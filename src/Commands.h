@@ -429,6 +429,9 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 #define kCmdArgCommandLine StrL("cmdline")
 #define kCmdArgToolbarText StrL("toolbartext")
 #define kCmdArgToolbarSvgIcon StrL("toolbarsvgicon")
+// text (or, when it starts with "<svg", an icon) for a button on the toolbar
+// that pops up over a text selection
+#define kCmdArgSelectToolbar StrL("selecttoolbar")
 #define kCmdArgFocusEdit StrL("focusedit")
 #define kCmdArgFocusList StrL("focuslist")
 // optional bool to force a state on a toggle command instead of flipping it (#5067)

@@ -712,6 +712,11 @@ SelectionHandlers [
     ; Note that anything you put here is stored in plain text in this settings
     ; file (introduced in version 3.7)
     Headers =
+
+    ; if set, the handler also gets a button in the toolbar that pops up over a
+    ; text selection. The value is the button's text, or, if it starts with
+    ; '<svg', an icon to draw instead (introduced in version 3.7)
+    SelectToolbarNameOrSvg =
   ]
 ]
 

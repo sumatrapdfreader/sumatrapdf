@@ -50,6 +50,49 @@ SelectionHandlers [
 
 **Ver3.6+**: `Key` is a keyboard shortcut in the same format as in [Shortcuts](Customize-keyboard-shortcuts.md) advanced setting.
 
+## A button on the selection toolbar (Ver3.7+)
+
+Selecting text pops up a small toolbar over the selection (turn it off with
+`SelectionToolbar` in advanced settings). `SelectToolbarNameOrSvg` puts the
+handler on it, so sending the selection to a service is one click instead of a
+trip through the context menu:
+
+```
+SelectionHandlers [
+  [
+    URL = https://duckduckgo.com/?q=${selection}
+    Name = &DuckDuckGo
+    SelectToolbarNameOrSvg = Search
+  ]
+]
+```
+
+![Selection toolbar with a handler button](img/selection-toolbar-handler.png)
+
+The value is the button's text. Keep it short — the toolbar sits over what you
+are reading, and every handler you add makes it wider. Unlike `Name`, it is
+shown as you typed it: no `&` hot-key handling, and no translation.
+
+If the value starts with `<svg`, it is an SVG icon and is drawn instead of the
+text, in the same format as `ToolbarSvgIcon` in
+[Customize toolbar](Customize-toolbar.md#using-svg-icons): 24x24,
+`stroke="currentColor"` and `fill="none"` so the icon picks up the theme's text
+color, and a full-size `<rect>` so its background comes out transparent.
+[Tabler Icons](https://tabler.io/icons) are already in that shape:
+
+```
+SelectionHandlers [
+  [
+    URL = https://duckduckgo.com/?q=${selection}
+    Name = &DuckDuckGo
+    SelectToolbarNameOrSvg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="24" height="24" stroke="none"></rect><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.35-4.35"></path></svg>
+  ]
+]
+```
+
+Handlers without `SelectToolbarNameOrSvg` are unaffected: they stay in the
+context menu and the command palette as before.
+
 ## Sending long text (Ver3.7+)
 
 A URL can only hold so much text. If you select several paragraphs and send them

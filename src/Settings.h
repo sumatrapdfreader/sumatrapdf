@@ -380,6 +380,10 @@ struct SelectionHandler {
     // Ignored by POST-VIA-BROWSER. Note that anything you put here is
     // stored in plain text in this settings file
     Str headers;
+    // if set, the handler also gets a button in the toolbar that pops up
+    // over a text selection. The value is the button's text, or, if it
+    // starts with '<svg', an icon to draw instead
+    Str selectToolbarNameOrSvg;
 };
 
 // custom keyboard shortcuts
@@ -1295,12 +1299,13 @@ static const FieldInfo gSelectionHandlerFields[] = {
     {offsetof(SelectionHandler, body), SettingType::String, 0},
     {offsetof(SelectionHandler, contentType), SettingType::String, 0},
     {offsetof(SelectionHandler, headers), SettingType::String, 0},
+    {offsetof(SelectionHandler, selectToolbarNameOrSvg), SettingType::String, 0},
 };
 static const StructInfo gSelectionHandlerInfo = {
     sizeof(SelectionHandler),
-    8,
+    9,
     gSelectionHandlerFields,
-    "URL\0Name\0Key\0Exe\0Method\0Body\0ContentType\0Headers",
+    "URL\0Name\0Key\0Exe\0Method\0Body\0ContentType\0Headers\0SelectToolbarNameOrSvg",
     "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with "
     "language code for current UI (e.g. 'de' for German)\0name shown in context menu\0keyboard shortcut\0command line "
     "of a program to run instead of opening a URL. Use ${selectionfile} to pass the selection as a temporary utf-8 "
@@ -1314,7 +1319,8 @@ static const StructInfo gSelectionHandlerInfo = {
     "POST-VIA-BROWSER, which always submits a form\0extra HTTP headers for POST, one per line as 'Name: value' (use "
     "\\n to separate them in this file). Needed for services that authenticate with an api key, e.g. 'Authorization: "
     "Bearer sk-...'. Ignored by POST-VIA-BROWSER. Note that anything you put here is stored in plain text in this "
-    "settings file",
+    "settings file\0if set, the handler also gets a button in the toolbar that pops up over a text selection. The "
+    "value is the button's text, or, if it starts with '<svg', an icon to draw instead",
     false};
 
 static const FieldInfo gShortcutFields[] = {

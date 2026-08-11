@@ -6,6 +6,7 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/GdiPlusUtil.h"
+#include "base/Pixmap.h"
 
 #include "wingui/UIModels.h"
 
@@ -23,6 +24,7 @@
 #include "Commands.h"
 #include "CommandAvailability.h"
 #include "AppSettings.h"
+#include "Toolbar.h"
 #include "Translations.h"
 #include "Theme.h"
 #include "SelectionToolbar.h"
@@ -37,9 +39,22 @@
 struct SelectionToolbarButton {
     int cmdId = 0;
     const char* label = nullptr; // English literal, translated via _TRA at layout/paint time
+    // a selection handler's SelectToolbarNameOrSvg: user text shown as-is, or an
+    // svg icon drawn instead of the text. Only one of them is set
+    Str userLabel;
+    Str svgIcon;
+    Pixmap* icon = nullptr; // svgIcon rendered at the current size; not owned
     bool enabled = true;
     Rect rc; // position within the toolbar client area
 };
+
+// what to draw for a button that isn't an icon
+static Str ButtonText(const SelectionToolbarButton& b) {
+    if (b.userLabel) {
+        return b.userLabel;
+    }
+    return _TRA(b.label);
+}
 
 struct SelectionToolbar {
     MainWindow* win = nullptr;
@@ -51,11 +66,11 @@ struct SelectionToolbar {
     int pressedIndex = -1;
     bool trackingMouse = false;
     Size size;
+    int iconSize = 0;   // size the cached icons were rendered at
     Rect lastPlaced;    // last screen rect we moved the window to (avoids redundant SetWindowPos)
     Rect lastSelBounds; // last canvas-space selection bounds used for placement
     DWORD lastPositionUpdateTick = 0;
-    SelectionToolbarButton buttons[9];
-    int nButtons = 0;
+    Vec<SelectionToolbarButton> buttons;
 };
 
 // candidate buttons; per-window visibility/enabled state comes from
@@ -71,19 +86,44 @@ static const SelectionToolbarButton gCandidateButtons[] = {
     {CmdCreateAnnotText, "Text"},
 };
 
+// selection handlers that asked for a button with SelectToolbarNameOrSvg
+static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommandCtx& ctx) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
+    for (CustomCommand* cmd : cmds) {
+        Str s = GetCommandStringArg(cmd, kCmdArgSelectToolbar, nullptr);
+        if (str::IsEmptyOrWhiteSpace(s)) {
+            continue;
+        }
+        CommandVisibility v = GetCommandVisibility(cmd->id, ctx, CommandSurface::Toolbar);
+        if (CommandShouldRemove(v)) {
+            continue;
+        }
+        SelectionToolbarButton b;
+        b.cmdId = cmd->id;
+        if (str::StartsWithI(s, StrL("<svg"))) {
+            b.svgIcon = s;
+        } else {
+            b.userLabel = s;
+        }
+        b.enabled = !CommandShouldDisable(v);
+        tb->buttons.Append(b);
+    }
+}
+
 static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
     AppCommandCtx ctx = NewAppCommandCtx(win);
-    int i = 0;
+    tb->buttons.Reset();
     for (const SelectionToolbarButton& cand : gCandidateButtons) {
         CommandVisibility v = GetCommandVisibility(cand.cmdId, ctx, CommandSurface::Toolbar);
         if (CommandShouldRemove(v)) {
             continue;
         }
-        tb->buttons[i] = cand;
-        tb->buttons[i].enabled = !CommandShouldDisable(v);
-        i++;
+        SelectionToolbarButton b = cand;
+        b.enabled = !CommandShouldDisable(v);
+        tb->buttons.Append(b);
     }
-    tb->nButtons = i;
+    AppendSelectionHandlerButtons(tb, ctx);
 }
 
 constexpr int kBtnPadX = 8; // horizontal padding inside a button
@@ -208,6 +248,59 @@ static HFONT CreateScaledFontFrom(HFONT base, int pct) {
     return CreateFontIndirectW(&lf);
 }
 
+// Rendering an svg costs a mupdf context, and the bar re-lays out whenever the
+// selection moves, so keep the rendered icons around. They only change when the
+// size or the theme colors do
+struct SelToolbarIcon {
+    Str svg; // our own copy: a settings reload frees the string we were given
+    int size = 0;
+    COLORREF fgCol = 0;
+    COLORREF bgCol = 0;
+    Pixmap* pixmap = nullptr;
+};
+
+static Vec<SelToolbarIcon> gSelToolbarIcons;
+
+static void FreeSelToolbarIcons() {
+    for (SelToolbarIcon& i : gSelToolbarIcons) {
+        str::Free(i.svg);
+        FreePixmap(i.pixmap);
+    }
+    gSelToolbarIcons.Reset();
+}
+
+static Pixmap* GetSelToolbarIcon(Str svg, int size, COLORREF fgCol, COLORREF bgCol) {
+    for (SelToolbarIcon& i : gSelToolbarIcons) {
+        if (i.size == size && i.fgCol == fgCol && i.bgCol == bgCol && str::Eq(i.svg, svg)) {
+            return i.pixmap;
+        }
+    }
+    // a theme switch or a dpi change invalidates every entry; they're cheap to
+    // re-render, so drop them all rather than track which are still wanted
+    if (len(gSelToolbarIcons) >= 32) {
+        FreeSelToolbarIcons();
+    }
+    SelToolbarIcon i;
+    i.svg = str::Dup(svg);
+    i.size = size;
+    i.fgCol = fgCol;
+    i.bgCol = bgCol;
+    i.pixmap = RenderSvgIconToPixmap(svg, size, size, fgCol, bgCol);
+    gSelToolbarIcons.Append(i);
+    return i.pixmap;
+}
+
+static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
+    COLORREF fgCol = SelBarTextColor();
+    COLORREF bgCol = SelBarBg();
+    for (SelectionToolbarButton& b : tb->buttons) {
+        if (!b.svgIcon) {
+            continue;
+        }
+        b.icon = GetSelToolbarIcon(b.svgIcon, size, fgCol, bgCol);
+    }
+}
+
 // Compute button layout and tb->size only (region applied after SetWindowPos).
 static void LayoutToolbar(SelectionToolbar* tb) {
     HWND hwnd = tb->hwnd;
@@ -218,12 +311,17 @@ static void LayoutToolbar(SelectionToolbar* tb) {
 
     int x = margin;
     int maxDy = 0;
-    int n = tb->nButtons;
+    int n = len(tb->buttons);
+    // an icon button is square, so its width isn't known until the row height
+    // is; lay those out in a second pass
+    int textDy = HwndMeasureText(hwnd, StrL("Mg"), tb->font).dy;
     for (int i = 0; i < n; i++) {
         SelectionToolbarButton& b = tb->buttons[i];
-        Size s = HwndMeasureText(hwnd, _TRA(b.label), tb->font);
-        int dx = s.dx + (2 * padX);
-        int dy = s.dy + (2 * padY);
+        int dy = textDy + (2 * padY);
+        int dx = dy;
+        if (!b.svgIcon) {
+            dx = HwndMeasureText(hwnd, ButtonText(b), tb->font).dx + (2 * padX);
+        }
         b.rc = Rect(x, margin, dx, dy);
         x += dx + gap;
         maxDy = std::max(dy, maxDy);
@@ -231,15 +329,23 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     if (n > 0) {
         x -= gap;
     }
+    int shift = 0;
     for (int i = 0; i < n; i++) {
-        tb->buttons[i].rc.dy = maxDy;
+        SelectionToolbarButton& b = tb->buttons[i];
+        b.rc.x += shift;
+        if (b.svgIcon && b.rc.dx != maxDy) {
+            shift += maxDy - b.rc.dx;
+            b.rc.dx = maxDy;
+        }
+        b.rc.dy = maxDy;
     }
-    tb->size = Size(x + margin, maxDy + (2 * margin));
+    tb->size = Size(x + shift + margin, maxDy + (2 * margin));
+    UpdateButtonIcons(tb, maxDy - (2 * padY));
 }
 
 static int ButtonFromPoint(SelectionToolbar* tb, int x, int y) {
     Point pt(x, y);
-    for (int i = 0; i < tb->nButtons; i++) {
+    for (int i = 0; i < len(tb->buttons); i++) {
         if (tb->buttons[i].rc.Contains(pt)) {
             return i;
         }
@@ -279,14 +385,20 @@ static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
     COLORREF textCol = SelBarTextColor();
     COLORREF mutedCol = SelBarMutedTextColor();
-    for (int i = 0; i < tb->nButtons; i++) {
+    for (int i = 0; i < len(tb->buttons); i++) {
         SelectionToolbarButton& b = tb->buttons[i];
         bool isHot = b.enabled && (i == tb->hotIndex);
         if (isHot) {
             FillRoundedRect(hdc, b.rc, btnRadius, hoverBg);
         }
+        if (b.icon) {
+            int x = b.rc.x + ((b.rc.dx - b.icon->width) / 2);
+            int y = b.rc.y + ((b.rc.dy - b.icon->height) / 2);
+            BlitPixmapAlpha(b.icon, hdc, {x, y, b.icon->width, b.icon->height});
+            continue;
+        }
         SetTextColor(hdc, b.enabled ? textCol : mutedCol);
-        HdcDrawCenteredText(hdc, b.rc, _TRA(b.label));
+        HdcDrawCenteredText(hdc, b.rc, ButtonText(b));
     }
 }
 
@@ -533,7 +645,7 @@ static void ShowSelectionToolbarNow(MainWindow* win) {
     tb->lastPositionUpdateTick = GetTickCount();
     tb->lastSelBounds = sel;
     InitButtons(tb, win);
-    if (tb->nButtons == 0) {
+    if (len(tb->buttons) == 0) {
         return;
     }
     LayoutToolbar(tb);

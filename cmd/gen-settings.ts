@@ -623,6 +623,13 @@ const selectionHandler: Field[] = [
       "'Authorization: Bearer sk-...'. Ignored by POST-VIA-BROWSER. Note that anything you put " +
       "here is stored in plain text in this settings file",
   ).ver("3.7"),
+  field(
+    "SelectToolbarNameOrSvg",
+    Str,
+    null,
+    "if set, the handler also gets a button in the toolbar that pops up over a text selection. " +
+      "The value is the button's text, or, if it starts with '<svg', an icon to draw instead",
+  ).ver("3.7"),
 ];
 
 const annotations: Field[] = [

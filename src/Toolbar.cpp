@@ -5,6 +5,7 @@
 #include "base/Dpi.h"
 #include "base/Win.h"
 #include "base/BitManip.h"
+#include "base/Pixmap.h"
 
 extern "C" {
 #include <mupdf/fitz.h>
@@ -1324,6 +1325,27 @@ static void ClearIconSlot(u8* dstSamples, ptrdiff_t dstStride, int dx, int dy, i
             d += 4;
         }
     }
+}
+
+// same rendering the toolbar's image list uses, into a standalone Pixmap.
+// bgCol is what the icon will be drawn on: pixels that come out as that color
+// are the svg's background and become transparent
+Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol) {
+    if (str::IsEmptyOrWhiteSpace(svgData) || dx <= 0 || dy <= 0) {
+        return nullptr;
+    }
+    fz_context* ctx = fz_new_context_windows();
+    fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
+    Pixmap* res = nullptr;
+    if (pixmap) {
+        res = AllocPixmap(dx, dy);
+        if (res) {
+            BlitPixmap(res->data, res->stride, pixmap, 0, 0, bgCol);
+        }
+        fz_drop_pixmap(ctx, pixmap);
+    }
+    fz_drop_context_windows(ctx);
+    return res;
 }
 
 static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount) {

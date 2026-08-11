@@ -26,6 +26,10 @@ constexpr int kDelayToolbarHide = 500;
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
 HIMAGELIST BuildStdToolbarImageList(int dx);
+// renders an svg icon into a dx by dy Pixmap whose background is transparent,
+// for code that draws its own buttons (the selection toolbar). Caller owns the
+// Pixmap; null if the svg couldn't be rendered
+Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
 
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
