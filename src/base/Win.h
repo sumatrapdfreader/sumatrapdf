@@ -206,6 +206,10 @@ void ShowTextInWindowDialog(Str title, Str text);
 
 //--- GDI: draw / measure
 
+// set a consistent mode on a Graphics so that measuring and drawing text give
+// the same results everywhere
+void InitGraphicsMode(Gdiplus::Graphics* g);
+
 void HdcDrawRect(HDC, const Rect&);
 void HdcFillRect(HDC, const Rect&, HBRUSH);
 void HdcFillRect(HDC hdc, const Rect&, COLORREF);

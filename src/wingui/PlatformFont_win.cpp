@@ -8,7 +8,7 @@
 
 #include "wingui/PlatformFont.h"
 
-#include "mui/Mui.h"
+#include "mui/TextRender.h"
 
 using Gdiplus::Font;
 using Gdiplus::Ok;
@@ -57,7 +57,7 @@ HFONT PlatformFont::GetHFont() {
     u8 data[kMeasureBmpDx * kMeasureBmpDy * 4]{};
     Gdiplus::Bitmap bmp(kMeasureBmpDx, kMeasureBmpDy, kMeasureBmpDx * 4, PixelFormat32bppARGB, data);
     Gdiplus::Graphics gfx((Gdiplus::Image*)&bmp);
-    mui::InitGraphicsMode(&gfx);
+    InitGraphicsMode(&gfx);
     LOGFONTW lf;
     Status status = gdiFont->GetLogFontW(&gfx, &lf);
     ReportIf(status != Ok);

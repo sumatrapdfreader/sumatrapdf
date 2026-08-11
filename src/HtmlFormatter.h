@@ -11,10 +11,7 @@ class Color;
 class Graphics;
 } // namespace Gdiplus
 
-namespace mui {
-struct CachedFont;
 class ITextRender;
-} // namespace mui
 #endif
 
 // PlatformFont / PlatformFontStyle live in wingui/PlatformFont.h and the text
@@ -316,8 +313,8 @@ struct HtmlFormatter {
 };
 
 #if OS_WIN
-void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, COLORREF textColor, bool* abortCookie = nullptr);
+void DrawHtmlPage(Gdiplus::Graphics* g, ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
+                  bool showBbox, COLORREF textColor, bool* abortCookie = nullptr);
 #endif
 
 PlatformTextMeasureMethod GetTextRenderMethod();

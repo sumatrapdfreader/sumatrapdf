@@ -855,7 +855,6 @@ end
 
 function mui_files()
   files_in_dir("src/mui", {
-    "Mui.*",
     "TextRender.*",
   })
 end
@@ -1402,7 +1401,6 @@ function pdf_preview_files()
     "HtmlFormatter.*",
     "JxlReader.*",
     "MobiDoc.*",
-    "mui/Mui.*",
     "mui/TextRender.*",
     "wingui/PlatformFont.*",
     "wingui/PlatformFont_win.*",
@@ -1474,7 +1472,6 @@ function pdf_preview2_files()
 
   files_in_dir("src", {
     "CrashHandlerNoOp.cpp",
-    "mui/Mui.*",
     "RegistryPreview.*",
     "SumatraConfig.*",
     "base/Base.*",
@@ -1506,7 +1503,6 @@ function search_filter2_files()
   })
   files_in_dir("src", {
     "CrashHandlerNoOp.cpp",
-    "mui/Mui.*",
     "RegistrySearchFilter.*",
     "SumatraConfig.*",
     "base/Base.*",

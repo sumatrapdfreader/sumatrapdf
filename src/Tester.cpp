@@ -11,7 +11,7 @@
 #include "base/GdiPlusUtil.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/PlatformText.h"
-#include "mui/Mui.h"
+#include "mui/TextRender.h"
 #include "base/Win.h"
 #include "base/Zip.h"
 

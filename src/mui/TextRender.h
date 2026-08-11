@@ -1,9 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// PlatformFont (wingui/PlatformFont.h) must be included before this header:
-// it is pulled in from inside `namespace mui`, so a forward declaration here
-// would declare mui::PlatformFont instead of the global one
+// PlatformFont (wingui/PlatformFont.h) must be included before this header
 
 enum class TextRenderMethod {
     Gdiplus,      // uses MeasureTextAccurate, which is slower than MeasureTextQuick
@@ -163,7 +161,7 @@ class TextRenderHdc : public ITextRender {
     ~TextRenderHdc() override;
 };
 
-ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, int dy);
+ITextRender* CreateTextRender(TextRenderMethod method, Gdiplus::Graphics* gfx, int dx, int dy);
 
 // the length is in utf-8 bytes and never cuts a sequence in half
 int StringLenForWidth(ITextRender* textMeasure, Str s, float dx, float sWidth = -1);

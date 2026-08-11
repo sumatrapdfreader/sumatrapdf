@@ -6,7 +6,7 @@
 #include "base/Win.h"
 #include "wingui/PlatformFont.h"
 
-#include "Mui.h"
+#include "TextRender.h"
 
 /*
 TODO:
@@ -25,9 +25,6 @@ TODO:
    to Graphics object.
 */
 
-/* Note: I would prefer this code be in utils but it depends on mui, so it must
-be in mui to avoid circular dependency */
-
 using Gdiplus::Bitmap;
 using Gdiplus::Graphics;
 using Gdiplus::Ok;
@@ -36,8 +33,6 @@ using Gdiplus::SolidBrush;
 using Gdiplus::Status;
 using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsDirectionRightToLeft;
-
-namespace mui {
 
 // note: Draw() ignores any transformation set on gfx
 TextRenderGdi* TextRenderGdi::Create(Graphics* gfx) {
@@ -528,5 +523,3 @@ float GetSpaceDx(ITextRender* textMeasure) {
     return spaceDx2;
 #endif
 }
-
-} // namespace mui

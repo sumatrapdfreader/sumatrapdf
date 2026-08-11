@@ -3,11 +3,12 @@
 
 #include "base/Base.h"
 #include "base/GdiPlusUtil.h"
+#include "base/Win.h"
 
 #include "wingui/PlatformFont.h"
 #include "wingui/PlatformText.h"
 
-#include "mui/Mui.h"
+#include "mui/TextRender.h"
 
 using Gdiplus::Bitmap;
 using Gdiplus::Graphics;
@@ -52,7 +53,7 @@ bool GraphicsCacheEntry::Create() {
     if (!gfx) {
         return false;
     }
-    mui::InitGraphicsMode(gfx);
+    InitGraphicsMode(gfx);
     return true;
 }
 
@@ -138,29 +139,29 @@ void PlatformFontDestroy() {
     gGraphicsCache = nullptr;
 }
 
-static mui::TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod method) {
+static TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod method) {
     switch (method) {
         case PlatformTextMeasureMethod::Gdiplus:
-            return mui::TextRenderMethod::Gdiplus;
+            return TextRenderMethod::Gdiplus;
         case PlatformTextMeasureMethod::GdiplusQuick:
-            return mui::TextRenderMethod::GdiplusQuick;
+            return TextRenderMethod::GdiplusQuick;
         case PlatformTextMeasureMethod::Gdi:
-            return mui::TextRenderMethod::Gdi;
+            return TextRenderMethod::Gdi;
         case PlatformTextMeasureMethod::Hdc:
-            return mui::TextRenderMethod::Hdc;
+            return TextRenderMethod::Hdc;
         case PlatformTextMeasureMethod::Stub:
             break;
     }
-    return mui::TextRenderMethod::Gdiplus;
+    return TextRenderMethod::Gdiplus;
 }
 
 struct WinTextMeasurer : PlatformTextMeasurer {
     Graphics* gfx = nullptr;
-    mui::ITextRender* textMeasure = nullptr;
+    ITextRender* textMeasure = nullptr;
 
     explicit WinTextMeasurer(PlatformTextMeasureMethod method) {
         gfx = AllocGraphicsForMeasureText();
-        textMeasure = mui::CreateTextRender(ToMuiTextRenderMethod(method), gfx, 10, 10);
+        textMeasure = CreateTextRender(ToMuiTextRenderMethod(method), gfx, 10, 10);
     }
 
     ~WinTextMeasurer() override {
@@ -172,12 +173,12 @@ struct WinTextMeasurer : PlatformTextMeasurer {
 
     float GetCurrFontLineSpacing() override { return textMeasure->GetCurrFontLineSpacing(); }
 
-    float GetSpaceDx() override { return mui::GetSpaceDx(textMeasure); }
+    float GetSpaceDx() override { return ::GetSpaceDx(textMeasure); }
 
     RectF Measure(Str s) override { return textMeasure->Measure(s); }
 
     int StringLenForWidth(Str s, float dx, float sWidth) override {
-        return mui::StringLenForWidth(textMeasure, s, dx, sWidth);
+        return ::StringLenForWidth(textMeasure, s, dx, sWidth);
     }
 };
 

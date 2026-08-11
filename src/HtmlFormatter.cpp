@@ -17,7 +17,7 @@
 
 #if OS_WIN
 #include "base/GdiPlusUtil.h"
-#include "mui/Mui.h"
+#include "mui/TextRender.h"
 #endif
 
 /*
@@ -1542,8 +1542,8 @@ using Gdiplus::Status;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, COLORREF textColor, bool* abortCookie) {
+void DrawHtmlPage(Gdiplus::Graphics* g, ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
+                  bool showBbox, COLORREF textColor, bool* abortCookie) {
     Pen debugPen(Color(255, 0, 0), 1);
     // Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
@@ -1632,7 +1632,7 @@ void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInst
 #endif
 
 static PlatformTextMeasureMethod gTextRenderMethod = PlatformTextMeasureMethod::Gdi;
-// static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethodGdiplus;
+// static TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;
 
 PlatformTextMeasureMethod GetTextRenderMethod() {
     return gTextRenderMethod;

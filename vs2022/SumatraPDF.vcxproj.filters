@@ -447,9 +447,6 @@
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mui\Mui.h">
-      <Filter>src\mui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\mui\TextRender.h">
       <Filter>src\mui</Filter>
     </ClInclude>
@@ -1069,9 +1066,6 @@
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>src\base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\Mui.cpp">
-      <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\TextRender.cpp">
       <Filter>src\mui</Filter>

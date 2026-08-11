@@ -32,7 +32,7 @@
 #include "base/Win.h"
 #include "base/Zip.h"
 
-#include "mui/Mui.h"
+#include "mui/TextRender.h"
 
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
@@ -387,7 +387,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     DeleteObject(SelectObject(hDC, hbmp));
 
     Graphics g(hDC);
-    mui::InitGraphicsMode(&g);
+    InitGraphicsMode(&g);
 
     Color white(0xFF, 0xFF, 0xFF);
     SolidBrush tmpBrush(white);
@@ -408,7 +408,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 
     ScopedMutex scope(&pagesAccess);
 
-    mui::ITextRender* textDraw = mui::TextRenderGdiplus::Create(&g);
+    ITextRender* textDraw = TextRenderGdiplus::Create(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, RGB(0, 0, 0),
                  cookie ? &cookie->abort : nullptr);
     delete textDraw;
