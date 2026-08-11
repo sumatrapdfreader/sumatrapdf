@@ -246,6 +246,13 @@ DocumentColorsFollowTheme = off
 ; is the height of the bookmarks (table of contents) part, in screen pixels
 TocDy = 0
 
+; the toolbar's built-in buttons, in the order you want them, e.g. CmdOpenFile
+; CmdPrint PageInfo | CmdFindFirst. Leave a button out to hide it. | is a
+; separator and PageInfo is the page number box. Empty (the default) means the
+; standard layout. Buttons you added yourself (see Shortcuts) still come last
+; (introduced in version 3.7)
+ToolbarCustomLayout = 
+
 ; if true, the toolbar has a Read Aloud button (with a drop-down for voice,
 ; speed and what to read). Read Aloud is still reachable from the Read Aloud
 ; menu when this is false (introduced in version 3.7)

@@ -1112,6 +1112,15 @@ const globalPrefs: Field[] = [
       "the height of the bookmarks (table of contents) part, in screen pixels",
   ).internal(),
   field(
+    "ToolbarCustomLayout",
+    Str,
+    "",
+    "the toolbar's built-in buttons, in the order you want them, e.g. " +
+      "CmdOpenFile CmdPrint PageInfo | CmdFindFirst. Leave a button out to hide it. " +
+      "| is a separator and PageInfo is the page number box. Empty (the default) means " +
+      "the standard layout. Buttons you added yourself (see Shortcuts) still come last",
+  ).ver("3.7"),
+  field(
     "ToolbarShowReadAloud",
     Bool,
     false,

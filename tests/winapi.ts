@@ -743,6 +743,28 @@ export function captureWindowPixels(hwnd: number): { w: number; h: number; data:
   return { w, h, data };
 }
 
+// Toolbar (ToolbarWindow32) helpers. A button is addressed by its command id.
+export const TB_GETSTATE = 0x0412;
+export const TB_COMMANDTOINDEX = 0x0419;
+export const TBSTATE_HIDDEN = 0x08;
+
+// button state bits, or -1 when the toolbar has no button for that command
+export function tbGetState(toolbar: number, cmdId: number): number {
+  return Number(sendMessage(toolbar, TB_GETSTATE, BigInt(cmdId), 0n));
+}
+
+export function tbIsButtonVisible(toolbar: number, cmdId: number): boolean {
+  const state = tbGetState(toolbar, cmdId);
+  return state >= 0 && (state & TBSTATE_HIDDEN) === 0;
+}
+
+// position of a button in the toolbar, -1 when there is no button for that
+// command. Messages that write through a pointer (TB_GETRECT) can't be used
+// across processes, but this one only returns a number.
+export function tbGetButtonIndex(toolbar: number, cmdId: number): number {
+  return Number(sendMessage(toolbar, TB_COMMANDTOINDEX, BigInt(cmdId), 0n));
+}
+
 // set a window's text via WM_SETTEXT (works on edit controls cross-process,
 // unlike SendInput typing). Synchronous, so the wide buffer stays alive.
 export function sendText(hwnd: number, text: string): void {

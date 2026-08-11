@@ -92,6 +92,18 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);
 
+// The built-in buttons actually on the toolbar, which is gToolbarButtons unless
+// ToolbarCustomLayout asks for a different set / order (issue #5095). A layout
+// can repeat a button, so allow for more than the default count.
+constexpr int kMaxLayoutButtons = 64;
+static ToolbarButtonInfo gLayoutButtons[kMaxLayoutButtons];
+static int gLayoutButtonsCount = 0;
+// the page number box is optional in a custom layout; the controls that float
+// over it are hidden when it isn't there
+static bool gLayoutHasPageBox = true;
+static Str gLayoutParsedFrom;
+static bool gLayoutParsed = false;
+
 // 128 should be more than enough
 // we use static array so that we don't have to generate
 // code for Vec<ToolbarButtonInfo>
@@ -120,13 +132,88 @@ static void UpdateToolbarButtonStateByIdx(HWND hwnd, int idx, bool set, BYTE fla
     TbSetButtonInfo(hwnd, idx, &bi);
 }
 
+// Work out which built-in buttons the toolbar has, and in which order. Empty
+// ToolbarCustomLayout (the default) means the standard layout; otherwise the
+// setting lists the buttons the user wants: a command name puts that button
+// there, `|` a separator, `PageInfo` the page number box, and leaving a button
+// out is how you hide it (issue #5095).
+static void PopulateToolbarLayout() {
+    Str setting = gGlobalPrefs->toolbarCustomLayout;
+    if (gLayoutParsed && str::Eq(setting, gLayoutParsedFrom)) {
+        return;
+    }
+    str::Free(gLayoutParsedFrom);
+    gLayoutParsedFrom = str::Dup(setting);
+    gLayoutParsed = true;
+    gLayoutButtonsCount = 0;
+    gLayoutHasPageBox = false;
+
+    auto addButton = [](const ToolbarButtonInfo& tbi) {
+        if (gLayoutButtonsCount < kMaxLayoutButtons) {
+            gLayoutButtons[gLayoutButtonsCount++] = tbi;
+        }
+    };
+
+    if (str::IsEmptyOrWhiteSpace(setting)) {
+        for (int i = 0; i < kButtonsCount; i++) {
+            addButton(gToolbarButtons[i]);
+        }
+        gLayoutHasPageBox = true;
+        return;
+    }
+
+    // commas and semicolons are a natural way to write a list, so accept them
+    TempStr normalized = str::ReplaceTemp(setting, StrL(","), StrL(" "));
+    normalized = str::ReplaceTemp(normalized, StrL(";"), StrL(" "));
+    StrVec names;
+    Split(&names, normalized, StrL(" "), true);
+    for (Str name : names) {
+        Str tok = name;
+        str::TrimWSInPlace(tok, str::TrimOpt::Both);
+        if (!tok) {
+            continue;
+        }
+        if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
+            addButton({TbIcon::None, 0, nullptr});
+            continue;
+        }
+        if (str::EqI(tok, StrL("PageInfo"))) {
+            addButton({TbIcon::None, PageInfoId, nullptr});
+            gLayoutHasPageBox = true;
+            continue;
+        }
+        int cmdId = GetCommandIdByName(tok);
+        const ToolbarButtonInfo* found = nullptr;
+        for (int i = 0; i < kButtonsCount && cmdId != CmdNone; i++) {
+            if (gToolbarButtons[i].cmdId == cmdId) {
+                found = &gToolbarButtons[i];
+                break;
+            }
+        }
+        if (!found) {
+            logf("ToolbarCustomLayout: no built-in toolbar button for '%s'\n", tok);
+            continue;
+        }
+        addButton(*found);
+    }
+    if (gLayoutButtonsCount == 0) {
+        logf("ToolbarCustomLayout: nothing usable in '%s', using the standard layout\n", setting);
+        str::FreePtr(&gLayoutParsedFrom);
+        gLayoutParsed = false;
+        Str prev = gGlobalPrefs->toolbarCustomLayout;
+        gGlobalPrefs->toolbarCustomLayout = nullptr;
+        PopulateToolbarLayout();
+        gGlobalPrefs->toolbarCustomLayout = prev;
+    }
+}
+
 static int TotalButtonsCount() {
-    return kButtonsCount + gCustomButtonsCount;
+    return gLayoutButtonsCount + gCustomButtonsCount;
 }
 
 static ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
-    if (idx < kButtonsCount) return gToolbarButtons[idx];
-    return gCustomButtons[idx - kButtonsCount];
+    if (idx < gLayoutButtonsCount) return gLayoutButtons[idx];
+    return gCustomButtons[idx - gLayoutButtonsCount];
 }
 
 // more than one because users can add custom buttons with overlapping ids
@@ -337,8 +424,8 @@ static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi, bool noTrans
 void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     TBBUTTONINFO binfo{};
     HWND hwnd = win->hwndToolbar;
-    for (int i = 0; i < kButtonsCount; i++) {
-        const ToolbarButtonInfo& bi = gToolbarButtons[i];
+    for (int i = 0; i < gLayoutButtonsCount; i++) {
+        const ToolbarButtonInfo& bi = gLayoutButtons[i];
         if (!bi.toolTip) {
             continue;
         }
@@ -975,8 +1062,42 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return CallWindowProc(DefWndProcPageBox, hwnd, msg, wp, lp);
 }
 
+// The page box is positioned after the buttons that come before it, but
+// TB_GETRECT only works for visible buttons and any of them can be hidden. Walk
+// back from the page box to the closest visible one; an empty rect (nothing
+// visible before it) puts the page box at the start of the toolbar.
+static Rect LastVisibleButtonRectBeforePageBox(HWND hwndToolbar) {
+    Rect res;
+    int n = TotalButtonsCount();
+    for (int i = 0; i < n; i++) {
+        const ToolbarButtonInfo& tb = GetToolbarButtonInfoByIdx(i);
+        if (tb.cmdId == PageInfoId) {
+            break;
+        }
+        TBBUTTONINFOW bi{};
+        bi.cbSize = sizeof(bi);
+        bi.dwMask = TBIF_BYINDEX | TBIF_STATE;
+        if (TbGetButtonInfo(hwndToolbar, i, &bi) == -1) {
+            continue;
+        }
+        if (bi.fsState & TBSTATE_HIDDEN) {
+            continue;
+        }
+        Rect r = TbGetItemRect(hwndToolbar, i);
+        if (!r.IsEmpty()) {
+            res = r;
+        }
+    }
+    return res;
+}
+
 void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (!win->hwndToolbar) {
+        return;
+    }
+    if (!gLayoutHasPageBox) {
+        // ToolbarCustomLayout leaves out PageInfo, so there are no page-number
+        // controls to lay out (see CreatePageBox)
         return;
     }
     Str text = _TRA("Page:");
@@ -990,11 +1111,11 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 
     Rect pageWndRect = HwndWindowRect(win->hwndPageBg);
 
-    // TB_GETRECT fails for hidden buttons, so anchor on a button that's still
-    // visible. CmdPrint is hidden when PrinterAccess is revoked via
-    // sumatrapdfrestrict.ini (issue #5563); fall back to CmdOpenFile in that case.
-    int anchorCmd = HasPermission(Perm::PrinterAccess) ? CmdPrint : CmdOpenFile;
-    Rect r = TbGetRect(win->hwndToolbar, anchorCmd);
+    // TB_GETRECT fails for hidden buttons, so anchor on the last button before
+    // the page box that is actually visible: CmdPrint is hidden when
+    // PrinterAccess is revoked via sumatrapdfrestrict.ini (issue #5563) and any
+    // of them can be hidden with ToolbarHideButtons (issue #5095)
+    Rect r = LastVisibleButtonRectBeforePageBox(win->hwndToolbar);
     int currX = r.x + r.dx + DpiScale(win->hwndFrame, 10);
     int currY = (r.y + r.dy - pageWndRect.dy) / 2;
 
@@ -1090,6 +1211,12 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 }
 
 static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
+    if (!gLayoutHasPageBox) {
+        // ToolbarCustomLayout leaves out PageInfo: there is no button for these
+        // controls to sit on, so don't make them at all. Everything that uses
+        // them copes with them being null.
+        return;
+    }
     bool isRtl = IsUIRtl();
 
     auto* hwndFrame = win->hwndFrame;
@@ -1575,6 +1702,7 @@ void CreateToolbar(MainWindow* win) {
         DarkMode::setWindowNotifyCustomDrawSubclass(win->hwndReBar);
     }
 
+    PopulateToolbarLayout();
     PopulateCustomToolbarButtons();
     int iconSize = SetToolbarIconsImageList(win);
 
@@ -1595,12 +1723,12 @@ void CreateToolbar(MainWindow* win) {
     exstyle |= TBSTYLE_EX_DRAWDDARROWS;
     TbSetExtendedStyle(hwndToolbar, exstyle);
 
-    TBBUTTON tbButtons[kButtonsCount];
-    for (int i = 0; i < kButtonsCount; i++) {
-        const ToolbarButtonInfo& bi = gToolbarButtons[i];
+    TBBUTTON tbButtons[kMaxLayoutButtons];
+    for (int i = 0; i < gLayoutButtonsCount; i++) {
+        const ToolbarButtonInfo& bi = gLayoutButtons[i];
         tbButtons[i] = TbButtonFromButtonInfo(bi);
     }
-    TbAddButtons(hwndToolbar, kButtonsCount, tbButtons);
+    TbAddButtons(hwndToolbar, gLayoutButtonsCount, tbButtons);
 
     TBBUTTON* buttons = AllocArrayTemp<TBBUTTON>(gCustomButtonsCount);
     for (int i = 0; i < gCustomButtonsCount; i++) {
@@ -1624,7 +1752,7 @@ void CreateToolbar(MainWindow* win) {
     rbBand.hbmBack = nullptr;
     rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
     rbBand.hwndChild = hwndToolbar;
-    rbBand.cxMinChild = rc.dx * kButtonsCount;
+    rbBand.cxMinChild = rc.dx * gLayoutButtonsCount;
     rbBand.cyMinChild = rc.dy + (2 * rc.y);
     rbBand.cx = 0;
     SendMessageW(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
