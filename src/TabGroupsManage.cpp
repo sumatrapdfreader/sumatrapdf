@@ -53,7 +53,7 @@ struct TabGroupsListBoxModel : ListBoxModel {
     }
 };
 
-struct TabGroupsWnd : Wnd {
+struct TabGroupsWnd : WindowBase {
     ~TabGroupsWnd() override;
 
     HFONT font = nullptr;
@@ -295,7 +295,7 @@ void TabGroupsWnd::UpdateTheme() {
     COLORREF colBg = ThemeWindowControlBackgroundColor();
     COLORREF colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    auto setColors = [&](Wnd* c) {
+    auto setColors = [&](ControlBase* c) {
         if (c) {
             c->SetColors(colTxt, colBg);
         }
@@ -363,11 +363,11 @@ static void TeardownTabGroupsWnd(TabGroupsWnd* w) {
     w->ScheduleDelete();
 }
 
-static void OnTabGroupsClose(Wnd::CloseEvent* ev) {
+static void OnTabGroupsClose(WindowBase::CloseEvent* ev) {
     TeardownTabGroupsWnd((TabGroupsWnd*)ev->e->self);
 }
 
-static void OnTabGroupsDestroy(Wnd::DestroyEvent* ev) {
+static void OnTabGroupsDestroy(WindowBase::DestroyEvent* ev) {
     TeardownTabGroupsWnd((TabGroupsWnd*)ev->e->self);
 }
 
@@ -480,8 +480,8 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
 
     auto* wnd = new TabGroupsWnd();
     wnd->font = GetAppFont(win->hwndFrame);
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnTabGroupsClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnTabGroupsDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
     if (!wnd->Create(win, mode)) {
         delete wnd;
         return;

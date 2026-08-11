@@ -1228,7 +1228,7 @@ void RenderCache::LogCacheSize() {
 
 extern RenderCache* gRenderCache;
 
-struct DebugTextWnd : Wnd {
+struct DebugTextWnd : WindowBase {
     ~DebugTextWnd() override;
 
     Edit* edit = nullptr;
@@ -1360,19 +1360,19 @@ static void CloseDebugTextWnd(DebugTextWnd** slot) {
     }
 }
 
-static void OnRenderInfoClose(Wnd::CloseEvent* ev) {
+static void OnRenderInfoClose(WindowBase::CloseEvent* ev) {
     TeardownDebugTextWnd(&gRenderInfoWnd, (DebugTextWnd*)ev->e->self);
 }
 
-static void OnRenderInfoDestroy(Wnd::DestroyEvent* ev) {
+static void OnRenderInfoDestroy(WindowBase::DestroyEvent* ev) {
     TeardownDebugTextWnd(&gRenderInfoWnd, (DebugTextWnd*)ev->e->self);
 }
 
-static void OnCacheInfoClose(Wnd::CloseEvent* ev) {
+static void OnCacheInfoClose(WindowBase::CloseEvent* ev) {
     TeardownDebugTextWnd(&gCacheInfoWnd, (DebugTextWnd*)ev->e->self);
 }
 
-static void OnCacheInfoDestroy(Wnd::DestroyEvent* ev) {
+static void OnCacheInfoDestroy(WindowBase::DestroyEvent* ev) {
     TeardownDebugTextWnd(&gCacheInfoWnd, (DebugTextWnd*)ev->e->self);
 }
 
@@ -1509,8 +1509,8 @@ void RenderCache::UpdateRenderInfo() {
 
 static void CreateRenderInfoWindow() {
     auto* wnd = new DebugTextWnd();
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnRenderInfoClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnRenderInfoDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnRenderInfoClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnRenderInfoDestroy);
     if (!wnd->Create(StrL("Render Queue Info"), 12)) {
         delete wnd;
         return;
@@ -1638,8 +1638,8 @@ void RenderCache::UpdateCacheInfo() {
 
 static void CreateCacheInfoWindow() {
     auto* wnd = new DebugTextWnd();
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnCacheInfoClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnCacheInfoDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnCacheInfoClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnCacheInfoDestroy);
     if (!wnd->Create(StrL("Cache Info"), 12)) {
         delete wnd;
         return;

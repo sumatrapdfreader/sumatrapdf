@@ -123,7 +123,7 @@ struct KbKeyCaps : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct KeyboardHelpWnd : Wnd {
+struct KeyboardHelpWnd : WindowBase {
     MainWindow* win = nullptr;
 
     PlatformFont* fontTitle = nullptr; // window title

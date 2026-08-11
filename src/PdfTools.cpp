@@ -81,7 +81,7 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
 }
 
 // Esc closes PDF tool dialogs (Bake/Compress/etc.); same as other app dialogs (#5856).
-static bool PdfToolPreTranslateEsc(MSG& msg, Wnd* dlg) {
+static bool PdfToolPreTranslateEsc(MSG& msg, WindowBase* dlg) {
     if (!dlg) {
         return false;
     }
@@ -98,7 +98,7 @@ static bool PdfToolPreTranslateEsc(MSG& msg, Wnd* dlg) {
 // buttons are virtual controls, the text fields stay native edits hosted by a
 // VirtWrapper so they take part in the same layout - and each dialog only
 // adds its rows and implements DoIt().
-struct PdfToolDialog : Wnd {
+struct PdfToolDialog : WindowBase {
     HFONT hFont = nullptr;
     PlatformFont* font = nullptr;
     Str srcPath; // owned
@@ -146,7 +146,7 @@ PdfToolDialog::~PdfToolDialog() {
     delete vroot;
 }
 
-static void PdfToolDialogOnClose(Wnd::CloseEvent* ev) {
+static void PdfToolDialogOnClose(WindowBase::CloseEvent* ev) {
     auto* dlg = (PdfToolDialog*)ev->e->self;
     delete dlg;
 }

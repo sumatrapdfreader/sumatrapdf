@@ -28,7 +28,7 @@ using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
 
-struct ReadAloudPlaybackBar : Wnd {
+struct ReadAloudPlaybackBar : WindowBase {
     ReadAloudPlaybackBar() = default;
     ~ReadAloudPlaybackBar() override = default;
 

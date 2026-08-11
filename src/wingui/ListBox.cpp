@@ -41,7 +41,7 @@ HWND ListBox::Create(const CreateArgs& args) {
         cargs.style |= LBS_OWNERDRAWFIXED;
     }
     // args.style |= WS_BORDER;
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     SizeToIdealSize(this);
 
     if (hwnd) {

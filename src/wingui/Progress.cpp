@@ -25,7 +25,7 @@ HWND Progress::Create(const CreateArgs& args) {
     cargs.style = WS_CHILD | WS_VISIBLE;
     cargs.className = PROGRESS_CLASSW;
 
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     SizeToIdealSize(this);
     if (hwnd && args.initialMax != 0) {
         SetMax(args.initialMax);

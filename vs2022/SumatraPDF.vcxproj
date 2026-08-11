@@ -1770,6 +1770,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\wingui\BrowserDocView.cpp" />
     <ClCompile Include="..\src\wingui\Button.cpp" />
     <ClCompile Include="..\src\wingui\Checkbox.cpp" />
+    <ClCompile Include="..\src\wingui\ControlBase.cpp" />
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
     <ClCompile Include="..\src\wingui\DropDown.cpp" />
     <ClCompile Include="..\src\wingui\Edit.cpp" />
@@ -1794,7 +1795,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
     <ClCompile Include="..\src\wingui\VirtWnd.cpp" />
     <ClCompile Include="..\src\wingui\WebView.cpp" />
-    <ClCompile Include="..\src\wingui\Wnd.cpp" />
+    <ClCompile Include="..\src\wingui\WindowBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc" />

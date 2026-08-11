@@ -82,7 +82,7 @@ struct NotifProgressWnd : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct NotificationWnd : Wnd {
+struct NotificationWnd : WindowBase {
     NotificationWnd() = default;
     ~NotificationWnd() override;
 

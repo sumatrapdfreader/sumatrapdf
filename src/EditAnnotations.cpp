@@ -89,7 +89,7 @@ static TempStr GetKnownColorNameTemp(PdfColor c) {
     return {};
 }
 
-struct EditAnnotationsWindow : Wnd {
+struct EditAnnotationsWindow : WindowBase {
     WindowTab* tab = nullptr;
     LayoutBase* mainLayout = nullptr;
 
@@ -488,9 +488,9 @@ static void ScheduleDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
 }
 
 // CloseEvent::didHandle defaults to true, so the framework skips its default
-// Destroy(); we own teardown via the scheduled delete (which runs ~Wnd and
+// Destroy(); we own teardown via the scheduled delete (which runs ~WindowBase and
 // DestroyWindow).
-static void OnClose(Wnd::CloseEvent* ev) {
+static void OnClose(WindowBase::CloseEvent* ev) {
     auto* w = (EditAnnotationsWindow*)ev->e->self;
     FlushContentsFromEdit(w);
     ScheduleDeleteEditAnnotationsWindow(w);
@@ -499,7 +499,7 @@ static void OnClose(Wnd::CloseEvent* ev) {
 // CloseAndDeleteEditAnnotationsWindow already nulls the tab pointer and
 // deletes; only schedule if this is an unexpected destroy with the pointer
 // still set.
-static void OnDestroy(Wnd::DestroyEvent* ev) {
+static void OnDestroy(WindowBase::DestroyEvent* ev) {
     auto* w = (EditAnnotationsWindow*)ev->e->self;
     if (w->tab && w->tab->editAnnotsWindow == w) {
         ScheduleDeleteEditAnnotationsWindow(w);

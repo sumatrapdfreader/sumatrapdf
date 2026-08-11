@@ -22,7 +22,7 @@
 #include "PdfDarkMode.h"
 #include "ChangeThemeDialog.h"
 
-struct ChangeThemeWnd : Wnd {
+struct ChangeThemeWnd : WindowBase {
     ~ChangeThemeWnd() override;
 
     HFONT font = nullptr;
@@ -220,13 +220,13 @@ bool ChangeThemeWnd::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-static void OnClose(Wnd::CloseEvent* /*ev*/) {
+static void OnClose(WindowBase::CloseEvent* /*ev*/) {
     if (gChangeThemeWnd) {
         gChangeThemeWnd->OnCancel();
     }
 }
 
-static void OnDestroy(Wnd::DestroyEvent* /*ev*/) {
+static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gChangeThemeWnd) {
         gChangeThemeWnd->ScheduleDelete();
     }
@@ -347,8 +347,8 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     }
     auto* wnd = new ChangeThemeWnd();
     wnd->documentColorsFollowThemeOnly = documentColorsFollowThemeOnly;
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppFont(win->hwndFrame);
     bool ok = wnd->Create(win);
     if (!ok) {

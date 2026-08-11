@@ -90,7 +90,7 @@ static TempStr LangCodeForUrlTemp(Str name) {
     return SeqStrByIndex(gLangNameToCode, idx + 1);
 }
 
-struct SelectionTranslateWnd : Wnd {
+struct SelectionTranslateWnd : WindowBase {
     ~SelectionTranslateWnd() override;
 
     HFONT font = nullptr;
@@ -921,7 +921,7 @@ void SelectionTranslateWnd::UpdateTheme() {
     COLORREF colBg = ThemeWindowControlBackgroundColor();
     COLORREF colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    auto setColors = [&](Wnd* w) {
+    auto setColors = [&](ControlBase* w) {
         if (w) {
             w->SetColors(colTxt, colBg);
         }
@@ -1173,13 +1173,13 @@ static void TeardownSelectionTranslateWnd() {
     w->ScheduleDelete();
 }
 
-static void OnSelectionTranslateClose(Wnd::CloseEvent* ev) {
+static void OnSelectionTranslateClose(WindowBase::CloseEvent* ev) {
     if (gSelectionTranslateWnd == (SelectionTranslateWnd*)ev->e->self) {
         TeardownSelectionTranslateWnd();
     }
 }
 
-static void OnSelectionTranslateDestroy(Wnd::DestroyEvent* ev) {
+static void OnSelectionTranslateDestroy(WindowBase::DestroyEvent* ev) {
     if (gSelectionTranslateWnd == (SelectionTranslateWnd*)ev->e->self) {
         TeardownSelectionTranslateWnd();
     }
@@ -1426,8 +1426,8 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     wnd->hwndOwner = hwndOwner;
     wnd->engine = engine;
     wnd->font = GetAppFont(hwndOwner);
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnSelectionTranslateClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnSelectionTranslateDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSelectionTranslateClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSelectionTranslateDestroy);
     Str title = _TRA("Translate");
     if (!wnd->Create(hwndOwner, selText, title)) {
         EnableWindow(hwndOwner, TRUE);

@@ -302,7 +302,7 @@ struct ListBoxModelSettings : ListBoxModel {
     }
 };
 
-struct AdvancedSettingsWnd : Wnd {
+struct AdvancedSettingsWnd : WindowBase {
     ~AdvancedSettingsWnd() override;
 
     HFONT font = nullptr;
@@ -374,7 +374,7 @@ static AdvancedSettingsWnd* gAdvancedSettingsWnd = nullptr;
 
 AdvancedSettingsWnd::~AdvancedSettingsWnd() {
     // editFilter, listBox and commentText are added to the layout; VBox owns
-    // and deletes its children, and the base Wnd::~Wnd() deletes `layout`, so
+    // and deletes its children, and the base WindowBase::~WindowBase() deletes `layout`, so
     // they must not be deleted here (doing so is a double-free). editValue and
     // dropDownValue are created on demand and are not part of the layout, so
     // they are freed explicitly.
@@ -1009,18 +1009,18 @@ bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
 }
 
 // clicking the window's close box sends WM_CLOSE. We must schedule our own
-// teardown here: the framework's default WM_CLOSE handler calls Wnd::Destroy(),
-// which removes the Wnd from the hwnd->Wnd list *before* DestroyWindow(), so the
+// teardown here: the framework's default WM_CLOSE handler calls WindowBase::Destroy(),
+// which removes the WindowBase from the hwnd->WindowBase list *before* DestroyWindow(), so the
 // following WM_DESTROY never reaches onDestroy - leaving gAdvancedSettingsWnd
 // dangling and blocking reopen. CloseEvent::didHandle defaults to true, so
 // returning from here skips that default Destroy().
-static void OnClose(Wnd::CloseEvent* /*ev*/) {
+static void OnClose(WindowBase::CloseEvent* /*ev*/) {
     if (gAdvancedSettingsWnd) {
         gAdvancedSettingsWnd->ScheduleDelete();
     }
 }
 
-static void OnDestroy(Wnd::DestroyEvent* /*ev*/) {
+static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gAdvancedSettingsWnd) {
         gAdvancedSettingsWnd->ScheduleDelete();
     }
@@ -1249,8 +1249,8 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
         return;
     }
     auto* wnd = new AdvancedSettingsWnd();
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppFont(win->hwndFrame);
     bool ok = wnd->Create(win);
     if (!ok) {

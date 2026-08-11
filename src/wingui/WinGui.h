@@ -1,7 +1,7 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-//--- Wnd
+//--- WindowBase
 
 // global messages for wingui start at WM_APP + 0x300 to not
 // collide with values defined for the app
@@ -16,13 +16,16 @@ enum WindowBorderStyle {
     kWindowBorderStatic
 };
 
-struct Wnd;
+struct WindowBase;
 
-Wnd* WndListFindByHwnd(HWND);
+WindowBase* WindowBaseFromHwnd(HWND);
 void MarkHWNDDestroyed(HWND);
+bool HwndWasDestroyed(HWND);
+
+struct ControlBase;
 
 struct ContextMenuEvent {
-    Wnd* w = nullptr;
+    ControlBase* w = nullptr;
 
     // mouse x,y position relative to the window
     Point mouseWindow;
@@ -68,12 +71,16 @@ struct WmEvent {
     WPARAM wp = 0;
     LPARAM lp = 0;
     uintptr_t userData = 0;
-    Wnd* self = nullptr;
+    // the WindowBase / ControlBase the message went to; consumers cast it
+    void* self = nullptr;
 
     bool didHandle = true; // common case so set as default
 };
 
-struct Wnd : ILayout {
+// Base of the top-level windows (and the child windows that place themselves,
+// like the notification toasts). Not an ILayout: a window isn't positioned by a
+// parent's layout - it has a `layout` of its own children instead
+struct WindowBase {
     struct CloseEvent {
         WmEvent* e = nullptr;
     };
@@ -84,13 +91,105 @@ struct Wnd : ILayout {
     using CloseHandler = Func1<CloseEvent*>;
     using DestroyHandler = Func1<DestroyEvent*>;
 
-    Wnd();
-    Wnd(HWND hwnd);
-    ~Wnd() override;
+    WindowBase();
+    WindowBase(HWND hwnd);
+    virtual ~WindowBase();
     void Destroy();
 
     HWND CreateCustom(const CreateCustomArgs&);
+
+    void SetVisibility(Visibility);
+    Visibility GetVisibility();
+
+    void Attach(HWND hwnd);
+    HWND Detach();
+
+    void Subclass();
+    void UnSubclass();
+
+    virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+    virtual bool PreTranslateMessage(MSG& msg);
+    virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
+
+    virtual void OnAttach();
+    virtual void OnFocus();
+    virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
+    virtual int OnCreate(CREATESTRUCT*);
+    virtual void OnDropFiles(HDROP drop_info);
+    virtual void OnGetMinMaxInfo(MINMAXINFO* mmi);
+    virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
+    virtual void OnMove(POINTS* pts);
+    virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
+    virtual void OnSize(UINT msg, UINT type, Size size);
+    virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
+    virtual void OnTimer(UINT_PTR timerId);
+    virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
+
+    virtual void SetColors(COLORREF textColor, COLORREF bgColor);
+
+    void Close();
+    void SetPos(Rect* r);
+    void SetIsVisible(bool isVisible);
+    bool IsVisible() const;
+    void SetText(Str);
+    TempStr GetTextTemp();
+
+    HFONT GetFont();
+    void SetFont(HFONT font);
+
+    void SetIsEnabled(bool isEnabled) const;
+    bool IsEnabled() const;
+
+    void SuspendRedraw() const;
+    void ResumeRedraw() const;
+
+    // sends a control's own messages (colors, owner draw, ...) back to it
+    LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
+    LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+    LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
+
+    HBRUSH BackgroundBrush();
+
+    Kind kind = nullptr;
+    uintptr_t userData = 0;
+
+    // data that can be set before calling Create()
+    Visibility visibility{Visibility::Visible};
+
+    HWND hwnd = nullptr;
+    HFONT font = nullptr; // we don't own it
+    UINT_PTR subclassId = 0;
+
+    COLORREF bgColor = kColorUnset;
+    HBRUSH bgBrush = nullptr;
+    COLORREF textColor = kColorUnset;
+
+    // the layout of our children, if we have one
+    ILayout* layout = nullptr;
+
+    CloseHandler onClose;
+    DestroyHandler onDestroy;
+};
+
+bool PreTranslateMessage(MSG& msg);
+
+// Base of the controls that a layout positions: the win32 controls (Static,
+// Button, Edit, ...) and the custom-drawn ones (Splitter, TabsCtrl, VirtHost).
+// It is an ILayout, and it has no window-only machinery (no WM_CLOSE handler,
+// no min/max info, no drop files, no taskbar callback)
+struct ControlBase : ILayout {
+    struct DestroyEvent {
+        WmEvent* e = nullptr;
+    };
+
+    using DestroyHandler = Func1<DestroyEvent*>;
+
+    ControlBase();
+    ~ControlBase() override;
+    void Destroy();
+
     HWND CreateControl(const CreateControlArgs&);
+    HWND CreateCustom(const CreateCustomArgs&);
 
     virtual Size GetIdealSize();
 
@@ -113,10 +212,7 @@ struct Wnd : ILayout {
     void Subclass();
     void UnSubclass();
 
-    void Cleanup();
-
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-    virtual bool PreTranslateMessage(MSG& msg);
     virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
     virtual LRESULT OnNotifyReflect(WPARAM, LPARAM);
     virtual LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -126,19 +222,13 @@ struct Wnd : ILayout {
     virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
     virtual int OnCreate(CREATESTRUCT*);
     virtual void OnContextMenu(Point pt);
-    virtual void OnDropFiles(HDROP drop_info);
-    virtual void OnGetMinMaxInfo(MINMAXINFO* mmi);
     virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
-    virtual void OnMove(POINTS* pts);
     virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
     virtual void OnSize(UINT msg, UINT type, Size size);
-    virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
     virtual void OnTimer(UINT_PTR timerId);
-    virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
 
     virtual void SetColors(COLORREF textColor, COLORREF bgColor);
 
-    void Close();
     void SetPos(Rect* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
@@ -174,21 +264,16 @@ struct Wnd : ILayout {
     HFONT font = nullptr; // we don't own it
     UINT_PTR subclassId = 0;
 
-    // used by all controls that inherit
     COLORREF bgColor = kColorUnset;
     HBRUSH bgBrush = nullptr;
     COLORREF textColor = kColorUnset;
 
-    ILayout* layout = nullptr;
-
     ContextMenuHandler onContextMenu;
-
-    CloseHandler onClose;
     DestroyHandler onDestroy;
 };
 
-bool PreTranslateMessage(MSG& msg);
-void SizeToIdealSize(Wnd* wnd);
+ControlBase* ControlFromHwnd(HWND);
+void SizeToIdealSize(ControlBase* c);
 
 //--- Static
 
@@ -197,7 +282,7 @@ struct VirtWnd;
 
 // The inverse of VirtWrapper: a child window that hosts a VirtWnd tree, so a
 // virtual control can sit in a layout of real (HWND) controls. Owns the tree
-struct VirtHost : Wnd {
+struct VirtHost : ControlBase {
     VirtRoot* vroot = nullptr;
     COLORREF bgColor = kColorUnset;
 
@@ -214,7 +299,7 @@ struct VirtHost : Wnd {
     LRESULT WndProc(HWND, UINT, WPARAM, LPARAM) override;
 };
 
-struct Static : Wnd {
+struct Static : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
@@ -253,7 +338,7 @@ struct ButtonColors {
 
 bool ButtonGetColors(ButtonColors*);
 
-struct Button : Wnd {
+struct Button : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
@@ -293,7 +378,7 @@ Button* CreateDefaultButton(HWND parent, Str s, bool isRtl);
 //--- Tooltip
 
 // a tooltip manages multiple areas within HWND
-struct Tooltip : Wnd {
+struct Tooltip : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
@@ -341,7 +426,7 @@ using TextChangedHandler = Func0;
 
 COLORREF EditBottomBorderColor();
 
-struct Edit : Wnd {
+struct Edit : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         bool isMultiLine = false;
@@ -407,7 +492,7 @@ struct Edit : Wnd {
 
 void ListBoxMaybeApplyTheme(HWND);
 
-struct ListBox : Wnd {
+struct ListBox : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         int idealSizeLines = 0;
@@ -463,7 +548,7 @@ struct ListBox : Wnd {
 
 //--- CheckboxCtrl
 
-struct Checkbox : Wnd {
+struct Checkbox : ControlBase {
     enum class State {
         Unchecked = BST_UNCHECKED,
         Checked = BST_CHECKED,
@@ -499,7 +584,7 @@ struct Checkbox : Wnd {
 
 //--- Progress
 
-struct Progress : Wnd {
+struct Progress : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         int initialMax = 0;
@@ -523,7 +608,7 @@ struct Progress : Wnd {
 
 //--- DropDown
 
-struct DropDown : Wnd {
+struct DropDown : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
@@ -557,7 +642,7 @@ struct DropDown : Wnd {
 
 struct Trackbar;
 
-struct Trackbar : Wnd {
+struct Trackbar : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         bool isHorizontal = true;
@@ -605,7 +690,7 @@ enum class SplitterType {
 
 struct Splitter;
 
-struct Splitter : Wnd {
+struct Splitter : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         SplitterType type = SplitterType::Horiz;
@@ -648,7 +733,7 @@ struct Splitter : Wnd {
 
 struct TreeView;
 
-struct TreeView : Wnd {
+struct TreeView : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
@@ -796,7 +881,7 @@ struct TabInfo {
     ~TabInfo();
 };
 
-struct TabsCtrl : Wnd {
+struct TabsCtrl : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;

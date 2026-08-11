@@ -86,7 +86,8 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     int webDx = rc.dx - (2 * pad);
     webDx = std::max(webDx, 0);
     if (w->webView) {
-        w->webView->SetBounds({pad, navRowDy, webDx, webDy});
+        Rect webRc = {pad, navRowDy, webDx, webDy};
+        w->webView->SetPos(&webRc);
         w->webView->UpdateWebviewSize();
     }
 }

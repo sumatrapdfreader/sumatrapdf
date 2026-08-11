@@ -204,7 +204,7 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wp, LPARAM lp) {
     return CallNextHookEx(gKeyboardHook, nCode, wp, lp);
 }
 
-struct SetHotkeyWnd : Wnd {
+struct SetHotkeyWnd : WindowBase {
     ~SetHotkeyWnd() override;
 
     HFONT font = nullptr;
@@ -407,13 +407,13 @@ static void TeardownSetHotkeyWnd() {
     w->ScheduleDelete();
 }
 
-static void OnSetHotkeyClose(Wnd::CloseEvent* ev) {
+static void OnSetHotkeyClose(WindowBase::CloseEvent* ev) {
     if (gSetHotkeyWnd == (SetHotkeyWnd*)ev->e->self) {
         TeardownSetHotkeyWnd();
     }
 }
 
-static void OnSetHotkeyDestroy(Wnd::DestroyEvent* ev) {
+static void OnSetHotkeyDestroy(WindowBase::DestroyEvent* ev) {
     if (gSetHotkeyWnd == (SetHotkeyWnd*)ev->e->self) {
         TeardownSetHotkeyWnd();
     }
@@ -530,8 +530,8 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
 
     auto* wnd = new SetHotkeyWnd();
     wnd->hwndOwner = hwndOwner;
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnSetHotkeyClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnSetHotkeyDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSetHotkeyClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSetHotkeyDestroy);
     wnd->font = GetAppFont(hwndOwner);
     if (!wnd->Create(hwndOwner)) {
         delete wnd;

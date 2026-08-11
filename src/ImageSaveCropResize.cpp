@@ -462,7 +462,7 @@ static void ImageEditApplyFont(ImageEditWindow* ew) {
             SendMessageW(h, WM_SETFONT, (WPARAM)f, TRUE);
         }
     };
-    auto setWndFont = [&](Wnd* w) {
+    auto setWndFont = [&](ControlBase* w) {
         if (w && w->hwnd) {
             w->font = f;
             setFont(w->hwnd);

@@ -1528,7 +1528,7 @@ static void OnInstallationFinished(Flags* cli) {
     }
 }
 
-static void ShowAndEnable(Wnd* w, bool enable) {
+static void ShowAndEnable(ControlBase* w, bool enable) {
     if (w) {
         ShowWindow(w->hwnd, enable ? SW_SHOW : SW_HIDE);
         w->SetIsEnabled(enable);

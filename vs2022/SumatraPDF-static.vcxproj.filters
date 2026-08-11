@@ -1088,6 +1088,9 @@
     <ClCompile Include="..\src\wingui\Checkbox.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\ControlBase.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\DialogSizer.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
@@ -1160,7 +1163,7 @@
     <ClCompile Include="..\src\wingui\WebView.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wingui\Wnd.cpp">
+    <ClCompile Include="..\src\wingui\WindowBase.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
   </ItemGroup>

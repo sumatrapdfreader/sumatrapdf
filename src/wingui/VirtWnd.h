@@ -16,7 +16,8 @@
 struct VirtWnd;
 struct VirtRoot;
 struct Pixmap;
-struct Wnd;
+struct WindowBase;
+struct ControlBase;
 
 enum VirtFlags : u32 {
     vwfEnabled = 1 << 0,
@@ -327,10 +328,10 @@ struct VirtCustom : VirtWnd {
 // own: Windows paints it and delivers its input, so the wrapper only forwards
 // layout and visibility and is never a paint or hit-test target.
 struct VirtWrapper : VirtWnd {
-    Wnd* wnd = nullptr; // owned unless ownsWnd is false
+    ControlBase* wnd = nullptr; // owned unless ownsWnd is false
     bool ownsWnd = true;
 
-    explicit VirtWrapper(Wnd*, bool ownsWnd = true);
+    explicit VirtWrapper(ControlBase*, bool ownsWnd = true);
     ~VirtWrapper() override;
 
     int MinIntrinsicHeight(int width) override;

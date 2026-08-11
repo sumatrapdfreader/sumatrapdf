@@ -1368,7 +1368,7 @@ bool VirtCustom::OnMouseUp(VirtMouseEvent& ev) {
 
 static Kind kindVirtWndWrapper = "virtWndWrapper";
 
-VirtWrapper::VirtWrapper(Wnd* w, bool owns) {
+VirtWrapper::VirtWrapper(ControlBase* w, bool owns) {
     kind = kindVirtWndWrapper;
     wnd = w;
     ownsWnd = owns;

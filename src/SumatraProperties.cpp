@@ -34,7 +34,7 @@ void ShowProperties(HWND parent, DocController* ctrl);
 
 constexpr int kButtonPadding = 8;
 
-struct PropertiesWnd : Wnd {
+struct PropertiesWnd : WindowBase {
     ~PropertiesWnd() override;
 
     HWND hwndParent = nullptr;
@@ -865,7 +865,7 @@ bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {
         CopyToClipboard();
         return true;
     }
-    return Wnd::OnCommand(wparam, lparam);
+    return WindowBase::OnCommand(wparam, lparam);
 }
 
 static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
@@ -880,9 +880,9 @@ static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
     }
 }
 
-// WM_CLOSE must clean up here: Wnd::Destroy() clears hwnd and drops the Wnd from
+// WM_CLOSE must clean up here: WindowBase::Destroy() clears hwnd and drops the WindowBase from
 // the hwnd map before DestroyWindow(), so WM_DESTROY never reaches onDestroy.
-static void OnPropertiesClose(Wnd::CloseEvent* ev) {
+static void OnPropertiesClose(WindowBase::CloseEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
     if (!w || w->deleteScheduled) {
         return;
@@ -892,7 +892,7 @@ static void OnPropertiesClose(Wnd::CloseEvent* ev) {
     w->ScheduleDelete();
 }
 
-static void OnPropertiesDestroy(Wnd::DestroyEvent* ev) {
+static void OnPropertiesDestroy(WindowBase::DestroyEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
     // Fallback if the window was destroyed without WM_CLOSE (or Close already
     // scheduled the deferred free — then deleteScheduled is set and we no-op).
@@ -1032,8 +1032,8 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     wnd->propsText.Append("\n");
     wnd->propsText.Append(_TRA("Getting font information..."));
 
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnPropertiesClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnPropertiesDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnPropertiesClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnPropertiesDestroy);
     if (!wnd->Create(parent)) {
         gPropertiesWindows.Remove(wnd);
         delete wnd;

@@ -90,7 +90,7 @@ struct CreateWebViewArgs {
     Rect pos;
 };
 
-struct WebviewWnd : Wnd {
+struct WebviewWnd : WindowBase {
     WebviewWnd();
     ~WebviewWnd() override;
 

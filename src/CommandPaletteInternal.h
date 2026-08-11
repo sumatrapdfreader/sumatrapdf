@@ -30,7 +30,7 @@ struct ListBoxModelCP : ListBoxModel {
     ItemDataCP* Data(int i) { return strings.AtData(i); }
 };
 
-struct CommandPaletteWnd : Wnd {
+struct CommandPaletteWnd : WindowBase {
     ~CommandPaletteWnd() override = default;
     HFONT font = nullptr;
     MainWindow* win = nullptr;

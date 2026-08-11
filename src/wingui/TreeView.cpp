@@ -54,7 +54,7 @@ HWND TreeView::Create(const CreateArgs& args) {
         cargs.style &= ~TVS_HASLINES;
     }
 
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
 
     if (IsWindowsVistaOrGreater()) {
         SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
@@ -253,7 +253,7 @@ bool TreeView::SelectItem(TreeItem ti) {
 }
 
 void TreeView::SetColors(COLORREF textCol, COLORREF bgCol) {
-    Wnd::SetColors(textCol, bgCol);
+    ControlBase::SetColors(textCol, bgCol);
     if (!IsSpecialColor(textCol)) {
         TreeView_SetTextColor(hwnd, textCol);
     } else if (textColor == kColorUnset) {

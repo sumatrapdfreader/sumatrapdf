@@ -475,7 +475,7 @@ Size VBox::Layout(const Constraints bc) {
     // Content overflows the available height: shrink flex children so that
     // fixed-size siblings aren't pushed past the edge and clipped. Symmetric
     // to the grow case above; non-flex children keep their size, and
-    // Wnd::Layout clamps each flex child to the tightened height.
+    // WindowBase::Layout clamps each flex child to the tightened height.
     if (totalFlex > 0 && bc.HasBoundedHeight() && totalHeight > bc.max.dy) {
         int deficit = totalHeight - bc.max.dy;
         for (auto& v : children) {
@@ -804,7 +804,7 @@ Size HBox::Layout(const Constraints bc) {
     // Content overflows the available width: shrink flex children so that
     // fixed-size siblings (e.g. a browse button) aren't pushed past the edge
     // and clipped. Symmetric to the grow case above; non-flex children keep
-    // their size, and Wnd::Layout clamps each flex child to the tightened width.
+    // their size, and WindowBase::Layout clamps each flex child to the tightened width.
     if (totalFlex > 0 && bc.HasBoundedWidth() && totalWidth > bc.max.dx) {
         int deficit = totalWidth - bc.max.dx;
         for (int i = 0; i < n; i++) {

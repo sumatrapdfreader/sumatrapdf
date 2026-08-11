@@ -194,7 +194,7 @@ HWND Tooltip::Create(const CreateArgs& args) {
 
     parent = args.parent;
 
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     SetDelayTime(TTDT_AUTOPOP, 32767);
     return hwnd;
 }

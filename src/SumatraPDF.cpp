@@ -9070,7 +9070,7 @@ constexpr const WCHAR* kManualVirtualHostW = L"https://sumatrapdf.manual/";
 
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
 
-static void OnDestroyManualBrowserWindow(Wnd::DestroyEvent* /*ev*/) {
+static void OnDestroyManualBrowserWindow(WindowBase::DestroyEvent* /*ev*/) {
     gManualBrowserWindow = nullptr;
 }
 
@@ -9242,7 +9242,7 @@ void LaunchDocumentation(Str docURI) {
         args.resourceUriPrefix = kManualVirtualHostW;
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
         if (gManualBrowserWindow != nullptr) {
-            auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroyManualBrowserWindow);
+            auto fn = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroyManualBrowserWindow);
             gManualBrowserWindow->onDestroy = fn;
             return;
         }

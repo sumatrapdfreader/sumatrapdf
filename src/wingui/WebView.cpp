@@ -985,7 +985,7 @@ class webview2_add_script_handler : public ICoreWebView2AddScriptToExecuteOnDocu
         if (FAILED(res) || !id) {
             return S_OK;
         }
-        auto* wnd = (WebviewWnd*)WndListFindByHwnd(m_hwnd);
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
         if (wnd) {
             wnd->OnInitScriptAdded(m_token, id);
         }
@@ -1034,7 +1034,7 @@ class webview2_process_failed_handler : public ICoreWebView2ProcessFailedEventHa
         if (FAILED(args->get_ProcessFailedKind(&kind))) {
             return S_OK;
         }
-        auto* wnd = (WebviewWnd*)WndListFindByHwnd(m_hwnd);
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
         if (!wnd) {
             return S_OK;
         }
@@ -1773,7 +1773,7 @@ void WebviewWnd::RevokeForwardingDropTarget() {
 
 static void ComHandlerCbHwnd(void* hwndVoid, ICoreWebView2Controller* ctrl) {
     HWND hwnd = (HWND)hwndVoid;
-    auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
+    auto* self = (WebviewWnd*)WindowBaseFromHwnd(hwnd);
     if (!self) {
         if (ctrl) {
             // The window went away while the webview was still being created
@@ -2018,7 +2018,7 @@ void WebviewWnd::OnBrowserMessage(Str msg) {
 
 static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
     HWND hwnd = (HWND)hwndVoid;
-    auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
+    auto* self = (WebviewWnd*)WindowBaseFromHwnd(hwnd);
     if (self) {
         // structured calls from the JS bridge don't go to OnBrowserMessage, so
         // subclasses keep seeing only their own raw messages

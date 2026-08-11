@@ -31,7 +31,7 @@ HWND Static::Create(const CreateArgs& args) {
     cargs.text = args.text;
     cargs.isRtl = args.isRtl;
 
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     SizeToIdealSize(this);
 
     return hwnd;

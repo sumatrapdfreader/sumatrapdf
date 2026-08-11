@@ -121,7 +121,7 @@ HWND Edit::Create(const CreateArgs& args) {
     }
     idealSizeLines = args.idealSizeLines;
     idealSizeLines = std::max(idealSizeLines, 1);
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     if (!hwnd) {
         return nullptr;
     }

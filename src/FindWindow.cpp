@@ -76,7 +76,7 @@ static int FindMatchIndex(MainWindow* win, int page, int glyph) {
     return -1;
 }
 
-struct FindWindowWnd : Wnd {
+struct FindWindowWnd : WindowBase {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
     Static* status = nullptr;

@@ -430,11 +430,11 @@ void CommandPaletteWnd::OnPre36CheckboxChanged() {
     }
 }
 
-static void OnClose(Wnd::CloseEvent* /*ev*/) {
+static void OnClose(WindowBase::CloseEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
 
-static void OnDestroy(Wnd::DestroyEvent* /*ev*/) {
+static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
 
@@ -723,8 +723,8 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     }
 
     auto* wnd = new CommandPaletteWnd();
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->font = GetAppBiggerFont(win->hwndFrame);
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);

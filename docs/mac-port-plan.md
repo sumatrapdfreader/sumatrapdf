@@ -150,7 +150,8 @@ These are Win32 windowing/controls. On mac they are re-implemented natively; the
 portable model/data they consume comes from tiers A/B. Keep the Windows code in
 place (optionally rename to `_win` where a shared header is introduced).
 
-- `wingui/` control implementations: `Wnd.cpp`, `WinGui.h`, `Button`, `Edit`,
+- `wingui/` control implementations: `WindowBase.cpp`, `ControlBase.cpp`,
+  `WinGui.h`, `Button`, `Edit`,
   `Checkbox`, `ListBox`, `DropDown`, `TreeView` (→ `NSOutlineView`), `TabsCtrl`
   (→ `NSTabView`), `Splitter` (→ `NSSplitView`), `Tooltip`, `Trackbar`,
   `Progress`, `Static`, `LabelWithCloseWnd`, `DialogSizer`.

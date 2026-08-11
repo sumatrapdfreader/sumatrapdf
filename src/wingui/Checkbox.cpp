@@ -37,7 +37,7 @@ HWND Checkbox::Create(const CreateArgs& args) {
     cargs.className = WC_BUTTONW;
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
 
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     SetButtonState(hwnd, args.initialState);
     SizeToIdealSize(this);
     return hwnd;

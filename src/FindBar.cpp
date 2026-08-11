@@ -35,7 +35,7 @@
 constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
 constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 
-struct FindBarWnd : Wnd {
+struct FindBarWnd : WindowBase {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
     Static* status = nullptr;

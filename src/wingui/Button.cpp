@@ -153,7 +153,7 @@ HWND Button::Create(const CreateArgs& args) {
     }
     cargs.text = args.text;
 
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     SizeToIdealSize(this);
 
     return hwnd;

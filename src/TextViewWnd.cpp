@@ -14,7 +14,7 @@
 #include "DarkModeSubclass.h"
 #include "SumatraConfig.h"
 
-struct TextViewWnd : Wnd {
+struct TextViewWnd : WindowBase {
     ~TextViewWnd() override;
 
     Edit* edit = nullptr;
@@ -166,19 +166,19 @@ static void TeardownTextViewWnd(TextViewWnd* w) {
     w->ScheduleDelete();
 }
 
-static void OnTextViewClose(Wnd::CloseEvent* ev) {
+static void OnTextViewClose(WindowBase::CloseEvent* ev) {
     TeardownTextViewWnd((TextViewWnd*)ev->e->self);
 }
 
-static void OnTextViewDestroy(Wnd::DestroyEvent* ev) {
+static void OnTextViewDestroy(WindowBase::DestroyEvent* ev) {
     TeardownTextViewWnd((TextViewWnd*)ev->e->self);
 }
 
 HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
     auto* wnd = new TextViewWnd();
     wnd->hwndPtr = hwndPtr;
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnTextViewClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnTextViewDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
     if (!wnd->Create(title, text)) {
         delete wnd;
         return nullptr;
@@ -189,8 +189,8 @@ HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
 void ShowTextInWindowDialog(Str title, Str text) {
     auto* wnd = new TextViewWnd();
     wnd->isDialog = true;
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnTextViewClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnTextViewDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
     if (!wnd->Create(title, text)) {
         delete wnd;
         return;

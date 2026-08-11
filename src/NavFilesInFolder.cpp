@@ -72,7 +72,7 @@ struct ListBoxModelNav : ListBoxModel {
     Str Item(int i) override { return entries[i].name; }
 };
 
-struct NavFilesInFolderWnd : Wnd {
+struct NavFilesInFolderWnd : WindowBase {
     ~NavFilesInFolderWnd() override;
 
     HFONT font = nullptr;
@@ -746,11 +746,11 @@ static void PositionNavFilesWnd(HWND hwnd, HWND hwndMain, bool docked, bool plac
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-static void OnNavFilesWndClose(Wnd::CloseEvent* /*ev*/) {
+static void OnNavFilesWndClose(WindowBase::CloseEvent* /*ev*/) {
     ScheduleDeleteNavFilesWnd();
 }
 
-static void OnNavFilesWndDestroy(Wnd::DestroyEvent* /*ev*/) {
+static void OnNavFilesWndDestroy(WindowBase::DestroyEvent* /*ev*/) {
     ScheduleDeleteNavFilesWnd();
 }
 
@@ -925,8 +925,8 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
         ScheduleDeleteNavFilesWnd();
     }
     auto* wnd = new NavFilesInFolderWnd();
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnNavFilesWndClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnNavFilesWndDestroy);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnNavFilesWndClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnNavFilesWndDestroy);
     wnd->font = GetAppFont(win->hwndFrame);
     // set before Create so Esc during Create can dismiss
     gNavFilesWnd = wnd;

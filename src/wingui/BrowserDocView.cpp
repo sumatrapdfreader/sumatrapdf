@@ -393,7 +393,7 @@ LRESULT BrowserDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_SIZE:
             if (view->wv && view->wv->hwnd) {
                 Rect rc = HwndClientRect(hwnd);
-                view->wv->SetBounds(rc);
+                view->wv->SetPos(&rc);
                 view->wv->UpdateWebviewSize();
             }
             break;

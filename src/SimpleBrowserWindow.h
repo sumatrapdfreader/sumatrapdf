@@ -10,7 +10,7 @@ struct SimpleBrowserCreateArgs {
     WStr resourceUriPrefix;
 };
 
-struct SimpleBrowserWindow : Wnd {
+struct SimpleBrowserWindow : WindowBase {
     WebviewWnd* webView = nullptr;
     Button* btnBack = nullptr;
     Button* btnForward = nullptr;

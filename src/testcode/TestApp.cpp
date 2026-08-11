@@ -41,15 +41,15 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     return padding;
 }
 
-struct TestWnd : Wnd {};
+struct TestWnd : WindowBase {};
 
-static void OnDestroy(Wnd::DestroyEvent*) {
+static void OnDestroy(WindowBase::DestroyEvent*) {
     ::PostQuitMessage(0);
 }
 
 void TestApp() {
     auto w = new TestWnd();
-    auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
+    auto fn = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     w->onDestroy = fn;
 
     // w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);

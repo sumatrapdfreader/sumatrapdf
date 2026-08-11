@@ -57,7 +57,7 @@ HWND DropDown::Create(const CreateArgs& args) {
     cargs.className = WC_COMBOBOX;
     cargs.font = args.font;
 
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     if (!hwnd) {
         return nullptr;
     }

@@ -43,7 +43,7 @@ HWND Trackbar::Create(const CreateArgs& args) {
     // initialSize = idealSize;
     cargs.style = dwStyle;
     // args.style |= WS_BORDER;
-    Wnd::CreateControl(cargs);
+    ControlBase::CreateControl(cargs);
     SizeToIdealSize(this);
 
     if (hwnd) {
