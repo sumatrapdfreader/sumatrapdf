@@ -10,6 +10,7 @@
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
 #include "wingui/PlatformFont.h"
+#include "wingui/PlatformText.h"
 #include "mui/Mui.h"
 #include "base/Win.h"
 #include "base/Zip.h"
@@ -77,7 +78,6 @@ int TesterMain() {
 
     // InitAllCommonControls();
     // ScopedGdiPlus gdi;
-    // mui::Initialize();
 
     int i = 2; // skip program name and "/tester"
     while (i < nArgs) {
@@ -104,7 +104,6 @@ int TesterMain() {
         return Usage();
     }
 
-    mui::Destroy();
     system("pause");
     return 0;
 }

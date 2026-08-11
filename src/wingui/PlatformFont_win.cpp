@@ -14,6 +14,11 @@ using Gdiplus::Font;
 using Gdiplus::Ok;
 using Gdiplus::Status;
 
+// the Graphics used for font metrics doesn't draw anything, so its bitmap can
+// be tiny
+constexpr int kMeasureBmpDx = 32;
+constexpr int kMeasureBmpDy = 4;
+
 static Gdiplus::FontStyle ToGdiPlusFontStyle(PlatformFontStyle style) {
     return (Gdiplus::FontStyle)(int)style;
 }
@@ -47,10 +52,14 @@ HFONT PlatformFont::GetHFont() {
     // TODO: Graphics is probably only used for metrics, so this might not be
     // 100% correct (e.g. 2 monitors with different DPIs?) but the previous code
     // wasn't much better
-    Gdiplus::Graphics* gfx = mui::AllocGraphicsForMeasureText();
+    // a bitmap-backed Graphics, like the one text is measured with. This runs
+    // once per font and can run on any thread, so it isn't worth caching
+    u8 data[kMeasureBmpDx * kMeasureBmpDy * 4]{};
+    Gdiplus::Bitmap bmp(kMeasureBmpDx, kMeasureBmpDy, kMeasureBmpDx * 4, PixelFormat32bppARGB, data);
+    Gdiplus::Graphics gfx((Gdiplus::Image*)&bmp);
+    mui::InitGraphicsMode(&gfx);
     LOGFONTW lf;
-    Status status = gdiFont->GetLogFontW(gfx, &lf);
-    mui::FreeGraphicsForMeasureText(gfx);
+    Status status = gdiFont->GetLogFontW(&gfx, &lf);
     ReportIf(status != Ok);
     hfont = CreateFontIndirectW(&lf);
     ReportIf(!hfont);

@@ -1283,6 +1283,7 @@
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\PlatformFont.h" />
+    <ClInclude Include="..\src\wingui\PlatformText.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
     <ClInclude Include="..\src\wingui\VirtWnd.h" />
     <ClInclude Include="..\src\wingui\WebView.h" />
@@ -1758,6 +1759,8 @@
     <ClCompile Include="..\src\wingui\ListBox.cpp" />
     <ClCompile Include="..\src\wingui\PlatformFont.cpp" />
     <ClCompile Include="..\src\wingui\PlatformFont_win.cpp" />
+    <ClCompile Include="..\src\wingui\PlatformText.cpp" />
+    <ClCompile Include="..\src\wingui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\wingui\Progress.cpp" />
     <ClCompile Include="..\src\wingui\Splitter.cpp" />
     <ClCompile Include="..\src\wingui\Static.cpp" />

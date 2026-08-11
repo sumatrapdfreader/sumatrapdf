@@ -8,6 +8,7 @@
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
 #include "wingui/PlatformFont.h"
+#include "wingui/PlatformText.h"
 #include "mui/Mui.h"
 
 #include "wingui/UIModels.h"
@@ -407,10 +408,6 @@ static bool NeedsGdiPlus(PreviewType type) {
            type == PreviewType::Mobi || type == PreviewType::Cbx || type == PreviewType::Tga;
 }
 
-static bool NeedsMui(PreviewType type) {
-    return type == PreviewType::Epub || type == PreviewType::Fb2 || type == PreviewType::Mobi;
-}
-
 PdfPreview::PdfPreview(AtomicInt* plRefCount, PreviewType type) {
     m_type = type;
     m_plModuleRef = plRefCount;
@@ -418,18 +415,16 @@ PdfPreview::PdfPreview(AtomicInt* plRefCount, PreviewType type) {
     if (NeedsGdiPlus(type)) {
         m_gdiScope = new ScopedGdiPlus();
     }
-    if (NeedsMui(type)) {
-        mui::Initialize();
-        m_muiInitialized = true;
-    }
 }
 
 PdfPreview::~PdfPreview() {
     Unload();
-    if (m_muiInitialized) {
-        mui::Destroy();
+    if (m_gdiScope) {
+        // the cached gdiplus objects text measuring keeps around must go before
+        // gdiplus itself does
+        PlatformFontDestroy();
+        delete m_gdiScope;
     }
-    delete m_gdiScope;
     InterlockedDecrement(m_plModuleRef);
 }
 

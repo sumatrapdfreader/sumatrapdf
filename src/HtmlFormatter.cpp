@@ -12,6 +12,7 @@
 #include "ImageReader.h"
 
 #include "wingui/PlatformFont.h"
+#include "wingui/PlatformText.h"
 #include "HtmlFormatter.h"
 
 #if OS_WIN
@@ -160,132 +161,6 @@ void StyleRule::Merge(StyleRule& source) {
         textIndent = source.textIndent;
         textIndentUnit = source.textIndentUnit;
     }
-}
-
-#if OS_WIN
-static mui::TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod method) {
-    switch (method) {
-        case PlatformTextMeasureMethod::Gdiplus:
-            return mui::TextRenderMethod::Gdiplus;
-        case PlatformTextMeasureMethod::GdiplusQuick:
-            return mui::TextRenderMethod::GdiplusQuick;
-        case PlatformTextMeasureMethod::Gdi:
-            return mui::TextRenderMethod::Gdi;
-        case PlatformTextMeasureMethod::Hdc:
-            return mui::TextRenderMethod::Hdc;
-        case PlatformTextMeasureMethod::Stub:
-            break;
-    }
-    return mui::TextRenderMethod::Gdiplus;
-}
-#endif
-
-static bool IsUtf8Continuation(char c) {
-    return ((u8)c & 0xC0) == 0x80;
-}
-
-struct StubTextMeasurer : PlatformTextMeasurer {
-    PlatformFont* currFont = nullptr;
-
-    float CurrFontSize() const {
-        if (currFont && currFont->GetSize() > 0) {
-            return currFont->GetSize();
-        }
-        return 12.5f;
-    }
-
-    float AverageCharDx() const { return CurrFontSize() * 0.55f; }
-
-    void SetFont(PlatformFont* font) override { currFont = font; }
-
-    float GetCurrFontLineSpacing() override { return CurrFontSize() * 1.25f; }
-
-    float GetSpaceDx() override { return AverageCharDx(); }
-
-    // a rough guess, so count characters rather than utf-8 bytes
-    static int CharCount(Str s) {
-        int n = 0;
-        for (int i = 0; i < len(s); i++) {
-            if (!IsUtf8Continuation(s.s[i])) {
-                n++;
-            }
-        }
-        return n;
-    }
-
-    RectF Measure(Str s) override {
-        return RectF(0, 0, (float)CharCount(s) * AverageCharDx(), GetCurrFontLineSpacing());
-    }
-
-    int StringLenForWidth(Str s, float dx, float sWidth) override {
-        int n = len(s);
-        if (n == 0 || dx <= 0) {
-            return 0;
-        }
-        if (sWidth < 0) {
-            sWidth = Measure(s).dx;
-        }
-        if (sWidth <= dx) {
-            return n;
-        }
-        int res = (int)floorf((float)n * dx / sWidth);
-        res = limitValue(res, 0, n);
-        // don't cut a utf-8 sequence in half
-        while (res > 0 && res < n && IsUtf8Continuation(s.s[res])) {
-            res--;
-        }
-        return res;
-    }
-};
-
-#if OS_WIN
-struct WinTextMeasurer : PlatformTextMeasurer {
-    Gdiplus::Graphics* gfx = nullptr;
-    mui::ITextRender* textMeasure = nullptr;
-
-    explicit WinTextMeasurer(PlatformTextMeasureMethod method) {
-        gfx = mui::AllocGraphicsForMeasureText();
-        textMeasure = mui::CreateTextRender(ToMuiTextRenderMethod(method), gfx, 10, 10);
-    }
-
-    ~WinTextMeasurer() override {
-        delete textMeasure;
-        mui::FreeGraphicsForMeasureText(gfx);
-    }
-
-    void SetFont(PlatformFont* font) override { textMeasure->SetFont(font); }
-
-    float GetCurrFontLineSpacing() override { return textMeasure->GetCurrFontLineSpacing(); }
-
-    float GetSpaceDx() override { return mui::GetSpaceDx(textMeasure); }
-
-    RectF Measure(Str s) override { return textMeasure->Measure(ToWStrTemp(s)); }
-
-    // mui measures utf-16, so its answer is a WCHAR count: turn it back into the
-    // byte count the caller asked for
-    int StringLenForWidth(Str s, float dx, float sWidth) override {
-        TempWStr ws = ToWStrTemp(s);
-        int nChars = mui::StringLenForWidth(textMeasure, ws, dx, sWidth);
-        if (nChars >= len(ws)) {
-            return len(s);
-        }
-        if (nChars <= 0) {
-            return 0;
-        }
-        return len(ToUtf8Temp(WStr(ws.s, nChars)));
-    }
-};
-#endif
-
-PlatformTextMeasurer* CreatePlatformTextMeasurer(PlatformTextMeasureMethod method) {
-#if OS_WIN
-    if (method != PlatformTextMeasureMethod::Stub) {
-        return new WinTextMeasurer(method);
-    }
-#else
-    (void)method;
-#endif
-    return new StubTextMeasurer();
 }
 
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
@@ -883,42 +758,6 @@ void HtmlFormatter::EmitElasticSpace() {
 }
 
 // return true if we can break a word on a given character during layout
-// the codepoint the byte at `i` belongs to, or -1 if it can't be decoded
-static int Utf8CodePointAt(Str s, int i) {
-    if (i < 0 || i >= len(s)) {
-        return -1;
-    }
-    // back up to the start of the sequence
-    while (i > 0 && IsUtf8Continuation(s.s[i])) {
-        i--;
-    }
-    u8 b = (u8)s.s[i];
-    int nBytes = 1;
-    int c = b;
-    if (b >= 0xF0) {
-        nBytes = 4;
-        c = b & 0x07;
-    } else if (b >= 0xE0) {
-        nBytes = 3;
-        c = b & 0x0F;
-    } else if (b >= 0xC0) {
-        nBytes = 2;
-        c = b & 0x1F;
-    } else if (b >= 0x80) {
-        return -1; // a stray continuation byte
-    }
-    if (i + nBytes > len(s)) {
-        return -1;
-    }
-    for (int j = 1; j < nBytes; j++) {
-        if (!IsUtf8Continuation(s.s[i + j])) {
-            return -1;
-        }
-        c = (c << 6) | ((u8)s.s[i + j] & 0x3F);
-    }
-    return c;
-}
-
 static bool CanBreakWordOnChar(int c) {
     // don't break on Chinese and Japan characters
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/250
@@ -994,10 +833,10 @@ void HtmlFormatter::EmitTextRun(Str s) {
         int lenThatFits = textMeasure->StringLenForWidth(buf, pageDx - currX, bbox.dx);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
-            if (!CanBreakWordOnChar(Utf8CodePointAt(buf, lenThatFits))) {
+            if (!CanBreakWordOnChar(Utf8CodepointContaining(buf, lenThatFits))) {
                 int lenTmp;
                 for (lenTmp = lenThatFits; lenTmp > 0; lenTmp--) {
-                    if (CanBreakWordOnChar(Utf8CodePointAt(buf, lenTmp - 1))) {
+                    if (CanBreakWordOnChar(Utf8CodepointContaining(buf, lenTmp - 1))) {
                         break;
                     }
                 }
@@ -1021,8 +860,8 @@ void HtmlFormatter::EmitTextRun(Str s) {
 
         // never cut a utf-8 sequence in half (this used to be the utf-16
         // surrogate-pair case)
-        while (lenThatFits > 0 && lenThatFits < len(buf) && IsUtf8Continuation(buf.s[lenThatFits])) {
-            lenThatFits--;
+        if (lenThatFits < len(buf)) {
+            lenThatFits = Utf8CodepointStartByte(buf, lenThatFits);
         }
         textMeasure->SetFont(CurrFont());
         bbox = MeasureTextCached(Str(buf.s, lenThatFits));

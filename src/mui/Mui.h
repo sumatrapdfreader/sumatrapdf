@@ -10,18 +10,8 @@ namespace mui {
 
 #include "TextRender.h"
 
-void Initialize();
-void Destroy();
-
+// set a consistent mode on a Graphics so that measuring and drawing text give
+// the same results everywhere
 void InitGraphicsMode(Graphics* g);
 
-Graphics* AllocGraphicsForMeasureText();
-void FreeGraphicsForMeasureText(Graphics* gfx);
-
 } // namespace mui
-
-class ScopedMui {
-  public:
-    ScopedMui() { mui::Initialize(); }
-    ~ScopedMui() { mui::Destroy(); }
-};

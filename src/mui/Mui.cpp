@@ -37,62 +37,12 @@ messages and paints child windows on WM_PAINT.
 Event handling is loosly coupled.
 */
 
-using Gdiplus::Bitmap;
 using Gdiplus::CompositingQualityHighQuality;
-using Gdiplus::Font;
-using Gdiplus::Image;
-using Gdiplus::Ok;
 using Gdiplus::SmoothingModeAntiAlias;
-using Gdiplus::Status;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
 namespace mui {
-
-// a single lock for everything that needs protecting in mui
-// we use only one for simplicity as long as contention is not a problem
-static Mutex gMuiCs;
-
-static void EnterMuiLock() {
-    gMuiCs.Lock();
-}
-
-static void LeaveMuiLock() {
-    gMuiCs.Unlock();
-}
-
-class ScopedMuiCritSec {
-  public:
-    ScopedMuiCritSec() { EnterMuiLock(); }
-
-    ~ScopedMuiCritSec() { LeaveMuiLock(); }
-};
-
-static Graphics* AllocGraphicsForMeasureTextNoLock();
-static void FreeGraphicsForMeasureTextNoLock(Graphics* gfx);
-
-// Graphics objects cannot be used across threads. We have a per-thread
-// cache so that it's easy to grab Graphics object to be used for
-// measuring text
-struct GraphicsCacheEntry {
-    enum {
-        bmpDx = 32,
-        bmpDy = 4,
-        stride = bmpDx * 4,
-    };
-
-    ThreadId threadId;
-    int refCount;
-
-    Graphics* gfx;
-    Bitmap* bmp;
-    u8 data[bmpDx * bmpDy * 4];
-
-    bool Create();
-    void Free() const;
-};
-
-static Vec<GraphicsCacheEntry>* gGraphicsCache = nullptr;
 
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
@@ -102,101 +52,6 @@ void InitGraphicsMode(Graphics* g) {
     // g.SetSmoothingMode(SmoothingModeHighQuality);
     g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g->SetPageUnit(UnitPixel);
-}
-
-bool GraphicsCacheEntry::Create() {
-    memset(data, 0, sizeof(data));
-    refCount = 1;
-    threadId = GetCurrentThreadId();
-    // using a small bitmap under assumption that Graphics used only
-    // for measuring text doesn't need the actual bitmap
-    bmp = new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
-    if (!bmp) {
-        return false;
-    }
-    gfx = new Graphics((Image*)bmp);
-    if (!gfx) {
-        return false;
-    }
-    InitGraphicsMode(gfx);
-    return true;
-}
-
-void GraphicsCacheEntry::Free() const {
-    ReportIf(0 != refCount);
-    delete gfx;
-    delete bmp;
-}
-
-void Initialize() {
-    gGraphicsCache = new Vec<GraphicsCacheEntry>();
-    // allocate the first entry in gGraphicsCache for UI thread, ref count
-    // ensures it stays alive forever
-    AllocGraphicsForMeasureText();
-}
-
-void Destroy() {
-    FreeGraphicsForMeasureText((*gGraphicsCache)[0].gfx);
-    for (GraphicsCacheEntry& e : *gGraphicsCache) {
-        e.Free();
-    }
-    delete gGraphicsCache;
-    gGraphicsCache = nullptr;
-}
-
-// caller must hold the mui lock (gMuiCs is not re-entrant)
-static Graphics* AllocGraphicsForMeasureTextNoLock() {
-    ThreadId threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry& e : *gGraphicsCache) {
-        if (e.threadId == threadId) {
-            e.refCount++;
-            return e.gfx;
-        }
-    }
-    GraphicsCacheEntry ce;
-    ce.Create();
-    gGraphicsCache->Append(ce);
-    if (len(*gGraphicsCache) < 64) {
-        return ce.gfx;
-    }
-
-    // try to limit the size of cache by evicting the oldest entries, but don't remove
-    // first (for ui thread) or last (one we just added) entries
-    for (int i = 1; i < len(*gGraphicsCache) - 1; i++) {
-        GraphicsCacheEntry e = (*gGraphicsCache)[i];
-        if (0 == e.refCount) {
-            e.Free();
-            gGraphicsCache->RemoveAt(i);
-            return ce.gfx;
-        }
-    }
-    // We shouldn't get here - indicates ref counting problem
-    ReportIf(true);
-    return ce.gfx;
-}
-
-Graphics* AllocGraphicsForMeasureText() {
-    ScopedMuiCritSec muiCs;
-    return AllocGraphicsForMeasureTextNoLock();
-}
-
-// caller must hold the mui lock (gMuiCs is not re-entrant)
-static void FreeGraphicsForMeasureTextNoLock(Graphics* gfx) {
-    ThreadId threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry& e : *gGraphicsCache) {
-        if (e.gfx == gfx) {
-            ReportIf(e.threadId != threadId);
-            e.refCount--;
-            ReportIf(e.refCount < 0);
-            return;
-        }
-    }
-    ReportIf(true);
-}
-
-void FreeGraphicsForMeasureText(Graphics* gfx) {
-    ScopedMuiCritSec muiCs;
-    FreeGraphicsForMeasureTextNoLock(gfx);
 }
 
 } // namespace mui

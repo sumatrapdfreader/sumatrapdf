@@ -204,6 +204,31 @@ void str::Utf8Encode(char* buf, int& off, int c) {
     off = (int)((char*)tmp - buf);
 }
 
+bool Utf8IsContinuationByte(char c) {
+    return ((u8)c & 0xC0) == 0x80;
+}
+
+// the byte a sequence starts at, so that a byte index that landed in the middle
+// of one can be turned into a codepoint
+int Utf8CodepointStartByte(Str s, int byteIdx) {
+    if (byteIdx <= 0) {
+        return 0;
+    }
+    byteIdx = std::min(byteIdx, len(s));
+    while (byteIdx > 0 && Utf8IsContinuationByte(s.s[byteIdx])) {
+        byteIdx--;
+    }
+    return byteIdx;
+}
+
+// the codepoint the byte at byteIdx is part of, 0 if there is none
+int Utf8CodepointContaining(Str s, int byteIdx) {
+    if (!s || byteIdx < 0 || byteIdx >= len(s)) {
+        return 0;
+    }
+    return Utf8CodepointAtByte(s, Utf8CodepointStartByte(s, byteIdx));
+}
+
 int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut) {
     if (bytesOut) {
         *bytesOut = 0;

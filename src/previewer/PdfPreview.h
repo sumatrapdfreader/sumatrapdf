@@ -176,7 +176,6 @@ class PdfPreview : public IThumbnailProvider,
     Str m_data;
     EngineBase* m_engine = nullptr;
     ScopedGdiPlus* m_gdiScope = nullptr;
-    bool m_muiInitialized = false;
     // state for IPreviewHandler
     ScopedComPtr<IUnknown> m_site;
     HWND m_hwnd = nullptr;

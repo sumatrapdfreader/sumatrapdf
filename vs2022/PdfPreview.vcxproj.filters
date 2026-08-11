@@ -53,6 +53,9 @@
     <ClInclude Include="..\src\wingui\PlatformFont.h">
       <Filter>wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\PlatformText.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AvifReader.cpp" />
@@ -102,6 +105,12 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\PlatformFont_win.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformText.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformText_win.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
   </ItemGroup>

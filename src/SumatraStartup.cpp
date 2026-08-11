@@ -13,6 +13,7 @@
 #include "base/FileWatcher.h"
 #include "base/GdiPlusUtil.h"
 #include "wingui/PlatformFont.h"
+#include "wingui/PlatformText.h"
 #include "mui/Mui.h"
 #include "base/UITask.h"
 #include "base/Win.h"
@@ -832,7 +833,7 @@ static int RunMessageLoop() {
 static void FreeLibsumatrapdfDll();
 
 static void ShutdownCommon() {
-    mui::Destroy();
+    PlatformFontDestroy();
     uitask::Destroy();
     FreeLibsumatrapdfDll();
     UninstallCrashHandler();
@@ -2189,7 +2190,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     }
     InitAllCommonControls();
     ScopedGdiPlus gdiPlus(true);
-    mui::Initialize();
 
     // when running a command-line tool (e.g. `info file.pdf`), keep logging off
     // the console so it doesn't contaminate the tool's stdout (issue #5677)
@@ -2921,7 +2921,7 @@ Exit:
     // and before gRenderCache goes away (the waiting threads use it)
     WaitForPendingControllerDeletes();
 
-    mui::Destroy();
+    PlatformFontDestroy();
     uitask::Destroy();
     trans::Destroy();
 

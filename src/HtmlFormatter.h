@@ -17,29 +17,8 @@ class ITextRender;
 } // namespace mui
 #endif
 
-// PlatformFont / PlatformFontStyle live in wingui/PlatformFont.h; include it
-// before this header
-
-enum class PlatformTextMeasureMethod {
-    Gdiplus,
-    GdiplusQuick,
-    Gdi,
-    Hdc,
-    Stub,
-};
-
-struct PlatformTextMeasurer {
-    virtual void SetFont(PlatformFont* font) = 0;
-    virtual float GetCurrFontLineSpacing() = 0;
-    virtual float GetSpaceDx() = 0;
-    // s is utf-8, and the length StringLenForWidth returns is in bytes; it
-    // never cuts a utf-8 sequence in half
-    virtual RectF Measure(Str s) = 0;
-    virtual int StringLenForWidth(Str s, float dx, float sWidth = -1) = 0;
-    virtual ~PlatformTextMeasurer() = default;
-};
-
-PlatformTextMeasurer* CreatePlatformTextMeasurer(PlatformTextMeasureMethod method);
+// PlatformFont / PlatformFontStyle live in wingui/PlatformFont.h and the text
+// measuring API in wingui/PlatformText.h; include them before this header
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.

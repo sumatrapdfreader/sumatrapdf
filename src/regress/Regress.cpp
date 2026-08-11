@@ -25,6 +25,7 @@ To write new regression test:
 #include "base/GdiPlusUtil.h"
 #include "base/HtmlTags.h"
 #include "wingui/PlatformFont.h"
+#include "wingui/PlatformText.h"
 #include "mui/Mui.h"
 #include "base/Win.h"
 
@@ -181,12 +182,10 @@ int RegressMain() {
     InstallCrashHandler();
     InitAllCommonControls();
     ScopedGdiPlus gdi;
-    mui::Initialize();
 
     RunTests();
 
     printflush("All tests completed successfully!\n");
-    mui::Destroy();
     UninstallCrashHandler();
 
     system("pause");

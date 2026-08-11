@@ -512,7 +512,6 @@ void EngineDump(const Flags& flags) {
 
 #if 0
     ScopedGdiPlus gdiPlus;
-    ScopedMui miniMui;
 
     // Normalize casing / short names when the path exists (embedded docs may use
     // "C:\file.pdf:3:0" which does not exist as a real file path).
