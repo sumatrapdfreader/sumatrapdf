@@ -1371,6 +1371,29 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     });
 }
 
+// Give the list of annotations whatever vertical space the rest of the window
+// doesn't need, so it grows with the window instead of being a fixed number of
+// lines. The old rule (5 lines, or 14 once the window was over 1024 tall) made
+// the list jump between two very different sizes for a small difference in
+// window height, and could size the window taller than the screen (#3769).
+static void SetListBoxLinesToFit(EditAnnotationsWindow* ew, int targetClientDy) {
+    constexpr int kPreferredListLines = 5;
+    if (!ew->listBox || !ew->mainLayout) {
+        return;
+    }
+    int lineDy = ew->listBox->GetItemHeight(0);
+    if (lineDy <= 0 || targetClientDy <= 0) {
+        return;
+    }
+    // how tall everything is with the smallest list we'd like to show
+    ew->listBox->idealSizeLines = kPreferredListLines;
+    Size natural = ew->mainLayout->Layout(ExpandInf());
+    int nLines = kPreferredListLines + ((targetClientDy - natural.dy) / lineDy);
+    // one line is the floor: better a cramped list than a window taller than
+    // the screen
+    ew->listBox->idealSizeLines = std::max(nLines, 1);
+}
+
 void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
     if (msg != WM_SIZE) {
         return;
@@ -1388,6 +1411,7 @@ void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
         // avoid un-necessary layout
         return;
     }
+    SetListBoxLinesToFit(this, dy);
     LayoutToSize(mainLayout, {dx, dy});
 }
 
@@ -1904,20 +1928,16 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         }
     }
 
-    // if it's a tall window, up the number of items in list box
-    // from 5 to 14
-    if (minDy > 1024) {
-        ew->listBox->idealSizeLines = 14;
-    }
-
     if (lastPos.IsEmpty()) {
         Size size = {520, minDy};
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
+        SetListBoxLinesToFit(ew, size.dy);
         LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     } else {
         Size size = {lastPos.dx, minDy};
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
+        SetListBoxLinesToFit(ew, size.dy);
         LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)
