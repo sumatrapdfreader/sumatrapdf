@@ -27,8 +27,9 @@ class ITextRender {
 
     virtual float GetCurrFontLineSpacing() = 0;
 
+    // s is utf-8; converting to whatever the platform draws with is up to the
+    // implementation
     virtual RectF Measure(Str s) = 0;
-    virtual RectF Measure(WStr s) = 0;
 
     // GDI+ calls cannot be done if we called Graphics::GetHDC(). However, getting/releasing
     // hdc is very expensive and kills performance if we do it for every Draw(). So we add
@@ -38,7 +39,6 @@ class ITextRender {
     virtual void Unlock() = 0;
 
     virtual void Draw(Str s, RectF bb, bool isRtl) = 0;
-    virtual void Draw(WStr s, RectF bb, bool isRtl) = 0;
 
     virtual ~ITextRender() = default;
     ;
@@ -84,16 +84,13 @@ class TextRenderGdi : public ITextRender {
     float GetCurrFontLineSpacing() override;
 
     RectF Measure(Str s) override;
-    RectF Measure(WStr s) override;
 
     void Lock() override;
     void Unlock() override;
 
     void Draw(Str s, RectF bb, bool isRtl) override;
-    void Draw(WStr s, RectF bb, bool isRtl) override;
 
     void DrawTransparent(Str s, RectF bb, bool isRtl);
-    void DrawTransparent(WStr s, RectF bb, bool isRtl);
 
     ~TextRenderGdi() override;
 };
@@ -120,13 +117,11 @@ class TextRenderGdiplus : public ITextRender {
     float GetCurrFontLineSpacing() override;
 
     RectF Measure(Str s) override;
-    RectF Measure(WStr s) override;
 
     void Lock() override {}
     void Unlock() override {}
 
     void Draw(Str s, RectF bb, bool isRtl) override;
-    void Draw(WStr s, RectF bb, bool isRtl) override;
 
     ~TextRenderGdiplus() override;
 };
@@ -159,18 +154,17 @@ class TextRenderHdc : public ITextRender {
     float GetCurrFontLineSpacing() override;
 
     RectF Measure(Str s) override;
-    RectF Measure(WStr s) override;
 
     void Lock() override;
     void Unlock() override;
 
     void Draw(Str s, RectF bb, bool isRtl) override;
-    void Draw(WStr s, RectF bb, bool isRtl) override;
 
     ~TextRenderHdc() override;
 };
 
 ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, int dy);
 
-int StringLenForWidth(ITextRender* textMeasure, WStr s, float dx, float sWidth = -1);
+// the length is in utf-8 bytes and never cuts a sequence in half
+int StringLenForWidth(ITextRender* textMeasure, Str s, float dx, float sWidth = -1);
 float GetSpaceDx(ITextRender* textMeasure);

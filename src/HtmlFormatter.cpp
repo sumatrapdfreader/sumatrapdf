@@ -1560,9 +1560,8 @@ void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInst
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            TempWStr buf = ToWStrTemp(i.str);
-            // soft hyphens should not be displayed
-            buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
+            TempStr buf = str::DupTemp(i.str);
+            RemoveSoftHyphensInPlace(buf);
             textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
             textDraw->SetFont(i.font);

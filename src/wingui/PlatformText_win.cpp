@@ -174,20 +174,10 @@ struct WinTextMeasurer : PlatformTextMeasurer {
 
     float GetSpaceDx() override { return mui::GetSpaceDx(textMeasure); }
 
-    RectF Measure(Str s) override { return textMeasure->Measure(ToWStrTemp(s)); }
+    RectF Measure(Str s) override { return textMeasure->Measure(s); }
 
-    // mui measures utf-16, so its answer is a WCHAR count: turn it back into the
-    // byte count the caller asked for
     int StringLenForWidth(Str s, float dx, float sWidth) override {
-        TempWStr ws = ToWStrTemp(s);
-        int nChars = mui::StringLenForWidth(textMeasure, ws, dx, sWidth);
-        if (nChars >= len(ws)) {
-            return len(s);
-        }
-        if (nChars <= 0) {
-            return 0;
-        }
-        return len(ToUtf8Temp(WStr(ws.s, nChars)));
+        return mui::StringLenForWidth(textMeasure, s, dx, sWidth);
     }
 };
 
