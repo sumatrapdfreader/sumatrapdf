@@ -179,6 +179,61 @@ int main(int argc, char** argv) {
         sayAll->Release();
     }
 
+    // reading what is under the mouse / finger: take the on-screen rectangle of
+    // a word, hand its center to RangeFromPoint and see whether we get that
+    // same word back
+    {
+        IUIAutomationTextRange* word = nullptr;
+        tp->get_DocumentRange(&word);
+        if (word) {
+            word->MoveEndpointByRange(TextPatternRangeEndpoint_End, word, TextPatternRangeEndpoint_Start);
+            word->ExpandToEnclosingUnit(TextUnit_Word);
+            BSTR wantS = RangeText(word, 40);
+            PrintEscaped("point.word", wantS);
+            SAFEARRAY* rects = nullptr;
+            HRESULT hrR = word->GetBoundingRectangles(&rects);
+            double cx = 0, cy = 0;
+            bool haveRect = false;
+            if (SUCCEEDED(hrR) && rects) {
+                LONG lo = 0, hi = -1;
+                SafeArrayGetLBound(rects, 1, &lo);
+                SafeArrayGetUBound(rects, 1, &hi);
+                if (hi - lo + 1 >= 4) {
+                    double v[4]{};
+                    for (LONG i = 0; i < 4; i++) {
+                        LONG idx = lo + i;
+                        SafeArrayGetElement(rects, &idx, &v[i]);
+                    }
+                    cx = v[0] + (v[2] / 2);
+                    cy = v[1] + (v[3] / 2);
+                    haveRect = v[2] > 0 && v[3] > 0;
+                }
+                SafeArrayDestroy(rects);
+            }
+            printf("point.haveRect=%d\n", haveRect ? 1 : 0);
+            printf("point.x=%d\npoint.y=%d\n", (int)cx, (int)cy);
+            if (haveRect) {
+                POINT pt{(LONG)cx, (LONG)cy};
+                IUIAutomationTextRange* atPt = nullptr;
+                HRESULT hrP = tp->RangeFromPoint(pt, &atPt);
+                printf("point.hr=0x%08x\n", (unsigned)hrP);
+                if (SUCCEEDED(hrP) && atPt) {
+                    atPt->ExpandToEnclosingUnit(TextUnit_Word);
+                    BSTR gotS = RangeText(atPt, 40);
+                    PrintEscaped("point.wordAtPoint", gotS);
+                    if (gotS) {
+                        SysFreeString(gotS);
+                    }
+                    atPt->Release();
+                }
+            }
+            if (wantS) {
+                SysFreeString(wantS);
+            }
+            word->Release();
+        }
+    }
+
     if (docRange) {
         docRange->Release();
     }

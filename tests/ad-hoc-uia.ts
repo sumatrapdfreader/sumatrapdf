@@ -210,6 +210,25 @@ export async function testit(): Promise<void> {
       throw new Error(`moving one page did not land on page 2: '${kv.get("walk.page1")}'`);
     }
 
+    // Reading what is under the mouse / finger (Narrator's mouse mode, touch
+    // exploration) needs two things: GetBoundingRectangles to say where the
+    // text is on screen, and RangeFromPoint to say what text is at a point.
+    // Both used to be E_NOTIMPL.
+    if (need("point.haveRect") !== "1") {
+      throw new Error(
+        `no on-screen rectangle for the first word: GetBoundingRectangles gives screen readers ` +
+          `nowhere to point (Narrator can't highlight what it reads)`,
+      );
+    }
+    if (need("point.hr") !== "0x00000000") {
+      throw new Error(`RangeFromPoint failed with ${kv.get("point.hr")}: reading text under the mouse can't work`);
+    }
+    const want = need("point.word").trim();
+    const got = need("point.wordAtPoint").trim();
+    if (!got.includes(want) && !want.includes(got)) {
+      throw new Error(`RangeFromPoint over the word '${want}' returned '${got}'`);
+    }
+
     if (need("sayall.terminated") !== "1") {
       throw new Error("reading the document line by line never reached the end");
     }
@@ -219,6 +238,7 @@ export async function testit(): Promise<void> {
       throw new Error(`read only ${nLines} lines, expected about ${totalLines}`);
     }
     console.log(`  UIA: document readable, ${nLines} lines walked, page/word/char navigation advances ✓`);
+    console.log(`  UIA: word under the mouse: '${kv.get("point.word")}' -> '${kv.get("point.wordAtPoint")}' ✓`);
   } finally {
     proc.kill();
     await sleep(300);

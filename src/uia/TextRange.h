@@ -28,6 +28,7 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     bool operator==(const SumatraUIAutomationTextRange&) const;
 
     void SetToDocumentRange();
+    void SetToDegenerateAt(int pageNo, int glyphIdx);
     void SetToNullRange();
     bool IsNullRange() const;
     bool IsEmptyRange() const;

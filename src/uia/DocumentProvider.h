@@ -30,6 +30,7 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
 
     // GetDM() must not be called if IsDocumentLoaded()==FALSE
     DisplayModel* GetDM();
+    HWND GetCanvasHwnd() const;
 
     SumatraUIAutomationPageProvider* GetFirstPage();
     SumatraUIAutomationPageProvider* GetLastPage();

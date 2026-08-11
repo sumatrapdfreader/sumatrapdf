@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Win.h"
 #include "base/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
@@ -84,6 +85,15 @@ void SumatraUIAutomationTextRange::SetToDocumentRange() {
     startGlyph = 0;
     endPage = document->GetDM()->PageCount();
     endGlyph = GetPageGlyphCount(endPage);
+}
+
+// an empty range sitting at one spot in the text, which is what a client gets
+// from RangeFromPoint() before it expands the range to a word / line
+void SumatraUIAutomationTextRange::SetToDegenerateAt(int pageNo, int glyphIdx) {
+    startPage = pageNo;
+    endPage = pageNo;
+    startGlyph = limitValue(glyphIdx, 0, GetPageGlyphCount(pageNo));
+    endGlyph = startGlyph;
 }
 
 void SumatraUIAutomationTextRange::SetToNullRange() {
@@ -483,18 +493,49 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetBoundingRectangles(SA
         return hrDoc;
     }
 
-    if (IsNullRange()) {
-        SAFEARRAY* sarray = SafeArrayCreateVector(VT_R8, 0, 0);
-        if (!sarray) {
-            return E_OUTOFMEMORY;
+    // one rectangle per line of the range, in screen coordinates. This is how a
+    // screen reader knows where on screen the text it reads is: Narrator draws
+    // its highlight around it and touch/braille clients locate text with it.
+    // Text on pages that aren't laid out on screen contributes nothing.
+    Vec<double> coords;
+    if (!IsNullRange() && !IsEmptyRange()) {
+        DisplayModel* dm = document->GetDM();
+        HWND hwnd = document->GetCanvasHwnd();
+        TextSelection selection(dm->GetEngine());
+        selection.StartAt(startPage, startGlyph);
+        selection.SelectUpTo(endPage, endGlyph);
+        TextSel* sel = &selection.result;
+        for (int i = 0; i < sel->len; i++) {
+            int pageNo = sel->pages[i];
+            PageInfo* pi = dm->GetPageInfo(pageNo);
+            if (!pi || !pi->isShown || pi->visibleRatio <= 0.f) {
+                continue;
+            }
+            Rect rc = dm->CvtToScreen(pageNo, ToRectF(sel->rects[i]));
+            if (rc.IsEmpty()) {
+                continue;
+            }
+            Point tl = HwndClientToScreen(hwnd, rc.TL());
+            coords.Append((double)tl.x);
+            coords.Append((double)tl.y);
+            coords.Append((double)rc.dx);
+            coords.Append((double)rc.dy);
         }
-
-        *boundingRects = sarray;
-        return S_OK;
     }
 
-    // TODO: support GetBoundingRectangles
-    return E_NOTIMPL;
+    SAFEARRAY* sarray = SafeArrayCreateVector(VT_R8, 0, (ULONG)len(coords));
+    if (!sarray) {
+        return E_OUTOFMEMORY;
+    }
+    for (LONG i = 0; i < (LONG)len(coords); i++) {
+        HRESULT hr = SafeArrayPutElement(sarray, &i, &coords[i]);
+        if (FAILED(hr)) {
+            SafeArrayDestroy(sarray);
+            return hr;
+        }
+    }
+    *boundingRects = sarray;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE
