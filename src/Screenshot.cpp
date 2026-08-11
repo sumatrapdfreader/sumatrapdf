@@ -15,6 +15,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Notifications.h"
 #include "AppTools.h"
@@ -208,12 +211,16 @@ struct SetHotkeyWnd : WindowBase {
     ~SetHotkeyWnd() override;
 
     HFONT font = nullptr;
+    PlatformFont* platformFont = nullptr;
     HWND hwndOwner = nullptr;
-    Static* staticPrompt = nullptr;
-    Edit* editHotkey = nullptr;
-    Button* btnSet = nullptr;
-    Button* btnRemove = nullptr;
-    Button* btnCancel = nullptr;
+    // the dialog is made only of virtual controls: it turns every key into a
+    // hotkey to capture, so nothing in it can hold the keyboard focus anyway
+    VirtText* prompt = nullptr;
+    // the current / captured combination, drawn as a key-cap
+    VirtRichText* hotkeyDisplay = nullptr;
+    VirtButton* btnSet = nullptr;
+    VirtButton* btnRemove = nullptr;
+    VirtButton* btnCancel = nullptr;
 
     Str currentHotkey;      // current hotkey string, or empty if none
     Str newHotkey;          // newly captured hotkey string
@@ -223,6 +230,8 @@ struct SetHotkeyWnd : WindowBase {
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     bool PreTranslateMessage(MSG& msg) override;
 
+    VirtButton* NewButton(Str text, bool isDefault);
+    void StyleButton(VirtButton*, bool isDefault);
     void UpdateTheme();
     void UpdateUI();
     bool HandleKeyDown(UINT vk);
@@ -256,15 +265,22 @@ void SetHotkeyWnd::UpdateUI() {
     } else if (currentHotkey) {
         display = currentHotkey;
     }
-    if (editHotkey) {
-        editHotkey->SetText(display);
+    if (hotkeyDisplay) {
+        // a real combination draws as a key-cap; "None" is just text
+        bool isNone = str::Eq(display, StrL("None"));
+        TempStr markup = isNone ? str::DupTemp(display) : str::JoinTemp(StrL("(Kbd/"), display, StrL(")"));
+        hotkeyDisplay->Reset();
+        ParseTipInto(hotkeyDisplay, markup);
     }
     if (btnSet) {
-        btnSet->SetIsEnabled(len(newHotkey) > 0);
+        btnSet->SetFlag(vwfEnabled, len(newHotkey) > 0);
     }
     if (btnRemove) {
-        btnRemove->SetIsEnabled(len(currentHotkey) > 0 || len(newHotkey) > 0);
+        btnRemove->SetFlag(vwfEnabled, len(currentHotkey) > 0 || len(newHotkey) > 0);
     }
+    // the key-cap changes width with the combination, so lay out again
+    DoLayout();
+    HwndScheduleRepaint(hwnd);
 }
 
 bool SetHotkeyWnd::HandleKeyDown(UINT vk) {
@@ -345,28 +361,48 @@ void SetHotkeyWnd::CleanupHook() {
     gHotkeyDlgHwnd = nullptr;
 }
 
+// the buttons are virtual controls, so they are styled here rather than by the
+// system: a filled box with a border, brighter on hover (like the PDF tool
+// dialogs and the theme dialog)
+void SetHotkeyWnd::StyleButton(VirtButton* b, bool isDefault) {
+    COLORREF bg = ThemeWindowControlBackgroundColor();
+    b->textColor = ThemeWindowTextColor();
+    b->textColorDisabled = ThemeWindowTextDisabledColor();
+    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
+    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
+    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+}
+
+VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
+    auto* b = new VirtButton(text, platformFont);
+    StyleButton(b, isDefault);
+    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
+    return b;
+}
+
 void SetHotkeyWnd::UpdateTheme() {
     COLORREF colBg = ThemeWindowControlBackgroundColor();
     COLORREF colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (staticPrompt) {
-        staticPrompt->SetColors(colTxt, colBg);
+    if (prompt) {
+        prompt->textColor = colTxt;
     }
-    if (editHotkey) {
-        editHotkey->SetColors(colTxt, colBg);
+    if (hotkeyDisplay) {
+        hotkeyDisplay->textColor = colTxt;
+        // the key-cap's fill and border are derived from the color it sits on
+        hotkeyDisplay->bgColor = colBg;
     }
     if (btnSet) {
-        btnSet->SetColors(colTxt, colBg);
+        StyleButton(btnSet, true);
     }
     if (btnRemove) {
-        btnRemove->SetColors(colTxt, colBg);
+        StyleButton(btnRemove, false);
     }
     if (btnCancel) {
-        btnCancel->SetColors(colTxt, colBg);
+        StyleButton(btnCancel, false);
     }
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
@@ -376,6 +412,10 @@ LRESULT SetHotkeyWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         HandleKeyDown((UINT)wp);
         return 0;
     }
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
+    }
+    // WindowBase::WndProcDefault sends the virtual controls their input
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
@@ -419,6 +459,18 @@ static void OnSetHotkeyDestroy(WindowBase::DestroyEvent* ev) {
     }
 }
 
+static void CancelClicked(SetHotkeyWnd* wnd, VirtMouseEvent*) {
+    wnd->OnCancel();
+}
+
+static void RemoveClicked(SetHotkeyWnd* wnd, VirtMouseEvent*) {
+    wnd->DoRemove();
+}
+
+static void SetClicked(SetHotkeyWnd* wnd, VirtMouseEvent*) {
+    wnd->DoSet();
+}
+
 bool SetHotkeyWnd::Create(HWND owner) {
     hwndOwner = owner;
     Str existing = FindScreenshotShortcut();
@@ -440,75 +492,60 @@ bool SetHotkeyWnd::Create(HWND owner) {
     if (!hwnd) {
         return false;
     }
-
-    Str display = currentHotkey ? currentHotkey : StrL("None");
+    platformFont = GetPlatformFont(font);
 
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
-    {
-        Static::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.text = _TRA("Press a key combination:");
-        args.isRtl = isRtl;
-        auto* c = new Static();
-        c->Create(args);
-        staticPrompt = c;
-        vbox->AddChild(c);
-    }
+    prompt = NewVirtText({
+        .s = _TRA("Press a key combination:"),
+        .font = platformFont,
+        .isRtl = isRtl,
+    });
+    vbox->AddChild(prompt);
 
     {
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.text = display;
-        args.withBorder = true;
-        args.isRtl = isRtl;
-        auto* c = new Edit();
-        c->Create(args);
-        SendMessageW(c->hwnd, EM_SETREADONLY, TRUE, 0);
-        editHotkey = c;
-        c->SetInsetsPt(6, 0, 0, 0);
-        vbox->AddChild(c);
+        auto* t = new VirtRichText();
+        t->font = platformFont;
+        t->padding = DpiScaledInsets(hwnd, 6, 0, 0, 0);
+        hotkeyDisplay = t;
+        vbox->AddChild(t);
     }
 
     {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
+        int gap = DpiScale(hwnd, 4);
 
-        btnCancel = CreateButton(hwnd, _TRA("Cancel"), MkMethod0<SetHotkeyWnd, &SetHotkeyWnd::OnCancel>(this), isRtl);
+        btnCancel = NewButton(_TRA("Cancel"), false);
+        btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(btnCancel);
-        btnRemove = CreateButton(hwnd, _TRA("Remove"), MkMethod0<SetHotkeyWnd, &SetHotkeyWnd::DoRemove>(this), isRtl);
-        btnRemove->SetInsetsPt(0, 0, 0, 4);
+        btnRemove = NewButton(_TRA("Remove"), false);
+        btnRemove->onClick = MkFunc1(RemoveClicked, this);
+        hbox->AddChild(new Spacer(gap, 0));
         hbox->AddChild(btnRemove);
-        {
-            auto* btn = new Button();
-            btn->isDefault = true;
-            btn->onClick = MkMethod0<SetHotkeyWnd, &SetHotkeyWnd::DoSet>(this);
-            Button::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = _TRA("Set");
-            args.isRtl = isRtl;
-            btn->Create(args);
-            btn->SetInsetsPt(0, 0, 0, 4);
-            btnSet = btn;
-            hbox->AddChild(btnSet);
-        }
+        btnSet = NewButton(_TRA("Set"), true);
+        btnSet->onClick = MkFunc1(SetClicked, this);
+        hbox->AddChild(new Spacer(gap, 0));
+        hbox->AddChild(btnSet);
+
         auto* hboxPad = new Padding(hbox, DpiScaledInsets(hwnd, 8, 0, 0, 0));
         vbox->AddChild(hboxPad);
     }
 
     layout = new Padding(vbox, DpiScaledInsets(hwnd, 8, 12));
 
+    // fill in the key-cap and the button states before measuring: an empty
+    // rich text has no height, and the window is sized to its content
+    UpdateUI();
     int minDx = DpiScale(hwnd, 320);
     LayoutAndSizeToContent(layout, minDx, 0, hwnd);
+    // pick up the virtual controls so we paint them and they get their input
+    DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, owner);
     UpdateTheme();
-    UpdateUI();
 
     SetIsVisible(true);
     HwndSetFocus(hwnd);
