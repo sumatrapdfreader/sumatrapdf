@@ -415,6 +415,8 @@ struct VirtListBox : VirtWnd {
 
   private:
     int selIdx = -1;
+    // EnsureVisible() called before the first layout; applied by SetBounds()
+    int pendingVisibleIdx = -1;
     bool draggingThumb = false;
     // where the thumb drag started, in window coords, and the scroll position
     // it started from

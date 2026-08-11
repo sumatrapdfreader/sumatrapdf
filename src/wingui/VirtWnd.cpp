@@ -1370,7 +1370,9 @@ static Kind kindVirtWndListBox = "virtWndListBox";
 
 VirtListBox::VirtListBox() {
     kind = kindVirtWndListBox;
-    flags |= vwfClipChildren;
+    // like a win32 listbox: takes the focus and is in the window's tab ring, so
+    // the arrow keys reach OnKeyDown()
+    flags |= vwfClipChildren | vwfFocusable;
 }
 
 VirtListBox::~VirtListBox() {
@@ -1471,6 +1473,11 @@ void VirtListBox::SetBounds(Rect r) {
     VirtWnd::SetBounds(r);
     // a taller viewport can make the current scroll position invalid
     scrollY = Clamp(scrollY, 0, MaxScrollY());
+    if (pendingVisibleIdx >= 0) {
+        int idx = pendingVisibleIdx;
+        pendingVisibleIdx = -1;
+        EnsureVisible(idx);
+    }
 }
 
 bool VirtListBox::ScrollTo(int y) {
@@ -1492,9 +1499,15 @@ void VirtListBox::EnsureVisible(int idx) {
     if (idx < 0 || idx >= n) {
         return;
     }
+    int visibleDy = ViewportDy();
+    if (visibleDy <= 0) {
+        // not laid out yet (a caller can select before the first layout);
+        // scrolling now would be against a zero-height viewport
+        pendingVisibleIdx = idx;
+        return;
+    }
     int dy = GetItemHeight();
     int top = idx * dy;
-    int visibleDy = ViewportDy();
     if (top < scrollY) {
         ScrollTo(top);
         return;
