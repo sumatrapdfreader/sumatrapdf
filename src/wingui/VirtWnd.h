@@ -476,6 +476,8 @@ struct VirtTextArgs {
     bool withUnderline = false;
     bool isRtl = false;
     bool ellipsis = false;
+    // "…" in the middle instead of at the end, for paths
+    bool pathEllipsis = false;
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
     Insets padding{};
@@ -487,6 +489,7 @@ struct VirtText : VirtWnd {
     bool withUnderline = false;
     bool isRtl = false;
     bool ellipsis = false;
+    bool pathEllipsis = false;
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
     VirtTextAlign align = VirtTextAlign::Left;

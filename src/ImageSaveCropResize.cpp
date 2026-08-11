@@ -7,10 +7,14 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 #include "base/GdiPlusUtil.h"
+#include "base/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "PngOptimizer.h"
 #include "ImageSaveCropResize.h"
@@ -131,22 +135,31 @@ enum class DragEdge {
     NewCrop // only used in crop mode
 };
 
-struct ImageEditWindow {
+// a button labelled "&Save": virtual controls draw their text as-is, so the
+// '&' is stripped for the label and kept here as the Alt- shortcut
+struct ImageEditButton : VirtButton {
+    using VirtButton::VirtButton;
+    WCHAR mnemonic = 0;
+
+    void SetLabel(Str s);
+};
+
+struct ImageEditWindow : WindowBase {
     ImageEditMode mode = ImageEditMode::Crop;
     bool fromRenderedBitmap = false;
 
-    HWND hwnd = nullptr;
     HWND hwndParent = nullptr;
 
-    // child controls (owned by controlLayout except non-owning refs below)
+    // the same tree as WindowBase::layout, which owns it. The window places it
+    // itself (below the image area), so it keeps its own pointer to it
     ILayout* controlLayout = nullptr;
-    Static* staticPathLabel = nullptr;
-    Static* staticInfoLabel = nullptr;
+    VirtText* staticPathLabel = nullptr;
+    VirtText* staticInfoLabel = nullptr;
     Edit* destEdit = nullptr;
-    Button* btnBrowse = nullptr;
-    Button* btnSave = nullptr;
-    Button* btnCrop = nullptr;   // "Crop" or "Apply Crop"
-    Button* btnResize = nullptr; // "Resize" or "Apply Resize"
+    ImageEditButton* btnBrowse = nullptr;
+    ImageEditButton* btnSave = nullptr;
+    ImageEditButton* btnCrop = nullptr;   // "Crop" or "Apply Crop"
+    ImageEditButton* btnResize = nullptr; // "Resize" or "Apply Resize"
     DropDown* dropFormat = nullptr;
     Vec<int> formatIndices; // maps dropdown index to gImageFormats index
 
@@ -191,12 +204,28 @@ struct ImageEditWindow {
     HFONT hFont = nullptr;
 
     ImageEditWindow() = default;
-    ~ImageEditWindow() {
+    ~ImageEditWindow() override {
         delete srcBitmap;
         str::Free(filePath);
-        delete controlLayout;
+        // ~WindowBase deletes `layout`, which is controlLayout
     }
+
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    bool PreTranslateMessage(MSG& msg) override;
 };
+
+// "&Save" -> label "Save", mnemonic 'S'
+void ImageEditButton::SetLabel(Str str) {
+    int ampIdx = str::IndexOfChar(str, '&');
+    if (ampIdx < 0 || ampIdx + 1 >= len(str)) {
+        mnemonic = 0;
+        SetText(str);
+        return;
+    }
+    mnemonic = (WCHAR)str.s[ampIdx + 1];
+    TempStr stripped = str::JoinTemp(Str(str.s, ampIdx), Str(str.s + ampIdx + 1, len(str) - ampIdx - 1));
+    SetText(stripped);
+}
 
 static Vec<ImageEditWindow*> gImageEditWindows;
 static UINT_PTR gDestEditSubclassId = 0;
@@ -215,13 +244,8 @@ static LRESULT CALLBACK WndProcDestEditSubclass(HWND hwnd, UINT msg, WPARAM wp, 
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static ImageEditWindow* FindImageEditWindowByHwnd(HWND hwnd) {
-    for (auto* ew : gImageEditWindows) {
-        if (ew->hwnd == hwnd) {
-            return ew;
-        }
-    }
-    return nullptr;
+static void DeleteImageEditWindow(ImageEditWindow* ew) {
+    delete ew;
 }
 
 static WCHAR UpperW(WCHAR c) {
@@ -350,19 +374,17 @@ static bool TriggerImageEditMnemonic(ImageEditWindow* ew, WCHAR key) {
         return false;
     }
     key = UpperW(key);
-    Button* btns[] = {ew->btnSave, ew->btnCrop, ew->btnResize};
-    for (Button* btn : btns) {
-        if (!btn || !btn->hwnd || !IsWindowEnabled(btn->hwnd)) {
+    ImageEditButton* btns[] = {ew->btnSave, ew->btnCrop, ew->btnResize};
+    for (ImageEditButton* btn : btns) {
+        if (!btn || !btn->IsEnabled() || btn->mnemonic == 0) {
             continue;
         }
-        TempWStr text = ToWStrTemp(HwndGetTextTemp(btn->hwnd));
-        int ampIdx = wstr::IndexOfChar(text, L'&');
-        if (ampIdx < 0 || ampIdx + 1 >= len(text)) {
-            continue;
-        }
-        if (UpperW(text.s[ampIdx + 1]) == key) {
+        if (UpperW(btn->mnemonic) == key) {
             if (btn->onClick.IsValid()) {
-                btn->onClick.Call();
+                VirtMouseEvent ev;
+                ev.target = btn;
+                ev.hit = btn;
+                btn->onClick.Call(&ev);
             }
             return true;
         }
@@ -468,13 +490,19 @@ static void ImageEditApplyFont(ImageEditWindow* ew) {
             setFont(w->hwnd);
         }
     };
-    setWndFont(ew->staticPathLabel);
+    PlatformFont* pf = GetPlatformFont(f);
+    auto setVirtFont = [&](VirtText* w) {
+        if (w) {
+            w->font = pf;
+        }
+    };
+    setVirtFont(ew->staticPathLabel);
+    setVirtFont(ew->staticInfoLabel);
+    setVirtFont(ew->btnBrowse);
+    setVirtFont(ew->btnSave);
+    setVirtFont(ew->btnCrop);
+    setVirtFont(ew->btnResize);
     setWndFont(ew->destEdit);
-    setWndFont(ew->btnBrowse);
-    setWndFont(ew->staticInfoLabel);
-    setWndFont(ew->btnSave);
-    setWndFont(ew->btnCrop);
-    setWndFont(ew->btnResize);
     setWndFont(ew->dropFormat);
 }
 
@@ -510,7 +538,7 @@ static void UpdateSaveButtonText(ImageEditWindow* ew) {
     }
     TempStr dest = ew->destEdit->GetTextTemp();
     Str text = file::Exists(dest) ? Str(Tr("&Overwrite")) : Str(Tr("&Save"));
-    ew->btnSave->SetText(text);
+    ew->btnSave->SetLabel(text);
     // re-layout since button width may have changed
     LayoutControls(ew);
 }
@@ -1067,7 +1095,12 @@ static void LayoutControls(ImageEditWindow* ew) {
     int w = cRc.dx - (2 * btnPad);
     Constraints bc = Loose({w, Inf});
     Size layoutSize = ew->controlLayout->Layout(bc);
-    ew->controlLayout->SetBounds({0, ew->imgAreaH, cRc.dx, layoutSize.dy});
+    Rect bounds{0, ew->imgAreaH, cRc.dx, layoutSize.dy};
+    ew->controlLayout->SetBounds(bounds);
+    RefreshVirtTops(ew->hwnd, ew->controlLayout, bounds, &ew->vroot);
+    // the labels and buttons are painted by us, so a changed label (or a
+    // button that grew) needs the control area repainted
+    HwndInvalidateRect(ew->hwnd, {0, ew->imgAreaH, cRc.dx, cRc.dy - ew->imgAreaH}, false);
 }
 
 static void OnBrowse(ImageEditWindow* ew) {
@@ -1325,20 +1358,20 @@ static bool IsResizeChanged(ImageEditWindow* ew) {
 
 static void UpdateModeButtons(ImageEditWindow* ew) {
     if (ew->mode == ImageEditMode::Crop) {
-        ew->btnCrop->SetText(Tr("&Apply Crop"));
+        ew->btnCrop->SetLabel(Tr("&Apply Crop"));
         ew->btnCrop->SetIsEnabled(IsCropChanged(ew));
-        ew->btnResize->SetText(Tr("&Resize"));
+        ew->btnResize->SetLabel(Tr("&Resize"));
         ew->btnResize->SetIsEnabled(true);
     } else if (ew->mode == ImageEditMode::Resize) {
-        ew->btnCrop->SetText(Tr("&Crop"));
+        ew->btnCrop->SetLabel(Tr("&Crop"));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetText(Tr("&Apply Resize"));
+        ew->btnResize->SetLabel(Tr("&Apply Resize"));
         ew->btnResize->SetIsEnabled(IsResizeChanged(ew));
     } else {
         // Save mode
-        ew->btnCrop->SetText(Tr("&Crop"));
+        ew->btnCrop->SetLabel(Tr("&Crop"));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetText(Tr("&Resize"));
+        ew->btnResize->SetLabel(Tr("&Resize"));
         ew->btnResize->SetIsEnabled(true);
     }
 }
@@ -1478,14 +1511,29 @@ static bool CopyEditedImageToClipboard(ImageEditWindow* ew) {
     return CopyImageToClipboard(tmp, false);
 }
 
-static LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+// Tab moves between the dest edit, the format drop-down and the buttons; the
+// ring is the layout order and covers HWND and virtual controls alike
+bool ImageEditWindow::PreTranslateMessage(MSG& msg) {
+    if (msg.message != WM_KEYDOWN || msg.wParam != VK_TAB) {
+        return false;
+    }
+    if (msg.hwnd != hwnd && !::IsChild(hwnd, msg.hwnd)) {
+        return false;
+    }
+    TabNavigate(IsShiftPressed());
+    return true;
+}
 
-LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    ImageEditWindow* ew;
+LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    ImageEditWindow* ew = this;
 
-    LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
-    if (res != 0) {
-        return res;
+    // the labels and buttons are virtual controls: hand them the mouse and,
+    // when one of them has the focus, the keyboard
+    if (vroot) {
+        LRESULT vres = 0;
+        if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, vres)) {
+            return vres;
+        }
     }
 
     switch (msg) {
@@ -1493,7 +1541,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_SIZE: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
                 CalcImageLayout(ew);
                 LayoutControls(ew);
@@ -1507,7 +1554,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_DPICHANGED: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
                 RECT* r = (RECT*)lp;
                 SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
@@ -1522,7 +1568,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_PAINT: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (!ew) return 0;
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -1544,12 +1589,16 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             SelectObject(memDC, oldBmp);
             DeleteObject(memBmp);
             DeleteDC(memDC);
+            // the control area's background was filled by WM_ERASEBKGND
+            if (ew->vroot) {
+                Gfx gfx = GfxFromHdc(hdc);
+                ew->vroot->Paint(&gfx, ToRect(ps.rcPaint));
+            }
             EndPaint(hwnd, &ps);
             return 0;
         }
 
         case WM_ERASEBKGND: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (!ew) return 0;
             // paint control area background, skip image area (double-buffered)
             HDC hdc = (HDC)wp;
@@ -1566,7 +1615,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MOUSEMOVE: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (!ew || ew->mode == ImageEditMode::Save) {
                 break;
             }
@@ -1700,7 +1748,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONDOWN: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (!ew) {
                 break;
             }
@@ -1741,7 +1788,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONUP: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew && ew->isDragging) {
                 if (ew->mode == ImageEditMode::Crop && ew->dragEdge == DragEdge::NewCrop && !ew->dragMoved) {
                     ew->cropX = ew->dragCropX;
@@ -1759,7 +1805,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_SETCURSOR: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew && ew->mode != ImageEditMode::Save && LOWORD(lp) == HTCLIENT) {
                 Point pt = HwndGetCursorPos(hwnd);
                 DragEdge edge;
@@ -1773,18 +1818,16 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     return TRUE;
                 }
             }
-            return DefWindowProc(hwnd, msg, wp, lp);
+            return WndProcDefault(hwnd, msg, wp, lp);
         }
 
         case WM_MOUSEACTIVATE:
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
                 SetFocus(hwnd);
             }
             return MA_ACTIVATE;
 
         case WM_SYSKEYDOWN: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew && GetFocus() == hwnd && wp != VK_MENU && TriggerImageEditMnemonic(ew, (WCHAR)wp)) {
                 return 0;
             }
@@ -1792,7 +1835,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_SYSCHAR: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew && TriggerImageEditMnemonic(ew, (WCHAR)wp)) {
                 return 0;
             }
@@ -1806,7 +1848,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_KEYDOWN: {
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (!ew) {
                 break;
             }
@@ -1836,7 +1877,6 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
             } else {
                 SetCurrentModelessDialog(hwnd);
-                ew = FindImageEditWindowByHwnd(hwnd);
                 // menu commands often leave keyboard focus on the main window
                 if (ew && !HasFocusInImageEdit(ew)) {
                     RestoreImageEditFocus(ew);
@@ -1848,14 +1888,16 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (GetCurrentModelessDialog() == hwnd) {
                 SetCurrentModelessDialog(nullptr);
             }
-            ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
                 HWND hwndParent = ew->hwndParent;
                 if (ew->destEdit && ew->destEdit->hwnd && gDestEditSubclassId) {
                     RemoveWindowSubclass(ew->destEdit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId);
                 }
                 gImageEditWindows.Remove(ew);
-                delete ew;
+                // deleting a window while handling its own message is unsafe;
+                // uitask runs after this dispatch finishes
+                auto fn = MkFunc0<ImageEditWindow>(DeleteImageEditWindow, ew);
+                uitask::Post(fn, "DeleteImageEditWindow");
                 if (hwndParent) {
                     HwndToForeground(hwndParent);
                 }
@@ -1863,9 +1905,41 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wp, lp);
+            return WndProcDefault(hwnd, msg, wp, lp);
     }
     return 0;
+}
+
+// the buttons are virtual controls, so they are styled here rather than by the
+// system: a filled box with a border, brighter on hover
+static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const VirtMouseHandler& onClick) {
+    auto* b = new ImageEditButton(Str{}, GetPlatformFont(ew->hFont));
+    COLORREF bg = GetSysColor(COLOR_BTNFACE);
+    b->textColor = GetSysColor(COLOR_BTNTEXT);
+    b->textColorDisabled = GetSysColor(COLOR_GRAYTEXT);
+    b->bgColor = AccentColor(bg, 14);
+    b->bgColorHover = AccentColor(bg, 28);
+    b->borderColor = AccentColor(bg, 40);
+    b->textPadding = DpiScaledInsets(ew->hwnd, 4, 10);
+    b->SetLabel(text);
+    b->onClick = onClick;
+    return b;
+}
+
+static void BrowseClicked(ImageEditWindow* ew, VirtMouseEvent*) {
+    OnBrowse(ew);
+}
+
+static void SaveClicked(ImageEditWindow* ew, VirtMouseEvent*) {
+    OnSave(ew);
+}
+
+static void CropClicked(ImageEditWindow* ew, VirtMouseEvent*) {
+    OnCropButton(ew);
+}
+
+static void ResizeClicked(ImageEditWindow* ew, VirtMouseEvent*) {
+    OnResizeButton(ew);
 }
 
 void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf) {
@@ -1933,32 +2007,35 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     gImageEditWindows.Append(ew);
 
     HMODULE h = GetModuleHandleW(nullptr);
-    WNDCLASSEX wcex = {};
-    FillWndClassEx(wcex, kImageEditWinClassName, WndProcImageEdit);
-    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    if (gImageEditHost.appIconId) {
-        wcex.hIcon = LoadIconW(h, MAKEINTRESOURCEW(gImageEditHost.appIconId));
-    }
-    RegisterClassEx(&wcex);
-
     Size winSize = CalcImageEditWindowSizeEx(parent, parent, fromRenderedBitmap, imgW, imgH, nullptr);
 
-    WStr title = L"Save Image";
+    Str title = "Save Image";
     if (mode == ImageEditMode::Crop) {
-        title = L"Crop Image";
+        title = "Crop Image";
     } else if (mode == ImageEditMode::Resize) {
-        title = L"Resize Image";
+        title = "Resize Image";
     }
-    HWND hwnd =
-        CreateWindowExW(WS_EX_CONTROLPARENT, kImageEditWinClassName, title.s, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-                        CW_USEDEFAULT, CW_USEDEFAULT, winSize.dx, winSize.dy, nullptr, nullptr, h, nullptr);
+    {
+        CreateCustomArgs cargs;
+        cargs.className = kImageEditWinClassName;
+        cargs.title = title;
+        cargs.style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+        cargs.exStyle = WS_EX_CONTROLPARENT;
+        cargs.pos = {CW_USEDEFAULT, CW_USEDEFAULT, winSize.dx, winSize.dy};
+        cargs.visible = false;
+        cargs.bgColor = GetSysColor(COLOR_BTNFACE);
+        if (gImageEditHost.appIconId) {
+            cargs.icon = LoadIconW(h, MAKEINTRESOURCEW(gImageEditHost.appIconId));
+        }
+        ew->CreateCustom(cargs);
+    }
+    HWND hwnd = ew->hwnd;
     if (!hwnd) {
         gImageEditWindows.Remove(ew);
         delete ew;
         return;
     }
 
-    ew->hwnd = hwnd;
     ew->hwndParent = parent;
 
     ew->hFont = ImageEditFont(hwnd);
@@ -1980,25 +2057,14 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         SetWindowSubclass(edit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId, (DWORD_PTR)ew);
         ew->destEdit = edit;
     }
-    {
-        auto* btn = new Button();
-        Button::CreateArgs args;
-        args.parent = hwnd;
-        args.font = ew->hFont;
-        args.text = StrL("...");
-        btn->Create(args);
-        btn->onClick = MkFunc0<ImageEditWindow>(OnBrowse, ew);
-        ew->btnBrowse = btn;
-    }
+    ew->btnBrowse = NewImageEditButton(ew, StrL("..."), MkFunc1(BrowseClicked, ew));
     if (!fromRenderedBitmap) {
-        auto* pathLabel = new Static();
-        Static::CreateArgs pathArgs;
-        pathArgs.parent = hwnd;
-        pathArgs.font = ew->hFont;
-        pathArgs.text = filePath ? filePath : Str{};
-        pathArgs.pathEllipsis = true;
-        pathLabel->Create(pathArgs);
-        ew->staticPathLabel = pathLabel;
+        ew->staticPathLabel = NewVirtText({
+            .s = filePath ? filePath : Str{},
+            .font = GetPlatformFont(ew->hFont),
+            .textColor = GetSysColor(COLOR_BTNTEXT),
+            .pathEllipsis = true,
+        });
     }
 
     // row 3: info label (buttons and format dropdown added below, then wired into controlLayout)
@@ -2010,47 +2076,17 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     } else {
         infoStr = FormatResizeInfoTemp(imgW, imgH, imgW, imgH);
     }
-    {
-        auto* infoLabel = new Static();
-        Static::CreateArgs infoArgs;
-        infoArgs.parent = hwnd;
-        infoArgs.font = ew->hFont;
-        infoArgs.text = infoStr;
-        infoLabel->Create(infoArgs);
-        ew->staticInfoLabel = infoLabel;
-    }
+    ew->staticInfoLabel = NewVirtText({
+        .s = infoStr,
+        .font = GetPlatformFont(ew->hFont),
+        .textColor = GetSysColor(COLOR_BTNTEXT),
+        .ellipsis = true,
+    });
 
     // buttons
-    {
-        auto* btn = new Button();
-        Button::CreateArgs args;
-        args.parent = hwnd;
-        args.font = ew->hFont;
-        args.text = Tr("&Save");
-        btn->Create(args);
-        btn->onClick = MkFunc0<ImageEditWindow>(OnSave, ew);
-        ew->btnSave = btn;
-    }
-    {
-        auto* btn = new Button();
-        Button::CreateArgs args;
-        args.parent = hwnd;
-        args.font = ew->hFont;
-        args.text = Tr("&Crop");
-        btn->Create(args);
-        btn->onClick = MkFunc0<ImageEditWindow>(OnCropButton, ew);
-        ew->btnCrop = btn;
-    }
-    {
-        auto* btn = new Button();
-        Button::CreateArgs args;
-        args.parent = hwnd;
-        args.font = ew->hFont;
-        args.text = Tr("&Resize");
-        btn->Create(args);
-        btn->onClick = MkFunc0<ImageEditWindow>(OnResizeButton, ew);
-        ew->btnResize = btn;
-    }
+    ew->btnSave = NewImageEditButton(ew, Tr("&Save"), MkFunc1(SaveClicked, ew));
+    ew->btnCrop = NewImageEditButton(ew, Tr("&Crop"), MkFunc1(CropClicked, ew));
+    ew->btnResize = NewImageEditButton(ew, Tr("&Resize"), MkFunc1(ResizeClicked, ew));
 
     // format dropdown
     {
@@ -2098,9 +2134,9 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             row2->alignMain = MainAxisAlign::MainStart;
             row2->alignCross = CrossAxisAlign::CrossCenter;
             row2->AddChild(ew->destEdit, 1);
-            ew->btnBrowse->SetInsetsPt(0, 0, 0, 4);
+            ew->btnBrowse->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
             row2->AddChild(ew->btnBrowse);
-            ew->btnSave->SetInsetsPt(0, 0, 0, 4);
+            ew->btnSave->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
             row2->AddChild(ew->btnSave);
             auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(ew), 0});
             vbox->AddChild(row2Pad);
@@ -2116,17 +2152,19 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
                 row3->AddChild(ew->dropFormat);
             }
             if (ew->btnCrop) {
-                ew->btnCrop->SetInsetsPt(0, 0, 0, 4);
+                ew->btnCrop->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
                 row3->AddChild(ew->btnCrop);
             }
             if (ew->btnResize) {
-                ew->btnResize->SetInsetsPt(0, 0, 0, 4);
+                ew->btnResize->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
                 row3->AddChild(ew->btnResize);
             }
             vbox->AddChild(row3);
         }
 
         ew->controlLayout = new Padding(vbox, DpiScaledInsets(hwnd, kRowPadding, kButtonPadding));
+        // WindowBase owns and tab-navigates `layout`; it is the same tree
+        ew->layout = ew->controlLayout;
     }
 
     CalcImageLayout(ew);
@@ -2140,7 +2178,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         gImageEditHost.ApplyDarkMode(hwnd);
     }
     HideKeyboardCues(hwnd);
-    ShowWindow(hwnd, SW_SHOW);
+    ew->SetIsVisible(true);
     SetCurrentModelessDialog(hwnd);
     HwndToForeground(hwnd);
     RestoreImageEditFocus(ew);

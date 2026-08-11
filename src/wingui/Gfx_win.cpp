@@ -39,7 +39,9 @@ void GfxDrawLine(Gfx* gfx, const Rect& r, COLORREF col, int thickness) {
 
 static uint ToDrawTextFormat(u32 flags) {
     uint fmt = DT_NOPREFIX;
-    if (flags & gfxTextEllipsis) {
+    if (flags & gfxTextPathEllipsis) {
+        fmt |= DT_PATH_ELLIPSIS | DT_SINGLELINE | DT_VCENTER;
+    } else if (flags & gfxTextEllipsis) {
         fmt |= DT_END_ELLIPSIS | DT_SINGLELINE | DT_VCENTER;
     } else {
         fmt |= DT_NOCLIP;

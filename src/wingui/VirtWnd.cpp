@@ -1889,7 +1889,9 @@ void VirtText::Paint(VirtPaintCtx& ctx) {
         return;
     }
     u32 fmt = 0;
-    if (ellipsis) {
+    if (pathEllipsis) {
+        fmt |= gfxTextPathEllipsis;
+    } else if (ellipsis) {
         fmt |= gfxTextEllipsis;
     }
     if (isRtl) {
@@ -1920,6 +1922,7 @@ VirtText* NewVirtText(const VirtTextArgs& args) {
     w->withUnderline = args.withUnderline;
     w->isRtl = args.isRtl;
     w->ellipsis = args.ellipsis;
+    w->pathEllipsis = args.pathEllipsis;
     w->underlineOffsetY = args.underlineOffsetY;
     w->padding = args.padding;
     return w;

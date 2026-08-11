@@ -26,6 +26,9 @@ enum GfxTextFlags : u32 {
     // single line, vertically centered, "…" when it doesn't fit
     gfxTextEllipsis = 1 << 2,
     gfxTextRtl = 1 << 3,
+    // like gfxTextEllipsis, but the "…" goes in the middle, keeping the last
+    // path component visible
+    gfxTextPathEllipsis = 1 << 4,
 };
 
 // kColorUnset means "keep whatever color the surface is set to"
