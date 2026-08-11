@@ -1305,7 +1305,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\wingui\Gfx.h" />
     <ClInclude Include="..\src\wingui\HtmlWindow.h" />
     <ClInclude Include="..\src\wingui\IconPixmap.h" />
-    <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\PlatformFont.h" />
     <ClInclude Include="..\src\wingui\PlatformText.h" />
@@ -1778,7 +1777,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\wingui\Gfx_win.cpp" />
     <ClCompile Include="..\src\wingui\HtmlWindow.cpp" />
     <ClCompile Include="..\src\wingui\IconPixmap_win.cpp" />
-    <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\ListBox.cpp" />
     <ClCompile Include="..\src\wingui\PlatformFont.cpp" />

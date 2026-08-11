@@ -15,7 +15,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
-#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 #include "wingui/WebView.h"
 
 #include "Settings.h"
@@ -33,8 +35,6 @@
 
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
-
-#define IDC_AICHAT_LABEL_WITH_CLOSE 1110
 
 // timer ids on hwndAiChatBox
 constexpr UINT_PTR kTimerAutoSelectSession = 42;
@@ -237,8 +237,8 @@ static void UpdateAIChatPanelTitle(MainWindow* win, int labelDx) {
         }
     }
 
-    HWND labelHwnd = win->aiChatLabel->hwnd;
-    HFONT font = win->aiChatLabel->font;
+    HWND labelHwnd = win->hwndAiChatBox;
+    HFONT font = win->aiChatLabel->font ? win->aiChatLabel->font->GetHFont() : nullptr;
     if (!font) {
         font = GetDefaultGuiFont(true, false);
     }
@@ -248,7 +248,7 @@ static void UpdateAIChatPanelTitle(MainWindow* win, int labelDx) {
     int maxDx = AIChatLabelMaxTextDx(labelHwnd, labelDx);
     TempStr prefix = str::JoinTemp(p->TitleTemp(), StrL(" with "));
     TempStr label = AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
-    win->aiChatLabel->SetLabel(label);
+    win->aiChatLabel->SetText(label);
 }
 
 // --- Layout ---
@@ -263,7 +263,7 @@ static void LayoutAIChatBox(MainWindow* win) {
     }
 
     UpdateAIChatPanelTitle(win, rc.dx);
-    LayoutToSize(win->aiChatLayout, {rc.dx, rc.dy});
+    LayoutTreeToSize(win->hwndAiChatBox, win->aiChatLayout, {rc.dx, rc.dy}, &win->aiChatRoot);
 
     // the webview is created lazily so it's not part of the layout; a flex
     // spacer reserves its area and we position it into the spacer's bounds
@@ -999,6 +999,10 @@ static LRESULT CALLBACK WndProcAIChatInput(HWND hwnd, UINT msg, WPARAM wp, LPARA
 
 static void CloseAIChatPanelFromLabel(MainWindow* win);
 
+static void AIChatCloseClicked(MainWindow* win, VirtMouseEvent*) {
+    CloseAIChatPanelFromLabel(win);
+}
+
 static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
                                          DWORD_PTR data) {
     MainWindow* win = (MainWindow*)data;
@@ -1008,6 +1012,12 @@ static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 
     LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
     if (res) {
+        return res;
+    }
+
+    // the panel header (label + close button) is a virtual control tree, so
+    // this window paints it (background included) and hands it its input
+    if (VirtHostOnMessage(hwnd, win->aiChatRoot, msg, wp, lp, res, ThemeControlBackgroundColor())) {
         return res;
     }
 
@@ -1025,11 +1035,6 @@ static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
         }
         case WM_SIZE:
             LayoutAIChatBox(win);
-            break;
-        case WM_COMMAND:
-            if (LOWORD(wp) == IDC_AICHAT_LABEL_WITH_CLOSE) {
-                CloseAIChatPanelFromLabel(win);
-            }
             break;
         case WM_TIMER:
             if (wp == kTimerAutoSelectSession) {
@@ -1208,7 +1213,7 @@ void UpdateAIChatTheme(MainWindow* win) {
     COLORREF bgCol = ThemeControlBackgroundColor();
     COLORREF txtCol = ThemeWindowTextColor();
     if (win->aiChatLabel) {
-        win->aiChatLabel->SetColors(txtCol, bgCol);
+        win->aiChatLabel->textColor = txtCol;
     }
     if (win->aiChatInput) {
         win->aiChatInput->SetColors(txtCol, bgCol);
@@ -1255,17 +1260,10 @@ void CreateAIChatPanel(MainWindow* win) {
     HFONT font = GetDefaultGuiFont();
 
     // label
-    auto* label = new LabelWithCloseWnd();
-    {
-        LabelWithCloseWnd::CreateArgs args;
-        args.parent = win->hwndAiChatBox;
-        args.cmdId = IDC_AICHAT_LABEL_WITH_CLOSE;
-        args.isRtl = IsUIRtl();
-        args.font = GetDefaultGuiFont(true, false);
-        label->Create(args);
-    }
-    win->aiChatLabel = label;
-    label->SetPaddingXY(2, 2);
+    PlatformFont* labelFont = GetPlatformFont(GetDefaultGuiFont(true, false));
+    auto header = NewLabelWithClose(win->hwndAiChatBox, labelFont, MkFunc1(AIChatCloseClicked, win));
+    win->aiChatLabel = header.label;
+    win->aiChatHeader = header.box;
 
     // session combo
     {
@@ -1360,7 +1358,7 @@ void CreateAIChatPanel(MainWindow* win) {
 
         auto* vbox = new VBox();
         vbox->alignCross = CrossAxisAlign::Stretch;
-        vbox->AddChild(win->aiChatLabel);
+        vbox->AddChild(win->aiChatHeader);
         vbox->AddChild(win->aiChatSessionCombo);
         win->aiChatWebViewSlot = new Spacer(0, 0);
         vbox->AddChild(win->aiChatWebViewSlot, 1);
@@ -1549,6 +1547,10 @@ void DestroyAIChatPanel(MainWindow* win) {
     // deleting the layout deletes the controls in it
     delete win->aiChatLayout;
     win->aiChatLayout = nullptr;
+    // the layout owns the virtual controls the root points at, so it goes first
+    delete win->aiChatRoot;
+    win->aiChatRoot = nullptr;
+    win->aiChatHeader = nullptr;
     win->aiChatWebViewSlot = nullptr;
     win->aiChatLabel = nullptr;
     win->aiChatSessionCombo = nullptr;

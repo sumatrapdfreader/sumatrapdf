@@ -94,7 +94,6 @@ struct MainWindow;
 struct NotificationWnd;
 struct RenderCache;
 struct WindowTab;
-struct LabelWithCloseWnd;
 struct SessionData;
 struct Flags;
 

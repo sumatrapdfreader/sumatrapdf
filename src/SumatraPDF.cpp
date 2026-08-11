@@ -27,7 +27,6 @@
 #include "wingui/WinGui.h"
 #include "wingui/WebView.h"
 
-#include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
@@ -889,9 +888,6 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
 
     SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
     RelayoutCaption(win);
-
-    if (win->tocLabelWithClose) win->tocLabelWithClose->Layout();
-    if (win->favLabelWithClose) win->favLabelWithClose->Layout();
 
     RelayoutNotifications(win->hwndCanvas);
 
@@ -2519,8 +2515,10 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
     UpdateToolbarFindText(win);
     UpdateToolbarButtonsToolTipsForWindow(win);
 
-    win->tocLabelWithClose->SetLabel(_TRA("Bookmarks"));
-    win->favLabelWithClose->SetLabel(_TRA("Favorites"));
+    win->tocLabel->SetText(_TRA("Bookmarks"));
+    win->tocLabel->Invalidate();
+    win->favLabel->SetText(_TRA("Favorites"));
+    win->favLabel->Invalidate();
 }
 
 static COLORREF DwmFrameBorderColorForCurrentTheme() {
@@ -6723,11 +6721,12 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
     if (win->favTreeView && win->favTreeView->hwnd) {
         HwndSetTreeFontForDpi(win->favTreeView->hwnd, treeFont, dpi);
     }
-    if (win->tocLabelWithClose) {
-        win->tocLabelWithClose->SetFont(labelFont);
+    PlatformFont* labelPlatformFont = GetPlatformFont(labelFont);
+    if (win->tocLabel) {
+        win->tocLabel->font = labelPlatformFont;
     }
-    if (win->favLabelWithClose) {
-        win->favLabelWithClose->SetFont(labelFont);
+    if (win->favLabel) {
+        win->favLabel->font = labelPlatformFont;
     }
     if (win->tocFilterEdit) {
         win->tocFilterEdit->SetFont(appFont);

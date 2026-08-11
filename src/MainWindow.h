@@ -9,7 +9,9 @@ struct StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
 struct ReadAloudPlaybackBar;
-struct LabelWithCloseWnd;
+struct VirtText;
+struct VirtRoot;
+struct HBox;
 struct Splitter;
 struct Tooltip;
 struct TreeView;
@@ -193,7 +195,10 @@ struct MainWindow {
     HWND hwndTocBox = nullptr;
     UINT_PTR tocBoxSubclassId = 0;
 
-    LabelWithCloseWnd* tocLabelWithClose = nullptr;
+    // the panel header's label; the ✕ next to it closes the panel
+    VirtText* tocLabel = nullptr;
+    // the virtual controls of the header, hosted in hwndTocBox
+    VirtRoot* tocRoot = nullptr;
     Edit* tocFilterEdit = nullptr;
     TreeView* tocTreeView = nullptr;
     TocTree* tocFilteredTree = nullptr;
@@ -217,7 +222,8 @@ struct MainWindow {
 
     // state related to favorites
     HWND hwndFavBox = nullptr;
-    LabelWithCloseWnd* favLabelWithClose = nullptr;
+    VirtText* favLabel = nullptr;
+    VirtRoot* favRoot = nullptr;
     Edit* favFilterEdit = nullptr;
     TreeView* favTreeView = nullptr;
     // VBox(label, filter edit, tree); owns those controls and lays them out in hwndFavBox
@@ -228,7 +234,10 @@ struct MainWindow {
     // providers (Claude Code, Grok Build, OpenAI Codex), see AIChatPanel.cpp
     HWND hwndAiChatBox = nullptr;
     UINT_PTR aiChatBoxSubclassId = 0;
-    LabelWithCloseWnd* aiChatLabel = nullptr;
+    VirtText* aiChatLabel = nullptr;
+    // HBox(label, close button), the panel's header row
+    HBox* aiChatHeader = nullptr;
+    VirtRoot* aiChatRoot = nullptr;
     DropDown* aiChatSessionCombo = nullptr;
     DropDown* aiChatModelCombo = nullptr;
     DropDown* aiChatOptionCombo = nullptr; // effort / sandbox

@@ -184,6 +184,10 @@ void LayoutTreeToSize(HWND, ILayout* layout, Size, VirtRoot** rootInOut);
 void RefreshVirtTops(HWND, ILayout* layout, Rect bounds, VirtRoot** rootInOut);
 // double-buffered; fills bg first. Does nothing if there's nothing virtual
 void PaintVirtTree(VirtRoot*, HDC, Rect clip, COLORREF bg);
+// paint + input in one call, for a plain HWND that isn't a WindowBase /
+// ControlBase (the side panels are subclassed WC_STATICs). Returns true when
+// the message was handled
+bool VirtHostOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&, COLORREF bg);
 // the single entry point for input: mouse, cursor, tooltips and keyboard, with
 // RTL mouse coordinates unmirrored
 bool VirtTreeOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&);
@@ -588,6 +592,17 @@ struct VirtCloseButton : VirtWnd {
     bool OnSetCursor(Point ptLocal) override;
     TempStr GetTooltipTemp(Point ptLocal) override;
 };
+
+// The header of a side panel: a label on the left, the ✕ that closes the panel
+// on the right. `box` is what goes into the parent layout and owns the other
+// two, so the caller only keeps what it needs to update
+struct LabelWithClose {
+    HBox* box = nullptr;
+    VirtText* label = nullptr;
+    VirtCloseButton* closeBtn = nullptr;
+};
+
+LabelWithClose NewLabelWithClose(HWND hwndForDpi, PlatformFont*, const VirtMouseHandler& onClose);
 
 struct VirtImage : VirtWnd {
     Pixmap* pixmap = nullptr; // not owned

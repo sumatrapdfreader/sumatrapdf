@@ -632,8 +632,8 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 OnPaint(hdc, &ps);
                 ::EndPaint(hwnd, &ps);
             } else {
-                // TODO: for now those are the same because LabelWithCloseWnd::OnPaint
-                // assumes ps is provided (and maybe others)
+                // TODO: for now those are the same because some OnPaint()
+                // implementations assume ps is provided
                 PAINTSTRUCT ps;
                 HDC hdc = ::BeginPaint(hwnd, &ps);
                 OnPaint(hdc, &ps);

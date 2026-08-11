@@ -9,7 +9,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
-#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -1413,8 +1415,7 @@ void LayoutFavoritesContainer(MainWindow* win) {
     if (rc.IsEmpty()) {
         return;
     }
-    win->favLayout->Layout(Tight(Size{rc.dx, rc.dy}));
-    win->favLayout->SetBounds(Rect{0, 0, rc.dx, rc.dy});
+    LayoutTreeToSize(win->hwndFavBox, win->favLayout, {rc.dx, rc.dy}, &win->favRoot);
 }
 
 static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -1428,23 +1429,27 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return res;
     }
 
+    // the panel header (label + close button) is a virtual control tree, so
+    // this window paints it and hands it its input
+    if (VirtHostOnMessage(hwnd, win->favRoot, msg, wp, lp, res, ThemeControlBackgroundColor())) {
+        return res;
+    }
+
     switch (msg) {
         case WM_SIZE:
             LayoutFavoritesContainer(win);
             break;
-
-        case WM_COMMAND:
-            if (LOWORD(wp) == IDC_FAV_LABEL_WITH_CLOSE) {
-                // Full-window Favorites tab: close the tab. Sidebar panel: hide it.
-                if (WindowTab* favTab = FindFavoritesTab(win); favTab && win->CurrentTab() == favTab) {
-                    CloseTab(favTab, false);
-                } else {
-                    ToggleFavorites(win);
-                }
-            }
-            break;
     }
     return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
+}
+
+// Full-window Favorites tab: close the tab. Sidebar panel: hide it.
+static void FavCloseClicked(MainWindow* win, VirtMouseEvent*) {
+    if (WindowTab* favTab = FindFavoritesTab(win); favTab && win->CurrentTab() == favTab) {
+        CloseTab(favTab, false);
+    } else {
+        ToggleFavorites(win);
+    }
 }
 
 void CreateFavorites(MainWindow* win) {
@@ -1453,19 +1458,10 @@ void CreateFavorites(MainWindow* win) {
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
     win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
 
-    auto* l = new LabelWithCloseWnd();
-    {
-        LabelWithCloseWnd::CreateArgs args;
-        args.parent = win->hwndFavBox;
-        args.cmdId = IDC_FAV_LABEL_WITH_CLOSE;
-        args.font = GetAppSidebarLabelFont(win->hwndFrame);
-        args.isRtl = IsUIRtl();
-        l->Create(args);
-    }
-
-    win->favLabelWithClose = l;
-    l->SetPaddingXY(2, 2);
-    // label is set in UpdateToolbarSidebarText()
+    PlatformFont* labelFont = GetPlatformFont(GetAppSidebarLabelFont(win->hwndFrame));
+    auto header = NewLabelWithClose(win->hwndFavBox, labelFont, MkFunc1(FavCloseClicked, win));
+    win->favLabel = header.label;
+    // label text is set in UpdateToolbarSidebarText()
 
     auto* filterEdit = new Edit();
     {
@@ -1507,7 +1503,7 @@ void CreateFavorites(MainWindow* win) {
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-    vbox->AddChild(l);
+    vbox->AddChild(header.box);
     vbox->AddChild(filterEdit);
     vbox->AddChild(new Spacer(0, 2)); // gap under the search field
     vbox->AddChild(treeView, 1);

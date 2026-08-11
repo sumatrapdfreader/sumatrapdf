@@ -2178,6 +2178,47 @@ TempStr VirtCloseButton::GetTooltipTemp(Point) {
     return str::DupTemp(tooltip);
 }
 
+//--- LabelWithClose
+
+// what the old LabelWithCloseWnd custom control used, kept so the panels look
+// the same: a 16x16 ✕ with a bit of air around the text
+constexpr int kLabelPad = 2;
+constexpr int kCloseBtnDx = 16;
+constexpr int kCloseBtnGapDx = 8;
+
+LabelWithClose NewLabelWithClose(HWND hwnd, PlatformFont* font, const VirtMouseHandler& onClose) {
+    int pad = DpiScale(hwnd, kLabelPad);
+    auto* label = NewVirtText({
+        .font = font,
+        .isRtl = HwndIsRtl(hwnd),
+        .ellipsis = true,
+        .padding = Insets{pad, pad, pad, pad},
+    });
+
+    auto* closeBtn = new VirtCloseButton();
+    int btnDx = DpiScale(hwnd, kCloseBtnDx);
+    int gap = DpiScale(hwnd, kCloseBtnGapDx);
+    // the padding is part of the ideal size, so it enlarges the hit area
+    // without shrinking the ✕ itself
+    closeBtn->padding = Insets{0, pad, 0, gap};
+    closeBtn->idealSize = {btnDx + pad + gap, btnDx};
+    closeBtn->onClick = onClose;
+
+    auto* box = new HBox();
+    box->alignMain = MainAxisAlign::MainStart;
+    box->alignCross = CrossAxisAlign::CrossCenter;
+    // the label takes whatever is left, so the ✕ stays at the right edge; a
+    // label too long for the panel is ellipsized rather than run under it
+    box->AddChild(label, 1);
+    box->AddChild(closeBtn);
+
+    LabelWithClose res;
+    res.box = box;
+    res.label = label;
+    res.closeBtn = closeBtn;
+    return res;
+}
+
 //--- VirtImage
 
 static Kind kindVirtWndImage = "virtWndImage";
@@ -2529,6 +2570,33 @@ void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, COLORREF bg) {
     Gfx gfx = GfxFromHdc(memDC);
     root->Paint(&gfx, clip);
     buffer.Flush(hdc);
+}
+
+bool VirtHostOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res, COLORREF bg) {
+    if (!root || len(root->tops) == 0) {
+        return false;
+    }
+    if (msg == WM_ERASEBKGND) {
+        // WM_PAINT fills the whole client, so erasing first only flickers
+        res = TRUE;
+        return true;
+    }
+    if (msg == WM_NCHITTEST) {
+        // a WC_STATIC answers HTTRANSPARENT, which sends the mouse to the
+        // parent window instead - the virtual controls would never see a hover
+        // or a click
+        res = HTCLIENT;
+        return true;
+    }
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        PaintVirtTree(root, hdc, ToRect(ps.rcPaint), bg);
+        EndPaint(hwnd, &ps);
+        res = 0;
+        return true;
+    }
+    return VirtTreeOnMessage(hwnd, root, msg, wp, lp, res);
 }
 
 // the tree lays out left-to-right; when the HWND has an RTL layout GDI mirrors

@@ -12,7 +12,9 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -1562,8 +1564,7 @@ static void LayoutTocContainer(MainWindow* win) {
         return;
     }
     Rect rc = HwndWindowRect(win->hwndTocBox);
-    win->tocLayout->Layout(Tight(Size{rc.dx, rc.dy}));
-    win->tocLayout->SetBounds(Rect{0, 0, rc.dx, rc.dy});
+    LayoutTreeToSize(win->hwndTocBox, win->tocLayout, {rc.dx, rc.dy}, &win->tocRoot);
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
@@ -1579,15 +1580,15 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         return res;
     }
 
+    // the panel header (label + close button) is a virtual control tree, so
+    // this window paints it and hands it its input
+    if (VirtHostOnMessage(hwnd, win->tocRoot, msg, wp, lp, res, ThemeControlBackgroundColor())) {
+        return res;
+    }
+
     switch (msg) {
         case WM_SIZE:
             LayoutTocContainer(win);
-            break;
-
-        case WM_COMMAND:
-            if (LOWORD(wp) == IDC_TOC_LABEL_WITH_CLOSE) {
-                ToggleTocBox(win);
-            }
             break;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
@@ -1766,6 +1767,10 @@ static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPA
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
+static void TocCloseClicked(MainWindow* win, VirtMouseEvent*) {
+    ToggleTocBox(win);
+}
+
 void CreateToc(MainWindow* win) {
     HMODULE hmod = GetModuleHandle(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -1773,18 +1778,10 @@ void CreateToc(MainWindow* win) {
     HWND parent = win->hwndFrame;
     win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
-    auto* l = new LabelWithCloseWnd();
-    {
-        LabelWithCloseWnd::CreateArgs args;
-        args.parent = win->hwndTocBox;
-        args.cmdId = IDC_TOC_LABEL_WITH_CLOSE;
-        args.isRtl = IsUIRtl();
-        args.font = GetAppSidebarLabelFont(win->hwndFrame);
-        l->Create(args);
-    }
-    win->tocLabelWithClose = l;
-    l->SetPaddingXY(2, 2);
-    // label is set in UpdateToolbarSidebarText()
+    PlatformFont* labelFont = GetPlatformFont(GetAppSidebarLabelFont(win->hwndFrame));
+    auto header = NewLabelWithClose(win->hwndTocBox, labelFont, MkFunc1(TocCloseClicked, win));
+    win->tocLabel = header.label;
+    // label text is set in UpdateToolbarSidebarText()
 
     auto* filterEdit = new Edit();
     {
@@ -1825,7 +1822,7 @@ void CreateToc(MainWindow* win) {
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-    vbox->AddChild(l);
+    vbox->AddChild(header.box);
     vbox->AddChild(filterEdit);
     vbox->AddChild(new Spacer(0, 2)); // gap under the search field
     vbox->AddChild(treeView, 1);

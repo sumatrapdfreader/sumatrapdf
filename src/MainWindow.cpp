@@ -15,7 +15,9 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 #include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
@@ -187,14 +189,17 @@ MainWindow::~MainWindow() {
     delete frameRateWnd;
     ReadAloudPlaybackBarDestroy(this);
     delete infotip;
-    // tocLayout (VBox) owns tocLabelWithClose, tocFilterEdit and tocTreeView
+    // tocLayout (VBox) owns the header, tocFilterEdit and tocTreeView; the
+    // root only points at the header's virtual controls, so it outlives them
     delete tocLayout;
+    delete tocRoot;
     delete tocFilteredTree;
     if (favTreeView) {
         delete favTreeView->treeModel;
     }
-    // favLayout (VBox) owns favLabelWithClose, favFilterEdit and favTreeView
+    // favLayout (VBox) owns the header, favFilterEdit and favTreeView
     delete favLayout;
+    delete favRoot;
 
     DestroyAIChatPanel(this);
 
@@ -931,7 +936,7 @@ void UpdateControlsColors(MainWindow* win) {
         auto* tocTreeView = win->tocTreeView;
         tocTreeView->SetColors(txtCol, bgCol);
 
-        win->tocLabelWithClose->SetColors(txtCol, bgCol);
+        win->tocLabel->textColor = txtCol;
         if (win->tocFilterEdit) {
             win->tocFilterEdit->SetColors(txtCol, bgCol);
         }
@@ -941,7 +946,7 @@ void UpdateControlsColors(MainWindow* win) {
     auto* favTreeView = win->favTreeView;
     if (favTreeView) {
         favTreeView->SetColors(txtCol, bgCol);
-        win->favLabelWithClose->SetColors(txtCol, bgCol);
+        win->favLabel->textColor = txtCol;
         if (win->favFilterEdit) {
             win->favFilterEdit->SetColors(txtCol, bgCol);
         }
