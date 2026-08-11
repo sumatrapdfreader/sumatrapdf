@@ -3146,6 +3146,53 @@ static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs, bool s
     LoadDocumentMarkNotExist(win, path, noSavePrefs, showWin);
 }
 
+// A failed load that had no tab of its own used to leave only a notification.
+// Without a tab there is no document context, so the file could not be handed to
+// an external viewer or shown in its folder, and opening several bad files at
+// once replaced one notification with the next (issue #3595). Give the failure a
+// tab instead: the canvas paints the error screen for a tab that has a path and
+// no controller, and the file keeps a place in the UI to act on.
+static void ShowLoadErrorInTab(MainWindow* win, LoadArgs* args, Str path) {
+    WindowTab* tab = args->targetTab;
+    if (!tab && args->forceReuse) {
+        // reload / replace of the current document: the error belongs in its tab
+        tab = win->CurrentTab();
+        if (tab && tab->IsAboutTab()) {
+            tab = nullptr;
+        }
+    }
+    bool isNewTab = false;
+    if (!tab && win->tabsCtrl && !gPluginMode) {
+        tab = new WindowTab(win);
+        tab->SetFilePath(path);
+        tab->SetDisplayName(args->DisplayName());
+        // must be before AddTabToWindow(): selecting the tab runs
+        // LoadModelIntoTab(), which would see LoadState::None and try to load
+        // the file all over again
+        SetTabLoadError(tab, path);
+        AddTabToWindow(win, tab);
+        // like the successful path does: the new tab is the current one
+        win->currentTabTemp = tab;
+        isNewTab = true;
+    }
+    if (!tab) {
+        // nowhere to put it (plugin mode has no tabs)
+        ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
+        return;
+    }
+    if (!isNewTab) {
+        SetTabLoadError(tab, path);
+    }
+    win->ctrl = nullptr;
+    if (tab == win->CurrentTab()) {
+        // the title bar names the file that failed, like it did before the tab
+        // went away
+        SetFrameTitleForTab(tab, false);
+        HwndInvalidate(win->hwndCanvas);
+    }
+    LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);
+}
+
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
     // Same translation as Canvas OnPaintError ("Error loading %s").
     NotificationCreateArgs nargs;
@@ -3552,15 +3599,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
         args->targetTab->loadCopyBytesTotal = 0;
     }
     if (!args->ctrl) {
-        if (args->targetTab) {
-            SetTabLoadError(args->targetTab, path);
-            if (args->targetTab == win->CurrentTab()) {
-                HwndInvalidate(win->hwndCanvas);
-            }
-            LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);
-        } else {
-            ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
-        }
+        ShowLoadErrorInTab(win, args, path);
         // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
         // which can pump messages and change tab selection
         WindowTab* currTab = win->CurrentTab();
@@ -3775,15 +3814,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
                 return;
             }
             if (!args->ctrl) {
-                if (args->targetTab) {
-                    SetTabLoadError(args->targetTab, path);
-                    if (args->targetTab == win->CurrentTab()) {
-                        HwndInvalidate(win->hwndCanvas);
-                    }
-                    LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);
-                } else {
-                    ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
-                }
+                ShowLoadErrorInTab(win, args, path);
                 // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
                 // which can pump messages and change tab selection
                 WindowTab* currTab = win->CurrentTab();
@@ -3929,9 +3960,9 @@ MainWindow* LoadDocument(LoadArgs* args) {
             if (!HwndIsVisible(win->hwndFrame)) {
                 ShowMainWindow(win, gGlobalPrefs->windowState);
             }
-            ShowErrorLoadingNotification(win, path, args->noSavePrefs, args->showWin);
-            // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
-            // which can pump messages and change tab selection
+            ShowLoadErrorInTab(win, args, path);
+            // re-sync win->ctrl with current tab: the above can pump messages
+            // and change tab selection
             WindowTab* currTab = win->CurrentTab();
             win->ctrl = currTab ? currTab->ctrl : nullptr;
             return win;
