@@ -384,6 +384,10 @@ static MenuDef menuDefZoomShort[] = {
         CmdZoomCustom,
     },
     {
+        _TRN("To &Selection"),
+        CmdZoomToSelection,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -426,6 +430,10 @@ static MenuDef menuDefZoom[] = {
     {
         _TRN("Custom &Zoom..."),
         CmdZoomCustom,
+    },
+    {
+        _TRN("To &Selection"),
+        CmdZoomToSelection,
     },
     {
         kMenuSeparator,
@@ -1047,6 +1055,10 @@ static MenuDef menuDefContext[] = {
     {
         _TRN("&Copy Selection"),
         CmdCopySelection,
+    },
+    {
+        _TRN("&Zoom To Selection"),
+        CmdZoomToSelection,
     },
     //{
     //    _TRN("Create Annotation From Selection"),

@@ -2523,9 +2523,14 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
 // don't remember more than "enough" history entries (same number as Firefox uses)
 #define MAX_NAV_HISTORY_LEN 50
 
-/* Records the current scroll state for later navigating back to. */
-void DisplayModel::AddNavPoint() {
+/* Records the current scroll state for later navigating back to.
+   With rememberZoom the entry also carries the current zoom, so navigating back
+   to it undoes a zoom change as well as the scrolling (Zoom To Selection). */
+void DisplayModel::AddNavPoint(bool rememberZoom) {
     ScrollState ss = GetScrollState();
+    if (rememberZoom) {
+        ss.zoom = zoomVirtual;
+    }
     // remove the current and all Forward history entries
     if (navHistoryIdx < len(navHistory)) {
         navHistory.RemoveAt(navHistoryIdx, len(navHistory) - navHistoryIdx);
@@ -2558,15 +2563,21 @@ void DisplayModel::Navigate(int dir) {
     if (!CanNavigate(dir)) {
         return;
     }
-    // update the current history entry
+    // update the current history entry, keeping the zoom it was recorded with
     ScrollState ss = GetScrollState();
     if (navHistoryIdx < len(navHistory)) {
+        ss.zoom = navHistory[navHistoryIdx].zoom;
         navHistory[navHistoryIdx] = ss;
     } else {
         navHistory.Append(ss);
     }
     navHistoryIdx += dir;
-    SetScrollState(navHistory[navHistoryIdx]);
+    ScrollState target = navHistory[navHistoryIdx];
+    // zoom first: the position in the entry is relative to a laid out document
+    if (target.zoom != 0 && target.zoom != zoomVirtual && IsValidZoom(target.zoom)) {
+        SetZoomVirtual(target.zoom, nullptr);
+    }
+    SetScrollState(target);
 }
 
 void DisplayModel::CopyNavHistory(DisplayModel& orig) {

@@ -292,6 +292,7 @@ static SeqStrings gCommandNames =
     "CmdExtendSelectionWordLeft\0"
     "CmdExtendSelectionWordRight\0"
     "CmdToggleLaserPointer\0"
+    "CmdZoomToSelection\0"
     "CmdNone\0"
     "\0";
 
@@ -572,6 +573,7 @@ static i32 gCommandIds[] = {
     CmdExtendSelectionWordLeft,
     CmdExtendSelectionWordRight,
     CmdToggleLaserPointer,
+    CmdZoomToSelection,
     CmdNone,
 };
 
@@ -852,6 +854,7 @@ SeqStrings gCommandDescriptions =
     "Extend Selection One Word Left\0"
     "Extend Selection One Word Right\0"
     "Toggle Laser Pointer\0"
+    "Zoom: To Selection\0"
     "Do nothing\0"
     "\0";
 // clang-format on

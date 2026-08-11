@@ -63,6 +63,10 @@ struct ScrollState {
     double x = 0;
     double y = 0;
     int page = 0;
+    // zoom to restore along with the position, 0 for "leave the zoom alone".
+    // Only navigation history sets it (AddNavPoint(rememberZoom)), so restoring
+    // a scroll state for any other reason doesn't touch the zoom.
+    float zoom = 0;
 };
 
 struct TextSelection;
@@ -217,7 +221,7 @@ struct DisplayModel : DocController {
     Point GetContentStart(int pageNo) const;
     void RecalcVisibleParts() const;
     void RenderVisibleParts();
-    void AddNavPoint();
+    void AddNavPoint(bool rememberZoom = false);
     RectF GetContentBox(int pageNo) const;
     void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);

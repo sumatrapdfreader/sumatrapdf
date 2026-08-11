@@ -92,6 +92,7 @@ static UINT_PTR gNoDocWhitelist[] = {
 
 UINT_PTR disableIfNoSelection[] = {
     CmdCopySelection,
+    CmdZoomToSelection,
     CmdFindNextSel,
     CmdFindPrevSel,
     CmdTranslateSelection,

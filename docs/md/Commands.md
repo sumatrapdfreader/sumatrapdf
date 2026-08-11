@@ -220,6 +220,7 @@ CmdToggleZoom,z,Toggle Zoom,
 CmdZoomActualSize,"Ctrl + 1, Ctrl + Numpad 1",Zoom: Actual Size,
 CmdZoomCustom,Ctrl + Y,Zoom: Custom...,
 CmdZoomFitContent,"Ctrl + 3, Ctrl + Numpad 3",Zoom: Fit Content,
+CmdZoomToSelection,"Ctrl + 4, Ctrl + Numpad 4",Zoom: To Selection,"ver 3.7+, zooms so the current selection (Ctrl + drag rectangle or selected text) fills the window and centers it; the selection is kept so it can still be copied, and Navigate Back (Alt + Left) returns to the view it was zoomed from. Also in the Zoom menu and the right-click menu (fixes #1699)"
 CmdZoomShrinkToFit,,Zoom: Shrink To Fit,"Shows at 100% if page is smaller than view area, otherwise fits page"
 CmdZoomFitPage,"Ctrl + 0, Ctrl + Numpad 0",Zoom: Fit Page,
 CmdZoomFitPageAndSinglePage,,Zoom: Fit Page and Single Page,

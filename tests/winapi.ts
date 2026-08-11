@@ -233,6 +233,9 @@ export const WM_COMMAND = 0x0111;
 export const WM_COPYDATA = 0x004a;
 // virtual-key / mouse-button flags
 export const MK_LBUTTON = 0x0001;
+export const MK_RBUTTON = 0x0002;
+export const MK_SHIFT = 0x0004;
+export const MK_CONTROL = 0x0008;
 export const MK_MBUTTON = 0x0010;
 // virtual key codes
 export const VK_TAB = 0x09;

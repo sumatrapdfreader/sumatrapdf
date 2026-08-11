@@ -7314,6 +7314,61 @@ void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom) {
     ShowZoomNotification(win, factor);
 }
 
+// Zoom so that the current selection (Ctrl + drag rectangle or selected text)
+// fills the window, and centre it. The selection itself is left alone so it can
+// still be copied afterwards, and a navigation point is added first so Back
+// returns to the view you zoomed from (issue #1699).
+static void ZoomToSelection(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    if (!dm || !tab || !win->showSelection || !tab->selectionOnPage) {
+        return;
+    }
+
+    // the selection doesn't move in page coordinates while we zoom, so remember
+    // it there and map it back to the screen once the new zoom is applied
+    int pageNo = 0;
+    RectF selPage;
+    Rect selScreen;
+    bool isFirst = true;
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        Rect rc = sel.GetRect(dm);
+        if (rc.IsEmpty()) {
+            continue;
+        }
+        if (isFirst) {
+            pageNo = sel.pageNo;
+            selPage = sel.rect;
+            selScreen = rc;
+            isFirst = false;
+            continue;
+        }
+        selScreen = selScreen.Union(rc);
+        if (sel.pageNo == pageNo) {
+            selPage = selPage.Union(sel.rect);
+        }
+    }
+    Rect viewPort = dm->GetViewPort();
+    if (isFirst || selScreen.dx <= 0 || selScreen.dy <= 0 || viewPort.dx <= 0 || viewPort.dy <= 0) {
+        return;
+    }
+
+    float fx = (float)viewPort.dx / (float)selScreen.dx;
+    float fy = (float)viewPort.dy / (float)selScreen.dy;
+    float newZoom = dm->GetZoomVirtual(true) * std::min(fx, fy);
+    newZoom = limitValue(newZoom, kZoomMin, kZoomMax);
+
+    // remember the zoom too, so Back undoes the whole "zoom to selection"
+    dm->AddNavPoint(true);
+    SmartZoom(win, newZoom, nullptr, false);
+
+    // put the middle of the selection in the middle of the window
+    Rect rc = dm->CvtToScreen(pageNo, selPage);
+    viewPort = dm->GetViewPort();
+    dm->ScrollXBy(rc.x + (rc.dx / 2) - (viewPort.dx / 2));
+    dm->ScrollYBy(rc.y + (rc.dy / 2) - (viewPort.dy / 2), false);
+}
+
 /* Zoom document in window 'hwnd' to zoom level 'zoom'.
    'zoom' is given as a floating-point number, 1.0 is 100%, 2.0 is 200% etc.
 */
@@ -9858,6 +9913,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 OnMenuCustomZoom(win);
             }
         } break;
+
+        case CmdZoomToSelection:
+            ZoomToSelection(win);
+            break;
 
         case CmdSinglePageView:
             SwitchToDisplayMode(win, DisplayMode::SinglePage, true);

@@ -92,6 +92,8 @@ static ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, VK_NUMPAD2, CmdZoomFitWidth},
     {FCONTROL | FVIRTKEY, '3', CmdZoomFitContent},
     {FCONTROL | FVIRTKEY, VK_NUMPAD3, CmdZoomFitContent},
+    {FCONTROL | FVIRTKEY, '4', CmdZoomToSelection},
+    {FCONTROL | FVIRTKEY, VK_NUMPAD4, CmdZoomToSelection},
     {FCONTROL | FVIRTKEY, VK_ADD, CmdZoomIn},
     {FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdZoomOut},
     {FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdZoomOut},
