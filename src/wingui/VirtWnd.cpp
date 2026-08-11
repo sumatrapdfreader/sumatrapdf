@@ -1458,9 +1458,14 @@ Size VirtText::MinIntrinsicSize(int width, int height) {
 }
 
 Size VirtText::GetIdealSize() {
-    return GetIdealSize(false);
+    Size res = GetIdealSize(false);
+    res.dx += padding.left + padding.right;
+    res.dy += padding.top + padding.bottom;
+    return res;
 }
 
+// the size of the text itself, without padding. Paint() draws into the content
+// rect, which is already deflated by it
 Size VirtText::GetIdealSize(bool onlyIfEmpty) {
     if (onlyIfEmpty && !sz.IsEmpty()) {
         return sz;

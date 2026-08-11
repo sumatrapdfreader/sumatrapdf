@@ -106,7 +106,6 @@ struct KbSectionData {
 };
 
 static Kind kindKbKeyCaps = "kbKeyCaps";
-static Kind kindKbSectionTitle = "kbSectionTitle";
 
 // the shortcut(s) of one row, drawn as rounded key-caps
 struct KbKeyCaps : VirtWnd {
@@ -119,18 +118,6 @@ struct KbKeyCaps : VirtWnd {
 
     KbKeyCaps();
     ~KbKeyCaps() override = default;
-
-    Size GetIdealSize() override;
-    void Paint(VirtPaintCtx&) override;
-};
-
-// a section header. It carries the gap that separates it from the section above,
-// because a column is a single table and its rowGap is uniform
-struct KbSectionTitle : VirtText {
-    int topGap = 0;
-
-    KbSectionTitle(Str s, PlatformFont* f);
-    ~KbSectionTitle() override = default;
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
@@ -351,24 +338,6 @@ void KbKeyCaps::Paint(VirtPaintCtx& ctx) {
     DeleteObject(br);
 }
 
-KbSectionTitle::KbSectionTitle(Str s, PlatformFont* f) : VirtText(s, f) {
-    kind = kindKbSectionTitle;
-}
-
-Size KbSectionTitle::GetIdealSize() {
-    Size sz2 = VirtText::GetIdealSize();
-    sz2.dy += topGap;
-    return sz2;
-}
-
-void KbSectionTitle::Paint(VirtPaintCtx& ctx) {
-    // the gap belongs above the text
-    VirtPaintCtx c2 = ctx;
-    c2.content.y += topGap;
-    c2.content.dy -= topGap;
-    VirtText::Paint(c2);
-}
-
 //--- building the sheet
 
 static void OnCloseClicked(VirtMouseEvent*) {
@@ -497,8 +466,10 @@ void KeyboardHelpWnd::BuildContent() {
         VirtTable* t = tables[s.col];
         int& row = rowAt[s.col];
 
-        auto* hdr = new KbSectionTitle(s.title, fontHdr);
-        hdr->topGap = (row == 0) ? 0 : secGap;
+        // the padding is the gap that separates the header from the section
+        // above: a column is a single table, and its rowGap is uniform
+        auto* hdr = new VirtText(s.title, fontHdr);
+        hdr->padding.top = (row == 0) ? 0 : secGap;
         texts.Append(hdr);
         VirtTableCell& hdrCell = t->SetCell(row, 0, hdr, 1, 2);
         hdrCell.alignV = CrossAxisAlign::CrossEnd;
