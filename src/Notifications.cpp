@@ -21,7 +21,6 @@
 #include "WindowTab.h"
 
 #include "Notifications.h"
-#include "TipText.h"
 #include "Theme.h"
 
 using Gdiplus::Graphics;

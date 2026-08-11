@@ -1255,7 +1255,6 @@
     <ClInclude Include="..\src\TextSelection.h" />
     <ClInclude Include="..\src\TextToSpeech.h" />
     <ClInclude Include="..\src\Theme.h" />
-    <ClInclude Include="..\src\TipText.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\TreeModel.h" />
@@ -1506,7 +1505,6 @@
     <ClCompile Include="..\src\TextToSpeech.cpp" />
     <ClCompile Include="..\src\TextViewWnd.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
-    <ClCompile Include="..\src\TipText.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />

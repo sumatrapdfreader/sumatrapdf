@@ -661,7 +661,6 @@ function sumatrapdf_files()
     "PdfSync.*",
     "PdfTools.*",
     "PngOptimizer.*",
-    "TipText.*",
     "Print.*",
     "ProgressUpdateUI.*",
     "ReadAloudHighlight.*",

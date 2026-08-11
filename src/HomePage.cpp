@@ -29,7 +29,6 @@
 #include "FilterHighlightDraw.h"
 #include "FileThumbnails.h"
 #include "Menu.h"
-#include "TipText.h"
 #include "HomePage.h"
 #include "Translations.h"
 #include "Version.h"

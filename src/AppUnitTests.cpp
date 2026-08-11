@@ -10,7 +10,6 @@
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
 #include "wingui/VirtWnd.h"
-#include "TipText.h"
 #include "Commands.h"
 
 #if defined(DEBUG)
