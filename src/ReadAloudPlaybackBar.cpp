@@ -329,6 +329,18 @@ void ReadAloudPlaybackBarHide(MainWindow* win) {
     ShowWindow(win->readAloudPlaybackBar->hwnd, SW_HIDE);
 }
 
+// the tab is going away; the bar has no reason to exist without it
+void ReadAloudPlaybackBarForgetTab(MainWindow* win, WindowTab* tab) {
+    ReadAloudPlaybackBar* bar = win ? win->readAloudPlaybackBar : nullptr;
+    if (!bar || bar->sessionTab != tab) {
+        return;
+    }
+    bar->sessionTab = nullptr;
+    if (bar->hwnd) {
+        ShowWindow(bar->hwnd, SW_HIDE);
+    }
+}
+
 void ReadAloudPlaybackBarRelayout(HWND hwndCanvas) {
     MainWindow* win = FindMainWindowByHwnd(hwndCanvas);
     if (!win || !win->readAloudPlaybackBar || !win->readAloudPlaybackBar->hwnd) {
@@ -342,10 +354,17 @@ void ReadAloudPlaybackBarRelayout(HWND hwndCanvas) {
 }
 
 void ReadAloudPlaybackBarUpdateSession(WindowTab* tab) {
-    if (!tab || !tab->win || len(tab->readAloudText) == 0) {
-        if (tab && tab->win) {
-            ReadAloudPlaybackBarHide(tab->win);
+    if (!tab) {
+        // no read-aloud source any more (callers pass GetReadAloudSourceTab()),
+        // so no bar should be up. Hiding also drops the tab each bar points at,
+        // which is about to be deleted on the tab-close path
+        for (MainWindow* win : gWindows) {
+            ReadAloudPlaybackBarHide(win);
         }
+        return;
+    }
+    if (!tab->win || len(tab->readAloudText) == 0) {
+        ReadAloudPlaybackBarHide(tab->win);
         return;
     }
 

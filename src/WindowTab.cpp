@@ -54,6 +54,9 @@ bool WindowTab::IsNonDocumentTab() const {
 
 WindowTab::~WindowTab() {
     logf("~WindowTab: 0x%p, dm: 0x%p\n", this, AsFixed());
+    // whatever a close path forgot, nothing may be left pointing at a tab that
+    // is going away (the read-aloud playback bar holds one)
+    ReadAloudForgetTab(this);
     if (hwndPDFInfo) {
         DestroyWindow(hwndPDFInfo);
         hwndPDFInfo = nullptr;

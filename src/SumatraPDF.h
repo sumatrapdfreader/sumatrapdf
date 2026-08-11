@@ -146,6 +146,7 @@ WindowTab* FindTabByFilePath(Str path);
 // the tab that currently owns this controller, null if it is no longer shown
 WindowTab* FindTabByController(DocController*);
 WindowTab* GetReadAloudSourceTab();
+void ReadAloudForgetTab(WindowTab*);
 
 constexpr UINT CmdTtsVoiceDefault = 0x7100;
 constexpr UINT CmdTtsVoiceFirst = 0x7101;

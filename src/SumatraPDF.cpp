@@ -4813,8 +4813,10 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         return;
     }
 
-    // Stop eventual TTS reading
-    StopReadAloudIfSourceTab(tab);
+    // Stop eventual TTS reading. The full reset (rather than just
+    // StopReadAloudIfSourceTab) also drops the pointers to this tab held by the
+    // playback bar and the session, which is about to be a dangling one
+    ResetReadAloudStateForTab(tab);
 
     int tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
@@ -12230,6 +12232,23 @@ static void StopReadAloudIfSourceTab(WindowTab* tab) {
         HwndInvalidate(tab->win->hwndCanvas);
     }
     ReadAloudClearSourceTab();
+}
+
+// last-resort guard: whatever a close path forgets, a tab that is being
+// destroyed can't be left pointed at by the read-aloud state
+void ReadAloudForgetTab(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    if (gReadAloudSourceTab == tab) {
+        gReadAloudSourceTab = nullptr;
+    }
+    if (gReadAloudSessionTab == tab) {
+        gReadAloudSessionTab = nullptr;
+    }
+    for (MainWindow* win : gWindows) {
+        ReadAloudPlaybackBarForgetTab(win, tab);
+    }
 }
 
 static void StopReadAloudIfSourceWindow(MainWindow* win) {
