@@ -156,6 +156,20 @@ void SaveThumbnail(FileState* fs) {
     if (PixmapIsEmpty(thumbnail)) {
         return;
     }
+    // the engine renders pages to an 8-bit palette DIB when it can, and those
+    // pixels can only be read through the platform bitmap
+    Pixmap* converted = nullptr;
+    defer {
+        FreePixmap(converted);
+    };
+    if (thumbnail->format == PixmapFormat::Native) {
+        converted = PixmapCopyAs32bppDIB(thumbnail);
+        if (!converted) {
+            logf("SaveThumbnail: PixmapCopyAs32bppDIB() failed for '%s'\n", fs->filePath);
+            return;
+        }
+        thumbnail = converted;
+    }
     // Wrap (don't take ownership) so we can encode the in-memory thumbnail as PNG.
     Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(thumbnail);
     if (!bmp) {
@@ -163,8 +177,14 @@ void SaveThumbnail(FileState* fs) {
     }
     CLSID tmpClsid = GetGdiPlusEncoderClsid(L"image/png");
     WCHAR* pathW = CWStrTemp(thumbnailPath);
-    bmp->Save(pathW, &tmpClsid, nullptr);
+    Gdiplus::Status st = bmp->Save(pathW, &tmpClsid, nullptr);
     delete bmp;
+    if (st != Gdiplus::Ok) {
+        // gdi+ creates the file before it encodes, so a failure leaves a 0-byte
+        // png behind, which reads back as a blank thumbnail (issue #5932)
+        logf("SaveThumbnail: Save('%s') failed with %d\n", thumbnailPath, (int)st);
+        file::Delete(thumbnailPath);
+    }
 }
 
 void RemoveThumbnail(FileState* fs) {

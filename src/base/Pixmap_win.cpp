@@ -48,11 +48,63 @@ Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap) {
     if (GetObject(hbmp, sizeof(ds), &ds) == sizeof(ds) && ds.dsBm.bmBits) {
         p->stride = ds.dsBm.bmWidthBytes;
         p->data = (u8*)ds.dsBm.bmBits;
-        p->format = (ds.dsBm.bmBitsPixel == 24) ? PixmapFormat::BGR8 : PixmapFormat::BGRA8;
+        // stride is the DIB's real byte width either way, so the memory
+        // accounting stays right even when the pixels aren't ours to read
+        int bpp = ds.dsBm.bmBitsPixel;
+        p->format = PixmapFormat::Native;
+        if (bpp == 24) {
+            p->format = PixmapFormat::BGR8;
+        } else if (bpp == 32) {
+            p->format = PixmapFormat::BGRA8;
+        }
         // Orientation follows the DIB. Pixel readers that care about orientation should
         // prefer the HBITMAP-based helpers, which handle it.
     }
     return p;
+}
+
+Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p) {
+    if (!p || !p->hbmp || p->width <= 0 || p->height <= 0) {
+        return nullptr;
+    }
+    Pixmap* dst = AllocPixmapDIB(p->width, p->height);
+    if (!dst) {
+        return nullptr;
+    }
+    bool ok = false;
+    HDC dstDC = CreateCompatibleDC(nullptr);
+    HDC srcDC = CreateCompatibleDC(nullptr);
+    if (dstDC && srcDC) {
+        HGDIOBJ prevDst = SelectObject(dstDC, dst->hbmp);
+        HGDIOBJ prevSrc = SelectObject(srcDC, p->hbmp);
+        if (prevDst && prevSrc) {
+            ok = BitBlt(dstDC, 0, 0, p->width, p->height, srcDC, 0, 0, SRCCOPY) != 0;
+            GdiFlush();
+        }
+        if (prevDst) {
+            SelectObject(dstDC, prevDst);
+        }
+        if (prevSrc) {
+            SelectObject(srcDC, prevSrc);
+        }
+    }
+    DeleteDC(dstDC);
+    DeleteDC(srcDC);
+    if (!ok) {
+        FreePixmap(dst);
+        return nullptr;
+    }
+    // BitBlt leaves the alpha channel alone (i.e. at the zero CreateDIBSection
+    // gave us), which would make the copy fully transparent
+    for (int y = 0; y < dst->height; y++) {
+        u8* d = dst->data + ((size_t)y * dst->stride);
+        for (int x = 0; x < dst->width; x++, d += 4) {
+            d[3] = 0xff;
+        }
+    }
+    dst->xres = p->xres;
+    dst->yres = p->yres;
+    return dst;
 }
 
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb) {

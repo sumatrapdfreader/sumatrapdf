@@ -236,7 +236,11 @@ void ApplyExifOrientation(Bitmap* bmp, int exifOrientation) {
     }
 }
 
+// 0 (an invalid gdi+ format) when the pixels aren't ours to read
 static Gdiplus::PixelFormat PixmapToGdiplusPixelFormat(const Pixmap* px) {
+    if (px->format == PixmapFormat::Native) {
+        return 0;
+    }
     if (px->format == PixmapFormat::BGR8) {
         return PixelFormat24bppRGB;
     }
@@ -265,6 +269,10 @@ Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px) {
         return nullptr;
     }
     Gdiplus::PixelFormat fmt = PixmapToGdiplusPixelFormat(px);
+    if (!fmt) {
+        FreePixmap(px);
+        return nullptr;
+    }
     auto* bmp = new PixmapBackedBitmap(px, fmt);
     if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp; // also frees px
@@ -336,6 +344,9 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
         return nullptr;
     }
     Gdiplus::PixelFormat fmt = PixmapToGdiplusPixelFormat(px);
+    if (!fmt) {
+        return nullptr;
+    }
     auto* bmp = new Gdiplus::Bitmap(px->width, px->height, px->stride, fmt, px->data);
     if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp;

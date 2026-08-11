@@ -28,6 +28,11 @@ enum class PixmapFormat : u8 {
     BGRA8, // 32bpp B,G,R,A -> Gdiplus 32bppARGB/PARGB
     BGR8,  // 24bpp B,G,R    -> Gdiplus 24bppRGB (rows still padded to a multiple of 4)
     RGBA8, // 32bpp R,G,B,A  -> needs a swizzle for any platform API; for source data
+    // the pixels are laid out in a way we can't describe (e.g. the 8-bit palette
+    // DIBs the mupdf engine renders to when a page has few enough colors). Only
+    // the platform bitmap (hbmp) knows how to read them: blit it, or copy it into
+    // a Pixmap we can describe with PixmapCopyAs32bppDIB()
+    Native,
 };
 
 struct Pixmap {
@@ -59,6 +64,9 @@ bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
 bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target);
 bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source);
 Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
+// an opaque 32bpp copy of a DIB-backed Pixmap, for code that needs to read pixels
+// out of one whose format is Native. Returns null if there's nothing to copy
+Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p);
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
