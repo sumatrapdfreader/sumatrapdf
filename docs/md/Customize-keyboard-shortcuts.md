@@ -38,7 +38,7 @@ Shortcuts [
 
 **Ver 3.6+** binds `Ctrl + Tab` / `Ctrl + Shift + Tab` to **Smart Tab Switch** (`CmdNextTabSmart` / `CmdPrevTabSmart`), which shows a tab list while Ctrl is held. In 3.5 those keys switched tabs immediately in strip order (`CmdNextTab` / `CmdPrevTab`).
 
-**Ver 3.7+:** the simplest way to get the old behavior back is the checkbox at the bottom of the tab switcher window, or setting `CtrlTabPre36Behavior = true` in advanced settings. You can also rebind the keys:
+**Ver 3.7+:** the simplest way to get the old behavior back is setting `CtrlTabSimple = true` in advanced settings. You can also rebind the keys:
 
 ```
 Shortcuts [

@@ -307,7 +307,7 @@ TabsMru = false
 ; if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next / previous
 ; tab in tab-strip order (the behavior before version 3.6) instead of showing
 ; the tab switcher (introduced in version 3.7)
-CtrlTabPre36Behavior = false
+CtrlTabSimple = false
 
 ; sequence of zoom levels when zooming in/out; values must lie between 8.33 and
 ; 1000000 (the largest one becomes the maximum zoom, which is 6400 by default)

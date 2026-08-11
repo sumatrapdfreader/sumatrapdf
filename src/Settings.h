@@ -833,7 +833,7 @@ struct GlobalPrefs {
     // if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next
     // / previous tab in tab-strip order (the behavior before version 3.6)
     // instead of showing the tab switcher
-    bool ctrlTabPre36Behavior;
+    bool ctrlTabSimple;
     // zoom levels which zooming steps through in addition to Fit Page and
     // Fit Width. The largest value is also the highest zoom that can be
     // set at all, so listing levels above 6400 (up to 1000000) is how you
@@ -1677,7 +1677,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
     {offsetof(GlobalPrefs, selectionToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabsMru), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, ctrlTabPre36Behavior), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, ctrlTabSimple), SettingType::Bool, false},
     {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t)""},
     {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t)"0"},
     {(size_t)-1, SettingType::Comment, 0},
@@ -1759,13 +1759,13 @@ static const StructInfo gGlobalPrefsInfo = {
     "dingAfterLastPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFu"
     "llscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarCustomLayout\0T"
     "oolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnha"
-    "nce\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabPre36Behavior\0ZoomLevels\0ZoomInc"
-    "rement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokB"
-    "uild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Ann"
-    "otations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0"
-    "\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos"
-    "\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckF"
-    "orUpdates\0\0",
+    "nce\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement"
+    "\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0"
+    "\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotatio"
+    "ns\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Theme"
+    "s\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0Search"
+    "UIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdate"
+    "s\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "

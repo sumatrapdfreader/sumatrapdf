@@ -1195,7 +1195,7 @@ const globalPrefs: Field[] = [
     "if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order",
   ).ver("3.7"),
   field(
-    "CtrlTabPre36Behavior",
+    "CtrlTabSimple",
     Bool,
     false,
     "if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order " +

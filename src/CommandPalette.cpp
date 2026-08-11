@@ -418,21 +418,6 @@ void CommandPaletteWnd::OnListDoubleClick() {
     ExecuteCurrentSelection();
 }
 
-// The tab switcher shows a checkbox for restoring the pre-3.6 Ctrl+Tab behavior
-// (switch tabs immediately, no switcher window). Checking it makes this window
-// obsolete, so we close it without switching tabs.
-void CommandPaletteWnd::OnPre36CheckboxChanged() {
-    bool isChecked = checkboxPre36->IsChecked();
-    if (gGlobalPrefs->ctrlTabPre36Behavior == isChecked) {
-        return;
-    }
-    gGlobalPrefs->ctrlTabPre36Behavior = isChecked;
-    SaveSettings();
-    if (isChecked) {
-        ScheduleDeleteAndExecCommand();
-    }
-}
-
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
@@ -650,28 +635,6 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             box->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
         }
         vbox->AddChild(NewHelpRow(box));
-    }
-
-    if (smartTabMode) {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainCenter;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        Checkbox::CreateArgs args;
-        args.parent = hwnd;
-        args.text = _TRA("Ctrl+Tab switches tabs directly (like before version 3.6)");
-        args.isRtl = IsUIRtl();
-        auto* c = new Checkbox();
-        c->Create(args);
-        HwndSetFont(c->hwnd, GetAppFont(hwnd));
-        c->SetColors(colTxt, colBg);
-        if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
-            // otherwise the box glyph stays a light Windows checkbox
-            DarkMode::setDarkThemeExperimental(c->hwnd);
-        }
-        c->onStateChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnPre36CheckboxChanged>(this);
-        checkboxPre36 = c;
-        hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 4, 8, 0, 8)));
-        vbox->AddChild(hbox);
     }
 
     auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));

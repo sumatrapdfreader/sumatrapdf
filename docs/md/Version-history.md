@@ -130,7 +130,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - save and restore groups of tabs; saved groups are persisted in `TabGroups` advanced setting
 - add `Shrink To Fit` zoom mode: shows at 100% if page is smaller than view area, otherwise fits page
 - add `TabsMru` advanced setting to change order of navigating tabs when using `Ctrl + Tab`
-- add `CtrlTabPre36Behavior` advanced setting: when true, `Ctrl + Tab` / `Ctrl + Shift + Tab` switch to the next / previous tab immediately, in tab-strip order, without showing the tab switcher (the behavior before 3.6). The tab switcher has a checkbox at the bottom that turns it on, so you can restore the old behavior without editing settings
+- add `CtrlTabSimple` advanced setting: when true, `Ctrl + Tab` / `Ctrl + Shift + Tab` switch to the next / previous tab immediately, in tab-strip order, without showing the tab switcher (the behavior before 3.6)
 - the tab switcher (`Ctrl + Tab`) window is sized to the number of tabs instead of always being a tall, mostly empty window
 - improve document properties for comic book files (CBZ, CBR, CB7, CBT). We now show list of image files and per-image EXIF metadata
 - improve document properties for image files: size, dimensions, DPI, exif metadata
