@@ -214,7 +214,7 @@ constexpr int kSumatraTxtFontSize = 24;
 
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
-static VirtWndRoot* gAboutRoot = nullptr;
+static VirtRoot* gAboutRoot = nullptr;
 static Tooltip* gAboutTooltip = nullptr;
 static Str gClickedURL;
 
@@ -247,10 +247,10 @@ static AboutRow gAboutRows[] = {
 #endif
     {nullptr, nullptr, nullptr}};
 
-// The About screen's two text columns as virtual controls: a VirtWndTable whose
+// The About screen's two text columns as virtual controls: a VirtTable whose
 // left column is right-aligned and right column left-aligned, which is what the
-// hand-rolled geometry used to do. Rows with a url become VirtWndLink (owning
-// the hit-testing, the hand cursor and the tooltip), the rest plain VirtWndText.
+// hand-rolled geometry used to do. Rows with a url become VirtLink (owning
+// the hit-testing, the hand cursor and the tooltip), the rest plain VirtText.
 static Kind kindAboutWnd = "aboutWnd";
 
 struct SumatraLogo;
@@ -258,9 +258,9 @@ struct SumatraLogo;
 struct AboutWnd : VirtWnd {
     // the two text columns; a container of its own so that rebuilding the rows
     // can't take the sibling showFreqRead link with it
-    VirtWndTable* table = nullptr;
+    VirtTable* table = nullptr;
     // "Show frequently read", bottom right of the About page (not the window)
-    VirtWndLink* showFreqRead = nullptr;
+    VirtLink* showFreqRead = nullptr;
     // the colored app name on top of the box
     SumatraLogo* logo = nullptr;
 
@@ -272,12 +272,12 @@ struct AboutWnd : VirtWnd {
     AboutWnd();
     void Sync(HWND hwnd, HDC hdc);
     void UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc);
-    VirtWndText* LeftAt(int i);
-    VirtWndText* RightAt(int i);
+    VirtText* LeftAt(int i);
+    VirtText* RightAt(int i);
 };
 
-static void OpenAboutUrl(VirtWndMouseEvent* ev) {
-    auto* link = (VirtWndLink*)ev->target;
+static void OpenAboutUrl(VirtMouseEvent* ev) {
+    auto* link = (VirtLink*)ev->target;
     if (len(link->target) > 0) {
         SumatraLaunchBrowser(link->target);
     }
@@ -310,14 +310,14 @@ constexpr COLORREF kCol5 = RGB(112, 115, 207);
 static Kind kindSumatraLogo = "sumatraLogo";
 
 // the app name centered in its bounds, each letter in a different color (so it
-// can't be a VirtWndText). The version isn't part of it: it is the first row of
+// can't be a VirtText). The version isn't part of it: it is the first row of
 // the About table
 struct SumatraLogo : VirtWnd {
     PlatformFont* font = nullptr; // not owned
 
     SumatraLogo();
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
 SumatraLogo::SumatraLogo() {
@@ -333,7 +333,7 @@ Size SumatraLogo::GetIdealSize() {
     return sz;
 }
 
-void SumatraLogo::Paint(VirtWndPaintCtx& ctx) {
+void SumatraLogo::Paint(VirtPaintCtx& ctx) {
     static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
     Size txtSize = PlatformFontMeasureText(font, kAppName);
     Rect r = ctx.bounds;
@@ -359,10 +359,10 @@ static TempStr TrimGitTemp(Str s) {
 
 // the About screen's virtual controls for one HWND. Positions come from
 // AboutWnd::UpdateLayout(), so the root must not run a layout of its own
-static AboutWnd* EnsureAboutWnd(VirtWndRoot** rootPtr, HWND hwnd, Rect clientRc) {
-    VirtWndRoot* root = *rootPtr;
+static AboutWnd* EnsureAboutWnd(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
+    VirtRoot* root = *rootPtr;
     if (!root) {
-        root = new VirtWndRoot(hwnd);
+        root = new VirtRoot(hwnd);
         *rootPtr = root;
     }
     if (!IsVirtWndOfKind(root->child, kindAboutWnd)) {
@@ -386,18 +386,18 @@ static int AboutRowCount() {
 AboutWnd::AboutWnd() {
     kind = kindAboutWnd;
     flags |= vwfNoHitTest;
-    table = new VirtWndTable();
+    table = new VirtTable();
     AddChild(table);
     logo = new SumatraLogo();
     AddChild(logo);
 }
 
-VirtWndText* AboutWnd::LeftAt(int i) {
-    return (VirtWndText*)table->GetCell(i, 0);
+VirtText* AboutWnd::LeftAt(int i) {
+    return (VirtText*)table->GetCell(i, 0);
 }
 
-VirtWndText* AboutWnd::RightAt(int i) {
-    return (VirtWndText*)table->GetCell(i, 1);
+VirtText* AboutWnd::RightAt(int i) {
+    return (VirtText*)table->GetCell(i, 1);
 }
 
 // build the table once, then keep text, fonts and colors in step with the theme
@@ -409,14 +409,14 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
         table->SetSize(n, 2);
         for (int i = 0; i < n; i++) {
             AboutRow* el = &gAboutRows[i];
-            VirtWndTableCell& left = table->SetCell(i, 0, new VirtWndText(el->leftTxt));
+            VirtTableCell& left = table->SetCell(i, 0, new VirtText(el->leftTxt));
             // the left column is flush against the divider line
             left.alignH = CrossAxisAlign::CrossEnd;
             left.alignV = CrossAxisAlign::CrossCenter;
 
-            VirtWndText* rightTxt;
+            VirtText* rightTxt;
             if (el->url) {
-                auto* link = new VirtWndLink(el->rightTxt);
+                auto* link = new VirtLink(el->rightTxt);
                 link->SetTarget(el->url);
                 link->SetTooltip(el->url);
                 link->withUnderline = true;
@@ -425,9 +425,9 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
                 link->onClick = MkFunc1Void(OpenAboutUrl);
                 rightTxt = link;
             } else {
-                rightTxt = new VirtWndText(el->rightTxt);
+                rightTxt = new VirtText(el->rightTxt);
             }
-            VirtWndTableCell& right = table->SetCell(i, 1, rightTxt);
+            VirtTableCell& right = table->SetCell(i, 1, rightTxt);
             right.alignV = CrossAxisAlign::CrossCenter;
         }
     }
@@ -441,11 +441,11 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
 
     for (int i = 0; i < n; i++) {
         AboutRow* el = &gAboutRows[i];
-        VirtWndText* left = LeftAt(i);
+        VirtText* left = LeftAt(i);
         left->font = GetPlatformFont(fontLeftTxt);
         left->textColor = colText;
 
-        VirtWndText* right = RightAt(i);
+        VirtText* right = RightAt(i);
         right->font = GetPlatformFont(fontRightTxt);
         bool isLink = canAccessDisk && el->url;
         right->textColor = isLink ? colLink : colText;
@@ -487,7 +487,7 @@ void AboutWnd::UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc) {
 }
 
 // prepares the About tree for hwnd and computes its geometry
-static AboutWnd* UpdateAboutLayout(VirtWndRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
+static AboutWnd* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
     AboutWnd* about = EnsureAboutWnd(rootPtr, hwnd, clientRc);
     about->Sync(hwnd, hdc);
     about->UpdateLayout(hwnd, hdc, clientRc);
@@ -497,7 +497,7 @@ static AboutWnd* UpdateAboutLayout(VirtWndRoot** rootPtr, HWND hwnd, HDC hdc, Re
 /* Draws the about screen. The text columns are painted by the AboutWnd tree;
    this draws the frame around them. It transcribes the design I did in graphics
    software - hopeless to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, VirtWndRoot* root) {
+static void DrawAbout(HWND hwnd, HDC hdc, VirtRoot* root) {
     auto* about = (AboutWnd*)root->child;
     Rect rect = about->aboutRect;
     auto col = ThemeWindowTextColor();
@@ -609,7 +609,7 @@ static void DeleteInfotip() {
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     Point pt;
 
-    // the links are VirtWndLinks: let the tree hit-test, click and set the
+    // the links are VirtLinks: let the tree hit-test, click and set the
     // cursor. Its GetTooltipTemp() drives this window's own Tooltip
     if (gAboutRoot && gAboutRoot->child) {
         LRESULT res = 0;
@@ -738,7 +738,7 @@ void ShowAboutWindow(MainWindow* win) {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
-static void ShowFrequentlyRead(VirtWndMouseEvent* ev) {
+static void ShowFrequentlyRead(VirtMouseEvent* ev) {
     auto* win = (MainWindow*)ev->target->userData;
     gGlobalPrefs->showStartPage = true;
     win->RedrawAll(true);
@@ -751,7 +751,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
 
     bool showLink = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles();
     if (showLink && !about->showFreqRead) {
-        auto* link = new VirtWndLink(_TRA("Show frequently read"));
+        auto* link = new VirtLink(_TRA("Show frequently read"));
         link->withUnderline = true;
         link->isRtl = IsUIRtl();
         link->userData = (uintptr_t)win;
@@ -760,7 +760,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
         about->AddChild(link);
     }
     if (about->showFreqRead) {
-        VirtWndLink* link = about->showFreqRead;
+        VirtLink* link = about->showFreqRead;
         link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
         link->font = GetPlatformFont(HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16));
         link->textColor = ThemeWindowLinkColor();
@@ -853,9 +853,9 @@ struct HomePageLayout {
     Rect rcIconThumbnailView;
 
     HIMAGELIST himlOpen = nullptr;
-    VirtWndText* freqRead = nullptr;
-    VirtWndText* openDoc = nullptr;
-    VirtWndText* hideShowFreqRead = nullptr;
+    VirtText* freqRead = nullptr;
+    VirtText* openDoc = nullptr;
+    VirtText* hideShowFreqRead = nullptr;
     Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
     int totalContentDy = 0;          // total height of all thumbnail rows
     int thumbsVisibleDy = 0;         // visible height for thumbnails area
@@ -891,32 +891,32 @@ struct HomeViewIconWnd : VirtWnd {
     bool listView = false;
     Str tooltip;
 
-    void Paint(VirtWndPaintCtx&) override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point) override;
     TempStr GetTooltipTemp(Point) override;
 };
 
 struct HomeOpenDocWnd : VirtWnd {
     MainWindow* win = nullptr;
-    Pixmap* pixmap = nullptr;    // not owned, from IconPixmapFromImageList()
-    VirtWndText* text = nullptr; // child
+    Pixmap* pixmap = nullptr; // not owned, from IconPixmapFromImageList()
+    VirtText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
 
-    void Paint(VirtWndPaintCtx&) override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point) override;
 };
 
 struct HomeHelpBtnWnd : VirtWnd {
     MainWindow* win = nullptr;
 
-    void Paint(VirtWndPaintCtx&) override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point) override;
     TempStr GetTooltipTemp(Point) override;
 };
@@ -924,13 +924,13 @@ struct HomeHelpBtnWnd : VirtWnd {
 struct HomeEntryWnd;
 
 // the pin icon of a list-view row. It is drawn by DrawHomeListRow, so this is a
-// hit target only (the row's ✕ is a VirtWndCloseButton, which draws itself)
+// hit target only (the row's ✕ is a VirtCloseButton, which draws itself)
 struct HomeListIconWnd : VirtWnd {
     MainWindow* win = nullptr;
     bool isPin = true;
 
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point) override;
     TempStr GetTooltipTemp(Point) override;
 };
@@ -941,14 +941,14 @@ struct HomeEntryWnd : VirtWnd {
     MainWindow* win = nullptr;
     Str filePath; // owned
     int idx = 0;
-    VirtWndCloseButton* closeBtn = nullptr;
-    VirtWndCloseButton* removeBtn = nullptr;
+    VirtCloseButton* closeBtn = nullptr;
+    VirtCloseButton* removeBtn = nullptr;
     HomeListIconWnd* pinBtn = nullptr;
 
     ~HomeEntryWnd() override;
 
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point) override;
 };
 
@@ -959,7 +959,7 @@ struct HomeEntriesWnd : VirtWnd {
     int activeIdx = -1;
     Point lastHoverPt{-1, -1};
 
-    bool OnMouseMove(VirtWndMouseEvent&) override;
+    bool OnMouseMove(VirtMouseEvent&) override;
 
     HomeEntryWnd* EntryAt(int idx);
     HomeEntryWnd* EntryForWnd(VirtWnd*);
@@ -977,8 +977,8 @@ struct HomeTipWnd : VirtWnd {
     Str richFor;                  // owned, the markup `rich` was parsed from
 
     ~HomeTipWnd() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     void SetTipLine(Str line, PlatformFont* font);
     void Sync(const Rect& rcTip, const Rect& rcText);
 };
@@ -988,7 +988,7 @@ static Kind kindHomeChromeWnd = "homeChromeWnd";
 struct HomeChromeWnd : VirtWnd {
     HomeTipWnd* tip = nullptr;
     HomeEntriesWnd* entries = nullptr;
-    VirtWndText* hdr = nullptr;
+    VirtText* hdr = nullptr;
     HomeViewIconWnd* thumbView = nullptr;
     HomeViewIconWnd* listView = nullptr;
     HomeOpenDocWnd* openDoc = nullptr;
@@ -1295,7 +1295,7 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.filterWords = l.filterWords;
 }
 
-// rebuild chrome VirtWndText + copy cached geometry into l (no full layout)
+// rebuild chrome VirtText + copy cached geometry into l (no full layout)
 static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     auto& c = gHomeLayoutCache;
     auto* win = l.win;
@@ -1340,14 +1340,14 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
         txt = _TRA("Frequently Read");
     }
     HomeChromeWnd* chrome = EnsureHomeChrome(win);
-    VirtWndText* hdr = chrome->hdr;
+    VirtText* hdr = chrome->hdr;
     hdr->SetText(txt);
     hdr->font = GetPlatformFont(hdrFont);
     hdr->isRtl = isRtl;
     hdr->SetBounds(c.rcFreqRead);
     l.freqRead = hdr;
 
-    VirtWndText* openDoc = chrome->openDoc->text;
+    VirtText* openDoc = chrome->openDoc->text;
     openDoc->SetText(_TRA("Open a document..."));
     openDoc->font = GetPlatformFont(fontText);
     openDoc->isRtl = isRtl;
@@ -1442,7 +1442,7 @@ static void LayoutHomePage(HomePageLayout& l) {
         txt = _TRA("Frequently Read");
     }
     HomeChromeWnd* chrome = EnsureHomeChrome(win);
-    VirtWndText* hdr = chrome->hdr;
+    VirtText* hdr = chrome->hdr;
     hdr->SetText(txt);
     hdr->font = GetPlatformFont(hdrFont);
     l.freqRead = hdr;
@@ -1472,7 +1472,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
 
     txt = _TRA("Open a document...");
-    VirtWndText* openDoc = chrome->openDoc->text;
+    VirtText* openDoc = chrome->openDoc->text;
     openDoc->SetText(txt);
     openDoc->font = GetPlatformFont(fontText);
     openDoc->isRtl = isRtl;
@@ -1907,16 +1907,16 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 
 //--- home page chrome VirtWnds
 
-void HomeViewIconWnd::Paint(VirtWndPaintCtx& ctx) {
+void HomeViewIconWnd::Paint(VirtPaintCtx& ctx) {
     bool selected = (listView == HomePageIsListView());
     DrawHomeViewButton(GfxHdc(ctx.gfx), pixmap, ctx.bounds, selected);
 }
 
-bool HomeViewIconWnd::OnMouseDown(VirtWndMouseEvent&) {
+bool HomeViewIconWnd::OnMouseDown(VirtMouseEvent&) {
     return true;
 }
 
-bool HomeViewIconWnd::OnMouseUp(VirtWndMouseEvent&) {
+bool HomeViewIconWnd::OnMouseUp(VirtMouseEvent&) {
     if (listView == HomePageIsListView()) {
         return true;
     }
@@ -1936,7 +1936,7 @@ TempStr HomeViewIconWnd::GetTooltipTemp(Point) {
     return str::DupTemp(tooltip);
 }
 
-void HomeOpenDocWnd::Paint(VirtWndPaintCtx& ctx) {
+void HomeOpenDocWnd::Paint(VirtPaintCtx& ctx) {
     if (!pixmap) {
         return;
     }
@@ -1944,11 +1944,11 @@ void HomeOpenDocWnd::Paint(VirtWndPaintCtx& ctx) {
     GfxDrawPixmap(ctx.gfx, pixmap, r);
 }
 
-bool HomeOpenDocWnd::OnMouseDown(VirtWndMouseEvent&) {
+bool HomeOpenDocWnd::OnMouseDown(VirtMouseEvent&) {
     return true;
 }
 
-bool HomeOpenDocWnd::OnMouseUp(VirtWndMouseEvent&) {
+bool HomeOpenDocWnd::OnMouseUp(VirtMouseEvent&) {
     HwndSendCommand(win->hwndFrame, CmdOpenFile);
     return true;
 }
@@ -1958,15 +1958,15 @@ bool HomeOpenDocWnd::OnSetCursor(Point) {
     return true;
 }
 
-void HomeHelpBtnWnd::Paint(VirtWndPaintCtx& ctx) {
+void HomeHelpBtnWnd::Paint(VirtPaintCtx& ctx) {
     DrawHomeHelpButton(GfxHdc(ctx.gfx), ctx.bounds);
 }
 
-bool HomeHelpBtnWnd::OnMouseDown(VirtWndMouseEvent&) {
+bool HomeHelpBtnWnd::OnMouseDown(VirtMouseEvent&) {
     return true;
 }
 
-bool HomeHelpBtnWnd::OnMouseUp(VirtWndMouseEvent&) {
+bool HomeHelpBtnWnd::OnMouseUp(VirtMouseEvent&) {
     HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
     return true;
 }
@@ -2006,12 +2006,12 @@ void HomeTipWnd::SetTipLine(Str line, PlatformFont* font) {
     AddChild(rich);
 }
 
-bool HomeTipWnd::OnMouseDown(VirtWndMouseEvent&) {
+bool HomeTipWnd::OnMouseDown(VirtMouseEvent&) {
     return true;
 }
 
 // clicking the band outside of any link shows another tip
-bool HomeTipWnd::OnMouseUp(VirtWndMouseEvent&) {
+bool HomeTipWnd::OnMouseUp(VirtMouseEvent&) {
     PickAnotherRandomPromotion();
     win->RedrawAll(true);
     return true;
@@ -2045,7 +2045,7 @@ static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
 }
 
 // the ✕ of a thumbnail / list row: forget the file it belongs to
-static void HomeForgetEntryClicked(MainWindow* win, VirtWndMouseEvent* ev) {
+static void HomeForgetEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
     auto* entry = (HomeEntryWnd*)ev->target->parent;
     TempStr path = str::DupTemp(entry->filePath);
     if (len(path) > 0) {
@@ -2053,11 +2053,11 @@ static void HomeForgetEntryClicked(MainWindow* win, VirtWndMouseEvent* ev) {
     }
 }
 
-bool HomeListIconWnd::OnMouseDown(VirtWndMouseEvent&) {
+bool HomeListIconWnd::OnMouseDown(VirtMouseEvent&) {
     return true;
 }
 
-bool HomeListIconWnd::OnMouseUp(VirtWndMouseEvent&) {
+bool HomeListIconWnd::OnMouseUp(VirtMouseEvent&) {
     auto* entry = (HomeEntryWnd*)parent;
     TempStr path = str::DupTemp(entry->filePath);
     if (len(path) == 0) {
@@ -2089,11 +2089,11 @@ HomeEntryWnd::~HomeEntryWnd() {
     str::Free(filePath);
 }
 
-bool HomeEntryWnd::OnMouseDown(VirtWndMouseEvent&) {
+bool HomeEntryWnd::OnMouseDown(VirtMouseEvent&) {
     return true;
 }
 
-bool HomeEntryWnd::OnMouseUp(VirtWndMouseEvent& ev) {
+bool HomeEntryWnd::OnMouseUp(VirtMouseEvent& ev) {
     if (len(filePath) == 0) {
         return true;
     }
@@ -2134,7 +2134,7 @@ void HomeEntriesWnd::SetEntryCount(int n) {
         e->win = win;
         e->idx = ChildCount();
 
-        e->closeBtn = new VirtWndCloseButton();
+        e->closeBtn = new VirtCloseButton();
         // it sits on the thumbnail, so it needs the circle behind it
         e->closeBtn->withCircle = true;
         e->closeBtn->SetTooltip(_TRA("Remove from Frequently Read"));
@@ -2142,7 +2142,7 @@ void HomeEntriesWnd::SetEntryCount(int n) {
         e->closeBtn->visibility = Visibility::Collapse;
         e->AddChild(e->closeBtn);
 
-        e->removeBtn = new VirtWndCloseButton();
+        e->removeBtn = new VirtCloseButton();
         e->removeBtn->SetTooltip(_TRA("Remove from Frequently Read"));
         e->removeBtn->onClick = MkFunc1(HomeForgetEntryClicked, win);
         e->removeBtn->visibility = Visibility::Collapse;
@@ -2189,7 +2189,7 @@ void HomeEntriesWnd::SetActiveEntry(int idx) {
 
 // mouse events bubble up to us from the entry (or one of its buttons) that was
 // hit, so this is where the active entry is tracked
-bool HomeEntriesWnd::OnMouseMove(VirtWndMouseEvent& ev) {
+bool HomeEntriesWnd::OnMouseMove(VirtMouseEvent& ev) {
     // keyboard nav invalidates the canvas and Windows may re-send WM_MOUSEMOVE
     // with the same coordinates: ignore those so the selection doesn't snap
     // back under a stationary cursor
@@ -2212,7 +2212,7 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     }
     HWND hwnd = win->hwndCanvas;
     if (!win->homeRoot) {
-        win->homeRoot = new VirtWndRoot(hwnd);
+        win->homeRoot = new VirtRoot(hwnd);
     }
 
     auto* chrome = new HomeChromeWnd();
@@ -2245,12 +2245,12 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     chrome->listView->tooltip = _TRA("Show as list");
     chrome->AddChild(chrome->listView);
 
-    chrome->hdr = new VirtWndText(StrL(""));
+    chrome->hdr = new VirtText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
     chrome->openDoc = new HomeOpenDocWnd();
     chrome->openDoc->win = win;
-    chrome->openDoc->text = new VirtWndText(StrL(""));
+    chrome->openDoc->text = new VirtText(StrL(""));
     chrome->openDoc->text->withUnderline = true;
     chrome->openDoc->AddChild(chrome->openDoc->text);
     chrome->AddChild(chrome->openDoc);
@@ -2271,7 +2271,7 @@ void HomePageDestroyChrome(MainWindow* win) {
 // gives the home page's virtual controls first shot at the canvas messages.
 // Returns true when the event was consumed and the caller should stop
 bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
-    VirtWndRoot* root = win->homeRoot;
+    VirtRoot* root = win->homeRoot;
     if (!root || !root->child) {
         return false;
     }
@@ -2319,7 +2319,7 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
 static void HomePageSyncChrome(HomePageLayout& l) {
     MainWindow* win = l.win;
     HomeChromeWnd* chrome = EnsureHomeChrome(win);
-    VirtWndRoot* root = win->homeRoot;
+    VirtRoot* root = win->homeRoot;
     // the chrome positions its children itself, so don't let the root re-layout
     root->bounds = l.rc;
     root->needsLayout = false;

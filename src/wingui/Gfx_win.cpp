@@ -23,7 +23,7 @@ void GfxFillRect(Gfx* gfx, const Rect& r, COLORREF col) {
 }
 
 // kColorUnset draws in the surface's current text color, which is how the
-// underline under a VirtWndText picks up the color the text was drawn in
+// underline under a VirtText picks up the color the text was drawn in
 void GfxDrawLine(Gfx* gfx, const Rect& r, COLORREF col, int thickness) {
     if (col == kColorUnset) {
         col = GetTextColor(gfx->hdc);

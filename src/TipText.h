@@ -96,9 +96,9 @@ struct VirtRichText : VirtWnd {
     Size Layout(Constraints bc) override;
     Size GetIdealSize() override;
     void SetBounds(Rect) override;
-    void Paint(VirtWndPaintCtx&) override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point ptLocal) override;
     TempStr GetTooltipTemp(Point ptLocal) override;
 };

@@ -21,7 +21,7 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 //--- Tabs
 //
-// Each tab is a TabWnd in a VirtWndBox that lays them out along the bar, with
+// Each tab is a TabWnd in a VirtBox that lays them out along the bar, with
 // the tab's ✕ as a child of the tab. The control keeps the HWND (it owns the
 // drag loop, which needs capture and screen coordinates) and the tab list;
 // everything on screen belongs to the tree.
@@ -74,7 +74,7 @@ static COLORREF TabTextColorForBackground(COLORREF tabBg) {
 struct TabWnd : VirtWnd {
     TabsCtrl* tabsCtrl = nullptr;
     TabInfo* ti = nullptr;
-    VirtWndCloseButton* closeBtn = nullptr;
+    VirtCloseButton* closeBtn = nullptr;
     Size idealSize;
     // the ✕ glyph itself, inside the close button's larger hit area
     Rect rClose;
@@ -90,17 +90,17 @@ struct TabWnd : VirtWnd {
 
     Size GetIdealSize() override;
     void SetBounds(Rect) override;
-    void Paint(VirtWndPaintCtx&) override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     TempStr GetTooltipTemp(Point) override;
 };
 
-static void TabCloseClicked(TabWnd*, VirtWndMouseEvent*);
+static void TabCloseClicked(TabWnd*, VirtMouseEvent*);
 
 TabWnd::TabWnd() {
     kind = kindTabWnd;
-    closeBtn = new VirtWndCloseButton();
+    closeBtn = new VirtCloseButton();
     closeBtn->onClick = MkFunc1(TabCloseClicked, this);
     closeBtn->visibility = Visibility::Collapse;
     AddChild(closeBtn);
@@ -208,7 +208,7 @@ bool TabWnd::CloseVisible() {
     return IsSelected() || (IsUnderMouse() && bounds.dx >= kMinTabWidthForClose);
 }
 
-void TabWnd::Paint(VirtWndPaintCtx& ctx) {
+void TabWnd::Paint(VirtPaintCtx& ctx) {
     HDC hdc = GfxHdc(ctx.gfx);
     HWND hwnd = GetHwnd();
     Rect r = ctx.bounds;
@@ -275,12 +275,12 @@ void TabWnd::Paint(VirtWndPaintCtx& ctx) {
     closeBtn->circleColor = tabBgCol;
 }
 
-bool TabWnd::OnMouseDown(VirtWndMouseEvent& ev) {
+bool TabWnd::OnMouseDown(VirtMouseEvent& ev) {
     tabsCtrl->OnTabMouseDown(this, ev);
     return true;
 }
 
-bool TabWnd::OnMouseUp(VirtWndMouseEvent&) {
+bool TabWnd::OnMouseUp(VirtMouseEvent&) {
     // the drag / migration handling needs capture and screen coordinates, so it
     // stays in the control's WndProc
     return true;
@@ -290,7 +290,7 @@ TempStr TabWnd::GetTooltipTemp(Point) {
     return str::DupTemp(ti->tooltip);
 }
 
-static void TabCloseClicked(TabWnd* tab, VirtWndMouseEvent*) {
+static void TabCloseClicked(TabWnd* tab, VirtMouseEvent*) {
     tab->tabsCtrl->CloseTab(tab->Idx());
 }
 
@@ -594,7 +594,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
 }
 
 // clicking a tab selects it (and arms a possible drag)
-void TabsCtrl::OnTabMouseDown(TabWnd* tab, VirtWndMouseEvent& ev) {
+void TabsCtrl::OnTabMouseDown(TabWnd* tab, VirtMouseEvent& ev) {
     int idx = tab->Idx();
     UpdateHover(idx);
     if (idx != selectedIdx) {
@@ -898,8 +898,8 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
         return nullptr;
     }
 
-    vroot = new VirtWndRoot(hwnd);
-    bar = new VirtWndBox(false);
+    vroot = new VirtRoot(hwnd);
+    bar = new VirtBox(false);
     bar->alignCross = CrossAxisAlign::Stretch;
     vroot->SetChild(bar);
 

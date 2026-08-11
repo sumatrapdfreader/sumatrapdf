@@ -754,10 +754,10 @@ using Gdiplus::PathData;
 struct TabsCtrl;
 struct TabInfo;
 struct TabWnd;
-struct VirtWndRoot;
-struct VirtWndBox;
-struct VirtWndCloseButton;
-struct VirtWndMouseEvent;
+struct VirtRoot;
+struct VirtBox;
+struct VirtCloseButton;
+struct VirtMouseEvent;
 
 #define kTabDefaultBgCol ((COLORREF)(-1))
 
@@ -837,8 +837,8 @@ struct TabsCtrl : Wnd {
 
     Vec<TabInfo*> tabs;
     // the bar as virtual controls: one TabWnd per TabInfo, laid out by `bar`
-    VirtWndRoot* vroot = nullptr;
-    VirtWndBox* bar = nullptr;
+    VirtRoot* vroot = nullptr;
+    VirtBox* bar = nullptr;
     // in tab order (the box's children are reversed when the UI is RTL)
     Vec<TabWnd*> tabWnds;
     struct Tooltip* tooltip = nullptr;
@@ -929,7 +929,7 @@ struct TabsCtrl : Wnd {
     TabWnd* TabWndAt(int idx);
     void RebuildTabWnds();
     void UpdateHover(int tabUnderMouse);
-    void OnTabMouseDown(TabWnd*, VirtWndMouseEvent&);
+    void OnTabMouseDown(TabWnd*, VirtMouseEvent&);
     void CloseTab(int idx);
 };
 

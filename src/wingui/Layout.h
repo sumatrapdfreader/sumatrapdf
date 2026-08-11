@@ -244,7 +244,7 @@ struct Spacer : LayoutBase {
     void SetBounds(Rect) override;
 };
 
-// for a grid layout see VirtWndTable (VirtWnd.h)
+// for a grid layout see VirtTable (VirtWnd.h)
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Size LayoutToSize(ILayout* layout, Size size);

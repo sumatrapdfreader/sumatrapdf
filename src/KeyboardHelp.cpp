@@ -32,7 +32,7 @@
 // command with no binding is simply skipped, so the sheet self-adjusts.
 //
 // The sheet is a VirtWnd tree: an HBox of two columns, each column a
-// VirtWndTable of (key-caps, description) rows with the section headers as
+// VirtTable of (key-caps, description) rows with the section headers as
 // full-width spanning cells.
 
 // which commands go in which section; each list is 0-terminated. Kept in enum
@@ -121,19 +121,19 @@ struct KbKeyCaps : VirtWnd {
     ~KbKeyCaps() override = default;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
 // a section header. It carries the gap that separates it from the section above,
 // because a column is a single table and its rowGap is uniform
-struct KbSectionTitle : VirtWndText {
+struct KbSectionTitle : VirtText {
     int topGap = 0;
 
     KbSectionTitle(Str s, PlatformFont* f);
     ~KbSectionTitle() override = default;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
 struct KeyboardHelpWnd : Wnd {
@@ -145,15 +145,15 @@ struct KeyboardHelpWnd : Wnd {
 
     // the sheet as a VirtWnd tree. `container` positions its children itself,
     // so the root never re-layouts them
-    VirtWndRoot* vroot = nullptr;
+    VirtRoot* vroot = nullptr;
     VirtWnd* container = nullptr;
-    VirtWndText* title = nullptr;
-    VirtWndLink* closeBtn = nullptr;
-    VirtWndLine* separator = nullptr;
-    VirtWndBox* columns = nullptr;
-    VirtWndText* footer = nullptr;
+    VirtText* title = nullptr;
+    VirtLink* closeBtn = nullptr;
+    VirtLine* separator = nullptr;
+    VirtBox* columns = nullptr;
+    VirtText* footer = nullptr;
     // section headers and row descriptions, so SyncColors() can reach them
-    Vec<VirtWndText*> texts;
+    Vec<VirtText*> texts;
 
     // metrics, in client pixels, computed in BuildContent
     int pad = 0;
@@ -318,7 +318,7 @@ Size KbKeyCaps::GetIdealSize() {
     return {dx, capDy};
 }
 
-void KbKeyCaps::Paint(VirtWndPaintCtx& ctx) {
+void KbKeyCaps::Paint(VirtPaintCtx& ctx) {
     int n = toks.size;
     if (n <= 0) {
         return;
@@ -351,27 +351,27 @@ void KbKeyCaps::Paint(VirtWndPaintCtx& ctx) {
     DeleteObject(br);
 }
 
-KbSectionTitle::KbSectionTitle(Str s, PlatformFont* f) : VirtWndText(s, f) {
+KbSectionTitle::KbSectionTitle(Str s, PlatformFont* f) : VirtText(s, f) {
     kind = kindKbSectionTitle;
 }
 
 Size KbSectionTitle::GetIdealSize() {
-    Size sz2 = VirtWndText::GetIdealSize();
+    Size sz2 = VirtText::GetIdealSize();
     sz2.dy += topGap;
     return sz2;
 }
 
-void KbSectionTitle::Paint(VirtWndPaintCtx& ctx) {
+void KbSectionTitle::Paint(VirtPaintCtx& ctx) {
     // the gap belongs above the text
-    VirtWndPaintCtx c2 = ctx;
+    VirtPaintCtx c2 = ctx;
     c2.content.y += topGap;
     c2.content.dy -= topGap;
-    VirtWndText::Paint(c2);
+    VirtText::Paint(c2);
 }
 
 //--- building the sheet
 
-static void OnCloseClicked(VirtWndMouseEvent*) {
+static void OnCloseClicked(VirtMouseEvent*) {
     ScheduleCloseKeyboardHelp();
 }
 
@@ -448,37 +448,37 @@ void KeyboardHelpWnd::BuildContent() {
     Vec<KbSectionData> sections;
     CollectSections(sections, secTitleH, szRow.dy + rowGap, secGap);
 
-    vroot = new VirtWndRoot(hwnd);
+    vroot = new VirtRoot(hwnd);
     container = new VirtWnd();
     container->name = StrL("keyboardHelp");
     container->flags |= vwfNoHitTest;
 
-    title = new VirtWndText(trans::GetTranslation("Keyboard Shortcuts"), fontTitle);
+    title = new VirtText(trans::GetTranslation("Keyboard Shortcuts"), fontTitle);
     container->AddChild(title);
 
     // U+2715 MULTIPLICATION X
-    closeBtn = new VirtWndLink("\xE2\x9C\x95", fontTitle);
-    closeBtn->align = VirtWndTextAlign::Center;
+    closeBtn = new VirtLink("\xE2\x9C\x95", fontTitle);
+    closeBtn->align = VirtTextAlign::Center;
     closeBtn->onClick = MkFunc1Void(OnCloseClicked);
     container->AddChild(closeBtn);
 
-    separator = new VirtWndLine();
+    separator = new VirtLine();
     separator->thickness = DpiScale(hwnd, 1);
     container->AddChild(separator);
 
-    columns = new VirtWndBox(false);
+    columns = new VirtBox(false);
     columns->alignCross = CrossAxisAlign::CrossStart;
-    VirtWndTable* tables[2] = {new VirtWndTable(), new VirtWndTable()};
-    for (VirtWndTable* t : tables) {
+    VirtTable* tables[2] = {new VirtTable(), new VirtTable()};
+    for (VirtTable* t : tables) {
         t->colGap = keysDescGap;
         t->rowGap = rowGap;
     }
     columns->AddChild(tables[0]);
-    columns->AddChild(new VirtWndSpacer(colGap, 0));
+    columns->AddChild(new VirtSpacer(colGap, 0));
     columns->AddChild(tables[1]);
     container->AddChild(columns);
 
-    footer = new VirtWndText(trans::GetTranslation("Press ? to close"), fontRow);
+    footer = new VirtText(trans::GetTranslation("Press ? to close"), fontRow);
     container->AddChild(footer);
 
     // one table per column: a section header spans both table columns, each row
@@ -494,13 +494,13 @@ void KeyboardHelpWnd::BuildContent() {
     int radius = DpiScale(hwnd, 5);
     int rowAt[2] = {0, 0};
     for (auto& s : sections) {
-        VirtWndTable* t = tables[s.col];
+        VirtTable* t = tables[s.col];
         int& row = rowAt[s.col];
 
         auto* hdr = new KbSectionTitle(s.title, fontHdr);
         hdr->topGap = (row == 0) ? 0 : secGap;
         texts.Append(hdr);
-        VirtWndTableCell& hdrCell = t->SetCell(row, 0, hdr, 1, 2);
+        VirtTableCell& hdrCell = t->SetCell(row, 0, hdr, 1, 2);
         hdrCell.alignV = CrossAxisAlign::CrossEnd;
         row++;
 
@@ -514,13 +514,13 @@ void KeyboardHelpWnd::BuildContent() {
             // at most 4 caps per row, like the sheet has always shown
             Split(&caps->toks, r.keys, ", ", false, 4);
             // the caps sit against the description, like a gutter
-            VirtWndTableCell& capsCell = t->SetCell(row, 0, caps);
+            VirtTableCell& capsCell = t->SetCell(row, 0, caps);
             capsCell.alignH = CrossAxisAlign::CrossEnd;
             capsCell.alignV = CrossAxisAlign::CrossCenter;
 
             auto* desc = NewVirtWndText({.s = r.desc, .font = fontRow, .ellipsis = true});
             texts.Append(desc);
-            VirtWndTableCell& descCell = t->SetCell(row, 1, desc);
+            VirtTableCell& descCell = t->SetCell(row, 1, desc);
             descCell.alignV = CrossAxisAlign::CrossCenter;
             row++;
         }
@@ -569,7 +569,7 @@ void KeyboardHelpWnd::SyncColors() {
     closeBtn->textColor = dim;
     separator->color = ThemeEdgeColor();
     footer->textColor = dim;
-    for (VirtWndText* t : texts) {
+    for (VirtText* t : texts) {
         t->textColor = txt;
     }
 }

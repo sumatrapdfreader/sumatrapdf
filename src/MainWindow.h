@@ -356,7 +356,7 @@ struct MainWindow {
     Rect selectionEditOrig;
 
     // virtual controls of the home page (header, view buttons, links, ...)
-    struct VirtWndRoot* homeRoot = nullptr;
+    struct VirtRoot* homeRoot = nullptr;
 
     // home page thumbnail scrolling
     int homePageScrollY = 0;

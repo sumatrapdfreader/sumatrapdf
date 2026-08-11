@@ -9020,9 +9020,9 @@ static void DebugCorruptMemory() {
 }
 #endif
 
-// a VirtWndImage doesn't own the Pixmap it shows, so a notification that
+// a VirtImage doesn't own the Pixmap it shows, so a notification that
 // generates one needs a wnd that frees it when the tree goes away
-struct OwnedPixmapWnd : VirtWndImage {
+struct OwnedPixmapWnd : VirtImage {
     ~OwnedPixmapWnd() override { FreePixmap(pixmap); }
 };
 
@@ -9050,7 +9050,7 @@ static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
 // by a VirtWnd, with a caption below it
 static VirtWnd* MakeDebugPixmapNotifContent(HWND hwnd) {
     PlatformFont* font = GetPlatformFont(GetAppBiggerFont(hwnd));
-    auto* box = new VirtWndBox(true);
+    auto* box = new VirtBox(true);
     box->alignCross = CrossAxisAlign::CrossCenter;
 
     auto* img = new OwnedPixmapWnd();
@@ -9058,8 +9058,8 @@ static VirtWnd* MakeDebugPixmapNotifContent(HWND hwnd) {
     img->fitToBounds = false;
     box->AddChild(img);
 
-    box->AddChild(new VirtWndSpacer(0, DpiScale(hwnd, 6)));
-    box->AddChild(new VirtWndText(StrL("a VirtWnd-drawn Pixmap"), font));
+    box->AddChild(new VirtSpacer(0, DpiScale(hwnd, 6)));
+    box->AddChild(new VirtText(StrL("a VirtWnd-drawn Pixmap"), font));
     return box;
 }
 #endif

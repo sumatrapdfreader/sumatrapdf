@@ -548,7 +548,7 @@ void VirtRichText::SetBounds(Rect r) {
 
 // draws the words (link words in linkColor, underlined; others in textColor;
 // isKbd words as key-caps like the keyboard help sheet)
-void VirtRichText::Paint(VirtWndPaintCtx& ctx) {
+void VirtRichText::Paint(VirtPaintCtx& ctx) {
     HDC hdc = GfxHdc(ctx.gfx);
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
     PlatformFont* boldFont = nullptr;
@@ -626,11 +626,11 @@ TipLink* VirtRichText::LinkAt(Point ptLocal) {
 }
 
 // a click on a link runs it; anything else bubbles up to whoever hosts us
-bool VirtRichText::OnMouseDown(VirtWndMouseEvent& ev) {
+bool VirtRichText::OnMouseDown(VirtMouseEvent& ev) {
     return LinkAt(ev.pt) != nullptr;
 }
 
-bool VirtRichText::OnMouseUp(VirtWndMouseEvent& ev) {
+bool VirtRichText::OnMouseUp(VirtMouseEvent& ev) {
     TipLink* link = LinkAt(ev.pt);
     if (!link) {
         return false;

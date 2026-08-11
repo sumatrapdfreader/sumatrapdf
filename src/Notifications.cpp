@@ -70,7 +70,7 @@ struct NotifTextWnd : VirtWnd {
     ~NotifTextWnd() override = default;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
 // the progress bar below the message (only when progressPerc >= 0)
@@ -80,7 +80,7 @@ struct NotifProgressWnd : VirtWnd {
     NotifProgressWnd();
     ~NotifProgressWnd() override = default;
 
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
 struct NotificationWnd : Wnd {
@@ -131,16 +131,16 @@ struct NotificationWnd : Wnd {
     // the content is a VirtWnd tree hosted in our HWND. `container` positions
     // its children itself (Layout() computes the rects), so the root never
     // re-layouts on its own
-    VirtWndRoot* vroot = nullptr;
+    VirtRoot* vroot = nullptr;
     VirtWnd* container = nullptr;
     // either the built-in text or a caller-supplied tree, never both
     NotifTextWnd* txtWnd = nullptr;
     VirtWnd* contentWnd = nullptr;
-    VirtWndCloseButton* closeWnd = nullptr;
+    VirtCloseButton* closeWnd = nullptr;
     NotifProgressWnd* progressWnd = nullptr;
 };
 
-static void NotifCloseClicked(NotificationWnd* wnd, VirtWndMouseEvent*) {
+static void NotifCloseClicked(NotificationWnd* wnd, VirtMouseEvent*) {
     wnd->ScheduleRemove();
 }
 
@@ -348,7 +348,7 @@ NotifColors NotificationWnd::Colors() const {
 // builds the tree hosted in our HWND: the body (message text or a caller
 // supplied tree), the close button and the progress bar
 void NotificationWnd::BuildTree(VirtWnd* customContent) {
-    vroot = new VirtWndRoot(hwnd);
+    vroot = new VirtRoot(hwnd);
     container = new VirtWnd();
     container->name = StrL("notification");
     // decorative: clicks in the padding around the controls do nothing
@@ -370,7 +370,7 @@ void NotificationWnd::BuildTree(VirtWnd* customContent) {
 
     if (!noClose) {
         // last, so it hit-tests on top of the body
-        closeWnd = new VirtWndCloseButton();
+        closeWnd = new VirtCloseButton();
         closeWnd->onClick = MkFunc1(NotifCloseClicked, this);
         container->AddChild(closeWnd);
     }
@@ -671,7 +671,7 @@ Size NotifTextWnd::GetIdealSize() {
     return idealSize;
 }
 
-void NotifTextWnd::Paint(VirtWndPaintCtx& ctx) {
+void NotifTextWnd::Paint(VirtPaintCtx& ctx) {
     if (rich) {
         // the child paints itself; keep its colors in step with the theme
         NotifColors cols = notif->Colors();
@@ -689,7 +689,7 @@ NotifProgressWnd::NotifProgressWnd() {
     flags |= vwfNoHitTest;
 }
 
-void NotifProgressWnd::Paint(VirtWndPaintCtx& ctx) {
+void NotifProgressWnd::Paint(VirtPaintCtx& ctx) {
     Rect rc = ctx.bounds;
     int progressWidth = rc.dx;
 

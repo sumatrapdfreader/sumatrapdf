@@ -2,29 +2,29 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // A VirtWnd is a "virtual control": a tree of them lives inside a single HWND,
-// each taking up a part of it. VirtWndRoot bridges the tree to the HWND: it
+// each taking up a part of it. VirtRoot bridges the tree to the HWND: it
 // drives layout, painting and message dispatch (hover / capture / focus).
 //
 // A VirtWnd is an ILayout (Layout.h), so it composes with VBox / HBox /
-// Padding / VirtWndTable. Its `bounds` are relative to the parent's content
+// Padding / VirtTable. Its `bounds` are relative to the parent's content
 // origin; painting and hit-testing carry an origin down the tree, which is what
-// makes VirtWndScroll cheap (shift the origin, don't re-layout the subtree).
+// makes VirtScroll cheap (shift the origin, don't re-layout the subtree).
 
 // needs wingui/PlatformFont.h (PlatformFont) and wingui/Gfx.h (Gfx)
 // included before it
 
 struct VirtWnd;
-struct VirtWndRoot;
+struct VirtRoot;
 struct Pixmap;
 struct Wnd;
 
-enum VirtWndFlags : u32 {
+enum VirtFlags : u32 {
     vwfEnabled = 1 << 0,
     vwfFocusable = 1 << 1,
     vwfFocused = 1 << 2,
     vwfHovered = 1 << 3,
     vwfPressed = 1 << 4,
-    // keeps the mouse during a drag; while captured, VirtWndMouseEvent::pt is
+    // keeps the mouse during a drag; while captured, VirtMouseEvent::pt is
     // in window coords because the mouse can be outside the wnd's bounds
     vwfCapturesMouse = 1 << 5,
     vwfClipChildren = 1 << 6,
@@ -36,14 +36,14 @@ enum VirtWndFlags : u32 {
 };
 
 // all rects are in HWND client coords
-struct VirtWndPaintCtx {
+struct VirtPaintCtx {
     Gfx* gfx = nullptr;
     Rect bounds;  // the wnd being painted
     Rect content; // bounds deflated by padding
     Rect clip;    // intersection of the clip rects of all ancestors
 };
 
-struct VirtWndMouseEvent {
+struct VirtMouseEvent {
     // the wnd currently being offered the event; changes as it bubbles up
     VirtWnd* target = nullptr;
     // the wnd the mouse actually hit; stays the same while bubbling
@@ -58,7 +58,7 @@ struct VirtWndMouseEvent {
     bool isAlt = false;
 };
 
-struct VirtWndKeyEvent {
+struct VirtKeyEvent {
     VirtWnd* target = nullptr;
     int vkey = 0;
     bool isCtrl = false;
@@ -66,12 +66,12 @@ struct VirtWndKeyEvent {
     bool isAlt = false;
 };
 
-using VirtWndMouseHandler = Func1<VirtWndMouseEvent*>;
-using VirtWndPaintHandler = Func1<VirtWndPaintCtx*>;
+using VirtMouseHandler = Func1<VirtMouseEvent*>;
+using VirtPaintHandler = Func1<VirtPaintCtx*>;
 
 struct VirtWnd : LayoutBase {
     VirtWnd* parent = nullptr;
-    VirtWndRoot* root = nullptr;
+    VirtRoot* root = nullptr;
     Vec<VirtWnd*> children; // owned
 
     u32 flags = vwfEnabled;
@@ -94,8 +94,8 @@ struct VirtWnd : LayoutBase {
 
     virtual Size GetIdealSize();
 
-    virtual void Paint(VirtWndPaintCtx&);
-    virtual void PaintChildren(VirtWndPaintCtx&);
+    virtual void Paint(VirtPaintCtx&);
+    virtual void PaintChildren(VirtPaintCtx&);
     void PaintTree(Gfx*, Point origin, Rect clip);
     void PaintStandalone(Gfx*);
 
@@ -105,16 +105,16 @@ struct VirtWnd : LayoutBase {
     VirtWnd* WndFromPoint(Point ptWindow, Point* ptLocalOut);
 
     // return true to consume the event, false to let it bubble to the parent
-    virtual bool OnMouseDown(VirtWndMouseEvent&);
-    virtual bool OnMouseUp(VirtWndMouseEvent&);
-    virtual bool OnMouseMove(VirtWndMouseEvent&);
-    virtual bool OnMouseWheel(VirtWndMouseEvent&);
-    virtual bool OnDoubleClick(VirtWndMouseEvent&);
-    virtual bool OnContextMenu(VirtWndMouseEvent&);
+    virtual bool OnMouseDown(VirtMouseEvent&);
+    virtual bool OnMouseUp(VirtMouseEvent&);
+    virtual bool OnMouseMove(VirtMouseEvent&);
+    virtual bool OnMouseWheel(VirtMouseEvent&);
+    virtual bool OnDoubleClick(VirtMouseEvent&);
+    virtual bool OnContextMenu(VirtMouseEvent&);
     virtual void OnMouseEnter();
     virtual void OnMouseLeave();
     virtual void OnCaptureLost();
-    virtual bool OnKeyDown(VirtWndKeyEvent&);
+    virtual bool OnKeyDown(VirtKeyEvent&);
     virtual bool OnChar(int c);
     virtual void OnFocusChanged(bool gotFocus);
     virtual bool OnSetCursor(Point ptLocal);
@@ -143,12 +143,12 @@ struct VirtWnd : LayoutBase {
     bool IsHitTestable() const;
     void SetFlag(u32 f, bool on);
     bool HasFlag(u32 f) const;
-    void SetRoot(VirtWndRoot*);
+    void SetRoot(VirtRoot*);
 };
 
 bool IsVirtWndOfKind(VirtWnd*, Kind);
 
-struct VirtWndRoot {
+struct VirtRoot {
     HWND hwnd = nullptr;
     VirtWnd* child = nullptr; // owned
     // part of hwnd occupied by the tree
@@ -162,8 +162,8 @@ struct VirtWndRoot {
     bool needsLayout = true;
     bool trackingMouseLeave = false;
 
-    explicit VirtWndRoot(HWND);
-    ~VirtWndRoot();
+    explicit VirtRoot(HWND);
+    ~VirtRoot();
 
     void SetChild(VirtWnd*);
     void SetBounds(Rect);
@@ -188,13 +188,13 @@ struct VirtWndRoot {
 
 //--- containers
 
-struct VirtWndBox : VirtWnd {
+struct VirtBox : VirtWnd {
     bool isVertical = true;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
 
-    explicit VirtWndBox(bool isVertical = true);
-    ~VirtWndBox() override;
+    explicit VirtBox(bool isVertical = true);
+    ~VirtBox() override;
 
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
@@ -212,10 +212,10 @@ struct VirtWndBox : VirtWnd {
     ILayout* Box();
 };
 
-// one cell of a VirtWndTable. alignH / alignV say where the child sits when the
+// one cell of a VirtTable. alignH / alignV say where the child sits when the
 // cell is bigger than the child; CrossAxisAlign::Stretch makes the child fill
 // the cell in that direction
-struct VirtWndTableCell {
+struct VirtTableCell {
     // owned, as one of the table's VirtWnd children
     VirtWnd* child = nullptr;
     int rowSpan = 1;
@@ -231,15 +231,15 @@ struct VirtWndTableCell {
 // a grid of rows x cols cells, each holding a VirtWnd. A column is as wide as
 // its widest cell and a row as tall as its tallest; a cell can span several
 // rows and / or columns
-struct VirtWndTable : VirtWnd {
+struct VirtTable : VirtWnd {
     int rows = 0;
     int cols = 0;
     // space between adjacent columns / rows
     int colGap = 0;
     int rowGap = 0;
 
-    VirtWndTable();
-    ~VirtWndTable() override;
+    VirtTable();
+    ~VirtTable() override;
 
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
@@ -247,8 +247,8 @@ struct VirtWndTable : VirtWnd {
     void SetBounds(Rect) override;
 
     void SetSize(int rows, int cols);
-    VirtWndTableCell& SetCell(int row, int col, VirtWnd* child, int rowSpan = 1, int colSpan = 1);
-    VirtWndTableCell* CellAt(int row, int col);
+    VirtTableCell& SetCell(int row, int col, VirtWnd* child, int rowSpan = 1, int colSpan = 1);
+    VirtTableCell* CellAt(int row, int col);
     VirtWnd* GetCell(int row, int col);
     void RemoveAllCells();
 
@@ -258,7 +258,7 @@ struct VirtWndTable : VirtWnd {
     Rect CellRect(int row, int col);
 
   private:
-    Vec<VirtWndTableCell> cells; // rows * cols, row-major
+    Vec<VirtTableCell> cells; // rows * cols, row-major
     Vec<int> colWidths;
     Vec<int> rowHeights;
 
@@ -271,27 +271,27 @@ struct VirtWndTable : VirtWnd {
 
 // tells the owner which part of the content is visible so it can create
 // only the wnds that are needed (list virtualization)
-struct VirtWndScrollRange {
+struct VirtScrollRange {
     VirtWnd* wnd = nullptr;
     int visibleY = 0;
     int visibleDy = 0;
 };
 
-struct VirtWndScroll : VirtWnd {
+struct VirtScroll : VirtWnd {
     int scrollY = 0;
     int contentDy = 0;
     int lineDy = 16;
     // when set, syncs the HWND's vertical scrollbar
     bool syncScrollbar = false;
-    Func1<VirtWndScrollRange*> onVisibleRangeChanged;
+    Func1<VirtScrollRange*> onVisibleRangeChanged;
 
-    VirtWndScroll();
-    ~VirtWndScroll() override;
+    VirtScroll();
+    ~VirtScroll() override;
 
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
     Point ScrollOffset() override;
-    bool OnMouseWheel(VirtWndMouseEvent&) override;
+    bool OnMouseWheel(VirtMouseEvent&) override;
 
     void SetContentDy(int);
     int MaxScrollY() const;
@@ -309,29 +309,29 @@ struct VirtWndScroll : VirtWnd {
     void NotifyVisibleRange();
 };
 
-struct VirtWndCustom : VirtWnd {
+struct VirtCustom : VirtWnd {
     Size idealSize;
-    VirtWndPaintHandler onPaint;
-    VirtWndMouseHandler onClick;
+    VirtPaintHandler onPaint;
+    VirtMouseHandler onClick;
 
-    VirtWndCustom();
-    ~VirtWndCustom() override;
+    VirtCustom();
+    ~VirtCustom() override;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
 };
 
 // Hosts a real HWND control (an edit, a native list, ...) inside a VirtWnd
 // tree, so the two can be laid out together. The control is a window of its
 // own: Windows paints it and delivers its input, so the wrapper only forwards
 // layout and visibility and is never a paint or hit-test target.
-struct VirtWndWrapper : VirtWnd {
+struct VirtWrapper : VirtWnd {
     Wnd* wnd = nullptr; // owned unless ownsWnd is false
     bool ownsWnd = true;
 
-    explicit VirtWndWrapper(Wnd*, bool ownsWnd = true);
-    ~VirtWndWrapper() override;
+    explicit VirtWrapper(Wnd*, bool ownsWnd = true);
+    ~VirtWrapper() override;
 
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
@@ -342,21 +342,21 @@ struct VirtWndWrapper : VirtWnd {
 
 //--- controls
 
-enum class VirtWndTextAlign {
+enum class VirtTextAlign {
     Left,
     Center,
     Right
 };
 
-// VirtWndText itself can't be an aggregate - it inherits VirtWnd, which has
+// VirtText itself can't be an aggregate - it inherits VirtWnd, which has
 // virtual functions and a constructor - so designated initializers go through
 // this, like the CreateArgs of the HWND controls:
 //   auto* t = NewVirtWndText({.s = path, .font = font, .ellipsis = true});
-struct VirtWndTextArgs {
+struct VirtTextArgs {
     Str s;
     PlatformFont* font = nullptr; // not owned, interned
     COLORREF textColor = kColorUnset;
-    VirtWndTextAlign align = VirtWndTextAlign::Left;
+    VirtTextAlign align = VirtTextAlign::Left;
     bool withUnderline = false;
     bool isRtl = false;
     bool ellipsis = false;
@@ -365,7 +365,7 @@ struct VirtWndTextArgs {
     Insets padding{};
 };
 
-struct VirtWndText : VirtWnd {
+struct VirtText : VirtWnd {
     Str s;
     PlatformFont* font = nullptr; // not owned, interned
     bool withUnderline = false;
@@ -373,13 +373,13 @@ struct VirtWndText : VirtWnd {
     bool ellipsis = false;
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
-    VirtWndTextAlign align = VirtWndTextAlign::Left;
+    VirtTextAlign align = VirtTextAlign::Left;
     COLORREF textColor = kColorUnset;
 
     Size sz = {0, 0};
 
-    VirtWndText(Str s, PlatformFont* font = nullptr);
-    ~VirtWndText() override;
+    VirtText(Str s, PlatformFont* font = nullptr);
+    ~VirtText() override;
 
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
@@ -390,71 +390,71 @@ struct VirtWndText : VirtWnd {
     Size GetIdealSize(bool onlyIfEmpty);
     void SetText(Str);
 
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
-VirtWndText* NewVirtWndText(const VirtWndTextArgs&);
+VirtText* NewVirtWndText(const VirtTextArgs&);
 
-struct VirtWndLink : VirtWndText {
+struct VirtLink : VirtText {
     Str target;  // owned
     Str tooltip; // owned
-    VirtWndMouseHandler onClick;
+    VirtMouseHandler onClick;
     bool underlineOnHover = false;
 
-    VirtWndLink(Str s, PlatformFont* font = nullptr);
-    ~VirtWndLink() override;
+    VirtLink(Str s, PlatformFont* font = nullptr);
+    ~VirtLink() override;
 
     void SetTarget(Str);
     void SetTooltip(Str);
 
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
     void OnMouseEnter() override;
     void OnMouseLeave() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point ptLocal) override;
     TempStr GetTooltipTemp(Point ptLocal) override;
 };
 
-struct VirtWndButton : VirtWndText {
+struct VirtButton : VirtText {
     COLORREF bgColor = kColorUnset;
     COLORREF bgColorHover = kColorUnset;
     COLORREF borderColor = kColorUnset;
     // when the button is disabled (vwfEnabled cleared)
     COLORREF textColorDisabled = kColorUnset;
     Insets textPadding{4, 8, 4, 8};
-    VirtWndMouseHandler onClick;
+    VirtMouseHandler onClick;
 
-    VirtWndButton(Str s, PlatformFont* font = nullptr);
-    ~VirtWndButton() override;
+    VirtButton(Str s, PlatformFont* font = nullptr);
+    ~VirtButton() override;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
     void OnMouseEnter() override;
     void OnMouseLeave() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point ptLocal) override;
 };
 
-struct VirtWndIconButton : VirtWnd {
+struct VirtIconButton : VirtWnd {
     // not owned; on Windows usually from IconPixmapFromImageList()
     Pixmap* pixmap = nullptr;
     bool isSelected = false;
     Str tooltip; // owned
-    VirtWndMouseHandler onClick;
+    VirtMouseHandler onClick;
 
-    VirtWndIconButton();
-    ~VirtWndIconButton() override;
+    VirtIconButton();
+    ~VirtIconButton() override;
 
     void SetTooltip(Str);
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
     void OnMouseEnter() override;
     void OnMouseLeave() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point ptLocal) override;
     TempStr GetTooltipTemp(Point ptLocal) override;
 };
@@ -464,7 +464,7 @@ struct VirtWndIconButton : VirtWnd {
 // the circle when not hovered, which is what keeps it readable on top of
 // arbitrary content (a thumbnail).
 // Colors left at kColorUnset use the tab close button's.
-struct VirtWndCloseButton : VirtWnd {
+struct VirtCloseButton : VirtWnd {
     bool withCircle = false;
     COLORREF xColor = kColorUnset;
     COLORREF xColorHover = kColorUnset;
@@ -472,63 +472,63 @@ struct VirtWndCloseButton : VirtWnd {
     COLORREF circleColorHover = kColorUnset;
     Size idealSize;
     Str tooltip; // owned
-    VirtWndMouseHandler onClick;
+    VirtMouseHandler onClick;
 
-    VirtWndCloseButton();
-    ~VirtWndCloseButton() override;
+    VirtCloseButton();
+    ~VirtCloseButton() override;
 
     void SetTooltip(Str);
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
     void OnMouseEnter() override;
     void OnMouseLeave() override;
-    bool OnMouseDown(VirtWndMouseEvent&) override;
-    bool OnMouseUp(VirtWndMouseEvent&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
     bool OnSetCursor(Point ptLocal) override;
     TempStr GetTooltipTemp(Point ptLocal) override;
 };
 
-struct VirtWndImage : VirtWnd {
+struct VirtImage : VirtWnd {
     Pixmap* pixmap = nullptr; // not owned
     // scale the image down to fit, keeping the aspect ratio
     bool fitToBounds = true;
 
-    VirtWndImage();
-    ~VirtWndImage() override;
+    VirtImage();
+    ~VirtImage() override;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
-struct VirtWndFill : VirtWnd {
+struct VirtFill : VirtWnd {
     COLORREF color = kColorUnset;
     Size idealSize;
 
-    VirtWndFill();
-    ~VirtWndFill() override;
+    VirtFill();
+    ~VirtFill() override;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
-struct VirtWndLine : VirtWnd {
+struct VirtLine : VirtWnd {
     COLORREF color = kColorUnset;
     bool isVertical = false;
     int thickness = 1;
 
-    VirtWndLine();
-    ~VirtWndLine() override;
+    VirtLine();
+    ~VirtLine() override;
 
     Size GetIdealSize() override;
-    void Paint(VirtWndPaintCtx&) override;
+    void Paint(VirtPaintCtx&) override;
 };
 
-struct VirtWndSpacer : VirtWnd {
+struct VirtSpacer : VirtWnd {
     Size idealSize;
 
-    VirtWndSpacer(int dx, int dy);
-    ~VirtWndSpacer() override;
+    VirtSpacer(int dx, int dy);
+    ~VirtSpacer() override;
 
     Size GetIdealSize() override;
 };
