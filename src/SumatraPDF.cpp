@@ -235,8 +235,8 @@ static StrVec gNextPrevDirCache; // cached files in gNextPrevDir
 
 static void CloseDocumentInCurrentTab(MainWindow* /*win*/, bool keepUIEnabled, bool deleteModel);
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh);
-static void OnSidebarSplitterMove(Splitter::MoveEvent* /*ev*/);
-static void OnFavSplitterMove(Splitter::MoveEvent* /*ev*/);
+static void OnSidebarSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
+static void OnFavSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
 
 EBookUI* GetEBookUI() {
     if (!gGlobalPrefs) return nullptr;
@@ -2476,26 +2476,44 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     DeleteFileState(fs);
 }
 
-static void CreateSidebar(MainWindow* win) {
-    {
-        Splitter::CreateArgs args;
-        args.parent = win->hwndFrame;
-        args.type = SplitterType::Vert;
-        win->sidebarSplitter = new Splitter();
-        win->sidebarSplitter->onMove = MkFunc1Void(OnSidebarSplitterMove);
-        win->sidebarSplitter->Create(args);
+// A splitter is a virtual control in the frame's tree: the frame paints it and
+// hands it the mouse. `isLive` false means the panes only move on release
+static VirtSplitter* NewFrameSplitter(MainWindow* win, SplitterType type, bool isLive) {
+    auto* s = new VirtSplitter();
+    s->type = type;
+    s->isLive = isLive;
+    s->bgColor = ThemeControlBackgroundColor();
+    s->SetIsVisible(false); // shown by the relayout when the pane is up
+    return s;
+}
+
+// (re)tells the frame's root which splitters exist; they are created as their
+// panes are (the AI chat one last)
+void FrameSyncSplitters(MainWindow* win) {
+    if (!win->frameRoot) {
+        win->frameRoot = new VirtRoot(win->hwndFrame);
+        win->frameRoot->SetBounds(HwndClientRect(win->hwndFrame));
     }
+    Vec<VirtWnd*> tops;
+    VirtSplitter* all[] = {win->sidebarSplitter, win->favSplitter, win->aiChatSplitter};
+    for (VirtSplitter* s : all) {
+        if (s) {
+            tops.Append(s);
+        }
+    }
+    win->frameRoot->SetTops(tops);
+}
+
+static void CreateSidebar(MainWindow* win) {
+    win->sidebarSplitter = NewFrameSplitter(win, SplitterType::Vert, true);
+    win->sidebarSplitter->onMove = MkFunc1Void(OnSidebarSplitterMove);
+    FrameSyncSplitters(win);
 
     CreateToc(win);
 
-    {
-        Splitter::CreateArgs args;
-        args.parent = win->hwndFrame;
-        args.type = SplitterType::Horiz;
-        win->favSplitter = new Splitter();
-        win->favSplitter->onMove = MkFunc1Void(OnFavSplitterMove);
-        win->favSplitter->Create(args);
-    }
+    win->favSplitter = NewFrameSplitter(win, SplitterType::Horiz, true);
+    win->favSplitter->onMove = MkFunc1Void(OnFavSplitterMove);
+    FrameSyncSplitters(win);
 
     CreateFavorites(win);
 
@@ -6235,13 +6253,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         bool favAsTab = cur && cur->IsFavoritesTab();
         bool favVis = favAsTab || ui.favVisible;
         bool tocVis = !favAsTab && ui.tocVisible;
-        HwndSetVisible(win->sidebarSplitter->hwnd, !favAsTab && (tocVis || favVis));
+        win->sidebarSplitter->SetIsVisible(!favAsTab && (tocVis || favVis));
         HwndSetVisible(win->hwndTocBox, tocVis);
-        HwndSetVisible(win->favSplitter->hwnd, tocVis && favVis);
+        win->favSplitter->SetIsVisible(tocVis && favVis);
         HwndSetVisible(win->hwndFavBox, favVis);
         if (win->hwndAiChatBox) {
             HwndSetVisible(win->hwndAiChatBox, ui.aiChatVisible);
-            HwndSetVisible(win->aiChatSplitter->hwnd, ui.aiChatVisible);
+            win->aiChatSplitter->SetIsVisible(ui.aiChatVisible);
         }
     }
 
@@ -6283,6 +6301,11 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     DeferWinPosHelper dh;
+
+    // the splitters are positioned into this window's coordinates
+    if (win->frameRoot) {
+        win->frameRoot->SetBounds(HwndClientRect(win->hwndFrame));
+    }
 
     // Tabbar and toolbar at the top
     if (!win->presentation && !win->isFullScreen) {
@@ -6384,14 +6407,14 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     if (favAsTab) {
         // Favorites tab: full client area for the favorites list (discussion #5820)
-        HwndHide(win->sidebarSplitter->hwnd);
+        win->sidebarSplitter->SetIsVisible(false);
         HwndHide(win->hwndTocBox);
-        HwndHide(win->favSplitter->hwnd);
+        win->favSplitter->SetIsVisible(false);
         HwndShow(win->hwndFavBox);
         // hide AI chat over the favorites tab for a clean full-width list
         if (win->hwndAiChatBox) {
             HwndHide(win->hwndAiChatBox);
-            HwndHide(win->aiChatSplitter->hwnd);
+            win->aiChatSplitter->SetIsVisible(false);
         }
         dh.MoveWindow(win->hwndFavBox, rc);
         // leave canvas geometry unchanged (hidden above); finish without resizing it
@@ -6452,7 +6475,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             dh.MoveWindow(win->hwndTocBox, rToc);
             if (favVisible) {
                 Rect rSplitV(rc.x, rc.y + toc.dy, toc.dx, kSplitterDy);
-                dh.MoveWindow(win->favSplitter->hwnd, rSplitV);
+                win->favSplitter->SetBounds(rSplitV);
                 toc.dy += kSplitterDy;
             }
         }
@@ -6461,7 +6484,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             dh.MoveWindow(win->hwndFavBox, rFav);
         }
         Rect rSplitH(rc.x + toc.dx, rc.y, kSplitterDx, rc.dy);
-        dh.MoveWindow(win->sidebarSplitter->hwnd, rSplitH);
+        win->sidebarSplitter->SetBounds(rSplitH);
 
         rc.x += toc.dx + kSplitterDx;
         rc.dx -= toc.dx + kSplitterDx;
@@ -6476,7 +6499,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->aiChatDx = aiChatDx;
 
         Rect rSplitter(rc.x + rc.dx - aiChatDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
-        dh.MoveWindow(win->aiChatSplitter->hwnd, rSplitter);
+        win->aiChatSplitter->SetBounds(rSplitter);
 
         Rect rAIChat(rc.x + rc.dx - aiChatDx, rc.y, aiChatDx, rc.dy);
         dh.MoveWindow(win->hwndAiChatBox, rAIChat);
@@ -6521,10 +6544,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         RelayoutAIChatPanel(win);
     }
     if (tocVisible || favVisible) {
-        HwndInvalidate(win->sidebarSplitter->hwnd, true);
+        win->sidebarSplitter->Invalidate();
     }
     if (tocVisible && favVisible) {
-        HwndInvalidate(win->favSplitter->hwnd, true);
+        win->favSplitter->Invalidate();
     }
     if (updateToolbars && win->isToolbarVisible) {
         RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
@@ -6662,10 +6685,10 @@ static void FrameUpdateUi(MainWindow* win) {
             RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
         if (tocVisible || favVisible) {
-            HwndInvalidate(win->sidebarSplitter->hwnd, true);
+            win->sidebarSplitter->Invalidate();
         }
         if (tocVisible && favVisible) {
-            HwndInvalidate(win->favSplitter->hwnd, true);
+            win->favSplitter->Invalidate();
         }
     }
 }
@@ -8252,10 +8275,11 @@ static bool FrameOnSysChar(MainWindow* win, WPARAM key) {
     return false;
 }
 
-static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
-    Splitter* splitter = ev->w;
-    HWND hwnd = splitter->hwnd;
-    MainWindow* win = FindMainWindowByHwnd(hwnd);
+static void OnSidebarSplitterMove(VirtSplitter::MoveEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(ev->w->GetHwnd());
+    if (!win) {
+        return;
+    }
 
     Point pcur = HwndGetCursorPos(win->hwndFrame);
     int sidebarDx = pcur.x; // without splitter
@@ -8278,10 +8302,11 @@ static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars, sidebarDx);
 }
 
-static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
-    Splitter* splitter = ev->w;
-    HWND hwnd = splitter->hwnd;
-    MainWindow* win = FindMainWindowByHwnd(hwnd);
+static void OnFavSplitterMove(VirtSplitter::MoveEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(ev->w->GetHwnd());
+    if (!win) {
+        return;
+    }
 
     Point pcur = HwndGetCursorPos(win->hwndCanvas);
     int tocDy = pcur.y; // without splitter
@@ -11750,6 +11775,11 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 HdcFillRect(hdc, ToRect(ps.rcPaint), brBorder);
                 DeleteObject(brBorder);
             }
+            // the splitters are virtual controls of this window
+            if (win->frameRoot) {
+                Gfx gfx = GfxFromHdc(hdc);
+                win->frameRoot->Paint(&gfx, ToRect(ps.rcPaint));
+            }
 
             EndPaint(hwnd, &ps);
             *callDef = false;
@@ -13020,6 +13050,25 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
     if (res) {
         return res;
+    }
+
+    // the splitters between the panes are virtual controls: they get the mouse
+    // (dragging one captures it) and set the resize cursor
+    if (win && win->frameRoot) {
+        LRESULT vres = 0;
+        if (VirtTreeOnMessage(hwnd, win->frameRoot, msg, wp, lp, vres)) {
+            return vres;
+        }
+        if (msg == WM_PAINT) {
+            // BeginPaint erases with the class brush first; we only add the
+            // splitters on top (the custom-caption path paints its own)
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            Gfx gfx = GfxFromHdc(hdc);
+            win->frameRoot->Paint(&gfx, ToRect(ps.rcPaint));
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
     }
 
     switch (msg) {

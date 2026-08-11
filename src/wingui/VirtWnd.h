@@ -443,6 +443,54 @@ struct VirtListBox : VirtWnd {
     bool SelectAndNotify(int idx);
 };
 
+enum class SplitterType {
+    Horiz,
+    Vert,
+};
+
+// The drag handle between two panes, e.g. the sidebar and the document. While
+// dragging it captures the mouse; a non-live splitter shows a dotted popup
+// where the split would land and only moves the panes on release.
+struct VirtSplitter : VirtWnd {
+    struct MoveEvent {
+        VirtSplitter* w = nullptr;
+        bool finishedDragging = false;
+        // the owner sets this to false to forbid resizing to here
+        bool resizeAllowed = true;
+    };
+
+    using MoveHandler = Func1<MoveEvent*>;
+
+    SplitterType type = SplitterType::Horiz;
+    // false: the panes only move when the drag ends
+    bool isLive = true;
+    COLORREF bgColor = kColorUnset;
+    MoveHandler onMove;
+
+    VirtSplitter();
+    ~VirtSplitter() override;
+
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
+    bool OnMouseMove(VirtMouseEvent&) override;
+    void OnMouseEnter() override;
+    void OnMouseLeave() override;
+    void OnCaptureLost() override;
+    bool OnSetCursor(Point ptLocal) override;
+
+  private:
+    // the dotted popup of a non-live drag; above the child windows, which is
+    // why it is a window of its own rather than something we paint
+    HWND overlayHwnd = nullptr;
+    HBITMAP bmp = nullptr;
+    HBRUSH brush = nullptr;
+    bool isDragging = false;
+
+    void UpdateOverlay();
+    void HideOverlay();
+};
+
 struct VirtCustom : VirtWnd {
     Size idealSize;
     VirtPaintHandler onPaint;

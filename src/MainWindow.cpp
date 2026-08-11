@@ -205,6 +205,8 @@ MainWindow::~MainWindow() {
 
     delete sidebarSplitter;
     delete favSplitter;
+    // the splitters tell the root they are going away, so it goes last
+    delete frameRoot;
 }
 
 void ClearMouseState(MainWindow* win) {
@@ -940,7 +942,7 @@ void UpdateControlsColors(MainWindow* win) {
         if (win->tocFilterEdit) {
             win->tocFilterEdit->SetColors(txtCol, bgCol);
         }
-        win->sidebarSplitter->SetColors(kColorNoChange, splitterCol);
+        win->sidebarSplitter->bgColor = splitterCol;
     }
 
     auto* favTreeView = win->favTreeView;
@@ -950,7 +952,7 @@ void UpdateControlsColors(MainWindow* win) {
         if (win->favFilterEdit) {
             win->favFilterEdit->SetColors(txtCol, bgCol);
         }
-        win->favSplitter->SetColors(kColorNoChange, splitterCol);
+        win->favSplitter->bgColor = splitterCol;
     }
 }
 

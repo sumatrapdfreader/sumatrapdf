@@ -687,54 +687,6 @@ struct Trackbar : ControlBase {
     int GetValue();
 };
 
-// -- Splitter
-
-enum class SplitterType {
-    Horiz,
-    Vert,
-};
-
-struct Splitter;
-
-struct Splitter : ControlBase {
-    struct CreateArgs {
-        HWND parent = nullptr;
-        SplitterType type = SplitterType::Horiz;
-        bool isLive = true;
-        COLORREF backgroundColor = kColorUnset;
-    };
-
-    // called when user drags the splitter ('finishedDragging' is false) and when drag is finished ('finishedDragging'
-    // is true). the owner can constrain splitter by using current cursor position and setting resizeAllowed to false if
-    // it's not allowed to go there
-    struct MoveEvent {
-        Splitter* w = nullptr;
-        bool finishedDragging = false;
-        // user can set to false to forbid resizing here
-        bool resizeAllowed = true;
-    };
-
-    using MoveHandler = Func1<MoveEvent*>;
-
-    SplitterType type = SplitterType::Horiz;
-    bool isLive = true;
-    MoveHandler onMove;
-
-    HBITMAP bmp = nullptr;
-    HBRUSH brush = nullptr;
-
-    // popup overlay for non-live resize indicator (above child controls like WebView2)
-    HWND resizeOverlayHwnd = nullptr;
-    bool isMouseOver = false;
-    bool mouseTracking = false;
-
-    Splitter();
-    ~Splitter() override;
-
-    HWND Create(const CreateArgs&);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-};
-
 //--- TreeView
 
 struct TreeView;

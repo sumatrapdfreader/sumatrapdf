@@ -91,6 +91,9 @@ inline constexpr Perm operator~(Perm lhs) {
 struct Favorites;
 struct FileHistory;
 struct MainWindow;
+// tells the frame's virtual tree which splitters exist (they are created
+// with their panes)
+void FrameSyncSplitters(MainWindow*);
 struct NotificationWnd;
 struct RenderCache;
 struct WindowTab;

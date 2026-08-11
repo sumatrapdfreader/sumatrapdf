@@ -1798,6 +1798,172 @@ bool VirtListBox::OnKeyDown(VirtKeyEvent& ev) {
     return true;
 }
 
+//--- VirtSplitter
+
+static Kind kindVirtWndSplitter = "virtWndSplitter";
+
+static const WCHAR* kResizeOverlayClass = L"SplitterResizeOverlayWnd";
+static WORD gDotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
+
+static LRESULT CALLBACK ResizeOverlayWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE;
+    }
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        auto* brush = (HBRUSH)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+        if (brush) {
+            SetBrushOrgEx(hdc, 0, 0, nullptr);
+            HdcFillRect(hdc, ToRect(ps.rcPaint), brush);
+        }
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+static void RegisterResizeOverlayClass() {
+    static bool registered = false;
+    if (registered) {
+        return;
+    }
+    WNDCLASSEX wcex{};
+    FillWndClassEx(wcex, kResizeOverlayClass, ResizeOverlayWndProc);
+    RegisterClassExW(&wcex);
+    registered = true;
+}
+
+VirtSplitter::VirtSplitter() {
+    kind = kindVirtWndSplitter;
+    // the mouse belongs to us for the whole drag, wherever it goes
+    flags |= vwfCapturesMouse;
+}
+
+VirtSplitter::~VirtSplitter() {
+    if (overlayHwnd) {
+        DestroyWindow(overlayHwnd);
+    }
+    DeleteObject(brush);
+    DeleteObject(bmp);
+}
+
+void VirtSplitter::HideOverlay() {
+    if (overlayHwnd) {
+        ShowWindow(overlayHwnd, SW_HIDE);
+    }
+}
+
+// a thin dotted bar where the split would land, following the cursor
+void VirtSplitter::UpdateOverlay() {
+    HWND hwnd = GetHwnd();
+    if (!hwnd) {
+        return;
+    }
+    if (!bmp) {
+        bmp = CreateBitmap(8, 8, 1, 1, gDotPatternBmp);
+        brush = CreatePatternBrush(bmp);
+    }
+    if (!overlayHwnd) {
+        RegisterResizeOverlayClass();
+        HWND owner = GetAncestor(hwnd, GA_ROOT);
+        DWORD exStyle = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+        overlayHwnd = CreateWindowExW(exStyle, kResizeOverlayClass, nullptr, WS_POPUP, 0, 0, 0, 0, owner, nullptr,
+                                      GetModuleHandleW(nullptr), nullptr);
+        if (!overlayHwnd) {
+            return;
+        }
+        SetWindowLongPtrW(overlayHwnd, GWLP_USERDATA, (LONG_PTR)brush);
+    }
+
+    Point pos = HwndGetCursorPos(hwnd);
+    Point origin = HwndClientToScreen(hwnd, Point());
+    Rect b = BoundsInWindow();
+    Rect screen = {origin.x + b.x, origin.y + b.y, b.dx, b.dy};
+
+    Rect r;
+    if (type != SplitterType::Horiz) {
+        r = {origin.x + pos.x - 2, screen.y, 4, screen.dy};
+    } else {
+        r = {screen.x, origin.y + pos.y - 2, screen.dx, 4};
+    }
+    SetWindowPos(overlayHwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    HwndInvalidate(overlayHwnd, true);
+}
+
+void VirtSplitter::Paint(VirtPaintCtx& ctx) {
+    if (bgColor == kColorUnset) {
+        return;
+    }
+    GfxFillRect(ctx.gfx, ctx.bounds, AccentColor(bgColor, 30));
+}
+
+bool VirtSplitter::OnMouseDown(VirtMouseEvent&) {
+    isDragging = true;
+    if (!isLive) {
+        UpdateOverlay();
+    }
+    return true;
+}
+
+bool VirtSplitter::OnMouseMove(VirtMouseEvent&) {
+    if (!isDragging) {
+        return false;
+    }
+    MoveEvent ev;
+    ev.w = this;
+    ev.finishedDragging = false;
+    onMove.Call(&ev);
+    if (ev.resizeAllowed && !isLive) {
+        UpdateOverlay();
+    }
+    return true;
+}
+
+bool VirtSplitter::OnMouseUp(VirtMouseEvent&) {
+    if (!isDragging) {
+        return false;
+    }
+    isDragging = false;
+    HideOverlay();
+    MoveEvent ev;
+    ev.w = this;
+    ev.finishedDragging = true;
+    onMove.Call(&ev);
+    Invalidate();
+    return true;
+}
+
+void VirtSplitter::OnCaptureLost() {
+    isDragging = false;
+    HideOverlay();
+}
+
+void VirtSplitter::OnMouseEnter() {
+    Invalidate();
+}
+
+void VirtSplitter::OnMouseLeave() {
+    Invalidate();
+}
+
+bool VirtSplitter::OnSetCursor(Point) {
+    LPWSTR curId = (type == SplitterType::Vert) ? IDC_SIZEWE : IDC_SIZENS;
+    if (isDragging) {
+        MoveEvent ev;
+        ev.w = this;
+        ev.finishedDragging = false;
+        // ask the owner whether the current position is allowed, so the cursor
+        // can say "no" without moving anything
+        onMove.Call(&ev);
+        if (!ev.resizeAllowed) {
+            curId = IDC_NO;
+        }
+    }
+    SetCursorCached(curId);
+    return true;
+}
+
 //--- VirtCustom
 
 static Kind kindVirtWndCustom = "virtWndCustom";

@@ -1133,9 +1133,6 @@
     <ClCompile Include="..\src\wingui\Progress.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wingui\Splitter.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\wingui\Static.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>

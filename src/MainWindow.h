@@ -11,6 +11,7 @@ struct FrameRateWnd;
 struct ReadAloudPlaybackBar;
 struct VirtText;
 struct VirtRoot;
+struct VirtSplitter;
 struct HBox;
 struct Splitter;
 struct Tooltip;
@@ -246,7 +247,7 @@ struct MainWindow {
     Edit* aiChatInput = nullptr;
     WebviewWnd* aiChatWebView = nullptr;
     bool aiChatWebViewReady = false;
-    Splitter* aiChatSplitter = nullptr;
+    VirtSplitter* aiChatSplitter = nullptr;
     // VBox(label, session combo, webview slot, input row, options row);
     // owns those controls and lays them out in hwndAiChatBox
     ILayout* aiChatLayout = nullptr;
@@ -259,10 +260,12 @@ struct MainWindow {
     int aiChatDx = 0;
 
     // vertical splitter for resizing left side panel
-    Splitter* sidebarSplitter = nullptr;
+    // the splitters are virtual controls living in the frame's own tree
+    // (frameRoot), not child windows
+    VirtSplitter* sidebarSplitter = nullptr;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    Splitter* favSplitter = nullptr;
+    VirtSplitter* favSplitter = nullptr;
 
     TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
@@ -366,6 +369,9 @@ struct MainWindow {
 
     // virtual controls of the home page (header, view buttons, links, ...)
     struct VirtRoot* homeRoot = nullptr;
+    // the frame's virtual controls: the three splitters. The frame paints
+    // them and hands them its mouse input
+    VirtRoot* frameRoot = nullptr;
 
     // home page thumbnail scrolling
     int homePageScrollY = 0;

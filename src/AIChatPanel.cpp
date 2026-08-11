@@ -1055,9 +1055,8 @@ static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 // --- Splitter ---
 constexpr int kAIChatMinDx = 150;
 
-static void OnAIChatSplitterMove(Splitter::MoveEvent* ev) {
-    Splitter* splitter = ev->w;
-    MainWindow* win = FindMainWindowByHwnd(splitter->hwnd);
+static void OnAIChatSplitterMove(VirtSplitter::MoveEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(ev->w->GetHwnd());
     if (!win) {
         return;
     }
@@ -1086,8 +1085,8 @@ void RelayoutAIChatPanel(MainWindow* win) {
         win->aiChatWebView->UpdateWebviewSize();
     }
     RedrawWindow(win->hwndAiChatBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-    if (win->aiChatSplitter && win->aiChatSplitter->hwnd) {
-        HwndInvalidate(win->aiChatSplitter->hwnd, true);
+    if (win->aiChatSplitter) {
+        win->aiChatSplitter->Invalidate();
     }
 }
 
@@ -1248,13 +1247,15 @@ void CreateAIChatPanel(MainWindow* win) {
 
     // splitter (non-live: only resize on mouse release)
     {
-        Splitter::CreateArgs args;
-        args.parent = win->hwndFrame;
-        args.type = SplitterType::Vert;
-        args.isLive = false;
-        win->aiChatSplitter = new Splitter();
+        // non-live: the webview is expensive to resize, so the panes only
+        // move when the drag ends
+        win->aiChatSplitter = new VirtSplitter();
+        win->aiChatSplitter->type = SplitterType::Vert;
+        win->aiChatSplitter->isLive = false;
+        win->aiChatSplitter->bgColor = ThemeControlBackgroundColor();
+        win->aiChatSplitter->SetIsVisible(false);
         win->aiChatSplitter->onMove = MkFunc1Void(OnAIChatSplitterMove);
-        win->aiChatSplitter->Create(args);
+        FrameSyncSplitters(win);
     }
 
     HFONT font = GetDefaultGuiFont();
@@ -1562,6 +1563,7 @@ void DestroyAIChatPanel(MainWindow* win) {
 
     delete win->aiChatSplitter;
     win->aiChatSplitter = nullptr;
+    FrameSyncSplitters(win);
 
     if (win->hwndAiChatBox) {
         DestroyWindow(win->hwndAiChatBox);
