@@ -142,6 +142,13 @@ struct VirtWnd : LayoutBase {
     void Invalidate(Rect rLocal);
     void RequestLayout();
 
+    // same names as ControlBase's, so code that shows / hides / disables a
+    // control doesn't care which kind it got
+    void SetIsVisible(bool);
+    bool IsVisible() const;
+    void SetIsEnabled(bool);
+    bool IsEnabled() const;
+
     HWND GetHwnd() const;
     bool IsPaintable() const;
     bool IsHitTestable() const;

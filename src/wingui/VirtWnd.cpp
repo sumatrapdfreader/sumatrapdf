@@ -378,6 +378,34 @@ void VirtWnd::RequestLayout() {
     }
 }
 
+void VirtWnd::SetIsVisible(bool isVisible) {
+    Visibility v = isVisible ? Visibility::Visible : Visibility::Collapse;
+    if (v == visibility) {
+        return;
+    }
+    // the owner re-lays out after showing / hiding; invalidate the space we
+    // occupied so a hidden control doesn't stay on screen until it does
+    Invalidate();
+    visibility = v;
+    Invalidate();
+}
+
+bool VirtWnd::IsVisible() const {
+    return visibility == Visibility::Visible;
+}
+
+void VirtWnd::SetIsEnabled(bool isEnabled) {
+    if (isEnabled == HasFlag(vwfEnabled)) {
+        return;
+    }
+    SetFlag(vwfEnabled, isEnabled);
+    Invalidate();
+}
+
+bool VirtWnd::IsEnabled() const {
+    return HasFlag(vwfEnabled);
+}
+
 HWND VirtWnd::GetHwnd() const {
     return root ? root->hwnd : nullptr;
 }

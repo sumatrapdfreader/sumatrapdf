@@ -13,6 +13,9 @@ extern "C" {
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -93,48 +96,48 @@ struct EditAnnotationsWindow : WindowBase {
     WindowTab* tab = nullptr;
     LayoutBase* mainLayout = nullptr;
 
-    ListBox* listBox = nullptr;
-    Static* staticRect = nullptr;
-    Static* staticAuthor = nullptr;
-    Static* staticModificationDate = nullptr;
-    Static* staticPopup = nullptr;
-    Static* staticContents = nullptr;
+    VirtListBox* listBox = nullptr;
+    VirtText* staticRect = nullptr;
+    VirtText* staticAuthor = nullptr;
+    VirtText* staticModificationDate = nullptr;
+    VirtText* staticPopup = nullptr;
+    VirtText* staticContents = nullptr;
     Edit* editContents = nullptr;
-    Static* staticTextAlignment = nullptr;
+    VirtText* staticTextAlignment = nullptr;
     DropDown* dropDownTextAlignment = nullptr;
-    Static* staticTextFont = nullptr;
+    VirtText* staticTextFont = nullptr;
     DropDown* dropDownTextFont = nullptr;
-    Static* staticTextSize = nullptr;
+    VirtText* staticTextSize = nullptr;
     Trackbar* trackbarTextSize = nullptr;
-    Static* staticTextColor = nullptr;
+    VirtText* staticTextColor = nullptr;
     DropDown* dropDownTextColor = nullptr;
 
-    Static* staticLineStart = nullptr;
+    VirtText* staticLineStart = nullptr;
     DropDown* dropDownLineStart = nullptr;
-    Static* staticLineEnd = nullptr;
+    VirtText* staticLineEnd = nullptr;
     DropDown* dropDownLineEnd = nullptr;
 
-    Static* staticIcon = nullptr;
+    VirtText* staticIcon = nullptr;
     DropDown* dropDownIcon = nullptr;
 
-    Static* staticBorder = nullptr;
+    VirtText* staticBorder = nullptr;
     Trackbar* trackbarBorder = nullptr;
 
-    Static* staticColor = nullptr;
+    VirtText* staticColor = nullptr;
     DropDown* dropDownColor = nullptr;
-    Static* staticInteriorColor = nullptr;
+    VirtText* staticInteriorColor = nullptr;
     DropDown* dropDownInteriorColor = nullptr;
 
-    Static* staticOpacity = nullptr;
+    VirtText* staticOpacity = nullptr;
     Trackbar* trackbarOpacity = nullptr;
 
-    Button* buttonSaveAttachment = nullptr;
-    Button* buttonEmbedAttachment = nullptr;
+    VirtButton* buttonSaveAttachment = nullptr;
+    VirtButton* buttonEmbedAttachment = nullptr;
 
-    Button* buttonDelete = nullptr;
+    VirtButton* buttonDelete = nullptr;
 
-    Button* buttonSaveToCurrentFile = nullptr;
-    Button* buttonSaveToNewFile = nullptr;
+    VirtButton* buttonSaveToCurrentFile = nullptr;
+    VirtButton* buttonSaveToNewFile = nullptr;
 
     // those are
     Vec<Annotation*> annotations;
@@ -148,6 +151,7 @@ struct EditAnnotationsWindow : WindowBase {
     str::Builder currCustomInteriorColor;
 
     void OnSize(UINT msg, UINT type, Size size) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     void OnFocus() override;
     bool PreTranslateMessage(MSG& msg) override;
 
@@ -384,7 +388,7 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
             ToolbarUpdateStateForWindow(tab->win, false);
         }
     }
-    delete mainLayout;
+    // ~WindowBase deletes `layout`, which is the same tree as mainLayout
 }
 
 static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
@@ -444,12 +448,9 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
         model->strings.Append(ToStr(s));
     }
 
-    auto topIdx = LbGetTopIndex(ew->listBox->hwnd);
-    ew->listBox->SetModel(model);
-    topIdx = std::min(ew->listBox->GetCount() - 1, topIdx);
-    if (topIdx >= 0) {
-        LbSetTopIndex(ew->listBox->hwnd, topIdx);
-    }
+    int prevScrollY = ew->listBox->scrollY;
+    ew->listBox->SetModel(model); // resets the scroll position
+    ew->listBox->ScrollTo(prevScrollY);
     EnableSaveIfAnnotationsChanged(ew);
 }
 
@@ -506,6 +507,14 @@ static void OnDestroy(WindowBase::DestroyEvent* ev) {
     }
 }
 
+LRESULT EditAnnotationsWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
+    }
+    // WindowBase::WndProcDefault sends the virtual controls their input
+    return WndProcDefault(hwnd, msg, wp, lp);
+}
+
 void EditAnnotationsWindow::OnFocus() {
     SelectTabInWindow(tab);
 }
@@ -534,57 +543,10 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     SaveAnnotationsToExistingFile(ew->tab);
 }
 
-constexpr int kMaxControls = 18;
-
+// Tab / Shift+Tab. The ring is the layout order and skips what is hidden,
+// HWND controls and virtual ones alike
 static void AdvanceFocus(EditAnnotationsWindow* ew, bool forward) {
-    HWND controls[kMaxControls];
-    int n = 0;
-    auto addIfVisible = [&](HWND h) {
-        if (h && HwndIsVisible(h)) {
-            ReportIf(n >= kMaxControls);
-            controls[n++] = h;
-        }
-    };
-
-    addIfVisible(ew->listBox->hwnd);
-    addIfVisible(ew->editContents->hwnd);
-    addIfVisible(ew->dropDownTextAlignment->hwnd);
-    addIfVisible(ew->dropDownTextFont->hwnd);
-    addIfVisible(ew->trackbarTextSize->hwnd);
-    addIfVisible(ew->dropDownTextColor->hwnd);
-    addIfVisible(ew->dropDownLineStart->hwnd);
-    addIfVisible(ew->dropDownLineEnd->hwnd);
-    addIfVisible(ew->dropDownIcon->hwnd);
-    addIfVisible(ew->trackbarBorder->hwnd);
-    addIfVisible(ew->dropDownColor->hwnd);
-    addIfVisible(ew->dropDownInteriorColor->hwnd);
-    addIfVisible(ew->trackbarOpacity->hwnd);
-    addIfVisible(ew->buttonSaveAttachment->hwnd);
-    addIfVisible(ew->buttonEmbedAttachment->hwnd);
-    addIfVisible(ew->buttonDelete->hwnd);
-    addIfVisible(ew->buttonSaveToCurrentFile->hwnd);
-    addIfVisible(ew->buttonSaveToNewFile->hwnd);
-
-    if (n == 0) {
-        return;
-    }
-
-    HWND focused = ::GetFocus();
-    int idx = -1;
-    for (int i = 0; i < n; i++) {
-        if (controls[i] == focused || ::IsChild(controls[i], focused)) {
-            idx = i;
-            break;
-        }
-    }
-
-    int next;
-    if (forward) {
-        next = (idx + 1) % n;
-    } else {
-        next = (idx <= 0) ? n - 1 : idx - 1;
-    }
-    HwndSetFocus(controls[next]);
+    ew->TabNavigate(!forward);
 }
 
 bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
@@ -1092,13 +1054,13 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
             HwndSetFocus(ew->editContents->hwnd);
             ew->editContents->SelectAll();
         } else if (focus == EditAnnotFocus::List) { // NOLINT(bugprone-branch-clone)
-            HwndSetFocus(ew->listBox->hwnd);
+            ew->SetFocusTo(ew->listBox);
         } else if (isNew && annot->type == AnnotationType::FreeText) {
             HwndSetFocus(ew->editContents->hwnd);
             // ew->editContents->SetCursorPositionAtEnd();
             ew->editContents->SelectAll();
         } else {
-            HwndSetFocus(ew->listBox->hwnd);
+            ew->SetFocusTo(ew->listBox);
         }
     }
 
@@ -1113,6 +1075,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         dy = currBounds.dy;
     }
     LayoutAndSizeToContent(ew->mainLayout, dx, dy, ew->hwnd);
+    // pick up the virtual controls so we paint them and they get their input
+    ew->DoLayout(HwndClientRect(ew->hwnd).Size());
 
     if (!annot) {
         return;
@@ -1392,7 +1356,7 @@ static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientD
     if (!ew->listBox || !ew->mainLayout) {
         return;
     }
-    int listLineDy = ew->listBox->GetItemHeight(0);
+    int listLineDy = ew->listBox->GetItemHeight();
     if (listLineDy <= 0 || targetClientDy <= 0) {
         return;
     }
@@ -1438,19 +1402,51 @@ void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
         return;
     }
     SetGrowingControlsToFit(this, dy);
-    LayoutToSize(mainLayout, {dx, dy});
+    DoLayout({dx, dy});
 }
 
-static Static* CreateStatic(HWND parent, Str s = nullptr) {
-    auto* w = new Static();
-    Static::CreateArgs args;
-    args.parent = parent;
-    args.text = s;
-    args.isRtl = IsUIRtl();
-    args.font = GetAppFont(parent);
-    HWND hwnd = w->Create(args);
-    ReportIf(!hwnd);
-    return w;
+static VirtText* CreateStatic(HWND parent, Str s = nullptr) {
+    return NewVirtText({
+        .s = s,
+        .font = GetPlatformFont(GetAppFont(parent)),
+        .textColor = ThemeWindowTextColor(),
+        .isRtl = IsUIRtl(),
+        .ellipsis = true,
+    });
+}
+
+// the buttons are virtual controls, so they are styled here rather than by the
+// system: a filled box with a border, brighter on hover (like the other dialogs)
+static VirtButton* CreateVirtButton(HWND parent, Str text) {
+    auto* b = new VirtButton(text, GetPlatformFont(GetAppFont(parent)));
+    COLORREF bg = ThemeWindowControlBackgroundColor();
+    b->textColor = ThemeWindowTextColor();
+    b->textColorDisabled = ThemeWindowTextDisabledColor();
+    b->bgColor = AccentColor(bg, 14);
+    b->bgColorHover = AccentColor(bg, 28);
+    b->borderColor = ThemeEdgeColor();
+    b->textPadding = DpiScaledInsets(parent, 5, 12);
+    return b;
+}
+
+static void SaveAttachmentClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
+    ButtonSaveAttachment(ew);
+}
+
+static void EmbedAttachmentClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
+    ButtonEmbedAttachment(ew);
+}
+
+static void DeleteClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
+    ButtonDeleteHandler(ew);
+}
+
+static void SaveToCurrentFileClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
+    ButtonSaveToCurrentPDFHandler(ew);
+}
+
+static void SaveToNewFileClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
+    ButtonSaveToNewFileHandler(ew);
 }
 
 static void CreateMainLayout(EditAnnotationsWindow* ew) {
@@ -1461,14 +1457,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HFONT fnt = GetAppFont(parent);
 
     {
-        ListBox::CreateArgs args;
-        args.parent = parent;
-        args.idealSizeLines = 5;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-        auto* w = new ListBox();
-        w->SetInsetsPt(4, 0);
-        w->Create(args);
+        auto* w = new VirtListBox();
+        w->hwndForDpi = parent;
+        w->font = GetPlatformFont(fnt);
+        w->textColor = ThemeWindowTextColor();
+        w->bgColor = ThemeWindowControlBackgroundColor();
+        w->padding = DpiScaledInsets(parent, 4, 0);
+        w->idealSizeLines = 5;
         auto* lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
         w->onSelectionChanged = MkFunc0(ListBoxSelectionChanged, ew);
@@ -1505,7 +1500,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         auto* w = CreateStatic(parent, _TRA("Contents:"));
         ew->staticContents = w;
-        w->SetInsetsPt(4, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 4, 0, 0, 0);
         vbox->AddChild(w);
     }
 
@@ -1530,7 +1525,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Text Alignment:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticTextAlignment = w;
         vbox->AddChild(w);
     }
@@ -1553,7 +1548,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Text Font:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticTextFont = w;
         vbox->AddChild(w);
     }
@@ -1575,7 +1570,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Text Size:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticTextSize = w;
         vbox->AddChild(w);
     }
@@ -1622,7 +1617,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Line Start:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticLineStart = w;
         vbox->AddChild(w);
     }
@@ -1644,7 +1639,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Line End:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticLineEnd = w;
         vbox->AddChild(w);
     }
@@ -1666,7 +1661,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Icon:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticIcon = w;
         vbox->AddChild(w);
     }
@@ -1688,7 +1683,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, "Border:");
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticBorder = w;
         vbox->AddChild(w);
     }
@@ -1710,7 +1705,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Color:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticColor = w;
         vbox->AddChild(w);
     }
@@ -1732,7 +1727,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Interior Color:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticInteriorColor = w;
         vbox->AddChild(w);
     }
@@ -1755,7 +1750,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = CreateStatic(parent, _TRA("Opacity:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         ew->staticOpacity = w;
         vbox->AddChild(w);
     }
@@ -1777,52 +1772,25 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Save...");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new Button();
-        w->SetInsetsPt(8, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
-        w->onClick = MkFunc0(ButtonSaveAttachment, ew);
+        auto* w = CreateVirtButton(parent, _TRA("Save..."));
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
+        w->onClick = MkFunc1(SaveAttachmentClicked, ew);
         ew->buttonSaveAttachment = w;
         vbox->AddChild(w);
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Embed...");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new Button();
-        w->SetInsetsPt(8, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
-        w->onClick = MkFunc0(ButtonEmbedAttachment, ew);
+        auto* w = CreateVirtButton(parent, _TRA("Embed..."));
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
+        w->onClick = MkFunc1(EmbedAttachmentClicked, ew);
         ew->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Delete Annotation");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new Button();
-        w->SetInsetsPt(11, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
-        w->onClick = MkFunc0(ButtonDeleteHandler, ew);
+        auto* w = CreateVirtButton(parent, _TRA("Delete Annotation"));
+        w->padding = DpiScaledInsets(parent, 11, 0, 0, 0);
+        w->onClick = MkFunc1(DeleteClicked, ew);
         ew->buttonDelete = w;
         vbox->AddChild(w);
     }
@@ -1834,43 +1802,28 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
         // text set by UpdateSaveButtonLabels once tab is attached
-        args.text = _TRA("Save changes to existing PDF");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new Button();
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
+        auto* w = CreateVirtButton(parent, _TRA("Save changes to existing PDF"));
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClick = MkFunc0(ButtonSaveToCurrentPDFHandler, ew);
+        w->onClick = MkFunc1(SaveToCurrentFileClicked, ew);
         ew->buttonSaveToCurrentFile = w;
         vbox->AddChild(w);
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Save changes to a new PDF");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new Button();
-        w->SetInsetsPt(8, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
+        auto* w = CreateVirtButton(parent, _TRA("Save changes to a new PDF"));
+        w->padding = DpiScaledInsets(parent, 8, 0, 0, 0);
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClick = MkFunc0(ButtonSaveToNewFileHandler, ew);
+        w->onClick = MkFunc1(SaveToNewFileClicked, ew);
         ew->buttonSaveToNewFile = w;
         vbox->AddChild(w);
     }
 
     auto* padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
     ew->mainLayout = padding;
+    // WindowBase owns and lays out `layout`; mainLayout is the same tree, kept
+    // as a LayoutBase* for its lastBounds
+    ew->layout = padding;
     HidePerAnnotControls(ew);
 }
 
@@ -1905,7 +1858,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         HwndShowWithoutActivate(ew->hwnd);
         SetForegroundWindow(ew->hwnd);
         if (ew->listBox && ew->listBox->model->ItemsCount() > 0) {
-            HwndSetFocus(ew->listBox->hwnd);
+            ew->SetFocusTo(ew->listBox);
         }
         if (!annot) return;
         SetSelectedAnnotation(tab, annot, isNew, focus);
@@ -1959,12 +1912,14 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
         SetGrowingControlsToFit(ew, size.dy);
         LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
+        ew->DoLayout(HwndClientRect(ew->hwnd).Size());
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     } else {
         Size size = {lastPos.dx, minDy};
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
         SetGrowingControlsToFit(ew, size.dy);
         LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
+        ew->DoLayout(HwndClientRect(ew->hwnd).Size());
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)
         Rect r = HwndWindowRect(ew->hwnd);
