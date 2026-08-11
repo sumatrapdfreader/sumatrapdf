@@ -9,6 +9,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -435,16 +438,101 @@ static void OnDestroy(Wnd::DestroyEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
 
-static Static* CreateStatic(HWND parent, HFONT font, Str s) {
-    Static::CreateArgs args;
-    args.parent = parent;
-    args.font = font;
-    args.text = s;
-    args.isRtl = IsUIRtl();
-    auto* c = new Static();
-    auto* wnd = c->Create(args);
-    ReportIf(!wnd);
-    return c;
+// The help lines name keys, and a key reads better as a key-cap than as a word
+// in the sentence. The strings are translated, so instead of putting markup in
+// them - which would invalidate every existing translation - the key names are
+// wrapped wherever they ended up in the sentence. Translators leave key names
+// in English, so matching on them works in every language
+static const char* kHelpKeys[] = {
+    "Ctrl+Tab", "Ctrl", "Enter", "Space", "Del", "Esc", "\u2191", "\u2193",
+};
+
+// s[at..] is tok and isn't part of a longer word
+static bool IsTokenAt(Str s, int at, Str tok) {
+    int n = len(tok);
+    if (at + n > len(s)) {
+        return false;
+    }
+    if (!str::EqN(Str(s.s + at, n), tok, n)) {
+        return false;
+    }
+    char before = (at > 0) ? s.s[at - 1] : ' ';
+    char after = (at + n < len(s)) ? s.s[at + n] : ' ';
+    bool okBefore = (before == ' ') || (before == '(');
+    bool okAfter = (after == ' ') || (after == ',') || (after == ')') || (after == '.');
+    return okBefore && okAfter;
+}
+
+static TempStr WithKbdMarkupTemp(Str s) {
+    str::Builder out;
+    int i = 0;
+    while (i < len(s)) {
+        Str match{};
+        for (const char* k : kHelpKeys) {
+            if (IsTokenAt(s, i, Str(k))) {
+                match = Str(k);
+                break;
+            }
+        }
+        if (!match) {
+            out.AppendChar(s.s[i]);
+            i++;
+            continue;
+        }
+        out.Append("(Kbd/");
+        out.Append(match);
+        out.Append(")");
+        i += len(match);
+    }
+    return ToStrTemp(out);
+}
+
+// one of the "# File History" / "> Commands" switches in the top row; it
+// carries the prefix it switches to so they can share one click handler
+struct PaletteSwitch : VirtRichText {
+    CommandPaletteWnd* wnd = nullptr;
+    Str prefix;
+};
+
+static void OnPaletteSwitchClicked(VirtMouseEvent* ev) {
+    auto* t = (PaletteSwitch*)ev->target;
+    t->wnd->SwitchToPrefix(t->prefix);
+}
+
+// what the two help rows have in common
+struct HelpStyle {
+    HWND hwnd = nullptr;
+    PlatformFont* font = nullptr;
+    COLORREF colTxt = kColorUnset;
+    COLORREF colBg = kColorUnset;
+};
+
+static void InitHelpText(const HelpStyle& st, VirtRichText* t, Str markup) {
+    ParseTipInto(t, markup);
+    t->font = st.font;
+    t->textColor = st.colTxt;
+    t->linkColor = st.colTxt;
+    t->bgColor = st.colBg;
+    int padX = DpiScale(st.hwnd, 8);
+    t->padding = Insets{0, padX, 0, padX};
+}
+
+static VirtRichText* NewHelpText(const HelpStyle& st, Str markup) {
+    auto* t = new VirtRichText();
+    InitHelpText(st, t, markup);
+    return t;
+}
+
+// a row of help items lives in a window of its own, so virtual controls can sit
+// in the palette's layout of real ones
+static VirtHost* NewHelpRow(const HelpStyle& st, VirtBox* box) {
+    box->alignMain = MainAxisAlign::MainCenter;
+    box->alignCross = CrossAxisAlign::CrossCenter;
+    auto* host = new VirtHost();
+    host->bgColor = st.colBg;
+    HWND ok = host->Create(st.hwnd, box);
+    ReportIf(!ok);
+    return host;
 }
 
 bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance) {
@@ -492,47 +580,30 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     if (!smartTabMode) {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainCenter;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{0, 8, 0, 8};
-        {
-            auto* c = CreateStatic(hwnd, font, _TRA("# File History"));
-            c->SetColors(colTxt, colBg);
-            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFileHistory>(this);
-            hbox->AddChild(new Padding(c, pad));
-        }
-        {
-            auto* c = CreateStatic(hwnd, font, _TRA("> Commands"));
-            c->SetColors(colTxt, colBg);
-            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToCommands>(this);
-            hbox->AddChild(new Padding(c, pad));
-        }
-        {
-            auto* c = CreateStatic(hwnd, font, _TRA("@ Tabs"));
-            c->SetColors(colTxt, colBg);
-            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
-            hbox->AddChild(new Padding(c, pad));
-        }
-        {
-            auto* c = CreateStatic(hwnd, font, _TRA(": Everything"));
-            c->SetColors(colTxt, colBg);
-            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToEverything>(this);
-            hbox->AddChild(new Padding(c, pad));
-        }
+        auto* box = new VirtBox(false);
+        HelpStyle st{hwnd, GetPlatformFont(font), colTxt, colBg};
+        // in "# File History" and friends the first character is what you type
+        // to get there, so it becomes a key-cap
+        auto addSwitch = [this, box, &st](Str s, Str switchTo) {
+            TempStr markup = str::JoinTemp(StrL("(Kbd/"), Str(s.s, 1), StrL(")"), Str(s.s + 1, len(s) - 1));
+            auto* t = new PaletteSwitch();
+            InitHelpText(st, t, markup);
+            t->wnd = this;
+            t->prefix = switchTo;
+            t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
+            box->AddChild(t);
+        };
+        addSwitch(_TRA("# File History"), kPalettePrefixFileHistory);
+        addSwitch(_TRA("> Commands"), kPalettePrefixCommands);
+        addSwitch(_TRA("@ Tabs"), kPalettePrefixTabs);
+        addSwitch(_TRA(": Everything"), kPalettePrefixEverything);
         if (len(toc) > 0) {
-            auto* c = CreateStatic(hwnd, font, _TRA("* TOC"));
-            c->SetColors(colTxt, colBg);
-            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTOC>(this);
-            hbox->AddChild(new Padding(c, pad));
+            addSwitch(_TRA("* TOC"), kPalettePrefixTOC);
         }
         if (len(favorites) > 0) {
-            auto* c = CreateStatic(hwnd, font, _TRA("$ Favorites"));
-            c->SetColors(colTxt, colBg);
-            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFavorites>(this);
-            hbox->AddChild(new Padding(c, pad));
+            addSwitch(_TRA("$ Favorites"), kPalettePrefixFavorites);
         }
-        vbox->AddChild(hbox);
+        vbox->AddChild(NewHelpRow(st, box));
     }
 
     {
@@ -572,20 +643,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             strings[nHelp++] = _TRA("Del to remove item");
             strings[nHelp++] = _TRA("Esc to close");
         }
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainCenter;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{0, 8, 0, 8};
+        auto* box = new VirtBox(false);
         // the hints are secondary information, so they use the regular (smaller)
         // app font, not the bigger font of the query / list
-        HFONT fontHelp = GetAppFont(hwnd);
+        HelpStyle st{hwnd, GetPlatformFont(GetAppFont(hwnd)), colTxt, colBg};
         for (int i = 0; i < nHelp; i++) {
-            auto* c = CreateStatic(hwnd, fontHelp, strings[i]);
-            c->SetColors(colTxt, colBg);
-            auto* p = new Padding(c, pad);
-            hbox->AddChild(p);
+            box->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
         }
-        vbox->AddChild(hbox);
+        vbox->AddChild(NewHelpRow(st, box));
     }
 
     if (smartTabMode) {

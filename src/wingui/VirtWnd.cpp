@@ -2372,7 +2372,8 @@ static TempStr CommandShortcutTemp(Str cmdName) {
     return gCommandsContext->GetCommandShortcutTemp(cmdName);
 }
 
-static void ParseTipInto(VirtRichText& tip, Str s) {
+void ParseTipInto(VirtRichText* tipIn, Str s) {
+    VirtRichText& tip = *tipIn;
     if (!s) {
         return;
     }
@@ -2562,29 +2563,54 @@ void VirtRichText::LayoutText(int areaWidth) {
         maxX = std::max(x, maxX);
         lineHeight = std::max(w->dy, lineHeight);
     }
+    // A key-cap's box is taller than a word: its text is centered in it, which
+    // put the cap's baseline below the baseline of the words around it. Nudge
+    // the plain words down by the cap's top padding instead, so everything on a
+    // line with caps sits on one baseline. Words on a line all share the same y
+    Vec<int> capLineYs;
+    for (TipWord* w = words.next; w; w = w->next) {
+        if (w->isKbd && !capLineYs.Contains(w->y)) {
+            capLineYs.Append(w->y);
+        }
+    }
+    if (len(capLineYs) > 0) {
+        int capLift = kbdPadY / 2;
+        for (TipWord* w = words.next; w; w = w->next) {
+            if (!w->isKbd && capLineYs.Contains(w->y)) {
+                w->y += capLift;
+            }
+        }
+    }
+
     totalDx = maxX - startX;
     totalDy = (y - startY) + lineHeight;
 }
 
+// the sizes below include padding: SetBounds() lays the words out in the
+// content rect, so a box that didn't count it would hand us too little room
+// and the text would wrap or get cut off
 int VirtRichText::MinIntrinsicWidth(int) {
     LayoutText(1 << 20);
-    return totalDx;
+    return totalDx + padding.left + padding.right;
 }
 
 int VirtRichText::MinIntrinsicHeight(int width) {
-    LayoutText(width > 0 ? width : (1 << 20));
-    return totalDy;
+    int padX = padding.left + padding.right;
+    int dx = (width > padX) ? (width - padX) : (1 << 20);
+    LayoutText(dx);
+    return totalDy + padding.top + padding.bottom;
 }
 
 Size VirtRichText::GetIdealSize() {
     LayoutText(layoutDx > 0 ? layoutDx : (1 << 20));
-    return {totalDx, totalDy};
+    return {totalDx + padding.left + padding.right, totalDy + padding.top + padding.bottom};
 }
 
 Size VirtRichText::Layout(Constraints bc) {
-    int dx = (bc.max.dx == Inf) ? (1 << 20) : bc.max.dx;
+    int padX = padding.left + padding.right;
+    int dx = (bc.max.dx == Inf) ? (1 << 20) : std::max(bc.max.dx - padX, 1);
     LayoutText(dx);
-    return bc.Constrain({totalDx, totalDy});
+    return bc.Constrain({totalDx + padX, totalDy + padding.top + padding.bottom});
 }
 
 void VirtRichText::SetBounds(Rect r) {
@@ -2682,6 +2708,10 @@ bool VirtRichText::OnMouseDown(VirtMouseEvent& ev) {
 bool VirtRichText::OnMouseUp(VirtMouseEvent& ev) {
     TipLink* link = LinkAt(ev.pt);
     if (!link) {
+        if (onClick.IsValid()) {
+            onClick.Call(&ev);
+            return true;
+        }
         return false;
     }
     HWND hwnd = hwndForCmds ? hwndForCmds : GetHwnd();
@@ -2690,7 +2720,7 @@ bool VirtRichText::OnMouseUp(VirtMouseEvent& ev) {
 }
 
 bool VirtRichText::OnSetCursor(Point ptLocal) {
-    if (!LinkAt(ptLocal)) {
+    if (!LinkAt(ptLocal) && !onClick.IsValid()) {
         return false;
     }
     SetCursorCached(IDC_HAND);
@@ -2751,6 +2781,6 @@ TempStr VirtRichText::PlainTextTemp() {
 
 VirtRichText* ParseTip(Str s) {
     auto* tip = new VirtRichText();
-    ParseTipInto(*tip, s);
+    ParseTipInto(tip, s);
     return tip;
 }

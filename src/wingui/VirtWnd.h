@@ -617,6 +617,9 @@ struct VirtRichText : VirtWnd {
     COLORREF bgColor = kColorUnset;
     // link commands are sent to this window
     HWND hwndForCmds = nullptr;
+    // fired by a click that didn't land on a link, so the whole run can be
+    // clickable (the command palette's "# File History" and friends)
+    VirtMouseHandler onClick;
 
     VirtRichText();
     ~VirtRichText() override;
@@ -641,6 +644,8 @@ struct VirtRichText : VirtWnd {
 };
 
 VirtRichText* ParseTip(Str s);
+// same, but into a VirtRichText the caller made (e.g. a subclass of it)
+void ParseTipInto(VirtRichText*, Str s);
 int TipWordCount(VirtRichText*);
 int TipLinkCount(VirtRichText*);
 void ExecuteTipLink(HWND hwnd, Str cmd);

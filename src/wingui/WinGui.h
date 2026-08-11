@@ -192,6 +192,28 @@ void SizeToIdealSize(Wnd* wnd);
 
 //--- Static
 
+struct VirtRoot;
+struct VirtWnd;
+
+// The inverse of VirtWrapper: a child window that hosts a VirtWnd tree, so a
+// virtual control can sit in a layout of real (HWND) controls. Owns the tree
+struct VirtHost : Wnd {
+    VirtRoot* vroot = nullptr;
+    COLORREF bgColor = kColorUnset;
+
+    VirtHost();
+    ~VirtHost() override;
+
+    // takes ownership of `child`
+    HWND Create(HWND parent, VirtWnd* child);
+    VirtWnd* Child() const;
+
+    Size GetIdealSize() override;
+    void SetBounds(Rect) override;
+    void OnPaint(HDC, PAINTSTRUCT*) override;
+    LRESULT WndProc(HWND, UINT, WPARAM, LPARAM) override;
+};
+
 struct Static : Wnd {
     struct CreateArgs {
         HWND parent = nullptr;
