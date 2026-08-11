@@ -588,10 +588,14 @@ static void StrArenaTest() {
         params.commit_size = 4 * 1024;
         Arena* a2 = ArenaNew(params);
         utassert(a2 != nullptr);
-        void* filler = a2->Push(3 * 1024, 8, true);
+        // ArenaNew rounds the reserve up to a page, and a page is 16K on arm64
+        // macOS, not 4K - so size the pushes from the block we actually got
+        u64 half = a2->res / 2;
+        void* filler = a2->Push(half, 8, true);
         utassert(filler != nullptr);
-        // second large push forces a chained block (first block is ~4KB)
-        void* filler2 = a2->Push(3 * 1024, 8, true);
+        // second large push forces a chained block (two halves + the header
+        // don't fit in one)
+        void* filler2 = a2->Push(half, 8, true);
         utassert(filler2 != nullptr);
         utassert(a2->current != a2);
         StrArena sa2 = StrArenaDupStr(a2, StrL("second-block"));

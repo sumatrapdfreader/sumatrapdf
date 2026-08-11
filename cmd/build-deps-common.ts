@@ -48,6 +48,22 @@ export interface BuildLibraryOptions {
 
 export const DEFAULT_JOBS = Math.max(1, Math.min(4, cpus().length));
 
+const kX86OnlyCflagRe = /^-m(no-)?(sse|avx|mmx|f16c|fma|aes|pclmul|popcnt|bmi|lzcnt|movbe|xop)/;
+
+/**
+ * Drops x86-only `-m` flags (`-msse4.1` and friends) when not building for x86.
+ * clang *rejects* them on other targets ("unsupported option '-msse4.1' for
+ * target 'arm64-apple-darwin'") instead of ignoring them, and the intrinsics
+ * they enable already sit behind each library's own x86 `#ifdef`s, so there is
+ * nothing to replace them with. Mutates lib.
+ */
+export function dropX86OnlyCflags(lib: LibDef, arch: string): void {
+  if (arch === "x64" || arch === "x86" || !lib.extraCflags) {
+    return;
+  }
+  lib.extraCflags = lib.extraCflags.filter((f) => !kX86OnlyCflagRe.test(f));
+}
+
 /** Font files embedded into the mupdf static lib (premake fonts()). */
 export const FONT_FILES = [
   { path: "mupdf/resources/fonts/urw/Dingbats.cff", ext: "cff" },
@@ -120,10 +136,7 @@ export async function spawnCmd(
 }
 
 /** Compile a list of {src, obj, args} units in parallel */
-export async function compileAll(
-  units: { src: string; obj: string; args: string[] }[],
-  jobs: number,
-): Promise<void> {
+export async function compileAll(units: { src: string; obj: string; args: string[] }[], jobs: number): Promise<void> {
   let idx = 0;
   let failed = 0;
   const total = units.length;
@@ -173,11 +186,7 @@ export async function compileAll(
 }
 
 /** Create a static .a archive from object files */
-export async function createArchive(
-  tools: BuildTools,
-  archivePath: string,
-  objFiles: string[],
-): Promise<void> {
+export async function createArchive(tools: BuildTools, archivePath: string, objFiles: string[]): Promise<void> {
   if (objFiles.length === 0) return;
   mkdirSync(dirname(archivePath), { recursive: true });
   const batch = 200;
@@ -260,14 +269,8 @@ export async function embedBinaryFile(
     }
     // xxd -i names symbols from the filename: <name>[] and <name>_len
     const cBody = xxdRes.stdout
-      .replace(
-        new RegExp(`unsigned char ${cleanFileName}\\[\\]`),
-        `const unsigned char ${symbolPrefix}[]`,
-      )
-      .replace(
-        new RegExp(`unsigned int ${cleanFileName}_len`),
-        `const unsigned int ${symbolPrefix}_size`,
-      );
+      .replace(new RegExp(`unsigned char ${cleanFileName}\\[\\]`), `const unsigned char ${symbolPrefix}[]`)
+      .replace(new RegExp(`unsigned int ${cleanFileName}_len`), `const unsigned int ${symbolPrefix}_size`);
     await writeFile(cSrc, cBody);
     res = await spawnCmd([tools.cc, "-Os", "-c", cSrc, "-o", outAbsolute]);
     if (!res.ok) {

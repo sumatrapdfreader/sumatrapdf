@@ -13256,9 +13256,12 @@ static void dct_rows4(float *data, size_t stride, int w, int inverse) {
 #else
 
 void jxl_idct8x8_plane(float *data, size_t stride,
+                       const jxl_block_info *blocks, int channel,
                        uint32_t blocks_w, uint32_t blocks_h) {
     (void)data;
     (void)stride;
+    (void)blocks;
+    (void)channel;
     (void)blocks_w;
     (void)blocks_h;
 }

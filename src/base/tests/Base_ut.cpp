@@ -200,13 +200,18 @@ static void ArenaPtrCompressTest() {
         utassert(a->current == a);
         utassert(a->base_pos == 0);
 
+        // ArenaNew rounds the reserve up to a page, and a page is 16K on arm64
+        // macOS, not 4K - so size the pushes from the block we actually got.
+        // Two of these plus ARENA_HEADER_SIZE can't fit in one block.
+        u64 half = a->res / 2;
+
         // Fill most of the first block (header is ARENA_HEADER_SIZE)
-        void* p1 = a->Push(3 * 1024, 8, true);
+        void* p1 = a->Push(half, 8, true);
         utassert(p1 != nullptr);
         utassert(a->current == a);
 
         // Force a second arena block in the chain
-        void* p2 = a->Push(3 * 1024, 8, true);
+        void* p2 = a->Push(half, 8, true);
         utassert(p2 != nullptr);
         utassert(a->current != a);
         utassert(a->current->prev == a);
