@@ -853,12 +853,6 @@ function wingui_files()
   })
 end
 
-function mui_files()
-  files_in_dir("src/mui", {
-    "TextRender.*",
-  })
-end
-
 function engines_files()
   files_in_dir("src", {
     "Annotation.*",
@@ -1401,7 +1395,6 @@ function pdf_preview_files()
     "HtmlFormatter.*",
     "JxlReader.*",
     "MobiDoc.*",
-    "mui/TextRender.*",
     "wingui/PlatformFont.*",
     "wingui/PlatformFont_win.*",
     "wingui/PlatformText.*",

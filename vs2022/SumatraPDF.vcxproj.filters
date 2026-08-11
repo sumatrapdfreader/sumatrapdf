@@ -25,9 +25,6 @@
     <Filter Include="src\base\tests">
       <UniqueIdentifier>{19604212-052E-3618-EEC1-A63EDA2E127D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\mui">
-      <UniqueIdentifier>{A71E30A9-13FE-AE44-1C16-3A1B887415A6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\regress">
       <UniqueIdentifier>{F7CE8947-6384-023D-EC78-FC13582DF940}</UniqueIdentifier>
     </Filter>
@@ -446,9 +443,6 @@
     </ClInclude>
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\TextRender.h">
-      <Filter>src\mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\resource.h">
       <Filter>src</Filter>
@@ -1066,9 +1060,6 @@
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>src\base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\TextRender.cpp">
-      <Filter>src\mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\regress\Regress.cpp">
       <Filter>src\regress</Filter>

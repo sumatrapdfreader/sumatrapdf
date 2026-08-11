@@ -17,7 +17,6 @@
 
 #if OS_WIN
 #include "base/GdiPlusUtil.h"
-#include "mui/TextRender.h"
 #endif
 
 /*
@@ -170,7 +169,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     htmlParser->SetCurrPosOff(currReparseIdx);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
-    textMeasure = CreatePlatformTextMeasurer(args->textRenderMethod);
+    textMeasure = CreatePlatformTextRender(args->textRenderMethod);
     defaultFontName = str::Dup(ToUtf8Temp(args->GetFontName()));
     defaultFontSize = args->fontSize;
 
@@ -1542,8 +1541,8 @@ using Gdiplus::Status;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-void DrawHtmlPage(Gdiplus::Graphics* g, ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
-                  bool showBbox, COLORREF textColor, bool* abortCookie) {
+void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
+                  float offY, bool showBbox, COLORREF textColor, bool* abortCookie) {
     Pen debugPen(Color(255, 0, 0), 1);
     // Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);

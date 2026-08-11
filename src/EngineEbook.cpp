@@ -32,8 +32,6 @@
 #include "base/Win.h"
 #include "base/Zip.h"
 
-#include "mui/TextRender.h"
-
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
 using Gdiplus::Color;
@@ -408,7 +406,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 
     ScopedMutex scope(&pagesAccess);
 
-    ITextRender* textDraw = TextRenderGdiplus::Create(&g);
+    PlatformTextRender* textDraw = CreateGdiplusTextRender(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, RGB(0, 0, 0),
                  cookie ? &cookie->abort : nullptr);
     delete textDraw;

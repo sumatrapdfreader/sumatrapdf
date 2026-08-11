@@ -26,7 +26,6 @@ To write new regression test:
 #include "base/HtmlTags.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/PlatformText.h"
-#include "mui/TextRender.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"

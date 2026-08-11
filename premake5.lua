@@ -1316,7 +1316,6 @@ workspace "SumatraPDF"
     filter {}
 
     synctex_files()
-    mui_files()
     wingui_files()
     uia_files()
     engines_files()
@@ -1416,7 +1415,6 @@ workspace "SumatraPDF"
     darkmodelib_files()
 
     synctex_files()
-    mui_files()
     wingui_files()
     uia_files()
     engines_files()

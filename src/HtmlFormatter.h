@@ -10,8 +10,6 @@ namespace Gdiplus {
 class Color;
 class Graphics;
 } // namespace Gdiplus
-
-class ITextRender;
 #endif
 
 // PlatformFont / PlatformFontStyle live in wingui/PlatformFont.h and the text
@@ -231,7 +229,7 @@ struct HtmlFormatter {
     Str defaultFontName;
     float defaultFontSize = 0;
     Arena* textAllocator = nullptr;
-    PlatformTextMeasurer* textMeasure = nullptr;
+    PlatformTextRender* textMeasure = nullptr;
 
     // Cache of measured text. We assume few distinct fonts, so each font gets
     // its own hash table (keyed by text only). If we ever see more than
@@ -313,8 +311,8 @@ struct HtmlFormatter {
 };
 
 #if OS_WIN
-void DrawHtmlPage(Gdiplus::Graphics* g, ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
-                  bool showBbox, COLORREF textColor, bool* abortCookie = nullptr);
+void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
+                  float offY, bool showBbox, COLORREF textColor, bool* abortCookie = nullptr);
 #endif
 
 PlatformTextMeasureMethod GetTextRenderMethod();

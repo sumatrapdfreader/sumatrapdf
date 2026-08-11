@@ -1046,7 +1046,6 @@
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\WebpReader.h" />
     <ClInclude Include="..\src\base\Archive.h" />
-    <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
     <ClInclude Include="..\src\wingui\PlatformFont.h" />
     <ClInclude Include="..\src\wingui\PlatformText.h" />
@@ -1081,7 +1080,6 @@
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
-    <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
     <ClCompile Include="..\src\wingui\PlatformFont.cpp" />
