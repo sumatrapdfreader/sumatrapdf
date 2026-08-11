@@ -1371,27 +1371,53 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     });
 }
 
-// Give the list of annotations whatever vertical space the rest of the window
-// doesn't need, so it grows with the window instead of being a fixed number of
-// lines. The old rule (5 lines, or 14 once the window was over 1024 tall) made
-// the list jump between two very different sizes for a small difference in
-// window height, and could size the window taller than the screen (#3769).
-static void SetListBoxLinesToFit(EditAnnotationsWindow* ew, int targetClientDy) {
-    constexpr int kPreferredListLines = 5;
+// how much taller a multi-line edit gets for one more line of text
+static int EditLineDy(Edit* e) {
+    int prev = e->idealSizeLines;
+    e->idealSizeLines = 1;
+    int dy1 = e->GetIdealSize().dy;
+    e->idealSizeLines = 2;
+    int dy2 = e->GetIdealSize().dy;
+    e->idealSizeLines = prev;
+    return std::max(dy2 - dy1, 1);
+}
+
+// Hand the vertical space the rest of the window doesn't need to the two
+// controls that can use it: the list of annotations and, when an annotation is
+// selected, its Contents box. Both used to be a fixed number of lines, so a
+// taller window just grew its empty area - the list stayed put (#3769) and a
+// multi-line annotation stayed cut off with room to spare below it (#5834).
+static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientDy) {
+    constexpr int kPreferredLines = 5;
     if (!ew->listBox || !ew->mainLayout) {
         return;
     }
-    int lineDy = ew->listBox->GetItemHeight(0);
-    if (lineDy <= 0 || targetClientDy <= 0) {
+    int listLineDy = ew->listBox->GetItemHeight(0);
+    if (listLineDy <= 0 || targetClientDy <= 0) {
         return;
     }
-    // how tall everything is with the smallest list we'd like to show
-    ew->listBox->idealSizeLines = kPreferredListLines;
+    Edit* contents = ew->editContents;
+    bool growContents = contents && contents->IsVisible();
+
+    // how tall everything is with the smallest list and Contents box we'd like
+    // to show
+    ew->listBox->idealSizeLines = kPreferredLines;
+    if (growContents) {
+        contents->idealSizeLines = kPreferredLines;
+    }
     Size natural = ew->mainLayout->Layout(ExpandInf());
-    int nLines = kPreferredListLines + ((targetClientDy - natural.dy) / lineDy);
+    int extraDy = targetClientDy - natural.dy;
+
+    if (extraDy > 0 && growContents) {
+        // share it: the list is for finding an annotation, the Contents box for
+        // reading and writing the one you found, and both want the room
+        int forContents = extraDy / 2;
+        extraDy -= forContents;
+        contents->idealSizeLines = kPreferredLines + (forContents / EditLineDy(contents));
+    }
     // one line is the floor: better a cramped list than a window taller than
     // the screen
-    ew->listBox->idealSizeLines = std::max(nLines, 1);
+    ew->listBox->idealSizeLines = std::max(kPreferredLines + (extraDy / listLineDy), 1);
 }
 
 void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
@@ -1411,7 +1437,7 @@ void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
         // avoid un-necessary layout
         return;
     }
-    SetListBoxLinesToFit(this, dy);
+    SetGrowingControlsToFit(this, dy);
     LayoutToSize(mainLayout, {dx, dy});
 }
 
@@ -1931,13 +1957,13 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     if (lastPos.IsEmpty()) {
         Size size = {520, minDy};
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        SetListBoxLinesToFit(ew, size.dy);
+        SetGrowingControlsToFit(ew, size.dy);
         LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
     } else {
         Size size = {lastPos.dx, minDy};
         LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        SetListBoxLinesToFit(ew, size.dy);
+        SetGrowingControlsToFit(ew, size.dy);
         LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)

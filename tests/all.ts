@@ -62,6 +62,7 @@ import { testit as issue1201 } from "./issue-1201.ts";
 import { testit as issue1189 } from "./issue-1189.ts";
 import { testit as issue5792 } from "./issue-5792.ts";
 import { testit as issue4576 } from "./issue-4576.ts";
+import { testit as issue5834 } from "./issue-5834.ts";
 import { testit as issue5840 } from "./issue-5840.ts";
 import { testit as issue5842 } from "./issue-5842.ts";
 import { testit as issue5845 } from "./issue-5845.ts";
@@ -143,6 +144,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-1189", issue1189],
   ["issue-5792", issue5792],
   ["issue-4576", issue4576],
+  ["issue-5834", issue5834],
   ["issue-5840", issue5840],
   ["issue-5842", issue5842],
   ["issue-5845", issue5845],
