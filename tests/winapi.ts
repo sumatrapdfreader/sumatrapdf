@@ -10,7 +10,7 @@
 // Handles (HWND) are represented as JS `number`s here. That's fine for window
 // handles in practice; do not use these helpers for arbitrary 64-bit pointers.
 
-import { dlopen, FFIType, JSCallback, ptr } from "bun:ffi";
+import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
 
 const user32 = dlopen("user32.dll", {
   EnumWindows: { args: [FFIType.function, FFIType.i64], returns: FFIType.bool },
@@ -112,6 +112,10 @@ const gdi32 = dlopen("gdi32.dll", {
   GetPixel: { args: [FFIType.u64, FFIType.i32, FFIType.i32], returns: FFIType.u32 },
   CreateSolidBrush: { args: [FFIType.u32], returns: FFIType.u64 },
   GetObjectW: { args: [FFIType.u64, FFIType.i32, FFIType.ptr], returns: FFIType.i32 },
+  CreateDIBSection: {
+    args: [FFIType.u64, FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.u64, FFIType.u32],
+    returns: FFIType.u64,
+  },
 });
 
 const shell32 = dlopen("shell32.dll", {
@@ -239,6 +243,7 @@ export const VK_UP = 0x26;
 export const VK_RIGHT = 0x27;
 export const VK_DOWN = 0x28;
 // PrintWindow flags
+export const PW_CLIENTONLY = 0x00000001;
 export const PW_RENDERFULLCONTENT = 0x00000002;
 export const SRCCOPY = 0x00cc0020;
 export const COLORONCOLOR = 3; // StretchBlt mode: no smoothing
@@ -671,6 +676,68 @@ export function readWindowDCColumn(hwnd: number, x: number, y: number, count: nu
   }
   user32.symbols.ReleaseDC(hwnd, dc);
   return out;
+}
+
+// Like readWindowDCColumn but a horizontal run of pixels. Handy for checking
+// that centered text (a "Couldn't render page N" message, a notification, ...)
+// actually painted: scan the rows around the middle and count non-background
+// pixels.
+export function readWindowDCRow(hwnd: number, x: number, y: number, count: number): number[] {
+  const dc = user32.symbols.GetWindowDC(hwnd);
+  const out: number[] = [];
+  for (let i = 0; i < count; i++) {
+    let c = gdi32.symbols.GetPixel(dc, x + i, y) >>> 0;
+    for (let attempt = 0; c === CLR_INVALID && attempt < 4; attempt++) {
+      c = gdi32.symbols.GetPixel(dc, x + i, y) >>> 0;
+    }
+    out.push(c);
+  }
+  user32.symbols.ReleaseDC(hwnd, dc);
+  return out;
+}
+
+// Grab a window's client-area pixels via PrintWindow into a 32bpp DIB and hand
+// them back as BGRA bytes (4 per pixel, top-down). Unlike GetPixel on a window
+// DC this works for occluded / background windows, and unlike captureWindowToPng
+// it needs no PNG decoder to assert on what was painted.
+export function captureWindowPixels(hwnd: number): { w: number; h: number; data: Uint8Array } | null {
+  const rc = getClientRect(hwnd);
+  const w = rc.right - rc.left;
+  const h = rc.bottom - rc.top;
+  if (w <= 0 || h <= 0) {
+    return null;
+  }
+  const screenDC = user32.symbols.GetWindowDC(0);
+  const memDC = gdi32.symbols.CreateCompatibleDC(screenDC);
+  // BITMAPINFOHEADER, negative height = top-down rows
+  const bmi = new ArrayBuffer(40);
+  const dv = new DataView(bmi);
+  dv.setUint32(0, 40, true); // biSize
+  dv.setInt32(4, w, true); // biWidth
+  dv.setInt32(8, -h, true); // biHeight
+  dv.setUint16(12, 1, true); // biPlanes
+  dv.setUint16(14, 32, true); // biBitCount
+  dv.setUint32(16, 0, true); // biCompression = BI_RGB
+  const bitsPtr = new BigUint64Array(1);
+  const bmp = gdi32.symbols.CreateDIBSection(memDC, ptr(bmi), 0 /*DIB_RGB_COLORS*/, ptr(bitsPtr), 0n, 0);
+  if (!bmp || !bitsPtr[0]) {
+    gdi32.symbols.DeleteDC(memDC);
+    user32.symbols.ReleaseDC(0, screenDC);
+    return null;
+  }
+  const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
+  user32.symbols.PrintWindow(hwnd, memDC, PW_CLIENTONLY | PW_RENDERFULLCONTENT);
+  gdi32.symbols.SelectObject(memDC, oldObj);
+
+  // bun wants the pointer as a number, not the bigint CreateDIBSection wrote
+  const nBytes = w * h * 4;
+  const bits = Number(bitsPtr[0]) as unknown as Parameters<typeof toArrayBuffer>[0];
+  const data = new Uint8Array(toArrayBuffer(bits, 0, nBytes)).slice();
+
+  gdi32.symbols.DeleteObject(bmp);
+  gdi32.symbols.DeleteDC(memDC);
+  user32.symbols.ReleaseDC(0, screenDC);
+  return { w, h, data };
 }
 
 // set a window's text via WM_SETTEXT (works on edit controls cross-process,

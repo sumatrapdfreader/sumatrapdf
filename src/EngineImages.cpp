@@ -549,12 +549,13 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     Pixmap* src = page->pixmap;
     if (page->failedToLoad || !src || !src->data) {
+        // the image in the archive is corrupt / of an unsupported format. Fail
+        // the render instead of handing back a blank page: the caller marks the
+        // page as failed and the canvas says "Couldn't render page N", where a
+        // blank page just looked like an empty (black) page of the comic (#2199)
+        logf("EngineImages::RenderPage: no image data for page %d, failing the render\n", pageNo);
         DropPage(page, false);
-        Pixmap* blank = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
-        if (blank) {
-            FillPixmapWhite(blank);
-        }
-        return blank;
+        return nullptr;
     }
 
 #if OS_WIN

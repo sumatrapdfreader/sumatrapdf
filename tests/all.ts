@@ -16,6 +16,7 @@ import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue1136 } from "./issue-1136.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
+import { testit as issue2199 } from "./issue-2199.ts";
 import { testit as issue2693 } from "./issue-2693.ts";
 import { testit as issue906 } from "./issue-906.ts";
 import { testit as issue933 } from "./issue-933.ts";
@@ -92,6 +93,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-1106", issue1106],
   ["issue-1136", issue1136],
   ["issue-1998", issue1998],
+  ["issue-2199", issue2199],
   ["issue-2693", issue2693],
   ["issue-906", issue906],
   ["issue-933", issue933],
