@@ -38,7 +38,7 @@ void GfxDrawPixmap(Gfx*, Pixmap*, const Rect&);
 #if OS_WIN
 Gfx GfxFromHdc(HDC);
 // for app code that still paints with win32 directly (custom controls,
-// gdiplus, DrawCloseButton, ...)
+// gdiplus, ...)
 inline HDC GfxHdc(Gfx* gfx) {
     return gfx ? gfx->hdc : nullptr;
 }
