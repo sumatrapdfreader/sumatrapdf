@@ -1543,7 +1543,7 @@ using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
 void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Gdiplus::Color textColor, bool* abortCookie) {
+                  float offY, bool showBbox, COLORREF textColor, bool* abortCookie) {
     Pen debugPen(Color(255, 0, 0), 1);
     // Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);

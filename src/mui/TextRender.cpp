@@ -29,7 +29,6 @@ TODO:
 be in mui to avoid circular dependency */
 
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::Graphics;
 using Gdiplus::Ok;
 using Gdiplus::Region;
@@ -45,7 +44,7 @@ TextRenderGdi* TextRenderGdi::Create(Graphics* gfx) {
     TextRenderGdi* res = new TextRenderGdi();
     res->gfx = gfx;
     // default to red to make mistakes stand out
-    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
+    res->SetTextColor(RGB(0xff, 0, 0));
     res->CreateHdcForTextMeasure(); // could do lazily, but that's more things to track, so not
                                     // worth it
     return res;
@@ -133,23 +132,23 @@ RectF TextRenderGdi::Measure(Str s) {
     return Measure(buf);
 }
 
-void TextRenderGdi::SetTextColor(Gdiplus::Color col) {
-    if (textColor.GetValue() == col.GetValue()) {
+void TextRenderGdi::SetTextColor(COLORREF col) {
+    if (textColor == col) {
         return;
     }
     textColor = col;
     if (hdcGfxLocked) {
-        ::SetTextColor(hdcGfxLocked, col.ToCOLORREF());
+        ::SetTextColor(hdcGfxLocked, col);
     }
 }
 
-void TextRenderGdi::SetTextBgColor(Gdiplus::Color col) {
-    if (textBgColor.GetValue() == col.GetValue()) {
+void TextRenderGdi::SetTextBgColor(COLORREF col) {
+    if (textBgColor == col) {
         return;
     }
     textBgColor = col;
     if (hdcGfxLocked) {
-        ::SetBkColor(hdcGfxLocked, textBgColor.ToCOLORREF());
+        ::SetBkColor(hdcGfxLocked, textBgColor);
     }
 }
 
@@ -165,8 +164,8 @@ void TextRenderGdi::Lock() {
     DeleteObject(hrgn);
 
     SelectFont(hdcGfxLocked, currFont);
-    ::SetTextColor(hdcGfxLocked, textColor.ToCOLORREF());
-    ::SetBkColor(hdcGfxLocked, textBgColor.ToCOLORREF());
+    ::SetTextColor(hdcGfxLocked, textColor);
+    ::SetBkColor(hdcGfxLocked, textBgColor);
 }
 
 void TextRenderGdi::Unlock() {
@@ -262,7 +261,7 @@ void TextRenderGdi::DrawTransparent(WStr s, const RectF bb, bool isRtl) {
     // BitBlt(memHdc, 0, 0, dx, dy, hdcGfxLocked, x, y, SRCCOPY);
     RestoreMemHdcPrevFont();
     memHdcPrevFont = SelectObject(memHdc, currFont);
-    ::SetTextColor(memHdc, textColor.ToCOLORREF());
+    ::SetTextColor(memHdc, textColor);
 
 #if 0
     TextOut(memHdc, 0, 0, s.s, s.len);
@@ -277,8 +276,8 @@ void TextRenderGdi::DrawTransparent(WStr s, const RectF bb, bool isRtl) {
     BLENDFUNCTION bf{};
     bf.BlendOp = AC_SRC_OVER;
     bf.BlendFlags = 0;
-    bf.AlphaFormat = 0;           // 0 - ignore source alpha, AC_SRC_ALPHA (1) - use source alpha
-    bf.SourceConstantAlpha = 0x3; // textColor.GetA();
+    bf.AlphaFormat = 0; // 0 - ignore source alpha, AC_SRC_ALPHA (1) - use source alpha
+    bf.SourceConstantAlpha = 0x3;
     AlphaBlend(hdcGfxLocked, x, y, dx, dy, memHdc, 0, 0, dx, dy, bf);
 }
 
@@ -297,7 +296,7 @@ TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, TextMeasureAlgorithm
         res->measureAlgo = measureAlgo;
     }
     // default to red to make mistakes stand out
-    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
+    res->SetTextColor(RGB(0xff, 0, 0));
     return res;
 }
 
@@ -327,13 +326,13 @@ TextRenderGdiplus::~TextRenderGdiplus() {
     delete textColorBrush;
 }
 
-void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
-    if (textColor.GetValue() == col.GetValue()) {
+void TextRenderGdiplus::SetTextColor(COLORREF col) {
+    if (textColor == col) {
         return;
     }
     textColor = col;
     delete textColorBrush;
-    textColorBrush = new SolidBrush(col);
+    textColorBrush = new SolidBrush(GdiRgbFromCOLORREF(col));
 }
 
 static Gdiplus::PointF ToGdipPointF(const PointF p) {
@@ -398,7 +397,7 @@ TextRenderHdc* TextRenderHdc::Create(Graphics* gfx, int dx, int dy) {
     SelectObject(res->hdc, res->bmp);
 
     // default to red to make mistakes stand out
-    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
+    res->SetTextColor(RGB(0xff, 0, 0));
     return res;
 }
 
@@ -412,22 +411,22 @@ void TextRenderHdc::SetFont(PlatformFont* font) {
     SelectFont(hdc, font->GetHFont());
 }
 
-void TextRenderHdc::SetTextColor(Gdiplus::Color col) {
+void TextRenderHdc::SetTextColor(COLORREF col) {
     ReportIf(!hdc);
-    if (textColor.GetValue() == col.GetValue()) {
+    if (textColor == col) {
         return;
     }
     textColor = col;
-    ::SetTextColor(hdc, col.ToCOLORREF());
+    ::SetTextColor(hdc, col);
 }
 
-void TextRenderHdc::SetTextBgColor(Gdiplus::Color col) {
+void TextRenderHdc::SetTextBgColor(COLORREF col) {
     ReportIf(!hdc);
-    if (textBgColor.GetValue() == col.GetValue()) {
+    if (textBgColor == col) {
         return;
     }
     textBgColor = col;
-    ::SetBkColor(hdc, textBgColor.ToCOLORREF());
+    ::SetBkColor(hdc, textBgColor);
 }
 
 float TextRenderHdc::GetCurrFontLineSpacing() {

@@ -409,7 +409,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     ScopedMutex scope(&pagesAccess);
 
     mui::ITextRender* textDraw = mui::TextRenderGdiplus::Create(&g);
-    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black),
+    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, RGB(0, 0, 0),
                  cookie ? &cookie->abort : nullptr);
     delete textDraw;
     DeleteDC(hDC);

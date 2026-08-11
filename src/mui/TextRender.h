@@ -17,13 +17,13 @@ enum class TextRenderMethod {
 class ITextRender {
   public:
     virtual void SetFont(PlatformFont* font) = 0;
-    virtual void SetTextColor(Gdiplus::Color col) = 0;
+    virtual void SetTextColor(COLORREF col) = 0;
 
     // this is only for the benefit of TextRenderGdi. In GDI+, Draw() uses
     // transparent background color (i.e. whatever is under).
     // GDI doesn't support such transparency so the best we can do is simulate
     // that if the background is solid color. It won't work in other cases
-    virtual void SetTextBgColor(Gdiplus::Color col) = 0;
+    virtual void SetTextBgColor(COLORREF col) = 0;
 
     virtual float GetCurrFontLineSpacing() = 0;
 
@@ -53,8 +53,9 @@ class TextRenderGdi : public ITextRender {
     HGDIOBJ hdcForTextMeasurePrevFont = nullptr;
     PlatformFont* currFont = nullptr;
     Gdiplus::Graphics* gfx = nullptr;
-    Gdiplus::Color textColor;
-    Gdiplus::Color textBgColor;
+    // black, like the Gdiplus::Color these used to default to
+    COLORREF textColor = 0;
+    COLORREF textBgColor = 0;
 
     HDC memHdc = nullptr;
     HGDIOBJ memHdcPrevFont = nullptr;
@@ -77,8 +78,8 @@ class TextRenderGdi : public ITextRender {
     static TextRenderGdi* Create(Gdiplus::Graphics* gfx);
 
     void SetFont(PlatformFont* font) override;
-    void SetTextColor(Gdiplus::Color col) override;
-    void SetTextBgColor(Gdiplus::Color col) override;
+    void SetTextColor(COLORREF col) override;
+    void SetTextBgColor(COLORREF col) override;
 
     float GetCurrFontLineSpacing() override;
 
@@ -104,7 +105,7 @@ class TextRenderGdiplus : public ITextRender {
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
     PlatformFont* currFont = nullptr;
-    Gdiplus::Color textColor;
+    COLORREF textColor = 0;
     Gdiplus::Brush* textColorBrush = nullptr;
 
     TextRenderGdiplus() = default;
@@ -113,8 +114,8 @@ class TextRenderGdiplus : public ITextRender {
     static TextRenderGdiplus* Create(Gdiplus::Graphics* gfx, TextMeasureAlgorithm measureAlgo = nullptr);
 
     void SetFont(PlatformFont* font) override;
-    void SetTextColor(Gdiplus::Color col) override;
-    void SetTextBgColor(Gdiplus::Color) override {}
+    void SetTextColor(COLORREF col) override;
+    void SetTextBgColor(COLORREF) override {}
 
     float GetCurrFontLineSpacing() override;
 
@@ -142,8 +143,9 @@ class TextRenderHdc : public ITextRender {
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
     PlatformFont* currFont = nullptr;
-    Gdiplus::Color textColor;
-    Gdiplus::Color textBgColor;
+    // black, like the Gdiplus::Color these used to default to
+    COLORREF textColor = 0;
+    COLORREF textBgColor = 0;
 
     TextRenderHdc() = default;
 
@@ -151,8 +153,8 @@ class TextRenderHdc : public ITextRender {
     static TextRenderHdc* Create(Gdiplus::Graphics* gfx, int dx, int dy);
 
     void SetFont(PlatformFont* font) override;
-    void SetTextColor(Gdiplus::Color col) override;
-    void SetTextBgColor(Gdiplus::Color col) override;
+    void SetTextColor(COLORREF col) override;
+    void SetTextBgColor(COLORREF col) override;
 
     float GetCurrFontLineSpacing() override;
 

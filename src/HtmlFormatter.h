@@ -317,7 +317,7 @@ struct HtmlFormatter {
 
 #if OS_WIN
 void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Gdiplus::Color textColor, bool* abortCookie = nullptr);
+                  float offY, bool showBbox, COLORREF textColor, bool* abortCookie = nullptr);
 #endif
 
 PlatformTextMeasureMethod GetTextRenderMethod();
