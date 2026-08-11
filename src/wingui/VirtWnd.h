@@ -336,6 +336,96 @@ struct VirtScroll : VirtWnd {
     void NotifyVisibleRange();
 };
 
+// A list of rows: it owns the model, the selection and the scroll position, and
+// paints only the rows that are visible. The virtual counterpart of the HWND
+// ListBox, minus the win32 listbox's habits (it doesn't steal the keyboard
+// focus when clicked, and it repaints as one piece instead of scrolling pixels)
+struct VirtListBox : VirtWnd {
+    struct DrawItemEvent {
+        VirtListBox* listBox = nullptr;
+        Gfx* gfx = nullptr;
+        // the whole row, in window coords, without the scrollbar strip
+        Rect itemRect;
+        int itemIndex = -1;
+        bool selected = false;
+    };
+
+    using SelectionChangedHandler = Func0;
+    using DoubleClickHandler = Func0;
+    using DrawItemHandler = Func1<DrawItemEvent*>;
+
+    ListBoxModel* model = nullptr; // owned
+    SelectionChangedHandler onSelectionChanged;
+    DoubleClickHandler onDoubleClick;
+    // when not set, rows are drawn as plain text
+    DrawItemHandler onDrawItem;
+
+    PlatformFont* font = nullptr; // not owned, interned
+    COLORREF textColor = kColorUnset;
+    COLORREF bgColor = kColorUnset;
+    // background of the selected row; derived from bgColor when unset
+    COLORREF selectionColor = kColorUnset;
+    COLORREF scrollbarColor = kColorUnset;
+
+    // how many rows GetIdealSize() asks for; 0 means "as many as there are",
+    // capped at 16
+    int idealSizeLines = 0;
+    // width GetIdealSize() asks for; 0 means a default
+    int idealSizeDx = 0;
+    // 0 means "derive from the font"
+    int itemDy = 0;
+    // for scaling before the tree is attached to a window (GetHwnd() is null
+    // until then)
+    HWND hwndForDpi = nullptr;
+
+    int scrollY = 0;
+
+    VirtListBox();
+    ~VirtListBox() override;
+
+    Size GetIdealSize() override;
+    void SetBounds(Rect) override;
+    void Paint(VirtPaintCtx&) override;
+    bool OnMouseDown(VirtMouseEvent&) override;
+    bool OnMouseUp(VirtMouseEvent&) override;
+    bool OnMouseMove(VirtMouseEvent&) override;
+    bool OnMouseWheel(VirtMouseEvent&) override;
+    bool OnDoubleClick(VirtMouseEvent&) override;
+    bool OnKeyDown(VirtKeyEvent&) override;
+    void OnCaptureLost() override;
+
+    // for efficiency you can re-use the model: get it, change the data, call
+    // SetModel() again
+    void SetModel(ListBoxModel*);
+    int ItemsCount();
+    int GetItemHeight();
+    int GetCurrentSelection();
+    // -1 clears the selection; doesn't call onSelectionChanged
+    bool SetCurrentSelection(int);
+    int ItemFromPoint(Point ptLocal);
+    void EnsureVisible(int idx);
+    int ViewportDy();
+    int MaxScrollY();
+    bool ScrollTo(int y);
+    bool ScrollBy(int dy);
+
+  private:
+    int selIdx = -1;
+    bool draggingThumb = false;
+    // where the thumb drag started, in window coords, and the scroll position
+    // it started from
+    int dragStartY = 0;
+    int dragStartScrollY = 0;
+
+    HWND HwndForDpi();
+    int ScrollbarDx();
+    Rect ContentRectLocal();
+    Rect ItemsRectLocal();
+    Rect ScrollbarRectLocal();
+    Rect ThumbRectLocal();
+    bool SelectAndNotify(int idx);
+};
+
 struct VirtCustom : VirtWnd {
     Size idealSize;
     VirtPaintHandler onPaint;

@@ -28,7 +28,6 @@
 #include "Favorites.h"
 #include "FileHistory.h"
 #include "Menu.h"
-#include "DarkModeSubclass.h"
 #include "Translations.h"
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
@@ -225,7 +224,7 @@ bool CommandPaletteWnd::AdvanceSelection(int dir) {
     if (dir == 0) {
         return false;
     }
-    int n = listBox->GetCount();
+    int n = listBox->ItemsCount();
     if (n == 0) {
         return false;
     }
@@ -591,25 +590,20 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     {
-        ListBox::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.isRtl = IsUIRtl();
-        auto* c = new ListBox();
+        auto* c = new VirtListBox();
+        c->hwndForDpi = hwnd;
+        c->font = GetPlatformFont(font);
+        c->textColor = colTxt;
+        c->bgColor = colBg;
+        c->padding = DpiScaledInsets(hwnd, 4, 0);
         c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
         c->onDrawItem =
-            MkMethod1<CommandPaletteWnd, ListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
-        c->SetInsetsPt(4, 0);
-        c->Create(args);
-        c->SetColors(colTxt, colBg);
+            MkMethod1<CommandPaletteWnd, VirtListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
         c->onSelectionChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnSelectionChange>(this);
         auto* m = new ListBoxModelCP();
         FilterStringsForQuery(prefix, m->strings);
         c->SetModel(m);
         listBox = c;
-        if (UseDarkModeLib()) {
-            DarkMode::setDarkScrollBar(listBox->hwnd);
-        }
         vbox->AddChild(c, 1);
     }
 
@@ -647,7 +641,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     dx = limitValue(dx, 640, 1024);
     if (smartTabMode) {
         // size the window to the number of tabs instead of using a fixed height
-        int itemDy = listBox->GetItemHeight(0);
+        int itemDy = listBox->GetItemHeight();
         int maxLines = 16;
         if (itemDy > 0) {
             maxLines = std::max((rc.dy - DpiScale(hwnd, 160)) / itemDy, 3);
@@ -709,12 +703,6 @@ HWND CommandPaletteHwndForAccelerator(HWND hwnd) {
         return wHwnd;
     }
     if (wnd->editQuery && wnd->editQuery->hwnd == hwnd) {
-        return wHwnd;
-    }
-    if (!wnd->listBox) {
-        return nullptr;
-    }
-    if (hwnd == wnd->listBox->hwnd) {
         return wHwnd;
     }
     return nullptr;

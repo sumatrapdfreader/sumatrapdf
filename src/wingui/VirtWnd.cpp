@@ -921,7 +921,6 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     return false;
 }
 
-
 //--- VirtTable
 
 static Kind kindVirtWndTable = "virtWndTable";
@@ -1365,6 +1364,364 @@ void VirtScroll::NotifyVisibleRange() {
     onVisibleRangeChanged.Call(&r);
 }
 
+//--- VirtListBox
+
+static Kind kindVirtWndListBox = "virtWndListBox";
+
+VirtListBox::VirtListBox() {
+    kind = kindVirtWndListBox;
+    flags |= vwfClipChildren;
+}
+
+VirtListBox::~VirtListBox() {
+    delete model;
+}
+
+// scaling has to work before the tree is attached to a window, which is when
+// the owner asks for the row height to decide how tall to make the window
+HWND VirtListBox::HwndForDpi() {
+    HWND h = GetHwnd();
+    return h ? h : hwndForDpi;
+}
+
+int VirtListBox::ItemsCount() {
+    return model ? model->ItemsCount() : 0;
+}
+
+int VirtListBox::GetItemHeight() {
+    if (itemDy > 0) {
+        return itemDy;
+    }
+    Size sz = PlatformFontMeasureText(font, "Ag");
+    int dy = sz.dy + DpiScale(HwndForDpi(), 4);
+    if (dy < 1) {
+        dy = 1;
+    }
+    return dy;
+}
+
+int VirtListBox::ViewportDy() {
+    int dy = bounds.dy - padding.top - padding.bottom;
+    return dy > 0 ? dy : 0;
+}
+
+int VirtListBox::MaxScrollY() {
+    int res = (ItemsCount() * GetItemHeight()) - ViewportDy();
+    return res > 0 ? res : 0;
+}
+
+int VirtListBox::ScrollbarDx() {
+    if (MaxScrollY() <= 0) {
+        return 0;
+    }
+    return DpiScale(HwndForDpi(), 10);
+}
+
+Rect VirtListBox::ContentRectLocal() {
+    Rect r{0, 0, bounds.dx, bounds.dy};
+    r.SubTB(padding.top, padding.bottom);
+    r.SubLR(padding.left, padding.right);
+    return r;
+}
+
+// the content minus the strip the scrollbar sits in
+Rect VirtListBox::ItemsRectLocal() {
+    Rect r = ContentRectLocal();
+    r.dx -= ScrollbarDx();
+    return r;
+}
+
+Rect VirtListBox::ScrollbarRectLocal() {
+    int dx = ScrollbarDx();
+    if (dx == 0) {
+        return {};
+    }
+    Rect r = ContentRectLocal();
+    return {r.Right() - dx, r.y, dx, r.dy};
+}
+
+// null when there is nothing to scroll
+Rect VirtListBox::ThumbRectLocal() {
+    Rect sb = ScrollbarRectLocal();
+    if (sb.IsEmpty()) {
+        return {};
+    }
+    int contentDy = ItemsCount() * GetItemHeight();
+    int visibleDy = ViewportDy();
+    int minDy = DpiScale(HwndForDpi(), 20);
+    int thumbDy = Scale(sb.dy, visibleDy, contentDy);
+    thumbDy = Clamp(thumbDy, std::min(minDy, sb.dy), sb.dy);
+    int maxY = MaxScrollY();
+    int y = (maxY > 0) ? Scale(sb.dy - thumbDy, scrollY, maxY) : 0;
+    return {sb.x, sb.y + y, sb.dx, thumbDy};
+}
+
+Size VirtListBox::GetIdealSize() {
+    int nLines = idealSizeLines;
+    if (nLines <= 0) {
+        nLines = std::min(ItemsCount(), 16);
+        nLines = std::max(nLines, 1);
+    }
+    int dx = (idealSizeDx > 0) ? idealSizeDx : DpiScale(HwndForDpi(), 120);
+    int dy = (GetItemHeight() * nLines) + padding.top + padding.bottom;
+    return {dx, dy};
+}
+
+void VirtListBox::SetBounds(Rect r) {
+    VirtWnd::SetBounds(r);
+    // a taller viewport can make the current scroll position invalid
+    scrollY = Clamp(scrollY, 0, MaxScrollY());
+}
+
+bool VirtListBox::ScrollTo(int y) {
+    y = Clamp(y, 0, MaxScrollY());
+    if (y == scrollY) {
+        return false;
+    }
+    scrollY = y;
+    Invalidate();
+    return true;
+}
+
+bool VirtListBox::ScrollBy(int dy) {
+    return ScrollTo(scrollY + dy);
+}
+
+void VirtListBox::EnsureVisible(int idx) {
+    int n = ItemsCount();
+    if (idx < 0 || idx >= n) {
+        return;
+    }
+    int dy = GetItemHeight();
+    int top = idx * dy;
+    int visibleDy = ViewportDy();
+    if (top < scrollY) {
+        ScrollTo(top);
+        return;
+    }
+    if (top + dy > scrollY + visibleDy) {
+        ScrollTo(top + dy - visibleDy);
+    }
+}
+
+int VirtListBox::GetCurrentSelection() {
+    return selIdx;
+}
+
+bool VirtListBox::SetCurrentSelection(int idx) {
+    if (idx < 0) {
+        idx = -1;
+    } else if (idx >= ItemsCount()) {
+        return false;
+    }
+    if (idx != selIdx) {
+        selIdx = idx;
+        Invalidate();
+    }
+    EnsureVisible(idx);
+    return true;
+}
+
+bool VirtListBox::SelectAndNotify(int idx) {
+    if (idx == selIdx) {
+        return false;
+    }
+    if (!SetCurrentSelection(idx)) {
+        return false;
+    }
+    onSelectionChanged.Call();
+    return true;
+}
+
+void VirtListBox::SetModel(ListBoxModel* m) {
+    if (model && (model != m)) {
+        delete model;
+    }
+    model = m;
+    selIdx = -1;
+    // the items are new even when the model object is the same one refilled
+    scrollY = 0;
+    Invalidate();
+}
+
+// ptLocal is relative to our bounds; -1 when it isn't on an item
+int VirtListBox::ItemFromPoint(Point ptLocal) {
+    Rect r = ItemsRectLocal();
+    if (!r.Contains(ptLocal)) {
+        return -1;
+    }
+    int idx = (ptLocal.y - r.y + scrollY) / GetItemHeight();
+    if (idx < 0 || idx >= ItemsCount()) {
+        return -1;
+    }
+    return idx;
+}
+
+void VirtListBox::Paint(VirtPaintCtx& ctx) {
+    COLORREF colBg = bgColor;
+    GfxFillRect(ctx.gfx, ctx.bounds, colBg);
+    int n = ItemsCount();
+    Rect clip = ctx.clip.Intersect(ctx.bounds);
+    if (n == 0 || clip.IsEmpty()) {
+        return;
+    }
+
+    // ctx.content is our bounds minus padding, so the items area only differs
+    // from it by the strip the scrollbar takes on the right
+    Rect items = ctx.content;
+    items.dx -= ScrollbarDx();
+    int dy = GetItemHeight();
+    int first = scrollY / dy;
+    int last = (scrollY + items.dy - 1) / dy;
+    last = std::min(last, n - 1);
+
+    COLORREF colSel = selectionColor;
+    if (colSel == kColorUnset && colBg != kColorUnset) {
+        colSel = AccentColor(colBg, 30);
+    }
+
+    HDC hdc = GfxHdc(ctx.gfx);
+    int savedDC = SaveDC(hdc);
+    // rows at the top and bottom of the viewport can be cut in half by it
+    IntersectClipRect(hdc, clip.x, clip.y, clip.Right(), clip.Bottom());
+    for (int i = first; i <= last; i++) {
+        Rect r = {items.x, items.y + (i * dy) - scrollY, items.dx, dy};
+        bool isSel = (i == selIdx);
+        if (onDrawItem.IsValid()) {
+            DrawItemEvent ev;
+            ev.listBox = this;
+            ev.gfx = ctx.gfx;
+            ev.itemRect = r;
+            ev.itemIndex = i;
+            ev.selected = isSel;
+            onDrawItem.Call(&ev);
+            continue;
+        }
+        if (isSel) {
+            GfxFillRect(ctx.gfx, r, colSel);
+        }
+        Rect rt = r;
+        rt.SubLR(DpiScale(HwndForDpi(), 4), 0);
+        GfxDrawText(ctx.gfx, model->Item(i), rt, gfxTextEllipsis, font, textColor);
+    }
+    RestoreDC(hdc, savedDC);
+
+    Rect thumb = ThumbRectLocal();
+    if (thumb.IsEmpty()) {
+        return;
+    }
+    COLORREF colThumb = scrollbarColor;
+    if (colThumb == kColorUnset && colBg != kColorUnset) {
+        colThumb = AccentColor(colBg, 60);
+    }
+    Point orig = ctx.bounds.TL();
+    thumb.Offset(orig.x, orig.y);
+    // a slim thumb with a gap on both sides, like an overlay scrollbar
+    thumb.SubLR(2, 2);
+    GfxFillRect(ctx.gfx, thumb, colThumb);
+}
+
+bool VirtListBox::OnMouseDown(VirtMouseEvent& ev) {
+    Rect thumb = ThumbRectLocal();
+    if (!thumb.IsEmpty() && thumb.Contains(ev.pt)) {
+        draggingThumb = true;
+        dragStartY = ev.ptWindow.y;
+        dragStartScrollY = scrollY;
+        if (root) {
+            root->SetCapture(this);
+        }
+        return true;
+    }
+    Rect sb = ScrollbarRectLocal();
+    if (!sb.IsEmpty() && sb.Contains(ev.pt)) {
+        // above / below the thumb: page towards the click
+        int dir = (ev.pt.y < thumb.y) ? -1 : 1;
+        ScrollBy(dir * ViewportDy());
+        return true;
+    }
+    int idx = ItemFromPoint(ev.pt);
+    if (idx < 0) {
+        return true;
+    }
+    SelectAndNotify(idx);
+    return true;
+}
+
+bool VirtListBox::OnMouseMove(VirtMouseEvent& ev) {
+    if (!draggingThumb) {
+        return false;
+    }
+    Rect sb = ScrollbarRectLocal();
+    Rect thumb = ThumbRectLocal();
+    int range = sb.dy - thumb.dy;
+    if (range <= 0) {
+        return true;
+    }
+    int dy = ev.ptWindow.y - dragStartY;
+    ScrollTo(dragStartScrollY + Scale(dy, MaxScrollY(), range));
+    return true;
+}
+
+bool VirtListBox::OnMouseUp(VirtMouseEvent&) {
+    draggingThumb = false;
+    return true;
+}
+
+void VirtListBox::OnCaptureLost() {
+    draggingThumb = false;
+}
+
+bool VirtListBox::OnMouseWheel(VirtMouseEvent& ev) {
+    if (ev.wheelDelta == 0) {
+        return false;
+    }
+    int lines = -(ev.wheelDelta * 3) / WHEEL_DELTA;
+    return ScrollBy(lines * GetItemHeight());
+}
+
+bool VirtListBox::OnDoubleClick(VirtMouseEvent& ev) {
+    int idx = ItemFromPoint(ev.pt);
+    if (idx < 0) {
+        return false;
+    }
+    SelectAndNotify(idx);
+    onDoubleClick.Call();
+    return true;
+}
+
+bool VirtListBox::OnKeyDown(VirtKeyEvent& ev) {
+    int n = ItemsCount();
+    if (n == 0) {
+        return false;
+    }
+    int perPage = std::max(ViewportDy() / GetItemHeight(), 1);
+    int idx = selIdx;
+    switch (ev.vkey) {
+        case VK_UP:
+            idx = (idx < 0) ? 0 : idx - 1;
+            break;
+        case VK_DOWN:
+            idx = (idx < 0) ? 0 : idx + 1;
+            break;
+        case VK_PRIOR:
+            idx = (idx < 0) ? 0 : idx - perPage;
+            break;
+        case VK_NEXT:
+            idx = (idx < 0) ? 0 : idx + perPage;
+            break;
+        case VK_HOME:
+            idx = 0;
+            break;
+        case VK_END:
+            idx = n - 1;
+            break;
+        default:
+            return false;
+    }
+    SelectAndNotify(Clamp(idx, 0, n - 1));
+    return true;
+}
+
 //--- VirtCustom
 
 static Kind kindVirtWndCustom = "virtWndCustom";
@@ -1390,7 +1747,6 @@ bool VirtCustom::OnMouseUp(VirtMouseEvent& ev) {
     onClick.Call(&ev);
     return true;
 }
-
 
 //--- VirtText
 

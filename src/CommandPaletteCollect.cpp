@@ -8,6 +8,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "AppSettings.h"

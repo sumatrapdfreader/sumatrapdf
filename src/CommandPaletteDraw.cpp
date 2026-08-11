@@ -9,6 +9,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Theme.h"
 #include "Accelerators.h"
@@ -26,15 +29,18 @@ void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
-    ListBox* lb = ev->listBox;
+void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
     auto* m = (ListBoxModelCP*)lb->model;
     if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
         return;
     }
 
-    HDC hdc = ev->hdc;
+    HDC hdc = GfxHdc(ev->gfx);
+    HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
+    // the whole virtual tree paints into one DC, so leave it as we found it
+    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -45,10 +51,10 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     SetBkColor(hdc, colBg);
     HdcFillRectWithBkColor(hdc, rc);
 
-    bool isRtl = HwndIsRtl(lb->hwnd);
-    if (isRtl) {
-        SetLayout(hdc, 0);
-    }
+    // drawing text into a mirrored DC would mirror the glyphs; we lay the row
+    // out right-to-left ourselves instead
+    bool isRtl = HwndIsRtl(hwndList);
+    DWORD prevLayout = isRtl ? SetLayout(hdc, 0) : 0;
 
     Str itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
@@ -69,17 +75,16 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     SetTextColor(hdc, colText);
     SetBkMode(hdc, TRANSPARENT);
 
-    HFONT oldFont = nullptr;
     if (lb->font) {
-        oldFont = SelectFont(hdc, lb->font);
+        SelectFont(hdc, lb->font->GetHFont());
     }
 
-    int padX = DpiScale(lb->hwnd, 4);
+    int padX = DpiScale(hwndList, 4);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
     if (data->indent > 0) {
-        int indentW = data->indent * DpiScale(lb->hwnd, 16);
+        int indentW = data->indent * DpiScale(hwndList, 16);
         if (isRtl) {
             rc.dx -= indentW;
         } else {
@@ -96,7 +101,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     int rightW = 0;
     if (rightStr && rightStr.s[0]) {
         rightStrW = ToWStrTemp(rightStr);
-        int gap = DpiScale(lb->hwnd, 8);
+        int gap = DpiScale(hwndList, 8);
         rightW = HdcGetTextExtentPoint32(hdc, rightStr).dx;
         if (isRtl) {
             rcText.x += rightW + gap;
@@ -129,7 +134,8 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         SetTextColor(hdc, colText);
     }
 
-    if (oldFont) {
-        SelectFont(hdc, oldFont);
+    if (isRtl) {
+        SetLayout(hdc, prevLayout);
     }
+    RestoreDC(hdc, savedDC);
 }

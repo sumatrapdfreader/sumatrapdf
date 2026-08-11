@@ -41,7 +41,7 @@ struct CommandPaletteWnd : WindowBase {
     StrVecCP commands;
     StrVecCP toc;
     StrVecCP favorites;
-    ListBox* listBox = nullptr;
+    VirtListBox* listBox = nullptr;
     Static* staticInfo = nullptr;
 
     StrVec filterWords;
@@ -78,7 +78,7 @@ struct CommandPaletteWnd : WindowBase {
     void SwitchToFavorites();
     void OnSelectionChange();
     void OnListDoubleClick();
-    void DrawListBoxItem(ListBox::DrawItemEvent* ev);
+    void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
 };
 
 extern CommandPaletteWnd* gCommandPaletteWnd;
