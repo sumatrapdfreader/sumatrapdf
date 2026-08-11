@@ -12,6 +12,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -76,9 +79,12 @@ struct NavFilesInFolderWnd : WindowBase {
     ~NavFilesInFolderWnd() override;
 
     HFONT font = nullptr;
+    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
-    Static* dirLabel = nullptr;
-    ListBox* listBox = nullptr;
+    // the label, the list and the hints are virtual controls; this window has
+    // no HWND children at all
+    VirtText* dirLabel = nullptr;
+    VirtListBox* listBox = nullptr;
     Str currDir; // owned
 
     bool PreTranslateMessage(MSG& msg) override;
@@ -93,7 +99,7 @@ struct NavFilesInFolderWnd : WindowBase {
     void DeleteCurrentSelection();
     void OnListDoubleClick();
     void GoUp();
-    void DrawListBoxItem(ListBox::DrawItemEvent* ev);
+    void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
     void UpdateDirLabel();
 };
 
@@ -132,13 +138,13 @@ static void ScheduleDeleteNavFilesWnd() {
 // focus after the message queue drains (and only while this window is still active).
 static void FocusNavListBox() {
     NavFilesInFolderWnd* wnd = gNavFilesWnd;
-    if (!wnd || !wnd->hwnd || !IsWindow(wnd->hwnd) || !wnd->listBox || !wnd->listBox->hwnd) {
+    if (!wnd || !wnd->hwnd || !IsWindow(wnd->hwnd) || !wnd->listBox) {
         return;
     }
     if (GetForegroundWindow() != wnd->hwnd) {
         return;
     }
-    HwndSetFocus(wnd->listBox->hwnd);
+    wnd->SetFocusTo(wnd->listBox);
 }
 
 static void ScheduleFocusNavListBox() {
@@ -289,11 +295,11 @@ static int FindEntryIndex(NavFilesInFolderWnd* wnd, ListBoxModelNav* m, Str sele
 }
 
 // select idx and scroll so it is visible (centered when possible)
-static void SelectAndEnsureVisible(ListBox* lb, int idx) {
-    if (!lb || !lb->hwnd || idx < 0) {
+static void SelectAndEnsureVisible(VirtListBox* lb, int idx) {
+    if (!lb || idx < 0) {
         return;
     }
-    int n = lb->GetCount();
+    int n = lb->ItemsCount();
     if (n <= 0) {
         return;
     }
@@ -302,20 +308,10 @@ static void SelectAndEnsureVisible(ListBox* lb, int idx) {
     }
     lb->SetCurrentSelection(idx);
 
-    int itemH = lb->GetItemHeight(0);
-    if (itemH <= 0) {
-        LbSetTopIndex(lb->hwnd, idx);
-        return;
-    }
-    Rect client = HwndClientRect(lb->hwnd);
-    int visible = client.dy / itemH;
-    visible = std::max(visible, 1);
-    int top = idx - visible / 2;
-    top = std::max(top, 0);
-    int maxTop = n - visible;
-    maxTop = std::max(maxTop, 0);
-    top = std::min(top, maxTop);
-    LbSetTopIndex(lb->hwnd, top);
+    int itemH = lb->GetItemHeight();
+    int visible = std::max(lb->UsableDy() / itemH, 1);
+    int top = Clamp(idx - (visible / 2), 0, std::max(n - visible, 0));
+    lb->ScrollTo(top * itemH);
 }
 
 void NavFilesInFolderWnd::UpdateDirLabel() {
@@ -337,13 +333,13 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
         int selIdx = FindEntryIndex(this, m, selectPath);
         SelectAndEnsureVisible(listBox, selIdx);
     }
-    HwndScheduleRepaint(listBox->hwnd);
+    listBox->Invalidate();
 }
 
 // full path of the selected entry, or empty. Owned copy: callers pass it back
 // into SetDir(), which frees the entries the path would otherwise point into.
 TempStr NavFilesInFolderWnd::SelectedPathTemp() {
-    if (!listBox || !listBox->hwnd) {
+    if (!listBox) {
         return {};
     }
     int idx = listBox->GetCurrentSelection();
@@ -363,7 +359,7 @@ TempStr NavFilesInFolderWnd::SelectedPathTemp() {
 // the main window, by another app, ...) would otherwise linger (issue #5878).
 void NavFilesInFolderWnd::RefreshList() {
     // WM_ACTIVATE can arrive during CreateCustom(), before the list exists
-    if (!listBox || !listBox->hwnd || len(currDir) == 0) {
+    if (!listBox || len(currDir) == 0) {
         return;
     }
     TempStr sel = SelectedPathTemp();
@@ -484,7 +480,7 @@ void NavFilesInFolderWnd::DeleteCurrentSelection() {
     TempStr dir = str::DupTemp(currDir);
     SetDir(dir, Str{});
     SelectAndEnsureVisible(listBox, idx);
-    HwndSetFocus(listBox->hwnd);
+    SetFocusTo(listBox);
 }
 
 void NavFilesInFolderWnd::OnListDoubleClick() {
@@ -542,10 +538,14 @@ LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp
     }
     // top-level received focus (e.g. Alt-Tab); steer it to the list
     if (msg == WM_SETFOCUS) {
-        if (listBox && listBox->hwnd) {
-            HwndSetFocus(listBox->hwnd);
-            return 0;
+        // the list is a virtual control: this window holds the win32 focus on
+        // its behalf, so only the focus inside the tree moves
+        if (vroot && listBox) {
+            vroot->SetFocus(listBox);
         }
+    }
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
     }
     // Esc when this window (not a child) has focus
     if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
@@ -567,32 +567,26 @@ void NavFilesInFolderWnd::OnSize(UINT /*msg*/, UINT /*type*/, Size size) {
     if (dx == 0 || dy == 0) {
         return;
     }
-    LayoutToSize(layout, {dx, dy});
+    DoLayout({dx, dy});
     HwndInvalidate(hwnd);
 }
 
-void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
-    ListBox* lb = ev->listBox;
+void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
     auto* m = (ListBoxModelNav*)lb->model;
     if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
         return;
     }
 
-    HDC hdc = ev->hdc;
+    HDC hdc = GfxHdc(ev->gfx);
+    HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
     NavFileEntry& e = m->entries[ev->itemIndex];
+    // the whole virtual tree paints into one DC, so leave it as we found it
+    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
-
-    // a row cut in half by the bottom of the list (LBS_NOINTEGRALHEIGHT) is
-    // painted as plain background rather than half a line of text, like the
-    // find window's results (#5796)
-    if (ev->clippedAtBottom && rc.y > 0) {
-        SetBkColor(hdc, colBg);
-        HdcFillRectWithBkColor(hdc, rc);
-        return;
-    }
 
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
@@ -601,20 +595,19 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     SetBkColor(hdc, colBg);
     HdcFillRectWithBkColor(hdc, rc);
 
-    bool isRtl = HwndIsRtl(lb->hwnd);
-    if (isRtl) {
-        SetLayout(hdc, 0);
-    }
+    // drawing text into a mirrored DC would mirror the glyphs; we lay the row
+    // out right-to-left ourselves instead
+    bool isRtl = HwndIsRtl(hwndList);
+    DWORD prevLayout = isRtl ? SetLayout(hdc, 0) : 0;
 
     SetTextColor(hdc, colText);
     SetBkMode(hdc, TRANSPARENT);
 
-    HFONT oldFont = nullptr;
     if (lb->font) {
-        oldFont = SelectFont(hdc, lb->font);
+        SelectFont(hdc, lb->font->GetHFont());
     }
 
-    int padX = DpiScale(lb->hwnd, 4);
+    int padX = DpiScale(hwndList, 4);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
@@ -626,7 +619,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         TempStr sizeStr = str::FormatSizeShortTemp(e.size);
         rightW = ToWStrTemp(sizeStr);
         rightDx = HdcGetTextExtentPoint32(hdc, sizeStr).dx;
-        int gap = DpiScale(lb->hwnd, 8);
+        int gap = DpiScale(hwndList, 8);
         if (isRtl) {
             rcText.x += rightDx + gap;
             rcText.dx -= rightDx + gap;
@@ -658,9 +651,10 @@ void NavFilesInFolderWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         SetTextColor(hdc, colText);
     }
 
-    if (oldFont) {
-        SelectFont(hdc, oldFont);
+    if (isRtl) {
+        SetLayout(hdc, prevLayout);
     }
+    RestoreDC(hdc, savedDC);
 }
 
 // non-client (frame) size for an outer width/height of the given client size
@@ -805,35 +799,30 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
+    platformFont = GetPlatformFont(font);
+
     {
-        Static::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.isRtl = IsUIRtl();
-        auto* c = new Static();
-        HWND ok = c->Create(args);
-        ReportIf(!ok);
-        c->SetColors(colTxt, colBg);
+        auto* c = NewVirtText({
+            .font = platformFont,
+            .textColor = colTxt,
+            .isRtl = IsUIRtl(),
+            .ellipsis = true,
+        });
         dirLabel = c;
         vbox->AddChild(new Padding(c, Insets{0, 4, 4, 4}));
     }
 
     {
-        ListBox::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.isRtl = IsUIRtl();
-        auto* c = new ListBox();
+        auto* c = new VirtListBox();
+        c->hwndForDpi = hwnd;
+        c->font = platformFont;
+        c->textColor = colTxt;
+        c->bgColor = colBg;
+        c->padding = DpiScaledInsets(hwnd, 4, 0);
         c->onDoubleClick = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnListDoubleClick>(this);
         c->onDrawItem =
-            MkMethod1<NavFilesInFolderWnd, ListBox::DrawItemEvent*, &NavFilesInFolderWnd::DrawListBoxItem>(this);
-        c->SetInsetsPt(4, 0);
-        c->Create(args);
-        c->SetColors(colTxt, colBg);
+            MkMethod1<NavFilesInFolderWnd, VirtListBox::DrawItemEvent*, &NavFilesInFolderWnd::DrawListBoxItem>(this);
         listBox = c;
-        if (UseDarkModeLib()) {
-            DarkMode::setDarkScrollBar(listBox->hwnd);
-        }
         vbox->AddChild(c, 1);
     }
 
@@ -845,15 +834,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
         for (Str s : strings) {
-            Static::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = s;
-            args.isRtl = IsUIRtl();
-            auto* c = new Static();
-            HWND ok = c->Create(args);
-            ReportIf(!ok);
-            c->SetColors(colTxt, colBg);
+            auto* c = NewVirtText({.s = s, .font = platformFont, .textColor = colTxt, .isRtl = IsUIRtl()});
             hbox->AddChild(new Padding(c, pad));
         }
         vbox->AddChild(hbox);
@@ -882,6 +863,8 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
                         DpiScale(hwnd, kNavFallbackMaxDx));
     }
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
+    // pick up the virtual controls so we paint them and they get their input
+    DoLayout(HwndClientRect(hwnd).Size());
     PositionNavFilesWnd(hwnd, mainWin->hwndFrame, docked, placeLeft);
 
     if (selIdx >= 0) {
@@ -889,7 +872,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     }
 
     SetIsVisible(true);
-    HwndSetFocus(listBox->hwnd);
+    SetFocusTo(listBox);
     return true;
 }
 
@@ -916,7 +899,7 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
             ShowWindow(gNavFilesWnd->hwnd, SW_SHOW);
             SetForegroundWindow(gNavFilesWnd->hwnd);
             if (gNavFilesWnd->listBox) {
-                HwndSetFocus(gNavFilesWnd->listBox->hwnd);
+                gNavFilesWnd->SetFocusTo(gNavFilesWnd->listBox);
             } else {
                 HwndSetFocus(gNavFilesWnd->hwnd);
             }
