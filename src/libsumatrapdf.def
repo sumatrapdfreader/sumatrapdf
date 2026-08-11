@@ -181,6 +181,12 @@ EXPORTS
 	fz_new_device_of_size
 
 	fz_load_outline
+	fz_new_outline_iterator
+	fz_drop_outline_iterator
+	fz_outline_iterator_item
+	fz_outline_iterator_next
+	fz_outline_iterator_down
+	fz_outline_iterator_up
 
 	fz_load_page
 

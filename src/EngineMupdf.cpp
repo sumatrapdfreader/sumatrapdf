@@ -3712,16 +3712,10 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         TocItem* item = NewTocItemWithDestination(parent, name, dest);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
-        item->fontFlags = 0; // TODO: had outline->flags; but mupdf changed outline
+        // style (bold / italic / color) is filled in by ApplyOutlineStyles()
+        item->fontFlags = 0;
         item->pageNo = pageNo;
         ReportIf(!isAttachment && !item->PageNumbersMatch());
-
-        // TODO: had outline->n_color and outline->color but mupdf changed outline
-        /*
-        if (outline->n_color > 0) {
-            item->color = ColorRefFromPdfFloat(ctx, outline->n_color, outline->color);
-        }
-        */
 
         if (outline->down) {
             item->child = BuildTocTree(item, outline->down, idCounter, isAttachment, depth + 1);
@@ -3744,6 +3738,72 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
     return root;
 }
 
+// Outline entries can ask for a color (/C) and for bold / italic (/F), and
+// SumatraPDF draws the bookmarks tree with them. fz_load_outline() throws that
+// away: converting the outline iterator into fz_outline nodes copies the title,
+// the uri and is_open but not flags / r / g / b, so every entry comes out
+// unstyled (regression since we moved to that mupdf API, issue #3560). Walking
+// the iterator ourselves gets them back; it visits entries in exactly the order
+// fz_load_outline() builds them (item, its children, then the next sibling), so
+// the styles line up with the TocItems built from the same outline.
+static void ApplyOutlineStyles(fz_context* ctx, fz_outline_iterator* iter, TocItem* item) {
+    while (item) {
+        fz_outline_item* it = fz_outline_iterator_item(ctx, iter);
+        if (!it) {
+            return;
+        }
+        // our fontBit* are the /F bit numbers (fontBitItalic is bit 1 of /F,
+        // fontBitBold is bit 2) and mupdf keeps /F as-is, so the low two bits
+        // carry over directly. Don't go by fz_outline's FZ_OUTLINE_FLAG_*
+        // names, they have bold and italic the other way round from the spec
+        item->fontFlags = it->flags & 3;
+        // the pdf outline iterator scales /C to 0..255. No /C leaves it at 0,
+        // so black means "no color of its own", which is what we want anyway:
+        // an explicitly black entry would be invisible in a dark theme and is
+        // better drawn in the theme's text color
+        u8 r = (u8)it->r, g = (u8)it->g, b = (u8)it->b;
+        if (r || g || b) {
+            item->color = MkColor(r, g, b);
+        }
+
+        int res = fz_outline_iterator_down(ctx, iter);
+        if (res == 0 && item->child) {
+            ApplyOutlineStyles(ctx, iter, item->child);
+        }
+        if (res >= 0) {
+            fz_outline_iterator_up(ctx, iter);
+        }
+        if (fz_outline_iterator_next(ctx, iter) != 0) {
+            return;
+        }
+        item = item->next;
+    }
+}
+
+static void ApplyOutlineStyles(fz_context* ctx, fz_document* doc, TocItem* first) {
+    if (!doc || !first) {
+        return;
+    }
+    fz_outline_iterator* iter = nullptr;
+    fz_try(ctx) {
+        iter = fz_new_outline_iterator(ctx, doc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        iter = nullptr;
+    }
+    if (!iter) {
+        return;
+    }
+    fz_try(ctx) {
+        ApplyOutlineStyles(ctx, iter, first);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    fz_drop_outline_iterator(ctx, iter);
+}
+
 // TODO: maybe build in FinishLoading
 TocTree* EngineMupdf::GetToc() {
     if (tocTree) {
@@ -3761,6 +3821,7 @@ TocTree* EngineMupdf::GetToc() {
     TocItem* att = nullptr;
     if (outline) {
         root = BuildTocTree(nullptr, outline, idCounter, false, 0);
+        ApplyOutlineStyles(Ctx(), _doc, root);
     }
     if (!attachments) {
         goto MakeTree;
