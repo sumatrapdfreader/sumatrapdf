@@ -12,6 +12,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -94,17 +97,20 @@ struct SelectionTranslateWnd : WindowBase {
     ~SelectionTranslateWnd() override;
 
     HFONT font = nullptr;
+    PlatformFont* platformFont = nullptr;
     HWND hwndOwner = nullptr;
-    Static* staticPrompt = nullptr;
+    // the labels and the buttons are virtual controls; the text fields and the
+    // drop-downs are real HWNDs
+    VirtText* staticPrompt = nullptr;
     DropDown* dropEngine = nullptr;
     Edit* editSrcText = nullptr;
-    Static* staticFromLabel = nullptr;
+    VirtText* staticFromLabel = nullptr;
     DropDown* dropSrcLang = nullptr;
-    Static* staticToLabel = nullptr;
+    VirtText* staticToLabel = nullptr;
     DropDown* dropDstLang = nullptr;
-    Button* btnTranslate = nullptr;
-    Button* btnClose = nullptr;
-    Static* staticResultLabel = nullptr;
+    VirtButton* btnTranslate = nullptr;
+    VirtButton* btnClose = nullptr;
+    VirtText* staticResultLabel = nullptr;
     Edit* editResult = nullptr;
 
     // engine pre-selected in the dropdown when the dialog opens
@@ -120,6 +126,11 @@ struct SelectionTranslateWnd : WindowBase {
     // initial: size to content and center; later: reflow keeping (or growing) current size
     void Relayout(bool initial = false);
     void UpdateTheme();
+    VirtButton* NewButton(Str text, bool isDefault);
+    void StyleButton(VirtButton*, bool isDefault);
+    // the label changes width ("Translate" / "Translating..."), so the row is
+    // laid out again
+    void SetTranslateButtonText(Str);
     void UpdateTranslateButtonState();
     void ShowTranslationResult(Str text, bool isError);
     void StartTranslation();
@@ -926,20 +937,28 @@ void SelectionTranslateWnd::UpdateTheme() {
             w->SetColors(colTxt, colBg);
         }
     };
-    setColors(staticPrompt);
+    auto setTextColor = [&](VirtText* w) {
+        if (w) {
+            w->textColor = colTxt;
+        }
+    };
+    setTextColor(staticPrompt);
     setColors(dropEngine);
     setColors(editSrcText);
-    setColors(staticFromLabel);
+    setTextColor(staticFromLabel);
     setColors(dropSrcLang);
-    setColors(staticToLabel);
+    setTextColor(staticToLabel);
     setColors(dropDstLang);
-    setColors(btnTranslate);
-    setColors(btnClose);
-    setColors(staticResultLabel);
+    setTextColor(staticResultLabel);
     setColors(editResult);
+    if (btnTranslate) {
+        StyleButton(btnTranslate, true);
+    }
+    if (btnClose) {
+        StyleButton(btnClose, false);
+    }
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
@@ -949,6 +968,40 @@ void SelectionTranslateWnd::UpdateTheme() {
 void SelectionTranslateWnd::UpdateFont() {
     font = GetAppFont(hwnd);
     HwndSetFontForWindowAndItsChildren(hwnd, font);
+    platformFont = GetPlatformFont(font);
+    VirtText* virts[] = {staticPrompt, staticFromLabel, staticToLabel, staticResultLabel, btnTranslate, btnClose};
+    for (VirtText* w : virts) {
+        if (w) {
+            w->font = platformFont;
+        }
+    }
+}
+
+// the buttons are virtual controls, so they are styled here rather than by the
+// system: a filled box with a border, brighter on hover (like the other dialogs)
+void SelectionTranslateWnd::StyleButton(VirtButton* b, bool isDefault) {
+    COLORREF bg = ThemeWindowControlBackgroundColor();
+    b->textColor = ThemeWindowTextColor();
+    b->textColorDisabled = ThemeWindowTextDisabledColor();
+    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
+    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
+    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+}
+
+VirtButton* SelectionTranslateWnd::NewButton(Str text, bool isDefault) {
+    auto* b = new VirtButton(text, platformFont);
+    StyleButton(b, isDefault);
+    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
+    return b;
+}
+
+void SelectionTranslateWnd::SetTranslateButtonText(Str s) {
+    if (!btnTranslate) {
+        return;
+    }
+    btnTranslate->SetText(s);
+    Relayout();
+    btnTranslate->Invalidate();
 }
 
 // Moving the dialog to a monitor with a different scaling changes this window's
@@ -956,6 +1009,9 @@ void SelectionTranslateWnd::UpdateFont() {
 // measured from its font, so they resize with it. Note the Padding insets were
 // DpiScale()d once when the layout tree was built and keep their old scale.
 LRESULT SelectionTranslateWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
+    }
     if (msg == WM_DPICHANGED) {
         RECT* r = (RECT*)lp;
         SetWindowPos(hwndIn, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
@@ -974,6 +1030,8 @@ void SelectionTranslateWnd::Relayout(bool initial) {
     }
     if (initial || !sizeInitialized) {
         LayoutAndSizeToContent(layout, 0, 0, hwnd);
+        // pick up the virtual controls so we paint them and they get their input
+        DoLayout(HwndClientRect(hwnd).Size());
         HwndCenterDialog(hwnd, hwndOwner);
         sizeInitialized = true;
         return;
@@ -981,6 +1039,7 @@ void SelectionTranslateWnd::Relayout(bool initial) {
     // keep current client size (or grow if new content needs more space, e.g. result)
     Rect rc = HwndClientRect(hwnd);
     LayoutAndSizeToContent(layout, rc.dx, rc.dy, hwnd);
+    DoLayout(HwndClientRect(hwnd).Size());
 }
 
 // reflow controls when the user resizes the window
@@ -997,7 +1056,7 @@ void SelectionTranslateWnd::OnSize(UINT msg, UINT /*type*/, Size size) {
     if (dx == 0 || dy == 0) {
         return;
     }
-    LayoutToSize(layout, {dx, dy});
+    DoLayout({dx, dy});
     HwndInvalidate(hwnd);
 }
 
@@ -1090,7 +1149,7 @@ void SelectionTranslateWnd::StartTranslation() {
     }
     if (btnTranslate) {
         btnTranslate->SetIsEnabled(false);
-        btnTranslate->SetText(_TRA("Translating..."));
+        SetTranslateButtonText(_TRA("Translating..."));
     }
     if (resultVisible) {
         if (staticResultLabel) {
@@ -1124,7 +1183,7 @@ void SelectionTranslateWnd::OnTranslationFinished(bool ok, Str msg) {
         dropDstLang->SetIsEnabled(true);
     }
     if (btnTranslate) {
-        btnTranslate->SetText(_TRA("Translate"));
+        SetTranslateButtonText(_TRA("Translate"));
     }
     TempStr display = ok ? msg : FormatTranslationErrorForDisplayTemp(backend, msg);
     ShowTranslationResult(display, !ok);
@@ -1185,6 +1244,14 @@ static void OnSelectionTranslateDestroy(WindowBase::DestroyEvent* ev) {
     }
 }
 
+static void CloseClicked(SelectionTranslateWnd* wnd, VirtMouseEvent*) {
+    wnd->OnCloseClicked();
+}
+
+static void TranslateClicked(SelectionTranslateWnd* wnd, VirtMouseEvent*) {
+    wnd->StartTranslation();
+}
+
 bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     hwndOwner = owner;
     bool isRtl = IsUIRtl();
@@ -1202,6 +1269,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     if (!hwnd) {
         return false;
     }
+    platformFont = GetPlatformFont(font);
 
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
@@ -1231,15 +1299,13 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     vbox->AddChild(editSrcText, 1);
 
     {
-        Static::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.text = _TRA("Translation:");
-        args.isRtl = isRtl;
-        staticResultLabel = new Static();
-        staticResultLabel->Create(args);
+        staticResultLabel = NewVirtText({
+            .s = _TRA("Translation:"),
+            .font = platformFont,
+            .isRtl = isRtl,
+            .padding = DpiScaledInsets(hwnd, 8, 0, 0, 0),
+        });
         staticResultLabel->SetVisibility(Visibility::Collapse);
-        staticResultLabel->SetInsetsPt(8, 0, 0, 0);
         vbox->AddChild(staticResultLabel);
     }
     {
@@ -1264,16 +1330,8 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         auto* engineRow = new HBox();
         engineRow->alignMain = MainAxisAlign::MainStart;
         engineRow->alignCross = CrossAxisAlign::CrossCenter;
-        {
-            Static::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = _TRA("Translate with");
-            args.isRtl = isRtl;
-            staticPrompt = new Static();
-            staticPrompt->Create(args);
-            engineRow->AddChild(staticPrompt);
-        }
+        staticPrompt = NewVirtText({.s = _TRA("Translate with"), .font = platformFont, .isRtl = isRtl});
+        engineRow->AddChild(staticPrompt);
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
@@ -1295,16 +1353,8 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         langRow->alignMain = MainAxisAlign::MainStart;
         langRow->alignCross = CrossAxisAlign::CrossCenter;
 
-        {
-            Static::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = _TRA("From:");
-            args.isRtl = isRtl;
-            staticFromLabel = new Static();
-            staticFromLabel->Create(args);
-            langRow->AddChild(staticFromLabel);
-        }
+        staticFromLabel = NewVirtText({.s = _TRA("From:"), .font = platformFont, .isRtl = isRtl});
+        langRow->AddChild(staticFromLabel);
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
@@ -1321,17 +1371,13 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             dropSrcLang->SetInsetsPt(0, 0, 0, 4);
             langRow->AddChild(dropSrcLang, 1);
         }
-        {
-            Static::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = _TRA("To:");
-            args.isRtl = isRtl;
-            staticToLabel = new Static();
-            staticToLabel->Create(args);
-            staticToLabel->SetInsetsPt(0, 0, 0, 4);
-            langRow->AddChild(staticToLabel);
-        }
+        staticToLabel = NewVirtText({
+            .s = _TRA("To:"),
+            .font = platformFont,
+            .isRtl = isRtl,
+            .padding = DpiScaledInsets(hwnd, 0, 0, 0, 4),
+        });
+        langRow->AddChild(staticToLabel);
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
@@ -1355,34 +1401,14 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
 
-        {
-            // not CreateButton(): it doesn't take a font, so the button would
-            // keep the system default instead of our DPI-scaled one
-            auto* btn = new Button();
-            btn->onClick = MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::OnCloseClicked>(this);
-            Button::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = _TRA("Close");
-            args.isRtl = isRtl;
-            btn->Create(args);
-            btnClose = btn;
-            btnRow->AddChild(btnClose);
-        }
-        {
-            auto* btn = new Button();
-            btn->isDefault = true;
-            btn->onClick = MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::StartTranslation>(this);
-            Button::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = _TRA("Translate");
-            args.isRtl = isRtl;
-            btn->Create(args);
-            btn->SetInsetsPt(0, 0, 0, 4);
-            btnTranslate = btn;
-            btnRow->AddChild(btnTranslate);
-        }
+        btnClose = NewButton(_TRA("Close"), false);
+        btnClose->onClick = MkFunc1(CloseClicked, this);
+        btnRow->AddChild(btnClose);
+
+        btnTranslate = NewButton(_TRA("Translate"), true);
+        btnTranslate->onClick = MkFunc1(TranslateClicked, this);
+        btnTranslate->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+        btnRow->AddChild(btnTranslate);
         vbox->AddChild(new Padding(btnRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
     }
 
