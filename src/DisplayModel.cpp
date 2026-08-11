@@ -2124,9 +2124,45 @@ int DisplayModel::yOffset() {
     return viewPort.y;
 }
 
+// Pages are laid out in pixels on a canvas whose size is an int, as are the
+// page positions and the scroll offsets computed from it, so there is a zoom
+// above which a given document no longer fits. It's far beyond kZoomMaxDefault
+// for anything of a normal length, which is why this only matters once
+// ZoomLevels raises the limit (issue #1195): rather than letting the canvas
+// overflow, we stop zooming in at the largest zoom it can be laid out at.
+float DisplayModel::MaxZoomForDocument() const {
+    // room to spare for margins, page spacing and the arithmetic done on positions
+    constexpr float kMaxCanvasSize = (float)(1 << 29);
+
+    float totalDy = 0;
+    float maxDx = 0;
+    int nPages = PageCount();
+    for (int pageNo = 1; pageNo <= nPages; pageNo++) {
+        RectF box = PageMediaBoxForLayout(pageNo);
+        float dx = box.dx;
+        float dy = box.dy;
+        if (rotation == 90 || rotation == 270) {
+            std::swap(dx, dy);
+        }
+        totalDy += dy;
+        maxDx = std::max(maxDx, dx);
+    }
+    // facing modes put two pages side by side
+    maxDx *= 2;
+    float largest = std::max(totalDy, maxDx);
+    if (largest <= 0) {
+        return kZoomMax;
+    }
+    float maxZoomReal = kMaxCanvasSize / largest;
+    return maxZoomReal * 100 / dpiFactor;
+}
+
 void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     if (zoomLevel > 0) {
         zoomLevel = limitValue(zoomLevel, kZoomMin, kZoomMax);
+        if (zoomLevel > kZoomMaxDefault) {
+            zoomLevel = std::max(kZoomMin, std::min(zoomLevel, MaxZoomForDocument()));
+        }
     }
     if (!IsValidZoom(zoomLevel)) {
         return;

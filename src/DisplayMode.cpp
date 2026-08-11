@@ -23,6 +23,16 @@ bool IsBookView(DisplayMode mode) {
     return DisplayMode::BookView == mode || DisplayMode::ContinuousBookView == mode;
 }
 
+// The highest zoom the user can ask for. kZoomMaxDefault (6400%) is enough for
+// documents meant to be read, but not for ones meant to be examined, like large
+// maps, so the largest level in the ZoomLevels setting raises it (issue #1195).
+// Loading the settings is the only thing that changes it.
+// The ceiling on that, kZoomMaxAllowed: a page is laid out in pixels as int and
+// the coordinate math is float, so at 1000000% a 612pt wide page is 6.1 million
+// pixels, which both still represent exactly. A document is more than one page,
+// though, so DisplayModel lowers this further to what its canvas can hold
+float kZoomMax = kZoomMaxDefault;
+
 bool IsValidZoom(float zoom) {
     if ((kZoomMin - 0.01f <= zoom) && (zoom <= kZoomMax + 0.01f)) {
         return true;

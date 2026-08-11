@@ -309,8 +309,8 @@ TabsMru = false
 ; the tab switcher (introduced in version 3.7)
 CtrlTabPre36Behavior = false
 
-; sequence of zoom levels when zooming in/out; all values must lie between 8.33
-; and 6400
+; sequence of zoom levels when zooming in/out; values must lie between 8.33 and
+; 1000000 (the largest one becomes the maximum zoom, which is 6400 by default)
 ZoomLevels = 
 
 ; how much a single zoom in / zoom out step changes the zoom, as a percentage of

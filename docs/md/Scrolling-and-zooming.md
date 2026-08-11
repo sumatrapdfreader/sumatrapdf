@@ -48,6 +48,24 @@ For comic books and manga (right-to-left reading, double-page spreads, `LimitToW
 - `Ctrl` + touch pad scroll gesture : zoom in / out
 - pinch zoom gesture on touch screen
 
+## Zoom levels
+
+Zooming in and out steps through a fixed list of zoom levels. This is the built-in list, and also the value of the `ZoomLevels` [advanced setting](Advanced-options-settings.md) that reproduces it:
+
+```
+ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
+```
+
+Setting `ZoomLevels` replaces the built-in list rather than adding to it, so the way to change the steps is to copy the line above and edit it. Fit Page, Fit Width and Fit Content are always available regardless of the list.
+
+**Ver 3.7+:** the largest level in the list is also the highest zoom that can be set at all, in the Custom Zoom dialog (`Ctrl + y`) and everywhere else. So to zoom further than 6400% — into a large map, say, where the detail is in the file but the old limit hid it — add the levels you want on the end:
+
+```
+ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400 12800 25600 51200 102400
+```
+
+Levels up to 1000000 (10000x) are accepted; anything larger is ignored. How far a particular document can be zoomed also depends on its size: all of its pages are laid out on a single canvas measured in pixels, so a long document stops zooming in earlier than a short one does.
+
 ## Navigating history
 
 Certain actions add navigation point. You can go back and forward in the history of navigation points (similar to browser back button) with:

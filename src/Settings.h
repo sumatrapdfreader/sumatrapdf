@@ -24,8 +24,10 @@ constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
 constexpr float kZoomFitHeight = -6.F;
 constexpr float kZoomActualSize = 100.0F;
-constexpr float kZoomMax = 6400.F; /* max zoom in % */
-constexpr float kZoomMin = 8.33F;  /* min zoom in % */
+constexpr float kZoomMaxDefault = 6400.F;    /* max zoom in %, unless ZoomLevels raises it */
+constexpr float kZoomMaxAllowed = 1000000.F; /* the highest ZoomLevels can raise it to */
+extern float kZoomMax;                       /* the max zoom in % in force, see DisplayMode.cpp */
+constexpr float kZoomMin = 8.33F;            /* min zoom in % */
 constexpr float kInvalidZoom = -99.0F;
 
 // top, right, bottom and left margin (in that order) between window and
@@ -832,8 +834,10 @@ struct GlobalPrefs {
     // / previous tab in tab-strip order (the behavior before version 3.6)
     // instead of showing the tab switcher
     bool ctrlTabPre36Behavior;
-    // zoom levels which zooming steps through in addition to Fit Page, Fit
-    // Width and the minimum and maximum allowed values (8.33 and 6400)
+    // zoom levels which zooming steps through in addition to Fit Page and
+    // Fit Width. The largest value is also the highest zoom that can be
+    // set at all, so listing levels above 6400 (up to 1000000) is how you
+    // zoom further into e.g. a large map
     Vec<float>* zoomLevels;
     // command id assigned to each entry of ZoomLevels
     Vec<int>* zoomLevelsCmdIds;
@@ -1831,21 +1835,22 @@ static const StructInfo gGlobalPrefsInfo = {
     "actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it\0if true, "
     "Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order\0if "
     "true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order (the behavior "
-    "before version 3.6) instead of showing the tab switcher\0sequence of zoom levels when zooming in/out; all values "
-    "must lie between 8.33 and 6400\0how much a single zoom in / zoom out step changes the zoom, as a percentage of "
-    "the current zoom level. If 0 or negative, zooming steps through ZoomLevels instead\0\0customization options for "
-    "PDF, XPS, DjVu and PostScript UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain "
-    "text)\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
-    "options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for "
-    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
-    "available\0\0customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
-    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
-    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat sidebar\0\0width "
-    "of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
-    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
-    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
-    "DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of "
-    "additional external viewers for various file types. See [docs for more "
+    "before version 3.6) instead of showing the tab switcher\0sequence of zoom levels when zooming in/out; values must "
+    "lie between 8.33 and 1000000 (the largest one becomes the maximum zoom, which is 6400 by default)\0how much a "
+    "single zoom in / zoom out step changes the zoom, as a percentage of the current zoom level. If 0 or negative, "
+    "zooming steps through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and PostScript "
+    "UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization options for "
+    "Comic Book UI\0\0customization options for image files UI\0\0customization options for CHM UI. If UseFixedPageUI "
+    "is true, FixedPageUI settings apply instead\0\0customization options for Markdown UI. If UseFixedPageUI is true, "
+    "MuPDF is used; otherwise WebView2 browser view is used when available\0\0customization options for HTML UI. If "
+    "UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0settings for the "
+    "Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat "
+    "sidebar\0\0settings for the Antigravity chat sidebar\0\0width of the AI chat sidebar (0 = use default); shared by "
+    "Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
+    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
+    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
+    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
+    "types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

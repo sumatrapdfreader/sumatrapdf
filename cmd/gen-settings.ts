@@ -1205,9 +1205,13 @@ const globalPrefs: Field[] = [
     "ZoomLevels",
     Float,
     "",
-    "zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
-      "the minimum and maximum allowed values (8.33 and 6400)",
-  ).doc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
+    "zoom levels which zooming steps through in addition to Fit Page and Fit Width. " +
+      "The largest value is also the highest zoom that can be set at all, so listing " +
+      "levels above 6400 (up to 1000000) is how you zoom further into e.g. a large map",
+  ).doc(
+    "sequence of zoom levels when zooming in/out; values must lie between 8.33 and 1000000 " +
+      "(the largest one becomes the maximum zoom, which is 6400 by default)",
+  ),
   compactArray("ZoomLevelsCmdIds", Int, "", "command id assigned to each entry of ZoomLevels").notSaved(),
   field(
     "ZoomIncrement",
@@ -1646,7 +1650,9 @@ constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
 constexpr float kZoomFitHeight = -6.F;
 constexpr float kZoomActualSize = 100.0F;
-constexpr float kZoomMax = 6400.F; /* max zoom in % */
+constexpr float kZoomMaxDefault = 6400.F;     /* max zoom in %, unless ZoomLevels raises it */
+constexpr float kZoomMaxAllowed = 1000000.F;  /* the highest ZoomLevels can raise it to */
+extern float kZoomMax;                        /* the max zoom in % in force, see DisplayMode.cpp */
 constexpr float kZoomMin = 8.33F;  /* min zoom in % */
 constexpr float kInvalidZoom = -99.0F;
 
