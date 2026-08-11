@@ -407,8 +407,12 @@ struct VirtListBox : VirtWnd {
     // -1 clears the selection; doesn't call onSelectionChanged
     bool SetCurrentSelection(int);
     int ItemFromPoint(Point ptLocal);
+    // the row's rectangle in window coords; empty when the row isn't visible
+    Rect ItemRect(int idx);
     void EnsureVisible(int idx);
     int ViewportDy();
+    // ViewportDy() rounded down to whole rows
+    int UsableDy();
     int MaxScrollY();
     bool ScrollTo(int y);
     bool ScrollBy(int dy);

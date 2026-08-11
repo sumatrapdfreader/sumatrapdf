@@ -1407,8 +1407,17 @@ int VirtListBox::ViewportDy() {
     return dy > 0 ? dy : 0;
 }
 
+// the viewport rounded down to whole rows: a row cut in half by the bottom of
+// the list reads as a rendering glitch, so the strip below the last whole row
+// is left empty and never scrolled into
+int VirtListBox::UsableDy() {
+    int dy = GetItemHeight();
+    int usable = (ViewportDy() / dy) * dy;
+    return usable > 0 ? usable : ViewportDy();
+}
+
 int VirtListBox::MaxScrollY() {
-    int res = (ItemsCount() * GetItemHeight()) - ViewportDy();
+    int res = (ItemsCount() * GetItemHeight()) - UsableDy();
     return res > 0 ? res : 0;
 }
 
@@ -1449,7 +1458,7 @@ Rect VirtListBox::ThumbRectLocal() {
         return {};
     }
     int contentDy = ItemsCount() * GetItemHeight();
-    int visibleDy = ViewportDy();
+    int visibleDy = UsableDy();
     int minDy = DpiScale(HwndForDpi(), 20);
     int thumbDy = Scale(sb.dy, visibleDy, contentDy);
     thumbDy = Clamp(thumbDy, std::min(minDy, sb.dy), sb.dy);
@@ -1499,7 +1508,7 @@ void VirtListBox::EnsureVisible(int idx) {
     if (idx < 0 || idx >= n) {
         return;
     }
-    int visibleDy = ViewportDy();
+    int visibleDy = UsableDy();
     if (visibleDy <= 0) {
         // not laid out yet (a caller can select before the first layout);
         // scrolling now would be against a zero-height viewport
@@ -1570,6 +1579,21 @@ int VirtListBox::ItemFromPoint(Point ptLocal) {
     return idx;
 }
 
+// what an owner draws into, and where an in-place editor goes
+Rect VirtListBox::ItemRect(int idx) {
+    if (idx < 0 || idx >= ItemsCount()) {
+        return {};
+    }
+    Rect content = ContentRectInWindow();
+    content.dy = UsableDy();
+    int dy = GetItemHeight();
+    Rect r = {content.x, content.y + (idx * dy) - scrollY, content.dx - ScrollbarDx(), dy};
+    if (r.y < content.y || r.Bottom() > content.Bottom()) {
+        return {}; // not (fully) visible
+    }
+    return r;
+}
+
 void VirtListBox::Paint(VirtPaintCtx& ctx) {
     COLORREF colBg = bgColor;
     GfxFillRect(ctx.gfx, ctx.bounds, colBg);
@@ -1583,6 +1607,8 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     // from it by the strip the scrollbar takes on the right
     Rect items = ctx.content;
     items.dx -= ScrollbarDx();
+    // only whole rows: the strip below the last one stays background
+    items.dy = UsableDy();
     int dy = GetItemHeight();
     int first = scrollY / dy;
     int last = (scrollY + items.dy - 1) / dy;
@@ -1658,7 +1684,7 @@ bool VirtListBox::OnMouseDown(VirtMouseEvent& ev) {
     if (!sb.IsEmpty() && sb.Contains(ev.pt)) {
         // above / below the thumb: page towards the click
         int dir = (ev.pt.y < thumb.y) ? -1 : 1;
-        ScrollBy(dir * ViewportDy());
+        ScrollBy(dir * UsableDy());
         return true;
     }
     int idx = ItemFromPoint(ev.pt);
@@ -1716,7 +1742,7 @@ bool VirtListBox::OnKeyDown(VirtKeyEvent& ev) {
     if (n == 0) {
         return false;
     }
-    int perPage = std::max(ViewportDy() / GetItemHeight(), 1);
+    int perPage = std::max(UsableDy() / GetItemHeight(), 1);
     int idx = selIdx;
     switch (ev.vkey) {
         case VK_UP:

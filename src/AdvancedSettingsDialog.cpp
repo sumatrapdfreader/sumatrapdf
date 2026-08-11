@@ -17,6 +17,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"
@@ -302,17 +305,73 @@ struct ListBoxModelSettings : ListBoxModel {
     }
 };
 
+// The doc comment of the selected setting, wrapped to the dialog's width.
+// Its height is fixed to a number of lines so the rest of the dialog doesn't
+// jump around as comments of different lengths come and go
+struct CommentText : VirtRichText {
+    int nLines = 5;
+
+    int FixedDy() {
+        int lineDy = PlatformFontMeasureText(font, "Ag").dy;
+        return (lineDy * nLines) + padding.top + padding.bottom;
+    }
+
+    // the height is ours in all three, or the box would follow the text: it is
+    // laid out (and sized) while empty, and every comment is a different length
+    Size GetIdealSize() override {
+        Size sz = VirtRichText::GetIdealSize();
+        sz.dy = FixedDy();
+        return sz;
+    }
+
+    int MinIntrinsicHeight(int width) override {
+        VirtRichText::MinIntrinsicHeight(width); // wraps to `width`
+        return FixedDy();
+    }
+
+    Size Layout(Constraints bc) override {
+        Size sz = VirtRichText::Layout(bc);
+        sz.dy = FixedDy();
+        return bc.Constrain(sz);
+    }
+
+    // the box is a fixed number of lines, so a longer comment has to be cut off
+    // rather than spill over the hints below it
+    void Paint(VirtPaintCtx& ctx) override {
+        HDC hdc = GfxHdc(ctx.gfx);
+        Rect clip = ctx.bounds.Intersect(ctx.clip);
+        if (clip.IsEmpty()) {
+            return;
+        }
+        int savedDC = SaveDC(hdc);
+        IntersectClipRect(hdc, clip.x, clip.y, clip.Right(), clip.Bottom());
+        VirtRichText::Paint(ctx);
+        RestoreDC(hdc, savedDC);
+    }
+
+    // Reset() drops the word layout, so re-wrap to the width we already have
+    void SetText(Str s) {
+        Reset();
+        AddPlainText(s);
+        LayoutText(ContentRectInWindow().dx);
+        Invalidate();
+    }
+};
+
 struct AdvancedSettingsWnd : WindowBase {
     ~AdvancedSettingsWnd() override;
 
     HFONT font = nullptr;
     HFONT fontBold = nullptr; // for changed settings, owned
+    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
 
+    // the list, the doc comment, the hints and the buttons are virtual
+    // controls; the filter and the in-place editors are real HWNDs
     Edit* editFilter = nullptr;
-    ListBox* listBox = nullptr;
+    VirtListBox* listBox = nullptr;
     ListBoxModelSettings* model = nullptr; // owned by listBox
-    Edit* commentText = nullptr;           // read-only, shows the selected setting's doc comment
+    CommentText* commentText = nullptr;    // shows the selected setting's doc comment
     Edit* editValue = nullptr;             // in-place value editor, created on demand
     DropDown* dropDownValue = nullptr;     // in-place enum editor, created on demand
     Str dropDownOrigVal;                   // value before the drop-down opened (owned), for Esc
@@ -325,10 +384,10 @@ struct AdvancedSettingsWnd : WindowBase {
     bool pendingCancelEdit = false;
 
     // bottom buttons (layout-owned; Tab order Save → Cancel → Open → Help)
-    Button* btnSave = nullptr;
-    Button* btnCancel = nullptr;
-    Button* btnOpenSettingsFile = nullptr;
-    Button* btnHelp = nullptr;
+    VirtButton* btnSave = nullptr;
+    VirtButton* btnCancel = nullptr;
+    VirtButton* btnOpenSettingsFile = nullptr;
+    VirtButton* btnHelp = nullptr;
 
     // filter tokens for list matching + match underlay paint (command-palette style)
     StrVec filterWords;
@@ -338,15 +397,16 @@ struct AdvancedSettingsWnd : WindowBase {
 
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG& msg) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    VirtButton* NewButton(Str text, bool isDefault);
     bool HandleEscapeKey(bool isEditingValue, bool isEditingEnum);
     bool HandleTabKey(bool isEditingValue, bool isEditingEnum);
     bool HandleEnterKey(bool isEditingValue, bool isEditingEnum);
     bool HandleUpDownKey(const MSG& msg);
     void OnSize(UINT msg, UINT type, Size size) override;
-    void AdvanceFocus(bool forward);
 
     void QueryChanged();
-    void DrawListBoxItem(ListBox::DrawItemEvent* ev);
+    void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
     void ActivateItem(int lbIdx);
     void OnItemDoubleClicked();
     void OnSelectionChanged();
@@ -496,16 +556,18 @@ static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect
     rcVal.dx = valW;
 }
 
-void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
-    ListBox* lb = ev->listBox;
+void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
     auto* m = (ListBoxModelSettings*)lb->model;
     SettingItem* item = m->ItemAt(ev->itemIndex);
     if (!item) {
         return;
     }
 
-    HDC hdc = ev->hdc;
+    HDC hdc = GfxHdc(ev->gfx);
     Rect rc = ev->itemRect;
+    // the whole virtual tree paints into one DC, so leave it as we found it
+    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -515,13 +577,6 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     SetBkColor(hdc, colBg);
     HdcFillRectWithBkColor(hdc, rc);
-
-    // With LBS_NOINTEGRALHEIGHT the last row can be cut in half by the bottom of
-    // the list; half a line of text there reads as a rendering glitch, so leave
-    // it as plain background (same as the Find and Navigate Files lists, #5796)
-    if (ev->clippedAtBottom && rc.y > 0) {
-        return;
-    }
 
     HFONT fontNormal = font ? font : GetAppFont(hwnd);
 
@@ -536,8 +591,8 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     Rect rcName{}, rcVal{};
     AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
 
-    bool isRtl = HwndIsRtl(lb->hwnd);
-    HGDIOBJ prevFont = SelectObject(hdc, nameFont);
+    bool isRtl = HwndIsRtl(lb->GetHwnd());
+    SelectObject(hdc, nameFont);
     // yellow/accent underlays on matched filter tokens (same as command palette)
     uint nameFmt = DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS;
     if (isRtl) {
@@ -550,10 +605,11 @@ void AdvancedSettingsWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     TempWStr ws = ToWStrTemp(val);
     HdcDrawText(hdc, ws, rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
-    SelectObject(hdc, prevFont);
+    RestoreDC(hdc, savedDC);
 }
 
 // in-place editor sits in the value column (same split as DrawListBoxItem)
+// in window (dialog client) coords, which is where the in-place editors go
 Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
     int lbIdx = -1;
     int n = model->ItemsCount();
@@ -566,7 +622,7 @@ Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
     if (lbIdx < 0) {
         return {};
     }
-    Rect rc = LbGetItemRect(listBox->hwnd, lbIdx);
+    Rect rc = listBox->ItemRect(lbIdx);
     if (rc.IsEmpty()) {
         return {};
     }
@@ -584,7 +640,7 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     }
 
     Edit::CreateArgs args;
-    args.parent = listBox->hwnd;
+    args.parent = hwnd;
     args.isMultiLine = false;
     args.withBorder = true;
     args.font = font;
@@ -631,7 +687,7 @@ void AdvancedSettingsWnd::CancelEditValue() {
     editValue = nullptr;
     editItemIdx = -1;
     delete tmp;
-    HwndSetFocus(listBox->hwnd);
+    SetFocusTo(listBox);
 }
 
 // show a drop-down with the allowed values over the item's value rect
@@ -642,14 +698,7 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     if (r.IsEmpty()) {
         return;
     }
-    // ValueRectForItem is in listBox client coords; the drop-down is parented
-    // to the dialog (see below), so map the rect into dialog client coords
-    r = HwndMapRectToWindow(r, listBox->hwnd, hwnd);
-
     DropDown::CreateArgs args;
-    // parent to the dialog, not the listBox: a subclassed control (the listBox)
-    // does not reflect WM_COMMAND to child controls, so CBN_SELCHANGE would
-    // never reach DropDown::OnCommand and the selection would be lost
     args.parent = hwnd;
     args.font = font;
     auto* c = new DropDown();
@@ -702,7 +751,7 @@ void AdvancedSettingsWnd::OnEnumSelectionChanged() {
         SetItemChanged(item);
         // browsing the list with the arrow keys previews each value in turn
         PreviewSettingChange(item);
-        HwndInvalidate(listBox->hwnd, true);
+        listBox->Invalidate();
     }
     // selecting with the mouse closes the list: dispose of the control then.
     // can't do it here (we're inside its notification), so check afterwards;
@@ -739,8 +788,8 @@ void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
     }
     editItemIdx = -1;
     delete tmp;
-    HwndInvalidate(listBox->hwnd, true);
-    HwndSetFocus(listBox->hwnd);
+    listBox->Invalidate();
+    SetFocusTo(listBox);
 }
 
 void AdvancedSettingsWnd::CommitEditValue() {
@@ -766,7 +815,7 @@ void AdvancedSettingsWnd::CommitEditValue() {
     SetItemChanged(item);
     PreviewSettingChange(item);
     CancelEditValue();
-    HwndInvalidate(listBox->hwnd, true);
+    listBox->Invalidate();
 }
 
 // activate a setting: toggle a bool, or begin editing an enum / value. A single
@@ -780,7 +829,7 @@ void AdvancedSettingsWnd::ActivateItem(int lbIdx) {
     if (item->type == SettingType::Bool) {
         item->boolVal = !item->boolVal;
         SetItemChanged(item);
-        HwndInvalidate(listBox->hwnd, true);
+        listBox->Invalidate();
         return;
     }
     int idx = model->filtered[lbIdx];
@@ -868,54 +917,6 @@ void AdvancedSettingsWnd::OnSave() {
     ApplyChangesAndSave();
 }
 
-// Tab / Shift+Tab: filter → list → Save → Cancel → Open Settings File → Help
-void AdvancedSettingsWnd::AdvanceFocus(bool forward) {
-    HWND controls[] = {
-        editFilter ? editFilter->hwnd : nullptr,
-        listBox ? listBox->hwnd : nullptr,
-        btnSave ? btnSave->hwnd : nullptr,
-        btnCancel ? btnCancel->hwnd : nullptr,
-        btnOpenSettingsFile ? btnOpenSettingsFile->hwnd : nullptr,
-        btnHelp ? btnHelp->hwnd : nullptr,
-    };
-    HWND order[6]{};
-    int n = 0;
-    for (HWND h : controls) {
-        if (h && IsWindow(h)) {
-            order[n++] = h;
-        }
-    }
-    if (n == 0) {
-        return;
-    }
-
-    HWND focused = ::GetFocus();
-    int idx = -1;
-    for (int i = 0; i < n; i++) {
-        if (order[i] == focused || ::IsChild(order[i], focused)) {
-            idx = i;
-            break;
-        }
-    }
-    // in-place editors sit over the list; treat them as the list slot
-    if (idx < 0 && editValue && editValue->hwnd &&
-        (focused == editValue->hwnd || ::IsChild(editValue->hwnd, focused))) {
-        idx = 1; // list
-    }
-    if (idx < 0 && dropDownValue && dropDownValue->hwnd &&
-        (focused == dropDownValue->hwnd || ::IsChild(dropDownValue->hwnd, focused))) {
-        idx = 1; // list
-    }
-
-    int next;
-    if (forward) {
-        next = (idx + 1) % n;
-    } else {
-        next = (idx <= 0) ? n - 1 : idx - 1;
-    }
-    HwndSetFocus(order[next]);
-}
-
 bool AdvancedSettingsWnd::HandleEscapeKey(bool isEditingValue, bool isEditingEnum) {
     if (isEditingValue) {
         CancelEditValue();
@@ -934,7 +935,8 @@ bool AdvancedSettingsWnd::HandleTabKey(bool isEditingValue, bool isEditingEnum) 
     } else if (isEditingEnum) {
         CloseEnumEdit(true);
     }
-    AdvanceFocus(!IsShiftPressed());
+    // the ring is the layout order: filter → list → Save → Cancel → Open → Help
+    TabNavigate(IsShiftPressed());
     return true;
 }
 
@@ -949,13 +951,9 @@ bool AdvancedSettingsWnd::HandleEnterKey(bool isEditingValue, bool isEditingEnum
     }
     // focused button: Enter = click (PreTranslate would otherwise steal
     // Enter for list-item activation)
-    HWND focused = ::GetFocus();
-    Button* buttons[] = {btnSave, btnCancel, btnOpenSettingsFile, btnHelp};
-    for (Button* b : buttons) {
-        if (b && b->hwnd && b->hwnd == focused) {
-            SendMessageW(b->hwnd, BM_CLICK, 0, 0);
-            return true;
-        }
+    LRESULT res = 0;
+    if (vroot && vroot->focused && VirtTreeOnMessage(hwnd, vroot, WM_KEYDOWN, VK_RETURN, 0, res)) {
+        return true;
     }
     // Activate the selected row (bool: toggle true↔false; else edit).
     // Do not require list focus: after filter/arrow navigation the
@@ -979,13 +977,21 @@ bool AdvancedSettingsWnd::HandleUpDownKey(const MSG& msg) {
     if (dir == 0 || msg.hwnd != editFilter->hwnd) {
         return false;
     }
-    int n = listBox->GetCount();
+    int n = listBox->ItemsCount();
     if (n > 0) {
         int sel = (listBox->GetCurrentSelection() + dir + n) % n;
         listBox->SetCurrentSelection(sel);
         OnSelectionChanged(); // programmatic selection: no LBN_SELCHANGE
     }
     return true;
+}
+
+LRESULT AdvancedSettingsWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
+    }
+    // WindowBase::WndProcDefault sends the virtual controls their input
+    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
 bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
@@ -1048,7 +1054,7 @@ void AdvancedSettingsWnd::OnSize(UINT /*msg*/, UINT /*type*/, Size size) {
     // in-place editors are positioned over a specific item rect; that rect
     // moves on resize, so close them
     CancelEditValue();
-    LayoutToSize(layout, {dx, dy});
+    DoLayout({dx, dy});
     HwndInvalidate(hwnd);
 }
 
@@ -1073,6 +1079,36 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+// the buttons are virtual controls, so they are styled here rather than by the
+// system: a filled box with a border, brighter on hover (like the other dialogs)
+VirtButton* AdvancedSettingsWnd::NewButton(Str text, bool isDefault) {
+    auto* b = new VirtButton(text, platformFont);
+    COLORREF bg = ThemeWindowControlBackgroundColor();
+    b->textColor = ThemeWindowTextColor();
+    b->textColorDisabled = ThemeWindowTextDisabledColor();
+    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
+    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
+    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
+    return b;
+}
+
+static void SaveClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
+    wnd->OnSave();
+}
+
+static void CancelClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
+    wnd->OnCancel();
+}
+
+static void OpenSettingsFileClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
+    wnd->OnOpenSettingsFile();
+}
+
+static void HelpClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
+    wnd->OnHelp();
+}
+
 bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     CollectSettings(items, &gGlobalPrefsInfo, (u8*)gGlobalPrefs, {});
@@ -1090,6 +1126,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         return false;
     }
     fontBold = CreateBoldFont(font ? font : GetAppFont(hwnd));
+    platformFont = GetPlatformFont(font);
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();
@@ -1121,16 +1158,14 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        ListBox::CreateArgs args;
-        args.parent = hwnd;
-        args.font = font;
-        args.isRtl = isRtl;
-        auto* c = new ListBox();
+        auto* c = new VirtListBox();
+        c->hwndForDpi = hwnd;
+        c->font = platformFont;
+        c->textColor = colTxt;
+        c->bgColor = colBg;
+        c->padding = DpiScaledInsets(hwnd, 4, 0);
         c->onDrawItem =
-            MkMethod1<AdvancedSettingsWnd, ListBox::DrawItemEvent*, &AdvancedSettingsWnd::DrawListBoxItem>(this);
-        c->SetInsetsPt(4, 0);
-        c->Create(args);
-        c->SetColors(colTxt, colBg);
+            MkMethod1<AdvancedSettingsWnd, VirtListBox::DrawItemEvent*, &AdvancedSettingsWnd::DrawListBoxItem>(this);
         listBox = c;
         model = new ListBoxModelSettings();
         model->items = &items;
@@ -1144,23 +1179,15 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(c, 1);
     }
 
-    // read-only text area showing the selected setting's doc comment, between
-    // the list and the buttons
+    // text area showing the selected setting's doc comment, between the list
+    // and the buttons
     {
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.isMultiLine = true;
-        args.withBorder = false;
-        args.idealSizeLines = 5;
-        // don't let the doc text touch the edges of the control
-        args.textPadding = 4;
-        args.font = font;
-        args.isRtl = isRtl;
-        auto* c = new Edit();
-        c->SetColors(colTxt, colBg);
-        HWND ok = c->Create(args);
-        ReportIf(!ok);
-        SendMessageW(c->hwnd, EM_SETREADONLY, TRUE, 0);
+        auto* c = new CommentText();
+        c->font = platformFont;
+        c->textColor = colTxt;
+        c->bgColor = colBg;
+        // don't let the doc text touch the edges of the dialog
+        c->padding = DpiScaledInsets(hwnd, 4);
         commentText = c;
         vbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 4, 2)));
     }
@@ -1178,14 +1205,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             hbox->alignMain = MainAxisAlign::MainCenter;
             hbox->alignCross = CrossAxisAlign::CrossCenter;
 
-            Static::CreateArgs args;
-            args.parent = hwnd;
-            args.font = font;
-            args.text = hint;
-            args.isRtl = isRtl;
-            auto* c = new Static();
-            c->SetColors(colTxt, colBg);
-            c->Create(args);
+            auto* c = NewVirtText({.s = hint, .font = platformFont, .textColor = colTxt, .isRtl = isRtl});
             hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 1, 8)));
             vbox->AddChild(hbox);
         }
@@ -1201,20 +1221,19 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         auto* left = new HBox();
         left->alignMain = MainAxisAlign::MainStart;
         left->alignCross = CrossAxisAlign::CrossCenter;
-        btnSave =
-            CreateButton(hwnd, _TRA("Save"), MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnSave>(this), isRtl);
+        btnSave = NewButton(_TRA("Save"), true);
+        btnSave->onClick = MkFunc1(SaveClicked, this);
         left->AddChild(new Padding(btnSave, pad));
-        btnCancel = CreateButton(hwnd, _TRA("Cancel"),
-                                 MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnCancel>(this), isRtl);
+        btnCancel = NewButton(_TRA("Cancel"), false);
+        btnCancel->onClick = MkFunc1(CancelClicked, this);
         left->AddChild(new Padding(btnCancel, pad));
-        btnOpenSettingsFile =
-            CreateButton(hwnd, _TRA("Open Settings File"),
-                         MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnOpenSettingsFile>(this), isRtl);
+        btnOpenSettingsFile = NewButton(_TRA("Open Settings File"), false);
+        btnOpenSettingsFile->onClick = MkFunc1(OpenSettingsFileClicked, this);
         left->AddChild(new Padding(btnOpenSettingsFile, pad));
         hbox->AddChild(left);
 
-        btnHelp =
-            CreateButton(hwnd, _TRA("Help"), MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnHelp>(this), isRtl);
+        btnHelp = NewButton(_TRA("Help"), false);
+        btnHelp->onClick = MkFunc1(HelpClicked, this);
         hbox->AddChild(new Padding(btnHelp, pad));
         vbox->AddChild(hbox);
     }
@@ -1231,6 +1250,8 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     int dy = gAdvSettingsLastClientDy > 0 ? gAdvSettingsLastClientDy : limitValue(rc.dy - 72, 480, 900);
     int dx = gAdvSettingsLastClientDx > 0 ? gAdvSettingsLastClientDx : limitValue(rc.dx - 128, 760, 1100);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
+    // pick up the virtual controls so we paint them and they get their input
+    DoLayout(HwndClientRect(hwnd).Size());
     gAdvSettingsLastClientDx = HwndClientRect(hwnd).dx;
     gAdvSettingsLastClientDy = HwndClientRect(hwnd).dy;
     PositionDialog(hwnd, win->hwndFrame);
