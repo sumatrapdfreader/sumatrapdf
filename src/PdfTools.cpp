@@ -235,9 +235,7 @@ VirtWndBox* PdfToolDialog::AddRow() {
 
 // the source path, ellipsized in the middle for long paths
 void PdfToolDialog::AddPathRow() {
-    pathLabel = new VirtWndText(srcPath, font);
-    pathLabel->ellipsis = true;
-    pathLabel->isRtl = IsUIRtl();
+    pathLabel = NewVirtWndText({.s = srcPath, .font = font, .isRtl = IsUIRtl(), .ellipsis = true});
     mainBox->AddChild(pathLabel);
 }
 
@@ -271,9 +269,7 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
 Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
     VirtWndBox* row = AddRow();
 
-    auto* l = new VirtWndText(label, font);
-    l->isRtl = IsUIRtl();
-    row->AddChild(l);
+    row->AddChild(NewVirtWndText({.s = label, .font = font, .isRtl = IsUIRtl()}));
     row->AddChild(new VirtWndSpacer(gap, 0));
 
     Edit::CreateArgs eargs;
@@ -294,9 +290,7 @@ Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
 void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
     VirtWndBox* row = AddRow();
     if (hint) {
-        auto* l = new VirtWndText(hint, font);
-        l->isRtl = IsUIRtl();
-        row->AddChild(l);
+        row->AddChild(NewVirtWndText({.s = hint, .font = font, .isRtl = IsUIRtl()}));
     }
     // a flexible spacer pushes the buttons to the right
     row->AddChild(new VirtWndSpacer(0, 0), 1);
@@ -933,10 +927,8 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     Str pagesLabel = isExtract ? _TRA("Pages To Extract:") : _TRA("Pages To Delete:");
     pagesEdit = AddLabeledEdit(pagesLabel, fmt("%d", currentPage));
     // "of N" after the edit
-    auto* total = new VirtWndText(fmt("of %d", pageCount), font);
-    total->isRtl = IsUIRtl();
     lastRow->AddChild(new VirtWndSpacer(gap, 0));
-    lastRow->AddChild(total);
+    lastRow->AddChild(NewVirtWndText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
 
     Str actionText = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
     AddButtonsRow(actionText, "Syntax: 2,5-7,13-");

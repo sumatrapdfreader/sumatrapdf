@@ -1498,6 +1498,18 @@ void VirtWndText::Paint(VirtWndPaintCtx& ctx) {
     }
 }
 
+VirtWndText* NewVirtWndText(const VirtWndTextArgs& args) {
+    auto* w = new VirtWndText(args.s, args.font);
+    w->textColor = args.textColor;
+    w->align = args.align;
+    w->withUnderline = args.withUnderline;
+    w->isRtl = args.isRtl;
+    w->ellipsis = args.ellipsis;
+    w->underlineOffsetY = args.underlineOffsetY;
+    w->padding = args.padding;
+    return w;
+}
+
 //--- VirtWndLink
 
 static Kind kindVirtWndLink = "virtWndLink";
