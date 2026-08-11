@@ -1499,7 +1499,7 @@ void VirtText::Paint(VirtPaintCtx& ctx) {
     }
 }
 
-VirtText* NewVirtWndText(const VirtTextArgs& args) {
+VirtText* NewVirtText(const VirtTextArgs& args) {
     auto* w = new VirtText(args.s, args.font);
     w->textColor = args.textColor;
     w->align = args.align;

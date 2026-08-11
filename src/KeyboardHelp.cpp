@@ -518,7 +518,7 @@ void KeyboardHelpWnd::BuildContent() {
             capsCell.alignH = CrossAxisAlign::CrossEnd;
             capsCell.alignV = CrossAxisAlign::CrossCenter;
 
-            auto* desc = NewVirtWndText({.s = r.desc, .font = fontRow, .ellipsis = true});
+            auto* desc = NewVirtText({.s = r.desc, .font = fontRow, .ellipsis = true});
             texts.Append(desc);
             VirtTableCell& descCell = t->SetCell(row, 1, desc);
             descCell.alignV = CrossAxisAlign::CrossCenter;

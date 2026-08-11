@@ -235,7 +235,7 @@ VirtBox* PdfToolDialog::AddRow() {
 
 // the source path, ellipsized in the middle for long paths
 void PdfToolDialog::AddPathRow() {
-    pathLabel = NewVirtWndText({.s = srcPath, .font = font, .isRtl = IsUIRtl(), .ellipsis = true});
+    pathLabel = NewVirtText({.s = srcPath, .font = font, .isRtl = IsUIRtl(), .ellipsis = true});
     mainBox->AddChild(pathLabel);
 }
 
@@ -269,7 +269,7 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
 Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
     VirtBox* row = AddRow();
 
-    row->AddChild(NewVirtWndText({.s = label, .font = font, .isRtl = IsUIRtl()}));
+    row->AddChild(NewVirtText({.s = label, .font = font, .isRtl = IsUIRtl()}));
     row->AddChild(new VirtSpacer(gap, 0));
 
     Edit::CreateArgs eargs;
@@ -290,7 +290,7 @@ Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
 void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
     VirtBox* row = AddRow();
     if (hint) {
-        row->AddChild(NewVirtWndText({.s = hint, .font = font, .isRtl = IsUIRtl()}));
+        row->AddChild(NewVirtText({.s = hint, .font = font, .isRtl = IsUIRtl()}));
     }
     // a flexible spacer pushes the buttons to the right
     row->AddChild(new VirtSpacer(0, 0), 1);
@@ -928,7 +928,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     pagesEdit = AddLabeledEdit(pagesLabel, fmt("%d", currentPage));
     // "of N" after the edit
     lastRow->AddChild(new VirtSpacer(gap, 0));
-    lastRow->AddChild(NewVirtWndText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
+    lastRow->AddChild(NewVirtText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
 
     Str actionText = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
     AddButtonsRow(actionText, "Syntax: 2,5-7,13-");

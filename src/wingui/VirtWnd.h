@@ -351,7 +351,7 @@ enum class VirtTextAlign {
 // VirtText itself can't be an aggregate - it inherits VirtWnd, which has
 // virtual functions and a constructor - so designated initializers go through
 // this, like the CreateArgs of the HWND controls:
-//   auto* t = NewVirtWndText({.s = path, .font = font, .ellipsis = true});
+//   auto* t = NewVirtText({.s = path, .font = font, .ellipsis = true});
 struct VirtTextArgs {
     Str s;
     PlatformFont* font = nullptr; // not owned, interned
@@ -393,7 +393,7 @@ struct VirtText : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-VirtText* NewVirtWndText(const VirtTextArgs&);
+VirtText* NewVirtText(const VirtTextArgs&);
 
 struct VirtLink : VirtText {
     Str target;  // owned
