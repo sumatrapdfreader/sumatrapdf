@@ -12,8 +12,6 @@
 
 static bool gScrollbarClassRegistered = false;
 
-// distance in pixels from scrollbar edge at which it transitions to thick
-int gThickVisibilityDistance = 32;
 bool gOverlayScrollbarSuppressThick = false;
 // if true, draw small filled triangles instead of chevrons
 static bool gThickArrows = true;
@@ -140,40 +138,16 @@ static UINT ScrollMsgForType(OverlayScrollbar* sb) {
     return IsVert(sb) ? WM_VSCROLL : WM_HSCROLL;
 }
 
-// Get scrollbar rect in screen coordinates (for thick size, used for proximity check)
+// The band the scrollbar occupies when thick, in screen coordinates. The mouse
+// being in it is what turns a smart scrollbar thick, so it is always the thick
+// width, whatever width the scrollbar is drawn at right now
 static Rect GetScrollbarScreenRect(OverlayScrollbar* sb) {
     Rect ownerRc = HwndWindowRect(sb->hwndOwner);
-    int scrollW = ScaledWidth(sb, true); // use thick width for proximity
+    int scrollW = ScaledWidth(sb, true);
     if (IsVert(sb)) {
         return Rect(ownerRc.x + ownerRc.dx - scrollW, ownerRc.y, scrollW, ownerRc.dy);
     }
     return Rect(ownerRc.x, ownerRc.y + ownerRc.dy - scrollW, ownerRc.dx, scrollW);
-}
-
-// Distance from point to rect edge (0 if inside)
-static int DistToRect(Point pt, Rect rc) {
-    int dx = 0;
-    int dy = 0;
-    if (pt.x < rc.x) {
-        dx = rc.x - pt.x;
-    } else if (pt.x >= rc.x + rc.dx) {
-        dx = pt.x - (rc.x + rc.dx - 1);
-    }
-    if (pt.y < rc.y) {
-        dy = rc.y - pt.y;
-    } else if (pt.y >= rc.y + rc.dy) {
-        dy = pt.y - (rc.y + rc.dy - 1);
-    }
-    if (dx == 0 && dy == 0) {
-        return 0;
-    }
-    if (dx == 0) {
-        return dy;
-    }
-    if (dy == 0) {
-        return dx;
-    }
-    return (int)sqrt((double)((dx * dx) + (dy * dy)));
 }
 
 // Check if hwnd is the same as or an ancestor of child
@@ -503,11 +477,11 @@ static void CALLBACK MouseTrackTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR /
         Rect ownerRc = HwndWindowRect(sb->hwndOwner);
         bool overOwner = ownerRc.Contains(pt);
 
-        // Check distance to scrollbar area
+        // Is the mouse over the band the thick scrollbar occupies? Being merely
+        // near it isn't enough: the thick bar used to pop out while the mouse
+        // was still over the page, which is distracting while reading
         Rect sbRect = GetScrollbarScreenRect(sb);
-        int dist = DistToRect(pt, sbRect);
-        bool closeToScrollbar = (dist <= gThickVisibilityDistance);
-        bool overScrollbar = (dist == 0);
+        bool overScrollbar = sbRect.Contains(pt);
 
         if (sb->isDragging) {
             // Don't change state while dragging
@@ -531,13 +505,8 @@ static void CALLBACK MouseTrackTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR /
             if (wasOver != sb->mouseOverThumb) {
                 PaintScrollbar(sb);
             }
-        } else if (closeToScrollbar && overOwner) {
-            // Near scrollbar and over owner - show thick
-            if (!IsThick(sb)) {
-                ShowScrollbarWindow(sb, true);
-            }
         } else if (overOwner && mouseMoved) {
-            // Mouse is over owner and moving, but not near scrollbar - show thin
+            // Mouse is over owner and moving, but not over the scrollbar - show thin
             // IsThick() means transitioning from thick to thin
             if (IsThick(sb) || sb->state != State::SmartThin) {
                 ShowScrollbarWindow(sb, false);

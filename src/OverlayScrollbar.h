@@ -4,7 +4,6 @@
 // Overlay scrollbar - a semi-transparent top-level window that acts like
 // a standard Windows scrollbar but floats over the owner window.
 
-extern int gThickVisibilityDistance;
 extern bool gOverlayScrollbarSuppressThick;
 
 struct OverlayScrollbar {
