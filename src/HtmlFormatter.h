@@ -32,8 +32,10 @@ struct PlatformTextMeasurer {
     virtual void SetFont(PlatformFont* font) = 0;
     virtual float GetCurrFontLineSpacing() = 0;
     virtual float GetSpaceDx() = 0;
-    virtual RectF Measure(WStr s) = 0;
-    virtual int StringLenForWidth(WStr s, float dx, float sWidth = -1) = 0;
+    // s is utf-8, and the length StringLenForWidth returns is in bytes; it
+    // never cuts a utf-8 sequence in half
+    virtual RectF Measure(Str s) = 0;
+    virtual int StringLenForWidth(Str s, float dx, float sWidth = -1) = 0;
     virtual ~PlatformTextMeasurer() = default;
 };
 
@@ -241,7 +243,7 @@ struct HtmlFormatter {
     bool IsCurrLineEmpty();
     virtual bool IgnoreText();
 
-    RectF MeasureTextCached(WStr s);
+    RectF MeasureTextCached(Str s);
 
     void DumpLineDebugInfo();
 

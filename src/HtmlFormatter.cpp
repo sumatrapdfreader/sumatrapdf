@@ -180,6 +180,10 @@ static mui::TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod met
 }
 #endif
 
+static bool IsUtf8Continuation(char c) {
+    return ((u8)c & 0xC0) == 0x80;
+}
+
 struct StubTextMeasurer : PlatformTextMeasurer {
     PlatformFont* currFont = nullptr;
 
@@ -198,9 +202,22 @@ struct StubTextMeasurer : PlatformTextMeasurer {
 
     float GetSpaceDx() override { return AverageCharDx(); }
 
-    RectF Measure(WStr s) override { return RectF(0, 0, (float)len(s) * AverageCharDx(), GetCurrFontLineSpacing()); }
+    // a rough guess, so count characters rather than utf-8 bytes
+    static int CharCount(Str s) {
+        int n = 0;
+        for (int i = 0; i < len(s); i++) {
+            if (!IsUtf8Continuation(s.s[i])) {
+                n++;
+            }
+        }
+        return n;
+    }
 
-    int StringLenForWidth(WStr s, float dx, float sWidth) override {
+    RectF Measure(Str s) override {
+        return RectF(0, 0, (float)CharCount(s) * AverageCharDx(), GetCurrFontLineSpacing());
+    }
+
+    int StringLenForWidth(Str s, float dx, float sWidth) override {
         int n = len(s);
         if (n == 0 || dx <= 0) {
             return 0;
@@ -212,7 +229,12 @@ struct StubTextMeasurer : PlatformTextMeasurer {
             return n;
         }
         int res = (int)floorf((float)n * dx / sWidth);
-        return limitValue(res, 0, n);
+        res = limitValue(res, 0, n);
+        // don't cut a utf-8 sequence in half
+        while (res > 0 && res < n && IsUtf8Continuation(s.s[res])) {
+            res--;
+        }
+        return res;
     }
 };
 
@@ -237,10 +259,20 @@ struct WinTextMeasurer : PlatformTextMeasurer {
 
     float GetSpaceDx() override { return mui::GetSpaceDx(textMeasure); }
 
-    RectF Measure(WStr s) override { return textMeasure->Measure(s); }
+    RectF Measure(Str s) override { return textMeasure->Measure(ToWStrTemp(s)); }
 
-    int StringLenForWidth(WStr s, float dx, float sWidth) override {
-        return mui::StringLenForWidth(textMeasure, s, dx, sWidth);
+    // mui measures utf-16, so its answer is a WCHAR count: turn it back into the
+    // byte count the caller asked for
+    int StringLenForWidth(Str s, float dx, float sWidth) override {
+        TempWStr ws = ToWStrTemp(s);
+        int nChars = mui::StringLenForWidth(textMeasure, ws, dx, sWidth);
+        if (nChars >= len(ws)) {
+            return len(s);
+        }
+        if (nChars <= 0) {
+            return 0;
+        }
+        return len(ToUtf8Temp(WStr(ws.s, nChars)));
     }
 };
 #endif
@@ -331,16 +363,15 @@ HtmlFormatter::MeasureCache* HtmlFormatter::GetMeasureCacheForCurrFont() {
 // measuring text is expensive and text runs (mostly words) repeat a lot
 // within a document, so cache the measured size per font, keyed by text.
 // The caller must have called textMeasure->SetFont(CurrFont()) already.
-RectF HtmlFormatter::MeasureTextCached(WStr s) {
+RectF HtmlFormatter::MeasureTextCached(Str s) {
     MeasureCache* mc = GetMeasureCacheForCurrFont();
     if (!mc) {
         return textMeasure->Measure(s);
     }
-    // MapStrToInt keys are UTF-8; the WStr text is our key
-    TempStr key = ToUtf8Temp(s);
+    // MapStrToInt keys are utf-8, which is what we measure, so s is the key
     int existingIdx = 0;
     int idx = len(mc->vals);
-    if (!mc->keys->Insert(key, idx, &existingIdx)) {
+    if (!mc->keys->Insert(s, idx, &existingIdx)) {
         return mc->vals[existingIdx];
     }
     RectF bbox = textMeasure->Measure(s);
@@ -852,13 +883,80 @@ void HtmlFormatter::EmitElasticSpace() {
 }
 
 // return true if we can break a word on a given character during layout
-static bool CanBreakWordOnChar(WCHAR c) {
+// the codepoint the byte at `i` belongs to, or -1 if it can't be decoded
+static int Utf8CodePointAt(Str s, int i) {
+    if (i < 0 || i >= len(s)) {
+        return -1;
+    }
+    // back up to the start of the sequence
+    while (i > 0 && IsUtf8Continuation(s.s[i])) {
+        i--;
+    }
+    u8 b = (u8)s.s[i];
+    int nBytes = 1;
+    int c = b;
+    if (b >= 0xF0) {
+        nBytes = 4;
+        c = b & 0x07;
+    } else if (b >= 0xE0) {
+        nBytes = 3;
+        c = b & 0x0F;
+    } else if (b >= 0xC0) {
+        nBytes = 2;
+        c = b & 0x1F;
+    } else if (b >= 0x80) {
+        return -1; // a stray continuation byte
+    }
+    if (i + nBytes > len(s)) {
+        return -1;
+    }
+    for (int j = 1; j < nBytes; j++) {
+        if (!IsUtf8Continuation(s.s[i + j])) {
+            return -1;
+        }
+        c = (c << 6) | ((u8)s.s[i + j] & 0x3F);
+    }
+    return c;
+}
+
+static bool CanBreakWordOnChar(int c) {
     // don't break on Chinese and Japan characters
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/250
     // https://github.com/sumatrapdfreader/sumatrapdf/pull/1057
     // There are other  ranges, but far less common
     // https://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
     return c >= 0x2E80 && c <= 0xA4CF;
+}
+
+// how much of `run` the first `bufLen` bytes of its soft-hyphen-stripped copy
+// cover
+static int RunLenForBufLen(Str run, int bufLen) {
+    int i = 0;
+    int n = 0;
+    while (i < len(run) && n < bufLen) {
+        if ((u8)run.s[i] == 0xC2 && (i + 1) < len(run) && (u8)run.s[i + 1] == 0xAD) {
+            i += 2;
+            continue;
+        }
+        i++;
+        n++;
+    }
+    return i;
+}
+
+// soft hyphens (U+00AD, 0xC2 0xAD in utf-8) should not be displayed
+static void RemoveSoftHyphensInPlace(Str& s) {
+    char* dst = s.s;
+    const char* src = s.s;
+    const char* end = s.s + s.len;
+    while (src < end) {
+        if ((u8)src[0] == 0xC2 && (src + 1) < end && (u8)src[1] == 0xAD) {
+            src += 2;
+            continue;
+        }
+        *dst++ = *src++;
+    }
+    s.len = (int)(dst - s.s);
 }
 
 // a text run is a string of consecutive text with uniform style
@@ -879,9 +977,8 @@ void HtmlFormatter::EmitTextRun(Str s) {
             currReparseIdx = htmlParser->PosOf(run);
         }
 
-        TempWStr buf = ToWStrTemp(run);
-        // soft hyphens should not be displayed
-        buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
+        TempStr buf = str::DupTemp(run);
+        RemoveSoftHyphensInPlace(buf);
         if (len(buf) == 0) {
             break;
         }
@@ -897,10 +994,10 @@ void HtmlFormatter::EmitTextRun(Str s) {
         int lenThatFits = textMeasure->StringLenForWidth(buf, pageDx - currX, bbox.dx);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
-            if (!CanBreakWordOnChar(buf.s[lenThatFits])) {
+            if (!CanBreakWordOnChar(Utf8CodePointAt(buf, lenThatFits))) {
                 int lenTmp;
                 for (lenTmp = lenThatFits; lenTmp > 0; lenTmp--) {
-                    if (CanBreakWordOnChar(buf.s[lenTmp - 1])) {
+                    if (CanBreakWordOnChar(Utf8CodePointAt(buf, lenTmp - 1))) {
                         break;
                     }
                 }
@@ -922,17 +1019,20 @@ void HtmlFormatter::EmitTextRun(Str s) {
             continue;
         }
 
-        if (lenThatFits < len(buf) && lenThatFits > 0 && buf.s[lenThatFits - 1] >= 0xD800 &&
-            buf.s[lenThatFits - 1] <= 0xDBFF && buf.s[lenThatFits] >= 0xDC00 && buf.s[lenThatFits] <= 0xDFFF) {
-            lenThatFits = lenThatFits == 1 ? 2 : lenThatFits - 1;
+        // never cut a utf-8 sequence in half (this used to be the utf-16
+        // surrogate-pair case)
+        while (lenThatFits > 0 && lenThatFits < len(buf) && IsUtf8Continuation(buf.s[lenThatFits])) {
+            lenThatFits--;
         }
         textMeasure->SetFont(CurrFont());
-        bbox = MeasureTextCached(WStr(buf.s, lenThatFits));
+        bbox = MeasureTextCached(Str(buf.s, lenThatFits));
         ReportIf(bbox.dx > pageDx);
-        int utf8LenThatFits = len(ToUtf8Temp(WStr(buf.s, lenThatFits)));
-        AppendInstr(DrawInstr::Text(Str(run.s, utf8LenThatFits), bbox, dirRtl));
+        // buf is `run` with the soft hyphens removed, so a length in buf maps
+        // back to a longer one in run
+        int runLenThatFits = RunLenForBufLen(run, lenThatFits);
+        AppendInstr(DrawInstr::Text(Str(run.s, runLenThatFits), bbox, dirRtl));
         currX += bbox.dx;
-        run = Str(run.s + utf8LenThatFits, run.len - utf8LenThatFits);
+        run = Str(run.s + runLenThatFits, run.len - runLenThatFits);
     }
 }
 
@@ -945,12 +1045,8 @@ void HtmlFormatter::EmitTextMarker(Str s) {
     if (!s) {
         return;
     }
-    TempWStr buf = ToWStrTemp(s);
-    if (len(buf) == 0) {
-        return;
-    }
     textMeasure->SetFont(CurrFont());
-    RectF bbox = MeasureTextCached(buf);
+    RectF bbox = MeasureTextCached(s);
     AppendInstr(DrawInstr::Text(s, bbox, dirRtl));
     currX += bbox.dx;
 }
