@@ -68,6 +68,18 @@ static Pixmap* RenderIconToPixmap(HIMAGELIST himl, int iconIdx, Size sz) {
     return px;
 }
 
+Pixmap* IconPixmapRender(HIMAGELIST himl, int iconIdx) {
+    if (!himl) {
+        return nullptr;
+    }
+    Size sz;
+    ImageList_GetIconSize(himl, &sz.dx, &sz.dy);
+    if (sz.IsEmpty()) {
+        return nullptr;
+    }
+    return RenderIconToPixmap(himl, iconIdx, sz);
+}
+
 Pixmap* IconPixmapFromImageList(HIMAGELIST himl, int iconIdx) {
     if (!himl) {
         return nullptr;

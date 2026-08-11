@@ -7,9 +7,15 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 
+#include "base/Pixmap.h"
+
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/IconPixmap.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -79,10 +85,15 @@ static int FindMatchIndex(MainWindow* win, int page, int glyph) {
 struct FindWindowWnd : WindowBase {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
-    Static* status = nullptr;
-    HWND hwndBtns = nullptr; // prev / next / match-case / unpin(dock)
-    HIMAGELIST himl = nullptr;
-    ListBox* results = nullptr;
+    // the status text, the buttons and the results list are virtual controls;
+    // the search field is the only HWND child
+    VirtText* status = nullptr;
+    // prev / next / match-case / match-whole-word / unpin(dock). Each owns the
+    // Pixmap it draws, rendered once per theme + DPI
+    VirtIconButton* btns[5]{};
+    Pixmap* btnPixmaps[5]{};
+    Tooltip* tooltip = nullptr;
+    VirtListBox* results = nullptr;
     StrVec filterWords; // search term(s) to highlight in snippets
     Vec<u8> hlScratch;  // reused highlight mask for DrawMaybeHighlightedText
     // coalesce rapid list selections: only the latest deferred navigation runs
@@ -104,13 +115,18 @@ struct FindWindowWnd : WindowBase {
     ~FindWindowWnd() override;
 
     bool Create(MainWindow* win);
+    void CreateButtons();
+    void FreeButtonPixmaps();
+    void UpdateButtonIcons();
+    // the button under `pt` (window coords), or -1
+    int ButtonIndexFromPoint(Point pt);
     void Layout();
     void SavePos();
     void RefreshResults(bool allowNavigation = true);
     void UpdateTheme();
 
     void OnTextChanged();
-    void DrawResultItem(ListBox::DrawItemEvent* ev);
+    void DrawResultItem(VirtListBox::DrawItemEvent* ev);
     void OnResultSelected();
     void SaveSelectedMatch();
     bool MoveResultSelection(WPARAM vkey);
@@ -118,7 +134,6 @@ struct FindWindowWnd : WindowBase {
     int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnNotify(int controlId, NMHDR* nmh) override;
     bool PreTranslateMessage(MSG& msg) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
@@ -161,12 +176,73 @@ static TempStr FindWindowButtonTooltip(int cmd) {
 
 FindWindowWnd::~FindWindowWnd() {
     delete edit;
+    delete tooltip;
     delete status;
     delete results; // also deletes its FindResultsModel
-    HwndDestroyWindowSafe(&hwndBtns);
-    if (himl) {
-        ImageList_Destroy(himl);
+    for (VirtIconButton* b : btns) {
+        delete b;
     }
+    FreeButtonPixmaps();
+}
+
+void FindWindowWnd::FreeButtonPixmaps() {
+    for (Pixmap*& px : btnPixmaps) {
+        FreePixmap(px);
+        px = nullptr;
+    }
+}
+
+// The icons come from an image list built at the current theme color and DPI.
+// It is only the source: each icon is rendered into a Pixmap we own and the
+// list is dropped, so nothing here holds an HIMAGELIST
+void FindWindowWnd::UpdateButtonIcons() {
+    static const TbIcon icons[5] = {TbIcon::ChevronUp, TbIcon::ChevronDown, TbIcon::MatchCase, TbIcon::MatchWholeWord,
+                                    TbIcon::ArrowsDiagonalMinimize};
+    int isz = RoundUp(DpiScale(hwnd, 16), 4);
+    HIMAGELIST himl = BuildStdToolbarImageList(isz);
+    if (!himl) {
+        return;
+    }
+    FreeButtonPixmaps();
+    for (int i = 0; i < 5; i++) {
+        btnPixmaps[i] = IconPixmapRender(himl, (int)icons[i]);
+        if (btns[i]) {
+            btns[i]->pixmap = btnPixmaps[i];
+        }
+    }
+    ImageList_Destroy(himl);
+}
+
+static void FindWindowButtonClicked(FindWindowWnd* w, VirtMouseEvent* ev) {
+    auto* btn = (VirtIconButton*)ev->target;
+    w->OnCommand((WPARAM)btn->id, 0);
+}
+
+void FindWindowWnd::CreateButtons() {
+    static const int cmds[5] = {CmdFindPrev, CmdFindNext, CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
+                                kFindWinPinCmdId};
+    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    int pad = DpiScale(hwnd, 4);
+    for (int i = 0; i < 5; i++) {
+        auto* b = new VirtIconButton();
+        b->id = cmds[i];
+        b->padding = Insets{pad, pad, pad, pad};
+        b->bgColorHover = AccentColor(colBg, 20);
+        b->bgColorSelected = AccentColor(colBg, 36);
+        b->SetTooltip(FindWindowButtonTooltip(cmds[i]));
+        b->onClick = MkFunc1(FindWindowButtonClicked, this);
+        btns[i] = b;
+    }
+    UpdateButtonIcons();
+}
+
+int FindWindowWnd::ButtonIndexFromPoint(Point pt) {
+    for (int i = 0; i < 5; i++) {
+        if (btns[i] && btns[i]->BoundsInWindow().Contains(pt)) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 bool FindWindowWnd::Create(MainWindow* mainWin) {
@@ -210,71 +286,47 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         edit->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
     }
 
+    PlatformFont* platformFont = GetPlatformFont(GetAppFont(hwnd));
+
+    status = NewVirtText({
+        .font = platformFont,
+        .textColor = colTxt,
+        .isRtl = IsUIRtl(),
+        // single line, vertically centered (what SS_CENTERIMAGE used to do)
+        .ellipsis = true,
+    });
+
+    CreateButtons();
+
     {
-        Static::CreateArgs args;
+        auto* c = new VirtListBox();
+        c->hwndForDpi = hwnd;
+        c->font = platformFont;
+        c->textColor = colTxt;
+        c->bgColor = colBg;
+        c->onDrawItem = MkMethod1<FindWindowWnd, VirtListBox::DrawItemEvent*, &FindWindowWnd::DrawResultItem>(this);
+        c->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
+        c->onDoubleClick = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
+        c->SetModel(new FindResultsModel(win));
+        results = c;
+    }
+
+    {
+        Tooltip::CreateArgs args;
         args.parent = hwnd;
-        args.text = "";
-        args.isRtl = IsUIRtl();
-        status = new Static();
-        status->SetColors(colTxt, colBg);
-        status->Create(args);
-        HwndSetWindowStyle(status->hwnd, SS_CENTERIMAGE, true);
+        tooltip = new Tooltip();
+        tooltip->Create(args);
     }
 
-    {
-        DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | TBSTYLE_TOOLTIPS | CCS_NODIVIDER |
-                      CCS_NORESIZE | CCS_NOPARENTALIGN;
-        DWORD exStyle = IsUIRtl() ? WS_EX_LAYOUTRTL : 0;
-        HINSTANCE hinst = GetModuleHandleW(nullptr);
-        hwndBtns = CreateWindowExW(exStyle, TOOLBARCLASSNAMEW, nullptr, style, 0, 0, 0, 0, hwnd, (HMENU) nullptr, hinst,
-                                   nullptr);
-        // drop the visual-style button background so the flat toolbar shows the
-        // window's themed background instead of a light box in dark themes
-        SetWindowTheme(hwndBtns, L"", L"");
-        TbSetButtonStructSize(hwndBtns, sizeofi(TBBUTTON));
-
-        int isz = RoundUp(DpiScale(hwnd, 16), 4);
-        himl = BuildStdToolbarImageList(isz);
-        TbSetImageList(hwndBtns, himl);
-        TbSetButtonSize(hwndBtns, Size(isz, isz));
-
-        TBBUTTON b[5]{};
-        b[0].iBitmap = (int)TbIcon::ChevronUp;
-        b[0].idCommand = CmdFindPrev;
-        b[0].fsState = TBSTATE_ENABLED;
-        b[0].fsStyle = BTNS_BUTTON;
-        b[1].iBitmap = (int)TbIcon::ChevronDown;
-        b[1].idCommand = CmdFindNext;
-        b[1].fsState = TBSTATE_ENABLED;
-        b[1].fsStyle = BTNS_BUTTON;
-        b[2].iBitmap = (int)TbIcon::MatchCase;
-        b[2].idCommand = CmdFindToggleMatchCase;
-        b[2].fsState = TBSTATE_ENABLED;
-        b[2].fsStyle = BTNS_CHECK;
-        b[3].iBitmap = (int)TbIcon::MatchWholeWord;
-        b[3].idCommand = CmdFindToggleMatchWholeWord;
-        b[3].fsState = TBSTATE_ENABLED;
-        b[3].fsStyle = BTNS_CHECK;
-        b[4].iBitmap = (int)TbIcon::ArrowsDiagonalMinimize;
-        b[4].idCommand = kFindWinPinCmdId;
-        b[4].fsState = TBSTATE_ENABLED;
-        b[4].fsStyle = BTNS_BUTTON;
-        TbAddButtons(hwndBtns, 5, b);
-        TbAutosIZE(hwndBtns);
+    // the virtual controls of this window; it positions them itself in Layout()
+    vroot = new VirtRoot(hwnd);
+    Vec<VirtWnd*> tops;
+    tops.Append(status);
+    for (VirtIconButton* b : btns) {
+        tops.Append(b);
     }
-
-    {
-        ListBox::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetAppFont(hwnd);
-        results = new ListBox();
-        results->onDrawItem = MkMethod1<FindWindowWnd, ListBox::DrawItemEvent*, &FindWindowWnd::DrawResultItem>(this);
-        results->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
-        results->onDoubleClick = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
-        results->SetColors(colTxt, colBg);
-        results->Create(args);
-        results->SetModel(new FindResultsModel(win));
-    }
+    tops.Append(results);
+    vroot->SetTops(tops);
 
     ApplyDarkModeToPopupWindow(hwnd);
     return true;
@@ -283,19 +335,31 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
 void FindWindowWnd::Layout() {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom, before
     // the child controls exist; ignore layout until they're created
-    if (!edit || !status || !hwndBtns || !results) {
+    if (!edit || !status || !btns[0] || !results) {
         return;
     }
     Rect rc = HwndClientRect(hwnd);
+    if (vroot) {
+        vroot->SetBounds({0, 0, rc.dx, rc.dy});
+    }
     int pad = DpiScale(hwnd, 8);
     int gap = DpiScale(hwnd, 6);
     int statusDx = DpiScale(hwnd, 90);
     int minEditDx = DpiScale(hwnd, 48);
 
     int editDy = edit->GetIdealSize().dy;
-    Size tbSz = TbGetMaxSize(hwndBtns);
-    int tbW = tbSz.dx;
-    int tbH = tbSz.dy;
+    Size btnSz = btns[0]->GetIdealSize();
+    btnSz.dx += btns[0]->padding.left + btns[0]->padding.right;
+    btnSz.dy += btns[0]->padding.top + btns[0]->padding.bottom;
+    int tbW = btnSz.dx * 5;
+    int tbH = btnSz.dy;
+    // lays the five buttons out left to right inside the strip they were given
+    auto layoutBtns = [&](int x, int y) {
+        for (VirtIconButton* b : btns) {
+            b->SetBounds({x, y, btnSz.dx, btnSz.dy});
+            x += btnSz.dx;
+        }
+    };
 
     int contentDx = std::max(0, rc.dx - (2 * pad));
     // minimum width for [edit][status][toolbar] on one row without overlap
@@ -309,8 +373,8 @@ void FindWindowWnd::Layout() {
         int tbX = pad + contentDx - tbW;
         int statusX = tbX - gap - statusDx;
         int editDx = statusX - gap - pad;
-        MoveWindow(hwndBtns, tbX, y + ((headerDy - tbH) / 2), tbW, tbH, TRUE);
-        MoveWindow(status->hwnd, statusX, y + ((headerDy - editDy) / 2), statusDx, editDy, TRUE);
+        layoutBtns(tbX, y + ((headerDy - tbH) / 2));
+        status->SetBounds({statusX, y + ((headerDy - editDy) / 2), statusDx, editDy});
         MoveWindow(edit->hwnd, pad, y + ((headerDy - editDy) / 2), editDx, editDy, TRUE);
     } else {
         // narrow: full-width edit, then [n/m][toolbar] (issue #5692)
@@ -319,15 +383,15 @@ void FindWindowWnd::Layout() {
         headerDy = editDy + gap + std::max(editDy, tbH);
         int row2Dy = std::max(editDy, tbH);
         int statusW = std::max(0, contentDx - gap - tbW);
-        MoveWindow(status->hwnd, pad, y + ((row2Dy - editDy) / 2), statusW, editDy, TRUE);
+        status->SetBounds({pad, y + ((row2Dy - editDy) / 2), statusW, editDy});
         int tbX = pad + contentDx - tbW;
-        MoveWindow(hwndBtns, tbX, y + ((row2Dy - tbH) / 2), tbW, tbH, TRUE);
+        layoutBtns(tbX, y + ((row2Dy - tbH) / 2));
     }
 
     // the results list fills the rest of the window below the header
     int listTop = pad + headerDy + pad;
     int listDy = std::max(0, rc.dy - listTop - pad);
-    MoveWindow(results->hwnd, pad, listTop, contentDx, listDy, TRUE);
+    results->SetBounds({pad, listTop, contentDx, listDy});
 
     // Erase margins (and any area the list just vacated when shrinking) so
     // snippet/page-number pixels don't ghost at the bottom/side of the window
@@ -348,7 +412,7 @@ void FindWindowWnd::RefreshResults(bool allowNavigation) {
     if (len(term) > 0) {
         filterWords.Append(term);
     }
-    FillWithItems(results->hwnd, results->model);
+    results->SetModel(results->model); // the model is live; re-read it
     // keep a result selected so it's visible as you type and Next/Prev have a
     // sensible starting point.
     int sel = -1;
@@ -382,12 +446,13 @@ void FindWindowWnd::RefreshResults(bool allowNavigation) {
     }
 }
 
-void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
-    ListBox* lb = ev->listBox;
+void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
     if (ev->itemIndex < 0 || ev->itemIndex >= len(win->findMatches)) {
         return;
     }
-    HDC hdc = ev->hdc;
+    HDC hdc = GfxHdc(ev->gfx);
+    HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
 
     // clip the whole row so a partially visible last item (LBS_NOINTEGRALHEIGHT)
@@ -398,17 +463,6 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
 
-    // With LBS_NOINTEGRALHEIGHT the last row can be cut in half by the bottom of
-    // the list. Half a line of text there reads as a rendering glitch (#5796), so
-    // fill it with plain background instead. Only when another row is fully
-    // visible above it -- if the list is shorter than one row, still draw it.
-    if (ev->clippedAtBottom && rc.y > 0) {
-        SetBkColor(hdc, colBg);
-        HdcFillRectWithBkColor(hdc, rc);
-        RestoreDC(hdc, rowDC);
-        return;
-    }
-
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }
@@ -416,8 +470,8 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     HdcFillRectWithBkColor(hdc, rc);
     SetBkMode(hdc, TRANSPARENT);
 
-    HFONT oldFont = lb->font ? SelectFont(hdc, lb->font) : nullptr;
-    int pad = DpiScale(lb->hwnd, 6);
+    HFONT oldFont = lb->font ? SelectFont(hdc, lb->font->GetHFont()) : nullptr;
+    int pad = DpiScale(hwndList, 6);
     Rect rcText = rc;
     rcText.x += pad;
     rcText.dx -= 2 * pad;
@@ -428,10 +482,10 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
     TempWStr pageW = ToWStrTemp(pageStr);
-    int pageGap = DpiScale(lb->hwnd, 10);
-    int pageColDx = DpiScale(lb->hwnd, 40);
+    int pageGap = DpiScale(hwndList, 10);
+    int pageColDx = DpiScale(hwndList, 40);
     Size pageSize = HdcGetTextExtentPoint32(hdc, pageStr);
-    pageColDx = std::max(pageSize.dx + DpiScale(lb->hwnd, 4), pageColDx);
+    pageColDx = std::max(pageSize.dx + DpiScale(hwndList, 4), pageColDx);
     Rect rcPage = rcText;
     rcPage.x = std::max(rcText.x, rcText.x + rcText.dx - pageColDx);
     rcPage.dx = rcText.x + rcText.dx - rcPage.x;
@@ -634,21 +688,21 @@ void FindWindowWnd::UpdateTheme() {
     if (edit) {
         edit->SetColors(colTxt, colBg);
     }
-    if (status) {
-        status->SetColors(colTxt, colBg);
-    }
     if (results) {
-        results->SetColors(colTxt, colBg);
+        results->textColor = colTxt;
+        results->bgColor = colBg;
     }
-    if (hwndBtns) {
-        int isz = RoundUp(DpiScale(hwnd, 16), 4);
-        HIMAGELIST oldHiml = himl;
-        himl = BuildStdToolbarImageList(isz);
-        TbSetImageList(hwndBtns, himl);
-        if (oldHiml) {
-            ImageList_Destroy(oldHiml);
+    if (status) {
+        status->textColor = colTxt;
+    }
+    for (VirtIconButton* b : btns) {
+        if (b) {
+            b->bgColorHover = AccentColor(colBg, 20);
+            b->bgColorSelected = AccentColor(colBg, 36);
         }
     }
+    // the icons are drawn in the theme's text color, so re-render them
+    UpdateButtonIcons();
     ApplyTitleBarTheme(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
@@ -662,31 +716,31 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_ENTERSIZEMOVE:
             inSizeMove = true;
             break;
+        case WM_ERASEBKGND:
+            return TRUE; // OnPaint covers the whole client area, double-buffered
         case WM_SIZE:
             Layout();
-            // Pause list redraws only on an actual resize (a WM_SIZE arrived
-            // during the interactive size/move loop), to avoid the page-number
-            // glitch (#5692). Don't pause for a plain move -- doing so left the
-            // results list blank/white while dragging the window (#5737 follow-up).
-            if (inSizeMove && results && !listRedrawPaused && wp != SIZE_MINIMIZED) {
-                SendMessageW(results->hwnd, WM_SETREDRAW, FALSE, 0);
-                listRedrawPaused = true;
-            }
             break;
         case WM_EXITSIZEMOVE:
             inSizeMove = false;
-            if (results && listRedrawPaused) {
-                SendMessageW(results->hwnd, WM_SETREDRAW, TRUE, 0);
-                listRedrawPaused = false;
-            }
-            // full client erase: margins + list, so nothing left over from the
-            // pre-resize layout at the bottom of the window (#5796)
             HwndInvalidate(h, true);
-            if (results) {
-                HwndInvalidate(results->hwnd, true);
-            }
             SavePos();
             break;
+        case WM_SETCURSOR: {
+            // the buttons are virtual controls, so their tooltips are ours to
+            // show; the tip follows whichever one the mouse is over
+            Point pt = HwndGetCursorPos(h);
+            int idx = ButtonIndexFromPoint(pt);
+            if (idx >= 0 && tooltip) {
+                TempStr tip = btns[idx]->GetTooltipTemp({});
+                if (tip) {
+                    tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
+                }
+            } else if (tooltip) {
+                tooltip->Delete();
+            }
+            break;
+        }
         case WM_GETMINMAXINFO: {
             auto* mmi = (MINMAXINFO*)lp;
             int pad = DpiScale(h, 8);
@@ -694,10 +748,10 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             int editDy = edit ? edit->GetIdealSize().dy : DpiScale(h, 22);
             int tbH = DpiScale(h, 24);
             int tbW = DpiScale(h, 120);
-            if (hwndBtns) {
-                Size tbSz = TbGetMaxSize(hwndBtns);
-                tbW = tbSz.dx;
-                tbH = tbSz.dy;
+            if (btns[0]) {
+                Size btnSz = btns[0]->GetIdealSize();
+                tbW = (btnSz.dx + btns[0]->padding.left + btns[0]->padding.right) * 5;
+                tbH = btnSz.dy + btns[0]->padding.top + btns[0]->padding.bottom;
             }
             int row2Dy = std::max(editDy, tbH);
             // narrow two-row header: edit, then status+toolbar
@@ -709,37 +763,8 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             // the caption close button hides the bar instead of destroying it
             HideFindWindow(win);
             return 0;
-        case WM_NOTIFY: {
-            // the embedded toolbar paints a light button background in dark
-            // themes; repaint it with the window's theme background so the icons
-            // sit on the same color as the rest of the window
-            auto* nmh = (NMHDR*)lp;
-            if (nmh->hwndFrom == hwndBtns && nmh->code == NM_CUSTOMDRAW) {
-                auto* cd = (NMTBCUSTOMDRAW*)nmh;
-                auto stage = cd->nmcd.dwDrawStage;
-                if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
-                    // reuse the window's cached background brush (rebuilt on theme
-                    // change via SetColors) instead of allocating one per paint
-                    HdcFillRect(cd->nmcd.hdc, ToRect(cd->nmcd.rc), BackgroundBrush());
-                    return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
-                }
-            }
-            break;
-        }
     }
     return WndProcDefault(h, msg, wp, lp);
-}
-
-LRESULT FindWindowWnd::OnNotify(int /*controlId*/, NMHDR* nmh) {
-    if (nmh->code == TTN_GETDISPINFOW) {
-        auto* di = (NMTTDISPINFOW*)nmh;
-        TempStr s = FindWindowButtonTooltip((int)nmh->idFrom);
-        if (s) {
-            str::BufSet(di->szText, dimof(di->szText), s);
-            di->lpszText = di->szText;
-        }
-    }
-    return 0;
 }
 
 bool FindWindowWnd::PreTranslateMessage(MSG& msg) {
@@ -917,20 +942,33 @@ bool IsFindWindowVisible(MainWindow* win) {
 
 void FindWindowSetStatus(MainWindow* win, Str s) {
     if (win->findWindow && win->findWindow->status) {
-        HwndSetText(win->findWindow->status->hwnd, s ? s : StrL(""));
+        win->findWindow->status->SetText(s ? s : StrL(""));
+        win->findWindow->status->Invalidate();
     }
+}
+
+// idx into FindWindowWnd::btns
+constexpr int kBtnMatchCase = 2;
+constexpr int kBtnMatchWholeWord = 3;
+
+static void FindWindowSetBtnChecked(MainWindow* win, int idx, bool checked) {
+    if (!win->findWindow) {
+        return;
+    }
+    VirtIconButton* b = win->findWindow->btns[idx];
+    if (!b || b->isSelected == checked) {
+        return;
+    }
+    b->isSelected = checked;
+    b->Invalidate();
 }
 
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked) {
-    if (win->findWindow && win->findWindow->hwndBtns) {
-        TbSetButtonChecked(win->findWindow->hwndBtns, CmdFindToggleMatchCase, checked);
-    }
+    FindWindowSetBtnChecked(win, kBtnMatchCase, checked);
 }
 
 void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked) {
-    if (win->findWindow && win->findWindow->hwndBtns) {
-        TbSetButtonChecked(win->findWindow->hwndBtns, CmdFindToggleMatchWholeWord, checked);
-    }
+    FindWindowSetBtnChecked(win, kBtnMatchWholeWord, checked);
 }
 
 // repopulate the results list from win->findMatches (no-op if not visible).
@@ -1080,9 +1118,10 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmp);
 
-    ListBox::DrawItemEvent ev;
+    Gfx gfx = GfxFromHdc(hdcMem);
+    VirtListBox::DrawItemEvent ev;
     ev.listBox = fw->results;
-    ev.hdc = hdcMem;
+    ev.gfx = &gfx;
     ev.itemRect = {0, 0, w, h};
     ev.itemIndex = 0;
     ev.selected = false;

@@ -9,4 +9,8 @@
 struct Pixmap;
 
 Pixmap* IconPixmapFromImageList(HIMAGELIST, int iconIdx);
+// same, but the caller owns the result (FreePixmap()) and the shared cache is
+// left alone. For icons that come from an image list of your own, which the
+// cache (one image list at a time) would otherwise thrash
+Pixmap* IconPixmapRender(HIMAGELIST, int iconIdx);
 void ClearIconPixmapCache();

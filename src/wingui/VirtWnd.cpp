@@ -2122,6 +2122,10 @@ Size VirtIconButton::GetIdealSize() {
 }
 
 void VirtIconButton::Paint(VirtPaintCtx& ctx) {
+    COLORREF bg = isSelected ? bgColorSelected : (HasFlag(vwfHovered) ? bgColorHover : kColorUnset);
+    if (bg != kColorUnset) {
+        GfxFillRect(ctx.gfx, ctx.bounds, bg);
+    }
     if (!pixmap) {
         return;
     }

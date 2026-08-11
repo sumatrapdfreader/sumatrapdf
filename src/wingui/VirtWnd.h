@@ -560,7 +560,10 @@ struct VirtButton : VirtText {
 struct VirtIconButton : VirtWnd {
     // not owned; on Windows usually from IconPixmapFromImageList()
     Pixmap* pixmap = nullptr;
+    // a toggle button (match case, ...) draws bgColorSelected while on
     bool isSelected = false;
+    COLORREF bgColorHover = kColorUnset;
+    COLORREF bgColorSelected = kColorUnset;
     Str tooltip; // owned
     VirtMouseHandler onClick;
 
