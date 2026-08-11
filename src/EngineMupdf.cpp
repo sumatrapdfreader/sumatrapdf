@@ -446,6 +446,51 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     return dest;
 }
 
+// A link annotation can carry a human-readable description of where it goes in
+// its /Contents, which is what a viewer has to show for a link that has no URL
+// to show instead. mupdf's fz_link doesn't hand out the annotation object it
+// came from, so find it in the page's /Annots by rect (issue #1724).
+static Str PdfLinkContents(fz_context* ctx, pdf_document* pdfdoc, pdf_page* pdfpage, int pageNo, fz_rect linkRect) {
+    if (!pdfdoc || !pdfpage) {
+        return {};
+    }
+    Str res;
+    fz_try(ctx) {
+        fz_rect mediabox;
+        fz_matrix ctm;
+        pdf_page_transform(ctx, pdfpage, &mediabox, &ctm);
+        pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, pageNo - 1);
+        pdf_obj* annots = pdf_dict_get(ctx, pageObj, PDF_NAME(Annots));
+        int n = pdf_array_len(ctx, annots);
+        for (int i = 0; i < n; i++) {
+            pdf_obj* annot = pdf_array_get(ctx, annots, i);
+            pdf_obj* subtype = pdf_dict_get(ctx, annot, PDF_NAME(Subtype));
+            if (!pdf_name_eq(ctx, subtype, PDF_NAME(Link))) {
+                continue;
+            }
+            // /Rect is in page space, fz_link::rect has the page's transform
+            // applied, so compare in the same space
+            fz_rect r = pdf_dict_get_rect(ctx, annot, PDF_NAME(Rect));
+            r = fz_transform_rect(r, ctm);
+            constexpr float kMaxDiff = 1.f;
+            bool same = fabsf(r.x0 - linkRect.x0) < kMaxDiff && fabsf(r.y0 - linkRect.y0) < kMaxDiff &&
+                        fabsf(r.x1 - linkRect.x1) < kMaxDiff && fabsf(r.y1 - linkRect.y1) < kMaxDiff;
+            if (!same) {
+                continue;
+            }
+            const char* s = pdf_dict_get_text_string(ctx, annot, PDF_NAME(Contents));
+            if (s && *s) {
+                res = str::Dup(Str(s));
+            }
+            break;
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return res;
+}
+
 static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx, fz_document* doc, fz_link* link,
                                                   fz_outline* outline) {
     auto* dest = NewPageDestinationMupdf(ctx, doc, link, outline);
@@ -4258,9 +4303,25 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
         *tail = btnLinks;
     }
     pageInfo->retainedLinks = link;
+    pdf_page* pdfpage = nullptr;
+    if (e->pdfdoc) {
+        fz_try(ctx) {
+            pdfpage = pdf_page_from_fz_page(ctx, page);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            pdfpage = nullptr;
+        }
+    }
     while (link) {
         auto* pel = NewLinkDestination(pageNo, ctx, e->_doc, link, nullptr);
         if (pel) {
+            // a link that goes somewhere in this document has no URL to show,
+            // so show the description the PDF gives it, like other viewers do
+            auto* dest = (PageDestinationMupdf*)pel->AsLink();
+            if (dest && !PageDestGetValue(dest)) {
+                dest->value = PdfLinkContents(ctx, e->pdfdoc, pdfpage, pageNo, link->rect);
+            }
             pageInfo->links.Append(pel);
         }
         link = link->next;

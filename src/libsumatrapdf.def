@@ -1417,6 +1417,8 @@ EXPORTS
 	pdf_dict_get_val
 
 	pdf_dict_get
+	pdf_dict_get_rect
+	pdf_dict_get_text_string
 
 	pdf_dict_gets
 

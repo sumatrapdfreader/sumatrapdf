@@ -410,7 +410,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
             Str value = pageEl->GetValue();
-            ctx.cursorOnLinkTarget = value && pageEl->Is(kindPageElementDest);
+            ctx.cursorOnLinkTarget = pageEl->Is(kindPageElementDest) && PageDestHasAddress(pageEl->AsLink());
             ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
             ctx.cursorOnImage = pageEl->Is(kindPageElementImage);
         }

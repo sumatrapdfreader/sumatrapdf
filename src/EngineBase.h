@@ -130,6 +130,17 @@ static inline Str PageDestGetValue(IPageDestination* dest) {
     return dest->GetValue2();
 }
 
+// true when the destination's value is an address worth copying (a URL or a
+// file path). A link inside the document has no address; its value is the
+// description the PDF gives it, which is for showing, not for copying
+static inline bool PageDestHasAddress(IPageDestination* dest) {
+    if (!dest || !dest->GetValue2()) {
+        return false;
+    }
+    Kind k = dest->GetKind();
+    return k == kindDestinationLaunchURL || k == kindDestinationLaunchFile;
+}
+
 static inline int PageDestGetPageNo(IPageDestination* dest) {
     if (!dest) {
         return -1;

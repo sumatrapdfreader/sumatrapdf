@@ -2055,7 +2055,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         RebuildReadAloudMenu(win, readAloudCtxMenu, true, win->contextMenuPtValid);
     }
 
-    if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
+    if (!pageEl || !pageEl->Is(kindPageElementDest) || !PageDestHasAddress(pageEl->AsLink())) {
         MenuRemove(popup, CmdCopyLinkTarget);
     }
     if (!pageEl || !pageEl->Is(kindPageElementComment) || !value) {
