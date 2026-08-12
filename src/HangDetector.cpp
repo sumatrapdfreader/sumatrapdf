@@ -224,7 +224,7 @@ void StartUiHangDetector() {
     }
     // message-only window owned by the UI thread: a ping to it is answered by
     // the UI thread's message loop, which is exactly what we want to time
-    gHwndPing = CreateWindowExW(0, L"STATIC", L"SumatraPDF hang detector", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr,
+    gHwndPing = CreateWindowExW(0, WC_STATICW, L"SumatraPDF hang detector", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr,
                                 GetModuleHandleW(nullptr), nullptr);
     if (!gHwndPing) {
         log("StartUiHangDetector: failed to create the ping window\n");
