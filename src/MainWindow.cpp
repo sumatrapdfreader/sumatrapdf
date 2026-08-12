@@ -926,6 +926,21 @@ bool HasOpenedDocuments(MainWindow* win) {
     return false;
 }
 
+// a debugging aid: flip it (in the source or the debugger) to get a small
+// window showing how long painting the canvas takes
+bool gShowFrameRate = false;
+
+void MainWindow::ShowFrameRateDur(double durMs) {
+    if (!gShowFrameRate) {
+        return;
+    }
+    if (!frameRateWnd) {
+        frameRateWnd = new FrameRateWnd();
+        frameRateWnd->Create(hwndCanvas);
+    }
+    frameRateWnd->ShowFrameRateDur(durMs);
+}
+
 void UpdateControlsColors(MainWindow* win) {
     COLORREF bgCol = ThemeControlBackgroundColor();
     COLORREF txtCol = ThemeWindowTextColor();

@@ -565,6 +565,7 @@ struct MainWindow {
 
     TouchState touchState;
 
+    // debugging aid; created on first use, see MainWindow::ShowFrameRateDur()
     FrameRateWnd* frameRateWnd = nullptr;
 
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
@@ -586,6 +587,9 @@ struct MainWindow {
     Size GetViewPortSize() const;
     void RedrawAll(bool update = false) const;
     void RedrawAllIncludingNonClient() const;
+
+    // no-op unless gShowFrameRate is set
+    void ShowFrameRateDur(double durMs);
 
     void ChangePresentationMode(PresentationMode mode);
     bool InPresentation() const;
@@ -613,6 +617,7 @@ MainWindow* FindMainWindowByHwnd(HWND);
 bool IsMainWindowValid(MainWindow*);
 bool IsWindowTabValid(WindowTab*);
 extern Vec<MainWindow*> gWindows;
+extern bool gShowFrameRate;
 void HighlightTab(MainWindow*, WindowTab*);
 HWND GetHwndForNotification();
 

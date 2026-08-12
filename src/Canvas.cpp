@@ -22,8 +22,6 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "wingui/FrameRateWnd.h"
-
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Annotation.h"
@@ -3108,9 +3106,7 @@ static void OnPaintDocument(MainWindow* win) {
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
-    if (gShowFrameRate) {
-        win->frameRateWnd->ShowFrameRateDur(TimeSinceInMs(t));
-    }
+    win->ShowFrameRateDur(TimeSinceInMs(t));
 }
 
 static void SetTextOrArrorCursor(DisplayModel* dm, Point pt) {

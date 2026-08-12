@@ -27,7 +27,6 @@
 #include "wingui/WinGui.h"
 #include "wingui/WebView.h"
 
-#include "wingui/FrameRateWnd.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
 #include "wingui/VirtWnd.h"
@@ -144,7 +143,6 @@ static void StopReadAloudIfSourceWindow(MainWindow* win);
 
 // used to show it in debug, but is not very useful,
 // so always disable
-bool gShowFrameRate = false;
 
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
@@ -2636,11 +2634,6 @@ static MainWindow* CreateMainWindow() {
     if (!win->hwndCanvas) {
         delete win;
         return nullptr;
-    }
-
-    if (gShowFrameRate) {
-        win->frameRateWnd = new FrameRateWnd();
-        win->frameRateWnd->Create(win->hwndCanvas);
     }
 
     // hide scrollbars to avoid showing/hiding on empty window

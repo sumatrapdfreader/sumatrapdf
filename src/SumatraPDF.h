@@ -102,7 +102,6 @@ struct Flags;
 
 // all defined in SumatraPDF.cpp
 extern Flags* gCli;
-extern bool gShowFrameRate;
 
 extern Str gPluginURL;
 extern bool gMyWindowWasEmbedded;

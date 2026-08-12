@@ -9,7 +9,6 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
-#include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -47,9 +46,7 @@ static void OnPaintAbout(MainWindow* win) {
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
-    if (gShowFrameRate) {
-        win->frameRateWnd->ShowFrameRateDur(TimeSinceInMs(t));
-    }
+    win->ShowFrameRateDur(TimeSinceInMs(t));
 }
 
 static void OnMouseMoveAbout(HWND hwnd) {
