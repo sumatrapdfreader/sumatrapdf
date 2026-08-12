@@ -324,6 +324,10 @@ bool Edit::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
         onKillFocus.Call();
         return true;
     }
+    if (code == EN_SETFOCUS && onFocus.IsValid()) {
+        onFocus.Call();
+        return true;
+    }
     return false;
 }
 

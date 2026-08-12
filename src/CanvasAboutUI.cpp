@@ -108,28 +108,10 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             break;
         }
     }
+    // the search box's own messages (WM_CTLCOLOREDIT, EN_CHANGE, focus) are
+    // reflected back to it by WndProcCanvas; it colors itself from SetColors()
+    // and calls the handlers HomePage.cpp gave it
     switch (msg) {
-            // WM_CTLCOLOREDIT for the search box is reflected back to it by
-            // WndProcCanvas, so the Edit colors itself from SetColors()
-
-        case WM_COMMAND:
-            if (win->homeSearch && (HWND)lp == win->homeSearch->hwnd) {
-                UINT notify = HIWORD(wp);
-                if (notify == EN_CHANGE) {
-                    win->homePageScrollY = 0;
-                    // the filter changed the list, so select its first entry (#1136)
-                    HomePageSelectFirst(win);
-                    HwndInvalidate(win->hwndCanvas);
-                    return 0;
-                }
-                // hide/show keyboard selection outline when focus enters/leaves search
-                if (notify == EN_SETFOCUS || notify == EN_KILLFOCUS) {
-                    HwndInvalidate(win->hwndCanvas);
-                    return 0;
-                }
-            }
-            break;
-
         case WM_KEYDOWN:
             // keyboard navigation of the file list (issue #1136). These keys are
             // routed here by MaybeTranslateAccelerator instead of scrolling

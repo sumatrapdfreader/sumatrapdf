@@ -1065,6 +1065,18 @@ static void UpdateHomeSearchCueBanner(MainWindow* win) {
     win->homeSearch->SetCue(cue);
 }
 
+static void HomeSearchTextChanged(MainWindow* win) {
+    win->homePageScrollY = 0;
+    // the filter changed the list, so select its first entry (#1136)
+    HomePageSelectFirst(win);
+    HwndInvalidate(win->hwndCanvas);
+}
+
+// the keyboard selection outline is hidden while the search box has the focus
+static void HomeSearchFocusChanged(MainWindow* win) {
+    HwndInvalidate(win->hwndCanvas);
+}
+
 static void EnsureHomeSearchCreated(MainWindow* win) {
     if (win->homeSearch) {
         UpdateHomeSearchCueBanner(win);
@@ -1083,6 +1095,9 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     e->win = win;
     e->Create(args);
     e->SetColors(ThemeWindowTextColor(), ThemeControlBackgroundColor());
+    e->onTextChanged = MkFunc0(HomeSearchTextChanged, win);
+    e->onFocus = MkFunc0(HomeSearchFocusChanged, win);
+    e->onKillFocus = MkFunc0(HomeSearchFocusChanged, win);
     win->homeSearch = e;
     UpdateHomeSearchCueBanner(win);
     // add left/right padding so text doesn't overlap the border

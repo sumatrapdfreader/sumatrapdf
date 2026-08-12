@@ -408,6 +408,8 @@ struct Edit : ControlBase {
     TextChangedHandler onTextChanged;
     // EN_KILLFOCUS only (e.g. flush annotation Contents before blur)
     TextChangedHandler onKillFocus;
+    // EN_SETFOCUS only
+    TextChangedHandler onFocus;
 
     // set before Create() (pixels); or use idealWidthChars / maxWidthChars
     int idealSizeLines = 1;
