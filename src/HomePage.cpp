@@ -1004,39 +1004,39 @@ constexpr int kSearchEditDy = 28;
 constexpr int kHeaderSearchGapY = 12;
 constexpr int kSearchThumbnailsGapY = 12;
 
-static WNDPROC DefWndProcHomeSearch = nullptr;
-
 static void HomeSelectFromSearchReturnCol(MainWindow* win);
 static void HomePageShowSelectionTooltip(MainWindow* win);
 
-static LRESULT CALLBACK WndProcHomeSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_KEYDOWN && wp == VK_DOWN) {
-        // down from the search box moves into the file list (issue #1136),
-        // restoring the column we left from when going up
-        MainWindow* win = FindMainWindowByHwnd(GetParent(hwnd));
-        if (win) {
-            HomeSelectFromSearchReturnCol(win);
-            HwndSetFocus(win->hwndCanvas);
-            HwndInvalidate(win->hwndCanvas);
-            HomePageShowSelectionTooltip(win);
+struct HomeSearchEdit : Edit {
+    MainWindow* win = nullptr;
+
+    LRESULT WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) override {
+        if (msg == WM_KEYDOWN && wp == VK_DOWN) {
+            // down from the search box moves into the file list (issue #1136),
+            // restoring the column we left from when going up
+            if (win) {
+                HomeSelectFromSearchReturnCol(win);
+                HwndSetFocus(win->hwndCanvas);
+                HwndInvalidate(win->hwndCanvas);
+                HomePageShowSelectionTooltip(win);
+            }
+            return 0;
         }
-        return 0;
-    }
-    if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
-        HwndSetText(hwnd, "");
-        MainWindow* win = FindMainWindowByHwnd(GetParent(hwnd));
-        if (win) {
-            HwndSetFocus(win->hwndCanvas);
-            win->RedrawAll(true);
+        if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
+            SetText("");
+            if (win) {
+                HwndSetFocus(win->hwndCanvas);
+                win->RedrawAll(true);
+            }
+            return 0;
         }
-        return 0;
+        if (msg == WM_MOUSEWHEEL) {
+            // the home page scrolls, not the one-line edit
+            return SendMessageW(GetParent(hwndIn), msg, wp, lp);
+        }
+        return Edit::WndProc(hwndIn, msg, wp, lp);
     }
-    if (msg == WM_MOUSEWHEEL) {
-        HWND parent = GetParent(hwnd);
-        return SendMessageW(parent, msg, wp, lp);
-    }
-    return CallWindowProcW(DefWndProcHomeSearch, hwnd, msg, wp, lp);
-}
+};
 
 // Home-list entries with a path (same set as thumbnails when search is empty).
 static int CountHomePageFiles() {
@@ -1057,56 +1057,64 @@ static int CountHomePageFiles() {
 
 // Cue banner when the search field is empty: "Search N files (Ctrl + F)".
 static void UpdateHomeSearchCueBanner(MainWindow* win) {
-    if (!win || !win->hwndHomeSearch) {
+    if (!win || !win->homeSearch) {
         return;
     }
     // _TRA returns Str; pass .s into type-safe fmt for the format string.
     TempStr cue = fmt(_TRA("Search %d files (Ctrl + F)").s, CountHomePageFiles());
-    Edit_SetCueBannerText(win->hwndHomeSearch, CWStrTemp(cue));
+    win->homeSearch->SetCue(cue);
 }
 
 static void EnsureHomeSearchCreated(MainWindow* win) {
-    if (win->hwndHomeSearch) {
+    if (win->homeSearch) {
         UpdateHomeSearchCueBanner(win);
         return;
     }
-    HMODULE hmod = GetModuleHandleW(nullptr);
-    DWORD style = WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL;
-    DWORD exStyle = 0;
-    win->hwndHomeSearch = CreateWindowExW(exStyle, WC_EDITW, L"", style, 0, 0, 100, kSearchEditDy, win->hwndCanvas,
-                                          nullptr, hmod, nullptr);
-    HDC hdc = GetDC(win->hwndCanvas);
+    HWND parent = win->hwndCanvas;
+    HDC hdc = GetDC(parent);
     HFONT font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    ReleaseDC(win->hwndCanvas, hdc);
-    SetWindowFont(win->hwndHomeSearch, font, TRUE);
-    if (!DefWndProcHomeSearch) {
-        DefWndProcHomeSearch = (WNDPROC)GetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC, (LONG_PTR)WndProcHomeSearch);
+    ReleaseDC(parent, hdc);
+
+    Edit::CreateArgs args;
+    args.parent = parent;
+    args.font = font;
+    // the home page draws the box around it, so the edit has no border of its own
+    auto* e = new HomeSearchEdit();
+    e->win = win;
+    e->Create(args);
+    win->homeSearch = e;
     UpdateHomeSearchCueBanner(win);
     // add left/right padding so text doesn't overlap the border
-    int margin = DpiScale(win->hwndCanvas, 6);
-    SendMessage(win->hwndHomeSearch, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(margin, margin));
+    int margin = DpiScale(parent, 6);
+    e->SetMargins(margin, margin);
     // restore the query from before the edit control was destroyed
     // (e.g. by switching to a document tab and back)
     if (len(win->homeSearchQuery) > 0) {
-        HwndSetText(win->hwndHomeSearch, win->homeSearchQuery);
+        e->SetText(win->homeSearchQuery);
     }
+    // the box is kSearchEditDy tall but the edit is only as tall as its text,
+    // so a one-child HBox centers it in there instead of us doing that by hand
+    auto* box = new HBox();
+    box->alignCross = CrossAxisAlign::CrossCenter;
+    box->AddChild(e, 1);
+    win->homeSearchLayout = box;
 }
 
 void HomePageDestroySearch(MainWindow* win) {
-    if (win->hwndHomeSearch) {
-        TempStr query = HwndGetTextTemp(win->hwndHomeSearch);
+    if (win->homeSearch) {
+        TempStr query = win->homeSearch->GetTextTemp();
         str::ReplaceWithCopy(&win->homeSearchQuery, query);
-        DestroyWindow(win->hwndHomeSearch);
-        win->hwndHomeSearch = nullptr;
+        // the layout owns the edit
+        delete win->homeSearchLayout;
+        win->homeSearchLayout = nullptr;
+        win->homeSearch = nullptr;
     }
 }
 
 void HomePageFocusSearch(MainWindow* win) {
     EnsureHomeSearchCreated(win);
-    ShowWindow(win->hwndHomeSearch, SW_SHOW);
-    HwndSetFocus(win->hwndHomeSearch);
+    win->homeSearch->SetIsVisible(true);
+    HwndSetFocus(win->homeSearch->hwnd);
 }
 
 void PickAnotherRandomPromotion() {
@@ -1190,10 +1198,10 @@ static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
 }
 
 static TempStr HomeSearchQueryTemp(MainWindow* win) {
-    if (!win->hwndHomeSearch) {
+    if (!win->homeSearch) {
         return {};
     }
-    return HwndGetTextTemp(win->hwndHomeSearch);
+    return win->homeSearch->GetTextTemp();
 }
 
 static bool HomeLayoutCacheMatches(const Rect& rc, Str filterText) {
@@ -1387,8 +1395,8 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     // filter by search query if present
     TempStr searchQuery = nullptr;
-    if (win->hwndHomeSearch) {
-        searchQuery = HwndGetTextTemp(win->hwndHomeSearch);
+    if (win->homeSearch) {
+        searchQuery = win->homeSearch->GetTextTemp();
     }
     bool hasFilter = searchQuery && searchQuery.s[0];
     if (hasFilter) {
@@ -1509,16 +1517,11 @@ static void LayoutHomePage(HomePageLayout& l) {
         int borderY = headerBottomY + headerSearchGap;
         int borderDy = searchEditDy + 2; // 1px border on each side
         l.rcSearchBorder = {borderX, borderY, borderDx, borderDy};
-        // measure font height so we can vertically center the edit
-        HFONT editFont = (HFONT)SendMessage(win->hwndHomeSearch, WM_GETFONT, 0, 0);
-        TEXTMETRIC tm;
-        HFONT oldFont = (HFONT)SelectObject(hdc, editFont);
-        GetTextMetrics(hdc, &tm);
-        SelectObject(hdc, oldFont);
-        int fontDy = tm.tmHeight + tm.tmExternalLeading + 2; // +2 for caret padding
-        int editDy = std::min(fontDy, searchEditDy);
-        int editY = borderY + 1 + ((searchEditDy - editDy) / 2);
-        MoveWindow(win->hwndHomeSearch, borderX + 1, editY, borderDx - 2, editDy, TRUE);
+        // inside the 1px border: the layout gives the edit the full width and
+        // its own (text-sized) height, centered vertically
+        Rect rcEdit = {borderX + 1, borderY + 1, borderDx - 2, searchEditDy};
+        LayoutToSize(win->homeSearchLayout, rcEdit.Size());
+        win->homeSearchLayout->SetBounds(rcEdit);
     }
     // border is 1px top + 1px bottom = 2px
     int searchAreaDy = headerSearchGap + searchEditDy + 2 + searchThumbsGap;
@@ -1782,7 +1785,7 @@ static void MeasureHomeListRowText(HDC hdc, ThumbnailLayout& thumb, HFONT font, 
 
 // True when keyboard focus is in the home search box (hide list selection then).
 static bool HomeSearchHasFocus(MainWindow* win) {
-    return win && win->hwndHomeSearch && GetFocus() == win->hwndHomeSearch;
+    return win && win->homeSearch && GetFocus() == win->homeSearch->hwnd;
 }
 
 static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, COLORREF backgroundColor,
@@ -2898,10 +2901,10 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
     int newIdx = idx + delta;
     if (newIdx < 0) {
         // above the first row: hand focus to the search box, remember column
-        if (dRow < 0 && win->hwndHomeSearch) {
+        if (dRow < 0 && win->homeSearch) {
             win->homePageSearchReturnCol = HomePageIsListView() ? 0 : (idx % nCols);
             win->DeleteToolTip();
-            HwndSetFocus(win->hwndHomeSearch);
+            HwndSetFocus(win->homeSearch->hwnd);
             HwndInvalidate(win->hwndCanvas); // drop selection outline while typing
             return;
         }

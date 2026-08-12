@@ -437,6 +437,8 @@ struct Edit : ControlBase {
 
     int GetLeftTextMargin();
 
+    void SetCue(Str);
+    void SetMargins(int left, int right);
     void SetSelection(int start, int end);
     void SelectAll();
     void SetCursorPosition(int pos);

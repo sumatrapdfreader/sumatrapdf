@@ -27,13 +27,21 @@ static Kind kindEdit = "edit";
 // area: edit client paint on typing would overwrite a WM_PAINT GetDC line)
 static constexpr int kEditBottomBorderDy = 1;
 
-static bool EditSetCueText(HWND hwnd, Str s) {
+// space between the text and the left / right edges of the client area, in
+// (already DPI-scaled) pixels
+void Edit::SetMargins(int left, int right) {
     if (!hwnd) {
-        return false;
+        return;
     }
-    WCHAR* ws = CWStrTemp(s);
-    bool ok = Edit_SetCueBannerText(hwnd, ws) == TRUE;
-    return ok;
+    SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(left, right));
+}
+
+// the placeholder text shown while the edit is empty
+void Edit::SetCue(Str s) {
+    if (!hwnd) {
+        return;
+    }
+    Edit_SetCueBannerText(hwnd, CWStrTemp(s));
 }
 
 // average character width for sizing edits by character count
@@ -145,7 +153,7 @@ HWND Edit::Create(const CreateArgs& args) {
     }
 
     if (args.cueText) {
-        EditSetCueText(hwnd, args.cueText);
+        SetCue(args.cueText);
     }
     if (args.text) {
         SetText(args.text);

@@ -382,8 +382,10 @@ struct MainWindow {
     // into the search box; Down restores it (clamped to the current column count)
     int homePageSearchReturnCol = 0;
 
-    // home page search filter
-    HWND hwndHomeSearch = nullptr;
+    // home page search filter. The layout owns the edit and is what places it
+    // inside the search box the home page draws
+    Edit* homeSearch = nullptr;
+    ILayout* homeSearchLayout = nullptr;
     // remembers the search query while the edit control is destroyed
     // (e.g. when a document tab is active)
     Str homeSearchQuery;

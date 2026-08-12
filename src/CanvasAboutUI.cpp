@@ -6,6 +6,9 @@
 #include "base/Timer.h"
 #include "base/Win.h"
 
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
 #include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
@@ -107,7 +110,7 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
     }
     switch (msg) {
         case WM_CTLCOLOREDIT:
-            if ((HWND)lp == win->hwndHomeSearch) {
+            if (win->homeSearch && (HWND)lp == win->homeSearch->hwnd) {
                 HDC hdcEdit = (HDC)wp;
                 SetTextColor(hdcEdit, ThemeWindowTextColor());
                 SetBkColor(hdcEdit, ThemeControlBackgroundColor());
@@ -119,7 +122,7 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             break;
 
         case WM_COMMAND:
-            if ((HWND)lp == win->hwndHomeSearch) {
+            if (win->homeSearch && (HWND)lp == win->homeSearch->hwnd) {
                 UINT notify = HIWORD(wp);
                 if (notify == EN_CHANGE) {
                     win->homePageScrollY = 0;
