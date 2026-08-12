@@ -188,6 +188,8 @@ struct VirtWnd : LayoutBase {
     void SetRoot(VirtRoot*);
 
     // input / focus / cursor (wire with MkMethod1 in ctors; paint stays virtual)
+    // high-level click: if set and onMouseUp is not, mouse down/up call this
+    VirtMouseHandler onClick;
     VirtMouseHandler onMouseDown;
     VirtMouseHandler onMouseUp;
     VirtMouseHandler onMouseMove;
@@ -546,14 +548,12 @@ struct VirtSplitter : VirtWnd {
 struct VirtCustom : VirtWnd {
     Size idealSize;
     VirtPaintHandler onPaint;
-    VirtMouseHandler onClick;
 
     VirtCustom();
     ~VirtCustom() override;
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
-    void OnMouseUp(VirtMouseEvent*);
 };
 
 //--- controls
@@ -617,7 +617,6 @@ VirtText* NewVirtText(const VirtTextArgs&);
 struct VirtLink : VirtText {
     Str target;  // owned
     Str tooltip; // owned
-    VirtMouseHandler onClick;
     bool underlineOnHover = false;
 
     VirtLink(Str s, PlatformFont* font = nullptr);
@@ -629,8 +628,6 @@ struct VirtLink : VirtText {
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
 };
@@ -642,7 +639,6 @@ struct VirtButton : VirtText {
     // when the button is disabled (vwfEnabled cleared)
     COLORREF textColorDisabled = kColorUnset;
     Insets textPadding{4, 8, 4, 8};
-    VirtMouseHandler onClick;
 
     VirtButton(Str s, PlatformFont* font = nullptr);
     ~VirtButton() override;
@@ -651,8 +647,6 @@ struct VirtButton : VirtText {
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnKeyDown(VirtKeyEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
 };
@@ -665,7 +659,6 @@ struct VirtIconButton : VirtWnd {
     COLORREF bgColorHover = kColorUnset;
     COLORREF bgColorSelected = kColorUnset;
     Str tooltip; // owned
-    VirtMouseHandler onClick;
 
     VirtIconButton();
     ~VirtIconButton() override;
@@ -676,8 +669,6 @@ struct VirtIconButton : VirtWnd {
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
 };
@@ -695,7 +686,6 @@ struct VirtCloseButton : VirtWnd {
     COLORREF circleColorHover = kColorUnset;
     Size idealSize;
     Str tooltip; // owned
-    VirtMouseHandler onClick;
 
     VirtCloseButton();
     ~VirtCloseButton() override;
@@ -706,8 +696,6 @@ struct VirtCloseButton : VirtWnd {
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
 };
@@ -851,9 +839,8 @@ struct VirtRichText : VirtWnd {
     COLORREF bgColor = kColorUnset;
     // link commands are sent to this window
     HWND hwndForCmds = nullptr;
-    // fired by a click that didn't land on a link, so the whole run can be
-    // clickable (the command palette's "# File History" and friends)
-    VirtMouseHandler onClick;
+    // onClick (from VirtWnd): fired by a click that didn't land on a link, so
+    // the whole run can be clickable (command palette "# File History", etc.)
 
     VirtRichText();
     ~VirtRichText() override;

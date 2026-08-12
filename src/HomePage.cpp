@@ -891,12 +891,9 @@ struct HomeViewIconWnd : VirtWnd {
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
     Str tooltip;
-    VirtMouseHandler onClick;
 
     HomeViewIconWnd();
     void Paint(VirtPaintCtx&) override;
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
 };
@@ -906,22 +903,15 @@ struct HomeOpenDocWnd : VirtWnd {
     VirtText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
-    VirtMouseHandler onClick;
 
     HomeOpenDocWnd();
     void Paint(VirtPaintCtx&) override;
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
 };
 
 struct HomeHelpBtnWnd : VirtWnd {
-    VirtMouseHandler onClick;
-
     HomeHelpBtnWnd();
     void Paint(VirtPaintCtx&) override;
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
 };
@@ -932,11 +922,8 @@ struct HomeEntryWnd;
 // hit target only (the row's ✕ is a VirtCloseButton, which draws itself)
 struct HomeListIconWnd : VirtWnd {
     bool isPin = true;
-    VirtMouseHandler onClick;
 
     HomeListIconWnd();
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
 };
@@ -949,13 +936,10 @@ struct HomeEntryWnd : VirtWnd {
     VirtCloseButton* closeBtn = nullptr;
     VirtCloseButton* removeBtn = nullptr;
     HomeListIconWnd* pinBtn = nullptr;
-    VirtMouseHandler onClick;
 
     HomeEntryWnd();
     ~HomeEntryWnd() override;
 
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
 };
 
@@ -984,14 +968,11 @@ struct HomeEntriesWnd : VirtWnd {
 struct HomeTipWnd : VirtWnd {
     // for link commands inside the tip markup (like VirtRichText)
     HWND hwndForCmds = nullptr;
-    VirtMouseHandler onClick;     // band click outside a link: next tip
+    // onClick (VirtWnd): band click outside a link picks another tip
     VirtRichText* rich = nullptr; // owned, as our only child
     Str richFor;                  // owned, the markup `rich` was parsed from
 
-    HomeTipWnd();
     ~HomeTipWnd() override;
-    void OnMouseDown(VirtMouseEvent*);
-    void OnMouseUp(VirtMouseEvent*);
     void SetTipLine(Str line, PlatformFont* font);
     void Sync(const Rect& rcTip, const Rect& rcText);
 };
@@ -1961,8 +1942,6 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 //--- home page chrome VirtWnds
 
 HomeViewIconWnd::HomeViewIconWnd() {
-    onMouseDown = MkMethod1<HomeViewIconWnd, VirtMouseEvent*, &HomeViewIconWnd::OnMouseDown>(this);
-    onMouseUp = MkMethod1<HomeViewIconWnd, VirtMouseEvent*, &HomeViewIconWnd::OnMouseUp>(this);
     onSetCursor = MkMethod1<HomeViewIconWnd, VirtSetCursorEvent*, &HomeViewIconWnd::OnSetCursor>(this);
     onGetTooltip = MkMethod1<HomeViewIconWnd, VirtTooltipEvent*, &HomeViewIconWnd::OnGetTooltip>(this);
 }
@@ -1972,32 +1951,16 @@ void HomeViewIconWnd::Paint(VirtPaintCtx& ctx) {
     DrawHomeViewButton(GfxHdc(ctx.gfx), pixmap, ctx.bounds, selected);
 }
 
-void HomeViewIconWnd::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-    return;
-}
-
-void HomeViewIconWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (listView != HomePageIsListView() && onClick.IsValid()) {
-        onClick.Call(ev);
-    }
-    ev->didHandle = true;
-}
-
 void HomeViewIconWnd::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 void HomeViewIconWnd::OnGetTooltip(VirtTooltipEvent* ev) {
     ev->tip = str::DupTemp(tooltip);
-    return;
 }
 
 HomeOpenDocWnd::HomeOpenDocWnd() {
-    onMouseDown = MkMethod1<HomeOpenDocWnd, VirtMouseEvent*, &HomeOpenDocWnd::OnMouseDown>(this);
-    onMouseUp = MkMethod1<HomeOpenDocWnd, VirtMouseEvent*, &HomeOpenDocWnd::OnMouseUp>(this);
     onSetCursor = MkMethod1<HomeOpenDocWnd, VirtSetCursorEvent*, &HomeOpenDocWnd::OnSetCursor>(this);
 }
 
@@ -2009,27 +1972,12 @@ void HomeOpenDocWnd::Paint(VirtPaintCtx& ctx) {
     GfxDrawPixmap(ctx.gfx, pixmap, r);
 }
 
-void HomeOpenDocWnd::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-    return;
-}
-
-void HomeOpenDocWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (onClick.IsValid()) {
-        onClick.Call(ev);
-    }
-    ev->didHandle = true;
-}
-
 void HomeOpenDocWnd::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 HomeHelpBtnWnd::HomeHelpBtnWnd() {
-    onMouseDown = MkMethod1<HomeHelpBtnWnd, VirtMouseEvent*, &HomeHelpBtnWnd::OnMouseDown>(this);
-    onMouseUp = MkMethod1<HomeHelpBtnWnd, VirtMouseEvent*, &HomeHelpBtnWnd::OnMouseUp>(this);
     onSetCursor = MkMethod1<HomeHelpBtnWnd, VirtSetCursorEvent*, &HomeHelpBtnWnd::OnSetCursor>(this);
     onGetTooltip = MkMethod1<HomeHelpBtnWnd, VirtTooltipEvent*, &HomeHelpBtnWnd::OnGetTooltip>(this);
 }
@@ -2038,27 +1986,13 @@ void HomeHelpBtnWnd::Paint(VirtPaintCtx& ctx) {
     DrawHomeHelpButton(GfxHdc(ctx.gfx), ctx.bounds);
 }
 
-void HomeHelpBtnWnd::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-    return;
-}
-
-void HomeHelpBtnWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (onClick.IsValid()) {
-        onClick.Call(ev);
-    }
-    ev->didHandle = true;
-}
-
 void HomeHelpBtnWnd::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 void HomeHelpBtnWnd::OnGetTooltip(VirtTooltipEvent* ev) {
     ev->tip = str::DupTemp(_TRA("Keyboard Shortcuts"));
-    return;
 }
 
 //--- tip links
@@ -2086,23 +2020,6 @@ void HomeTipWnd::SetTipLine(Str line, PlatformFont* font) {
     rich->font = font;
     rich->hwndForCmds = hwndForCmds;
     AddChild(rich);
-}
-
-HomeTipWnd::HomeTipWnd() {
-    onMouseDown = MkMethod1<HomeTipWnd, VirtMouseEvent*, &HomeTipWnd::OnMouseDown>(this);
-    onMouseUp = MkMethod1<HomeTipWnd, VirtMouseEvent*, &HomeTipWnd::OnMouseUp>(this);
-}
-
-void HomeTipWnd::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-}
-
-// clicking the band outside of any link shows another tip
-void HomeTipWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (onClick.IsValid()) {
-        onClick.Call(ev);
-    }
-    ev->didHandle = true;
 }
 
 // rcTip is the whole band (its background), rcText where the markup goes
@@ -2194,27 +2111,13 @@ static void HomeTipBandClicked(MainWindow* win, VirtMouseEvent*) {
 }
 
 HomeListIconWnd::HomeListIconWnd() {
-    onMouseDown = MkMethod1<HomeListIconWnd, VirtMouseEvent*, &HomeListIconWnd::OnMouseDown>(this);
-    onMouseUp = MkMethod1<HomeListIconWnd, VirtMouseEvent*, &HomeListIconWnd::OnMouseUp>(this);
     onSetCursor = MkMethod1<HomeListIconWnd, VirtSetCursorEvent*, &HomeListIconWnd::OnSetCursor>(this);
     onGetTooltip = MkMethod1<HomeListIconWnd, VirtTooltipEvent*, &HomeListIconWnd::OnGetTooltip>(this);
-}
-
-void HomeListIconWnd::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-}
-
-void HomeListIconWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (onClick.IsValid()) {
-        onClick.Call(ev);
-    }
-    ev->didHandle = true;
 }
 
 void HomeListIconWnd::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 void HomeListIconWnd::OnGetTooltip(VirtTooltipEvent* ev) {
@@ -2222,7 +2125,6 @@ void HomeListIconWnd::OnGetTooltip(VirtTooltipEvent* ev) {
     FileState* fs = gFileHistory.FindByPath(entry->filePath);
     bool pinned = fs && fs->isPinned;
     ev->tip = str::DupTemp(pinned ? _TRA("Unpin") : _TRA("Pin"));
-    return;
 }
 
 HomeEntryWnd::~HomeEntryWnd() {
@@ -2230,27 +2132,12 @@ HomeEntryWnd::~HomeEntryWnd() {
 }
 
 HomeEntryWnd::HomeEntryWnd() {
-    onMouseDown = MkMethod1<HomeEntryWnd, VirtMouseEvent*, &HomeEntryWnd::OnMouseDown>(this);
-    onMouseUp = MkMethod1<HomeEntryWnd, VirtMouseEvent*, &HomeEntryWnd::OnMouseUp>(this);
     onSetCursor = MkMethod1<HomeEntryWnd, VirtSetCursorEvent*, &HomeEntryWnd::OnSetCursor>(this);
-}
-
-void HomeEntryWnd::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-    return;
-}
-
-void HomeEntryWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (onClick.IsValid()) {
-        onClick.Call(ev);
-    }
-    ev->didHandle = true;
 }
 
 void HomeEntryWnd::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 HomeEntryWnd* HomeEntriesWnd::EntryAt(int idx) {

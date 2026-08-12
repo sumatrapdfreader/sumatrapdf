@@ -184,21 +184,26 @@ VirtWnd* VirtWnd::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
 }
 
 bool VirtWnd::OnMouseDown(VirtMouseEvent& ev) {
-    if (!onMouseDown.IsValid()) {
-        return false;
+    if (onMouseDown.IsValid()) {
+        ev.didHandle = false;
+        onMouseDown.Call(&ev);
+        return ev.didHandle;
     }
-    ev.didHandle = false;
-    onMouseDown.Call(&ev);
-    return ev.didHandle;
+    // clickable by default: swallow press so a parent does not steal the click
+    return onClick.IsValid();
 }
 
 bool VirtWnd::OnMouseUp(VirtMouseEvent& ev) {
-    if (!onMouseUp.IsValid()) {
-        return false;
+    if (onMouseUp.IsValid()) {
+        ev.didHandle = false;
+        onMouseUp.Call(&ev);
+        return ev.didHandle;
     }
-    ev.didHandle = false;
-    onMouseUp.Call(&ev);
-    return ev.didHandle;
+    if (onClick.IsValid()) {
+        onClick.Call(&ev);
+        return true;
+    }
+    return false;
 }
 
 bool VirtWnd::OnMouseMove(VirtMouseEvent& ev) {
@@ -2107,8 +2112,6 @@ void VirtSplitter::OnSetCursor(VirtSetCursorEvent* ev) {
 static Kind kindVirtWndCustom = "virtWndCustom";
 
 VirtCustom::VirtCustom() {
-    onMouseUp = MkMethod1<VirtCustom, VirtMouseEvent*, &VirtCustom::OnMouseUp>(this);
-
     kind = kindVirtWndCustom;
 }
 
@@ -2120,14 +2123,6 @@ Size VirtCustom::GetIdealSize() {
 
 void VirtCustom::Paint(VirtPaintCtx& ctx) {
     onPaint.Call(&ctx);
-}
-
-void VirtCustom::OnMouseUp(VirtMouseEvent* ev) {
-    if (!onClick.IsValid()) {
-        return;
-    }
-    onClick.Call(ev);
-    ev->didHandle = true;
 }
 
 //--- VirtText
@@ -2241,8 +2236,6 @@ static Kind kindVirtWndLink = "virtWndLink";
 VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtLink, &VirtLink::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtLink, &VirtLink::OnMouseLeave>(this);
-    onMouseDown = MkMethod1<VirtLink, VirtMouseEvent*, &VirtLink::OnMouseDown>(this);
-    onMouseUp = MkMethod1<VirtLink, VirtMouseEvent*, &VirtLink::OnMouseUp>(this);
     onSetCursor = MkMethod1<VirtLink, VirtSetCursorEvent*, &VirtLink::OnSetCursor>(this);
     onGetTooltip = MkMethod1<VirtLink, VirtTooltipEvent*, &VirtLink::OnGetTooltip>(this);
 
@@ -2286,21 +2279,6 @@ void VirtLink::OnMouseLeave() {
     }
 }
 
-void VirtLink::OnMouseDown(VirtMouseEvent* ev) {
-    // consume so that the click doesn't fall through to the page below
-    ev->didHandle = true;
-    return;
-}
-
-void VirtLink::OnMouseUp(VirtMouseEvent* ev) {
-    if (!onClick.IsValid()) {
-        return;
-    }
-    onClick.Call(ev);
-    ev->didHandle = true;
-    return;
-}
-
 void VirtLink::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
@@ -2322,8 +2300,6 @@ static Kind kindVirtWndButton = "virtWndButton";
 VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtButton, &VirtButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtButton, &VirtButton::OnMouseLeave>(this);
-    onMouseDown = MkMethod1<VirtButton, VirtMouseEvent*, &VirtButton::OnMouseDown>(this);
-    onMouseUp = MkMethod1<VirtButton, VirtMouseEvent*, &VirtButton::OnMouseUp>(this);
     onKeyDown = MkMethod1<VirtButton, VirtKeyEvent*, &VirtButton::OnKeyDown>(this);
     onSetCursor = MkMethod1<VirtButton, VirtSetCursorEvent*, &VirtButton::OnSetCursor>(this);
 
@@ -2402,27 +2378,12 @@ void VirtButton::OnMouseLeave() {
     Invalidate();
 }
 
-void VirtButton::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-    return;
-}
-
-void VirtButton::OnMouseUp(VirtMouseEvent* ev) {
-    if (!onClick.IsValid()) {
-        return;
-    }
-    onClick.Call(ev);
-    ev->didHandle = true;
-    return;
-}
-
 void VirtButton::OnSetCursor(VirtSetCursorEvent* ev) {
     if (!HasFlag(vwfEnabled)) {
         return;
     }
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 //--- VirtIconButton
@@ -2432,8 +2393,6 @@ static Kind kindVirtWndIconButton = "virtWndIconButton";
 VirtIconButton::VirtIconButton() {
     onMouseEnter = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseLeave>(this);
-    onMouseDown = MkMethod1<VirtIconButton, VirtMouseEvent*, &VirtIconButton::OnMouseDown>(this);
-    onMouseUp = MkMethod1<VirtIconButton, VirtMouseEvent*, &VirtIconButton::OnMouseUp>(this);
     onSetCursor = MkMethod1<VirtIconButton, VirtSetCursorEvent*, &VirtIconButton::OnSetCursor>(this);
     onGetTooltip = MkMethod1<VirtIconButton, VirtTooltipEvent*, &VirtIconButton::OnGetTooltip>(this);
 
@@ -2479,24 +2438,9 @@ void VirtIconButton::OnMouseLeave() {
     Invalidate();
 }
 
-void VirtIconButton::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-    return;
-}
-
-void VirtIconButton::OnMouseUp(VirtMouseEvent* ev) {
-    if (!onClick.IsValid()) {
-        return;
-    }
-    onClick.Call(ev);
-    ev->didHandle = true;
-    return;
-}
-
 void VirtIconButton::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 void VirtIconButton::OnGetTooltip(VirtTooltipEvent* ev) {
@@ -2520,8 +2464,6 @@ static Kind kindVirtWndCloseButton = "virtWndCloseButton";
 VirtCloseButton::VirtCloseButton() {
     onMouseEnter = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseLeave>(this);
-    onMouseDown = MkMethod1<VirtCloseButton, VirtMouseEvent*, &VirtCloseButton::OnMouseDown>(this);
-    onMouseUp = MkMethod1<VirtCloseButton, VirtMouseEvent*, &VirtCloseButton::OnMouseUp>(this);
     onSetCursor = MkMethod1<VirtCloseButton, VirtSetCursorEvent*, &VirtCloseButton::OnSetCursor>(this);
     onGetTooltip = MkMethod1<VirtCloseButton, VirtTooltipEvent*, &VirtCloseButton::OnGetTooltip>(this);
 
@@ -2589,24 +2531,9 @@ void VirtCloseButton::OnMouseLeave() {
     Invalidate();
 }
 
-void VirtCloseButton::OnMouseDown(VirtMouseEvent* ev) {
-    ev->didHandle = true;
-    return;
-}
-
-void VirtCloseButton::OnMouseUp(VirtMouseEvent* ev) {
-    if (!onClick.IsValid()) {
-        return;
-    }
-    onClick.Call(ev);
-    ev->didHandle = true;
-    return;
-}
-
 void VirtCloseButton::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
 }
 
 void VirtCloseButton::OnGetTooltip(VirtTooltipEvent* ev) {
