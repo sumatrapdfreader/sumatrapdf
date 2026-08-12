@@ -1753,7 +1753,6 @@
     <ClCompile Include="..\src\wingui\PlatformText.cpp" />
     <ClCompile Include="..\src\wingui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\wingui\Progress.cpp" />
-    <ClCompile Include="..\src\wingui\Static.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Tooltip.cpp" />
     <ClCompile Include="..\src\wingui\Trackbar.cpp" />

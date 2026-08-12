@@ -300,31 +300,8 @@ struct ControlBase : ILayout {
 ControlBase* ControlFromHwnd(HWND);
 void SizeToIdealSize(ControlBase* c);
 
-//--- Static
-
 struct VirtRoot;
 struct VirtWnd;
-
-struct Static : ControlBase {
-    struct CreateArgs {
-        HWND parent = nullptr;
-        HFONT font = nullptr;
-        Str text;
-        bool isRtl = false;
-        bool pathEllipsis = false;
-    };
-
-    Static();
-
-    Func0 onClick;
-
-    HWND Create(const CreateArgs&);
-
-    Size GetIdealSize() override;
-
-    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
-};
 
 //--- Button
 
