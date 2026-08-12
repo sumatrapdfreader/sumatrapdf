@@ -48,9 +48,6 @@ struct ChangeThemeWnd : WindowBase {
     bool PreTranslateMessage(MSG& msg) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
-    VirtButton* NewButton(Str text, bool isDefault);
-    void StyleButton(VirtButton*, bool isDefault);
-
     void UpdateTheme();
     void KeepFocus();
     void OnSelectionChanged();
@@ -147,26 +144,6 @@ void ChangeThemeWnd::PreviewDocumentColors() {
     }
 }
 
-// the buttons are virtual controls, so they are styled here rather than by the
-// system: a filled box with a border, brighter on hover (same look as the PDF
-// tool dialogs). Re-applied on every theme change
-void ChangeThemeWnd::StyleButton(VirtButton* b, bool isDefault) {
-    COLORREF bg = ThemeWindowControlBackgroundColor();
-    b->textColor = ThemeWindowTextColor();
-    b->textColorDisabled = ThemeWindowTextDisabledColor();
-    // the default button is a shade stronger, like a native default button
-    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
-    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
-    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
-}
-
-VirtButton* ChangeThemeWnd::NewButton(Str text, bool isDefault) {
-    auto* b = new VirtButton(text, platformFont);
-    StyleButton(b, isDefault);
-    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
-    return b;
-}
-
 void ChangeThemeWnd::UpdateTheme() {
     COLORREF colBg = ThemeWindowControlBackgroundColor();
     COLORREF colTxt = ThemeWindowTextColor();
@@ -182,10 +159,10 @@ void ChangeThemeWnd::UpdateTheme() {
         dropDownDocumentColorsFollowTheme->SetColors(colTxt, colBg);
     }
     if (btnCancel) {
-        StyleButton(btnCancel, false);
+        StyleThemedButton(btnCancel, false);
     }
     if (btnChange) {
-        StyleButton(btnChange, true);
+        StyleThemedButton(btnChange, true);
     }
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
@@ -371,12 +348,12 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewButton(_TRA("Cancel"), false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
         // Enter runs this one (see PreTranslateMessage), so draw it as the
         // default button to say so
-        btnChange = NewButton(_TRA("Change"), true);
+        btnChange = NewThemedButton(hwnd, _TRA("Change"), platformFont, true);
         btnChange->onClick = MkFunc1(ChangeClicked, this);
         hbox->AddChild(new Padding(btnChange, pad));
         vbox->AddChild(hbox);

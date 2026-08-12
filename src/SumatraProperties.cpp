@@ -10,6 +10,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -39,7 +42,7 @@ struct PropertiesWnd : WindowBase {
 
     HWND hwndParent = nullptr;
     Edit* editProps = nullptr;
-    Button* btnCopyToClipboard = nullptr;
+    VirtButton* btnCopyToClipboard = nullptr;
     HFONT propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
@@ -60,6 +63,10 @@ struct PropertiesWnd : WindowBase {
 };
 
 static Vec<PropertiesWnd*> gPropertiesWindows;
+
+static void CopyToClipboardClicked(PropertiesWnd* w, VirtMouseEvent*) {
+    w->CopyToClipboard();
+}
 
 PropertiesWnd::~PropertiesWnd() {
     // propsFont is from HdcCreateSimpleFont — cached for the app lifetime.
@@ -810,10 +817,8 @@ void PropertiesWnd::LayoutToClient() {
     if (!layout || !hwnd) {
         return;
     }
-    Rect rc = HwndClientRect(hwnd);
-    Constraints bc = Tight({rc.dx, rc.dy});
-    layout->Layout(bc);
-    layout->SetBounds({0, 0, rc.dx, rc.dy});
+    // also picks up the virtual controls so we paint them and they get input
+    DoLayout(HwndClientRect(hwnd).Size());
 }
 
 void PropertiesWnd::UpdateTheme() {
@@ -824,7 +829,7 @@ void PropertiesWnd::UpdateTheme() {
         editProps->SetColors(colTxt, colBg);
     }
     if (btnCopyToClipboard) {
-        btnCopyToClipboard->SetColors(colTxt, colBg);
+        StyleThemedButton(btnCopyToClipboard, true);
     }
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
@@ -838,10 +843,15 @@ void PropertiesWnd::UpdateTheme() {
 }
 
 LRESULT PropertiesWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
+    }
     if (msg == WM_SIZE) {
         LayoutToClient();
+        HwndInvalidate(hwndIn);
         return 0;
     }
+    // WindowBase::WndProcDefault sends the virtual controls their input
     return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
@@ -953,8 +963,8 @@ bool PropertiesWnd::Create(HWND parent) {
         auto* btnRow = new HBox();
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
-        btnCopyToClipboard = CreateButton(hwnd, _TRA("Copy To Clipboard"),
-                                          MkMethod0<PropertiesWnd, &PropertiesWnd::CopyToClipboard>(this), isRtl);
+        btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetPlatformFont(GetAppFont(hwnd)), true);
+        btnCopyToClipboard->onClick = MkFunc1(CopyToClipboardClicked, this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(hwnd, kButtonPadding, 0, 0, 0)));
         vbox->AddChild(btnRow);
     }

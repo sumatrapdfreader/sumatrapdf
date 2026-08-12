@@ -305,43 +305,21 @@ struct VirtWnd;
 
 //--- Button
 
-// Colors an owner-drawn push button paints itself with. Windows' own dark
-// button face is a fixed color that no app palette can move, so the app hands
-// us its own; see ButtonGetColors().
-struct ButtonColors {
-    COLORREF bg;
-    COLORREF bgHot;     // mouse over
-    COLORREF bgPressed; // held down
-    COLORREF text;
-    COLORREF textDisabled;
-    COLORREF edge;
-    COLORREF edgeHot;
-    COLORREF edgeDisabled;
-};
-
-bool ButtonGetColors(ButtonColors*);
-
+// The only buttons left as HWND controls are the installer's and the
+// uninstaller's: they have no theme to draw from, so Windows' own themed push
+// button (with its UAC shield, mnemonics and dialog keyboard navigation) beats
+// anything we would draw. Everything in the app itself uses VirtButton.
 struct Button : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
         Str text;
         bool isRtl = false;
-        // Draw the button ourselves from the app's palette (ButtonGetColors).
-        // An app with no palette should turn this off rather than let us fall
-        // back to a hand-drawn button: Windows' own themed push button looks
-        // better than anything we can approximate, and it costs nothing.
-        bool ownerDrawn = true;
     };
 
     Func0 onClick;
 
     bool isDefault = false;
-    bool ownerDrawn = true;
-    // mouse is over the button; owner-draw has to track this itself because
-    // WM_DRAWITEM never reports a hot state
-    bool isHot = false;
-    bool trackingMouse = false;
 
     Button();
 
@@ -349,13 +327,9 @@ struct Button : ControlBase {
 
     Size GetIdealSize() override;
 
-    void PaintOwnerDrawn(DRAWITEMSTRUCT*);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
 
-Button* CreateButton(HWND parent, Str s, const Func0& onClick, bool isRtl);
 Button* CreateDefaultButton(HWND parent, Str s, bool isRtl);
 
 //--- Tooltip

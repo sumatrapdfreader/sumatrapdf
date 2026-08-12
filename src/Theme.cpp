@@ -6,6 +6,9 @@ License: GPLv3 */
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -54,27 +57,20 @@ void ApplyDarkModeToPopupWindow(HWND hwnd) {
     DarkMode::setWindowNotifyCustomDrawSubclass(hwnd);
 }
 
-// wingui calls this from Button's WM_DRAWITEM; see the declaration in WinGui.h.
-// Every theme, including the default one, has colors for this, and using them
-// everywhere keeps one code path and makes buttons match the rest of the UI
-// (the light theme's flat white button replaces Windows' beveled one).
-// Called from Button's WM_DRAWITEM so wingui doesn't have to know about the
-// app's palette. The app implements it; returning false leaves the button to
-// Windows, which is what an app that doesn't theme anything should do.
-bool ButtonGetColors(ButtonColors* out) {
-    if (!HasCurrentTheme()) {
-        // installer / uninstaller: no palette, so wingui draws a stock button
-        return false;
-    }
-    out->bg = ThemeWindowControlBackgroundColor();
-    out->bgHot = ThemeHotBackgroundColor();
-    out->bgPressed = ThemeEdgeColor();
-    out->text = ThemeWindowTextColor();
-    out->textDisabled = ThemeWindowTextDisabledColor();
-    out->edge = ThemeEdgeColor();
-    out->edgeHot = ThemeHotEdgeColor();
-    out->edgeDisabled = ThemeDisabledEdgeColor();
-    return true;
+void StyleThemedButton(VirtButton* b, bool isDefault) {
+    COLORREF bg = ThemeWindowControlBackgroundColor();
+    b->textColor = ThemeWindowTextColor();
+    b->textColorDisabled = ThemeWindowTextDisabledColor();
+    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
+    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
+    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+}
+
+VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool isDefault) {
+    auto* b = new VirtButton(text, font);
+    StyleThemedButton(b, isDefault);
+    b->textPadding = DpiScaledInsets(hwndForDpi, 5, 12);
+    return b;
 }
 
 // The underline under a borderless Edit is a separator, so it takes the edge

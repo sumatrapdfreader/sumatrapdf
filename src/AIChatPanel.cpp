@@ -484,8 +484,8 @@ static void UpdateAIChatPanelForCurrentTab(MainWindow* win) {
         EnableWindow(win->aiChatCheckbox->hwnd, enableInput);
     }
     if (win->aiChatStopBtn) {
-        win->aiChatStopBtn->SetVisibility(working ? Visibility::Visible : Visibility::Collapse);
-        EnableWindow(win->aiChatStopBtn->hwnd, working);
+        win->aiChatStopBtn->SetIsVisible(working);
+        win->aiChatStopBtn->SetIsEnabled(working);
     }
     LayoutAIChatBox(win);
 }
@@ -504,6 +504,10 @@ static void StopAIChat(MainWindow* win) {
         WebViewAddError(win, "Stopped by user.");
         SetAIChatWorking(win, false);
     }
+}
+
+static void StopClicked(MainWindow* win, VirtMouseEvent*) {
+    StopAIChat(win);
 }
 
 // --- Stream updates (posted from the reader thread) ---
@@ -1313,15 +1317,10 @@ void CreateAIChatPanel(MainWindow* win) {
 
     // stop button (hidden by default, shown when agent is working)
     {
-        Button::CreateArgs args;
-        args.parent = win->hwndAiChatBox;
-        args.text = "Stop";
-        args.font = font;
-        args.isRtl = IsUIRtl();
-        win->aiChatStopBtn = new Button();
-        win->aiChatStopBtn->Create(args);
-        win->aiChatStopBtn->onClick = MkFunc0(StopAIChat, win);
-        win->aiChatStopBtn->SetVisibility(Visibility::Collapse);
+        auto* b = NewThemedButton(win->hwndAiChatBox, "Stop", GetPlatformFont(font), false);
+        b->onClick = MkFunc1(StopClicked, win);
+        b->SetIsVisible(false);
+        win->aiChatStopBtn = b;
     }
 
     // input box

@@ -398,7 +398,6 @@ struct AdvancedSettingsWnd : WindowBase {
     bool Create(MainWindow* win);
     bool PreTranslateMessage(MSG& msg) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    VirtButton* NewButton(Str text, bool isDefault);
     bool HandleEscapeKey(bool isEditingValue, bool isEditingEnum);
     bool HandleTabKey(bool isEditingValue, bool isEditingEnum);
     bool HandleEnterKey(bool isEditingValue, bool isEditingEnum);
@@ -1081,18 +1080,6 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
 
 // the buttons are virtual controls, so they are styled here rather than by the
 // system: a filled box with a border, brighter on hover (like the other dialogs)
-VirtButton* AdvancedSettingsWnd::NewButton(Str text, bool isDefault) {
-    auto* b = new VirtButton(text, platformFont);
-    COLORREF bg = ThemeWindowControlBackgroundColor();
-    b->textColor = ThemeWindowTextColor();
-    b->textColorDisabled = ThemeWindowTextDisabledColor();
-    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
-    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
-    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
-    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
-    return b;
-}
-
 static void SaveClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
     wnd->OnSave();
 }
@@ -1221,18 +1208,18 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         auto* left = new HBox();
         left->alignMain = MainAxisAlign::MainStart;
         left->alignCross = CrossAxisAlign::CrossCenter;
-        btnSave = NewButton(_TRA("Save"), true);
+        btnSave = NewThemedButton(hwnd, _TRA("Save"), platformFont, true);
         btnSave->onClick = MkFunc1(SaveClicked, this);
         left->AddChild(new Padding(btnSave, pad));
-        btnCancel = NewButton(_TRA("Cancel"), false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         left->AddChild(new Padding(btnCancel, pad));
-        btnOpenSettingsFile = NewButton(_TRA("Open Settings File"), false);
+        btnOpenSettingsFile = NewThemedButton(hwnd, _TRA("Open Settings File"), platformFont, false);
         btnOpenSettingsFile->onClick = MkFunc1(OpenSettingsFileClicked, this);
         left->AddChild(new Padding(btnOpenSettingsFile, pad));
         hbox->AddChild(left);
 
-        btnHelp = NewButton(_TRA("Help"), false);
+        btnHelp = NewThemedButton(hwnd, _TRA("Help"), platformFont, false);
         btnHelp->onClick = MkFunc1(HelpClicked, this);
         hbox->AddChild(new Padding(btnHelp, pad));
         vbox->AddChild(hbox);

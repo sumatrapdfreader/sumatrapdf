@@ -44,6 +44,16 @@ bool MigrateRenamedThemeNames();
 bool GetInvertPageColors();
 void SetInvertPageColors(bool);
 
+struct VirtButton;
+struct PlatformFont;
+
+// The buttons are virtual controls, so they take their look from the theme
+// rather than from the system: a filled box with a border, brighter on hover.
+// `isDefault` is a shade stronger, like a native default button.
+// StyleThemedButton() is what a window calls again after a theme change
+void StyleThemedButton(VirtButton*, bool isDefault);
+VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont*, bool isDefault);
+
 extern int gFirstSetThemeCmdId;
 extern int gLastSetThemeCmdId;
 extern int gCurrSetThemeCmdId;

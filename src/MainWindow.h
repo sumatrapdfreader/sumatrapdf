@@ -21,7 +21,7 @@ struct ILayout;
 struct Spacer;
 struct DropDown;
 struct Checkbox;
-struct Button;
+struct VirtButton;
 struct TabsCtrl;
 struct TocTree;
 struct TocItem;
@@ -243,7 +243,7 @@ struct MainWindow {
     DropDown* aiChatModelCombo = nullptr;
     DropDown* aiChatOptionCombo = nullptr; // effort / sandbox
     Checkbox* aiChatCheckbox = nullptr;    // skip permissions / always approve / skip sandbox
-    Button* aiChatStopBtn = nullptr;
+    VirtButton* aiChatStopBtn = nullptr;
     Edit* aiChatInput = nullptr;
     WebviewWnd* aiChatWebView = nullptr;
     bool aiChatWebViewReady = false;

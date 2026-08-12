@@ -5,6 +5,9 @@
 
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 // in TestTab.cpp
 extern int TestTab(int nCmdShow);
@@ -21,19 +24,29 @@ static void LaunchLayout() {
     TestLayout(SW_SHOW);
 }
 
-static ILayout* CreateMainLayout(HWND hwnd) {
+static void TabsClicked(VirtMouseEvent*) {
+    LaunchTabs();
+}
+
+static void LayoutClicked(VirtMouseEvent*) {
+    LaunchLayout();
+}
+
+static ILayout* CreateMainLayout(HWND) {
     auto* vbox = new VBox();
 
     vbox->alignMain = MainAxisAlign::MainCenter;
     vbox->alignCross = CrossAxisAlign::CrossCenter;
-    auto isRtl = IsUIRtl();
+    PlatformFont* font = GetPlatformFont(GetDefaultGuiFont());
     {
-        auto b = CreateButton(hwnd, "Tabs test", MkFunc0Void(LaunchTabs), isRtl);
+        auto* b = new VirtButton("Tabs test", font);
+        b->onClick = MkFunc1Void<VirtMouseEvent*>(TabsClicked);
         vbox->AddChild(b);
     }
 
     {
-        auto b = CreateButton(hwnd, "Layout test", MkFunc0Void(LaunchLayout), isRtl);
+        auto* b = new VirtButton("Layout test", font);
+        b->onClick = MkFunc1Void<VirtMouseEvent*>(LayoutClicked);
         vbox->AddChild(b);
     }
 

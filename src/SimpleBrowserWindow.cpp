@@ -8,6 +8,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 #include "wingui/WebView.h"
 
 #include "Settings.h"
@@ -16,6 +19,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Theme.h"
 
 #include "SimpleBrowserWindow.h"
 
@@ -55,6 +59,11 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     }
 
     Rect rc = HwndClientRect(w->hwnd);
+    // the buttons place themselves in window coords, so the root covers the
+    // whole client area
+    if (w->vroot) {
+        w->vroot->bounds = rc;
+    }
     int pad = DpiScale(w->hwnd, kNavRowPadding);
     int gap = DpiScale(w->hwnd, kNavBtnGap);
     int y = pad;
@@ -65,9 +74,9 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     int rowH = backSize.dy;
     rowH = std::max(fwdSize.dy, rowH);
 
-    MoveWindow(w->btnBack->hwnd, x, y, backSize.dx, backSize.dy, TRUE);
+    w->btnBack->SetBounds({x, y, backSize.dx, backSize.dy});
     x += backSize.dx + gap;
-    MoveWindow(w->btnForward->hwnd, x, y, fwdSize.dx, fwdSize.dy, TRUE);
+    w->btnForward->SetBounds({x, y, fwdSize.dx, fwdSize.dy});
     x += fwdSize.dx + gap;
 
     int urlX = x;
@@ -92,6 +101,9 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     }
 }
 
+static void BackClicked(SimpleBrowserWindow*, VirtMouseEvent*);
+static void ForwardClicked(SimpleBrowserWindow*, VirtMouseEvent*);
+
 static void OnBack(SimpleBrowserWindow* w) {
     if (w && w->webView) {
         w->webView->GoBack();
@@ -102,6 +114,14 @@ static void OnForward(SimpleBrowserWindow* w) {
     if (w && w->webView) {
         w->webView->GoForward();
     }
+}
+
+static void BackClicked(SimpleBrowserWindow* w, VirtMouseEvent*) {
+    OnBack(w);
+}
+
+static void ForwardClicked(SimpleBrowserWindow* w, VirtMouseEvent*) {
+    OnForward(w);
 }
 
 // an absolute http(s)/mailto URL is "non-internal": it points outside the
@@ -169,6 +189,7 @@ static int ResolveAccelCmd(void* /*user*/, u16 vk, bool ctrl, bool shift, bool a
 }
 
 SimpleBrowserWindow::~SimpleBrowserWindow() {
+    // the buttons report their destruction to vroot, so they go first
     delete btnBack;
     delete btnForward;
     delete webView;
@@ -201,7 +222,8 @@ LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     if (msg == WM_CTLCOLORSTATIC && (HWND)lparam == hwndUrl) {
         HDC hdc = (HDC)wparam;
         SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+        // the url sits on our own background, so it takes our text color
+        SetTextColor(hdc, IsSpecialColor(textColor) ? GetSysColor(COLOR_WINDOWTEXT) : textColor);
         HBRUSH br = BackgroundBrush();
         if (!br) {
             br = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -232,27 +254,28 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         ReportIf(!frameHwnd);
     }
 
+    // the nav row is painted by us (it holds virtual buttons), so the window
+    // needs a background color of its own - without one it paints black
+    SetColors(ThemeWindowTextColor(), ThemeWindowBackgroundColor());
+
     hFont = GetDefaultGuiFont();
 
     {
-        Button::CreateArgs bargs;
-        bargs.parent = frameHwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Back");
-        btnBack = new Button();
-        btnBack->Create(bargs);
-        btnBack->onClick = MkFunc0<SimpleBrowserWindow>(OnBack, this);
+        // this window has no layout tree: the two buttons are the whole of it,
+        // placed by LayoutControls() and painted by us
+        PlatformFont* platformFont = GetPlatformFont(hFont);
+        btnBack = NewThemedButton(frameHwnd, _TRA("Back"), platformFont, false);
+        btnBack->onClick = MkFunc1(BackClicked, this);
         btnBack->SetIsEnabled(false);
-    }
-    {
-        Button::CreateArgs bargs;
-        bargs.parent = frameHwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Forward");
-        btnForward = new Button();
-        btnForward->Create(bargs);
-        btnForward->onClick = MkFunc0<SimpleBrowserWindow>(OnForward, this);
+        btnForward = NewThemedButton(frameHwnd, _TRA("Forward"), platformFont, false);
+        btnForward->onClick = MkFunc1(ForwardClicked, this);
         btnForward->SetIsEnabled(false);
+
+        vroot = new VirtRoot(frameHwnd);
+        Vec<VirtWnd*> tops;
+        tops.Append(btnBack);
+        tops.Append(btnForward);
+        vroot->SetTops(tops);
     }
     {
         HINSTANCE inst = GetInstance();

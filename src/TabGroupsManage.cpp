@@ -64,9 +64,9 @@ struct TabGroupsWnd : WindowBase {
     Edit* editName = nullptr;
     VirtListBox* listBox = nullptr;
     TabGroupsListBoxModel* model = nullptr;
-    Button* btnOk = nullptr;
-    Button* btnDelete = nullptr;
-    Button* btnCancel = nullptr;
+    VirtButton* btnOk = nullptr;
+    VirtButton* btnDelete = nullptr;
+    VirtButton* btnCancel = nullptr;
     TabGroupDialogMode mode = TabGroupDialogMode::Save;
     MainWindow* win = nullptr;
 
@@ -305,9 +305,11 @@ void TabGroupsWnd::UpdateTheme() {
         listBox->textColor = colTxt;
         listBox->bgColor = colBg;
     }
-    setColors(btnOk);
-    setColors(btnDelete);
-    setColors(btnCancel);
+    if (btnOk) {
+        StyleThemedButton(btnOk, true);
+        StyleThemedButton(btnDelete, false);
+        StyleThemedButton(btnCancel, false);
+    }
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
@@ -317,6 +319,18 @@ void TabGroupsWnd::UpdateTheme() {
 
 void TabGroupsWnd::OnCancel() {
     Close();
+}
+
+static void CancelClicked(TabGroupsWnd* w, VirtMouseEvent*) {
+    w->OnCancel();
+}
+
+static void DeleteClicked(TabGroupsWnd* w, VirtMouseEvent*) {
+    w->DeleteTabGroup();
+}
+
+static void OkClicked(TabGroupsWnd* w, VirtMouseEvent*) {
+    w->OnOk();
 }
 
 void TabGroupsWnd::OnOk() {
@@ -439,17 +453,20 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
 
-        btnCancel = CreateButton(hwnd, _TRA("Cancel"), MkMethod0<TabGroupsWnd, &TabGroupsWnd::OnCancel>(this), isRtl);
+        auto* platformFont = GetPlatformFont(font);
+        Insets gap = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel->onClick = MkFunc1(CancelClicked, this);
         btnRow->AddChild(btnCancel);
-        btnDelete =
-            CreateButton(hwnd, _TRA("Delete"), MkMethod0<TabGroupsWnd, &TabGroupsWnd::DeleteTabGroup>(this), isRtl);
+        btnDelete = NewThemedButton(hwnd, _TRA("Delete"), platformFont, false);
+        btnDelete->onClick = MkFunc1(DeleteClicked, this);
         btnDelete->SetIsEnabled(false);
-        btnDelete->SetInsetsPt(0, 0, 0, 4);
-        btnRow->AddChild(btnDelete);
+        btnRow->AddChild(new Padding(btnDelete, gap));
         Str okText = (mode == TabGroupDialogMode::Save) ? Str(_TRA("Save")) : Str(_TRA("Restore"));
-        btnOk = CreateButton(hwnd, okText, MkMethod0<TabGroupsWnd, &TabGroupsWnd::OnOk>(this), isRtl);
-        btnOk->SetInsetsPt(0, 0, 0, 4);
-        btnRow->AddChild(btnOk);
+        btnOk = NewThemedButton(hwnd, okText, platformFont, true);
+        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnRow->AddChild(new Padding(btnOk, gap));
         vbox->AddChild(new Padding(btnRow, DpiScaledInsets(hwnd, kPadding, 0, 0, 0)));
     }
 

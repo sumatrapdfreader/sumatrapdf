@@ -10,10 +10,12 @@ struct SimpleBrowserCreateArgs {
     WStr resourceUriPrefix;
 };
 
+struct VirtButton;
+
 struct SimpleBrowserWindow : WindowBase {
     WebviewWnd* webView = nullptr;
-    Button* btnBack = nullptr;
-    Button* btnForward = nullptr;
+    VirtButton* btnBack = nullptr;
+    VirtButton* btnForward = nullptr;
     HWND hwndUrl = nullptr;
     HFONT hFont = nullptr;
     bool webViewFocusSet = false;
