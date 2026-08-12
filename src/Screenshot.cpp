@@ -414,10 +414,6 @@ void SetHotkeyWnd::WndProc(WindowBase::WndProcEvent* ev) {
         ev->didHandle = true;
         return;
     }
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-    }
 }
 
 void SetHotkeyWnd::OnKeyDown(KeyEvent* ev) {

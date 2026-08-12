@@ -1010,11 +1010,6 @@ void SelectionTranslateWnd::SetTranslateButtonText(Str s) {
 // measured from its font, so they resize with it. Note the Padding insets were
 // DpiScale()d once when the layout tree was built and keep their old scale.
 void SelectionTranslateWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-        return;
-    }
     if (ev->msg == WM_DPICHANGED) {
         RECT* r = (RECT*)ev->lparam;
         SetWindowPos(ev->hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,

@@ -46,7 +46,6 @@ struct ChangeThemeWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void OnKeyDown(KeyEvent* ev);
-    void WndProc(WindowBase::WndProcEvent* ev);
 
     void UpdateTheme();
     void KeepFocus();
@@ -217,13 +216,6 @@ void ChangeThemeWnd::OnChange() {
     ScheduleDelete();
 }
 
-void ChangeThemeWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-    }
-}
-
 void ChangeThemeWnd::OnKeyDown(KeyEvent* ev) {
     if (ev->vkey == VK_ESCAPE) {
         OnCancel();
@@ -385,7 +377,6 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     wnd->documentColorsFollowThemeOnly = documentColorsFollowThemeOnly;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onWndProc = MkMethod1<ChangeThemeWnd, WindowBase::WndProcEvent*, &ChangeThemeWnd::WndProc>(wnd);
     wnd->onKeyDown = MkMethod1<ChangeThemeWnd, KeyEvent*, &ChangeThemeWnd::OnKeyDown>(wnd);
     wnd->font = GetAppFont(win->hwndFrame);
     bool ok = wnd->Create(win);

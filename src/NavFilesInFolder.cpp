@@ -554,11 +554,6 @@ void NavFilesInFolderWnd::WndProc(WindowBase::WndProcEvent* ev) {
             vroot->SetFocus(listBox);
         }
     }
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-        return;
-    }
     // Esc when this window (not a child) has focus
     if (ev->msg == WM_KEYDOWN && ev->wparam == VK_ESCAPE) {
         ScheduleDeleteNavFilesWnd();

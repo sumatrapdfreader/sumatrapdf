@@ -57,8 +57,6 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
     }
     hwndAssociatedWithTopLevel = topLevel;
 
-    onWndProc = MkMethod1<FrameRateWnd, WindowBase::WndProcEvent*, &FrameRateWnd::WndProc>(this);
-
     {
         CreateCustomArgs args;
         args.className = FRAME_RATE_CLASS_NAME;
@@ -91,13 +89,6 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
     SetLayeredWindowAttributes(hwnd, 0, 0x7f, LWA_ALPHA);
     ShowFrameRate(0);
     return true;
-}
-
-void FrameRateWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-    }
 }
 
 void FrameRateWnd::ShowFrameRate(int frameRateIn) {

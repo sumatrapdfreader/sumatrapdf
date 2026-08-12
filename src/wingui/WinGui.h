@@ -282,6 +282,9 @@ struct WindowBase {
     VirtRoot* vroot = nullptr;
     // relayout on WM_SIZE. Off by default: most windows do it themselves
     bool autoLayout = false;
+    // if false, WM_ERASEBKGND returns TRUE without painting (WM_PAINT covers).
+    // default false: custom windows usually double-buffer the full client
+    bool shouldEraseBackground = false;
 
     AttachHandler onAttach;
     FocusHandler onFocus;
@@ -477,6 +480,10 @@ struct ControlBase : ILayout {
     VirtRoot* vroot = nullptr;
 
     void DoLayout(Size);
+
+    // if false, WM_ERASEBKGND returns TRUE without painting (WM_PAINT covers).
+    // default true: native subclassed controls keep system erase
+    bool shouldEraseBackground = true;
 
     AttachHandler onAttach;
     FocusHandler onFocus;

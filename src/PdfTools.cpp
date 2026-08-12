@@ -122,7 +122,6 @@ struct PdfToolDialog : WindowBase {
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt() {}
 
-    void WndProc(WindowBase::WndProcEvent* ev);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
 };
@@ -178,7 +177,6 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     srcPath = str::Dup(tab->filePath);
     hFont = GetDefaultGuiFont();
     onClose = MkFunc1Void(PdfToolDialogOnClose);
-    onWndProc = MkMethod1<PdfToolDialog, WindowBase::WndProcEvent*, &PdfToolDialog::WndProc>(this);
     onPreTranslate = MkMethod1<PdfToolDialog, WindowBase::PreTranslateEvent*, &PdfToolDialog::PreTranslate>(this);
     onKeyDown = MkMethod1<PdfToolDialog, KeyEvent*, &PdfToolDialog::OnKeyDown>(this);
 
@@ -312,13 +310,6 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     SetIsVisible(true);
     if (focusOn) {
         HwndSetFocus(focusOn->hwnd);
-    }
-}
-
-void PdfToolDialog::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area
-        ev->didHandle = true;
     }
 }
 

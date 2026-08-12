@@ -263,12 +263,6 @@ void ReadAloudPlaybackBar::WndProc(WindowBase::WndProcEvent* ev) {
         }
     }
 
-    if (WM_ERASEBKGND == msg) {
-        ev->result = TRUE;
-        ev->didHandle = true;
-        return;
-    }
-
     if (WM_MOUSEMOVE == msg) {
         HwndScheduleRepaint(hwndIn);
         TrackMouseLeave(hwndIn);

@@ -181,11 +181,6 @@ void CommandPaletteWnd::SwitchToFavorites() {
 }
 
 void CommandPaletteWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // we paint the whole client area, double-buffered
-        ev->didHandle = true;
-        return;
-    }
     switch (ev->msg) {
         case WM_ACTIVATE:
             if (ev->wparam == WA_INACTIVE) {

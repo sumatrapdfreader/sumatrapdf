@@ -700,10 +700,6 @@ void FindWindowWnd::WndProc(WindowBase::WndProcEvent* ev) {
         case WM_ENTERSIZEMOVE:
             inSizeMove = true;
             break;
-        case WM_ERASEBKGND:
-            ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-            ev->didHandle = true;
-            return;
         case WM_SIZE:
             Layout();
             break;

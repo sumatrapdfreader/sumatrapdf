@@ -397,7 +397,6 @@ struct AdvancedSettingsWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void OnKeyDown(KeyEvent* ev);
-    void WndProc(WindowBase::WndProcEvent* ev);
     bool HandleEscapeKey(bool isEditingValue, bool isEditingEnum);
     bool HandleTabKey(bool isEditingValue, bool isEditingEnum);
     bool HandleEnterKey(bool isEditingValue, bool isEditingEnum);
@@ -985,13 +984,6 @@ bool AdvancedSettingsWnd::HandleUpDownKey(const KeyEvent& ev) {
     return true;
 }
 
-void AdvancedSettingsWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-    }
-}
-
 void AdvancedSettingsWnd::OnKeyDown(KeyEvent* ev) {
     // a single click only selects; activation (toggle / edit) is on double-click
     // (OnItemDoubleClicked) or Enter
@@ -1261,7 +1253,6 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onSize = MkMethod1<AdvancedSettingsWnd, WindowBase::SizeEvent*, &AdvancedSettingsWnd::OnSize>(wnd);
-    wnd->onWndProc = MkMethod1<AdvancedSettingsWnd, WindowBase::WndProcEvent*, &AdvancedSettingsWnd::WndProc>(wnd);
     wnd->onKeyDown = MkMethod1<AdvancedSettingsWnd, KeyEvent*, &AdvancedSettingsWnd::OnKeyDown>(wnd);
     wnd->font = GetAppFont(win->hwndFrame);
     bool ok = wnd->Create(win);

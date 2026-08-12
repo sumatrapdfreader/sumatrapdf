@@ -152,7 +152,6 @@ struct EditAnnotationsWindow : WindowBase {
     str::Builder currCustomInteriorColor;
 
     void OnSize(WindowBase::SizeEvent* ev);
-    void WndProc(WindowBase::WndProcEvent* ev);
     void OnFocus(WindowBase::FocusEvent* ev);
     void OnKeyDown(KeyEvent* ev);
 
@@ -505,13 +504,6 @@ static void OnDestroy(WindowBase::DestroyEvent* ev) {
     auto* w = (EditAnnotationsWindow*)ev->e->self;
     if (w->tab && w->tab->editAnnotsWindow == w) {
         ScheduleDeleteEditAnnotationsWindow(w);
-    }
-}
-
-void EditAnnotationsWindow::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
     }
 }
 
@@ -1874,7 +1866,6 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew->onDestroy = MkFunc1Void(OnDestroy);
     ew->onSize = MkMethod1<EditAnnotationsWindow, WindowBase::SizeEvent*, &EditAnnotationsWindow::OnSize>(ew);
     ew->onFocus = MkMethod1<EditAnnotationsWindow, WindowBase::FocusEvent*, &EditAnnotationsWindow::OnFocus>(ew);
-    ew->onWndProc = MkMethod1<EditAnnotationsWindow, WindowBase::WndProcEvent*, &EditAnnotationsWindow::WndProc>(ew);
     ew->onKeyDown = MkMethod1<EditAnnotationsWindow, KeyEvent*, &EditAnnotationsWindow::OnKeyDown>(ew);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);

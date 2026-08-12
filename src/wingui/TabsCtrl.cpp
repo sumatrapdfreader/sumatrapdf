@@ -924,14 +924,6 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
             break;
         }
 
-        case WM_ERASEBKGND:
-            // we paint the full client in WM_PAINT
-            {
-                ev->result = TRUE;
-                ev->didHandle = true;
-                return;
-            }
-
         case WM_PAINT: {
             // BeginPaint / EndPaint only to consume the update region: ValidateRect
             // doesn't clear it on a hidden control, so WM_PAINT was regenerated
@@ -978,6 +970,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
 }
 
 HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
+    shouldEraseBackground = false;
     onWndProc = MkMethod1<TabsCtrl, ControlBase::WndProcEvent*, &TabsCtrl::WndProc>(this);
     CreateCustomArgs cargs;
     cargs.parent = args.parent;

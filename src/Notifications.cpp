@@ -90,7 +90,6 @@ struct NotificationWnd : WindowBase {
 
     void OnPaint(WindowBase::PaintEvent* ev);
     void OnTimer(WindowBase::TimerEvent* ev);
-    void WndProc(WindowBase::WndProcEvent* ev);
 
     void UpdateMessage(Str msg, int timeoutMs = 0, bool highlight = false);
 
@@ -392,7 +391,6 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
 
     onPaint = MkMethod1<NotificationWnd, WindowBase::PaintEvent*, &NotificationWnd::OnPaint>(this);
     onTimer = MkMethod1<NotificationWnd, WindowBase::TimerEvent*, &NotificationWnd::OnTimer>(this);
-    onWndProc = MkMethod1<NotificationWnd, WindowBase::WndProcEvent*, &NotificationWnd::WndProc>(this);
 
     CreateCustomArgs cargs;
     cargs.parent = args.hwndParent;
@@ -765,14 +763,6 @@ void NotificationWnd::OnTimer(WindowBase::TimerEvent* ev) {
     }
     ReportIf(kNotifTimerTimeoutId != timerId);
     ScheduleRemove();
-}
-
-void NotificationWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (WM_ERASEBKGND == ev->msg) {
-        // avoid flicker by telling we took care of erasing background
-        ev->result = TRUE;
-        ev->didHandle = true;
-    }
 }
 
 // If onlyTab is non-null, only remove notifications in this group that are

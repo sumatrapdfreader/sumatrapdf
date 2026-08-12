@@ -563,6 +563,15 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             break;
         }
 
+        case WM_ERASEBKGND: {
+            // false: claim handled so DefWindowProc does not fill with the class
+            // brush (custom windows paint the full client in WM_PAINT)
+            if (!shouldEraseBackground) {
+                return TRUE;
+            }
+            break;
+        }
+
         case WM_PAINT: {
             if (subclassId) {
                 // Allow window controls to do their default drawing.

@@ -365,11 +365,6 @@ void FindBarWnd::WndProc(WindowBase::WndProcEvent* ev) {
         ev->didHandle = true;
         return;
     }
-    if (msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-        return;
-    }
     if (msg == WM_SETCURSOR) {
         // the buttons are virtual controls, so their tooltips are ours to show
         Point pt = HwndGetCursorPos(h);

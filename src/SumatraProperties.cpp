@@ -844,11 +844,6 @@ void PropertiesWnd::UpdateTheme() {
 }
 
 void PropertiesWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ERASEBKGND) {
-        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
-        ev->didHandle = true;
-        return;
-    }
     if (ev->msg == WM_SIZE) {
         LayoutToClient();
         HwndInvalidate(ev->hwnd);

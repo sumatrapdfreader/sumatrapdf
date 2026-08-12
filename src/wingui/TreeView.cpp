@@ -36,6 +36,7 @@ TreeView::TreeView() {
 TreeView::~TreeView() {}
 
 HWND TreeView::Create(const CreateArgs& args) {
+    shouldEraseBackground = false;
     onWndProc = MkMethod1<TreeView, ControlBase::WndProcEvent*, &TreeView::WndProc>(this);
     onNotifyReflect = MkMethod1<TreeView, ControlBase::NotifyReflectEvent*, &TreeView::OnNotifyReflect>(this);
     CreateControlArgs cargs;
@@ -184,12 +185,6 @@ void TreeView::WndProc(ControlBase::WndProcEvent* ev) {
     WPARAM wparam = ev->wparam;
     LPARAM lparam = ev->lparam;
     TreeView* w = this;
-
-    if (WM_ERASEBKGND == msg) {
-        ev->result = FALSE;
-        ev->didHandle = true;
-        return;
-    }
 
     if (WM_RBUTTONDOWN == msg) {
         // this is needed to make right click trigger context menu

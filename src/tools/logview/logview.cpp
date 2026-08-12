@@ -859,6 +859,7 @@ struct LogLinesWnd : ControlBase {
 };
 
 HWND LogLinesWnd::Create(HWND parent) {
+    shouldEraseBackground = false;
     onWndProc = MkMethod1<LogLinesWnd, ControlBase::WndProcEvent*, &LogLinesWnd::WndProc>(this);
     CreateCustomArgs args;
     args.parent = parent;
@@ -876,10 +877,6 @@ void LogLinesWnd::WndProc(ControlBase::WndProcEvent* ev) {
         case WM_PAINT:
             PaintLog(hwnd);
             ev->result = 0;
-            ev->didHandle = true;
-            return;
-        case WM_ERASEBKGND:
-            ev->result = 1; // handled in WM_PAINT (double buffered)
             ev->didHandle = true;
             return;
         case WM_SIZE: {

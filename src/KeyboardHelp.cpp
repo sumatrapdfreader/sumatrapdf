@@ -556,10 +556,6 @@ void KeyboardHelpWnd::WndProc(WindowBase::WndProcEvent* ev) {
     WPARAM wp = ev->wparam;
     LPARAM lp = ev->lparam;
     switch (msg) {
-        case WM_ERASEBKGND:
-            ev->result = 1; // we paint the whole client, so skip the erase flicker
-            ev->didHandle = true;
-            return;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
