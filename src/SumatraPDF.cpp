@@ -2184,8 +2184,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // caused by showing/hiding UI elements happends.
     // Relayout before tearing down prevCtrl so a WM_PAINT pumped during
     // the teardown never calls SetViewPortSize with an invalid zoom.
-    if (win->AsFixed()) {
-        win->AsFixed()->Relayout(zoomVirtual, rotation);
+    // Pause rendering until the remembered page is restored so Relayout,
+    // ShowWindow, and sidebar setup don't request page 1 first (issue #4973).
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        dm->pauseRendering = true;
+        dm->Relayout(zoomVirtual, rotation);
     } else if (win && win->ctrl && win->IsDocLoaded()) {
         win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
     }
@@ -2276,9 +2280,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         return;
     }
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
+    if (dm) {
+        dm->pauseRendering = false;
+    }
     // restore scroll state after the canvas size has been restored
-    if ((args->showWin || ss.page != 1) && win->AsFixed()) {
-        win->AsFixed()->SetScrollState(ss);
+    if ((args->showWin || ss.page != 1) && dm) {
+        dm->SetScrollState(ss);
     }
 
     tab->canvasRc = win->canvasRc;
