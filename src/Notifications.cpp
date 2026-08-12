@@ -88,9 +88,9 @@ struct NotificationWnd : WindowBase {
 
     HWND Create(const NotificationCreateArgs& args);
 
-    void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
-    void OnTimer(UINT_PTR timerId) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void OnPaint(WindowBase::PaintEvent* ev);
+    void OnTimer(WindowBase::TimerEvent* ev);
+    void WndProc(WindowBase::WndProcEvent* ev);
 
     void UpdateMessage(Str msg, int timeoutMs = 0, bool highlight = false);
 
@@ -390,6 +390,10 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     xMargin = args.xMargin;
     yMargin = args.yMargin;
 
+    onPaint = MkMethod1<NotificationWnd, WindowBase::PaintEvent*, &NotificationWnd::OnPaint>(this);
+    onTimer = MkMethod1<NotificationWnd, WindowBase::TimerEvent*, &NotificationWnd::OnTimer>(this);
+    onWndProc = MkMethod1<NotificationWnd, WindowBase::WndProcEvent*, &NotificationWnd::WndProc>(this);
+
     CreateCustomArgs cargs;
     cargs.parent = args.hwndParent;
     cargs.font = args.font;
@@ -631,7 +635,8 @@ void NotificationWnd::Layout(Str message) {
 }
 
 // TODO: figure out why it flickers
-void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
+void NotificationWnd::OnPaint(WindowBase::PaintEvent* ev) {
+    HDC hdcIn = ev->hdc;
     Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();
@@ -744,7 +749,8 @@ void NotificationWnd::ScheduleRemove() {
     }
 }
 
-void NotificationWnd::OnTimer(UINT_PTR timerId) {
+void NotificationWnd::OnTimer(WindowBase::TimerEvent* ev) {
+    UINT_PTR timerId = ev->timerId;
     if (timerId == kNotifTimerDelayId) {
         // delay elapsed, now show the notification
         KillTimer(hwnd, delayTimerId);
@@ -761,13 +767,12 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
     ScheduleRemove();
 }
 
-LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_ERASEBKGND == msg) {
+void NotificationWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (WM_ERASEBKGND == ev->msg) {
         // avoid flicker by telling we took care of erasing background
-        return TRUE;
+        ev->result = TRUE;
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the controls their input, RTL included
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
 // If onlyTab is non-null, only remove notifications in this group that are

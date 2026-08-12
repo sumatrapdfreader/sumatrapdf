@@ -122,9 +122,9 @@ struct PdfToolDialog : WindowBase {
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt() {}
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool PreTranslateMessage(MSG& msg) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void PreTranslate(WindowBase::PreTranslateEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
 };
 
 PdfToolDialog::~PdfToolDialog() {
@@ -178,6 +178,9 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     srcPath = str::Dup(tab->filePath);
     hFont = GetDefaultGuiFont();
     onClose = MkFunc1Void(PdfToolDialogOnClose);
+    onWndProc = MkMethod1<PdfToolDialog, WindowBase::WndProcEvent*, &PdfToolDialog::WndProc>(this);
+    onPreTranslate = MkMethod1<PdfToolDialog, WindowBase::PreTranslateEvent*, &PdfToolDialog::PreTranslate>(this);
+    onKeyDown = MkMethod1<PdfToolDialog, KeyEvent*, &PdfToolDialog::OnKeyDown>(this);
 
     CreateCustomArgs cargs;
     cargs.title = title;
@@ -312,42 +315,42 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     }
 }
 
-LRESULT PdfToolDialog::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area
+void PdfToolDialog::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the virtual controls their input
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-// WM_CHAR Esc (some locales / IME paths); key-down Esc is in OnKeyDown (#5856).
-bool PdfToolDialog::PreTranslateMessage(MSG& msg) {
+// WM_CHAR Esc (some locales / IME paths); key-down Esc is in onKeyDown (#5856).
+void PdfToolDialog::PreTranslate(WindowBase::PreTranslateEvent* ev) {
+    MSG& msg = *ev->msg;
     if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::PreTranslateMessage(msg);
 }
 
-bool PdfToolDialog::OnKeyDown(KeyEvent& ev) {
-    if (ev.vkey == VK_ESCAPE) {
+void PdfToolDialog::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == VK_RETURN) {
+    if (ev->vkey == VK_RETURN) {
         // Enter presses the focused button, if it's one; otherwise it's the
         // dialog's default action
         LRESULT res = 0;
         if (vroot && vroot->focused && VirtTreeOnMessage(hwnd, vroot, WM_KEYDOWN, VK_RETURN, 0, res)) {
-            return true;
+            ev->didHandle = true;
+            return;
         }
         if (actionBtn && actionBtn->HasFlag(vwfEnabled)) {
             DoIt();
         }
-        return true;
+        ev->didHandle = true;
     }
-    // Tab moves between the Edits and the buttons
-    return WindowBase::OnKeyDown(ev);
+    // Tab: leave didHandle false for default Tab navigation
 }
 
 struct PdfBakeDialog : PdfToolDialog {

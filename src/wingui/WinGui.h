@@ -78,8 +78,9 @@ struct WmEvent {
     bool didHandle = true; // common case so set as default
 };
 
-// WM_KEYDOWN / WM_SYSKEYDOWN for WindowBase::OnKeyDown (like VirtKeyEvent).
+// WM_KEYDOWN / WM_SYSKEYDOWN for WindowBase::onKeyDown (like VirtKeyEvent).
 // hwnd is MSG::hwnd (often a child Edit/DropDown), not necessarily the WindowBase.
+// Handlers set didHandle = true to consume the key.
 struct KeyEvent {
     HWND hwnd = nullptr;
     int vkey = 0;
@@ -87,6 +88,7 @@ struct KeyEvent {
     bool isShift = false;
     bool isAlt = false;
     bool isSysKey = false; // true for WM_SYSKEYDOWN
+    bool didHandle = false;
 };
 
 // Base of the top-level windows (and the child windows that place themselves,
@@ -99,9 +101,106 @@ struct WindowBase {
     struct DestroyEvent {
         WmEvent* e = nullptr;
     };
+    struct AttachEvent {
+        WindowBase* w = nullptr;
+    };
+    struct FocusEvent {
+        WindowBase* w = nullptr;
+    };
+    struct CommandEvent {
+        WindowBase* w = nullptr;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        bool didHandle = false;
+    };
+    struct CreateEvent {
+        WindowBase* w = nullptr;
+        CREATESTRUCT* cs = nullptr;
+        int result = 0;
+    };
+    struct DropFilesEvent {
+        WindowBase* w = nullptr;
+        HDROP dropInfo = nullptr;
+    };
+    struct GetMinMaxInfoEvent {
+        WindowBase* w = nullptr;
+        MINMAXINFO* mmi = nullptr;
+    };
+    struct MouseEvent {
+        WindowBase* w = nullptr;
+        UINT msg = 0;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        LRESULT result = -1; // -1 = not handled
+    };
+    struct MoveEvent {
+        WindowBase* w = nullptr;
+        POINTS* pts = nullptr;
+    };
+    struct PaintEvent {
+        WindowBase* w = nullptr;
+        HDC hdc = nullptr;
+        PAINTSTRUCT* ps = nullptr;
+    };
+    struct SizeEvent {
+        WindowBase* w = nullptr;
+        UINT msg = 0;
+        UINT type = 0;
+        Size size{};
+    };
+    struct TaskbarCallbackEvent {
+        WindowBase* w = nullptr;
+        UINT msg = 0;
+        LPARAM lparam = 0;
+    };
+    struct TimerEvent {
+        WindowBase* w = nullptr;
+        UINT_PTR timerId = 0;
+    };
+    struct WindowPosChangingEvent {
+        WindowBase* w = nullptr;
+        WINDOWPOS* windowPos = nullptr;
+    };
+    struct WndProcEvent {
+        WindowBase* w = nullptr;
+        HWND hwnd = nullptr;
+        UINT msg = 0;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        LRESULT result = 0;
+        bool didHandle = false; // true -> return result; else WndProcDefault
+    };
+    struct PreTranslateEvent {
+        WindowBase* w = nullptr;
+        MSG* msg = nullptr;
+        bool didHandle = false;
+    };
+    struct NotifyEvent {
+        WindowBase* w = nullptr;
+        int controlId = 0;
+        NMHDR* nmh = nullptr;
+        LRESULT result = 0;
+    };
 
     using CloseHandler = Func1<CloseEvent*>;
     using DestroyHandler = Func1<DestroyEvent*>;
+    using AttachHandler = Func1<AttachEvent*>;
+    using FocusHandler = Func1<FocusEvent*>;
+    using CommandHandler = Func1<CommandEvent*>;
+    using CreateHandler = Func1<CreateEvent*>;
+    using DropFilesHandler = Func1<DropFilesEvent*>;
+    using GetMinMaxInfoHandler = Func1<GetMinMaxInfoEvent*>;
+    using MouseHandler = Func1<MouseEvent*>;
+    using MoveHandler = Func1<MoveEvent*>;
+    using PaintHandler = Func1<PaintEvent*>;
+    using SizeHandler = Func1<SizeEvent*>;
+    using TaskbarCallbackHandler = Func1<TaskbarCallbackEvent*>;
+    using TimerHandler = Func1<TimerEvent*>;
+    using WindowPosChangingHandler = Func1<WindowPosChangingEvent*>;
+    using WndProcHandler = Func1<WndProcEvent*>;
+    using PreTranslateHandler = Func1<PreTranslateEvent*>;
+    using KeyDownHandler = Func1<KeyEvent*>;
+    using NotifyHandler = Func1<NotifyEvent*>;
 
     WindowBase();
     WindowBase(HWND hwnd);
@@ -119,26 +218,8 @@ struct WindowBase {
     void Subclass();
     void UnSubclass();
 
-    virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-    // default: WM_KEYDOWN/WM_SYSKEYDOWN -> OnKeyDown; override for non-key msgs
-    virtual bool PreTranslateMessage(MSG& msg);
-    // return true to consume; default handles Tab among mixed HWND/virtual layout
-    virtual bool OnKeyDown(KeyEvent&);
-    virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
-
-    virtual void OnAttach();
-    virtual void OnFocus();
-    virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
-    virtual int OnCreate(CREATESTRUCT*);
-    virtual void OnDropFiles(HDROP drop_info);
-    virtual void OnGetMinMaxInfo(MINMAXINFO* mmi);
-    virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
-    virtual void OnMove(POINTS* pts);
-    virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
-    virtual void OnSize(UINT msg, UINT type, Size size);
-    virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
-    virtual void OnTimer(UINT_PTR timerId);
-    virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
+    // PreTranslateMessage: onPreTranslate, then key-down -> onKeyDown, then Tab default
+    bool PreTranslateMessage(MSG& msg);
 
     void SetColors(COLORREF textColor, COLORREF bgColor);
 
@@ -202,6 +283,23 @@ struct WindowBase {
     // relayout on WM_SIZE. Off by default: most windows do it themselves
     bool autoLayout = false;
 
+    AttachHandler onAttach;
+    FocusHandler onFocus;
+    CommandHandler onCommand;
+    CreateHandler onCreate;
+    DropFilesHandler onDropFiles;
+    GetMinMaxInfoHandler onGetMinMaxInfo;
+    MouseHandler onMouseEvent;
+    MoveHandler onMove;
+    PaintHandler onPaint;
+    SizeHandler onSize;
+    TaskbarCallbackHandler onTaskbarCallback;
+    TimerHandler onTimer;
+    WindowPosChangingHandler onWindowPosChanging;
+    WndProcHandler onWndProc;
+    PreTranslateHandler onPreTranslate;
+    KeyDownHandler onKeyDown;
+    NotifyHandler onNotify;
     CloseHandler onClose;
     DestroyHandler onDestroy;
 };

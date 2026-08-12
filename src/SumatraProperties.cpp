@@ -56,10 +56,10 @@ struct PropertiesWnd : WindowBase {
     void SetPropsText(Str text);
     void SizeToContent();
     void CopyToClipboard();
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool PreTranslateMessage(MSG& msg) override;
-    bool OnKeyDown(KeyEvent& ev) override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void PreTranslate(WindowBase::PreTranslateEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
+    void OnCommand(WindowBase::CommandEvent* ev);
     void ScheduleDelete();
 };
 
@@ -843,54 +843,53 @@ void PropertiesWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-LRESULT PropertiesWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+void PropertiesWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
+        return;
     }
-    if (msg == WM_SIZE) {
+    if (ev->msg == WM_SIZE) {
         LayoutToClient();
-        HwndInvalidate(hwndIn);
-        return 0;
+        HwndInvalidate(ev->hwnd);
+        ev->result = 0;
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the virtual controls their input
-    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
-bool PropertiesWnd::OnKeyDown(KeyEvent& ev) {
+void PropertiesWnd::OnKeyDown(KeyEvent* ev) {
     if (!hwnd) {
-        return false;
+        return;
     }
-    if (ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
-        return false;
+    if (ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
+        return;
     }
-    if (ev.vkey == VK_ESCAPE) {
+    if (ev->vkey == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
-bool PropertiesWnd::PreTranslateMessage(MSG& msg) {
+void PropertiesWnd::PreTranslate(WindowBase::PreTranslateEvent* ev) {
     if (!hwnd) {
-        return false;
+        return;
     }
+    MSG& msg = *ev->msg;
     if (msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
-        return false;
+        return;
     }
     if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::PreTranslateMessage(msg);
 }
 
-bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {
-    auto cmd = LOWORD(wparam);
+void PropertiesWnd::OnCommand(WindowBase::CommandEvent* ev) {
+    auto cmd = LOWORD(ev->wparam);
     if (cmd == CmdCopySelection) {
         CopyToClipboard();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnCommand(wparam, lparam);
 }
 
 static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
@@ -1059,6 +1058,10 @@ void ShowProperties(HWND parent, DocController* ctrl) {
 
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnPropertiesClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnPropertiesDestroy);
+    wnd->onCommand = MkMethod1<PropertiesWnd, WindowBase::CommandEvent*, &PropertiesWnd::OnCommand>(wnd);
+    wnd->onWndProc = MkMethod1<PropertiesWnd, WindowBase::WndProcEvent*, &PropertiesWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<PropertiesWnd, KeyEvent*, &PropertiesWnd::OnKeyDown>(wnd);
+    wnd->onPreTranslate = MkMethod1<PropertiesWnd, WindowBase::PreTranslateEvent*, &PropertiesWnd::PreTranslate>(wnd);
     if (!wnd->Create(parent)) {
         gPropertiesWindows.Remove(wnd);
         delete wnd;

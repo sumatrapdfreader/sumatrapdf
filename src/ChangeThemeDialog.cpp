@@ -45,8 +45,8 @@ struct ChangeThemeWnd : WindowBase {
     DocumentColorsFollowTheme startDocumentColorsFollowTheme = DocumentColorsFollowTheme::Off;
 
     bool Create(MainWindow* win);
-    bool OnKeyDown(KeyEvent& ev) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void OnKeyDown(KeyEvent* ev);
+    void WndProc(WindowBase::WndProcEvent* ev);
 
     void UpdateTheme();
     void KeepFocus();
@@ -217,25 +217,25 @@ void ChangeThemeWnd::OnChange() {
     ScheduleDelete();
 }
 
-LRESULT ChangeThemeWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+void ChangeThemeWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the virtual controls their input
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool ChangeThemeWnd::OnKeyDown(KeyEvent& ev) {
-    if (ev.vkey == VK_ESCAPE) {
+void ChangeThemeWnd::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_ESCAPE) {
         OnCancel();
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == VK_RETURN) {
+    if (ev->vkey == VK_RETURN) {
         // an open drop-down list gets Enter first: there it commits the
         // highlighted entry rather than the dialog
         HWND hwndDrop = dropDownDocumentColorsFollowTheme ? dropDownDocumentColorsFollowTheme->hwnd : nullptr;
         if (hwndDrop && SendMessageW(hwndDrop, CB_GETDROPPEDSTATE, 0, 0)) {
-            return false;
+            return;
         }
         // Enter presses the focused button, like a real dialog does; anywhere
         // else it's the default action
@@ -244,11 +244,9 @@ bool ChangeThemeWnd::OnKeyDown(KeyEvent& ev) {
         } else {
             OnChange();
         }
-        return true;
+        ev->didHandle = true;
     }
-    // Tab moves between the list, the drop-down and the buttons; the arrow keys
-    // go to whichever virtual control has the focus
-    return WindowBase::OnKeyDown(ev);
+    // Tab / unhandled: leave didHandle false for default Tab navigation
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
@@ -387,6 +385,8 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     wnd->documentColorsFollowThemeOnly = documentColorsFollowThemeOnly;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
+    wnd->onWndProc = MkMethod1<ChangeThemeWnd, WindowBase::WndProcEvent*, &ChangeThemeWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<ChangeThemeWnd, KeyEvent*, &ChangeThemeWnd::OnKeyDown>(wnd);
     wnd->font = GetAppFont(win->hwndFrame);
     bool ok = wnd->Create(win);
     if (!ok) {

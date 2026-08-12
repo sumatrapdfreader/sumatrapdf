@@ -396,13 +396,13 @@ struct AdvancedSettingsWnd : WindowBase {
     Vec<SettingItem*> items;
 
     bool Create(MainWindow* win);
-    bool OnKeyDown(KeyEvent& ev) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void OnKeyDown(KeyEvent* ev);
+    void WndProc(WindowBase::WndProcEvent* ev);
     bool HandleEscapeKey(bool isEditingValue, bool isEditingEnum);
     bool HandleTabKey(bool isEditingValue, bool isEditingEnum);
     bool HandleEnterKey(bool isEditingValue, bool isEditingEnum);
     bool HandleUpDownKey(const KeyEvent& ev);
-    void OnSize(UINT msg, UINT type, Size size) override;
+    void OnSize(WindowBase::SizeEvent* ev);
 
     void QueryChanged();
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
@@ -985,32 +985,33 @@ bool AdvancedSettingsWnd::HandleUpDownKey(const KeyEvent& ev) {
     return true;
 }
 
-LRESULT AdvancedSettingsWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+void AdvancedSettingsWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the virtual controls their input
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool AdvancedSettingsWnd::OnKeyDown(KeyEvent& ev) {
+void AdvancedSettingsWnd::OnKeyDown(KeyEvent* ev) {
     // a single click only selects; activation (toggle / edit) is on double-click
     // (OnItemDoubleClicked) or Enter
-    bool isEditingValue = editValue && ev.hwnd == editValue->hwnd;
-    bool isEditingEnum = dropDownValue && ev.hwnd == dropDownValue->hwnd;
-    if (ev.vkey == VK_ESCAPE) {
-        return HandleEscapeKey(isEditingValue, isEditingEnum);
+    bool isEditingValue = editValue && ev->hwnd == editValue->hwnd;
+    bool isEditingEnum = dropDownValue && ev->hwnd == dropDownValue->hwnd;
+    if (ev->vkey == VK_ESCAPE) {
+        ev->didHandle = HandleEscapeKey(isEditingValue, isEditingEnum);
+        return;
     }
-    if (ev.vkey == VK_TAB) {
-        return HandleTabKey(isEditingValue, isEditingEnum);
+    if (ev->vkey == VK_TAB) {
+        ev->didHandle = HandleTabKey(isEditingValue, isEditingEnum);
+        return;
     }
-    if (ev.vkey == VK_RETURN) {
-        return HandleEnterKey(isEditingValue, isEditingEnum);
+    if (ev->vkey == VK_RETURN) {
+        ev->didHandle = HandleEnterKey(isEditingValue, isEditingEnum);
+        return;
     }
-    if (HandleUpDownKey(ev)) {
-        return true;
+    if (HandleUpDownKey(*ev)) {
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
 // clicking the window's close box sends WM_CLOSE. We must schedule our own
@@ -1037,14 +1038,14 @@ static int gAdvSettingsLastClientDx = 0;
 static int gAdvSettingsLastClientDy = 0;
 
 // re-layout the controls when the (resizable) window is resized
-void AdvancedSettingsWnd::OnSize(UINT /*msg*/, UINT /*type*/, Size size) {
+void AdvancedSettingsWnd::OnSize(WindowBase::SizeEvent* ev) {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
     // before the child controls exist; ignore layout until they're created
     if (!layout || !listBox) {
         return;
     }
-    int dx = size.dx;
-    int dy = size.dy;
+    int dx = ev->size.dx;
+    int dy = ev->size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -1259,6 +1260,9 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     auto* wnd = new AdvancedSettingsWnd();
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
+    wnd->onSize = MkMethod1<AdvancedSettingsWnd, WindowBase::SizeEvent*, &AdvancedSettingsWnd::OnSize>(wnd);
+    wnd->onWndProc = MkMethod1<AdvancedSettingsWnd, WindowBase::WndProcEvent*, &AdvancedSettingsWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<AdvancedSettingsWnd, KeyEvent*, &AdvancedSettingsWnd::OnKeyDown>(wnd);
     wnd->font = GetAppFont(win->hwndFrame);
     bool ok = wnd->Create(win);
     if (!ok) {

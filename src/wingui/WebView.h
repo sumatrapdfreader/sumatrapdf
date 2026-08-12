@@ -132,7 +132,7 @@ struct WebviewWnd : WindowBase {
 
     virtual void OnBrowserMessage(Str msg);
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
 
     void UpdateWebviewSize();
 

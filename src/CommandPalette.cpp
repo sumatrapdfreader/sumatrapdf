@@ -180,19 +180,23 @@ void CommandPaletteWnd::SwitchToFavorites() {
     SwitchToPrefix(kPalettePrefixFavorites);
 }
 
-LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // we paint the whole client area, double-buffered
+void CommandPaletteWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // we paint the whole client area, double-buffered
+        ev->didHandle = true;
+        return;
     }
-    switch (msg) {
+    switch (ev->msg) {
         case WM_ACTIVATE:
-            if (wp == WA_INACTIVE) {
+            if (ev->wparam == WA_INACTIVE) {
                 ScheduleDeleteAndExecCommand();
-                return 0;
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
             }
             break;
         case WM_COMMAND: {
-            int cmdId = LOWORD(wp);
+            int cmdId = LOWORD(ev->wparam);
             CustomCommand* cmd = FindCustomCommand(cmdId);
             if (cmd != nullptr) {
                 cmdId = cmd->origId;
@@ -201,13 +205,13 @@ LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 case CmdNextTabSmart:
                 case CmdPrevTabSmart: {
                     int dir = cmdId == CmdNextTabSmart ? 1 : -1;
-                    return AdvanceSelection(dir);
+                    ev->result = AdvanceSelection(dir);
+                    ev->didHandle = true;
+                    return;
                 }
             }
         }
     }
-
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
 void CommandPaletteWnd::OnSelectionChange() {
@@ -305,50 +309,51 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
     return true;
 }
 
-bool CommandPaletteWnd::OnKeyDown(KeyEvent& ev) {
+void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
     int dir = 0;
-    if (ev.vkey == VK_ESCAPE) {
+    if (ev->vkey == VK_ESCAPE) {
         ScheduleDeleteAndExecCommand();
-        return true;
+        ev->didHandle = true;
+        return;
     }
 
-    if (ev.vkey == VK_RETURN) {
+    if (ev->vkey == VK_RETURN) {
         ExecuteCurrentSelection();
-        return true;
+        ev->didHandle = true;
+        return;
     }
 
-    if (ev.vkey == VK_DELETE) {
+    if (ev->vkey == VK_DELETE) {
         if (RemoveSelectedItem()) {
-            return true;
+            ev->didHandle = true;
         }
         // not a removable list item: let the edit control process Delete
-        // (delete the character to the right of the cursor)
-        return false;
+        return;
     }
 
-    if (ev.vkey == VK_UP) {
+    if (ev->vkey == VK_UP) {
         dir = -1;
-    } else if (ev.vkey == VK_DOWN) {
+    } else if (ev->vkey == VK_DOWN) {
         dir = 1;
     }
 
-    if (ev.vkey == VK_TAB) {
-        if (ev.isCtrl) {
-            dir = ev.isShift ? -1 : 1;
+    if (ev->vkey == VK_TAB) {
+        if (ev->isCtrl) {
+            dir = ev->isShift ? -1 : 1;
         }
     }
-    return AdvanceSelection(dir);
+    ev->didHandle = AdvanceSelection(dir);
 }
 
-// smart-tab releases Ctrl after the palette is open; key-downs go via OnKeyDown
-bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
+// smart-tab releases Ctrl after the palette is open; key-downs go via onKeyDown
+void CommandPaletteWnd::PreTranslate(WindowBase::PreTranslateEvent* ev) {
+    MSG& msg = *ev->msg;
     if (smartTabMode && msg.message == WM_KEYUP && msg.wParam == VK_CONTROL) {
         if (!stickyMode) {
             ExecuteCurrentSelection();
         }
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::PreTranslateMessage(msg);
 }
 
 void CommandPaletteWnd::ExecuteCurrentSelection() {
@@ -685,6 +690,10 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     auto* wnd = new CommandPaletteWnd();
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
+    wnd->onWndProc = MkMethod1<CommandPaletteWnd, WindowBase::WndProcEvent*, &CommandPaletteWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<CommandPaletteWnd, KeyEvent*, &CommandPaletteWnd::OnKeyDown>(wnd);
+    wnd->onPreTranslate =
+        MkMethod1<CommandPaletteWnd, WindowBase::PreTranslateEvent*, &CommandPaletteWnd::PreTranslate>(wnd);
     wnd->font = GetAppBiggerFont(win->hwndFrame);
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);

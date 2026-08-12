@@ -129,9 +129,9 @@ struct FindWindowWnd : WindowBase {
     int CurrentMatchIndex();         // list index of the document's current match, or -1
     int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool OnKeyDown(KeyEvent& ev) override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
+    void OnCommand(WindowBase::CommandEvent* ev);
 };
 
 static void DeferredGoToFindMatch(DeferredGoToFindMatchData* d) {
@@ -195,7 +195,10 @@ void FindWindowWnd::UpdateButtonIcons() {
 
 static void FindWindowButtonClicked(FindWindowWnd* w, VirtMouseEvent* ev) {
     auto* btn = (VirtIconButton*)ev->target;
-    w->OnCommand((WPARAM)btn->id, 0);
+    WindowBase::CommandEvent ce;
+    ce.w = w;
+    ce.wparam = (WPARAM)btn->id;
+    w->OnCommand(&ce);
 }
 
 void FindWindowWnd::CreateButtons() {
@@ -691,13 +694,16 @@ void FindWindowWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
-LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
-    switch (msg) {
+void FindWindowWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    HWND h = ev->hwnd;
+    switch (ev->msg) {
         case WM_ENTERSIZEMOVE:
             inSizeMove = true;
             break;
         case WM_ERASEBKGND:
-            return TRUE; // OnPaint covers the whole client area, double-buffered
+            ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+            ev->didHandle = true;
+            return;
         case WM_SIZE:
             Layout();
             break;
@@ -722,7 +728,7 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             break;
         }
         case WM_GETMINMAXINFO: {
-            auto* mmi = (MINMAXINFO*)lp;
+            auto* mmi = (MINMAXINFO*)ev->lparam;
             int pad = DpiScale(h, 8);
             int gap = DpiScale(h, 6);
             int editDy = edit ? edit->GetIdealSize().dy : DpiScale(h, 22);
@@ -737,99 +743,110 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             // narrow two-row header: edit, then status+toolbar
             mmi->ptMinTrackSize.x = (2 * pad) + std::max(tbW, DpiScale(h, 160));
             mmi->ptMinTrackSize.y = (2 * pad) + editDy + gap + row2Dy + pad + DpiScale(h, 48);
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
         case WM_CLOSE:
             // the caption close button hides the bar instead of destroying it
             HideFindWindow(win);
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
     }
-    return WndProcDefault(h, msg, wp, lp);
 }
 
-bool FindWindowWnd::OnKeyDown(KeyEvent& ev) {
-    switch (ev.vkey) {
+void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
+    switch (ev->vkey) {
         case 'F':
-            if (ev.isCtrl && !ev.isAlt) {
+            if (ev->isCtrl && !ev->isAlt) {
                 FocusFindEditSelectAll(win);
-                return true;
+                ev->didHandle = true;
             }
             break;
         case VK_ESCAPE:
             HideFindWindow(win);
-            return true;
+            ev->didHandle = true;
+            break;
         case VK_RETURN:
         case VK_F3: {
             // Enter forces a pending debounced search to start now (find the
             // first match) instead of stepping the (stale) results list (#4626)
-            if (ev.vkey == VK_RETURN && FindFlushPendingSearch(win)) {
-                return true;
+            if (ev->vkey == VK_RETURN && FindFlushPendingSearch(win)) {
+                ev->didHandle = true;
+                break;
             }
             // step through the results list; fall back to a document search when
             // there's no list (e.g. count not ready)
-            WPARAM dir = ev.isShift ? VK_UP : VK_DOWN;
+            WPARAM dir = ev->isShift ? VK_UP : VK_DOWN;
             if (!MoveResultSelection(dir)) {
-                ev.isShift ? FindPrev(win) : FindNext(win);
+                ev->isShift ? FindPrev(win) : FindNext(win);
             }
-            return true;
+            ev->didHandle = true;
+            break;
         }
         case VK_DOWN:
         case VK_UP:
         case VK_NEXT:
         case VK_PRIOR:
             // walk the results list from the search edit
-            return MoveResultSelection(ev.vkey);
+            ev->didHandle = MoveResultSelection(ev->vkey);
+            break;
         case VK_HOME:
         case VK_END: {
             // Ctrl+Home / Ctrl+End: always jump to first/last result (#5797)
-            if (ev.isCtrl) {
-                return MoveResultSelection(ev.vkey);
+            if (ev->isCtrl) {
+                ev->didHandle = MoveResultSelection(ev->vkey);
+                break;
             }
             // Home / End: if the caret is already at the start/end of the search
             // text, move the results list; otherwise let the Edit control move
             // the caret (same idea as the two-press pattern in the request).
-            if (!edit || ev.hwnd != edit->hwnd) {
+            if (!edit || ev->hwnd != edit->hwnd) {
                 // focus is on the list itself: Home/End jump first/last
-                return MoveResultSelection(ev.vkey);
+                ev->didHandle = MoveResultSelection(ev->vkey);
+                break;
             }
             DWORD selStart = 0, selEnd = 0;
             SendMessageW(edit->hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
             int textLen = Edit_GetTextLength(edit->hwnd);
-            bool toEnd = (ev.vkey == VK_END);
+            bool toEnd = (ev->vkey == VK_END);
             bool caretAtBound = (selStart == selEnd) && (toEnd ? (int)selEnd == textLen : (int)selStart == 0);
             if (caretAtBound) {
-                return MoveResultSelection(ev.vkey);
+                ev->didHandle = MoveResultSelection(ev->vkey);
             }
-            return false; // Edit moves the caret
+            // else leave didHandle false: Edit moves the caret
+            break;
         }
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
-bool FindWindowWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
-    int cmd = LOWORD(wparam);
+void FindWindowWnd::OnCommand(WindowBase::CommandEvent* ev) {
+    int cmd = LOWORD(ev->wparam);
     switch (cmd) {
         case CmdFindPrev:
             if (!MoveResultSelection(VK_UP)) {
                 FindPrev(win);
             }
-            return true;
+            break;
         case CmdFindNext:
             if (!MoveResultSelection(VK_DOWN)) {
                 FindNext(win);
             }
-            return true;
+            break;
         case CmdFindToggleMatchCase:
             FindToggleMatchCase(win);
-            return true;
+            break;
         case CmdFindToggleMatchWholeWord:
             FindToggleMatchWholeWord(win);
-            return true;
+            break;
         case kFindWinPinCmdId:
             ToggleFloatingFindUI(win); // dock back to the compact toolbar bar
-            return true;
+            break;
+        default:
+            return;
     }
-    return false;
+    ev->didHandle = true;
 }
 
 //--- public API
@@ -838,6 +855,9 @@ bool FindWindowWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
 // Phase 1: search controls only; a results list is added in a later phase.
 FindWindowWnd* CreateFindWindow(MainWindow* win) {
     auto* w = new FindWindowWnd();
+    w->onCommand = MkMethod1<FindWindowWnd, WindowBase::CommandEvent*, &FindWindowWnd::OnCommand>(w);
+    w->onWndProc = MkMethod1<FindWindowWnd, WindowBase::WndProcEvent*, &FindWindowWnd::WndProc>(w);
+    w->onKeyDown = MkMethod1<FindWindowWnd, KeyEvent*, &FindWindowWnd::OnKeyDown>(w);
     if (!w->Create(win)) {
         delete w;
         return nullptr;

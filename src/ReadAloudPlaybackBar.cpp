@@ -35,8 +35,8 @@ struct ReadAloudPlaybackBar : WindowBase {
     HWND Create(HWND parentCanvas);
     void SetSession(WindowTab* tab);
     void UpdateLayout();
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnPaint(WindowBase::PaintEvent* ev);
 
     WindowTab* sessionTab = nullptr;
     Rect rPause;
@@ -98,6 +98,8 @@ static TempStr SpeedLabelTemp() {
 }
 
 HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
+    onPaint = MkMethod1<ReadAloudPlaybackBar, WindowBase::PaintEvent*, &ReadAloudPlaybackBar::OnPaint>(this);
+    onWndProc = MkMethod1<ReadAloudPlaybackBar, WindowBase::WndProcEvent*, &ReadAloudPlaybackBar::WndProc>(this);
     CreateCustomArgs args;
     args.parent = parentCanvas;
     args.style = WS_CHILD | SS_CENTER;
@@ -180,7 +182,8 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     SetWindowPos(hwnd, nullptr, x, y, barDx, barDy, flags);
 }
 
-void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
+void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
+    HDC hdcIn = ev->hdc;
     Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();
@@ -245,46 +248,63 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* /*ps*/) {
     buffer.Flush(hdcIn);
 }
 
-LRESULT ReadAloudPlaybackBar::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+void ReadAloudPlaybackBar::WndProc(WindowBase::WndProcEvent* ev) {
+    HWND hwndIn = ev->hwnd;
+    UINT msg = ev->msg;
+    LPARAM lp = ev->lparam;
     if (WM_SETCURSOR == msg) {
         Point pt = HwndGetCursorPos(hwndIn);
         if (ReadAloudPlaybackBarHitTest(rPause, pt) || ReadAloudPlaybackBarHitTest(rStop, pt) ||
             ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
             SetCursorCached(IDC_HAND);
-            return TRUE;
+            ev->result = TRUE;
+            ev->didHandle = true;
+            return;
         }
     }
 
     if (WM_ERASEBKGND == msg) {
-        return TRUE;
+        ev->result = TRUE;
+        ev->didHandle = true;
+        return;
     }
 
     if (WM_MOUSEMOVE == msg) {
         HwndScheduleRepaint(hwndIn);
         TrackMouseLeave(hwndIn);
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
 
     if (WM_MOUSELEAVE == msg) {
         HwndScheduleRepaint(hwndIn);
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
 
     if (WM_LBUTTONUP == msg) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (ReadAloudPlaybackBarHitTest(rPause, pt)) {
             ReadAloudPlaybackPauseOrResume();
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
         if (ReadAloudPlaybackBarHitTest(rStop, pt)) {
             ReadAloudPlaybackStop();
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
         if (ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
             ReadAloudPlaybackCycleSpeed(+1);
             UpdateLayout();
             HwndRepaintNow(hwndIn);
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
     }
 
@@ -295,11 +315,10 @@ LRESULT ReadAloudPlaybackBar::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM l
             ReadAloudPlaybackCycleSpeed(-1);
             UpdateLayout();
             HwndRepaintNow(hwndIn);
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
         }
     }
-
-    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
 static ReadAloudPlaybackBar* ReadAloudPlaybackBarEnsure(MainWindow* win) {

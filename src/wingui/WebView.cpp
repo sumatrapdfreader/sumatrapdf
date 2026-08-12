@@ -2036,6 +2036,7 @@ static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
 
 HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     ReportIf(!dataDir);
+    onWndProc = MkMethod1<WebviewWnd, WindowBase::WndProcEvent*, &WebviewWnd::WndProc>(this);
     CreateCustomArgs cargs;
     cargs.parent = args.parent;
     cargs.pos = args.pos;
@@ -2058,35 +2059,36 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     return hwnd;
 }
 
-LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg == WM_TIMER && wparam == kEnvRetryTimerId) {
+void WebviewWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_TIMER && ev->wparam == kEnvRetryTimerId) {
         OnEnvCreateRetryTimer();
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
-    if (msg == WM_ENTERSIZEMOVE) {
+    if (ev->msg == WM_ENTERSIZEMOVE) {
         isInSizeMove = true;
         Eval("if (window.__setHostResizing) window.__setHostResizing(true);");
-    } else if (msg == WM_EXITSIZEMOVE) {
+    } else if (ev->msg == WM_EXITSIZEMOVE) {
         isInSizeMove = false;
         Eval("if (window.__setHostResizing) window.__setHostResizing(false);");
         UpdateWebviewSize();
-    } else if (msg == WM_SIZE) {
-        SetControllerVisible(wparam != SIZE_MINIMIZED);
+    } else if (ev->msg == WM_SIZE) {
+        SetControllerVisible(ev->wparam != SIZE_MINIMIZED);
         if (!isInSizeMove) {
             UpdateWebviewSize();
         }
-    } else if (msg == WM_SHOWWINDOW) {
-        SetControllerVisible(wparam != FALSE);
+    } else if (ev->msg == WM_SHOWWINDOW) {
+        SetControllerVisible(ev->wparam != FALSE);
         UpdateWebviewSize();
-    } else if (msg == WM_ACTIVATE) {
-        if (wparam == WA_INACTIVE) {
+    } else if (ev->msg == WM_ACTIVATE) {
+        if (ev->wparam == WA_INACTIVE) {
             SetControllerVisible(false);
         } else {
             SetControllerVisible(true);
             UpdateWebviewSize();
         }
     }
-    return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
 WebviewWnd::~WebviewWnd() {
@@ -2186,8 +2188,6 @@ void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str, int) {}
 void WebviewWnd::FlushPendingOps() {}
 void WebviewWnd::SetControllerVisible(bool) {}
 void WebviewWnd::OnBrowserMessage(Str) {}
-LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    return WndProcDefault(hwnd, msg, wparam, lparam);
-}
+void WebviewWnd::WndProc(WindowBase::WndProcEvent*) {}
 void WebviewWnd::UpdateWebviewSize() {}
 #endif // !_MSC_VER

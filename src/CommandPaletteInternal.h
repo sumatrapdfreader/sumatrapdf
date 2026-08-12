@@ -52,9 +52,9 @@ struct CommandPaletteWnd : WindowBase {
     bool smartTabMode = false;
     bool stickyMode = false;
 
-    bool PreTranslateMessage(MSG&) override;
-    bool OnKeyDown(KeyEvent&) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void PreTranslate(WindowBase::PreTranslateEvent*);
+    void OnKeyDown(KeyEvent*);
+    void WndProc(WindowBase::WndProcEvent*);
 
     void CollectStrings(MainWindow*);
     void CollectTabsRegular(MainWindow*, WindowTab* currTab);

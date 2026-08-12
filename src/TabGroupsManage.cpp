@@ -79,8 +79,8 @@ struct TabGroupsWnd : WindowBase {
     void UpdateDeleteButton();
     void OnCancel();
     void OnOk();
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
 };
 
@@ -341,38 +341,39 @@ void TabGroupsWnd::OnOk() {
     }
 }
 
-LRESULT TabGroupsWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+void TabGroupsWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
+        return;
     }
-    if (msg == WM_SIZE) {
+    if (ev->msg == WM_SIZE) {
         LayoutToClient();
-        HwndInvalidate(hwndIn);
-        return 0;
+        HwndInvalidate(ev->hwnd);
+        ev->result = 0;
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the virtual controls their input
-    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
-bool TabGroupsWnd::OnKeyDown(KeyEvent& ev) {
+void TabGroupsWnd::OnKeyDown(KeyEvent* ev) {
     if (!hwnd) {
-        return false;
+        return;
     }
-    if (ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
-        return false;
+    if (ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
+        return;
     }
-    if (ev.vkey == VK_RETURN && editName && ev.hwnd == editName->hwnd && mode == TabGroupDialogMode::Save) {
+    if (ev->vkey == VK_RETURN && editName && ev->hwnd == editName->hwnd && mode == TabGroupDialogMode::Save) {
         TempStr name = editName->GetTextTemp();
         if (!str::IsEmptyOrWhiteSpace(name)) {
             SaveTabGroup();
-            return true;
+            ev->didHandle = true;
+            return;
         }
     }
-    if (ev.vkey == VK_ESCAPE) {
+    if (ev->vkey == VK_ESCAPE) {
         OnCancel();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
 static void TeardownTabGroupsWnd(TabGroupsWnd* w) {
@@ -506,6 +507,8 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     wnd->font = GetAppFont(win->hwndFrame);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
+    wnd->onWndProc = MkMethod1<TabGroupsWnd, WindowBase::WndProcEvent*, &TabGroupsWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<TabGroupsWnd, KeyEvent*, &TabGroupsWnd::OnKeyDown>(wnd);
     if (!wnd->Create(win, mode)) {
         delete wnd;
         return;

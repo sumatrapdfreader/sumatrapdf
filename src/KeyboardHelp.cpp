@@ -151,8 +151,8 @@ struct KeyboardHelpWnd : WindowBase {
     void BuildContent();
     void SyncColors();
     void PaintContent(HDC hdc, const Rect& client);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
 };
 
 static KeyboardHelpWnd* gKeyboardHelpWnd = nullptr;
@@ -550,10 +550,16 @@ void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
     }
 }
 
-LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+void KeyboardHelpWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
+    LPARAM lp = ev->lparam;
     switch (msg) {
         case WM_ERASEBKGND:
-            return 1; // we paint the whole client, so skip the erase flicker
+            ev->result = 1; // we paint the whole client, so skip the erase flicker
+            ev->didHandle = true;
+            return;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -568,24 +574,32 @@ LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             DeleteObject(bmp);
             DeleteDC(memDC);
             EndPaint(hwnd, &ps);
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
         case WM_SETCURSOR: {
             LRESULT res = 0;
             if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
-                return res;
+                ev->result = res;
+                ev->didHandle = true;
+                return;
             }
             Point pt = HwndGetCursorPos(hwnd);
             if (pt.y < contentTop) {
                 SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
-                return TRUE;
+                ev->result = TRUE;
+                ev->didHandle = true;
+                return;
             }
             break;
         }
         case WM_LBUTTONDOWN: {
             LRESULT res = 0;
             if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
-                return res;
+                ev->result = res;
+                ev->didHandle = true;
+                return;
             }
             // dragging the title band moves the window (it has no title bar of
             // its own); hand off to the standard move loop
@@ -593,27 +607,29 @@ LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (y < contentTop) {
                 ReleaseCapture();
                 SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-                return 0;
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
             }
             break;
         }
     }
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool KeyboardHelpWnd::OnKeyDown(KeyEvent& ev) {
+void KeyboardHelpWnd::OnKeyDown(KeyEvent* ev) {
     // '?' (Shift + '/') toggles the sheet back off, matching how it opened. The
     // sheet otherwise stays up until '?' or the close button - it doesn't close
     // on focus loss, so it can sit alongside the document as a reference.
-    if (ev.vkey == VK_OEM_2 && ev.isShift) {
+    if (ev->vkey == VK_OEM_2 && ev->isShift) {
         ScheduleCloseKeyboardHelp();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
 bool KeyboardHelpWnd::Create(MainWindow* win) {
     this->win = win;
+    onWndProc = MkMethod1<KeyboardHelpWnd, WindowBase::WndProcEvent*, &KeyboardHelpWnd::WndProc>(this);
+    onKeyDown = MkMethod1<KeyboardHelpWnd, KeyEvent*, &KeyboardHelpWnd::OnKeyDown>(this);
     {
         CreateCustomArgs args;
         args.visible = false;

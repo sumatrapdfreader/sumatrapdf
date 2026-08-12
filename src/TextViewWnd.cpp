@@ -26,9 +26,9 @@ struct TextViewWnd : WindowBase {
     void LayoutToClient();
     void UpdateTheme();
     static Str FormatTextForEdit(Str text);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool PreTranslateMessage(MSG& msg) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void PreTranslate(WindowBase::PreTranslateEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
 };
 
@@ -134,32 +134,30 @@ bool TextViewWnd::Create(Str title, Str text) {
     return true;
 }
 
-LRESULT TextViewWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_SIZE) {
+void TextViewWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_SIZE) {
         LayoutToClient();
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
     }
-    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
 // Esc closes PDF Info / Errors / outline text windows (issue #5856)
-bool TextViewWnd::OnKeyDown(KeyEvent& ev) {
-    if (ev.vkey == VK_ESCAPE) {
+void TextViewWnd::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
-bool TextViewWnd::PreTranslateMessage(MSG& msg) {
+void TextViewWnd::PreTranslate(WindowBase::PreTranslateEvent* ev) {
     if (!hwnd) {
-        return false;
+        return;
     }
-    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
+    if (ev->msg->message == WM_CHAR && ev->msg->wParam == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::PreTranslateMessage(msg);
 }
 
 static void TeardownTextViewWnd(TextViewWnd* w) {
@@ -188,6 +186,9 @@ HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
     wnd->hwndPtr = hwndPtr;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
+    wnd->onWndProc = MkMethod1<TextViewWnd, WindowBase::WndProcEvent*, &TextViewWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
+    wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {
         delete wnd;
         return nullptr;
@@ -200,6 +201,9 @@ void ShowTextInWindowDialog(Str title, Str text) {
     wnd->isDialog = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
+    wnd->onWndProc = MkMethod1<TextViewWnd, WindowBase::WndProcEvent*, &TextViewWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
+    wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {
         delete wnd;
         return;

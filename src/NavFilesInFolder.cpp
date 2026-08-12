@@ -87,10 +87,10 @@ struct NavFilesInFolderWnd : WindowBase {
     VirtListBox* listBox = nullptr;
     Str currDir; // owned
 
-    bool PreTranslateMessage(MSG& msg) override;
-    bool OnKeyDown(KeyEvent& ev) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    void OnSize(UINT msg, UINT type, Size size) override;
+    void PreTranslate(WindowBase::PreTranslateEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
 
     bool Create(MainWindow* win);
     void SetDir(Str dir, Str selectPath);
@@ -488,86 +488,94 @@ void NavFilesInFolderWnd::OnListDoubleClick() {
     ExecuteCurrentSelection(IsCtrlPressed());
 }
 
-// WM_CHAR Esc (IME / some locales); key-downs are handled in OnKeyDown
-bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
+// WM_CHAR Esc (IME / some locales); key-downs are handled in onKeyDown
+void NavFilesInFolderWnd::PreTranslate(WindowBase::PreTranslateEvent* ev) {
+    MSG& msg = *ev->msg;
     if (hwnd && msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
-        return false;
+        return;
     }
     if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
         ScheduleDeleteNavFilesWnd();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::PreTranslateMessage(msg);
 }
 
-bool NavFilesInFolderWnd::OnKeyDown(KeyEvent& ev) {
-    if (hwnd && ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
-        return false;
+void NavFilesInFolderWnd::OnKeyDown(KeyEvent* ev) {
+    if (hwnd && ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
+        return;
     }
-    if (ev.vkey == VK_ESCAPE) {
+    if (ev->vkey == VK_ESCAPE) {
         ScheduleDeleteNavFilesWnd();
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == VK_RETURN) {
-        ExecuteCurrentSelection(ev.isCtrl);
-        return true;
+    if (ev->vkey == VK_RETURN) {
+        ExecuteCurrentSelection(ev->isCtrl);
+        ev->didHandle = true;
+        return;
     }
     // Alt + Up goes to the parent directory, like Explorer. It arrives as
     // WM_SYSKEYDOWN; swallowing it also avoids the system-menu beep
-    if (ev.vkey == VK_UP && ev.isAlt) {
+    if (ev->vkey == VK_UP && ev->isAlt) {
         GoUp();
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == VK_DELETE) {
+    if (ev->vkey == VK_DELETE) {
         DeleteCurrentSelection();
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == VK_F5) {
+    if (ev->vkey == VK_F5) {
         RefreshList();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
-LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ACTIVATE) {
-        LRESULT res = WndProcDefault(hwndIn, msg, wp, lp);
+void NavFilesInFolderWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ACTIVATE) {
+        // default handling first (focus routing, etc.), then our follow-up
+        LRESULT res = WndProcDefault(ev->hwnd, ev->msg, ev->wparam, ev->lparam);
         // defer: Windows assigns focus after WM_ACTIVATE during Alt-Tab
-        if (LOWORD(wp) != WA_INACTIVE) {
+        if (LOWORD(ev->wparam) != WA_INACTIVE) {
             // the directory may have changed while we were in the background
             RefreshList();
             ScheduleFocusNavListBox();
         }
-        return res;
+        ev->result = res;
+        ev->didHandle = true;
+        return;
     }
     // top-level received focus (e.g. Alt-Tab); steer it to the list
-    if (msg == WM_SETFOCUS) {
+    if (ev->msg == WM_SETFOCUS) {
         // the list is a virtual control: this window holds the win32 focus on
         // its behalf, so only the focus inside the tree moves
         if (vroot && listBox) {
             vroot->SetFocus(listBox);
         }
     }
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
+        return;
     }
     // Esc when this window (not a child) has focus
-    if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
+    if (ev->msg == WM_KEYDOWN && ev->wparam == VK_ESCAPE) {
         ScheduleDeleteNavFilesWnd();
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
     }
-    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
 // re-layout the controls when the (resizable) window is resized
-void NavFilesInFolderWnd::OnSize(UINT /*msg*/, UINT /*type*/, Size size) {
+void NavFilesInFolderWnd::OnSize(WindowBase::SizeEvent* ev) {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
     // before the child controls exist; ignore layout until they're created
     if (!layout || !listBox) {
         return;
     }
-    int dx = size.dx;
-    int dy = size.dy;
+    int dx = ev->size.dx;
+    int dy = ev->size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -914,6 +922,11 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
     auto* wnd = new NavFilesInFolderWnd();
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnNavFilesWndClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnNavFilesWndDestroy);
+    wnd->onSize = MkMethod1<NavFilesInFolderWnd, WindowBase::SizeEvent*, &NavFilesInFolderWnd::OnSize>(wnd);
+    wnd->onWndProc = MkMethod1<NavFilesInFolderWnd, WindowBase::WndProcEvent*, &NavFilesInFolderWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
+    wnd->onPreTranslate =
+        MkMethod1<NavFilesInFolderWnd, WindowBase::PreTranslateEvent*, &NavFilesInFolderWnd::PreTranslate>(wnd);
     wnd->font = GetAppFont(win->hwndFrame);
     // set before Create so Esc during Create can dismiss
     gNavFilesWnd = wnd;

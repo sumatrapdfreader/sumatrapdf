@@ -92,7 +92,19 @@ static LRESULT CALLBACK WindowBaseWindowProc(HWND hwnd, UINT msg, WPARAM wparam,
     }
 
     if (wnd) {
-        return wnd->WndProc(hwnd, msg, wparam, lparam);
+        if (wnd->onWndProc.IsValid()) {
+            WindowBase::WndProcEvent ev;
+            ev.w = wnd;
+            ev.hwnd = hwnd;
+            ev.msg = msg;
+            ev.wparam = wparam;
+            ev.lparam = lparam;
+            wnd->onWndProc.Call(&ev);
+            if (ev.didHandle) {
+                return ev.result;
+            }
+        }
+        return wnd->WndProcDefault(hwnd, msg, wparam, lparam);
     } else {
         return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
@@ -172,92 +184,13 @@ void WindowBase::Destroy() {
     HwndDestroyWindowSafe(&hwnd);
 }
 
-// over-ride those to hook into message processing
-LRESULT WindowBase::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    return WndProcDefault(hwnd, msg, wparam, lparam);
-}
-
-// This function is called when a window is attached to WindowBase.
-// Override it to automatically perform tasks when the window is attached.
-// Note:  Window controls are attached.
-void WindowBase::OnAttach() {}
-
-void WindowBase::OnFocus() {}
-
-// Override this to handle WM_COMMAND messages
-bool WindowBase::OnCommand(WPARAM /*wparam*/, LPARAM /*lparam*/) {
-    //  UINT id = LOWORD(wparam);
-    //  switch (id)
-    //  {
-    //  case IDM_FILE_NEW:
-    //      OnFileNew();
-    //      return true;   // return TRUE for handled commands
-    //  }
-
-    // return false for unhandled commands
-
-    return false;
-}
-
-// Called during window creation. Override this functions to perform tasks
-// such as creating child windows.
-int WindowBase::OnCreate(CREATESTRUCT* /*cs*/) {
-    // This function is called when a WM_CREATE message is received
-    // Override it to automatically perform tasks during window creation.
-    // Return 0 to continue creating the window.
-
-    // Note: Window controls don't call OnCreate. They are sublcassed (attached)
-    //  after their window is created.
-
-    /*
-    LOGFONT logfont;
-    ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
-    font = ::CreateFontIndirectW(&logfont);
-    ::SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
-    */
-
-    return 0;
-}
-
-void WindowBase::OnDropFiles(HDROP drop_info) {}
-
-void WindowBase::OnGetMinMaxInfo(MINMAXINFO* mmi) {}
-
-LRESULT WindowBase::OnMouseEvent(UINT /*msg*/, WPARAM /*wparam*/, LPARAM /*lparam*/) {
-    return -1;
-}
-
-void WindowBase::OnMove(POINTS* /*pts*/) {}
-
-// Processes notification (WM_NOTIFY) messages from a child window.
-LRESULT WindowBase::OnNotify(int /*controlId*/, NMHDR* /*nmh*/) {
-    // You can use either OnNotifyReflect or OnNotify to handle notifications
-    // Override OnNotifyReflect to handle notifications in the CWnd class that
-    //   generated the notification.   OR
-    // Override OnNotify to handle notifications in the PARENT of the CWnd class
-    //   that generated the notification.
-
-    // Your overriding function should look like this ...
-
-    // LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
-    // switch (pHeader->code)
-    // {
-    //      Handle your notifications from the CHILD window here
-    //      Return the value recommended by the Windows API documentation.
-    //      For many notifications, the return value doesn't matter, but for some it does.
-    // }
-
-    // return 0 for unhandled notifications
-    // The framework will call SetWindowLongPtr(DWLP_MSGRESULT, result) for dialogs.
-    return 0;
-}
-
-void WindowBase::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
-    if (vroot) {
-        PaintVirtTree(vroot, hdc, ToRect(ps->rcPaint), bgColor);
+// default paint when onPaint is not set: virtual tree, or solid background
+static void WindowBaseDefaultPaint(WindowBase* w, HDC hdc, PAINTSTRUCT* ps) {
+    if (w->vroot) {
+        PaintVirtTree(w->vroot, hdc, ToRect(ps->rcPaint), w->bgColor);
         return;
     }
-    auto* br = BackgroundBrush();
+    auto* br = w->BackgroundBrush();
     if (br != nullptr) {
         HdcFillRect(hdc, ToRect(ps->rcPaint), br);
     }
@@ -334,14 +267,6 @@ bool WindowBase::TabNavigate(bool backwards) {
     }
     return true;
 }
-
-void WindowBase::OnSize(UINT msg, UINT type, Size size) {}
-
-void WindowBase::OnTaskbarCallback(UINT msg, LPARAM lparam) {}
-
-void WindowBase::OnTimer(UINT_PTR timerId) {}
-
-void WindowBase::OnWindowPosChanging(WINDOWPOS* window_pos) {}
 
 void WindowBase::Close() {
     ReportIf(!::IsWindow(hwnd));
@@ -570,8 +495,13 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             }
 
             // Handle user commands.
-            if (!didHandle) {
-                didHandle = OnCommand(wparam, lparam);
+            if (!didHandle && onCommand.IsValid()) {
+                CommandEvent ev;
+                ev.w = this;
+                ev.wparam = wparam;
+                ev.lparam = lparam;
+                onCommand.Call(&ev);
+                didHandle = ev.didHandle;
             }
 
             if (didHandle) {
@@ -580,12 +510,21 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         } break; // Note: Some MDI commands require default processing.
 
         case WM_CREATE: {
-            OnCreate((CREATESTRUCT*)lparam);
+            if (onCreate.IsValid()) {
+                CreateEvent ev;
+                ev.w = this;
+                ev.cs = (CREATESTRUCT*)lparam;
+                onCreate.Call(&ev);
+            }
             break;
         }
 
         case WM_SETFOCUS: {
-            OnFocus();
+            if (onFocus.IsValid()) {
+                FocusEvent ev;
+                ev.w = this;
+                onFocus.Call(&ev);
+            }
             break;
         }
 
@@ -611,8 +550,13 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             }
 
             // Handle user notifications
-            if (result == 0) {
-                result = OnNotify((int)wparam, (NMHDR*)lparam);
+            if (result == 0 && onNotify.IsValid()) {
+                NotifyEvent nev;
+                nev.w = this;
+                nev.controlId = (int)wparam;
+                nev.nmh = (NMHDR*)lparam;
+                onNotify.Call(&nev);
+                result = nev.result;
             }
             if (result != 0) {
                 return result;
@@ -626,23 +570,19 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 return FinalWindowProc(msg, wparam, lparam);
             }
 
-            if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
+            {
                 PAINTSTRUCT ps;
                 HDC hdc = ::BeginPaint(hwnd, &ps);
-                OnPaint(hdc, &ps);
+                if (onPaint.IsValid()) {
+                    PaintEvent ev;
+                    ev.w = this;
+                    ev.hdc = hdc;
+                    ev.ps = &ps;
+                    onPaint.Call(&ev);
+                } else {
+                    WindowBaseDefaultPaint(this, hdc, &ps);
+                }
                 ::EndPaint(hwnd, &ps);
-            } else {
-                // TODO: for now those are the same because some OnPaint()
-                // implementations assume ps is provided
-                PAINTSTRUCT ps;
-                HDC hdc = ::BeginPaint(hwnd, &ps);
-                OnPaint(hdc, &ps);
-                ::EndPaint(hwnd, &ps);
-#if 0
-                HDC hdc = ::GetDC(hwnd);
-                OnPaint(hdc, nullptr);
-                ::ReleaseDC(hwnd, hdc);
-#endif
             }
             // No more drawing required
             return 0;
@@ -669,18 +609,32 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         } break;                            // Do default processing when message not already processed.
 
         case WM_DROPFILES: {
-            OnDropFiles(reinterpret_cast<HDROP>(wparam));
+            if (onDropFiles.IsValid()) {
+                DropFilesEvent ev;
+                ev.w = this;
+                ev.dropInfo = reinterpret_cast<HDROP>(wparam);
+                onDropFiles.Call(&ev);
+            }
             break;
         }
 
         case WM_ENTERSIZEMOVE:
         case WM_EXITSIZEMOVE: {
-            Size size{};
-            OnSize(msg, 0, size);
+            if (onSize.IsValid()) {
+                SizeEvent ev;
+                ev.w = this;
+                ev.msg = msg;
+                onSize.Call(&ev);
+            }
             break;
         }
         case WM_GETMINMAXINFO: {
-            OnGetMinMaxInfo(reinterpret_cast<MINMAXINFO*>(lparam));
+            if (onGetMinMaxInfo.IsValid()) {
+                GetMinMaxInfoEvent ev;
+                ev.w = this;
+                ev.mmi = reinterpret_cast<MINMAXINFO*>(lparam);
+                onGetMinMaxInfo.Call(&ev);
+            }
             break;
         }
         case WM_LBUTTONDOWN:
@@ -695,13 +649,27 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         case WM_MOUSELEAVE:
         case WM_MOUSEMOVE:
         case WM_MOUSEWHEEL: {
-            LRESULT lResult = OnMouseEvent(msg, wparam, lparam);
-            if (lResult != -1) return lResult;
+            if (onMouseEvent.IsValid()) {
+                MouseEvent ev;
+                ev.w = this;
+                ev.msg = msg;
+                ev.wparam = wparam;
+                ev.lparam = lparam;
+                onMouseEvent.Call(&ev);
+                if (ev.result != -1) {
+                    return ev.result;
+                }
+            }
             break;
         }
         case WM_MOVE: {
-            POINTS pts = MAKEPOINTS(lparam);
-            OnMove(&pts);
+            if (onMove.IsValid()) {
+                POINTS pts = MAKEPOINTS(lparam);
+                MoveEvent ev;
+                ev.w = this;
+                ev.pts = &pts;
+                onMove.Call(&ev);
+            }
             break;
         }
 
@@ -711,21 +679,44 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 DoLayout(size);
                 HwndInvalidate(hwnd);
             }
-            OnSize(msg, static_cast<UINT>(wparam), size);
+            if (onSize.IsValid()) {
+                SizeEvent ev;
+                ev.w = this;
+                ev.msg = msg;
+                ev.type = static_cast<UINT>(wparam);
+                ev.size = size;
+                onSize.Call(&ev);
+            }
             break;
         }
         case WM_TIMER: {
-            OnTimer(static_cast<UINT>(wparam));
+            if (onTimer.IsValid()) {
+                TimerEvent ev;
+                ev.w = this;
+                ev.timerId = static_cast<UINT_PTR>(wparam);
+                onTimer.Call(&ev);
+            }
             break;
         }
         case WM_WINDOWPOSCHANGING: {
-            OnWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lparam));
+            if (onWindowPosChanging.IsValid()) {
+                WindowPosChangingEvent ev;
+                ev.w = this;
+                ev.windowPos = reinterpret_cast<LPWINDOWPOS>(lparam);
+                onWindowPosChanging.Call(&ev);
+            }
             break;
         }
 
         default: {
             if (msg == WM_TASKBARCREATED || msg == WM_TASKBARBUTTONCREATED || msg == WM_TASKBARCALLBACK) {
-                OnTaskbarCallback(msg, lparam);
+                if (onTaskbarCallback.IsValid()) {
+                    TaskbarCallbackEvent ev;
+                    ev.w = this;
+                    ev.msg = msg;
+                    ev.lparam = lparam;
+                    onTaskbarCallback.Call(&ev);
+                }
                 return 0;
             }
             break;
@@ -745,10 +736,19 @@ LRESULT WindowBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 }
 
-// PreTranslate routes key-downs into OnKeyDown so dialog shortcuts work while
-// focus is on a child HWND (Edit, DropDown, …). Override OnKeyDown for keys;
-// keep PreTranslateMessage only for non-key messages (WM_CHAR, WM_KEYUP, …).
+// PreTranslate: onPreTranslate first (WM_CHAR / KEYUP / etc.), then key-downs
+// via onKeyDown (so dialog shortcuts work while focus is on a child HWND), then
+// default Tab among mixed HWND + virtual controls.
 bool WindowBase::PreTranslateMessage(MSG& msg) {
+    if (onPreTranslate.IsValid()) {
+        PreTranslateEvent pev;
+        pev.w = this;
+        pev.msg = &msg;
+        onPreTranslate.Call(&pev);
+        if (pev.didHandle) {
+            return true;
+        }
+    }
     if (msg.message != WM_KEYDOWN && msg.message != WM_SYSKEYDOWN) {
         return false;
     }
@@ -759,11 +759,13 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
     ev.isShift = IsShiftPressed();
     ev.isAlt = IsAltPressed();
     ev.isSysKey = (msg.message == WM_SYSKEYDOWN);
-    return OnKeyDown(ev);
-}
-
-// Tab among mixed HWND + virtual controls; pure HWND dialogs keep IsDialogMessage.
-bool WindowBase::OnKeyDown(KeyEvent& ev) {
+    if (onKeyDown.IsValid()) {
+        onKeyDown.Call(&ev);
+        if (ev.didHandle) {
+            return true;
+        }
+    }
+    // default Tab among mixed HWND + virtual controls
     if (ev.vkey != VK_TAB || !layout || ev.isCtrl || ev.isAlt) {
         return false;
     }
@@ -779,7 +781,11 @@ void WindowBase::Attach(HWND hwnd) {
 
     this->hwnd = hwnd;
     Subclass();
-    OnAttach();
+    if (onAttach.IsValid()) {
+        AttachEvent ev;
+        ev.w = this;
+        onAttach.Call(&ev);
+    }
 }
 
 HWND WindowBase::Detach() {

@@ -1049,7 +1049,7 @@ struct LogViewWnd : WindowBase {
     LogLinesWnd* logLines = nullptr;
 
     bool Create();
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
 };
 
 static void InvalidateTabBar() {
@@ -1134,6 +1134,7 @@ static VirtButton* NewToolButton(Str text, const VirtMouseHandler& onClick) {
 }
 
 bool LogViewWnd::Create() {
+    onWndProc = MkMethod1<LogViewWnd, WindowBase::WndProcEvent*, &LogViewWnd::WndProc>(this);
     {
         CreateCustomArgs args;
         args.className = L"LogViewMain";
@@ -1195,26 +1196,33 @@ bool LogViewWnd::Create() {
     return true;
 }
 
-LRESULT LogViewWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    switch (msg) {
+void LogViewWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    switch (ev->msg) {
         case WM_APP_NEW_LOGS:
             DrainQueue();
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         case WM_TIMER:
-            if (wp == kFilterTimerId) {
-                KillTimer(hwndIn, kFilterTimerId);
+            if (ev->wparam == kFilterTimerId) {
+                KillTimer(ev->hwnd, kFilterTimerId);
                 OnFilterChanged();
             }
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         case WM_SIZE:
-            DoLayout({LOWORD(lp), HIWORD(lp)});
-            HwndInvalidate(hwndIn);
-            return 0;
+            DoLayout({LOWORD(ev->lparam), HIWORD(ev->lparam)});
+            HwndInvalidate(ev->hwnd);
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         case WM_DESTROY:
             PostQuitMessage(0);
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
     }
-    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
 // -------------------------------------------------------------------- setup

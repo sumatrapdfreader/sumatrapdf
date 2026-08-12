@@ -210,8 +210,8 @@ struct ImageEditWindow : WindowBase {
         // ~WindowBase deletes `layout`, which is controlLayout
     }
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
 };
 
 // "&Save" -> label "Save", mnemonic 'S'
@@ -1513,18 +1513,22 @@ static bool CopyEditedImageToClipboard(ImageEditWindow* ew) {
 
 // Tab moves between the dest edit, the format drop-down and the buttons; the
 // ring is the layout order and covers HWND and virtual controls alike
-bool ImageEditWindow::OnKeyDown(KeyEvent& ev) {
-    if (ev.vkey != VK_TAB) {
-        return WindowBase::OnKeyDown(ev);
+void ImageEditWindow::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey != VK_TAB) {
+        return;
     }
-    if (ev.hwnd != hwnd && !::IsChild(hwnd, ev.hwnd)) {
-        return false;
+    if (ev->hwnd != hwnd && !::IsChild(hwnd, ev->hwnd)) {
+        return;
     }
-    TabNavigate(ev.isShift);
-    return true;
+    TabNavigate(ev->isShift);
+    ev->didHandle = true;
 }
 
-LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
+    LPARAM lp = ev->lparam;
     ImageEditWindow* ew = this;
 
     // the labels and buttons are virtual controls: hand them the mouse and,
@@ -1532,7 +1536,11 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (vroot) {
         LRESULT vres = 0;
         if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, vres)) {
-            return vres;
+            {
+                ev->result = vres;
+                ev->didHandle = true;
+                return;
+            }
         }
     }
 
@@ -1550,7 +1558,11 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     HwndInvalidate(hwnd, true);
                 }
             }
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_DPICHANGED: {
@@ -1564,11 +1576,19 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 LayoutControls(ew);
                 HwndInvalidate(hwnd, true);
             }
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_PAINT: {
-            if (!ew) return 0;
+            if (!ew) {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             // double-buffer only the image area to avoid flicker
@@ -1595,17 +1615,29 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ew->vroot->Paint(&gfx, ToRect(ps.rcPaint));
             }
             EndPaint(hwnd, &ps);
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_ERASEBKGND: {
-            if (!ew) return 0;
+            if (!ew) {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
             // paint control area background, skip image area (double-buffered)
             HDC hdc = (HDC)wp;
             Rect crc = HwndClientRect(hwnd);
             Rect ctrlRc = {0, ew->imgAreaH, crc.dx, crc.dy - ew->imgAreaH};
             HdcFillRect(hdc, ctrlRc, GetSysColorBrush(COLOR_BTNFACE));
-            return 1;
+            {
+                ev->result = 1;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_MOUSEMOVE: {
@@ -1619,7 +1651,11 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     auto edge = ew->dragEdge;
                     if (edge == DragEdge::NewCrop) {
                         if (!ew->dragMoved && !IsImageEditDragDistance(ew->dragStart, mx, my)) {
-                            return 0;
+                            {
+                                ev->result = 0;
+                                ev->didHandle = true;
+                                return;
+                            }
                         }
                         ew->dragMoved = true;
                         SetCropFromDisplaySelection(ew, ew->dragStart, mx, my);
@@ -1738,7 +1774,11 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ew->hoverEdge = edge;
                 SetCursor(GetCursorForEdge(edge));
             }
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_LBUTTONDOWN: {
@@ -1778,7 +1818,11 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
                 SetCapture(hwnd);
             }
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_LBUTTONUP: {
@@ -1795,7 +1839,11 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ReleaseCapture();
                 UpdateModeButtons(ew);
             }
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_SETCURSOR: {
@@ -1809,35 +1857,55 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
                 if (edge != DragEdge::None) {
                     SetCursor(GetCursorForEdge(edge));
-                    return TRUE;
+                    {
+                        ev->result = TRUE;
+                        ev->didHandle = true;
+                        return;
+                    }
                 }
             }
-            return WndProcDefault(hwnd, msg, wp, lp);
+            return; // fall through to WndProcDefault
         }
 
         case WM_MOUSEACTIVATE:
             if (ew) {
                 SetFocus(hwnd);
             }
-            return MA_ACTIVATE;
+            {
+                ev->result = MA_ACTIVATE;
+                ev->didHandle = true;
+                return;
+            }
 
         case WM_SYSKEYDOWN: {
             if (ew && GetFocus() == hwnd && wp != VK_MENU && TriggerImageEditMnemonic(ew, (WCHAR)wp)) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             break;
         }
 
         case WM_SYSCHAR: {
             if (ew && TriggerImageEditMnemonic(ew, (WCHAR)wp)) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             break;
         }
 
         case WM_CHAR:
             if (VK_ESCAPE == wp) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             break;
 
@@ -1847,7 +1915,11 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             if ((GetKeyState(VK_CONTROL) & 0x8000) != 0 && wp == 'C') {
                 CopyEditedImageToClipboard(ew);
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             if (wp == VK_ESCAPE) {
                 if (ew->mode != ImageEditMode::Save) {
@@ -1855,10 +1927,18 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 } else if (gImageEditHost.escToExit) {
                     DestroyWindow(hwnd);
                 }
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             if (HandleImageEditArrowKey(ew, wp)) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             break;
         }
@@ -1899,9 +1979,13 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         default:
-            return WndProcDefault(hwnd, msg, wp, lp);
+            return; // fall through to WndProcDefault
     }
-    return 0;
+    {
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
+    }
 }
 
 // the buttons are virtual controls, so they are styled here rather than by the
@@ -2021,6 +2105,8 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         if (gImageEditHost.appIconId) {
             cargs.icon = LoadIconW(h, MAKEINTRESOURCEW(gImageEditHost.appIconId));
         }
+        ew->onWndProc = MkMethod1<ImageEditWindow, WindowBase::WndProcEvent*, &ImageEditWindow::WndProc>(ew);
+        ew->onKeyDown = MkMethod1<ImageEditWindow, KeyEvent*, &ImageEditWindow::OnKeyDown>(ew);
         ew->CreateCustom(cargs);
     }
     HWND hwnd = ew->hwnd;

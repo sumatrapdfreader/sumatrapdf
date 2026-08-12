@@ -151,10 +151,10 @@ struct EditAnnotationsWindow : WindowBase {
     str::Builder currCustomColor;
     str::Builder currCustomInteriorColor;
 
-    void OnSize(UINT msg, UINT type, Size size) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    void OnFocus() override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void OnSize(WindowBase::SizeEvent* ev);
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnFocus(WindowBase::FocusEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
 
     void ListBoxSelectionChanged();
 
@@ -508,15 +508,14 @@ static void OnDestroy(WindowBase::DestroyEvent* ev) {
     }
 }
 
-LRESULT EditAnnotationsWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+void EditAnnotationsWindow::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the virtual controls their input
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-void EditAnnotationsWindow::OnFocus() {
+void EditAnnotationsWindow::OnFocus(WindowBase::FocusEvent*) {
     SelectTabInWindow(tab);
 }
 
@@ -550,39 +549,41 @@ static void AdvanceFocus(EditAnnotationsWindow* ew, bool forward) {
     ew->TabNavigate(!forward);
 }
 
-bool EditAnnotationsWindow::OnKeyDown(KeyEvent& ev) {
-    if (ev.vkey == VK_TAB) {
-        bool forward = !ev.isShift;
+void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_TAB) {
+        bool forward = !ev->isShift;
         AdvanceFocus(this, forward);
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == VK_DELETE) {
+    if (ev->vkey == VK_DELETE) {
         // When focus is in a text field, let the Edit control handle Delete /
         // Ctrl+Delete (word delete). Only delete the annotation when focus is
         // outside an edit control (issue #5815).
         HWND focused = ::GetFocus();
         TempStr cls = HwndGetClassName(focused);
         if (str::EqI(cls, StrL("Edit"))) {
-            return false;
+            return;
         }
         // Ctrl+Delete (and plain Delete) remove the selected annotation
         DeleteSelectedAnnotation(this);
-        return true;
+        ev->didHandle = true;
+        return;
     }
     // Ctrl+W closes this window (Esc does not — user may be editing text).
     // issue #5934
-    if (ev.vkey == 'W' && ev.isCtrl && !ev.isAlt) {
+    if (ev->vkey == 'W' && ev->isCtrl && !ev->isAlt) {
         Close();
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == 'S' && ev.isShift && ev.isCtrl) {
+    if (ev->vkey == 'S' && ev->isShift && ev->isCtrl) {
         // TODO: delay by posting a message?
         // TODO: the keybinding could be changed so this should
         // be more sophisticated and match the shortcut
         ButtonSaveToCurrentPDFHandler(this);
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
 static void ItemsFromSeqstrings(StrVec& items, SeqStrings strings) {
@@ -1388,15 +1389,15 @@ static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientD
     ew->listBox->idealSizeLines = std::max(kPreferredLines + (extraDy / listLineDy), 1);
 }
 
-void EditAnnotationsWindow::OnSize(UINT msg, UINT /*type*/, Size size) {
-    if (msg != WM_SIZE) {
+void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
         return;
     }
     if (!mainLayout) {
         return;
     }
-    int dx = size.dx;
-    int dy = size.dy;
+    int dx = ev->size.dx;
+    int dy = ev->size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -1871,6 +1872,10 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew = new EditAnnotationsWindow();
     ew->onClose = MkFunc1Void(OnClose);
     ew->onDestroy = MkFunc1Void(OnDestroy);
+    ew->onSize = MkMethod1<EditAnnotationsWindow, WindowBase::SizeEvent*, &EditAnnotationsWindow::OnSize>(ew);
+    ew->onFocus = MkMethod1<EditAnnotationsWindow, WindowBase::FocusEvent*, &EditAnnotationsWindow::OnFocus>(ew);
+    ew->onWndProc = MkMethod1<EditAnnotationsWindow, WindowBase::WndProcEvent*, &EditAnnotationsWindow::WndProc>(ew);
+    ew->onKeyDown = MkMethod1<EditAnnotationsWindow, KeyEvent*, &EditAnnotationsWindow::OnKeyDown>(ew);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));

@@ -227,8 +227,8 @@ struct SetHotkeyWnd : WindowBase {
     bool committed = false; // true if Set or Remove was pressed
 
     bool Create(HWND owner);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
 
     VirtButton* NewButton(Str text, bool isDefault);
     void StyleButton(VirtButton*, bool isDefault);
@@ -407,26 +407,27 @@ void SetHotkeyWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-LRESULT SetHotkeyWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_HOTKEY_CAPTURED || msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) {
-        HandleKeyDown((UINT)wp);
-        return 0;
+void SetHotkeyWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_HOTKEY_CAPTURED || ev->msg == WM_KEYDOWN || ev->msg == WM_SYSKEYDOWN) {
+        HandleKeyDown((UINT)ev->wparam);
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
     }
-    // WindowBase::WndProcDefault sends the virtual controls their input
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool SetHotkeyWnd::OnKeyDown(KeyEvent& ev) {
+void SetHotkeyWnd::OnKeyDown(KeyEvent* ev) {
     if (!hwnd) {
-        return false;
+        return;
     }
-    if (ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
-        return false;
+    if (ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
+        return;
     }
-    return HandleKeyDown((UINT)ev.vkey);
+    ev->didHandle = HandleKeyDown((UINT)ev->vkey);
 }
 
 static void TeardownSetHotkeyWnd() {
@@ -566,6 +567,8 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     wnd->hwndOwner = hwndOwner;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSetHotkeyClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSetHotkeyDestroy);
+    wnd->onWndProc = MkMethod1<SetHotkeyWnd, WindowBase::WndProcEvent*, &SetHotkeyWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<SetHotkeyWnd, KeyEvent*, &SetHotkeyWnd::OnKeyDown>(wnd);
     wnd->font = GetAppFont(hwndOwner);
     if (!wnd->Create(hwndOwner)) {
         delete wnd;

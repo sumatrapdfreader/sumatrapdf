@@ -140,10 +140,10 @@ struct SelectionTranslateWnd : WindowBase {
 
     void UpdateFont();
 
-    void OnSize(UINT msg, UINT type, Size size) override;
-    void OnGetMinMaxInfo(MINMAXINFO* mmi) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void OnSize(WindowBase::SizeEvent* ev);
+    void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
 };
 
 static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
@@ -1009,20 +1009,22 @@ void SelectionTranslateWnd::SetTranslateButtonText(Str s) {
 // DPI, so re-pick the font and re-run the layout: each control's ideal size is
 // measured from its font, so they resize with it. Note the Padding insets were
 // DpiScale()d once when the layout tree was built and keep their old scale.
-LRESULT SelectionTranslateWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+void SelectionTranslateWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_ERASEBKGND) {
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
+        return;
     }
-    if (msg == WM_DPICHANGED) {
-        RECT* r = (RECT*)lp;
-        SetWindowPos(hwndIn, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
+    if (ev->msg == WM_DPICHANGED) {
+        RECT* r = (RECT*)ev->lparam;
+        SetWindowPos(ev->hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
                      SWP_NOZORDER | SWP_NOACTIVATE);
         UpdateFont();
         Relayout();
-        HwndInvalidate(hwndIn, true);
-        return 0;
+        HwndInvalidate(ev->hwnd, true);
+        ev->result = 0;
+        ev->didHandle = true;
     }
-    return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
 void SelectionTranslateWnd::Relayout(bool initial) {
@@ -1044,16 +1046,16 @@ void SelectionTranslateWnd::Relayout(bool initial) {
 }
 
 // reflow controls when the user resizes the window
-void SelectionTranslateWnd::OnSize(UINT msg, UINT /*type*/, Size size) {
-    if (msg != WM_SIZE) {
+void SelectionTranslateWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
         return;
     }
     // WS_THICKFRAME windows get WM_SIZE during CreateCustom before children exist
     if (!layout || !sizeInitialized) {
         return;
     }
-    int dx = size.dx;
-    int dy = size.dy;
+    int dx = ev->size.dx;
+    int dy = ev->size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -1061,8 +1063,8 @@ void SelectionTranslateWnd::OnSize(UINT msg, UINT /*type*/, Size size) {
     HwndInvalidate(hwnd);
 }
 
-void SelectionTranslateWnd::OnGetMinMaxInfo(MINMAXINFO* mmi) {
-    if (!hwnd || !layout) {
+void SelectionTranslateWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
+    if (!hwnd || !layout || !ev->mmi) {
         return;
     }
     int clientMinDx = layout->MinIntrinsicWidth(Inf);
@@ -1073,8 +1075,8 @@ void SelectionTranslateWnd::OnGetMinMaxInfo(MINMAXINFO* mmi) {
     DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
     DWORD exStyle = (DWORD)GetWindowLongW(hwnd, GWL_EXSTYLE);
     AdjustWindowRectEx(&r, style, FALSE, exStyle);
-    mmi->ptMinTrackSize.x = r.right - r.left;
-    mmi->ptMinTrackSize.y = r.bottom - r.top;
+    ev->mmi->ptMinTrackSize.x = r.right - r.left;
+    ev->mmi->ptMinTrackSize.y = r.bottom - r.top;
 }
 
 void SelectionTranslateWnd::UpdateTranslateButtonState() {
@@ -1196,16 +1198,16 @@ void SelectionTranslateWnd::OnCloseClicked() {
 }
 
 // Esc and Ctrl+W close the translate dialog (issue #5934).
-bool SelectionTranslateWnd::OnKeyDown(KeyEvent& ev) {
-    if (ev.vkey == VK_ESCAPE) {
+void SelectionTranslateWnd::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_ESCAPE) {
         OnCloseClicked();
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    if (ev.vkey == 'W' && ev.isCtrl && !ev.isAlt) {
+    if (ev->vkey == 'W' && ev->isCtrl && !ev->isAlt) {
         OnCloseClicked();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
 static void OnTranslateDone(SelectionTranslateDoneData* data) {
@@ -1469,6 +1471,11 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     wnd->font = GetAppFont(hwndOwner);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSelectionTranslateDestroy);
+    wnd->onSize = MkMethod1<SelectionTranslateWnd, WindowBase::SizeEvent*, &SelectionTranslateWnd::OnSize>(wnd);
+    wnd->onGetMinMaxInfo =
+        MkMethod1<SelectionTranslateWnd, WindowBase::GetMinMaxInfoEvent*, &SelectionTranslateWnd::OnGetMinMaxInfo>(wnd);
+    wnd->onWndProc = MkMethod1<SelectionTranslateWnd, WindowBase::WndProcEvent*, &SelectionTranslateWnd::WndProc>(wnd);
+    wnd->onKeyDown = MkMethod1<SelectionTranslateWnd, KeyEvent*, &SelectionTranslateWnd::OnKeyDown>(wnd);
     Str title = _TRA("Translate");
     if (!wnd->Create(hwndOwner, selText, title)) {
         EnableWindow(hwndOwner, TRUE);

@@ -12,7 +12,7 @@ struct FrameRateWnd : WindowBase {
     void ShowFrameRate(int frameRate);
     void ShowFrameRateDur(double durMs);
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
 
     HWND hwndAssociatedWith = nullptr;
     HWND hwndAssociatedWithTopLevel = nullptr;

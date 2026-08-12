@@ -78,9 +78,9 @@ struct FindBarWnd : WindowBase {
 
     void OnTextChanged();
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool OnKeyDown(KeyEvent& ev) override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
+    void OnCommand(WindowBase::CommandEvent* ev);
 };
 
 // tooltip text for the bar's toolbar buttons
@@ -135,7 +135,10 @@ void FindBarWnd::UpdateButtonIcons() {
 
 static void FindBarButtonClicked(FindBarWnd* bar, VirtMouseEvent* ev) {
     auto* btn = (VirtIconButton*)ev->target;
-    bar->OnCommand((WPARAM)btn->id, 0);
+    WindowBase::CommandEvent ce;
+    ce.w = bar;
+    ce.wparam = (WPARAM)btn->id;
+    bar->OnCommand(&ce);
 }
 
 void FindBarWnd::CreateButtons() {
@@ -323,7 +326,10 @@ void FindBarWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
-LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
+void FindBarWnd::WndProc(WindowBase::WndProcEvent* ev) {
+    HWND h = ev->hwnd;
+    UINT msg = ev->msg;
+    LPARAM lp = ev->lparam;
     // The bar is pinned to the right edge of the frame, so only its left edge
     // can be dragged; report that edge as a sizing border and the default
     // handling turns a drag there into a resize.
@@ -331,7 +337,9 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         Rect wr = HwndWindowRect(h);
         int x = GET_X_LPARAM(lp);
         if (x < wr.x + DpiScale(h, kFindBarResizeGripDx)) {
-            return HTLEFT;
+            ev->result = HTLEFT;
+            ev->didHandle = true;
+            return;
         }
     }
     if (msg == WM_SIZE) {
@@ -342,7 +350,9 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             Rect wr = HwndWindowRect(h);
             Layout(wr.dx);
         }
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
     if (msg == WM_GETMINMAXINFO && barDy > 0) {
         // don't let the edit box be dragged away entirely, and keep the height
@@ -351,10 +361,14 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         mmi->ptMinTrackSize.x = MinBarDx();
         mmi->ptMinTrackSize.y = barDy;
         mmi->ptMaxTrackSize.y = barDy;
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
     if (msg == WM_ERASEBKGND) {
-        return TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->result = TRUE; // OnPaint covers the whole client area, double-buffered
+        ev->didHandle = true;
+        return;
     }
     if (msg == WM_SETCURSOR) {
         // the buttons are virtual controls, so their tooltips are ours to show
@@ -369,63 +383,66 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             tooltip->Delete();
         }
     }
-    return WndProcDefault(h, msg, wp, lp);
 }
 
-bool FindBarWnd::OnKeyDown(KeyEvent& ev) {
+void FindBarWnd::OnKeyDown(KeyEvent* ev) {
     // the find edit lives in this owned popup, not as a child of the frame, so
     // the frame's edit accelerator table doesn't reach it; handle the find keys
     // here (Esc, Enter/Shift+Enter, F3/Shift+F3)
-    switch (ev.vkey) {
+    switch (ev->vkey) {
         case 'F':
-            if (ev.isCtrl && !ev.isAlt) {
+            if (ev->isCtrl && !ev->isAlt) {
                 FocusFindEditSelectAll(win);
-                return true;
+                ev->didHandle = true;
             }
             break;
         case VK_ESCAPE:
             HideFindBar(win);
-            return true;
+            ev->didHandle = true;
+            break;
         case VK_RETURN:
         case VK_F3:
             // Enter forces a pending debounced search to start now (find the
             // first match) instead of advancing to the next one (issue #4626)
-            if (ev.vkey == VK_RETURN && FindFlushPendingSearch(win)) {
-                return true;
+            if (ev->vkey == VK_RETURN && FindFlushPendingSearch(win)) {
+                ev->didHandle = true;
+                break;
             }
-            if (ev.isShift) {
+            if (ev->isShift) {
                 FindPrev(win);
             } else {
                 FindNext(win);
             }
-            return true;
+            ev->didHandle = true;
+            break;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
-bool FindBarWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
-    int cmd = LOWORD(wparam);
+void FindBarWnd::OnCommand(WindowBase::CommandEvent* ev) {
+    int cmd = LOWORD(ev->wparam);
     switch (cmd) {
         case CmdFindPrev:
             FindPrev(win);
-            return true;
+            break;
         case CmdFindNext:
             FindNext(win);
-            return true;
+            break;
         case CmdFindToggleMatchCase:
             FindToggleMatchCase(win);
-            return true;
+            break;
         case CmdFindToggleMatchWholeWord:
             FindToggleMatchWholeWord(win);
-            return true;
+            break;
         case kFindBarPinCmdId:
             ToggleFloatingFindUI(win); // pop out into the floating window
-            return true;
+            break;
         case kFindBarCloseCmdId:
             HideFindBar(win);
-            return true;
+            break;
+        default:
+            return;
     }
-    return false;
+    ev->didHandle = true;
 }
 
 //--- public API
@@ -434,6 +451,9 @@ bool FindBarWnd::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
 // owns win->hwndFindEdit. Shown via Ctrl+F or the toolbar search icon.
 FindBarWnd* CreateFindBar(MainWindow* win) {
     auto* bar = new FindBarWnd();
+    bar->onCommand = MkMethod1<FindBarWnd, WindowBase::CommandEvent*, &FindBarWnd::OnCommand>(bar);
+    bar->onWndProc = MkMethod1<FindBarWnd, WindowBase::WndProcEvent*, &FindBarWnd::WndProc>(bar);
+    bar->onKeyDown = MkMethod1<FindBarWnd, KeyEvent*, &FindBarWnd::OnKeyDown>(bar);
     if (!bar->Create(win)) {
         delete bar;
         return nullptr;

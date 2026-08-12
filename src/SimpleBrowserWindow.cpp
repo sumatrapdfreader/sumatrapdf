@@ -165,41 +165,47 @@ SimpleBrowserWindow::~SimpleBrowserWindow() {
 }
 
 // When focus is on chrome (Back/Forward/URL), Esc is not handled by WebView.
-bool SimpleBrowserWindow::OnKeyDown(KeyEvent& ev) {
-    if (ev.vkey == VK_ESCAPE) {
+void SimpleBrowserWindow::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::OnKeyDown(ev);
 }
 
-bool SimpleBrowserWindow::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
+void SimpleBrowserWindow::PreTranslate(WindowBase::PreTranslateEvent* ev) {
+    if (ev->msg->message == WM_CHAR && ev->msg->wParam == VK_ESCAPE) {
         Close();
-        return true;
+        ev->didHandle = true;
     }
-    return WindowBase::PreTranslateMessage(msg);
 }
 
-LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg == WM_SETFOCUS) {
+void SimpleBrowserWindow::WndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_SETFOCUS) {
         if (webView) {
             webView->Focus();
         }
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
-    if (msg == WM_SIZE) {
+    if (ev->msg == WM_SIZE) {
         LayoutControls(this);
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
     }
-    if (msg == WM_COMMAND && LOWORD(wparam) == CmdClose) {
-        SendMessageW(hwnd, WM_CLOSE, 0, 0);
-        return 0;
+    if (ev->msg == WM_COMMAND && LOWORD(ev->wparam) == CmdClose) {
+        SendMessageW(ev->hwnd, WM_CLOSE, 0, 0);
+        ev->result = 0;
+        ev->didHandle = true;
     }
-    return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
 HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
+    onWndProc = MkMethod1<SimpleBrowserWindow, WindowBase::WndProcEvent*, &SimpleBrowserWindow::WndProc>(this);
+    onKeyDown = MkMethod1<SimpleBrowserWindow, KeyEvent*, &SimpleBrowserWindow::OnKeyDown>(this);
+    onPreTranslate =
+        MkMethod1<SimpleBrowserWindow, WindowBase::PreTranslateEvent*, &SimpleBrowserWindow::PreTranslate>(this);
     HWND frameHwnd = nullptr;
     {
         CreateCustomArgs cargs;

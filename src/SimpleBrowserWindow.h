@@ -23,9 +23,9 @@ struct SimpleBrowserWindow : WindowBase {
     bool webViewFocusSet = false;
 
     HWND Create(const SimpleBrowserCreateArgs&);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool PreTranslateMessage(MSG& msg) override;
-    bool OnKeyDown(KeyEvent& ev) override;
+    void WndProc(WindowBase::WndProcEvent* ev);
+    void PreTranslate(WindowBase::PreTranslateEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
     ~SimpleBrowserWindow() override;
 };
 
