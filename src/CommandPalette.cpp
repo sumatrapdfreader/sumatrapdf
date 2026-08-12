@@ -305,53 +305,50 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
     return true;
 }
 
+bool CommandPaletteWnd::OnKeyDown(KeyEvent& ev) {
+    int dir = 0;
+    if (ev.vkey == VK_ESCAPE) {
+        ScheduleDeleteAndExecCommand();
+        return true;
+    }
+
+    if (ev.vkey == VK_RETURN) {
+        ExecuteCurrentSelection();
+        return true;
+    }
+
+    if (ev.vkey == VK_DELETE) {
+        if (RemoveSelectedItem()) {
+            return true;
+        }
+        // not a removable list item: let the edit control process Delete
+        // (delete the character to the right of the cursor)
+        return false;
+    }
+
+    if (ev.vkey == VK_UP) {
+        dir = -1;
+    } else if (ev.vkey == VK_DOWN) {
+        dir = 1;
+    }
+
+    if (ev.vkey == VK_TAB) {
+        if (ev.isCtrl) {
+            dir = ev.isShift ? -1 : 1;
+        }
+    }
+    return AdvanceSelection(dir);
+}
+
+// smart-tab releases Ctrl after the palette is open; key-downs go via OnKeyDown
 bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_KEYDOWN) {
-        int dir = 0;
-        if (msg.wParam == VK_ESCAPE) {
-            ScheduleDeleteAndExecCommand();
-            return true;
-        }
-
-        if (msg.wParam == VK_RETURN) {
+    if (smartTabMode && msg.message == WM_KEYUP && msg.wParam == VK_CONTROL) {
+        if (!stickyMode) {
             ExecuteCurrentSelection();
-            return true;
         }
-
-        if (msg.wParam == VK_DELETE) {
-            if (RemoveSelectedItem()) {
-                return true;
-            }
-            // not a removable list item: let the edit control process Delete
-            // (delete the character to the right of the cursor)
-            return false;
-        }
-
-        if (msg.wParam == VK_UP) {
-            dir = -1;
-        } else if (msg.wParam == VK_DOWN) {
-            dir = 1;
-        }
-
-        if (msg.wParam == VK_TAB) {
-            if (IsCtrlPressed()) {
-                dir = IsShiftPressed() ? -1 : 1;
-            }
-        }
-        return AdvanceSelection(dir);
+        return true;
     }
-
-    if (smartTabMode) {
-        if (msg.message == WM_KEYUP) {
-            if (msg.wParam == VK_CONTROL) {
-                if (!stickyMode) {
-                    ExecuteCurrentSelection();
-                }
-                return true;
-            }
-        }
-    }
-    return false;
+    return WindowBase::PreTranslateMessage(msg);
 }
 
 void CommandPaletteWnd::ExecuteCurrentSelection() {

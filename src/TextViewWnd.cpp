@@ -28,6 +28,7 @@ struct TextViewWnd : WindowBase {
     static Str FormatTextForEdit(Str text);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
     void ScheduleDelete();
 };
 
@@ -141,16 +142,24 @@ LRESULT TextViewWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
+// Esc closes PDF Info / Errors / outline text windows (issue #5856)
+bool TextViewWnd::OnKeyDown(KeyEvent& ev) {
+    if (ev.vkey == VK_ESCAPE) {
+        Close();
+        return true;
+    }
+    return WindowBase::OnKeyDown(ev);
+}
+
 bool TextViewWnd::PreTranslateMessage(MSG& msg) {
     if (!hwnd) {
         return false;
     }
-    // Esc closes PDF Info / Errors / outline text windows (issue #5856)
-    if ((msg.message == WM_KEYDOWN || msg.message == WM_CHAR) && msg.wParam == VK_ESCAPE) {
+    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
         Close();
         return true;
     }
-    return false;
+    return WindowBase::PreTranslateMessage(msg);
 }
 
 static void TeardownTextViewWnd(TextViewWnd* w) {

@@ -88,6 +88,7 @@ struct NavFilesInFolderWnd : WindowBase {
     Str currDir; // owned
 
     bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     void OnSize(UINT msg, UINT type, Size size) override;
 
@@ -487,42 +488,45 @@ void NavFilesInFolderWnd::OnListDoubleClick() {
     ExecuteCurrentSelection(IsCtrlPressed());
 }
 
+// WM_CHAR Esc (IME / some locales); key-downs are handled in OnKeyDown
 bool NavFilesInFolderWnd::PreTranslateMessage(MSG& msg) {
-    // only keys aimed at this window or its children
     if (hwnd && msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
         return false;
     }
-    bool isKey = (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN);
-    bool isEscChar = (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE);
-    if (!isKey && !isEscChar) {
-        return false;
-    }
-    if (msg.wParam == VK_ESCAPE || isEscChar) {
+    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
         ScheduleDeleteNavFilesWnd();
         return true;
     }
-    if (!isKey) {
+    return WindowBase::PreTranslateMessage(msg);
+}
+
+bool NavFilesInFolderWnd::OnKeyDown(KeyEvent& ev) {
+    if (hwnd && ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
         return false;
     }
-    if (msg.wParam == VK_RETURN) {
-        ExecuteCurrentSelection(IsCtrlPressed());
+    if (ev.vkey == VK_ESCAPE) {
+        ScheduleDeleteNavFilesWnd();
+        return true;
+    }
+    if (ev.vkey == VK_RETURN) {
+        ExecuteCurrentSelection(ev.isCtrl);
         return true;
     }
     // Alt + Up goes to the parent directory, like Explorer. It arrives as
     // WM_SYSKEYDOWN; swallowing it also avoids the system-menu beep
-    if (msg.wParam == VK_UP && IsAltPressed()) {
+    if (ev.vkey == VK_UP && ev.isAlt) {
         GoUp();
         return true;
     }
-    if (msg.wParam == VK_DELETE) {
+    if (ev.vkey == VK_DELETE) {
         DeleteCurrentSelection();
         return true;
     }
-    if (msg.wParam == VK_F5) {
+    if (ev.vkey == VK_F5) {
         RefreshList();
         return true;
     }
-    return false;
+    return WindowBase::OnKeyDown(ev);
 }
 
 LRESULT NavFilesInFolderWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {

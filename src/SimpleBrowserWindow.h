@@ -25,6 +25,7 @@ struct SimpleBrowserWindow : WindowBase {
     HWND Create(const SimpleBrowserCreateArgs&);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
     ~SimpleBrowserWindow() override;
 };
 

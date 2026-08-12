@@ -154,7 +154,7 @@ struct EditAnnotationsWindow : WindowBase {
     void OnSize(UINT msg, UINT type, Size size) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     void OnFocus() override;
-    bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
 
     void ListBoxSelectionChanged();
 
@@ -550,42 +550,39 @@ static void AdvanceFocus(EditAnnotationsWindow* ew, bool forward) {
     ew->TabNavigate(!forward);
 }
 
-bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_KEYDOWN) {
-        int key = (int)msg.wParam;
-        if (key == VK_TAB) {
-            bool forward = !IsShiftPressed();
-            AdvanceFocus(this, forward);
-            return true;
-        }
-        if (key == VK_DELETE) {
-            // When focus is in a text field, let the Edit control handle Delete /
-            // Ctrl+Delete (word delete). Only delete the annotation when focus is
-            // outside an edit control (issue #5815).
-            HWND focused = ::GetFocus();
-            TempStr cls = HwndGetClassName(focused);
-            if (str::EqI(cls, StrL("Edit"))) {
-                return false;
-            }
-            // Ctrl+Delete (and plain Delete) remove the selected annotation
-            DeleteSelectedAnnotation(this);
-            return true;
-        }
-        // Ctrl+W closes this window (Esc does not — user may be editing text).
-        // issue #5934
-        if (key == 'W' && IsCtrlPressed() && !IsAltPressed()) {
-            Close();
-            return true;
-        }
-        if (key == 'S' && IsShiftPressed() && IsCtrlPressed()) {
-            // TODO: delay by posting a message?
-            // TODO: the keybinding could be changed so this should
-            // be more sophisticated and match the shortcut
-            ButtonSaveToCurrentPDFHandler(this);
-            return true;
-        }
+bool EditAnnotationsWindow::OnKeyDown(KeyEvent& ev) {
+    if (ev.vkey == VK_TAB) {
+        bool forward = !ev.isShift;
+        AdvanceFocus(this, forward);
+        return true;
     }
-    return false;
+    if (ev.vkey == VK_DELETE) {
+        // When focus is in a text field, let the Edit control handle Delete /
+        // Ctrl+Delete (word delete). Only delete the annotation when focus is
+        // outside an edit control (issue #5815).
+        HWND focused = ::GetFocus();
+        TempStr cls = HwndGetClassName(focused);
+        if (str::EqI(cls, StrL("Edit"))) {
+            return false;
+        }
+        // Ctrl+Delete (and plain Delete) remove the selected annotation
+        DeleteSelectedAnnotation(this);
+        return true;
+    }
+    // Ctrl+W closes this window (Esc does not — user may be editing text).
+    // issue #5934
+    if (ev.vkey == 'W' && ev.isCtrl && !ev.isAlt) {
+        Close();
+        return true;
+    }
+    if (ev.vkey == 'S' && ev.isShift && ev.isCtrl) {
+        // TODO: delay by posting a message?
+        // TODO: the keybinding could be changed so this should
+        // be more sophisticated and match the shortcut
+        ButtonSaveToCurrentPDFHandler(this);
+        return true;
+    }
+    return WindowBase::OnKeyDown(ev);
 }
 
 static void ItemsFromSeqstrings(StrVec& items, SeqStrings strings) {

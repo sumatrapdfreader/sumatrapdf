@@ -152,7 +152,7 @@ struct KeyboardHelpWnd : WindowBase {
     void SyncColors();
     void PaintContent(HDC hdc, const Rect& client);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
 };
 
 static KeyboardHelpWnd* gKeyboardHelpWnd = nullptr;
@@ -240,8 +240,7 @@ static TempStr CmdDescTemp(int cmdId) {
     return {};
 }
 
-KeyboardHelpWnd::~KeyboardHelpWnd() {
-}
+KeyboardHelpWnd::~KeyboardHelpWnd() {}
 
 // Park the window beside the main window on whichever side has more room, so it
 // covers the document as little as possible, always kept fully on-screen. In
@@ -602,18 +601,15 @@ LRESULT KeyboardHelpWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool KeyboardHelpWnd::PreTranslateMessage(MSG& msg) {
-    if (msg.message != WM_KEYDOWN) {
-        return false;
-    }
+bool KeyboardHelpWnd::OnKeyDown(KeyEvent& ev) {
     // '?' (Shift + '/') toggles the sheet back off, matching how it opened. The
     // sheet otherwise stays up until '?' or the close button - it doesn't close
     // on focus loss, so it can sit alongside the document as a reference.
-    if (msg.wParam == VK_OEM_2 && IsShiftPressed()) {
+    if (ev.vkey == VK_OEM_2 && ev.isShift) {
         ScheduleCloseKeyboardHelp();
         return true;
     }
-    return false;
+    return WindowBase::OnKeyDown(ev);
 }
 
 bool KeyboardHelpWnd::Create(MainWindow* win) {

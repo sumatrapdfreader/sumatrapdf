@@ -211,7 +211,7 @@ struct ImageEditWindow : WindowBase {
     }
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
 };
 
 // "&Save" -> label "Save", mnemonic 'S'
@@ -1513,14 +1513,14 @@ static bool CopyEditedImageToClipboard(ImageEditWindow* ew) {
 
 // Tab moves between the dest edit, the format drop-down and the buttons; the
 // ring is the layout order and covers HWND and virtual controls alike
-bool ImageEditWindow::PreTranslateMessage(MSG& msg) {
-    if (msg.message != WM_KEYDOWN || msg.wParam != VK_TAB) {
+bool ImageEditWindow::OnKeyDown(KeyEvent& ev) {
+    if (ev.vkey != VK_TAB) {
+        return WindowBase::OnKeyDown(ev);
+    }
+    if (ev.hwnd != hwnd && !::IsChild(hwnd, ev.hwnd)) {
         return false;
     }
-    if (msg.hwnd != hwnd && !::IsChild(hwnd, msg.hwnd)) {
-        return false;
-    }
-    TabNavigate(IsShiftPressed());
+    TabNavigate(ev.isShift);
     return true;
 }
 

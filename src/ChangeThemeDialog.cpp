@@ -45,7 +45,7 @@ struct ChangeThemeWnd : WindowBase {
     DocumentColorsFollowTheme startDocumentColorsFollowTheme = DocumentColorsFollowTheme::Off;
 
     bool Create(MainWindow* win);
-    bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     void UpdateTheme();
@@ -225,15 +225,12 @@ LRESULT ChangeThemeWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool ChangeThemeWnd::PreTranslateMessage(MSG& msg) {
-    if (msg.message != WM_KEYDOWN) {
-        return false;
-    }
-    if (msg.wParam == VK_ESCAPE) {
+bool ChangeThemeWnd::OnKeyDown(KeyEvent& ev) {
+    if (ev.vkey == VK_ESCAPE) {
         OnCancel();
         return true;
     }
-    if (msg.wParam == VK_RETURN) {
+    if (ev.vkey == VK_RETURN) {
         // an open drop-down list gets Enter first: there it commits the
         // highlighted entry rather than the dialog
         HWND hwndDrop = dropDownDocumentColorsFollowTheme ? dropDownDocumentColorsFollowTheme->hwnd : nullptr;
@@ -251,7 +248,7 @@ bool ChangeThemeWnd::PreTranslateMessage(MSG& msg) {
     }
     // Tab moves between the list, the drop-down and the buttons; the arrow keys
     // go to whichever virtual control has the focus
-    return WindowBase::PreTranslateMessage(msg);
+    return WindowBase::OnKeyDown(ev);
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
@@ -351,7 +348,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        // Enter runs this one (see PreTranslateMessage), so draw it as the
+        // Enter runs this one (see OnKeyDown), so draw it as the
         // default button to say so
         btnChange = NewThemedButton(hwnd, _TRA("Change"), platformFont, true);
         btnChange->onClick = MkFunc1(ChangeClicked, this);

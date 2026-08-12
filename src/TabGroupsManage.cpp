@@ -80,7 +80,7 @@ struct TabGroupsWnd : WindowBase {
     void OnCancel();
     void OnOk();
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
     void ScheduleDelete();
 };
 
@@ -354,26 +354,25 @@ LRESULT TabGroupsWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
-bool TabGroupsWnd::PreTranslateMessage(MSG& msg) {
+bool TabGroupsWnd::OnKeyDown(KeyEvent& ev) {
     if (!hwnd) {
         return false;
     }
-    if (msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
+    if (ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
         return false;
     }
-    if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN && editName && msg.hwnd == editName->hwnd &&
-        mode == TabGroupDialogMode::Save) {
+    if (ev.vkey == VK_RETURN && editName && ev.hwnd == editName->hwnd && mode == TabGroupDialogMode::Save) {
         TempStr name = editName->GetTextTemp();
         if (!str::IsEmptyOrWhiteSpace(name)) {
             SaveTabGroup();
             return true;
         }
     }
-    if (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE) {
+    if (ev.vkey == VK_ESCAPE) {
         OnCancel();
         return true;
     }
-    return false;
+    return WindowBase::OnKeyDown(ev);
 }
 
 static void TeardownTabGroupsWnd(TabGroupsWnd* w) {

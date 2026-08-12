@@ -396,12 +396,12 @@ struct AdvancedSettingsWnd : WindowBase {
     Vec<SettingItem*> items;
 
     bool Create(MainWindow* win);
-    bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool HandleEscapeKey(bool isEditingValue, bool isEditingEnum);
     bool HandleTabKey(bool isEditingValue, bool isEditingEnum);
     bool HandleEnterKey(bool isEditingValue, bool isEditingEnum);
-    bool HandleUpDownKey(const MSG& msg);
+    bool HandleUpDownKey(const KeyEvent& ev);
     void OnSize(UINT msg, UINT type, Size size) override;
 
     void QueryChanged();
@@ -948,7 +948,7 @@ bool AdvancedSettingsWnd::HandleEnterKey(bool isEditingValue, bool isEditingEnum
         CloseEnumEdit(true);
         return true;
     }
-    // focused button: Enter = click (PreTranslate would otherwise steal
+    // focused button: Enter = click (OnKeyDown would otherwise steal
     // Enter for list-item activation)
     LRESULT res = 0;
     if (vroot && vroot->focused && VirtTreeOnMessage(hwnd, vroot, WM_KEYDOWN, VK_RETURN, 0, res)) {
@@ -966,14 +966,14 @@ bool AdvancedSettingsWnd::HandleEnterKey(bool isEditingValue, bool isEditingEnum
 }
 
 // up/down in the filter edit moves the list selection (wrapping)
-bool AdvancedSettingsWnd::HandleUpDownKey(const MSG& msg) {
+bool AdvancedSettingsWnd::HandleUpDownKey(const KeyEvent& ev) {
     int dir = 0;
-    if (msg.wParam == VK_UP) {
+    if (ev.vkey == VK_UP) {
         dir = -1;
-    } else if (msg.wParam == VK_DOWN) {
+    } else if (ev.vkey == VK_DOWN) {
         dir = 1;
     }
-    if (dir == 0 || msg.hwnd != editFilter->hwnd) {
+    if (dir == 0 || ev.hwnd != editFilter->hwnd) {
         return false;
     }
     int n = listBox->ItemsCount();
@@ -993,24 +993,24 @@ LRESULT AdvancedSettingsWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool AdvancedSettingsWnd::PreTranslateMessage(MSG& msg) {
+bool AdvancedSettingsWnd::OnKeyDown(KeyEvent& ev) {
     // a single click only selects; activation (toggle / edit) is on double-click
-    // (OnItemDoubleClicked) or Enter, so there's no WM_LBUTTONUP handling here
-    if (msg.message != WM_KEYDOWN) {
-        return false;
-    }
-    bool isEditingValue = editValue && msg.hwnd == editValue->hwnd;
-    bool isEditingEnum = dropDownValue && msg.hwnd == dropDownValue->hwnd;
-    if (msg.wParam == VK_ESCAPE) {
+    // (OnItemDoubleClicked) or Enter
+    bool isEditingValue = editValue && ev.hwnd == editValue->hwnd;
+    bool isEditingEnum = dropDownValue && ev.hwnd == dropDownValue->hwnd;
+    if (ev.vkey == VK_ESCAPE) {
         return HandleEscapeKey(isEditingValue, isEditingEnum);
     }
-    if (msg.wParam == VK_TAB) {
+    if (ev.vkey == VK_TAB) {
         return HandleTabKey(isEditingValue, isEditingEnum);
     }
-    if (msg.wParam == VK_RETURN) {
+    if (ev.vkey == VK_RETURN) {
         return HandleEnterKey(isEditingValue, isEditingEnum);
     }
-    return HandleUpDownKey(msg);
+    if (HandleUpDownKey(ev)) {
+        return true;
+    }
+    return WindowBase::OnKeyDown(ev);
 }
 
 // clicking the window's close box sends WM_CLOSE. We must schedule our own

@@ -80,18 +80,6 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     }
 }
 
-// Esc closes PDF tool dialogs (Bake/Compress/etc.); same as other app dialogs (#5856).
-static bool PdfToolPreTranslateEsc(MSG& msg, WindowBase* dlg) {
-    if (!dlg) {
-        return false;
-    }
-    if ((msg.message == WM_KEYDOWN || msg.message == WM_CHAR) && msg.wParam == VK_ESCAPE) {
-        dlg->Close();
-        return true;
-    }
-    return false;
-}
-
 // Every dialog here has the same shape: the source path, a destination edit
 // with a browse button, sometimes one more labelled field, and an action +
 // Cancel row. PdfToolDialog builds that as one layout tree: the labels and
@@ -136,6 +124,7 @@ struct PdfToolDialog : WindowBase {
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
 };
 
 PdfToolDialog::~PdfToolDialog() {
@@ -331,15 +320,25 @@ LRESULT PdfToolDialog::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
+// WM_CHAR Esc (some locales / IME paths); key-down Esc is in OnKeyDown (#5856).
 bool PdfToolDialog::PreTranslateMessage(MSG& msg) {
-    if (PdfToolPreTranslateEsc(msg, this)) {
+    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
+        Close();
         return true;
     }
-    if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
+    return WindowBase::PreTranslateMessage(msg);
+}
+
+bool PdfToolDialog::OnKeyDown(KeyEvent& ev) {
+    if (ev.vkey == VK_ESCAPE) {
+        Close();
+        return true;
+    }
+    if (ev.vkey == VK_RETURN) {
         // Enter presses the focused button, if it's one; otherwise it's the
         // dialog's default action
         LRESULT res = 0;
-        if (vroot && vroot->focused && VirtTreeOnMessage(hwnd, vroot, msg.message, msg.wParam, msg.lParam, res)) {
+        if (vroot && vroot->focused && VirtTreeOnMessage(hwnd, vroot, WM_KEYDOWN, VK_RETURN, 0, res)) {
             return true;
         }
         if (actionBtn && actionBtn->HasFlag(vwfEnabled)) {
@@ -348,7 +347,7 @@ bool PdfToolDialog::PreTranslateMessage(MSG& msg) {
         return true;
     }
     // Tab moves between the Edits and the buttons
-    return WindowBase::PreTranslateMessage(msg);
+    return WindowBase::OnKeyDown(ev);
 }
 
 struct PdfBakeDialog : PdfToolDialog {

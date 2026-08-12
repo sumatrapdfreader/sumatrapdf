@@ -53,6 +53,7 @@ struct CommandPaletteWnd : WindowBase {
     bool stickyMode = false;
 
     bool PreTranslateMessage(MSG&) override;
+    bool OnKeyDown(KeyEvent&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     void CollectStrings(MainWindow*);

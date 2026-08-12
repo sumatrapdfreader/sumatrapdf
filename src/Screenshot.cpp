@@ -228,7 +228,7 @@ struct SetHotkeyWnd : WindowBase {
 
     bool Create(HWND owner);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
 
     VirtButton* NewButton(Str text, bool isDefault);
     void StyleButton(VirtButton*, bool isDefault);
@@ -419,17 +419,14 @@ LRESULT SetHotkeyWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-bool SetHotkeyWnd::PreTranslateMessage(MSG& msg) {
+bool SetHotkeyWnd::OnKeyDown(KeyEvent& ev) {
     if (!hwnd) {
         return false;
     }
-    if (msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
+    if (ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
         return false;
     }
-    if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) {
-        return HandleKeyDown((UINT)msg.wParam);
-    }
-    return false;
+    return HandleKeyDown((UINT)ev.vkey);
 }
 
 static void TeardownSetHotkeyWnd() {

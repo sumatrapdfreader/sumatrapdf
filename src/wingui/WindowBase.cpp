@@ -745,20 +745,32 @@ LRESULT WindowBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 }
 
+// PreTranslate routes key-downs into OnKeyDown so dialog shortcuts work while
+// focus is on a child HWND (Edit, DropDown, …). Override OnKeyDown for keys;
+// keep PreTranslateMessage only for non-key messages (WM_CHAR, WM_KEYUP, …).
 bool WindowBase::PreTranslateMessage(MSG& msg) {
-    if (msg.message != WM_KEYDOWN || msg.wParam != VK_TAB || !layout) {
+    if (msg.message != WM_KEYDOWN && msg.message != WM_SYSKEYDOWN) {
         return false;
     }
-    if (IsCtrlPressed() || IsAltPressed()) {
+    KeyEvent ev;
+    ev.hwnd = msg.hwnd;
+    ev.vkey = (int)msg.wParam;
+    ev.isCtrl = IsCtrlPressed();
+    ev.isShift = IsShiftPressed();
+    ev.isAlt = IsAltPressed();
+    ev.isSysKey = (msg.message == WM_SYSKEYDOWN);
+    return OnKeyDown(ev);
+}
+
+// Tab among mixed HWND + virtual controls; pure HWND dialogs keep IsDialogMessage.
+bool WindowBase::OnKeyDown(KeyEvent& ev) {
+    if (ev.vkey != VK_TAB || !layout || ev.isCtrl || ev.isAlt) {
         return false;
     }
-    // a window of only HWND controls keeps the native dialog navigation
-    // (IsDialogMessage() in the message loop); we take Tab over only when there
-    // are virtual controls in the ring as well, as those it can't see
     if (!vroot) {
         return false;
     }
-    return TabNavigate(IsShiftPressed());
+    return TabNavigate(ev.isShift);
 }
 
 void WindowBase::Attach(HWND hwnd) {

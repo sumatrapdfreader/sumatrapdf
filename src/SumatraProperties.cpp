@@ -58,6 +58,7 @@ struct PropertiesWnd : WindowBase {
     void CopyToClipboard();
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
     bool PreTranslateMessage(MSG& msg) override;
+    bool OnKeyDown(KeyEvent& ev) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
     void ScheduleDelete();
 };
@@ -855,6 +856,20 @@ LRESULT PropertiesWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
+bool PropertiesWnd::OnKeyDown(KeyEvent& ev) {
+    if (!hwnd) {
+        return false;
+    }
+    if (ev.hwnd != hwnd && !IsChild(hwnd, ev.hwnd)) {
+        return false;
+    }
+    if (ev.vkey == VK_ESCAPE) {
+        Close();
+        return true;
+    }
+    return WindowBase::OnKeyDown(ev);
+}
+
 bool PropertiesWnd::PreTranslateMessage(MSG& msg) {
     if (!hwnd) {
         return false;
@@ -866,7 +881,7 @@ bool PropertiesWnd::PreTranslateMessage(MSG& msg) {
         Close();
         return true;
     }
-    return false;
+    return WindowBase::PreTranslateMessage(msg);
 }
 
 bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {

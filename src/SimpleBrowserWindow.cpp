@@ -164,13 +164,21 @@ SimpleBrowserWindow::~SimpleBrowserWindow() {
     delete webView;
 }
 
-bool SimpleBrowserWindow::PreTranslateMessage(MSG& msg) {
-    // When focus is on chrome (Back/Forward/URL), Esc is not handled by WebView.
-    if ((msg.message == WM_KEYDOWN || msg.message == WM_CHAR) && msg.wParam == VK_ESCAPE) {
+// When focus is on chrome (Back/Forward/URL), Esc is not handled by WebView.
+bool SimpleBrowserWindow::OnKeyDown(KeyEvent& ev) {
+    if (ev.vkey == VK_ESCAPE) {
         Close();
         return true;
     }
-    return false;
+    return WindowBase::OnKeyDown(ev);
+}
+
+bool SimpleBrowserWindow::PreTranslateMessage(MSG& msg) {
+    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
+        Close();
+        return true;
+    }
+    return WindowBase::PreTranslateMessage(msg);
 }
 
 LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {

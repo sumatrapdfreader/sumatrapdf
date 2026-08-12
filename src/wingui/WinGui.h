@@ -78,6 +78,17 @@ struct WmEvent {
     bool didHandle = true; // common case so set as default
 };
 
+// WM_KEYDOWN / WM_SYSKEYDOWN for WindowBase::OnKeyDown (like VirtKeyEvent).
+// hwnd is MSG::hwnd (often a child Edit/DropDown), not necessarily the WindowBase.
+struct KeyEvent {
+    HWND hwnd = nullptr;
+    int vkey = 0;
+    bool isCtrl = false;
+    bool isShift = false;
+    bool isAlt = false;
+    bool isSysKey = false; // true for WM_SYSKEYDOWN
+};
+
 // Base of the top-level windows (and the child windows that place themselves,
 // like the notification toasts). Not an ILayout: a window isn't positioned by a
 // parent's layout - it has a `layout` of its own children instead
@@ -109,7 +120,10 @@ struct WindowBase {
     void UnSubclass();
 
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+    // default: WM_KEYDOWN/WM_SYSKEYDOWN -> OnKeyDown; override for non-key msgs
     virtual bool PreTranslateMessage(MSG& msg);
+    // return true to consume; default handles Tab among mixed HWND/virtual layout
+    virtual bool OnKeyDown(KeyEvent&);
     virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
 
     virtual void OnAttach();
