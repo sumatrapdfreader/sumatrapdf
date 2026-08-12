@@ -343,7 +343,10 @@ LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
         }
         if (!IsSpecialColor(bgColor)) {
             SetBkColor(hdc, bgColor);
-            SetBkMode(hdc, TRANSPARENT);
+            // OPAQUE so character cells are filled before ClearType glyphs.
+            // TRANSPARENT left trails / harsh-soft flicker when inserting text
+            // (e.g. at the start of the translate dialog source box, issue #5935).
+            SetBkMode(hdc, OPAQUE);
         }
         return (LRESULT)BackgroundBrush();
     }
