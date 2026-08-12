@@ -140,7 +140,7 @@ struct WindowBase {
     virtual void OnTimer(UINT_PTR timerId);
     virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
 
-    virtual void SetColors(COLORREF textColor, COLORREF bgColor);
+    void SetColors(COLORREF textColor, COLORREF bgColor);
 
     void Close();
     void SetPos(Rect* r);
