@@ -883,12 +883,15 @@ HomePageLayout::~HomePageLayout() = default;
 // the repaints that scrolling and filtering cause. Geometry still comes from
 // LayoutHomePage(): HomePageSyncChrome() just feeds it into the tree.
 
+// Leaf home-page controls: no MainWindow*. Wire onClick / hwndForCmds when
+// building the chrome so the same VirtWnd types stay reusable.
+
 struct HomeViewIconWnd : VirtWnd {
-    MainWindow* win = nullptr;
     Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
     Str tooltip;
+    VirtMouseHandler onClick;
 
     HomeViewIconWnd();
     void Paint(VirtPaintCtx&) override;
@@ -899,11 +902,11 @@ struct HomeViewIconWnd : VirtWnd {
 };
 
 struct HomeOpenDocWnd : VirtWnd {
-    MainWindow* win = nullptr;
     Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     VirtText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
+    VirtMouseHandler onClick;
 
     HomeOpenDocWnd();
     void Paint(VirtPaintCtx&) override;
@@ -913,7 +916,7 @@ struct HomeOpenDocWnd : VirtWnd {
 };
 
 struct HomeHelpBtnWnd : VirtWnd {
-    MainWindow* win = nullptr;
+    VirtMouseHandler onClick;
 
     HomeHelpBtnWnd();
     void Paint(VirtPaintCtx&) override;
@@ -928,8 +931,8 @@ struct HomeEntryWnd;
 // the pin icon of a list-view row. It is drawn by DrawHomeListRow, so this is a
 // hit target only (the row's ✕ is a VirtCloseButton, which draws itself)
 struct HomeListIconWnd : VirtWnd {
-    MainWindow* win = nullptr;
     bool isPin = true;
+    VirtMouseHandler onClick;
 
     HomeListIconWnd();
     void OnMouseDown(VirtMouseEvent*);
@@ -941,12 +944,12 @@ struct HomeListIconWnd : VirtWnd {
 // one file entry (a thumbnail or a list row). Painting still happens in
 // DrawHomePageLayout(); this owns hit-testing, hover and clicks
 struct HomeEntryWnd : VirtWnd {
-    MainWindow* win = nullptr;
     Str filePath; // owned
     int idx = 0;
     VirtCloseButton* closeBtn = nullptr;
     VirtCloseButton* removeBtn = nullptr;
     HomeListIconWnd* pinBtn = nullptr;
+    VirtMouseHandler onClick;
 
     HomeEntryWnd();
     ~HomeEntryWnd() override;
@@ -956,6 +959,8 @@ struct HomeEntryWnd : VirtWnd {
     void OnSetCursor(VirtSetCursorEvent*);
 };
 
+// page-level list: still knows the MainWindow so it can wire entry actions and
+// keep keyboard selection in sync
 struct HomeEntriesWnd : VirtWnd {
     MainWindow* win = nullptr;
     // entry the mouse is on, -1 for none. Drives the ✕ button and the keyboard
@@ -977,7 +982,9 @@ struct HomeEntriesWnd : VirtWnd {
 // itself and runs its own links; clicking the band anywhere else picks another
 // tip
 struct HomeTipWnd : VirtWnd {
-    MainWindow* win = nullptr;
+    // for link commands inside the tip markup (like VirtRichText)
+    HWND hwndForCmds = nullptr;
+    VirtMouseHandler onClick;     // band click outside a link: next tip
     VirtRichText* rich = nullptr; // owned, as our only child
     Str richFor;                  // owned, the markup `rich` was parsed from
 
@@ -1971,16 +1978,10 @@ void HomeViewIconWnd::OnMouseDown(VirtMouseEvent* ev) {
 }
 
 void HomeViewIconWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (listView == HomePageIsListView()) {
-        ev->didHandle = true;
-        return;
+    if (listView != HomePageIsListView() && onClick.IsValid()) {
+        onClick.Call(ev);
     }
-    SetHomePageListView(listView);
-    win->homePageScrollY = 0;
-    SaveSettings();
-    win->RedrawAll(true);
     ev->didHandle = true;
-    return;
 }
 
 void HomeViewIconWnd::OnSetCursor(VirtSetCursorEvent* ev) {
@@ -2014,9 +2015,10 @@ void HomeOpenDocWnd::OnMouseDown(VirtMouseEvent* ev) {
 }
 
 void HomeOpenDocWnd::OnMouseUp(VirtMouseEvent* ev) {
-    HwndSendCommand(win->hwndFrame, CmdOpenFile);
+    if (onClick.IsValid()) {
+        onClick.Call(ev);
+    }
     ev->didHandle = true;
-    return;
 }
 
 void HomeOpenDocWnd::OnSetCursor(VirtSetCursorEvent* ev) {
@@ -2042,9 +2044,10 @@ void HomeHelpBtnWnd::OnMouseDown(VirtMouseEvent* ev) {
 }
 
 void HomeHelpBtnWnd::OnMouseUp(VirtMouseEvent* ev) {
-    HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
+    if (onClick.IsValid()) {
+        onClick.Call(ev);
+    }
     ev->didHandle = true;
-    return;
 }
 
 void HomeHelpBtnWnd::OnSetCursor(VirtSetCursorEvent* ev) {
@@ -2068,6 +2071,7 @@ HomeTipWnd::~HomeTipWnd() {
 void HomeTipWnd::SetTipLine(Str line, PlatformFont* font) {
     if (rich && str::Eq(richFor, line)) {
         rich->font = font;
+        rich->hwndForCmds = hwndForCmds;
         return;
     }
     if (rich) {
@@ -2080,7 +2084,7 @@ void HomeTipWnd::SetTipLine(Str line, PlatformFont* font) {
     }
     rich = ParseTip(line);
     rich->font = font;
-    rich->hwndForCmds = win->hwndFrame;
+    rich->hwndForCmds = hwndForCmds;
     AddChild(rich);
 }
 
@@ -2091,15 +2095,14 @@ HomeTipWnd::HomeTipWnd() {
 
 void HomeTipWnd::OnMouseDown(VirtMouseEvent* ev) {
     ev->didHandle = true;
-    return;
 }
 
 // clicking the band outside of any link shows another tip
 void HomeTipWnd::OnMouseUp(VirtMouseEvent* ev) {
-    PickAnotherRandomPromotion();
-    win->RedrawAll(true);
+    if (onClick.IsValid()) {
+        onClick.Call(ev);
+    }
     ev->didHandle = true;
-    return;
 }
 
 // rcTip is the whole band (its background), rcText where the markup goes
@@ -2138,6 +2141,58 @@ static void HomeForgetEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
     }
 }
 
+static void HomePinEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
+    auto* entry = (HomeEntryWnd*)ev->target->parent;
+    TempStr path = str::DupTemp(entry->filePath);
+    if (len(path) == 0) {
+        return;
+    }
+    FileState* fs = gFileHistory.FindByPath(path);
+    if (!fs) {
+        return;
+    }
+    fs->isPinned = !fs->isPinned;
+    SaveSettings();
+    win->DeleteToolTip();
+    win->RedrawAll(true);
+}
+
+static void HomeEntryOpenClicked(MainWindow* win, VirtMouseEvent* ev) {
+    auto* entry = (HomeEntryWnd*)ev->target;
+    if (len(entry->filePath) == 0) {
+        return;
+    }
+    LoadArgs args(entry->filePath, win);
+    // ctrl forces always opening
+    args.activateExisting = !ev->isCtrl;
+    args.activateExistingInWindow = true;
+    StartLoadDocument(&args);
+}
+
+static void HomeViewModeClicked(MainWindow* win, VirtMouseEvent* ev) {
+    auto* btn = (HomeViewIconWnd*)ev->target;
+    if (btn->listView == HomePageIsListView()) {
+        return;
+    }
+    SetHomePageListView(btn->listView);
+    win->homePageScrollY = 0;
+    SaveSettings();
+    win->RedrawAll(true);
+}
+
+static void HomeOpenDocClicked(MainWindow* win, VirtMouseEvent*) {
+    HwndSendCommand(win->hwndFrame, CmdOpenFile);
+}
+
+static void HomeHelpClicked(MainWindow* win, VirtMouseEvent*) {
+    HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
+}
+
+static void HomeTipBandClicked(MainWindow* win, VirtMouseEvent*) {
+    PickAnotherRandomPromotion();
+    win->RedrawAll(true);
+}
+
 HomeListIconWnd::HomeListIconWnd() {
     onMouseDown = MkMethod1<HomeListIconWnd, VirtMouseEvent*, &HomeListIconWnd::OnMouseDown>(this);
     onMouseUp = MkMethod1<HomeListIconWnd, VirtMouseEvent*, &HomeListIconWnd::OnMouseUp>(this);
@@ -2147,25 +2202,13 @@ HomeListIconWnd::HomeListIconWnd() {
 
 void HomeListIconWnd::OnMouseDown(VirtMouseEvent* ev) {
     ev->didHandle = true;
-    return;
 }
 
 void HomeListIconWnd::OnMouseUp(VirtMouseEvent* ev) {
-    auto* entry = (HomeEntryWnd*)parent;
-    TempStr path = str::DupTemp(entry->filePath);
-    if (len(path) == 0) {
-        ev->didHandle = true;
-        return;
-    }
-    FileState* fs = gFileHistory.FindByPath(path);
-    if (fs) {
-        fs->isPinned = !fs->isPinned;
-        SaveSettings();
-        win->DeleteToolTip();
-        win->RedrawAll(true);
+    if (onClick.IsValid()) {
+        onClick.Call(ev);
     }
     ev->didHandle = true;
-    return;
 }
 
 void HomeListIconWnd::OnSetCursor(VirtSetCursorEvent* ev) {
@@ -2198,15 +2241,9 @@ void HomeEntryWnd::OnMouseDown(VirtMouseEvent* ev) {
 }
 
 void HomeEntryWnd::OnMouseUp(VirtMouseEvent* ev) {
-    if (len(filePath) == 0) {
-        ev->didHandle = true;
-        return;
+    if (onClick.IsValid()) {
+        onClick.Call(ev);
     }
-    LoadArgs args(filePath, win);
-    // ctrl forces always opening
-    args.activateExisting = !ev->isCtrl;
-    args.activateExistingInWindow = true;
-    StartLoadDocument(&args);
     ev->didHandle = true;
 }
 
@@ -2237,8 +2274,8 @@ void HomeEntriesWnd::SetEntryCount(int n) {
     }
     while (ChildCount() < n) {
         auto* e = new HomeEntryWnd();
-        e->win = win;
         e->idx = ChildCount();
+        e->onClick = MkFunc1(HomeEntryOpenClicked, win);
 
         e->closeBtn = new VirtCloseButton();
         // it sits on the thumbnail, so it needs the circle behind it
@@ -2255,7 +2292,7 @@ void HomeEntriesWnd::SetEntryCount(int n) {
         e->AddChild(e->removeBtn);
 
         e->pinBtn = new HomeListIconWnd();
-        e->pinBtn->win = win;
+        e->pinBtn->onClick = MkFunc1(HomePinEntryClicked, win);
         e->pinBtn->visibility = Visibility::Collapse;
         e->AddChild(e->pinBtn);
 
@@ -2333,7 +2370,8 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     // overlap the thumbnails) hit-tests and paints on top of the entries
     // below everything else: the tip band sits at the bottom of the page
     chrome->tip = new HomeTipWnd();
-    chrome->tip->win = win;
+    chrome->tip->hwndForCmds = win->hwndFrame;
+    chrome->tip->onClick = MkFunc1(HomeTipBandClicked, win);
     chrome->AddChild(chrome->tip);
 
     chrome->entries = new HomeEntriesWnd();
@@ -2344,29 +2382,29 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     chrome->AddChild(chrome->entries);
 
     chrome->thumbView = new HomeViewIconWnd();
-    chrome->thumbView->win = win;
     chrome->thumbView->listView = false;
     chrome->thumbView->tooltip = _TRA("Show as thumbnails");
+    chrome->thumbView->onClick = MkFunc1(HomeViewModeClicked, win);
     chrome->AddChild(chrome->thumbView);
 
     chrome->listView = new HomeViewIconWnd();
-    chrome->listView->win = win;
     chrome->listView->listView = true;
     chrome->listView->tooltip = _TRA("Show as list");
+    chrome->listView->onClick = MkFunc1(HomeViewModeClicked, win);
     chrome->AddChild(chrome->listView);
 
     chrome->hdr = new VirtText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
     chrome->openDoc = new HomeOpenDocWnd();
-    chrome->openDoc->win = win;
     chrome->openDoc->text = new VirtText(StrL(""));
     chrome->openDoc->text->withUnderline = true;
     chrome->openDoc->AddChild(chrome->openDoc->text);
+    chrome->openDoc->onClick = MkFunc1(HomeOpenDocClicked, win);
     chrome->AddChild(chrome->openDoc);
 
     chrome->helpBtn = new HomeHelpBtnWnd();
-    chrome->helpBtn->win = win;
+    chrome->helpBtn->onClick = MkFunc1(HomeHelpClicked, win);
     chrome->AddChild(chrome->helpBtn);
 
     win->homeRoot->SetChild(chrome);
