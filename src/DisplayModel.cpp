@@ -1054,13 +1054,21 @@ int DisplayModel::CurrentPageNo() const {
         }
     }
 
-    /* if no page is visible, default to either the first or the last one */
+    /* No page overlaps the viewport at all. That is not only "above the first
+       page / below the last one": when one page is much wider than the others
+       the canvas is as wide as that page and the narrow ones sit centered in
+       it, so scrolled fully left the viewport misses every page horizontally.
+       Answering "the last page" there sent a restored view to the end of the
+       document (issue #1438), so go by the vertical band the viewport is in,
+       which is what "current page" means in continuous mode. */
     if (kInvalidPageNo == mostVisiblePage) {
-        PageInfo* pageInfo = GetPageInfo(1);
-        if (pageInfo && viewPort.y > pageInfo->pos.y + pageInfo->pos.dy) {
-            mostVisiblePage = PageCount();
-        } else {
-            mostVisiblePage = 1;
+        mostVisiblePage = PageCount();
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            PageInfo* pageInfo = GetPageInfo(pageNo);
+            if (pageInfo && viewPort.y < pageInfo->pos.y + pageInfo->pos.dy) {
+                mostVisiblePage = pageNo;
+                break;
+            }
         }
     }
 

@@ -341,10 +341,32 @@ int DocumentLayout::CurrentPageNo() const {
         }
     }
     if (ratio <= 0 && pages.len > 0) {
-        const DocumentLayoutPage* first = GetPage(1);
-        mostVisiblePage = (first && viewPort.y > first->pos.y + first->pos.dy) ? pages.len : 1;
+        // No page overlaps the viewport at all. That is not only "before the
+        // first page / after the last one": when one page is much wider than
+        // the others the canvas is as wide as it and the narrow pages sit
+        // centered in that canvas, so scrolled fully left the viewport misses
+        // every page horizontally. Answering "the last page" there sent a
+        // restored view to the end of the document (issue #1438), so go by the
+        // vertical band the viewport is in, which is what "current page" means
+        // in continuous mode
+        mostVisiblePage = PageNoAtViewPortTop();
     }
     return mostVisiblePage;
+}
+
+// the page whose vertical band contains the top of the viewport (the last page
+// when the viewport is past the end); ignores horizontal position
+int DocumentLayout::PageNoAtViewPortTop() const {
+    if (pages.len <= 0) {
+        return 1;
+    }
+    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
+        const DocumentLayoutPage* page = GetPage(pageNo);
+        if (page && viewPort.y < page->pos.y + page->pos.dy) {
+            return pageNo;
+        }
+    }
+    return pages.len;
 }
 
 int DocumentLayout::FirstVisiblePageNo() const {

@@ -14,6 +14,7 @@ import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
+import { testit as issue1438 } from "./issue-1438.ts";
 import { testit as issue1136 } from "./issue-1136.ts";
 import { testit as issue1699 } from "./issue-1699.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
@@ -98,6 +99,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["lint-mingw-sources", lintMingwSources],
   ["combining-mark-first", combiningMarkFirst],
   ["issue-1106", issue1106],
+  ["issue-1438", issue1438],
   ["issue-1136", issue1136],
   ["issue-1699", issue1699],
   ["issue-1998", issue1998],
