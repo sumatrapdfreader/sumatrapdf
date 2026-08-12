@@ -55,6 +55,29 @@ bool IsCollapsed(ILayout* l) {
     return l->GetVisibility() == Visibility::Collapse;
 }
 
+// A layout tree is a tree, not a graph: adding a child that (directly or
+// through wrappers) is the parent again makes every measuring pass recurse
+// until the stack is gone - e.g. box->AddChild(new Padding(box, ...)) instead
+// of wrapping the child that needs the padding
+// returned when a child is refused, so callers can still tweak "the element"
+static boxElementInfo gRefusedBoxElement;
+
+static bool LayoutTreeContains(ILayout* l, ILayout* needle) {
+    if (!l) {
+        return false;
+    }
+    if (l == needle) {
+        return true;
+    }
+    int n = l->LayoutChildCount();
+    for (int i = 0; i < n; i++) {
+        if (LayoutTreeContains(l->LayoutChildAt(i), needle)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void PositionRB(const Rect& container, Rect& r) {
     r.x = container.dx - r.dx;
     r.y = container.dy - r.dy;
@@ -697,6 +720,10 @@ void VBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, i
 }
 
 boxElementInfo& VBox::AddChild(ILayout* child, int flex) {
+    if (LayoutTreeContains(child, this)) {
+        ReportIf(true);
+        return gRefusedBoxElement;
+    }
     boxElementInfo v{};
     v.layout = child;
     v.flex = flex;
@@ -1045,6 +1072,10 @@ void HBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, i
 }
 
 boxElementInfo& HBox::AddChild(ILayout* child, int flex) {
+    if (LayoutTreeContains(child, this)) {
+        ReportIf(true);
+        return gRefusedBoxElement;
+    }
     boxElementInfo v{};
     v.layout = child;
     v.flex = flex;

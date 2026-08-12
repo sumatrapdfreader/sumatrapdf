@@ -1403,11 +1403,12 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
 
         btnClose = NewButton(_TRA("Close"), false);
         btnClose->onClick = MkFunc1(CloseClicked, this);
-        btnRow->AddChild(btnClose);
+        // the gap to the Translate button
+        btnRow->AddChild(new Padding(btnClose, DpiScaledInsets(hwnd, 0, 8, 0, 0)));
 
         btnTranslate = NewButton(_TRA("Translate"), true);
         btnTranslate->onClick = MkFunc1(TranslateClicked, this);
-        btnTranslate->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+        btnTranslate->padding = DpiScaledInsets(hwnd, 0, 4, 0, 4);
         btnRow->AddChild(btnTranslate);
         vbox->AddChild(new Padding(btnRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
     }

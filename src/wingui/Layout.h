@@ -263,8 +263,7 @@ struct Align : LayoutBase {
     ILayout* LayoutChildAt(int) override;
 };
 
-// spacer is to be used to take space
-// can be used for flexible
+// spacer can be used for spacing between elements
 struct Spacer : LayoutBase {
     int dx = 0;
     int dy = 0;
