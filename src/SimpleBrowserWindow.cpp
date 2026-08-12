@@ -26,19 +26,12 @@
 constexpr int kNavRowPadding = 6;
 constexpr int kNavBtnGap = 4;
 
-static LRESULT CALLBACK UrlStaticSubclassProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
-                                              DWORD_PTR /*refData*/) {
-    if (msg == WM_ERASEBKGND) {
-        return 1;
-    }
-    return DefSubclassProc(hwnd, msg, wp, lp);
-}
-
 static void SetCurrentUrl(SimpleBrowserWindow* w, Str url) {
-    if (!w || !w->hwndUrl) {
+    if (!w || !w->urlText) {
         return;
     }
-    HwndSetText(w->hwndUrl, url);
+    w->urlText->SetText(url);
+    w->urlText->Invalidate();
 }
 
 static void UpdateNavButtons(SimpleBrowserWindow* w) {
@@ -54,48 +47,26 @@ static void UpdateNavButtons(SimpleBrowserWindow* w) {
 }
 
 static void LayoutControls(SimpleBrowserWindow* w) {
-    if (!w || !w->hwnd || !w->btnBack || !w->btnForward || !w->hwndUrl) {
+    if (!w || !w->hwnd || !w->layout) {
         return;
     }
 
     Rect rc = HwndClientRect(w->hwnd);
-    // the buttons place themselves in window coords, so the root covers the
-    // whole client area
-    if (w->vroot) {
-        w->vroot->bounds = rc;
-    }
+    // the nav row is as wide as the window and as tall as its tallest child
+    Size navSize = w->layout->Layout(ExpandHeight(rc.dx));
+    w->layout->SetBounds({0, 0, rc.dx, navSize.dy});
+    // the row's controls are virtual: pick them up so we paint them and they
+    // get their input. The root covers the client area, which is what the
+    // window coordinates in the tree are relative to
+    RefreshVirtTops(w->hwnd, w->layout, rc, &w->vroot);
+
     int pad = DpiScale(w->hwnd, kNavRowPadding);
-    int gap = DpiScale(w->hwnd, kNavBtnGap);
-    int y = pad;
-    int x = pad;
-
-    Size backSize = w->btnBack->GetIdealSize();
-    Size fwdSize = w->btnForward->GetIdealSize();
-    int rowH = backSize.dy;
-    rowH = std::max(fwdSize.dy, rowH);
-
-    w->btnBack->SetBounds({x, y, backSize.dx, backSize.dy});
-    x += backSize.dx + gap;
-    w->btnForward->SetBounds({x, y, fwdSize.dx, fwdSize.dy});
-    x += fwdSize.dx + gap;
-
-    int urlX = x;
-    int urlDx = rc.dx - urlX - pad;
-    urlDx = std::max(urlDx, 0);
-    int urlDy = FontDyPx(w->hwnd, w->hFont);
-    if (urlDy <= 0) {
-        urlDy = rowH;
-    }
-    int urlY = y + ((rowH - urlDy) / 2);
-    MoveWindow(w->hwndUrl, urlX, urlY, urlDx, urlDy, TRUE);
-
-    int navRowDy = rowH + (2 * pad);
-    int webDy = rc.dy - navRowDy - pad;
+    int webDy = rc.dy - navSize.dy - pad;
     webDy = std::max(webDy, 0);
     int webDx = rc.dx - (2 * pad);
     webDx = std::max(webDx, 0);
     if (w->webView) {
-        Rect webRc = {pad, navRowDy, webDx, webDy};
+        Rect webRc = {pad, navSize.dy, webDx, webDy};
         w->webView->SetPos(&webRc);
         w->webView->UpdateWebviewSize();
     }
@@ -189,9 +160,7 @@ static int ResolveAccelCmd(void* /*user*/, u16 vk, bool ctrl, bool shift, bool a
 }
 
 SimpleBrowserWindow::~SimpleBrowserWindow() {
-    // the buttons report their destruction to vroot, so they go first
-    delete btnBack;
-    delete btnForward;
+    // ~WindowBase deletes `layout`, which owns the buttons and the url label
     delete webView;
 }
 
@@ -218,17 +187,6 @@ LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     if (msg == WM_COMMAND && LOWORD(wparam) == CmdClose) {
         SendMessageW(hwnd, WM_CLOSE, 0, 0);
         return 0;
-    }
-    if (msg == WM_CTLCOLORSTATIC && (HWND)lparam == hwndUrl) {
-        HDC hdc = (HDC)wparam;
-        SetBkMode(hdc, TRANSPARENT);
-        // the url sits on our own background, so it takes our text color
-        SetTextColor(hdc, IsSpecialColor(textColor) ? GetSysColor(COLOR_WINDOWTEXT) : textColor);
-        HBRUSH br = BackgroundBrush();
-        if (!br) {
-            br = (HBRUSH)GetStockObject(WHITE_BRUSH);
-        }
-        return (LRESULT)br;
     }
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
@@ -258,31 +216,32 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     // needs a background color of its own - without one it paints black
     SetColors(ThemeWindowTextColor(), ThemeWindowBackgroundColor());
 
-    hFont = GetDefaultGuiFont();
+    font = GetPlatformFont(GetDefaultGuiFont());
 
     {
-        // this window has no layout tree: the two buttons are the whole of it,
-        // placed by LayoutControls() and painted by us
-        PlatformFont* platformFont = GetPlatformFont(hFont);
-        btnBack = NewThemedButton(frameHwnd, _TRA("Back"), platformFont, false);
+        // Back | Forward | url, the whole row inset by kNavRowPadding. All
+        // three are virtual controls, so the window paints them itself
+        btnBack = NewThemedButton(frameHwnd, _TRA("Back"), font, false);
         btnBack->onClick = MkFunc1(BackClicked, this);
         btnBack->SetIsEnabled(false);
-        btnForward = NewThemedButton(frameHwnd, _TRA("Forward"), platformFont, false);
+        btnForward = NewThemedButton(frameHwnd, _TRA("Forward"), font, false);
         btnForward->onClick = MkFunc1(ForwardClicked, this);
         btnForward->SetIsEnabled(false);
+        urlText = NewVirtText({
+            .font = font,
+            .textColor = ThemeWindowTextColor(),
+            // keep the file name visible when the url doesn't fit
+            .pathEllipsis = true,
+        });
 
-        vroot = new VirtRoot(frameHwnd);
-        Vec<VirtWnd*> tops;
-        tops.Append(btnBack);
-        tops.Append(btnForward);
-        vroot->SetTops(tops);
-    }
-    {
-        HINSTANCE inst = GetInstance();
-        hwndUrl = CreateWindowExW(0, WC_STATICW, L"", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_PATHELLIPSIS, 0, 0, 0, 0,
-                                  frameHwnd, nullptr, inst, nullptr);
-        SendMessageW(hwndUrl, WM_SETFONT, (WPARAM)hFont, TRUE);
-        SetWindowSubclass(hwndUrl, UrlStaticSubclassProc, NextSubclassId(), 0);
+        int pad = DpiScale(frameHwnd, kNavRowPadding);
+        Insets gap = DpiScaledInsets(frameHwnd, 0, 0, 0, kNavBtnGap);
+        auto* row = new HBox();
+        row->alignCross = CrossAxisAlign::CrossCenter;
+        row->AddChild(btnBack);
+        row->AddChild(new Padding(btnForward, gap));
+        row->AddChild(new Padding(urlText, gap), 1);
+        layout = new Padding(row, Insets{pad, pad, pad, pad});
     }
 
     {

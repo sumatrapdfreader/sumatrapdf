@@ -11,13 +11,15 @@ struct SimpleBrowserCreateArgs {
 };
 
 struct VirtButton;
+struct VirtText;
+struct PlatformFont;
 
 struct SimpleBrowserWindow : WindowBase {
     WebviewWnd* webView = nullptr;
     VirtButton* btnBack = nullptr;
     VirtButton* btnForward = nullptr;
-    HWND hwndUrl = nullptr;
-    HFONT hFont = nullptr;
+    VirtText* urlText = nullptr;
+    PlatformFont* font = nullptr; // not owned, interned
     bool webViewFocusSet = false;
 
     HWND Create(const SimpleBrowserCreateArgs&);
