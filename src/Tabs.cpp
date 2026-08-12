@@ -9,6 +9,10 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtCtrl.h"
+#include "wingui/TabsCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -452,10 +456,12 @@ void CloseAllTabs(MainWindow* win) {
 }
 
 // TODO: add "Move to another window" sub-menu
-static void TabsContextMenu(ContextMenuEvent* ev) {
-    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    TabsCtrl* tabsCtrl = (TabsCtrl*)ev->w;
-    TabsCtrl::MouseState tabState = tabsCtrl->TabStateFromMousePosition(ev->mouseWindow);
+static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(tabsCtrl->hwnd);
+    if (!win) {
+        return;
+    }
+    TabsCtrl::MouseState tabState = tabsCtrl->TabStateFromMousePosition(ev->ptWindow);
     int tabIdx = tabState.tabIdx;
     if (tabIdx < 0) {
         return;
@@ -465,7 +471,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     if (tabUnderMouse->IsAboutTab()) {
         return;
     }
-    Point pt = ev->mouseScreen;
+    Point pt = HwndClientToScreen(tabsCtrl->hwnd, ev->ptWindow);
 
     Vec<WindowTab*> toCloseOther;
     Vec<WindowTab*> toCloseRight;
@@ -624,7 +630,7 @@ void CreateTabbar(MainWindow* win) {
     tabsCtrl->onTabClosed = MkFunc1(MainWindowTabClosed, win);
     tabsCtrl->onSelectionChanging = MkFunc1(MainWindowTabSelectionChanging, win);
     tabsCtrl->onSelectionChanged = MkFunc1(MainWindowTabSelectionChanged, win);
-    tabsCtrl->onContextMenu = MkFunc1Void(TabsContextMenu);
+    tabsCtrl->onContextMenu = MkFunc1(TabsContextMenu, tabsCtrl);
     tabsCtrl->onTabMigration = MkFunc1(MainWindowTabMigration, win);
     tabsCtrl->Create(args);
     win->tabsCtrl = tabsCtrl;

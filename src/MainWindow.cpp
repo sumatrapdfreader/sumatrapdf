@@ -18,6 +18,7 @@
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
 #include "wingui/VirtCtrl.h"
+#include "wingui/TabsCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"

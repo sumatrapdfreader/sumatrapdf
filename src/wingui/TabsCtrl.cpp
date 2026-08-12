@@ -12,6 +12,7 @@
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
 #include "wingui/VirtCtrl.h"
+#include "wingui/TabsCtrl.h"
 
 #include "Theme.h"
 
@@ -21,10 +22,9 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 //--- Tabs
 //
-// Each tab is a TabCtrl in an HBox that lays them out along the bar, with
-// the tab's ✕ as a child of the tab. The control keeps the HWND (it owns the
-// drag loop, which needs capture and screen coordinates) and the tab list;
-// everything on screen belongs to the tree.
+// TabsCtrl is a VirtCtrl hosted in its own child HWND so the frame can
+// SetWindowPos it, and so the drag loop can capture the mouse and map to
+// screen coordinates. Each tab is a TabCtrl child with a VirtCloseButton.
 
 static Kind kindTabs = "tabs";
 static Kind kindTabCtrl = "tabCtrl";
@@ -43,6 +43,8 @@ using Gdiplus::StringAlignmentCenter;
 using Gdiplus::StringFormat;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
+
+static const WStr kTabsCtrlClassName = L"SumatraTabsCtrlClass";
 
 // hwnd is kept LTR (like the canvas); UI direction comes from the parent frame
 static bool IsTabsRtl(HWND hwnd) {
@@ -285,7 +287,7 @@ void TabCtrl::OnMouseDown(VirtMouseEvent* ev) {
 
 void TabCtrl::OnMouseUp(VirtMouseEvent* ev) {
     // the drag / migration handling needs capture and screen coordinates, so it
-    // stays in the control's WndProc
+    // stays in the host WndProc
     ev->didHandle = true;
 }
 
@@ -297,6 +299,38 @@ static void TabCloseClicked(TabCtrl* tab, VirtMouseEvent*) {
     tab->tabsCtrl->CloseTab(tab->Idx());
 }
 
+//--- TabsCtrl host window
+
+static LRESULT CALLBACK TabsCtrlWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    TabsCtrl* tabs = (TabsCtrl*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (msg == WM_NCCREATE) {
+        CREATESTRUCT* cs = (CREATESTRUCT*)lparam;
+        tabs = (TabsCtrl*)cs->lpCreateParams;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)tabs);
+        tabs->hwnd = hwnd;
+    }
+    if (tabs && tabs->hwnd == hwnd) {
+        return tabs->WndProc(hwnd, msg, wparam, lparam);
+    }
+    return DefWindowProcW(hwnd, msg, wparam, lparam);
+}
+
+static void RegisterTabsCtrlClass() {
+    static ATOM atom = 0;
+    if (atom) {
+        return;
+    }
+    WNDCLASSEXW wcex = {};
+    wcex.cbSize = sizeof(wcex);
+    wcex.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    wcex.lpfnWndProc = TabsCtrlWindowProc;
+    wcex.hInstance = GetInstance();
+    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wcex.lpszClassName = kTabsCtrlClassName.s;
+    atom = RegisterClassExW(&wcex);
+    ReportIf(!atom);
+}
+
 //--- TabsCtrl
 
 TabsCtrl::TabsCtrl() {
@@ -304,12 +338,31 @@ TabsCtrl::TabsCtrl() {
 }
 
 TabsCtrl::~TabsCtrl() {
-    // ~ControlBase deletes vroot and layout (which owns the TabCtrls)
+    Destroy();
     delete tooltip;
+    tooltip = nullptr;
+    DeleteVecMembers(tabs);
+    // TabCtrl children are owned via VirtCtrl::children
+}
+
+void TabsCtrl::Destroy() {
+    if (hwnd) {
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+        HwndDestroyWindowSafe(&hwnd);
+    }
+    if (vroot) {
+        // tops do not own us; clear root pointer before deleting
+        vroot->tops.Reset();
+        delete vroot;
+        vroot = nullptr;
+    }
+    SetRoot(nullptr);
 }
 
 void TabsCtrl::ScheduleRepaint() {
-    HwndScheduleRepaint(hwnd);
+    if (hwnd) {
+        HwndScheduleRepaint(hwnd);
+    }
 }
 
 bool TabsCtrl::IsValidIdx(int idx) {
@@ -327,17 +380,34 @@ TabCtrl* TabsCtrl::TabCtrlAt(int idx) {
     return tabCtrls[idx];
 }
 
+HFONT TabsCtrl::GetFont() const {
+    return font;
+}
+
+void TabsCtrl::SetFont(HFONT fontIn) {
+    font = fontIn;
+    if (hwnd) {
+        HwndSetFont(hwnd, fontIn);
+    }
+    ScheduleRepaint();
+}
+
+void TabsCtrl::SetIsVisible(bool show) {
+    VirtCtrl::SetIsVisible(show);
+    if (!hwnd) {
+        return;
+    }
+    HwndSetWindowStyle(hwnd, WS_VISIBLE, show);
+}
+
+bool TabsCtrl::IsVisible() const {
+    return VirtCtrl::IsVisible();
+}
+
 // the tab wnds are rebuilt whenever the tab list changes: there are few of them
 // and it keeps the tree and the list impossible to get out of step
 void TabsCtrl::RebuildTabCtrls() {
-    if (!bar) {
-        return;
-    }
-    // the box owns the tabs, so free them before dropping both lists
-    for (auto& c : bar->children) {
-        delete c.layout;
-    }
-    bar->children.Reset();
+    RemoveAllChildren(true);
     tabCtrls.Reset();
     int n = TabCount();
     for (int i = 0; i < n; i++) {
@@ -345,17 +415,15 @@ void TabsCtrl::RebuildTabCtrls() {
         w->tabsCtrl = this;
         w->ti = tabs[i];
         tabCtrls.Append(w);
-    }
-    // RTL tabs run right to left, which for the box means reversed children
-    bool isRtl = IsTabsRtl(hwnd);
-    bar->alignMain = isRtl ? MainAxisAlign::MainEnd : MainAxisAlign::MainStart;
-    for (int i = 0; i < n; i++) {
-        bar->AddChild(tabCtrls[isRtl ? (n - 1 - i) : i]);
+        AddChild(w);
     }
 }
 
-// Calculates the size of a tab and lays the bar out.
+// Calculates the size of a tab and lays the children out.
 void TabsCtrl::LayoutTabs() {
+    if (!hwnd || !vroot) {
+        return;
+    }
     Rect rect = HwndClientRect(hwnd);
     int dy = rect.dy;
     int nTabs = TabCount();
@@ -381,18 +449,32 @@ void TabsCtrl::LayoutTabs() {
     for (int i = 0; i < nTabs; i++) {
         tabCtrls[i]->idealSize = tabSize;
     }
-    bar->Layout(Tight({rect.dx, rect.dy}));
-    bar->SetBounds(rect);
-    // the tabs are virtual controls: this is what paints them and sends them
-    // their input
-    DoLayout(rect.Size());
+
+    // pack tabs left-to-right (LTR) or right-aligned with reversed order (RTL)
+    bool isRtl = IsTabsRtl(hwnd);
+    int totalW = nTabs * tabSize.dx;
+    int x = 0;
+    if (isRtl && totalW < rect.dx) {
+        x = rect.dx - totalW;
+    }
+    vroot->SetBounds(rect);
+    VirtCtrl::SetBounds(rect);
+
+    for (int i = 0; i < nTabs; i++) {
+        int idx = isRtl ? (nTabs - 1 - i) : i;
+        TabCtrl* t = tabCtrls[idx];
+        Rect r = {x, 0, tabSize.dx, tabSize.dy};
+        // absolute client coords; TabCtrl::SetBounds rebases via parent origin
+        t->SetBounds({rect.x + r.x, rect.y + r.y, r.dx, r.dy});
+        x += tabSize.dx;
+    }
 
     if (withToolTips && tooltip) {
         TooltipInfo* tools = AllocArrayTemp<TooltipInfo>(nTabs);
         for (int i = 0; i < nTabs; i++) {
             tools[i].s = tabs[i]->tooltip;
             tools[i].id = i;
-            tools[i].r = tabCtrls[i]->bounds;
+            tools[i].r = tabCtrls[i]->BoundsInWindow();
         }
         TooltipRemoveAll(tooltip->hwnd);
         TooltipAddTools(tooltip->hwnd, hwnd, tools, nTabs);
@@ -422,7 +504,7 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     res.tabIdx = tab->Idx();
     res.tabInfo = tab->ti;
     res.overClose = overClose && tab->CloseVisible();
-    Rect r = tab->bounds;
+    Rect r = tab->BoundsInWindow();
     Rect rightHalf = r;
     int halfDx = r.dx / 2;
     rightHalf.x = r.x + halfDx;
@@ -445,7 +527,7 @@ void TabsCtrl::UpdateHover(int tabUnderMouse) {
         }
     }
     if (changed) {
-        HwndScheduleRepaint(hwnd);
+        ScheduleRepaint();
     }
 }
 
@@ -455,7 +537,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     if (!ti || !tw) {
         return nullptr;
     }
-    Rect r = tw->bounds;
+    Rect r = tw->BoundsInWindow();
     Bitmap bitmap(r.dx, r.dy);
     Graphics* gfx = Graphics::FromImage(&bitmap);
     // DrawString() on a bitmap does not work with CompositingModeSourceCopy - obscure bug.
@@ -497,7 +579,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
 // must be called after LayoutTabs()
 static void TabsCtrlUpdateAfterChangingTabsCount(TabsCtrl* tabs) {
     HWND hwnd = tabs->hwnd;
-    if (GetCapture() == hwnd) {
+    if (hwnd && GetCapture() == hwnd) {
         ReleaseCapture();
     }
     tabs->tabBeingClosed = -1;
@@ -611,7 +693,7 @@ void TabsCtrl::OnTabMouseDown(TabCtrl* tab, VirtMouseEvent& ev) {
     if (!ti || ti->isPinned) {
         return;
     }
-    Rect r = tab->bounds;
+    Rect r = tab->BoundsInWindow();
     grabLocation.x = ev.ptWindow.x - r.x;
     grabLocation.y = ev.ptWindow.y - r.y;
     SetCapture(hwnd);
@@ -630,20 +712,22 @@ void TabsCtrl::CloseTab(int idx) {
     if (!FindMainWindowByHwnd(hwnd)) {
         return;
     }
-    HwndScheduleRepaint(hwnd);
+    ScheduleRepaint();
     tabBeingClosed = -1;
 }
 
 static bool CanDragTab(TabInfo* tab) {
-    if (tab->isPinned) return false;
+    if (tab->isPinned) {
+        return false;
+    }
     return true;
 }
 
-void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
-    HWND hwnd = ev->hwnd;
-    UINT msg = ev->msg;
-    WPARAM wp = ev->wparam;
-    LPARAM lp = ev->lparam;
+void TabsCtrl::Paint(VirtPaintCtx&) {
+    // children paint themselves; host WM_PAINT fills the background
+}
+
+LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
     if (WM_MOUSELEAVE == msg) {
         mousePos = HwndGetCursorPos(hwnd);
@@ -666,11 +750,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
     if (draggingTab && msg == WM_MOUSEMOVE) {
         Point p = HwndMapWindowPoint(hwnd, nullptr, mousePos);
         ImageList_DragMove(p.x, p.y);
-        {
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
-        }
+        return 0;
     }
 
     // Check if mouse has moved beyond system drag threshold
@@ -680,7 +760,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
         if (hlCtrl) {
             int cxDrag = GetSystemMetrics(SM_CXDRAG);
             int cyDrag = GetSystemMetrics(SM_CYDRAG);
-            Rect r = hlCtrl->bounds;
+            Rect r = hlCtrl->BoundsInWindow();
             beyondDragThreshold =
                 (abs(mousePos.x - grabLocation.x - r.x) > cxDrag) || (abs(mousePos.y - grabLocation.y - r.y) > cyDrag);
         }
@@ -690,26 +770,14 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
         case WM_NCHITTEST: {
             // parts that are HTTRANSPARENT are used to move the window
             if (!inTitleBar || hwnd == GetCapture()) {
-                {
-                    ev->result = HTCLIENT;
-                    ev->didHandle = true;
-                    return;
-                }
+                return HTCLIENT;
             }
             mousePos = HwndScreenToClient(hwnd, mousePos);
             tabState = TabStateFromMousePosition(mousePos);
             if (tabState.tabIdx >= 0) {
-                {
-                    ev->result = HTCLIENT;
-                    ev->didHandle = true;
-                    return;
-                }
+                return HTCLIENT;
             }
-            {
-                ev->result = HTTRANSPARENT;
-                ev->didHandle = true;
-                return;
-            }
+            return HTTRANSPARENT;
         }
 
         case WM_SIZE:
@@ -736,11 +804,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
             int hl = tabHighlighted;
             if (isDragging && beyondDragThreshold) {
                 if (hl < 0) {
-                    {
-                        ev->result = 0;
-                        ev->didHandle = true;
-                        return;
-                    }
+                    return 0;
                 }
                 // move the tab out: draw it as a image and drag around the screen
                 draggingTab = true;
@@ -748,13 +812,9 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 HBITMAP hbmp = RenderForDragging(hl);
                 if (!hbmp || !hlCtrl) {
                     logfa("TabsCtrl::WndProc: RenderForDragging failed for tab %d\n", hl);
-                    {
-                        ev->result = 0;
-                        ev->didHandle = true;
-                        return;
-                    }
+                    return 0;
                 }
-                Rect r = hlCtrl->bounds;
+                Rect r = hlCtrl->BoundsInWindow();
                 HIMAGELIST himl = ImageList_Create(r.dx, r.dy, 0, 1, 0);
                 ImageList_Add(himl, hbmp, nullptr);
                 ImageList_BeginDrag(himl, 0, grabLocation.x, grabLocation.y);
@@ -762,11 +822,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 DeleteObject(himl);
                 Point p = HwndMapWindowPoint(hwnd, nullptr, mousePos);
                 ImageList_DragEnter(nullptr, p.x, p.y);
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
 
             LRESULT res = 0;
@@ -782,19 +838,11 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                     if (!CanDragTab(GetTab(tabUnderMouse))) {
                         TriggerTabDragged(this, hl, tabUnderMouse);
                         UpdateAfterDrag(this, hl, tabUnderMouse);
-                        {
-                            ev->result = 0;
-                            ev->didHandle = true;
-                            return;
-                        }
+                        return 0;
                     }
                 }
                 UpdateHover(tabUnderMouse);
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             int xHl = -1;
             if (overClose && !isDragging) {
@@ -802,13 +850,9 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
             }
             if (tabHighlightedClose != xHl) {
                 tabHighlightedClose = xHl;
-                HwndScheduleRepaint(hwnd);
+                ScheduleRepaint();
             }
-            {
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
+            return 0;
         }
 
         case WM_LBUTTONDOWN: {
@@ -819,11 +863,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
             if (vroot) {
                 vroot->OnMessage(msg, wp, lp, res);
             }
-            {
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
+            return 0;
         }
 
         case WM_LBUTTONUP: {
@@ -837,11 +877,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 if (vroot) {
                     vroot->OnMessage(msg, wp, lp, res);
                 }
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             // we don't always get WM_MOUSEMOVE before WM_LBUTTONUP so
             // update the hover state
@@ -852,11 +888,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 if (vroot) {
                     vroot->OnMessage(msg, wp, lp, res);
                 }
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             draggingTab = false;
             ImageList_EndDrag();
@@ -865,67 +897,53 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 // migrate to new/different window
                 Point scPoint = HwndClientToScreen(hwnd, mousePos);
                 TriggerTabMigration(this, selectedTab, scPoint);
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             int dstIdx = tabUnderMouse;
             if (tabState.inRightHalf) {
                 dstIdx++;
             }
             if (dstIdx == selectedTab) {
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             if ((dstIdx < TabCount()) && GetTab(dstIdx)->isPinned) {
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             TriggerTabDragged(this, selectedTab, dstIdx);
             UpdateAfterDrag(this, selectedTab, dstIdx);
-            HwndScheduleRepaint(hwnd);
-            {
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
+            ScheduleRepaint();
+            return 0;
         }
 
         case WM_MBUTTONDOWN: {
             // middle-clicking unconditionally closes the tab
             tabBeingClosed = tabUnderMouse;
             if (tabBeingClosed < 0 || !canClose) {
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             CloseTab(tabBeingClosed);
-            {
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
+            return 0;
+        }
+
+        case WM_RBUTTONUP:
+        case WM_CONTEXTMENU: {
+            LRESULT res = 0;
+            if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
+                return res;
             }
+            break;
         }
 
         case WM_SETCURSOR: {
             LRESULT res = 0;
             if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
-                ev->result = res;
-                ev->didHandle = true;
-                return;
+                return res;
             }
             break;
         }
+
+        case WM_ERASEBKGND:
+            return 1;
 
         case WM_PAINT: {
             // BeginPaint / EndPaint only to consume the update region: ValidateRect
@@ -938,19 +956,11 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 EndPaint(hwnd, &ps);
             };
             if (!IsWindowVisible(hwnd)) {
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             Rect clientRc = HwndClientRect(hwnd);
             if (clientRc.IsEmpty()) {
-                {
-                    ev->result = 0;
-                    ev->didHandle = true;
-                    return;
-                }
+                return 0;
             }
             HDC hdc = GetDC(hwnd);
             COLORREF bgCol = ThemeControlBackgroundColor();
@@ -961,37 +971,49 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 HdcFillRect(hdc, clientRc, bgCol);
             }
             ReleaseDC(hwnd, hdc);
-            {
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
+            return 0;
         }
+
+        case WM_NCDESTROY:
+            // HWND is going away; detach without DestroyWindow
+            if (this->hwnd == hwnd) {
+                this->hwnd = nullptr;
+            }
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+            break;
     }
 
-    return; // WndProcDefault
+    return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
 HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
-    shouldEraseBackground = false;
-    onWndProc = MkMethod1<TabsCtrl, ControlBase::WndProcEvent*, &TabsCtrl::WndProc>(this);
-    CreateCustomArgs cargs;
-    cargs.parent = args.parent;
-    cargs.isRtl = args.isRtl;
-    cargs.font = args.font;
-    cargs.style = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE;
-    cargs.visible = true;
+    RegisterTabsCtrlClass();
     withToolTips = args.withToolTips;
     tabDefaultDx = args.tabDefaultDx;
+    font = args.font;
+    ctrlID = args.ctrlID;
 
-    HWND hwnd = CreateCustom(cargs);
+    DWORD style = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE;
+    DWORD exStyle = 0;
+    if (args.isRtl) {
+        exStyle |= WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
+    }
+
+    HWND created = CreateWindowExW(exStyle, kTabsCtrlClassName.s, L"", style, 0, 0, 0, 0, args.parent,
+                                   (HMENU)(INT_PTR)ctrlID, GetInstance(), this);
+    ReportIf(!created || created != hwnd);
     if (!hwnd) {
         return nullptr;
     }
+    if (font) {
+        HwndSetFont(hwnd, font);
+    }
 
-    bar = new HBox();
-    bar->alignCross = CrossAxisAlign::Stretch;
-    layout = bar;
+    vroot = new VirtRoot(hwnd);
+    // non-owning top: MainWindow owns TabsCtrl, TabsCtrl owns vroot
+    Vec<VirtCtrl*> tops;
+    tops.Append(this);
+    vroot->SetTops(tops);
 
     if (withToolTips) {
         Tooltip::CreateArgs targs;

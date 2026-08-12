@@ -1307,6 +1307,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\PlatformFont.h" />
     <ClInclude Include="..\src\wingui\PlatformText.h" />
+    <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
     <ClInclude Include="..\src\wingui\VirtCtrl.h" />
     <ClInclude Include="..\src\wingui\WebView.h" />
