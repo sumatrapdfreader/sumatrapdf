@@ -510,9 +510,9 @@ DisplayModel::~DisplayModel() {
 static RectF DefaultMediaBox(EngineBase* engine) {
     float fileDPI = engine->GetFileDPI();
     if (0 == GetMeasurementSystem()) {
-        return RectF(0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI));
+        return {0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI)};
     }
-    return RectF(0, 0, (float)(8.5 * fileDPI), 11 * fileDPI);
+    return {0, 0, (float)(8.5 * fileDPI), 11 * fileDPI};
 }
 
 RectF DisplayModel::PageMediaBox(int pageNo) const {

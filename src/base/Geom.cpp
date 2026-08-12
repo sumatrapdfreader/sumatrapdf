@@ -116,7 +116,7 @@ Rect Rect::FromXY(int xs, int ys, int xe, int ye) {
     if (ys > ye) {
         std::swap(ys, ye);
     }
-    return Rect(xs, ys, xe - xs, ye - ys);
+    return {xs, ys, xe - xs, ye - ys};
 }
 
 Rect Rect::FromXY(Point TL, Point BR) {
@@ -213,11 +213,11 @@ void Rect::SubLR(int l, int r) {
 }
 
 Point Rect::TL() const {
-    return Point(x, y);
+    return {x, y};
 }
 
 Point Rect::BR() const {
-    return Point(x + dx, y + dy);
+    return {x + dx, y + dy};
 }
 
 Size Rect::Size() const {
@@ -294,7 +294,7 @@ RectF RectF::FromXY(float xs, float ys, float xe, float ye) {
     if (ys > ye) {
         std::swap(ys, ye);
     }
-    return RectF(xs, ys, xe - xs, ye - ys);
+    return {xs, ys, xe - xs, ye - ys};
 }
 
 RectF RectF::FromXY(PointF TL, PointF BR) {
@@ -384,7 +384,7 @@ PointF RectF::BR() const {
 }
 
 SizeF RectF::Size() const {
-    return SizeF(dx, dy);
+    return {dx, dy};
 }
 
 bool RectF::operator==(const RectF& other) const {
@@ -412,7 +412,7 @@ SizeF ToSizeFl(const Size s) {
 Size ToSize(const SizeF s) {
     int dx = (int)floor(s.dx + 0.5);
     int dy = (int)floor(s.dy + 0.5);
-    return Size(dx, dy);
+    return {dx, dy};
 }
 
 RectF ToRectF(const Rect& r) {
@@ -424,7 +424,7 @@ Rect ToRect(const RectF& r) {
     int y = (int)floor(r.y + 0.5);
     int dx = (int)floor(r.dx + 0.5);
     int dy = (int)floor(r.dy + 0.5);
-    return Rect(x, y, dx, dy);
+    return {x, y, dx, dy};
 }
 
 // conversions to and from the Win32 / GDI+ geometry types; see Geom.h
@@ -454,20 +454,20 @@ Rect ToRect(const RECT& r) {
 }
 
 Gdiplus::Rect ToGdipRect(const Rect& r) {
-    return Gdiplus::Rect(r.x, r.y, r.dx, r.dy);
+    return {r.x, r.y, r.dx, r.dy};
 }
 
 Gdiplus::RectF ToGdipRectF(const Rect& r) {
-    return Gdiplus::RectF((float)r.x, (float)r.y, (float)r.dx, (float)r.dy);
+    return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
 }
 
 Gdiplus::Rect ToGdipRect(const RectF& r) {
     Rect rect = ToRect(r);
-    return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
+    return {rect.x, rect.y, rect.dx, rect.dy};
 }
 
 Gdiplus::RectF ToGdipRectF(const RectF& r) {
-    return Gdiplus::RectF(r.x, r.y, r.dx, r.dy);
+    return {r.x, r.y, r.dx, r.dy};
 }
 #endif
 

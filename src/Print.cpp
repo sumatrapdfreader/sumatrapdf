@@ -553,9 +553,9 @@ static void SetCustomPaperSize(Printer* printer, SizeF size) {
 // Make sure dy > dx i.e. it's tall not wide
 static Size NormalizePaperSize(Size s) {
     if (s.dy > s.dx) {
-        return Size(s.dx, s.dy);
+        return {s.dx, s.dy};
     }
-    return Size(s.dy, s.dx);
+    return {s.dy, s.dx};
 }
 
 static void MessageBoxWarningCond(bool show, Str msg, Str title) {

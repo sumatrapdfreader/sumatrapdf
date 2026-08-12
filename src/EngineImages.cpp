@@ -888,7 +888,7 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget /*target*/) {
     // Handle degenerate cases where the image is too small for margin detection
     // Minimum sensible dimension for margin cropping is about 10 pixels
     if (w < 10 || h < 10) {
-        return RectF(0, 0, (float)w, (float)h);
+        return {0, 0, (float)w, (float)h};
     }
 
     // don't need pixel-perfect margin, so scan 200 points at most
@@ -1436,9 +1436,9 @@ fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
 RectF EngineImage::LoadMediabox(int pageNo) {
     int idx = pageNo - 1;
     if (idx >= 0 && idx < len(frames) && frames[idx]) {
-        return RectF(0, 0, (float)frames[idx]->width, (float)frames[idx]->height);
+        return {0, 0, (float)frames[idx]->width, (float)frames[idx]->height};
     }
-    return RectF();
+    return {};
 }
 
 EngineBase* EngineImage::CreateFromFile(Str path) {
@@ -1693,7 +1693,7 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
         if (nRead > 0) {
             Size size = ImageSizeFromDataPortable(Str((char*)buf, nRead), true);
             if (!size.IsEmpty()) {
-                return RectF(0, 0, (float)size.dx, (float)size.dy);
+                return {0, 0, (float)size.dx, (float)size.dy};
             }
         }
     }
@@ -1703,9 +1703,9 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     if (bmpData) {
         Size size = ImageSizeFromDataPortable(bmpData);
         str::Free(bmpData);
-        return RectF(0, 0, (float)size.dx, (float)size.dy);
+        return {0, 0, (float)size.dx, (float)size.dy};
     }
-    return RectF();
+    return {};
 }
 
 EngineBase* EngineImageDir::CreateFromFile(Str path) {
@@ -2287,7 +2287,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
         Size size = ImageSizeFromDataPortable(header, true);
         str::Free(header);
         if (!size.IsEmpty()) {
-            return RectF(0, 0, (float)size.dx, (float)size.dy);
+            return {0, 0, (float)size.dx, (float)size.dy};
         }
     }
 
@@ -2296,7 +2296,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     if (len(img) > 0) {
         Size size = ImageSizeFromDataPortable(img);
         if (!size.IsEmpty()) {
-            return RectF(0, 0, (float)size.dx, (float)size.dy);
+            return {0, 0, (float)size.dx, (float)size.dy};
         }
         // partial/corrupt header (e.g. dx>0 but dy==0) -- don't return that;
         // fall through to GetPage so we can use the actual decoded dimensions
@@ -2322,14 +2322,14 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
         }
         DropPage(page, false);
         if (w > 0 && h > 0) {
-            return RectF(0, 0, (float)w, (float)h);
+            return {0, 0, (float)w, (float)h};
         }
     }
 
     // use A4-like dimensions (at 96 DPI) as fallback for failed pages.
     // Important: this MUST be non-empty -- DisplayModel::CalcZoomReal divides
     // by the mediabox, and a zero-area box trips a debug-break assertion.
-    return RectF(0, 0, 595, 842);
+    return {0, 0, 595, 842};
 }
 
 EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* formatOut, bool* isEncryptedOut,

@@ -196,7 +196,7 @@ static COLORREF SelBarHoverBg(COLORREF bg) {
 }
 
 static Gdiplus::Color GdipColor(COLORREF col) {
-    return Gdiplus::Color(255, GetRValue(col), GetGValue(col), GetBValue(col));
+    return {255, GetRValue(col), GetGValue(col), GetBValue(col)};
 }
 
 static void AddRoundedRectPath(Gdiplus::GraphicsPath& path, const Rect& rc, int d) {

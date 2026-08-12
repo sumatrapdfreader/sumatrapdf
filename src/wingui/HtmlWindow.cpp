@@ -351,7 +351,7 @@ static bool ParseProtoUrl(Str url, int* htmlWindowId, TempStr* urlRest) {
 static TempStr MimeFromUrlTemp(Str url, Str imgExt = {}) {
     Str ext = str::SliceFromCharLast(url, '.');
     if (!ext.s) {
-        return Str(kDefaultMimeType);
+        return {kDefaultMimeType};
     }
 
     Str semi = str::SliceFromChar(ext, ';');
@@ -372,7 +372,7 @@ static TempStr MimeFromUrlTemp(Str url, Str imgExt = {}) {
         return contentType;
     }
 
-    return Str(kDefaultMimeType);
+    return {kDefaultMimeType};
 }
 
 // TODO: return an error page html in case of errors?
@@ -1641,7 +1641,7 @@ Point HtmlWindow::GetScrollPos() {
     if (!got) {
         return res;
     }
-    return Point((int)x, (int)y);
+    return {(int)x, (int)y};
 }
 
 void HtmlWindow::SetScrollPos(Point pos) {

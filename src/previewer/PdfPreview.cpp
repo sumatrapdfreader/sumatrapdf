@@ -168,7 +168,7 @@ class PageRenderer {
 
     RectF GetPageRect(int pageNo) {
         if (preventRecursion) {
-            return RectF();
+            return {};
         }
 
         preventRecursion = true;

@@ -476,7 +476,7 @@ static int WStrCodepointAt(WStr s, int& idx) {
 
 Str ToUtf8(Arena* arena, WStr wide) {
     if (len(wide) == 0) {
-        return Str();
+        return {};
     }
 #if OS_WIN
     int n = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);

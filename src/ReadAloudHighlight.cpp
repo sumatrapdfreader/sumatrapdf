@@ -81,7 +81,7 @@ static bool ReadAloudByteLocHasRect(const ReadAloudByteLoc& loc) {
 }
 
 static Rect ReadAloudByteLocToRect(const ReadAloudByteLoc& loc) {
-    return Rect(loc.x, loc.y, loc.dx, loc.dy);
+    return {loc.x, loc.y, loc.dx, loc.dy};
 }
 
 static bool IsLineBreakGlyph(const Rect* coords, int idx, int c) {

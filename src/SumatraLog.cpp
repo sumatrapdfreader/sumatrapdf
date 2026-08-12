@@ -312,7 +312,7 @@ static TempStr GetProcessCommandLineTemp(DWORD pid) {
     }* us = (decltype(us))buf;
     TempStr out{};
     if (us->Buffer && us->Length >= sizeof(WCHAR)) {
-        int nChars = us->Length / sizeof(WCHAR);
+        int nChars = (int)(us->Length / sizeof(WCHAR));
         out = ToUtf8Temp(WStr(us->Buffer, nChars));
     }
     free(buf);

@@ -205,7 +205,7 @@ Rect LbGetItemRect(HWND hwnd, int idx) {
     if (res == LB_ERR) {
         return {};
     }
-    return Rect(rect);
+    return {rect};
 }
 
 int LbItemFromPoint(HWND hwnd, Point point, bool* outside) {
@@ -279,7 +279,7 @@ Rect LvGetItemRect(HWND hwnd, int i, int code) {
     if (!SendMessageW(hwnd, LVM_GETITEMRECT, (WPARAM)i, (LPARAM)&rc)) {
         return {};
     }
-    return Rect(rc);
+    return {rc};
 }
 
 Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code) {
@@ -289,7 +289,7 @@ Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code) {
     if (!SendMessageW(hwnd, LVM_GETSUBITEMRECT, (WPARAM)iItem, (LPARAM)&rc)) {
         return {};
     }
-    return Rect(rc);
+    return {rc};
 }
 
 void LvSetColumnWidth(HWND hwnd, int iCol, int cx) {
@@ -369,13 +369,13 @@ void FillWndClassEx(WNDCLASSEX& wcex, WStr clsName, WNDPROC wndproc) {
 Rect HwndClientRect(HWND hwnd) {
     RECT rc{};
     ::GetClientRect(hwnd, &rc);
-    return Rect(rc);
+    return {rc};
 }
 
 Rect HwndWindowRect(HWND hwnd) {
     RECT rc{};
     GetWindowRect(hwnd, &rc);
-    return Rect(rc);
+    return {rc};
 }
 
 void HwndInvalidateRect(HWND hwnd, Rect rect, bool erase) {
@@ -418,19 +418,19 @@ int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
 Point HwndMapWindowPoint(HWND hwndFrom, HWND hwndTo, Point p) {
     POINT pt = ToPOINT(p);
     ::MapWindowPoints(hwndFrom, hwndTo, &pt, 1);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 Point HwndClientToScreen(HWND hwnd, Point p) {
     POINT pt = ToPOINT(p);
     ClientToScreen(hwnd, &pt);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 Point HwndScreenToClient(HWND hwnd, Point p) {
     POINT pt = ToPOINT(p);
     ScreenToClient(hwnd, &pt);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 HWND HwndWindowFromPoint(Point p) {
@@ -440,7 +440,7 @@ HWND HwndWindowFromPoint(Point p) {
 Point GetCursorPosition() {
     POINT pt{};
     GetCursorPos(&pt);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 //--- HWND: focus / visibility / Z-order
@@ -1776,7 +1776,7 @@ Rect HwndGetFullscreenRect(HWND hwnd) {
         return ToRect(mi.rcMonitor);
     }
     // fall back to the primary monitor
-    return Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    return {0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)};
 }
 
 static BOOL CALLBACK GetMonitorRectProc(HMONITOR /*hMonitor*/, HDC /*hdc*/, LPRECT rcMonitor, LPARAM data) {
@@ -2688,7 +2688,7 @@ void HwndHide(HWND hwnd) {
 Size GetBitmapSize(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    return Size(bmpInfo.bmWidth, bmpInfo.bmHeight);
+    return {bmpInfo.bmWidth, bmpInfo.bmHeight};
 }
 
 // cf. fz_mul255 in fitz.h
@@ -3615,7 +3615,7 @@ void TbSetExtendedStyle(HWND hwnd, DWORD style) {
 Size TbGetMaxSize(HWND hwnd) {
     SIZE size{};
     SendMessageW(hwnd, TB_GETMAXSIZE, 0, (LPARAM)&size);
-    return Size((int)size.cx, (int)size.cy);
+    return {(int)size.cx, (int)size.cy};
 }
 
 void TbGetPadding(HWND hwnd, int* padX, int* padY) {
@@ -3643,7 +3643,7 @@ Rect TbGetRect(HWND hwnd, int buttonId) {
         LogLastError();
         ReportIf(res == 0);
     }
-    return Rect(r);
+    return {r};
 }
 
 Rect TbGetItemRect(HWND hwnd, int buttonIdx) {
@@ -3657,7 +3657,7 @@ Rect TbGetItemRect(HWND hwnd, int buttonIdx) {
         LogLastError();
         ReportIf(res == 0);
     }
-    return Rect(rc);
+    return {rc};
 }
 
 void TbGetMetrics(HWND hwnd, TBMETRICS* metrics) {
@@ -4132,7 +4132,7 @@ void RestoreDCState(SavedDCState* state) {
 Size HdcGetTextExtentPoint32(HDC hdc, WStr str) {
     SIZE size{};
     GetTextExtentPoint32W(hdc, str.s, str.len, &size);
-    return Size((int)size.cx, (int)size.cy);
+    return {(int)size.cx, (int)size.cy};
 }
 
 Size HdcGetTextExtentPoint32(HDC hdc, Str str) {
@@ -4222,7 +4222,7 @@ Str GetAppLocalDataDirTemp() {
     wchar_t* path = nullptr;
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path);
     if (FAILED(hr) || !path) {
-        return Str();
+        return {};
     }
     Str result = ToUtf8Temp(WStr(path));
     CoTaskMemFree(path);

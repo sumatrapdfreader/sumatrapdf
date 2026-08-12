@@ -37,7 +37,7 @@ struct Vec {
 
     void FreeEls() {
         if (els) {
-            Free(nullptr, els);
+            Free(nullptr, (void*)els);
             els = nullptr;
         }
     }
@@ -54,7 +54,7 @@ struct Vec {
     void Clear() {
         len = 0;
         if (els && cap > 0) {
-            memset(els, 0, (size_t)cap * sizeof(T));
+            memset((void*)els, 0, (size_t)cap * sizeof(T));
         }
     }
 
@@ -67,7 +67,7 @@ struct Vec {
         len = other.len;
         // using memcpy, as Vec only supports POD types
         if (other.len > 0 && other.els && els) {
-            memcpy(els, other.els, sizeof(T) * (size_t)other.len);
+            memcpy((void*)els, (const void*)other.els, sizeof(T) * (size_t)other.len);
         }
     }
 
@@ -83,8 +83,8 @@ struct Vec {
         // using memcpy, as Vec only supports POD types
         len = other.len;
         if (other.len > 0) {
-            memcpy(els, other.els, sizeof(T) * (size_t)len);
-            memset(els + len, 0, sizeof(T) * (size_t)(cap - len));
+            memcpy((void*)els, (const void*)other.els, sizeof(T) * (size_t)len);
+            memset((void*)(els + len), 0, sizeof(T) * (size_t)(cap - len));
         }
         return *this;
     }
@@ -128,7 +128,7 @@ struct Vec {
         if (!dst) {
             return false;
         }
-        memcpy(dst, src, (size_t)count * sizeof(T));
+        memcpy((void*)dst, (const void*)src, (size_t)count * sizeof(T));
         return true;
     }
 
@@ -145,10 +145,10 @@ struct Vec {
         if (len > idx + count) {
             T* dst = els + idx;
             T* src = els + idx + count;
-            memmove(dst, src, (size_t)(len - idx - count) * sizeof(T));
+            memmove((void*)dst, (const void*)src, (size_t)(len - idx - count) * sizeof(T));
         }
         len -= count;
-        memset(els + len, 0, (size_t)count * sizeof(T));
+        memset((void*)(els + len), 0, (size_t)count * sizeof(T));
     }
 
     void RemoveLast() {
@@ -171,9 +171,9 @@ struct Vec {
         T* toRemove = els + idx;
         T* last = els + len - 1;
         if (toRemove != last) {
-            memcpy(toRemove, last, sizeof(T));
+            memcpy((void*)toRemove, (const void*)last, sizeof(T));
         }
-        memset(last, 0, sizeof(T));
+        memset((void*)last, 0, sizeof(T));
         --len;
     }
 
@@ -266,7 +266,7 @@ template <typename T>
 void VecSort(Vec<T>& v, typename VecSortCmp<T>::Fn cmpFunc) {
     if (v.len > 0) {
         auto cmp = (int (*)(const void* a, const void* b))cmpFunc;
-        qsort(v.els, v.len, sizeof(T), cmp);
+        qsort((void*)v.els, v.len, sizeof(T), cmp);
     }
 }
 
@@ -305,7 +305,7 @@ T* VecInsertSpace(Vec<T>& v, int idx, int count) {
     if (v.len > idx) {
         T* src = v.els + idx;
         T* dst = v.els + idx + count;
-        memmove(dst, src, (size_t)(v.len - idx) * sizeof(T));
+        memmove((void*)dst, (const void*)src, (size_t)(v.len - idx) * sizeof(T));
     }
     v.len = newLen;
     return res;
@@ -325,7 +325,7 @@ bool VecResize(Vec<T>& v, int newSize) {
     }
     v.len = newSize;
     if (v.els && v.cap > v.len) {
-        memset(v.els + v.len, 0, (size_t)(v.cap - v.len) * sizeof(T));
+        memset((void*)(v.els + v.len), 0, (size_t)(v.cap - v.len) * sizeof(T));
     }
     return true;
 }

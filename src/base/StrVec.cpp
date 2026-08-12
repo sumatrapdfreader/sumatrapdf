@@ -124,7 +124,7 @@ static StrVecPage* AllocStrVecPage(int pageSize, int dataSize) {
 // index entry is offset and size (both u32) + (optional) data
 static int cbIndexSize(int dataSize) {
     // dataSize is guaranteed multiple of sizeofi(u32)
-    return 2 * sizeofi(u32) + dataSize;
+    return (2 * sizeofi(u32)) + dataSize;
 }
 
 static u32* OffsetsForString(const StrVecPage* p, int idx) {
@@ -621,11 +621,11 @@ StrVec::iterator::iterator(const StrVec* v, int idx) {
 }
 
 StrVec::iterator StrVec::begin() const {
-    return StrVec::iterator(this, 0);
+    return {this, 0};
 }
 
 StrVec::iterator StrVec::end() const {
-    return StrVec::iterator(this, len(*this));
+    return {this, len(*this)};
 }
 
 Str StrVec::iterator::operator*() const {

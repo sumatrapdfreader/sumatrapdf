@@ -1862,7 +1862,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     y -= editDy;
 
     Str s2 = _TRA("Install SumatraPDF in &folder:");
-    rc = {x, y, r.dx - 2 * margin, staticDy};
+    rc = {x, y, r.dx - (2 * margin), staticDy};
 
     Static::CreateArgs args;
     args.parent = hwnd;
@@ -2141,7 +2141,7 @@ static i64 EstimateInstallerWriteBytes(const lzma::SimpleArchive* archive) {
         }
     }
     need += largest;          // possible concurrent .tmp during robust write
-    need += 16 * 1024 * 1024; // filesystem / safety margin
+    need += 16ll * 1024 * 1024; // filesystem / safety margin
     return need;
 }
 
@@ -2185,7 +2185,7 @@ static bool EnsureEnoughDiskSpaceForInstall(Str installDir, const lzma::SimpleAr
         return true;
     }
     int freeMb = (int)(freeBytes / (1024ull * 1024ull));
-    int needMb = (int)((need + 1024 * 1024 - 1) / (1024 * 1024));
+    int needMb = (int)((need + (1024ll * 1024) - 1) / (1024ll * 1024));
     NotifyFailed(fmt(_TRA("Not enough free disk space to install SumatraPDF.\n\n"
                           "Required: about %d MB free\nAvailable: %d MB\n\n"
                           "Free up space on this drive and try again.")

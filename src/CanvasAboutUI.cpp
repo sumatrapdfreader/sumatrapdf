@@ -49,7 +49,7 @@ static void OnPaintAbout(MainWindow* win) {
     }
 }
 
-static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
+static void OnMouseMoveAbout(HWND hwnd) {
     TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
     tme.dwFlags = TME_LEAVE;
     tme.hwndTrack = hwnd;
@@ -176,7 +176,7 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             break;
 
         case WM_MOUSEMOVE:
-            OnMouseMoveAbout(win, hwnd, x, y);
+            OnMouseMoveAbout(hwnd);
             return 0;
 
         case WM_MOUSELEAVE:

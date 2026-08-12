@@ -196,7 +196,7 @@ RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH
     if (newDx == imgPage.dx && newDy == imgPage.dy) {
         return imgPage;
     }
-    return RectF(imgPage.x, imgPage.y, newDx, newDy);
+    return {imgPage.x, imgPage.y, newDx, newDy};
 }
 
 // Cap bbox when embedded image dimensions are unknown (common with content-stream tiles).
@@ -208,7 +208,7 @@ RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight)
     if (imgPage.dy <= maxH) {
         return imgPage;
     }
-    return RectF(imgPage.x, imgPage.y, imgPage.dx, maxH);
+    return {imgPage.x, imgPage.y, imgPage.dx, maxH};
 }
 
 static bool PdfDarkModeStatsLookLikeDarkArtwork(const PdfDarkModeImageSampleStats& stats, float pageCoverage) {

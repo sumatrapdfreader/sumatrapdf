@@ -606,7 +606,7 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
     {
         Str s = ToStr(translationOut);
         str::TrimWSInPlace(s, str::TrimOpt::Both);
-        translationOut.len = (u32)s.len;
+        translationOut.len = s.len;
     }
     if (len(translationOut) == 0 && output && !str::Contains(output, StrL("{\"type\":")) &&
         !str::Contains(output, StrL("{\"event\":"))) {

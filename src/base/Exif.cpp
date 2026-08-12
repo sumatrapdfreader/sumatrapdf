@@ -150,7 +150,7 @@ const TagDef kInteropTags[] = {
 Str LookupTagName(const TagDef* tags, int n, u16 id) {
     for (int i = 0; i < n; i++) {
         if (tags[i].id == id) {
-            return Str(tags[i].name);
+            return {tags[i].name};
         }
     }
     return {};

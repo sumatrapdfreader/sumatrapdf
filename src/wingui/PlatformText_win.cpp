@@ -346,7 +346,7 @@ void TextRenderGdiplus::SetTextColor(COLORREF col) {
 }
 
 static Gdiplus::PointF ToGdipPointF(const PointF p) {
-    return Gdiplus::PointF(p.x, p.y);
+    return {p.x, p.y};
 }
 
 void TextRenderGdiplus::Draw(Str s, const RectF bb, bool isRtl) {

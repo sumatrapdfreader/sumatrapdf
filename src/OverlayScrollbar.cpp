@@ -80,9 +80,9 @@ static Rect GetTrackRect(OverlayScrollbar* sb) {
     }
     int total = arrowSize + gap;
     if (IsVert(sb)) {
-        return Rect(0, total, rc.dx, rc.dy - (2 * total));
+        return {0, total, rc.dx, rc.dy - (2 * total)};
     }
-    return Rect(total, 0, rc.dx - (2 * total), rc.dy);
+    return {total, 0, rc.dx - (2 * total), rc.dy};
 }
 
 // Calculate thumb rect within the track
@@ -107,27 +107,27 @@ static Rect GetThumbRect(OverlayScrollbar* sb) {
     thumbOffset = setMinMax(thumbOffset, 0, scrollableTrack);
 
     if (IsVert(sb)) {
-        return Rect(track.x, track.y + thumbOffset, track.dx, thumbLen);
+        return {track.x, track.y + thumbOffset, track.dx, thumbLen};
     }
-    return Rect(track.x + thumbOffset, track.y, thumbLen, track.dy);
+    return {track.x + thumbOffset, track.y, thumbLen, track.dy};
 }
 
 static Rect GetArrowTopRect(OverlayScrollbar* sb) {
     Rect rc = HwndClientRect(sb->hwnd);
     int arrowSize = IsVert(sb) ? rc.dx : rc.dy;
     if (IsVert(sb)) {
-        return Rect(0, 0, rc.dx, arrowSize);
+        return {0, 0, rc.dx, arrowSize};
     }
-    return Rect(0, 0, arrowSize, rc.dy);
+    return {0, 0, arrowSize, rc.dy};
 }
 
 static Rect GetArrowBottomRect(OverlayScrollbar* sb) {
     Rect rc = HwndClientRect(sb->hwnd);
     int arrowSize = IsVert(sb) ? rc.dx : rc.dy;
     if (IsVert(sb)) {
-        return Rect(0, rc.dy - arrowSize, rc.dx, arrowSize);
+        return {0, rc.dy - arrowSize, rc.dx, arrowSize};
     }
-    return Rect(rc.dx - arrowSize, 0, arrowSize, rc.dy);
+    return {rc.dx - arrowSize, 0, arrowSize, rc.dy};
 }
 
 static void SendScrollMsg(OverlayScrollbar* sb, UINT scrollMsg, WPARAM wp) {
@@ -145,9 +145,9 @@ static Rect GetScrollbarScreenRect(OverlayScrollbar* sb) {
     Rect ownerRc = HwndWindowRect(sb->hwndOwner);
     int scrollW = ScaledWidth(sb, true);
     if (IsVert(sb)) {
-        return Rect(ownerRc.x + ownerRc.dx - scrollW, ownerRc.y, scrollW, ownerRc.dy);
+        return {ownerRc.x + ownerRc.dx - scrollW, ownerRc.y, scrollW, ownerRc.dy};
     }
-    return Rect(ownerRc.x, ownerRc.y + ownerRc.dy - scrollW, ownerRc.dx, scrollW);
+    return {ownerRc.x, ownerRc.y + ownerRc.dy - scrollW, ownerRc.dx, scrollW};
 }
 
 // Check if hwnd is the same as or an ancestor of child

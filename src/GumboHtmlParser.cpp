@@ -423,7 +423,7 @@ static Str CDataText(Str raw, const GumboNode* node) {
         raw.len -= 3;
         return raw;
     }
-    return Str(node->v.text.text);
+    return {node->v.text.text};
 }
 
 static ptrdiff_t PosOfSource(Str html, Str p) {

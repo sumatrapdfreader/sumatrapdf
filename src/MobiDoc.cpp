@@ -865,7 +865,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
     ReportIf(len(doc) != 0);
     doc.Reset();
-    doc.cap = (u32)docUncompressedSize; // capacity hint, same trick as ByteWriter ctor
+    doc.cap = docUncompressedSize; // capacity hint, same trick as ByteWriter ctor
     int nFailed = 0;
     for (int i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, doc)) {

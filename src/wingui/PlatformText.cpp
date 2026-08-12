@@ -87,7 +87,7 @@ struct StubTextRender : PlatformTextRender {
 
     // a rough guess, so measure by codepoint rather than by utf-8 byte
     RectF Measure(Str s) override {
-        return RectF(0, 0, (float)Utf8CodepointCount(s) * AverageCharDx(), GetCurrFontLineSpacing());
+        return {0, 0, (float)Utf8CodepointCount(s) * AverageCharDx(), GetCurrFontLineSpacing()};
     }
 
     void SetTextColor(COLORREF) override {}

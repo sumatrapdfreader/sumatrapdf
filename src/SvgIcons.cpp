@@ -297,5 +297,5 @@ Str GetSvgIcon(TbIcon idx) {
     if (n < 0 || n >= dimofi(gIcons)) {
         return {};
     }
-    return Str(gIcons[n]);
+    return {gIcons[n]};
 }

@@ -580,7 +580,7 @@ Point BrowserDocView::GetScrollPos() const {
     if (backend == Backend::IE && ie) {
         return ie->GetScrollPos();
     }
-    return Point(-1, -1);
+    return {-1, -1};
 }
 
 void BrowserDocView::SetScrollPos(Point pos) {

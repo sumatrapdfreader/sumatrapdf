@@ -419,7 +419,7 @@ Str FindFirstValidParentDir(Str path) {
 
 Str PathGetDirTemp(Str path) {
     if (len(path) == 0) {
-        return Str();
+        return {};
     }
     while (path.len > 1 && path::IsSep(path.s[path.len - 1])) {
         path.len--;
@@ -431,7 +431,7 @@ Str PathGetDirTemp(Str path) {
         }
     }
     if (idx < 0) {
-        return Str();
+        return {};
     }
     int n = idx;
     if (idx == 0) {
@@ -444,7 +444,7 @@ Str PathGetDirTemp(Str path) {
 
 Str PathGetNameTemp(Str path) {
     if (len(path) == 0) {
-        return Str();
+        return {};
     }
     while (path.len > 1 && path::IsSep(path.s[path.len - 1])) {
         path.len--;

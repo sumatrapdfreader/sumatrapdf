@@ -231,7 +231,7 @@ void SetCurrentLangByCode(Str langCode) {
 }
 
 Str ValidateLangCode(Str langCode) {
-    if (!langCode) return Str();
+    if (!langCode) return {};
     int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         return nullptr;

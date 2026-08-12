@@ -263,6 +263,6 @@ void StopUiHangDetector() {
     }
     Free(nullptr, gStacks);
     gStacks = nullptr;
-    Free(nullptr, gThreadHandles);
+    Free(nullptr, (void*)gThreadHandles);
     gThreadHandles = nullptr;
 }

@@ -27,7 +27,7 @@ void InitGraphicsMode(Graphics* g) {
 }
 
 Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
-    return Gdiplus::RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height);
+    return {(float)r.X, (float)r.Y, (float)r.Width, (float)r.Height};
 }
 
 // note: gdi+ seems to under-report the width, the longer the text, the
@@ -39,7 +39,7 @@ Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
 RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
     int n = s.len;
     if (0 == n) {
-        return RectF(0, 0, 0, 0); // TODO: should set height to font's height
+        return {0, 0, 0, 0}; // TODO: should set height to font's height
     }
     // note: frankly, I don't see a difference between those StringFormat variations
     StringFormat sf(StringFormat::GenericTypographic());

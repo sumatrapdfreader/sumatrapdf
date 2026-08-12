@@ -297,7 +297,7 @@ Str PopRecentlyClosedDocument() {
     if (n > 0) {
         return Str(gClosedDocuments.RemoveAtFast(n - 1));
     }
-    return Str();
+    return {};
 }
 
 // --- thumbnail cache delete

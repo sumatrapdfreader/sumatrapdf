@@ -2493,8 +2493,8 @@ Rect FitSizeInRect(Size src, Rect dst) {
         dx = Scale(dx, dst.dy, dy);
         dy = dst.dy;
     }
-    int x = dst.x + (dst.dx - dx) / 2;
-    int y = dst.y + (dst.dy - dy) / 2;
+    int x = dst.x + ((dst.dx - dx) / 2);
+    int y = dst.y + ((dst.dy - dy) / 2);
     return {x, y, dx, dy};
 }
 

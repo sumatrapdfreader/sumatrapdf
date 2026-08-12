@@ -2477,7 +2477,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
 
 // A splitter is a virtual control in the frame's tree: the frame paints it and
 // hands it the mouse. `isLive` false means the panes only move on release
-static VirtSplitter* NewFrameSplitter(MainWindow* win, SplitterType type, bool isLive) {
+static VirtSplitter* NewFrameSplitter(SplitterType type, bool isLive) {
     auto* s = new VirtSplitter();
     s->type = type;
     s->isLive = isLive;
@@ -2504,13 +2504,13 @@ void FrameSyncSplitters(MainWindow* win) {
 }
 
 static void CreateSidebar(MainWindow* win) {
-    win->sidebarSplitter = NewFrameSplitter(win, SplitterType::Vert, true);
+    win->sidebarSplitter = NewFrameSplitter(SplitterType::Vert, true);
     win->sidebarSplitter->onMove = MkFunc1Void(OnSidebarSplitterMove);
     FrameSyncSplitters(win);
 
     CreateToc(win);
 
-    win->favSplitter = NewFrameSplitter(win, SplitterType::Horiz, true);
+    win->favSplitter = NewFrameSplitter(SplitterType::Horiz, true);
     win->favSplitter->onMove = MkFunc1Void(OnFavSplitterMove);
     FrameSyncSplitters(win);
 

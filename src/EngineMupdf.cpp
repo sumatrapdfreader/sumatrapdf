@@ -4680,7 +4680,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget /*target*/) {
         // maybe should return a dummy size. not sure how this
         // will play with layout. The page should fail to render
         // since the doc is broken and page is missing
-        return RectF();
+        return {};
     }
 
     RectF mediabox = pageInfo->mediabox;

@@ -48,11 +48,11 @@ DirIter::iterator::~iterator() {
 }
 
 DirIter::iterator DirIter::begin() const {
-    return DirIter::iterator(this, false);
+    return {this, false};
 }
 
 DirIter::iterator DirIter::end() const {
-    return DirIter::iterator(this, true);
+    return {this, true};
 }
 
 DirIterEntry* DirIter::iterator::operator*() {

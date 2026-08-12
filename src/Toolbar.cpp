@@ -637,7 +637,7 @@ static int ToolbarNaturalWidth(MainWindow* win) {
 static Rect CanvasRectInFrame(MainWindow* win) {
     Rect rc = HwndWindowRect(win->hwndCanvas);
     Point tl = HwndScreenToClient(win->hwndFrame, rc.TL());
-    return Rect(tl, rc.Size());
+    return {tl, rc.Size()};
 }
 
 // when the overlay toolbar sits at the bottom, lift it above the horizontal
@@ -668,7 +668,7 @@ static Rect OverlayToolbarRect(MainWindow* win) {
     if (ToolbarAtBottom()) {
         y = canvas.y + canvas.dy - h - OverlayToolbarBottomScrollbarOffset(win);
     }
-    return Rect(x, y, natW, h);
+    return {x, y, natW, h};
 }
 
 // position/show the floating overlay toolbar; called on relayout and mouse move

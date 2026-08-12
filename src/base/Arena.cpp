@@ -547,7 +547,7 @@ void* AllocTemp(int size, u64 align) {
 // allocate null-terminated string
 Str AllocStrTemp(int size) {
     if (size == 0) {
-        return Str();
+        return {};
     }
     Arena* arena = GetTempArena();
     char* res = (char*)arena->Push((u64)size + 1, 1, false);

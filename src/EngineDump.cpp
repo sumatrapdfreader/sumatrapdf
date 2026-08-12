@@ -226,13 +226,13 @@ static void DumpToc(EngineBase* engine) {
 static Str ElementTypeToStr(IPageElement* el) {
     Kind kind = el->GetKind();
     if (kind) {
-        return Str(kind);
+        return {kind};
     }
     return StrL("unknown");
 }
 
 __unused static Str PageDestToStr(Kind kind) {
-    return Str(kind);
+    return {kind};
 }
 
 static void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {

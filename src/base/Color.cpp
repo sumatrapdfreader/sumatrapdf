@@ -49,17 +49,17 @@ Gdiplus::Color Unblend(COLORREF c, u8 alpha) {
     u8 R = (u8)floorf((float)std::max(r - (255 - ralpha), 0) * tmp);
     u8 G = (u8)floorf((float)std::max(g - (255 - ralpha), 0) * tmp);
     u8 B = (u8)floorf((float)std::max(b - (255 - ralpha), 0) * tmp);
-    return Gdiplus::Color(alpha, R, G, B);
+    return {alpha, R, G, B};
 }
 
 Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
-    return Gdiplus::Color(r, g, b);
+    return {r, g, b};
 }
 
 Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
-    return Gdiplus::Color(c);
+    return {c};
 }
 #endif
 

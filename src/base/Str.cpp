@@ -1285,7 +1285,7 @@ TempStr SeqStrAt(SeqStrings strs, int off) {
     if (!strs || off < 0 || !strs[off]) {
         return {};
     }
-    return Str(strs + off);
+    return {strs + off};
 }
 
 bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {

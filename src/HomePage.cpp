@@ -269,8 +269,8 @@ struct AboutWnd : VirtWnd {
     int dividerX = 0;
 
     AboutWnd();
-    void Sync(HWND hwnd, HDC hdc);
-    void UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc);
+    void Sync(HDC hdc);
+    void UpdateLayout(HWND hwnd, Rect clientRc);
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
 };
@@ -401,7 +401,7 @@ VirtText* AboutWnd::RightAt(int i) {
 
 // build the table once, then keep text, fonts and colors in step with the theme
 // and the DPI. Sizing happens in UpdateLayout(), which measures what we set here
-void AboutWnd::Sync(HWND hwnd, HDC hdc) {
+void AboutWnd::Sync(HDC hdc) {
     int n = AboutRowCount();
     bool canAccessDisk = CanAccessDisk();
     if (table->rows != n) {
@@ -457,7 +457,7 @@ void AboutWnd::Sync(HWND hwnd, HDC hdc) {
 
 // the About box is the title band above the two-column table. This sizes it from
 // the table, centers it in clientRc and positions the table inside it
-void AboutWnd::UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc) {
+void AboutWnd::UpdateLayout(HWND hwnd, Rect clientRc) {
     headerSize = logo->GetIdealSize();
 
     int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
@@ -488,8 +488,8 @@ void AboutWnd::UpdateLayout(HWND hwnd, HDC hdc, Rect clientRc) {
 // prepares the About tree for hwnd and computes its geometry
 static AboutWnd* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
     AboutWnd* about = EnsureAboutWnd(rootPtr, hwnd, clientRc);
-    about->Sync(hwnd, hdc);
-    about->UpdateLayout(hwnd, hdc, clientRc);
+    about->Sync(hdc);
+    about->UpdateLayout(hwnd, clientRc);
     return about;
 }
 
@@ -1196,7 +1196,7 @@ static TempStr HomeSearchQueryTemp(MainWindow* win) {
     return HwndGetTextTemp(win->hwndHomeSearch);
 }
 
-static bool HomeLayoutCacheMatches(MainWindow* win, const Rect& rc, Str filterText) {
+static bool HomeLayoutCacheMatches(const Rect& rc, Str filterText) {
     auto& c = gHomeLayoutCache;
     if (!c.valid) {
         return false;
@@ -2040,7 +2040,7 @@ static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
     int margin = DpiScale(win->hwndCanvas, 5);
     int bx = IsUIRtl() ? (thumb.x + margin) : (thumb.x + thumb.dx - sz - margin);
     int by = thumb.y + margin;
-    return Rect(bx, by, sz, sz);
+    return {bx, by, sz, sz};
 }
 
 // the ✕ of a thumbnail / list row: forget the file it belongs to
@@ -2542,7 +2542,7 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     // Prefer the scroll-friendly path: when only scrollY changed, offset cached
     // thumb rects instead of re-running full LayoutHomePage (was ~30% of scroll CPU).
     bool usedCache = false;
-    if (HomeLayoutCacheMatches(win, l.rc, filterText)) {
+    if (HomeLayoutCacheMatches(l.rc, filterText)) {
         Vec<FileState*> files;
         StrVec filterWords;
         CollectHomePageFiles(win, files, filterWords);
@@ -2697,7 +2697,7 @@ static void HomeScrollSelectionIntoView(MainWindow* win) {
 static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t, HWND hwnd) {
     if (HomePageIsListView()) {
         // list: outline is the row, 1px shorter (separator line)
-        return Rect(t.rcListRow.x, t.rcListRow.y, t.rcListRow.dx, t.rcListRow.dy - 1);
+        return {t.rcListRow.x, t.rcListRow.y, t.rcListRow.dx, t.rcListRow.dy - 1};
     }
     // thumbnails: page ∪ name, inflated by the same amounts as paint
     Rect sel = t.rcPage.Union(t.rcText);

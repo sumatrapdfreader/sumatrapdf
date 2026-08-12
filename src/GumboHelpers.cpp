@@ -11,7 +11,7 @@ static Str GumboElementTagName(const GumboNode* node) {
         return {};
     }
     if (node->v.element.tag != GUMBO_TAG_UNKNOWN) {
-        return Str(gumbo_normalized_tagname(node->v.element.tag));
+        return {gumbo_normalized_tagname(node->v.element.tag)};
     }
     Str orig = Str((char*)node->v.element.original_tag.data, (int)node->v.element.original_tag.length);
     int off = 0;

@@ -10,7 +10,7 @@ static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
 }
 
 static Str FieldDefaultStr(const FieldInfo& field) {
-    return Str((const char*)field.value);
+    return {(const char*)field.value};
 }
 
 // only escape characters which are significant to SquareTreeParser:

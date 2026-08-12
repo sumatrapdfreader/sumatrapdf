@@ -253,7 +253,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
             CreateFileW(pszFileName, GENERIC_READ, share, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE) return E_INVALIDARG;
         DWORD size = GetFileSize(hFile, nullptr), read = 0;
-        char* data = AllocArray<char>((size_t)size + 1);
+        char* data = AllocArray<char>((int)size + 1);
         if (!data) {
             CloseHandle(hFile);
             return E_OUTOFMEMORY;

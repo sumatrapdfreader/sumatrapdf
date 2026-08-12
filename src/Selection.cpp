@@ -44,7 +44,7 @@ Rect SelectionOnPage::GetRect(DisplayModel* dm) const {
     // if the page is not visible, we return an empty rectangle
     PageInfo* pageInfo = dm->GetPageInfo(pageNo);
     if (!pageInfo || pageInfo->visibleRatio <= 0.0) {
-        return Rect();
+        return {};
     }
 
     return dm->CvtToScreen(pageNo, rect);
@@ -171,7 +171,7 @@ static Rect ApplySelectionEdgeDrag(Rect orig, SelectionDragEdge edge, int dx, in
     int h = orig.dy;
 
     if (edge == SelectionDragEdge::Move) {
-        return Rect(x + dx, y + dy, w, h);
+        return {x + dx, y + dy, w, h};
     }
 
     if (edge == SelectionDragEdge::Left || edge == SelectionDragEdge::TopLeft ||
@@ -211,7 +211,7 @@ static Rect ApplySelectionEdgeDrag(Rect orig, SelectionDragEdge edge, int dx, in
             y = orig.y;
         }
     }
-    return Rect(x, y, w, h);
+    return {x, y, w, h};
 }
 
 SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int mx, int my) {

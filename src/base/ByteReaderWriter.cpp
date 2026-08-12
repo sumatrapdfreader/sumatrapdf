@@ -328,7 +328,7 @@ u32 UInt32LE(const u8* d) {
 // --- ByteWriter
 
 ByteWriter::ByteWriter(int sizeHint) {
-    d.cap = (u32)sizeHint;
+    d.cap = sizeHint;
 }
 
 void ByteWriter::Write8(u8 b) {
@@ -385,6 +385,6 @@ Str ByteWriter::AsByteSlice() const {
 }
 
 ByteWriterLE::ByteWriterLE(int sizeHint) {
-    d.cap = (u32)sizeHint;
+    d.cap = sizeHint;
     isLE = true;
 }

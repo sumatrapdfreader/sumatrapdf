@@ -259,7 +259,7 @@ Str Dialog_GetPassword(HWND hwndParent, Str fileName, bool* rememberPassword, bo
     INT_PTR res = CreateDialogBox(IDD_DIALOG_GET_PASSWORD, hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
     if (IDOK != res) {
         str::Free(data.pwdOut);
-        return Str();
+        return {};
     }
     return str::Dup(data.pwdOut);
 }
@@ -420,7 +420,7 @@ Str Dialog_Find(HWND hwnd, Str previousSearch, bool* matchCase) {
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd, Dialog_Find_Proc, (LPARAM)&data);
     if (res != IDOK) {
         str::Free(data.searchTerm);
-        return Str();
+        return {};
     }
 
     if (matchCase) {
@@ -549,7 +549,7 @@ Str Dialog_ChangeLanguge(HWND hwnd, Str currLangCode) {
     delete gLangListMap;
     gLangListMap = nullptr;
     if (IDCANCEL == res) {
-        return Str();
+        return {};
     }
     return str::Dup(data.langCode);
 }
@@ -671,7 +671,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
 
 static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom) {
     float newZoom = defaultZoom;
-    HWND dlg = GetDlgItem(hDlg, idComboBox);
+    HWND dlg = GetDlgItem(hDlg, (int)idComboBox);
     int idx = ComboBox_GetCurSel(dlg);
     if (idx == -1) {
         TempStr customZoom = HwndGetTextTemp(dlg);
