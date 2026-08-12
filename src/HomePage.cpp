@@ -1117,14 +1117,19 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
 }
 
 void HomePageDestroySearch(MainWindow* win) {
-    if (win->homeSearch) {
-        TempStr query = win->homeSearch->GetTextTemp();
-        str::ReplaceWithCopy(&win->homeSearchQuery, query);
-        // the layout owns the edit
-        delete win->homeSearchLayout;
-        win->homeSearchLayout = nullptr;
-        win->homeSearch = nullptr;
+    if (!win->homeSearch) {
+        return;
     }
+    TempStr query = win->homeSearch->GetTextTemp();
+    str::ReplaceWithCopy(&win->homeSearchQuery, query);
+    // destroying the edit's window pumps messages, and the canvas answers most
+    // of them by calling us again (see WndProcCanvas), so drop our pointers
+    // before deleting - otherwise the re-entered call deletes the tree twice
+    ILayout* layout = win->homeSearchLayout;
+    win->homeSearchLayout = nullptr;
+    win->homeSearch = nullptr;
+    // the layout owns the edit
+    delete layout;
 }
 
 // after a theme change; the edit paints itself from these (see
