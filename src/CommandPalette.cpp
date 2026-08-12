@@ -180,31 +180,26 @@ void CommandPaletteWnd::SwitchToFavorites() {
     SwitchToPrefix(kPalettePrefixFavorites);
 }
 
-void CommandPaletteWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    switch (ev->msg) {
-        case WM_ACTIVATE:
-            if (ev->wparam == WA_INACTIVE) {
-                ScheduleDeleteAndExecCommand();
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
-            break;
-        case WM_COMMAND: {
-            int cmdId = LOWORD(ev->wparam);
-            CustomCommand* cmd = FindCustomCommand(cmdId);
-            if (cmd != nullptr) {
-                cmdId = cmd->origId;
-            }
-            switch (cmdId) {
-                case CmdNextTabSmart:
-                case CmdPrevTabSmart: {
-                    int dir = cmdId == CmdNextTabSmart ? 1 : -1;
-                    ev->result = AdvanceSelection(dir);
-                    ev->didHandle = true;
-                    return;
-                }
-            }
+void CommandPaletteWnd::OnActivate(WindowBase::ActivateEvent* ev) {
+    if (ev->state == WA_INACTIVE) {
+        ScheduleDeleteAndExecCommand();
+        ev->didHandle = true;
+    }
+}
+
+void CommandPaletteWnd::OnCommand(WindowBase::CommandEvent* ev) {
+    int cmdId = LOWORD(ev->wparam);
+    CustomCommand* cmd = FindCustomCommand(cmdId);
+    if (cmd != nullptr) {
+        cmdId = cmd->origId;
+    }
+    switch (cmdId) {
+        case CmdNextTabSmart:
+        case CmdPrevTabSmart: {
+            int dir = cmdId == CmdNextTabSmart ? 1 : -1;
+            AdvanceSelection(dir);
+            ev->didHandle = true;
+            return;
         }
     }
 }
@@ -685,7 +680,8 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     auto* wnd = new CommandPaletteWnd();
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onWndProc = MkMethod1<CommandPaletteWnd, WindowBase::WndProcEvent*, &CommandPaletteWnd::WndProc>(wnd);
+    wnd->onActivate = MkMethod1<CommandPaletteWnd, WindowBase::ActivateEvent*, &CommandPaletteWnd::OnActivate>(wnd);
+    wnd->onCommand = MkMethod1<CommandPaletteWnd, WindowBase::CommandEvent*, &CommandPaletteWnd::OnCommand>(wnd);
     wnd->onKeyDown = MkMethod1<CommandPaletteWnd, KeyEvent*, &CommandPaletteWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<CommandPaletteWnd, WindowBase::PreTranslateEvent*, &CommandPaletteWnd::PreTranslate>(wnd);

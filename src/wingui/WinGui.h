@@ -107,6 +107,14 @@ struct WindowBase {
     struct FocusEvent {
         WindowBase* w = nullptr;
     };
+    // WM_ACTIVATE: state is WA_INACTIVE / WA_ACTIVE / WA_CLICKACTIVE
+    struct ActivateEvent {
+        WindowBase* w = nullptr;
+        UINT state = 0;
+        bool minimized = false;
+        HWND other = nullptr;
+        bool didHandle = false;
+    };
     struct CommandEvent {
         WindowBase* w = nullptr;
         WPARAM wparam = 0;
@@ -186,6 +194,7 @@ struct WindowBase {
     using DestroyHandler = Func1<DestroyEvent*>;
     using AttachHandler = Func1<AttachEvent*>;
     using FocusHandler = Func1<FocusEvent*>;
+    using ActivateHandler = Func1<ActivateEvent*>;
     using CommandHandler = Func1<CommandEvent*>;
     using CreateHandler = Func1<CreateEvent*>;
     using DropFilesHandler = Func1<DropFilesEvent*>;
@@ -288,6 +297,7 @@ struct WindowBase {
 
     AttachHandler onAttach;
     FocusHandler onFocus;
+    ActivateHandler onActivate;
     CommandHandler onCommand;
     CreateHandler onCreate;
     DropFilesHandler onDropFiles;

@@ -54,7 +54,8 @@ struct CommandPaletteWnd : WindowBase {
 
     void PreTranslate(WindowBase::PreTranslateEvent*);
     void OnKeyDown(KeyEvent*);
-    void WndProc(WindowBase::WndProcEvent*);
+    void OnActivate(WindowBase::ActivateEvent*);
+    void OnCommand(WindowBase::CommandEvent*);
 
     void CollectStrings(MainWindow*);
     void CollectTabsRegular(MainWindow*, WindowTab* currTab);

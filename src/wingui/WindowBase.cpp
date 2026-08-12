@@ -527,6 +527,21 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             break;
         }
 
+        case WM_ACTIVATE: {
+            if (onActivate.IsValid()) {
+                ActivateEvent ev;
+                ev.w = this;
+                ev.state = LOWORD(wparam);
+                ev.minimized = HIWORD(wparam) != 0;
+                ev.other = reinterpret_cast<HWND>(lparam);
+                onActivate.Call(&ev);
+                if (ev.didHandle) {
+                    return 0;
+                }
+            }
+            break;
+        }
+
         case WM_KILLFOCUS: {
             // we were holding the focus for a virtual control; it's gone now
             if (vroot) {
