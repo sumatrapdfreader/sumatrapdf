@@ -1776,7 +1776,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\wingui\Gfx_win.cpp" />
     <ClCompile Include="..\src\wingui\HtmlWindow.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
-    <ClCompile Include="..\src\wingui\ListBox.cpp" />
     <ClCompile Include="..\src\wingui\PlatformFont.cpp" />
     <ClCompile Include="..\src\wingui\PlatformFont_win.cpp" />
     <ClCompile Include="..\src\wingui\PlatformText.cpp" />

@@ -77,16 +77,6 @@ bool ButtonGetColors(ButtonColors* out) {
     return true;
 }
 
-// wingui calls this from ListBox::Create(); see the declaration in WinGui.h
-// Called from ListBox::Create() so wingui doesn't have to know about the app's
-// theming. The app implements it (Sumatra gives the list a dark scrollbar);
-// an app that doesn't theme anything can implement it as a no-op.
-void ListBoxMaybeApplyTheme(HWND hwnd) {
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkScrollBar(hwnd);
-    }
-}
-
 // The underline under a borderless Edit is a separator, so it takes the edge
 // color like every other border and divider. wingui used to blend the control's
 // own text color toward its background, which lands wherever those two happen

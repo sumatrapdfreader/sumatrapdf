@@ -1106,9 +1106,6 @@
     <ClCompile Include="..\src\wingui\Layout.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wingui\ListBox.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\wingui\PlatformFont.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>

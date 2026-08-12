@@ -471,64 +471,6 @@ struct Edit : ControlBase {
     void ApplyTextPadding();
 };
 
-//--- ListBox
-
-void ListBoxMaybeApplyTheme(HWND);
-
-struct ListBox : ControlBase {
-    struct CreateArgs {
-        HWND parent = nullptr;
-        int idealSizeLines = 0;
-        HFONT font = nullptr;
-        bool isRtl = false;
-    };
-
-    struct DrawItemEvent {
-        ListBox* listBox = nullptr;
-        HDC hdc = nullptr;
-        Rect itemRect; // clamped to the client rect; use this to draw
-        // true when the row is cut off by the bottom of the list
-        // (LBS_NOINTEGRALHEIGHT), so itemRect is shorter than a full row
-        bool clippedAtBottom = false;
-        int itemIndex = -1;
-        bool selected = false;
-    };
-
-    using SelectionChangedHandler = Func0;
-    using DoubleClickHandler = Func0;
-    using DrawItemHandler = Func1<DrawItemEvent*>;
-
-    ListBoxModel* model = nullptr;
-    SelectionChangedHandler onSelectionChanged;
-    DoubleClickHandler onDoubleClick;
-    DrawItemHandler onDrawItem;
-
-    Size idealSize;
-    int idealSizeLines = 0;
-    // viewport as of the last WM_PAINT; a change means the content was scrolled
-    // or resized and the whole list has to be repainted (see WndProc)
-    Size prevPaintSize;
-    int prevPaintTopIdx = -1;
-
-    ListBox();
-    ~ListBox() override;
-
-    HWND Create(const CreateArgs&);
-
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
-
-    int GetItemHeight(int);
-
-    Size GetIdealSize() override;
-
-    int GetCount();
-    int GetCurrentSelection();
-    bool SetCurrentSelection(int);
-    void SetModel(ListBoxModel*);
-};
-
 //--- CheckboxCtrl
 
 struct Checkbox : ControlBase {

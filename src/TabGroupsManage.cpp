@@ -9,6 +9,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -59,7 +62,7 @@ struct TabGroupsWnd : WindowBase {
     HFONT font = nullptr;
     HWND hwndParent = nullptr;
     Edit* editName = nullptr;
-    ListBox* listBox = nullptr;
+    VirtListBox* listBox = nullptr;
     TabGroupsListBoxModel* model = nullptr;
     Button* btnOk = nullptr;
     Button* btnDelete = nullptr;
@@ -103,10 +106,8 @@ void TabGroupsWnd::LayoutToClient() {
     if (!layout || !hwnd) {
         return;
     }
-    Rect rc = HwndClientRect(hwnd);
-    Constraints bc = Tight({rc.dx, rc.dy});
-    layout->Layout(bc);
-    layout->SetBounds({0, 0, rc.dx, rc.dy});
+    // also picks up the virtual controls so we paint them and they get input
+    DoLayout(HwndClientRect(hwnd).Size());
 }
 
 void TabGroupsWnd::SaveTabGroup() {
@@ -226,14 +227,16 @@ void TabGroupsWnd::DeleteTabGroup() {
     UpdateDeleteButton();
 }
 
-static void DrawTabGroupItem(TabGroupsWnd* w, ListBox::DrawItemEvent* ev) {
+static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
     if (ev->itemIndex < 0 || ev->itemIndex >= w->model->ItemsCount()) {
         return;
     }
 
-    HDC hdc = ev->hdc;
+    VirtListBox* lb = ev->listBox;
+    HDC hdc = GfxHdc(ev->gfx);
     Rect rc = ev->itemRect;
-    ListBox* lb = ev->listBox;
+    // the whole virtual tree paints into one DC, so leave it as we found it
+    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -247,12 +250,11 @@ static void DrawTabGroupItem(TabGroupsWnd* w, ListBox::DrawItemEvent* ev) {
     SetTextColor(hdc, colText);
     SetBkMode(hdc, TRANSPARENT);
 
-    HFONT oldFont = nullptr;
     if (lb->font) {
-        oldFont = SelectFont(hdc, lb->font);
+        SelectFont(hdc, lb->font->GetHFont());
     }
 
-    int padX = DpiScale(lb->hwnd, 4);
+    int padX = DpiScale(lb->GetHwnd(), 4);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
@@ -270,9 +272,7 @@ static void DrawTabGroupItem(TabGroupsWnd* w, ListBox::DrawItemEvent* ev) {
     fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT;
     HdcDrawText(hdc, Str(buf), rc, fmt);
 
-    if (oldFont) {
-        SelectFont(hdc, oldFont);
-    }
+    RestoreDC(hdc, savedDC);
 }
 
 static void OnListDoubleClick(TabGroupsWnd* w) {
@@ -301,7 +301,10 @@ void TabGroupsWnd::UpdateTheme() {
         }
     };
     setColors(editName);
-    setColors(listBox);
+    if (listBox) {
+        listBox->textColor = colTxt;
+        listBox->bgColor = colBg;
+    }
     setColors(btnOk);
     setColors(btnDelete);
     setColors(btnCancel);
@@ -325,10 +328,15 @@ void TabGroupsWnd::OnOk() {
 }
 
 LRESULT TabGroupsWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
+    }
     if (msg == WM_SIZE) {
         LayoutToClient();
+        HwndInvalidate(hwndIn);
         return 0;
     }
+    // WindowBase::WndProcDefault sends the virtual controls their input
     return WndProcDefault(hwndIn, msg, wp, lp);
 }
 
@@ -415,15 +423,12 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     }
 
     {
-        ListBox::CreateArgs lbArgs;
-        lbArgs.parent = hwnd;
-        lbArgs.font = font;
-        lbArgs.isRtl = isRtl;
-        listBox = new ListBox();
+        listBox = new VirtListBox();
+        listBox->hwndForDpi = hwnd;
+        listBox->font = GetPlatformFont(font);
         listBox->onDrawItem = MkFunc1(DrawTabGroupItem, this);
         listBox->onSelectionChanged = MkMethod0<TabGroupsWnd, &TabGroupsWnd::UpdateDeleteButton>(this);
         listBox->onDoubleClick = MkFunc0(OnListDoubleClick, this);
-        listBox->Create(lbArgs);
         model = new TabGroupsListBoxModel();
         PopulateListBox(this);
         vbox->AddChild(listBox, 1);
@@ -462,6 +467,9 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     if (editName) {
         editName->SelectAll();
         HwndSetFocus(editName->hwnd);
+    } else {
+        // no name to type in when restoring: the list owns the keyboard
+        SetFocusTo(listBox);
     }
     return true;
 }
