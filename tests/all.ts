@@ -93,6 +93,7 @@ import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as ghsaJf4vRw66J4w2 } from "./security-ghsa-jf4v-rw66-j4w2.ts";
+import { testit as issue5934 } from "./issue-5934.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["lint-command-ids", lintCommandIds],
@@ -178,6 +179,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
   ["security-ghsa-crhm-w5qr-wjj4", ghsaCrhmW5qrWjj4],
   ["security-ghsa-jf4v-rw66-j4w2", ghsaJf4vRw66J4w2],
+  ["issue-5934", issue5934],
 ];
 
 export type AllTestOptions = {

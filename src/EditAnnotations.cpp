@@ -571,6 +571,12 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
             DeleteSelectedAnnotation(this);
             return true;
         }
+        // Ctrl+W closes this window (Esc does not — user may be editing text).
+        // issue #5934
+        if (key == 'W' && IsCtrlPressed() && !IsAltPressed()) {
+            Close();
+            return true;
+        }
         if (key == 'S' && IsShiftPressed() && IsCtrlPressed()) {
             // TODO: delay by posting a message?
             // TODO: the keybinding could be changed so this should

@@ -143,6 +143,7 @@ struct SelectionTranslateWnd : WindowBase {
     void OnSize(UINT msg, UINT type, Size size) override;
     void OnGetMinMaxInfo(MINMAXINFO* mmi) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    bool PreTranslateMessage(MSG& msg) override;
 };
 
 static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
@@ -1192,6 +1193,22 @@ void SelectionTranslateWnd::OnTranslationFinished(bool ok, Str msg) {
 
 void SelectionTranslateWnd::OnCloseClicked() {
     Close();
+}
+
+// Esc and Ctrl+W close the translate dialog (issue #5934).
+bool SelectionTranslateWnd::PreTranslateMessage(MSG& msg) {
+    if (msg.message != WM_KEYDOWN) {
+        return WindowBase::PreTranslateMessage(msg);
+    }
+    if (msg.wParam == VK_ESCAPE) {
+        OnCloseClicked();
+        return true;
+    }
+    if (msg.wParam == 'W' && IsCtrlPressed() && !IsAltPressed()) {
+        OnCloseClicked();
+        return true;
+    }
+    return WindowBase::PreTranslateMessage(msg);
 }
 
 static void OnTranslateDone(SelectionTranslateDoneData* data) {
