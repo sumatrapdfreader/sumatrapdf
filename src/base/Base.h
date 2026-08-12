@@ -732,7 +732,6 @@ struct Func1 {
     ~Func1() = default;
 
     bool IsValid() const { return fn != nullptr; }
-    bool IsEmpty() const { return fn == nullptr; }
     void Call(T arg) const {
         if (!fn) {
             return;

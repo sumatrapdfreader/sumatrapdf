@@ -1034,7 +1034,7 @@ static DWORD CALLBACK CopyProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INT
 }
 
 bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress) {
-    if (cbProgress.IsEmpty()) {
+    if (!cbProgress.IsValid()) {
         return Copy(dst, src, dontOverwrite);
     }
     BOOL cancel = FALSE;

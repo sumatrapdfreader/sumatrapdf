@@ -1391,7 +1391,7 @@ void VirtScroll::UpdateScrollbar() {
 // only tell the owner when the visible band actually changed, so that
 // virtualized owners can rebuild their children cheaply
 void VirtScroll::NotifyVisibleRange() {
-    if (onVisibleRangeChanged.IsEmpty()) {
+    if (!onVisibleRangeChanged.IsValid()) {
         return;
     }
     int visible = bounds.dy - padding.top - padding.bottom;
@@ -1497,7 +1497,7 @@ Rect VirtListBox::ScrollbarRectLocal() {
 // null when there is nothing to scroll
 Rect VirtListBox::ThumbRectLocal() {
     Rect sb = ScrollbarRectLocal();
-    if (sb.IsEmpty()) {
+    if (!sb.IsEmpty()) {
         return {};
     }
     int contentDy = ItemsCount() * GetItemHeight();
@@ -2012,7 +2012,7 @@ void VirtCustom::Paint(VirtPaintCtx& ctx) {
 }
 
 bool VirtCustom::OnMouseUp(VirtMouseEvent& ev) {
-    if (onClick.IsEmpty()) {
+    if (!onClick.IsValid()) {
         return false;
     }
     onClick.Call(&ev);
@@ -2174,7 +2174,7 @@ bool VirtLink::OnMouseDown(VirtMouseEvent&) {
 }
 
 bool VirtLink::OnMouseUp(VirtMouseEvent& ev) {
-    if (onClick.IsEmpty()) {
+    if (!onClick.IsValid()) {
         return false;
     }
     onClick.Call(&ev);
@@ -2252,7 +2252,7 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
 // Enter / Space press the button, like a win32 one
 bool VirtButton::OnKeyDown(VirtKeyEvent& ev) {
     bool isPress = (ev.vkey == VK_RETURN) || (ev.vkey == VK_SPACE);
-    if (!isPress || !HasFlag(vwfEnabled) || onClick.IsEmpty()) {
+    if (!isPress || !HasFlag(vwfEnabled) || !onClick.IsValid()) {
         return false;
     }
     VirtMouseEvent me;
@@ -2277,7 +2277,7 @@ bool VirtButton::OnMouseDown(VirtMouseEvent&) {
 }
 
 bool VirtButton::OnMouseUp(VirtMouseEvent& ev) {
-    if (onClick.IsEmpty()) {
+    if (!onClick.IsValid()) {
         return false;
     }
     onClick.Call(&ev);
@@ -2344,7 +2344,7 @@ bool VirtIconButton::OnMouseDown(VirtMouseEvent&) {
 }
 
 bool VirtIconButton::OnMouseUp(VirtMouseEvent& ev) {
-    if (onClick.IsEmpty()) {
+    if (!onClick.IsValid()) {
         return false;
     }
     onClick.Call(&ev);
@@ -2443,7 +2443,7 @@ bool VirtCloseButton::OnMouseDown(VirtMouseEvent&) {
 }
 
 bool VirtCloseButton::OnMouseUp(VirtMouseEvent& ev) {
-    if (onClick.IsEmpty()) {
+    if (!onClick.IsValid()) {
         return false;
     }
     onClick.Call(&ev);
