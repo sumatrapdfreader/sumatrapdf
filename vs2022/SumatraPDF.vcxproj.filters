@@ -477,9 +477,6 @@
     <ClInclude Include="..\src\wingui\HtmlWindow.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\IconPixmap.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\Layout.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -1107,9 +1104,6 @@
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\HtmlWindow.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\IconPixmap_win.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Layout.cpp">

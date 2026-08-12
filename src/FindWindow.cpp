@@ -14,7 +14,6 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/IconPixmap.h"
 #include "wingui/VirtWnd.h"
 
 #include "Settings.h"
@@ -88,10 +87,8 @@ struct FindWindowWnd : WindowBase {
     // the status text, the buttons and the results list are virtual controls;
     // the search field is the only HWND child
     VirtText* status = nullptr;
-    // prev / next / match-case / match-whole-word / unpin(dock). Each owns the
-    // Pixmap it draws, rendered once per theme + DPI
+    // prev / next / match-case / match-whole-word / unpin(dock)
     VirtIconButton* btns[5]{};
-    Pixmap* btnPixmaps[5]{};
     Tooltip* tooltip = nullptr;
     VirtListBox* results = nullptr;
     StrVec filterWords; // search term(s) to highlight in snippets
@@ -116,7 +113,6 @@ struct FindWindowWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void CreateButtons();
-    void FreeButtonPixmaps();
     void UpdateButtonIcons();
     // the button under `pt` (window coords), or -1
     int ButtonIndexFromPoint(Point pt);
@@ -182,35 +178,19 @@ FindWindowWnd::~FindWindowWnd() {
     for (VirtIconButton* b : btns) {
         delete b;
     }
-    FreeButtonPixmaps();
 }
 
-void FindWindowWnd::FreeButtonPixmaps() {
-    for (Pixmap*& px : btnPixmaps) {
-        FreePixmap(px);
-        px = nullptr;
-    }
-}
-
-// The icons come from an image list built at the current theme color and DPI.
-// It is only the source: each icon is rendered into a Pixmap we own and the
-// list is dropped, so nothing here holds an HIMAGELIST
+// the pixmaps belong to the icon cache, which re-renders them for the current
+// theme and size
 void FindWindowWnd::UpdateButtonIcons() {
     static const TbIcon icons[5] = {TbIcon::ChevronUp, TbIcon::ChevronDown, TbIcon::MatchCase, TbIcon::MatchWholeWord,
                                     TbIcon::ArrowsDiagonalMinimize};
     int isz = RoundUp(DpiScale(hwnd, 16), 4);
-    HIMAGELIST himl = BuildStdToolbarImageList(isz);
-    if (!himl) {
-        return;
-    }
-    FreeButtonPixmaps();
     for (int i = 0; i < 5; i++) {
-        btnPixmaps[i] = IconPixmapRender(himl, (int)icons[i]);
         if (btns[i]) {
-            btns[i]->pixmap = btnPixmaps[i];
+            btns[i]->pixmap = GetPixmapForIcon(icons[i], isz, isz);
         }
     }
-    ImageList_Destroy(himl);
 }
 
 static void FindWindowButtonClicked(FindWindowWnd* w, VirtMouseEvent* ev) {

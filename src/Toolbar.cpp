@@ -1536,6 +1536,88 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
     return hbmp;
 }
 
+// One icon rendered into a Pixmap, with the pixels the VirtWnd controls want:
+// BGRA, alpha-premultiplied, transparent where the SVG left the background
+// (which is what BlitPixmap() marks with alpha 0 for the image list)
+static Pixmap* RenderIconPixmap(TbIcon icon, int dx, int dy) {
+    Str svgData = GetSvgIcon(icon);
+    if (!svgData) {
+        return nullptr;
+    }
+    Pixmap* px = AllocPixmapDIB(dx, dy);
+    if (!px) {
+        return nullptr;
+    }
+    memset(px->data, 0, (size_t)px->stride * (size_t)dy);
+    px->premultiplied = true;
+
+    COLORREF fgCol = ThemeWindowTextColor();
+    COLORREF bgCol = ThemeControlBackgroundColor();
+    fz_context* ctx = fz_new_context_windows();
+    fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
+    if (pixmap) {
+        BlitPixmap(px->data, px->stride, pixmap, 0, 0, bgCol);
+        // BlitPixmap leaves the background color in the transparent pixels;
+        // premultiplied alpha wants them at 0 or AlphaBlend paints a box of it
+        u8* row = px->data;
+        for (int y = 0; y < dy; y++) {
+            u8* d = row;
+            for (int x = 0; x < dx; x++) {
+                if (d[3] == 0) {
+                    d[0] = d[1] = d[2] = 0;
+                }
+                d += 4;
+            }
+            row += px->stride;
+        }
+        fz_drop_pixmap(ctx, pixmap);
+    }
+    fz_drop_context_windows(ctx);
+    return px;
+}
+
+// A handful of icons are ever cached (a few sizes of a few icons), so an
+// intrusive list walked linearly is as good as anything
+struct CachedPixmapIcon {
+    CachedPixmapIcon* next;
+    TbIcon icon;
+    // the size is the pixmap's own width / height
+    Pixmap* pixmap; // owned
+};
+
+static CachedPixmapIcon* gIconPixmaps = nullptr;
+
+Pixmap* GetPixmapForIcon(TbIcon icon, int dx, int dy) {
+    if (dx <= 0 || dy <= 0) {
+        return nullptr;
+    }
+    for (CachedPixmapIcon* e = gIconPixmaps; e; e = e->next) {
+        if (e->icon == icon && e->pixmap->width == dx && e->pixmap->height == dy) {
+            return e->pixmap;
+        }
+    }
+    Pixmap* px = RenderIconPixmap(icon, dx, dy);
+    if (!px) {
+        return nullptr;
+    }
+    auto* e = new CachedPixmapIcon{gIconPixmaps, icon, px};
+    gIconPixmaps = e;
+    return px;
+}
+
+// the icons are drawn in the theme's colors, so this is also what a theme
+// change calls to drop them
+void DestroyIconPixmaps() {
+    CachedPixmapIcon* e = gIconPixmaps;
+    gIconPixmaps = nullptr;
+    while (e) {
+        CachedPixmapIcon* next = e->next;
+        FreePixmap(e->pixmap);
+        delete e;
+        e = next;
+    }
+}
+
 static int SetToolbarIconsImageList(MainWindow* win) {
     HWND hwndToolbar = win->hwndToolbar;
     HWND hwndParent = GetParent(hwndToolbar);

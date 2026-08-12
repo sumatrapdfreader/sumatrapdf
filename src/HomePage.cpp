@@ -13,7 +13,6 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/IconPixmap.h"
 #include "wingui/VirtWnd.h"
 
 #include "Settings.h"
@@ -36,6 +35,7 @@
 #include "AppSettings.h"
 #include "DarkModeSubclass.h"
 #include "SvgIcons.h"
+#include "Toolbar.h"
 
 // how the shared tip code (TipText.cpp) opens a url link
 static void OpenTipUrl(Str url) {
@@ -885,7 +885,7 @@ HomePageLayout::~HomePageLayout() = default;
 
 struct HomeViewIconWnd : VirtWnd {
     MainWindow* win = nullptr;
-    Pixmap* pixmap = nullptr; // not owned, from IconPixmapFromImageList()
+    Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
     Str tooltip;
@@ -899,7 +899,7 @@ struct HomeViewIconWnd : VirtWnd {
 
 struct HomeOpenDocWnd : VirtWnd {
     MainWindow* win = nullptr;
-    Pixmap* pixmap = nullptr; // not owned, from IconPixmapFromImageList()
+    Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     VirtText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
@@ -2358,9 +2358,10 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     }
     entries->UpdateCloseBtnVisibility();
 
-    chrome->thumbView->pixmap = IconPixmapFromImageList(l.himlOpen, (int)TbIcon::HomeThumbnails);
+    Size iconSize = l.rcIconThumbnailView.Size();
+    chrome->thumbView->pixmap = GetPixmapForIcon(TbIcon::HomeThumbnails, iconSize.dx, iconSize.dy);
     chrome->thumbView->SetBounds(l.rcIconThumbnailView);
-    chrome->listView->pixmap = IconPixmapFromImageList(l.himlOpen, (int)TbIcon::HomeList);
+    chrome->listView->pixmap = GetPixmapForIcon(TbIcon::HomeList, iconSize.dx, iconSize.dy);
     chrome->listView->SetBounds(l.rcIconListView);
 
     chrome->hdr->textColor = ThemeWindowTextColor();
@@ -2371,7 +2372,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
     rcOpen.Inflate(10, 10);
     HomeOpenDocWnd* od = chrome->openDoc;
-    od->pixmap = IconPixmapFromImageList(l.himlOpen, (int)TbIcon::Open);
+    od->pixmap = GetPixmapForIcon(TbIcon::Open, l.rcIconOpen.dx, l.rcIconOpen.dy);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
     od->text->textColor = ThemeWindowLinkColor();

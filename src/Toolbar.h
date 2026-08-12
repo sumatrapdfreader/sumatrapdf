@@ -2,6 +2,14 @@
    License: GPLv3 */
 
 struct MainWindow;
+struct Pixmap;
+enum class TbIcon;
+
+// A toolbar icon rendered into a Pixmap of the given size, in the current
+// theme's colors. Cached: the Pixmap belongs to the cache and stays valid
+// until DestroyIconPixmaps(), which the theme change and the shutdown call
+Pixmap* GetPixmapForIcon(TbIcon, int dx, int dy);
+void DestroyIconPixmaps();
 
 void CreateToolbar(MainWindow*);
 void ReCreateToolbar(MainWindow* win);
