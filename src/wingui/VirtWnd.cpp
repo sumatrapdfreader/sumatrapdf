@@ -797,6 +797,21 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             ClearHover();
             return false;
 
+        case WM_CAPTURECHANGED: {
+            // someone else took the mouse (or the window lost it): whoever was
+            // tracking it has to stop, otherwise it keeps reacting to plain
+            // mouse moves. Our own ReleaseCapture() clears `captured` first,
+            // so this only fires for captures lost from the outside
+            if (captured) {
+                VirtWnd* w = captured;
+                captured = nullptr;
+                w->SetFlag(vwfPressed, false);
+                w->OnCaptureLost();
+                w->Invalidate();
+            }
+            return false; // the window may still want it
+        }
+
         case WM_LBUTTONDOWN:
         case WM_RBUTTONDOWN:
         case WM_MBUTTONDOWN: {

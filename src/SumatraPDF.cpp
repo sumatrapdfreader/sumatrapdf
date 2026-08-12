@@ -12042,6 +12042,15 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         } break;
 
         case WM_LBUTTONUP: {
+            bool anyPressed = false;
+            for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+                anyPressed |= win->captionBtn[i].pressed;
+            }
+            if (!anyPressed) {
+                // not ours: whoever else is tracking the mouse (a splitter
+                // drag) has to see the button go up, or it keeps dragging
+                break;
+            }
             if (GetCapture() == hwnd) {
                 ReleaseCapture();
             }
