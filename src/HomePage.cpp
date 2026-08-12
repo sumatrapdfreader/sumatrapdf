@@ -345,7 +345,7 @@ void SumatraLogo::Paint(VirtPaintCtx& ctx) {
         buf[0] = kAppName[i];
         Str letter{buf, 1};
         Size sz = PlatformFontMeasureText(font, letter);
-        GfxDrawText(ctx.gfx, letter, {pt.x, pt.y, sz.dx, sz.dy}, 0, font, cols[i % dimofi(cols)]);
+        ctx.gfx->DrawText(letter, {pt.x, pt.y, sz.dx, sz.dy}, 0, font, cols[i % dimofi(cols)]);
         pt.x += sz.dx;
     }
 }
@@ -588,7 +588,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, VirtRoot* root) {
 #endif
 
     /* render both text columns */
-    Gfx gfx = GfxFromHdc(hdc);
+    GfxHdc gfx(hdc);
     root->Paint(&gfx, rc);
 
     SelectObject(hdc, penDivideLine);
@@ -1985,7 +1985,7 @@ HomeViewIconCtrl::HomeViewIconCtrl() {
 
 void HomeViewIconCtrl::Paint(VirtPaintCtx& ctx) {
     bool selected = (listView == HomePageIsListView());
-    DrawHomeViewButton(GfxHdc(ctx.gfx), pixmap, ctx.bounds, selected);
+    DrawHomeViewButton(GfxGetHdc(ctx.gfx), pixmap, ctx.bounds, selected);
 }
 
 HomeOpenDocCtrl::HomeOpenDocCtrl() {
@@ -1997,7 +1997,7 @@ void HomeOpenDocCtrl::Paint(VirtPaintCtx& ctx) {
         return;
     }
     Rect r = {ctx.bounds.x + rcIconLocal.x, ctx.bounds.y + rcIconLocal.y, pixmap->width, pixmap->height};
-    GfxDrawPixmap(ctx.gfx, pixmap, r);
+    ctx.gfx->DrawPixmap(pixmap, r);
 }
 
 HomeHelpBtnCtrl::HomeHelpBtnCtrl() {
@@ -2006,7 +2006,7 @@ HomeHelpBtnCtrl::HomeHelpBtnCtrl() {
 }
 
 void HomeHelpBtnCtrl::Paint(VirtPaintCtx& ctx) {
-    DrawHomeHelpButton(GfxHdc(ctx.gfx), ctx.bounds);
+    DrawHomeHelpButton(GfxGetHdc(ctx.gfx), ctx.bounds);
 }
 
 //--- tip links
@@ -2563,7 +2563,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     // the chrome (header, view buttons, "Open a document...", help button)
     // paints last: none of it overlaps the thumbnails, and the help button has
     // to land on top of the tip band
-    Gfx gfx = GfxFromHdc(hdc);
+    GfxHdc gfx(hdc);
     win->homeRoot->Paint(&gfx, l.rc);
 }
 

@@ -11822,7 +11822,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             // the splitters are virtual controls of this window
             if (win->frameRoot) {
-                Gfx gfx = GfxFromHdc(hdc);
+                GfxHdc gfx(hdc);
                 win->frameRoot->Paint(&gfx, ToRect(ps.rcPaint));
             }
 
@@ -13118,7 +13118,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // splitters on top (the custom-caption path paints its own)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            Gfx gfx = GfxFromHdc(hdc);
+            GfxHdc gfx(hdc);
             win->frameRoot->Paint(&gfx, ToRect(ps.rcPaint));
             EndPaint(hwnd, &ps);
             return 0;

@@ -437,7 +437,7 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     if (ev->itemIndex < 0 || ev->itemIndex >= len(win->findMatches)) {
         return;
     }
-    HDC hdc = GfxHdc(ev->gfx);
+    HDC hdc = GfxGetHdc(ev->gfx);
     HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
 
@@ -1113,7 +1113,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmp);
 
-    Gfx gfx = GfxFromHdc(hdcMem);
+    GfxHdc gfx(hdcMem);
     VirtListBox::DrawItemEvent ev;
     ev.listBox = fw->results;
     ev.gfx = &gfx;

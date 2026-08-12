@@ -9,24 +9,22 @@
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
 
-Gfx GfxFromHdc(HDC hdc) {
-    Gfx gfx;
-    gfx.hdc = hdc;
-    return gfx;
+GfxHdc::GfxHdc(HDC hdc) {
+    this->hdc = hdc;
 }
 
-void GfxFillRect(Gfx* gfx, const Rect& r, COLORREF col) {
+void GfxHdc::FillRect(const Rect& r, COLORREF col) {
     if (col == kColorUnset || r.IsEmpty()) {
         return;
     }
-    HdcFillRect(gfx->hdc, r, col);
+    HdcFillRect(hdc, r, col);
 }
 
 // kColorUnset draws in the surface's current text color, which is how the
 // underline under a VirtText picks up the color the text was drawn in
-void GfxDrawLine(Gfx* gfx, const Rect& r, COLORREF col, int thickness) {
+void GfxHdc::DrawLine(const Rect& r, COLORREF col, int thickness) {
     if (col == kColorUnset) {
-        col = GetTextColor(gfx->hdc);
+        col = GetTextColor(hdc);
     }
     Rect r2 = r;
     if (r2.dy == 0) {
@@ -34,7 +32,7 @@ void GfxDrawLine(Gfx* gfx, const Rect& r, COLORREF col, int thickness) {
     } else if (r2.dx == 0) {
         r2.dx = thickness;
     }
-    HdcFillRect(gfx->hdc, r2, col);
+    HdcFillRect(hdc, r2, col);
 }
 
 static uint ToDrawTextFormat(u32 flags) {
@@ -57,11 +55,10 @@ static uint ToDrawTextFormat(u32 flags) {
     return fmt;
 }
 
-void GfxDrawText(Gfx* gfx, Str s, const Rect& r, u32 flags, PlatformFont* font, COLORREF col) {
+void GfxHdc::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, COLORREF col) {
     if (r.IsEmpty() || len(s) == 0) {
         return;
     }
-    HDC hdc = gfx->hdc;
     COLORREF prevCol = kColorUnset;
     if (col != kColorUnset) {
         prevCol = SetTextColor(hdc, col);
@@ -76,9 +73,9 @@ void GfxDrawText(Gfx* gfx, Str s, const Rect& r, u32 flags, PlatformFont* font, 
     }
 }
 
-void GfxDrawPixmap(Gfx* gfx, Pixmap* px, const Rect& r) {
+void GfxHdc::DrawPixmap(Pixmap* px, const Rect& r) {
     if (!px) {
         return;
     }
-    BlitPixmapAlpha(px, gfx->hdc, r);
+    BlitPixmapAlpha(px, hdc, r);
 }

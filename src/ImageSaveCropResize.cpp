@@ -1656,7 +1656,7 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
             DeleteDC(memDC);
             // the control area's background was filled by WM_ERASEBKGND
             if (ew->vroot) {
-                Gfx gfx = GfxFromHdc(hdc);
+                GfxHdc gfx(hdc);
                 ew->vroot->Paint(&gfx, ToRect(ps.rcPaint));
             }
             EndPaint(hwnd, &ps);

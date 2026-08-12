@@ -939,7 +939,7 @@ struct TabBarCtrl : VirtCtrl {
 };
 
 void TabBarCtrl::Paint(VirtPaintCtx& ctx) {
-    HDC hdc = GfxHdc(ctx.gfx);
+    HDC hdc = GfxGetHdc(ctx.gfx);
     RECT client = ToRECT(ctx.bounds);
     int savedDC = SaveDC(hdc);
 

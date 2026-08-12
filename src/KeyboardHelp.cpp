@@ -318,7 +318,7 @@ void KbKeyCaps::Paint(VirtPaintCtx& ctx) {
     int x = r.x;
     int y = r.y + ((r.dy - capDy) / 2);
 
-    HDC hdc = GfxHdc(ctx.gfx);
+    HDC hdc = GfxGetHdc(ctx.gfx);
     HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
     HBRUSH br = CreateSolidBrush(capBg);
     HGDIOBJ oldPen = SelectObject(hdc, pen);
@@ -328,7 +328,7 @@ void KbKeyCaps::Paint(VirtPaintCtx& ctx) {
         int dx = PlatformFontMeasureText(font, tok).dx + (2 * capPadX);
         RoundRect(hdc, x, y, x + dx, y + capDy, radius, radius);
         Rect capRc{x, y, dx, capDy};
-        GfxDrawText(ctx.gfx, tok, capRc, gfxTextCenter | gfxTextEllipsis, font, txt);
+        ctx.gfx->DrawText(tok, capRc, gfxTextCenter | gfxTextEllipsis, font, txt);
         x += dx + capGap;
     }
     SelectObject(hdc, oldPen);
@@ -546,7 +546,7 @@ void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
     SetBkMode(hdc, TRANSPARENT);
 
     SyncColors();
-    Gfx gfx = GfxFromHdc(hdc);
+    GfxHdc gfx(hdc);
     if (vroot) {
         vroot->Paint(&gfx, client);
     }

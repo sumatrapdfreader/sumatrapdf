@@ -36,7 +36,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         return;
     }
 
-    HDC hdc = GfxHdc(ev->gfx);
+    HDC hdc = GfxGetHdc(ev->gfx);
     HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
     // the whole virtual tree paints into one DC, so leave it as we found it

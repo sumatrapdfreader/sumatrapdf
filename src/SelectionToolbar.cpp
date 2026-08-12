@@ -313,7 +313,7 @@ struct SelToolbarTextButton : VirtButton {
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
             int radius = DpiScale(GetHwnd(), kButtonRadius);
-            FillRoundedRect(GfxHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
+            FillRoundedRect(GfxGetHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
         }
         VirtButton::Paint(ctx);
     }
@@ -324,7 +324,7 @@ struct SelToolbarIconButton : VirtIconButton {
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
             int radius = DpiScale(GetHwnd(), kButtonRadius);
-            FillRoundedRect(GfxHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
+            FillRoundedRect(GfxGetHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
         }
         VirtIconButton::Paint(ctx);
     }
@@ -444,7 +444,7 @@ static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
         return;
     }
     SetBkMode(hdc, TRANSPARENT);
-    Gfx gfx = GfxFromHdc(hdc);
+    GfxHdc gfx(hdc);
     tb->vroot->Paint(&gfx, rc);
 }
 

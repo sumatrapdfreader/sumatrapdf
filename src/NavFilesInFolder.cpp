@@ -573,7 +573,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         return;
     }
 
-    HDC hdc = GfxHdc(ev->gfx);
+    HDC hdc = GfxGetHdc(ev->gfx);
     HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
     NavFileEntry& e = m->entries[ev->itemIndex];

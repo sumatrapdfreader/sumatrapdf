@@ -649,7 +649,7 @@ void NotificationWnd::OnPaint(WindowBase::PaintEvent* ev) {
     SetTextColor(hdc, cols.txt);
     // the controls (message / custom content, close button, progress) paint
     // themselves
-    Gfx gfx = GfxFromHdc(hdc);
+    GfxHdc gfx(hdc);
     if (vroot) {
         vroot->Paint(&gfx, rc);
     }
@@ -677,7 +677,7 @@ void NotifTextCtrl::Paint(VirtPaintCtx& ctx) {
         return;
     }
     TempStr text = HwndGetTextTemp(notif->hwnd);
-    HdcDrawText(GfxHdc(ctx.gfx), text, ctx.content, txtFmt, notif->font);
+    HdcDrawText(GfxGetHdc(ctx.gfx), text, ctx.content, txtFmt, notif->font);
 }
 
 NotifProgressCtrl::NotifProgressCtrl() {
@@ -690,7 +690,7 @@ void NotifProgressCtrl::Paint(VirtPaintCtx& ctx) {
     int progressWidth = rc.dx;
 
     COLORREF col = ThemeNotificationsProgressColor();
-    Graphics graphics(GfxHdc(ctx.gfx));
+    Graphics graphics(GfxGetHdc(ctx.gfx));
     Pen pen(GdiRgbFromCOLORREF(col));
     auto grc = Gdiplus::Rect(rc.x, rc.y, rc.dx, rc.dy);
     graphics.DrawRectangle(&pen, grc);

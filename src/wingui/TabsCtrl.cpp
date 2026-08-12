@@ -214,7 +214,7 @@ bool TabCtrl::CloseVisible() {
 }
 
 void TabCtrl::Paint(VirtPaintCtx& ctx) {
-    HDC hdc = GfxHdc(ctx.gfx);
+    HDC hdc = GfxGetHdc(ctx.gfx);
     HWND hwnd = GetHwnd();
     Rect r = ctx.bounds;
     COLORREF tabBgCol = BgColor();

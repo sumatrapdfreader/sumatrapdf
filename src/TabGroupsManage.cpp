@@ -233,7 +233,7 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
     }
 
     VirtListBox* lb = ev->listBox;
-    HDC hdc = GfxHdc(ev->gfx);
+    HDC hdc = GfxGetHdc(ev->gfx);
     Rect rc = ev->itemRect;
     // the whole virtual tree paints into one DC, so leave it as we found it
     int savedDC = SaveDC(hdc);

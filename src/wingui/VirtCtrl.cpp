@@ -1466,7 +1466,7 @@ Rect VirtListBox::ItemRect(int idx) {
 
 void VirtListBox::Paint(VirtPaintCtx& ctx) {
     COLORREF colBg = bgColor;
-    GfxFillRect(ctx.gfx, ctx.bounds, colBg);
+    ctx.gfx->FillRect(ctx.bounds, colBg);
     int n = ItemsCount();
     Rect clip = ctx.clip.Intersect(ctx.bounds);
     if (n == 0 || clip.IsEmpty()) {
@@ -1492,7 +1492,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
         colSel = AccentColor(colBg, isFocused ? 45 : 25);
     }
 
-    HDC hdc = GfxHdc(ctx.gfx);
+    HDC hdc = GfxGetHdc(ctx.gfx);
     int savedDC = SaveDC(hdc);
     // rows at the top and bottom of the viewport can be cut in half by it
     IntersectClipRect(hdc, clip.x, clip.y, clip.Right(), clip.Bottom());
@@ -1509,11 +1509,11 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
             onDrawItem.Call(&ev);
         } else {
             if (isSel) {
-                GfxFillRect(ctx.gfx, r, colSel);
+                ctx.gfx->FillRect(r, colSel);
             }
             Rect rt = r;
             rt.SubLR(DpiScaleByDpi(GetDpi(), 4), 0);
-            GfxDrawText(ctx.gfx, model->Item(i), rt, gfxTextEllipsis, font, textColor);
+            ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis, font, textColor);
         }
     }
     // the dotted ring around the list says the keys go here, the same way a
@@ -1536,7 +1536,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     thumb.Offset(orig.x, orig.y);
     // a slim thumb with a gap on both sides, like an overlay scrollbar
     thumb.SubLR(2, 2);
-    GfxFillRect(ctx.gfx, thumb, colThumb);
+    ctx.gfx->FillRect(thumb, colThumb);
 }
 
 void VirtListBox::OnMouseDown(VirtMouseEvent* ev) {
@@ -1770,7 +1770,7 @@ void VirtSplitter::Paint(VirtPaintCtx& ctx) {
     if (bgColor == kColorUnset) {
         return;
     }
-    GfxFillRect(ctx.gfx, ctx.bounds, AccentColor(bgColor, 30));
+    ctx.gfx->FillRect(ctx.bounds, AccentColor(bgColor, 30));
 }
 
 void VirtSplitter::OnMouseDown(VirtMouseEvent* ev) {
@@ -1941,11 +1941,11 @@ void VirtText::Paint(VirtPaintCtx& ctx) {
         case VirtTextAlign::Left:
             break;
     }
-    GfxDrawText(ctx.gfx, s, r, fmt, font, textColor);
+    ctx.gfx->DrawText(s, r, fmt, font, textColor);
     if (withUnderline) {
         GetIdealSize(true);
         Rect lineRect = {r.x, r.y + sz.dy + underlineOffsetY, sz.dx, 0};
-        GfxDrawLine(ctx.gfx, lineRect, textColor);
+        ctx.gfx->DrawLine(lineRect, textColor);
     }
 }
 
@@ -2031,13 +2031,13 @@ Size VirtButton::GetIdealSize() {
 void VirtButton::Paint(VirtPaintCtx& ctx) {
     bool isEnabled = HasFlag(vwfEnabled);
     COLORREF bg = (isEnabled && HasFlag(vwfHovered)) ? bgColorHover : bgColor;
-    GfxFillRect(ctx.gfx, ctx.bounds, bg);
+    ctx.gfx->FillRect(ctx.bounds, bg);
     if (borderColor != kColorUnset) {
         Rect b = ctx.bounds;
-        GfxFillRect(ctx.gfx, {b.x, b.y, b.dx, 1}, borderColor);
-        GfxFillRect(ctx.gfx, {b.x, b.Bottom() - 1, b.dx, 1}, borderColor);
-        GfxFillRect(ctx.gfx, {b.x, b.y, 1, b.dy}, borderColor);
-        GfxFillRect(ctx.gfx, {b.Right() - 1, b.y, 1, b.dy}, borderColor);
+        ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, borderColor);
+        ctx.gfx->FillRect({b.x, b.Bottom() - 1, b.dx, 1}, borderColor);
+        ctx.gfx->FillRect({b.x, b.y, 1, b.dy}, borderColor);
+        ctx.gfx->FillRect({b.Right() - 1, b.y, 1, b.dy}, borderColor);
     }
     Rect r = ctx.content;
     r.SubTB(textPadding.top, textPadding.bottom);
@@ -2058,10 +2058,10 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
         b.SubLR(2, 2);
         COLORREF col = (textColor != kColorUnset) ? textColor : borderColor;
         if (col != kColorUnset && !b.IsEmpty()) {
-            GfxFillRect(ctx.gfx, {b.x, b.y, b.dx, 1}, col);
-            GfxFillRect(ctx.gfx, {b.x, b.Bottom() - 1, b.dx, 1}, col);
-            GfxFillRect(ctx.gfx, {b.x, b.y, 1, b.dy}, col);
-            GfxFillRect(ctx.gfx, {b.Right() - 1, b.y, 1, b.dy}, col);
+            ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, col);
+            ctx.gfx->FillRect({b.x, b.Bottom() - 1, b.dx, 1}, col);
+            ctx.gfx->FillRect({b.x, b.y, 1, b.dy}, col);
+            ctx.gfx->FillRect({b.Right() - 1, b.y, 1, b.dy}, col);
         }
     }
 }
@@ -2112,7 +2112,7 @@ Size VirtIconButton::GetIdealSize() {
 void VirtIconButton::Paint(VirtPaintCtx& ctx) {
     COLORREF bg = isSelected ? bgColorSelected : (HasFlag(vwfHovered) ? bgColorHover : kColorUnset);
     if (bg != kColorUnset) {
-        GfxFillRect(ctx.gfx, ctx.bounds, bg);
+        ctx.gfx->FillRect(ctx.bounds, bg);
     }
     if (!pixmap) {
         return;
@@ -2121,7 +2121,7 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
     Rect r = ctx.content;
     int x = r.x + ((r.dx - s2.dx) / 2);
     int y = r.y + ((r.dy - s2.dy) / 2);
-    GfxDrawPixmap(ctx.gfx, pixmap, {x, y, s2.dx, s2.dy});
+    ctx.gfx->DrawPixmap(pixmap, {x, y, s2.dx, s2.dy});
 }
 
 void VirtIconButton::OnMouseEnter() {
@@ -2159,7 +2159,7 @@ void VirtCloseButton::Paint(VirtPaintCtx& ctx) {
     // the glyph goes in the content rect, so padding makes the hit area bigger
     // than the ✕ itself (the tab bar's close gutter)
     Rect r = ctx.content;
-    Gdiplus::Graphics g(GfxHdc(ctx.gfx));
+    Gdiplus::Graphics g(GfxGetHdc(ctx.gfx));
     g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
     g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
     g.SetPageUnit(Gdiplus::UnitPixel);
@@ -2293,7 +2293,7 @@ void VirtImage::Paint(VirtPaintCtx& ctx) {
         r.dx = sz2.dx;
         r.dy = sz2.dy;
     }
-    GfxDrawPixmap(ctx.gfx, pixmap, r);
+    ctx.gfx->DrawPixmap(pixmap, r);
 }
 
 //--- VirtFill
@@ -2312,7 +2312,7 @@ Size VirtFill::GetIdealSize() {
 }
 
 void VirtFill::Paint(VirtPaintCtx& ctx) {
-    GfxFillRect(ctx.gfx, ctx.bounds, color);
+    ctx.gfx->FillRect(ctx.bounds, color);
 }
 
 //--- VirtLine
@@ -2340,7 +2340,7 @@ void VirtLine::Paint(VirtPaintCtx& ctx) {
     } else {
         r.dy = thickness;
     }
-    GfxFillRect(ctx.gfx, r, color);
+    ctx.gfx->FillRect(r, color);
 }
 
 //--- VirtSpacer
@@ -2598,7 +2598,7 @@ void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, COLORREF bg) {
         HdcFillRect(memDC, rc, bg);
     }
     SetBkMode(memDC, TRANSPARENT);
-    Gfx gfx = GfxFromHdc(memDC);
+    GfxHdc gfx(memDC);
     root->Paint(&gfx, clip);
     buffer.Flush(hdc);
 }
@@ -3262,7 +3262,7 @@ void VirtRichText::SetBounds(Rect r) {
 // draws the words (link words in linkColor, underlined; others in textColor;
 // isKbd words as key-caps like the keyboard help sheet)
 void VirtRichText::Paint(VirtPaintCtx& ctx) {
-    HDC hdc = GfxHdc(ctx.gfx);
+    HDC hdc = GfxGetHdc(ctx.gfx);
     uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
     PlatformFont* boldFont = nullptr;
     COLORREF textCol = textColor;

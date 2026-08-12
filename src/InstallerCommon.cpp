@@ -1013,7 +1013,7 @@ void OnPaintFrame(HWND hwnd, bool skipMessage, VirtRoot* virt) {
         // DrawFrame() has just painted the background for us, so the virtual
         // controls only draw themselves on top of it
         SetBkMode(dc, TRANSPARENT);
-        Gfx gfx = GfxFromHdc(dc);
+        GfxHdc gfx(dc);
         virt->Paint(&gfx, HwndClientRect(hwnd));
     }
     EndPaint(hwnd, &ps);

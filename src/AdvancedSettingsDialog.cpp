@@ -338,7 +338,7 @@ struct CommentText : VirtRichText {
     // the box is a fixed number of lines, so a longer comment has to be cut off
     // rather than spill over the hints below it
     void Paint(VirtPaintCtx& ctx) override {
-        HDC hdc = GfxHdc(ctx.gfx);
+        HDC hdc = GfxGetHdc(ctx.gfx);
         Rect clip = ctx.bounds.Intersect(ctx.clip);
         if (clip.IsEmpty()) {
             return;
@@ -562,7 +562,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         return;
     }
 
-    HDC hdc = GfxHdc(ev->gfx);
+    HDC hdc = GfxGetHdc(ev->gfx);
     Rect rc = ev->itemRect;
     // the whole virtual tree paints into one DC, so leave it as we found it
     int savedDC = SaveDC(hdc);
