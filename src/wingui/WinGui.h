@@ -314,8 +314,87 @@ struct ControlBase : ILayout {
     struct DestroyEvent {
         WmEvent* e = nullptr;
     };
+    struct AttachEvent {
+        ControlBase* w = nullptr;
+    };
+    struct FocusEvent {
+        ControlBase* w = nullptr;
+    };
+    struct CommandEvent {
+        ControlBase* w = nullptr;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        bool didHandle = false;
+    };
+    struct CreateEvent {
+        ControlBase* w = nullptr;
+        CREATESTRUCT* cs = nullptr;
+        int result = 0;
+    };
+    struct MouseEvent {
+        ControlBase* w = nullptr;
+        UINT msg = 0;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        LRESULT result = -1; // -1 = not handled
+    };
+    struct PaintEvent {
+        ControlBase* w = nullptr;
+        HDC hdc = nullptr;
+        PAINTSTRUCT* ps = nullptr;
+    };
+    struct SizeEvent {
+        ControlBase* w = nullptr;
+        UINT msg = 0;
+        UINT type = 0;
+        Size size{};
+    };
+    struct TimerEvent {
+        ControlBase* w = nullptr;
+        UINT_PTR timerId = 0;
+    };
+    struct WndProcEvent {
+        ControlBase* w = nullptr;
+        HWND hwnd = nullptr;
+        UINT msg = 0;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        LRESULT result = 0;
+        bool didHandle = false;
+    };
+    struct NotifyEvent {
+        ControlBase* w = nullptr;
+        int controlId = 0;
+        NMHDR* nmh = nullptr;
+        LRESULT result = 0;
+    };
+    struct NotifyReflectEvent {
+        ControlBase* w = nullptr;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        LRESULT result = 0;
+    };
+    struct MessageReflectEvent {
+        ControlBase* w = nullptr;
+        UINT msg = 0;
+        WPARAM wparam = 0;
+        LPARAM lparam = 0;
+        LRESULT result = 0;
+    };
 
     using DestroyHandler = Func1<DestroyEvent*>;
+    using AttachHandler = Func1<AttachEvent*>;
+    using FocusHandler = Func1<FocusEvent*>;
+    using CommandHandler = Func1<CommandEvent*>;
+    using CreateHandler = Func1<CreateEvent*>;
+    using MouseHandler = Func1<MouseEvent*>;
+    using PaintHandler = Func1<PaintEvent*>;
+    using SizeHandler = Func1<SizeEvent*>;
+    using TimerHandler = Func1<TimerEvent*>;
+    using WndProcHandler = Func1<WndProcEvent*>;
+    using NotifyHandler = Func1<NotifyEvent*>;
+    using NotifyReflectHandler = Func1<NotifyReflectEvent*>;
+    using MessageReflectHandler = Func1<MessageReflectEvent*>;
 
     ControlBase();
     ~ControlBase() override;
@@ -324,6 +403,7 @@ struct ControlBase : ILayout {
     HWND CreateControl(const CreateControlArgs&);
     HWND CreateCustom(const CreateCustomArgs&);
 
+    // layout sizing (kept virtual: subclasses measure differently)
     virtual Size GetIdealSize();
 
     Kind GetKind() override;
@@ -346,22 +426,12 @@ struct ControlBase : ILayout {
     void Subclass();
     void UnSubclass();
 
-    virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-    virtual LRESULT OnNotify(int controlId, NMHDR* nmh);
-    virtual LRESULT OnNotifyReflect(WPARAM, LPARAM);
-    virtual LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
+    // for reflection from parents (WindowBase / ControlBase WndProcDefault)
+    bool DispatchCommand(WPARAM wparam, LPARAM lparam);
+    LRESULT DispatchMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
+    LRESULT DispatchNotifyReflect(WPARAM wparam, LPARAM lparam);
 
-    virtual void OnAttach();
-    virtual void OnFocus();
-    virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
-    virtual int OnCreate(CREATESTRUCT*);
-    virtual void OnContextMenu(Point pt);
-    virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
-    virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
-    virtual void OnSize(UINT msg, UINT type, Size size);
-    virtual void OnTimer(UINT_PTR timerId);
-
-    virtual void SetColors(COLORREF textColor, COLORREF bgColor);
+    void SetColors(COLORREF textColor, COLORREF bgColor);
 
     void SetPos(Rect* r);
     void SetIsVisible(bool isVisible);
@@ -408,6 +478,18 @@ struct ControlBase : ILayout {
 
     void DoLayout(Size);
 
+    AttachHandler onAttach;
+    FocusHandler onFocus;
+    CommandHandler onCommand;
+    CreateHandler onCreate;
+    MouseHandler onMouseEvent;
+    PaintHandler onPaint;
+    SizeHandler onSize;
+    TimerHandler onTimer;
+    WndProcHandler onWndProc;
+    NotifyHandler onNotify;
+    NotifyReflectHandler onNotifyReflect;
+    MessageReflectHandler onMessageReflect;
     ContextMenuHandler onContextMenu;
     DestroyHandler onDestroy;
 };
@@ -442,7 +524,7 @@ struct Button : ControlBase {
 
     Size GetIdealSize() override;
 
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    void OnCommand(ControlBase::CommandEvent* ev);
 };
 
 Button* CreateDefaultButton(HWND parent, Str s, bool isRtl);
@@ -543,9 +625,9 @@ struct Edit : ControlBase {
     ~Edit() override;
 
     HWND Create(const CreateArgs&);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    void WndProc(ControlBase::WndProcEvent* ev);
+    void OnMessageReflect(ControlBase::MessageReflectEvent* ev);
+    void OnCommand(ControlBase::CommandEvent* ev);
 
     Size GetIdealSize() override;
 
@@ -588,8 +670,8 @@ struct Checkbox : ControlBase {
 
     HWND Create(const CreateArgs&);
 
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void OnCommand(ControlBase::CommandEvent* ev);
+    void OnMessageReflect(ControlBase::MessageReflectEvent* ev);
 
     Size GetIdealSize() override;
 
@@ -647,7 +729,7 @@ struct DropDown : ControlBase {
     HWND Create(const DropDown::CreateArgs&);
 
     Size GetIdealSize() override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
+    void OnCommand(ControlBase::CommandEvent* ev);
 
     int GetCurrentSelection();
     void SetCurrentSelection(int n);
@@ -688,7 +770,7 @@ struct Trackbar : ControlBase {
 
     HWND Create(const CreateArgs&);
 
-    LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void OnMessageReflect(ControlBase::MessageReflectEvent* ev);
 
     Size GetIdealSize() override;
     void SetRange(int min, int max);
@@ -768,10 +850,10 @@ struct TreeView : ControlBase {
 
     HWND Create(const CreateArgs&);
 
-    void SetColors(COLORREF col, COLORREF bgCol) override;
+    void SetColors(COLORREF col, COLORREF bgCol);
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
+    void WndProc(ControlBase::WndProcEvent* ev);
+    void OnNotifyReflect(ControlBase::NotifyReflectEvent* ev);
 
     Size GetIdealSize() override;
     void SetToolTipsDelayTime(int type, int timeInMs);
@@ -965,7 +1047,7 @@ struct TabsCtrl : ControlBase {
 
     HWND Create(TabsCtrl::CreateArgs&);
 
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void WndProc(ControlBase::WndProcEvent* ev);
 
     Size GetIdealSize() override;
 

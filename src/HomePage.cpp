@@ -1010,8 +1010,8 @@ static void HomePageShowSelectionTooltip(MainWindow* win);
 struct HomeSearchEdit : Edit {
     MainWindow* win = nullptr;
 
-    LRESULT WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) override {
-        if (msg == WM_KEYDOWN && wp == VK_DOWN) {
+    void WndProc(ControlBase::WndProcEvent* ev) {
+        if (ev->msg == WM_KEYDOWN && ev->wparam == VK_DOWN) {
             // down from the search box moves into the file list (issue #1136),
             // restoring the column we left from when going up
             if (win) {
@@ -1020,21 +1020,27 @@ struct HomeSearchEdit : Edit {
                 HwndInvalidate(win->hwndCanvas);
                 HomePageShowSelectionTooltip(win);
             }
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
-        if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
+        if (ev->msg == WM_KEYDOWN && ev->wparam == VK_ESCAPE) {
             SetText("");
             if (win) {
                 HwndSetFocus(win->hwndCanvas);
                 win->RedrawAll(true);
             }
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
-        if (msg == WM_MOUSEWHEEL) {
+        if (ev->msg == WM_MOUSEWHEEL) {
             // the home page scrolls, not the one-line edit
-            return SendMessageW(GetParent(hwndIn), msg, wp, lp);
+            ev->result = SendMessageW(GetParent(ev->hwnd), ev->msg, ev->wparam, ev->lparam);
+            ev->didHandle = true;
+            return;
         }
-        return Edit::WndProc(hwndIn, msg, wp, lp);
+        Edit::WndProc(ev);
     }
 };
 
@@ -1094,6 +1100,8 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     auto* e = new HomeSearchEdit();
     e->win = win;
     e->Create(args);
+    // Edit::Create wired Edit::WndProc; re-route to HomeSearchEdit for Esc/Down/wheel
+    e->onWndProc = MkMethod1<HomeSearchEdit, ControlBase::WndProcEvent*, &HomeSearchEdit::WndProc>(e);
     e->SetColors(ThemeWindowTextColor(), ThemeControlBackgroundColor());
     e->onTextChanged = MkFunc0(HomeSearchTextChanged, win);
     e->onFocus = MkFunc0(HomeSearchFocusChanged, win);

@@ -110,6 +110,9 @@ void Edit::SetMaxWidthChars(int nChars) {
 
 HWND Edit::Create(const CreateArgs& args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
+    onWndProc = MkMethod1<Edit, ControlBase::WndProcEvent*, &Edit::WndProc>(this);
+    onCommand = MkMethod1<Edit, ControlBase::CommandEvent*, &Edit::OnCommand>(this);
+    onMessageReflect = MkMethod1<Edit, ControlBase::MessageReflectEvent*, &Edit::OnMessageReflect>(this);
     CreateControlArgs cargs;
     cargs.className = WC_EDITW;
     cargs.parent = args.parent;
@@ -177,26 +180,36 @@ void Edit::ApplyTextPadding() {
     SendMessageW(hwnd, EM_SETRECTNP, 0, (LPARAM)&rc);
 }
 
-LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+void Edit::WndProc(ControlBase::WndProcEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
+    LPARAM lp = ev->lparam;
     switch (msg) {
         case WM_SIZE: {
             LRESULT res = WndProcDefault(hwnd, msg, wp, lp);
             ApplyTextPadding();
-            return res;
+            ev->result = res;
+            ev->didHandle = true;
+            return;
         }
 
         case WM_KEYDOWN: {
             bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed();
             if (isCtrlBack) {
                 PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
-                return true;
+                ev->result = true;
+                ev->didHandle = true;
+                return;
             }
             break;
         }
 
         case UWM_DELAYED_CTRL_BACK: {
             EditImplementCtrlBack(hwnd);
-            return true;
+            ev->result = true;
+            ev->didHandle = true;
+            return;
         }
 
         case WM_NCCALCSIZE: {
@@ -209,7 +222,9 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (rc->bottom - rc->top > kEditBottomBorderDy) {
                 rc->bottom -= kEditBottomBorderDy;
             }
-            return res;
+            ev->result = res;
+            ev->didHandle = true;
+            return;
         }
 
         case WM_NCPAINT: {
@@ -233,11 +248,11 @@ LRESULT Edit::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 DeleteObject(pen);
                 ReleaseDC(hwnd, hdc);
             }
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
     }
-    return WndProcDefault(hwnd, msg, wp, lp);
-    // return FinalWindowProc(msg, wp, lp);
 }
 
 bool Edit::HasBorder() {
@@ -314,30 +329,31 @@ int Edit::GetLeftTextMargin() {
 // EN_CHANGE → onTextChanged; EN_KILLFOCUS → onKillFocus (separate, so a
 // filter field that only sets onTextChanged is not re-entered when focus
 // moves to an in-place editor — that UAF'd Advanced Settings enum drop-downs).
-bool Edit::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
-    auto code = HIWORD(wparam);
+void Edit::OnCommand(ControlBase::CommandEvent* ev) {
+    auto code = HIWORD(ev->wparam);
     if (code == EN_CHANGE && onTextChanged.IsValid()) {
         onTextChanged.Call();
-        return true;
+        ev->didHandle = true;
+        return;
     }
     if (code == EN_KILLFOCUS && onKillFocus.IsValid()) {
         onKillFocus.Call();
-        return true;
+        ev->didHandle = true;
+        return;
     }
     if (code == EN_SETFOCUS && onFocus.IsValid()) {
         onFocus.Call();
-        return true;
+        ev->didHandle = true;
     }
-    return false;
 }
 
-LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
+void Edit::OnMessageReflect(ControlBase::MessageReflectEvent* ev) {
     // a read-only edit is coloured with WM_CTLCOLORSTATIC, not WM_CTLCOLOREDIT,
     // so handling only the latter left read-only edits with the default white
     // background whatever SetColors() said - like the advanced settings dialog's
     // description field on a dark theme (issue #5895)
-    if (msg == WM_CTLCOLOREDIT || msg == WM_CTLCOLORSTATIC) {
-        HDC hdc = (HDC)wp;
+    if (ev->msg == WM_CTLCOLOREDIT || ev->msg == WM_CTLCOLORSTATIC) {
+        HDC hdc = (HDC)ev->wparam;
         if (!IsSpecialColor(textColor)) {
             SetTextColor(hdc, textColor);
         }
@@ -348,7 +364,6 @@ LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
             // (e.g. at the start of the translate dialog source box, issue #5935).
             SetBkMode(hdc, OPAQUE);
         }
-        return (LRESULT)BackgroundBrush();
+        ev->result = (LRESULT)BackgroundBrush();
     }
-    return 0;
 }

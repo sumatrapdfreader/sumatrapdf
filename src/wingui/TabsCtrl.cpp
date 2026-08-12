@@ -636,7 +636,11 @@ static bool CanDragTab(TabInfo* tab) {
     return true;
 }
 
-LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
+    LPARAM lp = ev->lparam;
     Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
     if (WM_MOUSELEAVE == msg) {
         mousePos = HwndGetCursorPos(hwnd);
@@ -659,7 +663,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (draggingTab && msg == WM_MOUSEMOVE) {
         Point p = HwndMapWindowPoint(hwnd, nullptr, mousePos);
         ImageList_DragMove(p.x, p.y);
-        return 0;
+        {
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
+        }
     }
 
     // Check if mouse has moved beyond system drag threshold
@@ -679,14 +687,26 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_NCHITTEST: {
             // parts that are HTTRANSPARENT are used to move the window
             if (!inTitleBar || hwnd == GetCapture()) {
-                return HTCLIENT;
+                {
+                    ev->result = HTCLIENT;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             mousePos = HwndScreenToClient(hwnd, mousePos);
             tabState = TabStateFromMousePosition(mousePos);
             if (tabState.tabIdx >= 0) {
-                return HTCLIENT;
+                {
+                    ev->result = HTCLIENT;
+                    ev->didHandle = true;
+                    return;
+                }
             }
-            return HTTRANSPARENT;
+            {
+                ev->result = HTTRANSPARENT;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_SIZE:
@@ -713,7 +733,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int hl = tabHighlighted;
             if (isDragging && beyondDragThreshold) {
                 if (hl < 0) {
-                    return 0;
+                    {
+                        ev->result = 0;
+                        ev->didHandle = true;
+                        return;
+                    }
                 }
                 // move the tab out: draw it as a image and drag around the screen
                 draggingTab = true;
@@ -721,7 +745,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HBITMAP hbmp = RenderForDragging(hl);
                 if (!hbmp || !hlWnd) {
                     logfa("TabsCtrl::WndProc: RenderForDragging failed for tab %d\n", hl);
-                    return 0;
+                    {
+                        ev->result = 0;
+                        ev->didHandle = true;
+                        return;
+                    }
                 }
                 Rect r = hlWnd->bounds;
                 HIMAGELIST himl = ImageList_Create(r.dx, r.dy, 0, 1, 0);
@@ -731,7 +759,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 DeleteObject(himl);
                 Point p = HwndMapWindowPoint(hwnd, nullptr, mousePos);
                 ImageList_DragEnter(nullptr, p.x, p.y);
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
 
             LRESULT res = 0;
@@ -747,11 +779,19 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     if (!CanDragTab(GetTab(tabUnderMouse))) {
                         TriggerTabDragged(this, hl, tabUnderMouse);
                         UpdateAfterDrag(this, hl, tabUnderMouse);
-                        return 0;
+                        {
+                            ev->result = 0;
+                            ev->didHandle = true;
+                            return;
+                        }
                     }
                 }
                 UpdateHover(tabUnderMouse);
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             int xHl = -1;
             if (overClose && !isDragging) {
@@ -761,7 +801,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 tabHighlightedClose = xHl;
                 HwndScheduleRepaint(hwnd);
             }
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_LBUTTONDOWN: {
@@ -772,7 +816,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (vroot) {
                 vroot->OnMessage(msg, wp, lp, res);
             }
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_LBUTTONUP: {
@@ -786,7 +834,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (vroot) {
                     vroot->OnMessage(msg, wp, lp, res);
                 }
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             // we don't always get WM_MOUSEMOVE before WM_LBUTTONUP so
             // update the hover state
@@ -797,7 +849,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (vroot) {
                     vroot->OnMessage(msg, wp, lp, res);
                 }
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             draggingTab = false;
             ImageList_EndDrag();
@@ -806,45 +862,75 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 // migrate to new/different window
                 Point scPoint = HwndClientToScreen(hwnd, mousePos);
                 TriggerTabMigration(this, selectedTab, scPoint);
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             int dstIdx = tabUnderMouse;
             if (tabState.inRightHalf) {
                 dstIdx++;
             }
             if (dstIdx == selectedTab) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             if ((dstIdx < TabCount()) && GetTab(dstIdx)->isPinned) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             TriggerTabDragged(this, selectedTab, dstIdx);
             UpdateAfterDrag(this, selectedTab, dstIdx);
             HwndScheduleRepaint(hwnd);
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_MBUTTONDOWN: {
             // middle-clicking unconditionally closes the tab
             tabBeingClosed = tabUnderMouse;
             if (tabBeingClosed < 0 || !canClose) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             CloseTab(tabBeingClosed);
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
 
         case WM_SETCURSOR: {
             LRESULT res = 0;
             if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
-                return res;
+                ev->result = res;
+                ev->didHandle = true;
+                return;
             }
             break;
         }
 
         case WM_ERASEBKGND:
             // we paint the full client in WM_PAINT
-            return TRUE;
+            {
+                ev->result = TRUE;
+                ev->didHandle = true;
+                return;
+            }
 
         case WM_PAINT: {
             // BeginPaint / EndPaint only to consume the update region: ValidateRect
@@ -857,11 +943,19 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 EndPaint(hwnd, &ps);
             };
             if (!IsWindowVisible(hwnd)) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             Rect clientRc = HwndClientRect(hwnd);
             if (clientRc.IsEmpty()) {
-                return 0;
+                {
+                    ev->result = 0;
+                    ev->didHandle = true;
+                    return;
+                }
             }
             HDC hdc = GetDC(hwnd);
             COLORREF bgCol = ThemeControlBackgroundColor();
@@ -872,14 +966,19 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 HdcFillRect(hdc, clientRc, bgCol);
             }
             ReleaseDC(hwnd, hdc);
-            return 0;
+            {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
         }
     }
 
-    return WndProcDefault(hwnd, msg, wp, lp);
+    return; // WndProcDefault
 }
 
 HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
+    onWndProc = MkMethod1<TabsCtrl, ControlBase::WndProcEvent*, &TabsCtrl::WndProc>(this);
     CreateCustomArgs cargs;
     cargs.parent = args.parent;
     cargs.isRtl = args.isRtl;

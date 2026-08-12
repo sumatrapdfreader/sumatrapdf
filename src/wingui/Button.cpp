@@ -20,18 +20,18 @@ Button::Button() {
     kind = kindButton;
 }
 
-bool Button::OnCommand(WPARAM wparam, LPARAM /*lparam*/) {
-    auto code = HIWORD(wparam);
+void Button::OnCommand(ControlBase::CommandEvent* ev) {
+    auto code = HIWORD(ev->wparam);
     if (code == BN_CLICKED) {
         if (onClick.IsValid()) {
             onClick.Call();
-            return true;
+            ev->didHandle = true;
         }
     }
-    return false;
 }
 
 HWND Button::Create(const CreateArgs& args) {
+    onCommand = MkMethod1<Button, ControlBase::CommandEvent*, &Button::OnCommand>(this);
     CreateControlArgs cargs;
     cargs.className = WC_BUTTONW;
     cargs.parent = args.parent;

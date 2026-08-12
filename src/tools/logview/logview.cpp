@@ -855,10 +855,11 @@ static void LogHScroll(HWND hwnd, int code) {
 struct LogLinesWnd : ControlBase {
     LogLinesWnd() { kind = "logLines"; }
     HWND Create(HWND parent);
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    void WndProc(ControlBase::WndProcEvent* ev);
 };
 
 HWND LogLinesWnd::Create(HWND parent) {
+    onWndProc = MkMethod1<LogLinesWnd, ControlBase::WndProcEvent*, &LogLinesWnd::WndProc>(this);
     CreateCustomArgs args;
     args.parent = parent;
     args.className = L"LogViewLines";
@@ -867,27 +868,40 @@ HWND LogLinesWnd::Create(HWND parent) {
     return hwnd;
 }
 
-LRESULT LogLinesWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+void LogLinesWnd::WndProc(ControlBase::WndProcEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
     switch (msg) {
         case WM_PAINT:
             PaintLog(hwnd);
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         case WM_ERASEBKGND:
-            return 1; // handled in WM_PAINT (double buffered)
+            ev->result = 1; // handled in WM_PAINT (double buffered)
+            ev->didHandle = true;
+            return;
         case WM_SIZE: {
             Tab* tab = SelTab();
             if (tab && tab->follow) {
                 ScrollToBottom(tab); // fewer/more visible rows: stay pinned to the tail
             }
             UpdateLogScrollbars();
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
         case WM_VSCROLL:
             LogVScroll(hwnd, LOWORD(wp));
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         case WM_HSCROLL:
             LogHScroll(hwnd, LOWORD(wp));
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         case WM_MOUSEWHEEL: {
             // accumulate so hi-resolution wheels (delta < WHEEL_DELTA) also scroll,
             // and scroll by whole notches (3 lines each). wheel up (positive delta)
@@ -898,13 +912,16 @@ LRESULT LogLinesWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 gWheelAccum -= notches * WHEEL_DELTA;
                 ScrollByLines(hwnd, -notches * 3);
             }
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
         case WM_LBUTTONDOWN:
             SetFocus(hwnd); // so subsequent wheel messages target the log view
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
     }
-    return WndProcDefault(hwnd, msg, wp, lp);
 }
 
 // ------------------------------------------------------------- tabs window

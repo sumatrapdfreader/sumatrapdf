@@ -329,8 +329,7 @@ LRESULT WindowBase::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
 
     ControlBase* pWnd = ControlFromHwnd(wnd);
     if (pWnd != nullptr) {
-        auto res = pWnd->OnMessageReflect(msg, wparam, lparam);
-        return res;
+        return pWnd->DispatchMessageReflect(msg, wparam, lparam);
     }
 
     return 0;
@@ -345,7 +344,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             ControlBase* pWnd = ControlFromHwnd(reinterpret_cast<HWND>(lparam));
             bool didHandle = false;
             if (pWnd != nullptr) {
-                didHandle = pWnd->OnCommand(wparam, lparam);
+                didHandle = pWnd->DispatchCommand(wparam, lparam);
             }
             if (didHandle) {
                 return 1;
@@ -361,7 +360,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
                 return 0;
             }
             if (hwnd == GetParent(wndFrom->hwnd)) {
-                return wndFrom->OnNotifyReflect(wparam, lparam);
+                return wndFrom->DispatchNotifyReflect(wparam, lparam);
             }
         }
         // A set of messages to be reflected back to the control that generated them.
@@ -390,7 +389,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lparam;
             ControlBase* pWnd = ControlFromHwnd(dis->hwndItem);
             if (pWnd != nullptr) {
-                LRESULT result = pWnd->OnMessageReflect(msg, wparam, lparam);
+                LRESULT result = pWnd->DispatchMessageReflect(msg, wparam, lparam);
                 if (result != 0) {
                     return result;
                 }
@@ -403,7 +402,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             }
             ControlBase* pWnd = wnd ? ControlFromHwnd(wnd) : nullptr;
             if (pWnd != nullptr) {
-                LRESULT result = pWnd->OnMessageReflect(msg, wparam, lparam);
+                LRESULT result = pWnd->DispatchMessageReflect(msg, wparam, lparam);
                 if (result != 0) {
                     return result;
                 }
@@ -491,7 +490,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             ControlBase* pWnd = ControlFromHwnd(reinterpret_cast<HWND>(lparam));
             bool didHandle = false;
             if (pWnd != nullptr) {
-                didHandle = pWnd->OnCommand(wparam, lparam);
+                didHandle = pWnd->DispatchCommand(wparam, lparam);
             }
 
             // Handle user commands.
@@ -545,7 +544,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 
             if (wndFrom != nullptr) {
                 if (::GetParent(from) == this->hwnd) {
-                    result = wndFrom->OnNotifyReflect(wparam, lparam);
+                    result = wndFrom->DispatchNotifyReflect(wparam, lparam);
                 }
             }
 

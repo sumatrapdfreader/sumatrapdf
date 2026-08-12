@@ -36,6 +36,8 @@ TreeView::TreeView() {
 TreeView::~TreeView() {}
 
 HWND TreeView::Create(const CreateArgs& args) {
+    onWndProc = MkMethod1<TreeView, ControlBase::WndProcEvent*, &TreeView::WndProc>(this);
+    onNotifyReflect = MkMethod1<TreeView, ControlBase::NotifyReflectEvent*, &TreeView::OnNotifyReflect>(this);
     CreateControlArgs cargs;
     cargs.className = WC_TREEVIEWW;
     cargs.parent = args.parent;
@@ -176,20 +178,26 @@ static bool HandleKey(TreeView* tree, WPARAM wp) {
     return true;
 }
 
-LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    LRESULT res;
+void TreeView::WndProc(ControlBase::WndProcEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wparam = ev->wparam;
+    LPARAM lparam = ev->lparam;
     TreeView* w = this;
 
     if (WM_ERASEBKGND == msg) {
-        return FALSE;
+        ev->result = FALSE;
+        ev->didHandle = true;
+        return;
     }
 
     if (WM_RBUTTONDOWN == msg) {
         // this is needed to make right click trigger context menu
         // otherwise it gets turned into NM_CLICK and it somehow
         // blocks WM_RBUTTONUP, which is a trigger for WM_CONTEXTMENU
-        res = DefWindowProcW(hwnd, msg, wparam, lparam);
-        return res;
+        ev->result = DefWindowProcW(hwnd, msg, wparam, lparam);
+        ev->didHandle = true;
+        return;
     }
 
     if (WM_KEYDOWN == msg) {
@@ -198,27 +206,29 @@ LRESULT TreeView::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         // the selected item (sidebar and full-window tab); Toc leaves result 0 so
         // the default toggle still applies.
         if (wparam == VK_RETURN && onKeyDown.IsValid()) {
-            KeyDownEvent ev{};
-            ev.treeView = w;
-            ev.keyCode = (int)wparam;
-            onKeyDown.Call(&ev);
-            if (ev.result != 0) {
-                return 0;
+            KeyDownEvent kev{};
+            kev.treeView = w;
+            kev.keyCode = (int)wparam;
+            onKeyDown.Call(&kev);
+            if (kev.result != 0) {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
             }
         }
         if (HandleKey(w, wparam)) {
-            return 0;
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
         }
     }
 
     // Swallow WM_CHAR for Enter after we handled WM_KEYDOWN so Windows does not
     // play the default "invalid key" beep (e.g. opening a favorite with Enter).
     if (WM_CHAR == msg && (wparam == VK_RETURN || wparam == '\r' || wparam == '\n')) {
-        return 0;
+        ev->result = 0;
+        ev->didHandle = true;
     }
-
-    res = WndProcDefault(hwnd, msg, wparam, lparam);
-    return res;
 }
 
 bool TreeView::IsExpanded(TreeItem ti) {
@@ -518,29 +528,31 @@ static void InvalidateTreeItemRow(HWND hwnd, HTREEITEM hItem) {
     }
 }
 
-LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
+void TreeView::OnNotifyReflect(ControlBase::NotifyReflectEvent* rev) {
     TreeView* w = this;
+    LPARAM lp = rev->lparam;
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
-    LRESULT res;
 
     auto code = nmtv->hdr.code;
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getinfotip
     if (code == TVN_GETINFOTIP) {
         if (!onGetTooltip.IsValid()) {
-            return 0;
+            return;
         }
         TreeView::GetTooltipEvent ev;
         ev.treeView = w;
         ev.info = (NMTVGETINFOTIPW*)(nmtv);
         ev.treeItem = GetTreeItemByHandle(ev.info->hItem);
         onGetTooltip.Call(&ev);
-        return 0;
+        rev->result = 0;
+        return;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
     if (code == NM_CUSTOMDRAW) {
         if (!onCustomDraw.IsValid()) {
-            return CDRF_DODEFAULT;
+            rev->result = CDRF_DODEFAULT;
+            return;
         }
         TreeView::CustomDrawEvent ev;
         ev.treeView = w;
@@ -552,14 +564,17 @@ LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
         // so the handler can return CDRF_NOTIFYITEMDRAW
         DWORD drawStage = ev.nm->nmcd.dwDrawStage;
         if (!ev.treeItem && drawStage != CDDS_PREPAINT) {
-            return CDRF_DODEFAULT;
+            rev->result = CDRF_DODEFAULT;
+            return;
         }
         onCustomDraw.Call(&ev);
-        res = ev.result;
+        LRESULT res = ev.result;
         if (res < 0) {
-            return CDRF_DODEFAULT;
+            rev->result = CDRF_DODEFAULT;
+            return;
         }
-        return res;
+        rev->result = res;
+        return;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
@@ -572,7 +587,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
             InvalidateTreeItemRow(hwnd, nmtv->itemNew.hItem);
         }
         if (!onSelectionChanged.IsValid()) {
-            return 0;
+            return;
         }
         TreeView::SelectionChangedEvent ev;
         ev.treeView = w;
@@ -586,14 +601,15 @@ LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
         ev.prevSelectedItem = w->GetTreeItemByHandle(nmtv->itemOld.hItem);
         ev.selectedItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
         onSelectionChanged.Call(&ev);
-        return 0;
+        rev->result = 0;
+        return;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
     if (code == NM_CLICK || code == NM_DBLCLK) {
         // log("tv: NM_CLICK\n");
         if (!onClick.IsValid()) {
-            return 0;
+            return;
         }
         NMHDR* nmhdr = (NMHDR*)lp;
         TreeView::ClickEvent ev{};
@@ -618,13 +634,14 @@ LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
             ev.treeItem = GetTreeItemByHandle(ht.hItem);
         }
         onClick.Call(&ev);
-        return ev.result;
+        rev->result = ev.result;
+        return;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-keydown
     if (code == TVN_KEYDOWN) {
         if (!onKeyDown.IsValid()) {
-            return 0;
+            return;
         }
         NMTVKEYDOWN* nmkd = (NMTVKEYDOWN*)nmtv;
         TreeView::KeyDownEvent ev{};
@@ -634,8 +651,6 @@ LRESULT TreeView::OnNotifyReflect(WPARAM /*wp*/, LPARAM lp) {
         ev.flags = nmkd->flags;
         onKeyDown.Call(&ev);
         // non-zero: prevent default tree handling (e.g. type-ahead) when requested
-        return ev.result;
+        rev->result = ev.result;
     }
-
-    return 0;
 }

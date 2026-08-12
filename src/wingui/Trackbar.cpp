@@ -21,6 +21,7 @@ Trackbar::Trackbar() {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
 HWND Trackbar::Create(const CreateArgs& args) {
+    onMessageReflect = MkMethod1<Trackbar, ControlBase::MessageReflectEvent*, &Trackbar::OnMessageReflect>(this);
     CreateControlArgs cargs;
     cargs.className = TRACKBAR_CLASS;
     cargs.parent = args.parent;
@@ -55,15 +56,15 @@ HWND Trackbar::Create(const CreateArgs& args) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
-LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
+void Trackbar::OnMessageReflect(ControlBase::MessageReflectEvent* ev) {
     if (!onPositionChanging.IsValid()) {
-        return 0;
+        return;
     }
-    switch (msg) {
+    switch (ev->msg) {
         case WM_VSCROLL:
         case WM_HSCROLL: {
-            int pos = (int)HIWORD(wp);
-            int code = (int)LOWORD(wp);
+            int pos = (int)HIWORD(ev->wparam);
+            int code = (int)LOWORD(ev->wparam);
             switch (code) {
                 case TB_THUMBPOSITION:
                 case TB_THUMBTRACK:
@@ -78,11 +79,9 @@ LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
             onPositionChanging.Call(&a);
             // per https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
             // "if an application processes this message, it should return zero"
-            return 0;
+            ev->result = 0;
         }
     }
-
-    return 0;
 }
 
 Size Trackbar::GetIdealSize() {

@@ -72,7 +72,19 @@ static LRESULT CALLBACK ControlWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
     }
 
     if (c) {
-        return c->WndProc(hwnd, msg, wparam, lparam);
+        if (c->onWndProc.IsValid()) {
+            ControlBase::WndProcEvent ev;
+            ev.w = c;
+            ev.hwnd = hwnd;
+            ev.msg = msg;
+            ev.wparam = wparam;
+            ev.lparam = lparam;
+            c->onWndProc.Call(&ev);
+            if (ev.didHandle) {
+                return ev.result;
+            }
+        }
+        return c->WndProcDefault(hwnd, msg, wparam, lparam);
     }
     return ::DefWindowProc(hwnd, msg, wparam, lparam);
 }
@@ -155,149 +167,48 @@ void ControlBase::Destroy() {
     HwndDestroyWindowSafe(&hwnd);
 }
 
-// over-ride those to hook into message processing
-LRESULT ControlBase::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    return WndProcDefault(hwnd, msg, wparam, lparam);
-}
-
-// This function is called when a window is attached to WindowBase.
-// Override it to automatically perform tasks when the window is attached.
-// Note:  Window controls are attached.
-void ControlBase::OnAttach() {}
-
-void ControlBase::OnFocus() {}
-
-// Override this to handle WM_COMMAND messages
-bool ControlBase::OnCommand(WPARAM /*wparam*/, LPARAM /*lparam*/) {
-    //  UINT id = LOWORD(wparam);
-    //  switch (id)
-    //  {
-    //  case IDM_FILE_NEW:
-    //      OnFileNew();
-    //      return true;   // return TRUE for handled commands
-    //  }
-
-    // return false for unhandled commands
-
-    return false;
-}
-
-// Called during window creation. Override this functions to perform tasks
-// such as creating child windows.
-int ControlBase::OnCreate(CREATESTRUCT* /*cs*/) {
-    // This function is called when a WM_CREATE message is received
-    // Override it to automatically perform tasks during window creation.
-    // Return 0 to continue creating the window.
-
-    // Note: Window controls don't call OnCreate. They are sublcassed (attached)
-    //  after their window is created.
-
-    /*
-    LOGFONT logfont;
-    ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
-    font = ::CreateFontIndirectW(&logfont);
-    ::SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
-    */
-
-    return 0;
-}
-
-void ControlBase::OnContextMenu(Point ptScreen) {
-    if (!onContextMenu.IsValid()) {
-        return;
+bool ControlBase::DispatchCommand(WPARAM wparam, LPARAM lparam) {
+    if (!onCommand.IsValid()) {
+        return false;
     }
-
-    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
-    ContextMenuEvent ev;
+    CommandEvent ev;
     ev.w = this;
-    ev.mouseScreen = ptScreen;
+    ev.wparam = wparam;
+    ev.lparam = lparam;
+    onCommand.Call(&ev);
+    return ev.didHandle;
+}
 
-    Point ptW = ptScreen;
-    if (ptScreen.x != -1) {
-        ptW = HwndMapWindowPoint(HWND_DESKTOP, hwnd, ptW);
+LRESULT ControlBase::DispatchMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (!onMessageReflect.IsValid()) {
+        return 0;
     }
-    ev.mouseWindow = ptW;
-    onContextMenu.Call(&ev);
+    MessageReflectEvent ev;
+    ev.w = this;
+    ev.msg = msg;
+    ev.wparam = wparam;
+    ev.lparam = lparam;
+    onMessageReflect.Call(&ev);
+    return ev.result;
 }
 
-LRESULT ControlBase::OnMouseEvent(UINT /*msg*/, WPARAM /*wparam*/, LPARAM /*lparam*/) {
-    return -1;
+LRESULT ControlBase::DispatchNotifyReflect(WPARAM wparam, LPARAM lparam) {
+    if (!onNotifyReflect.IsValid()) {
+        return 0;
+    }
+    NotifyReflectEvent ev;
+    ev.w = this;
+    ev.wparam = wparam;
+    ev.lparam = lparam;
+    onNotifyReflect.Call(&ev);
+    return ev.result;
 }
 
-// Processes notification (WM_NOTIFY) messages from a child window.
-LRESULT ControlBase::OnNotify(int /*controlId*/, NMHDR* /*nmh*/) {
-    // You can use either OnNotifyReflect or OnNotify to handle notifications
-    // Override OnNotifyReflect to handle notifications in the CWnd class that
-    //   generated the notification.   OR
-    // Override OnNotify to handle notifications in the PARENT of the CWnd class
-    //   that generated the notification.
-
-    // Your overriding function should look like this ...
-
-    // LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
-    // switch (pHeader->code)
-    // {
-    //      Handle your notifications from the CHILD window here
-    //      Return the value recommended by the Windows API documentation.
-    //      For many notifications, the return value doesn't matter, but for some it does.
-    // }
-
-    // return 0 for unhandled notifications
-    // The framework will call SetWindowLongPtr(DWLP_MSGRESULT, result) for dialogs.
-    return 0;
-}
-
-// Processes the notification (WM_NOTIFY) messages in the child window that originated them.
-LRESULT ControlBase::OnNotifyReflect(WPARAM /*wparam*/, LPARAM /*lparam*/) {
-    // Override OnNotifyReflect to handle notifications in the CWnd class that
-    //   generated the notification.
-
-    // Your overriding function should look like this ...
-
-    // LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
-    // switch (pHeader->code)
-    // {
-    //      Handle your notifications from this window here
-    //      Return the value recommended by the Windows API documentation.
-    // }
-
-    // Return 0 for unhandled notifications.
-    // The framework will call SetWindowLongPtr(DWLP_MSGRESULT, result) for dialogs.
-    return 0;
-}
-
-void ControlBase::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
-    auto* br = BackgroundBrush();
+static void ControlBaseDefaultPaint(ControlBase* w, HDC hdc, PAINTSTRUCT* ps) {
+    auto* br = w->BackgroundBrush();
     if (br != nullptr) {
         HdcFillRect(hdc, ToRect(ps->rcPaint), br);
     }
-}
-
-void ControlBase::OnSize(UINT msg, UINT type, Size size) {}
-
-void ControlBase::OnTimer(UINT_PTR timerId) {}
-
-// This function processes those special messages sent by some older controls,
-// and reflects them back to the originating CWnd object.
-// Override this function in your derived class to handle these special messages:
-// WM_COMMAND, WM_CTLCOLORBTN, WM_CTLCOLOREDIT, WM_CTLCOLORDLG, WM_CTLCOLORLISTBOX,
-// WM_CTLCOLORSCROLLBAR, WM_CTLCOLORSTATIC, WM_CHARTOITEM,  WM_VKEYTOITEM,
-// WM_HSCROLL, WM_VSCROLL, WM_DRAWITEM, WM_MEASUREITEM, WM_DELETEITEM,
-// WM_COMPAREITEM, WM_PARENTNOTIFY.
-LRESULT ControlBase::OnMessageReflect(UINT /*msg*/, WPARAM /*wparam*/, LPARAM /*lparam*/) {
-    // This function processes those special messages (see above) sent
-    // by some older controls, and reflects them back to the originating CWnd object.
-    // Override this function in your derived class to handle these special messages.
-
-    // Your overriding function should look like this ...
-
-    // switch (msg)
-    // {
-    //      Handle your reflected messages here
-    // }
-
-    // return 0 for unhandled messages
-    return 0;
 }
 
 Size ControlBase::GetIdealSize() {
@@ -424,8 +335,7 @@ LRESULT ControlBase::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
 
     ControlBase* pWnd = ControlFromHwnd(wnd);
     if (pWnd != nullptr) {
-        auto res = pWnd->OnMessageReflect(msg, wparam, lparam);
-        return res;
+        return pWnd->DispatchMessageReflect(msg, wparam, lparam);
     }
 
     return 0;
@@ -477,12 +387,12 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
             ControlBase* pWnd = ControlFromHwnd(reinterpret_cast<HWND>(lparam));
             bool didHandle = false;
             if (pWnd != nullptr) {
-                didHandle = pWnd->OnCommand(wparam, lparam);
+                didHandle = pWnd->DispatchCommand(wparam, lparam);
             }
 
             // Handle user commands.
             if (!didHandle) {
-                didHandle = OnCommand(wparam, lparam);
+                didHandle = DispatchCommand(wparam, lparam);
             }
 
             if (didHandle) {
@@ -491,12 +401,21 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         } break; // Note: Some MDI commands require default processing.
 
         case WM_CREATE: {
-            OnCreate((CREATESTRUCT*)lparam);
+            if (onCreate.IsValid()) {
+                CreateEvent ev;
+                ev.w = this;
+                ev.cs = (CREATESTRUCT*)lparam;
+                onCreate.Call(&ev);
+            }
             break;
         }
 
         case WM_SETFOCUS: {
-            OnFocus();
+            if (onFocus.IsValid()) {
+                FocusEvent ev;
+                ev.w = this;
+                onFocus.Call(&ev);
+            }
             break;
         }
 
@@ -509,13 +428,18 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
 
             if (wndFrom != nullptr) {
                 if (::GetParent(from) == this->hwnd) {
-                    result = wndFrom->OnNotifyReflect(wparam, lparam);
+                    result = wndFrom->DispatchNotifyReflect(wparam, lparam);
                 }
             }
 
             // Handle user notifications
-            if (result == 0) {
-                result = OnNotify((int)wparam, (NMHDR*)lparam);
+            if (result == 0 && onNotify.IsValid()) {
+                NotifyEvent nev;
+                nev.w = this;
+                nev.controlId = (int)wparam;
+                nev.nmh = (NMHDR*)lparam;
+                onNotify.Call(&nev);
+                result = nev.result;
             }
             if (result != 0) {
                 return result;
@@ -529,23 +453,19 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
                 return FinalWindowProc(msg, wparam, lparam);
             }
 
-            if (::GetUpdateRect(hwnd, nullptr, FALSE)) {
+            {
                 PAINTSTRUCT ps;
                 HDC hdc = ::BeginPaint(hwnd, &ps);
-                OnPaint(hdc, &ps);
+                if (onPaint.IsValid()) {
+                    PaintEvent pev;
+                    pev.w = this;
+                    pev.hdc = hdc;
+                    pev.ps = &ps;
+                    onPaint.Call(&pev);
+                } else {
+                    ControlBaseDefaultPaint(this, hdc, &ps);
+                }
                 ::EndPaint(hwnd, &ps);
-            } else {
-                // TODO: for now those are the same because some OnPaint()
-                // implementations assume ps is provided
-                PAINTSTRUCT ps;
-                HDC hdc = ::BeginPaint(hwnd, &ps);
-                OnPaint(hdc, &ps);
-                ::EndPaint(hwnd, &ps);
-#if 0
-                HDC hdc = ::GetDC(hwnd);
-                OnPaint(hdc, nullptr);
-                ::ReleaseDC(hwnd, hdc);
-#endif
             }
             // No more drawing required
             return 0;
@@ -573,8 +493,12 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
 
         case WM_ENTERSIZEMOVE:
         case WM_EXITSIZEMOVE: {
-            Size size{};
-            OnSize(msg, 0, size);
+            if (onSize.IsValid()) {
+                SizeEvent sev;
+                sev.w = this;
+                sev.msg = msg;
+                onSize.Call(&sev);
+            }
             break;
         }
         case WM_LBUTTONDOWN:
@@ -589,24 +513,54 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         case WM_MOUSELEAVE:
         case WM_MOUSEMOVE:
         case WM_MOUSEWHEEL: {
-            LRESULT lResult = OnMouseEvent(msg, wparam, lparam);
-            if (lResult != -1) return lResult;
+            if (onMouseEvent.IsValid()) {
+                MouseEvent mev;
+                mev.w = this;
+                mev.msg = msg;
+                mev.wparam = wparam;
+                mev.lparam = lparam;
+                onMouseEvent.Call(&mev);
+                if (mev.result != -1) {
+                    return mev.result;
+                }
+            }
             break;
         }
         case WM_CONTEXTMENU: {
-            Point ptScreen = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
-            // Note: HWND in wparam might be a child window
-            OnContextMenu(ptScreen);
+            if (onContextMenu.IsValid()) {
+                Point ptScreen = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+                // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
+                ContextMenuEvent cev;
+                cev.w = this;
+                cev.mouseScreen = ptScreen;
+                Point ptW = ptScreen;
+                if (ptScreen.x != -1) {
+                    ptW = HwndMapWindowPoint(HWND_DESKTOP, hwnd, ptW);
+                }
+                cev.mouseWindow = ptW;
+                onContextMenu.Call(&cev);
+            }
             break;
         }
 
         case WM_SIZE: {
-            Size size = {LOWORD(lparam), HIWORD(lparam)};
-            OnSize(msg, static_cast<UINT>(wparam), size);
+            if (onSize.IsValid()) {
+                SizeEvent sev;
+                sev.w = this;
+                sev.msg = msg;
+                sev.type = static_cast<UINT>(wparam);
+                sev.size = {LOWORD(lparam), HIWORD(lparam)};
+                onSize.Call(&sev);
+            }
             break;
         }
         case WM_TIMER: {
-            OnTimer(static_cast<UINT>(wparam));
+            if (onTimer.IsValid()) {
+                TimerEvent tev;
+                tev.w = this;
+                tev.timerId = static_cast<UINT_PTR>(wparam);
+                onTimer.Call(&tev);
+            }
             break;
         }
     }
@@ -630,7 +584,11 @@ void ControlBase::Attach(HWND hwnd) {
 
     this->hwnd = hwnd;
     Subclass();
-    OnAttach();
+    if (onAttach.IsValid()) {
+        AttachEvent ev;
+        ev.w = this;
+        onAttach.Call(&ev);
+    }
 }
 
 // Attaches a CWnd object to a dialog item.
@@ -701,7 +659,11 @@ HWND ControlBase::CreateControl(const CreateControlArgs& args) {
 
     // TODO: validate that
     Subclass();
-    OnAttach();
+    if (onAttach.IsValid()) {
+        AttachEvent ev;
+        ev.w = this;
+        onAttach.Call(&ev);
+    }
 
     // prevWindowProc(hwnd, WM_SETFONT, (WPARAM)f, 0);
     // HwndSetFont(hwnd, f);

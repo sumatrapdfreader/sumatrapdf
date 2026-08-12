@@ -30,6 +30,8 @@ Checkbox::Checkbox() {
 }
 
 HWND Checkbox::Create(const CreateArgs& args) {
+    onCommand = MkMethod1<Checkbox, ControlBase::CommandEvent*, &Checkbox::OnCommand>(this);
+    onMessageReflect = MkMethod1<Checkbox, ControlBase::MessageReflectEvent*, &Checkbox::OnMessageReflect>(this);
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.isRtl = args.isRtl;
@@ -46,9 +48,9 @@ HWND Checkbox::Create(const CreateArgs& args) {
 // A checkbox draws its label on the parent's background, which by default is
 // the gray button face. Answer the reflected WM_CTLCOLORSTATIC with our own
 // colors so the control blends into a themed (or plain white) parent.
-LRESULT Checkbox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
-    if (msg == WM_CTLCOLORSTATIC || msg == WM_CTLCOLORBTN) {
-        HDC hdc = (HDC)wp;
+void Checkbox::OnMessageReflect(ControlBase::MessageReflectEvent* ev) {
+    if (ev->msg == WM_CTLCOLORSTATIC || ev->msg == WM_CTLCOLORBTN) {
+        HDC hdc = (HDC)ev->wparam;
         if (!IsSpecialColor(textColor)) {
             SetTextColor(hdc, textColor);
         }
@@ -56,18 +58,16 @@ LRESULT Checkbox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM /*lparam*/) {
             SetBkColor(hdc, bgColor);
         }
         auto* br = BackgroundBrush();
-        return (LRESULT)br;
+        ev->result = (LRESULT)br;
     }
-    return 0;
 }
 
-bool Checkbox::OnCommand(WPARAM wp, LPARAM /*lparam*/) {
-    auto code = HIWORD(wp);
+void Checkbox::OnCommand(ControlBase::CommandEvent* ev) {
+    auto code = HIWORD(ev->wparam);
     if (code == BN_CLICKED && onStateChanged.IsValid()) {
         onStateChanged.Call();
-        return true;
+        ev->didHandle = true;
     }
-    return false;
 }
 
 Size Checkbox::GetIdealSize() {

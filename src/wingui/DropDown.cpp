@@ -30,21 +30,21 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
     }
 }
 
-bool DropDown::OnCommand(WPARAM wp, LPARAM /*lparam*/) {
-    auto code = HIWORD(wp);
+void DropDown::OnCommand(ControlBase::CommandEvent* ev) {
+    auto code = HIWORD(ev->wparam);
     if (code == CBN_EDITCHANGE && onTextChanged.IsValid()) {
         onTextChanged.Call();
-        return true;
+        ev->didHandle = true;
+        return;
     }
     if ((code == CBN_SELCHANGE) && onSelectionChanged.IsValid()) {
         onSelectionChanged.Call();
-        // must return false or else the drop-down list will not close
-        return false;
+        // must leave didHandle false or else the drop-down list will not close
     }
-    return false;
 }
 
 HWND DropDown::Create(const CreateArgs& args) {
+    onCommand = MkMethod1<DropDown, ControlBase::CommandEvent*, &DropDown::OnCommand>(this);
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.isRtl = args.isRtl;
