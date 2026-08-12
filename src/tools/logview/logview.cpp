@@ -125,7 +125,7 @@ static Vec<PendingLine> gQueue;
 
 struct LogViewWnd;
 struct LogLinesWnd;
-struct TabBarWnd;
+struct TabBarCtrl;
 
 // windows / gdi
 static LogViewWnd* gWnd = nullptr;
@@ -928,17 +928,17 @@ static void CloseTab(int idx);
 
 // the tab bar is a virtual control: the main window paints it and gives it its
 // input, so it needs no HWND / window class of its own
-struct TabBarWnd : VirtCtrl {
-    TabBarWnd() {
+struct TabBarCtrl : VirtCtrl {
+    TabBarCtrl() {
         kind = "logViewTabs";
-        onMouseDown = MkMethod1<TabBarWnd, VirtMouseEvent*, &TabBarWnd::OnMouseDown>(this);
+        onMouseDown = MkMethod1<TabBarCtrl, VirtMouseEvent*, &TabBarCtrl::OnMouseDown>(this);
     }
     Size GetIdealSize() override { return {0, DpiScale(26)}; }
     void Paint(VirtPaintCtx&) override;
     void OnMouseDown(VirtMouseEvent*);
 };
 
-void TabBarWnd::Paint(VirtPaintCtx& ctx) {
+void TabBarCtrl::Paint(VirtPaintCtx& ctx) {
     HDC hdc = GfxHdc(ctx.gfx);
     RECT client = ToRECT(ctx.bounds);
     int savedDC = SaveDC(hdc);
@@ -995,7 +995,7 @@ void TabBarWnd::Paint(VirtPaintCtx& ctx) {
     ResetTempArena();
 }
 
-void TabBarWnd::OnMouseDown(VirtMouseEvent* ev) {
+void TabBarCtrl::OnMouseDown(VirtMouseEvent* ev) {
     POINT pt{ev->ptWindow.x, ev->ptWindow.y};
     int n = len(gTabHits);
     for (int i = 0; i < n; i++) {
@@ -1064,7 +1064,7 @@ struct LogViewWnd : WindowBase {
     VirtText* countText = nullptr;
     VirtButton* btnClear = nullptr;
     VirtButton* btnAbout = nullptr;
-    TabBarWnd* tabBar = nullptr;
+    TabBarCtrl* tabBar = nullptr;
     LogLinesWnd* logLines = nullptr;
 
     bool Create();
@@ -1197,7 +1197,7 @@ bool LogViewWnd::Create() {
     btnClear = NewToolButton("c", MkFunc1Void<VirtMouseEvent*>(ClearClicked));
     btnAbout = NewToolButton("?", MkFunc1Void<VirtMouseEvent*>(AboutClicked));
 
-    tabBar = new TabBarWnd();
+    tabBar = new TabBarCtrl();
 
     logLines = new LogLinesWnd();
     logLines->Create(hwnd);

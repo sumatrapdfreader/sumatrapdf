@@ -968,7 +968,7 @@ using Gdiplus::PathData;
 
 struct TabsCtrl;
 struct TabInfo;
-struct TabWnd;
+struct TabCtrl;
 struct VirtRoot;
 struct VirtCloseButton;
 struct VirtMouseEvent;
@@ -1050,10 +1050,10 @@ struct TabsCtrl : ControlBase {
     int tabDefaultDx = 300;
 
     Vec<TabInfo*> tabs;
-    // the bar: one TabWnd per TabInfo, laid out by `bar` (which is `layout`)
+    // the bar: one TabCtrl per TabInfo, laid out by `bar` (which is `layout`)
     HBox* bar = nullptr;
     // in tab order (the box's children are reversed when the UI is RTL)
-    Vec<TabWnd*> tabWnds;
+    Vec<TabCtrl*> tabCtrls;
     struct Tooltip* tooltip = nullptr;
     int selectedIdx = -1;
 
@@ -1138,10 +1138,10 @@ struct TabsCtrl : ControlBase {
     TabsCtrl::MouseState TabStateFromMousePosition(const Point& p);
     HBITMAP RenderForDragging(int idx);
 
-    TabWnd* TabWndAt(int idx);
-    void RebuildTabWnds();
+    TabCtrl* TabCtrlAt(int idx);
+    void RebuildTabCtrls();
     void UpdateHover(int tabUnderMouse);
-    void OnTabMouseDown(TabWnd*, VirtMouseEvent&);
+    void OnTabMouseDown(TabCtrl*, VirtMouseEvent&);
     void CloseTab(int idx);
 };
 

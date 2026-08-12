@@ -21,13 +21,13 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 //--- Tabs
 //
-// Each tab is a TabWnd in an HBox that lays them out along the bar, with
+// Each tab is a TabCtrl in an HBox that lays them out along the bar, with
 // the tab's ✕ as a child of the tab. The control keeps the HWND (it owns the
 // drag loop, which needs capture and screen coordinates) and the tab list;
 // everything on screen belongs to the tree.
 
 static Kind kindTabs = "tabs";
-static Kind kindTabWnd = "tabWnd";
+static Kind kindTabCtrl = "tabCtrl";
 
 // non-selected tabs narrower than this hide their close button so that
 // clicks drag/select instead of accidentally closing the tab
@@ -67,11 +67,11 @@ static COLORREF TabTextColorForBackground(COLORREF tabBg) {
     return IsLightColor(tabBg) ? RGB(0, 0, 0) : RGB(255, 255, 255);
 }
 
-//--- TabWnd: one tab
+//--- TabCtrl: one tab
 
 // paints the tab (background, title, dirty dot) and hosts its ✕. It doesn't own
 // its TabInfo: the control's `tabs` does
-struct TabWnd : VirtCtrl {
+struct TabCtrl : VirtCtrl {
     TabsCtrl* tabsCtrl = nullptr;
     TabInfo* ti = nullptr;
     VirtCloseButton* closeBtn = nullptr;
@@ -79,8 +79,8 @@ struct TabWnd : VirtCtrl {
     // the ✕ glyph itself, inside the close button's larger hit area
     Rect rClose;
 
-    TabWnd();
-    ~TabWnd() override = default;
+    TabCtrl();
+    ~TabCtrl() override = default;
 
     int Idx();
     bool IsSelected();
@@ -96,24 +96,24 @@ struct TabWnd : VirtCtrl {
     void OnGetTooltip(VirtTooltipEvent*);
 };
 
-static void TabCloseClicked(TabWnd*, VirtMouseEvent*);
+static void TabCloseClicked(TabCtrl*, VirtMouseEvent*);
 
-TabWnd::TabWnd() {
-    kind = kindTabWnd;
-    onMouseDown = MkMethod1<TabWnd, VirtMouseEvent*, &TabWnd::OnMouseDown>(this);
-    onMouseUp = MkMethod1<TabWnd, VirtMouseEvent*, &TabWnd::OnMouseUp>(this);
-    onGetTooltip = MkMethod1<TabWnd, VirtTooltipEvent*, &TabWnd::OnGetTooltip>(this);
+TabCtrl::TabCtrl() {
+    kind = kindTabCtrl;
+    onMouseDown = MkMethod1<TabCtrl, VirtMouseEvent*, &TabCtrl::OnMouseDown>(this);
+    onMouseUp = MkMethod1<TabCtrl, VirtMouseEvent*, &TabCtrl::OnMouseUp>(this);
+    onGetTooltip = MkMethod1<TabCtrl, VirtTooltipEvent*, &TabCtrl::OnGetTooltip>(this);
     closeBtn = new VirtCloseButton();
     closeBtn->onClick = MkFunc1(TabCloseClicked, this);
     closeBtn->visibility = Visibility::Collapse;
     AddChild(closeBtn);
 }
 
-int TabWnd::Idx() {
+int TabCtrl::Idx() {
     return tabsCtrl ? tabsCtrl->tabs.Find(ti) : -1;
 }
 
-bool TabWnd::IsSelected() {
+bool TabCtrl::IsSelected() {
     int idx = Idx();
     if (idx < 0) {
         return false;
@@ -125,11 +125,11 @@ bool TabWnd::IsSelected() {
     return idx == tc->selectedIdx;
 }
 
-bool TabWnd::IsUnderMouse() {
+bool TabCtrl::IsUnderMouse() {
     return tabsCtrl && tabsCtrl->tabHighlighted == Idx();
 }
 
-COLORREF TabWnd::BgColor() {
+COLORREF TabCtrl::BgColor() {
     COLORREF selected = ThemeControlBackgroundColor();
     bool isSelected = IsSelected();
     bool isUnderMouse = IsUnderMouse();
@@ -146,13 +146,13 @@ COLORREF TabWnd::BgColor() {
     return AccentColor(selected, isUnderMouse ? 35 : 25);
 }
 
-Size TabWnd::GetIdealSize() {
+Size TabCtrl::GetIdealSize() {
     return idealSize;
 }
 
 // the ✕ is inset from the tab's edge, but its hit area is the whole gutter
 // (~40 DIP, full height) so it stays easy to hit
-void TabWnd::SetBounds(Rect r) {
+void TabCtrl::SetBounds(Rect r) {
     VirtCtrl::SetBounds(r);
     HWND hwnd = GetHwnd();
     int dx = r.dx;
@@ -204,14 +204,14 @@ void TabWnd::SetBounds(Rect r) {
     closeBtn->SetBounds(hit);
 }
 
-bool TabWnd::CloseVisible() {
+bool TabCtrl::CloseVisible() {
     if (!ti->canClose) {
         return false;
     }
     return IsSelected() || (IsUnderMouse() && bounds.dx >= kMinTabWidthForClose);
 }
 
-void TabWnd::Paint(VirtPaintCtx& ctx) {
+void TabCtrl::Paint(VirtPaintCtx& ctx) {
     HDC hdc = GfxHdc(ctx.gfx);
     HWND hwnd = GetHwnd();
     Rect r = ctx.bounds;
@@ -278,22 +278,22 @@ void TabWnd::Paint(VirtPaintCtx& ctx) {
     closeBtn->circleColor = tabBgCol;
 }
 
-void TabWnd::OnMouseDown(VirtMouseEvent* ev) {
+void TabCtrl::OnMouseDown(VirtMouseEvent* ev) {
     tabsCtrl->OnTabMouseDown(this, *ev);
     ev->didHandle = true;
 }
 
-void TabWnd::OnMouseUp(VirtMouseEvent* ev) {
+void TabCtrl::OnMouseUp(VirtMouseEvent* ev) {
     // the drag / migration handling needs capture and screen coordinates, so it
     // stays in the control's WndProc
     ev->didHandle = true;
 }
 
-void TabWnd::OnGetTooltip(VirtTooltipEvent* ev) {
+void TabCtrl::OnGetTooltip(VirtTooltipEvent* ev) {
     ev->tip = str::DupTemp(ti->tooltip);
 }
 
-static void TabCloseClicked(TabWnd* tab, VirtMouseEvent*) {
+static void TabCloseClicked(TabCtrl* tab, VirtMouseEvent*) {
     tab->tabsCtrl->CloseTab(tab->Idx());
 }
 
@@ -304,7 +304,7 @@ TabsCtrl::TabsCtrl() {
 }
 
 TabsCtrl::~TabsCtrl() {
-    // ~ControlBase deletes vroot and layout (which owns the TabWnds)
+    // ~ControlBase deletes vroot and layout (which owns the TabCtrls)
     delete tooltip;
 }
 
@@ -320,16 +320,16 @@ int TabsCtrl::TabCount() {
     return len(tabs);
 }
 
-TabWnd* TabsCtrl::TabWndAt(int idx) {
+TabCtrl* TabsCtrl::TabCtrlAt(int idx) {
     if (!IsValidIdx(idx)) {
         return nullptr;
     }
-    return tabWnds[idx];
+    return tabCtrls[idx];
 }
 
 // the tab wnds are rebuilt whenever the tab list changes: there are few of them
 // and it keeps the tree and the list impossible to get out of step
-void TabsCtrl::RebuildTabWnds() {
+void TabsCtrl::RebuildTabCtrls() {
     if (!bar) {
         return;
     }
@@ -338,19 +338,19 @@ void TabsCtrl::RebuildTabWnds() {
         delete c.layout;
     }
     bar->children.Reset();
-    tabWnds.Reset();
+    tabCtrls.Reset();
     int n = TabCount();
     for (int i = 0; i < n; i++) {
-        auto* w = new TabWnd();
+        auto* w = new TabCtrl();
         w->tabsCtrl = this;
         w->ti = tabs[i];
-        tabWnds.Append(w);
+        tabCtrls.Append(w);
     }
     // RTL tabs run right to left, which for the box means reversed children
     bool isRtl = IsTabsRtl(hwnd);
     bar->alignMain = isRtl ? MainAxisAlign::MainEnd : MainAxisAlign::MainStart;
     for (int i = 0; i < n; i++) {
-        bar->AddChild(tabWnds[isRtl ? (n - 1 - i) : i]);
+        bar->AddChild(tabCtrls[isRtl ? (n - 1 - i) : i]);
     }
 }
 
@@ -379,7 +379,7 @@ void TabsCtrl::LayoutTabs() {
     }
 
     for (int i = 0; i < nTabs; i++) {
-        tabWnds[i]->idealSize = tabSize;
+        tabCtrls[i]->idealSize = tabSize;
     }
     bar->Layout(Tight({rect.dx, rect.dy}));
     bar->SetBounds(rect);
@@ -392,7 +392,7 @@ void TabsCtrl::LayoutTabs() {
         for (int i = 0; i < nTabs; i++) {
             tools[i].s = tabs[i]->tooltip;
             tools[i].id = i;
-            tools[i].r = tabWnds[i]->bounds;
+            tools[i].r = tabCtrls[i]->bounds;
         }
         TooltipRemoveAll(tooltip->hwnd);
         TooltipAddTools(tooltip->hwnd, hwnd, tools, nTabs);
@@ -408,11 +408,11 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     Point ptLocal{0, 0};
     VirtCtrl* hit = vroot->WndFromPoint(p, &ptLocal);
     // the only child of a tab is its ✕, so anything below a tab is the ✕
-    bool overClose = hit && hit->parent && IsVirtCtrlOfKind(hit->parent, kindTabWnd);
-    TabWnd* tab = nullptr;
+    bool overClose = hit && hit->parent && IsVirtCtrlOfKind(hit->parent, kindTabCtrl);
+    TabCtrl* tab = nullptr;
     for (VirtCtrl* w = hit; w; w = w->parent) {
-        if (IsVirtCtrlOfKind(w, kindTabWnd)) {
-            tab = (TabWnd*)w;
+        if (IsVirtCtrlOfKind(w, kindTabCtrl)) {
+            tab = (TabCtrl*)w;
             break;
         }
     }
@@ -437,7 +437,7 @@ void TabsCtrl::UpdateHover(int tabUnderMouse) {
     tabHighlighted = tabUnderMouse;
     int n = TabCount();
     for (int i = 0; i < n; i++) {
-        TabWnd* w = tabWnds[i];
+        TabCtrl* w = tabCtrls[i];
         auto vis = w->CloseVisible() ? Visibility::Visible : Visibility::Collapse;
         if (w->closeBtn->visibility != vis) {
             w->closeBtn->visibility = vis;
@@ -451,7 +451,7 @@ void TabsCtrl::UpdateHover(int tabUnderMouse) {
 
 HBITMAP TabsCtrl::RenderForDragging(int idx) {
     TabInfo* ti = GetTab(idx);
-    TabWnd* tw = TabWndAt(idx);
+    TabCtrl* tw = TabCtrlAt(idx);
     if (!ti || !tw) {
         return nullptr;
     }
@@ -586,14 +586,14 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
         tabIdxTo -= 1;
     }
     tabs.InsertAt(tabIdxTo, moved);
-    tabsCtrl->RebuildTabWnds();
+    tabsCtrl->RebuildTabCtrls();
     tabsCtrl->SetSelected(tabIdxTo);
     tabsCtrl->LayoutTabs();
     TabsCtrlUpdateAfterChangingTabsCount(tabsCtrl);
 }
 
 // clicking a tab selects it (and arms a possible drag)
-void TabsCtrl::OnTabMouseDown(TabWnd* tab, VirtMouseEvent& ev) {
+void TabsCtrl::OnTabMouseDown(TabCtrl* tab, VirtMouseEvent& ev) {
     int idx = tab->Idx();
     UpdateHover(idx);
     if (idx != selectedIdx) {
@@ -676,11 +676,11 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
     // Check if mouse has moved beyond system drag threshold
     bool beyondDragThreshold = false;
     if (msg == WM_MOUSEMOVE && GetCapture() == hwnd && !draggingTab) {
-        TabWnd* hlWnd = TabWndAt(tabHighlighted);
-        if (hlWnd) {
+        TabCtrl* hlCtrl = TabCtrlAt(tabHighlighted);
+        if (hlCtrl) {
             int cxDrag = GetSystemMetrics(SM_CXDRAG);
             int cyDrag = GetSystemMetrics(SM_CYDRAG);
-            Rect r = hlWnd->bounds;
+            Rect r = hlCtrl->bounds;
             beyondDragThreshold =
                 (abs(mousePos.x - grabLocation.x - r.x) > cxDrag) || (abs(mousePos.y - grabLocation.y - r.y) > cyDrag);
         }
@@ -744,9 +744,9 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                 }
                 // move the tab out: draw it as a image and drag around the screen
                 draggingTab = true;
-                TabWnd* hlWnd = TabWndAt(hl);
+                TabCtrl* hlCtrl = TabCtrlAt(hl);
                 HBITMAP hbmp = RenderForDragging(hl);
-                if (!hbmp || !hlWnd) {
+                if (!hbmp || !hlCtrl) {
                     logfa("TabsCtrl::WndProc: RenderForDragging failed for tab %d\n", hl);
                     {
                         ev->result = 0;
@@ -754,7 +754,7 @@ void TabsCtrl::WndProc(ControlBase::WndProcEvent* ev) {
                         return;
                     }
                 }
-                Rect r = hlWnd->bounds;
+                Rect r = hlCtrl->bounds;
                 HIMAGELIST himl = ImageList_Create(r.dx, r.dy, 0, 1, 0);
                 ImageList_Add(himl, hbmp, nullptr);
                 ImageList_BeginDrag(himl, 0, grabLocation.x, grabLocation.y);
@@ -1013,7 +1013,7 @@ Size TabsCtrl::GetIdealSize() {
 int TabsCtrl::InsertTab(int idx, TabInfo* tab, bool update) {
     ReportIf(idx < 0);
     tabs.InsertAt(idx, tab);
-    RebuildTabWnds();
+    RebuildTabCtrls();
     if (update) {
         // LayoutTabs() must be before SetSelected() because SetSelected()
         // triggers sync repaint which paints tab texts in wrong positions
@@ -1058,7 +1058,7 @@ UINT_PTR TabsCtrl::RemoveTab(int idx) {
     UINT_PTR userData = tab->userData;
     tabs.RemoveAt(idx);
     delete tab;
-    RebuildTabWnds();
+    RebuildTabCtrls();
     if (TabCount() > 0 && selectedTab >= 0) {
         if (idx < selectedTab) {
             selectedTab--;
@@ -1078,7 +1078,7 @@ void TabsCtrl::SwapTabs(int idx1, int idx2) {
     TabInfo* tmp = tabs[idx1];
     tabs[idx1] = tabs[idx2];
     tabs[idx2] = tmp;
-    RebuildTabWnds();
+    RebuildTabCtrls();
 }
 
 // Note: the caller should take care of deleting userData
@@ -1086,7 +1086,7 @@ void TabsCtrl::RemoveAllTabs() {
     DeleteVecMembers(tabs);
     tabs.Reset();
     selectedIdx = -1;
-    RebuildTabWnds();
+    RebuildTabCtrls();
     LayoutTabs();
     TabsCtrlUpdateAfterChangingTabsCount(this);
 }

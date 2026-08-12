@@ -9090,8 +9090,8 @@ static void DebugCorruptMemory() {
 
 // a VirtImage doesn't own the Pixmap it shows, so a notification that
 // generates one needs a wnd that frees it when the tree goes away
-struct OwnedPixmapWnd : VirtImage {
-    ~OwnedPixmapWnd() override { FreePixmap(pixmap); }
+struct OwnedPixmapCtrl : VirtImage {
+    ~OwnedPixmapCtrl() override { FreePixmap(pixmap); }
 };
 
 // a gradient, so that there is something recognizable to look at
@@ -9121,7 +9121,7 @@ static ILayout* MakeDebugPixmapNotifContent(HWND hwnd) {
     auto* box = new VBox();
     box->alignCross = CrossAxisAlign::CrossCenter;
 
-    auto* img = new OwnedPixmapWnd();
+    auto* img = new OwnedPixmapCtrl();
     img->pixmap = MakeDebugGradientPixmap(DpiScale(hwnd, 120), DpiScale(hwnd, 40));
     img->fitToBounds = false;
     box->AddChild(img);

@@ -250,11 +250,11 @@ static AboutRow gAboutRows[] = {
 // left column is right-aligned and right column left-aligned, which is what the
 // hand-rolled geometry used to do. Rows with a url become VirtLink (owning
 // the hit-testing, the hand cursor and the tooltip), the rest plain VirtText.
-static Kind kindAboutWnd = "aboutWnd";
+static Kind kindAboutCtrl = "aboutCtrl";
 
 struct SumatraLogo;
 
-struct AboutWnd : VirtCtrl {
+struct AboutCtrl : VirtCtrl {
     // the two text columns; a container of its own so that rebuilding the rows
     // can't take the sibling showFreqRead link with it
     VirtTable* table = nullptr;
@@ -268,7 +268,7 @@ struct AboutWnd : VirtCtrl {
     Size headerSize; // the "SumatraPDF" band on top of it
     int dividerX = 0;
 
-    AboutWnd();
+    AboutCtrl();
     void Sync(HDC hdc);
     void UpdateLayout(HWND hwnd, Rect clientRc);
     VirtText* LeftAt(int i);
@@ -357,19 +357,19 @@ static TempStr TrimGitTemp(Str s) {
 }
 
 // the About screen's virtual controls for one HWND. Positions come from
-// AboutWnd::UpdateLayout(), so the root must not run a layout of its own
-static AboutWnd* EnsureAboutWnd(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
+// AboutCtrl::UpdateLayout(), so the root must not run a layout of its own
+static AboutCtrl* EnsureAboutCtrl(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
     VirtRoot* root = *rootPtr;
     if (!root) {
         root = new VirtRoot(hwnd);
         *rootPtr = root;
     }
-    if (!IsVirtCtrlOfKind(root->owned, kindAboutWnd)) {
-        root->SetChild(new AboutWnd());
+    if (!IsVirtCtrlOfKind(root->owned, kindAboutCtrl)) {
+        root->SetChild(new AboutCtrl());
     }
     root->bounds = clientRc;
     root->needsLayout = false;
-    auto* about = (AboutWnd*)root->owned;
+    auto* about = (AboutCtrl*)root->owned;
     about->SetBounds(clientRc);
     return about;
 }
@@ -382,8 +382,8 @@ static int AboutRowCount() {
     return n;
 }
 
-AboutWnd::AboutWnd() {
-    kind = kindAboutWnd;
+AboutCtrl::AboutCtrl() {
+    kind = kindAboutCtrl;
     flags |= vwfNoHitTest;
     table = new VirtTable();
     AddChild(table);
@@ -391,17 +391,17 @@ AboutWnd::AboutWnd() {
     AddChild(logo);
 }
 
-VirtText* AboutWnd::LeftAt(int i) {
+VirtText* AboutCtrl::LeftAt(int i) {
     return (VirtText*)table->GetCell(i, 0);
 }
 
-VirtText* AboutWnd::RightAt(int i) {
+VirtText* AboutCtrl::RightAt(int i) {
     return (VirtText*)table->GetCell(i, 1);
 }
 
 // build the table once, then keep text, fonts and colors in step with the theme
 // and the DPI. Sizing happens in UpdateLayout(), which measures what we set here
-void AboutWnd::Sync(HDC hdc) {
+void AboutCtrl::Sync(HDC hdc) {
     int n = AboutRowCount();
     bool canAccessDisk = CanAccessDisk();
     if (table->rows != n) {
@@ -457,7 +457,7 @@ void AboutWnd::Sync(HDC hdc) {
 
 // the About box is the title band above the two-column table. This sizes it from
 // the table, centers it in clientRc and positions the table inside it
-void AboutWnd::UpdateLayout(HWND hwnd, Rect clientRc) {
+void AboutCtrl::UpdateLayout(HWND hwnd, Rect clientRc) {
     headerSize = logo->GetIdealSize();
 
     int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
@@ -486,18 +486,18 @@ void AboutWnd::UpdateLayout(HWND hwnd, Rect clientRc) {
 }
 
 // prepares the About tree for hwnd and computes its geometry
-static AboutWnd* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
-    AboutWnd* about = EnsureAboutWnd(rootPtr, hwnd, clientRc);
+static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
+    AboutCtrl* about = EnsureAboutCtrl(rootPtr, hwnd, clientRc);
     about->Sync(hdc);
     about->UpdateLayout(hwnd, clientRc);
     return about;
 }
 
-/* Draws the about screen. The text columns are painted by the AboutWnd tree;
+/* Draws the about screen. The text columns are painted by the AboutCtrl tree;
    this draws the frame around them. It transcribes the design I did in graphics
    software - hopeless to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, VirtRoot* root) {
-    auto* about = (AboutWnd*)root->owned;
+    auto* about = (AboutCtrl*)root->owned;
     Rect rect = about->aboutRect;
     auto col = ThemeWindowTextColor();
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
@@ -720,7 +720,7 @@ void ShowAboutWindow(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(gHwndAbout, &ps);
     SetLayout(hdc, LAYOUT_LTR);
-    AboutWnd* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, hdc, HwndClientRect(gHwndAbout));
+    AboutCtrl* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, hdc, HwndClientRect(gHwndAbout));
     Rect rc = about->aboutRect;
     EndPaint(gHwndAbout, &ps);
     int rectPadding = DpiScale(gHwndAbout, kAboutRectPadding);
@@ -746,7 +746,7 @@ static void ShowFrequentlyRead(VirtMouseEvent* ev) {
 void DrawAboutPage(MainWindow* win, HDC hdc) {
     HWND hwnd = win->hwndCanvas;
     Rect clientRc = HwndClientRect(hwnd);
-    AboutWnd* about = UpdateAboutLayout(&win->homeRoot, hwnd, hdc, clientRc);
+    AboutCtrl* about = UpdateAboutLayout(&win->homeRoot, hwnd, hdc, clientRc);
 
     bool showLink = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles();
     if (showLink && !about->showFreqRead) {
@@ -886,68 +886,68 @@ HomePageLayout::~HomePageLayout() = default;
 // Leaf home-page controls: no MainWindow*. Wire onClick / hwndForCmds when
 // building the chrome so the same VirtCtrl types stay reusable.
 
-struct HomeViewIconWnd : VirtCtrl {
+struct HomeViewIconCtrl : VirtCtrl {
     Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
 
-    HomeViewIconWnd();
+    HomeViewIconCtrl();
     void Paint(VirtPaintCtx&) override;
 };
 
-struct HomeOpenDocWnd : VirtCtrl {
+struct HomeOpenDocCtrl : VirtCtrl {
     Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     VirtText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
 
-    HomeOpenDocWnd();
+    HomeOpenDocCtrl();
     void Paint(VirtPaintCtx&) override;
 };
 
-struct HomeHelpBtnWnd : VirtCtrl {
-    HomeHelpBtnWnd();
+struct HomeHelpBtnCtrl : VirtCtrl {
+    HomeHelpBtnCtrl();
     void Paint(VirtPaintCtx&) override;
 };
 
-struct HomeEntryWnd;
+struct HomeEntryCtrl;
 
 // the pin icon of a list-view row. It is drawn by DrawHomeListRow, so this is a
 // hit target only (the row's ✕ is a VirtCloseButton, which draws itself)
-struct HomeListIconWnd : VirtCtrl {
+struct HomeListIconCtrl : VirtCtrl {
     bool isPin = true;
 
-    HomeListIconWnd();
+    HomeListIconCtrl();
     void OnGetTooltip(VirtTooltipEvent*);
 };
 
 // one file entry (a thumbnail or a list row). Painting still happens in
 // DrawHomePageLayout(); this owns hit-testing, hover and clicks
-struct HomeEntryWnd : VirtCtrl {
+struct HomeEntryCtrl : VirtCtrl {
     Str filePath; // owned
     int idx = 0;
     VirtCloseButton* closeBtn = nullptr;
     VirtCloseButton* removeBtn = nullptr;
-    HomeListIconWnd* pinBtn = nullptr;
+    HomeListIconCtrl* pinBtn = nullptr;
 
-    HomeEntryWnd();
-    ~HomeEntryWnd() override;
+    HomeEntryCtrl();
+    ~HomeEntryCtrl() override;
 };
 
 // page-level list: still knows the MainWindow so it can wire entry actions and
 // keep keyboard selection in sync
-struct HomeEntriesWnd : VirtCtrl {
+struct HomeEntriesCtrl : VirtCtrl {
     MainWindow* win = nullptr;
     // entry the mouse is on, -1 for none. Drives the ✕ button and the keyboard
     // selection, which follows the mouse
     int activeIdx = -1;
     Point lastHoverPt{-1, -1};
 
-    HomeEntriesWnd();
+    HomeEntriesCtrl();
     void OnMouseMove(VirtMouseEvent*);
 
-    HomeEntryWnd* EntryAt(int idx);
-    HomeEntryWnd* EntryForWnd(VirtCtrl*);
+    HomeEntryCtrl* EntryAt(int idx);
+    HomeEntryCtrl* EntryForCtrl(VirtCtrl*);
     void SetEntryCount(int n);
     void SetActiveEntry(int idx);
     void UpdateCloseBtnVisibility();
@@ -956,32 +956,32 @@ struct HomeEntriesWnd : VirtCtrl {
 // the tip band at the bottom. The markup is its VirtRichText child, which draws
 // itself and runs its own links; clicking the band anywhere else picks another
 // tip
-struct HomeTipWnd : VirtCtrl {
+struct HomeTipCtrl : VirtCtrl {
     // for link commands inside the tip markup (like VirtRichText)
     HWND hwndForCmds = nullptr;
     // onClick (VirtCtrl): band click outside a link picks another tip
     VirtRichText* rich = nullptr; // owned, as our only child
     Str richFor;                  // owned, the markup `rich` was parsed from
 
-    ~HomeTipWnd() override;
+    ~HomeTipCtrl() override;
     void SetTipLine(Str line, PlatformFont* font);
     void Sync(const Rect& rcTip, const Rect& rcText);
 };
 
-static Kind kindHomeChromeWnd = "homeChromeWnd";
+static Kind kindHomeChromeCtrl = "homeChromeCtrl";
 
-struct HomeChromeWnd : VirtCtrl {
-    HomeTipWnd* tip = nullptr;
-    HomeEntriesWnd* entries = nullptr;
+struct HomeChromeCtrl : VirtCtrl {
+    HomeTipCtrl* tip = nullptr;
+    HomeEntriesCtrl* entries = nullptr;
     VirtText* hdr = nullptr;
-    HomeViewIconWnd* thumbView = nullptr;
-    HomeViewIconWnd* listView = nullptr;
-    HomeOpenDocWnd* openDoc = nullptr;
-    HomeHelpBtnWnd* helpBtn = nullptr;
+    HomeViewIconCtrl* thumbView = nullptr;
+    HomeViewIconCtrl* listView = nullptr;
+    HomeOpenDocCtrl* openDoc = nullptr;
+    HomeHelpBtnCtrl* helpBtn = nullptr;
 };
 
-static HomeChromeWnd* EnsureHomeChrome(MainWindow* win);
-static HomeEntriesWnd* HomeEntries(MainWindow* win);
+static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win);
+static HomeEntriesCtrl* HomeEntries(MainWindow* win);
 static void HomePageSyncChrome(HomePageLayout& l);
 
 constexpr int kOpenDocumentYShift = 7;
@@ -1369,7 +1369,7 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
-    HomeChromeWnd* chrome = EnsureHomeChrome(win);
+    HomeChromeCtrl* chrome = EnsureHomeChrome(win);
     VirtText* hdr = chrome->hdr;
     hdr->SetText(txt);
     hdr->font = GetPlatformFont(hdrFont);
@@ -1471,7 +1471,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
-    HomeChromeWnd* chrome = EnsureHomeChrome(win);
+    HomeChromeCtrl* chrome = EnsureHomeChrome(win);
     VirtText* hdr = chrome->hdr;
     hdr->SetText(txt);
     hdr->font = GetPlatformFont(hdrFont);
@@ -1553,9 +1553,9 @@ static void LayoutHomePage(HomePageLayout& l) {
     // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
     int tipHeight = 0;
     HFONT fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
-    HomeTipWnd* tipWnd = EnsureHomeChrome(l.win)->tip;
-    tipWnd->SetTipLine(SelectedTipLine(), GetPlatformFont(fontTip));
-    VirtRichText* tip = tipWnd->rich;
+    HomeTipCtrl* tipCtrl = EnsureHomeChrome(l.win)->tip;
+    tipCtrl->SetTipLine(SelectedTipLine(), GetPlatformFont(fontTip));
+    VirtRichText* tip = tipCtrl->rich;
     if (tip) {
         int tipPadding = DpiScale(hdc, 8);
         tipHeight = tip->MinIntrinsicHeight(thumbsContentWidth) + (2 * tipPadding);
@@ -1727,7 +1727,7 @@ static void GetFileStateIcon(FileState* fs) {
 // under the mouse) rather than as a separate top-level window. The separate
 // window could be left behind, drawing stray crosses over a document (#5745).
 // Styled like the tab close button (gray X on a white circle; red circle +
-// white X on hover). It is a HomeCloseBtnWnd in the chrome tree, shown on the
+// white X on hover). It is a HomeCloseBtnCtrl in the chrome tree, shown on the
 // entry the mouse is on.
 
 static void DrawHomeViewButton(HDC hdc, Pixmap* icon, Rect r, bool selected) {
@@ -1932,20 +1932,20 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 
 //--- home page chrome VirtCtrls
 
-HomeViewIconWnd::HomeViewIconWnd() {
+HomeViewIconCtrl::HomeViewIconCtrl() {
     cursor = IDC_HAND;
 }
 
-void HomeViewIconWnd::Paint(VirtPaintCtx& ctx) {
+void HomeViewIconCtrl::Paint(VirtPaintCtx& ctx) {
     bool selected = (listView == HomePageIsListView());
     DrawHomeViewButton(GfxHdc(ctx.gfx), pixmap, ctx.bounds, selected);
 }
 
-HomeOpenDocWnd::HomeOpenDocWnd() {
+HomeOpenDocCtrl::HomeOpenDocCtrl() {
     cursor = IDC_HAND;
 }
 
-void HomeOpenDocWnd::Paint(VirtPaintCtx& ctx) {
+void HomeOpenDocCtrl::Paint(VirtPaintCtx& ctx) {
     if (!pixmap) {
         return;
     }
@@ -1953,23 +1953,23 @@ void HomeOpenDocWnd::Paint(VirtPaintCtx& ctx) {
     GfxDrawPixmap(ctx.gfx, pixmap, r);
 }
 
-HomeHelpBtnWnd::HomeHelpBtnWnd() {
+HomeHelpBtnCtrl::HomeHelpBtnCtrl() {
     cursor = IDC_HAND;
     SetTooltip(_TRA("Keyboard Shortcuts"));
 }
 
-void HomeHelpBtnWnd::Paint(VirtPaintCtx& ctx) {
+void HomeHelpBtnCtrl::Paint(VirtPaintCtx& ctx) {
     DrawHomeHelpButton(GfxHdc(ctx.gfx), ctx.bounds);
 }
 
 //--- tip links
 
-HomeTipWnd::~HomeTipWnd() {
+HomeTipCtrl::~HomeTipCtrl() {
     str::Free(richFor);
 }
 
 // re-parses when the markup changes; the parse is what the band draws
-void HomeTipWnd::SetTipLine(Str line, PlatformFont* font) {
+void HomeTipCtrl::SetTipLine(Str line, PlatformFont* font) {
     if (rich && str::Eq(richFor, line)) {
         rich->font = font;
         rich->hwndForCmds = hwndForCmds;
@@ -1990,7 +1990,7 @@ void HomeTipWnd::SetTipLine(Str line, PlatformFont* font) {
 }
 
 // rcTip is the whole band (its background), rcText where the markup goes
-void HomeTipWnd::Sync(const Rect& rcTip, const Rect& rcText) {
+void HomeTipCtrl::Sync(const Rect& rcTip, const Rect& rcText) {
     if (!rich || rcTip.IsEmpty()) {
         visibility = Visibility::Collapse;
         return;
@@ -2018,7 +2018,7 @@ static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
 
 // the ✕ of a thumbnail / list row: forget the file it belongs to
 static void HomeForgetEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
-    auto* entry = (HomeEntryWnd*)ev->target->parent;
+    auto* entry = (HomeEntryCtrl*)ev->target->parent;
     TempStr path = str::DupTemp(entry->filePath);
     if (len(path) > 0) {
         ForgetFileFromFrequentlyRead(win, path);
@@ -2026,7 +2026,7 @@ static void HomeForgetEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
 }
 
 static void HomePinEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
-    auto* entry = (HomeEntryWnd*)ev->target->parent;
+    auto* entry = (HomeEntryCtrl*)ev->target->parent;
     TempStr path = str::DupTemp(entry->filePath);
     if (len(path) == 0) {
         return;
@@ -2042,7 +2042,7 @@ static void HomePinEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
 }
 
 static void HomeEntryOpenClicked(MainWindow* win, VirtMouseEvent* ev) {
-    auto* entry = (HomeEntryWnd*)ev->target;
+    auto* entry = (HomeEntryCtrl*)ev->target;
     if (len(entry->filePath) == 0) {
         return;
     }
@@ -2054,7 +2054,7 @@ static void HomeEntryOpenClicked(MainWindow* win, VirtMouseEvent* ev) {
 }
 
 static void HomeViewModeClicked(MainWindow* win, VirtMouseEvent* ev) {
-    auto* btn = (HomeViewIconWnd*)ev->target;
+    auto* btn = (HomeViewIconCtrl*)ev->target;
     if (btn->listView == HomePageIsListView()) {
         return;
     }
@@ -2077,47 +2077,47 @@ static void HomeTipBandClicked(MainWindow* win, VirtMouseEvent*) {
     win->RedrawAll(true);
 }
 
-HomeListIconWnd::HomeListIconWnd() {
+HomeListIconCtrl::HomeListIconCtrl() {
     cursor = IDC_HAND;
-    onGetTooltip = MkMethod1<HomeListIconWnd, VirtTooltipEvent*, &HomeListIconWnd::OnGetTooltip>(this);
+    onGetTooltip = MkMethod1<HomeListIconCtrl, VirtTooltipEvent*, &HomeListIconCtrl::OnGetTooltip>(this);
 }
 
-void HomeListIconWnd::OnGetTooltip(VirtTooltipEvent* ev) {
-    auto* entry = (HomeEntryWnd*)parent;
+void HomeListIconCtrl::OnGetTooltip(VirtTooltipEvent* ev) {
+    auto* entry = (HomeEntryCtrl*)parent;
     FileState* fs = gFileHistory.FindByPath(entry->filePath);
     bool pinned = fs && fs->isPinned;
     ev->tip = str::DupTemp(pinned ? _TRA("Unpin") : _TRA("Pin"));
 }
 
-HomeEntryWnd::~HomeEntryWnd() {
+HomeEntryCtrl::~HomeEntryCtrl() {
     str::Free(filePath);
 }
 
-HomeEntryWnd::HomeEntryWnd() {
+HomeEntryCtrl::HomeEntryCtrl() {
     cursor = IDC_HAND;
 }
 
-HomeEntryWnd* HomeEntriesWnd::EntryAt(int idx) {
-    return (HomeEntryWnd*)ChildAt(idx);
+HomeEntryCtrl* HomeEntriesCtrl::EntryAt(int idx) {
+    return (HomeEntryCtrl*)ChildAt(idx);
 }
 
 // the wnd the mouse is on may be one of an entry's buttons
-HomeEntryWnd* HomeEntriesWnd::EntryForWnd(VirtCtrl* w) {
+HomeEntryCtrl* HomeEntriesCtrl::EntryForCtrl(VirtCtrl* w) {
     while (w && w != this) {
         if (w->parent == this) {
-            return (HomeEntryWnd*)w;
+            return (HomeEntryCtrl*)w;
         }
         w = w->parent;
     }
     return nullptr;
 }
 
-void HomeEntriesWnd::SetEntryCount(int n) {
+void HomeEntriesCtrl::SetEntryCount(int n) {
     while (ChildCount() > n) {
         RemoveChild(children[ChildCount() - 1], true);
     }
     while (ChildCount() < n) {
-        auto* e = new HomeEntryWnd();
+        auto* e = new HomeEntryCtrl();
         e->idx = ChildCount();
         e->onClick = MkFunc1(HomeEntryOpenClicked, win);
 
@@ -2135,7 +2135,7 @@ void HomeEntriesWnd::SetEntryCount(int n) {
         e->removeBtn->visibility = Visibility::Collapse;
         e->AddChild(e->removeBtn);
 
-        e->pinBtn = new HomeListIconWnd();
+        e->pinBtn = new HomeListIconCtrl();
         e->pinBtn->onClick = MkFunc1(HomePinEntryClicked, win);
         e->pinBtn->visibility = Visibility::Collapse;
         e->AddChild(e->pinBtn);
@@ -2148,17 +2148,17 @@ void HomeEntriesWnd::SetEntryCount(int n) {
 }
 
 // the ✕ shows on the entry the mouse is on, and only in thumbnail view
-void HomeEntriesWnd::UpdateCloseBtnVisibility() {
+void HomeEntriesCtrl::UpdateCloseBtnVisibility() {
     bool canShow = CanAccessDisk() && !HomePageIsListView();
     int n = ChildCount();
     for (int i = 0; i < n; i++) {
-        HomeEntryWnd* e = EntryAt(i);
+        HomeEntryCtrl* e = EntryAt(i);
         bool show = canShow && (i == activeIdx);
         e->closeBtn->visibility = show ? Visibility::Visible : Visibility::Collapse;
     }
 }
 
-void HomeEntriesWnd::SetActiveEntry(int idx) {
+void HomeEntriesCtrl::SetActiveEntry(int idx) {
     if (idx == activeIdx) {
         return;
     }
@@ -2176,11 +2176,11 @@ void HomeEntriesWnd::SetActiveEntry(int idx) {
 
 // mouse events bubble up to us from the entry (or one of its buttons) that was
 // hit, so this is where the active entry is tracked
-HomeEntriesWnd::HomeEntriesWnd() {
-    onMouseMove = MkMethod1<HomeEntriesWnd, VirtMouseEvent*, &HomeEntriesWnd::OnMouseMove>(this);
+HomeEntriesCtrl::HomeEntriesCtrl() {
+    onMouseMove = MkMethod1<HomeEntriesCtrl, VirtMouseEvent*, &HomeEntriesCtrl::OnMouseMove>(this);
 }
 
-void HomeEntriesWnd::OnMouseMove(VirtMouseEvent* ev) {
+void HomeEntriesCtrl::OnMouseMove(VirtMouseEvent* ev) {
     // keyboard nav invalidates the canvas and Windows may re-send WM_MOUSEMOVE
     // with the same coordinates: ignore those so the selection doesn't snap
     // back under a stationary cursor
@@ -2188,50 +2188,50 @@ void HomeEntriesWnd::OnMouseMove(VirtMouseEvent* ev) {
         return;
     }
     lastHoverPt = ev->ptWindow;
-    HomeEntryWnd* e = EntryForWnd(ev->hit);
+    HomeEntryCtrl* e = EntryForCtrl(ev->hit);
     SetActiveEntry(e ? e->idx : -1);
     return;
 }
 
 // created once per window so that hover / pressed state survives the repaints
 // that scrolling and filtering cause
-static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
+static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     // the canvas root holds either the home page's chrome or the About page's
     // controls, depending on which one is showing
-    if (win->homeRoot && IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
-        return (HomeChromeWnd*)win->homeRoot->owned;
+    if (win->homeRoot && IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeCtrl)) {
+        return (HomeChromeCtrl*)win->homeRoot->owned;
     }
     HWND hwnd = win->hwndCanvas;
     if (!win->homeRoot) {
         win->homeRoot = new VirtRoot(hwnd);
     }
 
-    auto* chrome = new HomeChromeWnd();
-    chrome->kind = kindHomeChromeWnd;
+    auto* chrome = new HomeChromeCtrl();
+    chrome->kind = kindHomeChromeCtrl;
     chrome->flags |= vwfNoHitTest;
 
     // first, so that the rest of the chrome (notably the help button, which can
     // overlap the thumbnails) hit-tests and paints on top of the entries
     // below everything else: the tip band sits at the bottom of the page
-    chrome->tip = new HomeTipWnd();
+    chrome->tip = new HomeTipCtrl();
     chrome->tip->hwndForCmds = win->hwndFrame;
     chrome->tip->onClick = MkFunc1(HomeTipBandClicked, win);
     chrome->AddChild(chrome->tip);
 
-    chrome->entries = new HomeEntriesWnd();
+    chrome->entries = new HomeEntriesCtrl();
     chrome->entries->win = win;
     // hit-testable so that moving into the gaps between thumbnails still
     // reaches OnMouseMove() and clears the active entry
     chrome->entries->flags |= vwfClipChildren;
     chrome->AddChild(chrome->entries);
 
-    chrome->thumbView = new HomeViewIconWnd();
+    chrome->thumbView = new HomeViewIconCtrl();
     chrome->thumbView->listView = false;
     chrome->thumbView->SetTooltip(_TRA("Show as thumbnails"));
     chrome->thumbView->onClick = MkFunc1(HomeViewModeClicked, win);
     chrome->AddChild(chrome->thumbView);
 
-    chrome->listView = new HomeViewIconWnd();
+    chrome->listView = new HomeViewIconCtrl();
     chrome->listView->listView = true;
     chrome->listView->SetTooltip(_TRA("Show as list"));
     chrome->listView->onClick = MkFunc1(HomeViewModeClicked, win);
@@ -2240,14 +2240,14 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     chrome->hdr = new VirtText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
-    chrome->openDoc = new HomeOpenDocWnd();
+    chrome->openDoc = new HomeOpenDocCtrl();
     chrome->openDoc->text = new VirtText(StrL(""));
     chrome->openDoc->text->withUnderline = true;
     chrome->openDoc->AddChild(chrome->openDoc->text);
     chrome->openDoc->onClick = MkFunc1(HomeOpenDocClicked, win);
     chrome->AddChild(chrome->openDoc);
 
-    chrome->helpBtn = new HomeHelpBtnWnd();
+    chrome->helpBtn = new HomeHelpBtnCtrl();
     chrome->helpBtn->onClick = MkFunc1(HomeHelpClicked, win);
     chrome->AddChild(chrome->helpBtn);
 
@@ -2282,7 +2282,7 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
         // moving outside the entries band (or off the canvas) drops the active
         // entry, so the ✕ button goes away
         if (msg == WM_MOUSEMOVE && !root->hovered) {
-            HomeEntriesWnd* entries = HomeEntries(win);
+            HomeEntriesCtrl* entries = HomeEntries(win);
             if (entries) {
                 entries->SetActiveEntry(-1);
             }
@@ -2310,7 +2310,7 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
 // feeds the geometry LayoutHomePage() computed into the persistent chrome tree
 static void HomePageSyncChrome(HomePageLayout& l) {
     MainWindow* win = l.win;
-    HomeChromeWnd* chrome = EnsureHomeChrome(win);
+    HomeChromeCtrl* chrome = EnsureHomeChrome(win);
     VirtRoot* root = win->homeRoot;
     // the chrome positions its children itself, so don't let the root re-layout
     root->bounds = l.rc;
@@ -2320,14 +2320,14 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     chrome->tip->Sync(l.rcTip, l.rcTipText);
 
     // file entries: clipped to the thumbnails band, like the static links were
-    HomeEntriesWnd* entries = chrome->entries;
+    HomeEntriesCtrl* entries = chrome->entries;
     entries->SetBounds(l.rcThumbsArea);
     int nEntries = len(l.thumbnails);
     entries->SetEntryCount(nEntries);
     bool listView = HomePageIsListView();
     for (int i = 0; i < nEntries; i++) {
         ThumbnailLayout& t = l.thumbnails[i];
-        HomeEntryWnd* e = entries->EntryAt(i);
+        HomeEntryCtrl* e = entries->EntryAt(i);
         e->idx = i;
         Str path = t.fs ? t.fs->filePath : Str{};
         if (!str::Eq(e->filePath, path)) {
@@ -2364,7 +2364,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     // one click target covering the icon and the link text
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
     rcOpen.Inflate(10, 10);
-    HomeOpenDocWnd* od = chrome->openDoc;
+    HomeOpenDocCtrl* od = chrome->openDoc;
     od->pixmap = GetPixmapForIcon(TbIcon::Open, l.rcIconOpen.dx, l.rcIconOpen.dy);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
@@ -2788,20 +2788,20 @@ void HomePageOnWindowActivate(MainWindow* win, bool active) {
 }
 
 // the entries wnd of the chrome tree, if the home page is showing
-static HomeEntriesWnd* HomeEntries(MainWindow* win) {
+static HomeEntriesCtrl* HomeEntries(MainWindow* win) {
     if (!win || !win->homeRoot) {
         return nullptr;
     }
-    if (!IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
+    if (!IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeCtrl)) {
         return nullptr; // the About page is showing, not the home page
     }
-    return ((HomeChromeWnd*)win->homeRoot->owned)->entries;
+    return ((HomeChromeCtrl*)win->homeRoot->owned)->entries;
 }
 
 // mouse left the canvas (or the page scrolled): drop the active entry so the
 // close button goes away
 void HomePageClearActiveEntry(MainWindow* win) {
-    HomeEntriesWnd* entries = HomeEntries(win);
+    HomeEntriesCtrl* entries = HomeEntries(win);
     if (!entries) {
         return;
     }
@@ -2816,13 +2816,13 @@ void HomePageClearActiveEntry(MainWindow* win) {
 // file of the entry at (x,y), empty if there is no entry there. Replaces the
 // old "look the click up in win->staticLinks" - entries are VirtCtrls now
 Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
-    HomeEntriesWnd* entries = HomeEntries(win);
+    HomeEntriesCtrl* entries = HomeEntries(win);
     if (!entries) {
         return {};
     }
     Point ptLocal{0, 0};
     VirtCtrl* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
-    HomeEntryWnd* e = entries->EntryForWnd(w);
+    HomeEntryCtrl* e = entries->EntryForCtrl(w);
     if (!e) {
         return {};
     }
@@ -2830,13 +2830,13 @@ Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
 }
 
 bool HomePageOnHover(MainWindow* win, int x, int y) {
-    HomeEntriesWnd* entries = HomeEntries(win);
+    HomeEntriesCtrl* entries = HomeEntries(win);
     if (!entries) {
         return false;
     }
     Point ptLocal{0, 0};
     VirtCtrl* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
-    HomeEntryWnd* e = entries->EntryForWnd(w);
+    HomeEntryCtrl* e = entries->EntryForCtrl(w);
     if (!e) {
         return false;
     }

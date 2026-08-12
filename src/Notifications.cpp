@@ -58,26 +58,26 @@ struct NotifColors {
 // the message text. A plain message is a single DrawText; one with links, bold
 // runs or key-caps becomes a VirtRichText child, which draws and runs its own
 // links
-struct NotifTextWnd : VirtCtrl {
+struct NotifTextCtrl : VirtCtrl {
     NotificationWnd* notif = nullptr;
     VirtRichText* rich = nullptr; // owned, as our only child
     // DT_* format for drawing a plain message, set in NotificationWnd::Layout()
     uint txtFmt = DT_SINGLELINE | DT_NOPREFIX;
     Size idealSize;
 
-    NotifTextWnd();
-    ~NotifTextWnd() override = default;
+    NotifTextCtrl();
+    ~NotifTextCtrl() override = default;
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
 };
 
 // the progress bar below the message (only when progressPerc >= 0)
-struct NotifProgressWnd : VirtCtrl {
+struct NotifProgressCtrl : VirtCtrl {
     NotificationWnd* notif = nullptr;
 
-    NotifProgressWnd();
-    ~NotifProgressWnd() override = default;
+    NotifProgressCtrl();
+    ~NotifProgressCtrl() override = default;
 
     void Paint(VirtPaintCtx&) override;
 };
@@ -130,10 +130,10 @@ struct NotificationWnd : WindowBase {
     // positions them itself
     VBox* container = nullptr;
     // either the built-in text or a caller-supplied tree, never both
-    NotifTextWnd* txtWnd = nullptr;
+    NotifTextCtrl* txtCtrl = nullptr;
     ILayout* contentWnd = nullptr;
-    VirtCloseButton* closeWnd = nullptr;
-    NotifProgressWnd* progressWnd = nullptr;
+    VirtCloseButton* closeCtrl = nullptr;
+    NotifProgressCtrl* progressCtrl = nullptr;
 };
 
 static void NotifCloseClicked(NotificationWnd* wnd, VirtMouseEvent*) {
@@ -142,7 +142,7 @@ static void NotifCloseClicked(NotificationWnd* wnd, VirtMouseEvent*) {
 
 // the control showing the message (built-in) or the caller's custom tree
 static ILayout* NotifBody(NotificationWnd* wnd) {
-    return wnd->contentWnd ? wnd->contentWnd : (ILayout*)wnd->txtWnd;
+    return wnd->contentWnd ? wnd->contentWnd : (ILayout*)wnd->txtCtrl;
 }
 
 constexpr int kMaxNotifs = 128;
@@ -350,21 +350,21 @@ void NotificationWnd::BuildTree(ILayout* customContent) {
         contentWnd = customContent;
         container->AddChild(contentWnd);
     } else {
-        txtWnd = new NotifTextWnd();
-        txtWnd->notif = this;
-        container->AddChild(txtWnd);
+        txtCtrl = new NotifTextCtrl();
+        txtCtrl->notif = this;
+        container->AddChild(txtCtrl);
     }
 
-    progressWnd = new NotifProgressWnd();
-    progressWnd->notif = this;
-    progressWnd->visibility = Visibility::Collapse;
-    container->AddChild(progressWnd);
+    progressCtrl = new NotifProgressCtrl();
+    progressCtrl->notif = this;
+    progressCtrl->visibility = Visibility::Collapse;
+    container->AddChild(progressCtrl);
 
     if (!noClose) {
         // last, so it hit-tests on top of the body
-        closeWnd = new VirtCloseButton();
-        closeWnd->onClick = MkFunc1(NotifCloseClicked, this);
-        container->AddChild(closeWnd);
+        closeCtrl = new VirtCloseButton();
+        closeCtrl->onClick = MkFunc1(NotifCloseClicked, this);
+        container->AddChild(closeCtrl);
     }
     layout = container;
 }
@@ -471,20 +471,20 @@ void NotificationWnd::Layout(Str message) {
         VirtRichText* parsed = ParseTip(message);
         // rich path also for bold-only messages (e.g. the F7 help), not just links
         bool drawRich = parsed->HasRichContent();
-        if (txtWnd->rich) {
-            txtWnd->RemoveChild(txtWnd->rich, true);
-            txtWnd->rich = nullptr;
+        if (txtCtrl->rich) {
+            txtCtrl->RemoveChild(txtCtrl->rich, true);
+            txtCtrl->rich = nullptr;
         }
 
         if (drawRich) {
             // rich text: the words lay themselves out (links included). Note: no
             // RTL word reordering, same as the home page tips.
-            txtWnd->txtFmt = DT_LEFT | DT_NOPREFIX;
+            txtCtrl->txtFmt = DT_LEFT | DT_NOPREFIX;
             parsed->font = GetPlatformFont(font);
             // link commands go to the top-level window (the main frame)
             parsed->hwndForCmds = GetAncestor(hwnd, GA_ROOT);
-            txtWnd->rich = parsed;
-            txtWnd->AddChild(parsed);
+            txtCtrl->rich = parsed;
+            txtCtrl->AddChild(parsed);
             int areaWidth = (maxTextDx > 0) ? maxTextDx : (1 << 20);
             parsed->LayoutText(areaWidth);
             szText.dx = parsed->totalDx;
@@ -511,10 +511,10 @@ void NotificationWnd::Layout(Str message) {
                 szText.dx = std::min(szText.dx, maxTextDx);
             }
             ReleaseDC(hwnd, hdc);
-            txtWnd->txtFmt = fmt;
+            txtCtrl->txtFmt = fmt;
             delete parsed;
         }
-        txtWnd->idealSize = szText;
+        txtCtrl->idealSize = szText;
     }
 
     Rect rTxt;
@@ -603,15 +603,15 @@ void NotificationWnd::Layout(Str message) {
     RefreshVirtTops(hwnd, layout, Rect{0, 0, dx, dy}, &vroot);
     ILayout* body = NotifBody(this);
     body->SetBounds(rTxt);
-    if (txtWnd && txtWnd->rich) {
-        txtWnd->rich->SetBounds(rTxt);
+    if (txtCtrl && txtCtrl->rich) {
+        txtCtrl->rich->SetBounds(rTxt);
     }
-    if (closeWnd) {
-        closeWnd->idealSize = {rClose.dx, rClose.dy};
-        closeWnd->SetBounds(rClose);
+    if (closeCtrl) {
+        closeCtrl->idealSize = {rClose.dx, rClose.dy};
+        closeCtrl->SetBounds(rClose);
     }
-    progressWnd->visibility = HasProgress() ? Visibility::Visible : Visibility::Collapse;
-    progressWnd->SetBounds(rProgress);
+    progressCtrl->visibility = HasProgress() ? Visibility::Visible : Visibility::Collapse;
+    progressCtrl->SetBounds(rProgress);
 
     if (dx == rCurr.dx && dy == rCurr.dy) {
         return;
@@ -659,15 +659,15 @@ void NotificationWnd::OnPaint(WindowBase::PaintEvent* ev) {
 
 //--- the VirtCtrl controls making up a notification
 
-NotifTextWnd::NotifTextWnd() {
+NotifTextCtrl::NotifTextCtrl() {
     kind = kindNotifText;
 }
 
-Size NotifTextWnd::GetIdealSize() {
+Size NotifTextCtrl::GetIdealSize() {
     return idealSize;
 }
 
-void NotifTextWnd::Paint(VirtPaintCtx& ctx) {
+void NotifTextCtrl::Paint(VirtPaintCtx& ctx) {
     if (rich) {
         // the child paints itself; keep its colors in step with the theme
         NotifColors cols = notif->Colors();
@@ -680,12 +680,12 @@ void NotifTextWnd::Paint(VirtPaintCtx& ctx) {
     HdcDrawText(GfxHdc(ctx.gfx), text, ctx.content, txtFmt, notif->font);
 }
 
-NotifProgressWnd::NotifProgressWnd() {
+NotifProgressCtrl::NotifProgressCtrl() {
     kind = kindNotifProgress;
     flags |= vwfNoHitTest;
 }
 
-void NotifProgressWnd::Paint(VirtPaintCtx& ctx) {
+void NotifProgressCtrl::Paint(VirtPaintCtx& ctx) {
     Rect rc = ctx.bounds;
     int progressWidth = rc.dx;
 
