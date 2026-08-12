@@ -1900,6 +1900,8 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
     TempStr buf = nullptr;
     NotificationCreateArgs args{};
     args.hwndParent = win->hwndCanvas;
+    // several of these embed a file name read from the .synctex / .pdfsync file
+    args.plainText = true;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
         args.msg = _TRA("No synchronization file found");
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {

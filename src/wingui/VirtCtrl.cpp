@@ -3424,3 +3424,18 @@ VirtRichText* ParseTip(Str s) {
     ParseTipInto(tip, s);
     return tip;
 }
+
+// the equivalent of the [text](cmd) markup for a `text` that comes from outside
+// the app: it becomes a link to `cmd` with nothing in it interpreted
+void VirtRichText::AddPlainLink(Str text, Str cmd) {
+    TipWord* prevWord = lastWord;
+    TipLink* link = AppendTipLink(*this, ResolveLinkCmdTemp(cmd));
+    AppendTipWordsFromText(*this, text, true, link);
+    link->firstWord = FirstWordAfter(*this, prevWord);
+    link->lastWord = lastWord;
+    if (!link->firstWord) {
+        // `text` was empty so it produced no words
+        RemoveLastTipLink(*this);
+    }
+    layoutDx = -1;
+}

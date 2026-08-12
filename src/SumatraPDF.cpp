@@ -1663,6 +1663,8 @@ static void ShowPageInfoIfWanted(MainWindow* win) {
     args.timeoutMs = 0;
     args.msg = "";
     args.groupId = kNotifPageInfo;
+    // the message carries page labels and image entry names from the document
+    args.plainText = true;
     wnd = ShowNotification(args);
     UpdatePageInfoHelper(win->ctrl, wnd, -1);
 }
@@ -2300,7 +2302,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifPersistentWarning;
         nargs.msg = msg;
-        nargs.tab = tab; // only show while this tab is active
+        nargs.plainText = true; // `unsupported` is a document property
+        nargs.tab = tab;        // only show while this tab is active
         nargs.corner = NotifCorner::BottomRight;
         nargs.xMargin = 2;
         nargs.yMargin = 2;
@@ -3197,6 +3200,7 @@ static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs, bool s
     nargs.hwndParent = win->hwndCanvas;
     nargs.warning = true;
     nargs.msg = fmt(_TRA("File %s not found").s, path);
+    nargs.plainText = true; // `path` is not ours, don't parse it as tip markup
     ShowNotification(nargs);
     LoadDocumentMarkNotExist(win, path, noSavePrefs, showWin);
 }
@@ -3253,6 +3257,9 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, b
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.msg = fmt("%s: %s", fmt(_TRA("Error loading %s").s, path), FileLoadErrorReasonTemp(path));
+    // `path` is attacker-controlled, so the message must not be parsed as tip
+    // markup: a "[x](CmdExec ...)" in it would become a clickable command link
+    nargs.plainText = true;
     nargs.warning = true;
     nargs.timeoutMs = 1000 * 5;
     ShowNotification(nargs);
@@ -4510,13 +4517,15 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
     nargs.font = GetDefaultGuiFont();
     nargs.timeoutMs = 5000;
     nargs.msg = ToStr(msg);
+    nargs.plainText = true; // `path` is not ours, don't parse it as tip markup
     ShowNotification(nargs);
 }
 
 static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
     str::Builder msg;
     msg.Append(fmt(_TRA("Failed to save '%s': %s").s, path, mupdfErr));
-    ShowWarningNotification(hwndParent, ToStr(msg), 0);
+    // both `path` and the mupdf error come from the document, so no markup
+    ShowPlainWarningNotification(hwndParent, ToStr(msg), 0);
 }
 
 struct ShowErrorData {
@@ -6060,18 +6069,25 @@ void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
     }
     TempStr name = path::GetBaseNameTemp(nextPath);
     // (Kbd/(Key/...)): key-cap of the bound shortcut; filename and "browse" open
-    // the navigate-files dialog (see ParseTip for (Kbd/)/(Key/) markup)
-    TempStr msg =
-        fmt("(Kbd/(Key/CmdOpenNextFileInFolder)) %s [%s](CmdOpenNextFileInFolder) · %d/%d · "
-            "[%s](CmdNavigateFilesInFolder)",
-            _TRA("open"), name, n, m, _TRA("browse"));
+    // the navigate-files dialog (see ParseTip for (Kbd/)/(Key/) markup).
+    // The file name comes from the file system, so it can't go through ParseTip
+    // (a "](CmdExec ...)" in it would break out of the link and run a program -
+    // GHSA-2wv2-qm2f-vmxh). Build the run instead: only our markup is parsed and
+    // the name is added as plain words that happen to be a link.
+    auto* rich = new VirtRichText();
+    ParseTipInto(rich, fmt("(Kbd/(Key/CmdOpenNextFileInFolder)) %s", _TRA("open")));
+    rich->AddPlainLink(name, StrL("CmdOpenNextFileInFolder"));
+    // leading space so the "·" doesn't abut the file name
+    ParseTipInto(rich, fmt(" · %d/%d · [%s](CmdNavigateFilesInFolder)", n, m, _TRA("browse")));
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.groupId = kNotifNextFileHint;
     args.corner = NotifCorner::BottomRight;
     args.timeoutMs = kNotifNoTimeout;
     args.tab = win->CurrentTab();
-    args.msg = msg;
+    args.richMsg = rich;
+    // what the window text (and thus NotificationGetMessageTemp) reports
+    args.msg = fmt("%s %s · %d/%d · %s", _TRA("open"), name, n, m, _TRA("browse"));
     ShowNotification(args);
 }
 

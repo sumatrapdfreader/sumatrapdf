@@ -4,6 +4,7 @@
 struct NotificationWnd;
 struct WindowTab;
 struct VirtCtrl;
+struct VirtRichText;
 struct ILayout;
 
 extern Kind kNotifCursorPos;
@@ -48,6 +49,15 @@ struct NotificationCreateArgs {
     int xMargin = kNotifDefaultMargin; // distance from the left/right edge
     int yMargin = kNotifDefaultMargin; // distance from the top/bottom edge
     Str msg;
+    // if true, `msg` is shown verbatim: the tip markup ([text](CmdFoo),
+    // **bold**, (Key/..), (Kbd/..)) is not parsed. Required for any message
+    // that embeds text from outside the app (file paths, document metadata,
+    // server responses) - see GHSA-2wv2-qm2f-vmxh
+    bool plainText = false;
+    // when set, the message is this pre-built rich text instead of `msg` parsed
+    // as tip markup, for messages mixing app-authored markup with outside text.
+    // `msg` is still the window text. ownership passes to the notification
+    VirtRichText* richMsg = nullptr;
     // when set, the notification shows this VirtCtrl tree instead of `msg`.
     // ownership passes to the notification
     ILayout* content = nullptr;
@@ -72,6 +82,10 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowCustomNotification(HWND hwndParent, ILayout* content, int timeoutMs = kNotifNoTimeout);
 NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs);
+
+// same, for a message that isn't fully app-authored: shown verbatim, no markup
+NotificationWnd* ShowPlainNotification(HWND hwnd, Str msg, int timeoutMs = kNotifDefaultTimeOut);
+NotificationWnd* ShowPlainWarningNotification(HWND hwndParent, Str msg, int timeoutMs);
 
 void MaybeDelayedWarningNotification(Str msg);
 void ShowMaybeDelayedNotifications(HWND hwndParent);

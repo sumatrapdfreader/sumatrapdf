@@ -133,6 +133,8 @@ static void ShowSelectionHandlerNotification(WindowTab* tab, Str msg, bool isWar
     args.warning = isWarning;
     args.timeoutMs = isWarning ? 8000 : 4000;
     args.msg = msg;
+    // the message can embed the handler's HTTP response, so no tip markup
+    args.plainText = true;
     ShowNotification(args);
 }
 

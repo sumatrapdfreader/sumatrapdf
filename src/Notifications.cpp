@@ -103,6 +103,11 @@ struct NotificationWnd : WindowBase {
 
     bool highlight = false; // TODO: should really be a color
     bool noClose = false;
+    // message is shown verbatim, no tip markup parsed (see NotificationCreateArgs)
+    bool plainText = false;
+    // caller-built message; not owned (it's txtCtrl's child once laid out) but
+    // reused across layouts because, unlike `msg`, it can't be re-parsed
+    VirtRichText* richMsg = nullptr;
 
     NotificationWndRemoved wndRemovedCb;
 
@@ -388,6 +393,10 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     corner = args.corner;
     xMargin = args.xMargin;
     yMargin = args.yMargin;
+    plainText = args.plainText;
+    // `content` replaces the message entirely, so a richMsg would never be shown
+    ReportIf(args.richMsg && args.content);
+    richMsg = args.content ? nullptr : args.richMsg;
 
     onPaint = MkMethod1<NotificationWnd, WindowBase::PaintEvent*, &NotificationWnd::OnPaint>(this);
     onTimer = MkMethod1<NotificationWnd, WindowBase::TimerEvent*, &NotificationWnd::OnTimer>(this);
@@ -409,6 +418,8 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     if (!hwnd) {
         // we took ownership of the content, so it dies with us
         delete args.content;
+        delete args.richMsg;
+        richMsg = nullptr;
         return nullptr;
     }
 
@@ -467,14 +478,21 @@ void NotificationWnd::Layout(Str message) {
         Constraints bc = Loose({maxTextDx > 0 ? maxTextDx : Inf, Inf});
         szText = contentWnd->Layout(bc);
     } else {
-        // parse the message for the extended tip syntax (links, Key/ shortcuts)
-        VirtRichText* parsed = ParseTip(message);
-        // rich path also for bold-only messages (e.g. the F7 help), not just links
-        bool drawRich = parsed->HasRichContent();
         if (txtCtrl->rich) {
-            txtCtrl->RemoveChild(txtCtrl->rich, true);
+            // a caller-built richMsg is reused: unlike `message`, it can't be
+            // rebuilt here, so don't let RemoveChild() delete it
+            txtCtrl->RemoveChild(txtCtrl->rich, txtCtrl->rich != richMsg);
             txtCtrl->rich = nullptr;
         }
+        // parse the message for the extended tip syntax (links, Key/ shortcuts).
+        // Not for a plainText message: it embeds text from outside the app,
+        // which must not be able to inject a command link (GHSA-2wv2-qm2f-vmxh)
+        VirtRichText* parsed = richMsg;
+        if (!parsed && !plainText) {
+            parsed = ParseTip(message);
+        }
+        // rich path also for bold-only messages (e.g. the F7 help), not just links
+        bool drawRich = parsed && (parsed == richMsg || parsed->HasRichContent());
 
         if (drawRich) {
             // rich text: the words lay themselves out (links included). Note: no
@@ -493,7 +511,7 @@ void NotificationWnd::Layout(Str message) {
             // plain text: render exactly like before (RTL handling, wrapping). Only
             // substitute the parsed text when there were (Key/...) / (Kbd/...) so
             // ordinary messages keep their original whitespace/newlines.
-            if (str::Contains(message, StrL("(Key/")) || str::Contains(message, StrL("(Kbd/"))) {
+            if (parsed && (str::Contains(message, StrL("(Key/")) || str::Contains(message, StrL("(Kbd/")))) {
                 message = parsed->PlainTextTemp();
                 HwndSetText(hwnd, message);
             }
@@ -883,6 +901,34 @@ NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs
     NotificationCreateArgs args;
     args.hwndParent = hwndParent;
     args.msg = msg;
+    args.warning = true;
+    args.timeoutMs = timeoutMs;
+    return ShowNotification(args);
+}
+
+// for a message that embeds text we didn't author (a file path, document
+// metadata, a server response): shown verbatim, so it can't smuggle in a
+// clickable command link
+NotificationWnd* ShowPlainNotification(HWND hwnd, Str msg, int timeoutMs) {
+    if (timeoutMs <= 0) {
+        timeoutMs = kNotifDefaultTimeOut;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = hwnd;
+    args.msg = msg;
+    args.plainText = true;
+    args.timeoutMs = timeoutMs;
+    return ShowNotification(args);
+}
+
+NotificationWnd* ShowPlainWarningNotification(HWND hwndParent, Str msg, int timeoutMs) {
+    if (timeoutMs < 0) {
+        timeoutMs = kNotifDefaultTimeOut;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = hwndParent;
+    args.msg = msg;
+    args.plainText = true;
     args.warning = true;
     args.timeoutMs = timeoutMs;
     return ShowNotification(args);

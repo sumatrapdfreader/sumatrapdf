@@ -783,6 +783,7 @@ struct VirtRichText : VirtCtrl {
 
     void Reset();
     void AddPlainText(Str);
+    void AddPlainLink(Str text, Str cmd);
     void LayoutText(int areaWidth);
     bool HasRichContent();
     TempStr PlainTextTemp();

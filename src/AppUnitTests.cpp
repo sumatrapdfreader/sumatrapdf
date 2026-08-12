@@ -105,6 +105,35 @@ static void ParseTip_UnitTests() {
     // ordinary tips still work
     ParseTipExpectWordsLinks("before [valid](CmdFoo)", 2, 1);
     ParseTipExpectWordsLinks("[valid](CmdFoo) after", 2, 1);
+
+    // GHSA-2wv2-qm2f-vmxh: a file name can contain the markup, so text from
+    // outside the app must never become a link. AddPlainText / AddPlainLink are
+    // how such text gets in
+    {
+        Str evil = StrL("a[b](CmdExec calc.exe)c");
+        VirtRichText* tip = new VirtRichText();
+        tip->AddPlainText(evil);
+        utassert(TipLinkCount(tip) == 0);
+        utassert(str::Contains(tip->PlainTextTemp(), StrL("(CmdExec")));
+        delete tip;
+
+        // the same text as a link: exactly one link, and to our command
+        tip = new VirtRichText();
+        tip->AddPlainLink(evil, StrL("CmdOpenNextFileInFolder"));
+        utassert(TipLinkCount(tip) == 1);
+        utassert(str::Eq(tip->links.next->cmd, StrL("CmdOpenNextFileInFolder")));
+        delete tip;
+
+        // mixing our markup with outside text keeps them apart
+        tip = new VirtRichText();
+        ParseTipInto(tip, StrL("open"));
+        tip->AddPlainLink(evil, StrL("CmdOpenNextFileInFolder"));
+        ParseTipInto(tip, StrL("[browse](CmdNavigateFilesInFolder)"));
+        utassert(TipLinkCount(tip) == 2);
+        utassert(str::Eq(tip->links.next->cmd, StrL("CmdOpenNextFileInFolder")));
+        utassert(str::Eq(tip->links.next->next->cmd, StrL("CmdNavigateFilesInFolder")));
+        delete tip;
+    }
 }
 
 int RunAppUnitTests() {
