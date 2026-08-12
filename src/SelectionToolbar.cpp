@@ -9,6 +9,11 @@
 #include "base/Pixmap.h"
 
 #include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -45,7 +50,6 @@ struct SelectionToolbarButton {
     Str svgIcon;
     Pixmap* icon = nullptr; // svgIcon rendered at the current size; not owned
     bool enabled = true;
-    Rect rc; // position within the toolbar client area
 };
 
 // what to draw for a button that isn't an icon
@@ -62,11 +66,12 @@ struct SelectionToolbar {
     HWND hwnd = nullptr;
     HFONT font = nullptr;
     bool fontOwned = false;
-    int hotIndex = -1;
-    int pressedIndex = -1;
-    bool trackingMouse = false;
+    PlatformFont* platformFont = nullptr; // not owned, interned
+    // the row of buttons; rebuilt whenever the set of buttons changes
+    ILayout* layout = nullptr;
+    // the buttons of `layout`; owned here, the controls themselves by `layout`
+    VirtRoot* vroot = nullptr;
     Size size;
-    int iconSize = 0;   // size the cached icons were rendered at
     Rect lastPlaced;    // last screen rect we moved the window to (avoids redundant SetWindowPos)
     Rect lastSelBounds; // last canvas-space selection bounds used for placement
     DWORD lastPositionUpdateTick = 0;
@@ -301,7 +306,56 @@ static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
     }
 }
 
-// Compute button layout and tb->size only (region applied after SetWindowPos).
+// The buttons are pills, not rectangles: they draw their hover background with
+// the same rounded corners as the card they sit on, so they get their own Paint
+struct SelToolbarTextButton : VirtButton {
+    SelToolbarTextButton(Str s, PlatformFont* f) : VirtButton(s, f) {}
+    void Paint(VirtPaintCtx& ctx) override {
+        if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
+            int radius = DpiScale(GetHwnd(), kButtonRadius);
+            FillRoundedRect(GfxHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
+        }
+        VirtButton::Paint(ctx);
+    }
+    COLORREF hoverBg = kColorUnset;
+};
+
+struct SelToolbarIconButton : VirtIconButton {
+    void Paint(VirtPaintCtx& ctx) override {
+        if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
+            int radius = DpiScale(GetHwnd(), kButtonRadius);
+            FillRoundedRect(GfxHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
+        }
+        VirtIconButton::Paint(ctx);
+    }
+    // square, as tall as the row: the icon is centered in it
+    Size GetIdealSize() override { return {sideLen, sideLen}; }
+    COLORREF hoverBg = kColorUnset;
+    int sideLen = 0;
+};
+
+static bool GetSelectionEndPoint(MainWindow* win, Point& out);
+
+static void OnSelToolbarButtonClicked(SelectionToolbar* tb, VirtMouseEvent* ev) {
+    int cmdId = ev->target ? ev->target->id : 0;
+    if (!cmdId) {
+        return;
+    }
+    MainWindow* win = tb->win;
+    LPARAM commandPoint = 0;
+    if (cmdId == CmdCreateAnnotText) {
+        Point selectionEnd;
+        if (GetSelectionEndPoint(win, selectionEnd)) {
+            commandPoint = MAKELPARAM(selectionEnd.x, selectionEnd.y);
+        }
+        DeleteOldSelectionInfo(win, true);
+    }
+    HideSelectionToolbar(win);
+    HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
+}
+
+// Build the layout tree for the current buttons and measure it into tb->size
+// (the window region is applied after SetWindowPos).
 static void LayoutToolbar(SelectionToolbar* tb) {
     HWND hwnd = tb->hwnd;
     int padX = DpiScale(hwnd, kBtnPadX);
@@ -309,48 +363,55 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     int margin = DpiScale(hwnd, kMargin);
     int gap = DpiScale(hwnd, kBtnGap);
 
-    int x = margin;
-    int maxDy = 0;
-    int n = len(tb->buttons);
-    // an icon button is square, so its width isn't known until the row height
-    // is; lay those out in a second pass
-    int textDy = HwndMeasureText(hwnd, StrL("Mg"), tb->font).dy;
-    for (int i = 0; i < n; i++) {
-        SelectionToolbarButton& b = tb->buttons[i];
-        int dy = textDy + (2 * padY);
-        int dx = dy;
-        if (!b.svgIcon) {
-            dx = HwndMeasureText(hwnd, ButtonText(b), tb->font).dx + (2 * padX);
-        }
-        b.rc = Rect(x, margin, dx, dy);
-        x += dx + gap;
-        maxDy = std::max(dy, maxDy);
-    }
-    if (n > 0) {
-        x -= gap;
-    }
-    int shift = 0;
-    for (int i = 0; i < n; i++) {
-        SelectionToolbarButton& b = tb->buttons[i];
-        b.rc.x += shift;
-        if (b.svgIcon && b.rc.dx != maxDy) {
-            shift += maxDy - b.rc.dx;
-            b.rc.dx = maxDy;
-        }
-        b.rc.dy = maxDy;
-    }
-    tb->size = Size(x + shift + margin, maxDy + (2 * margin));
-    UpdateButtonIcons(tb, maxDy - (2 * padY));
-}
+    // deleting the old tree takes its buttons out of vroot->tops
+    delete tb->layout;
+    tb->layout = nullptr;
 
-static int ButtonFromPoint(SelectionToolbar* tb, int x, int y) {
-    Point pt(x, y);
-    for (int i = 0; i < len(tb->buttons); i++) {
-        if (tb->buttons[i].rc.Contains(pt)) {
-            return i;
+    COLORREF bgCol = SelBarBg();
+    COLORREF hoverBg = SelBarHoverBg(bgCol);
+    COLORREF textCol = SelBarTextColor();
+    COLORREF mutedCol = SelBarMutedTextColor();
+
+    int textDy = HwndMeasureText(hwnd, StrL("Mg"), tb->font).dy;
+    int rowDy = textDy + (2 * padY);
+    UpdateButtonIcons(tb, textDy);
+
+    auto* box = new HBox();
+    box->alignCross = CrossAxisAlign::Stretch;
+    bool isFirst = true;
+    for (SelectionToolbarButton& b : tb->buttons) {
+        VirtWnd* w;
+        if (b.svgIcon) {
+            auto* ib = new SelToolbarIconButton();
+            ib->pixmap = b.icon;
+            ib->sideLen = rowDy;
+            ib->hoverBg = hoverBg;
+            ib->onClick = MkFunc1(OnSelToolbarButtonClicked, tb);
+            w = ib;
+        } else {
+            auto* tbtn = new SelToolbarTextButton(ButtonText(b), tb->platformFont);
+            tbtn->textPadding = {padY, padX, padY, padX};
+            tbtn->textColor = textCol;
+            tbtn->textColorDisabled = mutedCol;
+            tbtn->align = VirtTextAlign::Center;
+            tbtn->hoverBg = hoverBg;
+            tbtn->onClick = MkFunc1(OnSelToolbarButtonClicked, tb);
+            w = tbtn;
         }
+        w->id = b.cmdId;
+        w->SetIsEnabled(b.enabled);
+        ILayout* child = w;
+        if (!isFirst) {
+            child = new Padding(w, Insets{0, 0, 0, gap});
+        }
+        isFirst = false;
+        box->AddChild(child);
     }
-    return -1;
+    tb->layout = new Padding(box, Insets{margin, margin, margin, margin});
+    Constraints bc = ExpandInf();
+    tb->size = tb->layout->Layout(bc);
+    tb->layout->SetBounds({0, 0, tb->size.dx, tb->size.dy});
+    RefreshVirtTops(hwnd, tb->layout, {0, 0, tb->size.dx, tb->size.dy}, &tb->vroot);
 }
 
 // Sticky-note (Text) annots are placed at a canvas point; use the selection end.
@@ -370,48 +431,21 @@ static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
     return true;
 }
 
+// the card itself; the buttons on it are virtual controls painted on top
 static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
     HWND hwnd = tb->hwnd;
     Rect rc = HwndClientRect(hwnd);
-    COLORREF bgCol = SelBarBg();
-    COLORREF hoverBg = SelBarHoverBg(bgCol);
     int cornerRadius = DpiScale(hwnd, kCornerRadius);
-    int btnRadius = DpiScale(hwnd, kButtonRadius);
 
-    FillRoundedRect(hdc, rc, cornerRadius, bgCol);
+    FillRoundedRect(hdc, rc, cornerRadius, SelBarBg());
     StrokeRoundedRect(hdc, rc, cornerRadius, SelBarBorderColor());
 
-    ScopedSelectObject selFont(hdc, tb->font);
-    SetBkMode(hdc, TRANSPARENT);
-    COLORREF textCol = SelBarTextColor();
-    COLORREF mutedCol = SelBarMutedTextColor();
-    for (int i = 0; i < len(tb->buttons); i++) {
-        SelectionToolbarButton& b = tb->buttons[i];
-        bool isHot = b.enabled && (i == tb->hotIndex);
-        if (isHot) {
-            FillRoundedRect(hdc, b.rc, btnRadius, hoverBg);
-        }
-        if (b.icon) {
-            int x = b.rc.x + ((b.rc.dx - b.icon->width) / 2);
-            int y = b.rc.y + ((b.rc.dy - b.icon->height) / 2);
-            BlitPixmapAlpha(b.icon, hdc, {x, y, b.icon->width, b.icon->height});
-            continue;
-        }
-        SetTextColor(hdc, b.enabled ? textCol : mutedCol);
-        HdcDrawCenteredText(hdc, b.rc, ButtonText(b));
-    }
-}
-
-static void TrackMouseLeave(SelectionToolbar* tb) {
-    if (tb->trackingMouse) {
+    if (!tb->vroot) {
         return;
     }
-    TRACKMOUSEEVENT tme{};
-    tme.cbSize = sizeof(tme);
-    tme.dwFlags = TME_LEAVE;
-    tme.hwndTrack = tb->hwnd;
-    TrackMouseEvent(&tme);
-    tb->trackingMouse = true;
+    SetBkMode(hdc, TRANSPARENT);
+    Gfx gfx = GfxFromHdc(hdc);
+    tb->vroot->Paint(&gfx, rc);
 }
 
 static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -436,65 +470,6 @@ static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, 
         case WM_MOUSEACTIVATE:
             return MA_NOACTIVATE;
 
-        case WM_MOUSEMOVE: {
-            int x = GET_X_LPARAM(lp);
-            int y = GET_Y_LPARAM(lp);
-            int idx = ButtonFromPoint(tb, x, y);
-            if (idx >= 0 && !tb->buttons[idx].enabled) {
-                idx = -1;
-            }
-            if (idx != tb->hotIndex) {
-                tb->hotIndex = idx;
-                HwndScheduleRepaint(hwnd);
-            }
-            TrackMouseLeave(tb);
-            return 0;
-        }
-
-        case WM_MOUSELEAVE:
-            tb->trackingMouse = false;
-            if (tb->hotIndex != -1) {
-                tb->hotIndex = -1;
-                HwndScheduleRepaint(hwnd);
-            }
-            return 0;
-
-        case WM_LBUTTONDOWN: {
-            int x = GET_X_LPARAM(lp);
-            int y = GET_Y_LPARAM(lp);
-            int idx = ButtonFromPoint(tb, x, y);
-            if (idx >= 0 && tb->buttons[idx].enabled) {
-                tb->pressedIndex = idx;
-            } else {
-                tb->pressedIndex = -1;
-            }
-            return 0;
-        }
-
-        case WM_LBUTTONUP: {
-            int x = GET_X_LPARAM(lp);
-            int y = GET_Y_LPARAM(lp);
-            int idx = ButtonFromPoint(tb, x, y);
-            int pressed = tb->pressedIndex;
-            tb->pressedIndex = -1;
-            if (idx < 0 || idx != pressed || !tb->buttons[idx].enabled) {
-                return 0;
-            }
-            int cmdId = tb->buttons[idx].cmdId;
-            MainWindow* win = tb->win;
-            LPARAM commandPoint = 0;
-            if (cmdId == CmdCreateAnnotText) {
-                Point selectionEnd;
-                if (GetSelectionEndPoint(win, selectionEnd)) {
-                    commandPoint = MAKELPARAM(selectionEnd.x, selectionEnd.y);
-                }
-                DeleteOldSelectionInfo(win, true);
-            }
-            HideSelectionToolbar(win);
-            HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
-            return 0;
-        }
-
         case WM_PAINT: {
             // Paint off-screen and blit once. Hovering a button repaints the
             // whole bar, and drawing straight to the window showed the
@@ -508,6 +483,11 @@ static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, 
             EndPaint(hwnd, &ps);
             return 0;
         }
+    }
+    // hover, click and cursor of the buttons
+    LRESULT res = 0;
+    if (VirtTreeOnMessage(hwnd, tb->vroot, msg, wp, lp, res)) {
+        return res;
     }
     return DefWindowProc(hwnd, msg, wp, lp);
 }
@@ -608,6 +588,10 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
     }
     tb->font = CreateScaledFontFrom(GetAppFont(hwnd), kToolbarFontPct);
     tb->fontOwned = tb->font != nullptr;
+    if (!tb->font) {
+        tb->font = GetAppFont(hwnd);
+    }
+    tb->platformFont = GetPlatformFont(tb->font);
     win->selectionToolbar = tb;
     return tb;
 }
@@ -640,8 +624,6 @@ static void ShowSelectionToolbarNow(MainWindow* win) {
         return;
     }
     tb->tab = win->CurrentTab();
-    tb->hotIndex = -1;
-    tb->pressedIndex = -1;
     tb->lastPositionUpdateTick = GetTickCount();
     tb->lastSelBounds = sel;
     InitButtons(tb, win);
@@ -762,8 +744,11 @@ void HideSelectionToolbar(MainWindow* win) {
     if (HwndIsVisible(tb->hwnd)) {
         ShowWindow(tb->hwnd, SW_HIDE);
     }
-    tb->hotIndex = -1;
-    tb->pressedIndex = -1;
+    if (tb->vroot) {
+        // the mouse can't leave a hidden window, so drop the hover ourselves
+        tb->vroot->ClearHover();
+        tb->vroot->ClearPressed();
+    }
     tb->tab = nullptr;
     tb->lastPlaced = Rect();
     tb->lastSelBounds = Rect();
@@ -779,6 +764,9 @@ void DeleteSelectionToolbar(MainWindow* win) {
     if (tb->hwnd) {
         DestroyWindow(tb->hwnd);
     }
+    // the buttons first: they report their destruction to the root
+    delete tb->layout;
+    delete tb->vroot;
     if (tb->fontOwned && tb->font) {
         DeleteObject(tb->font);
     }
