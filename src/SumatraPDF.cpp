@@ -7926,6 +7926,11 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
 
     if (VK_ESCAPE == key) {
         CancelDrag(win);
+        // and leave a selected annotation's edit mode (issue #5933)
+        WindowTab* tabEsc = win->CurrentTab();
+        if (tabEsc && tabEsc->selectedAnnotation) {
+            SetSelectedAnnotation(tabEsc, nullptr);
+        }
         return true;
     }
 

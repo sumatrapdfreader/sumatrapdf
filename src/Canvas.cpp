@@ -2058,12 +2058,15 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     if (isMoveableAnnot) {
         if (annot == tab->selectedAnnotation) {
             // dragging the selected annotation. do nothing here, just start dragging in mouse move
-        } else if (tab->editAnnotsWindow || tab->selectedAnnotation) {
-            // clicking on a different annotation while edit annotations window is open. or
-            // other annotation is selected, select the clicked annotation and start dragging yet
-            SetSelectedAnnotation(tab, annot);
-        } else {
+        } else if (annot->type == AnnotationType::Widget) {
+            // a form field is not something to move around by clicking it
             isMoveableAnnot = false;
+        } else {
+            // clicking a shape annotation selects it, so it can be moved /
+            // resized right away. Only these: the text markup annotations
+            // (highlight and friends) lie on top of text, where a click has to
+            // stay a click on the text
+            SetSelectedAnnotation(tab, annot);
         }
     }
 
@@ -2275,6 +2278,13 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     if (win->annotationUnderCursor && (tab->selectedAnnotation || tab->editAnnotsWindow)) {
         SetSelectedAnnotation(tab, win->annotationUnderCursor);
         return;
+    }
+
+    // clicking next to a selected annotation deselects it. Without this the
+    // resize handles stayed up and the only ways out of "editing its size"
+    // were Esc or a right click (issue #5933)
+    if (tab && tab->selectedAnnotation) {
+        SetSelectedAnnotation(tab, nullptr);
     }
 
     if (link && link->GetRect().Contains(ptPage)) {
