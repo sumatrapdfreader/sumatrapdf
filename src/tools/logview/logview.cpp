@@ -929,10 +929,13 @@ static void CloseTab(int idx);
 // the tab bar is a virtual control: the main window paints it and gives it its
 // input, so it needs no HWND / window class of its own
 struct TabBarWnd : VirtWnd {
-    TabBarWnd() { kind = "logViewTabs"; }
+    TabBarWnd() {
+        kind = "logViewTabs";
+        onMouseDown = MkMethod1<TabBarWnd, VirtMouseEvent*, &TabBarWnd::OnMouseDown>(this);
+    }
     Size GetIdealSize() override { return {0, DpiScale(26)}; }
     void Paint(VirtPaintCtx&) override;
-    bool OnMouseDown(VirtMouseEvent&) override;
+    void OnMouseDown(VirtMouseEvent*);
 };
 
 void TabBarWnd::Paint(VirtPaintCtx& ctx) {
@@ -992,20 +995,22 @@ void TabBarWnd::Paint(VirtPaintCtx& ctx) {
     ResetTempArena();
 }
 
-bool TabBarWnd::OnMouseDown(VirtMouseEvent& ev) {
-    POINT pt{ev.ptWindow.x, ev.ptWindow.y};
+void TabBarWnd::OnMouseDown(VirtMouseEvent* ev) {
+    POINT pt{ev->ptWindow.x, ev->ptWindow.y};
     int n = len(gTabHits);
     for (int i = 0; i < n; i++) {
         if (PtInRect(&gTabHits[i].rcClose, pt)) {
             CloseTab(i);
-            return true;
+            ev->didHandle = true;
+            return;
         }
         if (PtInRect(&gTabHits[i].rc, pt)) {
             SelectTab(i);
-            return true;
+            ev->didHandle = true;
+            return;
         }
     }
-    return true;
+    ev->didHandle = true;
 }
 
 static void SelectTab(int idx) {

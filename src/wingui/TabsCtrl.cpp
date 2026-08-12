@@ -91,15 +91,18 @@ struct TabWnd : VirtWnd {
     Size GetIdealSize() override;
     void SetBounds(Rect) override;
     void Paint(VirtPaintCtx&) override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    TempStr GetTooltipTemp(Point) override;
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 static void TabCloseClicked(TabWnd*, VirtMouseEvent*);
 
 TabWnd::TabWnd() {
     kind = kindTabWnd;
+    onMouseDown = MkMethod1<TabWnd, VirtMouseEvent*, &TabWnd::OnMouseDown>(this);
+    onMouseUp = MkMethod1<TabWnd, VirtMouseEvent*, &TabWnd::OnMouseUp>(this);
+    onGetTooltip = MkMethod1<TabWnd, VirtTooltipEvent*, &TabWnd::OnGetTooltip>(this);
     closeBtn = new VirtCloseButton();
     closeBtn->onClick = MkFunc1(TabCloseClicked, this);
     closeBtn->visibility = Visibility::Collapse;
@@ -275,19 +278,19 @@ void TabWnd::Paint(VirtPaintCtx& ctx) {
     closeBtn->circleColor = tabBgCol;
 }
 
-bool TabWnd::OnMouseDown(VirtMouseEvent& ev) {
-    tabsCtrl->OnTabMouseDown(this, ev);
-    return true;
+void TabWnd::OnMouseDown(VirtMouseEvent* ev) {
+    tabsCtrl->OnTabMouseDown(this, *ev);
+    ev->didHandle = true;
 }
 
-bool TabWnd::OnMouseUp(VirtMouseEvent&) {
+void TabWnd::OnMouseUp(VirtMouseEvent* ev) {
     // the drag / migration handling needs capture and screen coordinates, so it
     // stays in the control's WndProc
-    return true;
+    ev->didHandle = true;
 }
 
-TempStr TabWnd::GetTooltipTemp(Point) {
-    return str::DupTemp(ti->tooltip);
+void TabWnd::OnGetTooltip(VirtTooltipEvent* ev) {
+    ev->tip = str::DupTemp(ti->tooltip);
 }
 
 static void TabCloseClicked(TabWnd* tab, VirtMouseEvent*) {

@@ -183,52 +183,128 @@ VirtWnd* VirtWnd::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
     return this;
 }
 
-bool VirtWnd::OnMouseDown(VirtMouseEvent&) {
-    return false;
+bool VirtWnd::OnMouseDown(VirtMouseEvent& ev) {
+    if (!onMouseDown.IsValid()) {
+        return false;
+    }
+    ev.didHandle = false;
+    onMouseDown.Call(&ev);
+    return ev.didHandle;
 }
 
-bool VirtWnd::OnMouseUp(VirtMouseEvent&) {
-    return false;
+bool VirtWnd::OnMouseUp(VirtMouseEvent& ev) {
+    if (!onMouseUp.IsValid()) {
+        return false;
+    }
+    ev.didHandle = false;
+    onMouseUp.Call(&ev);
+    return ev.didHandle;
 }
 
-bool VirtWnd::OnMouseMove(VirtMouseEvent&) {
-    return false;
+bool VirtWnd::OnMouseMove(VirtMouseEvent& ev) {
+    if (!onMouseMove.IsValid()) {
+        return false;
+    }
+    ev.didHandle = false;
+    onMouseMove.Call(&ev);
+    return ev.didHandle;
 }
 
-bool VirtWnd::OnMouseWheel(VirtMouseEvent&) {
-    return false;
+bool VirtWnd::OnMouseWheel(VirtMouseEvent& ev) {
+    if (!onMouseWheel.IsValid()) {
+        return false;
+    }
+    ev.didHandle = false;
+    onMouseWheel.Call(&ev);
+    return ev.didHandle;
 }
 
-bool VirtWnd::OnDoubleClick(VirtMouseEvent&) {
-    return false;
+bool VirtWnd::OnDoubleClick(VirtMouseEvent& ev) {
+    if (!onDoubleClick.IsValid()) {
+        return false;
+    }
+    ev.didHandle = false;
+    onDoubleClick.Call(&ev);
+    return ev.didHandle;
 }
 
-bool VirtWnd::OnContextMenu(VirtMouseEvent&) {
-    return false;
+bool VirtWnd::OnContextMenu(VirtMouseEvent& ev) {
+    if (!onContextMenu.IsValid()) {
+        return false;
+    }
+    ev.didHandle = false;
+    onContextMenu.Call(&ev);
+    return ev.didHandle;
 }
 
-void VirtWnd::OnMouseEnter() {}
-
-void VirtWnd::OnMouseLeave() {}
-
-void VirtWnd::OnCaptureLost() {}
-
-bool VirtWnd::OnKeyDown(VirtKeyEvent&) {
-    return false;
+void VirtWnd::OnMouseEnter() {
+    if (onMouseEnter.IsValid()) {
+        onMouseEnter.Call();
+    }
 }
 
-bool VirtWnd::OnChar(int) {
-    return false;
+void VirtWnd::OnMouseLeave() {
+    if (onMouseLeave.IsValid()) {
+        onMouseLeave.Call();
+    }
 }
 
-void VirtWnd::OnFocusChanged(bool) {}
-
-bool VirtWnd::OnSetCursor(Point) {
-    return false;
+void VirtWnd::OnCaptureLost() {
+    if (onCaptureLost.IsValid()) {
+        onCaptureLost.Call();
+    }
 }
 
-TempStr VirtWnd::GetTooltipTemp(Point) {
-    return nullptr;
+bool VirtWnd::OnKeyDown(VirtKeyEvent& ev) {
+    if (!onKeyDown.IsValid()) {
+        return false;
+    }
+    ev.didHandle = false;
+    onKeyDown.Call(&ev);
+    return ev.didHandle;
+}
+
+bool VirtWnd::OnChar(int c) {
+    if (!onChar.IsValid()) {
+        return false;
+    }
+    VirtCharEvent ev;
+    ev.w = this;
+    ev.c = c;
+    onChar.Call(&ev);
+    return ev.didHandle;
+}
+
+void VirtWnd::OnFocusChanged(bool gotFocus) {
+    if (!onFocusChanged.IsValid()) {
+        return;
+    }
+    VirtFocusEvent ev;
+    ev.w = this;
+    ev.gotFocus = gotFocus;
+    onFocusChanged.Call(&ev);
+}
+
+bool VirtWnd::OnSetCursor(Point ptLocal) {
+    if (!onSetCursor.IsValid()) {
+        return false;
+    }
+    VirtSetCursorEvent ev;
+    ev.w = this;
+    ev.ptLocal = ptLocal;
+    onSetCursor.Call(&ev);
+    return ev.didHandle;
+}
+
+TempStr VirtWnd::GetTooltipTemp(Point ptLocal) {
+    if (!onGetTooltip.IsValid()) {
+        return nullptr;
+    }
+    VirtTooltipEvent ev;
+    ev.w = this;
+    ev.ptLocal = ptLocal;
+    onGetTooltip.Call(&ev);
+    return ev.tip;
 }
 
 void VirtWnd::AddChild(VirtWnd* c) {
@@ -1248,6 +1324,8 @@ void VirtTable::SetBounds(Rect r) {
 static Kind kindVirtWndScroll = "virtWndScroll";
 
 VirtScroll::VirtScroll() {
+    onMouseWheel = MkMethod1<VirtScroll, VirtMouseEvent*, &VirtScroll::OnMouseWheel>(this);
+
     kind = kindVirtWndScroll;
     flags |= vwfClipChildren;
 }
@@ -1337,12 +1415,14 @@ void VirtScroll::ScrollIntoView(VirtWnd* w) {
     }
 }
 
-bool VirtScroll::OnMouseWheel(VirtMouseEvent& ev) {
-    if (ev.wheelDelta == 0) {
-        return false;
+void VirtScroll::OnMouseWheel(VirtMouseEvent* ev) {
+    if (ev->wheelDelta == 0) {
+        return;
     }
-    int lines = -(ev.wheelDelta * 3) / WHEEL_DELTA;
-    return ScrollBy(lines * lineDy);
+    int lines = -(ev->wheelDelta * 3) / WHEEL_DELTA;
+    if (ScrollBy(lines * lineDy)) {
+        ev->didHandle = true;
+    }
 }
 
 void VirtScroll::OnVScroll(WPARAM wp) {
@@ -1412,6 +1492,15 @@ void VirtScroll::NotifyVisibleRange() {
 static Kind kindVirtWndListBox = "virtWndListBox";
 
 VirtListBox::VirtListBox() {
+    onMouseDown = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseDown>(this);
+    onMouseUp = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseUp>(this);
+    onMouseMove = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseMove>(this);
+    onMouseWheel = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseWheel>(this);
+    // onDoubleClick is the public item-activated Func0; wire the mouse path on VirtWnd
+    VirtWnd::onDoubleClick = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnDoubleClick>(this);
+    onKeyDown = MkMethod1<VirtListBox, VirtKeyEvent*, &VirtListBox::OnKeyDown>(this);
+    onCaptureLost = MkMethod0<VirtListBox, &VirtListBox::OnCaptureLost>(this);
+
     kind = kindVirtWndListBox;
     // like a win32 listbox: takes the focus and is in the window's tab ring, so
     // the arrow keys reach OnKeyDown()
@@ -1712,82 +1801,92 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     GfxFillRect(ctx.gfx, thumb, colThumb);
 }
 
-bool VirtListBox::OnMouseDown(VirtMouseEvent& ev) {
+void VirtListBox::OnMouseDown(VirtMouseEvent* ev) {
     Rect thumb = ThumbRectLocal();
-    if (!thumb.IsEmpty() && thumb.Contains(ev.pt)) {
+    if (!thumb.IsEmpty() && thumb.Contains(ev->pt)) {
         draggingThumb = true;
-        dragStartY = ev.ptWindow.y;
+        dragStartY = ev->ptWindow.y;
         dragStartScrollY = scrollY;
         if (root) {
             root->SetCapture(this);
         }
-        return true;
+        ev->didHandle = true;
+        return;
     }
     Rect sb = ScrollbarRectLocal();
-    if (!sb.IsEmpty() && sb.Contains(ev.pt)) {
+    if (!sb.IsEmpty() && sb.Contains(ev->pt)) {
         // above / below the thumb: page towards the click
-        int dir = (ev.pt.y < thumb.y) ? -1 : 1;
+        int dir = (ev->pt.y < thumb.y) ? -1 : 1;
         ScrollBy(dir * UsableDy());
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    int idx = ItemFromPoint(ev.pt);
+    int idx = ItemFromPoint(ev->pt);
     if (idx < 0) {
-        return true;
+        ev->didHandle = true;
+        return;
     }
     SelectAndNotify(idx);
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtListBox::OnMouseMove(VirtMouseEvent& ev) {
+void VirtListBox::OnMouseMove(VirtMouseEvent* ev) {
     if (!draggingThumb) {
-        return false;
+        return;
     }
     Rect sb = ScrollbarRectLocal();
     Rect thumb = ThumbRectLocal();
     int range = sb.dy - thumb.dy;
     if (range <= 0) {
-        return true;
+        ev->didHandle = true;
+        return;
     }
-    int dy = ev.ptWindow.y - dragStartY;
+    int dy = ev->ptWindow.y - dragStartY;
     ScrollTo(dragStartScrollY + Scale(dy, MaxScrollY(), range));
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtListBox::OnMouseUp(VirtMouseEvent&) {
+void VirtListBox::OnMouseUp(VirtMouseEvent* ev) {
     draggingThumb = false;
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
 void VirtListBox::OnCaptureLost() {
     draggingThumb = false;
 }
 
-bool VirtListBox::OnMouseWheel(VirtMouseEvent& ev) {
-    if (ev.wheelDelta == 0) {
-        return false;
+void VirtListBox::OnMouseWheel(VirtMouseEvent* ev) {
+    if (ev->wheelDelta == 0) {
+        return;
     }
-    int lines = -(ev.wheelDelta * 3) / WHEEL_DELTA;
-    return ScrollBy(lines * GetItemHeight());
+    int lines = -(ev->wheelDelta * 3) / WHEEL_DELTA;
+    if (ScrollBy(lines * GetItemHeight())) {
+        ev->didHandle = true;
+    }
 }
 
-bool VirtListBox::OnDoubleClick(VirtMouseEvent& ev) {
-    int idx = ItemFromPoint(ev.pt);
+void VirtListBox::OnDoubleClick(VirtMouseEvent* ev) {
+    int idx = ItemFromPoint(ev->pt);
     if (idx < 0) {
-        return false;
+        return;
     }
     SelectAndNotify(idx);
     onDoubleClick.Call();
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtListBox::OnKeyDown(VirtKeyEvent& ev) {
+void VirtListBox::OnKeyDown(VirtKeyEvent* ev) {
     int n = ItemsCount();
     if (n == 0) {
-        return false;
+        return;
     }
     int perPage = std::max(UsableDy() / GetItemHeight(), 1);
     int idx = selIdx;
-    switch (ev.vkey) {
+    switch (ev->vkey) {
         case VK_UP:
             idx = (idx < 0) ? 0 : idx - 1;
             break;
@@ -1807,10 +1906,11 @@ bool VirtListBox::OnKeyDown(VirtKeyEvent& ev) {
             idx = n - 1;
             break;
         default:
-            return false;
+            return;
     }
     SelectAndNotify(Clamp(idx, 0, n - 1));
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
 //--- VirtSplitter
@@ -1850,6 +1950,14 @@ static void RegisterResizeOverlayClass() {
 }
 
 VirtSplitter::VirtSplitter() {
+    onMouseDown = MkMethod1<VirtSplitter, VirtMouseEvent*, &VirtSplitter::OnMouseDown>(this);
+    onMouseUp = MkMethod1<VirtSplitter, VirtMouseEvent*, &VirtSplitter::OnMouseUp>(this);
+    onMouseMove = MkMethod1<VirtSplitter, VirtMouseEvent*, &VirtSplitter::OnMouseMove>(this);
+    onMouseEnter = MkMethod0<VirtSplitter, &VirtSplitter::OnMouseEnter>(this);
+    onMouseLeave = MkMethod0<VirtSplitter, &VirtSplitter::OnMouseLeave>(this);
+    onCaptureLost = MkMethod0<VirtSplitter, &VirtSplitter::OnCaptureLost>(this);
+    onSetCursor = MkMethod1<VirtSplitter, VirtSetCursorEvent*, &VirtSplitter::OnSetCursor>(this);
+
     kind = kindVirtWndSplitter;
     // the mouse belongs to us for the whole drag, wherever it goes
     flags |= vwfCapturesMouse;
@@ -1927,40 +2035,41 @@ void VirtSplitter::Paint(VirtPaintCtx& ctx) {
     GfxFillRect(ctx.gfx, ctx.bounds, AccentColor(bgColor, 30));
 }
 
-bool VirtSplitter::OnMouseDown(VirtMouseEvent&) {
+void VirtSplitter::OnMouseDown(VirtMouseEvent* ev) {
     isDragging = true;
     if (!isLive) {
         UpdateOverlay();
     }
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtSplitter::OnMouseMove(VirtMouseEvent&) {
+void VirtSplitter::OnMouseMove(VirtMouseEvent* ev) {
     if (!isDragging) {
-        return false;
+        return;
     }
-    MoveEvent ev;
-    ev.w = this;
-    ev.finishedDragging = false;
-    onMove.Call(&ev);
-    if (ev.resizeAllowed && !isLive) {
+    MoveEvent mev;
+    mev.w = this;
+    mev.finishedDragging = false;
+    onMove.Call(&mev);
+    if (mev.resizeAllowed && !isLive) {
         UpdateOverlay();
     }
-    return true;
+    ev->didHandle = true;
 }
 
-bool VirtSplitter::OnMouseUp(VirtMouseEvent&) {
+void VirtSplitter::OnMouseUp(VirtMouseEvent* ev) {
     if (!isDragging) {
-        return false;
+        return;
     }
     isDragging = false;
     HideOverlay();
-    MoveEvent ev;
-    ev.w = this;
-    ev.finishedDragging = true;
-    onMove.Call(&ev);
+    MoveEvent mev;
+    mev.w = this;
+    mev.finishedDragging = true;
+    onMove.Call(&mev);
     Invalidate();
-    return true;
+    ev->didHandle = true;
 }
 
 void VirtSplitter::OnCaptureLost() {
@@ -1976,21 +2085,21 @@ void VirtSplitter::OnMouseLeave() {
     Invalidate();
 }
 
-bool VirtSplitter::OnSetCursor(Point) {
+void VirtSplitter::OnSetCursor(VirtSetCursorEvent* ev) {
     LPWSTR curId = (type == SplitterType::Vert) ? IDC_SIZEWE : IDC_SIZENS;
     if (isDragging) {
-        MoveEvent ev;
-        ev.w = this;
-        ev.finishedDragging = false;
+        MoveEvent mev;
+        mev.w = this;
+        mev.finishedDragging = false;
         // ask the owner whether the current position is allowed, so the cursor
         // can say "no" without moving anything
-        onMove.Call(&ev);
-        if (!ev.resizeAllowed) {
+        onMove.Call(&mev);
+        if (!mev.resizeAllowed) {
             curId = IDC_NO;
         }
     }
     SetCursorCached(curId);
-    return true;
+    ev->didHandle = true;
 }
 
 //--- VirtCustom
@@ -1998,6 +2107,8 @@ bool VirtSplitter::OnSetCursor(Point) {
 static Kind kindVirtWndCustom = "virtWndCustom";
 
 VirtCustom::VirtCustom() {
+    onMouseUp = MkMethod1<VirtCustom, VirtMouseEvent*, &VirtCustom::OnMouseUp>(this);
+
     kind = kindVirtWndCustom;
 }
 
@@ -2011,12 +2122,12 @@ void VirtCustom::Paint(VirtPaintCtx& ctx) {
     onPaint.Call(&ctx);
 }
 
-bool VirtCustom::OnMouseUp(VirtMouseEvent& ev) {
+void VirtCustom::OnMouseUp(VirtMouseEvent* ev) {
     if (!onClick.IsValid()) {
-        return false;
+        return;
     }
-    onClick.Call(&ev);
-    return true;
+    onClick.Call(ev);
+    ev->didHandle = true;
 }
 
 //--- VirtText
@@ -2128,6 +2239,13 @@ VirtText* NewVirtText(const VirtTextArgs& args) {
 static Kind kindVirtWndLink = "virtWndLink";
 
 VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
+    onMouseEnter = MkMethod0<VirtLink, &VirtLink::OnMouseEnter>(this);
+    onMouseLeave = MkMethod0<VirtLink, &VirtLink::OnMouseLeave>(this);
+    onMouseDown = MkMethod1<VirtLink, VirtMouseEvent*, &VirtLink::OnMouseDown>(this);
+    onMouseUp = MkMethod1<VirtLink, VirtMouseEvent*, &VirtLink::OnMouseUp>(this);
+    onSetCursor = MkMethod1<VirtLink, VirtSetCursorEvent*, &VirtLink::OnSetCursor>(this);
+    onGetTooltip = MkMethod1<VirtLink, VirtTooltipEvent*, &VirtLink::OnGetTooltip>(this);
+
     kind = kindVirtWndLink;
     flags &= ~vwfNoHitTest;
 }
@@ -2168,29 +2286,33 @@ void VirtLink::OnMouseLeave() {
     }
 }
 
-bool VirtLink::OnMouseDown(VirtMouseEvent&) {
+void VirtLink::OnMouseDown(VirtMouseEvent* ev) {
     // consume so that the click doesn't fall through to the page below
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtLink::OnMouseUp(VirtMouseEvent& ev) {
+void VirtLink::OnMouseUp(VirtMouseEvent* ev) {
     if (!onClick.IsValid()) {
-        return false;
+        return;
     }
-    onClick.Call(&ev);
-    return true;
+    onClick.Call(ev);
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtLink::OnSetCursor(Point) {
+void VirtLink::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-TempStr VirtLink::GetTooltipTemp(Point) {
+void VirtLink::OnGetTooltip(VirtTooltipEvent* ev) {
     if (!tooltip) {
-        return nullptr;
+        return;
     }
-    return str::DupTemp(tooltip);
+    ev->tip = str::DupTemp(tooltip);
+    return;
 }
 
 //--- VirtButton
@@ -2198,6 +2320,13 @@ TempStr VirtLink::GetTooltipTemp(Point) {
 static Kind kindVirtWndButton = "virtWndButton";
 
 VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
+    onMouseEnter = MkMethod0<VirtButton, &VirtButton::OnMouseEnter>(this);
+    onMouseLeave = MkMethod0<VirtButton, &VirtButton::OnMouseLeave>(this);
+    onMouseDown = MkMethod1<VirtButton, VirtMouseEvent*, &VirtButton::OnMouseDown>(this);
+    onMouseUp = MkMethod1<VirtButton, VirtMouseEvent*, &VirtButton::OnMouseUp>(this);
+    onKeyDown = MkMethod1<VirtButton, VirtKeyEvent*, &VirtButton::OnKeyDown>(this);
+    onSetCursor = MkMethod1<VirtButton, VirtSetCursorEvent*, &VirtButton::OnSetCursor>(this);
+
     kind = kindVirtWndButton;
     flags &= ~vwfNoHitTest;
     flags |= vwfFocusable;
@@ -2250,10 +2379,10 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
 }
 
 // Enter / Space press the button, like a win32 one
-bool VirtButton::OnKeyDown(VirtKeyEvent& ev) {
-    bool isPress = (ev.vkey == VK_RETURN) || (ev.vkey == VK_SPACE);
+void VirtButton::OnKeyDown(VirtKeyEvent* ev) {
+    bool isPress = (ev->vkey == VK_RETURN) || (ev->vkey == VK_SPACE);
     if (!isPress || !HasFlag(vwfEnabled) || !onClick.IsValid()) {
-        return false;
+        return;
     }
     VirtMouseEvent me;
     me.target = this;
@@ -2261,7 +2390,8 @@ bool VirtButton::OnKeyDown(VirtKeyEvent& ev) {
     me.pt = {bounds.dx / 2, bounds.dy / 2};
     me.ptWindow = {bounds.x + me.pt.x, bounds.y + me.pt.y};
     onClick.Call(&me);
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
 void VirtButton::OnMouseEnter() {
@@ -2272,24 +2402,27 @@ void VirtButton::OnMouseLeave() {
     Invalidate();
 }
 
-bool VirtButton::OnMouseDown(VirtMouseEvent&) {
-    return true;
+void VirtButton::OnMouseDown(VirtMouseEvent* ev) {
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtButton::OnMouseUp(VirtMouseEvent& ev) {
+void VirtButton::OnMouseUp(VirtMouseEvent* ev) {
     if (!onClick.IsValid()) {
-        return false;
+        return;
     }
-    onClick.Call(&ev);
-    return true;
+    onClick.Call(ev);
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtButton::OnSetCursor(Point) {
+void VirtButton::OnSetCursor(VirtSetCursorEvent* ev) {
     if (!HasFlag(vwfEnabled)) {
-        return false;
+        return;
     }
     SetCursorCached(IDC_HAND);
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
 //--- VirtIconButton
@@ -2297,6 +2430,13 @@ bool VirtButton::OnSetCursor(Point) {
 static Kind kindVirtWndIconButton = "virtWndIconButton";
 
 VirtIconButton::VirtIconButton() {
+    onMouseEnter = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseEnter>(this);
+    onMouseLeave = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseLeave>(this);
+    onMouseDown = MkMethod1<VirtIconButton, VirtMouseEvent*, &VirtIconButton::OnMouseDown>(this);
+    onMouseUp = MkMethod1<VirtIconButton, VirtMouseEvent*, &VirtIconButton::OnMouseUp>(this);
+    onSetCursor = MkMethod1<VirtIconButton, VirtSetCursorEvent*, &VirtIconButton::OnSetCursor>(this);
+    onGetTooltip = MkMethod1<VirtIconButton, VirtTooltipEvent*, &VirtIconButton::OnGetTooltip>(this);
+
     kind = kindVirtWndIconButton;
 }
 
@@ -2339,28 +2479,32 @@ void VirtIconButton::OnMouseLeave() {
     Invalidate();
 }
 
-bool VirtIconButton::OnMouseDown(VirtMouseEvent&) {
-    return true;
+void VirtIconButton::OnMouseDown(VirtMouseEvent* ev) {
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtIconButton::OnMouseUp(VirtMouseEvent& ev) {
+void VirtIconButton::OnMouseUp(VirtMouseEvent* ev) {
     if (!onClick.IsValid()) {
-        return false;
+        return;
     }
-    onClick.Call(&ev);
-    return true;
+    onClick.Call(ev);
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtIconButton::OnSetCursor(Point) {
+void VirtIconButton::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-TempStr VirtIconButton::GetTooltipTemp(Point) {
+void VirtIconButton::OnGetTooltip(VirtTooltipEvent* ev) {
     if (!tooltip) {
-        return nullptr;
+        return;
     }
-    return str::DupTemp(tooltip);
+    ev->tip = str::DupTemp(tooltip);
+    return;
 }
 
 //--- VirtCloseButton
@@ -2374,6 +2518,13 @@ static Kind kindVirtWndCloseButton = "virtWndCloseButton";
 #define kColCloseXHoverBg RGB(0xC1, 0x35, 0x35) // red-ish
 
 VirtCloseButton::VirtCloseButton() {
+    onMouseEnter = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseEnter>(this);
+    onMouseLeave = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseLeave>(this);
+    onMouseDown = MkMethod1<VirtCloseButton, VirtMouseEvent*, &VirtCloseButton::OnMouseDown>(this);
+    onMouseUp = MkMethod1<VirtCloseButton, VirtMouseEvent*, &VirtCloseButton::OnMouseUp>(this);
+    onSetCursor = MkMethod1<VirtCloseButton, VirtSetCursorEvent*, &VirtCloseButton::OnSetCursor>(this);
+    onGetTooltip = MkMethod1<VirtCloseButton, VirtTooltipEvent*, &VirtCloseButton::OnGetTooltip>(this);
+
     kind = kindVirtWndCloseButton;
 }
 
@@ -2438,28 +2589,32 @@ void VirtCloseButton::OnMouseLeave() {
     Invalidate();
 }
 
-bool VirtCloseButton::OnMouseDown(VirtMouseEvent&) {
-    return true;
+void VirtCloseButton::OnMouseDown(VirtMouseEvent* ev) {
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtCloseButton::OnMouseUp(VirtMouseEvent& ev) {
+void VirtCloseButton::OnMouseUp(VirtMouseEvent* ev) {
     if (!onClick.IsValid()) {
-        return false;
+        return;
     }
-    onClick.Call(&ev);
-    return true;
+    onClick.Call(ev);
+    ev->didHandle = true;
+    return;
 }
 
-bool VirtCloseButton::OnSetCursor(Point) {
+void VirtCloseButton::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
-    return true;
+    ev->didHandle = true;
+    return;
 }
 
-TempStr VirtCloseButton::GetTooltipTemp(Point) {
+void VirtCloseButton::OnGetTooltip(VirtTooltipEvent* ev) {
     if (!tooltip) {
-        return nullptr;
+        return;
     }
-    return str::DupTemp(tooltip);
+    ev->tip = str::DupTemp(tooltip);
+    return;
 }
 
 //--- LabelWithClose
@@ -2960,6 +3115,11 @@ CommandsContext* gCommandsContext = nullptr;
 static Kind kindVirtRichText = "virtRichText";
 
 VirtRichText::VirtRichText() {
+    onMouseDown = MkMethod1<VirtRichText, VirtMouseEvent*, &VirtRichText::OnMouseDown>(this);
+    onMouseUp = MkMethod1<VirtRichText, VirtMouseEvent*, &VirtRichText::OnMouseUp>(this);
+    onSetCursor = MkMethod1<VirtRichText, VirtSetCursorEvent*, &VirtRichText::OnSetCursor>(this);
+    onGetTooltip = MkMethod1<VirtRichText, VirtTooltipEvent*, &VirtRichText::OnGetTooltip>(this);
+
     kind = kindVirtRichText;
 }
 
@@ -3587,38 +3747,40 @@ TipLink* VirtRichText::LinkAt(Point ptLocal) {
 }
 
 // a click on a link runs it; anything else bubbles up to whoever hosts us
-bool VirtRichText::OnMouseDown(VirtMouseEvent& ev) {
-    return LinkAt(ev.pt) != nullptr;
+void VirtRichText::OnMouseDown(VirtMouseEvent* ev) {
+    if (LinkAt(ev->pt)) {
+        ev->didHandle = true;
+    }
 }
 
-bool VirtRichText::OnMouseUp(VirtMouseEvent& ev) {
-    TipLink* link = LinkAt(ev.pt);
+void VirtRichText::OnMouseUp(VirtMouseEvent* ev) {
+    TipLink* link = LinkAt(ev->pt);
     if (!link) {
         if (onClick.IsValid()) {
-            onClick.Call(&ev);
-            return true;
+            onClick.Call(ev);
+            ev->didHandle = true;
         }
-        return false;
+        return;
     }
     HWND hwnd = hwndForCmds ? hwndForCmds : GetHwnd();
     ExecuteTipLink(hwnd, link->cmd);
-    return true;
+    ev->didHandle = true;
 }
 
-bool VirtRichText::OnSetCursor(Point ptLocal) {
-    if (!LinkAt(ptLocal) && !onClick.IsValid()) {
-        return false;
+void VirtRichText::OnSetCursor(VirtSetCursorEvent* ev) {
+    if (!LinkAt(ev->ptLocal) && !onClick.IsValid()) {
+        return;
     }
     SetCursorCached(IDC_HAND);
-    return true;
+    ev->didHandle = true;
 }
 
-TempStr VirtRichText::GetTooltipTemp(Point ptLocal) {
-    TipLink* link = LinkAt(ptLocal);
+void VirtRichText::OnGetTooltip(VirtTooltipEvent* ev) {
+    TipLink* link = LinkAt(ev->ptLocal);
     if (!link) {
-        return nullptr;
+        return;
     }
-    return str::DupTemp(link->cmd);
+    ev->tip = str::DupTemp(link->cmd);
 }
 
 // runs a link target: "Cmd..." sends the command to hwnd, a url goes to gTipOpenUrl.

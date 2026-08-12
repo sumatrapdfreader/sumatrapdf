@@ -57,6 +57,8 @@ struct VirtMouseEvent {
     bool isCtrl = false;
     bool isShift = false;
     bool isAlt = false;
+    // true = consume (stop bubbling)
+    bool didHandle = false;
 };
 
 struct VirtKeyEvent {
@@ -65,9 +67,38 @@ struct VirtKeyEvent {
     bool isCtrl = false;
     bool isShift = false;
     bool isAlt = false;
+    bool didHandle = false;
+};
+
+struct VirtSetCursorEvent {
+    VirtWnd* w = nullptr;
+    Point ptLocal{};
+    bool didHandle = false;
+};
+
+struct VirtCharEvent {
+    VirtWnd* w = nullptr;
+    int c = 0;
+    bool didHandle = false;
+};
+
+struct VirtFocusEvent {
+    VirtWnd* w = nullptr;
+    bool gotFocus = false;
+};
+
+struct VirtTooltipEvent {
+    VirtWnd* w = nullptr;
+    Point ptLocal{};
+    TempStr tip; // set by handler
 };
 
 using VirtMouseHandler = Func1<VirtMouseEvent*>;
+using VirtKeyHandler = Func1<VirtKeyEvent*>;
+using VirtSetCursorHandler = Func1<VirtSetCursorEvent*>;
+using VirtCharHandler = Func1<VirtCharEvent*>;
+using VirtFocusHandler = Func1<VirtFocusEvent*>;
+using VirtTooltipHandler = Func1<VirtTooltipEvent*>;
 using VirtPaintHandler = Func1<VirtPaintCtx*>;
 
 struct VirtWnd : LayoutBase {
@@ -108,21 +139,21 @@ struct VirtWnd : LayoutBase {
     virtual Point ScrollOffset();
     VirtWnd* WndFromPoint(Point ptWindow, Point* ptLocalOut);
 
-    // return true to consume the event, false to let it bubble to the parent
-    virtual bool OnMouseDown(VirtMouseEvent&);
-    virtual bool OnMouseUp(VirtMouseEvent&);
-    virtual bool OnMouseMove(VirtMouseEvent&);
-    virtual bool OnMouseWheel(VirtMouseEvent&);
-    virtual bool OnDoubleClick(VirtMouseEvent&);
-    virtual bool OnContextMenu(VirtMouseEvent&);
-    virtual void OnMouseEnter();
-    virtual void OnMouseLeave();
-    virtual void OnCaptureLost();
-    virtual bool OnKeyDown(VirtKeyEvent&);
-    virtual bool OnChar(int c);
-    virtual void OnFocusChanged(bool gotFocus);
-    virtual bool OnSetCursor(Point ptLocal);
-    virtual TempStr GetTooltipTemp(Point ptLocal);
+    // dispatch to on* handlers; return true to consume (stop bubbling)
+    bool OnMouseDown(VirtMouseEvent&);
+    bool OnMouseUp(VirtMouseEvent&);
+    bool OnMouseMove(VirtMouseEvent&);
+    bool OnMouseWheel(VirtMouseEvent&);
+    bool OnDoubleClick(VirtMouseEvent&);
+    bool OnContextMenu(VirtMouseEvent&);
+    void OnMouseEnter();
+    void OnMouseLeave();
+    void OnCaptureLost();
+    bool OnKeyDown(VirtKeyEvent&);
+    bool OnChar(int c);
+    void OnFocusChanged(bool gotFocus);
+    bool OnSetCursor(Point ptLocal);
+    TempStr GetTooltipTemp(Point ptLocal);
 
     void AddChild(VirtWnd*);
     void InsertChild(VirtWnd*, int idx);
@@ -155,6 +186,22 @@ struct VirtWnd : LayoutBase {
     void SetFlag(u32 f, bool on);
     bool HasFlag(u32 f) const;
     void SetRoot(VirtRoot*);
+
+    // input / focus / cursor (wire with MkMethod1 in ctors; paint stays virtual)
+    VirtMouseHandler onMouseDown;
+    VirtMouseHandler onMouseUp;
+    VirtMouseHandler onMouseMove;
+    VirtMouseHandler onMouseWheel;
+    VirtMouseHandler onDoubleClick;
+    VirtMouseHandler onContextMenu;
+    Func0 onMouseEnter;
+    Func0 onMouseLeave;
+    Func0 onCaptureLost;
+    VirtKeyHandler onKeyDown;
+    VirtCharHandler onChar;
+    VirtFocusHandler onFocusChanged;
+    VirtSetCursorHandler onSetCursor;
+    VirtTooltipHandler onGetTooltip;
 };
 
 bool IsVirtWndOfKind(VirtWnd*, Kind);
@@ -329,7 +376,7 @@ struct VirtScroll : VirtWnd {
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
     Point ScrollOffset() override;
-    bool OnMouseWheel(VirtMouseEvent&) override;
+    void OnMouseWheel(VirtMouseEvent*);
 
     void SetContentDy(int);
     int MaxScrollY() const;
@@ -397,13 +444,13 @@ struct VirtListBox : VirtWnd {
     Size GetIdealSize() override;
     void SetBounds(Rect) override;
     void Paint(VirtPaintCtx&) override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    bool OnMouseMove(VirtMouseEvent&) override;
-    bool OnMouseWheel(VirtMouseEvent&) override;
-    bool OnDoubleClick(VirtMouseEvent&) override;
-    bool OnKeyDown(VirtKeyEvent&) override;
-    void OnCaptureLost() override;
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnMouseMove(VirtMouseEvent*);
+    void OnMouseWheel(VirtMouseEvent*);
+    void OnDoubleClick(VirtMouseEvent*);
+    void OnKeyDown(VirtKeyEvent*);
+    void OnCaptureLost();
 
     // for efficiency you can re-use the model: get it, change the data, call
     // SetModel() again
@@ -476,13 +523,13 @@ struct VirtSplitter : VirtWnd {
     Size GetIdealSize() override;
 
     void Paint(VirtPaintCtx&) override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    bool OnMouseMove(VirtMouseEvent&) override;
-    void OnMouseEnter() override;
-    void OnMouseLeave() override;
-    void OnCaptureLost() override;
-    bool OnSetCursor(Point ptLocal) override;
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnMouseMove(VirtMouseEvent*);
+    void OnMouseEnter();
+    void OnMouseLeave();
+    void OnCaptureLost();
+    void OnSetCursor(VirtSetCursorEvent*);
 
   private:
     // the dotted popup of a non-live drag; above the child windows, which is
@@ -506,7 +553,7 @@ struct VirtCustom : VirtWnd {
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
+    void OnMouseUp(VirtMouseEvent*);
 };
 
 //--- controls
@@ -580,12 +627,12 @@ struct VirtLink : VirtText {
     void SetTooltip(Str);
 
     void Paint(VirtPaintCtx&) override;
-    void OnMouseEnter() override;
-    void OnMouseLeave() override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    bool OnSetCursor(Point ptLocal) override;
-    TempStr GetTooltipTemp(Point ptLocal) override;
+    void OnMouseEnter();
+    void OnMouseLeave();
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnSetCursor(VirtSetCursorEvent*);
+    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 struct VirtButton : VirtText {
@@ -602,12 +649,12 @@ struct VirtButton : VirtText {
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
-    void OnMouseEnter() override;
-    void OnMouseLeave() override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    bool OnKeyDown(VirtKeyEvent&) override;
-    bool OnSetCursor(Point ptLocal) override;
+    void OnMouseEnter();
+    void OnMouseLeave();
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnKeyDown(VirtKeyEvent*);
+    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 struct VirtIconButton : VirtWnd {
@@ -627,12 +674,12 @@ struct VirtIconButton : VirtWnd {
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
-    void OnMouseEnter() override;
-    void OnMouseLeave() override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    bool OnSetCursor(Point ptLocal) override;
-    TempStr GetTooltipTemp(Point ptLocal) override;
+    void OnMouseEnter();
+    void OnMouseLeave();
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnSetCursor(VirtSetCursorEvent*);
+    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 // The ✕ that closes or removes something, styled like the tab close button: a
@@ -657,12 +704,12 @@ struct VirtCloseButton : VirtWnd {
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
-    void OnMouseEnter() override;
-    void OnMouseLeave() override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    bool OnSetCursor(Point ptLocal) override;
-    TempStr GetTooltipTemp(Point ptLocal) override;
+    void OnMouseEnter();
+    void OnMouseLeave();
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnSetCursor(VirtSetCursorEvent*);
+    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 // The header of a side panel: a label on the left, the ✕ that closes the panel
@@ -824,10 +871,10 @@ struct VirtRichText : VirtWnd {
     Size GetIdealSize() override;
     void SetBounds(Rect) override;
     void Paint(VirtPaintCtx&) override;
-    bool OnMouseDown(VirtMouseEvent&) override;
-    bool OnMouseUp(VirtMouseEvent&) override;
-    bool OnSetCursor(Point ptLocal) override;
-    TempStr GetTooltipTemp(Point ptLocal) override;
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnSetCursor(VirtSetCursorEvent*);
+    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 VirtRichText* ParseTip(Str s);
