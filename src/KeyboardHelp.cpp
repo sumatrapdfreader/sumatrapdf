@@ -151,7 +151,9 @@ struct KeyboardHelpWnd : WindowBase {
     void BuildContent();
     void SyncColors();
     void PaintContent(HDC hdc, const Rect& client);
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnPaint(WindowBase::PaintEvent* ev);
+    void OnSetCursor(WindowBase::SetCursorEvent* ev);
+    void OnMouseEvent(WindowBase::MouseEvent* ev);
     void OnKeyDown(KeyEvent* ev);
 };
 
@@ -550,65 +552,39 @@ void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
     }
 }
 
-void KeyboardHelpWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    HWND hwnd = ev->hwnd;
-    UINT msg = ev->msg;
-    WPARAM wp = ev->wparam;
-    LPARAM lp = ev->lparam;
-    switch (msg) {
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            Rect client = HwndClientRect(hwnd);
-            // double-buffer: a lot of small draws would otherwise flicker
-            HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP bmp = CreateCompatibleBitmap(hdc, client.dx, client.dy);
-            HGDIOBJ oldBmp = SelectObject(memDC, bmp);
-            PaintContent(memDC, client);
-            BitBlt(hdc, 0, 0, client.dx, client.dy, memDC, 0, 0, SRCCOPY);
-            SelectObject(memDC, oldBmp);
-            DeleteObject(bmp);
-            DeleteDC(memDC);
-            EndPaint(hwnd, &ps);
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
-        }
-        case WM_SETCURSOR: {
-            LRESULT res = 0;
-            if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
-                ev->result = res;
-                ev->didHandle = true;
-                return;
-            }
-            Point pt = HwndGetCursorPos(hwnd);
-            if (pt.y < contentTop) {
-                SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
-                ev->result = TRUE;
-                ev->didHandle = true;
-                return;
-            }
-            break;
-        }
-        case WM_LBUTTONDOWN: {
-            LRESULT res = 0;
-            if (VirtTreeOnMessage(hwnd, vroot, msg, wp, lp, res)) {
-                ev->result = res;
-                ev->didHandle = true;
-                return;
-            }
-            // dragging the title band moves the window (it has no title bar of
-            // its own); hand off to the standard move loop
-            int y = (short)HIWORD(lp);
-            if (y < contentTop) {
-                ReleaseCapture();
-                SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
-            break;
-        }
+void KeyboardHelpWnd::OnPaint(WindowBase::PaintEvent* ev) {
+    Rect client = HwndClientRect(hwnd);
+    // double-buffer: a lot of small draws would otherwise flicker
+    HDC memDC = CreateCompatibleDC(ev->hdc);
+    HBITMAP bmp = CreateCompatibleBitmap(ev->hdc, client.dx, client.dy);
+    HGDIOBJ oldBmp = SelectObject(memDC, bmp);
+    PaintContent(memDC, client);
+    BitBlt(ev->hdc, 0, 0, client.dx, client.dy, memDC, 0, 0, SRCCOPY);
+    SelectObject(memDC, oldBmp);
+    DeleteObject(bmp);
+    DeleteDC(memDC);
+}
+
+// title-band cursor. VirtTree for content is handled after this in WndProcDefault
+void KeyboardHelpWnd::OnSetCursor(WindowBase::SetCursorEvent* ev) {
+    Point pt = HwndGetCursorPos(hwnd);
+    if (pt.y < contentTop) {
+        SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
+        ev->result = TRUE;
+        ev->didHandle = true;
+    }
+}
+
+// dragging the title band moves the window (it has no title bar of its own)
+void KeyboardHelpWnd::OnMouseEvent(WindowBase::MouseEvent* ev) {
+    if (ev->msg != WM_LBUTTONDOWN) {
+        return;
+    }
+    int y = (short)HIWORD(ev->lparam);
+    if (y < contentTop) {
+        ReleaseCapture();
+        SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+        ev->result = 0;
     }
 }
 
@@ -624,7 +600,9 @@ void KeyboardHelpWnd::OnKeyDown(KeyEvent* ev) {
 
 bool KeyboardHelpWnd::Create(MainWindow* win) {
     this->win = win;
-    onWndProc = MkMethod1<KeyboardHelpWnd, WindowBase::WndProcEvent*, &KeyboardHelpWnd::WndProc>(this);
+    onPaint = MkMethod1<KeyboardHelpWnd, WindowBase::PaintEvent*, &KeyboardHelpWnd::OnPaint>(this);
+    onSetCursor = MkMethod1<KeyboardHelpWnd, WindowBase::SetCursorEvent*, &KeyboardHelpWnd::OnSetCursor>(this);
+    onMouseEvent = MkMethod1<KeyboardHelpWnd, WindowBase::MouseEvent*, &KeyboardHelpWnd::OnMouseEvent>(this);
     onKeyDown = MkMethod1<KeyboardHelpWnd, KeyEvent*, &KeyboardHelpWnd::OnKeyDown>(this);
     {
         CreateCustomArgs args;

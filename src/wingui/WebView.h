@@ -132,7 +132,10 @@ struct WebviewWnd : WindowBase {
 
     virtual void OnBrowserMessage(Str msg);
 
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnTimer(WindowBase::TimerEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
+    void OnActivate(WindowBase::ActivateEvent* ev);
+    void OnShowWindow(WindowBase::ShowWindowEvent* ev);
 
     void UpdateWebviewSize();
 

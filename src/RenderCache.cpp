@@ -1238,7 +1238,7 @@ struct DebugTextWnd : WindowBase {
     void LayoutToClient();
     void UpdateTheme();
     void SetTextContent(Str text);
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
     void ScheduleDelete();
 };
 
@@ -1290,7 +1290,7 @@ void DebugTextWnd::SetTextContent(Str text) {
 }
 
 bool DebugTextWnd::Create(Str title, int fontSize) {
-    onWndProc = MkMethod1<DebugTextWnd, WindowBase::WndProcEvent*, &DebugTextWnd::WndProc>(this);
+    onSize = MkMethod1<DebugTextWnd, WindowBase::SizeEvent*, &DebugTextWnd::OnSize>(this);
     {
         CreateCustomArgs args;
         args.title = title;
@@ -1330,12 +1330,11 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     return true;
 }
 
-void DebugTextWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_SIZE) {
-        LayoutToClient();
-        ev->result = 0;
-        ev->didHandle = true;
+void DebugTextWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
+        return;
     }
+    LayoutToClient();
 }
 
 static DebugTextWnd* gRenderInfoWnd = nullptr;

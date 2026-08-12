@@ -179,30 +179,30 @@ void SimpleBrowserWindow::PreTranslate(WindowBase::PreTranslateEvent* ev) {
     }
 }
 
-void SimpleBrowserWindow::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_SETFOCUS) {
-        if (webView) {
-            webView->Focus();
-        }
-        ev->result = 0;
-        ev->didHandle = true;
+void SimpleBrowserWindow::OnFocus(WindowBase::FocusEvent*) {
+    if (webView) {
+        webView->Focus();
+    }
+}
+
+void SimpleBrowserWindow::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
         return;
     }
-    if (ev->msg == WM_SIZE) {
-        LayoutControls(this);
-        ev->result = 0;
-        ev->didHandle = true;
-        return;
-    }
-    if (ev->msg == WM_COMMAND && LOWORD(ev->wparam) == CmdClose) {
-        SendMessageW(ev->hwnd, WM_CLOSE, 0, 0);
-        ev->result = 0;
+    LayoutControls(this);
+}
+
+void SimpleBrowserWindow::OnCommand(WindowBase::CommandEvent* ev) {
+    if (LOWORD(ev->wparam) == CmdClose) {
+        SendMessageW(hwnd, WM_CLOSE, 0, 0);
         ev->didHandle = true;
     }
 }
 
 HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
-    onWndProc = MkMethod1<SimpleBrowserWindow, WindowBase::WndProcEvent*, &SimpleBrowserWindow::WndProc>(this);
+    onFocus = MkMethod1<SimpleBrowserWindow, WindowBase::FocusEvent*, &SimpleBrowserWindow::OnFocus>(this);
+    onSize = MkMethod1<SimpleBrowserWindow, WindowBase::SizeEvent*, &SimpleBrowserWindow::OnSize>(this);
+    onCommand = MkMethod1<SimpleBrowserWindow, WindowBase::CommandEvent*, &SimpleBrowserWindow::OnCommand>(this);
     onKeyDown = MkMethod1<SimpleBrowserWindow, KeyEvent*, &SimpleBrowserWindow::OnKeyDown>(this);
     onPreTranslate =
         MkMethod1<SimpleBrowserWindow, WindowBase::PreTranslateEvent*, &SimpleBrowserWindow::PreTranslate>(this);

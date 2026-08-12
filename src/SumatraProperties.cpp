@@ -56,7 +56,7 @@ struct PropertiesWnd : WindowBase {
     void SetPropsText(Str text);
     void SizeToContent();
     void CopyToClipboard();
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
@@ -843,13 +843,12 @@ void PropertiesWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-void PropertiesWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_SIZE) {
-        LayoutToClient();
-        HwndInvalidate(ev->hwnd);
-        ev->result = 0;
-        ev->didHandle = true;
+void PropertiesWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
+        return;
     }
+    LayoutToClient();
+    HwndInvalidate(hwnd);
 }
 
 void PropertiesWnd::OnKeyDown(KeyEvent* ev) {
@@ -1054,7 +1053,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnPropertiesClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnPropertiesDestroy);
     wnd->onCommand = MkMethod1<PropertiesWnd, WindowBase::CommandEvent*, &PropertiesWnd::OnCommand>(wnd);
-    wnd->onWndProc = MkMethod1<PropertiesWnd, WindowBase::WndProcEvent*, &PropertiesWnd::WndProc>(wnd);
+    wnd->onSize = MkMethod1<PropertiesWnd, WindowBase::SizeEvent*, &PropertiesWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<PropertiesWnd, KeyEvent*, &PropertiesWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate = MkMethod1<PropertiesWnd, WindowBase::PreTranslateEvent*, &PropertiesWnd::PreTranslate>(wnd);
     if (!wnd->Create(parent)) {

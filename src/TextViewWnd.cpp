@@ -26,7 +26,7 @@ struct TextViewWnd : WindowBase {
     void LayoutToClient();
     void UpdateTheme();
     static Str FormatTextForEdit(Str text);
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
@@ -134,12 +134,11 @@ bool TextViewWnd::Create(Str title, Str text) {
     return true;
 }
 
-void TextViewWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_SIZE) {
-        LayoutToClient();
-        ev->result = 0;
-        ev->didHandle = true;
+void TextViewWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
+        return;
     }
+    LayoutToClient();
 }
 
 // Esc closes PDF Info / Errors / outline text windows (issue #5856)
@@ -186,7 +185,7 @@ HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
     wnd->hwndPtr = hwndPtr;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    wnd->onWndProc = MkMethod1<TextViewWnd, WindowBase::WndProcEvent*, &TextViewWnd::WndProc>(wnd);
+    wnd->onSize = MkMethod1<TextViewWnd, WindowBase::SizeEvent*, &TextViewWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {
@@ -201,7 +200,7 @@ void ShowTextInWindowDialog(Str title, Str text) {
     wnd->isDialog = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    wnd->onWndProc = MkMethod1<TextViewWnd, WindowBase::WndProcEvent*, &TextViewWnd::WndProc>(wnd);
+    wnd->onSize = MkMethod1<TextViewWnd, WindowBase::SizeEvent*, &TextViewWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {

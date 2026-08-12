@@ -115,6 +115,37 @@ struct WindowBase {
         HWND other = nullptr;
         bool didHandle = false;
     };
+    // WM_DPICHANGED: suggested is the system-recommended window rect
+    struct DpiChangedEvent {
+        WindowBase* w = nullptr;
+        UINT dpiX = 0;
+        UINT dpiY = 0;
+        RECT* suggested = nullptr;
+        bool didHandle = false;
+    };
+    // WM_SETCURSOR: hitTest is LOWORD(lParam), mouseMsg is HIWORD(lParam)
+    struct SetCursorEvent {
+        WindowBase* w = nullptr;
+        HWND hwndCursor = nullptr; // (HWND)wParam
+        UINT hitTest = 0;
+        UINT mouseMsg = 0;
+        LRESULT result = FALSE;
+        bool didHandle = false;
+    };
+    // WM_NCHITTEST: screenPos is from lParam; set result to HT* and didHandle
+    struct NcHitTestEvent {
+        WindowBase* w = nullptr;
+        Point screenPos{};
+        LRESULT result = HTCLIENT;
+        bool didHandle = false;
+    };
+    // WM_SHOWWINDOW: show is wParam; status is lParam (SW_*)
+    struct ShowWindowEvent {
+        WindowBase* w = nullptr;
+        bool show = false;
+        LPARAM status = 0;
+        bool didHandle = false;
+    };
     struct CommandEvent {
         WindowBase* w = nullptr;
         WPARAM wparam = 0;
@@ -195,6 +226,10 @@ struct WindowBase {
     using AttachHandler = Func1<AttachEvent*>;
     using FocusHandler = Func1<FocusEvent*>;
     using ActivateHandler = Func1<ActivateEvent*>;
+    using DpiChangedHandler = Func1<DpiChangedEvent*>;
+    using SetCursorHandler = Func1<SetCursorEvent*>;
+    using NcHitTestHandler = Func1<NcHitTestEvent*>;
+    using ShowWindowHandler = Func1<ShowWindowEvent*>;
     using CommandHandler = Func1<CommandEvent*>;
     using CreateHandler = Func1<CreateEvent*>;
     using DropFilesHandler = Func1<DropFilesEvent*>;
@@ -298,6 +333,10 @@ struct WindowBase {
     AttachHandler onAttach;
     FocusHandler onFocus;
     ActivateHandler onActivate;
+    DpiChangedHandler onDpiChanged;
+    SetCursorHandler onSetCursor;
+    NcHitTestHandler onNcHitTest;
+    ShowWindowHandler onShowWindow;
     CommandHandler onCommand;
     CreateHandler onCreate;
     DropFilesHandler onDropFiles;

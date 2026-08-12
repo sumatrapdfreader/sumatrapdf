@@ -79,7 +79,7 @@ struct TabGroupsWnd : WindowBase {
     void UpdateDeleteButton();
     void OnCancel();
     void OnOk();
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
 };
@@ -341,13 +341,12 @@ void TabGroupsWnd::OnOk() {
     }
 }
 
-void TabGroupsWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_SIZE) {
-        LayoutToClient();
-        HwndInvalidate(ev->hwnd);
-        ev->result = 0;
-        ev->didHandle = true;
+void TabGroupsWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
+        return;
     }
+    LayoutToClient();
+    HwndInvalidate(hwnd);
 }
 
 void TabGroupsWnd::OnKeyDown(KeyEvent* ev) {
@@ -502,7 +501,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     wnd->font = GetAppFont(win->hwndFrame);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
-    wnd->onWndProc = MkMethod1<TabGroupsWnd, WindowBase::WndProcEvent*, &TabGroupsWnd::WndProc>(wnd);
+    wnd->onSize = MkMethod1<TabGroupsWnd, WindowBase::SizeEvent*, &TabGroupsWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<TabGroupsWnd, KeyEvent*, &TabGroupsWnd::OnKeyDown>(wnd);
     if (!wnd->Create(win, mode)) {
         delete wnd;

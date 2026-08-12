@@ -1064,6 +1064,9 @@ struct LogViewWnd : WindowBase {
 
     bool Create();
     void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
+    void OnTimer(WindowBase::TimerEvent* ev);
+    void OnDestroy(WindowBase::DestroyEvent* ev);
 };
 
 static void InvalidateTabBar() {
@@ -1149,6 +1152,9 @@ static VirtButton* NewToolButton(Str text, const VirtMouseHandler& onClick) {
 
 bool LogViewWnd::Create() {
     onWndProc = MkMethod1<LogViewWnd, WindowBase::WndProcEvent*, &LogViewWnd::WndProc>(this);
+    onSize = MkMethod1<LogViewWnd, WindowBase::SizeEvent*, &LogViewWnd::OnSize>(this);
+    onTimer = MkMethod1<LogViewWnd, WindowBase::TimerEvent*, &LogViewWnd::OnTimer>(this);
+    onDestroy = MkMethod1<LogViewWnd, WindowBase::DestroyEvent*, &LogViewWnd::OnDestroy>(this);
     {
         CreateCustomArgs args;
         args.className = L"LogViewMain";
@@ -1210,32 +1216,31 @@ bool LogViewWnd::Create() {
     return true;
 }
 
+void LogViewWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
+        return;
+    }
+    DoLayout(ev->size);
+    HwndInvalidate(hwnd);
+}
+
+void LogViewWnd::OnTimer(WindowBase::TimerEvent* ev) {
+    if (ev->timerId == kFilterTimerId) {
+        KillTimer(hwnd, kFilterTimerId);
+        OnFilterChanged();
+    }
+}
+
+void LogViewWnd::OnDestroy(WindowBase::DestroyEvent*) {
+    PostQuitMessage(0);
+}
+
+// custom app message for the log drain queue
 void LogViewWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    switch (ev->msg) {
-        case WM_APP_NEW_LOGS:
-            DrainQueue();
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
-        case WM_TIMER:
-            if (ev->wparam == kFilterTimerId) {
-                KillTimer(ev->hwnd, kFilterTimerId);
-                OnFilterChanged();
-            }
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
-        case WM_SIZE:
-            DoLayout({LOWORD(ev->lparam), HIWORD(ev->lparam)});
-            HwndInvalidate(ev->hwnd);
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
+    if (ev->msg == WM_APP_NEW_LOGS) {
+        DrainQueue();
+        ev->result = 0;
+        ev->didHandle = true;
     }
 }
 

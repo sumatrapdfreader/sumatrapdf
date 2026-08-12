@@ -142,7 +142,7 @@ struct SelectionTranslateWnd : WindowBase {
 
     void OnSize(WindowBase::SizeEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
     void OnKeyDown(KeyEvent* ev);
 };
 
@@ -1009,17 +1009,16 @@ void SelectionTranslateWnd::SetTranslateButtonText(Str s) {
 // DPI, so re-pick the font and re-run the layout: each control's ideal size is
 // measured from its font, so they resize with it. Note the Padding insets were
 // DpiScale()d once when the layout tree was built and keep their old scale.
-void SelectionTranslateWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_DPICHANGED) {
-        RECT* r = (RECT*)ev->lparam;
-        SetWindowPos(ev->hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
+void SelectionTranslateWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
+    RECT* r = ev->suggested;
+    if (r) {
+        SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
                      SWP_NOZORDER | SWP_NOACTIVATE);
-        UpdateFont();
-        Relayout();
-        HwndInvalidate(ev->hwnd, true);
-        ev->result = 0;
-        ev->didHandle = true;
     }
+    UpdateFont();
+    Relayout();
+    HwndInvalidate(hwnd, true);
+    ev->didHandle = true;
 }
 
 void SelectionTranslateWnd::Relayout(bool initial) {
@@ -1469,7 +1468,8 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     wnd->onSize = MkMethod1<SelectionTranslateWnd, WindowBase::SizeEvent*, &SelectionTranslateWnd::OnSize>(wnd);
     wnd->onGetMinMaxInfo =
         MkMethod1<SelectionTranslateWnd, WindowBase::GetMinMaxInfoEvent*, &SelectionTranslateWnd::OnGetMinMaxInfo>(wnd);
-    wnd->onWndProc = MkMethod1<SelectionTranslateWnd, WindowBase::WndProcEvent*, &SelectionTranslateWnd::WndProc>(wnd);
+    wnd->onDpiChanged =
+        MkMethod1<SelectionTranslateWnd, WindowBase::DpiChangedEvent*, &SelectionTranslateWnd::OnDpiChanged>(wnd);
     wnd->onKeyDown = MkMethod1<SelectionTranslateWnd, KeyEvent*, &SelectionTranslateWnd::OnKeyDown>(wnd);
     Str title = _TRA("Translate");
     if (!wnd->Create(hwndOwner, selText, title)) {

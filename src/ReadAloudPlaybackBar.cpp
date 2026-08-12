@@ -35,7 +35,8 @@ struct ReadAloudPlaybackBar : WindowBase {
     HWND Create(HWND parentCanvas);
     void SetSession(WindowTab* tab);
     void UpdateLayout();
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnMouseEvent(WindowBase::MouseEvent* ev);
+    void OnSetCursor(WindowBase::SetCursorEvent* ev);
     void OnPaint(WindowBase::PaintEvent* ev);
 
     WindowTab* sessionTab = nullptr;
@@ -99,7 +100,9 @@ static TempStr SpeedLabelTemp() {
 
 HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
     onPaint = MkMethod1<ReadAloudPlaybackBar, WindowBase::PaintEvent*, &ReadAloudPlaybackBar::OnPaint>(this);
-    onWndProc = MkMethod1<ReadAloudPlaybackBar, WindowBase::WndProcEvent*, &ReadAloudPlaybackBar::WndProc>(this);
+    onMouseEvent = MkMethod1<ReadAloudPlaybackBar, WindowBase::MouseEvent*, &ReadAloudPlaybackBar::OnMouseEvent>(this);
+    onSetCursor =
+        MkMethod1<ReadAloudPlaybackBar, WindowBase::SetCursorEvent*, &ReadAloudPlaybackBar::OnSetCursor>(this);
     CreateCustomArgs args;
     args.parent = parentCanvas;
     args.style = WS_CHILD | SS_CENTER;
@@ -248,70 +251,59 @@ void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
     buffer.Flush(hdcIn);
 }
 
-void ReadAloudPlaybackBar::WndProc(WindowBase::WndProcEvent* ev) {
-    HWND hwndIn = ev->hwnd;
-    UINT msg = ev->msg;
+void ReadAloudPlaybackBar::OnMouseEvent(WindowBase::MouseEvent* ev) {
     LPARAM lp = ev->lparam;
-    if (WM_SETCURSOR == msg) {
-        Point pt = HwndGetCursorPos(hwndIn);
-        if (ReadAloudPlaybackBarHitTest(rPause, pt) || ReadAloudPlaybackBarHitTest(rStop, pt) ||
-            ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
-            SetCursorCached(IDC_HAND);
-            ev->result = TRUE;
-            ev->didHandle = true;
-            return;
-        }
-    }
-
-    if (WM_MOUSEMOVE == msg) {
-        HwndScheduleRepaint(hwndIn);
-        TrackMouseLeave(hwndIn);
+    if (ev->msg == WM_MOUSEMOVE) {
+        HwndScheduleRepaint(hwnd);
+        TrackMouseLeave(hwnd);
         ev->result = 0;
-        ev->didHandle = true;
         return;
     }
-
-    if (WM_MOUSELEAVE == msg) {
-        HwndScheduleRepaint(hwndIn);
+    if (ev->msg == WM_MOUSELEAVE) {
+        HwndScheduleRepaint(hwnd);
         ev->result = 0;
-        ev->didHandle = true;
         return;
     }
-
-    if (WM_LBUTTONUP == msg) {
+    if (ev->msg == WM_LBUTTONUP) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (ReadAloudPlaybackBarHitTest(rPause, pt)) {
             ReadAloudPlaybackPauseOrResume();
             ev->result = 0;
-            ev->didHandle = true;
             return;
         }
         if (ReadAloudPlaybackBarHitTest(rStop, pt)) {
             ReadAloudPlaybackStop();
             ev->result = 0;
-            ev->didHandle = true;
             return;
         }
         if (ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
             ReadAloudPlaybackCycleSpeed(+1);
             UpdateLayout();
-            HwndRepaintNow(hwndIn);
+            HwndRepaintNow(hwnd);
             ev->result = 0;
-            ev->didHandle = true;
             return;
         }
     }
-
     // right-click on the speed button cycles backwards
-    if (WM_RBUTTONUP == msg) {
+    if (ev->msg == WM_RBUTTONUP) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
             ReadAloudPlaybackCycleSpeed(-1);
             UpdateLayout();
-            HwndRepaintNow(hwndIn);
+            HwndRepaintNow(hwnd);
             ev->result = 0;
-            ev->didHandle = true;
         }
+    }
+}
+
+// hand cursor over the three hit targets
+void ReadAloudPlaybackBar::OnSetCursor(WindowBase::SetCursorEvent* ev) {
+    Point pt = HwndGetCursorPos(hwnd);
+    if (ReadAloudPlaybackBarHitTest(rPause, pt) || ReadAloudPlaybackBarHitTest(rStop, pt) ||
+        ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
+        SetCursorCached(IDC_HAND);
+        ev->result = TRUE;
+        ev->didHandle = true;
     }
 }
 

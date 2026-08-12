@@ -78,7 +78,10 @@ struct FindBarWnd : WindowBase {
 
     void OnTextChanged();
 
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
+    void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
+    void OnNcHitTest(WindowBase::NcHitTestEvent* ev);
+    void OnSetCursor(WindowBase::SetCursorEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
 };
@@ -326,57 +329,52 @@ void FindBarWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
-void FindBarWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    HWND h = ev->hwnd;
-    UINT msg = ev->msg;
-    LPARAM lp = ev->lparam;
-    // The bar is pinned to the right edge of the frame, so only its left edge
-    // can be dragged; report that edge as a sizing border and the default
-    // handling turns a drag there into a resize.
-    if (msg == WM_NCHITTEST) {
-        Rect wr = HwndWindowRect(h);
-        int x = GET_X_LPARAM(lp);
-        if (x < wr.x + DpiScale(h, kFindBarResizeGripDx)) {
-            ev->result = HTLEFT;
-            ev->didHandle = true;
-            return;
-        }
-    }
-    if (msg == WM_SIZE) {
-        // ignore the WM_SIZE our own SetWindowPos in Layout() generates
-        if (!inLayout) {
-            // GetWindowRect, not LOWORD(lp): lp is the client size, while barDx
-            // is a window size
-            Rect wr = HwndWindowRect(h);
-            Layout(wr.dx);
-        }
-        ev->result = 0;
-        ev->didHandle = true;
+void FindBarWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
         return;
     }
-    if (msg == WM_GETMINMAXINFO && barDy > 0) {
-        // don't let the edit box be dragged away entirely, and keep the height
-        // fixed: it comes from the font metrics, not from the user
-        auto* mmi = (MINMAXINFO*)lp;
-        mmi->ptMinTrackSize.x = MinBarDx();
-        mmi->ptMinTrackSize.y = barDy;
-        mmi->ptMaxTrackSize.y = barDy;
-        ev->result = 0;
-        ev->didHandle = true;
+    // ignore the WM_SIZE our own SetWindowPos in Layout() generates
+    if (!inLayout) {
+        // window size (barDx), not client size from the size event
+        Rect wr = HwndWindowRect(hwnd);
+        Layout(wr.dx);
+    }
+}
+
+void FindBarWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
+    if (barDy <= 0) {
         return;
     }
-    if (msg == WM_SETCURSOR) {
-        // the buttons are virtual controls, so their tooltips are ours to show
-        Point pt = HwndGetCursorPos(h);
-        int idx = ButtonIndexFromPoint(pt);
-        if (idx >= 0 && tooltip) {
-            TempStr tip = btns[idx]->GetTooltipTemp({});
-            if (tip) {
-                tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
-            }
-        } else if (tooltip) {
-            tooltip->Delete();
+    // don't let the edit box be dragged away entirely, and keep the height
+    // fixed: it comes from the font metrics, not from the user
+    auto* mmi = ev->mmi;
+    mmi->ptMinTrackSize.x = MinBarDx();
+    mmi->ptMinTrackSize.y = barDy;
+    mmi->ptMaxTrackSize.y = barDy;
+}
+
+// The bar is pinned to the right edge of the frame, so only its left edge
+// can be dragged; report that edge as a sizing border and the default
+// handling turns a drag there into a resize.
+void FindBarWnd::OnNcHitTest(WindowBase::NcHitTestEvent* ev) {
+    Rect wr = HwndWindowRect(hwnd);
+    if (ev->screenPos.x < wr.x + DpiScale(hwnd, kFindBarResizeGripDx)) {
+        ev->result = HTLEFT;
+        ev->didHandle = true;
+    }
+}
+
+// the buttons are virtual controls, so their tooltips are ours to show
+void FindBarWnd::OnSetCursor(WindowBase::SetCursorEvent*) {
+    Point pt = HwndGetCursorPos(hwnd);
+    int idx = ButtonIndexFromPoint(pt);
+    if (idx >= 0 && tooltip) {
+        TempStr tip = btns[idx]->GetTooltipTemp({});
+        if (tip) {
+            tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
         }
+    } else if (tooltip) {
+        tooltip->Delete();
     }
 }
 
@@ -447,7 +445,10 @@ void FindBarWnd::OnCommand(WindowBase::CommandEvent* ev) {
 FindBarWnd* CreateFindBar(MainWindow* win) {
     auto* bar = new FindBarWnd();
     bar->onCommand = MkMethod1<FindBarWnd, WindowBase::CommandEvent*, &FindBarWnd::OnCommand>(bar);
-    bar->onWndProc = MkMethod1<FindBarWnd, WindowBase::WndProcEvent*, &FindBarWnd::WndProc>(bar);
+    bar->onSize = MkMethod1<FindBarWnd, WindowBase::SizeEvent*, &FindBarWnd::OnSize>(bar);
+    bar->onGetMinMaxInfo = MkMethod1<FindBarWnd, WindowBase::GetMinMaxInfoEvent*, &FindBarWnd::OnGetMinMaxInfo>(bar);
+    bar->onNcHitTest = MkMethod1<FindBarWnd, WindowBase::NcHitTestEvent*, &FindBarWnd::OnNcHitTest>(bar);
+    bar->onSetCursor = MkMethod1<FindBarWnd, WindowBase::SetCursorEvent*, &FindBarWnd::OnSetCursor>(bar);
     bar->onKeyDown = MkMethod1<FindBarWnd, KeyEvent*, &FindBarWnd::OnKeyDown>(bar);
     if (!bar->Create(win)) {
         delete bar;

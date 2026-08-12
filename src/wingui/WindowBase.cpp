@@ -426,7 +426,27 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     LRESULT result = 0;
 
-    if (vroot) {
+    // WM_SETCURSOR: onSetCursor first so tooltips can update even when a virt
+    // control later claims the cursor (FindBar / FindWindow button tips).
+    if (msg == WM_SETCURSOR) {
+        if (onSetCursor.IsValid()) {
+            SetCursorEvent sev;
+            sev.w = this;
+            sev.hwndCursor = reinterpret_cast<HWND>(wparam);
+            sev.hitTest = LOWORD(lparam);
+            sev.mouseMsg = HIWORD(lparam);
+            onSetCursor.Call(&sev);
+            if (sev.didHandle) {
+                return sev.result;
+            }
+        }
+        if (vroot) {
+            LRESULT res = 0;
+            if (VirtTreeOnMessage(hwnd, vroot, msg, wparam, lparam, res)) {
+                return res;
+            }
+        }
+    } else if (vroot) {
         LRESULT res = 0;
         if (VirtTreeOnMessage(hwnd, vroot, msg, wparam, lparam, res)) {
             return res;
@@ -535,6 +555,48 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 ev.minimized = HIWORD(wparam) != 0;
                 ev.other = reinterpret_cast<HWND>(lparam);
                 onActivate.Call(&ev);
+                if (ev.didHandle) {
+                    return 0;
+                }
+            }
+            break;
+        }
+
+        case WM_DPICHANGED: {
+            if (onDpiChanged.IsValid()) {
+                DpiChangedEvent ev;
+                ev.w = this;
+                ev.dpiX = LOWORD(wparam);
+                ev.dpiY = HIWORD(wparam);
+                ev.suggested = reinterpret_cast<RECT*>(lparam);
+                onDpiChanged.Call(&ev);
+                if (ev.didHandle) {
+                    return 0;
+                }
+            }
+            break;
+        }
+
+        case WM_NCHITTEST: {
+            if (onNcHitTest.IsValid()) {
+                NcHitTestEvent ev;
+                ev.w = this;
+                ev.screenPos = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+                onNcHitTest.Call(&ev);
+                if (ev.didHandle) {
+                    return ev.result;
+                }
+            }
+            break;
+        }
+
+        case WM_SHOWWINDOW: {
+            if (onShowWindow.IsValid()) {
+                ShowWindowEvent ev;
+                ev.w = this;
+                ev.show = wparam != FALSE;
+                ev.status = lparam;
+                onShowWindow.Call(&ev);
                 if (ev.didHandle) {
                     return 0;
                 }

@@ -2036,7 +2036,10 @@ static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
 
 HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     ReportIf(!dataDir);
-    onWndProc = MkMethod1<WebviewWnd, WindowBase::WndProcEvent*, &WebviewWnd::WndProc>(this);
+    onTimer = MkMethod1<WebviewWnd, WindowBase::TimerEvent*, &WebviewWnd::OnTimer>(this);
+    onSize = MkMethod1<WebviewWnd, WindowBase::SizeEvent*, &WebviewWnd::OnSize>(this);
+    onActivate = MkMethod1<WebviewWnd, WindowBase::ActivateEvent*, &WebviewWnd::OnActivate>(this);
+    onShowWindow = MkMethod1<WebviewWnd, WindowBase::ShowWindowEvent*, &WebviewWnd::OnShowWindow>(this);
     CreateCustomArgs cargs;
     cargs.parent = args.parent;
     cargs.pos = args.pos;
@@ -2059,36 +2062,44 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     return hwnd;
 }
 
-void WebviewWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_TIMER && ev->wparam == kEnvRetryTimerId) {
+void WebviewWnd::OnTimer(WindowBase::TimerEvent* ev) {
+    if (ev->timerId == kEnvRetryTimerId) {
         OnEnvCreateRetryTimer();
-        ev->result = 0;
-        ev->didHandle = true;
-        return;
     }
+}
+
+void WebviewWnd::OnSize(WindowBase::SizeEvent* ev) {
     if (ev->msg == WM_ENTERSIZEMOVE) {
         isInSizeMove = true;
         Eval("if (window.__setHostResizing) window.__setHostResizing(true);");
-    } else if (ev->msg == WM_EXITSIZEMOVE) {
+        return;
+    }
+    if (ev->msg == WM_EXITSIZEMOVE) {
         isInSizeMove = false;
         Eval("if (window.__setHostResizing) window.__setHostResizing(false);");
         UpdateWebviewSize();
-    } else if (ev->msg == WM_SIZE) {
-        SetControllerVisible(ev->wparam != SIZE_MINIMIZED);
+        return;
+    }
+    if (ev->msg == WM_SIZE) {
+        SetControllerVisible(ev->type != SIZE_MINIMIZED);
         if (!isInSizeMove) {
             UpdateWebviewSize();
         }
-    } else if (ev->msg == WM_SHOWWINDOW) {
-        SetControllerVisible(ev->wparam != FALSE);
-        UpdateWebviewSize();
-    } else if (ev->msg == WM_ACTIVATE) {
-        if (ev->wparam == WA_INACTIVE) {
-            SetControllerVisible(false);
-        } else {
-            SetControllerVisible(true);
-            UpdateWebviewSize();
-        }
     }
+}
+
+void WebviewWnd::OnActivate(WindowBase::ActivateEvent* ev) {
+    if (ev->state == WA_INACTIVE) {
+        SetControllerVisible(false);
+    } else {
+        SetControllerVisible(true);
+        UpdateWebviewSize();
+    }
+}
+
+void WebviewWnd::OnShowWindow(WindowBase::ShowWindowEvent* ev) {
+    SetControllerVisible(ev->show);
+    UpdateWebviewSize();
 }
 
 WebviewWnd::~WebviewWnd() {
@@ -2188,6 +2199,9 @@ void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str, int) {}
 void WebviewWnd::FlushPendingOps() {}
 void WebviewWnd::SetControllerVisible(bool) {}
 void WebviewWnd::OnBrowserMessage(Str) {}
-void WebviewWnd::WndProc(WindowBase::WndProcEvent*) {}
+void WebviewWnd::OnTimer(WindowBase::TimerEvent*) {}
+void WebviewWnd::OnSize(WindowBase::SizeEvent*) {}
+void WebviewWnd::OnActivate(WindowBase::ActivateEvent*) {}
+void WebviewWnd::OnShowWindow(WindowBase::ShowWindowEvent*) {}
 void WebviewWnd::UpdateWebviewSize() {}
 #endif // !_MSC_VER

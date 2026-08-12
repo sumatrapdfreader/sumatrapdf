@@ -23,7 +23,9 @@ struct SimpleBrowserWindow : WindowBase {
     bool webViewFocusSet = false;
 
     HWND Create(const SimpleBrowserCreateArgs&);
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnFocus(WindowBase::FocusEvent*);
+    void OnSize(WindowBase::SizeEvent*);
+    void OnCommand(WindowBase::CommandEvent*);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     ~SimpleBrowserWindow() override;

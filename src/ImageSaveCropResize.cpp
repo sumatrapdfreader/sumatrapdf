@@ -212,6 +212,11 @@ struct ImageEditWindow : WindowBase {
 
     void WndProc(WindowBase::WndProcEvent* ev);
     void OnKeyDown(KeyEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
+    void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
+    void OnActivate(WindowBase::ActivateEvent* ev);
+    void OnDestroy(WindowBase::DestroyEvent* ev);
+    void OnSetCursor(WindowBase::SetCursorEvent* ev);
 };
 
 // "&Save" -> label "Save", mnemonic 'S'
@@ -1524,6 +1529,84 @@ void ImageEditWindow::OnKeyDown(KeyEvent* ev) {
     ev->didHandle = true;
 }
 
+void ImageEditWindow::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
+        return;
+    }
+    CalcImageLayout(this);
+    LayoutControls(this);
+    if (mode == ImageEditMode::Crop) {
+        InvalidateImageArea(this);
+    } else {
+        HwndInvalidate(hwnd, true);
+    }
+}
+
+void ImageEditWindow::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
+    RECT* r = ev->suggested;
+    if (r) {
+        SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    hFont = ImageEditFont(hwnd);
+    ImageEditApplyFont(this);
+    CalcImageLayout(this);
+    LayoutControls(this);
+    HwndInvalidate(hwnd, true);
+    ev->didHandle = true;
+}
+
+// modeless dialog: route Alt+<mnemonic> / Tab via IsDialogMessage in main loop
+void ImageEditWindow::OnActivate(WindowBase::ActivateEvent* ev) {
+    if (ev->state == WA_INACTIVE) {
+        if (GetCurrentModelessDialog() == hwnd) {
+            SetCurrentModelessDialog(nullptr);
+        }
+        return;
+    }
+    SetCurrentModelessDialog(hwnd);
+    // menu commands often leave keyboard focus on the main window
+    if (!HasFocusInImageEdit(this)) {
+        RestoreImageEditFocus(this);
+    }
+}
+
+void ImageEditWindow::OnDestroy(WindowBase::DestroyEvent*) {
+    if (GetCurrentModelessDialog() == hwnd) {
+        SetCurrentModelessDialog(nullptr);
+    }
+    HWND parent = hwndParent;
+    if (destEdit && destEdit->hwnd && gDestEditSubclassId) {
+        RemoveWindowSubclass(destEdit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId);
+    }
+    gImageEditWindows.Remove(this);
+    // deleting a window while handling its own message is unsafe;
+    // uitask runs after this dispatch finishes
+    auto fn = MkFunc0<ImageEditWindow>(DeleteImageEditWindow, this);
+    uitask::Post(fn, "DeleteImageEditWindow");
+    if (parent) {
+        HwndToForeground(parent);
+    }
+}
+
+void ImageEditWindow::OnSetCursor(WindowBase::SetCursorEvent* ev) {
+    if (mode == ImageEditMode::Save || ev->hitTest != HTCLIENT) {
+        return;
+    }
+    Point pt = HwndGetCursorPos(hwnd);
+    DragEdge edge;
+    if (mode == ImageEditMode::Crop) {
+        edge = HitTestCropEdgeOrNewCrop(this, pt.x, pt.y);
+    } else {
+        edge = HitTestResizeEdge(this, pt.x, pt.y);
+    }
+    if (edge != DragEdge::None) {
+        SetCursor(GetCursorForEdge(edge));
+        ev->result = TRUE;
+        ev->didHandle = true;
+    }
+}
+
 void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
     HWND hwnd = ev->hwnd;
     UINT msg = ev->msg;
@@ -1545,44 +1628,6 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
     }
 
     switch (msg) {
-        case WM_CREATE:
-            break;
-
-        case WM_SIZE: {
-            if (ew) {
-                CalcImageLayout(ew);
-                LayoutControls(ew);
-                if (ew->mode == ImageEditMode::Crop) {
-                    InvalidateImageArea(ew);
-                } else {
-                    HwndInvalidate(hwnd, true);
-                }
-            }
-            {
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
-        }
-
-        case WM_DPICHANGED: {
-            if (ew) {
-                RECT* r = (RECT*)lp;
-                SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
-                             SWP_NOZORDER | SWP_NOACTIVATE);
-                ew->hFont = ImageEditFont(hwnd);
-                ImageEditApplyFont(ew);
-                CalcImageLayout(ew);
-                LayoutControls(ew);
-                HwndInvalidate(hwnd, true);
-            }
-            {
-                ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
-        }
-
         case WM_PAINT: {
             if (!ew) {
                 ev->result = 0;
@@ -1846,27 +1891,6 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
             }
         }
 
-        case WM_SETCURSOR: {
-            if (ew && ew->mode != ImageEditMode::Save && LOWORD(lp) == HTCLIENT) {
-                Point pt = HwndGetCursorPos(hwnd);
-                DragEdge edge;
-                if (ew->mode == ImageEditMode::Crop) {
-                    edge = HitTestCropEdgeOrNewCrop(ew, pt.x, pt.y);
-                } else {
-                    edge = HitTestResizeEdge(ew, pt.x, pt.y);
-                }
-                if (edge != DragEdge::None) {
-                    SetCursor(GetCursorForEdge(edge));
-                    {
-                        ev->result = TRUE;
-                        ev->didHandle = true;
-                        return;
-                    }
-                }
-            }
-            return; // fall through to WndProcDefault
-        }
-
         case WM_MOUSEACTIVATE:
             if (ew) {
                 SetFocus(hwnd);
@@ -1942,41 +1966,6 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
             }
             break;
         }
-
-        case WM_ACTIVATE:
-            // modeless dialog: route Alt+<mnemonic> / Tab via IsDialogMessage in main loop
-            if (LOWORD(wp) == WA_INACTIVE) {
-                if (GetCurrentModelessDialog() == hwnd) {
-                    SetCurrentModelessDialog(nullptr);
-                }
-            } else {
-                SetCurrentModelessDialog(hwnd);
-                // menu commands often leave keyboard focus on the main window
-                if (ew && !HasFocusInImageEdit(ew)) {
-                    RestoreImageEditFocus(ew);
-                }
-            }
-            break;
-
-        case WM_DESTROY:
-            if (GetCurrentModelessDialog() == hwnd) {
-                SetCurrentModelessDialog(nullptr);
-            }
-            if (ew) {
-                HWND hwndParent = ew->hwndParent;
-                if (ew->destEdit && ew->destEdit->hwnd && gDestEditSubclassId) {
-                    RemoveWindowSubclass(ew->destEdit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId);
-                }
-                gImageEditWindows.Remove(ew);
-                // deleting a window while handling its own message is unsafe;
-                // uitask runs after this dispatch finishes
-                auto fn = MkFunc0<ImageEditWindow>(DeleteImageEditWindow, ew);
-                uitask::Post(fn, "DeleteImageEditWindow");
-                if (hwndParent) {
-                    HwndToForeground(hwndParent);
-                }
-            }
-            break;
 
         default:
             return; // fall through to WndProcDefault
@@ -2107,6 +2096,11 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         }
         ew->onWndProc = MkMethod1<ImageEditWindow, WindowBase::WndProcEvent*, &ImageEditWindow::WndProc>(ew);
         ew->onKeyDown = MkMethod1<ImageEditWindow, KeyEvent*, &ImageEditWindow::OnKeyDown>(ew);
+        ew->onSize = MkMethod1<ImageEditWindow, WindowBase::SizeEvent*, &ImageEditWindow::OnSize>(ew);
+        ew->onDpiChanged = MkMethod1<ImageEditWindow, WindowBase::DpiChangedEvent*, &ImageEditWindow::OnDpiChanged>(ew);
+        ew->onActivate = MkMethod1<ImageEditWindow, WindowBase::ActivateEvent*, &ImageEditWindow::OnActivate>(ew);
+        ew->onDestroy = MkMethod1<ImageEditWindow, WindowBase::DestroyEvent*, &ImageEditWindow::OnDestroy>(ew);
+        ew->onSetCursor = MkMethod1<ImageEditWindow, WindowBase::SetCursorEvent*, &ImageEditWindow::OnSetCursor>(ew);
         ew->CreateCustom(cargs);
     }
     HWND hwnd = ew->hwnd;

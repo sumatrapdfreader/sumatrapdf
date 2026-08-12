@@ -129,7 +129,10 @@ struct FindWindowWnd : WindowBase {
     int CurrentMatchIndex();         // list index of the document's current match, or -1
     int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
+    void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
+    void OnClose(WindowBase::CloseEvent* ev);
+    void OnSetCursor(WindowBase::SetCursorEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
 };
@@ -694,61 +697,57 @@ void FindWindowWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
-void FindWindowWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    HWND h = ev->hwnd;
-    switch (ev->msg) {
-        case WM_ENTERSIZEMOVE:
-            inSizeMove = true;
-            break;
-        case WM_SIZE:
-            Layout();
-            break;
-        case WM_EXITSIZEMOVE:
-            inSizeMove = false;
-            HwndInvalidate(h, true);
-            SavePos();
-            break;
-        case WM_SETCURSOR: {
-            // the buttons are virtual controls, so their tooltips are ours to
-            // show; the tip follows whichever one the mouse is over
-            Point pt = HwndGetCursorPos(h);
-            int idx = ButtonIndexFromPoint(pt);
-            if (idx >= 0 && tooltip) {
-                TempStr tip = btns[idx]->GetTooltipTemp({});
-                if (tip) {
-                    tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
-                }
-            } else if (tooltip) {
-                tooltip->Delete();
-            }
-            break;
+void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg == WM_ENTERSIZEMOVE) {
+        inSizeMove = true;
+        return;
+    }
+    if (ev->msg == WM_SIZE) {
+        Layout();
+        return;
+    }
+    if (ev->msg == WM_EXITSIZEMOVE) {
+        inSizeMove = false;
+        HwndInvalidate(hwnd, true);
+        SavePos();
+    }
+}
+
+void FindWindowWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
+    auto* mmi = ev->mmi;
+    int pad = DpiScale(hwnd, 8);
+    int gap = DpiScale(hwnd, 6);
+    int editDy = edit ? edit->GetIdealSize().dy : DpiScale(hwnd, 22);
+    int tbH = DpiScale(hwnd, 24);
+    int tbW = DpiScale(hwnd, 120);
+    if (btns[0]) {
+        Size btnSz = btns[0]->GetIdealSize();
+        tbW = (btnSz.dx + btns[0]->padding.left + btns[0]->padding.right) * 5;
+        tbH = btnSz.dy + btns[0]->padding.top + btns[0]->padding.bottom;
+    }
+    int row2Dy = std::max(editDy, tbH);
+    // narrow two-row header: edit, then status+toolbar
+    mmi->ptMinTrackSize.x = (2 * pad) + std::max(tbW, DpiScale(hwnd, 160));
+    mmi->ptMinTrackSize.y = (2 * pad) + editDy + gap + row2Dy + pad + DpiScale(hwnd, 48);
+}
+
+void FindWindowWnd::OnClose(WindowBase::CloseEvent* ev) {
+    // the caption close button hides the bar instead of destroying it
+    HideFindWindow(win);
+    // WmEvent.didHandle defaults true -> skip WindowBase::Destroy()
+}
+
+// virtual-control tooltips
+void FindWindowWnd::OnSetCursor(WindowBase::SetCursorEvent*) {
+    Point pt = HwndGetCursorPos(hwnd);
+    int idx = ButtonIndexFromPoint(pt);
+    if (idx >= 0 && tooltip) {
+        TempStr tip = btns[idx]->GetTooltipTemp({});
+        if (tip) {
+            tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
         }
-        case WM_GETMINMAXINFO: {
-            auto* mmi = (MINMAXINFO*)ev->lparam;
-            int pad = DpiScale(h, 8);
-            int gap = DpiScale(h, 6);
-            int editDy = edit ? edit->GetIdealSize().dy : DpiScale(h, 22);
-            int tbH = DpiScale(h, 24);
-            int tbW = DpiScale(h, 120);
-            if (btns[0]) {
-                Size btnSz = btns[0]->GetIdealSize();
-                tbW = (btnSz.dx + btns[0]->padding.left + btns[0]->padding.right) * 5;
-                tbH = btnSz.dy + btns[0]->padding.top + btns[0]->padding.bottom;
-            }
-            int row2Dy = std::max(editDy, tbH);
-            // narrow two-row header: edit, then status+toolbar
-            mmi->ptMinTrackSize.x = (2 * pad) + std::max(tbW, DpiScale(h, 160));
-            mmi->ptMinTrackSize.y = (2 * pad) + editDy + gap + row2Dy + pad + DpiScale(h, 48);
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
-        }
-        case WM_CLOSE:
-            // the caption close button hides the bar instead of destroying it
-            HideFindWindow(win);
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
+    } else if (tooltip) {
+        tooltip->Delete();
     }
 }
 
@@ -852,7 +851,10 @@ void FindWindowWnd::OnCommand(WindowBase::CommandEvent* ev) {
 FindWindowWnd* CreateFindWindow(MainWindow* win) {
     auto* w = new FindWindowWnd();
     w->onCommand = MkMethod1<FindWindowWnd, WindowBase::CommandEvent*, &FindWindowWnd::OnCommand>(w);
-    w->onWndProc = MkMethod1<FindWindowWnd, WindowBase::WndProcEvent*, &FindWindowWnd::WndProc>(w);
+    w->onSize = MkMethod1<FindWindowWnd, WindowBase::SizeEvent*, &FindWindowWnd::OnSize>(w);
+    w->onGetMinMaxInfo = MkMethod1<FindWindowWnd, WindowBase::GetMinMaxInfoEvent*, &FindWindowWnd::OnGetMinMaxInfo>(w);
+    w->onClose = MkMethod1<FindWindowWnd, WindowBase::CloseEvent*, &FindWindowWnd::OnClose>(w);
+    w->onSetCursor = MkMethod1<FindWindowWnd, WindowBase::SetCursorEvent*, &FindWindowWnd::OnSetCursor>(w);
     w->onKeyDown = MkMethod1<FindWindowWnd, KeyEvent*, &FindWindowWnd::OnKeyDown>(w);
     if (!w->Create(win)) {
         delete w;

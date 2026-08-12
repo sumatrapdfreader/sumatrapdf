@@ -89,7 +89,8 @@ struct NavFilesInFolderWnd : WindowBase {
 
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
-    void WndProc(WindowBase::WndProcEvent* ev);
+    void OnActivate(WindowBase::ActivateEvent* ev);
+    void OnFocus(WindowBase::FocusEvent* ev);
     void OnSize(WindowBase::SizeEvent* ev);
 
     bool Create(MainWindow* win);
@@ -532,33 +533,20 @@ void NavFilesInFolderWnd::OnKeyDown(KeyEvent* ev) {
     }
 }
 
-void NavFilesInFolderWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_ACTIVATE) {
-        // default handling first (focus routing, etc.), then our follow-up
-        LRESULT res = WndProcDefault(ev->hwnd, ev->msg, ev->wparam, ev->lparam);
-        // defer: Windows assigns focus after WM_ACTIVATE during Alt-Tab
-        if (LOWORD(ev->wparam) != WA_INACTIVE) {
-            // the directory may have changed while we were in the background
-            RefreshList();
-            ScheduleFocusNavListBox();
-        }
-        ev->result = res;
-        ev->didHandle = true;
-        return;
+// after activate: refresh dir listing and put focus on the list (Alt-Tab)
+void NavFilesInFolderWnd::OnActivate(WindowBase::ActivateEvent* ev) {
+    if (ev->state != WA_INACTIVE) {
+        RefreshList();
+        ScheduleFocusNavListBox();
     }
-    // top-level received focus (e.g. Alt-Tab); steer it to the list
-    if (ev->msg == WM_SETFOCUS) {
-        // the list is a virtual control: this window holds the win32 focus on
-        // its behalf, so only the focus inside the tree moves
-        if (vroot && listBox) {
-            vroot->SetFocus(listBox);
-        }
-    }
-    // Esc when this window (not a child) has focus
-    if (ev->msg == WM_KEYDOWN && ev->wparam == VK_ESCAPE) {
-        ScheduleDeleteNavFilesWnd();
-        ev->result = 0;
-        ev->didHandle = true;
+}
+
+// top-level received focus (e.g. Alt-Tab); steer it to the list
+void NavFilesInFolderWnd::OnFocus(WindowBase::FocusEvent*) {
+    // the list is a virtual control: this window holds the win32 focus on
+    // its behalf, so only the focus inside the tree moves
+    if (vroot && listBox) {
+        vroot->SetFocus(listBox);
     }
 }
 
@@ -918,7 +906,8 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnNavFilesWndClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnNavFilesWndDestroy);
     wnd->onSize = MkMethod1<NavFilesInFolderWnd, WindowBase::SizeEvent*, &NavFilesInFolderWnd::OnSize>(wnd);
-    wnd->onWndProc = MkMethod1<NavFilesInFolderWnd, WindowBase::WndProcEvent*, &NavFilesInFolderWnd::WndProc>(wnd);
+    wnd->onActivate = MkMethod1<NavFilesInFolderWnd, WindowBase::ActivateEvent*, &NavFilesInFolderWnd::OnActivate>(wnd);
+    wnd->onFocus = MkMethod1<NavFilesInFolderWnd, WindowBase::FocusEvent*, &NavFilesInFolderWnd::OnFocus>(wnd);
     wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<NavFilesInFolderWnd, WindowBase::PreTranslateEvent*, &NavFilesInFolderWnd::PreTranslate>(wnd);
