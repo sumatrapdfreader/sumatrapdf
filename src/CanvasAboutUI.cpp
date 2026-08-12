@@ -109,17 +109,8 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
         }
     }
     switch (msg) {
-        case WM_CTLCOLOREDIT:
-            if (win->homeSearch && (HWND)lp == win->homeSearch->hwnd) {
-                HDC hdcEdit = (HDC)wp;
-                SetTextColor(hdcEdit, ThemeWindowTextColor());
-                SetBkColor(hdcEdit, ThemeControlBackgroundColor());
-                if (!win->brControlBgColor) {
-                    win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
-                }
-                return (LRESULT)win->brControlBgColor;
-            }
-            break;
+            // WM_CTLCOLOREDIT for the search box is reflected back to it by
+            // WndProcCanvas, so the Edit colors itself from SetColors()
 
         case WM_COMMAND:
             if (win->homeSearch && (HWND)lp == win->homeSearch->hwnd) {

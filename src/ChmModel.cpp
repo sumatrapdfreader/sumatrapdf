@@ -1026,10 +1026,10 @@ static void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendere
     // We render twice the size of thumbnail and scale it down
     int dx = (size.dx * 2) + GetSystemMetrics(SM_CXVSCROLL);
     int dy = (size.dy * 2) + GetSystemMetrics(SM_CYHSCROLL);
-    // reusing WC_STATIC. I don't think exact class matters (WndProc
+    // reusing WC_STATICW. I don't think exact class matters (WndProc
     // will be taken over by HtmlWindow anyway) but it can't be nullptr.
     HWND hwnd =
-        CreateWindowExW(0, WC_STATIC, L"BrowserCapture", WS_POPUP, 0, 0, dx, dy, nullptr, nullptr, nullptr, nullptr);
+        CreateWindowExW(0, WC_STATICW, L"BrowserCapture", WS_POPUP, 0, 0, dx, dy, nullptr, nullptr, nullptr, nullptr);
     if (!hwnd) {
         delete doc;
         return;

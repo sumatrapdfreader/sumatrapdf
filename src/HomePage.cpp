@@ -1082,6 +1082,7 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     auto* e = new HomeSearchEdit();
     e->win = win;
     e->Create(args);
+    e->SetColors(ThemeWindowTextColor(), ThemeControlBackgroundColor());
     win->homeSearch = e;
     UpdateHomeSearchCueBanner(win);
     // add left/right padding so text doesn't overlap the border
@@ -1108,6 +1109,14 @@ void HomePageDestroySearch(MainWindow* win) {
         delete win->homeSearchLayout;
         win->homeSearchLayout = nullptr;
         win->homeSearch = nullptr;
+    }
+}
+
+// after a theme change; the edit paints itself from these (see
+// Edit::OnMessageReflect and the reflection in WndProcCanvas)
+void HomePageUpdateSearchColors(MainWindow* win) {
+    if (win->homeSearch) {
+        win->homeSearch->SetColors(ThemeWindowTextColor(), ThemeControlBackgroundColor());
     }
 }
 

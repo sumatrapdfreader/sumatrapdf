@@ -945,6 +945,8 @@ void UpdateControlsColors(MainWindow* win) {
         win->sidebarSplitter->bgColor = splitterCol;
     }
 
+    HomePageUpdateSearchColors(win);
+
     auto* favTreeView = win->favTreeView;
     if (favTreeView) {
         favTreeView->SetColors(txtCol, bgCol);
