@@ -2,10 +2,16 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "FrameRateWnd.h"
-
 #include "base/ScopedWin.h"
 #include "base/Win.h"
+
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
+#include "wingui/FrameRateWnd.h"
 
 /*
 Frame rate window is a debugging tool that shows the frame rate, most likely
@@ -24,45 +30,10 @@ that it's actually a part of that window.
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
 #define COL_BLACK RGB(0, 0, 0)
 
-static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT& /*ps*/) {
-    Rect rc = HwndClientRect(w->hwnd);
-    RECT r = ToRECT(rc);
-    AutoDeleteBrush brush = CreateSolidBrush(COL_BLACK);
-    HdcFillRect(hdc, ToRect(r), brush);
-
-    SetTextColor(hdc, COL_WHITE);
-
-    ScopedSelectObject selFont(hdc, w->font);
-    TempStr txt = fmt("%d", w->frameRate);
-    HdcDrawCenteredText(hdc, rc, txt);
-}
-
 static void PositionWindow(FrameRateWnd* w, Size s) {
     Rect rc = HwndClientRect(w->hwndAssociatedWith);
     Point p = HwndClientToScreen(w->hwndAssociatedWith, Point(rc.x + rc.dx - s.dx, rc.y));
     MoveWindow(w->hwnd, p.x, p.y, s.dx, s.dy, TRUE);
-}
-
-static Size GetIdealSize(FrameRateWnd* w) {
-    TempStr txt = fmt("%d", w->frameRate);
-    Size s = HwndMeasureText(w->hwnd, txt);
-
-    // add padding
-    s.dy += 4;
-    s.dx += 8;
-
-    // we wan't to avoid the window to grow/shrink when the number changes
-    // so we keep the largest size so far, since the difference isn't big
-    w->maxSizeSoFar.dx = std::max(s.dx, w->maxSizeSoFar.dx);
-    w->maxSizeSoFar.dy = std::max(s.dy, w->maxSizeSoFar.dy);
-    return w->maxSizeSoFar;
-}
-
-static void FrameRateOnPaint(FrameRateWnd* w) {
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(w->hwnd, &ps);
-    FrameRatePaint(w, hdc, ps);
-    EndPaint(w->hwnd, &ps);
 }
 
 static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
@@ -74,99 +45,83 @@ static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM w
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static LRESULT CALLBACK WndProcFrameRate(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    FrameRateWnd* w;
-
-    if (msg == WM_ERASEBKGND) {
-        return TRUE; // tells Windows we handle background erasing so it doesn't do it
-    }
-
-    if (msg == WM_NCCREATE) {
-        LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
-        w = reinterpret_cast<FrameRateWnd*>(lpcs->lpCreateParams);
-        w->hwnd = hwnd;
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(w));
-    } else {
-        w = reinterpret_cast<FrameRateWnd*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-    }
-
-    if (!w) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    // other clients that might use WM_SETFONT/WM_GETFONT
-    if (WM_GETFONT == msg) {
-        return (LRESULT)w->font;
-    }
-
-    if (WM_SETFONT == msg) {
-        w->font = (HFONT)wp;
-        return 0;
-    }
-
-    if (WM_PAINT == msg) {
-        FrameRateOnPaint(w);
-        return 0;
-    }
-
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
-
-static void RegisterFrameRateWndClass() {
-    WNDCLASSEX wcex{};
-    FillWndClassEx(wcex, FRAME_RATE_CLASS_NAME, WndProcFrameRate);
-    RegisterClassEx(&wcex);
-}
-
-bool FrameRateWnd::Create(HWND hwndAssociatedWith) {
-    RegisterFrameRateWndClass();
-    this->hwndAssociatedWith = hwndAssociatedWith;
+bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
+    hwndAssociatedWith = hwndAssociatedWithIn;
 
     // if hwndAssociatedWith is a child window, we need to find its top-level parent
     // so that we can intercept moving messages and re-position frame rate window
     // during main window moves
-    HWND topLevel = this->hwndAssociatedWith;
+    HWND topLevel = hwndAssociatedWith;
     while (GetParent(topLevel) != nullptr) {
         topLevel = GetParent(topLevel);
     }
-    this->hwndAssociatedWithTopLevel = topLevel;
-    // WS_POPUP removes all decorations
-    DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_DISABLED;
-    // since this is WS_POPUP window, providing w->hwndAssocatedWith doesn't establish
-    // parent-child relationship but ownership relationship (as long as hwndAssociatedWith
-    // is WS_OVERLAPEPED or WS_POPUP). Owned window always shows up on top of owner in z-order
-    // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
-    // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
-    HWND hwnd2 = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, nullptr, dwStyle, 0, 0, 0, 0,
-                                this->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), this);
-    ReportIf(hwnd2 != this->hwnd);
+    hwndAssociatedWithTopLevel = topLevel;
+
+    {
+        CreateCustomArgs args;
+        args.className = FRAME_RATE_CLASS_NAME;
+        // WS_POPUP removes all decorations
+        args.style = WS_POPUP | WS_DISABLED;
+        // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
+        args.exStyle = WS_EX_LAYERED | WS_EX_TRANSPARENT;
+        args.pos = {0, 0, 1, 1};
+        args.bgColor = COL_BLACK;
+        CreateCustom(args);
+    }
     if (!hwnd) {
         return false;
     }
-    this->font = GetDefaultGuiFont();
-    SetWindowSubclass(this->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0, (DWORD_PTR)this);
+    // a WS_POPUP window given a parent at creation would become a child, so the
+    // ownership relationship is established after the fact. An owned window always
+    // shows up on top of its owner in z-order
+    // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)hwndAssociatedWith);
 
+    text = NewVirtText({
+        .s = "0",
+        .font = GetPlatformFont(GetDefaultGuiFont()),
+        .textColor = COL_WHITE,
+        .align = VirtTextAlign::Center,
+    });
+    layout = new Padding(text, Insets{2, 4, 2, 4});
+
+    SetWindowSubclass(hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0, (DWORD_PTR)this);
     SetLayeredWindowAttributes(hwnd, 0, 0x7f, LWA_ALPHA);
-    this->ShowFrameRate(0);
+    ShowFrameRate(0);
     return true;
 }
 
-void FrameRateWnd::ShowFrameRate(int frameRate) {
-    if (this->frameRate == frameRate) {
+LRESULT FrameRateWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE; // OnPaint covers the whole client area, double-buffered
+    }
+    return WndProcDefault(hwndIn, msg, wp, lp);
+}
+
+void FrameRateWnd::ShowFrameRate(int frameRateIn) {
+    if (frameRate == frameRateIn) {
         return;
     }
-    this->frameRate = frameRate;
-    Size s = GetIdealSize(this);
-    PositionWindow(this, s);
-    HwndScheduleRepaint(this->hwnd);
+    frameRate = frameRateIn;
+    text->SetText(fmt("%d", frameRate));
+
+    Size s = layout->Layout(ExpandInf());
+    // we wan't to avoid the window to grow/shrink when the number changes
+    // so we keep the largest size so far, since the difference isn't big
+    maxSizeSoFar.dx = std::max(s.dx, maxSizeSoFar.dx);
+    maxSizeSoFar.dy = std::max(s.dy, maxSizeSoFar.dy);
+
+    PositionWindow(this, maxSizeSoFar);
+    DoLayout(maxSizeSoFar);
+    HwndScheduleRepaint(hwnd);
 }
 
 void FrameRateWnd::ShowFrameRateDur(double durMs) {
-    this->ShowFrameRate(FrameRateFromDuration(durMs));
+    ShowFrameRate(FrameRateFromDuration(durMs));
 }
 
 FrameRateWnd::~FrameRateWnd() {
-    RemoveWindowSubclass(this->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0);
+    RemoveWindowSubclass(hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0);
 }
 
 int FrameRateFromDuration(double durMs) {
