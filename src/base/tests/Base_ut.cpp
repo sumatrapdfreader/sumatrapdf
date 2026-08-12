@@ -181,7 +181,7 @@ static void ArenaPtrCompressTest() {
         p[1] = 22;
         u32 c = ArenaPtrCompress(a, p);
         utassert(c != 0);
-        utassert(c >= (u32)ARENA_HEADER_SIZE);
+        utassert(c >= (u32)kArenaHeaderSize);
         utassert(ArenaPtrUncompress(a, c) == p);
         utassert(ArenaPtrUncompress<int>(a, c) == p);
         utassert(ArenaPtrUncompress<int>(a, c)[1] == 22);
@@ -193,19 +193,19 @@ static void ArenaPtrCompressTest() {
     // Multi-block chain: tiny reserve so a second Push allocates a new block
     {
         ArenaParams params = ArenaDefaultParams();
-        params.reserve_size = 4 * 1024;
-        params.commit_size = 4 * 1024;
+        params.reserveSize = 4 * 1024;
+        params.commitSize = 4 * 1024;
         Arena* a = ArenaNew(params);
         utassert(a != nullptr);
         utassert(a->current == a);
-        utassert(a->base_pos == 0);
+        utassert(a->basePos == 0);
 
         // ArenaNew rounds the reserve up to a page, and a page is 16K on arm64
         // macOS, not 4K - so size the pushes from the block we actually got.
-        // Two of these plus ARENA_HEADER_SIZE can't fit in one block.
-        u64 half = a->res / 2;
+        // Two of these plus kArenaHeaderSize can't fit in one block.
+        u64 half = a->reserved / 2;
 
-        // Fill most of the first block (header is ARENA_HEADER_SIZE)
+        // Fill most of the first block (header is kArenaHeaderSize)
         void* p1 = a->Push(half, 8, true);
         utassert(p1 != nullptr);
         utassert(a->current == a);
@@ -215,13 +215,13 @@ static void ArenaPtrCompressTest() {
         utassert(p2 != nullptr);
         utassert(a->current != a);
         utassert(a->current->prev == a);
-        utassert(a->current->base_pos == a->res);
+        utassert(a->current->basePos == a->reserved);
 
         u32 c1 = ArenaPtrCompress(a, p1);
         u32 c2 = ArenaPtrCompress(a, p2);
         utassert(c1 != 0 && c2 != 0);
-        utassert(c1 < a->res);  // still in the first block's range
-        utassert(c2 >= a->res); // past the first block
+        utassert(c1 < a->reserved);  // still in the first block's range
+        utassert(c2 >= a->reserved); // past the first block
         utassert(c2 > c1);
 
         utassert(ArenaPtrUncompress(a, c1) == p1);

@@ -584,13 +584,13 @@ static void StrArenaTest() {
     // multi-block arena: force a second chain block, then store a string there
     {
         ArenaParams params = ArenaDefaultParams();
-        params.reserve_size = 4 * 1024;
-        params.commit_size = 4 * 1024;
+        params.reserveSize = 4 * 1024;
+        params.commitSize = 4 * 1024;
         Arena* a2 = ArenaNew(params);
         utassert(a2 != nullptr);
         // ArenaNew rounds the reserve up to a page, and a page is 16K on arm64
         // macOS, not 4K - so size the pushes from the block we actually got
-        u64 half = a2->res / 2;
+        u64 half = a2->reserved / 2;
         void* filler = a2->Push(half, 8, true);
         utassert(filler != nullptr);
         // second large push forces a chained block (two halves + the header
@@ -600,7 +600,7 @@ static void StrArenaTest() {
         utassert(a2->current != a2);
         StrArena sa2 = StrArenaDupStr(a2, StrL("second-block"));
         utassert(sa2 != 0);
-        utassert(sa2 >= (u32)a2->res); // compressed offset past first block
+        utassert(sa2 >= (u32)a2->reserved); // compressed offset past first block
         utassert(str::Eq(StrArenaToStr(a2, sa2), StrL("second-block")));
         ArenaDelete(a2);
     }

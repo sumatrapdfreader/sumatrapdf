@@ -7,21 +7,21 @@
 
 // Standalone reserve/commit arena
 // 256 (not 128) to leave room in the header for the allocation stats below
-static const u64 ARENA_HEADER_SIZE = 256;
+static const u64 kArenaHeaderSize = 256;
 
 typedef u64 ArenaFlags;
 enum : ArenaFlags {
-    ArenaFlag_NoChain = 1ull << 0,
-    ArenaFlag_LargePages = 1ull << 1,
+    ArenaFlagNoChain = 1ull << 0,
+    ArenaFlagLargePages = 1ull << 1,
 };
 
 struct ArenaParams {
     ArenaFlags flags = 0;
-    u64 reserve_size = 0;
-    u64 commit_size = 0;
-    void* optional_backing_buffer = nullptr;
-    const char* allocation_site_file = nullptr;
-    int allocation_site_line = 0;
+    u64 reserveSize = 0;
+    u64 commitSize = 0;
+    void* optionalBackingBuffer = nullptr;
+    const char* allocationSiteFile = nullptr;
+    int allocationSiteLine = 0;
     const char* name = nullptr;
 };
 
@@ -36,16 +36,16 @@ struct Arena {
     Arena* prev;    // Previous arena in chain
     Arena* current; // Current arena in chain
     ArenaFlags flags;
-    u64 cmt_size;
-    u64 res_size;
-    u64 base_pos;
+    u64 commitChunkSize;
+    u64 reserveChunkSize;
+    u64 basePos;
     u64 pos;
-    u64 cmt;
-    u64 res;
-    const char* allocation_site_file;
-    int allocation_site_line;
+    u64 committed;
+    u64 reserved;
+    const char* allocationSiteFile;
+    int allocationSiteLine;
     const char* name;
-    bool uses_external_buffer;
+    bool usesExternalBuffer;
     Mutex lock;
 
     // allocation statistics, updated after every successful allocation
@@ -70,18 +70,18 @@ struct Arena {
     ~Arena() = delete; // use ArenaDelete()
 };
 
-static_assert(sizeof(Arena) <= ARENA_HEADER_SIZE, "Arena header must fit in reserved header bytes");
+static_assert(sizeof(Arena) <= kArenaHeaderSize, "Arena header must fit in reserved header bytes");
 
-extern u64 arena_default_reserve_size;
-extern u64 arena_default_commit_size;
-extern ArenaFlags arena_default_flags;
+extern u64 gArenaDefaultReserveSize;
+extern u64 gArenaDefaultCommitSize;
+extern ArenaFlags gArenaDefaultFlags;
 
 ArenaParams ArenaDefaultParams();
 Arena* ArenaNew(const ArenaParams& params = ArenaDefaultParams());
 void ArenaDelete(Arena* arena);
 
-ArenaSavepoint ArenaGetSavepoint(Arena* arena);
-void ArenaRestoreSavepoint(ArenaSavepoint temp);
+ArenaSavepoint GetArenaSavepoint(Arena* arena);
+void RestoreArenaSavepoint(ArenaSavepoint temp);
 
 u32 ArenaPtrCompress(Arena* arena, void* ptr);
 void* ArenaPtrUncompress(Arena* arena, u32 compressed);
@@ -103,13 +103,13 @@ void DestroyTempArena();
 struct AutoArenaSavepoint {
     ArenaSavepoint sp;
     AutoArenaSavepoint(Arena* a = GetTempArena()) { // NOLINT
-        sp = ArenaGetSavepoint(a);
+        sp = GetArenaSavepoint(a);
     }
     AutoArenaSavepoint(AutoArenaSavepoint& other) = delete;
     AutoArenaSavepoint(AutoArenaSavepoint&& other) = delete;
     AutoArenaSavepoint(const AutoArenaSavepoint& other) = delete;
     AutoArenaSavepoint(const AutoArenaSavepoint&& other) = delete;
-    ~AutoArenaSavepoint() { ArenaRestoreSavepoint(sp); }
+    ~AutoArenaSavepoint() { RestoreArenaSavepoint(sp); }
 };
 
 // Arena for allocations that live for the whole lifetime of the program (i.e.
@@ -120,23 +120,23 @@ Arena* GetPermArena();
 void DestroyPermArena();
 
 template <typename T>
-inline T* push_array_no_zero_aligned(Arena* arena, u64 count, u64 align) {
+inline T* PushArrayNoZeroAligned(Arena* arena, u64 count, u64 align) {
     return (T*)arena->Push(sizeof(T) * count, align, false);
 }
 
 template <typename T>
-inline T* push_array_aligned(Arena* arena, u64 count, u64 align) {
+inline T* PushArrayAligned(Arena* arena, u64 count, u64 align) {
     return (T*)arena->Push(sizeof(T) * count, align, true);
 }
 
 template <typename T>
-inline T* push_array_no_zero(Arena* arena, u64 count) {
-    return push_array_no_zero_aligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
+inline T* PushArrayNoZero(Arena* arena, u64 count) {
+    return PushArrayNoZeroAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
 }
 
 template <typename T>
-inline T* push_array(Arena* arena, u64 count) {
-    return push_array_aligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
+inline T* PushArray(Arena* arena, u64 count) {
+    return PushArrayAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
 }
 
 void* Alloc(struct Arena* arena, int size);
