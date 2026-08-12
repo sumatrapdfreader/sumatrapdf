@@ -1608,12 +1608,6 @@ LRESULT ImageEditWindow::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 1;
         }
 
-        case WM_CTLCOLORSTATIC: {
-            HDC hdcStatic = (HDC)wp;
-            SetBkMode(hdcStatic, TRANSPARENT);
-            return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
-        }
-
         case WM_MOUSEMOVE: {
             if (!ew || ew->mode == ImageEditMode::Save) {
                 break;
