@@ -114,9 +114,13 @@ struct VirtWnd : LayoutBase {
     uintptr_t userData = 0;
     // for debugging; not owned
     Str name;
+    // static tooltip (owned); used when onGetTooltip is empty
+    Str tooltip;
 
     VirtWnd();
     ~VirtWnd() override;
+
+    void SetTooltip(Str);
 
     // ILayout
     int MinIntrinsicHeight(int width) override;
@@ -203,6 +207,7 @@ struct VirtWnd : LayoutBase {
     VirtCharHandler onChar;
     VirtFocusHandler onFocusChanged;
     VirtSetCursorHandler onSetCursor;
+    // dynamic tip (overrides tooltip when set)
     VirtTooltipHandler onGetTooltip;
 };
 
@@ -615,21 +620,18 @@ struct VirtText : VirtWnd {
 VirtText* NewVirtText(const VirtTextArgs&);
 
 struct VirtLink : VirtText {
-    Str target;  // owned
-    Str tooltip; // owned
+    Str target; // owned
     bool underlineOnHover = false;
 
     VirtLink(Str s, PlatformFont* font = nullptr);
     ~VirtLink() override;
 
     void SetTarget(Str);
-    void SetTooltip(Str);
 
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
     void OnSetCursor(VirtSetCursorEvent*);
-    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 struct VirtButton : VirtText {
@@ -658,19 +660,15 @@ struct VirtIconButton : VirtWnd {
     bool isSelected = false;
     COLORREF bgColorHover = kColorUnset;
     COLORREF bgColorSelected = kColorUnset;
-    Str tooltip; // owned
 
     VirtIconButton();
-    ~VirtIconButton() override;
-
-    void SetTooltip(Str);
+    ~VirtIconButton() override = default;
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
     void OnSetCursor(VirtSetCursorEvent*);
-    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 // The ✕ that closes or removes something, styled like the tab close button: a
@@ -685,19 +683,15 @@ struct VirtCloseButton : VirtWnd {
     COLORREF circleColor = kColorUnset;
     COLORREF circleColorHover = kColorUnset;
     Size idealSize;
-    Str tooltip; // owned
 
     VirtCloseButton();
-    ~VirtCloseButton() override;
-
-    void SetTooltip(Str);
+    ~VirtCloseButton() override = default;
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
     void OnSetCursor(VirtSetCursorEvent*);
-    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 // The header of a side panel: a label on the left, the ✕ that closes the panel
@@ -861,7 +855,7 @@ struct VirtRichText : VirtWnd {
     void OnMouseDown(VirtMouseEvent*);
     void OnMouseUp(VirtMouseEvent*);
     void OnSetCursor(VirtSetCursorEvent*);
-    void OnGetTooltip(VirtTooltipEvent*);
+    void OnGetTooltip(VirtTooltipEvent*); // link under cursor
 };
 
 VirtRichText* ParseTip(Str s);

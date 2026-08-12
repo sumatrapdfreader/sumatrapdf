@@ -890,12 +890,10 @@ struct HomeViewIconWnd : VirtWnd {
     Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
-    Str tooltip;
 
     HomeViewIconWnd();
     void Paint(VirtPaintCtx&) override;
     void OnSetCursor(VirtSetCursorEvent*);
-    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 struct HomeOpenDocWnd : VirtWnd {
@@ -913,7 +911,6 @@ struct HomeHelpBtnWnd : VirtWnd {
     HomeHelpBtnWnd();
     void Paint(VirtPaintCtx&) override;
     void OnSetCursor(VirtSetCursorEvent*);
-    void OnGetTooltip(VirtTooltipEvent*);
 };
 
 struct HomeEntryWnd;
@@ -1943,7 +1940,6 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 
 HomeViewIconWnd::HomeViewIconWnd() {
     onSetCursor = MkMethod1<HomeViewIconWnd, VirtSetCursorEvent*, &HomeViewIconWnd::OnSetCursor>(this);
-    onGetTooltip = MkMethod1<HomeViewIconWnd, VirtTooltipEvent*, &HomeViewIconWnd::OnGetTooltip>(this);
 }
 
 void HomeViewIconWnd::Paint(VirtPaintCtx& ctx) {
@@ -1954,10 +1950,6 @@ void HomeViewIconWnd::Paint(VirtPaintCtx& ctx) {
 void HomeViewIconWnd::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-}
-
-void HomeViewIconWnd::OnGetTooltip(VirtTooltipEvent* ev) {
-    ev->tip = str::DupTemp(tooltip);
 }
 
 HomeOpenDocWnd::HomeOpenDocWnd() {
@@ -1979,7 +1971,7 @@ void HomeOpenDocWnd::OnSetCursor(VirtSetCursorEvent* ev) {
 
 HomeHelpBtnWnd::HomeHelpBtnWnd() {
     onSetCursor = MkMethod1<HomeHelpBtnWnd, VirtSetCursorEvent*, &HomeHelpBtnWnd::OnSetCursor>(this);
-    onGetTooltip = MkMethod1<HomeHelpBtnWnd, VirtTooltipEvent*, &HomeHelpBtnWnd::OnGetTooltip>(this);
+    SetTooltip(_TRA("Keyboard Shortcuts"));
 }
 
 void HomeHelpBtnWnd::Paint(VirtPaintCtx& ctx) {
@@ -1989,10 +1981,6 @@ void HomeHelpBtnWnd::Paint(VirtPaintCtx& ctx) {
 void HomeHelpBtnWnd::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-}
-
-void HomeHelpBtnWnd::OnGetTooltip(VirtTooltipEvent* ev) {
-    ev->tip = str::DupTemp(_TRA("Keyboard Shortcuts"));
 }
 
 //--- tip links
@@ -2270,13 +2258,13 @@ static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
 
     chrome->thumbView = new HomeViewIconWnd();
     chrome->thumbView->listView = false;
-    chrome->thumbView->tooltip = _TRA("Show as thumbnails");
+    chrome->thumbView->SetTooltip(_TRA("Show as thumbnails"));
     chrome->thumbView->onClick = MkFunc1(HomeViewModeClicked, win);
     chrome->AddChild(chrome->thumbView);
 
     chrome->listView = new HomeViewIconWnd();
     chrome->listView->listView = true;
-    chrome->listView->tooltip = _TRA("Show as list");
+    chrome->listView->SetTooltip(_TRA("Show as list"));
     chrome->listView->onClick = MkFunc1(HomeViewModeClicked, win);
     chrome->AddChild(chrome->listView);
 

@@ -29,6 +29,11 @@ VirtWnd::~VirtWnd() {
         root->OnWndDestroyed(this);
     }
     RemoveAllChildren(true);
+    str::Free(tooltip);
+}
+
+void VirtWnd::SetTooltip(Str s) {
+    str::ReplaceWithCopy(&tooltip, s);
 }
 
 int VirtWnd::LayoutChildCount() {
@@ -302,14 +307,17 @@ bool VirtWnd::OnSetCursor(Point ptLocal) {
 }
 
 TempStr VirtWnd::GetTooltipTemp(Point ptLocal) {
-    if (!onGetTooltip.IsValid()) {
-        return nullptr;
+    if (onGetTooltip.IsValid()) {
+        VirtTooltipEvent ev;
+        ev.w = this;
+        ev.ptLocal = ptLocal;
+        onGetTooltip.Call(&ev);
+        return ev.tip;
     }
-    VirtTooltipEvent ev;
-    ev.w = this;
-    ev.ptLocal = ptLocal;
-    onGetTooltip.Call(&ev);
-    return ev.tip;
+    if (tooltip) {
+        return str::DupTemp(tooltip);
+    }
+    return nullptr;
 }
 
 void VirtWnd::AddChild(VirtWnd* c) {
@@ -2237,7 +2245,6 @@ VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtLink, &VirtLink::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtLink, &VirtLink::OnMouseLeave>(this);
     onSetCursor = MkMethod1<VirtLink, VirtSetCursorEvent*, &VirtLink::OnSetCursor>(this);
-    onGetTooltip = MkMethod1<VirtLink, VirtTooltipEvent*, &VirtLink::OnGetTooltip>(this);
 
     kind = kindVirtWndLink;
     flags &= ~vwfNoHitTest;
@@ -2245,17 +2252,11 @@ VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
 
 VirtLink::~VirtLink() {
     str::Free(target);
-    str::Free(tooltip);
 }
 
 void VirtLink::SetTarget(Str s2) {
     str::Free(target);
     target = str::Dup(s2);
-}
-
-void VirtLink::SetTooltip(Str s2) {
-    str::Free(tooltip);
-    tooltip = str::Dup(s2);
 }
 
 void VirtLink::Paint(VirtPaintCtx& ctx) {
@@ -2282,15 +2283,6 @@ void VirtLink::OnMouseLeave() {
 void VirtLink::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-    return;
-}
-
-void VirtLink::OnGetTooltip(VirtTooltipEvent* ev) {
-    if (!tooltip) {
-        return;
-    }
-    ev->tip = str::DupTemp(tooltip);
-    return;
 }
 
 //--- VirtButton
@@ -2394,18 +2386,8 @@ VirtIconButton::VirtIconButton() {
     onMouseEnter = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseLeave>(this);
     onSetCursor = MkMethod1<VirtIconButton, VirtSetCursorEvent*, &VirtIconButton::OnSetCursor>(this);
-    onGetTooltip = MkMethod1<VirtIconButton, VirtTooltipEvent*, &VirtIconButton::OnGetTooltip>(this);
 
     kind = kindVirtWndIconButton;
-}
-
-VirtIconButton::~VirtIconButton() {
-    str::Free(tooltip);
-}
-
-void VirtIconButton::SetTooltip(Str s2) {
-    str::Free(tooltip);
-    tooltip = str::Dup(s2);
 }
 
 Size VirtIconButton::GetIdealSize() {
@@ -2443,14 +2425,6 @@ void VirtIconButton::OnSetCursor(VirtSetCursorEvent* ev) {
     ev->didHandle = true;
 }
 
-void VirtIconButton::OnGetTooltip(VirtTooltipEvent* ev) {
-    if (!tooltip) {
-        return;
-    }
-    ev->tip = str::DupTemp(tooltip);
-    return;
-}
-
 //--- VirtCloseButton
 
 static Kind kindVirtWndCloseButton = "virtWndCloseButton";
@@ -2465,18 +2439,8 @@ VirtCloseButton::VirtCloseButton() {
     onMouseEnter = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseLeave>(this);
     onSetCursor = MkMethod1<VirtCloseButton, VirtSetCursorEvent*, &VirtCloseButton::OnSetCursor>(this);
-    onGetTooltip = MkMethod1<VirtCloseButton, VirtTooltipEvent*, &VirtCloseButton::OnGetTooltip>(this);
 
     kind = kindVirtWndCloseButton;
-}
-
-VirtCloseButton::~VirtCloseButton() {
-    str::Free(tooltip);
-}
-
-void VirtCloseButton::SetTooltip(Str s) {
-    str::Free(tooltip);
-    tooltip = str::Dup(s);
 }
 
 Size VirtCloseButton::GetIdealSize() {
@@ -2534,14 +2498,6 @@ void VirtCloseButton::OnMouseLeave() {
 void VirtCloseButton::OnSetCursor(VirtSetCursorEvent* ev) {
     SetCursorCached(IDC_HAND);
     ev->didHandle = true;
-}
-
-void VirtCloseButton::OnGetTooltip(VirtTooltipEvent* ev) {
-    if (!tooltip) {
-        return;
-    }
-    ev->tip = str::DupTemp(tooltip);
-    return;
 }
 
 //--- LabelWithClose
