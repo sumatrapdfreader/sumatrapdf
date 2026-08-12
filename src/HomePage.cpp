@@ -893,7 +893,6 @@ struct HomeViewIconWnd : VirtWnd {
 
     HomeViewIconWnd();
     void Paint(VirtPaintCtx&) override;
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 struct HomeOpenDocWnd : VirtWnd {
@@ -904,13 +903,11 @@ struct HomeOpenDocWnd : VirtWnd {
 
     HomeOpenDocWnd();
     void Paint(VirtPaintCtx&) override;
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 struct HomeHelpBtnWnd : VirtWnd {
     HomeHelpBtnWnd();
     void Paint(VirtPaintCtx&) override;
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 struct HomeEntryWnd;
@@ -921,7 +918,6 @@ struct HomeListIconWnd : VirtWnd {
     bool isPin = true;
 
     HomeListIconWnd();
-    void OnSetCursor(VirtSetCursorEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
 };
 
@@ -936,8 +932,6 @@ struct HomeEntryWnd : VirtWnd {
 
     HomeEntryWnd();
     ~HomeEntryWnd() override;
-
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 // page-level list: still knows the MainWindow so it can wire entry actions and
@@ -1939,7 +1933,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 //--- home page chrome VirtWnds
 
 HomeViewIconWnd::HomeViewIconWnd() {
-    onSetCursor = MkMethod1<HomeViewIconWnd, VirtSetCursorEvent*, &HomeViewIconWnd::OnSetCursor>(this);
+    cursor = IDC_HAND;
 }
 
 void HomeViewIconWnd::Paint(VirtPaintCtx& ctx) {
@@ -1947,13 +1941,8 @@ void HomeViewIconWnd::Paint(VirtPaintCtx& ctx) {
     DrawHomeViewButton(GfxHdc(ctx.gfx), pixmap, ctx.bounds, selected);
 }
 
-void HomeViewIconWnd::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
-}
-
 HomeOpenDocWnd::HomeOpenDocWnd() {
-    onSetCursor = MkMethod1<HomeOpenDocWnd, VirtSetCursorEvent*, &HomeOpenDocWnd::OnSetCursor>(this);
+    cursor = IDC_HAND;
 }
 
 void HomeOpenDocWnd::Paint(VirtPaintCtx& ctx) {
@@ -1964,23 +1953,13 @@ void HomeOpenDocWnd::Paint(VirtPaintCtx& ctx) {
     GfxDrawPixmap(ctx.gfx, pixmap, r);
 }
 
-void HomeOpenDocWnd::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
-}
-
 HomeHelpBtnWnd::HomeHelpBtnWnd() {
-    onSetCursor = MkMethod1<HomeHelpBtnWnd, VirtSetCursorEvent*, &HomeHelpBtnWnd::OnSetCursor>(this);
+    cursor = IDC_HAND;
     SetTooltip(_TRA("Keyboard Shortcuts"));
 }
 
 void HomeHelpBtnWnd::Paint(VirtPaintCtx& ctx) {
     DrawHomeHelpButton(GfxHdc(ctx.gfx), ctx.bounds);
-}
-
-void HomeHelpBtnWnd::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
 }
 
 //--- tip links
@@ -2099,13 +2078,8 @@ static void HomeTipBandClicked(MainWindow* win, VirtMouseEvent*) {
 }
 
 HomeListIconWnd::HomeListIconWnd() {
-    onSetCursor = MkMethod1<HomeListIconWnd, VirtSetCursorEvent*, &HomeListIconWnd::OnSetCursor>(this);
+    cursor = IDC_HAND;
     onGetTooltip = MkMethod1<HomeListIconWnd, VirtTooltipEvent*, &HomeListIconWnd::OnGetTooltip>(this);
-}
-
-void HomeListIconWnd::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
 }
 
 void HomeListIconWnd::OnGetTooltip(VirtTooltipEvent* ev) {
@@ -2120,12 +2094,7 @@ HomeEntryWnd::~HomeEntryWnd() {
 }
 
 HomeEntryWnd::HomeEntryWnd() {
-    onSetCursor = MkMethod1<HomeEntryWnd, VirtSetCursorEvent*, &HomeEntryWnd::OnSetCursor>(this);
-}
-
-void HomeEntryWnd::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
+    cursor = IDC_HAND;
 }
 
 HomeEntryWnd* HomeEntriesWnd::EntryAt(int idx) {

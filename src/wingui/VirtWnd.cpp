@@ -296,14 +296,18 @@ void VirtWnd::OnFocusChanged(bool gotFocus) {
 }
 
 bool VirtWnd::OnSetCursor(Point ptLocal) {
-    if (!onSetCursor.IsValid()) {
-        return false;
+    if (onSetCursor.IsValid()) {
+        VirtSetCursorEvent ev;
+        ev.w = this;
+        ev.ptLocal = ptLocal;
+        onSetCursor.Call(&ev);
+        return ev.didHandle;
     }
-    VirtSetCursorEvent ev;
-    ev.w = this;
-    ev.ptLocal = ptLocal;
-    onSetCursor.Call(&ev);
-    return ev.didHandle;
+    if (HasFlag(vwfEnabled) && cursor) {
+        SetCursorCached(cursor);
+        return true;
+    }
+    return false;
 }
 
 TempStr VirtWnd::GetTooltipTemp(Point ptLocal) {
@@ -2244,7 +2248,7 @@ static Kind kindVirtWndLink = "virtWndLink";
 VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtLink, &VirtLink::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtLink, &VirtLink::OnMouseLeave>(this);
-    onSetCursor = MkMethod1<VirtLink, VirtSetCursorEvent*, &VirtLink::OnSetCursor>(this);
+    cursor = IDC_HAND;
 
     kind = kindVirtWndLink;
     flags &= ~vwfNoHitTest;
@@ -2280,11 +2284,6 @@ void VirtLink::OnMouseLeave() {
     }
 }
 
-void VirtLink::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
-}
-
 //--- VirtButton
 
 static Kind kindVirtWndButton = "virtWndButton";
@@ -2293,7 +2292,7 @@ VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtButton, &VirtButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtButton, &VirtButton::OnMouseLeave>(this);
     onKeyDown = MkMethod1<VirtButton, VirtKeyEvent*, &VirtButton::OnKeyDown>(this);
-    onSetCursor = MkMethod1<VirtButton, VirtSetCursorEvent*, &VirtButton::OnSetCursor>(this);
+    cursor = IDC_HAND;
 
     kind = kindVirtWndButton;
     flags &= ~vwfNoHitTest;
@@ -2370,14 +2369,6 @@ void VirtButton::OnMouseLeave() {
     Invalidate();
 }
 
-void VirtButton::OnSetCursor(VirtSetCursorEvent* ev) {
-    if (!HasFlag(vwfEnabled)) {
-        return;
-    }
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
-}
-
 //--- VirtIconButton
 
 static Kind kindVirtWndIconButton = "virtWndIconButton";
@@ -2385,7 +2376,7 @@ static Kind kindVirtWndIconButton = "virtWndIconButton";
 VirtIconButton::VirtIconButton() {
     onMouseEnter = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseLeave>(this);
-    onSetCursor = MkMethod1<VirtIconButton, VirtSetCursorEvent*, &VirtIconButton::OnSetCursor>(this);
+    cursor = IDC_HAND;
 
     kind = kindVirtWndIconButton;
 }
@@ -2420,11 +2411,6 @@ void VirtIconButton::OnMouseLeave() {
     Invalidate();
 }
 
-void VirtIconButton::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
-}
-
 //--- VirtCloseButton
 
 static Kind kindVirtWndCloseButton = "virtWndCloseButton";
@@ -2438,7 +2424,7 @@ static Kind kindVirtWndCloseButton = "virtWndCloseButton";
 VirtCloseButton::VirtCloseButton() {
     onMouseEnter = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseLeave>(this);
-    onSetCursor = MkMethod1<VirtCloseButton, VirtSetCursorEvent*, &VirtCloseButton::OnSetCursor>(this);
+    cursor = IDC_HAND;
 
     kind = kindVirtWndCloseButton;
 }
@@ -2493,11 +2479,6 @@ void VirtCloseButton::OnMouseEnter() {
 
 void VirtCloseButton::OnMouseLeave() {
     Invalidate();
-}
-
-void VirtCloseButton::OnSetCursor(VirtSetCursorEvent* ev) {
-    SetCursorCached(IDC_HAND);
-    ev->didHandle = true;
 }
 
 //--- LabelWithClose

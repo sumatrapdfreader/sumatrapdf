@@ -116,6 +116,8 @@ struct VirtWnd : LayoutBase {
     Str name;
     // static tooltip (owned); used when onGetTooltip is empty
     Str tooltip;
+    // default cursor id (e.g. IDC_HAND); used when onSetCursor is empty
+    LPWSTR cursor = nullptr;
 
     VirtWnd();
     ~VirtWnd() override;
@@ -206,6 +208,7 @@ struct VirtWnd : LayoutBase {
     VirtKeyHandler onKeyDown;
     VirtCharHandler onChar;
     VirtFocusHandler onFocusChanged;
+    // dynamic cursor (overrides cursor when set)
     VirtSetCursorHandler onSetCursor;
     // dynamic tip (overrides tooltip when set)
     VirtTooltipHandler onGetTooltip;
@@ -631,7 +634,6 @@ struct VirtLink : VirtText {
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 struct VirtButton : VirtText {
@@ -650,7 +652,6 @@ struct VirtButton : VirtText {
     void OnMouseEnter();
     void OnMouseLeave();
     void OnKeyDown(VirtKeyEvent*);
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 struct VirtIconButton : VirtWnd {
@@ -668,7 +669,6 @@ struct VirtIconButton : VirtWnd {
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 // The ✕ that closes or removes something, styled like the tab close button: a
@@ -691,7 +691,6 @@ struct VirtCloseButton : VirtWnd {
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
-    void OnSetCursor(VirtSetCursorEvent*);
 };
 
 // The header of a side panel: a label on the left, the ✕ that closes the panel
