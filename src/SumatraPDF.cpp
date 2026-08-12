@@ -29,7 +29,7 @@
 
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "SimpleBrowserWindow.h"
 
@@ -2500,7 +2500,7 @@ void FrameSyncSplitters(MainWindow* win) {
         win->frameRoot = new VirtRoot(win->hwndFrame);
         win->frameRoot->SetBounds(HwndClientRect(win->hwndFrame));
     }
-    Vec<VirtWnd*> tops;
+    Vec<VirtCtrl*> tops;
     VirtSplitter* all[] = {win->sidebarSplitter, win->favSplitter, win->aiChatSplitter};
     for (VirtSplitter* s : all) {
         if (s) {
@@ -9114,8 +9114,8 @@ static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
     return px;
 }
 
-// content for a notification, built as a VirtWnd tree: a generated Pixmap shown
-// by a VirtWnd, with a caption below it
+// content for a notification, built as a VirtCtrl tree: a generated Pixmap shown
+// by a VirtCtrl, with a caption below it
 static ILayout* MakeDebugPixmapNotifContent(HWND hwnd) {
     PlatformFont* font = GetPlatformFont(GetAppBiggerFont(hwnd));
     auto* box = new VBox();
@@ -9127,7 +9127,7 @@ static ILayout* MakeDebugPixmapNotifContent(HWND hwnd) {
     box->AddChild(img);
 
     box->AddChild(new Spacer(0, DpiScale(hwnd, 6)));
-    box->AddChild(new VirtText(StrL("a VirtWnd-drawn Pixmap"), font));
+    box->AddChild(new VirtText(StrL("a VirtCtrl-drawn Pixmap"), font));
     return box;
 }
 #endif
@@ -10819,7 +10819,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 UpdateNotificationProgress(wnd, "Progress", 50);
             }
 
-            // a notification whose content is a VirtWnd tree we build here
+            // a notification whose content is a VirtCtrl tree we build here
             ShowCustomNotification(win->hwndCanvas, MakeDebugPixmapNotifContent(win->hwndCanvas));
         } break;
 

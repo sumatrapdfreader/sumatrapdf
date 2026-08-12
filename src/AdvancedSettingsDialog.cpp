@@ -19,7 +19,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"

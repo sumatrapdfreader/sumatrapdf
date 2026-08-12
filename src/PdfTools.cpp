@@ -11,7 +11,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -649,7 +649,7 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 // --- Delete Pages From PDF dialog ---
 
-// The dialog's content is a VirtWnd tree: the labels and buttons are virtual
+// The dialog's content is a VirtCtrl tree: the labels and buttons are virtual
 // controls, while the two text fields stay real HWND edits, hosted in the tree
 // so they take part in the same layout.
 struct PdfDeletePageDialog : PdfToolDialog {

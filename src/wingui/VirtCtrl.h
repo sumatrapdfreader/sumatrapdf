@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// A VirtWnd is a "virtual control": a tree of them lives inside a single HWND,
+// A VirtCtrl is a "virtual control": a tree of them lives inside a single HWND,
 // each taking up a part of it. VirtRoot bridges the tree to the HWND: it
 // drives layout, painting and message dispatch (hover / capture / focus).
 //
-// A VirtWnd is an ILayout (Layout.h), so it composes with VBox / HBox /
+// A VirtCtrl is an ILayout (Layout.h), so it composes with VBox / HBox /
 // Padding / VirtTable. Its `bounds` are relative to the parent's content
 // origin; painting and hit-testing carry an origin down the tree, which is what
 // makes VirtScroll cheap (shift the origin, don't re-layout the subtree).
@@ -13,7 +13,7 @@
 // needs wingui/PlatformFont.h (PlatformFont) and wingui/Gfx.h (Gfx)
 // included before it
 
-struct VirtWnd;
+struct VirtCtrl;
 struct VirtRoot;
 struct Pixmap;
 struct WindowBase;
@@ -46,9 +46,9 @@ struct VirtPaintCtx {
 
 struct VirtMouseEvent {
     // the wnd currently being offered the event; changes as it bubbles up
-    VirtWnd* target = nullptr;
+    VirtCtrl* target = nullptr;
     // the wnd the mouse actually hit; stays the same while bubbling
-    VirtWnd* hit = nullptr;
+    VirtCtrl* hit = nullptr;
     // relative to target's bounds; in window coords while captured
     Point pt;
     Point ptWindow;
@@ -62,7 +62,7 @@ struct VirtMouseEvent {
 };
 
 struct VirtKeyEvent {
-    VirtWnd* target = nullptr;
+    VirtCtrl* target = nullptr;
     int vkey = 0;
     bool isCtrl = false;
     bool isShift = false;
@@ -71,24 +71,24 @@ struct VirtKeyEvent {
 };
 
 struct VirtSetCursorEvent {
-    VirtWnd* w = nullptr;
+    VirtCtrl* w = nullptr;
     Point ptLocal{};
     bool didHandle = false;
 };
 
 struct VirtCharEvent {
-    VirtWnd* w = nullptr;
+    VirtCtrl* w = nullptr;
     int c = 0;
     bool didHandle = false;
 };
 
 struct VirtFocusEvent {
-    VirtWnd* w = nullptr;
+    VirtCtrl* w = nullptr;
     bool gotFocus = false;
 };
 
 struct VirtTooltipEvent {
-    VirtWnd* w = nullptr;
+    VirtCtrl* w = nullptr;
     Point ptLocal{};
     TempStr tip; // set by handler
 };
@@ -101,10 +101,10 @@ using VirtFocusHandler = Func1<VirtFocusEvent*>;
 using VirtTooltipHandler = Func1<VirtTooltipEvent*>;
 using VirtPaintHandler = Func1<VirtPaintCtx*>;
 
-struct VirtWnd : LayoutBase {
-    VirtWnd* parent = nullptr;
+struct VirtCtrl : LayoutBase {
+    VirtCtrl* parent = nullptr;
     VirtRoot* root = nullptr;
-    Vec<VirtWnd*> children; // owned
+    Vec<VirtCtrl*> children; // owned
 
     u32 flags = vwfEnabled;
     // relative to parent's content origin
@@ -119,8 +119,8 @@ struct VirtWnd : LayoutBase {
     // default cursor id (e.g. IDC_HAND); used when onSetCursor is empty
     LPWSTR cursor = nullptr;
 
-    VirtWnd();
-    ~VirtWnd() override;
+    VirtCtrl();
+    ~VirtCtrl() override;
 
     void SetTooltip(Str);
 
@@ -131,7 +131,7 @@ struct VirtWnd : LayoutBase {
     void SetBounds(Rect) override;
     int LayoutChildCount() override;
     ILayout* LayoutChildAt(int) override;
-    VirtWnd* AsVirtWnd() override;
+    VirtCtrl* AsVirtCtrl() override;
 
     virtual Size GetIdealSize();
 
@@ -143,7 +143,7 @@ struct VirtWnd : LayoutBase {
     virtual bool HitTest(Point ptLocal);
     // scroll containers return how much their content is scrolled
     virtual Point ScrollOffset();
-    VirtWnd* WndFromPoint(Point ptWindow, Point* ptLocalOut);
+    VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut);
 
     // dispatch to on* handlers; return true to consume (stop bubbling)
     bool OnMouseDown(VirtMouseEvent&);
@@ -161,13 +161,13 @@ struct VirtWnd : LayoutBase {
     bool OnSetCursor(Point ptLocal);
     TempStr GetTooltipTemp(Point ptLocal);
 
-    void AddChild(VirtWnd*);
-    void InsertChild(VirtWnd*, int idx);
-    void RemoveChild(VirtWnd*, bool del = true);
+    void AddChild(VirtCtrl*);
+    void InsertChild(VirtCtrl*, int idx);
+    void RemoveChild(VirtCtrl*, bool del = true);
     void RemoveAllChildren(bool del = true);
     int ChildCount() const;
-    VirtWnd* ChildAt(int idx) const;
-    VirtWnd* FindById(int);
+    VirtCtrl* ChildAt(int idx) const;
+    VirtCtrl* FindById(int);
 
     Point OriginInWindow();
     Point ChildOriginInWindow();
@@ -214,19 +214,19 @@ struct VirtWnd : LayoutBase {
     VirtTooltipHandler onGetTooltip;
 };
 
-bool IsVirtWndOfKind(VirtWnd*, Kind);
+bool IsVirtCtrlOfKind(VirtCtrl*, Kind);
 
 // The virtual controls at the top of a layout tree: nodes whose ancestors are
-// all plain layouts. Doesn't descend into a VirtWnd's own children - it paints
+// all plain layouts. Doesn't descend into a VirtCtrl's own children - it paints
 // and hit-tests those itself. A tree of only HWND controls yields none
-void CollectVirtWnds(ILayout* root, Vec<VirtWnd*>& out);
+void CollectVirtCtrls(ILayout* root, Vec<VirtCtrl*>& out);
 
 // One stop in a window's Tab ring: exactly one of the two is set. The ring is
 // the layout order, so an Edit and a virtual button sitting in the same VBox
 // are reached one after the other
 struct TabStop {
     ControlBase* ctrl = nullptr;
-    VirtWnd* vwnd = nullptr;
+    VirtCtrl* vwnd = nullptr;
 };
 
 // the tab stops of a layout tree, in layout order: HWND controls that have
@@ -262,16 +262,16 @@ bool VirtTreeOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&);
 // two - and they are not owned here; the layout tree owns them
 struct VirtRoot {
     HWND hwnd = nullptr;
-    Vec<VirtWnd*> tops;
+    Vec<VirtCtrl*> tops;
     // set only by SetChild(), which owns what it is given
-    VirtWnd* owned = nullptr;
+    VirtCtrl* owned = nullptr;
     // part of hwnd occupied by the tree
     Rect bounds;
 
-    VirtWnd* hovered = nullptr;
-    VirtWnd* captured = nullptr;
-    VirtWnd* focused = nullptr;
-    VirtWnd* pressed = nullptr;
+    VirtCtrl* hovered = nullptr;
+    VirtCtrl* captured = nullptr;
+    VirtCtrl* focused = nullptr;
+    VirtCtrl* pressed = nullptr;
 
     bool needsLayout = true;
     // legacy single-tree hosts lay out lazily from Paint(); see SetChild()
@@ -282,9 +282,9 @@ struct VirtRoot {
     ~VirtRoot();
 
     // takes ownership; for a window whose whole content is one virtual tree
-    void SetChild(VirtWnd*);
+    void SetChild(VirtCtrl*);
     // the tops found in a layout tree; not owned
-    void SetTops(const Vec<VirtWnd*>&);
+    void SetTops(const Vec<VirtCtrl*>&);
     void SetBounds(Rect);
     void LayoutIfNeeded();
     void RequestLayout();
@@ -293,14 +293,14 @@ struct VirtRoot {
     // single entry point from the owning WndProc, returns false if not handled
     bool OnMessage(UINT msg, WPARAM, LPARAM, LRESULT& res);
 
-    VirtWnd* WndFromPoint(Point ptWindow, Point* ptLocalOut);
-    void SetFocus(VirtWnd*);
+    VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut);
+    void SetFocus(VirtCtrl*);
     bool TabNavigate(bool backwards);
-    void SetCapture(VirtWnd*);
+    void SetCapture(VirtCtrl*);
     void ReleaseCapture();
     void ClearHover();
     void ClearPressed();
-    void OnWndDestroyed(VirtWnd*);
+    void OnWndDestroyed(VirtCtrl*);
     void Invalidate(Rect rWindow);
     void TrackMouseLeaveIfNeeded();
 };
@@ -311,8 +311,8 @@ struct VirtRoot {
 // cell is bigger than the child; CrossAxisAlign::Stretch makes the child fill
 // the cell in that direction
 struct VirtTableCell {
-    // owned, as one of the table's VirtWnd children
-    VirtWnd* child = nullptr;
+    // owned, as one of the table's VirtCtrl children
+    VirtCtrl* child = nullptr;
     int rowSpan = 1;
     int colSpan = 1;
     CrossAxisAlign alignH = CrossAxisAlign::CrossStart;
@@ -323,10 +323,10 @@ struct VirtTableCell {
     Size childSize;
 };
 
-// a grid of rows x cols cells, each holding a VirtWnd. A column is as wide as
+// a grid of rows x cols cells, each holding a VirtCtrl. A column is as wide as
 // its widest cell and a row as tall as its tallest; a cell can span several
 // rows and / or columns
-struct VirtTable : VirtWnd {
+struct VirtTable : VirtCtrl {
     int rows = 0;
     int cols = 0;
     // space between adjacent columns / rows
@@ -342,9 +342,9 @@ struct VirtTable : VirtWnd {
     void SetBounds(Rect) override;
 
     void SetSize(int rows, int cols);
-    VirtTableCell& SetCell(int row, int col, VirtWnd* child, int rowSpan = 1, int colSpan = 1);
+    VirtTableCell& SetCell(int row, int col, VirtCtrl* child, int rowSpan = 1, int colSpan = 1);
     VirtTableCell* CellAt(int row, int col);
-    VirtWnd* GetCell(int row, int col);
+    VirtCtrl* GetCell(int row, int col);
     void RemoveAllCells();
 
     // valid after a Layout() / SetBounds() pass
@@ -367,12 +367,12 @@ struct VirtTable : VirtWnd {
 // tells the owner which part of the content is visible so it can create
 // only the wnds that are needed (list virtualization)
 struct VirtScrollRange {
-    VirtWnd* wnd = nullptr;
+    VirtCtrl* wnd = nullptr;
     int visibleY = 0;
     int visibleDy = 0;
 };
 
-struct VirtScroll : VirtWnd {
+struct VirtScroll : VirtCtrl {
     int scrollY = 0;
     int contentDy = 0;
     int lineDy = 16;
@@ -393,7 +393,7 @@ struct VirtScroll : VirtWnd {
     bool ScrollTo(int y);
     bool ScrollBy(int dy);
     bool ScrollPage(int dir);
-    void ScrollIntoView(VirtWnd*);
+    void ScrollIntoView(VirtCtrl*);
     void OnVScroll(WPARAM);
 
   private:
@@ -408,7 +408,7 @@ struct VirtScroll : VirtWnd {
 // paints only the rows that are visible. The virtual counterpart of the HWND
 // ListBox, minus the win32 listbox's habits (it doesn't steal the keyboard
 // focus when clicked, and it repaints as one piece instead of scrolling pixels)
-struct VirtListBox : VirtWnd {
+struct VirtListBox : VirtCtrl {
     struct DrawItemEvent {
         VirtListBox* listBox = nullptr;
         Gfx* gfx = nullptr;
@@ -508,7 +508,7 @@ enum class SplitterType {
 // The drag handle between two panes, e.g. the sidebar and the document. While
 // dragging it captures the mouse; a non-live splitter shows a dotted popup
 // where the split would land and only moves the panes on release.
-struct VirtSplitter : VirtWnd {
+struct VirtSplitter : VirtCtrl {
     struct MoveEvent {
         VirtSplitter* w = nullptr;
         bool finishedDragging = false;
@@ -553,7 +553,7 @@ struct VirtSplitter : VirtWnd {
     void HideOverlay();
 };
 
-struct VirtCustom : VirtWnd {
+struct VirtCustom : VirtCtrl {
     Size idealSize;
     VirtPaintHandler onPaint;
 
@@ -572,7 +572,7 @@ enum class VirtTextAlign {
     Right
 };
 
-// VirtText itself can't be an aggregate - it inherits VirtWnd, which has
+// VirtText itself can't be an aggregate - it inherits VirtCtrl, which has
 // virtual functions and a constructor - so designated initializers go through
 // this, like the CreateArgs of the HWND controls:
 //   auto* t = NewVirtText({.s = path, .font = font, .ellipsis = true});
@@ -591,7 +591,7 @@ struct VirtTextArgs {
     Insets padding{};
 };
 
-struct VirtText : VirtWnd {
+struct VirtText : VirtCtrl {
     Str s;
     PlatformFont* font = nullptr; // not owned, interned
     bool withUnderline = false;
@@ -654,7 +654,7 @@ struct VirtButton : VirtText {
     void OnKeyDown(VirtKeyEvent*);
 };
 
-struct VirtIconButton : VirtWnd {
+struct VirtIconButton : VirtCtrl {
     // not owned; in SumatraPDF it comes from GetPixmapForIcon()
     Pixmap* pixmap = nullptr;
     // a toggle button (match case, ...) draws bgColorSelected while on
@@ -676,7 +676,7 @@ struct VirtIconButton : VirtWnd {
 // the circle when not hovered, which is what keeps it readable on top of
 // arbitrary content (a thumbnail).
 // Colors left at kColorUnset use the tab close button's.
-struct VirtCloseButton : VirtWnd {
+struct VirtCloseButton : VirtCtrl {
     bool withCircle = false;
     COLORREF xColor = kColorUnset;
     COLORREF xColorHover = kColorUnset;
@@ -704,7 +704,7 @@ struct LabelWithClose {
 
 LabelWithClose NewLabelWithClose(HWND hwndForDpi, PlatformFont*, const VirtMouseHandler& onClose);
 
-struct VirtImage : VirtWnd {
+struct VirtImage : VirtCtrl {
     Pixmap* pixmap = nullptr; // not owned
     // scale the image down to fit, keeping the aspect ratio
     bool fitToBounds = true;
@@ -716,7 +716,7 @@ struct VirtImage : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct VirtFill : VirtWnd {
+struct VirtFill : VirtCtrl {
     COLORREF color = kColorUnset;
     Size idealSize;
 
@@ -727,7 +727,7 @@ struct VirtFill : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct VirtLine : VirtWnd {
+struct VirtLine : VirtCtrl {
     COLORREF color = kColorUnset;
     bool isVertical = false;
     int thickness = 1;
@@ -739,7 +739,7 @@ struct VirtLine : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct VirtSpacer : VirtWnd {
+struct VirtSpacer : VirtCtrl {
     Size idealSize;
 
     VirtSpacer(int dx, int dy);
@@ -812,7 +812,7 @@ struct TipLink {
 // control: it wraps itself to the width it is given, paints itself, and handles
 // clicks on its links. `words` and `links` are root nodes of intrusive lists;
 // the content starts at words.next / links.next.
-struct VirtRichText : VirtWnd {
+struct VirtRichText : VirtCtrl {
     TipWord words;
     TipLink links;
     // where to append next, so parsing doesn't walk the list for every word
@@ -832,7 +832,7 @@ struct VirtRichText : VirtWnd {
     COLORREF bgColor = kColorUnset;
     // link commands are sent to this window
     HWND hwndForCmds = nullptr;
-    // onClick (from VirtWnd): fired by a click that didn't land on a link, so
+    // onClick (from VirtCtrl): fired by a click that didn't land on a link, so
     // the whole run can be clickable (command palette "# File History", etc.)
 
     VirtRichText();

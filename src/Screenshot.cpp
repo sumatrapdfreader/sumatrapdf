@@ -17,7 +17,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Notifications.h"
 #include "AppTools.h"

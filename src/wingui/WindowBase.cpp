@@ -12,7 +12,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 static Kind kindWindow = "wnd";
 
@@ -213,7 +213,7 @@ void WindowBase::SetFocusTo(ControlBase* c) {
     ::SetFocus(c->hwnd);
 }
 
-void WindowBase::SetFocusTo(VirtWnd* w) {
+void WindowBase::SetFocusTo(VirtCtrl* w) {
     if (!vroot || !w) {
         return;
     }
@@ -238,7 +238,7 @@ bool WindowBase::TabNavigate(bool backwards) {
     // where we are now: a virtual control if one has the focus, otherwise the
     // control that owns the win32 focus
     int idx = -1;
-    VirtWnd* focusedVirt = vroot ? vroot->focused : nullptr;
+    VirtCtrl* focusedVirt = vroot ? vroot->focused : nullptr;
     HWND focusedHwnd = ::GetFocus();
     for (int i = 0; i < n; i++) {
         TabStop& ts = stops[i];

@@ -11,7 +11,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -25,7 +25,7 @@
 #include "PdfDarkMode.h"
 #include "ChangeThemeDialog.h"
 
-// The theme list, the label and the buttons are virtual controls (VirtWnd);
+// The theme list, the label and the buttons are virtual controls (VirtCtrl);
 // only the drop-down is a real HWND. They all sit in the same layout tree,
 // which the window paints and dispatches input to
 struct ChangeThemeWnd : WindowBase {

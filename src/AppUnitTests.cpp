@@ -9,13 +9,13 @@
 #include "wingui/Layout.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 #include "Commands.h"
 
 #if defined(DEBUG)
 void TextSelection_UnitTests();
 void Layout_UnitTests();
-void VirtWnd_UnitTests();
+void VirtCtrl_UnitTests();
 bool TableOfContents_UnitTestSnapshotNamedDest();
 bool MarkdownModel_UnitTestBrowserNavigationUrl();
 bool MarkdownToc_UnitTestHtmlLinks();
@@ -112,7 +112,7 @@ int RunAppUnitTests() {
 #if defined(DEBUG)
     TextSelection_UnitTests();
     Layout_UnitTests();
-    VirtWnd_UnitTests();
+    VirtCtrl_UnitTests();
     utassert(TableOfContents_UnitTestSnapshotNamedDest());
     utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
     utassert(MarkdownToc_UnitTestHtmlLinks());

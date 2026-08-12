@@ -12,7 +12,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 // ControlBase is the base of the controls a layout positions. It is deliberately
 // independent of WindowBase: the two share the shape of the win32 plumbing but

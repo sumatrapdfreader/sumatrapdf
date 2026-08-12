@@ -302,7 +302,7 @@ struct WindowBase {
     // `vroot->focused` says which one it is
     bool TabNavigate(bool backwards);
     void SetFocusTo(ControlBase*);
-    void SetFocusTo(VirtWnd*);
+    void SetFocusTo(VirtCtrl*);
 
     Kind kind = nullptr;
     uintptr_t userData = 0;
@@ -319,7 +319,7 @@ struct WindowBase {
     COLORREF textColor = kColorUnset;
 
     // the layout of our children, if we have one. It can hold HWND controls
-    // (ControlBase) and virtual ones (VirtWnd) side by side
+    // (ControlBase) and virtual ones (VirtCtrl) side by side
     ILayout* layout = nullptr;
     // the virtual controls of `layout`, if it has any. Created on demand by
     // DoLayout(), owned here, but it doesn't own the controls - `layout` does
@@ -554,7 +554,7 @@ ControlBase* ControlFromHwnd(HWND);
 void SizeToIdealSize(ControlBase* c);
 
 struct VirtRoot;
-struct VirtWnd;
+struct VirtCtrl;
 
 //--- Button
 

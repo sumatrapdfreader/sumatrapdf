@@ -3,7 +3,7 @@
 
 struct NotificationWnd;
 struct WindowTab;
-struct VirtWnd;
+struct VirtCtrl;
 struct ILayout;
 
 extern Kind kNotifCursorPos;
@@ -48,7 +48,7 @@ struct NotificationCreateArgs {
     int xMargin = kNotifDefaultMargin; // distance from the left/right edge
     int yMargin = kNotifDefaultMargin; // distance from the top/bottom edge
     Str msg;
-    // when set, the notification shows this VirtWnd tree instead of `msg`.
+    // when set, the notification shows this VirtCtrl tree instead of `msg`.
     // ownership passes to the notification
     ILayout* content = nullptr;
     // if set, the notification is only shown while this tab is the active tab

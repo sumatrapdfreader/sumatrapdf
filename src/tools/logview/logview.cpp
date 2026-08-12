@@ -32,7 +32,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 // ---- logging required by the base library (we don't link SumatraLog.cpp) ----
 
@@ -928,7 +928,7 @@ static void CloseTab(int idx);
 
 // the tab bar is a virtual control: the main window paints it and gives it its
 // input, so it needs no HWND / window class of its own
-struct TabBarWnd : VirtWnd {
+struct TabBarWnd : VirtCtrl {
     TabBarWnd() {
         kind = "logViewTabs";
         onMouseDown = MkMethod1<TabBarWnd, VirtMouseEvent*, &TabBarWnd::OnMouseDown>(this);

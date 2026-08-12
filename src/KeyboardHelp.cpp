@@ -11,7 +11,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -31,7 +31,7 @@
 // override or a rebind shows through here without any extra bookkeeping. A
 // command with no binding is simply skipped, so the sheet self-adjusts.
 //
-// The sheet is a VirtWnd tree: an HBox of two columns, each column a
+// The sheet is a VirtCtrl tree: an HBox of two columns, each column a
 // VirtTable of (key-caps, description) rows with the section headers as
 // full-width spanning cells.
 
@@ -108,7 +108,7 @@ struct KbSectionData {
 static Kind kindKbKeyCaps = "kbKeyCaps";
 
 // the shortcut(s) of one row, drawn as rounded key-caps
-struct KbKeyCaps : VirtWnd {
+struct KbKeyCaps : VirtCtrl {
     StrVec toks; // one per cap, at most 4
     PlatformFont* font = nullptr;
     int capPadX = 0;

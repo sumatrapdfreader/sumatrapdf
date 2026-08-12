@@ -14,7 +14,7 @@
 
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"

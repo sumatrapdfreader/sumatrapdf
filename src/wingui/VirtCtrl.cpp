@@ -14,17 +14,17 @@
 
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
-//--- VirtWnd
+//--- VirtCtrl
 
-static Kind kindVirtWnd = "virtWnd";
+static Kind kindVirtCtrl = "virtCtrl";
 
-VirtWnd::VirtWnd() {
-    kind = kindVirtWnd;
+VirtCtrl::VirtCtrl() {
+    kind = kindVirtCtrl;
 }
 
-VirtWnd::~VirtWnd() {
+VirtCtrl::~VirtCtrl() {
     if (root) {
         root->OnWndDestroyed(this);
     }
@@ -32,27 +32,27 @@ VirtWnd::~VirtWnd() {
     str::Free(tooltip);
 }
 
-void VirtWnd::SetTooltip(Str s) {
+void VirtCtrl::SetTooltip(Str s) {
     str::ReplaceWithCopy(&tooltip, s);
 }
 
-int VirtWnd::LayoutChildCount() {
+int VirtCtrl::LayoutChildCount() {
     return len(children);
 }
 
-ILayout* VirtWnd::LayoutChildAt(int idx) {
+ILayout* VirtCtrl::LayoutChildAt(int idx) {
     return children[idx];
 }
 
-VirtWnd* VirtWnd::AsVirtWnd() {
+VirtCtrl* VirtCtrl::AsVirtCtrl() {
     return this;
 }
 
-void CollectVirtWnds(ILayout* root, Vec<VirtWnd*>& out) {
+void CollectVirtCtrls(ILayout* root, Vec<VirtCtrl*>& out) {
     if (!root) {
         return;
     }
-    VirtWnd* w = root->AsVirtWnd();
+    VirtCtrl* w = root->AsVirtCtrl();
     if (w) {
         // its children come with it: it paints and hit-tests them itself
         out.Append(w);
@@ -60,18 +60,18 @@ void CollectVirtWnds(ILayout* root, Vec<VirtWnd*>& out) {
     }
     int n = root->LayoutChildCount();
     for (int i = 0; i < n; i++) {
-        CollectVirtWnds(root->LayoutChildAt(i), out);
+        CollectVirtCtrls(root->LayoutChildAt(i), out);
     }
 }
 
-bool IsVirtWndOfKind(VirtWnd* w, Kind k) {
+bool IsVirtCtrlOfKind(VirtCtrl* w, Kind k) {
     return w && w->kind == k;
 }
 
 // ILayout: the containers in Layout.h hand us an absolute (HWND client) rect,
 // and a parent is always laid out before its children, so we can rebase it into
 // the parent-relative form the paint / hit-test walks expect
-void VirtWnd::SetBounds(Rect r) {
+void VirtCtrl::SetBounds(Rect r) {
     lastBounds = r;
     Point po{0, 0};
     if (parent) {
@@ -82,28 +82,28 @@ void VirtWnd::SetBounds(Rect r) {
     bounds = {r.x - po.x, r.y - po.y, r.dx, r.dy};
 }
 
-Size VirtWnd::Layout(Constraints bc) {
+Size VirtCtrl::Layout(Constraints bc) {
     Size sz = GetIdealSize();
     return bc.Constrain(sz);
 }
 
-int VirtWnd::MinIntrinsicHeight(int) {
+int VirtCtrl::MinIntrinsicHeight(int) {
     return GetIdealSize().dy;
 }
 
-int VirtWnd::MinIntrinsicWidth(int) {
+int VirtCtrl::MinIntrinsicWidth(int) {
     return GetIdealSize().dx;
 }
 
-Size VirtWnd::GetIdealSize() {
+Size VirtCtrl::GetIdealSize() {
     return {bounds.dx, bounds.dy};
 }
 
-void VirtWnd::Paint(VirtPaintCtx&) {}
+void VirtCtrl::Paint(VirtPaintCtx&) {}
 
 // origin is the window position of our parent's content origin (already
 // adjusted for the parent's scroll offset)
-void VirtWnd::PaintTree(Gfx* gfx, Point origin, Rect clip) {
+void VirtCtrl::PaintTree(Gfx* gfx, Point origin, Rect clip) {
     if (visibility != Visibility::Visible) {
         return;
     }
@@ -135,31 +135,31 @@ void VirtWnd::PaintTree(Gfx* gfx, Point origin, Rect clip) {
     PaintChildren(ctx);
 }
 
-void VirtWnd::PaintChildren(VirtPaintCtx& ctx) {
+void VirtCtrl::PaintChildren(VirtPaintCtx& ctx) {
     Point so = ScrollOffset();
     Point origin{ctx.content.x - so.x, ctx.content.y - so.y};
-    for (VirtWnd* c : children) {
+    for (VirtCtrl* c : children) {
         c->PaintTree(ctx.gfx, origin, ctx.clip);
     }
 }
 
-// paints a standalone (parent-less) VirtWnd at the position it was given by
+// paints a standalone (parent-less) VirtCtrl at the position it was given by
 // SetBounds(). Used for one-off "measure a string and draw it" cases
-void VirtWnd::PaintStandalone(Gfx* gfx) {
+void VirtCtrl::PaintStandalone(Gfx* gfx) {
     PaintTree(gfx, {0, 0}, lastBounds);
 }
 
-bool VirtWnd::HitTest(Point ptLocal) {
+bool VirtCtrl::HitTest(Point ptLocal) {
     Rect r{0, 0, bounds.dx, bounds.dy};
     return r.Contains(ptLocal);
 }
 
-Point VirtWnd::ScrollOffset() {
+Point VirtCtrl::ScrollOffset() {
     return {0, 0};
 }
 
 // topmost (i.e. last) child wins, so walk back to front
-VirtWnd* VirtWnd::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
+VirtCtrl* VirtCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
     if (!IsHitTestable()) {
         return nullptr;
     }
@@ -169,7 +169,7 @@ VirtWnd* VirtWnd::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
     }
     if (!HasFlag(vwfPaintsOwnChildren)) {
         for (int i = ChildCount() - 1; i >= 0; i--) {
-            VirtWnd* hit = children[i]->WndFromPoint(ptWindow, ptLocalOut);
+            VirtCtrl* hit = children[i]->WndFromPoint(ptWindow, ptLocalOut);
             if (hit) {
                 return hit;
             }
@@ -188,7 +188,7 @@ VirtWnd* VirtWnd::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
     return this;
 }
 
-bool VirtWnd::OnMouseDown(VirtMouseEvent& ev) {
+bool VirtCtrl::OnMouseDown(VirtMouseEvent& ev) {
     if (onMouseDown.IsValid()) {
         ev.didHandle = false;
         onMouseDown.Call(&ev);
@@ -198,7 +198,7 @@ bool VirtWnd::OnMouseDown(VirtMouseEvent& ev) {
     return onClick.IsValid();
 }
 
-bool VirtWnd::OnMouseUp(VirtMouseEvent& ev) {
+bool VirtCtrl::OnMouseUp(VirtMouseEvent& ev) {
     if (onMouseUp.IsValid()) {
         ev.didHandle = false;
         onMouseUp.Call(&ev);
@@ -211,7 +211,7 @@ bool VirtWnd::OnMouseUp(VirtMouseEvent& ev) {
     return false;
 }
 
-bool VirtWnd::OnMouseMove(VirtMouseEvent& ev) {
+bool VirtCtrl::OnMouseMove(VirtMouseEvent& ev) {
     if (!onMouseMove.IsValid()) {
         return false;
     }
@@ -220,7 +220,7 @@ bool VirtWnd::OnMouseMove(VirtMouseEvent& ev) {
     return ev.didHandle;
 }
 
-bool VirtWnd::OnMouseWheel(VirtMouseEvent& ev) {
+bool VirtCtrl::OnMouseWheel(VirtMouseEvent& ev) {
     if (!onMouseWheel.IsValid()) {
         return false;
     }
@@ -229,7 +229,7 @@ bool VirtWnd::OnMouseWheel(VirtMouseEvent& ev) {
     return ev.didHandle;
 }
 
-bool VirtWnd::OnDoubleClick(VirtMouseEvent& ev) {
+bool VirtCtrl::OnDoubleClick(VirtMouseEvent& ev) {
     if (!onDoubleClick.IsValid()) {
         return false;
     }
@@ -238,7 +238,7 @@ bool VirtWnd::OnDoubleClick(VirtMouseEvent& ev) {
     return ev.didHandle;
 }
 
-bool VirtWnd::OnContextMenu(VirtMouseEvent& ev) {
+bool VirtCtrl::OnContextMenu(VirtMouseEvent& ev) {
     if (!onContextMenu.IsValid()) {
         return false;
     }
@@ -247,25 +247,25 @@ bool VirtWnd::OnContextMenu(VirtMouseEvent& ev) {
     return ev.didHandle;
 }
 
-void VirtWnd::OnMouseEnter() {
+void VirtCtrl::OnMouseEnter() {
     if (onMouseEnter.IsValid()) {
         onMouseEnter.Call();
     }
 }
 
-void VirtWnd::OnMouseLeave() {
+void VirtCtrl::OnMouseLeave() {
     if (onMouseLeave.IsValid()) {
         onMouseLeave.Call();
     }
 }
 
-void VirtWnd::OnCaptureLost() {
+void VirtCtrl::OnCaptureLost() {
     if (onCaptureLost.IsValid()) {
         onCaptureLost.Call();
     }
 }
 
-bool VirtWnd::OnKeyDown(VirtKeyEvent& ev) {
+bool VirtCtrl::OnKeyDown(VirtKeyEvent& ev) {
     if (!onKeyDown.IsValid()) {
         return false;
     }
@@ -274,7 +274,7 @@ bool VirtWnd::OnKeyDown(VirtKeyEvent& ev) {
     return ev.didHandle;
 }
 
-bool VirtWnd::OnChar(int c) {
+bool VirtCtrl::OnChar(int c) {
     if (!onChar.IsValid()) {
         return false;
     }
@@ -285,7 +285,7 @@ bool VirtWnd::OnChar(int c) {
     return ev.didHandle;
 }
 
-void VirtWnd::OnFocusChanged(bool gotFocus) {
+void VirtCtrl::OnFocusChanged(bool gotFocus) {
     if (!onFocusChanged.IsValid()) {
         return;
     }
@@ -295,7 +295,7 @@ void VirtWnd::OnFocusChanged(bool gotFocus) {
     onFocusChanged.Call(&ev);
 }
 
-bool VirtWnd::OnSetCursor(Point ptLocal) {
+bool VirtCtrl::OnSetCursor(Point ptLocal) {
     if (onSetCursor.IsValid()) {
         VirtSetCursorEvent ev;
         ev.w = this;
@@ -310,7 +310,7 @@ bool VirtWnd::OnSetCursor(Point ptLocal) {
     return false;
 }
 
-TempStr VirtWnd::GetTooltipTemp(Point ptLocal) {
+TempStr VirtCtrl::GetTooltipTemp(Point ptLocal) {
     if (onGetTooltip.IsValid()) {
         VirtTooltipEvent ev;
         ev.w = this;
@@ -324,11 +324,11 @@ TempStr VirtWnd::GetTooltipTemp(Point ptLocal) {
     return nullptr;
 }
 
-void VirtWnd::AddChild(VirtWnd* c) {
+void VirtCtrl::AddChild(VirtCtrl* c) {
     InsertChild(c, -1);
 }
 
-void VirtWnd::InsertChild(VirtWnd* c, int idx) {
+void VirtCtrl::InsertChild(VirtCtrl* c, int idx) {
     ReportIf(!c);
     ReportIf(c->parent);
     c->parent = this;
@@ -340,7 +340,7 @@ void VirtWnd::InsertChild(VirtWnd* c, int idx) {
     }
 }
 
-void VirtWnd::RemoveChild(VirtWnd* c, bool del) {
+void VirtCtrl::RemoveChild(VirtCtrl* c, bool del) {
     int idx = children.Find(c);
     if (idx < 0) {
         return;
@@ -357,15 +357,15 @@ void VirtWnd::RemoveChild(VirtWnd* c, bool del) {
     c->SetRoot(nullptr);
 }
 
-void VirtWnd::RemoveAllChildren(bool del) {
-    // take a copy of the pointers first: ~VirtWnd() of a child can reach back
+void VirtCtrl::RemoveAllChildren(bool del) {
+    // take a copy of the pointers first: ~VirtCtrl() of a child can reach back
     // into us via root->OnWndDestroyed()
-    Vec<VirtWnd*> tmp;
-    for (VirtWnd* c : children) {
+    Vec<VirtCtrl*> tmp;
+    for (VirtCtrl* c : children) {
         tmp.Append(c);
     }
     children.Clear();
-    for (VirtWnd* c : tmp) {
+    for (VirtCtrl* c : tmp) {
         c->parent = nullptr;
         if (del) {
             delete c;
@@ -378,23 +378,23 @@ void VirtWnd::RemoveAllChildren(bool del) {
     }
 }
 
-int VirtWnd::ChildCount() const {
+int VirtCtrl::ChildCount() const {
     return len(children);
 }
 
-VirtWnd* VirtWnd::ChildAt(int idx) const {
+VirtCtrl* VirtCtrl::ChildAt(int idx) const {
     if (idx < 0 || idx >= len(children)) {
         return nullptr;
     }
     return children[idx];
 }
 
-VirtWnd* VirtWnd::FindById(int wndId) {
+VirtCtrl* VirtCtrl::FindById(int wndId) {
     if (id == wndId) {
         return this;
     }
-    for (VirtWnd* c : children) {
-        VirtWnd* res = c->FindById(wndId);
+    for (VirtCtrl* c : children) {
+        VirtCtrl* res = c->FindById(wndId);
         if (res) {
             return res;
         }
@@ -402,7 +402,7 @@ VirtWnd* VirtWnd::FindById(int wndId) {
     return nullptr;
 }
 
-Point VirtWnd::OriginInWindow() {
+Point VirtCtrl::OriginInWindow() {
     Point p{0, 0};
     if (parent) {
         p = parent->ChildOriginInWindow();
@@ -413,18 +413,18 @@ Point VirtWnd::OriginInWindow() {
 }
 
 // where children are positioned: our content origin, shifted by our scroll
-Point VirtWnd::ChildOriginInWindow() {
+Point VirtCtrl::ChildOriginInWindow() {
     Point o = OriginInWindow();
     Point so = ScrollOffset();
     return {o.x + padding.left - so.x, o.y + padding.top - so.y};
 }
 
-Rect VirtWnd::BoundsInWindow() {
+Rect VirtCtrl::BoundsInWindow() {
     Point o = OriginInWindow();
     return {o.x, o.y, bounds.dx, bounds.dy};
 }
 
-Rect VirtWnd::ContentRectInWindow() {
+Rect VirtCtrl::ContentRectInWindow() {
     Rect r = BoundsInWindow();
     r.SubTB(padding.top, padding.bottom);
     r.SubLR(padding.left, padding.right);
@@ -433,9 +433,9 @@ Rect VirtWnd::ContentRectInWindow() {
 
 // our bounds clipped by every clipping ancestor, so that a wnd scrolled out of
 // its container doesn't invalidate (or hit-test) outside of it
-Rect VirtWnd::VisibleRectInWindow() {
+Rect VirtCtrl::VisibleRectInWindow() {
     Rect r = BoundsInWindow();
-    VirtWnd* p = parent;
+    VirtCtrl* p = parent;
     while (p && !r.IsEmpty()) {
         if (p->HasFlag(vwfClipChildren)) {
             r = r.Intersect(p->BoundsInWindow());
@@ -448,14 +448,14 @@ Rect VirtWnd::VisibleRectInWindow() {
     return r;
 }
 
-void VirtWnd::Invalidate() {
+void VirtCtrl::Invalidate() {
     if (!root) {
         return;
     }
     root->Invalidate(VisibleRectInWindow());
 }
 
-void VirtWnd::Invalidate(Rect rLocal) {
+void VirtCtrl::Invalidate(Rect rLocal) {
     if (!root) {
         return;
     }
@@ -465,13 +465,13 @@ void VirtWnd::Invalidate(Rect rLocal) {
     root->Invalidate(r.Intersect(VisibleRectInWindow()));
 }
 
-void VirtWnd::RequestLayout() {
+void VirtCtrl::RequestLayout() {
     if (root) {
         root->RequestLayout();
     }
 }
 
-void VirtWnd::SetIsVisible(bool isVisible) {
+void VirtCtrl::SetIsVisible(bool isVisible) {
     Visibility v = isVisible ? Visibility::Visible : Visibility::Collapse;
     if (v == visibility) {
         return;
@@ -483,11 +483,11 @@ void VirtWnd::SetIsVisible(bool isVisible) {
     Invalidate();
 }
 
-bool VirtWnd::IsVisible() const {
+bool VirtCtrl::IsVisible() const {
     return visibility == Visibility::Visible;
 }
 
-void VirtWnd::SetIsEnabled(bool isEnabled) {
+void VirtCtrl::SetIsEnabled(bool isEnabled) {
     if (isEnabled == HasFlag(vwfEnabled)) {
         return;
     }
@@ -495,26 +495,26 @@ void VirtWnd::SetIsEnabled(bool isEnabled) {
     Invalidate();
 }
 
-bool VirtWnd::IsEnabled() const {
+bool VirtCtrl::IsEnabled() const {
     return HasFlag(vwfEnabled);
 }
 
-HWND VirtWnd::GetHwnd() const {
+HWND VirtCtrl::GetHwnd() const {
     return root ? root->hwnd : nullptr;
 }
 
-bool VirtWnd::IsPaintable() const {
+bool VirtCtrl::IsPaintable() const {
     return visibility == Visibility::Visible;
 }
 
-bool VirtWnd::IsHitTestable() const {
+bool VirtCtrl::IsHitTestable() const {
     if (visibility != Visibility::Visible) {
         return false;
     }
     return HasFlag(vwfEnabled);
 }
 
-void VirtWnd::SetFlag(u32 f, bool on) {
+void VirtCtrl::SetFlag(u32 f, bool on) {
     if (on) {
         flags |= f;
     } else {
@@ -522,13 +522,13 @@ void VirtWnd::SetFlag(u32 f, bool on) {
     }
 }
 
-bool VirtWnd::HasFlag(u32 f) const {
+bool VirtCtrl::HasFlag(u32 f) const {
     return (flags & f) != 0;
 }
 
-void VirtWnd::SetRoot(VirtRoot* r) {
+void VirtCtrl::SetRoot(VirtRoot* r) {
     root = r;
-    for (VirtWnd* c : children) {
+    for (VirtCtrl* c : children) {
         c->SetRoot(r);
     }
 }
@@ -542,13 +542,13 @@ VirtRoot::VirtRoot(HWND hwnd) {
 VirtRoot::~VirtRoot() {
     // `tops` belong to the layout tree and can outlive us; make sure they don't
     // report their destruction to a root that is gone
-    for (VirtWnd* w : tops) {
+    for (VirtCtrl* w : tops) {
         w->SetRoot(nullptr);
     }
     delete owned;
 }
 
-void VirtRoot::SetChild(VirtWnd* c) {
+void VirtRoot::SetChild(VirtCtrl* c) {
     if (owned == c) {
         return;
     }
@@ -571,14 +571,14 @@ void VirtRoot::SetChild(VirtWnd* c) {
     needsLayout = true;
 }
 
-void VirtRoot::SetTops(const Vec<VirtWnd*>& newTops) {
+void VirtRoot::SetTops(const Vec<VirtCtrl*>& newTops) {
     ReportIf(owned);
     tops.Reset();
     hovered = nullptr;
     captured = nullptr;
     focused = nullptr;
     pressed = nullptr;
-    for (VirtWnd* w : newTops) {
+    for (VirtCtrl* w : newTops) {
         w->SetRoot(this);
         tops.Append(w);
     }
@@ -620,12 +620,12 @@ void VirtRoot::Paint(Gfx* gfx, Rect clip) {
         return;
     }
     // painted in layout order, so a later one draws over an earlier one
-    for (VirtWnd* w : tops) {
+    for (VirtCtrl* w : tops) {
         w->PaintTree(gfx, bounds.TL(), c);
     }
 }
 
-VirtWnd* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
+VirtCtrl* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
     if (len(tops) == 0 || !bounds.Contains(ptWindow)) {
         return nullptr;
     }
@@ -634,7 +634,7 @@ VirtWnd* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
     }
     // reverse of the paint order: whatever is drawn last is on top
     for (int i = len(tops) - 1; i >= 0; i--) {
-        VirtWnd* w = tops[i]->WndFromPoint(ptWindow, ptLocalOut);
+        VirtCtrl* w = tops[i]->WndFromPoint(ptWindow, ptLocalOut);
         if (w) {
             return w;
         }
@@ -649,14 +649,14 @@ void VirtRoot::Invalidate(Rect rWindow) {
     HwndInvalidateRect(hwnd, rWindow, false);
 }
 
-void VirtRoot::SetFocus(VirtWnd* w) {
+void VirtRoot::SetFocus(VirtCtrl* w) {
     if (w && !(w->IsHitTestable() && w->HasFlag(vwfFocusable))) {
         w = nullptr;
     }
     if (w == focused) {
         return;
     }
-    VirtWnd* prev = focused;
+    VirtCtrl* prev = focused;
     focused = w;
     if (prev) {
         prev->SetFlag(vwfFocused, false);
@@ -670,14 +670,14 @@ void VirtRoot::SetFocus(VirtWnd* w) {
     }
 }
 
-static void CollectFocusable(VirtWnd* w, Vec<VirtWnd*>& out) {
+static void CollectFocusable(VirtCtrl* w, Vec<VirtCtrl*>& out) {
     if (!w || !w->IsHitTestable()) {
         return;
     }
     if (w->HasFlag(vwfFocusable) && !w->HasFlag(vwfSkipTabStop)) {
         out.Append(w);
     }
-    for (VirtWnd* c : w->children) {
+    for (VirtCtrl* c : w->children) {
         CollectFocusable(c, out);
     }
 }
@@ -703,13 +703,13 @@ void CollectTabStops(ILayout* root, Vec<TabStop>& out) {
         }
         return;
     }
-    VirtWnd* w = root->AsVirtWnd();
+    VirtCtrl* w = root->AsVirtCtrl();
     if (w) {
         // a virtual control can hold more than one stop: its children are part
         // of the same tree
-        Vec<VirtWnd*> focusable;
+        Vec<VirtCtrl*> focusable;
         CollectFocusable(w, focusable);
-        for (VirtWnd* f : focusable) {
+        for (VirtCtrl* f : focusable) {
             out.Append(TabStop{nullptr, f});
         }
         return;
@@ -721,8 +721,8 @@ void CollectTabStops(ILayout* root, Vec<TabStop>& out) {
 }
 
 bool VirtRoot::TabNavigate(bool backwards) {
-    Vec<VirtWnd*> all;
-    for (VirtWnd* w : tops) {
+    Vec<VirtCtrl*> all;
+    for (VirtCtrl* w : tops) {
         CollectFocusable(w, all);
     }
     int n = len(all);
@@ -744,7 +744,7 @@ bool VirtRoot::TabNavigate(bool backwards) {
     return true;
 }
 
-void VirtRoot::SetCapture(VirtWnd* w) {
+void VirtRoot::SetCapture(VirtCtrl* w) {
     captured = w;
     if (w && hwnd) {
         ::SetCapture(hwnd);
@@ -752,7 +752,7 @@ void VirtRoot::SetCapture(VirtWnd* w) {
 }
 
 void VirtRoot::ReleaseCapture() {
-    VirtWnd* w = captured;
+    VirtCtrl* w = captured;
     captured = nullptr;
     if (!w) {
         return;
@@ -766,7 +766,7 @@ void VirtRoot::ReleaseCapture() {
 }
 
 void VirtRoot::ClearPressed() {
-    VirtWnd* w = pressed;
+    VirtCtrl* w = pressed;
     if (!w) {
         return;
     }
@@ -776,7 +776,7 @@ void VirtRoot::ClearPressed() {
 }
 
 void VirtRoot::ClearHover() {
-    VirtWnd* w = hovered;
+    VirtCtrl* w = hovered;
     if (!w) {
         return;
     }
@@ -787,7 +787,7 @@ void VirtRoot::ClearHover() {
 }
 
 // a wnd is going away: don't leave dangling hover / capture / focus pointers
-void VirtRoot::OnWndDestroyed(VirtWnd* w) {
+void VirtRoot::OnWndDestroyed(VirtCtrl* w) {
     if (hovered == w) {
         hovered = nullptr;
     }
@@ -811,7 +811,7 @@ void VirtRoot::OnWndDestroyed(VirtWnd* w) {
     }
 }
 
-static void FillMouseEvent(VirtMouseEvent& ev, VirtWnd* target, Point ptWindow, Point ptLocal, bool captured) {
+static void FillMouseEvent(VirtMouseEvent& ev, VirtCtrl* target, Point ptWindow, Point ptLocal, bool captured) {
     ev.target = target;
     ev.hit = target;
     ev.ptWindow = ptWindow;
@@ -822,8 +822,8 @@ static void FillMouseEvent(VirtMouseEvent& ev, VirtWnd* target, Point ptWindow, 
 }
 
 // walks up from target until someone consumes the event
-static bool BubbleMouse(VirtWnd* target, VirtMouseEvent& ev, bool (VirtWnd::*handler)(VirtMouseEvent&)) {
-    VirtWnd* w = target;
+static bool BubbleMouse(VirtCtrl* target, VirtMouseEvent& ev, bool (VirtCtrl::*handler)(VirtMouseEvent&)) {
+    VirtCtrl* w = target;
     while (w) {
         Rect b = w->BoundsInWindow();
         ev.target = w;
@@ -859,7 +859,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     switch (msg) {
         case WM_MOUSEMOVE: {
             TrackMouseLeaveIfNeeded();
-            VirtWnd* target = captured;
+            VirtCtrl* target = captured;
             if (target) {
                 ptLocal = ptWindow;
             } else {
@@ -882,7 +882,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             if (captured) {
                 return target->OnMouseMove(ev);
             }
-            return BubbleMouse(target, ev, &VirtWnd::OnMouseMove);
+            return BubbleMouse(target, ev, &VirtCtrl::OnMouseMove);
         }
 
         case WM_MOUSELEAVE:
@@ -896,7 +896,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             // mouse moves. Our own ReleaseCapture() clears `captured` first,
             // so this only fires for captures lost from the outside
             if (captured) {
-                VirtWnd* w = captured;
+                VirtCtrl* w = captured;
                 captured = nullptr;
                 w->SetFlag(vwfPressed, false);
                 w->OnCaptureLost();
@@ -908,7 +908,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
         case WM_LBUTTONDOWN:
         case WM_RBUTTONDOWN:
         case WM_MBUTTONDOWN: {
-            VirtWnd* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
             ClearPressed();
             if (!target) {
                 SetFocus(nullptr);
@@ -926,14 +926,14 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             VirtMouseEvent ev;
             FillMouseEvent(ev, target, ptWindow, ptLocal, false);
             ev.button = (msg == WM_LBUTTONDOWN) ? 0 : ((msg == WM_RBUTTONDOWN) ? 1 : 2);
-            return BubbleMouse(target, ev, &VirtWnd::OnMouseDown);
+            return BubbleMouse(target, ev, &VirtCtrl::OnMouseDown);
         }
 
         case WM_LBUTTONUP:
         case WM_RBUTTONUP:
         case WM_MBUTTONUP: {
             bool wasCaptured = captured != nullptr;
-            VirtWnd* target = captured;
+            VirtCtrl* target = captured;
             if (target) {
                 ptLocal = ptWindow;
             } else {
@@ -958,19 +958,19 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 didHandle = target->OnMouseUp(ev);
                 ReleaseCapture();
             } else {
-                didHandle = BubbleMouse(target, ev, &VirtWnd::OnMouseUp);
+                didHandle = BubbleMouse(target, ev, &VirtCtrl::OnMouseUp);
             }
             return didHandle;
         }
 
         case WM_LBUTTONDBLCLK: {
-            VirtWnd* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
             if (!target) {
                 return false;
             }
             VirtMouseEvent ev;
             FillMouseEvent(ev, target, ptWindow, ptLocal, false);
-            return BubbleMouse(target, ev, &VirtWnd::OnDoubleClick);
+            return BubbleMouse(target, ev, &VirtCtrl::OnDoubleClick);
         }
 
         case WM_MOUSEWHEEL: {
@@ -978,14 +978,14 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
             ScreenToClient(hwnd, &pt);
             ptWindow = {pt.x, pt.y};
-            VirtWnd* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
             if (!target) {
                 return false;
             }
             VirtMouseEvent ev;
             FillMouseEvent(ev, target, ptWindow, ptLocal, false);
             ev.wheelDelta = GET_WHEEL_DELTA_WPARAM(wp);
-            return BubbleMouse(target, ev, &VirtWnd::OnMouseWheel);
+            return BubbleMouse(target, ev, &VirtCtrl::OnMouseWheel);
         }
 
         case WM_CONTEXTMENU: {
@@ -995,18 +995,18 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             }
             ScreenToClient(hwnd, &pt);
             ptWindow = {pt.x, pt.y};
-            VirtWnd* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
             if (!target) {
                 return false;
             }
             VirtMouseEvent ev;
             FillMouseEvent(ev, target, ptWindow, ptLocal, false);
-            return BubbleMouse(target, ev, &VirtWnd::OnContextMenu);
+            return BubbleMouse(target, ev, &VirtCtrl::OnContextMenu);
         }
 
         case WM_SETCURSOR: {
             Point pt = HwndGetCursorPos(hwnd);
-            VirtWnd* target = WndFromPoint(pt, &ptLocal);
+            VirtCtrl* target = WndFromPoint(pt, &ptLocal);
             while (target) {
                 Rect b = target->BoundsInWindow();
                 if (target->OnSetCursor({pt.x - b.x, pt.y - b.y})) {
@@ -1036,7 +1036,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             ev.isCtrl = isCtrl;
             ev.isShift = IsShiftPressed();
             ev.isAlt = isAlt;
-            VirtWnd* w = focused;
+            VirtCtrl* w = focused;
             while (w) {
                 ev.target = w;
                 if (w->OnKeyDown(ev)) {
@@ -1059,15 +1059,15 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
 
 //--- VirtTable
 
-static Kind kindVirtWndTable = "virtWndTable";
+static Kind kindVirtCtrlTable = "virtCtrlTable";
 
 VirtTable::VirtTable() {
-    kind = kindVirtWndTable;
+    kind = kindVirtCtrlTable;
     // a grid is decorative, only its cells' children are hit targets
     flags |= vwfNoHitTest;
 }
 
-// the cells' children are owned by VirtWnd::children, which ~VirtWnd frees
+// the cells' children are owned by VirtCtrl::children, which ~VirtCtrl frees
 VirtTable::~VirtTable() = default;
 
 int VirtTable::CellIdx(int row, int col) const {
@@ -1109,7 +1109,7 @@ void VirtTable::MarkCovered(int row, int col, int rowSpan, int colSpan, bool cov
 
 // (row, col) is the cell's top-left; a spanning cell covers the ones to its
 // right / below, which must stay empty
-VirtTableCell& VirtTable::SetCell(int row, int col, VirtWnd* child, int rowSpan, int colSpan) {
+VirtTableCell& VirtTable::SetCell(int row, int col, VirtCtrl* child, int rowSpan, int colSpan) {
     ReportIf(rowSpan < 1 || colSpan < 1);
     ReportIf(row + rowSpan > rows || col + colSpan > cols);
     VirtTableCell& cell = cells[CellIdx(row, col)];
@@ -1135,7 +1135,7 @@ VirtTableCell* VirtTable::CellAt(int row, int col) {
     return &cells[CellIdx(row, col)];
 }
 
-VirtWnd* VirtTable::GetCell(int row, int col) {
+VirtCtrl* VirtTable::GetCell(int row, int col) {
     VirtTableCell* cell = CellAt(row, col);
     return cell ? cell->child : nullptr;
 }
@@ -1319,7 +1319,7 @@ static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossA
 }
 
 void VirtTable::SetBounds(Rect r) {
-    VirtWnd::SetBounds(r);
+    VirtCtrl::SetBounds(r);
     if (len(colWidths) != cols || len(rowHeights) != rows) {
         // SetBounds() without a preceding Layout()
         Measure();
@@ -1338,12 +1338,12 @@ void VirtTable::SetBounds(Rect r) {
 
 //--- VirtScroll
 
-static Kind kindVirtWndScroll = "virtWndScroll";
+static Kind kindVirtCtrlScroll = "virtCtrlScroll";
 
 VirtScroll::VirtScroll() {
     onMouseWheel = MkMethod1<VirtScroll, VirtMouseEvent*, &VirtScroll::OnMouseWheel>(this);
 
-    kind = kindVirtWndScroll;
+    kind = kindVirtCtrlScroll;
     flags |= vwfClipChildren;
 }
 
@@ -1352,7 +1352,7 @@ VirtScroll::~VirtScroll() = default;
 Size VirtScroll::Layout(Constraints bc) {
     // a viewport takes whatever it is given; the content decides contentDy
     Size sz = bc.Constrain({bc.max.dx, bc.max.dy});
-    for (VirtWnd* c : children) {
+    for (VirtCtrl* c : children) {
         Constraints cc = bc;
         cc.min = {0, 0};
         cc.max.dy = Inf;
@@ -1362,12 +1362,12 @@ Size VirtScroll::Layout(Constraints bc) {
 }
 
 void VirtScroll::SetBounds(Rect r) {
-    VirtWnd::SetBounds(r);
+    VirtCtrl::SetBounds(r);
     Rect content = r;
     content.SubTB(padding.top, padding.bottom);
     content.SubLR(padding.left, padding.right);
     int y = content.y - scrollY;
-    for (VirtWnd* c : children) {
+    for (VirtCtrl* c : children) {
         int dy = c->MinIntrinsicHeight(content.dx);
         c->SetBounds({content.x, y, content.dx, dy});
         y += dy;
@@ -1417,7 +1417,7 @@ bool VirtScroll::ScrollPage(int dir) {
     return ScrollBy(dir * visible);
 }
 
-void VirtScroll::ScrollIntoView(VirtWnd* w) {
+void VirtScroll::ScrollIntoView(VirtCtrl* w) {
     if (!w) {
         return;
     }
@@ -1506,19 +1506,19 @@ void VirtScroll::NotifyVisibleRange() {
 
 //--- VirtListBox
 
-static Kind kindVirtWndListBox = "virtWndListBox";
+static Kind kindVirtCtrlListBox = "virtCtrlListBox";
 
 VirtListBox::VirtListBox() {
     onMouseDown = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseDown>(this);
     onMouseUp = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseUp>(this);
     onMouseMove = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseMove>(this);
     onMouseWheel = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnMouseWheel>(this);
-    // onDoubleClick is the public item-activated Func0; wire the mouse path on VirtWnd
-    VirtWnd::onDoubleClick = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnDoubleClick>(this);
+    // onDoubleClick is the public item-activated Func0; wire the mouse path on VirtCtrl
+    VirtCtrl::onDoubleClick = MkMethod1<VirtListBox, VirtMouseEvent*, &VirtListBox::OnDoubleClick>(this);
     onKeyDown = MkMethod1<VirtListBox, VirtKeyEvent*, &VirtListBox::OnKeyDown>(this);
     onCaptureLost = MkMethod0<VirtListBox, &VirtListBox::OnCaptureLost>(this);
 
-    kind = kindVirtWndListBox;
+    kind = kindVirtCtrlListBox;
     // like a win32 listbox: takes the focus and is in the window's tab ring, so
     // the arrow keys reach OnKeyDown()
     flags |= vwfClipChildren | vwfFocusable;
@@ -1628,7 +1628,7 @@ Size VirtListBox::GetIdealSize() {
 }
 
 void VirtListBox::SetBounds(Rect r) {
-    VirtWnd::SetBounds(r);
+    VirtCtrl::SetBounds(r);
     // a taller viewport can make the current scroll position invalid
     scrollY = Clamp(scrollY, 0, MaxScrollY());
     if (pendingVisibleIdx >= 0) {
@@ -1932,7 +1932,7 @@ void VirtListBox::OnKeyDown(VirtKeyEvent* ev) {
 
 //--- VirtSplitter
 
-static Kind kindVirtWndSplitter = "virtWndSplitter";
+static Kind kindVirtCtrlSplitter = "virtCtrlSplitter";
 
 static const WCHAR* kResizeOverlayClass = L"SplitterResizeOverlayWnd";
 static WORD gDotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
@@ -1975,7 +1975,7 @@ VirtSplitter::VirtSplitter() {
     onCaptureLost = MkMethod0<VirtSplitter, &VirtSplitter::OnCaptureLost>(this);
     onSetCursor = MkMethod1<VirtSplitter, VirtSetCursorEvent*, &VirtSplitter::OnSetCursor>(this);
 
-    kind = kindVirtWndSplitter;
+    kind = kindVirtCtrlSplitter;
     // the mouse belongs to us for the whole drag, wherever it goes
     flags |= vwfCapturesMouse;
 }
@@ -2121,10 +2121,10 @@ void VirtSplitter::OnSetCursor(VirtSetCursorEvent* ev) {
 
 //--- VirtCustom
 
-static Kind kindVirtWndCustom = "virtWndCustom";
+static Kind kindVirtCtrlCustom = "virtCtrlCustom";
 
 VirtCustom::VirtCustom() {
-    kind = kindVirtWndCustom;
+    kind = kindVirtCtrlCustom;
 }
 
 VirtCustom::~VirtCustom() = default;
@@ -2139,10 +2139,10 @@ void VirtCustom::Paint(VirtPaintCtx& ctx) {
 
 //--- VirtText
 
-static Kind kindVirtWndText = "virtWndText";
+static Kind kindVirtCtrlText = "virtCtrlText";
 
 VirtText::VirtText(Str str, PlatformFont* f) {
-    kind = kindVirtWndText;
+    kind = kindVirtCtrlText;
     s = str::Dup(str);
     font = f;
     flags |= vwfNoHitTest;
@@ -2243,14 +2243,14 @@ VirtText* NewVirtText(const VirtTextArgs& args) {
 
 //--- VirtLink
 
-static Kind kindVirtWndLink = "virtWndLink";
+static Kind kindVirtCtrlLink = "virtCtrlLink";
 
 VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtLink, &VirtLink::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtLink, &VirtLink::OnMouseLeave>(this);
     cursor = IDC_HAND;
 
-    kind = kindVirtWndLink;
+    kind = kindVirtCtrlLink;
     flags &= ~vwfNoHitTest;
 }
 
@@ -2286,7 +2286,7 @@ void VirtLink::OnMouseLeave() {
 
 //--- VirtButton
 
-static Kind kindVirtWndButton = "virtWndButton";
+static Kind kindVirtCtrlButton = "virtCtrlButton";
 
 VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtButton, &VirtButton::OnMouseEnter>(this);
@@ -2294,7 +2294,7 @@ VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     onKeyDown = MkMethod1<VirtButton, VirtKeyEvent*, &VirtButton::OnKeyDown>(this);
     cursor = IDC_HAND;
 
-    kind = kindVirtWndButton;
+    kind = kindVirtCtrlButton;
     flags &= ~vwfNoHitTest;
     flags |= vwfFocusable;
     align = VirtTextAlign::Center;
@@ -2371,14 +2371,14 @@ void VirtButton::OnMouseLeave() {
 
 //--- VirtIconButton
 
-static Kind kindVirtWndIconButton = "virtWndIconButton";
+static Kind kindVirtCtrlIconButton = "virtCtrlIconButton";
 
 VirtIconButton::VirtIconButton() {
     onMouseEnter = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseLeave>(this);
     cursor = IDC_HAND;
 
-    kind = kindVirtWndIconButton;
+    kind = kindVirtCtrlIconButton;
 }
 
 Size VirtIconButton::GetIdealSize() {
@@ -2413,7 +2413,7 @@ void VirtIconButton::OnMouseLeave() {
 
 //--- VirtCloseButton
 
-static Kind kindVirtWndCloseButton = "virtWndCloseButton";
+static Kind kindVirtCtrlCloseButton = "virtCtrlCloseButton";
 
 // the default look of the ✕ that closes a tab / panel / notification: a gray
 // glyph that turns white on a red circle when hovered
@@ -2426,7 +2426,7 @@ VirtCloseButton::VirtCloseButton() {
     onMouseLeave = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseLeave>(this);
     cursor = IDC_HAND;
 
-    kind = kindVirtWndCloseButton;
+    kind = kindVirtCtrlCloseButton;
 }
 
 Size VirtCloseButton::GetIdealSize() {
@@ -2524,7 +2524,7 @@ LabelWithClose NewLabelWithClose(HWND hwnd, PlatformFont* font, const VirtMouseH
 
 //--- VirtImage
 
-static Kind kindVirtWndImage = "virtWndImage";
+static Kind kindVirtCtrlImage = "virtCtrlImage";
 
 // scale src down (never up) to fit dst, centered
 Rect FitSizeInRect(Size src, Rect dst) {
@@ -2547,7 +2547,7 @@ Rect FitSizeInRect(Size src, Rect dst) {
 }
 
 VirtImage::VirtImage() {
-    kind = kindVirtWndImage;
+    kind = kindVirtCtrlImage;
     flags |= vwfNoHitTest;
 }
 
@@ -2577,10 +2577,10 @@ void VirtImage::Paint(VirtPaintCtx& ctx) {
 
 //--- VirtFill
 
-static Kind kindVirtWndFill = "virtWndFill";
+static Kind kindVirtCtrlFill = "virtCtrlFill";
 
 VirtFill::VirtFill() {
-    kind = kindVirtWndFill;
+    kind = kindVirtCtrlFill;
     flags |= vwfNoHitTest;
 }
 
@@ -2596,10 +2596,10 @@ void VirtFill::Paint(VirtPaintCtx& ctx) {
 
 //--- VirtLine
 
-static Kind kindVirtWndLine = "virtWndLine";
+static Kind kindVirtCtrlLine = "virtCtrlLine";
 
 VirtLine::VirtLine() {
-    kind = kindVirtWndLine;
+    kind = kindVirtCtrlLine;
     flags |= vwfNoHitTest;
 }
 
@@ -2624,10 +2624,10 @@ void VirtLine::Paint(VirtPaintCtx& ctx) {
 
 //--- VirtSpacer
 
-static Kind kindVirtWndSpacer = "virtWndSpacer";
+static Kind kindVirtCtrlSpacer = "virtCtrlSpacer";
 
 VirtSpacer::VirtSpacer(int dx, int dy) {
-    kind = kindVirtWndSpacer;
+    kind = kindVirtCtrlSpacer;
     idealSize = {dx, dy};
     flags |= vwfNoHitTest;
 }
@@ -2645,7 +2645,7 @@ Size VirtSpacer::GetIdealSize() {
 // Unit tests for VirtTable. VirtSpacer is the leaf: a fixed ideal size
 // and no HWND, so a whole table can be laid out and its geometry asserted.
 
-static bool VirtWndRectEq(const Rect& r, int x, int y, int dx, int dy) {
+static bool VirtCtrlRectEq(const Rect& r, int x, int y, int dx, int dy) {
     return r.x == x && r.y == y && r.dx == dx && r.dy == dy;
 }
 
@@ -2666,9 +2666,9 @@ static void VirtTable_TestGrid() {
     utassert(t->RowHeight(0) == 30 && t->RowHeight(1) == 20);
     utassert(sz.dx == 30 + 10 + 40 && sz.dy == 30 + 4 + 20);
     t->SetBounds(Rect{0, 0, sz.dx, sz.dy});
-    utassert(VirtWndRectEq(a->lastBounds, 0, 0, 20, 10));
-    utassert(VirtWndRectEq(b->lastBounds, 40, 0, 40, 30));
-    utassert(VirtWndRectEq(c->lastBounds, 0, 34, 30, 20));
+    utassert(VirtCtrlRectEq(a->lastBounds, 0, 0, 20, 10));
+    utassert(VirtCtrlRectEq(b->lastBounds, 40, 0, 40, 30));
+    utassert(VirtCtrlRectEq(c->lastBounds, 0, 34, 30, 20));
     // an empty cell doesn't disturb the tracks
     utassert(t->GetCell(1, 1) == nullptr);
     delete t;
@@ -2690,11 +2690,11 @@ static void VirtTable_TestAlign() {
     Size sz = t->Layout(ExpandInf());
     t->SetBounds(Rect{0, 0, sz.dx, sz.dy});
     // 20 wide centered in the 100-wide column -> x = 40
-    utassert(VirtWndRectEq(center->lastBounds, 40, 40, 20, 10));
+    utassert(VirtCtrlRectEq(center->lastBounds, 40, 40, 20, 10));
     // 10 tall pushed to the bottom of the 40-tall row
-    utassert(VirtWndRectEq(bottom->lastBounds, 100, 30, 20, 10));
+    utassert(VirtCtrlRectEq(bottom->lastBounds, 100, 30, 20, 10));
     // stretched to the full column width
-    utassert(VirtWndRectEq(stretch->lastBounds, 0, 50, 100, 10));
+    utassert(VirtCtrlRectEq(stretch->lastBounds, 0, 50, 100, 10));
     delete t;
 }
 
@@ -2714,7 +2714,7 @@ static void VirtTable_TestSpan() {
     utassert(t->ColWidth(0) == 40 && t->ColWidth(1) == 50);
     utassert(sz.dx == 100);
     t->SetBounds(Rect{0, 0, sz.dx, sz.dy});
-    utassert(VirtWndRectEq(wide->lastBounds, 0, 0, 100, 10));
+    utassert(VirtCtrlRectEq(wide->lastBounds, 0, 0, 100, 10));
     utassert(b->lastBounds.x == 50);
     delete t;
 
@@ -2731,7 +2731,7 @@ static void VirtTable_TestSpan() {
     utassert(t2->RowHeight(0) == 42 && t2->RowHeight(1) == 52);
     utassert(sz2.dy == 100);
     t2->SetBounds(Rect{0, 0, sz2.dx, sz2.dy});
-    utassert(VirtWndRectEq(tall->lastBounds, 0, 0, 10, 100));
+    utassert(VirtCtrlRectEq(tall->lastBounds, 0, 0, 10, 100));
     delete t2;
 }
 
@@ -2761,15 +2761,15 @@ static void VirtTable_TestHitTest() {
 
 // a layout tree mixing plain layouts and virtual controls yields the virtual
 // ones, in layout order, without descending into their own children
-static void CollectVirtWnds_Test() {
-    Vec<VirtWnd*> out;
-    CollectVirtWnds(nullptr, out);
+static void CollectVirtCtrls_Test() {
+    Vec<VirtCtrl*> out;
+    CollectVirtCtrls(nullptr, out);
     utassert(len(out) == 0);
 
     // a tree of no virtual controls yields none
     auto* plain = new VBox();
     plain->AddChild(new Spacer(10, 10));
-    CollectVirtWnds(plain, out);
+    CollectVirtCtrls(plain, out);
     utassert(len(out) == 0);
     delete plain;
 
@@ -2782,7 +2782,7 @@ static void CollectVirtWnds_Test() {
     box->AddChild(new Spacer(5, 5));
     box->AddChild(first);
     box->AddChild(new Padding(nested, DefaultInsets()));
-    CollectVirtWnds(box, out);
+    CollectVirtCtrls(box, out);
     utassert(len(out) == 2);
     utassert(out[0] == first);
     utassert(out[1] == nested);
@@ -2816,12 +2816,12 @@ static void CollectTabStops_Test() {
     delete box;
 }
 
-void VirtWnd_UnitTests() {
+void VirtCtrl_UnitTests() {
     VirtTable_TestGrid();
     VirtTable_TestAlign();
     VirtTable_TestSpan();
     VirtTable_TestHitTest();
-    CollectVirtWnds_Test();
+    CollectVirtCtrls_Test();
     CollectTabStops_Test();
 }
 #endif
@@ -2832,8 +2832,8 @@ void RefreshVirtTops(HWND hwnd, ILayout* layout, Rect bounds, VirtRoot** rootInO
     if (!layout) {
         return;
     }
-    Vec<VirtWnd*> tops;
-    CollectVirtWnds(layout, tops);
+    Vec<VirtCtrl*> tops;
+    CollectVirtCtrls(layout, tops);
     VirtRoot* root = *rootInOut;
     if (len(tops) == 0) {
         // nothing virtual in this window: nothing to paint or dispatch
@@ -2940,7 +2940,7 @@ bool VirtTreeOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp
         Point pt = HwndGetCursorPos(hwnd);
         UnmirrorRtl(hwnd, pt);
         Point ptLocal{0, 0};
-        VirtWnd* w = root->WndFromPoint(pt, &ptLocal);
+        VirtCtrl* w = root->WndFromPoint(pt, &ptLocal);
         // the cursor belongs to whichever ancestor claims it first
         while (w) {
             Rect b = w->BoundsInWindow();
@@ -2970,7 +2970,7 @@ bool VirtTreeOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp
 // A small markup with links, keyboard shortcuts and bold runs, parsed into a
 // VirtRichText: a virtual control that wraps, paints and hit-tests itself.
 // Shared by SumatraPDF's home page and notifications, and by other apps in the
-// family. What it needs from the app is a CommandsContext (see VirtWnd.h) and a
+// family. What it needs from the app is a CommandsContext (see VirtCtrl.h) and a
 // way to open a url.
 
 void (*gTipOpenUrl)(Str url) = nullptr;
@@ -3524,7 +3524,7 @@ Size VirtRichText::Layout(Constraints bc) {
 }
 
 void VirtRichText::SetBounds(Rect r) {
-    VirtWnd::SetBounds(r);
+    VirtCtrl::SetBounds(r);
     Rect content = r;
     content.SubTB(padding.top, padding.bottom);
     content.SubLR(padding.left, padding.right);

@@ -56,7 +56,7 @@ enum class Visibility {
     Collapse,
 };
 
-struct VirtWnd;
+struct VirtCtrl;
 struct ControlBase;
 
 struct ILayout {
@@ -70,7 +70,7 @@ struct ILayout {
     virtual void SetBounds(Rect) = 0;
 
     // walking a layout tree: containers return their children, leaves nothing.
-    // Lets code find things in a tree it didn't build (see CollectVirtWnds())
+    // Lets code find things in a tree it didn't build (see CollectVirtCtrls())
     virtual int LayoutChildCount() {
         return 0;
     }
@@ -79,7 +79,7 @@ struct ILayout {
     }
     // non-null for the virtual controls, which have no HWND of their own: the
     // window they end up in paints them and sends them their input
-    virtual VirtWnd* AsVirtWnd() {
+    virtual VirtCtrl* AsVirtCtrl() {
         return nullptr;
     }
     // non-null for the controls that do have an HWND of their own
@@ -278,7 +278,7 @@ struct Spacer : LayoutBase {
     void SetBounds(Rect) override;
 };
 
-// for a grid layout see VirtTable (VirtWnd.h)
+// for a grid layout see VirtTable (VirtCtrl.h)
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Size LayoutToSize(ILayout* layout, Size size);

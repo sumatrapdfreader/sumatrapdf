@@ -382,7 +382,7 @@ const sumatraFiles: FileGroup[] = [
       "Translations.*",
       "TranslationLangs.cpp",
       "UpdateCheck.*",
-      "VirtWnd.*",
+      "VirtCtrl.*",
       "WindowTab.*",
       "Uninstaller.cpp",
     ],

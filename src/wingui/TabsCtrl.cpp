@@ -11,7 +11,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Theme.h"
 
@@ -71,7 +71,7 @@ static COLORREF TabTextColorForBackground(COLORREF tabBg) {
 
 // paints the tab (background, title, dirty dot) and hosts its ✕. It doesn't own
 // its TabInfo: the control's `tabs` does
-struct TabWnd : VirtWnd {
+struct TabWnd : VirtCtrl {
     TabsCtrl* tabsCtrl = nullptr;
     TabInfo* ti = nullptr;
     VirtCloseButton* closeBtn = nullptr;
@@ -153,7 +153,7 @@ Size TabWnd::GetIdealSize() {
 // the ✕ is inset from the tab's edge, but its hit area is the whole gutter
 // (~40 DIP, full height) so it stays easy to hit
 void TabWnd::SetBounds(Rect r) {
-    VirtWnd::SetBounds(r);
+    VirtCtrl::SetBounds(r);
     HWND hwnd = GetHwnd();
     int dx = r.dx;
     int dy = r.dy;
@@ -406,12 +406,12 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
         return res;
     }
     Point ptLocal{0, 0};
-    VirtWnd* hit = vroot->WndFromPoint(p, &ptLocal);
+    VirtCtrl* hit = vroot->WndFromPoint(p, &ptLocal);
     // the only child of a tab is its ✕, so anything below a tab is the ✕
-    bool overClose = hit && hit->parent && IsVirtWndOfKind(hit->parent, kindTabWnd);
+    bool overClose = hit && hit->parent && IsVirtCtrlOfKind(hit->parent, kindTabWnd);
     TabWnd* tab = nullptr;
-    for (VirtWnd* w = hit; w; w = w->parent) {
-        if (IsVirtWndOfKind(w, kindTabWnd)) {
+    for (VirtCtrl* w = hit; w; w = w->parent) {
+        if (IsVirtCtrlOfKind(w, kindTabWnd)) {
             tab = (TabWnd*)w;
             break;
         }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1280,7 +1280,7 @@
     <ClInclude Include="..\src\wingui\PlatformFont.h" />
     <ClInclude Include="..\src\wingui\PlatformText.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
-    <ClInclude Include="..\src\wingui\VirtWnd.h" />
+    <ClInclude Include="..\src\wingui\VirtCtrl.h" />
     <ClInclude Include="..\src\wingui\WebView.h" />
     <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
@@ -1757,7 +1757,7 @@
     <ClCompile Include="..\src\wingui\Trackbar.cpp" />
     <ClCompile Include="..\src\wingui\TreeView.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
-    <ClCompile Include="..\src\wingui\VirtWnd.cpp" />
+    <ClCompile Include="..\src\wingui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\wingui\WebView.cpp" />
     <ClCompile Include="..\src\wingui\WindowBase.cpp" />
   </ItemGroup>

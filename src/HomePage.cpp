@@ -13,7 +13,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -254,7 +254,7 @@ static Kind kindAboutWnd = "aboutWnd";
 
 struct SumatraLogo;
 
-struct AboutWnd : VirtWnd {
+struct AboutWnd : VirtCtrl {
     // the two text columns; a container of its own so that rebuilding the rows
     // can't take the sibling showFreqRead link with it
     VirtTable* table = nullptr;
@@ -311,7 +311,7 @@ static Kind kindSumatraLogo = "sumatraLogo";
 // the app name centered in its bounds, each letter in a different color (so it
 // can't be a VirtText). The version isn't part of it: it is the first row of
 // the About table
-struct SumatraLogo : VirtWnd {
+struct SumatraLogo : VirtCtrl {
     PlatformFont* font = nullptr; // not owned
 
     SumatraLogo();
@@ -364,7 +364,7 @@ static AboutWnd* EnsureAboutWnd(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
         root = new VirtRoot(hwnd);
         *rootPtr = root;
     }
-    if (!IsVirtWndOfKind(root->owned, kindAboutWnd)) {
+    if (!IsVirtCtrlOfKind(root->owned, kindAboutWnd)) {
         root->SetChild(new AboutWnd());
     }
     root->bounds = clientRc;
@@ -624,7 +624,7 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             case WM_SETCURSOR: {
                 pt = HwndGetCursorPos(hwnd);
                 Point ptLocal{0, 0};
-                VirtWnd* w = gAboutRoot->WndFromPoint(pt, &ptLocal);
+                VirtCtrl* w = gAboutRoot->WndFromPoint(pt, &ptLocal);
                 if (w && w->OnSetCursor(ptLocal)) {
                     TempStr tip = w->GetTooltipTemp(ptLocal);
                     if (tip && *tip.s) {
@@ -877,16 +877,16 @@ struct HomePageLayout {
 // win->homeRoot), not created per layout
 HomePageLayout::~HomePageLayout() = default;
 
-// --- home page chrome as a VirtWnd tree ---
+// --- home page chrome as a VirtCtrl tree ---
 // The chrome (header, view-mode buttons, "Open a document..." link, help
 // button) lives for as long as the window, so hover / pressed state survives
 // the repaints that scrolling and filtering cause. Geometry still comes from
 // LayoutHomePage(): HomePageSyncChrome() just feeds it into the tree.
 
 // Leaf home-page controls: no MainWindow*. Wire onClick / hwndForCmds when
-// building the chrome so the same VirtWnd types stay reusable.
+// building the chrome so the same VirtCtrl types stay reusable.
 
-struct HomeViewIconWnd : VirtWnd {
+struct HomeViewIconWnd : VirtCtrl {
     Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
@@ -895,7 +895,7 @@ struct HomeViewIconWnd : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct HomeOpenDocWnd : VirtWnd {
+struct HomeOpenDocWnd : VirtCtrl {
     Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
     VirtText* text = nullptr; // child
     // icon position, relative to our bounds
@@ -905,7 +905,7 @@ struct HomeOpenDocWnd : VirtWnd {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct HomeHelpBtnWnd : VirtWnd {
+struct HomeHelpBtnWnd : VirtCtrl {
     HomeHelpBtnWnd();
     void Paint(VirtPaintCtx&) override;
 };
@@ -914,7 +914,7 @@ struct HomeEntryWnd;
 
 // the pin icon of a list-view row. It is drawn by DrawHomeListRow, so this is a
 // hit target only (the row's ✕ is a VirtCloseButton, which draws itself)
-struct HomeListIconWnd : VirtWnd {
+struct HomeListIconWnd : VirtCtrl {
     bool isPin = true;
 
     HomeListIconWnd();
@@ -923,7 +923,7 @@ struct HomeListIconWnd : VirtWnd {
 
 // one file entry (a thumbnail or a list row). Painting still happens in
 // DrawHomePageLayout(); this owns hit-testing, hover and clicks
-struct HomeEntryWnd : VirtWnd {
+struct HomeEntryWnd : VirtCtrl {
     Str filePath; // owned
     int idx = 0;
     VirtCloseButton* closeBtn = nullptr;
@@ -936,7 +936,7 @@ struct HomeEntryWnd : VirtWnd {
 
 // page-level list: still knows the MainWindow so it can wire entry actions and
 // keep keyboard selection in sync
-struct HomeEntriesWnd : VirtWnd {
+struct HomeEntriesWnd : VirtCtrl {
     MainWindow* win = nullptr;
     // entry the mouse is on, -1 for none. Drives the ✕ button and the keyboard
     // selection, which follows the mouse
@@ -947,7 +947,7 @@ struct HomeEntriesWnd : VirtWnd {
     void OnMouseMove(VirtMouseEvent*);
 
     HomeEntryWnd* EntryAt(int idx);
-    HomeEntryWnd* EntryForWnd(VirtWnd*);
+    HomeEntryWnd* EntryForWnd(VirtCtrl*);
     void SetEntryCount(int n);
     void SetActiveEntry(int idx);
     void UpdateCloseBtnVisibility();
@@ -956,10 +956,10 @@ struct HomeEntriesWnd : VirtWnd {
 // the tip band at the bottom. The markup is its VirtRichText child, which draws
 // itself and runs its own links; clicking the band anywhere else picks another
 // tip
-struct HomeTipWnd : VirtWnd {
+struct HomeTipWnd : VirtCtrl {
     // for link commands inside the tip markup (like VirtRichText)
     HWND hwndForCmds = nullptr;
-    // onClick (VirtWnd): band click outside a link picks another tip
+    // onClick (VirtCtrl): band click outside a link picks another tip
     VirtRichText* rich = nullptr; // owned, as our only child
     Str richFor;                  // owned, the markup `rich` was parsed from
 
@@ -970,7 +970,7 @@ struct HomeTipWnd : VirtWnd {
 
 static Kind kindHomeChromeWnd = "homeChromeWnd";
 
-struct HomeChromeWnd : VirtWnd {
+struct HomeChromeWnd : VirtCtrl {
     HomeTipWnd* tip = nullptr;
     HomeEntriesWnd* entries = nullptr;
     VirtText* hdr = nullptr;
@@ -1930,7 +1930,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
     return finish(0);
 }
 
-//--- home page chrome VirtWnds
+//--- home page chrome VirtCtrls
 
 HomeViewIconWnd::HomeViewIconWnd() {
     cursor = IDC_HAND;
@@ -2102,7 +2102,7 @@ HomeEntryWnd* HomeEntriesWnd::EntryAt(int idx) {
 }
 
 // the wnd the mouse is on may be one of an entry's buttons
-HomeEntryWnd* HomeEntriesWnd::EntryForWnd(VirtWnd* w) {
+HomeEntryWnd* HomeEntriesWnd::EntryForWnd(VirtCtrl* w) {
     while (w && w != this) {
         if (w->parent == this) {
             return (HomeEntryWnd*)w;
@@ -2198,7 +2198,7 @@ void HomeEntriesWnd::OnMouseMove(VirtMouseEvent* ev) {
 static HomeChromeWnd* EnsureHomeChrome(MainWindow* win) {
     // the canvas root holds either the home page's chrome or the About page's
     // controls, depending on which one is showing
-    if (win->homeRoot && IsVirtWndOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
+    if (win->homeRoot && IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
         return (HomeChromeWnd*)win->homeRoot->owned;
     }
     HWND hwnd = win->hwndCanvas;
@@ -2291,7 +2291,7 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
     }
     Point pt = HwndGetCursorPos(win->hwndCanvas);
     Point ptLocal{0, 0};
-    VirtWnd* w = root->WndFromPoint(pt, &ptLocal);
+    VirtCtrl* w = root->WndFromPoint(pt, &ptLocal);
     if (!w || !w->OnSetCursor(ptLocal)) {
         return false;
     }
@@ -2792,7 +2792,7 @@ static HomeEntriesWnd* HomeEntries(MainWindow* win) {
     if (!win || !win->homeRoot) {
         return nullptr;
     }
-    if (!IsVirtWndOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
+    if (!IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeWnd)) {
         return nullptr; // the About page is showing, not the home page
     }
     return ((HomeChromeWnd*)win->homeRoot->owned)->entries;
@@ -2814,14 +2814,14 @@ void HomePageClearActiveEntry(MainWindow* win) {
 // mouse over a file entry: update homePageSelIdx and show the tip at that entry
 // (not at the cursor). Returns true if (x,y) is over a file thumbnail/list row
 // file of the entry at (x,y), empty if there is no entry there. Replaces the
-// old "look the click up in win->staticLinks" - entries are VirtWnds now
+// old "look the click up in win->staticLinks" - entries are VirtCtrls now
 Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
     HomeEntriesWnd* entries = HomeEntries(win);
     if (!entries) {
         return {};
     }
     Point ptLocal{0, 0};
-    VirtWnd* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
+    VirtCtrl* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
     HomeEntryWnd* e = entries->EntryForWnd(w);
     if (!e) {
         return {};
@@ -2835,7 +2835,7 @@ bool HomePageOnHover(MainWindow* win, int x, int y) {
         return false;
     }
     Point ptLocal{0, 0};
-    VirtWnd* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
+    VirtCtrl* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
     HomeEntryWnd* e = entries->EntryForWnd(w);
     if (!e) {
         return false;

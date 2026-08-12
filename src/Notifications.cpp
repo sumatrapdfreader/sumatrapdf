@@ -12,7 +12,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -58,7 +58,7 @@ struct NotifColors {
 // the message text. A plain message is a single DrawText; one with links, bold
 // runs or key-caps becomes a VirtRichText child, which draws and runs its own
 // links
-struct NotifTextWnd : VirtWnd {
+struct NotifTextWnd : VirtCtrl {
     NotificationWnd* notif = nullptr;
     VirtRichText* rich = nullptr; // owned, as our only child
     // DT_* format for drawing a plain message, set in NotificationWnd::Layout()
@@ -73,7 +73,7 @@ struct NotifTextWnd : VirtWnd {
 };
 
 // the progress bar below the message (only when progressPerc >= 0)
-struct NotifProgressWnd : VirtWnd {
+struct NotifProgressWnd : VirtCtrl {
     NotificationWnd* notif = nullptr;
 
     NotifProgressWnd();
@@ -657,7 +657,7 @@ void NotificationWnd::OnPaint(WindowBase::PaintEvent* ev) {
     buffer.Flush(hdcIn);
 }
 
-//--- the VirtWnd controls making up a notification
+//--- the VirtCtrl controls making up a notification
 
 NotifTextWnd::NotifTextWnd() {
     kind = kindNotifText;
@@ -863,7 +863,7 @@ NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs) {
     return ShowNotification(args);
 }
 
-// show a notification whose content is an arbitrary VirtWnd tree. Ownership of
+// show a notification whose content is an arbitrary VirtCtrl tree. Ownership of
 // `content` passes to the notification (it is freed with it, also on failure).
 // The tree is measured with whatever HWND / HFONT its controls were built with,
 // so build it against the parent window

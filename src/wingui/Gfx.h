@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// Gfx is the drawing surface the VirtWnd controls paint on. It exists so the
+// Gfx is the drawing surface the VirtCtrl controls paint on. It exists so the
 // controls don't name an OS imaging API: on Windows it wraps an HDC, elsewhere
 // it will wrap the platform's equivalent. Like Pixmap, the backing is described
 // per-platform with #if rather than an opaque handle.
 //
 // Rects are in the coordinates of whatever the surface was created for (for
-// VirtWnd painting: HWND client coords).
+// VirtCtrl painting: HWND client coords).
 
 struct PlatformFont;
 struct Pixmap;

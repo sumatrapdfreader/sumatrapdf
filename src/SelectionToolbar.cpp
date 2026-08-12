@@ -13,7 +13,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -380,7 +380,7 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     box->alignCross = CrossAxisAlign::Stretch;
     bool isFirst = true;
     for (SelectionToolbarButton& b : tb->buttons) {
-        VirtWnd* w;
+        VirtCtrl* w;
         if (b.svgIcon) {
             auto* ib = new SelToolbarIconButton();
             ib->pixmap = b.icon;

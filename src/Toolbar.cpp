@@ -1536,7 +1536,7 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
     return hbmp;
 }
 
-// One icon rendered into a Pixmap, with the pixels the VirtWnd controls want:
+// One icon rendered into a Pixmap, with the pixels the VirtCtrl controls want:
 // BGRA, alpha-premultiplied, transparent where the SVG left the background
 // (which is what BlitPixmap() marks with alpha 0 for the image list)
 static Pixmap* RenderIconPixmap(TbIcon icon, int dx, int dy) {

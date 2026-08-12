@@ -14,7 +14,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -306,7 +306,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
 
     // the virtual controls of this window; it positions them itself in Layout()
     vroot = new VirtRoot(hwnd);
-    Vec<VirtWnd*> tops;
+    Vec<VirtCtrl*> tops;
     tops.Append(status);
     for (VirtIconButton* b : btns) {
         tops.Append(b);

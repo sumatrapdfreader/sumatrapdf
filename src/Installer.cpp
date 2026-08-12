@@ -27,7 +27,7 @@
 #include "wingui/WinGui.h"
 #include "wingui/PlatformFont.h"
 #include "wingui/Gfx.h"
-#include "wingui/VirtWnd.h"
+#include "wingui/VirtCtrl.h"
 
 #include "resource.h"
 #include "Settings.h"
@@ -1890,7 +1890,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     // the whole client area
     wnd->virtRoot->bounds = r;
     {
-        Vec<VirtWnd*> tops;
+        Vec<VirtCtrl*> tops;
         tops.Append(wnd->staticInstDir);
         wnd->virtRoot->SetTops(tops);
     }
