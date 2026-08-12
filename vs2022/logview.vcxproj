@@ -963,6 +963,7 @@
     <ClInclude Include="..\src\wingui\PlatformFont.h" />
     <ClInclude Include="..\src\wingui\PlatformText.h" />
     <ClInclude Include="..\src\wingui\UIModels.h" />
+    <ClInclude Include="..\src\wingui\VirtCtrl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp">
@@ -979,6 +980,7 @@
     <ClCompile Include="..\src\wingui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\wingui\Tooltip.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
+    <ClCompile Include="..\src\wingui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\wingui\WindowBase.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -1376,7 +1376,7 @@ function logview_files()
     "PlatformText_win.*",
     "Gfx.h",
     "Gfx_win.cpp",
-    "VirtWnd.*",
+    "VirtCtrl.*",
   })
 end
 

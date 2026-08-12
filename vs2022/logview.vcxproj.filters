@@ -27,6 +27,9 @@
     <ClInclude Include="..\src\wingui\UIModels.h">
       <Filter>wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\VirtCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
@@ -61,6 +64,9 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\UIModels.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\VirtCtrl.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\WindowBase.cpp">
