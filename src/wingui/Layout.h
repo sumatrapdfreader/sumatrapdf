@@ -71,21 +71,13 @@ struct ILayout {
 
     // walking a layout tree: containers return their children, leaves nothing.
     // Lets code find things in a tree it didn't build (see CollectVirtCtrls())
-    virtual int LayoutChildCount() {
-        return 0;
-    }
-    virtual ILayout* LayoutChildAt(int) {
-        return nullptr;
-    }
+    virtual int LayoutChildCount() { return 0; }
+    virtual ILayout* LayoutChildAt(int) { return nullptr; }
     // non-null for the virtual controls, which have no HWND of their own: the
     // window they end up in paints them and sends them their input
-    virtual VirtCtrl* AsVirtCtrl() {
-        return nullptr;
-    }
+    virtual VirtCtrl* AsVirtCtrl() { return nullptr; }
     // non-null for the controls that do have an HWND of their own
-    virtual ControlBase* AsControl() {
-        return nullptr;
-    }
+    virtual ControlBase* AsControl() { return nullptr; }
 };
 
 bool IsCollapsed(ILayout*);
@@ -278,7 +270,67 @@ struct Spacer : LayoutBase {
     void SetBounds(Rect) override;
 };
 
-// for a grid layout see VirtTable (VirtCtrl.h)
+//--- Table: a grid of cells, each holding an ILayout child
+
+// one cell of a Table. alignH / alignV say where the child sits when the
+// cell is bigger than the child; CrossAxisAlign::Stretch makes the child fill
+// the cell in that direction
+struct TableCell {
+    // owned by the Table (deleted with the table / when replaced)
+    ILayout* child = nullptr;
+    int rowSpan = 1;
+    int colSpan = 1;
+    CrossAxisAlign alignH = CrossAxisAlign::CrossStart;
+    CrossAxisAlign alignV = CrossAxisAlign::CrossStart;
+    // covered by a cell that spans into it, so it can't hold a child of its own
+    bool covered = false;
+    // the child's size, measured by Layout()
+    Size childSize;
+};
+
+// a grid of rows x cols cells. A column is as wide as its widest cell and a row
+// as tall as its tallest; a cell can span several rows and / or columns
+struct Table : LayoutBase {
+    int rows = 0;
+    int cols = 0;
+    // space between adjacent columns / rows
+    int colGap = 0;
+    int rowGap = 0;
+    Insets padding{};
+
+    Table();
+    ~Table() override;
+
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size Layout(Constraints bc) override;
+    void SetBounds(Rect) override;
+
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+
+    void SetSize(int rows, int cols);
+    TableCell& SetCell(int row, int col, ILayout* child, int rowSpan = 1, int colSpan = 1);
+    TableCell* CellAt(int row, int col);
+    ILayout* GetCell(int row, int col);
+    void RemoveAllCells();
+
+    // valid after a Layout() / SetBounds() pass
+    int ColWidth(int col);
+    int RowHeight(int row);
+    Rect CellRect(int row, int col);
+
+  private:
+    Vec<TableCell> cells; // rows * cols, row-major
+    Vec<int> colWidths;
+    Vec<int> rowHeights;
+
+    int CellIdx(int row, int col) const;
+    void MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered);
+    void Measure();
+    Size TotalSize();
+    Rect ContentRect();
+};
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Size LayoutToSize(ILayout* layout, Size size);

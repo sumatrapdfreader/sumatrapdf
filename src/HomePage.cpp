@@ -246,18 +246,18 @@ static AboutRow gAboutRows[] = {
 #endif
     {nullptr, nullptr, nullptr}};
 
-// The About screen's two text columns as virtual controls: a VirtTable whose
-// left column is right-aligned and right column left-aligned, which is what the
-// hand-rolled geometry used to do. Rows with a url become VirtLink (owning
-// the hit-testing, the hand cursor and the tooltip), the rest plain VirtText.
+// The About screen's two text columns: a Table (LayoutBase) whose left column
+// is right-aligned and right column left-aligned. Rows with a url become
+// VirtLink (owning the hit-testing, the hand cursor and the tooltip), the rest
+// plain VirtText. Table is pure layout; AboutCtrl paints and hit-tests the
+// cells' VirtCtrls itself (they are not VirtCtrl children of AboutCtrl).
 static Kind kindAboutCtrl = "aboutCtrl";
 
 struct SumatraLogo;
 
 struct AboutCtrl : VirtCtrl {
-    // the two text columns; a container of its own so that rebuilding the rows
-    // can't take the sibling showFreqRead link with it
-    VirtTable* table = nullptr;
+    // the two text columns; owned here (not a VirtCtrl child)
+    Table* table = nullptr;
     // "Show frequently read", bottom right of the About page (not the window)
     VirtLink* showFreqRead = nullptr;
     // the colored app name on top of the box
@@ -269,10 +269,13 @@ struct AboutCtrl : VirtCtrl {
     int dividerX = 0;
 
     AboutCtrl();
+    ~AboutCtrl() override;
     void Sync(HDC hdc);
     void UpdateLayout(HWND hwnd, Rect clientRc);
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
+    void PaintChildren(VirtPaintCtx&) override;
+    VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut) override;
 };
 
 static void OpenAboutUrl(VirtMouseEvent* ev) {
@@ -385,10 +388,14 @@ static int AboutRowCount() {
 AboutCtrl::AboutCtrl() {
     kind = kindAboutCtrl;
     flags |= vwfNoHitTest;
-    table = new VirtTable();
-    AddChild(table);
+    table = new Table();
     logo = new SumatraLogo();
     AddChild(logo);
+}
+
+AboutCtrl::~AboutCtrl() {
+    delete table;
+    table = nullptr;
 }
 
 VirtText* AboutCtrl::LeftAt(int i) {
@@ -397,6 +404,46 @@ VirtText* AboutCtrl::LeftAt(int i) {
 
 VirtText* AboutCtrl::RightAt(int i) {
     return (VirtText*)table->GetCell(i, 1);
+}
+
+// paint logo (VirtCtrl children) and the table's VirtText / VirtLink cells
+void AboutCtrl::PaintChildren(VirtPaintCtx& ctx) {
+    VirtCtrl::PaintChildren(ctx);
+    if (!table) {
+        return;
+    }
+    for (int i = 0; i < table->LayoutChildCount(); i++) {
+        VirtCtrl* v = table->LayoutChildAt(i)->AsVirtCtrl();
+        if (!v) {
+            continue;
+        }
+        v->SetRoot(root);
+        // cells were given absolute window coords by Table::SetBounds
+        v->PaintTree(ctx.gfx, {0, 0}, ctx.clip);
+    }
+}
+
+// hit-test logo / showFreqRead, then the table's links
+VirtCtrl* AboutCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
+    VirtCtrl* hit = VirtCtrl::WndFromPoint(ptWindow, ptLocalOut);
+    if (hit) {
+        return hit;
+    }
+    if (!table) {
+        return nullptr;
+    }
+    for (int i = table->LayoutChildCount() - 1; i >= 0; i--) {
+        VirtCtrl* v = table->LayoutChildAt(i)->AsVirtCtrl();
+        if (!v) {
+            continue;
+        }
+        v->SetRoot(root);
+        hit = v->WndFromPoint(ptWindow, ptLocalOut);
+        if (hit) {
+            return hit;
+        }
+    }
+    return nullptr;
 }
 
 // build the table once, then keep text, fonts and colors in step with the theme
@@ -408,7 +455,7 @@ void AboutCtrl::Sync(HDC hdc) {
         table->SetSize(n, 2);
         for (int i = 0; i < n; i++) {
             AboutRow* el = &gAboutRows[i];
-            VirtTableCell& left = table->SetCell(i, 0, new VirtText(el->leftTxt));
+            TableCell& left = table->SetCell(i, 0, new VirtText(el->leftTxt));
             // the left column is flush against the divider line
             left.alignH = CrossAxisAlign::CrossEnd;
             left.alignV = CrossAxisAlign::CrossCenter;
@@ -426,7 +473,7 @@ void AboutCtrl::Sync(HDC hdc) {
             } else {
                 rightTxt = new VirtText(el->rightTxt);
             }
-            VirtTableCell& right = table->SetCell(i, 1, rightTxt);
+            TableCell& right = table->SetCell(i, 1, rightTxt);
             right.alignV = CrossAxisAlign::CrossCenter;
         }
     }

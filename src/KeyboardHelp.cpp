@@ -31,8 +31,8 @@
 // override or a rebind shows through here without any extra bookkeeping. A
 // command with no binding is simply skipped, so the sheet self-adjusts.
 //
-// The sheet is a VirtCtrl tree: an HBox of two columns, each column a
-// VirtTable of (key-caps, description) rows with the section headers as
+// The sheet is a layout tree of VirtCtrls: an HBox of two columns, each
+// column a Table of (key-caps, description) rows with the section headers as
 // full-width spanning cells.
 
 // which commands go in which section; each list is 0-terminated. Kept in enum
@@ -433,8 +433,8 @@ void KeyboardHelpWnd::BuildContent() {
 
     columns = new HBox();
     columns->alignCross = CrossAxisAlign::CrossStart;
-    VirtTable* tables[2] = {new VirtTable(), new VirtTable()};
-    for (VirtTable* t : tables) {
+    Table* tables[2] = {new Table(), new Table()};
+    for (Table* t : tables) {
         t->colGap = keysDescGap;
         t->rowGap = rowGap;
     }
@@ -459,7 +459,7 @@ void KeyboardHelpWnd::BuildContent() {
     int radius = DpiScale(hwnd, 5);
     int rowAt[2] = {0, 0};
     for (auto& s : sections) {
-        VirtTable* t = tables[s.col];
+        Table* t = tables[s.col];
         int& row = rowAt[s.col];
 
         // the padding is the gap that separates the header from the section
@@ -467,7 +467,7 @@ void KeyboardHelpWnd::BuildContent() {
         auto* hdr = new VirtText(s.title, fontHdr);
         hdr->padding.top = (row == 0) ? 0 : secGap;
         texts.Append(hdr);
-        VirtTableCell& hdrCell = t->SetCell(row, 0, hdr, 1, 2);
+        TableCell& hdrCell = t->SetCell(row, 0, hdr, 1, 2);
         hdrCell.alignV = CrossAxisAlign::CrossEnd;
         row++;
 
@@ -481,13 +481,13 @@ void KeyboardHelpWnd::BuildContent() {
             // at most 4 caps per row, like the sheet has always shown
             Split(&caps->toks, r.keys, ", ", false, 4);
             // the caps sit against the description, like a gutter
-            VirtTableCell& capsCell = t->SetCell(row, 0, caps);
+            TableCell& capsCell = t->SetCell(row, 0, caps);
             capsCell.alignH = CrossAxisAlign::CrossEnd;
             capsCell.alignV = CrossAxisAlign::CrossCenter;
 
             auto* desc = NewVirtText({.s = r.desc, .font = fontRow, .ellipsis = true});
             texts.Append(desc);
-            VirtTableCell& descCell = t->SetCell(row, 1, desc);
+            TableCell& descCell = t->SetCell(row, 1, desc);
             descCell.alignV = CrossAxisAlign::CrossCenter;
             row++;
         }

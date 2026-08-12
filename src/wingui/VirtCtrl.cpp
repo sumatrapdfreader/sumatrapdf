@@ -1057,285 +1057,6 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     return false;
 }
 
-//--- VirtTable
-
-static Kind kindVirtCtrlTable = "virtCtrlTable";
-
-VirtTable::VirtTable() {
-    kind = kindVirtCtrlTable;
-    // a grid is decorative, only its cells' children are hit targets
-    flags |= vwfNoHitTest;
-}
-
-// the cells' children are owned by VirtCtrl::children, which ~VirtCtrl frees
-VirtTable::~VirtTable() = default;
-
-int VirtTable::CellIdx(int row, int col) const {
-    ReportIf(row < 0 || row >= rows);
-    ReportIf(col < 0 || col >= cols);
-    return (row * cols) + col;
-}
-
-void VirtTable::SetSize(int nRows, int nCols) {
-    ReportIf(nRows < 0 || nCols < 0);
-    if (nRows == rows && nCols == cols) {
-        return;
-    }
-    RemoveAllChildren(true);
-    rows = nRows;
-    cols = nCols;
-    cells.Clear();
-    VirtTableCell empty;
-    for (int i = 0; i < rows * cols; i++) {
-        cells.Append(empty);
-    }
-    colWidths.Clear();
-    rowHeights.Clear();
-}
-
-void VirtTable::MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered) {
-    for (int r = row; r < row + rowSpan; r++) {
-        for (int c = col; c < col + colSpan; c++) {
-            if (r == row && c == col) {
-                continue;
-            }
-            VirtTableCell& cell = cells[CellIdx(r, c)];
-            // a spanned-over cell can't hold a child of its own
-            ReportIf(covered && cell.child);
-            cell.covered = covered;
-        }
-    }
-}
-
-// (row, col) is the cell's top-left; a spanning cell covers the ones to its
-// right / below, which must stay empty
-VirtTableCell& VirtTable::SetCell(int row, int col, VirtCtrl* child, int rowSpan, int colSpan) {
-    ReportIf(rowSpan < 1 || colSpan < 1);
-    ReportIf(row + rowSpan > rows || col + colSpan > cols);
-    VirtTableCell& cell = cells[CellIdx(row, col)];
-    ReportIf(cell.covered);
-    MarkCovered(row, col, cell.rowSpan, cell.colSpan, false);
-    if (cell.child) {
-        RemoveChild(cell.child, true);
-    }
-    cell.child = child;
-    cell.rowSpan = rowSpan;
-    cell.colSpan = colSpan;
-    if (child) {
-        AddChild(child);
-    }
-    MarkCovered(row, col, rowSpan, colSpan, true);
-    return cell;
-}
-
-VirtTableCell* VirtTable::CellAt(int row, int col) {
-    if (row < 0 || row >= rows || col < 0 || col >= cols) {
-        return nullptr;
-    }
-    return &cells[CellIdx(row, col)];
-}
-
-VirtCtrl* VirtTable::GetCell(int row, int col) {
-    VirtTableCell* cell = CellAt(row, col);
-    return cell ? cell->child : nullptr;
-}
-
-void VirtTable::RemoveAllCells() {
-    RemoveAllChildren(true);
-    VirtTableCell empty;
-    for (int i = 0; i < len(cells); i++) {
-        cells[i] = empty;
-    }
-}
-
-// a cell spanning several tracks needs those tracks (plus the gaps between
-// them) to be at least as big as the cell; grow them evenly if they aren't
-static void GrowTracks(Vec<int>& tracks, int start, int span, int gap, int needed) {
-    int have = gap * (span - 1);
-    for (int i = start; i < start + span; i++) {
-        have += tracks[i];
-    }
-    int missing = needed - have;
-    if (missing <= 0) {
-        return;
-    }
-    for (int i = 0; i < span; i++) {
-        // the last track gets what rounding left over
-        int add = missing / (span - i);
-        tracks[start + i] += add;
-        missing -= add;
-    }
-}
-
-static int TracksSize(Vec<int>& tracks, int start, int span, int gap) {
-    if (span < 1) {
-        return 0;
-    }
-    int size = gap * (span - 1);
-    for (int i = start; i < start + span; i++) {
-        size += tracks[i];
-    }
-    return size;
-}
-
-// where track idx starts, relative to the first track
-static int TracksStart(Vec<int>& tracks, int idx, int gap) {
-    int pos = 0;
-    for (int i = 0; i < idx; i++) {
-        pos += tracks[i] + gap;
-    }
-    return pos;
-}
-
-// a column is as wide as its widest cell, a row as tall as its tallest. Cells
-// that span several tracks are applied afterwards, so they only stretch the
-// tracks they span when what those already give them isn't enough
-void VirtTable::Measure() {
-    colWidths.Clear();
-    colWidths.AppendBlanks(cols);
-    rowHeights.Clear();
-    rowHeights.AppendBlanks(rows);
-
-    Constraints loose = ExpandInf();
-    for (int row = 0; row < rows; row++) {
-        for (int col = 0; col < cols; col++) {
-            VirtTableCell& cell = cells[CellIdx(row, col)];
-            cell.childSize = {0, 0};
-            if (!cell.child || IsCollapsed(cell.child)) {
-                continue;
-            }
-            cell.childSize = cell.child->Layout(loose);
-            if (cell.colSpan == 1) {
-                colWidths[col] = std::max(colWidths[col], cell.childSize.dx);
-            }
-            if (cell.rowSpan == 1) {
-                rowHeights[row] = std::max(rowHeights[row], cell.childSize.dy);
-            }
-        }
-    }
-
-    for (int row = 0; row < rows; row++) {
-        for (int col = 0; col < cols; col++) {
-            VirtTableCell& cell = cells[CellIdx(row, col)];
-            if (!cell.child || IsCollapsed(cell.child)) {
-                continue;
-            }
-            if (cell.colSpan > 1) {
-                GrowTracks(colWidths, col, cell.colSpan, colGap, cell.childSize.dx);
-            }
-            if (cell.rowSpan > 1) {
-                GrowTracks(rowHeights, row, cell.rowSpan, rowGap, cell.childSize.dy);
-            }
-        }
-    }
-}
-
-Size VirtTable::TotalSize() {
-    int dx = padding.left + padding.right + TracksSize(colWidths, 0, cols, colGap);
-    int dy = padding.top + padding.bottom + TracksSize(rowHeights, 0, rows, rowGap);
-    return {dx, dy};
-}
-
-int VirtTable::MinIntrinsicHeight(int) {
-    Measure();
-    return TotalSize().dy;
-}
-
-int VirtTable::MinIntrinsicWidth(int) {
-    Measure();
-    return TotalSize().dx;
-}
-
-Size VirtTable::Layout(Constraints bc) {
-    Measure();
-    return bc.Constrain(TotalSize());
-}
-
-int VirtTable::ColWidth(int col) {
-    if (col < 0 || col >= len(colWidths)) {
-        return 0;
-    }
-    return colWidths[col];
-}
-
-int VirtTable::RowHeight(int row) {
-    if (row < 0 || row >= len(rowHeights)) {
-        return 0;
-    }
-    return rowHeights[row];
-}
-
-Rect VirtTable::ContentRect() {
-    Rect r = lastBounds;
-    r.SubTB(padding.top, padding.bottom);
-    r.SubLR(padding.left, padding.right);
-    return r;
-}
-
-// in the same coords SetBounds() was given
-Rect VirtTable::CellRect(int row, int col) {
-    VirtTableCell* cell = CellAt(row, col);
-    if (!cell || len(colWidths) != cols || len(rowHeights) != rows) {
-        return {};
-    }
-    Rect content = ContentRect();
-    int x = content.x + TracksStart(colWidths, col, colGap);
-    int y = content.y + TracksStart(rowHeights, row, rowGap);
-    int dx = TracksSize(colWidths, col, cell->colSpan, colGap);
-    int dy = TracksSize(rowHeights, row, cell->rowSpan, rowGap);
-    return {x, y, dx, dy};
-}
-
-// where a child of size sz sits inside its cell
-static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossAxisAlign alignV) {
-    Rect r{cell.x, cell.y, sz.dx, sz.dy};
-    switch (alignH) {
-        case CrossAxisAlign::Stretch:
-            r.dx = cell.dx;
-            break;
-        case CrossAxisAlign::CrossCenter:
-            r.x += (cell.dx - sz.dx) / 2;
-            break;
-        case CrossAxisAlign::CrossEnd:
-            r.x += cell.dx - sz.dx;
-            break;
-        case CrossAxisAlign::CrossStart:
-            break;
-    }
-    switch (alignV) {
-        case CrossAxisAlign::Stretch:
-            r.dy = cell.dy;
-            break;
-        case CrossAxisAlign::CrossCenter:
-            r.y += (cell.dy - sz.dy) / 2;
-            break;
-        case CrossAxisAlign::CrossEnd:
-            r.y += cell.dy - sz.dy;
-            break;
-        case CrossAxisAlign::CrossStart:
-            break;
-    }
-    return r;
-}
-
-void VirtTable::SetBounds(Rect r) {
-    VirtCtrl::SetBounds(r);
-    if (len(colWidths) != cols || len(rowHeights) != rows) {
-        // SetBounds() without a preceding Layout()
-        Measure();
-    }
-    for (int row = 0; row < rows; row++) {
-        for (int col = 0; col < cols; col++) {
-            VirtTableCell& cell = cells[CellIdx(row, col)];
-            if (!cell.child || IsCollapsed(cell.child)) {
-                continue;
-            }
-            Rect cellRc = CellRect(row, col);
-            cell.child->SetBounds(AlignInCell(cellRc, cell.childSize, cell.alignH, cell.alignV));
-        }
-    }
-}
-
 //--- VirtScroll
 
 static Kind kindVirtCtrlScroll = "virtCtrlScroll";
@@ -2642,15 +2363,16 @@ Size VirtSpacer::GetIdealSize() {
 // must be last: UtAssert.h over-writes assert()
 #include "base/UtAssert.h"
 
-// Unit tests for VirtTable. VirtSpacer is the leaf: a fixed ideal size
-// and no HWND, so a whole table can be laid out and its geometry asserted.
+// Unit tests for Table (LayoutBase grid). VirtSpacer is the leaf: a fixed
+// ideal size and no HWND, so a whole table can be laid out and its geometry
+// asserted. CollectVirtCtrls finds the cell VirtCtrls as tops.
 
 static bool VirtCtrlRectEq(const Rect& r, int x, int y, int dx, int dy) {
     return r.x == x && r.y == y && r.dx == dx && r.dy == dy;
 }
 
-static void VirtTable_TestGrid() {
-    auto* t = new VirtTable();
+static void Table_TestGrid() {
+    auto* t = new Table();
     t->SetSize(2, 2);
     t->colGap = 10;
     t->rowGap = 4;
@@ -2674,8 +2396,8 @@ static void VirtTable_TestGrid() {
     delete t;
 }
 
-static void VirtTable_TestAlign() {
-    auto* t = new VirtTable();
+static void Table_TestAlign() {
+    auto* t = new Table();
     t->SetSize(3, 2);
     // sets col 0 to 100 wide and row 0 to 40 tall, so the other cells have
     // room to be aligned in
@@ -2698,8 +2420,8 @@ static void VirtTable_TestAlign() {
     delete t;
 }
 
-static void VirtTable_TestSpan() {
-    auto* t = new VirtTable();
+static void Table_TestSpan() {
+    auto* t = new Table();
     t->SetSize(2, 2);
     t->colGap = 10;
     auto* wide = new VirtSpacer(100, 10);
@@ -2719,7 +2441,7 @@ static void VirtTable_TestSpan() {
     delete t;
 
     // the same for rows
-    auto* t2 = new VirtTable();
+    auto* t2 = new Table();
     t2->SetSize(2, 2);
     t2->rowGap = 6;
     auto* tall = new VirtSpacer(10, 100);
@@ -2735,10 +2457,10 @@ static void VirtTable_TestSpan() {
     delete t2;
 }
 
-// the cells' children must be reachable through the table's own bounds, or the
-// links of a table-laid-out screen (About) stop being clickable
-static void VirtTable_TestHitTest() {
-    auto* t = new VirtTable();
+// the cells' children must be reachable as tops through CollectVirtCtrls, or
+// the links of a table-laid-out screen (About) stop being clickable
+static void Table_TestHitTest() {
+    auto* t = new Table();
     t->SetSize(1, 2);
     t->colGap = 10;
     auto* a = new VirtSpacer(20, 10);
@@ -2750,12 +2472,18 @@ static void VirtTable_TestHitTest() {
     t->SetCell(0, 1, b);
     Size sz = t->Layout(ExpandInf());
     t->SetBounds(Rect{5, 7, sz.dx, sz.dy});
+
+    VirtRoot root((HWND)1);
+    root.bounds = {0, 0, 200, 100};
+    Vec<VirtCtrl*> tops;
+    CollectVirtCtrls(t, tops);
+    root.SetTops(tops);
+
     Point local{0, 0};
-    utassert(t->WndFromPoint({6, 8}, &local) == a);
-    utassert(t->WndFromPoint({40, 8}, &local) == b);
-    utassert(local.x == 5 && local.y == 1);
-    // the table itself is never a target, so the gap between the columns is a miss
-    utassert(t->WndFromPoint({30, 8}, &local) == nullptr);
+    utassert(root.WndFromPoint({6, 8}, &local) == a);
+    utassert(root.WndFromPoint({40, 8}, &local) == b);
+    // the gap between the columns is a miss
+    utassert(root.WndFromPoint({30, 8}, &local) == nullptr);
     delete t;
 }
 
@@ -2817,10 +2545,10 @@ static void CollectTabStops_Test() {
 }
 
 void VirtCtrl_UnitTests() {
-    VirtTable_TestGrid();
-    VirtTable_TestAlign();
-    VirtTable_TestSpan();
-    VirtTable_TestHitTest();
+    Table_TestGrid();
+    Table_TestAlign();
+    Table_TestSpan();
+    Table_TestHitTest();
     CollectVirtCtrls_Test();
     CollectTabStops_Test();
 }

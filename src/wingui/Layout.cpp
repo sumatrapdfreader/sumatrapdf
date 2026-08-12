@@ -1163,6 +1163,305 @@ void Align::SetBounds(Rect bounds) {
     Child->SetBounds(b);
 }
 
+//--- Table
+
+static Kind kindTable = "table";
+
+Table::Table() {
+    kind = kindTable;
+}
+
+// owns every cell's child
+Table::~Table() {
+    RemoveAllCells();
+}
+
+int Table::CellIdx(int row, int col) const {
+    ReportIf(row < 0 || row >= rows);
+    ReportIf(col < 0 || col >= cols);
+    return (row * cols) + col;
+}
+
+void Table::SetSize(int nRows, int nCols) {
+    ReportIf(nRows < 0 || nCols < 0);
+    if (nRows == rows && nCols == cols) {
+        return;
+    }
+    RemoveAllCells();
+    rows = nRows;
+    cols = nCols;
+    cells.Clear();
+    TableCell empty;
+    for (int i = 0; i < rows * cols; i++) {
+        cells.Append(empty);
+    }
+    colWidths.Clear();
+    rowHeights.Clear();
+}
+
+void Table::MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered) {
+    for (int r = row; r < row + rowSpan; r++) {
+        for (int c = col; c < col + colSpan; c++) {
+            if (r == row && c == col) {
+                continue;
+            }
+            TableCell& cell = cells[CellIdx(r, c)];
+            // a spanned-over cell can't hold a child of its own
+            ReportIf(covered && cell.child);
+            cell.covered = covered;
+        }
+    }
+}
+
+// (row, col) is the cell's top-left; a spanning cell covers the ones to its
+// right / below, which must stay empty
+TableCell& Table::SetCell(int row, int col, ILayout* child, int rowSpan, int colSpan) {
+    ReportIf(rowSpan < 1 || colSpan < 1);
+    ReportIf(row + rowSpan > rows || col + colSpan > cols);
+    TableCell& cell = cells[CellIdx(row, col)];
+    ReportIf(cell.covered);
+    MarkCovered(row, col, cell.rowSpan, cell.colSpan, false);
+    if (cell.child && cell.child != child) {
+        delete cell.child;
+    }
+    cell.child = child;
+    cell.rowSpan = rowSpan;
+    cell.colSpan = colSpan;
+    MarkCovered(row, col, rowSpan, colSpan, true);
+    return cell;
+}
+
+TableCell* Table::CellAt(int row, int col) {
+    if (row < 0 || row >= rows || col < 0 || col >= cols) {
+        return nullptr;
+    }
+    return &cells[CellIdx(row, col)];
+}
+
+ILayout* Table::GetCell(int row, int col) {
+    TableCell* cell = CellAt(row, col);
+    return cell ? cell->child : nullptr;
+}
+
+void Table::RemoveAllCells() {
+    for (int i = 0; i < len(cells); i++) {
+        delete cells[i].child;
+        cells[i] = TableCell{};
+    }
+}
+
+int Table::LayoutChildCount() {
+    int n = 0;
+    for (const TableCell& c : cells) {
+        if (c.child) {
+            n++;
+        }
+    }
+    return n;
+}
+
+ILayout* Table::LayoutChildAt(int idx) {
+    int i = 0;
+    for (TableCell& c : cells) {
+        if (!c.child) {
+            continue;
+        }
+        if (i == idx) {
+            return c.child;
+        }
+        i++;
+    }
+    return nullptr;
+}
+
+// a cell spanning several tracks needs those tracks (plus the gaps between
+// them) to be at least as big as the cell; grow them evenly if they aren't
+static void GrowTracks(Vec<int>& tracks, int start, int span, int gap, int needed) {
+    int have = gap * (span - 1);
+    for (int i = start; i < start + span; i++) {
+        have += tracks[i];
+    }
+    int missing = needed - have;
+    if (missing <= 0) {
+        return;
+    }
+    for (int i = 0; i < span; i++) {
+        // the last track gets what rounding left over
+        int add = missing / (span - i);
+        tracks[start + i] += add;
+        missing -= add;
+    }
+}
+
+static int TracksSize(Vec<int>& tracks, int start, int span, int gap) {
+    if (span < 1) {
+        return 0;
+    }
+    int size = gap * (span - 1);
+    for (int i = start; i < start + span; i++) {
+        size += tracks[i];
+    }
+    return size;
+}
+
+// where track idx starts, relative to the first track
+static int TracksStart(Vec<int>& tracks, int idx, int gap) {
+    int pos = 0;
+    for (int i = 0; i < idx; i++) {
+        pos += tracks[i] + gap;
+    }
+    return pos;
+}
+
+// a column is as wide as its widest cell, a row as tall as its tallest. Cells
+// that span several tracks are applied afterwards, so they only stretch the
+// tracks they span when what those already give them isn't enough
+void Table::Measure() {
+    colWidths.Clear();
+    colWidths.AppendBlanks(cols);
+    rowHeights.Clear();
+    rowHeights.AppendBlanks(rows);
+
+    Constraints loose = ExpandInf();
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            TableCell& cell = cells[CellIdx(row, col)];
+            cell.childSize = {0, 0};
+            if (!cell.child || IsCollapsed(cell.child)) {
+                continue;
+            }
+            cell.childSize = cell.child->Layout(loose);
+            if (cell.colSpan == 1) {
+                colWidths[col] = std::max(colWidths[col], cell.childSize.dx);
+            }
+            if (cell.rowSpan == 1) {
+                rowHeights[row] = std::max(rowHeights[row], cell.childSize.dy);
+            }
+        }
+    }
+
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            TableCell& cell = cells[CellIdx(row, col)];
+            if (!cell.child || IsCollapsed(cell.child)) {
+                continue;
+            }
+            if (cell.colSpan > 1) {
+                GrowTracks(colWidths, col, cell.colSpan, colGap, cell.childSize.dx);
+            }
+            if (cell.rowSpan > 1) {
+                GrowTracks(rowHeights, row, cell.rowSpan, rowGap, cell.childSize.dy);
+            }
+        }
+    }
+}
+
+Size Table::TotalSize() {
+    int dx = padding.left + padding.right + TracksSize(colWidths, 0, cols, colGap);
+    int dy = padding.top + padding.bottom + TracksSize(rowHeights, 0, rows, rowGap);
+    return {dx, dy};
+}
+
+int Table::MinIntrinsicHeight(int) {
+    Measure();
+    return TotalSize().dy;
+}
+
+int Table::MinIntrinsicWidth(int) {
+    Measure();
+    return TotalSize().dx;
+}
+
+Size Table::Layout(Constraints bc) {
+    Measure();
+    return bc.Constrain(TotalSize());
+}
+
+int Table::ColWidth(int col) {
+    if (col < 0 || col >= len(colWidths)) {
+        return 0;
+    }
+    return colWidths[col];
+}
+
+int Table::RowHeight(int row) {
+    if (row < 0 || row >= len(rowHeights)) {
+        return 0;
+    }
+    return rowHeights[row];
+}
+
+Rect Table::ContentRect() {
+    Rect r = lastBounds;
+    r.SubTB(padding.top, padding.bottom);
+    r.SubLR(padding.left, padding.right);
+    return r;
+}
+
+// in the same coords SetBounds() was given
+Rect Table::CellRect(int row, int col) {
+    TableCell* cell = CellAt(row, col);
+    if (!cell || len(colWidths) != cols || len(rowHeights) != rows) {
+        return {};
+    }
+    Rect content = ContentRect();
+    int x = content.x + TracksStart(colWidths, col, colGap);
+    int y = content.y + TracksStart(rowHeights, row, rowGap);
+    int dx = TracksSize(colWidths, col, cell->colSpan, colGap);
+    int dy = TracksSize(rowHeights, row, cell->rowSpan, rowGap);
+    return {x, y, dx, dy};
+}
+
+// where a child of size sz sits inside its cell
+static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossAxisAlign alignV) {
+    Rect r{cell.x, cell.y, sz.dx, sz.dy};
+    switch (alignH) {
+        case CrossAxisAlign::Stretch:
+            r.dx = cell.dx;
+            break;
+        case CrossAxisAlign::CrossCenter:
+            r.x += (cell.dx - sz.dx) / 2;
+            break;
+        case CrossAxisAlign::CrossEnd:
+            r.x += cell.dx - sz.dx;
+            break;
+        case CrossAxisAlign::CrossStart:
+            break;
+    }
+    switch (alignV) {
+        case CrossAxisAlign::Stretch:
+            r.dy = cell.dy;
+            break;
+        case CrossAxisAlign::CrossCenter:
+            r.y += (cell.dy - sz.dy) / 2;
+            break;
+        case CrossAxisAlign::CrossEnd:
+            r.y += cell.dy - sz.dy;
+            break;
+        case CrossAxisAlign::CrossStart:
+            break;
+    }
+    return r;
+}
+
+void Table::SetBounds(Rect r) {
+    lastBounds = r;
+    if (len(colWidths) != cols || len(rowHeights) != rows) {
+        // SetBounds() without a preceding Layout()
+        Measure();
+    }
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            TableCell& cell = cells[CellIdx(row, col)];
+            if (!cell.child || IsCollapsed(cell.child)) {
+                continue;
+            }
+            Rect cellRc = CellRect(row, col);
+            cell.child->SetBounds(AlignInCell(cellRc, cell.childSize, cell.alignH, cell.alignV));
+        }
+    }
+}
+
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
     dbglayout(fmt("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy));
 
