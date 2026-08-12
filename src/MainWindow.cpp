@@ -203,8 +203,8 @@ MainWindow::~MainWindow() {
 
     DestroyAIChatPanel(this);
 
-    delete sidebarSplitter;
-    delete favSplitter;
+    // owns the splitters and the layout slots
+    delete frameLayout;
     // the splitters tell the root they are going away, so it goes last
     delete frameRoot;
 }

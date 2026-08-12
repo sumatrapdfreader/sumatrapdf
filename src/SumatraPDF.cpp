@@ -2473,6 +2473,15 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     DeleteFileState(fs);
 }
 
+constexpr int kSplitterDx = 5;
+constexpr int kSplitterDy = 4;
+
+// show / collapse a node of the frame's content row; a collapsed one takes no
+// space and, for the virtual controls, isn't painted or hit-tested either
+static void SetVis(ILayout* l, bool visible) {
+    l->SetVisibility(visible ? Visibility::Visible : Visibility::Collapse);
+}
+
 // A splitter is a virtual control in the frame's tree: the frame paints it and
 // hands it the mouse. `isLive` false means the panes only move on release
 static VirtSplitter* NewFrameSplitter(SplitterType type, bool isLive) {
@@ -2501,16 +2510,54 @@ void FrameSyncSplitters(MainWindow* win) {
     win->frameRoot->SetTops(tops);
 }
 
+// The frame's content row: [ToC / Favorites column] | splitter | canvas |
+// splitter | AI chat. The panels are windows, so each gets a Spacer slot and
+// RelayoutFrame moves the window into the slot's bounds (still batched with
+// DeferWindowPos); the splitters are virtual controls and place themselves.
+// The AI chat parts stay in the row even while that panel doesn't exist -
+// they are simply collapsed
+static void CreateFrameLayout(MainWindow* win) {
+    win->tocSlot = new Spacer(0, 0);
+    win->favSlot = new Spacer(0, 0);
+    win->canvasSlot = new Spacer(0, 0);
+    win->aiChatSlot = new Spacer(0, 0);
+
+    // the webview is expensive to resize, so this one only moves the panes
+    // when the drag ends
+    win->aiChatSplitter = NewFrameSplitter(SplitterType::Vert, false);
+    win->aiChatSplitter->thickness = kSplitterDx;
+
+    auto* sidebar = new VBox();
+    sidebar->alignCross = CrossAxisAlign::Stretch;
+    sidebar->AddChild(win->tocSlot);
+    sidebar->AddChild(win->favSplitter);
+    sidebar->AddChild(win->favSlot, 1);
+
+    auto* row = new HBox();
+    row->alignCross = CrossAxisAlign::Stretch;
+    row->AddChild(sidebar);
+    row->AddChild(win->sidebarSplitter);
+    row->AddChild(win->canvasSlot, 1);
+    row->AddChild(win->aiChatSplitter);
+    row->AddChild(win->aiChatSlot);
+    win->frameLayout = row;
+    FrameSyncSplitters(win);
+}
+
 static void CreateSidebar(MainWindow* win) {
     win->sidebarSplitter = NewFrameSplitter(SplitterType::Vert, true);
+    win->sidebarSplitter->thickness = kSplitterDx;
     win->sidebarSplitter->onMove = MkFunc1Void(OnSidebarSplitterMove);
     FrameSyncSplitters(win);
 
     CreateToc(win);
 
     win->favSplitter = NewFrameSplitter(SplitterType::Horiz, true);
+    win->favSplitter->thickness = kSplitterDy;
     win->favSplitter->onMove = MkFunc1Void(OnFavSplitterMove);
     FrameSyncSplitters(win);
+
+    CreateFrameLayout(win);
 
     CreateFavorites(win);
 
@@ -6178,8 +6225,6 @@ static void DeleteCurrentFileAndOpenNext(MainWindow* win) {
     OpenNextPrevFileInFolder(win, true, path);
 }
 
-constexpr int kSplitterDx = 5;
-constexpr int kSplitterDy = 4;
 constexpr int kSidebarMinDx = 150;
 constexpr int kTocMinDy = 100;
 
@@ -6424,80 +6469,83 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         return true;
     }
-    if (tocVisible || favVisible) {
+    // --- the content row, laid out by win->frameLayout ---
+    bool sidebarVisible = tocVisible || favVisible;
+    bool aiChatVisible = win->uiState.aiChatVisible && win->hwndAiChatBox;
+
+    int sidebarDxApplied = 0;
+    if (sidebarVisible) {
         if (sidebarDx > 0) {
             win->sidebarDx = sidebarDx; // splitter drag
         }
-        Size toc(win->sidebarDx, 0);
-        if (0 == toc.dx) {
+        sidebarDxApplied = win->sidebarDx;
+        if (0 == sidebarDxApplied) {
             // not laid out yet: width the toc box was created with
             // (gGlobalPrefs->sidebarDx, see CreateToc)
-            toc.dx = HwndClientRect(win->hwndTocBox).dx;
+            sidebarDxApplied = HwndClientRect(win->hwndTocBox).dx;
         }
-        if (0 == toc.dx) {
-            toc.dx = rc.dx / 4;
+        if (0 == sidebarDxApplied) {
+            sidebarDxApplied = rc.dx / 4;
         }
         // never too narrow; max leaves kMinDocCanvasDx for the document
         // (was hard-capped at half the frame, which cut long favorite names)
         int maxSidebarDx = std::max(kSidebarMinDx, rc.dx - kMinDocCanvasDx);
-        toc.dx = limitValue(toc.dx, kSidebarMinDx, maxSidebarDx);
-        win->sidebarDx = toc.dx; // remember what's applied
-
-        toc.dy = 0;
-        if (tocVisible) {
-            if (!favVisible) {
-                toc.dy = rc.dy;
-            } else {
-                toc.dy = gGlobalPrefs->tocDy;
-                if (toc.dy > 0) {
-                    toc.dy = limitValue(gGlobalPrefs->tocDy, 0, rc.dy);
-                } else {
-                    toc.dy = rc.dy / 2; // default value
-                }
-            }
-        }
-
-        if (tocVisible && favVisible) {
-            toc.dy = limitValue(toc.dy, kTocMinDy, rc.dy - kTocMinDy);
-        }
-
-        if (tocVisible) {
-            Rect rToc(rc.TL(), toc);
-            dh.MoveWindow(win->hwndTocBox, rToc);
-            if (favVisible) {
-                Rect rSplitV(rc.x, rc.y + toc.dy, toc.dx, kSplitterDy);
-                win->favSplitter->SetBounds(rSplitV);
-                toc.dy += kSplitterDy;
-            }
-        }
-        if (favVisible) {
-            Rect rFav(rc.x, rc.y + toc.dy, toc.dx, rc.dy - toc.dy);
-            dh.MoveWindow(win->hwndFavBox, rFav);
-        }
-        Rect rSplitH(rc.x + toc.dx, rc.y, kSplitterDx, rc.dy);
-        win->sidebarSplitter->SetBounds(rSplitH);
-
-        rc.x += toc.dx + kSplitterDx;
-        rc.dx -= toc.dx + kSplitterDx;
+        sidebarDxApplied = limitValue(sidebarDxApplied, kSidebarMinDx, maxSidebarDx);
+        win->sidebarDx = sidebarDxApplied; // remember what's applied
     }
 
-    if (win->uiState.aiChatVisible && win->hwndAiChatBox) {
-        int aiChatDx = win->aiChatDx;
+    int tocDy = 0;
+    if (tocVisible) {
+        if (!favVisible) {
+            tocDy = rc.dy;
+        } else {
+            tocDy = gGlobalPrefs->tocDy;
+            if (tocDy > 0) {
+                tocDy = limitValue(gGlobalPrefs->tocDy, 0, rc.dy);
+            } else {
+                tocDy = rc.dy / 2; // default value
+            }
+            tocDy = limitValue(tocDy, kTocMinDy, rc.dy - kTocMinDy);
+        }
+    }
+
+    int aiChatDx = 0;
+    if (aiChatVisible) {
+        aiChatDx = win->aiChatDx;
         if (aiChatDx <= 0) {
             aiChatDx = rc.dx * 3 / 8;
         }
-        aiChatDx = limitValue(aiChatDx, kSidebarMinDx, rc.dx / 2);
+        int availDx = rc.dx - (sidebarVisible ? sidebarDxApplied + kSplitterDx : 0);
+        aiChatDx = limitValue(aiChatDx, kSidebarMinDx, availDx / 2);
         win->aiChatDx = aiChatDx;
-
-        Rect rSplitter(rc.x + rc.dx - aiChatDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
-        win->aiChatSplitter->SetBounds(rSplitter);
-
-        Rect rAIChat(rc.x + rc.dx - aiChatDx, rc.y, aiChatDx, rc.dy);
-        dh.MoveWindow(win->hwndAiChatBox, rAIChat);
-        rc.dx -= aiChatDx + kSplitterDx;
     }
 
-    dh.MoveWindow(win->hwndCanvas, rc);
+    // what's not showing is collapsed, so the boxes skip it
+    SetVis(win->tocSlot, tocVisible);
+    SetVis(win->favSlot, favVisible);
+    SetVis(win->favSplitter, tocVisible && favVisible);
+    SetVis(win->sidebarSplitter, sidebarVisible);
+    SetVis(win->aiChatSplitter, aiChatVisible);
+    SetVis(win->aiChatSlot, aiChatVisible);
+
+    win->tocSlot->dx = sidebarDxApplied;
+    win->tocSlot->dy = tocDy;
+    win->favSlot->dx = sidebarDxApplied;
+    win->aiChatSlot->dx = aiChatDx;
+
+    LayoutToSize(win->frameLayout, {rc.dx, rc.dy});
+    win->frameLayout->SetBounds(rc);
+
+    if (tocVisible) {
+        dh.MoveWindow(win->hwndTocBox, win->tocSlot->lastBounds);
+    }
+    if (favVisible) {
+        dh.MoveWindow(win->hwndFavBox, win->favSlot->lastBounds);
+    }
+    if (aiChatVisible) {
+        dh.MoveWindow(win->hwndAiChatBox, win->aiChatSlot->lastBounds);
+    }
+    dh.MoveWindow(win->hwndCanvas, win->canvasSlot->lastBounds);
 
     dh.End();
 

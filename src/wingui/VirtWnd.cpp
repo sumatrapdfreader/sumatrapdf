@@ -1891,6 +1891,20 @@ void VirtSplitter::UpdateOverlay() {
     HwndInvalidate(overlayHwnd, true);
 }
 
+Size VirtSplitter::GetIdealSize() {
+    Size sz = {bounds.dx, bounds.dy};
+    if (thickness > 0) {
+        // Vert is a vertical bar between two side-by-side panes, so it's the
+        // width that is fixed
+        if (type == SplitterType::Vert) {
+            sz.dx = thickness;
+        } else {
+            sz.dy = thickness;
+        }
+    }
+    return sz;
+}
+
 void VirtSplitter::Paint(VirtPaintCtx& ctx) {
     if (bgColor == kColorUnset) {
         return;

@@ -1249,17 +1249,12 @@ void CreateAIChatPanel(MainWindow* win) {
     HWND parent = win->hwndFrame;
     win->hwndAiChatBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
-    // splitter (non-live: only resize on mouse release)
-    {
-        // non-live: the webview is expensive to resize, so the panes only
-        // move when the drag ends
-        win->aiChatSplitter = new VirtSplitter();
-        win->aiChatSplitter->type = SplitterType::Vert;
-        win->aiChatSplitter->isLive = false;
+    // the splitter is part of the frame's content row and outlives the panel;
+    // we only take it over while the panel exists
+    if (win->aiChatSplitter) {
         win->aiChatSplitter->bgColor = ThemeControlBackgroundColor();
         win->aiChatSplitter->SetIsVisible(false);
         win->aiChatSplitter->onMove = MkFunc1Void(OnAIChatSplitterMove);
-        FrameSyncSplitters(win);
     }
 
     HFONT font = GetDefaultGuiFont();
@@ -1560,9 +1555,11 @@ void DestroyAIChatPanel(MainWindow* win) {
     win->aiChatStopBtn = nullptr;
     win->aiChatInput = nullptr;
 
-    delete win->aiChatSplitter;
-    win->aiChatSplitter = nullptr;
-    FrameSyncSplitters(win);
+    if (win->aiChatSplitter) {
+        // owned by the frame's content row, so just park it
+        win->aiChatSplitter->SetIsVisible(false);
+        win->aiChatSplitter->onMove = {};
+    }
 
     if (win->hwndAiChatBox) {
         DestroyWindow(win->hwndAiChatBox);

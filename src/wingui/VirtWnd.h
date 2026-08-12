@@ -465,10 +465,15 @@ struct VirtSplitter : VirtWnd {
     // false: the panes only move when the drag ends
     bool isLive = true;
     COLORREF bgColor = kColorUnset;
+    // how thick the bar is; the other axis is stretched by the layout.
+    // 0 keeps whatever bounds it was given
+    int thickness = 0;
     MoveHandler onMove;
 
     VirtSplitter();
     ~VirtSplitter() override;
+
+    Size GetIdealSize() override;
 
     void Paint(VirtPaintCtx&) override;
     bool OnMouseDown(VirtMouseEvent&) override;

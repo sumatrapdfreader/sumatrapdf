@@ -373,6 +373,16 @@ struct MainWindow {
     // them and hands them its mouse input
     VirtRoot* frameRoot = nullptr;
 
+    // The content row under the chrome: sidebar | splitter | canvas | splitter
+    // | AI chat. It owns the splitters and the slots; the panels' windows are
+    // moved into the slots' bounds by RelayoutFrame (which still batches those
+    // moves with DeferWindowPos)
+    HBox* frameLayout = nullptr;
+    Spacer* tocSlot = nullptr;
+    Spacer* favSlot = nullptr;
+    Spacer* canvasSlot = nullptr;
+    Spacer* aiChatSlot = nullptr;
+
     // home page thumbnail scrolling
     int homePageScrollY = 0;
     // keyboard-selected home page entry (index into the filtered list),
