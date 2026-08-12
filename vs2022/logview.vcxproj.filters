@@ -7,11 +7,70 @@
     <Filter Include="tools\logview">
       <UniqueIdentifier>{82663E5D-EE26-BA93-B761-031123E1FE6F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="wingui">
+      <UniqueIdentifier>{D80B1F25-C4AD-49FB-AD68-5D4F99A9D04B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\wingui\Gfx.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\Layout.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\PlatformFont.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\PlatformText.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\UIModels.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\VirtWnd.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
     <ClCompile Include="..\src\tools\logview\logview.cpp">
       <Filter>tools\logview</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ControlBase.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Edit.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Gfx_win.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Layout.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformFont.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformText.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\PlatformText_win.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Tooltip.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\UIModels.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\VirtWnd.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\WindowBase.cpp">
+      <Filter>wingui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -958,10 +958,30 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\wingui\Gfx.h" />
+    <ClInclude Include="..\src\wingui\Layout.h" />
+    <ClInclude Include="..\src\wingui\PlatformFont.h" />
+    <ClInclude Include="..\src\wingui\PlatformText.h" />
+    <ClInclude Include="..\src\wingui\UIModels.h" />
+    <ClInclude Include="..\src\wingui\VirtWnd.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\tools\logview\logview.cpp" />
+    <ClCompile Include="..\src\wingui\ControlBase.cpp" />
+    <ClCompile Include="..\src\wingui\Edit.cpp" />
+    <ClCompile Include="..\src\wingui\Gfx_win.cpp" />
+    <ClCompile Include="..\src\wingui\Layout.cpp" />
+    <ClCompile Include="..\src\wingui\PlatformFont.cpp" />
+    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp" />
+    <ClCompile Include="..\src\wingui\PlatformText.cpp" />
+    <ClCompile Include="..\src\wingui\PlatformText_win.cpp" />
+    <ClCompile Include="..\src\wingui\Tooltip.cpp" />
+    <ClCompile Include="..\src\wingui\UIModels.cpp" />
+    <ClCompile Include="..\src\wingui\VirtWnd.cpp" />
+    <ClCompile Include="..\src\wingui\WindowBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="base.vcxproj">

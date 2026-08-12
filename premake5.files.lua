@@ -1362,6 +1362,22 @@ function logview_files()
   files {
     "src/tools/logview/logview.cpp",
   }
+  -- the subset of wingui logview's UI needs (no tree view, tabs, web view, ...)
+  files_in_dir("src/wingui", {
+    "UIModels.*",
+    "Layout.*",
+    "WindowBase.*",
+    "ControlBase.*",
+    "Edit.*",
+    "Tooltip.*",
+    "PlatformFont.*",
+    "PlatformFont_win.*",
+    "PlatformText.*",
+    "PlatformText_win.*",
+    "Gfx.h",
+    "Gfx_win.cpp",
+    "VirtWnd.*",
+  })
 end
 
 function pdf_preview_files()
