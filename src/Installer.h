@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct VirtRoot;
+
 constexpr int kInstallerWinDy = 340;
 
 enum class PreviousInstallationType {
@@ -49,7 +51,8 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-void OnPaintFrame(HWND hwnd, bool skipMessage);
+// virt: the window's virtual controls, painted on top of the frame (can be null)
+void OnPaintFrame(HWND hwnd, bool skipMessage, VirtRoot* virt = nullptr);
 void AnimStep();
 
 void NotifyFailed(Str msg);

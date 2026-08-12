@@ -18,6 +18,13 @@
 #include "SumatraConfig.h"
 #include "Flags.h"
 #include "Version.h"
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
+
 #include "Installer.h"
 
 // set to true to enable shadow effect
@@ -998,9 +1005,16 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT* /*ps*/, bool skipMessage) 
     g.DrawImage(&bmp, 0, 0);
 }
 
-void OnPaintFrame(HWND hwnd, bool skipMessage) {
+void OnPaintFrame(HWND hwnd, bool skipMessage, VirtRoot* virt) {
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
     DrawFrame(hwnd, dc, &ps, skipMessage);
+    if (virt) {
+        // DrawFrame() has just painted the background for us, so the virtual
+        // controls only draw themselves on top of it
+        SetBkMode(dc, TRANSPARENT);
+        Gfx gfx = GfxFromHdc(dc);
+        virt->Paint(&gfx, HwndClientRect(hwnd));
+    }
     EndPaint(hwnd, &ps);
 }

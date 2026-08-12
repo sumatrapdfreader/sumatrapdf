@@ -25,6 +25,9 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "resource.h"
 #include "Settings.h"
@@ -58,7 +61,10 @@ struct InstallerWnd {
     HBRUSH hbrBackground = nullptr;
     Button* btnOptions = nullptr;
     Button* btnRunSumatra = nullptr;
-    Static* staticInstDir = nullptr;
+    // the only virtual control of this window, painted by us on top of the
+    // frame we draw ourselves
+    VirtRoot* virtRoot = nullptr;
+    VirtText* staticInstDir = nullptr;
     Edit* editInstallationDir = nullptr;
     Button* btnBrowseDir = nullptr;
     Checkbox* checkboxForAllUsers = nullptr;
@@ -1330,7 +1336,9 @@ static void StartInstallation(InstallerWnd* wnd) {
     ProgressStep();
 
     // disable the install button and remove all the installation options
-    DeleteWnd(&wnd->staticInstDir);
+    // deleting it takes it out of virtRoot->tops, so we stop painting it
+    delete wnd->staticInstDir;
+    wnd->staticInstDir = nullptr;
     DeleteWnd(&wnd->editInstallationDir);
     DeleteWnd(&wnd->btnBrowseDir);
     DeleteWnd(&wnd->checkboxForAllUsers);
@@ -1596,7 +1604,9 @@ static void ForAllUsersStateChanged() {
 static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     bool showOpts = wnd->showOptions;
 
-    ShowAndEnable(wnd->staticInstDir, showOpts);
+    if (wnd->staticInstDir) {
+        wnd->staticInstDir->SetIsVisible(showOpts);
+    }
     ShowAndEnable(wnd->editInstallationDir, showOpts);
     ShowAndEnable(wnd->btnBrowseDir, showOpts);
 
@@ -1862,16 +1872,28 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     y -= editDy;
 
     Str s2 = _TRA("Install SumatraPDF in &folder:");
+    // we paint the text ourselves, so the '&' of the access key would show up
+    // literally instead of underlining the next letter
+    TempStr s2NoAccel = str::DupTemp(s2);
+    str::RemoveCharsInPlace(s2NoAccel, "&");
     rc = {x, y, r.dx - (2 * margin), staticDy};
 
-    Static::CreateArgs args;
-    args.parent = hwnd;
-    args.text = s2;
-    args.isRtl = IsUIRtl();
-
-    wnd->staticInstDir = new Static();
-    wnd->staticInstDir->Create(args);
+    wnd->staticInstDir = NewVirtText({
+        .s = s2NoAccel,
+        .font = GetPlatformFont(GetDefaultGuiFont()),
+        .textColor = RGB(0, 0, 0),
+        .isRtl = IsUIRtl(),
+    });
     wnd->staticInstDir->SetBounds(rc);
+    wnd->virtRoot = new VirtRoot(hwnd);
+    // the virtual controls are positioned in window coords, so the root covers
+    // the whole client area
+    wnd->virtRoot->bounds = r;
+    {
+        Vec<VirtWnd*> tops;
+        tops.Append(wnd->staticInstDir);
+        wnd->virtRoot->SetTops(tops);
+    }
 
     wnd->showOptions = showOptions;
     UpdateUIForOptionsState(wnd);
@@ -1926,7 +1948,7 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             return TRUE;
 
         case WM_PAINT: {
-            OnPaintFrame(hwnd, gWnd->showOptions);
+            OnPaintFrame(hwnd, gWnd->showOptions, gWnd->virtRoot);
             break;
         }
 
@@ -2140,7 +2162,7 @@ static i64 EstimateInstallerWriteBytes(const lzma::SimpleArchive* archive) {
             }
         }
     }
-    need += largest;          // possible concurrent .tmp during robust write
+    need += largest;            // possible concurrent .tmp during robust write
     need += 16ll * 1024 * 1024; // filesystem / safety margin
     return need;
 }
