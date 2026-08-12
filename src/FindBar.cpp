@@ -6,9 +6,14 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 
+#include "base/Pixmap.h"
+
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -37,10 +42,13 @@ constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 
 struct FindBarWnd : WindowBase {
     MainWindow* win = nullptr;
+    // the status text and the buttons are virtual controls; the search field is
+    // the only HWND child
     Edit* edit = nullptr;
-    Static* status = nullptr;
-    HWND hwndBtns = nullptr; // small toolbar: prev / next / match-case / close
-    HIMAGELIST himl = nullptr;
+    VirtText* status = nullptr;
+    // prev / next / match-case / match-whole-word / pop-out / close
+    VirtIconButton* btns[6]{};
+    Tooltip* tooltip = nullptr;
 
     int barDx = 0;
     int barDy = 0;
@@ -55,6 +63,12 @@ struct FindBarWnd : WindowBase {
     ~FindBarWnd() override;
 
     bool Create(MainWindow* win);
+    void CreateButtons();
+    void UpdateButtonIcons();
+    // one button's size, padding included
+    Size ButtonSize() const;
+    // the button under `pt` (window coords), or -1
+    int ButtonIndexFromPoint(Point pt);
     // forceBarDx > 0: fit the bar into exactly that window width, giving the
     // slack to the edit box. 0: the default edit width.
     void Layout(int forceBarDx = 0);
@@ -65,7 +79,6 @@ struct FindBarWnd : WindowBase {
     void OnTextChanged();
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    LRESULT OnNotify(int controlId, NMHDR* nmh) override;
     bool PreTranslateMessage(MSG& msg) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
@@ -100,11 +113,67 @@ static TempStr FindBarButtonTooltip(int cmd) {
 
 FindBarWnd::~FindBarWnd() {
     delete edit;
+    delete tooltip;
     delete status;
-    HwndDestroyWindowSafe(&hwndBtns);
-    if (himl) {
-        ImageList_Destroy(himl);
+    for (VirtIconButton* b : btns) {
+        delete b;
     }
+}
+
+// the icons come from the shared cache, which renders them for the current
+// theme and size
+void FindBarWnd::UpdateButtonIcons() {
+    static const TbIcon icons[6] = {TbIcon::ChevronUp,      TbIcon::ChevronDown,    TbIcon::MatchCase,
+                                    TbIcon::MatchWholeWord, TbIcon::ArrowsDiagonal, TbIcon::Close};
+    int isz = RoundUp(DpiScale(hwnd, 16), 4);
+    for (int i = 0; i < 6; i++) {
+        if (btns[i]) {
+            btns[i]->pixmap = GetPixmapForIcon(icons[i], isz, isz);
+        }
+    }
+}
+
+static void FindBarButtonClicked(FindBarWnd* bar, VirtMouseEvent* ev) {
+    auto* btn = (VirtIconButton*)ev->target;
+    bar->OnCommand((WPARAM)btn->id, 0);
+}
+
+void FindBarWnd::CreateButtons() {
+    static const int cmds[6] = {
+        CmdFindPrev,      CmdFindNext,       CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
+        kFindBarPinCmdId, kFindBarCloseCmdId};
+    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    int pad = DpiScale(hwnd, 4);
+    for (int i = 0; i < 6; i++) {
+        auto* b = new VirtIconButton();
+        b->id = cmds[i];
+        b->padding = Insets{pad, pad, pad, pad};
+        b->bgColorHover = AccentColor(colBg, 20);
+        b->bgColorSelected = AccentColor(colBg, 36);
+        b->SetTooltip(FindBarButtonTooltip(cmds[i]));
+        b->onClick = MkFunc1(FindBarButtonClicked, this);
+        btns[i] = b;
+    }
+    UpdateButtonIcons();
+}
+
+Size FindBarWnd::ButtonSize() const {
+    if (!btns[0]) {
+        return {};
+    }
+    Size sz = btns[0]->GetIdealSize();
+    sz.dx += btns[0]->padding.left + btns[0]->padding.right;
+    sz.dy += btns[0]->padding.top + btns[0]->padding.bottom;
+    return sz;
+}
+
+int FindBarWnd::ButtonIndexFromPoint(Point pt) {
+    for (int i = 0; i < 6; i++) {
+        if (btns[i] && btns[i]->BoundsInWindow().Contains(pt)) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 bool FindBarWnd::Create(MainWindow* mainWin) {
@@ -149,66 +218,32 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         win->hwndFindEdit = edit->hwnd;
     }
 
-    {
-        Static::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetAppFont(hwnd);
-        args.text = "";
-        args.isRtl = IsUIRtl();
-        status = new Static();
-        status->SetColors(colTxt, colBg);
-        status->Create(args);
-        // vertically center the single line of text so it lines up with the
-        // (taller, bordered) edit box's text instead of sitting at the top
-        HwndSetWindowStyle(status->hwnd, SS_CENTERIMAGE, true);
-    }
+    // ellipsis: single line, vertically centered, so it lines up with the
+    // (taller, bordered) edit box's text instead of sitting at the top
+    status = NewVirtText({
+        .font = GetPlatformFont(GetAppFont(hwnd)),
+        .textColor = colTxt,
+        .isRtl = IsUIRtl(),
+        .ellipsis = true,
+    });
+
+    CreateButtons();
 
     {
-        DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | TBSTYLE_TOOLTIPS | CCS_NODIVIDER |
-                      CCS_NORESIZE | CCS_NOPARENTALIGN;
-        DWORD exStyle = IsUIRtl() ? WS_EX_LAYOUTRTL : 0;
-        HINSTANCE hinst = GetModuleHandleW(nullptr);
-        hwndBtns = CreateWindowExW(exStyle, TOOLBARCLASSNAMEW, nullptr, style, 0, 0, 0, 0, hwnd, (HMENU) nullptr, hinst,
-                                   nullptr);
-        // drop the visual-style button background so the flat toolbar shows the
-        // bar's themed background instead of a light box in dark themes (the
-        // background is painted from NM_CUSTOMDRAW in WndProc)
-        SetWindowTheme(hwndBtns, L"", L"");
-        TbSetButtonStructSize(hwndBtns, sizeofi(TBBUTTON));
-
-        int isz = RoundUp(DpiScale(hwnd, 16), 4);
-        himl = BuildStdToolbarImageList(isz);
-        TbSetImageList(hwndBtns, himl);
-        TbSetButtonSize(hwndBtns, Size(isz, isz));
-
-        TBBUTTON b[6]{};
-        b[0].iBitmap = (int)TbIcon::ChevronUp;
-        b[0].idCommand = CmdFindPrev;
-        b[0].fsState = TBSTATE_ENABLED;
-        b[0].fsStyle = BTNS_BUTTON;
-        b[1].iBitmap = (int)TbIcon::ChevronDown;
-        b[1].idCommand = CmdFindNext;
-        b[1].fsState = TBSTATE_ENABLED;
-        b[1].fsStyle = BTNS_BUTTON;
-        b[2].iBitmap = (int)TbIcon::MatchCase;
-        b[2].idCommand = CmdFindToggleMatchCase;
-        b[2].fsState = TBSTATE_ENABLED;
-        b[2].fsStyle = BTNS_CHECK;
-        b[3].iBitmap = (int)TbIcon::MatchWholeWord;
-        b[3].idCommand = CmdFindToggleMatchWholeWord;
-        b[3].fsState = TBSTATE_ENABLED;
-        b[3].fsStyle = BTNS_CHECK;
-        b[4].iBitmap = (int)TbIcon::ArrowsDiagonal;
-        b[4].idCommand = kFindBarPinCmdId;
-        b[4].fsState = TBSTATE_ENABLED;
-        b[4].fsStyle = BTNS_BUTTON;
-        b[5].iBitmap = (int)TbIcon::Close;
-        b[5].idCommand = kFindBarCloseCmdId;
-        b[5].fsState = TBSTATE_ENABLED;
-        b[5].fsStyle = BTNS_BUTTON;
-        TbAddButtons(hwndBtns, 6, b);
-        TbAutosIZE(hwndBtns);
+        Tooltip::CreateArgs targs;
+        targs.parent = hwnd;
+        tooltip = new Tooltip();
+        tooltip->Create(targs);
     }
+
+    // the virtual controls of this window; it positions them itself in Layout()
+    vroot = new VirtRoot(hwnd);
+    Vec<VirtWnd*> tops;
+    tops.Append(status);
+    for (VirtIconButton* b : btns) {
+        tops.Append(b);
+    }
+    vroot->SetTops(tops);
 
     ApplyDarkModeToPopupWindow(hwnd);
     Layout();
@@ -225,9 +260,9 @@ constexpr int kFindBarResizeGripDx = 6;
 
 // left padding + gap + status + gap + toolbar + right padding
 int FindBarWnd::FixedDx() const {
-    Size tbSz = TbGetMaxSize(hwndBtns);
+    Size btnSz = ButtonSize();
     return (2 * DpiScale(hwnd, kFindBarPadding)) + (2 * DpiScale(hwnd, kFindBarGap)) +
-           DpiScale(hwnd, kFindBarStatusDx) + tbSz.dx;
+           DpiScale(hwnd, kFindBarStatusDx) + (btnSz.dx * 6);
 }
 
 int FindBarWnd::MinBarDx() const {
@@ -235,8 +270,8 @@ int FindBarWnd::MinBarDx() const {
 }
 
 void FindBarWnd::Layout(int forceBarDx) {
-    // WM_SIZE can arrive from CreateCustom, before the child controls exist
-    if (!edit || !status || !hwndBtns) {
+    // WM_SIZE can arrive from CreateCustom, before the controls exist
+    if (!edit || !status || !btns[0]) {
         return;
     }
     int p = DpiScale(hwnd, kFindBarPadding);
@@ -245,7 +280,8 @@ void FindBarWnd::Layout(int forceBarDx) {
 
     int editDy = edit->GetIdealSize().dy;
 
-    Size tbSz = TbGetMaxSize(hwndBtns);
+    Size btnSz = ButtonSize();
+    Size tbSz = {btnSz.dx * 6, btnSz.dy};
 
     int innerDy = std::max(editDy, tbSz.dy);
     barDy = innerDy + (2 * p);
@@ -260,12 +296,20 @@ void FindBarWnd::Layout(int forceBarDx) {
     }
     barDx = editDx + fixedDx;
 
+    if (vroot) {
+        vroot->SetBounds({0, 0, barDx, barDy});
+    }
     int x = p;
     MoveWindow(edit->hwnd, x, (barDy - editDy) / 2, editDx, editDy, TRUE);
     x += editDx + gap;
-    MoveWindow(status->hwnd, x, (barDy - editDy) / 2, statusDx, editDy, TRUE);
+    status->SetBounds({x, (barDy - editDy) / 2, statusDx, editDy});
     x += statusDx + gap;
-    MoveWindow(hwndBtns, x, (barDy - tbSz.dy) / 2, tbSz.dx, tbSz.dy, TRUE);
+    int btnY = (barDy - tbSz.dy) / 2;
+    for (VirtIconButton* b : btns) {
+        b->SetBounds({x, btnY, btnSz.dx, btnSz.dy});
+        x += btnSz.dx;
+    }
+    HwndInvalidate(hwnd);
 
     inLayout = true;
     SetWindowPos(hwnd, nullptr, 0, 0, barDx, barDy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -310,42 +354,22 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     }
     if (msg == WM_ERASEBKGND) {
-        HBRUSH br = BackgroundBrush();
-        if (br) {
-            HDC hdc = (HDC)wp;
-            HdcFillRect(hdc, HwndClientRect(h), br);
-            return 1;
-        }
+        return TRUE; // OnPaint covers the whole client area, double-buffered
     }
-    if (msg == WM_NOTIFY) {
-        // the embedded toolbar paints a light button background in dark themes;
-        // repaint it with the bar's theme background so the icons sit on the
-        // same color as the rest of the bar
-        auto* nmh = (NMHDR*)lp;
-        if (nmh->hwndFrom == hwndBtns && nmh->code == NM_CUSTOMDRAW) {
-            auto* cd = (NMTBCUSTOMDRAW*)nmh;
-            auto stage = cd->nmcd.dwDrawStage;
-            if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
-                // reuse the bar's cached background brush (rebuilt on theme change
-                // via SetColors) instead of allocating one per paint
-                HdcFillRect(cd->nmcd.hdc, ToRect(cd->nmcd.rc), BackgroundBrush());
-                return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
+    if (msg == WM_SETCURSOR) {
+        // the buttons are virtual controls, so their tooltips are ours to show
+        Point pt = HwndGetCursorPos(h);
+        int idx = ButtonIndexFromPoint(pt);
+        if (idx >= 0 && tooltip) {
+            TempStr tip = btns[idx]->GetTooltipTemp({});
+            if (tip) {
+                tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
             }
+        } else if (tooltip) {
+            tooltip->Delete();
         }
     }
     return WndProcDefault(h, msg, wp, lp);
-}
-
-LRESULT FindBarWnd::OnNotify(int /*controlId*/, NMHDR* nmh) {
-    if (nmh->code == TTN_GETDISPINFOW) {
-        auto* di = (NMTTDISPINFOW*)nmh;
-        TempStr s = FindBarButtonTooltip((int)nmh->idFrom);
-        if (s) {
-            str::BufSet(di->szText, dimof(di->szText), s);
-            di->lpszText = di->szText;
-        }
-    }
-    return 0;
 }
 
 bool FindBarWnd::PreTranslateMessage(MSG& msg) {
@@ -600,8 +624,25 @@ void FindBarSetStatus(MainWindow* win, Str s) {
         return;
     }
     if (win->findBar && win->findBar->status) {
-        HwndSetText(win->findBar->status->hwnd, s ? s : StrL(""));
+        win->findBar->status->SetText(s ? s : StrL(""));
+        win->findBar->status->Invalidate();
     }
+}
+
+// idx into FindBarWnd::btns
+constexpr int kBtnMatchCase = 2;
+constexpr int kBtnMatchWholeWord = 3;
+
+static void FindBarSetBtnChecked(MainWindow* win, int idx, bool checked) {
+    if (!win->findBar) {
+        return;
+    }
+    VirtIconButton* b = win->findBar->btns[idx];
+    if (!b || b->isSelected == checked) {
+        return;
+    }
+    b->isSelected = checked;
+    b->Invalidate();
 }
 
 // reflect match-case toggle state on the bar's button
@@ -610,9 +651,7 @@ void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
         FindWindowSetMatchCaseChecked(win, checked);
         return;
     }
-    if (win->findBar && win->findBar->hwndBtns) {
-        TbSetButtonChecked(win->findBar->hwndBtns, CmdFindToggleMatchCase, checked);
-    }
+    FindBarSetBtnChecked(win, kBtnMatchCase, checked);
 }
 
 // reflect match-whole-word toggle state on the bar's button
@@ -621,7 +660,5 @@ void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked) {
         FindWindowSetMatchWholeWordChecked(win, checked);
         return;
     }
-    if (win->findBar && win->findBar->hwndBtns) {
-        TbSetButtonChecked(win->findBar->hwndBtns, CmdFindToggleMatchWholeWord, checked);
-    }
+    FindBarSetBtnChecked(win, kBtnMatchWholeWord, checked);
 }

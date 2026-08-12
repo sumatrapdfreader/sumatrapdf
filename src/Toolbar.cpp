@@ -1665,17 +1665,6 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
     HwndScheduleRepaint(win->hwndToolbar);
 }
 
-// build an image list with all the standard toolbar icons; the FindBar uses
-// this for its own small toolbar (chevrons, match-case, close). Caller owns
-// the returned HIMAGELIST.
-HIMAGELIST BuildStdToolbarImageList(int dx) {
-    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, (int)TbIcon::kMax, 0);
-    HBITMAP hbmp = BuildIconsBitmap(dx, dx, nullptr, 0);
-    ImageList_Add(himl, hbmp, nullptr);
-    DeleteObject(hbmp);
-    return himl;
-}
-
 // screen-coordinates rect of a toolbar button, used to position the FindBar.
 // returns an empty rect when the toolbar isn't visible (e.g. fullscreen /
 // presentation) so the caller can fall back to a different anchor.
