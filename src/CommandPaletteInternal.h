@@ -42,7 +42,6 @@ struct CommandPaletteWnd : WindowBase {
     StrVecCP toc;
     StrVecCP favorites;
     VirtListBox* listBox = nullptr;
-    Static* staticInfo = nullptr;
 
     StrVec filterWords;
     Vec<u8> highlighted;
