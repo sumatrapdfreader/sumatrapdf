@@ -1597,7 +1597,7 @@ static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
     BOOL isMember = FALSE;
     DWORD highestGroup = 0;
     BOOL validTokenGroups = FALSE;
-    TOKEN_GROUPS* ptg = NULL;
+    TOKEN_GROUPS* ptg = nullptr;
     DWORD cbTokenGroups;
 
     BOOL ok = OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken) ||
@@ -1612,7 +1612,7 @@ static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
         // the token. Note that we expect a FALSE result from GetTokenInformation
         // because we've given it a NULL buffer. On exit cbTokenGroups will tell
         // the size of the group information.
-        if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &cbTokenGroups) &&
+        if (!GetTokenInformation(hToken, TokenGroups, nullptr, 0, &cbTokenGroups) &&
             GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
             // Allocate buffer and ask for the group information again.
             // This may fail if an administrator has added this account
@@ -1637,7 +1637,7 @@ static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
             }
 
             if (checkTokenForGroupDeny) {
-                CheckTokenMembership(0, psid, &isMember);
+                CheckTokenMembership(nullptr, psid, &isMember);
             } else if (validTokenGroups) {
                 isMember = FALSE;
                 for (DWORD j = 0; !isMember && (j < ptg->GroupCount); j++) {
@@ -3900,7 +3900,7 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
 HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
     HGLOBAL h = GlobalAlloc(flags, n);
     if (!h) {
-        return 0;
+        return nullptr;
     }
     void* d = GlobalLock(h);
     if (d) {

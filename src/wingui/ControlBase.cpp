@@ -374,7 +374,7 @@ void ControlBase::SetBounds(Rect bounds) {
 
 // A function used internally to call OnMessageReflect. Don't call or override this function.
 LRESULT ControlBase::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
-    HWND wnd = 0;
+    HWND wnd = nullptr;
     switch (msg) {
         case WM_COMMAND:
         case WM_CTLCOLORBTN:
@@ -889,4 +889,3 @@ void SizeToIdealSize(ControlBase* c) {
     RECT r{0, 0, size.dx, size.dy};
     c->SetBounds(r);
 }
-

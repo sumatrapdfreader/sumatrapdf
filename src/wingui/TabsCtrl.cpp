@@ -725,7 +725,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
                 Rect r = hlWnd->bounds;
                 HIMAGELIST himl = ImageList_Create(r.dx, r.dy, 0, 1, 0);
-                ImageList_Add(himl, hbmp, NULL);
+                ImageList_Add(himl, hbmp, nullptr);
                 ImageList_BeginDrag(himl, 0, grabLocation.x, grabLocation.y);
                 DeleteObject(hbmp);
                 DeleteObject(himl);

@@ -4159,11 +4159,11 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
 static fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
                                                    fz_cookie* cookie) {
     fz_stext_page* text;
-    fz_device* dev = NULL;
+    fz_device* dev = nullptr;
 
     fz_var(dev);
 
-    if (page == NULL) return NULL;
+    if (page == nullptr) return nullptr;
 
     text = fz_new_stext_page(ctx, fz_bound_page(ctx, page));
     fz_try(ctx) {
@@ -5265,7 +5265,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
             dev = fz_new_draw_device(ctx, ctm, pix);
-            fz_run_page_contents(ctx, page, dev, fz_identity, NULL);
+            fz_run_page_contents(ctx, page, dev, fz_identity, nullptr);
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
             pixmap = NewPixmapFromFzPixmap(ctx, pix);

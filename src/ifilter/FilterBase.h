@@ -155,7 +155,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
                                     QITABENTMULTI(FilterBase, IPersist, IPersistStream),
                                     QITABENT(FilterBase, IInitializeWithStream),
                                     QITABENT(FilterBase, IFilter),
-                                    {0}};
+                                    {}};
         return QISearch(this, qit, riid, ppv);
     }
     IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }

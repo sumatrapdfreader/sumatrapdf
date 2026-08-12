@@ -444,7 +444,7 @@ static void visitTree(VistorForPageNoData* d, TreeItemVisitorData* vd) {
 static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
     TreeModel* tm = treeView->treeModel;
     if (!tm) {
-        return 0;
+        return nullptr;
     }
     VistorForPageNoData d;
     d.pageNo = pageNo;
@@ -453,7 +453,7 @@ static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
     // if there's only one item, we want to unselect it so that it can
     // be selected by the user
     if (d.nItems < 2) {
-        return 0;
+        return nullptr;
     }
     return d.bestMatch;
 }

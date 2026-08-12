@@ -354,7 +354,7 @@ void WindowBase::SetPos(Rect* r) {
 
 // A function used internally to call OnMessageReflect. Don't call or override this function.
 LRESULT WindowBase::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
-    HWND wnd = 0;
+    HWND wnd = nullptr;
     switch (msg) {
         case WM_COMMAND:
         case WM_CTLCOLORBTN:

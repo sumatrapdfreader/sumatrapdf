@@ -185,26 +185,26 @@ bool IsPEFileSigned(Str filePath) {
     WINTRUST_FILE_INFO fileInfo = {};
     fileInfo.cbStruct = sizeof(WINTRUST_FILE_INFO);
     fileInfo.pcwszFilePath = ws;
-    fileInfo.hFile = NULL;
-    fileInfo.pgKnownSubject = NULL;
+    fileInfo.hFile = nullptr;
+    fileInfo.pgKnownSubject = nullptr;
 
     GUID actionGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
     WINTRUST_DATA trustData = {};
 
     trustData.cbStruct = sizeof(WINTRUST_DATA);
-    trustData.pPolicyCallbackData = NULL;
-    trustData.pSIPClientData = NULL;
+    trustData.pPolicyCallbackData = nullptr;
+    trustData.pSIPClientData = nullptr;
     trustData.dwUIChoice = WTD_UI_NONE;
     trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
     trustData.dwUnionChoice = WTD_CHOICE_FILE;
     trustData.dwStateAction = WTD_STATEACTION_IGNORE;
-    trustData.hWVTStateData = NULL;
-    trustData.pwszURLReference = NULL;
+    trustData.hWVTStateData = nullptr;
+    trustData.pwszURLReference = nullptr;
     trustData.dwProvFlags = WTD_SAFER_FLAG;
     trustData.dwUIContext = 0;
     trustData.pFile = &fileInfo;
 
-    LONG status = WinVerifyTrust(NULL, &actionGUID, &trustData);
+    LONG status = WinVerifyTrust(nullptr, &actionGUID, &trustData);
 
     if (status == ERROR_SUCCESS) {
         return true; // File is signed and signature is valid

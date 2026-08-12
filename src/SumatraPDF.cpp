@@ -8093,7 +8093,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         AddUniquePageNo(pageNos, pageNo);
     }
     if (len(pageNos) == 0) {
-        return 0;
+        return nullptr;
     }
 
     if (args->setContentToSelection) {

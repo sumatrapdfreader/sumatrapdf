@@ -565,7 +565,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
         return {};
     }
     UINT acp = GetACP();
-    int wLen = MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, NULL, 0);
+    int wLen = MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, nullptr, 0);
     if (wLen == 0) {
         return {};
     }
@@ -576,7 +576,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, wBuf, wLen) == 0) {
         return {};
     }
-    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, NULL, 0, NULL, NULL);
+    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, nullptr, 0, nullptr, nullptr);
     if (utf8Len == 0) {
         return {};
     }
@@ -584,7 +584,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (!utf8Buf) {
         return {};
     }
-    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf, utf8Len, NULL, NULL) == 0) {
+    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf, utf8Len, nullptr, nullptr) == 0) {
         free(utf8Buf);
         return {};
     }
@@ -636,7 +636,7 @@ static TempStr DealPlainSync(TempStr pathSync) {
         return {};
     }
     TempStr srcZ = str::DupTemp(src);
-    int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, NULL, 0);
+    int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, nullptr, 0);
     if (wlen != 0) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
         return pathSync;

@@ -32,7 +32,7 @@ class PdfPreview : public IThumbnailProvider,
                                     QITABENT(PdfPreview, IObjectWithSite),
                                     QITABENT(PdfPreview, IPreviewHandler),
                                     QITABENT(PdfPreview, IOleWindow),
-                                    {0}};
+                                    {}};
         return QISearch(this, qit, riid, ppv);
     }
     IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }

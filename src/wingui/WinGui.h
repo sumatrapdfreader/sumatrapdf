@@ -42,7 +42,7 @@ struct CreateControlArgs {
     DWORD style = 0;
     DWORD exStyle = 0;
     Rect pos;
-    HMENU ctrlId = 0;
+    HMENU ctrlId = nullptr;
     bool visible = true;
     HFONT font = nullptr;
     Str text;
