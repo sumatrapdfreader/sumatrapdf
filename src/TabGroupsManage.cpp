@@ -438,7 +438,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
 
     {
         listBox = new VirtListBox();
-        listBox->hwndForDpi = hwnd;
+        listBox->dpi = GetDpi();
         listBox->font = GetPlatformFont(font);
         listBox->onDrawItem = MkFunc1(DrawTabGroupItem, this);
         listBox->onSelectionChanged = MkMethod0<TabGroupsWnd, &TabGroupsWnd::UpdateDeleteButton>(this);

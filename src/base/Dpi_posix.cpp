@@ -26,8 +26,15 @@ int DpiGet(HWND hwnd) {
     return DpiGetForHwnd(hwnd);
 }
 
+int DpiScaleByDpi(int dpi, int n) {
+    if (dpi <= 0) {
+        dpi = 96;
+    }
+    return (int)(((i64)n * dpi) / 96);
+}
+
 int DpiScale(HWND hwnd, int x) {
-    return (int)(((i64)x * DpiGet(hwnd)) / 96);
+    return DpiScaleByDpi(DpiGet(hwnd), x);
 }
 
 void DpiScale(HWND hwnd, int& x1, int& x2) {

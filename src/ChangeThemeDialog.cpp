@@ -302,7 +302,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     if (!documentColorsFollowThemeOnly) {
         int n = ThemeGetCount();
         auto* c = new VirtListBox();
-        c->hwndForDpi = hwnd;
+        c->dpi = GetDpi();
         c->font = platformFont;
         listBox = c;
         model = new ListBoxModelStrings();

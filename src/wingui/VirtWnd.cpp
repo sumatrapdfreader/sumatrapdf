@@ -1409,9 +1409,9 @@ VirtListBox::~VirtListBox() {
 
 // scaling has to work before the tree is attached to a window, which is when
 // the owner asks for the row height to decide how tall to make the window
-HWND VirtListBox::HwndForDpi() {
+int VirtListBox::GetDpi() {
     HWND h = GetHwnd();
-    return h ? h : hwndForDpi;
+    return h ? DpiGet(h) : dpi;
 }
 
 int VirtListBox::ItemsCount() {
@@ -1423,7 +1423,7 @@ int VirtListBox::GetItemHeight() {
         return itemDy;
     }
     Size sz = PlatformFontMeasureText(font, "Ag");
-    int dy = sz.dy + DpiScale(HwndForDpi(), 4);
+    int dy = sz.dy + DpiScaleByDpi(GetDpi(), 4);
     if (dy < 1) {
         dy = 1;
     }
@@ -1453,7 +1453,7 @@ int VirtListBox::ScrollbarDx() {
     if (MaxScrollY() <= 0) {
         return 0;
     }
-    return DpiScale(HwndForDpi(), 10);
+    return DpiScaleByDpi(GetDpi(), 10);
 }
 
 Rect VirtListBox::ContentRectLocal() {
@@ -1487,7 +1487,7 @@ Rect VirtListBox::ThumbRectLocal() {
     }
     int contentDy = ItemsCount() * GetItemHeight();
     int visibleDy = UsableDy();
-    int minDy = DpiScale(HwndForDpi(), 20);
+    int minDy = DpiScaleByDpi(GetDpi(), 20);
     int thumbDy = Scale(sb.dy, visibleDy, contentDy);
     thumbDy = Clamp(thumbDy, std::min(minDy, sb.dy), sb.dy);
     int maxY = MaxScrollY();
@@ -1501,7 +1501,7 @@ Size VirtListBox::GetIdealSize() {
         nLines = std::min(ItemsCount(), 16);
         nLines = std::max(nLines, 1);
     }
-    int dx = (idealSizeDx > 0) ? idealSizeDx : DpiScale(HwndForDpi(), 120);
+    int dx = (idealSizeDx > 0) ? idealSizeDx : DpiScaleByDpi(GetDpi(), 120);
     int dy = (GetItemHeight() * nLines) + padding.top + padding.bottom;
     return {dx, dy};
 }
@@ -1670,7 +1670,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
                 GfxFillRect(ctx.gfx, r, colSel);
             }
             Rect rt = r;
-            rt.SubLR(DpiScale(HwndForDpi(), 4), 0);
+            rt.SubLR(DpiScaleByDpi(GetDpi(), 4), 0);
             GfxDrawText(ctx.gfx, model->Item(i), rt, gfxTextEllipsis, font, textColor);
         }
     }

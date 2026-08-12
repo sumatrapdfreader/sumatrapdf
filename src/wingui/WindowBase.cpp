@@ -896,6 +896,10 @@ HFONT WindowBase::GetFont() {
     return font;
 }
 
+int WindowBase::GetDpi() const {
+    return DpiGet(hwnd);
+}
+
 // HwndSetFont() sends WM_SETFONT, which our wndproc records in `font` and (for
 // subclassed controls) forwards to the control itself, so this both remembers
 // and applies the font. Without it SetFont() was a no-op on screen.

@@ -595,7 +595,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         // keys into selection changes itself), so the list doesn't take the
         // focus and doesn't show a focus ring
         c->SetFlag(vwfFocusable, false);
-        c->hwndForDpi = hwnd;
+        c->dpi = GetDpi();
         c->font = GetPlatformFont(font);
         c->textColor = colTxt;
         c->bgColor = colBg;

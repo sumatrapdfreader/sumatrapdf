@@ -814,7 +814,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
 
     {
         auto* c = new VirtListBox();
-        c->hwndForDpi = hwnd;
+        c->dpi = GetDpi();
         c->font = platformFont;
         c->textColor = colTxt;
         c->bgColor = colBg;

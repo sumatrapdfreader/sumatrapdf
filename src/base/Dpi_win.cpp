@@ -94,10 +94,15 @@ int DpiGet(HWND hwnd) {
     return dpi;
 }
 
+int DpiScaleByDpi(int dpi, int n) {
+    if (dpi <= 0) {
+        dpi = 96;
+    }
+    return MulDiv(n, dpi, 96);
+}
+
 int DpiScale(HWND hwnd, int x) {
-    int dpi = DpiGet(hwnd);
-    int res = MulDiv(x, dpi, 96);
-    return res;
+    return DpiScaleByDpi(DpiGet(hwnd), x);
 }
 
 void DpiScale(HWND hwnd, int& x1, int& x2) {

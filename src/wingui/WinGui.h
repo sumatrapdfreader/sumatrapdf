@@ -138,6 +138,9 @@ struct WindowBase {
     HFONT GetFont();
     void SetFont(HFONT font);
 
+    // dpi of the monitor this window is on
+    int GetDpi() const;
+
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;
 

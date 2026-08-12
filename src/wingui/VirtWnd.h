@@ -386,8 +386,8 @@ struct VirtListBox : VirtWnd {
     // 0 means "derive from the font"
     int itemDy = 0;
     // for scaling before the tree is attached to a window (GetHwnd() is null
-    // until then)
-    HWND hwndForDpi = nullptr;
+    // until then); once it is, the window's own dpi wins
+    int dpi = 96;
 
     int scrollY = 0;
 
@@ -434,7 +434,7 @@ struct VirtListBox : VirtWnd {
     int dragStartY = 0;
     int dragStartScrollY = 0;
 
-    HWND HwndForDpi();
+    int GetDpi();
     int ScrollbarDx();
     Rect ContentRectLocal();
     Rect ItemsRectLocal();

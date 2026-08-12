@@ -12,6 +12,9 @@ extern int gDpiOverride;
 int DpiGetForHwnd(HWND);
 int DpiGet(HWND);
 void DpiSetWineOverride(int dpi);
+// for code that has a dpi rather than a window (a control that isn't
+// attached to one yet). dpi <= 0 means 96 (unscaled)
+int DpiScaleByDpi(int dpi, int n);
 int DpiScale(HWND, int);
 void DpiScale(HWND, int&, int&);
 

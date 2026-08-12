@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
+#include "base/Dpi.h"
 #include "base/UITask.h"
 
 extern "C" {
@@ -1458,7 +1459,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         auto* w = new VirtListBox();
-        w->hwndForDpi = parent;
+        w->dpi = ew->GetDpi();
         w->font = GetPlatformFont(fnt);
         w->textColor = ThemeWindowTextColor();
         w->bgColor = ThemeWindowControlBackgroundColor();
