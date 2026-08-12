@@ -130,10 +130,17 @@ void ChmModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
 
 // the following is specific to ChmModel
 bool ChmModel::SetParentHwnd(HWND hwnd) {
-    // can be already set if tab was restored at startup and then switched away
-    // without going through the normal CloseDocumentInCurrentTab path
-    if (docView || htmlWindowCb) {
-        RemoveParentHwnd();
+    // reuse the existing browser when switching back to this tab: creating a
+    // WebView2 is expensive, so we only hide it in RemoveParentHwnd
+    if (docView) {
+        if (docView->GetParentHwnd() == hwnd) {
+            docView->SetVisible(true);
+            return true;
+        }
+        delete docView;
+        docView = nullptr;
+        delete htmlWindowCb;
+        htmlWindowCb = nullptr;
     }
     htmlWindowCb = new HtmlWindowHandler(this);
     docView = BrowserDocView::Create(hwnd, htmlWindowCb);
@@ -142,17 +149,27 @@ bool ChmModel::SetParentHwnd(HWND hwnd) {
         htmlWindowCb = nullptr;
         return false;
     }
+    docView->SetVisible(true);
     return true;
 }
 
 void ChmModel::RemoveParentHwnd() {
+    if (!docView) {
+        return;
+    }
+    // remember where we were so it can be restored when the view is shown again
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
+    docView->SetVisible(false);
+}
+
+void ChmModel::DestroyParentHwnd() {
     if (!docView && !htmlWindowCb) {
         return;
     }
-    // remember where we were so it can be restored when the view is recreated
-    // (e.g. when switching back to this tab)
     SaveHtmlScrollPos();
     restoreHtmlScrollPos = true;
+    // DestroyWindow inside ~BrowserDocView / ~WebviewWnd pumps messages
     delete docView;
     docView = nullptr;
     delete htmlWindowCb;

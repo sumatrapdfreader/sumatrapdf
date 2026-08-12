@@ -17,6 +17,13 @@ class BrowserDocView {
     static BrowserDocView* Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix = {});
     ~BrowserDocView();
 
+    // show/hide without destroying the browser (tab switch). Creating a WebView2
+    // is expensive, so markdown/CHM keep the view and only hide it when leaving
+    // the tab; SetVisible(true) reattaches the canvas subclass and shows it.
+    void SetVisible(bool visible);
+    bool IsVisible() const;
+    HWND GetParentHwnd() const { return hwndParent; }
+
     void NavigateToDataUrl(Str url);
     void GoBack();
     void GoForward();
@@ -60,7 +67,9 @@ class BrowserDocView {
     WStr virtualHostW;
 
     bool CreateWebView2();
+    void SubclassParent();
     void UnsubclassParent();
+    bool visible = false;
     static LRESULT CALLBACK ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
                                           DWORD_PTR data);
     static bool ResourceGet(void* ctx, Str path, WebViewResourceResult* res);

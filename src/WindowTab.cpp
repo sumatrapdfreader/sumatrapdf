@@ -57,6 +57,25 @@ WindowTab::~WindowTab() {
     // whatever a close path forgot, nothing may be left pointing at a tab that
     // is going away (the read-aloud playback bar holds one)
     ReadAloudForgetTab(this);
+    // Drop MainWindow pointers into this tab / its controller before we free
+    // them: DestroyWindow during WebView teardown can re-enter the canvas
+    // WndProc, which reads win->ctrl / CurrentTab().
+    if (win) {
+        if (win->ctrl == ctrl) {
+            win->ctrl = nullptr;
+        }
+        if (win->currentTabTemp == this) {
+            win->currentTabTemp = nullptr;
+        }
+    }
+    // Full browser teardown next (not mere hide). DestroyWindow pumps; with
+    // win->ctrl already nulled (and isBeingClosed on window close), canvas
+    // re-entry must not touch a freed DisplayModel.
+    if (AsChm()) {
+        AsChm()->DestroyParentHwnd();
+    } else if (AsMarkdown()) {
+        AsMarkdown()->DestroyParentHwnd();
+    }
     if (hwndPDFInfo) {
         DestroyWindow(hwndPDFInfo);
         hwndPDFInfo = nullptr;
@@ -67,11 +86,6 @@ WindowTab::~WindowTab() {
     }
     CloseAndDeleteEditAnnotationsWindow(this);
     FileWatcherUnsubscribe(watcher);
-    if (AsChm()) {
-        AsChm()->RemoveParentHwnd();
-    } else if (AsMarkdown()) {
-        AsMarkdown()->RemoveParentHwnd();
-    }
     delete selectionOnPage;
     // technically we only need to clear ctrl == gMostRecentlyOpenedDoc
     // but gMostRecentlyOpenedDoc is only for dde commands

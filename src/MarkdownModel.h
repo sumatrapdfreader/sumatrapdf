@@ -47,7 +47,10 @@ struct MarkdownModel : DocController {
     static bool IsHtmlFileType(FileType);
 
     bool SetParentHwnd(HWND hwnd);
+    // hide for tab switch (keep WebView2 for fast re-show)
     void RemoveParentHwnd();
+    // full teardown (tab/window close); DestroyWindow can pump messages
+    void DestroyParentHwnd();
 
     void PrintCurrentPage(bool showUI) const;
     void FindInCurrentPage() const;

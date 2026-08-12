@@ -304,8 +304,18 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
 }
 
 bool MarkdownModel::SetParentHwnd(HWND hwnd) {
-    if (docView || htmlWindowCb) {
-        RemoveParentHwnd();
+    // reuse the existing browser when switching back to this tab: creating a
+    // WebView2 is hundreds of ms, so we only hide it in RemoveParentHwnd
+    if (docView) {
+        if (docView->GetParentHwnd() == hwnd) {
+            docView->SetVisible(true);
+            return true;
+        }
+        // different parent (shouldn't happen for a tab): rebuild
+        delete docView;
+        docView = nullptr;
+        delete htmlWindowCb;
+        htmlWindowCb = nullptr;
     }
     htmlWindowCb = new MarkdownHtmlWindowHandler(this);
     docView = BrowserDocView::Create(hwnd, htmlWindowCb, Str(kMdVirtualHost));
@@ -314,15 +324,27 @@ bool MarkdownModel::SetParentHwnd(HWND hwnd) {
         htmlWindowCb = nullptr;
         return false;
     }
+    docView->SetVisible(true);
     return true;
 }
 
 void MarkdownModel::RemoveParentHwnd() {
+    if (!docView) {
+        return;
+    }
+    // keep the browser alive (hidden) so the next SetParentHwnd is cheap
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
+    docView->SetVisible(false);
+}
+
+void MarkdownModel::DestroyParentHwnd() {
     if (!docView && !htmlWindowCb) {
         return;
     }
     SaveHtmlScrollPos();
     restoreHtmlScrollPos = true;
+    // DestroyWindow inside ~BrowserDocView / ~WebviewWnd pumps messages
     delete docView;
     docView = nullptr;
     delete htmlWindowCb;

@@ -792,12 +792,15 @@ void TabsOnCloseWindow(MainWindow* win) {
     if (!win->tabsCtrl) {
         return;
     }
+    // Clear these BEFORE destroying tabs. Deleting a Markdown/CHM tab destroys
+    // its WebView2, which pumps messages; canvas WndProc then called AsFixed()
+    // on win->ctrl after another tab's DisplayModel had already been freed.
+    win->ctrl = nullptr;
+    win->currentTabTemp = nullptr;
     auto tabs = win->Tabs();
     DeleteVecMembers(tabs);
     win->tabsCtrl->RemoveAllTabs();
     win->tabSelectionHistory->Reset();
-    win->currentTabTemp = nullptr;
-    win->ctrl = nullptr;
 }
 
 void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {

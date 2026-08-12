@@ -370,6 +370,20 @@ static int ChmResolveAccelCmd(void* /*user*/, u16 vk, bool ctrl, bool shift, boo
     return SafeAcceleratorCmd(vk, ctrl, shift, alt);
 }
 
+void BrowserDocView::SubclassParent() {
+    if (subclassId || !hwndParent) {
+        return;
+    }
+    subclassId = NextSubclassId();
+    BOOL ok = SetWindowSubclass(hwndParent, ParentWndProc, subclassId, (DWORD_PTR)this);
+    if (!ok) {
+        logf("BrowserDocView: SetWindowSubclass() failed, err: %d\n", (int)GetLastError());
+        subclassId = 0;
+        return;
+    }
+    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
+}
+
 void BrowserDocView::UnsubclassParent() {
     if (!subclassId || !hwndParent) {
         return;
@@ -380,6 +394,51 @@ void BrowserDocView::UnsubclassParent() {
         SetWindowLongPtr(hwndParent, GWLP_USERDATA, 0);
     }
     subclassId = 0;
+}
+
+bool BrowserDocView::IsVisible() const {
+    return visible;
+}
+
+// show/hide without destroying WebView2 / IE. Creating a browser is slow, so
+// tab switches hide the view and show it again instead of recreate.
+void BrowserDocView::SetVisible(bool show) {
+    if (visible == show) {
+        if (show) {
+            // still refresh size in case the canvas resized while we were hidden
+            if (backend == Backend::WebView2 && wv && wv->hwnd && hwndParent) {
+                Rect rc = HwndClientRect(hwndParent);
+                wv->SetPos(&rc);
+                wv->UpdateWebviewSize();
+            }
+        }
+        return;
+    }
+    visible = show;
+    if (show) {
+        SubclassParent();
+        if (backend == Backend::WebView2 && wv) {
+            if (wv->hwnd && hwndParent) {
+                Rect rc = HwndClientRect(hwndParent);
+                wv->SetPos(&rc);
+                ::ShowWindow(wv->hwnd, SW_SHOW);
+            }
+            wv->SetControllerVisible(true);
+            wv->UpdateWebviewSize();
+        } else if (backend == Backend::IE && ie && ie->oleObjectHwnd) {
+            HwndSetVisible(ie->oleObjectHwnd, true);
+        }
+        return;
+    }
+    if (backend == Backend::WebView2 && wv) {
+        wv->SetControllerVisible(false);
+        if (wv->hwnd) {
+            ::ShowWindow(wv->hwnd, SW_HIDE);
+        }
+    } else if (backend == Backend::IE && ie && ie->oleObjectHwnd) {
+        HwndSetVisible(ie->oleObjectHwnd, false);
+    }
+    UnsubclassParent();
 }
 
 LRESULT BrowserDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
@@ -447,6 +506,9 @@ bool BrowserDocView::CreateWebView2() {
     wv->allowExternalDrop = false;
     // don't host downloads inside the document viewer (issue #5920)
     wv->routeDownloadsToOsBrowser = true;
+    // stay hidden until SetVisible(true); OnControllerReady is async and must
+    // not flash over another tab while this one is still being set up
+    wv->desiredVisible = false;
 
     Rect rc = HwndClientRect(hwndParent);
     CreateWebViewArgs cargs;
@@ -461,14 +523,6 @@ bool BrowserDocView::CreateWebView2() {
     wv->Init(kReportScrollJs);
     wv->Init(kFindInPageJs);
 
-    subclassId = NextSubclassId();
-    BOOL ok = SetWindowSubclass(hwndParent, ParentWndProc, subclassId, (DWORD_PTR)this);
-    if (!ok) {
-        // can fail under low memory / desktop heap exhaustion, so don't assert
-        logf("BrowserDocView: SetWindowSubclass() failed, err: %d\n", (int)GetLastError());
-        subclassId = 0;
-    }
-    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
     backend = Backend::WebView2;
     return true;
 }
@@ -491,6 +545,7 @@ BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, 
 
 #ifdef _MSC_VER
     if (HasWebView() && view->CreateWebView2()) {
+        // leave hidden; caller shows with SetVisible(true) when the tab is active
         return view;
     }
 #endif
@@ -498,6 +553,10 @@ BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, 
     view->ie = HtmlWindow::Create(hwndParent, cb);
     if (view->ie) {
         view->backend = Backend::IE;
+        // hide IE until the tab is shown
+        if (view->ie->oleObjectHwnd) {
+            HwndSetVisible(view->ie->oleObjectHwnd, false);
+        }
         return view;
     }
 

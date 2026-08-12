@@ -155,6 +155,11 @@ struct WebviewWnd : WindowBase {
 
     bool initStarted = false;
     bool initFailed = false;
+    // desired visibility: OnControllerReady respects this so a host can create
+    // the control hidden (tab probe / deferred show) without the async ready
+    // callback flipping it visible again. Default true matches hosts that call
+    // SetIsVisible(true) after Create; BrowserDocView clears it until show.
+    bool desiredVisible = true;
     bool isVisible = true;
     bool isSuspended = false;
     bool isInSizeMove = false;

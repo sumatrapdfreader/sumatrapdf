@@ -1145,6 +1145,7 @@ void WebviewWnd::FailInit() {
 }
 
 void WebviewWnd::SetControllerVisible(bool visible) {
+    desiredVisible = visible;
     if (visible == isVisible) {
         if ((visible && !isSuspended) || (!visible && isSuspended)) {
             return;
@@ -1314,11 +1315,17 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     initStarted = true;
     FlushPendingOps();
 
-    bool wantVisible = ShouldWebviewBeVisible(hwnd);
+    // honor desiredVisible (SetControllerVisible) so BrowserDocView can create
+    // hidden during a tab probe without the async ready callback showing it
+    bool wantVisible = desiredVisible && ShouldWebviewBeVisible(hwnd);
     if (wantVisible) {
         ::ShowWindow(hwnd, SW_SHOW);
+    } else {
+        ::ShowWindow(hwnd, SW_HIDE);
     }
-    SetControllerVisible(wantVisible);
+    bool want = desiredVisible;
+    isVisible = !want; // force SetControllerVisible to apply
+    SetControllerVisible(want);
 }
 
 void WebviewWnd::UpdateWebviewSize() {

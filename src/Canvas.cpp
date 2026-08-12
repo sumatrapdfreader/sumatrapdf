@@ -5030,6 +5030,12 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    // Window close deletes controllers while DestroyWindow (WebView2, etc.) can
+    // still deliver canvas messages; don't touch win->ctrl after that starts.
+    if (win->isBeingClosed) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
     // reveal/hide the floating overlay toolbar as the mouse approaches the top;
     // don't consume the message, just observe it
     if (msg == WM_MOUSEMOVE && win->isToolbarOverlay) {
