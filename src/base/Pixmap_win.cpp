@@ -361,6 +361,12 @@ void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, 
     }
 }
 
+static Size GetBitmapSize(HBITMAP hbmp) {
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+    return {bmpInfo.bmWidth, bmpInfo.bmHeight};
+}
+
 // Returns a copy of the clipboard bitmap as a platform-independent Pixmap.
 Pixmap* GetClipboardImageAsPixmap() {
     if (!IsClipboardFormatAvailable(CF_BITMAP) || !OpenClipboard(nullptr)) {

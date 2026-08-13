@@ -229,18 +229,6 @@ bool DeleteObjectSafe(HGDIOBJ*);
 bool DeleteBrushSafe(HBRUSH*);
 bool DestroyIconSafe(HICON*);
 
-struct BitmapPixels {
-    u8* pixels;
-    Size size;
-    int nBytes;
-    int nBytesPerPixel;
-    int nBytesPerRow;
-
-    HBITMAP hbmp;
-    BITMAPINFO bmi;
-    HDC hdc;
-};
-
 struct RenderedBitmap;
 
 // A Windows present-layer bitmap handle: an HBITMAP (+ optional file mapping) that can be
@@ -263,10 +251,6 @@ struct RenderedBitmap {
 
 i64 RenderedBitmapByteSize(RenderedBitmap*);
 
-Size GetBitmapSize(HBITMAP hbmp);
-BitmapPixels* GetBitmapPixels(HBITMAP hbmp);
-void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
-Color GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor = 0,
                         Vec<Rect>* skipRects = nullptr);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);

@@ -2688,107 +2688,11 @@ void HwndHide(HWND hwnd) {
 
 //--- GDI: bitmaps / pixmaps
 
-Size GetBitmapSize(HBITMAP hbmp) {
-    BITMAP bmpInfo;
-    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    return {bmpInfo.bmWidth, bmpInfo.bmHeight};
-}
-
 // cf. fz_mul255 in fitz.h
 static inline int mul255(int a, int b) {
     int x = (a * b) + 128;
     x += x >> 8;
     return x >> 8;
-}
-
-void FinalizeBitmapPixels(BitmapPixels* bitmapPixels) {
-    HDC hdc = bitmapPixels->hdc;
-    if (hdc) {
-        SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels,
-                  &bitmapPixels->bmi, DIB_RGB_COLORS);
-        DeleteDC(hdc);
-    }
-    free(bitmapPixels);
-}
-
-static bool IsPalettedBitmap(DIBSECTION& info, int nBytes) {
-    return sizeof(info) == nBytes && info.dsBmih.biBitCount != 0 && info.dsBmih.biBitCount <= 8;
-}
-
-Color GetPixel(BitmapPixels* bitmap, int x, int y) {
-    ReportIf(x < 0 || x >= bitmap->size.dx);
-    ReportIf(y < 0 || y >= bitmap->size.dy);
-    u8* pixels = bitmap->pixels;
-    u8* pixel = pixels + ((size_t)y * bitmap->nBytesPerRow) + ((size_t)x * bitmap->nBytesPerPixel);
-    // color order in DIB is blue-green-red-alpha
-    Color c = 0;
-    if (3 == bitmap->nBytesPerPixel) {
-        c = MkRgb(pixel[2], pixel[1], pixel[0]);
-    } else if (4 == bitmap->nBytesPerPixel) {
-        c = MkRgb(pixel[3], pixel[2], pixel[1]);
-    } else {
-        ReportIf(true);
-    }
-    return c;
-}
-
-BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
-    BitmapPixels* res = AllocStruct<BitmapPixels>();
-
-    DIBSECTION info{};
-    int nBytes = GetObject(hbmp, sizeof(info), &info);
-    ReportIf(nBytes < sizeof(info.dsBm));
-    Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
-
-    res->size = size;
-    res->hbmp = hbmp;
-
-    if (nBytes >= sizeof(info.dsBm)) {
-        res->pixels = (u8*)info.dsBm.bmBits;
-    }
-
-    // for mapped 32-bit DI bitmaps: directly access the pixel data
-    if (res->pixels && 32 == info.dsBm.bmBitsPixel && size.dx * 4 == info.dsBm.bmWidthBytes) {
-        res->nBytesPerPixel = 4;
-        res->nBytesPerRow = info.dsBm.bmWidthBytes;
-        res->nBytes = size.dx * size.dy * 4;
-        return res;
-    }
-
-    // for mapped 24-bit DI bitmaps: directly access the pixel data
-    if (res->pixels && 24 == info.dsBm.bmBitsPixel && info.dsBm.bmWidthBytes >= size.dx * 3) {
-        res->nBytesPerPixel = 3;
-        res->nBytesPerRow = info.dsBm.bmWidthBytes;
-        res->nBytes = size.dx * size.dy * 4;
-        return res;
-    }
-
-    // we don't support paletted DI bitmaps
-    if (IsPalettedBitmap(info, nBytes)) {
-        FinalizeBitmapPixels(res);
-        return nullptr;
-    }
-
-    BITMAPINFO bmi{};
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = size.dx;
-    bmi.bmiHeader.biHeight = size.dy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    HDC hdc = CreateCompatibleDC(nullptr);
-    int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<u8> bmpData((u8*)malloc(bmpBytes));
-    ReportIf(!bmpData);
-
-    if (!GetDIBits(hdc, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
-        DeleteDC(hdc);
-        FinalizeBitmapPixels(res);
-        return nullptr;
-    }
-    res->hdc = hdc;
-    return res;
 }
 
 // Recolor a rendered page bitmap: map black->textColor and white->bgColor
