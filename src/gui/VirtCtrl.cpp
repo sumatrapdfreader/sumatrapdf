@@ -1396,7 +1396,7 @@ Rect VirtListBox::ScrollbarRectLocal() {
 // null when there is nothing to scroll
 Rect VirtListBox::ThumbRectLocal() {
     Rect sb = ScrollbarRectLocal();
-    if (!sb.IsEmpty()) {
+    if (sb.IsEmpty()) {
         return {};
     }
     int contentDy = ItemsCount() * GetItemHeight();
