@@ -93,33 +93,6 @@ IDB_RELOADING_CUE       BITMAP                  "reloading.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 
-IDD_DIALOG_SETTINGS DIALOGEX 0, 0, 240, 223
-STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Settings"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    GROUPBOX        "View",IDC_SECTION_VIEW,6,6,228,75
-    LTEXT           "Default &Layout:",IDC_DEFAULT_LAYOUT_LABEL,12,19,108,9
-    COMBOBOX        IDC_DEFAULT_LAYOUT,120,17,108,64,CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "Default &Zoom:",IDC_DEFAULT_ZOOM_LABEL,12,36,108,9
-    COMBOBOX        IDC_DEFAULT_ZOOM,120,34,108,149,CBS_DROPDOWN | WS_TABSTOP
-    CONTROL         "Show the &bookmarks sidebar when available",IDC_DEFAULT_SHOW_TOC,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,53,216,9
-    CONTROL         "&Remember these settings for each document",IDC_REMEMBER_STATE_PER_DOCUMENT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,66,216,9
-    GROUPBOX        "Advanced",IDC_SECTION_ADVANCED,6,87,228,52
-    CONTROL         "Use &tabs",IDC_USE_TABS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,216,9
-    CONTROL         "Automatically check for &updates",IDC_CHECK_FOR_UPDATES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,110,216,9
-    CONTROL         "Remember &opened files",IDC_REMEMBER_OPENED_FILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,123,216,9
-    GROUPBOX        "Set inverse search command line",IDC_SECTION_INVERSESEARCH,6,145,228,52
-    LTEXT           "Enter the command line to invoke when you double-click on the PDF document:",IDC_CMDLINE_LABEL,12,157,216,18
-    COMBOBOX        IDC_CMDLINE,12,177,216,13,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_HASSTRINGS | CBS_DISABLENOSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,128,203,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,184,203,50,14
-END
-
 IDD_PROPSHEET_PRINT_ADVANCED DIALOGEX 0, 0, 292, 194
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Advanced"
@@ -207,23 +180,6 @@ BEGIN
     "\0"
 END
 
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
-BEGIN
-    IDD_DIALOG_SETTINGS, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 157
-    END
-
-END
 #endif    // APSTUDIO_INVOKED
 
 

@@ -3,8 +3,6 @@
 
 struct GlobalPrefs;
 
-INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
-
 enum class PrintRangeAdv {
     All = 0,
     Even,

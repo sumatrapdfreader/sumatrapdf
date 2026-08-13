@@ -387,6 +387,9 @@
     <ClInclude Include="..\src\Settings.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SettingsDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ShortcutParse.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -942,6 +945,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SelectionTranslate.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SettingsDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ShortcutParse.cpp">

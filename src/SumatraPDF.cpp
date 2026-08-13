@@ -117,6 +117,7 @@
 #include "GetPasswordDialog.h"
 #include "GoToPageDialog.h"
 #include "InverseSearchDialog.h"
+#include "SettingsDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -7367,29 +7368,6 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
     HwndInvalidate(win->hwndCanvas, true);
 }
 
-static void ShowOptionsDialog(HWND hwnd) {
-    if (!HasPermission(Perm::SavePreferences)) {
-        return;
-    }
-
-    if (IDOK != Dialog_Settings(hwnd, gGlobalPrefs)) {
-        return;
-    }
-
-    if (!SettingsRememberOpenedFiles()) {
-        gFileHistory.Clear(true);
-        EmptyThumbnailCacheDirectory();
-    }
-    UpdateDocumentColors();
-    ApplySettingsToOpenWindows();
-
-    // note: ideally we would also update state for useTabs changes but that's complicated since
-    // to do it right we would have to convert tabs to windows. When moving no tabs -> tabs,
-    // there's no problem. When moving tabs -> no tabs, a half solution would be to only
-    // call SetTabsInTitlebar() for windows that have only one tab, but that's somewhat inconsistent
-    SaveSettings();
-}
-
 // TODO: should use currently active window, but most of the time
 // there's only one window
 void MaybeRedrawHomePage() {
@@ -7399,8 +7377,7 @@ void MaybeRedrawHomePage() {
 }
 
 static void ShowOptionsDialog(MainWindow* win) {
-    ShowOptionsDialog(win->hwndFrame);
-    MaybeRedrawHomePage();
+    ShowSettingsDialog(win);
 }
 
 static void SetInverseSearch(MainWindow* win) {

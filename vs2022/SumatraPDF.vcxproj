@@ -1273,6 +1273,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\SelectionToolbar.h" />
     <ClInclude Include="..\src\SelectionTranslate.h" />
     <ClInclude Include="..\src\Settings.h" />
+    <ClInclude Include="..\src\SettingsDialog.h" />
     <ClInclude Include="..\src\ShortcutParse.h" />
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
     <ClInclude Include="..\src\StressTesting.h" />
@@ -1505,6 +1506,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\SelectionHandlers.cpp" />
     <ClCompile Include="..\src\SelectionToolbar.cpp" />
     <ClCompile Include="..\src\SelectionTranslate.cpp" />
+    <ClCompile Include="..\src\SettingsDialog.cpp" />
     <ClCompile Include="..\src\ShortcutParse.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
