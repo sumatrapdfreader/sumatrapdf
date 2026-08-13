@@ -97,6 +97,7 @@
 #include "TableOfContents.h"
 #include "Tabs.h"
 #include "Toolbar.h"
+#include "SvgIcons.h"
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "Translations.h"
@@ -3061,7 +3062,7 @@ void DeleteMainWindow(MainWindow* win) {
 
 void UpdateAfterThemeChange() {
     // the icon pixmaps are rendered in the theme's colors
-    DestroyIconPixmaps();
+    DestroySvgPixmapIconsCache();
     for (auto* win : gWindows) {
         DeleteObject(win->brControlBgColor);
         win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
@@ -3071,6 +3072,7 @@ void UpdateAfterThemeChange() {
         UpdateToolbarAfterThemeChange(win);
         RecreateFindBar(win);
         UpdateFindWindowTheme(win);
+        RefreshSelectionToolbarIcons(win);
         UpdateAIChatTheme(win);
         if (UseDarkModeLib()) {
             DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
@@ -7023,6 +7025,16 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     logf("ApplyMainWindowDpiChromeRefresh: dpi=%d\n", dpi);
 
     HideSelectionToolbar(win);
+    DestroySvgPixmapIconsCache();
+    for (MainWindow* other : gWindows) {
+        if (other == win) {
+            continue;
+        }
+        UpdateToolbarAfterThemeChange(other);
+        RecreateFindBar(other);
+        UpdateFindWindowTheme(other);
+        RefreshSelectionToolbarIcons(other);
+    }
 
     bool menuRebarVisible = IsShowingMenuBarRebar(win);
     if (menuRebarVisible) {
@@ -13815,7 +13827,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
 void ShutdownCleanup() {
     TtsRelease();
     FreeHomePageTips();
-    DestroyIconPixmaps();
+    DestroySvgPixmapIconsCache();
     DisconnectLastDragDataObject();
 
     gAllowedFileTypes.Reset();

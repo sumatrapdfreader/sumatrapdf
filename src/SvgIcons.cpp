@@ -2,6 +2,14 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
+
+extern "C" {
+#include <mupdf/fitz.h>
+}
+
+#include "ImageReader.h"
+#include "Theme.h"
 #include "SvgIcons.h"
 
 // https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
@@ -257,46 +265,147 @@ const char* gIconPin =
   <path d="M9.5 4l10.5 10.5l-5.5 0.5l-4 4l-1 -4.5l-4.5 -1l4 -4z" />
 </svg>)";
 
-// clang-format off
-static const char* gIcons[] = {
-    gIconFileOpen,
-    gIconPrint,
-    gIconPagePrev,
-    gIconPageNext,
-    gIconLayoutContinuous,
-    gIconLayoutSinglePage,
-    gIconZoomOut,
-    gIconZoomIn,
-    gIconSearchPrev,
-    gIconSearchNext,
-    gIconMatchCase,
-    gIconSave,
-    gIconRotateLeft,
-    gIconRotateRight,
-    gIconSpeak,
-    gIconPauseSpeaking,
-    gIconNavigateBack,
-    gIconNavigateForward,
-    gIconSearch,
-    gIconChevronUp,
-    gIconChevronDown,
-    gIconClose,
-    gIconArrowsDiagonal,
-    gIconArrowsDiagonalMinimize,
-    gIconMatchWholeWord,
-    gIconHomeList,
-    gIconHomeThumbnails,
-    gIconPin,
-};
-// clang-format on
+// A custom ToolbarSvgIcon comes from the settings file, so it can be malformed:
+// a typo, or the file caught half-written by the settings watcher while the user
+// is editing it. mupdf signals that by throwing, and an uncaught mupdf exception
+// aborts the whole process, so everything here has to be inside fz_try.
+static fz_pixmap* RenderSvgToFzPixmap(fz_context* ctx, Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
+    TempStr strokeCol = SerializeColorTemp(fgCol);
+    TempStr fillCol = SerializeColorTemp(bgCol);
+    TempStr fillColRepl = str::JoinTemp(StrL("fill=\""), fillCol, StrL("\""));
+    TempStr svg = str::ReplaceTemp(svgData, StrL("currentColor"), strokeCol);
+    svg = str::ReplaceTemp(svg, StrL(R"(fill="none")"), fillColRepl);
 
-int SvgIconsCount() {
-    return dimofi(gIcons);
-}
-
-const char* SvgIconAt(int i) {
-    if (i < 0 || i >= dimofi(gIcons)) {
+    fz_buffer* buf = nullptr;
+    fz_image* image = nullptr;
+    fz_pixmap* pixmap = nullptr;
+    fz_var(buf);
+    fz_var(image);
+    fz_var(pixmap);
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
+        image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
+        image->w = dx;
+        image->h = dy;
+        pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+    }
+    fz_always(ctx) {
+        fz_drop_image(ctx, image);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("GetCachedPixmapForSvg: rendering svg icon failed with: '%s'\n", Str(fz_caught_message(ctx)));
         return nullptr;
     }
-    return gIcons[i];
+    return pixmap;
+}
+
+static void BlitFzPixmapBgra(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, Color bgCol) {
+    int dx = src->w;
+    int dy = src->h;
+    int srcN = src->n;
+    auto srcStride = src->stride;
+    u8 r, g, b;
+    UnpackColor(bgCol, r, g, b);
+    for (size_t y = 0; y < (size_t)dy; y++) {
+        u8* s = src->samples + (srcStride * y);
+        u8* d = dstSamples + (dstStride * y);
+        for (int x = 0; x < dx; x++) {
+            bool isTransparent = (s[0] == r) && (s[1] == g) && (s[2] == b);
+            d[0] = s[2];
+            d[1] = s[1];
+            d[2] = s[0];
+            d[3] = isTransparent ? 0 : 0xff;
+            d += 4;
+            s += srcN;
+        }
+    }
+}
+
+// BGRA DIB, alpha-premultiplied, transparent where the SVG left the background.
+static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
+    Pixmap* px = AllocPixmapDIB(dx, dy);
+    if (!px) {
+        return nullptr;
+    }
+    memset(px->data, 0, (size_t)px->stride * (size_t)dy);
+    px->premultiplied = true;
+
+    fz_context* ctx = fz_new_context_windows();
+    fz_pixmap* pixmap = RenderSvgToFzPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
+    if (pixmap) {
+        BlitFzPixmapBgra(px->data, px->stride, pixmap, bgCol);
+        u8* row = px->data;
+        for (int y = 0; y < dy; y++) {
+            u8* d = row;
+            for (int x = 0; x < dx; x++) {
+                if (d[3] == 0) {
+                    d[0] = d[1] = d[2] = 0;
+                }
+                d += 4;
+            }
+            row += px->stride;
+        }
+        fz_drop_pixmap(ctx, pixmap);
+    }
+    fz_drop_context_windows(ctx);
+    return px;
+}
+
+// Super-set of the old GetPixmapForIcon / SelToolbarIcon caches: keyed by
+// SVG bytes (built-in gIcon* or a user-provided string), size, and colors.
+struct SvgPixmapCacheEntry {
+    SvgPixmapCacheEntry* next = nullptr;
+    Str svg; // owned
+    int dx = 0;
+    int dy = 0;
+    Color fg = 0;
+    Color bg = 0;
+    Pixmap* pixmap = nullptr; // owned
+
+    ~SvgPixmapCacheEntry() {
+        str::Free(svg);
+        FreePixmap(pixmap);
+    }
+};
+
+static SvgPixmapCacheEntry* gSvgPixmapCache = nullptr;
+
+// Render `svg` at dx×dy in fg/bg (theme text/control colors if unset).
+// The Pixmap belongs to the cache until DestroySvgPixmapIconsCache().
+Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg, Color bg) {
+    if (str::IsEmptyOrWhiteSpace(svg) || dx <= 0 || dy <= 0) {
+        return nullptr;
+    }
+    if (fg == kColorUnset) {
+        fg = ThemeWindowTextColor();
+    }
+    if (bg == kColorUnset) {
+        bg = ThemeControlBackgroundColor();
+    }
+    for (SvgPixmapCacheEntry* e = gSvgPixmapCache; e; e = e->next) {
+        if (e->dx == dx && e->dy == dy && e->fg == fg && e->bg == bg && str::Eq(e->svg, svg)) {
+            return e->pixmap;
+        }
+    }
+    Pixmap* px = RenderSvgToPixmap(svg, dx, dy, fg, bg);
+    if (!px) {
+        return nullptr;
+    }
+    auto* e = new SvgPixmapCacheEntry();
+    e->svg = str::Dup(svg);
+    e->dx = dx;
+    e->dy = dy;
+    e->fg = fg;
+    e->bg = bg;
+    e->pixmap = px;
+    ListInsertFront(&gSvgPixmapCache, e);
+    return px;
+}
+
+// Theme, DPI, and shutdown: every cached pixmap is in the current colors/size.
+void DestroySvgPixmapIconsCache() {
+    ListDelete(gSvgPixmapCache);
+    gSvgPixmapCache = nullptr;
 }

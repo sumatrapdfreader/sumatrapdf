@@ -30,5 +30,7 @@ extern const char* gIconHomeList;
 extern const char* gIconHomeThumbnails;
 extern const char* gIconPin;
 
-int SvgIconsCount();
-const char* SvgIconAt(int);
+struct Pixmap;
+
+Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg = kColorUnset, Color bg = kColorUnset);
+void DestroySvgPixmapIconsCache();

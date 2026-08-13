@@ -28,9 +28,9 @@
 #include "Commands.h"
 #include "CommandAvailability.h"
 #include "AppSettings.h"
-#include "Toolbar.h"
 #include "Translations.h"
 #include "Theme.h"
+#include "SvgIcons.h"
 #include "SelectionToolbar.h"
 
 // A small floating toolbar shown under/over a finished text selection with
@@ -222,48 +222,6 @@ static HFONT CreateScaledFontFrom(HFONT base, int pct) {
     return CreateFontIndirectW(&lf);
 }
 
-// Rendering an svg costs a mupdf context, and the bar re-lays out whenever the
-// selection moves, so keep the rendered icons around. They only change when the
-// size or the theme colors do
-struct SelToolbarIcon {
-    Str svg; // our own copy: a settings reload frees the string we were given
-    int size = 0;
-    Color fgCol = 0;
-    Color bgCol = 0;
-    Pixmap* pixmap = nullptr;
-};
-
-static Vec<SelToolbarIcon> gSelToolbarIcons;
-
-static void FreeSelToolbarIcons() {
-    for (SelToolbarIcon& i : gSelToolbarIcons) {
-        str::Free(i.svg);
-        FreePixmap(i.pixmap);
-    }
-    gSelToolbarIcons.Reset();
-}
-
-static Pixmap* GetSelToolbarIcon(Str svg, int size, Color fgCol, Color bgCol) {
-    for (SelToolbarIcon& i : gSelToolbarIcons) {
-        if (i.size == size && i.fgCol == fgCol && i.bgCol == bgCol && str::Eq(i.svg, svg)) {
-            return i.pixmap;
-        }
-    }
-    // a theme switch or a dpi change invalidates every entry; they're cheap to
-    // re-render, so drop them all rather than track which are still wanted
-    if (len(gSelToolbarIcons) >= 32) {
-        FreeSelToolbarIcons();
-    }
-    SelToolbarIcon i;
-    i.svg = str::Dup(svg);
-    i.size = size;
-    i.fgCol = fgCol;
-    i.bgCol = bgCol;
-    i.pixmap = RenderSvgIconToPixmap(svg, size, size, fgCol, bgCol);
-    gSelToolbarIcons.Append(i);
-    return i.pixmap;
-}
-
 static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
     Color fgCol = SelBarTextColor();
     Color bgCol = SelBarBg();
@@ -271,7 +229,7 @@ static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
         if (!b.svgIcon) {
             continue;
         }
-        b.icon = GetSelToolbarIcon(b.svgIcon, size, fgCol, bgCol);
+        b.icon = GetCachedPixmapForSvg(b.svgIcon, size, size, fgCol, bgCol);
     }
 }
 
@@ -700,6 +658,15 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
     if (PositionToolbar(tb, sel)) {
         HwndScheduleRepaint(tb->hwnd);
     }
+}
+
+void RefreshSelectionToolbarIcons(MainWindow* win) {
+    SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
+    if (!tb || !tb->hwnd || !HwndIsVisible(tb->hwnd)) {
+        return;
+    }
+    LayoutToolbar(tb);
+    HwndScheduleRepaint(tb->hwnd);
 }
 
 // Hide the toolbar but keep the window around for reuse.

@@ -7,10 +7,6 @@
 #include "base/BitManip.h"
 #include "base/Pixmap.h"
 
-extern "C" {
-#include <mupdf/fitz.h>
-}
-
 #include "gui/UIModels.h"
 
 #include "Accelerators.h"
@@ -21,7 +17,6 @@ extern "C" {
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
-#include "ImageReader.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
@@ -117,19 +112,6 @@ constexpr int kMaxCustomButtons = 127;
 static ToolbarButtonInfo gCustomButtons[kMaxCustomButtons + 1];
 static int gCustomButtonsCount = 0;
 
-static HIMAGELIST gTbHiml = nullptr;
-
-HIMAGELIST GetToolbarImageList() {
-    return gTbHiml;
-}
-
-void DestroyToolbarImageList() {
-    if (gTbHiml) {
-        ImageList_Destroy(gTbHiml);
-        gTbHiml = nullptr;
-    }
-}
-
 // Light theme ControlBackgroundColor is white, which is what the old themed
 // rebar/toolbar painted. Other themes use their control background.
 static Color TbBgColor() {
@@ -187,7 +169,6 @@ struct ToolbarVirt {
     PlatformFont* platformFont = nullptr;
     int iconSize = 0;
     int rowDy = 0;
-    Vec<Pixmap*> ownedPixmaps;
 };
 
 static const WStr kVirtToolbarClass = WStrL(L"SUMATRA_VIRT_TOOLBAR");
@@ -568,8 +549,8 @@ static void SetToolbarButtonImageByIdx(MainWindow* win, int idx, const char* ico
     auto* ib = (VirtIconButton*)w;
     ToolbarVirt* tb = win->toolbarVirt;
     int sz = tb ? tb->iconSize : DpiScale(gGlobalPrefs->toolbarSize);
-    Pixmap* px = GetPixmapForIcon(icon, sz, sz, TbTextColor());
-    Pixmap* pxOff = GetPixmapForIcon(icon, sz, sz, TbDisabledColor());
+    Pixmap* px = GetCachedPixmapForSvg(icon, sz, sz, TbTextColor());
+    Pixmap* pxOff = GetCachedPixmapForSvg(icon, sz, sz, TbDisabledColor());
     if (ib->pixmap == px && ib->pixmapDisabled == pxOff) {
         return;
     }
@@ -1332,285 +1313,8 @@ static void PopulateCustomToolbarButtons() {
     }
 }
 
-// Returns nullptr if mupdf can't render svgData; the caller then leaves that
-// icon's part of the bitmap empty.
-//
-// A custom ToolbarSvgIcon comes from the settings file, so it can be malformed:
-// a typo, or the file caught half-written by the settings watcher while the user
-// is editing it. mupdf signals that by throwing, and an uncaught mupdf exception
-// aborts the whole process, so everything here has to be inside fz_try.
-static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
-    TempStr strokeCol = SerializeColorTemp(fgCol);
-    TempStr fillCol = SerializeColorTemp(bgCol);
-    TempStr fillColRepl = str::JoinTemp(StrL("fill=\""), fillCol, StrL("\""));
-    TempStr svg = str::ReplaceTemp(svgData, StrL("currentColor"), strokeCol);
-    svg = str::ReplaceTemp(svg, StrL(R"(fill="none")"), fillColRepl);
-
-    fz_buffer* buf = nullptr;
-    fz_image* image = nullptr;
-    fz_pixmap* pixmap = nullptr;
-    fz_var(buf);
-    fz_var(image);
-    fz_var(pixmap);
-    fz_try(ctx) {
-        buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
-        image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
-        image->w = dx;
-        image->h = dy;
-        pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
-    }
-    fz_always(ctx) {
-        fz_drop_image(ctx, image);
-        fz_drop_buffer(ctx, buf);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        logf("RenderSvgIconPixmap: rendering svg icon failed with: '%s'\n", Str(fz_caught_message(ctx)));
-        return nullptr;
-    }
-    return pixmap;
-}
-
-static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY, Color bgCol) {
-    int dx = src->w;
-    int dy = src->h;
-    int srcN = src->n;
-    int dstN = 4;
-    auto srcStride = src->stride;
-    u8 r, g, b;
-    UnpackColor(bgCol, r, g, b);
-    for (size_t y = 0; y < (size_t)dy; y++) {
-        u8* s = src->samples + (srcStride * y);
-        size_t atY = y + (size_t)dstY;
-        u8* d = dstSamples + (dstStride * atY) + ((size_t)dstX * dstN);
-        for (int x = 0; x < dx; x++) {
-            bool isTransparent = (s[0] == r) && (s[1] == g) && (s[2] == b);
-            // note: we're swapping red and green channel because src is rgb
-            // and we want bgr for Toolbar's IMAGELIST
-            d[0] = s[2];
-            d[1] = s[1];
-            d[2] = s[0];
-            if (isTransparent) {
-                d[3] = 0;
-            } else {
-                d[3] = 0xff;
-            }
-            d += dstN;
-            s += srcN;
-        }
-    }
-}
-
-// leaves an icon-sized hole in the bitmap: background color, fully transparent.
-// Used for an icon we couldn't render, so the button shows up empty instead of
-// as a black square (the zero-filled DIB).
-static void ClearIconSlot(u8* dstSamples, ptrdiff_t dstStride, int dx, int dy, int dstX, Color bgCol) {
-    u8 r, g, b;
-    UnpackColor(bgCol, r, g, b);
-    for (size_t y = 0; y < (size_t)dy; y++) {
-        u8* d = dstSamples + (dstStride * y) + ((size_t)dstX * 4);
-        for (int x = 0; x < dx; x++) {
-            d[0] = b;
-            d[1] = g;
-            d[2] = r;
-            d[3] = 0;
-            d += 4;
-        }
-    }
-}
-
-// same rendering the toolbar's image list uses, into a standalone Pixmap.
-// bgCol is what the icon will be drawn on: pixels that come out as that color
-// are the svg's background and become transparent
-Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
-    if (str::IsEmptyOrWhiteSpace(svgData) || dx <= 0 || dy <= 0) {
-        return nullptr;
-    }
-    fz_context* ctx = fz_new_context_windows();
-    fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
-    Pixmap* res = nullptr;
-    if (pixmap) {
-        res = AllocPixmap(dx, dy);
-        if (res) {
-            BlitPixmap(res->data, res->stride, pixmap, 0, 0, bgCol);
-        }
-        fz_drop_pixmap(ctx, pixmap);
-    }
-    fz_drop_context_windows(ctx);
-    return res;
-}
-
-static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount) {
-    fz_context* ctx = fz_new_context_windows();
-    int nBuiltIn = SvgIconsCount();
-    int nIcons = nBuiltIn + customCount;
-    int destDx = dx * nIcons;
-    ptrdiff_t dstStride;
-
-    u8* hbmpData = nullptr;
-    HBITMAP hbmp;
-    {
-        int w = destDx;
-        int h = dy;
-        int n = 4;
-        dstStride = (ptrdiff_t)destDx * n;
-        int imgSize = (int)dstStride * h;
-        int bitsCount = n * 8;
-
-        int bmiSize = (int)(sizeof(BITMAPINFO) + (255 * sizeof(RGBQUAD)));
-        auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>(bmiSize);
-        BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
-        bmih->biSize = sizeof(*bmih);
-        bmih->biWidth = w;
-        bmih->biHeight = -h;
-        bmih->biPlanes = 1;
-        bmih->biCompression = BI_RGB;
-        bmih->biBitCount = bitsCount;
-        bmih->biSizeImage = imgSize;
-        bmih->biClrUsed = 0;
-        uint usage = DIB_RGB_COLORS;
-        // no file mapping: nothing shares the section and the bitmap is
-        // deleted right after ImageList_Add, so let CreateDIBSection
-        // allocate (a mapping handle here was leaked)
-        hbmp = CreateDIBSection(nullptr, bmi, usage, (void**)&hbmpData, nullptr, 0);
-    }
-
-    Color fgCol = ThemeWindowTextColor();
-    Color bgCol = ThemeControlBackgroundColor();
-    for (int i = 0; i < nBuiltIn; i++) {
-        Str svgData = SvgIconAt(i);
-        fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
-        if (!pixmap) {
-            ClearIconSlot(hbmpData, dstStride, dx, dy, dx * i, bgCol);
-            continue;
-        }
-        BlitPixmap(hbmpData, dstStride, pixmap, dx * i, 0, bgCol);
-        fz_drop_pixmap(ctx, pixmap);
-    }
-    for (int i = 0; i < customCount; i++) {
-        fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, customSvgs[i], dx, dy, fgCol, bgCol);
-        if (!pixmap) {
-            ClearIconSlot(hbmpData, dstStride, dx, dy, dx * (nBuiltIn + i), bgCol);
-            continue;
-        }
-        BlitPixmap(hbmpData, dstStride, pixmap, dx * (nBuiltIn + i), 0, bgCol);
-        fz_drop_pixmap(ctx, pixmap);
-    }
-
-    fz_drop_context_windows(ctx);
-    return hbmp;
-}
-
-// One icon rendered into a Pixmap, with the pixels the VirtCtrl controls want:
-// BGRA, alpha-premultiplied, transparent where the SVG left the background
-// (which is what BlitPixmap() marks with alpha 0 for the image list)
-static Pixmap* RenderIconPixmap(const char* svgData, int dx, int dy, Color fgCol) {
-    if (!svgData || !*svgData) {
-        return nullptr;
-    }
-    Pixmap* px = AllocPixmapDIB(dx, dy);
-    if (!px) {
-        return nullptr;
-    }
-    memset(px->data, 0, (size_t)px->stride * (size_t)dy);
-    px->premultiplied = true;
-
-    Color bgCol = ThemeControlBackgroundColor();
-    fz_context* ctx = fz_new_context_windows();
-    fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, Str(svgData), dx, dy, fgCol, bgCol);
-    if (pixmap) {
-        BlitPixmap(px->data, px->stride, pixmap, 0, 0, bgCol);
-        // BlitPixmap leaves the background color in the transparent pixels;
-        // premultiplied alpha wants them at 0 or AlphaBlend paints a box of it
-        u8* row = px->data;
-        for (int y = 0; y < dy; y++) {
-            u8* d = row;
-            for (int x = 0; x < dx; x++) {
-                if (d[3] == 0) {
-                    d[0] = d[1] = d[2] = 0;
-                }
-                d += 4;
-            }
-            row += px->stride;
-        }
-        fz_drop_pixmap(ctx, pixmap);
-    }
-    fz_drop_context_windows(ctx);
-    return px;
-}
-
-// A handful of icons are ever cached (a few sizes of a few icons), so an
-// intrusive list walked linearly is as good as anything
-struct CachedPixmapIcon {
-    CachedPixmapIcon* next;
-    const char* svg; // gIcon* pointer, not owned
-    Color fg;
-    // the size is the pixmap's own width / height
-    Pixmap* pixmap; // owned
-};
-
-static CachedPixmapIcon* gIconPixmaps = nullptr;
-
-Pixmap* GetPixmapForIcon(const char* svg, int dx, int dy, Color fg) {
-    if (!svg || !*svg || dx <= 0 || dy <= 0) {
-        return nullptr;
-    }
-    if (fg == kColorUnset) {
-        fg = ThemeWindowTextColor();
-    }
-    for (CachedPixmapIcon* e = gIconPixmaps; e; e = e->next) {
-        if (e->svg == svg && e->fg == fg && e->pixmap->width == dx && e->pixmap->height == dy) {
-            return e->pixmap;
-        }
-    }
-    Pixmap* px = RenderIconPixmap(svg, dx, dy, fg);
-    if (!px) {
-        return nullptr;
-    }
-    auto* e = new CachedPixmapIcon{gIconPixmaps, svg, fg, px};
-    gIconPixmaps = e;
-    return px;
-}
-
-// the icons are drawn in the theme's colors, so this is also what a theme
-// change calls to drop them
-void DestroyIconPixmaps() {
-    CachedPixmapIcon* e = gIconPixmaps;
-    gIconPixmaps = nullptr;
-    while (e) {
-        CachedPixmapIcon* next = e->next;
-        FreePixmap(e->pixmap);
-        delete e;
-        e = next;
-    }
-}
-
-static int SetToolbarIconsImageList(MainWindow* win) {
-    // we call it ToolbarSize for users, but it's really size of the icon
-    int iconSize = DpiScale(gGlobalPrefs->toolbarSize);
-    iconSize = RoundUp(iconSize, 4);
-    int dx = iconSize;
-
-    Str customSvgs[kMaxCustomButtons];
-    int customCount = 0;
-    int nBuiltIn = SvgIconsCount();
-    for (int i = 0; i < gCustomButtonsCount; i++) {
-        Str svg = gCustomButtons[i].svgIcon;
-        if (str::IsEmptyOrWhiteSpace(svg)) {
-            continue;
-        }
-        customSvgs[customCount++] = svg;
-    }
-
-    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, nBuiltIn + customCount, 0);
-    HBITMAP hbmp = BuildIconsBitmap(dx, dx, customSvgs, customCount);
-    ImageList_Add(himl, hbmp, nullptr);
-    DeleteObject(hbmp);
-    if (gTbHiml) {
-        ImageList_Destroy(gTbHiml);
-    }
-    gTbHiml = himl;
-    return iconSize;
+static int ToolbarIconSize() {
+    return RoundUp(DpiScale(gGlobalPrefs->toolbarSize), 4);
 }
 
 static void ApplyToolbarItemColors(VirtCtrl* w) {
@@ -1656,19 +1360,9 @@ static void RefreshToolbarIcons(MainWindow* win) {
             continue;
         }
         auto* ib = (VirtIconButton*)w;
-        if (bi.svgIcon) {
-            ib->pixmap = RenderSvgIconToPixmap(bi.svgIcon, sz, sz, fg, TbBgColor());
-            ib->pixmapDisabled = RenderSvgIconToPixmap(bi.svgIcon, sz, sz, dis, TbBgColor());
-            if (ib->pixmap) {
-                tb->ownedPixmaps.Append(ib->pixmap);
-            }
-            if (ib->pixmapDisabled) {
-                tb->ownedPixmaps.Append(ib->pixmapDisabled);
-            }
-        } else if (bi.icon) {
-            ib->pixmap = GetPixmapForIcon(bi.icon, sz, sz, fg);
-            ib->pixmapDisabled = GetPixmapForIcon(bi.icon, sz, sz, dis);
-        }
+        Str svg = bi.svgIcon ? bi.svgIcon : Str(bi.icon);
+        ib->pixmap = GetCachedPixmapForSvg(svg, sz, sz, fg, TbBgColor());
+        ib->pixmapDisabled = GetCachedPixmapForSvg(svg, sz, sz, dis, TbBgColor());
     }
     if (tb->pageLabel) {
         tb->pageLabel->textColor = TbTextColor();
@@ -1679,8 +1373,6 @@ static void RefreshToolbarIcons(MainWindow* win) {
 }
 
 void UpdateToolbarAfterThemeChange(MainWindow* win) {
-    SetToolbarIconsImageList(win);
-    DestroyIconPixmaps();
     RefreshToolbarIcons(win);
     HwndScheduleRepaint(win->hwndToolbar);
 }
@@ -1892,10 +1584,6 @@ static void BuildToolbarLayout(MainWindow* win) {
     delete tb->layout;
     tb->layout = nullptr;
     tb->items.Reset();
-    for (Pixmap* px : tb->ownedPixmaps) {
-        FreePixmap(px);
-    }
-    tb->ownedPixmaps.Reset();
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;
     tb->pageEditSlot = nullptr;
@@ -1960,19 +1648,9 @@ static void BuildToolbarLayout(MainWindow* win) {
             ib->bgColorSelected = sel;
             ib->chevronColor = fg;
             ib->hasDropdown = (bi.cmdId == CmdReadAloud);
-            if (bi.svgIcon) {
-                ib->pixmap = RenderSvgIconToPixmap(bi.svgIcon, tb->iconSize, tb->iconSize, fg, TbBgColor());
-                ib->pixmapDisabled = RenderSvgIconToPixmap(bi.svgIcon, tb->iconSize, tb->iconSize, dis, TbBgColor());
-                if (ib->pixmap) {
-                    tb->ownedPixmaps.Append(ib->pixmap);
-                }
-                if (ib->pixmapDisabled) {
-                    tb->ownedPixmaps.Append(ib->pixmapDisabled);
-                }
-            } else {
-                ib->pixmap = GetPixmapForIcon(bi.icon, tb->iconSize, tb->iconSize, fg);
-                ib->pixmapDisabled = GetPixmapForIcon(bi.icon, tb->iconSize, tb->iconSize, dis);
-            }
+            Str svg = bi.svgIcon ? bi.svgIcon : Str(bi.icon);
+            ib->pixmap = GetCachedPixmapForSvg(svg, tb->iconSize, tb->iconSize, fg, TbBgColor());
+            ib->pixmapDisabled = GetCachedPixmapForSvg(svg, tb->iconSize, tb->iconSize, dis, TbBgColor());
             w = ib;
         }
         w->id = bi.cmdId;
@@ -1999,9 +1677,6 @@ static void FreeToolbarVirt(MainWindow* win) {
     }
     delete tb->layout;
     delete tb->vroot;
-    for (Pixmap* px : tb->ownedPixmaps) {
-        FreePixmap(px);
-    }
     delete tb;
     win->toolbarVirt = nullptr;
 }
@@ -2136,7 +1811,7 @@ void CreateToolbar(MainWindow* win) {
 
     PopulateToolbarLayout();
     PopulateCustomToolbarButtons();
-    int iconSize = SetToolbarIconsImageList(win);
+    int iconSize = ToolbarIconSize();
     int yPad = DpiScale(2);
     int rowDy = ToolbarRowDy(iconSize);
 

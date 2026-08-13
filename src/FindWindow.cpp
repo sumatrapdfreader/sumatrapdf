@@ -30,7 +30,6 @@
 #include "Commands.h"
 #include "Accelerators.h"
 #include "SvgIcons.h"
-#include "Toolbar.h"
 #include "SearchAndDDE.h"
 #include "FindBar.h"
 #include "FindWindow.h"
@@ -256,7 +255,7 @@ void FindWindowWnd::UpdateButtonIcons() {
     int isz = RoundUp(DpiScale(16), 4);
     for (int i = 0; i < 5; i++) {
         if (btns[i]) {
-            btns[i]->pixmap = GetPixmapForIcon(icons[i], isz, isz);
+            btns[i]->pixmap = GetCachedPixmapForSvg(icons[i], isz, isz);
         }
     }
 }

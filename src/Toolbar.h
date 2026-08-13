@@ -2,15 +2,6 @@
    License: GPLv3 */
 
 struct MainWindow;
-struct Pixmap;
-
-// A toolbar icon rendered into a Pixmap of the given size, in the current
-// theme's colors. `svg` is a gIcon* string. Cached: the Pixmap belongs to
-// the cache and stays valid until DestroyIconPixmaps(), which the theme
-// change and the shutdown call
-Pixmap* GetPixmapForIcon(const char* svg, int dx, int dy, Color fg = kColorUnset);
-HIMAGELIST GetToolbarImageList();
-void DestroyIconPixmaps();
 
 void CreateToolbar(MainWindow*);
 void ReCreateToolbar(MainWindow* win);
@@ -35,10 +26,6 @@ constexpr int kDelayToolbarHide = 500;
 #define kHideOverlayToolbarTimerId 0x101
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
-// renders an svg icon into a dx by dy Pixmap whose background is transparent,
-// for code that draws its own buttons (the selection toolbar). Caller owns the
-// Pixmap; null if the svg couldn't be rendered
-Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bgCol);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
 void ToolbarEatMenuDismissClick(MainWindow*, int cmdId);
 

@@ -598,7 +598,7 @@ struct VirtButton : VirtText {
 };
 
 struct VirtIconButton : VirtCtrl {
-    // not owned; in SumatraPDF it comes from GetPixmapForIcon()
+    // not owned; in SumatraPDF it comes from GetCachedPixmapForSvg()
     Pixmap* pixmap = nullptr;
     // drawn when !IsEnabled(); if null, pixmap is used
     Pixmap* pixmapDisabled = nullptr;

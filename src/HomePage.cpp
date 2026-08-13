@@ -35,7 +35,6 @@
 #include "AppSettings.h"
 #include "DarkModeSubclass.h"
 #include "SvgIcons.h"
-#include "Toolbar.h"
 
 // how the shared tip code (TipText.cpp) opens a url link
 static void OpenTipUrl(Str url) {
@@ -898,7 +897,6 @@ struct HomePageLayout {
     Rect rcIconListView;
     Rect rcIconThumbnailView;
 
-    HIMAGELIST himlOpen = nullptr;
     VirtText* freqRead = nullptr;
     VirtText* openDoc = nullptr;
     VirtText* hideShowFreqRead = nullptr;
@@ -934,7 +932,7 @@ HomePageLayout::~HomePageLayout() = default;
 // building the chrome so the same VirtCtrl types stay reusable.
 
 struct HomeViewIconCtrl : VirtCtrl {
-    Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
+    Pixmap* pixmap = nullptr; // not owned, from GetCachedPixmapForSvg()
     // true for the "show as list" button, false for "show as thumbnails"
     bool listView = false;
 
@@ -943,7 +941,7 @@ struct HomeViewIconCtrl : VirtCtrl {
 };
 
 struct HomeOpenDocCtrl : VirtCtrl {
-    Pixmap* pixmap = nullptr; // not owned, from GetPixmapForIcon()
+    Pixmap* pixmap = nullptr; // not owned, from GetCachedPixmapForSvg()
     VirtText* text = nullptr; // child
     // icon position, relative to our bounds
     Rect rcIconLocal;
@@ -1030,6 +1028,14 @@ struct HomeChromeCtrl : VirtCtrl {
 static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win);
 static HomeEntriesCtrl* HomeEntries(MainWindow* win);
 static void HomePageSyncChrome(HomePageLayout& l);
+
+static int HomePageIconSize() {
+    int sz = DpiScale(gGlobalPrefs->toolbarSize);
+    if (sz < 1) {
+        sz = DpiScale(16);
+    }
+    return RoundUp(sz, 4);
+}
 
 constexpr int kOpenDocumentYShift = 7;
 constexpr int kThumbsMiddleMargin = 32;
@@ -1407,8 +1413,6 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.thumbnails = c.thumbs;
     l.filterWords = c.filterWords;
 
-    l.himlOpen = GetToolbarImageList();
-
     HFONT hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
     HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
@@ -1510,13 +1514,8 @@ static void LayoutHomePage(HomePageLayout& l) {
     int thumbsContentWidth = (thumbsColsForLayout * kThumbnailDx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
 
     // --- Step 1: layout header at the top ---
-    l.himlOpen = GetToolbarImageList();
     Rect rcIconView(0, 0, 0, 0);
-    if (l.himlOpen) {
-        ImageList_GetIconSize(l.himlOpen, &rcIconView.dx, &rcIconView.dy);
-    } else {
-        rcIconView.dx = rcIconView.dy = DpiScale(16);
-    }
+    rcIconView.dx = rcIconView.dy = HomePageIconSize();
 
     Str txt = _TRA("Recently Opened");
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
@@ -1550,11 +1549,7 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     /* "Open a document" link next to header */
     Rect rcIconOpen(0, 0, 0, 0);
-    if (l.himlOpen) {
-        ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
-    } else {
-        rcIconOpen.dx = rcIconOpen.dy = DpiScale(16);
-    }
+    rcIconOpen.dx = rcIconOpen.dy = HomePageIconSize();
 
     txt = _TRA("Open a document...");
     VirtText* openDoc = chrome->openDoc->text;
@@ -1931,7 +1926,7 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     {
         int pinDx = thumb.rcListPin.dx > 0 ? thumb.rcListPin.dx : DpiScale(16);
         int pinDy = thumb.rcListPin.dy > 0 ? thumb.rcListPin.dy : pinDx;
-        Pixmap* pin = GetPixmapForIcon(gIconPin, pinDx, pinDy);
+        Pixmap* pin = GetCachedPixmapForSvg(gIconPin, pinDx, pinDy);
         if (pin) {
             BlitPixmapAlpha(pin, hdc, thumb.rcListPin);
         }
@@ -2409,9 +2404,9 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     entries->UpdateCloseBtnVisibility();
 
     Size iconSize = l.rcIconThumbnailView.Size();
-    chrome->thumbView->pixmap = GetPixmapForIcon(gIconHomeThumbnails, iconSize.dx, iconSize.dy);
+    chrome->thumbView->pixmap = GetCachedPixmapForSvg(gIconHomeThumbnails, iconSize.dx, iconSize.dy);
     chrome->thumbView->SetBounds(l.rcIconThumbnailView);
-    chrome->listView->pixmap = GetPixmapForIcon(gIconHomeList, iconSize.dx, iconSize.dy);
+    chrome->listView->pixmap = GetCachedPixmapForSvg(gIconHomeList, iconSize.dx, iconSize.dy);
     chrome->listView->SetBounds(l.rcIconListView);
 
     chrome->hdr->textColor = ThemeWindowTextColor();
@@ -2422,7 +2417,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
     rcOpen.Inflate(10, 10);
     HomeOpenDocCtrl* od = chrome->openDoc;
-    od->pixmap = GetPixmapForIcon(gIconFileOpen, l.rcIconOpen.dx, l.rcIconOpen.dy);
+    od->pixmap = GetCachedPixmapForSvg(gIconFileOpen, l.rcIconOpen.dx, l.rcIconOpen.dy);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
     od->text->textColor = ThemeWindowLinkColor();

@@ -188,7 +188,7 @@ void FindBarWnd::UpdateButtonIcons() {
     int isz = RoundUp(DpiScale(16), 4);
     for (int i = 0; i < 6; i++) {
         if (btns[i]) {
-            btns[i]->pixmap = GetPixmapForIcon(icons[i], isz, isz);
+            btns[i]->pixmap = GetCachedPixmapForSvg(icons[i], isz, isz);
         }
     }
 }
