@@ -82,7 +82,6 @@ struct CommandPaletteWnd : WindowBase {
 };
 
 extern CommandPaletteWnd* gCommandPaletteWnd;
-extern HWND gCommandPaletteHwnd;
 
 Str CommandPaletteSkipWS(Str s);
 void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx);

@@ -80,7 +80,6 @@ Str CommandPaletteSkipWS(Str s) {
 }
 
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
-HWND gCommandPaletteHwnd = nullptr;
 static HWND gHwndToActivateOnClose = nullptr;
 static WindowTab* gTabToSelectOnClose = nullptr;
 static i32 gCmdIdToExecOnClose = 0;
@@ -95,7 +94,6 @@ void SafeDeleteCommandPaletteWnd() {
     MainWindow* win = gCommandPaletteWnd->win;
     auto* tmp = gCommandPaletteWnd;
     gCommandPaletteWnd = nullptr;
-    gCommandPaletteHwnd = nullptr;
     delete tmp;
     if (gHwndToActivateOnClose) {
         HWND fg = GetForegroundWindow();
@@ -670,8 +668,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
 void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     if (gCommandPaletteWnd) {
-        if (gCommandPaletteHwnd && IsWindow(gCommandPaletteHwnd)) {
-            HwndSetFocus(gCommandPaletteHwnd);
+        if (gCommandPaletteWnd->hwnd && IsWindow(gCommandPaletteWnd->hwnd)) {
+            HwndSetFocus(gCommandPaletteWnd->hwnd);
             return;
         }
         ScheduleDeleteAndExecCommand();
@@ -690,7 +688,6 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);
     gCommandPaletteWnd = wnd;
-    gCommandPaletteHwnd = wnd->hwnd;
     gHwndToActivateOnClose = win->hwndFrame;
 }
 
