@@ -2365,7 +2365,10 @@ void DeferWinPosHelper::SetWindowPos(HWND hwnd, const Rect rc) {
 }
 
 void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint) {
-    uint uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    // SWP_NOCOPYBITS: a sibling that grows into another's old screen rect
+    // (canvas into a shrinking TOC) otherwise inherits those pixels. WebView2
+    // is transparent, so that leftover TOC flash is visible until it composites.
+    uint uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOCOPYBITS;
     if (!bRepaint) {
         uFlags |= SWP_NOREDRAW;
     }

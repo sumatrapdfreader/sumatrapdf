@@ -6567,7 +6567,11 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // handling *shows* the window, which would flash a normal-size standard-
     // caption window during startup, before ShowMainWindow / LoadDocument
     // show it with the intended state.
-    bool suppressIntermediateRedraws = !win->suppressFrameRedraw && HwndIsVisible(win->hwndFrame);
+    // splitter drag (sidebarDx >= 0) is a live sibling resize: WM_SETREDRAW
+    // would hide the frame on every mouse move and flash the TOC through the
+    // transparent WebView2 in the strip the canvas just inherited
+    bool isSplitterDrag = sidebarDx != -1;
+    bool suppressIntermediateRedraws = !isSplitterDrag && !win->suppressFrameRedraw && HwndIsVisible(win->hwndFrame);
     if (suppressIntermediateRedraws) {
         // suppress intermediate repaints during relayout
         SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
@@ -6734,6 +6738,17 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     dh.End();
 
+    if (isSplitterDrag) {
+        // EndDeferWindowPos should have sent WM_SIZE; send it again so the
+        // tree/filter are clipped to the new width before the next paint
+        if (win->hwndTocBox && HwndIsVisible(win->hwndTocBox)) {
+            SendMessageW(win->hwndTocBox, WM_SIZE, 0, 0);
+        }
+        if (IsBrowserDocController(win->ctrl)) {
+            FillCanvasThemeBackground(win->hwndCanvas);
+        }
+    }
+
     if (favAsTab) {
         // above the hidden canvas so mouse hits the tree
         SetWindowPos(win->hwndFavBox, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
@@ -6783,9 +6798,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
     // during a live splitter drag we must paint synchronously: WM_PAINT is
-    // starved by the stream of WM_MOUSEMOVE messages and the next relayout's
-    // WM_SETREDRAW FALSE would discard the pending invalidation
-    bool isSplitterDrag = sidebarDx != -1;
+    // starved by the stream of WM_MOUSEMOVE messages
     if (isSplitterDrag) {
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
