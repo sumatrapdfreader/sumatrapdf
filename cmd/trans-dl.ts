@@ -24,6 +24,7 @@
  *   bun cmd/trans-dl.ts --ai=claude|grok|none
  *   bun cmd/trans-dl.ts --no-ai         # download + fix suspicious + filter + lzsa (no AI fill)
  *   bun cmd/trans-dl.ts --lang de       # only fill missing for one language
+ *   bun cmd/trans-dl.ts --lang br --retranslate  # refill AI/wrong br (not Breton)
  *   bun cmd/trans-dl.ts --max-submit N  # cap AI submissions (for testing; fixes always run)
  */
 
@@ -55,6 +56,7 @@ interface CliArgs {
   langs: Set<string> | null; // null = all
   maxSubmit: number; // 0 = unlimited
   skipLzsa: boolean;
+  retranslate: boolean; // refill existing AI/wrong translations for --lang
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -63,6 +65,7 @@ function parseArgs(argv: string[]): CliArgs {
   let langs: Set<string> | null = null;
   let maxSubmit = 0;
   let skipLzsa = false;
+  let retranslate = false;
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -80,23 +83,26 @@ function parseArgs(argv: string[]): CliArgs {
       ai = parseAi(a.slice("--ai=".length));
     } else if (a === "--lang" && argv[i + 1]) {
       if (!langs) langs = new Set();
-      langs.add(argv[++i]);
+      langs.add(normalizeLangCode(argv[++i]));
     } else if (a.startsWith("--lang=")) {
       if (!langs) langs = new Set();
-      langs.add(a.slice("--lang=".length));
+      langs.add(normalizeLangCode(a.slice("--lang=".length)));
     } else if (a === "--max-submit" && argv[i + 1]) {
       maxSubmit = parseInt(argv[++i], 10) || 0;
     } else if (a.startsWith("--max-submit=")) {
       maxSubmit = parseInt(a.slice("--max-submit=".length), 10) || 0;
     } else if (a === "--skip-lzsa") {
       skipLzsa = true;
+    } else if (a === "--retranslate") {
+      retranslate = true;
     } else if (a === "--help" || a === "-h") {
       console.log(`Usage: bun cmd/trans-dl.ts [options]
   --local              use ${LOCAL_SERVER}
   --server URL         apptranslator base URL (default ${DEFAULT_SERVER})
   --ai=claude|grok|none  AI for missing translations (default claude)
   --no-ai              same as --ai=none
-  --lang CODE          only fill this language (repeatable)
+  --lang CODE          only fill this language (repeatable; br-pt/pt-br → br)
+  --retranslate        refill AI-authored (and Breton-looking br) strings; requires --lang
   --max-submit N       stop after N AI submissions (testing)
   --skip-lzsa          do not run MakeLZSA`);
       process.exit(0);
@@ -104,7 +110,17 @@ function parseArgs(argv: string[]): CliArgs {
       throw new Error(`Unknown arg: ${a} (try --help)`);
     }
   }
-  return { server: server.replace(/\/$/, ""), ai, langs, maxSubmit, skipLzsa };
+  if (retranslate && (!langs || langs.size === 0)) {
+    throw new Error("--retranslate requires --lang");
+  }
+  return { server: server.replace(/\/$/, ""), ai, langs, maxSubmit, skipLzsa, retranslate };
+}
+
+// Project codes are not always ISO 639-1 (br = Brazilian Portuguese, not Breton).
+function normalizeLangCode(code: string): string {
+  const c = code.trim();
+  if (c === "br-pt" || c.toLowerCase() === "pt-br") return "br";
+  return c;
 }
 
 function parseAi(s: string): AiProvider {
@@ -454,20 +470,35 @@ function autoAddNoPrefixTranslations(pt: ParsedTranslations): Map<string, Map<st
   return added;
 }
 
-/** Language codes we ship (from trans-gen.ts gLangs), excluding English. */
-function loadSupportedLangCodes(): string[] {
+interface SupportedLang {
+  code: string;
+  name: string;
+}
+
+/** Languages we ship (from trans-gen.ts gLangs), excluding English. */
+function loadSupportedLangs(): SupportedLang[] {
   const path = join(import.meta.dir, "trans-gen.ts");
   const text = readFileSync(path, "utf-8");
   const startIdx = text.indexOf("const gLangs");
   const endIdx = text.indexOf("];", startIdx);
   const block = text.substring(startIdx, endIdx);
-  const codes: string[] = [];
-  const re = /\["([^"]+)"/g;
+  const langs: SupportedLang[] = [];
+  const re = /\["([^"]+)",\s*"([^"]+)"/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(block)) !== null) {
-    if (m[1] !== "en") codes.push(m[1]);
+    if (m[1] !== "en") langs.push({ code: m[1], name: m[2] });
   }
-  return codes;
+  return langs;
+}
+
+function loadSupportedLangCodes(): string[] {
+  return loadSupportedLangs().map((l) => l.code);
+}
+
+const kLangNameByCode = new Map(loadSupportedLangs().map((l) => [l.code, l.name]));
+
+function langDisplayName(code: string): string {
+  return kLangNameByCode.get(code) ?? code;
 }
 
 // AI translation order: most widely spoken first (rough L1+L2 speaker ranks).
@@ -565,6 +596,79 @@ function sortLangsByPopularity(langs: Iterable<string>): string[] {
       if (ra !== rb) return ra - rb;
       return a.localeCompare(b);
     });
+}
+
+function isAiFillAuthor(user: string): boolean {
+  const u = user.trim().toLowerCase();
+  return u === "ai" || u === "ai claude" || u === "ai grok" || u === "ai auto";
+}
+
+// Distinctive Breton (ISO 639-1 "br") — used when AI treated project code "br" as Breton.
+function looksLikeBreton(s: string): boolean {
+  return /c'h|n'eo|pennroll|skeudenn|diouzh|a-raok|war-lerc|teñval|golver|ivinell|drekleur|hêrezh|flapañ|teuliadur|nullañ|poazhañ|staliadur|sinedoù|bihanaat|astenn betek|n'haller|kreizañ|glaou|dibab mammenn|gwaskañ|dizielfennañ|disifriñ|dilemel|restroù|stagañ|pellgargañ|embann|gant an |ar restr |ar stali|endalc|kemmañ|kenderc'hel|n'eus ket|amdreiñ|krouiñ|troc'hañ|livioù|gwintañ|liester|klask er|diskouez|mont d'ar/i.test(
+    s,
+  );
+}
+
+async function latestAuthors(server: string, lang: string): Promise<Map<string, string>> {
+  const uri = `${server}/api/transhist?app=${encodeURIComponent(APP_NAME)}&lang=${encodeURIComponent(lang)}`;
+  const resp = await fetch(uri);
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`transhist HTTP ${resp.status}: ${body.slice(0, 200)}`);
+  }
+  const raw: unknown = await resp.json();
+  const out = new Map<string, string>();
+  if (!Array.isArray(raw)) return out;
+  for (const entry of raw) {
+    if (!Array.isArray(entry) || entry.length < 2 || typeof entry[0] !== "string") continue;
+    const last = entry[entry.length - 1];
+    if (Array.isArray(last) && typeof last[1] === "string") {
+      out.set(entry[0], last[1]);
+    }
+  }
+  return out;
+}
+
+// Drop selected existing translations so findMissing/submitMany will refill them.
+async function markRetranslateAsMissing(
+  server: string,
+  langs: Iterable<string>,
+  pt: ParsedTranslations,
+): Promise<number> {
+  let n = 0;
+  for (const lang of langs) {
+    const want = new Set<string>();
+    try {
+      const authors = await latestAuthors(server, lang);
+      for (const [en, user] of authors) {
+        if (isAiFillAuthor(user)) want.add(en);
+      }
+      console.log(`retranslate ${lang}: ${want.size} AI-authored current translation(s)`);
+    } catch (e) {
+      console.log(`retranslate ${lang}: transhist failed (${e}); heuristic only`);
+    }
+    const m = pt.perLang.get(lang);
+    if (m && (lang === "br" || lang === "br-pt")) {
+      let nBret = 0;
+      for (const [en, tr] of m) {
+        if (looksLikeBreton(tr)) {
+          want.add(en);
+          nBret++;
+        }
+      }
+      if (nBret > 0) {
+        console.log(`retranslate ${lang}: ${nBret} Breton-looking string(s)`);
+      }
+    }
+    for (const en of want) {
+      pt.fromServer.get(lang)?.delete(en);
+      pt.perLang.get(lang)?.delete(en);
+      n++;
+    }
+    console.log(`retranslate ${lang}: ${want.size} string(s) marked for refill`);
+  }
+  return n;
 }
 
 function findMissing(
@@ -706,8 +810,11 @@ const kTransMarker = (i: number) => `<<<${i}>>>`;
 
 function buildTranslatePrompt(stringsToTranslate: string[], langCode: string): string {
   const n = stringsToTranslate.length;
+  const langName = langDisplayName(langCode);
   const inputBlocks = stringsToTranslate.map((s, i) => `${kTransMarker(i)}\n${s}`).join("\n");
-  return `Translate each English UI string to the language for locale code "${langCode}".
+  return `Translate each UI string from English (source language) into ${langName}.
+
+The project's locale code is "${langCode}". Use the language name above — do not interpret the code as ISO 639-1 when they differ (in particular, "br" is Brazilian Portuguese / pt-BR, not Breton).
 
 There are exactly ${n} strings, numbered 0..${n - 1}.
 For each index i, output the marker <<<i>>> on its own line, then the translation on the following line(s).
@@ -1161,6 +1268,10 @@ async function main() {
   // parse + auto-fill no-prefix candidates
   let pt = parseTranslations(fullText);
   const autoAdded = autoAddNoPrefixTranslations(pt);
+
+  if (args.retranslate && args.langs) {
+    await markRetranslateAsMissing(args.server, args.langs, pt);
+  }
 
   // langs we care about filling: those already present on the server, plus
   // any --lang filter. When the store is empty (local), require --lang.
