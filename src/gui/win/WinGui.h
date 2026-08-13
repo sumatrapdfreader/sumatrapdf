@@ -807,6 +807,7 @@ struct DropDown : ControlBase {
     StrVec items;
     SelectionChangedHandler onSelectionChanged;
     TextChangedHandler onTextChanged;
+    SelectionChangedHandler onCloseUp;
 
     DropDown();
     ~DropDown() override = default;

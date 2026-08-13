@@ -172,6 +172,7 @@ void ChangeThemeWnd::UpdateTheme() {
 // focus. The user is working in this dialog, so take the focus back (a focus
 // that is already on one of our controls, e.g. the drop-down, stays put)
 void ChangeThemeWnd::KeepFocus() {
+    HwndToForeground(hwnd);
     HWND focused = ::GetFocus();
     if (focused == hwnd || ::IsChild(hwnd, focused)) {
         return;
@@ -313,6 +314,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         c->Create(args);
         c->SetItemsSeqStrings(gDocumentColorsFollowThemeNames);
         c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnDocumentColorsFollowThemeChanged>(this);
+        c->onCloseUp = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::KeepFocus>(this);
         dropDownDocumentColorsFollowTheme = c;
         c->SetCurrentSelection(DocumentColorsFollowThemeToDropDownIndex(startDocumentColorsFollowTheme));
         vbox->AddChild(c);

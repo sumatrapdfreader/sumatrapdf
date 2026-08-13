@@ -41,6 +41,9 @@ void DropDown::OnCommand(ControlBase::CommandEvent* ev) {
         onSelectionChanged.Call();
         // must leave didHandle false or else the drop-down list will not close
     }
+    if (code == CBN_CLOSEUP && onCloseUp.IsValid()) {
+        onCloseUp.Call();
+    }
 }
 
 HWND DropDown::Create(const CreateArgs& args) {

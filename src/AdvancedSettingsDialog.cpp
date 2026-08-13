@@ -309,7 +309,7 @@ struct ListBoxModelSettings : ListBoxModel {
 // Its height is fixed to a number of lines so the rest of the dialog doesn't
 // jump around as comments of different lengths come and go
 struct CommentText : VirtRichText {
-    int nLines = 5;
+    int nLines = 6;
 
     int FixedDy() {
         int lineDy = PlatformFontMeasureText(font, "Ag").dy;
@@ -343,7 +343,11 @@ struct CommentText : VirtRichText {
             return;
         }
         ctx.gfx->PushClip(clip);
+        if (!ColorSkipsPaint(bgColor)) {
+            ctx.gfx->FillRect(ctx.bounds, bgColor);
+        }
         VirtRichText::Paint(ctx);
+        ctx.gfx->DrawRect(ctx.bounds, ThemeEdgeColor());
         ctx.gfx->PopClip();
     }
 
@@ -412,8 +416,10 @@ struct AdvancedSettingsWnd : WindowBase {
 
     void BeginEditEnum(int idx);
     void OnEnumSelectionChanged();
+    void OnEnumDropDownClosed();
     void CheckDropDownClosed();
     void CloseEnumEdit(bool keepValue);
+    void KeepFocus();
 
     void OnOpenSettingsFile(VirtMouseEvent* ev = nullptr);
     void OnHelp(VirtMouseEvent* ev = nullptr);
@@ -710,6 +716,7 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     c->SetItems(vals);
     c->SetCurrentSelection(currSel);
     c->onSelectionChanged = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnEnumSelectionChanged>(this);
+    c->onCloseUp = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnEnumDropDownClosed>(this);
     dropDownValue = c;
     editItemIdx = idx;
     str::ReplaceWithCopy(&dropDownOrigVal, item->strVal);
@@ -721,6 +728,25 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
         pendingCancelEdit = false;
         CancelEditValue();
     }
+}
+
+// Previewing a value (or the combo list closing) can activate the main
+// window. Put the user back in this dialog; if the list is still open,
+// leave the caret on the combo.
+void AdvancedSettingsWnd::KeepFocus() {
+    if (gAdvancedSettingsWnd != this || !hwnd) {
+        return;
+    }
+    HwndToForeground(hwnd);
+    HWND focused = ::GetFocus();
+    if (focused == hwnd || ::IsChild(hwnd, focused)) {
+        return;
+    }
+    if (dropDownValue && dropDownValue->hwnd) {
+        HwndSetFocus(dropDownValue->hwnd);
+        return;
+    }
+    HwndSetFocus(hwnd);
 }
 
 void AdvancedSettingsWnd::OnEnumSelectionChanged() {
@@ -736,9 +762,19 @@ void AdvancedSettingsWnd::OnEnumSelectionChanged() {
         PreviewSettingChange(item);
         listBox->Invalidate();
     }
+    KeepFocus();
     // selecting with the mouse closes the list: dispose of the control then.
     // can't do it here (we're inside its notification), so check afterwards;
     // during keyboard browsing the list stays open and the control stays up
+    auto fn = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::CheckDropDownClosed>(this);
+    uitask::Post(fn, "AdvSettingsCheckDropDownClosed");
+}
+
+void AdvancedSettingsWnd::OnEnumDropDownClosed() {
+    // CBN_CLOSEUP is when Windows hands activation to whoever it thinks
+    // owned the list (often the main window). Take it back now, not after
+    // a posted task that runs too late.
+    KeepFocus();
     auto fn = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::CheckDropDownClosed>(this);
     uitask::Post(fn, "AdvSettingsCheckDropDownClosed");
 }
@@ -772,7 +808,11 @@ void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
     editItemIdx = -1;
     delete tmp;
     listBox->Invalidate();
+    KeepFocus();
     SetFocusTo(listBox);
+    // destroying the combo can activate the main window after we return
+    auto fn = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::KeepFocus>(this);
+    uitask::Post(fn, "AdvSettingsKeepFocus");
 }
 
 void AdvancedSettingsWnd::CommitEditValue() {
