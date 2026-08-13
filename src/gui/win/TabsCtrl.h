@@ -6,7 +6,6 @@
 // VirtCloseButton. Include after gui/VirtCtrl.h (and its PlatformFont/Gfx
 // prerequisites).
 
-#define kTabBarDy 24
 #define kTabMinDx 100
 
 struct TabsCtrl;

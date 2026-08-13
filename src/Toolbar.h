@@ -30,13 +30,3 @@ Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
 void ToolbarEatMenuDismissClick(MainWindow*, int cmdId);
 
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
-
-int GetMenuBarRebarHeight(MainWindow*);
-void CreateMenuBarRebar(MainWindow*);
-void DestroyMenuBarRebar(MainWindow*);
-void ShowMenuBarRebar(MainWindow*);
-void RebuildMenuBarButtons(MainWindow*);
-bool IsShowingMenuBarRebar(MainWindow*);
-bool HandleMenuBarCommand(MainWindow*, int cmdId);
-bool ActivateMenuBarByAccel(MainWindow*, WCHAR accel);
-void UpdateCustomMenuBarMenuSelect(MainWindow*, WPARAM, LPARAM);
