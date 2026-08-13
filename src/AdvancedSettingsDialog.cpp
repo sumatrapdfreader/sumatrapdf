@@ -1228,6 +1228,105 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     return true;
 }
 
+struct AdvSettingsRowRec {
+    int idx;
+    Rect rect;
+};
+
+// set only while the probe below is painting into its scratch bitmap
+static Vec<AdvSettingsRowRec>* gAdvSettingsRowRec = nullptr;
+
+static void RecordAdvSettingsRow(VirtListBox::DrawItemEvent* ev) {
+    if (gAdvSettingsRowRec) {
+        gAdvSettingsRowRec->Append({ev->itemIndex, ev->itemRect});
+    }
+}
+
+// The rects the list hands its row drawer. Asking VirtListBox for them
+// (ItemRect) would report what the layout intends, not what the paint does --
+// and the bug this is here for was a paint that disagreed with the layout. So
+// the real tree is painted into a scratch bitmap with the row drawer swapped
+// for a recorder.
+static void RecordAdvSettingsRows(AdvancedSettingsWnd* wnd, Vec<AdvSettingsRowRec>& out) {
+    Rect client = HwndClientRect(wnd->hwnd);
+    if (client.IsEmpty() || !wnd->vroot) {
+        return;
+    }
+    HDC hdcWin = GetDC(wnd->hwnd);
+    if (!hdcWin) {
+        return;
+    }
+    HDC memDC = CreateCompatibleDC(hdcWin);
+    HBITMAP bmp = CreateCompatibleBitmap(hdcWin, client.dx, client.dy);
+    if (memDC && bmp) {
+        HGDIOBJ oldBmp = SelectObject(memDC, bmp);
+        auto prevDrawItem = wnd->listBox->onDrawItem;
+        gAdvSettingsRowRec = &out;
+        wnd->listBox->onDrawItem = MkFunc1Void<VirtListBox::DrawItemEvent*>(RecordAdvSettingsRow);
+        GfxHdc gfx(memDC);
+        wnd->vroot->Paint(&gfx, client);
+        wnd->listBox->onDrawItem = prevDrawItem;
+        gAdvSettingsRowRec = nullptr;
+        SelectObject(memDC, oldBmp);
+    }
+    if (bmp) {
+        DeleteObject(bmp);
+    }
+    if (memDC) {
+        DeleteDC(memDC);
+    }
+    ReleaseDC(wnd->hwnd, hdcWin);
+}
+
+// What the settings list actually draws: the list's content rect in dialog
+// client coords, the row height, and the rect of every row the paint touched.
+// `action` is "geom" to report, or "scroll" to first scroll by `arg` rows. Rows
+// are always whole and always tile the usable viewport; a test can check that
+// on the real pixels without hard-coding a layout that depends on window size,
+// dpi and theme. Used by tests/issue-5882.ts.
+TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    AdvancedSettingsWnd* wnd = gAdvancedSettingsWnd;
+    if (!wnd || !wnd->hwnd || !wnd->listBox) {
+        out.Append("NOTREADY no-dialog\n");
+        return finish(2);
+    }
+    VirtListBox* lb = wnd->listBox;
+    if (lb->bounds.IsEmpty()) {
+        out.Append("NOTREADY no-layout\n");
+        return finish(2);
+    }
+    int itemDy = lb->GetItemHeight();
+    if (str::Eq(action, "scroll")) {
+        lb->ScrollBy(arg * itemDy);
+        HwndRepaintNow(wnd->hwnd);
+    } else if (!str::Eq(action, "geom")) {
+        out.Append(fmt("ERROR unknown-action action=%s\n", action));
+        return finish(1);
+    }
+
+    // the content rect is where the rows live; UsableDy() rounds it down to
+    // whole rows, so the strip below the last one is background and must stay
+    // that way however far the list is scrolled
+    Rect cr = lb->ContentRectInWindow();
+    out.Append(fmt("OK content=%d,%d,%d,%d itemDy=%d usableDy=%d scrollY=%d maxScrollY=%d items=%d\n", cr.x, cr.y,
+                   cr.dx, cr.dy, itemDy, lb->UsableDy(), lb->scrollY, lb->MaxScrollY(), lb->ItemsCount()));
+    Vec<AdvSettingsRowRec> drawn;
+    RecordAdvSettingsRows(wnd, drawn);
+    for (const AdvSettingsRowRec& rec : drawn) {
+        Rect r = rec.rect;
+        out.Append(fmt("row=%d rect=%d,%d,%d,%d\n", rec.idx, r.x, r.y, r.dx, r.dy));
+    }
+    return finish(0);
+}
+
 void ShowAdvancedSettingsDialog(MainWindow* win) {
     if (!HasPermission(Perm::SavePreferences)) {
         return;

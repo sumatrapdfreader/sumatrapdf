@@ -5,3 +5,5 @@ struct MainWindow;
 
 void ShowAdvancedSettingsDialog(MainWindow* win);
 void SafeDeleteAdvancedSettingsDialog();
+
+TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut);

@@ -24,6 +24,7 @@
 #include "SelectTextKeyboard.h"
 #include "HomePage.h"
 #include "AIChatCommon.h"
+#include "AdvancedSettingsDialog.h"
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -138,6 +139,7 @@ enum class ControlCmd : u16 {
     TestMarkdownFollowLink = 43,
     TestHomeListRows = 44,
     TestPageComments = 45,
+    TestAdvSettingsRows = 46,
 };
 
 enum class ControlArgType : u16 {
@@ -703,6 +705,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestHomeListRows: {
             int exitCode = 0;
             Str res = HomeListRowsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestAdvSettingsRows: {
+            Str action = StringArg(req, 0);
+            i32 arg = 0;
+            IntArg(req, 1, arg); // optional; only "scroll" uses it
+            if (!action) {
+                AppendError(req, "TestAdvSettingsRows expects string action [, int rows]");
+                break;
+            }
+            int exitCode = 0;
+            Str res = AdvSettingsRowsResultTemp(action, arg, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
