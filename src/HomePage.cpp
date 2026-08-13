@@ -248,8 +248,7 @@ static AboutRow gAboutRows[] = {
 // The About screen's two text columns: a Table (ILayout) whose left column
 // is right-aligned and right column left-aligned. Rows with a url become
 // VirtLink (owning the hit-testing, the hand cursor and the tooltip), the rest
-// plain VirtText. Table is pure layout; AboutCtrl paints and hit-tests the
-// cells' VirtCtrls itself (they are not VirtCtrl children of AboutCtrl).
+// plain VirtText. Table is an ILayout child so ElementFromPoint walks the cells.
 static Kind kindAboutCtrl = "aboutCtrl";
 
 struct SumatraLogo;
@@ -274,7 +273,8 @@ struct AboutCtrl : VirtCtrl {
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
     void PaintChildren(VirtPaintCtx&) override;
-    VirtCtrl* ExtraFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) override;
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
 };
 
 static void OpenAboutUrl(VirtMouseEvent* ev) {
@@ -422,23 +422,17 @@ void AboutCtrl::PaintChildren(VirtPaintCtx& ctx) {
     }
 }
 
-// table cells are not VirtCtrl children; CtrlFromPoint asks here after logo / showFreqRead miss
-VirtCtrl* AboutCtrl::ExtraFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
-    if (!table) {
-        return nullptr;
+// table is not a VirtCtrl child; expose it so ElementFromPoint walks the cells
+int AboutCtrl::LayoutChildCount() {
+    return VirtCtrl::LayoutChildCount() + (table ? 1 : 0);
+}
+
+ILayout* AboutCtrl::LayoutChildAt(int i) {
+    int n = VirtCtrl::LayoutChildCount();
+    if (i < n) {
+        return VirtCtrl::LayoutChildAt(i);
     }
-    for (int i = table->LayoutChildCount() - 1; i >= 0; i--) {
-        VirtCtrl* v = table->LayoutChildAt(i)->AsVirtCtrl();
-        if (!v) {
-            continue;
-        }
-        v->SetRoot(root);
-        VirtCtrl* hit = CtrlFromPoint(v, ptWindow, ptLocalOut, flags);
-        if (hit) {
-            return hit;
-        }
-    }
-    return nullptr;
+    return table;
 }
 
 // build the table once, then keep text, fonts and colors in step with the theme
@@ -666,7 +660,8 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             case WM_SETCURSOR: {
                 pt = HwndGetCursorPos(hwnd);
                 Point ptLocal{0, 0};
-                VirtCtrl* w = CtrlFromPoint(gAboutRoot, pt, &ptLocal);
+                ILayout* el = ElementFromPoint(gAboutRoot, pt, &ptLocal);
+                VirtCtrl* w = el ? el->AsVirtCtrl() : nullptr;
                 if (w && w->OnSetCursor(ptLocal)) {
                     TempStr tip = w->GetTooltipTemp(ptLocal);
                     if (tip && *tip.s) {
@@ -2339,7 +2334,8 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
     }
     Point pt = HwndGetCursorPos(win->hwndCanvas);
     Point ptLocal{0, 0};
-    VirtCtrl* w = CtrlFromPoint(root, pt, &ptLocal);
+    ILayout* el = ElementFromPoint(root, pt, &ptLocal);
+    VirtCtrl* w = el ? el->AsVirtCtrl() : nullptr;
     if (!w || !w->OnSetCursor(ptLocal)) {
         return false;
     }
@@ -2870,7 +2866,8 @@ Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
         return {};
     }
     Point ptLocal{0, 0};
-    VirtCtrl* w = CtrlFromPoint(win->homeRoot, {x, y}, &ptLocal);
+    ILayout* el = ElementFromPoint(win->homeRoot, {x, y}, &ptLocal);
+    VirtCtrl* w = el ? el->AsVirtCtrl() : nullptr;
     HomeEntryCtrl* e = entries->EntryForCtrl(w);
     if (!e) {
         return {};
@@ -2884,7 +2881,8 @@ bool HomePageOnHover(MainWindow* win, int x, int y) {
         return false;
     }
     Point ptLocal{0, 0};
-    VirtCtrl* w = CtrlFromPoint(win->homeRoot, {x, y}, &ptLocal);
+    ILayout* el = ElementFromPoint(win->homeRoot, {x, y}, &ptLocal);
+    VirtCtrl* w = el ? el->AsVirtCtrl() : nullptr;
     HomeEntryCtrl* e = entries->EntryForCtrl(w);
     if (!e) {
         return false;

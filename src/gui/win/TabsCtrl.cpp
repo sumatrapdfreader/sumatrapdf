@@ -467,7 +467,8 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
         return res;
     }
     Point ptLocal{0, 0};
-    VirtCtrl* hit = CtrlFromPoint(vroot, p, &ptLocal);
+    ILayout* el = ElementFromPoint(vroot, p, &ptLocal);
+    VirtCtrl* hit = el ? el->AsVirtCtrl() : nullptr;
     // the only child of a tab is its ✕, so anything below a tab is the ✕
     bool overClose = hit && hit->parent && IsVirtCtrlOfKind(hit->parent, kindTabCtrl);
     TabCtrl* tab = nullptr;

@@ -41,8 +41,8 @@ enum VirtHitFlags : u32 {
     vhfIncludeDisabled = 1 << 0,
 };
 
-VirtCtrl* CtrlFromPoint(VirtCtrl* root, Point ptWindow, Point* ptLocalOut = nullptr, u32 flags = 0);
-VirtCtrl* CtrlFromPoint(VirtRoot* root, Point ptWindow, Point* ptLocalOut = nullptr, u32 flags = 0);
+ILayout* ElementFromPoint(ILayout* root, Point ptWindow, Point* ptLocalOut = nullptr, u32 flags = 0);
+ILayout* ElementFromPoint(VirtRoot* root, Point ptWindow, Point* ptLocalOut = nullptr, u32 flags = 0);
 
 // all rects are in HWND client coords
 struct VirtPaintCtx {
@@ -151,7 +151,6 @@ struct VirtCtrl : ILayout {
     virtual bool HitTest(Point ptLocal);
     // scroll containers return how much their content is scrolled
     virtual Point ScrollOffset();
-    virtual VirtCtrl* ExtraFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags);
 
     // dispatch to on* handlers; return true to consume (stop bubbling)
     bool OnMouseDown(VirtMouseEvent&);
