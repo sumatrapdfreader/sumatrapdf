@@ -77,12 +77,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-// Windows-only: glibc pthread structs have a field named __unused, so this
-// cannot be a macro on Linux/macOS.
-#if OS_WIN
-#define __unused [[maybe_unused]]
-#endif
-
 // C/C++ standard headers  we use often
 #include <cctype>
 #include <climits>
@@ -98,9 +92,13 @@
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
 #if OS_POSIX
+// pthread.h first: glibc mutex structs have a field named __unused
 #include <pthread.h>
 #include <strings.h>
 #endif
+
+// after system headers so we don't rewrite pthread's __unused field
+#define __unused [[maybe_unused]]
 
 #define _USE_MATH_DEFINES
 #include <math.h>

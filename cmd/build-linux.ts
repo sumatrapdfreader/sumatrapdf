@@ -59,6 +59,18 @@ function requireLinux(): void {
   }
 }
 
+// libssl-dev provides libcrypto.so; the runtime package only has libcrypto.so.3
+function libCryptoLinkFlags(): string[] {
+  const so = [
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so",
+    "/usr/lib/aarch64-linux-gnu/libcrypto.so",
+    "/usr/lib/libcrypto.so",
+    "/lib/x86_64-linux-gnu/libcrypto.so",
+    "/lib/aarch64-linux-gnu/libcrypto.so",
+  ];
+  return so.some((p) => existsSync(p)) ? ["-lcrypto"] : [];
+}
+
 function detectLinuxArch(): LinuxArch {
   if (process.arch === "arm64") return "arm64";
   if (process.arch === "x64") return "x64";
@@ -741,8 +753,6 @@ async function buildTestUtil(
     ...commonFlags,
     ...units.map((u) => u.obj),
     join(outDir, "lib", "libbase.a"),
-    // Crypto_posix.cpp uses OpenSSL digests on Linux (CommonCrypto on Darwin).
-    "-lcrypto",
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {
@@ -836,7 +846,7 @@ async function buildTestEngines(
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "liba-zlib.a"),
     "-Wl,--end-group",
-    "-lcrypto",
+    ...libCryptoLinkFlags(),
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {
