@@ -1910,6 +1910,12 @@ Size VirtText::GetIdealSize(bool onlyIfEmpty) {
     if (onlyIfEmpty && !sz.IsEmpty()) {
         return sz;
     }
+    if (len(s) == 0) {
+        // empty still occupies a line so a later SetText() paints into a real box
+        // (the find-bar status starts empty and is filled when a search runs)
+        sz = {0, PlatformFontLineHeight(font)};
+        return sz;
+    }
     sz = PlatformFontMeasureText(font, s);
     return sz;
 }
@@ -2117,7 +2123,9 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
     if (!pixmap) {
         return;
     }
-    Size s2 = GetIdealSize();
+    // pixmap size, not GetIdealSize(): that includes padding and a stretched
+    // blit falls back to an opaque copy, which paints the transparent fringe black
+    Size s2 = {pixmap->width, pixmap->height};
     Rect r = ctx.content;
     int x = r.x + ((r.dx - s2.dx) / 2);
     int y = r.y + ((r.dy - s2.dy) / 2);
