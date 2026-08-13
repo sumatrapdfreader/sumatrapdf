@@ -2100,13 +2100,14 @@ static Kind kindVirtCtrlIconButton = "virtCtrlIconButton";
 VirtIconButton::VirtIconButton() {
     onMouseEnter = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseLeave>(this);
+    onMouseMove = MkMethod1<VirtIconButton, VirtMouseEvent*, &VirtIconButton::OnMouseMove>(this);
     cursor = IDC_HAND;
 
     kind = kindVirtCtrlIconButton;
 }
 
-static int VirtIconDropdownDx() {
-    return DpiScale(12);
+int VirtIconButton::DropdownDx() const {
+    return hasDropdown ? DpiScale(12) : 0;
 }
 
 Size VirtIconButton::GetIdealSize() {
@@ -2116,21 +2117,29 @@ Size VirtIconButton::GetIdealSize() {
     }
     sz.dx += padding.left + padding.right;
     sz.dy += padding.top + padding.bottom;
-    if (hasDropdown) {
-        sz.dx += VirtIconDropdownDx();
-    }
+    sz.dx += DropdownDx();
     return sz;
 }
 
 void VirtIconButton::Paint(VirtPaintCtx& ctx) {
     bool enabled = IsEnabled();
-    Color bg = isSelected ? bgColorSelected : ((enabled && HasFlag(vwfHovered)) ? bgColorHover : kColorUnset);
-    if (bg != kColorUnset) {
-        ctx.gfx->FillRect(ctx.bounds, bg);
+    int dropDx = DropdownDx();
+    Rect action = ctx.bounds;
+    Rect drop = ctx.bounds;
+    if (dropDx > 0) {
+        action.dx -= dropDx;
+        drop.x = ctx.bounds.Right() - dropDx;
+        drop.dx = dropDx;
+    }
+    if (isSelected && bgColorSelected != kColorUnset) {
+        ctx.gfx->FillRect(action, bgColorSelected);
+    }
+    if (enabled && HasFlag(vwfHovered) && bgColorHover != kColorUnset) {
+        Rect hi = (dropDx > 0 && hoverOnDropdown) ? drop : action;
+        ctx.gfx->FillRect(hi, bgColorHover);
     }
     Pixmap* px = (!enabled && pixmapDisabled) ? pixmapDisabled : pixmap;
     Rect r = ctx.content;
-    int dropDx = hasDropdown ? VirtIconDropdownDx() : 0;
     if (px) {
         // pixmap size, not GetIdealSize(): that includes padding and a stretched
         // blit falls back to an opaque copy, which paints the transparent fringe black
@@ -2140,17 +2149,16 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
         int y = r.y + ((r.dy - s2.dy) / 2);
         ctx.gfx->DrawPixmap(px, {x, y, s2.dx, s2.dy});
     }
-    if (hasDropdown) {
+    if (dropDx > 0) {
         Color col = chevronColor;
         if (col == kColorUnset) {
             col = MkGray(enabled ? 0x40 : 0x90);
         }
-        int cx = r.Right() - (dropDx / 2);
-        int cy = r.y + (r.dy / 2);
-        int w = DpiScale(3);
-        int h = DpiScale(2);
-        ctx.gfx->DrawLineAA({cx - w, cy - h}, {cx, cy + h}, col, 1.2f);
-        ctx.gfx->DrawLineAA({cx, cy + h}, {cx + w, cy - h}, col, 1.2f);
+        // Segoe UI U+25BE (▾): same small filled triangle as the Win32
+        // TBSTYLE_EX_DRAWDDARROWS glyph
+        float pt = 12.f * (float)DpiGet() / 96.f;
+        PlatformFont* font = GetPlatformFont(StrL("Segoe UI"), pt, PlatformFontStyle::Regular);
+        ctx.gfx->DrawText(StrL("\xE2\x96\xBE"), drop, gfxTextCenter | gfxTextVCenter, font, col);
     }
 }
 
@@ -2159,6 +2167,19 @@ void VirtIconButton::OnMouseEnter() {
 }
 
 void VirtIconButton::OnMouseLeave() {
+    hoverOnDropdown = false;
+    Invalidate();
+}
+
+void VirtIconButton::OnMouseMove(VirtMouseEvent* ev) {
+    if (!hasDropdown) {
+        return;
+    }
+    bool onDrop = ev->pt.x >= bounds.dx - DropdownDx();
+    if (onDrop == hoverOnDropdown) {
+        return;
+    }
+    hoverOnDropdown = onDrop;
     Invalidate();
 }
 

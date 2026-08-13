@@ -13053,6 +13053,7 @@ static void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen) {
     BuildReadAloudMenuItems(menu, win, false, false);
 
     UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD, rc.left, rc.bottom, 0, win->hwndFrame, nullptr);
+    ToolbarEatMenuDismissClick(win, CmdReadAloud);
 
     DestroyMenu(menu);
     if (selected == 0) {

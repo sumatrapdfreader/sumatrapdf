@@ -606,6 +606,8 @@ struct VirtIconButton : VirtCtrl {
     bool isSelected = false;
     // split button: a chevron on the right; click there fires onDropdown
     bool hasDropdown = false;
+    // which half of a split button is hovered (action vs dropdown)
+    bool hoverOnDropdown = false;
     Color bgColorHover = kColorUnset;
     Color bgColorSelected = kColorUnset;
     Color chevronColor = kColorUnset;
@@ -614,10 +616,12 @@ struct VirtIconButton : VirtCtrl {
     VirtIconButton();
     ~VirtIconButton() override = default;
 
+    int DropdownDx() const;
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();
+    void OnMouseMove(VirtMouseEvent*);
 };
 
 // The ✕ that closes or removes something, styled like the tab close button: a

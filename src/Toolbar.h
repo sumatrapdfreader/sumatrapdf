@@ -40,6 +40,7 @@ void UpdateToolbarAfterThemeChange(MainWindow*);
 // Pixmap; null if the svg couldn't be rendered
 Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bgCol);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
+void ToolbarEatMenuDismissClick(MainWindow*, int cmdId);
 
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
 

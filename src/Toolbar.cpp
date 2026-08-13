@@ -74,6 +74,7 @@ constexpr int WarningMsgId = (int)CmdLast + 17;
 static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconFileOpen, CmdOpenFile, _TRN("Open")},
     {gIconPrint, CmdPrint, _TRN("Print")},
+    {nullptr, 0, nullptr},          // separator
     {nullptr, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
     {gIconPagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
     {gIconPageNext, CmdGoToNextPage, _TRN("Next Page")},
@@ -1731,6 +1732,50 @@ static bool IsVirtKind(VirtCtrl* w, const char* k) {
     return w && w->GetKind() && str::Eq(w->GetKind(), k);
 }
 
+// TrackPopupMenu is modal: a click on the split button dismisses the menu and
+// is then delivered as a new WM_LBUTTONDOWN, which would open it again.
+static u64 gToolbarDropdownClosedAt = 0;
+
+static bool ToolbarDropdownJustClosed() {
+    return GetTickCount64() - gToolbarDropdownClosedAt < 200;
+}
+
+static bool PeekRemoveClickOnRect(HWND hwnd, UINT msgId, Rect btn) {
+    MSG msg{};
+    if (!PeekMessageW(&msg, hwnd, msgId, msgId, PM_NOREMOVE)) {
+        return false;
+    }
+    Point pt = {GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam)};
+    if (!btn.Contains(pt)) {
+        return false;
+    }
+    PeekMessageW(&msg, hwnd, msgId, msgId, PM_REMOVE);
+    return true;
+}
+
+// After the popup returns, drop a pending click that landed on this button.
+void ToolbarEatMenuDismissClick(MainWindow* win, int cmdId) {
+    gToolbarDropdownClosedAt = GetTickCount64();
+    if (!win || !win->hwndToolbar || !win->toolbarVirt) {
+        return;
+    }
+    Rect btn{};
+    for (VirtCtrl* w : win->toolbarVirt->items) {
+        if (w && w->id == cmdId && w->GetVisibility() == Visibility::Visible) {
+            btn = w->BoundsInWindow();
+            break;
+        }
+    }
+    if (btn.IsEmpty()) {
+        return;
+    }
+    HWND hwnd = win->hwndToolbar;
+    while (PeekRemoveClickOnRect(hwnd, WM_LBUTTONDOWN, btn) || PeekRemoveClickOnRect(hwnd, WM_LBUTTONDBLCLK, btn)) {
+        MSG up{};
+        PeekMessageW(&up, hwnd, WM_LBUTTONUP, WM_LBUTTONUP, PM_REMOVE);
+    }
+}
+
 static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     VirtCtrl* w = ev->target;
     if (!w || !win || !w->IsEnabled()) {
@@ -1740,12 +1785,15 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     if (cmdId == PageInfoId || cmdId == 0) {
         return;
     }
+    if (ToolbarDropdownJustClosed() && (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud)) {
+        ev->didHandle = true;
+        return;
+    }
     if (IsVirtKind(w, "virtCtrlIconButton")) {
         auto* ib = (VirtIconButton*)w;
         if (ib->hasDropdown) {
-            Rect r = w->BoundsInWindow();
-            int dropDx = DpiScale(12);
-            if (ev->pt.x >= r.dx - dropDx) {
+            int dropDx = ib->DropdownDx();
+            if (dropDx > 0 && ev->pt.x >= w->bounds.dx - dropDx) {
                 NMTOOLBARW nmtb{};
                 nmtb.hdr.hwndFrom = win->hwndToolbar;
                 nmtb.hdr.idFrom = IDC_TOOLBAR;

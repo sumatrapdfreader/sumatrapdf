@@ -24,7 +24,7 @@ Hiding a button doesn't disable the command: it's still available from the menu,
 This is the standard toolbar written out, a convenient starting point to edit down:
 
 ```
-ToolbarCustomLayout = CmdOpenFile CmdPrint PageInfo CmdGoToPrevPage CmdGoToNextPage | CmdNavigateBack CmdNavigateForward | CmdReadAloud | CmdZoomFitWidthAndContinuous CmdZoomFitPageAndSinglePage CmdRotateLeft CmdRotateRight CmdZoomOut CmdZoomIn | CmdFindFirst
+ToolbarCustomLayout = CmdOpenFile CmdPrint | PageInfo CmdGoToPrevPage CmdGoToNextPage | CmdNavigateBack CmdNavigateForward | CmdReadAloud | CmdZoomFitWidthAndContinuous CmdZoomFitPageAndSinglePage CmdRotateLeft CmdRotateRight CmdZoomOut CmdZoomIn | CmdFindFirst
 ```
 
 Some buttons only show when they apply (the Read Aloud button needs `ToolbarShowReadAloud`, Find needs a document that can be searched, rotate needs a document that can be rotated), so a button you list may still stay hidden.
