@@ -158,34 +158,43 @@ Point VirtCtrl::ScrollOffset() {
     return {0, 0};
 }
 
-// topmost (i.e. last) child wins, so walk back to front
-VirtCtrl* VirtCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
-    if (!IsHitTestable()) {
+// Hit-test the subtree at ptWindow. Topmost (last) child wins.
+// vhfIncludeDisabled also matches disabled-but-visible controls so gray
+// toolbar buttons still show their tooltips.
+VirtCtrl* CtrlFromPoint(VirtCtrl* root, Point ptWindow, Point* ptLocalOut, u32 flags) {
+    if (!root || root->visibility != Visibility::Visible) {
         return nullptr;
     }
-    Rect b = BoundsInWindow();
+    if (!(flags & vhfIncludeDisabled) && !root->HasFlag(vwfEnabled)) {
+        return nullptr;
+    }
+    Rect b = root->BoundsInWindow();
     if (!b.Contains(ptWindow)) {
         return nullptr;
     }
-    if (!HasFlag(vwfPaintsOwnChildren)) {
-        for (int i = ChildCount() - 1; i >= 0; i--) {
-            VirtCtrl* hit = children[i]->WndFromPoint(ptWindow, ptLocalOut);
+    if (!root->HasFlag(vwfPaintsOwnChildren)) {
+        for (int i = root->ChildCount() - 1; i >= 0; i--) {
+            VirtCtrl* hit = CtrlFromPoint(root->ChildAt(i), ptWindow, ptLocalOut, flags);
             if (hit) {
                 return hit;
             }
         }
     }
-    if (HasFlag(vwfNoHitTest)) {
+    if (root->HasFlag(vwfNoHitTest)) {
         return nullptr;
     }
     Point ptLocal{ptWindow.x - b.x, ptWindow.y - b.y};
-    if (!HitTest(ptLocal)) {
+    if (!root->HitTest(ptLocal)) {
         return nullptr;
     }
     if (ptLocalOut) {
         *ptLocalOut = ptLocal;
     }
-    return this;
+    return root;
+}
+
+VirtCtrl* VirtCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
+    return CtrlFromPoint(this, ptWindow, ptLocalOut, flags);
 }
 
 bool VirtCtrl::OnMouseDown(VirtMouseEvent& ev) {
@@ -628,7 +637,7 @@ void VirtRoot::Paint(Gfx* gfx, Rect clip) {
     }
 }
 
-VirtCtrl* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
+VirtCtrl* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
     if (len(tops) == 0 || !bounds.Contains(ptWindow)) {
         return nullptr;
     }
@@ -637,54 +646,7 @@ VirtCtrl* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
     }
     // reverse of the paint order: whatever is drawn last is on top
     for (int i = len(tops) - 1; i >= 0; i--) {
-        VirtCtrl* w = tops[i]->WndFromPoint(ptWindow, ptLocalOut);
-        if (w) {
-            return w;
-        }
-    }
-    return nullptr;
-}
-
-// Like WndFromPoint, but includes disabled visible controls so gray toolbar
-// buttons still show their tooltips.
-static VirtCtrl* WndFromPointForTooltipWalk(VirtCtrl* w, Point ptWindow, Point* ptLocalOut) {
-    if (!w || w->visibility != Visibility::Visible) {
-        return nullptr;
-    }
-    Rect b = w->BoundsInWindow();
-    if (!b.Contains(ptWindow)) {
-        return nullptr;
-    }
-    if (!w->HasFlag(vwfPaintsOwnChildren)) {
-        for (int i = w->ChildCount() - 1; i >= 0; i--) {
-            VirtCtrl* hit = WndFromPointForTooltipWalk(w->ChildAt(i), ptWindow, ptLocalOut);
-            if (hit) {
-                return hit;
-            }
-        }
-    }
-    if (w->HasFlag(vwfNoHitTest)) {
-        return nullptr;
-    }
-    Point ptLocal{ptWindow.x - b.x, ptWindow.y - b.y};
-    if (!w->HitTest(ptLocal)) {
-        return nullptr;
-    }
-    if (ptLocalOut) {
-        *ptLocalOut = ptLocal;
-    }
-    return w;
-}
-
-VirtCtrl* VirtRoot::WndFromPointForTooltip(Point ptWindow, Point* ptLocalOut) {
-    if (len(tops) == 0 || !bounds.Contains(ptWindow)) {
-        return nullptr;
-    }
-    if (layoutInPaint) {
-        LayoutIfNeeded();
-    }
-    for (int i = len(tops) - 1; i >= 0; i--) {
-        VirtCtrl* w = WndFromPointForTooltipWalk(tops[i], ptWindow, ptLocalOut);
+        VirtCtrl* w = tops[i]->WndFromPoint(ptWindow, ptLocalOut, flags);
         if (w) {
             return w;
         }
@@ -701,7 +663,7 @@ void VirtRoot::HideTooltip() {
 
 void VirtRoot::UpdateTooltip(Point ptWindow) {
     Point ptLocal{};
-    VirtCtrl* w = WndFromPointForTooltip(ptWindow, &ptLocal);
+    VirtCtrl* w = WndFromPoint(ptWindow, &ptLocal, vhfIncludeDisabled);
     TempStr tip{};
     Rect tipRc{};
     while (w) {

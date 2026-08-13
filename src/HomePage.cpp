@@ -274,7 +274,7 @@ struct AboutCtrl : VirtCtrl {
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
     void PaintChildren(VirtPaintCtx&) override;
-    VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut) override;
+    VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags = 0) override;
 };
 
 static void OpenAboutUrl(VirtMouseEvent* ev) {
@@ -423,8 +423,8 @@ void AboutCtrl::PaintChildren(VirtPaintCtx& ctx) {
 }
 
 // hit-test logo / showFreqRead, then the table's links
-VirtCtrl* AboutCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
-    VirtCtrl* hit = VirtCtrl::WndFromPoint(ptWindow, ptLocalOut);
+VirtCtrl* AboutCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
+    VirtCtrl* hit = CtrlFromPoint(this, ptWindow, ptLocalOut, flags);
     if (hit) {
         return hit;
     }
@@ -437,7 +437,7 @@ VirtCtrl* AboutCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
             continue;
         }
         v->SetRoot(root);
-        hit = v->WndFromPoint(ptWindow, ptLocalOut);
+        hit = CtrlFromPoint(v, ptWindow, ptLocalOut, flags);
         if (hit) {
             return hit;
         }
