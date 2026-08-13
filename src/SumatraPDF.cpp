@@ -2512,6 +2512,9 @@ void FrameSyncSplitters(MainWindow* win) {
         win->frameRoot->SetBounds(HwndClientRect(win->hwndFrame));
     }
     Vec<VirtCtrl*> tops;
+    if (win->captionLayout) {
+        CollectVirtCtrls(win->captionLayout, tops);
+    }
     VirtSplitter* all[] = {win->sidebarSplitter, win->favSplitter, win->aiChatSplitter};
     for (VirtSplitter* s : all) {
         if (s) {
@@ -2519,6 +2522,87 @@ void FrameSyncSplitters(MainWindow* win) {
         }
     }
     win->frameRoot->SetTops(tops);
+}
+
+//--- tabs-in-titlebar caption
+
+static Kind kindCaptionBtn = "captionBtn";
+
+struct VirtCaptionButton : VirtCtrl {
+    MainWindow* win = nullptr;
+    int id = 0;
+    Size idealSize;
+
+    VirtCaptionButton(MainWindow* w, int idIn);
+    Size GetIdealSize() override;
+    void SetBounds(Rect) override;
+};
+
+VirtCaptionButton::VirtCaptionButton(MainWindow* w, int idIn) {
+    win = w;
+    id = idIn;
+    kind = kindCaptionBtn;
+    flags |= vwfNoHitTest;
+}
+
+Size VirtCaptionButton::GetIdealSize() {
+    return idealSize;
+}
+
+void VirtCaptionButton::SetBounds(Rect r) {
+    VirtCtrl::SetBounds(r);
+    if (!win) {
+        return;
+    }
+    win->captionBtn[id].rect = r;
+    win->captionBtn[id].id = id;
+    win->captionBtn[id].visible = GetVisibility() == Visibility::Visible;
+}
+
+constexpr int kTabsButtonGapX = 32;
+
+static void CreateCaptionLayout(MainWindow* win) {
+    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+        win->capBtn[i] = new VirtCaptionButton(win, i);
+        win->captionBtn[i].id = i;
+    }
+    win->capMenuSlot = new HwndSlot();
+    win->capMenuSlot->mapRtlX = true;
+    win->capTabsRow1 = new HwndSlot();
+    win->capTabsRow1->mapRtlX = true;
+    win->capTabsRow2 = new HwndSlot();
+    win->capTabsRow2->mapRtlX = true;
+    win->capGap = new Spacer(0, 0);
+    win->capDrag1 = new Spacer(0, 0);
+    win->capRow2Lead = new Spacer(0, 0);
+    win->capRow2Trail = new Spacer(0, 0);
+
+    // single row: sys | menu | tabs | gap | min | max/restore | close
+    // two row:     sys | menu hwnd | drag | min | max/restore | close
+    win->captionRow1 = new HBox();
+    win->captionRow1->alignCross = CrossAxisAlign::CrossEnd;
+    win->captionRow1->AddChild(win->capBtn[CB_SYSTEM_MENU]);
+    win->captionRow1->AddChild(win->capBtn[CB_MENU]);
+    win->captionRow1->AddChild(win->capMenuSlot);
+    win->captionRow1->AddChild(win->capTabsRow1, 1);
+    win->captionRow1->AddChild(win->capDrag1, 1);
+    win->captionRow1->AddChild(win->capGap);
+    win->captionRow1->AddChild(win->capBtn[CB_MINIMIZE]);
+    win->captionRow1->AddChild(win->capBtn[CB_MAXIMIZE]);
+    win->captionRow1->AddChild(win->capBtn[CB_RESTORE]);
+    win->captionRow1->AddChild(win->capBtn[CB_CLOSE]);
+
+    // two-row tabs sit under the menu, stopping short of the window buttons
+    win->captionRow2 = new HBox();
+    win->captionRow2->alignCross = CrossAxisAlign::Stretch;
+    win->captionRow2->AddChild(win->capRow2Lead);
+    win->captionRow2->AddChild(win->capTabsRow2, 1);
+    win->captionRow2->AddChild(win->capRow2Trail);
+
+    win->captionLayout = new VBox();
+    win->captionLayout->alignCross = CrossAxisAlign::Stretch;
+    win->captionLayout->AddChild(win->captionRow1);
+    win->captionLayout->AddChild(win->captionRow2);
 }
 
 // The frame's chrome + content: a VBox of caption / tabs / menu / toolbar
@@ -2539,8 +2623,7 @@ static void CreateFrameLayout(MainWindow* win) {
     win->menuSlot->mapRtlX = true;
     win->toolbarTopSlot = new HwndSlot();
     win->toolbarBottomSlot = new HwndSlot();
-    win->captionPad = new Spacer(0, 0);
-    win->captionSlot = new Spacer(0, 0);
+    CreateCaptionLayout(win);
 
     // the webview is expensive to resize, so this one only moves the panes
     // when the drag ends
@@ -2569,8 +2652,7 @@ static void CreateFrameLayout(MainWindow* win) {
 
     auto* chrome = new VBox();
     chrome->alignCross = CrossAxisAlign::Stretch;
-    chrome->AddChild(win->captionPad);
-    chrome->AddChild(win->captionSlot);
+    chrome->AddChild(win->captionLayout);
     chrome->AddChild(win->tabsSlot);
     chrome->AddChild(win->menuSlot);
     chrome->AddChild(win->toolbarTopSlot);
@@ -6311,6 +6393,80 @@ static void ClearSlotDefer(HwndSlot* slot) {
     slot->winPos = nullptr;
 }
 
+// sizes and shows the caption-tree children for the current mode (single row
+// vs. menu-bar + tabs). RelayoutFrame measures the tree after this; the
+// buttons' lastBounds become captionBtn[].rect
+static void SyncCaptionLayout(MainWindow* win) {
+    if (!win->captionLayout) {
+        return;
+    }
+    bool maximized = IsZoomed(win->hwndFrame);
+    bool twoRow = IsShowingMenuBarRebar(win);
+    bool isRtl = IsUIRtl();
+    bool needPad = !maximized && !twoRow;
+    int tabHeight = GetTabbarHeight(win->hwndFrame);
+    int pad = needPad ? kCaptionTopPadding : 0;
+    int menuBarDy = twoRow ? GetMenuBarRebarHeight(win) : 0;
+    bool hasFileTabs = WinHasFileTabs(win);
+
+    win->captionRow1->rtl = isRtl;
+    win->captionRow2->rtl = isRtl;
+
+    int winBtn = twoRow ? menuBarDy : (pad + tabHeight + 2);
+    // hamburger / app icon match the tab band; min/max/close span the pad too
+    int tabBtn = twoRow ? menuBarDy : tabHeight;
+
+    auto setBtn = [&](int id, bool vis, int sz) {
+        win->capBtn[id]->idealSize = {sz, sz};
+        SetVis(win->capBtn[id], vis);
+        win->captionBtn[id].id = id;
+        win->captionBtn[id].visible = vis;
+    };
+    setBtn(CB_SYSTEM_MENU, true, tabBtn);
+    setBtn(CB_MENU, !twoRow, tabBtn);
+    setBtn(CB_MINIMIZE, true, winBtn);
+    setBtn(CB_MAXIMIZE, !maximized, winBtn);
+    setBtn(CB_RESTORE, maximized, winBtn);
+    setBtn(CB_CLOSE, true, winBtn);
+
+    SetVis(win->capMenuSlot, twoRow);
+    SetVis(win->capTabsRow1, !twoRow);
+    SetVis(win->capDrag1, twoRow);
+    SetVis(win->capGap, !twoRow);
+    SetVis(win->captionRow2, twoRow && hasFileTabs);
+    SetVis(win->capTabsRow2, twoRow && hasFileTabs);
+    SetVis(win->capRow2Lead, twoRow && hasFileTabs && isRtl);
+    SetVis(win->capRow2Trail, twoRow && hasFileTabs);
+
+    win->capGap->dx = kTabsButtonGapX;
+    win->capTabsRow1->dy = tabHeight + 2;
+    win->capTabsRow2->dy = tabHeight;
+
+    if (twoRow) {
+        win->capMenuSlot->dy = menuBarDy;
+        int rowDx = win->captionRect.dx;
+        if (rowDx <= 0) {
+            rowDx = HwndClientRect(win->hwndFrame).dx;
+        }
+        int menuMax = std::max(rowDx - (4 * winBtn), 0);
+        int natural = menuMax;
+        if (win->hwndMenuToolbar) {
+            int btnCount = TbGetButtonCount(win->hwndMenuToolbar);
+            if (btnCount > 0) {
+                Rect lastBtn = TbGetItemRect(win->hwndMenuToolbar, btnCount - 1);
+                natural = lastBtn.x + lastBtn.dx + (DpiGetSystemMetrics(win->hwndMenuToolbar, SM_CXBORDER) * 2);
+            }
+        }
+        win->capMenuSlot->dx = std::min(natural, menuMax);
+        win->capRow2Lead->dx = winBtn;
+        win->capRow2Trail->dx = 3 * winBtn;
+        if (win->tabsCtrl) {
+            win->tabsVisible = hasFileTabs;
+            win->tabsCtrl->SetIsVisible(hasFileTabs);
+        }
+    }
+}
+
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     Rect rc = HwndClientRect(win->hwndFrame);
     // don't relayout while the window is minimized
@@ -6423,36 +6579,27 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool aiChatVisible = !favAsTab && win->uiState.aiChatVisible && win->hwndAiChatBox;
     bool showCaption = !win->presentation && !win->isFullScreen && win->tabsInTitlebar;
     bool showingMenuBar = IsShowingMenuBarRebar(win);
-    bool showCaptionPad = showCaption && !IsZoomed(win->hwndFrame) && !showingMenuBar;
     bool showTabsBar = !win->presentation && !win->isFullScreen && !win->tabsInTitlebar && win->tabsVisible;
     bool showMenuRebar = showingMenuBar && (!win->tabsInTitlebar || win->isFullScreen);
     bool showToolbar = win->isToolbarVisible;
     bool toolbarBottom = showToolbar && ToolbarAtBottom();
 
     int tabHeight = GetTabbarHeight(win->hwndFrame);
-    int captionHeight = 0;
     if (showCaption) {
-        captionHeight = tabHeight + 2;
-        if (showingMenuBar) {
-            int menuBarDy = GetMenuBarRebarHeight(win);
-            captionHeight = menuBarDy + (WinHasFileTabs(win) ? tabHeight : 0);
-        }
+        SyncCaptionLayout(win);
     }
+    int captionHeight = showCaption ? win->captionLayout->Layout(ExpandInf()).dy : 0;
     int menuBarDy = showMenuRebar ? GetMenuBarRebarHeight(win) : 0;
     int rebarDy = 0;
     if (showToolbar && win->hwndReBar) {
         rebarDy = HwndWindowRect(win->hwndReBar).dy;
     }
 
-    SetVis(win->captionPad, showCaptionPad);
-    SetVis(win->captionSlot, showCaption);
+    SetVis(win->captionLayout, showCaption);
     SetVis(win->tabsSlot, showTabsBar);
     SetVis(win->menuSlot, showMenuRebar);
     SetVis(win->toolbarTopSlot, showToolbar && !toolbarBottom);
     SetVis(win->toolbarBottomSlot, showToolbar && toolbarBottom);
-    win->captionPad->dy = showCaptionPad ? kCaptionTopPadding : 0;
-    win->captionSlot->dx = rc.dx;
-    win->captionSlot->dy = captionHeight;
     win->tabsSlot->dy = tabHeight;
     win->menuSlot->dy = menuBarDy;
     win->toolbarTopSlot->dy = rebarDy;
@@ -6481,8 +6628,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->sidebarDx = sidebarDxApplied; // remember what's applied
     }
 
-    int chromeDy =
-        (showCaptionPad ? kCaptionTopPadding : 0) + captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy;
+    int chromeDy = captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy;
     int contentDy = std::max(rc.dy - chromeDy, 0);
 
     int tocDy = 0;
@@ -6527,8 +6673,15 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     win->aiChatSlot->dx = aiChatDx;
 
     // chrome HWNDs only move when updateToolbars (splitter drag skips them)
+    bool capTwoRow = showCaption && showingMenuBar;
+    bool capHasFileTabs = showCaption && WinHasFileTabs(win);
     BindSlot(win->tabsSlot, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, updateToolbars && showTabsBar);
     BindSlot(win->menuSlot, win->hwndMenuReBar, &dh, updateToolbars && showMenuRebar);
+    BindSlot(win->capMenuSlot, win->hwndMenuReBar, &dh, updateToolbars && capTwoRow);
+    BindSlot(win->capTabsRow1, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh,
+             updateToolbars && showCaption && !capTwoRow);
+    BindSlot(win->capTabsRow2, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh,
+             updateToolbars && capTwoRow && capHasFileTabs);
     BindSlot(win->toolbarTopSlot, win->hwndReBar, &dh, updateToolbars && showToolbar && !toolbarBottom);
     BindSlot(win->toolbarBottomSlot, win->hwndReBar, &dh, updateToolbars && showToolbar && toolbarBottom);
     BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible);
@@ -6540,15 +6693,15 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     LayoutToSize(win->chromeLayout, {rc.dx, rc.dy});
     win->chromeLayout->SetBounds(rc);
 
-    HwndSlot* chromeSlots[] = {win->tabsSlot,          win->menuSlot,   win->toolbarTopSlot,
-                               win->toolbarBottomSlot, win->tocSlot,    win->favSlot,
-                               win->fullFavSlot,       win->canvasSlot, win->aiChatSlot};
+    HwndSlot* chromeSlots[] = {win->tabsSlot,    win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot,
+                               win->capMenuSlot, win->capTabsRow1, win->capTabsRow2,    win->tocSlot,
+                               win->favSlot,     win->fullFavSlot, win->canvasSlot,     win->aiChatSlot};
     for (HwndSlot* s : chromeSlots) {
         ClearSlotDefer(s);
     }
 
     if (showCaption) {
-        win->captionRect = win->captionSlot->lastBounds;
+        win->captionRect = win->captionLayout->lastBounds;
         if (IsRunningOnWine()) {
             logf(
                 "RelayoutFrame: tabsInTitlebar tabHeight=%d captionHeight=%d captionRect=(%d,%d,%d,%d) "
@@ -11387,235 +11540,36 @@ static void HandleCaptionClick(MainWindow* win, int btnIdx) {
     }
 }
 
-constexpr int kTabsButtonGapX = 32;
-
 void RelayoutCaption(MainWindow* win) {
-    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-        win->captionBtn[i].id = i;
+    if (!win->captionLayout || !win->tabsInTitlebar) {
+        return;
     }
+    SyncCaptionLayout(win);
     Rect rc = win->captionRect;
-    bool maximized = IsZoomed(win->hwndFrame);
-    bool showingMenuBar = IsShowingMenuBarRebar(win);
-    int tabHeight = GetTabbarHeight(win->hwndFrame);
-    bool isRtl = IsUIRtl();
-    if (IsRunningOnWine()) {
-        logf("RelayoutCaption: captionRect=(%d,%d,%d,%d) tabHeight=%d showingMenuBar=%d maximized=%d\n", rc.x, rc.y,
-             rc.dx, rc.dy, tabHeight, (int)showingMenuBar, (int)maximized);
+    if (rc.IsEmpty()) {
+        return;
     }
-
-    if (showingMenuBar) {
-        // Two-row layout:
-        //   Row 1 (top): CB_SYSTEM_MENU, menu bar rebar, [drag area], min/max/close
-        //   Row 2: tabs, [drag area]
-        // Menu bar goes all the way to the top for compactness.
-
-        int menuBarDy = GetMenuBarRebarHeight(win);
-
-        int row1Y = rc.y;
-        int row2Y = rc.y + menuBarDy;
-
-        // window buttons match menu bar size: dy = menuBarDy, dx = menuBarDy
-        int btnDy = menuBarDy;
-        int btnDx = menuBarDy;
-
-        int row1X = 0;
-        int row1Dx = 0;
-        int buttonsWidth = 3 * btnDx;
-        // both branches below set these
-        int tabsX;
-        int tabsDx;
-
-        if (isRtl) {
-            int x = rc.x;
-            win->captionBtn[CB_CLOSE].rect = {x, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_CLOSE].visible = true;
-            x += btnDx;
-
-            win->captionBtn[CB_RESTORE].rect = {x, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_RESTORE].visible = maximized;
-            if (maximized) {
-                x += btnDx;
-            }
-
-            win->captionBtn[CB_MAXIMIZE].rect = {x, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
-            if (!maximized) {
-                x += btnDx;
-            }
-
-            win->captionBtn[CB_MINIMIZE].rect = {x, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_MINIMIZE].visible = true;
-            x += btnDx;
-
-            int right = rc.x + rc.dx;
-            right -= btnDx;
-            win->captionBtn[CB_SYSTEM_MENU].rect = {right, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_SYSTEM_MENU].visible = true;
-
-            row1X = x;
-            row1Dx = right - x;
-            tabsX = rc.x + buttonsWidth;
-            tabsDx = rc.dx - buttonsWidth - btnDx;
-        } else {
-            win->captionBtn[CB_CLOSE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_CLOSE].visible = true;
-            rc.dx -= btnDx;
-
-            win->captionBtn[CB_RESTORE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_RESTORE].visible = maximized;
-
-            win->captionBtn[CB_MAXIMIZE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
-            rc.dx -= btnDx;
-
-            win->captionBtn[CB_MINIMIZE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_MINIMIZE].visible = true;
-            rc.dx -= btnDx;
-
-            // Row 1 left: system menu (sized to match window buttons)
-            win->captionBtn[CB_SYSTEM_MENU].rect = {rc.x, row1Y, btnDx, btnDy};
-            win->captionBtn[CB_SYSTEM_MENU].visible = true;
-            row1X = rc.x + btnDx;
-            row1Dx = rc.dx - btnDx;
-            tabsX = rc.x;
-            tabsDx = rc.dx;
-        }
-
-        // CB_MENU hidden when menu bar rebar is showing
-        win->captionBtn[CB_MENU].rect = {row1X, row1Y, menuBarDy, menuBarDy};
-        win->captionBtn[CB_MENU].visible = false;
-
-        // Menu bar rebar in row 1 after system menu, natural width
-        int menuBarWidth = row1Dx; // default: fill available
-        if (win->hwndMenuToolbar) {
-            int btnCount = TbGetButtonCount(win->hwndMenuToolbar);
-            if (btnCount > 0) {
-                Rect lastBtn = TbGetItemRect(win->hwndMenuToolbar, btnCount - 1);
-                int naturalWidth =
-                    lastBtn.x + lastBtn.dx + (DpiGetSystemMetrics(win->hwndMenuToolbar, SM_CXBORDER) * 2);
-                if (naturalWidth < row1Dx) {
-                    menuBarWidth = naturalWidth;
-                }
-            }
-        }
-
-        // Favorites alone must not keep the tab row open (issue #5861)
-        bool hasFileTabs = WinHasFileTabs(win);
-
-        DeferWinPosHelper dh;
-        // hwnd may vanish if embed teardown ran under a nested SendMessage
-        HWND hwndMenuReBar = win->hwndMenuReBar;
-        if (hwndMenuReBar && ::IsWindow(hwndMenuReBar)) {
-            int menuBarX = HwndMapChildXForRtlParent(win->hwndFrame, row1X, menuBarWidth);
-            dh.SetWindowPos(hwndMenuReBar, nullptr, menuBarX, row1Y, menuBarWidth, menuBarDy, SWP_NOZORDER);
-        }
-
-        if (hasFileTabs && win->tabsCtrl && win->tabsCtrl->hwnd && ::IsWindow(win->tabsCtrl->hwnd)) {
-            // Row 2: tabs — keep MainWindow::tabsVisible in sync (issue #5861)
-            win->tabsVisible = true;
-            win->tabsCtrl->SetIsVisible(true);
-            int tabBarX = HwndMapChildXForRtlParent(win->hwndFrame, tabsX, tabsDx);
-            dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabBarX, row2Y, tabsDx, tabHeight, SWP_NOZORDER);
-        } else {
-            // no file tabs: hide tab bar, single-row caption
-            win->tabsVisible = false;
-            if (win->tabsCtrl) {
-                win->tabsCtrl->SetIsVisible(false);
-            }
-        }
-        dh.End();
-    } else {
-        // Single-row layout
-        int btnDy = rc.y + rc.dy;
-        int btnDx = btnDy;
-
-        // tabs fill the full caption height (rc.dy)
-        int tabDy = rc.dy;
-        int tabY = rc.y + rc.dy - tabDy;
-
-        int tabsX = 0;
-        int tabsDx = 0;
-
-        if (isRtl) {
-            int x = rc.x;
-            win->captionBtn[CB_CLOSE].rect = {x, 0, btnDx, btnDy};
-            win->captionBtn[CB_CLOSE].visible = true;
-            x += btnDx;
-
-            win->captionBtn[CB_RESTORE].rect = {x, 0, btnDx, btnDy};
-            win->captionBtn[CB_RESTORE].visible = maximized;
-            if (maximized) {
-                x += btnDx;
-            }
-
-            win->captionBtn[CB_MAXIMIZE].rect = {x, 0, btnDx, btnDy};
-            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
-            if (!maximized) {
-                x += btnDx;
-            }
-
-            win->captionBtn[CB_MINIMIZE].rect = {x, 0, btnDx, btnDy};
-            win->captionBtn[CB_MINIMIZE].visible = true;
-            x += btnDx;
-
-            int right = rc.x + rc.dx;
-            right -= tabDy;
-            win->captionBtn[CB_SYSTEM_MENU].rect = {right, tabY, tabDy, tabDy};
-            win->captionBtn[CB_SYSTEM_MENU].visible = true;
-            right -= tabDy;
-            win->captionBtn[CB_MENU].rect = {right, tabY, tabDy, tabDy};
-            win->captionBtn[CB_MENU].visible = true;
-            right -= kTabsButtonGapX;
-
-            tabsX = x;
-            tabsDx = right - x;
-        } else {
-            win->captionBtn[CB_CLOSE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-            win->captionBtn[CB_CLOSE].visible = true;
-            rc.dx -= btnDx;
-
-            win->captionBtn[CB_RESTORE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-            win->captionBtn[CB_RESTORE].visible = maximized;
-
-            win->captionBtn[CB_MAXIMIZE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
-            rc.dx -= btnDx;
-
-            win->captionBtn[CB_MINIMIZE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-            win->captionBtn[CB_MINIMIZE].visible = true;
-            rc.dx -= btnDx;
-
-            win->captionBtn[CB_SYSTEM_MENU].rect = {rc.x, tabY, tabDy, tabDy};
-            win->captionBtn[CB_SYSTEM_MENU].visible = true;
-            rc.x += tabDy;
-            rc.dx -= tabDy;
-
-            win->captionBtn[CB_MENU].rect = {rc.x, tabY, tabDy, tabDy};
-            win->captionBtn[CB_MENU].visible = true;
-            rc.x += tabDy;
-            rc.dx -= tabDy;
-
-            // leave a gap between the tab bar and the minimize button
-            rc.dx -= kTabsButtonGapX;
-            tabsX = rc.x;
-            tabsDx = rc.dx;
-        }
-
-        DeferWinPosHelper dh;
-        int tabBarX = HwndMapChildXForRtlParent(win->hwndFrame, tabsX, tabsDx);
-        dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabBarX, tabY, tabsDx, tabDy, SWP_NOZORDER);
-        dh.End();
-        if (IsRunningOnWine()) {
-            logf("RelayoutCaption: singleRow btnDy=%d tabY=%d tabDy=%d tabsDx=%d\n", btnDy, tabY, tabDy, tabsDx);
-        }
+    bool twoRow = IsShowingMenuBarRebar(win);
+    bool hasFileTabs = WinHasFileTabs(win);
+    DeferWinPosHelper dh;
+    BindSlot(win->capMenuSlot, win->hwndMenuReBar, &dh, twoRow);
+    BindSlot(win->capTabsRow1, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, !twoRow);
+    BindSlot(win->capTabsRow2, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, twoRow && hasFileTabs);
+    int dy = win->captionLayout->MinIntrinsicHeight(rc.dx);
+    if (dy <= 0) {
+        dy = rc.dy;
     }
-
+    LayoutToSize(win->captionLayout, {rc.dx, dy});
+    win->captionLayout->SetBounds({rc.x, rc.y, rc.dx, dy});
+    win->captionRect = {rc.x, rc.y, rc.dx, dy};
+    BindSlot(win->capMenuSlot, nullptr, nullptr, false);
+    BindSlot(win->capTabsRow1, nullptr, nullptr, false);
+    BindSlot(win->capTabsRow2, nullptr, nullptr, false);
+    dh.End();
     UpdateTabWidth(win);
-
-    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-        if (win->captionBtn[i].visible) {
-            HwndInvalidateRect(win->hwndFrame, win->captionBtn[i].rect, false);
-        }
+    if (IsRunningOnWine()) {
+        logf("RelayoutCaption: captionRect=(%d,%d,%d,%d) twoRow=%d hasFileTabs=%d\n", win->captionRect.x,
+             win->captionRect.y, win->captionRect.dx, win->captionRect.dy, (int)twoRow, (int)hasFileTabs);
     }
 }
 

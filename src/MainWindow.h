@@ -21,6 +21,7 @@ struct ILayout;
 struct Spacer;
 struct HwndSlot;
 struct VBox;
+struct VirtCaptionButton;
 struct DropDown;
 struct Checkbox;
 struct VirtButton;
@@ -392,8 +393,18 @@ struct MainWindow {
     HwndSlot* menuSlot = nullptr;
     HwndSlot* toolbarTopSlot = nullptr;
     HwndSlot* toolbarBottomSlot = nullptr;
-    Spacer* captionPad = nullptr;
-    Spacer* captionSlot = nullptr;
+    // tabs-in-titlebar caption: VirtCtrl buttons + HwndSlots for tabs/menu
+    VBox* captionLayout = nullptr;
+    HBox* captionRow1 = nullptr;
+    HBox* captionRow2 = nullptr;
+    VirtCaptionButton* capBtn[CB_BTN_COUNT]{};
+    HwndSlot* capMenuSlot = nullptr;
+    HwndSlot* capTabsRow1 = nullptr;
+    HwndSlot* capTabsRow2 = nullptr;
+    Spacer* capGap = nullptr;
+    Spacer* capDrag1 = nullptr;
+    Spacer* capRow2Lead = nullptr;
+    Spacer* capRow2Trail = nullptr;
 
     // home page thumbnail scrolling
     int homePageScrollY = 0;
