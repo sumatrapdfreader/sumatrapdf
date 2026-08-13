@@ -111,6 +111,7 @@
 #include "CommandPalette.h"
 #include "AdvancedSettingsDialog.h"
 #include "ChangeLanguageDialog.h"
+#include "ChangeScrollbarDialog.h"
 #include "ChangeThemeDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
@@ -7362,12 +7363,6 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
     HwndInvalidate(win->hwndCanvas, true);
 }
 
-static void OnMenuChangeScrollbar(HWND hwnd) {
-    if (Dialog_ChangeScrollbar(hwnd)) {
-        UpdateFixedPageScrollbarsVisibility();
-    }
-}
-
 static void ShowOptionsDialog(HWND hwnd) {
     if (!HasPermission(Perm::SavePreferences)) {
         return;
@@ -10260,7 +10255,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdChangeScrollbar:
-            OnMenuChangeScrollbar(win->hwndFrame);
+            ShowChangeScrollbarDialog(win);
             break;
 
         case CmdChangeBackgroundColor:

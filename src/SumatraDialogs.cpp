@@ -544,57 +544,6 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut) {
     return true;
 }
 
-static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM /*lp*/) {
-    switch (msg) {
-        case WM_INITDIALOG: {
-            if (UseDarkModeLib()) {
-                DarkMode::setDarkWndSafe(hDlg);
-            }
-            Str s = gGlobalPrefs->scrollbars;
-            int checkId = IDC_SCROLLBAR_WINDOWS;
-            if (str::EqI(s, StrL("smart"))) {
-                checkId = IDC_SCROLLBAR_SMART;
-            } else if (str::EqI(s, StrL("overlay"))) {
-                checkId = IDC_SCROLLBAR_OVERLAY;
-            } else if (str::EqI(s, StrL("hidden"))) {
-                checkId = IDC_SCROLLBAR_HIDDEN;
-            }
-            CheckRadioButton(hDlg, IDC_SCROLLBAR_WINDOWS, IDC_SCROLLBAR_HIDDEN, checkId);
-            HwndSetText(hDlg, _TRA("Change Scrollbar"));
-            HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
-            HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
-            HwndCenterDialog(hDlg);
-            return TRUE;
-        }
-        case WM_COMMAND:
-            switch (LOWORD(wp)) {
-                case IDOK: {
-                    Str val = "windows";
-                    if (IsDlgButtonChecked(hDlg, IDC_SCROLLBAR_SMART) == BST_CHECKED) {
-                        val = "smart";
-                    } else if (IsDlgButtonChecked(hDlg, IDC_SCROLLBAR_OVERLAY) == BST_CHECKED) {
-                        val = "overlay";
-                    } else if (IsDlgButtonChecked(hDlg, IDC_SCROLLBAR_HIDDEN) == BST_CHECKED) {
-                        val = "hidden";
-                    }
-                    str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, val);
-                    EndDialog(hDlg, IDOK);
-                    return TRUE;
-                }
-                case IDCANCEL:
-                    EndDialog(hDlg, IDCANCEL);
-                    return TRUE;
-            }
-            break;
-    }
-    return FALSE;
-}
-
-bool Dialog_ChangeScrollbar(HWND hwnd) {
-    INT_PTR res = CreateDialogBox(IDD_DIALOG_CHANGE_SCROLLBAR, hwnd, Dialog_ChangeScrollbar_Proc, 0);
-    return res == IDOK;
-}
-
 static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
     Vec<TextEditor*> textEditors;
     DetectTextEditors(textEditors);

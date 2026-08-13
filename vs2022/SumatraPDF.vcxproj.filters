@@ -129,6 +129,9 @@
     <ClInclude Include="..\src\ChangeLanguageDialog.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ChangeScrollbarDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ChangeThemeDialog.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -600,6 +603,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChangeLanguageDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ChangeScrollbarDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChangeThemeDialog.cpp">

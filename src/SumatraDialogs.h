@@ -6,7 +6,6 @@ struct GlobalPrefs;
 Str Dialog_GoToPage(HWND hwnd, Str currentPageLabel, int pageCount, bool onlyNumeric = true);
 Str Dialog_GetPassword(HWND hwnd, Str fileName, bool* rememberPassword, bool* showPassword);
 bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut);
-bool Dialog_ChangeScrollbar(HWND hwnd);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
 bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs);
 
