@@ -191,6 +191,13 @@ SmoothScroll = true
 ; 3.7)
 PaddingAfterLastPage = false
 
+; if true, going to a destination (clicking a bookmark or a link inside the
+; document) keeps the current zoom instead of applying the zoom the destination
+; asks for; it still goes to the page and the position. Same as Adobe Reader's
+; 'forbid the change of the current zoom factor during execution of Go to
+; Destination actions' (introduced in version 3.7)
+IgnoreDestinationZoom = false
+
 ; how long an internal-document link has to be hovered, in milliseconds, before
 ; a popup rendering the destination region (citation entry, figure, footnote)
 ; appears. -1 (the default) disables the popup; set a positive value like 300 to

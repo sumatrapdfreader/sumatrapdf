@@ -140,6 +140,7 @@ enum class ControlCmd : u16 {
     TestHomeListRows = 44,
     TestPageComments = 45,
     TestAdvSettingsRows = 46,
+    TestDestZoomNav = 47,
 };
 
 enum class ControlArgType : u16 {
@@ -672,6 +673,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = TocNavigateResultTemp(destNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDestZoomNav: {
+            i32 destNo = 1;
+            i32 startZoomPerc = 0;
+            if (!IntArg(req, 0, destNo)) {
+                AppendError(req, "TestDestZoomNav expects int destNo (1-based) [, int startZoomPerc]");
+                break;
+            }
+            IntArg(req, 1, startZoomPerc); // optional
+            int exitCode = 0;
+            Str res = DestZoomNavResultTemp(destNo, startZoomPerc, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

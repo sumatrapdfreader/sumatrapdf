@@ -952,6 +952,67 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Zoom to startZoomPerc, then follow the destNo-th outline destination the way
+// a bookmark click does, and report the zoom on both sides of it. That is what
+// IgnoreDestinationZoom decides: whether the destination's zoom wins or the
+// zoom the reader is at is kept (discussion #5938). With destNo == 0 nothing is
+// followed, so the caller can zoom and read back the zoom around a navigation
+// it drives itself (a real click in the Bookmarks sidebar).
+// Used by tests/issue-5938.ts.
+TempStr DestZoomNavResultTemp(int destNo, int startZoomPerc, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return fail(StrL("NOTREADY not-fixed"), 2);
+    }
+    IPageDestination* dest = nullptr;
+    if (destNo > 0) {
+        EngineBase* engine = dm->GetEngine();
+        TocTree* toc = engine ? engine->GetToc() : nullptr;
+        if (!toc || !toc->root) {
+            return fail(StrL("ERROR no-toc"));
+        }
+        int counter = 0;
+        dest = NthDestInToc(toc->root, destNo, counter);
+        if (!dest) {
+            return fail(fmt("ERROR no-dest destNo=%d", destNo));
+        }
+    }
+
+    if (startZoomPerc > 0) {
+        dm->SetZoomVirtual((float)startZoomPerc, nullptr);
+    }
+    float zoomBefore = dm->GetZoomVirtual();
+    if (dest) {
+        win->ctrl->HandleLink(dest, win->linkHandler);
+    }
+    float zoomAfter = dm->GetZoomVirtual();
+
+    out.Append(fmt("OK dest=%d destZoom=%g page=%d landed=%d zoomBefore=%g zoomAfter=%g ignore=%d\n", destNo,
+                   dest ? PageDestGetZoom(dest) : 0.f, dest ? PageDestGetPageNo(dest) : 0, dm->CurrentPageNo(),
+                   zoomBefore, zoomAfter, gGlobalPrefs->ignoreDestinationZoom ? 1 : 0));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // With destNo > 0, start navigation to that Markdown TOC item through the real
 // deferred TOC path. With destNo == 0, report whether WebView has reached the
 // requested vertical scroll position. Used by tests/issue-5842.ts.

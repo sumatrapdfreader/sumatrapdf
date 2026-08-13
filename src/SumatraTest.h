@@ -18,5 +18,6 @@ TempStr GetTocResultTemp(Str path, int* exitCodeOut = nullptr);
 TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut = nullptr);
 TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut = nullptr);
 TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut = nullptr);
+TempStr DestZoomNavResultTemp(int destNo, int startZoomPerc, int* exitCodeOut = nullptr);
 TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeOut = nullptr);
 TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut = nullptr);

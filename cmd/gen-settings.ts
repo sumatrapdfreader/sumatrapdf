@@ -1033,6 +1033,15 @@ const globalPrefs: Field[] = [
     "if true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the top of the window",
   ).ver("3.7"),
   field(
+    "IgnoreDestinationZoom",
+    Bool,
+    false,
+    "if true, going to a destination (clicking a bookmark or a link inside the document) keeps " +
+      "the current zoom instead of applying the zoom the destination asks for; it still goes to " +
+      "the page and the position. Same as Adobe Reader's 'forbid the change of the current zoom " +
+      "factor during execution of Go to Destination actions'",
+  ).ver("3.7"),
+  field(
     "CitationHoverDelay",
     Int,
     -1,

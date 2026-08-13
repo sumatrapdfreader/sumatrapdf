@@ -2663,6 +2663,11 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     // (kZoomFitPage / FitWidth / FitContent); 0 = leave zoom (issue #5828).
     // FitContent uses CurrentPageNo() for the content box, so switch page first
     // for virtual modes, then apply zoom, then fine-tune scroll.
+    if (gGlobalPrefs->ignoreDestinationZoom) {
+        // the reader stays at the zoom the user picked; the destination still
+        // decides the page and the position on it (discussion #5938)
+        zoom = 0;
+    }
     bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitHeight ||
                          zoom == kZoomFitContent || zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
     bool isAbsZoom = zoom > 0;

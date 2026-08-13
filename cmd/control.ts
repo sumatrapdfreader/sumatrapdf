@@ -39,6 +39,7 @@ export enum ControlCommand {
   TestHomeListRows = 44,
   TestPageComments = 45,
   TestAdvSettingsRows = 46,
+  TestDestZoomNav = 47,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

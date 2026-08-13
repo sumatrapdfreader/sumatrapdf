@@ -738,6 +738,12 @@ struct GlobalPrefs {
     // if true, continuous view has extra scroll room after the last page
     // so you can scroll the end of the document to the top of the window
     bool paddingAfterLastPage;
+    // if true, going to a destination (clicking a bookmark or a link
+    // inside the document) keeps the current zoom instead of applying the
+    // zoom the destination asks for; it still goes to the page and the
+    // position. Same as Adobe Reader's 'forbid the change of the current
+    // zoom factor during execution of Go to Destination actions'
+    bool ignoreDestinationZoom;
     // how long an internal-document link has to be hovered, in
     // milliseconds, before a popup rendering the destination region
     // (citation entry, figure, footnote) appears. -1 (the default)
@@ -1653,6 +1659,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, scrollbarInSinglePage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, true},
     {offsetof(GlobalPrefs, paddingAfterLastPage), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, ignoreDestinationZoom), SettingType::Bool, false},
     {offsetof(GlobalPrefs, citationHoverDelay), SettingType::Int, -1},
     {offsetof(GlobalPrefs, readAloudVoiceId), SettingType::String, 0},
     {offsetof(GlobalPrefs, readAloudSpeed), SettingType::Float, (intptr_t)"1"},
@@ -1748,7 +1755,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs),
-    134,
+    135,
     gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -1756,16 +1763,16 @@ static const StructInfo gGlobalPrefsInfo = {
     "\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0"
     "SearchUIFloating\0ShowFavorites\0SortFavoritesByName\0ShowToc\0ShowLinks\0ShowDocumentFocusIndicator\0ShowAnnotati"
     "onNotification\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0Pad"
-    "dingAfterLastPage\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScrollbar\0PreventSleepInFu"
-    "llscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarCustomLayout\0T"
-    "oolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnha"
-    "nce\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement"
-    "\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0"
-    "\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotatio"
-    "ns\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Theme"
-    "s\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0Search"
-    "UIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdate"
-    "s\0\0",
+    "dingAfterLastPage\0IgnoreDestinationZoom\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0FastScrollOverScro"
+    "llbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy"
+    "\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias"
+    "\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0TabsMru\0CtrlTabSimple\0Zo"
+    "omLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0Cl"
+    "audeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0Trans"
+    "lateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandler"
+    "s\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowS"
+    "tate\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0Pro"
+    "pWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view\0default zoom. valid values: fit page, fit width, fit height, fit content or percent "
     "like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a "
@@ -1801,13 +1808,16 @@ static const StructInfo gGlobalPrefsInfo = {
     "smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if "
     "true, show a scrollbar in single page mode as well\0if true, smooth mouse-wheel scrolling (exponential chase of "
     "the target; continuous wheel input stays fluid)\0if true, continuous view has extra scroll room after the last "
-    "page so you can scroll the end of the document to the top of the window\0how long an internal-document link has "
-    "to be hovered, in milliseconds, before a popup rendering the destination region (citation entry, figure, "
-    "footnote) appears. -1 (the default) disables the popup; set a positive value like 300 to enable it\0voice id for "
-    "Read Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read "
-    "Aloud Voice menu (WinRT voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 "
-    ".. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling "
-    "is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or "
+    "page so you can scroll the end of the document to the top of the window\0if true, going to a destination "
+    "(clicking a bookmark or a link inside the document) keeps the current zoom instead of applying the zoom the "
+    "destination asks for; it still goes to the page and the position. Same as Adobe Reader's 'forbid the change of "
+    "the current zoom factor during execution of Go to Destination actions'\0how long an internal-document link has to "
+    "be hovered, in milliseconds, before a popup rendering the destination region (citation entry, figure, footnote) "
+    "appears. -1 (the default) disables the popup; set a positive value like 300 to enable it\0voice id for Read Aloud "
+    "text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read Aloud "
+    "Voice menu (WinRT voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. "
+    "3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar\0if true, mouse wheel scrolling is "
+    "faster when mouse is over a scrollbar\0if true, prevents the screen from turning off when in fullscreen or "
     "presentation mode\0maximum width of a single tab, in pixels at 100% display scaling (at least 60)\0valid themes: "
     "Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, Solarized Dark, Dracula, Nebula, Greeny, "
     "Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, "
