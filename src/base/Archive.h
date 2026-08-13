@@ -34,8 +34,9 @@ struct Archive {
         i64 fileTime = 0; // this is typedef'ed as time64_t in unrar.h
         int fileSizeUncompressed = 0;
         bool isDir = false;
-        // set when eagerLoad extraction failed for this entry (bad data,
-        // OOM, etc.). `data` will be nullptr in that case.
+        // Permanent extract failure (no path to reopen, corrupt entry).
+        // Transient I/O (sleep, network drop) leaves this false so a later
+        // GetFileDataById retries. `data` is nullptr when failed.
         bool failed = false;
 
         // internal use

@@ -245,6 +245,30 @@ static int ArchiveReadOpenFilename(struct archive* a, Str path) {
 }
 #endif
 
+static struct archive* NewLibarchiveReader(Str password) {
+    struct archive* a = archive_read_new();
+    archive_read_support_format_all(a);
+    archive_read_support_filter_all(a);
+    SetArchivePassword(a, password);
+    return a;
+}
+
+// Open path for on-demand extraction. Retry once: after sleep or a brief
+// SMB disconnect the first open often fails and the second reconnects.
+static struct archive* OpenLibarchiveFile(Str path, Str password) {
+    struct archive* a = NewLibarchiveReader(password);
+    if (ArchiveReadOpenFilename(a, path) == ARCHIVE_OK) {
+        return a;
+    }
+    archive_read_free(a);
+    a = NewLibarchiveReader(password);
+    if (ArchiveReadOpenFilename(a, path) == ARCHIVE_OK) {
+        return a;
+    }
+    archive_read_free(a);
+    return nullptr;
+}
+
 bool Archive::OpenFromData(Str data) {
     if (len(data) == 0) {
         return false;
@@ -365,14 +389,10 @@ void Archive::LoadFileDataByIdLibarchive(int fileId) {
     }
 
     // re-open the archive and skip to the right entry
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
-    int r = ArchiveReadOpenFilename(a, archivePath_);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
-        fileInfo->failed = true;
+    struct archive* a = OpenLibarchiveFile(archivePath_, password);
+    if (!a) {
+        // Transient I/O (sleep, network drop). Leave failed=false so
+        // the next GetFileDataById retries.
         return;
     }
 
@@ -393,14 +413,17 @@ void Archive::LoadFileDataByIdLibarchive(int fileId) {
         u8* data = AllocArray<u8>(size + ZERO_PADDING_COUNT);
         if (!data) {
             archive_read_free(a);
-            fileInfo->failed = true;
-            return;
+            return; // OOM: retry later
         }
         la_ssize_t n = archive_read_data(a, data, (size_t)size);
         archive_read_free(a);
-        if (n < 0 || (int)n != size) {
+        if (n < 0) {
             free(data);
-            fileInfo->failed = true;
+            return; // I/O error: retry later
+        }
+        if ((int)n != size) {
+            free(data);
+            fileInfo->failed = true; // truncated/corrupt entry
             return;
         }
         fileInfo->data = (char*)data;
@@ -436,13 +459,8 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
         return {};
     }
 
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
-    int r = ArchiveReadOpenFilename(a, archivePath_);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
+    struct archive* a = OpenLibarchiveFile(archivePath_, password);
+    if (!a) {
         return {};
     }
 
@@ -568,6 +586,32 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, WStr fileName) {
     }
 }
 
+static HANDLE TryOpenUnrarFile(WCHAR* rarPath, UnrarData* uncompressedBuf) {
+    RAROpenArchiveDataEx arcData = {nullptr};
+    arcData.ArcNameW = rarPath;
+    arcData.OpenMode = RAR_OM_EXTRACT;
+    arcData.Callback = unrarCallback;
+    arcData.UserData = (LPARAM)uncompressedBuf;
+    HANDLE hArc = RAROpenArchiveEx(&arcData);
+    if (hArc && arcData.OpenResult == 0) {
+        return hArc;
+    }
+    if (hArc) {
+        RARCloseArchive(hArc);
+    }
+    return nullptr;
+}
+
+// Open a RAR for on-demand extraction. Retry once: after sleep or a
+// brief SMB disconnect the first open often fails and the second reconnects.
+static HANDLE OpenUnrarFile(WCHAR* rarPath, UnrarData* uncompressedBuf) {
+    HANDLE h = TryOpenUnrarFile(rarPath, uncompressedBuf);
+    if (h) {
+        return h;
+    }
+    return TryOpenUnrarFile(rarPath, uncompressedBuf);
+}
+
 // Populate fileInfos_[fileId]->data via the respective backend; set
 // ->failed when extraction didn't produce the expected bytes.
 void Archive::LoadFileDataByIdUnrarDll(int fileId) {
@@ -586,15 +630,10 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     UnrarData uncompressedBuf;
     uncompressedBuf.password = password;
 
-    RAROpenArchiveDataEx arcData = {nullptr};
-    arcData.ArcNameW = rarPath;
-    arcData.OpenMode = RAR_OM_EXTRACT;
-    arcData.Callback = unrarCallback;
-    arcData.UserData = (LPARAM)&uncompressedBuf;
-
-    HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0) {
-        fileInfo->failed = true;
+    HANDLE hArc = OpenUnrarFile(rarPath, &uncompressedBuf);
+    if (!hArc) {
+        // Transient I/O (sleep, network drop). Leave failed=false so
+        // the next GetFileDataById retries.
         return;
     }
 
@@ -603,13 +642,15 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     auto fileName = ToWStrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     int res;
+    bool permanent = false;
     bool ok = FindFile(hArc, &rarHeader, fileName);
     if (!ok) {
-        goto Exit;
+        goto Exit; // I/O or missing entry: retry later
     }
     size = fileInfo->fileSizeUncompressed;
     ReportIf(size != (int)rarHeader.UnpSize);
     if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
+        permanent = true;
         ok = false;
         goto Exit;
     }
@@ -617,7 +658,7 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     data = AllocArray<char>(size + ZERO_PADDING_COUNT);
     if (!data) {
         ok = false;
-        goto Exit;
+        goto Exit; // OOM: retry later
     }
 
     uncompressedBuf.d = (u8*)data;
@@ -630,7 +671,9 @@ Exit:
     RARCloseArchive(hArc);
     if (!ok) {
         free(data);
-        fileInfo->failed = true;
+        if (permanent) {
+            fileInfo->failed = true;
+        }
         return;
     }
     fileInfo->data = data;
@@ -656,14 +699,8 @@ Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
     UnrarData uncompressedBuf;
     uncompressedBuf.password = password;
 
-    RAROpenArchiveDataEx arcData = {nullptr};
-    arcData.ArcNameW = rarPath;
-    arcData.OpenMode = RAR_OM_EXTRACT;
-    arcData.Callback = unrarCallback;
-    arcData.UserData = (LPARAM)&uncompressedBuf;
-
-    HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0) {
+    HANDLE hArc = OpenUnrarFile(rarPath, &uncompressedBuf);
+    if (!hArc) {
         return {};
     }
 
