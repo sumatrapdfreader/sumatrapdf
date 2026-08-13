@@ -261,7 +261,7 @@ bool GfxHdc::SetMirrored(bool mirror) {
     return (prev & LAYOUT_RTL) != 0;
 }
 
-bool gUseDirect2D = false;
+bool gUseDirect2D = true;
 
 // The two implementations that draw the same way (anti-aliased shapes, their
 // own text layout), so that flipping gUseDirect2D swaps the backend under
