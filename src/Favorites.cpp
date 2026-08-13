@@ -129,7 +129,7 @@ HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
 
 static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
     FileState* ds;
-    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
         for (int j = 0; j < len(*ds->favorites); j++) {
             if (menuId == (*ds->favorites)[j]->menuId) {
                 if (dsOut) {
@@ -144,7 +144,7 @@ static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
 
 static FileState* GetByFavorite(Favorite* fn) {
     FileState* ds;
-    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
         if (ds->favorites->Contains(fn)) {
             return ds;
         }
@@ -154,7 +154,7 @@ static FileState* GetByFavorite(Favorite* fn) {
 
 static void ResetFavMenuIds() {
     FileState* ds;
-    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
         for (int j = 0; j < len(*ds->favorites); j++) {
             (*ds->favorites)[j]->menuId = 0;
         }
@@ -166,18 +166,18 @@ static int idxCache = -1;
 static FileState* GetFavByFilePath(Str filePath) {
     // it's likely that we'll ask about the info for the same
     // file as in previous call, so use one element cache
-    FileState* fs = gFileHistory.Get(idxCache);
+    FileState* fs = FileHistoryGet(idxCache);
     if (fs && str::Eq(fs->filePath, filePath)) {
         return fs;
     }
     // Full paths only: FindByPath avoids basename collisions (two files named
     // the same in different folders must not share favorites).
-    fs = gFileHistory.FindByPath(filePath);
+    fs = FileHistoryFindByPath(filePath);
     idxCache = -1;
-    if (fs && gFileHistory.states) {
-        int n = len(*gFileHistory.states);
+    if (fs && FileHistoryStates()) {
+        int n = len(*FileHistoryStates());
         for (int i = 0; i < n; i++) {
-            if ((*gFileHistory.states)[i] == fs) {
+            if ((*FileHistoryStates())[i] == fs) {
                 idxCache = i;
                 break;
             }
@@ -302,7 +302,7 @@ static void SortFileFavorites(FileState* fs) {
 
 static void SortAllFavorites() {
     FileState* fs;
-    for (int i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (fs = FileHistoryGet(i)) != nullptr; i++) {
         SortFileFavorites(fs);
     }
 }
@@ -322,7 +322,7 @@ static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel) {
         // we were asked to add a favorite for current file but couldn't find
         // history for this file
         fav = NewFileState(filePath);
-        gFileHistory.Append(fav);
+        FileHistoryAppend(fav);
     }
 
     Favorite* fn = FindByPage(fav, pageNo, pageLabel);
@@ -383,7 +383,7 @@ void SetSearchStartFavorite(MainWindow* win) {
     FileState* fs = GetFavByFilePath(path);
     if (!fs) {
         fs = NewFileState(path);
-        gFileHistory.Append(fs);
+        FileHistoryAppend(fs);
     }
 
     Str markName = SearchStartFavName();
@@ -420,7 +420,7 @@ static void RemoveFav(Str filePath, int pageNo) {
     DeleteFavorite(fn);
 
     if (!SettingsRememberOpenedFiles() && 0 == len(*fav->favorites)) {
-        gFileHistory.Remove(fav);
+        FileHistoryRemove(fav);
         DeleteFileState(fav);
     }
 }
@@ -437,7 +437,7 @@ static void RemoveAllFavForFile(Str filePath) {
     fav->favorites->Reset();
 
     if (!SettingsRememberOpenedFiles()) {
-        gFileHistory.Remove(fav);
+        FileHistoryRemove(fav);
         DeleteFileState(fav);
     }
 }
@@ -448,7 +448,7 @@ static void RemoveAllFavForFile(Str filePath) {
 
 bool HasFavorites() {
     FileState* ds;
-    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
         if (len(*ds->favorites) > 0) {
             return true;
         }
@@ -524,7 +524,7 @@ static bool SortByBaseFileName(Str s1, Str s2) {
 
 static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore = nullptr) {
     FileState* fs;
-    for (int i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (fs = FileHistoryGet(i)) != nullptr; i++) {
         if (len(*fs->favorites) > 0 && fs != toIgnore) {
             filePathsSortedOut.Append(fs->filePath);
         }
@@ -691,7 +691,7 @@ void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     // A hacky solution because I don't want to add even more parameters to
     // LoadDocument() and LoadDocumentInto()
     int pageNo = fav->pageNo;
-    FileState* ds = gFileHistory.FindByPath(fs->filePath);
+    FileState* ds = FileHistoryFindByPath(fs->filePath);
     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
         ds->pageNo = fav->pageNo;
         ds->scrollPos = PointF(-1, -1); // don't scroll the page

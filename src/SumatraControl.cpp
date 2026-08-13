@@ -38,10 +38,10 @@ static void AddFavoriteSilent(MainWindow* win, int pageNo) {
         return;
     }
     Str path = tab->filePath;
-    FileState* fs = gFileHistory.FindByPath(path);
+    FileState* fs = FileHistoryFindByPath(path);
     if (!fs) {
         fs = NewFileState(path);
-        gFileHistory.Append(fs);
+        FileHistoryAppend(fs);
     }
     if (!fs->favorites) {
         return;

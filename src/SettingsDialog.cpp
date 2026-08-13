@@ -266,7 +266,7 @@ void SettingsWnd::OnOk(VirtMouseEvent*) {
     }
 
     if (!SettingsRememberOpenedFiles()) {
-        gFileHistory.Clear(true);
+        FileHistoryClear(true);
         EmptyThumbnailCacheDirectory();
     }
     UpdateDocumentColors();

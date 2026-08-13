@@ -422,7 +422,7 @@ void SetTabState(WindowTab* tab, TabState* state) {
 
 static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
     logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
-    gFileHistory.MarkFileInexistent(state->filePath, true);
+    FileHistoryMarkFileInexistent(state->filePath, true);
     WindowTab* tab = new WindowTab(win);
     tab->SetFilePath(state->filePath);
     tab->tabState = state;
@@ -2797,7 +2797,7 @@ ContinueOpenWindow:
     }
 
     // only hide newly missing files when showing the start page on startup
-    if (showStartPage && gFileHistory.Get(0)) {
+    if (showStartPage && FileHistoryGet(0)) {
         RemoveNonExistentFilesAsync();
     }
     // call this once it's clear whether Perm::SavePreferences has been granted
@@ -2939,7 +2939,7 @@ Exit:
 
     // must be after uitask::Destroy() because we might have queued ReloadSettings()
     // which crashes if gGlobalPrefs is freed
-    gFileHistory.UpdateStatesSource(nullptr);
+    FileHistorySetStates(nullptr);
     CleanUpSettings();
 
     FreeAllMenuDrawInfos();

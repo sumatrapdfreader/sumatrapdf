@@ -42,118 +42,90 @@ constexpr int kFileHistoryMaxFiles = 1000;
 // Frequent Read list (space permitting)
 constexpr int kFileHistoryMaxFrequent = 1000;
 
-FileHistory gFileHistory;
+// owned by gGlobalPrefs->fileStates
+static Vec<FileState*>* gStates;
 
-void FileHistory::Append(FileState* fs) const {
+Vec<FileState*>* FileHistoryStates() {
+    return gStates;
+}
+
+void FileHistorySetStates(Vec<FileState*>* states) {
+    gStates = states;
+}
+
+void FileHistoryAppend(FileState* fs) {
     ReportIf(!fs->filePath);
-    states->Append(fs);
+    gStates->Append(fs);
 }
 
 // the home page layout cache holds raw FileState* from this list, so it has to
 // be dropped whenever an entry leaves it (the caller usually frees the
 // FileState right after; crash 8c7b045cb). It is rebuilt on the next paint
-void FileHistory::Remove(FileState* fs) const {
+void FileHistoryRemove(FileState* fs) {
     HomePageInvalidateLayoutCache();
-    states->Remove(fs);
+    gStates->Remove(fs);
 }
 
-void FileHistory::UpdateStatesSource(Vec<FileState*>* states) {
-    this->states = states;
-}
-
-void FileHistory::Clear(bool keepFavorites) const {
-    if (!states) {
+void FileHistoryClear(bool keepFavorites) {
+    if (!gStates) {
         return;
     }
     HomePageInvalidateLayoutCache();
     Vec<FileState*> keep;
-    for (int i = 0; i < len(*states); i++) {
-        if (keepFavorites && len(*(*states)[i]->favorites) > 0) {
-            (*states)[i]->openCount = 0;
-            keep.Append((*states)[i]);
+    for (int i = 0; i < len(*gStates); i++) {
+        if (keepFavorites && len(*(*gStates)[i]->favorites) > 0) {
+            (*gStates)[i]->openCount = 0;
+            keep.Append((*gStates)[i]);
         } else {
-            DeleteFileState((*states)[i]);
+            DeleteFileState((*gStates)[i]);
         }
     }
-    *states = keep;
+    *gStates = keep;
 }
 
-FileState* FileHistory::Get(int index) const {
-    if (index < 0 || index >= len(*states)) {
+FileState* FileHistoryGet(int index) {
+    if (index < 0 || index >= len(*gStates)) {
         return nullptr;
     }
-    return (*states)[index];
+    return (*gStates)[index];
 }
 
-FileState* FileHistory::FindByPath(Str filePath) const {
-    int idxExact = -1;
-    int n = len(*states);
-    for (int i = 0; i < n; i++) {
-        FileState* fs = (*states)[i];
+FileState* FileHistoryFindByPath(Str filePath) {
+    int n = len(*gStates);
+    for (int i = n - 1; i >= 0; i--) {
+        FileState* fs = (*gStates)[i];
         if (str::EqI(fs->filePath, filePath)) {
-            idxExact = i;
+            return fs;
         }
     }
-    if (idxExact == -1) {
-        return nullptr;
-    }
-    return (*states)[idxExact];
+    return nullptr;
 }
 
-// Exact path match first, then basename-only match (for legacy callers that
-// only have a file name). Prefer FindByPath when you have a full path — basename
-// matches can collide across folders.
-FileState* FileHistory::FindByName(Str filePath, int* idxOut) const {
-    int idxExact = -1;
-    int idxFileNameMatch = -1;
-    TempStr fileName = path::GetBaseNameTemp(filePath);
-    int n = len(*states);
-    for (int i = 0; i < n; i++) {
-        FileState* fs = (*states)[i];
-        if (str::EqI(fs->filePath, filePath)) {
-            idxExact = i;
-        } else if (str::EqI(path::GetBaseNameTemp(fs->filePath), fileName)) {
-            idxFileNameMatch = i;
-        }
-    }
-    int idFound = idxExact;
-    if (idFound == -1) {
-        idFound = idxFileNameMatch;
-    }
-    if (idFound == -1) {
-        return nullptr;
-    }
-    if (idxOut) {
-        *idxOut = idFound;
-    }
-    return (*states)[idFound];
-}
-
-FileState* FileHistory::MarkFileLoaded(Str filePath) const {
+FileState* FileHistoryMarkFileLoaded(Str filePath) {
     ReportIf(!filePath);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
-    FileState* fs = FindByPath(filePath);
+    FileState* fs = FileHistoryFindByPath(filePath);
     if (!fs) {
         fs = NewFileState(filePath);
         fs->useDefaultState = true;
     } else {
-        states->Remove(fs);
+        gStates->Remove(fs);
         fs->isMissing = false;
     }
-    states->InsertAt(0, fs);
+    gStates->InsertAt(0, fs);
     fs->openCount++;
     return fs;
 }
 
-bool FileHistory::MarkFileInexistent(Str filePath, bool hide) const {
+bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     ReportIf(!filePath);
-    FileState* state = FindByPath(filePath);
+    FileState* state = FileHistoryFindByPath(filePath);
     if (!state) {
         // keep a record so IsMissing can be persisted in settings (fixes #5585)
         state = NewFileState(filePath);
-        states->Append(state);
+        gStates->Append(state);
     }
     // move the file history entry to the end of the list
     // of recently opened documents (if it exists at all),
@@ -161,13 +133,13 @@ bool FileHistory::MarkFileInexistent(Str filePath, bool hide) const {
     // and so that we don't completely forget the settings,
     // should the file reappear later on
     int newIdx = hide ? INT_MAX : kFileHistoryMaxRecent - 1;
-    int idx = states->Find(state);
-    if (idx < newIdx && state != states->Last()) {
-        states->Remove(state);
-        if (len(*states) <= newIdx) {
-            states->Append(state);
+    int idx = gStates->Find(state);
+    if (idx < newIdx && state != gStates->Last()) {
+        gStates->Remove(state);
+        if (len(*gStates) <= newIdx) {
+            gStates->Append(state);
         } else {
-            states->InsertAt(newIdx, state);
+            gStates->InsertAt(newIdx, state);
         }
     }
     // also delete the thumbnail and move the link towards the
@@ -200,20 +172,23 @@ static int cmpOpenCount(FileState* const* a, FileState* const* b) {
     return dsA->index < dsB->index ? -1 : 1;
 }
 
-// returns a shallow copy of the file history list, sorted
-// by open count (which has a pre-multiplied recency factor)
-// and with all missing states filtered out
-// caller needs to delete the result (but not the contained states)
-void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
+// fills `list` with a shallow copy of the file history list (the states stay
+// owned by the history), with all missing states filtered out, sorted by `cmp`
+static void GetSortedStates(Vec<FileState*>& list, VecSortCmp<FileState*>::Fn cmp) {
     ReportIf(len(list) > 0);
     int i = 0;
-    for (FileState* ds : *states) {
+    for (FileState* ds : *gStates) {
         ds->index = i++;
         if (!ds->isMissing || ds->isPinned) {
             list.Append(ds);
         }
     }
-    VecSort(list, cmpOpenCount);
+    VecSort(list, cmp);
+}
+
+// sorted by open count (which has a pre-multiplied recency factor)
+void FileHistoryGetFrequencyOrder(Vec<FileState*>& list) {
+    GetSortedStates(list, cmpOpenCount);
 }
 
 // sorts recently opened files first
@@ -232,36 +207,28 @@ static int cmpRecentlyOpened(FileState* const* a, FileState* const* b) {
     return dsA->index < dsB->index ? -1 : 1;
 }
 
-void FileHistory::GetRecentlyOpenedOrder(Vec<FileState*>& list) const {
-    ReportIf(len(list) > 0);
-    int i = 0;
-    for (FileState* ds : *states) {
-        ds->index = i++;
-        if (!ds->isMissing || ds->isPinned) {
-            list.Append(ds);
-        }
-    }
-    VecSort(list, cmpRecentlyOpened);
+void FileHistoryGetRecentlyOpenedOrder(Vec<FileState*>& list) {
+    GetSortedStates(list, cmpRecentlyOpened);
 }
 
 // removes file history entries which shouldn't be saved anymore
 // (see the loop below for the details)
-void FileHistory::Purge(bool alwaysUseDefaultState) const {
+void FileHistoryPurge(bool alwaysUseDefaultState) {
     // minOpenCount is set to the number of times a file must have been
     // opened to be kept (provided that there is no other valuable
     // information about the file to be remembered)
     int minOpenCount = 0;
     if (alwaysUseDefaultState) {
         Vec<FileState*> frequencyList;
-        GetFrequencyOrder(frequencyList);
+        FileHistoryGetFrequencyOrder(frequencyList);
         if (len(frequencyList) > kFileHistoryMaxFrequent) {
             auto* el = frequencyList[kFileHistoryMaxFrequent];
             minOpenCount = el->openCount / 2;
         }
     }
 
-    for (int j = len(*states); j > 0; j--) {
-        FileState* state = (*states)[j - 1];
+    for (int j = len(*gStates); j > 0; j--) {
+        FileState* state = (*gStates)[j - 1];
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
         if (state->isPinned || len(state->decryptionKey) > 0 || len(*state->favorites) > 0) {
@@ -270,13 +237,13 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         // NOLINTNEXTLINE(bugprone-branch-clone): each branch documents a different reason to forget
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {
             // forget about missing documents without valuable state
-            states->RemoveAt(j - 1);
+            gStates->RemoveAt(j - 1);
         } else if (j > kFileHistoryMaxFiles) {
             // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
-            states->RemoveAt(j - 1);
+            gStates->RemoveAt(j - 1);
         } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > kFileHistoryMaxRecent) {
             // forget about files that were hardly used (and without valuable state)
-            states->RemoveAt(j - 1);
+            gStates->RemoveAt(j - 1);
         } else {
             continue;
         }
@@ -316,10 +283,10 @@ Str PopRecentlyClosedDocument() {
 // a StrVec rewrite: missing files in GetFrequencyOrder and Remove() behavior
 // made it too aggressive. Only purge thumbs for states we already know are gone.
 void CleanUpThumbnailCache() {
-    if (!gFileHistory.states) {
+    if (!gStates) {
         return;
     }
-    for (FileState* fs : *gFileHistory.states) {
+    for (FileState* fs : *gStates) {
         if (!fs || !fs->isMissing || len(fs->filePath) == 0) {
             continue;
         }
@@ -365,7 +332,7 @@ struct CheckFilesExistData {
 
 static void HideMissingFiles(CheckFilesExistData* d) {
     for (Str path : d->missing) {
-        gFileHistory.MarkFileInexistent(path, true);
+        FileHistoryMarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
     MaybeRedrawHomePage();
@@ -376,7 +343,7 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
     StrVec& toCheck = d->toCheck;
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
-    // be marked as inexistent in gFileHistory)
+    // be marked as inexistent in the file history)
     int n = len(toCheck);
     for (int i = 0; i < n; i++) {
         Str path = toCheck[i];
@@ -400,14 +367,14 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
 
 static void GetFilePathsToCheck(StrVec& toCheck) {
     FileState* fs;
-    for (int i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; i < 2 * kFileHistoryMaxRecent && (fs = FileHistoryGet(i)) != nullptr; i++) {
         if (!fs->isMissing) {
             toCheck.Append(fs->filePath);
         }
     }
     // add missing paths from the list of most frequently opened documents
     Vec<FileState*> frequencyList;
-    gFileHistory.GetFrequencyOrder(frequencyList);
+    FileHistoryGetFrequencyOrder(frequencyList);
     int iMax = std::min(2 * kFileHistoryMaxFrequent, len(frequencyList));
     for (int i = 0; i < iMax; i++) {
         fs = frequencyList[i];

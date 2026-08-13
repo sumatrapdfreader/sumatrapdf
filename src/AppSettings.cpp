@@ -481,7 +481,7 @@ bool LoadSettings() {
             }
         }
     }
-    gFileHistory.UpdateStatesSource(gprefs->fileStates);
+    FileHistorySetStates(gprefs->fileStates);
     //    auto fontName = ToWStrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
@@ -684,7 +684,7 @@ static void RememberSessionState() {
 }
 
 // called whenever global preferences change or a file is
-// added or removed from gFileHistory (in order to keep
+// added or removed from the file history (in order to keep
 // the list of recently opened documents in sync)
 bool SaveSettings() {
     if (gForTesting) {
@@ -718,7 +718,7 @@ bool SaveSettings() {
     SyncInitialSessionData();
 
     // remove entries which should (no longer) be remembered
-    gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
+    FileHistoryPurge(!gGlobalPrefs->rememberStatePerDocument);
     // update display mode and zoom fields from internal values
     str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
@@ -791,7 +791,7 @@ static void ReloadSettings() {
     // gGlobalPrefs; CleanUpSettings() frees them (crash 8c34d7eda)
     HomePageInvalidateLayoutCache();
 
-    gFileHistory.UpdateStatesSource(nullptr);
+    FileHistorySetStates(nullptr);
     CleanUpSettings();
 
     ok = LoadSettings();

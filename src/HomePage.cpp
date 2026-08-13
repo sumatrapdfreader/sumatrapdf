@@ -1078,9 +1078,9 @@ struct HomeSearchEdit : Edit {
 static int CountHomePageFiles() {
     Vec<FileState*> all;
     if (gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead) {
-        gFileHistory.GetFrequencyOrder(all);
+        FileHistoryGetFrequencyOrder(all);
     } else {
-        gFileHistory.GetRecentlyOpenedOrder(all);
+        FileHistoryGetRecentlyOpenedOrder(all);
     }
     int n = 0;
     for (FileState* fs : all) {
@@ -1316,9 +1316,9 @@ static bool HomeLayoutCacheFilesMatch(const Vec<FileState*>& files) {
 static void CollectHomePageFiles(MainWindow* win, Vec<FileState*>& fileStates, StrVec& filterWords) {
     Vec<FileState*> allFileStates;
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
-        gFileHistory.GetFrequencyOrder(allFileStates);
+        FileHistoryGetFrequencyOrder(allFileStates);
     } else {
-        gFileHistory.GetRecentlyOpenedOrder(allFileStates);
+        FileHistoryGetRecentlyOpenedOrder(allFileStates);
     }
 
     TempStr searchQuery = HomeSearchQueryTemp(win);
@@ -1450,9 +1450,9 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     Vec<FileState*> allFileStates;
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
-        gFileHistory.GetFrequencyOrder(allFileStates);
+        FileHistoryGetFrequencyOrder(allFileStates);
     } else {
-        gFileHistory.GetRecentlyOpenedOrder(allFileStates);
+        FileHistoryGetRecentlyOpenedOrder(allFileStates);
     }
     auto* hdc = l.hdc;
     auto rc = l.rc;
@@ -2074,7 +2074,7 @@ static void HomePinEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
     if (len(path) == 0) {
         return;
     }
-    FileState* fs = gFileHistory.FindByPath(path);
+    FileState* fs = FileHistoryFindByPath(path);
     if (!fs) {
         return;
     }
@@ -2127,7 +2127,7 @@ HomeListIconCtrl::HomeListIconCtrl() {
 
 void HomeListIconCtrl::OnGetTooltip(VirtTooltipEvent* ev) {
     auto* entry = (HomeEntryCtrl*)parent;
-    FileState* fs = gFileHistory.FindByPath(entry->filePath);
+    FileState* fs = FileHistoryFindByPath(entry->filePath);
     bool pinned = fs && fs->isPinned;
     ev->tip = str::DupTemp(pinned ? _TRA("Unpin") : _TRA("Pin"));
 }

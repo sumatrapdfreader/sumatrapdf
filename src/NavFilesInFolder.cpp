@@ -732,7 +732,7 @@ static void OnNavFilesWndDestroy(WindowBase::DestroyEvent* /*ev*/) {
 // compute is the newest still-existing entry in our own file history.
 static TempStr NavStartDirNoDocTemp() {
     for (int i = 0;; i++) {
-        FileState* fs = gFileHistory.Get(i);
+        FileState* fs = FileHistoryGet(i);
         if (!fs) {
             break;
         }

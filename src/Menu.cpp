@@ -1274,7 +1274,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
 
     int i;
     for (i = 0; i < kFileHistoryMaxRecent; i++) {
-        FileState* fs = gFileHistory.Get(i);
+        FileState* fs = FileHistoryGet(i);
         if (!fs || fs->isMissing) {
             break;
         }
@@ -1897,7 +1897,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         HomePageOnHover(win, x, y);
     }
 
-    FileState* fs = gFileHistory.FindByPath(path);
+    FileState* fs = FileHistoryFindByPath(path);
     if (!fs) {
         return;
     }
@@ -1983,16 +1983,16 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
 // favorites are only hidden (so the favorites aren't lost). Used by both the
 // context menu and the per-thumbnail ✕ button (issue #283).
 void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
-    FileState* fs = gFileHistory.FindByPath(filePath);
+    FileState* fs = FileHistoryFindByPath(filePath);
     if (!fs) {
         return;
     }
     TempStr path = str::DupTemp(fs->filePath);
     if (len(*fs->favorites) > 0) {
         // only hide documents with favorites
-        gFileHistory.MarkFileInexistent(fs->filePath, true);
+        FileHistoryMarkFileInexistent(fs->filePath, true);
     } else {
-        gFileHistory.Remove(fs);
+        FileHistoryRemove(fs);
         DeleteFileState(fs);
     }
     DeleteThumbnailForFile(path);

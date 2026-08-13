@@ -588,14 +588,14 @@ void ChangeColorWnd::ApplyBackground() {
             str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.windowBgCol, colorStr);
             gGlobalPrefs->fixedPageUI.windowBgColParsed.wasParsed = false;
         }
-        FileState* fs = gFileHistory.FindByPath(t->filePath);
+        FileState* fs = FileHistoryFindByPath(t->filePath);
         if (fs) {
             str::ReplaceWithCopy(&fs->bgCol, "");
         }
         t->bgColor = kColorUnset;
         t->bgColorCheckered = false;
     } else {
-        FileState* fs = gFileHistory.FindByPath(t->filePath);
+        FileState* fs = FileHistoryFindByPath(t->filePath);
         if (fs) {
             str::ReplaceWithCopy(&fs->bgCol, colorStr);
             fs->bgColParsed.wasParsed = false;
@@ -614,7 +614,7 @@ void ChangeColorWnd::ApplyTabColor() {
     }
     t->tabColor = isCheckered ? kColorUnset : currentColor;
     SetTabInfoColor(t);
-    FileState* fs = gFileHistory.FindByPath(t->filePath);
+    FileState* fs = FileHistoryFindByPath(t->filePath);
     if (fs) {
         if (isCheckered) {
             str::ReplaceWithCopy(&fs->tabCol, "");

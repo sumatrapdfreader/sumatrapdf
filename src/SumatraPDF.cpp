@@ -662,7 +662,7 @@ class HwndPasswordUI : public PasswordUI {
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
 Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
-    FileState* fileFromHistory = gFileHistory.FindByPath(path);
+    FileState* fileFromHistory = FileHistoryFindByPath(path);
     if (fileFromHistory && fileFromHistory->decryptionKey && fileDigest && decryptionKeyOut) {
         TempStr fingerprint = str::MemToHexTemp(Str((const char*)fileDigest, 16));
         Str decryptionKey = fileFromHistory->decryptionKey;
@@ -816,7 +816,7 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
     Str fp = tab->filePath;
-    FileState* fs = gFileHistory.FindByPath(fp);
+    FileState* fs = FileHistoryFindByPath(fp);
     if (!fs) {
         return;
     }
@@ -1026,9 +1026,9 @@ static bool ShouldSaveThumbnail(FileState* ds) {
     // don't create thumbnails for files that won't need them anytime soon
     Vec<FileState*> list;
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
-        gFileHistory.GetFrequencyOrder(list);
+        FileHistoryGetFrequencyOrder(list);
     } else {
-        gFileHistory.GetRecentlyOpenedOrder(list);
+        FileHistoryGetRecentlyOpenedOrder(list);
     }
     int idx = list.Find(ds);
     if (idx < 0) {
@@ -1128,7 +1128,7 @@ struct CreateThumbnailFromFileData {
 
 static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     if (d->bmp) {
-        FileState* fs = gFileHistory.FindByPath(d->filePath);
+        FileState* fs = FileHistoryFindByPath(d->filePath);
         SetThumbnail(fs, d->bmp);
         d->bmp = nullptr;
     }
@@ -2043,7 +2043,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
     if (!fs && gGlobalPrefs->rememberStatePerDocument) {
         Str fn = args->FilePath();
-        fs = gFileHistory.FindByPath(fn);
+        fs = FileHistoryFindByPath(fn);
         if (fs) {
             if (fs->windowPos.IsEmpty()) {
                 fs->windowPos = gGlobalPrefs->windowPos;
@@ -2500,7 +2500,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
-        FileState* state = gFileHistory.FindByPath(fs->filePath);
+        FileState* state = FileHistoryFindByPath(fs->filePath);
         if (state) {
             CreateThumbnailForFile(win, state);
         }
@@ -2511,7 +2511,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
         // we don't ask again at the next refresh
         Str decryptionKey = tab->AsFixed()->GetEngine()->decryptionKey;
         if (decryptionKey) {
-            FileState* fs2 = gFileHistory.FindByPath(fs->filePath);
+            FileState* fs2 = FileHistoryFindByPath(fs->filePath);
             if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
                 str::ReplaceWithCopy(&fs2->decryptionKey, decryptionKey);
             }
@@ -3135,20 +3135,20 @@ static void RenameFileInHistory(Str oldPath, Str newPath) {
     if (path::IsSame(oldPath, newPath)) {
         return;
     }
-    FileState* fs = gFileHistory.FindByPath(newPath);
+    FileState* fs = FileHistoryFindByPath(newPath);
     bool oldIsPinned = false;
     int oldOpenCount = 0;
     if (fs) {
         oldIsPinned = fs->isPinned;
         oldOpenCount = fs->openCount;
-        gFileHistory.Remove(fs);
+        FileHistoryRemove(fs);
         // TODO: merge favorites as well?
         if (len(*fs->favorites) > 0) {
             UpdateFavoritesTreeForAllWindows();
         }
         DeleteFileState(fs);
     }
-    fs = gFileHistory.FindByPath(oldPath);
+    fs = FileHistoryFindByPath(oldPath);
     if (fs) {
         SetFileStatePath(fs, newPath);
         // merge Frequently Read data, so that a file
@@ -3235,7 +3235,7 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
         return false;
     }
     bool failEarly = args->win && !args->forceReuse && !args->engine;
-    bool fileInHistory = gFileHistory.FindByPath(path) != nullptr;
+    bool fileInHistory = FileHistoryFindByPath(path) != nullptr;
     if (!failEarly || !fileInHistory) {
         return failEarly;
     }
@@ -3261,7 +3261,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     // display the notification ASAP (SaveSettings() can introduce a notable delay)
     win->RedrawAll(true);
 
-    if (!gFileHistory.MarkFileInexistent(path)) {
+    if (!FileHistoryMarkFileInexistent(path)) {
         return;
     }
     // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
@@ -3566,7 +3566,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     if (SettingsRememberOpenedFiles()) {
         ReportIf(!str::Eq(fullPath, path));
-        FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
+        FileState* ds = FileHistoryMarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, ds);
         }
@@ -5602,9 +5602,9 @@ WindowTab* FindTabByFilePath(Str path) {
 void DeleteFileFromDiskAndHistory(Str path) {
     file::DeleteFileToTrash(path);
     DeleteThumbnailForFile(path);
-    FileState* fs = gFileHistory.FindByPath(path);
+    FileState* fs = FileHistoryFindByPath(path);
     if (fs) {
-        gFileHistory.Remove(fs);
+        FileHistoryRemove(fs);
         DeleteFileState(fs);
     }
     SaveSettings();
@@ -6116,7 +6116,7 @@ static StrVec& CollectNextPrevFilesIfChanged(Str path) {
             // files[] came from DirIter with the default includeDirs = false
             FileType kind = GuessFileTypeFromName(path2, true);
             bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
-            bool inHistory = gFileHistory.FindByPath(path2);
+            bool inHistory = FileHistoryFindByPath(path2);
             if (isSupported || inHistory) {
                 continue;
             }
@@ -9049,28 +9049,16 @@ static void ClearHistory(MainWindow* win) {
         return;
     }
 
-    // TODO: what is relation between gFileHistory and gGlobalPrefs->fileStates?
-    int nFiles = 0;
-    if (gFileHistory.states) {
-        nFiles = len(*gFileHistory.states);
-    }
-    gFileHistory.Clear(false);
-
-    /*
-    Vec<FileState*>* files = gGlobalPrefs->fileStates;
-    int nFiles = 0;
-    if (files) {
-        nFiles = files->Size();
-        DeleteVecMembers(*files);
-        delete files;
-    }
-    gGlobalPrefs->fileStates = new Vec<FileState*>();
-    if (gGlobalPrefs->sessionData) {
-        DeleteVecMembers(*gGlobalPrefs->sessionData);
-        delete gGlobalPrefs->sessionData;
-    }
-    gGlobalPrefs->sessionData = new Vec<SessionData*>();
-    */
+    // there is no separate storage: FileHistoryStates() *is* gGlobalPrefs->fileStates.
+    // LoadSettings() hands the vector to FileHistorySetStates() and the FileHistory*()
+    // functions are just an API over it, so FileHistoryClear() deletes the FileStates
+    // and empties that same vector -- gGlobalPrefs->fileStates ends up empty too.
+    // Don't free/replace the vector here: gGlobalPrefs owns it and the history holds
+    // the pointer. gGlobalPrefs->sessionData is deliberately left alone -- it describes
+    // the currently open windows, not history, and SaveSettings() rebuilds it anyway.
+    Vec<FileState*>* states = FileHistoryStates();
+    int nFiles = states ? len(*states) : 0;
+    FileHistoryClear(false);
 
     SaveSettings();
 
@@ -9090,11 +9078,11 @@ static void ClearHistory(MainWindow* win) {
 // looks through the file history and removes entries for files that no
 // longer exist on disk. Done synchronously on the main thread for simplicity.
 static void RemoveDeletedFilesFromHistory(MainWindow* win) {
-    if (!win || !gFileHistory.states) {
+    if (!win || !FileHistoryStates()) {
         return;
     }
     int nRemoved = 0;
-    Vec<FileState*>* states = gFileHistory.states;
+    Vec<FileState*>* states = FileHistoryStates();
     // iterate from the end because removing changes indices
     for (int i = len(*states) - 1; i >= 0; i--) {
         FileState* fs = (*states)[i];
@@ -9116,7 +9104,7 @@ static void RemoveDeletedFilesFromHistory(MainWindow* win) {
         }
         DeleteThumbnailForFile(path);
         // drops the home page layout cache, which points at fs
-        gFileHistory.Remove(fs);
+        FileHistoryRemove(fs);
         DeleteFileState(fs);
         nRemoved++;
     }
@@ -9670,7 +9658,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         // recently opened files and load the referenced file if it does
         if ((cmdId >= CmdFileHistoryFirst) && (cmdId <= CmdFileHistoryLast)) {
             int idx = cmdId - (int)CmdFileHistoryFirst;
-            FileState* state = gFileHistory.Get(idx);
+            FileState* state = FileHistoryGet(idx);
             if (state) {
                 LoadArgs args(state->filePath, win);
                 LoadDocument(&args);
