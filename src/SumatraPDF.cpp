@@ -185,11 +185,6 @@ bool gRedrawLog = false;
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sidebarDx = -1);
 static void UpdateOverlayScrollbarPositions(MainWindow* win);
 
-// message for deferred, coalesced UI updates (see ScheduleUiUpdate)
-constexpr UINT WM_UPDATE_UI = WM_APP + 0x400;
-// finish deferred DPI chrome refresh after drag/resize settles (plus multi-monitor DPI)
-constexpr UINT WM_MAIN_WINDOW_DPI_SETTLED = WM_APP + 0x422;
-
 static Str HwndName(HWND hwnd) {
     WCHAR cls[64]{};
     GetClassNameW(hwnd, cls, dimof(cls));
@@ -6882,9 +6877,11 @@ static void UpdateOverlayScrollbarPositions(MainWindow* win) {
     }
 }
 
-// handle WM_UPDATE_UI: perform all UI work requested via ScheduleUiUpdate
-// since the last update in one pass
+// perform all UI work requested via ScheduleUiUpdate since the last update
 static void FrameUpdateUi(MainWindow* win) {
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
     MainWindow::UIState& ui = win->uiState;
     ui.updatePending = false;
     bool updateToolbars = ui.updateToolbars;
@@ -6943,10 +6940,10 @@ static void FrameUpdateUi(MainWindow* win) {
 }
 
 // Request an async, coalesced UI update: records what needs to happen and
-// posts WM_UPDATE_UI once; any further requests before it's handled are
-// folded into the same pass. Prefer this over direct relayout/RedrawWindow
-// calls to avoid excessive repaints. sidebarDx >= 0 relayouts with a new
-// sidebar width (splitter dragging).
+// posts one uitask; any further requests before it's handled are folded
+// into the same pass. Prefer this over direct relayout/RedrawWindow calls
+// to avoid excessive repaints. sidebarDx >= 0 relayouts with a new sidebar
+// width (splitter dragging).
 void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
     if (!win || !win->hwndFrame) {
         return;
@@ -6971,10 +6968,10 @@ void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
         ui.sidebarDirty = true;
     }
     if (ui.updatePending) {
-        return; // one WM_UPDATE_UI is already queued; it'll pick this up
+        return; // one FrameUpdateUi is already queued; it'll pick this up
     }
     ui.updatePending = true;
-    PostMessageW(win->hwndFrame, WM_UPDATE_UI, 0, 0);
+    uitask::Post(MkFunc0(FrameUpdateUi, win), "FrameUpdateUi");
 }
 
 // Apply TOC/favorites fonts and TreeView row height for an explicit DPI
@@ -7197,8 +7194,8 @@ static void ToggleDpiOverride() {
     }
 }
 
-static void FinishDeferredMainWindowDpiRefresh(MainWindow* win, HWND hwnd) {
-    if (!win) {
+static void FinishDeferredMainWindowDpiRefresh(MainWindow* win) {
+    if (!IsMainWindowValid(win)) {
         return;
     }
     win->deferDpiChromeRefresh = false;
@@ -7207,7 +7204,7 @@ static void FinishDeferredMainWindowDpiRefresh(MainWindow* win, HWND hwnd) {
     }
     win->dpiChromeRefreshPending = false;
     // Keep the DPI from the last WM_DPICHANGED; do not re-query the monitor.
-    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(hwnd);
+    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame);
     OnDpiChanged(win, nullptr, dpi, true);
 }
 
@@ -13194,13 +13191,6 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             break;
 
-        case WM_UPDATE_UI:
-            // deferred, coalesced UI update requested via ScheduleUiUpdate
-            if (win) {
-                FrameUpdateUi(win);
-            }
-            return 0;
-
         case WM_GETMINMAXINFO:
             return OnFrameGetMinMaxInfo((MINMAXINFO*)lp);
 
@@ -13214,17 +13204,11 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_EXITSIZEMOVE:
             if (win) {
                 if (win->dpiChromeRefreshPending) {
-                    if (!PostMessageW(hwnd, WM_MAIN_WINDOW_DPI_SETTLED, 0, 0)) {
-                        FinishDeferredMainWindowDpiRefresh(win, hwnd);
-                    }
+                    uitask::Post(MkFunc0(FinishDeferredMainWindowDpiRefresh, win), "DpiSettled");
                 } else {
                     win->deferDpiChromeRefresh = false;
                 }
             }
-            return 0;
-
-        case WM_MAIN_WINDOW_DPI_SETTLED:
-            FinishDeferredMainWindowDpiRefresh(win, hwnd);
             return 0;
 
         case WM_DPICHANGED:

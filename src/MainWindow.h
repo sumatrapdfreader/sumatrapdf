@@ -278,7 +278,7 @@ struct MainWindow {
     // still lags during a cross-monitor drag.
     int frameDpi = 0;
     // defer expensive chrome rebuild while the user is dragging/resizing;
-    // finish on WM_EXITSIZEMOVE via a posted settle message
+    // finish on WM_EXITSIZEMOVE via a uitask
     bool deferDpiChromeRefresh = false;
     bool dpiChromeRefreshPending = false;
     // keeps the sequence of tab selection. This is needed for restoration
@@ -442,11 +442,11 @@ struct MainWindow {
 
     Rect canvasRc; // size of the canvas (excluding any scroll bars)
 
-    // deferred, coalesced UI update (WM_UPDATE_UI; see ScheduleUiUpdate):
-    // multiple relayout/repaint requests before the message pump runs are
-    // handled in one pass. `layout` is a snapshot of everything that affects
-    // frame layout; RelayoutFrame skips when it's unchanged (force a relayout
-    // by resetting it to {})
+    // deferred, coalesced UI update (see ScheduleUiUpdate): multiple
+    // relayout/repaint requests before the uitask runs are handled in one
+    // pass. `layout` is a snapshot of everything that affects frame layout;
+    // RelayoutFrame skips when it's unchanged (force a relayout by resetting
+    // it to {})
     struct UIState {
         struct Layout {
             Rect rc;
@@ -469,7 +469,7 @@ struct MainWindow {
         bool tocVisible = false;
         bool favVisible = false;
         bool aiChatVisible = false;
-        bool updatePending = false; // a WM_UPDATE_UI is queued
+        bool updatePending = false; // a FrameUpdateUi uitask is queued
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update
         bool sidebarDirty = false;  // repaint toc/favorites boxes on the next update

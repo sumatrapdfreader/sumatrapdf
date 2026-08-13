@@ -3,11 +3,6 @@
 
 //--- WindowBase
 
-// global messages for wingui start at WM_APP + 0x300 to not
-// collide with values defined for the app
-const DWORD UWM_DELAYED_CTRL_BACK = WM_APP + 0x300 + 1;
-const DWORD UWM_DELAYED_SELECT_ALL = WM_APP + 0x300 + 2;
-
 TempStr WinMsgNameTemp(UINT);
 
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -639,6 +634,8 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools);
 using TextChangedHandler = Func0;
 
 Color EditBottomBorderColor();
+void PostDelayedEditSelectAll(HWND);
+void PostDelayedEditCtrlBack(HWND);
 
 struct Edit : ControlBase {
     struct CreateArgs {

@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/BitManip.h"
 #include "base/Win.h"
+#include "base/UITask.h"
 #include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
@@ -12,6 +13,35 @@
 #include "gui/win/WinGui.h"
 
 //--- Edit
+
+// after the current mouse/focus message so the edit's default processing
+// does not undo the selection
+static void DelayedEditSelectAll(HWND hwnd) {
+    if (hwnd && ::IsWindow(hwnd)) {
+        EditSelectAll(hwnd);
+    }
+}
+
+void PostDelayedEditSelectAll(HWND hwnd) {
+    if (!hwnd) {
+        return;
+    }
+    uitask::Post(MkFunc0(DelayedEditSelectAll, hwnd), "DelayedEditSelectAll");
+}
+
+// after WM_KEYDOWN so the edit does not insert the Ctrl+Backspace glyph first
+static void DelayedEditCtrlBack(HWND hwnd) {
+    if (hwnd && ::IsWindow(hwnd)) {
+        EditImplementCtrlBack(hwnd);
+    }
+}
+
+void PostDelayedEditCtrlBack(HWND hwnd) {
+    if (!hwnd) {
+        return;
+    }
+    uitask::Post(MkFunc0(DelayedEditCtrlBack, hwnd), "DelayedEditCtrlBack");
+}
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
 
@@ -303,7 +333,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
             if (selectAllOnFocus && delaySelectAll) {
                 DWORD sel = Edit_GetSel(hwnd);
                 if (LOWORD(sel) == HIWORD(sel)) {
-                    PostMessageW(hwnd, UWM_DELAYED_SELECT_ALL, 0, 0);
+                    PostDelayedEditSelectAll(hwnd);
                 }
                 delaySelectAll = false;
             }
@@ -312,34 +342,20 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
 
         case WM_SETFOCUS: {
             if (selectAllOnFocus && !delaySelectAll) {
-                PostMessageW(hwnd, UWM_DELAYED_SELECT_ALL, 0, 0);
+                PostDelayedEditSelectAll(hwnd);
             }
             break;
-        }
-
-        case UWM_DELAYED_SELECT_ALL: {
-            SelectAll();
-            ev->result = 0;
-            ev->didHandle = true;
-            return;
         }
 
         case WM_KEYDOWN: {
             bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed();
             if (isCtrlBack) {
-                PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
+                PostDelayedEditCtrlBack(hwnd);
                 ev->result = true;
                 ev->didHandle = true;
                 return;
             }
             break;
-        }
-
-        case UWM_DELAYED_CTRL_BACK: {
-            EditImplementCtrlBack(hwnd);
-            ev->result = true;
-            ev->didHandle = true;
-            return;
         }
 
         case WM_NCCALCSIZE: {

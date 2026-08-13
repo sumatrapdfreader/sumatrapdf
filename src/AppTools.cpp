@@ -408,18 +408,16 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
     }
 }
 
-#define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
-
 // selects all text in an edit box if it's selected either
 // through a keyboard shortcut or a non-selecting mouse click
 // (or responds to Ctrl+Backspace as nowadays expected)
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM /*lp*/) {
-    static bool delayFocus = false;
+    static bool delaySelectAll = false;
 
     switch (msg) {
         case WM_LBUTTONDOWN:
-            delayFocus = !HwndIsFocused(hwnd);
-            if (delayFocus && NeedsWindowEmbeddingHacks()) {
+            delaySelectAll = !HwndIsFocused(hwnd);
+            if (delaySelectAll && NeedsWindowEmbeddingHacks()) {
                 HWND hwndFg = GetForegroundWindow();
                 ThreadId fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
                 ThreadId ourTid = GetCurrentThreadId();
@@ -435,12 +433,12 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM /*lp*/) {
             return true;
 
         case WM_LBUTTONUP: {
-            if (delayFocus) {
+            if (delaySelectAll) {
                 DWORD sel = Edit_GetSel(hwnd);
                 if (LOWORD(sel) == HIWORD(sel)) {
-                    PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+                    PostDelayedEditSelectAll(hwnd);
                 }
-                delayFocus = false;
+                delaySelectAll = false;
             }
             return true;
         }
@@ -449,29 +447,19 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM /*lp*/) {
             return false; // for easier debugging (make setting a breakpoint possible)
 
         case WM_SETFOCUS: {
-            if (!delayFocus) {
-                PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+            if (!delaySelectAll) {
+                PostDelayedEditSelectAll(hwnd);
             }
-            return true;
-        }
-
-        case UWM_DELAYED_SET_FOCUS: {
-            EditSelectAll(hwnd);
             return true;
         }
 
         case WM_KEYDOWN: {
             bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed();
             if (isCtrlBack) {
-                PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
+                PostDelayedEditCtrlBack(hwnd);
                 return true;
             }
             return false;
-        }
-
-        case UWM_DELAYED_CTRL_BACK: {
-            EditImplementCtrlBack(hwnd);
-            return true;
         }
 
         default:
