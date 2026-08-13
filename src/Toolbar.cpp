@@ -129,11 +129,9 @@ void DestroyToolbarImageList() {
     }
 }
 
-// Windows toolbar colors in the default Light theme; theme colors otherwise
+// Light theme ControlBackgroundColor is white, which is what the old themed
+// rebar/toolbar painted. Other themes use their control background.
 static Color TbBgColor() {
-    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-        return GetSysColor(COLOR_BTNFACE);
-    }
     return ThemeControlBackgroundColor();
 }
 
@@ -160,10 +158,17 @@ static Color TbSelectedColor() {
 }
 
 static Color TbEdgeColor() {
-    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-        return GetSysColor(COLOR_3DSHADOW);
-    }
     return ThemeEdgeColor();
+}
+
+// Old Win32 toolbar: TBMETRICS.cyPad defaults to 6, then we added DpiScale(2).
+// TB_SETBUTTONSIZE cannot go below image + 2*cyPad, so that was the bar height.
+static int ToolbarCyPad() {
+    return 6 + DpiScale(2);
+}
+
+static int ToolbarRowDy(int iconSize) {
+    return iconSize + (2 * ToolbarCyPad());
 }
 
 static void RelayoutToolbar(MainWindow* win);
@@ -587,7 +592,10 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     for (int i = 0; i < n; i++) {
         auto& tb = GetToolbarButtonInfoByIdx(i);
         int cmdId = tb.cmdId;
-        if (setButtonsVisibility && cmdId != WarningMsgId) {
+        // cmdId 0 is a separator; GetCommandVisibility treats 0 as Hide, but
+        // the old Win32 toolbar still painted the etched line (TBSTATE_HIDDEN
+        // on a BTNS_SEP is a no-op / all-seps share id 0).
+        if (setButtonsVisibility && cmdId != WarningMsgId && cmdId != 0) {
             bool hide = !IsCmdAvailable(win, cmdId);
             UpdateToolbarButtonStateByIdx(win, i, hide, TBSTATE_HIDDEN);
         }
@@ -608,6 +616,36 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
                 tip = _TRA("Continue Reading");
             }
             SetToolbarButtonToolTipByIdx(win, i, cmdId, tip);
+        }
+    }
+
+    if (setButtonsVisibility) {
+        // drop a separator that would sit next to another, or at either end
+        // (Read Aloud is hidden by default, which would otherwise leave ||)
+        bool prevVisibleNonSep = false;
+        int lastSep = -1;
+        for (int i = 0; i < n; i++) {
+            const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
+            VirtCtrl* w = ToolbarItemAt(win, i);
+            if (!w) {
+                continue;
+            }
+            if (bi.cmdId == 0) {
+                bool hide = !prevVisibleNonSep;
+                UpdateToolbarButtonStateByIdx(win, i, hide, TBSTATE_HIDDEN);
+                prevVisibleNonSep = false;
+                if (!hide) {
+                    lastSep = i;
+                }
+                continue;
+            }
+            if (w->GetVisibility() == Visibility::Visible && bi.cmdId != PageInfoId) {
+                prevVisibleNonSep = true;
+                lastSep = -1;
+            }
+        }
+        if (lastSep >= 0) {
+            UpdateToolbarButtonStateByIdx(win, lastSep, true, TBSTATE_HIDDEN);
         }
     }
 
@@ -1155,13 +1193,17 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     int boxWidth = HwndMeasureText(win->hwndFrame, "999999", font).dx;
     boxWidth += 2 * DpiGetSystemMetrics(SM_CXEDGE);
     boxWidth += DpiScale(12);
+    // no WS_EX_CLIENTEDGE: a themed edit draws a blue bottom accent (Win11).
+    // The old toolbar used a borderless edit sitting on a static that we
+    // framed ourselves with a 1px gray line.
     DWORD style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT | WS_TABSTOP;
-    DWORD exStyle = WS_EX_CLIENTEDGE;
+    DWORD exStyle = 0;
     if (isRtl) {
         exStyle |= WS_EX_LAYOUTRTL;
     }
     HWND page = CreateWindowExW(exStyle, WC_EDIT, L"0", style, 0, 1, boxWidth, iconDy, win->hwndToolbar,
                                 (HMENU) nullptr, GetModuleHandle(nullptr), nullptr);
+    SetWindowTheme(page, L"", L"");
     SetWindowFont(page, font, FALSE);
     if (!DefWndProcPageBox) {
         DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);
@@ -1746,8 +1788,23 @@ static void RelayoutToolbar(MainWindow* win) {
     PositionPageEdit(win);
 }
 
+static void PaintToolbarSeparator(VirtCustom*, VirtPaintCtx* ctx) {
+    Rect r = ctx->bounds;
+    int inset = DpiScale(6);
+    int dy = r.dy - (2 * inset);
+    if (dy <= 0) {
+        return;
+    }
+    int x = r.x + (r.dx / 2);
+    ctx->gfx->FillRect({x, r.y + inset, 1, dy}, ThemeEdgeColor());
+}
+
 static VirtCtrl* MakeToolbarSeparator(int rowDy) {
-    return new VirtSpacer(DpiScale(8), rowDy);
+    auto* sep = new VirtCustom();
+    sep->idealSize = {DpiScale(8), rowDy};
+    sep->onPaint = MkFunc1(PaintToolbarSeparator, sep);
+    sep->SetFlag(vwfNoHitTest, true);
+    return sep;
 }
 
 static void BuildToolbarLayout(MainWindow* win) {
@@ -1763,9 +1820,9 @@ static void BuildToolbarLayout(MainWindow* win) {
     tb->pageTotal = nullptr;
     tb->pageEditSlot = nullptr;
 
-    int pad = DpiScale(4);
+    int cyPad = ToolbarCyPad();
     int iconPad = DpiScale(6);
-    tb->rowDy = tb->iconSize + (2 * pad);
+    tb->rowDy = ToolbarRowDy(tb->iconSize);
     Color fg = TbTextColor();
     Color dis = TbDisabledColor();
     Color hover = TbHoverColor();
@@ -1791,8 +1848,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             int editDx = HwndMeasureText(win->hwndFrame, "999999", tb->font).dx;
             editDx += DpiScale(16);
             auto* slot = new VirtFill();
-            slot->color = IsCurrentThemeDefault() && !ThemeColorizeControls() ? MkRgb(0xff, 0xff, 0xff)
-                                                                              : ThemeWindowControlBackgroundColor();
+            slot->color = ThemeWindowControlBackgroundColor();
             slot->idealSize = {editDx, tb->iconSize + DpiScale(2)};
             slot->id = PageInfoId;
             tb->pageEditSlot = slot;
@@ -1813,11 +1869,11 @@ static void BuildToolbarLayout(MainWindow* win) {
             b->textColor = fg;
             b->textColorDisabled = dis;
             b->bgColorHover = hover;
-            b->textPadding = {pad, iconPad, pad, iconPad};
+            b->textPadding = {cyPad, iconPad, cyPad, iconPad};
             w = b;
         } else {
             auto* ib = new VirtIconButton();
-            ib->padding = {pad, iconPad, pad, iconPad};
+            ib->padding = {cyPad, iconPad, cyPad, iconPad};
             ib->bgColorHover = hover;
             ib->bgColorSelected = sel;
             ib->chevronColor = fg;
@@ -1902,9 +1958,18 @@ static LRESULT CALLBACK WndProcVirtToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARA
             GfxHdc gfx(memDC);
             tb->vroot->Paint(&gfx, rc);
         }
+        if (tb && tb->pageEditSlot && tb->pageEditSlot->GetVisibility() == Visibility::Visible) {
+            Rect r = tb->pageEditSlot->BoundsInWindow();
+            if (!r.IsEmpty()) {
+                Color col = AccentColor(TbBgColor(), 40);
+                HBRUSH br = CreateSolidBrush(col);
+                RECT wr = ToRECT(r);
+                FrameRect(memDC, &wr, br);
+                DeleteObject(br);
+            }
+        }
         if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-            Color edge = TbEdgeColor();
-            HdcFillRect(memDC, {rc.x, rc.Bottom() - 1, rc.dx, 1}, edge);
+            HdcFillRect(memDC, {rc.x, rc.Bottom() - 1, rc.dx, 1}, TbEdgeColor());
         }
         buffer.Flush(hdc);
         EndPaint(hwnd, &ps);
@@ -1914,11 +1979,10 @@ static LRESULT CALLBACK WndProcVirtToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARA
     if ((msg == WM_CTLCOLOREDIT || msg == WM_CTLCOLORSTATIC) && win) {
         HDC hdc = (HDC)wp;
         SetTextColor(hdc, TbTextColor());
-        if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-            SetBkColor(hdc, MkRgb(0xff, 0xff, 0xff));
+        SetBkColor(hdc, ThemeWindowControlBackgroundColor());
+        if (IsCurrentThemeDefault() && !ThemeColorizeControls() && !ThemeUsesHighContrastColors()) {
             return (LRESULT)GetStockObject(WHITE_BRUSH);
         }
-        SetBkColor(hdc, ThemeWindowControlBackgroundColor());
         return (LRESULT)win->brControlBgColor;
     }
     if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) {
@@ -1992,7 +2056,7 @@ void CreateToolbar(MainWindow* win) {
     PopulateCustomToolbarButtons();
     int iconSize = SetToolbarIconsImageList(win);
     int yPad = DpiScale(2);
-    int rowDy = iconSize + DpiScale(8);
+    int rowDy = ToolbarRowDy(iconSize);
 
     HWND hwnd = CreateWindowExW(exStyle, kVirtToolbarClass.s, nullptr, style, 0, 0, 100, rowDy, hwndParent,
                                 (HMENU)IDC_REBAR, hinst, nullptr);
