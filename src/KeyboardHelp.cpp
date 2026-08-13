@@ -130,8 +130,7 @@ struct KeyboardHelpWnd : WindowBase {
     PlatformFont* fontHdr = nullptr;   // section headers
     PlatformFont* fontRow = nullptr;   // rows
 
-    // the sheet's controls. `container` only owns them - this window positions
-    // so the root never re-layouts them
+    // the sheet's layout tree; WindowBase::layout owns it
     VBox* container = nullptr;
     VirtText* title = nullptr;
     VirtLink* closeBtn = nullptr;
@@ -141,10 +140,8 @@ struct KeyboardHelpWnd : WindowBase {
     // section headers and row descriptions, so SyncColors() can reach them
     Vec<VirtText*> texts;
 
-    // metrics, in client pixels, computed in BuildContent
-    int pad = 0;
+    // y of the columns; the band above is the drag handle
     int contentTop = 0;
-    int footerH = 0;
 
     ~KeyboardHelpWnd() override;
     bool Create(MainWindow* win);
@@ -389,11 +386,9 @@ void KeyboardHelpWnd::BuildContent() {
 
     Size szRow = PlatformFontMeasureText(fontRow, "Ag");
     Size szHdr = PlatformFontMeasureText(fontHdr, "Ag");
-    Size szTitle = PlatformFontMeasureText(fontTitle, "Ag");
 
     int rem = DpiScale(hwnd, 16); // 1rem == 16px at 96 DPI
-    pad = DpiScale(hwnd, 20);
-    int titleGap = DpiScale(hwnd, 16);
+    int pad = DpiScale(hwnd, 20);
     int rowGap = DpiScale(hwnd, 8);
     int secTitleH = szHdr.dy + DpiScale(hwnd, 8);
     int secGap = DpiScale(hwnd, 14);
@@ -401,25 +396,30 @@ void KeyboardHelpWnd::BuildContent() {
     int capPadX = DpiScale(hwnd, 7);
     int capGap = DpiScale(hwnd, 5);
     int keysDescGap = DpiScale(hwnd, 12);
-    contentTop = pad + szTitle.dy + titleGap;
-    footerH = szRow.dy + DpiScale(hwnd, 6);
 
     Vec<KbSectionData> sections;
     CollectSections(sections, secTitleH, szRow.dy + rowGap, secGap);
 
     container = new VBox();
+    container->alignCross = CrossAxisAlign::Stretch;
 
     title = new VirtText(trans::GetTranslation("Keyboard Shortcuts"), fontTitle);
-    container->AddChild(title);
-
     // U+2715 MULTIPLICATION X
     closeBtn = new VirtLink("\xE2\x9C\x95", fontTitle);
     closeBtn->align = VirtTextAlign::Center;
     closeBtn->onClick = MkFunc1Void(OnCloseClicked);
-    container->AddChild(closeBtn);
+    int closeGrow = DpiScale(hwnd, 6);
+    closeBtn->padding = Insets{closeGrow, closeGrow, closeGrow, closeGrow};
+
+    auto* titleRow = new HBox();
+    titleRow->alignCross = CrossAxisAlign::CrossCenter;
+    titleRow->AddChild(title, 1);
+    titleRow->AddChild(closeBtn);
+    container->AddChild(titleRow);
 
     separator = new VirtLine();
     separator->thickness = DpiScale(hwnd, 1);
+    container->AddChild(new Spacer(0, DpiScale(hwnd, 6)));
     container->AddChild(separator);
 
     columns = new HBox();
@@ -432,9 +432,11 @@ void KeyboardHelpWnd::BuildContent() {
     columns->AddChild(tables[0]);
     columns->AddChild(new Spacer(colGap, 0));
     columns->AddChild(tables[1]);
+    container->AddChild(new Spacer(0, DpiScale(hwnd, 10)));
     container->AddChild(columns);
 
     footer = new VirtText(trans::GetTranslation("Press ? to close"), fontRow);
+    container->AddChild(new Spacer(0, DpiScale(hwnd, 12)));
     container->AddChild(footer);
 
     // one table per column: a section header spans both table columns, each row
@@ -484,36 +486,15 @@ void KeyboardHelpWnd::BuildContent() {
         }
     }
 
-    layout = container;
+    layout = new Padding(container, Insets{pad, pad, pad / 2, pad});
 
-    Size colsSize = columns->Layout(ExpandInf());
-    int rightPad = rem / 2; // 0.5rem right margin
-    int clientDx = pad + colsSize.dx + rightPad;
-    int clientDy = contentTop + colsSize.dy + DpiScale(hwnd, 12) + footerH + DpiScale(hwnd, 6);
+    LayoutAndSizeToContent(layout, 0, 0, hwnd);
+    DoLayout(HwndClientRect(hwnd).Size());
+    contentTop = columns->lastBounds.y;
 
-    RECT wr = {0, 0, clientDx, clientDy};
-    DWORD style = (DWORD)GetWindowLongPtrW(hwnd, GWL_STYLE);
-    DWORD exStyle = (DWORD)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-    AdjustWindowRectEx(&wr, style, FALSE, exStyle);
-    int winDx = wr.right - wr.left;
-    int winDy = wr.bottom - wr.top;
-
-    Rect r = PositionHelpWindow(win, winDx, winDy);
+    Rect wr = HwndWindowRect(hwnd);
+    Rect r = PositionHelpWindow(win, wr.dx, wr.dy);
     SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER);
-
-    // this window places the pieces itself, so the tree is only collected, not
-    // laid out
-    RefreshVirtTops(hwnd, layout, Rect{0, 0, clientDx, clientDy}, &vroot);
-
-    Size szClose = closeBtn->GetIdealSize();
-    int closeGrow = DpiScale(hwnd, 6);
-    title->SetBounds({pad, pad, clientDx - (2 * pad) - szClose.dx, szTitle.dy});
-    closeBtn->SetBounds({clientDx - pad - szClose.dx - closeGrow, pad - closeGrow, szClose.dx + (2 * closeGrow),
-                         szClose.dy + (2 * closeGrow)});
-    int sepY = contentTop - DpiScale(hwnd, 10);
-    separator->SetBounds({pad, sepY, clientDx - (2 * pad), separator->thickness});
-    columns->SetBounds({pad, contentTop, colsSize.dx, colsSize.dy});
-    footer->SetBounds({pad, clientDy - footerH - (pad / 2), clientDx - (2 * pad), footerH});
 }
 
 // colors are read from the theme on every paint, so a theme change shows

@@ -38,6 +38,8 @@ static Kind kindNotifProgress = "notifProgress";
 
 constexpr int kPadding = 6;
 constexpr int kTopLeftMargin = 8;
+constexpr int kCloseLeftMargin = 16;
+constexpr int kProgressDy = 5;
 
 constexpr UINT_PTR kNotifTimerTimeoutId = 1;
 constexpr UINT_PTR kNotifTimerDelayId = 2;
@@ -65,6 +67,7 @@ struct NotifTextCtrl : VirtCtrl {
     ~NotifTextCtrl() override = default;
 
     Size GetIdealSize() override;
+    void SetBounds(Rect) override;
     void Paint(VirtPaintCtx&) override;
 };
 
@@ -75,6 +78,7 @@ struct NotifProgressCtrl : VirtCtrl {
     NotifProgressCtrl();
     ~NotifProgressCtrl() override = default;
 
+    Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
 };
 
@@ -127,23 +131,19 @@ struct NotificationWnd : WindowBase {
     int delayInMs = 0;
     UINT_PTR delayTimerId = 0;
 
-    // the controls hosted in our HWND. `container` only owns them - this window
-    // positions them itself
+    // VBox of (message row, progress); WindowBase::layout owns it
     VBox* container = nullptr;
     // either the built-in text or a caller-supplied tree, never both
     NotifTextCtrl* txtCtrl = nullptr;
     ILayout* contentWnd = nullptr;
     VirtCloseButton* closeCtrl = nullptr;
     NotifProgressCtrl* progressCtrl = nullptr;
+    // padding + progress; collapsed when there is no progress so the gap goes too
+    ILayout* progressBlock = nullptr;
 };
 
 static void NotifCloseClicked(NotificationWnd* wnd, VirtMouseEvent*) {
     wnd->ScheduleRemove();
-}
-
-// the control showing the message (built-in) or the caller's custom tree
-static ILayout* NotifBody(NotificationWnd* wnd) {
-    return wnd->contentWnd ? wnd->contentWnd : (ILayout*)wnd->txtCtrl;
 }
 
 constexpr int kMaxNotifs = 128;
@@ -342,32 +342,57 @@ NotifColors NotificationWnd::Colors() const {
     return c;
 }
 
-// builds the tree hosted in our HWND: the body (message text or a caller
-// supplied tree), the close button and the progress bar
+// builds the tree hosted in our HWND: a message row (body | close) and an
+// optional progress bar under the body
 void NotificationWnd::BuildTree(ILayout* customContent) {
-    container = new VBox();
+    int padX = DpiScale(hwnd, 12);
+    int padY = DpiScale(hwnd, 8);
+    int closeDx = DpiScale(hwnd, 16);
+    int closeGap = DpiScale(hwnd, kCloseLeftMargin) - padX;
+    closeGap = std::max(closeGap, 0);
 
+    ILayout* body = nullptr;
     if (customContent) {
         contentWnd = customContent;
-        container->AddChild(contentWnd);
+        body = contentWnd;
     } else {
         txtCtrl = new NotifTextCtrl();
         txtCtrl->notif = this;
-        container->AddChild(txtCtrl);
+        body = txtCtrl;
+    }
+    if (corner == NotifCorner::BottomBar) {
+        auto* al = new Align(body);
+        al->HAlign = AlignCenter;
+        al->VAlign = AlignCenter;
+        body = al;
     }
 
     progressCtrl = new NotifProgressCtrl();
     progressCtrl->notif = this;
-    progressCtrl->visibility = Visibility::Collapse;
-    container->AddChild(progressCtrl);
+    progressBlock = new Padding(progressCtrl, Insets{padY, 0, 0, 0});
+    progressBlock->SetVisibility(Visibility::Collapse);
 
+    auto* left = new VBox();
+    left->alignCross = CrossAxisAlign::Stretch;
+    left->AddChild(body);
+    left->AddChild(progressBlock);
+
+    auto* row = new HBox();
+    row->alignCross = CrossAxisAlign::CrossCenter;
+    row->rtl = IsUIRtl();
+    row->AddChild(left, 1);
     if (!noClose) {
-        // last, so it hit-tests on top of the body
         closeCtrl = new VirtCloseButton();
         closeCtrl->onClick = MkFunc1(NotifCloseClicked, this);
-        container->AddChild(closeCtrl);
+        closeCtrl->idealSize = {closeDx, closeDx + 2};
+        row->AddChild(new Spacer(closeGap, 0));
+        row->AddChild(closeCtrl);
     }
-    layout = container;
+
+    container = new VBox();
+    container->alignCross = CrossAxisAlign::Stretch;
+    container->AddChild(row);
+    layout = new Padding(container, Insets{padY, padX, padY, padX});
 }
 
 HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
@@ -445,15 +470,11 @@ int CalcPerc(int current, int total) {
     return perc;
 }
 
-constexpr int kCloseLeftMargin = 16;
-constexpr int kProgressDy = 5;
-
 void NotificationWnd::Layout(Str message) {
     if (!message) {
         message = StrL("");
     }
     int padX = DpiScale(hwnd, 12);
-    int padY = DpiScale(hwnd, 8);
     int closeDx = DpiScale(hwnd, 16);
     int closeLeftMargin = DpiScale(hwnd, kCloseLeftMargin) - padX;
 
@@ -469,11 +490,7 @@ void NotificationWnd::Layout(Str message) {
     bool isRtl = IsUIRtl();
 
     Size szText;
-    if (contentWnd) {
-        // caller-supplied tree: it decides its own size, we only cap the width
-        Constraints bc = Loose({maxTextDx > 0 ? maxTextDx : Inf, Inf});
-        szText = contentWnd->Layout(bc);
-    } else {
+    if (!contentWnd) {
         if (txtCtrl->rich) {
             // a caller-built richMsg is reused: unlike `message`, it can't be
             // rebuilt here, so don't let RemoveChild() delete it
@@ -534,109 +551,38 @@ void NotificationWnd::Layout(Str message) {
         txtCtrl->idealSize = szText;
     }
 
-    Rect rTxt;
-    Rect rClose;
-    Rect rProgress;
-    int dx = padX + szText.dx + padX;
-    int dy = padY + szText.dy + padY;
-    int closeBlockDx = closeLeftMargin + closeDx + padX;
-    if (!noClose) {
-        if (isRtl) {
-            rClose = {padX, padY, closeDx, closeDx + 2};
-            int textX = padX + closeBlockDx;
-            rTxt = {textX, padY, szText.dx, szText.dy};
-            dx = textX + szText.dx + padX;
-        } else {
-            rTxt = {padX, padY, szText.dx, szText.dy};
-            rClose = {dx + closeLeftMargin, padY, closeDx, closeDx + 2};
-            dx += closeBlockDx;
-        }
-    } else {
-        rTxt = {padX, padY, szText.dx, szText.dy};
-        rClose = {};
-        dx += padX;
-    }
-    int progressDy = DpiScale(hwnd, kProgressDy);
-    rProgress = {rTxt.x, dy, rTxt.dx, progressDy};
-    if (HasProgress()) {
-        dy += padY + progressDy + padY;
-    }
-
-    Rect rCurr = HwndWindowRect(hwnd);
-    // for less flicker we don't want to shrink the window when the text shrinks
-    if (dx < rCurr.dx) {
-        int diff = rCurr.dx - dx;
-        if (isRtl) {
-            rTxt.dx += diff;
-        } else {
-            rClose.x += diff;
-        }
-        dx = rCurr.dx;
-    }
-    // but never wider than the parent window (issue #2916)
-    int maxDx = rParent.dx - (2 * topLeftMargin);
-    if (maxDx > 0 && dx > maxDx) {
-        int diff = dx - maxDx;
-        if (isRtl) {
-            rTxt.dx -= diff;
-        } else {
-            rClose.x -= diff;
-        }
-        dx = maxDx;
-    }
-#if 0
-    if (dy < rCurr.dy) {
-        dy = rCurr.dy;
-    }
-#endif
-#if 0
-    if (wnd->shrinkLimit < 1.0f) {
-        Rect rcOrig = HwndClientRect(wnd->hwnd);
-        if (rMsg.dx < rcOrig.dx && rMsg.dx > rcOrig.dx * wnd->shrinkLimit) {
-            rMsg.dx = rcOrig.dx;
-        }
-    }
-#endif
-
-    // full-width bottom bar: stretch to the canvas width and center the text
-    // (the close button, if any, stays pinned to the right edge)
-    if (corner == NotifCorner::BottomBar && rParent.dx > 0) {
-        dx = rParent.dx;
-        int reserveRight = noClose ? 0 : closeBlockDx;
-        rTxt.x = std::max((dx - reserveRight - szText.dx) / 2, padX);
-        rTxt.y = padY;
-        if (!noClose) {
-            rClose.x = dx - closeDx - padX;
-        }
-    }
-
-    // y-center close
-    if (!noClose) {
-        rClose.y = ((dy - rClose.dx) / 2) + 1;
-    }
-
-    // hand the computed geometry to the controls; this window positions them
-    // itself, so the tree is only collected, not laid out
-    RefreshVirtTops(hwnd, layout, Rect{0, 0, dx, dy}, &vroot);
-    ILayout* body = NotifBody(this);
-    body->SetBounds(rTxt);
-    if (txtCtrl && txtCtrl->rich) {
-        txtCtrl->rich->SetBounds(rTxt);
-    }
     if (closeCtrl) {
-        closeCtrl->idealSize = {rClose.dx, rClose.dy};
-        closeCtrl->SetBounds(rClose);
+        closeCtrl->idealSize = {closeDx, closeDx + 2};
     }
-    progressCtrl->visibility = HasProgress() ? Visibility::Visible : Visibility::Collapse;
-    progressCtrl->SetBounds(rProgress);
+    if (progressBlock) {
+        progressBlock->SetVisibility(HasProgress() ? Visibility::Visible : Visibility::Collapse);
+    }
 
-    if (dx == rCurr.dx && dy == rCurr.dy) {
+    int maxDx = rParent.dx - (2 * topLeftMargin);
+    Rect rCurr = HwndClientRect(hwnd);
+    // measure at natural size first; a bounded max on a Stretch VBox would
+    // expand the toast to the canvas width
+    Size sz = layout->Layout(ExpandInf());
+    if (corner == NotifCorner::BottomBar && rParent.dx > 0) {
+        sz.dx = rParent.dx;
+    } else {
+        if (rCurr.dx > sz.dx) {
+            sz.dx = rCurr.dx; // don't shrink when the text gets shorter
+        }
+        if (maxDx > 0 && sz.dx > maxDx) {
+            sz.dx = maxDx;
+        }
+    }
+    LayoutToSize(layout, sz);
+    RefreshVirtTops(hwnd, layout, {0, 0, sz.dx, sz.dy}, &vroot);
+
+    Rect rWin = HwndWindowRect(hwnd);
+    if (sz.dx == rWin.dx && sz.dy == rWin.dy) {
         return;
     }
 
-    // adjust the window to fit the message (only shrink the window when there's no progress bar)
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE;
-    SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, flags);
+    SetWindowPos(hwnd, nullptr, 0, 0, sz.dx, sz.dy, flags);
 
     // move the window to the right for a right-to-left layout
     if (IsUIRtl()) {
@@ -684,6 +630,14 @@ Size NotifTextCtrl::GetIdealSize() {
     return idealSize;
 }
 
+void NotifTextCtrl::SetBounds(Rect r) {
+    VirtCtrl::SetBounds(r);
+    if (rich) {
+        // same window rect as us so the words sit at {0,0} in our content
+        rich->SetBounds(r);
+    }
+}
+
 void NotifTextCtrl::Paint(VirtPaintCtx& ctx) {
     if (rich) {
         // the child paints itself; keep its colors in step with the theme
@@ -701,6 +655,11 @@ void NotifTextCtrl::Paint(VirtPaintCtx& ctx) {
 NotifProgressCtrl::NotifProgressCtrl() {
     kind = kindNotifProgress;
     flags |= vwfNoHitTest;
+}
+
+Size NotifProgressCtrl::GetIdealSize() {
+    int h = notif && notif->hwnd ? DpiScale(notif->hwnd, kProgressDy) : kProgressDy;
+    return {0, h};
 }
 
 void NotifProgressCtrl::Paint(VirtPaintCtx& ctx) {
