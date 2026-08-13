@@ -3166,15 +3166,16 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, selected);
-    if (annot && (selected || tab->editAnnotsWindow)) {
-        SetCursorCached(IDC_HAND);
-        return TRUE;
-    }
+    bool annotEditHover = annot && (selected || tab->editAnnotsWindow);
 
     int pageNo = 0;
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
     if (!pageEl) {
-        SetTextOrArrorCursor(dm, pt);
+        if (annotEditHover) {
+            SetCursorCached(IDC_HAND);
+        } else {
+            SetTextOrArrorCursor(dm, pt);
+        }
         win->DeleteToolTip();
         return TRUE;
     }
@@ -3189,9 +3190,9 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     Rect rc = dm->CvtToScreen(pageNo, r);
     win->ShowToolTip(text, rc, true);
 
-    bool isLink = pageEl->Is(kindPageElementDest);
-
-    if (isLink) {
+    // keep the hand cursor while editing an annotation, but still show the
+    // comment tooltip (issue #5329)
+    if (annotEditHover || pageEl->Is(kindPageElementDest)) {
         SetCursorCached(IDC_HAND);
     } else {
         SetTextOrArrorCursor(dm, pt);

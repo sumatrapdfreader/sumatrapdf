@@ -4050,18 +4050,40 @@ static IPageElement* NewFzComment(Str comment, int pageNo, RectF rect) {
     return res;
 }
 
+// Hover tip for an annotation: author and/or contents (issue #5329).
+// FreeText already draws its contents on the page, so the tip is just the author.
 // must be called inside fz_try
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_bound_annot(ctx, annot);
+    auto tp = pdf_annot_type(ctx, annot);
     Str contents = pdf_annot_contents(ctx, annot);
     Str label = pdf_annot_field_label(ctx, annot);
-    Str s = contents;
-    // TODO: use separate classes for comments and tooltips?
-    if (!contents) {
+    Str author;
+    if (pdf_annot_has_author(ctx, annot)) {
+        author = pdf_annot_author(ctx, annot);
+        if (str::IsEmptyOrWhiteSpace(author)) {
+            author = {};
+        }
+    }
+    if (str::IsEmptyOrWhiteSpace(contents)) {
+        contents = {};
+    }
+
+    Str s;
+    if (tp == PDF_ANNOT_WIDGET) {
+        s = contents ? contents : label;
+    } else if (tp == PDF_ANNOT_FREE_TEXT) {
+        s = author ? author : StrL("Anonymous");
+    } else if (author && contents) {
+        s = str::JoinTemp(author, StrL("\n"), contents);
+    } else if (contents) {
+        s = contents;
+    } else if (author) {
+        s = author;
+    } else {
         s = label;
     }
-    RectF rd = ToRectF(rect);
-    return NewFzComment(s, pageNo, rd);
+    return NewFzComment(s, pageNo, ToRectF(rect));
 }
 
 // must be called inside fz_try
@@ -4075,8 +4097,15 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
     bool isContentsEmpty = !contents;
     Str label = pdf_annot_field_label(ctx, annot); // don't free
     bool isLabelEmpty = !label;
+    Str author;
+    if (pdf_annot_has_author(ctx, annot)) {
+        author = pdf_annot_author(ctx, annot);
+        if (str::IsEmptyOrWhiteSpace(author)) {
+            author = {};
+        }
+    }
     int flags = pdf_annot_field_flags(ctx, annot);
-    bool isEmpty = isContentsEmpty && isLabelEmpty;
+    bool isEmpty = isContentsEmpty && isLabelEmpty && !author;
 
     // const char* tpStr = pdf_string_from_annot_type(ctx, tp);
     //  logf("MakePageElementCommentsFromAnnotations: annot %d '%s', contents: '%s', label: '%s'\n", tp, tpStr,
@@ -4113,7 +4142,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         return;
     }
 
-    if (!isEmpty && tp != PDF_ANNOT_FREE_TEXT) {
+    if (tp == PDF_ANNOT_FREE_TEXT || (!isEmpty && tp != PDF_ANNOT_WIDGET)) {
         auto* comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
         comments.Append(comment);
         return;

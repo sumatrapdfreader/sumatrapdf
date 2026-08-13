@@ -1212,3 +1212,51 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
     SafeEngineRelease(&engine);
     return ToStrTemp(out);
 }
+
+// Hover-tip strings for annotation comments on a page (issue #5329).
+// Newlines in a tip are reported as "|".
+TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR engine-create-failed path=%s\n", path));
+        return ToStrTemp(out);
+    }
+
+    if (!engine->BenchLoadPage(pageNo)) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR page-load-failed page=%d\n", pageNo));
+        SafeEngineRelease(&engine);
+        return ToStrTemp(out);
+    }
+
+    int nComments = 0;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (!el || !el->Is(kindPageElementComment)) {
+            continue;
+        }
+        Str value = el->GetValue();
+        TempStr flat = str::ReplaceTemp(value, StrL("\n"), StrL("|"));
+        nComments++;
+        out.Append(fmt("comment=%s\n", flat));
+    }
+    if (nComments == 0) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR no-comments page=%d\n", pageNo));
+    } else if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    SafeEngineRelease(&engine);
+    return ToStrTemp(out);
+}

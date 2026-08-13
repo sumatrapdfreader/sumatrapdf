@@ -137,6 +137,7 @@ enum class ControlCmd : u16 {
     TestAIChatReplay = 42,
     TestMarkdownFollowLink = 43,
     TestHomeListRows = 44,
+    TestPageComments = 45,
 };
 
 enum class ControlArgType : u16 {
@@ -637,6 +638,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageLinksResultTemp(path, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageComments: {
+            Str path = StringArg(req, 0);
+            i32 pageNo = 1;
+            if (!path || !IntArg(req, 1, pageNo)) {
+                AppendError(req, "TestPageComments expects string path, int pageNo");
+                break;
+            }
+            int exitCode = 0;
+            Str res = PageCommentsResultTemp(path, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

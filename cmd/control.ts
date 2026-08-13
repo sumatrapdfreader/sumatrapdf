@@ -37,6 +37,7 @@ export enum ControlCommand {
   TestAIChatReplay = 42,
   TestMarkdownFollowLink = 43,
   TestHomeListRows = 44,
+  TestPageComments = 45,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
