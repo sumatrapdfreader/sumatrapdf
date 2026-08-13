@@ -75,6 +75,10 @@ struct InstallerWnd {
     Button* btnExit = nullptr;
     Button* btnInstall = nullptr;
 
+    ILayout* layout = nullptr;
+    ILayout* optionsBox = nullptr;
+    HwndSlot* optionsBtnSlot = nullptr;
+
     bool showOptions = false;
     ThreadHandle hThread = nullptr;
 };
@@ -1335,10 +1339,13 @@ static void StartInstallation(InstallerWnd* wnd) {
     // first one to show progress quickly
     ProgressStep();
 
-    // disable the install button and remove all the installation options
-    // deleting it takes it out of virtRoot->tops, so we stop painting it
-    delete wnd->staticInstDir;
-    wnd->staticInstDir = nullptr;
+    // disable the install button and hide the installation options
+    if (wnd->optionsBox) {
+        wnd->optionsBox->SetVisibility(Visibility::Collapse);
+    }
+    if (wnd->staticInstDir) {
+        wnd->staticInstDir->SetIsVisible(false);
+    }
     DeleteWnd(&wnd->editInstallationDir);
     DeleteWnd(&wnd->btnBrowseDir);
     DeleteWnd(&wnd->checkboxForAllUsers);
@@ -1588,6 +1595,8 @@ static void SetInstallButtonElevationState() {
     Button_SetElevationRequiredState(gWnd->btnInstall->hwnd, mustElevate);
 }
 
+static void RelayoutInstaller(InstallerWnd* wnd);
+
 static void ForAllUsersStateChanged() {
     Flags* cli = &gCliNew;
     bool forAllUsers = gWnd->checkboxForAllUsers->IsChecked();
@@ -1601,11 +1610,37 @@ static void ForAllUsersStateChanged() {
          cli->installDir, (int)forAllUsers);
 }
 
+static void RelayoutInstaller(InstallerWnd* wnd) {
+    if (!wnd || !wnd->layout || !wnd->hwnd) {
+        return;
+    }
+    Rect rc = HwndClientRect(wnd->hwnd);
+    if (rc.IsEmpty()) {
+        return;
+    }
+    Visibility optVis = wnd->showOptions ? Visibility::Visible : Visibility::Hidden;
+    if (wnd->optionsBox) {
+        wnd->optionsBox->SetVisibility(optVis);
+    }
+    if (wnd->staticInstDir) {
+        wnd->staticInstDir->SetVisibility(optVis);
+    }
+    LayoutToSize(wnd->layout, rc.Size());
+    wnd->layout->SetBounds(rc);
+    if (!wnd->virtRoot) {
+        wnd->virtRoot = new VirtRoot(wnd->hwnd);
+    }
+    wnd->virtRoot->bounds = rc;
+    Vec<VirtCtrl*> tops;
+    CollectVirtCtrls(wnd->layout, tops);
+    wnd->virtRoot->SetTops(tops);
+}
+
 static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     bool showOpts = wnd->showOptions;
 
     if (wnd->staticInstDir) {
-        wnd->staticInstDir->SetIsVisible(showOpts);
+        wnd->staticInstDir->SetVisibility(showOpts ? Visibility::Visible : Visibility::Hidden);
     }
     ShowAndEnable(wnd->editInstallationDir, showOpts);
     ShowAndEnable(wnd->btnBrowseDir, showOpts);
@@ -1622,10 +1657,15 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
         //| ACCESSKEY_ALTERNATIVE
         s = _TRA("Hide &Options");
     }
-    SetButtonTextAndResize(btnOptions, s);
+    Size sz = SetButtonTextAndResize(btnOptions, s);
+    if (wnd->optionsBtnSlot) {
+        wnd->optionsBtnSlot->dx = sz.dx;
+        wnd->optionsBtnSlot->dy = sz.dy;
+    }
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
 
+    RelayoutInstaller(wnd);
     HwndRepaintNow(wnd->hwnd);
     HwndSetFocus(btnOptions->hwnd);
 }
@@ -1753,47 +1793,16 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     bool showInstallButton = !cli->fastInstall;
 
     wnd->btnInstall = CreateDefaultButton(hwnd, _TRA("Install SumatraPDF"), isRtl);
-    auto* b = wnd->btnInstall;
-    b->onClick = MkFunc0(OnButtonInstall, wnd);
-    {
-        // button position: bottom-right
-        HWND parent = ::GetParent(b->hwnd);
-        Rect r = HwndClientRect(parent);
-        Size size = b->GetIdealSize();
-        int x = r.dx - size.dx - margin;
-        int y = r.dy - size.dy - margin;
-        b->SetBounds({x, y, size.dx, size.dy});
-    }
+    wnd->btnInstall->onClick = MkFunc0(OnButtonInstall, wnd);
     ShowAndEnable(wnd->btnInstall, showInstallButton);
 
-    Rect r = HwndClientRect(hwnd);
     wnd->btnOptions = CreateDefaultButton(hwnd, _TRA("&Options"), isRtl);
-    b = wnd->btnOptions;
-    b->onClick = MkFunc0(OnButtonOptions, wnd);
-    int x = margin;
-    int y;
-    {
-        auto size = b->GetIdealSize();
-        y = r.dy - size.dy - margin;
-        b->SetBounds({x, y, size.dx, size.dy});
-        gButtonDy = size.dy;
-        gBottomPartDy = gButtonDy + (margin * 2);
-    }
+    wnd->btnOptions->onClick = MkFunc0(OnButtonOptions, wnd);
+    Size optSz = wnd->btnOptions->GetIdealSize();
+    gButtonDy = optSz.dy;
+    gBottomPartDy = gButtonDy + (margin * 2);
 
-    Size size = HwndMeasureText(hwnd, "Foo");
-    int staticDy = size.dy + DpiScale(hwnd, 6);
-
-    y = r.dy - gBottomPartDy;
-    int dx = r.dx - (margin * 2) - DpiScale(hwnd, 2);
-
-    x += DpiScale(hwnd, 2);
-
-    // build options controls going from the bottom
-    y -= (staticDy + margin);
-
-    Rect rc;
-    int checkDy;
-    // only show this checkbox if the CPU arch of DLL and OS match
+    // only show these if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
@@ -1803,11 +1812,6 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
             showOptions = true;
         }
         wnd->checkboxRegisterPreview = CreateCheckbox(hwnd, s, isChecked);
-        checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
-
-        rc = {x, y, dx, checkDy};
-        wnd->checkboxRegisterPreview->SetPos(&rc);
-        y -= checkDy;
 
         isChecked = cli->withFilter || IsSearchFilterInstalled();
         if (isChecked) {
@@ -1815,10 +1819,6 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         }
         s = _TRA("Let Windows Desktop Search &search PDF documents");
         wnd->checkboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
-        checkDy = wnd->checkboxRegisterSearchFilter->GetIdealSize().dy;
-        rc = {x, y, dx, checkDy};
-        wnd->checkboxRegisterSearchFilter->SetPos(&rc);
-        y -= checkDy;
     }
 
     {
@@ -1829,18 +1829,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         }
         wnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
         wnd->checkboxForAllUsers->onStateChanged = MkFunc0Void(ForAllUsersStateChanged);
-
-        checkDy = 0;
-        if (wnd->checkboxRegisterPreview) {
-            checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
-        }
-        rc = {x, y, dx, checkDy};
-        wnd->checkboxForAllUsers->SetPos(&rc);
-        y -= checkDy;
     }
-
-    // a bit more space between text box and checkboxes
-    y -= (DpiScale(hwnd, 4) + margin);
 
     wnd->btnBrowseDir = CreateDefaultButton(hwnd, "&...", isRtl);
     wnd->btnBrowseDir->onClick = MkFunc0(OnButtonBrowse, wnd);
@@ -1854,46 +1843,65 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     wnd->editInstallationDir->Create(eargs);
     wnd->editInstallationDir->SetText(cli->installDir);
 
-    int editDy = wnd->editInstallationDir->GetIdealSize().dy;
-
-    int btnDx = editDy; // btnDx == btnDy
-    x = r.dx - margin - btnDx;
-    wnd->btnBrowseDir->SetBounds({x, y, btnDx, btnDx});
-
-    x = margin;
-    dx = r.dx - (2 * margin) - btnDx - DpiScale(hwnd, 4);
-
-    // Rect is (x, y, dx, dy) — not (left, top, right, bottom). Using right/bottom
-    // here made the edit (and label below) cover most of the client area with a
-    // white background when Options was shown (issue #5860).
-    rc = {x, y, dx, editDy};
-    wnd->editInstallationDir->SetBounds(rc);
-
-    y -= editDy;
-
     Str s2 = _TRA("Install SumatraPDF in &folder:");
     // we paint the text ourselves, so the '&' of the access key would show up
     // literally instead of underlining the next letter
     TempStr s2NoAccel = str::DupTemp(s2);
     str::RemoveCharsInPlace(s2NoAccel, "&");
-    rc = {x, y, r.dx - (2 * margin), staticDy};
-
     wnd->staticInstDir = NewVirtText({
         .s = s2NoAccel,
         .font = GetPlatformFont(GetDefaultGuiFont()),
         .textColor = RGB(0, 0, 0),
         .isRtl = IsUIRtl(),
     });
-    wnd->staticInstDir->SetBounds(rc);
-    wnd->virtRoot = new VirtRoot(hwnd);
-    // the virtual controls are positioned in window coords, so the root covers
-    // the whole client area
-    wnd->virtRoot->bounds = r;
-    {
-        Vec<VirtCtrl*> tops;
-        tops.Append(wnd->staticInstDir);
-        wnd->virtRoot->SetTops(tops);
+
+    int gap = DpiScale(hwnd, 4);
+    int editDy = wnd->editInstallationDir->GetIdealSize().dy;
+    int browseDx = editDy;
+
+    auto* dirRow = new HBox();
+    dirRow->alignCross = CrossAxisAlign::CrossCenter;
+    dirRow->AddChild(new HwndSlot(wnd->editInstallationDir->hwnd, DpiScale(hwnd, 80), editDy), 1);
+    dirRow->AddChild(new Spacer(gap, 0));
+    dirRow->AddChild(new HwndSlot(wnd->btnBrowseDir->hwnd, browseDx, browseDx));
+
+    auto addCheck = [&](Checkbox* cb, VBox* box) {
+        if (!cb) {
+            return;
+        }
+        box->AddChild(new HwndSlot(cb->hwnd, 0, cb->GetIdealSize().dy));
+    };
+
+    auto* opts = new VBox();
+    opts->alignCross = CrossAxisAlign::Stretch;
+    opts->AddChild(wnd->staticInstDir);
+    opts->AddChild(new Spacer(0, DpiScale(hwnd, 2)));
+    opts->AddChild(dirRow);
+    opts->AddChild(new Spacer(0, gap + margin));
+    addCheck(wnd->checkboxForAllUsers, opts);
+    addCheck(wnd->checkboxRegisterSearchFilter, opts);
+    addCheck(wnd->checkboxRegisterPreview, opts);
+    wnd->optionsBox = new Padding(opts, Insets{0, margin, 0, margin});
+
+    // options sit at the bottom of the branded area, above the button row
+    auto* overlay = new Overlay();
+    overlay->AddChild(wnd->optionsBox, CrossAxisAlign::Stretch, CrossAxisAlign::CrossEnd);
+
+    Size instSz = wnd->btnInstall->GetIdealSize();
+    auto* bottom = new HBox();
+    bottom->alignCross = CrossAxisAlign::CrossCenter;
+    wnd->optionsBtnSlot = new HwndSlot(wnd->btnOptions->hwnd, optSz.dx, optSz.dy);
+    bottom->AddChild(wnd->optionsBtnSlot);
+    bottom->AddChild(new Spacer(0, 0), 1);
+    if (showInstallButton) {
+        bottom->AddChild(new HwndSlot(wnd->btnInstall->hwnd, instSz.dx, instSz.dy));
     }
+
+    auto* root = new VBox();
+    root->alignCross = CrossAxisAlign::Stretch;
+    root->AddChild(overlay, 1);
+    root->AddChild(new Padding(bottom, Insets{margin, margin, margin, margin}));
+    wnd->layout = root;
 
     wnd->showOptions = showOptions;
     UpdateUIForOptionsState(wnd);
@@ -1941,6 +1949,13 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
         }
 
         case WM_DESTROY:
+            gWnd->staticInstDir = nullptr;
+            gWnd->optionsBox = nullptr;
+            gWnd->optionsBtnSlot = nullptr;
+            delete gWnd->layout;
+            gWnd->layout = nullptr;
+            delete gWnd->virtRoot;
+            gWnd->virtRoot = nullptr;
             PostQuitMessage(0);
             break;
 
