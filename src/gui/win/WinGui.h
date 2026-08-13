@@ -14,6 +14,7 @@ enum WindowBorderStyle {
 
 struct WindowBase;
 struct VirtRoot;
+struct PlatformFont;
 
 WindowBase* WindowBaseFromHwnd(HWND);
 void MarkHWNDDestroyed(HWND);
@@ -270,8 +271,9 @@ struct WindowBase {
     void SetText(Str);
     TempStr GetTextTemp();
 
-    HFONT GetFont();
-    void SetFont(HFONT font);
+    PlatformFont* GetFont();
+    HFONT GetHFont() const;
+    void SetFont(PlatformFont*);
 
     // dpi of the monitor this window is on
     int GetDpi() const;
@@ -307,7 +309,7 @@ struct WindowBase {
     Visibility visibility{Visibility::Visible};
 
     HWND hwnd = nullptr;
-    HFONT font = nullptr; // we don't own it
+    PlatformFont* font = nullptr; // interned, not owned
     UINT_PTR subclassId = 0;
 
     Color bgColor = kColorUnset;

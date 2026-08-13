@@ -31,8 +31,6 @@
 struct ChangeThemeWnd : WindowBase {
     ~ChangeThemeWnd() override;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
     bool documentColorsFollowThemeOnly = false;
     VirtListBox* listBox = nullptr;
@@ -271,14 +269,13 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.title = documentColorsFollowThemeOnly ? _TRA("Make Document Colors Follow Theme") : _TRA("Change Theme");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
 
     bool isRtl = IsUIRtl();
 
@@ -290,7 +287,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         int n = ThemeGetCount();
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
-        c->font = platformFont;
+        c->font = font;
         listBox = c;
         model = new ListBoxModelStrings();
         for (int i = 0; i < n; i++) {
@@ -306,7 +303,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
 
         auto* label = NewVirtText({
             .s = _TRA("Document colors follow theme"),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
             .padding = DpiScaledInsets(8, 0, 0, 0),
         });
@@ -317,7 +314,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     {
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.isRtl = isRtl;
         auto* c = new DropDown();
         c->SetInsetsPt(4, 0, 0, 0);
@@ -335,12 +332,12 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
         // Enter runs this one (see OnKeyDown), so draw it as the
         // default button to say so
-        btnChange = NewThemedButton(hwnd, _TRA("Change"), platformFont, true);
+        btnChange = NewThemedButton(hwnd, _TRA("Change"), font, true);
         btnChange->onClick = MkFunc1(ChangeClicked, this);
         hbox->AddChild(new Padding(btnChange, pad));
         vbox->AddChild(hbox);
@@ -378,7 +375,7 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeThemeWnd, KeyEvent*, &ChangeThemeWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

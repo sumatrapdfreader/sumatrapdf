@@ -78,8 +78,6 @@ struct ListBoxModelNav : ListBoxModel {
 struct NavFilesInFolderWnd : WindowBase {
     ~NavFilesInFolderWnd() override;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
     // the label, the list and the hints are virtual controls; this window has
     // no HWND children at all
@@ -758,7 +756,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         // regular resizable window (not a popup that auto-dismisses)
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
         args.title = _TRA("Navigate Files in Folder");
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         args.isRtl = IsUIRtl();
         CreateCustom(args);
@@ -779,11 +777,9 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
-    platformFont = GetPlatformFont(font);
-
     {
         auto* c = NewVirtText({
-            .font = platformFont,
+            .font = font,
             .textColor = colTxt,
             .isRtl = IsUIRtl(),
             .ellipsis = true,
@@ -795,7 +791,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
-        c->font = platformFont;
+        c->font = font;
         c->textColor = colTxt;
         c->bgColor = colBg;
         c->padding = DpiScaledInsets(4, 0);
@@ -814,7 +810,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
         for (Str s : strings) {
-            auto* c = NewVirtText({.s = s, .font = platformFont, .textColor = colTxt, .isRtl = IsUIRtl()});
+            auto* c = NewVirtText({.s = s, .font = font, .textColor = colTxt, .isRtl = IsUIRtl()});
             hbox->AddChild(new Padding(c, pad));
         }
         vbox->AddChild(hbox);
@@ -896,7 +892,7 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
     wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<NavFilesInFolderWnd, WindowBase::PreTranslateEvent*, &NavFilesInFolderWnd::PreTranslate>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     // set before Create so Esc during Create can dismiss
     gNavFilesWnd = wnd;
     gHwndToActivateOnNavClose = win->hwndFrame;

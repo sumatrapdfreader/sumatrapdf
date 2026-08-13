@@ -31,8 +31,6 @@
 struct CustomZoomWnd : WindowBase {
     ~CustomZoomWnd() override = default;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
     bool forChm = false;
     float startZoom = 0;
@@ -211,14 +209,13 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Zoom factor");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
     bool isRtl = IsUIRtl();
 
     auto* vbox = new VBox();
@@ -228,7 +225,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
     {
         auto* c = NewVirtText({
             .s = _TRA("&Magnification:"),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
             .padding = DpiScaledInsets(0, 0, 4, 0),
         });
@@ -239,7 +236,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
     {
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.isRtl = isRtl;
         args.isEditable = true;
         auto* c = new DropDown();
@@ -255,10 +252,10 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        btnZoom = NewThemedButton(hwnd, _TRA("Zoom"), platformFont, true);
+        btnZoom = NewThemedButton(hwnd, _TRA("Zoom"), font, true);
         btnZoom->onClick = MkFunc1(ZoomClicked, this);
         hbox->AddChild(new Padding(btnZoom, pad));
         vbox->AddChild(hbox);
@@ -296,7 +293,7 @@ void ShowCustomZoomDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<CustomZoomWnd, KeyEvent*, &CustomZoomWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

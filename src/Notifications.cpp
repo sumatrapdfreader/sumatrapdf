@@ -511,7 +511,7 @@ void NotificationWnd::Layout(Str message) {
             // rich text: the words lay themselves out (links included). Note: no
             // RTL word reordering, same as the home page tips.
             txtCtrl->txtFmt = gfxTextLeft;
-            parsed->font = GetPlatformFont(font);
+            parsed->font = font;
             // link commands go to the top-level window (the main frame)
             parsed->hwndForCmds = GetAncestor(hwnd, GA_ROOT);
             txtCtrl->rich = parsed;
@@ -535,13 +535,13 @@ void NotificationWnd::Layout(Str message) {
                 gfxFmt |= gfxTextRight | gfxTextRtl;
             }
             HDC hdc = GetDC(hwnd);
-            szText = HdcMeasureText(hdc, message, fmt, font);
+            szText = HdcMeasureText(hdc, message, fmt, GetHFont());
             if (maxTextDx > 0 && szText.dx > maxTextDx) {
                 // too wide: word-wrap the message; DT_WORD_ELLIPSIS truncates
                 // words too long to wrap (e.g. long file paths)
                 fmt = DT_WORDBREAK | DT_WORD_ELLIPSIS | DT_NOPREFIX;
                 gfxFmt = gfxTextWrap | gfxTextEllipsis;
-                szText = HdcMeasureText(hdc, message, maxTextDx, fmt, font);
+                szText = HdcMeasureText(hdc, message, maxTextDx, fmt, GetHFont());
                 szText.dx = std::min(szText.dx, maxTextDx);
             }
             ReleaseDC(hwnd, hdc);
@@ -603,7 +603,7 @@ void NotificationWnd::OnPaint(WindowBase::PaintEvent* ev) {
     HDC hdc = buffer.GetDC();
     // HDC hdc = hdcIn;
 
-    ScopedSelectObject fontPrev(hdc, font);
+    ScopedSelectObject fontPrev(hdc, GetHFont());
 
     NotifColors cols = Colors();
     HdcFillRect(hdc, rc, cols.bg);
@@ -649,7 +649,7 @@ void NotifTextCtrl::Paint(VirtPaintCtx& ctx) {
     }
     TempStr text = HwndGetTextTemp(notif->hwnd);
     NotifColors cols = notif->Colors();
-    ctx.gfx->DrawText(text, ctx.content, txtFmt, GetPlatformFont(notif->font), cols.txt);
+    ctx.gfx->DrawText(text, ctx.content, txtFmt, notif->font, cols.txt);
 }
 
 NotifProgressCtrl::NotifProgressCtrl() {

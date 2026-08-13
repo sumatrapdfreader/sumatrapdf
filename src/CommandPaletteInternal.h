@@ -32,7 +32,6 @@ struct ListBoxModelCP : ListBoxModel {
 
 struct CommandPaletteWnd : WindowBase {
     ~CommandPaletteWnd() override = default;
-    HFONT font = nullptr;
     MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;

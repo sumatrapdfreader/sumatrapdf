@@ -520,7 +520,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         CreateCustomArgs args;
         args.visible = false;
         args.style = WS_POPUPWINDOW;
-        args.font = font;
+        args.font = GetHFont();
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -542,7 +542,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         args.withBorder = false;
         args.cueText = "enter search term";
         args.text = prefix;
-        args.font = font;
+        args.font = GetHFont();
         args.isRtl = IsUIRtl();
         auto* c = new Edit();
         c->SetColors(colTxt, colBg);
@@ -556,7 +556,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
     if (!smartTabMode) {
         auto* box = new HBox();
-        HelpStyle st{hwnd, GetPlatformFont(font), colTxt, colBg};
+        HelpStyle st{hwnd, font, colTxt, colBg};
         // in "# File History" and friends the first character is what you type
         // to get there, so it becomes a key-cap
         auto addSwitch = [this, box, &st](Str s, Str switchTo) {
@@ -588,7 +588,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         // focus and doesn't show a focus ring
         c->SetFlag(vwfFocusable, false);
         c->dpi = GetDpi();
-        c->font = GetPlatformFont(font);
+        c->font = font;
         c->textColor = colTxt;
         c->bgColor = colBg;
         c->padding = DpiScaledInsets(4, 0);
@@ -685,7 +685,7 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     wnd->onKeyDown = MkMethod1<CommandPaletteWnd, KeyEvent*, &CommandPaletteWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<CommandPaletteWnd, WindowBase::PreTranslateEvent*, &CommandPaletteWnd::PreTranslate>(wnd);
-    wnd->font = GetAppBiggerFont();
+    wnd->SetFont(GetPlatformFont(GetAppBiggerFont()));
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);

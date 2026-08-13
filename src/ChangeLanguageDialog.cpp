@@ -29,8 +29,6 @@
 struct ChangeLanguageWnd : WindowBase {
     ~ChangeLanguageWnd() override = default;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
     Edit* editSearch = nullptr;
     VirtListBox* listBox = nullptr;
@@ -193,14 +191,13 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Change Language");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
 
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
@@ -209,7 +206,7 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.withBorder = true;
         args.isRtl = IsUIRtl();
         auto* c = new Edit();
@@ -222,7 +219,7 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
     {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
-        c->font = platformFont;
+        c->font = font;
         c->idealSizeLines = 16;
         listBox = c;
         model = new ListBoxModelStrings();
@@ -237,10 +234,10 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, _TRA("OK"), platformFont, true);
+        btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
         btnOk->onClick = MkFunc1(OkClicked, this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
@@ -271,7 +268,7 @@ void ShowChangeLanguageDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeLanguageWnd, KeyEvent*, &ChangeLanguageWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

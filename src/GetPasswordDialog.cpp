@@ -28,8 +28,6 @@
 struct GetPasswordWnd : WindowBase {
     ~GetPasswordWnd() override;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     HWND hwndParent = nullptr;
     Str fileName;
     bool* remember = nullptr;
@@ -153,14 +151,13 @@ bool GetPasswordWnd::Create() {
         args.title = _TRA("Enter password");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
     bool isRtl = IsUIRtl();
 
     auto* vbox = new VBox();
@@ -170,7 +167,7 @@ bool GetPasswordWnd::Create() {
     {
         auto* c = NewVirtText({
             .s = fmt(_TRA("Enter password for %s").s, fileName),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
             .padding = DpiScaledInsets(0, 0, 4, 0),
         });
@@ -185,7 +182,7 @@ bool GetPasswordWnd::Create() {
 
         auto* lab = NewVirtText({
             .s = _TRA("&Password:"),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
         });
         labelPwd = lab;
@@ -193,7 +190,7 @@ bool GetPasswordWnd::Create() {
 
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.withBorder = true;
         args.isPassword = true;
         args.selectAllOnFocus = true;
@@ -243,10 +240,10 @@ bool GetPasswordWnd::Create() {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, _TRA("OK"), platformFont, true);
+        btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
         btnOk->onClick = MkFunc1(OkClicked, this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
@@ -279,7 +276,7 @@ Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword,
     wnd->showPassword = showPassword;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onKeyDown = MkMethod1<GetPasswordWnd, KeyEvent*, &GetPasswordWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create();
     if (!ok) {
         delete wnd;

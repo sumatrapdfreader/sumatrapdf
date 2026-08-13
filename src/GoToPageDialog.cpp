@@ -30,8 +30,6 @@
 struct GoToPageWnd : WindowBase {
     ~GoToPageWnd() override = default;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
     int pageCount = 0;
     bool onlyNumeric = true;
@@ -182,14 +180,13 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Go to page");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
     bool isRtl = IsUIRtl();
 
     auto* vbox = new VBox();
@@ -203,7 +200,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
 
         auto* lab = NewVirtText({
             .s = _TRA("&Go to page:"),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
         });
         label = lab;
@@ -211,7 +208,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
 
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.withBorder = true;
         args.alignRight = true;
         args.numbersOnly = onlyNumeric;
@@ -227,7 +224,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
 
         auto* of = NewVirtText({
             .s = fmt(_TRA("(of %d)").s, pageCount),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
         });
         labelOf = of;
@@ -241,10 +238,10 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        btnGo = NewThemedButton(hwnd, _TRA("Go to page"), platformFont, true);
+        btnGo = NewThemedButton(hwnd, _TRA("Go to page"), font, true);
         btnGo->onClick = MkFunc1(GoClicked, this);
         hbox->AddChild(new Padding(btnGo, pad));
         vbox->AddChild(hbox);
@@ -287,7 +284,7 @@ void ShowGoToPageDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<GoToPageWnd, KeyEvent*, &GoToPageWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

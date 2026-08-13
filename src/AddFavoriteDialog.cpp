@@ -30,8 +30,6 @@
 struct AddFavoriteWnd : WindowBase {
     ~AddFavoriteWnd() override;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
     int pageNo = 0;
     Str pageLabel;
@@ -173,14 +171,13 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
         args.title = _TRA("Add Favorite");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
     bool isRtl = IsUIRtl();
 
     auto* vbox = new VBox();
@@ -190,7 +187,7 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
     {
         auto* c = NewVirtText({
             .s = FavoritePromptTemp(pageLabel),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
             .padding = DpiScaledInsets(0, 0, 4, 0),
         });
@@ -201,7 +198,7 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.withBorder = true;
         args.selectAllOnFocus = true;
         args.isRtl = isRtl;
@@ -218,10 +215,10 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, _TRA("OK"), platformFont, true);
+        btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
         btnOk->onClick = MkFunc1(OkClicked, this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
@@ -261,7 +258,7 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<AddFavoriteWnd, KeyEvent*, &AddFavoriteWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create(win, filePath, pageNo, pageLabel, name);
     if (!ok) {
         delete wnd;

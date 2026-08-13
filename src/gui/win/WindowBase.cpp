@@ -485,11 +485,11 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         // with control handling
         // TODO: maybe when font is nullptr, ask the original proc
         case WM_GETFONT: {
-            return (LRESULT)font;
+            return (LRESULT)GetHFont();
         }
 
         case WM_SETFONT: {
-            font = (HFONT)wparam;
+            font = GetPlatformFont((HFONT)wparam);
             if (!subclassId) {
                 return 0;
             }
@@ -900,7 +900,9 @@ static void WndRegisterClass(WStr className) {
 }
 
 HWND WindowBase::CreateCustom(const CreateCustomArgs& args) {
-    font = args.font;
+    if (args.font) {
+        font = GetPlatformFont(args.font);
+    }
 
     WStr className = args.className ? args.className : kDefaultClassName;
     // TODO: validate className is not win32 control class
@@ -1001,23 +1003,24 @@ void WindowBase::UnSubclass() {
     subclassId = 0;
 }
 
-HFONT WindowBase::GetFont() {
+PlatformFont* WindowBase::GetFont() {
     return font;
+}
+
+HFONT WindowBase::GetHFont() const {
+    return font ? font->GetHFont() : nullptr;
 }
 
 int WindowBase::GetDpi() const {
     return hwnd ? RoundUp(DpiGetForHwnd(hwnd), 4) : DpiGet();
 }
 
-// HwndSetFont() sends WM_SETFONT, which our wndproc records in `font` and (for
-// subclassed controls) forwards to the control itself, so this both remembers
-// and applies the font. Without it SetFont() was a no-op on screen.
-void WindowBase::SetFont(HFONT fontIn) {
+void WindowBase::SetFont(PlatformFont* fontIn) {
     font = fontIn;
     if (!hwnd) {
         return;
     }
-    HwndSetFont(hwnd, fontIn);
+    HwndSetFont(hwnd, GetHFont());
 }
 
 void WindowBase::SetIsEnabled(bool isEnabled) const {

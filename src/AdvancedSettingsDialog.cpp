@@ -359,9 +359,7 @@ struct CommentText : VirtRichText {
 struct AdvancedSettingsWnd : WindowBase {
     ~AdvancedSettingsWnd() override;
 
-    HFONT font = nullptr;
     HFONT fontBold = nullptr; // for changed settings, owned
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
 
     // the list, the doc comment, the hints and the buttons are virtual
@@ -571,7 +569,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     gfx->FillRect(rc, colBg);
 
-    HFONT fontNormal = font ? font : GetAppFont();
+    HFONT fontNormal = GetHFont() ? GetHFont() : GetAppFont();
 
     // bold name => changed this session; bold value => differs from default.
     // together they show both "not the default" and "edited since opening".
@@ -628,7 +626,7 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     args.parent = hwnd;
     args.isMultiLine = false;
     args.withBorder = true;
-    args.font = font;
+    args.font = GetHFont();
     args.text = FormatSettingValueTemp(item);
     auto* c = new Edit();
     c->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
@@ -685,7 +683,7 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     }
     DropDown::CreateArgs args;
     args.parent = hwnd;
-    args.font = font;
+    args.font = GetHFont();
     auto* c = new DropDown();
     // Suppress re-entrant CancelEditValue / CloseEnumEdit while Create and
     // CB_SHOWDROPDOWN pump messages (filter EN_CHANGE was freeing c mid-flight).
@@ -1085,15 +1083,14 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Advanced Settings");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    fontBold = CreateBoldFont(font ? font : GetAppFont());
-    platformFont = GetPlatformFont(font);
+    fontBold = CreateBoldFont(GetHFont() ? GetHFont() : GetAppFont());
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();
@@ -1112,7 +1109,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         // underline so the filter field reads clearly against the dialog bg
         args.withBottomBorder = true;
         args.cueText = _TRA("enter search term to filter settings");
-        args.font = font;
+        args.font = GetHFont();
         args.isRtl = isRtl;
         auto* c = new Edit();
         c->SetColors(colTxt, colBg);
@@ -1127,7 +1124,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
-        c->font = platformFont;
+        c->font = font;
         c->textColor = colTxt;
         c->bgColor = colBg;
         c->padding = DpiScaledInsets(4, 0);
@@ -1150,7 +1147,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     // and the buttons
     {
         auto* c = new CommentText();
-        c->font = platformFont;
+        c->font = font;
         c->textColor = colTxt;
         c->bgColor = colBg;
         // don't let the doc text touch the edges of the dialog
@@ -1172,7 +1169,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             hbox->alignMain = MainAxisAlign::MainCenter;
             hbox->alignCross = CrossAxisAlign::CrossCenter;
 
-            auto* c = NewVirtText({.s = hint, .font = platformFont, .textColor = colTxt, .isRtl = isRtl});
+            auto* c = NewVirtText({.s = hint, .font = font, .textColor = colTxt, .isRtl = isRtl});
             hbox->AddChild(new Padding(c, DpiScaledInsets(1, 8)));
             vbox->AddChild(hbox);
         }
@@ -1188,18 +1185,18 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         auto* left = new HBox();
         left->alignMain = MainAxisAlign::MainStart;
         left->alignCross = CrossAxisAlign::CrossCenter;
-        btnSave = NewThemedButton(hwnd, _TRA("Save"), platformFont, true);
+        btnSave = NewThemedButton(hwnd, _TRA("Save"), font, true);
         btnSave->onClick = MkFunc1(SaveClicked, this);
         left->AddChild(new Padding(btnSave, pad));
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         left->AddChild(new Padding(btnCancel, pad));
-        btnOpenSettingsFile = NewThemedButton(hwnd, _TRA("Open Settings File"), platformFont, false);
+        btnOpenSettingsFile = NewThemedButton(hwnd, _TRA("Open Settings File"), font, false);
         btnOpenSettingsFile->onClick = MkFunc1(OpenSettingsFileClicked, this);
         left->AddChild(new Padding(btnOpenSettingsFile, pad));
         hbox->AddChild(left);
 
-        btnHelp = NewThemedButton(hwnd, _TRA("Help"), platformFont, false);
+        btnHelp = NewThemedButton(hwnd, _TRA("Help"), font, false);
         btnHelp->onClick = MkFunc1(HelpClicked, this);
         hbox->AddChild(new Padding(btnHelp, pad));
         vbox->AddChild(hbox);
@@ -1340,7 +1337,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onSize = MkMethod1<AdvancedSettingsWnd, WindowBase::SizeEvent*, &AdvancedSettingsWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<AdvancedSettingsWnd, KeyEvent*, &AdvancedSettingsWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

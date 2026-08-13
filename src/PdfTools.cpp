@@ -88,7 +88,6 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
 // implements DoIt().
 struct PdfToolDialog : WindowBase {
     HFONT hFont = nullptr;
-    PlatformFont* font = nullptr;
     Str srcPath; // owned
     MainWindow* win = nullptr;
     // what the "..." button's save dialog offers

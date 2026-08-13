@@ -210,8 +210,6 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wp, LPARAM lp) {
 struct SetHotkeyWnd : WindowBase {
     ~SetHotkeyWnd() override;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     HWND hwndOwner = nullptr;
     // the dialog is made only of virtual controls: it turns every key into a
     // hotkey to capture, so nothing in it can hold the keyboard focus anyway
@@ -374,7 +372,7 @@ void SetHotkeyWnd::StyleButton(VirtButton* b, bool isDefault) {
 }
 
 VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
-    auto* b = new VirtButton(text, platformFont);
+    auto* b = new VirtButton(text, font);
     StyleButton(b, isDefault);
     b->textPadding = DpiScaledInsets(5, 12);
     return b;
@@ -479,14 +477,13 @@ bool SetHotkeyWnd::Create(HWND owner) {
         args.visible = false;
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
         args.exStyle = WS_EX_DLGMODALFRAME;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
 
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
@@ -494,14 +491,14 @@ bool SetHotkeyWnd::Create(HWND owner) {
 
     prompt = NewVirtText({
         .s = _TRA("Press a key combination:"),
-        .font = platformFont,
+        .font = font,
         .isRtl = isRtl,
     });
     vbox->AddChild(prompt);
 
     {
         auto* t = new VirtRichText();
-        t->font = platformFont;
+        t->font = font;
         t->padding = DpiScaledInsets(6, 0, 0, 0);
         hotkeyDisplay = t;
         vbox->AddChild(t);
@@ -565,7 +562,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSetHotkeyDestroy);
     wnd->onWndProc = MkMethod1<SetHotkeyWnd, WindowBase::WndProcEvent*, &SetHotkeyWnd::WndProc>(wnd);
     wnd->onKeyDown = MkMethod1<SetHotkeyWnd, KeyEvent*, &SetHotkeyWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     if (!wnd->Create(hwndOwner)) {
         delete wnd;
         for (MainWindow* win : gWindows) {

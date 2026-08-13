@@ -59,7 +59,6 @@ struct TabGroupsListBoxModel : ListBoxModel {
 struct TabGroupsWnd : WindowBase {
     ~TabGroupsWnd() override;
 
-    HFONT font = nullptr;
     HWND hwndParent = nullptr;
     Edit* editName = nullptr;
     VirtListBox* listBox = nullptr;
@@ -383,7 +382,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         args.title = titleStr;
         args.visible = false;
         args.style = WS_OVERLAPPEDWINDOW;
-        args.font = font;
+        args.font = GetHFont();
         args.isRtl = isRtl;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
@@ -399,7 +398,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     if (mode == TabGroupDialogMode::Save) {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.withBorder = true;
         args.isRtl = isRtl;
         int groupNum = 1;
@@ -417,7 +416,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     {
         listBox = new VirtListBox();
         listBox->dpi = GetDpi();
-        listBox->font = GetPlatformFont(font);
+        listBox->font = font;
         listBox->onDrawItem = MkFunc1(DrawTabGroupItem, this);
         listBox->onSelectionChanged = MkMethod0<TabGroupsWnd, &TabGroupsWnd::UpdateDeleteButton>(this);
         listBox->onDoubleClick = MkFunc0(OnListDoubleClick, this);
@@ -431,18 +430,17 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
 
-        auto* platformFont = GetPlatformFont(font);
         Insets gap = DpiScaledInsets(0, 0, 0, 4);
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         btnRow->AddChild(btnCancel);
-        btnDelete = NewThemedButton(hwnd, _TRA("Delete"), platformFont, false);
+        btnDelete = NewThemedButton(hwnd, _TRA("Delete"), font, false);
         btnDelete->onClick = MkFunc1(DeleteClicked, this);
         btnDelete->SetIsEnabled(false);
         btnRow->AddChild(new Padding(btnDelete, gap));
         Str okText = (mode == TabGroupDialogMode::Save) ? Str(_TRA("Save")) : Str(_TRA("Restore"));
-        btnOk = NewThemedButton(hwnd, okText, platformFont, true);
+        btnOk = NewThemedButton(hwnd, okText, font, true);
         btnOk->onClick = MkFunc1(OkClicked, this);
         btnRow->AddChild(new Padding(btnOk, gap));
         vbox->AddChild(new Padding(btnRow, DpiScaledInsets(kPadding, 0, 0, 0)));
@@ -482,7 +480,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     }
 
     auto* wnd = new TabGroupsWnd();
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
     wnd->onSize = MkMethod1<TabGroupsWnd, WindowBase::SizeEvent*, &TabGroupsWnd::OnSize>(wnd);

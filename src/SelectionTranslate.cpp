@@ -96,8 +96,6 @@ static TempStr LangCodeForUrlTemp(Str name) {
 struct SelectionTranslateWnd : WindowBase {
     ~SelectionTranslateWnd() override;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     HWND hwndOwner = nullptr;
     // the labels and the buttons are virtual controls; the text fields and the
     // drop-downs are real HWNDs
@@ -967,13 +965,12 @@ void SelectionTranslateWnd::UpdateTheme() {
 // re-pick the app font for the window's current DPI and push it to every child.
 // GetAppFont() caches per DPI, so the HFONT stays owned by AppSettings.
 void SelectionTranslateWnd::UpdateFont() {
-    font = GetAppFont();
-    HwndSetFontForWindowAndItsChildren(hwnd, font);
-    platformFont = GetPlatformFont(font);
+    SetFont(GetPlatformFont(GetAppFont()));
+    HwndSetFontForWindowAndItsChildren(hwnd, GetHFont());
     VirtText* virts[] = {staticPrompt, staticFromLabel, staticToLabel, staticResultLabel, btnTranslate, btnClose};
     for (VirtText* w : virts) {
         if (w) {
-            w->font = platformFont;
+            w->font = font;
         }
     }
 }
@@ -990,7 +987,7 @@ void SelectionTranslateWnd::StyleButton(VirtButton* b, bool isDefault) {
 }
 
 VirtButton* SelectionTranslateWnd::NewButton(Str text, bool isDefault) {
-    auto* b = new VirtButton(text, platformFont);
+    auto* b = new VirtButton(text, font);
     StyleButton(b, isDefault);
     b->textPadding = DpiScaledInsets(5, 12);
     return b;
@@ -1272,14 +1269,13 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         args.visible = false;
         // resizable: thick frame; CLIPCHILDREN avoids flicker while resizing
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
 
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
@@ -1288,7 +1284,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.text = selText;
         args.isMultiLine = true;
         args.withBorder = true;
@@ -1311,7 +1307,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     {
         staticResultLabel = NewVirtText({
             .s = _TRA("Translation:"),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
             .padding = DpiScaledInsets(8, 0, 0, 0),
         });
@@ -1321,7 +1317,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = font;
+        args.font = GetHFont();
         args.isMultiLine = true;
         args.withBorder = true;
         args.idealSizeLines = 6;
@@ -1340,12 +1336,12 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         auto* engineRow = new HBox();
         engineRow->alignMain = MainAxisAlign::MainStart;
         engineRow->alignCross = CrossAxisAlign::CrossCenter;
-        staticPrompt = NewVirtText({.s = _TRA("Translate with"), .font = platformFont, .isRtl = isRtl});
+        staticPrompt = NewVirtText({.s = _TRA("Translate with"), .font = font, .isRtl = isRtl});
         engineRow->AddChild(staticPrompt);
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
-            args.font = font;
+            args.font = GetHFont();
             args.isRtl = isRtl;
             dropEngine = new DropDown();
             dropEngine->Create(args);
@@ -1363,12 +1359,12 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         langRow->alignMain = MainAxisAlign::MainStart;
         langRow->alignCross = CrossAxisAlign::CrossCenter;
 
-        staticFromLabel = NewVirtText({.s = _TRA("From:"), .font = platformFont, .isRtl = isRtl});
+        staticFromLabel = NewVirtText({.s = _TRA("From:"), .font = font, .isRtl = isRtl});
         langRow->AddChild(staticFromLabel);
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
-            args.font = font;
+            args.font = GetHFont();
             args.isEditable = true;
             args.isRtl = isRtl;
             dropSrcLang = new DropDown();
@@ -1383,7 +1379,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         }
         staticToLabel = NewVirtText({
             .s = _TRA("To:"),
-            .font = platformFont,
+            .font = font,
             .isRtl = isRtl,
             .padding = DpiScaledInsets(0, 0, 0, 4),
         });
@@ -1391,7 +1387,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
-            args.font = font;
+            args.font = GetHFont();
             args.isEditable = true;
             args.isRtl = isRtl;
             dropDstLang = new DropDown();
@@ -1462,7 +1458,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     auto* wnd = new SelectionTranslateWnd();
     wnd->hwndOwner = hwndOwner;
     wnd->engine = engine;
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSelectionTranslateDestroy);
     wnd->onSize = MkMethod1<SelectionTranslateWnd, WindowBase::SizeEvent*, &SelectionTranslateWnd::OnSize>(wnd);

@@ -28,8 +28,6 @@
 struct ChangeScrollbarWnd : WindowBase {
     ~ChangeScrollbarWnd() override = default;
 
-    HFONT font = nullptr;
-    PlatformFont* platformFont = nullptr;
     MainWindow* win = nullptr;
     VirtListBox* listBox = nullptr;
     ListBoxModelStrings* model = nullptr; // owned by listBox
@@ -156,14 +154,13 @@ bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Change Scrollbar");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = font;
+        args.font = GetHFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    platformFont = GetPlatformFont(font);
 
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
@@ -172,7 +169,7 @@ bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
     {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
-        c->font = platformFont;
+        c->font = font;
         c->idealSizeLines = 4;
         listBox = c;
         model = new ListBoxModelStrings();
@@ -194,10 +191,10 @@ bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{4, 8, 4, 8};
 
-        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, _TRA("OK"), platformFont, true);
+        btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
         btnOk->onClick = MkFunc1(OkClicked, this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
@@ -229,7 +226,7 @@ void ShowChangeScrollbarDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeScrollbarWnd, KeyEvent*, &ChangeScrollbarWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont();
+    wnd->SetFont(GetPlatformFont(GetAppFont()));
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

@@ -133,7 +133,7 @@ HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
 // into a DoubleBuffer DC that is not mirrored, so HBox.rtl (not GDI's flip)
 // is what reverses the row.
 void ReadAloudPlaybackBar::BuildLayout() {
-    PlatformFont* pf = GetPlatformFont(font);
+    PlatformFont* pf = font;
     int gap = DpiScale(kBtnGap);
     int padX = DpiScale(kBarPadX);
     int padY = DpiScale(kBarPadY);
