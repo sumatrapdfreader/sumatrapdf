@@ -19,6 +19,8 @@ struct TreeView;
 struct SelectionToolbar;
 struct ILayout;
 struct Spacer;
+struct HwndSlot;
+struct VBox;
 struct DropDown;
 struct Checkbox;
 struct VirtButton;
@@ -373,15 +375,25 @@ struct MainWindow {
     // them and hands them its mouse input
     VirtRoot* frameRoot = nullptr;
 
-    // The content row under the chrome: sidebar | splitter | canvas | splitter
-    // | AI chat. It owns the splitters and the slots; the panels' windows are
-    // moved into the slots' bounds by RelayoutFrame (which still batches those
-    // moves with DeferWindowPos)
+    // chrome VBox: caption / tabs / menu / toolbar + the content row. Owns
+    // the slots; HwndSlot::SetBounds moves each HWND (batched via winPos)
+    VBox* chromeLayout = nullptr;
+    // content row: sidebar | splitter | (canvas / full-window favorites) |
+    // splitter | AI chat
     HBox* frameLayout = nullptr;
-    Spacer* tocSlot = nullptr;
-    Spacer* favSlot = nullptr;
-    Spacer* canvasSlot = nullptr;
-    Spacer* aiChatSlot = nullptr;
+    HwndSlot* tocSlot = nullptr;
+    HwndSlot* favSlot = nullptr;
+    // same hwndFavBox as favSlot; shown instead of the canvas when the
+    // Favorites tab is selected
+    HwndSlot* fullFavSlot = nullptr;
+    HwndSlot* canvasSlot = nullptr;
+    HwndSlot* aiChatSlot = nullptr;
+    HwndSlot* tabsSlot = nullptr;
+    HwndSlot* menuSlot = nullptr;
+    HwndSlot* toolbarTopSlot = nullptr;
+    HwndSlot* toolbarBottomSlot = nullptr;
+    Spacer* captionPad = nullptr;
+    Spacer* captionSlot = nullptr;
 
     // home page thumbnail scrolling
     int homePageScrollY = 0;

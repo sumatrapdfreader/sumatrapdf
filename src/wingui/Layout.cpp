@@ -1594,6 +1594,10 @@ void HwndSlot::SetBounds(Rect bounds) {
     if (!hwnd || IsCollapsed(this)) {
         return;
     }
+    if (mapRtlX) {
+        HWND parent = GetParent(hwnd);
+        bounds.x = HwndMapChildXForRtlParent(parent, bounds.x, bounds.dx);
+    }
     if (winPos) {
         winPos->MoveWindow(hwnd, bounds);
         return;

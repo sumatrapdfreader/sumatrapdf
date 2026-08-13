@@ -2521,17 +2521,26 @@ void FrameSyncSplitters(MainWindow* win) {
     win->frameRoot->SetTops(tops);
 }
 
-// The frame's content row: [ToC / Favorites column] | splitter | canvas |
-// splitter | AI chat. The panels are windows, so each gets a Spacer slot and
-// RelayoutFrame moves the window into the slot's bounds (still batched with
-// DeferWindowPos); the splitters are virtual controls and place themselves.
-// The AI chat parts stay in the row even while that panel doesn't exist -
-// they are simply collapsed
+// The frame's chrome + content: a VBox of caption / tabs / menu / toolbar
+// over the content row [ToC / Favorites column] | splitter | (canvas stacked
+// with the full-window Favorites tab) | splitter | AI chat. Each HWND is an
+// HwndSlot; RelayoutFrame sets winPos so SetBounds batches the moves.
+// The AI chat parts stay in the row even while that panel doesn't exist —
+// they are simply collapsed.
 static void CreateFrameLayout(MainWindow* win) {
-    win->tocSlot = new Spacer(0, 0);
-    win->favSlot = new Spacer(0, 0);
-    win->canvasSlot = new Spacer(0, 0);
-    win->aiChatSlot = new Spacer(0, 0);
+    win->tocSlot = new HwndSlot();
+    win->favSlot = new HwndSlot();
+    win->fullFavSlot = new HwndSlot();
+    win->canvasSlot = new HwndSlot();
+    win->aiChatSlot = new HwndSlot();
+    win->tabsSlot = new HwndSlot();
+    win->tabsSlot->mapRtlX = true;
+    win->menuSlot = new HwndSlot();
+    win->menuSlot->mapRtlX = true;
+    win->toolbarTopSlot = new HwndSlot();
+    win->toolbarBottomSlot = new HwndSlot();
+    win->captionPad = new Spacer(0, 0);
+    win->captionSlot = new Spacer(0, 0);
 
     // the webview is expensive to resize, so this one only moves the panes
     // when the drag ends
@@ -2544,14 +2553,30 @@ static void CreateFrameLayout(MainWindow* win) {
     sidebar->AddChild(win->favSplitter);
     sidebar->AddChild(win->favSlot, 1);
 
+    // canvas and the Favorites tab share this box; only one HWND is shown
+    auto* content = new Overlay();
+    content->AddChild(win->canvasSlot);
+    content->AddChild(win->fullFavSlot);
+
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::Stretch;
     row->AddChild(sidebar);
     row->AddChild(win->sidebarSplitter);
-    row->AddChild(win->canvasSlot, 1);
+    row->AddChild(content, 1);
     row->AddChild(win->aiChatSplitter);
     row->AddChild(win->aiChatSlot);
     win->frameLayout = row;
+
+    auto* chrome = new VBox();
+    chrome->alignCross = CrossAxisAlign::Stretch;
+    chrome->AddChild(win->captionPad);
+    chrome->AddChild(win->captionSlot);
+    chrome->AddChild(win->tabsSlot);
+    chrome->AddChild(win->menuSlot);
+    chrome->AddChild(win->toolbarTopSlot);
+    chrome->AddChild(win->frameLayout, 1);
+    chrome->AddChild(win->toolbarBottomSlot);
+    win->chromeLayout = chrome;
     FrameSyncSplitters(win);
 }
 
@@ -6267,6 +6292,25 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->aiChatDx == s2->aiChatDx;
 }
 
+// Favorites-only must not reserve a tab row (issue #5861)
+static bool WinHasFileTabs(MainWindow* win) {
+    for (WindowTab* tab : win->Tabs()) {
+        if (!tab->IsNonDocumentTab()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void BindSlot(HwndSlot* slot, HWND hwnd, DeferWinPosHelper* dh, bool move) {
+    slot->hwnd = move ? hwnd : nullptr;
+    slot->winPos = dh;
+}
+
+static void ClearSlotDefer(HwndSlot* slot) {
+    slot->winPos = nullptr;
+}
+
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     Rect rc = HwndClientRect(win->hwndFrame);
     // don't relayout while the window is minimized
@@ -6313,13 +6357,17 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         bool favAsTab = cur && cur->IsFavoritesTab();
         bool favVis = favAsTab || ui.favVisible;
         bool tocVis = !favAsTab && ui.tocVisible;
+        bool aiVis = !favAsTab && ui.aiChatVisible;
         win->sidebarSplitter->SetIsVisible(!favAsTab && (tocVis || favVis));
         HwndSetVisible(win->hwndTocBox, tocVis);
         win->favSplitter->SetIsVisible(tocVis && favVis);
         HwndSetVisible(win->hwndFavBox, favVis);
+        // canvas stays sized under a Favorites tab (only hidden) so switching
+        // back does not SetViewPortSize with a 0x0 canvas
+        HwndSetVisible(win->hwndCanvas, !favAsTab);
         if (win->hwndAiChatBox) {
-            HwndSetVisible(win->hwndAiChatBox, ui.aiChatVisible);
-            win->aiChatSplitter->SetIsVisible(ui.aiChatVisible);
+            HwndSetVisible(win->hwndAiChatBox, aiVis);
+            win->aiChatSplitter->SetIsVisible(aiVis);
         }
     }
 
@@ -6367,136 +6415,51 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->frameRoot->SetBounds(HwndClientRect(win->hwndFrame));
     }
 
-    // Tabbar and toolbar at the top
-    if (!win->presentation && !win->isFullScreen) {
-        if (win->tabsInTitlebar) {
-            bool showingMenuBar = IsShowingMenuBarRebar(win);
-            // Add a visible gap above the caption for window dragging.
-            // Skip when menu bar is showing (it goes all the way to the top).
-            if (!IsZoomed(win->hwndFrame) && !showingMenuBar) {
-                rc.y += kCaptionTopPadding;
-                rc.dy -= kCaptionTopPadding;
-            }
-            int tabHeight = GetTabbarHeight(win->hwndFrame);
-            int captionHeight = tabHeight + 2;
-            if (showingMenuBar) {
-                int menuBarDy = GetMenuBarRebarHeight(win);
-                // check if there are actual file tabs to show. IsNonDocumentTab,
-                // not IsAboutTab: Favorites alone must not reserve a tab row
-                // either, or this disagrees with UpdateTabWidth and the two take
-                // turns showing and hiding the bar (issue #5861)
-                bool hasFileTabs = false;
-                for (WindowTab* tab : win->Tabs()) {
-                    if (!tab->IsNonDocumentTab()) {
-                        hasFileTabs = true;
-                        break;
-                    }
-                }
-                // menu bar row + optional tabs row
-                captionHeight = menuBarDy + (hasFileTabs ? tabHeight : 0);
-            }
-            win->captionRect = {rc.x, rc.y, rc.dx, captionHeight};
-            if (IsRunningOnWine()) {
-                logf(
-                    "RelayoutFrame: tabsInTitlebar tabHeight=%d captionHeight=%d captionRect=(%d,%d,%d,%d) "
-                    "showingMenuBar=%d\n",
-                    tabHeight, captionHeight, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
-                    win->captionRect.dy, (int)showingMenuBar);
-            }
-            if (updateToolbars) {
-                RelayoutCaption(win);
-            }
-            rc.y += captionHeight;
-            rc.dy -= captionHeight;
-        } else if (win->tabsVisible) {
-            int tabHeight = GetTabbarHeight(win->hwndFrame);
-            if (IsRunningOnWine()) {
-                logf("RelayoutFrame: tabsVisible tabHeight=%d\n", tabHeight);
-            }
-            if (updateToolbars) {
-                int tabX = HwndMapChildXForRtlParent(win->hwndFrame, rc.x, rc.dx);
-                dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabX, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
-            }
-            rc.y += tabHeight;
-            rc.dy -= tabHeight;
-        }
-    }
-    bool showMenuRebar = IsShowingMenuBarRebar(win) && (!win->tabsInTitlebar || win->isFullScreen);
-    if (showMenuRebar) {
-        // menu bar rebar in client area (non-titlebar case, or fullscreen where there's no titlebar)
-        int menuBarDy = GetMenuBarRebarHeight(win);
-        if (updateToolbars) {
-            dh.SetWindowPos(win->hwndMenuReBar, nullptr, rc.x, rc.y, rc.dx, menuBarDy, SWP_NOZORDER);
-        }
-        rc.y += menuBarDy;
-        rc.dy -= menuBarDy;
-    }
-    if (win->isToolbarVisible) {
-        Rect rcRebar = HwndWindowRect(win->hwndReBar);
-        int rebarDy = rcRebar.dy;
-        bool atBottom = ToolbarAtBottom();
-        int rebarY = atBottom ? (rc.y + rc.dy - rebarDy) : rc.y;
-        if (updateToolbars) {
-            dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rebarY, rc.dx, rebarDy, SWP_NOZORDER);
-        }
-        // reserve the toolbar's space; from the bottom of the content area when
-        // placed at the bottom, otherwise from the top
-        rc.dy -= rebarDy;
-        if (!atBottom) {
-            rc.y += rebarDy;
-        }
-    }
-    // in overlay mode the toolbar floats over the canvas and is positioned
-    // separately (see PositionOverlayToolbar below); don't touch its visibility
-    // here so a relayout doesn't flash it on/off
-    if (updateToolbars && !win->isToolbarOverlay) {
-        ShowWindow(win->hwndReBar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
-    }
-
-    // ToC and Favorites sidebars at the left (or full-area Favorites tab)
-    // desired state, normalized by SetSidebarVisibility
     WindowTab* curTab = win->CurrentTab();
     bool favAsTab = curTab && curTab->IsFavoritesTab();
     bool favVisible = favAsTab || win->uiState.favVisible;
     bool tocVisible = !favAsTab && win->uiState.tocVisible;
+    bool sidebarVisible = !favAsTab && (tocVisible || win->uiState.favVisible);
+    bool aiChatVisible = !favAsTab && win->uiState.aiChatVisible && win->hwndAiChatBox;
+    bool showCaption = !win->presentation && !win->isFullScreen && win->tabsInTitlebar;
+    bool showingMenuBar = IsShowingMenuBarRebar(win);
+    bool showCaptionPad = showCaption && !IsZoomed(win->hwndFrame) && !showingMenuBar;
+    bool showTabsBar = !win->presentation && !win->isFullScreen && !win->tabsInTitlebar && win->tabsVisible;
+    bool showMenuRebar = showingMenuBar && (!win->tabsInTitlebar || win->isFullScreen);
+    bool showToolbar = win->isToolbarVisible;
+    bool toolbarBottom = showToolbar && ToolbarAtBottom();
+
+    int tabHeight = GetTabbarHeight(win->hwndFrame);
+    int captionHeight = 0;
+    if (showCaption) {
+        captionHeight = tabHeight + 2;
+        if (showingMenuBar) {
+            int menuBarDy = GetMenuBarRebarHeight(win);
+            captionHeight = menuBarDy + (WinHasFileTabs(win) ? tabHeight : 0);
+        }
+    }
+    int menuBarDy = showMenuRebar ? GetMenuBarRebarHeight(win) : 0;
+    int rebarDy = 0;
+    if (showToolbar && win->hwndReBar) {
+        rebarDy = HwndWindowRect(win->hwndReBar).dy;
+    }
+
+    SetVis(win->captionPad, showCaptionPad);
+    SetVis(win->captionSlot, showCaption);
+    SetVis(win->tabsSlot, showTabsBar);
+    SetVis(win->menuSlot, showMenuRebar);
+    SetVis(win->toolbarTopSlot, showToolbar && !toolbarBottom);
+    SetVis(win->toolbarBottomSlot, showToolbar && toolbarBottom);
+    win->captionPad->dy = showCaptionPad ? kCaptionTopPadding : 0;
+    win->captionSlot->dx = rc.dx;
+    win->captionSlot->dy = captionHeight;
+    win->tabsSlot->dy = tabHeight;
+    win->menuSlot->dy = menuBarDy;
+    win->toolbarTopSlot->dy = rebarDy;
+    win->toolbarBottomSlot->dy = rebarDy;
+
     // leave at least this much canvas for the document when sidebar is open
     constexpr int kMinDocCanvasDx = 200;
-    // Canvas stays sized under a Favorites tab (only hidden) so switching back
-    // to a document does not SetViewPortSize with a 0x0 canvas (CalcZoomReal assert).
-    HwndSetVisible(win->hwndCanvas, !favAsTab);
-
-    if (favAsTab) {
-        // Favorites tab: full client area for the favorites list (discussion #5820)
-        win->sidebarSplitter->SetIsVisible(false);
-        HwndHide(win->hwndTocBox);
-        win->favSplitter->SetIsVisible(false);
-        HwndShow(win->hwndFavBox);
-        // hide AI chat over the favorites tab for a clean full-width list
-        if (win->hwndAiChatBox) {
-            HwndHide(win->hwndAiChatBox);
-            win->aiChatSplitter->SetIsVisible(false);
-        }
-        dh.MoveWindow(win->hwndFavBox, rc);
-        // leave canvas geometry unchanged (hidden above); finish without resizing it
-        dh.End();
-        // Above any sibling (e.g. hidden canvas still in z-order) so mouse hits the tree
-        SetWindowPos(win->hwndFavBox, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-        // DeferWindowPos can leave child layout stale; size the tree now so it
-        // paints and accepts mouse expand clicks without a tab re-select.
-        LayoutFavoritesContainer(win);
-        if (suppressIntermediateRedraws) {
-            SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
-            // RDW_ALLCHILDREN as in the main path below: WM_SETREDRAW FALSE dropped any
-            // update region already pending on the tab bar / toolbar (issue #5866)
-            RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
-        }
-        RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-        return true;
-    }
-    // --- the content row, laid out by win->frameLayout ---
-    bool sidebarVisible = tocVisible || favVisible;
-    bool aiChatVisible = win->uiState.aiChatVisible && win->hwndAiChatBox;
-
     int sidebarDxApplied = 0;
     if (sidebarVisible) {
         if (sidebarDx > 0) {
@@ -6518,18 +6481,22 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->sidebarDx = sidebarDxApplied; // remember what's applied
     }
 
+    int chromeDy =
+        (showCaptionPad ? kCaptionTopPadding : 0) + captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy;
+    int contentDy = std::max(rc.dy - chromeDy, 0);
+
     int tocDy = 0;
     if (tocVisible) {
-        if (!favVisible) {
-            tocDy = rc.dy;
+        if (!win->uiState.favVisible) {
+            tocDy = contentDy;
         } else {
             tocDy = gGlobalPrefs->tocDy;
             if (tocDy > 0) {
-                tocDy = limitValue(gGlobalPrefs->tocDy, 0, rc.dy);
+                tocDy = limitValue(gGlobalPrefs->tocDy, 0, contentDy);
             } else {
-                tocDy = rc.dy / 2; // default value
+                tocDy = contentDy / 2;
             }
-            tocDy = limitValue(tocDy, kTocMinDy, rc.dy - kTocMinDy);
+            tocDy = limitValue(tocDy, kTocMinDy, contentDy - kTocMinDy);
         }
     }
 
@@ -6544,10 +6511,12 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->aiChatDx = aiChatDx;
     }
 
-    // what's not showing is collapsed, so the boxes skip it
+    // sidebar favorites vs. the full-window Favorites tab: same HWND, one slot
+    bool sidebarFav = !favAsTab && win->uiState.favVisible;
     SetVis(win->tocSlot, tocVisible);
-    SetVis(win->favSlot, favVisible);
-    SetVis(win->favSplitter, tocVisible && favVisible);
+    SetVis(win->favSlot, sidebarFav);
+    SetVis(win->fullFavSlot, favAsTab);
+    SetVis(win->favSplitter, tocVisible && sidebarFav);
     SetVis(win->sidebarSplitter, sidebarVisible);
     SetVis(win->aiChatSplitter, aiChatVisible);
     SetVis(win->aiChatSlot, aiChatVisible);
@@ -6557,21 +6526,57 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     win->favSlot->dx = sidebarDxApplied;
     win->aiChatSlot->dx = aiChatDx;
 
-    LayoutToSize(win->frameLayout, {rc.dx, rc.dy});
-    win->frameLayout->SetBounds(rc);
+    // chrome HWNDs only move when updateToolbars (splitter drag skips them)
+    BindSlot(win->tabsSlot, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, updateToolbars && showTabsBar);
+    BindSlot(win->menuSlot, win->hwndMenuReBar, &dh, updateToolbars && showMenuRebar);
+    BindSlot(win->toolbarTopSlot, win->hwndReBar, &dh, updateToolbars && showToolbar && !toolbarBottom);
+    BindSlot(win->toolbarBottomSlot, win->hwndReBar, &dh, updateToolbars && showToolbar && toolbarBottom);
+    BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible);
+    BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav);
+    BindSlot(win->fullFavSlot, win->hwndFavBox, &dh, favAsTab);
+    BindSlot(win->canvasSlot, win->hwndCanvas, &dh, true);
+    BindSlot(win->aiChatSlot, win->hwndAiChatBox, &dh, aiChatVisible);
 
-    if (tocVisible) {
-        dh.MoveWindow(win->hwndTocBox, win->tocSlot->lastBounds);
+    LayoutToSize(win->chromeLayout, {rc.dx, rc.dy});
+    win->chromeLayout->SetBounds(rc);
+
+    HwndSlot* chromeSlots[] = {win->tabsSlot,          win->menuSlot,   win->toolbarTopSlot,
+                               win->toolbarBottomSlot, win->tocSlot,    win->favSlot,
+                               win->fullFavSlot,       win->canvasSlot, win->aiChatSlot};
+    for (HwndSlot* s : chromeSlots) {
+        ClearSlotDefer(s);
     }
-    if (favVisible) {
-        dh.MoveWindow(win->hwndFavBox, win->favSlot->lastBounds);
+
+    if (showCaption) {
+        win->captionRect = win->captionSlot->lastBounds;
+        if (IsRunningOnWine()) {
+            logf(
+                "RelayoutFrame: tabsInTitlebar tabHeight=%d captionHeight=%d captionRect=(%d,%d,%d,%d) "
+                "showingMenuBar=%d\n",
+                tabHeight, captionHeight, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
+                win->captionRect.dy, (int)showingMenuBar);
+        }
+        if (updateToolbars) {
+            RelayoutCaption(win);
+        }
+    } else if (showTabsBar && IsRunningOnWine()) {
+        logf("RelayoutFrame: tabsVisible tabHeight=%d\n", tabHeight);
     }
-    if (aiChatVisible) {
-        dh.MoveWindow(win->hwndAiChatBox, win->aiChatSlot->lastBounds);
+
+    // in overlay mode the toolbar floats over the canvas and is positioned
+    // separately (see PositionOverlayToolbar below); don't touch its visibility
+    // here so a relayout doesn't flash it on/off
+    if (updateToolbars && !win->isToolbarOverlay) {
+        ShowWindow(win->hwndReBar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
     }
-    dh.MoveWindow(win->hwndCanvas, win->canvasSlot->lastBounds);
 
     dh.End();
+
+    if (favAsTab) {
+        // above the hidden canvas so mouse hits the tree
+        SetWindowPos(win->hwndFavBox, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        LayoutFavoritesContainer(win);
+    }
 
     // Canvas size/position may have changed (e.g. first open shows the ToC via
     // deferred ScheduleUiUpdate after "Errors in document" was created against
@@ -11494,17 +11499,8 @@ void RelayoutCaption(MainWindow* win) {
             }
         }
 
-        // check if there are actual file tabs to show. IsNonDocumentTab, not
-        // IsAboutTab: Favorites alone must not keep the tab row open either, or
-        // this disagrees with UpdateTabWidth and the two take turns showing and
-        // hiding the bar (issue #5861)
-        bool hasFileTabs = false;
-        for (WindowTab* tab : win->Tabs()) {
-            if (!tab->IsNonDocumentTab()) {
-                hasFileTabs = true;
-                break;
-            }
-        }
+        // Favorites alone must not keep the tab row open (issue #5861)
+        bool hasFileTabs = WinHasFileTabs(win);
 
         DeferWinPosHelper dh;
         // hwnd may vanish if embed teardown ran under a nested SendMessage

@@ -204,8 +204,8 @@ MainWindow::~MainWindow() {
 
     DestroyAIChatPanel(this);
 
-    // owns the splitters and the layout slots
-    delete frameLayout;
+    // owns chrome, the content row, the splitters and the slots
+    delete chromeLayout;
     // the splitters tell the root they are going away, so it goes last
     delete frameRoot;
 }

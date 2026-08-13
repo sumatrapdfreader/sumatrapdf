@@ -281,6 +281,10 @@ struct HwndSlot : LayoutBase {
     DeferWinPosHelper* winPos = nullptr;
     int dx = 0;
     int dy = 0;
+    // SetWindowPos x as offset from the physical left when the parent is RTL
+    // (tabs / menu rebar). Off for toc / canvas / favorites, which already
+    // live in the frame's client coordinates.
+    bool mapRtlX = false;
 
     HwndSlot(HWND hwnd = nullptr, int dx = 0, int dy = 0);
     ~HwndSlot() override;
