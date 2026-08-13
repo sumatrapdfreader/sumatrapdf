@@ -13,6 +13,7 @@
  *   4. If any language is missing translations:
  *        - translate with Claude or Grok
  *        - submit each via /api/edittranslation as user "ai claude" / "ai grok"
+ *          only when that lang+string has no translation yet (never overwrite)
  *   5. Re-download (should now include submitted translations)
  *   6. Write filtered .work/translations.txt and build .lzsa
  *
@@ -367,6 +368,18 @@ async function submitFixedSuspicious(
 interface ParsedTranslations {
   perLang: Map<string, Map<string, string>>;
   allStrings: string[];
+  // snapshot of perLang from the download, before in-memory auto-fill.
+  // /api/edittranslation always appends (latest wins), so AI/auto submit
+  // must consult this — not perLang, which autoAdd mutates.
+  fromServer: Map<string, Map<string, string>>;
+}
+
+function clonePerLang(src: Map<string, Map<string, string>>): Map<string, Map<string, string>> {
+  const out = new Map<string, Map<string, string>>();
+  for (const [lang, m] of src) {
+    out.set(lang, new Map(m));
+  }
+  return out;
 }
 
 function parseTranslations(d: string): ParsedTranslations {
@@ -400,7 +413,7 @@ function parseTranslations(d: string): ParsedTranslations {
     }
     m.set(currString, trans);
   }
-  return { perLang, allStrings };
+  return { perLang, allStrings, fromServer: clonePerLang(perLang) };
 }
 
 function stripAmpersand(s: string): string {
@@ -612,6 +625,40 @@ async function submitTranslation(
   }
 }
 
+function previewEnglish(s: string): string {
+  return s.length > 70 ? s.slice(0, 70) + "…" : s;
+}
+
+function existingTranslation(
+  perLang: Map<string, Map<string, string>>,
+  lang: string,
+  english: string,
+): string | undefined {
+  const t = perLang.get(lang)?.get(english);
+  return t !== undefined && t.length > 0 ? t : undefined;
+}
+
+function setTranslation(
+  perLang: Map<string, Map<string, string>>,
+  lang: string,
+  english: string,
+  translation: string,
+): void {
+  let m = perLang.get(lang);
+  if (!m) {
+    m = new Map();
+    perLang.set(lang, m);
+  }
+  m.set(english, translation);
+}
+
+function rememberTranslation(pt: ParsedTranslations, lang: string, english: string, translation: string): void {
+  setTranslation(pt.perLang, lang, english, translation);
+  setTranslation(pt.fromServer, lang, english, translation);
+}
+
+// AI / auto-derived uploads must not replace a translation that already exists.
+// /api/edittranslation always appends an edit (latest wins), so the guard is here.
 async function submitMany(
   server: string,
   secret: string,
@@ -620,16 +667,32 @@ async function submitMany(
   pairs: Map<string, string>,
   maxSubmit: number,
   submittedSoFar: { n: number },
+  pt: ParsedTranslations,
 ): Promise<number> {
   let n = 0;
+  let nSkip = 0;
   for (const [english, translation] of pairs) {
     if (maxSubmit > 0 && submittedSoFar.n >= maxSubmit) {
       console.log(`--max-submit ${maxSubmit} reached, stopping submissions`);
       break;
     }
+    if (existingTranslation(pt.fromServer, lang, english) !== undefined) {
+      console.log(`  skip existing ${lang}: ${previewEnglish(english)}`);
+      nSkip++;
+      continue;
+    }
+    if (translation.length === 0) {
+      console.log(`  skip empty ${lang}: ${previewEnglish(english)}`);
+      nSkip++;
+      continue;
+    }
     await submitTranslation(server, secret, user, lang, english, translation);
+    rememberTranslation(pt, lang, english, translation);
     n++;
     submittedSoFar.n++;
+  }
+  if (nSkip > 0) {
+    console.log(`  skipped ${nSkip} ${lang} string(s) (already translated or empty)`);
   }
   return n;
 }
@@ -909,7 +972,7 @@ async function fillMissingWithAiAndSubmit(
     if (args.langs && !args.langs.has(lang)) continue;
     if (args.maxSubmit > 0 && submitted.n >= args.maxSubmit) break;
     const pairs = autoAdded.get(lang)!;
-    const n = await submitMany(args.server, secret, "ai auto", lang, pairs, args.maxSubmit, submitted);
+    const n = await submitMany(args.server, secret, "ai auto", lang, pairs, args.maxSubmit, submitted, pt);
     if (n > 0) {
       console.log(`submitted ${n} auto no-prefix translations for ${lang}`);
     }
@@ -945,7 +1008,9 @@ async function fillMissingWithAiAndSubmit(
   // fully translate one language before moving to the next
   for (const lang of langsInOrder) {
     if (args.maxSubmit > 0 && submitted.n >= args.maxSubmit) break;
-    const currentMissing = missing.get(lang) ?? [];
+    const currentMissing = (missing.get(lang) ?? []).filter(
+      (s) => existingTranslation(pt.fromServer, lang, s) === undefined,
+    );
     if (currentMissing.length === 0) continue;
 
     console.log(`Lang ${lang}: ${currentMissing.length} missing — finishing this language first`);
@@ -965,17 +1030,17 @@ async function fillMissingWithAiAndSubmit(
           console.log(`  no translations returned for batch`);
           continue;
         }
-        const n = await submitMany(args.server, secret, user, lang, translated, args.maxSubmit, submitted);
+        // only submit strings from this missing batch that the server does not already have
+        const toSubmit = new Map<string, string>();
+        for (const en of batch) {
+          if (existingTranslation(pt.fromServer, lang, en) !== undefined) {
+            continue;
+          }
+          const tr = translated.get(en);
+          if (tr) toSubmit.set(en, tr);
+        }
+        const n = await submitMany(args.server, secret, user, lang, toSubmit, args.maxSubmit, submitted, pt);
         console.log(`  submitted ${n} translations for ${lang}`);
-        // update in-memory so we don't re-translate
-        let m = pt.perLang.get(lang);
-        if (!m) {
-          m = new Map();
-          pt.perLang.set(lang, m);
-        }
-        for (const [en, tr] of translated) {
-          m.set(en, tr);
-        }
       } catch (e) {
         console.error(`  error translating to ${lang}: ${e}`);
       }
