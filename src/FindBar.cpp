@@ -253,7 +253,11 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
         edit->onTextChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnTextChanged>(this);
-        win->findEdit = edit;
+        if (!win->findEdit) {
+            // don't steal it from the floating find window: this can run while
+            // that one is up (RecreateFindBar on a theme change)
+            win->findEdit = edit;
+        }
     }
 
     // ellipsis: single line, vertically centered, so it lines up with the
@@ -459,9 +463,13 @@ void DeleteFindBar(MainWindow* win) {
     if (!win->findBar) {
         return;
     }
+    // only if this bar is the active find UI; the floating find window's edit
+    // must survive us (see ShowFindWindow)
+    if (win->findEdit == win->findBar->edit) {
+        win->findEdit = nullptr;
+    }
     delete win->findBar;
     win->findBar = nullptr;
-    win->findEdit = nullptr;
 }
 
 // rebuild the bar so it picks up new theme colors / icons (called on theme change)

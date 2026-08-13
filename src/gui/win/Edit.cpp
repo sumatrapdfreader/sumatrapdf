@@ -131,12 +131,11 @@ bool Edit::IsModified() const {
     return hwnd && Edit_GetModify(hwnd);
 }
 
-// GCLP_HCURSOR is per window class (WC_EDIT), not per HWND
-void Edit::SetClassCursor(LPWSTR cursorId) {
-    if (!hwnd) {
-        return;
-    }
-    SetClassLongPtrW(hwnd, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
+// null restores the edit's own cursor (I-beam). Must not be done with
+// GCLP_HCURSOR: that is per window class (WC_EDIT), i.e. every edit in the
+// process, so one edit would change the cursor of all the others
+void Edit::SetCursorId(LPWSTR id) {
+    cursorId = id;
 }
 
 void Edit::SelectAll() {
@@ -317,6 +316,16 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                     ev->didHandle = true;
                     return;
                 }
+            }
+            break;
+        }
+
+        case WM_SETCURSOR: {
+            if (cursorId && (HWND)wp == hwnd) {
+                SetCursor(GetCachedCursor(cursorId));
+                ev->result = TRUE;
+                ev->didHandle = true;
+                return;
             }
             break;
         }

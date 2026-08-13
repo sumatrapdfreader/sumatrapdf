@@ -617,7 +617,9 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
                 }
                 continue;
             }
-            if (w->GetVisibility() == Visibility::Visible && bi.cmdId != PageInfoId) {
+            // the page box counts as visible content: a separator right after
+            // it is not a leading one (ToolbarCustomLayout = PageInfo | ...)
+            if (w->GetVisibility() == Visibility::Visible) {
                 prevVisibleNonSep = true;
                 lastSep = -1;
             }
@@ -906,9 +908,10 @@ void UpdateFindbox(MainWindow* win) {
         UpdateWindow(win->hwndToolbar);
     }
 
-    auto* cursorId = win->IsDocLoaded() ? IDC_IBEAM : IDC_ARROW;
+    // no document: the find edit does nothing, so don't offer a text cursor
+    LPWSTR cursorId = win->IsDocLoaded() ? nullptr : IDC_ARROW;
     if (win->findEdit) {
-        win->findEdit->SetClassCursor(cursorId);
+        win->findEdit->SetCursorId(cursorId);
     }
 }
 

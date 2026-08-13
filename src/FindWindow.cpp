@@ -852,6 +852,11 @@ void DeleteFindWindow(MainWindow* win) {
     if (!win->findWindow) {
         return;
     }
+    // only if this window is the active find UI; the compact bar's edit must
+    // survive us (mirrors DeleteFindBar)
+    if (win->findEdit == win->findWindow->edit) {
+        win->findEdit = nullptr;
+    }
     delete win->findWindow;
     win->findWindow = nullptr;
 }

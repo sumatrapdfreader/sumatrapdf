@@ -692,6 +692,8 @@ struct Edit : ControlBase {
     bool createdWithFrame = false;
     bool selectAllOnFocus = false;
     bool delaySelectAll = false;
+    // when set, shown instead of the edit's own I-beam (see SetCursorId)
+    LPWSTR cursorId = nullptr;
 
     Edit();
     ~Edit() override;
@@ -721,7 +723,7 @@ struct Edit : ControlBase {
     int GetTextLen() const;
     void SetModified(bool);
     bool IsModified() const;
-    void SetClassCursor(LPWSTR);
+    void SetCursorId(LPWSTR);
     bool HasBorder();
     void ApplyTextPadding();
 };
