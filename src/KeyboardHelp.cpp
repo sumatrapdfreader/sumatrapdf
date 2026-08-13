@@ -133,7 +133,7 @@ struct KeyboardHelpWnd : WindowBase {
     // the sheet's layout tree; WindowBase::layout owns it
     VBox* container = nullptr;
     VirtText* title = nullptr;
-    VirtLink* closeBtn = nullptr;
+    VirtCloseButton* closeBtn = nullptr;
     VirtLine* separator = nullptr;
     HBox* columns = nullptr;
     VirtText* footer = nullptr;
@@ -404,12 +404,12 @@ void KeyboardHelpWnd::BuildContent() {
     container->alignCross = CrossAxisAlign::Stretch;
 
     title = new VirtText(trans::GetTranslation("Keyboard Shortcuts"), fontTitle);
-    // U+2715 MULTIPLICATION X
-    closeBtn = new VirtLink("\xE2\x9C\x95", fontTitle);
-    closeBtn->align = VirtTextAlign::Center;
+    closeBtn = new VirtCloseButton();
     closeBtn->onClick = MkFunc1Void(OnCloseClicked);
-    int closeGrow = DpiScale(hwnd, 6);
+    int btnDx = DpiScale(hwnd, 16);
+    int closeGrow = DpiScale(hwnd, 4);
     closeBtn->padding = Insets{closeGrow, closeGrow, closeGrow, closeGrow};
+    closeBtn->idealSize = {btnDx + (2 * closeGrow), btnDx + (2 * closeGrow)};
 
     auto* titleRow = new HBox();
     titleRow->alignCross = CrossAxisAlign::CrossCenter;
@@ -503,7 +503,6 @@ void KeyboardHelpWnd::SyncColors() {
     COLORREF txt = ThemeWindowTextColor();
     COLORREF dim = AccentColor(txt, 90);
     title->textColor = txt;
-    closeBtn->textColor = dim;
     separator->color = ThemeEdgeColor();
     footer->textColor = dim;
     for (VirtText* t : texts) {
@@ -540,8 +539,13 @@ void KeyboardHelpWnd::OnPaint(WindowBase::PaintEvent* ev) {
 // title-band cursor. VirtTree for content is handled after this in WndProcDefault
 void KeyboardHelpWnd::OnSetCursor(WindowBase::SetCursorEvent* ev) {
     Point pt = HwndGetCursorPos(hwnd);
+    // the ✕ lives in the title band; leave WM_SETCURSOR to VirtTree so it can
+    // show the hand cursor instead of the drag cursor
+    if (closeBtn && closeBtn->lastBounds.Contains(pt)) {
+        return;
+    }
     if (pt.y < contentTop) {
-        SetCursor(LoadCursorW(nullptr, IDC_SIZEALL));
+        SetCursorCached(IDC_SIZEALL);
         ev->result = TRUE;
         ev->didHandle = true;
     }
