@@ -9,6 +9,8 @@
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -622,7 +624,7 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
         return;
     }
 
-    if (HwndIsFocused(win->hwndFindEdit) || HwndIsFocused(win->hwndPageEdit)) {
+    if (HwndIsFocused(win->hwndFindEdit) || (win->pageEdit && HwndIsFocused(win->pageEdit->hwnd))) {
         EditSelectAll(GetFocus());
         return;
     }

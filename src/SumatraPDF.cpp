@@ -1717,7 +1717,9 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     if (pageChanged && kInvalidPageNo != pageNo) {
         TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
         // HwndSetText is a no-op when the text is unchanged
-        HwndSetText(win->hwndPageEdit, label);
+        if (win->pageEdit) {
+            win->pageEdit->SetText(label);
+        }
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels()) {
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
@@ -1961,7 +1963,9 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
-    HwndSetWindowStyle(win->hwndPageEdit, ES_NUMBER, onlyNumbers);
+    if (win->pageEdit) {
+        win->pageEdit->SetNumbersOnly(onlyNumbers);
+    }
 }
 
 static bool showTocByDefault(Str path) {
@@ -7709,14 +7713,14 @@ static void OnMenuGoToPage(MainWindow* win) {
     // Don't show a dialog if we don't have to - use the Toolbar instead.
     // In overlay mode the toolbar is only visible while revealed, so reveal it
     // first; focusing the hidden page box did nothing at all (#5916).
-    if (win->hwndPageEdit && !win->presentation) {
+    if (win->pageEdit && !win->presentation) {
         if (win->isToolbarOverlay) {
             RevealOverlayToolbar(win);
-            FocusPageNoEdit(win->hwndPageEdit);
+            FocusPageNoEdit(win->pageEdit->hwnd);
             return;
         }
         if (win->isToolbarVisible) {
-            FocusPageNoEdit(win->hwndPageEdit);
+            FocusPageNoEdit(win->pageEdit->hwnd);
             return;
         }
     }
@@ -8014,8 +8018,8 @@ void AdvanceFocus(MainWindow* win) {
     const int MAX_WINDOWS = 5;
     HWND tabOrder[MAX_WINDOWS] = {win->hwndFrame};
     int nWindows = 1;
-    if (hasToolbar) {
-        tabOrder[nWindows++] = win->hwndPageEdit;
+    if (hasToolbar && win->pageEdit) {
+        tabOrder[nWindows++] = win->pageEdit->hwnd;
     }
     // note: the find edit is no longer in the toolbar tab order; it lives in the
     // floating findBar and is reached via Ctrl+F / the search toolbar icon
@@ -8725,7 +8729,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    if (HwndIsFocused(tab->win->hwndFindEdit) || HwndIsFocused(tab->win->hwndPageEdit)) {
+    if (HwndIsFocused(tab->win->hwndFindEdit) || (tab->win->pageEdit && HwndIsFocused(tab->win->pageEdit->hwnd))) {
         SendMessageW(GetFocus(), WM_COPY, 0, 0);
         return;
     }

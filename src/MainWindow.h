@@ -192,10 +192,8 @@ struct MainWindow {
     HWND hwndFindEdit = nullptr;
     FindBarWnd* findBar = nullptr;       // compact toolbar overlay
     FindWindowWnd* findWindow = nullptr; // floating window variant (SearchUIFloating)
-    HWND hwndPageLabel = nullptr;
-    HWND hwndPageEdit = nullptr;
-    HWND hwndPageBg = nullptr;
-    HWND hwndPageTotal = nullptr;
+    // owned by the toolbar layout
+    Edit* pageEdit = nullptr;
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox = nullptr;

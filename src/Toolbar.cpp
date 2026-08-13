@@ -164,7 +164,6 @@ struct ToolbarVirt {
     Vec<VirtCtrl*> items; // not owned; layout owns them
     VirtText* pageLabel = nullptr;
     VirtText* pageTotal = nullptr;
-    VirtCtrl* pageEditSlot = nullptr;
     HFONT font = nullptr;
     PlatformFont* platformFont = nullptr;
     int iconSize = 0;
@@ -200,10 +199,6 @@ static VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
             return w;
         }
     }
-    if (tb->pageEditSlot && tb->pageEditSlot->GetVisibility() == Visibility::Visible &&
-        tb->pageEditSlot->BoundsInWindow().Contains(pt)) {
-        return tb->pageEditSlot;
-    }
     if (tb->pageTotal && tb->pageTotal->GetVisibility() == Visibility::Visible &&
         tb->pageTotal->BoundsInWindow().Contains(pt)) {
         return tb->pageTotal;
@@ -235,14 +230,11 @@ static void UpdateToolbarButtonStateByIdx(MainWindow* win, int idx, bool set, BY
             if (tb->pageLabel) {
                 tb->pageLabel->SetVisibility(want);
             }
-            if (tb->pageEditSlot) {
-                tb->pageEditSlot->SetVisibility(want);
+            if (win->pageEdit) {
+                win->pageEdit->SetVisibility(want);
             }
             if (tb->pageTotal) {
                 tb->pageTotal->SetVisibility(want);
-            }
-            if (win->hwndPageEdit) {
-                ShowWindow(win->hwndPageEdit, set ? SW_HIDE : SW_SHOW);
             }
         }
         if (tb && tb->vroot) {
@@ -894,7 +886,7 @@ void ShowOrHideToolbar(MainWindow* win) {
     }
     if (!show && !overlay) {
         // Move the focus out of the toolbar
-        if (HwndIsFocused(win->hwndFindEdit) || HwndIsFocused(win->hwndPageEdit)) {
+        if (HwndIsFocused(win->hwndFindEdit) || (win->pageEdit && HwndIsFocused(win->pageEdit->hwnd))) {
             HwndSetFocus(win->hwndFrame);
         }
     }
@@ -943,45 +935,34 @@ void UpdateToolbarState(MainWindow* win) {
 
 // (old Win32 toolbar subclass removed; WndProcVirtToolbar handles this)
 
-static WNDPROC DefWndProcPageBox = nullptr;
-static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindMainWindowByHwnd(hwnd);
-    // Always chain to the real EDIT proc (WM_PAINT / WM_SETFONT / WM_GETFONT).
-    // Routing those to DefWindowProc when no doc is loaded left the box blank
-    // and dropped the font.
-    if (win && win->IsDocLoaded()) {
-        // NOLINTNEXTLINE(bugprone-branch-clone): both empty branches are handled elsewhere, for different reasons
-        if (ExtendedEditWndProc(hwnd, msg, wp, lp)) {
-            // select the whole page box on a non-selecting click
-        } else if (WM_CHAR == msg) {
-            switch (wp) {
-                case VK_RETURN: {
-                    TempStr s = HwndGetTextTemp(win->hwndPageEdit);
-                    int newPageNo = win->ctrl->GetPageByLabel(s);
-                    if (win->ctrl->ValidPageNo(newPageNo)) {
-                        win->ctrl->GoToPage(newPageNo, true);
-                        HwndSetFocus(win->hwndFrame);
-                        // the overlay toolbar was kept up by the focus; now that
-                        // it's gone, let it hide again
-                        UpdateOverlayToolbarForMouse(win);
-                    }
-                    return 1;
-                }
-                case VK_ESCAPE:
-                    HwndSetFocus(win->hwndFrame);
-                    UpdateOverlayToolbarForMouse(win);
-                    return 1;
-
-                case VK_TAB:
-                    AdvanceFocus(win);
-                    return 1;
-            }
-        } else if (WM_KEYDOWN == msg) {
-            // TODO: see WndProcEditSearch for note on enabling accelerators here as well
-        }
+static void OnPageEditChar(MainWindow* win, Edit::CharEvent* ev) {
+    if (!win || !win->IsDocLoaded() || !win->pageEdit) {
+        return;
     }
-
-    return CallWindowProc(DefWndProcPageBox, hwnd, msg, wp, lp);
+    switch (ev->c) {
+        case VK_RETURN: {
+            TempStr s = win->pageEdit->GetTextTemp();
+            int newPageNo = win->ctrl->GetPageByLabel(s);
+            if (win->ctrl->ValidPageNo(newPageNo)) {
+                win->ctrl->GoToPage(newPageNo, true);
+                HwndSetFocus(win->hwndFrame);
+                // the overlay toolbar was kept up by the focus; now that
+                // it's gone, let it hide again
+                UpdateOverlayToolbarForMouse(win);
+            }
+            ev->didHandle = true;
+            return;
+        }
+        case VK_ESCAPE:
+            HwndSetFocus(win->hwndFrame);
+            UpdateOverlayToolbarForMouse(win);
+            ev->didHandle = true;
+            return;
+        case VK_TAB:
+            AdvanceFocus(win);
+            ev->didHandle = true;
+            return;
+    }
 }
 
 void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
@@ -1011,23 +992,6 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     HwndInvalidate(win->hwndToolbar, true);
 }
 
-// GetTextExtent, not HwndMeasureText: DT_EDITCONTROL underestimates digits.
-static Size MeasurePageDigits(HWND hwnd, HFONT font) {
-    HDC dc = GetDC(hwnd);
-    HFONT prev = font ? (HFONT)SelectObject(dc, font) : nullptr;
-    Size sz = HdcGetTextExtentPoint32(dc, StrL("999999"));
-    if (prev) {
-        SelectObject(dc, prev);
-    }
-    ReleaseDC(hwnd, dc);
-    return sz;
-}
-
-// EDIT HWND width: 6 digits plus slack. The slot adds left/right pad around it.
-static int PageEditTextDx(HWND hwnd, HFONT font) {
-    return MeasurePageDigits(hwnd, font).dx + DpiScale(24);
-}
-
 static int PageEditPadL() {
     return DpiGetSystemMetrics(SM_CXEDGE);
 }
@@ -1036,36 +1000,27 @@ static int PageEditPadR() {
     return PageEditPadL() + DpiScale(4);
 }
 
-static int PageEditSlotDx(HWND hwnd, HFONT font) {
-    return PageEditTextDx(hwnd, font) + PageEditPadL() + PageEditPadR();
-}
-
-static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
-    if (!gLayoutHasPageBox) {
-        return;
-    }
-    bool isRtl = IsUIRtl();
-    int boxWidth = PageEditSlotDx(win->hwndFrame, font);
-    // no WS_EX_CLIENTEDGE: a themed edit draws a blue bottom accent (Win11).
-    // The old toolbar used a borderless edit sitting on a static that we
-    // framed ourselves with a 1px gray line.
-    DWORD style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT | WS_TABSTOP;
-    DWORD exStyle = 0;
-    if (isRtl) {
-        exStyle |= WS_EX_LAYOUTRTL;
-    }
-    HWND page = CreateWindowExW(exStyle, WC_EDIT, L"0", style, 0, 1, boxWidth, iconDy, win->hwndToolbar,
-                                (HMENU) nullptr, GetModuleHandle(nullptr), nullptr);
-    SetWindowTheme(page, L"", L"");
-    SetWindowFont(page, font, FALSE);
-    // Default EM margins (3px each side here) plus a narrower HWND clipped
-    // "999999". Padding lives in the slot around the HWND, not in the edit.
-    SendMessageW(page, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, 0);
-    if (!DefWndProcPageBox) {
-        DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(page, GWLP_WNDPROC, (LONG_PTR)WndProcPageBox);
-    win->hwndPageEdit = page;
+static Edit* CreatePageEdit(MainWindow* win, HFONT font, int iconDy) {
+    Edit::CreateArgs args;
+    args.parent = win->hwndToolbar;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    // no WS_EX_CLIENTEDGE: a themed edit draws a blue bottom accent (Win11)
+    args.withFrame = true;
+    args.noTheme = true;
+    args.numbersOnly = true;
+    args.alignRight = true;
+    args.selectAllOnFocus = true;
+    args.text = StrL("0");
+    args.marginLeft = PageEditPadL();
+    args.marginRight = PageEditPadR();
+    auto* e = new Edit();
+    e->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
+    e->Create(args);
+    e->SetIdealWidthFromText(StrL("999999"), DpiScale(24));
+    e->idealDy = iconDy;
+    e->onChar = MkFunc1(OnPageEditChar, win);
+    return e;
 }
 
 __unused static void LogBitmapInfo(HBITMAP hbmp) {
@@ -1223,6 +1178,9 @@ static void RefreshToolbarIcons(MainWindow* win) {
     if (tb->pageTotal) {
         tb->pageTotal->textColor = TbTextColor();
     }
+    if (win->pageEdit) {
+        win->pageEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
+    }
 }
 
 void UpdateToolbarAfterThemeChange(MainWindow* win) {
@@ -1375,31 +1333,6 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     ev->didHandle = true;
 }
 
-static void PositionPageEdit(MainWindow* win) {
-    ToolbarVirt* tb = win->toolbarVirt;
-    if (!tb || !tb->pageEditSlot || !win->hwndPageEdit) {
-        return;
-    }
-    Rect r = tb->pageEditSlot->BoundsInWindow();
-    if (r.IsEmpty()) {
-        return;
-    }
-    // Font-tall HWND, vertically centered in the framed slot. Inset by the
-    // system edge on both sides plus extra right pad so ES_RIGHT text is not
-    // flush against the frame. The slot is sized so "999999" fits in this HWND.
-    Size textSz = MeasurePageDigits(win->hwndToolbar, tb->font);
-    int textDy = std::max(textSz.dy, HwndMeasureText(win->hwndToolbar, "999999", tb->font).dy);
-    if (textDy < 1) {
-        textDy = std::max(1, r.dy - DpiScale(4));
-    }
-    int padL = PageEditPadL();
-    int padR = PageEditPadR();
-    int x = r.x + padL;
-    int y = r.y + ((r.dy - textDy + 1) / 2);
-    int dx = std::max(1, r.dx - padL - padR);
-    MoveWindow(win->hwndPageEdit, x, y, dx, textDy, TRUE);
-}
-
 static void RelayoutToolbar(MainWindow* win) {
     ToolbarVirt* tb = win->toolbarVirt;
     if (!tb || !tb->layout || !win->hwndToolbar) {
@@ -1410,7 +1343,6 @@ static void RelayoutToolbar(MainWindow* win) {
         return;
     }
     LayoutTreeToSize(win->hwndToolbar, tb->layout, rc.Size(), &tb->vroot);
-    PositionPageEdit(win);
 }
 
 static void PaintToolbarSeparator(VirtCustom*, VirtPaintCtx* ctx) {
@@ -1439,7 +1371,7 @@ static void BuildToolbarLayout(MainWindow* win) {
     tb->items.Reset();
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;
-    tb->pageEditSlot = nullptr;
+    win->pageEdit = nullptr;
 
     int cyPad = ToolbarCyPad();
     int iconPad = DpiScale(6);
@@ -1469,13 +1401,9 @@ static void BuildToolbarLayout(MainWindow* win) {
             tb->pageLabel = label;
             box->AddChild(label);
 
-            int editDx = PageEditSlotDx(win->hwndFrame, tb->font);
-            auto* slot = new VirtFill();
-            slot->color = ThemeWindowControlBackgroundColor();
-            slot->idealSize = {editDx, tb->iconSize + DpiScale(2)};
-            slot->id = PageInfoId;
-            tb->pageEditSlot = slot;
-            box->AddChild(slot);
+            Edit* pageEdit = CreatePageEdit(win, tb->font, tb->iconSize);
+            win->pageEdit = pageEdit;
+            box->AddChild(pageEdit);
 
             auto* total = new VirtText(StrL(" "), tb->platformFont);
             total->textColor = fg;
@@ -1568,23 +1496,18 @@ static LRESULT CALLBACK WndProcVirtToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARA
             GfxHdc gfx(memDC);
             tb->vroot->Paint(&gfx, rc);
         }
-        if (tb && tb->pageEditSlot && tb->pageEditSlot->GetVisibility() == Visibility::Visible) {
-            Rect r = tb->pageEditSlot->BoundsInWindow();
-            if (!r.IsEmpty()) {
-                Color col = AccentColor(TbBgColor(), 40);
-                HBRUSH br = CreateSolidBrush(col);
-                RECT wr = ToRECT(r);
-                FrameRect(memDC, &wr, br);
-                DeleteObject(br);
-            }
-        }
         if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
             HdcFillRect(memDC, {rc.x, rc.Bottom() - 1, rc.dx, 1}, TbEdgeColor());
         }
         buffer.Flush(hdc);
         EndPaint(hwnd, &ps);
-        PositionPageEdit(win);
         return 0;
+    }
+    if (msg == WM_COMMAND || msg == WM_CTLCOLOREDIT || msg == WM_CTLCOLORSTATIC) {
+        LRESULT reflected = TryReflectMessages(hwnd, msg, wp, lp);
+        if (reflected) {
+            return reflected;
+        }
     }
     if ((msg == WM_CTLCOLOREDIT || msg == WM_CTLCOLORSTATIC) && win) {
         HDC hdc = (HDC)wp;
@@ -1688,15 +1611,14 @@ void CreateToolbar(MainWindow* win) {
     win->toolbarVirt = tb;
     HwndSetFont(hwnd, tb->font);
 
-    CreatePageBox(win, tb->font, iconSize);
     BuildToolbarLayout(win);
 
     DocController* ctrl = win->ctrl;
     UpdateToolbarPageText(win, ctrl ? ctrl->PageCount() : -1);
-    if (ctrl && win->hwndPageEdit) {
+    if (ctrl && win->pageEdit) {
         TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
-        HwndSetText(win->hwndPageEdit, label);
-        HwndSetWindowStyle(win->hwndPageEdit, ES_NUMBER, !ctrl->HasPageLabels());
+        win->pageEdit->SetText(label);
+        win->pageEdit->SetNumbersOnly(!ctrl->HasPageLabels());
     }
     UpdateToolbarFindText(win);
     ToolbarUpdateStateForWindow(win, true);
@@ -1706,10 +1628,7 @@ void DestroyToolbar(MainWindow* win) {
     if (!win->hwndReBar && !win->toolbarVirt) {
         return;
     }
-    HwndDestroyWindowSafe(&win->hwndPageEdit);
-    HwndDestroyWindowSafe(&win->hwndPageLabel);
-    HwndDestroyWindowSafe(&win->hwndPageBg);
-    HwndDestroyWindowSafe(&win->hwndPageTotal);
+    win->pageEdit = nullptr;
     FreeToolbarVirt(win);
     HwndDestroyWindowSafe(&win->hwndToolbar);
     win->hwndReBar = nullptr;

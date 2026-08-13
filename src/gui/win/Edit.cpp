@@ -108,6 +108,29 @@ void Edit::SetMaxWidthChars(int nChars) {
     maxDx = EditWidthForChars(hwnd, HwndGetFont(hwnd), nChars);
 }
 
+void Edit::SetIdealWidthFromText(Str s, int extraPx) {
+    if (!hwnd || !s) {
+        return;
+    }
+    HFONT font = HwndGetFont(hwnd);
+    HDC dc = GetDC(hwnd);
+    HFONT prev = font ? (HFONT)SelectObject(dc, font) : nullptr;
+    // GetTextExtent, not HwndMeasureText: DT_EDITCONTROL underestimates digits
+    Size sz = HdcGetTextExtentPoint32(dc, s);
+    if (prev) {
+        SelectObject(dc, prev);
+    }
+    ReleaseDC(hwnd, dc);
+    idealDx = sz.dx + extraPx;
+}
+
+void Edit::SetNumbersOnly(bool on) {
+    if (!hwnd) {
+        return;
+    }
+    HwndSetWindowStyle(hwnd, ES_NUMBER, on);
+}
+
 HWND Edit::Create(const CreateArgs& args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     onWndProc = MkMethod1<Edit, ControlBase::WndProcEvent*, &Edit::WndProc>(this);
@@ -118,12 +141,18 @@ HWND Edit::Create(const CreateArgs& args) {
     cargs.parent = args.parent;
     cargs.font = args.font;
     cargs.isRtl = args.isRtl;
-    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
+    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    cargs.style |= args.alignRight ? ES_RIGHT : ES_LEFT;
+    if (args.numbersOnly) {
+        cargs.style |= ES_NUMBER;
+    }
     if (args.withBorder) {
         cargs.exStyle = WS_EX_CLIENTEDGE;
         createdWithBorder = true;
     }
-    createdWithBottomBorder = args.withBottomBorder && !args.withBorder;
+    createdWithBottomBorder = args.withBottomBorder && !args.withBorder && !args.withFrame;
+    createdWithFrame = args.withFrame && !args.withBorder;
+    selectAllOnFocus = args.selectAllOnFocus;
     if (args.isMultiLine) {
         cargs.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
     } else {
@@ -136,6 +165,9 @@ HWND Edit::Create(const CreateArgs& args) {
     if (!hwnd) {
         return nullptr;
     }
+    if (args.noTheme) {
+        SetWindowTheme(hwnd, L"", L"");
+    }
     // character-based ideal/max width (needs hwnd + font for measurement)
     if (args.idealWidthChars > 0) {
         SetIdealWidthChars(args.idealWidthChars);
@@ -146,11 +178,14 @@ HWND Edit::Create(const CreateArgs& args) {
     if (args.textPadding > 0) {
         textPadding = DpiScale(args.textPadding);
     }
+    if (args.marginLeft || args.marginRight) {
+        SetMargins(args.marginLeft, args.marginRight);
+    }
     SizeToIdealSize(this);
     ApplyTextPadding();
 
-    if (createdWithBottomBorder) {
-        // apply the 1px bottom NC strip from WM_NCCALCSIZE
+    if (createdWithBottomBorder || createdWithFrame) {
+        // apply the NC strip from WM_NCCALCSIZE
         SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     }
@@ -194,6 +229,65 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
             return;
         }
 
+        case WM_CHAR: {
+            if (onChar.IsValid()) {
+                CharEvent ce;
+                ce.c = (int)wp;
+                onChar.Call(&ce);
+                if (ce.didHandle) {
+                    ev->result = 1;
+                    ev->didHandle = true;
+                    return;
+                }
+            }
+            break;
+        }
+
+        case WM_LBUTTONDOWN: {
+            if (selectAllOnFocus) {
+                delaySelectAll = !HwndIsFocused(hwnd);
+                if (delaySelectAll) {
+                    HWND hwndFg = GetForegroundWindow();
+                    DWORD fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
+                    DWORD ourTid = GetCurrentThreadId();
+                    bool attached = false;
+                    if (fgTid && fgTid != ourTid) {
+                        attached = AttachThreadInput(ourTid, fgTid, TRUE) != 0;
+                    }
+                    SetFocus(hwnd);
+                    if (attached) {
+                        AttachThreadInput(ourTid, fgTid, FALSE);
+                    }
+                }
+            }
+            break;
+        }
+
+        case WM_LBUTTONUP: {
+            if (selectAllOnFocus && delaySelectAll) {
+                DWORD sel = Edit_GetSel(hwnd);
+                if (LOWORD(sel) == HIWORD(sel)) {
+                    PostMessageW(hwnd, UWM_DELAYED_SELECT_ALL, 0, 0);
+                }
+                delaySelectAll = false;
+            }
+            break;
+        }
+
+        case WM_SETFOCUS: {
+            if (selectAllOnFocus && !delaySelectAll) {
+                PostMessageW(hwnd, UWM_DELAYED_SELECT_ALL, 0, 0);
+            }
+            break;
+        }
+
+        case UWM_DELAYED_SELECT_ALL: {
+            SelectAll();
+            ev->result = 0;
+            ev->didHandle = true;
+            return;
+        }
+
         case WM_KEYDOWN: {
             bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed();
             if (isCtrlBack) {
@@ -213,13 +307,22 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
         }
 
         case WM_NCCALCSIZE: {
-            if (!createdWithBottomBorder) {
+            if (!createdWithBottomBorder && !createdWithFrame) {
                 break;
             }
-            // reserve a 1px strip under the client so typing never paints over the line
             LRESULT res = WndProcDefault(hwnd, msg, wp, lp);
             RECT* rc = (wp == TRUE) ? &((NCCALCSIZE_PARAMS*)lp)->rgrc[0] : (RECT*)lp;
-            if (rc->bottom - rc->top > kEditBottomBorderDy) {
+            if (createdWithFrame) {
+                if (rc->right - rc->left > 2) {
+                    rc->left += 1;
+                    rc->right -= 1;
+                }
+                if (rc->bottom - rc->top > 2) {
+                    rc->top += 1;
+                    rc->bottom -= 1;
+                }
+            } else if (rc->bottom - rc->top > kEditBottomBorderDy) {
+                // reserve a 1px strip under the client so typing never paints over the line
                 rc->bottom -= kEditBottomBorderDy;
             }
             ev->result = res;
@@ -228,7 +331,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
         }
 
         case WM_NCPAINT: {
-            if (!createdWithBottomBorder) {
+            if (!createdWithBottomBorder && !createdWithFrame) {
                 break;
             }
             // borderless edit has no default NC chrome; still call default then draw
@@ -240,12 +343,19 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                 int w = wr.right - wr.left;
                 int h = wr.bottom - wr.top;
                 Color col = EditBottomBorderColor();
-                HPEN pen = CreatePen(PS_SOLID, 1, col);
-                HGDIOBJ old = SelectObject(hdc, pen);
-                MoveToEx(hdc, 0, h - 1, nullptr);
-                LineTo(hdc, w, h - 1);
-                SelectObject(hdc, old);
-                DeleteObject(pen);
+                if (createdWithFrame) {
+                    RECT fr{0, 0, w, h};
+                    HBRUSH br = CreateSolidBrush(col);
+                    FrameRect(hdc, &fr, br);
+                    DeleteObject(br);
+                } else {
+                    HPEN pen = CreatePen(PS_SOLID, 1, col);
+                    HGDIOBJ old = SelectObject(hdc, pen);
+                    MoveToEx(hdc, 0, h - 1, nullptr);
+                    LineTo(hdc, w, h - 1);
+                    SelectObject(hdc, old);
+                    DeleteObject(pen);
+                }
                 ReleaseDC(hwnd, hdc);
             }
             ev->result = 0;
@@ -286,6 +396,9 @@ Size Edit::GetIdealSize() {
         dy = std::max(s1.dy, s2.dy);
     }
     dy = dy * idealSizeLines;
+    if (idealDy > 0 && dy < idealDy) {
+        dy = idealDy;
+    }
     // logf("Edit::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 
     LRESULT margins = SendMessageW(hwnd, EM_GETMARGINS, 0, 0);
@@ -299,6 +412,10 @@ Size Edit::GetIdealSize() {
     }
     if (createdWithBottomBorder) {
         dy += kEditBottomBorderDy;
+    }
+    if (createdWithFrame) {
+        dx += 2;
+        dy += 2;
     }
     // the text is inset on all 4 sides, so the client area has to grow to still
     // show idealSizeLines lines

@@ -6,6 +6,7 @@
 // global messages for wingui start at WM_APP + 0x300 to not
 // collide with values defined for the app
 const DWORD UWM_DELAYED_CTRL_BACK = WM_APP + 0x300 + 1;
+const DWORD UWM_DELAYED_SELECT_ALL = WM_APP + 0x300 + 2;
 
 TempStr WinMsgNameTemp(UINT);
 
@@ -644,6 +645,12 @@ struct Edit : ControlBase {
         bool withBorder = false;
         // 1px NC underline under the client area (no WS_EX_CLIENTEDGE)
         bool withBottomBorder = false;
+        // 1px NC rectangle (not the themed WS_EX_CLIENTEDGE / Win11 accent)
+        bool withFrame = false;
+        bool numbersOnly = false;
+        bool alignRight = false;
+        bool selectAllOnFocus = false;
+        bool noTheme = false;
         Str cueText;
         Str text;
         int idealSizeLines = 1;
@@ -654,9 +661,17 @@ struct Edit : ControlBase {
         // if > 0: unscaled px of space between the text and all 4 client edges
         // (multi-line only; the edit control ignores EM_SETRECT otherwise)
         int textPadding = 0;
+        int marginLeft = 0;
+        int marginRight = 0;
         HFONT font = nullptr;
         bool isRtl = false;
     };
+
+    struct CharEvent {
+        int c = 0;
+        bool didHandle = false;
+    };
+    using CharHandler = Func1<CharEvent*>;
 
     // EN_CHANGE only (do not use for kill-focus flush; see onKillFocus)
     TextChangedHandler onTextChanged;
@@ -664,11 +679,13 @@ struct Edit : ControlBase {
     TextChangedHandler onKillFocus;
     // EN_SETFOCUS only
     TextChangedHandler onFocus;
+    CharHandler onChar;
 
     // set before Create() (pixels); or use idealWidthChars / maxWidthChars
     int idealSizeLines = 1;
     int idealDx = 0;
     int maxDx = 0;
+    int idealDy = 0;
     // DPI-scaled CreateArgs.textPadding
     int textPadding = 0;
 
@@ -677,6 +694,9 @@ struct Edit : ControlBase {
     // window styles can't be used to detect the border
     bool createdWithBorder = false;
     bool createdWithBottomBorder = false;
+    bool createdWithFrame = false;
+    bool selectAllOnFocus = false;
+    bool delaySelectAll = false;
 
     Edit();
     ~Edit() override;
@@ -690,6 +710,8 @@ struct Edit : ControlBase {
 
     void SetIdealWidthChars(int nChars);
     void SetMaxWidthChars(int nChars);
+    void SetIdealWidthFromText(Str s, int extraPx = 0);
+    void SetNumbersOnly(bool);
 
     int GetLeftTextMargin();
 
