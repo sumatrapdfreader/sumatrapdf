@@ -914,7 +914,7 @@ void LogLinesWnd::WndProc(ControlBase::WndProcEvent* ev) {
             return;
         }
         case WM_LBUTTONDOWN:
-            SetFocus(hwnd); // so subsequent wheel messages target the log view
+            SetFocus(); // so subsequent wheel messages target the log view
             ev->result = 0;
             ev->didHandle = true;
             return;
