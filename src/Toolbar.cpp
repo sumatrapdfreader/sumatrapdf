@@ -1918,9 +1918,12 @@ static void BuildToolbarLayout(MainWindow* win) {
         VirtCtrl* w = nullptr;
         bool noTranslate = i >= gLayoutButtonsCount;
         if (bi.cmdId == PageInfoId) {
+            // Old toolbar: label HWND was text + kTextPaddingRight + kButtonSpacingX
+            // (10dpi) so "Page:" and "/ N" were not flush against the edit.
+            int pageGap = DpiScale(kTextPaddingRight) + DpiScale(kButtonSpacingX);
             auto* label = new VirtText(_TRA("Page:"), tb->platformFont);
             label->textColor = fg;
-            label->padding = {0, DpiScale(kTextPaddingRight), 0, DpiScale(4)};
+            label->padding = {0, pageGap, 0, DpiScale(4)};
             label->id = PageInfoId;
             tb->pageLabel = label;
             box->AddChild(label);
@@ -1935,7 +1938,7 @@ static void BuildToolbarLayout(MainWindow* win) {
 
             auto* total = new VirtText(StrL(" "), tb->platformFont);
             total->textColor = fg;
-            total->padding = {0, DpiScale(4), 0, DpiScale(4)};
+            total->padding = {0, DpiScale(4), 0, pageGap};
             total->id = PageInfoId;
             tb->pageTotal = total;
             box->AddChild(total);
