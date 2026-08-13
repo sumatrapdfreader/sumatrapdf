@@ -2156,7 +2156,7 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
         }
         // Segoe UI U+25BE (▾): same small filled triangle as the Win32
         // TBSTYLE_EX_DRAWDDARROWS glyph
-        float pt = 12.f * (float)DpiGet() / 96.f;
+        float pt = 14.f * (float)DpiGet() / 96.f;
         PlatformFont* font = GetPlatformFont(StrL("Segoe UI"), pt, PlatformFontStyle::Regular);
         ctx.gfx->DrawText(StrL("\xE2\x96\xBE"), drop, gfxTextCenter | gfxTextVCenter, font, col);
     }
