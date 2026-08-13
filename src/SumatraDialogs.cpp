@@ -956,64 +956,6 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
     return CreatePropertySheetPage(&psp);
 }
 
-struct Dialog_AddFav_Data {
-    Str pageNo;
-    Str favName;
-    ~Dialog_AddFav_Data() {
-        str::Free(pageNo);
-        str::Free(favName);
-    }
-};
-
-static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_INITDIALOG == msg) {
-        Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
-        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        if (UseDarkModeLib()) {
-            DarkMode::setDarkWndSafe(hDlg);
-        }
-        HwndSetText(hDlg, _TRA("Add Favorite"));
-        TempStr s = fmt(_TRA("Add page %s to favorites with (optional) name:").s, data->pageNo);
-        HwndSetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
-        HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
-        HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
-        if (data->favName) {
-            HwndSetDlgItemText(hDlg, IDC_FAV_NAME_EDIT, data->favName);
-            EditSelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
-        }
-        HwndCenterDialog(hDlg);
-        HwndSetFocus(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
-        return FALSE;
-    }
-
-    if (WM_COMMAND == msg) {
-        Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-        WORD cmd = LOWORD(wp);
-        if (IDOK == cmd) {
-            TempStr name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
-            str::TrimWSInPlace(name, str::TrimOpt::Both);
-            if (len(name) > 0) {
-                str::ReplaceWithCopy(&data->favName, name);
-            } else {
-                str::Free(data->favName);
-                data->favName = {};
-            }
-            EndDialog(hDlg, IDOK);
-            return TRUE;
-        }
-        if (IDCANCEL == cmd) {
-            EndDialog(hDlg, IDCANCEL);
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-// pageNo is the page we're adding to favorites
-// returns true if the user wants to add a favorite.
-// favName is the name the user wants the favorite to have
-// (passing in a non-nullptr favName will use it as default name)
 // --- Change Background Color dialog ---
 
 static const int kMaxCustomColors = 13;
@@ -1510,19 +1452,5 @@ bool Dialog_SetTabColor(HWND hwnd, Color currentColor, bool isUnset, Color& resu
 
     resultColor = data.currentColor;
     resultIsUnset = data.isCheckered;
-    return true;
-}
-
-bool Dialog_AddFavorite(HWND hwnd, Str pageNo, Str& favName) {
-    Dialog_AddFav_Data data;
-    data.pageNo = str::Dup(pageNo);
-    data.favName = str::Dup(favName);
-
-    INT_PTR res = CreateDialogBox(IDD_DIALOG_FAV_ADD, hwnd, Dialog_AddFav_Proc, (LPARAM)&data);
-    if (IDCANCEL == res) {
-        return false;
-    }
-
-    str::ReplaceWithCopy(&favName, data.favName);
     return true;
 }

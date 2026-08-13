@@ -25,7 +25,7 @@
 #include "Commands.h"
 #include "AppSettings.h"
 #include "Menu.h"
-#include "SumatraDialogs.h"
+#include "AddFavoriteDialog.h"
 #include "Translations.h"
 #include "Accelerators.h"
 #include "Tabs.h"
@@ -1090,27 +1090,31 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
     return currItem;
 }
 
-void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn) {
-    Str name = str::Dup(nameIn);
-    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
-    if (shouldAdd) {
-        TempStr plainLabel = fmt("%d", pageNo);
-        bool needsLabel = !str::Eq(plainLabel, pageLabel);
-
-        RememberFavTreeExpansionStateForAllWindows();
-        Str pl = needsLabel ? pageLabel : Str{};
-        WindowTab* tab = win->CurrentTab();
-        Str path = tab->filePath;
-        AddOrReplaceFav(path, pageNo, name, pl);
-        // expand newly added favorites by default
-        FileState* fav = GetFavByFilePath(path);
-        if (fav && len(*fav->favorites) == 2) {
-            win->expandedFavorites.Append(fav);
-        }
-        UpdateFavoritesTreeForAllWindows();
-        SaveSettings();
+// Persist a favorite after the Add Favorite dialog's OK (name may be empty).
+void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name) {
+    if (!filePath || !IsMainWindowValid(win)) {
+        return;
     }
-    str::Free(name);
+    TempStr plainLabel = fmt("%d", pageNo);
+    bool needsLabel = !str::Eq(plainLabel, pageLabel);
+
+    RememberFavTreeExpansionStateForAllWindows();
+    Str pl = needsLabel ? pageLabel : Str{};
+    AddOrReplaceFav(filePath, pageNo, name, pl);
+    // expand newly added favorites by default
+    FileState* fav = GetFavByFilePath(filePath);
+    if (fav && len(*fav->favorites) == 2) {
+        win->expandedFavorites.Append(fav);
+    }
+    UpdateFavoritesTreeForAllWindows();
+    SaveSettings();
+}
+
+void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn) {
+    if (!IsMainWindowValid(win) || !win->CurrentTab()) {
+        return;
+    }
+    ShowAddFavoriteDialog(win, win->CurrentTab()->filePath, pageNo, pageLabel, nameIn);
 }
 
 void AddFavoriteForPage(MainWindow* win, int pageNo) {

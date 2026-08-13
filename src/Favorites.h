@@ -23,6 +23,7 @@ struct WindowTab;
 
 bool HasFavorites();
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn);
+void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
 void AddFavoriteForPage(MainWindow* win, int pageNo);
 void AddFavoriteForCurrentPage(MainWindow* win);
 void DelFavorite(Str filePath, int pageNo);
