@@ -225,6 +225,9 @@
     <ClInclude Include="..\src\FormFields.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\GetPasswordDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -726,6 +729,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FormFields.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GetPasswordDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GlobalPrefs.cpp">

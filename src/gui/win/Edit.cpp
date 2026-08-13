@@ -197,6 +197,15 @@ void Edit::SetNumbersOnly(bool on) {
     HwndSetWindowStyle(hwnd, ES_NUMBER, on);
 }
 
+// 0 shows the real text; the bullet matches the old password dialog.
+void Edit::SetPasswordVisible(bool show) {
+    if (!hwnd) {
+        return;
+    }
+    SendMessageW(hwnd, EM_SETPASSWORDCHAR, show ? 0 : (WPARAM)L'\x25CF', 0);
+    HwndInvalidate(hwnd, true);
+}
+
 HWND Edit::Create(const CreateArgs& args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     onWndProc = MkMethod1<Edit, ControlBase::WndProcEvent*, &Edit::WndProc>(this);
@@ -211,6 +220,9 @@ HWND Edit::Create(const CreateArgs& args) {
     cargs.style |= args.alignRight ? ES_RIGHT : ES_LEFT;
     if (args.numbersOnly) {
         cargs.style |= ES_NUMBER;
+    }
+    if (args.isPassword) {
+        cargs.style |= ES_PASSWORD;
     }
     if (args.withBorder) {
         cargs.exStyle = WS_EX_CLIENTEDGE;

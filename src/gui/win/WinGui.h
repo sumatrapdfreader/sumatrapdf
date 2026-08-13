@@ -647,6 +647,7 @@ struct Edit : ControlBase {
         // 1px NC rectangle (not the themed WS_EX_CLIENTEDGE / Win11 accent)
         bool withFrame = false;
         bool numbersOnly = false;
+        bool isPassword = false;
         bool alignRight = false;
         bool selectAllOnFocus = false;
         bool noTheme = false;
@@ -711,6 +712,7 @@ struct Edit : ControlBase {
     void SetMaxWidthChars(int nChars);
     void SetIdealWidthFromText(Str s, int extraPx = 0);
     void SetNumbersOnly(bool);
+    void SetPasswordVisible(bool);
 
     int GetLeftTextMargin();
 

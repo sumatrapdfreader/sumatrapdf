@@ -114,6 +114,7 @@
 #include "ChangeScrollbarDialog.h"
 #include "ChangeThemeDialog.h"
 #include "CustomZoomDialog.h"
+#include "GetPasswordDialog.h"
 #include "GoToPageDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
@@ -712,7 +713,7 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     // remembering the password requires saving per-document state
     bool canRememberPwd = SettingsRememberOpenedFiles() && gGlobalPrefs->rememberStatePerDocument;
     bool* rememberPwd = canRememberPwd ? saveKey : nullptr;
-    return Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword);
+    return ShowGetPasswordDialog(hwnd, path, rememberPwd, &gShowPassword);
 }
 
 // True while a tab is mid-load (async open). Used so we don't treat a plain
