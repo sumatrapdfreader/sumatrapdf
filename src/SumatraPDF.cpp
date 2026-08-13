@@ -116,6 +116,7 @@
 #include "CustomZoomDialog.h"
 #include "GetPasswordDialog.h"
 #include "GoToPageDialog.h"
+#include "InverseSearchDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -7403,9 +7404,7 @@ static void ShowOptionsDialog(MainWindow* win) {
 }
 
 static void SetInverseSearch(MainWindow* win) {
-    if (Dialog_SetInverseSearch(win->hwndFrame, gGlobalPrefs)) {
-        SaveSettings();
-    }
+    ShowInverseSearchDialog(win);
 }
 
 // toggles 'show pages continuously' state

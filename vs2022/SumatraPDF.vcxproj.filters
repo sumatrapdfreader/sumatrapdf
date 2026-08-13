@@ -258,6 +258,9 @@
     <ClInclude Include="..\src\Installer.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\InverseSearchDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\JxlReader.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -771,6 +774,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\InstallerCommon.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\InverseSearchDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\JxlReader.cpp">

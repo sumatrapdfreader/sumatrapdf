@@ -1230,6 +1230,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\ImageReader.h" />
     <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
+    <ClInclude Include="..\src\InverseSearchDialog.h" />
     <ClInclude Include="..\src\JxlReader.h" />
     <ClInclude Include="..\src\KeyboardHelp.h" />
     <ClInclude Include="..\src\LinkFollow.h" />
@@ -1438,6 +1439,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\ImageSaveCropResize.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
+    <ClCompile Include="..\src\InverseSearchDialog.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\KeyboardHelp.cpp" />
     <ClCompile Include="..\src\LinkFollow.cpp" />

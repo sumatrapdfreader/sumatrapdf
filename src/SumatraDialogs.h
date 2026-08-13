@@ -4,7 +4,6 @@
 struct GlobalPrefs;
 
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
-bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs);
 
 enum class PrintRangeAdv {
     All = 0,
@@ -70,3 +69,4 @@ bool Dialog_SetTabColor(HWND hwnd, Color currentColor, bool isUnset, Color& resu
 
 TempStr ZoomLevelStr(float zoom);
 void CollectZoomLevels(Vec<float>& out, bool forChm);
+void CollectInverseSearchCommands(StrVec& out, Str cmdLine);

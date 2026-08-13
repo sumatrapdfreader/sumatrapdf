@@ -310,16 +310,23 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
     return newZoom;
 }
 
-static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
+// Detected text-editor command lines plus the current setting, if any.
+void CollectInverseSearchCommands(StrVec& out, Str cmdLine) {
+    out.Reset();
     Vec<TextEditor*> textEditors;
     DetectTextEditors(textEditors);
-    StrVec detected;
     for (auto* e : textEditors) {
-        AppendIfNotExists(&detected, e->openFileCmd);
+        AppendIfNotExists(&out, e->openFileCmd);
     }
     if (cmdLine) {
-        AppendIfNotExists(&detected, cmdLine);
-    } else if (len(detected) > 0) {
+        AppendIfNotExists(&out, cmdLine);
+    }
+}
+
+static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
+    StrVec detected;
+    CollectInverseSearchCommands(detected, cmdLine);
+    if (!cmdLine && len(detected) > 0) {
         cmdLine = detected[0];
     }
     for (Str s : detected) {
@@ -335,12 +342,6 @@ static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
     } else {
         CbSetCurrentSelection(hwndComboBox, (int)ind);
     }
-}
-
-static void ApplyInverseSearchSettings(GlobalPrefs* prefs, HWND hwndComboBox) {
-    TempStr tmp = HwndGetTextTemp(hwndComboBox);
-    str::ReplaceWithCopy(&prefs->inverseSearchCmdLine, tmp);
-    prefs->enableTeXEnhancements = true;
 }
 
 static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
@@ -474,57 +475,6 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
 
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs) {
     return CreateDialogBox(IDD_DIALOG_SETTINGS, hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
-}
-
-static INT_PTR CALLBACK Dialog_SetInverseSearch_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
-    GlobalPrefs* prefs;
-
-    switch (msg) {
-        case WM_INITDIALOG:
-            prefs = (GlobalPrefs*)lp;
-            SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)prefs);
-            if (UseDarkModeLib()) {
-                DarkMode::setDarkWndSafe(hDlg);
-            }
-            HwndSetText(hDlg, _TRA("Set inverse search command line"));
-            HwndSetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TRA("Set inverse search command line"));
-            HwndSetDlgItemText(hDlg, IDC_CMDLINE_LABEL,
-                               _TRA("Enter the command line to invoke when you double-click on the PDF document:"));
-            HwndSetDlgItemText(hDlg, IDC_INVERSE_SEARCH_HELP, _TRA("Help"));
-            HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
-            HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
-            FillInverseSearchCombo(GetDlgItem(hDlg, IDC_CMDLINE), prefs->inverseSearchCmdLine);
-            HwndCenterDialog(hDlg);
-            HwndSetFocus(GetDlgItem(hDlg, IDC_CMDLINE));
-            return FALSE;
-
-        case WM_COMMAND:
-            switch (LOWORD(wp)) {
-                case IDOK:
-                    prefs = (GlobalPrefs*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    ApplyInverseSearchSettings(prefs, GetDlgItem(hDlg, IDC_CMDLINE));
-                    EndDialog(hDlg, IDOK);
-                    return TRUE;
-
-                case IDCANCEL:
-                    EndDialog(hDlg, IDCANCEL);
-                    return TRUE;
-
-                case IDC_INVERSE_SEARCH_HELP:
-                    LaunchDocumentation("/LaTeX-integration");
-                    return TRUE;
-            }
-            break;
-    }
-    return FALSE;
-}
-
-bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs) {
-    if (!CanAccessDisk() || !HasPermission(Perm::SavePreferences)) {
-        return false;
-    }
-    INT_PTR res = CreateDialogBox(IDD_DIALOG_INVERSE_SEARCH, hwnd, Dialog_SetInverseSearch_Proc, (LPARAM)prefs);
-    return res == IDOK;
 }
 
 #ifndef ID_APPLY_NOW
