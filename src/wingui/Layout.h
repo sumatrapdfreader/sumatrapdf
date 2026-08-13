@@ -58,6 +58,7 @@ enum class Visibility {
 
 struct VirtCtrl;
 struct ControlBase;
+class DeferWinPosHelper;
 
 struct ILayout {
     virtual ~ILayout() = default;
@@ -203,6 +204,8 @@ struct HBox : LayoutBase {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
+    // when true, children are placed right-to-left (MainStart packs to the right)
+    bool rtl = false;
     int totalWidth = 0;
     int totalFlex = 0;
 
@@ -268,6 +271,88 @@ struct Spacer : LayoutBase {
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
+};
+
+// MoveWindow of an HWND that is not itself an ILayout (frame canvas, lazy webview).
+// lastBounds is always recorded, so a null hwnd still works as a measured slot.
+struct HwndSlot : LayoutBase {
+    HWND hwnd = nullptr;
+    // if set, SetBounds batches the move through this helper (not owned)
+    DeferWinPosHelper* winPos = nullptr;
+    int dx = 0;
+    int dy = 0;
+
+    HwndSlot(HWND hwnd = nullptr, int dx = 0, int dy = 0);
+    ~HwndSlot() override;
+
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    void SetBounds(Rect) override;
+};
+
+// one child of an Overlay: sits or stretches inside the shared box
+struct OverlayChild {
+    ILayout* child = nullptr;
+    Size size;
+    CrossAxisAlign alignH = CrossAxisAlign::Stretch;
+    CrossAxisAlign alignV = CrossAxisAlign::Stretch;
+};
+
+// children share one box (a z-stack). Sized to the largest child.
+struct Overlay : LayoutBase {
+    Vec<OverlayChild> children;
+
+    Overlay();
+    ~Overlay() override;
+
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    void SetBounds(Rect) override;
+
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+
+    OverlayChild& AddChild(ILayout* child);
+    OverlayChild& AddChild(ILayout* child, CrossAxisAlign alignH, CrossAxisAlign alignV);
+    int ChildrenCount() const;
+};
+
+// HBox that wraps onto the next row when children do not fit the available width.
+// Flex is applied per row. rtl places each row right-to-left.
+struct Wrap : LayoutBase {
+    Vec<boxElementInfo> children;
+    CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
+    bool rtl = false;
+    int colGap = 0;
+    int rowGap = 0;
+
+    Wrap();
+    ~Wrap() override;
+
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    void SetBounds(Rect) override;
+
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+
+    boxElementInfo& AddChild(ILayout* child);
+    boxElementInfo& AddChild(ILayout* child, int flex);
+    int ChildrenCount() const;
+
+  private:
+    struct Row {
+        int start = 0;
+        int count = 0;
+        int width = 0;
+        int height = 0;
+    };
+    Vec<Row> rows;
+
+    void PackRows(int maxWidth);
 };
 
 //--- Table: a grid of cells, each holding an ILayout child

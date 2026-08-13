@@ -426,6 +426,38 @@ static int CalculateHGap(ILayout* /*prev*/, ILayout* /*current*/) {
     return 0;
 }
 
+// where a child of size sz sits inside its cell
+static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossAxisAlign alignV) {
+    Rect r{cell.x, cell.y, sz.dx, sz.dy};
+    switch (alignH) {
+        case CrossAxisAlign::Stretch:
+            r.dx = cell.dx;
+            break;
+        case CrossAxisAlign::CrossCenter:
+            r.x += (cell.dx - sz.dx) / 2;
+            break;
+        case CrossAxisAlign::CrossEnd:
+            r.x += cell.dx - sz.dx;
+            break;
+        case CrossAxisAlign::CrossStart:
+            break;
+    }
+    switch (alignV) {
+        case CrossAxisAlign::Stretch:
+            r.dy = cell.dy;
+            break;
+        case CrossAxisAlign::CrossCenter:
+            r.y += (cell.dy - sz.dy) / 2;
+            break;
+        case CrossAxisAlign::CrossEnd:
+            r.y += cell.dy - sz.dy;
+            break;
+        case CrossAxisAlign::CrossStart:
+            break;
+    }
+    return r;
+}
+
 // ILayout
 Size VBox::Layout(const Constraints bc) {
     auto n = ChildrenCount();
@@ -961,9 +993,15 @@ int HBox::MinIntrinsicWidth(int height) {
     return size;
 }
 
+// mirror a child's x against the original HBox so MainStart packs to the right
+static int MirrorX(const Rect& box, int x, int dx) {
+    return box.x + box.dx - (x - box.x) - dx;
+}
+
 void HBox::SetBounds(Rect bounds) {
     dbglayout(fmt("HBox:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
     lastBounds = bounds;
+    Rect box = bounds;
     auto n = ChildrenCount();
     if (n == 0) {
         return;
@@ -978,6 +1016,11 @@ void HBox::SetBounds(Rect bounds) {
             auto* v = children[i].layout;
             auto x1 = bounds.x + Scale(dx, i, count);
             auto x2 = bounds.x + Scale(dx, i + 1, count) - gap;
+            if (rtl) {
+                int w = x2 - x1;
+                x1 = MirrorX(box, x1, w);
+                x2 = x1 + w;
+            }
             SetBoundsForChild(i, v, x1, bounds.y, x2, bounds.Bottom());
         }
         return;
@@ -1036,7 +1079,13 @@ void HBox::SetBounds(Rect bounds) {
         }
 
         auto dx = children[i].size.dx;
-        SetBoundsForChild(i, v.layout, posX, bounds.y, posX + dx, bounds.Bottom());
+        int x1 = posX;
+        int x2 = posX + dx;
+        if (rtl) {
+            x1 = MirrorX(box, posX, dx);
+            x2 = x1 + dx;
+        }
+        SetBoundsForChild(i, v.layout, x1, bounds.y, x2, bounds.Bottom());
         posX += dx + extraGap;
     }
 }
@@ -1412,38 +1461,6 @@ Rect Table::CellRect(int row, int col) {
     return {x, y, dx, dy};
 }
 
-// where a child of size sz sits inside its cell
-static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossAxisAlign alignV) {
-    Rect r{cell.x, cell.y, sz.dx, sz.dy};
-    switch (alignH) {
-        case CrossAxisAlign::Stretch:
-            r.dx = cell.dx;
-            break;
-        case CrossAxisAlign::CrossCenter:
-            r.x += (cell.dx - sz.dx) / 2;
-            break;
-        case CrossAxisAlign::CrossEnd:
-            r.x += cell.dx - sz.dx;
-            break;
-        case CrossAxisAlign::CrossStart:
-            break;
-    }
-    switch (alignV) {
-        case CrossAxisAlign::Stretch:
-            r.dy = cell.dy;
-            break;
-        case CrossAxisAlign::CrossCenter:
-            r.y += (cell.dy - sz.dy) / 2;
-            break;
-        case CrossAxisAlign::CrossEnd:
-            r.y += cell.dy - sz.dy;
-            break;
-        case CrossAxisAlign::CrossStart:
-            break;
-    }
-    return r;
-}
-
 void Table::SetBounds(Rect r) {
     lastBounds = r;
     if (len(colWidths) != cols || len(rowHeights) != rows) {
@@ -1541,6 +1558,382 @@ void Spacer::SetBounds(Rect bounds) {
     // the AI chat panel positions its lazily-created webview into the slot) read
     // lastBounds, so record it
     lastBounds = bounds;
+}
+
+//--- HwndSlot
+
+static Kind kindHwndSlot = "hwnd-slot";
+
+HwndSlot::HwndSlot(HWND hwndIn, int dxIn, int dyIn) {
+    kind = kindHwndSlot;
+    hwnd = hwndIn;
+    dx = dxIn;
+    dy = dyIn;
+}
+
+HwndSlot::~HwndSlot() {
+    // does not own hwnd
+}
+
+Size HwndSlot::Layout(const Constraints bc) {
+    return bc.Constrain({dx, dy});
+}
+
+int HwndSlot::MinIntrinsicHeight(int /*width*/) {
+    return dy;
+}
+
+int HwndSlot::MinIntrinsicWidth(int /*height*/) {
+    return dx;
+}
+
+// Move the HWND into bounds (batched when winPos is set). A null or collapsed
+// slot still records lastBounds so callers can place a lazily-created window.
+void HwndSlot::SetBounds(Rect bounds) {
+    lastBounds = bounds;
+    if (!hwnd || IsCollapsed(this)) {
+        return;
+    }
+    if (winPos) {
+        winPos->MoveWindow(hwnd, bounds);
+        return;
+    }
+    HwndMoveWindow(hwnd, &bounds);
+}
+
+//--- Overlay
+
+static Kind kindOverlay = "overlay";
+
+Overlay::Overlay() {
+    kind = kindOverlay;
+}
+
+Overlay::~Overlay() {
+    for (auto& c : children) {
+        delete c.child;
+    }
+}
+
+int Overlay::LayoutChildCount() {
+    return len(children);
+}
+
+ILayout* Overlay::LayoutChildAt(int idx) {
+    return children[idx].child;
+}
+
+int Overlay::ChildrenCount() const {
+    return len(children);
+}
+
+static OverlayChild gRefusedOverlayChild;
+
+OverlayChild& Overlay::AddChild(ILayout* child, CrossAxisAlign alignH, CrossAxisAlign alignV) {
+    if (LayoutTreeContains(child, this)) {
+        ReportIf(true);
+        return gRefusedOverlayChild;
+    }
+    OverlayChild v{};
+    v.child = child;
+    v.alignH = alignH;
+    v.alignV = alignV;
+    children.Append(v);
+    return children[len(children) - 1];
+}
+
+OverlayChild& Overlay::AddChild(ILayout* child) {
+    return AddChild(child, CrossAxisAlign::Stretch, CrossAxisAlign::Stretch);
+}
+
+// each child is measured loosely; the overlay is as large as the largest one
+Size Overlay::Layout(const Constraints bc) {
+    Size maxSz{};
+    Constraints loose = bc.Loosen();
+    for (auto& c : children) {
+        if (!c.child || IsCollapsed(c.child)) {
+            c.size = {};
+            continue;
+        }
+        c.size = c.child->Layout(loose);
+        maxSz.dx = std::max(maxSz.dx, c.size.dx);
+        maxSz.dy = std::max(maxSz.dy, c.size.dy);
+    }
+    return bc.Constrain(maxSz);
+}
+
+int Overlay::MinIntrinsicHeight(int width) {
+    int h = 0;
+    for (auto& c : children) {
+        if (c.child && !IsCollapsed(c.child)) {
+            h = std::max(h, c.child->MinIntrinsicHeight(width));
+        }
+    }
+    return h;
+}
+
+int Overlay::MinIntrinsicWidth(int height) {
+    int w = 0;
+    for (auto& c : children) {
+        if (c.child && !IsCollapsed(c.child)) {
+            w = std::max(w, c.child->MinIntrinsicWidth(height));
+        }
+    }
+    return w;
+}
+
+// Stretch children are re-measured to the overlay size; others sit inside it
+void Overlay::SetBounds(Rect bounds) {
+    lastBounds = bounds;
+    for (auto& c : children) {
+        if (!c.child || IsCollapsed(c.child)) {
+            continue;
+        }
+        Size sz = c.size;
+        bool stretchH = c.alignH == CrossAxisAlign::Stretch;
+        bool stretchV = c.alignV == CrossAxisAlign::Stretch;
+        if (stretchH) {
+            sz.dx = bounds.dx;
+        }
+        if (stretchV) {
+            sz.dy = bounds.dy;
+        }
+        if (stretchH || stretchV) {
+            c.size = c.child->Layout(Tight(sz));
+            sz = c.size;
+        }
+        c.child->SetBounds(AlignInCell(bounds, sz, c.alignH, c.alignV));
+    }
+}
+
+//--- Wrap
+
+static Kind kindWrap = "wrap";
+
+Wrap::Wrap() {
+    kind = kindWrap;
+}
+
+Wrap::~Wrap() {
+    for (auto& c : children) {
+        delete c.layout;
+    }
+}
+
+int Wrap::LayoutChildCount() {
+    return len(children);
+}
+
+ILayout* Wrap::LayoutChildAt(int idx) {
+    return children[idx].layout;
+}
+
+int Wrap::ChildrenCount() const {
+    return len(children);
+}
+
+boxElementInfo& Wrap::AddChild(ILayout* child, int flex) {
+    if (LayoutTreeContains(child, this)) {
+        ReportIf(true);
+        return gRefusedBoxElement;
+    }
+    boxElementInfo v{};
+    v.layout = child;
+    v.flex = flex;
+    children.Append(v);
+    return children[len(children) - 1];
+}
+
+boxElementInfo& Wrap::AddChild(ILayout* child) {
+    return AddChild(child, 0);
+}
+
+// greedy wrap of already-measured children into rows that fit maxWidth
+void Wrap::PackRows(int maxWidth) {
+    rows.Reset();
+    int n = ChildrenCount();
+    Row cur{};
+    bool have = false;
+    for (int i = 0; i < n; i++) {
+        auto& v = children[i];
+        if (!v.layout || IsCollapsed(v.layout)) {
+            continue;
+        }
+        int nextW = have ? (cur.width + colGap + v.size.dx) : v.size.dx;
+        if (have && maxWidth < Inf && nextW > maxWidth) {
+            rows.Append(cur);
+            cur = {};
+            have = false;
+        }
+        if (!have) {
+            cur.start = i;
+            cur.count = 1;
+            cur.width = v.size.dx;
+            cur.height = v.size.dy;
+            have = true;
+        } else {
+            cur.count = i - cur.start + 1;
+            cur.width = nextW;
+            cur.height = std::max(cur.height, v.size.dy);
+        }
+    }
+    if (have) {
+        rows.Append(cur);
+    }
+}
+
+Size Wrap::Layout(const Constraints bc) {
+    rows.Reset();
+    int n = ChildrenCount();
+    if (n == 0) {
+        return bc.Constrain(Size{});
+    }
+
+    // first pass: natural size of each child (unbounded width, like HBox)
+    Constraints cbc = bc;
+    cbc.min.dx = 0;
+    cbc.max.dx = Inf;
+    cbc = cbc.LoosenHeight();
+    for (int i = 0; i < n; i++) {
+        auto& v = children[i];
+        if (!v.layout || IsCollapsed(v.layout)) {
+            v.size = {};
+            continue;
+        }
+        v.size = v.layout->Layout(cbc);
+    }
+
+    int maxWidth = bc.HasBoundedWidth() ? bc.max.dx : Inf;
+    PackRows(maxWidth);
+
+    // flex extra width per row among that row's flex children
+    if (bc.HasBoundedWidth()) {
+        Constraints fbc = cbc;
+        for (auto& row : rows) {
+            int totalFlex = 0;
+            for (int i = row.start; i < row.start + row.count; i++) {
+                auto& v = children[i];
+                if (v.layout && !IsCollapsed(v.layout) && v.flex > 0) {
+                    totalFlex += v.flex;
+                }
+            }
+            int extra = maxWidth - row.width;
+            if (totalFlex <= 0 || extra <= 0) {
+                continue;
+            }
+            for (int i = row.start; i < row.start + row.count; i++) {
+                auto& v = children[i];
+                if (!v.layout || IsCollapsed(v.layout) || v.flex <= 0) {
+                    continue;
+                }
+                int old = v.size.dx;
+                int nw = old + Scale(extra, v.flex, totalFlex);
+                v.size = v.layout->Layout(fbc.TightenWidth(nw));
+                row.width += v.size.dx - old;
+                row.height = std::max(row.height, v.size.dy);
+            }
+        }
+    }
+
+    int width = 0;
+    int height = 0;
+    for (int i = 0; i < len(rows); i++) {
+        width = std::max(width, rows[i].width);
+        if (i > 0) {
+            height += rowGap;
+        }
+        height += rows[i].height;
+    }
+    return bc.Constrain(Size{width, height});
+}
+
+int Wrap::MinIntrinsicWidth(int height) {
+    int w = 0;
+    for (auto& v : children) {
+        if (v.layout && !IsCollapsed(v.layout)) {
+            w = std::max(w, v.layout->MinIntrinsicWidth(height));
+        }
+    }
+    return w;
+}
+
+// with a bounded width this is the wrapped height; unbounded is one row
+int Wrap::MinIntrinsicHeight(int width) {
+    int n = ChildrenCount();
+    if (n == 0) {
+        return 0;
+    }
+    if (width == Inf || width <= 0) {
+        int h = 0;
+        for (auto& v : children) {
+            if (v.layout && !IsCollapsed(v.layout)) {
+                h = std::max(h, v.layout->MinIntrinsicHeight(Inf));
+            }
+        }
+        return h;
+    }
+    int x = 0;
+    int rowH = 0;
+    int total = 0;
+    bool have = false;
+    for (int i = 0; i < n; i++) {
+        auto& v = children[i];
+        if (!v.layout || IsCollapsed(v.layout)) {
+            continue;
+        }
+        int cw = v.layout->MinIntrinsicWidth(Inf);
+        int ch = v.layout->MinIntrinsicHeight(width);
+        int next = have ? (x + colGap + cw) : cw;
+        if (have && next > width) {
+            if (total > 0) {
+                total += rowGap;
+            }
+            total += rowH;
+            x = 0;
+            rowH = 0;
+            have = false;
+            next = cw;
+        }
+        x = next;
+        rowH = std::max(rowH, ch);
+        have = true;
+    }
+    if (have) {
+        if (total > 0) {
+            total += rowGap;
+        }
+        total += rowH;
+    }
+    return total;
+}
+
+void Wrap::SetBounds(Rect bounds) {
+    lastBounds = bounds;
+    int y = bounds.y;
+    for (int ri = 0; ri < len(rows); ri++) {
+        auto& row = rows[ri];
+        int x = bounds.x;
+        if (rtl) {
+            x = bounds.x + bounds.dx;
+        }
+        for (int i = row.start; i < row.start + row.count; i++) {
+            auto& v = children[i];
+            if (!v.layout || IsCollapsed(v.layout)) {
+                continue;
+            }
+            if (rtl) {
+                x -= v.size.dx;
+            }
+            Rect cell{x, y, v.size.dx, row.height};
+            v.layout->SetBounds(AlignInCell(cell, v.size, CrossAxisAlign::CrossStart, alignCross));
+            if (rtl) {
+                x -= colGap;
+            } else {
+                x += v.size.dx + colGap;
+            }
+        }
+        y += row.height + rowGap;
+    }
 }
 
 #if defined(DEBUG)
@@ -1756,6 +2149,104 @@ static void Layout_TestAlign() {
     delete al;
 }
 
+static void Layout_TestHwndSlot() {
+    // no HWND: same as Spacer (records lastBounds, preferred size)
+    HwndSlot slot(nullptr, 30, 20);
+    Size sz = slot.Layout(Loose(Size{100, 100}));
+    utassert(sz.dx == 30 && sz.dy == 20);
+    slot.SetBounds(Rect{5, 6, 40, 41});
+    utassert(LayoutRectEq(slot.lastBounds, 5, 6, 40, 41));
+}
+
+static void Layout_TestOverlay() {
+    auto* body = new Spacer(80, 20);
+    auto* close = new Spacer(10, 10);
+    auto* ov = new Overlay();
+    ov->AddChild(body);
+    ov->AddChild(close, CrossAxisAlign::CrossEnd, CrossAxisAlign::CrossCenter);
+    LayoutToSize(ov, Size{80, 20});
+    // body fills the overlay; close sits at the right, vertically centered
+    utassert(LayoutRectEq(body->lastBounds, 0, 0, 80, 20));
+    utassert(LayoutRectEq(close->lastBounds, 70, 5, 10, 10));
+    delete ov;
+}
+
+static void Layout_TestWrap() {
+    // three 40-wide children in a 90-wide box wrap to two + one
+    {
+        auto* a = new Spacer(40, 10);
+        auto* b = new Spacer(40, 10);
+        auto* c = new Spacer(40, 10);
+        auto* w = new Wrap();
+        w->AddChild(a);
+        w->AddChild(b);
+        w->AddChild(c);
+        LayoutToSize(w, Size{90, 100});
+        utassert(LayoutRectEq(a->lastBounds, 0, 0, 40, 10));
+        utassert(LayoutRectEq(b->lastBounds, 40, 0, 40, 10));
+        utassert(LayoutRectEq(c->lastBounds, 0, 10, 40, 10));
+        delete w;
+    }
+    // flex extra on a row goes to the flex child
+    {
+        auto* a = new Spacer(40, 10);
+        auto* b = new Spacer(40, 10);
+        auto* w = new Wrap();
+        w->AddChild(a, 1);
+        w->AddChild(b);
+        LayoutToSize(w, Size{100, 20});
+        utassert(LayoutRectEq(a->lastBounds, 0, 0, 60, 10));
+        utassert(LayoutRectEq(b->lastBounds, 60, 0, 40, 10));
+        delete w;
+    }
+    // rtl: each row packs from the right
+    {
+        auto* a = new Spacer(40, 10);
+        auto* b = new Spacer(40, 10);
+        auto* c = new Spacer(40, 10);
+        auto* w = new Wrap();
+        w->rtl = true;
+        w->AddChild(a);
+        w->AddChild(b);
+        w->AddChild(c);
+        LayoutToSize(w, Size{90, 100});
+        utassert(LayoutRectEq(a->lastBounds, 50, 0, 40, 10));
+        utassert(LayoutRectEq(b->lastBounds, 10, 0, 40, 10));
+        utassert(LayoutRectEq(c->lastBounds, 50, 10, 40, 10));
+        delete w;
+    }
+}
+
+static void Layout_TestHBoxRtl() {
+    // MainStart packs to the right: first child at the right edge
+    {
+        auto* a = new Spacer(20, 10);
+        auto* b = new Spacer(30, 10);
+        auto* hb = new HBox();
+        hb->rtl = true;
+        hb->AddChild(a);
+        hb->AddChild(b);
+        LayoutToSize(hb, Size{100, 10});
+        utassert(LayoutRectEq(a->lastBounds, 80, 0, 20, 10));
+        utassert(LayoutRectEq(b->lastBounds, 50, 0, 30, 10));
+        delete hb;
+    }
+    // MainEnd packs toward the left (the RTL end)
+    {
+        auto* a = new Spacer(20, 10);
+        auto* b = new Spacer(30, 10);
+        auto* hb = new HBox();
+        hb->rtl = true;
+        hb->alignMain = MainAxisAlign::MainEnd;
+        hb->AddChild(a);
+        hb->AddChild(b);
+        LayoutToSize(hb, Size{100, 10});
+        utassert(LayoutRectEq(a->lastBounds, 30, 0, 20, 10));
+        utassert(LayoutRectEq(b->lastBounds, 0, 0, 30, 10));
+        delete hb;
+    }
+}
+
 void Layout_UnitTests() {
     Layout_TestPrimitives();
     Layout_TestSpacer();
@@ -1767,5 +2258,9 @@ void Layout_UnitTests() {
     Layout_TestHBoxCrossCenter();
     Layout_TestCollapsed();
     Layout_TestAlign();
+    Layout_TestHwndSlot();
+    Layout_TestOverlay();
+    Layout_TestWrap();
+    Layout_TestHBoxRtl();
 }
 #endif
