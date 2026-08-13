@@ -788,11 +788,11 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
                 ev->didHandle = MoveResultSelection(ev->vkey);
                 break;
             }
-            DWORD selStart = 0, selEnd = 0;
-            SendMessageW(edit->hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-            int textLen = Edit_GetTextLength(edit->hwnd);
+            int selStart = 0, selEnd = 0;
+            edit->GetSelection(selStart, selEnd);
+            int textLen = edit->GetTextLen();
             bool toEnd = (ev->vkey == VK_END);
-            bool caretAtBound = (selStart == selEnd) && (toEnd ? (int)selEnd == textLen : (int)selStart == 0);
+            bool caretAtBound = (selStart == selEnd) && (toEnd ? selEnd == textLen : selStart == 0);
             if (caretAtBound) {
                 ev->didHandle = MoveResultSelection(ev->vkey);
             }
