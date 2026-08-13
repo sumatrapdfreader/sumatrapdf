@@ -113,6 +113,7 @@
 #include "ChangeLanguageDialog.h"
 #include "ChangeScrollbarDialog.h"
 #include "ChangeThemeDialog.h"
+#include "CustomZoomDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -8745,15 +8746,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
 }
 
 static void OnMenuCustomZoom(MainWindow* win) {
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-
-    float virtZoom = win->ctrl->GetZoomVirtual();
-    if (!Dialog_CustomZoom(win->hwndFrame, IsBrowserDocController(win->ctrl), &virtZoom)) {
-        return;
-    }
-    SmartZoom(win, virtZoom, nullptr, true);
+    ShowCustomZoomDialog(win);
 }
 
 // this is a directory for not important data, like downloaded symbols

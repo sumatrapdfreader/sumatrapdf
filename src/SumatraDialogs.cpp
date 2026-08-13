@@ -406,24 +406,15 @@ static float gZoomLevelsChm[] = {
 
 static Vec<float>* gCurrZoomLevels = nullptr;
 
-static void AddZoomLevel(float zoomLevel, HWND hwnd, Vec<float>* levels) {
-    TempStr s = ZoomLevelStr(zoomLevel);
-    CbAddString(hwnd, s);
-    levels->Append(zoomLevel);
-}
-
-static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
-    HWND hwnd = GetDlgItem(hDlg, (int)idComboBox);
-
-    auto* prefs = gGlobalPrefs;
-    auto* customZoomLevels = prefs->zoomLevels;
-    auto* currZoomLevels = new Vec<float>();
-    int n = len(*customZoomLevels);
+// Fit/preset zoom values for the zoom combo (Settings) and Custom Zoom dialog.
+void CollectZoomLevels(Vec<float>& out, bool forChm) {
+    out.Reset();
+    auto* customZoomLevels = gGlobalPrefs->zoomLevels;
+    int n = customZoomLevels ? len(*customZoomLevels) : 0;
     if (n > 0) {
         if (!forChm) {
-            float* zoomLevels = gZoomLevels;
             for (int i = 0; i < 4; i++) {
-                AddZoomLevel(zoomLevels[i], hwnd, currZoomLevels);
+                out.Append(gZoomLevels[i]);
             }
         }
         float maxZoom = forChm ? 800 : kZoomMax;
@@ -431,18 +422,28 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
         for (int i = 0; i < n; i++) {
             float zl = (*customZoomLevels)[n - i - 1]; // largest first
             if (zl >= minZoom && zl <= maxZoom) {
-                AddZoomLevel(zl, hwnd, currZoomLevels);
+                out.Append(zl);
             }
         }
-    } else {
-        float* zoomLevels = forChm ? gZoomLevelsChm : gZoomLevels;
-        n = forChm ? dimofi(gZoomLevelsChm) : dimofi(gZoomLevels);
-        for (int i = 0; i < n; i++) {
-            AddZoomLevel(zoomLevels[i], hwnd, currZoomLevels);
-        }
+        return;
+    }
+    float* zoomLevels = forChm ? gZoomLevelsChm : gZoomLevels;
+    n = forChm ? dimofi(gZoomLevelsChm) : dimofi(gZoomLevels);
+    for (int i = 0; i < n; i++) {
+        out.Append(zoomLevels[i]);
+    }
+}
+
+static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
+    HWND hwnd = GetDlgItem(hDlg, (int)idComboBox);
+
+    auto* currZoomLevels = new Vec<float>();
+    CollectZoomLevels(*currZoomLevels, forChm);
+    for (float zl : *currZoomLevels) {
+        CbAddString(hwnd, ZoomLevelStr(zl));
     }
 
-    n = len(*currZoomLevels);
+    int n = len(*currZoomLevels);
     for (int i = 0; i < n; i++) {
         float zl = (*currZoomLevels)[i];
         if (zl == currZoom) {
@@ -483,65 +484,6 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
         newZoom = defaultZoom;
     }
     return newZoom;
-}
-
-struct Dialog_CustomZoom_Data {
-    float zoomArg = 0;
-    float zoomResult = 0;
-    bool forChm = false;
-};
-
-static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
-    Dialog_CustomZoom_Data* data;
-
-    switch (msg) {
-        case WM_INITDIALOG:
-            //[ ACCESSKEY_GROUP Zoom Dialog
-            data = (Dialog_CustomZoom_Data*)lp;
-            SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-            if (UseDarkModeLib()) {
-                DarkMode::setDarkWndSafe(hDlg);
-            }
-            SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, data->forChm, data->zoomArg);
-
-            HwndSetText(hDlg, _TRA("Zoom factor"));
-            HwndSetDlgItemText(hDlg, IDC_STATIC, _TRA("&Magnification:"));
-            HwndSetDlgItemText(hDlg, IDOK, _TRA("Zoom"));
-            HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
-
-            HwndCenterDialog(hDlg);
-            HwndSetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
-            return FALSE;
-            //] ACCESSKEY_GROUP Zoom Dialog
-
-        case WM_COMMAND:
-            switch (LOWORD(wp)) {
-                case IDOK:
-                    data = (Dialog_CustomZoom_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    data->zoomResult = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, data->zoomArg);
-                    EndDialog(hDlg, IDOK);
-                    return TRUE;
-
-                case IDCANCEL:
-                    EndDialog(hDlg, IDCANCEL);
-                    return TRUE;
-            }
-            break;
-    }
-    return FALSE;
-}
-
-bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut) {
-    Dialog_CustomZoom_Data data;
-    data.forChm = forChm;
-    data.zoomArg = *currZoomInOut;
-    INT_PTR res = CreateDialogBox(IDD_DIALOG_CUSTOM_ZOOM, hwnd, Dialog_CustomZoom_Proc, (LPARAM)&data);
-    if (res == IDCANCEL) {
-        return false;
-    }
-
-    *currZoomInOut = data.zoomResult;
-    return true;
 }
 
 static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {

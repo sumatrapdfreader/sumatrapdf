@@ -301,6 +301,7 @@ const sumatraFiles: FileGroup[] = [
       "ChangeLanguageDialog.*",
       "ChangeScrollbarDialog.*",
       "ChangeThemeDialog.*",
+      "CustomZoomDialog.*",
       "AIClaudeCode.*",
       "CommandAvailability.*",
       "ExifDump.*",

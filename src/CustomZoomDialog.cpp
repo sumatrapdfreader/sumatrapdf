@@ -1,0 +1,306 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+#include "base/Base.h"
+#include "base/Win.h"
+#include "gui/Dpi.h"
+#include "base/UITask.h"
+
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
+
+#include "Settings.h"
+#include "AppSettings.h"
+#include "GlobalPrefs.h"
+#include "DocController.h"
+#include "MainWindow.h"
+#include "Theme.h"
+#include "SumatraConfig.h"
+#include "SumatraPDF.h"
+#include "SumatraDialogs.h"
+#include "Translations.h"
+#include "DarkModeSubclass.h"
+#include "CustomZoomDialog.h"
+
+// Label and buttons are VirtCtrl; the zoom field is an editable DropDown.
+// Same WindowBase layout pattern as Change Theme / Add Favorite.
+struct CustomZoomWnd : WindowBase {
+    ~CustomZoomWnd() override = default;
+
+    HFONT font = nullptr;
+    PlatformFont* platformFont = nullptr;
+    MainWindow* win = nullptr;
+    bool forChm = false;
+    float startZoom = 0;
+    Vec<float> zoomLevels;
+    VirtText* label = nullptr;
+    DropDown* dropDown = nullptr;
+    VirtButton* btnCancel = nullptr;
+    VirtButton* btnZoom = nullptr;
+
+    bool Create(MainWindow* win);
+    void SetTarget(MainWindow* win);
+    void FillZoom();
+    float SelectedZoom();
+    void OnKeyDown(KeyEvent* ev);
+
+    void UpdateTheme();
+    void OnCancel();
+    void OnOk();
+    void ScheduleDelete();
+};
+
+static CustomZoomWnd* gCustomZoomWnd = nullptr;
+
+void SafeDeleteCustomZoomDialog() {
+    if (!gCustomZoomWnd) {
+        return;
+    }
+    auto* tmp = gCustomZoomWnd;
+    gCustomZoomWnd = nullptr;
+    delete tmp;
+}
+
+void CustomZoomWnd::ScheduleDelete() {
+    if (gCustomZoomWnd != this) {
+        return;
+    }
+    auto fn = MkFunc0Void(SafeDeleteCustomZoomDialog);
+    uitask::Post(fn, "SafeDeleteCustomZoomDialog");
+}
+
+void CustomZoomWnd::UpdateTheme() {
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+    if (label) {
+        label->textColor = colTxt;
+    }
+    if (dropDown) {
+        dropDown->SetColors(colTxt, colBg);
+    }
+    if (btnCancel) {
+        StyleThemedButton(btnCancel, false);
+    }
+    if (btnZoom) {
+        StyleThemedButton(btnZoom, true);
+    }
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+    }
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
+
+void CustomZoomWnd::FillZoom() {
+    if (!dropDown) {
+        return;
+    }
+    CollectZoomLevels(zoomLevels, forChm);
+    StrVec items;
+    for (float z : zoomLevels) {
+        items.Append(ZoomLevelStr(z));
+    }
+    dropDown->SetItems(items);
+    int sel = -1;
+    for (int i = 0; i < len(zoomLevels); i++) {
+        if (zoomLevels[i] == startZoom) {
+            sel = i;
+            break;
+        }
+    }
+    if (sel >= 0) {
+        dropDown->SetCurrentSelection(sel);
+    } else {
+        dropDown->SetText(fmt("%.0f%%", startZoom));
+    }
+}
+
+void CustomZoomWnd::SetTarget(MainWindow* mainWin) {
+    win = mainWin;
+    forChm = false;
+    startZoom = 0;
+    if (IsMainWindowValid(win) && win->IsDocLoaded() && win->ctrl) {
+        forChm = IsBrowserDocController(win->ctrl);
+        startZoom = win->ctrl->GetZoomVirtual();
+    }
+    FillZoom();
+}
+
+// Selected list entry, or a typed number (empty / non-numeric keeps startZoom).
+float CustomZoomWnd::SelectedZoom() {
+    int idx = dropDown ? dropDown->GetCurrentSelection() : -1;
+    if (idx >= 0 && idx < len(zoomLevels)) {
+        float z = zoomLevels[idx];
+        return z == 0 ? startZoom : z;
+    }
+    TempStr text = dropDown ? dropDown->GetTextTemp() : Str{};
+    if (len(text) == 0) {
+        return startZoom;
+    }
+    float zoom = (float)atof(CStrTemp(text));
+    if (zoom == 0) {
+        return startZoom;
+    }
+    return limitValue(zoom, kZoomMin, kZoomMax);
+}
+
+void CustomZoomWnd::OnCancel() {
+    ScheduleDelete();
+}
+
+void CustomZoomWnd::OnOk() {
+    if (IsMainWindowValid(win) && win->IsDocLoaded()) {
+        SmartZoom(win, SelectedZoom(), nullptr, true);
+    }
+    ScheduleDelete();
+}
+
+void CustomZoomWnd::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_ESCAPE) {
+        OnCancel();
+        ev->didHandle = true;
+        return;
+    }
+    if (ev->vkey == VK_RETURN) {
+        HWND hwndDrop = dropDown ? dropDown->hwnd : nullptr;
+        if (hwndDrop && SendMessageW(hwndDrop, CB_GETDROPPEDSTATE, 0, 0)) {
+            return;
+        }
+        if (btnCancel && vroot && vroot->focused == btnCancel) {
+            OnCancel();
+        } else {
+            OnOk();
+        }
+        ev->didHandle = true;
+    }
+}
+
+static void OnClose(WindowBase::CloseEvent* /*ev*/) {
+    if (gCustomZoomWnd) {
+        gCustomZoomWnd->OnCancel();
+    }
+}
+
+static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
+    if (gCustomZoomWnd) {
+        gCustomZoomWnd->ScheduleDelete();
+    }
+}
+
+static void CancelClicked(CustomZoomWnd* wnd, VirtMouseEvent*) {
+    wnd->OnCancel();
+}
+
+static void ZoomClicked(CustomZoomWnd* wnd, VirtMouseEvent*) {
+    wnd->OnOk();
+}
+
+bool CustomZoomWnd::Create(MainWindow* mainWin) {
+    win = mainWin;
+    if (IsMainWindowValid(win) && win->IsDocLoaded() && win->ctrl) {
+        forChm = IsBrowserDocController(win->ctrl);
+        startZoom = win->ctrl->GetZoomVirtual();
+    }
+
+    {
+        CreateCustomArgs args;
+        args.title = _TRA("Zoom factor");
+        args.visible = false;
+        args.style = WS_POPUPWINDOW | WS_CAPTION;
+        args.font = font;
+        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
+        CreateCustom(args);
+    }
+    if (!hwnd) {
+        return false;
+    }
+    platformFont = GetPlatformFont(font);
+    bool isRtl = IsUIRtl();
+
+    auto* vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    {
+        auto* c = NewVirtText({
+            .s = _TRA("&Magnification:"),
+            .font = platformFont,
+            .isRtl = isRtl,
+            .padding = DpiScaledInsets(0, 0, 4, 0),
+        });
+        label = c;
+        vbox->AddChild(c);
+    }
+
+    {
+        DropDown::CreateArgs args;
+        args.parent = hwnd;
+        args.font = font;
+        args.isRtl = isRtl;
+        args.isEditable = true;
+        auto* c = new DropDown();
+        c->Create(args);
+        dropDown = c;
+        vbox->AddChild(c);
+        FillZoom();
+    }
+
+    {
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainEnd;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        auto pad = Insets{4, 8, 4, 8};
+
+        btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
+        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        hbox->AddChild(new Padding(btnCancel, pad));
+        btnZoom = NewThemedButton(hwnd, _TRA("Zoom"), platformFont, true);
+        btnZoom->onClick = MkFunc1(ZoomClicked, this);
+        hbox->AddChild(new Padding(btnZoom, pad));
+        vbox->AddChild(hbox);
+    }
+
+    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
+    layout = padding;
+
+    int dx = DpiScale(240);
+    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    DoLayout(HwndClientRect(hwnd).Size());
+    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    UpdateTheme();
+
+    SetIsVisible(true);
+    if (dropDown) {
+        HwndSetFocus(dropDown->hwnd);
+    }
+    return true;
+}
+
+void ShowCustomZoomDialog(MainWindow* win) {
+    if (!IsMainWindowValid(win) || !win->IsDocLoaded()) {
+        return;
+    }
+    if (gCustomZoomWnd) {
+        gCustomZoomWnd->SetTarget(win);
+        HwndSetFocus(gCustomZoomWnd->hwnd);
+        if (gCustomZoomWnd->dropDown) {
+            HwndSetFocus(gCustomZoomWnd->dropDown->hwnd);
+        }
+        return;
+    }
+    auto* wnd = new CustomZoomWnd();
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
+    wnd->onKeyDown = MkMethod1<CustomZoomWnd, KeyEvent*, &CustomZoomWnd::OnKeyDown>(wnd);
+    wnd->font = GetAppFont();
+    bool ok = wnd->Create(win);
+    if (!ok) {
+        delete wnd;
+        return;
+    }
+    gCustomZoomWnd = wnd;
+}

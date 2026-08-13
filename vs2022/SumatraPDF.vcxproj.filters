@@ -156,6 +156,9 @@
     <ClInclude Include="..\src\CrashHandler.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\CustomZoomDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\DisplayMode.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -639,6 +642,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CustomZoomDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DisplayMode.cpp">

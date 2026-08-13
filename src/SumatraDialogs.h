@@ -5,7 +5,6 @@ struct GlobalPrefs;
 
 Str Dialog_GoToPage(HWND hwnd, Str currentPageLabel, int pageCount, bool onlyNumeric = true);
 Str Dialog_GetPassword(HWND hwnd, Str fileName, bool* rememberPassword, bool* showPassword);
-bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
 bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs);
 
@@ -72,3 +71,4 @@ bool Dialog_ChangeBackgroundColor(HWND hwnd, Color currentColor, bool isCheckere
 bool Dialog_SetTabColor(HWND hwnd, Color currentColor, bool isUnset, Color& resultColor, bool& resultIsUnset);
 
 TempStr ZoomLevelStr(float zoom);
+void CollectZoomLevels(Vec<float>& out, bool forChm);
