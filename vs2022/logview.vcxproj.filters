@@ -42,6 +42,9 @@
     <ClCompile Include="..\src\wingui\Edit.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\Gfx_win.cpp">
       <Filter>wingui</Filter>
     </ClCompile>

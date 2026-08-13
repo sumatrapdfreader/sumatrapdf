@@ -437,14 +437,13 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     if (ev->itemIndex < 0 || ev->itemIndex >= len(win->findMatches)) {
         return;
     }
-    HDC hdc = GfxGetHdc(ev->gfx);
+    Gfx* gfx = ev->gfx;
     HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
 
     // clip the whole row so a partially visible last item (LBS_NOINTEGRALHEIGHT)
     // and highlight fill cannot paint outside the item / list client (#5796)
-    int rowDC = SaveDC(hdc);
-    IntersectClipRect(hdc, rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy);
+    gfx->PushClip(rc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -452,11 +451,8 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }
-    SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, rc);
-    SetBkMode(hdc, TRANSPARENT);
+    gfx->FillRect(rc, colBg);
 
-    HFONT oldFont = lb->font ? SelectFont(hdc, lb->font->GetHFont()) : nullptr;
     int pad = DpiScale(hwndList, 6);
     Rect rcText = rc;
     rcText.x += pad;
@@ -467,10 +463,9 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     // instead of fighting a per-row measured width (#5692 / #5796).
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
-    TempWStr pageW = ToWStrTemp(pageStr);
     int pageGap = DpiScale(hwndList, 10);
     int pageColDx = DpiScale(hwndList, 40);
-    Size pageSize = HdcGetTextExtentPoint32(hdc, pageStr);
+    Size pageSize = gfx->MeasureText(pageStr, lb->font);
     pageColDx = std::max(pageSize.dx + DpiScale(hwndList, 4), pageColDx);
     Rect rcPage = rcText;
     rcPage.x = std::max(rcText.x, rcText.x + rcText.dx - pageColDx);
@@ -480,30 +475,22 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     Rect rcSnippet = rcText;
     rcSnippet.dx = std::max(0, rcPage.x - pageGap - rcSnippet.x);
     if (rcSnippet.dx > 0) {
-        SetTextColor(hdc, colText);
-        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
+        u32 drawFmt = gfxTextEllipsis | gfxTextVCenter | gfxTextLeft;
         // clip snippet drawing so match highlights cannot bleed into the page
-        // number column when the floating window is narrow (issue #5736);
-        // SaveDC/RestoreDC (rather than SelectClipRgn(nullptr)) so the outer
-        // listbox-client clip stays in effect afterwards
-        int snippetDC = SaveDC(hdc);
-        IntersectClipRect(hdc, rcSnippet.x, rcSnippet.y, rcSnippet.x + rcSnippet.dx, rcSnippet.y + rcSnippet.dy);
-        DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
-                                 win->findMatchWholeWord, drawFmt);
-        RestoreDC(hdc, snippetDC);
+        // number column when the floating window is narrow (issue #5736); it
+        // nests, so the outer row clip stays in effect afterwards
+        gfx->PushClip(rcSnippet);
+        DrawMaybeHighlightedText(gfx, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
+                                 win->findMatchWholeWord, drawFmt, lb->font, colText);
+        gfx->PopClip();
     }
 
     // repaint the page column on top in case a prior draw left stray pixels
-    SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, rcPage);
-    SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, AccentColor(colText, 80));
-    HdcDrawText(hdc, pageW, rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
+    gfx->FillRect(rcPage, colBg);
+    u32 pageFmt = gfxTextEllipsis | gfxTextVCenter | gfxTextRight;
+    gfx->DrawText(pageStr, rcPage, pageFmt, lb->font, AccentColor(colText, 80));
 
-    if (oldFont) {
-        SelectFont(hdc, oldFont);
-    }
-    RestoreDC(hdc, rowDC);
+    gfx->PopClip();
 }
 
 void FindWindowWnd::OnResultSelected() {

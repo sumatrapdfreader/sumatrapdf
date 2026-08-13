@@ -1777,16 +1777,14 @@ static void GetFileStateIcon(FileState* fs) {
 // white X on hover). It is a HomeCloseBtnCtrl in the chrome tree, shown on the
 // entry the mouse is on.
 
-static void DrawHomeViewButton(HDC hdc, Pixmap* icon, Rect r, bool selected) {
+static void DrawHomeViewButton(Gfx* gfx, Pixmap* icon, Rect r, bool selected) {
     if (selected) {
-        HdcFillRect(hdc, r, ThemeControlBackgroundColor());
-        HBRUSH br = CreateSolidBrush(AccentColor(ThemeControlBackgroundColor(), 40));
-        RECT rr = ToRECT(r);
-        FrameRect(hdc, &rr, br);
-        DeleteObject(br);
+        COLORREF bg = ThemeControlBackgroundColor();
+        gfx->FillRect(r, bg);
+        gfx->DrawRect(r, AccentColor(bg, 40));
     }
     if (icon) {
-        BlitPixmapAlpha(icon, hdc, {r.x, r.y, icon->width, icon->height});
+        gfx->DrawPixmap(icon, {r.x, r.y, icon->width, icon->height});
     }
 }
 
@@ -1887,11 +1885,12 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     }
     Str path = fs->filePath;
     TempStr fileName = path::GetBaseNameTemp(path);
-    UINT nameFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
+    u32 nameFmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
     SelectObject(hdc, fontText);
     {
-        DrawMaybeHighlightedText(hdc, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor,
-                                 isRtl, false, nameFmt);
+        GfxHdc gfx(hdc);
+        DrawMaybeHighlightedText(&gfx, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor,
+                                 isRtl, false, nameFmt, GetPlatformFont(fontText));
     }
 
     // directory path, right-aligned and muted, in the space the file name doesn't need.
@@ -1927,17 +1926,13 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
 // a white circle with a black "?" inside: the home page's affordance for the
 // keyboard-shortcuts sheet. The disc is drawn with GDI+ so its edge is smooth;
 // nothing is painted outside it, so the page background shows through.
-static void DrawHomeHelpButton(HDC hdc, Rect r) {
-    Gdiplus::Graphics g(hdc);
-    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    Gdiplus::SolidBrush white(Gdiplus::Color(255, 255, 255, 255));
-    g.FillEllipse(&white, r.x, r.y, r.dx - 1, r.dy - 1);
-
-    HFONT font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    int oldBk = SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, RGB(0, 0, 0));
-    HdcDrawText(hdc, "?", r, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX, font);
-    SetBkMode(hdc, oldBk);
+static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
+    gfx->FillEllipse(r, RGB(255, 255, 255));
+    // the screen dc is only for sizing the font (it is cached and interned by
+    // both helpers, so this doesn't create anything per paint)
+    AutoReleaseDC dc(nullptr);
+    PlatformFont* font = GetPlatformFont(HdcCreateSimpleFont(dc, "MS Shell Dlg", 14));
+    gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, RGB(0, 0, 0));
 }
 
 // What the home page list drew for each row: the path, the size text as drawn,
@@ -1985,7 +1980,7 @@ HomeViewIconCtrl::HomeViewIconCtrl() {
 
 void HomeViewIconCtrl::Paint(VirtPaintCtx& ctx) {
     bool selected = (listView == HomePageIsListView());
-    DrawHomeViewButton(GfxGetHdc(ctx.gfx), pixmap, ctx.bounds, selected);
+    DrawHomeViewButton(ctx.gfx, pixmap, ctx.bounds, selected);
 }
 
 HomeOpenDocCtrl::HomeOpenDocCtrl() {
@@ -2006,7 +2001,7 @@ HomeHelpBtnCtrl::HomeHelpBtnCtrl() {
 }
 
 void HomeHelpBtnCtrl::Paint(VirtPaintCtx& ctx) {
-    DrawHomeHelpButton(GfxGetHdc(ctx.gfx), ctx.bounds);
+    DrawHomeHelpButton(ctx.gfx, ctx.bounds);
 }
 
 //--- tip links
@@ -2524,12 +2519,13 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         const Rect& rect = thumb.rcText;
         Str path = fs->filePath;
         TempStr fileName = path::GetBaseNameTemp(path);
-        UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
+        u32 fmt = gfxTextEllipsis | (isRtl ? gfxTextRight : gfxTextLeft);
 
         SelectObject(hdc, fontText);
         {
-            DrawMaybeHighlightedText(hdc, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
-                                     fmt);
+            GfxHdc gfx(hdc);
+            DrawMaybeHighlightedText(&gfx, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
+                                     fmt, GetPlatformFont(fontText));
         }
 
         GetFileStateIcon(fs);

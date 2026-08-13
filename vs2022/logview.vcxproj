@@ -972,6 +972,7 @@
     <ClCompile Include="..\src\tools\logview\logview.cpp" />
     <ClCompile Include="..\src\wingui\ControlBase.cpp" />
     <ClCompile Include="..\src\wingui\Edit.cpp" />
+    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp" />
     <ClCompile Include="..\src\wingui\Gfx_win.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\PlatformFont.cpp" />

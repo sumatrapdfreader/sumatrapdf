@@ -233,10 +233,8 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
     }
 
     VirtListBox* lb = ev->listBox;
-    HDC hdc = GfxGetHdc(ev->gfx);
+    Gfx* gfx = ev->gfx;
     Rect rc = ev->itemRect;
-    // the whole virtual tree paints into one DC, so leave it as we found it
-    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -244,15 +242,7 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
         colBg = AccentColor(colBg, 30);
     }
 
-    SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, rc);
-
-    SetTextColor(hdc, colText);
-    SetBkMode(hdc, TRANSPARENT);
-
-    if (lb->font) {
-        SelectFont(hdc, lb->font->GetHFont());
-    }
+    gfx->FillRect(rc, colBg);
 
     int padX = DpiScale(lb->GetHwnd(), 4);
     rc.x += padX;
@@ -260,19 +250,13 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
 
     // draw group name on the left
     Str name = w->model->Item(ev->itemIndex);
-    uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT;
-    HdcDrawText(hdc, name, rc, fmt);
+    gfx->DrawText(name, rc, gfxTextVCenter | gfxTextLeft, lb->font, colText);
 
     // draw tab count on the right
     int nTabs = w->model->TabCount(ev->itemIndex);
     char buf[32];
     snprintf(buf, sizeof(buf), "%d tabs", nTabs);
-    COLORREF rightCol = AccentColor(colText, 80);
-    SetTextColor(hdc, rightCol);
-    fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT;
-    HdcDrawText(hdc, Str(buf), rc, fmt);
-
-    RestoreDC(hdc, savedDC);
+    gfx->DrawText(Str(buf), rc, gfxTextVCenter | gfxTextRight, lb->font, AccentColor(colText, 80));
 }
 
 static void OnListDoubleClick(TabGroupsWnd* w) {

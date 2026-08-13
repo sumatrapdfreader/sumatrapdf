@@ -573,12 +573,10 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         return;
     }
 
-    HDC hdc = GfxGetHdc(ev->gfx);
+    Gfx* gfx = ev->gfx;
     HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
     NavFileEntry& e = m->entries[ev->itemIndex];
-    // the whole virtual tree paints into one DC, so leave it as we found it
-    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -587,20 +585,12 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         colBg = AccentColor(colBg, 30);
     }
 
-    SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, rc);
+    gfx->FillRect(rc, colBg);
 
-    // drawing text into a mirrored DC would mirror the glyphs; we lay the row
-    // out right-to-left ourselves instead
+    // drawing text into a mirrored surface would mirror the glyphs; we lay the
+    // row out right-to-left ourselves instead
     bool isRtl = HwndIsRtl(hwndList);
-    DWORD prevLayout = isRtl ? SetLayout(hdc, 0) : 0;
-
-    SetTextColor(hdc, colText);
-    SetBkMode(hdc, TRANSPARENT);
-
-    if (lb->font) {
-        SelectFont(hdc, lb->font->GetHFont());
-    }
+    bool prevMirrored = isRtl ? gfx->SetMirrored(false) : false;
 
     int padX = DpiScale(hwndList, 4);
     rc.x += padX;
@@ -608,12 +598,11 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     // human readable file size on the right (files only; include 0-byte files)
     Rect rcText = rc;
-    TempWStr rightW = nullptr;
+    TempStr sizeStr = nullptr;
     int rightDx = 0;
     if (!e.isDir) {
-        TempStr sizeStr = str::FormatSizeShortTemp(e.size);
-        rightW = ToWStrTemp(sizeStr);
-        rightDx = HdcGetTextExtentPoint32(hdc, sizeStr).dx;
+        sizeStr = str::FormatSizeShortTemp(e.size);
+        rightDx = gfx->MeasureText(sizeStr, lb->font).dx;
         int gap = DpiScale(hwndList, 8);
         if (isRtl) {
             rcText.x += rightDx + gap;
@@ -624,32 +613,28 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     }
 
     {
-        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
-        drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
-        TempWStr nameW = ToWStrTemp(e.name);
-        HdcDrawText(hdc, nameW, rcText, drawFmt);
+        u32 drawFmt = gfxTextEllipsis | gfxTextVCenter;
+        drawFmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+        gfx->DrawText(e.name, rcText, drawFmt, lb->font, colText);
     }
 
-    if (rightW) {
+    if (sizeStr) {
         Rect rcRight = rc;
-        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+        u32 drawFmt = gfxTextVCenter;
         if (isRtl) {
             rcRight.dx = rightDx;
-            drawFmt |= DT_LEFT | DT_RTLREADING;
+            drawFmt |= gfxTextLeft | gfxTextRtl;
         } else {
             rcRight.x = rc.x + rc.dx - rightDx;
             rcRight.dx = rightDx;
-            drawFmt |= DT_RIGHT;
+            drawFmt |= gfxTextRight;
         }
-        SetTextColor(hdc, AccentColor(colText, 80));
-        HdcDrawText(hdc, rightW, rcRight, drawFmt);
-        SetTextColor(hdc, colText);
+        gfx->DrawText(sizeStr, rcRight, drawFmt, lb->font, AccentColor(colText, 80));
     }
 
     if (isRtl) {
-        SetLayout(hdc, prevLayout);
+        gfx->SetMirrored(prevMirrored);
     }
-    RestoreDC(hdc, savedDC);
 }
 
 // non-client (frame) size for an outer width/height of the given client size

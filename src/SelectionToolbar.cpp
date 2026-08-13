@@ -5,7 +5,6 @@
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 #include "base/Dpi.h"
-#include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
 
 #include "wingui/UIModels.h"
@@ -200,36 +199,6 @@ static COLORREF SelBarHoverBg(COLORREF bg) {
     return AccentColor(bg, 10);
 }
 
-static Gdiplus::Color GdipColor(COLORREF col) {
-    return {255, GetRValue(col), GetGValue(col), GetBValue(col)};
-}
-
-static void AddRoundedRectPath(Gdiplus::GraphicsPath& path, const Rect& rc, int d) {
-    path.AddArc(rc.x, rc.y, d, d, 180, 90);
-    path.AddArc(rc.x + rc.dx - d - 1, rc.y, d, d, 270, 90);
-    path.AddArc(rc.x + rc.dx - d - 1, rc.y + rc.dy - d - 1, d, d, 0, 90);
-    path.AddArc(rc.x, rc.y + rc.dy - d - 1, d, d, 90, 90);
-    path.CloseFigure();
-}
-
-static void FillRoundedRect(HDC hdc, const Rect& rc, int radius, COLORREF col) {
-    Gdiplus::Graphics g(hdc);
-    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    Gdiplus::SolidBrush br(GdipColor(col));
-    Gdiplus::GraphicsPath path;
-    AddRoundedRectPath(path, rc, radius);
-    g.FillPath(&br, &path);
-}
-
-static void StrokeRoundedRect(HDC hdc, const Rect& rc, int radius, COLORREF col) {
-    Gdiplus::Graphics g(hdc);
-    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    Gdiplus::Pen pen(GdipColor(col), 1);
-    Gdiplus::GraphicsPath path;
-    AddRoundedRectPath(path, rc, radius);
-    g.DrawPath(&pen, &path);
-}
-
 // Clip the popup to a rounded rect. Use the intended layout size — not
 // HwndClientRect — because CreateWindow starts at 0x0 and client rect is still empty
 // until after SetWindowPos (a 1x1 region left the toolbar invisible).
@@ -313,7 +282,7 @@ struct SelToolbarTextButton : VirtButton {
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
             int radius = DpiScale(GetHwnd(), kButtonRadius);
-            FillRoundedRect(GfxGetHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
+            ctx.gfx->FillRoundedRect(ctx.bounds, radius, hoverBg);
         }
         VirtButton::Paint(ctx);
     }
@@ -324,7 +293,7 @@ struct SelToolbarIconButton : VirtIconButton {
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
             int radius = DpiScale(GetHwnd(), kButtonRadius);
-            FillRoundedRect(GfxGetHdc(ctx.gfx), ctx.bounds, radius, hoverBg);
+            ctx.gfx->FillRoundedRect(ctx.bounds, radius, hoverBg);
         }
         VirtIconButton::Paint(ctx);
     }
@@ -437,14 +406,13 @@ static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
     Rect rc = HwndClientRect(hwnd);
     int cornerRadius = DpiScale(hwnd, kCornerRadius);
 
-    FillRoundedRect(hdc, rc, cornerRadius, SelBarBg());
-    StrokeRoundedRect(hdc, rc, cornerRadius, SelBarBorderColor());
+    GfxHdc gfx(hdc);
+    gfx.FillRoundedRect(rc, cornerRadius, SelBarBg(), SelBarBorderColor());
 
     if (!tb->vroot) {
         return;
     }
     SetBkMode(hdc, TRANSPARENT);
-    GfxHdc gfx(hdc);
     tb->vroot->Paint(&gfx, rc);
 }
 

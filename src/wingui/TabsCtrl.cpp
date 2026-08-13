@@ -214,66 +214,46 @@ bool TabCtrl::CloseVisible() {
 }
 
 void TabCtrl::Paint(VirtPaintCtx& ctx) {
-    HDC hdc = GfxGetHdc(ctx.gfx);
+    Gfx* gfx = ctx.gfx;
     HWND hwnd = GetHwnd();
     Rect r = ctx.bounds;
     COLORREF tabBgCol = BgColor();
     COLORREF textColor = TabTextColorForBackground(tabBgCol);
 
-    Graphics gfx(hdc);
-    gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
-    gfx.SetCompositingQuality(CompositingQualityHighQuality);
-    gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);
-    gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-    gfx.SetPageUnit(UnitPixel);
-
-    SolidBrush br(GdipCol(tabBgCol));
-    gfx.FillRectangle(&br, ToGdipRect(r));
+    gfx->FillRect(r, tabBgCol);
 
     bool isRtl = IsTabsRtl(hwnd);
-    StringFormat sf(StringFormat::GenericDefault());
-    sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
-    sf.SetLineAlignment(StringAlignmentCenter);
-    sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
-    if (isRtl) {
-        sf.SetAlignment(Gdiplus::StringAlignmentFar);
-    }
+    PlatformFont* font = GetPlatformFont(tabsCtrl->GetFont());
 
     // draw text — inset from the close glyph (size varies with tab height)
-    gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
-    Gdiplus::RectF rTxt = ToGdipRectF(r);
+    Rect rTxt = r;
     int textPad = DpiScale(hwnd, 8);
     int textGap = DpiScale(hwnd, 4);
     if (isRtl) {
         // RTL: close on the left — text after the close circle
         int textLeft = rClose.x + rClose.dx + textGap;
-        rTxt.X = (Gdiplus::REAL)textLeft;
-        rTxt.Width = (Gdiplus::REAL)std::max(0, (r.x + r.dx - textPad) - textLeft);
+        rTxt.x = textLeft;
+        rTxt.dx = std::max(0, (r.x + r.dx - textPad) - textLeft);
     } else {
         // LTR: close on the right — text before the close circle
-        rTxt.X = (Gdiplus::REAL)(r.x + textPad);
-        rTxt.Width = (Gdiplus::REAL)std::max(0, rClose.x - textGap - (int)rTxt.X);
+        rTxt.x = r.x + textPad;
+        rTxt.dx = std::max(0, rClose.x - textGap - rTxt.x);
     }
-    Font f(hdc, tabsCtrl->GetFont());
-    br.SetColor(GdipCol(textColor));
-    WCHAR* ws = CWStrTemp(ti->text);
-    gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);
+    u32 fmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
+    gfx->DrawText(ti->text, rTxt, fmt, font, textColor);
 
     // draw red dot after tab text for dirty (unsaved) tabs
     if (ti->isDirty) {
-        gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-        // measure actual rendered text width (may be truncated with ellipsis)
-        Gdiplus::RectF textBounds;
-        gfx.MeasureString(ws, -1, &f, rTxt, &sf, &textBounds);
         int dotRadius = DpiScale(hwnd, 3);
-        int dotX = (int)(textBounds.X + textBounds.Width) + dotRadius;
+        // the text may have been ellipsized, so the dot goes after whichever is
+        // narrower: the text or the room it had
+        int textDx = std::min(gfx->MeasureText(ti->text, font).dx, rTxt.dx);
+        int textEnd = isRtl ? rTxt.Right() : rTxt.x + textDx;
         // clamp to not exceed the text area
-        int maxX = (int)(rTxt.X + rTxt.Width) - (dotRadius * 2);
-        dotX = std::min(dotX, maxX);
+        int maxX = rTxt.Right() - (dotRadius * 2);
+        int dotX = std::min(textEnd + dotRadius, maxX);
         int dotY = r.y + ((r.dy - (dotRadius * 2)) / 2);
-        SolidBrush redBr(Color(255, 0xEE, 0x22, 0x22));
-        gfx.FillEllipse(&redBr, dotX, dotY, dotRadius * 2, dotRadius * 2);
-        gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);
+        gfx->FillEllipse({dotX, dotY, dotRadius * 2, dotRadius * 2}, RGB(0xEE, 0x22, 0x22));
     }
 
     // the ✕ blends into the tab, so it takes the tab's background

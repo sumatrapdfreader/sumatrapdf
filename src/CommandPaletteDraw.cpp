@@ -36,11 +36,9 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         return;
     }
 
-    HDC hdc = GfxGetHdc(ev->gfx);
+    Gfx* gfx = ev->gfx;
     HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
-    // the whole virtual tree paints into one DC, so leave it as we found it
-    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -48,13 +46,12 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         colBg = AccentColor(colBg, 30);
     }
 
-    SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, rc);
+    gfx->FillRect(rc, colBg);
 
-    // drawing text into a mirrored DC would mirror the glyphs; we lay the row
-    // out right-to-left ourselves instead
+    // drawing text into a mirrored surface would mirror the glyphs; we lay the
+    // row out right-to-left ourselves instead
     bool isRtl = HwndIsRtl(hwndList);
-    DWORD prevLayout = isRtl ? SetLayout(hdc, 0) : 0;
+    bool prevMirrored = isRtl ? gfx->SetMirrored(false) : false;
 
     Str itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
@@ -70,13 +67,6 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         rightStr = fmt("p%d", data->pageNo);
     } else if (data->filePath) {
         rightStr = path::GetDirTemp(data->filePath);
-    }
-
-    SetTextColor(hdc, colText);
-    SetBkMode(hdc, TRANSPARENT);
-
-    if (lb->font) {
-        SelectFont(hdc, lb->font->GetHFont());
     }
 
     int padX = DpiScale(hwndList, 4);
@@ -97,12 +87,11 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     // is always visible; the item text gets the remaining space and is
     // ellipsized when too long.
     Rect rcText = rc;
-    TempWStr rightStrW = nullptr;
+    bool hasRight = rightStr && rightStr.s[0];
     int rightW = 0;
-    if (rightStr && rightStr.s[0]) {
-        rightStrW = ToWStrTemp(rightStr);
+    if (hasRight) {
         int gap = DpiScale(hwndList, 8);
-        rightW = HdcGetTextExtentPoint32(hdc, rightStr).dx;
+        rightW = gfx->MeasureText(rightStr, lb->font).dx;
         if (isRtl) {
             rcText.x += rightW + gap;
             rcText.dx -= rightW + gap;
@@ -112,30 +101,27 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     }
 
     {
-        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
-        drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
-        DrawMaybeHighlightedText(hdc, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
+        u32 drawFmt = gfxTextEllipsis | gfxTextVCenter;
+        drawFmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+        DrawMaybeHighlightedText(gfx, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt,
+                                 lb->font, colText);
     }
 
-    if (rightStrW) {
+    if (hasRight) {
         Rect rcRight = rc;
-        uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+        u32 rightFmt = gfxTextVCenter;
         if (isRtl) {
             rcRight.dx = rightW;
-            fmt |= DT_LEFT | DT_RTLREADING;
+            rightFmt |= gfxTextLeft | gfxTextRtl;
         } else {
             rcRight.x += rcRight.dx - rightW;
             rcRight.dx = rightW;
-            fmt |= DT_RIGHT;
+            rightFmt |= gfxTextRight;
         }
-        COLORREF rightCol = AccentColor(colText, 80);
-        SetTextColor(hdc, rightCol);
-        HdcDrawText(hdc, rightStrW, rcRight, fmt);
-        SetTextColor(hdc, colText);
+        gfx->DrawText(rightStr, rcRight, rightFmt, lb->font, AccentColor(colText, 80));
     }
 
     if (isRtl) {
-        SetLayout(hdc, prevLayout);
+        gfx->SetMirrored(prevMirrored);
     }
-    RestoreDC(hdc, savedDC);
 }

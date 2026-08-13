@@ -318,23 +318,14 @@ void KbKeyCaps::Paint(VirtPaintCtx& ctx) {
     int x = r.x;
     int y = r.y + ((r.dy - capDy) / 2);
 
-    HDC hdc = GfxGetHdc(ctx.gfx);
-    HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
-    HBRUSH br = CreateSolidBrush(capBg);
-    HGDIOBJ oldPen = SelectObject(hdc, pen);
-    HGDIOBJ oldBr = SelectObject(hdc, br);
     for (int i = 0; i < n; i++) {
         Str tok = toks.At(i);
         int dx = PlatformFontMeasureText(font, tok).dx + (2 * capPadX);
-        RoundRect(hdc, x, y, x + dx, y + capDy, radius, radius);
         Rect capRc{x, y, dx, capDy};
-        ctx.gfx->DrawText(tok, capRc, gfxTextCenter | gfxTextEllipsis, font, txt);
+        ctx.gfx->FillRoundedRect(capRc, radius, capBg, capBorder);
+        ctx.gfx->DrawText(tok, capRc, gfxTextCenter | gfxTextVCenter | gfxTextEllipsis, font, txt);
         x += dx + capGap;
     }
-    SelectObject(hdc, oldPen);
-    SelectObject(hdc, oldBr);
-    DeleteObject(pen);
-    DeleteObject(br);
 }
 
 //--- building the sheet

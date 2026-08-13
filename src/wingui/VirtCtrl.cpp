@@ -1492,10 +1492,8 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
         colSel = AccentColor(colBg, isFocused ? 45 : 25);
     }
 
-    HDC hdc = GfxGetHdc(ctx.gfx);
-    int savedDC = SaveDC(hdc);
     // rows at the top and bottom of the viewport can be cut in half by it
-    IntersectClipRect(hdc, clip.x, clip.y, clip.Right(), clip.Bottom());
+    ctx.gfx->PushClip(clip);
     for (int i = first; i <= last; i++) {
         Rect r = {items.x, items.y + (i * dy) - scrollY, items.dx, dy};
         bool isSel = (i == selIdx);
@@ -1513,16 +1511,15 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
             }
             Rect rt = r;
             rt.SubLR(DpiScaleByDpi(GetDpi(), 4), 0);
-            ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis, font, textColor);
+            ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis | gfxTextVCenter, font, textColor);
         }
     }
     // the dotted ring around the list says the keys go here, the same way a
     // win32 listbox does it
     if (isFocused) {
-        RECT rr = ToRECT(items);
-        DrawFocusRect(hdc, &rr);
+        ctx.gfx->DrawFocusRect(items);
     }
-    RestoreDC(hdc, savedDC);
+    ctx.gfx->PopClip();
 
     Rect thumb = ThumbRectLocal();
     if (thumb.IsEmpty()) {
@@ -1924,9 +1921,9 @@ void VirtText::Paint(VirtPaintCtx& ctx) {
     }
     u32 fmt = 0;
     if (pathEllipsis) {
-        fmt |= gfxTextPathEllipsis;
+        fmt |= gfxTextPathEllipsis | gfxTextVCenter;
     } else if (ellipsis) {
-        fmt |= gfxTextEllipsis;
+        fmt |= gfxTextEllipsis | gfxTextVCenter;
     }
     if (isRtl) {
         fmt |= gfxTextRtl;
@@ -2159,17 +2156,12 @@ void VirtCloseButton::Paint(VirtPaintCtx& ctx) {
     // the glyph goes in the content rect, so padding makes the hit area bigger
     // than the ✕ itself (the tab bar's close gutter)
     Rect r = ctx.content;
-    Gdiplus::Graphics g(GfxGetHdc(ctx.gfx));
-    g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
-    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    g.SetPageUnit(Gdiplus::UnitPixel);
-    // gdiplus doesn't pick up the window's orientation from the device context,
-    // so mirroring has to be explicit
+    Gfx* gfx = ctx.gfx;
+    // the tree paints into an unmirrored buffer that is flipped as a whole for a
+    // right-to-left window, so the glyph is placed as if it had been mirrored
     HWND hwnd = GetHwnd();
-    if (HwndIsRtl(hwnd)) {
-        g.ScaleTransform(-1, 1);
-        g.TranslateTransform((float)HwndClientRect(hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
-    }
+    int mirrorDx = HwndIsRtl(hwnd) ? HwndClientRect(hwnd).dx : 0;
+    auto mirrorX = [mirrorDx](int x) { return mirrorDx ? mirrorDx - x : x; };
 
     // slightly translucent when it sits on content it doesn't own
     u8 a = (withCircle && !isHover) ? 215 : 255;
@@ -2180,18 +2172,20 @@ void VirtCloseButton::Paint(VirtPaintCtx& ctx) {
         circle = MkGray(0xff);
     }
     if (isHover || withCircle) {
-        Gdiplus::SolidBrush br(Gdiplus::Color(a, GetRValue(circle), GetGValue(circle), GetBValue(circle)));
-        g.FillEllipse(&br, r.x, r.y, r.dx - 1, r.dy - 1);
+        Rect er = r;
+        if (mirrorDx) {
+            er.x = mirrorX(r.x + r.dx - 1);
+        }
+        gfx->FillEllipse(er, circle, a);
     }
 
     COLORREF xcol = isHover ? xColorHover : xColor;
     if (xcol == kColorUnset) {
         xcol = isHover ? kColCloseXHover : kColCloseX;
     }
-    Gdiplus::Pen pen(Gdiplus::Color(a, GetRValue(xcol), GetGValue(xcol), GetBValue(xcol)), 2.0f);
     int pad = r.dx / 3;
-    g.DrawLine(&pen, r.x + pad, r.y + pad, r.x + r.dx - pad, r.y + r.dy - pad);
-    g.DrawLine(&pen, r.x + r.dx - pad, r.y + pad, r.x + pad, r.y + r.dy - pad);
+    gfx->DrawLineAA({mirrorX(r.x + pad), r.y + pad}, {mirrorX(r.x + r.dx - pad), r.y + r.dy - pad}, xcol, 2.0f, a);
+    gfx->DrawLineAA({mirrorX(r.x + r.dx - pad), r.y + pad}, {mirrorX(r.x + pad), r.y + r.dy - pad}, xcol, 2.0f, a);
 }
 
 void VirtCloseButton::OnMouseEnter() {
@@ -3262,8 +3256,8 @@ void VirtRichText::SetBounds(Rect r) {
 // draws the words (link words in linkColor, underlined; others in textColor;
 // isKbd words as key-caps like the keyboard help sheet)
 void VirtRichText::Paint(VirtPaintCtx& ctx) {
-    HDC hdc = GfxGetHdc(ctx.gfx);
-    uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
+    Gfx* gfx = ctx.gfx;
+    u32 fmt = gfxTextLeft | gfxTextNoClip | gfxTextSingleLine;
     PlatformFont* boldFont = nullptr;
     COLORREF textCol = textColor;
     COLORREF linkCol = (linkColor == kColorUnset) ? textCol : linkColor;
@@ -3281,32 +3275,19 @@ void VirtRichText::Paint(VirtPaintCtx& ctx) {
 
     for (TipWord* w = words.next; w; w = w->next) {
         if (w->isKbd) {
-            HPEN pen = CreatePen(PS_SOLID, 1, capBorder);
-            HBRUSH br = CreateSolidBrush(capBg);
-            HGDIOBJ oldPen = SelectObject(hdc, pen);
-            HGDIOBJ oldBr = SelectObject(hdc, br);
-            RoundRect(hdc, offX + w->x, offY + w->y, offX + w->x + w->dx, offY + w->y + w->dy, rad, rad);
-            SelectObject(hdc, oldPen);
-            SelectObject(hdc, oldBr);
-            DeleteObject(pen);
-            DeleteObject(br);
-            SetTextColor(hdc, textCol);
             Rect capRc{offX + w->x, offY + w->y, w->dx, w->dy};
-            HdcDrawText(hdc, w->text, capRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX,
-                        font ? font->GetHFont() : nullptr);
+            gfx->FillRoundedRect(capRc, rad, capBg, capBorder);
+            gfx->DrawText(w->text, capRc, gfxTextCenter | gfxTextVCenter, font, textCol);
             continue;
         }
         if (w->isBold && !boldFont) {
             boldFont = GetBoldPlatformFont(font);
         }
         Point pt = {offX + w->x, offY + w->y};
-        SetTextColor(hdc, w->isLink ? linkCol : textCol);
         PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
-        HdcDrawText(hdc, w->text, pt, fmt, use ? use->GetHFont() : nullptr);
+        gfx->DrawTextAt(w->text, pt, fmt, use, w->isLink ? linkCol : textCol);
     }
     // underline each link
-    HPEN pen = CreatePen(PS_SOLID, 1, linkCol);
-    HGDIOBJ prevPen = SelectObject(hdc, pen);
     for (TipLink* link = links.next; link; link = link->next) {
         TipWord* first = link->firstWord;
         TipWord* last = link->lastWord;
@@ -3316,10 +3297,8 @@ void VirtRichText::Paint(VirtPaintCtx& ctx) {
         int underlineY = offY + first->y + first->dy - 3;
         int x1 = offX + first->x;
         int x2 = offX + last->x + last->dx;
-        HdcDrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
+        gfx->DrawLine(Rect(x1, underlineY, x2 - x1, 0), linkCol);
     }
-    SelectObject(hdc, prevPen);
-    DeleteObject(pen);
 }
 
 // the link under a point in our own coordinates, or null

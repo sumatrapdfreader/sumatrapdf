@@ -338,15 +338,13 @@ struct CommentText : VirtRichText {
     // the box is a fixed number of lines, so a longer comment has to be cut off
     // rather than spill over the hints below it
     void Paint(VirtPaintCtx& ctx) override {
-        HDC hdc = GfxGetHdc(ctx.gfx);
         Rect clip = ctx.bounds.Intersect(ctx.clip);
         if (clip.IsEmpty()) {
             return;
         }
-        int savedDC = SaveDC(hdc);
-        IntersectClipRect(hdc, clip.x, clip.y, clip.Right(), clip.Bottom());
+        ctx.gfx->PushClip(clip);
         VirtRichText::Paint(ctx);
-        RestoreDC(hdc, savedDC);
+        ctx.gfx->PopClip();
     }
 
     // Reset() drops the word layout, so re-wrap to the width we already have
@@ -562,10 +560,8 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         return;
     }
 
-    HDC hdc = GfxGetHdc(ev->gfx);
+    Gfx* gfx = ev->gfx;
     Rect rc = ev->itemRect;
-    // the whole virtual tree paints into one DC, so leave it as we found it
-    int savedDC = SaveDC(hdc);
 
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
@@ -573,8 +569,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         colBg = AccentColor(colBg, 30);
     }
 
-    SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, rc);
+    gfx->FillRect(rc, colBg);
 
     HFONT fontNormal = font ? font : GetAppFont(hwnd);
 
@@ -583,27 +578,19 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     HFONT nameFont = (item->changed && fontBold) ? fontBold : fontNormal;
     HFONT valFont = (SettingDiffersFromDefault(item) && fontBold) ? fontBold : fontNormal;
 
-    SetTextColor(hdc, colText);
-    SetBkMode(hdc, TRANSPARENT);
-
     Rect rcName{}, rcVal{};
     AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
 
     bool isRtl = HwndIsRtl(lb->GetHwnd());
-    SelectObject(hdc, nameFont);
     // yellow/accent underlays on matched filter tokens (same as command palette)
-    uint nameFmt = DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS;
-    if (isRtl) {
-        nameFmt = DT_RIGHT | DT_RTLREADING | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS;
-    }
-    DrawMaybeHighlightedText(hdc, rcName, item->name, filterWords, highlighted, colBg, isRtl, false, nameFmt);
+    u32 nameFmt = gfxTextEllipsis | gfxTextVCenter;
+    nameFmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+    DrawMaybeHighlightedText(gfx, rcName, item->name, filterWords, highlighted, colBg, isRtl, false, nameFmt,
+                             GetPlatformFont(nameFont), colText);
 
     TempStr val = FormatSettingValueTemp(item);
-    SelectObject(hdc, valFont);
-    TempWStr ws = ToWStrTemp(val);
-    HdcDrawText(hdc, ws, rcVal, DT_RIGHT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
-
-    RestoreDC(hdc, savedDC);
+    u32 valFmt = gfxTextEllipsis | gfxTextVCenter | gfxTextRight;
+    gfx->DrawText(val, rcVal, valFmt, GetPlatformFont(valFont), colText);
 }
 
 // in-place editor sits in the value column (same split as DrawListBoxItem)

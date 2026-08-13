@@ -23,10 +23,6 @@
 #include "Notifications.h"
 #include "Theme.h"
 
-using Gdiplus::Graphics;
-using Gdiplus::Pen;
-using Gdiplus::SolidBrush;
-
 static StrNode* gDelayedNotifications = nullptr;
 
 Kind kNotifCursorPos = "cursorPosHelper";
@@ -61,8 +57,8 @@ struct NotifColors {
 struct NotifTextCtrl : VirtCtrl {
     NotificationWnd* notif = nullptr;
     VirtRichText* rich = nullptr; // owned, as our only child
-    // DT_* format for drawing a plain message, set in NotificationWnd::Layout()
-    uint txtFmt = DT_SINGLELINE | DT_NOPREFIX;
+    // gfxText* flags for drawing a plain message, set in NotificationWnd::Layout()
+    u32 txtFmt = gfxTextSingleLine;
     Size idealSize;
 
     NotifTextCtrl();
@@ -497,7 +493,7 @@ void NotificationWnd::Layout(Str message) {
         if (drawRich) {
             // rich text: the words lay themselves out (links included). Note: no
             // RTL word reordering, same as the home page tips.
-            txtCtrl->txtFmt = DT_LEFT | DT_NOPREFIX;
+            txtCtrl->txtFmt = gfxTextLeft;
             parsed->font = GetPlatformFont(font);
             // link commands go to the top-level window (the main frame)
             parsed->hwndForCmds = GetAncestor(hwnd, GA_ROOT);
@@ -516,8 +512,10 @@ void NotificationWnd::Layout(Str message) {
                 HwndSetText(hwnd, message);
             }
             uint fmt = DT_SINGLELINE | DT_NOPREFIX;
+            u32 gfxFmt = gfxTextSingleLine;
             if (isRtl) {
                 fmt |= DT_RIGHT | DT_RTLREADING;
+                gfxFmt |= gfxTextRight | gfxTextRtl;
             }
             HDC hdc = GetDC(hwnd);
             szText = HdcMeasureText(hdc, message, fmt, font);
@@ -525,11 +523,12 @@ void NotificationWnd::Layout(Str message) {
                 // too wide: word-wrap the message; DT_WORD_ELLIPSIS truncates
                 // words too long to wrap (e.g. long file paths)
                 fmt = DT_WORDBREAK | DT_WORD_ELLIPSIS | DT_NOPREFIX;
+                gfxFmt = gfxTextWrap | gfxTextEllipsis;
                 szText = HdcMeasureText(hdc, message, maxTextDx, fmt, font);
                 szText.dx = std::min(szText.dx, maxTextDx);
             }
             ReleaseDC(hwnd, hdc);
-            txtCtrl->txtFmt = fmt;
+            txtCtrl->txtFmt = gfxFmt;
             delete parsed;
         }
         txtCtrl->idealSize = szText;
@@ -695,7 +694,8 @@ void NotifTextCtrl::Paint(VirtPaintCtx& ctx) {
         return;
     }
     TempStr text = HwndGetTextTemp(notif->hwnd);
-    HdcDrawText(GfxGetHdc(ctx.gfx), text, ctx.content, txtFmt, notif->font);
+    NotifColors cols = notif->Colors();
+    ctx.gfx->DrawText(text, ctx.content, txtFmt, GetPlatformFont(notif->font), cols.txt);
 }
 
 NotifProgressCtrl::NotifProgressCtrl() {
@@ -708,19 +708,13 @@ void NotifProgressCtrl::Paint(VirtPaintCtx& ctx) {
     int progressWidth = rc.dx;
 
     COLORREF col = ThemeNotificationsProgressColor();
-    Graphics graphics(GfxGetHdc(ctx.gfx));
-    Pen pen(GdiRgbFromCOLORREF(col));
-    auto grc = Gdiplus::Rect(rc.x, rc.y, rc.dx, rc.dy);
-    graphics.DrawRectangle(&pen, grc);
+    ctx.gfx->DrawRect(rc, col);
 
     rc.x += 2;
     rc.dx = (progressWidth - 3) * notif->progressPerc / 100;
     rc.y += 2;
     rc.dy -= 3;
-
-    SolidBrush br(GdiRgbFromCOLORREF(col));
-    grc = {rc.x, rc.y, rc.dx, rc.dy};
-    graphics.FillRectangle(&br, grc);
+    ctx.gfx->FillRect(rc, col);
 }
 
 void NotificationWnd::UpdateMessage(Str msg, int timeoutMs, bool highlight) {

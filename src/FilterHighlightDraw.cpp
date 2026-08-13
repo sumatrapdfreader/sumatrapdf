@@ -5,6 +5,9 @@
 #include "base/Win.h"
 #include "base/Dpi.h"
 
+#include "wingui/PlatformFont.h"
+#include "wingui/Gfx.h"
+
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
 
@@ -18,11 +21,12 @@ static bool IsWordByte(u8 b) {
     return IsCharAlphaNumericW((WCHAR)b) || b == '_';
 }
 
-void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
-                              COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt) {
+void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
+                              COLORREF colBg, bool isRtl, bool matchWholeWord, u32 drawFlags, PlatformFont* font,
+                              COLORREF colText) {
     int nWords = len(filterWords);
     if (nWords == 0) {
-        HdcDrawText(hdc, text, rc, drawFmt);
+        gfx->DrawText(text, rc, drawFlags, font, colText);
         return;
     }
 
@@ -85,26 +89,18 @@ void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWo
         }
     }
 
-    TempWStr textW = ToWStrTemp(text);
-
     // measure total string width for RTL positioning
     int strOriginX = rc.x;
     if (isRtl) {
-        Size sizeTotal = HdcGetTextExtentPoint32(hdc, textW);
+        Size sizeTotal = gfx->MeasureText(text, font);
         strOriginX = rc.x + rc.dx - sizeTotal.dx;
     }
 
     // compute pixel rectangles for each highlighted range
     Rect highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
-        TempWStr prefixToStart = ToWStrTemp(Str(text.s, byteRanges[i].start));
-        int wStart = len(prefixToStart);
-        TempWStr prefixToEnd = ToWStrTemp(Str(text.s, byteRanges[i].end));
-        int wEnd = len(prefixToEnd);
-
-        Size sizeStart = HdcGetTextExtentPoint32(hdc, WStr(textW.s, wStart));
-        Size sizeEnd = HdcGetTextExtentPoint32(hdc, WStr(textW.s, wEnd));
-
+        Size sizeStart = gfx->MeasureText(Str(text.s, byteRanges[i].start), font);
+        Size sizeEnd = gfx->MeasureText(Str(text.s, byteRanges[i].end), font);
         highlightRects[i] = {strOriginX + sizeStart.dx, rc.y, sizeEnd.dx - sizeStart.dx, rc.dy};
     }
 
@@ -116,21 +112,19 @@ void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWo
         } else {
             highlightCol = AccentColor(colBg, 40);
         }
-        HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
         for (int i = 0; i < nRanges; i++) {
             // highlightRects are computed from the full (untruncated) string, but
             // the text is drawn clipped/ellipsized to rc. Clip to rc so a match
             // in the truncated-away tail doesn't paint a stray box outside the label.
             Rect clipped = highlightRects[i].Intersect(rc);
             if (!clipped.IsEmpty()) {
-                HdcFillRect(hdc, clipped, hbrHighlight);
+                gfx->FillRect(clipped, highlightCol);
             }
         }
-        DeleteObject(hbrHighlight);
     }
 
     // draw the whole string at once over the highlights
-    HdcDrawText(hdc, textW, rc, drawFmt);
+    gfx->DrawText(text, rc, drawFlags, font, colText);
 }
 
 // Ink that stays readable on a solid highlight underlay (black on yellow).

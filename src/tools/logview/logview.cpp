@@ -939,59 +939,45 @@ struct TabBarCtrl : VirtCtrl {
 };
 
 void TabBarCtrl::Paint(VirtPaintCtx& ctx) {
-    HDC hdc = GfxGetHdc(ctx.gfx);
-    RECT client = ToRECT(ctx.bounds);
-    int savedDC = SaveDC(hdc);
-
-    HBRUSH bg = CreateSolidBrush(kColTabBar);
-    FillRect(hdc, &client, bg);
-    DeleteObject(bg);
-
-    SelectObject(hdc, gUiFont->GetHFont());
-    SetBkMode(hdc, TRANSPARENT);
+    Gfx* gfx = ctx.gfx;
+    Rect client = ctx.bounds;
+    gfx->FillRect(client, kColTabBar);
 
     gTabHits.Reset();
     int pad = DpiScale(8);
-    int x = client.left;
+    int x = client.x;
     int n = len(gTabs);
+    Str closeStr = StrL(" x");
     for (int i = 0; i < n; i++) {
         Tab* tab = gTabs[i];
-        WStr name = ToWStrTemp(tab->name);
-        WCHAR kbd[16];
-        wsprintfW(kbd, L" [%d]", i + 1);
+        TempStr kbd = fmt(" [%d]", i + 1);
 
-        SIZE szName{}, szKbd{}, szClose{};
-        GetTextExtentPoint32W(hdc, name.s, name.len, &szName);
-        GetTextExtentPoint32W(hdc, kbd, (int)wcslen(kbd), &szKbd);
-        GetTextExtentPoint32W(hdc, L" x", 2, &szClose);
+        Size szName = gfx->MeasureText(tab->name, gUiFont);
+        Size szKbd = gfx->MeasureText(kbd, gUiFont);
+        Size szClose = gfx->MeasureText(closeStr, gUiFont);
 
-        int tabW = pad + szName.cx + szKbd.cx + DpiScale(6) + szClose.cx + pad;
-        RECT rc{x, client.top, x + tabW, client.bottom};
+        int tabW = pad + szName.dx + szKbd.dx + DpiScale(6) + szClose.dx + pad;
+        Rect rc{x, client.y, tabW, client.dy};
 
         if (i == gSel) {
-            HBRUSH sel = CreateSolidBrush(kColTabSel);
-            FillRect(hdc, &rc, sel);
-            DeleteObject(sel);
+            gfx->FillRect(rc, kColTabSel);
         }
 
         int tx = x + pad;
-        int ty = client.top + (((client.bottom - client.top) - szName.cy) / 2);
-        SetTextColor(hdc, kColLogText);
-        ExtTextOutW(hdc, tx, ty, 0, nullptr, name.s, name.len, nullptr);
-        tx += szName.cx;
-        SetTextColor(hdc, kColKbd);
-        ExtTextOutW(hdc, tx, ty, 0, nullptr, kbd, (int)wcslen(kbd), nullptr);
-        tx += szKbd.cx + DpiScale(6);
+        int ty = client.y + ((client.dy - szName.dy) / 2);
+        u32 fmtTxt = gfxTextSingleLine | gfxTextNoClip;
+        gfx->DrawTextAt(tab->name, {tx, ty}, fmtTxt, gUiFont, kColLogText);
+        tx += szName.dx;
+        gfx->DrawTextAt(kbd, {tx, ty}, fmtTxt, gUiFont, kColKbd);
+        tx += szKbd.dx + DpiScale(6);
 
-        RECT rcClose{tx, ty, tx + szClose.cx, ty + szClose.cy};
-        SetTextColor(hdc, RGB(0x60, 0x60, 0x60));
-        ExtTextOutW(hdc, tx, ty, 0, nullptr, L" x", 2, nullptr);
+        Rect rcClose{tx, ty, szClose.dx, szClose.dy};
+        gfx->DrawTextAt(closeStr, {tx, ty}, fmtTxt, gUiFont, RGB(0x60, 0x60, 0x60));
 
-        gTabHits.Append(TabHit{rc, rcClose});
+        gTabHits.Append(TabHit{ToRECT(rc), ToRECT(rcClose)});
         x += tabW;
     }
 
-    RestoreDC(hdc, savedDC);
     ResetTempArena();
 }
 

@@ -1745,6 +1745,7 @@
     <ClCompile Include="..\src\wingui\DropDown.cpp" />
     <ClCompile Include="..\src\wingui\Edit.cpp" />
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
+    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp" />
     <ClCompile Include="..\src\wingui\Gfx_win.cpp" />
     <ClCompile Include="..\src\wingui\HtmlWindow.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />

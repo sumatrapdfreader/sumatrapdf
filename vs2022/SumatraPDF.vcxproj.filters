@@ -1103,6 +1103,9 @@
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\Gfx_win.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
