@@ -114,6 +114,7 @@
 #include "ChangeScrollbarDialog.h"
 #include "ChangeThemeDialog.h"
 #include "CustomZoomDialog.h"
+#include "GoToPageDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -7714,18 +7715,7 @@ static void OnMenuGoToPage(MainWindow* win) {
         }
     }
 
-    auto* ctrl = win->ctrl;
-    TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
-    Str pageLabelResult = Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels());
-    if (!pageLabelResult) {
-        return;
-    }
-
-    int newPageNo = ctrl->GetPageByLabel(pageLabelResult);
-    if (ctrl->ValidPageNo(newPageNo)) {
-        ctrl->GoToPage(newPageNo, true);
-    }
-    str::Free(pageLabelResult);
+    ShowGoToPageDialog(win);
 }
 
 void EnterFullScreen(MainWindow* win, bool presentation) {

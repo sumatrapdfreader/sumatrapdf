@@ -3,7 +3,6 @@
 
 struct GlobalPrefs;
 
-Str Dialog_GoToPage(HWND hwnd, Str currentPageLabel, int pageCount, bool onlyNumeric = true);
 Str Dialog_GetPassword(HWND hwnd, Str fileName, bool* rememberPassword, bool* showPassword);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
 bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs);

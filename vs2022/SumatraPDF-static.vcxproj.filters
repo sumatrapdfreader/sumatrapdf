@@ -228,6 +228,9 @@
     <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\GoToPageDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\GumboHelpers.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -726,6 +729,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GlobalPrefs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GoToPageDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GumboHelpers.cpp">
