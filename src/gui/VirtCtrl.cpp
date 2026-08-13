@@ -693,6 +693,7 @@ VirtCtrl* VirtRoot::WndFromPointForTooltip(Point ptWindow, Point* ptLocalOut) {
 }
 
 void VirtRoot::HideTooltip() {
+    tooltipWnd = nullptr;
     if (tooltip) {
         tooltip->Delete();
     }
@@ -715,6 +716,10 @@ void VirtRoot::UpdateTooltip(Point ptWindow) {
         HideTooltip();
         return;
     }
+    // already showing for this control: leave the bubble where it first appeared
+    if (w == tooltipWnd && tooltip && tooltip->Count() > 0) {
+        return;
+    }
     if (!tooltip && hwnd) {
         Tooltip::CreateArgs args;
         args.parent = hwnd;
@@ -723,6 +728,7 @@ void VirtRoot::UpdateTooltip(Point ptWindow) {
     }
     if (tooltip) {
         tooltip->SetSingle(tip, tipRc, false);
+        tooltipWnd = w;
     }
 }
 

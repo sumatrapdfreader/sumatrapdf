@@ -274,6 +274,7 @@ struct VirtRoot {
     VirtCtrl* focused = nullptr;
     VirtCtrl* pressed = nullptr;
     Tooltip* tooltip = nullptr;
+    VirtCtrl* tooltipWnd = nullptr; // control the tip is currently showing for
 
     bool needsLayout = true;
     // legacy single-tree hosts lay out lazily from Paint(); see SetChild()
