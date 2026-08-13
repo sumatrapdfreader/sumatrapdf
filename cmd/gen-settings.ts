@@ -175,6 +175,14 @@ const ebookUI: Field[] = [
     "",
     "if given, sets the canvas background color for ebook documents (epub, mobi etc.)",
   ).ver("3.7"),
+  field(
+    "DefaultDisplayMode",
+    Str,
+    "",
+    "default page layout for ebooks; empty uses the global DefaultDisplayMode. " +
+      "valid values: automatic, single page, facing, book view, continuous, " +
+      "continuous facing, continuous book view",
+  ).ver("3.7"),
 ];
 
 // the colors after LinkColor are optional: when empty they're derived from
@@ -421,6 +429,14 @@ const comicBookUI: Field[] = [
     Bool,
     false,
     "if true, absolute zoom never makes a page taller than the window (each page is capped at Fit Height)",
+  ).ver("3.7"),
+  field(
+    "DefaultDisplayMode",
+    Str,
+    "",
+    "default page layout for comic books; empty uses the global DefaultDisplayMode. " +
+      "valid values: automatic, single page, facing, book view, continuous, " +
+      "continuous facing, continuous book view",
   ).ver("3.7"),
 ];
 

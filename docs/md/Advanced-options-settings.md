@@ -392,6 +392,11 @@ EBookUI [
     ; if given, sets the canvas background color for ebook documents (epub, mobi
     ; etc.) (introduced in version 3.7)
     WindowBgCol = 
+
+    ; default page layout for ebooks; empty uses the global DefaultDisplayMode.
+    ; valid values: automatic, single page, facing, book view, continuous,
+    ; continuous facing, continuous book view (introduced in version 3.7)
+    DefaultDisplayMode = 
 ]
 
 ; customization options for Comic Book UI
@@ -421,6 +426,12 @@ ComicBookUI [
     ; if true, absolute zoom never makes a page taller than the window (each
     ; page is capped at Fit Height) (introduced in version 3.7)
     LimitToWindowHeight = false
+
+    ; default page layout for comic books; empty uses the global
+    ; DefaultDisplayMode. valid values: automatic, single page, facing, book
+    ; view, continuous, continuous facing, continuous book view (introduced in
+    ; version 3.7)
+    DefaultDisplayMode = 
 ]
 
 ; customization options for image files UI

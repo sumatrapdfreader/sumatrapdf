@@ -1980,6 +1980,31 @@ static bool showTocByDefault(Str path) {
     return showByDefault;
 }
 
+static bool IsEbookFileType(FileType ft) {
+    return ft == FileType::Epub || ft == FileType::Mobi || ft == FileType::Fb2 || ft == FileType::Fb2z ||
+           ft == FileType::PalmDoc || ft == FileType::HTML || ft == FileType::Txt;
+}
+
+// Per-type DefaultDisplayMode (empty = inherit the global DefaultDisplayMode).
+// Used only on first open when there is no remembered FileState (issue #2588).
+static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
+    DisplayMode dm = gGlobalPrefs->defaultDisplayModeEnum;
+    Str modeStr;
+    Kind k = engine ? engine->kind : nullptr;
+    if (k == kindEngineComicBooks || k == kindEngineImageDir ||
+        (path && IsEngineCbxSupportedFileType(GuessFileTypeFromName(path, true)))) {
+        modeStr = gGlobalPrefs->comicBookUI.defaultDisplayMode;
+    } else if (k == kindEngineEpub || k == kindEngineFb2 || k == kindEngineMobi || k == kindEnginePdb ||
+               k == kindEngineHtml || k == kindEngineTxt ||
+               (path && IsEbookFileType(GuessFileTypeFromName(path, true)))) {
+        modeStr = gGlobalPrefs->eBookUI.defaultDisplayMode;
+    }
+    if (modeStr) {
+        return DisplayModeFromString(modeStr, dm);
+    }
+    return dm;
+}
+
 // Document is represented as DocController. Replace current DocController (if any) with ctrl
 // in current tab.
 // meaning of the internal values of LoadArgs:
@@ -2092,6 +2117,11 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         float imageZoom = gGlobalPrefs->imageUI.defaultZoomFloat;
         if (engine->kind == kindEngineImage && imageZoom != 0) {
             zoomVirtual = imageZoom;
+        }
+        // first open: EbookUI / ComicBookUI DefaultDisplayMode override the
+        // global default when set (issue #2588). Remembered FileState wins.
+        if (!fs) {
+            displayMode = DisplayModeForNewDocument(path, engine);
         }
         // First open without per-file remembered state: honor PDF Catalog
         // /OpenAction when it is a safe internal GoTo (issue #1631). Does not

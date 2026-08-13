@@ -98,6 +98,10 @@ struct EBookUI {
     // (epub, mobi etc.)
     Str windowBgCol;
     ParsedColor windowBgColParsed;
+    // default page layout for ebooks; empty uses the global
+    // DefaultDisplayMode. valid values: automatic, single page, facing,
+    // book view, continuous, continuous facing, continuous book view
+    Str defaultDisplayMode;
 };
 
 // customization options for Comic Book UI
@@ -122,6 +126,10 @@ struct ComicBookUI {
     // if true, absolute zoom never makes a page taller than the window
     // (each page is capped at Fit Height)
     bool limitToWindowHeight;
+    // default page layout for comic books; empty uses the global
+    // DefaultDisplayMode. valid values: automatic, single page, facing,
+    // book view, continuous, continuous facing, continuous book view
+    Str defaultDisplayMode;
 };
 
 // customization options for image files UI
@@ -1030,17 +1038,20 @@ static const FieldInfo gEBookUIFields[] = {
     {offsetof(EBookUI, ignoreDocumentCSS), SettingType::Bool, false},
     {offsetof(EBookUI, customCSS), SettingType::String, 0},
     {offsetof(EBookUI, windowBgCol), SettingType::Color, (intptr_t)""},
+    {offsetof(EBookUI, defaultDisplayMode), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gEBookUIInfo = {
     sizeof(EBookUI),
-    6,
+    7,
     gEBookUIFields,
-    "FontSize\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS\0WindowBgCol",
+    "FontSize\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS\0WindowBgCol\0DefaultDisplayMode",
     "font size in points; 0 means the default (8.0)\0width of the page the ebook is laid out into, in points (not "
     "screen pixels); 0 means the default (420)\0height of the page the ebook is laid out into, in points (not screen "
     "pixels); 0 means the default (595)\0if true, the CSS in the ebook is ignored and only CustomCSS "
     "applies\0additional CSS applied to ebooks; set IgnoreDocumentCSS = true if the document's own CSS overrides "
-    "it\0if given, sets the canvas background color for ebook documents (epub, mobi etc.)",
+    "it\0if given, sets the canvas background color for ebook documents (epub, mobi etc.)\0default page layout for "
+    "ebooks; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book view, "
+    "continuous, continuous facing, continuous book view",
     false};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
@@ -1079,18 +1090,21 @@ static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, windowBgCol), SettingType::Color, (intptr_t)""},
     {offsetof(ComicBookUI, limitToWindowWidth), SettingType::Bool, false},
     {offsetof(ComicBookUI, limitToWindowHeight), SettingType::Bool, false},
+    {offsetof(ComicBookUI, defaultDisplayMode), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gComicBookUIInfo = {
     sizeof(ComicBookUI),
-    6,
+    7,
     gComicBookUIFields,
-    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight",
+    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight\0DefaultDisplayMode",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical distance "
     "between two pages in facing and book view modes\0if true, default to displaying Comic Book files in manga mode "
     "(from right to left if showing 2 pages at a time)\0if given, sets the canvas background color for comic book "
     "files\0if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). Useful "
     "for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)\0if true, absolute "
-    "zoom never makes a page taller than the window (each page is capped at Fit Height)",
+    "zoom never makes a page taller than the window (each page is capped at Fit Height)\0default page layout for comic "
+    "books; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book view, "
+    "continuous, continuous facing, continuous book view",
     false};
 
 static const FieldInfo gImageUIFields[] = {
