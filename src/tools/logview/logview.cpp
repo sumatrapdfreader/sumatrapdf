@@ -52,7 +52,7 @@ void _uploadDebugReport(Str, Str, bool, bool) {}
 
 // wingui asks the app what color a borderless Edit's underline is; we don't
 // draw one, so any color will do
-COLORREF EditBottomBorderColor() {
+Color EditBottomBorderColor() {
     return GetSysColor(COLOR_WINDOWFRAME);
 }
 
@@ -74,13 +74,13 @@ constexpr int WM_APP_NEW_LOGS = WM_APP + 1;
 constexpr UINT_PTR kFilterTimerId = 1;
 constexpr UINT kFilterDebounceMs = 300;
 
-constexpr COLORREF kColLogBg = RGB(0xff, 0xff, 0xff);
-constexpr COLORREF kColLogText = RGB(0, 0, 0);
-constexpr COLORREF kColHili = RGB(0xff, 0xff, 0x00);
-constexpr COLORREF kColTabBar = RGB(0xd8, 0xd8, 0xd8);
-constexpr COLORREF kColTabSel = RGB(0xff, 0xff, 0xff);
-constexpr COLORREF kColKbd = RGB(0x80, 0x80, 0x80);
-constexpr COLORREF kColValBg = RGB(0xf3, 0xf3, 0xf3);
+constexpr Color kColLogBg = RGB(0xff, 0xff, 0xff);
+constexpr Color kColLogText = RGB(0, 0, 0);
+constexpr Color kColHili = RGB(0xff, 0xff, 0x00);
+constexpr Color kColTabBar = RGB(0xd8, 0xd8, 0xd8);
+constexpr Color kColTabSel = RGB(0xff, 0xff, 0xff);
+constexpr Color kColKbd = RGB(0x80, 0x80, 0x80);
+constexpr Color kColValBg = RGB(0xf3, 0xf3, 0xf3);
 
 enum {
     IdcClear = 100, // 'c' button

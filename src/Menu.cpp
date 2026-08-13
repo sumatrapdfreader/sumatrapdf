@@ -2371,8 +2371,8 @@ void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
 
     // https://stackoverflow.com/questions/30353644/cmenu-border-color-on-mfc
     static HBRUSH hbrBrush = nullptr;
-    static COLORREF bgCol = (COLORREF)-1;
-    COLORREF col = ThemeMainWindowBackgroundColor();
+    static Color bgCol = (Color)-1;
+    Color col = ThemeMainWindowBackgroundColor();
     if (!hbrBrush) {
         bgCol = col;
         hbrBrush = ::CreateSolidBrush(col);
@@ -2537,8 +2537,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     HFONT font = GetAppMenuFont();
     ScopedSelectFont restoreFont(hdc, font);
 
-    COLORREF bgCol = ThemeMainWindowBackgroundColor();
-    COLORREF txtCol = ThemeWindowTextColor();
+    Color bgCol = ThemeMainWindowBackgroundColor();
+    Color txtCol = ThemeWindowTextColor();
 
     bool isSelected = bit::IsMaskSet(dis->itemState, (uint)ODS_SELECTED);
     if (isDisabled) {
@@ -2558,8 +2558,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     int padY = DpiScale(kMenuPaddingY);
     int padX = DpiScale(kMenuPaddingX);
 
-    COLORREF prevTxtCol = SetTextColor(hdc, txtCol);
-    COLORREF prevBgCol = SetBkColor(hdc, bgCol);
+    Color prevTxtCol = SetTextColor(hdc, txtCol);
+    Color prevBgCol = SetBkColor(hdc, bgCol);
     defer {
         SetTextColor(hdc, prevTxtCol);
         SetBkColor(hdc, prevBgCol);

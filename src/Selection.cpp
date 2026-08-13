@@ -321,7 +321,7 @@ void UpdateRectangularSelectionEdit(MainWindow* win, int x, int y) {
     win->selectionMeasure = win->AsFixed() ? win->AsFixed()->CvtFromScreen(win->selectionRect).Size() : SizeF();
 }
 
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha, int pad,
+void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, Color selectionColor, u8 alpha, int pad,
                                 bool drawBorder) {
     // create path from rectangles
     Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
@@ -417,7 +417,7 @@ static void PaintTouchSelHandles(MainWindow* win, HDC hdc) {
         return;
     }
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
-    COLORREF col = parsedCol->col;
+    Color col = parsedCol->col;
     AutoDeleteBrush brush(CreateSolidBrush(col));
     AutoDeletePen pen(CreatePen(PS_SOLID, DpiScale(1), col));
     ScopedSelectObject restoreBrush(hdc, brush);

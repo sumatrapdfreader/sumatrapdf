@@ -1416,7 +1416,7 @@ static VirtText* CreateStatic(HWND parent, Str s = nullptr) {
 // system: a filled box with a border, brighter on hover (like the other dialogs)
 static VirtButton* CreateVirtButton(HWND parent, Str text) {
     auto* b = new VirtButton(text, GetPlatformFont(GetAppFont()));
-    COLORREF bg = ThemeWindowControlBackgroundColor();
+    Color bg = ThemeWindowControlBackgroundColor();
     b->textColor = ThemeWindowTextColor();
     b->textColorDisabled = ThemeWindowTextDisabledColor();
     b->bgColor = AccentColor(bg, 14);

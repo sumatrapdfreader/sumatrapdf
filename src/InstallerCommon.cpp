@@ -31,12 +31,11 @@
 constexpr bool kDrawTextShadow = true;
 constexpr bool kDrawMsgTextShadow = false;
 
-constexpr COLORREF kInstallerWinBgColor = RGB(0xff, 0xf2, 0); // yellow
+constexpr Color kInstallerWinBgColor = RGB(0xff, 0xf2, 0); // yellow
 
 constexpr DWORD kTenSecondsInMs = 10 * 1000;
 
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::CompositingQualityHighQuality;
 using Gdiplus::Font;
 using Gdiplus::FontStyleRegular;
@@ -49,21 +48,21 @@ using Gdiplus::StringAlignmentCenter;
 using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsDirectionRightToLeft;
 
-Color gCol1(196, 64, 50);
-Color gCol1Shadow(134, 48, 39);
-Color gCol2(227, 107, 35);
-Color gCol2Shadow(155, 77, 31);
-Color gCol3(93, 160, 40);
-Color gCol3Shadow(51, 87, 39);
-Color gCol4(69, 132, 190);
-Color gCol4Shadow(47, 89, 127);
-Color gCol5(112, 115, 207);
-Color gCol5Shadow(66, 71, 118);
+Gdiplus::Color gCol1(196, 64, 50);
+Gdiplus::Color gCol1Shadow(134, 48, 39);
+Gdiplus::Color gCol2(227, 107, 35);
+Gdiplus::Color gCol2Shadow(155, 77, 31);
+Gdiplus::Color gCol3(93, 160, 40);
+Gdiplus::Color gCol3Shadow(51, 87, 39);
+Gdiplus::Color gCol4(69, 132, 190);
+Gdiplus::Color gCol4Shadow(47, 89, 127);
+Gdiplus::Color gCol5(112, 115, 207);
+Gdiplus::Color gCol5Shadow(66, 71, 118);
 
-Color COLOR_MSG_WELCOME(gCol5);
-Color COLOR_MSG_OK(gCol5);
-Color COLOR_MSG_INSTALLATION(gCol5);
-Color COLOR_MSG_FAILED(gCol1);
+Gdiplus::Color COLOR_MSG_WELCOME(gCol5);
+Gdiplus::Color COLOR_MSG_OK(gCol5);
+Gdiplus::Color COLOR_MSG_INSTALLATION(gCol5);
+Gdiplus::Color COLOR_MSG_FAILED(gCol1);
 
 HWND gHwndFrame = nullptr;
 Str gFirstError;
@@ -114,7 +113,7 @@ bool WriteRegExpandSz(HKEY root, Str keyName, Str valueName, Str value) {
 }
 
 static Str gMsg;
-static Color gMsgColor;
+static Gdiplus::Color gMsgColor;
 
 static StrVec gProcessesToClose;
 
@@ -136,7 +135,7 @@ void NotifyFailed(Str msg) {
     logf("NotifyFailed: %s\n", msg);
 }
 
-void SetMsg(Str msg, Color color) {
+void SetMsg(Str msg, Gdiplus::Color color) {
     gMsg = str::Dup(GetPermArena(), msg);
     gMsgColor = color;
 }
@@ -760,7 +759,7 @@ bool CheckInstallUninstallPossible(HWND hwnd, bool silent) {
 typedef struct {
     // part that doesn't change
     char c;
-    Color col, colShadow;
+    Gdiplus::Color col, colShadow;
     float rotation;
     float dyOff; // displacement
 
@@ -894,7 +893,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
     didLayout = TRUE;
 }
 
-static float DrawMessage(Graphics& g, Str msg, float y, float dx, Color color) {
+static float DrawMessage(Graphics& g, Str msg, float y, float dx, Gdiplus::Color color) {
     WCHAR* s = CWStrTemp(msg);
 
     Font f(L"Impact", 16, FontStyleRegular);
@@ -912,7 +911,7 @@ static float DrawMessage(Graphics& g, Str msg, float y, float dx, Color color) {
     if (kDrawMsgTextShadow) {
         bbox.X--;
         bbox.Y++;
-        SolidBrush b(Color(0xff, 0xff, 0xff));
+        SolidBrush b(Gdiplus::Color(0xff, 0xff, 0xff));
         g.DrawString(s, -1, &f, bbox, &sft, &b);
         bbox.X++;
         bbox.Y--;
@@ -956,10 +955,10 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
 
     const WCHAR* ver_s = L"v" CURR_VERSION_STR;
     if (kDrawTextShadow) {
-        SolidBrush b1(Color(0, 0, 0));
+        SolidBrush b1(Gdiplus::Color(0, 0, 0));
         g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);
     }
-    SolidBrush b2(Color(0xff, 0xff, 0xff));
+    SolidBrush b2(Gdiplus::Color(0xff, 0xff, 0xff));
     g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2, y2), &b2);
     g.ResetTransform();
 }

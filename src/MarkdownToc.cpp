@@ -511,7 +511,7 @@ static const char kMermaidBootstrap[] = R"HTML(
 </script>
 )HTML";
 
-static TempStr ColorToCssTemp(COLORREF c) {
+static TempStr ColorToCssTemp(Color c) {
     return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
 }
 
@@ -519,8 +519,8 @@ static TempStr ColorToCssTemp(COLORREF c) {
 // black-on-white (or FixedPageUI overrides) when DocumentColorsFollowTheme
 // is off and theme-derived page colors when it's on
 static TempStr MarkdownPageCssTemp() {
-    COLORREF bgCol;
-    COLORREF txtCol = ThemePageRenderColors(bgCol);
+    Color bgCol;
+    Color txtCol = ThemePageRenderColors(bgCol);
     bool dark = !IsLightColor(bgCol);
     bool isDefault = (bgCol == RGB(0xff, 0xff, 0xff)) && (txtCol == RGB(0, 0, 0));
 

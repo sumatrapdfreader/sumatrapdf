@@ -306,10 +306,10 @@ void KbKeyCaps::Paint(VirtPaintCtx& ctx) {
     if (n <= 0) {
         return;
     }
-    COLORREF bg = ThemeWindowControlBackgroundColor();
-    COLORREF capBg = AccentColor(bg, 16);
-    COLORREF capBorder = ThemeEdgeColor();
-    COLORREF txt = ThemeWindowTextColor();
+    Color bg = ThemeWindowControlBackgroundColor();
+    Color capBg = AccentColor(bg, 16);
+    Color capBorder = ThemeEdgeColor();
+    Color txt = ThemeWindowTextColor();
 
     Rect r = ctx.bounds;
     int x = r.x;
@@ -500,8 +500,8 @@ void KeyboardHelpWnd::BuildContent() {
 // colors are read from the theme on every paint, so a theme change shows
 // through without rebuilding the tree
 void KeyboardHelpWnd::SyncColors() {
-    COLORREF txt = ThemeWindowTextColor();
-    COLORREF dim = AccentColor(txt, 90);
+    Color txt = ThemeWindowTextColor();
+    Color dim = AccentColor(txt, 90);
     title->textColor = txt;
     separator->color = ThemeEdgeColor();
     footer->textColor = dim;
@@ -511,7 +511,7 @@ void KeyboardHelpWnd::SyncColors() {
 }
 
 void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
-    COLORREF bg = ThemeWindowControlBackgroundColor();
+    Color bg = ThemeWindowControlBackgroundColor();
     SetBkColor(hdc, bg);
     HdcFillRectWithBkColor(hdc, client);
     SetBkMode(hdc, TRANSPARENT);

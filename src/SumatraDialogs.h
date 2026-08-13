@@ -66,13 +66,13 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
 struct MainWindow;
 
 struct BgColorResult {
-    COLORREF color;
+    Color color;
     bool isCheckered;
     bool applyToAllFiles; // true = all files like this, false = this file only
 };
 
-bool Dialog_ChangeBackgroundColor(HWND hwnd, COLORREF currentColor, bool isCheckered, Str allFilesLabel,
+bool Dialog_ChangeBackgroundColor(HWND hwnd, Color currentColor, bool isCheckered, Str allFilesLabel,
                                   BgColorResult& result);
-bool Dialog_SetTabColor(HWND hwnd, COLORREF currentColor, bool isUnset, COLORREF& resultColor, bool& resultIsUnset);
+bool Dialog_SetTabColor(HWND hwnd, Color currentColor, bool isUnset, Color& resultColor, bool& resultIsUnset);
 
 TempStr ZoomLevelStr(float zoom);

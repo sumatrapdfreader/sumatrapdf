@@ -53,11 +53,11 @@ GfxGdiplus::~GfxGdiplus() {
 // covers the gdi-measure / gdiplus-draw mismatch, not a real overflow
 constexpr int kGdiplusTextSlack = 4;
 
-static Gdiplus::Color ToGdipColor(COLORREF col, u8 alpha = 255) {
+static Gdiplus::Color ToGdipColor(Color col, u8 alpha = 255) {
     return {alpha, GetRValue(col), GetGValue(col), GetBValue(col)};
 }
 
-void GfxGdiplus::FillRect(const Rect& r, COLORREF col) {
+void GfxGdiplus::FillRect(const Rect& r, Color col) {
     if (col == kColorUnset || r.IsEmpty()) {
         return;
     }
@@ -70,7 +70,7 @@ void GfxGdiplus::FillRect(const Rect& r, COLORREF col) {
     gfx->SetSmoothingMode(prev);
 }
 
-void GfxGdiplus::DrawRect(const Rect& r, COLORREF col, int thickness) {
+void GfxGdiplus::DrawRect(const Rect& r, Color col, int thickness) {
     if (col == kColorUnset || r.IsEmpty() || thickness < 1) {
         return;
     }
@@ -95,7 +95,7 @@ static void AddRoundedRectPath(GraphicsPath& path, const Rect& rc, int d) {
     path.CloseFigure();
 }
 
-void GfxGdiplus::FillRoundedRect(const Rect& r, int radius, COLORREF fill, COLORREF border) {
+void GfxGdiplus::FillRoundedRect(const Rect& r, int radius, Color fill, Color border) {
     if (r.IsEmpty()) {
         return;
     }
@@ -117,7 +117,7 @@ void GfxGdiplus::FillRoundedRect(const Rect& r, int radius, COLORREF fill, COLOR
     }
 }
 
-void GfxGdiplus::FillEllipse(const Rect& r, COLORREF col, u8 alpha) {
+void GfxGdiplus::FillEllipse(const Rect& r, Color col, u8 alpha) {
     if (col == kColorUnset || r.IsEmpty()) {
         return;
     }
@@ -126,7 +126,7 @@ void GfxGdiplus::FillEllipse(const Rect& r, COLORREF col, u8 alpha) {
     gfx->FillEllipse(&br, r.x, r.y, r.dx - 1, r.dy - 1);
 }
 
-void GfxGdiplus::DrawLine(const Rect& r, COLORREF col, int thickness) {
+void GfxGdiplus::DrawLine(const Rect& r, Color col, int thickness) {
     if (col == kColorUnset) {
         col = textColor;
     }
@@ -141,7 +141,7 @@ void GfxGdiplus::DrawLine(const Rect& r, COLORREF col, int thickness) {
     FillRect(r2, col);
 }
 
-void GfxGdiplus::DrawLineAA(Point p1, Point p2, COLORREF col, float thickness, u8 alpha) {
+void GfxGdiplus::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 alpha) {
     if (col == kColorUnset) {
         col = textColor;
     }
@@ -230,7 +230,7 @@ Gdiplus::Font* GfxGdiplus::GetGdiplusFont(PlatformFont* font, bool* owned) {
     return f;
 }
 
-void GfxGdiplus::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, COLORREF col) {
+void GfxGdiplus::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, Color col) {
     if (r.IsEmpty() || len(s) == 0) {
         return;
     }
@@ -262,7 +262,7 @@ void GfxGdiplus::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, C
     }
 }
 
-void GfxGdiplus::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, COLORREF col) {
+void GfxGdiplus::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, Color col) {
     if (len(s) == 0) {
         return;
     }

@@ -482,8 +482,8 @@ static void OnPaletteSwitchClicked(VirtMouseEvent* ev) {
 struct HelpStyle {
     HWND hwnd = nullptr;
     PlatformFont* font = nullptr;
-    COLORREF colTxt = kColorUnset;
-    COLORREF colBg = kColorUnset;
+    Color colTxt = kColorUnset;
+    Color colBg = kColorUnset;
 };
 
 static void InitHelpText(const HelpStyle& st, VirtRichText* t, Str markup) {

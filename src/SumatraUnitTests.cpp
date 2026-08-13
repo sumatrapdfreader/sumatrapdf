@@ -193,13 +193,13 @@ static void hexstrTest() {
     utassert(ok);
 }
 
-static void assertSerializedColor(COLORREF c, Str s) {
+static void assertSerializedColor(Color c, Str s) {
     TempStr s2 = SerializeColorTemp(c);
     utassert(str::Eq(s2, s));
 }
 
 static void colorTest() {
-    COLORREF c = 0;
+    Color c = 0;
     bool ok = ParseColor(&c, "0x01020304");
     utassert(ok);
     assertSerializedColor(c, "#01020304");
@@ -208,7 +208,7 @@ static void colorTest() {
     utassert(ok);
     assertSerializedColor(c, "#01020304");
 
-    COLORREF c2 = MkColor(2, 3, 4, 1);
+    Color c2 = MkColor(2, 3, 4, 1);
     assertSerializedColor(c2, "#01020304");
     utassert(c == c2);
 

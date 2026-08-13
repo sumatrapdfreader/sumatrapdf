@@ -1213,8 +1213,8 @@ void UpdateAIChatTheme(MainWindow* win) {
     if (!win || !win->hwndAiChatBox) {
         return;
     }
-    COLORREF bgCol = ThemeControlBackgroundColor();
-    COLORREF txtCol = ThemeWindowTextColor();
+    Color bgCol = ThemeControlBackgroundColor();
+    Color txtCol = ThemeWindowTextColor();
     if (win->aiChatLabel) {
         win->aiChatLabel->textColor = txtCol;
     }

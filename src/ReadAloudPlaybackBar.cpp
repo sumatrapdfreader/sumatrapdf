@@ -183,11 +183,11 @@ void ReadAloudPlaybackBar::SyncLabels() {
 }
 
 void ReadAloudPlaybackBar::SyncColors() {
-    COLORREF colBg = ThemeNotificationsBackgroundColor();
-    COLORREF colTxt = ThemeNotificationsTextColor();
-    COLORREF colBorder = MkGray(0xdd);
-    COLORREF colBtnBg = AccentColor(colBg, 8, -8);
-    COLORREF colBtnHover = AccentColor(colBg, 16, -16);
+    Color colBg = ThemeNotificationsBackgroundColor();
+    Color colTxt = ThemeNotificationsTextColor();
+    Color colBorder = MkGray(0xdd);
+    Color colBtnBg = AccentColor(colBg, 8, -8);
+    Color colBtnHover = AccentColor(colBg, 16, -16);
     VirtButton* btns[] = {btnPause, btnStop, btnSpeed};
     for (VirtButton* b : btns) {
         b->bgColor = colBtnBg;
@@ -239,8 +239,8 @@ void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
     DoubleBuffer buffer(hwnd, rc);
     HDC hdc = buffer.GetDC();
 
-    COLORREF colBg = ThemeNotificationsBackgroundColor();
-    COLORREF colBorder = MkGray(0xdd);
+    Color colBg = ThemeNotificationsBackgroundColor();
+    Color colBorder = MkGray(0xdd);
     HdcFillRect(hdc, rc, colBg);
 
     SyncColors();

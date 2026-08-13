@@ -247,11 +247,11 @@ void LayoutTreeToSize(HWND, ILayout* layout, Size, VirtRoot** rootInOut);
 // same, for a host that positions the tree itself: only refreshes the root
 void RefreshVirtTops(HWND, ILayout* layout, Rect bounds, VirtRoot** rootInOut);
 // double-buffered; fills bg first. Does nothing if there's nothing virtual
-void PaintVirtTree(VirtRoot*, HDC, Rect clip, COLORREF bg);
+void PaintVirtTree(VirtRoot*, HDC, Rect clip, Color bg);
 // paint + input in one call, for a plain HWND that isn't a WindowBase /
 // ControlBase (the side panels are subclassed WC_STATICs). Returns true when
 // the message was handled
-bool VirtHostOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&, COLORREF bg);
+bool VirtHostOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&, Color bg);
 // the single entry point for input: mouse, cursor, tooltips and keyboard, with
 // RTL mouse coordinates unmirrored
 bool VirtTreeOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&);
@@ -372,11 +372,11 @@ struct VirtListBox : VirtCtrl {
     DrawItemHandler onDrawItem;
 
     PlatformFont* font = nullptr; // not owned, interned
-    COLORREF textColor = kColorUnset;
-    COLORREF bgColor = kColorUnset;
+    Color textColor = kColorUnset;
+    Color bgColor = kColorUnset;
     // background of the selected row; derived from bgColor when unset
-    COLORREF selectionColor = kColorUnset;
-    COLORREF scrollbarColor = kColorUnset;
+    Color selectionColor = kColorUnset;
+    Color scrollbarColor = kColorUnset;
 
     // how many rows GetIdealSize() asks for; 0 means "as many as there are",
     // capped at 16
@@ -464,7 +464,7 @@ struct VirtSplitter : VirtCtrl {
     SplitterType type = SplitterType::Horiz;
     // false: the panes only move when the drag ends
     bool isLive = true;
-    COLORREF bgColor = kColorUnset;
+    Color bgColor = kColorUnset;
     // how thick the bar is; the other axis is stretched by the layout.
     // 0 keeps whatever bounds it was given
     int thickness = 0;
@@ -522,7 +522,7 @@ enum class VirtTextAlign {
 struct VirtTextArgs {
     Str s;
     PlatformFont* font = nullptr; // not owned, interned
-    COLORREF textColor = kColorUnset;
+    Color textColor = kColorUnset;
     VirtTextAlign align = VirtTextAlign::Left;
     bool withUnderline = false;
     bool isRtl = false;
@@ -544,7 +544,7 @@ struct VirtText : VirtCtrl {
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
     VirtTextAlign align = VirtTextAlign::Left;
-    COLORREF textColor = kColorUnset;
+    Color textColor = kColorUnset;
 
     Size sz = {0, 0};
 
@@ -580,11 +580,11 @@ struct VirtLink : VirtText {
 };
 
 struct VirtButton : VirtText {
-    COLORREF bgColor = kColorUnset;
-    COLORREF bgColorHover = kColorUnset;
-    COLORREF borderColor = kColorUnset;
+    Color bgColor = kColorUnset;
+    Color bgColorHover = kColorUnset;
+    Color borderColor = kColorUnset;
     // when the button is disabled (vwfEnabled cleared)
-    COLORREF textColorDisabled = kColorUnset;
+    Color textColorDisabled = kColorUnset;
     Insets textPadding{4, 8, 4, 8};
 
     VirtButton(Str s, PlatformFont* font = nullptr);
@@ -602,8 +602,8 @@ struct VirtIconButton : VirtCtrl {
     Pixmap* pixmap = nullptr;
     // a toggle button (match case, ...) draws bgColorSelected while on
     bool isSelected = false;
-    COLORREF bgColorHover = kColorUnset;
-    COLORREF bgColorSelected = kColorUnset;
+    Color bgColorHover = kColorUnset;
+    Color bgColorSelected = kColorUnset;
 
     VirtIconButton();
     ~VirtIconButton() override = default;
@@ -621,10 +621,10 @@ struct VirtIconButton : VirtCtrl {
 // Colors left at kColorUnset use the tab close button's.
 struct VirtCloseButton : VirtCtrl {
     bool withCircle = false;
-    COLORREF xColor = kColorUnset;
-    COLORREF xColorHover = kColorUnset;
-    COLORREF circleColor = kColorUnset;
-    COLORREF circleColorHover = kColorUnset;
+    Color xColor = kColorUnset;
+    Color xColorHover = kColorUnset;
+    Color circleColor = kColorUnset;
+    Color circleColorHover = kColorUnset;
     Size idealSize;
 
     VirtCloseButton();
@@ -660,7 +660,7 @@ struct VirtImage : VirtCtrl {
 };
 
 struct VirtFill : VirtCtrl {
-    COLORREF color = kColorUnset;
+    Color color = kColorUnset;
     Size idealSize;
 
     VirtFill();
@@ -671,7 +671,7 @@ struct VirtFill : VirtCtrl {
 };
 
 struct VirtLine : VirtCtrl {
-    COLORREF color = kColorUnset;
+    Color color = kColorUnset;
     bool isVertical = false;
     int thickness = 1;
 
@@ -769,10 +769,10 @@ struct VirtRichText : VirtCtrl {
     int layoutDx = -1;
 
     PlatformFont* font = nullptr; // not owned
-    COLORREF textColor = kColorUnset;
-    COLORREF linkColor = kColorUnset;
+    Color textColor = kColorUnset;
+    Color linkColor = kColorUnset;
     // the color the text is painted on; used for the key-cap fill and border
-    COLORREF bgColor = kColorUnset;
+    Color bgColor = kColorUnset;
     // link commands are sent to this window
     HWND hwndForCmds = nullptr;
     // onClick (from VirtCtrl): fired by a click that didn't land on a link, so

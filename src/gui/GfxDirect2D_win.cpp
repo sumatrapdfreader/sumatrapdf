@@ -142,7 +142,7 @@ static IDWriteTextFormat* GetTextFormat(PlatformFont* font, IDWriteInlineObject*
 
 //--- GfxDirect2D
 
-static D2D1_COLOR_F ToD2DColor(COLORREF col, u8 alpha = 255) {
+static D2D1_COLOR_F ToD2DColor(Color col, u8 alpha = 255) {
     return D2D1::ColorF((float)GetRValue(col) / 255.0f, (float)GetGValue(col) / 255.0f, (float)GetBValue(col) / 255.0f,
                         (float)alpha / 255.0f);
 }
@@ -219,7 +219,7 @@ GfxDirect2D::~GfxDirect2D() {
 
 // every draw needs a brush and they are cheap to make, but not free; one brush
 // re-colored per call is what the d2d samples do
-ID2D1SolidColorBrush* GfxDirect2D::GetBrush(COLORREF col, u8 alpha) {
+ID2D1SolidColorBrush* GfxDirect2D::GetBrush(Color col, u8 alpha) {
     if (!target) {
         return nullptr;
     }
@@ -235,7 +235,7 @@ ID2D1SolidColorBrush* GfxDirect2D::GetBrush(COLORREF col, u8 alpha) {
     return brush;
 }
 
-void GfxDirect2D::FillRect(const Rect& r, COLORREF col) {
+void GfxDirect2D::FillRect(const Rect& r, Color col) {
     if (!target || col == kColorUnset || r.IsEmpty()) {
         return;
     }
@@ -249,7 +249,7 @@ void GfxDirect2D::FillRect(const Rect& r, COLORREF col) {
     target->FillRectangle(ToD2DRect(r), br);
 }
 
-void GfxDirect2D::DrawRect(const Rect& r, COLORREF col, int thickness) {
+void GfxDirect2D::DrawRect(const Rect& r, Color col, int thickness) {
     if (!target || col == kColorUnset || r.IsEmpty() || thickness < 1) {
         return;
     }
@@ -266,7 +266,7 @@ void GfxDirect2D::DrawRect(const Rect& r, COLORREF col, int thickness) {
     target->DrawRectangle(rf, br, (float)thickness);
 }
 
-void GfxDirect2D::FillRoundedRect(const Rect& r, int radius, COLORREF fill, COLORREF border) {
+void GfxDirect2D::FillRoundedRect(const Rect& r, int radius, Color fill, Color border) {
     if (!target || r.IsEmpty()) {
         return;
     }
@@ -295,7 +295,7 @@ void GfxDirect2D::FillRoundedRect(const Rect& r, int radius, COLORREF fill, COLO
     }
 }
 
-void GfxDirect2D::FillEllipse(const Rect& r, COLORREF col, u8 alpha) {
+void GfxDirect2D::FillEllipse(const Rect& r, Color col, u8 alpha) {
     if (!target || col == kColorUnset || r.IsEmpty()) {
         return;
     }
@@ -310,7 +310,7 @@ void GfxDirect2D::FillEllipse(const Rect& r, COLORREF col, u8 alpha) {
     target->FillEllipse(e, br);
 }
 
-void GfxDirect2D::DrawLine(const Rect& r, COLORREF col, int thickness) {
+void GfxDirect2D::DrawLine(const Rect& r, Color col, int thickness) {
     if (col == kColorUnset) {
         col = textColor;
     }
@@ -325,7 +325,7 @@ void GfxDirect2D::DrawLine(const Rect& r, COLORREF col, int thickness) {
     FillRect(r2, col);
 }
 
-void GfxDirect2D::DrawLineAA(Point p1, Point p2, COLORREF col, float thickness, u8 alpha) {
+void GfxDirect2D::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 alpha) {
     if (!target) {
         return;
     }
@@ -387,7 +387,7 @@ static void SetTextFormatFlags(IDWriteTextFormat* format, IDWriteInlineObject* e
     }
 }
 
-void GfxDirect2D::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, COLORREF col) {
+void GfxDirect2D::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, Color col) {
     if (!target || r.IsEmpty() || len(s) == 0) {
         return;
     }
@@ -421,7 +421,7 @@ void GfxDirect2D::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, 
     target->DrawText(ws.s, (UINT32)ws.len, format, ToD2DRect(r), br, opts);
 }
 
-void GfxDirect2D::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, COLORREF col) {
+void GfxDirect2D::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, Color col) {
     if (len(s) == 0) {
         return;
     }

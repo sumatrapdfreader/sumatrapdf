@@ -144,8 +144,8 @@ void ChangeThemeWnd::PreviewDocumentColors() {
 }
 
 void ChangeThemeWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
     if (listBox) {
         listBox->textColor = colTxt;

@@ -272,7 +272,7 @@ static void FindWindowButtonClicked(FindWindowWnd* w, VirtMouseEvent* ev) {
 void FindWindowWnd::CreateButtons() {
     static const int cmds[5] = {CmdFindPrev, CmdFindNext, CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
                                 kFindWinPinCmdId};
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
     int pad = DpiScale(4);
     for (int i = 0; i < 5; i++) {
         auto* b = new VirtIconButton();
@@ -482,8 +482,8 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     // and highlight fill cannot paint outside the item / list client (#5796)
     gfx->PushClip(rc);
 
-    COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
-    COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    Color colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
+    Color colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
 
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
@@ -1144,7 +1144,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     ev.selected = false;
     fw->DrawResultItem(&ev);
 
-    COLORREF px = GetPixel(hdcMem, w - 3, h / 2);
+    Color px = GetPixel(hdcMem, w - 3, h / 2);
     SelectObject(hdcMem, oldBmp);
     DeleteObject(hbmp);
     DeleteDC(hdcMem);

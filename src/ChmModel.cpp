@@ -682,7 +682,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
 }
 
 // Load and cache data for a given url inside CHM file.
-static TempStr ColorToCssTemp(COLORREF c) {
+static TempStr ColorToCssTemp(Color c) {
     return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
 }
 
@@ -691,8 +691,8 @@ static TempStr ColorToCssTemp(COLORREF c) {
 // color. Returns null when the effective page colors are the plain default
 // (black on white) — i.e. nothing to override.
 static TempStr ChmThemeStyleTemp() {
-    COLORREF bgCol;
-    COLORREF txtCol = ThemePageRenderColors(bgCol);
+    Color bgCol;
+    Color txtCol = ThemePageRenderColors(bgCol);
     bool isDefault = (bgCol == RGB(0xff, 0xff, 0xff)) && (txtCol == RGB(0, 0, 0));
     if (isDefault) {
         return nullptr;

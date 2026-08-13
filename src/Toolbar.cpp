@@ -842,7 +842,7 @@ static LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     if (WM_ERASEBKGND == uMsg && ThemeColorizeControls()) {
         HDC hdc = (HDC)wParam;
         SetTextColor(hdc, ThemeWindowTextColor());
-        COLORREF bgCol = ThemeControlBackgroundColor();
+        Color bgCol = ThemeControlBackgroundColor();
         SetBkColor(hdc, bgCol);
         auto* bgBrush = CreateSolidBrush(bgCol);
         HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
@@ -920,8 +920,8 @@ static LRESULT CALLBACK WndProcEditBg(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     if (msg == WM_PAINT) {
         HDC hdc = GetDC(hwnd);
         RECT rc = ToRECT(HwndClientRect(hwnd));
-        COLORREF bgCol2 = ThemeControlBackgroundColor();
-        COLORREF col = AccentColor(bgCol2, 40);
+        Color bgCol2 = ThemeControlBackgroundColor();
+        Color col = AccentColor(bgCol2, 40);
         HBRUSH br = CreateSolidBrush(col);
         FrameRect(hdc, &rc, br);
         DeleteObject(br);
@@ -1378,7 +1378,7 @@ static void PopulateCustomToolbarButtons() {
 // a typo, or the file caught half-written by the settings watcher while the user
 // is editing it. mupdf signals that by throwing, and an uncaught mupdf exception
 // aborts the whole process, so everything here has to be inside fz_try.
-static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol) {
+static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
     TempStr strokeCol = SerializeColorTemp(fgCol);
     TempStr fillCol = SerializeColorTemp(bgCol);
     TempStr fillColRepl = str::JoinTemp(StrL("fill=\""), fillCol, StrL("\""));
@@ -1410,7 +1410,7 @@ static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, Str svgData, int dx, int 
     return pixmap;
 }
 
-static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY, COLORREF bgCol) {
+static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY, Color bgCol) {
     int dx = src->w;
     int dy = src->h;
     int srcN = src->n;
@@ -1443,7 +1443,7 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
 // leaves an icon-sized hole in the bitmap: background color, fully transparent.
 // Used for an icon we couldn't render, so the button shows up empty instead of
 // as a black square (the zero-filled DIB).
-static void ClearIconSlot(u8* dstSamples, ptrdiff_t dstStride, int dx, int dy, int dstX, COLORREF bgCol) {
+static void ClearIconSlot(u8* dstSamples, ptrdiff_t dstStride, int dx, int dy, int dstX, Color bgCol) {
     u8 r, g, b;
     UnpackColor(bgCol, r, g, b);
     for (size_t y = 0; y < (size_t)dy; y++) {
@@ -1461,7 +1461,7 @@ static void ClearIconSlot(u8* dstSamples, ptrdiff_t dstStride, int dx, int dy, i
 // same rendering the toolbar's image list uses, into a standalone Pixmap.
 // bgCol is what the icon will be drawn on: pixels that come out as that color
 // are the svg's background and become transparent
-Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol) {
+Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
     if (str::IsEmptyOrWhiteSpace(svgData) || dx <= 0 || dy <= 0) {
         return nullptr;
     }
@@ -1514,8 +1514,8 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
         hbmp = CreateDIBSection(nullptr, bmi, usage, (void**)&hbmpData, nullptr, 0);
     }
 
-    COLORREF fgCol = ThemeWindowTextColor();
-    COLORREF bgCol = ThemeControlBackgroundColor();
+    Color fgCol = ThemeWindowTextColor();
+    Color bgCol = ThemeControlBackgroundColor();
     for (int i = 0; i < nBuiltIn; i++) {
         Str svgData = GetSvgIcon((TbIcon)i);
         fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
@@ -1555,8 +1555,8 @@ static Pixmap* RenderIconPixmap(TbIcon icon, int dx, int dy) {
     memset(px->data, 0, (size_t)px->stride * (size_t)dy);
     px->premultiplied = true;
 
-    COLORREF fgCol = ThemeWindowTextColor();
-    COLORREF bgCol = ThemeControlBackgroundColor();
+    Color fgCol = ThemeWindowTextColor();
+    Color bgCol = ThemeControlBackgroundColor();
     fz_context* ctx = fz_new_context_windows();
     fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
     if (pixmap) {
@@ -1911,7 +1911,7 @@ static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
     if (WM_ERASEBKGND == uMsg) {
         // always paint background with theme color to avoid gray strips in light theme
         HDC hdc = (HDC)wParam;
-        COLORREF bgCol = ThemeControlBackgroundColor();
+        Color bgCol = ThemeControlBackgroundColor();
         auto* bgBrush = CreateSolidBrush(bgCol);
         HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
         DeleteObject(bgBrush);

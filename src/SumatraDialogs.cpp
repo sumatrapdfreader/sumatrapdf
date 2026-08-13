@@ -1230,10 +1230,10 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
 static const int kMaxCustomColors = 13;
 
 struct BgColorDlgData {
-    COLORREF currentColor; // current selected color
-    bool isCheckered;      // true if "checkered" is selected
-    bool applyToAll;       // radio: all files like this
-    COLORREF customColors[kMaxCustomColors];
+    Color currentColor; // current selected color
+    bool isCheckered;   // true if "checkered" is selected
+    bool applyToAll;    // radio: all files like this
+    Color customColors[kMaxCustomColors];
     bool customColorSet[kMaxCustomColors]; // true if slot has a color
     bool customColorsChanged;
     int selectedCustomIdx; // -1 = no custom button selected
@@ -1244,7 +1244,7 @@ struct BgColorDlgData {
 };
 
 // fixed preset colors: checkered, black, white
-static const COLORREF kBgPresetColors[] = {
+static const Color kBgPresetColors[] = {
     kColorUnset,        // checkered
     RGB(0, 0, 0),       // black
     RGB(255, 255, 255), // white
@@ -1445,7 +1445,7 @@ static bool TryParseBgColorEdit(HWND hDlg, BgColorDlgData* data) {
 static void PickColorFromArea(HWND hwndCA, BgColorDlgData* data, HWND hDlg) {
     Point pt = HwndGetCursorPos(hwndCA);
     HDC hdcCA = GetDC(hwndCA);
-    COLORREF picked = GetPixel(hdcCA, pt.x, pt.y);
+    Color picked = GetPixel(hdcCA, pt.x, pt.y);
     ReleaseDC(hwndCA, hdcCA);
     if (picked != CLR_INVALID) {
         data->isCheckered = false;
@@ -1539,7 +1539,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
             // preset color buttons
             if (ctlId >= IDC_BGCOL_PRESET_FIRST && ctlId < IDC_BGCOL_PRESET_FIRST + kNumPresets) {
                 int idx = ctlId - IDC_BGCOL_PRESET_FIRST;
-                COLORREF col = kBgPresetColors[idx];
+                Color col = kBgPresetColors[idx];
                 if (col == kColorUnset) {
                     HdcPaintCheckerboard(dis->hDC, dis->rcItem.left, dis->rcItem.top,
                                          dis->rcItem.right - dis->rcItem.left, dis->rcItem.bottom - dis->rcItem.top);
@@ -1631,7 +1631,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
                     // preset buttons: select preview button
                     if (id >= IDC_BGCOL_PRESET_FIRST && id < IDC_BGCOL_PRESET_FIRST + kNumPresets) {
                         int idx = id - IDC_BGCOL_PRESET_FIRST;
-                        COLORREF col = kBgPresetColors[idx];
+                        Color col = kBgPresetColors[idx];
                         if (col == kColorUnset) {
                             data->isCheckered = true;
                         } else {
@@ -1682,7 +1682,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
     return FALSE;
 }
 
-bool Dialog_ChangeBackgroundColor(HWND hwnd, COLORREF currentColor, bool isCheckered, Str allFilesLabel,
+bool Dialog_ChangeBackgroundColor(HWND hwnd, Color currentColor, bool isCheckered, Str allFilesLabel,
                                   BgColorResult& result) {
     BgColorDlgData data;
     data.currentColor = currentColor;
@@ -1704,7 +1704,7 @@ bool Dialog_ChangeBackgroundColor(HWND hwnd, COLORREF currentColor, bool isCheck
     return true;
 }
 
-bool Dialog_SetTabColor(HWND hwnd, COLORREF currentColor, bool isUnset, COLORREF& resultColor, bool& resultIsUnset) {
+bool Dialog_SetTabColor(HWND hwnd, Color currentColor, bool isUnset, Color& resultColor, bool& resultIsUnset) {
     BgColorDlgData data;
     data.currentColor = currentColor;
     data.isCheckered = isUnset;

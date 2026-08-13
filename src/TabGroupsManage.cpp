@@ -236,8 +236,8 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
     Gfx* gfx = ev->gfx;
     Rect rc = ev->itemRect;
 
-    COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
-    COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    Color colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
+    Color colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }
@@ -276,8 +276,8 @@ static void OnListDoubleClick(TabGroupsWnd* w) {
 }
 
 void TabGroupsWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
     auto setColors = [&](ControlBase* c) {
         if (c) {

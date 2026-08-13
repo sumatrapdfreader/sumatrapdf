@@ -239,7 +239,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                 GetWindowRect(hwnd, &wr);
                 int w = wr.right - wr.left;
                 int h = wr.bottom - wr.top;
-                COLORREF col = EditBottomBorderColor();
+                Color col = EditBottomBorderColor();
                 HPEN pen = CreatePen(PS_SOLID, 1, col);
                 HGDIOBJ old = SelectObject(hdc, pen);
                 MoveToEx(hdc, 0, h - 1, nullptr);

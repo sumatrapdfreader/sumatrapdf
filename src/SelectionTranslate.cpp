@@ -930,8 +930,8 @@ TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str 
 }
 
 void SelectionTranslateWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
     auto setColors = [&](ControlBase* w) {
         if (w) {
@@ -981,7 +981,7 @@ void SelectionTranslateWnd::UpdateFont() {
 // the buttons are virtual controls, so they are styled here rather than by the
 // system: a filled box with a border, brighter on hover (like the other dialogs)
 void SelectionTranslateWnd::StyleButton(VirtButton* b, bool isDefault) {
-    COLORREF bg = ThemeWindowControlBackgroundColor();
+    Color bg = ThemeWindowControlBackgroundColor();
     b->textColor = ThemeWindowTextColor();
     b->textColorDisabled = ThemeWindowTextDisabledColor();
     b->bgColor = AccentColor(bg, isDefault ? 26 : 14);

@@ -56,8 +56,8 @@ void TextViewWnd::LayoutToClient() {
 }
 
 void TextViewWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
     if (edit) {
         edit->SetColors(colTxt, colBg);

@@ -2545,7 +2545,7 @@ static void OnMouseRightButtonDblClick(MainWindow* win, int x, int y, WPARAM key
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE 1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation, COLORREF /*bgCol*/) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation, Color /*bgCol*/) {
     // Frame info
     Rect frame = bounds;
     frame.Inflate(BORDER_SIZE, BORDER_SIZE);
@@ -2580,7 +2580,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
 }
 #else
-static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& /*pageRect*/, bool /*presentation*/, COLORREF bgCol) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& /*pageRect*/, bool /*presentation*/, Color bgCol) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
     AutoDeleteBrush brush(CreateSolidBrush(bgCol));
     ScopedSelectPen restorePen(hdc, pen);
@@ -2608,7 +2608,7 @@ static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
 
     // blue for links, green for images, so both can be on at once
-    COLORREF col = images ? RGB(0x00, 0xa0, 0x00) : RGB(0x00, 0x00, 0xff);
+    Color col = images ? RGB(0x00, 0xa0, 0x00) : RGB(0x00, 0x00, 0xff);
     ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
@@ -2690,7 +2690,7 @@ static void DebugShowFitContentArea(DisplayModel* dm, HDC hdc) {
 }
 
 // cf. https://web.archive.org/web/20140201011540/http://forums.fofou.org/sumatrapdf/topic?id=3183580&comments=15
-static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) {
+static void GetGradientColor(Color a, Color b, float perc, TRIVERTEX* tv) {
     u8 ar, ag, ab;
     u8 br, bg, bb;
     UnpackColor(a, ar, ag, ab);
@@ -2730,7 +2730,7 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     Gdiplus::Graphics gs(hdc);
 
     if (gDrawOldStyleAnnotationRect) {
-        Gdiplus::Color col = GdiRgbFromCOLORREF(0xff3333); // blue
+        Gdiplus::Color col = GdiRgbFromColor(0xff3333); // blue
         Gdiplus::Color colHatch2((Gdiplus::ARGB)Gdiplus::Color::Yellow);
         Gdiplus::HatchBrush br(Gdiplus::HatchStyleCross, colHatch2, col);
         Gdiplus::Pen pen(&br, 4);
@@ -2791,8 +2791,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     bool paintOnBlackWithoutShadow = win->presentation || isImage;
     bool isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
     bool isPdf = engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, StrL(".pdf"));
-    COLORREF colDocBg;
-    COLORREF colDocTxt = ThemeDocumentColors(colDocBg);
+    Color colDocBg;
+    Color colDocTxt = ThemeDocumentColors(colDocBg);
     if (isImage) {
         colDocBg = 0x0;
         colDocTxt = 0xffffff;
@@ -2829,7 +2829,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     // placeholder painted where a page's bitmap isn't rendered yet; normally
     // the page render background so an incoming page doesn't flash a
     // different color
-    COLORREF colPlaceholder;
+    Color colPlaceholder;
     ThemeDocumentColors(colPlaceholder);
     // until the first page of this tab has been painted, use the theme's
     // window background instead: e.g. restoring a session into a maximized
@@ -2845,7 +2845,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     bool shouldPaint = false;
     auto* gcols = gGlobalPrefs->fixedPageUI.gradientColors;
     auto nGCols = len(*gcols);
-    auto paintBgOrCheckerboard = [&](COLORREF col, Rect rc) {
+    auto paintBgOrCheckerboard = [&](Color col, Rect rc) {
         if (col == kColorUnset) {
             HdcPaintCheckerboard(hdc, rc.x, rc.y, rc.dx, rc.dy);
         } else {
@@ -2860,7 +2860,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         AutoDeleteBrush brush = CreateSolidBrush(colDocBg);
         HdcFillRect(hdc, rcArea, brush);
     } else {
-        COLORREF colors[3];
+        Color colors[3];
         colors[0] = ParseColor((*gcols)[0], WIN_COL_WHITE);
         if (nGCols == 1) {
             colors[1] = colors[2] = colors[0];
@@ -2886,9 +2886,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         TRIVERTEX tv[4] = {{0, 0}, {vp.dx, vp.dy / 2}, {0, vp.dy / 2}, {vp.dx, vp.dy}};
         GRADIENT_RECT gr[2] = {{0, 1}, {2, 3}};
 
-        COLORREF col0 = colors[0];
-        COLORREF col1 = colors[1];
-        COLORREF col2 = colors[2];
+        Color col0 = colors[0];
+        Color col1 = colors[1];
+        Color col2 = colors[2];
         if (percTop < 0.5F) {
             GetGradientColor(col0, col1, 2 * percTop, &tv[0]);
         } else {
@@ -4251,7 +4251,7 @@ static void DrawLoadErrorLine(HDC hdc, Rect r, Str name, HFONT font) {
 }
 
 // a red that stays readable on both a light and a dark canvas background
-static COLORREF LoadErrorTextColor() {
+static Color LoadErrorTextColor() {
     if (IsLightColor(ThemeMainWindowBackgroundColor())) {
         return RGB(0xc6, 0x28, 0x28);
     }

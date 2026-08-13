@@ -16,7 +16,7 @@ struct VirtRoot;
 struct VirtCloseButton;
 struct VirtMouseEvent;
 
-#define kTabDefaultBgCol ((COLORREF)(-1))
+#define kTabDefaultBgCol ((Color)(-1))
 
 struct TabInfo {
     Str text;
@@ -25,7 +25,7 @@ struct TabInfo {
     bool canClose = true; // TODO: same as !isPinned?
     bool isDirty = false;
     UINT_PTR userData = 0;
-    COLORREF tabColor = (COLORREF)(0xfeffffff); // kColorUnset; use default tab color
+    Color tabColor = (Color)(0xfeffffff); // kColorUnset; use default tab color
 
     TabInfo() = default;
     ~TabInfo();
@@ -127,23 +127,23 @@ struct TabsCtrl : VirtCtrl {
     MigrationHandler onTabMigration;
     DraggedHandler onTabDragged;
 
-    COLORREF currBgCol = 0;
-    COLORREF tabBackgroundBg = 0;
-    COLORREF tabBackgroundText = 0;
-    COLORREF tabBackgroundCloseX = 0;
-    COLORREF tabBackgroundCloseCircle = 0;
-    COLORREF tabSelectedBg = 0;
-    COLORREF tabSelectedText = 0;
-    COLORREF tabSelectedCloseX = 0;
-    COLORREF tabSelectedCloseCircle = 0;
-    COLORREF tabHighlightedBg = 0;
-    COLORREF tabHighlightedText = 0;
-    COLORREF tabHighlightedCloseX = 0;
-    COLORREF tabHighlightedCloseCircle = 0;
-    COLORREF tabHoveredCloseX = 0;
-    COLORREF tabHoveredCloseCircle = 0;
-    COLORREF tabClickedCloseX = 0;
-    COLORREF tabClickedCloseCircle = 0;
+    Color currBgCol = 0;
+    Color tabBackgroundBg = 0;
+    Color tabBackgroundText = 0;
+    Color tabBackgroundCloseX = 0;
+    Color tabBackgroundCloseCircle = 0;
+    Color tabSelectedBg = 0;
+    Color tabSelectedText = 0;
+    Color tabSelectedCloseX = 0;
+    Color tabSelectedCloseCircle = 0;
+    Color tabHighlightedBg = 0;
+    Color tabHighlightedText = 0;
+    Color tabHighlightedCloseX = 0;
+    Color tabHighlightedCloseCircle = 0;
+    Color tabHoveredCloseX = 0;
+    Color tabHoveredCloseCircle = 0;
+    Color tabClickedCloseX = 0;
+    Color tabClickedCloseCircle = 0;
 
     Size tabSize{-1, -1};
 

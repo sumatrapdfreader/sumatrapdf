@@ -90,8 +90,8 @@ struct StubTextRender : PlatformTextRender {
         return {0, 0, (float)Utf8CodepointCount(s) * AverageCharDx(), GetCurrFontLineSpacing()};
     }
 
-    void SetTextColor(COLORREF) override {}
-    void SetTextBgColor(COLORREF) override {}
+    void SetTextColor(Color) override {}
+    void SetTextBgColor(Color) override {}
     void Lock() override {}
     void Unlock() override {}
     void Draw(Str, RectF, bool) override {}

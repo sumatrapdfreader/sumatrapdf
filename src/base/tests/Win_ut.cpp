@@ -97,7 +97,7 @@ void WinUtilTest() {
     // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
 #if 0
     {
-        COLORREF c = AdjustLightness(RGB(255, 0, 0), 1.0f);
+        Color c = AdjustLightness(RGB(255, 0, 0), 1.0f);
         utassert(c == RGB(255, 0, 0));
         c = AdjustLightness(RGB(255, 0, 0), 2.0f);
         utassert(c == RGB(255, 255, 255));

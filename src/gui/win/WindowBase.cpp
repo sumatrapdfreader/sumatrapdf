@@ -1031,7 +1031,7 @@ bool WindowBase::IsEnabled() const {
     return tobool(enabled);
 }
 
-void WindowBase::SetColors(COLORREF textCol, COLORREF bgCol) {
+void WindowBase::SetColors(Color textCol, Color bgCol) {
     if (textCol != kColorNoChange) {
         this->textColor = textCol;
     }

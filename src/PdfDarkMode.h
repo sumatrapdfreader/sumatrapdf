@@ -92,9 +92,9 @@ struct DarkModePalette {
 
 struct DarkModeProfile {
     PageColorMode mode = PageColorMode::Normal;
-    COLORREF foreground = 0;
-    COLORREF pageBackground = 0;
-    COLORREF linkColor = 0;
+    Color foreground = 0;
+    Color pageBackground = 0;
+    Color linkColor = 0;
     float strength = 1.f;
     bool debugOverlay = false;
     bool preservePdfImages = false;

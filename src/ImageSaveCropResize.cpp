@@ -51,7 +51,6 @@ static Str Tr(Str s) {
 #include <wincodec.h>
 
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::Graphics;
 using Gdiplus::Ok;
 using Gdiplus::Status;
@@ -1002,7 +1001,7 @@ static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
     }
 
     // draw crop border
-    Gdiplus::Pen pen(Color(255, 255, 255), 1.0f);
+    Gdiplus::Pen pen(Gdiplus::Color(255, 255, 255), 1.0f);
     pen.SetDashStyle(Gdiplus::DashStyleDash);
     g.DrawRectangle(&pen, cropDispX, cropDispY, cropDispR - cropDispX, cropDispB - cropDispY);
 
@@ -1012,8 +1011,8 @@ static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
     int midX = (cropDispX + cropDispR) / 2;
     int midY = (cropDispY + cropDispB) / 2;
 
-    Gdiplus::SolidBrush handleBrush(Color(255, 255, 255, 255));
-    Gdiplus::Pen handlePen(Color(255, 0, 0, 0), 1);
+    Gdiplus::SolidBrush handleBrush(Gdiplus::Color(255, 255, 255, 255));
+    Gdiplus::Pen handlePen(Gdiplus::Color(255, 0, 0, 0), 1);
 
     auto drawHandle = [&](int cx, int cy) {
         g.FillRectangle(&handleBrush, cx - hh, cy - hh, hs, hs);
@@ -1064,7 +1063,7 @@ static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
     g.DrawImage(ew->srcBitmap, newLeft, newTop, dispNewW, dispNewH);
 
     // draw border around the new size rectangle
-    Gdiplus::Pen pen(Color(255, 255, 255), 1.0f);
+    Gdiplus::Pen pen(Gdiplus::Color(255, 255, 255), 1.0f);
     pen.SetDashStyle(Gdiplus::DashStyleDash);
     g.DrawRectangle(&pen, newLeft, newTop, dispNewW, dispNewH);
 
@@ -1076,8 +1075,8 @@ static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
     int right = newLeft + dispNewW;
     int bottom = newTop + dispNewH;
 
-    Gdiplus::SolidBrush handleBrush(Color(255, 255, 255, 255));
-    Gdiplus::Pen handlePen(Color(255, 0, 0, 0), 1);
+    Gdiplus::SolidBrush handleBrush(Gdiplus::Color(255, 255, 255, 255));
+    Gdiplus::Pen handlePen(Gdiplus::Color(255, 0, 0, 0), 1);
 
     auto drawHandle = [&](int hx, int hy) {
         g.FillRectangle(&handleBrush, hx - hh, hy - hh, hs, hs);
@@ -1984,7 +1983,7 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
 // system: a filled box with a border, brighter on hover
 static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const VirtMouseHandler& onClick) {
     auto* b = new ImageEditButton(Str{}, GetPlatformFont(ew->hFont));
-    COLORREF bg = GetSysColor(COLOR_BTNFACE);
+    Color bg = GetSysColor(COLOR_BTNFACE);
     b->textColor = GetSysColor(COLOR_BTNTEXT);
     b->textColorDisabled = GetSysColor(COLOR_GRAYTEXT);
     b->bgColor = AccentColor(bg, 14);

@@ -20,13 +20,13 @@ struct PlatformTextRender {
     virtual float GetCurrFontLineSpacing() = 0;
     virtual RectF Measure(Str s) = 0;
 
-    virtual void SetTextColor(COLORREF col) = 0;
+    virtual void SetTextColor(Color col) = 0;
 
     // this is only for the benefit of the gdi renderer. In GDI+, Draw() uses
     // transparent background color (i.e. whatever is under).
     // GDI doesn't support such transparency so the best we can do is simulate
     // that if the background is solid color. It won't work in other cases
-    virtual void SetTextBgColor(COLORREF col) = 0;
+    virtual void SetTextBgColor(Color col) = 0;
 
     // GDI+ calls cannot be done if we called Graphics::GetHDC(). However, getting/releasing
     // hdc is very expensive and kills performance if we do it for every Draw(). So we add

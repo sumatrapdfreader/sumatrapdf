@@ -347,7 +347,7 @@ struct TocItem {
     int id;
 
     int fontFlags; // fontBitBold, fontBitItalic
-    COLORREF color;
+    Color color;
 
     IPageDestination* dest;
     bool destNotOwned;

@@ -162,37 +162,37 @@ static bool SelBarIsDark() {
     return !IsLightColor(ThemeWindowBackgroundColor());
 }
 
-static COLORREF SelBarBg() {
+static Color SelBarBg() {
     if (SelBarIsDark()) {
         return ThemeWindowBackgroundColor();
     }
-    COLORREF contentBg;
+    Color contentBg;
     ThemePageRenderColors(contentBg);
     return AccentColor(contentBg, 12);
 }
 
-static COLORREF SelBarBorderColor() {
+static Color SelBarBorderColor() {
     if (SelBarIsDark()) {
         return AccentColor(ThemeWindowControlBackgroundColor(), 35);
     }
     return AccentColor(SelBarBg(), 8);
 }
 
-static COLORREF SelBarTextColor() {
+static Color SelBarTextColor() {
     if (SelBarIsDark()) {
         return ThemeWindowTextColor();
     }
     return RGB(27, 29, 33);
 }
 
-static COLORREF SelBarMutedTextColor() {
+static Color SelBarMutedTextColor() {
     if (SelBarIsDark()) {
         return ThemeWindowTextDisabledColor();
     }
     return RGB(92, 96, 104);
 }
 
-static COLORREF SelBarHoverBg(COLORREF bg) {
+static Color SelBarHoverBg(Color bg) {
     if (SelBarIsDark()) {
         return AccentColor(ThemeWindowControlBackgroundColor(), 15);
     }
@@ -228,8 +228,8 @@ static HFONT CreateScaledFontFrom(HFONT base, int pct) {
 struct SelToolbarIcon {
     Str svg; // our own copy: a settings reload frees the string we were given
     int size = 0;
-    COLORREF fgCol = 0;
-    COLORREF bgCol = 0;
+    Color fgCol = 0;
+    Color bgCol = 0;
     Pixmap* pixmap = nullptr;
 };
 
@@ -243,7 +243,7 @@ static void FreeSelToolbarIcons() {
     gSelToolbarIcons.Reset();
 }
 
-static Pixmap* GetSelToolbarIcon(Str svg, int size, COLORREF fgCol, COLORREF bgCol) {
+static Pixmap* GetSelToolbarIcon(Str svg, int size, Color fgCol, Color bgCol) {
     for (SelToolbarIcon& i : gSelToolbarIcons) {
         if (i.size == size && i.fgCol == fgCol && i.bgCol == bgCol && str::Eq(i.svg, svg)) {
             return i.pixmap;
@@ -265,8 +265,8 @@ static Pixmap* GetSelToolbarIcon(Str svg, int size, COLORREF fgCol, COLORREF bgC
 }
 
 static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
-    COLORREF fgCol = SelBarTextColor();
-    COLORREF bgCol = SelBarBg();
+    Color fgCol = SelBarTextColor();
+    Color bgCol = SelBarBg();
     for (SelectionToolbarButton& b : tb->buttons) {
         if (!b.svgIcon) {
             continue;
@@ -286,7 +286,7 @@ struct SelToolbarTextButton : VirtButton {
         }
         VirtButton::Paint(ctx);
     }
-    COLORREF hoverBg = kColorUnset;
+    Color hoverBg = kColorUnset;
 };
 
 struct SelToolbarIconButton : VirtIconButton {
@@ -299,7 +299,7 @@ struct SelToolbarIconButton : VirtIconButton {
     }
     // square, as tall as the row: the icon is centered in it
     Size GetIdealSize() override { return {sideLen, sideLen}; }
-    COLORREF hoverBg = kColorUnset;
+    Color hoverBg = kColorUnset;
     int sideLen = 0;
 };
 
@@ -336,10 +336,10 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     delete tb->layout;
     tb->layout = nullptr;
 
-    COLORREF bgCol = SelBarBg();
-    COLORREF hoverBg = SelBarHoverBg(bgCol);
-    COLORREF textCol = SelBarTextColor();
-    COLORREF mutedCol = SelBarMutedTextColor();
+    Color bgCol = SelBarBg();
+    Color hoverBg = SelBarHoverBg(bgCol);
+    Color textCol = SelBarTextColor();
+    Color mutedCol = SelBarMutedTextColor();
 
     int textDy = HwndMeasureText(hwnd, StrL("Mg"), tb->font).dy;
     int rowDy = textDy + (2 * padY);

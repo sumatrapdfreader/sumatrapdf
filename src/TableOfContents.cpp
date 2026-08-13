@@ -1246,7 +1246,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     bool isSelected = isTreeSelected || isMultiMatch;
     // Focus ring / highlight-text only for the real tree selection.
     bool hasFocus = isTreeSelected && (GetFocus() == tv->hwnd);
-    COLORREF bgCol, txtCol;
+    Color bgCol, txtCol;
     ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
     // Per-bookmark color from the document (when not the focused selection).
     if (!(isTreeSelected && hasFocus) && tocItem->color != kColorUnset) {
@@ -1330,7 +1330,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
         pageRect.dx = right - pageRect.x;
         // Slightly muted vs title when not selected (keeps numbers secondary).
         if (!(isTreeSelected && hasFocus)) {
-            COLORREF muted =
+            Color muted =
                 RGB((GetRValue(txtCol) * 2 + GetRValue(bgCol)) / 3, (GetGValue(txtCol) * 2 + GetGValue(bgCol)) / 3,
                     (GetBValue(txtCol) * 2 + GetBValue(bgCol)) / 3);
             SetTextColor(hdc, muted);
@@ -1380,7 +1380,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
         if (isSelected) {
             // Theme-aware selection fill/text; strip CDIS_SELECTED so Explorer
             // theme does not paint a light inactive selection over dark text.
-            COLORREF bgCol, txtCol;
+            Color bgCol, txtCol;
             ResolveTreeFilterItemColors(cd->hdc, ToRect(cd->rc), tv->bgColor, tv->textColor, true, hasFocus, &bgCol,
                                         &txtCol);
             if (!(isTreeSelected && hasFocus) && tocItem->color != kColorUnset) {

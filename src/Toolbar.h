@@ -36,7 +36,7 @@ void UpdateToolbarAfterThemeChange(MainWindow*);
 // renders an svg icon into a dx by dy Pixmap whose background is transparent,
 // for code that draws its own buttons (the selection toolbar). Caller owns the
 // Pixmap; null if the svg couldn't be rendered
-Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol);
+Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bgCol);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
 
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut);

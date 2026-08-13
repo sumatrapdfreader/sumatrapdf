@@ -196,7 +196,7 @@ static void PickAnotherRandomTip() {
     }
 }
 
-constexpr COLORREF kAboutBorderCol = RGB(0, 0, 0);
+constexpr Color kAboutBorderCol = RGB(0, 0, 0);
 
 constexpr int kAboutLeftRightSpaceDx = 8;
 constexpr int kAboutMarginDx = 10;
@@ -303,11 +303,11 @@ static TempStr GetAppVersionTemp() {
     return s;
 }
 
-constexpr COLORREF kCol1 = RGB(196, 64, 50);
-constexpr COLORREF kCol2 = RGB(227, 107, 35);
-constexpr COLORREF kCol3 = RGB(93, 160, 40);
-constexpr COLORREF kCol4 = RGB(69, 132, 190);
-constexpr COLORREF kCol5 = RGB(112, 115, 207);
+constexpr Color kCol1 = RGB(196, 64, 50);
+constexpr Color kCol2 = RGB(227, 107, 35);
+constexpr Color kCol3 = RGB(93, 160, 40);
+constexpr Color kCol4 = RGB(69, 132, 190);
+constexpr Color kCol5 = RGB(112, 115, 207);
 
 static Kind kindSumatraLogo = "sumatraLogo";
 
@@ -336,7 +336,7 @@ Size SumatraLogo::GetIdealSize() {
 }
 
 void SumatraLogo::Paint(VirtPaintCtx& ctx) {
-    static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
+    static Color cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
     Size txtSize = PlatformFontMeasureText(font, kAppName);
     Rect r = ctx.bounds;
     Point pt{r.x + ((r.dx - txtSize.dx) / 2), r.y + ((r.dy - txtSize.dy) / 2)};
@@ -482,8 +482,8 @@ void AboutCtrl::Sync(HDC hdc) {
 
     HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
     HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
-    COLORREF colText = ThemeWindowTextColor();
-    COLORREF colLink = ThemeWindowLinkColor();
+    Color colText = ThemeWindowTextColor();
+    Color colLink = ThemeWindowLinkColor();
 
     for (int i = 0; i < n; i++) {
         AboutRow* el = &gAboutRows[i];
@@ -1779,7 +1779,7 @@ static void GetFileStateIcon(FileState* fs) {
 
 static void DrawHomeViewButton(Gfx* gfx, Pixmap* icon, Rect r, bool selected) {
     if (selected) {
-        COLORREF bg = ThemeControlBackgroundColor();
+        Color bg = ThemeControlBackgroundColor();
         gfx->FillRect(r, bg);
         gfx->DrawRect(r, AccentColor(bg, 40));
     }
@@ -1812,7 +1812,7 @@ static TempStr FileSizeForHomeListTemp(i64 size) {
 // light blue outline marking the keyboard-selected entry (issue #1136).
 // A fixed color: it has to read as "selected" against both the light and the
 // dark page background
-constexpr COLORREF kHomeSelectionColor = RGB(0x4c, 0xa6, 0xff);
+constexpr Color kHomeSelectionColor = RGB(0x4c, 0xa6, 0xff);
 
 static void DrawHomeSelectionOutline(HDC hdc, const Rect& r, int radius) {
     int penDx = DpiScale(2);
@@ -1856,7 +1856,7 @@ static bool HomeSearchHasFocus(MainWindow* win) {
     return win && win->homeSearch && GetFocus() == win->homeSearch->hwnd;
 }
 
-static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, COLORREF backgroundColor,
+static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, Color backgroundColor,
                             bool isRtl, bool isSelected) {
     HDC hdc = l.hdc;
     FileState* fs = thumb.fs;
@@ -1870,7 +1870,7 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
         DrawHomeSelectionOutline(hdc, Rect(row.x, row.y, row.dx, row.dy - 1), 4);
     }
 
-    COLORREF lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
+    Color lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, lineCol), true);
     HdcDrawLine(hdc, Rect(row.x, row.y + row.dy - 1, row.dx, 0));
 
@@ -2439,7 +2439,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
     // draw search edit border and background on the canvas
     {
-        COLORREF bgCol = ThemeControlBackgroundColor();
+        Color bgCol = ThemeControlBackgroundColor();
         const Rect& sb = l.rcSearchBorder;
         RECT rcBorder = {sb.x, sb.y, sb.x + sb.dx, sb.y + sb.dy};
         // fill interior with control background so padding matches the edit
@@ -2447,7 +2447,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         HdcFillRect(hdc, ToRect(rcBorder), brBg);
         DeleteObject(brBg);
         // draw border frame
-        COLORREF borderCol = AccentColor(bgCol, 40);
+        Color borderCol = AccentColor(bgCol, 40);
         HBRUSH brBorder = CreateSolidBrush(borderCol);
         FrameRect(hdc, &rcBorder, brBorder);
         DeleteObject(brBorder);

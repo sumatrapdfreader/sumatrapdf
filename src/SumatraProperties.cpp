@@ -823,8 +823,8 @@ void PropertiesWnd::LayoutToClient() {
 }
 
 void PropertiesWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
     if (editProps) {
         editProps->SetColors(colTxt, colBg);

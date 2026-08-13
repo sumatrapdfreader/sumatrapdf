@@ -59,7 +59,7 @@ void ApplyDarkModeToPopupWindow(HWND hwnd) {
 }
 
 void StyleThemedButton(VirtButton* b, bool isDefault) {
-    COLORREF bg = ThemeWindowControlBackgroundColor();
+    Color bg = ThemeWindowControlBackgroundColor();
     b->textColor = ThemeWindowTextColor();
     b->textColorDisabled = ThemeWindowTextDisabledColor();
     b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
@@ -86,7 +86,7 @@ VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool 
 // doesn't have to know about the app's palette. The app implements it (Sumatra
 // returns the theme's edge color); an app that doesn't theme anything can
 // return a fixed gray.
-COLORREF EditBottomBorderColor() {
+Color EditBottomBorderColor() {
     if (!HasCurrentTheme()) {
         return GetSysColor(COLOR_WINDOWFRAME);
     }
@@ -100,9 +100,9 @@ _TRN("Light")
 _TRN("Charcoal")
 */
 
-constexpr COLORREF kColBlack = 0x000000;
-constexpr COLORREF kColWhite = 0xFFFFFF;
-constexpr COLORREF kRedColor = RgbToCOLORREF(0xff0000);
+constexpr Color kColBlack = 0x000000;
+constexpr Color kColWhite = 0xFFFFFF;
+constexpr Color kRedColor = RgbToColor(0xff0000);
 
 // Optional colors (DisabledTextColor … NotificationHighlightTextColor) fix
 // muddy derived hues when TextColor is not neutral gray (e.g. Dracula #f8f8f2).
@@ -666,7 +666,7 @@ static void ApplyThemeColorsToDarkMode() {
 
     DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
     DarkMode::setCtrlBackgroundColor(ThemeWindowControlBackgroundColor());
-    COLORREF ctrlBg = ThemeWindowControlBackgroundColor();
+    Color ctrlBg = ThemeWindowControlBackgroundColor();
     DarkMode::setHotBackgroundColor(ThemeHotBackgroundColor());
     DarkMode::setTextColor(ThemeWindowTextColor());
     DarkMode::setDarkerTextColor(ThemeWindowDarkerTextColor());
@@ -767,7 +767,7 @@ static int GetThemeByName(Str name) {
 }
 
 // this is the default aggressive yellow that we suppress
-constexpr COLORREF kMainWinBgColDefault = (RGB(0xff, 0xf2, 0) - 0x80000000);
+constexpr Color kMainWinBgColDefault = (RGB(0xff, 0xf2, 0) - 0x80000000);
 
 static bool IsDefaultMainWinColor(ParsedColor* col) {
     return col->parsedOk && col->col == kMainWinBgColDefault;
@@ -880,18 +880,18 @@ void SetCurrentThemeFromSettings() {
     }
 }
 
-#define GetThemeCol(name, def) GetParsedCOLORREF(name, name##Parsed, def)
+#define GetThemeCol(name, def) GetParsedColor(name, name##Parsed, def)
 
 // canvas/window background color around the document pages
 // not affected by FixedPageUI.TextColor/BackgroundColor (those affect page rendering)
-COLORREF ThemeDocumentColors(COLORREF& bg) {
+Color ThemeDocumentColors(Color& bg) {
     bg = ThemeMainWindowBackgroundColor();
 
     if (!DocumentColorsFollowThemeEnabled()) {
         return ThemeWindowTextColor();
     }
 
-    COLORREF text = ThemeWindowTextColor();
+    Color text = ThemeWindowTextColor();
     bg = ThemeMainWindowBackgroundColor();
 
     // the system palette is exact: tinting it away from COLOR_WINDOW is the
@@ -920,8 +920,8 @@ void SetInvertPageColors(bool invert) {
 
 // colors for page bitmap recoloring (render cache)
 // TextColor substitutes black, BackgroundColor substitutes white in rendered pages
-static COLORREF ThemePageRenderColorsNoInvert(COLORREF& bg) {
-    COLORREF text = kColBlack;
+static Color ThemePageRenderColorsNoInvert(Color& bg) {
+    Color text = kColBlack;
     bg = kColWhite;
 
     ParsedColor* parsedCol;
@@ -966,8 +966,8 @@ static COLORREF ThemePageRenderColorsNoInvert(COLORREF& bg) {
     return text;
 }
 
-COLORREF ThemePageRenderColors(COLORREF& bg) {
-    COLORREF text = ThemePageRenderColorsNoInvert(bg);
+Color ThemePageRenderColors(Color& bg) {
+    Color text = ThemePageRenderColorsNoInvert(bg);
     if (!gInvertPageColors) {
         return text;
     }
@@ -975,7 +975,7 @@ COLORREF ThemePageRenderColors(COLORREF& bg) {
     return text;
 }
 
-COLORREF ThemeControlBackgroundColor() {
+Color ThemeControlBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
@@ -984,11 +984,11 @@ COLORREF ThemeControlBackgroundColor() {
     return col;
 }
 
-COLORREF ThemeMainWindowBackgroundColor() {
+Color ThemeMainWindowBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
-    COLORREF bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
+    Color bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
     if (gCurrThemeIndex == 0) {
         // Special behavior for light theme.
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
@@ -999,7 +999,7 @@ COLORREF ThemeMainWindowBackgroundColor() {
     return bgColor;
 }
 
-COLORREF ThemeWindowBackgroundColor() {
+Color ThemeWindowBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
@@ -1007,7 +1007,7 @@ COLORREF ThemeWindowBackgroundColor() {
     return col;
 }
 
-COLORREF ThemeWindowTextColor() {
+Color ThemeWindowTextColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOWTEXT);
     }
@@ -1015,34 +1015,34 @@ COLORREF ThemeWindowTextColor() {
     return col;
 }
 
-static COLORREF BlendTextAndBgHalfway() {
+static Color BlendTextAndBgHalfway() {
     // fallback when DisabledTextColor is unset: mute text toward background
-    COLORREF txt = ThemeWindowTextColor();
-    COLORREF bg = ThemeMainWindowBackgroundColor();
+    Color txt = ThemeWindowTextColor();
+    Color bg = ThemeMainWindowBackgroundColor();
     u8 r = (u8)((GetRValue(txt) + GetRValue(bg)) / 2);
     u8 g = (u8)((GetGValue(txt) + GetGValue(bg)) / 2);
     u8 b = (u8)((GetBValue(txt) + GetBValue(bg)) / 2);
     return RGB(r, g, b);
 }
 
-COLORREF ThemeWindowTextDisabledColor() {
+Color ThemeWindowTextDisabledColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_GRAYTEXT);
     }
     return GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
 }
 
-COLORREF ThemeWindowDarkerTextColor() {
+Color ThemeWindowDarkerTextColor() {
     if (gUseHighContrast) {
         // high contrast has no muted text: muting it is the opposite of the point
         return GetSysColor(COLOR_WINDOWTEXT);
     }
     // fallback: slightly muted primary text (not as flat as disabled)
-    COLORREF fallback = AccentColor(ThemeWindowTextColor(), 40);
+    Color fallback = AccentColor(ThemeWindowTextColor(), 40);
     return GetThemeCol(gCurrentTheme->darkerTextColor, fallback);
 }
 
-COLORREF ThemeWindowControlBackgroundColor() {
+Color ThemeWindowControlBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
@@ -1050,7 +1050,7 @@ COLORREF ThemeWindowControlBackgroundColor() {
     return col;
 }
 
-COLORREF ThemeWindowLinkColor() {
+Color ThemeWindowLinkColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_HOTLIGHT);
     }
@@ -1058,61 +1058,61 @@ COLORREF ThemeWindowLinkColor() {
     return col;
 }
 
-COLORREF ThemeHotBackgroundColor() {
+Color ThemeHotBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_HIGHLIGHT);
     }
-    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 20);
+    Color fallback = AccentColor(ThemeWindowControlBackgroundColor(), 20);
     return GetThemeCol(gCurrentTheme->hotBackgroundColor, fallback);
 }
 
-COLORREF ThemeEdgeColor() {
+Color ThemeEdgeColor() {
     if (gUseHighContrast) {
         // borders have to stay visible, so they take the text color
         return GetSysColor(COLOR_WINDOWTEXT);
     }
-    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 40);
+    Color fallback = AccentColor(ThemeWindowControlBackgroundColor(), 40);
     return GetThemeCol(gCurrentTheme->edgeColor, fallback);
 }
 
-COLORREF ThemeHotEdgeColor() {
+Color ThemeHotEdgeColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_HIGHLIGHT);
     }
-    COLORREF fallback = AccentColor(ThemeEdgeColor(), 30);
+    Color fallback = AccentColor(ThemeEdgeColor(), 30);
     return GetThemeCol(gCurrentTheme->hotEdgeColor, fallback);
 }
 
-COLORREF ThemeDisabledEdgeColor() {
+Color ThemeDisabledEdgeColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_GRAYTEXT);
     }
-    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 15);
+    Color fallback = AccentColor(ThemeWindowControlBackgroundColor(), 15);
     return GetThemeCol(gCurrentTheme->disabledEdgeColor, fallback);
 }
 
-COLORREF ThemeErrorBackgroundColor() {
+Color ThemeErrorBackgroundColor() {
     if (gUseHighContrast) {
         // no error color in the system palette; the text carries the message
         return GetSysColor(COLOR_WINDOW);
     }
     // soft red tint of control background when unset
-    COLORREF fallback = RgbToCOLORREF(0x5c1a1a);
+    Color fallback = RgbToColor(0x5c1a1a);
     if (IsLightColor(ThemeWindowControlBackgroundColor())) {
-        fallback = RgbToCOLORREF(0xffe0e0);
+        fallback = RgbToColor(0xffe0e0);
     }
     return GetThemeCol(gCurrentTheme->errorBackgroundColor, fallback);
 }
 
-COLORREF ThemeNotificationsBackgroundColor() {
+Color ThemeNotificationsBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
-    COLORREF fallback = AdjustLightness2(ThemeWindowBackgroundColor(), 10);
+    Color fallback = AdjustLightness2(ThemeWindowBackgroundColor(), 10);
     return GetThemeCol(gCurrentTheme->notificationBackgroundColor, fallback);
 }
 
-COLORREF ThemeNotificationsTextColor() {
+Color ThemeNotificationsTextColor() {
     return ThemeWindowTextColor();
 }
 
@@ -1120,28 +1120,28 @@ COLORREF ThemeNotificationsTextColor() {
 // in both directions: light themes get the classic yellow, dark themes a muted
 // dark amber. Deriving it from the theme's own accent (as we used to) produced
 // saturated, unrelated hues -- Dracula's warnings came out bright purple.
-COLORREF ThemeNotificationsHighlightColor() {
+Color ThemeNotificationsHighlightColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_HIGHLIGHT);
     }
-    COLORREF fallback;
+    Color fallback;
     if (IsLightColor(ThemeNotificationsBackgroundColor())) {
-        fallback = RgbToCOLORREF(0xFFEE70); // yellowish
+        fallback = RgbToColor(0xFFEE70); // yellowish
     } else {
-        fallback = RgbToCOLORREF(0x422006); // dark amber
+        fallback = RgbToColor(0x422006); // dark amber
     }
     return GetThemeCol(gCurrentTheme->notificationHighlightColor, fallback);
 }
 
-COLORREF ThemeNotificationsHighlightTextColor() {
+Color ThemeNotificationsHighlightTextColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_HIGHLIGHTTEXT);
     }
-    COLORREF fallback;
+    Color fallback;
     if (IsLightColor(ThemeNotificationsBackgroundColor())) {
-        fallback = RgbToCOLORREF(0x8d0801); // reddish
+        fallback = RgbToColor(0x8d0801); // reddish
     } else {
-        fallback = RgbToCOLORREF(0xFDE68A); // light amber
+        fallback = RgbToColor(0xFDE68A); // light amber
     }
     return GetThemeCol(gCurrentTheme->notificationHighlightTextColor, fallback);
 }
@@ -1150,11 +1150,11 @@ COLORREF ThemeNotificationsHighlightTextColor() {
 // the window background and can vanish on the amber warning background (Dracula's
 // cyan, Choco's yellow). Links are underlined, so reusing the warning text color
 // stays legible and still reads as a link.
-COLORREF ThemeNotificationsHighlightLinkColor() {
+Color ThemeNotificationsHighlightLinkColor() {
     return ThemeNotificationsHighlightTextColor();
 }
 
-COLORREF ThemeNotificationsProgressColor() {
+Color ThemeNotificationsProgressColor() {
     return ThemeWindowLinkColor();
 }
 

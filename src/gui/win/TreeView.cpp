@@ -257,7 +257,7 @@ bool TreeView::SelectItem(TreeItem ti) {
     return ok == TRUE;
 }
 
-void TreeView::SetColors(COLORREF textCol, COLORREF bgCol) {
+void TreeView::SetColors(Color textCol, Color bgCol) {
     ControlBase::SetColors(textCol, bgCol);
     if (!IsSpecialColor(textCol)) {
         TreeView_SetTextColor(hwnd, textCol);

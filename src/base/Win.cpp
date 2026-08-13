@@ -1807,7 +1807,7 @@ void HdcFillRect(HDC hdc, const Rect& rect, HBRUSH br) {
     ::FillRect(hdc, &r, br);
 }
 
-void HdcFillRect(HDC hdc, const Rect& rect, COLORREF col) {
+void HdcFillRect(HDC hdc, const Rect& rect, Color col) {
     AutoDeleteBrush br(CreateSolidBrush(col));
     RECT r = ToRECT(rect);
     ::FillRect(hdc, &r, br);
@@ -2712,13 +2712,13 @@ static bool IsPalettedBitmap(DIBSECTION& info, int nBytes) {
     return sizeof(info) == nBytes && info.dsBmih.biBitCount != 0 && info.dsBmih.biBitCount <= 8;
 }
 
-COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
+Color GetPixel(BitmapPixels* bitmap, int x, int y) {
     ReportIf(x < 0 || x >= bitmap->size.dx);
     ReportIf(y < 0 || y >= bitmap->size.dy);
     u8* pixels = bitmap->pixels;
     u8* pixel = pixels + ((size_t)y * bitmap->nBytesPerRow) + ((size_t)x * bitmap->nBytesPerPixel);
     // color order in DIB is blue-green-red-alpha
-    COLORREF c = 0;
+    Color c = 0;
     if (3 == bitmap->nBytesPerPixel) {
         c = RGB(pixel[2], pixel[1], pixel[0]);
     } else if (4 == bitmap->nBytesPerPixel) {
@@ -2792,7 +2792,7 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
 // (proportionally in between). When linkColor is non-zero, pixels that look
 // like link text (blue-ish) are set to linkColor instead. Pixels inside
 // skipRects keep their original colors (dark-mode image preservation).
-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLORREF linkColor, Vec<Rect>* skipRects) {
+void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
     if (!hbmp) {
         return;
     }
@@ -4088,8 +4088,8 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
 
 void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
     constexpr int kCheckerSize = 8;
-    COLORREF lightColor = RGB(255, 255, 255);
-    COLORREF darkColor = RGB(204, 204, 204);
+    Color lightColor = RGB(255, 255, 255);
+    Color darkColor = RGB(204, 204, 204);
     HBRUSH lightBrush = CreateSolidBrush(lightColor);
     HBRUSH darkBrush = CreateSolidBrush(darkColor);
 

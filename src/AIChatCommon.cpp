@@ -472,7 +472,7 @@ function scrollToBottom() {
 }
 </script></body></html>)";
 
-static TempStr ColorToCssTemp(COLORREF c) {
+static TempStr ColorToCssTemp(Color c) {
     return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
 }
 
@@ -482,7 +482,7 @@ static TempStr ColorToCssTemp(COLORREF c) {
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     Str host = virtualHost ? virtualHost : StrL("");
     bool followTheme = str::IsEmptyOrWhiteSpace(bgColor) || str::EqI(bgColor, StrL("#ffffff"));
-    COLORREF themeBg = ThemeControlBackgroundColor();
+    Color themeBg = ThemeControlBackgroundColor();
     bool dark = followTheme && !IsLightColor(themeBg);
     TempStr bg = followTheme ? ColorToCssTemp(themeBg) : str::DupTemp(bgColor);
     TempStr fg = dark ? ColorToCssTemp(ThemeWindowTextColor()) : str::DupTemp("#222222");

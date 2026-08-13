@@ -81,8 +81,8 @@ static DocumentColorsFollowTheme MapLegacyDocumentColorMode(Str v) {
 }
 
 // the black-on-white a document renders as when FixedPageUI says nothing
-constexpr COLORREF kColBlackDefault = 0x000000;
-constexpr COLORREF kColWhiteDefault = 0xFFFFFF;
+constexpr Color kColBlackDefault = 0x000000;
+constexpr Color kColWhiteDefault = 0xFFFFFF;
 
 // Migrate FixedPageUI.InvertColors and DocumentColorMode to DocumentColorsFollowTheme
 static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
@@ -127,8 +127,8 @@ static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
         // back when the mapping was written. 37f920ff0 then redefined smart as
         // "match the UI theme, don't swap black/white", which quietly turned
         // this migration into "light pages" for anyone on a light theme.
-        COLORREF text = ParseColor(gGlobalPrefs->fixedPageUI.textColor, kColBlackDefault);
-        COLORREF bg = ParseColor(gGlobalPrefs->fixedPageUI.backgroundColor, kColWhiteDefault);
+        Color text = ParseColor(gGlobalPrefs->fixedPageUI.textColor, kColBlackDefault);
+        Color bg = ParseColor(gGlobalPrefs->fixedPageUI.backgroundColor, kColWhiteDefault);
         str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.textColor, SerializeColorTemp(bg));
         str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.backgroundColor, SerializeColorTemp(text));
         SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Off);

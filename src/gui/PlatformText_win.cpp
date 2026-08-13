@@ -171,8 +171,8 @@ struct WinTextRender : PlatformTextRender {
     bool ownsGfx = false;
     PlatformFont* currFont = nullptr;
     // black, like the Gdiplus::Color these used to default to
-    COLORREF textColor = 0;
-    COLORREF textBgColor = 0;
+    Color textColor = 0;
+    Color textBgColor = 0;
 
     ~WinTextRender() override {
         if (ownsGfx) {
@@ -197,8 +197,8 @@ struct TextRenderGdi : WinTextRender {
 
     void SetFont(PlatformFont* font) override;
     RectF Measure(Str s) override;
-    void SetTextColor(COLORREF col) override;
-    void SetTextBgColor(COLORREF col) override;
+    void SetTextColor(Color col) override;
+    void SetTextBgColor(Color col) override;
     void Lock() override;
     void Unlock() override;
     // note: ignores any transformation set on gfx
@@ -253,7 +253,7 @@ RectF TextRenderGdi::Measure(Str s) {
     return res;
 }
 
-void TextRenderGdi::SetTextColor(COLORREF col) {
+void TextRenderGdi::SetTextColor(Color col) {
     if (textColor == col) {
         return;
     }
@@ -263,7 +263,7 @@ void TextRenderGdi::SetTextColor(COLORREF col) {
     }
 }
 
-void TextRenderGdi::SetTextBgColor(COLORREF col) {
+void TextRenderGdi::SetTextBgColor(Color col) {
     if (textBgColor == col) {
         return;
     }
@@ -316,8 +316,8 @@ struct TextRenderGdiplus : WinTextRender {
 
     void SetFont(PlatformFont* font) override;
     RectF Measure(Str s) override;
-    void SetTextColor(COLORREF col) override;
-    void SetTextBgColor(COLORREF) override {}
+    void SetTextColor(Color col) override;
+    void SetTextBgColor(Color) override {}
     void Lock() override {}
     void Unlock() override {}
     void Draw(Str s, RectF bb, bool isRtl) override;
@@ -336,13 +336,13 @@ RectF TextRenderGdiplus::Measure(Str s) {
     return MeasureText(gfx, currFont->gdiFont, ToWStrTemp(s), measureAlgo);
 }
 
-void TextRenderGdiplus::SetTextColor(COLORREF col) {
+void TextRenderGdiplus::SetTextColor(Color col) {
     if (textColor == col) {
         return;
     }
     textColor = col;
     delete textColorBrush;
-    textColorBrush = new SolidBrush(GdiRgbFromCOLORREF(col));
+    textColorBrush = new SolidBrush(GdiRgbFromColor(col));
 }
 
 static Gdiplus::PointF ToGdipPointF(const PointF p) {
@@ -376,8 +376,8 @@ struct TextRenderHdc : WinTextRender {
 
     void SetFont(PlatformFont* font) override;
     RectF Measure(Str s) override;
-    void SetTextColor(COLORREF col) override;
-    void SetTextBgColor(COLORREF col) override;
+    void SetTextColor(Color col) override;
+    void SetTextBgColor(Color col) override;
     void Lock() override;
     void Unlock() override;
     void Draw(Str s, RectF bb, bool isRtl) override;
@@ -406,7 +406,7 @@ RectF TextRenderHdc::Measure(Str s) {
     return res;
 }
 
-void TextRenderHdc::SetTextColor(COLORREF col) {
+void TextRenderHdc::SetTextColor(Color col) {
     ReportIf(!hdc);
     if (textColor == col) {
         return;
@@ -415,7 +415,7 @@ void TextRenderHdc::SetTextColor(COLORREF col) {
     ::SetTextColor(hdc, col);
 }
 
-void TextRenderHdc::SetTextBgColor(COLORREF col) {
+void TextRenderHdc::SetTextBgColor(Color col) {
     ReportIf(!hdc);
     if (textBgColor == col) {
         return;

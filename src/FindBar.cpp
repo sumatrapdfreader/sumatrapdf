@@ -205,7 +205,7 @@ void FindBarWnd::CreateButtons() {
     static const int cmds[6] = {
         CmdFindPrev,      CmdFindNext,       CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
         kFindBarPinCmdId, kFindBarCloseCmdId};
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
     int pad = DpiScale(4);
     for (int i = 0; i < 6; i++) {
         auto* b = new VirtIconButton();

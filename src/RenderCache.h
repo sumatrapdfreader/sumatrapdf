@@ -185,9 +185,9 @@ struct RenderCache {
     Size maxTileSize;
     bool isRemoteSession = false;
 
-    COLORREF textColor = 0;
-    COLORREF backgroundColor = 0;
-    COLORREF linkColor = 0;
+    Color textColor = 0;
+    Color backgroundColor = 0;
+    Color linkColor = 0;
     // bumped by UpdateDocumentColors when page render colors / the PDF
     // document color mode change; renders started under an older epoch are
     // discarded instead of cached

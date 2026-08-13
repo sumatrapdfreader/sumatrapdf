@@ -318,7 +318,7 @@ static int Mul255(int a, int b) {
     return n >> 8;
 }
 
-void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor, Vec<Rect>* skipRects) {
+void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
     if (!px) {
         return;
     }

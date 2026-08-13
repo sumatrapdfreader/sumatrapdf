@@ -179,7 +179,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
     switch (edge) {
         case 0: // left column
             for (int y = y0; y < y0 + h; y++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[(y * stride) + x0] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToColor(pixels[(y * stride) + x0] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -187,7 +187,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 1: // right column
             for (int y = y0; y < y0 + h; y++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[(y * stride) + x0 + w - 1] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToColor(pixels[(y * stride) + x0 + w - 1] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -195,7 +195,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 2: // top row
             for (int x = x0; x < x0 + w; x++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[(y0 * stride) + x] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToColor(pixels[(y0 * stride) + x] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -203,7 +203,7 @@ static bool IsEdgeMostlyBlackEx(DWORD* pixels, int stride, int x0, int y0, int w
             break;
         case 3: // bottom row
             for (int x = x0; x < x0 + w; x++) {
-                if (IsNearBlack(RgbToCOLORREF(pixels[((y0 + h - 1) * stride) + x] & 0x00FFFFFF))) {
+                if (IsNearBlack(RgbToColor(pixels[((y0 + h - 1) * stride) + x] & 0x00FFFFFF))) {
                     blackCount++;
                 }
                 total++;
@@ -299,7 +299,7 @@ static HBITMAP TrimBlackBorders(HBITMAP hbm, int* pW, int* pH) {
 }
 
 // replace black corner pixels from PrintWindow with bgColor using a rounded corner mask
-static void FixRoundedCorners(HBITMAP hbm, int w, int h, COLORREF bgColor, int radius) {
+static void FixRoundedCorners(HBITMAP hbm, int w, int h, Color bgColor, int radius) {
     BITMAPINFO bmi;
     InitBitmapInfo32(bmi, w, h);
 
@@ -316,7 +316,7 @@ static void FixRoundedCorners(HBITMAP hbm, int w, int h, COLORREF bgColor, int r
 
     // only replace pixels that are actually near-black (avoids clobbering legitimate content)
     auto replaceIfBlack = [&](int idx) {
-        if (IsNearBlack(RgbToCOLORREF(pixels[idx] & 0x00FFFFFF))) {
+        if (IsNearBlack(RgbToColor(pixels[idx] & 0x00FFFFFF))) {
             pixels[idx] = bg;
         }
     };
@@ -406,7 +406,7 @@ static HBITMAP CaptureWindowBmp(HWND hwnd, int* outW, int* outH) {
     DWM_WINDOW_CORNER_PREFERENCE cornerPref = DWMWCP_DEFAULT;
     DwmGetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
     if (cornerPref == DWMWCP_DEFAULT || cornerPref == DWMWCP_ROUND || cornerPref == DWMWCP_ROUNDSMALL) {
-        COLORREF bgColor = GetSysColor(COLOR_WINDOW);
+        Color bgColor = GetSysColor(COLOR_WINDOW);
         // DWM corner radius is 8 logical pixels (4 for ROUNDSMALL), scale by DPI
         int baseRadius = (cornerPref == DWMWCP_ROUNDSMALL) ? 4 : 8;
         int dpi = DpiGetForHwnd(hwnd);
@@ -941,7 +941,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
         for (int y = y0; y < y1; y++) {
             for (int x = x0; x < x1; x++) {
-                COLORREF c = RgbToCOLORREF(tempPixels[(y * w) + x] & 0x00FFFFFF);
+                Color c = RgbToColor(tempPixels[(y * w) + x] & 0x00FFFFFF);
                 pixels[(y * w) + x] = PremultiplyPixel(c, 255);
             }
         }
@@ -951,7 +951,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     {
         for (int y = 0; y < kInfoBarHeight; y++) {
             for (int x = 0; x < w; x++) {
-                COLORREF c = RgbToCOLORREF(tempPixels[(y * w) + x] & 0x00FFFFFF);
+                Color c = RgbToColor(tempPixels[(y * w) + x] & 0x00FFFFFF);
                 pixels[(y * w) + x] = PremultiplyPixel(c, 255);
             }
         }

@@ -1221,7 +1221,7 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
         isSelected = hSel && hItem && hSel == hItem;
     }
     bool hasFocus = (GetFocus() == tv->hwnd);
-    COLORREF bgCol, txtCol;
+    Color bgCol, txtCol;
     ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
     HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
     DrawTreeItemFilterHighlight(hdc, labelRect, fti->text, words, bgCol, txtCol, font);

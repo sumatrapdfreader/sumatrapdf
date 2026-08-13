@@ -1010,9 +1010,9 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
                         skipRectsPtr = &skipRects;
                     }
                 }
-                COLORREF textCol = profile ? profile->foreground : cache->textColor;
-                COLORREF bgCol = profile ? profile->pageBackground : cache->backgroundColor;
-                COLORREF linkCol = profile ? profile->linkColor : cache->linkColor;
+                Color textCol = profile ? profile->foreground : cache->textColor;
+                Color bgCol = profile ? profile->pageBackground : cache->backgroundColor;
+                Color linkCol = profile ? profile->linkColor : cache->linkColor;
                 RecolorPixmap(bmp, textCol, bgCol, linkCol, skipRectsPtr);
             }
             if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {
@@ -1266,8 +1266,8 @@ void DebugTextWnd::LayoutToClient() {
 }
 
 void DebugTextWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
     if (edit) {
         edit->SetColors(colTxt, colBg);

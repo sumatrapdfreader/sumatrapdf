@@ -34,7 +34,6 @@ static Kind kindTabCtrl = "tabCtrl";
 constexpr int kMinTabWidthForClose = 64;
 
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::CompositingQualityHighQuality;
 using Gdiplus::Font;
 using Gdiplus::Graphics;
@@ -57,12 +56,12 @@ TabInfo::~TabInfo() {
     str::Free(tooltip);
 }
 
-static Gdiplus::Color GdipCol(COLORREF c) {
-    return GdiRgbFromCOLORREF(c);
+static Gdiplus::Color GdipCol(Color c) {
+    return GdiRgbFromColor(c);
 }
 
-static COLORREF TabTextColorForBackground(COLORREF tabBg) {
-    COLORREF text = ThemeWindowTextColor();
+static Color TabTextColorForBackground(Color tabBg) {
+    Color text = ThemeWindowTextColor();
     if (abs((int)GetLightness(text) - (int)GetLightness(tabBg)) >= 80) {
         return text;
     }
@@ -88,7 +87,7 @@ struct TabCtrl : VirtCtrl {
     bool IsSelected();
     bool IsUnderMouse();
     bool CloseVisible();
-    COLORREF BgColor();
+    Color BgColor();
 
     Size GetIdealSize() override;
     void SetBounds(Rect) override;
@@ -131,8 +130,8 @@ bool TabCtrl::IsUnderMouse() {
     return tabsCtrl && tabsCtrl->tabHighlighted == Idx();
 }
 
-COLORREF TabCtrl::BgColor() {
-    COLORREF selected = ThemeControlBackgroundColor();
+Color TabCtrl::BgColor() {
+    Color selected = ThemeControlBackgroundColor();
     bool isSelected = IsSelected();
     bool isUnderMouse = IsUnderMouse();
     // a tab with a color of its own keeps it, shaded when it isn't selected
@@ -217,8 +216,8 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     Gfx* gfx = ctx.gfx;
     HWND hwnd = GetHwnd();
     Rect r = ctx.bounds;
-    COLORREF tabBgCol = BgColor();
-    COLORREF textColor = TabTextColorForBackground(tabBgCol);
+    Color tabBgCol = BgColor();
+    Color textColor = TabTextColorForBackground(tabBgCol);
 
     gfx->FillRect(r, tabBgCol);
 
@@ -532,8 +531,8 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    COLORREF bgCol = tabSelectedBg;
-    COLORREF textCol = tabSelectedText;
+    Color bgCol = tabSelectedBg;
+    Color textCol = tabSelectedText;
 
     SolidBrush br(GdipCol(bgCol));
     Gdiplus::Rect gr(0, 0, r.dx, r.dy);
@@ -551,7 +550,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     gfx->DrawString(ws, -1, &f, rTxt, &sf, &br);
 
     HBITMAP ret;
-    bitmap.GetHBITMAP(Color(255, 255, 255), &ret);
+    bitmap.GetHBITMAP(Gdiplus::Color(255, 255, 255), &ret);
     delete gfx;
     return ret;
 }
@@ -943,7 +942,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return 0;
             }
             HDC hdc = GetDC(hwnd);
-            COLORREF bgCol = ThemeControlBackgroundColor();
+            Color bgCol = ThemeControlBackgroundColor();
             if (vroot) {
                 PaintVirtTree(vroot, hdc, clientRc, bgCol);
             } else {

@@ -34,7 +34,6 @@
 
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::FontFamily;
 using Gdiplus::Graphics;
 using Gdiplus::Matrix;
@@ -387,7 +386,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     Graphics g(hDC);
     InitGraphicsMode(&g);
 
-    Color white(0xFF, 0xFF, 0xFF);
+    Gdiplus::Color white(0xFF, 0xFF, 0xFF);
     SolidBrush tmpBrush(white);
     Gdiplus::Rect screenR(ToGdipRect(screen));
     screenR.Inflate(1, 1);
@@ -569,7 +568,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
 static RenderedBitmap* getImageFromData(Str imageData) {
     HBITMAP hbmp = nullptr;
     Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(imageData));
-    if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
+    if (!bmp || bmp->GetHBITMAP((ARGB)Gdiplus::Color::White, &hbmp) != Ok) {
         delete bmp;
         return nullptr;
     }

@@ -365,7 +365,7 @@ void SetHotkeyWnd::CleanupHook() {
 // system: a filled box with a border, brighter on hover (like the PDF tool
 // dialogs and the theme dialog)
 void SetHotkeyWnd::StyleButton(VirtButton* b, bool isDefault) {
-    COLORREF bg = ThemeWindowControlBackgroundColor();
+    Color bg = ThemeWindowControlBackgroundColor();
     b->textColor = ThemeWindowTextColor();
     b->textColorDisabled = ThemeWindowTextDisabledColor();
     b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
@@ -381,8 +381,8 @@ VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
 }
 
 void SetHotkeyWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
     if (prompt) {
         prompt->textColor = colTxt;

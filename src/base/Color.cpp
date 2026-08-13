@@ -3,24 +3,24 @@
 
 #include "base/Base.h"
 
-bool IsSpecialColor(COLORREF col) {
+bool IsSpecialColor(Color col) {
     return col == kColorUnset || col == kColorNoChange;
 }
 
-COLORREF MkColor(u8 r, u8 g, u8 b, u8 a) {
-    COLORREF r2 = r;
-    COLORREF g2 = (COLORREF)g << 8;
-    COLORREF b2 = (COLORREF)b << 16;
-    COLORREF a2 = (COLORREF)a << 24;
+Color MkColor(u8 r, u8 g, u8 b, u8 a) {
+    Color r2 = r;
+    Color g2 = (Color)g << 8;
+    Color b2 = (Color)b << 16;
+    Color a2 = (Color)a << 24;
     return r2 | g2 | b2 | a2;
 }
 
-COLORREF MkGray(u8 x) {
+Color MkGray(u8 x) {
     return MkColor(x, x, x);
 }
 
 // format: abgr
-void UnpackColor(COLORREF c, u8& r, u8& g, u8& b, u8& a) {
+void UnpackColor(Color c, u8& r, u8& g, u8& b, u8& a) {
     r = (u8)(c & 0xff);
     c = c >> 8;
     g = (u8)(c & 0xff);
@@ -31,7 +31,7 @@ void UnpackColor(COLORREF c, u8& r, u8& g, u8& b, u8& a) {
 }
 
 // format: bgr
-void UnpackColor(COLORREF c, u8& r, u8& g, u8& b) {
+void UnpackColor(Color c, u8& r, u8& g, u8& b) {
     r = (u8)(c & 0xff);
     c = c >> 8;
     g = (u8)(c & 0xff);
@@ -40,7 +40,7 @@ void UnpackColor(COLORREF c, u8& r, u8& g, u8& b) {
 }
 
 #if OS_WIN
-Gdiplus::Color Unblend(COLORREF c, u8 alpha) {
+Gdiplus::Color Unblend(Color c, u8 alpha) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
     u8 ralpha = (u8)((float)alpha * (float)a / 255.f);
@@ -52,13 +52,13 @@ Gdiplus::Color Unblend(COLORREF c, u8 alpha) {
     return {alpha, R, G, B};
 }
 
-Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c) {
+Gdiplus::Color GdiRgbFromColor(Color c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
     return {r, g, b};
 }
 
-Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
+Gdiplus::Color GdiRgbaFromColor(Color c) {
     return {c};
 }
 #endif
@@ -75,7 +75,7 @@ static Gdiplus::Color Unblend(PageAnnotation::Color c, u8 alpha) {
 
 // TODO: use AdjustLightness instead to compensate for the alpha?
 // TODO: not sure if that's the exact translation of the original (above)
-TempStr SerializeColorTemp(COLORREF c) {
+TempStr SerializeColorTemp(Color c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
     if (a > 0) {
@@ -126,7 +126,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
 }
 
 /* Parse 's' as hex color and return the result in 'destColor' */
-bool ParseColor(COLORREF* destColor, Str s) {
+bool ParseColor(Color* destColor, Str s) {
     ReportIf(!destColor);
     ParsedColor p;
     ParseColor(p, s);
@@ -140,8 +140,8 @@ void SerializePdfColor(PdfColor c, str::Builder& out) {
     out.Append(fmt("#%02x%02x%02x", r, g, b));
 }
 
-COLORREF ParseColor(Str s, COLORREF defCol) {
-    COLORREF c;
+Color ParseColor(Str s, Color defCol) {
+    Color c;
     if (ParseColor(&c, s)) {
         return c;
     }
@@ -168,7 +168,7 @@ void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
     a = (u8)(c & 0xff);
 }
 
-COLORREF AdjustLightness(COLORREF c, float factor) {
+Color AdjustLightness(Color c, float factor) {
     u8 R, G, B;
     UnpackColor(c, R, G, B);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
@@ -214,7 +214,7 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
 }
 
 // Adjusts lightness by 1/255 units.
-COLORREF AdjustLightness2(COLORREF c, float units) {
+Color AdjustLightness2(Color c, float units) {
     float lightness = GetLightness(c);
     units = limitValue(units, -lightness, 255.0f - lightness);
     if (0.0f == lightness) {
@@ -225,7 +225,7 @@ COLORREF AdjustLightness2(COLORREF c, float units) {
 }
 
 // http://en.wikipedia.org/wiki/HSV_color_space#Lightness
-float GetLightness(COLORREF c) {
+float GetLightness(Color c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
     u8 m1 = std::max(std::max(r, g), b);
@@ -235,14 +235,14 @@ float GetLightness(COLORREF c) {
 
 // return true for light color, false for dark
 // https://stackoverflow.com/questions/52879235/determine-color-lightness-via-rgb
-bool IsLightColor(COLORREF c) {
+bool IsLightColor(Color c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
     float y = (0.2126f * float(r)) + (0.7152f * float(g)) + (0.0722f * float(b));
     return y > 127.5f; // mid 256
 }
 
-bool IsNearBlack(COLORREF c) {
+bool IsNearBlack(Color c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
     return r < 10 && g < 10 && b < 10;
@@ -252,7 +252,7 @@ bool IsNearBlack(COLORREF c) {
 // whatever the theme. `dark` defaults to `light` when 0.
 // shift a color away from itself by `light` units when it's light, `dark` when
 // it's dark (dark defaults to `light`), for hover / selected / accent states
-COLORREF AccentColor(COLORREF col, int light, int dark) {
+Color AccentColor(Color col, int light, int dark) {
     if (dark == 0) {
         dark = light;
     }
@@ -262,7 +262,7 @@ COLORREF AccentColor(COLORREF col, int light, int dark) {
     return AdjustLightness2(col, (float)dark);
 }
 
-DWORD PremultiplyPixel(COLORREF c, u8 alpha) {
+DWORD PremultiplyPixel(Color c, u8 alpha) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
     r = (u8)((r * alpha) / 255);
@@ -274,22 +274,22 @@ DWORD PremultiplyPixel(COLORREF c, u8 alpha) {
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
 This adds equivalent functions that don't have this problem and ugly
 substitutions to make sure we don't use Get*Value() in the future */
-u8 GetRed(COLORREF rgb) {
+u8 GetRed(Color rgb) {
     rgb = rgb & 0xff;
     return (u8)rgb;
 }
 
-u8 GetGreen(COLORREF rgb) {
+u8 GetGreen(Color rgb) {
     rgb = (rgb >> 8) & 0xff;
     return (u8)rgb;
 }
 
-u8 GetBlue(COLORREF rgb) {
+u8 GetBlue(Color rgb) {
     rgb = (rgb >> 16) & 0xff;
     return (u8)rgb;
 }
 
-u8 GetAlpha(COLORREF rgb) {
+u8 GetAlpha(Color rgb) {
     rgb = (rgb >> 24) & 0xff;
     return (u8)rgb;
 }

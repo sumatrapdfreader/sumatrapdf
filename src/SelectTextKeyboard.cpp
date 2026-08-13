@@ -569,8 +569,8 @@ TempStr SelectTextKeyboardResultTemp(int* exitCodeOut) {
 // exact position within it, overhanging the line above and below. In selection
 // mode the selection highlight already shows where we are, so only the bar
 // draws. The band doesn't blink, so the caret's line stays marked between blinks.
-constexpr COLORREF kCaretBarCol = RGB(0x19, 0x76, 0xd2);
-constexpr COLORREF kCaretBandCol = RGB(0xff, 0xff, 0xff);
+constexpr Color kCaretBarCol = RGB(0x19, 0x76, 0xd2);
+constexpr Color kCaretBandCol = RGB(0xff, 0xff, 0xff);
 constexpr u8 kCaretBandAlpha = 90;
 
 void PaintKeyboardTextCaret(MainWindow* win, HDC hdc) {

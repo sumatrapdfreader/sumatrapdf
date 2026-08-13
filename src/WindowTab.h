@@ -85,11 +85,11 @@ struct WindowTab {
     HWND hwndPDFOutline = nullptr;
 
     // per-document background color from FileState; kColorUnset = use default
-    COLORREF bgColor = kColorUnset;
+    Color bgColor = kColorUnset;
     // true if per-document background is explicitly set to checkered pattern
     bool bgColorCheckered = false;
     // per-document tab color from FileState; kColorUnset = use default
-    COLORREF tabColor = kColorUnset;
+    Color tabColor = kColorUnset;
 
     // a page of this tab has been painted from the render cache at least
     // once. Until then page placeholders paint in the theme background color

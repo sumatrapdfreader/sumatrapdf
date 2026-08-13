@@ -184,8 +184,8 @@ class FrameSite : public IUnknown {
     bool isWindowless;
 
     LCID ambientLocale;
-    COLORREF ambientForeColor;
-    COLORREF ambientBackColor;
+    Color ambientForeColor;
+    Color ambientBackColor;
     bool ambientShowHatching;
     bool ambientShowGrabHandles;
     bool ambientUserMode;

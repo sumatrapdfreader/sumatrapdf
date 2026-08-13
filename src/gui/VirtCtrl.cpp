@@ -1465,7 +1465,7 @@ Rect VirtListBox::ItemRect(int idx) {
 }
 
 void VirtListBox::Paint(VirtPaintCtx& ctx) {
-    COLORREF colBg = bgColor;
+    Color colBg = bgColor;
     ctx.gfx->FillRect(ctx.bounds, colBg);
     int n = ItemsCount();
     Rect clip = ctx.clip.Intersect(ctx.bounds);
@@ -1485,7 +1485,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     last = std::min(last, n - 1);
 
     bool isFocused = HasFlag(vwfFocused);
-    COLORREF colSel = selectionColor;
+    Color colSel = selectionColor;
     if (colSel == kColorUnset && colBg != kColorUnset) {
         // the selection stands out more while the list has the keyboard focus,
         // like a win32 listbox's
@@ -1525,7 +1525,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     if (thumb.IsEmpty()) {
         return;
     }
-    COLORREF colThumb = scrollbarColor;
+    Color colThumb = scrollbarColor;
     if (colThumb == kColorUnset && colBg != kColorUnset) {
         colThumb = AccentColor(colBg, 60);
     }
@@ -2033,7 +2033,7 @@ Size VirtButton::GetIdealSize() {
 
 void VirtButton::Paint(VirtPaintCtx& ctx) {
     bool isEnabled = HasFlag(vwfEnabled);
-    COLORREF bg = (isEnabled && HasFlag(vwfHovered)) ? bgColorHover : bgColor;
+    Color bg = (isEnabled && HasFlag(vwfHovered)) ? bgColorHover : bgColor;
     ctx.gfx->FillRect(ctx.bounds, bg);
     if (borderColor != kColorUnset) {
         Rect b = ctx.bounds;
@@ -2047,7 +2047,7 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
     r.SubLR(textPadding.left, textPadding.right);
     VirtPaintCtx c2 = ctx;
     c2.content = r;
-    COLORREF prevCol = textColor;
+    Color prevCol = textColor;
     if (!isEnabled && textColorDisabled != kColorUnset) {
         textColor = textColorDisabled;
     }
@@ -2059,7 +2059,7 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
         Rect b = ctx.bounds;
         b.SubTB(2, 2);
         b.SubLR(2, 2);
-        COLORREF col = (textColor != kColorUnset) ? textColor : borderColor;
+        Color col = (textColor != kColorUnset) ? textColor : borderColor;
         if (col != kColorUnset && !b.IsEmpty()) {
             ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, col);
             ctx.gfx->FillRect({b.x, b.Bottom() - 1, b.dx, 1}, col);
@@ -2116,7 +2116,7 @@ Size VirtIconButton::GetIdealSize() {
 }
 
 void VirtIconButton::Paint(VirtPaintCtx& ctx) {
-    COLORREF bg = isSelected ? bgColorSelected : (HasFlag(vwfHovered) ? bgColorHover : kColorUnset);
+    Color bg = isSelected ? bgColorSelected : (HasFlag(vwfHovered) ? bgColorHover : kColorUnset);
     if (bg != kColorUnset) {
         ctx.gfx->FillRect(ctx.bounds, bg);
     }
@@ -2176,7 +2176,7 @@ void VirtCloseButton::Paint(VirtPaintCtx& ctx) {
 
     // slightly translucent when it sits on content it doesn't own
     u8 a = (withCircle && !isHover) ? 215 : 255;
-    COLORREF circle = isHover ? circleColorHover : circleColor;
+    Color circle = isHover ? circleColorHover : circleColor;
     if (isHover && circle == kColorUnset) {
         circle = kColCloseXHoverBg;
     } else if (!isHover && circle == kColorUnset) {
@@ -2190,7 +2190,7 @@ void VirtCloseButton::Paint(VirtPaintCtx& ctx) {
         gfx->FillEllipse(er, circle, a);
     }
 
-    COLORREF xcol = isHover ? xColorHover : xColor;
+    Color xcol = isHover ? xColorHover : xColor;
     if (xcol == kColorUnset) {
         xcol = isHover ? kColCloseXHover : kColCloseX;
     }
@@ -2592,7 +2592,7 @@ void LayoutTreeToSize(HWND hwnd, ILayout* layout, Size size, VirtRoot** rootInOu
     RefreshVirtTops(hwnd, layout, Rect{0, 0, size.dx, size.dy}, rootInOut);
 }
 
-void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, COLORREF bg) {
+void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, Color bg) {
     if (!root || len(root->tops) == 0) {
         return;
     }
@@ -2609,7 +2609,7 @@ void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, COLORREF bg) {
     buffer.Flush(hdc);
 }
 
-bool VirtHostOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res, COLORREF bg) {
+bool VirtHostOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res, Color bg) {
     if (!root || len(root->tops) == 0) {
         return false;
     }
@@ -3271,15 +3271,15 @@ void VirtRichText::Paint(VirtPaintCtx& ctx) {
     Gfx* gfx = ctx.gfx;
     u32 fmt = gfxTextLeft | gfxTextNoClip | gfxTextSingleLine;
     PlatformFont* boldFont = nullptr;
-    COLORREF textCol = textColor;
-    COLORREF linkCol = (linkColor == kColorUnset) ? textCol : linkColor;
-    COLORREF bgCol = bgColor;
+    Color textCol = textColor;
+    Color linkCol = (linkColor == kColorUnset) ? textCol : linkColor;
+    Color bgCol = bgColor;
     // key-cap colors: AccentColor on the background the text sits on
     if (bgCol == kColorUnset) {
         bgCol = IsLightColor(textCol) ? MkGray(0x22) : MkGray(0xf2);
     }
-    COLORREF capBg = AccentColor(bgCol, 16);
-    COLORREF capBorder = AccentColor(bgCol, 40);
+    Color capBg = AccentColor(bgCol, 16);
+    Color capBorder = AccentColor(bgCol, 40);
     int rad = DpiScale(5);
     // words are laid out at (0, 0); shift them to where we are
     int offX = ctx.content.x;

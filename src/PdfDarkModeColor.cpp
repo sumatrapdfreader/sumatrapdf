@@ -26,7 +26,7 @@ static bool gPreservePdfImagesInDarkMode = true;
 // (DocumentColorsFollowTheme or custom dark FixedPageUI colors); master's
 // themes never touch page colors, unlike the fork's
 static bool DarkChromeActive() {
-    COLORREF bg;
+    Color bg;
     ThemePageRenderColors(bg);
     return !IsLightColor(bg);
 }

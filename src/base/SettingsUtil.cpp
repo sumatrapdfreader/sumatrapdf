@@ -212,7 +212,7 @@ static bool IsCompactable(const StructInfo* info) {
     return info->fieldCount > 0;
 }
 
-static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
+static_assert(sizeof(float) == sizeof(int) && sizeof(Color) == sizeof(int),
               "compact array code can't be simplified if int, float and colorref are of different sizes");
 
 static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& field) {

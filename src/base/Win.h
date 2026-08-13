@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define NO_COLOR ((COLORREF)(-1))
+#define NO_COLOR ((Color)(-1))
 
 #define WIN_COL_WHITE RGB(0xff, 0xff, 0xff)
 #define WIN_COL_BLACK RGB(0, 0, 0)
@@ -208,7 +208,7 @@ void ShowTextInWindowDialog(Str title, Str text);
 
 void HdcDrawRect(HDC, const Rect&);
 void HdcFillRect(HDC, const Rect&, HBRUSH);
-void HdcFillRect(HDC hdc, const Rect&, COLORREF);
+void HdcFillRect(HDC hdc, const Rect&, Color);
 void HdcFillRectWithBkColor(HDC hdc, const Rect& rect);
 void HdcDrawLine(HDC, const Rect&);
 int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font = nullptr);
@@ -285,8 +285,8 @@ i64 RenderedBitmapByteSize(RenderedBitmap*);
 Size GetBitmapSize(HBITMAP hbmp);
 BitmapPixels* GetBitmapPixels(HBITMAP hbmp);
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
-COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
+Color GetPixel(BitmapPixels* bitmap, int x, int y);
+void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor = 0,
                         Vec<Rect>* skipRects = nullptr);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);

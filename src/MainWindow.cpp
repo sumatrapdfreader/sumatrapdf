@@ -943,12 +943,12 @@ void MainWindow::ShowFrameRateDur(double durMs) {
 }
 
 void UpdateControlsColors(MainWindow* win) {
-    COLORREF bgCol = ThemeControlBackgroundColor();
-    COLORREF txtCol = ThemeWindowTextColor();
+    Color bgCol = ThemeControlBackgroundColor();
+    Color txtCol = ThemeWindowTextColor();
 
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
-    COLORREF splitterCol = ThemeControlBackgroundColor();
+    Color splitterCol = ThemeControlBackgroundColor();
 
     {
         auto* tocTreeView = win->tocTreeView;

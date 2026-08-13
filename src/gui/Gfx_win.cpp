@@ -14,14 +14,14 @@ GfxHdc::GfxHdc(HDC hdc) {
     this->hdc = hdc;
 }
 
-void GfxHdc::FillRect(const Rect& r, COLORREF col) {
+void GfxHdc::FillRect(const Rect& r, Color col) {
     if (col == kColorUnset || r.IsEmpty()) {
         return;
     }
     HdcFillRect(hdc, r, col);
 }
 
-void GfxHdc::DrawRect(const Rect& r, COLORREF col, int thickness) {
+void GfxHdc::DrawRect(const Rect& r, Color col, int thickness) {
     if (col == kColorUnset || r.IsEmpty() || thickness < 1) {
         return;
     }
@@ -81,7 +81,7 @@ static void AddRoundedRectPath(Gdiplus::GraphicsPath& path, const Rect& rc, int 
 
 // gdiplus rather than gdi's RoundRect() because the corners have to be
 // anti-aliased to look like anything
-void GfxHdc::FillRoundedRect(const Rect& r, int radius, COLORREF fill, COLORREF border) {
+void GfxHdc::FillRoundedRect(const Rect& r, int radius, Color fill, Color border) {
     if (r.IsEmpty()) {
         return;
     }
@@ -94,16 +94,16 @@ void GfxHdc::FillRoundedRect(const Rect& r, int radius, COLORREF fill, COLORREF 
     Gdiplus::GraphicsPath path;
     AddRoundedRectPath(path, r, radius);
     if (fill != kColorUnset) {
-        Gdiplus::SolidBrush br(GdiRgbFromCOLORREF(fill));
+        Gdiplus::SolidBrush br(GdiRgbFromColor(fill));
         gp.g.FillPath(&br, &path);
     }
     if (border != kColorUnset) {
-        Gdiplus::Pen pen(GdiRgbFromCOLORREF(border), 1);
+        Gdiplus::Pen pen(GdiRgbFromColor(border), 1);
         gp.g.DrawPath(&pen, &path);
     }
 }
 
-void GfxHdc::FillEllipse(const Rect& r, COLORREF col, u8 alpha) {
+void GfxHdc::FillEllipse(const Rect& r, Color col, u8 alpha) {
     if (col == kColorUnset || r.IsEmpty()) {
         return;
     }
@@ -114,7 +114,7 @@ void GfxHdc::FillEllipse(const Rect& r, COLORREF col, u8 alpha) {
 
 // kColorUnset draws in the surface's current text color, which is how the
 // underline under a VirtText picks up the color the text was drawn in
-void GfxHdc::DrawLine(const Rect& r, COLORREF col, int thickness) {
+void GfxHdc::DrawLine(const Rect& r, Color col, int thickness) {
     if (col == kColorUnset) {
         col = GetTextColor(hdc);
     }
@@ -127,7 +127,7 @@ void GfxHdc::DrawLine(const Rect& r, COLORREF col, int thickness) {
     HdcFillRect(hdc, r2, col);
 }
 
-void GfxHdc::DrawLineAA(Point p1, Point p2, COLORREF col, float thickness, u8 alpha) {
+void GfxHdc::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 alpha) {
     if (col == kColorUnset) {
         col = GetTextColor(hdc);
     }
@@ -179,11 +179,11 @@ static uint ToDrawTextFormat(u32 flags) {
 // so a caller that paints many items into one DC doesn't have to
 struct ScopedTextState {
     HDC hdc;
-    COLORREF prevCol = kColorUnset;
+    Color prevCol = kColorUnset;
     int prevBkMode = 0;
     bool setCol = false;
 
-    ScopedTextState(HDC hdc, COLORREF col) {
+    ScopedTextState(HDC hdc, Color col) {
         this->hdc = hdc;
         setCol = (col != kColorUnset);
         if (setCol) {
@@ -201,7 +201,7 @@ struct ScopedTextState {
     }
 };
 
-void GfxHdc::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, COLORREF col) {
+void GfxHdc::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, Color col) {
     if (r.IsEmpty() || len(s) == 0) {
         return;
     }
@@ -209,7 +209,7 @@ void GfxHdc::DrawText(Str s, const Rect& r, u32 flags, PlatformFont* font, COLOR
     HdcDrawText(hdc, s, r, ToDrawTextFormat(flags), font ? font->GetHFont() : nullptr);
 }
 
-void GfxHdc::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, COLORREF col) {
+void GfxHdc::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, Color col) {
     if (len(s) == 0) {
         return;
     }

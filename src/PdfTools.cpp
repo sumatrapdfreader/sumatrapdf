@@ -161,7 +161,7 @@ void PdfToolDialog::OnBrowse() {
 // system: a filled box with a border, brighter on hover
 VirtButton* PdfToolDialog::NewButton(Str text, bool isDefault) {
     auto* b = new VirtButton(text, font);
-    COLORREF bg = ThemeWindowControlBackgroundColor();
+    Color bg = ThemeWindowControlBackgroundColor();
     b->textColor = ThemeWindowTextColor();
     b->textColorDisabled = ThemeWindowTextDisabledColor();
     // the default button is a shade stronger, like a native default button

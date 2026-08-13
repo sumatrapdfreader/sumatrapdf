@@ -832,7 +832,7 @@ bool ControlBase::IsEnabled() const {
     return tobool(enabled);
 }
 
-void ControlBase::SetColors(COLORREF textCol, COLORREF bgCol) {
+void ControlBase::SetColors(Color textCol, Color bgCol) {
     if (textCol != kColorNoChange) {
         this->textColor = textCol;
     }

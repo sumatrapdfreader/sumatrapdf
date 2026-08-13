@@ -1533,7 +1533,6 @@ Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
 #if OS_WIN
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::Graphics;
 using Gdiplus::Ok;
 using Gdiplus::Pen;
@@ -1542,10 +1541,10 @@ using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
 void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, COLORREF textColor, bool* abortCookie) {
-    Pen debugPen(Color(255, 0, 0), 1);
-    // Pen linePen(Color(0, 0, 0), 2.f);
-    Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
+                  float offY, bool showBbox, Color textColor, bool* abortCookie) {
+    Pen debugPen(Gdiplus::Color(255, 0, 0), 1);
+    // Pen linePen(Gdiplus::Color(0, 0, 0), 2.f);
+    Pen linePen(Gdiplus::Color(0x5F, 0x4B, 0x32), 2.f);
 
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else

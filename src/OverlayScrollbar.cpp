@@ -24,22 +24,22 @@ static constexpr UINT_PTR kMouseTrackTimerID = 100;
 static constexpr int kMouseTrackIntervalMs = 50;
 
 // Derive scrollbar colors from current theme
-static COLORREF ThemeTrackColor() {
-    COLORREF bg = ThemeControlBackgroundColor();
+static Color ThemeTrackColor() {
+    Color bg = ThemeControlBackgroundColor();
     return bg;
 }
 
-static COLORREF ThemeThumbColor() {
-    COLORREF bg = ThemeControlBackgroundColor();
+static Color ThemeThumbColor() {
+    Color bg = ThemeControlBackgroundColor();
     return AccentColor(bg, 100);
 }
 
-static COLORREF ThemeThumbHoverColor() {
-    COLORREF bg = ThemeControlBackgroundColor();
+static Color ThemeThumbHoverColor() {
+    Color bg = ThemeControlBackgroundColor();
     return AccentColor(bg, 140);
 }
 
-static COLORREF ThemeArrowColor() {
+static Color ThemeArrowColor() {
     return ThemeThumbHoverColor();
 }
 static constexpr int kMinThumbSize = 20;
@@ -210,7 +210,7 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
         alpha = IsCurrentThemeDefault() ? kAlphaThick : 255;
     }
 
-    auto fillRect = [&](Rect r, COLORREF color) {
+    auto fillRect = [&](Rect r, Color color) {
         DWORD pixel = PremultiplyPixel(color, alpha);
         DWORD* pixels = (DWORD*)bits;
         int x0 = std::max(r.x, 0);
@@ -229,7 +229,7 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
     }
 
     Rect thumbRc = GetThumbRect(sb);
-    COLORREF thumbCol = sb->mouseOverThumb ? ThemeThumbHoverColor() : ThemeThumbColor();
+    Color thumbCol = sb->mouseOverThumb ? ThemeThumbHoverColor() : ThemeThumbColor();
 
     if (!IsThick(sb)) {
         int thinW = ScaledWidth(sb, false);
@@ -247,7 +247,7 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
         Gdiplus::Graphics gfx(hdcMem);
         gfx.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
-        COLORREF arrowCol = ThemeArrowColor();
+        Color arrowCol = ThemeArrowColor();
         u8 ar = (u8)MulDiv(GetRValue(arrowCol), alpha, 255);
         u8 ag = (u8)MulDiv(GetGValue(arrowCol), alpha, 255);
         u8 ab = (u8)MulDiv(GetBValue(arrowCol), alpha, 255);

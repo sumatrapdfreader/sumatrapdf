@@ -48,9 +48,9 @@ struct NotificationWnd;
 
 // the colors a notification paints with; they depend on `highlight`
 struct NotifColors {
-    COLORREF bg;
-    COLORREF txt;
-    COLORREF link;
+    Color bg;
+    Color txt;
+    Color link;
 };
 
 // the message text. A plain message is a single DrawText; one with links, bold
@@ -666,7 +666,7 @@ void NotifProgressCtrl::Paint(VirtPaintCtx& ctx) {
     Rect rc = ctx.bounds;
     int progressWidth = rc.dx;
 
-    COLORREF col = ThemeNotificationsProgressColor();
+    Color col = ThemeNotificationsProgressColor();
     ctx.gfx->DrawRect(rc, col);
 
     rc.x += 2;

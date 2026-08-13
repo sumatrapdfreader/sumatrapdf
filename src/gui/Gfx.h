@@ -61,20 +61,20 @@ struct Gfx {
     virtual ~Gfx() = default;
 
     // kColorUnset means "keep whatever color the surface is set to"
-    virtual void FillRect(const Rect&, COLORREF) = 0;
+    virtual void FillRect(const Rect&, Color) = 0;
     // 1px-per-thickness outline drawn inside the rect
-    virtual void DrawRect(const Rect&, COLORREF, int thickness = 1) = 0;
+    virtual void DrawRect(const Rect&, Color, int thickness = 1) = 0;
     // anti-aliased; either color can be kColorUnset to skip fill / border
-    virtual void FillRoundedRect(const Rect&, int radius, COLORREF fill, COLORREF border = kColorUnset) = 0;
-    virtual void FillEllipse(const Rect&, COLORREF, u8 alpha = 255) = 0;
-    virtual void DrawLine(const Rect&, COLORREF, int thickness = 1) = 0;
+    virtual void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) = 0;
+    virtual void FillEllipse(const Rect&, Color, u8 alpha = 255) = 0;
+    virtual void DrawLine(const Rect&, Color, int thickness = 1) = 0;
     // anti-aliased line between two points, for diagonals
-    virtual void DrawLineAA(Point, Point, COLORREF, float thickness = 1.0f, u8 alpha = 255) = 0;
+    virtual void DrawLineAA(Point, Point, Color, float thickness = 1.0f, u8 alpha = 255) = 0;
     virtual void DrawFocusRect(const Rect&) = 0;
 
-    virtual void DrawText(Str, const Rect&, u32 flags, PlatformFont*, COLORREF = kColorUnset) = 0;
+    virtual void DrawText(Str, const Rect&, u32 flags, PlatformFont*, Color = kColorUnset) = 0;
     // the point is the top-left of the text (alignment flags don't apply)
-    virtual void DrawTextAt(Str, Point, u32 flags, PlatformFont*, COLORREF = kColorUnset) = 0;
+    virtual void DrawTextAt(Str, Point, u32 flags, PlatformFont*, Color = kColorUnset) = 0;
     virtual Size MeasureText(Str, PlatformFont*) = 0;
 
     // blends the pixmap's alpha over what is already there
@@ -98,15 +98,15 @@ struct GfxHdc : Gfx {
     explicit GfxHdc(HDC);
     ~GfxHdc() override = default;
 
-    void FillRect(const Rect&, COLORREF) override;
-    void DrawRect(const Rect&, COLORREF, int thickness = 1) override;
-    void FillRoundedRect(const Rect&, int radius, COLORREF fill, COLORREF border = kColorUnset) override;
-    void FillEllipse(const Rect&, COLORREF, u8 alpha = 255) override;
-    void DrawLine(const Rect&, COLORREF, int thickness = 1) override;
-    void DrawLineAA(Point, Point, COLORREF, float thickness = 1.0f, u8 alpha = 255) override;
+    void FillRect(const Rect&, Color) override;
+    void DrawRect(const Rect&, Color, int thickness = 1) override;
+    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) override;
+    void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
+    void DrawLine(const Rect&, Color, int thickness = 1) override;
+    void DrawLineAA(Point, Point, Color, float thickness = 1.0f, u8 alpha = 255) override;
     void DrawFocusRect(const Rect&) override;
-    void DrawText(Str, const Rect&, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
-    void DrawTextAt(Str, Point, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
+    void DrawText(Str, const Rect&, u32 flags, PlatformFont*, Color = kColorUnset) override;
+    void DrawTextAt(Str, Point, u32 flags, PlatformFont*, Color = kColorUnset) override;
     Size MeasureText(Str, PlatformFont*) override;
     void DrawPixmap(Pixmap*, const Rect&) override;
     void PushClip(const Rect&) override;
@@ -122,7 +122,7 @@ struct GfxGdiplus : Gfx {
     Gdiplus::Graphics* gfx = nullptr;
     bool ownsGfx = false;
     // gdiplus has no "current text color", so kColorUnset resolves to this
-    COLORREF textColor = 0;
+    Color textColor = 0;
     Vec<u32> savedStates; // one per PushClip()
 
     GfxGdiplus() = default;
@@ -130,15 +130,15 @@ struct GfxGdiplus : Gfx {
     explicit GfxGdiplus(Gdiplus::Graphics*);
     ~GfxGdiplus() override;
 
-    void FillRect(const Rect&, COLORREF) override;
-    void DrawRect(const Rect&, COLORREF, int thickness = 1) override;
-    void FillRoundedRect(const Rect&, int radius, COLORREF fill, COLORREF border = kColorUnset) override;
-    void FillEllipse(const Rect&, COLORREF, u8 alpha = 255) override;
-    void DrawLine(const Rect&, COLORREF, int thickness = 1) override;
-    void DrawLineAA(Point, Point, COLORREF, float thickness = 1.0f, u8 alpha = 255) override;
+    void FillRect(const Rect&, Color) override;
+    void DrawRect(const Rect&, Color, int thickness = 1) override;
+    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) override;
+    void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
+    void DrawLine(const Rect&, Color, int thickness = 1) override;
+    void DrawLineAA(Point, Point, Color, float thickness = 1.0f, u8 alpha = 255) override;
     void DrawFocusRect(const Rect&) override;
-    void DrawText(Str, const Rect&, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
-    void DrawTextAt(Str, Point, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
+    void DrawText(Str, const Rect&, u32 flags, PlatformFont*, Color = kColorUnset) override;
+    void DrawTextAt(Str, Point, u32 flags, PlatformFont*, Color = kColorUnset) override;
     Size MeasureText(Str, PlatformFont*) override;
     void DrawPixmap(Pixmap*, const Rect&) override;
     void PushClip(const Rect&) override;
@@ -159,29 +159,29 @@ struct GfxDirect2D : Gfx {
     ID2D1StrokeStyle* dottedStroke = nullptr;
     bool drawing = false; // between BeginDraw() and EndDraw()
     // d2d has no "current text color", so kColorUnset resolves to this
-    COLORREF textColor = 0;
+    Color textColor = 0;
     Vec<u8> clipDepth; // one per PushClip()
 
     GfxDirect2D() = default;
     explicit GfxDirect2D(HDC);
     ~GfxDirect2D() override;
 
-    void FillRect(const Rect&, COLORREF) override;
-    void DrawRect(const Rect&, COLORREF, int thickness = 1) override;
-    void FillRoundedRect(const Rect&, int radius, COLORREF fill, COLORREF border = kColorUnset) override;
-    void FillEllipse(const Rect&, COLORREF, u8 alpha = 255) override;
-    void DrawLine(const Rect&, COLORREF, int thickness = 1) override;
-    void DrawLineAA(Point, Point, COLORREF, float thickness = 1.0f, u8 alpha = 255) override;
+    void FillRect(const Rect&, Color) override;
+    void DrawRect(const Rect&, Color, int thickness = 1) override;
+    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) override;
+    void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
+    void DrawLine(const Rect&, Color, int thickness = 1) override;
+    void DrawLineAA(Point, Point, Color, float thickness = 1.0f, u8 alpha = 255) override;
     void DrawFocusRect(const Rect&) override;
-    void DrawText(Str, const Rect&, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
-    void DrawTextAt(Str, Point, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
+    void DrawText(Str, const Rect&, u32 flags, PlatformFont*, Color = kColorUnset) override;
+    void DrawTextAt(Str, Point, u32 flags, PlatformFont*, Color = kColorUnset) override;
     Size MeasureText(Str, PlatformFont*) override;
     void DrawPixmap(Pixmap*, const Rect&) override;
     void PushClip(const Rect&) override;
     void PopClip() override;
     bool SetMirrored(bool) override;
 
-    ID2D1SolidColorBrush* GetBrush(COLORREF, u8 alpha = 255);
+    ID2D1SolidColorBrush* GetBrush(Color, u8 alpha = 255);
 };
 
 bool Direct2DAvailable();

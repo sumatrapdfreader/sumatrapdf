@@ -62,7 +62,7 @@ struct CreateCustomArgs {
     bool visible = true;
     HFONT font = nullptr;
     HICON icon = nullptr;
-    COLORREF bgColor = kColorUnset;
+    Color bgColor = kColorUnset;
     bool isRtl = false;
 };
 
@@ -265,7 +265,7 @@ struct WindowBase {
     // PreTranslateMessage: onPreTranslate, then key-down -> onKeyDown, then Tab default
     bool PreTranslateMessage(MSG& msg);
 
-    void SetColors(COLORREF textColor, COLORREF bgColor);
+    void SetColors(Color textColor, Color bgColor);
 
     void Close();
     void SetPos(Rect* r);
@@ -314,9 +314,9 @@ struct WindowBase {
     HFONT font = nullptr; // we don't own it
     UINT_PTR subclassId = 0;
 
-    COLORREF bgColor = kColorUnset;
+    Color bgColor = kColorUnset;
     HBRUSH bgBrush = nullptr;
-    COLORREF textColor = kColorUnset;
+    Color textColor = kColorUnset;
 
     // the layout of our children, if we have one. It can hold HWND controls
     // (ControlBase) and virtual ones (VirtCtrl) side by side
@@ -484,7 +484,7 @@ struct ControlBase : ILayout {
     LRESULT DispatchMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT DispatchNotifyReflect(WPARAM wparam, LPARAM lparam);
 
-    void SetColors(COLORREF textColor, COLORREF bgColor);
+    void SetColors(Color textColor, Color bgColor);
 
     void SetPos(Rect* r);
     void SetIsVisible(bool isVisible);
@@ -521,9 +521,9 @@ struct ControlBase : ILayout {
     HFONT font = nullptr; // we don't own it
     UINT_PTR subclassId = 0;
 
-    COLORREF bgColor = kColorUnset;
+    Color bgColor = kColorUnset;
     HBRUSH bgBrush = nullptr;
-    COLORREF textColor = kColorUnset;
+    Color textColor = kColorUnset;
 
     // a control can host a layout tree of its own, real and virtual mixed
     ILayout* layout = nullptr;
@@ -635,7 +635,7 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools);
 //--- Edit
 using TextChangedHandler = Func0;
 
-COLORREF EditBottomBorderColor();
+Color EditBottomBorderColor();
 
 struct Edit : ControlBase {
     struct CreateArgs {
@@ -907,7 +907,7 @@ struct TreeView : ControlBase {
 
     HWND Create(const CreateArgs&);
 
-    void SetColors(COLORREF col, COLORREF bgCol);
+    void SetColors(Color col, Color bgCol);
 
     void WndProc(ControlBase::WndProcEvent* ev);
     void OnNotifyReflect(ControlBase::NotifyReflectEvent* ev);

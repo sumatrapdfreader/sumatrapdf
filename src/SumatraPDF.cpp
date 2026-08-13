@@ -121,7 +121,6 @@
 #include "ReadAloudPlaybackBar.h"
 #include "SumatraLog.h"
 
-using Gdiplus::Color;
 using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
@@ -2701,19 +2700,19 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
     win->favLabel->Invalidate();
 }
 
-static COLORREF DwmFrameBorderColorForCurrentTheme() {
-    return IsCurrentThemeDefault() ? (COLORREF)DWMWA_COLOR_DEFAULT : ThemeControlBackgroundColor();
+static Color DwmFrameBorderColorForCurrentTheme() {
+    return IsCurrentThemeDefault() ? (Color)DWMWA_COLOR_DEFAULT : ThemeControlBackgroundColor();
 }
 
 // Win11 DWM attributes; ignored (HRESULT failure) on older Windows.
-static void SetWindowBorderColor(HWND hwnd, COLORREF color) {
+static void SetWindowBorderColor(HWND hwnd, Color color) {
     DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &color, sizeof(color));
 }
 
 static void SetWindowRoundedCorners(HWND hwnd, bool rounded) {
     auto cornerPref = rounded ? DWMWCP_ROUND : DWMWCP_DONOTROUND;
     DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
-    COLORREF borderColor = rounded ? DWMWA_COLOR_DEFAULT : DWMWA_COLOR_NONE;
+    Color borderColor = rounded ? DWMWA_COLOR_DEFAULT : DWMWA_COLOR_NONE;
     SetWindowBorderColor(hwnd, borderColor);
 }
 
@@ -2724,7 +2723,7 @@ static void UpdateWindowFrameBorderColor(MainWindow* win) {
     // Maximized / fullscreen can't edge-resize; hide the DWM border so it does
     // not show as a bright 1px seam against the taskbar (issue #5851).
     if (IsZoomed(win->hwndFrame) || win->isFullScreen || win->presentation) {
-        SetWindowBorderColor(win->hwndFrame, (COLORREF)DWMWA_COLOR_NONE);
+        SetWindowBorderColor(win->hwndFrame, (Color)DWMWA_COLOR_NONE);
         return;
     }
     SetWindowBorderColor(win->hwndFrame, DwmFrameBorderColorForCurrentTheme());
@@ -4405,10 +4404,10 @@ static void RerenderFixedPage() {
 }
 
 void UpdateDocumentColors() {
-    COLORREF bg;
-    COLORREF text = ThemePageRenderColors(bg);
+    Color bg;
+    Color text = ThemePageRenderColors(bg);
     bool pagesDark = !IsLightColor(bg);
-    COLORREF link = pagesDark ? ThemeWindowLinkColor() : 0;
+    Color link = pagesDark ? ThemeWindowLinkColor() : 0;
 
     // dark-mode options that also affect rendered pages but not the two
     // cache colors; a change must invalidate cached renders the same way
@@ -7243,7 +7242,7 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
     bool isCbx = engine && engine->kind == kindEngineComicBooks;
     bool isEbook = engine && engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
 
-    COLORREF curColor;
+    Color curColor;
     bool isCheckered;
     if (tab->bgColorCheckered) {
         curColor = kColorUnset;
@@ -7267,7 +7266,7 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
             curColor = bgOverride->col;
             isCheckered = (bgOverride->col == kColorUnset);
         } else {
-            COLORREF bg;
+            Color bg;
             ThemeDocumentColors(bg);
             curColor = bg;
             isCheckered = false;
@@ -7294,7 +7293,7 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
     } else {
         colorStr = SerializeColorTemp(result.color);
     }
-    COLORREF newColor = result.isCheckered ? kColorUnset : result.color;
+    Color newColor = result.isCheckered ? kColorUnset : result.color;
 
     if (result.applyToAllFiles) {
         if (isCbx) {
@@ -11185,12 +11184,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!colorTab || !colorTab->ctrl) {
                 return 0;
             }
-            COLORREF curColor = colorTab->tabColor;
+            Color curColor = colorTab->tabColor;
             bool isUnset = (curColor == kColorUnset);
             if (isUnset) {
                 curColor = ThemeControlBackgroundColor();
             }
-            COLORREF newColor;
+            Color newColor;
             bool newIsUnset;
             if (!Dialog_SetTabColor(win->hwndFrame, curColor, isUnset, newColor, newIsUnset)) {
                 return 0;
@@ -11602,8 +11601,8 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
     gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);
 
     if (isSysButton) {
-        COLORREF bgc = ThemeControlBackgroundColor();
-        SolidBrush bgBrNormal(GdiRgbFromCOLORREF(bgc));
+        Color bgc = ThemeControlBackgroundColor();
+        SolidBrush bgBrNormal(GdiRgbFromColor(bgc));
         gfx.FillRectangle(&bgBrNormal, rButton.x, rButton.y, rButton.dx, rButton.dy);
 
         bool isClose = (button == CB_CLOSE);
@@ -11612,12 +11611,12 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         bool isInactive = (stateId == CBS_INACTIVE);
 
         if (isHot || isPushed) {
-            Color bgCol;
+            Gdiplus::Color bgCol;
             if (isClose) {
-                bgCol = isPushed ? Color(200, 196, 43, 28) : Color(255, 196, 43, 28);
+                bgCol = isPushed ? Gdiplus::Color(200, 196, 43, 28) : Gdiplus::Color(255, 196, 43, 28);
             } else {
-                COLORREF hotBg = isPushed ? AccentColor(bgc, 40) : AccentColor(bgc, 20);
-                bgCol = GdiRgbFromCOLORREF(hotBg);
+                Color hotBg = isPushed ? AccentColor(bgc, 40) : AccentColor(bgc, 20);
+                bgCol = GdiRgbFromColor(hotBg);
             }
             SolidBrush bgBr(bgCol);
             int x = rButton.x;
@@ -11637,7 +11636,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
             gfx.FillRectangle(&bgBr, x, y, w, h);
         }
 
-        COLORREF iconCol;
+        Color iconCol;
         if (isInactive) {
             iconCol = RGB(153, 153, 153);
         } else if (isClose && (isHot || isPushed)) {
@@ -11662,7 +11661,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         int iconPx = DpiScale(kCaptionGlyphDip);
         DrawCaptionSysButtonGlyph(hdc, kind, rc, iconCol, iconPx);
     } else if (button == CB_MENU) {
-        SolidBrush bgBrMenu(GdiRgbFromCOLORREF(ThemeControlBackgroundColor()));
+        SolidBrush bgBrMenu(GdiRgbFromColor(ThemeControlBackgroundColor()));
         gfx.FillRectangle(&bgBrMenu, rButton.x, rButton.y, rButton.dx, rButton.dy);
 
         if (win->isMenuOpen) {
@@ -11680,20 +11679,20 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
                 buttonRGB ^= 0xff;
             }
             u8 buttonAlpha = u8((255 - abs((int)GetLightness(ThemeControlBackgroundColor()) - buttonRGB)) / 2);
-            SolidBrush br(Color(buttonAlpha, buttonRGB, buttonRGB, buttonRGB));
+            SolidBrush br(Gdiplus::Color(buttonAlpha, buttonRGB, buttonRGB, buttonRGB));
             gfx.FillRectangle(&br, rc.x, rc.y, rc.dx, rc.dy);
         }
-        COLORREF c = ThemeWindowTextColor();
+        Color c = ThemeWindowTextColor();
         u8 r, g, b;
         UnpackColor(c, r, g, b);
         float width = floorf((float)rc.dy / 8.0f);
-        Pen p(Color(r, g, b), width);
+        Pen p(Gdiplus::Color(r, g, b), width);
         rc.Inflate(-(int)lroundf((float)rc.dx * 0.2f), -(int)lroundf((float)rc.dy * 0.3f));
         for (int i = 0; i < 3; i++) {
             gfx.DrawLine(&p, rc.x, rc.y + (i * rc.dy / 2), rc.x + rc.dx, rc.y + (i * rc.dy / 2));
         }
     } else if (button == CB_SYSTEM_MENU) {
-        SolidBrush bgBrSys(GdiRgbFromCOLORREF(ThemeControlBackgroundColor()));
+        SolidBrush bgBrSys(GdiRgbFromColor(ThemeControlBackgroundColor()));
         gfx.FillRectangle(&bgBrSys, rButton.x, rButton.y, rButton.dx, rButton.dy);
         int xIcon = DpiGetSystemMetrics(SM_CXSMICON);
         int yIcon = DpiGetSystemMetrics(SM_CYSMICON);

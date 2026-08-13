@@ -209,7 +209,7 @@ ParsedColor* GetParsedColor(Str s, ParsedColor& parsed) {
     return &parsed;
 }
 
-COLORREF GetParsedCOLORREF(Str s, ParsedColor& parsed, COLORREF def) {
+Color GetParsedColor(Str s, ParsedColor& parsed, Color def) {
     if (parsed.wasParsed && parsed.parsedOk) {
         return parsed.col;
     }

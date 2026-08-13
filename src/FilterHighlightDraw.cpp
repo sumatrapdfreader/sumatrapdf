@@ -21,9 +21,8 @@ static bool IsWordByte(u8 b) {
     return IsCharAlphaNumericW((WCHAR)b) || b == '_';
 }
 
-void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
-                              COLORREF colBg, bool isRtl, bool matchWholeWord, u32 drawFlags, PlatformFont* font,
-                              COLORREF colText) {
+void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted, Color colBg,
+                              bool isRtl, bool matchWholeWord, u32 drawFlags, PlatformFont* font, Color colText) {
     int nWords = len(filterWords);
     if (nWords == 0) {
         gfx->DrawText(text, rc, drawFlags, font, colText);
@@ -106,7 +105,7 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
 
     // draw highlight background rectangles for matches
     {
-        COLORREF highlightCol;
+        Color highlightCol;
         if (IsCurrentThemeDefault()) {
             highlightCol = RGB(255, 255, 0); // yellow for default theme
         } else {
@@ -128,14 +127,14 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
 }
 
 // Ink that stays readable on a solid highlight underlay (black on yellow).
-static COLORREF TextColorContrasting(COLORREF bg) {
+static Color TextColorContrasting(Color bg) {
     int lum = (GetRValue(bg) * 299 + GetGValue(bg) * 587 + GetBValue(bg) * 114) / 1000;
     return lum >= 140 ? RGB(0, 0, 0) : RGB(255, 255, 255);
 }
 
 // Sample the row background the TreeView already painted (indent/icon strip).
 // Falls back to kColorUnset if GetPixel fails.
-static COLORREF SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
+static Color SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
     if (itemRc.IsEmpty()) {
         return kColorUnset;
     }
@@ -144,7 +143,7 @@ static COLORREF SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
         x = itemRc.x;
     }
     int y = itemRc.y + (itemRc.dy / 2);
-    COLORREF c = GetPixel(hdc, x, y);
+    Color c = GetPixel(hdc, x, y);
     if (c == CLR_INVALID) {
         return kColorUnset;
     }
@@ -157,8 +156,8 @@ static COLORREF SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
 // Non-selected: sample the painted row / treeBg / theme control bg.
 // treeBg/treeTxt are TreeView::bgColor/textColor (may be unset).
 // itemRc is the full row rect (TreeView_GetItemRect with textOnly=FALSE).
-void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF treeTxt, bool isSelected,
-                                 bool hasFocus, COLORREF* bgOut, COLORREF* txtOut) {
+void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, Color treeBg, Color treeTxt, bool isSelected, bool hasFocus,
+                                 Color* bgOut, Color* txtOut) {
     if (!bgOut || !txtOut) {
         ReportIf(true);
         return;
@@ -175,7 +174,7 @@ void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF
         // with light theme text that made the initial bookmark highlight
         // unreadable (issue #5848). COLOR_BTNFACE has the same problem when
         // system colors are not fully remapped.
-        COLORREF base = !IsSpecialColor(treeBg) ? treeBg : ThemeControlBackgroundColor();
+        Color base = !IsSpecialColor(treeBg) ? treeBg : ThemeControlBackgroundColor();
         *bgOut = AccentColor(base, 40);
         *txtOut = IsSpecialColor(treeTxt) ? ThemeWindowTextColor() : treeTxt;
         return;
@@ -183,7 +182,7 @@ void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF
 
     // Non-selected: match the already-painted themed row, not COLOR_WINDOW
     // (white), which washed out dark/blue-ish sidebar backgrounds.
-    COLORREF sampled = SamplePaintedRowBackground(hdc, itemRc);
+    Color sampled = SamplePaintedRowBackground(hdc, itemRc);
     if (!IsSpecialColor(sampled)) {
         *bgOut = sampled;
     } else if (!IsSpecialColor(treeBg)) {
@@ -197,8 +196,8 @@ void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF
 // TreeView post-paint: repaint the label with multi-word match underlays
 // (command-palette style). `font` should be the tree's font (WM_GETFONT) so
 // extents match the control's text; pass nullptr to keep the HDC font.
-void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec& filterWords, COLORREF bgCol,
-                                 COLORREF txtCol, HFONT font) {
+void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec& filterWords, Color bgCol,
+                                 Color txtCol, HFONT font) {
     // TreeView has already painted the row. We repaint only the text label:
     // solid bg (selection or window) so themed double-draw artifacts go away,
     // yellow/accent underlays for each match word, then the string in runs so
@@ -285,7 +284,7 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
     HdcFillRect(hdc, labelRect, hbrBg);
     DeleteObject(hbrBg);
 
-    COLORREF highlightCol;
+    Color highlightCol;
     if (IsCurrentThemeDefault()) {
         highlightCol = RGB(255, 255, 0);
     } else {
@@ -308,9 +307,9 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
     // Draw non-match runs in the row text color (white when selected+focused);
     // match runs use ink that contrasts with the underlay so yellow+white does
     // not wash out. Prefix extents keep run x positions aligned with underlays.
-    COLORREF matchTxtCol = TextColorContrasting(highlightCol);
+    Color matchTxtCol = TextColorContrasting(highlightCol);
     int oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    COLORREF oldTxtCol = SetTextColor(hdc, txtCol);
+    Color oldTxtCol = SetTextColor(hdc, txtCol);
     int pos = 0;
     while (pos < textLen) {
         bool isHl = hl[pos] != 0;
