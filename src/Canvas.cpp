@@ -4196,8 +4196,27 @@ def:
 
 ///// methods needed for ChmUI canvases (should be subclassed by HtmlHwnd) /////
 
+// Wipe leftover pixels from a previous tab (the canvas HWND is shared). Without
+// this, resize / WM_SETREDRAW flashes the last PDF/CBR paint around WebView2.
+void FillCanvasThemeBackground(HWND hwndCanvas) {
+    if (!hwndCanvas) {
+        return;
+    }
+    HDC hdc = GetDC(hwndCanvas);
+    HdcFillRect(hdc, HwndClientRect(hwndCanvas), ThemeMainWindowBackgroundColor());
+    ReleaseDC(hwndCanvas, hdc);
+}
+
 static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            HdcFillRect(hdc, ToRect(ps.rcPaint), ThemeMainWindowBackgroundColor());
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+
         case WM_SETCURSOR:
             win->DeleteToolTip();
             return DefWindowProc(hwnd, msg, wp, lp);
@@ -5007,6 +5026,12 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 Rect rc = HwndClientRect(hwnd);
                 logf("redraw: WM_ERASEBKGND hwnd=0x%p (canvas) rc=(%d,%d,%d,%d)\n", hwnd, rc.x, rc.y, rc.dx, rc.dy);
             }
+            // markdown/CHM: fill now so leftover pixels from a previous tab
+            // cannot show through while WebView2 is resized
+            if (win && IsBrowserDocController(win->ctrl)) {
+                HdcFillRect((HDC)wp, HwndClientRect(hwnd), ThemeMainWindowBackgroundColor());
+                return 1;
+            }
             // don't paint here; old content stays until WM_PAINT covers it
             // (CS_HREDRAW|CS_VREDRAW removed so no transparent flash)
             return 1;
@@ -5073,6 +5098,11 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 // fully invalidate since layout depends on size
                 // (replaces CS_HREDRAW | CS_VREDRAW which caused transparent flash)
                 HwndInvalidate(hwnd);
+                // paint immediately: newly exposed strips otherwise keep the
+                // previous tab's last blit until WebView2 catches up
+                if (IsBrowserDocController(win->ctrl)) {
+                    FillCanvasThemeBackground(hwnd);
+                }
             }
             return 0;
 

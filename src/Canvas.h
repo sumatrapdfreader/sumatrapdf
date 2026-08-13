@@ -22,6 +22,7 @@ extern Kind kNotifAnnotation;
 
 void RegisterCanvasDropTarget(HWND hwndCanvas);
 void RevokeCanvasDropTarget(HWND hwndCanvas);
+void FillCanvasThemeBackground(HWND hwndCanvas);
 void DisconnectLastDragDataObject();
 
 // Timer for mouse wheel smooth scrolling

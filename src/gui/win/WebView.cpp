@@ -2105,6 +2105,22 @@ void WebviewWnd::OnActivate(WindowBase::ActivateEvent* ev) {
 }
 
 void WebviewWnd::OnShowWindow(WindowBase::ShowWindowEvent* ev) {
+    // RelayoutFrame sends WM_SETREDRAW to the frame, which hides the parent
+    // and delivers SW_PARENTCLOSING / SW_PARENTOPENING to children. Hiding
+    // the WebView2 controller then flashes the canvas (last PDF/CBR paint)
+    // on every resize. Tab show/hide uses ShowWindow on this HWND (status 0).
+    if (ev->status == SW_PARENTCLOSING || ev->status == SW_PARENTOPENING) {
+        HWND root = GetAncestor(hwnd, GA_ROOT);
+        if (root && IsIconic(root)) {
+            SetControllerVisible(false);
+            return;
+        }
+        if (ev->status == SW_PARENTOPENING && desiredVisible) {
+            SetControllerVisible(true);
+            UpdateWebviewSize();
+        }
+        return;
+    }
     SetControllerVisible(ev->show);
     UpdateWebviewSize();
 }

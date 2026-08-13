@@ -2134,6 +2134,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             } else {
                 win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
             }
+            FillCanvasThemeBackground(win->hwndCanvas);
             win->ctrl->SetDisplayMode(displayMode);
             // Markdown treats each .md in the directory as a "page". When the
             // user opens a specific file (File/Open, drag&drop, home thumbnail),
@@ -4223,8 +4224,10 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     if (win->AsChm()) {
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
+        FillCanvasThemeBackground(win->hwndCanvas);
     } else if (win->AsMarkdown()) {
         win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
+        FillCanvasThemeBackground(win->hwndCanvas);
     } else if (win->AsFixed() && win->uiaProvider) {
         // tell UI Automation about content change
         win->uiaProvider->OnDocumentLoad(win->AsFixed());
@@ -4515,6 +4518,11 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
     bool wasntFixed = !win->AsFixed();
+    // the canvas HWND is shared across tabs; wipe leftover page pixels so a
+    // following markdown/CHM tab cannot flash this document on resize
+    if (!wasntFixed) {
+        FillCanvasThemeBackground(win->hwndCanvas);
+    }
     if (win->AsChm()) {
         win->AsChm()->RemoveParentHwnd();
     } else if (win->AsMarkdown()) {
