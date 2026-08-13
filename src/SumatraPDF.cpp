@@ -9089,7 +9089,8 @@ static void RemoveDeletedFilesFromHistory(MainWindow* win) {
             continue;
         }
         DeleteThumbnailForFile(path);
-        states->RemoveAt(i);
+        // drops the home page layout cache, which points at fs
+        gFileHistory.Remove(fs);
         DeleteFileState(fs);
         nRemoved++;
     }

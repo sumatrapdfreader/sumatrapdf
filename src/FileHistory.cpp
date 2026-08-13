@@ -10,6 +10,7 @@ License: GPLv3 */
 #include "GlobalPrefs.h"
 #include "FileThumbnails.h"
 #include "FileHistory.h"
+#include "HomePage.h"
 
 /* Handling of file history list.
 
@@ -48,7 +49,11 @@ void FileHistory::Append(FileState* fs) const {
     states->Append(fs);
 }
 
+// the home page layout cache holds raw FileState* from this list, so it has to
+// be dropped whenever an entry leaves it (the caller usually frees the
+// FileState right after; crash 8c7b045cb). It is rebuilt on the next paint
 void FileHistory::Remove(FileState* fs) const {
+    HomePageInvalidateLayoutCache();
     states->Remove(fs);
 }
 
@@ -60,6 +65,7 @@ void FileHistory::Clear(bool keepFavorites) const {
     if (!states) {
         return;
     }
+    HomePageInvalidateLayoutCache();
     Vec<FileState*> keep;
     for (int i = 0; i < len(*states); i++) {
         if (keepFavorites && len(*(*states)[i]->favorites) > 0) {
@@ -274,6 +280,9 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         } else {
             continue;
         }
+        // SaveSettings() purges on every document load / tab close, so this
+        // can run while the home page is up and pointing at `state`
+        HomePageInvalidateLayoutCache();
         DeleteFileState(state);
     }
 }
