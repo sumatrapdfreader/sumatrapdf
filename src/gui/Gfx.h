@@ -28,6 +28,10 @@ namespace Gdiplus {
 class Font;
 class Graphics;
 } // namespace Gdiplus
+
+struct ID2D1DCRenderTarget;
+struct ID2D1SolidColorBrush;
+struct ID2D1StrokeStyle;
 #endif
 
 // how text is placed in the rect it is drawn into
@@ -143,4 +147,47 @@ struct GfxGdiplus : Gfx {
 
     Gdiplus::Font* GetGdiplusFont(PlatformFont*, bool* owned);
 };
+
+// Draws with Direct2D and lays text out with DirectWrite. Like GfxGdiplus it
+// draws into an HDC, so it fits the same places; the render target is bound at
+// 96 dpi, so a DIP is a pixel and the caller's coordinates go through unscaled.
+// Everything is a no-op when Direct2DAvailable() is false.
+struct GfxDirect2D : Gfx {
+    HDC hdc = nullptr;
+    ID2D1DCRenderTarget* target = nullptr; // owned; null when d2d isn't there
+    ID2D1SolidColorBrush* brush = nullptr; // owned, re-colored per draw
+    ID2D1StrokeStyle* dottedStroke = nullptr;
+    bool drawing = false; // between BeginDraw() and EndDraw()
+    // d2d has no "current text color", so kColorUnset resolves to this
+    COLORREF textColor = 0;
+    Vec<u8> clipDepth; // one per PushClip()
+
+    GfxDirect2D() = default;
+    explicit GfxDirect2D(HDC);
+    ~GfxDirect2D() override;
+
+    void FillRect(const Rect&, COLORREF) override;
+    void DrawRect(const Rect&, COLORREF, int thickness = 1) override;
+    void FillRoundedRect(const Rect&, int radius, COLORREF fill, COLORREF border = kColorUnset) override;
+    void FillEllipse(const Rect&, COLORREF, u8 alpha = 255) override;
+    void DrawLine(const Rect&, COLORREF, int thickness = 1) override;
+    void DrawLineAA(Point, Point, COLORREF, float thickness = 1.0f, u8 alpha = 255) override;
+    void DrawFocusRect(const Rect&) override;
+    void DrawText(Str, const Rect&, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
+    void DrawTextAt(Str, Point, u32 flags, PlatformFont*, COLORREF = kColorUnset) override;
+    Size MeasureText(Str, PlatformFont*) override;
+    void DrawPixmap(Pixmap*, const Rect&) override;
+    void PushClip(const Rect&) override;
+    void PopClip() override;
+    bool SetMirrored(bool) override;
+
+    ID2D1SolidColorBrush* GetBrush(COLORREF, u8 alpha = 255);
+};
+
+bool Direct2DAvailable();
+
+// flip to draw with Direct2D instead of gdiplus, for comparing the two
+extern bool gUseDirect2D;
+
+Gfx* CreateGfx(HDC);
 #endif

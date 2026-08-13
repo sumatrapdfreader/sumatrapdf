@@ -260,3 +260,16 @@ bool GfxHdc::SetMirrored(bool mirror) {
     }
     return (prev & LAYOUT_RTL) != 0;
 }
+
+bool gUseDirect2D = false;
+
+// The two implementations that draw the same way (anti-aliased shapes, their
+// own text layout), so that flipping gUseDirect2D swaps the backend under
+// whatever is painting and the two can be compared. Direct2D only when the OS
+// actually has it. The caller owns the result.
+Gfx* CreateGfx(HDC hdc) {
+    if (gUseDirect2D && Direct2DAvailable()) {
+        return new GfxDirect2D(hdc);
+    }
+    return new GfxGdiplus(hdc);
+}

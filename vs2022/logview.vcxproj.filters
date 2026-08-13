@@ -36,6 +36,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
+    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp">
       <Filter>gui</Filter>
     </ClCompile>

@@ -854,6 +854,7 @@ function gui_files()
     "Gfx.h",
     "Gfx_win.cpp",
     "GfxGdiplus_win.cpp",
+    "GfxDirect2D_win.cpp",
     "Layout.*",
     "PlatformFont.*",
     "PlatformFont_win.*",
@@ -1391,6 +1392,7 @@ function logview_files()
     "Gfx.h",
     "Gfx_win.cpp",
     "GfxGdiplus_win.cpp",
+    "GfxDirect2D_win.cpp",
     "VirtCtrl.*",
   })
   files_in_dir("src/gui/win", {

@@ -1055,6 +1055,9 @@
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>

@@ -969,6 +969,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp" />
     <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
     <ClCompile Include="..\src\gui\Gfx_win.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
