@@ -9,28 +9,20 @@
 // Leaving a button out is how you hide it; empty (the default) is the standard
 // layout.
 //
-// The test checks the standard layout first, then a custom one that reverses
-// two buttons and drops two others.
+// The toolbar is a Virt* tree (no ToolbarWindow32 HWND), so the test reads
+// button order and visibility through -dbg-control TestToolbarButtons.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, tmpPath } from "./util";
-import {
-  enumChildWindows,
-  getClassName,
-  sleep,
-  tbGetButtonIndex,
-  tbGetState,
-  tbIsButtonVisible,
-  waitForTopWindow,
-} from "./winapi";
+import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
 
 type Button = { visible: boolean; idx: number };
 
 // the standard toolbar written out as a layout; docs/md/Customize-toolbar.md
 // gives users this string as the starting point for their own
 const DEFAULT_LAYOUT =
-  "CmdOpenFile CmdPrint PageInfo CmdGoToPrevPage CmdGoToNextPage | " +
+  "CmdOpenFile CmdPrint | PageInfo CmdGoToPrevPage CmdGoToNextPage | " +
   "CmdNavigateBack CmdNavigateForward | CmdReadAloud | " +
   "CmdZoomFitWidthAndContinuous CmdZoomFitPageAndSinglePage CmdRotateLeft CmdRotateRight " +
   "CmdZoomOut CmdZoomIn | CmdFindFirst";
@@ -57,44 +49,53 @@ function makePdf(): string {
   return body;
 }
 
-// state and position in the toolbar of the given commands' buttons
-async function readToolbar(appdata: string, pdf: string, cmds: string[]): Promise<Map<string, Button>> {
-  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
-  try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
+type DumpBtn = { idx: number; cmd: number; hidden: boolean };
+
+function parseButtons(dump: string): DumpBtn[] {
+  const buttons: DumpBtn[] = [];
+  for (const line of dump.split("\n")) {
+    const m = /^idx=(\d+) cmd=(-?\d+) hidden=(\d)/.exec(line);
+    if (m) {
+      buttons.push({ idx: +m[1]!, cmd: +m[2]!, hidden: m[3] === "1" });
     }
-    await sleep(2000);
-    // the toolbar lives inside a rebar, and there is a second one for the menu
-    // bar, so find the one that knows the page-navigation commands
-    const toolbars: number[] = [];
-    const collect = (parent: number) => {
-      enumChildWindows(parent, (hwnd) => {
-        if (getClassName(hwnd) === "ToolbarWindow32") {
-          toolbars.push(hwnd);
-        }
-        collect(hwnd);
-        return true;
-      });
-    };
-    collect(frame);
-    const probeCmd = cmdId("CmdGoToNextPage");
-    const toolbar = toolbars.find((hwnd) => tbGetState(hwnd, probeCmd) >= 0);
-    if (!toolbar) {
-      throw new Error(`could not find the document toolbar (${toolbars.length} toolbar windows)`);
-    }
-    const res = new Map<string, Button>();
-    for (const name of cmds) {
-      const id = cmdId(name);
-      const visible = tbIsButtonVisible(toolbar, id);
-      res.set(name, { visible, idx: tbGetButtonIndex(toolbar, id) });
-    }
-    return res;
-  } finally {
-    proc.kill();
-    await sleep(400);
   }
+  return buttons;
+}
+
+function buttonsByName(dump: string, cmds: string[]): Map<string, Button> {
+  const parsed = parseButtons(dump);
+  const res = new Map<string, Button>();
+  for (const name of cmds) {
+    const id = cmdId(name);
+    const b = parsed.find((x) => x.cmd === id);
+    res.set(name, b ? { visible: !b.hidden, idx: b.idx } : { visible: false, idx: -1 });
+  }
+  return res;
+}
+
+async function readToolbar(appdata: string, pdf: string, cmds: string[]): Promise<Map<string, Button>> {
+  return withControlledSumatra(
+    EXE,
+    async (client) => {
+      const deadline = Date.now() + 15_000;
+      for (;;) {
+        const res = await client.request(ControlCommand.TestToolbarButtons, []);
+        const exitCode = res[0] as number;
+        const dump = String(res[1] ?? "");
+        if (exitCode === 0 && parseButtons(dump).length > 0) {
+          return buttonsByName(dump, cmds);
+        }
+        if (exitCode !== 0 && exitCode !== 1 && exitCode !== 2) {
+          throw new Error(`issue-5095: TestToolbarButtons failed: ${dump.trim()}`);
+        }
+        if (Date.now() > deadline) {
+          throw new Error(`issue-5095: could not read the document toolbar: ${dump.trim() || "empty"}`);
+        }
+        await new Promise((r) => setTimeout(r, 100));
+      }
+    },
+    ["-appdata", appdata, pdf],
+  );
 }
 
 function writeSettings(dir: string, layout: string) {
@@ -114,9 +115,6 @@ export async function testit(): Promise<void> {
   const appdata = tmpPath("issue-5095-appdata");
   rmSync(appdata, { recursive: true, force: true });
   mkdirSync(appdata, { recursive: true });
-
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
 
   const cmds = ["CmdOpenFile", "CmdPrint", "CmdGoToPrevPage", "CmdGoToNextPage", "CmdFindFirst"];
 
@@ -169,6 +167,5 @@ export async function testit(): Promise<void> {
 }
 
 if (import.meta.main) {
-  const { runStandalone } = await import("./util");
   await runStandalone(testit);
 }
