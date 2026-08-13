@@ -13,6 +13,8 @@
  *   - WSL distro named "Ubuntu"
  *   - bun in the distro (curl -fsSL https://bun.sh/install | bash)
  *   - compilers: sudo apt install build-essential clang libssl-dev
+ *   - for -asan with clang: sudo apt install libclang-rt-$(clang -dumpversion | cut -d. -f1)-dev
+ *     (without this the Linux script falls back to g++, which uses libasan)
  *
  * Note: the Linux script is base64-encoded before being passed to wsl.exe so
  * that Windows/WSL argument processing cannot mangle `$`, quotes, or newlines.

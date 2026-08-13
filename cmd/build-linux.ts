@@ -13,10 +13,10 @@
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
  */
 
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, basename } from "node:path";
-import { cpus } from "node:os";
+import { cpus, tmpdir } from "node:os";
 import {
   type BuildTools,
   type EmbedFormat,
@@ -95,6 +95,77 @@ function resolveLinuxTools(arch: LinuxArch): BuildTools {
   // x86_64: GNU objcopy embeds fonts as ELF .o; arm64 uses xxd+cc (see embedFonts).
   const embed = arch === "x64" ? resolveTool("objcopy for binary embedding", ["objcopy", "llvm-objcopy"]) : cc;
   return { cc, cxx, ar, embed };
+}
+
+function clangMajorVersion(): string | null {
+  const clang = Bun.which("clang");
+  if (!clang) {
+    return null;
+  }
+  const p = Bun.spawnSync([clang, "-dumpversion"]);
+  if (p.exitCode !== 0) {
+    return null;
+  }
+  return p.stdout.toString().trim().split(".")[0] || null;
+}
+
+// Ubuntu's clang package does not include compiler-rt; -fsanitize=address then
+// fails at link with missing libclang_rt.asan*.a. g++ uses libasan instead.
+function compilerCanLinkAsan(cxx: string): boolean {
+  const dir = mkdtempSync(join(tmpdir(), "sumatra-asan-"));
+  try {
+    const src = join(dir, "probe.cpp");
+    const exe = join(dir, "probe");
+    writeFileSync(src, "int main(){return 0;}\n");
+    const p = Bun.spawnSync([cxx, "-fsanitize=address", src, "-o", exe], {
+      stdout: "ignore",
+      stderr: "pipe",
+    });
+    return p.exitCode === 0;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function asanInstallHint(): string {
+  const major = clangMajorVersion();
+  const pkg = major ? `libclang-rt-${major}-dev` : "libclang-rt-dev";
+  return `sudo apt install ${pkg}   # clang ASan runtime\n  or: sudo apt install libasan8              # g++ ASan runtime`;
+}
+
+function ensureAsanLinker(tools: BuildTools): BuildTools {
+  if (compilerCanLinkAsan(tools.cxx)) {
+    return tools;
+  }
+  const gcc = Bun.which("gcc");
+  const gxx = Bun.which("g++");
+  if (gxx && gcc && compilerCanLinkAsan(gxx)) {
+    console.log(`${tools.cxx} cannot link -fsanitize=address (compiler-rt ASan libs are missing).`);
+    console.log(`Falling back to ${gxx}. To keep using clang:\n  ${asanInstallHint()}\n`);
+    return { ...tools, cc: gcc, cxx: gxx };
+  }
+  console.error(`${tools.cxx} cannot link -fsanitize=address (compiler-rt ASan libs are missing).`);
+  console.error(`Install one of:\n  ${asanInstallHint()}`);
+  process.exit(1);
+}
+
+// Rebuild objects if the compiler (or asan/debug/release) changed so we don't
+// mix clang-asan objects with a g++ link, or vice versa.
+function invalidateObjsIfCompilerChanged(outDir: string, tools: BuildTools, config: string): void {
+  const stampPath = join(outDir, ".compiler");
+  const stamp = `${tools.cc}\n${tools.cxx}\n${config}\n`;
+  let same = false;
+  if (existsSync(stampPath)) {
+    try {
+      same = readFileSync(stampPath, "utf8") === stamp;
+    } catch {}
+  }
+  if (!same && existsSync(join(outDir, "obj"))) {
+    console.log("Compiler or config changed; rebuilding objects...");
+    rmSync(join(outDir, "obj"), { recursive: true, force: true });
+  }
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(stampPath, stamp);
 }
 
 function makeLibarchive(outDir: string): LibDef {
@@ -591,7 +662,7 @@ export interface LinuxBuildOptions {
 export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   requireLinux();
   const arch = detectLinuxArch();
-  const tools: BuildTools = { ...resolveLinuxTools(arch), ...opts.tools };
+  let tools: BuildTools = { ...resolveLinuxTools(arch), ...opts.tools };
   const jobs = opts.jobs ?? DEFAULT_JOBS;
   const isRelease = opts.isRelease ?? false;
   const isAsan = opts.asan ?? false;
@@ -603,8 +674,13 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
     rmSync(outDir, { recursive: true, force: true });
   }
 
+  if (isAsan) {
+    tools = ensureAsanLinker(tools);
+  }
+
   const startTime = performance.now();
   const config = isAsan ? "asan" : isRelease ? "release" : "debug";
+  invalidateObjsIfCompilerChanged(outDir, tools, config);
   console.log(`\n=== Building SumatraPDF dependencies (${config}, Linux ${arch}) ===\n`);
   console.log(`Output: ${outDir}`);
   console.log(`Tools: ${tools.cc}, ${tools.cxx}`);
