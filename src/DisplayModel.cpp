@@ -1913,6 +1913,24 @@ void DisplayModel::SetInPresentation(bool enable) {
     SetZoomVirtual(presZoomVirtual, nullptr);
 }
 
+// Page-relative view offset so next/prev page can open at the same place
+// on the page (RememberViewOffsetOnPageTurn). scrollX is an absolute
+// canvas x (what GoToPage expects); scrollY is page-relative.
+static void GetRememberedViewOffset(DisplayModel* dm, int pageNo, int* scrollXOut, int* scrollYOut) {
+    PageInfo* pi = dm->GetPageInfo(pageNo);
+    if (!pi) {
+        *scrollXOut = -1;
+        *scrollYOut = 0;
+        return;
+    }
+    *scrollXOut = dm->viewPort.x;
+    if (IsContinuous(dm->GetDisplayMode())) {
+        *scrollYOut = dm->viewPort.y - pi->pos.y + dm->windowMargin.top;
+    } else {
+        *scrollYOut = dm->viewPort.y;
+    }
+}
+
 /* In continuous mode just scrolls to the next page. In single page mode
    rebuilds the display model for the next page.
    Returns true if advanced to the next page or false if couldn't advance
@@ -1931,7 +1949,12 @@ bool DisplayModel::GoToNextPage() {
         /* we're on a last row or after it, can't go any further */
         return false;
     }
-    GoToPage(firstPageInNewRow, false);
+    int scrollY = 0;
+    int scrollX = -1;
+    if (gGlobalPrefs->rememberViewOffsetOnPageTurn) {
+        GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
+    }
+    GoToPage(firstPageInNewRow, scrollY, false, scrollX);
     return true;
 }
 
@@ -1981,6 +2004,11 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
     // scroll to the bottom of the page
     if (-1 == scrollY) {
         scrollY = GetPageInfo(firstPageInNewRow)->pageOnScreen.dy;
+    } else if (gGlobalPrefs->rememberViewOffsetOnPageTurn && scrollY == 0) {
+        int scrollX = -1;
+        GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
+        GoToPage(firstPageInNewRow, scrollY, false, scrollX);
+        return true;
     }
 
     GoToPage(firstPageInNewRow, scrollY);
