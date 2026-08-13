@@ -3186,6 +3186,13 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         if (eBookUI->layoutDy > 100) {
             ldy = eBookUI->layoutDy;
         }
+        Str fontName = EbookFontNameFromSetting(eBookUI->fontName);
+        if (fontName) {
+            // user CSS with !important beats publisher font-family (issue #3138)
+            userCss = str::JoinTemp(
+                fmt("body, p, div, li, td, th, h1, h2, h3, h4, h5, h6 { font-family: \"%s\" !important; }\n", fontName),
+                userCss);
+        }
         if (eBookUI->customCSS) {
             userCss = str::JoinTemp(userCss, eBookUI->customCSS);
         }

@@ -26,6 +26,33 @@ EngineBase* CreateEngineHtmlFromFile(Str fileName);
 EngineBase* CreateEngineTxtFromFile(Str fileName);
 
 void SetDefaultEbookFont(Str name, float size);
+// Reject characters that would break out of a quoted CSS font-family value.
+inline bool IsSafeEbookFontName(Str name) {
+    if (!name) {
+        return false;
+    }
+    for (int i = 0; i < len(name); i++) {
+        unsigned char c = (unsigned char)name.s[i];
+        if (c < 32 || c == '"' || c == '\'' || c == ';' || c == '{' || c == '}' || c == '\\') {
+            return false;
+        }
+    }
+    return true;
+}
+// Drop one matching pair of wrapping ' or " quotes, then check IsSafeEbookFontName.
+inline Str EbookFontNameFromSetting(Str name) {
+    int n = len(name);
+    if (n >= 2) {
+        char q = name.s[0];
+        if ((q == '"' || q == '\'') && name.s[n - 1] == q) {
+            name = Str(name.s + 1, n - 2);
+        }
+    }
+    if (!IsSafeEbookFontName(name)) {
+        return {};
+    }
+    return name;
+}
 void EngineEbookCleanup();
 
 /* EngineImages.cpp */

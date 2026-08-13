@@ -8,6 +8,7 @@ Open **Settings → Advanced Options...** and edit the `EBookUI` section:
 
 ```
 EBookUI [
+    FontName =
     FontSize = 0
     LayoutDx = 0
     LayoutDy = 0
@@ -17,13 +18,14 @@ EBookUI [
 ]
 ```
 
-| Setting | Meaning |
-| --- | --- |
-| `FontSize` | Base font size (default `8.0`; `0` = built-in default) |
-| `LayoutDx` / `LayoutDy` | Virtual page width / height for reflow (defaults `420` / `595`) |
-| `IgnoreDocumentCSS` | Ignore stylesheet from the EPUB (`true` = your `CustomCSS` wins) |
-| `CustomCSS` | Extra CSS rules — often paired with `IgnoreDocumentCSS = true` |
-| `WindowBgCol` | Canvas background around the reflowed text (**ver 3.7+**) |
+| Setting                 | Meaning                                                                                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FontName`              | Default font family, e.g. `Segoe UI` or `Microsoft YaHei` (empty = engine default, usually a serif). Overrides the document's `font-family` (**ver 3.7+**) |
+| `FontSize`              | Base font size (default `8.0`; `0` = built-in default)                                                                                                     |
+| `LayoutDx` / `LayoutDy` | Virtual page width / height for reflow (defaults `420` / `595`)                                                                                            |
+| `IgnoreDocumentCSS`     | Ignore stylesheet from the EPUB (`true` = your `CustomCSS` wins)                                                                                           |
+| `CustomCSS`             | Extra CSS rules — often paired with `IgnoreDocumentCSS = true`                                                                                             |
+| `WindowBgCol`           | Canvas background around the reflowed text (**ver 3.7+**)                                                                                                  |
 
 Full field reference: [Advanced options / settings](Advanced-options-settings.md).
 
@@ -31,10 +33,10 @@ Full field reference: [Advanced options / settings](Advanced-options-settings.md
 
 UI themes (`Theme = ...`) only change window chrome. Ebooks that go through MuPDF’s fixed-page color path use the same **`DocumentColorsFollowTheme`** setting as PDF:
 
-| Value | Effect |
-| --- | --- |
-| **`off`** | Original page colors. |
-| **`smart`** | Dark (or custom) text and background; **images stay intact**. |
+| Value        | Effect                                                           |
+| ------------ | ---------------------------------------------------------------- |
+| **`off`**    | Original page colors.                                            |
+| **`smart`**  | Dark (or custom) text and background; **images stay intact**.    |
 | **`legacy`** | Recolor text, background, **and** images (pre-3.7 invert-style). |
 
 - **`Shift + I`** toggles **`off` ↔ `smart`**.

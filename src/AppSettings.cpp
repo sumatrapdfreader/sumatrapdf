@@ -482,8 +482,17 @@ bool LoadSettings() {
         }
     }
     FileHistorySetStates(gprefs->fileStates);
-    //    auto fontName = ToWStrTemp(gprefs->fixedPageUI.ebookFontName);
-    //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
+    {
+        Str fontName = EbookFontNameFromSetting(gprefs->eBookUI.fontName);
+        if (!fontName) {
+            fontName = StrL("Georgia");
+        }
+        float fontSize = gprefs->eBookUI.fontSize;
+        if (fontSize <= 0) {
+            fontSize = 8.f;
+        }
+        SetDefaultEbookFont(fontName, fontSize);
+    }
 
     ResetCachedFonts();
 

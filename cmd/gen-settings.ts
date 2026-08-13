@@ -149,6 +149,15 @@ function isComment(f: Field): boolean {
 }
 
 const ebookUI: Field[] = [
+  field(
+    "FontName",
+    Str,
+    "",
+    "default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft YaHei). " +
+      "empty uses the engine default (typically a serif). applied as user CSS " +
+      "with !important so it overrides a document font-family; leave empty to " +
+      "keep the publisher's fonts. wrapping quotes are stripped",
+  ).ver("3.7"),
   field("FontSize", Float, 0, "font size in points; 0 means the default (8.0)"),
   field(
     "LayoutDx",

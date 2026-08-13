@@ -371,6 +371,13 @@ FixedPageUI [
 
 ; customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)
 EBookUI [
+    ; default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft YaHei).
+    ; empty uses the engine default (typically a serif). applied as user CSS
+    ; with !important so it overrides a document font-family; leave empty to
+    ; keep the publisher's fonts. wrapping quotes are stripped (introduced in
+    ; version 3.7)
+    FontName = 
+
     ; font size in points; 0 means the default (8.0)
     FontSize = 0
 

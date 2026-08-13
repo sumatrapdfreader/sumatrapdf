@@ -81,6 +81,12 @@ struct FixedPageUI {
 // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
 // plain text)
 struct EBookUI {
+    // default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft
+    // YaHei). empty uses the engine default (typically a serif). applied
+    // as user CSS with !important so it overrides a document font-family;
+    // leave empty to keep the publisher's fonts. wrapping quotes are
+    // stripped
+    Str fontName;
     // font size in points; 0 means the default (8.0)
     float fontSize;
     // width of the page the ebook is laid out into, in points (not screen
@@ -1038,6 +1044,7 @@ static const StructInfo gFixedPageUIInfo = {
     false};
 
 static const FieldInfo gEBookUIFields[] = {
+    {offsetof(EBookUI, fontName), SettingType::String, (intptr_t)""},
     {offsetof(EBookUI, fontSize), SettingType::Float, (intptr_t)"0"},
     {offsetof(EBookUI, layoutDx), SettingType::Float, (intptr_t)"0"},
     {offsetof(EBookUI, layoutDy), SettingType::Float, (intptr_t)"0"},
@@ -1048,16 +1055,18 @@ static const FieldInfo gEBookUIFields[] = {
 };
 static const StructInfo gEBookUIInfo = {
     sizeof(EBookUI),
-    7,
+    8,
     gEBookUIFields,
-    "FontSize\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS\0WindowBgCol\0DefaultDisplayMode",
-    "font size in points; 0 means the default (8.0)\0width of the page the ebook is laid out into, in points (not "
-    "screen pixels); 0 means the default (420)\0height of the page the ebook is laid out into, in points (not screen "
-    "pixels); 0 means the default (595)\0if true, the CSS in the ebook is ignored and only CustomCSS "
-    "applies\0additional CSS applied to ebooks; set IgnoreDocumentCSS = true if the document's own CSS overrides "
-    "it\0if given, sets the canvas background color for ebook documents (epub, mobi etc.)\0default page layout for "
-    "ebooks; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book view, "
-    "continuous, continuous facing, continuous book view",
+    "FontName\0FontSize\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS\0WindowBgCol\0DefaultDisplayMode",
+    "default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft YaHei). empty uses the engine default "
+    "(typically a serif). applied as user CSS with !important so it overrides a document font-family; leave empty to "
+    "keep the publisher's fonts. wrapping quotes are stripped\0font size in points; 0 means the default (8.0)\0width "
+    "of the page the ebook is laid out into, in points (not screen pixels); 0 means the default (420)\0height of the "
+    "page the ebook is laid out into, in points (not screen pixels); 0 means the default (595)\0if true, the CSS in "
+    "the ebook is ignored and only CustomCSS applies\0additional CSS applied to ebooks; set IgnoreDocumentCSS = true "
+    "if the document's own CSS overrides it\0if given, sets the canvas background color for ebook documents (epub, "
+    "mobi etc.)\0default page layout for ebooks; empty uses the global DefaultDisplayMode. valid values: automatic, "
+    "single page, facing, book view, continuous, continuous facing, continuous book view",
     false};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
