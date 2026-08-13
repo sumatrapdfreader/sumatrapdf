@@ -2105,6 +2105,10 @@ VirtIconButton::VirtIconButton() {
     kind = kindVirtCtrlIconButton;
 }
 
+static int VirtIconDropdownDx() {
+    return DpiScale(12);
+}
+
 Size VirtIconButton::GetIdealSize() {
     Size sz;
     if (pixmap) {
@@ -2112,24 +2116,42 @@ Size VirtIconButton::GetIdealSize() {
     }
     sz.dx += padding.left + padding.right;
     sz.dy += padding.top + padding.bottom;
+    if (hasDropdown) {
+        sz.dx += VirtIconDropdownDx();
+    }
     return sz;
 }
 
 void VirtIconButton::Paint(VirtPaintCtx& ctx) {
-    Color bg = isSelected ? bgColorSelected : (HasFlag(vwfHovered) ? bgColorHover : kColorUnset);
+    bool enabled = IsEnabled();
+    Color bg = isSelected ? bgColorSelected : ((enabled && HasFlag(vwfHovered)) ? bgColorHover : kColorUnset);
     if (bg != kColorUnset) {
         ctx.gfx->FillRect(ctx.bounds, bg);
     }
-    if (!pixmap) {
-        return;
-    }
-    // pixmap size, not GetIdealSize(): that includes padding and a stretched
-    // blit falls back to an opaque copy, which paints the transparent fringe black
-    Size s2 = {pixmap->width, pixmap->height};
+    Pixmap* px = (!enabled && pixmapDisabled) ? pixmapDisabled : pixmap;
     Rect r = ctx.content;
-    int x = r.x + ((r.dx - s2.dx) / 2);
-    int y = r.y + ((r.dy - s2.dy) / 2);
-    ctx.gfx->DrawPixmap(pixmap, {x, y, s2.dx, s2.dy});
+    int dropDx = hasDropdown ? VirtIconDropdownDx() : 0;
+    if (px) {
+        // pixmap size, not GetIdealSize(): that includes padding and a stretched
+        // blit falls back to an opaque copy, which paints the transparent fringe black
+        Size s2 = {px->width, px->height};
+        int iconDx = r.dx - dropDx;
+        int x = r.x + ((iconDx - s2.dx) / 2);
+        int y = r.y + ((r.dy - s2.dy) / 2);
+        ctx.gfx->DrawPixmap(px, {x, y, s2.dx, s2.dy});
+    }
+    if (hasDropdown) {
+        Color col = chevronColor;
+        if (col == kColorUnset) {
+            col = MkGray(enabled ? 0x40 : 0x90);
+        }
+        int cx = r.Right() - (dropDx / 2);
+        int cy = r.y + (r.dy / 2);
+        int w = DpiScale(3);
+        int h = DpiScale(2);
+        ctx.gfx->DrawLineAA({cx - w, cy - h}, {cx, cy + h}, col, 1.2f);
+        ctx.gfx->DrawLineAA({cx, cy + h}, {cx + w, cy - h}, col, 1.2f);
+    }
 }
 
 void VirtIconButton::OnMouseEnter() {

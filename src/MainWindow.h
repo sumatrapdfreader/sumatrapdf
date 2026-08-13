@@ -30,6 +30,7 @@ struct TocTree;
 struct TocItem;
 struct FindBarWnd;
 struct FindWindowWnd;
+struct ToolbarVirt;
 
 // one link numbered by keyboard link following (CmdToggleKeyboardLinkFollowing).
 // stored in page coordinates so the badges stay glued to their links while
@@ -183,6 +184,7 @@ struct MainWindow {
 
     HWND hwndReBar = nullptr;
     HWND hwndToolbar = nullptr;
+    ToolbarVirt* toolbarVirt = nullptr;
     HWND hwndMenuReBar = nullptr;
     HWND hwndMenuToolbar = nullptr;
     // hwndFindEdit is the search input; it lives inside the floating findBar

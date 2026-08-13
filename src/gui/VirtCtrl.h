@@ -600,10 +600,16 @@ struct VirtButton : VirtText {
 struct VirtIconButton : VirtCtrl {
     // not owned; in SumatraPDF it comes from GetPixmapForIcon()
     Pixmap* pixmap = nullptr;
+    // drawn when !IsEnabled(); if null, pixmap is used
+    Pixmap* pixmapDisabled = nullptr;
     // a toggle button (match case, ...) draws bgColorSelected while on
     bool isSelected = false;
+    // split button: a chevron on the right; click there fires onDropdown
+    bool hasDropdown = false;
     Color bgColorHover = kColorUnset;
     Color bgColorSelected = kColorUnset;
+    Color chevronColor = kColorUnset;
+    VirtMouseHandler onDropdown;
 
     VirtIconButton();
     ~VirtIconButton() override = default;

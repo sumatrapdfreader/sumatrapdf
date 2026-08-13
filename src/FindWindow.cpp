@@ -251,8 +251,8 @@ FindWindowWnd::~FindWindowWnd() {
 // the pixmaps belong to the icon cache, which re-renders them for the current
 // theme and size
 void FindWindowWnd::UpdateButtonIcons() {
-    static const TbIcon icons[5] = {TbIcon::ChevronUp, TbIcon::ChevronDown, TbIcon::MatchCase, TbIcon::MatchWholeWord,
-                                    TbIcon::ArrowsDiagonalMinimize};
+    static const char* icons[5] = {gIconChevronUp, gIconChevronDown, gIconMatchCase, gIconMatchWholeWord,
+                                   gIconArrowsDiagonalMinimize};
     int isz = RoundUp(DpiScale(16), 4);
     for (int i = 0; i < 5; i++) {
         if (btns[i]) {

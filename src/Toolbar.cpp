@@ -58,11 +58,11 @@ static int kButtonSpacingX = 4;
 constexpr int kTextPaddingRight = 6;
 
 struct ToolbarButtonInfo {
-    /* index in the toolbar bitmap (-1 for separators) */
-    TbIcon bmpIndex;
-    int cmdId;
+    const char* icon = nullptr; // gIcon*, or null for a separator / page box / text
+    int cmdId = 0;
     Str toolTip;
-    Str svgIcon;
+    Str svgIcon; // custom SVG from settings
+    bool isText = false;
 };
 
 // thos are not real commands but we have to refer to toolbar buttons
@@ -72,25 +72,25 @@ constexpr int PageInfoId = (int)CmdLast + 16;
 constexpr int WarningMsgId = (int)CmdLast + 17;
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    {TbIcon::Open, CmdOpenFile, _TRN("Open")},
-    {TbIcon::Print, CmdPrint, _TRN("Print")},
-    {TbIcon::None, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
-    {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
-    {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page")},
-    {TbIcon::None, 0, nullptr}, // separator
-    {TbIcon::NavigateBack, CmdNavigateBack, _TRN("Back")},
-    {TbIcon::NavigateForward, CmdNavigateForward, _TRN("Forward")},
-    {TbIcon::None, 0, nullptr}, // separator
-    {TbIcon::Speak, CmdReadAloud, _TRN("Read Aloud")},
-    {TbIcon::None, 0, nullptr}, // separator
-    {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
-    {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
-    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
-    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right")},
-    {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out")},
-    {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In")},
-    {TbIcon::None, 0, nullptr}, // separator
-    {TbIcon::Search, CmdFindFirst, _TRN("Find")},
+    {gIconFileOpen, CmdOpenFile, _TRN("Open")},
+    {gIconPrint, CmdPrint, _TRN("Print")},
+    {nullptr, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
+    {gIconPagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
+    {gIconPageNext, CmdGoToNextPage, _TRN("Next Page")},
+    {nullptr, 0, nullptr}, // separator
+    {gIconNavigateBack, CmdNavigateBack, _TRN("Back")},
+    {gIconNavigateForward, CmdNavigateForward, _TRN("Forward")},
+    {nullptr, 0, nullptr}, // separator
+    {gIconSpeak, CmdReadAloud, _TRN("Read Aloud")},
+    {nullptr, 0, nullptr}, // separator
+    {gIconLayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
+    {gIconLayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
+    {gIconRotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
+    {gIconRotateRight, CmdRotateRight, _TRN("Rotate &Right")},
+    {gIconZoomOut, CmdZoomOut, _TRN("Zoom Out")},
+    {gIconZoomIn, CmdZoomIn, _TRN("Zoom In")},
+    {nullptr, 0, nullptr}, // separator
+    {gIconSearch, CmdFindFirst, _TRN("Find")},
 };
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
 
@@ -116,24 +116,163 @@ constexpr int kMaxCustomButtons = 127;
 static ToolbarButtonInfo gCustomButtons[kMaxCustomButtons + 1];
 static int gCustomButtonsCount = 0;
 
-static bool SkipBuiltInButton(const ToolbarButtonInfo& tbi) {
-    return tbi.bmpIndex == TbIcon::None;
+static HIMAGELIST gTbHiml = nullptr;
+
+HIMAGELIST GetToolbarImageList() {
+    return gTbHiml;
 }
 
-static void UpdateToolbarButtonStateByIdx(HWND hwnd, int idx, bool set, BYTE flag) {
-    TBBUTTONINFOW bi{};
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_BYINDEX | TBIF_STATE;
-    TbGetButtonInfo(hwnd, idx, &bi);
-    BYTE newState = (BYTE)(set ? bi.fsState | flag : bi.fsState & ~flag);
-    if (newState == bi.fsState) {
-        // TB_SETBUTTONINFOW repaints the button even when nothing changes, which
-        // flickers the toolbar (and the page-number controls floating over it)
-        // e.g. on every page change while drag-selecting. Skip the no-op.
+void DestroyToolbarImageList() {
+    if (gTbHiml) {
+        ImageList_Destroy(gTbHiml);
+        gTbHiml = nullptr;
+    }
+}
+
+// Windows toolbar colors in the default Light theme; theme colors otherwise
+static Color TbBgColor() {
+    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
+        return GetSysColor(COLOR_BTNFACE);
+    }
+    return ThemeControlBackgroundColor();
+}
+
+static Color TbTextColor() {
+    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
+        return GetSysColor(COLOR_BTNTEXT);
+    }
+    return ThemeWindowTextColor();
+}
+
+static Color TbDisabledColor() {
+    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
+        return GetSysColor(COLOR_GRAYTEXT);
+    }
+    return ThemeWindowTextDisabledColor();
+}
+
+static Color TbHoverColor() {
+    return ThemeHotBackgroundColor();
+}
+
+static Color TbSelectedColor() {
+    return AccentColor(TbBgColor(), 28);
+}
+
+static Color TbEdgeColor() {
+    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
+        return GetSysColor(COLOR_3DSHADOW);
+    }
+    return ThemeEdgeColor();
+}
+
+static void RelayoutToolbar(MainWindow* win);
+static bool IsVirtKind(VirtCtrl* w, const char* k);
+
+struct ToolbarVirt {
+    MainWindow* win = nullptr;
+    ILayout* layout = nullptr;
+    VirtRoot* vroot = nullptr;
+    Vec<VirtCtrl*> items; // not owned; layout owns them
+    VirtText* pageLabel = nullptr;
+    VirtText* pageTotal = nullptr;
+    VirtCtrl* pageEditSlot = nullptr;
+    HFONT font = nullptr;
+    PlatformFont* platformFont = nullptr;
+    int iconSize = 0;
+    int rowDy = 0;
+    Vec<Pixmap*> ownedPixmaps;
+};
+
+static const WStr kVirtToolbarClass = WStrL(L"SUMATRA_VIRT_TOOLBAR");
+
+static bool SkipBuiltInButton(const ToolbarButtonInfo& tbi) {
+    return !tbi.icon && !tbi.isText && str::IsEmptyOrWhiteSpace(tbi.svgIcon);
+}
+
+static VirtCtrl* ToolbarItemAt(MainWindow* win, int idx) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || idx < 0 || idx >= len(tb->items)) {
+        return nullptr;
+    }
+    return tb->items[idx];
+}
+
+// Includes disabled items (those are not hit-testable), so a click on a gray
+// button is not treated as empty toolbar and does not start a window drag.
+static VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return nullptr;
+    }
+    for (VirtCtrl* w : tb->items) {
+        if (!w || w->GetVisibility() != Visibility::Visible) {
+            continue;
+        }
+        if (w->BoundsInWindow().Contains(pt)) {
+            return w;
+        }
+    }
+    if (tb->pageEditSlot && tb->pageEditSlot->GetVisibility() == Visibility::Visible &&
+        tb->pageEditSlot->BoundsInWindow().Contains(pt)) {
+        return tb->pageEditSlot;
+    }
+    if (tb->pageTotal && tb->pageTotal->GetVisibility() == Visibility::Visible &&
+        tb->pageTotal->BoundsInWindow().Contains(pt)) {
+        return tb->pageTotal;
+    }
+    return nullptr;
+}
+
+static void UpdateToolbarButtonStateByIdx(MainWindow* win, int idx, bool set, BYTE flag) {
+    VirtCtrl* w = ToolbarItemAt(win, idx);
+    if (!w) {
         return;
     }
-    bi.fsState = newState;
-    TbSetButtonInfo(hwnd, idx, &bi);
+    if (flag == TBSTATE_ENABLED) {
+        if (w->IsEnabled() == set) {
+            return;
+        }
+        w->SetIsEnabled(set);
+        w->Invalidate();
+        return;
+    }
+    if (flag == TBSTATE_HIDDEN) {
+        Visibility want = set ? Visibility::Collapse : Visibility::Visible;
+        if (w->GetVisibility() == want) {
+            return;
+        }
+        w->SetVisibility(want);
+        ToolbarVirt* tb = win->toolbarVirt;
+        if (w->id == PageInfoId && tb) {
+            if (tb->pageLabel) {
+                tb->pageLabel->SetVisibility(want);
+            }
+            if (tb->pageEditSlot) {
+                tb->pageEditSlot->SetVisibility(want);
+            }
+            if (tb->pageTotal) {
+                tb->pageTotal->SetVisibility(want);
+            }
+            if (win->hwndPageEdit) {
+                ShowWindow(win->hwndPageEdit, set ? SW_HIDE : SW_SHOW);
+            }
+        }
+        if (tb && tb->vroot) {
+            tb->vroot->RequestLayout();
+        }
+        RelayoutToolbar(win);
+        HwndInvalidate(win->hwndToolbar, true);
+        return;
+    }
+    if (flag == TBSTATE_CHECKED) {
+        auto* ib = (VirtIconButton*)w;
+        if (ib->isSelected == set) {
+            return;
+        }
+        ib->isSelected = set;
+        ib->Invalidate();
+    }
 }
 
 // Work out which built-in buttons the toolbar has, and in which order. Empty
@@ -178,11 +317,11 @@ static void PopulateToolbarLayout() {
             continue;
         }
         if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
-            addButton({TbIcon::None, 0, nullptr});
+            addButton({nullptr, 0, nullptr});
             continue;
         }
         if (str::EqI(tok, StrL("PageInfo"))) {
-            addButton({TbIcon::None, PageInfoId, nullptr});
+            addButton({nullptr, PageInfoId, nullptr});
             gLayoutHasPageBox = true;
             continue;
         }
@@ -246,16 +385,8 @@ void SetToolbarButtonCheckedState(MainWindow* win, int cmdId, bool isChecked) {
     if (n == 0) return;
     for (int i = 0; i < n; i++) {
         int idx = buttons[i];
-        UpdateToolbarButtonStateByIdx(win->hwndToolbar, idx, isChecked, TBSTATE_CHECKED);
+        UpdateToolbarButtonStateByIdx(win, idx, isChecked, TBSTATE_CHECKED);
     }
-}
-
-static void TbSetButtonDx(HWND hwndToolbar, int cmd, int dx) {
-    TBBUTTONINFOW bi{};
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_SIZE;
-    bi.cx = (WORD)dx;
-    TbSetButtonInfo(hwndToolbar, cmd, &bi);
 }
 
 // which documents support rotation
@@ -396,141 +527,79 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
     }
 }
 
-static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi, bool noTranslate = false) {
-    TBBUTTON b{};
-    b.idCommand = bi.cmdId;
-    if (SkipBuiltInButton(bi)) {
-        b.fsStyle = BTNS_SEP;
-        return b;
-    }
-    b.iBitmap = (int)bi.bmpIndex;
-    b.fsState = TBSTATE_ENABLED;
-    b.fsStyle = BTNS_BUTTON;
-
-    if (bi.cmdId == CmdReadAloud) {
-        b.fsStyle |= BTNS_DROPDOWN;
-    }
-
-    if (bi.cmdId == CmdFindToggleMatchCase || bi.cmdId == CmdFindToggleMatchWholeWord) {
-        b.fsStyle = BTNS_CHECK;
-    }
-    if (bi.bmpIndex == TbIcon::Text) {
-        // b.fsStyle = BTNS_DROPDOWN;
-        b.fsStyle |= BTNS_SHOWTEXT;
-        b.fsStyle |= BTNS_AUTOSIZE;
-    }
-    Str s = noTranslate ? Str(bi.toolTip) : trans::GetTranslation(bi.toolTip);
-    b.iString = (INT_PTR)CWStrTemp(s);
-    return b;
-}
-
-// Set toolbar button tooltips taking current language into account.
-void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
-    TBBUTTONINFO binfo{};
-    HWND hwnd = win->hwndToolbar;
-    for (int i = 0; i < gLayoutButtonsCount; i++) {
-        const ToolbarButtonInfo& bi = gLayoutButtons[i];
-        if (!bi.toolTip) {
-            continue;
-        }
-        if (bi.bmpIndex == TbIcon::Text) {
-            continue;
-        }
-        TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
-        TempStr s = trans::GetTranslation(bi.toolTip);
-        if (accelStr) {
-            Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-            TempStr s2 = fmt(" (%s)", accel);
-            s = str::JoinTemp(s, s2);
-        }
-
-        binfo.cbSize = sizeof(TBBUTTONINFO);
-        binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-        binfo.pszText = CWStrTemp(s);
-        WPARAM buttonId = (WPARAM)i;
-        TbSetButtonInfo(hwnd, (int)buttonId, &binfo);
-    }
-    // TODO: need an explicit tooltip window https://chatgpt.com/c/18fb77c8-761c-4314-a1ac-e55b93edfeef
-#if 0
-    if (gCustomToolbarButtons) {
-        int n = gCustomToolbarButtons->Size();
-        for (int i = 0; i < n; i++) {
-            const ToolbarButtonInfo& bi = (*gCustomToolbarButtons)[i];
-            TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
-            TempStr s = bi.toolTip;
-            if (accelStr) {
-                Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-                TempStr s2 = fmt(" (%s)", accel);
-                s = str::JoinTemp(s, s2);
-            }
-
-            binfo.cbSize = sizeof(TBBUTTONINFO);
-            binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-            binfo.pszText = CWStrTemp(s);
-            WPARAM buttonId = (WPARAM)(kButtonsCount + i);
-            TbSetButtonInfo(hwnd, buttonId, &binfo);
-        }
-    }
-#endif
-}
-
-static void SetToolbarButtonImageByIdx(HWND hwnd, int idx, TbIcon icon) {
-    TBBUTTONINFOW bi{};
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
-    TbGetButtonInfo(hwnd, idx, &bi);
-    if (bi.iImage == (int)icon) {
-        return; // TB_SETBUTTONINFOW always repaints; skip no-ops
-    }
-    bi.iImage = (int)icon;
-    TbSetButtonInfo(hwnd, idx, &bi);
-}
-
-// sets button text, which the toolbar shows as its tooltip
-static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
+static TempStr ToolbarTipTemp(int cmdId, Str tip, bool translate) {
+    TempStr s = translate ? trans::GetTranslation(tip) : TempStr(tip);
     TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, cmdId);
     if (accelStr) {
         Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-        TempStr s2 = fmt(" (%s)", accel);
-        s = str::JoinTemp(s, s2);
+        s = str::JoinTemp(s, fmt(" (%s)", accel));
     }
-    // TB_GETBUTTONINFO with TBIF_TEXT needs a buffer; skip SET when equal
-    WCHAR prevBuf[256]{};
-    TBBUTTONINFOW bi{};
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_BYINDEX | TBIF_TEXT;
-    bi.pszText = prevBuf;
-    bi.cchText = dimof(prevBuf);
-    TbGetButtonInfo(hwnd, idx, &bi);
-    if (str::Eq(ToUtf8Temp(prevBuf), s)) {
+    return s;
+}
+
+void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
         return;
     }
-    bi.pszText = CWStrTemp(s);
-    bi.cchText = 0;
-    TbSetButtonInfo(hwnd, idx, &bi);
+    for (int i = 0; i < gLayoutButtonsCount; i++) {
+        const ToolbarButtonInfo& bi = gLayoutButtons[i];
+        if (!bi.toolTip || bi.isText) {
+            continue;
+        }
+        VirtCtrl* w = ToolbarItemAt(win, i);
+        if (w) {
+            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, true));
+        }
+    }
+}
+
+static void SetToolbarButtonImageByIdx(MainWindow* win, int idx, const char* icon) {
+    VirtCtrl* w = ToolbarItemAt(win, idx);
+    if (!w) {
+        return;
+    }
+    auto* ib = (VirtIconButton*)w;
+    ToolbarVirt* tb = win->toolbarVirt;
+    int sz = tb ? tb->iconSize : DpiScale(gGlobalPrefs->toolbarSize);
+    Pixmap* px = GetPixmapForIcon(icon, sz, sz, TbTextColor());
+    Pixmap* pxOff = GetPixmapForIcon(icon, sz, sz, TbDisabledColor());
+    if (ib->pixmap == px && ib->pixmapDisabled == pxOff) {
+        return;
+    }
+    ib->pixmap = px;
+    ib->pixmapDisabled = pxOff;
+    ib->Invalidate();
+}
+
+static void SetToolbarButtonToolTipByIdx(MainWindow* win, int idx, int cmdId, Str s) {
+    VirtCtrl* w = ToolbarItemAt(win, idx);
+    if (!w) {
+        return;
+    }
+    w->SetTooltip(ToolbarTipTemp(cmdId, s, false));
 }
 
 // TODO: this is called too often
 // TODO: also set checked state instead of calling SetToolbarButtonCheckedState() all over
 void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
-    HWND hwnd = win->hwndToolbar;
     int n = TotalButtonsCount();
     for (int i = 0; i < n; i++) {
         auto& tb = GetToolbarButtonInfoByIdx(i);
         int cmdId = tb.cmdId;
         if (setButtonsVisibility && cmdId != WarningMsgId) {
             bool hide = !IsCmdAvailable(win, cmdId);
-            UpdateToolbarButtonStateByIdx(hwnd, i, hide, TBSTATE_HIDDEN);
+            UpdateToolbarButtonStateByIdx(win, i, hide, TBSTATE_HIDDEN);
         }
         if (SkipBuiltInButton(tb)) {
             continue;
         }
         bool isEnabled = IsCmdEnabled(win, cmdId);
-        UpdateToolbarButtonStateByIdx(hwnd, i, isEnabled, TBSTATE_ENABLED);
+        UpdateToolbarButtonStateByIdx(win, i, isEnabled, TBSTATE_ENABLED);
 
         if (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud) {
             bool speaking = TtsIsSpeaking();
-            SetToolbarButtonImageByIdx(hwnd, i, speaking ? TbIcon::PauseSpeaking : TbIcon::Speak);
+            SetToolbarButtonImageByIdx(win, i, speaking ? gIconPauseSpeaking : gIconSpeak);
             // tooltip reflects what clicking the button will do
             Str tip = _TRA("Read Aloud");
             if (speaking) {
@@ -538,7 +607,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             } else if (CanContinueReadAloud(win->CurrentTab())) {
                 tip = _TRA("Continue Reading");
             }
-            SetToolbarButtonToolTipByIdx(hwnd, i, cmdId, tip);
+            SetToolbarButtonToolTipByIdx(win, i, cmdId, tip);
         }
     }
 
@@ -575,7 +644,7 @@ void SetToolbarButtonEnableState(MainWindow* win, int cmdId, bool isEnabled) {
     if (n == 0) return;
     for (int i = 0; i < n; i++) {
         int idx = buttons[i];
-        UpdateToolbarButtonStateByIdx(win->hwndToolbar, idx, isEnabled, TBSTATE_ENABLED);
+        UpdateToolbarButtonStateByIdx(win, idx, isEnabled, TBSTATE_ENABLED);
     }
 }
 // whether the current window context (presentation, about page) permits a
@@ -621,20 +690,13 @@ bool ShouldOverlayToolbar(MainWindow* win) {
 // natural width of the toolbar content (buttons + page box); the find bar
 // floats separately so the page-total label is the rightmost element
 static int ToolbarNaturalWidth(MainWindow* win) {
-    if (!win->hwndReBar || !win->hwndToolbar) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!tb || !tb->layout) {
         return 0;
     }
-    Rect rRebar = HwndWindowRect(win->hwndReBar);
-    Rect rTb = HwndWindowRect(win->hwndToolbar);
-    int contentRight = rTb.x; // screen x of the rightmost content edge
-    Size tbSz = TbGetMaxSize(win->hwndToolbar);
-    contentRight = std::max(contentRight, rTb.x + tbSz.dx);
-    if (win->hwndPageTotal && HwndIsVisible(win->hwndPageTotal)) {
-        Rect rpt = HwndWindowRect(win->hwndPageTotal);
-        contentRight = std::max(contentRight, rpt.x + rpt.dx);
-    }
-    int natW = (contentRight - rRebar.x) + DpiScale(12);
-    return natW;
+    Size sz = tb->layout->MinIntrinsicWidth(tb->rowDy) > 0 ? Size{tb->layout->MinIntrinsicWidth(tb->rowDy), tb->rowDy}
+                                                           : Size{tb->rowDy * 8, tb->rowDy};
+    return sz.dx + DpiScale(12);
 }
 
 // canvas rectangle in frame-client coordinates
@@ -823,9 +885,6 @@ void ShowOrHideToolbar(MainWindow* win) {
 }
 
 void UpdateFindbox(MainWindow* win) {
-    // remove SS_WHITERECT so WM_CTLCOLORSTATIC controls the background color
-    HwndSetWindowStyle(win->hwndPageBg, SS_WHITERECT, false);
-
     HwndInvalidate(win->hwndToolbar, true);
     if (HwndIsVisible(win->hwndFrame)) {
         UpdateWindow(win->hwndToolbar);
@@ -837,6 +896,7 @@ void UpdateFindbox(MainWindow* win) {
     }
 }
 
+#if 0
 static LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
                                      DWORD_PTR /*dwRefData*/) {
     if (WM_ERASEBKGND == uMsg && ThemeColorizeControls()) {
@@ -981,6 +1041,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 
     return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
 }
+#endif
 
 // the find UI is now a floating Chrome-style bar (see FindBar.cpp). When the
 // toolbar moves/resizes we keep the bar centered over the search icon.
@@ -1007,14 +1068,7 @@ void UpdateToolbarState(MainWindow* win) {
     }
 }
 
-// subclass the toolbar so we can handle WM_CTLCOLOR* for the page box and
-// allow dragging the window from empty toolbar areas
-static void SubclassToolbar(MainWindow* win) {
-    if (!DefWndProcToolbar) {
-        DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
-}
+// (old Win32 toolbar subclass removed; WndProcVirtToolbar handles this)
 
 static WNDPROC DefWndProcPageBox = nullptr;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -1066,209 +1120,54 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return CallWindowProc(DefWndProcPageBox, hwnd, msg, wp, lp);
 }
 
-// The page box is positioned after the buttons that come before it, but
-// TB_GETRECT only works for visible buttons and any of them can be hidden. Walk
-// back from the page box to the closest visible one; an empty rect (nothing
-// visible before it) puts the page box at the start of the toolbar.
-static Rect LastVisibleButtonRectBeforePageBox(HWND hwndToolbar) {
-    Rect res;
-    int n = TotalButtonsCount();
-    for (int i = 0; i < n; i++) {
-        const ToolbarButtonInfo& tb = GetToolbarButtonInfoByIdx(i);
-        if (tb.cmdId == PageInfoId) {
-            break;
-        }
-        TBBUTTONINFOW bi{};
-        bi.cbSize = sizeof(bi);
-        bi.dwMask = TBIF_BYINDEX | TBIF_STATE;
-        if (TbGetButtonInfo(hwndToolbar, i, &bi) == -1) {
-            continue;
-        }
-        if (bi.fsState & TBSTATE_HIDDEN) {
-            continue;
-        }
-        Rect r = TbGetItemRect(hwndToolbar, i);
-        if (!r.IsEmpty()) {
-            res = r;
-        }
-    }
-    return res;
-}
-
 void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
-    if (!win->hwndToolbar) {
+    if (!win->hwndToolbar || !gLayoutHasPageBox) {
         return;
     }
-    if (!gLayoutHasPageBox) {
-        // ToolbarCustomLayout leaves out PageInfo, so there are no page-number
-        // controls to lay out (see CreatePageBox)
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!tb || !tb->pageTotal) {
         return;
     }
-    Str text = _TRA("Page:");
-    if (!updateOnly) {
-        HwndSetText(win->hwndPageLabel, text);
+    if (tb->pageLabel) {
+        tb->pageLabel->SetText(_TRA("Page:"));
     }
-    int padX = DpiScale(kTextPaddingRight);
-    Size size = HwndMeasureText(win->hwndPageLabel, text);
-    size.dx += padX;
-    size.dx += DpiScale(kButtonSpacingX);
-
-    Rect pageWndRect = HwndWindowRect(win->hwndPageBg);
-
-    // TB_GETRECT fails for hidden buttons, so anchor on the last button before
-    // the page box that is actually visible: CmdPrint is hidden when
-    // PrinterAccess is revoked via sumatrapdfrestrict.ini (issue #5563) and any
-    // of them can be hidden with ToolbarHideButtons (issue #5095)
-    Rect r = LastVisibleButtonRectBeforePageBox(win->hwndToolbar);
-    int currX = r.x + r.dx + DpiScale(10);
-    int currY = (r.y + r.dy - pageWndRect.dy) / 2;
-
     TempStr txt = nullptr;
-    Size size2;
-    Size minSize = HwndMeasureText(win->hwndPageTotal, "999 / 999");
-    minSize.dx += padX;
-    int labelDx = 0;
     if (-1 == pageCount || !pageCount) {
-#if 0
-        // for pageCount == -1: preserve hwndPageTotal's text and size
-        txt = HwndGetTextTemp(win->hwndPageTotal);
-        size2 = HwndClientRect(win->hwndPageTotal).Size();
-        size2.dx -= padX;
-        size2.dx -= DpiScale(kButtonSpacingX);
-#endif
-        // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
         txt = " ";
-        minSize.dx = 0;
-        size2.dx = 0;
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
         txt = fmt(" / %d", pageCount);
-        size2 = HwndMeasureText(win->hwndPageTotal, txt);
-        minSize.dx = size2.dx;
     } else {
         txt = fmt("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
-        // TempStr txt2 = fmt(" (%d / %d)", pageCount, pageCount);
-        size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
-    labelDx = size2.dx;
-    size2.dx = std::max(size2.dx, minSize.dx);
-
-    // Skip layout/repaint when an update-only refresh would not change anything
-    // (page-label docs used to invalidate the whole toolbar on every call).
-    TempStr prevTotal = HwndGetTextTemp(win->hwndPageTotal);
-    bool textSame = prevTotal && txt && str::Eq(prevTotal, txt);
-    if (updateOnly && textSame) {
-        TBBUTTONINFOW bi0{};
-        bi0.cbSize = sizeof(bi0);
-        bi0.dwMask = TBIF_SIZE;
-        TbGetButtonInfo(win->hwndToolbar, PageInfoId, &bi0);
-        int wantCx = size2.dx + size.dx + pageWndRect.dx + 12;
-        if (bi0.cx == wantCx) {
-            return;
-        }
+    if (updateOnly && tb->pageTotal->s && txt && str::Eq(tb->pageTotal->s, txt)) {
+        return;
     }
-
-    HwndSetText(win->hwndPageTotal, txt);
-    if (0 == size2.dx) {
-        size2 = HwndMeasureText(win->hwndPageTotal, txt);
-    }
-    size2.dx += padX;
-    size2.dx += DpiScale(kButtonSpacingX);
-
-    int padding = DpiGetSystemMetrics(SM_CXEDGE);
-    int x = currX - 1;
-    int y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
-    MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
-    if (IsUIRtl()) {
-        currX += size2.dx;
-        currX -= padX;
-        currX -= DpiScale(kButtonSpacingX);
-    }
-    x = currX + size.dx;
-    y = currY;
-    MoveWindow(win->hwndPageBg, x, y, pageWndRect.dx, pageWndRect.dy, FALSE);
-    x = currX + size.dx + padding;
-    y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
-    int dx = pageWndRect.dx - (2 * padding);
-    MoveWindow(win->hwndPageEdit, x, y, dx, size.dy, FALSE);
-    // in right-to-left layout, the total comes "before" the current page number
-    if (IsUIRtl()) {
-        currX -= size2.dx;
-        x = currX + size.dx;
-        y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
-        MoveWindow(win->hwndPageTotal, x, y, size2.dx, size.dy, FALSE);
-    } else {
-        x = currX + size.dx + pageWndRect.dx;
-        int midX = (size2.dx - labelDx) / 2;
-        y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
-        MoveWindow(win->hwndPageTotal, x + midX, y, labelDx, size.dy, FALSE);
-    }
-
-    TBBUTTONINFOW bi{};
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_SIZE;
-    TbGetButtonInfo(win->hwndToolbar, PageInfoId, &bi);
-    size2.dx += size.dx + pageWndRect.dx + 12;
-    if (bi.cx != size2.dx || !updateOnly) {
-        TbSetButtonDx(win->hwndToolbar, PageInfoId, size2.dx);
-    }
+    tb->pageTotal->SetText(txt);
+    RelayoutToolbar(win);
     HwndInvalidate(win->hwndToolbar, true);
 }
 
 static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     if (!gLayoutHasPageBox) {
-        // ToolbarCustomLayout leaves out PageInfo: there is no button for these
-        // controls to sit on, so don't make them at all. Everything that uses
-        // them copes with them being null.
         return;
     }
     bool isRtl = IsUIRtl();
-
-    auto* hwndFrame = win->hwndFrame;
-    auto* hwndToolbar = win->hwndToolbar;
-    // Measure a full page number plus edit-control padding; plain measure is
-    // too tight for the right-aligned ES_NUMBER box (esp. under high DPI).
-    int boxWidth = HwndMeasureText(hwndFrame, "999999", font).dx;
+    int boxWidth = HwndMeasureText(win->hwndFrame, "999999", font).dx;
     boxWidth += 2 * DpiGetSystemMetrics(SM_CXEDGE);
     boxWidth += DpiScale(12);
-    DWORD style = WS_VISIBLE | WS_CHILD;
-    auto* h = GetModuleHandle(nullptr);
-    int dx = boxWidth;
-    int dy = iconDy + 2;
-    DWORD exStyle = 0;
-    if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
-
-    HWND pageBg =
-        CreateWindowExW(exStyle, WC_STATICW, L"", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
-    // capture the original static wndproc so WndProcEditBg can chain to it (it
-    // does the actual WM_PAINT BeginPaint/EndPaint that validates the window).
-    // This used to be captured in CreateFindBox; that box is gone, so do it here.
-    if (!DefWndProcEditBg) {
-        DefWndProcEditBg = (WNDPROC)GetWindowLongPtr(pageBg, GWLP_WNDPROC);
+    DWORD style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT | WS_TABSTOP;
+    DWORD exStyle = WS_EX_CLIENTEDGE;
+    if (isRtl) {
+        exStyle |= WS_EX_LAYOUTRTL;
     }
-    SetWindowLongPtr(pageBg, GWLP_WNDPROC, (LONG_PTR)WndProcEditBg);
-    HWND label = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
-    HWND total = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
-
-    style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
-    dx = boxWidth - DpiScale(4); // 4 pixels padding on the right side of the text box
-    dy = iconDy;
-    exStyle = 0;
-    if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
-    HWND page = CreateWindowExW(exStyle, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
-
-    SetWindowFont(label, font, FALSE);
+    HWND page = CreateWindowExW(exStyle, WC_EDIT, L"0", style, 0, 1, boxWidth, iconDy, win->hwndToolbar,
+                                (HMENU) nullptr, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(page, font, FALSE);
-    SetWindowFont(total, font, FALSE);
-
     if (!DefWndProcPageBox) {
         DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);
     }
     SetWindowLongPtr(page, GWLP_WNDPROC, (LONG_PTR)WndProcPageBox);
-
-    win->hwndPageLabel = label;
     win->hwndPageEdit = page;
-    win->hwndPageBg = pageBg;
-    win->hwndPageTotal = total;
 }
 
 __unused static void LogBitmapInfo(HBITMAP hbmp) {
@@ -1320,7 +1219,6 @@ static void PopulateCustomToolbarButtons() {
         }
         if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarSvgIcon)) {
             ToolbarButtonInfo tbi;
-            tbi.bmpIndex = TbIcon::None;
             tbi.cmdId = shortcut->cmdId;
             tbi.svgIcon = shortcut->toolbarSvgIcon;
             tbi.toolTip = ShortcutToolbarToolTipTemp(shortcut);
@@ -1329,9 +1227,9 @@ static void PopulateCustomToolbarButtons() {
         }
         if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarText)) {
             ToolbarButtonInfo tbi;
-            tbi.bmpIndex = TbIcon::Text;
             tbi.cmdId = shortcut->cmdId;
             tbi.toolTip = shortcut->toolbarText;
+            tbi.isText = true;
             gCustomButtons[gCustomButtonsCount++] = tbi;
         }
     }
@@ -1353,7 +1251,6 @@ static void PopulateCustomToolbarButtons() {
         Str tbText = GetCommandStringArg(cc, kCmdArgToolbarText, nullptr);
         if (!str::IsEmptyOrWhiteSpace(svgIcon)) {
             ToolbarButtonInfo tbi;
-            tbi.bmpIndex = TbIcon::None;
             tbi.cmdId = cc->id;
             tbi.svgIcon = svgIcon;
             tbi.toolTip = CustomCommandToolbarToolTipTemp(cc, tbText);
@@ -1364,9 +1261,9 @@ static void PopulateCustomToolbarButtons() {
             continue;
         }
         ToolbarButtonInfo tbi;
-        tbi.bmpIndex = TbIcon::Text;
         tbi.cmdId = cc->id;
         tbi.toolTip = tbText;
+        tbi.isText = true;
         gCustomButtons[gCustomButtonsCount++] = tbi;
     }
 }
@@ -1481,7 +1378,7 @@ Pixmap* RenderSvgIconToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bg
 
 static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount) {
     fz_context* ctx = fz_new_context_windows();
-    int nBuiltIn = (int)TbIcon::kMax;
+    int nBuiltIn = SvgIconsCount();
     int nIcons = nBuiltIn + customCount;
     int destDx = dx * nIcons;
     ptrdiff_t dstStride;
@@ -1517,7 +1414,7 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
     Color fgCol = ThemeWindowTextColor();
     Color bgCol = ThemeControlBackgroundColor();
     for (int i = 0; i < nBuiltIn; i++) {
-        Str svgData = GetSvgIcon((TbIcon)i);
+        Str svgData = SvgIconAt(i);
         fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
         if (!pixmap) {
             ClearIconSlot(hbmpData, dstStride, dx, dy, dx * i, bgCol);
@@ -1543,9 +1440,8 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
 // One icon rendered into a Pixmap, with the pixels the VirtCtrl controls want:
 // BGRA, alpha-premultiplied, transparent where the SVG left the background
 // (which is what BlitPixmap() marks with alpha 0 for the image list)
-static Pixmap* RenderIconPixmap(TbIcon icon, int dx, int dy) {
-    Str svgData = GetSvgIcon(icon);
-    if (!svgData) {
+static Pixmap* RenderIconPixmap(const char* svgData, int dx, int dy, Color fgCol) {
+    if (!svgData || !*svgData) {
         return nullptr;
     }
     Pixmap* px = AllocPixmapDIB(dx, dy);
@@ -1555,10 +1451,9 @@ static Pixmap* RenderIconPixmap(TbIcon icon, int dx, int dy) {
     memset(px->data, 0, (size_t)px->stride * (size_t)dy);
     px->premultiplied = true;
 
-    Color fgCol = ThemeWindowTextColor();
     Color bgCol = ThemeControlBackgroundColor();
     fz_context* ctx = fz_new_context_windows();
-    fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
+    fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, Str(svgData), dx, dy, fgCol, bgCol);
     if (pixmap) {
         BlitPixmap(px->data, px->stride, pixmap, 0, 0, bgCol);
         // BlitPixmap leaves the background color in the transparent pixels;
@@ -1584,27 +1479,31 @@ static Pixmap* RenderIconPixmap(TbIcon icon, int dx, int dy) {
 // intrusive list walked linearly is as good as anything
 struct CachedPixmapIcon {
     CachedPixmapIcon* next;
-    TbIcon icon;
+    const char* svg; // gIcon* pointer, not owned
+    Color fg;
     // the size is the pixmap's own width / height
     Pixmap* pixmap; // owned
 };
 
 static CachedPixmapIcon* gIconPixmaps = nullptr;
 
-Pixmap* GetPixmapForIcon(TbIcon icon, int dx, int dy) {
-    if (dx <= 0 || dy <= 0) {
+Pixmap* GetPixmapForIcon(const char* svg, int dx, int dy, Color fg) {
+    if (!svg || !*svg || dx <= 0 || dy <= 0) {
         return nullptr;
     }
+    if (fg == kColorUnset) {
+        fg = ThemeWindowTextColor();
+    }
     for (CachedPixmapIcon* e = gIconPixmaps; e; e = e->next) {
-        if (e->icon == icon && e->pixmap->width == dx && e->pixmap->height == dy) {
+        if (e->svg == svg && e->fg == fg && e->pixmap->width == dx && e->pixmap->height == dy) {
             return e->pixmap;
         }
     }
-    Pixmap* px = RenderIconPixmap(icon, dx, dy);
+    Pixmap* px = RenderIconPixmap(svg, dx, dy, fg);
     if (!px) {
         return nullptr;
     }
-    auto* e = new CachedPixmapIcon{gIconPixmaps, icon, px};
+    auto* e = new CachedPixmapIcon{gIconPixmaps, svg, fg, px};
     gIconPixmaps = e;
     return px;
 }
@@ -1623,49 +1522,102 @@ void DestroyIconPixmaps() {
 }
 
 static int SetToolbarIconsImageList(MainWindow* win) {
-    HWND hwndToolbar = win->hwndToolbar;
-    HWND hwndParent = GetParent(hwndToolbar);
-
     // we call it ToolbarSize for users, but it's really size of the icon
-    // toolbar size is iconSize + padding (seems to be 6)
-    // the setting is a size at 100% scaling, so it's scaled to the window's dpi
     int iconSize = DpiScale(gGlobalPrefs->toolbarSize);
-    // icon sizes must be multiple of 4 or else they are sheared
-    // TODO: I must be doing something wrong, any size should be ok
-    // it might be about size of buttons / bitmaps
     iconSize = RoundUp(iconSize, 4);
     int dx = iconSize;
-    // this doesn't seem to be required and doesn't help with weird sizes like 22
-    // but the docs say to do it
-    TbSetBitmapSize(hwndToolbar, Size(dx, dx));
 
     Str customSvgs[kMaxCustomButtons];
     int customCount = 0;
-    int nBuiltIn = (int)TbIcon::kMax;
+    int nBuiltIn = SvgIconsCount();
     for (int i = 0; i < gCustomButtonsCount; i++) {
         Str svg = gCustomButtons[i].svgIcon;
         if (str::IsEmptyOrWhiteSpace(svg)) {
             continue;
         }
-        gCustomButtons[i].bmpIndex = (TbIcon)(nBuiltIn + customCount);
         customSvgs[customCount++] = svg;
     }
 
-    // assume square icons
     HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, nBuiltIn + customCount, 0);
     HBITMAP hbmp = BuildIconsBitmap(dx, dx, customSvgs, customCount);
     ImageList_Add(himl, hbmp, nullptr);
     DeleteObject(hbmp);
-    // Replace (and free) the previous list so theme / size changes do not leak
-    HIMAGELIST oldHiml = TbSetImageList(hwndToolbar, himl);
-    if (oldHiml) {
-        ImageList_Destroy(oldHiml);
+    if (gTbHiml) {
+        ImageList_Destroy(gTbHiml);
     }
+    gTbHiml = himl;
     return iconSize;
+}
+
+static void ApplyToolbarItemColors(VirtCtrl* w) {
+    Color hover = TbHoverColor();
+    Color sel = TbSelectedColor();
+    if (auto* ib = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlIconButton")) ? (VirtIconButton*)w : nullptr) {
+        ib->bgColorHover = hover;
+        ib->bgColorSelected = sel;
+        ib->chevronColor = TbTextColor();
+        return;
+    }
+    if (auto* b = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlButton")) ? (VirtButton*)w : nullptr) {
+        b->bgColorHover = hover;
+        b->textColor = TbTextColor();
+        b->textColorDisabled = TbDisabledColor();
+        return;
+    }
+    if (auto* t = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlText")) ? (VirtText*)w : nullptr) {
+        t->textColor = TbTextColor();
+        return;
+    }
+    if (auto* line = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlLine")) ? (VirtLine*)w : nullptr) {
+        line->color = TbEdgeColor();
+    }
+}
+
+static void RefreshToolbarIcons(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!tb) {
+        return;
+    }
+    int sz = tb->iconSize;
+    Color fg = TbTextColor();
+    Color dis = TbDisabledColor();
+    for (int i = 0; i < len(tb->items); i++) {
+        VirtCtrl* w = tb->items[i];
+        ApplyToolbarItemColors(w);
+        if (!str::Eq(w->GetKind(), "virtCtrlIconButton")) {
+            continue;
+        }
+        const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
+        if (SkipBuiltInButton(bi) && !bi.svgIcon) {
+            continue;
+        }
+        auto* ib = (VirtIconButton*)w;
+        if (bi.svgIcon) {
+            ib->pixmap = RenderSvgIconToPixmap(bi.svgIcon, sz, sz, fg, TbBgColor());
+            ib->pixmapDisabled = RenderSvgIconToPixmap(bi.svgIcon, sz, sz, dis, TbBgColor());
+            if (ib->pixmap) {
+                tb->ownedPixmaps.Append(ib->pixmap);
+            }
+            if (ib->pixmapDisabled) {
+                tb->ownedPixmaps.Append(ib->pixmapDisabled);
+            }
+        } else if (bi.icon) {
+            ib->pixmap = GetPixmapForIcon(bi.icon, sz, sz, fg);
+            ib->pixmapDisabled = GetPixmapForIcon(bi.icon, sz, sz, dis);
+        }
+    }
+    if (tb->pageLabel) {
+        tb->pageLabel->textColor = TbTextColor();
+    }
+    if (tb->pageTotal) {
+        tb->pageTotal->textColor = TbTextColor();
+    }
 }
 
 void UpdateToolbarAfterThemeChange(MainWindow* win) {
     SetToolbarIconsImageList(win);
+    DestroyIconPixmaps();
+    RefreshToolbarIcons(win);
     HwndScheduleRepaint(win->hwndToolbar);
 }
 
@@ -1673,11 +1625,16 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
 // returns an empty rect when the toolbar isn't visible (e.g. fullscreen /
 // presentation) so the caller can fall back to a different anchor.
 Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
-    if (!win->hwndToolbar || !HwndIsVisible(win->hwndToolbar)) {
+    if (!win->hwndToolbar || !HwndIsVisible(win->hwndToolbar) || !win->toolbarVirt) {
         return {};
     }
-    Rect r = TbGetRect(win->hwndToolbar, cmdId);
-    return HwndMapRectToWindow(r, win->hwndToolbar, HWND_DESKTOP);
+    for (VirtCtrl* w : win->toolbarVirt->items) {
+        if (w && w->id == cmdId && w->GetVisibility() == Visibility::Visible) {
+            Rect r = w->BoundsInWindow();
+            return HwndMapRectToWindow(r, win->hwndToolbar, HWND_DESKTOP);
+        }
+    }
+    return {};
 }
 
 // Dump of the toolbar's buttons for -dbg-control tests (tests/issue-5869.ts).
@@ -1693,187 +1650,391 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
         out.Append("ERROR no-toolbar\n");
         return ToStrTemp(out);
     }
-    HWND hwnd = win->hwndToolbar;
-    int n = (int)SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0);
-    HWND hwndTt = (HWND)SendMessageW(hwnd, TB_GETTOOLTIPS, 0, 0);
-    int nTools = hwndTt ? (int)SendMessageW(hwndTt, TTM_GETTOOLCOUNT, 0, 0) : -1;
-    out.Append(fmt("buttons=%d tooltipTools=%d\n", n, nTools));
+    ToolbarVirt* tb = win->toolbarVirt;
+    int n = tb ? len(tb->items) : 0;
+    int nTools = 0;
     for (int i = 0; i < n; i++) {
-        WCHAR buf[512]{};
-        TBBUTTONINFOW bi{};
-        bi.cbSize = sizeof(bi);
-        bi.dwMask = TBIF_BYINDEX | TBIF_COMMAND | TBIF_TEXT | TBIF_STATE;
-        bi.pszText = buf;
-        bi.cchText = dimof(buf);
-        TbGetButtonInfo(hwnd, i, &bi);
-        RECT r{};
-        SendMessageW(hwnd, TB_GETITEMRECT, (WPARAM)i, (LPARAM)&r);
-        bool hidden = (bi.fsState & TBSTATE_HIDDEN) != 0;
-        out.Append(fmt("idx=%d cmd=%d hidden=%d rect=%d,%d,%d,%d text=%s\n", i, (int)bi.idCommand, hidden ? 1 : 0,
-                       (int)r.left, (int)r.top, (int)r.right, (int)r.bottom, ToUtf8Temp(buf)));
-    }
-    for (int i = 0; i < nTools; i++) {
-        TTTOOLINFOW ti{};
-        ti.cbSize = sizeof(ti);
-        if (!SendMessageW(hwndTt, TTM_ENUMTOOLSW, (WPARAM)i, (LPARAM)&ti)) {
-            continue;
+        if (tb->items[i] && tb->items[i]->tooltip) {
+            nTools++;
         }
-        out.Append(fmt("tool=%d uid=%d rect=%d,%d,%d,%d\n", i, (int)ti.uId, (int)ti.rect.left, (int)ti.rect.top,
-                       (int)ti.rect.right, (int)ti.rect.bottom));
+    }
+    out.Append(fmt("buttons=%d tooltipTools=%d\n", n, nTools));
+    int toolIdx = 0;
+    for (int i = 0; i < n; i++) {
+        VirtCtrl* w = tb->items[i];
+        Rect r = w ? w->BoundsInWindow() : Rect{};
+        bool hidden = !w || w->GetVisibility() != Visibility::Visible;
+        // Match the old Win32 dump: TBIF_TEXT. Built-in buttons store the
+        // tooltip (with accelerator); custom ones stored the raw name.
+        Str text{};
+        if (IsVirtKind(w, "virtCtrlButton")) {
+            text = ((VirtButton*)w)->s;
+        } else if (i >= gLayoutButtonsCount) {
+            text = GetToolbarButtonInfoByIdx(i).toolTip;
+        } else if (w && w->tooltip) {
+            text = w->tooltip;
+        }
+        out.Append(fmt("idx=%d cmd=%d hidden=%d rect=%d,%d,%d,%d text=%s\n", i, w ? w->id : 0, hidden ? 1 : 0, r.x, r.y,
+                       r.x + r.dx, r.y + r.dy, text));
+        if (w && w->tooltip) {
+            out.Append(fmt("tool=%d uid=%d rect=%d,%d,%d,%d\n", toolIdx, w->id, r.x, r.y, r.x + r.dx, r.y + r.dy));
+            toolIdx++;
+        }
     }
     *exitCodeOut = 0;
     return ToStrTemp(out);
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
+static bool IsVirtKind(VirtCtrl* w, const char* k) {
+    return w && w->GetKind() && str::Eq(w->GetKind(), k);
+}
+
+static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
+    VirtCtrl* w = ev->target;
+    if (!w || !win || !w->IsEnabled()) {
+        return;
+    }
+    int cmdId = w->id;
+    if (cmdId == PageInfoId || cmdId == 0) {
+        return;
+    }
+    if (IsVirtKind(w, "virtCtrlIconButton")) {
+        auto* ib = (VirtIconButton*)w;
+        if (ib->hasDropdown) {
+            Rect r = w->BoundsInWindow();
+            int dropDx = DpiScale(12);
+            if (ev->pt.x >= r.dx - dropDx) {
+                NMTOOLBARW nmtb{};
+                nmtb.hdr.hwndFrom = win->hwndToolbar;
+                nmtb.hdr.idFrom = IDC_TOOLBAR;
+                nmtb.hdr.code = TBN_DROPDOWN;
+                nmtb.iItem = cmdId;
+                SendMessageW(win->hwndFrame, WM_NOTIFY, IDC_TOOLBAR, (LPARAM)&nmtb);
+                ev->didHandle = true;
+                return;
+            }
+        }
+    }
+    HwndPostCommand(win->hwndFrame, cmdId, 0);
+    ev->didHandle = true;
+}
+
+static void PositionPageEdit(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!tb || !tb->pageEditSlot || !win->hwndPageEdit) {
+        return;
+    }
+    Rect r = tb->pageEditSlot->BoundsInWindow();
+    if (r.IsEmpty()) {
+        return;
+    }
+    int pad = DpiScale(2);
+    MoveWindow(win->hwndPageEdit, r.x + pad, r.y + pad, std::max(1, r.dx - (2 * pad)), std::max(1, r.dy - (2 * pad)),
+               TRUE);
+}
+
+static void RelayoutToolbar(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!tb || !tb->layout || !win->hwndToolbar) {
+        return;
+    }
+    Rect rc = HwndClientRect(win->hwndToolbar);
+    if (rc.dx <= 0 || rc.dy <= 0) {
+        return;
+    }
+    LayoutTreeToSize(win->hwndToolbar, tb->layout, rc.Size(), &tb->vroot);
+    PositionPageEdit(win);
+}
+
+static VirtCtrl* MakeToolbarSeparator(int rowDy) {
+    return new VirtSpacer(DpiScale(8), rowDy);
+}
+
+static void BuildToolbarLayout(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    delete tb->layout;
+    tb->layout = nullptr;
+    tb->items.Reset();
+    for (Pixmap* px : tb->ownedPixmaps) {
+        FreePixmap(px);
+    }
+    tb->ownedPixmaps.Reset();
+    tb->pageLabel = nullptr;
+    tb->pageTotal = nullptr;
+    tb->pageEditSlot = nullptr;
+
+    int pad = DpiScale(4);
+    int iconPad = DpiScale(6);
+    tb->rowDy = tb->iconSize + (2 * pad);
+    Color fg = TbTextColor();
+    Color dis = TbDisabledColor();
+    Color hover = TbHoverColor();
+    Color sel = TbSelectedColor();
+
+    auto* box = new HBox();
+    box->alignCross = CrossAxisAlign::CrossCenter;
+    box->rtl = IsUIRtl();
+
+    int n = TotalButtonsCount();
+    for (int i = 0; i < n; i++) {
+        const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
+        VirtCtrl* w = nullptr;
+        bool noTranslate = i >= gLayoutButtonsCount;
+        if (bi.cmdId == PageInfoId) {
+            auto* label = new VirtText(_TRA("Page:"), tb->platformFont);
+            label->textColor = fg;
+            label->padding = {0, DpiScale(kTextPaddingRight), 0, DpiScale(4)};
+            label->id = PageInfoId;
+            tb->pageLabel = label;
+            box->AddChild(label);
+
+            int editDx = HwndMeasureText(win->hwndFrame, "999999", tb->font).dx;
+            editDx += DpiScale(16);
+            auto* slot = new VirtFill();
+            slot->color = IsCurrentThemeDefault() && !ThemeColorizeControls() ? MkRgb(0xff, 0xff, 0xff)
+                                                                              : ThemeWindowControlBackgroundColor();
+            slot->idealSize = {editDx, tb->iconSize + DpiScale(2)};
+            slot->id = PageInfoId;
+            tb->pageEditSlot = slot;
+            box->AddChild(slot);
+
+            auto* total = new VirtText(StrL(" "), tb->platformFont);
+            total->textColor = fg;
+            total->padding = {0, DpiScale(4), 0, DpiScale(4)};
+            total->id = PageInfoId;
+            tb->pageTotal = total;
+            box->AddChild(total);
+            tb->items.Append(label);
+            continue;
+        } else if (bi.cmdId == 0 || (SkipBuiltInButton(bi) && !bi.svgIcon && !bi.isText)) {
+            w = MakeToolbarSeparator(tb->rowDy);
+        } else if (bi.isText) {
+            auto* b = new VirtButton(noTranslate ? bi.toolTip : trans::GetTranslation(bi.toolTip), tb->platformFont);
+            b->textColor = fg;
+            b->textColorDisabled = dis;
+            b->bgColorHover = hover;
+            b->textPadding = {pad, iconPad, pad, iconPad};
+            w = b;
+        } else {
+            auto* ib = new VirtIconButton();
+            ib->padding = {pad, iconPad, pad, iconPad};
+            ib->bgColorHover = hover;
+            ib->bgColorSelected = sel;
+            ib->chevronColor = fg;
+            ib->hasDropdown = (bi.cmdId == CmdReadAloud);
+            if (bi.svgIcon) {
+                ib->pixmap = RenderSvgIconToPixmap(bi.svgIcon, tb->iconSize, tb->iconSize, fg, TbBgColor());
+                ib->pixmapDisabled = RenderSvgIconToPixmap(bi.svgIcon, tb->iconSize, tb->iconSize, dis, TbBgColor());
+                if (ib->pixmap) {
+                    tb->ownedPixmaps.Append(ib->pixmap);
+                }
+                if (ib->pixmapDisabled) {
+                    tb->ownedPixmaps.Append(ib->pixmapDisabled);
+                }
+            } else {
+                ib->pixmap = GetPixmapForIcon(bi.icon, tb->iconSize, tb->iconSize, fg);
+                ib->pixmapDisabled = GetPixmapForIcon(bi.icon, tb->iconSize, tb->iconSize, dis);
+            }
+            w = ib;
+        }
+        w->id = bi.cmdId;
+        if (bi.toolTip && !bi.isText) {
+            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, !noTranslate));
+        } else if (bi.isText && bi.toolTip) {
+            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, false));
+        }
+        if (bi.cmdId != 0 && bi.cmdId != PageInfoId) {
+            w->onClick = MkFunc1(OnToolbarButtonClicked, win);
+        }
+        tb->items.Append(w);
+        box->AddChild(w);
+    }
+
+    tb->layout = new Padding(box, Insets{0, DpiScale(4), 0, DpiScale(4)});
+    RelayoutToolbar(win);
+}
+
+static void FreeToolbarVirt(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!tb) {
+        return;
+    }
+    delete tb->layout;
+    delete tb->vroot;
+    for (Pixmap* px : tb->ownedPixmaps) {
+        FreePixmap(px);
+    }
+    delete tb;
+    win->toolbarVirt = nullptr;
+}
+
+static LRESULT CALLBACK WndProcVirtToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    Color bg = TbBgColor();
+
+    if (msg == WM_SIZE) {
+        if (tb) {
+            RelayoutToolbar(win);
+        }
+        return 0;
+    }
+    if (msg == WM_ERASEBKGND) {
+        return 1;
+    }
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        Rect rc = HwndClientRect(hwnd);
+        DoubleBuffer buffer(hwnd, rc);
+        HDC memDC = buffer.GetDC();
+        HdcFillRect(memDC, rc, bg);
+        if (tb && tb->vroot) {
+            SetBkMode(memDC, TRANSPARENT);
+            GfxHdc gfx(memDC);
+            tb->vroot->Paint(&gfx, rc);
+        }
+        if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
+            Color edge = TbEdgeColor();
+            HdcFillRect(memDC, {rc.x, rc.Bottom() - 1, rc.dx, 1}, edge);
+        }
+        buffer.Flush(hdc);
+        EndPaint(hwnd, &ps);
+        PositionPageEdit(win);
+        return 0;
+    }
+    if ((msg == WM_CTLCOLOREDIT || msg == WM_CTLCOLORSTATIC) && win) {
+        HDC hdc = (HDC)wp;
+        SetTextColor(hdc, TbTextColor());
+        if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
+            SetBkColor(hdc, MkRgb(0xff, 0xff, 0xff));
+            return (LRESULT)GetStockObject(WHITE_BRUSH);
+        }
+        SetBkColor(hdc, ThemeWindowControlBackgroundColor());
+        return (LRESULT)win->brControlBgColor;
+    }
+    if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) {
+        if (win && win->tabsInTitlebar) {
+            Point pt = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+            HWND childAtPoint = ChildWindowFromPoint(hwnd, ToPOINT(pt));
+            bool overChild = childAtPoint && childAtPoint != hwnd;
+            VirtCtrl* hit = ToolbarItemFromPoint(win, pt);
+            if (!overChild && (!hit || hit->id == 0 || hit->id == PageInfoId)) {
+                HWND hwndFrame = GetAncestor(hwnd, GA_ROOT);
+                if (msg == WM_LBUTTONDBLCLK) {
+                    WPARAM cmd = IsZoomed(hwndFrame) ? SC_RESTORE : SC_MAXIMIZE;
+                    PostMessageW(hwndFrame, WM_SYSCOMMAND, cmd, 0);
+                } else {
+                    ReleaseCapture();
+                    SendMessageW(hwndFrame, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+                }
+                return 0;
+            }
+        }
+    }
+    if (msg == WM_MOUSEMOVE || msg == WM_MOUSELEAVE) {
+        if (win && win->isToolbarOverlay) {
+            if (msg == WM_MOUSEMOVE) {
+                TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT), TME_LEAVE, hwnd, 0};
+                TrackMouseEvent(&tme);
+            }
+            UpdateOverlayToolbarForMouse(win);
+        }
+    }
+    if (tb && tb->vroot) {
+        LRESULT res = 0;
+        if (VirtTreeOnMessage(hwnd, tb->vroot, msg, wp, lp, res)) {
+            return res;
+        }
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+static void RegisterVirtToolbarClass() {
+    static ATOM atom = 0;
+    if (atom) {
+        return;
+    }
+    WNDCLASSEXW wc{};
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_DBLCLKS;
+    wc.lpfnWndProc = WndProcVirtToolbar;
+    wc.hInstance = GetModuleHandle(nullptr);
+    wc.hCursor = GetCachedCursor(IDC_ARROW);
+    wc.lpszClassName = kVirtToolbarClass.s;
+    atom = RegisterClassExW(&wc);
+}
+
 void CreateToolbar(MainWindow* win) {
     bool isRtl = IsUIRtl();
+    RegisterVirtToolbarClass();
 
-    kButtonSpacingX = 0;
     HINSTANCE hinst = GetModuleHandle(nullptr);
     HWND hwndParent = win->hwndFrame;
 
     // WS_CLIPSIBLINGS so that in overlay mode the canvas (a lower-Z sibling)
     // doesn't paint over the floating toolbar
-    DWORD style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | RBS_VARHEIGHT;
-    if (IsCurrentThemeDefault()) {
-        style |= WS_BORDER | RBS_BANDBORDERS;
-    }
-    style |= CCS_NODIVIDER | CCS_NOPARENTALIGN | WS_VISIBLE;
+    DWORD style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
     DWORD exStyle = WS_EX_TOOLWINDOW;
-    if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
-
-    win->hwndReBar = CreateWindowExW(exStyle, REBARCLASSNAME, nullptr, style, 0, 0, 0, 0, hwndParent, (HMENU)IDC_REBAR,
-                                     hinst, nullptr);
-    SetWindowSubclass(win->hwndReBar, ReBarWndProc, 0, 0);
-
-    REBARINFO rbi{};
-    rbi.cbSize = sizeof(REBARINFO);
-    rbi.fMask = 0;
-    rbi.himl = (HIMAGELIST) nullptr;
-    SendMessageW(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
-    if (!IsCurrentThemeDefault()) {
-        SendMessageW(win->hwndReBar, RB_SETBKCOLOR, 0, ThemeControlBackgroundColor());
-    }
-
-    style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
-    style |= TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN;
-    exStyle = 0;
-    if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
-    HMENU cmd = (HMENU)IDC_TOOLBAR;
-    HWND hwndToolbar =
-        CreateWindowExW(exStyle, TOOLBARCLASSNAME, nullptr, style, 0, 0, 0, 0, win->hwndReBar, cmd, hinst, nullptr);
-    win->hwndToolbar = hwndToolbar;
-    TbSetButtonStructSize(hwndToolbar, sizeofi(TBBUTTON));
-
-    if (!UseDarkModeLib() || !DarkMode::isEnabled()) {
-        if (!IsCurrentThemeDefault()) {
-            // without this custom draw code doesn't work
-            SetWindowTheme(hwndToolbar, L"", L"");
-        }
-    }
-
-    if (UseDarkModeLib()) {
-        DarkMode::setWindowNotifyCustomDrawSubclass(win->hwndReBar);
+    if (isRtl) {
+        exStyle |= WS_EX_LAYOUTRTL;
     }
 
     PopulateToolbarLayout();
     PopulateCustomToolbarButtons();
     int iconSize = SetToolbarIconsImageList(win);
-
-    TBMETRICS tbMetrics{};
-    tbMetrics.cbSize = sizeof(tbMetrics);
-    // tbMetrics.dwMask = TBMF_PAD;
-    tbMetrics.dwMask = TBMF_BUTTONSPACING;
-    TbGetMetrics(hwndToolbar, &tbMetrics);
     int yPad = DpiScale(2);
-    tbMetrics.cxPad += DpiScale(14);
-    tbMetrics.cyPad += yPad;
-    tbMetrics.cxButtonSpacing += DpiScale(kButtonSpacingX);
-    // tbMetrics.cyButtonSpacing += DpiScale(4);
-    TbSetMetrics(hwndToolbar, &tbMetrics);
+    int rowDy = iconSize + DpiScale(8);
 
-    DWORD exstyle = TbGetExtendedStyle(hwndToolbar);
-    exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
-    exstyle |= TBSTYLE_EX_DRAWDDARROWS;
-    TbSetExtendedStyle(hwndToolbar, exstyle);
+    HWND hwnd = CreateWindowExW(exStyle, kVirtToolbarClass.s, nullptr, style, 0, 0, 100, rowDy, hwndParent,
+                                (HMENU)IDC_REBAR, hinst, nullptr);
+    win->hwndReBar = hwnd;
+    win->hwndToolbar = hwnd;
 
-    TBBUTTON tbButtons[kMaxLayoutButtons];
-    for (int i = 0; i < gLayoutButtonsCount; i++) {
-        const ToolbarButtonInfo& bi = gLayoutButtons[i];
-        tbButtons[i] = TbButtonFromButtonInfo(bi);
-    }
-    TbAddButtons(hwndToolbar, gLayoutButtonsCount, tbButtons);
-
-    TBBUTTON* buttons = AllocArrayTemp<TBBUTTON>(gCustomButtonsCount);
-    for (int i = 0; i < gCustomButtonsCount; i++) {
-        ToolbarButtonInfo& tbi = gCustomButtons[i];
-        buttons[i] = TbButtonFromButtonInfo(tbi, true);
-    }
-    TbAddButtons(hwndToolbar, gCustomButtonsCount, buttons);
-    TbSetButtonSize(hwndToolbar, Size(iconSize, iconSize));
-
-    Rect rc = TbGetItemRect(hwndToolbar, 0);
-
-    ShowWindow(hwndToolbar, SW_SHOW);
-
-    REBARBANDINFOW rbBand{};
-    rbBand.cbSize = sizeof(REBARBANDINFOW);
-    rbBand.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
-    rbBand.fStyle = RBBS_FIXEDSIZE;
-    if (IsAppThemed() && IsCurrentThemeDefault()) {
-        rbBand.fStyle |= RBBS_CHILDEDGE;
-    }
-    rbBand.hbmBack = nullptr;
-    rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
-    rbBand.hwndChild = hwndToolbar;
-    rbBand.cxMinChild = rc.dx * gLayoutButtonsCount;
-    rbBand.cyMinChild = rc.dy + (2 * rc.y);
-    rbBand.cx = 0;
-    SendMessageW(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
-
-    SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
-
+    auto* tb = new ToolbarVirt();
+    tb->win = win;
+    tb->iconSize = iconSize;
+    tb->rowDy = rowDy;
     int defFontSize = GetAppFontSize();
-    // ToolbarSize scales icons only; UI font size comes from UIFontSize (GetAppFontSize).
     int newSize = defFontSize;
-    int maxFontSize = iconSize - (yPad * 2) - 2; // -2 determined empirically
+    int maxFontSize = iconSize - (yPad * 2) - 2;
     if (newSize > maxFontSize) {
-        logfa("CreateToolbar: setting toolbar font size to %d (scaled was %d, default size: %d)\n", maxFontSize,
-              newSize, defFontSize);
         newSize = maxFontSize;
-    } else {
-        logfa("CreateToolbar: setting toolbar font size to %d (default size: %d)\n", newSize, defFontSize);
     }
-    auto* font = GetDefaultGuiFontOfSize(newSize);
-    HwndSetFont(hwndToolbar, font);
+    tb->font = GetDefaultGuiFontOfSize(newSize);
+    tb->platformFont = GetPlatformFont(tb->font);
+    win->toolbarVirt = tb;
+    HwndSetFont(hwnd, tb->font);
 
-    CreatePageBox(win, font, iconSize);
-    SubclassToolbar(win);
+    CreatePageBox(win, tb->font, iconSize);
+    BuildToolbarLayout(win);
 
-    // a document can already be loaded when we're re-creating the toolbar
-    // (settings reload, DPI or RTL change), so restore the page box instead
-    // of leaving it blank until the next page change
     DocController* ctrl = win->ctrl;
     UpdateToolbarPageText(win, ctrl ? ctrl->PageCount() : -1);
-    if (ctrl) {
+    if (ctrl && win->hwndPageEdit) {
         TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
         HwndSetText(win->hwndPageEdit, label);
-        // the box is created with ES_NUMBER; docs with page labels need it off
         HwndSetWindowStyle(win->hwndPageEdit, ES_NUMBER, !ctrl->HasPageLabels());
     }
     UpdateToolbarFindText(win);
+    ToolbarUpdateStateForWindow(win, true);
+}
+
+void DestroyToolbar(MainWindow* win) {
+    if (!win->hwndReBar && !win->toolbarVirt) {
+        return;
+    }
+    HwndDestroyWindowSafe(&win->hwndPageEdit);
+    HwndDestroyWindowSafe(&win->hwndPageLabel);
+    HwndDestroyWindowSafe(&win->hwndPageBg);
+    HwndDestroyWindowSafe(&win->hwndPageTotal);
+    FreeToolbarVirt(win);
+    HwndDestroyWindowSafe(&win->hwndToolbar);
+    win->hwndReBar = nullptr;
 }
 
 void ReCreateToolbar(MainWindow* win) {
-    if (win->hwndReBar) {
-        HwndDestroyWindowSafe(&win->hwndPageLabel);
-        HwndDestroyWindowSafe(&win->hwndPageEdit);
-        HwndDestroyWindowSafe(&win->hwndPageBg);
-        HwndDestroyWindowSafe(&win->hwndPageTotal);
-        HwndDestroyWindowSafe(&win->hwndToolbar);
-        HwndDestroyWindowSafe(&win->hwndReBar);
-    }
+    DestroyToolbar(win);
     CreateToolbar(win);
 }
 

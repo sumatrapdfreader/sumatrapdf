@@ -3048,7 +3048,7 @@ void DeleteMainWindow(MainWindow* win) {
     }
 
     DeletePropertiesWindow(win->hwndFrame);
-    ImageList_Destroy(TbGetImageList(win->hwndToolbar));
+    DestroyToolbar(win);
     RevokeCanvasDropTarget(win->hwndCanvas);
 
     ReportIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
@@ -13013,13 +13013,12 @@ bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId) {
     return false;
 }
 
-static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
-    if (!win || !nmtb || nmtb->iItem != CmdReadAloud) {
+static void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen) {
+    if (!win || buttonScreen.IsEmpty()) {
         return;
     }
 
-    Rect rect = TbGetRect(nmtb->hdr.hwndFrom, CmdReadAloud);
-    RECT rc = ToRECT(HwndMapRectToWindow(rect, nmtb->hdr.hwndFrom, HWND_DESKTOP));
+    RECT rc = ToRECT(buttonScreen);
 
     HMENU menu = CreatePopupMenu();
     if (!menu) {
@@ -13227,7 +13226,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_NOTIFY: {
             NMHDR* hdr = (NMHDR*)lp;
             if (win && hdr && hdr->hwndFrom == win->hwndToolbar && hdr->code == TBN_DROPDOWN) {
-                ShowTtsVoiceMenu(win, (NMTOOLBARW*)lp);
+                ShowTtsVoiceMenu(win, GetToolbarButtonScreenRect(win, CmdReadAloud));
                 return TBDDRET_DEFAULT;
             }
             break;

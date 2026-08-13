@@ -183,8 +183,8 @@ FindBarWnd::~FindBarWnd() {
 // the icons come from the shared cache, which renders them for the current
 // theme and size
 void FindBarWnd::UpdateButtonIcons() {
-    static const TbIcon icons[6] = {TbIcon::ChevronUp,      TbIcon::ChevronDown,    TbIcon::MatchCase,
-                                    TbIcon::MatchWholeWord, TbIcon::ArrowsDiagonal, TbIcon::Close};
+    static const char* icons[6] = {gIconChevronUp,      gIconChevronDown,    gIconMatchCase,
+                                   gIconMatchWholeWord, gIconArrowsDiagonal, gIconClose};
     int isz = RoundUp(DpiScale(16), 4);
     for (int i = 0; i < 6; i++) {
         if (btns[i]) {
