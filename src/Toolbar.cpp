@@ -163,7 +163,6 @@ struct ToolbarVirt {
     Vec<VirtCtrl*> items; // not owned; layout owns them
     VirtText* pageLabel = nullptr;
     VirtText* pageTotal = nullptr;
-    HFONT font = nullptr;
     PlatformFont* platformFont = nullptr;
     int iconSize = 0;
     int rowDy = 0;
@@ -1403,7 +1402,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             tb->pageLabel = label;
             box->AddChild(label);
 
-            Edit* pageEdit = CreatePageEdit(win, tb->font, tb->iconSize);
+            Edit* pageEdit = CreatePageEdit(win, tb->platformFont->GetHFont(), tb->iconSize);
             win->pageEdit = pageEdit;
             box->AddChild(pageEdit);
 
@@ -1608,10 +1607,9 @@ void CreateToolbar(MainWindow* win) {
     if (newSize > maxFontSize) {
         newSize = maxFontSize;
     }
-    tb->font = GetDefaultGuiFontOfSize(newSize);
-    tb->platformFont = GetPlatformFont(tb->font);
+    tb->platformFont = GetPlatformFont(GetDefaultGuiFontOfSize(newSize));
     win->toolbarVirt = tb;
-    HwndSetFont(hwnd, tb->font);
+    HwndSetFont(hwnd, tb->platformFont->GetHFont());
 
     BuildToolbarLayout(win);
 
