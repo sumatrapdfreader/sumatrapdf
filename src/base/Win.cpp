@@ -2720,9 +2720,9 @@ Color GetPixel(BitmapPixels* bitmap, int x, int y) {
     // color order in DIB is blue-green-red-alpha
     Color c = 0;
     if (3 == bitmap->nBytesPerPixel) {
-        c = RGB(pixel[2], pixel[1], pixel[0]);
+        c = MkRgb(pixel[2], pixel[1], pixel[0]);
     } else if (4 == bitmap->nBytesPerPixel) {
-        c = RGB(pixel[3], pixel[2], pixel[1]);
+        c = MkRgb(pixel[3], pixel[2], pixel[1]);
     } else {
         ReportIf(true);
     }
@@ -2796,7 +2796,7 @@ void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color link
     if (!hbmp) {
         return;
     }
-    if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE && !linkColor && !skipRects) {
+    if ((textColor & 0xFFFFFF) == kColBlack && (bgColor & 0xFFFFFF) == kColWhite && !linkColor && !skipRects) {
         return;
     }
 
@@ -4088,8 +4088,8 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
 
 void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
     constexpr int kCheckerSize = 8;
-    Color lightColor = RGB(255, 255, 255);
-    Color darkColor = RGB(204, 204, 204);
+    Color lightColor = kColWhite;
+    Color darkColor = MkRgb(204, 204, 204);
     HBRUSH lightBrush = CreateSolidBrush(lightColor);
     HBRUSH darkBrush = CreateSolidBrush(darkColor);
 

@@ -257,10 +257,10 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
     switch (msg) {
         case WM_CTLCOLORSTATIC: {
             if (ghbrBackground == nullptr) {
-                ghbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
+                ghbrBackground = CreateSolidBrush(MkRgb(0xff, 0xf2, 0));
             }
             HDC hdc = (HDC)wp;
-            SetTextColor(hdc, RGB(0, 0, 0));
+            SetTextColor(hdc, kColBlack);
             SetBkMode(hdc, TRANSPARENT);
             return (LRESULT)ghbrBackground;
         }

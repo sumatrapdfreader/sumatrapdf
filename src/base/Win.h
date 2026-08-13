@@ -1,11 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define NO_COLOR ((Color)(-1))
-
-#define WIN_COL_WHITE RGB(0xff, 0xff, 0xff)
-#define WIN_COL_BLACK RGB(0, 0, 0)
-
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
 //--- bool / BOOL

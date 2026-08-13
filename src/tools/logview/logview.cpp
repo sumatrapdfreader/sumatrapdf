@@ -74,13 +74,13 @@ constexpr int WM_APP_NEW_LOGS = WM_APP + 1;
 constexpr UINT_PTR kFilterTimerId = 1;
 constexpr UINT kFilterDebounceMs = 300;
 
-constexpr Color kColLogBg = RGB(0xff, 0xff, 0xff);
-constexpr Color kColLogText = RGB(0, 0, 0);
-constexpr Color kColHili = RGB(0xff, 0xff, 0x00);
-constexpr Color kColTabBar = RGB(0xd8, 0xd8, 0xd8);
-constexpr Color kColTabSel = RGB(0xff, 0xff, 0xff);
-constexpr Color kColKbd = RGB(0x80, 0x80, 0x80);
-constexpr Color kColValBg = RGB(0xf3, 0xf3, 0xf3);
+constexpr Color kColLogBg = kColWhite;
+constexpr Color kColLogText = kColBlack;
+constexpr Color kColHili = kColYellow;
+constexpr Color kColTabBar = MkRgb(0xd8, 0xd8, 0xd8);
+constexpr Color kColTabSel = kColWhite;
+constexpr Color kColKbd = MkRgb(0x80, 0x80, 0x80);
+constexpr Color kColValBg = MkRgb(0xf3, 0xf3, 0xf3);
 
 enum {
     IdcClear = 100, // 'c' button
@@ -702,7 +702,7 @@ static void PaintLog(HWND hwnd) {
             msg = buf;
         }
         SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, RGB(0x80, 0x80, 0x80));
+        SetTextColor(hdc, MkRgb(0x80, 0x80, 0x80));
         RECT rc = client;
         rc.top = clientH / 4;
         HFONT oldF = (HFONT)SelectObject(hdc, gUiFont->GetHFont());
@@ -972,7 +972,7 @@ void TabBarCtrl::Paint(VirtPaintCtx& ctx) {
         tx += szKbd.dx + DpiScale(6);
 
         Rect rcClose{tx, ty, szClose.dx, szClose.dy};
-        gfx->DrawTextAt(closeStr, {tx, ty}, fmtTxt, gUiFont, RGB(0x60, 0x60, 0x60));
+        gfx->DrawTextAt(closeStr, {tx, ty}, fmtTxt, gUiFont, MkRgb(0x60, 0x60, 0x60));
 
         gTabHits.Append(TabHit{ToRECT(rc), ToRECT(rcClose)});
         x += tabW;
@@ -1133,9 +1133,9 @@ static void AboutClicked(VirtMouseEvent*) {
 static VirtButton* NewToolButton(Str text, const VirtMouseHandler& onClick) {
     auto* b = new VirtButton(text, gUiFont);
     b->textColor = kColLogText;
-    b->bgColor = RGB(0xe6, 0xe6, 0xe6);
-    b->bgColorHover = RGB(0xd0, 0xd0, 0xd0);
-    b->borderColor = RGB(0xa0, 0xa0, 0xa0);
+    b->bgColor = MkRgb(0xe6, 0xe6, 0xe6);
+    b->bgColorHover = MkRgb(0xd0, 0xd0, 0xd0);
+    b->borderColor = MkRgb(0xa0, 0xa0, 0xa0);
     b->textPadding = {DpiScale(3), DpiScale(8), DpiScale(3), DpiScale(8)};
     b->onClick = onClick;
     return b;

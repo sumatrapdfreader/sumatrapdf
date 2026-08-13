@@ -90,8 +90,8 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
     // gEnableDbgLog = true;
 
     isRemoteSession = GetSystemMetrics(SM_REMOTESESSION);
-    textColor = WIN_COL_BLACK;
-    backgroundColor = WIN_COL_WHITE;
+    textColor = kColBlack;
+    backgroundColor = kColWhite;
 
     SYSTEM_INFO si;
     GetSystemInfo(&si);
@@ -1089,7 +1089,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
     BlitPixmapRegion(renderedBmp, hdc, target, source);
 
     if (gShowTileLayout) {
-        HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
+        HPEN pen = CreatePen(PS_SOLID, 1, kColYellow);
         HGDIOBJ oldPen = SelectObject(hdc, pen);
         HdcDrawRect(hdc, bounds);
         DeletePen(SelectObject(hdc, oldPen));

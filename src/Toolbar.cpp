@@ -948,7 +948,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             // In high contrast the system palette decides what a field looks
             // like, and a white one would put white text on white (#2124)
             if ((isBgCtrl || isEditCtrl) && !ThemeColorizeControls() && !ThemeUsesHighContrastColors()) {
-                SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
+                SetBkColor(hdc, kColWhite);
                 return (LRESULT)GetStockObject(WHITE_BRUSH);
             }
             return (LRESULT)win->brControlBgColor;

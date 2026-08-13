@@ -1245,9 +1245,9 @@ struct BgColorDlgData {
 
 // fixed preset colors: checkered, black, white
 static const Color kBgPresetColors[] = {
-    kColorUnset,        // checkered
-    RGB(0, 0, 0),       // black
-    RGB(255, 255, 255), // white
+    kColorUnset, // checkered
+    kColBlack,
+    kColWhite,
 };
 static const int kNumPresets = 3;
 

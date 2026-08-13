@@ -65,7 +65,7 @@ void TestApp() {
     auto fn = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     w->onDestroy = fn;
 
-    // w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
+    // w->backgroundColor = MkRgb((u8)0xae, (u8)0xae, (u8)0xae);
     CreateCustomArgs args;
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
     args.title = "a little test app";

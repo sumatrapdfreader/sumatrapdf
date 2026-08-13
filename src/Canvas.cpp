@@ -2608,7 +2608,7 @@ static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
 
     // blue for links, green for images, so both can be on at once
-    Color col = images ? RGB(0x00, 0xa0, 0x00) : RGB(0x00, 0x00, 0xff);
+    Color col = images ? MkRgb(0x00, 0xa0, 0x00) : kColBlue;
     ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
@@ -2666,7 +2666,7 @@ static void DebugShowFitContentArea(DisplayModel* dm, HDC hdc) {
         return;
     }
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
-    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 2, RGB(0xff, 0x00, 0x00)), true);
+    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 2, kColRed), true);
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pi = dm->GetPageInfo(pageNo);
@@ -2861,17 +2861,17 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         HdcFillRect(hdc, rcArea, brush);
     } else {
         Color colors[3];
-        colors[0] = ParseColor((*gcols)[0], WIN_COL_WHITE);
+        colors[0] = ParseColor((*gcols)[0], kColWhite);
         if (nGCols == 1) {
             colors[1] = colors[2] = colors[0];
         } else if (nGCols == 2) {
-            colors[2] = ParseColor((*gcols)[1], WIN_COL_WHITE);
+            colors[2] = ParseColor((*gcols)[1], kColWhite);
             colors[1] =
-                RGB((GetRed(colors[0]) + GetRed(colors[2])) / 2, (GetGreen(colors[0]) + GetGreen(colors[2])) / 2,
-                    (GetBlue(colors[0]) + GetBlue(colors[2])) / 2);
+                MkRgb((GetRed(colors[0]) + GetRed(colors[2])) / 2, (GetGreen(colors[0]) + GetGreen(colors[2])) / 2,
+                      (GetBlue(colors[0]) + GetBlue(colors[2])) / 2);
         } else {
-            colors[1] = ParseColor((*gcols)[1], WIN_COL_WHITE);
-            colors[2] = ParseColor((*gcols)[2], WIN_COL_WHITE);
+            colors[1] = ParseColor((*gcols)[1], kColWhite);
+            colors[2] = ParseColor((*gcols)[2], kColWhite);
         }
         Size size = dm->GetCanvasSize();
         float percTop = 1.0F * (float)dm->GetViewPort().y / (float)size.dy;
@@ -4253,9 +4253,9 @@ static void DrawLoadErrorLine(HDC hdc, Rect r, Str name, HFONT font) {
 // a red that stays readable on both a light and a dark canvas background
 static Color LoadErrorTextColor() {
     if (IsLightColor(ThemeMainWindowBackgroundColor())) {
-        return RGB(0xc6, 0x28, 0x28);
+        return MkRgb(0xc6, 0x28, 0x28);
     }
-    return RGB(0xef, 0x9a, 0x9a);
+    return MkRgb(0xef, 0x9a, 0x9a);
 }
 
 static void OnPaintDocumentStatus(MainWindow* win) {

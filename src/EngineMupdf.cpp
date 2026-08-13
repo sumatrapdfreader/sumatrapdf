@@ -3808,7 +3808,7 @@ static void ApplyOutlineStyles(fz_context* ctx, fz_outline_iterator* iter, TocIt
         // better drawn in the theme's text color
         u8 r = (u8)it->r, g = (u8)it->g, b = (u8)it->b;
         if (r || g || b) {
-            item->color = MkColor(r, g, b);
+            item->color = MkRgb(r, g, b);
         }
 
         int res = fz_outline_iterator_down(ctx, iter);

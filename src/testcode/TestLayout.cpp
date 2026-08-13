@@ -13,12 +13,8 @@ static ILayout* mainLayout = nullptr;
 static int currWinDx = 0;
 static int currWinDy = 0;
 
-#define COL_GRAY RGB(0xdd, 0xdd, 0xdd)
-#define COL_WHITE RGB(0xff, 0xff, 0xff)
-#define COL_BLACK RGB(0, 0, 0)
-
 static void Draw(HWND hwnd, HDC hdc) {
-    AutoDeleteBrush brush(CreateSolidBrush(COL_GRAY));
+    AutoDeleteBrush brush(CreateSolidBrush(kColGray));
     HdcFillRect(hdc, HwndClientRect(hwnd), brush);
 }
 

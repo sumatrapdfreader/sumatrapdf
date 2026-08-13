@@ -329,7 +329,7 @@ void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, 
     if (!px->data || px->width <= 0 || px->height <= 0 || px->format == PixmapFormat::RGBA8) {
         return;
     }
-    if ((textColor & 0xffffff) == WIN_COL_BLACK && (bgColor & 0xffffff) == WIN_COL_WHITE && !linkColor && !skipRects) {
+    if ((textColor & 0xffffff) == kColBlack && (bgColor & 0xffffff) == kColWhite && !linkColor && !skipRects) {
         return;
     }
     byte linkR = 0, linkG = 0, linkB = 0;

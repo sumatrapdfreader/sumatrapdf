@@ -97,16 +97,16 @@ void WinUtilTest() {
     // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
 #if 0
     {
-        Color c = AdjustLightness(RGB(255, 0, 0), 1.0f);
-        utassert(c == RGB(255, 0, 0));
-        c = AdjustLightness(RGB(255, 0, 0), 2.0f);
-        utassert(c == RGB(255, 255, 255));
-        c = AdjustLightness(RGB(255, 0, 0), 0.25f);
-        utassert(c == RGB(64, 0, 0));
-        c = AdjustLightness(RGB(226, 196, 226), 95 / 255.0f);
-        utassert(c == RGB(105, 52, 105));
-        c = AdjustLightness(RGB(255, 255, 255), 0.5f);
-        utassert(c == RGB(128, 128, 128));
+        Color c = AdjustLightness(kColRed, 1.0f);
+        utassert(c == kColRed);
+        c = AdjustLightness(kColRed, 2.0f);
+        utassert(c == kColWhite);
+        c = AdjustLightness(kColRed, 0.25f);
+        utassert(c == MkRgb(64, 0, 0));
+        c = AdjustLightness(MkRgb(226, 196, 226), 95 / 255.0f);
+        utassert(c == MkRgb(105, 52, 105));
+        c = AdjustLightness(kColWhite, 0.5f);
+        utassert(c == MkRgb(128, 128, 128));
     }
 #endif
 }

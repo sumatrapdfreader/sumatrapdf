@@ -100,10 +100,6 @@ _TRN("Light")
 _TRN("Charcoal")
 */
 
-constexpr Color kColBlack = 0x000000;
-constexpr Color kColWhite = 0xFFFFFF;
-constexpr Color kRedColor = RgbToColor(0xff0000);
-
 // Optional colors (DisabledTextColor … NotificationHighlightTextColor) fix
 // muddy derived hues when TextColor is not neutral gray (e.g. Dracula #f8f8f2).
 // Empty optional fields still fall back to AccentColor / blend of the four base colors.
@@ -767,7 +763,7 @@ static int GetThemeByName(Str name) {
 }
 
 // this is the default aggressive yellow that we suppress
-constexpr Color kMainWinBgColDefault = (RGB(0xff, 0xf2, 0) - 0x80000000);
+constexpr Color kMainWinBgColDefault = (MkRgb(0xff, 0xf2, 0) - 0x80000000);
 
 static bool IsDefaultMainWinColor(ParsedColor* col) {
     return col->parsedOk && col->col == kMainWinBgColDefault;
@@ -980,7 +976,7 @@ Color ThemeControlBackgroundColor() {
         return GetSysColor(COLOR_WINDOW);
     }
     // note: we can change it in ThemeUpdateAfterLoadSettings()
-    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kRedColor);
+    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
     return col;
 }
 
@@ -988,7 +984,7 @@ Color ThemeMainWindowBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
-    Color bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
+    Color bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
     if (gCurrThemeIndex == 0) {
         // Special behavior for light theme.
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
@@ -1003,7 +999,7 @@ Color ThemeWindowBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
-    auto col = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
+    auto col = GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
     return col;
 }
 
@@ -1011,7 +1007,7 @@ Color ThemeWindowTextColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOWTEXT);
     }
-    auto col = GetThemeCol(gCurrentTheme->textColor, kRedColor);
+    auto col = GetThemeCol(gCurrentTheme->textColor, kColRed);
     return col;
 }
 
@@ -1022,7 +1018,7 @@ static Color BlendTextAndBgHalfway() {
     u8 r = (u8)((GetRValue(txt) + GetRValue(bg)) / 2);
     u8 g = (u8)((GetGValue(txt) + GetGValue(bg)) / 2);
     u8 b = (u8)((GetBValue(txt) + GetBValue(bg)) / 2);
-    return RGB(r, g, b);
+    return MkRgb(r, g, b);
 }
 
 Color ThemeWindowTextDisabledColor() {
@@ -1046,7 +1042,7 @@ Color ThemeWindowControlBackgroundColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_WINDOW);
     }
-    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kRedColor);
+    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
     return col;
 }
 
@@ -1054,7 +1050,7 @@ Color ThemeWindowLinkColor() {
     if (gUseHighContrast) {
         return GetSysColor(COLOR_HOTLIGHT);
     }
-    auto col = GetThemeCol(gCurrentTheme->linkColor, kRedColor);
+    auto col = GetThemeCol(gCurrentTheme->linkColor, kColRed);
     return col;
 }
 

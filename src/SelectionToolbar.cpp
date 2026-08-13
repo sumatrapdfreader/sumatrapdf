@@ -182,14 +182,14 @@ static Color SelBarTextColor() {
     if (SelBarIsDark()) {
         return ThemeWindowTextColor();
     }
-    return RGB(27, 29, 33);
+    return MkRgb(27, 29, 33);
 }
 
 static Color SelBarMutedTextColor() {
     if (SelBarIsDark()) {
         return ThemeWindowTextDisabledColor();
     }
-    return RGB(92, 96, 104);
+    return MkRgb(92, 96, 104);
 }
 
 static Color SelBarHoverBg(Color bg) {

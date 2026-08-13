@@ -196,7 +196,7 @@ static void PickAnotherRandomTip() {
     }
 }
 
-constexpr Color kAboutBorderCol = RGB(0, 0, 0);
+constexpr Color kAboutBorderCol = kColBlack;
 
 constexpr int kAboutLeftRightSpaceDx = 8;
 constexpr int kAboutMarginDx = 10;
@@ -303,11 +303,11 @@ static TempStr GetAppVersionTemp() {
     return s;
 }
 
-constexpr Color kCol1 = RGB(196, 64, 50);
-constexpr Color kCol2 = RGB(227, 107, 35);
-constexpr Color kCol3 = RGB(93, 160, 40);
-constexpr Color kCol4 = RGB(69, 132, 190);
-constexpr Color kCol5 = RGB(112, 115, 207);
+constexpr Color kCol1 = MkRgb(196, 64, 50);
+constexpr Color kCol2 = MkRgb(227, 107, 35);
+constexpr Color kCol3 = MkRgb(93, 160, 40);
+constexpr Color kCol4 = MkRgb(69, 132, 190);
+constexpr Color kCol5 = MkRgb(112, 115, 207);
 
 static Kind kindSumatraLogo = "sumatraLogo";
 
@@ -1812,7 +1812,7 @@ static TempStr FileSizeForHomeListTemp(i64 size) {
 // light blue outline marking the keyboard-selected entry (issue #1136).
 // A fixed color: it has to read as "selected" against both the light and the
 // dark page background
-constexpr Color kHomeSelectionColor = RGB(0x4c, 0xa6, 0xff);
+constexpr Color kHomeSelectionColor = MkRgb(0x4c, 0xa6, 0xff);
 
 static void DrawHomeSelectionOutline(HDC hdc, const Rect& r, int radius) {
     int penDx = DpiScale(2);
@@ -1927,12 +1927,12 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
 // keyboard-shortcuts sheet. The disc is drawn with GDI+ so its edge is smooth;
 // nothing is painted outside it, so the page background shows through.
 static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
-    gfx->FillEllipse(r, RGB(255, 255, 255));
+    gfx->FillEllipse(r, kColWhite);
     // the screen dc is only for sizing the font (it is cached and interned by
     // both helpers, so this doesn't create anything per paint)
     AutoReleaseDC dc(nullptr);
     PlatformFont* font = GetPlatformFont(HdcCreateSimpleFont(dc, "MS Shell Dlg", 14));
-    gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, RGB(0, 0, 0));
+    gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
 // What the home page list drew for each row: the path, the size text as drawn,

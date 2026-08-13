@@ -31,7 +31,7 @@
 constexpr bool kDrawTextShadow = true;
 constexpr bool kDrawMsgTextShadow = false;
 
-constexpr Color kInstallerWinBgColor = RGB(0xff, 0xf2, 0); // yellow
+constexpr Color kInstallerWinBgColor = MkRgb(0xff, 0xf2, 0); // yellow
 
 constexpr DWORD kTenSecondsInMs = 10 * 1000;
 

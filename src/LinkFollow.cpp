@@ -252,9 +252,9 @@ TempStr KeyboardLinkFollowResultTemp(int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
-constexpr Color kLinkFollowHighlightCol = RGB(0xff, 0xf1, 0x00);
-constexpr Color kLinkFollowBadgeBgCol = RGB(0xd3, 0x2f, 0x2f);
-constexpr Color kLinkFollowBadgeTextCol = RGB(0xff, 0xff, 0xff);
+constexpr Color kLinkFollowHighlightCol = MkRgb(0xff, 0xf1, 0x00);
+constexpr Color kLinkFollowBadgeBgCol = MkRgb(0xd3, 0x2f, 0x2f);
+constexpr Color kLinkFollowBadgeTextCol = kColWhite;
 
 static void PaintLinkBadge(Gdiplus::Graphics& gs, Gdiplus::Font& font, const Rect& linkRect, int number) {
     WCHAR label[2] = {(WCHAR)(L'0' + number), 0};

@@ -450,7 +450,7 @@ static TextRenderGdi* NewTextRenderGdi(Graphics* gfx) {
     TextRenderGdi* res = new TextRenderGdi();
     res->gfx = gfx;
     // default to red to make mistakes stand out
-    res->SetTextColor(RGB(0xff, 0, 0));
+    res->SetTextColor(kColRed);
     res->CreateHdcForTextMeasure(); // could do lazily, but that's more things to track, so not
                                     // worth it
     return res;
@@ -461,7 +461,7 @@ static TextRenderGdiplus* NewTextRenderGdiplus(Graphics* gfx, TextMeasureAlgorit
     res->gfx = gfx;
     res->measureAlgo = measureAlgo ? measureAlgo : MeasureTextAccurate;
     // default to red to make mistakes stand out
-    res->SetTextColor(RGB(0xff, 0, 0));
+    res->SetTextColor(kColRed);
     return res;
 }
 
@@ -494,7 +494,7 @@ static TextRenderHdc* NewTextRenderHdc(Graphics* gfx, int dx, int dy) {
     SelectObject(res->hdc, res->bmp);
 
     // default to red to make mistakes stand out
-    res->SetTextColor(RGB(0xff, 0, 0));
+    res->SetTextColor(kColRed);
     return res;
 }
 

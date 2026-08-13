@@ -46,7 +46,7 @@ static Pixmap* StackPixmapsVertically(Pixmap* top, Pixmap* bottom) {
     HGDIOBJ oldOut = outDC ? SelectObject(outDC, out->hbmp) : nullptr;
     if (outDC && oldOut) {
         RECT full{0, 0, w, h};
-        HBRUSH white = CreateSolidBrush(RGB(255, 255, 255));
+        HBRUSH white = CreateSolidBrush(kColWhite);
         HdcFillRect(outDC, ToRect(full), white);
         DeleteObject(white);
 

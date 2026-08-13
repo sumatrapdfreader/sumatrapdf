@@ -11638,9 +11638,9 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
 
         Color iconCol;
         if (isInactive) {
-            iconCol = RGB(153, 153, 153);
+            iconCol = MkRgb(153, 153, 153);
         } else if (isClose && (isHot || isPushed)) {
-            iconCol = RGB(255, 255, 255);
+            iconCol = kColWhite;
         } else {
             iconCol = ThemeWindowTextColor();
         }

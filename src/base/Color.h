@@ -3,6 +3,13 @@
 
 // note: include Base.h instead of including directly
 
+// Win32 COLORREF layout (0x00bbggrr); typically no alpha
+#if OS_WIN
+using Color = COLORREF;
+#else
+using Color = uint32_t;
+#endif
+
 // a "unset" state for Color value. technically all colors are valid
 // this one is hopefully not used in practice
 constexpr Color kColorUnset = ((Color)(0xfeffffff));
@@ -20,8 +27,22 @@ struct ParsedColor {
     PdfColor pdfCol = 0;
 };
 
-Color MkGray(u8 x);
-Color MkColor(u8 r, u8 g, u8 b, u8 a = 0);
+constexpr Color MkRgb(u8 r, u8 g, u8 b) {
+    return (Color)r | ((Color)g << 8) | ((Color)b << 16);
+}
+constexpr Color MkRgba(u8 r, u8 g, u8 b, u8 a) {
+    return MkRgb(r, g, b) | ((Color)a << 24);
+}
+constexpr Color MkGray(u8 x) {
+    return MkRgb(x, x, x);
+}
+constexpr Color kColWhite = MkRgb(0xff, 0xff, 0xff);
+constexpr Color kColBlack = MkRgb(0, 0, 0);
+constexpr Color kColRed = MkRgb(0xff, 0, 0);
+constexpr Color kColGreen = MkRgb(0, 0xff, 0);
+constexpr Color kColBlue = MkRgb(0, 0, 0xff);
+constexpr Color kColYellow = MkRgb(0xff, 0xff, 0);
+constexpr Color kColGray = MkGray(0xdd);
 void UnpackColor(Color, u8& r, u8& g, u8& b);
 void UnpackColor(Color, u8& r, u8& g, u8& b, u8& a);
 

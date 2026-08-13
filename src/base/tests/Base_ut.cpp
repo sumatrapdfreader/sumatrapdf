@@ -159,12 +159,12 @@ static void ColorTest() {
     ParsedColor parsed;
     ParseColor(parsed, "#f2f2f2");
     utassert(parsed.parsedOk);
-    utassert(parsed.col == MkColor(0xf2, 0xf2, 0xf2));
+    utassert(parsed.col == MkRgb(0xf2, 0xf2, 0xf2));
 
     parsed = {};
     ParseColor(parsed, "#80f2f2f2");
     utassert(parsed.parsedOk);
-    utassert(parsed.col == MkColor(0xf2, 0xf2, 0xf2, 0x80));
+    utassert(parsed.col == MkRgba(0xf2, 0xf2, 0xf2, 0x80));
 
     parsed = {};
     ParseColor(parsed, "#f2f2f");

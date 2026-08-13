@@ -522,7 +522,7 @@ static TempStr MarkdownPageCssTemp() {
     Color bgCol;
     Color txtCol = ThemePageRenderColors(bgCol);
     bool dark = !IsLightColor(bgCol);
-    bool isDefault = (bgCol == RGB(0xff, 0xff, 0xff)) && (txtCol == RGB(0, 0, 0));
+    bool isDefault = (bgCol == kColWhite) && (txtCol == kColBlack);
 
     TempStr bg = ColorToCssTemp(bgCol);
     // the default black-on-white gets the classic GitHub palette

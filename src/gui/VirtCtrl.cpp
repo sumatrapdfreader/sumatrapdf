@@ -2146,9 +2146,9 @@ static Kind kindVirtCtrlCloseButton = "virtCtrlCloseButton";
 
 // the default look of the ✕ that closes a tab / panel / notification: a gray
 // glyph that turns white on a red circle when hovered
-#define kColCloseX RGB(0xa0, 0xa0, 0xa0)
-#define kColCloseXHover RGB(0xf9, 0xeb, 0xeb)   // white-ish
-#define kColCloseXHoverBg RGB(0xC1, 0x35, 0x35) // red-ish
+#define kColCloseX MkRgb(0xa0, 0xa0, 0xa0)
+#define kColCloseXHover MkRgb(0xf9, 0xeb, 0xeb)   // white-ish
+#define kColCloseXHoverBg MkRgb(0xC1, 0x35, 0x35) // red-ish
 
 VirtCloseButton::VirtCloseButton() {
     onMouseEnter = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseEnter>(this);

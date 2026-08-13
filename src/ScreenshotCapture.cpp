@@ -802,7 +802,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmDib);
 
     // Fill background: light blue at 93% opaque (7% transparent), premultiplied
-    DWORD bgPixel = PremultiplyPixel(MkColor(220, 230, 245), 237);
+    DWORD bgPixel = PremultiplyPixel(MkRgb(220, 230, 245), 237);
     for (int i = 0; i < w * h; i++) {
         pixels[i] = bgPixel;
     }
@@ -832,7 +832,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
     // white background for the temp surface
     Rect fullRect = {0, 0, w, h};
-    HBRUSH brWhite = CreateSolidBrush(RGB(255, 255, 255));
+    HBRUSH brWhite = CreateSolidBrush(kColWhite);
     HdcFillRect(hdcTemp, fullRect, brWhite);
     DeleteObject(brWhite);
 
@@ -850,7 +850,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
         // draw label below thumbnail: process name on left, dimensions on right
         Rect labelRect = {rc.x + 4, rc.y + rc.dy + kLabelGap, rc.dx - 8, kLabelHeight};
-        SetTextColor(hdcTemp, RGB(0, 0, 0));
+        SetTextColor(hdcTemp, kColBlack);
         SetBkMode(hdcTemp, TRANSPARENT);
         HdcDrawText(hdcTemp, cs.processName, labelRect, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
         TempStr dimStr = fmt("%dx%d", cs.origW, cs.origH);
@@ -858,7 +858,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
         // draw selection border around thumbnail and label
         if (i == data->selected) {
-            HPEN pen = CreatePen(PS_SOLID, kBorderThickness, RGB(0, 120, 215));
+            HPEN pen = CreatePen(PS_SOLID, kBorderThickness, MkRgb(0, 120, 215));
             HGDIOBJ oldPen = SelectObject(hdcTemp, pen);
             HGDIOBJ oldBrush = SelectObject(hdcTemp, GetStockObject(NULL_BRUSH));
             int b = (kBorderThickness / 2) + 1;
@@ -874,7 +874,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     }
 
     // Draw 1px blue border around the window
-    HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(0, 90, 180));
+    HPEN borderPen = CreatePen(PS_SOLID, 1, MkRgb(0, 90, 180));
     HGDIOBJ oldPen2 = SelectObject(hdcTemp, borderPen);
     HGDIOBJ oldBrush2 = SelectObject(hdcTemp, GetStockObject(NULL_BRUSH));
     Rectangle(hdcTemp, 0, 0, w, h);
@@ -884,7 +884,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
     // Draw info bar at the top with solid blue background
     Rect infoRect = {0, 0, w, kInfoBarHeight};
-    HBRUSH brBlue = CreateSolidBrush(RGB(0, 90, 180));
+    HBRUSH brBlue = CreateSolidBrush(MkRgb(0, 90, 180));
     HdcFillRect(hdcTemp, infoRect, brBlue);
     DeleteObject(brBlue);
 
@@ -897,7 +897,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     HFONT infoFont = CreateFontIndirectW(&ncm.lfMessageFont);
     HGDIOBJ prevInfoFont = SelectObject(hdcTemp, infoFont);
 
-    SetTextColor(hdcTemp, RGB(255, 255, 255));
+    SetTextColor(hdcTemp, kColWhite);
     SetBkMode(hdcTemp, TRANSPARENT);
     HdcDrawText(hdcTemp, WStrL(L"Select screenshot to save. ↑ ↓ to navigate. Enter to select. Esc to cancel"), infoRect,
                 DT_CENTER | DT_VCENTER | DT_SINGLELINE);

@@ -693,7 +693,7 @@ static TempStr ColorToCssTemp(Color c) {
 static TempStr ChmThemeStyleTemp() {
     Color bgCol;
     Color txtCol = ThemePageRenderColors(bgCol);
-    bool isDefault = (bgCol == RGB(0xff, 0xff, 0xff)) && (txtCol == RGB(0, 0, 0));
+    bool isDefault = (bgCol == kColWhite) && (txtCol == kColBlack);
     if (isDefault) {
         return nullptr;
     }

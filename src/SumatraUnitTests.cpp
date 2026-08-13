@@ -208,11 +208,11 @@ static void colorTest() {
     utassert(ok);
     assertSerializedColor(c, "#01020304");
 
-    Color c2 = MkColor(2, 3, 4, 1);
+    Color c2 = MkRgba(2, 3, 4, 1);
     assertSerializedColor(c2, "#01020304");
     utassert(c == c2);
 
-    c2 = MkColor(5, 7, 6, 8);
+    c2 = MkRgba(5, 7, 6, 8);
     assertSerializedColor(c2, "#08050706");
     ok = ParseColor(&c, "#08050706");
     utassert(ok);

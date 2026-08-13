@@ -406,7 +406,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     ScopedMutex scope(&pagesAccess);
 
     PlatformTextRender* textDraw = CreateGdiplusTextRender(&g);
-    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, RGB(0, 0, 0),
+    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, kColBlack,
                  cookie ? &cookie->abort : nullptr);
     delete textDraw;
     DeleteDC(hDC);

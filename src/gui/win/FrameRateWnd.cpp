@@ -27,9 +27,6 @@ that it's actually a part of that window.
 
 #define FRAME_RATE_CLASS_NAME L"FrameRateWnd"
 
-#define COL_WHITE RGB(0xff, 0xff, 0xff)
-#define COL_BLACK RGB(0, 0, 0)
-
 static void PositionWindow(FrameRateWnd* w, Size s) {
     Rect rc = HwndClientRect(w->hwndAssociatedWith);
     Point p = HwndClientToScreen(w->hwndAssociatedWith, Point(rc.x + rc.dx - s.dx, rc.y));
@@ -65,7 +62,7 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
         // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
         args.exStyle = WS_EX_LAYERED | WS_EX_TRANSPARENT;
         args.pos = {0, 0, 1, 1};
-        args.bgColor = COL_BLACK;
+        args.bgColor = kColBlack;
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -80,7 +77,7 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
     text = NewVirtText({
         .s = "0",
         .font = GetPlatformFont(GetDefaultGuiFont()),
-        .textColor = COL_WHITE,
+        .textColor = kColWhite,
         .align = VirtTextAlign::Center,
     });
     layout = new Padding(text, Insets{2, 4, 2, 4});

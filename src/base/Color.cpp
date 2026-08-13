@@ -7,18 +7,6 @@ bool IsSpecialColor(Color col) {
     return col == kColorUnset || col == kColorNoChange;
 }
 
-Color MkColor(u8 r, u8 g, u8 b, u8 a) {
-    Color r2 = r;
-    Color g2 = (Color)g << 8;
-    Color b2 = (Color)b << 16;
-    Color a2 = (Color)a << 24;
-    return r2 | g2 | b2 | a2;
-}
-
-Color MkGray(u8 x) {
-    return MkColor(x, x, x);
-}
-
 // format: abgr
 void UnpackColor(Color c, u8& r, u8& g, u8& b, u8& a) {
     r = (u8)(c & 0xff);
@@ -110,7 +98,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
     unsigned int a = 0;
     bool ok = n == 8 && !str::IsNull(str::Parse(s, "%2x%2x%2x%2x%$", &a, &r, &g, &b));
     if (ok) {
-        parsed.col = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
+        parsed.col = MkRgba((u8)r, (u8)g, (u8)b, (u8)a);
         parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b, (u8)a);
         parsed.parsedOk = true;
         return;
@@ -120,7 +108,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
     if (!ok) {
         return;
     }
-    parsed.col = MkColor((u8)r, (u8)g, (u8)b);
+    parsed.col = MkRgb((u8)r, (u8)g, (u8)b);
     parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b);
     parsed.parsedOk = true;
 }
@@ -176,7 +164,7 @@ Color AdjustLightness(Color c, float factor) {
     if (M == m) {
         // for grayscale values, lightness is proportional to the color value
         u8 X = (u8)limitValue((int)floorf(((float)M * factor) + 0.5f), 0, 255);
-        return MkColor(X, X, X);
+        return MkRgb(X, X, X);
     }
     u8 C = M - m;
     int hueDiff;
@@ -210,7 +198,7 @@ Color AdjustLightness(Color c, float factor) {
     R = (u8)floorf(chromaOrX(M == R, m == R, C1, X1) + m1 + 0.5f);
     G = (u8)floorf(chromaOrX(M == G, m == G, C1, X1) + m1 + 0.5f);
     B = (u8)floorf(chromaOrX(M == B, m == B, C1, X1) + m1 + 0.5f);
-    return MkColor(R, G, B);
+    return MkRgb(R, G, B);
 }
 
 // Adjusts lightness by 1/255 units.
@@ -219,7 +207,7 @@ Color AdjustLightness2(Color c, float units) {
     units = limitValue(units, -lightness, 255.0f - lightness);
     if (0.0f == lightness) {
         u8 x = (u8)lroundf(units);
-        return MkColor(x, x, x);
+        return MkRgb(x, x, x);
     }
     return AdjustLightness(c, 1.0f + (units / lightness));
 }

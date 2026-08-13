@@ -76,7 +76,7 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        HBRUSH hbg = CreateSolidBrush(RGB(255, 252, 200));
+        HBRUSH hbg = CreateSolidBrush(MkRgb(255, 252, 200));
         HdcFillRect(hdc, HwndClientRect(hwnd), hbg);
         DeleteObject(hbg);
 

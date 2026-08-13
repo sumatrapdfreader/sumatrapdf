@@ -142,8 +142,6 @@
 #undef min
 #undef max
 
-using Color = COLORREF;
-
 #else
 using BYTE = uint8_t;
 using WORD = uint16_t;
@@ -156,7 +154,6 @@ using BOOL = int;
 using WCHAR = wchar_t;
 using WPARAM = uintptr_t;
 using LPARAM = intptr_t;
-using Color = uint32_t;
 using LCID = uint32_t;
 
 struct HWND__;

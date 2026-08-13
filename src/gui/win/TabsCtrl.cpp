@@ -65,7 +65,7 @@ static Color TabTextColorForBackground(Color tabBg) {
     if (abs((int)GetLightness(text) - (int)GetLightness(tabBg)) >= 80) {
         return text;
     }
-    return IsLightColor(tabBg) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+    return IsLightColor(tabBg) ? kColBlack : kColWhite;
 }
 
 //--- TabCtrl: one tab
@@ -252,7 +252,7 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
         int maxX = rTxt.Right() - (dotRadius * 2);
         int dotX = std::min(textEnd + dotRadius, maxX);
         int dotY = r.y + ((r.dy - (dotRadius * 2)) / 2);
-        gfx->FillEllipse({dotX, dotY, dotRadius * 2, dotRadius * 2}, RGB(0xEE, 0x22, 0x22));
+        gfx->FillEllipse({dotX, dotY, dotRadius * 2, dotRadius * 2}, MkRgb(0xEE, 0x22, 0x22));
     }
 
     // the ✕ blends into the tab, so it takes the tab's background

@@ -1852,7 +1852,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     wnd->staticInstDir = NewVirtText({
         .s = s2NoAccel,
         .font = GetPlatformFont(GetDefaultGuiFont()),
-        .textColor = RGB(0, 0, 0),
+        .textColor = kColBlack,
         .isRtl = IsUIRtl(),
     });
 
@@ -1942,10 +1942,10 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
     switch (msg) {
         case WM_CTLCOLORSTATIC: {
             if (gWnd->hbrBackground == nullptr) {
-                gWnd->hbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
+                gWnd->hbrBackground = CreateSolidBrush(MkRgb(0xff, 0xf2, 0));
             }
             HDC hdc = (HDC)wp;
-            SetTextColor(hdc, RGB(0, 0, 0));
+            SetTextColor(hdc, kColBlack);
             SetBkMode(hdc, TRANSPARENT);
             return (LRESULT)gWnd->hbrBackground;
         }

@@ -107,7 +107,7 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
     {
         Color highlightCol;
         if (IsCurrentThemeDefault()) {
-            highlightCol = RGB(255, 255, 0); // yellow for default theme
+            highlightCol = kColYellow; // yellow for default theme
         } else {
             highlightCol = AccentColor(colBg, 40);
         }
@@ -129,7 +129,7 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
 // Ink that stays readable on a solid highlight underlay (black on yellow).
 static Color TextColorContrasting(Color bg) {
     int lum = (GetRValue(bg) * 299 + GetGValue(bg) * 587 + GetBValue(bg) * 114) / 1000;
-    return lum >= 140 ? RGB(0, 0, 0) : RGB(255, 255, 255);
+    return lum >= 140 ? kColBlack : kColWhite;
 }
 
 // Sample the row background the TreeView already painted (indent/icon strip).
@@ -286,7 +286,7 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
 
     Color highlightCol;
     if (IsCurrentThemeDefault()) {
-        highlightCol = RGB(255, 255, 0);
+        highlightCol = kColYellow;
     } else {
         highlightCol = AccentColor(bgCol, 40);
     }

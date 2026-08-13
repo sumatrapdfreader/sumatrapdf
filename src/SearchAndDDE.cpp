@@ -42,7 +42,7 @@ StrVec gDdeOpenOnStartup;
 // Chrome-style orange for the non-active find matches. The active (current)
 // match uses the user-customizable FixedPageUI.SelectionColor instead, so it
 // stands out with the color the user finds most noticeable (issue #5740).
-constexpr Color kFindOtherMatchColor = RGB(0xff, 0x96, 0x32);
+constexpr Color kFindOtherMatchColor = MkRgb(0xff, 0x96, 0x32);
 
 struct FindMatchPaintPageRect {
     int pageNo = 0;
