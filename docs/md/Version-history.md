@@ -175,6 +175,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdSelectTextViaKeyboard` : "Select Text With Keyboard" (`F7`) — caret browsing: move a text caret with the arrows and select without the mouse (fixes #4684, #4116)
 - `CmdExtendSelectionCharLeft`, `CmdExtendSelectionCharRight`, `CmdExtendSelectionWordLeft`, `CmdExtendSelectionWordRight` : "Extend Selection One Character/Word Left/Right" — no default shortcut, bind your own (discussion #5922)
 - `CmdToggleLaserPointer` : "Toggle Laser Pointer" — laser dot cursor over the document, no default shortcut, bind your own (fixes #5930)
+- `CmdToggleHoverPreview` : "Toggle Hover Preview" — palette-only; enables/disables the citation/reference hover popup (`CitationHoverDelay`)
 - `CmdZoomToSelection` : "Zoom: To Selection" (`Ctrl + 4`) — zoom so the selection fills the window (fixes #1699)
 - `CmdOpenFileWithOSFilePicker` : "Open File With Windows File Picker..." — always the system multi-select open dialog (when `FilePicker = sumatrapdf`, use this to force the Windows picker)
 - `CmdToggleFilePicker` : "SumatraPDF File Picker" — check under Settings and File menus; toggles `FilePicker` between Windows and SumatraPDF

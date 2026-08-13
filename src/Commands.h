@@ -286,7 +286,8 @@ enum {
     CmdExtendSelectionWordRight = 475,
     CmdToggleLaserPointer = 476,
     CmdZoomToSelection = 477,
-    CmdNone = 478,
+    CmdToggleHoverPreview = 478,
+    CmdNone = 479,
 
     /* range for file history */
     CmdFileHistoryFirst,

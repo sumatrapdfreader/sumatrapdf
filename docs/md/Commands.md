@@ -112,6 +112,7 @@ CmdToggleEngineeringDrawingEnhance,,Toggle Engineering Drawing Enhancement,"ver 
 CmdSetDocumentColorsFollowTheme,,Set Document Colors Follow Theme,"ver 3.7+, opens a dialog to pick how MuPDF-rendered documents follow the UI theme (`DocumentColorsFollowTheme`: off, smart, legacy)"
 CmdTogglePreservePdfImages,,Toggle Preserve PDF Image Colors in Dark Mode,"ver 3.7+, session-only toggle of image preservation on inverted pages"
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
+CmdToggleHoverPreview,,Toggle Hover Preview,"ver 3.7+, palette-only; toggles the citation/reference hover popup (`CitationHoverDelay`: 300 ms when on, -1 when off)"
 ```
 
 ## Tabs

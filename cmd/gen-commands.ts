@@ -286,6 +286,7 @@ export const commands = [
     "CmdExtendSelectionWordRight", "Extend Selection One Word Right",
     "CmdToggleLaserPointer", "Toggle Laser Pointer",
     "CmdZoomToSelection", "Zoom: To Selection",
+    "CmdToggleHoverPreview", "Toggle Hover Preview",
     "CmdNone", "Do nothing",
 ];
 

@@ -97,6 +97,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !IsLaserPointerActive();
         } break;
+        case CmdToggleHoverPreview: {
+            isToggle = true;
+            newIsOn = gGlobalPrefs->citationHoverDelay < 0;
+        } break;
         case CmdDebugShowFitContentArea: {
             isToggle = true;
             newIsOn = !ShowFitContentArea();

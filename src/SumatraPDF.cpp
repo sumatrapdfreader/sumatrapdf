@@ -11130,6 +11130,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleLaserPointer(win);
             break;
 
+        case CmdToggleHoverPreview:
+            if (gGlobalPrefs->citationHoverDelay < 0) {
+                gGlobalPrefs->citationHoverDelay = 300;
+            } else {
+                gGlobalPrefs->citationHoverDelay = -1;
+                for (MainWindow* w : gWindows) {
+                    RefHoverHide(w->refHover, w->hwndCanvas);
+                }
+            }
+            SaveSettings();
+            break;
+
         case CmdSelectTextViaKeyboard:
             ToggleSelectTextWithKeyboard(win);
             break;
