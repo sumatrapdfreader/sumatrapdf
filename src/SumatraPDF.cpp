@@ -110,6 +110,7 @@
 #include "SelectionHandlers.h"
 #include "CommandPalette.h"
 #include "AdvancedSettingsDialog.h"
+#include "ChangeLanguageDialog.h"
 #include "ChangeThemeDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
@@ -7223,11 +7224,6 @@ void SetCurrentLanguageAndRefreshUI(Str langCode) {
     SaveSettings();
 }
 
-static void OnMenuChangeLanguage(HWND hwnd) {
-    Str newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
-    SetCurrentLanguageAndRefreshUI(newLangCode);
-}
-
 // cycle the toolbar mode show -> overlay -> hide -> show
 // (fullscreen uses Fullscreen.Toolbar; home page overlay has no effect, so only
 // toggle show <-> hide there)
@@ -10379,7 +10375,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdChangeLanguage:
-            OnMenuChangeLanguage(win->hwndFrame);
+            ShowChangeLanguageDialog(win);
             break;
 
         case CmdToggleBookmarks:

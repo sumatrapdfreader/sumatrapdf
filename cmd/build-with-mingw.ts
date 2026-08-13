@@ -297,6 +297,7 @@ const sumatraFiles: FileGroup[] = [
       "AIGrokBuild.*",
       "KeyboardHelp.*",
       "CaptionGlyphs.*",
+      "ChangeLanguageDialog.*",
       "ChangeThemeDialog.*",
       "AIClaudeCode.*",
       "CommandAvailability.*",
