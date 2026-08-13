@@ -91,7 +91,6 @@
 #include "ImageSaveCropResize.h"
 #include "StressTesting.h"
 #include "HomePage.h"
-#include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "TabGroupsManage.h"
 #include "TableOfContents.h"

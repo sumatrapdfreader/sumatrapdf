@@ -12,7 +12,6 @@
 
 #include "SumatraPDF.h"
 #include "resource.h"
-#include "AppTools.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Theme.h"
@@ -165,108 +164,6 @@ static DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
     INT_PTR res = DialogBoxIndirectParamW(nullptr, tpl, parent, DlgProc, data);
     free(tpl);
     return res;
-}
-
-TempStr ZoomLevelStr(float zoom) {
-    if (zoom == kZoomFitPage) {
-        return _TRA("Fit Page");
-    }
-    if (zoom == kZoomFitWidth) {
-        return _TRA("Fit Width");
-    }
-    if (zoom == kZoomFitHeight) {
-        return _TRA("Fit Height");
-    }
-    if (zoom == kZoomFitContent) {
-        return _TRA("Fit Content");
-    }
-    if (zoom == kZoomShrinkToFit) {
-        return _TRA("Shrink To Fit");
-    }
-    if (zoom == kZoomFitByOrientation) {
-        return _TRA("Fit by Orientation");
-    }
-    if (zoom == 0) {
-        return "-";
-    }
-    TempStr res = fmt("%.f%%", zoom);
-    return res;
-}
-
-// clang-format off
-static float gZoomLevels[] = {
-    kZoomFitPage,
-    kZoomFitWidth,
-    kZoomFitHeight,
-    kZoomFitByOrientation,
-    kZoomFitContent,
-    kZoomShrinkToFit,
-    0,
-    6400.0,
-    3200.0,
-    1600.0,
-    800.0,
-    400.0,
-    200.0,
-    150.0,
-    125.0,
-    100.0,
-    50.0,
-    25.0,
-    12.5,
-    8.33f
-};
-static float gZoomLevelsChm[] = {
-    800.0,
-    400.0,
-    200.0,
-    150.0,
-    125.0,
-    100.0,
-    50.0,
-    25.0,
-};
-// clang-format on
-
-// Fit/preset zoom values for the zoom combo (Settings) and Custom Zoom dialog.
-void CollectZoomLevels(Vec<float>& out, bool forChm) {
-    out.Reset();
-    auto* customZoomLevels = gGlobalPrefs->zoomLevels;
-    int n = customZoomLevels ? len(*customZoomLevels) : 0;
-    if (n > 0) {
-        if (!forChm) {
-            for (int i = 0; i < 4; i++) {
-                out.Append(gZoomLevels[i]);
-            }
-        }
-        float maxZoom = forChm ? 800 : kZoomMax;
-        float minZoom = forChm ? 16 : kZoomMin;
-        for (int i = 0; i < n; i++) {
-            float zl = (*customZoomLevels)[n - i - 1]; // largest first
-            if (zl >= minZoom && zl <= maxZoom) {
-                out.Append(zl);
-            }
-        }
-        return;
-    }
-    float* zoomLevels = forChm ? gZoomLevelsChm : gZoomLevels;
-    n = forChm ? dimofi(gZoomLevelsChm) : dimofi(gZoomLevels);
-    for (int i = 0; i < n; i++) {
-        out.Append(zoomLevels[i]);
-    }
-}
-
-// Detected text-editor command lines plus the current setting, if any.
-void CollectInverseSearchCommands(StrVec& out, Str cmdLine) {
-    out.Reset();
-    Vec<TextEditor*> textEditors;
-    DetectTextEditors(textEditors);
-    for (auto* e : textEditors) {
-        AppendIfNotExists(&out, e->openFileCmd);
-    }
-    if (cmdLine) {
-        AppendIfNotExists(&out, cmdLine);
-    }
 }
 
 #ifndef ID_APPLY_NOW

@@ -33,7 +33,6 @@
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
-#include "SumatraDialogs.h"
 #include "FileHistory.h"
 #include "Theme.h"
 #include "Translations.h"

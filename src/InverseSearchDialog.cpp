@@ -20,7 +20,7 @@
 #include "Theme.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
-#include "SumatraDialogs.h"
+#include "AppTools.h"
 #include "Translations.h"
 #include "DarkModeSubclass.h"
 #include "InverseSearchDialog.h"

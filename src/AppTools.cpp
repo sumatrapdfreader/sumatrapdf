@@ -404,6 +404,19 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
     }
 }
 
+// Detected text-editor command lines plus the current setting, if any.
+void CollectInverseSearchCommands(StrVec& out, Str cmdLine) {
+    out.Reset();
+    Vec<TextEditor*> textEditors;
+    DetectTextEditors(textEditors);
+    for (auto* e : textEditors) {
+        AppendIfNotExists(&out, e->openFileCmd);
+    }
+    if (cmdLine) {
+        AppendIfNotExists(&out, cmdLine);
+    }
+}
+
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_RATIO (612.0 / 792.0)
 

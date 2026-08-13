@@ -36,6 +36,7 @@ TempStr GetAppDataDirTemp();
 TempStr GetPathInAppDataDirTemp(Str fileName);
 
 void DetectTextEditors(Vec<TextEditor*>&);
+void CollectInverseSearchCommands(StrVec& out, Str cmdLine);
 
 void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();

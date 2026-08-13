@@ -26,7 +26,6 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Canvas.h"
-#include "SumatraDialogs.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Commands.h"

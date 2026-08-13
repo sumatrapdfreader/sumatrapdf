@@ -41,3 +41,6 @@ HFONT GetAppTreeFontExForDpi(int dpi, bool bold, bool italic);
 HFONT GetAppSidebarLabelFont();
 HFONT GetAppSidebarLabelFontForDpi(int dpi);
 bool IsMenuFontSizeDefault();
+
+TempStr ZoomLevelStr(float zoom);
+void CollectZoomLevels(Vec<float>& out, bool forChm);

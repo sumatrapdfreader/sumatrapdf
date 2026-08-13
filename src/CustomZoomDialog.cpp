@@ -21,7 +21,6 @@
 #include "Theme.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
-#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "DarkModeSubclass.h"
 #include "CustomZoomDialog.h"

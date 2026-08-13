@@ -50,9 +50,3 @@ struct Print_Advanced_Data {
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
-
-struct MainWindow;
-
-TempStr ZoomLevelStr(float zoom);
-void CollectZoomLevels(Vec<float>& out, bool forChm);
-void CollectInverseSearchCommands(StrVec& out, Str cmdLine);
