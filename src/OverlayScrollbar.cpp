@@ -757,7 +757,7 @@ static void RegisterScrollbarClass() {
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc = WndProcOverlayScrollbar;
     wcex.hInstance = GetModuleHandleW(nullptr);
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wcex.hCursor = GetCachedCursor(IDC_ARROW);
     wcex.lpszClassName = OVERLAY_SCROLLBAR_CLASS;
     RegisterClassExW(&wcex);
     gScrollbarClassRegistered = true;

@@ -366,7 +366,7 @@ IFACEMETHODIMP PdfPreview::DoPreview() {
     WNDCLASSEX wcex{};
     wcex.cbSize = sizeof(wcex);
     wcex.lpfnWndProc = PreviewWndProc;
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hCursor = GetCachedCursor(IDC_ARROW);
     wcex.lpszClassName = L"SumatraPDF_PreviewPane";
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     RegisterClassEx(&wcex);

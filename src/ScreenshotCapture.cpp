@@ -1099,7 +1099,7 @@ static void RegisterScreenshotOverlayClass() {
     }
     WNDCLASSEX wcex{};
     FillWndClassEx(wcex, kScreenshotOverlayClassName, WndProcScreenshotOverlay);
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wcex.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClassEx(&wcex);
     gScreenshotClassRegistered = true;
 }

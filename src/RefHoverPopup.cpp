@@ -67,7 +67,7 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         if (s && GetCursorPos(&p)) {
             ScreenToClient(hwnd, &p);
             if (LaunchLinkAtPopupPt(s, hwnd, p.x, p.y)) {
-                SetCursor(LoadCursorW(nullptr, IDC_HAND));
+                SetCursorCached(IDC_HAND);
                 return TRUE;
             }
         }
@@ -124,7 +124,7 @@ static bool RegisterClassIfNeeded() {
     wc.lpfnWndProc = RefHoverWndProc;
     wc.hInstance = GetModuleHandleW(nullptr);
     wc.lpszClassName = REF_HOVER_CLASS;
-    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hCursor = GetCachedCursor(IDC_ARROW);
     ATOM atom = RegisterClassW(&wc);
     gClassRegistered = atom ? 1 : -1;
     return gClassRegistered > 0;

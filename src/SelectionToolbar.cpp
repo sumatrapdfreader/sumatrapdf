@@ -467,7 +467,7 @@ static void RegisterSelectionToolbarClass() {
     }
     WNDCLASSEX wcex{};
     FillWndClassEx(wcex, WStrL(kSelectionToolbarClassName), WndProcSelectionToolbar);
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClassEx(&wcex);
     registered = true;
 }

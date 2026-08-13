@@ -305,7 +305,7 @@ static void RegisterTabsCtrlClass() {
     wcex.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc = TabsCtrlWindowProc;
     wcex.hInstance = GetInstance();
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wcex.hCursor = GetCachedCursor(IDC_ARROW);
     wcex.lpszClassName = kTabsCtrlClassName.s;
     atom = RegisterClassExW(&wcex);
     ReportIf(!atom);

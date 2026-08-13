@@ -918,22 +918,22 @@ static HCURSOR GetCursorForEdge(DragEdge edge) {
     switch (edge) {
         case DragEdge::Left:
         case DragEdge::Right:
-            return LoadCursor(nullptr, IDC_SIZEWE);
+            return GetCachedCursor(IDC_SIZEWE);
         case DragEdge::Top:
         case DragEdge::Bottom:
-            return LoadCursor(nullptr, IDC_SIZENS);
+            return GetCachedCursor(IDC_SIZENS);
         case DragEdge::TopLeft:
         case DragEdge::BottomRight:
-            return LoadCursor(nullptr, IDC_SIZENWSE);
+            return GetCachedCursor(IDC_SIZENWSE);
         case DragEdge::TopRight:
         case DragEdge::BottomLeft:
-            return LoadCursor(nullptr, IDC_SIZENESW);
+            return GetCachedCursor(IDC_SIZENESW);
         case DragEdge::Move:
-            return LoadCursor(nullptr, IDC_SIZEALL);
+            return GetCachedCursor(IDC_SIZEALL);
         case DragEdge::NewCrop:
-            return LoadCursor(nullptr, IDC_CROSS);
+            return GetCachedCursor(IDC_CROSS);
         default:
-            return LoadCursor(nullptr, IDC_ARROW);
+            return GetCachedCursor(IDC_ARROW);
     }
 }
 

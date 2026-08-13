@@ -153,7 +153,7 @@ void TestPlugin(WStr cmdLine) {
     wc.lpfnWndProc = PluginParentWndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = PLUGIN_TEST_NAME;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClass(&wc);
 
     PluginStartData data = {args[0], args[2], args[1]};

@@ -623,7 +623,7 @@ static void ControlRegisterClass(WStr className) {
     wc.style = CS_DBLCLKS;
     wc.lpszClassName = className.s;
     wc.lpfnWndProc = ControlWindowProc;
-    wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+    wc.hCursor = GetCachedCursor(IDC_ARROW);
     wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
     ::RegisterClassExW(&wc);
 }

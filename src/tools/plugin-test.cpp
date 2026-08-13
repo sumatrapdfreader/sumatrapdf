@@ -120,7 +120,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     wc.lpfnWndProc = PluginParentWndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = PLUGIN_TEST_NAME;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClass(&wc);
 
     PluginStartData data = {argList[1], argList[3], argList[2]};
