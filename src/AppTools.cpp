@@ -9,15 +9,11 @@
 #include "base/Crypto.h"
 
 #include "gui/UIModels.h"
-#include "gui/Layout.h"
-#include "gui/win/WinGui.h"
 
 #include "SumatraConfig.h"
 #include "Translations.h"
 #include "Version.h"
 #include "AppTools.h"
-
-bool NeedsWindowEmbeddingHacks();
 
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
@@ -405,65 +401,6 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
             continue;
         }
         res.Append(e);
-    }
-}
-
-// selects all text in an edit box if it's selected either
-// through a keyboard shortcut or a non-selecting mouse click
-// (or responds to Ctrl+Backspace as nowadays expected)
-bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM /*lp*/) {
-    static bool delaySelectAll = false;
-
-    switch (msg) {
-        case WM_LBUTTONDOWN:
-            delaySelectAll = !HwndIsFocused(hwnd);
-            if (delaySelectAll && NeedsWindowEmbeddingHacks()) {
-                HWND hwndFg = GetForegroundWindow();
-                ThreadId fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
-                ThreadId ourTid = GetCurrentThreadId();
-                bool attached = false;
-                if (fgTid && fgTid != ourTid) {
-                    attached = AttachThreadInput(ourTid, fgTid, TRUE) != 0;
-                }
-                SetFocus(hwnd);
-                if (attached) {
-                    AttachThreadInput(ourTid, fgTid, FALSE);
-                }
-            }
-            return true;
-
-        case WM_LBUTTONUP: {
-            if (delaySelectAll) {
-                DWORD sel = Edit_GetSel(hwnd);
-                if (LOWORD(sel) == HIWORD(sel)) {
-                    PostDelayedEditSelectAll(hwnd);
-                }
-                delaySelectAll = false;
-            }
-            return true;
-        }
-
-        case WM_KILLFOCUS:
-            return false; // for easier debugging (make setting a breakpoint possible)
-
-        case WM_SETFOCUS: {
-            if (!delaySelectAll) {
-                PostDelayedEditSelectAll(hwnd);
-            }
-            return true;
-        }
-
-        case WM_KEYDOWN: {
-            bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed();
-            if (isCtrlBack) {
-                PostDelayedEditCtrlBack(hwnd);
-                return true;
-            }
-            return false;
-        }
-
-        default:
-            return false;
     }
 }
 

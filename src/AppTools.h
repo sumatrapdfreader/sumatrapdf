@@ -37,8 +37,6 @@ TempStr GetPathInAppDataDirTemp(Str fileName);
 
 void DetectTextEditors(Vec<TextEditor*>&);
 
-bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
-
 void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();
 void SaveCallstackLogs();
