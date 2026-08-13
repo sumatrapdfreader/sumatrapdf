@@ -107,11 +107,6 @@ ControlBase::~ControlBase() {
     DeleteBrushSafe(&bgBrush);
 }
 
-// ILayout
-Kind ControlBase::GetKind() {
-    return kind;
-}
-
 void ControlBase::SetText(Str s) {
     if (!s) {
         s = StrL("");
@@ -135,19 +130,6 @@ void ControlBase::SetVisibility(Visibility newVisibility) {
         BOOL bIsVisible = toBOOL(isVisible);
         HwndSetWindowStyle(hwnd, WS_VISIBLE, bIsVisible);
     }
-}
-
-Visibility ControlBase::GetVisibility() {
-    return visibility;
-#if 0
-    if (GetParent(hwnd) == nullptr) {
-        // TODO: what to do for top-level window?
-        CrashMe();
-        return true;
-    }
-    bool isVisible = HwndIsWindowStyleSet(hwnd, WS_VISIBLE);
-    return isVisible;
-#endif
 }
 
 void ControlBase::SetIsVisible(bool isVisible) {

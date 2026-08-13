@@ -43,7 +43,7 @@ constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 namespace {
 
 // status "n / m" keeps a stable slot so the bar doesn't jump as the count changes
-struct FindFixedDx : LayoutBase {
+struct FindFixedDx : ILayout {
     ILayout* child = nullptr;
     int dx = 0;
 

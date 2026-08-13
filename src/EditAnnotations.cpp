@@ -95,7 +95,7 @@ static TempStr GetKnownColorNameTemp(PdfColor c) {
 
 struct EditAnnotationsWindow : WindowBase {
     WindowTab* tab = nullptr;
-    LayoutBase* mainLayout = nullptr;
+    ILayout* mainLayout = nullptr;
 
     VirtListBox* listBox = nullptr;
     VirtText* staticRect = nullptr;
@@ -1819,7 +1819,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
     ew->mainLayout = padding;
     // WindowBase owns and lays out `layout`; mainLayout is the same tree, kept
-    // as a LayoutBase* for its lastBounds
+    // as an ILayout* for its lastBounds
     ew->layout = padding;
     HidePerAnnotControls(ew);
 }

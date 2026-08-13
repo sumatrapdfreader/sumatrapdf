@@ -61,14 +61,24 @@ struct ControlBase;
 class DeferWinPosHelper;
 
 struct ILayout {
+    Kind kind = nullptr;
+    // allows easy way to hide / show elements
+    // without rebuilding the whole layout
+    Visibility visibility = Visibility::Visible;
+    // for easy debugging, remember last bounds
+    Rect lastBounds;
+
+    ILayout() = default;
+    explicit ILayout(Kind);
     virtual ~ILayout() = default;
-    virtual Kind GetKind() = 0;
-    virtual void SetVisibility(Visibility) = 0;
-    virtual Visibility GetVisibility() = 0;
+
+    Kind GetKind() const { return kind; }
+    virtual void SetVisibility(Visibility);
+    virtual Visibility GetVisibility();
     virtual int MinIntrinsicHeight(int width) = 0;
     virtual int MinIntrinsicWidth(int height) = 0;
     virtual Size Layout(Constraints bc) = 0;
-    virtual void SetBounds(Rect) = 0;
+    virtual void SetBounds(Rect);
 
     // walking a layout tree: containers return their children, leaves nothing.
     // Lets code find things in a tree it didn't build (see CollectVirtCtrls())
@@ -82,23 +92,6 @@ struct ILayout {
 };
 
 bool IsCollapsed(ILayout*);
-
-struct LayoutBase : ILayout {
-    Kind kind = nullptr;
-    // allows easy way to hide / show elements
-    // without rebuilding the whole layout
-    Visibility visibility = Visibility::Visible;
-    // for easy debugging, remember last bounds
-    Rect lastBounds;
-
-    LayoutBase() = default;
-    explicit LayoutBase(Kind);
-
-    Kind GetKind() override;
-    void SetVisibility(Visibility) override;
-    Visibility GetVisibility() override;
-    void SetBounds(Rect) override;
-};
 
 bool IsLayoutOfKind(ILayout*, Kind);
 
@@ -116,7 +109,7 @@ Insets DpiScaledInsets(int uniform);
 Insets DpiScaledInsets(int topBottom, int leftRight);
 Insets DpiScaledInsets(int top, int right, int bottom, int left);
 
-struct Padding : LayoutBase {
+struct Padding : ILayout {
     ILayout* child = nullptr;
     Insets insets{};
     Size childSize;
@@ -172,7 +165,7 @@ struct boxElementInfo {
     int flex = 0;
 };
 
-struct VBox : LayoutBase {
+struct VBox : ILayout {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
@@ -200,7 +193,7 @@ struct VBox : LayoutBase {
 
 // hbox.go
 
-struct HBox : LayoutBase {
+struct HBox : ILayout {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
@@ -238,7 +231,7 @@ constexpr Alignment AlignStart = -32768;
 constexpr Alignment AlignCenter = 0;
 constexpr Alignment AlignEnd = 0x7fff;
 
-struct Align : LayoutBase {
+struct Align : ILayout {
     Alignment HAlign = AlignStart; // Horizontal alignment of child widget.
     Alignment VAlign = AlignStart; // Vertical alignment of child widget.
     float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
@@ -259,7 +252,7 @@ struct Align : LayoutBase {
 };
 
 // spacer can be used for spacing between elements
-struct Spacer : LayoutBase {
+struct Spacer : ILayout {
     int dx = 0;
     int dy = 0;
 
@@ -275,7 +268,7 @@ struct Spacer : LayoutBase {
 
 // MoveWindow of an HWND that is not itself an ILayout (frame canvas, lazy webview).
 // lastBounds is always recorded, so a null hwnd still works as a measured slot.
-struct HwndSlot : LayoutBase {
+struct HwndSlot : ILayout {
     HWND hwnd = nullptr;
     // if set, SetBounds batches the move through this helper (not owned)
     DeferWinPosHelper* winPos = nullptr;
@@ -304,7 +297,7 @@ struct OverlayChild {
 };
 
 // children share one box (a z-stack). Sized to the largest child.
-struct Overlay : LayoutBase {
+struct Overlay : ILayout {
     Vec<OverlayChild> children;
 
     Overlay();
@@ -325,7 +318,7 @@ struct Overlay : LayoutBase {
 
 // HBox that wraps onto the next row when children do not fit the available width.
 // Flex is applied per row. rtl places each row right-to-left.
-struct Wrap : LayoutBase {
+struct Wrap : ILayout {
     Vec<boxElementInfo> children;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
     bool rtl = false;
@@ -379,7 +372,7 @@ struct TableCell {
 
 // a grid of rows x cols cells. A column is as wide as its widest cell and a row
 // as tall as its tallest; a cell can span several rows and / or columns
-struct Table : LayoutBase {
+struct Table : ILayout {
     int rows = 0;
     int cols = 0;
     // space between adjacent columns / rows

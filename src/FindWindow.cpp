@@ -56,7 +56,7 @@ constexpr int kFindWinMinEditDx = 48;
 namespace {
 
 // status "n / m" keeps a stable slot on the wide row and can flex on the wrap row
-struct FindFixedDx : LayoutBase {
+struct FindFixedDx : ILayout {
     ILayout* child = nullptr;
     int dx = 0;
 

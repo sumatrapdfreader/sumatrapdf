@@ -2462,7 +2462,7 @@ Size VirtSpacer::GetIdealSize() {
 // must be last: UtAssert.h over-writes assert()
 #include "base/UtAssert.h"
 
-// Unit tests for Table (LayoutBase grid). VirtSpacer is the leaf: a fixed
+// Unit tests for Table (ILayout grid). VirtSpacer is the leaf: a fixed
 // ideal size and no HWND, so a whole table can be laid out and its geometry
 // asserted. CollectVirtCtrls finds the cell VirtCtrls as tops.
 

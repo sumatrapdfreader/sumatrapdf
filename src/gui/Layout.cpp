@@ -278,23 +278,19 @@ Constraints Constraints::TightenWidth(int width) const {
     return bc;
 }
 
-LayoutBase::LayoutBase(Kind k) {
+ILayout::ILayout(Kind k) {
     kind = k;
 }
 
-Kind LayoutBase::GetKind() {
-    return kind;
-}
-
-void LayoutBase::SetVisibility(Visibility newVisibility) {
+void ILayout::SetVisibility(Visibility newVisibility) {
     visibility = newVisibility;
 }
 
-Visibility LayoutBase::GetVisibility() {
+Visibility ILayout::GetVisibility() {
     return visibility;
 }
 
-void LayoutBase::SetBounds(Rect bounds) {
+void ILayout::SetBounds(Rect bounds) {
     lastBounds = bounds;
 }
 

@@ -109,7 +109,7 @@ using VirtFocusHandler = Func1<VirtFocusEvent*>;
 using VirtTooltipHandler = Func1<VirtTooltipEvent*>;
 using VirtPaintHandler = Func1<VirtPaintCtx*>;
 
-struct VirtCtrl : LayoutBase {
+struct VirtCtrl : ILayout {
     VirtCtrl* parent = nullptr;
     VirtRoot* root = nullptr;
     Vec<VirtCtrl*> children; // owned

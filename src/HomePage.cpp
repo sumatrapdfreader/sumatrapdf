@@ -245,7 +245,7 @@ static AboutRow gAboutRows[] = {
 #endif
     {nullptr, nullptr, nullptr}};
 
-// The About screen's two text columns: a Table (LayoutBase) whose left column
+// The About screen's two text columns: a Table (ILayout) whose left column
 // is right-aligned and right column left-aligned. Rows with a url become
 // VirtLink (owning the hit-testing, the hand cursor and the tooltip), the rest
 // plain VirtText. Table is pure layout; AboutCtrl paints and hit-tests the

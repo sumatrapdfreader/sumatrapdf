@@ -457,9 +457,7 @@ struct ControlBase : ILayout {
     // layout sizing (kept virtual: subclasses measure differently)
     virtual Size GetIdealSize();
 
-    Kind GetKind() override;
     void SetVisibility(Visibility) override;
-    Visibility GetVisibility() override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     Size Layout(Constraints bc) override;
@@ -507,15 +505,10 @@ struct ControlBase : ILayout {
 
     HBRUSH BackgroundBrush();
 
-    Kind kind = nullptr;
     uintptr_t userData = 0;
 
     Insets insets{};
     Size childSize;
-    Rect lastBounds;
-
-    // data that can be set before calling Create()
-    Visibility visibility{Visibility::Visible};
 
     HWND hwnd = nullptr;
     HFONT font = nullptr; // we don't own it
