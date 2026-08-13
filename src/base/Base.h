@@ -77,8 +77,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-// Windows headers use _unused
+// Windows-only: glibc pthread structs have a field named __unused, so this
+// cannot be a macro on Linux/macOS.
+#if OS_WIN
 #define __unused [[maybe_unused]]
+#endif
 
 // C/C++ standard headers  we use often
 #include <cctype>

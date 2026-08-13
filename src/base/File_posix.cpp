@@ -395,7 +395,7 @@ bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress
         }
 
         copied += nRead;
-        if (!cbProgress.IsEmpty()) {
+        if (cbProgress.IsValid()) {
             CopyProgress progress{copied, total < 0 ? 0 : total};
             cbProgress.Call(&progress);
         }
