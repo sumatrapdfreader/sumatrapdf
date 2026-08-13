@@ -15,10 +15,10 @@
 #include "base/LzmaSimpleArchive.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
-#include "wingui/WebView.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/win/WebView.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"

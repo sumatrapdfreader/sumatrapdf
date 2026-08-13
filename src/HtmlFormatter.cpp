@@ -11,8 +11,8 @@
 #include "GumboHtmlParser.h"
 #include "ImageReader.h"
 
-#include "wingui/PlatformFont.h"
-#include "wingui/PlatformText.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "HtmlFormatter.h"
 
 #if OS_WIN

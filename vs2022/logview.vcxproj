@@ -958,31 +958,31 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\wingui\Gfx.h" />
-    <ClInclude Include="..\src\wingui\Layout.h" />
-    <ClInclude Include="..\src\wingui\PlatformFont.h" />
-    <ClInclude Include="..\src\wingui\PlatformText.h" />
-    <ClInclude Include="..\src\wingui\UIModels.h" />
-    <ClInclude Include="..\src\wingui\VirtCtrl.h" />
+    <ClInclude Include="..\src\gui\Gfx.h" />
+    <ClInclude Include="..\src\gui\Layout.h" />
+    <ClInclude Include="..\src\gui\PlatformFont.h" />
+    <ClInclude Include="..\src\gui\PlatformText.h" />
+    <ClInclude Include="..\src\gui\UIModels.h" />
+    <ClInclude Include="..\src\gui\VirtCtrl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
+    <ClCompile Include="..\src\gui\Gfx_win.cpp" />
+    <ClCompile Include="..\src\gui\Layout.cpp" />
+    <ClCompile Include="..\src\gui\PlatformFont.cpp" />
+    <ClCompile Include="..\src\gui\PlatformFont_win.cpp" />
+    <ClCompile Include="..\src\gui\PlatformText.cpp" />
+    <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
+    <ClCompile Include="..\src\gui\UIModels.cpp" />
+    <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
+    <ClCompile Include="..\src\gui\win\ControlBase.cpp" />
+    <ClCompile Include="..\src\gui\win\Edit.cpp" />
+    <ClCompile Include="..\src\gui\win\Tooltip.cpp" />
+    <ClCompile Include="..\src\gui\win\WindowBase.cpp" />
     <ClCompile Include="..\src\tools\logview\logview.cpp" />
-    <ClCompile Include="..\src\wingui\ControlBase.cpp" />
-    <ClCompile Include="..\src\wingui\Edit.cpp" />
-    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp" />
-    <ClCompile Include="..\src\wingui\Gfx_win.cpp" />
-    <ClCompile Include="..\src\wingui\Layout.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformFont.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformText.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformText_win.cpp" />
-    <ClCompile Include="..\src\wingui\Tooltip.cpp" />
-    <ClCompile Include="..\src\wingui\UIModels.cpp" />
-    <ClCompile Include="..\src\wingui\VirtCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\WindowBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="base.vcxproj">

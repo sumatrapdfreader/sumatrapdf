@@ -7,7 +7,7 @@
 #include "base/File.h"
 #include "base/Zip.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"

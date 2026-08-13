@@ -7,7 +7,7 @@
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -25,7 +25,7 @@
 #include "Translations.h"
 #include "MarkdownModel.h"
 #include "TableOfContents.h"
-#include "wingui/BrowserDocView.h"
+#include "gui/win/BrowserDocView.h"
 
 #include <chm.h>
 #include "EbookBase.h"

@@ -6,10 +6,10 @@
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/BitManip.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "AppSettings.h"

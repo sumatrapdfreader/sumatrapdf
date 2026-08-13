@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "wingui/DialogSizer.h"
+#include "gui/win/DialogSizer.h"
 #include "base/Win.h"
 
 #include "Settings.h"

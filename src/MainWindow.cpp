@@ -7,19 +7,19 @@
 #include <mmsystem.h>
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/GuessFileType.h"
 #include "base/UITask.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
 
-#include "wingui/PlatformFont.h"
-#include "wingui/Gfx.h"
-#include "wingui/VirtCtrl.h"
-#include "wingui/TabsCtrl.h"
-#include "wingui/FrameRateWnd.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
+#include "gui/win/TabsCtrl.h"
+#include "gui/win/FrameRateWnd.h"
 
 #include "Settings.h"
 #include "DocController.h"

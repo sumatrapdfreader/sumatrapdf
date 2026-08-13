@@ -5,11 +5,11 @@
 
 #if defined(DEBUG)
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/PlatformFont.h"
-#include "wingui/Gfx.h"
-#include "wingui/VirtCtrl.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 #include "Commands.h"
 
 #if defined(DEBUG)

@@ -1264,6 +1264,19 @@
     <ClInclude Include="..\src\WindowTab.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\UtAssert.h" />
+    <ClInclude Include="..\src\gui\Gfx.h" />
+    <ClInclude Include="..\src\gui\Layout.h" />
+    <ClInclude Include="..\src\gui\PlatformFont.h" />
+    <ClInclude Include="..\src\gui\PlatformText.h" />
+    <ClInclude Include="..\src\gui\UIModels.h" />
+    <ClInclude Include="..\src\gui\VirtCtrl.h" />
+    <ClInclude Include="..\src\gui\win\BrowserDocView.h" />
+    <ClInclude Include="..\src\gui\win\DialogSizer.h" />
+    <ClInclude Include="..\src\gui\win\FrameRateWnd.h" />
+    <ClInclude Include="..\src\gui\win\HtmlWindow.h" />
+    <ClInclude Include="..\src\gui\win\TabsCtrl.h" />
+    <ClInclude Include="..\src\gui\win\WebView.h" />
+    <ClInclude Include="..\src\gui\win\WinGui.h" />
     <ClInclude Include="..\src\resource.h" />
     <ClInclude Include="..\src\testcode\test-app.h" />
     <ClInclude Include="..\src\uia\DocumentProvider.h" />
@@ -1271,19 +1284,6 @@
     <ClInclude Include="..\src\uia\Provider.h" />
     <ClInclude Include="..\src\uia\StartPageProvider.h" />
     <ClInclude Include="..\src\uia\TextRange.h" />
-    <ClInclude Include="..\src\wingui\BrowserDocView.h" />
-    <ClInclude Include="..\src\wingui\DialogSizer.h" />
-    <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
-    <ClInclude Include="..\src\wingui\Gfx.h" />
-    <ClInclude Include="..\src\wingui\HtmlWindow.h" />
-    <ClInclude Include="..\src\wingui\Layout.h" />
-    <ClInclude Include="..\src\wingui\PlatformFont.h" />
-    <ClInclude Include="..\src\wingui\PlatformText.h" />
-    <ClInclude Include="..\src\wingui\TabsCtrl.h" />
-    <ClInclude Include="..\src\wingui\UIModels.h" />
-    <ClInclude Include="..\src\wingui\VirtCtrl.h" />
-    <ClInclude Include="..\src\wingui\WebView.h" />
-    <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp">
@@ -1692,6 +1692,31 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
+    <ClCompile Include="..\src\gui\Gfx_win.cpp" />
+    <ClCompile Include="..\src\gui\Layout.cpp" />
+    <ClCompile Include="..\src\gui\PlatformFont.cpp" />
+    <ClCompile Include="..\src\gui\PlatformFont_win.cpp" />
+    <ClCompile Include="..\src\gui\PlatformText.cpp" />
+    <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
+    <ClCompile Include="..\src\gui\UIModels.cpp" />
+    <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
+    <ClCompile Include="..\src\gui\win\BrowserDocView.cpp" />
+    <ClCompile Include="..\src\gui\win\Button.cpp" />
+    <ClCompile Include="..\src\gui\win\Checkbox.cpp" />
+    <ClCompile Include="..\src\gui\win\ControlBase.cpp" />
+    <ClCompile Include="..\src\gui\win\DialogSizer.cpp" />
+    <ClCompile Include="..\src\gui\win\DropDown.cpp" />
+    <ClCompile Include="..\src\gui\win\Edit.cpp" />
+    <ClCompile Include="..\src\gui\win\FrameRateWnd.cpp" />
+    <ClCompile Include="..\src\gui\win\HtmlWindow.cpp" />
+    <ClCompile Include="..\src\gui\win\Progress.cpp" />
+    <ClCompile Include="..\src\gui\win\TabsCtrl.cpp" />
+    <ClCompile Include="..\src\gui\win\Tooltip.cpp" />
+    <ClCompile Include="..\src\gui\win\Trackbar.cpp" />
+    <ClCompile Include="..\src\gui\win\TreeView.cpp" />
+    <ClCompile Include="..\src\gui\win\WebView.cpp" />
+    <ClCompile Include="..\src\gui\win\WindowBase.cpp" />
     <ClCompile Include="..\src\regress\Regress.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -1737,31 +1762,6 @@
     <ClCompile Include="..\src\uia\Provider.cpp" />
     <ClCompile Include="..\src\uia\StartPageProvider.cpp" />
     <ClCompile Include="..\src\uia\TextRange.cpp" />
-    <ClCompile Include="..\src\wingui\BrowserDocView.cpp" />
-    <ClCompile Include="..\src\wingui\Button.cpp" />
-    <ClCompile Include="..\src\wingui\Checkbox.cpp" />
-    <ClCompile Include="..\src\wingui\ControlBase.cpp" />
-    <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
-    <ClCompile Include="..\src\wingui\DropDown.cpp" />
-    <ClCompile Include="..\src\wingui\Edit.cpp" />
-    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
-    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp" />
-    <ClCompile Include="..\src\wingui\Gfx_win.cpp" />
-    <ClCompile Include="..\src\wingui\HtmlWindow.cpp" />
-    <ClCompile Include="..\src\wingui\Layout.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformFont.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformText.cpp" />
-    <ClCompile Include="..\src\wingui\PlatformText_win.cpp" />
-    <ClCompile Include="..\src\wingui\Progress.cpp" />
-    <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\Tooltip.cpp" />
-    <ClCompile Include="..\src\wingui\Trackbar.cpp" />
-    <ClCompile Include="..\src\wingui\TreeView.cpp" />
-    <ClCompile Include="..\src\wingui\UIModels.cpp" />
-    <ClCompile Include="..\src\wingui\VirtCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\WebView.cpp" />
-    <ClCompile Include="..\src\wingui\WindowBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc" />

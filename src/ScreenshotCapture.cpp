@@ -11,11 +11,11 @@
 #include "base/WinDynCalls.h" // DWM corner prefs shim for mingw-w64 < 12
 #include <dwmapi.h>
 #include "base/Win.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/Timer.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
 
 #include "ImageSaveCropResize.h"
 #include "ScreenshotCapture.h"

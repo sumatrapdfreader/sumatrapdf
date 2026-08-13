@@ -8,7 +8,7 @@
 #include "base/TgaReader.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "Flags.h"

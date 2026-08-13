@@ -25,6 +25,12 @@
     <Filter Include="src\base\tests">
       <UniqueIdentifier>{19604212-052E-3618-EEC1-A63EDA2E127D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\gui">
+      <UniqueIdentifier>{210530A9-8DE4-AE44-96FC-391B025B15A6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\gui\win">
+      <UniqueIdentifier>{9E7B1B1E-0A31-9413-9325-8EEAFFD98A17}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\regress">
       <UniqueIdentifier>{F7CE8947-6384-023D-EC78-FC13582DF940}</UniqueIdentifier>
     </Filter>
@@ -33,9 +39,6 @@
     </Filter>
     <Filter Include="src\uia">
       <UniqueIdentifier>{1B3F30A9-871E-AF44-9036-3A1BFC9415A6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\wingui">
-      <UniqueIdentifier>{0FE57D82-FB9C-BFCF-64A4-982B507B5AC0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -441,6 +444,45 @@
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>src\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\Gfx.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\Layout.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\PlatformFont.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\PlatformText.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\UIModels.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\VirtCtrl.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\win\BrowserDocView.h">
+      <Filter>src\gui\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\win\DialogSizer.h">
+      <Filter>src\gui\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\win\FrameRateWnd.h">
+      <Filter>src\gui\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\win\HtmlWindow.h">
+      <Filter>src\gui\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\win\TabsCtrl.h">
+      <Filter>src\gui\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\win\WebView.h">
+      <Filter>src\gui\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\win\WinGui.h">
+      <Filter>src\gui\win</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\resource.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -461,45 +503,6 @@
     </ClInclude>
     <ClInclude Include="..\src\uia\TextRange.h">
       <Filter>src\uia</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\BrowserDocView.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\DialogSizer.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\FrameRateWnd.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\Gfx.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\HtmlWindow.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\Layout.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\PlatformFont.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\PlatformText.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\TabsCtrl.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\UIModels.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\VirtCtrl.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\WebView.h">
-      <Filter>src\wingui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\wingui\WinGui.h">
-      <Filter>src\wingui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1052,6 +1055,81 @@
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Gfx_win.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Layout.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformFont.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformFont_win.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText_win.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\UIModels.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\VirtCtrl.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\BrowserDocView.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Button.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Checkbox.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\ControlBase.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\DialogSizer.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\DropDown.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Edit.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\FrameRateWnd.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\HtmlWindow.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Progress.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\TabsCtrl.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Tooltip.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Trackbar.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\TreeView.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\WebView.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\WindowBase.cpp">
+      <Filter>src\gui\win</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\regress\Regress.cpp">
       <Filter>src\regress</Filter>
     </ClCompile>
@@ -1078,81 +1156,6 @@
     </ClCompile>
     <ClCompile Include="..\src\uia\TextRange.cpp">
       <Filter>src\uia</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\BrowserDocView.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Button.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Checkbox.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\ControlBase.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\DialogSizer.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\DropDown.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Edit.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Gfx_win.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\HtmlWindow.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Layout.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformFont.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformText.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformText_win.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Progress.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\TabsCtrl.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Tooltip.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Trackbar.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\TreeView.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\UIModels.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\VirtCtrl.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\WebView.cpp">
-      <Filter>src\wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\WindowBase.cpp">
-      <Filter>src\wingui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

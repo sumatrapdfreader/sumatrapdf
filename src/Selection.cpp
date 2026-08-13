@@ -4,11 +4,11 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include <uiautomationcore.h>
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"

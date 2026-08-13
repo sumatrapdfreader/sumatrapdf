@@ -978,7 +978,6 @@
     <ClInclude Include="..\src\base\DbgHelpDyn.h" />
     <ClInclude Include="..\src\base\Dict.h" />
     <ClInclude Include="..\src\base\DirScan.h" />
-    <ClInclude Include="..\src\base\Dpi.h" />
     <ClInclude Include="..\src\base\File.h" />
     <ClInclude Include="..\src\base\FileWatcher.h" />
     <ClInclude Include="..\src\base\Geom.h" />
@@ -1001,6 +1000,7 @@
     <ClInclude Include="..\src\base\Vec.h" />
     <ClInclude Include="..\src\base\Win.h" />
     <ClInclude Include="..\src\base\WinDynCalls.h" />
+    <ClInclude Include="..\src\gui\Dpi.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp">
@@ -1035,7 +1035,6 @@
     <ClCompile Include="..\src\base\Dict.cpp" />
     <ClCompile Include="..\src\base\DirScan.cpp" />
     <ClCompile Include="..\src\base\DirScan_win.cpp" />
-    <ClCompile Include="..\src\base\Dpi_win.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\FileWatcher.cpp" />
     <ClCompile Include="..\src\base\File_win.cpp" />
@@ -1073,6 +1072,7 @@
     <ClCompile Include="..\src\base\tests\Str_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Vec_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Win_ut.cpp" />
+    <ClCompile Include="..\src\gui\Dpi_win.cpp" />
     <ClCompile Include="..\src\tools\test_util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

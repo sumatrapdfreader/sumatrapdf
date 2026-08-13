@@ -7,10 +7,10 @@
 #include "base/SquareTreeParser.h"
 #include "base/UITask.h"
 #include "base/Win.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/Timer.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "Commands.h"

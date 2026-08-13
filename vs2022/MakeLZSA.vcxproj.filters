@@ -19,6 +19,9 @@
     <Filter Include="src\base">
       <UniqueIdentifier>{F7972DCF-E364-88DA-0C7E-7682F8A9BD68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\gui">
+      <UniqueIdentifier>{210530A9-8DE4-AE44-96FC-391B025B15A6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\tools">
       <UniqueIdentifier>{8DED2DB6-F957-E22C-4296-93D2AE3FC081}</UniqueIdentifier>
     </Filter>
@@ -43,9 +46,6 @@
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\DirScan.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Dpi.h">
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\File.h">
@@ -89,6 +89,9 @@
     </ClInclude>
     <ClInclude Include="..\src\base\WinDynCalls.h">
       <Filter>src\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\Dpi.h">
+      <Filter>src\gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -140,9 +143,6 @@
     <ClCompile Include="..\src\base\DirScan_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Dpi_win.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\File.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -187,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
       <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Dpi_win.cpp">
+      <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">
       <Filter>src\tools</Filter>

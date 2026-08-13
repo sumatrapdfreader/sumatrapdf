@@ -8,9 +8,9 @@
 #include "base/Win.h"
 #include "base/Crypto.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
 
 #include "SumatraConfig.h"
 #include "Translations.h"

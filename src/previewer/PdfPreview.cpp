@@ -7,10 +7,10 @@
 #include "base/ScopedWin.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
-#include "wingui/PlatformFont.h"
-#include "wingui/PlatformText.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"

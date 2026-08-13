@@ -12,8 +12,8 @@ class Graphics;
 } // namespace Gdiplus
 #endif
 
-// PlatformFont / PlatformFontStyle live in wingui/PlatformFont.h and the text
-// measuring API in wingui/PlatformText.h; include them before this header
+// PlatformFont / PlatformFontStyle live in gui/PlatformFont.h and the text
+// measuring API in gui/PlatformText.h; include them before this header
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.

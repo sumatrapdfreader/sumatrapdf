@@ -117,8 +117,8 @@ function winver_defines()
   -- winver_latest_defines()
 end
 
--- WebView2 (manual viewer, SimpleBrowserWindow, BrowserDocView). wingui/*.cpp is
--- included via wingui_files() in premake5.files.lua.
+-- WebView2 (manual viewer, SimpleBrowserWindow, BrowserDocView). gui/*.cpp is
+-- included via gui_files() in premake5.files.lua.
 function webview_conf()
   includedirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/include" }
   filter "platforms:x86"
@@ -1229,7 +1229,7 @@ workspace "SumatraPDF"
     filter { "configurations:Debug" }
     defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
     filter {}
-    includedirs { "src", "src/wingui", "mupdf/include", "ext/libarchive" }
+    includedirs { "src", "src/gui", "mupdf/include", "ext/libarchive" }
     search_filter_files()
     -- libarchive + unrar live in libsumatrapdf.dll (re-exported); do not link second copies
     links { "base", "libsumatrapdf" }
@@ -1241,7 +1241,7 @@ workspace "SumatraPDF"
   --   cppdialect "C++latest"
   --   mixed_dbg_rel_conf()
   --   disablewarnings { "4100", "4838" }
-  --   includedirs { "src", "src/wingui" }
+  --   includedirs { "src", "src/gui" }
   --   search_filter2_files()
   --   links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
@@ -1252,7 +1252,7 @@ workspace "SumatraPDF"
   --   mixed_dbg_rel_conf()
   --   disablewarnings { "4100", "4838" }
   --   includedirs {
-  --     "src", "src/wingui"
+  --     "src", "src/gui"
   --   }
   --   pdf_preview2_files()
   --   links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
@@ -1268,7 +1268,7 @@ workspace "SumatraPDF"
     -- image codecs (webp/jxl/heic/dav1d) live in libsumatrapdf.dll and are imported
     -- via libsumatrapdf.def; only headers are needed here to compile the readers.
     includedirs {
-      "src", "src/wingui", "mupdf/include",
+      "src", "src/gui", "mupdf/include",
       "ext/djvudec", "ext/chmdec",
       "ext/libarchive",
       "ext/heicdec", "ext/libwebp/src", "ext/jxldec",
@@ -1316,7 +1316,7 @@ workspace "SumatraPDF"
     filter {}
 
     synctex_files()
-    wingui_files()
+    gui_files()
     uia_files()
     engines_files()
     sumatrapdf_files()
@@ -1415,7 +1415,7 @@ workspace "SumatraPDF"
     darkmodelib_files()
 
     synctex_files()
-    wingui_files()
+    gui_files()
     uia_files()
     engines_files()
     sumatrapdf_files()

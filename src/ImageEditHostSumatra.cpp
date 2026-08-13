@@ -11,9 +11,9 @@
 #include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
 
 #include "ImageReader.h"
 #include "SumatraConfig.h"

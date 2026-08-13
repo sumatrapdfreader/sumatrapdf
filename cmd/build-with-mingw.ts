@@ -130,8 +130,6 @@ const utils: LibDef = {
         "DirScan.h",
         "DirScan.cpp",
         "DirScan_win.cpp",
-        "Dpi.h",
-        "Dpi_win.cpp",
         "Exif.*",
         "Geom.*",
         "GuessFileType.*",
@@ -173,6 +171,10 @@ const utils: LibDef = {
         "Zip.*",
       ],
     },
+    {
+      dir: "src/gui",
+      patterns: ["Dpi_win.cpp"],
+    },
     // LzSA decoder (LzmaDecode + x86 BCJ). Bra.c not needed.
     {
       dir: "ext/lzma/C",
@@ -185,7 +187,7 @@ const utils: LibDef = {
 const utilsDebugExtra: FileGroup[] = [];
 
 // SumatraPDF main executable sources (mixed debug/release)
-// Combines: darkmodelib_files, synctex_files, mui_files, wingui_files,
+// Combines: darkmodelib_files, synctex_files, mui_files, gui_files,
 // uia_files, engines_files, sumatrapdf_files
 const sumatraFiles: FileGroup[] = [
   // darkmodelib
@@ -210,8 +212,23 @@ const sumatraFiles: FileGroup[] = [
   },
   // mui
   { dir: "src/mui", patterns: ["Mui.cpp", "TextRender.cpp"] },
-  // wingui
-  { dir: "src/wingui", patterns: ["*.cpp"] },
+  // gui (portable + Windows). Dpi_win.cpp lives in src/gui but is compiled
+  // into the base/utils lib because Win.cpp calls it.
+  {
+    dir: "src/gui",
+    patterns: [
+      "Gfx_win.cpp",
+      "GfxGdiplus_win.cpp",
+      "Layout.cpp",
+      "PlatformFont.cpp",
+      "PlatformFont_win.cpp",
+      "PlatformText.cpp",
+      "PlatformText_win.cpp",
+      "UIModels.cpp",
+      "VirtCtrl.cpp",
+    ],
+  },
+  { dir: "src/gui/win", patterns: ["*.cpp"] },
   // uia
   {
     dir: "src/uia",

@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 extern "C" {
 #include <mupdf/fitz.h>

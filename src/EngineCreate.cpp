@@ -5,10 +5,10 @@
 #include "base/Crypto.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/Timer.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "SumatraPDF.h"

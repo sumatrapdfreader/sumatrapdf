@@ -9,10 +9,10 @@
 #include "base/File.h"
 #include "base/Crypto.h"
 
-#include "wingui/Layout.h"
-#include "wingui/UIModels.h"
-#include "wingui/WinGui.h"
-#include "wingui/WebView.h"
+#include "gui/Layout.h"
+#include "gui/UIModels.h"
+#include "gui/win/WinGui.h"
+#include "gui/win/WebView.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"

@@ -3,10 +3,10 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 
-#include "wingui/PlatformFont.h"
-#include "wingui/Gfx.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
 
 #include "Theme.h"
 #include "FilterHighlightDraw.h"

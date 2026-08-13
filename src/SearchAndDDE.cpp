@@ -7,7 +7,7 @@
 #include "base/UITask.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"

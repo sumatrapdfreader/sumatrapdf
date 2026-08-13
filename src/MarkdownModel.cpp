@@ -9,9 +9,9 @@
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 
-#include "wingui/HtmlWindow.h"
-#include "wingui/BrowserDocView.h"
-#include "wingui/UIModels.h"
+#include "gui/win/HtmlWindow.h"
+#include "gui/win/BrowserDocView.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"

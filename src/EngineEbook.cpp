@@ -6,7 +6,7 @@
 
 #include "base/Base.h"
 #include "base/Archive.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/File.h"
 #include "base/HtmlTags.h"
 #include "base/Pixmap.h"
@@ -21,8 +21,8 @@
 #include "EbookBase.h"
 #include "PalmDbReader.h"
 #include "EbookDoc.h"
-#include "wingui/PlatformFont.h"
-#include "wingui/PlatformText.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 

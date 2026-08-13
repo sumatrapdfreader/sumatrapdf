@@ -16,6 +16,9 @@
     <Filter Include="src\base">
       <UniqueIdentifier>{F7972DCF-E364-88DA-0C7E-7682F8A9BD68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\gui">
+      <UniqueIdentifier>{210530A9-8DE4-AE44-96FC-391B025B15A6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\base\Archive.h">
@@ -49,9 +52,6 @@
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\DirScan.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Dpi.h">
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Exif.h">
@@ -141,6 +141,9 @@
     <ClInclude Include="..\src\base\Zip.h">
       <Filter>src\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\Dpi.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\lzma\C\Bra86.c">
@@ -195,9 +198,6 @@
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\DirScan_win.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Dpi_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Exif.cpp">
@@ -289,6 +289,9 @@
     </ClCompile>
     <ClCompile Include="..\src\base\Zip.cpp">
       <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Dpi_win.cpp">
+      <Filter>src\gui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

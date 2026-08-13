@@ -9,12 +9,12 @@
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
-#include "wingui/PlatformFont.h"
-#include "wingui/PlatformText.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "base/Win.h"
 #include "base/Zip.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocProperties.h"
 #include "DocController.h"

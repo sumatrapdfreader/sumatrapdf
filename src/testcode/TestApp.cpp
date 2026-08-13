@@ -1,13 +1,13 @@
 #include "base/Base.h"
 
 #include "base/Win.h"
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
-#include "wingui/PlatformFont.h"
-#include "wingui/Gfx.h"
-#include "wingui/VirtCtrl.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 
 // in TestTab.cpp
 extern int TestTab(int nCmdShow);

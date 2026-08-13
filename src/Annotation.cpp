@@ -9,7 +9,7 @@ extern "C" {
 #include <mupdf/pdf.h>
 }
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Annotation.h"
 #include "Settings.h"

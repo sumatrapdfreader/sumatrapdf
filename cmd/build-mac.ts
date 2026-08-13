@@ -452,7 +452,6 @@ const DEP_LIBS_BASE = [
           "DbgHelpDyn_posix.cpp",
           "DirScan.cpp",
           "DirScan_posix.cpp",
-          "Dpi_posix.cpp",
           "Exif.cpp",
           "File.cpp",
           "File_posix.cpp",
@@ -478,6 +477,10 @@ const DEP_LIBS_BASE = [
           "Strconv.cpp",
           "TgaReader.cpp",
         ],
+      },
+      {
+        dir: "src/gui",
+        patterns: ["Dpi_posix.cpp"],
       },
     ],
   },

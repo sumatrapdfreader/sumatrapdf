@@ -23,8 +23,6 @@ function makelzsa_files()
     "DirScan.h",
     "DirScan.cpp",
     "DirScan_win.cpp",
-    "Dpi.h",
-    "Dpi_win.cpp",
     "File.h",
     "File.cpp",
     "File_win.cpp",
@@ -43,6 +41,10 @@ function makelzsa_files()
     "WinDynCalls.h",
     "WinDynCalls_win.cpp",
     "Win.*",
+  })
+  files_in_dir("src/gui", {
+    "Dpi.h",
+    "Dpi_win.cpp",
   })
 
   -- LZMA files needed by LzmaSimpleArchive (decode) and MakeLzSA.cpp (encode)
@@ -800,8 +802,6 @@ function base_files()
     "DirScan.h",
     "DirScan.cpp",
     "DirScan_win.cpp",
-    "Dpi.h",
-    "Dpi_win.cpp",
     "Exif.*",
     "File.h",
     "File.cpp",
@@ -843,10 +843,26 @@ function base_files()
     "Win.*",
     "Zip.*",
   })
+  files_in_dir("src/gui", {
+    "Dpi.h",
+    "Dpi_win.cpp",
+  })
 end
 
-function wingui_files()
-  files_in_dir("src/wingui", {
+function gui_files()
+  files_in_dir("src/gui", {
+    "Gfx.h",
+    "Gfx_win.cpp",
+    "GfxGdiplus_win.cpp",
+    "Layout.*",
+    "PlatformFont.*",
+    "PlatformFont_win.*",
+    "PlatformText.*",
+    "PlatformText_win.*",
+    "UIModels.*",
+    "VirtCtrl.*",
+  })
+  files_in_dir("src/gui/win", {
     "*.h",
     "*.cpp",
   })
@@ -1251,8 +1267,6 @@ function test_util_files()
     "DirScan.h",
     "DirScan.cpp",
     "DirScan_win.cpp",
-    "Dpi.h",
-    "Dpi_win.cpp",
     "File.h",
     "File.cpp",
     "File_win.cpp",
@@ -1280,6 +1294,10 @@ function test_util_files()
     "WinDynCalls.h",
     "WinDynCalls_win.cpp",
     "Win.*",
+  })
+  files_in_dir("src/gui", {
+    "Dpi.h",
+    "Dpi_win.cpp",
   })
   files_in_dir("src", {
     --"AppTools.*",
@@ -1362,14 +1380,10 @@ function logview_files()
   files {
     "src/tools/logview/logview.cpp",
   }
-  -- the subset of wingui logview's UI needs (no tree view, tabs, web view, ...)
-  files_in_dir("src/wingui", {
+  -- the subset of gui logview's UI needs (no tree view, tabs, web view, ...)
+  files_in_dir("src/gui", {
     "UIModels.*",
     "Layout.*",
-    "WindowBase.*",
-    "ControlBase.*",
-    "Edit.*",
-    "Tooltip.*",
     "PlatformFont.*",
     "PlatformFont_win.*",
     "PlatformText.*",
@@ -1378,6 +1392,12 @@ function logview_files()
     "Gfx_win.cpp",
     "GfxGdiplus_win.cpp",
     "VirtCtrl.*",
+  })
+  files_in_dir("src/gui/win", {
+    "WindowBase.*",
+    "ControlBase.*",
+    "Edit.*",
+    "Tooltip.*",
   })
 end
 
@@ -1411,10 +1431,10 @@ function pdf_preview_files()
     "HtmlFormatter.*",
     "JxlReader.*",
     "MobiDoc.*",
-    "wingui/PlatformFont.*",
-    "wingui/PlatformFont_win.*",
-    "wingui/PlatformText.*",
-    "wingui/PlatformText_win.*",
+    "gui/PlatformFont.*",
+    "gui/PlatformFont_win.*",
+    "gui/PlatformText.*",
+    "gui/PlatformText_win.*",
     "MUPDF_Exports.cpp",
     "PalmDbReader.*",
     "PdfCadDetect.*",
@@ -1485,8 +1505,8 @@ function pdf_preview2_files()
     "SumatraConfig.*",
     "base/Base.*",
     "base/Color.*",
-    "base/Dpi.h",
-    "base/Dpi_win.cpp",
+    "gui/Dpi.h",
+    "gui/Dpi_win.cpp",
     "base/File.h",
     "base/File.cpp",
     "base/File_win.cpp",
@@ -1516,8 +1536,8 @@ function search_filter2_files()
     "SumatraConfig.*",
     "base/Base.*",
     "base/Color.*",
-    "base/Dpi.h",
-    "base/Dpi_win.cpp",
+    "gui/Dpi.h",
+    "gui/Dpi_win.cpp",
     "base/File.h",
     "base/File.cpp",
     "base/File_win.cpp",

@@ -5,7 +5,7 @@
 #include "base/ByteReaderWriter.h"
 #include "base/GuessFileType.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "GumboHelpers.h"
 

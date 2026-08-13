@@ -24,11 +24,11 @@ To write new regression test:
 #include "base/GuessFileType.h"
 #include "base/GdiPlusUtil.h"
 #include "base/HtmlTags.h"
-#include "wingui/PlatformFont.h"
-#include "wingui/PlatformText.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocProperties.h"
 #include "DocController.h"

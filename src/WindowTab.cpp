@@ -6,7 +6,7 @@
 #include "base/FileWatcher.h"
 #include "base/GuessFileType.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"

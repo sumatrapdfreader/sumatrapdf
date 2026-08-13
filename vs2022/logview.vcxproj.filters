@@ -1,79 +1,82 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="gui">
+      <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui\win">
+      <UniqueIdentifier>{877BE114-F35A-60B0-FC72-EB8668D1C611}</UniqueIdentifier>
+    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
     <Filter Include="tools\logview">
       <UniqueIdentifier>{82663E5D-EE26-BA93-B761-031123E1FE6F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="wingui">
-      <UniqueIdentifier>{D80B1F25-C4AD-49FB-AD68-5D4F99A9D04B}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\wingui\Gfx.h">
-      <Filter>wingui</Filter>
+    <ClInclude Include="..\src\gui\Gfx.h">
+      <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\Layout.h">
-      <Filter>wingui</Filter>
+    <ClInclude Include="..\src\gui\Layout.h">
+      <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\PlatformFont.h">
-      <Filter>wingui</Filter>
+    <ClInclude Include="..\src\gui\PlatformFont.h">
+      <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\PlatformText.h">
-      <Filter>wingui</Filter>
+    <ClInclude Include="..\src\gui\PlatformText.h">
+      <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\UIModels.h">
-      <Filter>wingui</Filter>
+    <ClInclude Include="..\src\gui\UIModels.h">
+      <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\VirtCtrl.h">
-      <Filter>wingui</Filter>
+    <ClInclude Include="..\src\gui\VirtCtrl.h">
+      <Filter>gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
+    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Gfx_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Layout.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformFont.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformFont_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\UIModels.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\VirtCtrl.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\ControlBase.cpp">
+      <Filter>gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Edit.cpp">
+      <Filter>gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Tooltip.cpp">
+      <Filter>gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\WindowBase.cpp">
+      <Filter>gui\win</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\tools\logview\logview.cpp">
       <Filter>tools\logview</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\ControlBase.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Edit.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\GfxGdiplus_win.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Gfx_win.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Layout.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformFont.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformFont_win.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformText.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\PlatformText_win.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Tooltip.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\UIModels.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\VirtCtrl.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\WindowBase.cpp">
-      <Filter>wingui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
