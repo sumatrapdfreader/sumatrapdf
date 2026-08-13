@@ -2100,10 +2100,13 @@ VirtIconButton::VirtIconButton() {
 }
 
 Size VirtIconButton::GetIdealSize() {
-    if (!pixmap) {
-        return {0, 0};
+    Size sz;
+    if (pixmap) {
+        sz = {pixmap->width, pixmap->height};
     }
-    return {pixmap->width, pixmap->height};
+    sz.dx += padding.left + padding.right;
+    sz.dy += padding.top + padding.bottom;
+    return sz;
 }
 
 void VirtIconButton::Paint(VirtPaintCtx& ctx) {

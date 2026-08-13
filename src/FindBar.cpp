@@ -40,10 +40,74 @@
 constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
 constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 
+namespace {
+
+// status "n / m" keeps a stable slot so the bar doesn't jump as the count changes
+struct FindFixedDx : LayoutBase {
+    ILayout* child = nullptr;
+    int dx = 0;
+
+    FindFixedDx(ILayout* c, int dxIn);
+    ~FindFixedDx() override;
+
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    void SetBounds(Rect) override;
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+};
+
+FindFixedDx::FindFixedDx(ILayout* c, int dxIn) {
+    child = c;
+    dx = dxIn;
+}
+
+FindFixedDx::~FindFixedDx() {
+    delete child;
+}
+
+int FindFixedDx::LayoutChildCount() {
+    return child ? 1 : 0;
+}
+
+ILayout* FindFixedDx::LayoutChildAt(int) {
+    return child;
+}
+
+int FindFixedDx::MinIntrinsicWidth(int) {
+    return dx;
+}
+
+int FindFixedDx::MinIntrinsicHeight(int width) {
+    return child ? child->MinIntrinsicHeight(width) : 0;
+}
+
+Size FindFixedDx::Layout(const Constraints bc) {
+    int w = dx;
+    if (bc.min.dx > w) {
+        w = bc.min.dx;
+    }
+    if (bc.HasBoundedWidth() && bc.max.dx < w) {
+        w = bc.max.dx;
+    }
+    Size s = child ? child->Layout(bc.TightenWidth(w)) : Size{};
+    return {w, s.dy};
+}
+
+void FindFixedDx::SetBounds(Rect r) {
+    lastBounds = r;
+    if (child) {
+        child->SetBounds(r);
+    }
+}
+
+} // namespace
+
 struct FindBarWnd : WindowBase {
     MainWindow* win = nullptr;
     // the status text and the buttons are virtual controls; the search field is
-    // the only HWND child
+    // the only HWND child. Owned by `layout` once BuildLayout() runs
     Edit* edit = nullptr;
     VirtText* status = nullptr;
     // prev / next / match-case / match-whole-word / pop-out / close
@@ -65,15 +129,12 @@ struct FindBarWnd : WindowBase {
     bool Create(MainWindow* win);
     void CreateButtons();
     void UpdateButtonIcons();
-    // one button's size, padding included
-    Size ButtonSize() const;
+    void BuildLayout();
     // the button under `pt` (window coords), or -1
     int ButtonIndexFromPoint(Point pt);
     // forceBarDx > 0: fit the bar into exactly that window width, giving the
     // slack to the edit box. 0: the default edit width.
     void Layout(int forceBarDx = 0);
-    // width of everything in the bar except the edit box
-    int FixedDx() const;
     int MinBarDx() const;
 
     void OnTextChanged();
@@ -115,12 +176,8 @@ static TempStr FindBarButtonTooltip(int cmd) {
 }
 
 FindBarWnd::~FindBarWnd() {
-    delete edit;
     delete tooltip;
-    delete status;
-    for (VirtIconButton* b : btns) {
-        delete b;
-    }
+    // edit, status and buttons are owned by `layout` (deleted in ~WindowBase)
 }
 
 // the icons come from the shared cache, which renders them for the current
@@ -161,16 +218,6 @@ void FindBarWnd::CreateButtons() {
         btns[i] = b;
     }
     UpdateButtonIcons();
-}
-
-Size FindBarWnd::ButtonSize() const {
-    if (!btns[0]) {
-        return {};
-    }
-    Size sz = btns[0]->GetIdealSize();
-    sz.dx += btns[0]->padding.left + btns[0]->padding.right;
-    sz.dy += btns[0]->padding.top + btns[0]->padding.bottom;
-    return sz;
 }
 
 int FindBarWnd::ButtonIndexFromPoint(Point pt) {
@@ -217,7 +264,6 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         args.cueText = _TRA("Find");
         args.isRtl = IsUIRtl();
         edit = new Edit();
-        edit->maxDx = DpiScale(hwnd, 240);
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
         edit->onTextChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnTextChanged>(this);
@@ -242,14 +288,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         tooltip->Create(targs);
     }
 
-    // the virtual controls of this window; it positions them itself in Layout()
-    vroot = new VirtRoot(hwnd);
-    Vec<VirtCtrl*> tops;
-    tops.Append(status);
-    for (VirtIconButton* b : btns) {
-        tops.Append(b);
-    }
-    vroot->SetTops(tops);
+    BuildLayout();
 
     ApplyDarkModeToPopupWindow(hwnd);
     Layout();
@@ -264,62 +303,57 @@ constexpr int kFindBarMinEditDx = 80;
 // how wide the drag zone along the left edge is
 constexpr int kFindBarResizeGripDx = 6;
 
-// left padding + gap + status + gap + toolbar + right padding
-int FindBarWnd::FixedDx() const {
-    Size btnSz = ButtonSize();
-    return (2 * DpiScale(hwnd, kFindBarPadding)) + (2 * DpiScale(hwnd, kFindBarGap)) +
-           DpiScale(hwnd, kFindBarStatusDx) + (btnSz.dx * 6);
-}
-
-int FindBarWnd::MinBarDx() const {
-    return DpiScale(hwnd, kFindBarMinEditDx) + FixedDx();
-}
-
-void FindBarWnd::Layout(int forceBarDx) {
-    // WM_SIZE can arrive from CreateCustom, before the controls exist
-    if (!edit || !status || !btns[0]) {
-        return;
-    }
+void FindBarWnd::BuildLayout() {
     int p = DpiScale(hwnd, kFindBarPadding);
     int gap = DpiScale(hwnd, kFindBarGap);
     int statusDx = DpiScale(hwnd, kFindBarStatusDx);
+    // cap preferred width at the min so HBox flex, not the typed text, sets the
+    // edit's size (a long query would otherwise blow out the bar)
+    int minEditDx = DpiScale(hwnd, kFindBarMinEditDx);
+    edit->idealDx = minEditDx;
+    edit->maxDx = minEditDx;
 
-    int editDy = edit->GetIdealSize().dy;
-
-    Size btnSz = ButtonSize();
-    Size tbSz = {btnSz.dx * 6, btnSz.dy};
-
-    int innerDy = std::max(editDy, tbSz.dy);
-    barDy = innerDy + (2 * p);
-
-    int fixedDx = FixedDx();
-    int editDx;
-    if (forceBarDx > 0) {
-        // resizing: the edit box absorbs the change
-        editDx = std::max(forceBarDx - fixedDx, DpiScale(hwnd, kFindBarMinEditDx));
-    } else {
-        editDx = DpiScale(hwnd, kFindBarDefaultEditDx);
-    }
-    barDx = editDx + fixedDx;
-
-    if (vroot) {
-        vroot->SetBounds({0, 0, barDx, barDy});
-    }
-    int x = p;
-    MoveWindow(edit->hwnd, x, (barDy - editDy) / 2, editDx, editDy, TRUE);
-    x += editDx + gap;
-    status->SetBounds({x, (barDy - editDy) / 2, statusDx, editDy});
-    x += statusDx + gap;
-    int btnY = (barDy - tbSz.dy) / 2;
+    auto* row = new HBox();
+    row->alignCross = CrossAxisAlign::CrossCenter;
+    row->AddChild(edit, 1);
+    row->AddChild(new Spacer(gap, 0));
+    row->AddChild(new FindFixedDx(status, statusDx));
+    row->AddChild(new Spacer(gap, 0));
     for (VirtIconButton* b : btns) {
-        b->SetBounds({x, btnY, btnSz.dx, btnSz.dy});
-        x += btnSz.dx;
+        row->AddChild(b);
     }
-    HwndInvalidate(hwnd);
+    layout = new Padding(row, Insets{p, p, p, p});
+}
 
-    inLayout = true;
-    SetWindowPos(hwnd, nullptr, 0, 0, barDx, barDy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-    inLayout = false;
+int FindBarWnd::MinBarDx() const {
+    if (!layout) {
+        return 0;
+    }
+    int client = layout->MinIntrinsicWidth(0);
+    Rect wr = HwndWindowRect(hwnd);
+    Rect cr = HwndClientRect(hwnd);
+    return client + (wr.dx - cr.dx);
+}
+
+void FindBarWnd::Layout(int forceBarDx) {
+    // WM_SIZE can arrive from CreateCustom, before the tree exists
+    if (!layout) {
+        return;
+    }
+    if (forceBarDx > 0) {
+        DoLayout();
+    } else {
+        int extra = DpiScale(hwnd, kFindBarDefaultEditDx - kFindBarMinEditDx);
+        int minDx = layout->MinIntrinsicWidth(0) + extra;
+        inLayout = true;
+        LayoutAndSizeToContent(layout, minDx, 0, hwnd);
+        DoLayout(HwndClientRect(hwnd).Size());
+        inLayout = false;
+    }
+    Rect wr = HwndWindowRect(hwnd);
+    barDx = wr.dx;
+    barDy = wr.dy;
+    HwndInvalidate(hwnd);
 }
 
 void FindBarWnd::OnTextChanged() {

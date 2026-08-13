@@ -49,6 +49,75 @@ static void ApplyTitleBarTheme(HWND hwnd) {
 // command ids for the window's toolbar buttons (handled in OnCommand)
 constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 
+constexpr int kFindWinPadding = 8;
+constexpr int kFindWinGap = 6;
+constexpr int kFindWinStatusDx = 90;
+constexpr int kFindWinMinEditDx = 48;
+
+namespace {
+
+// status "n / m" keeps a stable slot on the wide row and can flex on the wrap row
+struct FindFixedDx : LayoutBase {
+    ILayout* child = nullptr;
+    int dx = 0;
+
+    FindFixedDx(ILayout* c, int dxIn);
+    ~FindFixedDx() override;
+
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    void SetBounds(Rect) override;
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+};
+
+FindFixedDx::FindFixedDx(ILayout* c, int dxIn) {
+    child = c;
+    dx = dxIn;
+}
+
+FindFixedDx::~FindFixedDx() {
+    delete child;
+}
+
+int FindFixedDx::LayoutChildCount() {
+    return child ? 1 : 0;
+}
+
+ILayout* FindFixedDx::LayoutChildAt(int) {
+    return child;
+}
+
+int FindFixedDx::MinIntrinsicWidth(int) {
+    return dx;
+}
+
+int FindFixedDx::MinIntrinsicHeight(int width) {
+    return child ? child->MinIntrinsicHeight(width) : 0;
+}
+
+Size FindFixedDx::Layout(const Constraints bc) {
+    int w = dx;
+    if (bc.min.dx > w) {
+        w = bc.min.dx;
+    }
+    if (bc.HasBoundedWidth() && bc.max.dx < w) {
+        w = bc.max.dx;
+    }
+    Size s = child ? child->Layout(bc.TightenWidth(w)) : Size{};
+    return {w, s.dy};
+}
+
+void FindFixedDx::SetBounds(Rect r) {
+    lastBounds = r;
+    if (child) {
+        child->SetBounds(r);
+    }
+}
+
+} // namespace
+
 struct FindWindowWnd;
 
 struct DeferredGoToFindMatchData {
@@ -85,7 +154,7 @@ struct FindWindowWnd : WindowBase {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
     // the status text, the buttons and the results list are virtual controls;
-    // the search field is the only HWND child
+    // the search field is the only HWND child. Owned by `layout` once built
     VirtText* status = nullptr;
     // prev / next / match-case / match-whole-word / unpin(dock)
     VirtIconButton* btns[5]{};
@@ -114,6 +183,7 @@ struct FindWindowWnd : WindowBase {
     bool Create(MainWindow* win);
     void CreateButtons();
     void UpdateButtonIcons();
+    void BuildLayout();
     // the button under `pt` (window coords), or -1
     int ButtonIndexFromPoint(Point pt);
     void Layout();
@@ -174,13 +244,8 @@ static TempStr FindWindowButtonTooltip(int cmd) {
 }
 
 FindWindowWnd::~FindWindowWnd() {
-    delete edit;
     delete tooltip;
-    delete status;
-    delete results; // also deletes its FindResultsModel
-    for (VirtIconButton* b : btns) {
-        delete b;
-    }
+    // edit, status, buttons and results are owned by `layout` (deleted in ~WindowBase)
 }
 
 // the pixmaps belong to the icon cache, which re-renders them for the current
@@ -266,7 +331,6 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         args.cueText = _TRA("Find");
         args.isRtl = IsUIRtl();
         edit = new Edit();
-        edit->maxDx = DpiScale(hwnd, 1000);
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
         edit->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
@@ -304,81 +368,54 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         tooltip->Create(args);
     }
 
-    // the virtual controls of this window; it positions them itself in Layout()
-    vroot = new VirtRoot(hwnd);
-    Vec<VirtCtrl*> tops;
-    tops.Append(status);
-    for (VirtIconButton* b : btns) {
-        tops.Append(b);
-    }
-    tops.Append(results);
-    vroot->SetTops(tops);
+    BuildLayout();
 
     ApplyDarkModeToPopupWindow(hwnd);
     return true;
 }
 
+void FindWindowWnd::BuildLayout() {
+    int pad = DpiScale(hwnd, kFindWinPadding);
+    int gap = DpiScale(hwnd, kFindWinGap);
+    int statusDx = DpiScale(hwnd, kFindWinStatusDx);
+    // cap preferred width at the min so Wrap decides the break from the min
+    // edit width, not the typed text (a long query would otherwise always wrap)
+    int minEditDx = DpiScale(hwnd, kFindWinMinEditDx);
+    edit->idealDx = minEditDx;
+    edit->maxDx = minEditDx;
+
+    // status + buttons stay together so they wrap as a unit under the edit
+    auto* tools = new HBox();
+    tools->alignCross = CrossAxisAlign::CrossCenter;
+    tools->AddChild(new FindFixedDx(status, statusDx), 1);
+    tools->AddChild(new Spacer(gap, 0));
+    for (VirtIconButton* b : btns) {
+        tools->AddChild(b);
+    }
+
+    auto* header = new Wrap();
+    header->alignCross = CrossAxisAlign::CrossCenter;
+    header->colGap = gap;
+    header->rowGap = gap;
+    header->AddChild(edit, 1);
+    header->AddChild(tools);
+
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->AddChild(header);
+    vbox->AddChild(new Spacer(0, pad));
+    vbox->AddChild(results, 1);
+
+    layout = new Padding(vbox, Insets{pad, pad, pad, pad});
+}
+
 void FindWindowWnd::Layout() {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom, before
     // the child controls exist; ignore layout until they're created
-    if (!edit || !status || !btns[0] || !results) {
+    if (!layout) {
         return;
     }
-    Rect rc = HwndClientRect(hwnd);
-    if (vroot) {
-        vroot->SetBounds({0, 0, rc.dx, rc.dy});
-    }
-    int pad = DpiScale(hwnd, 8);
-    int gap = DpiScale(hwnd, 6);
-    int statusDx = DpiScale(hwnd, 90);
-    int minEditDx = DpiScale(hwnd, 48);
-
-    int editDy = edit->GetIdealSize().dy;
-    Size btnSz = btns[0]->GetIdealSize();
-    btnSz.dx += btns[0]->padding.left + btns[0]->padding.right;
-    btnSz.dy += btns[0]->padding.top + btns[0]->padding.bottom;
-    int tbW = btnSz.dx * 5;
-    int tbH = btnSz.dy;
-    // lays the five buttons out left to right inside the strip they were given
-    auto layoutBtns = [&](int x, int y) {
-        for (VirtIconButton* b : btns) {
-            b->SetBounds({x, y, btnSz.dx, btnSz.dy});
-            x += btnSz.dx;
-        }
-    };
-
-    int contentDx = std::max(0, rc.dx - (2 * pad));
-    // minimum width for [edit][status][toolbar] on one row without overlap
-    int singleRowDx = minEditDx + gap + statusDx + gap + tbW;
-
-    int y = pad;
-    int headerDy;
-    if (contentDx >= singleRowDx) {
-        // wide: [edit][n/m][toolbar]
-        headerDy = std::max(editDy, tbH);
-        int tbX = pad + contentDx - tbW;
-        int statusX = tbX - gap - statusDx;
-        int editDx = statusX - gap - pad;
-        layoutBtns(tbX, y + ((headerDy - tbH) / 2));
-        status->SetBounds({statusX, y + ((headerDy - editDy) / 2), statusDx, editDy});
-        MoveWindow(edit->hwnd, pad, y + ((headerDy - editDy) / 2), editDx, editDy, TRUE);
-    } else {
-        // narrow: full-width edit, then [n/m][toolbar] (issue #5692)
-        MoveWindow(edit->hwnd, pad, y, contentDx, editDy, TRUE);
-        y += editDy + gap;
-        headerDy = editDy + gap + std::max(editDy, tbH);
-        int row2Dy = std::max(editDy, tbH);
-        int statusW = std::max(0, contentDx - gap - tbW);
-        status->SetBounds({pad, y + ((row2Dy - editDy) / 2), statusW, editDy});
-        int tbX = pad + contentDx - tbW;
-        layoutBtns(tbX, y + ((row2Dy - tbH) / 2));
-    }
-
-    // the results list fills the rest of the window below the header
-    int listTop = pad + headerDy + pad;
-    int listDy = std::max(0, rc.dy - listTop - pad);
-    results->SetBounds({pad, listTop, contentDx, listDy});
-
+    DoLayout();
     // Erase margins (and any area the list just vacated when shrinking) so
     // snippet/page-number pixels don't ghost at the bottom/side of the window
     // when the dialog is resized narrower than the previous text (#5796).
@@ -702,20 +739,18 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
 
 void FindWindowWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
     auto* mmi = ev->mmi;
-    int pad = DpiScale(hwnd, 8);
-    int gap = DpiScale(hwnd, 6);
-    int editDy = edit ? edit->GetIdealSize().dy : DpiScale(hwnd, 22);
-    int tbH = DpiScale(hwnd, 24);
-    int tbW = DpiScale(hwnd, 120);
-    if (btns[0]) {
-        Size btnSz = btns[0]->GetIdealSize();
-        tbW = (btnSz.dx + btns[0]->padding.left + btns[0]->padding.right) * 5;
-        tbH = btnSz.dy + btns[0]->padding.top + btns[0]->padding.bottom;
+    if (layout) {
+        int clientMinDx = layout->MinIntrinsicWidth(0);
+        int clientMinDy = layout->MinIntrinsicHeight(clientMinDx);
+        Rect wr = HwndWindowRect(hwnd);
+        Rect cr = HwndClientRect(hwnd);
+        mmi->ptMinTrackSize.x = clientMinDx + (wr.dx - cr.dx);
+        mmi->ptMinTrackSize.y = clientMinDy + (wr.dy - cr.dy);
+        return;
     }
-    int row2Dy = std::max(editDy, tbH);
-    // narrow two-row header: edit, then status+toolbar
-    mmi->ptMinTrackSize.x = (2 * pad) + std::max(tbW, DpiScale(hwnd, 160));
-    mmi->ptMinTrackSize.y = (2 * pad) + editDy + gap + row2Dy + pad + DpiScale(hwnd, 48);
+    int pad = DpiScale(hwnd, kFindWinPadding);
+    mmi->ptMinTrackSize.x = (2 * pad) + DpiScale(hwnd, 160);
+    mmi->ptMinTrackSize.y = (2 * pad) + DpiScale(hwnd, 80);
 }
 
 void FindWindowWnd::OnClose(WindowBase::CloseEvent* ev) {
