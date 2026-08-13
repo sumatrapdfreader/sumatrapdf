@@ -41,6 +41,7 @@ export enum ControlCommand {
   TestAdvSettingsRows = 46,
   TestDestZoomNav = 47,
   TestAnnotEditorLayout = 48,
+  TestDisplayMode = 49,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

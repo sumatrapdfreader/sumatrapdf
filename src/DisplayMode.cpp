@@ -5,6 +5,7 @@
 #include "base/File.h"
 
 #include "Settings.h"
+#include "DisplayMode.h"
 
 bool IsSingle(DisplayMode mode) {
     return DisplayMode::SinglePage == mode || DisplayMode::Continuous == mode;
@@ -78,16 +79,36 @@ Str DisplayModeToString(DisplayMode mode) {
     return s;
 }
 
-DisplayMode DisplayModeFromString(Str s, DisplayMode defVal) {
+// Fills *modeOut and returns true when s is a recognized layout name.
+// Empty / unknown strings return false (Fullscreen.DisplayMode uses this
+// so an unset setting means "don't change").
+bool TryParseDisplayMode(Str s, DisplayMode* modeOut) {
+    if (!s) {
+        return false;
+    }
     // for consistency ("continuous" is used instead in the settings instead for brevity)
     if (str::EqIS(s, StrL("continuous single page"))) {
-        return DisplayMode::Continuous;
+        if (modeOut) {
+            *modeOut = DisplayMode::Continuous;
+        }
+        return true;
     }
     int idx = SeqStrIndexIS(displayModeNames, s);
     if (idx < 0) {
-        return defVal;
+        return false;
     }
-    return (DisplayMode)idx;
+    if (modeOut) {
+        *modeOut = (DisplayMode)idx;
+    }
+    return true;
+}
+
+DisplayMode DisplayModeFromString(Str s, DisplayMode defVal) {
+    DisplayMode mode;
+    if (TryParseDisplayMode(s, &mode)) {
+        return mode;
+    }
+    return defVal;
 }
 
 float ZoomFromString(Str s, float defVal) {

@@ -105,6 +105,7 @@ struct DisplayModel : DocController {
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override;
     void SetInPresentation(bool enable) override;
+    void ApplyFullscreenDisplayMode(bool enable);
     void SetZoomVirtual(float zoom, Point* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
@@ -277,6 +278,8 @@ struct DisplayModel : DocController {
     float dpiFactor{1.0f};
     float presZoomVirtual{kInvalidZoom};
     DisplayMode presDisplayMode{DisplayMode::Automatic};
+    DisplayMode fsSavedDisplayMode{DisplayMode::Automatic};
+    bool fsDisplayModeSaved = false;
 
     Vec<ScrollState> navHistory;
     /* index of the "current" history entry (to be updated on navigation),

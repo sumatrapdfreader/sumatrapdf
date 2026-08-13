@@ -6,6 +6,7 @@
 #include "base/Win.h"
 
 #include "Settings.h"
+#include "DisplayMode.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
 #include "SumatraTest.h"
@@ -102,6 +103,44 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
     return finish(fmt("OK page=%d", cur), 0);
 }
 
+// action: "get" | "presentation" | "fullscreen"
+// Reports the current page layout and whether presentation / windowed
+// fullscreen is on. presentation/fullscreen toggle that mode first.
+static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+
+    if (!action || str::EqI(action, StrL("get"))) {
+        // report only
+    } else if (str::EqI(action, StrL("presentation"))) {
+        ToggleFullScreen(win, win->AsFixed() != nullptr);
+    } else if (str::EqI(action, StrL("fullscreen"))) {
+        ToggleFullScreen(win, false);
+    } else {
+        return finish(fmt("ERROR unknown-action action=%s", action), 1);
+    }
+
+    Str mode = DisplayModeToString(win->ctrl->GetDisplayMode());
+    return finish(
+        fmt("OK mode=%s presentation=%d fullscreen=%d", mode, win->InPresentation() ? 1 : 0, win->isFullScreen ? 1 : 0),
+        0);
+}
+
 enum class ControlCmd : u16 {
     Ping = 1,
     Quit = 2,
@@ -143,6 +182,7 @@ enum class ControlCmd : u16 {
     TestAdvSettingsRows = 46,
     TestDestZoomNav = 47,
     TestAnnotEditorLayout = 48,
+    TestDisplayMode = 49,
 };
 
 enum class ControlArgType : u16 {
@@ -700,6 +740,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, selectItem); // optional, 1-based
             int exitCode = 0;
             Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDisplayMode: {
+            Str action = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = DisplayModeResultTemp(action, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

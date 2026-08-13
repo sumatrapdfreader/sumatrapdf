@@ -350,6 +350,12 @@ struct Fullscreen {
     Str toolbar;
     // if true, show the menu bar in fullscreen mode
     bool showMenubar;
+    // page layout in presentation (Ctrl+L) and windowed fullscreen
+    // (Shift+Ctrl+L / F11). empty keeps the current behavior: presentation
+    // uses single page, windowed fullscreen keeps the existing layout.
+    // valid values: automatic, single page, facing, book view, continuous,
+    // continuous facing, continuous book view
+    Str displayMode;
 };
 
 // list of handlers for selected text, shown in context menu when text
@@ -1316,16 +1322,20 @@ static const FieldInfo gFullscreenFields[] = {
     {offsetof(Fullscreen, showToolbar), SettingType::Bool, false, true},
     {offsetof(Fullscreen, toolbar), SettingType::String, 0},
     {offsetof(Fullscreen, showMenubar), SettingType::Bool, false},
+    {offsetof(Fullscreen, displayMode), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gFullscreenInfo = {
     sizeof(Fullscreen),
-    3,
+    4,
     gFullscreenFields,
-    "ShowToolbar\0Toolbar\0ShowMenubar",
+    "ShowToolbar\0Toolbar\0ShowMenubar\0DisplayMode",
     "legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty, derived as show/hide (internal; use "
     "Fullscreen.Toolbar instead)\0toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay (toolbar "
     "floats over the page, only shown when the mouse is near it). if empty, derived from Fullscreen.ShowToolbar\0if "
-    "true, show the menu bar in fullscreen mode",
+    "true, show the menu bar in fullscreen mode\0page layout in presentation (Ctrl+L) and windowed fullscreen "
+    "(Shift+Ctrl+L / F11). empty keeps the current behavior: presentation uses single page, windowed fullscreen keeps "
+    "the existing layout. valid values: automatic, single page, facing, book view, continuous, continuous facing, "
+    "continuous book view",
     false};
 
 static const FieldInfo gSelectionHandlerFields[] = {

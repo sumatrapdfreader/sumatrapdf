@@ -97,6 +97,7 @@ import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as ghsaJf4vRw66J4w2 } from "./security-ghsa-jf4v-rw66-j4w2.ts";
 import { testit as issue5934 } from "./issue-5934.ts";
 import { testit as issue5938 } from "./issue-5938.ts";
+import { testit as issue4753 } from "./issue-4753.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["lint-command-ids", lintCommandIds],
@@ -186,6 +187,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["security-ghsa-jf4v-rw66-j4w2", ghsaJf4vRw66J4w2],
   ["issue-5934", issue5934],
   ["issue-5938", issue5938],
+  ["issue-4753", issue4753],
 ];
 
 export type AllTestOptions = {

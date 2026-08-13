@@ -4219,6 +4219,10 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (!IsMainWindowValid(win)) {
         return;
     }
+    DisplayModel* prevDm = win->AsFixed();
+    if (prevDm && win->isFullScreen && !win->InPresentation()) {
+        prevDm->ApplyFullscreenDisplayMode(false);
+    }
     CloseDocumentInCurrentTab(win, true, false);
 
     win->currentTabTemp = tab;
@@ -4299,6 +4303,8 @@ void LoadModelIntoTab(WindowTab* tab) {
         }
         if (dm->InPresentation() != win->InPresentation()) {
             dm->SetInPresentation(win->InPresentation());
+        } else if (win->isFullScreen && !win->InPresentation()) {
+            dm->ApplyFullscreenDisplayMode(true);
         }
     } else if (IsBrowserDocController(win->ctrl)) {
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
@@ -7723,6 +7729,9 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 
     if (presentation) {
         win->ctrl->SetInPresentation(true);
+    } else if (DisplayModel* dm = win->AsFixed()) {
+        dm->ApplyFullscreenDisplayMode(true);
+        UpdateToolbarState(win);
     }
 
     // Make sure that no toolbar/sidebar keeps the focus
@@ -7804,6 +7813,10 @@ void ExitFullScreen(MainWindow* win) {
         }
     } else {
         win->isFullScreen = false;
+        if (DisplayModel* dm = win->AsFixed()) {
+            dm->ApplyFullscreenDisplayMode(false);
+            UpdateToolbarState(win);
+        }
     }
 
     BeginFrameRedrawSuppression(win);

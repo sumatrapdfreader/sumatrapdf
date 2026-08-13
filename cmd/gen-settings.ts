@@ -561,6 +561,15 @@ const fullscreen: Field[] = [
       "if empty, derived from Fullscreen.ShowToolbar",
   ).ver("3.7"),
   field("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
+  field(
+    "DisplayMode",
+    Str,
+    "",
+    "page layout in presentation (Ctrl+L) and windowed fullscreen (Shift+Ctrl+L / F11). " +
+      "empty keeps the current behavior: presentation uses single page, windowed fullscreen " +
+      "keeps the existing layout. valid values: automatic, single page, facing, book view, " +
+      "continuous, continuous facing, continuous book view",
+  ).ver("3.7"),
 ];
 
 const externalViewer: Field[] = [

@@ -66,8 +66,14 @@ struct EnumSettingDef {
     const char** values;
 };
 } // namespace
+static const char* gEnumFullscreenDisplayMode[] = {
+    "", "automatic", "single page", "facing", "book view",
+    "continuous", "continuous facing", "continuous book view", nullptr,
+};
+
 static const EnumSettingDef gEnumSettings[] = {
     {"DefaultDisplayMode", gEnumDisplayMode},
+    {"Fullscreen.DisplayMode", gEnumFullscreenDisplayMode},
     {"Toolbar", gEnumToolbar},
     {"ToolbarPosition", gEnumToolbarPosition},
     {"Scrollbars", gEnumScrollbars},

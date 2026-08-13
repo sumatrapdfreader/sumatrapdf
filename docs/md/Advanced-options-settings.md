@@ -700,6 +700,13 @@ Fullscreen [
 
     ; if true, show the menu bar in fullscreen mode
     ShowMenubar = false
+
+    ; page layout in presentation (Ctrl+L) and windowed fullscreen (Shift+Ctrl+L
+    ; / F11). empty keeps the current behavior: presentation uses single page,
+    ; windowed fullscreen keeps the existing layout. valid values: automatic,
+    ; single page, facing, book view, continuous, continuous facing, continuous
+    ; book view (introduced in version 3.7)
+    DisplayMode = 
 ]
 
 ; list of handlers for selected text, shown in context menu when text selection

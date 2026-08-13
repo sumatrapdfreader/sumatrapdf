@@ -305,8 +305,16 @@ void DisplayModel::GetDisplayState(FileState* fs) {
 
     fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(inPresentation ? presDisplayMode : GetDisplayMode()));
-    ZoomToString(&fs->zoom, inPresentation ? presZoomVirtual : zoomVirtual, fs);
+    DisplayMode savedMode = GetDisplayMode();
+    float savedZoom = zoomVirtual;
+    if (inPresentation) {
+        savedMode = presDisplayMode;
+        savedZoom = presZoomVirtual;
+    } else if (fsDisplayModeSaved) {
+        savedMode = fsSavedDisplayMode;
+    }
+    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(savedMode));
+    ZoomToString(&fs->zoom, savedZoom, fs);
 
     ScrollState ss = GetScrollState();
     fs->pageNo = ss.page;
@@ -1891,7 +1899,10 @@ void DisplayModel::SetInPresentation(bool enable) {
         presZoomVirtual = zoomVirtual;
         // disable the window margin during presentations
         windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
-        SetDisplayMode(DisplayMode::SinglePage);
+        // Fullscreen.DisplayMode overrides the built-in single-page layout
+        DisplayMode mode = DisplayMode::SinglePage;
+        TryParseDisplayMode(gGlobalPrefs->fullscreen.displayMode, &mode);
+        SetDisplayMode(mode);
         SetZoomVirtual(kZoomFitPage, nullptr);
         return;
     }
@@ -1911,6 +1922,29 @@ void DisplayModel::SetInPresentation(bool enable) {
         presZoomVirtual = zoomVirtual;
     }
     SetZoomVirtual(presZoomVirtual, nullptr);
+}
+
+// Windowed fullscreen (F11 / Shift+Ctrl+L): switch to Fullscreen.DisplayMode
+// when that setting is set, and restore the previous layout on exit.
+// Presentation uses SetInPresentation instead.
+void DisplayModel::ApplyFullscreenDisplayMode(bool enable) {
+    DisplayMode wanted{};
+    bool havePref = TryParseDisplayMode(gGlobalPrefs->fullscreen.displayMode, &wanted);
+    if (enable) {
+        if (!havePref) {
+            return;
+        }
+        if (!fsDisplayModeSaved) {
+            fsSavedDisplayMode = displayMode;
+            fsDisplayModeSaved = true;
+        }
+        SetDisplayMode(wanted);
+        return;
+    }
+    if (fsDisplayModeSaved) {
+        SetDisplayMode(fsSavedDisplayMode);
+        fsDisplayModeSaved = false;
+    }
 }
 
 // Page-relative view offset so next/prev page can open at the same place
