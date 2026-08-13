@@ -26,11 +26,47 @@
 #ifdef DrawText
 #undef DrawText
 #endif
+#if __has_include(<d2d1.h>) && __has_include(<dwrite.h>)
+#define SUMATRA_HAS_D2D 1
 #include <d2d1.h>
 #include <dwrite.h>
+#endif
 
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+
+#if !SUMATRA_HAS_D2D
+// mingw-w64 on some distros has no d2d1.h / dwrite.h. CreateGfx() still
+// links, and Direct2DAvailable() is false so it always uses GfxGdiplus.
+bool Direct2DAvailable() {
+    return false;
+}
+GfxDirect2D::GfxDirect2D(HDC hdc) {
+    this->hdc = hdc;
+}
+GfxDirect2D::~GfxDirect2D() = default;
+void GfxDirect2D::FillRect(const Rect&, Color) {}
+void GfxDirect2D::DrawRect(const Rect&, Color, int) {}
+void GfxDirect2D::FillRoundedRect(const Rect&, int, Color, Color) {}
+void GfxDirect2D::FillEllipse(const Rect&, Color, u8) {}
+void GfxDirect2D::DrawLine(const Rect&, Color, int) {}
+void GfxDirect2D::DrawLineAA(Point, Point, Color, float, u8) {}
+void GfxDirect2D::DrawFocusRect(const Rect&) {}
+void GfxDirect2D::DrawText(Str, const Rect&, u32, PlatformFont*, Color) {}
+void GfxDirect2D::DrawTextAt(Str, Point, u32, PlatformFont*, Color) {}
+Size GfxDirect2D::MeasureText(Str, PlatformFont*) {
+    return {};
+}
+void GfxDirect2D::DrawPixmap(Pixmap*, const Rect&) {}
+void GfxDirect2D::PushClip(const Rect&) {}
+void GfxDirect2D::PopClip() {}
+bool GfxDirect2D::SetMirrored(bool) {
+    return false;
+}
+ID2D1SolidColorBrush* GfxDirect2D::GetBrush(Color, u8) {
+    return nullptr;
+}
+#else
 
 // how much wider than its rect a string may lay out before it is ellipsized;
 // covers the gdi-measure / DirectWrite-draw mismatch, not a real overflow
@@ -551,3 +587,4 @@ void GfxDirect2D::PopClip() {
 bool GfxDirect2D::SetMirrored(bool) {
     return false;
 }
+#endif

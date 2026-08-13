@@ -148,6 +148,10 @@ struct GfxGdiplus : Gfx {
     Gdiplus::Font* GetGdiplusFont(PlatformFont*, bool* owned);
 };
 
+struct ID2D1DCRenderTarget;
+struct ID2D1SolidColorBrush;
+struct ID2D1StrokeStyle;
+
 // Draws with Direct2D and lays text out with DirectWrite. Like GfxGdiplus it
 // draws into an HDC, so it fits the same places; the render target is bound at
 // 96 dpi, so a DIP is a pixel and the caller's coordinates go through unscaled.

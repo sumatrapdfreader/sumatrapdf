@@ -219,6 +219,7 @@ const sumatraFiles: FileGroup[] = [
     patterns: [
       "Gfx_win.cpp",
       "GfxGdiplus_win.cpp",
+      "GfxDirect2D_win.cpp",
       "Layout.cpp",
       "PlatformFont.cpp",
       "PlatformFont_win.cpp",
