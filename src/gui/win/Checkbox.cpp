@@ -37,7 +37,11 @@ HWND Checkbox::Create(const CreateArgs& args) {
     cargs.isRtl = args.isRtl;
     cargs.text = args.text;
     cargs.className = WC_BUTTONW;
-    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
+    cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    cargs.style |= args.isRadio ? BS_AUTORADIOBUTTON : BS_AUTOCHECKBOX;
+    if (args.isGroupStart) {
+        cargs.style |= WS_GROUP;
+    }
 
     ControlBase::CreateControl(cargs);
     SetButtonState(hwnd, args.initialState);

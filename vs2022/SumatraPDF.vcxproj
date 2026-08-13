@@ -1186,6 +1186,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\BuildConfig.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\CaptionGlyphs.h" />
+    <ClInclude Include="..\src\ChangeColorDialog.h" />
     <ClInclude Include="..\src\ChangeLanguageDialog.h" />
     <ClInclude Include="..\src\ChangeScrollbarDialog.h" />
     <ClInclude Include="..\src\ChangeThemeDialog.h" />
@@ -1386,6 +1387,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\CaptionGlyphs.cpp" />
+    <ClCompile Include="..\src\ChangeColorDialog.cpp" />
     <ClCompile Include="..\src\ChangeLanguageDialog.cpp" />
     <ClCompile Include="..\src\ChangeScrollbarDialog.cpp" />
     <ClCompile Include="..\src\ChangeThemeDialog.cpp" />

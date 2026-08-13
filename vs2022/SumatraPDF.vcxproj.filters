@@ -126,6 +126,9 @@
     <ClInclude Include="..\src\CaptionGlyphs.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ChangeColorDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ChangeLanguageDialog.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -615,6 +618,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CaptionGlyphs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ChangeColorDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChangeLanguageDialog.cpp">

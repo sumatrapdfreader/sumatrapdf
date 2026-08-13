@@ -747,6 +747,8 @@ struct Checkbox : ControlBase {
         Str text;
         State initialState = State::Unchecked;
         bool isRtl = false;
+        bool isRadio = false;
+        bool isGroupStart = false;
     };
 
     using StateChangedHandler = Func0;

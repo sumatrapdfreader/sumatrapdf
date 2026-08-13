@@ -1,8 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct GlobalPrefs;
-
 enum class PrintRangeAdv {
     All = 0,
     Even,
@@ -54,16 +52,6 @@ struct Print_Advanced_Data {
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
 
 struct MainWindow;
-
-struct BgColorResult {
-    Color color;
-    bool isCheckered;
-    bool applyToAllFiles; // true = all files like this, false = this file only
-};
-
-bool Dialog_ChangeBackgroundColor(HWND hwnd, Color currentColor, bool isCheckered, Str allFilesLabel,
-                                  BgColorResult& result);
-bool Dialog_SetTabColor(HWND hwnd, Color currentColor, bool isUnset, Color& resultColor, bool& resultIsUnset);
 
 TempStr ZoomLevelStr(float zoom);
 void CollectZoomLevels(Vec<float>& out, bool forChm);

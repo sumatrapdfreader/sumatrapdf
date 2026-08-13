@@ -113,6 +113,7 @@
 #include "ChangeLanguageDialog.h"
 #include "ChangeScrollbarDialog.h"
 #include "ChangeThemeDialog.h"
+#include "ChangeColorDialog.h"
 #include "CustomZoomDialog.h"
 #include "GetPasswordDialog.h"
 #include "GoToPageDialog.h"
@@ -7269,103 +7270,7 @@ static void SetToolbarModeAndApply(int mode) {
 }
 
 static void OnMenuChangeBackgroundColor(MainWindow* win) {
-    WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->ctrl) {
-        return;
-    }
-    auto* engine = tab->GetEngine();
-    bool isImage = engine && engine->IsImageCollection();
-    bool isCbx = engine && engine->kind == kindEngineComicBooks;
-    bool isEbook = engine && engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
-
-    Color curColor;
-    bool isCheckered;
-    if (tab->bgColorCheckered) {
-        curColor = kColorUnset;
-        isCheckered = true;
-    } else if (tab->bgColor != kColorUnset) {
-        curColor = tab->bgColor;
-        isCheckered = false;
-    } else {
-        // no per-document override: FixedPageUI/etc. WindowBgCol takes priority over theme
-        ParsedColor* bgOverride = nullptr;
-        if (isCbx) {
-            bgOverride = GetPrefsColor(gGlobalPrefs->comicBookUI.windowBgCol);
-        } else if (isImage) {
-            bgOverride = GetPrefsColor(gGlobalPrefs->imageUI.windowBgCol);
-        } else if (isEbook) {
-            bgOverride = GetPrefsColor(gGlobalPrefs->eBookUI.windowBgCol);
-        } else {
-            bgOverride = GetPrefsColor(gGlobalPrefs->fixedPageUI.windowBgCol);
-        }
-        if (bgOverride->parsedOk) {
-            curColor = bgOverride->col;
-            isCheckered = (bgOverride->col == kColorUnset);
-        } else {
-            Color bg;
-            ThemeDocumentColors(bg);
-            curColor = bg;
-            isCheckered = false;
-        }
-    }
-
-    Str allFilesLabel = "For all &PDF files";
-    if (isCbx) {
-        allFilesLabel = "For all &comic books";
-    } else if (isImage) {
-        allFilesLabel = "For all &images";
-    } else if (isEbook) {
-        allFilesLabel = "For all &ebooks";
-    }
-
-    BgColorResult result;
-    if (!Dialog_ChangeBackgroundColor(win->hwndFrame, curColor, isCheckered, allFilesLabel, result)) {
-        return;
-    }
-
-    Str colorStr;
-    if (result.isCheckered) {
-        colorStr = "checkered";
-    } else {
-        colorStr = SerializeColorTemp(result.color);
-    }
-    Color newColor = result.isCheckered ? kColorUnset : result.color;
-
-    if (result.applyToAllFiles) {
-        if (isCbx) {
-            str::ReplaceWithCopy(&gGlobalPrefs->comicBookUI.windowBgCol, colorStr);
-            gGlobalPrefs->comicBookUI.windowBgColParsed.wasParsed = false;
-        } else if (isImage) {
-            str::ReplaceWithCopy(&gGlobalPrefs->imageUI.windowBgCol, colorStr);
-            gGlobalPrefs->imageUI.windowBgColParsed.wasParsed = false;
-        } else if (isEbook) {
-            str::ReplaceWithCopy(&gGlobalPrefs->eBookUI.windowBgCol, colorStr);
-            gGlobalPrefs->eBookUI.windowBgColParsed.wasParsed = false;
-        } else {
-            str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.windowBgCol, colorStr);
-            gGlobalPrefs->fixedPageUI.windowBgColParsed.wasParsed = false;
-        }
-        // clear per-file override so it inherits the global setting
-        FileState* fs = gFileHistory.FindByPath(tab->filePath);
-        if (fs) {
-            str::ReplaceWithCopy(&fs->bgCol, "");
-        }
-        tab->bgColor = kColorUnset;
-        tab->bgColorCheckered = false;
-        SaveSettings();
-    } else {
-        // apply to this file only
-        FileState* fs = gFileHistory.FindByPath(tab->filePath);
-        if (fs) {
-            str::ReplaceWithCopy(&fs->bgCol, colorStr);
-            fs->bgColParsed.wasParsed = false;
-        }
-        tab->bgColor = newColor;
-        tab->bgColorCheckered = result.isCheckered;
-        SaveSettings();
-    }
-    // trigger repaint
-    HwndInvalidate(win->hwndCanvas, true);
+    ShowChangeBackgroundColorDialog(win);
 }
 
 // TODO: should use currently active window, but most of the time
@@ -11179,34 +11084,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             // lp carries the WindowTab* when forwarded from the tab context menu
             // (Tabs.cpp); the command palette sends 0, so use the current tab
             WindowTab* colorTab = lp ? (WindowTab*)lp : tab;
-            if (!colorTab || !colorTab->ctrl) {
-                return 0;
-            }
-            Color curColor = colorTab->tabColor;
-            bool isUnset = (curColor == kColorUnset);
-            if (isUnset) {
-                curColor = ThemeControlBackgroundColor();
-            }
-            Color newColor;
-            bool newIsUnset;
-            if (!Dialog_SetTabColor(win->hwndFrame, curColor, isUnset, newColor, newIsUnset)) {
-                return 0;
-            }
-            colorTab->tabColor = newIsUnset ? kColorUnset : newColor;
-            SetTabInfoColor(colorTab);
-            // persist to FileState
-            FileState* fs = gFileHistory.FindByPath(colorTab->filePath);
-            if (fs) {
-                if (newIsUnset) {
-                    str::ReplaceWithCopy(&fs->tabCol, "");
-                } else {
-                    TempStr colorStr = SerializeColorTemp(newColor);
-                    str::ReplaceWithCopy(&fs->tabCol, colorStr);
-                }
-                fs->tabColParsed.wasParsed = false;
-            }
-            SaveSettings();
-            win->tabsCtrl->ScheduleRepaint();
+            ShowSetTabColorDialog(win, colorTab);
             return 0;
         }
 
