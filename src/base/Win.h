@@ -164,26 +164,12 @@ void CbSetCurrentSelection(HWND, int);
 
 //--- toolbar
 
-int TbGetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info);
-void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info);
-void TbSetButtonChecked(HWND hwnd, int buttonId, bool checked);
 void TbSetButtonStructSize(HWND hwnd, int size);
-void TbSetButtonSize(HWND hwnd, Size size);
-void TbSetBitmapSize(HWND hwnd, Size size);
 void TbAddButtons(HWND hwnd, int count, const TBBUTTON* buttons);
 void TbAutosIZE(HWND hwnd);
-HIMAGELIST TbSetImageList(HWND hwnd, HIMAGELIST imageList);
-HIMAGELIST TbGetImageList(HWND hwnd);
 int TbGetButtonCount(HWND hwnd);
-int TbHitTest(HWND hwnd, Point point);
 DWORD TbGetExtendedStyle(HWND hwnd);
 void TbSetExtendedStyle(HWND hwnd, DWORD style);
-Size TbGetMaxSize(HWND hwnd);
-void TbGetPadding(HWND, int* padX, int* padY);
-void TbSetPadding(HWND, int padX, int padY);
-void TbGetMetrics(HWND hwnd, TBMETRICS* metrics);
-void TbSetMetrics(HWND hwnd, TBMETRICS* metrics);
-Rect TbGetRect(HWND hwnd, int buttonId);
 Rect TbGetItemRect(HWND hwnd, int buttonIdx);
 
 //--- tree view
