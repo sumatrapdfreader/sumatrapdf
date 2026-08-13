@@ -1873,6 +1873,14 @@ static LRESULT CALLBACK WndProcVirtToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARA
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     Color bg = TbBgColor();
 
+    if (msg == WM_MOUSEACTIVATE) {
+        // the old Win32 toolbar did not take keyboard focus; a generic child
+        // would, and then accelerators (Ctrl+W, …) never reached the frame
+        HWND frame = GetAncestor(hwnd, GA_ROOT);
+        if (frame && GetForegroundWindow() == frame) {
+            return MA_NOACTIVATE;
+        }
+    }
     if (msg == WM_SIZE) {
         if (tb) {
             RelayoutToolbar(win);

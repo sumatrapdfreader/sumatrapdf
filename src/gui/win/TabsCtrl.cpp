@@ -707,6 +707,12 @@ void TabsCtrl::Paint(VirtPaintCtx&) {
 }
 
 LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_MOUSEACTIVATE) {
+        HWND frame = GetAncestor(hwnd, GA_ROOT);
+        if (frame && GetForegroundWindow() == frame) {
+            return MA_NOACTIVATE;
+        }
+    }
     Point mousePos = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
     if (WM_MOUSELEAVE == msg) {
         mousePos = HwndGetCursorPos(hwnd);

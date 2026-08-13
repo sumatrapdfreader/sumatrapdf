@@ -680,32 +680,29 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
     if (!win) {
         return nullptr;
     }
-    if (hwnd == win->hwndFrame || hwnd == win->hwndCanvas) {
-        *hwndAccel = win->hwndFrame;
-        return accTable;
-    }
+    // Edit / tree keep a reduced table so letters and arrows type/navigate.
+    // Every other child (Virt toolbar, tabs HWND, canvas, WebView host, …)
+    // uses the main table — those windows take focus on click, and returning
+    // nullptr here is why Ctrl+W stopped closing a tab after the Virt toolbar.
     WCHAR clsName[256];
     int n = GetClassNameW(hwnd, clsName, dimof(clsName));
-    if (n == 0) {
-        return nullptr;
+    *hwndAccel = win->hwndFrame;
+    if (n <= 0) {
+        return accTable;
     }
     if (wstr::EqI(clsName, WC_EDITW)) {
-        *hwndAccel = win->hwndFrame;
         if (forwardSysKeys) {
             *forwardSysKeys = true;
         }
         return editAccTable;
     }
-
     if (wstr::EqI(clsName, WC_TREEVIEWW)) {
-        *hwndAccel = win->hwndFrame;
         if (forwardSysKeys) {
             *forwardSysKeys = true;
         }
         return treeViewAccTable;
     }
-
-    return nullptr;
+    return accTable;
 }
 
 static bool MaybeTranslateAccelerator(MSG& msg) {
