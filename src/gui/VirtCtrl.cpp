@@ -546,6 +546,7 @@ VirtRoot::~VirtRoot() {
         w->SetRoot(nullptr);
     }
     delete owned;
+    delete tooltip;
 }
 
 void VirtRoot::SetChild(VirtCtrl* c) {
@@ -559,6 +560,7 @@ void VirtRoot::SetChild(VirtCtrl* c) {
     captured = nullptr;
     focused = nullptr;
     pressed = nullptr;
+    HideTooltip();
     if (c) {
         c->parent = nullptr;
         c->SetRoot(this);
@@ -578,6 +580,7 @@ void VirtRoot::SetTops(const Vec<VirtCtrl*>& newTops) {
     captured = nullptr;
     focused = nullptr;
     pressed = nullptr;
+    HideTooltip();
     for (VirtCtrl* w : newTops) {
         w->SetRoot(this);
         tops.Append(w);
@@ -640,6 +643,87 @@ VirtCtrl* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut) {
         }
     }
     return nullptr;
+}
+
+// Like WndFromPoint, but includes disabled visible controls so gray toolbar
+// buttons still show their tooltips.
+static VirtCtrl* WndFromPointForTooltipWalk(VirtCtrl* w, Point ptWindow, Point* ptLocalOut) {
+    if (!w || w->visibility != Visibility::Visible) {
+        return nullptr;
+    }
+    Rect b = w->BoundsInWindow();
+    if (!b.Contains(ptWindow)) {
+        return nullptr;
+    }
+    if (!w->HasFlag(vwfPaintsOwnChildren)) {
+        for (int i = w->ChildCount() - 1; i >= 0; i--) {
+            VirtCtrl* hit = WndFromPointForTooltipWalk(w->ChildAt(i), ptWindow, ptLocalOut);
+            if (hit) {
+                return hit;
+            }
+        }
+    }
+    if (w->HasFlag(vwfNoHitTest)) {
+        return nullptr;
+    }
+    Point ptLocal{ptWindow.x - b.x, ptWindow.y - b.y};
+    if (!w->HitTest(ptLocal)) {
+        return nullptr;
+    }
+    if (ptLocalOut) {
+        *ptLocalOut = ptLocal;
+    }
+    return w;
+}
+
+VirtCtrl* VirtRoot::WndFromPointForTooltip(Point ptWindow, Point* ptLocalOut) {
+    if (len(tops) == 0 || !bounds.Contains(ptWindow)) {
+        return nullptr;
+    }
+    if (layoutInPaint) {
+        LayoutIfNeeded();
+    }
+    for (int i = len(tops) - 1; i >= 0; i--) {
+        VirtCtrl* w = WndFromPointForTooltipWalk(tops[i], ptWindow, ptLocalOut);
+        if (w) {
+            return w;
+        }
+    }
+    return nullptr;
+}
+
+void VirtRoot::HideTooltip() {
+    if (tooltip) {
+        tooltip->Delete();
+    }
+}
+
+void VirtRoot::UpdateTooltip(Point ptWindow) {
+    Point ptLocal{};
+    VirtCtrl* w = WndFromPointForTooltip(ptWindow, &ptLocal);
+    TempStr tip{};
+    Rect tipRc{};
+    while (w) {
+        tip = w->GetTooltipTemp(ptLocal);
+        if (tip) {
+            tipRc = w->BoundsInWindow();
+            break;
+        }
+        w = w->parent;
+    }
+    if (!tip) {
+        HideTooltip();
+        return;
+    }
+    if (!tooltip && hwnd) {
+        Tooltip::CreateArgs args;
+        args.parent = hwnd;
+        tooltip = new Tooltip();
+        tooltip->Create(args);
+    }
+    if (tooltip) {
+        tooltip->SetSingle(tip, tipRc, false);
+    }
 }
 
 void VirtRoot::Invalidate(Rect rWindow) {
@@ -803,6 +887,7 @@ void VirtRoot::OnWndDestroyed(VirtCtrl* w) {
     if (pressed == w) {
         pressed = nullptr;
     }
+    HideTooltip();
     // it can be one of the tops (the tree is rebuilt by deleting nodes and
     // laying out again), and those we must not paint or hit-test any more
     int idx = tops.Find(w);
@@ -888,6 +973,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
         case WM_MOUSELEAVE:
             trackingMouseLeave = false;
             ClearHover();
+            HideTooltip();
             return false;
 
         case WM_CAPTURECHANGED: {
@@ -2716,6 +2802,7 @@ bool VirtTreeOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp
     if (msg == WM_SETCURSOR) {
         Point pt = HwndGetCursorPos(hwnd);
         UnmirrorRtl(hwnd, pt);
+        root->UpdateTooltip(pt);
         Point ptLocal{0, 0};
         VirtCtrl* w = root->WndFromPoint(pt, &ptLocal);
         // the cursor belongs to whichever ancestor claims it first

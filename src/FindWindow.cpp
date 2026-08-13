@@ -157,7 +157,6 @@ struct FindWindowWnd : WindowBase {
     VirtText* status = nullptr;
     // prev / next / match-case / match-whole-word / unpin(dock)
     VirtIconButton* btns[5]{};
-    Tooltip* tooltip = nullptr;
     VirtListBox* results = nullptr;
     StrVec filterWords; // search term(s) to highlight in snippets
     Vec<u8> hlScratch;  // reused highlight mask for DrawMaybeHighlightedText
@@ -183,8 +182,6 @@ struct FindWindowWnd : WindowBase {
     void CreateButtons();
     void UpdateButtonIcons();
     void BuildLayout();
-    // the button under `pt` (window coords), or -1
-    int ButtonIndexFromPoint(Point pt);
     void Layout();
     void SavePos();
     void RefreshResults(bool allowNavigation = true);
@@ -201,7 +198,6 @@ struct FindWindowWnd : WindowBase {
     void OnSize(WindowBase::SizeEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
     void OnClose(WindowBase::CloseEvent* ev);
-    void OnSetCursor(WindowBase::SetCursorEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
 };
@@ -243,7 +239,6 @@ static TempStr FindWindowButtonTooltip(int cmd) {
 }
 
 FindWindowWnd::~FindWindowWnd() {
-    delete tooltip;
     // edit, status, buttons and results are owned by `layout` (deleted in ~WindowBase)
 }
 
@@ -284,15 +279,6 @@ void FindWindowWnd::CreateButtons() {
         btns[i] = b;
     }
     UpdateButtonIcons();
-}
-
-int FindWindowWnd::ButtonIndexFromPoint(Point pt) {
-    for (int i = 0; i < 5; i++) {
-        if (btns[i] && btns[i]->BoundsInWindow().Contains(pt)) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 bool FindWindowWnd::Create(MainWindow* mainWin) {
@@ -358,13 +344,6 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         c->onDoubleClick = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
         c->SetModel(new FindResultsModel(win));
         results = c;
-    }
-
-    {
-        Tooltip::CreateArgs args;
-        args.parent = hwnd;
-        tooltip = new Tooltip();
-        tooltip->Create(args);
     }
 
     BuildLayout();
@@ -758,20 +737,6 @@ void FindWindowWnd::OnClose(WindowBase::CloseEvent* ev) {
     // WmEvent.didHandle defaults true -> skip WindowBase::Destroy()
 }
 
-// virtual-control tooltips
-void FindWindowWnd::OnSetCursor(WindowBase::SetCursorEvent*) {
-    Point pt = HwndGetCursorPos(hwnd);
-    int idx = ButtonIndexFromPoint(pt);
-    if (idx >= 0 && tooltip) {
-        TempStr tip = btns[idx]->GetTooltipTemp({});
-        if (tip) {
-            tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
-        }
-    } else if (tooltip) {
-        tooltip->Delete();
-    }
-}
-
 void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
     switch (ev->vkey) {
         case 'F':
@@ -875,7 +840,6 @@ FindWindowWnd* CreateFindWindow(MainWindow* win) {
     w->onSize = MkMethod1<FindWindowWnd, WindowBase::SizeEvent*, &FindWindowWnd::OnSize>(w);
     w->onGetMinMaxInfo = MkMethod1<FindWindowWnd, WindowBase::GetMinMaxInfoEvent*, &FindWindowWnd::OnGetMinMaxInfo>(w);
     w->onClose = MkMethod1<FindWindowWnd, WindowBase::CloseEvent*, &FindWindowWnd::OnClose>(w);
-    w->onSetCursor = MkMethod1<FindWindowWnd, WindowBase::SetCursorEvent*, &FindWindowWnd::OnSetCursor>(w);
     w->onKeyDown = MkMethod1<FindWindowWnd, KeyEvent*, &FindWindowWnd::OnKeyDown>(w);
     if (!w->Create(win)) {
         delete w;

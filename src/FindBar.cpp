@@ -112,7 +112,6 @@ struct FindBarWnd : WindowBase {
     VirtText* status = nullptr;
     // prev / next / match-case / match-whole-word / pop-out / close
     VirtIconButton* btns[6]{};
-    Tooltip* tooltip = nullptr;
 
     int barDx = 0;
     int barDy = 0;
@@ -130,8 +129,6 @@ struct FindBarWnd : WindowBase {
     void CreateButtons();
     void UpdateButtonIcons();
     void BuildLayout();
-    // the button under `pt` (window coords), or -1
-    int ButtonIndexFromPoint(Point pt);
     // forceBarDx > 0: fit the bar into exactly that window width, giving the
     // slack to the edit box. 0: the default edit width.
     void Layout(int forceBarDx = 0);
@@ -142,7 +139,6 @@ struct FindBarWnd : WindowBase {
     void OnSize(WindowBase::SizeEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
     void OnNcHitTest(WindowBase::NcHitTestEvent* ev);
-    void OnSetCursor(WindowBase::SetCursorEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
 };
@@ -176,7 +172,6 @@ static TempStr FindBarButtonTooltip(int cmd) {
 }
 
 FindBarWnd::~FindBarWnd() {
-    delete tooltip;
     // edit, status and buttons are owned by `layout` (deleted in ~WindowBase)
 }
 
@@ -218,15 +213,6 @@ void FindBarWnd::CreateButtons() {
         btns[i] = b;
     }
     UpdateButtonIcons();
-}
-
-int FindBarWnd::ButtonIndexFromPoint(Point pt) {
-    for (int i = 0; i < 6; i++) {
-        if (btns[i] && btns[i]->BoundsInWindow().Contains(pt)) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 bool FindBarWnd::Create(MainWindow* mainWin) {
@@ -280,13 +266,6 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     });
 
     CreateButtons();
-
-    {
-        Tooltip::CreateArgs targs;
-        targs.parent = hwnd;
-        tooltip = new Tooltip();
-        tooltip->Create(targs);
-    }
 
     BuildLayout();
 
@@ -398,20 +377,6 @@ void FindBarWnd::OnNcHitTest(WindowBase::NcHitTestEvent* ev) {
     }
 }
 
-// the buttons are virtual controls, so their tooltips are ours to show
-void FindBarWnd::OnSetCursor(WindowBase::SetCursorEvent*) {
-    Point pt = HwndGetCursorPos(hwnd);
-    int idx = ButtonIndexFromPoint(pt);
-    if (idx >= 0 && tooltip) {
-        TempStr tip = btns[idx]->GetTooltipTemp({});
-        if (tip) {
-            tooltip->SetSingle(tip, btns[idx]->BoundsInWindow(), false);
-        }
-    } else if (tooltip) {
-        tooltip->Delete();
-    }
-}
-
 void FindBarWnd::OnKeyDown(KeyEvent* ev) {
     // the find edit lives in this owned popup, not as a child of the frame, so
     // the frame's edit accelerator table doesn't reach it; handle the find keys
@@ -482,7 +447,6 @@ FindBarWnd* CreateFindBar(MainWindow* win) {
     bar->onSize = MkMethod1<FindBarWnd, WindowBase::SizeEvent*, &FindBarWnd::OnSize>(bar);
     bar->onGetMinMaxInfo = MkMethod1<FindBarWnd, WindowBase::GetMinMaxInfoEvent*, &FindBarWnd::OnGetMinMaxInfo>(bar);
     bar->onNcHitTest = MkMethod1<FindBarWnd, WindowBase::NcHitTestEvent*, &FindBarWnd::OnNcHitTest>(bar);
-    bar->onSetCursor = MkMethod1<FindBarWnd, WindowBase::SetCursorEvent*, &FindBarWnd::OnSetCursor>(bar);
     bar->onKeyDown = MkMethod1<FindBarWnd, KeyEvent*, &FindBarWnd::OnKeyDown>(bar);
     if (!bar->Create(win)) {
         delete bar;

@@ -18,6 +18,7 @@ struct VirtRoot;
 struct Pixmap;
 struct WindowBase;
 struct ControlBase;
+struct Tooltip;
 
 enum VirtFlags : u32 {
     vwfEnabled = 1 << 0,
@@ -272,6 +273,7 @@ struct VirtRoot {
     VirtCtrl* captured = nullptr;
     VirtCtrl* focused = nullptr;
     VirtCtrl* pressed = nullptr;
+    Tooltip* tooltip = nullptr;
 
     bool needsLayout = true;
     // legacy single-tree hosts lay out lazily from Paint(); see SetChild()
@@ -294,6 +296,9 @@ struct VirtRoot {
     bool OnMessage(UINT msg, WPARAM, LPARAM, LRESULT& res);
 
     VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut);
+    VirtCtrl* WndFromPointForTooltip(Point ptWindow, Point* ptLocalOut);
+    void UpdateTooltip(Point ptWindow);
+    void HideTooltip();
     void SetFocus(VirtCtrl*);
     bool TabNavigate(bool backwards);
     void SetCapture(VirtCtrl*);
