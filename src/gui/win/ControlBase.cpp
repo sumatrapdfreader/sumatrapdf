@@ -832,6 +832,16 @@ bool ControlBase::IsEnabled() const {
     return tobool(enabled);
 }
 
+bool ControlBase::IsFocused() const {
+    return hwnd && HwndIsFocused(hwnd);
+}
+
+void ControlBase::SetFocus() {
+    if (hwnd) {
+        HwndSetFocus(hwnd);
+    }
+}
+
 void ControlBase::SetColors(Color textCol, Color bgCol) {
     if (textCol != kColorNoChange) {
         this->textColor = textCol;

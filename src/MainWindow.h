@@ -187,9 +187,8 @@ struct MainWindow {
     ToolbarVirt* toolbarVirt = nullptr;
     HWND hwndMenuReBar = nullptr;
     HWND hwndMenuToolbar = nullptr;
-    // hwndFindEdit is the search input; it lives inside the floating findBar
-    // (Chrome-style), not in the toolbar
-    HWND hwndFindEdit = nullptr;
+    // the search input of the active find UI (compact bar or floating window)
+    Edit* findEdit = nullptr;
     FindBarWnd* findBar = nullptr;       // compact toolbar overlay
     FindWindowWnd* findWindow = nullptr; // floating window variant (SearchUIFloating)
     // owned by the toolbar layout

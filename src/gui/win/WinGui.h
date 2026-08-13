@@ -498,6 +498,8 @@ struct ControlBase : ILayout {
 
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;
+    bool IsFocused() const;
+    void SetFocus();
 
     void SuspendRedraw() const;
     void ResumeRedraw() const;
@@ -718,9 +720,14 @@ struct Edit : ControlBase {
     void SetCue(Str);
     void SetMargins(int left, int right);
     void SetSelection(int start, int end);
+    void GetSelection(int& start, int& end) const;
     void SelectAll();
     void SetCursorPosition(int pos);
     void SetCursorPositionAtEnd();
+    int GetTextLen() const;
+    void SetModified(bool);
+    bool IsModified() const;
+    void SetClassCursor(LPWSTR);
     bool HasBorder();
     void ApplyTextPadding();
 };

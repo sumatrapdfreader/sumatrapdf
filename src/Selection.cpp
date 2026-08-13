@@ -624,7 +624,7 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
         return;
     }
 
-    if (HwndIsFocused(win->hwndFindEdit) || (win->pageEdit && HwndIsFocused(win->pageEdit->hwnd))) {
+    if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
         EditSelectAll(GetFocus());
         return;
     }

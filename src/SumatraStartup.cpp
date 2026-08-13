@@ -316,7 +316,9 @@ static void MaybeStartSearch(MainWindow* win, Str searchTerm) {
     if (!win || !searchTerm) {
         return;
     }
-    HwndSetText(win->hwndFindEdit, searchTerm);
+    if (win->findEdit) {
+        win->findEdit->SetText(searchTerm);
+    }
     bool wasModified = true;
     bool showProgress = true;
     FindTextOnThread(win, TextSearch::Direction::Forward, searchTerm, wasModified, showProgress);

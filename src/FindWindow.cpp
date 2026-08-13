@@ -408,7 +408,7 @@ void FindWindowWnd::RefreshResults(bool allowNavigation) {
     filterWords.Reset();
     Str term = win->findCountText;
     if (len(term) == 0) {
-        term = win->hwndFindEdit ? HwndGetTextTemp(win->hwndFindEdit) : nullptr;
+        term = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
     }
     if (len(term) > 0) {
         filterWords.Append(term);
@@ -878,18 +878,18 @@ void ShowFindWindow(MainWindow* win) {
         return;
     }
     FindWindowWnd* w = win->findWindow;
-    win->hwndFindEdit = w->edit->hwnd; // make this the active find edit
+    win->findEdit = w->edit; // make this the active find edit
     FindWindowSetMatchCaseChecked(win, win->findMatchCase);
     FindWindowSetMatchWholeWordChecked(win, win->findMatchWholeWord);
     PositionFindWindow(w);
     w->Layout();
     ShowWindow(w->hwnd, SW_SHOW);
-    HwndSetFocus(win->hwndFindEdit);
-    Edit_SetSel(win->hwndFindEdit, 0, -1);
+    win->findEdit->SetFocus();
+    win->findEdit->SelectAll();
     // populate the results list: show what's cached, and (re)run the search for
     // the current term so snippets get built now that the window is visible
     w->RefreshResults();
-    if (win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0) {
+    if (win->findEdit && win->findEdit->GetTextLen() > 0) {
         OnFindBarTextChanged(win);
     }
 }
@@ -1015,7 +1015,9 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
             win->ctrl->GoToPage(startPage, false);
         }
         ShowFindWindow(win);
-        HwndSetText(win->hwndFindEdit, term);
+        if (win->findEdit) {
+            win->findEdit->SetText(term);
+        }
         OnFindBarTextChanged(win);
         FindFlushPendingSearch(win); // run it now instead of waiting out the debounce
         return fail("NOTREADY scan-started");

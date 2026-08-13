@@ -473,8 +473,8 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
 
         case CmdFindNext:
         case CmdFindPrev: {
-            // Need non-empty find text (hwndFindEdit is the active bar or floating window edit).
-            if (!win->hwndFindEdit || HwndGetTextLen(win->hwndFindEdit) == 0) {
+            // Need non-empty find text (findEdit is the active bar or floating window edit).
+            if (!win->findEdit || win->findEdit->GetTextLen() == 0) {
                 return false;
             }
             // When we already know there are zero matches, disable next/prev.
@@ -886,7 +886,7 @@ void ShowOrHideToolbar(MainWindow* win) {
     }
     if (!show && !overlay) {
         // Move the focus out of the toolbar
-        if (HwndIsFocused(win->hwndFindEdit) || (win->pageEdit && HwndIsFocused(win->pageEdit->hwnd))) {
+        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
             HwndSetFocus(win->hwndFrame);
         }
     }
@@ -903,8 +903,8 @@ void UpdateFindbox(MainWindow* win) {
     }
 
     auto* cursorId = win->IsDocLoaded() ? IDC_IBEAM : IDC_ARROW;
-    if (win->hwndFindEdit) {
-        SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
+    if (win->findEdit) {
+        win->findEdit->SetClassCursor(cursorId);
     }
 }
 

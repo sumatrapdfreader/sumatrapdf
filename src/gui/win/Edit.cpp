@@ -70,7 +70,43 @@ Edit::~Edit() {
 }
 
 void Edit::SetSelection(int start, int end) {
+    if (!hwnd) {
+        return;
+    }
     Edit_SetSel(hwnd, start, end);
+}
+
+void Edit::GetSelection(int& start, int& end) const {
+    start = 0;
+    end = 0;
+    if (!hwnd) {
+        return;
+    }
+    DWORD sel = (DWORD)Edit_GetSel(hwnd);
+    start = (int)LOWORD(sel);
+    end = (int)HIWORD(sel);
+}
+
+int Edit::GetTextLen() const {
+    return hwnd ? HwndGetTextLen(hwnd) : 0;
+}
+
+void Edit::SetModified(bool on) {
+    if (hwnd) {
+        Edit_SetModify(hwnd, on);
+    }
+}
+
+bool Edit::IsModified() const {
+    return hwnd && Edit_GetModify(hwnd);
+}
+
+// GCLP_HCURSOR is per window class (WC_EDIT), not per HWND
+void Edit::SetClassCursor(LPWSTR cursorId) {
+    if (!hwnd) {
+        return;
+    }
+    SetClassLongPtrW(hwnd, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
 }
 
 void Edit::SelectAll() {
@@ -254,7 +290,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                     if (fgTid && fgTid != ourTid) {
                         attached = AttachThreadInput(ourTid, fgTid, TRUE) != 0;
                     }
-                    SetFocus(hwnd);
+                    ::SetFocus(hwnd);
                     if (attached) {
                         AttachThreadInput(ourTid, fgTid, FALSE);
                     }

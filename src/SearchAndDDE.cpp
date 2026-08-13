@@ -8,6 +8,8 @@
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -98,7 +100,7 @@ static DocController* BrowserFindCtrl(MainWindow* win) {
 // the current page and sweep all pages for the match list. Results arrive
 // asynchronously via BrowserFindResultReceived() / BrowserFindAllResultReceived()
 static void BrowserFindStartSearch(MainWindow* win, DocController* md) {
-    TempStr term = HwndGetTextTemp(win->hwndFindEdit);
+    TempStr term = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
     if (len(term) == 0) {
         return;
     }
@@ -267,15 +269,15 @@ void FindFirst(MainWindow* win) {
     if (!win) {
         return;
     }
-    bool hadFindFocus = win->hwndFindEdit && HwndIsFocused(win->hwndFindEdit);
+    bool hadFindFocus = win->findEdit && win->findEdit->IsFocused();
 
     if (BrowserFindCtrl(win)) {
         // chm / markdown in a webview: our own find bar drives the search
         // inside the webview
         ShowFindBar(win);
-        if (win->hwndFindEdit) {
-            HwndSetFocus(win->hwndFindEdit);
-            Edit_SetSel(win->hwndFindEdit, 0, -1);
+        if (win->findEdit) {
+            win->findEdit->SetFocus();
+            win->findEdit->SelectAll();
         }
         return;
     }
@@ -305,18 +307,20 @@ void FindFirst(MainWindow* win) {
         str::Free(sel);
         selection.len -= str::NormalizeWSInPlace(selection);
         if (len(selection) > 0) {
-            TempStr current = HwndGetTextTemp(win->hwndFindEdit);
+            TempStr current = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
             if (!str::EqI(selection, current)) {
                 AbortFinding(win, false);
                 dm->textSearch->SetLastResult(dm->textSelection);
-                HwndSetText(win->hwndFindEdit, selection);
+                if (win->findEdit) {
+                    win->findEdit->SetText(selection);
+                }
             }
         }
     }
 
-    if (win->hwndFindEdit) {
-        HwndSetFocus(win->hwndFindEdit);
-        Edit_SetSel(win->hwndFindEdit, 0, -1);
+    if (win->findEdit) {
+        win->findEdit->SetFocus();
+        win->findEdit->SelectAll();
     }
 }
 
@@ -350,7 +354,7 @@ void OnFindBarTextChanged(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    TempStr s = HwndGetTextTemp(win->hwndFindEdit);
+    TempStr s = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
     if (len(s) == 0) {
         AbortFinding(win, true); // also cancels a pending debounce timer
         DocController* md = BrowserFindCtrl(win);
@@ -363,7 +367,7 @@ void OnFindBarTextChanged(MainWindow* win) {
         FindWindowRefreshResults(win); // empty the results list
         return;
     }
-    size_t nChars = HwndGetTextLen(win->hwndFindEdit);
+    size_t nChars = win->findEdit ? win->findEdit->GetTextLen() : 0;
     UINT delay = (nChars <= 2) ? kFindDebounceShortDelayMs : kFindDebounceDelayMs;
     // SetTimer with the same id replaces the previous timer, so each keystroke
     // restarts the countdown
@@ -381,13 +385,13 @@ void FindDebounceTimerFired(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0) {
+    if (win->findEdit && win->findEdit->GetTextLen() > 0) {
         StartIncrementalFind(win);
     }
 }
 
 static bool HasFindText(MainWindow* win) {
-    return win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0;
+    return win->findEdit && win->findEdit->GetTextLen() > 0;
 }
 
 // if a debounced search is pending, cancel the timer and start it now (so Enter
@@ -447,8 +451,8 @@ void FindToggleMatchCase(MainWindow* win) {
         win->AsFixed()->textSearch->SetMatchCase(win->findMatchCase);
     }
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
-    if (win->hwndFindEdit) {
-        Edit_SetModify(win->hwndFindEdit, TRUE);
+    if (win->findEdit) {
+        win->findEdit->SetModified(true);
     }
     // re-run the search with the new match-case setting
     if (HasFindText(win)) {
@@ -473,8 +477,8 @@ void FindToggleMatchWholeWord(MainWindow* win) {
         win->AsFixed()->textSearch->SetMatchWholeWord(win->findMatchWholeWord);
     }
     FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);
-    if (win->hwndFindEdit) {
-        Edit_SetModify(win->hwndFindEdit, TRUE);
+    if (win->findEdit) {
+        win->findEdit->SetModified(true);
     }
     // re-run the search with the new whole-word setting
     if (HasFindText(win)) {
@@ -503,9 +507,11 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
 
-    HwndSetText(win->hwndFindEdit, selection);
+    if (win->findEdit) {
+        win->findEdit->SetText(selection);
+        win->findEdit->SetModified(false);
+    }
     AbortFinding(win, false); // cancel "find as you type"
-    Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
 
     // wasModified stays false so FindNext continues from the selection; still
@@ -754,10 +760,10 @@ void InvalidateFindForDocumentChange(MainWindow* win) {
     str::FreePtr(&win->findCountText);
     FindWindowRefreshResults(win);
 
-    if (!IsFindUIVisible(win) || !win->hwndFindEdit) {
+    if (!IsFindUIVisible(win) || !win->findEdit) {
         return;
     }
-    TempStr s = HwndGetTextTemp(win->hwndFindEdit);
+    TempStr s = win->findEdit->GetTextTemp();
     if (len(s) == 0) {
         FindBarSetStatus(win, "");
         return;
@@ -1471,10 +1477,13 @@ __unused static TempStr ReverseTextTemp(Str s) {
 }
 
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress) {
-    TempStr s = HwndGetTextTemp(win->hwndFindEdit);
+    if (!win->findEdit) {
+        return;
+    }
+    TempStr s = win->findEdit->GetTextTemp();
     // if document is rtl, need to reverse the text
     // s = ReverseTextTemp(s);
-    bool wasModified = Edit_GetModify(win->hwndFindEdit);
+    bool wasModified = win->findEdit->IsModified();
     if (!wasModified) {
         // check if the find text differs from the current tab's cached search text
         // this happens when switching tabs: the find edit box shows the current text
@@ -1495,7 +1504,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool sho
             }
         }
     }
-    Edit_SetModify(win->hwndFindEdit, FALSE);
+    win->findEdit->SetModified(false);
     FindTextOnThread(win, direction, s, wasModified, showProgress);
 }
 
@@ -1620,7 +1629,7 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
     if (!win->IsDocLoaded() || !win->AsFixed()) {
         return;
     }
-    if (!win->hwndFindEdit || HwndGetTextLen(win->hwndFindEdit) == 0) {
+    if (!win->findEdit || win->findEdit->GetTextLen() == 0) {
         return;
     }
 

@@ -2837,7 +2837,7 @@ static MainWindow* CreateMainWindow() {
 
     CreateTabbar(win);
     CreateToolbar(win);
-    // create the floating find bar hidden; it owns win->hwndFindEdit
+    // create the floating find bar hidden; it owns win->findEdit
     win->findBar = CreateFindBar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
@@ -8729,7 +8729,8 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    if (HwndIsFocused(tab->win->hwndFindEdit) || (tab->win->pageEdit && HwndIsFocused(tab->win->pageEdit->hwnd))) {
+    if ((tab->win->findEdit && tab->win->findEdit->IsFocused()) ||
+        (tab->win->pageEdit && tab->win->pageEdit->IsFocused())) {
         SendMessageW(GetFocus(), WM_COPY, 0, 0);
         return;
     }

@@ -253,7 +253,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
         edit->onTextChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnTextChanged>(this);
-        win->hwndFindEdit = edit->hwnd;
+        win->findEdit = edit;
     }
 
     // ellipsis: single line, vertically centered, so it lines up with the
@@ -440,7 +440,7 @@ void FindBarWnd::OnCommand(WindowBase::CommandEvent* ev) {
 //--- public API
 
 // Chrome-style floating search bar. Created hidden together with the toolbar;
-// owns win->hwndFindEdit. Shown via Ctrl+F or the toolbar search icon.
+// owns win->findEdit. Shown via Ctrl+F or the toolbar search icon.
 FindBarWnd* CreateFindBar(MainWindow* win) {
     auto* bar = new FindBarWnd();
     bar->onCommand = MkMethod1<FindBarWnd, WindowBase::CommandEvent*, &FindBarWnd::OnCommand>(bar);
@@ -461,7 +461,7 @@ void DeleteFindBar(MainWindow* win) {
     }
     delete win->findBar;
     win->findBar = nullptr;
-    win->hwndFindEdit = nullptr;
+    win->findEdit = nullptr;
 }
 
 // rebuild the bar so it picks up new theme colors / icons (called on theme change)
@@ -472,16 +472,16 @@ void RecreateFindBar(MainWindow* win) {
     // stop any in-flight find/count that captured the old bar's state
     AbortFinding(win, true);
     bool wasVisible = HwndIsVisible(win->findBar->hwnd);
-    TempStr text = wasVisible ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
+    TempStr text = wasVisible && win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : nullptr;
     DeleteFindBar(win);
     win->findBar = CreateFindBar(win);
     if (win->findBar && wasVisible) {
         ShowFindBar(win);
-        if (len(text) > 0) {
+        if (len(text) > 0 && win->findEdit) {
             // restore the text without re-running the search (the existing
             // document highlight is preserved across the recreate)
             win->findBar->suppressTextChanged = true;
-            HwndSetText(win->hwndFindEdit, text);
+            win->findEdit->SetText(text);
             win->findBar->suppressTextChanged = false;
         }
     }
@@ -519,14 +519,14 @@ static void ShowCompactBar(MainWindow* win) {
         return;
     }
     FindBarWnd* bar = win->findBar;
-    win->hwndFindEdit = bar->edit->hwnd; // make this the active find edit
+    win->findEdit = bar->edit; // make this the active find edit
     // reflect the current match-case / whole-word state on the toggle buttons
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
     FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);
     PositionFindBar(bar);
     ShowWindow(bar->hwnd, SW_SHOW);
-    HwndSetFocus(win->hwndFindEdit);
-    Edit_SetSel(win->hwndFindEdit, 0, -1);
+    win->findEdit->SetFocus();
+    win->findEdit->SelectAll();
 }
 
 // "ShowFindBar" is the entry point used by FindFirst/Ctrl+F; it shows whichever
@@ -582,19 +582,21 @@ bool IsFindUIVisible(MainWindow* win) {
 
 // focus the find edit and select all text (Ctrl+F when find UI is already open)
 void FocusFindEditSelectAll(MainWindow* win) {
-    if (!win->hwndFindEdit) {
+    if (!win->findEdit) {
         return;
     }
-    HwndSetFocus(win->hwndFindEdit);
-    Edit_SetSel(win->hwndFindEdit, 0, -1);
+    win->findEdit->SetFocus();
+    win->findEdit->SelectAll();
 }
 
 // switch the find UI between the compact toolbar overlay and the floating
 // window (persists the choice in gGlobalPrefs->searchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win) {
-    TempStr text = win->hwndFindEdit ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
-    // remember the caret/selection (LOWORD start, HIWORD end) so it survives the switch
-    DWORD sel = win->hwndFindEdit ? (DWORD)Edit_GetSel(win->hwndFindEdit) : 0;
+    TempStr text = win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : nullptr;
+    int selStart = 0, selEnd = 0;
+    if (win->findEdit) {
+        win->findEdit->GetSelection(selStart, selEnd);
+    }
     bool wasShowing = IsFindBarVisible(win) || IsFindWindowVisible(win);
 
     HideFindBar(win); // dispatches: hides whichever find UI is currently visible
@@ -605,13 +607,15 @@ void ToggleFloatingFindUI(MainWindow* win) {
     if (!wasShowing) {
         return; // just persist the preference; nothing was open
     }
-    ShowFindBar(win); // shows the now-active UI and repoints win->hwndFindEdit
-    if (len(text) > 0) {
-        HwndSetText(win->hwndFindEdit, text); // restore text (re-runs the search)
+    ShowFindBar(win); // shows the now-active UI and repoints win->findEdit
+    if (len(text) > 0 && win->findEdit) {
+        win->findEdit->SetText(text); // restore text (re-runs the search)
     }
-    HwndSetFocus(win->hwndFindEdit);
-    // restore the caret/selection last, after Show/SetText reset it
-    Edit_SetSel(win->hwndFindEdit, LOWORD(sel), HIWORD(sel));
+    if (win->findEdit) {
+        win->findEdit->SetFocus();
+        // restore the caret/selection last, after Show/SetText reset it
+        win->findEdit->SetSelection(selStart, selEnd);
+    }
 }
 
 // reposition over the search toolbar icon (no-op if not visible)
