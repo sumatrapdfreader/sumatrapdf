@@ -25,6 +25,7 @@
 #include "HomePage.h"
 #include "AIChatCommon.h"
 #include "AdvancedSettingsDialog.h"
+#include "EditAnnotations.h"
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -141,6 +142,7 @@ enum class ControlCmd : u16 {
     TestPageComments = 45,
     TestAdvSettingsRows = 46,
     TestDestZoomNav = 47,
+    TestAnnotEditorLayout = 48,
 };
 
 enum class ControlArgType : u16 {
@@ -687,6 +689,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, startZoomPerc); // optional
             int exitCode = 0;
             Str res = DestZoomNavResultTemp(destNo, startZoomPerc, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestAnnotEditorLayout: {
+            i32 clientDy = 0;
+            i32 selectItem = 0;
+            IntArg(req, 0, clientDy);   // optional
+            IntArg(req, 1, selectItem); // optional, 1-based
+            int exitCode = 0;
+            Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

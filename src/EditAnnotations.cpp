@@ -1943,3 +1943,63 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     // first layout is triggered
     ew->SetIsVisible(true);
 }
+
+// Resize the annotation editor to clientDy and report list / Contents / gap
+// sizes for tests/issue-3769.ts and tests/issue-5834.ts. selectItem is
+// 1-based; 0 leaves the selection alone.
+TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !EngineSupportsAnnotations(tab->GetEngine())) {
+        return finish(StrL("ERROR no-annot-engine"), 1);
+    }
+
+    ShowEditAnnotationsWindow(tab, nullptr);
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    if (!ew || !ew->hwnd || !ew->listBox) {
+        return finish(StrL("ERROR no-editor"), 1);
+    }
+
+    if (selectItem > 0) {
+        int idx = selectItem - 1;
+        if (!ew->annotations.isValidIndex(idx)) {
+            return finish(fmt("ERROR no-annot item=%d n=%d", selectItem, len(ew->annotations)), 1);
+        }
+        ew->listBox->SetCurrentSelection(idx);
+        ew->ListBoxSelectionChanged();
+    }
+
+    if (clientDy > 0) {
+        ResizeHwndToClientArea(ew->hwnd, 520, clientDy, false);
+        // MoveWindow can skip WM_SIZE when the outer size is unchanged;
+        // force the grow-to-fit layout either way.
+        Rect crNow = HwndClientRect(ew->hwnd);
+        SetGrowingControlsToFit(ew, crNow.dy);
+        ew->DoLayout(crNow.Size());
+    }
+
+    Rect cr = HwndClientRect(ew->hwnd);
+    Rect listR = ew->listBox->lastBounds;
+    int contentsDy = 0;
+    if (ew->editContents && ew->editContents->IsVisible() && ew->editContents->hwnd) {
+        contentsDy = HwndClientRect(ew->editContents->hwnd).dy;
+    }
+    int gapBelow = cr.dy - (listR.y + listR.dy);
+    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d", cr.dy, listR.dy, contentsDy, gapBelow), 0);
+}

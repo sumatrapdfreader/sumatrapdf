@@ -5,27 +5,14 @@
 // multi-line annotation stayed cut off however tall the window was. It now
 // shares the spare vertical space with the list of annotations (see #3769), so
 // making the window taller shows more of the annotation's text.
+//
+// The list is a VirtListBox (no Win32 ListBox HWND), so the test drives the
+// editor through -dbg-control: select the annotation, resize the window, and
+// check the Contents box grew.
 
 import { writeFileSync } from "node:fs";
-import { cmdId, EXE, tmpPath } from "./util";
-import {
-  enumChildWindows,
-  enumWindows,
-  findChildWindow,
-  getClassName,
-  getWindowPid,
-  getWindowRect,
-  moveWindow,
-  packCoords,
-  postMessage,
-  sendMessage,
-  sleep,
-  waitForTopWindow,
-  MK_LBUTTON,
-  WM_COMMAND,
-  WM_LBUTTONDOWN,
-  WM_LBUTTONUP,
-} from "./winapi";
+import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // one page with a text annotation whose Contents needs many lines
 function makePdf(): string {
@@ -52,101 +39,50 @@ function makePdf(): string {
   return body;
 }
 
-// the editor is the process' top-level window that isn't the main frame
-function findEditorWindow(pid: number, frame: number): number {
-  let res = 0;
-  enumWindows((hwnd) => {
-    if (getWindowPid(hwnd) !== pid || hwnd === frame) {
-      return true;
+async function measureContents(client: ControlClient, clientDy: number): Promise<{ contentsDy: number; raw: string }> {
+  const deadline = Date.now() + 15_000;
+  for (;;) {
+    const res = await client.request(ControlCommand.TestAnnotEditorLayout, [clientDy, 1]);
+    const exitCode = res[0] as number;
+    const raw = String(res[1] ?? "").trim();
+    if (exitCode === 0) {
+      const m = /contentsDy=(\d+)/.exec(raw);
+      if (!m) {
+        throw new Error(`issue-5834: could not parse: ${raw}`);
+      }
+      return { contentsDy: parseInt(m[1]!, 10), raw };
     }
-    const cls = getClassName(hwnd);
-    if (cls.includes("SUMATRA") || cls.length === 0) {
-      return true;
+    if (exitCode !== 2) {
+      throw new Error(`issue-5834: TestAnnotEditorLayout failed: ${raw}`);
     }
-    if (getWindowRect(hwnd).bottom - getWindowRect(hwnd).top > 200) {
-      res = hwnd;
-      return false;
+    if (Date.now() > deadline) {
+      throw new Error(`issue-5834: document never became ready: ${raw}`);
     }
-    return true;
-  });
-  return res;
-}
-
-// the Contents box: the tallest Edit in the editor window
-function findContentsEdit(editor: number): number {
-  let best = 0;
-  let bestDy = 0;
-  enumChildWindows(editor, (hwnd) => {
-    if (getClassName(hwnd) !== "Edit") {
-      return true;
-    }
-    const r = getWindowRect(hwnd);
-    const dy = r.bottom - r.top;
-    if (dy > bestDy) {
-      best = hwnd;
-      bestDy = dy;
-    }
-    return true;
-  });
-  return best;
+    await new Promise((r) => setTimeout(r, 100));
+  }
 }
 
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-5834.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
-  try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
-    await sleep(1500);
-    sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdEditAnnotations")), 0n);
-    await sleep(1800);
-
-    const ew = findEditorWindow(proc.pid, frame);
-    if (!ew) {
-      throw new Error("the annotation editor window did not appear");
-    }
-    const listBox = findChildWindow(ew, "ListBox");
-    if (!listBox) {
-      throw new Error("could not find the list of annotations");
-    }
-    // select the annotation, which is what shows the Contents box
-    postMessage(listBox, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(30, 8));
-    postMessage(listBox, WM_LBUTTONUP, 0, packCoords(30, 8));
-    await sleep(1000);
-
-    const measure = async (dy: number) => {
-      moveWindow(ew, 200, 30, 520, dy);
-      await sleep(800);
-      const edit = findContentsEdit(ew);
-      if (!edit) {
-        throw new Error("could not find the Contents box");
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      const short = await measureContents(client, 560);
+      const tall = await measureContents(client, 1000);
+      if (tall.contentsDy <= short.contentsDy + 20) {
+        throw new Error(
+          `the Contents box does not use the extra space: ${short.contentsDy}px in a 560px tall window, ` +
+            `${tall.contentsDy}px in a 1000px tall one (${short.raw} / ${tall.raw})`,
+        );
       }
-      const r = getWindowRect(edit);
-      return r.bottom - r.top;
-    };
-
-    const short = await measure(560);
-    const tall = await measure(1000);
-    if (tall <= short + 20) {
-      throw new Error(
-        `the Contents box does not use the extra space: ${short}px in a 560px tall window, ` +
-          `${tall}px in a 1000px tall one`,
-      );
-    }
-    console.log(`  Contents box grows with the window: ${short}px -> ${tall}px ✓`);
-  } finally {
-    proc.kill();
-    await sleep(300);
-  }
+      console.log(`  Contents box grows with the window: ${short.contentsDy}px -> ${tall.contentsDy}px ✓`);
+    },
+    [pdf],
+  );
 }
 
 if (import.meta.main) {
-  const { runStandalone } = await import("./util");
   await runStandalone(testit);
 }

@@ -17,3 +17,4 @@ void UpdateAnnotationsList(EditAnnotationsWindow*);
 void NotifyAnnotationsChanged(EditAnnotationsWindow*);
 void DetachAnnotationFromUI(Annotation*);
 void InvalidateEditAnnotationsOnEngineChange(WindowTab*);
+TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut = nullptr);

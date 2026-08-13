@@ -8,26 +8,16 @@
 // different sizes. It now takes whatever vertical space the rest of the window
 // doesn't need.
 //
-// The test opens the annotation editor, resizes it and checks the list follows:
-// the space below the list stays about the same while the list itself grows and
-// shrinks with the window.
+// The list is a VirtListBox (no Win32 ListBox HWND), so the test drives the
+// editor through -dbg-control: resize it and check the list follows. The space
+// below the list stays about the same while the list itself grows and shrinks
+// with the window.
 
 import { writeFileSync } from "node:fs";
-import { cmdId, EXE, tmpPath } from "./util";
-import {
-  enumWindows,
-  findChildWindow,
-  getClassName,
-  getWindowPid,
-  getWindowRect,
-  moveWindow,
-  sendMessage,
-  sleep,
-  waitForTopWindow,
-  WM_COMMAND,
-} from "./winapi";
+import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { EXE, runStandalone, tmpPath } from "./util.ts";
 
-// a one-page PDF; annotations can be added to it, which is all the editor needs
+// a one-page PDF; the editor opens even with no annotations
 function makePdf(): string {
   const objs = [
     `<< /Type /Catalog /Pages 2 0 R >>`,
@@ -50,92 +40,71 @@ function makePdf(): string {
   return body;
 }
 
-// the editor is the process' top-level window that isn't the main frame
-function findEditorWindow(pid: number, frame: number): number {
-  let res = 0;
-  enumWindows((hwnd) => {
-    if (getWindowPid(hwnd) !== pid || hwnd === frame) {
-      return true;
+type Layout = { windowDy: number; listDy: number; contentsDy: number; gapBelow: number; raw: string };
+
+async function measure(client: ControlClient, clientDy: number, selectItem = 0): Promise<Layout> {
+  const deadline = Date.now() + 15_000;
+  for (;;) {
+    const res = await client.request(ControlCommand.TestAnnotEditorLayout, [clientDy, selectItem]);
+    const exitCode = res[0] as number;
+    const raw = String(res[1] ?? "").trim();
+    if (exitCode === 0) {
+      const m = /windowDy=(\d+) listDy=(\d+) contentsDy=(\d+) gapBelow=(-?\d+)/.exec(raw);
+      if (!m) {
+        throw new Error(`issue-3769: could not parse: ${raw}`);
+      }
+      return {
+        windowDy: parseInt(m[1]!, 10),
+        listDy: parseInt(m[2]!, 10),
+        contentsDy: parseInt(m[3]!, 10),
+        gapBelow: parseInt(m[4]!, 10),
+        raw,
+      };
     }
-    const cls = getClassName(hwnd);
-    if (cls.includes("SUMATRA") || cls.length === 0) {
-      return true;
+    if (exitCode !== 2) {
+      throw new Error(`issue-3769: TestAnnotEditorLayout failed: ${raw}`);
     }
-    const r = getWindowRect(hwnd);
-    if (r.bottom - r.top > 200) {
-      res = hwnd;
-      return false;
+    if (Date.now() > deadline) {
+      throw new Error(`issue-3769: document never became ready: ${raw}`);
     }
-    return true;
-  });
-  return res;
+    await new Promise((r) => setTimeout(r, 100));
+  }
 }
 
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-3769.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
-  try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
-    await sleep(1500);
-    sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdEditAnnotations")), 0n);
-    await sleep(1800);
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      const tall = await measure(client, 1000);
+      const short = await measure(client, 560);
+      const tallAgain = await measure(client, 1000);
 
-    const ew = findEditorWindow(proc.pid, frame);
-    if (!ew) {
-      throw new Error("the annotation editor window did not appear");
-    }
-    const listBox = findChildWindow(ew, "ListBox");
-    if (!listBox) {
-      throw new Error("could not find the list of annotations");
-    }
-
-    const measure = async (dy: number) => {
-      moveWindow(ew, 200, 30, 520, dy);
-      await sleep(700);
-      const wr = getWindowRect(ew);
-      const lr = getWindowRect(listBox);
-      return { windowDy: wr.bottom - wr.top, listDy: lr.bottom - lr.top, gapBelow: wr.bottom - lr.bottom };
-    };
-
-    const tall = await measure(1000);
-    const short = await measure(560);
-    const tallAgain = await measure(1000);
-
-    // the list has to follow the window, not stay at a fixed number of lines
-    const grew = tall.listDy - short.listDy;
-    const windowGrew = tall.windowDy - short.windowDy;
-    if (grew < windowGrew / 2) {
-      throw new Error(
-        `the list does not take the available space: window ${short.windowDy} -> ${tall.windowDy} ` +
-          `but list only ${short.listDy} -> ${tall.listDy}`,
+      const grew = tall.listDy - short.listDy;
+      const windowGrew = tall.windowDy - short.windowDy;
+      if (grew < windowGrew / 2) {
+        throw new Error(
+          `the list does not take the available space: window ${short.windowDy} -> ${tall.windowDy} ` +
+            `but list only ${short.listDy} -> ${tall.listDy} (${tall.raw} / ${short.raw})`,
+        );
+      }
+      if (tall.gapBelow > 200) {
+        throw new Error(`${tall.gapBelow}px of unused space below the list in a ${tall.windowDy}px tall window`);
+      }
+      if (Math.abs(tallAgain.listDy - tall.listDy) > 4) {
+        throw new Error(`same window height gave different list sizes: ${tall.listDy} then ${tallAgain.listDy}`);
+      }
+      console.log(
+        `  annotation list follows the window: ${short.listDy}px at ${short.windowDy} -> ` +
+          `${tall.listDy}px at ${tall.windowDy} (gap below ${tall.gapBelow}px) ✓`,
       );
-    }
-    // no big empty area under the list
-    if (tall.gapBelow > 200) {
-      throw new Error(`${tall.gapBelow}px of unused space below the list in a ${tall.windowDy}px tall window`);
-    }
-    // and the same window size gives the same layout every time
-    if (Math.abs(tallAgain.listDy - tall.listDy) > 4) {
-      throw new Error(`same window height gave different list sizes: ${tall.listDy} then ${tallAgain.listDy}`);
-    }
-    console.log(
-      `  annotation list follows the window: ${short.listDy}px at ${short.windowDy} -> ` +
-        `${tall.listDy}px at ${tall.windowDy} (gap below ${tall.gapBelow}px) ✓`,
-    );
-  } finally {
-    proc.kill();
-    await sleep(300);
-  }
+    },
+    [pdf],
+  );
 }
 
 if (import.meta.main) {
-  const { runStandalone } = await import("./util");
   await runStandalone(testit);
 }
