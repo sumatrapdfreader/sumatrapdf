@@ -274,7 +274,7 @@ struct AboutCtrl : VirtCtrl {
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
     void PaintChildren(VirtPaintCtx&) override;
-    VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags = 0) override;
+    VirtCtrl* ExtraFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) override;
 };
 
 static void OpenAboutUrl(VirtMouseEvent* ev) {
@@ -422,12 +422,8 @@ void AboutCtrl::PaintChildren(VirtPaintCtx& ctx) {
     }
 }
 
-// hit-test logo / showFreqRead, then the table's links
-VirtCtrl* AboutCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
-    VirtCtrl* hit = CtrlFromPoint(this, ptWindow, ptLocalOut, flags);
-    if (hit) {
-        return hit;
-    }
+// table cells are not VirtCtrl children; CtrlFromPoint asks here after logo / showFreqRead miss
+VirtCtrl* AboutCtrl::ExtraFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
     if (!table) {
         return nullptr;
     }
@@ -437,7 +433,7 @@ VirtCtrl* AboutCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) 
             continue;
         }
         v->SetRoot(root);
-        hit = CtrlFromPoint(v, ptWindow, ptLocalOut, flags);
+        VirtCtrl* hit = CtrlFromPoint(v, ptWindow, ptLocalOut, flags);
         if (hit) {
             return hit;
         }
@@ -670,7 +666,7 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             case WM_SETCURSOR: {
                 pt = HwndGetCursorPos(hwnd);
                 Point ptLocal{0, 0};
-                VirtCtrl* w = gAboutRoot->WndFromPoint(pt, &ptLocal);
+                VirtCtrl* w = CtrlFromPoint(gAboutRoot, pt, &ptLocal);
                 if (w && w->OnSetCursor(ptLocal)) {
                     TempStr tip = w->GetTooltipTemp(ptLocal);
                     if (tip && *tip.s) {
@@ -2343,7 +2339,7 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
     }
     Point pt = HwndGetCursorPos(win->hwndCanvas);
     Point ptLocal{0, 0};
-    VirtCtrl* w = root->WndFromPoint(pt, &ptLocal);
+    VirtCtrl* w = CtrlFromPoint(root, pt, &ptLocal);
     if (!w || !w->OnSetCursor(ptLocal)) {
         return false;
     }
@@ -2874,7 +2870,7 @@ Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
         return {};
     }
     Point ptLocal{0, 0};
-    VirtCtrl* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
+    VirtCtrl* w = CtrlFromPoint(win->homeRoot, {x, y}, &ptLocal);
     HomeEntryCtrl* e = entries->EntryForCtrl(w);
     if (!e) {
         return {};
@@ -2888,7 +2884,7 @@ bool HomePageOnHover(MainWindow* win, int x, int y) {
         return false;
     }
     Point ptLocal{0, 0};
-    VirtCtrl* w = win->homeRoot->WndFromPoint({x, y}, &ptLocal);
+    VirtCtrl* w = CtrlFromPoint(win->homeRoot, {x, y}, &ptLocal);
     HomeEntryCtrl* e = entries->EntryForCtrl(w);
     if (!e) {
         return false;

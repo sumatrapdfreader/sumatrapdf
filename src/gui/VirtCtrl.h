@@ -42,6 +42,7 @@ enum VirtHitFlags : u32 {
 };
 
 VirtCtrl* CtrlFromPoint(VirtCtrl* root, Point ptWindow, Point* ptLocalOut = nullptr, u32 flags = 0);
+VirtCtrl* CtrlFromPoint(VirtRoot* root, Point ptWindow, Point* ptLocalOut = nullptr, u32 flags = 0);
 
 // all rects are in HWND client coords
 struct VirtPaintCtx {
@@ -150,7 +151,7 @@ struct VirtCtrl : LayoutBase {
     virtual bool HitTest(Point ptLocal);
     // scroll containers return how much their content is scrolled
     virtual Point ScrollOffset();
-    virtual VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags = 0);
+    virtual VirtCtrl* ExtraFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags);
 
     // dispatch to on* handlers; return true to consume (stop bubbling)
     bool OnMouseDown(VirtMouseEvent&);
@@ -302,7 +303,6 @@ struct VirtRoot {
     // single entry point from the owning WndProc, returns false if not handled
     bool OnMessage(UINT msg, WPARAM, LPARAM, LRESULT& res);
 
-    VirtCtrl* WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags = 0);
     void UpdateTooltip(Point ptWindow);
     void HideTooltip();
     void SetFocus(VirtCtrl*);

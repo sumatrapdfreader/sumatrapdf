@@ -180,21 +180,18 @@ VirtCtrl* CtrlFromPoint(VirtCtrl* root, Point ptWindow, Point* ptLocalOut, u32 f
             }
         }
     }
-    if (root->HasFlag(vwfNoHitTest)) {
-        return nullptr;
-    }
-    Point ptLocal{ptWindow.x - b.x, ptWindow.y - b.y};
-    if (!root->HitTest(ptLocal)) {
-        return nullptr;
+    if (root->HasFlag(vwfNoHitTest) || !root->HitTest({ptWindow.x - b.x, ptWindow.y - b.y})) {
+        return root->ExtraFromPoint(ptWindow, ptLocalOut, flags);
     }
     if (ptLocalOut) {
-        *ptLocalOut = ptLocal;
+        *ptLocalOut = {ptWindow.x - b.x, ptWindow.y - b.y};
     }
     return root;
 }
 
-VirtCtrl* VirtCtrl::WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
-    return CtrlFromPoint(this, ptWindow, ptLocalOut, flags);
+// Non-child hit targets (AboutCtrl's table cells). Default: none.
+VirtCtrl* VirtCtrl::ExtraFromPoint(Point, Point*, u32) {
+    return nullptr;
 }
 
 bool VirtCtrl::OnMouseDown(VirtMouseEvent& ev) {
@@ -637,16 +634,16 @@ void VirtRoot::Paint(Gfx* gfx, Rect clip) {
     }
 }
 
-VirtCtrl* VirtRoot::WndFromPoint(Point ptWindow, Point* ptLocalOut, u32 flags) {
-    if (len(tops) == 0 || !bounds.Contains(ptWindow)) {
+VirtCtrl* CtrlFromPoint(VirtRoot* root, Point ptWindow, Point* ptLocalOut, u32 flags) {
+    if (!root || len(root->tops) == 0 || !root->bounds.Contains(ptWindow)) {
         return nullptr;
     }
-    if (layoutInPaint) {
-        LayoutIfNeeded();
+    if (root->layoutInPaint) {
+        root->LayoutIfNeeded();
     }
     // reverse of the paint order: whatever is drawn last is on top
-    for (int i = len(tops) - 1; i >= 0; i--) {
-        VirtCtrl* w = tops[i]->WndFromPoint(ptWindow, ptLocalOut, flags);
+    for (int i = len(root->tops) - 1; i >= 0; i--) {
+        VirtCtrl* w = CtrlFromPoint(root->tops[i], ptWindow, ptLocalOut, flags);
         if (w) {
             return w;
         }
@@ -663,7 +660,7 @@ void VirtRoot::HideTooltip() {
 
 void VirtRoot::UpdateTooltip(Point ptWindow) {
     Point ptLocal{};
-    VirtCtrl* w = WndFromPoint(ptWindow, &ptLocal, vhfIncludeDisabled);
+    VirtCtrl* w = CtrlFromPoint(this, ptWindow, &ptLocal, vhfIncludeDisabled);
     TempStr tip{};
     Rect tipRc{};
     while (w) {
@@ -916,7 +913,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             if (target) {
                 ptLocal = ptWindow;
             } else {
-                target = WndFromPoint(ptWindow, &ptLocal);
+                target = CtrlFromPoint(this, ptWindow, &ptLocal);
             }
             if (target != hovered) {
                 ClearHover();
@@ -962,7 +959,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
         case WM_LBUTTONDOWN:
         case WM_RBUTTONDOWN:
         case WM_MBUTTONDOWN: {
-            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = CtrlFromPoint(this, ptWindow, &ptLocal);
             ClearPressed();
             if (!target) {
                 SetFocus(nullptr);
@@ -991,7 +988,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             if (target) {
                 ptLocal = ptWindow;
             } else {
-                target = WndFromPoint(ptWindow, &ptLocal);
+                target = CtrlFromPoint(this, ptWindow, &ptLocal);
             }
             if (!target) {
                 ClearPressed();
@@ -1018,7 +1015,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
         }
 
         case WM_LBUTTONDBLCLK: {
-            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = CtrlFromPoint(this, ptWindow, &ptLocal);
             if (!target) {
                 return false;
             }
@@ -1032,7 +1029,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
             ScreenToClient(hwnd, &pt);
             ptWindow = {pt.x, pt.y};
-            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = CtrlFromPoint(this, ptWindow, &ptLocal);
             if (!target) {
                 return false;
             }
@@ -1049,7 +1046,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             }
             ScreenToClient(hwnd, &pt);
             ptWindow = {pt.x, pt.y};
-            VirtCtrl* target = WndFromPoint(ptWindow, &ptLocal);
+            VirtCtrl* target = CtrlFromPoint(this, ptWindow, &ptLocal);
             if (!target) {
                 return false;
             }
@@ -1060,7 +1057,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
 
         case WM_SETCURSOR: {
             Point pt = HwndGetCursorPos(hwnd);
-            VirtCtrl* target = WndFromPoint(pt, &ptLocal);
+            VirtCtrl* target = CtrlFromPoint(this, pt, &ptLocal);
             while (target) {
                 Rect b = target->BoundsInWindow();
                 if (target->OnSetCursor({pt.x - b.x, pt.y - b.y})) {
@@ -2582,10 +2579,10 @@ static void Table_TestHitTest() {
     root.SetTops(tops);
 
     Point local{0, 0};
-    utassert(root.WndFromPoint({6, 8}, &local) == a);
-    utassert(root.WndFromPoint({40, 8}, &local) == b);
+    utassert(CtrlFromPoint(&root, {6, 8}, &local) == a);
+    utassert(CtrlFromPoint(&root, {40, 8}, &local) == b);
     // the gap between the columns is a miss
-    utassert(root.WndFromPoint({30, 8}, &local) == nullptr);
+    utassert(CtrlFromPoint(&root, {30, 8}, &local) == nullptr);
     delete t;
 }
 
@@ -2772,7 +2769,7 @@ bool VirtTreeOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp
         UnmirrorRtl(hwnd, pt);
         root->UpdateTooltip(pt);
         Point ptLocal{0, 0};
-        VirtCtrl* w = root->WndFromPoint(pt, &ptLocal);
+        VirtCtrl* w = CtrlFromPoint(root, pt, &ptLocal);
         // the cursor belongs to whichever ancestor claims it first
         while (w) {
             Rect b = w->BoundsInWindow();
