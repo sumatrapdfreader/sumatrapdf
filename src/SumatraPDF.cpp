@@ -10781,6 +10781,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdToggleDisableLinks:
+            if (ShouldToggle(cmd, gGlobalPrefs->disableLinks)) {
+                gGlobalPrefs->disableLinks = !gGlobalPrefs->disableLinks;
+                SaveSettings();
+                if (gGlobalPrefs->disableLinks) {
+                    for (MainWindow* w : gWindows) {
+                        RefHoverHide(w->refHover, w->hwndCanvas);
+                        StopKeyboardLinkFollowing(w);
+                    }
+                }
+            }
+            break;
+
         case CmdToggleImages:
             // not a setting like showLinks: this is a debug aid, so it lasts
             // for the session and doesn't end up in everyone's settings file

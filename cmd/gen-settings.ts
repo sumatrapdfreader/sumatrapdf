@@ -989,6 +989,13 @@ const globalPrefs: Field[] = [
   field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
   field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
+    "DisableLinks",
+    Bool,
+    false,
+    "if true, document links are ignored so you can select and read " +
+      "(useful for drawings with many links); if false, clicking a link follows it",
+  ).ver("3.7"),
+  field(
     "ShowDocumentFocusIndicator",
     Bool,
     false,

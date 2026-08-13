@@ -287,6 +287,7 @@ export const commands = [
     "CmdToggleLaserPointer", "Toggle Laser Pointer",
     "CmdZoomToSelection", "Zoom: To Selection",
     "CmdToggleHoverPreview", "Toggle Hover Preview",
+    "CmdToggleDisableLinks", "Toggle Disable Links",
     "CmdNone", "Do nothing",
 ];
 

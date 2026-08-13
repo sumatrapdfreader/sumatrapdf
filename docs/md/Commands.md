@@ -112,6 +112,7 @@ CmdToggleEngineeringDrawingEnhance,,Toggle Engineering Drawing Enhancement,"ver 
 CmdSetDocumentColorsFollowTheme,,Set Document Colors Follow Theme,"ver 3.7+, opens a dialog to pick how MuPDF-rendered documents follow the UI theme (`DocumentColorsFollowTheme`: off, smart, legacy)"
 CmdTogglePreservePdfImages,,Toggle Preserve PDF Image Colors in Dark Mode,"ver 3.7+, session-only toggle of image preservation on inverted pages"
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
+CmdToggleDisableLinks,,Toggle Disable Links,"ver 3.7+, palette-only; toggles `DisableLinks` so clicks, hover and keyboard following ignore document links (fixes #5939)"
 CmdToggleHoverPreview,,Toggle Hover Preview,"ver 3.7+, palette-only; toggles the citation/reference hover popup (`CitationHoverDelay`: 300 ms when on, -1 when off)"
 ```
 
@@ -612,6 +613,7 @@ These toggle commands accept an optional `state` boolean argument that forces an
 - `CmdToggleMenuBar`
 - `CmdToggleContinuousView`
 - `CmdToggleTableOfContents`, `CmdToggleBookmarks`
+- `CmdToggleDisableLinks`
 
 Arguments:
 

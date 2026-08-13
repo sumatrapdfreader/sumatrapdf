@@ -1723,6 +1723,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
             Annotation* prev = win->annotationUnderCursor;
             int srcPageNo = -1;
             IPageElement* el = dm->GetElementAtPos(pos, &srcPageNo);
+            if (el && el->Is(kindPageElementDest) && gGlobalPrefs->disableLinks) {
+                el = nullptr;
+            }
             // the annotation notification below is suppressed in favor of
             // the citation hover popup, but only when that feature is on
             int hoverDelayMs = gGlobalPrefs->citationHoverDelay;
@@ -2075,10 +2078,8 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     } else {
         ReportIf(win->linkOnLastButtonDown);
         IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
-        if (pageEl) {
-            if (pageEl->Is(kindPageElementDest)) {
-                win->linkOnLastButtonDown = pageEl;
-            }
+        if (pageEl && pageEl->Is(kindPageElementDest) && !gGlobalPrefs->disableLinks) {
+            win->linkOnLastButtonDown = pageEl;
         }
     }
 
@@ -2411,6 +2412,9 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
     if (pageEl->Is(kindPageElementDest)) {
+        if (gGlobalPrefs->disableLinks) {
+            return;
+        }
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
     } else if (pageEl->Is(kindPageElementImage)) {
@@ -3170,6 +3174,9 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
 
     int pageNo = 0;
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
+    if (pageEl && pageEl->Is(kindPageElementDest) && gGlobalPrefs->disableLinks) {
+        pageEl = nullptr;
+    }
     if (!pageEl) {
         if (annotEditHover) {
             SetCursorCached(IDC_HAND);

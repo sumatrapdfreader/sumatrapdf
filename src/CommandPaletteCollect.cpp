@@ -89,6 +89,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showLinks;
         } break;
+        case CmdToggleDisableLinks: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->disableLinks;
+        } break;
         case CmdToggleImages: {
             isToggle = true;
             newIsOn = !ShowImageOutlines();

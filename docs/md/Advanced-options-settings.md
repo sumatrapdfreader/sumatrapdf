@@ -154,6 +154,11 @@ ShowToc = true
 ; version 3.6)
 ShowLinks = false
 
+; if true, document links are ignored so you can select and read (useful for
+; drawings with many links); if false, clicking a link follows it (introduced in
+; version 3.7)
+DisableLinks = false
+
 ; if true, draw a focus ring around the document when it has keyboard focus (Tab
 ; to the page area) (introduced in version 3.7)
 ShowDocumentFocusIndicator = false

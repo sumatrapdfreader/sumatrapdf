@@ -40,6 +40,9 @@ bool CanFollowLinksWithKeyboard(MainWindow* win) {
     if (!win || !win->IsDocLoaded()) {
         return false;
     }
+    if (gGlobalPrefs && gGlobalPrefs->disableLinks) {
+        return false;
+    }
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return false;
