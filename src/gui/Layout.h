@@ -69,7 +69,6 @@ struct ILayout {
     Rect lastBounds;
 
     ILayout() = default;
-    explicit ILayout(Kind);
     virtual ~ILayout() = default;
 
     Kind GetKind() const { return kind; }

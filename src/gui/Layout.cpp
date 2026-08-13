@@ -278,10 +278,6 @@ Constraints Constraints::TightenWidth(int width) const {
     return bc;
 }
 
-ILayout::ILayout(Kind k) {
-    kind = k;
-}
-
 void ILayout::SetVisibility(Visibility newVisibility) {
     visibility = newVisibility;
 }
