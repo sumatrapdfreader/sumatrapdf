@@ -2570,6 +2570,43 @@ Size VirtSpacer::GetIdealSize() {
     return idealSize;
 }
 
+//--- checked downcasts
+
+// The kinds are the interned pointers defined above, so this is a pointer
+// compare, not a string compare.
+VirtText* AsVirtText(ILayout* l) {
+    if (!l) {
+        return nullptr;
+    }
+    Kind k = l->GetKind();
+    // VirtLink and VirtButton are VirtText
+    if (k == kindVirtCtrlText || k == kindVirtCtrlLink || k == kindVirtCtrlButton) {
+        return (VirtText*)l;
+    }
+    return nullptr;
+}
+
+VirtButton* AsVirtButton(ILayout* l) {
+    if (l && l->GetKind() == kindVirtCtrlButton) {
+        return (VirtButton*)l;
+    }
+    return nullptr;
+}
+
+VirtIconButton* AsVirtIconButton(ILayout* l) {
+    if (l && l->GetKind() == kindVirtCtrlIconButton) {
+        return (VirtIconButton*)l;
+    }
+    return nullptr;
+}
+
+VirtLine* AsVirtLine(ILayout* l) {
+    if (l && l->GetKind() == kindVirtCtrlLine) {
+        return (VirtLine*)l;
+    }
+    return nullptr;
+}
+
 #if defined(DEBUG)
 // must be last: UtAssert.h over-writes assert()
 #include "base/UtAssert.h"

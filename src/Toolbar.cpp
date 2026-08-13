@@ -155,7 +155,6 @@ static int ToolbarRowDy(int iconSize) {
 }
 
 static void RelayoutToolbar(MainWindow* win);
-static bool IsVirtKind(VirtCtrl* w, const char* k);
 
 struct ToolbarVirt {
     MainWindow* win = nullptr;
@@ -245,8 +244,10 @@ static void UpdateToolbarButtonStateByIdx(MainWindow* win, int idx, bool set, BY
         return;
     }
     if (flag == TBSTATE_CHECKED) {
-        auto* ib = (VirtIconButton*)w;
-        if (ib->isSelected == set) {
+        // a custom button with ToolbarText is a VirtButton, which has no
+        // checked state (and is not a VirtIconButton)
+        auto* ib = AsVirtIconButton(w);
+        if (!ib || ib->isSelected == set) {
             return;
         }
         ib->isSelected = set;
@@ -538,7 +539,10 @@ static void SetToolbarButtonImageByIdx(MainWindow* win, int idx, const char* ico
     if (!w) {
         return;
     }
-    auto* ib = (VirtIconButton*)w;
+    auto* ib = AsVirtIconButton(w);
+    if (!ib) {
+        return;
+    }
     ToolbarVirt* tb = win->toolbarVirt;
     int sz = tb ? tb->iconSize : DpiScale(gGlobalPrefs->toolbarSize);
     Pixmap* px = GetCachedPixmapForSvg(icon, sz, sz, TbTextColor());
@@ -1128,23 +1132,23 @@ static int ToolbarIconSize() {
 static void ApplyToolbarItemColors(VirtCtrl* w) {
     Color hover = TbHoverColor();
     Color sel = TbSelectedColor();
-    if (auto* ib = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlIconButton")) ? (VirtIconButton*)w : nullptr) {
+    if (auto* ib = AsVirtIconButton(w)) {
         ib->bgColorHover = hover;
         ib->bgColorSelected = sel;
         ib->chevronColor = TbTextColor();
         return;
     }
-    if (auto* b = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlButton")) ? (VirtButton*)w : nullptr) {
+    if (auto* b = AsVirtButton(w)) {
         b->bgColorHover = hover;
         b->textColor = TbTextColor();
         b->textColorDisabled = TbDisabledColor();
         return;
     }
-    if (auto* t = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlText")) ? (VirtText*)w : nullptr) {
+    if (auto* t = AsVirtText(w)) {
         t->textColor = TbTextColor();
         return;
     }
-    if (auto* line = (w->GetKind() && str::Eq(w->GetKind(), "virtCtrlLine")) ? (VirtLine*)w : nullptr) {
+    if (auto* line = AsVirtLine(w)) {
         line->color = TbEdgeColor();
     }
 }
@@ -1160,14 +1164,14 @@ static void RefreshToolbarIcons(MainWindow* win) {
     for (int i = 0; i < len(tb->items); i++) {
         VirtCtrl* w = tb->items[i];
         ApplyToolbarItemColors(w);
-        if (!str::Eq(w->GetKind(), "virtCtrlIconButton")) {
+        auto* ib = AsVirtIconButton(w);
+        if (!ib) {
             continue;
         }
         const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
         if (SkipBuiltInButton(bi) && !bi.svgIcon) {
             continue;
         }
-        auto* ib = (VirtIconButton*)w;
         Str svg = bi.svgIcon ? bi.svgIcon : Str(bi.icon);
         ib->pixmap = GetCachedPixmapForSvg(svg, sz, sz, fg, TbBgColor());
         ib->pixmapDisabled = GetCachedPixmapForSvg(svg, sz, sz, dis, TbBgColor());
@@ -1234,8 +1238,8 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
         // Match the old Win32 dump: TBIF_TEXT. Built-in buttons store the
         // tooltip (with accelerator); custom ones stored the raw name.
         Str text{};
-        if (IsVirtKind(w, "virtCtrlButton")) {
-            text = ((VirtButton*)w)->s;
+        if (auto* b = AsVirtButton(w)) {
+            text = b->s;
         } else if (i >= gLayoutButtonsCount) {
             text = GetToolbarButtonInfoByIdx(i).toolTip;
         } else if (w && w->tooltip) {
@@ -1250,10 +1254,6 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     }
     *exitCodeOut = 0;
     return ToStrTemp(out);
-}
-
-static bool IsVirtKind(VirtCtrl* w, const char* k) {
-    return w && w->GetKind() && str::Eq(w->GetKind(), k);
 }
 
 // TrackPopupMenu is modal: a click on the split button dismisses the menu and
@@ -1313,8 +1313,7 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
         ev->didHandle = true;
         return;
     }
-    if (IsVirtKind(w, "virtCtrlIconButton")) {
-        auto* ib = (VirtIconButton*)w;
+    if (auto* ib = AsVirtIconButton(w)) {
         if (ib->hasDropdown) {
             int dropDx = ib->DropdownDx();
             if (dropDx > 0 && ev->pt.x >= w->bounds.dx - dropDx) {

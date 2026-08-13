@@ -579,6 +579,12 @@ struct VirtText : VirtCtrl {
 
 VirtText* NewVirtText(const VirtTextArgs&);
 
+// Checked downcasts: null unless the layout really is that control. Code that
+// walks a layout tree it didn't build (the toolbar, whose items are a mix of
+// icon buttons, text buttons, labels and separators) must go through these
+// instead of casting on faith.
+VirtText* AsVirtText(ILayout*);
+
 struct VirtLink : VirtText {
     Str target; // owned
     bool underlineOnHover = false;
@@ -611,6 +617,8 @@ struct VirtButton : VirtText {
     void OnKeyDown(VirtKeyEvent*);
 };
 
+VirtButton* AsVirtButton(ILayout*);
+
 struct VirtIconButton : VirtCtrl {
     // not owned; in SumatraPDF it comes from GetCachedPixmapForSvg()
     Pixmap* pixmap = nullptr;
@@ -637,6 +645,8 @@ struct VirtIconButton : VirtCtrl {
     void OnMouseLeave();
     void OnMouseMove(VirtMouseEvent*);
 };
+
+VirtIconButton* AsVirtIconButton(ILayout*);
 
 // The ✕ that closes or removes something, styled like the tab close button: a
 // gray ✕ that turns white on a red circle when hovered. `withCircle` also fills
@@ -705,6 +715,8 @@ struct VirtLine : VirtCtrl {
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
 };
+
+VirtLine* AsVirtLine(ILayout*);
 
 struct VirtSpacer : VirtCtrl {
     Size idealSize;
