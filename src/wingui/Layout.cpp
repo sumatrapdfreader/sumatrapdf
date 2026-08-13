@@ -1480,6 +1480,7 @@ void Table::SetBounds(Rect r) {
 }
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
+    DpiSetFromHwnd(hwnd);
     dbglayout(fmt("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy));
 
     Constraints c = ExpandInf();
@@ -1510,24 +1511,24 @@ Insets DefaultInsets() {
 
 // DpiScaledInsets has 1-, 2-, and 4-value overloads only (no 3-value form) so a
 // mistaken top/right/bottom call without left fails at compile time.
-static Insets DpiScaledInsetsAll(HWND hwnd, int top, int right, int bottom, int left) {
+static Insets DpiScaledInsetsAll(int top, int right, int bottom, int left) {
     ReportIf(top < 0);
     ReportIf(right < 0);
     ReportIf(bottom < 0);
     ReportIf(left < 0);
-    return {DpiScale(hwnd, top), DpiScale(hwnd, right), DpiScale(hwnd, bottom), DpiScale(hwnd, left)};
+    return {DpiScale(top), DpiScale(right), DpiScale(bottom), DpiScale(left)};
 }
 
-Insets DpiScaledInsets(HWND hwnd, int uniform) {
-    return DpiScaledInsetsAll(hwnd, uniform, uniform, uniform, uniform);
+Insets DpiScaledInsets(int uniform) {
+    return DpiScaledInsetsAll(uniform, uniform, uniform, uniform);
 }
 
-Insets DpiScaledInsets(HWND hwnd, int topBottom, int leftRight) {
-    return DpiScaledInsetsAll(hwnd, topBottom, leftRight, topBottom, leftRight);
+Insets DpiScaledInsets(int topBottom, int leftRight) {
+    return DpiScaledInsetsAll(topBottom, leftRight, topBottom, leftRight);
 }
 
-Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
-    return DpiScaledInsetsAll(hwnd, top, right, bottom, left);
+Insets DpiScaledInsets(int top, int right, int bottom, int left) {
+    return DpiScaledInsetsAll(top, right, bottom, left);
 }
 
 static Kind kindSpacer = "spacer";

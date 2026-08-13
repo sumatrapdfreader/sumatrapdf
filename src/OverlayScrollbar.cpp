@@ -76,7 +76,7 @@ static Rect GetTrackRect(OverlayScrollbar* sb) {
     int gap = 0;
     if (IsThick(sb)) {
         arrowSize = IsVert(sb) ? rc.dx : rc.dy;
-        gap = DpiScale(sb->hwndOwner, 2);
+        gap = DpiScale(2);
     }
     int total = arrowSize + gap;
     if (IsVert(sb)) {
@@ -95,7 +95,7 @@ static Rect GetThumbRect(OverlayScrollbar* sb) {
 
     int trackLen = IsVert(sb) ? track.dy : track.dx;
     int thumbLen = MulDiv(trackLen, (int)sb->nPage, range);
-    thumbLen = std::max(thumbLen, DpiScale(sb->hwndOwner, kMinThumbSize));
+    thumbLen = std::max(thumbLen, DpiScale(kMinThumbSize));
 
     int scrollableTrack = trackLen - thumbLen;
     int scrollableRange = range - (int)sb->nPage;
@@ -581,7 +581,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 Rect track = GetTrackRect(sb);
                 int range = sb->nMax - sb->nMin + 1;
                 int thumbLen = MulDiv(IsVert(sb) ? track.dy : track.dx, (int)sb->nPage, range);
-                int minThumb = DpiScale(sb->hwndOwner, kMinThumbSize);
+                int minThumb = DpiScale(kMinThumbSize);
                 thumbLen = std::max(thumbLen, minThumb);
                 int trackLen = IsVert(sb) ? track.dy : track.dx;
                 int scrollableTrack = trackLen - thumbLen;
@@ -654,7 +654,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 int range = sb->nMax - sb->nMin + 1;
                 int trackLen = IsVert(sb) ? track.dy : track.dx;
                 int thumbLen = MulDiv(trackLen, (int)sb->nPage, range);
-                int minThumb = DpiScale(sb->hwndOwner, kMinThumbSize);
+                int minThumb = DpiScale(kMinThumbSize);
                 thumbLen = std::max(thumbLen, minThumb);
                 int scrollableTrack = trackLen - thumbLen;
                 int scrollableRange = range - (int)sb->nPage;
@@ -770,9 +770,9 @@ OverlayScrollbar* OverlayScrollbarCreate(HWND hwndOwner, OverlayScrollbar::Type 
     sb->hwndOwner = hwndOwner;
     sb->type = type;
     sb->mode = mode;
-    sb->thinWidth = DpiScale(hwndOwner, 4);
-    sb->thickWidth = DpiScale(hwndOwner, 16);
-    int sysWidth = DpiGetSystemMetrics(hwndOwner, IsVert(sb) ? SM_CXVSCROLL : SM_CYHSCROLL);
+    sb->thinWidth = DpiScale(4);
+    sb->thickWidth = DpiScale(16);
+    int sysWidth = DpiGetSystemMetrics(IsVert(sb) ? SM_CXVSCROLL : SM_CYHSCROLL);
     if (sysWidth > 0) {
         sb->thickWidth = sysWidth;
     }

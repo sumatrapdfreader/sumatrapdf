@@ -376,7 +376,7 @@ void SetHotkeyWnd::StyleButton(VirtButton* b, bool isDefault) {
 VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
     auto* b = new VirtButton(text, platformFont);
     StyleButton(b, isDefault);
-    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
+    b->textPadding = DpiScaledInsets(5, 12);
     return b;
 }
 
@@ -502,7 +502,7 @@ bool SetHotkeyWnd::Create(HWND owner) {
     {
         auto* t = new VirtRichText();
         t->font = platformFont;
-        t->padding = DpiScaledInsets(hwnd, 6, 0, 0, 0);
+        t->padding = DpiScaledInsets(6, 0, 0, 0);
         hotkeyDisplay = t;
         vbox->AddChild(t);
     }
@@ -511,7 +511,7 @@ bool SetHotkeyWnd::Create(HWND owner) {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
-        int gap = DpiScale(hwnd, 4);
+        int gap = DpiScale(4);
 
         btnCancel = NewButton(_TRA("Cancel"), false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
@@ -525,16 +525,16 @@ bool SetHotkeyWnd::Create(HWND owner) {
         hbox->AddChild(new Spacer(gap, 0));
         hbox->AddChild(btnSet);
 
-        auto* hboxPad = new Padding(hbox, DpiScaledInsets(hwnd, 8, 0, 0, 0));
+        auto* hboxPad = new Padding(hbox, DpiScaledInsets(8, 0, 0, 0));
         vbox->AddChild(hboxPad);
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, 8, 12));
+    layout = new Padding(vbox, DpiScaledInsets(8, 12));
 
     // fill in the key-cap and the button states before measuring: an empty
     // rich text has no height, and the window is sized to its content
     UpdateUI();
-    int minDx = DpiScale(hwnd, 320);
+    int minDx = DpiScale(320);
     LayoutAndSizeToContent(layout, minDx, 0, hwnd);
     // pick up the virtual controls so we paint them and they get their input
     DoLayout(HwndClientRect(hwnd).Size());
@@ -565,7 +565,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSetHotkeyDestroy);
     wnd->onWndProc = MkMethod1<SetHotkeyWnd, WindowBase::WndProcEvent*, &SetHotkeyWnd::WndProc>(wnd);
     wnd->onKeyDown = MkMethod1<SetHotkeyWnd, KeyEvent*, &SetHotkeyWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont(hwndOwner);
+    wnd->font = GetAppFont();
     if (!wnd->Create(hwndOwner)) {
         delete wnd;
         for (MainWindow* win : gWindows) {

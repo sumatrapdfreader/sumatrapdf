@@ -330,8 +330,8 @@ SumatraLogo::SumatraLogo() {
 Size SumatraLogo::GetIdealSize() {
     Size sz = PlatformFontMeasureText(font, kAppName);
     HWND hwnd = GetHwnd();
-    sz.dy += DpiScale(hwnd, kAboutBoxMarginDy * 2);
-    sz.dx += 2 * DpiScale(hwnd, kInnerPadding);
+    sz.dy += DpiScale(kAboutBoxMarginDy * 2);
+    sz.dx += 2 * DpiScale(kInnerPadding);
     return sz;
 }
 
@@ -507,9 +507,9 @@ void AboutCtrl::Sync(HDC hdc) {
 void AboutCtrl::UpdateLayout(HWND hwnd, Rect clientRc) {
     headerSize = logo->GetIdealSize();
 
-    int leftRightSpaceDx = DpiScale(hwnd, kAboutLeftRightSpaceDx);
-    int marginDx = DpiScale(hwnd, kAboutMarginDx);
-    int aboutTxtDy = DpiScale(hwnd, kAboutTxtDy);
+    int leftRightSpaceDx = DpiScale(kAboutLeftRightSpaceDx);
+    int marginDx = DpiScale(kAboutMarginDx);
+    int aboutTxtDy = DpiScale(kAboutTxtDy);
 
     table->colGap = 2 * leftRightSpaceDx;
     table->rowGap = aboutTxtDy;
@@ -635,7 +635,7 @@ static void CreateInfotipForLink(Str tooltip, const Rect& rc) {
 
     Tooltip::CreateArgs args;
     args.parent = gHwndAbout;
-    args.font = GetAppFont(gHwndAbout);
+    args.font = GetAppFont();
     args.isRtl = IsUIRtl();
 
     gAboutTooltip = new Tooltip();
@@ -770,7 +770,7 @@ void ShowAboutWindow(MainWindow* win) {
     AboutCtrl* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, hdc, HwndClientRect(gHwndAbout));
     Rect rc = about->aboutRect;
     EndPaint(gHwndAbout, &ps);
-    int rectPadding = DpiScale(gHwndAbout, kAboutRectPadding);
+    int rectPadding = DpiScale(kAboutRectPadding);
     rc.Inflate(rectPadding, rectPadding);
 
     // resize the new window to just match these dimensions
@@ -814,7 +814,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
         Size txtSize = link->GetIdealSize(true);
         Rect r = {0, 0, txtSize.dx, txtSize.dy};
         PositionRB(clientRc, r);
-        MoveXY(r, -DpiScale(hwnd, kInnerPadding), -DpiScale(hwnd, kInnerPadding));
+        MoveXY(r, -DpiScale(kInnerPadding), -DpiScale(kInnerPadding));
         link->SetBounds(r);
     }
     DrawAbout(hwnd, hdc, win->homeRoot);
@@ -824,17 +824,17 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
 
 constexpr int kThumbsSeparatorDy = 2;
 constexpr int kThumbsBorderDx = 1;
-#define kThumbsMarginLeft DpiScale(hdc, 40)
-#define kThumbsMarginRight DpiScale(hdc, 40)
-#define kThumbsMarginTop DpiScale(hdc, 50)
-#define kThumbsMarginBottom DpiScale(hdc, 40)
-#define kThumbsSpaceBetweenX DpiScale(hdc, 38)
-#define kThumbsSpaceBetweenY DpiScale(hdc, 58)
-#define kThumbsBottomBoxDy DpiScale(hdc, 50)
-#define kHomeListThumbDx DpiScale(hdc, 30)
-#define kHomeListThumbDy DpiScale(hdc, 40)
-#define kHomeListRowDy DpiScale(hdc, 46)
-#define kHomeListRowGapDx DpiScale(hdc, 8)
+#define kThumbsMarginLeft DpiScale(40)
+#define kThumbsMarginRight DpiScale(40)
+#define kThumbsMarginTop DpiScale(50)
+#define kThumbsMarginBottom DpiScale(40)
+#define kThumbsSpaceBetweenX DpiScale(38)
+#define kThumbsSpaceBetweenY DpiScale(58)
+#define kThumbsBottomBoxDy DpiScale(50)
+#define kHomeListThumbDx DpiScale(30)
+#define kHomeListThumbDy DpiScale(40)
+#define kHomeListRowDy DpiScale(46)
+#define kHomeListRowGapDx DpiScale(8)
 
 // ThumbnailLayout::fileSize cache: AppendBlanks zero-fills, so set
 // kSizeNotFetched after each AppendBlanks (default member init never runs).
@@ -1142,7 +1142,7 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     win->homeSearch = e;
     UpdateHomeSearchCueBanner(win);
     // add left/right padding so text doesn't overlap the border
-    int margin = DpiScale(parent, 6);
+    int margin = DpiScale(6);
     e->SetMargins(margin, margin);
     // restore the query from before the edit control was destroyed
     // (e.g. by switching to a document tab and back)
@@ -1502,8 +1502,8 @@ static void LayoutHomePage(HomePageLayout& l) {
                        ((rc.dx - (thumbsColsForLayout * kThumbnailDx) -
                          ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX) - kThumbsMarginLeft - kThumbsMarginRight) /
                         2);
-    if (thumbsStartX < DpiScale(hdc, kInnerPadding)) {
-        thumbsStartX = DpiScale(hdc, kInnerPadding);
+    if (thumbsStartX < DpiScale(kInnerPadding)) {
+        thumbsStartX = DpiScale(kInnerPadding);
     } else if (nFilesForLayout == 0) {
         thumbsStartX = kThumbsMarginLeft;
     }
@@ -1526,9 +1526,9 @@ static void LayoutHomePage(HomePageLayout& l) {
     hdr->isRtl = isRtl;
     Size txtSize = hdr->GetIdealSize(true);
 
-    int hdrY = DpiScale(hdc, 8);
-    int iconGap = DpiScale(hdc, 4);
-    int titleGap = DpiScale(hdc, 8);
+    int hdrY = DpiScale(8);
+    int iconGap = DpiScale(4);
+    int titleGap = DpiScale(8);
     int viewIconsDx = (2 * rcIconView.dx) + iconGap;
     Rect rcHdr(thumbsStartX + viewIconsDx + titleGap, hdrY, txtSize.dx, txtSize.dy);
     l.rcIconThumbnailView = {thumbsStartX, rcHdr.y + ((rcHdr.dy - rcIconView.dy) / 2), rcIconView.dx, rcIconView.dy};
@@ -1556,7 +1556,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     openDoc->withUnderline = true;
     txtSize = openDoc->GetIdealSize(true);
 
-    int openDocSpacing = DpiScale(hdc, 16);
+    int openDocSpacing = DpiScale(16);
     rcIconOpen.x = rcHdr.x + rcHdr.dx + openDocSpacing;
     rcIconOpen.y = rcHdr.y + rcHdr.dy - rcIconOpen.dy - kOpenDocumentYShift + 3;
     if (isRtl) {
@@ -1577,12 +1577,12 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     // --- Position search edit below header ---
     EnsureHomeSearchCreated(win);
-    int searchEditDy = DpiScale(hdc, kSearchEditDy);
-    int headerSearchGap = DpiScale(hdc, kHeaderSearchGapY);
-    int searchThumbsGap = DpiScale(hdc, kSearchThumbnailsGapY);
+    int searchEditDy = DpiScale(kSearchEditDy);
+    int headerSearchGap = DpiScale(kHeaderSearchGapY);
+    int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
     {
         int borderDx = thumbsContentWidth * 3 / 4;
-        borderDx = std::max(borderDx, DpiScale(hdc, 200));
+        borderDx = std::max(borderDx, DpiScale(200));
         int borderX = thumbsStartX + ((thumbsContentWidth - borderDx) / 2);
         int borderY = headerBottomY + headerSearchGap;
         int borderDy = searchEditDy + 2; // 1px border on each side
@@ -1604,7 +1604,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     tipCtrl->SetTipLine(SelectedTipLine(), GetPlatformFont(fontTip));
     VirtRichText* tip = tipCtrl->rich;
     if (tip) {
-        int tipPadding = DpiScale(hdc, 8);
+        int tipPadding = DpiScale(8);
         tipHeight = tip->MinIntrinsicHeight(thumbsContentWidth) + (2 * tipPadding);
     }
 
@@ -1620,7 +1620,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     bool showList = HomePageIsListView();
     // Leave room above the first row so RoundRect / selection outline top edges
     // aren't clipped by rcThumbsArea (they extend a few px upward).
-    int thumbsContentPadTop = showList ? DpiScale(hdc, 2) : DpiScale(hdc, 5);
+    int thumbsContentPadTop = showList ? DpiScale(2) : DpiScale(5);
     int thumbsRows = 0;
     int thumbsContentDy = 0;
     if (showList) {
@@ -1653,9 +1653,9 @@ static void LayoutHomePage(HomePageLayout& l) {
             listX = rc.dx - thumbsStartX - thumbsContentWidth;
         }
         int listIconDx = l.rcIconListView.dx;
-        int listIconGap = DpiScale(hdc, 6);
+        int listIconGap = DpiScale(6);
         // fixed size column — never call file::GetSize during layout (disk/network I/O)
-        int listSizeDx = DpiScale(hdc, 56);
+        int listSizeDx = DpiScale(56);
         // one-row margin so a quick scroll still has measured name/path splits ready
         int listPrefetchY = kHomeListRowDy;
         for (int row = 0; row < nFiles; row++) {
@@ -1729,7 +1729,7 @@ static void LayoutHomePage(HomePageLayout& l) {
                     thumb.szThumb = szThumb;
                 }
                 thumb.rcPage = rcPage;
-                int iconSpace = DpiScale(hdc, 20);
+                int iconSpace = DpiScale(20);
                 Rect rcText(rcPage.x + iconSpace, rcPage.y + rcPage.dy + 3, rcPage.dx - iconSpace, iconSpace);
                 if (isRtl) {
                     rcText.x -= iconSpace;
@@ -1742,7 +1742,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     // layout tip at the bottom
     if (tip) {
         Rect rcClient = HwndClientRect(win->hwndCanvas);
-        int tipPadding = DpiScale(hdc, 8);
+        int tipPadding = DpiScale(8);
 
         int tipY = rcClient.dy - tipHeight;
         // background spans full window width
@@ -1815,7 +1815,7 @@ static TempStr FileSizeForHomeListTemp(i64 size) {
 constexpr COLORREF kHomeSelectionColor = RGB(0x4c, 0xa6, 0xff);
 
 static void DrawHomeSelectionOutline(HDC hdc, const Rect& r, int radius) {
-    int penDx = DpiScale(hdc, 2);
+    int penDx = DpiScale(2);
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, penDx, kHomeSelectionColor), true);
     ScopedSelectObject brush(hdc, GetStockBrush(NULL_BRUSH));
     RoundRect(hdc, r.x, r.y, r.x + r.dx, r.y + r.dy, radius, radius);
@@ -1834,8 +1834,8 @@ static void MeasureHomeListRowText(HDC hdc, ThumbnailLayout& thumb, HFONT font, 
 
     Rect rcFileName = thumb.rcListFileName;
     TempStr fileName = path::GetBaseNameTemp(thumb.fs->filePath);
-    int nameDx = HdcMeasureText(hdc, Str(fileName), font).dx + DpiScale(hdc, 4);
-    int minPathDx = DpiScale(hdc, 80);
+    int nameDx = HdcMeasureText(hdc, Str(fileName), font).dx + DpiScale(4);
+    int minPathDx = DpiScale(80);
     if (nameDx + kHomeListRowGapDx + minPathDx > rcFileName.dx) {
         // no room for a path, the name gets the whole span
         return;
@@ -2051,8 +2051,8 @@ static Rect HomeEntryRect(const ThumbnailLayout& t);
 
 // the ✕ sits in the top-right corner of the thumbnail (top-left in RTL)
 static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
-    int sz = DpiScale(win->hwndCanvas, 18);
-    int margin = DpiScale(win->hwndCanvas, 5);
+    int sz = DpiScale(18);
+    int margin = DpiScale(5);
     int bx = IsUIRtl() ? (thumb.x + margin) : (thumb.x + thumb.dx - sz - margin);
     int by = thumb.y + margin;
     return {bx, by, sz, sz};
@@ -2417,8 +2417,8 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     // "?" help button in the bottom-right corner, opening the keyboard
     // shortcuts sheet; sits above the tip band when a tip is showing
     {
-        int diam = DpiScale(l.hdc, 30);
-        int margin = DpiScale(l.hdc, 16);
+        int diam = DpiScale(30);
+        int margin = DpiScale(16);
         int bottom = l.hasTip ? l.rcTip.y : l.rc.dy;
         Rect btn{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
         chrome->helpBtn->SetBounds(btn);
@@ -2529,12 +2529,12 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         }
 
         GetFileStateIcon(fs);
-        int x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
+        int x = isRtl ? page.x + page.dx - DpiScale(16) : page.x;
         ImageList_Draw(fs->himl, fs->iconIdx, hdc, x, rect.y, ILD_TRANSPARENT);
 
         if (isSelected) {
             Rect sel = page.Union(rect);
-            sel.Inflate(DpiScale(hdc, 4), DpiScale(hdc, 3));
+            sel.Inflate(DpiScale(4), DpiScale(3));
             pendingThumbSel = sel;
             hasPendingThumbSel = true;
         }
@@ -2737,7 +2737,7 @@ static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t, HWND hwnd) {
     }
     // thumbnails: page ∪ name, inflated by the same amounts as paint
     Rect sel = t.rcPage.Union(t.rcText);
-    sel.Inflate(DpiScale(hwnd, 4), DpiScale(hwnd, 3));
+    sel.Inflate(DpiScale(4), DpiScale(3));
     return sel;
 }
 
@@ -2783,7 +2783,7 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
     Rect outline = HomeSelectionOutlineRect(t, hwnd);
     // a little below the outline so the tip clears the blue border
     int tipClientX = outline.x;
-    int tipClientY = outline.y + outline.dy + DpiScale(hwnd, 4);
+    int tipClientY = outline.y + outline.dy + DpiScale(4);
 
     int rightEdgeClient = outline.x + outline.dx;
     if (!HomePageIsListView()) {

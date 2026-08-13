@@ -1253,7 +1253,7 @@ VirtListBox::~VirtListBox() {
 // the owner asks for the row height to decide how tall to make the window
 int VirtListBox::GetDpi() {
     HWND h = GetHwnd();
-    return h ? DpiGet(h) : dpi;
+    return h ? RoundUp(DpiGetForHwnd(h), 4) : dpi;
 }
 
 int VirtListBox::ItemsCount() {
@@ -2216,7 +2216,7 @@ constexpr int kCloseBtnDx = 16;
 constexpr int kCloseBtnGapDx = 8;
 
 LabelWithClose NewLabelWithClose(HWND hwnd, PlatformFont* font, const VirtMouseHandler& onClose) {
-    int pad = DpiScale(hwnd, kLabelPad);
+    int pad = DpiScale(kLabelPad);
     auto* label = NewVirtText({
         .font = font,
         .isRtl = HwndIsRtl(hwnd),
@@ -2225,8 +2225,8 @@ LabelWithClose NewLabelWithClose(HWND hwnd, PlatformFont* font, const VirtMouseH
     });
 
     auto* closeBtn = new VirtCloseButton();
-    int btnDx = DpiScale(hwnd, kCloseBtnDx);
-    int gap = DpiScale(hwnd, kCloseBtnGapDx);
+    int btnDx = DpiScale(kCloseBtnDx);
+    int gap = DpiScale(kCloseBtnGapDx);
     // the padding is part of the ideal size, so it enlarges the hit area
     // without shrinking the ✕ itself
     closeBtn->padding = Insets{0, pad, 0, gap};
@@ -2587,6 +2587,7 @@ void LayoutTreeToSize(HWND hwnd, ILayout* layout, Size size, VirtRoot** rootInOu
     if (!layout) {
         return;
     }
+    DpiSetFromHwnd(hwnd);
     LayoutToSize(layout, size);
     RefreshVirtTops(hwnd, layout, Rect{0, 0, size.dx, size.dy}, rootInOut);
 }
@@ -3163,8 +3164,8 @@ void VirtRichText::LayoutText(int areaWidth) {
     layoutDx = areaWidth;
     HWND hwnd = GetHwnd();
     PlatformFont* boldFont = nullptr;
-    int kbdPadX = DpiScale(hwnd, 7);
-    int kbdPadY = DpiScale(hwnd, 5);
+    int kbdPadX = DpiScale(7);
+    int kbdPadY = DpiScale(5);
     for (TipWord* w = words.next; w; w = w->next) {
         if (w->isBold && !boldFont) {
             boldFont = GetBoldPlatformFont(font);
@@ -3279,7 +3280,7 @@ void VirtRichText::Paint(VirtPaintCtx& ctx) {
     }
     COLORREF capBg = AccentColor(bgCol, 16);
     COLORREF capBorder = AccentColor(bgCol, 40);
-    int rad = DpiScale(GetHwnd(), 5);
+    int rad = DpiScale(5);
     // words are laid out at (0, 0); shift them to where we are
     int offX = ctx.content.x;
     int offY = ctx.content.y;

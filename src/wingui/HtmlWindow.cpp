@@ -1229,7 +1229,7 @@ HtmlWindow::HtmlWindow(HWND parent, HtmlWindowCallback* cb) {
     htmlWinCb = cb;
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
-    zoomDPI = DpiGet(parent);
+    zoomDPI = RoundUp(DpiGetForHwnd(parent), 4);
     zoomDPI = std::max(zoomDPI, 96);
 }
 

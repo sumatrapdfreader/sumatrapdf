@@ -2,6 +2,7 @@
 License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -67,9 +68,10 @@ void StyleThemedButton(VirtButton* b, bool isDefault) {
 }
 
 VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool isDefault) {
+    DpiSetFromHwnd(hwndForDpi);
     auto* b = new VirtButton(text, font);
     StyleThemedButton(b, isDefault);
-    b->textPadding = DpiScaledInsets(hwndForDpi, 5, 12);
+    b->textPadding = DpiScaledInsets(5, 12);
     return b;
 }
 

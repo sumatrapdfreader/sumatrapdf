@@ -967,7 +967,7 @@ void SelectionTranslateWnd::UpdateTheme() {
 // re-pick the app font for the window's current DPI and push it to every child.
 // GetAppFont() caches per DPI, so the HFONT stays owned by AppSettings.
 void SelectionTranslateWnd::UpdateFont() {
-    font = GetAppFont(hwnd);
+    font = GetAppFont();
     HwndSetFontForWindowAndItsChildren(hwnd, font);
     platformFont = GetPlatformFont(font);
     VirtText* virts[] = {staticPrompt, staticFromLabel, staticToLabel, staticResultLabel, btnTranslate, btnClose};
@@ -992,7 +992,7 @@ void SelectionTranslateWnd::StyleButton(VirtButton* b, bool isDefault) {
 VirtButton* SelectionTranslateWnd::NewButton(Str text, bool isDefault) {
     auto* b = new VirtButton(text, platformFont);
     StyleButton(b, isDefault);
-    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
+    b->textPadding = DpiScaledInsets(5, 12);
     return b;
 }
 
@@ -1063,8 +1063,8 @@ void SelectionTranslateWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) 
     }
     int clientMinDx = layout->MinIntrinsicWidth(Inf);
     int clientMinDy = layout->MinIntrinsicHeight(Inf);
-    clientMinDx = std::max(clientMinDx, DpiScale(hwnd, 200));
-    clientMinDy = std::max(clientMinDy, DpiScale(hwnd, 150));
+    clientMinDx = std::max(clientMinDx, DpiScale(200));
+    clientMinDy = std::max(clientMinDy, DpiScale(150));
     RECT r{0, 0, clientMinDx, clientMinDy};
     DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
     DWORD exStyle = (DWORD)GetWindowLongW(hwnd, GWL_EXSTYLE);
@@ -1313,7 +1313,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             .s = _TRA("Translation:"),
             .font = platformFont,
             .isRtl = isRtl,
-            .padding = DpiScaledInsets(hwnd, 8, 0, 0, 0),
+            .padding = DpiScaledInsets(8, 0, 0, 0),
         });
         staticResultLabel->SetVisibility(Visibility::Collapse);
         vbox->AddChild(staticResultLabel);
@@ -1355,7 +1355,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             dropEngine->SetInsetsPt(0, 0, 0, 4);
             engineRow->AddChild(dropEngine, 1);
         }
-        vbox->AddChild(new Padding(engineRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
+        vbox->AddChild(new Padding(engineRow, DpiScaledInsets(8, 0, 0, 0)));
     }
 
     {
@@ -1385,7 +1385,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
             .s = _TRA("To:"),
             .font = platformFont,
             .isRtl = isRtl,
-            .padding = DpiScaledInsets(hwnd, 0, 0, 0, 4),
+            .padding = DpiScaledInsets(0, 0, 0, 4),
         });
         langRow->AddChild(staticToLabel);
         {
@@ -1403,7 +1403,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
                 MkMethod0<SelectionTranslateWnd, &SelectionTranslateWnd::UpdateTranslateButtonState>(this);
             langRow->AddChild(dropDstLang, 1);
         }
-        vbox->AddChild(new Padding(langRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
+        vbox->AddChild(new Padding(langRow, DpiScaledInsets(8, 0, 0, 0)));
     }
 
     {
@@ -1414,16 +1414,16 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         btnClose = NewButton(_TRA("Close"), false);
         btnClose->onClick = MkFunc1(CloseClicked, this);
         // the gap to the Translate button
-        btnRow->AddChild(new Padding(btnClose, DpiScaledInsets(hwnd, 0, 8, 0, 0)));
+        btnRow->AddChild(new Padding(btnClose, DpiScaledInsets(0, 8, 0, 0)));
 
         btnTranslate = NewButton(_TRA("Translate"), true);
         btnTranslate->onClick = MkFunc1(TranslateClicked, this);
-        btnTranslate->padding = DpiScaledInsets(hwnd, 0, 4, 0, 4);
+        btnTranslate->padding = DpiScaledInsets(0, 4, 0, 4);
         btnRow->AddChild(btnTranslate);
-        vbox->AddChild(new Padding(btnRow, DpiScaledInsets(hwnd, 8, 0, 0, 0)));
+        vbox->AddChild(new Padding(btnRow, DpiScaledInsets(8, 0, 0, 0)));
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, 12, 12));
+    layout = new Padding(vbox, DpiScaledInsets(12, 12));
     Relayout(true);
     UpdateTheme();
     UpdateTranslateButtonState();
@@ -1462,7 +1462,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     auto* wnd = new SelectionTranslateWnd();
     wnd->hwndOwner = hwndOwner;
     wnd->engine = engine;
-    wnd->font = GetAppFont(hwndOwner);
+    wnd->font = GetAppFont();
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSelectionTranslateDestroy);
     wnd->onSize = MkMethod1<SelectionTranslateWnd, WindowBase::SizeEvent*, &SelectionTranslateWnd::OnSize>(wnd);

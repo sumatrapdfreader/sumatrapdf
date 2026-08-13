@@ -188,7 +188,7 @@ static bool StartTextEdit(MainWindow* win, Annotation* widget, Rect rc, int flag
     }
     HFONT font = MakeFieldFont(FieldFontPx(widget, rc));
     SetWindowFont(hEdit, font, TRUE);
-    int margin = DpiScale(win->hwndCanvas, 2);
+    int margin = DpiScale(2);
     SendMessageW(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(margin, margin));
     int maxLen = GetWidgetMaxLen(widget); // comb / limited fields (e.g. SSN)
     if (maxLen > 0) {
@@ -219,10 +219,10 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
         return false;
     }
     int fontPx = FieldFontPx(widget, rc);
-    int itemDy = fontPx + DpiScale(win->hwndCanvas, 6);
+    int itemDy = fontPx + DpiScale(6);
     int visN = std::min(n, 8);
-    int listDy = (visN * itemDy) + DpiScale(win->hwndCanvas, 4);
-    int listDx = std::max(rc.dx, DpiScale(win->hwndCanvas, 120));
+    int listDy = (visN * itemDy) + DpiScale(4);
+    int listDx = std::max(rc.dx, DpiScale(120));
     // drop down just below the field, or above if it would fall off the canvas
     Rect canvasRc = HwndClientRect(win->hwndCanvas);
     int x = rc.x;

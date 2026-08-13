@@ -1742,7 +1742,7 @@ static void LogWineDpiInfo() {
     logf(
         "WineDpi: screenDpi=%d monitorDpi=(%u,%u) GetDpiForMonitor hr=0x%lx envDpi=%d overrideDpi=%d "
         "SM_CYCAPTION=%d SM_CYFRAME=%d SM_CXPADDEDBORDER=%d screen=(%d,%d)\n",
-        screenDpi, monitorDpiX, monitorDpiY, (unsigned long)hr, envDpi, DpiGet(HWND_DESKTOP),
+        screenDpi, monitorDpiX, monitorDpiY, (unsigned long)hr, envDpi, DpiGetForHwnd(HWND_DESKTOP),
         GetSystemMetrics(SM_CYCAPTION), GetSystemMetrics(SM_CYFRAME), GetSystemMetrics(SM_CXPADDEDBORDER),
         GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
@@ -2201,6 +2201,13 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
     logf("elevated: %d\n", (int)IsProcessRunningElevated());
     LogWineDpiInfo();
+    {
+        HWND hwndMon = GetForegroundWindow();
+        if (!hwndMon) {
+            hwndMon = GetDesktopWindow();
+        }
+        DpiSetFromHwnd(hwndMon);
+    }
 
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
     if (flags.justExtractFiles) {

@@ -28,8 +28,11 @@ static void WarnBox(HWND hwnd, Str msg, Str title) {
 }
 
 static HFONT ImageEditFont(HWND hwnd) {
+    if (hwnd) {
+        DpiSetFromHwnd(hwnd);
+    }
     if (gImageEditHost.GetFont) {
-        return gImageEditHost.GetFont(hwnd);
+        return gImageEditHost.GetFont();
     }
     return (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 }
@@ -463,15 +466,15 @@ static void LayoutControls(ImageEditWindow* ew);
 static void CalcImageLayout(ImageEditWindow* ew);
 
 static int ImageEditImagePadding(ImageEditWindow* ew) {
-    return DpiScale(ew->hwnd, kImagePadding);
+    return DpiScale(kImagePadding);
 }
 
 static int ImageEditRowPadding(ImageEditWindow* ew) {
-    return DpiScale(ew->hwnd, kRowPadding);
+    return DpiScale(kRowPadding);
 }
 
 static int ImageEditButtonPadding(ImageEditWindow* ew) {
-    return DpiScale(ew->hwnd, kButtonPadding);
+    return DpiScale(kButtonPadding);
 }
 
 static int ImageEditLabelDy(ImageEditWindow* ew) {
@@ -584,7 +587,7 @@ static void InvalidateImageArea(ImageEditWindow* ew) {
 }
 
 static int GetControlAreaDy(ImageEditWindow* ew) {
-    int dy = DpiScale(ew->hwnd, kControlAreaDy);
+    int dy = DpiScale(kControlAreaDy);
     if (ew->fromRenderedBitmap) {
         dy -= ImageEditPathLabelRowDy(ew);
     }
@@ -601,10 +604,10 @@ static Size CalcImageEditWindowSizeEx(HWND dpiHwnd, HWND hwndParent, bool fromRe
         controlDy = GetControlAreaDy(ew);
         dpiHwnd = ew->hwnd;
     } else {
-        imagePadding = DpiScale(dpiHwnd, kImagePadding);
-        controlDy = DpiScale(dpiHwnd, kControlAreaDy);
+        imagePadding = DpiScale(kImagePadding);
+        controlDy = DpiScale(kControlAreaDy);
         if (fromRenderedBitmap) {
-            controlDy -= DpiScale(dpiHwnd, 16) + DpiScale(dpiHwnd, kRowPadding);
+            controlDy -= DpiScale(16) + DpiScale(kRowPadding);
         }
     }
     int wantW = imgW + (2 * imagePadding);
@@ -612,7 +615,7 @@ static Size CalcImageEditWindowSizeEx(HWND dpiHwnd, HWND hwndParent, bool fromRe
     RECT rc = {0, 0, wantW, wantH};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     int winW = rc.right - rc.left;
-    int minWinW = DpiScale(dpiHwnd, kMinWindowWidth);
+    int minWinW = DpiScale(kMinWindowWidth);
     winW = std::max(winW, minWinW);
     int winH = rc.bottom - rc.top;
     HMONITOR hMon = MonitorFromWindow(hwndParent ? hwndParent : dpiHwnd, MONITOR_DEFAULTTONEAREST);
@@ -630,8 +633,8 @@ static void ImageEditLayoutDimensions(ImageEditWindow* ew, int imgW, int imgH, b
     *layoutW = imgW;
     *layoutH = imgH;
     if (downsizing) {
-        int minDx = DpiScale(ew->hwnd, kDownsizeMinImgDx);
-        int minDy = DpiScale(ew->hwnd, kDownsizeMinImgDy);
+        int minDx = DpiScale(kDownsizeMinImgDx);
+        int minDy = DpiScale(kDownsizeMinImgDy);
         *layoutW = std::max(*layoutW, minDx);
         *layoutH = std::max(*layoutH, minDy);
     }
@@ -1987,7 +1990,7 @@ static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const 
     b->bgColor = AccentColor(bg, 14);
     b->bgColorHover = AccentColor(bg, 28);
     b->borderColor = AccentColor(bg, 40);
-    b->textPadding = DpiScaledInsets(ew->hwnd, 4, 10);
+    b->textPadding = DpiScaledInsets(4, 10);
     b->SetLabel(text);
     b->onClick = onClick;
     return b;
@@ -2208,9 +2211,9 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             row2->alignMain = MainAxisAlign::MainStart;
             row2->alignCross = CrossAxisAlign::CrossCenter;
             row2->AddChild(ew->destEdit, 1);
-            ew->btnBrowse->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+            ew->btnBrowse->padding = DpiScaledInsets(0, 0, 0, 4);
             row2->AddChild(ew->btnBrowse);
-            ew->btnSave->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+            ew->btnSave->padding = DpiScaledInsets(0, 0, 0, 4);
             row2->AddChild(ew->btnSave);
             auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(ew), 0});
             vbox->AddChild(row2Pad);
@@ -2226,17 +2229,17 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
                 row3->AddChild(ew->dropFormat);
             }
             if (ew->btnCrop) {
-                ew->btnCrop->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+                ew->btnCrop->padding = DpiScaledInsets(0, 0, 0, 4);
                 row3->AddChild(ew->btnCrop);
             }
             if (ew->btnResize) {
-                ew->btnResize->padding = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+                ew->btnResize->padding = DpiScaledInsets(0, 0, 0, 4);
                 row3->AddChild(ew->btnResize);
             }
             vbox->AddChild(row3);
         }
 
-        ew->controlLayout = new Padding(vbox, DpiScaledInsets(hwnd, kRowPadding, kButtonPadding));
+        ew->controlLayout = new Padding(vbox, DpiScaledInsets(kRowPadding, kButtonPadding));
         // WindowBase owns and tab-navigates `layout`; it is the same tree
         ew->layout = ew->controlLayout;
     }

@@ -244,7 +244,7 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
 
     gfx->FillRect(rc, colBg);
 
-    int padX = DpiScale(lb->GetHwnd(), 4);
+    int padX = DpiScale(4);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
@@ -410,7 +410,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         args.text = defaultName;
         editName = new Edit();
         editName->Create(args);
-        auto* editPad = new Padding(editName, DpiScaledInsets(hwnd, 0, 0, kPadding, 0));
+        auto* editPad = new Padding(editName, DpiScaledInsets(0, 0, kPadding, 0));
         vbox->AddChild(editPad);
     }
 
@@ -432,7 +432,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
 
         auto* platformFont = GetPlatformFont(font);
-        Insets gap = DpiScaledInsets(hwnd, 0, 0, 0, 4);
+        Insets gap = DpiScaledInsets(0, 0, 0, 4);
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), platformFont, false);
         btnCancel->onClick = MkFunc1(CancelClicked, this);
@@ -445,13 +445,13 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         btnOk = NewThemedButton(hwnd, okText, platformFont, true);
         btnOk->onClick = MkFunc1(OkClicked, this);
         btnRow->AddChild(new Padding(btnOk, gap));
-        vbox->AddChild(new Padding(btnRow, DpiScaledInsets(hwnd, kPadding, 0, 0, 0)));
+        vbox->AddChild(new Padding(btnRow, DpiScaledInsets(kPadding, 0, 0, 0)));
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, kPadding, kPadding));
+    layout = new Padding(vbox, DpiScaledInsets(kPadding, kPadding));
 
-    int winW = DpiScale(hwnd, 400);
-    int winH = DpiScale(hwnd, 350);
+    int winW = DpiScale(400);
+    int winH = DpiScale(350);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
     LayoutToClient();
     HwndCenterDialog(hwnd, hwndParent);
@@ -482,7 +482,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     }
 
     auto* wnd = new TabGroupsWnd();
-    wnd->font = GetAppFont(win->hwndFrame);
+    wnd->font = GetAppFont();
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
     wnd->onSize = MkMethod1<TabGroupsWnd, WindowBase::SizeEvent*, &TabGroupsWnd::OnSize>(wnd);

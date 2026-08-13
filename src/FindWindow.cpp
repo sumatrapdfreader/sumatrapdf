@@ -253,7 +253,7 @@ FindWindowWnd::~FindWindowWnd() {
 void FindWindowWnd::UpdateButtonIcons() {
     static const TbIcon icons[5] = {TbIcon::ChevronUp, TbIcon::ChevronDown, TbIcon::MatchCase, TbIcon::MatchWholeWord,
                                     TbIcon::ArrowsDiagonalMinimize};
-    int isz = RoundUp(DpiScale(hwnd, 16), 4);
+    int isz = RoundUp(DpiScale(16), 4);
     for (int i = 0; i < 5; i++) {
         if (btns[i]) {
             btns[i]->pixmap = GetPixmapForIcon(icons[i], isz, isz);
@@ -273,7 +273,7 @@ void FindWindowWnd::CreateButtons() {
     static const int cmds[5] = {CmdFindPrev, CmdFindNext, CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
                                 kFindWinPinCmdId};
     COLORREF colBg = ThemeWindowControlBackgroundColor();
-    int pad = DpiScale(hwnd, 4);
+    int pad = DpiScale(4);
     for (int i = 0; i < 5; i++) {
         auto* b = new VirtIconButton();
         b->id = cmds[i];
@@ -336,7 +336,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         edit->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
     }
 
-    PlatformFont* platformFont = GetPlatformFont(GetAppFont(hwnd));
+    PlatformFont* platformFont = GetPlatformFont(GetAppFont());
 
     status = NewVirtText({
         .font = platformFont,
@@ -375,12 +375,12 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
 }
 
 void FindWindowWnd::BuildLayout() {
-    int pad = DpiScale(hwnd, kFindWinPadding);
-    int gap = DpiScale(hwnd, kFindWinGap);
-    int statusDx = DpiScale(hwnd, kFindWinStatusDx);
+    int pad = DpiScale(kFindWinPadding);
+    int gap = DpiScale(kFindWinGap);
+    int statusDx = DpiScale(kFindWinStatusDx);
     // cap preferred width at the min so Wrap decides the break from the min
     // edit width, not the typed text (a long query would otherwise always wrap)
-    int minEditDx = DpiScale(hwnd, kFindWinMinEditDx);
+    int minEditDx = DpiScale(kFindWinMinEditDx);
     edit->idealDx = minEditDx;
     edit->maxDx = minEditDx;
 
@@ -490,7 +490,7 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     }
     gfx->FillRect(rc, colBg);
 
-    int pad = DpiScale(hwndList, 6);
+    int pad = DpiScale(6);
     Rect rcText = rc;
     rcText.x += pad;
     rcText.dx -= 2 * pad;
@@ -500,10 +500,10 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     // instead of fighting a per-row measured width (#5692 / #5796).
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
-    int pageGap = DpiScale(hwndList, 10);
-    int pageColDx = DpiScale(hwndList, 40);
+    int pageGap = DpiScale(10);
+    int pageColDx = DpiScale(40);
     Size pageSize = gfx->MeasureText(pageStr, lb->font);
-    pageColDx = std::max(pageSize.dx + DpiScale(hwndList, 4), pageColDx);
+    pageColDx = std::max(pageSize.dx + DpiScale(4), pageColDx);
     Rect rcPage = rcText;
     rcPage.x = std::max(rcText.x, rcText.x + rcText.dx - pageColDx);
     rcPage.dx = rcText.x + rcText.dx - rcPage.x;
@@ -748,9 +748,9 @@ void FindWindowWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
         mmi->ptMinTrackSize.y = clientMinDy + (wr.dy - cr.dy);
         return;
     }
-    int pad = DpiScale(hwnd, kFindWinPadding);
-    mmi->ptMinTrackSize.x = (2 * pad) + DpiScale(hwnd, 160);
-    mmi->ptMinTrackSize.y = (2 * pad) + DpiScale(hwnd, 80);
+    int pad = DpiScale(kFindWinPadding);
+    mmi->ptMinTrackSize.x = (2 * pad) + DpiScale(160);
+    mmi->ptMinTrackSize.y = (2 * pad) + DpiScale(80);
 }
 
 void FindWindowWnd::OnClose(WindowBase::CloseEvent* ev) {
@@ -899,9 +899,9 @@ static void PositionFindWindow(FindWindowWnd* w) {
     if (r.IsEmpty()) {
         // default: a reasonable size near the top-right of the frame
         Rect fr = HwndWindowRect(win->hwndFrame);
-        int dx = DpiScale(w->hwnd, 520);
-        int dy = DpiScale(w->hwnd, 360);
-        r = {fr.x + fr.dx - dx - DpiScale(w->hwnd, 40), fr.y + DpiScale(w->hwnd, 80), dx, dy};
+        int dx = DpiScale(520);
+        int dy = DpiScale(360);
+        r = {fr.x + fr.dx - dx - DpiScale(40), fr.y + DpiScale(80), dx, dy};
     }
     r = ShiftRectToWorkArea(r, win->hwndFrame, true);
     SetWindowPos(w->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
@@ -1120,7 +1120,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
         return fail("ERROR no-screen-dc");
     }
     const int w = 110;
-    const int h = DpiScale(fw->hwnd, 20);
+    const int h = DpiScale(20);
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
     HBITMAP hbmp = CreateCompatibleBitmap(hdcScreen, w, h);
     if (!hdcMem || !hbmp) {

@@ -105,8 +105,8 @@ class DialogData {
     bool bShowSizingGrip;
 
     void UpdateGripperRect() {
-        int width = DpiGetSystemMetrics(hwnd, SM_CXVSCROLL);
-        int height = DpiGetSystemMetrics(hwnd, SM_CYHSCROLL);
+        int width = DpiGetSystemMetrics(SM_CXVSCROLL);
+        int height = DpiGetSystemMetrics(SM_CYHSCROLL);
         rcGrip = Rect(sizeClient.dx - width, sizeClient.dy - height, width, height);
     }
 };

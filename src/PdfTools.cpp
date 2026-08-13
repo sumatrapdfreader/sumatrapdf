@@ -47,7 +47,7 @@ static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int pad
     Size size = HdcGetTextExtentPoint32(hdc, path);
     SelectObject(hdc, oldFont);
     ReleaseDC(nullptr, hdc);
-    int dlgW = size.dx + (2 * padding) + DpiScale(hwndParent, 32);
+    int dlgW = size.dx + (2 * padding) + DpiScale(32);
     dlgW = std::max(dlgW, minW);
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     dlgW = std::min(dlgW, screenW * 80 / 100);
@@ -168,7 +168,7 @@ VirtButton* PdfToolDialog::NewButton(Str text, bool isDefault) {
     b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
     b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
     b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
-    b->textPadding = DpiScaledInsets(hwnd, 5, 12);
+    b->textPadding = DpiScaledInsets(5, 12);
     return b;
 }
 
@@ -199,11 +199,11 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
     font = GetPlatformFont(hFont);
-    rowGap = DpiScale(hwnd, 6);
-    gap = DpiScale(hwnd, 8);
+    rowGap = DpiScale(6);
+    gap = DpiScale(8);
     mainBox = new VBox();
     mainBox->alignCross = CrossAxisAlign::Stretch;
-    layout = new Padding(mainBox, DpiScaledInsets(hwnd, 10));
+    layout = new Padding(mainBox, DpiScaledInsets(10));
     return true;
 }
 
@@ -295,8 +295,8 @@ void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
 void PdfToolDialog::FinishDialog(Edit* focusOn) {
     // size to a width that fits the source path (clamped), let the layout
     // compute the height
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
+    int minClientW = DpiScale(480);
+    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(10));
     Size size = layout->Layout(ExpandHeight(clientW));
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
     // positions everything and picks up the virtual controls to paint

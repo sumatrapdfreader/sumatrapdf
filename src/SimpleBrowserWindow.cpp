@@ -60,7 +60,7 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     // window coordinates in the tree are relative to
     RefreshVirtTops(w->hwnd, w->layout, rc, &w->vroot);
 
-    int pad = DpiScale(w->hwnd, kNavRowPadding);
+    int pad = DpiScale(kNavRowPadding);
     int webDy = rc.dy - navSize.dy - pad;
     webDy = std::max(webDy, 0);
     int webDx = rc.dx - (2 * pad);
@@ -248,8 +248,8 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
             .pathEllipsis = true,
         });
 
-        int pad = DpiScale(frameHwnd, kNavRowPadding);
-        Insets gap = DpiScaledInsets(frameHwnd, 0, 0, 0, kNavBtnGap);
+        int pad = DpiScale(kNavRowPadding);
+        Insets gap = DpiScaledInsets(0, 0, 0, kNavBtnGap);
         auto* row = new HBox();
         row->alignCross = CrossAxisAlign::CrossCenter;
         row->AddChild(btnBack);

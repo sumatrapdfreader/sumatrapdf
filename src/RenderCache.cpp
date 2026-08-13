@@ -1321,8 +1321,8 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     }
     layout = edit;
 
-    int winW = DpiScale(hwnd, 700);
-    int winH = DpiScale(hwnd, 500);
+    int winW = DpiScale(700);
+    int winH = DpiScale(500);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
     LayoutToClient();
     UpdateTheme();

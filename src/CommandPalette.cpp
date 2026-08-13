@@ -492,7 +492,7 @@ static void InitHelpText(const HelpStyle& st, VirtRichText* t, Str markup) {
     t->textColor = st.colTxt;
     t->linkColor = st.colTxt;
     t->bgColor = st.colBg;
-    int padX = DpiScale(st.hwnd, 8);
+    int padX = DpiScale(8);
     t->padding = Insets{0, padX, 0, padX};
 }
 
@@ -591,7 +591,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         c->font = GetPlatformFont(font);
         c->textColor = colTxt;
         c->bgColor = colBg;
-        c->padding = DpiScaledInsets(hwnd, 4, 0);
+        c->padding = DpiScaledInsets(4, 0);
         c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
         c->onDrawItem =
             MkMethod1<CommandPaletteWnd, VirtListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
@@ -620,14 +620,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         auto* box = new HBox();
         // the hints are secondary information, so they use the regular (smaller)
         // app font, not the bigger font of the query / list
-        HelpStyle st{hwnd, GetPlatformFont(GetAppFont(hwnd)), colTxt, colBg};
+        HelpStyle st{hwnd, GetPlatformFont(GetAppFont()), colTxt, colBg};
         for (int i = 0; i < nHelp; i++) {
             box->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
         }
         vbox->AddChild(NewHelpRow(box));
     }
 
-    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
     layout = padding;
 
     auto rc = HwndClientRect(win->hwndFrame);
@@ -640,7 +640,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         int itemDy = listBox->GetItemHeight();
         int maxLines = 16;
         if (itemDy > 0) {
-            maxLines = std::max((rc.dy - DpiScale(hwnd, 160)) / itemDy, 3);
+            maxLines = std::max((rc.dy - DpiScale(160)) / itemDy, 3);
         }
         listBox->idealSizeLines = std::min(listBox->model->ItemsCount(), maxLines);
         dy = 0;
@@ -685,7 +685,7 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     wnd->onKeyDown = MkMethod1<CommandPaletteWnd, KeyEvent*, &CommandPaletteWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<CommandPaletteWnd, WindowBase::PreTranslateEvent*, &CommandPaletteWnd::PreTranslate>(wnd);
-    wnd->font = GetAppBiggerFont(win->hwndFrame);
+    wnd->font = GetAppBiggerFont();
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);

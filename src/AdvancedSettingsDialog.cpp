@@ -522,8 +522,8 @@ void AdvancedSettingsWnd::OnSelectionChanged() {
 // columns so long names and long values (e.g. InverseSearchCmdLine) don't
 // draw on top of each other (#5804).
 static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect& rcVal) {
-    int pad = DpiScale(hwnd, 4);
-    int gap = DpiScale(hwnd, 10);
+    int pad = DpiScale(4);
+    int gap = DpiScale(10);
     int totalW = rc.dx - (2 * pad);
     if (totalW < 1) {
         rcName = rc;
@@ -532,11 +532,11 @@ static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect
     }
     // Value column ~45% (min 100px); name gets the rest. Both are clipped with
     // ellipsis when the dialog is narrow.
-    int minVal = DpiScale(hwnd, 100);
+    int minVal = DpiScale(100);
     int valW = std::max(totalW * 45 / 100, minVal);
     valW = std::min(valW, totalW * 3 / 5);
     int nameW = totalW - valW - gap;
-    if (nameW < DpiScale(hwnd, 72)) {
+    if (nameW < DpiScale(72)) {
         nameW = (totalW / 2) - (gap / 2);
         valW = totalW - nameW - gap;
     }
@@ -571,7 +571,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     gfx->FillRect(rc, colBg);
 
-    HFONT fontNormal = font ? font : GetAppFont(hwnd);
+    HFONT fontNormal = font ? font : GetAppFont();
 
     // bold name => changed this session; bold value => differs from default.
     // together they show both "not the default" and "edited since opening".
@@ -1092,7 +1092,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     if (!hwnd) {
         return false;
     }
-    fontBold = CreateBoldFont(font ? font : GetAppFont(hwnd));
+    fontBold = CreateBoldFont(font ? font : GetAppFont());
     platformFont = GetPlatformFont(font);
 
     auto colBg = ThemeWindowControlBackgroundColor();
@@ -1130,7 +1130,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         c->font = platformFont;
         c->textColor = colTxt;
         c->bgColor = colBg;
-        c->padding = DpiScaledInsets(hwnd, 4, 0);
+        c->padding = DpiScaledInsets(4, 0);
         c->onDrawItem =
             MkMethod1<AdvancedSettingsWnd, VirtListBox::DrawItemEvent*, &AdvancedSettingsWnd::DrawListBoxItem>(this);
         listBox = c;
@@ -1154,9 +1154,9 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         c->textColor = colTxt;
         c->bgColor = colBg;
         // don't let the doc text touch the edges of the dialog
-        c->padding = DpiScaledInsets(hwnd, 4);
+        c->padding = DpiScaledInsets(4);
         commentText = c;
-        vbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 4, 2)));
+        vbox->AddChild(new Padding(c, DpiScaledInsets(4, 2)));
     }
 
     // centered hints, above the buttons: how to edit a setting and what the
@@ -1173,7 +1173,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             hbox->alignCross = CrossAxisAlign::CrossCenter;
 
             auto* c = NewVirtText({.s = hint, .font = platformFont, .textColor = colTxt, .isRtl = isRtl});
-            hbox->AddChild(new Padding(c, DpiScaledInsets(hwnd, 1, 8)));
+            hbox->AddChild(new Padding(c, DpiScaledInsets(1, 8)));
             vbox->AddChild(hbox);
         }
     }
@@ -1207,7 +1207,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
 
     ApplyDarkModeToPopupWindow(hwnd);
 
-    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
     layout = padding;
 
     auto rc = HwndClientRect(win->hwndFrame);
@@ -1340,7 +1340,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onSize = MkMethod1<AdvancedSettingsWnd, WindowBase::SizeEvent*, &AdvancedSettingsWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<AdvancedSettingsWnd, KeyEvent*, &AdvancedSettingsWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont(win->hwndFrame);
+    wnd->font = GetAppFont();
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

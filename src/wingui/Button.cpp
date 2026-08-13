@@ -56,9 +56,9 @@ Size Button::GetIdealSize() {
     // measure the text and add our own
     TempStr s = HwndGetTextTemp(hwnd);
     Size sz = HwndMeasureText(hwnd, s, HwndGetFont(hwnd));
-    int dx = sz.dx + DpiScale(hwnd, 2 * 12);
-    int dy = sz.dy + DpiScale(hwnd, 2 * 5);
-    int minDx = DpiScale(hwnd, 70);
+    int dx = sz.dx + DpiScale(2 * 12);
+    int dy = sz.dy + DpiScale(2 * 5);
+    int minDx = DpiScale(70);
     dx = std::max(dx, minDx);
     return {dx, dy};
 }
@@ -78,7 +78,7 @@ Button* CreateDefaultButton(HWND parent, Str s, bool isRtl) {
 
     Rect rc = HwndClientRect(parent);
     Size size = b->GetIdealSize();
-    int margin = DpiScale(parent, kButtonMargin);
+    int margin = DpiScale(kButtonMargin);
     int x = rc.dx - size.dx - margin;
     int y = rc.dy - size.dy - margin;
     Rect r = {x, y, size.dx, size.dy};

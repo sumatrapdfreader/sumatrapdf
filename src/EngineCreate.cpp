@@ -172,7 +172,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     if (kind == FileType::Unknown) {
         return nullptr;
     }
-    int dpi = DpiGet(nullptr);
+    int dpi = DpiGet();
     EngineBase* engine = nullptr;
     // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm),
     // regardless of gEnableEpubWithPdfEngine.

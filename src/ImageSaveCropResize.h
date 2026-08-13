@@ -22,7 +22,7 @@ struct ImageEditHost {
     // Applies the host's dark mode to a window the editor created.
     void (*ApplyDarkMode)(HWND) = nullptr;
     // Font for the editor's controls; without it the default GUI font is used.
-    HFONT (*GetFont)(HWND) = nullptr;
+    HFONT (*GetFont)() = nullptr;
     // Window the editor falls back to as a parent (used by the headless test).
     HWND (*GetOwnerHwnd)() = nullptr;
     // Icon resource id for the editor window; 0 leaves it without one.

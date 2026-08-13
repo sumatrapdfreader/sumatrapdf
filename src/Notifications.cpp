@@ -190,7 +190,7 @@ void RelayoutNotifications(HWND hwndCanvas) {
     if (frame.IsEmpty()) {
         return;
     }
-    int dyPadding = DpiScale(hwndCanvas, kPadding);
+    int dyPadding = DpiScale(kPadding);
     bool isRtl = IsUIRtl();
     // running vertical offset per position so multiple notifications in the same
     // spot stack toward the opposite edge
@@ -210,8 +210,8 @@ void RelayoutNotifications(HWND hwndCanvas) {
             // explicitly hidden (e.g. tied to a non-active tab)
             continue;
         }
-        int xMargin = DpiScale(hwndCanvas, wnd->xMargin);
-        int yMargin = DpiScale(hwndCanvas, wnd->yMargin);
+        int xMargin = DpiScale(wnd->xMargin);
+        int yMargin = DpiScale(wnd->yMargin);
         NotifCorner corner = wnd->corner;
         bool isBar = (corner == NotifCorner::BottomBar);
         Rect rect = HwndWindowRect(wnd->hwnd);
@@ -345,10 +345,10 @@ NotifColors NotificationWnd::Colors() const {
 // builds the tree hosted in our HWND: a message row (body | close) and an
 // optional progress bar under the body
 void NotificationWnd::BuildTree(ILayout* customContent) {
-    int padX = DpiScale(hwnd, 12);
-    int padY = DpiScale(hwnd, 8);
-    int closeDx = DpiScale(hwnd, 16);
-    int closeGap = DpiScale(hwnd, kCloseLeftMargin) - padX;
+    int padX = DpiScale(12);
+    int padY = DpiScale(8);
+    int closeDx = DpiScale(16);
+    int closeGap = DpiScale(kCloseLeftMargin) - padX;
     closeGap = std::max(closeGap, 0);
 
     ILayout* body = nullptr;
@@ -429,7 +429,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     cargs.style = WS_CHILD | SS_CENTER;
     cargs.title = args.msg;
     if (cargs.font == nullptr) {
-        cargs.font = GetAppBiggerFont(args.hwndParent);
+        cargs.font = GetAppBiggerFont();
     }
     cargs.pos = Rect(0, 0, 0, 0);
     cargs.visible = args.delayInMs == 0;
@@ -474,13 +474,13 @@ void NotificationWnd::Layout(Str message) {
     if (!message) {
         message = StrL("");
     }
-    int padX = DpiScale(hwnd, 12);
-    int closeDx = DpiScale(hwnd, 16);
-    int closeLeftMargin = DpiScale(hwnd, kCloseLeftMargin) - padX;
+    int padX = DpiScale(12);
+    int closeDx = DpiScale(16);
+    int closeLeftMargin = DpiScale(kCloseLeftMargin) - padX;
 
     // limit the width to the parent window so that the close button
     // stays reachable even for very long messages (issue #2916)
-    int topLeftMargin = DpiScale(hwnd, kTopLeftMargin);
+    int topLeftMargin = DpiScale(kTopLeftMargin);
     Rect rParent = HwndClientRect(GetParent(hwnd));
     int maxTextDx = rParent.dx - (2 * topLeftMargin) - (2 * padX);
     if (!noClose) {
@@ -588,8 +588,8 @@ void NotificationWnd::Layout(Str message) {
     if (IsUIRtl()) {
         HWND parent = GetParent(hwnd);
         Rect r = HwndMapRectToWindow(HwndWindowRect(hwnd), HWND_DESKTOP, parent);
-        int cxVScroll = DpiGetSystemMetrics(hwnd, SM_CXVSCROLL);
-        r.x = HwndWindowRect(parent).dx - r.dx - DpiScale(hwnd, kTopLeftMargin) - cxVScroll;
+        int cxVScroll = DpiGetSystemMetrics(SM_CXVSCROLL);
+        r.x = HwndWindowRect(parent).dx - r.dx - DpiScale(kTopLeftMargin) - cxVScroll;
         flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_DEFERERASE;
         SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, flags);
     }
@@ -658,7 +658,7 @@ NotifProgressCtrl::NotifProgressCtrl() {
 }
 
 Size NotifProgressCtrl::GetIdealSize() {
-    int h = notif && notif->hwnd ? DpiScale(notif->hwnd, kProgressDy) : kProgressDy;
+    int h = notif && notif->hwnd ? DpiScale(kProgressDy) : kProgressDy;
     return {0, h};
 }
 

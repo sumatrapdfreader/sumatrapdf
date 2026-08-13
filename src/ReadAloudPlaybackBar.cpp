@@ -119,7 +119,7 @@ HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
     args.parent = parentCanvas;
     args.style = WS_CHILD | SS_CENTER;
     args.exStyle = WS_EX_TOPMOST;
-    args.font = GetAppBiggerFont(parentCanvas);
+    args.font = GetAppBiggerFont();
     args.visible = false;
     args.isRtl = IsUIRtl();
     CreateCustom(args);
@@ -134,11 +134,11 @@ HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
 // is what reverses the row.
 void ReadAloudPlaybackBar::BuildLayout() {
     PlatformFont* pf = GetPlatformFont(font);
-    int gap = DpiScale(hwnd, kBtnGap);
-    int padX = DpiScale(hwnd, kBarPadX);
-    int padY = DpiScale(hwnd, kBarPadY);
-    int btnPadX = DpiScale(hwnd, kBtnPadX);
-    int btnPadY = DpiScale(hwnd, kBtnPadY);
+    int gap = DpiScale(kBtnGap);
+    int padX = DpiScale(kBarPadX);
+    int padY = DpiScale(kBarPadY);
+    int btnPadX = DpiScale(kBtnPadX);
+    int btnPadY = DpiScale(kBtnPadY);
     Insets btnPad{btnPadY, btnPadX, btnPadY, btnPadX};
 
     btnPause = new VirtButton({}, pf);
@@ -219,7 +219,7 @@ void ReadAloudPlaybackBar::UpdateLayout() {
 
     HWND parent = GetParent(hwnd);
     Rect canvas = HwndClientRect(parent);
-    int margin = DpiScale(hwnd, kBarMargin);
+    int margin = DpiScale(kBarMargin);
     int barDx = std::max(canvas.dx - (2 * margin), 0);
     Size natural = layout->Layout(ExpandInf());
     int barDy = natural.dy;

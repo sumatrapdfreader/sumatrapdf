@@ -112,7 +112,7 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     Rect r = HwndWindowRect(hwnd);
     Rect work = GetWorkAreaRect(rRelative, hwndRelative);
 
-    int gap = DpiScale(hwnd, 8);
+    int gap = DpiScale(8);
     int spaceLeft = rRelative.x - work.x;
     int spaceRight = work.Right() - rRelative.Right();
     bool fitsLeft = spaceLeft >= r.dx + gap;
@@ -308,7 +308,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
             .s = _TRA("Document colors follow theme"),
             .font = platformFont,
             .isRtl = isRtl,
-            .padding = DpiScaledInsets(hwnd, 8, 0, 0, 0),
+            .padding = DpiScaledInsets(8, 0, 0, 0),
         });
         labelDocumentColorsFollowTheme = label;
         vbox->AddChild(label);
@@ -346,10 +346,10 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(hbox);
     }
 
-    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
     layout = padding;
 
-    int dx = DpiScale(hwnd, 280);
+    int dx = DpiScale(280);
     LayoutAndSizeToContent(layout, dx, 0, hwnd);
     // pick up the virtual controls so we paint them and they get their input
     DoLayout(HwndClientRect(hwnd).Size());
@@ -378,7 +378,7 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeThemeWnd, KeyEvent*, &ChangeThemeWnd::OnKeyDown>(wnd);
-    wnd->font = GetAppFont(win->hwndFrame);
+    wnd->font = GetAppFont();
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

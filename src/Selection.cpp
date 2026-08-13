@@ -222,7 +222,7 @@ SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int mx, int my) {
     if (r.IsEmpty()) {
         return SelectionDragEdge::None;
     }
-    int t = DpiScale(win->hwndCanvas, 6);
+    int t = DpiScale(6);
     int left = r.x;
     int right = r.x + r.dx;
     int top = r.y;
@@ -373,7 +373,7 @@ bool GetTouchSelHandleRects(MainWindow* win, Rect& startOut, Rect& endOut) {
     // the bottom-left of the first and the bottom-right of the last
     Rect first = sel[0].GetRect(dm);
     Rect last = sel[n - 1].GetRect(dm);
-    int dxy = DpiScale(win->hwndCanvas, kTouchSelHandleDip);
+    int dxy = DpiScale(kTouchSelHandleDip);
     int r = dxy / 2;
     startOut = Rect(first.x - r, first.y + first.dy, dxy, dxy);
     endOut = Rect(last.x + last.dx - r, last.y + last.dy, dxy, dxy);
@@ -388,7 +388,7 @@ TouchSelHandle HitTestTouchSelHandle(MainWindow* win, int x, int y) {
     if (!GetTouchSelHandleRects(win, start, end)) {
         return TouchSelHandle::None;
     }
-    int pad = DpiScale(win->hwndCanvas, kTouchSelHandleHitPadDip);
+    int pad = DpiScale(kTouchSelHandleHitPadDip);
     start.Inflate(pad, pad);
     end.Inflate(pad, pad);
     Point pt(x, y);
@@ -419,7 +419,7 @@ static void PaintTouchSelHandles(MainWindow* win, HDC hdc) {
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
     COLORREF col = parsedCol->col;
     AutoDeleteBrush brush(CreateSolidBrush(col));
-    AutoDeletePen pen(CreatePen(PS_SOLID, DpiScale(win->hwndCanvas, 1), col));
+    AutoDeletePen pen(CreatePen(PS_SOLID, DpiScale(1), col));
     ScopedSelectObject restoreBrush(hdc, brush);
     ScopedSelectObject restorePen(hdc, pen);
     for (const Rect& r : {start, end}) {
@@ -660,8 +660,8 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
     ScheduleRepaint(win, 0);
 }
 
-#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(win->hwndFrame, 15)
-#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScale(win->hwndFrame, 10)
+#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(15)
+#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScale(10)
 
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     return x < SELECT_AUTOSCROLL_AREA_WIDTH || x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH ||

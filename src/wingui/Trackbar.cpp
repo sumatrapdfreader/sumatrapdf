@@ -34,11 +34,11 @@ HWND Trackbar::Create(const CreateArgs& args) {
     if (args.isHorizontal) {
         dwStyle |= TBS_HORZ;
         idealSize.dx = 32;
-        idealSize.dy = DpiScale(args.parent, 22);
+        idealSize.dy = DpiScale(22);
     } else {
         dwStyle |= TBS_VERT;
         idealSize.dy = 32;
-        idealSize.dx = DpiScale(args.parent, 22);
+        idealSize.dx = DpiScale(22);
     }
     // TODO: add initial size to CreateControlArgs
     // initialSize = idealSize;

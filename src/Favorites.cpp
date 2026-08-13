@@ -1458,7 +1458,7 @@ void CreateFavorites(MainWindow* win) {
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
     win->hwndFavBox = CreateWindowW(WC_STATICW, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
 
-    PlatformFont* labelFont = GetPlatformFont(GetAppSidebarLabelFont(win->hwndFrame));
+    PlatformFont* labelFont = GetPlatformFont(GetAppSidebarLabelFont());
     auto header = NewLabelWithClose(win->hwndFavBox, labelFont, MkFunc1(FavCloseClicked, win));
     win->favLabel = header.label;
     // label text is set in UpdateToolbarSidebarText()
@@ -1471,7 +1471,7 @@ void CreateFavorites(MainWindow* win) {
         // underline so the filter field is visible on flat sidebar/tab backgrounds
         eargs.withBottomBorder = true;
         eargs.cueText = _TRA("Search Favorites");
-        eargs.font = GetAppFont(win->hwndFrame);
+        eargs.font = GetAppFont();
         filterEdit->Create(eargs);
     }
     win->favFilterEdit = filterEdit;
@@ -1481,7 +1481,7 @@ void CreateFavorites(MainWindow* win) {
     auto* treeView = new TreeView();
     TreeView::CreateArgs args;
     args.parent = win->hwndFavBox;
-    args.font = GetAppTreeFont(win->hwndFrame);
+    args.font = GetAppTreeFont();
     args.fullRowSelect = true;
     args.exStyle = 0;
     args.isRtl = IsUIRtl();

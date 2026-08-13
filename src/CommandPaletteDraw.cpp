@@ -69,12 +69,12 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         rightStr = path::GetDirTemp(data->filePath);
     }
 
-    int padX = DpiScale(hwndList, 4);
+    int padX = DpiScale(4);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
     if (data->indent > 0) {
-        int indentW = data->indent * DpiScale(hwndList, 16);
+        int indentW = data->indent * DpiScale(16);
         if (isRtl) {
             rc.dx -= indentW;
         } else {
@@ -90,7 +90,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     bool hasRight = rightStr && rightStr.s[0];
     int rightW = 0;
     if (hasRight) {
-        int gap = DpiScale(hwndList, 8);
+        int gap = DpiScale(8);
         rightW = gfx->MeasureText(rightStr, lb->font).dx;
         if (isRtl) {
             rcText.x += rightW + gap;

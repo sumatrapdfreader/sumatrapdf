@@ -867,9 +867,9 @@ static void GetNonClientMetricsForDpiValue(int dpi, NONCLIENTMETRICS* ncm) {
     }
 }
 
-// the size of the fonts follows the dpi of the monitor hwnd is on, so that
-// UI text scales when a window is moved to a monitor with a different scale
-// factor (a user-set UIFontSize is used as-is at every dpi)
+// Font size follows the current layout DPI (dpiX/dpiY), so UI text scales
+// when a window is moved to a monitor with a different scale factor.
+// A user-set UIFontSize is used as-is at every dpi.
 int GetAppMenuFontSizeForDpi(int dpi) {
     if (gGlobalPrefs->uIFontSize >= kMinFontSize) {
         return gGlobalPrefs->uIFontSize;
@@ -879,8 +879,8 @@ int GetAppMenuFontSizeForDpi(int dpi) {
     return std::abs(ncm.lfMenuFont.lfHeight);
 }
 
-int GetAppMenuFontSize(HWND hwnd) {
-    return GetAppMenuFontSizeForDpi(DpiGet(hwnd));
+int GetAppMenuFontSize() {
+    return GetAppMenuFontSizeForDpi(DpiGet());
 }
 
 int GetAppFontSizeForDpi(int dpi) {
@@ -892,8 +892,8 @@ int GetAppFontSizeForDpi(int dpi) {
     return fntSize;
 }
 
-int GetAppFontSize(HWND hwnd) {
-    return GetAppFontSizeForDpi(DpiGet(hwnd));
+int GetAppFontSize() {
+    return GetAppFontSizeForDpi(DpiGet());
 }
 
 HFONT GetAppFontForDpi(int dpi) {
@@ -905,8 +905,8 @@ HFONT GetAppFontForDpi(int dpi) {
     return fonts->appFont;
 }
 
-HFONT GetAppFont(HWND hwnd) {
-    return GetAppFontForDpi(DpiGet(hwnd));
+HFONT GetAppFont() {
+    return GetAppFontForDpi(DpiGet());
 }
 
 constexpr int kMinBiggerFontSize = 14;
@@ -932,8 +932,8 @@ HFONT GetAppBiggerFontForDpi(int dpi) {
     return fonts->biggerAppFont;
 }
 
-HFONT GetAppBiggerFont(HWND hwnd) {
-    return GetAppBiggerFontForDpi(DpiGet(hwnd));
+HFONT GetAppBiggerFont() {
+    return GetAppBiggerFontForDpi(DpiGet());
 }
 
 HFONT GetAppTreeFontExForDpi(int dpi, bool bold, bool italic) {
@@ -958,12 +958,12 @@ HFONT GetAppTreeFontForDpi(int dpi) {
     return GetAppTreeFontExForDpi(dpi, false, false);
 }
 
-HFONT GetAppTreeFont(HWND hwnd) {
-    return GetAppTreeFontEx(hwnd, false, false);
+HFONT GetAppTreeFont() {
+    return GetAppTreeFontEx(false, false);
 }
 
-HFONT GetAppTreeFontEx(HWND hwnd, bool bold, bool italic) {
-    return GetAppTreeFontExForDpi(DpiGet(hwnd), bold, italic);
+HFONT GetAppTreeFontEx(bool bold, bool italic) {
+    return GetAppTreeFontExForDpi(DpiGet(), bold, italic);
 }
 
 HFONT GetAppSidebarLabelFontForDpi(int dpi) {
@@ -975,8 +975,8 @@ HFONT GetAppSidebarLabelFontForDpi(int dpi) {
     return fonts->sidebarLabelFont;
 }
 
-HFONT GetAppSidebarLabelFont(HWND hwnd) {
-    return GetAppSidebarLabelFontForDpi(DpiGet(hwnd));
+HFONT GetAppSidebarLabelFont() {
+    return GetAppSidebarLabelFontForDpi(DpiGet());
 }
 
 HFONT GetAppMenuFontForDpi(int dpi) {
@@ -992,8 +992,8 @@ HFONT GetAppMenuFontForDpi(int dpi) {
     return fonts->appMenuFont;
 }
 
-HFONT GetAppMenuFont(HWND hwnd) {
-    return GetAppMenuFontForDpi(DpiGet(hwnd));
+HFONT GetAppMenuFont() {
+    return GetAppMenuFontForDpi(DpiGet());
 }
 
 bool IsMenuFontSizeDefault() {

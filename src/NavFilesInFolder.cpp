@@ -592,7 +592,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     bool isRtl = HwndIsRtl(hwndList);
     bool prevMirrored = isRtl ? gfx->SetMirrored(false) : false;
 
-    int padX = DpiScale(hwndList, 4);
+    int padX = DpiScale(4);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
@@ -603,7 +603,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     if (!e.isDir) {
         sizeStr = str::FormatSizeShortTemp(e.size);
         rightDx = gfx->MeasureText(sizeStr, lb->font).dx;
-        int gap = DpiScale(hwndList, 8);
+        int gap = DpiScale(8);
         if (isRtl) {
             rcText.x += rightDx + gap;
             rcText.dx -= rightDx + gap;
@@ -663,7 +663,7 @@ static bool NavDockedClientSize(HWND hwnd, HWND hwndMain, int* clientDxOut, int*
     int freeRight = 0;
     NavFreeSpaceBeside(hwndMain, &freeLeft, &freeRight);
 
-    int minFree = DpiScale(hwndMain, kNavDockMinFreeDx);
+    int minFree = DpiScale(kNavDockMinFreeDx);
     int free = 0;
     bool placeLeft = false;
     // NOLINTNEXTLINE(bugprone-branch-clone): left is preferred first, then falls back after right
@@ -681,7 +681,7 @@ static bool NavDockedClientSize(HWND hwnd, HWND hwndMain, int* clientDxOut, int*
     }
 
     // outer width fits the free strip but is capped at kNavDockMaxWidthDx
-    int maxOuterDx = DpiScale(hwndMain, kNavDockMaxWidthDx);
+    int maxOuterDx = DpiScale(kNavDockMaxWidthDx);
     int outerDx = free < maxOuterDx ? free : maxOuterDx;
 
     Rect main = HwndWindowRect(hwndMain);
@@ -689,8 +689,8 @@ static bool NavDockedClientSize(HWND hwnd, HWND hwndMain, int* clientDxOut, int*
     Size chrome = NavFrameChrome(hwnd);
     int clientDx = outerDx - chrome.dx;
     int clientDy = outerDy - chrome.dy;
-    int minClientDx = DpiScale(hwndMain, kNavMinClientDx);
-    int minClientDy = DpiScale(hwndMain, kNavMinClientDy);
+    int minClientDx = DpiScale(kNavMinClientDx);
+    int minClientDy = DpiScale(kNavMinClientDy);
     clientDx = std::max(clientDx, minClientDx);
     clientDy = std::max(clientDy, minClientDy);
     *clientDxOut = clientDx;
@@ -714,7 +714,7 @@ static void PositionNavFilesWnd(HWND hwnd, HWND hwndMain, bool docked, bool plac
         }
     } else {
         x = main.x + (main.dx / 2) - (r.dx / 2);
-        y = main.y + DpiScale(hwndMain, kNavFallbackYOffset);
+        y = main.y + DpiScale(kNavFallbackYOffset);
     }
     Rect r2 = ShiftRectToWorkArea({x, y, r.dx, r.dy}, hwndMain, true);
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
@@ -798,7 +798,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         c->font = platformFont;
         c->textColor = colTxt;
         c->bgColor = colBg;
-        c->padding = DpiScaledInsets(hwnd, 4, 0);
+        c->padding = DpiScaledInsets(4, 0);
         c->onDoubleClick = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnListDoubleClick>(this);
         c->onDrawItem =
             MkMethod1<NavFilesInFolderWnd, VirtListBox::DrawItemEvent*, &NavFilesInFolderWnd::DrawListBoxItem>(this);
@@ -820,7 +820,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(hbox);
     }
 
-    auto* padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
     layout = padding;
 
     WindowTab* tab = mainWin->CurrentTab();
@@ -837,10 +837,10 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     bool docked = NavDockedClientSize(hwnd, mainWin->hwndFrame, &dx, &dy, &placeLeft);
     if (!docked) {
         auto rc = HwndClientRect(mainWin->hwndFrame);
-        dy = rc.dy - DpiScale(hwnd, kNavFallbackMainDyMargin);
-        dy = std::max(dy, DpiScale(hwnd, kNavFallbackMinDy));
-        dx = limitValue(rc.dx - DpiScale(hwnd, kNavFallbackMainDxMargin), DpiScale(hwnd, kNavFallbackMinDx),
-                        DpiScale(hwnd, kNavFallbackMaxDx));
+        dy = rc.dy - DpiScale(kNavFallbackMainDyMargin);
+        dy = std::max(dy, DpiScale(kNavFallbackMinDy));
+        dx = limitValue(rc.dx - DpiScale(kNavFallbackMainDxMargin), DpiScale(kNavFallbackMinDx),
+                        DpiScale(kNavFallbackMaxDx));
     }
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     // pick up the virtual controls so we paint them and they get their input
@@ -896,7 +896,7 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
     wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<NavFilesInFolderWnd, WindowBase::PreTranslateEvent*, &NavFilesInFolderWnd::PreTranslate>(wnd);
-    wnd->font = GetAppFont(win->hwndFrame);
+    wnd->font = GetAppFont();
     // set before Create so Esc during Create can dismiss
     gNavFilesWnd = wnd;
     gHwndToActivateOnNavClose = win->hwndFrame;

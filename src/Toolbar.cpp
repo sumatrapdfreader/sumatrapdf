@@ -633,7 +633,7 @@ static int ToolbarNaturalWidth(MainWindow* win) {
         Rect rpt = HwndWindowRect(win->hwndPageTotal);
         contentRight = std::max(contentRight, rpt.x + rpt.dx);
     }
-    int natW = (contentRight - rRebar.x) + DpiScale(win->hwndFrame, 12);
+    int natW = (contentRight - rRebar.x) + DpiScale(12);
     return natW;
 }
 
@@ -653,10 +653,10 @@ static int OverlayToolbarBottomScrollbarOffset(MainWindow* win) {
     }
     if (ScrollbarsUseOverlay()) {
         // smart/overlay: the thick overlay scrollbar height (see OverlayScrollbarCreate)
-        return DpiScale(win->hwndFrame, 16);
+        return DpiScale(16);
     }
     // windows native horizontal scrollbar
-    return DpiGetSystemMetrics(win->hwndFrame, SM_CYHSCROLL);
+    return DpiGetSystemMetrics(SM_CYHSCROLL);
 }
 
 // rectangle (frame-client coords) the overlay toolbar occupies when shown
@@ -701,7 +701,7 @@ static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
     // the mouse is to the left or right of it, and extends a bit past the
     // toolbar (toward the page) so it shows before the cursor reaches it
     Rect canvas = CanvasRectInFrame(win);
-    int my = DpiScale(win->hwndFrame, 16);
+    int my = DpiScale(16);
     int bandY = ToolbarAtBottom() ? (tb.y - my) : tb.y;
     Rect band(canvas.x, bandY, canvas.dx, tb.dy + my);
     bool inBand = band.Contains(Point(ptFrame.x, ptFrame.y));
@@ -1108,10 +1108,10 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (!updateOnly) {
         HwndSetText(win->hwndPageLabel, text);
     }
-    int padX = DpiScale(win->hwndFrame, kTextPaddingRight);
+    int padX = DpiScale(kTextPaddingRight);
     Size size = HwndMeasureText(win->hwndPageLabel, text);
     size.dx += padX;
-    size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
+    size.dx += DpiScale(kButtonSpacingX);
 
     Rect pageWndRect = HwndWindowRect(win->hwndPageBg);
 
@@ -1120,7 +1120,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     // PrinterAccess is revoked via sumatrapdfrestrict.ini (issue #5563) and any
     // of them can be hidden with ToolbarHideButtons (issue #5095)
     Rect r = LastVisibleButtonRectBeforePageBox(win->hwndToolbar);
-    int currX = r.x + r.dx + DpiScale(win->hwndFrame, 10);
+    int currX = r.x + r.dx + DpiScale(10);
     int currY = (r.y + r.dy - pageWndRect.dy) / 2;
 
     TempStr txt = nullptr;
@@ -1134,7 +1134,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         txt = HwndGetTextTemp(win->hwndPageTotal);
         size2 = HwndClientRect(win->hwndPageTotal).Size();
         size2.dx -= padX;
-        size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
+        size2.dx -= DpiScale(kButtonSpacingX);
 #endif
         // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
         txt = " ";
@@ -1172,16 +1172,16 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
     size2.dx += padX;
-    size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
+    size2.dx += DpiScale(kButtonSpacingX);
 
-    int padding = DpiGetSystemMetrics(win->hwndFrame, SM_CXEDGE);
+    int padding = DpiGetSystemMetrics(SM_CXEDGE);
     int x = currX - 1;
     int y = ((pageWndRect.dy - size.dy + 1) / 2) + currY;
     MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
     if (IsUIRtl()) {
         currX += size2.dx;
         currX -= padX;
-        currX -= DpiScale(win->hwndFrame, kButtonSpacingX);
+        currX -= DpiScale(kButtonSpacingX);
     }
     x = currX + size.dx;
     y = currY;
@@ -1228,8 +1228,8 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     // Measure a full page number plus edit-control padding; plain measure is
     // too tight for the right-aligned ES_NUMBER box (esp. under high DPI).
     int boxWidth = HwndMeasureText(hwndFrame, "999999", font).dx;
-    boxWidth += 2 * DpiGetSystemMetrics(hwndFrame, SM_CXEDGE);
-    boxWidth += DpiScale(hwndFrame, 12);
+    boxWidth += 2 * DpiGetSystemMetrics(SM_CXEDGE);
+    boxWidth += DpiScale(12);
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto* h = GetModuleHandle(nullptr);
     int dx = boxWidth;
@@ -1250,7 +1250,7 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     HWND total = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
 
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
-    dx = boxWidth - DpiScale(hwndFrame, 4); // 4 pixels padding on the right side of the text box
+    dx = boxWidth - DpiScale(4); // 4 pixels padding on the right side of the text box
     dy = iconDy;
     exStyle = 0;
     if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
@@ -1629,7 +1629,7 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     // we call it ToolbarSize for users, but it's really size of the icon
     // toolbar size is iconSize + padding (seems to be 6)
     // the setting is a size at 100% scaling, so it's scaled to the window's dpi
-    int iconSize = DpiScale(hwndParent, gGlobalPrefs->toolbarSize);
+    int iconSize = DpiScale(gGlobalPrefs->toolbarSize);
     // icon sizes must be multiple of 4 or else they are sheared
     // TODO: I must be doing something wrong, any size should be ok
     // it might be about size of buttons / bitmaps
@@ -1786,11 +1786,11 @@ void CreateToolbar(MainWindow* win) {
     // tbMetrics.dwMask = TBMF_PAD;
     tbMetrics.dwMask = TBMF_BUTTONSPACING;
     TbGetMetrics(hwndToolbar, &tbMetrics);
-    int yPad = DpiScale(win->hwndFrame, 2);
-    tbMetrics.cxPad += DpiScale(win->hwndFrame, 14);
+    int yPad = DpiScale(2);
+    tbMetrics.cxPad += DpiScale(14);
     tbMetrics.cyPad += yPad;
-    tbMetrics.cxButtonSpacing += DpiScale(win->hwndFrame, kButtonSpacingX);
-    // tbMetrics.cyButtonSpacing += DpiScale(win->hwndFrame, 4);
+    tbMetrics.cxButtonSpacing += DpiScale(kButtonSpacingX);
+    // tbMetrics.cyButtonSpacing += DpiScale(4);
     TbSetMetrics(hwndToolbar, &tbMetrics);
 
     DWORD exstyle = TbGetExtendedStyle(hwndToolbar);
@@ -1834,7 +1834,7 @@ void CreateToolbar(MainWindow* win) {
 
     SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
 
-    int defFontSize = GetAppFontSize(win->hwndFrame);
+    int defFontSize = GetAppFontSize();
     // ToolbarSize scales icons only; UI font size comes from UIFontSize (GetAppFontSize).
     int newSize = defFontSize;
     int maxFontSize = iconSize - (yPad * 2) - 2; // -2 determined empirically
@@ -1878,9 +1878,9 @@ void ReCreateToolbar(MainWindow* win) {
 }
 
 static int MenuBarToolbarIdealDy(MainWindow* win) {
-    HFONT font = GetAppMenuFont(win->hwndFrame);
-    int dy = FontDyPx(win->hwndFrame, font) + DpiScale(win->hwndFrame, 4);
-    int minDy = DpiScale(win->hwndFrame, kTabBarDy);
+    HFONT font = GetAppMenuFont();
+    int dy = FontDyPx(win->hwndFrame, font) + DpiScale(4);
+    int minDy = DpiScale(kTabBarDy);
     return std::max(dy, minDy);
 }
 
@@ -2179,7 +2179,7 @@ void CreateMenuBarRebar(MainWindow* win) {
         }
     }
 
-    HFONT font = GetAppMenuFont(win->hwndFrame);
+    HFONT font = GetAppMenuFont();
     HwndSetFont(win->hwndMenuToolbar, font);
 
     DWORD tbExStyle = TbGetExtendedStyle(win->hwndMenuToolbar);

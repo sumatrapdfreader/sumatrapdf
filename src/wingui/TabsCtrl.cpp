@@ -162,9 +162,9 @@ void TabCtrl::SetBounds(Rect r) {
 
     // Close glyph grows with tab height (taller UI fonts / tab bar) so it
     // stays usable on touch; floor 16 DIP, cap 28 DIP (issue #5220).
-    int closeMin = DpiScale(hwnd, 16);
-    int closeMax = DpiScale(hwnd, 28);
-    int closeDy = dy - DpiScale(hwnd, 6);
+    int closeMin = DpiScale(16);
+    int closeMax = DpiScale(28);
+    int closeDy = dy - DpiScale(6);
     closeDy = limitValue(closeDy, closeMin, closeMax);
     if (closeDy > dy) {
         closeDy = dy;
@@ -172,10 +172,10 @@ void TabCtrl::SetBounds(Rect r) {
     int closeDx = closeDy;
 
     // Padding between circle and tab edge; grow with the button.
-    int closePad = std::max(DpiScale(hwnd, 6), closeDx / 2);
+    int closePad = std::max(DpiScale(6), closeDx / 2);
     // Keep the glyph inside the tab when tabs are very narrow.
     if (closeDx + closePad > dx && dx > 0) {
-        closeDx = std::min(closeDx, std::max(DpiScale(hwnd, 12), dx - 2));
+        closeDx = std::min(closeDx, std::max(DpiScale(12), dx - 2));
         closeDy = closeDx;
         closePad = std::max(1, (dx - closeDx) / 2);
     }
@@ -183,7 +183,7 @@ void TabCtrl::SetBounds(Rect r) {
 
     // Hit target: at least ~40 DIP wide (touch-friendly), full tab height.
     // Cap at half the tab so title still has a drag/select zone.
-    int minHitDx = DpiScale(hwnd, 40);
+    int minHitDx = DpiScale(40);
     int hitDx = std::max(closeDx + (2 * closePad), minHitDx);
     hitDx = std::min(hitDx, std::max(closeDx + closePad, dx / 2));
     hitDx = std::min(hitDx, dx);
@@ -227,8 +227,8 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
 
     // draw text — inset from the close glyph (size varies with tab height)
     Rect rTxt = r;
-    int textPad = DpiScale(hwnd, 8);
-    int textGap = DpiScale(hwnd, 4);
+    int textPad = DpiScale(8);
+    int textGap = DpiScale(4);
     if (isRtl) {
         // RTL: close on the left — text after the close circle
         int textLeft = rClose.x + rClose.dx + textGap;
@@ -244,7 +244,7 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
 
     // draw red dot after tab text for dirty (unsaved) tabs
     if (ti->isDirty) {
-        int dotRadius = DpiScale(hwnd, 3);
+        int dotRadius = DpiScale(3);
         // the text may have been ellipsized, so the dot goes after whichever is
         // narrower: the text or the room it had
         int textDx = std::min(gfx->MeasureText(ti->text, font).dx, rTxt.dx);

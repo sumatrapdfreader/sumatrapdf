@@ -22,7 +22,7 @@ static bool PopupClientToPagePt(RefHoverState* s, HWND hwnd, int clientX, int cl
     if (zoom <= 0.f) {
         return false;
     }
-    int border = DpiScale(hwnd, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     // When a column-wrap continuation is stitched below displayed.region in
     // the bitmap (see RefHoverRender.cpp's StackPixmapsVertically), a click
     // there falls outside what displayed.region maps to — the formula below
@@ -83,7 +83,7 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s && s->bmp) {
             Size bmpSize = Size(s->bmp->width, s->bmp->height);
-            int border = DpiScale(hwnd, kRefHoverBorder);
+            int border = DpiScale(kRefHoverBorder);
             HDC bmpDC = CreateCompatibleDC(hdc);
             HGDIOBJ oldBmp = bmpDC ? SelectObject(bmpDC, s->bmp->hbmp) : nullptr;
             if (oldBmp) {
@@ -150,7 +150,7 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
         return;
     }
     Size bmpSize = Size(s->bmp->width, s->bmp->height);
-    int border = DpiScale(s->hwndPopup, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     int popupW = bmpSize.dx + (2 * border);
     int popupH = bmpSize.dy + (2 * border);
 
@@ -182,7 +182,7 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
         }
     }
     int x = anchorX - (popupW / 2);
-    int cursorPad = DpiScale(s->hwndPopup, kRefHoverCursorPad);
+    int cursorPad = DpiScale(kRefHoverCursorPad);
     int spaceBelow = bottomBound - (screenPt.y + cursorPad);
     int spaceAbove = (screenPt.y - cursorPad) - topBound;
     int y;
@@ -258,7 +258,7 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     s->displayed.userZoom = newZoom;
 
     Rect rc = HwndClientRect(s->hwndPopup);
-    int border = DpiScale(s->hwndPopup, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     float clientW = (float)(rc.dx - (2 * border));
     float clientH = (float)(rc.dy - (2 * border));
     float zoom = s->displayed.baseZoom * s->displayed.userZoom;
@@ -304,7 +304,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         return false;
     }
 
-    float scrollStep = (float)DpiScale(s->hwndPopup, kRefHoverScrollStepPx);
+    float scrollStep = (float)DpiScale(kRefHoverScrollStepPx);
     float scrollPt = scrollStep * ((float)wheelDelta / (float)WHEEL_DELTA) / zoom;
     float newY = region.y - scrollPt;
 

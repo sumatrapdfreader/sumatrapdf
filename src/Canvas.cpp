@@ -162,7 +162,7 @@ static HCURSOR CreateLaserPointerCursor(int size) {
 // the cursor is sized for the DPI of the window it's shown in, so it's
 // re-created when the canvas moves to a monitor with a different scaling
 static HCURSOR GetLaserPointerCursor(HWND hwnd) {
-    int size = DpiScale(hwnd, kLaserPointerCursorSize);
+    int size = DpiScale(kLaserPointerCursorSize);
     if (gCursorLaserPointer && (gCursorLaserPointerSize == size)) {
         return gCursorLaserPointer;
     }
@@ -917,7 +917,7 @@ static void StartImageDragDrop(MainWindow* win) {
 
     ImageDataObject* dataObj = new ImageDataObject(hPng);
 
-    int maxEdge = DpiScale(win->hwndCanvas, kDragImageThumbnailSize);
+    int maxEdge = DpiScale(kDragImageThumbnailSize);
     POINT hot{0, 0};
     HIMAGELIST himl = nullptr;
     HBITMAP thumb = CreateProportionalDragThumbnail(srcBmp, maxEdge);
@@ -1104,7 +1104,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // scroll through pages using scrollbar even in single page mode
     bool singlePageWithScrollbar = gGlobalPrefs->scrollbarInSinglePage && dmIsSinglePage;
 
-    int lineHeight = DpiScale(win->hwndCanvas, 16);
+    int lineHeight = DpiScale(16);
     bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
         lineHeight = 1;
@@ -1274,10 +1274,10 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
             si.nPos = si.nMax;
             break;
         case SB_LINELEFT:
-            si.nPos -= DpiScale(win->hwndCanvas, 16);
+            si.nPos -= DpiScale(16);
             break;
         case SB_LINERIGHT:
-            si.nPos += DpiScale(win->hwndCanvas, 16);
+            si.nPos += DpiScale(16);
             break;
         case SB_PAGELEFT:
             si.nPos -= (int)si.nPage;
@@ -1522,7 +1522,7 @@ static void DragTouchSelHandle(MainWindow* win, int x, int y) {
         return;
     }
     // aim at the text the handle belongs to, not at the fingertip below it
-    int handleDy = DpiScale(win->hwndCanvas, 8);
+    int handleDy = DpiScale(8);
     Point pt(x, y - handleDy);
     int pageNo = dm->GetPageNoByPoint(pt);
     if (!win->ctrl->ValidPageNo(pageNo)) {
@@ -1593,7 +1593,7 @@ static bool OnTouchLongPress(MainWindow* win, int x, int y) {
     for (SelectionOnPage& s : *tab->selectionOnPage) {
         wordRc = wordRc.Union(s.GetRect(dm));
     }
-    int maxDist = DpiScale(win->hwndCanvas, kTouchLongPressMaxDistDip);
+    int maxDist = DpiScale(kTouchLongPressMaxDistDip);
     Rect nearRc = wordRc;
     nearRc.Inflate(maxDist, maxDist);
     if (!nearRc.Contains(pt)) {
@@ -1620,7 +1620,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
     }
     if (win->lastInputWasTouch) {
         // a finger that wanders isn't holding still, so it isn't a long press
-        int slop = DpiScale(win->hwndCanvas, 10);
+        int slop = DpiScale(10);
         if (abs(x - win->touchDownPos.x) > slop || abs(y - win->touchDownPos.y) > slop) {
             KillTimer(win->hwndCanvas, kTouchLongPressTimerID);
         }
@@ -2998,7 +2998,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
             continue;
         }
         SelectObject(bmpDC, gBitmapReloadingCue);
-        int size = DpiScale(win->hwndFrame, 16);
+        int size = DpiScale(16);
         int cx = std::min(bounds.dx, 2 * size);
         int cy = std::min(bounds.dy, 2 * size);
         int x = bounds.x + bounds.dx - std::min((cx + size) / 2, cx);
@@ -3767,7 +3767,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 break;
             }
             if (!(gi.dwFlags & GF_BEGIN)) {
-                int slop = DpiScale(win->hwndCanvas, 10);
+                int slop = DpiScale(10);
                 int dx = abs((int)gi.ptsLocation.x - (int)touchState.pressRestPos.x);
                 int dy = abs((int)gi.ptsLocation.y - (int)touchState.pressRestPos.y);
                 DWORD now = (DWORD)GetMessageTime();
@@ -3968,7 +3968,7 @@ static void OnTouchPointer(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             }
             return;
         }
-        int slop = DpiScale(hwnd, 10);
+        int slop = DpiScale(10);
         if (abs(pt.x - win->touchDownPos.x) > slop || abs(pt.y - win->touchDownPos.y) > slop) {
             // moved: this is a pan, not a press
             KillTimer(hwnd, kTouchLongPressTimerID);
@@ -4969,6 +4969,7 @@ void RevokeCanvasDropTarget(HWND hwndCanvas) {
 }
 
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    DpiSetFromHwnd(hwnd);
     // messages that don't require win
 
     if (msg == WM_NCCALCSIZE && wp == TRUE) {

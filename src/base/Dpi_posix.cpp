@@ -5,12 +5,16 @@
 #include "base/Dpi.h"
 
 int gDpiOverride = 0;
+int dpiX = 96;
+int dpiY = 96;
 
 static int gDpi = 96;
 
 void DpiSetWineOverride(int dpi) {
     if (dpi >= 72) {
         gDpi = dpi;
+        dpiX = dpi;
+        dpiY = dpi;
     }
 }
 
@@ -22,8 +26,24 @@ int DpiGetForHwnd(HWND hwnd) {
     return gDpi;
 }
 
-int DpiGet(HWND hwnd) {
-    return DpiGetForHwnd(hwnd);
+int DpiGet() {
+    return dpiX > 0 ? dpiX : 96;
+}
+
+void DpiSet(int x, int y) {
+    if (x <= 0) {
+        x = 96;
+    }
+    if (y <= 0) {
+        y = x;
+    }
+    dpiX = x;
+    dpiY = y;
+}
+
+void DpiSetFromHwnd(HWND hwnd) {
+    int d = DpiGetForHwnd(hwnd);
+    DpiSet(d, d);
 }
 
 int DpiScaleByDpi(int dpi, int n) {
@@ -33,35 +53,19 @@ int DpiScaleByDpi(int dpi, int n) {
     return (int)(((i64)n * dpi) / 96);
 }
 
-int DpiScale(HWND hwnd, int x) {
-    return DpiScaleByDpi(DpiGet(hwnd), x);
+int DpiScale(int x) {
+    return DpiScaleByDpi(DpiGet(), x);
 }
 
-void DpiScale(HWND hwnd, int& x1, int& x2) {
-    x1 = DpiScale(hwnd, x1);
-    x2 = DpiScale(hwnd, x2);
+void DpiScale(int& x, int& y) {
+    x = DpiScaleByDpi(dpiX > 0 ? dpiX : 96, x);
+    y = DpiScaleByDpi(dpiY > 0 ? dpiY : 96, y);
 }
 
-int DpiScale(HDC /*hdc*/, int x) {
-    return DpiScale((HWND) nullptr, x);
-}
-
-// GetSystemMetrics() for the dpi of a specific monitor/window. Plain
-// GetSystemMetrics() always answers for the *system* dpi (the primary
-// monitor's), so under PerMonitorV2 scrollbar widths, caption heights, border
-// sizes etc. come out wrong on any monitor scaled differently from the primary.
-// Only pass indices that actually depend on dpi (SM_CXVSCROLL, SM_CYCAPTION,
-// SM_CXEDGE, ...); screen sizes are in physical pixels and don't.
 int DpiGetSystemMetrics(int /*index*/, int /*dpi*/) {
     return 0;
 }
 
-// GetSystemMetrics() for the dpi of a specific monitor/window. Plain
-// GetSystemMetrics() always answers for the *system* dpi (the primary
-// monitor's), so under PerMonitorV2 scrollbar widths, caption heights, border
-// sizes etc. come out wrong on any monitor scaled differently from the primary.
-// Only pass indices that actually depend on dpi (SM_CXVSCROLL, SM_CYCAPTION,
-// SM_CXEDGE, ...); screen sizes are in physical pixels and don't.
-int DpiGetSystemMetrics(HWND /*hwnd*/, int /*index*/) {
-    return 0;
+int DpiGetSystemMetrics(int index) {
+    return DpiGetSystemMetrics(index, DpiGet());
 }

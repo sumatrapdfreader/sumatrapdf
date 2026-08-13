@@ -129,7 +129,7 @@ static bool CaretScreenRects(MainWindow* win, Rect& barOut, Rect& glyphOut) {
     // blue cursor: a thin bar centered on the glyph's leading edge (its trailing
     // edge at the end of a line), twice the glyph's height so it overhangs 50%
     // above and below - loud enough to find on a page of text
-    int caretDx = std::max(DpiScale(win->hwndCanvas, 5), 5);
+    int caretDx = std::max(DpiScale(5), 5);
     int edgeX = trailing ? r.x + r.dx : r.x;
     barOut = Rect{edgeX - (caretDx / 2), r.y - (r.dy / 2), caretDx, r.dy * 2};
     return true;

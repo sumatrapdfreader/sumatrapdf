@@ -23,6 +23,8 @@ Per-Monitor DPI Aware:
 constexpr int kMdtEffectiveDpi = 0;
 
 int gDpiOverride = 0;
+int dpiX = 96;
+int dpiY = 96;
 
 static int gWineDpiOverride = 0;
 
@@ -37,61 +39,102 @@ static int DpiApplyWineOverride(int dpi) {
     return dpi;
 }
 
-// get uncached dpi
-int DpiGetForHwnd(HWND hwnd) {
-    // Deliberately not applied to HWND_DESKTOP: that reports the *system* DPI
-    // (the primary monitor's), which doesn't change when a window moves to
-    // another monitor. Leaving it alone is what makes the override model a real
-    // multi-monitor setup, where per-window and system DPI disagree.
-    bool isDesktop = !hwnd || hwnd == HWND_DESKTOP || hwnd == GetDesktopWindow();
-    if (gDpiOverride > 0 && !isDesktop) {
-        return MulDiv(96, gDpiOverride, 100);
+static bool DpiIsDesktopHwnd(HWND hwnd) {
+    return !hwnd || hwnd == HWND_DESKTOP || hwnd == GetDesktopWindow();
+}
+
+// Uncached per-window DPI. HWND_DESKTOP / null report the system (primary
+// monitor) DPI and ignore gDpiOverride, so a multi-monitor setup and the
+// override test path both see per-window vs system DPI disagree.
+static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
+    int x = 96;
+    int y = 96;
+    if (gDpiOverride > 0 && !DpiIsDesktopHwnd(hwnd)) {
+        x = y = MulDiv(96, gDpiOverride, 100);
+        *outX = x;
+        *outY = y;
+        return;
     }
-    // GetDpiForWindow() returns defult 96 DPI for desktop window
+    // GetDpiForWindow() returns default 96 DPI for desktop window
     // (most likely desktop has DPI_AWARENESS set to UNAWARE)
-    if (hwnd && hwnd != HWND_DESKTOP && hwnd != GetDesktopWindow()) {
+    if (!DpiIsDesktopHwnd(hwnd)) {
         if (DynGetDpiForWindow) {
             uint dpiWin = DynGetDpiForWindow(hwnd);
             // returns 0 for HWND_DESKTOP
             if (dpiWin >= 72) {
-                return DpiApplyWineOverride((int)dpiWin);
+                x = y = DpiApplyWineOverride((int)dpiWin);
+                *outX = x;
+                *outY = y;
+                return;
             }
         }
 
         if (DynGetDpiForMonitor) {
-            uint dpiX = 96, dpiY = 96;
+            uint monX = 96, monY = 96;
             HMONITOR h = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
             if (h != nullptr) {
-                HRESULT hr = DynGetDpiForMonitor(h, kMdtEffectiveDpi, &dpiX, &dpiY);
-                if (hr == S_OK && dpiX >= 72) {
-                    return DpiApplyWineOverride((int)dpiX);
+                HRESULT hr = DynGetDpiForMonitor(h, kMdtEffectiveDpi, &monX, &monY);
+                if (hr == S_OK && monX >= 72) {
+                    x = DpiApplyWineOverride((int)monX);
+                    y = DpiApplyWineOverride((int)(monY >= 72 ? monY : monX));
+                    *outX = x;
+                    *outY = y;
+                    return;
                 }
             }
         }
     }
 
     ScopedGetDC dc(hwnd);
-    int dpi = GetDeviceCaps(dc, LOGPIXELSX);
-    if (dpi < 72) {
+    x = GetDeviceCaps(dc, LOGPIXELSX);
+    y = GetDeviceCaps(dc, LOGPIXELSY);
+    if (x < 72) {
         HDC screenDC = GetDC(nullptr);
         if (screenDC) {
-            int screenDpi = GetDeviceCaps(screenDC, LOGPIXELSX);
+            int screenX = GetDeviceCaps(screenDC, LOGPIXELSX);
+            int screenY = GetDeviceCaps(screenDC, LOGPIXELSY);
             ReleaseDC(nullptr, screenDC);
-            if (screenDpi >= 72) {
-                dpi = screenDpi;
+            if (screenX >= 72) {
+                x = screenX;
+                y = screenY >= 72 ? screenY : screenX;
             }
         }
     }
-    if (dpi < 72) {
-        dpi = 96;
+    if (x < 72) {
+        x = 96;
     }
-    return DpiApplyWineOverride(dpi);
+    if (y < 72) {
+        y = x;
+    }
+    *outX = DpiApplyWineOverride(x);
+    *outY = DpiApplyWineOverride(y);
 }
 
-int DpiGet(HWND hwnd) {
-    int dpi = DpiGetForHwnd(hwnd);
-    dpi = RoundUp(dpi, 4);
-    return dpi;
+int DpiGetForHwnd(HWND hwnd) {
+    int x = 96, y = 96;
+    DpiQueryForHwnd(hwnd, &x, &y);
+    return x;
+}
+
+int DpiGet() {
+    return dpiX > 0 ? dpiX : 96;
+}
+
+void DpiSet(int x, int y) {
+    if (x <= 0) {
+        x = 96;
+    }
+    if (y <= 0) {
+        y = x;
+    }
+    dpiX = RoundUp(x, 4);
+    dpiY = RoundUp(y, 4);
+}
+
+void DpiSetFromHwnd(HWND hwnd) {
+    int x = 96, y = 96;
+    DpiQueryForHwnd(hwnd, &x, &y);
+    DpiSet(x, y);
 }
 
 int DpiScaleByDpi(int dpi, int n) {
@@ -101,16 +144,13 @@ int DpiScaleByDpi(int dpi, int n) {
     return MulDiv(n, dpi, 96);
 }
 
-int DpiScale(HWND hwnd, int x) {
-    return DpiScaleByDpi(DpiGet(hwnd), x);
+int DpiScale(int x) {
+    return DpiScaleByDpi(DpiGet(), x);
 }
 
-void DpiScale(HWND hwnd, int& x1, int& x2) {
-    int dpi = DpiGet(hwnd);
-    int nx1 = MulDiv(x1, dpi, 96);
-    int nx2 = MulDiv(x2, dpi, 96);
-    x1 = nx1;
-    x2 = nx2;
+void DpiScale(int& x, int& y) {
+    x = DpiScaleByDpi(dpiX > 0 ? dpiX : 96, x);
+    y = DpiScaleByDpi(dpiY > 0 ? dpiY : 96, y);
 }
 
 // GetSystemMetrics() for the dpi of a specific monitor/window. Plain
@@ -140,18 +180,6 @@ int DpiGetSystemMetrics(int index, int dpi) {
     return res;
 }
 
-// GetSystemMetrics() for the dpi of a specific monitor/window. Plain
-// GetSystemMetrics() always answers for the *system* dpi (the primary
-// monitor's), so under PerMonitorV2 scrollbar widths, caption heights, border
-// sizes etc. come out wrong on any monitor scaled differently from the primary.
-// Only pass indices that actually depend on dpi (SM_CXVSCROLL, SM_CYCAPTION,
-// SM_CXEDGE, ...); screen sizes are in physical pixels and don't.
-int DpiGetSystemMetrics(HWND hwnd, int index) {
-    return DpiGetSystemMetrics(index, DpiGet(hwnd));
-}
-
-int DpiScale(HDC hdc, int x) {
-    int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
-    int res = MulDiv(x, dpi, 96);
-    return res;
+int DpiGetSystemMetrics(int index) {
+    return DpiGetSystemMetrics(index, DpiGet());
 }

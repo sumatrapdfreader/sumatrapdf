@@ -49,7 +49,7 @@ static int EditAverageCharDx(HWND hwnd, HFONT font) {
     Size s = HwndMeasureText(hwnd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", font);
     int ave = (s.dx + 25) / 52;
     if (ave < 1) {
-        ave = DpiScale(hwnd, 7);
+        ave = DpiScale(7);
     }
     return ave;
 }
@@ -144,7 +144,7 @@ HWND Edit::Create(const CreateArgs& args) {
         SetMaxWidthChars(args.maxWidthChars);
     }
     if (args.textPadding > 0) {
-        textPadding = DpiScale(hwnd, args.textPadding);
+        textPadding = DpiScale(args.textPadding);
     }
     SizeToIdealSize(this);
     ApplyTextPadding();
@@ -294,8 +294,8 @@ Size Edit::GetIdealSize() {
     dx += lm + rm;
 
     if (HasBorder()) {
-        dx += DpiScale(hwnd, 4);
-        dy += DpiScale(hwnd, 8);
+        dx += DpiScale(4);
+        dy += DpiScale(8);
     }
     if (createdWithBottomBorder) {
         dy += kEditBottomBorderDy;

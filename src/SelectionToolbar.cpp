@@ -146,7 +146,7 @@ static bool IsActivelySelecting(MainWindow* win) {
 }
 
 static int SelectionBoundsSlack(HWND hwnd) {
-    return DpiScale(hwnd, 3);
+    return DpiScale(3);
 }
 
 static bool SelectionBoundsChanged(Rect a, Rect b, int slack) {
@@ -205,7 +205,7 @@ static COLORREF SelBarHoverBg(COLORREF bg) {
 static void UpdateToolbarWindowRgn(HWND hwnd, int cornerRadius, int dx, int dy) {
     dx = std::max(dx, 1);
     dy = std::max(dy, 1);
-    int radius = DpiScale(hwnd, cornerRadius);
+    int radius = DpiScale(cornerRadius);
     HRGN rgn = CreateRoundRectRgn(0, 0, dx + 1, dy + 1, radius, radius);
     if (!SetWindowRgn(hwnd, rgn, TRUE)) {
         DeleteObject(rgn);
@@ -281,7 +281,7 @@ struct SelToolbarTextButton : VirtButton {
     SelToolbarTextButton(Str s, PlatformFont* f) : VirtButton(s, f) {}
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
-            int radius = DpiScale(GetHwnd(), kButtonRadius);
+            int radius = DpiScale(kButtonRadius);
             ctx.gfx->FillRoundedRect(ctx.bounds, radius, hoverBg);
         }
         VirtButton::Paint(ctx);
@@ -292,7 +292,7 @@ struct SelToolbarTextButton : VirtButton {
 struct SelToolbarIconButton : VirtIconButton {
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
-            int radius = DpiScale(GetHwnd(), kButtonRadius);
+            int radius = DpiScale(kButtonRadius);
             ctx.gfx->FillRoundedRect(ctx.bounds, radius, hoverBg);
         }
         VirtIconButton::Paint(ctx);
@@ -327,10 +327,10 @@ static void OnSelToolbarButtonClicked(SelectionToolbar* tb, VirtMouseEvent* ev) 
 // (the window region is applied after SetWindowPos).
 static void LayoutToolbar(SelectionToolbar* tb) {
     HWND hwnd = tb->hwnd;
-    int padX = DpiScale(hwnd, kBtnPadX);
-    int padY = DpiScale(hwnd, kBtnPadY);
-    int margin = DpiScale(hwnd, kMargin);
-    int gap = DpiScale(hwnd, kBtnGap);
+    int padX = DpiScale(kBtnPadX);
+    int padY = DpiScale(kBtnPadY);
+    int margin = DpiScale(kMargin);
+    int gap = DpiScale(kBtnGap);
 
     // deleting the old tree takes its buttons out of vroot->tops
     delete tb->layout;
@@ -404,7 +404,7 @@ static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
 static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
     HWND hwnd = tb->hwnd;
     Rect rc = HwndClientRect(hwnd);
-    int cornerRadius = DpiScale(hwnd, kCornerRadius);
+    int cornerRadius = DpiScale(kCornerRadius);
 
     GfxHdc gfx(hdc);
     gfx.FillRoundedRect(rc, cornerRadius, SelBarBg(), SelBarBorderColor());
@@ -510,7 +510,7 @@ static bool GetSelectionBounds(MainWindow* win, Rect& out) {
 static bool PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
     MainWindow* win = tb->win;
     Rect canvas = win->canvasRc;
-    int gap = DpiScale(tb->hwnd, 6);
+    int gap = DpiScale(6);
     int w = tb->size.dx;
     int h = tb->size.dy;
 
@@ -554,10 +554,10 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
         delete tb;
         return nullptr;
     }
-    tb->font = CreateScaledFontFrom(GetAppFont(hwnd), kToolbarFontPct);
+    tb->font = CreateScaledFontFrom(GetAppFont(), kToolbarFontPct);
     tb->fontOwned = tb->font != nullptr;
     if (!tb->font) {
-        tb->font = GetAppFont(hwnd);
+        tb->font = GetAppFont();
     }
     tb->platformFont = GetPlatformFont(tb->font);
     win->selectionToolbar = tb;

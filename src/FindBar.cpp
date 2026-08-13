@@ -185,7 +185,7 @@ FindBarWnd::~FindBarWnd() {
 void FindBarWnd::UpdateButtonIcons() {
     static const TbIcon icons[6] = {TbIcon::ChevronUp,      TbIcon::ChevronDown,    TbIcon::MatchCase,
                                     TbIcon::MatchWholeWord, TbIcon::ArrowsDiagonal, TbIcon::Close};
-    int isz = RoundUp(DpiScale(hwnd, 16), 4);
+    int isz = RoundUp(DpiScale(16), 4);
     for (int i = 0; i < 6; i++) {
         if (btns[i]) {
             btns[i]->pixmap = GetPixmapForIcon(icons[i], isz, isz);
@@ -206,7 +206,7 @@ void FindBarWnd::CreateButtons() {
         CmdFindPrev,      CmdFindNext,       CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
         kFindBarPinCmdId, kFindBarCloseCmdId};
     COLORREF colBg = ThemeWindowControlBackgroundColor();
-    int pad = DpiScale(hwnd, 4);
+    int pad = DpiScale(4);
     for (int i = 0; i < 6; i++) {
         auto* b = new VirtIconButton();
         b->id = cmds[i];
@@ -258,7 +258,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetAppFont(hwnd);
+        args.font = GetAppFont();
         args.isMultiLine = false;
         args.withBorder = true;
         args.cueText = _TRA("Find");
@@ -273,7 +273,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     // ellipsis: single line, vertically centered, so it lines up with the
     // (taller, bordered) edit box's text instead of sitting at the top
     status = NewVirtText({
-        .font = GetPlatformFont(GetAppFont(hwnd)),
+        .font = GetPlatformFont(GetAppFont()),
         .textColor = colTxt,
         .isRtl = IsUIRtl(),
         .ellipsis = true,
@@ -304,12 +304,12 @@ constexpr int kFindBarMinEditDx = 80;
 constexpr int kFindBarResizeGripDx = 6;
 
 void FindBarWnd::BuildLayout() {
-    int p = DpiScale(hwnd, kFindBarPadding);
-    int gap = DpiScale(hwnd, kFindBarGap);
-    int statusDx = DpiScale(hwnd, kFindBarStatusDx);
+    int p = DpiScale(kFindBarPadding);
+    int gap = DpiScale(kFindBarGap);
+    int statusDx = DpiScale(kFindBarStatusDx);
     // cap preferred width at the min so HBox flex, not the typed text, sets the
     // edit's size (a long query would otherwise blow out the bar)
-    int minEditDx = DpiScale(hwnd, kFindBarMinEditDx);
+    int minEditDx = DpiScale(kFindBarMinEditDx);
     edit->idealDx = minEditDx;
     edit->maxDx = minEditDx;
 
@@ -343,7 +343,7 @@ void FindBarWnd::Layout(int forceBarDx) {
     if (forceBarDx > 0) {
         DoLayout();
     } else {
-        int extra = DpiScale(hwnd, kFindBarDefaultEditDx - kFindBarMinEditDx);
+        int extra = DpiScale(kFindBarDefaultEditDx - kFindBarMinEditDx);
         int minDx = layout->MinIntrinsicWidth(0) + extra;
         inLayout = true;
         LayoutAndSizeToContent(layout, minDx, 0, hwnd);
@@ -392,7 +392,7 @@ void FindBarWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
 // handling turns a drag there into a resize.
 void FindBarWnd::OnNcHitTest(WindowBase::NcHitTestEvent* ev) {
     Rect wr = HwndWindowRect(hwnd);
-    if (ev->screenPos.x < wr.x + DpiScale(hwnd, kFindBarResizeGripDx)) {
+    if (ev->screenPos.x < wr.x + DpiScale(kFindBarResizeGripDx)) {
         ev->result = HTLEFT;
         ev->didHandle = true;
     }

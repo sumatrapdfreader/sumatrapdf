@@ -84,6 +84,7 @@ static LRESULT CALLBACK ControlWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
                 return ev.result;
             }
         }
+        DpiSetFromHwnd(hwnd);
         return c->WndProcDefault(hwnd, msg, wparam, lparam);
     }
     return ::DefWindowProc(hwnd, msg, wparam, lparam);
@@ -410,6 +411,11 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
             break;
         }
 
+        case WM_DPICHANGED: {
+            DpiSet((int)LOWORD(wparam), (int)HIWORD(wparam));
+            break;
+        }
+
         case WM_SETFOCUS: {
             if (onFocus.IsValid()) {
                 FocusEvent ev;
@@ -457,6 +463,7 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         }
 
         case WM_PAINT: {
+            DpiSetFromHwnd(hwnd);
             if (subclassId) {
                 // Allow window controls to do their default drawing.
                 return FinalWindowProc(msg, wparam, lparam);
@@ -553,6 +560,7 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         }
 
         case WM_SIZE: {
+            DpiSetFromHwnd(hwnd);
             if (onSize.IsValid()) {
                 SizeEvent sev;
                 sev.w = this;
@@ -592,6 +600,7 @@ void ControlBase::Attach(HWND hwnd) {
     ReportIf(ControlFromHwnd(hwnd));
 
     this->hwnd = hwnd;
+    DpiSetFromHwnd(hwnd);
     Subclass();
     if (onAttach.IsValid()) {
         AttachEvent ev;
@@ -665,6 +674,7 @@ HWND ControlBase::CreateControl(const CreateControlArgs& args) {
         return nullptr;
     }
     HwndSetFont(hwnd, font);
+    DpiSetFromHwnd(hwnd);
 
     // TODO: validate that
     Subclass();
@@ -740,6 +750,7 @@ HWND ControlBase::CreateCustom(const CreateCustomArgs& args) {
         return nullptr;
     }
 
+    DpiSetFromHwnd(hwnd);
     // trigger creating a backgroundBrush
     SetColors(kColorNoChange, args.bgColor);
     if (args.icon) {
@@ -757,15 +768,15 @@ HWND ControlBase::CreateCustom(const CreateCustomArgs& args) {
 }
 
 void ControlBase::SetInsetsPt(int uniform) {
-    insets = DpiScaledInsets(hwnd, uniform);
+    insets = DpiScaledInsets(uniform);
 }
 
 void ControlBase::SetInsetsPt(int topBottom, int leftRight) {
-    insets = DpiScaledInsets(hwnd, topBottom, leftRight);
+    insets = DpiScaledInsets(topBottom, leftRight);
 }
 
 void ControlBase::SetInsetsPt(int top, int right, int bottom, int left) {
-    insets = DpiScaledInsets(hwnd, top, right, bottom, left);
+    insets = DpiScaledInsets(top, right, bottom, left);
 }
 
 void ControlBase::Subclass() {

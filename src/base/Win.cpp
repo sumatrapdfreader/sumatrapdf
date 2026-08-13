@@ -107,7 +107,7 @@ int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
     }
     dy = dy * lines;
     if (hasBorder) {
-        dy += DpiScale(hwnd, 8);
+        dy += DpiScale(8);
     }
     // logf("Edit::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
     return dy;
@@ -2283,7 +2283,7 @@ bool GetNonClientMetricsForDpi(int dpi, NONCLIENTMETRICS* ncm) {
     if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(*ncm), ncm, 0)) {
         return false;
     }
-    int sysDpi = DpiGet(nullptr);
+    int sysDpi = DpiGetForHwnd(nullptr);
     if (sysDpi <= 0 || sysDpi == dpi) {
         return true;
     }
@@ -3314,8 +3314,8 @@ Size ButtonGetIdealSize(HWND hwnd) {
     SIZE s{};
     Button_GetIdealSize(hwnd, &s);
     // add padding
-    int xPadding = DpiScale(hwnd, 8 * 2);
-    int yPadding = DpiScale(hwnd, 2 * 2);
+    int xPadding = DpiScale(8 * 2);
+    int yPadding = DpiScale(2 * 2);
     s.cx += xPadding;
     s.cy += yPadding;
     Size res = {s.cx, s.cy};
@@ -3457,7 +3457,7 @@ void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi) {
         return;
     }
     if (dpi <= 0) {
-        dpi = DpiGet(hwndTree);
+        dpi = RoundUp(DpiGetForHwnd(hwndTree), 4);
     }
     HwndSetFont(hwndTree, font);
     HDC dc = GetDC(hwndTree);
@@ -3475,7 +3475,7 @@ void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi) {
 }
 
 void HwndSetTreeFont(HWND hwndTree, HFONT font) {
-    HwndSetTreeFontForDpi(hwndTree, font, DpiGet(hwndTree));
+    HwndSetTreeFontForDpi(hwndTree, font, DpiGetForHwnd(hwndTree));
 }
 
 HFONT HwndGetFont(HWND hwnd) {

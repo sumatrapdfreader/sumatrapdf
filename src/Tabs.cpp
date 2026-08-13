@@ -75,9 +75,10 @@ static void UpdateTabTitle(WindowTab* tab) {
 }
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int tabDy = DpiScale(hwnd, kTabBarDy);
-    HFONT hfont = GetAppFont(hwnd);
-    int fontDyWithPadding = FontDyPx(hwnd, hfont) + DpiScale(hwnd, 2);
+    DpiSetFromHwnd(hwnd);
+    int tabDy = DpiScale(kTabBarDy);
+    HFONT hfont = GetAppFont();
+    int fontDyWithPadding = FontDyPx(hwnd, hfont) + DpiScale(2);
     tabDy = std::max(fontDyWithPadding, tabDy);
     // Guard against the bad per-window DPI Wine reports (93e5b4e47: the tab bar
     // and caption came out tiny). Wine only, deliberately: we are PerMonitorV2,
@@ -86,15 +87,16 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     // tab bar too tall on any monitor scaled lower than the primary
     // (discussion #4831).
     if (IsRunningOnWine()) {
-        int minDy = DpiScale(HWND_DESKTOP, kTabBarDy);
-        int minFontDy = FontDyPx(hwnd, hfont) + DpiScale(HWND_DESKTOP, 2);
+        int minDy = DpiScaleByDpi(DpiGetForHwnd(HWND_DESKTOP), kTabBarDy);
+        int minFontDy = FontDyPx(hwnd, hfont) + DpiScaleByDpi(DpiGetForHwnd(HWND_DESKTOP), 2);
         minDy = std::max(minFontDy, minDy);
         tabDy = std::max(tabDy, minDy);
         int res = (int)((float)tabDy * factor);
         logf(
             "GetTabbarHeight: hwnd=%p factor=%g dpi=%d desktopDpi=%d tabDyScaled=%d fontDy=%d "
             "minDy=%d result=%d\n",
-            hwnd, factor, DpiGet(hwnd), DpiGet(HWND_DESKTOP), DpiScale(hwnd, kTabBarDy), fontDyWithPadding, minDy, res);
+            hwnd, factor, DpiGetForHwnd(hwnd), DpiGetForHwnd(HWND_DESKTOP), DpiScale(kTabBarDy), fontDyWithPadding,
+            minDy, res);
         return res;
     }
     return (int)((float)tabDy * factor);
@@ -102,7 +104,7 @@ int GetTabbarHeight(HWND hwnd, float factor) {
 
 #if 0
 static inline Size GetTabSize(HWND hwnd) {
-    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, kTabMinDx));
+    int dx = DpiScale(std::max(gGlobalPrefs->tabWidth, kTabMinDx));
     int dy = GetTabbarHeight(hwnd);
     return Size(dx, dy);
 }
@@ -140,7 +142,7 @@ void UpdateTabWidth(MainWindow* win) {
     // (issue #3850). Height already uses DpiScale via GetTabbarHeight.
     if (win->tabsCtrl) {
         HWND hwnd = win->tabsCtrl->hwnd ? win->tabsCtrl->hwnd : win->hwndFrame;
-        win->tabsCtrl->tabDefaultDx = DpiScale(hwnd, gGlobalPrefs->tabWidth);
+        win->tabsCtrl->tabDefaultDx = DpiScale(gGlobalPrefs->tabWidth);
     }
     // Lay out only when the bar stays visible. Hiding it right after
     // TabCtrl_SetItemSize invalidated the control leaves a pending WM_PAINT for
@@ -255,7 +257,7 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
             GetWindowPlacement(oldWin->hwndFrame, &wp);
             int dx = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
             int dy = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-            int x = releasePt.x - DpiScale(oldWin->hwndFrame, 100);
+            int x = releasePt.x - DpiScale(100);
             int y = releasePt.y - (GetTabbarHeight(oldWin->hwndFrame) / 2);
             Rect rect = ShiftRectToWorkArea(Rect(x, y, dx, dy), oldWin->hwndFrame, true);
             newWin = CreateAndShowMainWindow(nullptr, false);
@@ -621,9 +623,9 @@ void CreateTabbar(MainWindow* win) {
     TabsCtrl::CreateArgs args;
     args.parent = win->hwndFrame;
     args.withToolTips = true;
-    args.font = GetAppFont(win->hwndFrame);
+    args.font = GetAppFont();
     // logical TabWidth → physical (see UpdateTabWidth / issue #3850)
-    args.tabDefaultDx = DpiScale(win->hwndFrame, gGlobalPrefs->tabWidth);
+    args.tabDefaultDx = DpiScale(gGlobalPrefs->tabWidth);
     args.isRtl = false; // LTR hwnd; RTL tab order follows parent frame (see UpdateWindowRtlLayout)
 
     TabsCtrl* tabsCtrl = new TabsCtrl();

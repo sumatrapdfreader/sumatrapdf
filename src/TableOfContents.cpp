@@ -1189,7 +1189,7 @@ void ReloadTocTree(WindowTab* tab) {
 static void UpdateFont(HDC hdc, HWND hwnd, int fontFlags) {
     bool italic = bit::IsSet(fontFlags, fontBitItalic);
     bool bold = bit::IsSet(fontFlags, fontBitBold);
-    HFONT hfont = GetAppTreeFontEx(hwnd, bold, italic);
+    HFONT hfont = GetAppTreeFontEx(bold, italic);
     SelectObject(hdc, hfont);
 }
 
@@ -1296,7 +1296,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
         pageW = ToWStrTemp(pageLabel);
         if (pageW.len > 0) {
             pageSize = HdcGetTextExtentPoint32(hdc, pageLabel);
-            pageReserve = pageSize.dx + DpiScale(tv->hwnd, 8);
+            pageReserve = pageSize.dx + DpiScale(8);
         } else {
             showPage = false;
         }
@@ -1778,7 +1778,7 @@ void CreateToc(MainWindow* win) {
     HWND parent = win->hwndFrame;
     win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
-    PlatformFont* labelFont = GetPlatformFont(GetAppSidebarLabelFont(win->hwndFrame));
+    PlatformFont* labelFont = GetPlatformFont(GetAppSidebarLabelFont());
     auto header = NewLabelWithClose(win->hwndTocBox, labelFont, MkFunc1(TocCloseClicked, win));
     win->tocLabel = header.label;
     // label text is set in UpdateToolbarSidebarText()
@@ -1791,7 +1791,7 @@ void CreateToc(MainWindow* win) {
         // underline so the filter field is visible on flat sidebar backgrounds
         eargs.withBottomBorder = true;
         eargs.cueText = _TRA("Search Bookmarks");
-        eargs.font = GetAppFont(win->hwndFrame);
+        eargs.font = GetAppFont();
         filterEdit->Create(eargs);
     }
     win->tocFilterEdit = filterEdit;
@@ -1801,7 +1801,7 @@ void CreateToc(MainWindow* win) {
     auto* treeView = new TreeView();
     TreeView::CreateArgs args;
     args.parent = win->hwndTocBox;
-    args.font = GetAppTreeFont(win->hwndFrame);
+    args.font = GetAppTreeFont();
     args.fullRowSelect = true;
     args.exStyle = 0;
     args.isRtl = IsUIRtl();

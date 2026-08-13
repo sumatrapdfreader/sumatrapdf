@@ -90,7 +90,7 @@ void PropertiesWnd::ScheduleDelete() {
 }
 
 static int ButtonPadding(HWND hwnd) {
-    return DpiScale(hwnd, kButtonPadding);
+    return DpiScale(kButtonPadding);
 }
 
 PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
@@ -783,8 +783,8 @@ void PropertiesWnd::SizeToContent() {
     ReleaseDC(hwndEdit, hdcEdit);
 
     // add padding for scrollbar, border, window frame
-    int editPadding = DpiGetSystemMetrics(hwnd, SM_CXVSCROLL) + (2 * DpiGetSystemMetrics(hwnd, SM_CXEDGE)) + 16;
-    int frameDx = DpiGetSystemMetrics(hwnd, SM_CXFRAME) * 2;
+    int editPadding = DpiGetSystemMetrics(SM_CXVSCROLL) + (2 * DpiGetSystemMetrics(SM_CXEDGE)) + 16;
+    int frameDx = DpiGetSystemMetrics(SM_CXFRAME) * 2;
     int wantedClientDx = maxLineDx + editPadding;
     if (btnCopyToClipboard) {
         Size buttonSize = btnCopyToClipboard->GetIdealSize();
@@ -793,9 +793,9 @@ void PropertiesWnd::SizeToContent() {
     int wantedDx = wantedClientDx + frameDx;
 
     // calculate height to fit all lines
-    int editBorderDy = 2 * DpiGetSystemMetrics(hwnd, SM_CYEDGE);
-    int frameDy = (DpiGetSystemMetrics(hwnd, SM_CYFRAME) * 2) + DpiGetSystemMetrics(hwnd, SM_CYCAPTION);
-    int btnAreaDy = DpiScale(hwnd, 40);
+    int editBorderDy = 2 * DpiGetSystemMetrics(SM_CYEDGE);
+    int frameDy = (DpiGetSystemMetrics(SM_CYFRAME) * 2) + DpiGetSystemMetrics(SM_CYCAPTION);
+    int btnAreaDy = DpiScale(40);
     if (btnCopyToClipboard) {
         btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + (2 * ButtonPadding(hwnd)));
     }
@@ -933,7 +933,7 @@ bool PropertiesWnd::Create(HWND parent) {
         args.title = _TRA("Document Properties");
         args.visible = false;
         args.style = WS_OVERLAPPEDWINDOW;
-        args.font = GetAppFont(parent);
+        args.font = GetAppFont();
         args.isRtl = isRtl;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
@@ -971,13 +971,13 @@ bool PropertiesWnd::Create(HWND parent) {
         auto* btnRow = new HBox();
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
-        btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetPlatformFont(GetAppFont(hwnd)), true);
+        btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetPlatformFont(GetAppFont()), true);
         btnCopyToClipboard->onClick = MkFunc1(CopyToClipboardClicked, this);
-        btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(hwnd, kButtonPadding, 0, 0, 0)));
+        btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
         vbox->AddChild(btnRow);
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding, kButtonPadding, kButtonPadding));
+    layout = new Padding(vbox, DpiScaledInsets(0, kButtonPadding, kButtonPadding, kButtonPadding));
 
     SetPropsText(ToStr(propsText));
     SizeToContent();

@@ -707,7 +707,7 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
         return;
     }
 
-    int margin = DpiScale(win->hwndCanvas, 48);
+    int margin = DpiScale(48);
     if (ReadAloudIsWordRectFullyVisibleInViewport(win, wordRect, margin)) {
         return;
     }
@@ -731,7 +731,7 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
         return;
     }
 
-    int maxStep = std::max(canvas.dy / 4, DpiScale(win->hwndCanvas, 120));
+    int maxStep = std::max(canvas.dy / 4, DpiScale(120));
     if (dx > maxStep) {
         dx = maxStep;
     } else if (dx < -maxStep) {

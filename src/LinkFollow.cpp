@@ -310,7 +310,7 @@ void PaintKeyboardLinkTargets(MainWindow* win, HDC hdc) {
 
     Gdiplus::Graphics gs(hdc);
     gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    Gdiplus::Font font(L"Segoe UI", (float)DpiScale(win->hwndCanvas, 11), Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+    Gdiplus::Font font(L"Segoe UI", (float)DpiScale(11), Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
     for (int i = 0; i < n; i++) {
         PaintLinkBadge(gs, font, screenRects[i], i + 1);
     }

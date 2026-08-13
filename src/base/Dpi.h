@@ -9,16 +9,19 @@
 // does on a real multi-monitor setup.
 extern int gDpiOverride;
 
+// Current layout DPI. Set at the start of layout / paint / size / DPI-change
+// (DpiSetFromHwnd / DpiSet). DpiScale() and DpiGet() read these.
+extern int dpiX;
+extern int dpiY;
+
 int DpiGetForHwnd(HWND);
-int DpiGet(HWND);
+int DpiGet();
 void DpiSetWineOverride(int dpi);
-// for code that has a dpi rather than a window (a control that isn't
-// attached to one yet). dpi <= 0 means 96 (unscaled)
+void DpiSetFromHwnd(HWND);
+void DpiSet(int x, int y);
 int DpiScaleByDpi(int dpi, int n);
-int DpiScale(HWND, int);
-void DpiScale(HWND, int&, int&);
+int DpiScale(int x);
+void DpiScale(int& x, int& y);
 
-int DpiScale(HDC, int x);
-
+int DpiGetSystemMetrics(int index);
 int DpiGetSystemMetrics(int index, int dpi);
-int DpiGetSystemMetrics(HWND hwnd, int index);

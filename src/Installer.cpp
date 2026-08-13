@@ -1318,7 +1318,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     gInstallStarted = true;
 
     // create a progress bar in place of the Options button
-    int dx = DpiScale(wnd->hwnd, GetInstallerWinDx() / 2);
+    int dx = DpiScale(GetInstallerWinDx() / 2);
     Rect rc(0, 0, dx, gButtonDy);
     rc = HwndMapRectToWindow(rc, wnd->btnOptions->hwnd, wnd->hwnd);
 
@@ -1614,6 +1614,7 @@ static void RelayoutInstaller(InstallerWnd* wnd) {
     if (!wnd || !wnd->layout || !wnd->hwnd) {
         return;
     }
+    DpiSetFromHwnd(wnd->hwnd);
     Rect rc = HwndClientRect(wnd->hwnd);
     if (rc.IsEmpty()) {
         return;
@@ -1788,7 +1789,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     bool showOptions = false;
 
     HWND hwnd = wnd->hwnd;
-    int margin = DpiScale(hwnd, kInstallerWinMargin);
+    int margin = DpiScale(kInstallerWinMargin);
     bool isRtl = IsUIRtl();
     bool showInstallButton = !cli->fastInstall;
 
@@ -1855,13 +1856,13 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         .isRtl = IsUIRtl(),
     });
 
-    int gap = DpiScale(hwnd, 4);
+    int gap = DpiScale(4);
     int editDy = wnd->editInstallationDir->GetIdealSize().dy;
     int browseDx = editDy;
 
     auto* dirRow = new HBox();
     dirRow->alignCross = CrossAxisAlign::CrossCenter;
-    dirRow->AddChild(new HwndSlot(wnd->editInstallationDir->hwnd, DpiScale(hwnd, 80), editDy), 1);
+    dirRow->AddChild(new HwndSlot(wnd->editInstallationDir->hwnd, DpiScale(80), editDy), 1);
     dirRow->AddChild(new Spacer(gap, 0));
     dirRow->AddChild(new HwndSlot(wnd->btnBrowseDir->hwnd, browseDx, browseDx));
 
@@ -1875,7 +1876,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     auto* opts = new VBox();
     opts->alignCross = CrossAxisAlign::Stretch;
     opts->AddChild(wnd->staticInstDir);
-    opts->AddChild(new Spacer(0, DpiScale(hwnd, 2)));
+    opts->AddChild(new Spacer(0, DpiScale(2)));
     opts->AddChild(dirRow);
     opts->AddChild(new Spacer(0, gap + margin));
     addCheck(wnd->checkboxForAllUsers, opts);
@@ -1929,6 +1930,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 //] ACCESSKEY_GROUP Installer
 
 static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    DpiSetFromHwnd(hwnd);
     bool handled;
 
     LRESULT res = 0;
@@ -2026,7 +2028,8 @@ static bool CreateInstallerWnd(Flags* cli) {
         return false;
     }
     gWnd->hwnd = hwnd;
-    DpiScale(hwnd, dx, dy);
+    DpiSetFromHwnd(hwnd);
+    DpiScale(dx, dy);
     HwndResizeClientSize(hwnd, dx, dy);
     CreateInstallerWindowControls(gWnd, cli);
     return true;

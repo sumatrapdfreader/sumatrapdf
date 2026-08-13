@@ -90,7 +90,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         baseZoom = pageZoom;
     }
 
-    int popupWCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupWidth);
+    int popupWCap = DpiScale(kRefHoverMaxPopupWidth);
     {
         POINT mp = {s->pending.screenPt.x, s->pending.screenPt.y};
         HMONITOR hmon = MonitorFromPoint(mp, MONITOR_DEFAULTTONEAREST);
@@ -108,7 +108,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     float contentDx = hasContinuation && continuation.dx > region.dx ? continuation.dx : region.dx;
 
     int popupHCap;
-    int cursorPad = DpiScale(s->hwndPopup, kRefHoverCursorPad);
+    int cursorPad = DpiScale(kRefHoverCursorPad);
     if (contentDy > 250.f && s->pending.pageScreenRect.dy > 0) {
         Rect pr = s->pending.pageScreenRect;
         int curY = s->pending.screenPt.y;
@@ -119,13 +119,13 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         int pageBased = pr.dy * 75 / 100;
         popupHCap = (pageBased > maxSpace) ? pageBased : maxSpace;
     } else {
-        popupHCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupHeight);
+        popupHCap = DpiScale(kRefHoverMaxPopupHeight);
         if (s->pending.pageScreenRect.dy > 0) {
             int pageBased = s->pending.pageScreenRect.dy * 45 / 100;
             popupHCap = std::min(pageBased, popupHCap);
         }
     }
-    int border = DpiScale(s->hwndPopup, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     float availH = (float)(popupHCap - (2 * border));
     float availW = (float)(popupWCap - (2 * border));
     if (useLinkZoom) {

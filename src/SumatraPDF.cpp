@@ -2739,7 +2739,7 @@ static void ApplyDarkModeToInfotip(MainWindow* win) {
         return;
     }
     DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
-    HFONT font = GetAppFont(win->hwndCanvas);
+    HFONT font = GetAppFont();
     win->infotip->SetFont(font);
     HwndSetFont(win->infotip->hwnd, font);
 }
@@ -2753,7 +2753,7 @@ static MainWindow* CreateMainWindow() {
     }
     // we don't want the windows to overlap so shift each window by a bit
     int nShift = len(gWindows);
-    windowPos.x += nShift * DpiScale((HWND) nullptr, 15);
+    windowPos.x += nShift * DpiScale(15);
 
     WStr clsName = WStrL(FRAME_CLASS_NAME);
     WStr title = WStr(kSumatraWindowTitleW);
@@ -2768,6 +2768,7 @@ static MainWindow* CreateMainWindow() {
     if (!hwndFrame) {
         return nullptr;
     }
+    DpiSetFromHwnd(hwndFrame);
 
     // WM_NCCALCSIZE returning 0 disables DWM rounded corners; re-enable them.
     if (!IsRunningOnWine()) {
@@ -2776,7 +2777,7 @@ static MainWindow* CreateMainWindow() {
 
     ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
-    win->frameDpi = RoundUp(DpiGet(hwndFrame), 4);
+    win->frameDpi = RoundUp(DpiGetForHwnd(hwndFrame), 4);
     if (win->frameDpi <= 0) {
         win->frameDpi = 96;
     }
@@ -2823,7 +2824,7 @@ static MainWindow* CreateMainWindow() {
 
     Tooltip::CreateArgs args;
     args.parent = win->hwndCanvas;
-    args.font = GetAppFont(win->hwndCanvas);
+    args.font = GetAppFont();
     args.isRtl = IsUIRtl();
 
     win->infotip = new Tooltip();
@@ -6454,7 +6455,7 @@ static void SyncCaptionLayout(MainWindow* win) {
             int btnCount = TbGetButtonCount(win->hwndMenuToolbar);
             if (btnCount > 0) {
                 Rect lastBtn = TbGetItemRect(win->hwndMenuToolbar, btnCount - 1);
-                natural = lastBtn.x + lastBtn.dx + (DpiGetSystemMetrics(win->hwndMenuToolbar, SM_CXBORDER) * 2);
+                natural = lastBtn.x + lastBtn.dx + (DpiGetSystemMetrics(SM_CXBORDER) * 2);
             }
         }
         win->capMenuSlot->dx = std::min(natural, menuMax);
@@ -6468,6 +6469,7 @@ static void SyncCaptionLayout(MainWindow* win) {
 }
 
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
+    DpiSetFromHwnd(win->hwndFrame);
     Rect rc = HwndClientRect(win->hwndFrame);
     // don't relayout while the window is minimized
     if (rc.IsEmpty()) {
@@ -6996,7 +6998,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     if (!win || !hwnd) {
         return;
     }
-    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGet(hwnd);
+    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(hwnd);
     win->frameDpi = dpi;
     logf("ApplyMainWindowDpiChromeRefresh: dpi=%d\n", dpi);
 
@@ -7063,7 +7065,7 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, 
     if (explicitDpi > 0) {
         dpi = RoundUp(explicitDpi, 4);
     } else {
-        dpi = DpiGet(hwnd);
+        dpi = RoundUp(DpiGetForHwnd(hwnd), 4);
     }
     if (dpi <= 0) {
         dpi = 96;
@@ -7137,14 +7139,15 @@ static void ToggleDpiOverride() {
     Vec<int> dpis;
     for (HWND hwnd : hwnds) {
         rects.Append(HwndWindowRect(hwnd));
-        dpis.Append(DpiGet(hwnd));
+        dpis.Append(DpiGetForHwnd(hwnd));
     }
 
     gDpiOverride = next;
-    // not DpiGet(HWND_DESKTOP): the override deliberately doesn't apply there,
+    // not DpiGetForHwnd(HWND_DESKTOP): the override deliberately doesn't apply there,
     // so that still reports the (unchanged) system DPI
-    int newDpi = n > 0 ? DpiGet(hwnds[0]) : DpiGet(HWND_DESKTOP);
-    logf("ToggleDpiOverride: gDpiOverride=%d, windowDpi=%d systemDpi=%d\n", gDpiOverride, newDpi, DpiGet(HWND_DESKTOP));
+    int newDpi = n > 0 ? DpiGetForHwnd(hwnds[0]) : DpiGetForHwnd(HWND_DESKTOP);
+    logf("ToggleDpiOverride: gDpiOverride=%d, windowDpi=%d systemDpi=%d\n", gDpiOverride, newDpi,
+         DpiGetForHwnd(HWND_DESKTOP));
 
     for (int i = 0; i < n; i++) {
         int oldDpi = dpis[i] > 0 ? dpis[i] : 96;
@@ -7168,7 +7171,7 @@ static void FinishDeferredMainWindowDpiRefresh(MainWindow* win, HWND hwnd) {
     }
     win->dpiChromeRefreshPending = false;
     // Keep the DPI from the last WM_DPICHANGED; do not re-query the monitor.
-    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGet(hwnd);
+    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(hwnd);
     OnDpiChanged(win, nullptr, dpi, true);
 }
 
@@ -9299,16 +9302,16 @@ static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
 // content for a notification, built as a VirtCtrl tree: a generated Pixmap shown
 // by a VirtCtrl, with a caption below it
 static ILayout* MakeDebugPixmapNotifContent(HWND hwnd) {
-    PlatformFont* font = GetPlatformFont(GetAppBiggerFont(hwnd));
+    PlatformFont* font = GetPlatformFont(GetAppBiggerFont());
     auto* box = new VBox();
     box->alignCross = CrossAxisAlign::CrossCenter;
 
     auto* img = new OwnedPixmapCtrl();
-    img->pixmap = MakeDebugGradientPixmap(DpiScale(hwnd, 120), DpiScale(hwnd, 40));
+    img->pixmap = MakeDebugGradientPixmap(DpiScale(120), DpiScale(40));
     img->fitToBounds = false;
     box->AddChild(img);
 
-    box->AddChild(new Spacer(0, DpiScale(hwnd, 6)));
+    box->AddChild(new Spacer(0, DpiScale(6)));
     box->AddChild(new VirtText(StrL("a VirtCtrl-drawn Pixmap"), font));
     return box;
 }
@@ -11544,6 +11547,7 @@ void RelayoutCaption(MainWindow* win) {
     if (!win->captionLayout || !win->tabsInTitlebar) {
         return;
     }
+    DpiSetFromHwnd(win->hwndFrame);
     SyncCaptionLayout(win);
     Rect rc = win->captionRect;
     if (rc.IsEmpty()) {
@@ -11655,7 +11659,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
                 kind = CaptionSysButtonKind::Restore;
                 break;
         }
-        int iconPx = DpiScale(win->hwndFrame, kCaptionGlyphDip);
+        int iconPx = DpiScale(kCaptionGlyphDip);
         DrawCaptionSysButtonGlyph(hdc, kind, rc, iconCol, iconPx);
     } else if (button == CB_MENU) {
         SolidBrush bgBrMenu(GdiRgbFromCOLORREF(ThemeControlBackgroundColor()));
@@ -11691,8 +11695,8 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
     } else if (button == CB_SYSTEM_MENU) {
         SolidBrush bgBrSys(GdiRgbFromCOLORREF(ThemeControlBackgroundColor()));
         gfx.FillRectangle(&bgBrSys, rButton.x, rButton.y, rButton.dx, rButton.dy);
-        int xIcon = DpiGetSystemMetrics(win->hwndFrame, SM_CXSMICON);
-        int yIcon = DpiGetSystemMetrics(win->hwndFrame, SM_CYSMICON);
+        int xIcon = DpiGetSystemMetrics(SM_CXSMICON);
+        int yIcon = DpiGetSystemMetrics(SM_CYSMICON);
         HICON hIcon = (HICON)GetClassLongPtr(win->hwndFrame, GCLP_HICONSM);
         int x = rButton.x + ((rButton.dx - xIcon) / 2);
         int y = rButton.y + ((rButton.dy - yIcon) / 2);
@@ -13051,6 +13055,7 @@ static void ApplyEmbeddedWindowChrome(MainWindow* win) {
 }
 
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    DpiSetFromHwnd(hwnd);
     MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     // DbgLogMsg("frame:", hwnd, msg, wp, lp);
@@ -13174,6 +13179,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return 0;
 
         case WM_DPICHANGED:
+            DpiSet((int)LOWORD(wp), (int)HIWORD(wp));
             if (win) {
                 // Trust wParam DPI during cross-monitor drag (GetDpiForWindow can lag).
                 OnDpiChanged(win, (RECT*)lp, (int)LOWORD(wp));

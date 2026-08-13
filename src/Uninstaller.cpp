@@ -224,7 +224,8 @@ static void CreateUninstallerWindow() {
     const auto* winCls = kInstallerWindowClassName;
     gHwndFrame = CreateWindowW(winCls, CWStrTemp(title), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 
-    DpiScale(gHwndFrame, dx, dy);
+    DpiSetFromHwnd(gHwndFrame);
+    DpiScale(dx, dy);
     HwndResizeClientSize(gHwndFrame, dx, dy);
 
     auto isRtl = IsUIRtl();
@@ -244,6 +245,7 @@ static void ShowUsage() {
 }
 
 static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    DpiSetFromHwnd(hwnd);
     bool handled;
 
     LRESULT res = 0;

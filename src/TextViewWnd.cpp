@@ -125,8 +125,8 @@ bool TextViewWnd::Create(Str title, Str text) {
     SendMessageW(edit->hwnd, EM_SETSEL, 0, 0);
     layout = edit;
 
-    int winW = DpiScale(hwnd, 800);
-    int winH = DpiScale(hwnd, 600);
+    int winW = DpiScale(800);
+    int winH = DpiScale(600);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
     LayoutToClient();
     UpdateTheme();

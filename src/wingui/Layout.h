@@ -112,9 +112,9 @@ struct Insets {
 };
 
 Insets DefaultInsets();
-Insets DpiScaledInsets(HWND, int uniform);
-Insets DpiScaledInsets(HWND, int topBottom, int leftRight);
-Insets DpiScaledInsets(HWND, int top, int right, int bottom, int left);
+Insets DpiScaledInsets(int uniform);
+Insets DpiScaledInsets(int topBottom, int leftRight);
+Insets DpiScaledInsets(int top, int right, int bottom, int left);
 
 struct Padding : LayoutBase {
     ILayout* child = nullptr;

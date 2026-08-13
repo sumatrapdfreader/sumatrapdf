@@ -104,6 +104,7 @@ static LRESULT CALLBACK WindowBaseWindowProc(HWND hwnd, UINT msg, WPARAM wparam,
                 return ev.result;
             }
         }
+        DpiSetFromHwnd(hwnd);
         return wnd->WndProcDefault(hwnd, msg, wparam, lparam);
     } else {
         return ::DefWindowProc(hwnd, msg, wparam, lparam);
@@ -563,6 +564,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
 
         case WM_DPICHANGED: {
+            DpiSet((int)LOWORD(wparam), (int)HIWORD(wparam));
             if (onDpiChanged.IsValid()) {
                 DpiChangedEvent ev;
                 ev.w = this;
@@ -650,6 +652,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
 
         case WM_PAINT: {
+            DpiSetFromHwnd(hwnd);
             if (subclassId) {
                 // Allow window controls to do their default drawing.
                 return FinalWindowProc(msg, wparam, lparam);
@@ -759,6 +762,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
 
         case WM_SIZE: {
+            DpiSetFromHwnd(hwnd);
             Size size = {LOWORD(lparam), HIWORD(lparam)};
             if (autoLayout && (size.dx > 0) && (size.dy > 0)) {
                 DoLayout(size);
@@ -865,6 +869,7 @@ void WindowBase::Attach(HWND hwnd) {
     ReportIf(WindowBaseFromHwnd(hwnd));
 
     this->hwnd = hwnd;
+    DpiSetFromHwnd(hwnd);
     Subclass();
     if (onAttach.IsValid()) {
         AttachEvent ev;
@@ -957,6 +962,7 @@ HWND WindowBase::CreateCustom(const CreateCustomArgs& args) {
     if (args.icon) {
         HwndSetIcon(hwnd, args.icon);
     }
+    DpiSetFromHwnd(hwnd);
     if (style & WS_VISIBLE) {
         if (style & WS_MAXIMIZE)
             ::ShowWindow(hwnd, SW_MAXIMIZE);
@@ -1000,7 +1006,7 @@ HFONT WindowBase::GetFont() {
 }
 
 int WindowBase::GetDpi() const {
-    return DpiGet(hwnd);
+    return hwnd ? RoundUp(DpiGetForHwnd(hwnd), 4) : DpiGet();
 }
 
 // HwndSetFont() sends WM_SETFONT, which our wndproc records in `font` and (for

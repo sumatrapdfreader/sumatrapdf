@@ -352,10 +352,10 @@ Size MainWindow::GetViewPortSize() const {
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
     if ((style & WS_VSCROLL)) {
-        size.dx += DpiGetSystemMetrics(hwndCanvas, SM_CXVSCROLL);
+        size.dx += DpiGetSystemMetrics(SM_CXVSCROLL);
     }
     if ((style & WS_HSCROLL)) {
-        size.dy += DpiGetSystemMetrics(hwndCanvas, SM_CYHSCROLL);
+        size.dy += DpiGetSystemMetrics(SM_CYHSCROLL);
     }
     ReportIf((style & (WS_VSCROLL | WS_HSCROLL)) && !AsFixed());
     return size;

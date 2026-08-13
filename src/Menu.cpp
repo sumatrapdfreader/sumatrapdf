@@ -2433,15 +2433,16 @@ void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
 #endif
 
 static int GetMenuCheckMarkCx(HWND hwnd) {
+    DpiSetFromHwnd(hwnd);
     // GetSystemMetrics() already answers in pixels for the system dpi, so the
     // old DpiScale(GetSystemMetrics(...)) scaled it a second time
-    int cx = DpiGetSystemMetrics(hwnd, SM_CXMENUCHECK);
+    int cx = DpiGetSystemMetrics(SM_CXMENUCHECK);
     if (!IsMenuFontSizeDefault()) {
-        cx = GetAppMenuFontSize(hwnd);
+        cx = GetAppMenuFontSize();
         // this applies scaling for default values on my win 11 i.e.:
         // font size is 12, menu checkmark is 15
         cx = (cx * 15) / 12;
-        cx = DpiScale(hwnd, cx);
+        cx = DpiScale(cx);
     }
     return cx;
 }
@@ -2450,6 +2451,7 @@ constexpr int kMenuPaddingY = 4;
 constexpr int kMenuPaddingX = 8;
 
 void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
+    DpiSetFromHwnd(hwnd);
     if (ODT_MENU != mis->CtlType) {
         return;
     }
@@ -2457,13 +2459,13 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
 
     bool isSeparator = bit::IsMaskSet(modi->fType, (uint)MFT_SEPARATOR);
     if (isSeparator) {
-        mis->itemHeight = DpiScale(hwnd, 7);
-        mis->itemWidth = DpiScale(hwnd, 33);
+        mis->itemHeight = DpiScale(7);
+        mis->itemWidth = DpiScale(33);
         return;
     }
 
     Str text = modi && modi->text ? modi->text : StrL("Dummy");
-    HFONT font = GetAppMenuFont(hwnd);
+    HFONT font = GetAppMenuFont();
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(text, &shortcutText);
 
@@ -2477,8 +2479,8 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
         size = HwndMeasureText(hwnd, shortcutText, font);
         dx += size.dx;
     }
-    auto padX = DpiScale(hwnd, kMenuPaddingX);
-    auto padY = DpiScale(hwnd, kMenuPaddingY);
+    auto padX = DpiScale(kMenuPaddingX);
+    auto padY = DpiScale(kMenuPaddingY);
 
     int cxMenuCheckMark = GetMenuCheckMarkCx(hwnd);
     mis->itemHeight += padY * 2;
@@ -2493,6 +2495,7 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
 // - paint MFS_DISABLED state
 // - paint icons for system menus
 void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
+    DpiSetFromHwnd(hwnd);
     if (ODT_MENU != dis->CtlType) {
         return;
     }
@@ -2531,7 +2534,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
     auto* hdc = dis->hDC;
-    HFONT font = GetAppMenuFont(hwnd);
+    HFONT font = GetAppMenuFont();
     ScopedSelectFont restoreFont(hdc, font);
 
     COLORREF bgCol = ThemeMainWindowBackgroundColor();
@@ -2552,8 +2555,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     int rcDy = RectDy(rc);
 
     int cxCheckMark = GetMenuCheckMarkCx(hwnd);
-    int padY = DpiScale(hwnd, kMenuPaddingY);
-    int padX = DpiScale(hwnd, kMenuPaddingX);
+    int padY = DpiScale(kMenuPaddingY);
+    int padX = DpiScale(kMenuPaddingX);
 
     COLORREF prevTxtCol = SetTextColor(hdc, txtCol);
     COLORREF prevBgCol = SetBkColor(hdc, bgCol);
@@ -2609,8 +2612,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         rc = dis->rcItem;
         // draw radio check indicator (a circle)
         if (isRadioCheck) {
-            int dx = DpiScale(hwnd, kRadioCircleDx);
-            int offX = DpiScale(hwnd, 1); // why? beause it looks better
+            int dx = DpiScale(kRadioCircleDx);
+            int offX = DpiScale(1); // why? beause it looks better
             rc.left = rc.left + offX + (cxCheckMark / 2) - (dx / 2);
             rc.right = rc.left + dx;
             rc.top = rc.top + (rcDy / 2) - (dx / 2);
@@ -2624,7 +2627,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         AutoDeletePen pen(CreatePen(PS_SOLID, 2, txtCol));
         ScopedSelectPen restorePen(hdc, pen);
         POINT points[3];
-        int offX = DpiScale(hwnd, 6); // 6 is chosen experimentally
+        int offX = DpiScale(6); // 6 is chosen experimentally
         points[0] = {rc.left + offX, rc.top + (rcDy / 2)};
         points[1] = {rc.left + (cxCheckMark / 2), rc.bottom - (padY * 3)};
         points[2] = {rc.left + cxCheckMark - offX, rc.top + (padY * 3)};

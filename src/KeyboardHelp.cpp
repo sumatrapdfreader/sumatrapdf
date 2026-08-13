@@ -379,23 +379,23 @@ static void CollectSections(Vec<KbSectionData>& out, int secTitleH, int rowH, in
 }
 
 void KeyboardHelpWnd::BuildContent() {
-    HFONT hfontRow = GetAppFont(hwnd);
+    HFONT hfontRow = GetAppFont();
     fontRow = GetPlatformFont(hfontRow);
     fontHdr = GetBoldFont(hfontRow);
-    fontTitle = GetBoldFont(GetAppBiggerFont(hwnd));
+    fontTitle = GetBoldFont(GetAppBiggerFont());
 
     Size szRow = PlatformFontMeasureText(fontRow, "Ag");
     Size szHdr = PlatformFontMeasureText(fontHdr, "Ag");
 
-    int rem = DpiScale(hwnd, 16); // 1rem == 16px at 96 DPI
-    int pad = DpiScale(hwnd, 20);
-    int rowGap = DpiScale(hwnd, 8);
-    int secTitleH = szHdr.dy + DpiScale(hwnd, 8);
-    int secGap = DpiScale(hwnd, 14);
+    int rem = DpiScale(16); // 1rem == 16px at 96 DPI
+    int pad = DpiScale(20);
+    int rowGap = DpiScale(8);
+    int secTitleH = szHdr.dy + DpiScale(8);
+    int secGap = DpiScale(14);
     int colGap = rem; // gap between the two columns
-    int capPadX = DpiScale(hwnd, 7);
-    int capGap = DpiScale(hwnd, 5);
-    int keysDescGap = DpiScale(hwnd, 12);
+    int capPadX = DpiScale(7);
+    int capGap = DpiScale(5);
+    int keysDescGap = DpiScale(12);
 
     Vec<KbSectionData> sections;
     CollectSections(sections, secTitleH, szRow.dy + rowGap, secGap);
@@ -406,8 +406,8 @@ void KeyboardHelpWnd::BuildContent() {
     title = new VirtText(trans::GetTranslation("Keyboard Shortcuts"), fontTitle);
     closeBtn = new VirtCloseButton();
     closeBtn->onClick = MkFunc1Void(OnCloseClicked);
-    int btnDx = DpiScale(hwnd, 16);
-    int closeGrow = DpiScale(hwnd, 4);
+    int btnDx = DpiScale(16);
+    int closeGrow = DpiScale(4);
     closeBtn->padding = Insets{closeGrow, closeGrow, closeGrow, closeGrow};
     closeBtn->idealSize = {btnDx + (2 * closeGrow), btnDx + (2 * closeGrow)};
 
@@ -418,8 +418,8 @@ void KeyboardHelpWnd::BuildContent() {
     container->AddChild(titleRow);
 
     separator = new VirtLine();
-    separator->thickness = DpiScale(hwnd, 1);
-    container->AddChild(new Spacer(0, DpiScale(hwnd, 6)));
+    separator->thickness = DpiScale(1);
+    container->AddChild(new Spacer(0, DpiScale(6)));
     container->AddChild(separator);
 
     columns = new HBox();
@@ -432,11 +432,11 @@ void KeyboardHelpWnd::BuildContent() {
     columns->AddChild(tables[0]);
     columns->AddChild(new Spacer(colGap, 0));
     columns->AddChild(tables[1]);
-    container->AddChild(new Spacer(0, DpiScale(hwnd, 10)));
+    container->AddChild(new Spacer(0, DpiScale(10)));
     container->AddChild(columns);
 
     footer = new VirtText(trans::GetTranslation("Press ? to close"), fontRow);
-    container->AddChild(new Spacer(0, DpiScale(hwnd, 12)));
+    container->AddChild(new Spacer(0, DpiScale(12)));
     container->AddChild(footer);
 
     // one table per column: a section header spans both table columns, each row
@@ -448,8 +448,8 @@ void KeyboardHelpWnd::BuildContent() {
     tables[0]->SetSize(nRows[0], 2);
     tables[1]->SetSize(nRows[1], 2);
 
-    int capDy = szRow.dy + DpiScale(hwnd, 5);
-    int radius = DpiScale(hwnd, 5);
+    int capDy = szRow.dy + DpiScale(5);
+    int radius = DpiScale(5);
     int rowAt[2] = {0, 0};
     for (auto& s : sections) {
         Table* t = tables[s.col];
