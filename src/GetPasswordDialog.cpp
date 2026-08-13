@@ -46,6 +46,8 @@ struct GetPasswordWnd : WindowBase {
     bool Create();
     void OnKeyDown(KeyEvent* ev);
     void OnShowPasswordChanged();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
     void Finish(bool ok);
 
     void UpdateTheme();
@@ -136,12 +138,12 @@ static void OnClose(WindowBase::CloseEvent* ev) {
     wnd->Finish(false);
 }
 
-static void CancelClicked(GetPasswordWnd* wnd, VirtMouseEvent*) {
-    wnd->Finish(false);
+void GetPasswordWnd::OnCancel(VirtMouseEvent*) {
+    Finish(false);
 }
 
-static void OkClicked(GetPasswordWnd* wnd, VirtMouseEvent*) {
-    wnd->Finish(true);
+void GetPasswordWnd::OnOk(VirtMouseEvent*) {
+    Finish(true);
 }
 
 bool GetPasswordWnd::Create() {
@@ -241,10 +243,10 @@ bool GetPasswordWnd::Create() {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<GetPasswordWnd, VirtMouseEvent*, &GetPasswordWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
-        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnOk->onClick = MkMethod1<GetPasswordWnd, VirtMouseEvent*, &GetPasswordWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
     }

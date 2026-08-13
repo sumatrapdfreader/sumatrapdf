@@ -44,8 +44,8 @@ struct AddFavoriteWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
     void ScheduleDelete();
 };
 
@@ -113,11 +113,11 @@ void AddFavoriteWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-void AddFavoriteWnd::OnCancel() {
+void AddFavoriteWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void AddFavoriteWnd::OnOk() {
+void AddFavoriteWnd::OnOk(VirtMouseEvent*) {
     TempStr name = editName ? editName->GetTextTemp() : Str{};
     str::TrimWSInPlace(name, str::TrimOpt::Both);
     if (len(name) == 0) {
@@ -153,14 +153,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gAddFavoriteWnd) {
         gAddFavoriteWnd->ScheduleDelete();
     }
-}
-
-static void CancelClicked(AddFavoriteWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void OkClicked(AddFavoriteWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
 }
 
 bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn, Str name) {
@@ -216,10 +208,10 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<AddFavoriteWnd, VirtMouseEvent*, &AddFavoriteWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
-        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnOk->onClick = MkMethod1<AddFavoriteWnd, VirtMouseEvent*, &AddFavoriteWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
     }

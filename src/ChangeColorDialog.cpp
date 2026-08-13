@@ -99,8 +99,8 @@ struct ChangeColorWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
     void ApplyBackground();
     void ApplyTabColor();
     WindowTab* TargetTab();
@@ -407,10 +407,6 @@ void ChangeColorWnd::OnAreaMouse(VirtMouseEvent* ev) {
     ev->didHandle = true;
 }
 
-static void OnAreaMouseDown(ChangeColorWnd* wnd, VirtMouseEvent* ev) {
-    wnd->OnAreaMouse(ev);
-}
-
 static void OnAreaMouseMove(ChangeColorWnd* wnd, VirtMouseEvent* ev) {
     if (wnd->colorArea && wnd->colorArea->HasFlag(vwfPressed)) {
         wnd->OnAreaMouse(ev);
@@ -548,7 +544,7 @@ static void PaintSwatch(VirtCustom* sw, VirtPaintCtx* ctx) {
     }
 }
 
-void ChangeColorWnd::OnCancel() {
+void ChangeColorWnd::OnCancel(VirtMouseEvent*) {
     SaveCustomColorsIfChanged();
     ScheduleDelete();
 }
@@ -633,7 +629,7 @@ void ChangeColorWnd::ApplyTabColor() {
     }
 }
 
-void ChangeColorWnd::OnOk() {
+void ChangeColorWnd::OnOk(VirtMouseEvent*) {
     TryParseEdit();
     SaveCustomColorsIfChanged();
     if (forTabColor) {
@@ -670,14 +666,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gChangeColorWnd) {
         gChangeColorWnd->ScheduleDelete();
     }
-}
-
-static void CancelClicked(ChangeColorWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void OkClicked(ChangeColorWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
 }
 
 static void SwatchClicked(ChangeColorWnd* wnd, VirtMouseEvent* ev) {
@@ -870,7 +858,7 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
         c->SetFlag(vwfCapturesMouse, true);
         c->cursor = IDC_CROSS;
         c->onPaint = MkFunc1(PaintColorArea, this);
-        c->onMouseDown = MkFunc1(OnAreaMouseDown, this);
+        c->onMouseDown = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnAreaMouse>(this);
         c->onMouseMove = MkFunc1(OnAreaMouseMove, this);
         colorArea = c;
         vbox->AddChild(c);
@@ -966,10 +954,10 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
-        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnOk->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
     }

@@ -66,8 +66,8 @@ struct SettingsWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
     void ScheduleDelete();
 };
 
@@ -231,11 +231,11 @@ void SettingsWnd::OnRememberOpenedChanged() {
     chkRememberState->SetIsEnabled(on);
 }
 
-void SettingsWnd::OnCancel() {
+void SettingsWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void SettingsWnd::OnOk() {
+void SettingsWnd::OnOk(VirtMouseEvent*) {
     if (!gGlobalPrefs) {
         ScheduleDelete();
         return;
@@ -313,14 +313,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gSettingsWnd) {
         gSettingsWnd->ScheduleDelete();
     }
-}
-
-static void CancelClicked(SettingsWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void OkClicked(SettingsWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
 }
 
 static DropDown* MakeDropDown(HWND parent, HFONT font, bool isRtl, bool editable) {
@@ -485,10 +477,10 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<SettingsWnd, VirtMouseEvent*, &SettingsWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
-        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnOk->onClick = MkMethod1<SettingsWnd, VirtMouseEvent*, &SettingsWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
     }

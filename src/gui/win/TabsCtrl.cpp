@@ -95,9 +95,8 @@ struct TabCtrl : VirtCtrl {
     void OnMouseDown(VirtMouseEvent*);
     void OnMouseUp(VirtMouseEvent*);
     void OnGetTooltip(VirtTooltipEvent*);
+    void OnCloseClick(VirtMouseEvent* ev = nullptr);
 };
-
-static void TabCloseClicked(TabCtrl*, VirtMouseEvent*);
 
 TabCtrl::TabCtrl() {
     kind = kindTabCtrl;
@@ -105,7 +104,7 @@ TabCtrl::TabCtrl() {
     onMouseUp = MkMethod1<TabCtrl, VirtMouseEvent*, &TabCtrl::OnMouseUp>(this);
     onGetTooltip = MkMethod1<TabCtrl, VirtTooltipEvent*, &TabCtrl::OnGetTooltip>(this);
     closeBtn = new VirtCloseButton();
-    closeBtn->onClick = MkFunc1(TabCloseClicked, this);
+    closeBtn->onClick = MkMethod1<TabCtrl, VirtMouseEvent*, &TabCtrl::OnCloseClick>(this);
     closeBtn->visibility = Visibility::Collapse;
     AddChild(closeBtn);
 }
@@ -274,8 +273,8 @@ void TabCtrl::OnGetTooltip(VirtTooltipEvent* ev) {
     ev->tip = str::DupTemp(ti->tooltip);
 }
 
-static void TabCloseClicked(TabCtrl* tab, VirtMouseEvent*) {
-    tab->tabsCtrl->CloseTab(tab->Idx());
+void TabCtrl::OnCloseClick(VirtMouseEvent*) {
+    tabsCtrl->CloseTab(Idx());
 }
 
 //--- TabsCtrl host window

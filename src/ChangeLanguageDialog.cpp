@@ -42,8 +42,9 @@ struct ChangeLanguageWnd : WindowBase {
 
     void FilterList();
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
+    void OnListDoubleClick();
     void ScheduleDelete();
 };
 
@@ -117,11 +118,15 @@ void ChangeLanguageWnd::FilterList() {
     }
 }
 
-void ChangeLanguageWnd::OnCancel() {
+void ChangeLanguageWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void ChangeLanguageWnd::OnOk() {
+void ChangeLanguageWnd::OnListDoubleClick() {
+    OnOk();
+}
+
+void ChangeLanguageWnd::OnOk(VirtMouseEvent*) {
     int idx = listBox ? listBox->GetCurrentSelection() : -1;
     if (idx >= 0 && idx < len(langIdxByListIdx)) {
         int langIdx = langIdxByListIdx[idx];
@@ -175,14 +180,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     }
 }
 
-static void CancelClicked(ChangeLanguageWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void OkClicked(ChangeLanguageWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
-}
-
 bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
     win = mainWin;
 
@@ -223,7 +220,7 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
         c->idealSizeLines = 16;
         listBox = c;
         model = new ListBoxModelStrings();
-        c->onDoubleClick = MkMethod0<ChangeLanguageWnd, &ChangeLanguageWnd::OnOk>(this);
+        c->onDoubleClick = MkMethod0<ChangeLanguageWnd, &ChangeLanguageWnd::OnListDoubleClick>(this);
         vbox->AddChild(c);
         FilterList();
     }
@@ -235,10 +232,10 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<ChangeLanguageWnd, VirtMouseEvent*, &ChangeLanguageWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
-        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnOk->onClick = MkMethod1<ChangeLanguageWnd, VirtMouseEvent*, &ChangeLanguageWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
     }

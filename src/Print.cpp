@@ -1093,9 +1093,6 @@ static void UpdatePrintProgress(UpdatePrintProgressData* d) {
     delete d;
 }
 
-class PrintThreadData;
-static void RemovePrintNotif(PrintThreadData* self, NotificationWnd* wnd);
-
 class PrintThreadData {
   public:
     NotificationWnd* wnd = nullptr;
@@ -1107,7 +1104,7 @@ class PrintThreadData {
     ThreadHandle thread = nullptr; // close the print thread handle after execution
 
     // called when printing has been canceled
-    void RemovePrintNotification() {
+    void RemovePrintNotification(NotificationWnd* = nullptr) {
         isCanceled = true;
         cookie.Abort();
         if (this->wnd && IsMainWindowValid(win)) {
@@ -1122,7 +1119,7 @@ class PrintThreadData {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.timeoutMs = 0;
-        auto fn = MkFunc1(RemovePrintNotif, this);
+        auto fn = MkMethod1<PrintThreadData, NotificationWnd*, &PrintThreadData::RemovePrintNotification>(this);
         args.onRemoved = fn;
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
@@ -1149,10 +1146,6 @@ class PrintThreadData {
 
     bool WasCanceled() { return isCanceled || !IsMainWindowValid(win) || win->printCanceled; }
 };
-
-void RemovePrintNotif(PrintThreadData* self, NotificationWnd* /*wnd*/) {
-    self->RemovePrintNotification();
-}
 
 struct DeletePrinterThreadData {
     MainWindow* win;

@@ -116,10 +116,10 @@ struct PdfToolDialog : WindowBase {
     void FinishDialog(Edit* focusOn);
     VirtButton* NewButton(Str text, bool isDefault);
 
-    void OnBrowse();
-    void OnCancel();
+    void OnBrowse(VirtMouseEvent* ev = nullptr);
+    void OnCancel(VirtMouseEvent* ev = nullptr);
     // what the action button does; the only thing the dialogs really differ in
-    virtual void DoIt() {}
+    virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
 
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
@@ -136,23 +136,11 @@ static void PdfToolDialogOnClose(WindowBase::CloseEvent* ev) {
     delete dlg;
 }
 
-static void PdfToolBrowseClicked(PdfToolDialog* dlg, VirtMouseEvent*) {
-    dlg->OnBrowse();
-}
-
-static void PdfToolActionClicked(PdfToolDialog* dlg, VirtMouseEvent*) {
-    dlg->DoIt();
-}
-
-static void PdfToolCancelClicked(PdfToolDialog* dlg, VirtMouseEvent*) {
-    dlg->OnCancel();
-}
-
-void PdfToolDialog::OnCancel() {
+void PdfToolDialog::OnCancel(VirtMouseEvent*) {
     Close();
 }
 
-void PdfToolDialog::OnBrowse() {
+void PdfToolDialog::OnBrowse(VirtMouseEvent*) {
     BrowseForDest(hwnd, destEdit, browseFilter, browseDefExt);
 }
 
@@ -241,7 +229,7 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
     row->AddChild(destEdit, 1);
 
     browseBtn = NewButton("...", false);
-    browseBtn->onClick = MkFunc1(PdfToolBrowseClicked, this);
+    browseBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnBrowse>(this);
     row->AddChild(new Spacer(gap, 0));
     row->AddChild(browseBtn);
 
@@ -282,11 +270,11 @@ void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
     row->AddChild(new Spacer(0, 0), 1);
 
     actionBtn = NewButton(actionText, true);
-    actionBtn->onClick = MkFunc1(PdfToolActionClicked, this);
+    actionBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::DoIt>(this);
     row->AddChild(actionBtn);
 
     cancelBtn = NewButton(_TRA("Cancel"), false);
-    cancelBtn->onClick = MkFunc1(PdfToolCancelClicked, this);
+    cancelBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnCancel>(this);
     row->AddChild(new Spacer(gap, 0));
     row->AddChild(cancelBtn);
 }
@@ -345,10 +333,10 @@ void PdfToolDialog::OnKeyDown(KeyEvent* ev) {
 
 struct PdfBakeDialog : PdfToolDialog {
     bool Create(MainWindow* win, WindowTab* tab);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
-void PdfBakeDialog::DoIt() {
+void PdfBakeDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -411,7 +399,7 @@ void ShowPdfBakeDialog(MainWindow* win) {
 struct PdfExtractTextDialog : PdfToolDialog {
     Edit* pagesEdit = nullptr;
     bool Create(MainWindow* win, WindowTab* tab);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
 static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pages) {
@@ -448,7 +436,7 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pa
     return file::WriteFile(destPath, ToStr(text));
 }
 
-void PdfExtractTextDialog::DoIt() {
+void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -521,10 +509,10 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
 
 struct PdfCompressDialog : PdfToolDialog {
     bool Create(MainWindow* win, WindowTab* tab);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
-void PdfCompressDialog::DoIt() {
+void PdfCompressDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -586,10 +574,10 @@ void ShowPdfCompressDialog(MainWindow* win) {
 
 struct PdfDecompressDialog : PdfToolDialog {
     bool Create(MainWindow* win, WindowTab* tab);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
-void PdfDecompressDialog::DoIt() {
+void PdfDecompressDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -657,7 +645,7 @@ struct PdfDeletePageDialog : PdfToolDialog {
     Edit* pagesEdit = nullptr;
 
     bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
     void UpdateButton();
 };
 
@@ -817,7 +805,7 @@ void PdfDeletePageDialog::UpdateButton() {
     actionBtn->Invalidate();
 }
 
-void PdfDeletePageDialog::DoIt() {
+void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -942,7 +930,7 @@ void ShowPdfExtractPagesDialog(MainWindow* win) {
 struct PdfEncryptDialog : PdfToolDialog {
     Edit* passwordEdit = nullptr;
     bool Create(MainWindow* win, WindowTab* tab);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
     void UpdateButton();
 };
 
@@ -957,7 +945,7 @@ void PdfEncryptDialog::UpdateButton() {
     actionBtn->Invalidate();
 }
 
-void PdfEncryptDialog::DoIt() {
+void PdfEncryptDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -1037,14 +1025,14 @@ struct PdfDecryptDialog : PdfToolDialog {
 
     ~PdfDecryptDialog() override;
     bool Create(MainWindow* win, WindowTab* tab, Str pwd);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
 PdfDecryptDialog::~PdfDecryptDialog() {
     str::FreePtr(&password);
 }
 
-void PdfDecryptDialog::DoIt() {
+void PdfDecryptDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -1133,10 +1121,10 @@ static TempStr DefaultPdfDestPathTemp(Str srcPath) {
 
 struct ConvertToPdfDialog : PdfToolDialog {
     bool Create(MainWindow* win, WindowTab* tab);
-    void DoIt() override;
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
-void ConvertToPdfDialog::DoIt() {
+void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;

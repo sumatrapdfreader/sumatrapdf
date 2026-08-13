@@ -44,8 +44,8 @@ struct GoToPageWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
     void ScheduleDelete();
 };
 
@@ -113,11 +113,11 @@ void GoToPageWnd::SetTarget(MainWindow* mainWin) {
     }
 }
 
-void GoToPageWnd::OnCancel() {
+void GoToPageWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void GoToPageWnd::OnOk() {
+void GoToPageWnd::OnOk(VirtMouseEvent*) {
     if (!IsMainWindowValid(win) || !win->IsDocLoaded() || !win->ctrl) {
         ScheduleDelete();
         return;
@@ -156,14 +156,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gGoToPageWnd) {
         gGoToPageWnd->ScheduleDelete();
     }
-}
-
-static void CancelClicked(GoToPageWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void GoClicked(GoToPageWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
 }
 
 bool GoToPageWnd::Create(MainWindow* mainWin) {
@@ -239,10 +231,10 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnGo = NewThemedButton(hwnd, _TRA("Go to page"), font, true);
-        btnGo->onClick = MkFunc1(GoClicked, this);
+        btnGo->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnGo, pad));
         vbox->AddChild(hbox);
     }

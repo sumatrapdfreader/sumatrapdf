@@ -233,9 +233,9 @@ struct SetHotkeyWnd : WindowBase {
     void UpdateTheme();
     void UpdateUI();
     bool HandleKeyDown(UINT vk);
-    void DoSet();
-    void DoRemove();
-    void OnCancel();
+    void DoSet(VirtMouseEvent* ev = nullptr);
+    void DoRemove(VirtMouseEvent* ev = nullptr);
+    void OnCancel(VirtMouseEvent* ev = nullptr);
     static void CleanupHook();
     void ScheduleDelete();
 };
@@ -300,7 +300,7 @@ bool SetHotkeyWnd::HandleKeyDown(UINT vk) {
     return true;
 }
 
-void SetHotkeyWnd::DoSet() {
+void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
     if (!newHotkey) {
         return;
     }
@@ -328,7 +328,7 @@ void SetHotkeyWnd::DoSet() {
     Close();
 }
 
-void SetHotkeyWnd::DoRemove() {
+void SetHotkeyWnd::DoRemove(VirtMouseEvent*) {
     logf("SetHotkeyDoRemove: removing screenshot hotkey\n");
 
     Shortcut* sc = FindScreenshotShortcutEntry();
@@ -347,7 +347,7 @@ void SetHotkeyWnd::DoRemove() {
     Close();
 }
 
-void SetHotkeyWnd::OnCancel() {
+void SetHotkeyWnd::OnCancel(VirtMouseEvent*) {
     Close();
 }
 
@@ -451,18 +451,6 @@ static void OnSetHotkeyDestroy(WindowBase::DestroyEvent* ev) {
     }
 }
 
-static void CancelClicked(SetHotkeyWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void RemoveClicked(SetHotkeyWnd* wnd, VirtMouseEvent*) {
-    wnd->DoRemove();
-}
-
-static void SetClicked(SetHotkeyWnd* wnd, VirtMouseEvent*) {
-    wnd->DoSet();
-}
-
 bool SetHotkeyWnd::Create(HWND owner) {
     hwndOwner = owner;
     Str existing = FindScreenshotShortcut();
@@ -511,14 +499,14 @@ bool SetHotkeyWnd::Create(HWND owner) {
         int gap = DpiScale(4);
 
         btnCancel = NewButton(_TRA("Cancel"), false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::OnCancel>(this);
         hbox->AddChild(btnCancel);
         btnRemove = NewButton(_TRA("Remove"), false);
-        btnRemove->onClick = MkFunc1(RemoveClicked, this);
+        btnRemove->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoRemove>(this);
         hbox->AddChild(new Spacer(gap, 0));
         hbox->AddChild(btnRemove);
         btnSet = NewButton(_TRA("Set"), true);
-        btnSet->onClick = MkFunc1(SetClicked, this);
+        btnSet->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoSet>(this);
         hbox->AddChild(new Spacer(gap, 0));
         hbox->AddChild(btnSet);
 

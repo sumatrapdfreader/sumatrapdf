@@ -131,9 +131,9 @@ struct SelectionTranslateWnd : WindowBase {
     void SetTranslateButtonText(Str);
     void UpdateTranslateButtonState();
     void ShowTranslationResult(Str text, bool isError);
-    void StartTranslation();
+    void StartTranslation(VirtMouseEvent* ev = nullptr);
     void OnTranslationFinished(bool ok, Str msg);
-    void OnCloseClicked();
+    void OnCloseClicked(VirtMouseEvent* ev = nullptr);
     void ScheduleDelete();
 
     void UpdateFont();
@@ -1106,7 +1106,7 @@ void SelectionTranslateWnd::ShowTranslationResult(Str text, bool isError) {
     }
 }
 
-void SelectionTranslateWnd::StartTranslation() {
+void SelectionTranslateWnd::StartTranslation(VirtMouseEvent*) {
     if (translating) {
         return;
     }
@@ -1184,7 +1184,7 @@ void SelectionTranslateWnd::OnTranslationFinished(bool ok, Str msg) {
     UpdateTranslateButtonState();
 }
 
-void SelectionTranslateWnd::OnCloseClicked() {
+void SelectionTranslateWnd::OnCloseClicked(VirtMouseEvent*) {
     Close();
 }
 
@@ -1249,14 +1249,6 @@ static void OnSelectionTranslateDestroy(WindowBase::DestroyEvent* ev) {
     if (gSelectionTranslateWnd == (SelectionTranslateWnd*)ev->e->self) {
         TeardownSelectionTranslateWnd();
     }
-}
-
-static void CloseClicked(SelectionTranslateWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCloseClicked();
-}
-
-static void TranslateClicked(SelectionTranslateWnd* wnd, VirtMouseEvent*) {
-    wnd->StartTranslation();
 }
 
 bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
@@ -1408,12 +1400,14 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
 
         btnClose = NewButton(_TRA("Close"), false);
-        btnClose->onClick = MkFunc1(CloseClicked, this);
+        btnClose->onClick =
+            MkMethod1<SelectionTranslateWnd, VirtMouseEvent*, &SelectionTranslateWnd::OnCloseClicked>(this);
         // the gap to the Translate button
         btnRow->AddChild(new Padding(btnClose, DpiScaledInsets(0, 8, 0, 0)));
 
         btnTranslate = NewButton(_TRA("Translate"), true);
-        btnTranslate->onClick = MkFunc1(TranslateClicked, this);
+        btnTranslate->onClick =
+            MkMethod1<SelectionTranslateWnd, VirtMouseEvent*, &SelectionTranslateWnd::StartTranslation>(this);
         btnTranslate->padding = DpiScaledInsets(0, 4, 0, 4);
         btnRow->AddChild(btnTranslate);
         vbox->AddChild(new Padding(btnRow, DpiScaledInsets(8, 0, 0, 0)));

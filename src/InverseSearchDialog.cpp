@@ -42,9 +42,9 @@ struct InverseSearchWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
-    void OnHelp();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
+    void OnHelp(VirtMouseEvent* ev = nullptr);
     void ScheduleDelete();
 };
 
@@ -114,11 +114,11 @@ void InverseSearchWnd::FillCommands() {
     }
 }
 
-void InverseSearchWnd::OnCancel() {
+void InverseSearchWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void InverseSearchWnd::OnOk() {
+void InverseSearchWnd::OnOk(VirtMouseEvent*) {
     TempStr tmp = dropDown ? dropDown->GetTextTemp() : Str{};
     str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, tmp);
     gGlobalPrefs->enableTeXEnhancements = true;
@@ -126,7 +126,7 @@ void InverseSearchWnd::OnOk() {
     ScheduleDelete();
 }
 
-void InverseSearchWnd::OnHelp() {
+void InverseSearchWnd::OnHelp(VirtMouseEvent*) {
     LaunchDocumentation("/LaTeX-integration");
 }
 
@@ -162,18 +162,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gInverseSearchWnd) {
         gInverseSearchWnd->ScheduleDelete();
     }
-}
-
-static void CancelClicked(InverseSearchWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void OkClicked(InverseSearchWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
-}
-
-static void HelpClicked(InverseSearchWnd* wnd, VirtMouseEvent*) {
-    wnd->OnHelp();
 }
 
 bool InverseSearchWnd::Create(MainWindow* mainWin) {
@@ -228,17 +216,17 @@ bool InverseSearchWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnHelp = NewThemedButton(hwnd, _TRA("Help"), font, false);
-        btnHelp->onClick = MkFunc1(HelpClicked, this);
+        btnHelp->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnHelp>(this);
         row->AddChild(new Padding(btnHelp, pad));
 
         auto* right = new HBox();
         right->alignMain = MainAxisAlign::MainEnd;
         right->alignCross = CrossAxisAlign::CrossCenter;
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnCancel>(this);
         right->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
-        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnOk->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnOk>(this);
         right->AddChild(new Padding(btnOk, pad));
         row->AddChild(right);
         vbox->AddChild(row);

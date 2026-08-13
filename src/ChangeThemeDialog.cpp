@@ -50,8 +50,8 @@ struct ChangeThemeWnd : WindowBase {
     void OnSelectionChanged();
     void OnDocumentColorsFollowThemeChanged();
     void PreviewDocumentColors();
-    void OnCancel();
-    void OnChange();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnChange(VirtMouseEvent* ev = nullptr);
     void ScheduleDelete();
 };
 
@@ -200,7 +200,7 @@ void ChangeThemeWnd::OnDocumentColorsFollowThemeChanged() {
     KeepFocus();
 }
 
-void ChangeThemeWnd::OnCancel() {
+void ChangeThemeWnd::OnCancel(VirtMouseEvent*) {
     if (!documentColorsFollowThemeOnly) {
         SetTheme(startThemePref);
     }
@@ -209,7 +209,7 @@ void ChangeThemeWnd::OnCancel() {
     ScheduleDelete();
 }
 
-void ChangeThemeWnd::OnChange() {
+void ChangeThemeWnd::OnChange(VirtMouseEvent*) {
     SaveSettings();
     ScheduleDelete();
 }
@@ -249,14 +249,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gChangeThemeWnd) {
         gChangeThemeWnd->ScheduleDelete();
     }
-}
-
-static void CancelClicked(ChangeThemeWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void ChangeClicked(ChangeThemeWnd* wnd, VirtMouseEvent*) {
-    wnd->OnChange();
 }
 
 bool ChangeThemeWnd::Create(MainWindow* mainWin) {
@@ -333,12 +325,12 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         // Enter runs this one (see OnKeyDown), so draw it as the
         // default button to say so
         btnChange = NewThemedButton(hwnd, _TRA("Change"), font, true);
-        btnChange->onClick = MkFunc1(ChangeClicked, this);
+        btnChange->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnChange>(this);
         hbox->AddChild(new Padding(btnChange, pad));
         vbox->AddChild(hbox);
     }

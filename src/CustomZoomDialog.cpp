@@ -46,8 +46,8 @@ struct CustomZoomWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
     void ScheduleDelete();
 };
 
@@ -145,11 +145,11 @@ float CustomZoomWnd::SelectedZoom() {
     return limitValue(zoom, kZoomMin, kZoomMax);
 }
 
-void CustomZoomWnd::OnCancel() {
+void CustomZoomWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void CustomZoomWnd::OnOk() {
+void CustomZoomWnd::OnOk(VirtMouseEvent*) {
     if (IsMainWindowValid(win) && win->IsDocLoaded()) {
         SmartZoom(win, SelectedZoom(), nullptr, true);
     }
@@ -186,14 +186,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     if (gCustomZoomWnd) {
         gCustomZoomWnd->ScheduleDelete();
     }
-}
-
-static void CancelClicked(CustomZoomWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void ZoomClicked(CustomZoomWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
 }
 
 bool CustomZoomWnd::Create(MainWindow* mainWin) {
@@ -252,10 +244,10 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<CustomZoomWnd, VirtMouseEvent*, &CustomZoomWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnZoom = NewThemedButton(hwnd, _TRA("Zoom"), font, true);
-        btnZoom->onClick = MkFunc1(ZoomClicked, this);
+        btnZoom->onClick = MkMethod1<CustomZoomWnd, VirtMouseEvent*, &CustomZoomWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnZoom, pad));
         vbox->AddChild(hbox);
     }

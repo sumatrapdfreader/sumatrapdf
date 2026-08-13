@@ -55,7 +55,7 @@ struct PropertiesWnd : WindowBase {
     void UpdateTheme();
     void SetPropsText(Str text);
     void SizeToContent();
-    void CopyToClipboard();
+    void CopyToClipboard(VirtMouseEvent* ev = nullptr);
     void OnSize(WindowBase::SizeEvent* ev);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
@@ -64,10 +64,6 @@ struct PropertiesWnd : WindowBase {
 };
 
 static Vec<PropertiesWnd*> gPropertiesWindows;
-
-static void CopyToClipboardClicked(PropertiesWnd* w, VirtMouseEvent*) {
-    w->CopyToClipboard();
-}
 
 PropertiesWnd::~PropertiesWnd() {
     // propsFont is from HdcCreateSimpleFont — cached for the app lifetime.
@@ -730,7 +726,7 @@ static void AlignPropertiesText(str::Builder& text) {
     text.Reset(ToStr(aligned));
 }
 
-void PropertiesWnd::CopyToClipboard() {
+void PropertiesWnd::CopyToClipboard(VirtMouseEvent*) {
     CopyTextToClipboard(ToStr(propsText));
 }
 
@@ -972,7 +968,7 @@ bool PropertiesWnd::Create(HWND parent) {
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
         btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetPlatformFont(GetAppFont()), true);
-        btnCopyToClipboard->onClick = MkFunc1(CopyToClipboardClicked, this);
+        btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
         vbox->AddChild(btnRow);
     }

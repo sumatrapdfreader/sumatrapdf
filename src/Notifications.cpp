@@ -97,7 +97,7 @@ struct NotificationWnd : WindowBase {
     void Layout(Str message);
     void BuildTree(ILayout* customContent);
     NotifColors Colors() const;
-    void ScheduleRemove();
+    void ScheduleRemove(VirtMouseEvent* ev = nullptr);
 
     int timeoutMs = kNotifDefaultTimeOut; // 0 means no timeout
 
@@ -141,10 +141,6 @@ struct NotificationWnd : WindowBase {
     // padding + progress; collapsed when there is no progress so the gap goes too
     ILayout* progressBlock = nullptr;
 };
-
-static void NotifCloseClicked(NotificationWnd* wnd, VirtMouseEvent*) {
-    wnd->ScheduleRemove();
-}
 
 constexpr int kMaxNotifs = 128;
 static NotificationWnd* gNotifs[kMaxNotifs];
@@ -383,7 +379,7 @@ void NotificationWnd::BuildTree(ILayout* customContent) {
     row->AddChild(left, 1);
     if (!noClose) {
         closeCtrl = new VirtCloseButton();
-        closeCtrl->onClick = MkFunc1(NotifCloseClicked, this);
+        closeCtrl->onClick = MkMethod1<NotificationWnd, VirtMouseEvent*, &NotificationWnd::ScheduleRemove>(this);
         closeCtrl->idealSize = {closeDx, closeDx + 2};
         row->AddChild(new Spacer(closeGap, 0));
         row->AddChild(closeCtrl);
@@ -708,7 +704,7 @@ static void NotifDelete(NotificationWnd* wnd) {
 
 // Delete off the stack of the message being dispatched (uitask runs after
 // dispatch), so the wnd survives until the handler returns.
-void NotificationWnd::ScheduleRemove() {
+void NotificationWnd::ScheduleRemove(VirtMouseEvent*) {
     if (wndRemovedCb.IsValid()) {
         auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
         uitask::Post(fn, "TaskNotifRemove");

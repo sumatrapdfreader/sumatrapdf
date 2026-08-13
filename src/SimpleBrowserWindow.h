@@ -12,6 +12,7 @@ struct SimpleBrowserCreateArgs {
 
 struct VirtButton;
 struct VirtText;
+struct VirtMouseEvent;
 struct PlatformFont;
 
 struct SimpleBrowserWindow : WindowBase {
@@ -28,6 +29,8 @@ struct SimpleBrowserWindow : WindowBase {
     void OnCommand(WindowBase::CommandEvent*);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
+    void OnBack(VirtMouseEvent* ev = nullptr);
+    void OnForward(VirtMouseEvent* ev = nullptr);
     ~SimpleBrowserWindow() override;
 };
 

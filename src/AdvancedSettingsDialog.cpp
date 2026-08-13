@@ -415,10 +415,10 @@ struct AdvancedSettingsWnd : WindowBase {
     void CheckDropDownClosed();
     void CloseEnumEdit(bool keepValue);
 
-    void OnOpenSettingsFile();
-    void OnHelp();
-    void OnCancel();
-    void OnSave();
+    void OnOpenSettingsFile(VirtMouseEvent* ev = nullptr);
+    void OnHelp(VirtMouseEvent* ev = nullptr);
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnSave(VirtMouseEvent* ev = nullptr);
 
     void ApplyChangesAndSave();
     void ScheduleDelete();
@@ -875,7 +875,7 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
     ApplyChangedSettingsAndRelayout(before);
 }
 
-void AdvancedSettingsWnd::OnOpenSettingsFile() {
+void AdvancedSettingsWnd::OnOpenSettingsFile(VirtMouseEvent*) {
     if (!CanAccessDisk()) {
         return;
     }
@@ -883,15 +883,15 @@ void AdvancedSettingsWnd::OnOpenSettingsFile() {
     LaunchFileIfExists(path);
 }
 
-void AdvancedSettingsWnd::OnHelp() {
+void AdvancedSettingsWnd::OnHelp(VirtMouseEvent*) {
     SumatraLaunchBrowser(kSettingsDocsUrl);
 }
 
-void AdvancedSettingsWnd::OnCancel() {
+void AdvancedSettingsWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void AdvancedSettingsWnd::OnSave() {
+void AdvancedSettingsWnd::OnSave(VirtMouseEvent*) {
     CommitEditValue();
     // queue the dialog teardown first: ApplyChangesAndSave() may post a tabs
     // transition that closes/recreates windows (including this dialog's owner),
@@ -1058,22 +1058,6 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
 
 // the buttons are virtual controls, so they are styled here rather than by the
 // system: a filled box with a border, brighter on hover (like the other dialogs)
-static void SaveClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
-    wnd->OnSave();
-}
-
-static void CancelClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void OpenSettingsFileClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOpenSettingsFile();
-}
-
-static void HelpClicked(AdvancedSettingsWnd* wnd, VirtMouseEvent*) {
-    wnd->OnHelp();
-}
-
 bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     CollectSettings(items, &gGlobalPrefsInfo, (u8*)gGlobalPrefs, {});
@@ -1186,18 +1170,19 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         left->alignMain = MainAxisAlign::MainStart;
         left->alignCross = CrossAxisAlign::CrossCenter;
         btnSave = NewThemedButton(hwnd, _TRA("Save"), font, true);
-        btnSave->onClick = MkFunc1(SaveClicked, this);
+        btnSave->onClick = MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnSave>(this);
         left->AddChild(new Padding(btnSave, pad));
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnCancel>(this);
         left->AddChild(new Padding(btnCancel, pad));
         btnOpenSettingsFile = NewThemedButton(hwnd, _TRA("Open Settings File"), font, false);
-        btnOpenSettingsFile->onClick = MkFunc1(OpenSettingsFileClicked, this);
+        btnOpenSettingsFile->onClick =
+            MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnOpenSettingsFile>(this);
         left->AddChild(new Padding(btnOpenSettingsFile, pad));
         hbox->AddChild(left);
 
         btnHelp = NewThemedButton(hwnd, _TRA("Help"), font, false);
-        btnHelp->onClick = MkFunc1(HelpClicked, this);
+        btnHelp->onClick = MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnHelp>(this);
         hbox->AddChild(new Padding(btnHelp, pad));
         vbox->AddChild(hbox);
     }

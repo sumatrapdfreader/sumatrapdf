@@ -38,8 +38,9 @@ struct ChangeScrollbarWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
-    void OnCancel();
-    void OnOk();
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnOk(VirtMouseEvent* ev = nullptr);
+    void OnListDoubleClick();
     void ScheduleDelete();
 };
 
@@ -95,11 +96,15 @@ void ChangeScrollbarWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-void ChangeScrollbarWnd::OnCancel() {
+void ChangeScrollbarWnd::OnCancel(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void ChangeScrollbarWnd::OnOk() {
+void ChangeScrollbarWnd::OnListDoubleClick() {
+    OnOk();
+}
+
+void ChangeScrollbarWnd::OnOk(VirtMouseEvent*) {
     int idx = listBox ? listBox->GetCurrentSelection() : -1;
     if (idx >= 0) {
         Str val = SeqStrByIndex(gScrollbarModeNames, idx);
@@ -138,14 +143,6 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     }
 }
 
-static void CancelClicked(ChangeScrollbarWnd* wnd, VirtMouseEvent*) {
-    wnd->OnCancel();
-}
-
-static void OkClicked(ChangeScrollbarWnd* wnd, VirtMouseEvent*) {
-    wnd->OnOk();
-}
-
 bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
     win = mainWin;
 
@@ -181,7 +178,7 @@ bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
         if (curr >= 0 && curr <= kScrollbarHidden) {
             c->SetCurrentSelection(curr);
         }
-        c->onDoubleClick = MkMethod0<ChangeScrollbarWnd, &ChangeScrollbarWnd::OnOk>(this);
+        c->onDoubleClick = MkMethod0<ChangeScrollbarWnd, &ChangeScrollbarWnd::OnListDoubleClick>(this);
         vbox->AddChild(c);
     }
 
@@ -192,10 +189,10 @@ bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
         auto pad = Insets{4, 8, 4, 8};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
-        btnCancel->onClick = MkFunc1(CancelClicked, this);
+        btnCancel->onClick = MkMethod1<ChangeScrollbarWnd, VirtMouseEvent*, &ChangeScrollbarWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
-        btnOk->onClick = MkFunc1(OkClicked, this);
+        btnOk->onClick = MkMethod1<ChangeScrollbarWnd, VirtMouseEvent*, &ChangeScrollbarWnd::OnOk>(this);
         hbox->AddChild(new Padding(btnOk, pad));
         vbox->AddChild(hbox);
     }

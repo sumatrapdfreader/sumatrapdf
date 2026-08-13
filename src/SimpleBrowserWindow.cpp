@@ -72,27 +72,16 @@ static void LayoutControls(SimpleBrowserWindow* w) {
     }
 }
 
-static void BackClicked(SimpleBrowserWindow*, VirtMouseEvent*);
-static void ForwardClicked(SimpleBrowserWindow*, VirtMouseEvent*);
-
-static void OnBack(SimpleBrowserWindow* w) {
-    if (w && w->webView) {
-        w->webView->GoBack();
+void SimpleBrowserWindow::OnBack(VirtMouseEvent*) {
+    if (webView) {
+        webView->GoBack();
     }
 }
 
-static void OnForward(SimpleBrowserWindow* w) {
-    if (w && w->webView) {
-        w->webView->GoForward();
+void SimpleBrowserWindow::OnForward(VirtMouseEvent*) {
+    if (webView) {
+        webView->GoForward();
     }
-}
-
-static void BackClicked(SimpleBrowserWindow* w, VirtMouseEvent*) {
-    OnBack(w);
-}
-
-static void ForwardClicked(SimpleBrowserWindow* w, VirtMouseEvent*) {
-    OnForward(w);
 }
 
 // an absolute http(s)/mailto URL is "non-internal": it points outside the
@@ -236,10 +225,10 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         // Back | Forward | url, the whole row inset by kNavRowPadding. All
         // three are virtual controls, so the window paints them itself
         btnBack = NewThemedButton(frameHwnd, _TRA("Back"), font, false);
-        btnBack->onClick = MkFunc1(BackClicked, this);
+        btnBack->onClick = MkMethod1<SimpleBrowserWindow, VirtMouseEvent*, &SimpleBrowserWindow::OnBack>(this);
         btnBack->SetIsEnabled(false);
         btnForward = NewThemedButton(frameHwnd, _TRA("Forward"), font, false);
-        btnForward->onClick = MkFunc1(ForwardClicked, this);
+        btnForward->onClick = MkMethod1<SimpleBrowserWindow, VirtMouseEvent*, &SimpleBrowserWindow::OnForward>(this);
         btnForward->SetIsEnabled(false);
         urlText = NewVirtText({
             .font = font,
