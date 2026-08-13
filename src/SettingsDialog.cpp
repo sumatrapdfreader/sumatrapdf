@@ -389,6 +389,7 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
             .s = _TRA("Default &Layout:"),
             .font = font,
             .isRtl = isRtl,
+            .prefix = true,
         });
         labelLayout = lab;
         dropLayout = MakeDropDown(hwnd, GetHFont(), isRtl, false);
@@ -401,6 +402,7 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
             .s = _TRA("Default &Zoom:"),
             .font = font,
             .isRtl = isRtl,
+            .prefix = true,
         });
         labelZoom = lab;
         dropZoom = MakeDropDown(hwnd, GetHFont(), isRtl, true);

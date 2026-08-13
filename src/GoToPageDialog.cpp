@@ -194,6 +194,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
             .s = _TRA("&Go to page:"),
             .font = font,
             .isRtl = isRtl,
+            .prefix = true,
         });
         label = lab;
         hbox->AddChild(lab);

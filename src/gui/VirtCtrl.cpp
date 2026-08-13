@@ -1931,6 +1931,67 @@ void VirtCustom::Paint(VirtPaintCtx& ctx) {
 
 static Kind kindVirtCtrlText = "virtCtrlText";
 
+// Win32 STATIC/BUTTON prefix: "&Foo" draws as "Foo" with F underlined, "&&" as
+// a literal '&'. The first '&X' wins. A trailing '&' is dropped.
+struct AccelPrefix {
+    Str display;
+    int ulOff = -1;
+    int ulLen = 0;
+};
+
+static AccelPrefix ParseAccelPrefixTemp(Str s) {
+    AccelPrefix res;
+    if (len(s) == 0) {
+        return res;
+    }
+    if (!str::Contains(s, StrL("&"))) {
+        res.display = s;
+        return res;
+    }
+    char* buf = AllocArrayTemp<char>(len(s) + 1);
+    int out = 0;
+    for (int i = 0; i < len(s); i++) {
+        if (s.s[i] != '&') {
+            buf[out++] = s.s[i];
+            continue;
+        }
+        if (i + 1 >= len(s)) {
+            break;
+        }
+        if (s.s[i + 1] == '&') {
+            buf[out++] = '&';
+            i++;
+            continue;
+        }
+        if (res.ulOff < 0) {
+            res.ulOff = out;
+            int remain = len(s) - (i + 1);
+            int n = utf8RuneLen((const u8*)(s.s + i + 1));
+            if (n < 1) {
+                n = 1;
+            }
+            res.ulLen = n > remain ? remain : n;
+        }
+    }
+    buf[out] = 0;
+    res.display = Str(buf, out);
+    return res;
+}
+
+static Str TextToDraw(VirtText* w, AccelPrefix* prefixOut) {
+    if (!w->prefix) {
+        if (prefixOut) {
+            *prefixOut = {};
+        }
+        return w->s;
+    }
+    AccelPrefix p = ParseAccelPrefixTemp(w->s);
+    if (prefixOut) {
+        *prefixOut = p;
+    }
+    return p.display;
+}
+
 VirtText::VirtText(Str str, PlatformFont* f) {
     kind = kindVirtCtrlText;
     s = str::Dup(str);
@@ -1988,7 +2049,7 @@ Size VirtText::GetIdealSize(bool onlyIfEmpty) {
         sz = {0, PlatformFontLineHeight(font)};
         return sz;
     }
-    sz = PlatformFontMeasureText(font, s);
+    sz = PlatformFontMeasureText(font, TextToDraw(this, nullptr));
     return sz;
 }
 
@@ -2016,7 +2077,35 @@ void VirtText::Paint(VirtPaintCtx& ctx) {
         case VirtTextAlign::Left:
             break;
     }
-    ctx.gfx->DrawText(s, r, fmt, font, textColor);
+    AccelPrefix pref;
+    Str draw = TextToDraw(this, &pref);
+    ctx.gfx->DrawText(draw, r, fmt, font, textColor);
+    if (pref.ulOff >= 0 && pref.ulLen > 0 && len(draw) > 0) {
+        Size full = ctx.gfx->MeasureText(draw, font);
+        Size before = pref.ulOff > 0 ? ctx.gfx->MeasureText(Str(draw.s, pref.ulOff), font) : Size{};
+        int chLen = pref.ulLen;
+        if (pref.ulOff + chLen > len(draw)) {
+            chLen = len(draw) - pref.ulOff;
+        }
+        Size ch = chLen > 0 ? ctx.gfx->MeasureText(Str(draw.s + pref.ulOff, chLen), font) : Size{};
+        int textX = r.x;
+        if (fmt & gfxTextCenter) {
+            textX = r.x + (r.dx - full.dx) / 2;
+        } else if (fmt & gfxTextRight) {
+            textX = r.x + r.dx - full.dx;
+        }
+        int ulX = textX + before.dx;
+        if (isRtl) {
+            Size fromAccel = ctx.gfx->MeasureText(Str(draw.s + pref.ulOff, len(draw) - pref.ulOff), font);
+            ulX = textX + full.dx - fromAccel.dx;
+        }
+        int textY = r.y;
+        if (fmt & gfxTextVCenter) {
+            textY = r.y + (r.dy - full.dy) / 2;
+        }
+        int ulY = textY + full.dy + underlineOffsetY - 1;
+        ctx.gfx->DrawLine({ulX, ulY, ch.dx, 0}, textColor);
+    }
     if (withUnderline) {
         GetIdealSize(true);
         Rect lineRect = {r.x, r.y + sz.dy + underlineOffsetY, sz.dx, 0};
@@ -2032,6 +2121,7 @@ VirtText* NewVirtText(const VirtTextArgs& args) {
     w->isRtl = args.isRtl;
     w->ellipsis = args.ellipsis;
     w->pathEllipsis = args.pathEllipsis;
+    w->prefix = args.prefix;
     w->underlineOffsetY = args.underlineOffsetY;
     w->padding = args.padding;
     return w;
@@ -2094,6 +2184,7 @@ VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     flags &= ~vwfNoHitTest;
     flags |= vwfFocusable;
     align = VirtTextAlign::Center;
+    prefix = true;
 }
 
 VirtButton::~VirtButton() = default;

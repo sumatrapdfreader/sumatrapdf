@@ -1844,16 +1844,12 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     wnd->editInstallationDir->Create(eargs);
     wnd->editInstallationDir->SetText(cli->installDir);
 
-    Str s2 = _TRA("Install SumatraPDF in &folder:");
-    // we paint the text ourselves, so the '&' of the access key would show up
-    // literally instead of underlining the next letter
-    TempStr s2NoAccel = str::DupTemp(s2);
-    str::RemoveCharsInPlace(s2NoAccel, "&");
     wnd->staticInstDir = NewVirtText({
-        .s = s2NoAccel,
+        .s = _TRA("Install SumatraPDF in &folder:"),
         .font = GetPlatformFont(GetDefaultGuiFont()),
         .textColor = kColBlack,
         .isRtl = IsUIRtl(),
+        .prefix = true,
     });
 
     int gap = DpiScale(4);

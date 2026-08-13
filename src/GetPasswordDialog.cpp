@@ -186,6 +186,7 @@ bool GetPasswordWnd::Create() {
             .s = _TRA("&Password:"),
             .font = font,
             .isRtl = isRtl,
+            .prefix = true,
         });
         labelPwd = lab;
         hbox->AddChild(lab);

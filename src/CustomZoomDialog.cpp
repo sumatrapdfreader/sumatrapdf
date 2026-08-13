@@ -218,6 +218,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
             .s = _TRA("&Magnification:"),
             .font = font,
             .isRtl = isRtl,
+            .prefix = true,
             .padding = DpiScaledInsets(0, 0, 4, 0),
         });
         label = c;

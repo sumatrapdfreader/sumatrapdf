@@ -539,6 +539,8 @@ struct VirtTextArgs {
     bool ellipsis = false;
     // "…" in the middle instead of at the end, for paths
     bool pathEllipsis = false;
+    // "&F" → F underlined, "&&" → "&" (win32 STATIC / BUTTON)
+    bool prefix = false;
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
     Insets padding{};
@@ -551,6 +553,8 @@ struct VirtText : VirtCtrl {
     bool isRtl = false;
     bool ellipsis = false;
     bool pathEllipsis = false;
+    // "&F" → F underlined, "&&" → "&" (win32 STATIC / BUTTON)
+    bool prefix = false;
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
     VirtTextAlign align = VirtTextAlign::Left;
