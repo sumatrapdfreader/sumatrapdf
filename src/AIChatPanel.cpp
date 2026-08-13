@@ -1071,6 +1071,9 @@ static void OnAIChatSplitterMove(VirtSplitter::MoveEvent* ev) {
         ev->resizeAllowed = false;
         return;
     }
+    if (ev->queryOnly) {
+        return;
+    }
     AIChatUpdateSidebarDx(win, dx, ev->finishedDragging);
     if (ev->finishedDragging) {
         ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);

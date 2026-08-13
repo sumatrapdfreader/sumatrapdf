@@ -1844,6 +1844,7 @@ void VirtSplitter::Paint(VirtPaintCtx& ctx) {
 
 void VirtSplitter::OnMouseDown(VirtMouseEvent* ev) {
     isDragging = true;
+    lastDragPos = {-1, -1};
     if (!isLive) {
         UpdateOverlay();
     }
@@ -1855,6 +1856,15 @@ void VirtSplitter::OnMouseMove(VirtMouseEvent* ev) {
     if (!isDragging) {
         return;
     }
+    // SetWindowPos under a still cursor synthesizes WM_MOUSEMOVE; do not
+    // relayout unless the cursor actually moved (1px flicker loop).
+    HWND hwnd = GetHwnd();
+    Point pos = hwnd ? HwndGetCursorPos(hwnd) : Point{-1, -1};
+    if (pos == lastDragPos) {
+        ev->didHandle = true;
+        return;
+    }
+    lastDragPos = pos;
     MoveEvent mev;
     mev.w = this;
     mev.finishedDragging = false;
@@ -1898,8 +1908,10 @@ void VirtSplitter::OnSetCursor(VirtSetCursorEvent* ev) {
         MoveEvent mev;
         mev.w = this;
         mev.finishedDragging = false;
+        mev.queryOnly = true;
         // ask the owner whether the current position is allowed, so the cursor
-        // can say "no" without moving anything
+        // can say "no" without moving the panes (a live onMove would relayout
+        // on every WM_SETCURSOR and shimmer both sides by a pixel).
         onMove.Call(&mev);
         if (!mev.resizeAllowed) {
             curId = IDC_NO;

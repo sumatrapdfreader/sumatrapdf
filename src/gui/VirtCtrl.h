@@ -465,6 +465,9 @@ struct VirtSplitter : VirtCtrl {
     struct MoveEvent {
         VirtSplitter* w = nullptr;
         bool finishedDragging = false;
+        // SetCursor asks whether this position is allowed (IDC_NO) without
+        // moving the panes. A live onMove that relayouts here shimmers.
+        bool queryOnly = false;
         // the owner sets this to false to forbid resizing to here
         bool resizeAllowed = true;
     };
@@ -501,6 +504,7 @@ struct VirtSplitter : VirtCtrl {
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;
     bool isDragging = false;
+    Point lastDragPos{-1, -1};
 
     void UpdateOverlay();
     void HideOverlay();

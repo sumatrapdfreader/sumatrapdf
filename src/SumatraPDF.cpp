@@ -6543,6 +6543,12 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (IsUiLayoutEq(&curState, &win->uiState.layout) && updateToolbars && sidebarDx == -1) {
         return false;
     }
+    // live splitter drag: same width again (WM_SETCURSOR / synthetic
+    // WM_MOUSEMOVE) must not re-run layout — that repaints both panes and
+    // looks like a 1px shimmer. Fav-splitter calls pass sidebarDx == -1.
+    if (sidebarDx > 0 && sidebarDx == win->sidebarDx && !updateToolbars) {
+        return false;
+    }
     // only cache for default calls; non-default calls (sidebar dragging etc.)
     // must not prevent a subsequent default call from running
     if (updateToolbars && sidebarDx == -1) {
@@ -8452,6 +8458,10 @@ static void OnSidebarSplitterMove(VirtSplitter::MoveEvent* ev) {
         ev->resizeAllowed = false;
         return;
     }
+    // SetCursor / a still mouse must not relayout (1px shimmer on both sides)
+    if (ev->queryOnly || sidebarDx == win->sidebarDx) {
+        return;
+    }
 
     // coalesces a burst of splitter moves into one relayout
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars, sidebarDx);
@@ -8475,6 +8485,9 @@ static void OnFavSplitterMove(VirtSplitter::MoveEvent* ev) {
     int maxDy = std::max(rFrame.dy - kTocMinDy, rToc.dy);
     if (tocDy < minDy || tocDy > maxDy) {
         ev->resizeAllowed = false;
+        return;
+    }
+    if (ev->queryOnly || tocDy == gGlobalPrefs->tocDy) {
         return;
     }
     gGlobalPrefs->tocDy = tocDy;
