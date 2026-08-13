@@ -383,7 +383,7 @@ struct VirtListBox : VirtCtrl {
 
     PlatformFont* font = nullptr; // not owned, interned
     Color textColor = kColorUnset;
-    Color bgColor = kColorUnset;
+    Color bgColor = kColorTransparent;
     // background of the selected row; derived from bgColor when unset
     Color selectionColor = kColorUnset;
     Color scrollbarColor = kColorUnset;
@@ -474,7 +474,7 @@ struct VirtSplitter : VirtCtrl {
     SplitterType type = SplitterType::Horiz;
     // false: the panes only move when the drag ends
     bool isLive = true;
-    Color bgColor = kColorUnset;
+    Color bgColor = kColorTransparent;
     // how thick the bar is; the other axis is stretched by the layout.
     // 0 keeps whatever bounds it was given
     int thickness = 0;
@@ -590,9 +590,9 @@ struct VirtLink : VirtText {
 };
 
 struct VirtButton : VirtText {
-    Color bgColor = kColorUnset;
+    Color bgColor = kColorTransparent;
     Color bgColorHover = kColorUnset;
-    Color borderColor = kColorUnset;
+    Color borderColor = kColorTransparent;
     // when the button is disabled (vwfEnabled cleared)
     Color textColorDisabled = kColorUnset;
     Insets textPadding{4, 8, 4, 8};
@@ -680,7 +680,7 @@ struct VirtImage : VirtCtrl {
 };
 
 struct VirtFill : VirtCtrl {
-    Color color = kColorUnset;
+    Color color = kColorTransparent;
     Size idealSize;
 
     VirtFill();
@@ -691,7 +691,7 @@ struct VirtFill : VirtCtrl {
 };
 
 struct VirtLine : VirtCtrl {
-    Color color = kColorUnset;
+    Color color = kColorTransparent;
     bool isVertical = false;
     int thickness = 1;
 

@@ -1558,7 +1558,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
 
     bool isFocused = HasFlag(vwfFocused);
     Color colSel = selectionColor;
-    if (colSel == kColorUnset && colBg != kColorUnset) {
+    if (colSel == kColorUnset && !ColorSkipsPaint(colBg)) {
         // the selection stands out more while the list has the keyboard focus,
         // like a win32 listbox's
         colSel = AccentColor(colBg, isFocused ? 45 : 25);
@@ -1598,7 +1598,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
         return;
     }
     Color colThumb = scrollbarColor;
-    if (colThumb == kColorUnset && colBg != kColorUnset) {
+    if (colThumb == kColorUnset && !ColorSkipsPaint(colBg)) {
         colThumb = AccentColor(colBg, 60);
     }
     Point orig = ctx.bounds.TL();
@@ -1836,7 +1836,7 @@ Size VirtSplitter::GetIdealSize() {
 }
 
 void VirtSplitter::Paint(VirtPaintCtx& ctx) {
-    if (bgColor == kColorUnset) {
+    if (ColorSkipsPaint(bgColor)) {
         return;
     }
     ctx.gfx->FillRect(ctx.bounds, AccentColor(bgColor, 30));
@@ -2107,7 +2107,7 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
     bool isEnabled = HasFlag(vwfEnabled);
     Color bg = (isEnabled && HasFlag(vwfHovered)) ? bgColorHover : bgColor;
     ctx.gfx->FillRect(ctx.bounds, bg);
-    if (borderColor != kColorUnset) {
+    if (!ColorSkipsPaint(borderColor)) {
         Rect b = ctx.bounds;
         ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, borderColor);
         ctx.gfx->FillRect({b.x, b.Bottom() - 1, b.dx, 1}, borderColor);
@@ -2715,7 +2715,7 @@ void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, Color bg) {
     Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC memDC = buffer.GetDC();
-    if (bg != kColorUnset) {
+    if (!ColorSkipsPaint(bg)) {
         HdcFillRect(memDC, rc, bg);
     }
     SetBkMode(memDC, TRANSPARENT);

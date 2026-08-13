@@ -15,14 +15,14 @@ GfxHdc::GfxHdc(HDC hdc) {
 }
 
 void GfxHdc::FillRect(const Rect& r, Color col) {
-    if (col == kColorUnset || r.IsEmpty()) {
+    if (ColorSkipsPaint(col) || r.IsEmpty()) {
         return;
     }
     HdcFillRect(hdc, r, col);
 }
 
 void GfxHdc::DrawRect(const Rect& r, Color col, int thickness) {
-    if (col == kColorUnset || r.IsEmpty() || thickness < 1) {
+    if (ColorSkipsPaint(col) || r.IsEmpty() || thickness < 1) {
         return;
     }
     int t = std::min({thickness, r.dx, r.dy});
@@ -93,18 +93,18 @@ void GfxHdc::FillRoundedRect(const Rect& r, int radius, Color fill, Color border
     GdiplusOnHdc gp(hdc);
     Gdiplus::GraphicsPath path;
     AddRoundedRectPath(path, r, radius);
-    if (fill != kColorUnset) {
+    if (!ColorSkipsPaint(fill)) {
         Gdiplus::SolidBrush br(GdiRgbFromColor(fill));
         gp.g.FillPath(&br, &path);
     }
-    if (border != kColorUnset) {
+    if (!ColorSkipsPaint(border)) {
         Gdiplus::Pen pen(GdiRgbFromColor(border), 1);
         gp.g.DrawPath(&pen, &path);
     }
 }
 
 void GfxHdc::FillEllipse(const Rect& r, Color col, u8 alpha) {
-    if (col == kColorUnset || r.IsEmpty()) {
+    if (ColorSkipsPaint(col) || r.IsEmpty()) {
         return;
     }
     GdiplusOnHdc gp(hdc);

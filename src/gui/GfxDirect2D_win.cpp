@@ -272,7 +272,7 @@ ID2D1SolidColorBrush* GfxDirect2D::GetBrush(Color col, u8 alpha) {
 }
 
 void GfxDirect2D::FillRect(const Rect& r, Color col) {
-    if (!target || col == kColorUnset || r.IsEmpty()) {
+    if (!target || ColorSkipsPaint(col) || r.IsEmpty()) {
         return;
     }
     ID2D1SolidColorBrush* br = GetBrush(col);
@@ -286,7 +286,7 @@ void GfxDirect2D::FillRect(const Rect& r, Color col) {
 }
 
 void GfxDirect2D::DrawRect(const Rect& r, Color col, int thickness) {
-    if (!target || col == kColorUnset || r.IsEmpty() || thickness < 1) {
+    if (!target || ColorSkipsPaint(col) || r.IsEmpty() || thickness < 1) {
         return;
     }
     ID2D1SolidColorBrush* br = GetBrush(col);
@@ -315,13 +315,13 @@ void GfxDirect2D::FillRoundedRect(const Rect& r, int radius, Color fill, Color b
     // implementations), d2d wants the radii
     float rad = (float)radius / 2.0f;
     target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-    if (fill != kColorUnset) {
+    if (!ColorSkipsPaint(fill)) {
         ID2D1SolidColorBrush* br = GetBrush(fill);
         if (br) {
             target->FillRoundedRectangle(D2D1::RoundedRect(ToD2DRect(r), rad, rad), br);
         }
     }
-    if (border != kColorUnset) {
+    if (!ColorSkipsPaint(border)) {
         ID2D1SolidColorBrush* br = GetBrush(border);
         if (br) {
             D2D1_RECT_F rf =
@@ -332,7 +332,7 @@ void GfxDirect2D::FillRoundedRect(const Rect& r, int radius, Color fill, Color b
 }
 
 void GfxDirect2D::FillEllipse(const Rect& r, Color col, u8 alpha) {
-    if (!target || col == kColorUnset || r.IsEmpty()) {
+    if (!target || ColorSkipsPaint(col) || r.IsEmpty()) {
         return;
     }
     ID2D1SolidColorBrush* br = GetBrush(col, alpha);

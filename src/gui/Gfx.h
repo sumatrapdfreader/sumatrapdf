@@ -60,12 +60,12 @@ struct Gfx {
     Gfx() = default;
     virtual ~Gfx() = default;
 
-    // kColorUnset means "keep whatever color the surface is set to"
+    // kColorTransparent / kColorUnset skip the fill
     virtual void FillRect(const Rect&, Color) = 0;
     // 1px-per-thickness outline drawn inside the rect
     virtual void DrawRect(const Rect&, Color, int thickness = 1) = 0;
-    // anti-aliased; either color can be kColorUnset to skip fill / border
-    virtual void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) = 0;
+    // anti-aliased; transparent / unset skip fill / border
+    virtual void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) = 0;
     virtual void FillEllipse(const Rect&, Color, u8 alpha = 255) = 0;
     virtual void DrawLine(const Rect&, Color, int thickness = 1) = 0;
     // anti-aliased line between two points, for diagonals
@@ -100,7 +100,7 @@ struct GfxHdc : Gfx {
 
     void FillRect(const Rect&, Color) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
-    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) override;
+    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
     void DrawLine(const Rect&, Color, int thickness = 1) override;
     void DrawLineAA(Point, Point, Color, float thickness = 1.0f, u8 alpha = 255) override;
@@ -132,7 +132,7 @@ struct GfxGdiplus : Gfx {
 
     void FillRect(const Rect&, Color) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
-    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) override;
+    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
     void DrawLine(const Rect&, Color, int thickness = 1) override;
     void DrawLineAA(Point, Point, Color, float thickness = 1.0f, u8 alpha = 255) override;
@@ -172,7 +172,7 @@ struct GfxDirect2D : Gfx {
 
     void FillRect(const Rect&, Color) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
-    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorUnset) override;
+    void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
     void DrawLine(const Rect&, Color, int thickness = 1) override;
     void DrawLineAA(Point, Point, Color, float thickness = 1.0f, u8 alpha = 255) override;

@@ -15,6 +15,12 @@ using Color = uint32_t;
 constexpr Color kColorUnset = ((Color)(0xfeffffff));
 // kColorNoChange indicates that we shouldn't change the color
 constexpr Color kColorNoChange((Color)(0xfdffffff));
+// explicit "don't paint" / no fill / no border (not inherit/default)
+constexpr Color kColorTransparent = ((Color)(0xfcffffff));
+
+constexpr bool ColorSkipsPaint(Color c) {
+    return c == kColorUnset || c == kColorTransparent;
+}
 
 // PdfColor is aarrggbb, where 0xff alpha is opaque and 0x0 alpha is transparent
 // Color is ggrrbb (Win32 COLORREF layout) and typically has no alpha

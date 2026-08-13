@@ -4,7 +4,7 @@
 #include "base/Base.h"
 
 bool IsSpecialColor(Color col) {
-    return col == kColorUnset || col == kColorNoChange;
+    return col == kColorUnset || col == kColorNoChange || col == kColorTransparent;
 }
 
 // format: abgr

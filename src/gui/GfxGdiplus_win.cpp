@@ -58,7 +58,7 @@ static Gdiplus::Color ToGdipColor(Color col, u8 alpha = 255) {
 }
 
 void GfxGdiplus::FillRect(const Rect& r, Color col) {
-    if (col == kColorUnset || r.IsEmpty()) {
+    if (ColorSkipsPaint(col) || r.IsEmpty()) {
         return;
     }
     SolidBrush br(ToGdipColor(col));
@@ -71,7 +71,7 @@ void GfxGdiplus::FillRect(const Rect& r, Color col) {
 }
 
 void GfxGdiplus::DrawRect(const Rect& r, Color col, int thickness) {
-    if (col == kColorUnset || r.IsEmpty() || thickness < 1) {
+    if (ColorSkipsPaint(col) || r.IsEmpty() || thickness < 1) {
         return;
     }
     Pen pen(ToGdipColor(col), (float)thickness);
@@ -107,18 +107,18 @@ void GfxGdiplus::FillRoundedRect(const Rect& r, int radius, Color fill, Color bo
     gfx->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
     GraphicsPath path;
     AddRoundedRectPath(path, r, radius);
-    if (fill != kColorUnset) {
+    if (!ColorSkipsPaint(fill)) {
         SolidBrush br(ToGdipColor(fill));
         gfx->FillPath(&br, &path);
     }
-    if (border != kColorUnset) {
+    if (!ColorSkipsPaint(border)) {
         Pen pen(ToGdipColor(border), 1);
         gfx->DrawPath(&pen, &path);
     }
 }
 
 void GfxGdiplus::FillEllipse(const Rect& r, Color col, u8 alpha) {
-    if (col == kColorUnset || r.IsEmpty()) {
+    if (ColorSkipsPaint(col) || r.IsEmpty()) {
         return;
     }
     gfx->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
