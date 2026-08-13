@@ -996,6 +996,13 @@ const globalPrefs: Field[] = [
       "(useful for drawings with many links); if false, clicking a link follows it",
   ).ver("3.7"),
   field(
+    "RememberViewOffsetOnPageTurn",
+    Bool,
+    false,
+    "if true, next/previous page keeps the same view position on the page " +
+      "instead of jumping to the top (useful when zoomed in on similarly sized pages)",
+  ).ver("3.7"),
+  field(
     "ShowDocumentFocusIndicator",
     Bool,
     false,

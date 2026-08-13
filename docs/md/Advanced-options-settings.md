@@ -159,6 +159,11 @@ ShowLinks = false
 ; version 3.7)
 DisableLinks = false
 
+; if true, next/previous page keeps the same view position on the page instead
+; of jumping to the top (useful when zoomed in on similarly sized pages)
+; (introduced in version 3.7)
+RememberViewOffsetOnPageTurn = false
+
 ; if true, draw a focus ring around the document when it has keyboard focus (Tab
 ; to the page area) (introduced in version 3.7)
 ShowDocumentFocusIndicator = false
