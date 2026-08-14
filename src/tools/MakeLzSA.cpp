@@ -14,7 +14,6 @@
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/DirScan.h"
-#include "base/Win.h"
 #include "base/LzmaSimpleArchive.h"
 
 namespace lzsa {

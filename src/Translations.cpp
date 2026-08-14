@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/Win.h"
 #include "base/LzmaSimpleArchive.h"
 #include "EmbeddedResources.h"
 

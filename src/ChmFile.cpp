@@ -6,7 +6,6 @@
 #include "base/ByteReaderWriter.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
-#include "base/Win.h"
 
 #include "GumboHelpers.h"
 

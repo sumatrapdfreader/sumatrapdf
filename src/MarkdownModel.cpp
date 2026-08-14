@@ -7,7 +7,6 @@
 #include "base/GuessFileType.h"
 #include "base/UITask.h"
 #include "base/ScopedWin.h"
-#include "base/Win.h"
 
 #include "gui/win/HtmlWindow.h"
 #include "gui/win/BrowserDocView.h"

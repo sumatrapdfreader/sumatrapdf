@@ -7,7 +7,6 @@
 // enabled, is the current theme the default one - live here instead.
 
 #include "base/Base.h"
-#include "base/Win.h"
 #include "gui/Dpi.h"
 
 #include "gui/UIModels.h"

@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Exif.h"
 #include "base/File.h"
-#include "base/Win.h"
 
 #include "Settings.h"
 #include "Flags.h"

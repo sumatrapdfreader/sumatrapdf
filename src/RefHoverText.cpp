@@ -7,7 +7,6 @@
 // UI / render machinery stays separate from the citation-resolution logic.
 
 #include "base/Base.h"
-#include "base/Win.h"
 
 #include "gui/UIModels.h"
 

@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "gui/Dpi.h"
-#include "base/Win.h"
 #include "base/BitManip.h"
 #include "base/Pixmap.h"
 

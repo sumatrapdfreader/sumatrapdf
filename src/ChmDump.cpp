@@ -7,7 +7,6 @@
 #include "base/Crypto.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
-#include "base/Win.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"

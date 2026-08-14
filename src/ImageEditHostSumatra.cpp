@@ -7,7 +7,6 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/Win.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
 

@@ -12,7 +12,6 @@
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
 #include "base/ScopedWin.h"
-#include "base/Win.h"
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
    have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())

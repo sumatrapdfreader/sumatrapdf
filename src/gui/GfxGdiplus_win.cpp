@@ -19,7 +19,6 @@
 #include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
-#include "base/Win.h"
 
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
