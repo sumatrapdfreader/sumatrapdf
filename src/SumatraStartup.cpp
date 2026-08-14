@@ -2200,11 +2200,17 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     logf("elevated: %d\n", (int)IsProcessRunningElevated());
     LogWineDpiInfo();
     {
-        HWND hwndMon = GetForegroundWindow();
-        if (!hwndMon) {
-            hwndMon = GetDesktopWindow();
+        // the cursor is on the monitor the user launched from. GetForegroundWindow
+        // / HWND_DESKTOP report the *primary* monitor, which made the first
+        // layout 2.5× too big when starting on a 100% screen next to a 250%
+        // primary (discussion #4831).
+        POINT pt{};
+        if (GetCursorPos(&pt)) {
+            int dpi = DpiGetForPoint(pt.x, pt.y);
+            DpiSet(dpi, dpi);
+        } else {
+            DpiSetFromHwnd(GetDesktopWindow());
         }
-        DpiSetFromHwnd(hwndMon);
     }
 
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();

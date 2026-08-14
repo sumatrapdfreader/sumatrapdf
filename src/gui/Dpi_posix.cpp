@@ -26,6 +26,10 @@ int DpiGetForHwnd(HWND hwnd) {
     return gDpi;
 }
 
+int DpiGetForPoint(int, int) {
+    return DpiGet();
+}
+
 int DpiGet() {
     return dpiX > 0 ? dpiX : 96;
 }

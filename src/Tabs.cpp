@@ -619,6 +619,9 @@ static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev
 }
 
 void CreateTabbar(MainWindow* win) {
+    if (win->frameDpi > 0) {
+        DpiSet(win->frameDpi, win->frameDpi);
+    }
     TabsCtrl::CreateArgs args;
     args.parent = win->hwndFrame;
     args.withToolTips = true;

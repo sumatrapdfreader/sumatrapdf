@@ -2831,6 +2831,8 @@ static void UpdateWindowFrameBorderColor(MainWindow* win) {
     SetWindowBorderColor(win->hwndFrame, DwmFrameBorderColorForCurrentTheme());
 }
 
+static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, bool force = false);
+
 static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
@@ -2838,6 +2840,14 @@ static MainWindow* CreateMainWindow() {
     } else {
         windowPos = GetDefaultWindowPos();
     }
+    // DPI of the monitor the window will sit on, before CreateWindow. A new
+    // hwnd's GetDpiForWindow() is the process / primary DPI, which is wrong
+    // when launching on a secondary screen (discussion #4831).
+    int posDpi = DpiGetForPoint(windowPos.x + (windowPos.dx / 2), windowPos.y + (windowPos.dy / 2));
+    if (posDpi <= 0) {
+        posDpi = 96;
+    }
+    DpiSet(posDpi, posDpi);
     // we don't want the windows to overlap so shift each window by a bit
     int nShift = len(gWindows);
     windowPos.x += nShift * DpiScale(15);
@@ -2855,8 +2865,6 @@ static MainWindow* CreateMainWindow() {
     if (!hwndFrame) {
         return nullptr;
     }
-    DpiSetFromHwnd(hwndFrame);
-
     // WM_NCCALCSIZE returning 0 disables DWM rounded corners; re-enable them.
     if (!IsRunningOnWine()) {
         SetWindowRoundedCorners(hwndFrame, true);
@@ -2864,10 +2872,8 @@ static MainWindow* CreateMainWindow() {
 
     ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
-    win->frameDpi = RoundUp(DpiGetForHwnd(hwndFrame), 4);
-    if (win->frameDpi <= 0) {
-        win->frameDpi = 96;
-    }
+    win->frameDpi = RoundUp(posDpi, 4);
+    DpiSet(win->frameDpi, win->frameDpi);
     UpdateWindowFrameBorderColor(win);
 
     // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
@@ -2982,6 +2988,15 @@ void ShowMainWindow(MainWindow* win, int windowState) {
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);
     } else {
         ShowWindow(win->hwndFrame, SW_SHOW);
+    }
+
+    // a hidden frame's GetDpiForWindow() can still be the primary-monitor
+    // DPI; after ShowWindow the monitor of the window rect is reliable
+    {
+        int dpi = RoundUp(DpiGetForHwnd(win->hwndFrame), 4);
+        if (dpi > 0 && dpi != win->frameDpi) {
+            OnDpiChanged(win, nullptr, dpi, true);
+        }
     }
 
     // Fire the deferred SWP_FRAMECHANGED for custom caption (tabsInTitlebar).
@@ -7217,7 +7232,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
 // explicitDpi: LOWORD(wParam) from WM_DPICHANGED — trust it during cross-monitor
 // drag when GetDpiForWindow can lag (sumatrapdf-plus / issue #5827).
 // force: full refresh even when deferring (used after drag settles).
-static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, bool force = false) {
+static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi, bool force) {
     if (!win || !win->hwndFrame) {
         return;
     }

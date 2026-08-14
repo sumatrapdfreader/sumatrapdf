@@ -15,6 +15,7 @@ extern int dpiX;
 extern int dpiY;
 
 int DpiGetForHwnd(HWND);
+int DpiGetForPoint(int x, int y);
 int DpiGet();
 void DpiSetWineOverride(int dpi);
 void DpiSetFromHwnd(HWND);

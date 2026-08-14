@@ -43,9 +43,41 @@ static bool DpiIsDesktopHwnd(HWND hwnd) {
     return !hwnd || hwnd == HWND_DESKTOP || hwnd == GetDesktopWindow();
 }
 
+static bool DpiFromMonitor(HMONITOR h, int* outX, int* outY) {
+    if (!h || !DynGetDpiForMonitor) {
+        return false;
+    }
+    uint monX = 96, monY = 96;
+    HRESULT hr = DynGetDpiForMonitor(h, kMdtEffectiveDpi, &monX, &monY);
+    if (hr != S_OK || monX < 72) {
+        return false;
+    }
+    *outX = DpiApplyWineOverride((int)monX);
+    *outY = DpiApplyWineOverride((int)(monY >= 72 ? monY : monX));
+    return true;
+}
+
+// The monitor that contains (x,y), for seeding layout DPI before a window
+// exists. GetForegroundWindow / HWND_DESKTOP report the *primary* monitor.
+int DpiGetForPoint(int x, int y) {
+    if (gDpiOverride > 0) {
+        return MulDiv(96, gDpiOverride, 100);
+    }
+    POINT pt{x, y};
+    int dx = 96, dy = 96;
+    if (DpiFromMonitor(MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST), &dx, &dy)) {
+        return dx;
+    }
+    return 96;
+}
+
 // Uncached per-window DPI. HWND_DESKTOP / null report the system (primary
 // monitor) DPI and ignore gDpiOverride, so a multi-monitor setup and the
 // override test path both see per-window vs system DPI disagree.
+// Prefer the monitor the window sits on: GetDpiForWindow() on a newly created
+// (still hidden) hwnd returns the process / primary DPI, which made the
+// toolbar and tab bar 2.5× too big when launching on a 100% screen next to a
+// 250% primary (discussion #4831).
 static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
     int x = 96;
     int y = 96;
@@ -55,32 +87,19 @@ static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
         *outY = y;
         return;
     }
-    // GetDpiForWindow() returns default 96 DPI for desktop window
-    // (most likely desktop has DPI_AWARENESS set to UNAWARE)
     if (!DpiIsDesktopHwnd(hwnd)) {
+        if (DpiFromMonitor(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &x, &y)) {
+            *outX = x;
+            *outY = y;
+            return;
+        }
         if (DynGetDpiForWindow) {
             uint dpiWin = DynGetDpiForWindow(hwnd);
-            // returns 0 for HWND_DESKTOP
             if (dpiWin >= 72) {
                 x = y = DpiApplyWineOverride((int)dpiWin);
                 *outX = x;
                 *outY = y;
                 return;
-            }
-        }
-
-        if (DynGetDpiForMonitor) {
-            uint monX = 96, monY = 96;
-            HMONITOR h = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-            if (h != nullptr) {
-                HRESULT hr = DynGetDpiForMonitor(h, kMdtEffectiveDpi, &monX, &monY);
-                if (hr == S_OK && monX >= 72) {
-                    x = DpiApplyWineOverride((int)monX);
-                    y = DpiApplyWineOverride((int)(monY >= 72 ? monY : monX));
-                    *outX = x;
-                    *outY = y;
-                    return;
-                }
             }
         }
     }
@@ -132,6 +151,15 @@ void DpiSet(int x, int y) {
 }
 
 void DpiSetFromHwnd(HWND hwnd) {
+    // a child hwnd (tooltip, toolbar host, …) can report the process /
+    // primary DPI while the parent frame is still hidden. Always take the
+    // top-level window so CreateToolbar / GetAppFont see the frame's monitor.
+    if (hwnd && !DpiIsDesktopHwnd(hwnd)) {
+        HWND root = GetAncestor(hwnd, GA_ROOT);
+        if (root) {
+            hwnd = root;
+        }
+    }
     int x = 96, y = 96;
     DpiQueryForHwnd(hwnd, &x, &y);
     DpiSet(x, y);

@@ -1295,6 +1295,9 @@ static void PaintToolbarEdge(MainWindow*, VirtHostPaintEvent* ev) {
 static const WStr kToolbarHostClass = WStrL(L"SUMATRA_VIRT_TOOLBAR");
 
 void CreateToolbar(MainWindow* win) {
+    if (win->frameDpi > 0) {
+        DpiSet(win->frameDpi, win->frameDpi);
+    }
     int iconSize = ToolbarIconSize();
     int yPad = DpiScale(2);
 
