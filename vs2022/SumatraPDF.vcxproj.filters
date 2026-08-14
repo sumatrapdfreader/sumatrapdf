@@ -162,6 +162,9 @@
     <ClInclude Include="..\src\CustomZoomDialog.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DarkMode_win.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\DisplayMode.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -669,6 +672,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CustomZoomDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DarkMode_win.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DisplayMode.cpp">

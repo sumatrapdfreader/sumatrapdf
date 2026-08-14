@@ -40,8 +40,6 @@ Color ThemeNotificationsProgressColor();
 bool ThemeColorizeControls();
 bool IsCurrentThemeDefault();
 void FreeThemes();
-bool UseDarkModeLib();
-void ApplyDarkModeToPopupWindow(HWND hwnd);
 bool MigrateRenamedThemeNames();
 bool GetInvertPageColors();
 void SetInvertPageColors(bool);

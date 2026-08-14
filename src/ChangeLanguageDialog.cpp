@@ -21,7 +21,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "ChangeLanguageDialog.h"
 
 // Search edit is a real HWND; the language list and buttons are VirtCtrl.
@@ -84,9 +84,7 @@ void ChangeLanguageWnd::UpdateTheme() {
     if (btnOk) {
         StyleThemedButton(btnOk, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

@@ -22,7 +22,7 @@
 #include "SumatraPDF.h"
 #include "Favorites.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "AddFavoriteDialog.h"
 
 // Label and buttons are VirtCtrl; the name field is a real HWND Edit.
@@ -107,9 +107,7 @@ void AddFavoriteWnd::UpdateTheme() {
     if (btnOk) {
         StyleThemedButton(btnOk, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

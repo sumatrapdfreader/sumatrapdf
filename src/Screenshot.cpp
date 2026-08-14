@@ -26,7 +26,7 @@
 #include "Screenshot.h"
 #include "Theme.h"
 #include "SumatraConfig.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "Commands.h"
 #include "Accelerators.h"
 #include "Settings.h"
@@ -399,9 +399,7 @@ void SetHotkeyWnd::UpdateTheme() {
     if (btnCancel) {
         StyleButton(btnCancel, false);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

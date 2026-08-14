@@ -15,7 +15,7 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 
 // http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
 #pragma pack(push, 1)
@@ -178,9 +178,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
         case WM_INITDIALOG:
             data = (Print_Advanced_Data*)((PROPSHEETPAGE*)lp)->lParam;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-            if (UseDarkModeLib()) {
-                DarkMode::setDarkWndSafe(hDlg);
-            }
+            DarkModeApplyToWindow(hDlg);
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_RANGE, _TRA("Print range"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ALL, _TRA("&All selected pages"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_EVEN, _TRA("&Even pages only"));

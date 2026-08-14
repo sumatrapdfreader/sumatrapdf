@@ -68,7 +68,7 @@
 #include "RegistryPreview.h"
 #include "ExternalViewers.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "CommandPalette.h"
 #include "SelectTextKeyboard.h"
 #include "SumatraControl.h"
@@ -2465,10 +2465,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     gRenderCache = new RenderCache();
 
     // TODO: for reasons I don't understand, this must be called before LoadSettings()
-    if (UseDarkModeLib()) {
-        DarkMode::initDarkMode();
-        DarkMode::setColorizeTitleBarConfig(true);
-    }
+    DarkModeInit();
 
     LoadSettings();
     UpdateGlobalPrefs(flags);

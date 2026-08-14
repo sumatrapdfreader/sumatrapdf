@@ -21,7 +21,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "PdfDarkMode.h"
 #include "ChangeThemeDialog.h"
 
@@ -161,9 +161,7 @@ void ChangeThemeWnd::UpdateTheme() {
     if (btnChange) {
         StyleThemedButton(btnChange, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

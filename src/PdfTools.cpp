@@ -32,7 +32,7 @@
 #include "DisplayModel.h"
 #include "Theme.h"
 
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 
 extern "C" int pdfbake_main(int argc, char** argv);
 extern "C" int pdfclean_main(int argc, char** argv);
@@ -168,11 +168,7 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
     cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
+    cargs.bgColor = DarkModeDialogBgColor();
     CreateCustom(cargs);
     if (!hwnd) {
         return false;
@@ -284,10 +280,7 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     DoLayout(size);
 
     HwndCenterDialog(hwnd, win->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
+    DarkModeApplyToWindowAndEraseBg(hwnd);
     SetIsVisible(true);
     if (focusOn) {
         HwndSetFocus(focusOn->hwnd);

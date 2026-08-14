@@ -25,7 +25,7 @@
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "SettingsDialog.h"
 
 // Section headers, labels and OK/Cancel are VirtCtrl; layout/zoom/command
@@ -133,9 +133,7 @@ void SettingsWnd::UpdateTheme() {
     if (btnOk) {
         StyleThemedButton(btnOk, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

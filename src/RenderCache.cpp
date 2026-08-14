@@ -17,7 +17,7 @@
 
 #include "Settings.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "SumatraConfig.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -1265,10 +1265,7 @@ void DebugTextWnd::UpdateTheme() {
     if (edit) {
         edit->SetColors(colTxt, colBg);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
+    DarkModeApplyToWindowAndEraseBg(hwnd);
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (edit && monoFont) {
         edit->SetFont(monoFont);

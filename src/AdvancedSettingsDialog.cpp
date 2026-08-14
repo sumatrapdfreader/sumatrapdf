@@ -32,6 +32,7 @@
 #include "MainWindow.h"
 #include "PdfDarkMode.h"
 #include "Theme.h"
+#include "DarkMode_win.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
@@ -1220,7 +1221,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(hbox);
     }
 
-    ApplyDarkModeToPopupWindow(hwnd);
+    DarkModeApplyToPopupWindow(hwnd);
 
     auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
     layout = padding;

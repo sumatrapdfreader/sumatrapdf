@@ -22,7 +22,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "GoToPageDialog.h"
 
 // Labels and buttons are VirtCtrl; the page field is a real HWND Edit.
@@ -87,9 +87,7 @@ void GoToPageWnd::UpdateTheme() {
     if (btnGo) {
         StyleThemedButton(btnGo, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

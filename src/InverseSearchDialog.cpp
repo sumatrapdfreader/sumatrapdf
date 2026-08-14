@@ -22,7 +22,7 @@
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "InverseSearchDialog.h"
 
 // Label, Help and OK/Cancel are VirtCtrl; the command line is an editable DropDown.
@@ -86,9 +86,7 @@ void InverseSearchWnd::UpdateTheme() {
     if (btnOk) {
         StyleThemedButton(btnOk, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

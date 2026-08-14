@@ -22,7 +22,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "CustomZoomDialog.h"
 
 // Label and buttons are VirtCtrl; the zoom field is an editable DropDown.
@@ -86,9 +86,7 @@ void CustomZoomWnd::UpdateTheme() {
     if (btnZoom) {
         StyleThemedButton(btnZoom, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

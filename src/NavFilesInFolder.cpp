@@ -29,7 +29,7 @@
 #include "SumatraPDF.h"
 #include "Theme.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "NavFilesInFolder.h"
 
 // A modeless directory browser listing sub-directories and files SumatraPDF
@@ -765,9 +765,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         return false;
     }
     // top-level (no owner) so Alt-Tab switches between this and the main window
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkTitleBarEx(hwnd, true);
-    }
+    DarkModeApplyToTitleBar(hwnd);
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();

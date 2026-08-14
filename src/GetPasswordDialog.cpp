@@ -19,7 +19,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "GetPasswordDialog.h"
 
 // Labels and buttons are VirtCtrl; the password field and checkboxes are HWNDs.
@@ -83,9 +83,7 @@ void GetPasswordWnd::UpdateTheme() {
     if (btnOk) {
         StyleThemedButton(btnOk, true);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-    }
+    DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

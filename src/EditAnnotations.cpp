@@ -35,7 +35,7 @@ extern "C" {
 #include "EditAnnotations.h"
 #include "FormFields.h"
 #include "SumatraPDF.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 
 #include "Theme.h"
 
@@ -1871,11 +1871,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     HMODULE h = GetModuleHandleW(nullptr);
     args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
     // mainWindow->isDialog = true;
-    if (UseDarkModeLib()) {
-        args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
-    } else {
-        args.bgColor = MkGray(0xee);
-    }
+    args.bgColor = DarkModeDialogBgColor();
 
     args.title = str::JoinTemp(_TRA("Annotations"), StrL(": "), tab->GetTabTitle());
     args.visible = false;
@@ -1934,10 +1930,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         bool isNew = annot != ew->tab->win->annotationUnderCursor;
         SetSelectedAnnotation(tab, annot, isNew, focus);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndNotifySafe(ew->hwnd);
-        DarkMode::setWindowEraseBgSubclass(ew->hwnd);
-    }
+    DarkModeApplyToNotifyWindowAndEraseBg(ew->hwnd);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered

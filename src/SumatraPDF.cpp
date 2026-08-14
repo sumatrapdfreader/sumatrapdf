@@ -123,7 +123,7 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "TextToSpeech.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
@@ -2804,18 +2804,6 @@ static void UpdateWindowFrameBorderColor(MainWindow* win) {
     SetWindowBorderColor(win->hwndFrame, DwmFrameBorderColorForCurrentTheme());
 }
 
-// The infotip is the tooltip for home page thumbnails, links and the like. It
-// was left un-themed because applying a visual style to a tooltip resets its
-// font to the theme's, which is wrong for a control we size and populate
-// ourselves - so put our font back afterwards (issue #5894).
-static void ApplyDarkModeToInfotip(MainWindow* win) {
-    if (!win || !win->infotip || !win->infotip->hwnd) {
-        return;
-    }
-    DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
-    win->infotip->SetFont(GetAppFont());
-}
-
 static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
@@ -2954,14 +2942,7 @@ static MainWindow* CreateMainWindow() {
     // TODO: this is hackish. in general we should divorce
     // layout re-calculations from MainWindow and creation of windows
     win->UpdateCanvasSize();
-    if (UseDarkModeLib() && !IsCurrentThemeDefault()) {
-        DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
-        DarkMode::setChildCtrlsSubclassAndTheme(win->hwndFrame);
-        DarkMode::removeTabCtrlSubclass(win->tabsCtrl->hwnd);
-        DarkMode::setDarkScrollBar(win->hwndCanvas);
-        DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
-        ApplyDarkModeToInfotip(win);
-    }
+    DarkModeApplyToNewFrame(win);
 
     // show menu bar rebar now that layout is done
     ShowMenuBarRebar(win);
@@ -3145,16 +3126,7 @@ void UpdateAfterThemeChange() {
         UpdateFindWindowTheme(win);
         RefreshSelectionToolbarIcons(win);
         UpdateAIChatTheme(win);
-        if (UseDarkModeLib()) {
-            DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
-            DarkMode::setChildCtrlsTheme(win->hwndFrame);
-            if (win->tabsCtrl) {
-                DarkMode::removeTabCtrlSubclass(win->tabsCtrl->hwnd);
-            }
-            DarkMode::setDarkScrollBar(win->hwndCanvas);
-            DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
-            ApplyDarkModeToInfotip(win);
-        }
+        DarkModeApplyToFrameAfterThemeChange(win);
         UpdateWindowFrameBorderColor(win);
         // TODO: this only rerenders canvas, not frame, even with
         // includingNonClientArea == true.
@@ -12119,12 +12091,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
         case WM_INITMENUPOPUP:
             // apply dark mode to popup menu window
-            if (UseDarkModeLib() && DarkMode::isEnabled()) {
-                HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
-                if (hMenu) {
-                    DarkMode::setDarkTitleBarEx(hMenu, false);
-                }
-            }
+            DarkModeApplyToMenuWindow(FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr));
             if (gMenuAccelPressed) {
                 HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
                 if (hMenu) {
@@ -13205,12 +13172,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_INITMENUPOPUP:
             // apply dark mode to popup menu window
-            if (UseDarkModeLib() && DarkMode::isEnabled()) {
-                HWND hMenuWnd = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
-                if (hMenuWnd) {
-                    DarkMode::setDarkTitleBarEx(hMenuWnd, false);
-                }
-            }
+            DarkModeApplyToMenuWindow(FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr));
             // TODO: should I just build the menu from scratch every time?
             if (win) {
                 UpdateAppMenu(win, (HMENU)wp);

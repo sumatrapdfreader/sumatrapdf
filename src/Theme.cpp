@@ -15,22 +15,10 @@ License: GPLv3 */
 #include "AppSettings.h"
 #include "Commands.h"
 #include "Theme.h"
+#include "DarkMode_win.h"
 #include "GlobalPrefs.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
 #include "PdfDarkMode.h"
-
-// allow only x64 and arm64 for compatibility for older OS
-#if !defined(_DARKMODELIB_NOT_USED) && \
-    (defined(__x86_64__) || defined(_M_X64) || defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))
-static bool gUseDarkModeLib = true;
-#else
-bool gUseDarkModeLib = false;
-#endif
-
-bool UseDarkModeLib() {
-    return gUseDarkModeLib;
-}
 
 // The installer and uninstaller never load settings, so CreateThemeCommands()
 // doesn't run and there is no current theme - every Theme*Color() accessor
@@ -38,25 +26,6 @@ bool UseDarkModeLib() {
 // edits, and wingui asks the app for their colors, so the two hooks that need a
 // theme have to be able to answer without one. Defined next to gCurrentTheme.
 static bool HasCurrentTheme();
-
-// CreateMainWindow hands the frame to darkmodelib (dark caption, themed
-// children, toolbar custom draw) but a top-level window we create ourselves is
-// not a child of the frame, so none of that reaches it: buttons and edits keep
-// their stock light borders and hover highlights, list boxes and multi-line
-// edits keep a light scrollbar, and the caption stays white. Every such window
-// - the find bar, the find window, the advanced settings dialog - calls this
-// once its children exist (issues #5894, #5895).
-void ApplyDarkModeToPopupWindow(HWND hwnd) {
-    if (!UseDarkModeLib()) {
-        return;
-    }
-    DarkMode::setDarkTitleBarEx(hwnd, true);
-    if (IsCurrentThemeDefault()) {
-        return;
-    }
-    DarkMode::setChildCtrlsSubclassAndTheme(hwnd);
-    DarkMode::setWindowNotifyCustomDrawSubclass(hwnd);
-}
 
 void StyleThemedButton(VirtButton* b, bool isDefault) {
     Color bg = ThemeWindowControlBackgroundColor();
@@ -640,46 +609,6 @@ int ThemeGetCurrentIndex() {
     return gCurrThemeIndex;
 }
 
-// push the current palette (which may be the system's, in high contrast mode)
-// to darkmodelib, which draws the controls we don't draw ourselves
-static void ApplyThemeColorsToDarkMode() {
-    if (!UseDarkModeLib()) {
-        return;
-    }
-    // TODO: we should apply themes to every theme other than 0
-    // but in Solarized Light in Find dialog's input field text is invisible i.e. black
-    // UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
-    const bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
-    DarkMode::DarkModeType modeType = DarkMode::DarkModeType::light;
-    if (isDarkCol) {
-        modeType = DarkMode::DarkModeType::dark;
-    } else if (IsCurrentThemeDefault()) {
-        modeType = DarkMode::DarkModeType::classic;
-    }
-    const UINT mode = static_cast<UINT>(modeType);
-    DarkMode::setDarkModeConfigEx(mode);
-    DarkMode::setDefaultColors(false);
-
-    DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
-    DarkMode::setCtrlBackgroundColor(ThemeWindowControlBackgroundColor());
-    Color ctrlBg = ThemeWindowControlBackgroundColor();
-    DarkMode::setHotBackgroundColor(ThemeHotBackgroundColor());
-    DarkMode::setTextColor(ThemeWindowTextColor());
-    DarkMode::setDarkerTextColor(ThemeWindowDarkerTextColor());
-    DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
-    DarkMode::setDlgBackgroundColor(ctrlBg);
-    DarkMode::setLinkTextColor(ThemeWindowLinkColor());
-    DarkMode::setEdgeColor(ThemeEdgeColor());
-    DarkMode::setHotEdgeColor(ThemeHotEdgeColor());
-    DarkMode::setDisabledEdgeColor(ThemeDisabledEdgeColor());
-    DarkMode::setErrorBackgroundColor(ThemeErrorBackgroundColor());
-    DarkMode::updateThemeBrushesAndPens();
-
-    DarkMode::setViewTextColor(ThemeWindowTextColor());
-    DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
-    DarkMode::calculateTreeViewStyle();
-}
-
 void SetThemeByIndex(int themeIdx) {
     ReportIf((themeIdx < 0) || (themeIdx >= gThemeCount));
     if (themeIdx >= gThemeCount) {
@@ -693,13 +622,11 @@ void SetThemeByIndex(int themeIdx) {
     RecalcUseHighContrast(); // it depends on which theme is current
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     RememberLastLightDarkTheme();
-    ApplyThemeColorsToDarkMode();
+    DarkModeApplyThemeColors();
     if (themeChanged) {
         UpdateAfterThemeChange();
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setPrevTreeViewStyle();
-    }
+    DarkModeRememberTreeViewStyle();
 };
 
 // Map removed / renamed themes so existing settings keep working.
@@ -851,11 +778,9 @@ void UpdateThemeAfterHighContrastChange() {
         return;
     }
     logf("UpdateThemeAfterHighContrastChange: using high contrast colors: %d\n", (int)gUseHighContrast);
-    ApplyThemeColorsToDarkMode();
+    DarkModeApplyThemeColors();
     UpdateAfterThemeChange();
-    if (UseDarkModeLib()) {
-        DarkMode::setPrevTreeViewStyle();
-    }
+    DarkModeRememberTreeViewStyle();
 }
 
 // call after loading settings

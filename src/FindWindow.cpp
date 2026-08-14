@@ -36,13 +36,11 @@
 #include "FilterHighlightDraw.h"
 #include "Translations.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 
 // match the frame's title bar to the current theme (dark caption in dark mode)
 static void ApplyTitleBarTheme(HWND hwnd) {
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkTitleBarEx(hwnd, true);
-    }
+    DarkModeApplyToTitleBar(hwnd);
 }
 
 // command ids for the window's toolbar buttons (handled in OnCommand)
@@ -371,7 +369,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
 
     BuildLayout();
 
-    ApplyDarkModeToPopupWindow(hwnd);
+    DarkModeApplyToPopupWindow(hwnd);
     return true;
 }
 

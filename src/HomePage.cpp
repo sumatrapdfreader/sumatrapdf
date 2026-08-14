@@ -33,7 +33,7 @@
 #include "Version.h"
 #include "Theme.h"
 #include "AppSettings.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "SvgIcons.h"
 
 // how the shared tip code (TipText.cpp) opens a url link
@@ -678,9 +678,7 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     switch (msg) {
         case WM_CREATE:
             ReportIf(gHwndAbout);
-            if (UseDarkModeLib()) {
-                DarkMode::setDarkTitleBarEx(hwnd, true);
-            }
+            DarkModeApplyToTitleBar(hwnd);
             break;
 
         case WM_ERASEBKGND:

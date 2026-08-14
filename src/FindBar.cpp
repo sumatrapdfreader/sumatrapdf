@@ -35,6 +35,7 @@
 #include "FindWindow.h"
 #include "Translations.h"
 #include "Theme.h"
+#include "DarkMode_win.h"
 
 // command ids for the bar's toolbar buttons; must not collide with real commands
 constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
@@ -274,7 +275,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
 
     BuildLayout();
 
-    ApplyDarkModeToPopupWindow(hwnd);
+    DarkModeApplyToPopupWindow(hwnd);
     Layout();
     return true;
 }

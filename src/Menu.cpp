@@ -37,7 +37,7 @@
 #include "Translations.h"
 #include "Toolbar.h"
 #include "resource.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "Tabs.h"
 #include "Accelerators.h"
 #include "ImageSaveCropResize.h"
@@ -2365,7 +2365,7 @@ void MarkMenuOwnerDraw(HMENU /*hmenu*/, bool /*isMenuBar*/) {
 void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
     // darkmodelib handles the menu bar via setWindowMenuBarSubclass
     // but doesn't handle popup/context menus, so we owner-draw those
-    if (isMenuBar && UseDarkModeLib() && DarkMode::isEnabled()) {
+    if (isMenuBar && DarkModeIsActive()) {
         return;
     }
     if (!ThemeColorizeControls()) {
@@ -3031,7 +3031,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     SetWindowSubclass(win->hwndMenuToolbar, MenuBarToolbarWndProc, 0, 0);
     TbSetButtonStructSize(win->hwndMenuToolbar, sizeofi(TBBUTTON));
 
-    if (!UseDarkModeLib() || !DarkMode::isEnabled()) {
+    if (!DarkModeIsActive()) {
         if (!IsCurrentThemeDefault()) {
             SetWindowTheme(win->hwndMenuToolbar, L"", L"");
         }
@@ -3064,10 +3064,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     rbBand.cx = 0;
     SendMessageW(win->hwndMenuReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
-    if (UseDarkModeLib()) {
-        DarkMode::setWindowNotifyCustomDrawSubclass(win->hwndMenuReBar);
-        DarkMode::setChildCtrlsSubclassAndTheme(win->hwndMenuReBar);
-    }
+    DarkModeApplyToMenuBar(win->hwndMenuReBar);
 }
 
 void ShowMenuBarRebar(MainWindow* win) {

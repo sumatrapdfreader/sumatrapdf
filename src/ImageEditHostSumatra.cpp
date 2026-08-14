@@ -27,7 +27,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 #include "Translations.h"
 #include "ImageSaveCropResize.h"
 
@@ -107,11 +107,7 @@ static Str TranslateStr(Str s) {
 }
 
 static void ApplyDarkMode(HWND hwnd) {
-    if (!UseDarkModeLib()) {
-        return;
-    }
-    DarkMode::setDarkWndSafe(hwnd);
-    DarkMode::setWindowEraseBgSubclass(hwnd);
+    DarkModeApplyToWindowAndEraseBg(hwnd);
 }
 
 static HWND GetOwnerHwnd() {
