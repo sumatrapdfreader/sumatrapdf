@@ -172,6 +172,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     textMeasure = CreatePlatformTextRender(args->textRenderMethod);
     defaultFontName = str::Dup(ToUtf8Temp(args->GetFontName()));
     defaultFontSize = args->fontSize;
+    overrideFontName = args->overrideFontName;
 
     // pre-size each font's measured-text cache from the size of the text: text
     // runs are mostly words (avg. ~6 bytes of html) and many repeat, so guess
@@ -985,7 +986,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
 
     AttrInfo* attr = t->GetAttrByName(StrL("face"));
     Str faceName = CurrFont()->GetName();
-    if (attr) {
+    if (attr && !overrideFontName) {
         TempStr buf = str::DupTemp(attr->val);
         // multiple font names can be comma separated
         if (buf && buf.s[0] != ',') {

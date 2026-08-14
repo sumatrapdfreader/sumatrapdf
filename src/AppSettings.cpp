@@ -492,6 +492,7 @@ bool LoadSettings() {
             fontSize = 8.f;
         }
         SetDefaultEbookFont(fontName, fontSize);
+        SetDefaultChmFont(EbookFontNameFromSetting(gprefs->chmUI.fontName));
     }
 
     ResetCachedFonts();

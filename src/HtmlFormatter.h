@@ -135,6 +135,7 @@ struct HtmlFormatterArgs {
     WStr GetFontName() const { return fontName; }
 
     float fontSize = 0;
+    bool overrideFontName = false;
 
     /* Strings stored in DrawInstr must outlive the formatter (they are
        used for the lifetime of the engine). Strings that don't point into
@@ -228,6 +229,7 @@ struct HtmlFormatter {
     float spaceDx = 0;
     Str defaultFontName;
     float defaultFontSize = 0;
+    bool overrideFontName = false;
     Arena* textAllocator = nullptr;
     PlatformTextRender* textMeasure = nullptr;
 

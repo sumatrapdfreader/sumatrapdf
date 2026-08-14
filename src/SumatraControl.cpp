@@ -11,6 +11,7 @@
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
 #include "DocController.h"
+#include "DocProperties.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "Commands.h"
@@ -201,6 +202,29 @@ static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
                   0);
 }
 
+static TempStr DocumentFontListResultTemp(int* exitCodeOut) {
+    auto finish = [exitCodeOut](Str result, int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return str::DupTemp(result);
+    };
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(StrL("NOTREADY no-fixed-document"), 2);
+    }
+    TempStr fonts = engine->GetPropertyTemp(DocProp::FontList);
+    if (!fonts) {
+        return finish(StrL("ERROR no-fonts"), 1);
+    }
+    return finish(fmt("OK fonts=%s", fonts), 0);
+}
+
 enum class ControlCmd : u16 {
     Ping = 1,
     Quit = 2,
@@ -246,6 +270,7 @@ enum class ControlCmd : u16 {
     TestSidebarLayout = 50,
     TestCadEnhanceColors = 51,
     TestFindPageRange = 52,
+    TestDocumentFontList = 53,
 };
 
 enum class ControlArgType : u16 {
@@ -826,6 +851,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = DisplayModeResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDocumentFontList: {
+            int exitCode = 0;
+            Str res = DocumentFontListResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

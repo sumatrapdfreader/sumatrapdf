@@ -161,12 +161,17 @@ struct ImageUI {
     bool limitToWindowHeight;
 };
 
-// customization options for CHM UI. If UseFixedPageUI is true,
-// FixedPageUI settings apply instead
+// customization options for CHM UI. UseFixedPageUI switches to the
+// PDF-style view; FontName applies to that view
 struct ChmUI {
     // if true, the UI used for PDF documents will be used for CHM
     // documents as well
     bool useFixedPageUI;
+    // font family for the CHM fixed-page view (e.g. Segoe UI, Georgia,
+    // Microsoft YaHei). empty uses EBookUI.FontName or the engine default.
+    // overrides fonts specified by the document; wrapping quotes are
+    // stripped
+    Str fontName;
 };
 
 // customization options for Markdown UI. If UseFixedPageUI is true,
@@ -909,8 +914,8 @@ struct GlobalPrefs {
     ComicBookUI comicBookUI;
     // customization options for image files UI
     ImageUI imageUI;
-    // customization options for CHM UI. If UseFixedPageUI is true,
-    // FixedPageUI settings apply instead
+    // customization options for CHM UI. UseFixedPageUI switches to the
+    // PDF-style view; FontName applies to that view
     ChmUI chmUI;
     // customization options for Markdown UI. If UseFixedPageUI is true,
     // MuPDF is used; otherwise WebView2 browser view is used when
@@ -1167,13 +1172,17 @@ static const StructInfo gImageUIInfo = {
 
 static const FieldInfo gChmUIFields[] = {
     {offsetof(ChmUI, useFixedPageUI), SettingType::Bool, false},
+    {offsetof(ChmUI, fontName), SettingType::String, 0},
 };
-static const StructInfo gChmUIInfo = {sizeof(ChmUI),
-                                      1,
-                                      gChmUIFields,
-                                      "UseFixedPageUI",
-                                      "if true, the UI used for PDF documents will be used for CHM documents as well",
-                                      false};
+static const StructInfo gChmUIInfo = {
+    sizeof(ChmUI),
+    2,
+    gChmUIFields,
+    "UseFixedPageUI\0FontName",
+    "if true, the UI used for PDF documents will be used for CHM documents as well\0font family for the CHM fixed-page "
+    "view (e.g. Segoe UI, Georgia, Microsoft YaHei). empty uses EBookUI.FontName or the engine default. overrides "
+    "fonts specified by the document; wrapping quotes are stripped",
+    false};
 
 static const FieldInfo gMarkdownUIFields[] = {
     {offsetof(MarkdownUI, useFixedPageUI), SettingType::Bool, false},
@@ -1932,17 +1941,17 @@ static const StructInfo gGlobalPrefsInfo = {
     "6400 by default)\0how much a single zoom in / zoom out step changes the zoom, as a percentage of the current zoom "
     "level. If 0 or negative, zooming steps through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and "
     "PostScript UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization "
-    "options for Comic Book UI\0\0customization options for image files UI\0\0customization options for CHM UI. If "
-    "UseFixedPageUI is true, FixedPageUI settings apply instead\0\0customization options for Markdown UI. If "
-    "UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0customization "
-    "options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
-    "available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings "
-    "for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat sidebar\0\0width of the AI chat sidebar (0 "
-    "= use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language "
-    "for selection translation; empty uses OS UI language\0remembered source language for selection translation; empty "
-    "means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI "
-    "Codex\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various file "
-    "types. See [docs for more "
+    "options for Comic Book UI\0\0customization options for image files UI\0\0customization options for CHM UI. "
+    "UseFixedPageUI switches to the PDF-style view; FontName applies to that view\0\0customization options for "
+    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
+    "available\0\0customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
+    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
+    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat sidebar\0\0width "
+    "of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
+    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
+    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
+    "DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of "
+    "additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

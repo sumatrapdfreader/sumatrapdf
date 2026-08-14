@@ -52,6 +52,7 @@ Kind kindEngineHtml = "engineHtml";
 Kind kindEngineTxt = "engineTxt";
 
 static Str gDefaultFontName;
+static Str gDefaultChmFontName;
 static float gDefaultFontSize = 10.f;
 
 static WStr GetDefaultFontName() {
@@ -60,6 +61,13 @@ static WStr GetDefaultFontName() {
         return ToWStrTemp(s);
     }
     return WStrL(L"Georgia");
+}
+
+static WStr GetDefaultChmFontName() {
+    if (gDefaultChmFontName) {
+        return ToWStrTemp(gDefaultChmFontName);
+    }
+    return GetDefaultFontName();
 }
 
 static float GetDefaultFontSize() {
@@ -82,6 +90,10 @@ void SetDefaultEbookFont(Str name, float size) {
     // use a somewhat smaller size than in the EbookUI, since fit page/width
     // is likely to be above 100% for the paperback page dimensions
     gDefaultFontSize = size * 0.8f;
+}
+
+void SetDefaultChmFont(Str name) {
+    gDefaultChmFontName = name ? str::Dup(GetPermArena(), name) : Str();
 }
 
 /* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, HTML and TXT engines */
@@ -1632,7 +1644,8 @@ bool EngineChm::Load(Str fileName) {
     args.htmlStr = dataCache->GetHtmlData();
     args.pageDx = (float)pageRect.dx - (2 * pageBorder);
     args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
+    args.SetFontName(GetDefaultChmFontName());
+    args.overrideFontName = len(gDefaultChmFontName) > 0;
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
     args.textRenderMethod = GetTextRenderMethod();
@@ -1932,4 +1945,5 @@ EngineBase* CreateEngineTxtFromFile(Str fileName) {
 
 void EngineEbookCleanup() {
     gDefaultFontName = {};
+    gDefaultChmFontName = {};
 }

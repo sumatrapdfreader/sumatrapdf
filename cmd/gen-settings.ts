@@ -483,6 +483,14 @@ const imageUI: Field[] = [
 
 const chmUI: Field[] = [
   field("UseFixedPageUI", Bool, false, "if true, the UI used for PDF documents will be used for CHM documents as well"),
+  field(
+    "FontName",
+    Str,
+    null,
+    "font family for the CHM fixed-page view (e.g. Segoe UI, Georgia, Microsoft YaHei). " +
+      "empty uses EBookUI.FontName or the engine default. overrides fonts specified by the document; " +
+      "wrapping quotes are stripped",
+  ).ver("3.7"),
 ];
 
 const markdownUI: Field[] = [
@@ -1333,7 +1341,7 @@ const globalPrefs: Field[] = [
   struct(
     "ChmUI",
     chmUI,
-    "customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
+    "customization options for CHM UI. UseFixedPageUI switches to the PDF-style view; FontName applies to that view",
   ),
   emptyLine(),
   struct(

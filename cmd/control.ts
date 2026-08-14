@@ -45,6 +45,7 @@ export enum ControlCommand {
   TestSidebarLayout = 50,
   TestCadEnhanceColors = 51,
   TestFindPageRange = 52,
+  TestDocumentFontList = 53,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

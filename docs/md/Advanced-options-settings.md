@@ -486,12 +486,18 @@ ImageUI [
     LimitToWindowHeight = false
 ]
 
-; customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI
-; settings apply instead
+; customization options for CHM UI. UseFixedPageUI switches to the PDF-style
+; view; FontName applies to that view
 ChmUI [
     ; if true, the UI used for PDF documents will be used for CHM documents as
     ; well
     UseFixedPageUI = false
+
+    ; font family for the CHM fixed-page view (e.g. Segoe UI, Georgia, Microsoft
+    ; YaHei). empty uses EBookUI.FontName or the engine default. overrides fonts
+    ; specified by the document; wrapping quotes are stripped (introduced in
+    ; version 3.7)
+    FontName =
 ]
 
 ; customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is

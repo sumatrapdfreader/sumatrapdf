@@ -26,6 +26,7 @@ EngineBase* CreateEngineHtmlFromFile(Str fileName);
 EngineBase* CreateEngineTxtFromFile(Str fileName);
 
 void SetDefaultEbookFont(Str name, float size);
+void SetDefaultChmFont(Str name);
 // Reject characters that would break out of a quoted CSS font-family value.
 inline bool IsSafeEbookFontName(Str name) {
     if (!name) {

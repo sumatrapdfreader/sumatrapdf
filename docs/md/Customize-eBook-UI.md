@@ -67,7 +67,7 @@ Report issues in [discussions](https://github.com/sumatrapdfreader/sumatrapdf/di
 
 ## CHM files
 
-CHM uses a separate `ChmUI` section. Set `ChmUI.UseFixedPageUI = true` to render CHM with the PDF-style fixed-page engine instead of the HTML ebook engine.
+CHM uses a separate `ChmUI` section. Set `ChmUI.UseFixedPageUI = true` to render CHM with the PDF-style fixed-page engine instead of the interactive browser view. In that mode, set `ChmUI.FontName` to override the document font; when empty it falls back to `EBookUI.FontName` and then the engine default.
 
 ## See also
 
