@@ -94,6 +94,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase*, int pageNo, PointF pos, Ann
 void EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfSupportsAnnotations(EngineBase*);
+bool EngineMupdfIsPdf(EngineBase* engine);
 bool EngineMupdfIsEncrypted(EngineBase* engine);
 Str EngineMupdfGetPassword(EngineBase* engine);
 bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);

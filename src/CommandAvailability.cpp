@@ -383,7 +383,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         }
         ctx.engineKind = ctx.tab->GetEngineType();
         ctx.canSendEmail = CanSendAsEmailAttachment(ctx.tab);
-        ctx.isPdf = CouldBePDFDoc(ctx.tab);
+        ctx.isPdf = IsPdfDoc(ctx.tab);
         if (ctx.isPdf && engine) {
             ctx.isPdfEncrypted = EngineMupdfIsEncrypted(engine);
         }

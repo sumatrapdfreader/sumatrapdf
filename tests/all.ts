@@ -105,6 +105,7 @@ import { testit as issue1203 } from "./issue-1203.ts";
 import { testit as issue2873 } from "./issue-2873.ts";
 import { testit as issue5937 } from "./issue-5937.ts";
 import { testit as issue3472 } from "./issue-3472.ts";
+import { testit as pdfOnlyMenuItems } from "./pdf-only-menu-items.ts";
 import { testit as issue5694 } from "./issue-5694.ts";
 import { testit as issue5941 } from "./issue-5941.ts";
 import { testit as issue2447 } from "./issue-2447.ts";
@@ -208,6 +209,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-2873", issue2873],
   ["issue-5937", issue5937],
   ["issue-3472", issue3472],
+  ["pdf-only-menu-items", pdfOnlyMenuItems],
   ["issue-5694", issue5694],
   ["issue-5941", issue5941],
   ["issue-2447", issue2447],

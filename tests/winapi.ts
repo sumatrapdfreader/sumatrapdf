@@ -63,6 +63,9 @@ const user32 = dlopen("user32.dll", {
     returns: FFIType.bool,
   },
   FillRect: { args: [FFIType.u64, FFIType.ptr, FFIType.u64], returns: FFIType.i32 },
+  GetMenuItemCount: { args: [FFIType.u64], returns: FFIType.i32 },
+  GetSubMenu: { args: [FFIType.u64, FFIType.i32], returns: FFIType.u64 },
+  GetMenuStringW: { args: [FFIType.u64, FFIType.u32, FFIType.ptr, FFIType.i32, FFIType.u32], returns: FFIType.i32 },
 });
 
 // GDI + GDI+ for capturing a window to a PNG (see captureWindowToPng). Capturing
@@ -1117,4 +1120,52 @@ export function launchDetached(exePath: string, args: string[] = []): number {
   kernel32.symbols.CloseHandle(hProcess); // we don't wait on the child
   kernel32.symbols.CloseHandle(hThread);
   return pid;
+}
+
+// --- menus
+
+// MN_GETHMENU: the HMENU behind a popup-menu window (class #32768, which is
+// what waitForContextMenu returns). 0n if the window isn't a menu (any more).
+export function getPopupMenuHandle(hwndPopup: number): bigint {
+  return BigInt(sendMessage(hwndPopup, 0x01e1, 0, 0));
+}
+
+export function getMenuItemCount(hmenu: bigint): number {
+  return user32.symbols.GetMenuItemCount(hmenu);
+}
+
+export function getSubMenu(hmenu: bigint, pos: number): bigint {
+  return BigInt(user32.symbols.GetSubMenu(hmenu, pos));
+}
+
+// text of the item at `pos`, with the & accelerator markers stripped; the
+// shortcut after the tab is dropped, so this is just the label
+export function getMenuItemText(hmenu: bigint, pos: number): string {
+  const buf = new Uint16Array(512);
+  const n = user32.symbols.GetMenuStringW(hmenu, pos, ptr(buf), 512, MF_BYPOSITION);
+  if (n <= 0) {
+    return "";
+  }
+  const s = Buffer.from(buf.buffer, 0, n * 2).toString("utf16le");
+  return s.split("\t")[0].replace(/&/g, "");
+}
+
+export const MF_BYPOSITION = 0x400;
+
+export type MenuItem = { text: string; items?: MenuItem[] };
+
+// the whole menu tree, submenus included. Separators (empty labels) are skipped
+export function readMenuTree(hmenu: bigint): MenuItem[] {
+  const out: MenuItem[] = [];
+  const n = getMenuItemCount(hmenu);
+  for (let i = 0; i < n; i++) {
+    const text = getMenuItemText(hmenu, i);
+    const sub = getSubMenu(hmenu, i);
+    if (sub) {
+      out.push({ text, items: readMenuTree(sub) });
+    } else if (text) {
+      out.push({ text });
+    }
+  }
+  return out;
 }

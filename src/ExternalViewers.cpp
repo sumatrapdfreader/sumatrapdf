@@ -448,6 +448,23 @@ bool CouldBePDFDoc(WindowTab* tab) {
     return !tab || !tab->ctrl || tab->GetEngineType() == kindEngineMupdf;
 }
 
+// CouldBePDFDoc() is true for everything the mupdf engine renders -- epub, mobi,
+// fb2, xps, svg -- which is what "open in Acrobat" wants but not what the
+// PDF-only commands (Encrypt PDF, Show PDF Info, ...) want: those were offered
+// on ebooks. This asks the engine whether there is really a PDF behind the tab.
+bool IsPdfDoc(WindowTab* tab) {
+    if (!tab || !tab->ctrl) {
+        // same permissive answer as CouldBePDFDoc for a document that failed to load
+        return true;
+    }
+    if (tab->GetEngineType() != kindEngineMupdf) {
+        return false;
+    }
+    DisplayModel* dm = tab->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    return !engine || EngineMupdfIsPdf(engine);
+}
+
 // substitutions in cmdLine:
 //  %1 : file path (else the file path is appended)
 //  %d : directory in which file is

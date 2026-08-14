@@ -6527,6 +6527,13 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     return epdf->modifiedAnnotations;
 }
 
+// the mupdf engine also renders epub, mobi, fb2, xps, svg and more; only a real
+// PDF has a pdf_document behind it
+bool EngineMupdfIsPdf(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    return epdf && epdf->pdfdoc != nullptr;
+}
+
 bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf) {

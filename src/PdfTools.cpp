@@ -370,7 +370,7 @@ void ShowPdfBakeDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     logf("ShowPdfBakeDialog: opening for '%s'\n", tab->filePath);
@@ -438,7 +438,7 @@ void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
 
     bool ok = false;
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
-    bool isPdf = tab && CouldBePDFDoc(tab);
+    bool isPdf = tab && IsPdfDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
         char* argv[] = {(char*)"convert", (char*)"-o", CStrTemp(destPath), CStrTemp(srcPath), CStrTemp(pages)};
@@ -546,7 +546,7 @@ void ShowPdfCompressDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     logf("ShowPdfCompressDialog: opening for '%s'\n", tab->filePath);
@@ -610,7 +610,7 @@ void ShowPdfDecompressDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     logf("ShowPdfDecompressDialog: opening for '%s'\n", tab->filePath);
@@ -887,7 +887,7 @@ static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
 
@@ -988,7 +988,7 @@ void ShowPdfEncryptDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     EngineBase* engine = tab->GetEngine();
@@ -1069,7 +1069,7 @@ void ShowPdfDecryptDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     EngineBase* engine = tab->GetEngine();

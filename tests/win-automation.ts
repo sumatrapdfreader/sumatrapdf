@@ -37,6 +37,11 @@ import {
   VK_RETURN,
   VK_TAB,
   VK_ESCAPE,
+  getClientRect,
+  clientToScreen,
+  getPopupMenuHandle,
+  readMenuTree,
+  type MenuItem,
 } from "./winapi.ts";
 
 export { captureWindowToPng };
@@ -206,4 +211,37 @@ export function vScrollbarColorCount(canvas: number): number {
   const sbW = getSystemMetrics(SM_CXVSCROLL);
   const colors = readWindowDCColumn(canvas, w - Math.floor(sbW / 2), 0, h);
   return new Set(colors).size;
+}
+
+// Open hwnd's context menu at the center of its client area and read the whole
+// menu tree (submenus included), then dismiss it. Returns [] if none appeared.
+export async function readContextMenuTree(hwnd: number): Promise<MenuItem[]> {
+  const cr = getClientRect(hwnd);
+  const s = clientToScreen(hwnd, Math.floor(cr.right / 2), Math.floor(cr.bottom / 2));
+  openContextMenu(hwnd, s.x, s.y);
+  const popup = await waitForContextMenu(3000);
+  if (!popup) {
+    return [];
+  }
+  const hmenu = getPopupMenuHandle(popup);
+  const items = hmenu ? readMenuTree(hmenu) : [];
+  postMessage(popup, WM_KEYDOWN, VK_ESCAPE, 0);
+  await sleep(150);
+  return items;
+}
+
+// Depth-first search for a submenu by its label (exact, & already stripped).
+export function findSubMenu(items: MenuItem[], label: string): MenuItem | null {
+  for (const it of items) {
+    if (it.items) {
+      if (it.text === label) {
+        return it;
+      }
+      const found = findSubMenu(it.items, label);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
 }
