@@ -16,7 +16,7 @@
 
 extern "C" {
 #include <mupdf/pdf.h>
-#if defined(_WIN32)
+#if OS_WIN
 #include <mupdf/helpers/pkcs7-windows.h>
 #endif
 #include "../mupdf/source/fitz/color-imp.h"
@@ -62,7 +62,7 @@ void EngineMupdfSetEbookLayoutAspect(float dyOverDx) {
 }
 
 // in mupdf_load_system_font.c
-#if defined(_WIN32)
+#if OS_WIN
 extern "C" void install_load_windows_font_funcs(fz_context* ctx);
 #endif
 

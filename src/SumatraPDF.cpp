@@ -9277,7 +9277,7 @@ struct OwnedPixmapCtrl : VirtImage {
 
 // a gradient, so that there is something recognizable to look at
 static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
-    Pixmap* px = AllocPixmapDIB(dx, dy);
+    Pixmap* px = AllocPixmap(dx, dy);
     if (!px) {
         return nullptr;
     }

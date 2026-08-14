@@ -45,7 +45,7 @@ struct Pixmap {
     float yres = 96.0f;
     u8* data = nullptr; // pixel buffer; owned by malloc, or by hbmp when DIB-section-backed
 
-#if defined(_WIN32)
+#if OS_WIN
     // When non-null, the Pixmap is backed by a GDI DIB section: `data` is its pixels and
     // the bitmap is directly blittable (BlitPixmap). Owns these handles.
     HBITMAP hbmp = nullptr;
@@ -56,9 +56,12 @@ struct Pixmap {
 Str PixmapToBmpFormat(const Pixmap* pixmap);
 Pixmap* GetClipboardImageAsPixmap();
 
-#if defined(_WIN32)
+#if OS_WIN
 struct RenderedBitmap;
 
+// DIB-section-backed 32bpp BGRA8. Use only when this pixmap must be SelectObject'd
+// or must adopt a GDI HBITMAP / Native DIB. Heap pixels blit via StretchDIBits
+// with no extra copy (BlitPixmap / BlitPixmapAlpha).
 Pixmap* AllocPixmapDIB(int w, int h);
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
 bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target);
@@ -84,6 +87,8 @@ inline i64 PixmapByteSize(const Pixmap* p) {
 }
 
 // allocate a top-down Pixmap; data is uninitialized. returns nullptr on bad args / OOM.
+// Default for decode / generate / cache. On Windows, AllocPixmapDIB only when the
+// pixmap must be SelectObject'd or must adopt a GDI HBITMAP / Native DIB.
 inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8, bool premultiplied = false) {
     if (w <= 0 || h <= 0) {
         return nullptr;
@@ -109,11 +114,18 @@ inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8,
     return p;
 }
 
+#if !OS_WIN
+// No GDI DIB section off Windows; same heap buffer as AllocPixmap.
+inline Pixmap* AllocPixmapDIB(int w, int h) {
+    return AllocPixmap(w, h);
+}
+#endif
+
 inline void FreePixmap(Pixmap* p) {
     if (!p) {
         return;
     }
-#if defined(_WIN32)
+#if OS_WIN
     if (p->hbmp) {
         FreePixmapNativeBitmap(p);
         delete p;

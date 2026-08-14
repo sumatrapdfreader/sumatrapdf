@@ -15,7 +15,7 @@
 #define OS_LINUX 0
 #endif
 
-#if defined(WIN32) || defined(_WIN32)
+#if defined(_WIN32)
 #define OS_WIN 1
 #else
 #define OS_WIN 0

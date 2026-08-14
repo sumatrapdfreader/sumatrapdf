@@ -665,6 +665,7 @@ const PORTABLE_COMPILE_SOURCES = [
   "src/HtmlFormatter.cpp",
   "src/EbookFormatter.cpp",
   "src/EngineEbook.cpp",
+  "src/SvgIcons.cpp",
 ];
 
 export interface LinuxBuildOptions {
