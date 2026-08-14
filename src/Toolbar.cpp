@@ -745,7 +745,7 @@ static Rect OverlayToolbarRect(MainWindow* win) {
     if (natW <= 0 || natW > canvas.dx) {
         natW = canvas.dx;
     }
-    int h = HwndWindowRect(win->hwndReBar).dy;
+    int h = HwndWindowRect(win->hwndToolbar).dy;
     int x = canvas.x + ((canvas.dx - natW) / 2);
     int y = canvas.y;
     if (ToolbarAtBottom()) {
@@ -756,13 +756,13 @@ static Rect OverlayToolbarRect(MainWindow* win) {
 
 // position/show the floating overlay toolbar; called on relayout and mouse move
 void PositionOverlayToolbar(MainWindow* win) {
-    if (!win->isToolbarOverlay || !win->hwndReBar) {
+    if (!win->isToolbarOverlay || !win->hwndToolbar) {
         return;
     }
     Rect r = OverlayToolbarRect(win);
     UINT flags = SWP_NOACTIVATE;
     flags |= win->toolbarOverlayShown ? SWP_SHOWWINDOW : SWP_HIDEWINDOW;
-    SetWindowPos(win->hwndReBar, HWND_TOP, r.x, r.y, r.dx, r.dy, flags);
+    SetWindowPos(win->hwndToolbar, HWND_TOP, r.x, r.y, r.dx, r.dy, flags);
     if (!win->toolbarOverlayShown) {
         // repaint the canvas area the toolbar was covering
         HwndInvalidate(win->hwndCanvas);
@@ -787,22 +787,21 @@ static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
 
     // also keep shown while the cursor is over the toolbar window itself
     HWND hwndUnder = HwndWindowFromPoint(pt);
-    bool overToolbar = hwndUnder && (hwndUnder == win->hwndReBar || hwndUnder == win->hwndToolbar ||
-                                     IsChild(win->hwndReBar, hwndUnder));
+    bool overToolbar = hwndUnder && (hwndUnder == win->hwndToolbar || IsChild(win->hwndToolbar, hwndUnder));
     return inBand || overToolbar;
 }
 
 // the overlay toolbar must not vanish while it owns the keyboard focus (e.g.
 // the user is typing a page number into the page box after Ctrl+G)
 static bool OverlayToolbarHasFocus(MainWindow* win) {
-    if (!win->hwndReBar) {
+    if (!win->hwndToolbar) {
         return false;
     }
     HWND focus = GetFocus();
     if (!focus) {
         return false;
     }
-    return focus == win->hwndReBar || focus == win->hwndToolbar || IsChild(win->hwndReBar, focus);
+    return focus == win->hwndToolbar || IsChild(win->hwndToolbar, focus);
 }
 
 static void CancelOverlayHide(MainWindow* win) {
@@ -830,7 +829,7 @@ static void SetOverlayShown(MainWindow* win, bool shown) {
 
 // re-evaluate overlay toolbar visibility based on the cursor's screen position
 void UpdateOverlayToolbarForMouse(MainWindow* win) {
-    if (!win->isToolbarOverlay || !win->hwndReBar) {
+    if (!win->isToolbarOverlay || !win->hwndToolbar) {
         return;
     }
     bool show = OverlayToolbarShouldShowForCursor(win) || OverlayToolbarHasFocus(win);
@@ -848,7 +847,7 @@ void UpdateOverlayToolbarForMouse(MainWindow* win) {
 // (Ctrl+G): the toolbar stays up while it has the focus and auto-hides once the
 // focus and the cursor are away from it.
 void RevealOverlayToolbar(MainWindow* win) {
-    if (!win->isToolbarOverlay || !win->hwndReBar) {
+    if (!win->isToolbarOverlay || !win->hwndToolbar) {
         return;
     }
     CancelOverlayHide(win);
@@ -1589,8 +1588,7 @@ void CreateToolbar(MainWindow* win) {
     int rowDy = ToolbarRowDy(iconSize);
 
     HWND hwnd = CreateWindowExW(exStyle, kVirtToolbarClass.s, nullptr, style, 0, 0, 100, rowDy, hwndParent,
-                                (HMENU)IDC_REBAR, hinst, nullptr);
-    win->hwndReBar = hwnd;
+                                (HMENU)IDC_TOOLBAR, hinst, nullptr);
     win->hwndToolbar = hwnd;
 
     auto* tb = new ToolbarVirt();
@@ -1621,13 +1619,13 @@ void CreateToolbar(MainWindow* win) {
 }
 
 void DestroyToolbar(MainWindow* win) {
-    if (!win->hwndReBar && !win->toolbarVirt) {
+    if (!win->hwndToolbar && !win->toolbarVirt) {
         return;
     }
     win->pageEdit = nullptr;
     FreeToolbarVirt(win);
     HwndDestroyWindowSafe(&win->hwndToolbar);
-    win->hwndReBar = nullptr;
+    win->hwndToolbar = nullptr;
 }
 
 void ReCreateToolbar(MainWindow* win) {

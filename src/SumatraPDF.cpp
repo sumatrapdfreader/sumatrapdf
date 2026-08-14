@@ -6684,8 +6684,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     int captionHeight = showCaption ? win->captionLayout->Layout(ExpandInf()).dy : 0;
     int menuBarDy = showMenuRebar ? GetMenuBarRebarHeight(win) : 0;
     int rebarDy = 0;
-    if (showToolbar && win->hwndReBar) {
-        rebarDy = HwndWindowRect(win->hwndReBar).dy;
+    if (showToolbar && win->hwndToolbar) {
+        rebarDy = HwndWindowRect(win->hwndToolbar).dy;
     }
 
     SetVis(win->captionLayout, showCaption);
@@ -6775,8 +6775,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
              updateToolbars && showCaption && !capTwoRow);
     BindSlot(win->capTabsRow2, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh,
              updateToolbars && capTwoRow && capHasFileTabs);
-    BindSlot(win->toolbarTopSlot, win->hwndReBar, &dh, updateToolbars && showToolbar && !toolbarBottom);
-    BindSlot(win->toolbarBottomSlot, win->hwndReBar, &dh, updateToolbars && showToolbar && toolbarBottom);
+    BindSlot(win->toolbarTopSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && !toolbarBottom);
+    BindSlot(win->toolbarBottomSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && toolbarBottom);
     BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible);
     BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav);
     BindSlot(win->fullFavSlot, win->hwndFavBox, &dh, favAsTab);
@@ -6813,7 +6813,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // separately (see PositionOverlayToolbar below); don't touch its visibility
     // here so a relayout doesn't flash it on/off
     if (updateToolbars && !win->isToolbarOverlay) {
-        ShowWindow(win->hwndReBar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
+        ShowWindow(win->hwndToolbar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
     }
 
     dh.End();
@@ -6875,7 +6875,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->favSplitter->Invalidate();
     }
     if (updateToolbars && win->isToolbarVisible) {
-        RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        RedrawWindow(win->hwndToolbar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
     // during a live splitter drag we must paint synchronously: WM_PAINT is
     // starved by the stream of WM_MOUSEMOVE messages
@@ -6914,7 +6914,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (win->isToolbarOverlay && updateToolbars) {
         PositionOverlayToolbar(win);
         if (win->toolbarOverlayShown) {
-            RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            RedrawWindow(win->hwndToolbar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
     }
     return true;
@@ -6989,8 +6989,8 @@ static void FrameUpdateUi(MainWindow* win) {
     }
     if (ui.toolbarDirty) {
         ui.toolbarDirty = false;
-        if (win->hwndReBar) {
-            RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        if (win->hwndToolbar) {
+            RedrawWindow(win->hwndToolbar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
     }
     if (ui.tabsDirty) {
@@ -7860,9 +7860,9 @@ void ExitFullScreen(MainWindow* win) {
     win->isToolbarOverlay = ShouldOverlayToolbar(win);
     win->toolbarOverlayShown = false;
     if (win->isToolbarVisible) {
-        ShowWindow(win->hwndReBar, SW_SHOW);
+        ShowWindow(win->hwndToolbar, SW_SHOW);
     } else if (!win->isToolbarOverlay) {
-        ShowWindow(win->hwndReBar, SW_HIDE);
+        ShowWindow(win->hwndToolbar, SW_HIDE);
     }
     // destroy any fullscreen menu rebar before restoring normal menu
     DestroyMenuBarRebar(win);

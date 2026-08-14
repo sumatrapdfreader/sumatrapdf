@@ -182,7 +182,6 @@ struct MainWindow {
     HWND hwndFrame = nullptr;
     HWND hwndCanvas = nullptr;
 
-    HWND hwndReBar = nullptr;
     HWND hwndToolbar = nullptr;
     ToolbarVirt* toolbarVirt = nullptr;
     HWND hwndMenuReBar = nullptr;
