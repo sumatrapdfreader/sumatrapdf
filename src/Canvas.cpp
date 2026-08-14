@@ -996,6 +996,17 @@ static int gDeltaPerLine = 0;
 static bool gWheelMsgRedirect = false;
 static bool gInMouseWheelScroll = false;
 
+static int ScrollLineAmount(int configuredAmount) {
+    return configuredAmount > 0 ? configuredAmount : 16;
+}
+
+#if defined(DEBUG)
+bool Canvas_UnitTestScrollLineAmount() {
+    return ScrollLineAmount(16) == 16 && ScrollLineAmount(30) == 30 && ScrollLineAmount(1) == 1 &&
+           ScrollLineAmount(0) == 16 && ScrollLineAmount(-1) == 16;
+}
+#endif
+
 static void StopSmoothScroll(MainWindow* win) {
     if (!win) {
         return;
@@ -1105,7 +1116,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // scroll through pages using scrollbar even in single page mode
     bool singlePageWithScrollbar = gGlobalPrefs->scrollbarInSinglePage && dmIsSinglePage;
 
-    int lineHeight = DpiScale(16);
+    int lineHeight = DpiScale(ScrollLineAmount(gGlobalPrefs->scrollLineAmount));
     bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
         lineHeight = 1;
@@ -1267,6 +1278,7 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
 
     int currPos = si.nPos;
     USHORT msg = LOWORD(wp);
+    int lineAmount = DpiScale(ScrollLineAmount(gGlobalPrefs->scrollLineAmount));
     switch (msg) {
         case SB_LEFT:
             si.nPos = si.nMin;
@@ -1275,10 +1287,10 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
             si.nPos = si.nMax;
             break;
         case SB_LINELEFT:
-            si.nPos -= DpiScale(16);
+            si.nPos -= lineAmount;
             break;
         case SB_LINERIGHT:
-            si.nPos += DpiScale(16);
+            si.nPos += lineAmount;
             break;
         case SB_PAGELEFT:
             si.nPos -= (int)si.nPage;

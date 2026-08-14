@@ -1110,6 +1110,12 @@ const globalPrefs: Field[] = [
     "if true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)",
   ).ver("3.6"),
   field(
+    "ScrollLineAmount",
+    Int,
+    16,
+    "distance, in screen pixels at 96 DPI, scrolled by an arrow-key press or one mouse-wheel line; values below 1 use 16",
+  ).ver("3.7"),
+  field(
     "PaddingAfterLastPage",
     Bool,
     false,

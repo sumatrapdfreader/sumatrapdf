@@ -210,6 +210,10 @@ ScrollbarInSinglePage = false
 ; continuous wheel input stays fluid) (introduced in version 3.6)
 SmoothScroll = true
 
+; distance, in screen pixels at 96 DPI, scrolled by an arrow-key press or one
+; mouse-wheel line; values below 1 use 16 (introduced in version 3.7)
+ScrollLineAmount = 16
+
 ; if true, continuous view has extra scroll room after the last page so you can
 ; scroll the end of the document to the top of the window (introduced in version
 ; 3.7)
