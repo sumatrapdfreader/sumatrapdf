@@ -168,6 +168,7 @@ bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);
 void SetReadAloudAppSubmenu(HMENU menu);
 bool IsReadAloudAppSubmenu(HMENU menu);
 void SetReadAloudContextSubmenu(HMENU menu);
+void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen);
 bool IsReadAloudContextSubmenu(HMENU menu);
 HMENU GetReadAloudContextSubmenu();
 bool CanCloseWindow(MainWindow* win);

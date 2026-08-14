@@ -204,54 +204,54 @@ static VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
     return nullptr;
 }
 
-static void UpdateToolbarButtonStateByIdx(MainWindow* win, int idx, bool set, BYTE flag) {
+static void SetToolbarButtonEnabledByIdx(MainWindow* win, int idx, bool isEnabled) {
+    VirtCtrl* w = ToolbarItemAt(win, idx);
+    if (!w || w->IsEnabled() == isEnabled) {
+        return;
+    }
+    w->SetIsEnabled(isEnabled);
+    w->Invalidate();
+}
+
+// hiding the page box hides the whole group (label + edit + " / N")
+static void SetToolbarButtonHiddenByIdx(MainWindow* win, int idx, bool isHidden) {
     VirtCtrl* w = ToolbarItemAt(win, idx);
     if (!w) {
         return;
     }
-    if (flag == TBSTATE_ENABLED) {
-        if (w->IsEnabled() == set) {
-            return;
-        }
-        w->SetIsEnabled(set);
-        w->Invalidate();
+    Visibility want = isHidden ? Visibility::Collapse : Visibility::Visible;
+    if (w->GetVisibility() == want) {
         return;
     }
-    if (flag == TBSTATE_HIDDEN) {
-        Visibility want = set ? Visibility::Collapse : Visibility::Visible;
-        if (w->GetVisibility() == want) {
-            return;
+    w->SetVisibility(want);
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (w->id == PageInfoId && tb) {
+        if (tb->pageLabel) {
+            tb->pageLabel->SetVisibility(want);
         }
-        w->SetVisibility(want);
-        ToolbarVirt* tb = win->toolbarVirt;
-        if (w->id == PageInfoId && tb) {
-            if (tb->pageLabel) {
-                tb->pageLabel->SetVisibility(want);
-            }
-            if (win->pageEdit) {
-                win->pageEdit->SetVisibility(want);
-            }
-            if (tb->pageTotal) {
-                tb->pageTotal->SetVisibility(want);
-            }
+        if (win->pageEdit) {
+            win->pageEdit->SetVisibility(want);
         }
-        if (tb && tb->vroot) {
-            tb->vroot->RequestLayout();
+        if (tb->pageTotal) {
+            tb->pageTotal->SetVisibility(want);
         }
-        RelayoutToolbar(win);
-        HwndInvalidate(win->hwndToolbar, true);
+    }
+    if (tb && tb->vroot) {
+        tb->vroot->RequestLayout();
+    }
+    RelayoutToolbar(win);
+    HwndInvalidate(win->hwndToolbar, true);
+}
+
+static void SetToolbarButtonCheckedByIdx(MainWindow* win, int idx, bool isChecked) {
+    // a custom button with ToolbarText is a VirtButton, which has no
+    // checked state (and is not a VirtIconButton)
+    auto* ib = AsVirtIconButton(ToolbarItemAt(win, idx));
+    if (!ib || ib->isSelected == isChecked) {
         return;
     }
-    if (flag == TBSTATE_CHECKED) {
-        // a custom button with ToolbarText is a VirtButton, which has no
-        // checked state (and is not a VirtIconButton)
-        auto* ib = AsVirtIconButton(w);
-        if (!ib || ib->isSelected == set) {
-            return;
-        }
-        ib->isSelected = set;
-        ib->Invalidate();
-    }
+    ib->isSelected = isChecked;
+    ib->Invalidate();
 }
 
 // Work out which built-in buttons the toolbar has, and in which order. Empty
@@ -364,7 +364,7 @@ void SetToolbarButtonCheckedState(MainWindow* win, int cmdId, bool isChecked) {
     if (n == 0) return;
     for (int i = 0; i < n; i++) {
         int idx = buttons[i];
-        UpdateToolbarButtonStateByIdx(win, idx, isChecked, TBSTATE_CHECKED);
+        SetToolbarButtonCheckedByIdx(win, idx, isChecked);
     }
 }
 
@@ -570,17 +570,17 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         auto& tb = GetToolbarButtonInfoByIdx(i);
         int cmdId = tb.cmdId;
         // cmdId 0 is a separator; GetCommandVisibility treats 0 as Hide, but
-        // the old Win32 toolbar still painted the etched line (TBSTATE_HIDDEN
-        // on a BTNS_SEP is a no-op / all-seps share id 0).
+        // separators are always drawn. Which ones to drop is decided below,
+        // by position, not by command availability.
         if (setButtonsVisibility && cmdId != WarningMsgId && cmdId != 0) {
             bool hide = !IsCmdAvailable(win, cmdId);
-            UpdateToolbarButtonStateByIdx(win, i, hide, TBSTATE_HIDDEN);
+            SetToolbarButtonHiddenByIdx(win, i, hide);
         }
         if (SkipBuiltInButton(tb)) {
             continue;
         }
         bool isEnabled = IsCmdEnabled(win, cmdId);
-        UpdateToolbarButtonStateByIdx(win, i, isEnabled, TBSTATE_ENABLED);
+        SetToolbarButtonEnabledByIdx(win, i, isEnabled);
 
         if (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud) {
             bool speaking = TtsIsSpeaking();
@@ -609,7 +609,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             }
             if (bi.cmdId == 0) {
                 bool hide = !prevVisibleNonSep;
-                UpdateToolbarButtonStateByIdx(win, i, hide, TBSTATE_HIDDEN);
+                SetToolbarButtonHiddenByIdx(win, i, hide);
                 prevVisibleNonSep = false;
                 if (!hide) {
                     lastSep = i;
@@ -624,7 +624,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             }
         }
         if (lastSep >= 0) {
-            UpdateToolbarButtonStateByIdx(win, lastSep, true, TBSTATE_HIDDEN);
+            SetToolbarButtonHiddenByIdx(win, lastSep, true);
         }
     }
 
@@ -661,7 +661,7 @@ void SetToolbarButtonEnableState(MainWindow* win, int cmdId, bool isEnabled) {
     if (n == 0) return;
     for (int i = 0; i < n; i++) {
         int idx = buttons[i];
-        UpdateToolbarButtonStateByIdx(win, idx, isEnabled, TBSTATE_ENABLED);
+        SetToolbarButtonEnabledByIdx(win, idx, isEnabled);
     }
 }
 // whether the current window context (presentation, about page) permits a
@@ -1319,12 +1319,7 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
         if (ib->hasDropdown) {
             int dropDx = ib->DropdownDx();
             if (dropDx > 0 && ev->pt.x >= w->bounds.dx - dropDx) {
-                NMTOOLBARW nmtb{};
-                nmtb.hdr.hwndFrom = win->hwndToolbar;
-                nmtb.hdr.idFrom = IDC_TOOLBAR;
-                nmtb.hdr.code = TBN_DROPDOWN;
-                nmtb.iItem = cmdId;
-                SendMessageW(win->hwndFrame, WM_NOTIFY, IDC_TOOLBAR, (LPARAM)&nmtb);
+                ShowTtsVoiceMenu(win, GetToolbarButtonScreenRect(win, cmdId));
                 ev->didHandle = true;
                 return;
             }

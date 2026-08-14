@@ -12968,7 +12968,8 @@ bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId) {
     return false;
 }
 
-static void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen) {
+// the menu shown by the dropdown arrow on the Read Aloud toolbar button
+void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen) {
     if (!win || buttonScreen.IsEmpty()) {
         return;
     }
@@ -13165,15 +13166,6 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                 return 0;
             }
             break;
-
-        case WM_NOTIFY: {
-            NMHDR* hdr = (NMHDR*)lp;
-            if (win && hdr && hdr->hwndFrom == win->hwndToolbar && hdr->code == TBN_DROPDOWN) {
-                ShowTtsVoiceMenu(win, GetToolbarButtonScreenRect(win, CmdReadAloud));
-                return TBDDRET_DEFAULT;
-            }
-            break;
-        }
 
         case WM_COMMAND:
             return FrameOnCommand(win, hwnd, msg, wp, lp);
