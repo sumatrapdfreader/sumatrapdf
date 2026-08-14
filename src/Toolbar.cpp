@@ -38,12 +38,12 @@
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
+#include "gui/VirtHost.h"
 #include "gui/win/TabsCtrl.h"
 #include "FindBar.h"
 #include "Translations.h"
 #include "SvgIcons.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
 #include "TextToSpeech.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
@@ -106,7 +106,7 @@ static int gCustomButtonsCount = 0;
 
 // Light theme ControlBackgroundColor is white, which is what the old themed
 // rebar/toolbar painted. Other themes use their control background.
-Color TbBgColor() {
+static Color TbBgColor() {
     return ThemeControlBackgroundColor();
 }
 
@@ -117,7 +117,7 @@ Color TbTextColor() {
     return ThemeWindowTextColor();
 }
 
-Color TbDisabledColor() {
+static Color TbDisabledColor() {
     if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
         return GetSysColor(COLOR_GRAYTEXT);
     }
@@ -132,7 +132,7 @@ static Color TbSelectedColor() {
     return AccentColor(TbBgColor(), 28);
 }
 
-Color TbEdgeColor() {
+static Color TbEdgeColor() {
     return ThemeEdgeColor();
 }
 
@@ -142,12 +142,17 @@ static int ToolbarCyPad() {
     return 6 + DpiScale(2);
 }
 
-int ToolbarRowDy(int iconSize) {
+static int ToolbarRowDy(int iconSize) {
     return iconSize + (2 * ToolbarCyPad());
 }
 
 static bool HasToolbarButtonContent(const ToolbarButtonInfo& tbi) {
     return tbi.icon || tbi.isText || !str::IsEmptyOrWhiteSpace(tbi.svgIcon);
+}
+
+static VirtHost* ToolbarHost(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    return tb ? tb->host : nullptr;
 }
 
 static VirtCtrl* ToolbarItemAt(MainWindow* win, int idx) {
@@ -569,12 +574,14 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     }
 
     if (visibilityChanged) {
-        ToolbarVirt* tb = win->toolbarVirt;
-        if (tb && tb->vroot) {
-            tb->vroot->RequestLayout();
+        VirtHost* host = ToolbarHost(win);
+        if (host) {
+            if (host->vroot) {
+                host->vroot->RequestLayout();
+            }
+            host->Relayout();
+            host->Invalidate(true);
         }
-        RelayoutToolbar(win);
-        HwndInvalidate(win->hwndToolbar, true);
     }
 
     // reposition the floating find bar over the search icon (and hide it if the
@@ -646,6 +653,200 @@ bool ShouldOverlayToolbar(MainWindow* win) {
     return true;
 }
 
+// natural width of the toolbar content (buttons + page box); the find bar
+// floats separately so the page-total label is the rightmost element
+static int ToolbarNaturalWidth(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    VirtHost* host = ToolbarHost(win);
+    if (!host || !host->layout) {
+        return 0;
+    }
+    int dx = host->layout->MinIntrinsicWidth(tb->rowDy);
+    if (dx <= 0) {
+        dx = tb->rowDy * 8;
+    }
+    return dx + DpiScale(12);
+}
+
+// when the overlay toolbar sits at the bottom, lift it above the horizontal
+// scrollbar so it doesn't cover it. The height is reserved even when the
+// scrollbar isn't currently visible, so the toolbar's position is stable.
+static int OverlayToolbarBottomScrollbarOffset() {
+    if (ScrollbarsAreHidden()) {
+        return 0;
+    }
+    if (ScrollbarsUseOverlay()) {
+        // smart/overlay: the thick overlay scrollbar height (see OverlayScrollbarCreate)
+        return DpiScale(16);
+    }
+    return UiHScrollbarDy();
+}
+
+// rectangle (frame-client coords) the overlay toolbar occupies when shown
+static Rect OverlayToolbarRect(MainWindow* win) {
+    Rect canvas = ToolbarCanvasRectInFrame(win);
+    int natW = ToolbarNaturalWidth(win);
+    if (natW <= 0 || natW > canvas.dx) {
+        natW = canvas.dx;
+    }
+    int h = ToolbarHost(win)->ScreenRect().dy;
+    int x = canvas.x + ((canvas.dx - natW) / 2);
+    int y = canvas.y;
+    if (ToolbarAtBottom()) {
+        y = canvas.y + canvas.dy - h - OverlayToolbarBottomScrollbarOffset();
+    }
+    return {x, y, natW, h};
+}
+
+// position/show the floating overlay toolbar; called on relayout and mouse move
+void PositionOverlayToolbar(MainWindow* win) {
+    VirtHost* host = ToolbarHost(win);
+    if (!win->isToolbarOverlay || !host) {
+        return;
+    }
+    Rect r = OverlayToolbarRect(win);
+    host->SetPos(r, win->toolbarOverlayShown);
+    if (!win->toolbarOverlayShown) {
+        ToolbarRepaintUncovered(win, r);
+    }
+}
+
+// whether the cursor is currently in the reveal band or over the toolbar
+static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
+    Point pt = UiCursorScreenPos();
+    Point ptFrame = ToolbarScreenToFrame(win, pt);
+
+    Rect tb = OverlayToolbarRect(win);
+    // reveal band: spans the full canvas width so the toolbar also appears when
+    // the mouse is to the left or right of it, and extends a bit past the
+    // toolbar (toward the page) so it shows before the cursor reaches it
+    Rect canvas = ToolbarCanvasRectInFrame(win);
+    int my = DpiScale(16);
+    int bandY = ToolbarAtBottom() ? (tb.y - my) : tb.y;
+    Rect band(canvas.x, bandY, canvas.dx, tb.dy + my);
+    bool inBand = band.Contains(Point(ptFrame.x, ptFrame.y));
+
+    // also keep shown while the cursor is over the toolbar window itself
+    return inBand || ToolbarHost(win)->ContainsScreenPoint(pt);
+}
+
+// the overlay toolbar must not vanish while it owns the keyboard focus (e.g.
+// the user is typing a page number into the page box after Ctrl+G)
+static bool OverlayToolbarHasFocus(MainWindow* win) {
+    VirtHost* host = ToolbarHost(win);
+    return host && host->HasFocus();
+}
+
+static void CancelOverlayHide(MainWindow* win) {
+    if (win->toolbarOverlayHidePending) {
+        ToolbarHost(win)->KillTimer(kHideOverlayToolbarTimerId);
+        win->toolbarOverlayHidePending = false;
+    }
+}
+
+static void ScheduleOverlayHide(MainWindow* win) {
+    if (win->toolbarOverlayHidePending) {
+        return; // already scheduled; don't keep pushing it out on every move
+    }
+    win->toolbarOverlayHidePending = true;
+    ToolbarHost(win)->SetTimer(kHideOverlayToolbarTimerId, kDelayToolbarHide);
+}
+
+static void SetOverlayShown(MainWindow* win, bool shown) {
+    if (shown == win->toolbarOverlayShown) {
+        return;
+    }
+    win->toolbarOverlayShown = shown;
+    PositionOverlayToolbar(win);
+}
+
+// re-evaluate overlay toolbar visibility based on the cursor's screen position
+void UpdateOverlayToolbarForMouse(MainWindow* win) {
+    if (!win->isToolbarOverlay || !ToolbarHost(win)) {
+        return;
+    }
+    bool show = OverlayToolbarShouldShowForCursor(win) || OverlayToolbarHasFocus(win);
+    if (show) {
+        CancelOverlayHide(win);
+        SetOverlayShown(win, true);
+    } else if (win->toolbarOverlayShown) {
+        // don't hide immediately; give the user kDelayToolbarHide to come back
+        ScheduleOverlayHide(win);
+    }
+}
+
+// reveal the overlay toolbar right now, without waiting for the cursor to enter
+// the reveal band. Used by commands that drive the toolbar from the keyboard
+// (Ctrl+G): the toolbar stays up while it has the focus and auto-hides once the
+// focus and the cursor are away from it.
+void RevealOverlayToolbar(MainWindow* win) {
+    if (!win->isToolbarOverlay || !ToolbarHost(win)) {
+        return;
+    }
+    CancelOverlayHide(win);
+    SetOverlayShown(win, true);
+}
+
+// the delayed-hide timer fired on the toolbar's own host
+static void OnToolbarTimer(MainWindow* win, int timerId) {
+    if (timerId != kHideOverlayToolbarTimerId) {
+        return;
+    }
+    win->toolbarOverlayHidePending = false;
+    ToolbarHost(win)->KillTimer(kHideOverlayToolbarTimerId);
+    if (!win->isToolbarOverlay) {
+        return;
+    }
+    // if the cursor came back near the top while the timer was pending, keep
+    // the toolbar shown; otherwise hide it now
+    if (OverlayToolbarShouldShowForCursor(win) || OverlayToolbarHasFocus(win)) {
+        SetOverlayShown(win, true);
+    } else {
+        SetOverlayShown(win, false);
+    }
+}
+
+void ShowOrHideToolbar(MainWindow* win) {
+    bool show = ShouldShowToolbar(win);
+    bool overlay = ShouldOverlayToolbar(win);
+    if (show == win->isToolbarVisible && overlay == win->isToolbarOverlay) {
+        return;
+    }
+    bool enteredOverlay = overlay && !win->isToolbarOverlay;
+    win->isToolbarVisible = show;
+    win->isToolbarOverlay = overlay;
+    if (!overlay) {
+        CancelOverlayHide(win);
+        win->toolbarOverlayShown = false;
+    }
+    if (enteredOverlay) {
+        // reveal immediately on entering overlay mode (e.g. via F8) so the
+        // change is visible; it auto-hides after kDelayToolbarHide
+        win->toolbarOverlayShown = true;
+    }
+    if (!show && !overlay) {
+        // Move the focus out of the toolbar
+        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
+            ToolbarFocusFrame(win);
+        }
+    }
+    ScheduleUiUpdate(win);
+    if (enteredOverlay) {
+        ScheduleOverlayHide(win);
+    }
+}
+
+void UpdateFindbox(MainWindow* win) {
+    VirtHost* host = ToolbarHost(win);
+    if (host) {
+        host->Invalidate(true);
+        if (ToolbarFrameIsVisible(win)) {
+            host->Repaint();
+        }
+    }
+    ToolbarUpdateFindEditCursor(win);
+}
+
 // the find UI is now a floating Chrome-style bar (see FindBar.cpp). When the
 // toolbar moves/resizes we keep the bar centered over the search icon.
 void UpdateToolbarFindText(MainWindow* win) {
@@ -672,11 +873,12 @@ void UpdateToolbarState(MainWindow* win) {
 }
 
 void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
-    if (!win->hwndToolbar) {
+    VirtHost* host = ToolbarHost(win);
+    if (!host) {
         return;
     }
     ToolbarVirt* tb = win->toolbarVirt;
-    if (!tb || !tb->pageTotal) {
+    if (!tb->pageTotal) {
         return;
     }
     if (tb->pageLabel) {
@@ -694,8 +896,8 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         return;
     }
     tb->pageTotal->SetText(txt);
-    RelayoutToolbar(win);
-    HwndInvalidate(win->hwndToolbar, true);
+    host->Relayout();
+    host->Invalidate(true);
 }
 
 static TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
@@ -783,7 +985,7 @@ static void PopulateCustomToolbarButtons() {
     }
 }
 
-int ToolbarIconSize() {
+static int ToolbarIconSize() {
     return RoundUp(DpiScale(gGlobalPrefs->toolbarSize), 4);
 }
 
@@ -847,7 +1049,40 @@ static void RefreshToolbarIcons(MainWindow* win) {
 
 void UpdateToolbarAfterThemeChange(MainWindow* win) {
     RefreshToolbarIcons(win);
-    HwndScheduleRepaint(win->hwndToolbar);
+    VirtHost* host = ToolbarHost(win);
+    if (host) {
+        host->bgColor = TbBgColor();
+        host->Invalidate(true);
+    }
+}
+
+// bounds of a button in the toolbar's client coords, empty if it has none
+Rect ToolbarButtonRect(MainWindow* win, int cmdId) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return {};
+    }
+    for (VirtCtrl* w : tb->items) {
+        if (w && w->id == cmdId && w->GetVisibility() == Visibility::Visible) {
+            return w->BoundsInWindow();
+        }
+    }
+    return {};
+}
+
+// screen-coordinates rect of a toolbar button, used to position the FindBar.
+// returns an empty rect when the toolbar isn't visible (e.g. fullscreen /
+// presentation) so the caller can fall back to a different anchor.
+Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
+    VirtHost* host = ToolbarHost(win);
+    if (!host || !host->IsVisible()) {
+        return {};
+    }
+    Rect r = ToolbarButtonRect(win, cmdId);
+    if (r.IsEmpty()) {
+        return {};
+    }
+    return host->ToScreen(r);
 }
 
 // Dump of the toolbar's buttons for -dbg-control tests (tests/issue-5869.ts).
@@ -858,7 +1093,7 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     str::Builder out;
     MainWindow* win = len(gWindows) == 0 ? nullptr : gWindows[0];
-    if (!win || !win->hwndToolbar) {
+    if (!win || !ToolbarHost(win)) {
         *exitCodeOut = 1;
         out.Append("ERROR no-toolbar\n");
         return ToStrTemp(out);
@@ -934,7 +1169,7 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
             }
         }
     }
-    HwndPostCommand(win->hwndFrame, cmdId, 0);
+    ToolbarPostCommand(win, cmdId);
     ev->didHandle = true;
 }
 
@@ -958,13 +1193,11 @@ static VirtCtrl* MakeToolbarSeparator(int rowDy) {
 }
 
 // (re)build the tree of virtual controls the toolbar is made of, one per button
-void BuildToolbarLayout(MainWindow* win) {
+static void BuildToolbarLayout(MainWindow* win) {
     PopulateToolbarLayout();
     PopulateCustomToolbarButtons();
 
     ToolbarVirt* tb = win->toolbarVirt;
-    delete tb->layout;
-    tb->layout = nullptr;
     tb->items.Reset();
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;
@@ -1037,6 +1270,94 @@ void BuildToolbarLayout(MainWindow* win) {
         box->AddChild(w);
     }
 
-    tb->layout = new Padding(box, Insets{0, DpiScale(4), 0, DpiScale(4)});
-    RelayoutToolbar(win);
+    tb->host->SetLayout(new Padding(box, Insets{0, DpiScale(4), 0, DpiScale(4)}));
+}
+
+static void PaintToolbarBackground(MainWindow*, VirtHostPaintEvent* ev) {
+    ev->gfx->FillRect(ev->clientRect, TbBgColor());
+}
+
+// the default theme separates the toolbar from the canvas with a hairline
+static void PaintToolbarEdge(MainWindow*, VirtHostPaintEvent* ev) {
+    if (!IsCurrentThemeDefault() || ThemeColorizeControls()) {
+        return;
+    }
+    Rect rc = ev->clientRect;
+    ev->gfx->FillRect({rc.x, rc.Bottom() - 1, rc.dx, 1}, TbEdgeColor());
+}
+
+static const WStr kToolbarHostClass = WStrL(L"SUMATRA_VIRT_TOOLBAR");
+
+void CreateToolbar(MainWindow* win) {
+    int iconSize = ToolbarIconSize();
+    int yPad = DpiScale(2);
+
+    VirtHost::CreateArgs args;
+    args.parent = win->hwndFrame;
+    args.className = kToolbarHostClass;
+    args.initialSize = {100, ToolbarRowDy(iconSize)};
+    args.bgColor = TbBgColor();
+    args.isRtl = IsUIRtl();
+    args.visible = true;
+    // the old Win32 toolbar did not take the keyboard focus; a generic child
+    // would, and then accelerators (Ctrl+W, …) never reached the frame
+    args.noActivate = true;
+    // in overlay mode the canvas is a lower-Z sibling and would otherwise
+    // paint over the floating toolbar
+    args.clipSiblings = true;
+    args.userData = win;
+
+    VirtHost* host = VirtHost::Create(args);
+    if (!host) {
+        return;
+    }
+    host->onPaintBackground = MkFunc1(PaintToolbarBackground, win);
+    host->onPaint = MkFunc1(PaintToolbarEdge, win);
+    host->onTimer = MkFunc1(OnToolbarTimer, win);
+    host->onMouseMove = MkFunc0(UpdateOverlayToolbarForMouse, win);
+    host->onMouseLeave = MkFunc0(UpdateOverlayToolbarForMouse, win);
+    ToolbarSetNativeHooks(win, host);
+
+    auto* tb = new ToolbarVirt();
+    tb->host = host;
+    tb->iconSize = iconSize;
+    int newSize = GetAppFontSize();
+    int maxFontSize = iconSize - (yPad * 2) - 2;
+    if (newSize > maxFontSize) {
+        newSize = maxFontSize;
+    }
+    tb->platformFont = GetDefaultGuiFontOfSize(newSize);
+    win->toolbarVirt = tb;
+    win->hwndToolbar = host->native;
+    host->SetFont(tb->platformFont);
+
+    BuildToolbarLayout(win);
+
+    DocController* ctrl = win->ctrl;
+    UpdateToolbarPageText(win, ctrl ? ctrl->PageCount() : -1);
+    if (ctrl && win->pageEdit) {
+        TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
+        win->pageEdit->SetText(label);
+        win->pageEdit->SetNumbersOnly(!ctrl->HasPageLabels());
+    }
+    UpdateToolbarFindText(win);
+    ToolbarUpdateStateForWindow(win, true);
+}
+
+void DestroyToolbar(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!tb) {
+        win->hwndToolbar = nullptr;
+        return;
+    }
+    win->pageEdit = nullptr;
+    win->toolbarVirt = nullptr;
+    win->hwndToolbar = nullptr;
+    delete tb->host;
+    delete tb;
+}
+
+void ReCreateToolbar(MainWindow* win) {
+    DestroyToolbar(win);
+    CreateToolbar(win);
 }

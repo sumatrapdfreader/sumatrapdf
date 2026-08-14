@@ -19,11 +19,9 @@ void ShowOrHideToolbar(MainWindow*);
 void PositionOverlayToolbar(MainWindow*);
 void UpdateOverlayToolbarForMouse(MainWindow*);
 void RevealOverlayToolbar(MainWindow*);
-void OverlayToolbarHideTimerFired(MainWindow*);
 
 // delay before the overlay toolbar hides after the mouse moves away
 constexpr int kDelayToolbarHide = 500;
-#define kHideOverlayToolbarTimerId 0x101
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);

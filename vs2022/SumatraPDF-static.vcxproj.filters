@@ -492,6 +492,9 @@
     <ClInclude Include="..\src\gui\VirtCtrl.h">
       <Filter>src\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\VirtHost.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\win\BrowserDocView.h">
       <Filter>src\gui\win</Filter>
     </ClInclude>
@@ -1140,6 +1143,9 @@
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\VirtHost_win.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\win\BrowserDocView.cpp">

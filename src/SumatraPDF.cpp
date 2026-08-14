@@ -11857,11 +11857,6 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 *callDef = false;
                 return 0;
             }
-            if (wp == kHideOverlayToolbarTimerId) {
-                OverlayToolbarHideTimerFired(win);
-                *callDef = false;
-                return 0;
-            }
             break;
 
         case WM_THEMECHANGED:

@@ -1308,6 +1308,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\gui\UIModels.h" />
     <ClInclude Include="..\src\gui\VirtCtrl.h" />
+    <ClInclude Include="..\src\gui\VirtHost.h" />
     <ClInclude Include="..\src\gui\win\BrowserDocView.h" />
     <ClInclude Include="..\src\gui\win\DialogSizer.h" />
     <ClInclude Include="..\src\gui\win\FrameRateWnd.h" />
@@ -1751,6 +1752,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\gui\UIModels.cpp" />
     <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
+    <ClCompile Include="..\src\gui\VirtHost_win.cpp" />
     <ClCompile Include="..\src\gui\win\BrowserDocView.cpp" />
     <ClCompile Include="..\src\gui\win\Button.cpp" />
     <ClCompile Include="..\src\gui\win\Checkbox.cpp" />
