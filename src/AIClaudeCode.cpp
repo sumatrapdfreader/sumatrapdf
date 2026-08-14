@@ -285,7 +285,7 @@ struct ClaudeCodeProvider : AIChatProvider {
     void SetOption(int option) override { gGlobalPrefs->claudeCode.effort = option; }
     bool GetFlag() override { return gGlobalPrefs->claudeCode.skipPermissions; }
     void SetFlag(bool flag) override { gGlobalPrefs->claudeCode.skipPermissions = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->claudeCode.bgColor; }
+    Str GetBgColor() override { return gGlobalPrefs->claudeCode.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectClaudeSessions(dir, sessions); }
 

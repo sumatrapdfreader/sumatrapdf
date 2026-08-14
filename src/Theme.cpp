@@ -790,18 +790,18 @@ void SetCurrentThemeFromSettings() {
     bool isDefault = IsDefaultMainWinColor(bgParsed);
     if (isDefault) {
         gThemeLight->colorizeControls = false;
-        gThemeLight->controlBackgroundColorParsed.wasParsed = true;
-        gThemeLight->controlBackgroundColorParsed.parsedOk = true;
-        gThemeLight->controlBackgroundColorParsed.col = kColWhite;
+        gThemeLight->controlBackgroundColor.wasParsed = true;
+        gThemeLight->controlBackgroundColor.parsedOk = true;
+        gThemeLight->controlBackgroundColor.col = kColWhite;
     } else if (bgParsed->parsedOk) {
         gThemeLight->colorizeControls = true;
-        gThemeLight->controlBackgroundColorParsed.wasParsed = true;
-        gThemeLight->controlBackgroundColorParsed.parsedOk = true;
-        gThemeLight->controlBackgroundColorParsed.col = bgParsed->col;
+        gThemeLight->controlBackgroundColor.wasParsed = true;
+        gThemeLight->controlBackgroundColor.parsedOk = true;
+        gThemeLight->controlBackgroundColor.col = bgParsed->col;
     }
 }
 
-#define GetThemeCol(name, def) GetParsedColor(name, name##Parsed, def)
+#define GetThemeCol(name, def) GetParsedColor(name, def)
 
 // canvas/window background color around the document pages
 // not affected by FixedPageUI.TextColor/BackgroundColor (those affect page rendering)

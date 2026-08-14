@@ -9567,18 +9567,18 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     ParsedColor* bgCol = nullptr;
     auto typ = args.annotType;
     if (typ == AnnotationType::Text) {
-        col = GetParsedColor(a.textIconColor, a.textIconColorParsed);
+        col = GetParsedColor(a.textIconColor);
     } else if (typ == AnnotationType::Underline) {
-        col = GetParsedColor(a.underlineColor, a.underlineColorParsed);
+        col = GetParsedColor(a.underlineColor);
     } else if (typ == AnnotationType::Highlight) {
-        col = GetParsedColor(a.highlightColor, a.highlightColorParsed);
+        col = GetParsedColor(a.highlightColor);
     } else if (typ == AnnotationType::Squiggly) {
-        col = GetParsedColor(a.squigglyColor, a.squigglyColorParsed);
+        col = GetParsedColor(a.squigglyColor);
     } else if (typ == AnnotationType::StrikeOut) {
-        col = GetParsedColor(a.strikeOutColor, a.strikeOutColorParsed);
+        col = GetParsedColor(a.strikeOutColor);
     } else if (typ == AnnotationType::FreeText) {
-        col = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
-        bgCol = GetParsedColor(a.freeTextBackgroundColor, a.freeTextBackgroundColorParsed);
+        col = GetParsedColor(a.freeTextColor);
+        bgCol = GetParsedColor(a.freeTextBackgroundColor);
         if (bgCol && bgCol->parsedOk) {
             args.bgCol = *bgCol;
         }

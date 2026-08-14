@@ -241,7 +241,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
             return true;
         }
         case SettingType::Color: {
-            Str str = *(Str*)fieldPtr;
+            Str str = ((ParsedColor*)fieldPtr)->s;
             if (!str) {
                 return false; // skip empty strings
             }
@@ -340,13 +340,16 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
         }
 
         case SettingType::Color: {
-            Str* strPtr = (Str*)fieldPtr;
-            str::Free(*strPtr);
+            auto* parsed = (ParsedColor*)fieldPtr;
+            str::Free(parsed->s);
             if (!str::IsNull(value)) {
-                *strPtr = UnescapeStr(value);
+                parsed->s = UnescapeStr(value);
             } else {
-                *strPtr = str::Dup(FieldDefaultStr(field));
+                parsed->s = str::Dup(FieldDefaultStr(field));
             }
+            // the cached parse belonged to the old text
+            parsed->wasParsed = false;
+            parsed->parsedOk = false;
         } break;
 
         case SettingType::String: {
@@ -619,10 +622,7 @@ static void FreeStructData(const StructInfo* info, u8* base) {
                 break;
             }
             case SettingType::Color: {
-                Str* str = (Str*)fieldPtr;
-                str::Free(*str);
-                str->s = nullptr;
-                str->len = 0;
+                FreeColorText(*(ParsedColor*)fieldPtr);
                 break;
             }
             case SettingType::String: {

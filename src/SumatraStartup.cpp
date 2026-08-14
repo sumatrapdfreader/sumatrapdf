@@ -838,12 +838,11 @@ static void ShutdownCommon() {
     dbghelp::FreeCallstackLogs();
 }
 
-static void ReplaceColor(Str* col, Str maybeColor) {
+static void ReplaceColor(ParsedColor& col, Str maybeColor) {
     ParsedColor c;
     ParseColor(c, maybeColor);
     if (c.parsedOk) {
-        TempStr colNewStr = SerializeColorTemp(c.col);
-        str::ReplaceWithCopy(col, colNewStr);
+        SetColorText(col, SerializeColorTemp(c.col));
     }
 }
 
@@ -866,12 +865,12 @@ static void UpdateGlobalPrefs(const Flags& i) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
             param = i.globalPrefArgs[++n];
-            ReplaceColor(&gGlobalPrefs->mainWindowBackground, param);
+            ReplaceColor(gGlobalPrefs->mainWindowBackground, param);
         } else if (str::EqI(arg, StrL("-set-color-range"))) {
             param = i.globalPrefArgs[++n];
-            ReplaceColor(&gGlobalPrefs->fixedPageUI.textColor, param);
+            ReplaceColor(gGlobalPrefs->fixedPageUI.textColor, param);
             param = i.globalPrefArgs[++n];
-            ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, param);
+            ReplaceColor(gGlobalPrefs->fixedPageUI.backgroundColor, param);
         } else if (str::EqI(arg, StrL("-fwdsearch-offset"))) {
             param = i.globalPrefArgs[++n];
             gGlobalPrefs->forwardSearch.highlightOffset = ParseInt(param);
@@ -882,7 +881,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, StrL("-fwdsearch-color"))) {
             param = i.globalPrefArgs[++n];
-            ReplaceColor(&gGlobalPrefs->forwardSearch.highlightColor, param);
+            ReplaceColor(gGlobalPrefs->forwardSearch.highlightColor, param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, StrL("-fwdsearch-permanent"))) {
             param = i.globalPrefArgs[++n];

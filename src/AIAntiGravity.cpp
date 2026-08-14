@@ -311,7 +311,7 @@ struct AntiGravityProvider : AIChatProvider {
     void SetOption(int option) override { gGlobalPrefs->antiGravity.effort = option; }
     bool GetFlag() override { return gGlobalPrefs->antiGravity.autoApprove; }
     void SetFlag(bool flag) override { gGlobalPrefs->antiGravity.autoApprove = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->antiGravity.bgColor; }
+    Str GetBgColor() override { return gGlobalPrefs->antiGravity.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
         CollectAntiGravitySessions(dir, sessions);

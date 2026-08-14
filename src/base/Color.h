@@ -26,7 +26,11 @@ constexpr bool ColorSkipsPaint(Color c) {
 // Color is ggrrbb (Win32 COLORREF layout) and typically has no alpha
 using PdfColor = uint64_t;
 
+// A color setting: the text the user wrote (e.g. "#ff0000", "checkered") and
+// the parse of it, filled in on first use. Settings hold one of these rather
+// than a string and a separate cache, so the two can't drift apart.
 struct ParsedColor {
+    Str s;
     bool wasParsed = false;
     bool parsedOk = false;
     Color col = 0;
@@ -55,6 +59,11 @@ void UnpackColor(Color, u8& r, u8& g, u8& b, u8& a);
 bool IsSpecialColor(Color col);
 
 void ParseColor(ParsedColor& parsed, Str txt);
+// parse ParsedColor::s, if it hasn't been parsed yet
+void ParseColor(ParsedColor& parsed);
+// replace the text and drop the cached parse
+void SetColorText(ParsedColor& parsed, Str txt);
+void FreeColorText(ParsedColor& parsed);
 bool ParseColor(Color* destColor, Str s);
 Color ParseColor(Str s, Color defCol = 0);
 TempStr SerializeColorTemp(Color);

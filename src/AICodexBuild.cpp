@@ -493,7 +493,7 @@ struct CodexBuildProvider : AIChatProvider {
     void SetOption(int option) override { gGlobalPrefs->codexBuild.sandbox = option; }
     bool GetFlag() override { return gGlobalPrefs->codexBuild.skipSandbox; }
     void SetFlag(bool flag) override { gGlobalPrefs->codexBuild.skipSandbox = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->codexBuild.bgColor; }
+    Str GetBgColor() override { return gGlobalPrefs->codexBuild.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectCodexSessions(dir, sessions); }
 

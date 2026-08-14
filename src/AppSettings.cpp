@@ -128,10 +128,10 @@ static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
         // back when the mapping was written. 37f920ff0 then redefined smart as
         // "match the UI theme, don't swap black/white", which quietly turned
         // this migration into "light pages" for anyone on a light theme.
-        Color text = ParseColor(gGlobalPrefs->fixedPageUI.textColor, kColBlackDefault);
-        Color bg = ParseColor(gGlobalPrefs->fixedPageUI.backgroundColor, kColWhiteDefault);
-        str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.textColor, SerializeColorTemp(bg));
-        str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.backgroundColor, SerializeColorTemp(text));
+        Color text = ParseColor(gGlobalPrefs->fixedPageUI.textColor.s, kColBlackDefault);
+        Color bg = ParseColor(gGlobalPrefs->fixedPageUI.backgroundColor.s, kColWhiteDefault);
+        SetColorText(gGlobalPrefs->fixedPageUI.textColor, SerializeColorTemp(bg));
+        SetColorText(gGlobalPrefs->fixedPageUI.backgroundColor, SerializeColorTemp(text));
         SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Off);
         return true;
     }

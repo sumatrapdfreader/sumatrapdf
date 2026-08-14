@@ -201,19 +201,13 @@ void FreeSessionDataVec(Vec<SessionData*>* sessionData) {
     sessionData->Reset();
 }
 
-ParsedColor* GetParsedColor(Str s, ParsedColor& parsed) {
-    if (parsed.wasParsed) {
-        return &parsed;
-    }
-    ParseColor(parsed, s);
+ParsedColor* GetParsedColor(ParsedColor& parsed) {
+    ParseColor(parsed);
     return &parsed;
 }
 
-Color GetParsedColor(Str s, ParsedColor& parsed, Color def) {
-    if (parsed.wasParsed && parsed.parsedOk) {
-        return parsed.col;
-    }
-    ParseColor(parsed, s);
+Color GetParsedColor(ParsedColor& parsed, Color def) {
+    ParseColor(parsed);
     if (parsed.parsedOk) {
         return parsed.col;
     }

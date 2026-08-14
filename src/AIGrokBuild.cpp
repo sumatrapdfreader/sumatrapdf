@@ -388,7 +388,7 @@ struct GrokBuildProvider : AIChatProvider {
     void SetOption(int option) override { gGlobalPrefs->grokBuild.effort = option; }
     bool GetFlag() override { return gGlobalPrefs->grokBuild.alwaysApprove; }
     void SetFlag(bool flag) override { gGlobalPrefs->grokBuild.alwaysApprove = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->grokBuild.bgColor; }
+    Str GetBgColor() override { return gGlobalPrefs->grokBuild.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectGrokSessions(dir, sessions); }
 

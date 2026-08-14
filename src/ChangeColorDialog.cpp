@@ -574,29 +574,24 @@ void ChangeColorWnd::ApplyBackground() {
 
     if (applyToAll) {
         if (isCbx) {
-            str::ReplaceWithCopy(&gGlobalPrefs->comicBookUI.windowBgCol, colorStr);
-            gGlobalPrefs->comicBookUI.windowBgColParsed.wasParsed = false;
+            SetColorText(gGlobalPrefs->comicBookUI.windowBgCol, colorStr);
         } else if (isImage) {
-            str::ReplaceWithCopy(&gGlobalPrefs->imageUI.windowBgCol, colorStr);
-            gGlobalPrefs->imageUI.windowBgColParsed.wasParsed = false;
+            SetColorText(gGlobalPrefs->imageUI.windowBgCol, colorStr);
         } else if (isEbook) {
-            str::ReplaceWithCopy(&gGlobalPrefs->eBookUI.windowBgCol, colorStr);
-            gGlobalPrefs->eBookUI.windowBgColParsed.wasParsed = false;
+            SetColorText(gGlobalPrefs->eBookUI.windowBgCol, colorStr);
         } else {
-            str::ReplaceWithCopy(&gGlobalPrefs->fixedPageUI.windowBgCol, colorStr);
-            gGlobalPrefs->fixedPageUI.windowBgColParsed.wasParsed = false;
+            SetColorText(gGlobalPrefs->fixedPageUI.windowBgCol, colorStr);
         }
         FileState* fs = FileHistoryFindByPath(t->filePath);
         if (fs) {
-            str::ReplaceWithCopy(&fs->bgCol, "");
+            SetColorText(fs->bgCol, "");
         }
         t->bgColor = kColorUnset;
         t->bgColorCheckered = false;
     } else {
         FileState* fs = FileHistoryFindByPath(t->filePath);
         if (fs) {
-            str::ReplaceWithCopy(&fs->bgCol, colorStr);
-            fs->bgColParsed.wasParsed = false;
+            SetColorText(fs->bgCol, colorStr);
         }
         t->bgColor = newColor;
         t->bgColorCheckered = isCheckered;
@@ -615,11 +610,10 @@ void ChangeColorWnd::ApplyTabColor() {
     FileState* fs = FileHistoryFindByPath(t->filePath);
     if (fs) {
         if (isCheckered) {
-            str::ReplaceWithCopy(&fs->tabCol, "");
+            SetColorText(fs->tabCol, "");
         } else {
-            str::ReplaceWithCopy(&fs->tabCol, SerializeColorTemp(currentColor));
+            SetColorText(fs->tabCol, SerializeColorTemp(currentColor));
         }
-        fs->tabColParsed.wasParsed = false;
     }
     SaveSettings();
     if (win->tabsCtrl) {

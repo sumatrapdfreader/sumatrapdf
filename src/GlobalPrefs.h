@@ -21,8 +21,8 @@ TabState* NewTabState(FileState*);
 void DeleteTabState(TabState*);
 void FreeSessionData(SessionData*);
 void FreeSessionDataVec(Vec<SessionData*>*);
-ParsedColor* GetParsedColor(Str s, ParsedColor& parsed);
-Color GetParsedColor(Str s, ParsedColor& parsed, Color def);
+ParsedColor* GetParsedColor(ParsedColor& parsed);
+Color GetParsedColor(ParsedColor& parsed, Color def);
 
 void SetFileStatePath(FileState* fs, Str path);
 void SetFileStatePath(FileState* fs, WStr path);
@@ -30,4 +30,4 @@ void SetFileStatePath(FileState* fs, WStr path);
 Themes* ParseThemes(Str);
 void FreeParsedThemes(Themes*);
 
-#define GetPrefsColor(name) GetParsedColor(name, name##Parsed)
+#define GetPrefsColor(name) GetParsedColor(name)

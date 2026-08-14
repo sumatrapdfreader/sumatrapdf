@@ -114,6 +114,24 @@ void ParseColor(ParsedColor& parsed, Str txt) {
 }
 
 /* Parse 's' as hex color and return the result in 'destColor' */
+void ParseColor(ParsedColor& parsed) {
+    ParseColor(parsed, parsed.s);
+}
+
+// the cached parse belongs to the old text, so it has to go with it
+void SetColorText(ParsedColor& parsed, Str txt) {
+    str::ReplaceWithCopy(&parsed.s, txt);
+    parsed.wasParsed = false;
+    parsed.parsedOk = false;
+}
+
+void FreeColorText(ParsedColor& parsed) {
+    str::Free(parsed.s);
+    parsed.s = {};
+    parsed.wasParsed = false;
+    parsed.parsedOk = false;
+}
+
 bool ParseColor(Color* destColor, Str s) {
     ReportIf(!destColor);
     ParsedColor p;

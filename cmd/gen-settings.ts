@@ -1647,10 +1647,13 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
     if (isComment(field)) continue;
     const comments = formatComment(field.Comment, "\t//");
     lines.push(...comments);
-    lines.push(`\t${field.Type.ctype} ${field.CName};`);
     if (field.Type.name === "Color") {
-      lines.push(`\tParsedColor ${field.CName}Parsed;`);
-    } else if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
+      // a color setting is its text plus the parse of it; see ParsedColor
+      lines.push(`\tParsedColor ${field.CName};`);
+    } else {
+      lines.push(`\t${field.Type.ctype} ${field.CName};`);
+    }
+    if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
       const name = field.Name;
       if (name === field.StructName || name === field.StructName + "s") {
         if (built[name] === undefined) {

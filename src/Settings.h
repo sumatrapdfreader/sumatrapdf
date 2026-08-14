@@ -50,17 +50,14 @@ struct WindowMargin {
 // customization options for PDF, XPS, DjVu and PostScript UI
 struct FixedPageUI {
     // color used instead of black for the document's text
-    Str textColor;
-    ParsedColor textColorParsed;
+    ParsedColor textColor;
     // color used instead of white for the document's page background
-    Str backgroundColor;
-    ParsedColor backgroundColorParsed;
+    ParsedColor backgroundColor;
     // color value for the text selection rectangle (also used to highlight
     // found text). Use an #aarrggbb value to control opacity: a smaller
     // alpha (e.g. #40ffff00) makes the selection more transparent so the
     // selected text stays crisp; #rrggbb uses the default opacity
-    Str selectionColor;
-    ParsedColor selectionColorParsed;
+    ParsedColor selectionColor;
     // top, right, bottom and left margin (in that order) between window
     // and document
     WindowMargin windowMargin;
@@ -74,8 +71,7 @@ struct FixedPageUI {
     // #2828aa #28aa28 #aa2828
     Vec<Str>* gradientColors;
     // if given, sets the canvas background color for PDF files
-    Str windowBgCol;
-    ParsedColor windowBgColParsed;
+    ParsedColor windowBgCol;
 };
 
 // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
@@ -106,8 +102,7 @@ struct EBookUI {
     Str customCSS;
     // if given, sets the canvas background color for ebook documents
     // (epub, mobi etc.)
-    Str windowBgCol;
-    ParsedColor windowBgColParsed;
+    ParsedColor windowBgCol;
     // default page layout for ebooks; empty uses the global
     // DefaultDisplayMode. valid values: automatic, single page, facing,
     // book view, continuous, continuous facing, continuous book view
@@ -126,8 +121,7 @@ struct ComicBookUI {
     // right to left if showing 2 pages at a time)
     bool cbxMangaMode;
     // if given, sets the canvas background color for comic book files
-    Str windowBgCol;
-    ParsedColor windowBgColParsed;
+    ParsedColor windowBgCol;
     // if true, absolute zoom never makes a page wider than the window
     // (each page is capped at Fit Width). Useful for comics/manga with
     // double-page spreads that are much wider than regular pages (issue
@@ -145,8 +139,7 @@ struct ComicBookUI {
 // customization options for image files UI
 struct ImageUI {
     // if given, sets the canvas background color for image files
-    Str windowBgCol;
-    ParsedColor windowBgColParsed;
+    ParsedColor windowBgCol;
     // default zoom for image files. valid values: fit page, fit width, fit
     // height, fit content, shrink to fit or percent like 100%
     Str defaultZoom;
@@ -203,8 +196,7 @@ struct ClaudeCode {
     // if true, pass --dangerously-skip-permissions to Claude Code
     bool skipPermissions;
     // background color of the Claude Code chat panel
-    Str bgColor;
-    ParsedColor bgColorParsed;
+    ParsedColor bgColor;
 };
 
 // settings for the Grok Build chat sidebar
@@ -220,8 +212,7 @@ struct GrokBuild {
     // executions)
     bool alwaysApprove;
     // background color of the Grok Build chat panel
-    Str bgColor;
-    ParsedColor bgColorParsed;
+    ParsedColor bgColor;
 };
 
 // settings for the OpenAI Codex chat sidebar
@@ -237,8 +228,7 @@ struct CodexBuild {
     // if true, pass --dangerously-bypass-approvals-and-sandbox to Codex
     bool skipSandbox;
     // background color of the OpenAI Codex chat panel
-    Str bgColor;
-    ParsedColor bgColorParsed;
+    ParsedColor bgColor;
 };
 
 // settings for the Antigravity chat sidebar
@@ -254,8 +244,7 @@ struct AntiGravity {
     // prompt for permissions with -p)
     bool autoApprove;
     // background color of the Antigravity chat panel
-    Str bgColor;
-    ParsedColor bgColorParsed;
+    ParsedColor bgColor;
 };
 
 // default values for annotations in PDF documents
@@ -263,26 +252,20 @@ struct Annotations {
     // color of newly created highlight annotations. Use an #aarrggbb value
     // to set default opacity (00 = transparent, FF = opaque); #rrggbb is
     // fully opaque
-    Str highlightColor;
-    ParsedColor highlightColorParsed;
+    ParsedColor highlightColor;
     // color of newly created underline annotations. #aarrggbb sets default
     // opacity the same way as HighlightColor
-    Str underlineColor;
-    ParsedColor underlineColorParsed;
+    ParsedColor underlineColor;
     // color of newly created squiggly underline annotations. #aarrggbb
     // sets default opacity the same way as HighlightColor
-    Str squigglyColor;
-    ParsedColor squigglyColorParsed;
+    ParsedColor squigglyColor;
     // color of newly created strike out annotations. #aarrggbb sets
     // default opacity the same way as HighlightColor
-    Str strikeOutColor;
-    ParsedColor strikeOutColorParsed;
+    ParsedColor strikeOutColor;
     // text color of newly created free text annotations
-    Str freeTextColor;
-    ParsedColor freeTextColorParsed;
+    ParsedColor freeTextColor;
     // background color of newly created free text annotations
-    Str freeTextBackgroundColor;
-    ParsedColor freeTextBackgroundColorParsed;
+    ParsedColor freeTextBackgroundColor;
     // opacity of free text annotation in percent (0-100); 0 - fully
     // transparent (invisible), 50 - half transparent, 100 - fully opaque
     int freeTextOpacity;
@@ -295,8 +278,7 @@ struct Annotations {
     // Right-to-left scripts (Arabic, Hebrew, Persian) want right
     Str freeTextAlignment;
     // color of newly created text (sticky note) annotations
-    Str textIconColor;
-    ParsedColor textIconColorParsed;
+    ParsedColor textIconColor;
     // icon shown for text (sticky note) annotations: comment, help,
     // insert, key, new paragraph, note or paragraph. If not set, note is
     // used
@@ -343,8 +325,7 @@ struct ForwardSearch {
     // is greater than 0)
     int highlightWidth;
     // color used for the forward search highlight
-    Str highlightColor;
-    ParsedColor highlightColorParsed;
+    ParsedColor highlightColor;
     // if true, the highlight stays visible until the next mouse click
     // instead of fading away after a few seconds
     bool highlightPermanent;
@@ -445,57 +426,43 @@ struct Theme {
     // name of the theme, as shown in the Settings / Theme menu
     Str name;
     // color of text in menus, toolbar, tabs and sidebars
-    Str textColor;
-    ParsedColor textColorParsed;
+    ParsedColor textColor;
     // background color of the window around the document
-    Str backgroundColor;
-    ParsedColor backgroundColorParsed;
+    ParsedColor backgroundColor;
     // background color of toolbar, tabs, sidebars and dialogs
-    Str controlBackgroundColor;
-    ParsedColor controlBackgroundColorParsed;
+    ParsedColor controlBackgroundColor;
     // color of clickable links in the UI
-    Str linkColor;
-    ParsedColor linkColorParsed;
+    ParsedColor linkColor;
     // color of disabled (grayed out) text; if empty, derived from the
     // colors above
-    Str disabledTextColor;
-    ParsedColor disabledTextColorParsed;
+    ParsedColor disabledTextColor;
     // color of secondary / muted text like the page label; if empty,
     // derived from the colors above
-    Str darkerTextColor;
-    ParsedColor darkerTextColorParsed;
+    ParsedColor darkerTextColor;
     // background color of a control the mouse is over; if empty, derived
     // from the colors above
-    Str hotBackgroundColor;
-    ParsedColor hotBackgroundColorParsed;
+    ParsedColor hotBackgroundColor;
     // color of control borders and separators; if empty, derived from the
     // colors above
-    Str edgeColor;
-    ParsedColor edgeColorParsed;
+    ParsedColor edgeColor;
     // border color of a control the mouse is over; if empty, derived from
     // the colors above
-    Str hotEdgeColor;
-    ParsedColor hotEdgeColorParsed;
+    ParsedColor hotEdgeColor;
     // border color of a disabled control; if empty, derived from the
     // colors above
-    Str disabledEdgeColor;
-    ParsedColor disabledEdgeColorParsed;
+    ParsedColor disabledEdgeColor;
     // background color of error messages; if empty, derived from the
     // colors above
-    Str errorBackgroundColor;
-    ParsedColor errorBackgroundColorParsed;
+    ParsedColor errorBackgroundColor;
     // background color of notification tips; if empty, derived from the
     // colors above
-    Str notificationBackgroundColor;
-    ParsedColor notificationBackgroundColorParsed;
+    ParsedColor notificationBackgroundColor;
     // background color of a highlighted notification tip; if empty,
     // derived from the colors above
-    Str notificationHighlightColor;
-    ParsedColor notificationHighlightColorParsed;
+    ParsedColor notificationHighlightColor;
     // text color of a highlighted notification tip; if empty, derived from
     // the colors above
-    Str notificationHighlightTextColor;
-    ParsedColor notificationHighlightTextColorParsed;
+    ParsedColor notificationHighlightTextColor;
     // if true, apply the theme colors to Windows controls and window areas
     // too
     bool colorizeControls;
@@ -580,11 +547,9 @@ struct FileState {
     // view modes
     bool displayR2L;
     // if given, overrides the background color for this document
-    Str bgCol;
-    ParsedColor bgColParsed;
+    ParsedColor bgCol;
     // if given, overrides the tab color for this document
-    Str tabCol;
-    ParsedColor tabColParsed;
+    ParsedColor tabCol;
     // index into an ebook's HTML data from which reparsing has to happen
     // in order to restore the last viewed page (i.e. the equivalent of
     // PageNo for the ebook UI)
@@ -681,8 +646,7 @@ struct GlobalPrefs {
     // yellow. Only applies to the Light theme; the default #80fff200 is a
     // marker meaning "use the theme's color", so setting any other value
     // also colorizes the toolbar and sidebars
-    Str mainWindowBackground;
-    ParsedColor mainWindowBackgroundParsed;
+    ParsedColor mainWindowBackground;
     // if true, doesn't open Home tab
     bool noHomeTab;
     // if true, the home page lists documents by how often they've been
