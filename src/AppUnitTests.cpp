@@ -24,6 +24,7 @@ bool MarkdownToc_UnitTestMermaid();
 bool EbookDoc_UnitTestNormalizeURL();
 bool ExternalViewers_UnitTestPDFXChangePaths();
 bool Canvas_UnitTestScrollLineAmount();
+bool EngineMupdf_UnitTestEbookLineSpacingCss();
 #endif
 
 // must be last to over-write assert()
@@ -152,6 +153,7 @@ int RunAppUnitTests() {
     utassert(EbookDoc_UnitTestNormalizeURL());
     utassert(ExternalViewers_UnitTestPDFXChangePaths());
     utassert(Canvas_UnitTestScrollLineAmount());
+    utassert(EngineMupdf_UnitTestEbookLineSpacingCss());
 #endif
     return utassert_print_results();
 }

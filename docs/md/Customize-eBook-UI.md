@@ -10,6 +10,7 @@ Open **Settings → Advanced Options...** and edit the `EBookUI` section:
 EBookUI [
     FontName =
     FontSize = 0
+    LineSpacing = 0
     LayoutDx = 0
     LayoutDy = 0
     IgnoreDocumentCSS = false
@@ -22,6 +23,7 @@ EBookUI [
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `FontName`              | Default font family, e.g. `Segoe UI` or `Microsoft YaHei` (empty = engine default, usually a serif). Overrides the document's `font-family` (**ver 3.7+**) |
 | `FontSize`              | Base font size (default `8.0`; `0` = built-in default)                                                                                                     |
+| `LineSpacing`           | Line-height multiplier, e.g. `1.5` for expanded spacing (`0` = document or engine default; **ver 3.7+**)                                                   |
 | `LayoutDx` / `LayoutDy` | Virtual page width / height for reflow (defaults `420` / `595`)                                                                                            |
 | `IgnoreDocumentCSS`     | Ignore stylesheet from the EPUB (`true` = your `CustomCSS` wins)                                                                                           |
 | `CustomCSS`             | Extra CSS rules — often paired with `IgnoreDocumentCSS = true`                                                                                             |

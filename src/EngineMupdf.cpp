@@ -3143,6 +3143,20 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
 // TODO: allow setting per
 extern EBookUI* GetEBookUI();
 
+static TempStr EbookLineSpacingCssTemp(float lineSpacing) {
+    if (!(lineSpacing >= 0.5f && lineSpacing <= 5.f)) {
+        return {};
+    }
+    return fmt("body, body * { line-height: %g !important; }\n", lineSpacing);
+}
+
+#if defined(DEBUG)
+bool EngineMupdf_UnitTestEbookLineSpacingCss() {
+    return !EbookLineSpacingCssTemp(0) && !EbookLineSpacingCssTemp(0.49f) && !EbookLineSpacingCssTemp(5.01f) &&
+           str::Eq(EbookLineSpacingCssTemp(1.5f), StrL("body, body * { line-height: 1.5 !important; }\n"));
+}
+#endif
+
 // stm is either freed or retained via _doc
 // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
 // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
@@ -3211,6 +3225,10 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             userCss = str::JoinTemp(
                 fmt("body, p, div, li, td, th, h1, h2, h3, h4, h5, h6 { font-family: \"%s\" !important; }\n", fontName),
                 userCss);
+        }
+        TempStr lineSpacingCss = EbookLineSpacingCssTemp(eBookUI->lineSpacing);
+        if (lineSpacingCss) {
+            userCss = str::JoinTemp(lineSpacingCss, userCss);
         }
         if (eBookUI->customCSS) {
             userCss = str::JoinTemp(userCss, eBookUI->customCSS);

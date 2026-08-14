@@ -399,6 +399,11 @@ EBookUI [
     ; font size in points; 0 means the default (8.0)
     FontSize = 0
 
+    ; line-height multiplier for ebook text (e.g. 1.5); 0 keeps the document or
+    ; engine default. values from 0.5 to 5 are accepted (introduced in version
+    ; 3.7)
+    LineSpacing = 0
+
     ; width of the page the ebook is laid out into, in points (not screen
     ; pixels); 0 means the default (420)
     LayoutDx = 0

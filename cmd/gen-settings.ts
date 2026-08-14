@@ -160,6 +160,13 @@ const ebookUI: Field[] = [
   ).ver("3.7"),
   field("FontSize", Float, 0, "font size in points; 0 means the default (8.0)"),
   field(
+    "LineSpacing",
+    Float,
+    0,
+    "line-height multiplier for ebook text (e.g. 1.5); 0 keeps the document or engine default. " +
+      "values from 0.5 to 5 are accepted",
+  ).ver("3.7"),
+  field(
     "LayoutDx",
     Float,
     0,
