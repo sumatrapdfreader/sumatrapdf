@@ -15,11 +15,19 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-// files premake compiles that mingw deliberately leaves out. Keep this list
-// tiny and say why: each entry is a file the cross-compile cannot build.
+// files the Windows build compiles that mingw deliberately leaves out. Keep this
+// list tiny and say why: each entry is a file the cross-compile cannot build.
 const MINGW_EXCLUDED: Record<string, string> = {
-  "TextToSpeech.cpp": "WinRT (windows.media.speechsynthesis.h) / SAPI, not in mingw-w64",
+  "TextToSpeech.cpp": "WinRT (windows.media.speechsynthesis.h) / SAPI, not in mingw-w64; stubbed",
+  "TestPlugin.cpp": "doesn't build with mingw GDI+; stubbed",
+  "TestPreview.cpp": "doesn't build with mingw GDI+; stubbed",
+  "BasePch.cpp": "MSVC precompiled header source",
+  "MuPDF_Exports.cpp": "the libmupdf DLL's export table, not part of the exe",
 };
+
+// the dirs the vcxproj check covers: where SumatraPDF's own UI/app code lives.
+// src/gui/win and src/uia are already wildcarded in the mingw list.
+const VCXPROJ_DIRS = ["src", "src/gui"];
 
 function patternToRe(p: string): RegExp {
   const escaped = p.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
@@ -41,17 +49,42 @@ function premakeSrcPatterns(root: string): string[] {
   return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
 }
 
-// the src patterns cmd/build-with-mingw.ts compiles
-function mingwSrcPatterns(root: string): string[] {
+// the patterns cmd/build-with-mingw.ts compiles for `dir`
+function mingwPatterns(root: string, dir: string): string[] {
   const ts = readFileSync(join(root, "cmd", "build-with-mingw.ts"), "utf-8");
   const out: string[] = [];
-  for (const group of ts.matchAll(/dir:\s*"src",\s*patterns:\s*\[([^\]]*)\]/g)) {
+  const re = new RegExp(`dir:\\s*"${dir}",\\s*patterns:\\s*\\[([^\\]]*)\\]`, "g");
+  for (const group of ts.matchAll(re)) {
     for (const q of group[1].matchAll(/"([^"]+)"/g)) {
       out.push(q[1]);
     }
   }
   if (out.length === 0) {
-    throw new Error(`lint-mingw-sources: no dir: "src" pattern groups found in cmd/build-with-mingw.ts`);
+    throw new Error(`lint-mingw-sources: no dir: "${dir}" pattern groups found in cmd/build-with-mingw.ts`);
+  }
+  return out;
+}
+
+// the .cpp files SumatraPDF.vcxproj compiles that live directly in `dir`. That
+// project is the source of truth for what has to link: premake is regenerated
+// from it by hand and drifts (it was missing DarkMode_win.cpp when that file
+// broke the Linux job), so checking only premake -> mingw can pass while the
+// cross-compile is missing a file.
+function vcxprojSources(root: string, dir: string): string[] {
+  const vcx = readFileSync(join(root, "vs2022", "SumatraPDF.vcxproj"), "utf-8");
+  const out: string[] = [];
+  for (const m of vcx.matchAll(/<ClCompile Include="\.\.\\([^"]+)"/g)) {
+    const rel = m[1].replace(/\\/g, "/");
+    if (!rel.startsWith(`${dir}/`) || !rel.endsWith(".cpp")) {
+      continue;
+    }
+    const name = rel.slice(dir.length + 1);
+    if (!name.includes("/")) {
+      out.push(name);
+    }
+  }
+  if (out.length === 0) {
+    throw new Error(`lint-mingw-sources: no ClCompile entries for ${dir} in vs2022/SumatraPDF.vcxproj`);
   }
   return out;
 }
@@ -59,7 +92,7 @@ function mingwSrcPatterns(root: string): string[] {
 export async function testit(): Promise<void> {
   const root = join(import.meta.dir, "..");
   const premake = premakeSrcPatterns(root);
-  const mingw = mingwSrcPatterns(root).map(patternToRe);
+  const mingwSrc = mingwPatterns(root, "src").map(patternToRe);
   const sources = readdirSync(join(root, "src")).filter((f) => f.endsWith(".cpp"));
 
   const missing: string[] = [];
@@ -69,20 +102,35 @@ export async function testit(): Promise<void> {
       if (!re.test(f) || f in MINGW_EXCLUDED) {
         continue;
       }
-      if (!mingw.some((r) => r.test(f))) {
+      if (!mingwSrc.some((r) => r.test(f))) {
         missing.push(`  src/${f}  (premake pattern "${pattern}")`);
       }
     }
   }
+
+  // and the same against the vcxproj, which is what actually has to link
+  let nChecked = 0;
+  for (const dir of VCXPROJ_DIRS) {
+    const mingw = mingwPatterns(root, dir).map(patternToRe);
+    for (const f of vcxprojSources(root, dir)) {
+      nChecked++;
+      if (f in MINGW_EXCLUDED || mingw.some((r) => r.test(f))) {
+        continue;
+      }
+      missing.push(`  ${dir}/${f}  (in vs2022/SumatraPDF.vcxproj)`);
+    }
+  }
+
   if (missing.length > 0) {
     throw new Error(
-      "these src files are compiled by premake but not by cmd/build-with-mingw.ts,\n" +
+      "these files are compiled on Windows but not by cmd/build-with-mingw.ts,\n" +
         "so the Linux/Wine CI job will fail to link. Add matching patterns to the\n" +
-        `dir: "src" group in cmd/build-with-mingw.ts:\n` +
+        "corresponding dir group in cmd/build-with-mingw.ts (and to premake5.files.lua),\n" +
+        "or to MINGW_EXCLUDED in this file if the cross-compile genuinely can't build them:\n" +
         missing.join("\n"),
     );
   }
-  console.log(`PASS: mingw source list covers all ${premake.length} premake src patterns`);
+  console.log(`PASS: mingw source list covers ${premake.length} premake src patterns and ${nChecked} vcxproj sources`);
 }
 
 if (import.meta.main) {

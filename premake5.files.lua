@@ -601,6 +601,7 @@ function sumatrapdf_files()
     "ShortcutParse.*",
     "Actions.*",
     "AvifReader.*",
+    "DarkMode_win.*",
     "AdvancedSettingsDialog.*",
     "ChangeThemeDialog.*",
     "AppSettings.*",
@@ -716,6 +717,7 @@ function sumatrapdf_files()
     "TextViewWnd.*",
     "Theme.*",
     "Toolbar.*",
+    "Toolbar_win.*",
     "TranslationLangs.cpp",
     "Translations.*",
     "TreeModel.*",
@@ -862,6 +864,8 @@ function gui_files()
     "PlatformText_win.*",
     "UIModels.*",
     "VirtCtrl.*",
+    "VirtHost_win.*",
+    "UiPlatform_win.*",
   })
   files_in_dir("src/gui/win", {
     "*.h",
