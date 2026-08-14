@@ -1278,13 +1278,18 @@ static void PaintToolbarBackground(MainWindow*, VirtHostPaintEvent* ev) {
     ev->gfx->FillRect(ev->clientRect, TbBgColor());
 }
 
-// the default theme separates the toolbar from the canvas with a hairline
+// the default theme separates the toolbar from the canvas with a hairline.
+// Use the document background, not ThemeEdgeColor: on Light that is #c0c0c0
+// and reads as a dark strip against the page.
 static void PaintToolbarEdge(MainWindow*, VirtHostPaintEvent* ev) {
     if (!IsCurrentThemeDefault() || ThemeColorizeControls()) {
         return;
     }
+    Color canvasBg;
+    ThemeDocumentColors(canvasBg);
     Rect rc = ev->clientRect;
-    ev->gfx->FillRect({rc.x, rc.Bottom() - 1, rc.dx, 1}, TbEdgeColor());
+    int y = ToolbarAtBottom() ? rc.y : (rc.Bottom() - 1);
+    ev->gfx->FillRect({rc.x, y, rc.dx, 1}, canvasBg);
 }
 
 static const WStr kToolbarHostClass = WStrL(L"SUMATRA_VIRT_TOOLBAR");
