@@ -408,6 +408,8 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         ReportIf(len(name) == 0);
         ItemDataCP data;
         data.cmdId = (i32)cmdId;
+        // test against the English name: a translation may not carry the prefix
+        data.isDebug = str::StartsWith(name, StrL("Debug: "));
         auto nameTranslated = trans::GetTranslation(name);
         auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, nameTranslated);
         tempCommands.Append(nameUpdated, data);
@@ -434,7 +436,14 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     SortNoCase(&tempCommands);
     int n = len(tempCommands);
     commands.Reset();
-    for (int i = 0; i < n; i++) {
-        commands.AppendFrom(&tempCommands, i);
+    // dev-only commands go last instead of sitting in the middle of the list
+    // under "D"; each group keeps its alphabetical order
+    for (int pass = 0; pass < 2; pass++) {
+        bool wantDebug = (pass == 1);
+        for (int i = 0; i < n; i++) {
+            if (tempCommands.AtData(i)->isDebug == wantDebug) {
+                commands.AppendFrom(&tempCommands, i);
+            }
+        }
     }
 }

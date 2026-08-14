@@ -9,6 +9,8 @@ struct Favorite;
 
 struct ItemDataCP {
     i32 cmdId = 0;
+    // a "Debug: ..." command; those are listed after all the others
+    bool isDebug = false;
     WindowTab* tab = nullptr;
     Str filePath;
     TocItem* tocItem = nullptr;
