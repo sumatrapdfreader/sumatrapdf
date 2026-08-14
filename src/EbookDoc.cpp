@@ -573,6 +573,12 @@ bool EpubDoc::Load() {
         if (!idref) {
             continue;
         }
+        // EPUB linear="no": auxiliary content (footnotes) is not in the
+        // default reading order (issue #5803)
+        TempStr linear = GumboAttributeValueTemp(node, "linear");
+        if (linear && str::EqI(linear, StrL("no"))) {
+            continue;
+        }
         int idx = idList.Find(idref);
         if (idx < 0) {
             continue;

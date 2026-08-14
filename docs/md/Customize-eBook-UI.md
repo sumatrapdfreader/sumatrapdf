@@ -2,6 +2,8 @@
 
 EPUB, MOBI, FB2, and similar formats use SumatraPDF's **eBook UI** (HTML-based layout). Since **version 3.4** the engine is MuPDF-based: text selection, in-document search, and bookmarks work much like PDF.
 
+EPUB spine items with `linear="no"` (typically footnotes or other auxiliary pages) are left out of the default reading order, so page-up / page-down skips them (**ver 3.7+**).
+
 ## What you can customize
 
 Open **Settings → Advanced Options...** and edit the `EBookUI` section:

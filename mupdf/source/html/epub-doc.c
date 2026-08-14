@@ -936,6 +936,15 @@ read_container_and_prefix(fz_context *ctx, fz_archive *zip, char *prefix, size_t
 	return fz_read_archive_entry(ctx, zip, "META-INF/container.xml");
 }
 
+/* EPUB itemref linear="no" is auxiliary (footnotes, etc.) and is not
+ * part of the default reading order. */
+static int
+itemref_is_nonlinear(fz_xml *itemref)
+{
+	const char *linear = fz_xml_att(itemref, "linear");
+	return linear && !fz_strcasecmp(linear, "no");
+}
+
 static void
 epub_parse_header(fz_context *ctx, epub_document *doc)
 {
@@ -1043,7 +1052,8 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 		i = 0;
 		while (itemref)
 		{
-			if (path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
+			if (!itemref_is_nonlinear(itemref) &&
+				path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
 				++i;
 			itemref = fz_xml_find_next(itemref, "itemref");
 		}
@@ -1055,7 +1065,8 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 		i = 0;
 		while (itemref)
 		{
-			if (path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
+			if (!itemref_is_nonlinear(itemref) &&
+				path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
 			{
 				fz_try(ctx)
 				{
