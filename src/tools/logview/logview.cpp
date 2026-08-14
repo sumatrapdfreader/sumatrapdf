@@ -1056,7 +1056,6 @@ struct LogViewWnd : WindowBase {
 
     bool Create();
     void WndProc(WindowBase::WndProcEvent* ev);
-    void OnSize(WindowBase::SizeEvent* ev);
     void OnTimer(WindowBase::TimerEvent* ev);
     void OnDestroy(WindowBase::DestroyEvent* ev);
 };
@@ -1140,7 +1139,6 @@ static VirtButton* NewToolButton(Str text, const VirtMouseHandler& onClick) {
 
 bool LogViewWnd::Create() {
     onWndProc = MkMethod1<LogViewWnd, WindowBase::WndProcEvent*, &LogViewWnd::WndProc>(this);
-    onSize = MkMethod1<LogViewWnd, WindowBase::SizeEvent*, &LogViewWnd::OnSize>(this);
     onTimer = MkMethod1<LogViewWnd, WindowBase::TimerEvent*, &LogViewWnd::OnTimer>(this);
     onDestroy = MkMethod1<LogViewWnd, WindowBase::DestroyEvent*, &LogViewWnd::OnDestroy>(this);
     {
@@ -1202,14 +1200,6 @@ bool LogViewWnd::Create() {
     vbox->AddChild(logLines, 1);
     layout = vbox;
     return true;
-}
-
-void LogViewWnd::OnSize(WindowBase::SizeEvent* ev) {
-    if (ev->msg != WM_SIZE) {
-        return;
-    }
-    DoLayout(ev->size);
-    HwndInvalidate(hwnd);
 }
 
 void LogViewWnd::OnTimer(WindowBase::TimerEvent* ev) {

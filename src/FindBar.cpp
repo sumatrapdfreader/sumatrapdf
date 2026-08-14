@@ -219,6 +219,8 @@ void FindBarWnd::CreateButtons() {
 
 bool FindBarWnd::Create(MainWindow* mainWin) {
     win = mainWin;
+    // Layout() sizes the HWND to content; don't let WM_SIZE DoLayout first
+    autoLayout = false;
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();

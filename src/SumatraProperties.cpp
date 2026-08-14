@@ -49,12 +49,10 @@ struct PropertiesWnd : WindowBase {
     bool deleteScheduled = false;
 
     bool Create(HWND parent);
-    void LayoutToClient();
     void UpdateTheme();
     void SetPropsText(Str text);
     void SizeToContent();
     void CopyToClipboard(VirtMouseEvent* ev = nullptr);
-    void OnSize(WindowBase::SizeEvent* ev);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
@@ -788,15 +786,7 @@ void PropertiesWnd::SizeToContent() {
 
     Rect wRc = HwndWindowRect(hwnd);
     MoveWindow(hwnd, wRc.x, wRc.y, wantedDx, wantedDy, TRUE);
-    LayoutToClient();
-}
-
-void PropertiesWnd::LayoutToClient() {
-    if (!layout || !hwnd) {
-        return;
-    }
-    // also picks up the virtual controls so we paint them and they get input
-    DoLayout(HwndClientRect(hwnd).Size());
+    DoLayout();
 }
 
 void PropertiesWnd::UpdateTheme() {
@@ -815,14 +805,6 @@ void PropertiesWnd::UpdateTheme() {
         editProps->SetFont(propsFont);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-}
-
-void PropertiesWnd::OnSize(WindowBase::SizeEvent* ev) {
-    if (ev->msg != WM_SIZE) {
-        return;
-    }
-    LayoutToClient();
-    HwndInvalidate(hwnd);
 }
 
 void PropertiesWnd::OnKeyDown(KeyEvent* ev) {
@@ -1027,7 +1009,6 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnPropertiesClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnPropertiesDestroy);
     wnd->onCommand = MkMethod1<PropertiesWnd, WindowBase::CommandEvent*, &PropertiesWnd::OnCommand>(wnd);
-    wnd->onSize = MkMethod1<PropertiesWnd, WindowBase::SizeEvent*, &PropertiesWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<PropertiesWnd, KeyEvent*, &PropertiesWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate = MkMethod1<PropertiesWnd, WindowBase::PreTranslateEvent*, &PropertiesWnd::PreTranslate>(wnd);
     if (!wnd->Create(parent)) {
@@ -1039,7 +1020,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     Point savedPos = gGlobalPrefs->propWinPos;
     if (!savedPos.IsEmpty()) {
         SetWindowPos(wnd->hwnd, nullptr, savedPos.x, savedPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-        wnd->LayoutToClient();
+        wnd->DoLayout();
     } else {
         HwndCenterDialog(wnd->hwnd, parent);
     }

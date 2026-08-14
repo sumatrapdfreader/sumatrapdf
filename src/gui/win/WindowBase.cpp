@@ -20,9 +20,6 @@ TempStr WinMsgNameTemp(UINT msg) {
     return fmt("0x%x", (int)msg);
 }
 
-// TODO:
-// - if layout is set, do layout on WM_SIZE using LayoutToSize
-
 static Vec<HWND> gHwndDestroyed;
 
 void MarkHWNDDestroyed(HWND hwnd) {
@@ -763,7 +760,10 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         case WM_SIZE: {
             DpiSetFromHwnd(hwnd);
             Size size = {LOWORD(lparam), HIWORD(lparam)};
-            if (autoLayout && (size.dx > 0) && (size.dy > 0)) {
+            // most WindowBase windows just want `layout` stretched to the new
+            // client size. CreateCustom sends WM_SIZE before the tree exists,
+            // so `layout` being null is the usual "not ready yet" guard.
+            if (autoLayout && layout && (size.dx > 0) && (size.dy > 0)) {
                 DoLayout(size);
                 HwndInvalidate(hwnd);
             }

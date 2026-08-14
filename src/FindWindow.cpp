@@ -750,7 +750,9 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
         return;
     }
     if (ev->msg == WM_SIZE) {
-        Layout();
+        // autoLayout already reflowed `layout`; erase so snippet pixels
+        // don't ghost when the dialog shrinks (#5796)
+        HwndInvalidate(hwnd, true);
         return;
     }
     if (ev->msg == WM_EXITSIZEMOVE) {

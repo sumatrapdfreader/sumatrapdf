@@ -189,6 +189,9 @@ void SimpleBrowserWindow::OnCommand(WindowBase::CommandEvent* ev) {
 }
 
 HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
+    // LayoutControls sizes the nav row to its natural height and the webview
+    // into the leftover client area, not a full-client DoLayout
+    autoLayout = false;
     onFocus = MkMethod1<SimpleBrowserWindow, WindowBase::FocusEvent*, &SimpleBrowserWindow::OnFocus>(this);
     onSize = MkMethod1<SimpleBrowserWindow, WindowBase::SizeEvent*, &SimpleBrowserWindow::OnSize>(this);
     onCommand = MkMethod1<SimpleBrowserWindow, WindowBase::CommandEvent*, &SimpleBrowserWindow::OnCommand>(this);

@@ -1234,10 +1234,8 @@ struct DebugTextWnd : WindowBase {
     PlatformFont* monoFont = nullptr;
 
     bool Create(Str title, int fontSize);
-    void LayoutToClient();
     void UpdateTheme();
     void SetTextContent(Str text);
-    void OnSize(WindowBase::SizeEvent* ev);
     void ScheduleDelete();
 };
 
@@ -1248,14 +1246,6 @@ static void DeleteDebugTextWndInstance(DebugTextWnd* w) {
 void DebugTextWnd::ScheduleDelete() {
     auto fn = MkFunc0<DebugTextWnd>(DeleteDebugTextWndInstance, this);
     uitask::Post(fn, "SafeDeleteDebugTextWnd");
-}
-
-void DebugTextWnd::LayoutToClient() {
-    if (!edit || !hwnd) {
-        return;
-    }
-    Rect rc = HwndClientRect(hwnd);
-    edit->SetBounds(rc);
 }
 
 void DebugTextWnd::UpdateTheme() {
@@ -1280,7 +1270,6 @@ void DebugTextWnd::SetTextContent(Str text) {
 }
 
 bool DebugTextWnd::Create(Str title, int fontSize) {
-    onSize = MkMethod1<DebugTextWnd, WindowBase::SizeEvent*, &DebugTextWnd::OnSize>(this);
     {
         CreateCustomArgs args;
         args.title = title;
@@ -1313,17 +1302,10 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     int winW = DpiScale(700);
     int winH = DpiScale(500);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
-    LayoutToClient();
+    DoLayout();
     UpdateTheme();
     SetIsVisible(true);
     return true;
-}
-
-void DebugTextWnd::OnSize(WindowBase::SizeEvent* ev) {
-    if (ev->msg != WM_SIZE) {
-        return;
-    }
-    LayoutToClient();
 }
 
 static DebugTextWnd* gRenderInfoWnd = nullptr;

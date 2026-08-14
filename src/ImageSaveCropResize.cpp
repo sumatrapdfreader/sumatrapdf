@@ -2070,6 +2070,8 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         if (gImageEditHost.appIconId) {
             cargs.icon = LoadIconW(h, MAKEINTRESOURCEW(gImageEditHost.appIconId));
         }
+        // LayoutControls positions the image plus the control strip
+        ew->autoLayout = false;
         ew->onWndProc = MkMethod1<ImageEditWindow, WindowBase::WndProcEvent*, &ImageEditWindow::WndProc>(ew);
         ew->onKeyDown = MkMethod1<ImageEditWindow, KeyEvent*, &ImageEditWindow::OnKeyDown>(ew);
         ew->onSize = MkMethod1<ImageEditWindow, WindowBase::SizeEvent*, &ImageEditWindow::OnSize>(ew);

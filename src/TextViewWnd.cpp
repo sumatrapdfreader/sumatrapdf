@@ -22,10 +22,8 @@ struct TextViewWnd : WindowBase {
     bool isDialog = false;
 
     bool Create(Str title, Str text);
-    void LayoutToClient();
     void UpdateTheme();
     static Str FormatTextForEdit(Str text);
-    void OnSize(WindowBase::SizeEvent* ev);
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
@@ -38,14 +36,6 @@ static void DeleteTextViewWndInstance(TextViewWnd* w) {
 void TextViewWnd::ScheduleDelete() {
     auto fn = MkFunc0<TextViewWnd>(DeleteTextViewWndInstance, this);
     uitask::Post(fn, "SafeDeleteTextViewWnd");
-}
-
-void TextViewWnd::LayoutToClient() {
-    if (!edit || !hwnd) {
-        return;
-    }
-    Rect rc = HwndClientRect(hwnd);
-    edit->SetBounds(rc);
 }
 
 void TextViewWnd::UpdateTheme() {
@@ -117,17 +107,10 @@ bool TextViewWnd::Create(Str title, Str text) {
     int winW = DpiScale(800);
     int winH = DpiScale(600);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
-    LayoutToClient();
+    DoLayout();
     UpdateTheme();
     SetIsVisible(true);
     return true;
-}
-
-void TextViewWnd::OnSize(WindowBase::SizeEvent* ev) {
-    if (ev->msg != WM_SIZE) {
-        return;
-    }
-    LayoutToClient();
 }
 
 // Esc closes PDF Info / Errors / outline text windows (issue #5856)
@@ -174,7 +157,6 @@ HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
     wnd->hwndPtr = hwndPtr;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    wnd->onSize = MkMethod1<TextViewWnd, WindowBase::SizeEvent*, &TextViewWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {
@@ -189,7 +171,6 @@ void ShowTextInWindowDialog(Str title, Str text) {
     wnd->isDialog = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    wnd->onSize = MkMethod1<TextViewWnd, WindowBase::SizeEvent*, &TextViewWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {

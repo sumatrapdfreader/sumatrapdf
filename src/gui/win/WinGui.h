@@ -322,8 +322,10 @@ struct WindowBase {
     // the virtual controls of `layout`, if it has any. Created on demand by
     // DoLayout(), owned here, but it doesn't own the controls - `layout` does
     VirtRoot* vroot = nullptr;
-    // relayout on WM_SIZE. Off by default: most windows do it themselves
-    bool autoLayout = false;
+    // reflow `layout` on WM_SIZE. On by default; set false when onSize does a
+    // custom layout (FindBar sizes the HWND, annotations grow controls first,
+    // SimpleBrowser / image edit split the client between a strip and a view)
+    bool autoLayout = true;
     // if false, WM_ERASEBKGND returns TRUE without painting (WM_PAINT covers).
     // default false: custom windows usually double-buffer the full client
     bool shouldEraseBackground = false;

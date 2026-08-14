@@ -1094,6 +1094,8 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
 // system: a filled box with a border, brighter on hover (like the other dialogs)
 bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
+    // OnSize closes in-place editors before DoLayout; skip the generic path
+    autoLayout = false;
     CollectSettings(items, &gGlobalPrefsInfo, (u8*)gGlobalPrefs, {});
 
     {

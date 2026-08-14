@@ -117,7 +117,7 @@ struct SelectionTranslateWnd : WindowBase {
     AIChatBackend backend = AIChatBackend::Grok;
     bool translating = false;
     bool resultVisible = false;
-    // true after the first size-to-content layout (ignore WM_SIZE before that)
+    // true after the first size-to-content layout
     bool sizeInitialized = false;
 
     bool Create(HWND owner, Str selText, Str title);
@@ -138,7 +138,6 @@ struct SelectionTranslateWnd : WindowBase {
 
     void UpdateFont();
 
-    void OnSize(WindowBase::SizeEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
     void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
     void OnKeyDown(KeyEvent* ev);
@@ -1034,24 +1033,6 @@ void SelectionTranslateWnd::Relayout(bool initial) {
     DoLayout(HwndClientRect(hwnd).Size());
 }
 
-// reflow controls when the user resizes the window
-void SelectionTranslateWnd::OnSize(WindowBase::SizeEvent* ev) {
-    if (ev->msg != WM_SIZE) {
-        return;
-    }
-    // WS_THICKFRAME windows get WM_SIZE during CreateCustom before children exist
-    if (!layout || !sizeInitialized) {
-        return;
-    }
-    int dx = ev->size.dx;
-    int dy = ev->size.dy;
-    if (dx == 0 || dy == 0) {
-        return;
-    }
-    DoLayout({dx, dy});
-    HwndInvalidate(hwnd);
-}
-
 void SelectionTranslateWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
     if (!hwnd || !layout || !ev->mmi) {
         return;
@@ -1453,7 +1434,6 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     wnd->SetFont(GetAppFont());
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSelectionTranslateDestroy);
-    wnd->onSize = MkMethod1<SelectionTranslateWnd, WindowBase::SizeEvent*, &SelectionTranslateWnd::OnSize>(wnd);
     wnd->onGetMinMaxInfo =
         MkMethod1<SelectionTranslateWnd, WindowBase::GetMinMaxInfoEvent*, &SelectionTranslateWnd::OnGetMinMaxInfo>(wnd);
     wnd->onDpiChanged =

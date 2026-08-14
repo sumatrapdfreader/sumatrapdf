@@ -70,7 +70,6 @@ struct TabGroupsWnd : WindowBase {
     MainWindow* win = nullptr;
 
     bool Create(MainWindow* winIn, TabGroupDialogMode modeIn);
-    void LayoutToClient();
     void UpdateTheme();
     void SaveTabGroup();
     void OpenTabGroup();
@@ -78,7 +77,6 @@ struct TabGroupsWnd : WindowBase {
     void UpdateDeleteButton();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void OnSize(WindowBase::SizeEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
 };
@@ -99,14 +97,6 @@ void TabGroupsWnd::ScheduleDelete() {
 static void PopulateListBox(TabGroupsWnd* w) {
     w->model->Reload();
     w->listBox->SetModel(w->model);
-}
-
-void TabGroupsWnd::LayoutToClient() {
-    if (!layout || !hwnd) {
-        return;
-    }
-    // also picks up the virtual controls so we paint them and they get input
-    DoLayout(HwndClientRect(hwnd).Size());
 }
 
 void TabGroupsWnd::SaveTabGroup() {
@@ -309,14 +299,6 @@ void TabGroupsWnd::OnOk(VirtMouseEvent*) {
     }
 }
 
-void TabGroupsWnd::OnSize(WindowBase::SizeEvent* ev) {
-    if (ev->msg != WM_SIZE) {
-        return;
-    }
-    LayoutToClient();
-    HwndInvalidate(hwnd);
-}
-
 void TabGroupsWnd::OnKeyDown(KeyEvent* ev) {
     if (!hwnd) {
         return;
@@ -436,7 +418,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     int winW = DpiScale(400);
     int winH = DpiScale(350);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
-    LayoutToClient();
+    DoLayout();
     HwndCenterDialog(hwnd, hwndParent);
     HwndEnsureOnScreen(hwnd);
     UpdateTheme();
@@ -468,7 +450,6 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     wnd->SetFont(GetAppFont());
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
-    wnd->onSize = MkMethod1<TabGroupsWnd, WindowBase::SizeEvent*, &TabGroupsWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<TabGroupsWnd, KeyEvent*, &TabGroupsWnd::OnKeyDown>(wnd);
     if (!wnd->Create(win, mode)) {
         delete wnd;

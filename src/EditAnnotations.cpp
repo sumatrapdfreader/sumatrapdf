@@ -1842,6 +1842,8 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         return;
     }
     ew = new EditAnnotationsWindow();
+    // OnSize grows the list / Contents box before DoLayout
+    ew->autoLayout = false;
     ew->onClose = MkFunc1Void(OnClose);
     ew->onDestroy = MkFunc1Void(OnDestroy);
     ew->onSize = MkMethod1<EditAnnotationsWindow, WindowBase::SizeEvent*, &EditAnnotationsWindow::OnSize>(ew);

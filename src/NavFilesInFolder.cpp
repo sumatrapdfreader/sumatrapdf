@@ -89,7 +89,6 @@ struct NavFilesInFolderWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
     void OnActivate(WindowBase::ActivateEvent* ev);
     void OnFocus(WindowBase::FocusEvent* ev);
-    void OnSize(WindowBase::SizeEvent* ev);
 
     bool Create(MainWindow* win);
     void SetDir(Str dir, Str selectPath);
@@ -548,22 +547,6 @@ void NavFilesInFolderWnd::OnFocus(WindowBase::FocusEvent*) {
     }
 }
 
-// re-layout the controls when the (resizable) window is resized
-void NavFilesInFolderWnd::OnSize(WindowBase::SizeEvent* ev) {
-    // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom,
-    // before the child controls exist; ignore layout until they're created
-    if (!layout || !listBox) {
-        return;
-    }
-    int dx = ev->size.dx;
-    int dy = ev->size.dy;
-    if (dx == 0 || dy == 0) {
-        return;
-    }
-    DoLayout({dx, dy});
-    HwndInvalidate(hwnd);
-}
-
 void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     VirtListBox* lb = ev->listBox;
     auto* m = (ListBoxModelNav*)lb->model;
@@ -876,7 +859,6 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
     auto* wnd = new NavFilesInFolderWnd();
     wnd->onClose = MkFunc0Void(ScheduleDeleteNavFilesWnd);
     wnd->onDestroy = MkFunc0Void(ScheduleDeleteNavFilesWnd);
-    wnd->onSize = MkMethod1<NavFilesInFolderWnd, WindowBase::SizeEvent*, &NavFilesInFolderWnd::OnSize>(wnd);
     wnd->onActivate = MkMethod1<NavFilesInFolderWnd, WindowBase::ActivateEvent*, &NavFilesInFolderWnd::OnActivate>(wnd);
     wnd->onFocus = MkMethod1<NavFilesInFolderWnd, WindowBase::FocusEvent*, &NavFilesInFolderWnd::OnFocus>(wnd);
     wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
