@@ -644,9 +644,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (!ctx.isFixedPage) {
             return CommandVisibility::Hide;
         }
-        if (ctx.isSinglePage) {
-            return MapForSurface(CommandVisibility::Disable, surface);
-        }
+        // available in single page view too: right-to-left also decides which
+        // way the page turns and which side of the canvas advances (#1264)
     }
 
     if (cmdId == CmdConvertToPDF) {

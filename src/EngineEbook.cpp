@@ -886,6 +886,7 @@ bool EngineEpub::FinishLoading() {
     }
 
     preferredLayout = PageLayout(PageLayout::Type::Book);
+    preferredLayout.r2lDeclared = doc->HasReadingDirection();
     if (doc->IsRTL()) {
         preferredLayout.r2l = true;
     }

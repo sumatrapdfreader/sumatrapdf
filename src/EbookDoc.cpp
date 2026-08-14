@@ -559,6 +559,7 @@ bool EpubDoc::Load() {
     }
     TempStr readingDir = GumboAttributeValueTemp(node, "page-progression-direction");
     if (readingDir) {
+        hasReadingDir = true;
         isRtlDoc = str::EqI(readingDir, StrL("rtl"));
     }
 
@@ -764,6 +765,10 @@ bool EpubDoc::IsRTL() const {
     return isRtlDoc;
 }
 
+bool EpubDoc::HasReadingDirection() const {
+    return hasReadingDir;
+}
+
 bool EpubDoc::HasToc() const {
     return len(tocPath) > 0;
 }
@@ -901,6 +906,20 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
 
 bool EpubDoc::IsSupportedFileType(FileType kind) {
     return kind == FileType::Epub;
+}
+
+// Only the spine's page-progression-direction. Loading the whole book to read
+// one attribute would mean parsing every chapter.
+EpubReadingDirection EpubGetReadingDirection(Str path) {
+    EpubReadingDirection res;
+    EpubDoc* doc = EpubDoc::CreateFromFile(path);
+    if (!doc) {
+        return res;
+    }
+    res.declared = doc->HasReadingDirection();
+    res.rtl = doc->IsRTL();
+    delete doc;
+    return res;
 }
 
 EpubDoc* EpubDoc::CreateFromFile(Str path) {

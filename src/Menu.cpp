@@ -1802,7 +1802,7 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
     if (dm && win->CurrentTab()) {
         bool mangaMode = dm->GetDisplayR2L();
         MenuSetChecked(win->menu, CmdToggleMangaMode, mangaMode);
-        MenuSetEnabled(win->menu, CmdToggleMangaMode, !IsSingle(displayMode));
+        MenuSetEnabled(win->menu, CmdToggleMangaMode, true);
     }
 }
 

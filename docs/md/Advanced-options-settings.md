@@ -440,8 +440,9 @@ ComicBookUI [
     ; modes
     PageSpacing = 4 4
 
-    ; if true, default to displaying Comic Book files in manga mode (from right
-    ; to left if showing 2 pages at a time)
+    ; if true, documents that don't state their own reading direction default to
+    ; manga mode, i.e. right to left. A document that states a direction (e.g.
+    ; an EPUB with page-progression-direction) is shown the way it asks for
     CbxMangaMode = false
 
     ; if given, sets the canvas background color for comic book files

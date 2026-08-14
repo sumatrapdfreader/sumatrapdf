@@ -2188,9 +2188,16 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             // (physical-size) CustomScreenDPI used for zoom
             dm->SetUiDpi(win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame));
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
-            if (fs) {
+            // SetInitialViewSettings() has just taken the direction from the
+            // engine. A document that states its own (an EPUB with
+            // page-progression-direction) keeps it: a remembered `false` is
+            // indistinguishable from "never chosen", so it must not overrule
+            // the document. Only a remembered `true` is restored on top.
+            // Anything that says nothing falls back to the manga-mode default.
+            bool declared = dm->GetEngine()->preferredLayout.r2lDeclared;
+            if (fs && (fs->displayR2L || !declared)) {
                 dm->SetDisplayR2L(fs->displayR2L);
-            } else if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir) {
+            } else if (!fs && !declared) {
                 dm->SetDisplayR2L(gGlobalPrefs->comicBookUI.cbxMangaMode);
             }
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->GetFilePath(), prevCtrl->GetFilePath())) {

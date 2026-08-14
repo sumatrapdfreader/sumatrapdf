@@ -545,6 +545,26 @@ static void AppendFileType(str::Builder& out, Str path) {
     AppendProp(out, _TRA("File Type:"), name);
 }
 
+// Which way the pages run, and where that came from. An EPUB can state it with
+// page-progression-direction; for everything else it's the manga-mode default
+// or the user's own toggle (issue #1264).
+static void AppendReadingDirection(str::Builder& out, DisplayModel* dm) {
+    if (!dm) {
+        return;
+    }
+    bool r2l = dm->GetDisplayR2L();
+    Str dir = r2l ? _TRA("Right to left") : _TRA("Left to right");
+    Str src;
+    const PageLayout& layout = dm->GetEngine()->preferredLayout;
+    if (layout.r2lDeclared && r2l == layout.r2l) {
+        src = _TRA("from the document");
+    } else if (r2l != layout.r2l) {
+        src = _TRA("changed by you");
+    }
+    TempStr val = src ? str::JoinTemp(dir, StrL(" ("), src, StrL(")")) : TempStr(dir);
+    AppendProp(out, _TRA("Reading Direction:"), val);
+}
+
 static void GetPropsText(DocController* ctrl, str::Builder& out) {
     ReportIf(!ctrl);
 
@@ -567,6 +587,7 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
         AppendProp(out, _TRA("File Size:"), strTemp);
     }
     AppendFileType(out, path);
+    AppendReadingDirection(out, dm);
 
     Props props;
     GetAllProps(ctrl, props);

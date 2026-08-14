@@ -3605,6 +3605,20 @@ bool EngineMupdf::FinishLoading() {
     }
 
     preferredLayout = GetPreferredLayout(ctx, _doc);
+    // mupdf renders EPUBs but doesn't read the spine's
+    // page-progression-direction, so a manga EPUB came out left-to-right
+    // (#1264). Read it ourselves.
+    if (GuessFileTypeFromName(FilePath()) == FileType::Epub) {
+        EpubReadingDirection dir = EpubGetReadingDirection(FilePath());
+        preferredLayout.r2lDeclared = dir.declared;
+        if (dir.rtl) {
+            preferredLayout.r2l = true;
+            // right-to-left only shows in a two page spread, so ask for one
+            if (preferredLayout.type == PageLayout::Type::Single) {
+                preferredLayout.type = PageLayout::Type::Book;
+            }
+        }
+    }
     allowsPrinting = fz_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
     allowsCopyingText = fz_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
 

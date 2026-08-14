@@ -35,6 +35,9 @@ struct EpubDoc {
     Vec<PropValue> props;
     bool isNcxToc = false;
     bool isRtlDoc = false;
+    // the spine carried page-progression-direction, whatever its value. A
+    // document that says "ltr" has still said something
+    bool hasReadingDir = false;
 
     bool Load();
 
@@ -49,6 +52,7 @@ struct EpubDoc {
     TempStr GetPropertyTemp(DocProp prop) const;
     Str GetFileName() const;
     bool IsRTL() const;
+    bool HasReadingDirection() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
@@ -174,3 +178,11 @@ struct TxtDoc {
     static bool IsSupportedFileType(FileType kind);
     static TxtDoc* CreateFromFile(Str path);
 };
+
+// The reading direction an EPUB declares on its spine, without building a whole
+// EpubDoc. EPUBs are rendered by EngineMupdf, which doesn't parse it (#1264).
+struct EpubReadingDirection {
+    bool declared = false;
+    bool rtl = false;
+};
+EpubReadingDirection EpubGetReadingDirection(Str path);

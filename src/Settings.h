@@ -117,8 +117,10 @@ struct ComicBookUI {
     // horizontal and vertical distance between two pages in facing and
     // book view modes
     Size pageSpacing;
-    // if true, default to displaying Comic Book files in manga mode (from
-    // right to left if showing 2 pages at a time)
+    // if true, documents that don't state their own reading direction
+    // default to manga mode, i.e. right to left. A document that states a
+    // direction (e.g. an EPUB with page-progression-direction) is shown
+    // the way it asks for
     bool cbxMangaMode;
     // if given, sets the canvas background color for comic book files
     ParsedColor windowBgCol;
@@ -1107,13 +1109,14 @@ static const StructInfo gComicBookUIInfo = {
     gComicBookUIFields,
     "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight\0DefaultDisplayMode",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical distance "
-    "between two pages in facing and book view modes\0if true, default to displaying Comic Book files in manga mode "
-    "(from right to left if showing 2 pages at a time)\0if given, sets the canvas background color for comic book "
-    "files\0if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). Useful "
-    "for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)\0if true, absolute "
-    "zoom never makes a page taller than the window (each page is capped at Fit Height)\0default page layout for comic "
-    "books; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book view, "
-    "continuous, continuous facing, continuous book view",
+    "between two pages in facing and book view modes\0if true, documents that don't state their own reading direction "
+    "default to manga mode, i.e. right to left. A document that states a direction (e.g. an EPUB with "
+    "page-progression-direction) is shown the way it asks for\0if given, sets the canvas background color for comic "
+    "book files\0if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). "
+    "Useful for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)\0if true, "
+    "absolute zoom never makes a page taller than the window (each page is capped at Fit Height)\0default page layout "
+    "for comic books; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book "
+    "view, continuous, continuous facing, continuous book view",
     false};
 
 static const FieldInfo gImageUIFields[] = {
