@@ -1975,7 +1975,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 //--- home page chrome VirtCtrls
 
 HomeViewIconCtrl::HomeViewIconCtrl() {
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
 }
 
 void HomeViewIconCtrl::Paint(VirtPaintCtx& ctx) {
@@ -1984,7 +1984,7 @@ void HomeViewIconCtrl::Paint(VirtPaintCtx& ctx) {
 }
 
 HomeOpenDocCtrl::HomeOpenDocCtrl() {
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
 }
 
 void HomeOpenDocCtrl::Paint(VirtPaintCtx& ctx) {
@@ -1996,7 +1996,7 @@ void HomeOpenDocCtrl::Paint(VirtPaintCtx& ctx) {
 }
 
 HomeHelpBtnCtrl::HomeHelpBtnCtrl() {
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
     SetTooltip(_TRA("Keyboard Shortcuts"));
 }
 
@@ -2120,7 +2120,7 @@ static void HomeTipBandClicked(MainWindow* win, VirtMouseEvent*) {
 }
 
 HomeListIconCtrl::HomeListIconCtrl() {
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
     onGetTooltip = MkMethod1<HomeListIconCtrl, VirtTooltipEvent*, &HomeListIconCtrl::OnGetTooltip>(this);
 }
 
@@ -2136,7 +2136,7 @@ HomeEntryCtrl::~HomeEntryCtrl() {
 }
 
 HomeEntryCtrl::HomeEntryCtrl() {
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
 }
 
 HomeEntryCtrl* HomeEntriesCtrl::EntryAt(int idx) {

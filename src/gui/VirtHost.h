@@ -137,7 +137,13 @@ struct VirtHost {
     void SetFont(PlatformFont*);
 };
 
+//--- what the portable UI layer asks the platform for
+
 // where the mouse cursor is, in screen coordinates
 Point UiCursorScreenPos();
 // height of a horizontal scrollbar the OS draws
 int UiHScrollbarDy();
+// width of the 3d border the OS draws around a sunken control
+int UiEdgeDx();
+// show a cursor; does nothing for CursorId::None
+void UiSetCursor(CursorId);

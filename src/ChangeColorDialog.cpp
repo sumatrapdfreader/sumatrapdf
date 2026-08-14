@@ -808,7 +808,7 @@ static VirtCustom* MakeSwatch(ChangeColorWnd* wnd, int id, Size sz, bool context
     c->id = id;
     c->userData = (uintptr_t)wnd;
     c->SetFlag(vwfFocusable, true);
-    c->cursor = IDC_HAND;
+    c->cursor = CursorId::Hand;
     c->onPaint = MkFunc1(PaintSwatch, c);
     c->onClick = MkFunc1(SwatchClicked, wnd);
     if (contextMenu) {
@@ -856,7 +856,7 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
         auto* c = new VirtCustom();
         c->idealSize = {DpiScale(380), DpiScale(150)};
         c->SetFlag(vwfCapturesMouse, true);
-        c->cursor = IDC_CROSS;
+        c->cursor = CursorId::Cross;
         c->onPaint = MkFunc1(PaintColorArea, this);
         c->onMouseDown = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnAreaMouse>(this);
         c->onMouseMove = MkFunc1(OnAreaMouseMove, this);

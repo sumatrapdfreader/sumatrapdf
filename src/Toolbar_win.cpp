@@ -76,8 +76,8 @@ static void OnPageEditChar(MainWindow* win, Edit::CharEvent* ev) {
     if (!win || !win->IsDocLoaded() || !win->pageEdit) {
         return;
     }
-    switch (ev->c) {
-        case VK_RETURN: {
+    switch ((Key)ev->c) {
+        case Key::Enter: {
             TempStr s = win->pageEdit->GetTextTemp();
             int newPageNo = win->ctrl->GetPageByLabel(s);
             if (win->ctrl->ValidPageNo(newPageNo)) {
@@ -90,20 +90,22 @@ static void OnPageEditChar(MainWindow* win, Edit::CharEvent* ev) {
             ev->didHandle = true;
             return;
         }
-        case VK_ESCAPE:
+        case Key::Escape:
             HwndSetFocus(win->hwndFrame);
             UpdateOverlayToolbarForMouse(win);
             ev->didHandle = true;
             return;
-        case VK_TAB:
+        case Key::Tab:
             AdvanceFocus(win);
             ev->didHandle = true;
+            return;
+        default:
             return;
     }
 }
 
 static int PageEditPadL() {
-    return DpiGetSystemMetrics(SM_CXEDGE);
+    return UiEdgeDx();
 }
 
 static int PageEditPadR() {

@@ -112,14 +112,14 @@ static Color TbBgColor() {
 
 Color TbTextColor() {
     if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-        return GetSysColor(COLOR_BTNTEXT);
+        return SysControlTextColor();
     }
     return ThemeWindowTextColor();
 }
 
 static Color TbDisabledColor() {
     if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-        return GetSysColor(COLOR_GRAYTEXT);
+        return SysControlTextDisabledColor();
     }
     return ThemeWindowTextDisabledColor();
 }

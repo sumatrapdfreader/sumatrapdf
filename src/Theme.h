@@ -21,6 +21,8 @@ Color ThemeControlBackgroundColor();
 Color ThemeWindowBackgroundColor();
 Color ThemeWindowTextColor();
 Color ThemeWindowTextDisabledColor();
+Color SysControlTextColor();
+Color SysControlTextDisabledColor();
 Color ThemeWindowDarkerTextColor();
 Color ThemeWindowControlBackgroundColor();
 Color ThemeWindowLinkColor();

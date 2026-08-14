@@ -15,6 +15,7 @@
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
+#include "gui/VirtHost.h"
 
 //--- VirtCtrl
 
@@ -325,8 +326,8 @@ bool VirtCtrl::OnSetCursor(Point ptLocal) {
         onSetCursor.Call(&ev);
         return ev.didHandle;
     }
-    if (HasFlag(vwfEnabled) && cursor) {
-        SetCursorCached(cursor);
+    if (HasFlag(vwfEnabled) && cursor != CursorId::None) {
+        UiSetCursor(cursor);
         return true;
     }
     return false;
@@ -2146,7 +2147,7 @@ static Kind kindVirtCtrlLink = "virtCtrlLink";
 VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtLink, &VirtLink::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtLink, &VirtLink::OnMouseLeave>(this);
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
 
     kind = kindVirtCtrlLink;
     flags &= ~vwfNoHitTest;
@@ -2190,7 +2191,7 @@ VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     onMouseEnter = MkMethod0<VirtButton, &VirtButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtButton, &VirtButton::OnMouseLeave>(this);
     onKeyDown = MkMethod1<VirtButton, VirtKeyEvent*, &VirtButton::OnKeyDown>(this);
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
 
     kind = kindVirtCtrlButton;
     flags &= ~vwfNoHitTest;
@@ -2276,7 +2277,7 @@ VirtIconButton::VirtIconButton() {
     onMouseEnter = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtIconButton, &VirtIconButton::OnMouseLeave>(this);
     onMouseMove = MkMethod1<VirtIconButton, VirtMouseEvent*, &VirtIconButton::OnMouseMove>(this);
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
 
     kind = kindVirtCtrlIconButton;
 }
@@ -2371,7 +2372,7 @@ static Kind kindVirtCtrlCloseButton = "virtCtrlCloseButton";
 VirtCloseButton::VirtCloseButton() {
     onMouseEnter = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseLeave>(this);
-    cursor = IDC_HAND;
+    cursor = CursorId::Hand;
 
     kind = kindVirtCtrlCloseButton;
 }

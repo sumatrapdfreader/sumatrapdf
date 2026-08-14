@@ -124,8 +124,8 @@ struct VirtCtrl : ILayout {
     Str name;
     // static tooltip (owned); used when onGetTooltip is empty
     Str tooltip;
-    // default cursor id (e.g. IDC_HAND); used when onSetCursor is empty
-    LPWSTR cursor = nullptr;
+    // default cursor; used when onSetCursor is empty
+    CursorId cursor = CursorId::None;
 
     VirtCtrl();
     ~VirtCtrl() override;

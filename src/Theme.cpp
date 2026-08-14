@@ -1028,6 +1028,18 @@ Color ThemeWindowTextDisabledColor() {
     return GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
 }
 
+// The colors the OS draws its own controls in. The default theme defers to
+// them so that the app follows the system appearance; the other themes bring
+// their own. Callers ask Theme for them so they don't have to name the OS
+// palette themselves.
+Color SysControlTextColor() {
+    return GetSysColor(COLOR_BTNTEXT);
+}
+
+Color SysControlTextDisabledColor() {
+    return GetSysColor(COLOR_GRAYTEXT);
+}
+
 Color ThemeWindowDarkerTextColor() {
     if (gUseHighContrast) {
         // high contrast has no muted text: muting it is the opposite of the point

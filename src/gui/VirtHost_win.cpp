@@ -318,3 +318,36 @@ Point UiCursorScreenPos() {
 int UiHScrollbarDy() {
     return DpiGetSystemMetrics(SM_CYHSCROLL);
 }
+
+int UiEdgeDx() {
+    return DpiGetSystemMetrics(SM_CXEDGE);
+}
+
+static LPWSTR ToWin32Cursor(CursorId id) {
+    switch (id) {
+        case CursorId::Arrow:
+            return IDC_ARROW;
+        case CursorId::IBeam:
+            return IDC_IBEAM;
+        case CursorId::Hand:
+            return IDC_HAND;
+        case CursorId::Cross:
+            return IDC_CROSS;
+        case CursorId::SizeNS:
+            return IDC_SIZENS;
+        case CursorId::SizeWE:
+            return IDC_SIZEWE;
+        case CursorId::No:
+            return IDC_NO;
+        case CursorId::None:
+            return nullptr;
+    }
+    return nullptr;
+}
+
+void UiSetCursor(CursorId id) {
+    LPWSTR win32Id = ToWin32Cursor(id);
+    if (win32Id) {
+        SetCursorCached(win32Id);
+    }
+}

@@ -6,6 +6,28 @@ Data models for UI controls.
 Don't depend on UI subsystem because they are used in non-gui code e.g. engines.
 */
 
+// The keys the UI reacts to by name, so it doesn't compare against the
+// platform's key constants. The values are the control characters those keys
+// produce, which is what a character event carries.
+enum class Key : int {
+    Tab = 9,
+    Enter = 13,
+    Escape = 27,
+};
+
+// The mouse cursors the UI asks for by name. The platform layer maps them to
+// its own (on Windows, the IDC_* cursors)
+enum class CursorId {
+    None = 0,
+    Arrow,
+    IBeam,
+    Hand,
+    Cross,
+    SizeNS,
+    SizeWE,
+    No,
+};
+
 struct ListBoxModel {
     virtual ~ListBoxModel() = default;
     virtual int ItemsCount() = 0;
