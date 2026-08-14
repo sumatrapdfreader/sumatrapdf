@@ -27,8 +27,6 @@ struct SimpleBrowserWindow : WindowBase {
     void OnFocus(WindowBase::FocusEvent*);
     void OnSize(WindowBase::SizeEvent*);
     void OnCommand(WindowBase::CommandEvent*);
-    void PreTranslate(WindowBase::PreTranslateEvent* ev);
-    void OnKeyDown(KeyEvent* ev);
     void OnBack(VirtMouseEvent* ev = nullptr);
     void OnForward(VirtMouseEvent* ev = nullptr);
     ~SimpleBrowserWindow() override;

@@ -141,31 +141,12 @@ static int ResolveAccelCmd(void* /*user*/, u16 vk, bool ctrl, bool shift, bool a
     if (vk == 'W' && ctrl && !shift && !alt) {
         return CmdClose;
     }
-    // Esc closes documentation (WebView has focus; PreTranslate alone is not enough)
-    if (vk == VK_ESCAPE && !ctrl && !shift && !alt) {
-        return CmdClose;
-    }
     return 0;
 }
 
 SimpleBrowserWindow::~SimpleBrowserWindow() {
     // ~WindowBase deletes `layout`, which owns the buttons and the url label
     delete webView;
-}
-
-// When focus is on chrome (Back/Forward/URL), Esc is not handled by WebView.
-void SimpleBrowserWindow::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-    }
-}
-
-void SimpleBrowserWindow::PreTranslate(WindowBase::PreTranslateEvent* ev) {
-    if (ev->msg->message == WM_CHAR && ev->msg->wParam == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-    }
 }
 
 void SimpleBrowserWindow::OnFocus(WindowBase::FocusEvent*) {
@@ -195,9 +176,6 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     onFocus = MkMethod1<SimpleBrowserWindow, WindowBase::FocusEvent*, &SimpleBrowserWindow::OnFocus>(this);
     onSize = MkMethod1<SimpleBrowserWindow, WindowBase::SizeEvent*, &SimpleBrowserWindow::OnSize>(this);
     onCommand = MkMethod1<SimpleBrowserWindow, WindowBase::CommandEvent*, &SimpleBrowserWindow::OnCommand>(this);
-    onKeyDown = MkMethod1<SimpleBrowserWindow, KeyEvent*, &SimpleBrowserWindow::OnKeyDown>(this);
-    onPreTranslate =
-        MkMethod1<SimpleBrowserWindow, WindowBase::PreTranslateEvent*, &SimpleBrowserWindow::PreTranslate>(this);
     HWND frameHwnd = nullptr;
     {
         CreateCustomArgs cargs;
