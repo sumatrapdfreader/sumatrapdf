@@ -162,6 +162,12 @@ SidebarOnRight = false
 ; version 3.6)
 ShowLinks = false
 
+; if true, a click (not a drag) on the left fifth of the page area goes to the
+; previous page and a click on the right fifth goes to the next page (reversed
+; in manga / right-to-left mode). Links, annotations and presentation-mode
+; clicks are unchanged (introduced in version 3.7)
+ClickEdgeToTurnPage = false
+
 ; if true, document links are ignored so you can select and read (useful for
 ; drawings with many links); if false, clicking a link follows it (introduced in
 ; version 3.7)

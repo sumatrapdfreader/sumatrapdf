@@ -2341,6 +2341,33 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // Click the left/right fifth of the canvas to turn the page (issue #1203).
+    // Presentation mode has its own click-to-turn below. Manga (R2L) reverses
+    // the sides so left still advances.
+    if (gGlobalPrefs && gGlobalPrefs->clickEdgeToTurnPage && tab && tab->ctrl && PM_ENABLED != win->presentation) {
+        Rect rc = HwndClientRect(win->hwndCanvas);
+        if (rc.dx > 0) {
+            int edgeDx = rc.dx / 5;
+            bool r2l = dm && dm->GetDisplayR2L();
+            bool goPrev = x < edgeDx;
+            bool goNext = x >= rc.dx - edgeDx;
+            if (r2l) {
+                goPrev = x >= rc.dx - edgeDx;
+                goNext = x < edgeDx;
+            }
+            if (goPrev) {
+                tab->ctrl->GoToPrevPage();
+                ReadAloudOnUserViewChanged(win);
+                return;
+            }
+            if (goNext) {
+                tab->ctrl->GoToNextPage();
+                ReadAloudOnUserViewChanged(win);
+                return;
+            }
+        }
+    }
+
     if (PM_ENABLED == win->presentation) {
         /* in presentation mode, change pages on left/right-clicks */
         if ((key & MK_SHIFT)) {

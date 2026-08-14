@@ -1048,6 +1048,15 @@ const globalPrefs: Field[] = [
   ).ver("3.7"),
   field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
+    "ClickEdgeToTurnPage",
+    Bool,
+    false,
+    "if true, a click (not a drag) on the left fifth of the page area goes to " +
+      "the previous page and a click on the right fifth goes to the next page " +
+      "(reversed in manga / right-to-left mode). Links, annotations and " +
+      "presentation-mode clicks are unchanged",
+  ).ver("3.7"),
+  field(
     "DisableLinks",
     Bool,
     false,

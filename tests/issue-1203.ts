@@ -1,0 +1,150 @@
+// Test for https://github.com/sumatrapdfreader/sumatrapdf/issues/1203
+//
+// ClickEdgeToTurnPage: a click (not a drag) on the left fifth of the canvas
+// goes to the previous page, the right fifth to the next page.
+//
+// Run:  bun tests/issue-1203.ts [--no-build]   (or via tests/all.ts)
+
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { clickAt, findCanvas, waitForFrame } from "./win-automation.ts";
+import { getClientRect, sleep } from "./winapi.ts";
+import { EXE, runStandalone, tmpPath } from "./util.ts";
+
+const SETTINGS_HEAD = `UiLanguage = en
+CheckForUpdates = false
+RestoreSession = false
+RememberOpenedFiles = false
+RememberStatePerDocument = false
+ShowToc = false
+ShowFavorites = false
+`;
+
+function makePdf(): Buffer {
+  const objs = [
+    `<< /Type /Catalog /Pages 2 0 R >>`,
+    `<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 >>`,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>`,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>`,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>`,
+  ];
+  let pdf = "%PDF-1.7\n%\xe2\xe3\xcf\xd3\n";
+  const off: number[] = [];
+  for (let i = 0; i < objs.length; i++) {
+    off[i] = Buffer.byteLength(pdf, "latin1");
+    pdf += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
+  }
+  const xref = Buffer.byteLength(pdf, "latin1");
+  const n = objs.length + 1;
+  pdf += `xref\n0 ${n}\n0000000000 65535 f \n`;
+  for (let i = 0; i < objs.length; i++) {
+    pdf += off[i]!.toString().padStart(10, "0") + " 00000 n \n";
+  }
+  pdf += `trailer\n<< /Size ${n} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(pdf, "latin1");
+}
+
+async function queryPage(client: ControlClient): Promise<number> {
+  const deadline = Date.now() + 20_000;
+  for (;;) {
+    const res = await client.request(ControlCommand.TestFavoriteNav, ["page"]);
+    const exitCode = res[0] as number;
+    const raw = String(res[1] ?? "").trim();
+    if (exitCode === 0) {
+      const m = /OK page=(\d+)/.exec(raw);
+      if (!m) {
+        throw new Error(`issue-1203: could not parse page: ${raw}`);
+      }
+      return parseInt(m[1]!, 10);
+    }
+    if (exitCode !== 2) {
+      throw new Error(`issue-1203: page query failed: ${raw}`);
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`issue-1203: document never became ready: ${raw}`);
+    }
+    await new Promise((r) => setTimeout(r, 100));
+  }
+}
+
+async function clickCanvasEdge(pid: number, side: "left" | "right" | "middle"): Promise<void> {
+  const frame = await waitForFrame(pid);
+  if (!frame) {
+    throw new Error("issue-1203: no frame");
+  }
+  const canvas = findCanvas(frame);
+  if (!canvas) {
+    throw new Error("issue-1203: no canvas");
+  }
+  const rc = getClientRect(canvas);
+  const dx = rc.right - rc.left;
+  const dy = rc.bottom - rc.top;
+  if (dx < 50 || dy < 50) {
+    throw new Error(`issue-1203: canvas too small ${dx}x${dy}`);
+  }
+  const y = Math.floor(dy / 2);
+  let x = Math.floor(dx / 2);
+  if (side === "left") {
+    x = Math.max(4, Math.floor(dx / 10));
+  } else if (side === "right") {
+    x = dx - Math.max(4, Math.floor(dx / 10));
+  }
+  await clickAt(canvas, x, y, 200);
+  await sleep(150);
+}
+
+export async function testit(): Promise<void> {
+  const pdf = tmpPath("issue-1203.pdf");
+  writeFileSync(pdf, makePdf());
+
+  const onDir = tmpPath("issue-1203-on");
+  rmSync(onDir, { recursive: true, force: true });
+  mkdirSync(onDir, { recursive: true });
+  writeFileSync(join(onDir, "SumatraPDF-settings.txt"), `${SETTINGS_HEAD}ClickEdgeToTurnPage = true\n`);
+
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      if ((await queryPage(client)) !== 1) {
+        throw new Error("issue-1203 on: expected to start on page 1");
+      }
+      await clickCanvasEdge(proc.pid!, "right");
+      if ((await queryPage(client)) !== 2) {
+        throw new Error(`issue-1203 on: right-edge click should go to page 2, got ${await queryPage(client)}`);
+      }
+      await clickCanvasEdge(proc.pid!, "left");
+      if ((await queryPage(client)) !== 1) {
+        throw new Error(`issue-1203 on: left-edge click should go to page 1, got ${await queryPage(client)}`);
+      }
+      await clickCanvasEdge(proc.pid!, "middle");
+      if ((await queryPage(client)) !== 1) {
+        throw new Error("issue-1203 on: middle click should stay on page 1");
+      }
+    },
+    ["-appdata", onDir, pdf],
+  );
+
+  const offDir = tmpPath("issue-1203-off");
+  rmSync(offDir, { recursive: true, force: true });
+  mkdirSync(offDir, { recursive: true });
+  writeFileSync(join(offDir, "SumatraPDF-settings.txt"), `${SETTINGS_HEAD}ClickEdgeToTurnPage = false\n`);
+
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      if ((await queryPage(client)) !== 1) {
+        throw new Error("issue-1203 off: expected to start on page 1");
+      }
+      await clickCanvasEdge(proc.pid!, "right");
+      if ((await queryPage(client)) !== 1) {
+        throw new Error("issue-1203 off: right-edge click should not turn the page");
+      }
+    },
+    ["-appdata", offDir, pdf],
+  );
+}
+
+if (import.meta.main) {
+  await runStandalone(testit);
+}

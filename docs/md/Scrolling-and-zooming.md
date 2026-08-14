@@ -47,6 +47,9 @@ For comic books and manga (right-to-left reading, double-page spreads, `LimitToW
 - `Ctrl` + mouse scroll wheel : zoom in / out
 - `Ctrl` + touch pad scroll gesture : zoom in / out
 - pinch zoom gesture on touch screen
+- with `ClickEdgeToTurnPage = true` (advanced setting): click the left fifth of the page area for the previous page, the right fifth for the next page (sides reverse in manga mode)
+
+Also mention in comics doc briefly.
 
 ## Zoom levels
 

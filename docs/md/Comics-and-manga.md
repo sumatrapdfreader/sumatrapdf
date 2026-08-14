@@ -35,6 +35,8 @@ Use the same page layout commands as for PDF:
 
 Facing or book view is useful for double-page spreads. Continuous mode is natural for long webtoon-style strips. See [Scrolling and zooming](Scrolling-and-zooming.md).
 
+To turn the page by clicking the left or right edge of the window (like many comic readers), set `ClickEdgeToTurnPage = true` in [advanced settings](Advanced-options-settings.md). In manga mode the sides are reversed so a click on the left still advances.
+
 ## Manga mode (right-to-left)
 
 **Manga mode** displays pages right-to-left in facing and book views (typical for Japanese manga).
