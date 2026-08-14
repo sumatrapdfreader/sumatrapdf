@@ -2042,6 +2042,117 @@ static Str GetExtFromArchiveType(Archive* cbxFile) {
     return {};
 }
 
+constexpr int kMaxArchivePathParts = 32;
+
+// Split an archive member path on / or \. Skips empty, ".", and ".." parts.
+static int SplitArchivePath(Str path, Str* parts, int maxParts) {
+    int n = 0;
+    int i = 0;
+    while (i < path.len && n < maxParts) {
+        while (i < path.len && path::IsSep(path.s[i])) {
+            i++;
+        }
+        int start = i;
+        while (i < path.len && !path::IsSep(path.s[i])) {
+            i++;
+        }
+        if (i == start) {
+            break;
+        }
+        Str part(path.s + start, i - start);
+        if (str::Eq(part, StrL(".")) || str::Eq(part, StrL(".."))) {
+            continue;
+        }
+        parts[n++] = part;
+    }
+    return n;
+}
+
+static void TocAppendChild(TocItem* parent, TocItem* child) {
+    child->parent = parent;
+    if (!parent->child) {
+        parent->child = child;
+        return;
+    }
+    parent->child->AddSiblingAtEnd(child);
+}
+
+// Folder-aware ToC from archive member paths (issue #5317). A directory
+// shared by every file (e.g. all images in "images/") is stripped so a
+// single-folder comic stays a flat list. Remaining chapter folders become
+// tree nodes; clicking a folder goes to its first page.
+static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
+    int nFiles = len(files);
+    if (nFiles <= 0) {
+        return nullptr;
+    }
+
+    Str firstParts[kMaxArchivePathParts];
+    int firstN = SplitArchivePath(files[0]->name, firstParts, kMaxArchivePathParts);
+    int common = firstN > 0 ? firstN - 1 : 0;
+    bool anyFolder = false;
+    for (int i = 0; i < nFiles; i++) {
+        Str parts[kMaxArchivePathParts];
+        int n = SplitArchivePath(files[i]->name, parts, kMaxArchivePathParts);
+        int nDir = n > 0 ? n - 1 : 0;
+        int m = common < nDir ? common : nDir;
+        for (int k = 0; k < m; k++) {
+            if (!str::Eq(firstParts[k], parts[k])) {
+                m = k;
+                break;
+            }
+        }
+        common = m;
+        if (nDir > common) {
+            anyFolder = true;
+        }
+    }
+    if (!anyFolder) {
+        return nullptr;
+    }
+
+    auto* realRoot = AllocTocItem(nullptr, {}, 0);
+    Vec<TocItem*> stack;
+    Vec<Str> stackNames;
+    int idCounter = 0;
+
+    for (int i = 0; i < nFiles; i++) {
+        Str parts[kMaxArchivePathParts];
+        int n = SplitArchivePath(files[i]->name, parts, kMaxArchivePathParts);
+        if (n <= common) {
+            continue;
+        }
+        int nDir = n - 1;
+        int match = 0;
+        while (match < len(stack) && (common + match) < nDir && str::Eq(stackNames[match], parts[common + match])) {
+            match++;
+        }
+        stack.RemoveAt(match, len(stack) - match);
+        stackNames.RemoveAt(match, len(stackNames) - match);
+
+        for (int k = common + match; k < nDir; k++) {
+            TocItem* parent = len(stack) == 0 ? realRoot : stack.Last();
+            TocItem* folder = AllocTocItem(nullptr, parts[k], i + 1);
+            folder->isOpenDefault = true;
+            folder->id = ++idCounter;
+            TocAppendChild(parent, folder);
+            stack.Append(folder);
+            stackNames.Append(parts[k]);
+        }
+
+        TocItem* parent = len(stack) == 0 ? realRoot : stack.Last();
+        TocItem* leaf = AllocTocItem(nullptr, parts[n - 1], i + 1);
+        leaf->id = ++idCounter;
+        TocAppendChild(parent, leaf);
+    }
+
+    if (!realRoot->child) {
+        FreeTocItemRec(nullptr, realRoot);
+        return nullptr;
+    }
+    return realRoot;
+}
+
 bool EngineCbx::FinishLoading() {
     ReportIf(!cbxArchive);
     if (!cbxArchive) {
@@ -2174,17 +2285,27 @@ bool EngineCbx::FinishLoading() {
             }
             addTocItem(cip.bookmarkTitles[bi], pageNo);
         }
-    } else {
-        for (int i = 0; i < pageCount; i++) {
-            Str fname = files[i]->name;
-            TempStr baseName = path::GetBaseNameTemp(fname);
-            addTocItem(baseName, i + 1);
+        if (tocBuildRoot) {
+            auto* realRoot = AllocTocItem(nullptr, {}, 0);
+            realRoot->child = tocBuildRoot;
+            tocTree = new TocTree(realRoot);
         }
-    }
-    if (tocBuildRoot) {
-        auto* realRoot = AllocTocItem(nullptr, {}, 0);
-        realRoot->child = tocBuildRoot;
-        tocTree = new TocTree(realRoot);
+    } else {
+        TocItem* folderRoot = BuildCbxFolderToc(files);
+        if (folderRoot) {
+            tocTree = new TocTree(folderRoot);
+        } else {
+            for (int i = 0; i < pageCount; i++) {
+                Str fname = files[i]->name;
+                TempStr baseName = path::GetBaseNameTemp(fname);
+                addTocItem(baseName, i + 1);
+            }
+            if (tocBuildRoot) {
+                auto* realRoot = AllocTocItem(nullptr, {}, 0);
+                realRoot->child = tocBuildRoot;
+                tocTree = new TocTree(realRoot);
+            }
+        }
     }
 
     return true;

@@ -15,6 +15,13 @@ Encrypted `.cbz` / `.cbr` files are supported (password prompt when needed). Arc
 
 Document properties (`Ctrl + D`) for comic archives list image files and, where present, EXIF and ComicInfo / ComicBookInfo metadata.
 
+## Table of contents
+
+The Bookmarks sidebar lists pages in the archive.
+
+- If the archive has a `ComicInfo.xml` with bookmarks, those names are used.
+- Otherwise, if images live in **chapter folders**, the folders appear as nested outline entries (click a folder to jump to its first page). A directory shared by every file is omitted, so a comic whose files are all in one folder stays a flat list of file names.
+
 ## View layout
 
 Use the same page layout commands as for PDF:

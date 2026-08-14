@@ -1183,17 +1183,21 @@ TempStr I18nErrorStringResultTemp(int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
-static void AppendTocItems(str::Builder& out, TocItem* item) {
+static void AppendTocItems(str::Builder& out, TocItem* item, int depth = 0) {
     for (; item; item = item->next) {
         if (item->title) {
+            for (int i = 0; i < depth; i++) {
+                out.Append(StrL("  "));
+            }
             out.Append(fmt("%s|page=%d\n", item->title, item->pageNo));
         }
-        AppendTocItems(out, item->child);
+        AppendTocItems(out, item->child, depth + 1);
     }
 }
 
 // Headless test for document TOC (e.g. ComicInfo.xml bookmarks in CBZ). Returns
-// one line per top-level TOC entry: "title|page=N". Used by tests/issue-1201.ts.
+// one line per TOC entry: "title|page=N", indented two spaces per nesting
+// level. Used by tests/issue-1201.ts and tests/issue-5317.ts.
 TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
