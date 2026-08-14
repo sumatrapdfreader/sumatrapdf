@@ -667,12 +667,32 @@ const selectionHandler: Field[] = [
 ];
 
 const annotations: Field[] = [
-  field("HighlightColor", Color, rgb(0xff, 0xff, 0x0), "color of newly created highlight annotations"),
-  field("UnderlineColor", Color, rgb(0x00, 0xff, 0x0), "color of newly created underline annotations"),
-  field("SquigglyColor", Color, rgb(0xff, 0x00, 0xff), "color of newly created squiggly underline annotations").ver(
-    "3.5",
+  field(
+    "HighlightColor",
+    Color,
+    rgb(0xff, 0xff, 0x0),
+    "color of newly created highlight annotations. Use an #aarrggbb value to set " +
+      "default opacity (00 = transparent, FF = opaque); #rrggbb is fully opaque",
   ),
-  field("StrikeOutColor", Color, rgb(0xff, 0x00, 0x00), "color of newly created strike out annotations").ver("3.5"),
+  field(
+    "UnderlineColor",
+    Color,
+    rgb(0x00, 0xff, 0x0),
+    "color of newly created underline annotations. #aarrggbb sets default opacity " + "the same way as HighlightColor",
+  ),
+  field(
+    "SquigglyColor",
+    Color,
+    rgb(0xff, 0x00, 0xff),
+    "color of newly created squiggly underline annotations. #aarrggbb sets default opacity " +
+      "the same way as HighlightColor",
+  ).ver("3.5"),
+  field(
+    "StrikeOutColor",
+    Color,
+    rgb(0xff, 0x00, 0x00),
+    "color of newly created strike out annotations. #aarrggbb sets default opacity " + "the same way as HighlightColor",
+  ).ver("3.5"),
   field("FreeTextColor", Color, "", "text color of newly created free text annotations").ver("3.5"),
   field("FreeTextBackgroundColor", Color, "", "background color of newly created free text annotations").ver("3.6"),
   field(
@@ -2118,12 +2138,12 @@ If you add or remove lines with square brackets, **make sure to always add/remov
 The syntax for colors is: \`#rrggbb\` or \`#aarrggbb\`.
 
 The components are hex values (ranging from 00 to FF) and stand for:
-- \`aa\` : alpha (transparency). ff is fully transparent, 0 is not transparent, and 7f is 50% transparent
+- \`aa\` : alpha (opacity). \`00\` is fully transparent, \`FF\` is fully opaque, and \`7F\` is about 50% opaque
 - \`rr\` : red component
 - \`gg\` : green component
 - \`bb\` : blue component
 
-For example #ff0000 means red color. #7fff0000 is half-transparent red. You can use [Sphere](https://colorsphere.app/) to pick a color.
+For example \`#ff0000\` is opaque red. \`#7fff0000\` is half-transparent red. \`#rrggbb\` (6 digits) is the same as \`#FFrrggbb\`. You can use [Sphere](https://colorsphere.app/) to pick a color. This applies to annotation colors too (\`Annotations.HighlightColor\`, underline, squiggly, strike-out).
 
 `;
 

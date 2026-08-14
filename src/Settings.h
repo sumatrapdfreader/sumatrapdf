@@ -251,16 +251,21 @@ struct AntiGravity {
 
 // default values for annotations in PDF documents
 struct Annotations {
-    // color of newly created highlight annotations
+    // color of newly created highlight annotations. Use an #aarrggbb value
+    // to set default opacity (00 = transparent, FF = opaque); #rrggbb is
+    // fully opaque
     Str highlightColor;
     ParsedColor highlightColorParsed;
-    // color of newly created underline annotations
+    // color of newly created underline annotations. #aarrggbb sets default
+    // opacity the same way as HighlightColor
     Str underlineColor;
     ParsedColor underlineColorParsed;
-    // color of newly created squiggly underline annotations
+    // color of newly created squiggly underline annotations. #aarrggbb
+    // sets default opacity the same way as HighlightColor
     Str squigglyColor;
     ParsedColor squigglyColorParsed;
-    // color of newly created strike out annotations
+    // color of newly created strike out annotations. #aarrggbb sets
+    // default opacity the same way as HighlightColor
     Str strikeOutColor;
     ParsedColor strikeOutColorParsed;
     // text color of newly created free text annotations
@@ -1264,16 +1269,18 @@ static const StructInfo gAnnotationsInfo = {
     gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
     "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0TextIconColor\0TextIconType\0DefaultAuthor",
-    "color of newly created highlight annotations\0color of newly created underline annotations\0color of newly "
-    "created squiggly underline annotations\0color of newly created strike out annotations\0text color of newly "
-    "created free text annotations\0background color of newly created free text annotations\0opacity of free text "
-    "annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque\0font "
-    "size of free text annotations, in points\0border width of free text annotations, in points\0how text is aligned "
-    "in newly created free text annotations (Text Alignment in the annotation editor): left, center or right. "
-    "Right-to-left scripts (Arabic, Hebrew, Persian) want right\0color of newly created text (sticky note) "
-    "annotations\0icon shown for text (sticky note) annotations: comment, help, insert, key, new paragraph, note or "
-    "paragraph. If not set, note is used\0author recorded on newly created annotations. If not set, the Windows user "
-    "name is used; set it to (none) to leave the author out entirely",
+    "color of newly created highlight annotations. Use an #aarrggbb value to set default opacity (00 = transparent, FF "
+    "= opaque); #rrggbb is fully opaque\0color of newly created underline annotations. #aarrggbb sets default opacity "
+    "the same way as HighlightColor\0color of newly created squiggly underline annotations. #aarrggbb sets default "
+    "opacity the same way as HighlightColor\0color of newly created strike out annotations. #aarrggbb sets default "
+    "opacity the same way as HighlightColor\0text color of newly created free text annotations\0background color of "
+    "newly created free text annotations\0opacity of free text annotation in percent (0-100); 0 - fully transparent "
+    "(invisible), 50 - half transparent, 100 - fully opaque\0font size of free text annotations, in points\0border "
+    "width of free text annotations, in points\0how text is aligned in newly created free text annotations (Text "
+    "Alignment in the annotation editor): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want "
+    "right\0color of newly created text (sticky note) annotations\0icon shown for text (sticky note) annotations: "
+    "comment, help, insert, key, new paragraph, note or paragraph. If not set, note is used\0author recorded on newly "
+    "created annotations. If not set, the Windows user name is used; set it to (none) to leave the author out entirely",
     false};
 
 static const FieldInfo gExternalViewerFields[] = {

@@ -84,20 +84,22 @@ To move an annotation on the page, left click with mouse and drag to new locatio
 
 Open **Settings → Advanced Options...** and edit the `Annotations` block:
 
-| Setting | Used for |
-| --- | --- |
-| `HighlightColor` | New highlights (`a`) — default `#ffff00` |
-| `UnderlineColor` | Underline annotations |
-| `SquigglyColor` | Squiggly underline |
-| `StrikeOutColor` | Strike-out |
-| `FreeTextColor` / `FreeTextBackgroundColor` | Free text annotations |
-| `FreeTextSize` | Default font size for free text (default `12`) |
-| `FreeTextBorderWidth` | Border width for free text |
-| `FreeTextOpacity` | `0`–`100` percent opacity for free text |
-| `TextIconColor` / `TextIconType` | Sticky-note style icons |
-| `DefaultAuthor` | Author name written into new annotations |
+| Setting                                     | Used for                                       |
+| ------------------------------------------- | ---------------------------------------------- |
+| `HighlightColor`                            | New highlights (`a`) — default `#ffff00`       |
+| `UnderlineColor`                            | Underline annotations                          |
+| `SquigglyColor`                             | Squiggly underline                             |
+| `StrikeOutColor`                            | Strike-out                                     |
+| `FreeTextColor` / `FreeTextBackgroundColor` | Free text annotations                          |
+| `FreeTextSize`                              | Default font size for free text (default `12`) |
+| `FreeTextBorderWidth`                       | Border width for free text                     |
+| `FreeTextOpacity`                           | `0`–`100` percent opacity for free text        |
+| `TextIconColor` / `TextIconType`            | Sticky-note style icons                        |
+| `DefaultAuthor`                             | Author name written into new annotations       |
 
-Highlight/underline/strikeout opacity is changed **per annotation** in the annotation editor, not via a global default.
+Highlight, underline, squiggly and strike-out colors accept `#aarrggbb` so you can set a default opacity: `#80ffff00` is a half-transparent yellow highlight. `#rrggbb` (6 digits) is fully opaque. You can still change one annotation's opacity in the annotation editor.
+
+Free-text opacity is the separate `FreeTextOpacity` percent (0–100).
 
 See [Advanced options / settings](Advanced-options-settings.md) for the full list.
 
@@ -111,12 +113,12 @@ Add annotation commands to the toolbar via the `Shortcuts` array — see [Custom
 
 ## Saving workflow
 
-| Action | Shortcut / command |
-| --- | --- |
-| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`) |
-| Save to a new PDF | `CmdSaveAnnotationsNewFile` (tab context menu or command palette) |
-| Discard unsaved changes | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K` command palette) — reloads the file from disk |
-| Save when closing | Prompt dialog — choose existing file, new file, or discard |
+| Action                   | Shortcut / command                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`)                                                                              |
+| Save to a new PDF        | `CmdSaveAnnotationsNewFile` (tab context menu or command palette)                                                      |
+| Discard unsaved changes  | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K` command palette) — reloads the file from disk |
+| Save when closing        | Prompt dialog — choose existing file, new file, or discard                                                             |
 
 There is **no undo** (`Ctrl + Z`) for annotation edits. Delete an annotation with `Delete` when the cursor is over it, or remove it in the annotation editor.
 

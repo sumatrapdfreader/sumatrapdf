@@ -587,17 +587,21 @@ TranslateEngine =
 
 ; default values for annotations in PDF documents (introduced in version 3.3)
 Annotations [
-    ; color of newly created highlight annotations
+    ; color of newly created highlight annotations. Use an #aarrggbb value to
+    ; set default opacity (00 = transparent, FF = opaque); #rrggbb is fully
+    ; opaque
     HighlightColor = #ffff00
 
-    ; color of newly created underline annotations
+    ; color of newly created underline annotations. #aarrggbb sets default
+    ; opacity the same way as HighlightColor
     UnderlineColor = #00ff00
 
-    ; color of newly created squiggly underline annotations (introduced in
-    ; version 3.5)
+    ; color of newly created squiggly underline annotations. #aarrggbb sets
+    ; default opacity the same way as HighlightColor (introduced in version 3.5)
     SquigglyColor = #ff00ff
 
-    ; color of newly created strike out annotations (introduced in version 3.5)
+    ; color of newly created strike out annotations. #aarrggbb sets default
+    ; opacity the same way as HighlightColor (introduced in version 3.5)
     StrikeOutColor = #ff0000
 
     ; text color of newly created free text annotations (introduced in version
@@ -1068,10 +1072,10 @@ CheckForUpdates = true
 The syntax for colors is: `#rrggbb` or `#aarrggbb`.
 
 The components are hex values (ranging from 00 to FF) and stand for:
-- `aa` : alpha (transparency). ff is fully transparent, 0 is not transparent, and 7f is 50% transparent
+- `aa` : alpha (opacity). `00` is fully transparent, `FF` is fully opaque, and `7F` is about 50% opaque
 - `rr` : red component
 - `gg` : green component
 - `bb` : blue component
 
-For example #ff0000 means red color. #7fff0000 is half-transparent red. You can use [Sphere](https://colorsphere.app/) to pick a color.
+For example `#ff0000` is opaque red. `#7fff0000` is half-transparent red. `#rrggbb` (6 digits) is the same as `#FFrrggbb`. You can use [Sphere](https://colorsphere.app/) to pick a color. This applies to annotation colors too (`Annotations.HighlightColor`, underline, squiggly, strike-out).
 
