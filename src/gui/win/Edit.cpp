@@ -229,6 +229,7 @@ HWND Edit::Create(const CreateArgs& args) {
     }
     createdWithBottomBorder = args.withBottomBorder && !args.withBorder && !args.withFrame;
     createdWithFrame = args.withFrame && !args.withBorder;
+    centerTextVert = args.centerTextVert && !args.isMultiLine;
     selectAllOnFocus = args.selectAllOnFocus;
     if (args.isMultiLine) {
         cargs.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
@@ -380,7 +381,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
         }
 
         case WM_NCCALCSIZE: {
-            if (!createdWithBottomBorder && !createdWithFrame) {
+            if (!createdWithBottomBorder && !createdWithFrame && !centerTextVert) {
                 break;
             }
             LRESULT res = WndProcDefault(hwnd, msg, wp, lp);
@@ -394,9 +395,19 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                     rc->top += 1;
                     rc->bottom -= 1;
                 }
-            } else if (rc->bottom - rc->top > kEditBottomBorderDy) {
+            } else if (createdWithBottomBorder && rc->bottom - rc->top > kEditBottomBorderDy) {
                 // reserve a 1px strip under the client so typing never paints over the line
                 rc->bottom -= kEditBottomBorderDy;
+            }
+            // a single-line edit puts its text at the top of the client area, so
+            // the only way to move it down is to start the client area lower
+            ncCenterTop = 0;
+            if (centerTextVert) {
+                int surplus = (int)(rc->bottom - rc->top) - LineDy();
+                if (surplus > 1) {
+                    ncCenterTop = surplus / 2;
+                    rc->top += ncCenterTop;
+                }
             }
             ev->result = res;
             ev->didHandle = true;
@@ -404,7 +415,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
         }
 
         case WM_NCPAINT: {
-            if (!createdWithBottomBorder && !createdWithFrame) {
+            if (!createdWithBottomBorder && !createdWithFrame && ncCenterTop <= 0) {
                 break;
             }
             // borderless edit has no default NC chrome; still call default then draw
@@ -415,6 +426,14 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                 GetWindowRect(hwnd, &wr);
                 int w = wr.right - wr.left;
                 int h = wr.bottom - wr.top;
+                // the strip WM_NCCALCSIZE took off the top is outside the client
+                // area, so the edit never paints it: fill it like the client
+                HBRUSH bgBr = BackgroundBrush();
+                if (ncCenterTop > 0 && bgBr) {
+                    int inset = createdWithFrame ? 1 : 0;
+                    RECT tr{inset, inset, w - inset, inset + ncCenterTop};
+                    FillRect(hdc, &tr, bgBr);
+                }
                 Color col = EditBottomBorderColor();
                 if (createdWithFrame) {
                     RECT fr{0, 0, w, h};
@@ -436,6 +455,11 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
             return;
         }
     }
+}
+
+// height of one line of text in the control's font
+int Edit::LineDy() {
+    return HwndMeasureText(hwnd, "Minimal", HwndGetFont(hwnd)).dy;
 }
 
 bool Edit::HasBorder() {

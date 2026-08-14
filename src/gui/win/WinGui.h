@@ -658,6 +658,9 @@ struct Edit : ControlBase {
         int textPadding = 0;
         int marginLeft = 0;
         int marginRight = 0;
+        // center the text vertically when the control is taller than one line
+        // (single-line only; a single-line edit otherwise sits the text at the top)
+        bool centerTextVert = false;
         HFONT font = nullptr;
         bool isRtl = false;
     };
@@ -690,6 +693,9 @@ struct Edit : ControlBase {
     bool createdWithBorder = false;
     bool createdWithBottomBorder = false;
     bool createdWithFrame = false;
+    bool centerTextVert = false;
+    // top strip reserved by WM_NCCALCSIZE for centerTextVert, in px
+    int ncCenterTop = 0;
     bool selectAllOnFocus = false;
     bool delaySelectAll = false;
     // when set, shown instead of the edit's own I-beam (see SetCursorId)
@@ -704,6 +710,7 @@ struct Edit : ControlBase {
     void OnCommand(ControlBase::CommandEvent* ev);
 
     Size GetIdealSize() override;
+    int LineDy();
 
     void SetIdealWidthChars(int nChars);
     void SetMaxWidthChars(int nChars);

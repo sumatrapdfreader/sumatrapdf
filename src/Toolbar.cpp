@@ -1016,6 +1016,9 @@ static Edit* CreatePageEdit(MainWindow* win, HFONT font, int iconDy) {
     args.numbersOnly = true;
     args.alignRight = true;
     args.selectAllOnFocus = true;
+    // the box is as tall as the icons, so without this the digits would sit at
+    // its top instead of on the same line as "Page:" and "/ N"
+    args.centerTextVert = true;
     args.text = StrL("0");
     args.marginLeft = PageEditPadL();
     args.marginRight = PageEditPadR();
