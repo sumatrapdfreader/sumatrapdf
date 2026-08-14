@@ -24,8 +24,6 @@ struct ListBoxModelStrings : ListBoxModel {
 
 using DropDownModelStrings = ListBoxModelStrings;
 
-void FillWithItems(HWND hwnd, ListBoxModel* model);
-
 // TreeItem represents an item in a TreeView control
 typedef UINT_PTR TreeItem;
 

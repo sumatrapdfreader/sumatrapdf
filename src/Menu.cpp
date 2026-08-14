@@ -2967,7 +2967,7 @@ void RebuildMenuBarButtons(MainWindow* win) {
         TbAddButtons(hwndMb, 1, &b);
     }
 
-    TbAutosIZE(hwndMb);
+    TbAutoSize(hwndMb);
 
     if (win->hwndMenuReBar) {
         Rect rc = TbGetItemRect(hwndMb, 0);

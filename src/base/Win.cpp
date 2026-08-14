@@ -92,52 +92,6 @@ void EditSelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
 }
 
-int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
-    ReportIf(lines < 1);
-    ReportIf(lines > 256);
-
-    HFONT hfont = HwndGetFont(hwnd);
-    Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
-    // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    TempStr txt = HwndGetTextTemp(hwnd);
-    Size s2 = HwndMeasureText(hwnd, txt, hfont);
-    int dy = std::min(s1.dy, s2.dy);
-    if (dy == 0) {
-        dy = std::max(s1.dy, s2.dy);
-    }
-    dy = dy * lines;
-    if (hasBorder) {
-        dy += DpiScale(8);
-    }
-    // logf("Edit::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
-    return dy;
-}
-
-// HWND should be Edit control
-// Should be called after user types Ctrl + Backspace to
-// delete word backwards from current cursor position
-void EditImplementCtrlBack(HWND hwnd) {
-    // we calc selection in WCHAR space because it's easier
-    TempWStr text = HwndGetTextWTemp(hwnd);
-    int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
-    // remove the rectangle produced by Ctrl+Backspace
-    if (selStart > 0 && text.s[selStart - 1] == '\x7F') {
-        memmove(text.s + selStart - 1, text.s + selStart, len(text.s + selStart - 1) * sizeof(WCHAR));
-        TempStr s = ToUtf8Temp(text);
-        HwndSetText(hwnd, s);
-        selStart = selEnd = selStart - 1;
-    }
-    // remove the previous word (and any spacing after it)
-    for (; selStart > 0 && wstr::IsWs(text.s[selStart - 1]); selStart--) {
-        ;
-    }
-    for (; selStart > 0 && !wstr::IsWs(text.s[selStart - 1]); selStart--) {
-        ;
-    }
-    Edit_SetSel(hwnd, selStart, selEnd);
-    SendMessageW(hwnd, WM_CLEAR, 0, 0); // delete selected text
-}
-
 //--- list box
 
 void ListBox_AppendString_NoSort(HWND hwnd, WStr txt) {
@@ -1881,11 +1835,6 @@ void HwndCenterDialog(HWND hDlg, HWND hParent) {
     SetWindowPos(hDlg, nullptr, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt) {
-    HWND hwnd = GetDlgItem(hDlg, nIDDlgItem);
-    HwndSetFont(hwnd, fnt);
-}
-
 // Get the name of default printer or nullptr if not exists.
 TempStr GetDefaultPrinterNameTemp() {
     WCHAR buf[512] = {};
@@ -3464,7 +3413,7 @@ void TbAddButtons(HWND hwnd, int count, const TBBUTTON* buttons) {
     ReportDebugIf(0 == res);
 }
 
-void TbAutosIZE(HWND hwnd) {
+void TbAutoSize(HWND hwnd) {
     SendMessageW(hwnd, TB_AUTOSIZE, 0, 0);
 }
 

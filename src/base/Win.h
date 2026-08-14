@@ -112,8 +112,6 @@ void HwndPostCommand(HWND hwnd, int cmdId, LPARAM lp = 0);
 //--- edit control
 
 void EditSelectAll(HWND);
-int EditIdealDy(HWND, bool hasBorder, int lines = 1);
-void EditImplementCtrlBack(HWND hwnd);
 
 //--- list box
 
@@ -166,7 +164,7 @@ void CbSetCurrentSelection(HWND, int);
 
 void TbSetButtonStructSize(HWND hwnd, int size);
 void TbAddButtons(HWND hwnd, int count, const TBBUTTON* buttons);
-void TbAutosIZE(HWND hwnd);
+void TbAutoSize(HWND hwnd);
 int TbGetButtonCount(HWND hwnd);
 DWORD TbGetExtendedStyle(HWND hwnd);
 void TbSetExtendedStyle(HWND hwnd, DWORD style);
@@ -178,7 +176,6 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
 
 //--- dialogs / message boxes
 
-void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt);
 void MessageBoxWarningSimple(HWND hwnd, WStr msg, WStr title = WStr());
 void MessageBoxNYI(HWND hwnd);
 int MsgBox(HWND, Str text, Str caption, UINT flags);
