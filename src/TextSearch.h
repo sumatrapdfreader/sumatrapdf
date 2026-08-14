@@ -13,6 +13,11 @@ struct TextSearch : public TextSelection {
     void SetMatchCase(bool newMatchCase);
     void SetMatchWholeWord(bool wholeWord);
     void SetDirection(Direction direction);
+    void SetPageRange(int first, int last);
+    void SetAllowedPages(const Vec<bool>& allowed);
+    bool PageAllowed(int pageNo) const;
+    int RestrictFirst() const;
+    int RestrictLast() const;
     void SetLastResult(TextSelection* sel);
     TextSel* FindFirst(int page, Str text);
     TextSel* FindFirstOnPage(int pageNo, Str text);
@@ -62,4 +67,6 @@ struct TextSearch : public TextSelection {
     Str lastText;
     int nPages = 0;
     Vec<bool> pagesToSkip;
+    // empty = all pages. Otherwise pageAllowed[i] is page i+1 (issue #5694).
+    Vec<bool> pageAllowed;
 };

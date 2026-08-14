@@ -162,6 +162,52 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
     return ToStrTemp(out);
 }
 
+// Headless search restricted to pages first..last (0 = unbounded). Reports
+// every match page in document order. Used by tests/issue-5694.ts.
+TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
+        return finish(1);
+    }
+    auto* ts = new TextSearch(engine);
+    ts->SetDirection(TextSearch::Direction::Forward);
+    ts->SetMatchCase(false);
+    if (spec) {
+        Vec<bool> allowed;
+        if (!ParseFindPageRange(spec, engine->PageCount(), allowed)) {
+            allowed.Reset();
+        }
+        ts->SetAllowedPages(allowed);
+    } else {
+        ts->SetPageRange(first, last);
+    }
+    int n = 0;
+    TextSel* sel = ts->FindFirst(ts->RestrictFirst(), needle);
+    while (sel && sel->len > 0) {
+        out.Append(fmt("page=%d\n", sel->pages[0]));
+        n++;
+        sel = ts->FindNext();
+    }
+    if (n == 0) {
+        out.Append(fmt("NOTFOUND needle=%s first=%d last=%d\n", needle, first, last));
+    }
+    delete ts;
+    SafeEngineRelease(&engine);
+    return finish(0);
+}
+
 // walk the outline tree in document order, return the `target`-th (1-based) item
 // that has a destination. `counter` tracks how many dests we've seen so far.
 static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {

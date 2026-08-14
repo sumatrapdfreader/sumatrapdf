@@ -42,13 +42,13 @@ constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 
 namespace {
 
-// status "n / m" keeps a stable slot so the bar doesn't jump as the count changes
-struct FindFixedDx : ILayout {
+// min-width box: at least `dx`, wider if the child needs more
+struct FindMinDx : ILayout {
     ILayout* child = nullptr;
     int dx = 0;
 
-    FindFixedDx(ILayout* c, int dxIn);
-    ~FindFixedDx() override;
+    FindMinDx(ILayout* c, int dxIn);
+    ~FindMinDx() override;
 
     Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
@@ -58,33 +58,34 @@ struct FindFixedDx : ILayout {
     ILayout* LayoutChildAt(int) override;
 };
 
-FindFixedDx::FindFixedDx(ILayout* c, int dxIn) {
+FindMinDx::FindMinDx(ILayout* c, int dxIn) {
     child = c;
     dx = dxIn;
 }
 
-FindFixedDx::~FindFixedDx() {
+FindMinDx::~FindMinDx() {
     delete child;
 }
 
-int FindFixedDx::LayoutChildCount() {
+int FindMinDx::LayoutChildCount() {
     return child ? 1 : 0;
 }
 
-ILayout* FindFixedDx::LayoutChildAt(int) {
+ILayout* FindMinDx::LayoutChildAt(int) {
     return child;
 }
 
-int FindFixedDx::MinIntrinsicWidth(int) {
-    return dx;
+int FindMinDx::MinIntrinsicWidth(int height) {
+    int childDx = child ? child->MinIntrinsicWidth(height) : 0;
+    return std::max(dx, childDx);
 }
 
-int FindFixedDx::MinIntrinsicHeight(int width) {
+int FindMinDx::MinIntrinsicHeight(int width) {
     return child ? child->MinIntrinsicHeight(width) : 0;
 }
 
-Size FindFixedDx::Layout(const Constraints bc) {
-    int w = dx;
+Size FindMinDx::Layout(const Constraints bc) {
+    int w = MinIntrinsicWidth(0);
     if (bc.min.dx > w) {
         w = bc.min.dx;
     }
@@ -95,7 +96,7 @@ Size FindFixedDx::Layout(const Constraints bc) {
     return {w, s.dy};
 }
 
-void FindFixedDx::SetBounds(Rect r) {
+void FindMinDx::SetBounds(Rect r) {
     lastBounds = r;
     if (child) {
         child->SetBounds(r);
@@ -280,7 +281,6 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
 
 constexpr int kFindBarPadding = 6;
 constexpr int kFindBarGap = 4;
-constexpr int kFindBarStatusDx = 88;
 constexpr int kFindBarDefaultEditDx = 220;
 constexpr int kFindBarMinEditDx = 80;
 // how wide the drag zone along the left edge is
@@ -289,7 +289,6 @@ constexpr int kFindBarResizeGripDx = 6;
 void FindBarWnd::BuildLayout() {
     int p = DpiScale(kFindBarPadding);
     int gap = DpiScale(kFindBarGap);
-    int statusDx = DpiScale(kFindBarStatusDx);
     // cap preferred width at the min so HBox flex, not the typed text, sets the
     // edit's size (a long query would otherwise blow out the bar)
     int minEditDx = DpiScale(kFindBarMinEditDx);
@@ -300,7 +299,8 @@ void FindBarWnd::BuildLayout() {
     row->alignCross = CrossAxisAlign::CrossCenter;
     row->AddChild(edit, 1);
     row->AddChild(new Spacer(gap, 0));
-    row->AddChild(new FindFixedDx(status, statusDx));
+    int statusMinDx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
+    row->AddChild(new FindMinDx(status, statusMinDx));
     row->AddChild(new Spacer(gap, 0));
     for (VirtIconButton* b : btns) {
         row->AddChild(b);
@@ -527,7 +527,8 @@ static void ShowCompactBar(MainWindow* win) {
         return;
     }
     FindBarWnd* bar = win->findBar;
-    win->findEdit = bar->edit; // make this the active find edit
+    win->findEdit = bar->edit;    // make this the active find edit
+    win->findPagesEdit = nullptr; // page range is only on the floating window
     // reflect the current match-case / whole-word state on the toggle buttons
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
     FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);
@@ -601,6 +602,7 @@ void FocusFindEditSelectAll(MainWindow* win) {
 // window (persists the choice in gGlobalPrefs->searchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win) {
     TempStr text = win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : nullptr;
+    TempStr pages = win->findPagesEdit ? str::DupTemp(win->findPagesEdit->GetTextTemp()) : nullptr;
     int selStart = 0, selEnd = 0;
     if (win->findEdit) {
         win->findEdit->GetSelection(selStart, selEnd);
@@ -618,6 +620,9 @@ void ToggleFloatingFindUI(MainWindow* win) {
     ShowFindBar(win); // shows the now-active UI and repoints win->findEdit
     if (len(text) > 0 && win->findEdit) {
         win->findEdit->SetText(text); // restore text (re-runs the search)
+    }
+    if (len(pages) > 0 && win->findPagesEdit) {
+        win->findPagesEdit->SetText(pages);
     }
     if (win->findEdit) {
         win->findEdit->SetFocus();
@@ -648,7 +653,13 @@ void FindBarSetStatus(MainWindow* win, Str s) {
     }
     if (win->findBar && win->findBar->status) {
         win->findBar->status->SetText(s ? s : StrL(""));
-        win->findBar->status->Invalidate();
+        // relayout so the status is the text width (a fixed slot left a large
+        // empty gap after short counts like "1 / 999+")
+        if (win->findBar->barDx > 0) {
+            win->findBar->Layout(win->findBar->barDx);
+        } else {
+            win->findBar->Layout();
+        }
     }
 }
 

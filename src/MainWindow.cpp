@@ -159,6 +159,8 @@ MainWindow::~MainWindow() {
         findCountThread = nullptr;
     }
     str::FreePtr(&findCountText);
+    str::FreePtr(&findPageRangeText);
+    str::FreePtr(&findCountRangeText);
     str::FreePtr(&findCountPendingText);
     str::FreePtr(&browserFindTerm);
     ClearFindMatches(this);

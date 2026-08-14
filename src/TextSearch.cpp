@@ -172,6 +172,79 @@ void TextSearch::SetMatchWholeWord(bool newMatchWholeWord) {
     markAllPagesNonSkip(pagesToSkip);
 }
 
+bool TextSearch::PageAllowed(int pageNo) const {
+    if (pageNo < 1 || pageNo > nPages) {
+        return false;
+    }
+    if (len(pageAllowed) == 0) {
+        return true;
+    }
+    if (pageNo > len(pageAllowed)) {
+        return false;
+    }
+    return pageAllowed[pageNo - 1];
+}
+
+int TextSearch::RestrictFirst() const {
+    if (len(pageAllowed) == 0) {
+        return nPages > 0 ? 1 : 1;
+    }
+    int n = std::min(len(pageAllowed), nPages);
+    for (int i = 0; i < n; i++) {
+        if (pageAllowed[i]) {
+            return i + 1;
+        }
+    }
+    return 1;
+}
+
+int TextSearch::RestrictLast() const {
+    if (len(pageAllowed) == 0) {
+        return nPages;
+    }
+    int last = 0;
+    int n = std::min(len(pageAllowed), nPages);
+    for (int i = 0; i < n; i++) {
+        if (pageAllowed[i]) {
+            last = i + 1;
+        }
+    }
+    return last > 0 ? last : nPages;
+}
+
+void TextSearch::SetAllowedPages(const Vec<bool>& allowed) {
+    pageAllowed = allowed;
+    markAllPagesNonSkip(pagesToSkip);
+}
+
+void TextSearch::SetPageRange(int first, int last) {
+    if (first < 0) {
+        first = 0;
+    }
+    if (last < 0) {
+        last = 0;
+    }
+    if (first == 0 && last == 0) {
+        pageAllowed.Reset();
+        markAllPagesNonSkip(pagesToSkip);
+        return;
+    }
+    int lo = first > 0 ? first : 1;
+    int hi = last > 0 ? last : nPages;
+    if (lo > hi) {
+        int tmp = lo;
+        lo = hi;
+        hi = tmp;
+    }
+    Vec<bool> allowed;
+    VecResize(allowed, nPages);
+    for (int i = 0; i < nPages; i++) {
+        int page = i + 1;
+        allowed[i] = page >= lo && page <= hi;
+    }
+    SetAllowedPages(allowed);
+}
+
 void TextSearch::SetDirection(TextSearch::Direction direction) {
     bool fwd = TextSearch::Direction::Forward == direction;
     if (fwd == forward) {
@@ -504,8 +577,11 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             endIdx += endAdv;
         } else {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
-            // -> skip to next page
+            // -> skip to next page (but not past a restricted range)
             ++currentPage;
+            if (!PageAllowed(currentPage)) {
+                return notFound;
+            }
             bool abortSearch = false;
             currentPageText =
                 GetTextForPageForSearch(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
@@ -525,7 +601,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                                        (lookingAtWs && str::IsWs((char)prevMatchCh)))) {
             SkipWhitespace(findText, findTextLen, matchIdx, matchByteIdx);
             SkipWhitespace(currentPageText, currentPageTextLen, endIdx, endByteIdx);
-            while (endIdx >= currentPageTextLen && currentPage < nPages) {
+            while (endIdx >= currentPageTextLen && PageAllowed(currentPage + 1)) {
                 // treat page break as whitespace, too
                 ++currentPage;
                 bool abortSearch = false;
@@ -639,11 +715,19 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
         return false;
     }
 
+    int lo = RestrictFirst();
+    int hi = RestrictLast();
+    if (pageNo < lo) {
+        pageNo = forward ? lo : 0;
+    } else if (pageNo > hi) {
+        pageNo = forward ? nPages + 1 : hi;
+    }
+
     int next = forward ? 1 : -1;
-    while ((1 <= pageNo) && (pageNo <= nPages) && !WasCanceled(progressCb)) {
+    while ((lo <= pageNo) && (pageNo <= hi) && !WasCanceled(progressCb)) {
         UpdateProgress(progressCb, pageNo, nPages);
 
-        if (pagesToSkip[pageNo - 1]) {
+        if (!PageAllowed(pageNo) || pagesToSkip[pageNo - 1]) {
             pageNo += next;
             continue;
         }
@@ -682,8 +766,8 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
         return true;
     }
 
-    // allow for the first/last page to be included in the next search
-    searchHitStartAt = findPage = forward ? nPages + 1 : 0;
+    // allow for the first/last page of the (restricted) range to be included next
+    searchHitStartAt = findPage = forward ? hi + 1 : lo - 1;
 
     return false;
 }

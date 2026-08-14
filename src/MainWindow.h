@@ -188,6 +188,8 @@ struct MainWindow {
     HWND hwndMenuToolbar = nullptr;
     // the search input of the active find UI (compact bar or floating window)
     Edit* findEdit = nullptr;
+    // optional "10-25" page-range field of the active find UI (issue #5694)
+    Edit* findPagesEdit = nullptr;
     FindBarWnd* findBar = nullptr;       // compact toolbar overlay
     FindWindowWnd* findWindow = nullptr; // floating window variant (SearchUIFloating)
     // owned by the toolbar layout
@@ -513,6 +515,8 @@ struct MainWindow {
     ThreadHandle findCountThread = nullptr;
     AtomicInt findCountEpoch = 0;
     Str findCountText;
+    Str findPageRangeText; // last applied Pages box text (issue #5694)
+    Str findCountRangeText;
     bool findCountMatchCase = false;
     bool findCountMatchWholeWord = false;
     bool findCountValid = false;

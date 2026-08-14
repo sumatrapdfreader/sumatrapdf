@@ -349,6 +349,136 @@ static void StartIncrementalFind(MainWindow* win) {
 // find-as-you-type: called when the find bar's edit text changes. Instead of
 // searching on every keystroke, (re)arm a debounce timer; the search starts a
 // short while after the user stops typing (issue #4626).
+// Parse a find-UI page range: empty, "10", "10-25", "10-", "-25", or a
+// comma-separated list such as "3,4-6,18-". Whitespace around tokens is
+// allowed. Invalid input returns false (caller treats that as all pages).
+bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut) {
+    allowedOut.Reset();
+    if (!s || len(s) == 0 || nPages < 1) {
+        return true;
+    }
+    const char* p = s.s;
+    const char* end = s.s + s.len;
+    auto skipWs = [&]() {
+        while (p < end && str::IsWs(*p)) {
+            p++;
+        }
+    };
+    auto parseNum = [&](int& out) -> bool {
+        if (p >= end || *p < '0' || *p > '9') {
+            return false;
+        }
+        int n = 0;
+        while (p < end && *p >= '0' && *p <= '9') {
+            n = n * 10 + (*p - '0');
+            p++;
+        }
+        out = n;
+        return true;
+    };
+    auto parseDash = [&]() -> bool {
+        if (p >= end) {
+            return false;
+        }
+        if (*p == '-') {
+            p++;
+            return true;
+        }
+        // UTF-8 en-dash U+2013 (e2 80 93)
+        if ((u8)*p == 0xe2 && p + 2 < end && (u8)p[1] == 0x80 && (u8)p[2] == 0x93) {
+            p += 3;
+            return true;
+        }
+        return false;
+    };
+
+    VecResize(allowedOut, nPages);
+    for (int i = 0; i < nPages; i++) {
+        allowedOut[i] = false;
+    }
+    bool any = false;
+    while (p < end) {
+        skipWs();
+        if (p >= end) {
+            break;
+        }
+        if (*p == ',') {
+            p++;
+            continue;
+        }
+        int first = 0;
+        int last = 0;
+        bool haveFirst = parseNum(first);
+        skipWs();
+        bool haveDash = parseDash();
+        skipWs();
+        bool haveLast = parseNum(last);
+        skipWs();
+        if (p < end && *p != ',') {
+            allowedOut.Reset();
+            return false;
+        }
+        if (!haveFirst && !haveDash && !haveLast) {
+            allowedOut.Reset();
+            return false;
+        }
+        if (haveFirst && !haveDash && !haveLast) {
+            last = first;
+        } else if (!haveFirst && haveDash && haveLast) {
+            first = 1;
+        } else if (haveFirst && haveDash && !haveLast) {
+            last = nPages;
+        } else if (!haveFirst && haveDash && !haveLast) {
+            allowedOut.Reset();
+            return false;
+        }
+        if (first > last) {
+            int tmp = first;
+            first = last;
+            last = tmp;
+        }
+        if (last < 1 || first > nPages) {
+            if (p < end && *p == ',') {
+                p++;
+            }
+            continue;
+        }
+        if (first < 1) {
+            first = 1;
+        }
+        if (last > nPages) {
+            last = nPages;
+        }
+        for (int page = first; page <= last; page++) {
+            allowedOut[page - 1] = true;
+        }
+        any = true;
+        if (p < end && *p == ',') {
+            p++;
+        }
+    }
+    if (!any) {
+        allowedOut.Reset();
+    }
+    return true;
+}
+
+static bool ApplyFindPageRange(MainWindow* win) {
+    TempStr spec = win->findPagesEdit ? win->findPagesEdit->GetTextTemp() : TempStr{};
+    bool changed = !str::Eq(spec, win->findPageRangeText);
+    str::ReplaceWithCopy(&win->findPageRangeText, spec);
+    DisplayModel* dm = win->AsFixed();
+    if (dm && dm->textSearch) {
+        Vec<bool> allowed;
+        int nPages = dm->PageCount();
+        if (!ParseFindPageRange(spec, nPages, allowed)) {
+            allowed.Reset();
+        }
+        dm->textSearch->SetAllowedPages(allowed);
+    }
+    return changed;
+}
+
 // called when the user edits the find bar's text (find-as-you-type)
 void OnFindBarTextChanged(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
@@ -758,6 +888,7 @@ void InvalidateFindForDocumentChange(MainWindow* win) {
     win->findCountEngine = nullptr;
     win->findCountPositions.Reset();
     str::FreePtr(&win->findCountText);
+    FindWindowUpdatePagesLabel(win);
     FindWindowRefreshResults(win);
 
     if (!IsFindUIVisible(win) || !win->findEdit) {
@@ -807,6 +938,7 @@ struct CountThreadData {
     bool wantMatchList = false; // build findMatches (for all-match painting or the results list)
     bool wantSnippets = false;  // build per-match snippet strings for the results list
     int startPage = 1;          // scan from here (the current page), wrapping around
+    Str rangeSpec;              // Pages box text (issue #5694)
     LONG epoch = 0;
     ThreadHandle thread = nullptr;
     // worker-thread only: drive the "<found>... <page>" progress status
@@ -814,7 +946,7 @@ struct CountThreadData {
     DWORD lastProgressMs = 0;
 
     CountThreadData(MainWindow* win, EngineBase* engine, Str text, bool matchCase, bool matchWholeWord,
-                    bool wantMatchList, bool wantSnippets, int startPage, LONG epoch) {
+                    bool wantMatchList, bool wantSnippets, int startPage, Str rangeSpec, LONG epoch) {
         this->win = win;
         this->engine = engine;
         this->text = str::Dup(text);
@@ -823,10 +955,12 @@ struct CountThreadData {
         this->wantMatchList = wantMatchList;
         this->wantSnippets = wantSnippets;
         this->startPage = startPage;
+        this->rangeSpec = str::Dup(rangeSpec);
         this->epoch = epoch;
     }
     ~CountThreadData() {
         str::Free(text);
+        str::Free(rangeSpec);
         SafeCloseThreadHandle(&thread);
     }
 };
@@ -872,6 +1006,7 @@ static void CountEndTask(CountEndTaskData* d) {
         ctd->text = {};
         win->findCountMatchCase = ctd->matchCase;
         win->findCountMatchWholeWord = ctd->matchWholeWord;
+        str::ReplaceWithCopy(&win->findCountRangeText, ctd->rangeSpec);
         win->findCountEngine = ctd->engine;
         win->findCountPositions = *d->positions;
         VecSort(win->findCountPositions, CmpMatchKey);
@@ -1048,20 +1183,26 @@ static void CountThread(CountThreadData* d) {
         TextSearch ts(engine);
         ts.SetMatchCase(d->matchCase);
         ts.SetMatchWholeWord(d->matchWholeWord);
+        Vec<bool> allowed;
+        if (!ParseFindPageRange(d->rangeSpec, engine->PageCount(), allowed)) {
+            allowed.Reset();
+        }
+        ts.SetAllowedPages(allowed);
         ts.SetDirection(TextSearch::Direction::Forward);
         ts.progressCb = MkFunc1<CountThreadData, ProgressUpdateData*>(CountProgress, d);
         // scan from the current page so results near the reading position come
-        // first; wrap around to cover pages 1..startPage-1 at the end
+        // first; wrap around to cover the rest of the (restricted) range
+        int wrapStart = ts.RestrictFirst();
         bool wrapped = false;
         TextSel* m = ts.FindFirst(d->startPage, d->text);
-        if (!m && d->startPage > 1) {
+        if (!m && d->startPage > wrapStart) {
             // Nothing at or after startPage. The wrap-around below only runs
             // from inside the loop, so without this the loop is never entered
             // and the scan reports zero matches even though earlier pages have
             // them -- no "n / m", no highlights, empty results list until the
             // view moves to a page that has one (issue #5874)
             wrapped = true;
-            m = ts.FindFirst(1, d->text);
+            m = ts.FindFirst(wrapStart, d->text);
         }
         // check the epoch at the top so a cancel (AbortCount, which joins us on
         // the UI thread) bails before the expensive snippet build / next scan
@@ -1112,9 +1253,9 @@ static void CountThread(CountThreadData* d) {
                 }
             }
             m = ts.FindNext();
-            if (!m && !wrapped && d->startPage > 1) {
+            if (!m && !wrapped && d->startPage > wrapStart) {
                 wrapped = true;
-                m = ts.FindFirst(1, d->text);
+                m = ts.FindFirst(wrapStart, d->text);
             }
             if (wrapped && m && ts.startPage >= d->startPage) {
                 m = nullptr; // came full circle
@@ -1186,6 +1327,7 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     }
 
     engine->AddRef(); // released in CountThread
+    ApplyFindPageRange(win);
     // always build the match list so PaintAllFindMatches can highlight every hit;
     // snippets only when the floating results list is showing
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
@@ -1193,7 +1335,7 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     int epoch = AtomicIntInc(&win->findCountEpoch);
     int startPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
     auto* d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, startPage,
-                                  epoch);
+                                  win->findPageRangeText, epoch);
     win->findCountThread = nullptr;
     auto fn = MkFunc0<CountThreadData>(CountThread, d);
     win->findCountThread = StartThread(fn, "FindCountThread");
@@ -1207,9 +1349,11 @@ static void UpdateMatchCount(MainWindow* win, Str text) {
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = true;
+    ApplyFindPageRange(win);
     bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
                     win->findCountMatchCase == win->findMatchCase &&
                     win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
+                    str::Eq(win->findCountRangeText, win->findPageRangeText) &&
                     (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : len(win->findMatches) > 0));
     if (cacheHit) {
         // matches are unchanged: just refresh n/m. Don't rebuild the results
@@ -1354,7 +1498,8 @@ static void FindThread(FindThreadData* ftd) {
     bool loopedAround = false;
     if (!win->findCancelled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
-        int startPage = (TextSearch::Direction::Forward == ftd->direction) ? 1 : ctrl->PageCount();
+        int startPage = (TextSearch::Direction::Forward == ftd->direction) ? textSearch->RestrictFirst()
+                                                                           : textSearch->RestrictLast();
         if (!ftd->wasModified || ctrl->CurrentPageNo() != startPage) {
             loopedAround = true;
             rect = textSearch->FindFirst(startPage, ftd->text);
@@ -1437,6 +1582,9 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
     AbortFinding(win, false);
     if (len(text) == 0) {
         return;
+    }
+    if (ApplyFindPageRange(win)) {
+        wasModified = true;
     }
     DisplayModel* dm = win->AsFixed();
     if (dm && dm->textSearch) {

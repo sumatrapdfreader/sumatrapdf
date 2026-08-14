@@ -58,6 +58,7 @@ void FindFirst(MainWindow* win);
 void FindToggleMatchCase(MainWindow* win);
 void FindToggleMatchWholeWord(MainWindow* win);
 void OnFindBarTextChanged(MainWindow* win);
+bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut);
 void FindDebounceTimerFired(MainWindow* win);
 bool FindFlushPendingSearch(MainWindow* win);
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph);

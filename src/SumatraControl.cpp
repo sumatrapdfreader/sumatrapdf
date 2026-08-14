@@ -226,6 +226,7 @@ enum class ControlCmd : u16 {
     TestDisplayMode = 49,
     TestSidebarLayout = 50,
     TestCadEnhanceColors = 51,
+    TestFindPageRange = 52,
 };
 
 enum class ControlArgType : u16 {
@@ -806,6 +807,25 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = DisplayModeResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFindPageRange: {
+            Str pdf = StringArg(req, 0);
+            Str needle = StringArg(req, 1);
+            i32 first = 0;
+            i32 last = 0;
+            IntArg(req, 2, first);
+            IntArg(req, 3, last);
+            Str spec = StringArg(req, 4); // optional "3,4-6,18-"
+            if (!pdf || !needle) {
+                AppendError(
+                    req, "TestFindPageRange expects string pdf, string needle [, int first, int last [, string spec]]");
+                break;
+            }
+            int exitCode = 0;
+            Str res = FindPageRangeResultTemp(pdf, needle, first, last, spec, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

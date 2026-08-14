@@ -50,12 +50,11 @@ constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 
 constexpr int kFindWinPadding = 8;
 constexpr int kFindWinGap = 6;
-constexpr int kFindWinStatusDx = 90;
 constexpr int kFindWinMinEditDx = 48;
 
 namespace {
 
-// status "n / m" keeps a stable slot on the wide row and can flex on the wrap row
+// min-width box: at least `dx`, wider if the child needs more
 struct FindFixedDx : ILayout {
     ILayout* child = nullptr;
     int dx = 0;
@@ -88,8 +87,9 @@ ILayout* FindFixedDx::LayoutChildAt(int) {
     return child;
 }
 
-int FindFixedDx::MinIntrinsicWidth(int) {
-    return dx;
+int FindFixedDx::MinIntrinsicWidth(int height) {
+    int childDx = child ? child->MinIntrinsicWidth(height) : 0;
+    return std::max(dx, childDx);
 }
 
 int FindFixedDx::MinIntrinsicHeight(int width) {
@@ -97,7 +97,7 @@ int FindFixedDx::MinIntrinsicHeight(int width) {
 }
 
 Size FindFixedDx::Layout(const Constraints bc) {
-    int w = dx;
+    int w = MinIntrinsicWidth(0);
     if (bc.min.dx > w) {
         w = bc.min.dx;
     }
@@ -152,8 +152,10 @@ static int FindMatchIndex(MainWindow* win, int page, int glyph) {
 struct FindWindowWnd : WindowBase {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
+    Edit* editPages = nullptr;      // optional page range, e.g. "10-25" (issue #5694)
+    VirtText* pagesLabel = nullptr; // "Limit to pages 1-N:"
     // the status text, the buttons and the results list are virtual controls;
-    // the search field is the only HWND child. Owned by `layout` once built
+    // the search fields are HWND children. Owned by `layout` once built
     VirtText* status = nullptr;
     // prev / next / match-case / match-whole-word / unpin(dock)
     VirtIconButton* btns[5]{};
@@ -186,6 +188,7 @@ struct FindWindowWnd : WindowBase {
     void SavePos();
     void RefreshResults(bool allowNavigation = true);
     void UpdateTheme();
+    void UpdatePagesLabel();
 
     void OnTextChanged();
     void DrawResultItem(VirtListBox::DrawItemEvent* ev);
@@ -321,7 +324,27 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         edit->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
     }
 
+    {
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.isMultiLine = false;
+        args.withBorder = true;
+        args.cueText = StrL("e.g. 3,4-6,18-");
+        args.isRtl = IsUIRtl();
+        editPages = new Edit();
+        editPages->SetColors(colTxt, colBg);
+        editPages->Create(args);
+        editPages->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
+    }
+
     PlatformFont* platformFont = GetPlatformFont(GetAppFont());
+
+    pagesLabel = NewVirtText({
+        .font = platformFont,
+        .textColor = colTxt,
+        .isRtl = IsUIRtl(),
+    });
+    UpdatePagesLabel();
 
     status = NewVirtText({
         .font = platformFont,
@@ -355,17 +378,21 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
 void FindWindowWnd::BuildLayout() {
     int pad = DpiScale(kFindWinPadding);
     int gap = DpiScale(kFindWinGap);
-    int statusDx = DpiScale(kFindWinStatusDx);
     // cap preferred width at the min so Wrap decides the break from the min
     // edit width, not the typed text (a long query would otherwise always wrap)
     int minEditDx = DpiScale(kFindWinMinEditDx);
     edit->idealDx = minEditDx;
     edit->maxDx = minEditDx;
+    int pagesDx = DpiScale(160);
+    editPages->idealDx = pagesDx;
+    editPages->maxDx = pagesDx;
 
-    // status + buttons stay together so they wrap as a unit under the edit
+    // status + buttons stay together so they wrap as a unit under the edit.
+    // Status is at least ~7 characters so the bar doesn't jump; longer counts can grow.
     auto* tools = new HBox();
     tools->alignCross = CrossAxisAlign::CrossCenter;
-    tools->AddChild(new FindFixedDx(status, statusDx), 1);
+    int statusMinDx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
+    tools->AddChild(new FindFixedDx(status, statusMinDx));
     tools->AddChild(new Spacer(gap, 0));
     for (VirtIconButton* b : btns) {
         tools->AddChild(b);
@@ -378,9 +405,17 @@ void FindWindowWnd::BuildLayout() {
     header->AddChild(edit, 1);
     header->AddChild(tools);
 
+    auto* pagesRow = new HBox();
+    pagesRow->alignCross = CrossAxisAlign::CrossCenter;
+    pagesRow->AddChild(pagesLabel);
+    pagesRow->AddChild(new Spacer(gap, 0));
+    pagesRow->AddChild(new FindFixedDx(editPages, pagesDx));
+
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(header);
+    vbox->AddChild(new Spacer(0, gap));
+    vbox->AddChild(pagesRow);
     vbox->AddChild(new Spacer(0, pad));
     vbox->AddChild(results, 1);
 
@@ -658,6 +693,16 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
     return true;
 }
 
+void FindWindowWnd::UpdatePagesLabel() {
+    int n = 1;
+    if (win && win->ctrl) {
+        n = std::max(win->ctrl->PageCount(), 1);
+    }
+    if (pagesLabel) {
+        pagesLabel->SetText(fmt(_TRA("Limit to pages 1-%d:").s, n));
+    }
+}
+
 void FindWindowWnd::SavePos() {
     if (!HwndIsVisible(hwnd)) {
         return;
@@ -676,12 +721,19 @@ void FindWindowWnd::UpdateTheme() {
     if (edit) {
         edit->SetColors(colTxt, colBg);
     }
+    if (editPages) {
+        editPages->SetColors(colTxt, colBg);
+    }
     if (results) {
         results->textColor = colTxt;
         results->bgColor = colBg;
     }
     if (status) {
         status->textColor = colTxt;
+    }
+    if (pagesLabel) {
+        pagesLabel->textColor = colTxt;
+        UpdatePagesLabel();
     }
     for (VirtIconButton* b : btns) {
         if (b) {
@@ -857,6 +909,9 @@ void DeleteFindWindow(MainWindow* win) {
     if (win->findEdit == win->findWindow->edit) {
         win->findEdit = nullptr;
     }
+    if (win->findPagesEdit == win->findWindow->editPages) {
+        win->findPagesEdit = nullptr;
+    }
     delete win->findWindow;
     win->findWindow = nullptr;
 }
@@ -884,6 +939,8 @@ void ShowFindWindow(MainWindow* win) {
     }
     FindWindowWnd* w = win->findWindow;
     win->findEdit = w->edit; // make this the active find edit
+    win->findPagesEdit = w->editPages;
+    w->UpdatePagesLabel();
     FindWindowSetMatchCaseChecked(win, win->findMatchCase);
     FindWindowSetMatchWholeWordChecked(win, win->findMatchWholeWord);
     PositionFindWindow(w);
@@ -928,7 +985,9 @@ bool IsFindWindowVisible(MainWindow* win) {
 void FindWindowSetStatus(MainWindow* win, Str s) {
     if (win->findWindow && win->findWindow->status) {
         win->findWindow->status->SetText(s ? s : StrL(""));
-        win->findWindow->status->Invalidate();
+        if (IsFindWindowVisible(win)) {
+            win->findWindow->Layout();
+        }
     }
 }
 
@@ -959,6 +1018,15 @@ void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked) {
 // repopulate the results list from win->findMatches (no-op if not visible).
 // allowNavigation=false for streamed partial updates: don't navigate the
 // document (navigation would cancel the in-flight count scan)
+void FindWindowUpdatePagesLabel(MainWindow* win) {
+    if (win && win->findWindow) {
+        win->findWindow->UpdatePagesLabel();
+        if (IsFindWindowVisible(win)) {
+            win->findWindow->Layout();
+        }
+    }
+}
+
 void FindWindowRefreshResults(MainWindow* win, bool allowNavigation) {
     if (IsFindWindowVisible(win)) {
         win->findWindow->RefreshResults(allowNavigation);

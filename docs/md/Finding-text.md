@@ -4,10 +4,10 @@ SumatraPDF can search for text in PDF, EPUB, MOBI, and other formats that suppor
 
 ## Open the find box
 
-| Action | Shortcut |
-| --- | --- |
-| Find | `Ctrl + F` |
-| Find (alternate) | `/` |
+| Action           | Shortcut   |
+| ---------------- | ---------- |
+| Find             | `Ctrl + F` |
+| Find (alternate) | `/`        |
 
 A small find bar appears near the **Find** button in the toolbar. Type your text
 and matches are found as you type; a `n / m` counter shows the current match and
@@ -25,10 +25,10 @@ There are two find UIs:
 Switch between them with the diagonal-arrows button on the right of the find UI
 (hover it for a tooltip):
 
-| Button | Tooltip | Action |
-| --- | --- | --- |
-| arrows pointing **out**, on the compact bar | *Open in a window* | Pop the find UI out into a floating window |
-| arrows pointing **in**, on the floating window | *Dock to toolbar* | Dock it back to the compact bar |
+| Button                                         | Tooltip            | Action                                     |
+| ---------------------------------------------- | ------------------ | ------------------------------------------ |
+| arrows pointing **out**, on the compact bar    | _Open in a window_ | Pop the find UI out into a floating window |
+| arrows pointing **in**, on the floating window | _Dock to toolbar_  | Dock it back to the compact bar            |
 
 The choice is remembered across launches via the `SearchUIFloating` advanced
 setting (`true` = floating window). The floating window's position and size are
@@ -48,13 +48,20 @@ When the find UI is a floating window, it lists every match below the search box
 
 The list reflects matches across the whole document, even on large files.
 
+Below the search field, **Limit to pages 1-N:** restricts the search to a page
+range (N is the last page of the document). Leave the box empty to search every
+page. You can list several ranges, e.g. `3,4-6,18-` (page 3, pages 4–6, and page
+18 through the end). Also: `10-25`, `10`, `10-`, `-25`. The `n / m` counter and
+the results list follow the same range. The compact find bar always searches the
+whole document.
+
 ## Find next / previous
 
-| Action | Shortcut |
-| --- | --- |
-| Find next | `F3` |
-| Find previous | `Shift + F3` |
-| Find next (selection as needle) | `Ctrl + F3` |
+| Action                              | Shortcut            |
+| ----------------------------------- | ------------------- |
+| Find next                           | `F3`                |
+| Find previous                       | `Shift + F3`        |
+| Find next (selection as needle)     | `Ctrl + F3`         |
 | Find previous (selection as needle) | `Shift + Ctrl + F3` |
 
 All shortcuts are also listed in [Keyboard shortcuts](Keyboard-shortcuts.md) and [Commands](Commands.md).

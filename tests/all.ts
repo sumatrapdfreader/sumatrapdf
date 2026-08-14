@@ -104,6 +104,7 @@ import { testit as issue5317 } from "./issue-5317.ts";
 import { testit as issue1203 } from "./issue-1203.ts";
 import { testit as issue2873 } from "./issue-2873.ts";
 import { testit as issue5937 } from "./issue-5937.ts";
+import { testit as issue5694 } from "./issue-5694.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["lint-command-ids", lintCommandIds],
@@ -200,6 +201,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-1203", issue1203],
   ["issue-2873", issue2873],
   ["issue-5937", issue5937],
+  ["issue-5694", issue5694],
 ];
 
 export type AllTestOptions = {

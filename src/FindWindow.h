@@ -13,6 +13,7 @@ void FindWindowSetStatus(MainWindow* win, Str s);
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked);
 void FindWindowRefreshResults(MainWindow* win, bool allowNavigation = true);
+void FindWindowUpdatePagesLabel(MainWindow* win);
 void FindWindowSaveSelectedMatch(MainWindow* win);
 void UpdateFindWindowTheme(MainWindow* win);
 
