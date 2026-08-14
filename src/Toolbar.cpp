@@ -118,7 +118,7 @@ Color TbTextColor() {
 
 static Color TbDisabledColor() {
     if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-        return SysControlTextDisabledColor();
+        return SysDisabledTextColor();
     }
     return ThemeWindowTextDisabledColor();
 }

@@ -725,6 +725,7 @@ function sumatrapdf_files()
     "TextToSpeech.*",
     "TextViewWnd.*",
     "Theme.*",
+    "Theme_win.*",
     "Toolbar.*",
     "ToolbarInternal.h",
     "Toolbar_win.*",
@@ -1396,6 +1397,10 @@ function logview_files()
   files {
     "src/tools/logview/logview.cpp",
   }
+  -- Layout.cpp and VirtCtrl.cpp end in a #if DEBUG unit-test block calling utassert()
+  files_in_dir("src/base", {
+    "UtAssert.*",
+  })
   -- the subset of gui logview's UI needs (no tree view, tabs, web view, ...)
   files_in_dir("src/gui", {
     "UIModels.*",

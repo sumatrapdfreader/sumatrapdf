@@ -1526,6 +1526,7 @@
     <ClCompile Include="..\src\TextToSpeech.cpp" />
     <ClCompile Include="..\src\TextViewWnd.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
+    <ClCompile Include="..\src\Theme_win.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\Toolbar_win.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />

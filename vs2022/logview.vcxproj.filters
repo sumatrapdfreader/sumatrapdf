@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="base">
+      <UniqueIdentifier>{8078947C-6CAF-950D-159C-7B1001B2110F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="gui">
       <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
     </Filter>
@@ -15,6 +18,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\base\UtAssert.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\Gfx.h">
       <Filter>gui</Filter>
     </ClInclude>
@@ -36,6 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
+    <ClCompile Include="..\src\base\UtAssert.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
       <Filter>gui</Filter>
     </ClCompile>

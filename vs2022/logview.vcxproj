@@ -958,6 +958,7 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\base\UtAssert.h" />
     <ClInclude Include="..\src\gui\Gfx.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
     <ClInclude Include="..\src\gui\PlatformFont.h" />
@@ -969,6 +970,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\base\UtAssert.cpp" />
     <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp" />
     <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
     <ClCompile Include="..\src\gui\Gfx_win.cpp" />

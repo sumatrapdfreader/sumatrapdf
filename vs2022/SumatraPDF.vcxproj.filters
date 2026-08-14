@@ -1043,6 +1043,9 @@
     <ClCompile Include="..\src\Theme.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Theme_win.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Toolbar.cpp">
       <Filter>src</Filter>
     </ClCompile>

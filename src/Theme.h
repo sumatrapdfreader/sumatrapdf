@@ -21,8 +21,16 @@ Color ThemeControlBackgroundColor();
 Color ThemeWindowBackgroundColor();
 Color ThemeWindowTextColor();
 Color ThemeWindowTextDisabledColor();
+// the colors the OS draws its own UI in (Theme_win.cpp); the default theme and
+// high contrast mode defer to them
+Color SysWindowBgColor();
+Color SysWindowTextColor();
+Color SysWindowFrameColor();
 Color SysControlTextColor();
-Color SysControlTextDisabledColor();
+Color SysDisabledTextColor();
+Color SysLinkColor();
+Color SysHighlightBgColor();
+Color SysHighlightTextColor();
 Color ThemeWindowDarkerTextColor();
 Color ThemeWindowControlBackgroundColor();
 Color ThemeWindowLinkColor();
