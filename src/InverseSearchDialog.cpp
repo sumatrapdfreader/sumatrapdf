@@ -129,11 +129,6 @@ void InverseSearchWnd::OnHelp(VirtMouseEvent*) {
 }
 
 void InverseSearchWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        OnCancel();
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == VK_RETURN) {
         HWND hwndDrop = dropDown ? dropDown->hwnd : nullptr;
         if (hwndDrop && SendMessageW(hwndDrop, CB_GETDROPPEDSTATE, 0, 0)) {
@@ -259,6 +254,7 @@ void ShowInverseSearchDialog(MainWindow* win) {
         return;
     }
     auto* wnd = new InverseSearchWnd();
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<InverseSearchWnd, KeyEvent*, &InverseSearchWnd::OnKeyDown>(wnd);

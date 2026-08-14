@@ -126,11 +126,6 @@ void AddFavoriteWnd::OnOk(VirtMouseEvent*) {
 }
 
 void AddFavoriteWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        OnCancel();
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == VK_RETURN) {
         if (btnCancel && vroot && vroot->focused == btnCancel) {
             OnCancel();
@@ -245,6 +240,7 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
         return;
     }
     auto* wnd = new AddFavoriteWnd();
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<AddFavoriteWnd, KeyEvent*, &AddFavoriteWnd::OnKeyDown>(wnd);

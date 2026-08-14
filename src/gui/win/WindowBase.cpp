@@ -825,7 +825,9 @@ LRESULT WindowBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
 
 // PreTranslate: onPreTranslate first (WM_CHAR / KEYUP / etc.), then key-downs
 // via onKeyDown (so dialog shortcuts work while focus is on a child HWND), then
-// default Tab among mixed HWND + virtual controls.
+// closeOnEsc / closeOnCtrlW, then default Tab among mixed HWND + virtual controls.
+// WM_CHAR Escape is needed because an Edit can eat KEYDOWN Escape (IME / some
+// locales); KEYDOWN is still handled so we close before TranslateMessage.
 bool WindowBase::PreTranslateMessage(MSG& msg) {
     if (onPreTranslate.IsValid()) {
         PreTranslateEvent pev;
@@ -835,6 +837,10 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
         if (pev.didHandle) {
             return true;
         }
+    }
+    if (closeOnEsc && msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
+        Close();
+        return true;
     }
     if (msg.message != WM_KEYDOWN && msg.message != WM_SYSKEYDOWN) {
         return false;
@@ -851,6 +857,14 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
         if (ev.didHandle) {
             return true;
         }
+    }
+    if (closeOnEsc && ev.vkey == VK_ESCAPE) {
+        Close();
+        return true;
+    }
+    if (closeOnCtrlW && ev.vkey == 'W' && ev.isCtrl && !ev.isAlt) {
+        Close();
+        return true;
     }
     // default Tab among mixed HWND + virtual controls
     if (ev.vkey != VK_TAB || !layout || ev.isCtrl || ev.isAlt) {

@@ -116,7 +116,6 @@ struct PdfToolDialog : WindowBase {
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
 
-    void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
 };
 
@@ -158,8 +157,8 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     win = w;
     srcPath = str::Dup(tab->filePath);
     PlatformFont* dialogFont = GetDefaultGuiFont();
+    closeOnEsc = true;
     onClose = MkFunc1Void(PdfToolDialogOnClose);
-    onPreTranslate = MkMethod1<PdfToolDialog, WindowBase::PreTranslateEvent*, &PdfToolDialog::PreTranslate>(this);
     onKeyDown = MkMethod1<PdfToolDialog, KeyEvent*, &PdfToolDialog::OnKeyDown>(this);
 
     CreateCustomArgs cargs;
@@ -287,21 +286,7 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     }
 }
 
-// WM_CHAR Esc (some locales / IME paths); key-down Esc is in onKeyDown (#5856).
-void PdfToolDialog::PreTranslate(WindowBase::PreTranslateEvent* ev) {
-    MSG& msg = *ev->msg;
-    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-    }
-}
-
 void PdfToolDialog::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == VK_RETURN) {
         // Enter presses the focused button, if it's one; otherwise it's the
         // dialog's default action

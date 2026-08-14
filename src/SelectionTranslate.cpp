@@ -140,7 +140,6 @@ struct SelectionTranslateWnd : WindowBase {
 
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
     void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
-    void OnKeyDown(KeyEvent* ev);
 };
 
 static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
@@ -1167,19 +1166,6 @@ void SelectionTranslateWnd::OnCloseClicked(VirtMouseEvent*) {
     Close();
 }
 
-// Esc and Ctrl+W close the translate dialog (issue #5934).
-void SelectionTranslateWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        OnCloseClicked();
-        ev->didHandle = true;
-        return;
-    }
-    if (ev->vkey == 'W' && ev->isCtrl && !ev->isAlt) {
-        OnCloseClicked();
-        ev->didHandle = true;
-    }
-}
-
 static void OnTranslateDone(SelectionTranslateDoneData* data) {
     AutoDelete del(data);
     if (!gSelectionTranslateWnd || !IsWindow(gSelectionTranslateWnd->hwnd) ||
@@ -1432,13 +1418,14 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     wnd->hwndOwner = hwndOwner;
     wnd->engine = engine;
     wnd->SetFont(GetAppFont());
+    wnd->closeOnEsc = true;
+    wnd->closeOnCtrlW = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSelectionTranslateDestroy);
     wnd->onGetMinMaxInfo =
         MkMethod1<SelectionTranslateWnd, WindowBase::GetMinMaxInfoEvent*, &SelectionTranslateWnd::OnGetMinMaxInfo>(wnd);
     wnd->onDpiChanged =
         MkMethod1<SelectionTranslateWnd, WindowBase::DpiChangedEvent*, &SelectionTranslateWnd::OnDpiChanged>(wnd);
-    wnd->onKeyDown = MkMethod1<SelectionTranslateWnd, KeyEvent*, &SelectionTranslateWnd::OnKeyDown>(wnd);
     Str title = _TRA("Translate");
     if (!wnd->Create(hwndOwner, selText, title)) {
         EnableWindow(hwndOwner, TRUE);

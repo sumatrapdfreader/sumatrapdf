@@ -214,11 +214,6 @@ void ChangeThemeWnd::OnChange(VirtMouseEvent*) {
 }
 
 void ChangeThemeWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        OnCancel();
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == VK_RETURN) {
         // an open drop-down list gets Enter first: there it commits the
         // highlighted entry rather than the dialog
@@ -364,6 +359,7 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     }
     auto* wnd = new ChangeThemeWnd();
     wnd->documentColorsFollowThemeOnly = documentColorsFollowThemeOnly;
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeThemeWnd, KeyEvent*, &ChangeThemeWnd::OnKeyDown>(wnd);

@@ -15,7 +15,6 @@
 
 #include "Settings.h"
 #include "AppTools.h"
-#include "Commands.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
@@ -137,13 +136,6 @@ static void HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
     }
 }
 
-static int ResolveAccelCmd(void* /*user*/, u16 vk, bool ctrl, bool shift, bool alt) {
-    if (vk == 'W' && ctrl && !shift && !alt) {
-        return CmdClose;
-    }
-    return 0;
-}
-
 SimpleBrowserWindow::~SimpleBrowserWindow() {
     // ~WindowBase deletes `layout`, which owns the buttons and the url label
     delete webView;
@@ -162,20 +154,14 @@ void SimpleBrowserWindow::OnSize(WindowBase::SizeEvent* ev) {
     LayoutControls(this);
 }
 
-void SimpleBrowserWindow::OnCommand(WindowBase::CommandEvent* ev) {
-    if (LOWORD(ev->wparam) == CmdClose) {
-        SendMessageW(hwnd, WM_CLOSE, 0, 0);
-        ev->didHandle = true;
-    }
-}
-
 HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     // LayoutControls sizes the nav row to its natural height and the webview
     // into the leftover client area, not a full-client DoLayout
     autoLayout = false;
+    // docs window: Ctrl+W closes; Esc does not (search dialog, issue #5942)
+    closeOnCtrlW = true;
     onFocus = MkMethod1<SimpleBrowserWindow, WindowBase::FocusEvent*, &SimpleBrowserWindow::OnFocus>(this);
     onSize = MkMethod1<SimpleBrowserWindow, WindowBase::SizeEvent*, &SimpleBrowserWindow::OnSize>(this);
-    onCommand = MkMethod1<SimpleBrowserWindow, WindowBase::CommandEvent*, &SimpleBrowserWindow::OnCommand>(this);
     HWND frameHwnd = nullptr;
     {
         CreateCustomArgs cargs;
@@ -242,7 +228,6 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView->events.navigationStarting = NavigationStarting;
         webView->events.navigationCompleted = NavigationCompleted;
         webView->events.historyChanged = HistoryChanged;
-        webView->events.resolveAccelCmd = ResolveAccelCmd;
         webView->forwardAppAccelerators = true;
         // in-app manual (virtual host): route downloads to the OS browser
         if (len(args.resourceUriPrefix) > 0) {

@@ -116,11 +116,6 @@ void GetPasswordWnd::OnShowPasswordChanged() {
 }
 
 void GetPasswordWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        Finish(false);
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == VK_RETURN) {
         if (btnCancel && vroot && vroot->focused == btnCancel) {
             Finish(false);
@@ -275,6 +270,7 @@ Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword,
     wnd->fileName = str::Dup(fileName);
     wnd->remember = rememberPassword;
     wnd->showPassword = showPassword;
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onKeyDown = MkMethod1<GetPasswordWnd, KeyEvent*, &GetPasswordWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());

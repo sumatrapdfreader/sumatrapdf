@@ -85,7 +85,6 @@ struct NavFilesInFolderWnd : WindowBase {
     VirtListBox* listBox = nullptr;
     Str currDir; // owned
 
-    void PreTranslate(WindowBase::PreTranslateEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnActivate(WindowBase::ActivateEvent* ev);
     void OnFocus(WindowBase::FocusEvent* ev);
@@ -486,25 +485,8 @@ void NavFilesInFolderWnd::OnListDoubleClick() {
     ExecuteCurrentSelection(IsCtrlPressed());
 }
 
-// WM_CHAR Esc (IME / some locales); key-downs are handled in onKeyDown
-void NavFilesInFolderWnd::PreTranslate(WindowBase::PreTranslateEvent* ev) {
-    MSG& msg = *ev->msg;
-    if (hwnd && msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
-        return;
-    }
-    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
-        ScheduleDeleteNavFilesWnd();
-        ev->didHandle = true;
-    }
-}
-
 void NavFilesInFolderWnd::OnKeyDown(KeyEvent* ev) {
     if (hwnd && ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
-        return;
-    }
-    if (ev->vkey == VK_ESCAPE) {
-        ScheduleDeleteNavFilesWnd();
-        ev->didHandle = true;
         return;
     }
     if (ev->vkey == VK_RETURN) {
@@ -857,13 +839,12 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
         ScheduleDeleteNavFilesWnd();
     }
     auto* wnd = new NavFilesInFolderWnd();
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc0Void(ScheduleDeleteNavFilesWnd);
     wnd->onDestroy = MkFunc0Void(ScheduleDeleteNavFilesWnd);
     wnd->onActivate = MkMethod1<NavFilesInFolderWnd, WindowBase::ActivateEvent*, &NavFilesInFolderWnd::OnActivate>(wnd);
     wnd->onFocus = MkMethod1<NavFilesInFolderWnd, WindowBase::FocusEvent*, &NavFilesInFolderWnd::OnFocus>(wnd);
     wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
-    wnd->onPreTranslate =
-        MkMethod1<NavFilesInFolderWnd, WindowBase::PreTranslateEvent*, &NavFilesInFolderWnd::PreTranslate>(wnd);
     wnd->SetFont(GetAppFont());
     // set before Create so Esc during Create can dismiss
     gNavFilesWnd = wnd;

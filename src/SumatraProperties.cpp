@@ -53,8 +53,6 @@ struct PropertiesWnd : WindowBase {
     void SetPropsText(Str text);
     void SizeToContent();
     void CopyToClipboard(VirtMouseEvent* ev = nullptr);
-    void PreTranslate(WindowBase::PreTranslateEvent* ev);
-    void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
     void ScheduleDelete();
 };
@@ -828,33 +826,6 @@ void PropertiesWnd::UpdateTheme() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-void PropertiesWnd::OnKeyDown(KeyEvent* ev) {
-    if (!hwnd) {
-        return;
-    }
-    if (ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
-        return;
-    }
-    if (ev->vkey == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-    }
-}
-
-void PropertiesWnd::PreTranslate(WindowBase::PreTranslateEvent* ev) {
-    if (!hwnd) {
-        return;
-    }
-    MSG& msg = *ev->msg;
-    if (msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
-        return;
-    }
-    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-    }
-}
-
 void PropertiesWnd::OnCommand(WindowBase::CommandEvent* ev) {
     auto cmd = LOWORD(ev->wparam);
     if (cmd == CmdCopySelection) {
@@ -1027,11 +998,10 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     wnd->propsText.Append("\n");
     wnd->propsText.Append(_TRA("Getting font information..."));
 
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnPropertiesClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnPropertiesDestroy);
     wnd->onCommand = MkMethod1<PropertiesWnd, WindowBase::CommandEvent*, &PropertiesWnd::OnCommand>(wnd);
-    wnd->onKeyDown = MkMethod1<PropertiesWnd, KeyEvent*, &PropertiesWnd::OnKeyDown>(wnd);
-    wnd->onPreTranslate = MkMethod1<PropertiesWnd, WindowBase::PreTranslateEvent*, &PropertiesWnd::PreTranslate>(wnd);
     if (!wnd->Create(parent)) {
         gPropertiesWindows.Remove(wnd);
         delete wnd;

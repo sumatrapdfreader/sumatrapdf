@@ -259,7 +259,8 @@ struct WindowBase {
     void Subclass();
     void UnSubclass();
 
-    // PreTranslateMessage: onPreTranslate, then key-down -> onKeyDown, then Tab default
+    // PreTranslateMessage: onPreTranslate, then key-down -> onKeyDown, then
+    // closeOnEsc / closeOnCtrlW, then Tab default
     bool PreTranslateMessage(MSG& msg);
 
     void SetColors(Color textColor, Color bgColor);
@@ -329,6 +330,12 @@ struct WindowBase {
     // if false, WM_ERASEBKGND returns TRUE without painting (WM_PAINT covers).
     // default false: custom windows usually double-buffer the full client
     bool shouldEraseBackground = false;
+    // Close() on Esc (KEYDOWN and WM_CHAR, so it still works when an Edit has
+    // focus). Off by default — specialized Esc (find bar, palette, in-place
+    // editors) stays in the derived onKeyDown
+    bool closeOnEsc = false;
+    // Close() on Ctrl+W (no Alt). Off by default
+    bool closeOnCtrlW = false;
 
     AttachHandler onAttach;
     FocusHandler onFocus;

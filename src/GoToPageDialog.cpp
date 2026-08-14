@@ -129,11 +129,6 @@ void GoToPageWnd::OnOk(VirtMouseEvent*) {
 }
 
 void GoToPageWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        OnCancel();
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == VK_RETURN) {
         if (btnCancel && vroot && vroot->focused == btnCancel) {
             OnCancel();
@@ -272,6 +267,7 @@ void ShowGoToPageDialog(MainWindow* win) {
         return;
     }
     auto* wnd = new GoToPageWnd();
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<GoToPageWnd, KeyEvent*, &GoToPageWnd::OnKeyDown>(wnd);

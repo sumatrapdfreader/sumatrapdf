@@ -296,11 +296,6 @@ static bool ComboIsDropped(DropDown* d) {
 }
 
 void SettingsWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        OnCancel();
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == VK_RETURN) {
         if (ComboIsDropped(dropLayout) || ComboIsDropped(dropZoom) || ComboIsDropped(dropInverse)) {
             return;
@@ -526,6 +521,7 @@ void ShowSettingsDialog(MainWindow* win) {
         return;
     }
     auto* wnd = new SettingsWnd();
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<SettingsWnd, KeyEvent*, &SettingsWnd::OnKeyDown>(wnd);

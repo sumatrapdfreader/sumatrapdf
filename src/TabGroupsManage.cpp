@@ -314,10 +314,6 @@ void TabGroupsWnd::OnKeyDown(KeyEvent* ev) {
             return;
         }
     }
-    if (ev->vkey == VK_ESCAPE) {
-        OnCancel();
-        ev->didHandle = true;
-    }
 }
 
 static void TeardownTabGroupsWnd(TabGroupsWnd* w) {
@@ -448,6 +444,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
 
     auto* wnd = new TabGroupsWnd();
     wnd->SetFont(GetAppFont());
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
     wnd->onKeyDown = MkMethod1<TabGroupsWnd, KeyEvent*, &TabGroupsWnd::OnKeyDown>(wnd);

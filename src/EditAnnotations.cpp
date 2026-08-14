@@ -562,13 +562,6 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
         ev->didHandle = true;
         return;
     }
-    // Ctrl+W closes this window (Esc does not — user may be editing text).
-    // issue #5934
-    if (ev->vkey == 'W' && ev->isCtrl && !ev->isAlt) {
-        Close();
-        ev->didHandle = true;
-        return;
-    }
     if (ev->vkey == 'S' && ev->isShift && ev->isCtrl) {
         // TODO: delay by posting a message?
         // TODO: the keybinding could be changed so this should
@@ -1844,6 +1837,8 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew = new EditAnnotationsWindow();
     // OnSize grows the list / Contents box before DoLayout
     ew->autoLayout = false;
+    // Esc does not close — user may be editing text (issue #5934)
+    ew->closeOnCtrlW = true;
     ew->onClose = MkFunc1Void(OnClose);
     ew->onDestroy = MkFunc1Void(OnDestroy);
     ew->onSize = MkMethod1<EditAnnotationsWindow, WindowBase::SizeEvent*, &EditAnnotationsWindow::OnSize>(ew);

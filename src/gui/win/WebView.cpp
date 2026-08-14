@@ -399,14 +399,32 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
             return S_OK;
         }
 
-        if (m_wnd && m_wnd->forwardAppAccelerators && m_wnd->events.resolveAccelCmd) {
+        if (m_wnd && m_wnd->forwardAppAccelerators) {
             bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
             bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+            // WindowBase closeOnEsc / closeOnCtrlW: WebView2 eats keys before
+            // PreTranslate, so honor the flags here when the host window set them
+            HWND root = GetAncestor(m_hwnd, GA_ROOT);
+            WindowBase* wb = root ? WindowBaseFromHwnd(root) : nullptr;
+            if (wb) {
+                if (wb->closeOnEsc && vk == VK_ESCAPE) {
+                    args->put_Handled(TRUE);
+                    wb->Close();
+                    return S_OK;
+                }
+                if (wb->closeOnCtrlW && vk == 'W' && ctrl && !alt) {
+                    args->put_Handled(TRUE);
+                    wb->Close();
+                    return S_OK;
+                }
+            }
+            if (!m_wnd->events.resolveAccelCmd) {
+                return S_OK;
+            }
             int cmd = m_wnd->events.resolveAccelCmd(m_wnd->events.ctx, (u16)vk, ctrl, shift, alt);
             if (cmd != 0) {
                 args->put_Handled(TRUE);
-                HWND root = GetAncestor(m_hwnd, GA_ROOT);
                 if (root && ::IsWindow(root)) {
                     if (cmd == kWebViewForwardKey) {
                         // let the frame's key handler process it (e.g. Esc)

@@ -26,7 +26,6 @@ struct SimpleBrowserWindow : WindowBase {
     HWND Create(const SimpleBrowserCreateArgs&);
     void OnFocus(WindowBase::FocusEvent*);
     void OnSize(WindowBase::SizeEvent*);
-    void OnCommand(WindowBase::CommandEvent*);
     void OnBack(VirtMouseEvent* ev = nullptr);
     void OnForward(VirtMouseEvent* ev = nullptr);
     ~SimpleBrowserWindow() override;

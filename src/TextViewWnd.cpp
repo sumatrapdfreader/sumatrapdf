@@ -24,8 +24,6 @@ struct TextViewWnd : WindowBase {
     bool Create(Str title, Str text);
     void UpdateTheme();
     static Str FormatTextForEdit(Str text);
-    void PreTranslate(WindowBase::PreTranslateEvent* ev);
-    void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
 };
 
@@ -113,24 +111,6 @@ bool TextViewWnd::Create(Str title, Str text) {
     return true;
 }
 
-// Esc closes PDF Info / Errors / outline text windows (issue #5856)
-void TextViewWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-    }
-}
-
-void TextViewWnd::PreTranslate(WindowBase::PreTranslateEvent* ev) {
-    if (!hwnd) {
-        return;
-    }
-    if (ev->msg->message == WM_CHAR && ev->msg->wParam == VK_ESCAPE) {
-        Close();
-        ev->didHandle = true;
-    }
-}
-
 static void TeardownTextViewWnd(TextViewWnd* w) {
     if (!w) {
         return;
@@ -155,10 +135,9 @@ static void OnTextViewDestroy(WindowBase::DestroyEvent* ev) {
 HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
     auto* wnd = new TextViewWnd();
     wnd->hwndPtr = hwndPtr;
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
-    wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {
         delete wnd;
         return nullptr;
@@ -169,16 +148,18 @@ HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
 void ShowTextInWindowDialog(Str title, Str text) {
     auto* wnd = new TextViewWnd();
     wnd->isDialog = true;
+    wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    wnd->onKeyDown = MkMethod1<TextViewWnd, KeyEvent*, &TextViewWnd::OnKeyDown>(wnd);
-    wnd->onPreTranslate = MkMethod1<TextViewWnd, WindowBase::PreTranslateEvent*, &TextViewWnd::PreTranslate>(wnd);
     if (!wnd->Create(title, text)) {
         delete wnd;
         return;
     }
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (PreTranslateMessage(msg)) {
+            continue;
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
