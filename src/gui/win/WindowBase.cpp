@@ -270,6 +270,88 @@ void WindowBase::Close() {
     PostMessageW(hwnd, WM_CLOSE, 0, 0);
 }
 
+static bool HwndOrAncestorComboIsDropped(HWND focus, HWND top) {
+    for (HWND h = focus; h; h = ::GetParent(h)) {
+        TempStr cls = HwndGetClassName(h);
+        if (str::EqI(cls, StrL("ComboBox"))) {
+            return SendMessageW(h, CB_GETDROPPEDSTATE, 0, 0) != 0;
+        }
+        if (h == top) {
+            break;
+        }
+    }
+    return false;
+}
+
+static bool HwndEditWantsReturn(HWND focus) {
+    if (!focus) {
+        return false;
+    }
+    TempStr cls = HwndGetClassName(focus);
+    if (!str::EqI(cls, StrL("Edit"))) {
+        return false;
+    }
+    DWORD style = (DWORD)GetWindowLongW(focus, GWL_STYLE);
+    return (style & ES_WANTRETURN) != 0;
+}
+
+static bool IsHwndPushButton(HWND h) {
+    if (!h) {
+        return false;
+    }
+    TempStr cls = HwndGetClassName(h);
+    if (!str::EqI(cls, StrL("Button"))) {
+        return false;
+    }
+    DWORD type = (DWORD)GetWindowLongW(h, GWL_STYLE) & BS_TYPEMASK;
+    return type == BS_PUSHBUTTON || type == BS_DEFPUSHBUTTON;
+}
+
+static VirtButton* FindDefaultVirtButton(ILayout* root) {
+    if (!root) {
+        return nullptr;
+    }
+    Vec<TabStop> stops;
+    CollectTabStops(root, stops);
+    for (TabStop& ts : stops) {
+        VirtButton* b = AsVirtButton(ts.vwnd);
+        if (b && b->isDefault) {
+            return b;
+        }
+    }
+    return nullptr;
+}
+
+// Enter clicks the focused button, or the default VirtButton when focus is
+// on an edit / list / anything else. A dropped combo and a multiline edit
+// with ES_WANTRETURN keep the key, like a native dialog.
+bool WindowBase::ActivateOnEnter() {
+    HWND focus = ::GetFocus();
+    if (HwndOrAncestorComboIsDropped(focus, hwnd)) {
+        return false;
+    }
+    if (HwndEditWantsReturn(focus)) {
+        return false;
+    }
+
+    VirtButton* focusedBtn = nullptr;
+    if (vroot && vroot->focused) {
+        focusedBtn = AsVirtButton(vroot->focused);
+    }
+    if (focusedBtn && focusedBtn->Click()) {
+        return true;
+    }
+    if (IsHwndPushButton(focus)) {
+        SendMessageW(focus, BM_CLICK, 0, 0);
+        return true;
+    }
+    VirtButton* def = FindDefaultVirtButton(layout);
+    if (def && def != focusedBtn && def->Click()) {
+        return true;
+    }
+    return false;
+}
+
 void WindowBase::SetPos(Rect* r) {
     HwndMoveWindow(hwnd, r);
 }
@@ -825,7 +907,8 @@ LRESULT WindowBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
 
 // PreTranslate: onPreTranslate first (WM_CHAR / KEYUP / etc.), then key-downs
 // via onKeyDown (so dialog shortcuts work while focus is on a child HWND), then
-// closeOnEsc / closeOnCtrlW, then default Tab among mixed HWND + virtual controls.
+// closeOnEsc / closeOnCtrlW, then Enter (focused or default button), then
+// default Tab among mixed HWND + virtual controls.
 // WM_CHAR Escape is needed because an Edit can eat KEYDOWN Escape (IME / some
 // locales); KEYDOWN is still handled so we close before TranslateMessage.
 bool WindowBase::PreTranslateMessage(MSG& msg) {
@@ -865,6 +948,11 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
     if (closeOnCtrlW && ev.vkey == 'W' && ev.isCtrl && !ev.isAlt) {
         Close();
         return true;
+    }
+    if (ev.vkey == VK_RETURN && !ev.isCtrl && !ev.isAlt) {
+        if (ActivateOnEnter()) {
+            return true;
+        }
     }
     // default Tab among mixed HWND + virtual controls
     if (ev.vkey != VK_TAB || !layout || ev.isCtrl || ev.isAlt) {

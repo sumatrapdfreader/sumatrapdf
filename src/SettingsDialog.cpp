@@ -64,7 +64,6 @@ struct SettingsWnd : WindowBase {
     void FillInverse();
     float SelectedZoom();
     void OnRememberOpenedChanged();
-    void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -291,24 +290,6 @@ void SettingsWnd::OnOk(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-static bool ComboIsDropped(DropDown* d) {
-    return d && d->hwnd && SendMessageW(d->hwnd, CB_GETDROPPEDSTATE, 0, 0);
-}
-
-void SettingsWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        if (ComboIsDropped(dropLayout) || ComboIsDropped(dropZoom) || ComboIsDropped(dropInverse)) {
-            return;
-        }
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else {
-            OnOk();
-        }
-        ev->didHandle = true;
-    }
-}
-
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
     if (gSettingsWnd) {
         gSettingsWnd->OnCancel();
@@ -524,7 +505,6 @@ void ShowSettingsDialog(MainWindow* win) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<SettingsWnd, KeyEvent*, &SettingsWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {

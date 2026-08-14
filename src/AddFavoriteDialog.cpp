@@ -41,7 +41,6 @@ struct AddFavoriteWnd : WindowBase {
 
     bool Create(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
     void SetTarget(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
-    void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -123,17 +122,6 @@ void AddFavoriteWnd::OnOk(VirtMouseEvent*) {
     }
     ApplyAddFavorite(win, filePath, pageNo, pageLabel, name);
     ScheduleDelete();
-}
-
-void AddFavoriteWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else {
-            OnOk();
-        }
-        ev->didHandle = true;
-    }
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
@@ -243,7 +231,6 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<AddFavoriteWnd, KeyEvent*, &AddFavoriteWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win, filePath, pageNo, pageLabel, name);
     if (!ok) {

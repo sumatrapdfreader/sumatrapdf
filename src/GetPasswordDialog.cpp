@@ -44,7 +44,6 @@ struct GetPasswordWnd : WindowBase {
     Str pwdOut;
 
     bool Create();
-    void OnKeyDown(KeyEvent* ev);
     void OnShowPasswordChanged();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
@@ -112,17 +111,6 @@ void GetPasswordWnd::OnShowPasswordChanged() {
     }
     if (editPwd) {
         editPwd->SetPasswordVisible(show);
-    }
-}
-
-void GetPasswordWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            Finish(false);
-        } else {
-            Finish(true);
-        }
-        ev->didHandle = true;
     }
 }
 
@@ -272,7 +260,6 @@ Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword,
     wnd->showPassword = showPassword;
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
-    wnd->onKeyDown = MkMethod1<GetPasswordWnd, KeyEvent*, &GetPasswordWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create();
     if (!ok) {

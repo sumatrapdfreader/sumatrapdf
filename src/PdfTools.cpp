@@ -115,8 +115,6 @@ struct PdfToolDialog : WindowBase {
     void OnCancel(VirtMouseEvent* ev = nullptr);
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
-
-    void OnKeyDown(KeyEvent* ev);
 };
 
 PdfToolDialog::~PdfToolDialog() {
@@ -149,6 +147,7 @@ VirtButton* PdfToolDialog::NewButton(Str text, bool isDefault) {
     b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
     b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
     b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+    b->isDefault = isDefault;
     b->textPadding = DpiScaledInsets(5, 12);
     return b;
 }
@@ -159,7 +158,6 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     PlatformFont* dialogFont = GetDefaultGuiFont();
     closeOnEsc = true;
     onClose = MkFunc1Void(PdfToolDialogOnClose);
-    onKeyDown = MkMethod1<PdfToolDialog, KeyEvent*, &PdfToolDialog::OnKeyDown>(this);
 
     CreateCustomArgs cargs;
     cargs.title = title;
@@ -284,23 +282,6 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     if (focusOn) {
         HwndSetFocus(focusOn->hwnd);
     }
-}
-
-void PdfToolDialog::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        // Enter presses the focused button, if it's one; otherwise it's the
-        // dialog's default action
-        LRESULT res = 0;
-        if (vroot && vroot->focused && VirtTreeOnMessage(hwnd, vroot, WM_KEYDOWN, VK_RETURN, 0, res)) {
-            ev->didHandle = true;
-            return;
-        }
-        if (actionBtn && actionBtn->HasFlag(vwfEnabled)) {
-            DoIt();
-        }
-        ev->didHandle = true;
-    }
-    // Tab: leave didHandle false for default Tab navigation
 }
 
 struct PdfBakeDialog : PdfToolDialog {

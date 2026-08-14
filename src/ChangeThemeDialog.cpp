@@ -43,7 +43,6 @@ struct ChangeThemeWnd : WindowBase {
     DocumentColorsFollowTheme startDocumentColorsFollowTheme = DocumentColorsFollowTheme::Off;
 
     bool Create(MainWindow* win);
-    void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
     void KeepFocus();
@@ -213,26 +212,6 @@ void ChangeThemeWnd::OnChange(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void ChangeThemeWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        // an open drop-down list gets Enter first: there it commits the
-        // highlighted entry rather than the dialog
-        HWND hwndDrop = dropDownDocumentColorsFollowTheme ? dropDownDocumentColorsFollowTheme->hwnd : nullptr;
-        if (hwndDrop && SendMessageW(hwndDrop, CB_GETDROPPEDSTATE, 0, 0)) {
-            return;
-        }
-        // Enter presses the focused button, like a real dialog does; anywhere
-        // else it's the default action
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else {
-            OnChange();
-        }
-        ev->didHandle = true;
-    }
-    // Tab / unhandled: leave didHandle false for default Tab navigation
-}
-
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
     if (gChangeThemeWnd) {
         gChangeThemeWnd->OnCancel();
@@ -322,8 +301,8 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnCancel>(this);
         hbox->AddChild(new Padding(btnCancel, pad));
-        // Enter runs this one (see OnKeyDown), so draw it as the
-        // default button to say so
+        // Enter runs this one (WindowBase::ActivateOnEnter), so draw it
+        // as the default button to say so
         btnChange = NewThemedButton(hwnd, _TRA("Change"), font, true);
         btnChange->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnChange>(this);
         hbox->AddChild(new Padding(btnChange, pad));
@@ -362,7 +341,6 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<ChangeThemeWnd, KeyEvent*, &ChangeThemeWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {

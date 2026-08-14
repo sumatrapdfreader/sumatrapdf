@@ -34,6 +34,7 @@ void StyleThemedButton(VirtButton* b, bool isDefault) {
     b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
     b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
     b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+    b->isDefault = isDefault;
 }
 
 VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool isDefault) {

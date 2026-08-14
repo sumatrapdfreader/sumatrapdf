@@ -39,7 +39,6 @@ struct InverseSearchWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void FillCommands();
-    void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -126,23 +125,6 @@ void InverseSearchWnd::OnOk(VirtMouseEvent*) {
 
 void InverseSearchWnd::OnHelp(VirtMouseEvent*) {
     LaunchDocumentation("/LaTeX-integration");
-}
-
-void InverseSearchWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        HWND hwndDrop = dropDown ? dropDown->hwnd : nullptr;
-        if (hwndDrop && SendMessageW(hwndDrop, CB_GETDROPPEDSTATE, 0, 0)) {
-            return;
-        }
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else if (btnHelp && vroot && vroot->focused == btnHelp) {
-            OnHelp();
-        } else {
-            OnOk();
-        }
-        ev->didHandle = true;
-    }
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
@@ -257,7 +239,6 @@ void ShowInverseSearchDialog(MainWindow* win) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<InverseSearchWnd, KeyEvent*, &InverseSearchWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {

@@ -2245,11 +2245,10 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
     }
 }
 
-// Enter / Space press the button, like a win32 one
-void VirtButton::OnKeyDown(VirtKeyEvent* ev) {
-    bool isPress = (ev->vkey == VK_RETURN) || (ev->vkey == VK_SPACE);
-    if (!isPress || !HasFlag(vwfEnabled) || !onClick.IsValid()) {
-        return;
+// fire onClick as if the button was pressed (keyboard or WindowBase Enter)
+bool VirtButton::Click() {
+    if (!HasFlag(vwfEnabled) || !onClick.IsValid()) {
+        return false;
     }
     VirtMouseEvent me;
     me.target = this;
@@ -2257,8 +2256,18 @@ void VirtButton::OnKeyDown(VirtKeyEvent* ev) {
     me.pt = {bounds.dx / 2, bounds.dy / 2};
     me.ptWindow = {bounds.x + me.pt.x, bounds.y + me.pt.y};
     onClick.Call(&me);
-    ev->didHandle = true;
-    return;
+    return true;
+}
+
+// Enter / Space press the button, like a win32 one
+void VirtButton::OnKeyDown(VirtKeyEvent* ev) {
+    bool isPress = (ev->vkey == VK_RETURN) || (ev->vkey == VK_SPACE);
+    if (!isPress) {
+        return;
+    }
+    if (Click()) {
+        ev->didHandle = true;
+    }
 }
 
 void VirtButton::OnMouseEnter() {

@@ -610,6 +610,8 @@ struct VirtButton : VirtText {
     // when the button is disabled (vwfEnabled cleared)
     Color textColorDisabled = kColorUnset;
     Insets textPadding{4, 8, 4, 8};
+    // Enter clicks this when focus is not on another button
+    bool isDefault = false;
 
     VirtButton(Str s, PlatformFont* font = nullptr);
     ~VirtButton() override;
@@ -619,6 +621,7 @@ struct VirtButton : VirtText {
     void OnMouseEnter();
     void OnMouseLeave();
     void OnKeyDown(VirtKeyEvent*);
+    bool Click();
 };
 
 VirtButton* AsVirtButton(ILayout*);

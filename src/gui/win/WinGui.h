@@ -260,7 +260,8 @@ struct WindowBase {
     void UnSubclass();
 
     // PreTranslateMessage: onPreTranslate, then key-down -> onKeyDown, then
-    // closeOnEsc / closeOnCtrlW, then Tab default
+    // closeOnEsc / closeOnCtrlW, then Enter (focused or default button), then
+    // Tab default
     bool PreTranslateMessage(MSG& msg);
 
     void SetColors(Color textColor, Color bgColor);
@@ -300,6 +301,7 @@ struct WindowBase {
     // control holding the focus means this window holds the win32 focus and
     // `vroot->focused` says which one it is
     bool TabNavigate(bool backwards);
+    bool ActivateOnEnter();
     void SetFocusTo(ControlBase*);
     void SetFocusTo(VirtCtrl*);
 

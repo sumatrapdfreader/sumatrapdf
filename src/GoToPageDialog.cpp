@@ -41,7 +41,6 @@ struct GoToPageWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void SetTarget(MainWindow* win);
-    void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -126,17 +125,6 @@ void GoToPageWnd::OnOk(VirtMouseEvent*) {
         win->ctrl->GoToPage(newPageNo, true);
     }
     ScheduleDelete();
-}
-
-void GoToPageWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else {
-            OnOk();
-        }
-        ev->didHandle = true;
-    }
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
@@ -270,7 +258,6 @@ void ShowGoToPageDialog(MainWindow* win) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<GoToPageWnd, KeyEvent*, &GoToPageWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {

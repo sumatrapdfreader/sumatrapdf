@@ -980,6 +980,7 @@ void SelectionTranslateWnd::StyleButton(VirtButton* b, bool isDefault) {
     b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
     b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
     b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
+    b->isDefault = isDefault;
 }
 
 VirtButton* SelectionTranslateWnd::NewButton(Str text, bool isDefault) {

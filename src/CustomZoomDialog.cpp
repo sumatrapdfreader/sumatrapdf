@@ -43,7 +43,6 @@ struct CustomZoomWnd : WindowBase {
     void SetTarget(MainWindow* win);
     void FillZoom();
     float SelectedZoom();
-    void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -152,21 +151,6 @@ void CustomZoomWnd::OnOk(VirtMouseEvent*) {
         SmartZoom(win, SelectedZoom(), nullptr, true);
     }
     ScheduleDelete();
-}
-
-void CustomZoomWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        HWND hwndDrop = dropDown ? dropDown->hwnd : nullptr;
-        if (hwndDrop && SendMessageW(hwndDrop, CB_GETDROPPEDSTATE, 0, 0)) {
-            return;
-        }
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else {
-            OnOk();
-        }
-        ev->didHandle = true;
-    }
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
@@ -278,7 +262,6 @@ void ShowCustomZoomDialog(MainWindow* win) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<CustomZoomWnd, KeyEvent*, &CustomZoomWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {

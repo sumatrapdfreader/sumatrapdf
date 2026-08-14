@@ -96,7 +96,6 @@ struct ChangeColorWnd : WindowBase {
     void OnSwatchContext(VirtMouseEvent* ev);
     void OnEditChanged();
     void RelayoutRadios();
-    void OnKeyDown(KeyEvent* ev);
 
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -632,17 +631,6 @@ void ChangeColorWnd::OnOk(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-void ChangeColorWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else {
-            OnOk();
-        }
-        ev->didHandle = true;
-    }
-}
-
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
     if (gChangeColorWnd) {
         gChangeColorWnd->OnCancel();
@@ -987,7 +975,6 @@ void ShowChangeBackgroundColorDialog(MainWindow* win) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<ChangeColorWnd, KeyEvent*, &ChangeColorWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {
@@ -1015,7 +1002,6 @@ void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
-    wnd->onKeyDown = MkMethod1<ChangeColorWnd, KeyEvent*, &ChangeColorWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {

@@ -77,7 +77,6 @@ struct TabGroupsWnd : WindowBase {
     void UpdateDeleteButton();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
 };
 
@@ -299,23 +298,6 @@ void TabGroupsWnd::OnOk(VirtMouseEvent*) {
     }
 }
 
-void TabGroupsWnd::OnKeyDown(KeyEvent* ev) {
-    if (!hwnd) {
-        return;
-    }
-    if (ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
-        return;
-    }
-    if (ev->vkey == VK_RETURN && editName && ev->hwnd == editName->hwnd && mode == TabGroupDialogMode::Save) {
-        TempStr name = editName->GetTextTemp();
-        if (!str::IsEmptyOrWhiteSpace(name)) {
-            SaveTabGroup();
-            ev->didHandle = true;
-            return;
-        }
-    }
-}
-
 static void TeardownTabGroupsWnd(TabGroupsWnd* w) {
     if (!w || gTabGroupsWnds.Find(w) < 0) {
         return;
@@ -447,7 +429,6 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTabGroupsClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTabGroupsDestroy);
-    wnd->onKeyDown = MkMethod1<TabGroupsWnd, KeyEvent*, &TabGroupsWnd::OnKeyDown>(wnd);
     if (!wnd->Create(win, mode)) {
         delete wnd;
         return;

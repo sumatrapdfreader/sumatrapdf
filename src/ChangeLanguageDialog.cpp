@@ -134,15 +134,6 @@ void ChangeLanguageWnd::OnOk(VirtMouseEvent*) {
 }
 
 void ChangeLanguageWnd::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey == VK_RETURN) {
-        if (btnCancel && vroot && vroot->focused == btnCancel) {
-            OnCancel();
-        } else {
-            OnOk();
-        }
-        ev->didHandle = true;
-        return;
-    }
     // Up/Down from the search box move the list, like the command palette
     bool fromSearch = editSearch && ev->hwnd == editSearch->hwnd;
     if (fromSearch && listBox && (ev->vkey == VK_UP || ev->vkey == VK_DOWN)) {
