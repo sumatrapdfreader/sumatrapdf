@@ -47,7 +47,7 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 
-static int kButtonSpacingX = 4;
+constexpr int kButtonSpacingX = 4;
 
 // distance between label and edit field
 constexpr int kTextPaddingRight = 6;
@@ -98,9 +98,6 @@ constexpr int kButtonsCount = dimof(gToolbarButtons);
 constexpr int kMaxLayoutButtons = 64;
 static ToolbarButtonInfo gLayoutButtons[kMaxLayoutButtons];
 static int gLayoutButtonsCount = 0;
-// the page number box is optional in a custom layout; the controls that float
-// over it are hidden when it isn't there
-static bool gLayoutHasPageBox = true;
 static Str gLayoutParsedFrom;
 static bool gLayoutParsed = false;
 
@@ -157,7 +154,6 @@ static int ToolbarRowDy(int iconSize) {
 static void RelayoutToolbar(MainWindow* win);
 
 struct ToolbarVirt {
-    MainWindow* win = nullptr;
     ILayout* layout = nullptr;
     VirtRoot* vroot = nullptr;
     Vec<VirtCtrl*> items; // not owned; layout owns them
@@ -170,8 +166,8 @@ struct ToolbarVirt {
 
 static const WStr kVirtToolbarClass = WStrL(L"SUMATRA_VIRT_TOOLBAR");
 
-static bool SkipBuiltInButton(const ToolbarButtonInfo& tbi) {
-    return !tbi.icon && !tbi.isText && str::IsEmptyOrWhiteSpace(tbi.svgIcon);
+static bool HasToolbarButtonContent(const ToolbarButtonInfo& tbi) {
+    return tbi.icon || tbi.isText || !str::IsEmptyOrWhiteSpace(tbi.svgIcon);
 }
 
 static VirtCtrl* ToolbarItemAt(MainWindow* win, int idx) {
@@ -214,14 +210,14 @@ static void SetToolbarButtonEnabledByIdx(MainWindow* win, int idx, bool isEnable
 }
 
 // hiding the page box hides the whole group (label + edit + " / N")
-static void SetToolbarButtonHiddenByIdx(MainWindow* win, int idx, bool isHidden) {
+static bool SetToolbarButtonHiddenByIdx(MainWindow* win, int idx, bool isHidden) {
     VirtCtrl* w = ToolbarItemAt(win, idx);
     if (!w) {
-        return;
+        return false;
     }
     Visibility want = isHidden ? Visibility::Collapse : Visibility::Visible;
     if (w->GetVisibility() == want) {
-        return;
+        return false;
     }
     w->SetVisibility(want);
     ToolbarVirt* tb = win->toolbarVirt;
@@ -236,11 +232,7 @@ static void SetToolbarButtonHiddenByIdx(MainWindow* win, int idx, bool isHidden)
             tb->pageTotal->SetVisibility(want);
         }
     }
-    if (tb && tb->vroot) {
-        tb->vroot->RequestLayout();
-    }
-    RelayoutToolbar(win);
-    HwndInvalidate(win->hwndToolbar, true);
+    return true;
 }
 
 static void SetToolbarButtonCheckedByIdx(MainWindow* win, int idx, bool isChecked) {
@@ -268,19 +260,20 @@ static void PopulateToolbarLayout() {
     gLayoutParsedFrom = str::Dup(setting);
     gLayoutParsed = true;
     gLayoutButtonsCount = 0;
-    gLayoutHasPageBox = false;
 
     auto addButton = [](const ToolbarButtonInfo& tbi) {
         if (gLayoutButtonsCount < kMaxLayoutButtons) {
             gLayoutButtons[gLayoutButtonsCount++] = tbi;
         }
     };
-
-    if (str::IsEmptyOrWhiteSpace(setting)) {
+    auto useDefaultLayout = [&addButton]() {
         for (const ToolbarButtonInfo& tbi : gToolbarButtons) {
             addButton(tbi);
         }
-        gLayoutHasPageBox = true;
+    };
+
+    if (str::IsEmptyOrWhiteSpace(setting)) {
+        useDefaultLayout();
         return;
     }
 
@@ -301,7 +294,6 @@ static void PopulateToolbarLayout() {
         }
         if (str::EqI(tok, StrL("PageInfo"))) {
             addButton({nullptr, PageInfoId, nullptr});
-            gLayoutHasPageBox = true;
             continue;
         }
         int cmdId = GetCommandIdByName(tok);
@@ -320,12 +312,7 @@ static void PopulateToolbarLayout() {
     }
     if (gLayoutButtonsCount == 0) {
         logf("ToolbarCustomLayout: nothing usable in '%s', using the standard layout\n", setting);
-        str::FreePtr(&gLayoutParsedFrom);
-        gLayoutParsed = false;
-        Str prev = gGlobalPrefs->toolbarCustomLayout;
-        gGlobalPrefs->toolbarCustomLayout = nullptr;
-        PopulateToolbarLayout();
-        gGlobalPrefs->toolbarCustomLayout = prev;
+        useDefaultLayout();
     }
 }
 
@@ -338,42 +325,20 @@ static ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
     return gCustomButtons[idx - gLayoutButtonsCount];
 }
 
-// more than one because users can add custom buttons with overlapping ids
-static int GetToolbarButtonsByID(int cmdId, int (&buttons)[4]) {
-    int nFound = 0;
-    int n = TotalButtonsCount();
-    for (int idx = 0; idx < n; idx++) {
-        ToolbarButtonInfo& tb = GetToolbarButtonInfoByIdx(idx);
-        int tbCmdId = tb.cmdId;
-        auto* cmd = FindCustomCommand(tbCmdId);
-        if (cmd) tbCmdId = cmd->origId;
-        cmd = FindCustomCommand(cmdId);
-        if (cmd) cmdId = cmd->origId;
-        if (cmdId != tbCmdId) continue;
-        buttons[nFound++] = idx;
-        if (nFound >= 4) {
-            return nFound;
-        }
-    }
-    return nFound;
+static int OriginalCommandId(int cmdId) {
+    CustomCommand* cmd = FindCustomCommand(cmdId);
+    return cmd ? cmd->origId : cmdId;
 }
 
 void SetToolbarButtonCheckedState(MainWindow* win, int cmdId, bool isChecked) {
-    int buttons[4];
-    int n = GetToolbarButtonsByID(cmdId, buttons);
-    if (n == 0) return;
+    int originalCmdId = OriginalCommandId(cmdId);
+    int n = TotalButtonsCount();
     for (int i = 0; i < n; i++) {
-        int idx = buttons[i];
-        SetToolbarButtonCheckedByIdx(win, idx, isChecked);
+        const ToolbarButtonInfo& tbi = GetToolbarButtonInfoByIdx(i);
+        if (OriginalCommandId(tbi.cmdId) == originalCmdId) {
+            SetToolbarButtonCheckedByIdx(win, i, isChecked);
+        }
     }
-}
-
-// which documents support rotation
-static bool NeedsRotateUI(MainWindow* win) {
-    if (IsBrowserDocController(win->ctrl)) {
-        return false;
-    }
-    return true;
 }
 
 // some commands are only avialble in certain contexts
@@ -385,7 +350,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
             return !IsBrowserDocController(win->ctrl);
         case CmdRotateLeft:
         case CmdRotateRight:
-            return NeedsRotateUI(win);
+            return !IsBrowserDocController(win->ctrl);
         case CmdFindFirst:
             // CHM has its own (WebView2/IE) find bar even though NeedsFindUI()
             // is false for it; show the Search button so it's reachable
@@ -415,9 +380,6 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
 }
 
 static bool IsCmdEnabled(MainWindow* win, int cmdId) {
-    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
-    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
-
     switch (cmdId) {
         case CmdNextTab:
         case CmdPrevTab:
@@ -428,34 +390,31 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
             return true;
     }
 
+    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
     bool remove, disable;
     GetCommandIdState(ctx, cmdId, &remove, &disable);
     if (remove || disable) {
         return false;
     }
-    bool isAllowed = true;
     switch (cmdId) {
         case CmdOpenFile:
-            isAllowed = CanAccessDisk();
+            if (!CanAccessDisk()) {
+                return false;
+            }
             break;
         case CmdPrint:
-            isAllowed = HasPermission(Perm::PrinterAccess);
+            if (!HasPermission(Perm::PrinterAccess)) {
+                return false;
+            }
             break;
-    }
-    if (!isAllowed) {
-        return false;
     }
 
     // if no file is open, only enable buttons for commands that don't require a document
     // (custom toolbar buttons use a custom command id, the original command decides)
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5657
     if (!win->IsDocLoaded()) {
-        int realCmdId = cmdId;
-        auto* cmd = FindCustomCommand(cmdId);
-        if (cmd) {
-            realCmdId = cmd->origId;
-        }
-        return CmdWorksWithoutDocument(realCmdId);
+        return CmdWorksWithoutDocument(OriginalCommandId(cmdId));
     }
 
     switch (cmdId) {
@@ -566,6 +525,7 @@ static void SetToolbarButtonToolTipByIdx(MainWindow* win, int idx, int cmdId, St
 // TODO: also set checked state instead of calling SetToolbarButtonCheckedState() all over
 void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     int n = TotalButtonsCount();
+    bool visibilityChanged = false;
     for (int i = 0; i < n; i++) {
         auto& tb = GetToolbarButtonInfoByIdx(i);
         int cmdId = tb.cmdId;
@@ -574,9 +534,9 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         // by position, not by command availability.
         if (setButtonsVisibility && cmdId != WarningMsgId && cmdId != 0) {
             bool hide = !IsCmdAvailable(win, cmdId);
-            SetToolbarButtonHiddenByIdx(win, i, hide);
+            visibilityChanged |= SetToolbarButtonHiddenByIdx(win, i, hide);
         }
-        if (SkipBuiltInButton(tb)) {
+        if (!HasToolbarButtonContent(tb)) {
             continue;
         }
         bool isEnabled = IsCmdEnabled(win, cmdId);
@@ -609,7 +569,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             }
             if (bi.cmdId == 0) {
                 bool hide = !prevVisibleNonSep;
-                SetToolbarButtonHiddenByIdx(win, i, hide);
+                visibilityChanged |= SetToolbarButtonHiddenByIdx(win, i, hide);
                 prevVisibleNonSep = false;
                 if (!hide) {
                     lastSep = i;
@@ -624,8 +584,17 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             }
         }
         if (lastSep >= 0) {
-            SetToolbarButtonHiddenByIdx(win, lastSep, true);
+            visibilityChanged |= SetToolbarButtonHiddenByIdx(win, lastSep, true);
         }
+    }
+
+    if (visibilityChanged) {
+        ToolbarVirt* tb = win->toolbarVirt;
+        if (tb && tb->vroot) {
+            tb->vroot->RequestLayout();
+        }
+        RelayoutToolbar(win);
+        HwndInvalidate(win->hwndToolbar, true);
     }
 
     // reposition the floating find bar over the search icon (and hide it if the
@@ -656,21 +625,14 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
 }
 
 void SetToolbarButtonEnableState(MainWindow* win, int cmdId, bool isEnabled) {
-    int buttons[4];
-    int n = GetToolbarButtonsByID(cmdId, buttons);
-    if (n == 0) return;
+    int originalCmdId = OriginalCommandId(cmdId);
+    int n = TotalButtonsCount();
     for (int i = 0; i < n; i++) {
-        int idx = buttons[i];
-        SetToolbarButtonEnabledByIdx(win, idx, isEnabled);
+        const ToolbarButtonInfo& tbi = GetToolbarButtonInfoByIdx(i);
+        if (OriginalCommandId(tbi.cmdId) == originalCmdId) {
+            SetToolbarButtonEnabledByIdx(win, i, isEnabled);
+        }
     }
-}
-// whether the current window context (presentation, about page) permits a
-// toolbar at all, independent of the show/hide/overlay mode
-static bool ToolbarContextAllows(MainWindow* win) {
-    if (win->presentation) {
-        return false;
-    }
-    return true;
 }
 
 // toolbar mode for this window: Fullscreen.Toolbar in fullscreen, else Toolbar
@@ -682,7 +644,7 @@ static int ToolbarModeForWindow(MainWindow* win) {
 }
 
 bool ShouldShowToolbar(MainWindow* win) {
-    if (!ToolbarContextAllows(win)) {
+    if (win->presentation) {
         return false;
     }
     int mode = ToolbarModeForWindow(win);
@@ -690,7 +652,7 @@ bool ShouldShowToolbar(MainWindow* win) {
 }
 
 bool ShouldOverlayToolbar(MainWindow* win) {
-    if (!ToolbarContextAllows(win)) {
+    if (win->presentation) {
         return false;
     }
     if (ToolbarModeForWindow(win) != kToolbarOverlay) {
@@ -711,9 +673,11 @@ static int ToolbarNaturalWidth(MainWindow* win) {
     if (!tb || !tb->layout) {
         return 0;
     }
-    Size sz = tb->layout->MinIntrinsicWidth(tb->rowDy) > 0 ? Size{tb->layout->MinIntrinsicWidth(tb->rowDy), tb->rowDy}
-                                                           : Size{tb->rowDy * 8, tb->rowDy};
-    return sz.dx + DpiScale(12);
+    int dx = tb->layout->MinIntrinsicWidth(tb->rowDy);
+    if (dx <= 0) {
+        dx = tb->rowDy * 8;
+    }
+    return dx + DpiScale(12);
 }
 
 // canvas rectangle in frame-client coordinates
@@ -971,7 +935,7 @@ static void OnPageEditChar(MainWindow* win, Edit::CharEvent* ev) {
 }
 
 void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
-    if (!win->hwndToolbar || !gLayoutHasPageBox) {
+    if (!win->hwndToolbar) {
         return;
     }
     ToolbarVirt* tb = win->toolbarVirt;
@@ -1029,19 +993,6 @@ static Edit* CreatePageEdit(MainWindow* win, HFONT font, int iconDy) {
     e->idealDy = iconDy;
     e->onChar = MkFunc1(OnPageEditChar, win);
     return e;
-}
-
-__unused static void LogBitmapInfo(HBITMAP hbmp) {
-    BITMAP bmpInfo;
-    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    logf("dx: %d, dy: %d, stride: %d, bitsPerPixel: %d\n", (int)bmpInfo.bmWidth, (int)bmpInfo.bmHeight,
-         (int)bmpInfo.bmWidthBytes, (int)bmpInfo.bmBitsPixel);
-    u8* bits = (u8*)bmpInfo.bmBits;
-    u8* d;
-    for (int y = 0; y < 5; y++) {
-        d = bits + ((size_t)bmpInfo.bmWidthBytes * y);
-        logf("y: %d, d: 0x%p\n", y, d);
-    }
 }
 
 static TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
@@ -1173,7 +1124,7 @@ static void RefreshToolbarIcons(MainWindow* win) {
             continue;
         }
         const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
-        if (SkipBuiltInButton(bi) && !bi.svgIcon) {
+        if (!HasToolbarButtonContent(bi)) {
             continue;
         }
         Str svg = bi.svgIcon ? bi.svgIcon : Str(bi.icon);
@@ -1376,8 +1327,6 @@ static void BuildToolbarLayout(MainWindow* win) {
     tb->rowDy = ToolbarRowDy(tb->iconSize);
     Color fg = TbTextColor();
     Color dis = TbDisabledColor();
-    Color hover = TbHoverColor();
-    Color sel = TbSelectedColor();
 
     auto* box = new HBox();
     box->alignCross = CrossAxisAlign::CrossCenter;
@@ -1412,32 +1361,26 @@ static void BuildToolbarLayout(MainWindow* win) {
             tb->items.Append(label);
             continue;
         }
-        if (bi.cmdId == 0 || (SkipBuiltInButton(bi) && !bi.svgIcon && !bi.isText)) {
+        if (bi.cmdId == 0 || !HasToolbarButtonContent(bi)) {
             w = MakeToolbarSeparator(tb->rowDy);
         } else if (bi.isText) {
             auto* b = new VirtButton(noTranslate ? bi.toolTip : trans::GetTranslation(bi.toolTip), tb->platformFont);
-            b->textColor = fg;
-            b->textColorDisabled = dis;
-            b->bgColorHover = hover;
             b->textPadding = {cyPad, iconPad, cyPad, iconPad};
             w = b;
         } else {
             auto* ib = new VirtIconButton();
             ib->padding = {cyPad, iconPad, cyPad, iconPad};
-            ib->bgColorHover = hover;
-            ib->bgColorSelected = sel;
-            ib->chevronColor = fg;
             ib->hasDropdown = (bi.cmdId == CmdReadAloud);
             Str svg = bi.svgIcon ? bi.svgIcon : Str(bi.icon);
             ib->pixmap = GetCachedPixmapForSvg(svg, tb->iconSize, tb->iconSize, fg, TbBgColor());
             ib->pixmapDisabled = GetCachedPixmapForSvg(svg, tb->iconSize, tb->iconSize, dis, TbBgColor());
             w = ib;
         }
+        ApplyToolbarItemColors(w);
         w->id = bi.cmdId;
-        if (bi.toolTip && !bi.isText) {
-            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, !noTranslate));
-        } else if (bi.isText && bi.toolTip) {
-            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, false));
+        if (bi.toolTip) {
+            bool translate = !noTranslate && !bi.isText;
+            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, translate));
         }
         if (bi.cmdId != 0 && bi.cmdId != PageInfoId) {
             w->onClick = MkFunc1(OnToolbarButtonClicked, win);
@@ -1595,9 +1538,7 @@ void CreateToolbar(MainWindow* win) {
     win->hwndToolbar = hwnd;
 
     auto* tb = new ToolbarVirt();
-    tb->win = win;
     tb->iconSize = iconSize;
-    tb->rowDy = rowDy;
     int defFontSize = GetAppFontSize();
     int newSize = defFontSize;
     int maxFontSize = iconSize - (yPad * 2) - 2;
