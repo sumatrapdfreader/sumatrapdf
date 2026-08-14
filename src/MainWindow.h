@@ -461,6 +461,7 @@ struct MainWindow {
             bool showMenuBarRebar = false;
             bool aiChatVisible = false;
             int aiChatDx = 0;
+            bool sidebarOnRight = false;
         };
         Layout layout; // last applied layout state
         // desired visibility of the sidebar / AI chat panels; applied

@@ -1405,6 +1405,12 @@ bool ToolbarAtBottom() {
     return ToolbarPositionFromPrefs() == kToolbarBottom;
 }
 
+// Reverse the content-row HBox so the sidebar is on the right. RTL frames
+// already mirror via WS_EX_LAYOUTRTL, so don't also reverse the HBox.
+static bool SidebarOnRightLayout() {
+    return gGlobalPrefs && gGlobalPrefs->sidebarOnRight && !IsUIRtl();
+}
+
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -6453,7 +6459,7 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
            s1->showFavorites == s2->showFavorites && s1->favoritesAsTab == s2->favoritesAsTab &&
            s1->showMenuBarRebar == s2->showMenuBarRebar && s1->aiChatVisible == s2->aiChatVisible &&
-           s1->aiChatDx == s2->aiChatDx;
+           s1->aiChatDx == s2->aiChatDx && s1->sidebarOnRight == s2->sidebarOnRight;
 }
 
 // Favorites-only must not reserve a tab row (issue #5861)
@@ -6574,6 +6580,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
     curState.aiChatVisible = win->uiState.aiChatVisible;
     curState.aiChatDx = win->aiChatDx;
+    curState.sidebarOnRight = SidebarOnRightLayout();
 
     // skip redundant relayouts when all layout-affecting state is unchanged
     if (IsUiLayoutEq(&curState, &win->uiState.layout) && updateToolbars && sidebarDx == -1) {
@@ -6764,6 +6771,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     win->tocSlot->dy = tocDy;
     win->favSlot->dx = sidebarDxApplied;
     win->aiChatSlot->dx = aiChatDx;
+    if (win->frameLayout) {
+        win->frameLayout->rtl = SidebarOnRightLayout();
+    }
 
     // chrome HWNDs only move when updateToolbars (splitter drag skips them)
     bool capTwoRow = showCaption && showingMenuBar;
@@ -8486,12 +8496,15 @@ static void OnSidebarSplitterMove(VirtSplitter::MoveEvent* ev) {
     }
 
     Point pcur = HwndGetCursorPos(win->hwndFrame);
+    Rect rFrame = HwndClientRect(win->hwndFrame);
     int sidebarDx = pcur.x; // without splitter
+    if (SidebarOnRightLayout()) {
+        sidebarDx = rFrame.dx - pcur.x;
+    }
 
     // make sure to keep this in sync with the calculations in RelayoutFrame
     // note: without the min/max(..., curDx), the sidebar will be
     //       stuck at its width if it accidentally got too wide or too narrow
-    Rect rFrame = HwndClientRect(win->hwndFrame);
     int curDx = win->sidebarDx; // don't read the toc box rect, it can be stale
     int minDx = std::min(kSidebarMinDx, curDx);
     // match RelayoutFrame: allow wider than half window (long Favorites names)

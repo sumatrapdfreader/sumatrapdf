@@ -809,12 +809,7 @@ const fileSettings: Field[] = [
   ),
   compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
   field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
-  field(
-    "SidebarDx",
-    Int,
-    0,
-    "width of the left sidebar (table of contents / favorites) in screen pixels, as last resized",
-  ),
+  field("SidebarDx", Int, 0, "width of the bookmarks / favorites sidebar in screen pixels, as last resized"),
   field(
     "DisplayR2L",
     Bool,
@@ -1044,6 +1039,13 @@ const globalPrefs: Field[] = [
       "(or page label); if false (the default), they are sorted by page number",
   ).ver("3.7"),
   field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
+  field(
+    "SidebarOnRight",
+    Bool,
+    false,
+    "if true, put the bookmarks / favorites sidebar on the right of the window " +
+      "(left is the default; right-to-left UI languages already put it on the right)",
+  ).ver("3.7"),
   field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
     "DisableLinks",

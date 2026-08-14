@@ -153,6 +153,11 @@ SortFavoritesByName = false
 ; one
 ShowToc = true
 
+; if true, put the bookmarks / favorites sidebar on the right of the window
+; (left is the default; right-to-left UI languages already put it on the right)
+; (introduced in version 3.7)
+SidebarOnRight = false
+
 ; if true, draw a blue border around links in the document (introduced in
 ; version 3.6)
 ShowLinks = false
@@ -973,8 +978,8 @@ FileStates [
     ; has one
     ShowToc = true
 
-    ; width of the left sidebar (table of contents / favorites) in screen
-    ; pixels, as last resized
+    ; width of the bookmarks / favorites sidebar in screen pixels, as last
+    ; resized
     SidebarDx = 0
 
     ; if true, the document is displayed right-to-left in facing and book view

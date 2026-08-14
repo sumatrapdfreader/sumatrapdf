@@ -144,6 +144,44 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     return finish(res, 0);
 }
 
+// Reports sidebar vs canvas client x positions so tests can check SidebarOnRight.
+static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->hwndFrame) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+
+    auto clientX = [&](HWND hwnd) -> int {
+        if (!hwnd || !HwndIsVisible(hwnd)) {
+            return -1;
+        }
+        return HwndScreenToClient(win->hwndFrame, HwndWindowRect(hwnd).TL()).x;
+    };
+
+    bool pref = gGlobalPrefs && gGlobalPrefs->sidebarOnRight;
+    bool tocVis = win->hwndTocBox && HwndIsVisible(win->hwndTocBox);
+    bool favVis = win->hwndFavBox && HwndIsVisible(win->hwndFavBox);
+    int tocX = clientX(win->hwndTocBox);
+    int favX = clientX(win->hwndFavBox);
+    int canvasX = clientX(win->hwndCanvas);
+    return finish(fmt("OK pref=%d tocVis=%d favVis=%d tocX=%d favX=%d canvasX=%d", pref ? 1 : 0, tocVis ? 1 : 0,
+                      favVis ? 1 : 0, tocX, favX, canvasX),
+                  0);
+}
+
 enum class ControlCmd : u16 {
     Ping = 1,
     Quit = 2,
@@ -186,6 +224,7 @@ enum class ControlCmd : u16 {
     TestDestZoomNav = 47,
     TestAnnotEditorLayout = 48,
     TestDisplayMode = 49,
+    TestSidebarLayout = 50,
 };
 
 enum class ControlArgType : u16 {
@@ -751,6 +790,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = DisplayModeResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSidebarLayout: {
+            int exitCode = 0;
+            Str res = SidebarLayoutResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
