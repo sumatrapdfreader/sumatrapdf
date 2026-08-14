@@ -589,6 +589,20 @@ const MAC_APP_SOURCES = [
 ];
 
 const PORTABLE_COMPILE_SOURCES = [
+  // no Win32 call or Windows-only header, per a scan of src/*.cpp. Compiled
+  // (not linked) here to keep it that way
+  "src/ShortcutParse.cpp",
+  "src/TranslationLangs.cpp",
+  "src/GlobalPrefs.cpp",
+  "src/FileHistory.cpp",
+  // the dark-mode engine: color and image math over mupdf, no UI
+  "src/PdfDarkModeCache.cpp",
+  "src/PdfDarkModeDevice.cpp",
+  "src/PdfDarkModeEngineCache.cpp",
+  "src/PdfDarkModeImageBgBlend.cpp",
+  "src/PdfDarkModeImageClassifier.cpp",
+  "src/PdfDarkModeImageStats.cpp",
+  "src/PdfDarkModeScanProcess.cpp",
   "src/DisplayMode.cpp",
   "src/DocumentLayout.cpp",
   "src/GumboHtmlParser.cpp",
