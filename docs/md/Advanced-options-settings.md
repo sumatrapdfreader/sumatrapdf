@@ -400,7 +400,8 @@ EBookUI [
     LayoutDx = 0
 
     ; height of the page the ebook is laid out into, in points (not screen
-    ; pixels); 0 means the default (595)
+    ; pixels); 0 derives it from the window's shape when the document is opened,
+    ; so Fit Width shows a whole page
     LayoutDy = 0
 
     ; if true, the CSS in the ebook is ignored and only CustomCSS applies

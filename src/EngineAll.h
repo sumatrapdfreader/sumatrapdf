@@ -100,6 +100,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, A
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
 void EngineMupdfSetDisableJavaScript(bool disable);
+void EngineMupdfSetEbookLayoutAspect(float dyOverDx);
 void EngineMupdfSetAllowExternalImages(bool allow);
 void EngineMupdfToggleCadEnhance(EngineBase* engine);
 bool EngineMupdfCadEnhanceActive(EngineBase* engine);

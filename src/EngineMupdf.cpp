@@ -45,6 +45,22 @@ static float layoutA4DyPt = 842.F;
 
 static float layoutFontEm = 11.F;
 
+// Shape of the window a reflowable ebook should be laid out for, as
+// height / width. A reflow document is laid out once, into a page of a fixed
+// size, and Fit Width then only scales that page -- so with the A5 default a
+// width-fitted page is ~1.4x taller than any landscape window and has to be
+// scrolled through before turning it (issue #3472). Deriving the layout height
+// from the window's shape makes one page one screen. 0 keeps the fixed page.
+static float gEbookLayoutAspect = 0.F;
+// layout height for ebooks loaded after this call, as a fraction of the layout
+// width; 0 restores the fixed A5 page. EBookUI.LayoutDy overrides it
+void EngineMupdfSetEbookLayoutAspect(float dyOverDx) {
+    if (dyOverDx < 0.05f || dyOverDx > 20.f) {
+        dyOverDx = 0.f;
+    }
+    gEbookLayoutAspect = dyOverDx;
+}
+
 // in mupdf_load_system_font.c
 #if defined(_WIN32)
 extern "C" void install_load_windows_font_funcs(fz_context* ctx);
@@ -3185,6 +3201,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         }
         if (eBookUI->layoutDy > 100) {
             ldy = eBookUI->layoutDy;
+        } else if (gEbookLayoutAspect > 0) {
+            // after any LayoutDx override, so the user still sets line length
+            ldy = limitValue(ldx * gEbookLayoutAspect, 150.f, 5000.f);
         }
         Str fontName = EbookFontNameFromSetting(eBookUI->fontName);
         if (fontName) {

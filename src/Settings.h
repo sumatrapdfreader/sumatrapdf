@@ -93,7 +93,8 @@ struct EBookUI {
     // pixels); 0 means the default (420)
     float layoutDx;
     // height of the page the ebook is laid out into, in points (not screen
-    // pixels); 0 means the default (595)
+    // pixels); 0 derives it from the window's shape when the document is
+    // opened, so Fit Width shows a whole page
     float layoutDy;
     // if true, the CSS in the ebook is ignored and only CustomCSS applies
     bool ignoreDocumentCSS;
@@ -1076,11 +1077,12 @@ static const StructInfo gEBookUIInfo = {
     "(typically a serif). applied as user CSS with !important so it overrides a document font-family; leave empty to "
     "keep the publisher's fonts. wrapping quotes are stripped\0font size in points; 0 means the default (8.0)\0width "
     "of the page the ebook is laid out into, in points (not screen pixels); 0 means the default (420)\0height of the "
-    "page the ebook is laid out into, in points (not screen pixels); 0 means the default (595)\0if true, the CSS in "
-    "the ebook is ignored and only CustomCSS applies\0additional CSS applied to ebooks; set IgnoreDocumentCSS = true "
-    "if the document's own CSS overrides it\0if given, sets the canvas background color for ebook documents (epub, "
-    "mobi etc.)\0default page layout for ebooks; empty uses the global DefaultDisplayMode. valid values: automatic, "
-    "single page, facing, book view, continuous, continuous facing, continuous book view",
+    "page the ebook is laid out into, in points (not screen pixels); 0 derives it from the window's shape when the "
+    "document is opened, so Fit Width shows a whole page\0if true, the CSS in the ebook is ignored and only CustomCSS "
+    "applies\0additional CSS applied to ebooks; set IgnoreDocumentCSS = true if the document's own CSS overrides "
+    "it\0if given, sets the canvas background color for ebook documents (epub, mobi etc.)\0default page layout for "
+    "ebooks; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book view, "
+    "continuous, continuous facing, continuous book view",
     false};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {

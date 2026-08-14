@@ -3949,6 +3949,49 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     AtomicIntDec(&gDangerousThreadCount);
 }
 
+// height / width of the area a document is displayed in, 0 if not known yet
+static float EbookLayoutAspectForWindow(MainWindow* win) {
+    if (!win) {
+        return 0;
+    }
+    // A hidden frame is the startup window, which is shown (and maximized) only
+    // after the document loads -- its canvas still has the creation size.
+    bool canvasIsReal = win->hwndCanvas && HwndIsVisible(win->hwndFrame);
+    Rect rc = canvasIsReal ? HwndClientRect(win->hwndCanvas) : Rect();
+    if (rc.dx > 0 && rc.dy > 0) {
+        return (float)rc.dy / (float)rc.dx;
+    }
+    // So use the size the window is about to be restored to. That is the frame,
+    // not the canvas, so take off the toolbar and tab bar: guessing too tall
+    // would leave the page overflowing, which is the whole bug.
+    if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || gGlobalPrefs->windowState == WIN_STATE_FULLSCREEN) {
+        HMONITOR mon = MonitorFromWindow(win->hwndFrame, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi{sizeof(mi)};
+        if (GetMonitorInfoW(mon, &mi)) {
+            rc = ToRect(mi.rcWork);
+        }
+    } else {
+        rc = gGlobalPrefs->windowPos;
+    }
+    if (rc.dx < 1 || rc.dy < 1) {
+        // nothing remembered (first run): the hidden frame already has the
+        // size it will be shown at
+        rc = win->hwndFrame ? HwndClientRect(win->hwndFrame) : Rect();
+    }
+    if (rc.dx < 1 || rc.dy < 1) {
+        return 0;
+    }
+    int chromeDy = 0;
+    if (gGlobalPrefs->showToolbar) {
+        chromeDy += DpiScale(40);
+    }
+    if (SettingsUseTabs()) {
+        chromeDy += DpiScale(34);
+    }
+    rc.dy = std::max(rc.dy - chromeDy, 100);
+    return (float)rc.dy / (float)rc.dx;
+}
+
 void StartLoadDocument(LoadArgs* argsIn) {
     if (gCrashOnOpen) {
         log("LoadDocumentAsync: about to call CrashMe()\n");
@@ -4033,6 +4076,11 @@ void StartLoadDocument(LoadArgs* argsIn) {
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
         HwndInvalidate(win->hwndCanvas);
     }
+
+    // Lay reflowable ebooks out for this window's shape, so Fit Width shows a
+    // whole page instead of one that overflows the window (issue #3472). Done
+    // here because the load thread must not touch MainWindow.
+    EngineMupdfSetEbookLayoutAspect(EbookLayoutAspectForWindow(win));
 
     LoadArgs* args = argsIn->Clone();
     BeginDocumentLoad(path);
@@ -4186,6 +4234,9 @@ MainWindow* LoadDocument(LoadArgs* args) {
     if (!win) {
         return nullptr;
     }
+
+    // see the same call in StartLoadDocument (issue #3472)
+    EngineMupdfSetEbookLayoutAspect(EbookLayoutAspectForWindow(win));
 
     BeginDocumentLoad(path);
     auto timeStart = TimeGet();
