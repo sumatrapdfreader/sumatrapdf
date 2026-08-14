@@ -1185,13 +1185,6 @@ void PickAnotherRandomPromotion() {
     PickAnotherRandomTip();
 }
 
-// Just the path here — no file::GetSize during layout/scroll, it's too slow on
-// network drives (was ~11% of home-page scroll CPU). The size is appended when
-// the tooltip is actually shown, see LinkTooltipTemp().
-static TempStr HomeThumbTooltipTemp(Str path) {
-    return str::DupTemp(path);
-}
-
 // --- scroll-friendly layout cache: full LayoutHomePage only when content/size/
 // filter changes; pure scrollY changes just offset stored thumb rects ---
 struct HomePageLayoutCache {
@@ -2772,7 +2765,7 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
     }
 
     // Same text as hover: path + size (size looked up only when shown)
-    TempStr tip = HomeThumbTooltipTemp(fs->filePath);
+    TempStr tip = str::DupTemp(fs->filePath);
     i64 size = file::GetSize(fs->filePath);
     if (size >= 0) {
         tip = fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));

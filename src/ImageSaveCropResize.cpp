@@ -1985,22 +1985,6 @@ static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const 
     return b;
 }
 
-static void BrowseClicked(ImageEditWindow* ew, VirtMouseEvent*) {
-    OnBrowse(ew);
-}
-
-static void SaveClicked(ImageEditWindow* ew, VirtMouseEvent*) {
-    OnSave(ew);
-}
-
-static void CropClicked(ImageEditWindow* ew, VirtMouseEvent*) {
-    OnCropButton(ew);
-}
-
-static void ResizeClicked(ImageEditWindow* ew, VirtMouseEvent*) {
-    OnResizeButton(ew);
-}
-
 void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf) {
     ProbeImageFormats();
 
@@ -2123,7 +2107,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         SetWindowSubclass(edit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId, (DWORD_PTR)ew);
         ew->destEdit = edit;
     }
-    ew->btnBrowse = NewImageEditButton(ew, StrL("..."), MkFunc1(BrowseClicked, ew));
+    ew->btnBrowse = NewImageEditButton(ew, StrL("..."), MkFunc0(OnBrowse, ew));
     if (!fromRenderedBitmap) {
         ew->staticPathLabel = NewVirtText({
             .s = filePath ? filePath : Str{},
@@ -2150,9 +2134,9 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     });
 
     // buttons
-    ew->btnSave = NewImageEditButton(ew, Tr("&Save"), MkFunc1(SaveClicked, ew));
-    ew->btnCrop = NewImageEditButton(ew, Tr("&Crop"), MkFunc1(CropClicked, ew));
-    ew->btnResize = NewImageEditButton(ew, Tr("&Resize"), MkFunc1(ResizeClicked, ew));
+    ew->btnSave = NewImageEditButton(ew, Tr("&Save"), MkFunc0(OnSave, ew));
+    ew->btnCrop = NewImageEditButton(ew, Tr("&Crop"), MkFunc0(OnCropButton, ew));
+    ew->btnResize = NewImageEditButton(ew, Tr("&Resize"), MkFunc0(OnResizeButton, ew));
 
     // format dropdown
     {

@@ -38,11 +38,6 @@
 #include "Theme.h"
 #include "DarkMode_win.h"
 
-// match the frame's title bar to the current theme (dark caption in dark mode)
-static void ApplyTitleBarTheme(HWND hwnd) {
-    DarkModeApplyToTitleBar(hwnd);
-}
-
 // command ids for the window's toolbar buttons (handled in OnCommand)
 constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 
@@ -307,7 +302,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
     // owned by the frame so it groups/minimizes with it but isn't a child
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)win->hwndFrame);
     SetColors(colTxt, colBg);
-    ApplyTitleBarTheme(hwnd);
+    DarkModeApplyToTitleBar(hwnd);
 
     {
         Edit::CreateArgs args;
@@ -741,7 +736,7 @@ void FindWindowWnd::UpdateTheme() {
     }
     // the icons are drawn in the theme's text color, so re-render them
     UpdateButtonIcons();
-    ApplyTitleBarTheme(hwnd);
+    DarkModeApplyToTitleBar(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 

@@ -1426,26 +1426,6 @@ static VirtButton* CreateVirtButton(Str text) {
     return b;
 }
 
-static void SaveAttachmentClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
-    ButtonSaveAttachment(ew);
-}
-
-static void EmbedAttachmentClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
-    ButtonEmbedAttachment(ew);
-}
-
-static void DeleteClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
-    ButtonDeleteHandler(ew);
-}
-
-static void SaveToCurrentFileClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
-    ButtonSaveToCurrentPDFHandler(ew);
-}
-
-static void SaveToNewFileClicked(EditAnnotationsWindow* ew, VirtMouseEvent*) {
-    ButtonSaveToNewFileHandler(ew);
-}
-
 static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HWND parent = ew->hwnd;
     auto* vbox = new VBox();
@@ -1771,7 +1751,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         auto* w = CreateVirtButton(_TRA("Save..."));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
-        w->onClick = MkFunc1(SaveAttachmentClicked, ew);
+        w->onClick = MkFunc0(ButtonSaveAttachment, ew);
         ew->buttonSaveAttachment = w;
         vbox->AddChild(w);
     }
@@ -1779,7 +1759,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         auto* w = CreateVirtButton(_TRA("Embed..."));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
-        w->onClick = MkFunc1(EmbedAttachmentClicked, ew);
+        w->onClick = MkFunc0(ButtonEmbedAttachment, ew);
         ew->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
@@ -1787,7 +1767,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     {
         auto* w = CreateVirtButton(_TRA("Delete Annotation"));
         w->padding = DpiScaledInsets(11, 0, 0, 0);
-        w->onClick = MkFunc1(DeleteClicked, ew);
+        w->onClick = MkFunc0(ButtonDeleteHandler, ew);
         ew->buttonDelete = w;
         vbox->AddChild(w);
     }
@@ -1802,7 +1782,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         // text set by UpdateSaveButtonLabels once tab is attached
         auto* w = CreateVirtButton(_TRA("Save changes to existing PDF"));
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClick = MkFunc1(SaveToCurrentFileClicked, ew);
+        w->onClick = MkFunc0(ButtonSaveToCurrentPDFHandler, ew);
         ew->buttonSaveToCurrentFile = w;
         vbox->AddChild(w);
     }
@@ -1811,7 +1791,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto* w = CreateVirtButton(_TRA("Save changes to a new PDF"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClick = MkFunc1(SaveToNewFileClicked, ew);
+        w->onClick = MkFunc0(ButtonSaveToNewFileHandler, ew);
         ew->buttonSaveToNewFile = w;
         vbox->AddChild(w);
     }

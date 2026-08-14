@@ -7186,13 +7186,6 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     }
 }
 
-// Lightweight preview while the user is still dragging across monitors:
-// update fonts/layout at the destination DPI without waiting for mouse-up.
-// Full toolbar recreate still runs so icons match the new scale immediately.
-static void ApplyMainWindowDpiMovePreview(MainWindow* win, HWND hwnd) {
-    ApplyMainWindowDpiChromeRefresh(win, hwnd);
-}
-
 // WM_DPICHANGED: frame moved to a different DPI (or scaling changed).
 // explicitDpi: LOWORD(wParam) from WM_DPICHANGED — trust it during cross-monitor
 // drag when GetDpiForWindow can lag (sumatrapdf-plus / issue #5827).
@@ -7228,7 +7221,7 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, 
     if (win->deferDpiChromeRefresh && !force) {
         win->dpiChromeRefreshPending = true;
         if (dpiChanged) {
-            ApplyMainWindowDpiMovePreview(win, hwnd);
+            ApplyMainWindowDpiChromeRefresh(win, hwnd);
         }
         return;
     }
@@ -7369,24 +7362,12 @@ static void SetToolbarModeAndApply(int mode) {
     }
 }
 
-static void OnMenuChangeBackgroundColor(MainWindow* win) {
-    ShowChangeBackgroundColorDialog(win);
-}
-
 // TODO: should use currently active window, but most of the time
 // there's only one window
 void MaybeRedrawHomePage() {
     if (len(gWindows) > 0 && gWindows[0]->IsCurrentTabAbout()) {
         gWindows[0]->RedrawAll(true);
     }
-}
-
-static void ShowOptionsDialog(MainWindow* win) {
-    ShowSettingsDialog(win);
-}
-
-static void SetInverseSearch(MainWindow* win) {
-    ShowInverseSearchDialog(win);
 }
 
 // toggles 'show pages continuously' state
@@ -8732,10 +8713,6 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
         args.timeoutMs = 2000;
         ShowNotification(args);
     }
-}
-
-static void OnMenuCustomZoom(MainWindow* win) {
-    ShowCustomZoomDialog(win);
 }
 
 // this is a directory for not important data, like downloaded symbols
@@ -10159,7 +10136,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 float virtZoom = cmd->firstArg->floatVal;
                 SmartZoom(win, virtZoom, nullptr, true);
             } else {
-                OnMenuCustomZoom(win);
+                ShowCustomZoomDialog(win);
             }
         } break;
 
@@ -10230,7 +10207,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdChangeBackgroundColor:
-            OnMenuChangeBackgroundColor(win);
+            ShowChangeBackgroundColorDialog(win);
             break;
 
         case CmdSaveAnnotations: {
@@ -10299,7 +10276,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdSetInverseSearch:
-            SetInverseSearch(win);
+            ShowInverseSearchDialog(win);
             break;
 
         case CmdSaveAnnotationsNewFile: {
@@ -10671,7 +10648,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdOptions:
-            ShowOptionsDialog(win);
+            ShowSettingsDialog(win);
             break;
 
         case CmdAdvancedOptions:

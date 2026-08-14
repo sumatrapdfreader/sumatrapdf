@@ -39,6 +39,48 @@ static void Func1Test() {
     utassert(d1.p == -8);
 }
 
+static int gFn0VoidCalls = 0;
+
+static void testFn0Void() {
+    gFn0VoidCalls++;
+}
+
+// a Func0 can stand in for a Func1: Call() drops the argument. The conversion
+// stores a void(void*) in a void(void*, T) slot, so this checks the dispatch
+// actually lands in the right function rather than merely compiling.
+static void Func1FromFunc0Test() {
+    TestFn0Data d0;
+    TestFn1Data d1{.p = 7};
+
+    Func1<TestFn1Data*> fn = MkFunc0(testFn0, &d0);
+    utassert(fn.IsValid());
+    fn.Call(&d1);
+    utassert(d0.n == 1); // the Func0 ran
+    utassert(d1.p == 7); // and never saw the argument
+
+    fn.Call(nullptr); // dropped, so a null argument is harmless
+    utassert(d0.n == 2);
+
+    // the no-user-data flavour, where Func0 holds a void()
+    gFn0VoidCalls = 0;
+    Func1<TestFn1Data*> fnv = MkFunc0Void(testFn0Void);
+    fnv.Call(&d1);
+    utassert(gFn0VoidCalls == 1);
+    utassert(d1.p == 7);
+
+    // copies keep dropping the argument
+    Func1<TestFn1Data*> copy = fn;
+    copy.Call(&d1);
+    utassert(d0.n == 3);
+    utassert(d1.p == 7);
+
+    // a real Func1 still gets its argument
+    Func1<TestFn1Data*> real = MkFunc1<TestFn0Data, TestFn1Data*>(testFn1, &d0);
+    real.Call(&d1);
+    utassert(d0.n == 5);
+    utassert(d1.p == -8);
+}
+
 static void GeomTest() {
     PointF ptD(12.4f, -13.6f);
     utassert(ptD.x == 12.4f && ptD.y == -13.6f);
@@ -248,6 +290,7 @@ void BaseUtilTest() {
     ListTest();
     Func0Test();
     Func1Test();
+    Func1FromFunc0Test();
     ColorTest();
     ArenaPtrCompressTest();
 

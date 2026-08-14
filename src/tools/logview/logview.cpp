@@ -1123,10 +1123,6 @@ static void FilterTextChanged() {
     SetTimer(gHwndMain, kFilterTimerId, kFilterDebounceMs, nullptr);
 }
 
-static void ClearClicked(VirtMouseEvent*) {
-    ClearSelectedTab();
-}
-
 static void AboutClicked(VirtMouseEvent*) {
     ShellExecuteW(gHwndMain, L"open", kAboutURL, nullptr, nullptr, SW_SHOWNORMAL);
 }
@@ -1181,7 +1177,7 @@ bool LogViewWnd::Create() {
         .textColor = kColLogText,
         .align = VirtTextAlign::Right,
     });
-    btnClear = NewToolButton("c", MkFunc1Void<VirtMouseEvent*>(ClearClicked));
+    btnClear = NewToolButton("c", MkFunc0Void(ClearSelectedTab));
     btnAbout = NewToolButton("?", MkFunc1Void<VirtMouseEvent*>(AboutClicked));
 
     tabBar = new TabBarCtrl();

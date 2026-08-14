@@ -505,10 +505,6 @@ static void StopAIChat(MainWindow* win) {
     }
 }
 
-static void StopClicked(MainWindow* win, VirtMouseEvent*) {
-    StopAIChat(win);
-}
-
 // --- Stream updates (posted from the reader thread) ---
 
 struct AIChatUpdateData {
@@ -1002,10 +998,6 @@ static LRESULT CALLBACK WndProcAIChatInput(HWND hwnd, UINT msg, WPARAM wp, LPARA
 
 static void CloseAIChatPanelFromLabel(MainWindow* win);
 
-static void AIChatCloseClicked(MainWindow* win, VirtMouseEvent*) {
-    CloseAIChatPanelFromLabel(win);
-}
-
 static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
                                          DWORD_PTR data) {
     MainWindow* win = (MainWindow*)data;
@@ -1261,7 +1253,7 @@ void CreateAIChatPanel(MainWindow* win) {
 
     // label
     PlatformFont* labelFont = GetDefaultGuiFont(true, false);
-    auto header = NewLabelWithClose(win->hwndAiChatBox, labelFont, MkFunc1(AIChatCloseClicked, win));
+    auto header = NewLabelWithClose(win->hwndAiChatBox, labelFont, MkFunc0(CloseAIChatPanelFromLabel, win));
     win->aiChatLabel = header.label;
     win->aiChatHeader = header.box;
 
@@ -1313,7 +1305,7 @@ void CreateAIChatPanel(MainWindow* win) {
     // stop button (hidden by default, shown when agent is working)
     {
         auto* b = NewThemedButton(win->hwndAiChatBox, "Stop", font, false);
-        b->onClick = MkFunc1(StopClicked, win);
+        b->onClick = MkFunc0(StopAIChat, win);
         b->SetIsVisible(false);
         win->aiChatStopBtn = b;
     }

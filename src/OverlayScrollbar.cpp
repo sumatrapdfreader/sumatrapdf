@@ -39,9 +39,6 @@ static Color ThemeThumbHoverColor() {
     return AccentColor(bg, 140);
 }
 
-static Color ThemeArrowColor() {
-    return ThemeThumbHoverColor();
-}
 static constexpr int kMinThumbSize = 20;
 static constexpr u8 kAlphaThin = 180;
 static constexpr u8 kAlphaThick = 220;
@@ -247,7 +244,7 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
         Gdiplus::Graphics gfx(hdcMem);
         gfx.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
-        Color arrowCol = ThemeArrowColor();
+        Color arrowCol = ThemeThumbHoverColor();
         u8 ar = (u8)MulDiv(GetRValue(arrowCol), alpha, 255);
         u8 ag = (u8)MulDiv(GetGValue(arrowCol), alpha, 255);
         u8 ab = (u8)MulDiv(GetBValue(arrowCol), alpha, 255);

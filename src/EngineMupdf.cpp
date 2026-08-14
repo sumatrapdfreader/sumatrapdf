@@ -1972,12 +1972,6 @@ static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx
 
 // --- dark-mode image preservation helpers (ported from dengxibo/sumatrapdf-plus) ---
 
-// Min rendered size (device pixels) for preserving original image colors in dark mode.
-// Smaller embedded images (icons, bullets, ornaments) still use the page recolor filter.
-static int MinPreservePdfImageSizePx() {
-    return GetPreservePdfImagesMinSize();
-}
-
 static void FzAppendPageImageRect(fz_context* ctx, Vec<FitzPageImageInfo*>& images, int pageNo, fz_rect bbox,
                                   fz_image* image) {
     if (fz_is_empty_rect(bbox) || fz_is_infinite_rect(bbox)) {
@@ -4997,7 +4991,7 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
     fz_context* ctx = engine->Ctx();
     fz_page* page = pageInfo->page;
     fz_matrix ctm = engine->viewctm(page, zoom, rotation);
-    int minDx = MinPreservePdfImageSizePx();
+    int minDx = GetPreservePdfImagesMinSize();
     int minDy = minDx;
 
     RectF pageBounds = pageInfo->mediabox;

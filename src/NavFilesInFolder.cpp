@@ -718,14 +718,6 @@ static void PositionNavFilesWnd(HWND hwnd, HWND hwndMain, bool docked, bool plac
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-static void OnNavFilesWndClose(WindowBase::CloseEvent* /*ev*/) {
-    ScheduleDeleteNavFilesWnd();
-}
-
-static void OnNavFilesWndDestroy(WindowBase::DestroyEvent* /*ev*/) {
-    ScheduleDeleteNavFilesWnd();
-}
-
 // Start directory when no document is open (home page). The file-open dialog
 // deliberately doesn't set an initial directory, letting the shell reopen the
 // folder of the last file opened through it; the closest equivalent we can
@@ -882,8 +874,8 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
         ScheduleDeleteNavFilesWnd();
     }
     auto* wnd = new NavFilesInFolderWnd();
-    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnNavFilesWndClose);
-    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnNavFilesWndDestroy);
+    wnd->onClose = MkFunc0Void(ScheduleDeleteNavFilesWnd);
+    wnd->onDestroy = MkFunc0Void(ScheduleDeleteNavFilesWnd);
     wnd->onSize = MkMethod1<NavFilesInFolderWnd, WindowBase::SizeEvent*, &NavFilesInFolderWnd::OnSize>(wnd);
     wnd->onActivate = MkMethod1<NavFilesInFolderWnd, WindowBase::ActivateEvent*, &NavFilesInFolderWnd::OnActivate>(wnd);
     wnd->onFocus = MkMethod1<NavFilesInFolderWnd, WindowBase::FocusEvent*, &NavFilesInFolderWnd::OnFocus>(wnd);

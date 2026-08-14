@@ -719,18 +719,30 @@ template <typename T>
 struct Func1 {
     void (*fn)(void*, T) = nullptr;
     void* userData = nullptr;
+    // set when we were built from a Func0: fn really takes no T, so Call()
+    // drops the argument. Lets a handler that doesn't care about the event be
+    // used wherever a Func1 is wanted, instead of a wrapper that ignores it
+    bool dropsArg = false;
 
     Func1() = default;
+    // a Func0 is a Func1 that doesn't look at its argument
+    Func1(const Func0& that) {
+        this->fn = (void (*)(void*, T))that.fn;
+        this->userData = that.userData;
+        this->dropsArg = true;
+    }
     // copy constructor
     Func1(const Func1& that) {
         this->fn = that.fn;
         this->userData = that.userData;
+        this->dropsArg = that.dropsArg;
     }
     // copy assignment operator
     Func1& operator=(const Func1& that) {
         if (this != &that) {
             this->fn = that.fn;
             this->userData = that.userData;
+            this->dropsArg = that.dropsArg;
         }
         return *this;
     }
@@ -739,6 +751,16 @@ struct Func1 {
     bool IsValid() const { return fn != nullptr; }
     void Call(T arg) const {
         if (!fn) {
+            return;
+        }
+        if (dropsArg) {
+            if (userData == kFuncNoArg) {
+                auto func = (funcVoidPtr)fn;
+                func();
+            } else {
+                auto func = (func0Ptr)fn;
+                func(userData);
+            }
             return;
         }
         if (userData == kFuncNoArg) {

@@ -24,14 +24,6 @@ static void LaunchLayout() {
     TestLayout(SW_SHOW);
 }
 
-static void TabsClicked(VirtMouseEvent*) {
-    LaunchTabs();
-}
-
-static void LayoutClicked(VirtMouseEvent*) {
-    LaunchLayout();
-}
-
 static ILayout* CreateMainLayout(HWND) {
     auto* vbox = new VBox();
 
@@ -40,13 +32,13 @@ static ILayout* CreateMainLayout(HWND) {
     PlatformFont* font = GetDefaultGuiFont();
     {
         auto* b = new VirtButton("Tabs test", font);
-        b->onClick = MkFunc1Void<VirtMouseEvent*>(TabsClicked);
+        b->onClick = MkFunc0Void(LaunchTabs);
         vbox->AddChild(b);
     }
 
     {
         auto* b = new VirtButton("Layout test", font);
-        b->onClick = MkFunc1Void<VirtMouseEvent*>(LayoutClicked);
+        b->onClick = MkFunc0Void(LaunchLayout);
         vbox->AddChild(b);
     }
 

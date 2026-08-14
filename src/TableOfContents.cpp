@@ -1767,10 +1767,6 @@ static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPA
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static void TocCloseClicked(MainWindow* win, VirtMouseEvent*) {
-    ToggleTocBox(win);
-}
-
 void CreateToc(MainWindow* win) {
     HMODULE hmod = GetModuleHandle(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -1779,7 +1775,7 @@ void CreateToc(MainWindow* win) {
     win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
     PlatformFont* labelFont = GetAppSidebarLabelFont();
-    auto header = NewLabelWithClose(win->hwndTocBox, labelFont, MkFunc1(TocCloseClicked, win));
+    auto header = NewLabelWithClose(win->hwndTocBox, labelFont, MkFunc0(ToggleTocBox, win));
     win->tocLabel = header.label;
     // label text is set in UpdateToolbarSidebarText()
 
