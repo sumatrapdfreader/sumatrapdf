@@ -447,6 +447,9 @@
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ToolbarInternal.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Translations.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -1032,6 +1035,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Toolbar.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Toolbar_win.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TranslationLangs.cpp">
