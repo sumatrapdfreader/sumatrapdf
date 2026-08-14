@@ -52,6 +52,10 @@ static void Func1FromFunc0Test() {
     TestFn0Data d0;
     TestFn1Data d1{.p = 7};
 
+    // the drops-argument flag lives in userData's low bit, so Func1 is still
+    // two words - a bool member would have cost 8 more after padding
+    utassert(sizeof(Func1<TestFn1Data*>) == 2 * sizeof(void*));
+
     Func1<TestFn1Data*> fn = MkFunc0(testFn0, &d0);
     utassert(fn.IsValid());
     fn.Call(&d1);

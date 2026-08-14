@@ -653,7 +653,9 @@ class ExitScopeHelp {
 using func0Ptr = void (*)(void*);
 using funcVoidPtr = void (*)();
 
-#define kFuncNoArg ((void*)(-1))
+// Func1 keeps a flag in userData's lowest bit, so every value stored there
+// has to be even - including this sentinel, which is why it is ~1 and not -1
+#define kFuncNoArg ((void*)~(uintptr_t)1)
 
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
@@ -717,59 +719,66 @@ Func0 MkMethod0(T* obj) {
 
 template <typename T>
 struct Func1 {
+    // bit 0 of userData says fn takes no T, so Call() drops the argument -
+    // that's how a Func0 can stand in for a Func1. Everything we store is at
+    // least 2-byte aligned (and kFuncNoArg is even), so the bit is free and the
+    // struct stays two words
+    static constexpr uintptr_t kDropsArgBit = 1;
+
     void (*fn)(void*, T) = nullptr;
-    void* userData = nullptr;
-    // set when we were built from a Func0: fn really takes no T, so Call()
-    // drops the argument. Lets a handler that doesn't care about the event be
-    // used wherever a Func1 is wanted, instead of a wrapper that ignores it
-    bool dropsArg = false;
+    uintptr_t userData = 0;
 
     Func1() = default;
     // a Func0 is a Func1 that doesn't look at its argument
     Func1(const Func0& that) {
         this->fn = (void (*)(void*, T))that.fn;
-        this->userData = that.userData;
-        this->dropsArg = true;
+        this->SetData(that.userData, true);
     }
     // copy constructor
     Func1(const Func1& that) {
         this->fn = that.fn;
         this->userData = that.userData;
-        this->dropsArg = that.dropsArg;
     }
     // copy assignment operator
     Func1& operator=(const Func1& that) {
         if (this != &that) {
             this->fn = that.fn;
             this->userData = that.userData;
-            this->dropsArg = that.dropsArg;
         }
         return *this;
     }
     ~Func1() = default;
 
+    void SetData(void* d, bool dropsArg) {
+        // an odd pointer would collide with the flag. Nothing we take the
+        // address of is 1-byte aligned, so this means the caller handed us
+        // something that isn't a real pointer
+        ReportIf(((uintptr_t)d & kDropsArgBit) != 0);
+        userData = (uintptr_t)d | (dropsArg ? kDropsArgBit : 0);
+    }
     bool IsValid() const { return fn != nullptr; }
     void Call(T arg) const {
         if (!fn) {
             return;
         }
-        if (dropsArg) {
-            if (userData == kFuncNoArg) {
+        void* d = (void*)(userData & ~kDropsArgBit);
+        if (userData & kDropsArgBit) {
+            if (d == kFuncNoArg) {
                 auto func = (funcVoidPtr)fn;
                 func();
             } else {
                 auto func = (func0Ptr)fn;
-                func(userData);
+                func(d);
             }
             return;
         }
-        if (userData == kFuncNoArg) {
+        if (d == kFuncNoArg) {
             using fptr = void (*)(T);
             auto func = (fptr)fn;
             func(arg);
             return;
         }
-        fn(userData, arg);
+        fn(d, arg);
     }
 };
 
@@ -783,7 +792,7 @@ Func1<TArg> MkMethod1(T* obj) {
     auto res = Func1<TArg>{};
     using fptr = void (*)(void*, TArg);
     res.fn = (fptr)&MethodTrampoline1<T, TArg, Method>;
-    res.userData = (void*)obj;
+    res.SetData((void*)obj, false);
     return res;
 }
 
@@ -792,7 +801,7 @@ Func1<T2> MkFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res.fn = (fptr)fn;
-    res.userData = (void*)d;
+    res.SetData((void*)d, false);
     return res;
 }
 
@@ -801,7 +810,7 @@ Func1<T2> MkFunc1Void(void (*fn)(T2)) {
     auto res = Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res.fn = (fptr)fn;
-    res.userData = kFuncNoArg;
+    res.SetData(kFuncNoArg, false);
     return res;
 }
 
@@ -810,7 +819,7 @@ Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = new Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res->fn = (fptr)fn;
-    res->userData = (void*)d;
+    res->SetData((void*)d, false);
     return res;
 }
 
