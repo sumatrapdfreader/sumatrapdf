@@ -1193,7 +1193,22 @@ fz_css_property *fz_parse_css_properties(fz_context *ctx, fz_pool *pool, const c
 void fz_parse_css(fz_context *ctx, fz_css *css, const char *source, const char *file)
 {
 	struct lexbuf buf;
+	/* SumatraPDF: remember where the existing rules end so the ones parsed
+	 * from the user stylesheet can be marked (see fz_css_rule_s.user) */
+	int is_user = !strcmp(file, "<user>");
+	fz_css_rule *tail = is_user ? css->rule : NULL;
+	if (tail)
+		while (tail->next)
+			tail = tail->next;
+
 	css_lex_init(ctx, &buf, css->pool, source, file);
 	next(&buf);
 	css->rule = parse_stylesheet(&buf, css->rule);
+
+	if (is_user)
+	{
+		fz_css_rule *rule = tail ? tail->next : css->rule;
+		for (; rule; rule = rule->next)
+			rule->user = 1;
+	}
 }

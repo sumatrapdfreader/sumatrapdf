@@ -155,8 +155,10 @@ const ebookUI: Field[] = [
     "",
     "default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft YaHei). " +
       "empty uses the engine default (typically a serif). applied as user CSS " +
-      "with !important so it overrides a document font-family; leave empty to " +
-      "keep the publisher's fonts. wrapping quotes are stripped",
+      "with !important, which beats the document's own font-family even when it " +
+      "comes from an inline style attribute; leave empty to keep the publisher's " +
+      "fonts. wrapping quotes are stripped. a name that can't be loaded is " +
+      "reported with a notification when the document opens",
   ).ver("3.7"),
   field("FontSize", Float, 0, "font size in points; 0 means the default (8.0)"),
   field(

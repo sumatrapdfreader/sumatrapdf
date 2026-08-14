@@ -2421,6 +2421,26 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         ShowNotification(nargs);
     }
 
+    // EBookUI.FontName names a font we can't load, so the ebook silently
+    // rendered in the default font. Say so, otherwise the setting looks like
+    // it does nothing (issue #4600)
+    if (EngineEbookFontUnavailable(engineErr)) {
+        Str s = _TRA("Font \"%s\" not found, using the default font");
+        TempStr msg = fmt(s.s, gGlobalPrefs->eBookUI.fontName);
+        NotificationCreateArgs nargs;
+        nargs.hwndParent = win->hwndCanvas;
+        nargs.warning = true;
+        nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
+        nargs.groupId = kNotifPersistentWarning;
+        nargs.msg = msg;
+        nargs.plainText = true; // the font name comes from the settings file
+        nargs.tab = tab;
+        nargs.corner = NotifCorner::BottomRight;
+        nargs.xMargin = 2;
+        nargs.yMargin = 2;
+        ShowNotification(nargs);
+    }
+
     // Multi-file open / session restore: each finished load can leave tab-tied
     // notifs from earlier loads visible on the canvas. Re-sync visibility to
     // the active tab so "Show Errors" is not shown on the wrong document.

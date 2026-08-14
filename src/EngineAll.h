@@ -56,6 +56,10 @@ inline Str EbookFontNameFromSetting(Str name) {
 }
 void EngineEbookCleanup();
 
+// true if this is a reflowable document laid out while EBookUI.FontName named
+// a font we couldn't load, so the text came out in the default font (#4600)
+bool EngineEbookFontUnavailable(EngineBase* engine);
+
 /* EngineImages.cpp */
 
 // how many leading bytes of an image file are enough, in practice, to parse the

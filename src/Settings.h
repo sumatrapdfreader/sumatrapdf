@@ -79,9 +79,11 @@ struct FixedPageUI {
 struct EBookUI {
     // default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft
     // YaHei). empty uses the engine default (typically a serif). applied
-    // as user CSS with !important so it overrides a document font-family;
-    // leave empty to keep the publisher's fonts. wrapping quotes are
-    // stripped
+    // as user CSS with !important, which beats the document's own
+    // font-family even when it comes from an inline style attribute; leave
+    // empty to keep the publisher's fonts. wrapping quotes are stripped. a
+    // name that can't be loaded is reported with a notification when the
+    // document opens
     Str fontName;
     // font size in points; 0 means the default (8.0)
     float fontSize;
@@ -1053,14 +1055,15 @@ static const StructInfo gEBookUIInfo = {
     "FontName\0FontSize\0LineSpacing\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS\0WindowBgCol\0DefaultDisplayMod"
     "e",
     "default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft YaHei). empty uses the engine default "
-    "(typically a serif). applied as user CSS with !important so it overrides a document font-family; leave empty to "
-    "keep the publisher's fonts. wrapping quotes are stripped\0font size in points; 0 means the default "
-    "(8.0)\0line-height multiplier for ebook text (e.g. 1.5); 0 keeps the document or engine default. values from 0.5 "
-    "to 5 are accepted\0width of the page the ebook is laid out into, in points (not screen pixels); 0 means the "
-    "default (420)\0height of the page the ebook is laid out into, in points (not screen pixels); 0 derives it from "
-    "the window's shape when the document is opened, so Fit Width shows a whole page\0if true, the CSS in the ebook is "
-    "ignored and only CustomCSS applies\0additional CSS applied to ebooks; set IgnoreDocumentCSS = true if the "
-    "document's own CSS overrides it\0if given, sets the canvas background color for ebook documents (epub, mobi "
+    "(typically a serif). applied as user CSS with !important, which beats the document's own font-family even when it "
+    "comes from an inline style attribute; leave empty to keep the publisher's fonts. wrapping quotes are stripped. a "
+    "name that can't be loaded is reported with a notification when the document opens\0font size in points; 0 means "
+    "the default (8.0)\0line-height multiplier for ebook text (e.g. 1.5); 0 keeps the document or engine default. "
+    "values from 0.5 to 5 are accepted\0width of the page the ebook is laid out into, in points (not screen pixels); 0 "
+    "means the default (420)\0height of the page the ebook is laid out into, in points (not screen pixels); 0 derives "
+    "it from the window's shape when the document is opened, so Fit Width shows a whole page\0if true, the CSS in the "
+    "ebook is ignored and only CustomCSS applies\0additional CSS applied to ebooks; set IgnoreDocumentCSS = true if "
+    "the document's own CSS overrides it\0if given, sets the canvas background color for ebook documents (epub, mobi "
     "etc.)\0default page layout for ebooks; empty uses the global DefaultDisplayMode. valid values: automatic, single "
     "page, facing, book view, continuous, continuous facing, continuous book view",
     false};

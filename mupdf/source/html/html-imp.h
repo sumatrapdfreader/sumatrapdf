@@ -90,6 +90,10 @@ struct fz_css_rule_s
 	fz_css_property *declaration;
 	fz_css_rule *next;
 	int loaded;
+	/* SumatraPDF: rule comes from the user stylesheet (fz_style_document's
+	 * user_css), which makes its !important declarations outrank both the
+	 * publisher's rules and inline style attributes */
+	int user;
 };
 
 struct fz_css_selector_s

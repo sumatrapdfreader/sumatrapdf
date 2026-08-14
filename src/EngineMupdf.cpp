@@ -98,6 +98,12 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine) {
     return (EngineMupdf*)engine;
 }
 
+// lets the UI ask without pulling in mupdf headers (declared in EngineAll.h)
+bool EngineEbookFontUnavailable(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    return e && e->ebookFontUnavailable;
+}
+
 class FitzAbortCookie : public AbortCookie {
   public:
     fz_cookie cookie;
@@ -3144,12 +3150,71 @@ static TempStr EbookLineSpacingCssTemp(float lineSpacing) {
     return fmt("body, body * { line-height: %g !important; }\n", lineSpacing);
 }
 
+// user CSS with !important beats the publisher's font-family (issue #3138) and,
+// because it comes from the user stylesheet, also inline style="font-family:..."
+// attributes (issue #4600).
+// the element list has to be this long because font-family only reaches text
+// whose own element matches: publishers routinely put the font on a <span> or
+// another inline element. pre, code, kbd, samp and tt are left out on purpose,
+// so code stays monospace
+static TempStr EbookFontFamilyCssTemp(Str fontName) {
+    if (!fontName) {
+        return {};
+    }
+    return fmt("body, p, div, span, a, em, strong, b, i, u, s, small, big, sub, sup, "
+               "li, ol, ul, dl, dt, dd, td, th, caption, table, "
+               "h1, h2, h3, h4, h5, h6, blockquote, q, cite, "
+               "section, article, aside, header, footer, nav, main, figure, figcaption, "
+               "label, center, font { font-family: \"%s\" !important; }\n",
+               fontName);
+}
+
 #if defined(DEBUG)
 bool EngineMupdf_UnitTestEbookLineSpacingCss() {
     return !EbookLineSpacingCssTemp(0) && !EbookLineSpacingCssTemp(0.49f) && !EbookLineSpacingCssTemp(5.01f) &&
            str::Eq(EbookLineSpacingCssTemp(1.5f), StrL("body, body * { line-height: 1.5 !important; }\n"));
 }
+
+bool EngineMupdf_UnitTestEbookFontFamilyCss() {
+    if (EbookFontFamilyCssTemp({})) {
+        return false;
+    }
+    TempStr css = EbookFontFamilyCssTemp(StrL("Segoe UI"));
+    if (!str::Contains(css, "font-family: \"Segoe UI\" !important;")) {
+        return false;
+    }
+    // the elements publishers actually hang fonts off, and no monospace ones
+    return str::Contains(css, "span,") && str::Contains(css, "div,") && str::Contains(css, "li,") &&
+           !str::Contains(css, "pre,") && !str::Contains(css, "code,");
+}
 #endif
+
+// can mupdf turn this font-family into a font? mirrors fz_load_html_font():
+// a builtin (base-14 and friends), a system font, or a CSS generic family.
+// used to tell the user their EBookUI.FontName didn't take (issue #4600)
+static bool EbookFontIsAvailable(fz_context* ctx, Str fontName) {
+    const char* name = CStrTemp(fontName);
+    if (str::EqI(name, "serif") || str::EqI(name, "sans-serif") || str::EqI(name, "monospace")) {
+        return true;
+    }
+    int size = 0;
+    if (fz_lookup_builtin_font(ctx, name, 0, 0, &size)) {
+        return true;
+    }
+    fz_font* font = nullptr;
+    fz_try(ctx) {
+        font = fz_load_system_font(ctx, name, 0, 0, 0);
+    }
+    fz_catch(ctx) {
+        fz_ignore_error(ctx);
+        font = nullptr;
+    }
+    if (!font) {
+        return false;
+    }
+    fz_drop_font(ctx, font);
+    return true;
+}
 
 // stm is either freed or retained via _doc
 // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
@@ -3196,6 +3261,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     // overrides with !important. User CustomCSS is appended after this.
     TempStr userCss = StrL("img { height: auto !important; max-width: 100% !important; }\n");
     int usePublisherCss = 1; // use the document's own (publisher) CSS by default
+    Str requestedFontName;   // EBookUI.FontName, checked for existence after layout
     auto* eBookUI = GetEBookUI();
     if (eBookUI) {
         // accept any reasonable font size; the old upper bound of 30 made
@@ -3213,12 +3279,10 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             // after any LayoutDx override, so the user still sets line length
             ldy = limitValue(ldx * gEbookLayoutAspect, 150.f, 5000.f);
         }
-        Str fontName = EbookFontNameFromSetting(eBookUI->fontName);
-        if (fontName) {
-            // user CSS with !important beats publisher font-family (issue #3138)
-            userCss = str::JoinTemp(
-                fmt("body, p, div, li, td, th, h1, h2, h3, h4, h5, h6 { font-family: \"%s\" !important; }\n", fontName),
-                userCss);
+        requestedFontName = EbookFontNameFromSetting(eBookUI->fontName);
+        TempStr fontCss = EbookFontFamilyCssTemp(requestedFontName);
+        if (fontCss) {
+            userCss = str::JoinTemp(fontCss, userCss);
         }
         TempStr lineSpacingCss = EbookLineSpacingCssTemp(eBookUI->lineSpacing);
         if (lineSpacingCss) {
@@ -3278,6 +3342,13 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     }
     if (!_doc) {
         return false;
+    }
+
+    // EBookUI.FontName only affects reflowable documents, and a name we can't
+    // resolve silently renders in the default font. Note it for the UI (#4600).
+    // After fz_layout_document, so a font that was used is already cached.
+    if (requestedFontName && fz_is_document_reflowable(ctx, _doc)) {
+        ebookFontUnavailable = !EbookFontIsAvailable(ctx, requestedFontName);
     }
 
     isPasswordProtected = fz_needs_password(ctx, _doc);

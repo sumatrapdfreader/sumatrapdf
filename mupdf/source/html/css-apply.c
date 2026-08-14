@@ -435,12 +435,20 @@ count_selector_names(fz_css_selector *sel)
 
 #define INLINE_SPECIFICITY 10000
 
+/* SumatraPDF: a user (settings) stylesheet's !important declarations must beat
+ * the publisher's rules *and* inline style attributes, as they do in a browser
+ * (in the CSS cascade user-origin !important wins over author-origin).
+ * Above INLINE_SPECIFICITY but well inside the short of fz_css_match.spec */
+#define USER_IMPORTANT_SPECIFICITY 20000
+
 static int
-selector_specificity(fz_css_selector *sel, int important)
+selector_specificity(fz_css_selector *sel, int important, int user)
 {
 	int b = count_selector_ids(sel);
 	int c = count_selector_atts(sel);
 	int d = count_selector_names(sel);
+	if (important && user)
+		return USER_IMPORTANT_SPECIFICITY + b * 100 + c * 10 + d;
 	return important * 1000 + b * 100 + c * 10 + d;
 }
 
@@ -1088,7 +1096,7 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css
 			if (match_selector(sel, node, pseudo))
 			{
 				for (prop = rule->declaration; prop; prop = prop->next)
-					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important));
+					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important, rule->user));
 				break;
 			}
 			sel = sel->next;
@@ -1143,7 +1151,7 @@ fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css)
 			if (sel->name && !strcmp(sel->name, "@page"))
 			{
 				for (prop = rule->declaration; prop; prop = prop->next)
-					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important));
+					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important, rule->user));
 				break;
 			}
 			sel = sel->next;
@@ -2330,7 +2338,7 @@ static void print_rule(fz_css_rule *rule)
 	for (sel = rule->selector; sel; sel = sel->next)
 	{
 		print_selector(sel);
-		printf(" /* %d */", selector_specificity(sel, 0));
+		printf(" /* %d */", selector_specificity(sel, 0, 0));
 		if (sel->next)
 			printf(", ");
 	}

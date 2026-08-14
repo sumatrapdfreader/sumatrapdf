@@ -78,6 +78,8 @@ EXPORTS
 
 	fz_layout_document
 
+	fz_is_document_reflowable
+
 	fz_page_number_from_location
 
 	fz_lookup_metadata
@@ -591,6 +593,8 @@ EXPORTS
 	fz_install_load_system_font_funcs
 
 	fz_load_system_font
+
+	fz_lookup_builtin_font
 
 	fz_load_system_cjk_font
 
