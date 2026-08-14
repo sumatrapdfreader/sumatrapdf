@@ -905,6 +905,8 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
             gGlobalPrefs->defaultZoomFloat = ZoomFromString(item->strVal, kZoomActualSize);
         } else if (str::EqI(item->name, StrL("ImageUI.DefaultZoom"))) {
             gGlobalPrefs->imageUI.defaultZoomFloat = ZoomFromString(item->strVal, 0);
+        } else if (str::EqI(item->name, StrL("ComicBookUI.DefaultZoom"))) {
+            gGlobalPrefs->comicBookUI.defaultZoomFloat = ZoomFromString(item->strVal, 0);
         }
     }
     if (!didChange) {

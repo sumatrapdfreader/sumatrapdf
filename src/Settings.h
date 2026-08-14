@@ -138,6 +138,12 @@ struct ComicBookUI {
     // DefaultDisplayMode. valid values: automatic, single page, facing,
     // book view, continuous, continuous facing, continuous book view
     Str defaultDisplayMode;
+    // default zoom for comic books; empty uses the global DefaultZoom.
+    // valid values: fit page, fit width, fit height, fit content, shrink
+    // to fit or percent like 100%
+    Str defaultZoom;
+    // value of DefaultZoom for internal usage
+    float defaultZoomFloat;
 };
 
 // customization options for image files UI
@@ -1105,12 +1111,14 @@ static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, limitToWindowWidth), SettingType::Bool, false},
     {offsetof(ComicBookUI, limitToWindowHeight), SettingType::Bool, false},
     {offsetof(ComicBookUI, defaultDisplayMode), SettingType::String, (intptr_t)""},
+    {offsetof(ComicBookUI, defaultZoom), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gComicBookUIInfo = {
     sizeof(ComicBookUI),
-    7,
+    8,
     gComicBookUIFields,
-    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight\0DefaultDisplayMode",
+    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight\0DefaultDisplayMode"
+    "\0DefaultZoom",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical distance "
     "between two pages in facing and book view modes\0if true, documents that don't state their own reading direction "
     "default to manga mode, i.e. right to left. A document that states a direction (e.g. an EPUB with "
@@ -1119,7 +1127,8 @@ static const StructInfo gComicBookUIInfo = {
     "Useful for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)\0if true, "
     "absolute zoom never makes a page taller than the window (each page is capped at Fit Height)\0default page layout "
     "for comic books; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book "
-    "view, continuous, continuous facing, continuous book view",
+    "view, continuous, continuous facing, continuous book view\0default zoom for comic books; empty uses the global "
+    "DefaultZoom. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
     false};
 
 static const FieldInfo gImageUIFields[] = {

@@ -457,6 +457,14 @@ const comicBookUI: Field[] = [
       "valid values: automatic, single page, facing, book view, continuous, " +
       "continuous facing, continuous book view",
   ).ver("3.7"),
+  field(
+    "DefaultZoom",
+    Str,
+    "",
+    "default zoom for comic books; empty uses the global DefaultZoom. " +
+      "valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
+  ).ver("3.7"),
+  field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
 ];
 
 const imageUI: Field[] = [

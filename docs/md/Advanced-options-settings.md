@@ -466,6 +466,11 @@ ComicBookUI [
     ; view, continuous, continuous facing, continuous book view (introduced in
     ; version 3.7)
     DefaultDisplayMode = 
+
+    ; default zoom for comic books; empty uses the global DefaultZoom. valid
+    ; values: fit page, fit width, fit height, fit content, shrink to fit or
+    ; percent like 100% (introduced in version 3.7)
+    DefaultZoom = 
 ]
 
 ; customization options for image files UI

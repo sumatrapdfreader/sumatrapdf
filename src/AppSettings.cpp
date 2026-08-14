@@ -391,6 +391,9 @@ bool LoadSettings() {
     if (gprefs->imageUI.defaultZoom) {
         gprefs->imageUI.defaultZoomFloat = ZoomFromString(gprefs->imageUI.defaultZoom, 0);
     }
+    if (gprefs->comicBookUI.defaultZoom) {
+        gprefs->comicBookUI.defaultZoomFloat = ZoomFromString(gprefs->comicBookUI.defaultZoom, 0);
+    }
 
     int weekDiff = GetWeekCount() - gprefs->openCountWeek;
     gprefs->openCountWeek = GetWeekCount();
@@ -738,6 +741,9 @@ bool SaveSettings() {
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
     if (gGlobalPrefs->imageUI.defaultZoomFloat != 0) {
         ZoomToString(&gGlobalPrefs->imageUI.defaultZoom, gGlobalPrefs->imageUI.defaultZoomFloat, nullptr);
+    }
+    if (gGlobalPrefs->comicBookUI.defaultZoomFloat != 0) {
+        ZoomToString(&gGlobalPrefs->comicBookUI.defaultZoom, gGlobalPrefs->comicBookUI.defaultZoomFloat, nullptr);
     }
 
     TempStr path = GetSettingsPathTemp();
