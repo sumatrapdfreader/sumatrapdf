@@ -47,7 +47,7 @@ constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/setti
 // clang-format off
 static const char* gEnumDisplayMode[] = {
     "automatic", "single page", "facing", "book view",
-    "continuous", "continuous facing", "continuous book view", nullptr,
+    "continuous", "continuous facing", "continuous book view", "page aspect", nullptr,
 };
 static const char* gEnumToolbar[] = {"show", "hide", "overlay", nullptr};
 static const char* gEnumToolbarPosition[] = {"top", "bottom", nullptr};

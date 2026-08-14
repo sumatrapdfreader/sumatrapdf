@@ -103,6 +103,13 @@ bool TryParseDisplayMode(Str s, DisplayMode* modeOut) {
     return true;
 }
 
+// DefaultDisplayMode = page aspect: not a live layout, only a first-open
+// picker (portrait -> continuous + fit width, landscape -> single page +
+// fit page). Must not be added to displayModeNames / the DisplayMode enum.
+bool IsPageAspectDisplayMode(Str s) {
+    return str::EqIS(s, StrL("page aspect"));
+}
+
 DisplayMode DisplayModeFromString(Str s, DisplayMode defVal) {
     DisplayMode mode;
     if (TryParseDisplayMode(s, &mode)) {

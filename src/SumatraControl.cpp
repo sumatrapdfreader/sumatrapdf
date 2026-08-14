@@ -136,9 +136,12 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     }
 
     Str mode = DisplayModeToString(win->ctrl->GetDisplayMode());
-    return finish(
-        fmt("OK mode=%s presentation=%d fullscreen=%d", mode, win->InPresentation() ? 1 : 0, win->isFullScreen ? 1 : 0),
-        0);
+    Str zoomLabel;
+    ZoomToString(&zoomLabel, win->ctrl->GetZoomVirtual(false), nullptr);
+    TempStr res = fmt("OK mode=%s presentation=%d fullscreen=%d zoom=%s", mode, win->InPresentation() ? 1 : 0,
+                      win->isFullScreen ? 1 : 0, zoomLabel);
+    str::Free(zoomLabel);
+    return finish(res, 0);
 }
 
 enum class ControlCmd : u16 {

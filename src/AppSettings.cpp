@@ -728,8 +728,12 @@ bool SaveSettings() {
 
     // remove entries which should (no longer) be remembered
     FileHistoryPurge(!gGlobalPrefs->rememberStatePerDocument);
-    // update display mode and zoom fields from internal values
-    str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
+    // update display mode and zoom fields from internal values.
+    // "page aspect" is not a DisplayMode enum value — keep the string.
+    if (!IsPageAspectDisplayMode(gGlobalPrefs->defaultDisplayMode)) {
+        str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode,
+                             DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
+    }
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
     if (gGlobalPrefs->imageUI.defaultZoomFloat != 0) {
         ZoomToString(&gGlobalPrefs->imageUI.defaultZoom, gGlobalPrefs->imageUI.defaultZoomFloat, nullptr);

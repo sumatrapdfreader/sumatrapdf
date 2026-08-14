@@ -877,7 +877,10 @@ const globalPrefs: Field[] = [
       "before serialization",
   ).doc(
     "default layout of pages. valid values: automatic, single page, facing, " +
-      "book view, continuous, continuous facing, continuous book view",
+      "book view, continuous, continuous facing, continuous book view, page aspect. " +
+      "page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file " +
+      "uses page 1 — taller than wide is continuous + fit width, wider than tall " +
+      "is single page + fit page; a remembered FileState still wins",
   ),
   field(
     "DefaultZoom",

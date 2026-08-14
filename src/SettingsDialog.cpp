@@ -14,6 +14,7 @@
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
+#include "DisplayMode.h"
 #include "AppSettings.h"
 #include "GlobalPrefs.h"
 #include "MainWindow.h"
@@ -150,8 +151,14 @@ void SettingsWnd::FillLayout() {
     items.Append(_TRA("Continuous"));
     items.Append(_TRA("Continuous Facing"));
     items.Append(_TRA("Continuous Book View"));
+    items.Append(_TRA("Page Aspect"));
     dropLayout->SetItems(items);
-    int sel = gGlobalPrefs ? (int)gGlobalPrefs->defaultDisplayModeEnum - (int)DisplayMode::Automatic : 0;
+    int sel = 0;
+    if (gGlobalPrefs && IsPageAspectDisplayMode(gGlobalPrefs->defaultDisplayMode)) {
+        sel = len(items) - 1;
+    } else if (gGlobalPrefs) {
+        sel = (int)gGlobalPrefs->defaultDisplayModeEnum - (int)DisplayMode::Automatic;
+    }
     if (sel < 0 || sel >= len(items)) {
         sel = 0;
     }
@@ -241,8 +248,14 @@ void SettingsWnd::OnOk(VirtMouseEvent*) {
         return;
     }
     int layoutIdx = dropLayout ? dropLayout->GetCurrentSelection() : -1;
-    if (layoutIdx >= 0) {
+    int nLayout = dropLayout ? len(dropLayout->items) : 0;
+    if (layoutIdx >= 0 && nLayout > 0 && layoutIdx == nLayout - 1) {
+        str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, StrL("page aspect"));
+        gGlobalPrefs->defaultDisplayModeEnum = DisplayMode::Automatic;
+    } else if (layoutIdx >= 0) {
         gGlobalPrefs->defaultDisplayModeEnum = (DisplayMode)(layoutIdx + (int)DisplayMode::Automatic);
+        str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode,
+                             DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
     }
     gGlobalPrefs->defaultZoomFloat = SelectedZoom();
     if (chkShowToc) {

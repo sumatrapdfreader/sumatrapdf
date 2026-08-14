@@ -2005,6 +2005,33 @@ static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
     return dm;
 }
 
+// Research articles vs slides (issue #4055): portrait -> continuous + fit
+// width, landscape -> single page + fit page. First open only.
+static bool ShouldUsePageAspectForView(Str path) {
+    if (!IsPageAspectDisplayMode(gGlobalPrefs->defaultDisplayMode)) {
+        return false;
+    }
+    FileType ft = GuessFileTypeFromName(path, true);
+    return ft == FileType::PDF || ft == FileType::Xps || ft == FileType::DjVu || ft == FileType::PS;
+}
+
+static void ApplyPageAspectView(EngineBase* engine, DisplayMode* modeOut, float* zoomOut) {
+    if (!engine || engine->PageCount() < 1) {
+        return;
+    }
+    RectF box = engine->PageMediabox(1);
+    if (box.dx <= 0 || box.dy <= 0) {
+        return;
+    }
+    if (box.dx > box.dy) {
+        *modeOut = DisplayMode::SinglePage;
+        *zoomOut = kZoomFitPage;
+    } else {
+        *modeOut = DisplayMode::Continuous;
+        *zoomOut = kZoomFitWidth;
+    }
+}
+
 // Document is represented as DocController. Replace current DocController (if any) with ctrl
 // in current tab.
 // meaning of the internal values of LoadArgs:
@@ -2122,6 +2149,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         // global default when set (issue #2588). Remembered FileState wins.
         if (!fs) {
             displayMode = DisplayModeForNewDocument(path, engine);
+            if (ShouldUsePageAspectForView(path)) {
+                ApplyPageAspectView(engine, &displayMode, &zoomVirtual);
+            }
         }
         // First open without per-file remembered state: honor PDF Catalog
         // /OpenAction when it is a safe internal GoTo (issue #1631). Does not
