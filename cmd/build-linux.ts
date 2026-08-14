@@ -644,6 +644,18 @@ const TEST_ENGINES_SOURCES = [
 ];
 
 const PORTABLE_COMPILE_SOURCES = [
+  // Verified to compile on Linux (clang, WSL Ubuntu): no Win32 call, constant
+  // or header, directly or through the headers they include.
+  "src/GlobalPrefs.cpp",
+  "src/MuPDF_Exports.cpp",
+  // the dark-mode engine: color and image math over mupdf, no UI
+  "src/PdfDarkModeCache.cpp",
+  "src/PdfDarkModeDevice.cpp",
+  "src/PdfDarkModeEngineCache.cpp",
+  "src/PdfDarkModeImageBgBlend.cpp",
+  "src/PdfDarkModeImageClassifier.cpp",
+  "src/PdfDarkModeImageStats.cpp",
+  "src/PdfDarkModeScanProcess.cpp",
   "src/GumboHtmlParser.cpp",
   "src/HtmlFormatter.cpp",
   "src/EbookFormatter.cpp",
