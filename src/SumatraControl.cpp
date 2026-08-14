@@ -225,6 +225,7 @@ enum class ControlCmd : u16 {
     TestAnnotEditorLayout = 48,
     TestDisplayMode = 49,
     TestSidebarLayout = 50,
+    TestCadEnhanceColors = 51,
 };
 
 enum class ControlArgType : u16 {
@@ -725,6 +726,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageLinksResultTemp(path, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestCadEnhanceColors: {
+            Str path = StringArg(req, 0);
+            i32 pageNo = 1;
+            i32 zoomPercent = 25;
+            if (!path || !IntArg(req, 1, pageNo)) {
+                AppendError(req, "TestCadEnhanceColors expects string path, int pageNo [, int zoomPercent]");
+                break;
+            }
+            IntArg(req, 2, zoomPercent); // optional
+            int exitCode = 0;
+            Str res = CadEnhanceColorsResultTemp(path, pageNo, zoomPercent, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -155,9 +155,30 @@ static void cad_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text
     fz_stroke_text(ctx, d->inner, text, stroke, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
+// device pixels: below this on its shorter side, a filled path is a line an
+// exporter drew as a thin rectangle rather than a region
+constexpr float kCadFillLineMaxDy = 4.0f;
+
+// This device darkens grays so thin CAD lines stay readable when zoomed out.
+// Exporters do draw lines as thin filled rectangles, so fills can't be skipped
+// outright, but a fill that covers real area is a region -- a building, a hatch
+// block, a legend swatch -- and Acrobat leaves its gray alone. Darkening those
+// too turned mid-grays near-black: 0.6 gray rendered as 54 and 0.8 gray as 88
+// (issue #5937).
+static bool CadFillIsLineLike(fz_context* ctx, const fz_path* path, fz_matrix ctm) {
+    fz_rect r = fz_bound_path(ctx, path, nullptr, ctm);
+    float dx = r.x1 - r.x0;
+    float dy = r.y1 - r.y0;
+    return std::min(dx, dy) <= kCadFillLineMaxDy;
+}
+
 static void cad_fill_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,
                           fz_colorspace* colorspace, const float* color, float alpha, fz_color_params color_params) {
     pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
+    if (!CadFillIsLineLike(ctx, path, ctm)) {
+        fz_fill_path(ctx, d->inner, path, even_odd, ctm, colorspace, color, alpha, color_params);
+        return;
+    }
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
     fz_fill_path(ctx, d->inner, path, even_odd, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
