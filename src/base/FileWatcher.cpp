@@ -696,7 +696,7 @@ void FileWatcherWaitForShutdown(void) {
         if (!loggedPending) {
             loggedPending = LogPendingRemovals(StrL("waiting for shutdown"));
         }
-        Sleep(100);
+        SleepInMs(100);
     }
     if (loggedPending) {
         u64 waitedMs = GetTickCount64() - timeStart;

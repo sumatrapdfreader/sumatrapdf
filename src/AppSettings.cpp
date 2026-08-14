@@ -780,7 +780,7 @@ static void ReloadSettings() {
     // this is triggered when e.g. saving the file with VS Code
     bool ok = false;
     for (int i = 0; !ok && i < 5; i++) {
-        Sleep(200);
+        SleepInMs(200);
         Str prefsData = file::ReadFile(settingsPath);
         if (prefsData.len > 0) {
             ok = true;
