@@ -154,6 +154,7 @@ using BOOL = int;
 using WCHAR = wchar_t;
 using WPARAM = uintptr_t;
 using LPARAM = intptr_t;
+using LRESULT = intptr_t;
 using LCID = uint32_t;
 
 struct HWND__;
@@ -166,6 +167,10 @@ struct HIMAGELIST__;
 using HIMAGELIST = HIMAGELIST__*;
 struct HTREEITEM__;
 using HTREEITEM = HTREEITEM__*;
+struct HBITMAP__;
+using HBITMAP = HBITMAP__*;
+struct HBRUSH__;
+using HBRUSH = HBRUSH__*;
 using LPWSTR = WCHAR*;
 
 struct EXCEPTION_POINTERS;

@@ -589,6 +589,11 @@ const MAC_APP_SOURCES = [
 ];
 
 const PORTABLE_COMPILE_SOURCES = [
+  // unblocked by LRESULT / HBITMAP / HBRUSH in base/Base.h
+  "src/AppUnitTests.cpp",
+  "src/FileHistory.cpp",
+  "src/PdfDarkModeAnalysis.cpp",
+  "src/RefHoverInternal.cpp",
   // Verified to compile on Linux (clang, WSL Ubuntu): no Win32 call, constant
   // or header, directly or through the headers they include.
   "src/GlobalPrefs.cpp",
