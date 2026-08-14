@@ -25,6 +25,6 @@ constexpr int kDelayToolbarHide = 500;
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
-void ToolbarEatMenuDismissClick(MainWindow*, int cmdId);
+void ToolbarNoteDropdownClosed();
 
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut);

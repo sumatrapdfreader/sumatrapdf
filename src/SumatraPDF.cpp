@@ -13039,7 +13039,9 @@ void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen) {
     BuildReadAloudMenuItems(menu, win, false, false);
 
     UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD, rc.left, rc.bottom, 0, win->hwndFrame, nullptr);
-    ToolbarEatMenuDismissClick(win, CmdReadAloud);
+    // the click that dismissed the menu is delivered to the toolbar afterwards;
+    // this is what makes the toolbar ignore it instead of re-opening the menu
+    ToolbarNoteDropdownClosed();
 
     DestroyMenu(menu);
     if (selected == 0) {

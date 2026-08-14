@@ -43,9 +43,6 @@ struct ToolbarVirt {
 // implemented in Toolbar.cpp
 Color TbTextColor();
 VirtCtrl* ToolbarItemFromPoint(MainWindow*, Point);
-// bounds of a button in the toolbar's client coords, empty if it has none
-Rect ToolbarButtonRect(MainWindow*, int cmdId);
-void ToolbarNoteDropdownClosed();
 
 // implemented in Toolbar_win.cpp
 Edit* ToolbarCreatePageEdit(MainWindow*, PlatformFont*, int iconDy);

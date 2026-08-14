@@ -1057,7 +1057,7 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
 }
 
 // bounds of a button in the toolbar's client coords, empty if it has none
-Rect ToolbarButtonRect(MainWindow* win, int cmdId) {
+static Rect ToolbarButtonRect(MainWindow* win, int cmdId) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb) {
         return {};
@@ -1133,8 +1133,10 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
-// TrackPopupMenu is modal: a click on the split button dismisses the menu and
-// is then delivered as a new WM_LBUTTONDOWN, which would open it again.
+// A drop-down menu is modal: the click that dismisses it is delivered to the
+// toolbar after the menu closes, and when it lands on the split button that
+// opened the menu it would open it right back up. So the button ignores a click
+// that arrives on the heels of its menu closing.
 static u64 gToolbarDropdownClosedAt = 0;
 
 static bool ToolbarDropdownJustClosed() {

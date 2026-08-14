@@ -146,38 +146,6 @@ void ToolbarUpdateFindEditCursor(MainWindow* win) {
     }
 }
 
-//--- dismissing a drop-down menu
-
-static bool PeekRemoveClickOnRect(HWND hwnd, UINT msgId, Rect btn) {
-    MSG msg{};
-    if (!PeekMessageW(&msg, hwnd, msgId, msgId, PM_NOREMOVE)) {
-        return false;
-    }
-    Point pt = {GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam)};
-    if (!btn.Contains(pt)) {
-        return false;
-    }
-    PeekMessageW(&msg, hwnd, msgId, msgId, PM_REMOVE);
-    return true;
-}
-
-// After the popup returns, drop a pending click that landed on this button.
-void ToolbarEatMenuDismissClick(MainWindow* win, int cmdId) {
-    ToolbarNoteDropdownClosed();
-    if (!win || !win->hwndToolbar || !win->toolbarVirt) {
-        return;
-    }
-    Rect btn = ToolbarButtonRect(win, cmdId);
-    if (btn.IsEmpty()) {
-        return;
-    }
-    HWND hwnd = win->hwndToolbar;
-    while (PeekRemoveClickOnRect(hwnd, WM_LBUTTONDOWN, btn) || PeekRemoveClickOnRect(hwnd, WM_LBUTTONDBLCLK, btn)) {
-        MSG up{};
-        PeekMessageW(&up, hwnd, WM_LBUTTONUP, WM_LBUTTONUP, PM_REMOVE);
-    }
-}
-
 //--- the messages VirtHost doesn't model
 
 // the native edit control asks its parent what colors to draw itself in
