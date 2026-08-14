@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -238,22 +239,120 @@ static TempStr GetFoxitPathTemp() {
     return {};
 }
 
-static TempStr GetPDFXChangePathTemp() {
-    Str keyName = R"(Software\Tracker Software\PDFViewer)";
-    TempStr path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
-    if (!path) {
-        keyName = R"(Software\Tracker Software\PDFViewer)";
-        path = ReadRegStrTemp(HKEY_CURRENT_USER, keyName, "InstallPath");
+static TempStr GetAppPathExeTemp(Str exeName) {
+    TempStr keyName = fmt(R"(Software\Microsoft\Windows\CurrentVersion\App Paths\%s)", exeName);
+    TempStr path = ReadRegStr2Temp(keyName, {});
+    if (path && file::Exists(path)) {
+        return path;
     }
+    return {};
+}
+
+static TempStr GetRegisteredOpenExeTemp(Str progId) {
+    TempStr keyName = fmt(R"(%s\shell\open\command)", progId);
+    TempStr command = ReadRegStrTemp(HKEY_CLASSES_ROOT, keyName, {});
+    if (!command) {
+        return {};
+    }
+    StrVec args;
+    ParseCmdLine(command, args);
+    if (len(args) == 0 || !file::Exists(args[0])) {
+        return {};
+    }
+    return str::DupTemp(args[0]);
+}
+
+static TempStr FindPDFXChangeInProgramDirsTemp(const StrVec& programDirs) {
+    Str partialPaths[] = {
+        StrL(R"(PDF-XChange\PDF Editor\PXCEditor.exe)"),
+        StrL(R"(Tracker Software\PDF Editor\PXCEditor.exe)"),
+        StrL(R"(PDF-XChange\PDF Editor\PDFXEdit.exe)"),
+        StrL(R"(Tracker Software\PDF Editor\PDFXEdit.exe)"),
+    };
+    for (Str partialPath : partialPaths) {
+        for (Str dir : programDirs) {
+            TempStr exePath = path::JoinTemp(dir, partialPath);
+            if (file::Exists(exePath)) {
+                return exePath;
+            }
+        }
+    }
+    return {};
+}
+
+static TempStr GetPDFXChangePathTemp() {
+    // V11 renamed both the vendor directory and the executable. Prefer paths
+    // registered by the installer, then cover clean and upgraded installations.
+    TempStr exePath = GetAppPathExeTemp(StrL("PXCEditor.exe"));
+    if (!exePath) {
+        exePath = GetAppPathExeTemp(StrL("PDFXEdit.exe"));
+    }
+    if (!exePath) {
+        exePath = GetRegisteredOpenExeTemp(StrL("PXCEditor.PDF"));
+    }
+    if (!exePath) {
+        exePath = GetRegisteredOpenExeTemp(StrL("PDFXEdit.PDF"));
+    }
+    if (exePath) {
+        return exePath;
+    }
+
+    StrVec programDirs;
+    int csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86};
+    for (int csidl : csidls) {
+        TempStr dir = GetSpecialFolderTemp(csidl);
+        if (dir) {
+            programDirs.Append(dir);
+        }
+    }
+    exePath = FindPDFXChangeInProgramDirsTemp(programDirs);
+    if (exePath) {
+        return exePath;
+    }
+
+    // Legacy PDF-XChange Viewer registry entry.
+    Str keyName = R"(Software\Tracker Software\PDFViewer)";
+    TempStr path = ReadRegStr2Temp(keyName, StrL("InstallPath"));
     if (!path) {
         return {};
     }
-    TempStr exePath = path::JoinTemp(path, StrL("PDFXCview.exe"));
+    exePath = path::JoinTemp(path, StrL("PDFXCview.exe"));
     if (file::Exists(exePath)) {
         return exePath;
     }
     return {};
 }
+
+#if defined(DEBUG)
+bool ExternalViewers_UnitTestPDFXChangePaths() {
+    TempStr testDir = GetTempFilePathTemp(StrL("issue-5941"));
+    if (!testDir || !file::Delete(testDir) || !dir::Create(testDir)) {
+        return false;
+    }
+    defer {
+        dir::RemoveAll(testDir);
+    };
+
+    StrVec programDirs;
+    programDirs.Append(testDir);
+    Str partialPaths[] = {
+        StrL(R"(PDF-XChange\PDF Editor\PXCEditor.exe)"),
+        StrL(R"(Tracker Software\PDF Editor\PXCEditor.exe)"),
+        StrL(R"(Tracker Software\PDF Editor\PDFXEdit.exe)"),
+    };
+    for (Str partialPath : partialPaths) {
+        TempStr expected = path::JoinTemp(testDir, partialPath);
+        if (!dir::CreateForFile(expected) || !file::WriteFile(expected, StrL("test"))) {
+            return false;
+        }
+        TempStr found = FindPDFXChangeInProgramDirsTemp(programDirs);
+        if (!found || !path::IsSame(found, expected) || !file::Delete(expected)) {
+            return false;
+        }
+    }
+    return true;
+}
+#endif
 
 static void SetKnownExternalViewerExePath(int cmdId, Str exePath) {
     if (!exePath) {
@@ -266,6 +365,9 @@ static void SetKnownExternalViewerExePath(int cmdId, Str exePath) {
 }
 
 static bool DetectExternalViewer(ExternalViewerInfo* ev) {
+    if (ev->exeFullPath) {
+        return true;
+    }
     if (!ev->exePartialPath) {
         return false;
     }
@@ -290,20 +392,20 @@ void DetectExternalViewers() {
         return;
     }
 
+    TempStr exePath = GetPDFXChangePathTemp();
+    SetKnownExternalViewerExePath(CmdOpenWithPdfXchange, exePath);
+
     for (ExternalViewerInfo& i : gExternalViewers) {
         if (DetectExternalViewer(&i)) {
             gExternalViewersCount++;
         }
     }
 
-    TempStr exePath = GetAcrobatPathTemp();
+    exePath = GetAcrobatPathTemp();
     SetKnownExternalViewerExePath(CmdOpenWithAcrobat, exePath);
 
     exePath = GetFoxitPathTemp();
     SetKnownExternalViewerExePath(CmdOpenWithFoxIt, exePath);
-
-    exePath = GetPDFXChangePathTemp();
-    SetKnownExternalViewerExePath(CmdOpenWithPdfXchange, exePath);
 }
 
 static bool filterMatchesEverything(Str ext) {

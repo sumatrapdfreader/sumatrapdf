@@ -22,6 +22,7 @@ bool MarkdownToc_UnitTestHtmlLinks();
 bool MarkdownToc_UnitTestHtmlHeadings();
 bool MarkdownToc_UnitTestMermaid();
 bool EbookDoc_UnitTestNormalizeURL();
+bool ExternalViewers_UnitTestPDFXChangePaths();
 #endif
 
 // must be last to over-write assert()
@@ -148,6 +149,7 @@ int RunAppUnitTests() {
     utassert(MarkdownToc_UnitTestHtmlHeadings());
     utassert(MarkdownToc_UnitTestMermaid());
     utassert(EbookDoc_UnitTestNormalizeURL());
+    utassert(ExternalViewers_UnitTestPDFXChangePaths());
 #endif
     return utassert_print_results();
 }
