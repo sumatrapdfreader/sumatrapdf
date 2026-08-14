@@ -1590,8 +1590,8 @@ void CreateToolbar(MainWindow* win) {
     int yPad = DpiScale(2);
     int rowDy = ToolbarRowDy(iconSize);
 
-    HWND hwnd = CreateWindowExW(exStyle, kVirtToolbarClass.s, nullptr, style, 0, 0, 100, rowDy, hwndParent,
-                                (HMENU)IDC_TOOLBAR, hinst, nullptr);
+    HWND hwnd = CreateWindowExW(exStyle, kVirtToolbarClass.s, nullptr, style, 0, 0, 100, rowDy, hwndParent, nullptr,
+                                hinst, nullptr);
     win->hwndToolbar = hwnd;
 
     auto* tb = new ToolbarVirt();
