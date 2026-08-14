@@ -978,8 +978,8 @@
     <ClCompile Include="..\src\gui\PlatformText.cpp" />
     <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\gui\UIModels.cpp" />
-    <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\gui\UiPlatform_win.cpp" />
+    <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\gui\win\ControlBase.cpp" />
     <ClCompile Include="..\src\gui\win\Edit.cpp" />
     <ClCompile Include="..\src\gui\win\Tooltip.cpp" />

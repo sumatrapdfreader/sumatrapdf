@@ -1148,13 +1148,13 @@
     <ClCompile Include="..\src\gui\UIModels.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\VirtHost_win.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\win\BrowserDocView.cpp">

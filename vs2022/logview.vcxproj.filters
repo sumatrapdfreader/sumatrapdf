@@ -63,6 +63,9 @@
     <ClCompile Include="..\src\gui\UIModels.cpp">
       <Filter>gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">
       <Filter>gui</Filter>
     </ClCompile>

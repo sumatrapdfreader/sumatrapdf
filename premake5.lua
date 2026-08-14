@@ -1180,7 +1180,7 @@ workspace "SumatraPDF"
     links { "base" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
-      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32",
+      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "uxtheme",
     }
 
   -- LzSA archive tool (packs installer payloads / PDBs, see LzmaSimpleArchive.cpp).
