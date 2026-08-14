@@ -407,6 +407,7 @@ const sumatraFiles: FileGroup[] = [
       "TextSelection.*",
       "TextViewWnd.*",
       "Theme.*",
+      "Theme_win.*",
       "TipText.*",
       "Toolbar.*",
       "Toolbar_win.*",
