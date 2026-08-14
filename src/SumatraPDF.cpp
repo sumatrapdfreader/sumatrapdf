@@ -2046,6 +2046,19 @@ static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
     return dm;
 }
 
+// First open only: ComicBookUI.DefaultZoom when set (issue #5946). Empty
+// keeps the global DefaultZoom. Remembered FileState wins.
+static float ZoomForNewDocument(Str path, EngineBase* engine, float fallback) {
+    Kind k = engine ? engine->kind : nullptr;
+    if (k == kindEngineComicBooks || (path && IsEngineCbxSupportedFileType(GuessFileTypeFromName(path, true)))) {
+        float z = gGlobalPrefs->comicBookUI.defaultZoomFloat;
+        if (z != 0) {
+            return z;
+        }
+    }
+    return fallback;
+}
+
 // Research articles vs slides (issue #4055): portrait -> continuous + fit
 // width, landscape -> single page + fit page. First open only.
 static bool ShouldUsePageAspectForView(Str path) {
@@ -2190,6 +2203,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         // global default when set (issue #2588). Remembered FileState wins.
         if (!fs) {
             displayMode = DisplayModeForNewDocument(path, engine);
+            zoomVirtual = ZoomForNewDocument(path, engine, zoomVirtual);
             if (ShouldUsePageAspectForView(path)) {
                 ApplyPageAspectView(engine, &displayMode, &zoomVirtual);
             }
