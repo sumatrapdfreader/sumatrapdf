@@ -13,6 +13,7 @@
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
+#include "gui/VirtHost.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -62,12 +63,9 @@ static Str ButtonText(const SelectionToolbarButton& b) {
 struct SelectionToolbar {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr; // tab the current selection belongs to
-    HWND hwnd = nullptr;
+    // the popup window; owns the row of buttons and the virtual controls
+    VirtHost* host = nullptr;
     PlatformFont* font = nullptr;
-    // the row of buttons; rebuilt whenever the set of buttons changes
-    ILayout* layout = nullptr;
-    // the buttons of `layout`; owned here, the controls themselves by `layout`
-    VirtRoot* vroot = nullptr;
     Size size;
     Rect lastPlaced;    // last screen rect we moved the window to (avoids redundant SetWindowPos)
     Rect lastSelBounds; // last canvas-space selection bounds used for placement
@@ -197,19 +195,6 @@ static Color SelBarHoverBg(Color bg) {
     return AccentColor(bg, 10);
 }
 
-// Clip the popup to a rounded rect. Use the intended layout size — not
-// HwndClientRect — because CreateWindow starts at 0x0 and client rect is still empty
-// until after SetWindowPos (a 1x1 region left the toolbar invisible).
-static void UpdateToolbarWindowRgn(HWND hwnd, int cornerRadius, int dx, int dy) {
-    dx = std::max(dx, 1);
-    dy = std::max(dy, 1);
-    int radius = DpiScale(cornerRadius);
-    HRGN rgn = CreateRoundRectRgn(0, 0, dx + 1, dy + 1, radius, radius);
-    if (!SetWindowRgn(hwnd, rgn, TRUE)) {
-        DeleteObject(rgn);
-    }
-}
-
 static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
     Color fgCol = SelBarTextColor();
     Color bgCol = SelBarBg();
@@ -272,15 +257,10 @@ static void OnSelToolbarButtonClicked(SelectionToolbar* tb, VirtMouseEvent* ev) 
 // Build the layout tree for the current buttons and measure it into tb->size
 // (the window region is applied after SetWindowPos).
 static void LayoutToolbar(SelectionToolbar* tb) {
-    HWND hwnd = tb->hwnd;
     int padX = DpiScale(kBtnPadX);
     int padY = DpiScale(kBtnPadY);
     int margin = DpiScale(kMargin);
     int gap = DpiScale(kBtnGap);
-
-    // deleting the old tree takes its buttons out of vroot->tops
-    delete tb->layout;
-    tb->layout = nullptr;
 
     Color bgCol = SelBarBg();
     Color hoverBg = SelBarHoverBg(bgCol);
@@ -322,11 +302,8 @@ static void LayoutToolbar(SelectionToolbar* tb) {
         isFirst = false;
         box->AddChild(child);
     }
-    tb->layout = new Padding(box, Insets{margin, margin, margin, margin});
-    Constraints bc = ExpandInf();
-    tb->size = tb->layout->Layout(bc);
-    tb->layout->SetBounds({0, 0, tb->size.dx, tb->size.dy});
-    RefreshVirtTops(hwnd, tb->layout, {0, 0, tb->size.dx, tb->size.dy}, &tb->vroot);
+    auto* content = new Padding(box, Insets{margin, margin, margin, margin});
+    tb->size = tb->host->SetLayoutSizedToContent(content);
 }
 
 // Sticky-note (Text) annots are placed at a canvas point; use the selection end.
@@ -347,75 +324,9 @@ static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
 }
 
 // the card itself; the buttons on it are virtual controls painted on top
-static void PaintToolbar(SelectionToolbar* tb, HDC hdc) {
-    HWND hwnd = tb->hwnd;
-    Rect rc = HwndClientRect(hwnd);
+static void PaintToolbar(SelectionToolbar*, VirtHostPaintEvent* ev) {
     int cornerRadius = DpiScale(kCornerRadius);
-
-    GfxHdc gfx(hdc);
-    gfx.FillRoundedRect(rc, cornerRadius, SelBarBg(), SelBarBorderColor());
-
-    if (!tb->vroot) {
-        return;
-    }
-    SetBkMode(hdc, TRANSPARENT);
-    tb->vroot->Paint(&gfx, rc);
-}
-
-static LRESULT CALLBACK WndProcSelectionToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    SelectionToolbar* tb;
-    if (msg == WM_NCCREATE) {
-        LPCREATESTRUCT cs = reinterpret_cast<LPCREATESTRUCT>(lp);
-        tb = reinterpret_cast<SelectionToolbar*>(cs->lpCreateParams);
-        tb->hwnd = hwnd;
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(tb));
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-    tb = reinterpret_cast<SelectionToolbar*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-    if (!tb) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    switch (msg) {
-        case WM_ERASEBKGND:
-            return TRUE;
-
-        // don't steal focus from the canvas, so keyboard shortcuts keep working
-        case WM_MOUSEACTIVATE:
-            return MA_NOACTIVATE;
-
-        case WM_PAINT: {
-            // Paint off-screen and blit once. Hovering a button repaints the
-            // whole bar, and drawing straight to the window showed the
-            // background fill wiping it before the buttons came back -- a
-            // flash under the moving mouse.
-            Rect rc = HwndClientRect(hwnd);
-            DoubleBuffer buffer(hwnd, rc);
-            PaintToolbar(tb, buffer.GetDC());
-            PAINTSTRUCT ps;
-            buffer.Flush(BeginPaint(hwnd, &ps));
-            EndPaint(hwnd, &ps);
-            return 0;
-        }
-    }
-    // hover, click and cursor of the buttons
-    LRESULT res = 0;
-    if (VirtTreeOnMessage(hwnd, tb->vroot, msg, wp, lp, res)) {
-        return res;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
-
-static void RegisterSelectionToolbarClass() {
-    static bool registered = false;
-    if (registered) {
-        return;
-    }
-    WNDCLASSEX wcex{};
-    FillWndClassEx(wcex, WStrL(kSelectionToolbarClassName), WndProcSelectionToolbar);
-    wcex.hCursor = GetCachedCursor(IDC_ARROW);
-    RegisterClassEx(&wcex);
-    registered = true;
+    ev->gfx->FillRoundedRect(ev->clientRect, cornerRadius, SelBarBg(), SelBarBorderColor());
 }
 
 // union of the on-screen parts of the selection, in canvas coordinates;
@@ -479,9 +390,10 @@ static bool PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
         return false;
     }
     tb->lastPlaced = placed;
-    SetWindowPos(tb->hwnd, nullptr, p.x, p.y, w, h, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER);
-    // Region must match layout size after SetWindowPos (window may have been 0x0).
-    UpdateToolbarWindowRgn(tb->hwnd, kCornerRadius, w, h);
+    tb->host->SetBounds(placed);
+    // the region must match the layout size after the move (the window may
+    // have been 0x0, and a 1x1 region left the toolbar invisible)
+    tb->host->ClipToRoundedRect(kCornerRadius, {w, h});
     return true;
 }
 
@@ -489,17 +401,24 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
     if (win->selectionToolbar) {
         return win->selectionToolbar;
     }
-    RegisterSelectionToolbarClass();
     auto* tb = new SelectionToolbar();
     tb->win = win;
-    DWORD style = WS_POPUP;
-    DWORD styleEx = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
-    HWND hwnd = CreateWindowEx(styleEx, kSelectionToolbarClassName, nullptr, style, 0, 0, 0, 0, win->hwndFrame, nullptr,
-                               GetModuleHandle(nullptr), tb);
-    if (!hwnd) {
+
+    VirtHost::CreateArgs args;
+    args.parent = win->hwndFrame;
+    args.className = WStrL(kSelectionToolbarClassName);
+    args.isPopup = true;
+    args.visible = false;
+    // don't steal the focus from the canvas, so keyboard shortcuts keep working
+    args.noActivate = true;
+    args.userData = tb;
+
+    tb->host = VirtHost::Create(args);
+    if (!tb->host) {
         delete tb;
         return nullptr;
     }
+    tb->host->onPaintBackground = MkFunc1(PaintToolbar, tb);
     tb->font = GetScaledPlatformFont(GetAppFont(), kToolbarFontPct);
     win->selectionToolbar = tb;
     return tb;
@@ -543,8 +462,8 @@ static void ShowSelectionToolbarNow(MainWindow* win) {
     // Force SetWindowPos + region even if lastPlaced matched (e.g. after hide).
     tb->lastPlaced = Rect();
     PositionToolbar(tb, sel);
-    ShowWindow(tb->hwnd, SW_SHOWNOACTIVATE);
-    HwndScheduleRepaint(tb->hwnd);
+    tb->host->Show(true);
+    tb->host->Invalidate(false);
 }
 
 // The toolbar pops up over the document, right where the user is reading, so
@@ -599,13 +518,13 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
     // Hide during drag so the bar does not chase the rubber-band selection.
     if (IsActivelySelecting(win)) {
         SelectionToolbar* activeTb = win->selectionToolbar;
-        if (activeTb && activeTb->hwnd && HwndIsVisible(activeTb->hwnd)) {
+        if (activeTb && activeTb->host && activeTb->host->IsVisible()) {
             HideSelectionToolbar(win);
         }
         return;
     }
     SelectionToolbar* tb = win->selectionToolbar;
-    if (!tb || !tb->hwnd || !HwndIsVisible(tb->hwnd)) {
+    if (!tb || !tb->host || !tb->host->IsVisible()) {
         if (win->showSelection) {
             ShowSelectionToolbar(win);
         }
@@ -639,33 +558,33 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
     InitButtons(tb, win);
     LayoutToolbar(tb);
     if (PositionToolbar(tb, sel)) {
-        HwndScheduleRepaint(tb->hwnd);
+        tb->host->Invalidate(false);
     }
 }
 
 void RefreshSelectionToolbarIcons(MainWindow* win) {
     SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
-    if (!tb || !tb->hwnd || !HwndIsVisible(tb->hwnd)) {
+    if (!tb || !tb->host || !tb->host->IsVisible()) {
         return;
     }
     LayoutToolbar(tb);
-    HwndScheduleRepaint(tb->hwnd);
+    tb->host->Invalidate(false);
 }
 
 // Hide the toolbar but keep the window around for reuse.
 void HideSelectionToolbar(MainWindow* win) {
     CancelPendingShow(win);
     SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
-    if (!tb || !tb->hwnd) {
+    if (!tb || !tb->host) {
         return;
     }
-    if (HwndIsVisible(tb->hwnd)) {
-        ShowWindow(tb->hwnd, SW_HIDE);
+    if (tb->host->IsVisible()) {
+        tb->host->Show(false);
     }
-    if (tb->vroot) {
+    if (tb->host->vroot) {
         // the mouse can't leave a hidden window, so drop the hover ourselves
-        tb->vroot->ClearHover();
-        tb->vroot->ClearPressed();
+        tb->host->vroot->ClearHover();
+        tb->host->vroot->ClearPressed();
     }
     tb->tab = nullptr;
     tb->lastPlaced = Rect();
@@ -679,12 +598,9 @@ void DeleteSelectionToolbar(MainWindow* win) {
     if (!tb) {
         return;
     }
-    if (tb->hwnd) {
-        DestroyWindow(tb->hwnd);
-    }
-    // the buttons first: they report their destruction to the root
-    delete tb->layout;
-    delete tb->vroot;
+    // ~VirtHost deletes the layout first: the buttons report their
+    // destruction to the root
+    delete tb->host;
     delete tb;
     win->selectionToolbar = nullptr;
 }

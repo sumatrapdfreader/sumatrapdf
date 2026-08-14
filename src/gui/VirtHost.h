@@ -60,6 +60,9 @@ struct VirtHost {
         bool noActivate = false;
         // don't let a lower-Z sibling paint over us (for a floating host)
         bool clipSiblings = false;
+        // a window that floats over everything and is positioned in screen
+        // coordinates, instead of a child of the parent
+        bool isPopup = false;
         // the owner, for the callbacks to find their way back
         void* userData = nullptr;
     };
@@ -71,6 +74,7 @@ struct VirtHost {
     VirtRoot* vroot = nullptr;
     Color bgColor = kColorUnset;
     bool noActivate = false;
+    bool isPopup = false;
     void* userData = nullptr;
 
     // fills the background; the host fills it with bgColor when this is not set
@@ -93,9 +97,12 @@ struct VirtHost {
 
     static VirtHost* Create(const CreateArgs&);
 
-    // takes ownership of the tree and lays it out
+    // takes ownership of the tree and lays it out to the host's client area
     void SetLayout(ILayout*);
     void Relayout();
+    // takes ownership, lays the tree out to its natural size and returns it,
+    // for a host that sizes itself to its content instead
+    Size SetLayoutSizedToContent(ILayout*);
 
     Rect ClientRect() const;
     // the host's rectangle, in screen coordinates
@@ -104,9 +111,19 @@ struct VirtHost {
     Point FromScreen(Point) const;
     // a rect in the host's client coordinates, in screen coordinates
     Rect ToScreen(Rect) const;
-    // move and resize (in the parent's client coordinates), and show or hide
+    // move, resize and show or hide, raising the host above its siblings.
+    // The rect is in screen coords for a popup, in the parent's client coords
+    // for a child
     void SetPos(Rect, bool visible);
+    // move and resize without touching visibility or z-order
+    void SetBounds(Rect);
+    // show or hide, without ever activating the window
+    void Show(bool);
     bool IsVisible() const;
+    // clip the window to a rounded rectangle of the given size. The size is
+    // passed in because a host that hasn't been positioned yet has no client
+    // area to take it from
+    void ClipToRoundedRect(int radius, Size);
     void Invalidate(bool erase = true);
     // invalidate and paint right away
     void Repaint();

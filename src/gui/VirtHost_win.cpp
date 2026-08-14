@@ -81,9 +81,13 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     switch (msg) {
         case WM_MOUSEACTIVATE:
-            // only when the frame is already the foreground window: clicking an
-            // inactive window should still activate it
             if (host->noActivate) {
+                if (host->isPopup) {
+                    return MA_NOACTIVATE;
+                }
+                // a child only refuses activation when the frame is already the
+                // foreground window: clicking an inactive window should still
+                // activate it
                 HWND frame = GetAncestor(hwnd, GA_ROOT);
                 if (frame && GetForegroundWindow() == frame) {
                     return MA_NOACTIVATE;
@@ -140,7 +144,7 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 VirtHost* VirtHost::Create(const CreateArgs& args) {
     RegisterHostClass(args.className);
 
-    DWORD style = WS_CHILD | WS_CLIPCHILDREN;
+    DWORD style = args.isPopup ? WS_POPUP : (WS_CHILD | WS_CLIPCHILDREN);
     if (args.visible) {
         style |= WS_VISIBLE;
     }
@@ -148,6 +152,10 @@ VirtHost* VirtHost::Create(const CreateArgs& args) {
         style |= WS_CLIPSIBLINGS;
     }
     DWORD exStyle = WS_EX_TOOLWINDOW;
+    if (args.isPopup && args.noActivate) {
+        // a popup can keep the focus off itself with a style; a child can't
+        exStyle |= WS_EX_NOACTIVATE;
+    }
     if (args.isRtl) {
         exStyle |= WS_EX_LAYOUTRTL;
     }
@@ -155,6 +163,7 @@ VirtHost* VirtHost::Create(const CreateArgs& args) {
     auto* host = new VirtHost();
     host->bgColor = args.bgColor;
     host->noActivate = args.noActivate;
+    host->isPopup = args.isPopup;
     host->userData = args.userData;
 
     Size sz = args.initialSize;
@@ -202,6 +211,22 @@ void VirtHost::Relayout() {
     LayoutTreeToSize(native, layout, rc.Size(), &vroot);
 }
 
+Size VirtHost::SetLayoutSizedToContent(ILayout* l) {
+    if (layout != l) {
+        // deleting the old tree takes its controls out of vroot->tops
+        delete layout;
+        layout = l;
+    }
+    if (!layout || !native) {
+        return {};
+    }
+    Size sz = layout->Layout(ExpandInf());
+    Rect bounds{0, 0, sz.dx, sz.dy};
+    layout->SetBounds(bounds);
+    RefreshVirtTops(native, layout, bounds, &vroot);
+    return sz;
+}
+
 Rect VirtHost::ClientRect() const {
     return HwndClientRect(native);
 }
@@ -224,8 +249,27 @@ void VirtHost::SetPos(Rect r, bool visible) {
     SetWindowPos(native, HWND_TOP, r.x, r.y, r.dx, r.dy, flags);
 }
 
+void VirtHost::SetBounds(Rect r) {
+    UINT flags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    SetWindowPos(native, nullptr, r.x, r.y, r.dx, r.dy, flags);
+}
+
+void VirtHost::Show(bool show) {
+    ShowWindow(native, show ? SW_SHOWNOACTIVATE : SW_HIDE);
+}
+
 bool VirtHost::IsVisible() const {
     return HwndIsVisible(native);
+}
+
+void VirtHost::ClipToRoundedRect(int radius, Size sz) {
+    int dx = std::max(sz.dx, 1);
+    int dy = std::max(sz.dy, 1);
+    int r = DpiScale(radius);
+    HRGN rgn = CreateRoundRectRgn(0, 0, dx + 1, dy + 1, r, r);
+    if (!SetWindowRgn(native, rgn, TRUE)) {
+        DeleteObject(rgn);
+    }
 }
 
 void VirtHost::Invalidate(bool erase) {
