@@ -4057,13 +4057,49 @@ static IPageElement* NewFzComment(Str comment, int pageNo, RectF rect) {
     return res;
 }
 
+// An old SumatraPDF round-trip bug grew the line separator in annotation
+// contents by one CR on every save: "\r\n" became "\r\r\n", then "\r\r\r\n" and
+// so on. GDI draws each of those as its own break, so a short note renders as a
+// tall column of blank lines (issue #2873). No producer writes a CR run before a
+// LF, so collapse each such run to a single LF. A run of bare CRs is left alone
+// (one LF each): that is PDF's own line separator, where "\r\r" really is a
+// blank line. Trailing blank lines are dropped either way -- they only make the
+// hover tip taller.
+static Str NormalizeCommentNewlinesTemp(Str s) {
+    if (!str::ContainsChar(s, '\r')) {
+        Str res = str::DupTemp(s);
+        str::TrimWSInPlace(res, str::TrimOpt::Right);
+        return res;
+    }
+    str::Builder b;
+    int n = len(s);
+    for (int i = 0; i < n; i++) {
+        char c = s.s[i];
+        if (c != '\r') {
+            b.AppendChar(c);
+            continue;
+        }
+        int j = i;
+        while (j < n && s.s[j] == '\r') {
+            j++;
+        }
+        b.AppendChar('\n');
+        if (j < n && s.s[j] == '\n') {
+            i = j; // the whole CR run plus its LF is one break
+        }
+    }
+    Str res = ToStrTemp(b);
+    str::TrimWSInPlace(res, str::TrimOpt::Right);
+    return res;
+}
+
 // Hover tip for an annotation: author and/or contents (issue #5329).
 // FreeText already draws its contents on the page, so the tip is just the author.
 // must be called inside fz_try
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_bound_annot(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
-    Str contents = pdf_annot_contents(ctx, annot);
+    Str contents = NormalizeCommentNewlinesTemp(pdf_annot_contents(ctx, annot));
     Str label = pdf_annot_field_label(ctx, annot);
     Str author;
     if (pdf_annot_has_author(ctx, annot)) {
