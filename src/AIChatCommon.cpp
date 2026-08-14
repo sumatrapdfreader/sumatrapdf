@@ -556,7 +556,7 @@ constexpr int kAIChatLabelCloseBtnDx = 16;
 constexpr int kAIChatLabelCloseBtnSpaceDx = 8;
 constexpr int kAIChatLabelPadX = 2;
 
-int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx) {
+int AIChatLabelMaxTextDx(int labelDx) {
     int padX = DpiScale(kAIChatLabelPadX);
     int btnDx = DpiScale(kAIChatLabelCloseBtnDx);
     int spaceDx = DpiScale(kAIChatLabelCloseBtnSpaceDx);

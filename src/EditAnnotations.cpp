@@ -1402,7 +1402,7 @@ void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
     DoLayout({dx, dy});
 }
 
-static VirtText* CreateStatic(HWND parent, Str s = nullptr) {
+static VirtText* CreateStatic(Str s = nullptr) {
     return NewVirtText({
         .s = s,
         .font = GetPlatformFont(GetAppFont()),
@@ -1414,7 +1414,7 @@ static VirtText* CreateStatic(HWND parent, Str s = nullptr) {
 
 // the buttons are virtual controls, so they are styled here rather than by the
 // system: a filled box with a border, brighter on hover (like the other dialogs)
-static VirtButton* CreateVirtButton(HWND parent, Str text) {
+static VirtButton* CreateVirtButton(Str text) {
     auto* b = new VirtButton(text, GetPlatformFont(GetAppFont()));
     Color bg = ThemeWindowControlBackgroundColor();
     b->textColor = ThemeWindowTextColor();
@@ -1469,13 +1469,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent);
+        auto* w = CreateStatic();
         ew->staticRect = w;
         vbox->AddChild(w);
     }
 
     {
-        auto* w = CreateStatic(parent);
+        auto* w = CreateStatic();
         // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
         // l2->SetInsetsPt(20, 0, 0, 0);
         ew->staticAuthor = w;
@@ -1483,19 +1483,19 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent);
+        auto* w = CreateStatic();
         ew->staticModificationDate = w;
         vbox->AddChild(w);
     }
 
     {
-        auto* w = CreateStatic(parent);
+        auto* w = CreateStatic();
         ew->staticPopup = w;
         vbox->AddChild(w);
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Contents:"));
+        auto* w = CreateStatic(_TRA("Contents:"));
         ew->staticContents = w;
         w->padding = DpiScaledInsets(4, 0, 0, 0);
         vbox->AddChild(w);
@@ -1521,7 +1521,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Text Alignment:"));
+        auto* w = CreateStatic(_TRA("Text Alignment:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticTextAlignment = w;
         vbox->AddChild(w);
@@ -1544,7 +1544,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Text Font:"));
+        auto* w = CreateStatic(_TRA("Text Font:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticTextFont = w;
         vbox->AddChild(w);
@@ -1566,7 +1566,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Text Size:"));
+        auto* w = CreateStatic(_TRA("Text Size:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticTextSize = w;
         vbox->AddChild(w);
@@ -1591,7 +1591,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Text Color:"));
+        auto* w = CreateStatic(_TRA("Text Color:"));
         ew->staticTextColor = w;
         vbox->AddChild(w);
     }
@@ -1613,7 +1613,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Line Start:"));
+        auto* w = CreateStatic(_TRA("Line Start:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticLineStart = w;
         vbox->AddChild(w);
@@ -1635,7 +1635,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Line End:"));
+        auto* w = CreateStatic(_TRA("Line End:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticLineEnd = w;
         vbox->AddChild(w);
@@ -1657,7 +1657,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Icon:"));
+        auto* w = CreateStatic(_TRA("Icon:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticIcon = w;
         vbox->AddChild(w);
@@ -1679,7 +1679,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, "Border:");
+        auto* w = CreateStatic("Border:");
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticBorder = w;
         vbox->AddChild(w);
@@ -1701,7 +1701,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Color:"));
+        auto* w = CreateStatic(_TRA("Color:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticColor = w;
         vbox->AddChild(w);
@@ -1723,7 +1723,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Interior Color:"));
+        auto* w = CreateStatic(_TRA("Interior Color:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticInteriorColor = w;
         vbox->AddChild(w);
@@ -1746,7 +1746,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateStatic(parent, _TRA("Opacity:"));
+        auto* w = CreateStatic(_TRA("Opacity:"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticOpacity = w;
         vbox->AddChild(w);
@@ -1769,7 +1769,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateVirtButton(parent, _TRA("Save..."));
+        auto* w = CreateVirtButton(_TRA("Save..."));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         w->onClick = MkFunc1(SaveAttachmentClicked, ew);
         ew->buttonSaveAttachment = w;
@@ -1777,7 +1777,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateVirtButton(parent, _TRA("Embed..."));
+        auto* w = CreateVirtButton(_TRA("Embed..."));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         w->onClick = MkFunc1(EmbedAttachmentClicked, ew);
         ew->buttonEmbedAttachment = w;
@@ -1785,7 +1785,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateVirtButton(parent, _TRA("Delete Annotation"));
+        auto* w = CreateVirtButton(_TRA("Delete Annotation"));
         w->padding = DpiScaledInsets(11, 0, 0, 0);
         w->onClick = MkFunc1(DeleteClicked, ew);
         ew->buttonDelete = w;
@@ -1800,7 +1800,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         // text set by UpdateSaveButtonLabels once tab is attached
-        auto* w = CreateVirtButton(parent, _TRA("Save changes to existing PDF"));
+        auto* w = CreateVirtButton(_TRA("Save changes to existing PDF"));
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClick = MkFunc1(SaveToCurrentFileClicked, ew);
         ew->buttonSaveToCurrentFile = w;
@@ -1808,7 +1808,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto* w = CreateVirtButton(parent, _TRA("Save changes to a new PDF"));
+        auto* w = CreateVirtButton(_TRA("Save changes to a new PDF"));
         w->padding = DpiScaledInsets(8, 0, 0, 0);
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClick = MkFunc1(SaveToNewFileClicked, ew);

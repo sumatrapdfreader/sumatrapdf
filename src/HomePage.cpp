@@ -269,7 +269,7 @@ struct AboutCtrl : VirtCtrl {
     AboutCtrl();
     ~AboutCtrl() override;
     void Sync(HDC hdc);
-    void UpdateLayout(HWND hwnd, Rect clientRc);
+    void UpdateLayout(Rect clientRc);
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
     void PaintChildren(VirtPaintCtx&) override;
@@ -493,7 +493,7 @@ void AboutCtrl::Sync(HDC hdc) {
 
 // the About box is the title band above the two-column table. This sizes it from
 // the table, centers it in clientRc and positions the table inside it
-void AboutCtrl::UpdateLayout(HWND hwnd, Rect clientRc) {
+void AboutCtrl::UpdateLayout(Rect clientRc) {
     headerSize = logo->GetIdealSize();
 
     int leftRightSpaceDx = DpiScale(kAboutLeftRightSpaceDx);
@@ -525,7 +525,7 @@ void AboutCtrl::UpdateLayout(HWND hwnd, Rect clientRc) {
 static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
     AboutCtrl* about = EnsureAboutCtrl(rootPtr, hwnd, clientRc);
     about->Sync(hdc);
-    about->UpdateLayout(hwnd, clientRc);
+    about->UpdateLayout(clientRc);
     return about;
 }
 
@@ -2051,7 +2051,7 @@ void HomeTipCtrl::Sync(const Rect& rcTip, const Rect& rcText) {
 static Rect HomeEntryRect(const ThumbnailLayout& t);
 
 // the ✕ sits in the top-right corner of the thumbnail (top-left in RTL)
-static Rect HomeCloseBtnRectForThumb(MainWindow* win, const Rect& thumb) {
+static Rect HomeCloseBtnRectForThumb(const Rect& thumb) {
     int sz = DpiScale(18);
     int margin = DpiScale(5);
     int bx = IsUIRtl() ? (thumb.x + margin) : (thumb.x + thumb.dx - sz - margin);
@@ -2390,7 +2390,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
             e->pinBtn->visibility = Visibility::Collapse;
             // relative to the on-screen part of the entry, so the ✕ stays
             // visible on a thumbnail scrolled half-way out of the band
-            e->closeBtn->SetBounds(HomeCloseBtnRectForThumb(win, rc.Intersect(l.rcThumbsArea)));
+            e->closeBtn->SetBounds(HomeCloseBtnRectForThumb(rc.Intersect(l.rcThumbsArea)));
         }
     }
     entries->UpdateCloseBtnVisibility();
@@ -2732,7 +2732,7 @@ static void HomeScrollSelectionIntoView(MainWindow* win) {
 }
 
 // Selection outline rect — must match DrawHomePageLayout / DrawHomeListRow.
-static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t, HWND hwnd) {
+static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t) {
     if (HomePageIsListView()) {
         // list: outline is the row, 1px shorter (separator line)
         return {t.rcListRow.x, t.rcListRow.y, t.rcListRow.dx, t.rcListRow.dy - 1};
@@ -2782,7 +2782,7 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
     }
 
     HWND hwnd = win->hwndCanvas;
-    Rect outline = HomeSelectionOutlineRect(t, hwnd);
+    Rect outline = HomeSelectionOutlineRect(t);
     // a little below the outline so the tip clears the blue border
     int tipClientX = outline.x;
     int tipClientY = outline.y + outline.dy + DpiScale(4);
@@ -2798,7 +2798,7 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
         if (lastInRow >= n) {
             lastInRow = n - 1;
         }
-        Rect lastOutline = HomeSelectionOutlineRect(c.thumbs[lastInRow], hwnd);
+        Rect lastOutline = HomeSelectionOutlineRect(c.thumbs[lastInRow]);
         rightEdgeClient = lastOutline.x + lastOutline.dx;
     }
 

@@ -531,7 +531,7 @@ void AdvancedSettingsWnd::OnSelectionChanged() {
 // Split a list-item row into non-overlapping name (left) and value (right)
 // columns so long names and long values (e.g. InverseSearchCmdLine) don't
 // draw on top of each other (#5804).
-static void AdvSettingsItemColumns(HWND hwnd, const Rect& rc, Rect& rcName, Rect& rcVal) {
+static void AdvSettingsItemColumns(const Rect& rc, Rect& rcName, Rect& rcVal) {
     int pad = DpiScale(4);
     int gap = DpiScale(10);
     int totalW = rc.dx - (2 * pad);
@@ -589,7 +589,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     HFONT valFont = (SettingDiffersFromDefault(item) && fontBold) ? fontBold : fontNormal;
 
     Rect rcName{}, rcVal{};
-    AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
+    AdvSettingsItemColumns(rc, rcName, rcVal);
 
     bool isRtl = HwndIsRtl(lb->GetHwnd());
     // yellow/accent underlays on matched filter tokens (same as command palette)
@@ -622,7 +622,7 @@ Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
         return {};
     }
     Rect rcName{}, rcVal{};
-    AdvSettingsItemColumns(hwnd, rc, rcName, rcVal);
+    AdvSettingsItemColumns(rc, rcName, rcVal);
     return rcVal;
 }
 

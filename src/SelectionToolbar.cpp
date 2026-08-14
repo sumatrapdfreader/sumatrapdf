@@ -145,7 +145,7 @@ static bool IsActivelySelecting(MainWindow* win) {
     return ma == MouseAction::Selecting || ma == MouseAction::SelectingText;
 }
 
-static int SelectionBoundsSlack(HWND hwnd) {
+static int SelectionBoundsSlack() {
     return DpiScale(3);
 }
 
@@ -642,7 +642,7 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
     }
     // Canvas repaints often (e.g. read-aloud); skip work when the selection has
     // not moved, otherwise SetWindowRgn / ScheduleRepaint jitter the bar.
-    int slack = SelectionBoundsSlack(win->hwndFrame);
+    int slack = SelectionBoundsSlack();
     if (!SelectionBoundsChanged(sel, tb->lastSelBounds, slack)) {
         return;
     }

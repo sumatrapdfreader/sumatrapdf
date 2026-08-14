@@ -1979,9 +1979,8 @@ HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT* res
 static BSTR BstrFromVariant(VARIANT* vurl) {
     if (vurl->vt & VT_BYREF) {
         return *vurl->pbstrVal;
-    } else {
-        return vurl->bstrVal;
     }
+    return vurl->bstrVal;
 }
 
 HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid, __unused LCID lcid, WORD flags,

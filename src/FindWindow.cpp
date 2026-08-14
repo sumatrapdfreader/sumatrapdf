@@ -731,7 +731,7 @@ void FindWindowWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
     mmi->ptMinTrackSize.y = (2 * pad) + DpiScale(80);
 }
 
-void FindWindowWnd::OnClose(WindowBase::CloseEvent* ev) {
+void FindWindowWnd::OnClose(WindowBase::CloseEvent* /*ev*/) {
     // the caption close button hides the bar instead of destroying it
     HideFindWindow(win);
     // WmEvent.didHandle defaults true -> skip WindowBase::Destroy()

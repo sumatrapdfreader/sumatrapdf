@@ -14,7 +14,7 @@
 
 static int gClassRegistered = 0;
 
-static bool PopupClientToPagePt(RefHoverState* s, HWND hwnd, int clientX, int clientY, PointF& ptOut) {
+static bool PopupClientToPagePt(RefHoverState* s, int clientX, int clientY, PointF& ptOut) {
     if (!s || !s->hitEngine || s->displayed.destPage <= 0) {
         return false;
     }
@@ -54,7 +54,7 @@ static IPageDestination* LaunchLinkAtPagePt(RefHoverState* s, PointF pagePt) {
 
 static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, HWND hwnd, int clientX, int clientY) {
     PointF pagePt;
-    if (!PopupClientToPagePt(s, hwnd, clientX, clientY, pagePt)) {
+    if (!PopupClientToPagePt(s, clientX, clientY, pagePt)) {
         return nullptr;
     }
     return LaunchLinkAtPagePt(s, pagePt);

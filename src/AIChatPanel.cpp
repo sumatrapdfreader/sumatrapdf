@@ -245,7 +245,7 @@ static void UpdateAIChatPanelTitle(MainWindow* win, int labelDx) {
     if (labelDx <= 0 && win->hwndAiChatBox) {
         labelDx = HwndClientRect(win->hwndAiChatBox).dx;
     }
-    int maxDx = AIChatLabelMaxTextDx(labelHwnd, labelDx);
+    int maxDx = AIChatLabelMaxTextDx(labelDx);
     TempStr prefix = str::JoinTemp(p->TitleTemp(), StrL(" with "));
     TempStr label = AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
     win->aiChatLabel->SetText(label);

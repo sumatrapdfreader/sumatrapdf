@@ -1186,7 +1186,7 @@ void ReloadTocTree(WindowTab* tab) {
 
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
 // to get LOGFONT from existing font and then create a derived font
-static void UpdateFont(HDC hdc, HWND hwnd, int fontFlags) {
+static void UpdateFont(HDC hdc, int fontFlags) {
     bool italic = bit::IsSet(fontFlags, fontBitItalic);
     bool bold = bit::IsSet(fontFlags, fontBitBold);
     HFONT hfont = GetAppTreeFontEx(bold, italic);
@@ -1282,7 +1282,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     }
 
     if (tocItem->fontFlags != 0) {
-        UpdateFont(hdc, tv->hwnd, tocItem->fontFlags);
+        UpdateFont(hdc, tocItem->fontFlags);
     }
     HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
     if (tocItem->fontFlags == 0 && font) {
@@ -1394,7 +1394,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
             tvcd->clrText = tocItem->color;
         }
         if (tocItem->fontFlags != 0) {
-            UpdateFont(cd->hdc, ev->treeView->hwnd, tocItem->fontFlags);
+            UpdateFont(cd->hdc, tocItem->fontFlags);
             res |= CDRF_NEWFONT;
         }
         // POSTPAINT: selection colors (issue #5848), page numbers, filter, multi-match.

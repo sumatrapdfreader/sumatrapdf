@@ -571,10 +571,9 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
 LRESULT ControlBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     if (subclassId) {
         return ::DefSubclassProc(hwnd, msg, wparam, lparam);
-    } else {
-        // TODO: also DefSubclassProc?
-        return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
+    // TODO: also DefSubclassProc?
+    return ::DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
 void ControlBase::Attach(HWND hwnd) {

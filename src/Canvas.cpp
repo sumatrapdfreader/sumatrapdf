@@ -161,7 +161,7 @@ static HCURSOR CreateLaserPointerCursor(int size) {
 
 // the cursor is sized for the DPI of the window it's shown in, so it's
 // re-created when the canvas moves to a monitor with a different scaling
-static HCURSOR GetLaserPointerCursor(HWND hwnd) {
+static HCURSOR GetLaserPointerCursor() {
     int size = DpiScale(kLaserPointerCursorSize);
     if (gCursorLaserPointer && (gCursorLaserPointerSize == size)) {
         return gCursorLaserPointer;
@@ -201,7 +201,7 @@ static bool SetLaserPointerCursor(MainWindow* win) {
         // the presenter blanked the screen on purpose, don't put a dot on it
         return false;
     }
-    HCURSOR cur = GetLaserPointerCursor(win->hwndCanvas);
+    HCURSOR cur = GetLaserPointerCursor();
     if (!cur) {
         return false;
     }

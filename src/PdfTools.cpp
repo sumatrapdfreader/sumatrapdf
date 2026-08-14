@@ -41,7 +41,7 @@ extern "C" void fz_set_optind(int val);
 
 // compute a dialog client width that fits the source path text, clamped to a
 // minimum and to 80% of the screen width (long paths get ellipsized instead)
-static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int padding) {
+static int CalcDlgWidth(HFONT font, Str path, int minW, int padding) {
     HDC hdc = GetDC(nullptr);
     HFONT oldFont = (HFONT)SelectObject(hdc, font);
     Size size = HdcGetTextExtentPoint32(hdc, path);
@@ -283,7 +283,7 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     // size to a width that fits the source path (clamped), let the layout
     // compute the height
     int minClientW = DpiScale(480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(10));
+    int clientW = CalcDlgWidth(hFont, srcPath, minClientW, DpiScale(10));
     Size size = layout->Layout(ExpandHeight(clientW));
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
     // positions everything and picks up the virtual controls to paint

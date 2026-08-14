@@ -85,7 +85,7 @@ void PropertiesWnd::ScheduleDelete() {
     uitask::Post(fn, "SafeDeletePropertiesWnd");
 }
 
-static int ButtonPadding(HWND hwnd) {
+static int ButtonPadding() {
     return DpiScale(kButtonPadding);
 }
 
@@ -784,7 +784,7 @@ void PropertiesWnd::SizeToContent() {
     int wantedClientDx = maxLineDx + editPadding;
     if (btnCopyToClipboard) {
         Size buttonSize = btnCopyToClipboard->GetIdealSize();
-        wantedClientDx = std::max(wantedClientDx, buttonSize.dx + (2 * ButtonPadding(hwnd)));
+        wantedClientDx = std::max(wantedClientDx, buttonSize.dx + (2 * ButtonPadding()));
     }
     int wantedDx = wantedClientDx + frameDx;
 
@@ -793,9 +793,9 @@ void PropertiesWnd::SizeToContent() {
     int frameDy = (DpiGetSystemMetrics(SM_CYFRAME) * 2) + DpiGetSystemMetrics(SM_CYCAPTION);
     int btnAreaDy = DpiScale(40);
     if (btnCopyToClipboard) {
-        btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + (2 * ButtonPadding(hwnd)));
+        btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + (2 * ButtonPadding()));
     }
-    int bottomMargin = ButtonPadding(hwnd);
+    int bottomMargin = ButtonPadding();
     int wantedDy = ((nLines + 3) * lineHeight) + editBorderDy + btnAreaDy + bottomMargin + frameDy;
 
     // cap at 80% of screen

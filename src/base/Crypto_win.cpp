@@ -208,9 +208,8 @@ bool IsPEFileSigned(Str filePath) {
 
     if (status == ERROR_SUCCESS) {
         return true; // File is signed and signature is valid
-    } else {
-        return false; // File is not signed or signature is not valid
     }
+    return false; // File is not signed or signature is not valid
 }
 
 TempStr GetExecutableSignerTemp(Str exePath) {

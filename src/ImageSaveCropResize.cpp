@@ -464,15 +464,15 @@ static int ImageToDisplayH(ImageEditWindow* ew, int ih) {
 static void LayoutControls(ImageEditWindow* ew);
 static void CalcImageLayout(ImageEditWindow* ew);
 
-static int ImageEditImagePadding(ImageEditWindow* ew) {
+static int ImageEditImagePadding() {
     return DpiScale(kImagePadding);
 }
 
-static int ImageEditRowPadding(ImageEditWindow* ew) {
+static int ImageEditRowPadding() {
     return DpiScale(kRowPadding);
 }
 
-static int ImageEditButtonPadding(ImageEditWindow* ew) {
+static int ImageEditButtonPadding() {
     return DpiScale(kButtonPadding);
 }
 
@@ -481,7 +481,7 @@ static int ImageEditLabelDy(ImageEditWindow* ew) {
 }
 
 static int ImageEditPathLabelRowDy(ImageEditWindow* ew) {
-    return ImageEditLabelDy(ew) + ImageEditRowPadding(ew);
+    return ImageEditLabelDy(ew) + ImageEditRowPadding();
 }
 
 static void ImageEditApplyFont(ImageEditWindow* ew) {
@@ -599,7 +599,7 @@ static Size CalcImageEditWindowSizeEx(HWND dpiHwnd, HWND hwndParent, bool fromRe
     int imagePadding;
     int controlDy;
     if (ew && ew->hwnd) {
-        imagePadding = ImageEditImagePadding(ew);
+        imagePadding = ImageEditImagePadding();
         controlDy = GetControlAreaDy(ew);
         dpiHwnd = ew->hwnd;
     } else {
@@ -627,8 +627,7 @@ static Size CalcImageEditWindowSizeEx(HWND dpiHwnd, HWND hwndParent, bool fromRe
     return {winW, winH};
 }
 
-static void ImageEditLayoutDimensions(ImageEditWindow* ew, int imgW, int imgH, bool downsizing, int* layoutW,
-                                      int* layoutH) {
+static void ImageEditLayoutDimensions(int imgW, int imgH, bool downsizing, int* layoutW, int* layoutH) {
     *layoutW = imgW;
     *layoutH = imgH;
     if (downsizing) {
@@ -642,7 +641,7 @@ static void ImageEditLayoutDimensions(ImageEditWindow* ew, int imgW, int imgH, b
 static void ResizeImageEditWindowToImage(ImageEditWindow* ew, int prevW, int prevH) {
     bool downsizing = ew->imgW < prevW || ew->imgH < prevH;
     int layoutW, layoutH;
-    ImageEditLayoutDimensions(ew, ew->imgW, ew->imgH, downsizing, &layoutW, &layoutH);
+    ImageEditLayoutDimensions(ew->imgW, ew->imgH, downsizing, &layoutW, &layoutH);
     Size winSize = CalcImageEditWindowSizeEx(ew->hwnd, ew->hwndParent, ew->fromRenderedBitmap, layoutW, layoutH, ew);
     SetWindowPos(ew->hwnd, nullptr, 0, 0, winSize.dx, winSize.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     HwndCenterDialog(ew->hwnd, ew->hwndParent);
@@ -656,7 +655,7 @@ static void CalcImageLayout(ImageEditWindow* ew) {
     ew->imgAreaH = cRc.dy - GetControlAreaDy(ew);
     ew->imgAreaH = std::max(ew->imgAreaH, 10);
 
-    int imgPad = ImageEditImagePadding(ew);
+    int imgPad = ImageEditImagePadding();
     // fit image within image area with padding
     int availW = cRc.dx - (2 * imgPad);
     int availH = ew->imgAreaH - (2 * imgPad);
@@ -685,7 +684,7 @@ static void CalcImageLayout(ImageEditWindow* ew) {
 // Tries to grow in the direction of the drag, moving the window if needed,
 // but stops at screen edges.
 static void GrowWindowIfNeeded(ImageEditWindow* ew, DragEdge edge) {
-    int imgPad = ImageEditImagePadding(ew);
+    int imgPad = ImageEditImagePadding();
     // calculate how much display space the new size needs
     int neededDispW = ImageToDisplayW(ew, ew->newW) + (2 * imgPad);
     int neededDispH = ImageToDisplayH(ew, ew->newH) + (2 * imgPad);
@@ -1098,7 +1097,7 @@ static void LayoutControls(ImageEditWindow* ew) {
         return;
     }
     Rect cRc = HwndClientRect(ew->hwnd);
-    int btnPad = ImageEditButtonPadding(ew);
+    int btnPad = ImageEditButtonPadding();
     int w = cRc.dx - (2 * btnPad);
     Constraints bc = Loose({w, Inf});
     Size layoutSize = ew->controlLayout->Layout(bc);
@@ -2201,7 +2200,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
 
         if (ew->staticPathLabel && ew->destEdit) {
             int labelShift = ew->destEdit->GetLeftTextMargin();
-            auto* pathPad = new Padding(ew->staticPathLabel, {0, 0, ImageEditRowPadding(ew), labelShift});
+            auto* pathPad = new Padding(ew->staticPathLabel, {0, 0, ImageEditRowPadding(), labelShift});
             vbox->AddChild(pathPad);
         }
 
@@ -2214,7 +2213,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             row2->AddChild(ew->btnBrowse);
             ew->btnSave->padding = DpiScaledInsets(0, 0, 0, 4);
             row2->AddChild(ew->btnSave);
-            auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(ew), 0});
+            auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(), 0});
             vbox->AddChild(row2Pad);
         }
 

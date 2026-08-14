@@ -106,9 +106,8 @@ static LRESULT CALLBACK WindowBaseWindowProc(HWND hwnd, UINT msg, WPARAM wparam,
         }
         DpiSetFromHwnd(hwnd);
         return wnd->WndProcDefault(hwnd, msg, wparam, lparam);
-    } else {
-        return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
+    return ::DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
 static LRESULT CALLBACK WindowBaseSubclassedWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
@@ -819,10 +818,9 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 LRESULT WindowBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     if (subclassId) {
         return ::DefSubclassProc(hwnd, msg, wparam, lparam);
-    } else {
-        // TODO: also DefSubclassProc?
-        return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
+    // TODO: also DefSubclassProc?
+    return ::DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
 // PreTranslate: onPreTranslate first (WM_CHAR / KEYUP / etc.), then key-downs

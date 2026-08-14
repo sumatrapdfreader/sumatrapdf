@@ -290,9 +290,9 @@ void ChangeColorWnd::InvalidateSwatches() {
     if (swatchPreview) {
         swatchPreview->Invalidate();
     }
-    for (int i = 0; i < kMaxCustomColors; i++) {
-        if (swatchCustom[i]) {
-            swatchCustom[i]->Invalidate();
+    for (VirtCustom* sw : swatchCustom) {
+        if (sw) {
+            sw->Invalidate();
         }
     }
 }

@@ -277,8 +277,8 @@ static void PopulateToolbarLayout() {
     };
 
     if (str::IsEmptyOrWhiteSpace(setting)) {
-        for (int i = 0; i < kButtonsCount; i++) {
-            addButton(gToolbarButtons[i]);
+        for (const ToolbarButtonInfo& tbi : gToolbarButtons) {
+            addButton(tbi);
         }
         gLayoutHasPageBox = true;
         return;
@@ -726,7 +726,7 @@ static Rect CanvasRectInFrame(MainWindow* win) {
 // when the overlay toolbar sits at the bottom, lift it above the horizontal
 // scrollbar so it doesn't cover it. The height is reserved even when the
 // scrollbar isn't currently visible, so the toolbar's position is stable.
-static int OverlayToolbarBottomScrollbarOffset(MainWindow* win) {
+static int OverlayToolbarBottomScrollbarOffset() {
     if (ScrollbarsAreHidden()) {
         return 0;
     }
@@ -749,7 +749,7 @@ static Rect OverlayToolbarRect(MainWindow* win) {
     int x = canvas.x + ((canvas.dx - natW) / 2);
     int y = canvas.y;
     if (ToolbarAtBottom()) {
-        y = canvas.y + canvas.dy - h - OverlayToolbarBottomScrollbarOffset(win);
+        y = canvas.y + canvas.dy - h - OverlayToolbarBottomScrollbarOffset();
     }
     return {x, y, natW, h};
 }
@@ -1414,7 +1414,8 @@ static void BuildToolbarLayout(MainWindow* win) {
             box->AddChild(total);
             tb->items.Append(label);
             continue;
-        } else if (bi.cmdId == 0 || (SkipBuiltInButton(bi) && !bi.svgIcon && !bi.isText)) {
+        }
+        if (bi.cmdId == 0 || (SkipBuiltInButton(bi) && !bi.svgIcon && !bi.isText)) {
             w = MakeToolbarSeparator(tb->rowDy);
         } else if (bi.isText) {
             auto* b = new VirtButton(noTranslate ? bi.toolTip : trans::GetTranslation(bi.toolTip), tb->platformFont);
