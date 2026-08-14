@@ -591,6 +591,8 @@ struct Tooltip : ControlBase {
     };
 
     Tooltip();
+    ~Tooltip() override;
+
     HWND Create(const CreateArgs&);
     Size GetIdealSize() override;
 
@@ -614,17 +616,11 @@ struct Tooltip : ControlBase {
     HWND parent = nullptr;
 
     Vec<int> tooltipIds;
-};
-
-struct TooltipInfo {
-    Str s;
-    Rect r;
-    int id;
+    Str lastText;
 };
 
 int TooltipGetCount(HWND hwnd);
 void TooltipRemoveAll(HWND hwnd);
-void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools);
 
 //--- Edit
 using TextChangedHandler = Func0;

@@ -102,7 +102,6 @@ struct TabsCtrl : VirtCtrl {
     VirtRoot* vroot = nullptr;
     // in tab order (children are reversed when the UI is RTL)
     Vec<TabCtrl*> tabCtrls;
-    struct Tooltip* tooltip = nullptr;
     int selectedIdx = -1;
 
     // tracking state of which tab is highlighted etc.
@@ -185,8 +184,6 @@ struct TabsCtrl : VirtCtrl {
     bool IsValidIdx(int idx);
 
     void SetHighlighted(int idx);
-
-    HWND GetToolTipsHwnd();
 
     void LayoutTabs();
     void ScheduleRepaint();

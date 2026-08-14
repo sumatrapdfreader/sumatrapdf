@@ -48,33 +48,6 @@ void TooltipRemoveAll(HWND hwnd) {
     }
 }
 
-void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools) {
-    int nRtl = 0;
-    int nLtr = 0;
-    for (int i = 0; i < nTools; i++) {
-        TooltipInfo& tti = tools[i];
-        TempWStr ws = ToWStrTemp(tti.s);
-        bool isRtl = IsTextRtl(ws);
-        if (isRtl) {
-            nRtl++;
-        } else {
-            nLtr++;
-        }
-        TOOLINFOW ti = {};
-        ti.cbSize = sizeof(ti);
-        ti.hwnd = owner;
-        ti.uId = (UINT_PTR)tti.id;
-        ti.lpszText = (WCHAR*)ws.s;
-        ti.rect = ToRECT(tti.r);
-        // Tab control and similar multi-tool hosts still use subclass tracking.
-        ti.uFlags = TTF_SUBCLASS;
-        BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
-        ReportIfFast(!ok);
-    }
-    bool isRtl = nRtl > nLtr;
-    HwndSetRtl(hwnd, isRtl);
-}
-
 static TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
     WCHAR buf[512];
     TOOLINFOW ti = {};
@@ -182,6 +155,10 @@ Tooltip::Tooltip() {
     kind = kindTooltip;
 }
 
+Tooltip::~Tooltip() {
+    str::Free(lastText);
+}
+
 HWND Tooltip::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.className = TOOLTIPS_CLASS;
@@ -249,14 +226,14 @@ int Tooltip::SetSingle(Str s, const Rect& rc, bool multiline) {
         s = Str(ShortenStringUtf8InTheMiddleTemp(s, 250));
     }
 
-    // Same tip text: keep the tool, only follow the cursor (avoids flicker).
-    if (len(tooltipIds) == 1) {
-        TempStr cur = GetTextTemp(tooltipIds[0]);
-        if (str::Eq(s, cur)) {
-            TooltipUpdateRect(hwnd, parent, tooltipIds[0], rc);
-            TooltipTrackActivateAtCursor(hwnd, parent, tooltipIds[0]);
-            return tooltipIds[0];
-        }
+    // Same tip text: keep the tool and leave it where it first appeared.
+    // Re-tracking to the cursor made the bubble follow the mouse inside the
+    // same control (home-page buttons, rich-text links, canvas infotips).
+    // Compare against lastText, not TTM_GETTEXT: the latter can fail to echo
+    // the string back and would then re-create the tip on every WM_SETCURSOR.
+    if (len(tooltipIds) == 1 && str::Eq(s, lastText)) {
+        TooltipUpdateRect(hwnd, parent, tooltipIds[0], rc);
+        return tooltipIds[0];
     }
 
     // Different text or no tool: replace.
@@ -265,6 +242,7 @@ int Tooltip::SetSingle(Str s, const Rect& rc, bool multiline) {
     if (id < 0) {
         return -1;
     }
+    str::ReplaceWithCopy(&lastText, s);
     TooltipTrackActivateAtCursor(hwnd, parent, id);
     return id;
 }
@@ -281,12 +259,9 @@ int Tooltip::SetSingleAt(Str s, const Rect& rc, Point screenPos, bool multiline,
     }
 
     int id = -1;
-    if (len(tooltipIds) == 1) {
-        TempStr cur = GetTextTemp(tooltipIds[0]);
-        if (str::Eq(s, cur)) {
-            id = tooltipIds[0];
-            TooltipUpdateRect(hwnd, parent, id, rc);
-        }
+    if (len(tooltipIds) == 1 && str::Eq(s, lastText)) {
+        id = tooltipIds[0];
+        TooltipUpdateRect(hwnd, parent, id, rc);
     }
     if (id < 0) {
         Delete();
@@ -295,6 +270,7 @@ int Tooltip::SetSingleAt(Str s, const Rect& rc, Point screenPos, bool multiline,
             return -1;
         }
     }
+    str::ReplaceWithCopy(&lastText, s);
 
     Size tipSz = TooltipGetBubbleSize(hwnd, parent, id);
     int x = screenPos.x;
@@ -332,6 +308,8 @@ int Tooltip::Count() {
 
 void Tooltip::Delete(int id) {
     (void)id;
+    str::Free(lastText);
+    lastText = {};
     if (!hwnd) {
         tooltipIds.Reset();
         return;

@@ -269,7 +269,12 @@ void TabCtrl::OnMouseUp(VirtMouseEvent* ev) {
     ev->didHandle = true;
 }
 
+// VirtRoot::UpdateTooltip shows this. A second TTF_SUBCLASS tooltip on the
+// tab HWND used to appear as well, so the tip showed twice.
 void TabCtrl::OnGetTooltip(VirtTooltipEvent* ev) {
+    if (!tabsCtrl || !tabsCtrl->withToolTips || !ti) {
+        return;
+    }
     ev->tip = str::DupTemp(ti->tooltip);
 }
 
@@ -317,8 +322,6 @@ TabsCtrl::TabsCtrl() {
 
 TabsCtrl::~TabsCtrl() {
     Destroy();
-    delete tooltip;
-    tooltip = nullptr;
     DeleteVecMembers(tabs);
     // TabCtrl children are owned via VirtCtrl::children
 }
@@ -445,17 +448,6 @@ void TabsCtrl::LayoutTabs() {
         // absolute client coords; TabCtrl::SetBounds rebases via parent origin
         t->SetBounds({rect.x + r.x, rect.y + r.y, r.dx, r.dy});
         x += tabSize.dx;
-    }
-
-    if (withToolTips && tooltip) {
-        TooltipInfo* tools = AllocArrayTemp<TooltipInfo>(nTabs);
-        for (int i = 0; i < nTabs; i++) {
-            tools[i].s = tabs[i]->tooltip;
-            tools[i].id = i;
-            tools[i].r = tabCtrls[i]->BoundsInWindow();
-        }
-        TooltipRemoveAll(tooltip->hwnd);
-        TooltipAddTools(tooltip->hwnd, hwnd, tools, nTabs);
     }
 }
 
@@ -999,15 +991,6 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
     Vec<VirtCtrl*> tops;
     tops.Append(this);
     vroot->SetTops(tops);
-
-    if (withToolTips) {
-        Tooltip::CreateArgs targs;
-        targs.parent = hwnd;
-        targs.font = args.font;
-        tooltip = new Tooltip();
-        tooltip->Create(targs);
-        HwndSetWindowStyle(tooltip->hwnd, TTS_NOPREFIX, true);
-    }
     return hwnd;
 }
 
@@ -1049,7 +1032,7 @@ void TabsCtrl::SetTabDirty(int idx, bool dirty) {
     TabInfo* tab = GetTab(idx);
     if (tab && tab->isDirty != dirty) {
         tab->isDirty = dirty;
-        LayoutTabs(); // rebuilds tooltips from current ti->tooltip values
+        LayoutTabs();
         // LayoutTabs only schedules a repaint; force it so the dirty (red dot)
         // indicator updates immediately (e.g. right after editing a form field)
         HwndRepaintNow(hwnd);
@@ -1154,8 +1137,4 @@ void TabsCtrl::SetHighlighted(int idx) {
     }
     UpdateHover(tabHighlighted);
     HwndRepaintNow(hwnd);
-}
-
-HWND TabsCtrl::GetToolTipsHwnd() {
-    return tooltip ? tooltip->hwnd : nullptr;
 }
