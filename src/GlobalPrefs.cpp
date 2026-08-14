@@ -201,19 +201,6 @@ void FreeSessionDataVec(Vec<SessionData*>* sessionData) {
     sessionData->Reset();
 }
 
-ParsedColor* GetParsedColor(ParsedColor& parsed) {
-    ParseColor(parsed);
-    return &parsed;
-}
-
-Color GetParsedColor(ParsedColor& parsed, Color def) {
-    ParseColor(parsed);
-    if (parsed.parsedOk) {
-        return parsed.col;
-    }
-    return def;
-}
-
 void SetFileStatePath(FileState* fs, Str path) {
     if (fs->filePath && str::EqI(fs->filePath, path)) {
         return;

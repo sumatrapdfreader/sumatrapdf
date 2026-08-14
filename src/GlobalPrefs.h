@@ -21,8 +21,22 @@ TabState* NewTabState(FileState*);
 void DeleteTabState(TabState*);
 void FreeSessionData(SessionData*);
 void FreeSessionDataVec(Vec<SessionData*>*);
-ParsedColor* GetParsedColor(ParsedColor& parsed);
-Color GetParsedColor(ParsedColor& parsed, Color def);
+// A color setting's parse, done on first use and cached in the setting itself.
+// The Theme*Color() accessors call these on every paint, so the already-parsed
+// case has to be a load and a branch, not a call into another translation unit.
+inline ParsedColor* GetParsedColor(ParsedColor& parsed) {
+    if (!parsed.wasParsed) {
+        ParseColor(parsed);
+    }
+    return &parsed;
+}
+
+inline Color GetParsedColor(ParsedColor& parsed, Color def) {
+    if (!parsed.wasParsed) {
+        ParseColor(parsed);
+    }
+    return parsed.parsedOk ? parsed.col : def;
+}
 
 void SetFileStatePath(FileState* fs, Str path);
 void SetFileStatePath(FileState* fs, WStr path);
