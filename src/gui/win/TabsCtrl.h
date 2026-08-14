@@ -35,7 +35,7 @@ struct TabInfo {
 struct TabsCtrl : VirtCtrl {
     struct CreateArgs {
         HWND parent = nullptr;
-        HFONT font = nullptr;
+        PlatformFont* font = nullptr;
         bool withToolTips = false;
         int ctrlID = 0;
         int tabDefaultDx = 300;
@@ -88,7 +88,7 @@ struct TabsCtrl : VirtCtrl {
 
     // host HWND (child of the frame); GetHwnd() also returns this once attached
     HWND hwnd = nullptr;
-    HFONT font = nullptr; // not owned
+    PlatformFont* font = nullptr; // interned, not owned
 
     int ctrlID = 0;
     bool withToolTips = false;
@@ -159,8 +159,8 @@ struct TabsCtrl : VirtCtrl {
     void SetIsVisible(bool);
     bool IsVisible() const;
 
-    HFONT GetFont() const;
-    void SetFont(HFONT);
+    PlatformFont* GetFont() const;
+    void SetFont(PlatformFont*);
 
     int InsertTab(int idx, TabInfo*, bool update = true);
     TabInfo* GetTab(int idx);

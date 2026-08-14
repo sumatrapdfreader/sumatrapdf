@@ -2812,9 +2812,7 @@ static void ApplyDarkModeToInfotip(MainWindow* win) {
         return;
     }
     DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
-    HFONT font = GetAppFont();
-    win->infotip->SetFont(font);
-    HwndSetFont(win->infotip->hwnd, font);
+    win->infotip->SetFont(GetAppFont());
 }
 
 static MainWindow* CreateMainWindow() {
@@ -7120,30 +7118,27 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
     if (!win || dpi <= 0) {
         return;
     }
-    HFONT treeFont = GetAppTreeFontForDpi(dpi);
-    HFONT labelFont = GetAppSidebarLabelFontForDpi(dpi);
-    HFONT appFont = GetAppFontForDpi(dpi);
+    PlatformFont* treeFont = GetAppTreeFontForDpi(dpi);
+    PlatformFont* labelFont = GetAppSidebarLabelFontForDpi(dpi);
+    PlatformFont* appFont = GetAppFontForDpi(dpi);
 
     if (win->tocTreeView && win->tocTreeView->hwnd) {
-        HwndSetTreeFontForDpi(win->tocTreeView->hwnd, treeFont, dpi);
+        HwndSetTreeFontForDpi(win->tocTreeView->hwnd, treeFont->GetHFont(), dpi);
     }
     if (win->favTreeView && win->favTreeView->hwnd) {
-        HwndSetTreeFontForDpi(win->favTreeView->hwnd, treeFont, dpi);
+        HwndSetTreeFontForDpi(win->favTreeView->hwnd, treeFont->GetHFont(), dpi);
     }
-    PlatformFont* labelPlatformFont = GetPlatformFont(labelFont);
     if (win->tocLabel) {
-        win->tocLabel->font = labelPlatformFont;
+        win->tocLabel->font = labelFont;
     }
     if (win->favLabel) {
-        win->favLabel->font = labelPlatformFont;
+        win->favLabel->font = labelFont;
     }
     if (win->tocFilterEdit) {
         win->tocFilterEdit->SetFont(appFont);
-        HwndSetFont(win->tocFilterEdit->hwnd, appFont);
     }
     if (win->favFilterEdit) {
         win->favFilterEdit->SetFont(appFont);
-        HwndSetFont(win->favFilterEdit->hwnd, appFont);
     }
     // re-layout VBox children in the sidebar boxes
     if (win->hwndTocBox) {
@@ -9330,7 +9325,7 @@ static Pixmap* MakeDebugGradientPixmap(int dx, int dy) {
 // content for a notification, built as a VirtCtrl tree: a generated Pixmap shown
 // by a VirtCtrl, with a caption below it
 static ILayout* MakeDebugPixmapNotifContent(HWND hwnd) {
-    PlatformFont* font = GetPlatformFont(GetAppBiggerFont());
+    PlatformFont* font = GetAppBiggerFont();
     auto* box = new VBox();
     box->alignCross = CrossAxisAlign::CrossCenter;
 

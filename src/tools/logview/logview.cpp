@@ -412,13 +412,14 @@ static void DrainQueue() {
     }
 
     HDC hdc = GetDC(gHwndLog);
-    HFONT old = (HFONT)SelectObject(hdc, gMonoFont->GetHFont());
-    for (int i = 0; i < n; i++) {
-        PendingLine& pl = local[i];
-        IngestLine(hdc, pl.connNo, Str(pl.text));
-        free(pl.text);
+    {
+        ScopedSelectFont selectFont(hdc, gMonoFont->GetHFont());
+        for (int i = 0; i < n; i++) {
+            PendingLine& pl = local[i];
+            IngestLine(hdc, pl.connNo, Str(pl.text));
+            free(pl.text);
+        }
     }
-    SelectObject(hdc, old);
     ReleaseDC(gHwndLog, hdc);
 
     // pause is automatic: follow the tail only while the tab is in follow mode
@@ -670,49 +671,49 @@ static void PaintLog(HWND hwnd) {
     HDC hdc = CreateCompatibleDC(hdcWin);
     HBITMAP bmp = CreateCompatibleBitmap(hdcWin, clientW, clientH);
     HBITMAP oldBmp = (HBITMAP)SelectObject(hdc, bmp);
-    HFONT oldFont = (HFONT)SelectObject(hdc, gMonoFont->GetHFont());
+    {
+        ScopedSelectFont selectFont(hdc, gMonoFont->GetHFont());
 
-    HBRUSH bgBrush = CreateSolidBrush(kColLogBg);
-    FillRect(hdc, &client, bgBrush);
-    DeleteObject(bgBrush);
+        HBRUSH bgBrush = CreateSolidBrush(kColLogBg);
+        FillRect(hdc, &client, bgBrush);
+        DeleteObject(bgBrush);
 
-    Tab* tab = SelTab();
-    if (tab && len(tab->filtered) > 0) {
-        int rows = clientH / gLineDy + 1;
-        int top = tab->scrollTop;
-        int nFiltered = len(tab->filtered);
-        int x = -tab->scrollX;
-        for (int row = 0; row < rows; row++) {
-            int fi = top + row;
-            if (fi >= nFiltered) {
-                break;
+        Tab* tab = SelTab();
+        if (tab && len(tab->filtered) > 0) {
+            int rows = clientH / gLineDy + 1;
+            int top = tab->scrollTop;
+            int nFiltered = len(tab->filtered);
+            int x = -tab->scrollX;
+            for (int row = 0; row < rows; row++) {
+                int fi = top + row;
+                if (fi >= nFiltered) {
+                    break;
+                }
+                int lineIdx = tab->filtered[fi];
+                Str line = tab->logs[lineIdx];
+                DrawLogLine(hdc, x, row * gLineDy, line);
             }
-            int lineIdx = tab->filtered[fi];
-            Str line = tab->logs[lineIdx];
-            DrawLogLine(hdc, x, row * gLineDy, line);
+            DrawValuesOverlay(hdc, client, tab);
+        } else {
+            // empty state
+            const WCHAR* msg = L"No logs yet";
+            WCHAR buf[256];
+            if (tab && len(tab->logs) > 0 && gFilter.len > 0) {
+                WStr wf = ToWStrTemp(gFilter);
+                wsprintfW(buf, L"No results matching '%s'", wf.s);
+                msg = buf;
+            }
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, MkRgb(0x80, 0x80, 0x80));
+            RECT rc = client;
+            rc.top = clientH / 4;
+            ScopedSelectFont selectUiFont(hdc, gUiFont->GetHFont());
+            DrawTextW(hdc, msg, -1, &rc, DT_CENTER | DT_SINGLELINE);
         }
-        DrawValuesOverlay(hdc, client, tab);
-    } else {
-        // empty state
-        const WCHAR* msg = L"No logs yet";
-        WCHAR buf[256];
-        if (tab && len(tab->logs) > 0 && gFilter.len > 0) {
-            WStr wf = ToWStrTemp(gFilter);
-            wsprintfW(buf, L"No results matching '%s'", wf.s);
-            msg = buf;
-        }
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, MkRgb(0x80, 0x80, 0x80));
-        RECT rc = client;
-        rc.top = clientH / 4;
-        HFONT oldF = (HFONT)SelectObject(hdc, gUiFont->GetHFont());
-        DrawTextW(hdc, msg, -1, &rc, DT_CENTER | DT_SINGLELINE);
-        SelectObject(hdc, oldF);
+
+        BitBlt(hdcWin, 0, 0, clientW, clientH, hdc, 0, 0, SRCCOPY);
     }
 
-    BitBlt(hdcWin, 0, 0, clientW, clientH, hdc, 0, 0, SRCCOPY);
-
-    SelectObject(hdc, oldFont);
     SelectObject(hdc, oldBmp);
     DeleteObject(bmp);
     DeleteDC(hdc);
@@ -1166,7 +1167,7 @@ bool LogViewWnd::Create() {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = gUiFont->GetHFont();
+        args.font = gUiFont;
         args.withBorder = true;
         args.cueText = "filter '/'";
         filterEdit = new Edit();
@@ -1248,11 +1249,12 @@ static void CreateFonts() {
 
     gMonoFont = GetPlatformFont("Consolas", 10, PlatformFontStyle::Regular);
 
-    HFONT old = (HFONT)SelectObject(hdc, gMonoFont->GetHFont());
-    TEXTMETRICW tm{};
-    GetTextMetricsW(hdc, &tm);
-    gLineDy = tm.tmHeight + DpiScale(2);
-    SelectObject(hdc, old);
+    {
+        ScopedSelectFont selectFont(hdc, gMonoFont->GetHFont());
+        TEXTMETRICW tm{};
+        GetTextMetricsW(hdc, &tm);
+        gLineDy = tm.tmHeight + DpiScale(2);
+    }
     ReleaseDC(nullptr, hdc);
 }
 

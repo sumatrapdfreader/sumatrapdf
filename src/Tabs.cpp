@@ -75,9 +75,9 @@ static void UpdateTabTitle(WindowTab* tab) {
 
 int GetTabbarHeight(HWND hwnd, float factor) {
     DpiSetFromHwnd(hwnd);
+    PlatformFont* font = GetAppFont();
     int tabDy = DpiScale(kTabBarDy);
-    HFONT hfont = GetAppFont();
-    int fontDyWithPadding = FontDyPx(hwnd, hfont) + DpiScale(2);
+    int fontDyWithPadding = PlatformFontLineHeight(font) + DpiScale(2);
     tabDy = std::max(fontDyWithPadding, tabDy);
     // Guard against the bad per-window DPI Wine reports (93e5b4e47: the tab bar
     // and caption came out tiny). Wine only, deliberately: we are PerMonitorV2,
@@ -87,7 +87,7 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     // (discussion #4831).
     if (IsRunningOnWine()) {
         int minDy = DpiScaleByDpi(DpiGetForHwnd(HWND_DESKTOP), kTabBarDy);
-        int minFontDy = FontDyPx(hwnd, hfont) + DpiScaleByDpi(DpiGetForHwnd(HWND_DESKTOP), 2);
+        int minFontDy = PlatformFontLineHeight(font) + DpiScaleByDpi(DpiGetForHwnd(HWND_DESKTOP), 2);
         minDy = std::max(minFontDy, minDy);
         tabDy = std::max(tabDy, minDy);
         int res = (int)((float)tabDy * factor);

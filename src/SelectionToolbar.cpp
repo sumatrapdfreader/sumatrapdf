@@ -63,9 +63,7 @@ struct SelectionToolbar {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr; // tab the current selection belongs to
     HWND hwnd = nullptr;
-    HFONT font = nullptr;
-    bool fontOwned = false;
-    PlatformFont* platformFont = nullptr; // not owned, interned
+    PlatformFont* font = nullptr;
     // the row of buttons; rebuilt whenever the set of buttons changes
     ILayout* layout = nullptr;
     // the buttons of `layout`; owned here, the controls themselves by `layout`
@@ -212,16 +210,6 @@ static void UpdateToolbarWindowRgn(HWND hwnd, int cornerRadius, int dx, int dy) 
     }
 }
 
-static HFONT CreateScaledFontFrom(HFONT base, int pct) {
-    if (!base) {
-        return nullptr;
-    }
-    LOGFONTW lf{};
-    GetObjectW(base, sizeof(lf), &lf);
-    lf.lfHeight = MulDiv(lf.lfHeight, pct, 100);
-    return CreateFontIndirectW(&lf);
-}
-
 static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
     Color fgCol = SelBarTextColor();
     Color bgCol = SelBarBg();
@@ -299,7 +287,7 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     Color textCol = SelBarTextColor();
     Color mutedCol = SelBarMutedTextColor();
 
-    int textDy = HwndMeasureText(hwnd, StrL("Mg"), tb->font).dy;
+    int textDy = PlatformFontMeasureText(tb->font, StrL("Mg")).dy;
     int rowDy = textDy + (2 * padY);
     UpdateButtonIcons(tb, textDy);
 
@@ -316,7 +304,7 @@ static void LayoutToolbar(SelectionToolbar* tb) {
             ib->onClick = MkFunc1(OnSelToolbarButtonClicked, tb);
             w = ib;
         } else {
-            auto* tbtn = new SelToolbarTextButton(ButtonText(b), tb->platformFont);
+            auto* tbtn = new SelToolbarTextButton(ButtonText(b), tb->font);
             tbtn->textPadding = {padY, padX, padY, padX};
             tbtn->textColor = textCol;
             tbtn->textColorDisabled = mutedCol;
@@ -512,12 +500,7 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
         delete tb;
         return nullptr;
     }
-    tb->font = CreateScaledFontFrom(GetAppFont(), kToolbarFontPct);
-    tb->fontOwned = tb->font != nullptr;
-    if (!tb->font) {
-        tb->font = GetAppFont();
-    }
-    tb->platformFont = GetPlatformFont(tb->font);
+    tb->font = GetScaledPlatformFont(GetAppFont(), kToolbarFontPct);
     win->selectionToolbar = tb;
     return tb;
 }
@@ -702,9 +685,6 @@ void DeleteSelectionToolbar(MainWindow* win) {
     // the buttons first: they report their destruction to the root
     delete tb->layout;
     delete tb->vroot;
-    if (tb->fontOwned && tb->font) {
-        DeleteObject(tb->font);
-    }
     delete tb;
     win->selectionToolbar = nullptr;
 }

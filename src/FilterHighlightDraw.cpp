@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/ScopedWin.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 
@@ -197,7 +198,7 @@ void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, Color treeBg, Color treeT
 // (command-palette style). `font` should be the tree's font (WM_GETFONT) so
 // extents match the control's text; pass nullptr to keep the HDC font.
 void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec& filterWords, Color bgCol,
-                                 Color txtCol, HFONT font) {
+                                 Color txtCol, PlatformFont* font) {
     // TreeView has already painted the row. We repaint only the text label:
     // solid bg (selection or window) so themed double-draw artifacts go away,
     // yellow/accent underlays for each match word, then the string in runs so
@@ -210,10 +211,7 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
         return;
     }
 
-    HFONT oldFont = nullptr;
-    if (font) {
-        oldFont = (HFONT)SelectObject(hdc, font);
-    }
+    ScopedSelectFont selectFont(hdc, font ? font->GetHFont() : nullptr);
 
     int textLen = text.len;
     u8* hl = AllocArrayTemp<u8>(textLen);
@@ -260,9 +258,6 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
         }
     }
     if (nRanges == 0) {
-        if (oldFont) {
-            SelectObject(hdc, oldFont);
-        }
         return;
     }
 
@@ -332,10 +327,6 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
     }
     SetBkMode(hdc, oldBkMode);
     SetTextColor(hdc, oldTxtCol);
-
-    if (oldFont) {
-        SelectObject(hdc, oldFont);
-    }
 }
 
 bool FilterMatches(Str str, const StrVec& words) {

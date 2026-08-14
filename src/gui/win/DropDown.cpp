@@ -8,6 +8,7 @@
 #include "gui/UIModels.h"
 
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
 
 //- DropDown
@@ -121,13 +122,12 @@ void DropDown::SetItemsSeqStrings(SeqStrings items) {
 }
 
 Size DropDown::GetIdealSize() {
-    HFONT hfont = GetWindowFont(hwnd);
-    Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
+    Size s1 = PlatformFontMeasureText(font, "Minimal");
 
     int n = len(items);
     for (int i = 0; i < n; i++) {
         Str s = items[i];
-        Size s2 = HwndMeasureText(hwnd, s, hfont);
+        Size s2 = PlatformFontMeasureText(font, s);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);
     }

@@ -10,6 +10,7 @@
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
+#include "gui/PlatformFont.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -2467,18 +2468,18 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     }
 
     Str text = modi && modi->text ? modi->text : StrL("Dummy");
-    HFONT font = GetAppMenuFont();
+    PlatformFont* font = GetAppMenuFont();
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(text, &shortcutText);
 
-    auto size = HwndMeasureText(hwnd, menuText, font);
+    auto size = PlatformFontMeasureText(font, menuText);
     mis->itemHeight = size.dy;
     int dx = size.dx;
     if (shortcutText) {
         // add space betweeen menu text and shortcut
-        size = HwndMeasureText(hwnd, "    ", font);
+        size = PlatformFontMeasureText(font, "    ");
         dx += size.dx;
-        size = HwndMeasureText(hwnd, shortcutText, font);
+        size = PlatformFontMeasureText(font, shortcutText);
         dx += size.dx;
     }
     auto padX = DpiScale(kMenuPaddingX);
@@ -2536,8 +2537,8 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
     auto* hdc = dis->hDC;
-    HFONT font = GetAppMenuFont();
-    ScopedSelectFont restoreFont(hdc, font);
+    PlatformFont* font = GetAppMenuFont();
+    ScopedSelectFont restoreFont(hdc, font->GetHFont());
 
     Color bgCol = ThemeMainWindowBackgroundColor();
     Color txtCol = ThemeWindowTextColor();
@@ -2737,8 +2738,8 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
 // --- Menu bar as rebar control (used when tabs are in titlebar) ---
 
 static int MenuBarToolbarIdealDy(MainWindow* win) {
-    HFONT font = GetAppMenuFont();
-    int dy = FontDyPx(win->hwndFrame, font) + DpiScale(4);
+    PlatformFont* font = GetAppMenuFont();
+    int dy = PlatformFontLineHeight(font) + DpiScale(4);
     int minDy = DpiScale(kTabBarDy);
     return std::max(dy, minDy);
 }
@@ -3036,8 +3037,8 @@ void CreateMenuBarRebar(MainWindow* win) {
         }
     }
 
-    HFONT font = GetAppMenuFont();
-    HwndSetFont(win->hwndMenuToolbar, font);
+    PlatformFont* font = GetAppMenuFont();
+    HwndSetFont(win->hwndMenuToolbar, font->GetHFont());
 
     DWORD tbExStyle = TbGetExtendedStyle(win->hwndMenuToolbar);
     tbExStyle |= TBSTYLE_EX_MIXEDBUTTONS;

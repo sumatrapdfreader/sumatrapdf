@@ -969,7 +969,7 @@ static int PageEditPadR() {
     return PageEditPadL() + DpiScale(4);
 }
 
-static Edit* CreatePageEdit(MainWindow* win, HFONT font, int iconDy) {
+static Edit* CreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
     Edit::CreateArgs args;
     args.parent = win->hwndToolbar;
     args.font = font;
@@ -1348,7 +1348,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             tb->pageLabel = label;
             box->AddChild(label);
 
-            Edit* pageEdit = CreatePageEdit(win, tb->platformFont->GetHFont(), tb->iconSize);
+            Edit* pageEdit = CreatePageEdit(win, tb->platformFont, tb->iconSize);
             win->pageEdit = pageEdit;
             box->AddChild(pageEdit);
 
@@ -1545,7 +1545,7 @@ void CreateToolbar(MainWindow* win) {
     if (newSize > maxFontSize) {
         newSize = maxFontSize;
     }
-    tb->platformFont = GetPlatformFont(GetDefaultGuiFontOfSize(newSize));
+    tb->platformFont = GetDefaultGuiFontOfSize(newSize);
     win->toolbarVirt = tb;
     HwndSetFont(hwnd, tb->platformFont->GetHFont());
 

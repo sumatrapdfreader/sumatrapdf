@@ -203,7 +203,7 @@ class ScopedSelectFont {
     explicit ScopedSelectFont(HDC hdc, HFONT font) {
         this->hdc = hdc;
         if (font) {
-            prev = (HFONT)SelectObject(hdc, font);
+            prev = SelectObject(hdc, font);
         }
     }
 

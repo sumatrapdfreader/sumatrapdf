@@ -188,7 +188,7 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Change Language");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -203,7 +203,7 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.withBorder = true;
         args.isRtl = IsUIRtl();
         auto* c = new Edit();
@@ -265,7 +265,7 @@ void ShowChangeLanguageDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeLanguageWnd, KeyEvent*, &ChangeLanguageWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

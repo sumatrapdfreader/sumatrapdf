@@ -12,6 +12,7 @@
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
 
 #include "Settings.h"
@@ -1229,10 +1230,8 @@ void RenderCache::LogCacheSize() {
 extern RenderCache* gRenderCache;
 
 struct DebugTextWnd : WindowBase {
-    ~DebugTextWnd() override;
-
     Edit* edit = nullptr;
-    HFONT monoFont = nullptr;
+    PlatformFont* monoFont = nullptr;
 
     bool Create(Str title, int fontSize);
     void LayoutToClient();
@@ -1241,12 +1240,6 @@ struct DebugTextWnd : WindowBase {
     void OnSize(WindowBase::SizeEvent* ev);
     void ScheduleDelete();
 };
-
-DebugTextWnd::~DebugTextWnd() {
-    // monoFont is from HdcCreateSimpleFont — cached for the app lifetime.
-    // Do not DeleteObject it or the shared cache returns a dead HFONT next time.
-    monoFont = nullptr;
-}
 
 static void DeleteDebugTextWndInstance(DebugTextWnd* w) {
     delete w;
@@ -1278,7 +1271,7 @@ void DebugTextWnd::UpdateTheme() {
     }
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (edit && monoFont) {
-        HwndSetFont(edit->hwnd, monoFont);
+        edit->SetFont(monoFont);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
@@ -1316,8 +1309,7 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     monoFont = HdcCreateSimpleFont(hdc, "Consolas", fontSize);
     ReleaseDC(hwnd, hdc);
     if (monoFont) {
-        edit->font = monoFont;
-        SendMessageW(edit->hwnd, WM_SETFONT, (WPARAM)monoFont, TRUE);
+        edit->SetFont(monoFont);
     }
     layout = edit;
 

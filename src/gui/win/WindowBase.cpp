@@ -898,9 +898,7 @@ static void WndRegisterClass(WStr className) {
 }
 
 HWND WindowBase::CreateCustom(const CreateCustomArgs& args) {
-    if (args.font) {
-        font = GetPlatformFont(args.font);
-    }
+    font = args.font;
 
     WStr className = args.className ? args.className : kDefaultClassName;
     // TODO: validate className is not win32 control class

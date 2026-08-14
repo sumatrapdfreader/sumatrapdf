@@ -262,7 +262,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.title = documentColorsFollowThemeOnly ? _TRA("Make Document Colors Follow Theme") : _TRA("Change Theme");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -307,7 +307,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     {
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.isRtl = isRtl;
         auto* c = new DropDown();
         c->SetInsetsPt(4, 0, 0, 0);
@@ -369,7 +369,7 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeThemeWnd, KeyEvent*, &ChangeThemeWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

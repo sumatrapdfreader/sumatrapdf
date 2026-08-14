@@ -37,7 +37,7 @@ static ILayout* CreateMainLayout(HWND) {
 
     vbox->alignMain = MainAxisAlign::MainCenter;
     vbox->alignCross = CrossAxisAlign::CrossCenter;
-    PlatformFont* font = GetPlatformFont(GetDefaultGuiFont());
+    PlatformFont* font = GetDefaultGuiFont();
     {
         auto* b = new VirtButton("Tabs test", font);
         b->onClick = MkFunc1Void<VirtMouseEvent*>(TabsClicked);

@@ -20,6 +20,7 @@
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
 
 #include "Settings.h"
@@ -2973,8 +2974,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         // check if this page is known to have failed rendering
         if (pi->failedToRender) {
             shouldPaint = true;
-            HFONT fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-            HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
+            PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+            HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt->GetHFont());
             auto prevCol = SetTextColor(hdc, colDocTxt);
             TempStr msg = fmt(_TRA("Couldn't render page %d").s, pageNo);
             HdcDrawCenteredText(hdc, bounds, msg, isRtl);
@@ -2992,8 +2993,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
             }
         }
         if (renderDelay != 0) {
-            HFONT fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-            HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
+            PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+            HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt->GetHFont());
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < kRenderDelayShowNotif) {
                     ScheduleRepaint(win, kRenderDelayShowNotif - renderDelay);
@@ -4266,7 +4267,7 @@ static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM w
 // translation decides where the name sits in the sentence, so split its format
 // string around the %s instead of assuming the name comes last. Falls back to
 // one plain run for RTL, where laying runs out left to right would be wrong.
-static void DrawLoadErrorLine(HDC hdc, Rect r, Str name, HFONT font) {
+static void DrawLoadErrorLine(HDC hdc, Rect r, Str name, PlatformFont* font) {
     Str tmpl = _TRA("Error loading %s");
     int at = str::IndexOf(tmpl, StrL("%s"));
     if (at < 0 || IsUIRtl()) {
@@ -4276,27 +4277,23 @@ static void DrawLoadErrorLine(HDC hdc, Rect r, Str name, HFONT font) {
     Str prefix = Str(tmpl.s, at);
     Str suffix = Str(tmpl.s + at + 2, tmpl.len - at - 2);
 
-    LOGFONTW lf{};
-    GetObjectW(font, sizeof(lf), &lf);
-    lf.lfWeight = FW_BOLD;
-    ScopedGdiObj<HFONT> boldFont(CreateFontIndirectW(&lf));
-
-    Size szName = HdcMeasureText(hdc, name, boldFont);
-    int dxPrefix = len(prefix) > 0 ? HdcMeasureText(hdc, prefix, font).dx : 0;
-    int dxSuffix = len(suffix) > 0 ? HdcMeasureText(hdc, suffix, font).dx : 0;
+    PlatformFont* boldFont = GetBoldPlatformFont(font);
+    Size szName = PlatformFontMeasureText(boldFont, name);
+    int dxPrefix = len(prefix) > 0 ? PlatformFontMeasureText(font, prefix).dx : 0;
+    int dxSuffix = len(suffix) > 0 ? PlatformFontMeasureText(font, suffix).dx : 0;
     int x = r.x + ((r.dx - (dxPrefix + szName.dx + dxSuffix)) / 2);
     int y = r.y + ((r.dy - szName.dy) / 2);
 
     uint format = DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP;
     int prevMode = SetBkMode(hdc, TRANSPARENT);
     if (len(prefix) > 0) {
-        HdcDrawText(hdc, prefix, Point{x, y}, format, font);
+        HdcDrawText(hdc, prefix, Point{x, y}, format, font->GetHFont());
         x += dxPrefix;
     }
-    HdcDrawText(hdc, name, Point{x, y}, format, boldFont);
+    HdcDrawText(hdc, name, Point{x, y}, format, boldFont->GetHFont());
     x += szName.dx;
     if (len(suffix) > 0) {
-        HdcDrawText(hdc, suffix, Point{x, y}, format, font);
+        HdcDrawText(hdc, suffix, Point{x, y}, format, font->GetHFont());
     }
     if (prevMode != 0) {
         SetBkMode(hdc, prevMode);
@@ -4315,8 +4312,8 @@ static void OnPaintDocumentStatus(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
+    PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt->GetHFont());
     auto bgCol = ThemeMainWindowBackgroundColor();
     AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
     HdcFillRect(hdc, ToRect(ps.rcPaint), bgBrush);
@@ -4369,7 +4366,7 @@ static void OnPaintDocumentStatus(MainWindow* win) {
             Str reason = tab->loadErrorReason;
             Rect top = rc;
             if (len(reason) > 0) {
-                int lineDy = HwndMeasureText(win->hwndCanvas, name, fontRightTxt).dy;
+                int lineDy = PlatformFontMeasureText(fontRightTxt, name).dy;
                 top.dy -= lineDy;
                 Rect bottom = rc;
                 bottom.y += lineDy;

@@ -31,6 +31,7 @@ struct PlatformFont {
     Str name;
     float sizePt = 0;
     PlatformFontStyle style = PlatformFontStyle::Regular;
+    uintptr_t nativeId = 0;
 #if OS_WIN
     // created from the description above; null when the font was adopted from
     // an existing HFONT (one of the app's UI fonts)
@@ -67,4 +68,11 @@ int PlatformFontLineHeight(PlatformFont*);
 // adopts an existing HFONT (e.g. one of the app's UI fonts, which live for the
 // whole run) so it can be used with the portable drawing API. Not owned
 PlatformFont* GetPlatformFont(HFONT);
+PlatformFont* HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSize);
+PlatformFont* GetDefaultGuiFont(bool bold = false, bool italic = false);
+PlatformFont* GetDefaultGuiFontOfSize(int size);
+PlatformFont* GetUserGuiFont(Str fontName, int size);
+PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic);
+PlatformFont* GetScaledPlatformFont(PlatformFont*, int percent);
+void DeleteCreatedFonts();
 #endif

@@ -6,6 +6,7 @@ struct WindowTab;
 struct VirtCtrl;
 struct VirtRichText;
 struct ILayout;
+struct PlatformFont;
 
 extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
@@ -38,7 +39,7 @@ constexpr const int kNotifDefaultMargin = 8;
 
 struct NotificationCreateArgs {
     HWND hwndParent = nullptr;
-    HFONT font = nullptr;
+    PlatformFont* font = nullptr;
     Kind groupId = kNotifActionResponse;
     bool warning = false;
     bool noClose = false; // if true, no close button; must have timeoutMs > 0

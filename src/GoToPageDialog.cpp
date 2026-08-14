@@ -172,7 +172,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Go to page");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -201,7 +201,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
 
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.withBorder = true;
         args.alignRight = true;
         args.numbersOnly = onlyNumeric;
@@ -277,7 +277,7 @@ void ShowGoToPageDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<GoToPageWnd, KeyEvent*, &GoToPageWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

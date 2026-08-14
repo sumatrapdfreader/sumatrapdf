@@ -1846,7 +1846,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 
     wnd->staticInstDir = NewVirtText({
         .s = _TRA("Install SumatraPDF in &folder:"),
-        .font = GetPlatformFont(GetDefaultGuiFont()),
+        .font = GetDefaultGuiFont(),
         .textColor = kColBlack,
         .isRtl = IsUIRtl(),
         .prefix = true,

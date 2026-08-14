@@ -200,7 +200,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Zoom factor");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -228,7 +228,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
     {
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.isRtl = isRtl;
         args.isEditable = true;
         auto* c = new DropDown();
@@ -285,7 +285,7 @@ void ShowCustomZoomDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<CustomZoomWnd, KeyEvent*, &CustomZoomWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

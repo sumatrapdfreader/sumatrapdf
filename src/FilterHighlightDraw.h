@@ -13,7 +13,7 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
                               Color colText = kColorUnset);
 
 void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec& filterWords, Color bgCol,
-                                 Color txtCol, HFONT font);
+                                 Color txtCol, PlatformFont* font);
 
 void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, Color treeBg, Color treeTxt, bool isSelected, bool hasFocus,
                                  Color* bgOut, Color* txtOut);

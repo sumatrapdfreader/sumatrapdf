@@ -369,7 +369,7 @@ struct CommentText : VirtRichText {
 struct AdvancedSettingsWnd : WindowBase {
     ~AdvancedSettingsWnd() override;
 
-    HFONT fontBold = nullptr; // for changed settings, owned
+    PlatformFont* fontBold = nullptr;
     MainWindow* win = nullptr;
 
     // the list, the doc comment, the hints and the buttons are virtual
@@ -452,9 +452,6 @@ AdvancedSettingsWnd::~AdvancedSettingsWnd() {
     delete dropDownValue;
     DeleteVecMembers(items);
     str::Free(dropDownOrigVal);
-    if (fontBold) {
-        DeleteObject(fontBold);
-    }
 }
 
 void SafeDeleteAdvancedSettingsDialog() {
@@ -581,12 +578,12 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     gfx->FillRect(rc, colBg);
 
-    HFONT fontNormal = GetHFont() ? GetHFont() : GetAppFont();
+    PlatformFont* fontNormal = GetFont() ? GetFont() : GetAppFont();
 
     // bold name => changed this session; bold value => differs from default.
     // together they show both "not the default" and "edited since opening".
-    HFONT nameFont = (item->changed && fontBold) ? fontBold : fontNormal;
-    HFONT valFont = (SettingDiffersFromDefault(item) && fontBold) ? fontBold : fontNormal;
+    PlatformFont* nameFont = (item->changed && fontBold) ? fontBold : fontNormal;
+    PlatformFont* valFont = (SettingDiffersFromDefault(item) && fontBold) ? fontBold : fontNormal;
 
     Rect rcName{}, rcVal{};
     AdvSettingsItemColumns(rc, rcName, rcVal);
@@ -595,12 +592,12 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     // yellow/accent underlays on matched filter tokens (same as command palette)
     u32 nameFmt = gfxTextEllipsis | gfxTextVCenter;
     nameFmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
-    DrawMaybeHighlightedText(gfx, rcName, item->name, filterWords, highlighted, colBg, isRtl, false, nameFmt,
-                             GetPlatformFont(nameFont), colText);
+    DrawMaybeHighlightedText(gfx, rcName, item->name, filterWords, highlighted, colBg, isRtl, false, nameFmt, nameFont,
+                             colText);
 
     TempStr val = FormatSettingValueTemp(item);
     u32 valFmt = gfxTextEllipsis | gfxTextVCenter | gfxTextRight;
-    gfx->DrawText(val, rcVal, valFmt, GetPlatformFont(valFont), colText);
+    gfx->DrawText(val, rcVal, valFmt, valFont, colText);
 }
 
 // in-place editor sits in the value column (same split as DrawListBoxItem)
@@ -638,7 +635,7 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     args.parent = hwnd;
     args.isMultiLine = false;
     args.withBorder = true;
-    args.font = GetHFont();
+    args.font = GetFont();
     args.text = FormatSettingValueTemp(item);
     auto* c = new Edit();
     c->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
@@ -695,7 +692,7 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     }
     DropDown::CreateArgs args;
     args.parent = hwnd;
-    args.font = GetHFont();
+    args.font = GetFont();
     auto* c = new DropDown();
     // Suppress re-entrant CancelEditValue / CloseEnumEdit while Create and
     // CB_SHOWDROPDOWN pump messages (filter EN_CHANGE was freeing c mid-flight).
@@ -1081,16 +1078,6 @@ void AdvancedSettingsWnd::OnSize(WindowBase::SizeEvent* ev) {
     HwndInvalidate(hwnd);
 }
 
-// a bold variant of the given font, for drawing changed settings
-static HFONT CreateBoldFont(HFONT font) {
-    LOGFONTW lf{};
-    if (0 == GetObjectW(font, sizeof(lf), &lf)) {
-        return nullptr;
-    }
-    lf.lfWeight = FW_BOLD;
-    return CreateFontIndirectW(&lf);
-}
-
 // center the dialog over the main window frame
 static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     Rect rRelative = HwndWindowRect(hwndRelative);
@@ -1113,14 +1100,14 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("Advanced Settings");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    fontBold = CreateBoldFont(GetHFont() ? GetHFont() : GetAppFont());
+    fontBold = GetBoldPlatformFont(GetFont() ? GetFont() : GetAppFont());
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();
@@ -1139,7 +1126,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         // underline so the filter field reads clearly against the dialog bg
         args.withBottomBorder = true;
         args.cueText = _TRA("enter search term to filter settings");
-        args.font = GetHFont();
+        args.font = GetFont();
         args.isRtl = isRtl;
         auto* c = new Edit();
         c->SetColors(colTxt, colBg);
@@ -1368,7 +1355,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onSize = MkMethod1<AdvancedSettingsWnd, WindowBase::SizeEvent*, &AdvancedSettingsWnd::OnSize>(wnd);
     wnd->onKeyDown = MkMethod1<AdvancedSettingsWnd, KeyEvent*, &AdvancedSettingsWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

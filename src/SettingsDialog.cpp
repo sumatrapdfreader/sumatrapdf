@@ -328,7 +328,7 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     }
 }
 
-static DropDown* MakeDropDown(HWND parent, HFONT font, bool isRtl, bool editable) {
+static DropDown* MakeDropDown(HWND parent, PlatformFont* font, bool isRtl, bool editable) {
     DropDown::CreateArgs args;
     args.parent = parent;
     args.font = font;
@@ -372,7 +372,7 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
         args.title = _TRA("SumatraPDF Options");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -405,7 +405,7 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
             .prefix = true,
         });
         labelLayout = lab;
-        dropLayout = MakeDropDown(hwnd, GetHFont(), isRtl, false);
+        dropLayout = MakeDropDown(hwnd, GetFont(), isRtl, false);
         vbox->AddChild(LabelAndDrop(lab, dropLayout, 0));
         FillLayout();
     }
@@ -418,7 +418,7 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
             .prefix = true,
         });
         labelZoom = lab;
-        dropZoom = MakeDropDown(hwnd, GetHFont(), isRtl, true);
+        dropZoom = MakeDropDown(hwnd, GetFont(), isRtl, true);
         vbox->AddChild(LabelAndDrop(lab, dropZoom, 4));
         FillZoom();
     }
@@ -479,7 +479,7 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
         labelCmdLine = lab;
         vbox->AddChild(lab);
 
-        dropInverse = MakeDropDown(hwnd, GetHFont(), isRtl, true);
+        dropInverse = MakeDropDown(hwnd, GetFont(), isRtl, true);
         vbox->AddChild(dropInverse);
         FillInverse();
     }
@@ -531,7 +531,7 @@ void ShowSettingsDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<SettingsWnd, KeyEvent*, &SettingsWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
     if (!ok) {
         delete wnd;

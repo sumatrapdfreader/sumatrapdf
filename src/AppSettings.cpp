@@ -8,6 +8,7 @@
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
+#include "gui/PlatformFont.h"
 #include "base/Timer.h"
 
 #include "gui/UIModels.h"
@@ -142,11 +143,11 @@ static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
 // are pixel sizes and used as-is at every DPI.
 struct UiFontsAtDpi {
     int dpi = 0;
-    HFONT appFont = nullptr;
-    HFONT biggerAppFont = nullptr;
-    HFONT appMenuFont = nullptr;
-    HFONT sidebarLabelFont = nullptr;
-    HFONT treeFontEx[4] = {nullptr, nullptr, nullptr, nullptr};
+    PlatformFont* appFont = nullptr;
+    PlatformFont* biggerAppFont = nullptr;
+    PlatformFont* appMenuFont = nullptr;
+    PlatformFont* sidebarLabelFont = nullptr;
+    PlatformFont* treeFontEx[4] = {nullptr, nullptr, nullptr, nullptr};
 };
 
 static Vec<UiFontsAtDpi> gUiFontsAtDpi;
@@ -167,9 +168,8 @@ static UiFontsAtDpi* GetUiFontsAtDpi(int dpi) {
 
 // TODO: if font sizes change, would need to re-layout the app
 static void ResetCachedFonts() {
-    // fonts are owned by the Win.cpp font cache (freed via DeleteCreatedFonts),
-    // so just drop the references; old fonts stay valid for windows that
-    // still hold them (the exception is the menu fonts, which leak here)
+    // Fonts are interned PlatformFonts, so just drop these per-DPI references;
+    // old fonts stay valid for windows that still hold them.
     gUiFontsAtDpi.Reset();
 }
 
@@ -909,7 +909,7 @@ int GetAppFontSize() {
     return GetAppFontSizeForDpi(DpiGet());
 }
 
-HFONT GetAppFontForDpi(int dpi) {
+PlatformFont* GetAppFontForDpi(int dpi) {
     UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->appFont) {
         return fonts->appFont;
@@ -918,7 +918,7 @@ HFONT GetAppFontForDpi(int dpi) {
     return fonts->appFont;
 }
 
-HFONT GetAppFont() {
+PlatformFont* GetAppFont() {
     return GetAppFontForDpi(DpiGet());
 }
 
@@ -936,7 +936,7 @@ static int GetAppBiggerFontSizeForDpi(int dpi) {
     return fntSize;
 }
 
-HFONT GetAppBiggerFontForDpi(int dpi) {
+PlatformFont* GetAppBiggerFontForDpi(int dpi) {
     UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->biggerAppFont) {
         return fonts->biggerAppFont;
@@ -945,11 +945,11 @@ HFONT GetAppBiggerFontForDpi(int dpi) {
     return fonts->biggerAppFont;
 }
 
-HFONT GetAppBiggerFont() {
+PlatformFont* GetAppBiggerFont() {
     return GetAppBiggerFontForDpi(DpiGet());
 }
 
-HFONT GetAppTreeFontExForDpi(int dpi, bool bold, bool italic) {
+PlatformFont* GetAppTreeFontExForDpi(int dpi, bool bold, bool italic) {
     int idx = (bold ? 1 : 0) | (italic ? 2 : 0);
     UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->treeFontEx[idx]) {
@@ -967,19 +967,19 @@ HFONT GetAppTreeFontExForDpi(int dpi, bool bold, bool italic) {
     return fonts->treeFontEx[idx];
 }
 
-HFONT GetAppTreeFontForDpi(int dpi) {
+PlatformFont* GetAppTreeFontForDpi(int dpi) {
     return GetAppTreeFontExForDpi(dpi, false, false);
 }
 
-HFONT GetAppTreeFont() {
+PlatformFont* GetAppTreeFont() {
     return GetAppTreeFontEx(false, false);
 }
 
-HFONT GetAppTreeFontEx(bool bold, bool italic) {
+PlatformFont* GetAppTreeFontEx(bool bold, bool italic) {
     return GetAppTreeFontExForDpi(DpiGet(), bold, italic);
 }
 
-HFONT GetAppSidebarLabelFontForDpi(int dpi) {
+PlatformFont* GetAppSidebarLabelFontForDpi(int dpi) {
     UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->sidebarLabelFont) {
         return fonts->sidebarLabelFont;
@@ -988,11 +988,11 @@ HFONT GetAppSidebarLabelFontForDpi(int dpi) {
     return fonts->sidebarLabelFont;
 }
 
-HFONT GetAppSidebarLabelFont() {
+PlatformFont* GetAppSidebarLabelFont() {
     return GetAppSidebarLabelFontForDpi(DpiGet());
 }
 
-HFONT GetAppMenuFontForDpi(int dpi) {
+PlatformFont* GetAppMenuFontForDpi(int dpi) {
     UiFontsAtDpi* fonts = GetUiFontsAtDpi(dpi);
     if (fonts->appMenuFont) {
         return fonts->appMenuFont;
@@ -1001,11 +1001,11 @@ HFONT GetAppMenuFontForDpi(int dpi) {
     GetNonClientMetricsForDpiValue(dpi, &ncm);
     int fntSize = GetAppMenuFontSizeForDpi(dpi);
     ncm.lfMenuFont.lfHeight = -fntSize;
-    fonts->appMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
+    fonts->appMenuFont = GetPlatformFont(CreateFontIndirectW(&ncm.lfMenuFont));
     return fonts->appMenuFont;
 }
 
-HFONT GetAppMenuFont() {
+PlatformFont* GetAppMenuFont() {
     return GetAppMenuFontForDpi(DpiGet());
 }
 

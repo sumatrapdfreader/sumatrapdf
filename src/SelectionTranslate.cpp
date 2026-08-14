@@ -963,9 +963,9 @@ void SelectionTranslateWnd::UpdateTheme() {
 }
 
 // re-pick the app font for the window's current DPI and push it to every child.
-// GetAppFont() caches per DPI, so the HFONT stays owned by AppSettings.
+// GetAppFont() caches a PlatformFont per DPI.
 void SelectionTranslateWnd::UpdateFont() {
-    SetFont(GetPlatformFont(GetAppFont()));
+    SetFont(GetAppFont());
     HwndSetFontForWindowAndItsChildren(hwnd, GetHFont());
     VirtText* virts[] = {staticPrompt, staticFromLabel, staticToLabel, staticResultLabel, btnTranslate, btnClose};
     for (VirtText* w : virts) {
@@ -1261,7 +1261,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         args.visible = false;
         // resizable: thick frame; CLIPCHILDREN avoids flicker while resizing
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -1276,7 +1276,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.text = selText;
         args.isMultiLine = true;
         args.withBorder = true;
@@ -1309,7 +1309,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.isMultiLine = true;
         args.withBorder = true;
         args.idealSizeLines = 6;
@@ -1333,7 +1333,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
-            args.font = GetHFont();
+            args.font = GetFont();
             args.isRtl = isRtl;
             dropEngine = new DropDown();
             dropEngine->Create(args);
@@ -1356,7 +1356,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
-            args.font = GetHFont();
+            args.font = GetFont();
             args.isEditable = true;
             args.isRtl = isRtl;
             dropSrcLang = new DropDown();
@@ -1379,7 +1379,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         {
             DropDown::CreateArgs args;
             args.parent = hwnd;
-            args.font = GetHFont();
+            args.font = GetFont();
             args.isEditable = true;
             args.isRtl = isRtl;
             dropDstLang = new DropDown();
@@ -1452,7 +1452,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     auto* wnd = new SelectionTranslateWnd();
     wnd->hwndOwner = hwndOwner;
     wnd->engine = engine;
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSelectionTranslateClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSelectionTranslateDestroy);
     wnd->onSize = MkMethod1<SelectionTranslateWnd, WindowBase::SizeEvent*, &SelectionTranslateWnd::OnSize>(wnd);

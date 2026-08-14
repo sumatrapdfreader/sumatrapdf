@@ -237,8 +237,7 @@ static void UpdateAIChatPanelTitle(MainWindow* win, int labelDx) {
         }
     }
 
-    HWND labelHwnd = win->hwndAiChatBox;
-    HFONT font = win->aiChatLabel->font ? win->aiChatLabel->font->GetHFont() : nullptr;
+    PlatformFont* font = win->aiChatLabel->font;
     if (!font) {
         font = GetDefaultGuiFont(true, false);
     }
@@ -247,7 +246,7 @@ static void UpdateAIChatPanelTitle(MainWindow* win, int labelDx) {
     }
     int maxDx = AIChatLabelMaxTextDx(labelDx);
     TempStr prefix = str::JoinTemp(p->TitleTemp(), StrL(" with "));
-    TempStr label = AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
+    TempStr label = AIChatFitPanelTitleTemp(font, prefix, docName, maxDx);
     win->aiChatLabel->SetText(label);
 }
 
@@ -1260,10 +1259,10 @@ void CreateAIChatPanel(MainWindow* win) {
         win->aiChatSplitter->onMove = MkFunc1Void(OnAIChatSplitterMove);
     }
 
-    HFONT font = GetDefaultGuiFont();
+    PlatformFont* font = GetDefaultGuiFont();
 
     // label
-    PlatformFont* labelFont = GetPlatformFont(GetDefaultGuiFont(true, false));
+    PlatformFont* labelFont = GetDefaultGuiFont(true, false);
     auto header = NewLabelWithClose(win->hwndAiChatBox, labelFont, MkFunc1(AIChatCloseClicked, win));
     win->aiChatLabel = header.label;
     win->aiChatHeader = header.box;
@@ -1315,7 +1314,7 @@ void CreateAIChatPanel(MainWindow* win) {
 
     // stop button (hidden by default, shown when agent is working)
     {
-        auto* b = NewThemedButton(win->hwndAiChatBox, "Stop", GetPlatformFont(font), false);
+        auto* b = NewThemedButton(win->hwndAiChatBox, "Stop", font, false);
         b->onClick = MkFunc1(StopClicked, win);
         b->SetIsVisible(false);
         win->aiChatStopBtn = b;

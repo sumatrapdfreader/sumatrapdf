@@ -41,7 +41,7 @@ struct CreateControlArgs {
     Rect pos;
     HMENU ctrlId = nullptr;
     bool visible = true;
-    HFONT font = nullptr;
+    PlatformFont* font = nullptr;
     Str text;
     bool isRtl = false;
 };
@@ -57,7 +57,7 @@ struct CreateCustomArgs {
     HMENU menu = nullptr;
     int cmdId = 0; // command sent on click
     bool visible = true;
-    HFONT font = nullptr;
+    PlatformFont* font = nullptr;
     HICON icon = nullptr;
     Color bgColor = kColorUnset;
     bool isRtl = false;
@@ -488,8 +488,9 @@ struct ControlBase : ILayout {
     void SetText(Str);
     TempStr GetTextTemp();
 
-    HFONT GetFont();
-    void SetFont(HFONT font);
+    PlatformFont* GetFont();
+    HFONT GetHFont() const;
+    void SetFont(PlatformFont* font);
 
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;
@@ -511,7 +512,7 @@ struct ControlBase : ILayout {
     Size childSize;
 
     HWND hwnd = nullptr;
-    HFONT font = nullptr; // we don't own it
+    PlatformFont* font = nullptr; // interned, not owned
     UINT_PTR subclassId = 0;
 
     Color bgColor = kColorUnset;
@@ -559,7 +560,7 @@ struct VirtCtrl;
 struct Button : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
-        HFONT font = nullptr;
+        PlatformFont* font = nullptr;
         Str text;
         bool isRtl = false;
     };
@@ -585,7 +586,7 @@ Button* CreateDefaultButton(HWND parent, Str s, bool isRtl);
 struct Tooltip : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
-        HFONT font = nullptr;
+        PlatformFont* font = nullptr;
         bool isRtl = false;
     };
 
@@ -661,7 +662,7 @@ struct Edit : ControlBase {
         // center the text vertically when the control is taller than one line
         // (single-line only; a single-line edit otherwise sits the text at the top)
         bool centerTextVert = false;
-        HFONT font = nullptr;
+        PlatformFont* font = nullptr;
         bool isRtl = false;
     };
 
@@ -802,7 +803,7 @@ struct Progress : ControlBase {
 struct DropDown : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
-        HFONT font = nullptr;
+        PlatformFont* font = nullptr;
         bool isRtl = false;
         bool isEditable = false;
         // TODO: model or items
@@ -840,7 +841,7 @@ struct Trackbar : ControlBase {
         bool isHorizontal = true;
         int rangeMin = 1;
         int rangeMax = 5;
-        HFONT font = nullptr;
+        PlatformFont* font = nullptr;
         bool isRtl = false;
     };
 
@@ -880,7 +881,7 @@ struct TreeView;
 struct TreeView : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
-        HFONT font = nullptr;
+        PlatformFont* font = nullptr;
         DWORD exStyle = 0; // additional flags, will be OR with the rest
         bool fullRowSelect = false;
         bool isRtl = false;

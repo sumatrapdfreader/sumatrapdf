@@ -531,7 +531,7 @@ void NotificationWnd::Layout(Str message) {
                 gfxFmt |= gfxTextRight | gfxTextRtl;
             }
             HDC hdc = GetDC(hwnd);
-            szText = HdcMeasureText(hdc, message, fmt, GetHFont());
+            szText = HdcMeasureText(hdc, message, 4096, fmt | DT_NOCLIP, GetHFont());
             if (maxTextDx > 0 && szText.dx > maxTextDx) {
                 // too wide: word-wrap the message; DT_WORD_ELLIPSIS truncates
                 // words too long to wrap (e.g. long file paths)
@@ -832,7 +832,7 @@ NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs) {
 
 // show a notification whose content is an arbitrary VirtCtrl tree. Ownership of
 // `content` passes to the notification (it is freed with it, also on failure).
-// The tree is measured with whatever HWND / HFONT its controls were built with,
+// The tree is measured with the same PlatformFonts its controls were built with,
 // so build it against the parent window
 NotificationWnd* ShowCustomNotification(HWND hwndParent, ILayout* content, int timeoutMs) {
     NotificationCreateArgs args;

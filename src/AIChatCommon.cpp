@@ -9,6 +9,7 @@
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
 #include "gui/win/WebView.h"
 
@@ -564,12 +565,12 @@ int AIChatLabelMaxTextDx(int labelDx) {
     return maxDx > 0 ? maxDx : 0;
 }
 
-TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docName, int maxDx) {
+TempStr AIChatFitPanelTitleTemp(PlatformFont* font, Str prefix, Str docName, int maxDx) {
     TempStr full = str::JoinTemp(prefix, docName);
     if (maxDx <= 0) {
         return full;
     }
-    Size sz = HwndMeasureText(labelHwnd, full, font);
+    Size sz = PlatformFontMeasureText(font, full);
     if (sz.dx <= maxDx) {
         return full;
     }
@@ -585,7 +586,7 @@ TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docN
     while (lo <= hi) {
         int mid = (lo + hi) / 2;
         TempStr trial = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, mid));
-        sz = HwndMeasureText(labelHwnd, trial, font);
+        sz = PlatformFontMeasureText(font, trial);
         if (sz.dx <= maxDx) {
             best = trial;
             lo = mid + 1;

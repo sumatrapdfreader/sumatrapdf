@@ -8,6 +8,7 @@
 #include "gui/UIModels.h"
 
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
 
 //--- Button
@@ -55,7 +56,7 @@ Size Button::GetIdealSize() {
     // BCM_GETIDEALSIZE returns the text size without any button padding, so
     // measure the text and add our own
     TempStr s = HwndGetTextTemp(hwnd);
-    Size sz = HwndMeasureText(hwnd, s, HwndGetFont(hwnd));
+    Size sz = PlatformFontMeasureText(font, s);
     int dx = sz.dx + DpiScale(2 * 12);
     int dy = sz.dy + DpiScale(2 * 5);
     int minDx = DpiScale(70);

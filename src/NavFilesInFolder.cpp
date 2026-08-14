@@ -756,7 +756,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         // regular resizable window (not a popup that auto-dismisses)
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
         args.title = _TRA("Navigate Files in Folder");
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         args.isRtl = IsUIRtl();
         CreateCustom(args);
@@ -892,7 +892,7 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
     wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<NavFilesInFolderWnd, WindowBase::PreTranslateEvent*, &NavFilesInFolderWnd::PreTranslate>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     // set before Create so Esc during Create can dismiss
     gNavFilesWnd = wnd;
     gHwndToActivateOnNavClose = win->hwndFrame;

@@ -163,7 +163,7 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
         args.title = _TRA("Add Favorite");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -190,7 +190,7 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.withBorder = true;
         args.selectAllOnFocus = true;
         args.isRtl = isRtl;
@@ -250,7 +250,7 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<AddFavoriteWnd, KeyEvent*, &AddFavoriteWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win, filePath, pageNo, pageLabel, name);
     if (!ok) {
         delete wnd;

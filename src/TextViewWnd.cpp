@@ -8,6 +8,7 @@
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
 
 #include "Theme.h"
@@ -15,10 +16,8 @@
 #include "SumatraConfig.h"
 
 struct TextViewWnd : WindowBase {
-    ~TextViewWnd() override;
-
     Edit* edit = nullptr;
-    HFONT monoFont = nullptr;
+    PlatformFont* monoFont = nullptr;
     HWND* hwndPtr = nullptr;
     bool isDialog = false;
 
@@ -31,12 +30,6 @@ struct TextViewWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
     void ScheduleDelete();
 };
-
-TextViewWnd::~TextViewWnd() {
-    // monoFont is from HdcCreateSimpleFont — cached for the app lifetime.
-    // Do not DeleteObject it or the shared cache returns a dead HFONT next time.
-    monoFont = nullptr;
-}
 
 static void DeleteTextViewWndInstance(TextViewWnd* w) {
     delete w;
@@ -68,7 +61,7 @@ void TextViewWnd::UpdateTheme() {
     }
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (edit && monoFont) {
-        HwndSetFont(edit->hwnd, monoFont);
+        edit->SetFont(monoFont);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
@@ -113,8 +106,7 @@ bool TextViewWnd::Create(Str title, Str text) {
     monoFont = HdcCreateSimpleFont(hdc, "Consolas", 14);
     ReleaseDC(hwnd, hdc);
     if (monoFont) {
-        edit->font = monoFont;
-        SendMessageW(edit->hwnd, WM_SETFONT, (WPARAM)monoFont, TRUE);
+        edit->SetFont(monoFont);
     }
 
     // set tab stop to 4 spaces (16 dialog units; default is 32 = 8 spaces)

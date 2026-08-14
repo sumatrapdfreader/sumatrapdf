@@ -22,14 +22,14 @@ bool PlatformFont::SameAs(Str otherName, float otherSizePt, PlatformFontStyle ot
     return str::Eq(name, otherName);
 }
 
-PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style) {
+static PlatformFont* GetPlatformFontInternal(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
     gPlatformFontsMutex.Lock();
     defer {
         gPlatformFontsMutex.Unlock();
     };
 
     for (PlatformFont* font = gPlatformFonts.next; font; font = font->next) {
-        if (font->SameAs(name, sizePt, style)) {
+        if (nativeId ? font->nativeId == nativeId : font->nativeId == 0 && font->SameAs(name, sizePt, style)) {
             return font;
         }
     }
@@ -39,6 +39,7 @@ PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style) {
     font->name = str::Dup(arena, name);
     font->sizePt = sizePt;
     font->style = style;
+    font->nativeId = nativeId;
     if (!PlatformFontCreateNative(font)) {
         // no font could be created: hand out the last one that worked, like
         // the gdiplus font cache used to
@@ -47,3 +48,13 @@ PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style) {
     ListInsertFront(&gPlatformFonts.next, font);
     return font;
 }
+
+PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style) {
+    return GetPlatformFontInternal(name, sizePt, style, 0);
+}
+
+#if OS_WIN
+PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
+    return GetPlatformFontInternal(name, sizePt, style, nativeId);
+}
+#endif

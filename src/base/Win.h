@@ -91,11 +91,9 @@ TempWStr HwndGetTextWTemp(HWND hwnd);
 TempStr HwndGetTextTemp(HWND hwnd);
 void HwndSetText(HWND, Str s);
 void HwndSetDlgItemText(HWND, int, Str s);
-HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);
 void HwndSetFontForWindowAndItsChildren(HWND, HFONT);
 void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi);
-void HwndSetTreeFont(HWND hwndTree, HFONT font);
 HICON HwndGetIcon(HWND);
 HICON HwndSetIcon(HWND, HICON);
 void HwndRepaintNow(HWND);
@@ -193,32 +191,19 @@ int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font = nullptr
 int HdcDrawText(HDC hdc, WStr s, const Rect& r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, WStr s, const Point& pos, uint format, HFONT font = nullptr);
-Rect HdcMeasureWithDrawText(HDC hdc, Str s, Rect r, uint format, HFONT font = nullptr);
-Rect HdcMeasureWithDrawText(HDC hdc, WStr s, Rect r, uint format, HFONT font = nullptr);
 bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, Str text);
 bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, WStr text);
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font);
-Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font);
-Size HdcMeasureText(HDC hdc, Str s, HFONT font = nullptr);
 void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL = false);
 Size HdcGetTextExtentPoint32(HDC hdc, Str str);
 Size HdcGetTextExtentPoint32(HDC hdc, WStr str);
-Size HwndMeasureText(HWND hwnd, Str txt, HFONT font = nullptr);
-int FontDyPx(HWND hwnd, HFONT hfont);
 void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h);
 int HdcMeasureStringWidth(HDC hdc, WStr str);
 
 //--- GDI: fonts
 
-HFONT GetMenuFont();
-HFONT HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSize);
-HFONT GetDefaultGuiFont(bool bold = false, bool italic = false);
-HFONT GetDefaultGuiFontOfSize(int size);
-HFONT GetUserGuiFont(Str fontName, int size);
-HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic);
 int GetSizeOfDefaultGuiFont();
 bool GetNonClientMetricsForDpi(int dpi, NONCLIENTMETRICS* ncm);
-void DeleteCreatedFonts();
 
 //--- GDI: handles / bitmaps / pixmaps
 

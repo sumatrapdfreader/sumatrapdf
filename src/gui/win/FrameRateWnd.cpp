@@ -76,7 +76,7 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
 
     text = NewVirtText({
         .s = "0",
-        .font = GetPlatformFont(GetDefaultGuiFont()),
+        .font = GetDefaultGuiFont(),
         .textColor = kColWhite,
         .align = VirtTextAlign::Center,
     });

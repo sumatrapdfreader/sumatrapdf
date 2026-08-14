@@ -518,7 +518,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         CreateCustomArgs args;
         args.visible = false;
         args.style = WS_POPUPWINDOW;
-        args.font = GetHFont();
+        args.font = GetFont();
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -540,7 +540,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         args.withBorder = false;
         args.cueText = "enter search term";
         args.text = prefix;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.isRtl = IsUIRtl();
         auto* c = new Edit();
         c->SetColors(colTxt, colBg);
@@ -618,7 +618,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         auto* box = new HBox();
         // the hints are secondary information, so they use the regular (smaller)
         // app font, not the bigger font of the query / list
-        HelpStyle st{hwnd, GetPlatformFont(GetAppFont()), colTxt, colBg};
+        HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
         for (int i = 0; i < nHelp; i++) {
             box->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
         }
@@ -683,7 +683,7 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     wnd->onKeyDown = MkMethod1<CommandPaletteWnd, KeyEvent*, &CommandPaletteWnd::OnKeyDown>(wnd);
     wnd->onPreTranslate =
         MkMethod1<CommandPaletteWnd, WindowBase::PreTranslateEvent*, &CommandPaletteWnd::PreTranslate>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppBiggerFont()));
+    wnd->SetFont(GetAppBiggerFont());
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);

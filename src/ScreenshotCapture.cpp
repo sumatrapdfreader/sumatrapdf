@@ -16,6 +16,7 @@
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 
 #include "ImageSaveCropResize.h"
 #include "ScreenshotCapture.h"
@@ -827,8 +828,8 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     HGDIOBJ oldTemp = SelectObject(hdcTemp, hbmTemp);
 
     // select GUI font for text drawing
-    HFONT guiFont = GetDefaultGuiFont();
-    HGDIOBJ oldFont = SelectObject(hdcTemp, guiFont);
+    PlatformFont* guiFont = GetDefaultGuiFont();
+    HGDIOBJ oldFont = SelectObject(hdcTemp, guiFont->GetHFont());
 
     // white background for the temp surface
     Rect fullRect = {0, 0, w, h};
@@ -892,10 +893,9 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    ncm.lfMessageFont.lfHeight = (LONG)(ncm.lfMessageFont.lfHeight * 1.3);
-    ncm.lfMessageFont.lfWeight = FW_BOLD;
-    HFONT infoFont = CreateFontIndirectW(&ncm.lfMessageFont);
-    HGDIOBJ prevInfoFont = SelectObject(hdcTemp, infoFont);
+    int infoFontSize = std::abs((int)(ncm.lfMessageFont.lfHeight * 1.3));
+    PlatformFont* infoFont = GetUserGuiFontEx(nullptr, infoFontSize, true, false);
+    HGDIOBJ prevInfoFont = SelectObject(hdcTemp, infoFont->GetHFont());
 
     SetTextColor(hdcTemp, kColWhite);
     SetBkMode(hdcTemp, TRANSPARENT);
@@ -903,7 +903,6 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
                 DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     SelectObject(hdcTemp, prevInfoFont);
-    DeleteObject(infoFont);
 
     // Read back temp bitmap pixels
     BITMAPINFO bmiTemp{};

@@ -219,7 +219,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     // needs a background color of its own - without one it paints black
     SetColors(ThemeWindowTextColor(), ThemeWindowBackgroundColor());
 
-    font = GetPlatformFont(GetDefaultGuiFont());
+    font = GetDefaultGuiFont();
 
     {
         // Back | Forward | url, the whole row inset by kNavRowPadding. All

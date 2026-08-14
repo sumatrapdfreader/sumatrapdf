@@ -153,7 +153,7 @@ bool GetPasswordWnd::Create() {
         args.title = _TRA("Enter password");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -193,7 +193,7 @@ bool GetPasswordWnd::Create() {
 
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetHFont();
+        args.font = GetFont();
         args.withBorder = true;
         args.isPassword = true;
         args.selectAllOnFocus = true;
@@ -279,7 +279,7 @@ Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword,
     wnd->showPassword = showPassword;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onKeyDown = MkMethod1<GetPasswordWnd, KeyEvent*, &GetPasswordWnd::OnKeyDown>(wnd);
-    wnd->SetFont(GetPlatformFont(GetAppFont()));
+    wnd->SetFont(GetAppFont());
     bool ok = wnd->Create();
     if (!ok) {
         delete wnd;

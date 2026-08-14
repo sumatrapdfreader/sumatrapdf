@@ -27,14 +27,14 @@ static void WarnBox(HWND hwnd, Str msg, Str title) {
     MessageBoxWarningSimple(hwnd, ToWStrTemp(msg), ToWStrTemp(title));
 }
 
-static HFONT ImageEditFont(HWND hwnd) {
+static PlatformFont* ImageEditFont(HWND hwnd) {
     if (hwnd) {
         DpiSetFromHwnd(hwnd);
     }
     if (gImageEditHost.GetFont) {
         return gImageEditHost.GetFont();
     }
-    return (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    return GetDefaultGuiFont();
 }
 
 static Str Tr(Str s) {
@@ -202,8 +202,6 @@ struct ImageEditWindow : WindowBase {
     // resize mode drag state
     int dragNewW = 0;
     int dragNewH = 0;
-
-    HFONT hFont = nullptr;
 
     ImageEditWindow() = default;
     ~ImageEditWindow() override {
@@ -477,7 +475,7 @@ static int ImageEditButtonPadding() {
 }
 
 static int ImageEditLabelDy(ImageEditWindow* ew) {
-    return HwndMeasureText(ew->hwnd, "Ag", ew->hFont).dy;
+    return PlatformFontMeasureText(ew->font, "Ag").dy;
 }
 
 static int ImageEditPathLabelRowDy(ImageEditWindow* ew) {
@@ -485,22 +483,15 @@ static int ImageEditPathLabelRowDy(ImageEditWindow* ew) {
 }
 
 static void ImageEditApplyFont(ImageEditWindow* ew) {
-    HFONT f = ew->hFont;
-    auto setFont = [&](HWND h) {
-        if (h) {
-            SendMessageW(h, WM_SETFONT, (WPARAM)f, TRUE);
-        }
-    };
+    PlatformFont* font = ew->font;
     auto setWndFont = [&](ControlBase* w) {
         if (w && w->hwnd) {
-            w->font = f;
-            setFont(w->hwnd);
+            w->SetFont(font);
         }
     };
-    PlatformFont* pf = GetPlatformFont(f);
     auto setVirtFont = [&](VirtText* w) {
         if (w) {
-            w->font = pf;
+            w->font = font;
         }
     };
     setVirtFont(ew->staticPathLabel);
@@ -1549,7 +1540,7 @@ void ImageEditWindow::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
         SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
                      SWP_NOZORDER | SWP_NOACTIVATE);
     }
-    hFont = ImageEditFont(hwnd);
+    font = ImageEditFont(hwnd);
     ImageEditApplyFont(this);
     CalcImageLayout(this);
     LayoutControls(this);
@@ -1981,7 +1972,7 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
 // the buttons are virtual controls, so they are styled here rather than by the
 // system: a filled box with a border, brighter on hover
 static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const VirtMouseHandler& onClick) {
-    auto* b = new ImageEditButton(Str{}, GetPlatformFont(ew->hFont));
+    auto* b = new ImageEditButton(Str{}, ew->font);
     Color bg = GetSysColor(COLOR_BTNFACE);
     b->textColor = GetSysColor(COLOR_BTNTEXT);
     b->textColorDisabled = GetSysColor(COLOR_GRAYTEXT);
@@ -2113,7 +2104,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
 
     ew->hwndParent = parent;
 
-    ew->hFont = ImageEditFont(hwnd);
+    ew->font = ImageEditFont(hwnd);
 
     // create child controls
     TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
@@ -2121,7 +2112,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         auto* edit = new Edit();
         Edit::CreateArgs editArgs;
         editArgs.parent = hwnd;
-        editArgs.font = ew->hFont;
+        editArgs.font = ew->font;
         editArgs.text = destPath;
         editArgs.withBorder = true;
         edit->Create(editArgs);
@@ -2136,7 +2127,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     if (!fromRenderedBitmap) {
         ew->staticPathLabel = NewVirtText({
             .s = filePath ? filePath : Str{},
-            .font = GetPlatformFont(ew->hFont),
+            .font = ew->font,
             .textColor = GetSysColor(COLOR_BTNTEXT),
             .pathEllipsis = true,
         });
@@ -2153,7 +2144,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     }
     ew->staticInfoLabel = NewVirtText({
         .s = infoStr,
-        .font = GetPlatformFont(ew->hFont),
+        .font = ew->font,
         .textColor = GetSysColor(COLOR_BTNTEXT),
         .ellipsis = true,
     });
@@ -2168,7 +2159,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         auto* dd = new DropDown();
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = ew->hFont;
+        args.font = ew->font;
         dd->Create(args);
         StrVec items;
         int defaultDdIdx = 0;

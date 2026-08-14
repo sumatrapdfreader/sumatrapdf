@@ -184,45 +184,6 @@ static void ScheduleCloseKeyboardHelp() {
     uitask::Post(fn, "SafeDeleteKeyboardHelpWnd");
 }
 
-static HFONT CreateBoldFontFrom(HFONT font) {
-    if (!font) {
-        return nullptr;
-    }
-    LOGFONTW lf{};
-    if (GetObjectW(font, sizeof(lf), &lf) == 0) {
-        return nullptr;
-    }
-    lf.lfWeight = FW_BOLD;
-    return CreateFontIndirectW(&lf);
-}
-
-struct BoldFontCacheEntry {
-    BoldFontCacheEntry* next;
-    HFONT src;
-    PlatformFont* bold;
-};
-
-// A PlatformFont adopts an HFONT and keeps it for the life of the process, so
-// the bold variants can't be created and destroyed with the window. There are
-// only ever a handful (one per app font per DPI), so they are cached here and
-// live as long as the fonts they derive from.
-static BoldFontCacheEntry* gBoldFonts = nullptr;
-
-static PlatformFont* GetBoldFont(HFONT src) {
-    for (BoldFontCacheEntry* e = gBoldFonts; e; e = e->next) {
-        if (e->src == src) {
-            return e->bold;
-        }
-    }
-    HFONT bold = CreateBoldFontFrom(src);
-    PlatformFont* font = GetPlatformFont(bold ? bold : src);
-    auto* e = New<BoldFontCacheEntry>(GetPermArena());
-    e->src = src;
-    e->bold = font;
-    ListInsertFront(&gBoldFonts, e);
-    return font;
-}
-
 // id -> its (translated) menu description; empty if not found
 static TempStr CmdDescTemp(int cmdId) {
     int off = 0;
@@ -379,10 +340,9 @@ static void CollectSections(Vec<KbSectionData>& out, int secTitleH, int rowH, in
 }
 
 void KeyboardHelpWnd::BuildContent() {
-    HFONT hfontRow = GetAppFont();
-    fontRow = GetPlatformFont(hfontRow);
-    fontHdr = GetBoldFont(hfontRow);
-    fontTitle = GetBoldFont(GetAppBiggerFont());
+    fontRow = GetAppFont();
+    fontHdr = GetBoldPlatformFont(fontRow);
+    fontTitle = GetBoldPlatformFont(GetAppBiggerFont());
 
     Size szRow = PlatformFontMeasureText(fontRow, "Ag");
     Size szHdr = PlatformFontMeasureText(fontHdr, "Ag");

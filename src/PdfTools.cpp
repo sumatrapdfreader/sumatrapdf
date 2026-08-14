@@ -41,12 +41,8 @@ extern "C" void fz_set_optind(int val);
 
 // compute a dialog client width that fits the source path text, clamped to a
 // minimum and to 80% of the screen width (long paths get ellipsized instead)
-static int CalcDlgWidth(HFONT font, Str path, int minW, int padding) {
-    HDC hdc = GetDC(nullptr);
-    HFONT oldFont = (HFONT)SelectObject(hdc, font);
-    Size size = HdcGetTextExtentPoint32(hdc, path);
-    SelectObject(hdc, oldFont);
-    ReleaseDC(nullptr, hdc);
+static int CalcDlgWidth(PlatformFont* font, Str path, int minW, int padding) {
+    Size size = PlatformFontMeasureText(font, path);
     int dlgW = size.dx + (2 * padding) + DpiScale(32);
     dlgW = std::max(dlgW, minW);
     int screenW = GetSystemMetrics(SM_CXSCREEN);
@@ -87,7 +83,6 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
 // in the same VBox/HBox side by side. Each dialog only adds its rows and
 // implements DoIt().
 struct PdfToolDialog : WindowBase {
-    HFONT hFont = nullptr;
     Str srcPath; // owned
     MainWindow* win = nullptr;
     // what the "..." button's save dialog offers
@@ -162,14 +157,14 @@ VirtButton* PdfToolDialog::NewButton(Str text, bool isDefault) {
 bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     win = w;
     srcPath = str::Dup(tab->filePath);
-    hFont = GetDefaultGuiFont();
+    PlatformFont* dialogFont = GetDefaultGuiFont();
     onClose = MkFunc1Void(PdfToolDialogOnClose);
     onPreTranslate = MkMethod1<PdfToolDialog, WindowBase::PreTranslateEvent*, &PdfToolDialog::PreTranslate>(this);
     onKeyDown = MkMethod1<PdfToolDialog, KeyEvent*, &PdfToolDialog::OnKeyDown>(this);
 
     CreateCustomArgs cargs;
     cargs.title = title;
-    cargs.font = hFont;
+    cargs.font = dialogFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
     cargs.icon = GetAppIcon();
@@ -185,7 +180,6 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     // make the dialog an owned (rather than child) window of the main frame
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
 
-    font = GetPlatformFont(hFont);
     rowGap = DpiScale(6);
     gap = DpiScale(8);
     mainBox = new VBox();
@@ -221,7 +215,7 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
     Edit::CreateArgs args;
     args.parent = hwnd;
     args.withBorder = true;
-    args.font = hFont;
+    args.font = font;
     args.text = destPath;
     args.isRtl = IsUIRtl();
     destEdit = new Edit();
@@ -249,7 +243,7 @@ Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
     Edit::CreateArgs eargs;
     eargs.parent = hwnd;
     eargs.withBorder = true;
-    eargs.font = hFont;
+    eargs.font = font;
     eargs.text = text;
     eargs.isRtl = IsUIRtl();
     auto* e = new Edit();
@@ -283,7 +277,7 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     // size to a width that fits the source path (clamped), let the layout
     // compute the height
     int minClientW = DpiScale(480);
-    int clientW = CalcDlgWidth(hFont, srcPath, minClientW, DpiScale(10));
+    int clientW = CalcDlgWidth(font, srcPath, minClientW, DpiScale(10));
     Size size = layout->Layout(ExpandHeight(clientW));
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
     // positions everything and picks up the virtual controls to paint

@@ -169,7 +169,7 @@ void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning);
 bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out);
 
 int AIChatLabelMaxTextDx(int labelDx);
-TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docName, int maxDx);
+TempStr AIChatFitPanelTitleTemp(PlatformFont* font, Str prefix, Str docName, int maxDx);
 TempStr AIChatGenerateSessionIdTemp();
 
 AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab);

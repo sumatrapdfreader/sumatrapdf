@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/BitManip.h"
+#include "base/ScopedWin.h"
 #include "base/Win.h"
 #include "base/UITask.h"
 #include "gui/Dpi.h"
@@ -10,6 +11,7 @@
 #include "gui/UIModels.h"
 
 #include "gui/Layout.h"
+#include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
 
 //--- Edit
@@ -98,8 +100,8 @@ void Edit::SetCue(Str s) {
 }
 
 // average character width for sizing edits by character count
-static int EditAverageCharDx(HWND hwnd, HFONT font) {
-    Size s = HwndMeasureText(hwnd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", font);
+static int EditAverageCharDx(PlatformFont* font) {
+    Size s = PlatformFontMeasureText(font, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
     int ave = (s.dx + 25) / 52;
     if (ave < 1) {
         ave = DpiScale(7);
@@ -107,11 +109,11 @@ static int EditAverageCharDx(HWND hwnd, HFONT font) {
     return ave;
 }
 
-static int EditWidthForChars(HWND hwnd, HFONT font, int nChars) {
+static int EditWidthForChars(PlatformFont* font, int nChars) {
     if (nChars <= 0) {
         return 0;
     }
-    return EditAverageCharDx(hwnd, font) * nChars;
+    return EditAverageCharDx(font) * nChars;
 }
 
 Edit::Edit() {
@@ -184,7 +186,7 @@ void Edit::SetIdealWidthChars(int nChars) {
         idealDx = 0;
         return;
     }
-    idealDx = EditWidthForChars(hwnd, HwndGetFont(hwnd), nChars);
+    idealDx = EditWidthForChars(font, nChars);
 }
 
 // cap GetIdealSize width at ≈ nChars average character widths (0 clears)
@@ -193,20 +195,19 @@ void Edit::SetMaxWidthChars(int nChars) {
         maxDx = 0;
         return;
     }
-    maxDx = EditWidthForChars(hwnd, HwndGetFont(hwnd), nChars);
+    maxDx = EditWidthForChars(font, nChars);
 }
 
 void Edit::SetIdealWidthFromText(Str s, int extraPx) {
     if (!hwnd || !s) {
         return;
     }
-    HFONT font = HwndGetFont(hwnd);
     HDC dc = GetDC(hwnd);
-    HFONT prev = font ? (HFONT)SelectObject(dc, font) : nullptr;
-    // GetTextExtent, not HwndMeasureText: DT_EDITCONTROL underestimates digits
-    Size sz = HdcGetTextExtentPoint32(dc, s);
-    if (prev) {
-        SelectObject(dc, prev);
+    Size sz;
+    {
+        ScopedSelectFont selectFont(dc, GetHFont());
+        // GetTextExtent, not HwndMeasureText: DT_EDITCONTROL underestimates digits
+        sz = HdcGetTextExtentPoint32(dc, s);
     }
     ReleaseDC(hwnd, dc);
     idealDx = sz.dx + extraPx;
@@ -482,7 +483,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
 
 // height of one line of text in the control's font
 int Edit::LineDy() {
-    return HwndMeasureText(hwnd, "Minimal", HwndGetFont(hwnd)).dy;
+    return PlatformFontMeasureText(font, "Minimal").dy;
 }
 
 bool Edit::HasBorder() {
@@ -493,11 +494,10 @@ bool Edit::HasBorder() {
 }
 
 Size Edit::GetIdealSize() {
-    HFONT hfont = HwndGetFont(hwnd);
-    Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
+    Size s1 = PlatformFontMeasureText(font, "Minimal");
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
     TempStr txt = HwndGetTextTemp(hwnd);
-    Size s2 = HwndMeasureText(hwnd, txt, hfont);
+    Size s2 = PlatformFontMeasureText(font, txt);
     // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
     int dx = std::max(s1.dx, s2.dx);

@@ -38,12 +38,10 @@ void ShowProperties(HWND parent, DocController* ctrl);
 constexpr int kButtonPadding = 8;
 
 struct PropertiesWnd : WindowBase {
-    ~PropertiesWnd() override;
-
     HWND hwndParent = nullptr;
     Edit* editProps = nullptr;
     VirtButton* btnCopyToClipboard = nullptr;
-    HFONT propsFont = nullptr;
+    PlatformFont* propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
     // CloseDocumentInCurrentTab and DeleteMainWindow can both try to tear the
@@ -64,13 +62,6 @@ struct PropertiesWnd : WindowBase {
 };
 
 static Vec<PropertiesWnd*> gPropertiesWindows;
-
-PropertiesWnd::~PropertiesWnd() {
-    // propsFont is from HdcCreateSimpleFont — cached for the app lifetime.
-    // Do not DeleteObject it or the cache returns a dead HFONT on the next open
-    // (Document Properties then falls back to a proportional font; issue #5852).
-    propsFont = nullptr;
-}
 
 static void DeletePropertiesWndInstance(PropertiesWnd* w) {
     delete w;
@@ -750,11 +741,6 @@ void PropertiesWnd::SizeToContent() {
     if (!editProps) {
         return;
     }
-    HWND hwndEdit = editProps->hwnd;
-
-    HFONT font = (HFONT)SendMessageW(hwndEdit, WM_GETFONT, 0, 0);
-    HDC hdcEdit = GetDC(hwndEdit);
-    HGDIOBJ origFont = SelectObject(hdcEdit, font);
     int maxLineDx = 0;
     int nLines = 0;
     Str text = ToStr(propsText);
@@ -762,21 +748,16 @@ void PropertiesWnd::SizeToContent() {
         Str rest = Str(text.s + off, text.len - off);
         int nl = str::IndexOfChar(rest, '\n');
         int lineLen = nl >= 0 ? nl : rest.len;
-        Size size = HdcGetTextExtentPoint32(hdcEdit, Str(rest.s, lineLen));
+        Size size = PlatformFontMeasureText(propsFont, Str(rest.s, lineLen));
         maxLineDx = std::max(size.dx, maxLineDx);
         nLines++;
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
     maxLineDx += 16;
 
-    TEXTMETRICW tm{};
-    GetTextMetricsW(hdcEdit, &tm);
-    int lineHeight = tm.tmHeight + tm.tmExternalLeading;
+    int lineHeight = PlatformFontLineHeight(propsFont);
     // a bit of slack so the longest lines don't touch the right edge
-    maxLineDx += 4 * tm.tmAveCharWidth;
-
-    SelectObject(hdcEdit, origFont);
-    ReleaseDC(hwndEdit, hdcEdit);
+    maxLineDx += 4 * PlatformFontMeasureText(propsFont, "x").dx;
 
     // add padding for scrollbar, border, window frame
     int editPadding = DpiGetSystemMetrics(SM_CXVSCROLL) + (2 * DpiGetSystemMetrics(SM_CXEDGE)) + 16;
@@ -834,7 +815,7 @@ void PropertiesWnd::UpdateTheme() {
     }
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (editProps && propsFont) {
-        HwndSetFont(editProps->hwnd, propsFont);
+        editProps->SetFont(propsFont);
     }
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
@@ -967,7 +948,7 @@ bool PropertiesWnd::Create(HWND parent) {
         auto* btnRow = new HBox();
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
-        btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetPlatformFont(GetAppFont()), true);
+        btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetAppFont(), true);
         btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
         vbox->AddChild(btnRow);

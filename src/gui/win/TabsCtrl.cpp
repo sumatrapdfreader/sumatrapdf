@@ -221,7 +221,7 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     gfx->FillRect(r, tabBgCol);
 
     bool isRtl = IsTabsRtl(hwnd);
-    PlatformFont* font = GetPlatformFont(tabsCtrl->GetFont());
+    PlatformFont* font = tabsCtrl->GetFont();
 
     // draw text — inset from the close glyph (size varies with tab height)
     Rect rTxt = r;
@@ -358,14 +358,14 @@ TabCtrl* TabsCtrl::TabCtrlAt(int idx) {
     return tabCtrls[idx];
 }
 
-HFONT TabsCtrl::GetFont() const {
+PlatformFont* TabsCtrl::GetFont() const {
     return font;
 }
 
-void TabsCtrl::SetFont(HFONT fontIn) {
+void TabsCtrl::SetFont(PlatformFont* fontIn) {
     font = fontIn;
     if (hwnd) {
-        HwndSetFont(hwnd, fontIn);
+        HwndSetFont(hwnd, fontIn ? fontIn->GetHFont() : nullptr);
     }
     ScheduleRepaint();
 }
@@ -539,7 +539,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     gfx->FillRectangle(&br, gr);
 
     HDC hdc = GetDC(hwnd);
-    Font f(hdc, GetFont());
+    Font f(hdc, GetFont()->GetHFont());
     ReleaseDC(hwnd, hdc);
 
     Gdiplus::RectF rTxt(0, 0, (float)r.dx, (float)r.dy);
@@ -991,7 +991,7 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
         return nullptr;
     }
     if (font) {
-        HwndSetFont(hwnd, font);
+        HwndSetFont(hwnd, font->GetHFont());
     }
 
     vroot = new VirtRoot(hwnd);

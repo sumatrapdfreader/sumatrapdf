@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct RenderedBitmap;
+struct PlatformFont;
 namespace Gdiplus {
 class Bitmap;
 }
@@ -22,7 +23,7 @@ struct ImageEditHost {
     // Applies the host's dark mode to a window the editor created.
     void (*ApplyDarkMode)(HWND) = nullptr;
     // Font for the editor's controls; without it the default GUI font is used.
-    HFONT (*GetFont)() = nullptr;
+    PlatformFont* (*GetFont)() = nullptr;
     // Window the editor falls back to as a parent (used by the headless test).
     HWND (*GetOwnerHwnd)() = nullptr;
     // Icon resource id for the editor window; 0 leaves it without one.

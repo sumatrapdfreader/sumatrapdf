@@ -337,7 +337,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         editPages->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
     }
 
-    PlatformFont* platformFont = GetPlatformFont(GetAppFont());
+    PlatformFont* platformFont = GetAppFont();
 
     pagesLabel = NewVirtText({
         .font = platformFont,

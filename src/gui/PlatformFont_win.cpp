@@ -8,15 +8,169 @@
 
 #include "gui/PlatformFont.h"
 
-
 using Gdiplus::Font;
 using Gdiplus::Ok;
 using Gdiplus::Status;
+
+PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId);
 
 // the Graphics used for font metrics doesn't draw anything, so its bitmap can
 // be tiny
 constexpr int kMeasureBmpDx = 32;
 constexpr int kMeasureBmpDy = 4;
+
+constexpr u16 kFontFlagItalic = 0x01;
+constexpr u16 kFontFlagBold = 0x02;
+
+struct CreatedFontInfo {
+    CreatedFontInfo* next = nullptr;
+    Str name;
+    HFONT font = nullptr;
+    u16 size = 0;
+    u16 flags = 0;
+};
+
+static CreatedFontInfo* gFonts = nullptr;
+
+static CreatedFontInfo* FindCreatedFont(Str name, int size, u16 flags) {
+    for (CreatedFontInfo* font = gFonts; font; font = font->next) {
+        if (font->size == (u16)size && font->flags == flags && str::Eq(font->name, name)) {
+            return font;
+        }
+    }
+    return nullptr;
+}
+
+static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags) {
+    auto* created = new CreatedFontInfo();
+    created->name = str::Dup(name);
+    created->font = font;
+    created->size = (u16)size;
+    created->flags = flags;
+    ListInsertFront(&gFonts, created);
+    return font;
+}
+
+void DeleteCreatedFonts() {
+    CreatedFontInfo* font = gFonts;
+    while (font) {
+        auto* next = font->next;
+        str::Free(font->name);
+        DeleteFont(font->font);
+        delete font;
+        font = next;
+    }
+    gFonts = nullptr;
+}
+
+PlatformFont* HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
+    int realSize = MulDiv(fontSizePt, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
+    u16 flags = 0;
+    auto* font = FindCreatedFont(fontName, realSize, flags);
+    if (font) {
+        return GetPlatformFont(font->font);
+    }
+
+    LOGFONTW lf{};
+    lf.lfHeight = -realSize;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfOutPrecision = OUT_TT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = DEFAULT_PITCH;
+    wstr::BufSet(WStr(lf.lfFaceName, dimof(lf.lfFaceName)), ToWStrTemp(fontName));
+    lf.lfWeight = FW_DONTCARE;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    HFONT res = CreateFontIndirectW(&lf);
+    return GetPlatformFont(RememberCreatedFont(res, fontName, realSize, flags));
+}
+
+PlatformFont* GetDefaultGuiFontOfSize(int size) {
+    auto* font = FindCreatedFont(Str(), size, 0);
+    if (font) {
+        return GetPlatformFont(font->font);
+    }
+
+    NONCLIENTMETRICS ncm{};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    ncm.lfMessageFont.lfHeight = -size;
+    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
+    return GetPlatformFont(RememberCreatedFont(res, Str(), size, 0));
+}
+
+PlatformFont* GetUserGuiFont(Str fontName, int size) {
+    return GetUserGuiFontEx(fontName, size, false, false);
+}
+
+PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
+    if (str::EqI(fontName, StrL("automatic")) || str::EqI(fontName, StrL("auto"))) {
+        fontName = Str();
+    }
+    u16 flags = (bold ? kFontFlagBold : 0) | (italic ? kFontFlagItalic : 0);
+    auto* font = FindCreatedFont(fontName, size, flags);
+    if (font) {
+        return GetPlatformFont(font->font);
+    }
+
+    NONCLIENTMETRICS ncm{};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    if (len(fontName) > 0) {
+        wstr::BufSet(WStr(ncm.lfMessageFont.lfFaceName, dimof(ncm.lfMessageFont.lfFaceName)), ToWStrTemp(fontName));
+    }
+    ncm.lfMessageFont.lfHeight = -size;
+    if (bold) {
+        ncm.lfMessageFont.lfWeight = FW_BOLD;
+    }
+    if (italic) {
+        ncm.lfMessageFont.lfItalic = TRUE;
+    }
+    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
+    return GetPlatformFont(RememberCreatedFont(res, fontName, size, flags));
+}
+
+PlatformFont* GetDefaultGuiFont(bool bold, bool italic) {
+    u16 flags = (bold ? kFontFlagBold : 0) | (italic ? kFontFlagItalic : 0);
+    NONCLIENTMETRICS ncm{};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    int size = (int)std::abs(ncm.lfMessageFont.lfHeight);
+    auto* font = FindCreatedFont(Str(), size, flags);
+    if (font) {
+        return GetPlatformFont(font->font);
+    }
+    if (bold) {
+        ncm.lfMessageFont.lfWeight = FW_BOLD;
+    }
+    if (italic) {
+        ncm.lfMessageFont.lfItalic = TRUE;
+    }
+    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
+    return GetPlatformFont(RememberCreatedFont(res, Str(), size, flags));
+}
+
+PlatformFont* GetScaledPlatformFont(PlatformFont* font, int percent) {
+    if (!font || percent <= 0) {
+        return nullptr;
+    }
+    HFONT hfont = font->GetHFont();
+    LOGFONTW lf{};
+    if (!hfont || GetObjectW(hfont, sizeof(lf), &lf) == 0) {
+        return font;
+    }
+    lf.lfHeight = MulDiv(lf.lfHeight, percent, 100);
+    Str name = ToUtf8Temp(WStr(lf.lfFaceName));
+    u16 flags = (lf.lfWeight >= FW_BOLD ? kFontFlagBold : 0) | (lf.lfItalic ? kFontFlagItalic : 0);
+    auto* cached = FindCreatedFont(name, std::abs(lf.lfHeight), flags);
+    if (cached) {
+        return GetPlatformFont(cached->font);
+    }
+    HFONT scaled = CreateFontIndirectW(&lf);
+    if (!scaled) {
+        return font;
+    }
+    return GetPlatformFont(RememberCreatedFont(scaled, name, std::abs(lf.lfHeight), flags));
+}
 
 static Gdiplus::FontStyle ToGdiPlusFontStyle(PlatformFontStyle style) {
     return (Gdiplus::FontStyle)(int)style;
@@ -25,6 +179,10 @@ static Gdiplus::FontStyle ToGdiPlusFontStyle(PlatformFontStyle style) {
 // gdiplus is what lays out and draws our ebook text, so the font is created
 // there and the HFONT (needed by the gdi text renderers) is derived from it
 bool PlatformFontCreateNative(PlatformFont* f) {
+    if (f->nativeId) {
+        f->hfont = (HFONT)f->nativeId;
+        return true;
+    }
     Gdiplus::FontStyle style = ToGdiPlusFontStyle(f->style);
     // gdiplus wants a NUL-terminated WCHAR*
     TempWStr nameW = ToWStrTemp(f->name);
@@ -93,13 +251,7 @@ PlatformFont* GetPlatformFont(HFONT hfont) {
     // points at 96 dpi, which is what the rest of the font cache is keyed on
     int dyPx = lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight;
     float sizePt = (float)dyPx * 72.f / 96.f;
-    PlatformFont* font = GetPlatformFont(ToUtf8Temp(WStr(lf.lfFaceName)), sizePt, style);
-    if (font && !font->hfont) {
-        // prefer the caller's HFONT: it is the one the rest of the UI draws
-        // with, so text measured here matches text drawn by the win32 controls
-        font->hfont = hfont;
-    }
-    return font;
+    return GetPlatformFontForNative(ToUtf8Temp(WStr(lf.lfFaceName)), sizePt, style, (uintptr_t)hfont);
 }
 
 // derived from the font's own HFONT rather than from (name, size, Bold): an

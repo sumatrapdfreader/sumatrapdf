@@ -1186,11 +1186,12 @@ void ReloadTocTree(WindowTab* tab) {
 
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
 // to get LOGFONT from existing font and then create a derived font
-static void UpdateFont(HDC hdc, int fontFlags) {
+static PlatformFont* UpdateFont(HDC hdc, int fontFlags) {
     bool italic = bit::IsSet(fontFlags, fontBitItalic);
     bool bold = bit::IsSet(fontFlags, fontBitBold);
-    HFONT hfont = GetAppTreeFontEx(bold, italic);
-    SelectObject(hdc, hfont);
+    PlatformFont* font = GetAppTreeFontEx(bold, italic);
+    SelectObject(hdc, font->GetHFont());
+    return font;
 }
 
 static void GetTocFilterWords(MainWindow* win, StrVec& wordsOut) {
@@ -1281,12 +1282,11 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
         return;
     }
 
+    PlatformFont* font = tv->GetFont();
     if (tocItem->fontFlags != 0) {
-        UpdateFont(hdc, tocItem->fontFlags);
-    }
-    HFONT font = (HFONT)SendMessageW(tv->hwnd, WM_GETFONT, 0, 0);
-    if (tocItem->fontFlags == 0 && font) {
-        SelectObject(hdc, font);
+        font = UpdateFont(hdc, tocItem->fontFlags);
+    } else if (font) {
+        SelectObject(hdc, font->GetHFont());
     }
 
     TempWStr pageW{};
@@ -1778,7 +1778,7 @@ void CreateToc(MainWindow* win) {
     HWND parent = win->hwndFrame;
     win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
 
-    PlatformFont* labelFont = GetPlatformFont(GetAppSidebarLabelFont());
+    PlatformFont* labelFont = GetAppSidebarLabelFont();
     auto header = NewLabelWithClose(win->hwndTocBox, labelFont, MkFunc1(TocCloseClicked, win));
     win->tocLabel = header.label;
     // label text is set in UpdateToolbarSidebarText()

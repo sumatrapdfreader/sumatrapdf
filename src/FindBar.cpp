@@ -264,7 +264,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     // ellipsis: single line, vertically centered, so it lines up with the
     // (taller, bordered) edit box's text instead of sitting at the top
     status = NewVirtText({
-        .font = GetPlatformFont(GetAppFont()),
+        .font = GetAppFont(),
         .textColor = colTxt,
         .isRtl = IsUIRtl(),
         .ellipsis = true,

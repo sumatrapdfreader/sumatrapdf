@@ -1405,7 +1405,7 @@ void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
 static VirtText* CreateStatic(Str s = nullptr) {
     return NewVirtText({
         .s = s,
-        .font = GetPlatformFont(GetAppFont()),
+        .font = GetAppFont(),
         .textColor = ThemeWindowTextColor(),
         .isRtl = IsUIRtl(),
         .ellipsis = true,
@@ -1415,7 +1415,7 @@ static VirtText* CreateStatic(Str s = nullptr) {
 // the buttons are virtual controls, so they are styled here rather than by the
 // system: a filled box with a border, brighter on hover (like the other dialogs)
 static VirtButton* CreateVirtButton(Str text) {
-    auto* b = new VirtButton(text, GetPlatformFont(GetAppFont()));
+    auto* b = new VirtButton(text, GetAppFont());
     Color bg = ThemeWindowControlBackgroundColor();
     b->textColor = ThemeWindowTextColor();
     b->textColorDisabled = ThemeWindowTextDisabledColor();
@@ -1451,12 +1451,12 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-    HFONT fnt = GetAppFont();
+    PlatformFont* fnt = GetAppFont();
 
     {
         auto* w = new VirtListBox();
         w->dpi = ew->GetDpi();
-        w->font = GetPlatformFont(fnt);
+        w->font = fnt;
         w->textColor = ThemeWindowTextColor();
         w->bgColor = ThemeWindowControlBackgroundColor();
         w->padding = DpiScaledInsets(4, 0);

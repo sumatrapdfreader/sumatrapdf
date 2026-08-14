@@ -467,21 +467,21 @@ void AboutCtrl::Sync(HDC hdc) {
         }
     }
 
-    logo->font = GetPlatformFont(HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize));
+    logo->font = HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
 
-    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
-    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
+    PlatformFont* fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
+    PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
     Color colText = ThemeWindowTextColor();
     Color colLink = ThemeWindowLinkColor();
 
     for (int i = 0; i < n; i++) {
         AboutRow* el = &gAboutRows[i];
         VirtText* left = LeftAt(i);
-        left->font = GetPlatformFont(fontLeftTxt);
+        left->font = fontLeftTxt;
         left->textColor = colText;
 
         VirtText* right = RightAt(i);
-        right->font = GetPlatformFont(fontRightTxt);
+        right->font = fontRightTxt;
         bool isLink = canAccessDisk && el->url;
         right->textColor = isLink ? colLink : colText;
         // without disk access the url can't be opened, so it isn't a link
@@ -541,10 +541,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, VirtRoot* root) {
     col = ThemeWindowLinkColor();
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
 
-    HFONT fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
-    HFONT fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
+    PlatformFont* fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
 
-    ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
+    ScopedSelectFont font(hdc, fontLeftTxt->GetHFont());
 
     Rect rc = HwndClientRect(hwnd);
     col = ThemeMainWindowBackgroundColor();
@@ -798,7 +797,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
     if (about->showFreqRead) {
         VirtLink* link = about->showFreqRead;
         link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
-        link->font = GetPlatformFont(HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16));
+        link->font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
         link->textColor = ThemeWindowLinkColor();
         link->sz = {0, 0}; // re-measure: the font may have changed with the DPI
         Size txtSize = link->GetIdealSize(true);
@@ -1120,7 +1119,7 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     }
     HWND parent = win->hwndCanvas;
     HDC hdc = GetDC(parent);
-    HFONT font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    PlatformFont* font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
     ReleaseDC(parent, hdc);
 
     Edit::CreateArgs args;
@@ -1404,8 +1403,8 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.thumbnails = c.thumbs;
     l.filterWords = c.filterWords;
 
-    HFONT hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
-    HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    PlatformFont* hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    PlatformFont* fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
     Str txt = _TRA("Recently Opened");
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
@@ -1414,14 +1413,14 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     HomeChromeCtrl* chrome = EnsureHomeChrome(win);
     VirtText* hdr = chrome->hdr;
     hdr->SetText(txt);
-    hdr->font = GetPlatformFont(hdrFont);
+    hdr->font = hdrFont;
     hdr->isRtl = isRtl;
     hdr->SetBounds(c.rcFreqRead);
     l.freqRead = hdr;
 
     VirtText* openDoc = chrome->openDoc->text;
     openDoc->SetText(_TRA("Open a document..."));
-    openDoc->font = GetPlatformFont(fontText);
+    openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     openDoc->SetBounds(c.rcOpenDoc);
@@ -1484,8 +1483,8 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
 
     bool isRtl = IsUIRtl();
-    HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    HFONT hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    PlatformFont* fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    PlatformFont* hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
 
     // --- Pre-compute thumbnail grid x offset so header can align with it ---
     // use unfiltered count so layout stays stable when search filters results
@@ -1515,7 +1514,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     HomeChromeCtrl* chrome = EnsureHomeChrome(win);
     VirtText* hdr = chrome->hdr;
     hdr->SetText(txt);
-    hdr->font = GetPlatformFont(hdrFont);
+    hdr->font = hdrFont;
     l.freqRead = hdr;
     hdr->isRtl = isRtl;
     Size txtSize = hdr->GetIdealSize(true);
@@ -1545,7 +1544,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     txt = _TRA("Open a document...");
     VirtText* openDoc = chrome->openDoc->text;
     openDoc->SetText(txt);
-    openDoc->font = GetPlatformFont(fontText);
+    openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     txtSize = openDoc->GetIdealSize(true);
@@ -1593,9 +1592,9 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
     int tipHeight = 0;
-    HFONT fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
+    PlatformFont* fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
     HomeTipCtrl* tipCtrl = EnsureHomeChrome(l.win)->tip;
-    tipCtrl->SetTipLine(SelectedTipLine(), GetPlatformFont(fontTip));
+    tipCtrl->SetTipLine(SelectedTipLine(), fontTip);
     VirtRichText* tip = tipCtrl->rich;
     if (tip) {
         int tipPadding = DpiScale(8);
@@ -1820,7 +1819,7 @@ static void DrawHomeSelectionOutline(HDC hdc, const Rect& r, int radius) {
 // during layout: measuring every history entry made layout (and so scrolling)
 // slow, and measuring only the rows visible at layout time meant rows scrolled
 // into view later never got a directory.
-static void MeasureHomeListRowText(HDC hdc, ThumbnailLayout& thumb, HFONT font, bool isRtl) {
+static void MeasureHomeListRowText(ThumbnailLayout& thumb, PlatformFont* font, bool isRtl) {
     if (thumb.listTextMeasured) {
         return;
     }
@@ -1828,7 +1827,7 @@ static void MeasureHomeListRowText(HDC hdc, ThumbnailLayout& thumb, HFONT font, 
 
     Rect rcFileName = thumb.rcListFileName;
     TempStr fileName = path::GetBaseNameTemp(thumb.fs->filePath);
-    int nameDx = HdcMeasureText(hdc, Str(fileName), font).dx + DpiScale(4);
+    int nameDx = PlatformFontMeasureText(font, fileName).dx + DpiScale(4);
     int minPathDx = DpiScale(80);
     if (nameDx + kHomeListRowGapDx + minPathDx > rcFileName.dx) {
         // no room for a path, the name gets the whole span
@@ -1850,7 +1849,7 @@ static bool HomeSearchHasFocus(MainWindow* win) {
     return win && win->homeSearch && GetFocus() == win->homeSearch->hwnd;
 }
 
-static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fontText, Color backgroundColor,
+static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformFont* fontText, Color backgroundColor,
                             bool isRtl, bool isSelected) {
     HDC hdc = l.hdc;
     FileState* fs = thumb.fs;
@@ -1858,7 +1857,7 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     if (!IsHomeThumbOnScreen(row, l.rcThumbsArea)) {
         return;
     }
-    MeasureHomeListRowText(hdc, thumb, fontText, isRtl);
+    MeasureHomeListRowText(thumb, fontText, isRtl);
     // no selection chrome while typing in the search box
     if (isSelected && !HomeSearchHasFocus(l.win)) {
         DrawHomeSelectionOutline(hdc, Rect(row.x, row.y, row.dx, row.dy - 1), 4);
@@ -1880,11 +1879,11 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, HFONT fon
     Str path = fs->filePath;
     TempStr fileName = path::GetBaseNameTemp(path);
     u32 nameFmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
-    SelectObject(hdc, fontText);
+    SelectObject(hdc, fontText->GetHFont());
     {
         GfxHdc gfx(hdc);
         DrawMaybeHighlightedText(&gfx, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor,
-                                 isRtl, false, nameFmt, GetPlatformFont(fontText));
+                                 isRtl, false, nameFmt, fontText);
     }
 
     // directory path, right-aligned and muted, in the space the file name doesn't need.
@@ -1932,7 +1931,7 @@ static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
     // the screen dc is only for sizing the font (it is cached and interned by
     // both helpers, so this doesn't create anything per paint)
     AutoReleaseDC dc(nullptr);
-    PlatformFont* font = GetPlatformFont(HdcCreateSimpleFont(dc, "MS Shell Dlg", 14));
+    PlatformFont* font = HdcCreateSimpleFont(dc, "MS Shell Dlg", 14);
     gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
@@ -2456,7 +2455,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     }
 
     auto color = ThemeWindowTextColor();
-    HFONT fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    PlatformFont* fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
     color = ThemeWindowLinkColor();
@@ -2523,11 +2522,11 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         TempStr fileName = path::GetBaseNameTemp(path);
         u32 fmt = gfxTextEllipsis | (isRtl ? gfxTextRight : gfxTextLeft);
 
-        SelectObject(hdc, fontText);
+        SelectObject(hdc, fontText->GetHFont());
         {
             GfxHdc gfx(hdc);
             DrawMaybeHighlightedText(&gfx, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
-                                     fmt, GetPlatformFont(fontText));
+                                     fmt, fontText);
         }
 
         GetFileStateIcon(fs);
