@@ -971,6 +971,40 @@ FileStates [
     ; for the password again
     DecryptionKey =
 
+    ; reflowable (ebook) settings for just this document. The block is absent
+    ; until you add it; a field left empty or 0 uses the global EBookUI value.
+    ; The global section's WindowBgCol and DefaultDisplayMode are already
+    ; per-document as BgCol and DisplayMode below (introduced in version 3.7)
+    EBookUI [
+        ; font family for this document (e.g. Segoe UI, Microsoft YaHei); empty
+        ; uses EBookUI.FontName (introduced in version 3.7)
+        FontName = 
+
+        ; font size in points for this document; 0 uses EBookUI.FontSize
+        ; (introduced in version 3.7)
+        FontSize = 0
+
+        ; line-height multiplier for this document (e.g. 1.5); 0 uses
+        ; EBookUI.LineSpacing (introduced in version 3.7)
+        LineSpacing = 0
+
+        ; width of the page this document is laid out into, in points; 0 uses
+        ; EBookUI.LayoutDx (introduced in version 3.7)
+        LayoutDx = 0
+
+        ; height of the page this document is laid out into, in points; 0 uses
+        ; EBookUI.LayoutDy (introduced in version 3.7)
+        LayoutDy = 0
+
+        ; whether the CSS in this document is ignored: true or false; empty uses
+        ; EBookUI.IgnoreDocumentCSS (introduced in version 3.7)
+        IgnoreDocumentCSS = 
+
+        ; additional CSS applied to this document; empty uses EBookUI.CustomCSS
+        ; (introduced in version 3.7)
+        CustomCSS = 
+    ]
+
     ; if true, this document opens with the global defaults instead of the
     ; values below
     UseDefaultState = false

@@ -9,6 +9,12 @@ FileState* NewFileState(Str);
 void DeleteFileState(FileState*);
 void DeleteFileStates(Vec<FileState*>*);
 
+// a document's per-file ebook settings are read on the thread that loads it,
+// so a load that doesn't run on the UI thread needs its own copy (#4600).
+// both are null-safe
+FileEBookUI* CopyFileEBookUI(const FileEBookUI*);
+void DeleteFileEBookUI(FileEBookUI*);
+
 Favorite* NewFavorite(int pageNo, Str name, Str pageLabel);
 void DeleteFavorite(Favorite* fav);
 

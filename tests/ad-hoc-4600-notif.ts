@@ -41,6 +41,47 @@ export async function testit(): Promise<void> {
   await shot(epub, "NoSuchFontXYZ", "epub-missing");
   await shot(epub, "Arial", "epub-ok");
   await shot(pdf, "NoSuchFontXYZ", "pdf-missing");
+  // the notification has to name the font that actually failed: here the
+  // global one is fine and the document's own override is the bad one
+  await shotPerFile(epub, "Arial", "NoSuchPerFileFont", "epub-perfile-missing");
+}
+
+// like shot(), but the bad font name is in this document's FileStates entry
+async function shotPerFile(doc: string, globalFont: string, fileFont: string, tag: string): Promise<void> {
+  const appdata = tmpPath("issue-4600-notif-appdata");
+  rmSync(appdata, { recursive: true, force: true });
+  mkdirSync(appdata, { recursive: true });
+  writeFileSync(
+    join(appdata, "SumatraPDF-settings.txt"),
+    [
+      `EBookUI [`,
+      `\tFontName = ${globalFont}`,
+      `]`,
+      `RestoreSession = false`,
+      `FileStates [`,
+      `\t[`,
+      `\t\tFilePath = ${doc}`,
+      `\t\tEBookUI [`,
+      `\t\t\tFontName = ${fileFont}`,
+      `\t\t]`,
+      `\t]`,
+      `]`,
+      ``,
+    ].join("\n"),
+  );
+  const proc = launchSumatra(["-appdata", appdata, "-view", "single page", "-zoom", "fit page", doc]);
+  try {
+    const frame = await waitForFrame(proc.pid!);
+    showWindow(frame, SW_RESTORE);
+    moveWindow(frame, 40, 40, 900, 700);
+    setForegroundWindow(frame);
+    await sleep(2500);
+    captureWindowToPng(frame, join(tmpPath("epub-font"), `notif-${tag}.png`));
+    console.log(`  wrote notif-${tag}.png (per-file FontName='${fileFont}')`);
+  } finally {
+    proc.kill();
+    await sleep(300);
+  }
 }
 
 if (import.meta.main) {

@@ -60,6 +60,27 @@ FileState* NewFileState(Str filePath) {
     return fs;
 }
 
+FileEBookUI* CopyFileEBookUI(const FileEBookUI* src) {
+    if (!src) {
+        return nullptr;
+    }
+    auto* res = (FileEBookUI*)DeserializeStruct(&gFileEBookUIInfo, nullptr);
+    str::ReplaceWithCopy(&res->fontName, src->fontName);
+    res->fontSize = src->fontSize;
+    res->lineSpacing = src->lineSpacing;
+    res->layoutDx = src->layoutDx;
+    res->layoutDy = src->layoutDy;
+    str::ReplaceWithCopy(&res->ignoreDocumentCSS, src->ignoreDocumentCSS);
+    str::ReplaceWithCopy(&res->customCSS, src->customCSS);
+    return res;
+}
+
+void DeleteFileEBookUI(FileEBookUI* v) {
+    if (v) {
+        FreeStruct(&gFileEBookUIInfo, v);
+    }
+}
+
 void DeleteFileState(FileState* fs) {
     FreePixmap(fs->thumbnail);
     FreeStruct(&gFileStateInfo, fs);
@@ -95,7 +116,14 @@ GlobalPrefs* NewGlobalPrefs(Str data) {
 // (SetSearchStartFavorite), which left a bare FilePath in the settings file of
 // someone who asked us not to remember opened files (issue #5899).
 static bool FileStateWorthKeepingWithoutHistory(FileState* fs) {
-    if (!fs || !fs->favorites) {
+    if (!fs) {
+        return false;
+    }
+    // per-document ebook settings are configuration the user typed, not history
+    if (fs->eBookUI) {
+        return true;
+    }
+    if (!fs->favorites) {
         return false;
     }
     for (Favorite* fav : *fs->favorites) {

@@ -31,6 +31,36 @@ EBookUI [
 
 Full field reference: [Advanced options / settings](Advanced-options-settings.md).
 
+## Settings for a single document (**ver 3.7+**)
+
+The same options can be set for one document only, as an `EBookUI` block inside
+that file's entry in `FileStates`:
+
+```
+FileStates [
+    [
+        FilePath = C:\books\war-and-peace.epub
+        EBookUI [
+            FontName = Microsoft YaHei
+            LineSpacing = 1.4
+        ]
+    ]
+]
+```
+
+A field you leave out (empty, or `0` for the numbers) uses the value from the
+global `EBookUI` section, so the block above changes only the font and the line
+spacing for that one book. `IgnoreDocumentCSS` is `true` / `false` here, and
+empty means "use the global setting" — so a single document can keep the
+publisher's CSS even when the global setting ignores it.
+
+The block is written to the settings file only for documents that have one, and
+it survives `RememberOpenedFiles = false` (it's a setting you typed, not reading
+history). The document has to be reopened for a change to take effect.
+
+`WindowBgCol` and `DefaultDisplayMode` have no per-document version here: the
+`BgCol` and `DisplayMode` fields of the file entry already do that job.
+
 ## Themes and document page colors
 
 UI themes (`Theme = ...`) only change window chrome. Ebooks that go through MuPDF’s fixed-page color path use the same **`DocumentColorsFollowTheme`** setting as PDF:

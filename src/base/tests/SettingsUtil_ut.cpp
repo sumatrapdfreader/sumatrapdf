@@ -292,4 +292,65 @@ Key = Value";
         FreeStruct(&gSutTempRootInfo, loaded);
         FreeStruct(&gSutTempRootInfo, root);
     }
+
+    // SettingType::StructPtr is an optional sub-struct: null by default and not
+    // written at all until it's set (per-document EBookUI overrides, #4600)
+    struct SutOptSub {
+        Str name;
+        int size;
+    };
+    static const FieldInfo gSutOptSubFields[] = {
+        {offsetof(SutOptSub, name), SettingType::String, 0},
+        {offsetof(SutOptSub, size), SettingType::Int, 0},
+    };
+    static const StructInfo gSutOptSubInfo = {sizeof(SutOptSub), 2, gSutOptSubFields, "Name\0Size"};
+
+    struct SutOptRoot {
+        int other;
+        SutOptSub* sub;
+    };
+    static const FieldInfo gSutOptRootFields[] = {
+        {offsetof(SutOptRoot, other), SettingType::Int, 7},
+        {offsetof(SutOptRoot, sub), SettingType::StructPtr, (intptr_t)&gSutOptSubInfo},
+    };
+    static const StructInfo gSutOptRootInfo = {sizeof(SutOptRoot), 2, gSutOptRootFields, "Other\0Sub"};
+
+    {
+        // default: not set, and nothing about it in the output
+        auto* root = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, nullptr);
+        utassert(root && !root->sub);
+        Str out = SerializeStruct(&gSutOptRootInfo, root);
+        utassert(str::Contains(out, StrL("Other = 7")));
+        utassert(!str::Contains(out, StrL("Sub")));
+        str::Free(out);
+
+        // once set, it round-trips
+        root->sub = (SutOptSub*)DeserializeStruct(&gSutOptSubInfo, nullptr);
+        str::ReplaceWithCopy(&root->sub->name, StrL("Segoe UI"));
+        root->sub->size = 14;
+        out = SerializeStruct(&gSutOptRootInfo, root);
+        utassert(str::Contains(out, StrL("Sub [")));
+        utassert(str::Contains(out, StrL("Name = Segoe UI")));
+
+        auto* loaded = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, out);
+        str::Free(out);
+        utassert(loaded && loaded->sub);
+        utassert(str::Eq(loaded->sub->name, StrL("Segoe UI")));
+        utassert(14 == loaded->sub->size);
+        FreeStruct(&gSutOptRootInfo, loaded);
+        FreeStruct(&gSutOptRootInfo, root);
+
+        // a block in the data with none of its fields set still means "set"
+        auto* empty = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, StrL(UTF8_BOM "Sub [\r\n]\r\n"));
+        utassert(empty && empty->sub && !empty->sub->name && 0 == empty->sub->size);
+
+        // deserializing onto an existing struct merges, like the other types:
+        // fields not in the data keep their value, present ones win
+        str::ReplaceWithCopy(&empty->sub->name, StrL("old"));
+        empty->sub->size = 3;
+        DeserializeStruct(&gSutOptRootInfo, StrL(UTF8_BOM "Other = 9\r\nSub [\r\n\tSize = 5\r\n]\r\n"), empty);
+        utassert(9 == empty->other && empty->sub);
+        utassert(str::Eq(empty->sub->name, StrL("old")) && 5 == empty->sub->size);
+        FreeStruct(&gSutOptRootInfo, empty);
+    }
 }

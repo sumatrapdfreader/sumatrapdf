@@ -99,9 +99,9 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine) {
 }
 
 // lets the UI ask without pulling in mupdf headers (declared in EngineAll.h)
-bool EngineEbookFontUnavailable(EngineBase* engine) {
+Str EngineEbookFontUnavailable(EngineBase* engine) {
     EngineMupdf* e = AsEngineMupdf(engine);
-    return e && e->ebookFontUnavailable;
+    return e ? e->ebookFontUnavailable : Str{};
 }
 
 class FitzAbortCookie : public AbortCookie {
@@ -2772,6 +2772,7 @@ fz_context* EngineMupdf::Ctx() const {
 
 EngineMupdf::~EngineMupdf() {
     pagesLock.Lock();
+    str::Free(ebookFontUnavailable);
 
     auto* ctx = _ctx;
     if (darkModeEngineCache) {
@@ -3142,6 +3143,8 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
 // is implemented in SumatraPDF.exe, PdfFilter and PdfPreview
 // TODO: allow setting per
 extern EBookUI* GetEBookUI();
+// per-document overrides (FileStates -> EBookUI), null unless the document has them
+extern FileEBookUI* GetFileEBookUI(Str filePath);
 
 static TempStr EbookLineSpacingCssTemp(float lineSpacing) {
     if (!(lineSpacing >= 0.5f && lineSpacing <= 5.f)) {
@@ -3161,12 +3164,13 @@ static TempStr EbookFontFamilyCssTemp(Str fontName) {
     if (!fontName) {
         return {};
     }
-    return fmt("body, p, div, span, a, em, strong, b, i, u, s, small, big, sub, sup, "
-               "li, ol, ul, dl, dt, dd, td, th, caption, table, "
-               "h1, h2, h3, h4, h5, h6, blockquote, q, cite, "
-               "section, article, aside, header, footer, nav, main, figure, figcaption, "
-               "label, center, font { font-family: \"%s\" !important; }\n",
-               fontName);
+    return fmt(
+        "body, p, div, span, a, em, strong, b, i, u, s, small, big, sub, sup, "
+        "li, ol, ul, dl, dt, dd, td, th, caption, table, "
+        "h1, h2, h3, h4, h5, h6, blockquote, q, cite, "
+        "section, article, aside, header, footer, nav, main, figure, figcaption, "
+        "label, center, font { font-family: \"%s\" !important; }\n",
+        fontName);
 }
 
 #if defined(DEBUG)
@@ -3186,6 +3190,97 @@ bool EngineMupdf_UnitTestEbookFontFamilyCss() {
     // the elements publishers actually hang fonts off, and no monospace ones
     return str::Contains(css, "span,") && str::Contains(css, "div,") && str::Contains(css, "li,") &&
            !str::Contains(css, "pre,") && !str::Contains(css, "code,");
+}
+#endif
+
+// the reflow settings that actually reach mupdf, after a document's own
+// FileStates -> EBookUI block (if any) has overridden the global EBookUI
+// section. A per-document field is "unset" when it's empty or 0, so a document
+// can override just the font and inherit the rest (issue #4600)
+struct EBookUISettings {
+    Str fontName;
+    float fontSize;
+    float lineSpacing;
+    float layoutDx;
+    float layoutDy;
+    bool ignoreDocumentCSS;
+    Str customCSS;
+};
+
+static EBookUISettings MergeEBookUI(const EBookUI* global, const FileEBookUI* perFile) {
+    EBookUISettings res{};
+    res.fontName = global->fontName;
+    res.fontSize = global->fontSize;
+    res.lineSpacing = global->lineSpacing;
+    res.layoutDx = global->layoutDx;
+    res.layoutDy = global->layoutDy;
+    res.ignoreDocumentCSS = global->ignoreDocumentCSS;
+    res.customCSS = global->customCSS;
+    if (!perFile) {
+        return res;
+    }
+    if (perFile->fontName) {
+        res.fontName = perFile->fontName;
+    }
+    if (perFile->fontSize > 0) {
+        res.fontSize = perFile->fontSize;
+    }
+    if (perFile->lineSpacing > 0) {
+        res.lineSpacing = perFile->lineSpacing;
+    }
+    if (perFile->layoutDx > 0) {
+        res.layoutDx = perFile->layoutDx;
+    }
+    if (perFile->layoutDy > 0) {
+        res.layoutDy = perFile->layoutDy;
+    }
+    // a tri-state: empty inherits, "true" / "false" (or "yes" / "1") override
+    // in both directions, so one document can keep the publisher's CSS even
+    // when the global setting ignores it
+    if (perFile->ignoreDocumentCSS) {
+        res.ignoreDocumentCSS = str::EqI(perFile->ignoreDocumentCSS, StrL("true")) ||
+                                str::EqI(perFile->ignoreDocumentCSS, StrL("yes")) ||
+                                str::Eq(perFile->ignoreDocumentCSS, StrL("1"));
+    }
+    if (perFile->customCSS) {
+        res.customCSS = perFile->customCSS;
+    }
+    return res;
+}
+
+#if defined(DEBUG)
+bool EngineMupdf_UnitTestMergeEBookUI() {
+    EBookUI g{};
+    g.fontName = StrL("Georgia");
+    g.fontSize = 10;
+    g.lineSpacing = 1.5f;
+    g.layoutDx = 400;
+    g.layoutDy = 600;
+    g.ignoreDocumentCSS = true;
+    g.customCSS = StrL("p { color: red }");
+
+    // no per-document block: the global values, unchanged
+    EBookUISettings s = MergeEBookUI(&g, nullptr);
+    if (!str::Eq(s.fontName, StrL("Georgia")) || s.fontSize != 10 || !s.ignoreDocumentCSS) {
+        return false;
+    }
+    // an empty block inherits everything
+    FileEBookUI f{};
+    s = MergeEBookUI(&g, &f);
+    if (!str::Eq(s.fontName, StrL("Georgia")) || s.fontSize != 10 || s.lineSpacing != 1.5f || s.layoutDx != 400 ||
+        s.layoutDy != 600 || !s.ignoreDocumentCSS || !str::Eq(s.customCSS, StrL("p { color: red }"))) {
+        return false;
+    }
+    // set fields win, the rest still inherits
+    f.fontName = StrL("Segoe UI");
+    f.fontSize = 14;
+    f.ignoreDocumentCSS = StrL("false");
+    s = MergeEBookUI(&g, &f);
+    if (!str::Eq(s.fontName, StrL("Segoe UI")) || s.fontSize != 14 || s.lineSpacing != 1.5f) {
+        return false;
+    }
+    // the tri-state can turn the global true back off
+    return !s.ignoreDocumentCSS;
 }
 #endif
 
@@ -3261,37 +3356,39 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     // overrides with !important. User CustomCSS is appended after this.
     TempStr userCss = StrL("img { height: auto !important; max-width: 100% !important; }\n");
     int usePublisherCss = 1; // use the document's own (publisher) CSS by default
-    Str requestedFontName;   // EBookUI.FontName, checked for existence after layout
+    Str requestedFontName;   // the font name, checked for existence after layout
     auto* eBookUI = GetEBookUI();
     if (eBookUI) {
+        // FileStates -> EBookUI overrides the global section for this document
+        EBookUISettings s = MergeEBookUI(eBookUI, GetFileEBookUI(FilePath()));
         // accept any reasonable font size; the old upper bound of 30 made
         // larger sizes silently revert to the default (#2276). 256 is just a
         // sanity cap to reject garbage values.
-        if (eBookUI->fontSize > 6 && eBookUI->fontSize < 256) {
-            lfontDy = eBookUI->fontSize;
+        if (s.fontSize > 6 && s.fontSize < 256) {
+            lfontDy = s.fontSize;
         }
-        if (eBookUI->layoutDx > 100) {
-            ldx = eBookUI->layoutDx;
+        if (s.layoutDx > 100) {
+            ldx = s.layoutDx;
         }
-        if (eBookUI->layoutDy > 100) {
-            ldy = eBookUI->layoutDy;
+        if (s.layoutDy > 100) {
+            ldy = s.layoutDy;
         } else if (gEbookLayoutAspect > 0) {
             // after any LayoutDx override, so the user still sets line length
             ldy = limitValue(ldx * gEbookLayoutAspect, 150.f, 5000.f);
         }
-        requestedFontName = EbookFontNameFromSetting(eBookUI->fontName);
+        requestedFontName = EbookFontNameFromSetting(s.fontName);
         TempStr fontCss = EbookFontFamilyCssTemp(requestedFontName);
         if (fontCss) {
             userCss = str::JoinTemp(fontCss, userCss);
         }
-        TempStr lineSpacingCss = EbookLineSpacingCssTemp(eBookUI->lineSpacing);
+        TempStr lineSpacingCss = EbookLineSpacingCssTemp(s.lineSpacing);
         if (lineSpacingCss) {
             userCss = str::JoinTemp(lineSpacingCss, userCss);
         }
-        if (eBookUI->customCSS) {
-            userCss = str::JoinTemp(userCss, eBookUI->customCSS);
+        if (s.customCSS) {
+            userCss = str::JoinTemp(userCss, s.customCSS);
         }
-        usePublisherCss = eBookUI->ignoreDocumentCSS ? 0 : 1;
+        usePublisherCss = s.ignoreDocumentCSS ? 0 : 1;
     }
     const char* userCssZ = CStrTemp(userCss);
 
@@ -3348,7 +3445,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     // resolve silently renders in the default font. Note it for the UI (#4600).
     // After fz_layout_document, so a font that was used is already cached.
     if (requestedFontName && fz_is_document_reflowable(ctx, _doc)) {
-        ebookFontUnavailable = !EbookFontIsAvailable(ctx, requestedFontName);
+        if (!EbookFontIsAvailable(ctx, requestedFontName)) {
+            ebookFontUnavailable = str::Dup(requestedFontName);
+        }
     }
 
     isPasswordProtected = fz_needs_password(ctx, _doc);

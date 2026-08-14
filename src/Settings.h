@@ -501,6 +501,34 @@ struct Favorite {
     bool isTemporary;
 };
 
+// reflowable (ebook) settings for just this document. The block is
+// absent until you add it; a field left empty or 0 uses the global
+// EBookUI value. The global section's WindowBgCol and
+// DefaultDisplayMode are already per-document as BgCol and DisplayMode
+// below
+struct FileEBookUI {
+    // font family for this document (e.g. Segoe UI, Microsoft YaHei);
+    // empty uses EBookUI.FontName
+    Str fontName;
+    // font size in points for this document; 0 uses EBookUI.FontSize
+    float fontSize;
+    // line-height multiplier for this document (e.g. 1.5); 0 uses
+    // EBookUI.LineSpacing
+    float lineSpacing;
+    // width of the page this document is laid out into, in points; 0 uses
+    // EBookUI.LayoutDx
+    float layoutDx;
+    // height of the page this document is laid out into, in points; 0 uses
+    // EBookUI.LayoutDy
+    float layoutDy;
+    // whether the CSS in this document is ignored: true or false; empty
+    // uses EBookUI.IgnoreDocumentCSS
+    Str ignoreDocumentCSS;
+    // additional CSS applied to this document; empty uses
+    // EBookUI.CustomCSS
+    Str customCSS;
+};
+
 // information about opened files (in most recently used order)
 struct FileState {
     // path of the document
@@ -520,6 +548,12 @@ struct FileState {
     // hex encoded MD5 fingerprint of the file content (32 chars) followed
     // by the crypt key (64 chars); only applies to PDF documents
     Str decryptionKey;
+    // reflowable (ebook) settings for just this document. The block is
+    // absent until you add it; a field left empty or 0 uses the global
+    // EBookUI value. The global section's WindowBgCol and
+    // DefaultDisplayMode are already per-document as BgCol and DisplayMode
+    // below
+    FileEBookUI* eBookUI;
     // if true, this document opens with the global defaults instead of the
     // values below
     bool useDefaultState;
@@ -1505,6 +1539,28 @@ static const StructInfo gFavoriteInfo = {
     "elements",
     true};
 
+static const FieldInfo gFileEBookUIFields[] = {
+    {offsetof(FileEBookUI, fontName), SettingType::String, (intptr_t)""},
+    {offsetof(FileEBookUI, fontSize), SettingType::Float, (intptr_t)"0"},
+    {offsetof(FileEBookUI, lineSpacing), SettingType::Float, (intptr_t)"0"},
+    {offsetof(FileEBookUI, layoutDx), SettingType::Float, (intptr_t)"0"},
+    {offsetof(FileEBookUI, layoutDy), SettingType::Float, (intptr_t)"0"},
+    {offsetof(FileEBookUI, ignoreDocumentCSS), SettingType::String, (intptr_t)""},
+    {offsetof(FileEBookUI, customCSS), SettingType::String, (intptr_t)""},
+};
+static const StructInfo gFileEBookUIInfo = {
+    sizeof(FileEBookUI),
+    7,
+    gFileEBookUIFields,
+    "FontName\0FontSize\0LineSpacing\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS",
+    "font family for this document (e.g. Segoe UI, Microsoft YaHei); empty uses EBookUI.FontName\0font size in points "
+    "for this document; 0 uses EBookUI.FontSize\0line-height multiplier for this document (e.g. 1.5); 0 uses "
+    "EBookUI.LineSpacing\0width of the page this document is laid out into, in points; 0 uses EBookUI.LayoutDx\0height "
+    "of the page this document is laid out into, in points; 0 uses EBookUI.LayoutDy\0whether the CSS in this document "
+    "is ignored: true or false; empty uses EBookUI.IgnoreDocumentCSS\0additional CSS applied to this document; empty "
+    "uses EBookUI.CustomCSS",
+    false};
+
 static const FieldInfo gPointFFields[] = {
     {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
     {offsetof(PointF, y), SettingType::Float, (intptr_t)"0"},
@@ -1539,6 +1595,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, isMissing), SettingType::Bool, false},
     {offsetof(FileState, openCount), SettingType::Int, 0},
     {offsetof(FileState, decryptionKey), SettingType::String, 0},
+    {offsetof(FileState, eBookUI), SettingType::StructPtr, (intptr_t)&gFileEBookUIInfo},
     {offsetof(FileState, useDefaultState), SettingType::Bool, false},
     {offsetof(FileState, displayMode), SettingType::String, (intptr_t)"automatic"},
     {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointFInfo},
@@ -1557,24 +1614,27 @@ static const FieldInfo gFileStateFields[] = {
 };
 static StructInfo gFileStateInfo = {
     sizeof(FileState),
-    21,
+    22,
     gFileStateFields,
-    "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageN"
-    "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0BgCol\0TabCol\0ReparseIdx\0TocState",
+    "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0EBookUI\0UseDefaultState\0DisplayMode\0ScrollP"
+    "os\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0BgCol\0TabCol\0ReparseIdx\0Toc"
+    "State",
     "path of the document\0pages of this document bookmarked in the Favorites menu\0if true, the document is "
     "\"pinned\" to the Frequently Read list, so that recently opened documents don't displace it\0if true, the file is "
     "considered missing and won't be shown in any list\0number of times this document has been opened recently\0data "
-    "required to open a password protected document without having to ask for the password again\0if true, this "
-    "document opens with the global defaults instead of the values below\0layout of pages. valid values: automatic, "
-    "single page, facing, book view, continuous, continuous facing, continuous book view\0how far this document has "
-    "been scrolled (in x and y direction)\0number of the last read page\0zoom (in %) or one of those values: fit page, "
-    "fit width, fit height, fit content\0how far pages have been rotated as a multiple of 90 degrees\0state of the "
-    "window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0default position (can be on any "
-    "monitor)\0if true, show the table of contents (Bookmarks) sidebar when the document has one\0width of the "
-    "bookmarks / favorites sidebar in screen pixels, as last resized\0if true, the document is displayed right-to-left "
-    "in facing and book view modes\0if given, overrides the background color for this document\0if given, overrides "
-    "the tab color for this document\0data required to restore the last read page in the ebook UI\0data required to "
-    "determine which parts of the table of contents have been expanded",
+    "required to open a password protected document without having to ask for the password again\0reflowable (ebook) "
+    "settings for just this document. The block is absent until you add it; a field left empty or 0 uses the global "
+    "EBookUI value. The global section's WindowBgCol and DefaultDisplayMode are already per-document as BgCol and "
+    "DisplayMode below\0if true, this document opens with the global defaults instead of the values below\0layout of "
+    "pages. valid values: automatic, single page, facing, book view, continuous, continuous facing, continuous book "
+    "view\0how far this document has been scrolled (in x and y direction)\0number of the last read page\0zoom (in %) "
+    "or one of those values: fit page, fit width, fit height, fit content\0how far pages have been rotated as a "
+    "multiple of 90 degrees\0state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is "
+    "minimized\0default position (can be on any monitor)\0if true, show the table of contents (Bookmarks) sidebar when "
+    "the document has one\0width of the bookmarks / favorites sidebar in screen pixels, as last resized\0if true, the "
+    "document is displayed right-to-left in facing and book view modes\0if given, overrides the background color for "
+    "this document\0if given, overrides the tab color for this document\0data required to restore the last read page "
+    "in the ebook UI\0data required to determine which parts of the table of contents have been expanded",
     false};
 
 static const FieldInfo gPointF_1_Fields[] = {

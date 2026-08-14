@@ -430,7 +430,7 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
         return;
     }
     int off = 0;
-    if (SettingType::Struct == type) {
+    if (SettingType::Struct == type || SettingType::StructPtr == type) {
         if (node->GetChild(fieldName, &off)) {
             node->RemoveDataAt(off - 1);
         }
@@ -492,6 +492,18 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
                                prevNode ? prevNode->GetChild(fieldNameStr) : nullptr, indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
+        } else if (SettingType::StructPtr == field.type) {
+            // an optional sub-struct: nothing is written when it isn't set
+            const void* sub = *(void* const*)(base + field.offset);
+            if (sub) {
+                Indent(out, indent);
+                out.Append(fieldNameStr);
+                out.Append(" [\r\n");
+                SerializeStructRec(out, GetSubstruct(field), sub, prevNode ? prevNode->GetChild(fieldNameStr) : nullptr,
+                                   indent + 1);
+                Indent(out, indent);
+                out.Append("]\r\n");
+            }
         } else if (SettingType::Array == field.type) {
             Indent(out, indent);
             out.Append(fieldNameStr);
@@ -550,6 +562,21 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
         if (SettingType::Struct == field.type) {
             SquareTreeNode* child = node ? node->GetChild(fieldNameStr) : nullptr;
             DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
+        } else if (SettingType::StructPtr == field.type) {
+            SquareTreeNode* child = node ? node->GetChild(fieldNameStr) : nullptr;
+            const StructInfo* substruct = GetSubstruct(field);
+            void** pptr = (void**)fieldPtr;
+            if (child) {
+                if (*pptr) {
+                    DeserializeStructRec(substruct, child, (u8*)*pptr, useDefaults);
+                } else {
+                    *pptr = DeserializeStructRec(substruct, child, nullptr, true);
+                }
+            } else if (useDefaults && *pptr) {
+                // the block is gone from the data: unset it again
+                FreeStruct(substruct, *pptr);
+                *pptr = nullptr;
+            }
         } else if (SettingType::Array == field.type) {
             SquareTreeNode *parent = node, *child = nullptr;
             if (parent) {
@@ -614,6 +641,14 @@ static void FreeStructData(const StructInfo* info, u8* base) {
             case SettingType::Struct: {
                 const StructInfo* substruct = GetSubstruct(field);
                 FreeStructData(substruct, fieldPtr);
+                break;
+            }
+            case SettingType::StructPtr: {
+                void** pptr = (void**)fieldPtr;
+                if (*pptr) {
+                    FreeStruct(GetSubstruct(field), *pptr);
+                    *pptr = nullptr;
+                }
                 break;
             }
             case SettingType::Array: {

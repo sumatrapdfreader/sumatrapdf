@@ -22,6 +22,11 @@ EBookUI* GetEBookUI() {
     return nullptr;
 }
 
+struct FileEBookUI;
+FileEBookUI* GetFileEBookUI(Str) {
+    return nullptr;
+}
+
 VOID PdfFilter::CleanUp() {
     logf("PdfFilter::Cleanup()\n");
     if (m_pdfEngine) {

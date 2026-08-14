@@ -28,6 +28,11 @@ EBookUI* GetEBookUI() {
     return nullptr;
 }
 
+struct FileEBookUI;
+FileEBookUI* GetFileEBookUI(Str) {
+    return nullptr;
+}
+
 static EngineBase* CreateEngineForPath(Str path) {
     if (IsEngineImageDirSupportedFile(path)) {
         return CreateEngineImageDirFromFile(path);

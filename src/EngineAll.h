@@ -56,9 +56,9 @@ inline Str EbookFontNameFromSetting(Str name) {
 }
 void EngineEbookCleanup();
 
-// true if this is a reflowable document laid out while EBookUI.FontName named
-// a font we couldn't load, so the text came out in the default font (#4600)
-bool EngineEbookFontUnavailable(EngineBase* engine);
+// the ebook font this reflowable document asked for and we couldn't load, so
+// the text came out in the default font; null if that didn't happen (#4600)
+Str EngineEbookFontUnavailable(EngineBase* engine);
 
 /* EngineImages.cpp */
 

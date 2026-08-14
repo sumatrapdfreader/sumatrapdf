@@ -30,6 +30,10 @@ EBookUI* GetEBookUI() {
     return nullptr;
 }
 
+FileEBookUI* GetFileEBookUI(Str) {
+    return nullptr;
+}
+
 // Copy a rendered page into the 32bpp DIB the shell gets, rather than going
 // through GetDIBits(bmp->hbmp): only the mupdf engines render into a DIB
 // section, so for DjVu and the image engines hbmp is null and GetDIBits failed,

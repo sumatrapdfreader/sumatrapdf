@@ -26,6 +26,7 @@ bool ExternalViewers_UnitTestPDFXChangePaths();
 bool Canvas_UnitTestScrollLineAmount();
 bool EngineMupdf_UnitTestEbookLineSpacingCss();
 bool EngineMupdf_UnitTestEbookFontFamilyCss();
+bool EngineMupdf_UnitTestMergeEBookUI();
 #endif
 
 // must be last to over-write assert()
@@ -156,6 +157,7 @@ int RunAppUnitTests() {
     utassert(Canvas_UnitTestScrollLineAmount());
     utassert(EngineMupdf_UnitTestEbookLineSpacingCss());
     utassert(EngineMupdf_UnitTestEbookFontFamilyCss());
+    utassert(EngineMupdf_UnitTestMergeEBookUI());
 #endif
     return utassert_print_results();
 }

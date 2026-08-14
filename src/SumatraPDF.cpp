@@ -243,6 +243,34 @@ EBookUI* GetEBookUI() {
     return &gGlobalPrefs->eBookUI;
 }
 
+// A document is usually loaded on a worker thread, where walking the file
+// history (only ever touched on the UI thread) would race with it changing.
+// Such loads copy the settings before leaving the UI thread and park the copy
+// here for the engine to pick up.
+static thread_local FileEBookUI* gLoadThreadFileEBookUI;
+
+static void SetLoadThreadFileEBookUI(FileEBookUI* v) {
+    gLoadThreadFileEBookUI = v;
+}
+
+// per-document overrides of the ebook settings, null unless this document has
+// an EBookUI block in FileStates (#4600)
+FileEBookUI* GetFileEBookUI(Str filePath) {
+    if (!uitask::IsMainUIThread()) {
+        return gLoadThreadFileEBookUI;
+    }
+    if (!gGlobalPrefs || !filePath) {
+        return nullptr;
+    }
+    FileState* fs = FileHistoryFindByPath(filePath);
+    return fs ? fs->eBookUI : nullptr;
+}
+
+// the per-document settings to hand to a load running off the UI thread
+static FileEBookUI* CopyFileEBookUIForPath(Str filePath) {
+    return CopyFileEBookUI(GetFileEBookUI(filePath));
+}
+
 LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
     this->fileArgs = ParseFileArgs(origPath);
     Str cleanPath = origPath;
@@ -1120,9 +1148,13 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 struct CreateThumbnailFromFileData {
     Str filePath;
     Pixmap* bmp = nullptr;
+    // see LoadDocumentAsyncData: the thumbnail is rendered off the UI thread,
+    // so the per-document ebook settings have to come along as a copy (#4600)
+    FileEBookUI* fileEBookUI = nullptr;
     ~CreateThumbnailFromFileData() {
         str::Free(filePath);
         FreePixmap(bmp);
+        DeleteFileEBookUI(fileEBookUI);
     }
 };
 
@@ -1137,7 +1169,9 @@ static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
 
 static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
     HwndPasswordUI pwdUI(nullptr);
+    SetLoadThreadFileEBookUI(d->fileEBookUI);
     EngineBase* engine = CreateEngineFromFile(d->filePath, &pwdUI, true);
+    SetLoadThreadFileEBookUI(nullptr);
     if (!engine) {
         delete d;
         return;
@@ -1164,6 +1198,7 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
 static void CreateThumbnailFromFileAsync(FileState* ds) {
     auto* d = new CreateThumbnailFromFileData();
     d->filePath = str::Dup(ds->filePath);
+    d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
     RunAsync(fn, "CreateThumbnailFromFile");
 }
@@ -2424,9 +2459,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // EBookUI.FontName names a font we can't load, so the ebook silently
     // rendered in the default font. Say so, otherwise the setting looks like
     // it does nothing (issue #4600)
-    if (EngineEbookFontUnavailable(engineErr)) {
+    Str missingFont = EngineEbookFontUnavailable(engineErr);
+    if (missingFont) {
         Str s = _TRA("Font \"%s\" not found, using the default font");
-        TempStr msg = fmt(s.s, gGlobalPrefs->eBookUI.fontName);
+        TempStr msg = fmt(s.s, missingFont);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
@@ -3677,8 +3713,14 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
 
 struct LoadDocumentAsyncData {
     LoadArgs* args = nullptr;
+    // copy of the document's FileStates -> EBookUI block, taken on the UI
+    // thread because the load thread can't walk the file history (#4600)
+    FileEBookUI* fileEBookUI = nullptr;
     LoadDocumentAsyncData() = default;
-    ~LoadDocumentAsyncData() { delete args; }
+    ~LoadDocumentAsyncData() {
+        delete args;
+        DeleteFileEBookUI(fileEBookUI);
+    }
 };
 
 static void LoadDocumentAsync(LoadDocumentAsyncData* d);
@@ -3747,6 +3789,7 @@ static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
     }
     StartLoadingMessageTimer(args->targetTab);
     gLoadThreadsActive++;
+    data->fileEBookUI = CopyFileEBookUIForPath(args->FilePath());
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
     RunAsync(fn, "LoadDocumentThread");
 }
@@ -3932,6 +3975,8 @@ static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
 static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     auto* args = d->args;
     AtomicIntInc(&gDangerousThreadCount);
+    // load threads are reused, so this has to be cleared before we return
+    SetLoadThreadFileEBookUI(d->fileEBookUI);
     Str path = args->FilePath();
     EngineBase* engine = args->engine;
 
@@ -3956,6 +4001,7 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     // args->ctrl stays null until LoadDocumentAsyncFinish
 
     file::gFileCopyProgressCb = {};
+    SetLoadThreadFileEBookUI(nullptr);
 
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsyncFinish, d);
     uitask::Post(fn, "TaskLoadDocumentAsyncFinish");

@@ -31,6 +31,11 @@ EBookUI* GetEBookUI() {
     return nullptr;
 }
 
+struct FileEBookUI;
+FileEBookUI* GetFileEBookUI(Str) {
+    return nullptr;
+}
+
 static void Usage() {
     printf("usage: test_engines <document-or-image-path>\n");
     printf("       test_engines <path> -bench-mediabox   time PageMediabox() for every page\n");

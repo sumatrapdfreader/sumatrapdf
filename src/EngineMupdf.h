@@ -179,10 +179,11 @@ class EngineMupdf : public EngineBase {
     // smart dark mode: engine-level image feature/processed caches
     DarkModeEngineCache* darkModeEngineCache = nullptr;
 
-    // set when laying out a reflowable document if EBookUI.FontName names a
-    // font we can't load: the text silently comes out in the default font, so
-    // the UI tells the user about it after the document opens (issue #4600)
-    bool ebookFontUnavailable = false;
+    // the ebook font (EBookUI.FontName, or this document's own override) that
+    // we couldn't load, null if there was none or it loaded: the text silently
+    // comes out in the default font, so the UI names it in a notification after
+    // the document opens (issue #4600). owned by the engine
+    Str ebookFontUnavailable;
 
     void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
                                    Vec<Rect>& skipRects) override;

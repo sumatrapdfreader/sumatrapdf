@@ -72,6 +72,9 @@ class Field {
     if (this.Type.name === "Struct" || this.Type.name === "Compact") {
       this.Type.ctype = structName;
     }
+    if (this.Type.name === "StructPtr") {
+      this.Type.ctype = `${structName} *`;
+    }
     return this;
   }
 }
@@ -106,6 +109,16 @@ function struct(name: string, fields: Field[], comment: string): Field {
 function compactStruct(name: string, fields: Field[], comment: string): Field {
   const res = struct(name, fields, comment);
   res.Type.name = "Compact";
+  return res;
+}
+
+// an optional sub-struct: a pointer that is null until the user sets it, and
+// isn't written out at all while it's null. use it for a block that only some
+// instances of a much-repeated struct (e.g. FileState) ever have
+function structPtr(name: string, structName: string, fields: Field[], comment: string): Field {
+  const typ: Type = { name: "StructPtr", ctype: `${structName} *` };
+  const res = field(name, typ, fields, comment);
+  res.StructName = structName;
   return res;
 }
 
@@ -765,6 +778,49 @@ const favorite: Field[] = [
     .ver("3.7"),
 ];
 
+// per-document version of the EBookUI section. Every field means "unset" when
+// it's empty / 0, in which case the global EBookUI value is used, so a document
+// can override just the font and keep the rest.
+const fileEBookUI: Field[] = [
+  field(
+    "FontName",
+    Str,
+    "",
+    "font family for this document (e.g. Segoe UI, Microsoft YaHei); " + "empty uses EBookUI.FontName",
+  ).ver("3.7"),
+  field("FontSize", Float, 0, "font size in points for this document; 0 uses EBookUI.FontSize").ver("3.7"),
+  field(
+    "LineSpacing",
+    Float,
+    0,
+    "line-height multiplier for this document (e.g. 1.5); 0 uses EBookUI.LineSpacing",
+  ).ver("3.7"),
+  field(
+    "LayoutDx",
+    Float,
+    0,
+    "width of the page this document is laid out into, in points; 0 uses EBookUI.LayoutDx",
+  ).ver("3.7"),
+  field(
+    "LayoutDy",
+    Float,
+    0,
+    "height of the page this document is laid out into, in points; 0 uses EBookUI.LayoutDy",
+  ).ver("3.7"),
+  field(
+    "IgnoreDocumentCSS",
+    Str,
+    "",
+    "whether the CSS in this document is ignored: true or false; " + "empty uses EBookUI.IgnoreDocumentCSS",
+  ).ver("3.7"),
+  field(
+    "CustomCSS",
+    Str,
+    "",
+    "additional CSS applied to this document; empty uses EBookUI.CustomCSS",
+  ).ver("3.7"),
+];
+
 const fileSettings: Field[] = [
   field("FilePath", Str, null, "path of the document"),
   array("Favorites", favorite, "pages of this document bookmarked in the Favorites menu"),
@@ -796,6 +852,15 @@ const fileSettings: Field[] = [
     "hex encoded MD5 fingerprint of the file content (32 chars) followed by the " +
       "crypt key (64 chars); only applies to PDF documents",
   ).doc("data required to open a password protected document without having to " + "ask for the password again"),
+  structPtr(
+    "EBookUI",
+    "FileEBookUI",
+    fileEBookUI,
+    "reflowable (ebook) settings for just this document. The block is absent " +
+      "until you add it; a field left empty or 0 uses the global EBookUI value. " +
+      "The global section's WindowBgCol and DefaultDisplayMode are already " +
+      "per-document as BgCol and DisplayMode below",
+  ).ver("3.7"),
   field(
     "UseDefaultState",
     Bool,
@@ -1562,7 +1627,7 @@ function cdefault(f: Field, built: Record<string, number>): string {
     return `(intptr_t)"${f.Default}"`;
   }
   const typeName = f.Type.name;
-  if (["Struct", "Array", "Compact"].includes(typeName)) {
+  if (["Struct", "StructPtr", "Array", "Compact"].includes(typeName)) {
     let idStr = "";
     const id = built[f.StructName] || 0;
     if (id > 0) {
@@ -1664,6 +1729,13 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
           built[name] = (built[name] || 0) + 1;
         }
       }
+    } else if (field.Type.name === "StructPtr") {
+      const name = field.StructName;
+      if (built[name] === undefined) {
+        const s = buildStruct(field, built);
+        required.push(s, "");
+        built[name] = (built[name] || 0) + 1;
+      }
     }
   }
   lines.push("};", "");
@@ -1701,7 +1773,7 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     // per-field doc comment, aligned with names; used by the advanced settings
     // dialog to describe the selected setting
     comments.push(field.DocComment || "");
-    if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
+    if (["Struct", "StructPtr", "Compact", "Array"].includes(field.Type.name)) {
       const sublines = buildMetaData(field, built);
       lines.push(sublines, "");
       built[field.StructName] = (built[field.StructName] || 0) + 1;
@@ -1892,7 +1964,7 @@ function genStructHTML(struc: Field, indent: string): string {
       const end = `${indent2}]\n${indent}]`;
       const inside = genStructHTML(field, indent + indentStr);
       lines.push(start, inside, end);
-    } else if (field.Type.name === "Struct") {
+    } else if (field.Type.name === "Struct" || field.Type.name === "StructPtr") {
       const start = `${indent}${field.Name} [`;
       const end = `${indent}]`;
       const inside = genStructHTML(field, indent + indentStr);
@@ -1968,7 +2040,7 @@ function genStructMarkdown(struc: Field, indent: string): string {
       const end = `${indent2}]\n${indent}]`;
       const inside = genStructMarkdown(field, indent + indentStr);
       lines.push(start, inside, end);
-    } else if (field.Type.name === "Struct") {
+    } else if (field.Type.name === "Struct" || field.Type.name === "StructPtr") {
       const start = `${indent}${field.Name} [`;
       const end = `${indent}]`;
       const inside = genStructMarkdown(field, indent + indentStr);
