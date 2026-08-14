@@ -999,7 +999,7 @@ FileStates [
     SidebarDx = 0
 
     ; if true, the document is displayed right-to-left in facing and book view
-    ; modes (only used for comic book documents)
+    ; modes
     DisplayR2L = false
 
     ; if given, overrides the background color for this document (introduced in

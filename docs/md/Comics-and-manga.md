@@ -39,10 +39,11 @@ To turn the page by clicking the left or right edge of the window (like many com
 
 ## Manga mode (right-to-left)
 
-**Manga mode** displays pages right-to-left in facing and book views (typical for Japanese manga).
+**Manga mode** displays pages right-to-left in facing and book views (typical for Japanese manga and
+right-to-left documents).
 
 - **View** menu or command palette: **Toggle Manga Mode** (`CmdToggleMangaMode`)
-- Only offered for comic-book documents (not PDF)
+- Available for PDF, XPS, DjVu, ebooks, comic books, images and other fixed-page documents
 - When manga mode is on, **Left** advances and **Right** goes back (and horizontal swipe matches that), so navigation follows right-to-left reading
 
 ### Default for new comic files

@@ -818,13 +818,7 @@ const fileSettings: Field[] = [
   compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
   field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
   field("SidebarDx", Int, 0, "width of the bookmarks / favorites sidebar in screen pixels, as last resized"),
-  field(
-    "DisplayR2L",
-    Bool,
-    false,
-    "if true, the document is displayed right-to-left in facing and book view modes " +
-      "(only used for comic book documents)",
-  ),
+  field("DisplayR2L", Bool, false, "if true, the document is displayed right-to-left in facing and book view modes"),
   field("BgCol", Color, "", "if given, overrides the background color for this document").ver("3.7"),
   field("TabCol", Color, "", "if given, overrides the tab color for this document").ver("3.7"),
   field(

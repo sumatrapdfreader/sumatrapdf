@@ -572,7 +572,7 @@ struct FileState {
     // resized
     int sidebarDx;
     // if true, the document is displayed right-to-left in facing and book
-    // view modes (only used for comic book documents)
+    // view modes
     bool displayR2L;
     // if given, overrides the background color for this document
     Str bgCol;
@@ -1593,9 +1593,9 @@ static StructInfo gFileStateInfo = {
     "window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0default position (can be on any "
     "monitor)\0if true, show the table of contents (Bookmarks) sidebar when the document has one\0width of the "
     "bookmarks / favorites sidebar in screen pixels, as last resized\0if true, the document is displayed right-to-left "
-    "in facing and book view modes (only used for comic book documents)\0if given, overrides the background color for "
-    "this document\0if given, overrides the tab color for this document\0data required to restore the last read page "
-    "in the ebook UI\0data required to determine which parts of the table of contents have been expanded",
+    "in facing and book view modes\0if given, overrides the background color for this document\0if given, overrides "
+    "the tab color for this document\0data required to restore the last read page in the ebook UI\0data required to "
+    "determine which parts of the table of contents have been expanded",
     false};
 
 static const FieldInfo gPointF_1_Fields[] = {

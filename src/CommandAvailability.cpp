@@ -400,6 +400,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
 
     DisplayModel* dm = win->AsFixed();
     if (dm) {
+        ctx.isFixedPage = true;
         auto* engine = dm->GetEngine();
         ctx.hasTextSelection = ctx.hasSelection && dm->textSelection->result.len > 0;
         ctx.supportsAnnots = EngineSupportsAnnotations(engine) && !win->isFullScreen;
@@ -641,11 +642,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdToggleMangaMode) {
-        if (surface == CommandSurface::Palette && ctx.isSinglePage) {
+        if (!ctx.isFixedPage) {
             return CommandVisibility::Hide;
         }
-        if (!ctx.isCbx) {
-            return CommandVisibility::Hide;
+        if (ctx.isSinglePage) {
+            return MapForSurface(CommandVisibility::Disable, surface);
         }
     }
 

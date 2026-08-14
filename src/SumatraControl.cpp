@@ -5,13 +5,20 @@
 #include "base/UITask.h"
 #include "base/Win.h"
 
+#include "gui/UIModels.h"
+
 #include "Settings.h"
 #include "DisplayMode.h"
+#include "DocumentLayout.h"
+#include "DocController.h"
+#include "EngineBase.h"
+#include "DisplayModel.h"
+#include "Commands.h"
+#include "CommandAvailability.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
 #include "SumatraTest.h"
 #include "SumatraPDF.h"
-#include "DocController.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "FileHistory.h"
@@ -103,7 +110,7 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
     return finish(fmt("OK page=%d", cur), 0);
 }
 
-// action: "get" | "presentation" | "fullscreen"
+// action: "get" | "r2l" | "presentation" | "fullscreen"
 // Reports the current page layout and whether presentation / windowed
 // fullscreen is on. presentation/fullscreen toggle that mode first.
 static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
@@ -125,7 +132,8 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
         return finish(StrL("NOTREADY no-doc"), 2);
     }
 
-    if (!action || str::EqI(action, StrL("get"))) {
+    bool reportR2L = str::EqI(action, StrL("r2l"));
+    if (!action || str::EqI(action, StrL("get")) || reportR2L) {
         // report only
     } else if (str::EqI(action, StrL("presentation"))) {
         ToggleFullScreen(win, win->AsFixed() != nullptr);
@@ -133,6 +141,17 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
         ToggleFullScreen(win, false);
     } else {
         return finish(fmt("ERROR unknown-action action=%s", action), 1);
+    }
+
+    if (reportR2L) {
+        DisplayModel* dm = win->AsFixed();
+        if (!dm) {
+            return finish(StrL("ERROR not-fixed-page"), 1);
+        }
+        AppCommandCtx ctx = NewAppCommandCtx(win);
+        bool available =
+            GetCommandVisibility(CmdToggleMangaMode, ctx, CommandSurface::Palette) == CommandVisibility::Show;
+        return finish(fmt("OK r2l=%d available=%d", dm->GetDisplayR2L() ? 1 : 0, available ? 1 : 0), 0);
     }
 
     Str mode = DisplayModeToString(win->ctrl->GetDisplayMode());

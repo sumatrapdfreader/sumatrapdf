@@ -32,6 +32,7 @@ struct AppCommandCtx {
     bool isMarkdown = false;
     bool isCbx = false;
     bool isImageCollection = false;
+    bool isFixedPage = false;
     bool isSinglePage = false;
     bool hasToc = false;
 

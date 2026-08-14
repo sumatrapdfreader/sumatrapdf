@@ -2188,9 +2188,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             // (physical-size) CustomScreenDPI used for zoom
             dm->SetUiDpi(win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame));
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
-            // TODO: also expose Manga Mode for image folders?
-            if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir) {
-                dm->SetDisplayR2L(fs ? fs->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
+            if (fs) {
+                dm->SetDisplayR2L(fs->displayR2L);
+            } else if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir) {
+                dm->SetDisplayR2L(gGlobalPrefs->comicBookUI.cbxMangaMode);
             }
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->GetFilePath(), prevCtrl->GetFilePath())) {
                 gRenderCache->KeepForDisplayModel(prevCtrl->AsFixed(), dm);
