@@ -972,10 +972,39 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
 
         case WM_ERASEBKGND: {
-            // false: claim handled so DefWindowProc does not fill with the class
-            // brush (custom windows paint the full client in WM_PAINT)
+            // claim handled so DefWindowProc does not fill with the class brush
+            // (custom windows paint the full client in WM_PAINT). But fill with
+            // our background when we have one: this message also arrives on
+            // behalf of a child - a themed / darkmode checkbox erases its
+            // background through the parent (DrawThemeParentBackground) - and
+            // claiming "erased" while painting nothing left the child's pixels
+            // stale, so its label text accumulated on every repaint (#5947)
             if (!shouldEraseBackground) {
+                HDC hdc = (HDC)wparam;
+                auto* br = BackgroundBrush();
+                if (hdc && br) {
+                    HdcFillRect(hdc, HwndClientRect(hwnd), br);
+                }
                 return TRUE;
+            }
+            break;
+        }
+
+        case WM_PRINTCLIENT: {
+            // DrawThemeParentBackground: a darkmodelib-subclassed checkbox /
+            // radio asks its parent to paint the background under it through
+            // this (the dc is clipped and shifted to the child's rect). Not
+            // answering leaves the child's pixels stale, so its label text
+            // accumulated on every repaint (#5947)
+            if (subclassId) {
+                // a subclassed native window answers it itself
+                break;
+            }
+            HDC hdc = (HDC)wparam;
+            auto* br = BackgroundBrush();
+            if (hdc && br) {
+                HdcFillRect(hdc, HwndClientRect(hwnd), br);
+                return 0;
             }
             break;
         }
@@ -1481,10 +1510,31 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         }
 
         case WM_ERASEBKGND: {
-            // false: claim handled so DefWindowProc / DefSubclassProc does not
-            // fill (controls that paint the full client set shouldEraseBackground)
+            // claim handled so DefWindowProc / DefSubclassProc does not fill,
+            // but paint our background when we have one; see the note in
+            // WindowBase::WndProcDefault (#5947)
             if (!shouldEraseBackground) {
+                HDC hdc = (HDC)wparam;
+                auto* br = BackgroundBrush();
+                if (hdc && br) {
+                    HdcFillRect(hdc, HwndClientRect(hwnd), br);
+                }
                 return TRUE;
+            }
+            break;
+        }
+
+        case WM_PRINTCLIENT: {
+            // see WindowBase::WndProcDefault: background under a
+            // darkmodelib-subclassed checkbox / radio child (#5947)
+            if (subclassId) {
+                break;
+            }
+            HDC hdc = (HDC)wparam;
+            auto* br = BackgroundBrush();
+            if (hdc && br) {
+                HdcFillRect(hdc, HwndClientRect(hwnd), br);
+                return 0;
             }
             break;
         }
