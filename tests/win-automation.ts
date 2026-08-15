@@ -14,6 +14,7 @@
 
 import { EXE } from "./util.ts";
 import {
+  testWindowPos,
   enumWindows,
   getClassName,
   findChildWindow,
@@ -49,12 +50,24 @@ export { captureWindowToPng };
 export const FRAME_CLASS = "SUMATRA_PDF_FRAME";
 export const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
 
+// -window-pos for the upper-right quarter of the screen (see testWindowPos)
+export function windowPosArgs(): string[] {
+  const p = testWindowPos();
+  return ["-window-pos", `${p.dx}x${p.dy}@${p.x}x${p.y}`];
+}
+
 // Launch SumatraPDF.exe with -for-testing: a fresh instance that won't
 // interfere with a running SumatraPDF, doesn't restore the previous session
 // (only opens files passed on the cmd-line) and doesn't save settings. Use
 // proc.pid with waitForFrame() to get the window.
-export function launchSumatra(args: string[]): Bun.Subprocess {
-  return Bun.spawn([EXE, "-for-testing", ...args], { stdout: "ignore", stderr: "ignore" });
+//
+// The window opens as a quarter of the screen, which is a good deal faster to
+// render and to capture. Pass { defaultWindowPos: true } in a test that is
+// about the window's own size or state - fullscreen, maximized, minimized,
+// restoring a remembered position - so the app picks the position itself.
+export function launchSumatra(args: string[], opts?: { defaultWindowPos?: boolean }): Bun.Subprocess {
+  const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
+  return Bun.spawn([EXE, "-for-testing", ...posArgs, ...args], { stdout: "ignore", stderr: "ignore" });
 }
 
 // the main SUMATRA_PDF_FRAME window of a process (0 on timeout)

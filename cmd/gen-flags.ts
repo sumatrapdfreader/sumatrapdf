@@ -85,6 +85,7 @@ const args = [
     "SetColorRange", "set-color-range",
     "UpgradeFrom", "upgrade-from",
     "ForTesting", "for-testing",
+    "WindowPos", "window-pos",
     "DumpExif", "dump-exif",
     "DumpChm", "dump-chm",
     "Control", "dbg-control",

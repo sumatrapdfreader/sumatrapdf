@@ -87,6 +87,10 @@ struct Flags {
     // -for-testing: for ad-hoc testing by humans or agents. Always starts
     // a new instance, doesn't restore session, doesn't save settings
     bool forTesting = false;
+    // -window-pos <width>x<height>@<x>x<y>: open every window exactly there,
+    // e.g. 960x540@960x0. Empty unless given. Meant for automated tests, where
+    // a window a quarter of the screen renders and captures four times faster
+    Rect windowPos;
     Str controlPipeName; // -dbg-control <named-pipe>
     bool testRenderPage = false;
     bool testExtractPage = false;

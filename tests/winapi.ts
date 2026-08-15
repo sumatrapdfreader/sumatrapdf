@@ -44,6 +44,7 @@ const user32 = dlopen("user32.dll", {
   ReleaseDC: { args: [FFIType.ptr, FFIType.u64], returns: FFIType.i32 },
   PrintWindow: { args: [FFIType.ptr, FFIType.u64, FFIType.u32], returns: FFIType.bool },
   GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
+  SystemParametersInfoW: { args: [FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.bool },
   SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
   GetGUIThreadInfo: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
   GetCursorInfo: { args: [FFIType.ptr], returns: FFIType.bool },
@@ -278,6 +279,40 @@ export interface Rect {
   top: number;
   right: number;
   bottom: number;
+}
+
+// a window position the way MoveWindow and SumatraPDF's -window-pos want it
+export interface WindowPos {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+}
+
+const SPI_GETWORKAREA = 0x0030;
+const SM_CXSCREEN = 0;
+const SM_CYSCREEN = 1;
+
+// the desktop minus the taskbar (and any other appbar)
+export function getWorkArea(): Rect {
+  const buf = new Int32Array(4);
+  if (!user32.symbols.SystemParametersInfoW(SPI_GETWORKAREA, 0, ptr(buf), 0)) {
+    // no work area to be had: fall back to the whole primary screen
+    return { left: 0, top: 0, right: getSystemMetrics(SM_CXSCREEN), bottom: getSystemMetrics(SM_CYSCREEN) };
+  }
+  return { left: buf[0]!, top: buf[1]!, right: buf[2]!, bottom: buf[3]! };
+}
+
+// The upper-right quarter of the work area. Tests put SumatraPDF there: a
+// window of that size renders and, more to the point, captures a quarter of
+// the pixels a default-sized one does, and every captureWindowPixels() walk
+// over the result costs a quarter as much. Upper-right keeps it clear of the
+// taskbar's usual place and of anything at the top-left of the desktop
+export function testWindowPos(): WindowPos {
+  const wa = getWorkArea();
+  const dx = Math.floor((wa.right - wa.left) / 2);
+  const dy = Math.floor((wa.bottom - wa.top) / 2);
+  return { x: wa.left + dx, y: wa.top, dx, dy };
 }
 
 export function sleep(ms: number): Promise<void> {

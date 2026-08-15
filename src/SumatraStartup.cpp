@@ -847,6 +847,14 @@ static void ReplaceColor(ParsedColor& col, Str maybeColor) {
 }
 
 static void UpdateGlobalPrefs(const Flags& i) {
+    if (!i.windowPos.IsEmpty()) {
+        // -window-pos stands in for the remembered position: code that has to
+        // know the window's shape before it's on screen reads it from here
+        // (EbookLayoutAspectForWindow), and a remembered maximized state would
+        // otherwise ignore the rectangle we were given
+        gGlobalPrefs->windowPos = i.windowPos;
+        gGlobalPrefs->windowState = WIN_STATE_NORMAL;
+    }
     if (i.inverseSearchCmdLine) {
         str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;

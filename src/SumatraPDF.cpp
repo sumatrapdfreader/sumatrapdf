@@ -2178,6 +2178,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             SetTabInfoColor(tab);
         }
     }
+    if (gCli && !gCli->windowPos.IsEmpty()) {
+        // -window-pos asked for a rectangle, which a maximized, minimized or
+        // fullscreen window would ignore
+        showAsFullScreen = false;
+        showType = SW_NORMAL;
+    }
 
     AbortFinding(args->win, true);
 
@@ -2360,7 +2366,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         shouldPlace = false;
     }
     if (shouldPlace) {
-        if (args->isNewWindow && fs && !fs->windowPos.IsEmpty() && showType == SW_NORMAL) {
+        bool fixedWindowPos = gCli && !gCli->windowPos.IsEmpty();
+        if (!fixedWindowPos && args->isNewWindow && fs && !fs->windowPos.IsEmpty() && showType == SW_NORMAL) {
             // Make sure it doesn't have a position like outside of the screen etc.
             Rect rect = ShiftRectToWorkArea(fs->windowPos);
             // This shouldn't happen until !win.IsAboutWindow(), so that we don't
@@ -2885,7 +2892,10 @@ static void UpdateWindowFrameBorderColor(MainWindow* win) {
 static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, bool force = false);
 
 static MainWindow* CreateMainWindow() {
-    Rect windowPos = gGlobalPrefs->windowPos;
+    // -window-pos wins over both the remembered position and the default, and
+    // skips the per-window shift below: a test asked for an exact rectangle
+    bool fixedPos = gCli && !gCli->windowPos.IsEmpty();
+    Rect windowPos = fixedPos ? gCli->windowPos : gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
         EnsureAreaVisibility(windowPos);
     } else {
@@ -2900,8 +2910,10 @@ static MainWindow* CreateMainWindow() {
     }
     DpiSet(posDpi, posDpi);
     // we don't want the windows to overlap so shift each window by a bit
-    int nShift = len(gWindows);
-    windowPos.x += nShift * DpiScale(15);
+    if (!fixedPos) {
+        int nShift = len(gWindows);
+        windowPos.x += nShift * DpiScale(15);
+    }
 
     WStr clsName = WStrL(FRAME_CLASS_NAME);
     WStr title = WStr(kSumatraWindowTitleW);

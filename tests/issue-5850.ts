@@ -47,7 +47,7 @@ export async function testit(): Promise<void> {
   mkdirSync(appDataDir, { recursive: true });
   writeFileSync(join(appDataDir, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const proc = launchSumatra(["-appdata", appDataDir, PDF]);
+  const proc = launchSumatra(["-appdata", appDataDir, PDF], { defaultWindowPos: true });
   let frame = 0;
   try {
     frame = await waitForFrame(proc.pid!);
