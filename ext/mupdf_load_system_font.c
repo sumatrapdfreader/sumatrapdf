@@ -520,11 +520,28 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
         append_mapping(ctx, szPSName, path, index);
     }
     if (szTTName[0]) {
+        // every face of a family carries the same TT family name, so only the
+        // regular one may answer to it: registering it for the others too made
+        // a lookup for "Georgia" land on whichever of the four the binary
+        // search happened to hit (georgiai.ttf, the italic one)
+        int isRegularFace = !szStyle[0] || streqi(szStyle, "Regular");
         // derive a PostScript-like name and add it, if it's different from the font's
         // included PostScript name; cf. https://code.google.com/archive/p/sumatrapdf/issues/376
         // compare the two names before adding this one
-        if (!font_name_eq(szTTName, szPSName)) {
+        if (isRegularFace && !font_name_eq(szTTName, szPSName)) {
             append_mapping(ctx, szTTName, path, index);
+        }
+        // a lookup strips the spaces out of the name it's given
+        // (load_windows_font_by_name), so a family whose PostScript name isn't
+        // simply itself without spaces - "Courier New" is "CourierNewPSMT" -
+        // could not be found by its family name at all (#4600). Register the
+        // same PostScript-like form the CJK names below use, which keeps the
+        // style in the name so asking for the family gets the regular face
+        char szFakePSName[MAX_FACENAME];
+        fz_strlcpy(szFakePSName, szTTName, MAX_FACENAME);
+        makeFakePSName(szFakePSName, szStyle);
+        if (!font_name_eq(szFakePSName, szPSName) && !font_name_eq(szFakePSName, szTTName)) {
+            append_mapping(ctx, szFakePSName, path, index);
         }
     }
     if (szCJKName[0]) {
@@ -863,13 +880,21 @@ static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bol
     fz_font* font;
     const char* clean_name = pdf_clean_font_name(fontname);
     int is_base_14 = clean_name != fontname;
+    /* pdf_clean_font_name() ignores spaces, so it folds the CSS family name
+       "Courier New" into the base-14 "Courier" just like the PostScript name
+       "CourierNewPSMT". Only the latter is how a PDF names one of those fonts
+       - a family named in a stylesheet is written the way a human writes it -
+       and only the PDF case wants the substitution below, so an ebook can have
+       the Windows font its stylesheet asked for (#4600). A base-14 font with no
+       descriptor still needs the exact metrics whatever its name looks like. */
+    int pdf_base_14 = is_base_14 && (needs_exact_metrics || !strchr(fontname, ' '));
 
     /* metrics for Times-Roman don't match those of Windows' Times-Roman */
     /* https://code.google.com/archive/p/sumatrapdf/issues/2173 */
     /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2108 */
     /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2028 */
     /* TODO: should this always return NULL if is_base_14 is true? */
-    if (is_base_14) {
+    if (pdf_base_14) {
         if (!strncmp(clean_name, "Times", 5)) {
             return NULL;
         }
