@@ -535,16 +535,11 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     SaveAnnotationsToExistingFile(ew->tab);
 }
 
-// Tab / Shift+Tab. The ring is the layout order and skips what is hidden,
-// HWND controls and virtual ones alike
-static void AdvanceFocus(EditAnnotationsWindow* ew, bool forward) {
-    ew->TabNavigate(!forward);
-}
-
 void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
     if (ev->vkey == VK_TAB) {
-        bool forward = !ev->isShift;
-        AdvanceFocus(this, forward);
+        // Tab / Shift+Tab. The ring is the layout order and skips what is hidden,
+        // HWND controls and virtual ones alike
+        TabNavigate(!ev->isShift);
         ev->didHandle = true;
         return;
     }
