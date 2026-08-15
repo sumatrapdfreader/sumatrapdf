@@ -272,7 +272,7 @@ struct AboutCtrl : VirtCtrl {
 
     AboutCtrl();
     ~AboutCtrl() override;
-    void Sync(HDC hdc);
+    void Sync();
     void UpdateLayout(Rect clientRc);
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
@@ -441,7 +441,7 @@ ILayout* AboutCtrl::LayoutChildAt(int i) {
 
 // build the table once, then keep text, fonts and colors in step with the theme
 // and the DPI. Sizing happens in UpdateLayout(), which measures what we set here
-void AboutCtrl::Sync(HDC hdc) {
+void AboutCtrl::Sync() {
     int n = AboutRowCount();
     bool canAccessDisk = CanAccessDisk();
     if (table->rows != n) {
@@ -471,10 +471,10 @@ void AboutCtrl::Sync(HDC hdc) {
         }
     }
 
-    logo->font = HdcCreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+    logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
 
-    PlatformFont* fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
-    PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, kRightTextFont, kRightTextFontSize);
+    PlatformFont* fontLeftTxt = GetUserGuiFont(kLeftTextFont, DpiScale(kLeftTextFontSize));
+    PlatformFont* fontRightTxt = GetUserGuiFont(kRightTextFont, DpiScale(kRightTextFontSize));
     Color colText = ThemeWindowTextColor();
     Color colLink = ThemeWindowLinkColor();
 
@@ -526,9 +526,9 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
 }
 
 // prepares the About tree for hwnd and computes its geometry
-static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect clientRc) {
+static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
     AboutCtrl* about = EnsureAboutCtrl(rootPtr, hwnd, clientRc);
-    about->Sync(hdc);
+    about->Sync();
     about->UpdateLayout(clientRc);
     return about;
 }
@@ -536,64 +536,46 @@ static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, HDC hdc, Rect
 /* Draws the about screen. The text columns are painted by the AboutCtrl tree;
    this draws the frame around them. It transcribes the design I did in graphics
    software - hopeless to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, VirtRoot* root) {
+static void DrawAbout(Gfx* gfx, VirtRoot* root, Rect clientRc) {
     auto* about = (AboutCtrl*)root->owned;
     Rect rect = about->aboutRect;
-    auto col = ThemeWindowTextColor();
-    AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
-    AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
-    col = ThemeWindowLinkColor();
-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
-
-    PlatformFont* fontLeftTxt = HdcCreateSimpleFont(hdc, kLeftTextFont, kLeftTextFontSize);
-
-    ScopedSelectFont font(hdc, fontLeftTxt->GetHFont());
-
-    Rect rc = HwndClientRect(hwnd);
-    col = ThemeMainWindowBackgroundColor();
-    AutoDeleteBrush brushAboutBg = CreateSolidBrush(col);
-    HdcFillRect(hdc, rc, brushAboutBg);
+    Color lineCol = ThemeWindowTextColor();
+    Color bgCol = ThemeMainWindowBackgroundColor();
+    gfx->FillRect(clientRc, bgCol);
 
     /* render title */
     Rect titleRect(rect.TL(), about->headerSize);
 
-    ScopedSelectObject brush(hdc, CreateSolidBrush(col), true);
-    ScopedSelectObject pen(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
-    Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx,
-              rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
+    gfx->DrawRect({rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.dx, titleRect.dy}, lineCol, ABOUT_LINE_OUTER_SIZE);
 #else
-    Rect titleBgBand(0, rect.y, rc.dx, titleRect.dy);
-    RECT rcLogoBg = titleBgBand.ToRECT();
-    HdcFillRect(hdc, ToRect(rcLogoBg), bgBrush);
-    HdcDrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
-    HdcDrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
+    Rect titleBgBand(0, rect.y, clientRc.dx, titleRect.dy);
+    gfx->FillRect(titleBgBand, bgCol);
+    gfx->DrawLine(Rect(0, rect.y, clientRc.dx, 0), lineCol);
+    gfx->DrawLine(Rect(0, rect.y + titleRect.dy, clientRc.dx, 0), lineCol);
 #endif
 
     /* render attribution box */
-    col = ThemeWindowTextColor();
-    SetTextColor(hdc, col);
-    SetBkMode(hdc, TRANSPARENT);
-
 #ifndef ABOUT_USE_LESS_COLORS
-    Rectangle(hdc, rect.x, rect.y + titleRect.dy, rect.x + rect.dx, rect.y + rect.dy);
+    gfx->DrawRect({rect.x, rect.y + titleRect.dy, rect.dx, rect.dy - titleRect.dy}, lineCol, ABOUT_LINE_OUTER_SIZE);
 #endif
 
     /* render both text columns */
-    GfxHdc gfx(hdc);
-    root->Paint(&gfx, rc);
+    root->Paint(gfx, clientRc);
 
-    SelectObject(hdc, penDivideLine);
     Rect divideLine(about->dividerX, rect.y + titleRect.dy + 4, 0, rect.dy - titleRect.dy - 8);
-    HdcDrawLine(hdc, divideLine);
+    gfx->DrawLine(divideLine, lineCol, ABOUT_LINE_SEP_SIZE);
 }
 
 static void OnPaintAbout(HWND hwnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
     SetLayout(hdc, LAYOUT_LTR);
-    UpdateAboutLayout(&gAboutRoot, hwnd, hdc, HwndClientRect(hwnd));
-    DrawAbout(hwnd, hdc, gAboutRoot);
+    Rect clientRc = HwndClientRect(hwnd);
+    UpdateAboutLayout(&gAboutRoot, hwnd, clientRc);
+    Gfx* gfx = GfxCreate(hdc);
+    DrawAbout(gfx, gAboutRoot, clientRc);
+    delete gfx;
     EndPaint(hwnd, &ps);
 }
 
@@ -755,12 +737,8 @@ void ShowAboutWindow(MainWindow* win) {
     HwndSetRtl(gHwndAbout, IsUIRtl());
 
     // get the dimensions required for the about box's content
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(gHwndAbout, &ps);
-    SetLayout(hdc, LAYOUT_LTR);
-    AboutCtrl* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, hdc, HwndClientRect(gHwndAbout));
+    AboutCtrl* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, HwndClientRect(gHwndAbout));
     Rect rc = about->aboutRect;
-    EndPaint(gHwndAbout, &ps);
     int rectPadding = DpiScale(kAboutRectPadding);
     rc.Inflate(rectPadding, rectPadding);
 
@@ -781,10 +759,10 @@ static void ShowFrequentlyRead(VirtMouseEvent* ev) {
     win->RedrawAll(true);
 }
 
-void DrawAboutPage(MainWindow* win, HDC hdc) {
+void DrawAboutPage(MainWindow* win, Gfx* gfx) {
     HWND hwnd = win->hwndCanvas;
     Rect clientRc = HwndClientRect(hwnd);
-    AboutCtrl* about = UpdateAboutLayout(&win->homeRoot, hwnd, hdc, clientRc);
+    AboutCtrl* about = UpdateAboutLayout(&win->homeRoot, hwnd, clientRc);
 
     bool showLink = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles();
     if (showLink && !about->showFreqRead) {
@@ -799,7 +777,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
     if (about->showFreqRead) {
         VirtLink* link = about->showFreqRead;
         link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
-        link->font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        link->font = GetUserGuiFont("MS Shell Dlg", DpiScale(16));
         link->textColor = ThemeWindowLinkColor();
         link->sz = {0, 0}; // re-measure: the font may have changed with the DPI
         Size txtSize = link->GetIdealSize(true);
@@ -808,7 +786,7 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
         MoveXY(r, -DpiScale(kInnerPadding), -DpiScale(kInnerPadding));
         link->SetBounds(r);
     }
-    DrawAbout(hwnd, hdc, win->homeRoot);
+    DrawAbout(gfx, win->homeRoot, clientRc);
 }
 
 /* alternate static page to display when no document is loaded */

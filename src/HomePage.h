@@ -13,7 +13,7 @@ constexpr int kRightTextFontSize = 14;
 
 void ShowAboutWindow(MainWindow*);
 
-void DrawAboutPage(MainWindow* win, HDC hdc);
+void DrawAboutPage(MainWindow* win, Gfx* gfx);
 
 bool HomePageIsListView();
 void SetHomePageListView(bool listView);

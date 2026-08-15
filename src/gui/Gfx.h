@@ -102,7 +102,7 @@ struct Gfx {
 #if OS_WIN
 // Draws with plain gdi, immediately and without anti-aliasing. Kept for the
 // surfaces that interleave raw gdi drawing with Gfx drawing on the same HDC
-// (the home page, the caption frame, the installer): GfxDirect2D writes to the
+// (the caption frame and installer): GfxDirect2D writes to the
 // HDC only when destroyed and would overwrite the gdi-drawn content, and only
 // gdi honors the DC's world transform (an offset DoubleBuffer). Everything
 // that draws purely through Gfx should use GfxCreate() instead.

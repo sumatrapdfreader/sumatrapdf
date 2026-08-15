@@ -35,16 +35,16 @@ static void OnPaintAbout(MainWindow* win) {
     GlobalPrefs* prefs = gGlobalPrefs;
     bool hasPerms = HasPermission(Perm::SavePreferences | Perm::DiskAccess);
     bool drawHome = hasPerms && prefs->rememberOpenedFiles && prefs->showStartPage;
+    Gfx* gfx = GfxCreate(bufDC);
     if (drawHome) {
-        Gfx* gfx = GfxCreate(bufDC);
         DrawHomePage(win, gfx);
-        delete gfx;
     } else {
         HomePageDestroySearch(win);
         // DrawAboutPage swaps the canvas root's child from the home page's
         // chrome to the About page's controls
-        DrawAboutPage(win, bufDC);
+        DrawAboutPage(win, gfx);
     }
+    delete gfx;
     win->buffer->Flush(hdc);
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
