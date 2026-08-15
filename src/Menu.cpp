@@ -10,6 +10,7 @@
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
+#include "gui/Gfx.h"
 #include "gui/PlatformFont.h"
 
 #include "Settings.h"
@@ -2335,6 +2336,61 @@ static TempStr ParseMenuTextTemp(Str sIn, Str* shortcutOut) {
     return str::DupTemp(before);
 }
 
+struct MenuAccelText {
+    Str display;
+    int underlineOff = -1;
+    int underlineLen = 0;
+};
+
+// Remove Win32's '&' accelerator markup and remember the first character that
+// needs an underline. A doubled ampersand is a literal one.
+static MenuAccelText ParseMenuAccelTextTemp(Str s) {
+    MenuAccelText res;
+    if (!str::Contains(s, StrL("&"))) {
+        res.display = s;
+        return res;
+    }
+    char* buf = AllocArrayTemp<char>(len(s) + 1);
+    int out = 0;
+    for (int i = 0; i < len(s); i++) {
+        if (s.s[i] != '&') {
+            buf[out++] = s.s[i];
+            continue;
+        }
+        if (i + 1 >= len(s)) {
+            break;
+        }
+        if (s.s[i + 1] == '&') {
+            buf[out++] = '&';
+            i++;
+            continue;
+        }
+        if (res.underlineOff < 0) {
+            res.underlineOff = out;
+            int remain = len(s) - i - 1;
+            int n = utf8RuneLen((const u8*)(s.s + i + 1));
+            res.underlineLen = std::min(std::max(n, 1), remain);
+        }
+    }
+    buf[out] = 0;
+    res.display = Str(buf, out);
+    return res;
+}
+
+static void DrawMenuText(Gfx* gfx, Str text, Rect rc, u32 flags, PlatformFont* font, Color col) {
+    MenuAccelText parsed = ParseMenuAccelTextTemp(text);
+    gfx->DrawText(parsed.display, rc, flags, font, col);
+    if (parsed.underlineOff < 0 || parsed.underlineLen <= 0) {
+        return;
+    }
+    Size full = gfx->MeasureText(parsed.display, font);
+    Size before = parsed.underlineOff > 0 ? gfx->MeasureText(Str(parsed.display.s, parsed.underlineOff), font) : Size{};
+    Size ch = gfx->MeasureText(Str(parsed.display.s + parsed.underlineOff, parsed.underlineLen), font);
+    int textX = (flags & gfxTextRight) ? rc.x + rc.dx - full.dx : rc.x;
+    int underlineY = rc.y + full.dy - 1;
+    gfx->DrawLine({textX + before.dx, underlineY, ch.dx, 0}, col);
+}
+
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     MENUITEMINFOW mii{};
     mii.cbSize = sizeof(MENUITEMINFOW);
@@ -2471,8 +2527,9 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     PlatformFont* font = GetAppMenuFont();
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(text, &shortcutText);
+    MenuAccelText parsed = ParseMenuAccelTextTemp(menuText);
 
-    auto size = PlatformFontMeasureText(font, menuText);
+    auto size = PlatformFontMeasureText(font, parsed.display);
     mis->itemHeight = size.dy;
     int dx = size.dx;
     if (shortcutText) {
@@ -2536,9 +2593,11 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // if isChecked, show as radio button (i.e. circle)
     bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
-    auto* hdc = dis->hDC;
     PlatformFont* font = GetAppMenuFont();
-    ScopedSelectFont restoreFont(hdc, font->GetHFont());
+    Gfx* gfx = GfxCreate(dis->hDC);
+    defer {
+        delete gfx;
+    };
 
     Color bgCol = ThemeMainWindowBackgroundColor();
     Color txtCol = ThemeWindowTextColor();
@@ -2554,38 +2613,21 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         bgCol = AccentColor(bgCol, 40);
     }
 
-    RECT rc = dis->rcItem;
-    int rcDy = RectDy(rc);
+    Rect rc = ToRect(dis->rcItem);
+    int rcDy = rc.dy;
 
     int cxCheckMark = GetMenuCheckMarkCx(hwnd);
     int padY = DpiScale(kMenuPaddingY);
     int padX = DpiScale(kMenuPaddingX);
 
-    Color prevTxtCol = SetTextColor(hdc, txtCol);
-    Color prevBgCol = SetBkColor(hdc, bgCol);
-    defer {
-        SetTextColor(hdc, prevTxtCol);
-        SetBkColor(hdc, prevBgCol);
-    };
-
-    auto* brBg = CreateSolidBrush(bgCol);
-    HdcFillRect(hdc, ToRect(rc), brBg);
-    auto* brTxt = CreateSolidBrush(txtCol);
-
-    AutoDeleteObject deleteBgBrush(brBg);
-    AutoDeleteObject deleteTxtBrush(brTxt);
+    gfx->FillRect(rc, bgCol);
 
     if (isSeparator) {
         ReportIf(modi->text);
-        int sx = rc.left + cxCheckMark;
-        int y = rc.top + (rcDy / 2);
-        int ex = rc.right - padX;
-        auto* pen = CreatePen(PS_SOLID, 1, txtCol);
-        auto* prevPen = SelectObject(hdc, pen);
-        MoveToEx(hdc, sx, y, nullptr);
-        LineTo(hdc, ex, y);
-        SelectObject(hdc, prevPen);
-        DeleteObject(pen);
+        int sx = rc.x + cxCheckMark;
+        int y = rc.y + (rcDy / 2);
+        int ex = rc.x + rc.dx - padX;
+        gfx->DrawLine({sx, y, ex - sx, 0}, txtCol);
         return;
     }
 
@@ -2597,44 +2639,41 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(modi->text, &shortcutText);
 
-    // DrawTextEx handles & => underscore drawing
-    rc.top += padY;
-    rc.left += cxCheckMark;
-    WCHAR* ws = CWStrTemp(menuText);
-    DrawTextExW(hdc, ws, -1, &rc, DT_LEFT, nullptr);
+    rc.y += padY;
+    rc.dy -= padY;
+    rc.x += cxCheckMark;
+    rc.dx -= cxCheckMark;
+    DrawMenuText(gfx, menuText, rc, gfxTextSingleLine, font, txtCol);
     if (shortcutText) {
-        ws = CWStrTemp(shortcutText);
-        rc = dis->rcItem;
-        rc.top += padY;
-        rc.right -= (padX + (cxCheckMark / 2));
-        DrawTextExW(hdc, ws, -1, &rc, DT_RIGHT, nullptr);
+        rc = ToRect(dis->rcItem);
+        rc.y += padY;
+        rc.dy -= padY;
+        rc.dx -= padX + (cxCheckMark / 2);
+        gfx->DrawText(shortcutText, rc, gfxTextSingleLine | gfxTextRight, font, txtCol);
     }
 
     constexpr int kRadioCircleDx = 6;
     if (isChecked) {
-        rc = dis->rcItem;
+        rc = ToRect(dis->rcItem);
         // draw radio check indicator (a circle)
         if (isRadioCheck) {
             int dx = DpiScale(kRadioCircleDx);
             int offX = DpiScale(1); // why? beause it looks better
-            rc.left = rc.left + offX + (cxCheckMark / 2) - (dx / 2);
-            rc.right = rc.left + dx;
-            rc.top = rc.top + (rcDy / 2) - (dx / 2);
-            rc.bottom = rc.top + dx;
-            ScopedSelectObject restoreBrush(hdc, brTxt);
-            Ellipse(hdc, rc.left, rc.top, rc.right, rc.bottom);
+            rc.x = rc.x + offX + (cxCheckMark / 2) - (dx / 2);
+            rc.dx = dx;
+            rc.y = rc.y + (rcDy / 2) - (dx / 2);
+            rc.dy = dx;
+            gfx->FillEllipse(rc, txtCol);
             return;
         }
 
         // draw a checkmark
-        AutoDeletePen pen(CreatePen(PS_SOLID, 2, txtCol));
-        ScopedSelectPen restorePen(hdc, pen);
-        POINT points[3];
         int offX = DpiScale(6); // 6 is chosen experimentally
-        points[0] = {rc.left + offX, rc.top + (rcDy / 2)};
-        points[1] = {rc.left + (cxCheckMark / 2), rc.bottom - (padY * 3)};
-        points[2] = {rc.left + cxCheckMark - offX, rc.top + (padY * 3)};
-        Polyline(hdc, points, dimof(points));
+        Point p0 = {rc.x + offX, rc.y + (rcDy / 2)};
+        Point p1 = {rc.x + (cxCheckMark / 2), rc.y + rc.dy - (padY * 3)};
+        Point p2 = {rc.x + cxCheckMark - offX, rc.y + (padY * 3)};
+        gfx->DrawLineAA(p0, p1, txtCol, 2);
+        gfx->DrawLineAA(p1, p2, txtCol, 2);
     }
 }
 
