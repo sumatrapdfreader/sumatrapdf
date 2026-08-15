@@ -1756,18 +1756,20 @@ static void GetFileStateIcon(FileState* fs) {
 }
 
 struct HomeFileIcon {
+    HomeFileIcon* next = nullptr;
     HIMAGELIST imageList = nullptr;
     int iconIdx = -1;
     Pixmap* pixmap = nullptr;
 };
 
-static Vec<HomeFileIcon> gHomeFileIcons;
+static HomeFileIcon* gFileIcons = nullptr;
 
 static void FreeHomeFileIcons() {
-    for (HomeFileIcon& icon : gHomeFileIcons) {
-        FreePixmap(icon.pixmap);
+    for (HomeFileIcon* icon = gFileIcons; icon; icon = icon->next) {
+        FreePixmap(icon->pixmap);
     }
-    gHomeFileIcons.Reset();
+    ListDelete(gFileIcons);
+    gFileIcons = nullptr;
 }
 
 // Shell image lists are Windows drawing objects. Convert each distinct icon to
@@ -1777,9 +1779,9 @@ static Pixmap* GetFileStateIconPixmap(FileState* fs) {
     if (!fs->himl || fs->iconIdx < 0) {
         return nullptr;
     }
-    for (HomeFileIcon& icon : gHomeFileIcons) {
-        if (icon.imageList == fs->himl && icon.iconIdx == fs->iconIdx) {
-            return icon.pixmap;
+    for (HomeFileIcon* icon = gFileIcons; icon; icon = icon->next) {
+        if (icon->imageList == fs->himl && icon->iconIdx == fs->iconIdx) {
+            return icon->pixmap;
         }
     }
 
@@ -1792,7 +1794,11 @@ static Pixmap* GetFileStateIconPixmap(FileState* fs) {
         }
         DestroyIcon(hicon);
     }
-    gHomeFileIcons.Append({fs->himl, fs->iconIdx, pixmap});
+    auto* icon = new HomeFileIcon();
+    icon->imageList = fs->himl;
+    icon->iconIdx = fs->iconIdx;
+    icon->pixmap = pixmap;
+    ListInsertFront(&gFileIcons, icon);
     return pixmap;
 }
 
