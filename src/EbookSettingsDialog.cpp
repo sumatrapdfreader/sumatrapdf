@@ -39,6 +39,7 @@
 struct EbookVals {
     Str fontName; // not owned, points into the controls' temp strings
     float fontSize = 0;
+    Vec<float> margin; // 1, 2 or 4 values; empty means unset
     float lineSpacing = 0;
     bool ignoreDocumentCSS = false;
     Str customCSS; // not owned; empty unless useCustomCSS
@@ -55,6 +56,8 @@ struct EbookSettingsWnd : WindowBase {
     DropDown* ddFont = nullptr;
     VirtText* labelSize = nullptr;
     Edit* editSize = nullptr;
+    VirtText* labelMargin = nullptr;
+    Edit* editMargin = nullptr;
     VirtText* labelSpacing = nullptr;
     Edit* editSpacing = nullptr;
     Checkbox* cbIgnoreCss = nullptr;
@@ -73,7 +76,8 @@ struct EbookSettingsWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void FillFontList();
-    void SetValues(Str fontName, float fontSize, float lineSpacing, bool ignoreCss, Str customCss);
+    void SetValues(Str fontName, float fontSize, const Vec<float>* margin, float lineSpacing, bool ignoreCss,
+                   Str customCss);
     void LoadFromTarget();
     void ReadControls(EbookVals& out);
     void UpdateCssPreview();
@@ -128,6 +132,66 @@ static TempStr FromEditTextTemp(Str s) {
     return str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
 }
 
+// the margin is typed as CSS writes it: one number for all four sides, two
+// for top/bottom and left/right, or four in top-right-bottom-left order.
+// anything else (or out of range) is left empty, i.e. unset
+static void ParseMargin(Str s, Vec<float>& out) {
+    out.Reset();
+    if (!s) {
+        return;
+    }
+    StrVec parts;
+    Split(&parts, s, StrL(" "), true);
+    bool ok = true;
+    for (Str part : parts) {
+        if (!part) {
+            continue; // Split can hand back an empty piece
+        }
+        // strtof, not atof: a token that isn't a plain number (or is null,
+        // which atof faults on) has to invalidate the whole value, not read
+        // as 0 - that would silently mean "no margin at all"
+        const char* cs = CStrTemp(part);
+        char* end = nullptr;
+        float v = strtof(cs, &end);
+        if (end == cs || (end && *end != 0)) {
+            ok = false;
+            break;
+        }
+        out.Append(v);
+    }
+    int n = len(out);
+    ok = ok && (n == 1 || n == 2 || n == 4);
+    for (int i = 0; ok && i < n; i++) {
+        ok = out[i] >= 0 && out[i] <= 200;
+    }
+    if (!ok) {
+        out.Reset();
+    }
+}
+
+static TempStr MarginTextTemp(const Vec<float>* margin) {
+    int n = margin ? len(*margin) : 0;
+    TempStr res;
+    for (int i = 0; i < n; i++) {
+        TempStr one = fmt("%g", (*margin)[i]);
+        res = res ? str::JoinTemp(res, StrL(" "), one) : one;
+    }
+    return res;
+}
+
+static bool MarginEq(const Vec<float>& a, const Vec<float>* b) {
+    int n = len(a);
+    if (n != (b ? len(*b) : 0)) {
+        return false;
+    }
+    for (int i = 0; i < n; i++) {
+        if (a[i] != (*b)[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static float ParseFloatTemp(Edit* e) {
     TempStr s = e->GetTextTemp();
     if (!s) {
@@ -179,6 +243,7 @@ void EbookSettingsWnd::LoadFromTarget() {
 
     Str fontName = g->fontName;
     float fontSize = g->fontSize;
+    const Vec<float>* margin = g->margin;
     float lineSpacing = g->lineSpacing;
     bool ignoreCss = g->ignoreDocumentCSS;
     Str customCss = g->customCSS;
@@ -188,6 +253,9 @@ void EbookSettingsWnd::LoadFromTarget() {
         }
         if (f->fontSize > 0) {
             fontSize = f->fontSize;
+        }
+        if (f->margin && len(*f->margin) > 0) {
+            margin = f->margin;
         }
         if (f->lineSpacing > 0) {
             lineSpacing = f->lineSpacing;
@@ -200,13 +268,15 @@ void EbookSettingsWnd::LoadFromTarget() {
         }
     }
 
-    SetValues(fontName, fontSize, lineSpacing, ignoreCss, customCss);
+    SetValues(fontName, fontSize, margin, lineSpacing, ignoreCss, customCss);
 }
 
-void EbookSettingsWnd::SetValues(Str fontName, float fontSize, float lineSpacing, bool ignoreCss, Str customCss) {
+void EbookSettingsWnd::SetValues(Str fontName, float fontSize, const Vec<float>* margin, float lineSpacing,
+                                 bool ignoreCss, Str customCss) {
     updating = true;
     ddFont->SetText(fontName ? fontName : FontDefaultLabel());
     editSize->SetText(fontSize > 0 ? fmt("%g", fontSize) : StrL(""));
+    editMargin->SetText(MarginTextTemp(margin));
     editSpacing->SetText(lineSpacing > 0 ? fmt("%g", lineSpacing) : StrL(""));
     cbIgnoreCss->SetIsChecked(ignoreCss);
 
@@ -229,6 +299,7 @@ void EbookSettingsWnd::ReadControls(EbookVals& out) {
     }
     out.fontName = EbookFontNameFromSetting(font);
     out.fontSize = ParseFloatTemp(editSize);
+    ParseMargin(editMargin->GetTextTemp(), out.margin);
     out.lineSpacing = ParseFloatTemp(editSpacing);
     out.ignoreDocumentCSS = cbIgnoreCss->IsChecked();
     out.useCustomCSS = cbCustomCss->IsChecked();
@@ -237,6 +308,7 @@ void EbookSettingsWnd::ReadControls(EbookVals& out) {
         // the CSS in the box replaces what we would have generated, so the
         // values those rules came from are no longer ours to apply
         out.fontName = {};
+        out.margin.Reset();
         out.lineSpacing = 0;
     }
 }
@@ -248,6 +320,7 @@ void EbookSettingsWnd::SetCssEditable(bool editable) {
     SendMessageW(editCss->hwnd, EM_SETREADONLY, editable ? FALSE : TRUE, 0);
     // with hand-written CSS these two no longer feed anything
     ddFont->SetIsEnabled(!editable);
+    editMargin->SetIsEnabled(!editable);
     editSpacing->SetIsEnabled(!editable);
 }
 
@@ -259,8 +332,11 @@ void EbookSettingsWnd::UpdateCssPreview() {
     if (str::Eq(font, FontDefaultLabel())) {
         font = nullptr;
     }
-    float spacing = ParseFloatTemp(editSpacing);
-    TempStr css = EbookGeneratedCssTemp(font, spacing);
+    Vec<float> margin;
+    ParseMargin(editMargin->GetTextTemp(), margin);
+    // the same DPI the engine used: it takes it from DpiGet() when the document
+    // is opened (EngineCreate.cpp)
+    TempStr css = EbookGeneratedCssTemp(font, &margin, ParseFloatTemp(editSpacing), DpiGet());
     Str text = css ? css : _TRA("(the document's own styling is used as-is)");
     editCss->SetText(ToEditTextTemp(text));
 }
@@ -309,6 +385,7 @@ void EbookSettingsWnd::Apply() {
     if (!thisFile) {
         str::ReplaceWithCopy(&g->fontName, v.fontName);
         g->fontSize = v.fontSize;
+        *g->margin = v.margin;
         g->lineSpacing = v.lineSpacing;
         g->ignoreDocumentCSS = v.ignoreDocumentCSS;
         str::ReplaceWithCopy(&g->customCSS, v.customCSS);
@@ -329,8 +406,8 @@ void EbookSettingsWnd::Apply() {
         FileHistoryAppend(fs);
     }
     bool differs = !str::Eq(v.fontName, g->fontName) || v.fontSize != g->fontSize ||
-                   v.lineSpacing != g->lineSpacing || v.ignoreDocumentCSS != g->ignoreDocumentCSS ||
-                   !str::Eq(v.customCSS, g->customCSS);
+                   !MarginEq(v.margin, g->margin) || v.lineSpacing != g->lineSpacing ||
+                   v.ignoreDocumentCSS != g->ignoreDocumentCSS || !str::Eq(v.customCSS, g->customCSS);
     if (!differs) {
         // nothing left that isn't the global setting: drop the block entirely
         // so it stops being written out
@@ -345,6 +422,11 @@ void EbookSettingsWnd::Apply() {
     FileEBookUI* f = fs->eBookUI;
     str::ReplaceWithCopy(&f->fontName, str::Eq(v.fontName, g->fontName) ? Str{} : v.fontName);
     f->fontSize = (v.fontSize == g->fontSize) ? 0 : v.fontSize;
+    if (MarginEq(v.margin, g->margin)) {
+        f->margin->Reset();
+    } else {
+        *f->margin = v.margin;
+    }
     f->lineSpacing = (v.lineSpacing == g->lineSpacing) ? 0 : v.lineSpacing;
     Str ignore{};
     if (v.ignoreDocumentCSS != g->ignoreDocumentCSS) {
@@ -359,13 +441,14 @@ void EbookSettingsWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    VirtText* labels[] = {labelFont, labelSize, labelSpacing};
+    VirtText* labels[] = {labelFont, labelSize, labelMargin, labelSpacing};
     for (VirtText* l : labels) {
         if (l) {
             l->textColor = colTxt;
         }
     }
-    ControlBase* ctrls[] = {ddFont, editSize, editSpacing, editCss, cbIgnoreCss, cbCustomCss, radioThisFile,
+    ControlBase* ctrls[] = {ddFont,      editSize,    editMargin,    editSpacing,
+                            editCss,     cbIgnoreCss, cbCustomCss,   radioThisFile,
                             radioAllEbooks};
     for (ControlBase* c : ctrls) {
         if (c) {
@@ -396,10 +479,10 @@ void EbookSettingsWnd::OnReset(VirtMouseEvent*) {
     bool thisFile = radioThisFile && radioThisFile->IsChecked();
     if (thisFile) {
         auto* g = &gGlobalPrefs->eBookUI;
-        SetValues(g->fontName, g->fontSize, g->lineSpacing, g->ignoreDocumentCSS, g->customCSS);
+        SetValues(g->fontName, g->fontSize, g->margin, g->lineSpacing, g->ignoreDocumentCSS, g->customCSS);
         return;
     }
-    SetValues({}, 0, 0, false, {});
+    SetValues({}, 0, nullptr, 0, false, {});
 }
 
 void EbookSettingsWnd::OnOk(VirtMouseEvent*) {
@@ -493,6 +576,20 @@ bool EbookSettingsWnd::Create(MainWindow* mainWin) {
         editSize->SetInsetsPt(8, 0, 0, 0);
         editSize->Create(args);
         row->AddChild(editSize);
+
+        labelMargin = NewVirtText({
+            .s = _TRA("Margin:"),
+            .font = font,
+            .isRtl = isRtl,
+            .padding = DpiScaledInsets(8, 8, 0, 16),
+        });
+        row->AddChild(labelMargin);
+
+        editMargin = new Edit();
+        editMargin->SetInsetsPt(8, 0, 0, 0);
+        editMargin->Create(args);
+        editMargin->onTextChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnControlChanged>(this);
+        row->AddChild(editMargin);
 
         labelSpacing = NewVirtText({
             .s = _TRA("Line spacing:"),

@@ -26,6 +26,7 @@ bool ExternalViewers_UnitTestPDFXChangePaths();
 bool Canvas_UnitTestScrollLineAmount();
 bool EngineMupdf_UnitTestEbookLineSpacingCss();
 bool EngineMupdf_UnitTestEbookFontFamilyCss();
+bool EngineMupdf_UnitTestEbookMarginCss();
 bool EngineMupdf_UnitTestMergeEBookUI();
 #endif
 
@@ -157,6 +158,7 @@ int RunAppUnitTests() {
     utassert(Canvas_UnitTestScrollLineAmount());
     utassert(EngineMupdf_UnitTestEbookLineSpacingCss());
     utassert(EngineMupdf_UnitTestEbookFontFamilyCss());
+    utassert(EngineMupdf_UnitTestEbookMarginCss());
     utassert(EngineMupdf_UnitTestMergeEBookUI());
 #endif
     return utassert_print_results();

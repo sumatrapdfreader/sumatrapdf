@@ -3173,20 +3173,44 @@ static TempStr EbookFontFamilyCssTemp(Str fontName) {
         fontName);
 }
 
+// mupdf lays reflowable text into the page minus the @page margins (its own
+// default is "@page{margin:3em 2em}"), so that rule is the lever for how much
+// white space surrounds the text. The setting is in points like LayoutDx and
+// FontSize, so it gets the same DPI scaling: mupdf reads a CSS pt as one of the
+// units the page size and font are already expressed in.
+// 1, 2 or 4 values, meaning what they do in CSS (all / vertical horizontal /
+// top right bottom left); anything else is ignored rather than half-applied
+static TempStr EbookMarginCssTemp(const Vec<float>* margin, int displayDPI) {
+    int n = margin ? len(*margin) : 0;
+    if (n != 1 && n != 2 && n != 4) {
+        return {};
+    }
+    TempStr vals;
+    for (int i = 0; i < n; i++) {
+        float v = (*margin)[i];
+        if (!(v >= 0 && v <= 200)) {
+            return {};
+        }
+        TempStr one = fmt("%gpt", DpiScale(v, displayDPI));
+        vals = vals ? str::JoinTemp(vals, StrL(" "), one) : one;
+    }
+    return fmt("@page { margin: %s !important; }\n", vals);
+}
+
 // the user CSS we generate from the ebook settings: what the Ebook Settings
 // dialog shows in its preview, so the two can't drift apart. The built-in
 // img { height: auto } fix (#5805) is not part of it -- that one is ours, not
 // something the user configured
-TempStr EbookGeneratedCssTemp(Str fontName, float lineSpacing) {
-    TempStr css = EbookFontFamilyCssTemp(EbookFontNameFromSetting(fontName));
-    TempStr spacing = EbookLineSpacingCssTemp(lineSpacing);
-    if (!css) {
-        return spacing;
+TempStr EbookGeneratedCssTemp(Str fontName, const Vec<float>* margin, float lineSpacing, int displayDPI) {
+    TempStr res = EbookFontFamilyCssTemp(EbookFontNameFromSetting(fontName));
+    TempStr parts[] = {EbookMarginCssTemp(margin, displayDPI), EbookLineSpacingCssTemp(lineSpacing)};
+    for (TempStr part : parts) {
+        if (!part) {
+            continue;
+        }
+        res = res ? str::JoinTemp(res, part) : part;
     }
-    if (!spacing) {
-        return css;
-    }
-    return str::JoinTemp(css, spacing);
+    return res;
 }
 
 #if defined(DEBUG)
@@ -3216,6 +3240,7 @@ bool EngineMupdf_UnitTestEbookFontFamilyCss() {
 struct EBookUISettings {
     Str fontName;
     float fontSize;
+    const Vec<float>* margin; // not owned; empty or null means unset
     float lineSpacing;
     float layoutDx;
     float layoutDy;
@@ -3227,6 +3252,7 @@ static EBookUISettings MergeEBookUI(const EBookUI* global, const FileEBookUI* pe
     EBookUISettings res{};
     res.fontName = global->fontName;
     res.fontSize = global->fontSize;
+    res.margin = global->margin;
     res.lineSpacing = global->lineSpacing;
     res.layoutDx = global->layoutDx;
     res.layoutDy = global->layoutDy;
@@ -3240,6 +3266,9 @@ static EBookUISettings MergeEBookUI(const EBookUI* global, const FileEBookUI* pe
     }
     if (perFile->fontSize > 0) {
         res.fontSize = perFile->fontSize;
+    }
+    if (perFile->margin && len(*perFile->margin) > 0) {
+        res.margin = perFile->margin;
     }
     if (perFile->lineSpacing > 0) {
         res.lineSpacing = perFile->lineSpacing;
@@ -3265,10 +3294,66 @@ static EBookUISettings MergeEBookUI(const EBookUI* global, const FileEBookUI* pe
 }
 
 #if defined(DEBUG)
+bool EngineMupdf_UnitTestEbookMarginCss() {
+    Vec<float> m;
+    // nothing set, and 3 values (not a CSS margin), leave mupdf's default alone
+    if (EbookMarginCssTemp(nullptr, 96) || EbookMarginCssTemp(&m, 96)) {
+        return false;
+    }
+    m.Append(1);
+    m.Append(2);
+    m.Append(3);
+    if (EbookMarginCssTemp(&m, 96)) {
+        return false;
+    }
+    // 0 is a real value: no margin at all
+    m.Reset();
+    m.Append(0);
+    if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 0pt !important; }\n"))) {
+        return false;
+    }
+    // one value for all four sides, and points, so it scales with the display
+    m.Reset();
+    m.Append(24);
+    if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 24pt !important; }\n"))) {
+        return false;
+    }
+    if (!str::Eq(EbookMarginCssTemp(&m, 192), StrL("@page { margin: 48pt !important; }\n"))) {
+        return false;
+    }
+    // two and four values pass through in CSS order
+    m.Reset();
+    m.Append(36);
+    m.Append(24);
+    if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 36pt 24pt !important; }\n"))) {
+        return false;
+    }
+    m.Reset();
+    m.Append(1);
+    m.Append(2);
+    m.Append(3);
+    m.Append(4);
+    if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 1pt 2pt 3pt 4pt !important; }\n"))) {
+        return false;
+    }
+    // out of range is ignored rather than clamped
+    m.Reset();
+    m.Append(-1);
+    if (EbookMarginCssTemp(&m, 96)) {
+        return false;
+    }
+    m.Reset();
+    m.Append(200.1f);
+    return !EbookMarginCssTemp(&m, 96);
+}
+
 bool EngineMupdf_UnitTestMergeEBookUI() {
     EBookUI g{};
     g.fontName = StrL("Georgia");
     g.fontSize = 10;
+    Vec<float> gMargin;
+    gMargin.Append(24);
+    g.margin = &gMargin;
     g.lineSpacing = 1.5f;
     g.layoutDx = 400;
     g.layoutDy = 600;
@@ -3283,16 +3368,20 @@ bool EngineMupdf_UnitTestMergeEBookUI() {
     // an empty block inherits everything
     FileEBookUI f{};
     s = MergeEBookUI(&g, &f);
-    if (!str::Eq(s.fontName, StrL("Georgia")) || s.fontSize != 10 || s.lineSpacing != 1.5f || s.layoutDx != 400 ||
-        s.layoutDy != 600 || !s.ignoreDocumentCSS || !str::Eq(s.customCSS, StrL("p { color: red }"))) {
+    if (!str::Eq(s.fontName, StrL("Georgia")) || s.fontSize != 10 || s.margin != &gMargin || s.lineSpacing != 1.5f ||
+        s.layoutDx != 400 || s.layoutDy != 600 || !s.ignoreDocumentCSS ||
+        !str::Eq(s.customCSS, StrL("p { color: red }"))) {
         return false;
     }
     // set fields win, the rest still inherits
     f.fontName = StrL("Segoe UI");
     f.fontSize = 14;
+    Vec<float> fMargin; // this document has no margin at all, the global one has 24pt
+    fMargin.Append(0);
+    f.margin = &fMargin;
     f.ignoreDocumentCSS = StrL("false");
     s = MergeEBookUI(&g, &f);
-    if (!str::Eq(s.fontName, StrL("Segoe UI")) || s.fontSize != 14 || s.lineSpacing != 1.5f) {
+    if (!str::Eq(s.fontName, StrL("Segoe UI")) || s.fontSize != 14 || s.margin != &fMargin || s.lineSpacing != 1.5f) {
         return false;
     }
     // the tri-state can turn the global true back off
@@ -3393,7 +3482,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             ldy = limitValue(ldx * gEbookLayoutAspect, 150.f, 5000.f);
         }
         requestedFontName = EbookFontNameFromSetting(s.fontName);
-        TempStr generated = EbookGeneratedCssTemp(s.fontName, s.lineSpacing);
+        TempStr generated = EbookGeneratedCssTemp(s.fontName, s.margin, s.lineSpacing, displayDPI);
         if (generated) {
             userCss = str::JoinTemp(generated, userCss);
         }

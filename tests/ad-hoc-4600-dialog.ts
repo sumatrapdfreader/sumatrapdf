@@ -14,10 +14,12 @@ import { makeFixtures } from "./ad-hoc-issue-4600.ts";
 import { captureWindowToPng, waitForFrame } from "./win-automation.ts";
 import {
   enumChildWindows,
+  enumWindows,
   getClassName,
   getControlText,
   getFocusedHwnd,
   getWindowLong,
+  getWindowPid,
   getWindowText,
   moveWindow,
   postMessage,
@@ -138,14 +140,33 @@ async function launch(epub: string): Promise<Launched> {
   return { proc, frame };
 }
 
+// notifications are top-level windows of the same class (the fixture EPUB
+// raises an "Errors in document" one), so match the dialog by its title
+function findDialog(pid: number): number {
+  let found = 0;
+  enumWindows((hwnd) => {
+    if (getWindowPid(hwnd) !== pid || getClassName(hwnd) !== DLG_CLASS) {
+      return true;
+    }
+    if (getWindowText(hwnd) === "eBook Settings") {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
 async function openDialog(l: Launched): Promise<number> {
   sendMessage(l.frame, WM_COMMAND, CmdChangeEbookSettings, 0);
-  await sleep(1000);
-  const dlg = await waitForTopWindow(l.proc.pid!, DLG_CLASS, 4000);
-  if (!dlg) {
-    throw new Error("the eBook Settings dialog did not open");
+  for (let i = 0; i < 20; i++) {
+    await sleep(250);
+    const dlg = findDialog(l.proc.pid!);
+    if (dlg) {
+      return dlg;
+    }
   }
-  return dlg;
+  throw new Error("the eBook Settings dialog did not open");
 }
 
 export async function testit(): Promise<void> {

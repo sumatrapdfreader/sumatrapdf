@@ -174,6 +174,16 @@ const ebookUI: Field[] = [
       "reported with a notification when the document opens",
   ).ver("3.7"),
   field("FontSize", Float, 0, "font size in points; 0 means the default (8.0)"),
+  compactArray(
+    "Margin",
+    Float,
+    null,
+    "white space around the text, in points (not screen pixels), like LayoutDx. " +
+      "one number sets all four sides, two are top/bottom and left/right, four " +
+      "are top, right, bottom, left - the same order as in CSS. empty keeps the " +
+      "default (3 em above and below, 2 em left and right, so it follows the font " +
+      "size); 0 leaves no margin at all. each value can be up to 200",
+  ).ver("3.7"),
   field(
     "LineSpacing",
     Float,
@@ -797,6 +807,13 @@ const fileEBookUI: Field[] = [
     "font family for this document (e.g. Segoe UI, Microsoft YaHei); " + "empty uses EBookUI.FontName",
   ).ver("3.7"),
   field("FontSize", Float, 0, "font size in points for this document; 0 uses EBookUI.FontSize").ver("3.7"),
+  compactArray(
+    "Margin",
+    Float,
+    null,
+    "white space around the text for this document, in points; one, two or four " +
+      "values like EBookUI.Margin. empty uses EBookUI.Margin",
+  ).ver("3.7"),
   field(
     "LineSpacing",
     Float,

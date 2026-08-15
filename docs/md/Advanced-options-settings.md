@@ -401,6 +401,14 @@ EBookUI [
     ; font size in points; 0 means the default (8.0)
     FontSize = 0
 
+    ; white space around the text, in points (not screen pixels), like LayoutDx.
+    ; one number sets all four sides, two are top/bottom and left/right, four
+    ; are top, right, bottom, left - the same order as in CSS. empty keeps the
+    ; default (3 em above and below, 2 em left and right, so it follows the font
+    ; size); 0 leaves no margin at all. each value can be up to 200 (introduced
+    ; in version 3.7)
+    Margin =
+
     ; line-height multiplier for ebook text (e.g. 1.5); 0 keeps the document or
     ; engine default. values from 0.5 to 5 are accepted (introduced in version
     ; 3.7)
@@ -988,6 +996,11 @@ FileStates [
         ; font size in points for this document; 0 uses EBookUI.FontSize
         ; (introduced in version 3.7)
         FontSize = 0
+
+        ; white space around the text for this document, in points; one, two or
+        ; four values like EBookUI.Margin. empty uses EBookUI.Margin (introduced
+        ; in version 3.7)
+        Margin =
 
         ; line-height multiplier for this document (e.g. 1.5); 0 uses
         ; EBookUI.LineSpacing (introduced in version 3.7)

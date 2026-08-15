@@ -5,9 +5,10 @@ EPUB, MOBI, FB2, and similar formats use SumatraPDF's **eBook UI** (HTML-based l
 ## The eBook Settings dialog (**ver 3.7+**)
 
 With an ebook open, run **Change eBook Settings** (`CmdChangeEbookSettings`) from
-the [command palette](Command-Palette.md) (`Ctrl + K`). It has the font, size and
-line spacing, and shows the CSS those values produce in a read-only box, so you
-can see exactly what is applied. Tick **Custom CSS** and the box becomes
+the [command palette](Command-Palette.md) (`Ctrl + K`). It has the font, size,
+margin and line spacing, and shows the CSS those values produce in a read-only
+box, so you can see exactly what is applied. **Margin** is a single field, but it
+takes the same one, two or four values as the setting. Tick **Custom CSS** and the box becomes
 editable: what you type there is then used instead of the generated rules (it
 starts out holding them, so nothing is lost by taking over).
 
@@ -35,6 +36,7 @@ in the `EBookUI` section:
 EBookUI [
     FontName =
     FontSize = 0
+    Margin =
     LineSpacing = 0
     LayoutDx = 0
     LayoutDy = 0
@@ -48,6 +50,7 @@ EBookUI [
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `FontName`              | Default font family, e.g. `Segoe UI` or `Microsoft YaHei` (empty = engine default, usually a serif). Overrides the document's `font-family`, including inline `style="font-family: ..."`. A font that can't be loaded is reported with a notification (**ver 3.7+**) |
 | `FontSize`              | Base font size (default `8.0`; `0` = built-in default)                                                                                                     |
+| `Margin`                | White space around the text, in points, written like a CSS margin: one number for all four sides, two for top/bottom and left/right, or four in top-right-bottom-left order. Empty keeps the default (3 em above and below, 2 em to the sides, so it follows the font size); `0` leaves no margin at all (**ver 3.7+**) |
 | `LineSpacing`           | Line-height multiplier, e.g. `1.5` for expanded spacing (`0` = document or engine default; **ver 3.7+**)                                                   |
 | `LayoutDx` / `LayoutDy` | Virtual page width / height for reflow (defaults `420` / `595`)                                                                                            |
 | `IgnoreDocumentCSS`     | Ignore stylesheet from the EPUB (`true` = your `CustomCSS` wins)                                                                                           |
@@ -75,7 +78,8 @@ FileStates [
 
 A field you leave out (empty, or `0` for the numbers) uses the value from the
 global `EBookUI` section, so the block above changes only the font and the line
-spacing for that one book. `IgnoreDocumentCSS` is `true` / `false` here, and
+spacing for that one book. `Margin` is empty when unset, since `0` means no
+margin at all. `IgnoreDocumentCSS` is `true` / `false` here, and
 empty means "use the global setting" — so a single document can keep the
 publisher's CSS even when the global setting ignores it.
 
