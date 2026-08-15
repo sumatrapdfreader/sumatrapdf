@@ -1,6 +1,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "mac/SumatraMacEngine.h"
+#include "gui/mac/KeyboardHelpMacBridge.h"
 
 // The website / manual URL opened from the Help menu.
 static NSString* const kWebsiteURL = @"https://www.sumatrapdfreader.org";
@@ -297,6 +298,9 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
             return;
         case '0':
             [owner zoomActualSize:nil];
+            return;
+        case '?':
+            [owner showKeyboardShortcuts:nil];
             return;
         default:
             break;
@@ -1065,6 +1069,12 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kWebsiteURL]];
 }
 
+- (IBAction)showKeyboardShortcuts:(id)sender {
+    (void)sender;
+    bool fullscreen = ([_window styleMask] & NSWindowStyleMaskFullScreen) != 0;
+    MacToggleKeyboardHelp(_window, fullscreen);
+}
+
 // Placeholder for menu items whose feature isn't ported yet: kept in the menu
 // for structure but disabled (see validateMenuItem:).
 - (IBAction)unavailableFeature:(id)sender {
@@ -1269,6 +1279,8 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     NSMenuItem* helpItem = [[[NSMenuItem alloc] initWithTitle:@"Help" action:nil keyEquivalent:@""] autorelease];
     [mainMenu addItem:helpItem];
     NSMenu* helpMenu = [[[NSMenu alloc] initWithTitle:@"Help"] autorelease];
+    AddItem(helpMenu, @"Keyboard Shortcuts", @selector(showKeyboardShortcuts:), delegate, @"", 0);
+    [helpMenu addItem:[NSMenuItem separatorItem]];
     AddItem(helpMenu, @"SumatraPDF Website", @selector(openWebsite:), delegate, @"", 0);
     AddPlaceholder(helpMenu, @"Manual", delegate);
     [helpItem setSubmenu:helpMenu];

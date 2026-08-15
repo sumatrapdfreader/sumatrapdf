@@ -228,4 +228,6 @@ void GfxDestroyDoubleBuffer(HwndBase*);
 
 #if OS_LINUX
 Gfx* GfxCreate(cairo_t*);
+#elif OS_DARWIN
+Gfx* GfxCreate(void*);
 #endif

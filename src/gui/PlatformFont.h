@@ -39,7 +39,7 @@ struct PlatformFont {
     Gdiplus::Font* gdiFont = nullptr;
     // for gdiFont, created lazily by GetHFont(); set upfront when adopted
     HFONT hfont = nullptr;
-#elif OS_LINUX
+#elif OS_LINUX || OS_DARWIN
     void* nativeFont = nullptr;
 #endif
     // memoized by GetBoldPlatformFont()

@@ -558,6 +558,7 @@ const TEST_ENGINES_SOURCES = [
 ];
 
 const MAC_APP_SOURCES = [
+  "src/Commands.cpp",
   "src/base/GuessFileType.cpp",
   "src/DisplayMode.cpp",
   "src/DocumentLayout.cpp",
@@ -579,6 +580,14 @@ const MAC_APP_SOURCES = [
   "src/TextSelection.cpp",
   "src/TextSearch.cpp",
   "src/TreeModel.cpp",
+  "src/KeyboardHelp.cpp",
+  "src/gui/GuiColors.cpp",
+  "src/gui/PlatformFont.cpp",
+  "src/gui/mac/GfxMac.cpp",
+  "src/gui/mac/KeyboardHelpMac.cpp",
+  "src/gui/mac/PlatformFontMac.cpp",
+  "src/gui/mac/PlatformWindowMac.cpp",
+  "src/gui/mac/GuiMacBridge.mm",
   "src/mac/SumatraMacEngine.cpp",
   "src/mac/SumatraMac.mm",
 ];
@@ -829,6 +838,7 @@ async function buildMacApp(
 
   const units = MAC_APP_SOURCES.map((src) => {
     const obj = objPath(outDir, "sumatrapdf_app", src);
+    const sourceDefines = src === "src/Commands.cpp" ? ["-DSUMATRA_TEST_UTIL=1"] : [];
     return {
       src,
       obj,
@@ -836,6 +846,7 @@ async function buildMacApp(
         tools.cxx,
         ...optFlags,
         ...defineFlags,
+        ...sourceDefines,
         ...includeFlags,
         ...commonFlags,
         "-w",
