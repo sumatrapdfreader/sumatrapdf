@@ -16,7 +16,7 @@
 
 import { writeFileSync } from "node:fs";
 import { cmdId, tmpPath } from "./util";
-import { findCanvas, launchControlled } from "./win-automation";
+import { findCanvas, launchControlled, killAndWait } from "./win-automation";
 import {
   captureWindowPixels,
   packCoords,
@@ -218,7 +218,7 @@ export async function testit(): Promise<void> {
     console.log(`  zoom to selection: red ${before.red} -> ${after.red} px, Back restored the page ✓`);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

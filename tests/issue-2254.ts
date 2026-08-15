@@ -22,7 +22,7 @@ import {
   WM_GETTEXT,
   WM_GETTEXTLENGTH,
 } from "./winapi.ts";
-import { launchControlled, sendCommandSync } from "./win-automation.ts";
+import { launchControlled, sendCommandSync, killAndWait } from "./win-automation.ts";
 import { ptr } from "bun:ffi";
 
 const FB2 = join(import.meta.dir, "issue-2254.fb2");
@@ -131,7 +131,7 @@ export async function testit(): Promise<void> {
   } finally {
     client.close();
     try {
-      proc.kill();
+      await killAndWait(proc);
     } catch {
       // already exited
     }

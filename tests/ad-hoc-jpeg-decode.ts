@@ -11,7 +11,7 @@
 
 import { existsSync } from "node:fs";
 import { runStandalone, tmpPath } from "./util.ts";
-import { launchSumatra, waitForFrame, findCanvas } from "./win-automation.ts";
+import { launchSumatra, waitForFrame, findCanvas, killAndWait } from "./win-automation.ts";
 import { sleep, captureWindowToPng, getClientRect } from "./winapi.ts";
 
 const BUGS_DIR = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs";
@@ -95,8 +95,7 @@ async function renderAndCheck(jpg: string): Promise<void> {
       throw new Error(`${jpg}: luminance variance too low (${stddev.toFixed(2)}); canvas likely blank`);
     }
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 

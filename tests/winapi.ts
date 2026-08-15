@@ -149,6 +149,12 @@ const kernel32 = dlopen("kernel32.dll", {
     ],
     returns: FFIType.bool,
   },
+  CreateToolhelp32Snapshot: { args: [FFIType.u32, FFIType.u32], returns: FFIType.u64 },
+  Process32FirstW: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
+  Process32NextW: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
+  OpenProcess: { args: [FFIType.u32, FFIType.bool, FFIType.u32], returns: FFIType.u64 },
+  TerminateProcess: { args: [FFIType.u64, FFIType.u32], returns: FFIType.bool },
+  WaitForSingleObject: { args: [FFIType.u64, FFIType.u32], returns: FFIType.u32 },
   CloseHandle: { args: [FFIType.u64], returns: FFIType.bool },
   GetLastError: { args: [], returns: FFIType.u32 },
 });
@@ -1205,6 +1211,109 @@ export function launchDetached(exePath: string, args: string[] = []): number {
   kernel32.symbols.CloseHandle(hProcess); // we don't wait on the child
   kernel32.symbols.CloseHandle(hThread);
   return pid;
+}
+
+const TH32CS_SNAPPROCESS = 0x2;
+const INVALID_HANDLE_VALUE = 0xffffffffffffffffn;
+const PROCESS_TERMINATE = 0x0001;
+const SYNCHRONIZE = 0x00100000;
+const WAIT_OBJECT_0 = 0;
+// x64 PROCESSENTRY32W: DWORD fields, then ULONG_PTR, then WCHAR szExeFile[MAX_PATH]
+const PROCESSENTRY32W_SIZE = 568;
+const PROCESSENTRY32W_PID = 8;
+const PROCESSENTRY32W_EXE = 44;
+
+function readWideZ(buf: Uint8Array, byteOff: number): string {
+  const u16 = new Uint16Array(buf.buffer, buf.byteOffset + byteOff, (buf.byteLength - byteOff) >> 1);
+  let s = "";
+  for (let i = 0; i < u16.length && u16[i]; i++) {
+    s += String.fromCharCode(u16[i]!);
+  }
+  return s;
+}
+
+// PIDs whose image name matches (case-insensitive), e.g. "SumatraPDF.exe"
+export function listPidsByExeName(exeName: string): number[] {
+  const snap = kernel32.symbols.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (!snap || snap === INVALID_HANDLE_VALUE) {
+    return [];
+  }
+  try {
+    const buf = new Uint8Array(PROCESSENTRY32W_SIZE);
+    const dv = new DataView(buf.buffer);
+    dv.setUint32(0, PROCESSENTRY32W_SIZE, true);
+    if (!kernel32.symbols.Process32FirstW(snap, ptr(buf))) {
+      return [];
+    }
+    const want = exeName.toLowerCase();
+    const pids: number[] = [];
+    for (;;) {
+      if (readWideZ(buf, PROCESSENTRY32W_EXE).toLowerCase() === want) {
+        pids.push(dv.getUint32(PROCESSENTRY32W_PID, true));
+      }
+      if (!kernel32.symbols.Process32NextW(snap, ptr(buf))) {
+        break;
+      }
+    }
+    return pids;
+  } finally {
+    kernel32.symbols.CloseHandle(snap);
+  }
+}
+
+// Terminate a pid and block until it is gone. Already-exited is success.
+export function killPid(pid: number, timeoutMs = 5000): boolean {
+  if (!pid) {
+    return true;
+  }
+  const h = kernel32.symbols.OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, false, pid);
+  if (!h) {
+    return true;
+  }
+  try {
+    kernel32.symbols.TerminateProcess(h, 1);
+    return kernel32.symbols.WaitForSingleObject(h, timeoutMs) === WAIT_OBJECT_0;
+  } finally {
+    kernel32.symbols.CloseHandle(h);
+  }
+}
+
+export type KillableProc = {
+  pid?: number | null;
+  kill?: (signal?: number | string) => unknown;
+  exitCode?: number | null;
+};
+
+// Kill a spawned process (Bun.Subprocess or node ChildProcess) and wait until
+// the OS says it has exited. Replaces proc.kill()+sleep and taskkill /F.
+export async function killAndWait(proc: KillableProc | undefined | null, timeoutMs = 5000): Promise<boolean> {
+  if (!proc) {
+    return true;
+  }
+  if (proc.exitCode !== null && proc.exitCode !== undefined) {
+    return true;
+  }
+  const pid = proc.pid ?? 0;
+  try {
+    proc.kill?.();
+  } catch {
+    /* already gone */
+  }
+  return killPid(pid, timeoutMs);
+}
+
+// taskkill /F /IM <exe> replacement: terminate every matching process and wait
+export async function killProcessesNamed(exeName: string, timeoutMs = 5000): Promise<number> {
+  let n = 0;
+  for (const pid of listPidsByExeName(exeName)) {
+    if (pid === process.pid) {
+      continue;
+    }
+    if (killPid(pid, timeoutMs)) {
+      n++;
+    }
+  }
+  return n;
 }
 
 // --- menus

@@ -5,7 +5,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { makeMinimalPdf, tmpPath } from "./util.ts";
 import { makeFixtures } from "./ad-hoc-issue-4600.ts";
-import { captureWindowToPng, launchSumatra, waitForFrame } from "./win-automation.ts";
+import { captureWindowToPng, killAndWait, killProcessesNamed, launchSumatra, waitForFrame } from "./win-automation.ts";
 import { moveWindow, setForegroundWindow, showWindow, sleep, SW_RESTORE } from "./winapi.ts";
 
 async function shot(doc: string, fontName: string, tag: string): Promise<void> {
@@ -26,15 +26,13 @@ async function shot(doc: string, fontName: string, tag: string): Promise<void> {
     captureWindowToPng(frame, join(tmpPath("epub-font"), `notif-${tag}.png`));
     console.log(`  wrote notif-${tag}.png`);
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 
 export async function testit(): Promise<void> {
   makeFixtures();
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
   const epub = join(tmpPath("epub-font"), "none.epub");
   const pdf = tmpPath("issue-4600.pdf");
   writeFileSync(pdf, makeMinimalPdf("font test"));
@@ -79,8 +77,7 @@ async function shotPerFile(doc: string, globalFont: string, fileFont: string, ta
     captureWindowToPng(frame, join(tmpPath("epub-font"), `notif-${tag}.png`));
     console.log(`  wrote notif-${tag}.png (per-file FontName='${fileFont}')`);
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 

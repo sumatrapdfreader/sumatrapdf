@@ -14,7 +14,7 @@
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, findCanvas } from "./win-automation.ts";
+import { launchControlled, findCanvas, killAndWait } from "./win-automation.ts";
 import { captureWindowToPng } from "./winapi.ts";
 
 // build a PDF whose only image is an external-file stream (/F + /FFilter), with
@@ -93,7 +93,7 @@ async function renderDistinctColors(pdf: string, appdata: string, label: string)
     return distinctColors(png);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

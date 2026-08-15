@@ -11,6 +11,7 @@ import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 import { spawn } from "node:child_process";
+import { killAndWait } from "./winapi.ts";
 
 const mutoolCandidates = [
   join(process.env.USERPROFILE || "", "OneDrive", "bin", "mupdf-1.27.0", "mutool.exe"),
@@ -109,8 +110,7 @@ export async function testit(): Promise<void> {
     }
     await sleep(40);
   }
-  p1.kill();
-  await sleep(50);
+  await killAndWait(p1);
   if (loadsA1 !== 1) {
     throw new Error(`cmdline multi-open: expected 1 load of a-pwd.pdf, got ${loadsA1}`);
   }
@@ -162,9 +162,9 @@ export async function testit(): Promise<void> {
   }
   const secA = spawn(EXE, ["-appdata", appdata, "-pwd", "test", a], { cwd: ROOT, stdio: "ignore" });
   await sleep(400);
-  secB.kill();
-  secA.kill();
-  primary.kill();
+  await killAndWait(secB);
+  await killAndWait(secA);
+  await killAndWait(primary);
 
   // Primary log: one sync load of A. B is async (StartLoadDocument) so it may not
   // emit "LoadDocument: N pages" — but a second A must not produce a second

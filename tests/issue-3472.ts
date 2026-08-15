@@ -8,7 +8,7 @@
 // GUI automation rather than -dbg-control: the whole point is what the layout
 // does with the real window size.
 
-import { findCanvas, launchControlled } from "./win-automation.ts";
+import { findCanvas, launchControlled, killAndWait } from "./win-automation.ts";
 import { getClientRect, getScrollInfo, setForegroundWindow, SB_VERT } from "./winapi.ts";
 import { runStandalone } from "./util.ts";
 
@@ -40,7 +40,7 @@ export async function testit(): Promise<void> {
     console.log(`issue-3472: canvas ${cr.right}x${cr.bottom}, Fit Width page overflow ${overflow}px`);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

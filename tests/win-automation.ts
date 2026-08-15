@@ -45,11 +45,13 @@ import {
   readMenuTree,
   getWindowText,
   getFocusedHwnd,
+  killAndWait,
+  killProcessesNamed,
   type MenuItem,
 } from "./winapi.ts";
 import { ControlClient, uniquePipeName } from "../cmd/control.ts";
 
-export { captureWindowToPng };
+export { captureWindowToPng, killAndWait, killProcessesNamed };
 
 export const FRAME_CLASS = "SUMATRA_PDF_FRAME";
 export const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
@@ -97,7 +99,7 @@ export async function launchControlled(
     }
     return { proc, client, frame };
   } catch (e) {
-    proc.kill();
+    await killAndWait(proc);
     throw e;
   }
 }

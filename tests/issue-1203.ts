@@ -9,7 +9,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
 import { clickAt, findCanvas, waitForFrame } from "./win-automation.ts";
-import { getClientRect, sleep } from "./winapi.ts";
+import { getClientRect } from "./winapi.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 const SETTINGS_HEAD = `UiLanguage = en
@@ -43,6 +43,19 @@ function makePdf(): Buffer {
   }
   pdf += `trailer\n<< /Size ${n} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
   return Buffer.from(pdf, "latin1");
+}
+
+async function waitForPage(client: ControlClient, want: number, timeoutMs = 3000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  let last = 0;
+  while (Date.now() < deadline) {
+    last = await queryPage(client);
+    if (last === want) {
+      return last;
+    }
+    await new Promise((r) => setTimeout(r, 30));
+  }
+  return last;
 }
 
 async function queryPage(client: ControlClient): Promise<number> {
@@ -90,8 +103,7 @@ async function clickCanvasEdge(pid: number, side: "left" | "right" | "middle"): 
   } else if (side === "right") {
     x = dx - Math.max(4, Math.floor(dx / 10));
   }
-  await clickAt(canvas, x, y, 200);
-  await sleep(150);
+  await clickAt(canvas, x, y, 0);
 }
 
 export async function testit(): Promise<void> {
@@ -110,11 +122,11 @@ export async function testit(): Promise<void> {
         throw new Error("issue-1203 on: expected to start on page 1");
       }
       await clickCanvasEdge(proc.pid!, "right");
-      if ((await queryPage(client)) !== 2) {
+      if ((await waitForPage(client, 2)) !== 2) {
         throw new Error(`issue-1203 on: right-edge click should go to page 2, got ${await queryPage(client)}`);
       }
       await clickCanvasEdge(proc.pid!, "left");
-      if ((await queryPage(client)) !== 1) {
+      if ((await waitForPage(client, 1)) !== 1) {
         throw new Error(`issue-1203 on: left-edge click should go to page 1, got ${await queryPage(client)}`);
       }
       await clickCanvasEdge(proc.pid!, "middle");

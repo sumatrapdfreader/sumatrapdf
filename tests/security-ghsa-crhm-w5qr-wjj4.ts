@@ -6,7 +6,7 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
 import { enumWindows, getClassName, getWindowPid, sleep } from "./winapi.ts";
-import { sendCommand, waitForFrame } from "./win-automation.ts";
+import { sendCommand, waitForFrame, killAndWait } from "./win-automation.ts";
 
 const DLL = join(dirname(EXE), "libsumatrapdf.dll");
 
@@ -51,7 +51,7 @@ async function assertFileDialog(name: string, ini: string, expected: boolean): P
     }
   } finally {
     if (proc.exitCode === null) {
-      proc.kill();
+      await killAndWait(proc);
     }
   }
 }

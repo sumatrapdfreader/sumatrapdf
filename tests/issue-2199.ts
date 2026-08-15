@@ -14,7 +14,7 @@
 import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 import { cmdId, tmpPath } from "./util";
-import { findCanvas, launchControlled } from "./win-automation";
+import { findCanvas, launchControlled, killAndWait } from "./win-automation";
 import {
   captureWindowPixels,
   isZoomed,
@@ -194,7 +194,7 @@ export async function testit(): Promise<void> {
     console.log(`  broken cbz page reports itself (${painted2} px painted, normal pages ${painted1}/${painted3}) ✓`);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

@@ -10,7 +10,7 @@
 
 import { writeFileSync } from "node:fs";
 import { tmpPath } from "./util";
-import { launchControlled } from "./win-automation";
+import { launchControlled, killAndWait } from "./win-automation";
 import { captureWindowPixels, findChildWindow, isZoomed, moveWindow, showWindow, sleep, SW_RESTORE } from "./winapi";
 
 // two pages and an outline with a red bold entry and a blue one. PageMode
@@ -111,7 +111,7 @@ export async function testit(): Promise<void> {
     console.log(`  outline colors reach the bookmarks tree: ${n.red} red px, ${n.blue} blue px ✓`);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

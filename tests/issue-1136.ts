@@ -18,6 +18,7 @@ import {
   waitForFocusClass,
   waitForFrame,
   waitForTitle,
+  killAndWait,
 } from "./win-automation";
 
 const WM_KEYDOWN = 0x0100;
@@ -64,8 +65,7 @@ async function withHomePage(name: string, fn: (frame: number) => Promise<void>):
     await waitForWindowIdle(canvas || frame, 8000, 200);
     await fn(frame);
   } finally {
-    proc.kill();
-    await proc.exited;
+    await killAndWait(proc);
   }
 }
 

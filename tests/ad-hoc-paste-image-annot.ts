@@ -11,7 +11,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { waitForFrame, sendCommand, findCanvas } from "./win-automation.ts";
+import { waitForFrame, sendCommand, findCanvas, killAndWait, killProcessesNamed } from "./win-automation.ts";
 import { sleep, captureWindowToPng } from "./winapi.ts";
 
 function makePdf(n: number): Buffer {
@@ -76,8 +76,7 @@ export async function testit(): Promise<void> {
     throw new Error(`failed to set clipboard image: ${set.stderr.toString()}`);
   }
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
   const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
   try {
     const frame = await waitForFrame(proc.pid!);
@@ -104,8 +103,7 @@ export async function testit(): Promise<void> {
     }
     console.log("PASS: clipboard image pasted as an image Stamp annotation");
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 

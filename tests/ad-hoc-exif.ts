@@ -16,13 +16,13 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, runStandalone } from "./util.ts";
+import { killAndWait } from "./winapi.ts";
 
 const EXIF_PY = join(ROOT, "..", "exif-py");
 const RESOURCES = join(EXIF_PY, "tests", "resources");
 const DUMP_TXT = join(RESOURCES, "dump.txt");
 
-const CANON_MAKERNOTE_RE =
-  /\/(jpg|tiff)\/(Canon_|canon_)/i;
+const CANON_MAKERNOTE_RE = /\/(jpg|tiff)\/(Canon_|canon_)/i;
 
 function fail(msg: string): never {
   throw new Error(msg);
@@ -115,7 +115,7 @@ async function runDumpExif(absPath: string): Promise<string[]> {
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
-    proc.kill();
+    await killAndWait(proc);
   }, SPAWN_TIMEOUT_MS);
   const out = await new Response(proc.stdout).text();
   const exitCode = await proc.exited;

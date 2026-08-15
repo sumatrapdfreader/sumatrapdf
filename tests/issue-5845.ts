@@ -7,7 +7,7 @@
 import { copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, tmpPath } from "./util.ts";
-import { launchSumatra, sendCommand, waitForFrame } from "./win-automation.ts";
+import { launchSumatra, sendCommand, waitForFrame, killAndWait } from "./win-automation.ts";
 import { getWindowText, sleep } from "./winapi.ts";
 
 const SRC_PDF = join(import.meta.dir, "issue-3219.pdf");
@@ -60,7 +60,7 @@ export async function testit(): Promise<void> {
       await sleep(30);
     }
   } finally {
-    proc.kill();
+    await killAndWait(proc);
     rmSync(dir, { recursive: true, force: true });
   }
 }

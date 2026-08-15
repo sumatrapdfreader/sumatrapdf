@@ -15,7 +15,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, cmdId, tmpPath } from "./util.ts";
-import { launchSumatra, sendCommandSync, waitForExit, waitForFrame } from "./win-automation.ts";
+import { launchSumatra, sendCommandSync, waitForExit, waitForFrame, killAndWait } from "./win-automation.ts";
 import {
   getWindowRect,
   isZoomed,
@@ -116,7 +116,7 @@ export async function testit(): Promise<void> {
       postMessage(frame, WM_CLOSE, 0, 0);
       await waitForExit(proc, 5000);
     }
-    proc.kill();
+    await killAndWait(proc);
     rmSync(appDataDir, { recursive: true, force: true });
   }
 }

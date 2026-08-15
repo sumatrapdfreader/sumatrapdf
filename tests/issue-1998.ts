@@ -19,7 +19,7 @@
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, tmpPath } from "./util";
-import { launchControlled, sendCommandSync } from "./win-automation";
+import { launchControlled, sendCommandSync, killAndWait } from "./win-automation";
 import { collapseTreeRoots, countVisibleTreeRows, findChildWindow, sleep, treeGetSelection } from "./winapi";
 
 // a PDF with a nested (multi-level) table of contents
@@ -116,7 +116,7 @@ export async function testit(): Promise<void> {
     console.log(`  expanded TOC to current page: ${collapsed} -> ${after} visible rows ✓`);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

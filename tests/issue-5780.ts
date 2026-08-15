@@ -14,8 +14,7 @@
 import { mkdirSync, copyFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId } from "./util.ts";
-import { launchSumatra, waitForFrame, sendCommand } from "./win-automation.ts";
-import { getWindowText, sleep } from "./winapi.ts";
+import { launchSumatra, sendCommand, waitForFrame, waitForTitle, killAndWait } from "./win-automation.ts";
 
 // look these up by name: command ids are auto-numbered and shift whenever
 // commands are added/removed, so hardcoding them silently sends the wrong command
@@ -23,19 +22,6 @@ const CmdOpenNextFileInFolder = cmdId("CmdOpenNextFileInFolder");
 const CmdOpenPrevFileInFolder = cmdId("CmdOpenPrevFileInFolder");
 
 const SRC_PDF = join(import.meta.dir, "issue-3219.pdf");
-
-async function waitForTitle(frame: number, substr: string, timeoutMs = 5000): Promise<string> {
-  const deadline = Date.now() + timeoutMs;
-  let title = "";
-  while (Date.now() < deadline) {
-    title = getWindowText(frame);
-    if (title.includes(substr)) {
-      return title;
-    }
-    await sleep(200);
-  }
-  throw new Error(`window title is "${title}", expected it to contain "${substr}"`);
-}
 
 export async function testit(): Promise<void> {
   const dir = join(process.env.TEMP!, "sumatra-issue-5780");
@@ -51,18 +37,18 @@ export async function testit(): Promise<void> {
     if (!frame) {
       throw new Error("SumatraPDF frame window not found");
     }
-    await waitForTitle(frame, "aaa.pdf");
+    await waitForTitle(frame, (t) => t.includes("aaa.pdf"));
 
     sendCommand(frame, CmdOpenNextFileInFolder);
-    await waitForTitle(frame, "bbb.pdf");
+    await waitForTitle(frame, (t) => t.includes("bbb.pdf"));
 
     sendCommand(frame, CmdOpenNextFileInFolder);
-    await waitForTitle(frame, "ccc.pdf");
+    await waitForTitle(frame, (t) => t.includes("ccc.pdf"));
 
     sendCommand(frame, CmdOpenPrevFileInFolder);
-    await waitForTitle(frame, "bbb.pdf");
+    await waitForTitle(frame, (t) => t.includes("bbb.pdf"));
   } finally {
-    proc.kill();
+    await killAndWait(proc);
     rmSync(dir, { recursive: true, force: true });
   }
 }

@@ -10,7 +10,7 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, ROOT, runStandalone, tmpPath } from "./util";
 import { getWindowText, postMessage, WM_CLOSE } from "./winapi";
-import { launchControlled, sendCommand, waitForExit, waitForTitle } from "./win-automation";
+import { launchControlled, sendCommand, waitForExit, waitForTitle, killAndWait } from "./win-automation";
 
 const GOOD = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
 
@@ -61,7 +61,7 @@ async function openAndNavigate(dir: string, startFile: string, cmds: string[]): 
     return got;
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

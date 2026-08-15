@@ -20,6 +20,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
 import { EXE, runStandalone, tmpPath } from "./util";
+import { sleep } from "./winapi";
 import { findLatexEngine } from "./issue-5633";
 
 const nSections = 8;
@@ -105,7 +106,19 @@ async function forwardSearch(dir: string, line: number): Promise<void> {
     { stdout: "ignore", stderr: "ignore" },
   );
   await p.exited;
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+}
+
+async function waitForPage(client: ControlClient, pred: (page: number) => boolean, timeoutMs = 8000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  let last = 0;
+  while (Date.now() < deadline) {
+    last = await currentPage(client);
+    if (pred(last)) {
+      return last;
+    }
+    await sleep(40);
+  }
+  throw new Error(`issue-5040: page never matched (last ${last})`);
 }
 
 async function checkSynctexFlavor(pdflatex: string, gzip: boolean): Promise<void> {
@@ -121,14 +134,14 @@ async function checkSynctexFlavor(pdflatex: string, gzip: boolean): Promise<void
     EXE,
     async (client) => {
       await forwardSearch(dir, sectionLine(nFiller, nSections));
-      const first = await currentPage(client);
+      const first = await waitForPage(client, (p) => p > nFiller);
 
       // recompile without the filler: the same section is now nFiller pages
       // earlier. The PDF on screen stays the old one (no auto-reload), so the
       // Synchronizer -- and its index -- survives, which is the point.
       await compile(pdflatex, dir, 0, gzip);
       await forwardSearch(dir, sectionLine(0, nSections));
-      const second = await currentPage(client);
+      const second = await waitForPage(client, (p) => p === first - nFiller);
       return { first, second };
     },
     ["-appdata", dir, join(dir, "main.pdf")],

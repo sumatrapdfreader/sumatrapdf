@@ -20,7 +20,7 @@ import {
   setCursorPos,
   sleep,
 } from "./winapi";
-import { findCanvas, launchControlled, sendCommand, sendCommandSync, waitForExit } from "./win-automation";
+import { findCanvas, launchControlled, sendCommand, sendCommandSync, waitForExit, killAndWait } from "./win-automation";
 
 const WM_MOUSEWHEEL = 0x020a;
 const WM_VSCROLL = 0x0115;
@@ -127,7 +127,7 @@ async function runOnce(
     }
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

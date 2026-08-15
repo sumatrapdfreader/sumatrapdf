@@ -17,7 +17,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpPath } from "./util";
-import { findCanvas, launchControlled } from "./win-automation";
+import { findCanvas, launchControlled, killAndWait } from "./win-automation";
 import {
   getClientRect,
   getScrollPos,
@@ -125,7 +125,7 @@ export async function testit(): Promise<void> {
     console.log(`  fractional-speed auto-scroll works (moved ${moved}px) ✓`);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

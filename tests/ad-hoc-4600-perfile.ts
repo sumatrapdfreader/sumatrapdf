@@ -10,7 +10,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, tmpPath } from "./util.ts";
 import { makeFixtures } from "./ad-hoc-issue-4600.ts";
-import { findCanvas, launchSumatra, waitForFrame } from "./win-automation.ts";
+import { findCanvas, killAndWait, killProcessesNamed, launchSumatra, waitForFrame } from "./win-automation.ts";
 import { captureWindowPixels, moveWindow, setForegroundWindow, showWindow, sleep, SW_RESTORE } from "./winapi.ts";
 
 const EPUB_DIR = tmpPath("epub-font");
@@ -36,8 +36,7 @@ async function render(epub: string, settings: string): Promise<Uint8Array> {
     }
     return cap.data;
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 
@@ -72,8 +71,7 @@ function prefs(fileBlock: string, epub: string): string {
 
 export async function testit(): Promise<void> {
   makeFixtures();
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
   const epub = join(EPUB_DIR, "none.epub");
 
   // baseline: global FontName only
@@ -122,8 +120,7 @@ export async function testit(): Promise<void> {
     throw new Error("no frame for the round-trip run");
   }
   await sleep(2000);
-  proc.kill();
-  await sleep(1500);
+  await killAndWait(proc);
 
   const saved = readFileSync(settingsPath, "utf8");
   const forEpub = saved.split("FilePath").find((b) => b.includes("none.epub"));

@@ -4,7 +4,7 @@
 // The gate used CouldBePDFDoc(), which is true for epub/mobi/fb2/xps/svg too;
 // it now asks the engine whether there is really a pdf_document behind the tab.
 
-import { findCanvas, findSubMenu, launchControlled, readContextMenuTree } from "./win-automation.ts";
+import { findCanvas, findSubMenu, launchControlled, readContextMenuTree, killAndWait } from "./win-automation.ts";
 import { setForegroundWindow } from "./winapi.ts";
 import { runStandalone } from "./util.ts";
 
@@ -30,7 +30,7 @@ async function documentMenuItems(file: string): Promise<string[]> {
     return doc.items.map((it) => it.text);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

@@ -15,7 +15,7 @@
 import { readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, runStandalone } from "./util.ts";
-import { waitForFrame, sendCommand } from "./win-automation.ts";
+import { waitForFrame, sendCommand, killAndWait, killProcessesNamed } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
 const IMG_W = 1200;
@@ -77,8 +77,7 @@ export async function testit(): Promise<void> {
 
   setClipboardImage();
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
   const proc = Bun.spawn([EXE, "-for-testing"], { stdout: "ignore", stderr: "ignore" });
   let newFile = "";
   try {
@@ -132,14 +131,15 @@ export async function testit(): Promise<void> {
 
     // the "optimized by us" tEXt marker chunk must sit right after IHDR
     // (offset 33) so future optimize runs skip this file
-    const head = readFileSync(newFile).subarray(33, 33 + 64).toString("latin1");
+    const head = readFileSync(newFile)
+      .subarray(33, 33 + 64)
+      .toString("latin1");
     if (!head.startsWith("\0\0\0\x1atEXtSoftware\0SumatraPDF zopfli")) {
       throw new Error("optimized png is missing the SumatraPDF zopfli marker chunk after IHDR");
     }
     console.log("PASS: saved png was optimized in place, has the marker chunk and still decodes");
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
     if (newFile) {
       rmSync(newFile, { force: true });
     }

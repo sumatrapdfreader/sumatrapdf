@@ -9,7 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
-import { launchControlled, sendCommandSync } from "./win-automation";
+import { launchControlled, sendCommandSync, killAndWait } from "./win-automation";
 
 // truncated in the middle of an attribute value -- what the settings watcher
 // sees while the file is being written
@@ -58,7 +58,7 @@ async function runWithIcon(name: string, svg: string): Promise<void> {
     await proc.exited;
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

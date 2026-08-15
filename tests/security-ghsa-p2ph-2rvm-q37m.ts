@@ -4,7 +4,7 @@
 
 import { EXE, runStandalone } from "./util.ts";
 import { getWindowPid, sendCopyDataW, sleep } from "./winapi.ts";
-import { launchSumatra, waitForFrame } from "./win-automation.ts";
+import { launchSumatra, waitForFrame, killAndWait } from "./win-automation.ts";
 
 const kCopyDataDdeW = 0x44646557;
 
@@ -29,7 +29,7 @@ export async function testit(): Promise<void> {
     }
   } finally {
     if (proc.exitCode === null) {
-      proc.kill();
+      await killAndWait(proc);
     }
   }
 }

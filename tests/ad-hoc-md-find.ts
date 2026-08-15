@@ -12,7 +12,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { waitForFrame, sendCommand, findCanvas } from "./win-automation.ts";
+import { waitForFrame, sendCommand, findCanvas, killAndWait, killProcessesNamed } from "./win-automation.ts";
 import {
   sleep,
   enumWindows,
@@ -73,13 +73,9 @@ export async function testit(): Promise<void> {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   const md = join(dir, "find-test.md");
-  writeFileSync(
-    md,
-    "# Find test\n\nzebra one\n\nsome ze**br**a bold\n\nlast Zebra here\n\nnothing else\n",
-  );
+  writeFileSync(md, "# Find test\n\nzebra one\n\nsome ze**br**a bold\n\nlast Zebra here\n\nnothing else\n");
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
   const proc = Bun.spawn([EXE, "-for-testing", md], { stdout: "ignore", stderr: "ignore" });
   try {
     const frame = await waitForFrame(proc.pid!);
@@ -136,8 +132,7 @@ export async function testit(): Promise<void> {
 
     console.log("PASS: native find bar drives in-page search + highlighting in the markdown webview");
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 

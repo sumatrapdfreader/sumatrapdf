@@ -19,7 +19,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, tmpPath } from "./util.ts";
-import { launchControlled, waitForExit, findCanvas, vScrollbarColorCount } from "./win-automation.ts";
+import { launchControlled, waitForExit, findCanvas, vScrollbarColorCount, killAndWait } from "./win-automation.ts";
 import { setProcessDpiAware, sleep, postMessage, WM_CLOSE } from "./winapi.ts";
 
 // zlib.3.pdf is 2 pages, so at the default "fit page" zoom it needs a vertical
@@ -74,7 +74,7 @@ export async function testit(): Promise<void> {
     postMessage(frame, WM_CLOSE, 0, 0);
     await waitForExit(proc, 5000);
     client.close();
-    proc.kill();
+    await killAndWait(proc);
     rmSync(appDataDir, { recursive: true, force: true });
   }
 }

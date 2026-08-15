@@ -18,6 +18,7 @@ import {
   typeIntoInput,
   waitForExit,
   waitForFocusClass,
+  killAndWait,
 } from "./win-automation";
 
 const VK_RETURN = 0x0d;
@@ -57,7 +58,7 @@ async function run(dir: string, act: (frame: number) => Promise<void>): Promise<
     }
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

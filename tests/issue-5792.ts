@@ -17,7 +17,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, extractPageText, runStandalone } from "./util.ts";
-import { launchControlled, sendCommandSync } from "./win-automation.ts";
+import { launchControlled, sendCommandSync, killAndWait } from "./win-automation.ts";
 
 const FB2 = join(import.meta.dir, "issue-5792.fb2");
 
@@ -66,7 +66,7 @@ async function copyAllViaUi(): Promise<string> {
   } finally {
     client.close();
     try {
-      proc.kill();
+      await killAndWait(proc);
     } catch {
       // already exited
     }

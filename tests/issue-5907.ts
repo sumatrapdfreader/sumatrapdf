@@ -12,7 +12,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, runStandalone, tmpPath } from "./util";
 import { postMessage, WM_CLOSE } from "./winapi";
-import { launchControlled, waitForExit } from "./win-automation";
+import { launchControlled, waitForExit, killAndWait } from "./win-automation";
 
 function makeAppDir(name: string, settings: string): string {
   const dir = tmpPath(`issue-5907-${name}`);
@@ -47,7 +47,7 @@ async function openAndClose(dir: string): Promise<void> {
     }
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

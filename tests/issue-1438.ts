@@ -17,7 +17,7 @@
 
 import { writeFileSync, mkdirSync, rmSync, readFileSync, existsSync } from "node:fs";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, sendCommandSync, waitForExit } from "./win-automation.ts";
+import { launchControlled, sendCommandSync, waitForExit, killAndWait } from "./win-automation.ts";
 
 const PAGE_COUNT = 12;
 const WIDE_PAGE = 3; // 10x wider than the others
@@ -97,7 +97,7 @@ export async function testit(): Promise<void> {
       }
     } finally {
       client.close();
-      proc.kill();
+      await killAndWait(proc);
     }
   }
 

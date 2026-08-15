@@ -17,7 +17,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, tmpPath } from "./util";
-import { findCanvas, launchControlled, sendCommandSync } from "./win-automation";
+import { findCanvas, launchControlled, sendCommandSync, killAndWait } from "./win-automation";
 import {
   getScrollInfo,
   getWindowRect,
@@ -133,7 +133,7 @@ export async function testit(): Promise<void> {
     }
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

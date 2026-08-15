@@ -8,7 +8,7 @@
 import { mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, pressKey, sendCommandSync } from "./win-automation.ts";
+import { launchControlled, pressKey, sendCommandSync, killAndWait } from "./win-automation.ts";
 import { findChildWindow, captureWindowToPng, VK_RIGHT } from "./winapi.ts";
 
 function makePdf(nPages: number): Buffer {
@@ -92,7 +92,7 @@ async function captureCanvas(
     return readFileSync(path);
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

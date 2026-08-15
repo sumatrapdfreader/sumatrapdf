@@ -11,7 +11,7 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, runStandalone, tmpPath } from "./util";
 import { getWindowRect, postMessage, readWindowDCColumn, sleep, waitForWindowIdle } from "./winapi";
-import { findCanvas, launchSumatra, waitForFrame } from "./win-automation";
+import { findCanvas, launchSumatra, waitForFrame, killAndWait } from "./win-automation";
 
 const WM_VSCROLL = 0x0115;
 const SB_PAGEDOWN = 3;
@@ -98,8 +98,7 @@ export async function testit(): Promise<void> {
       throw new Error(`rows scrolled into view show no directory path (${atBottom} text pixels)`);
     }
   } finally {
-    proc.kill();
-    await proc.exited;
+    await killAndWait(proc);
   }
 }
 

@@ -29,7 +29,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, cmdId, tmpPath, EXE } from "./util.ts";
-import { countDifferingPixels, sendCommand, waitForFrame } from "./win-automation.ts";
+import { countDifferingPixels, sendCommand, waitForFrame, killAndWait } from "./win-automation.ts";
 import {
   getTaskbarAutoHide,
   getWindowRect,
@@ -117,7 +117,7 @@ export async function testit(): Promise<void> {
       postMessage(frame, WM_CLOSE, 0, 0);
       await sleep(100);
     }
-    proc?.kill();
+    await killAndWait(proc);
     setTaskbarAutoHide(hadAutoHide);
     rmSync(appDataDir, { recursive: true, force: true });
   }

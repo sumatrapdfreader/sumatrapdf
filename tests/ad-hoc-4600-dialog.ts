@@ -11,7 +11,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, tmpPath } from "./util.ts";
 import { makeFixtures } from "./ad-hoc-issue-4600.ts";
-import { captureWindowToPng, waitForFrame } from "./win-automation.ts";
+import { captureWindowToPng, killAndWait, killProcessesNamed, waitForFrame } from "./win-automation.ts";
 import {
   enumChildWindows,
   enumWindows,
@@ -172,8 +172,7 @@ async function openDialog(l: Launched): Promise<number> {
 export async function testit(): Promise<void> {
   makeFixtures();
   const epub = join(OUT, "none.epub");
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
 
   // --- both states of the CSS box ---------------------------------------
   writeSettings([]);
@@ -223,8 +222,7 @@ export async function testit(): Promise<void> {
       }
       console.log("  CSS box: read-only preview <-> editable custom CSS ✓");
     } finally {
-      l.proc.kill();
-      await sleep(500);
+      await killAndWait(l.proc);
     }
   }
 
@@ -303,8 +301,7 @@ export async function testit(): Promise<void> {
       }
       console.log("  Reset to defaults: back to the inherited font ✓");
     } finally {
-      l.proc.kill();
-      await sleep(500);
+      await killAndWait(l.proc);
     }
   }
 
@@ -320,8 +317,7 @@ export async function testit(): Promise<void> {
       pressOk(dlg);
       await sleep(2500);
     } finally {
-      l.proc.kill();
-      await sleep(1500);
+      await killAndWait(l.proc);
     }
     const saved = readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8");
     const entry = saved.split("FilePath").find((s) => s.includes("none.epub")) ?? "";
@@ -348,8 +344,7 @@ export async function testit(): Promise<void> {
       pressOk(dlg);
       await sleep(2500);
     } finally {
-      l.proc.kill();
-      await sleep(1500);
+      await killAndWait(l.proc);
     }
     const saved = readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8");
     const global = saved.slice(saved.indexOf("EBookUI ["), saved.indexOf("FileStates"));

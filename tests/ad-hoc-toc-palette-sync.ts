@@ -12,16 +12,15 @@
 
 import { writeFileSync } from "node:fs";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchSumatra, waitForFrame, findChildByClass, sendCommand, pressEnter } from "./win-automation.ts";
 import {
-  sleep,
-  moveWindow,
-  treeGetSelection,
-  enumWindows,
-  getWindowPid,
-  findChildWindow,
-  sendText,
-} from "./winapi.ts";
+  launchSumatra,
+  waitForFrame,
+  findChildByClass,
+  sendCommand,
+  pressEnter,
+  killAndWait,
+} from "./win-automation.ts";
+import { sleep, moveWindow, treeGetSelection, enumWindows, getWindowPid, findChildWindow, sendText } from "./winapi.ts";
 
 const CmdCommandPaletteTOC = cmdId("CmdCommandPaletteTOC");
 
@@ -116,12 +115,10 @@ export async function testit(): Promise<void> {
 
     const sel1 = treeGetSelection(tree);
     if (sel1 === sel0) {
-      throw new Error(
-        "issue #5716: Bookmarks panel selection did not move after navigating via the Command Palette",
-      );
+      throw new Error("issue #5716: Bookmarks panel selection did not move after navigating via the Command Palette");
     }
   } finally {
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

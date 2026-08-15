@@ -12,7 +12,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util";
 import { findChildWindow, getWindowText, postMessage, sendMessage, sleep, WM_CLOSE } from "./winapi";
-import { launchSumatra, sendCommand, waitForExit, waitForFrame } from "./win-automation";
+import { launchSumatra, sendCommand, waitForExit, waitForFrame, killAndWait } from "./win-automation";
 
 const TVM_GETCOUNT = 0x1100 + 5;
 const nFiles = 400;
@@ -133,7 +133,7 @@ async function testTocAndNextFile(dir: string): Promise<void> {
     postMessage(frame, WM_CLOSE, 0, 0);
     await waitForExit(proc, 5000);
   } finally {
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 
@@ -156,7 +156,7 @@ async function testCloseDuringBuild(dir: string): Promise<void> {
       throw new Error("issue-5918: app did not exit after closing during the TOC build");
     }
   } finally {
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

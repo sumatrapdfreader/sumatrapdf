@@ -7,7 +7,7 @@
 
 import { writeFileSync } from "node:fs";
 import { cmdId, tmpPath } from "./util";
-import { launchControlled } from "./win-automation";
+import { launchControlled, killAndWait } from "./win-automation";
 import {
   enumWindows,
   getClassName,
@@ -144,7 +144,7 @@ async function testAnnotationsEscDoesNotClose(): Promise<void> {
     console.log("  edit annotations: Esc does not close ✓");
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 
@@ -180,7 +180,7 @@ async function testTranslateEscCloses(): Promise<void> {
     throw new Error("translate: Esc did not close the translate dialog");
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

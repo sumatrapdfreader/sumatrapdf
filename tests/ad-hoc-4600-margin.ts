@@ -14,7 +14,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpPath } from "./util.ts";
 import { makeFixtures } from "./ad-hoc-issue-4600.ts";
-import { findCanvas, launchSumatra, waitForFrame } from "./win-automation.ts";
+import { findCanvas, launchSumatra, waitForFrame, killAndWait, killProcessesNamed } from "./win-automation.ts";
 import { captureWindowPixels, moveWindow, setForegroundWindow, showWindow, sleep, SW_RESTORE } from "./winapi.ts";
 
 type Cap = { w: number; h: number; data: Uint8Array };
@@ -39,8 +39,7 @@ async function render(settings: string[]): Promise<Cap> {
     }
     return cap;
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 
@@ -78,8 +77,7 @@ function show(name: string, b: Box): void {
 
 export async function testit(): Promise<void> {
   makeFixtures();
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
   const epub = join(tmpPath("epub-font"), "none.epub");
 
   const base = await box(null);

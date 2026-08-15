@@ -6,7 +6,7 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
 import { EXE, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { captureWindowPixels, captureWindowToPng, getClientRect, sleep } from "./winapi.ts";
+import { captureWindowPixels, captureWindowToPng, getClientRect } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
 
 const kPages = 8;
@@ -115,7 +115,7 @@ export async function testit(): Promise<void> {
         throw new Error(`issue-4973: after reload page=${after}, want ${kRememberedPage}`);
       }
 
-      await sleep(400);
+      await client.waitForRenderIdle();
       const canvas = findCanvas(frame);
       if (!canvas) {
         throw new Error("issue-4973: no canvas after reload");

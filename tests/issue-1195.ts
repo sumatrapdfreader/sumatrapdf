@@ -14,7 +14,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, tmpPath } from "./util";
 import { captureWindowPixels, sendMessage, waitForWindowIdle, WM_COMMAND } from "./winapi";
-import { findCanvas, launchControlled, sendCommand, waitForExit } from "./win-automation";
+import { findCanvas, launchControlled, sendCommand, waitForExit, killAndWait } from "./win-automation";
 
 // white pages, with a small black square in the top-left corner of page 1
 function makePdf(nPages: number, square: number): string {
@@ -116,7 +116,7 @@ async function openAtZoom(
     return { zoom: parseFloat(m[1]), dark };
   } finally {
     client.close();
-    proc.kill();
+    await killAndWait(proc);
   }
 }
 

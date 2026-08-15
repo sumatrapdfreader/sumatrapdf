@@ -1,5 +1,5 @@
 import { Socket, createConnection } from "node:net";
-import { testWindowPos } from "../tests/winapi.ts";
+import { killAndWait, testWindowPos } from "../tests/winapi.ts";
 
 export enum ControlCommand {
   Ping = 1,
@@ -395,12 +395,12 @@ export async function withControlledSumatra<T>(
       try {
         await client.quit();
       } catch {
-        proc.kill();
+        await killAndWait(proc);
         killed = true;
       }
       client.close();
     } else {
-      proc.kill();
+      await killAndWait(proc);
       killed = true;
     }
   }
@@ -415,8 +415,7 @@ export async function withControlledSumatra<T>(
   ]);
   clearTimeout(exitTimer);
   if (exitCode === "timeout") {
-    proc.kill();
-    await proc.exited;
+    await killAndWait(proc);
     throw new Error("SumatraPDF did not exit within 30s of Quit");
   }
   const stderrText = proc.stderr ? (await new Response(proc.stderr).text()).trim() : "";

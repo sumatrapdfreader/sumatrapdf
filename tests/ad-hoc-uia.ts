@@ -18,7 +18,16 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, tmpPath } from "./util";
-import { moveWindow, showWindow, sleep, waitForChildWindow, waitForTopWindow, SW_RESTORE } from "./winapi";
+import {
+  moveWindow,
+  showWindow,
+  sleep,
+  waitForChildWindow,
+  waitForTopWindow,
+  SW_RESTORE,
+  killAndWait,
+  killProcessesNamed,
+} from "./winapi";
 
 const PAGE_LINES = [
   ["Alpha line one", "Bravo line two", "Charlie line three", "Delta line four"],
@@ -136,8 +145,7 @@ export async function testit(): Promise<void> {
   mkdirSync(appdata, { recursive: true });
   writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
+  await killProcessesNamed("SumatraPDF.exe");
   const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
   try {
     const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
@@ -240,8 +248,7 @@ export async function testit(): Promise<void> {
     console.log(`  UIA: document readable, ${nLines} lines walked, page/word/char navigation advances ✓`);
     console.log(`  UIA: word under the mouse: '${kv.get("point.word")}' -> '${kv.get("point.wordAtPoint")}' ✓`);
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 
