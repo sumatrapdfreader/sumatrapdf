@@ -1,0 +1,239 @@
+/**
+ * Run a Linux-side build from Windows via WSL Ubuntu.
+ *
+ * Usage:
+ *   bun cmd/wsl-build.ts -linux [options]
+ *   bun cmd/wsl-build.ts -win [options]
+ *
+ *   -linux              native Linux build (cmd/build-linux.ts)
+ *                       default: -asan (same as Linux CI)
+ *     -debug            debug build
+ *     -release          release build
+ *     -asan             address-sanitizer build
+ *     -clean            clean the output dir first
+ *
+ *   -win                Windows exe via mingw in WSL (cmd/build-linux-wine.ts)
+ *     -clean            clean out/dbg64-wine (preserve settings)
+ *     -run              run the exe under Wine after building
+ *     -- args...        extra args for the exe (with -run)
+ *
+ * Requires a WSL distro named "Ubuntu" and bun in that distro.
+ * Linux deps: sudo sh cmd/ubuntu-install-deps.sh
+ * Win deps:   sudo apt install g++-mingw-w64-x86-64 unzip
+ *             (and wine wine64 for -run)
+ *
+ * The inner script is base64-encoded before being passed to wsl.exe so
+ * Windows/WSL argument processing cannot mangle `$`, quotes, or newlines.
+ */
+
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
+const WSL_DISTRO = "Ubuntu";
+
+const LINUX_SCRIPT = "cmd/build-linux.ts";
+const WIN_SCRIPT = "cmd/build-linux-wine.ts";
+
+const LINUX_FLAGS = new Set(["-debug", "-release", "-asan", "-clean"]);
+const WIN_FLAGS = new Set(["-clean", "-run"]);
+
+function usage(): string {
+  return `Usage: bun cmd/wsl-build.ts -linux [options]
+       bun cmd/wsl-build.ts -win [options]
+
+  -linux              native Linux build (cmd/build-linux.ts)
+                      default: -asan (same as Linux CI)
+    -debug            debug build
+    -release          release build
+    -asan             address-sanitizer build
+    -clean            clean the output dir first
+
+  -win                Windows exe via mingw in WSL (cmd/build-linux-wine.ts)
+    -clean            clean out/dbg64-wine (preserve settings)
+    -run              run the exe under Wine after building
+    -- args...        extra args for the exe (with -run)`;
+}
+
+function die(msg?: string): never {
+  if (msg) {
+    console.error(msg);
+    console.error();
+  }
+  console.error(usage());
+  process.exit(1);
+}
+
+type Target = "linux" | "win";
+
+function parseArgs(argv: string[]): { target: Target; forwarded: string[] } {
+  if (argv.length === 0) {
+    die();
+  }
+
+  let target: Target | undefined;
+  const forwarded: string[] = [];
+  let afterDashDash = false;
+
+  for (const a of argv) {
+    if (afterDashDash) {
+      forwarded.push(a);
+      continue;
+    }
+    if (a === "--") {
+      forwarded.push(a);
+      afterDashDash = true;
+      continue;
+    }
+    if (a === "-linux" || a === "-win") {
+      const next = a === "-linux" ? "linux" : "win";
+      if (target && target !== next) {
+        die("error: -linux and -win cannot be used together");
+      }
+      target = next;
+      continue;
+    }
+    if (LINUX_FLAGS.has(a) || WIN_FLAGS.has(a)) {
+      forwarded.push(a);
+      continue;
+    }
+    die(`error: unknown argument: ${a}`);
+  }
+
+  if (!target) {
+    die("error: missing -linux or -win");
+  }
+
+  for (const a of forwarded) {
+    if (a === "--") {
+      if (target !== "win") {
+        die("error: -- is only valid with -win");
+      }
+      break;
+    }
+    if (target === "linux" && !LINUX_FLAGS.has(a)) {
+      die(`error: ${a} is not valid with -linux`);
+    }
+    if (target === "win" && !WIN_FLAGS.has(a)) {
+      die(`error: ${a} is not valid with -win`);
+    }
+  }
+
+  return { target, forwarded };
+}
+
+function shellQuote(s: string): string {
+  return `'${s.replace(/'/g, `'\\''`)}'`;
+}
+
+function windowsPathToWsl(winPath: string): string {
+  const m = /^([A-Za-z]):[\\/](.*)$/.exec(winPath);
+  if (!m) {
+    return winPath.replace(/\\/g, "/");
+  }
+  return `/mnt/${m[1].toLowerCase()}/${m[2].replace(/\\/g, "/")}`;
+}
+
+function requireWsl(): void {
+  if (!Bun.which("wsl")) {
+    console.error("wsl not found in PATH. Install WSL and the Ubuntu distro.");
+    process.exit(1);
+  }
+}
+
+function bunMissingHint(target: Target): string[] {
+  const lines = [
+    '  echo "bun not found in WSL (looked in $HOME/.bun/bin/bun)." >&2',
+    '  echo "Install with: curl -fsSL https://bun.sh/install | bash" >&2',
+  ];
+  if (target === "linux") {
+    lines.push('  echo "Also need: sudo sh cmd/ubuntu-install-deps.sh" >&2');
+  } else {
+    lines.push('  echo "Also need: sudo apt install g++-mingw-w64-x86-64 unzip" >&2');
+  }
+  return lines;
+}
+
+async function runLocal(script: string, args: string[]): Promise<void> {
+  const proc = Bun.spawn(["bun", script, ...args], {
+    stdout: "inherit",
+    stderr: "inherit",
+    stdin: "inherit",
+  });
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) {
+    process.exit(exitCode);
+  }
+}
+
+async function runInWsl(script: string, args: string[], target: Target): Promise<void> {
+  requireWsl();
+
+  const cwd = process.cwd();
+  const wslCwd = windowsPathToWsl(cwd);
+  const quotedArgs = args.map(shellQuote).join(" ");
+
+  const remoteScript = [
+    "set -euo pipefail",
+    'export HOME="$(getent passwd "$(id -un)" | cut -d: -f6)"',
+    `cd ${shellQuote(wslCwd)}`,
+    'export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$HOME/.bun/bin"',
+    'BUN=""',
+    'if [ -x "$HOME/.bun/bin/bun" ]; then BUN="$HOME/.bun/bin/bun"; fi',
+    'if [ -z "$BUN" ] && command -v bun >/dev/null 2>&1; then BUN="$(command -v bun)"; fi',
+    'if [ -z "$BUN" ]; then',
+    ...bunMissingHint(target),
+    "  exit 1",
+    "fi",
+    `echo "> wsl -d ${WSL_DISTRO}: $BUN ${script}${quotedArgs ? " " + quotedArgs : ""}"`,
+    `exec "$BUN" ${script}${quotedArgs ? " " + quotedArgs : ""}`,
+    "",
+  ].join("\n");
+
+  const b64 = Buffer.from(remoteScript, "utf8").toString("base64");
+  const wrapper = `echo ${b64} | base64 -d | bash -l`;
+
+  console.log(`> wsl -d ${WSL_DISTRO}: bun ${script}${args.length ? " " + args.join(" ") : ""}`);
+
+  const proc = Bun.spawn(["wsl", "-d", WSL_DISTRO, "-e", "bash", "-lc", wrapper], {
+    stdout: "inherit",
+    stderr: "inherit",
+    stdin: "inherit",
+  });
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) {
+    process.exit(exitCode);
+  }
+}
+
+function hasConfigFlag(args: string[]): boolean {
+  return args.some((a) => a === "-debug" || a === "-release" || a === "-asan");
+}
+
+async function main(): Promise<void> {
+  const { target, forwarded } = parseArgs(Bun.argv.slice(2));
+  const script = target === "linux" ? LINUX_SCRIPT : WIN_SCRIPT;
+  const args = target === "linux" && !hasConfigFlag(forwarded) ? ["-asan", ...forwarded] : forwarded;
+
+  const cwd = process.cwd();
+  const scriptWin = join(cwd, ...script.split("/"));
+  if (!existsSync(scriptWin)) {
+    console.error(`Build script not found: ${scriptWin}`);
+    console.error("Run this from the SumatraPDF repo root.");
+    process.exit(1);
+  }
+
+  if (process.platform === "linux") {
+    await runLocal(script, args);
+    return;
+  }
+
+  await runInWsl(script, args, target);
+}
+
+if (import.meta.main) {
+  main().catch((e: unknown) => {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`\nWSL build failed: ${msg}`);
+    process.exit(1);
+  });
+}

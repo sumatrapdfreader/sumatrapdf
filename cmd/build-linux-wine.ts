@@ -8,7 +8,7 @@
  *   bun cmd/build-linux-wine.ts -clean -run
  *
  * From Windows (WSL Ubuntu):
- *   bun cmd/build-win-in-wsl.ts [-clean] [-run]
+ *   bun cmd/wsl-build.ts -win [-clean] [-run]
  *
  * Requires: gcc-mingw-w64-x86-64, g++-mingw-w64-x86-64 (and wine for -run)
  */
