@@ -189,6 +189,7 @@ export async function compileAll(units: { src: string; obj: string; args: string
 export async function createArchive(tools: BuildTools, archivePath: string, objFiles: string[]): Promise<void> {
   if (objFiles.length === 0) return;
   mkdirSync(dirname(archivePath), { recursive: true });
+  rmSync(archivePath, { force: true });
   const batch = 200;
   for (let i = 0; i < objFiles.length; i += batch) {
     const chunk = objFiles.slice(i, i + batch);

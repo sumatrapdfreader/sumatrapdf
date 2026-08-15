@@ -4,7 +4,7 @@
  * Invoked by cmd/build.ts -mac-remote.
  */
 
-const remoteHost = "kjk@100.120.113.17";
+const remoteHost = "kjk@macbook-pro-14";
 const remoteDir = "src/sumatrapdf";
 
 function shellQuote(s: string): string {
