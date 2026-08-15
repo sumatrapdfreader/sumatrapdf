@@ -56,20 +56,8 @@ void GoToPageWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (label) {
-        label->textColor = colTxt;
-    }
-    if (labelOf) {
-        labelOf->textColor = colTxt;
-    }
     if (editPage) {
         editPage->SetColors(colTxt, colBg);
-    }
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnGo) {
-        StyleThemedButton(btnGo, true);
     }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);

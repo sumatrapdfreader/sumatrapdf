@@ -9,6 +9,7 @@ Str ThemeGetNameAt(int idx);
 int ThemeGetCurrentIndex();
 void ToggleLightDarkTheme();
 Str ToggleLightDarkThemeTargetName();
+void SumatraUpdateTheme();
 void UpdateThemeAfterSystemColorChange();
 void UpdateThemeAfterHighContrastChange();
 bool ThemeUsesHighContrastColors();
@@ -25,7 +26,6 @@ Color ThemeWindowTextDisabledColor();
 // high contrast mode defer to them
 Color SysWindowBgColor();
 Color SysWindowTextColor();
-Color SysWindowFrameColor();
 Color SysControlTextColor();
 Color SysDisabledTextColor();
 Color SysLinkColor();
@@ -55,11 +55,10 @@ void SetInvertPageColors(bool);
 struct VirtButton;
 struct PlatformFont;
 
-// The buttons are virtual controls, so they take their look from the theme
-// rather than from the system: a filled box with a border, brighter on hover.
-// `isDefault` is a shade stronger, like a native default button.
-// StyleThemedButton() is what a window calls again after a theme change
-void StyleThemedButton(VirtButton*, bool isDefault);
+// The buttons are virtual controls, so they take their look from the gui/ color
+// defaults, which SumatraUpdateTheme() fills in from the theme: a filled box
+// with a border, brighter on hover. `isDefault` is a shade stronger, like a
+// native default button. Nothing has to re-style them after a theme change
 VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont*, bool isDefault);
 
 extern int gFirstSetThemeCmdId;

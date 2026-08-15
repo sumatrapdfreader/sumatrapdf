@@ -14,6 +14,7 @@
 
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 #include "gui/VirtHost.h"
 
@@ -23,6 +24,7 @@ static Kind kindVirtCtrl = "virtCtrl";
 
 VirtCtrl::VirtCtrl() {
     kind = kindVirtCtrl;
+    GuiColorsInitIfNeeded();
 }
 
 VirtCtrl::~VirtCtrl() {
@@ -31,6 +33,34 @@ VirtCtrl::~VirtCtrl() {
     }
     RemoveAllChildren(true);
     str::Free(tooltip);
+    free(colors);
+}
+
+Color VirtCtrl::GetColor(int idx) const {
+    ReportIf(idx >= nColors);
+    return GetCol(colorDefaults, colors, idx);
+}
+
+// the override array is allocated on the first SetColor(), so the common case
+// of a control that paints in its class's colors costs nothing
+void VirtCtrl::SetColor(int idx, Color col) {
+    ReportIf(idx >= nColors);
+    if (idx >= nColors) {
+        return;
+    }
+    if (!colors) {
+        colors = AllocArray<Color>(nColors);
+        for (int i = 0; i < nColors; i++) {
+            colors[i] = kColorUnset;
+        }
+    }
+    colors[idx] = col;
+}
+
+// back to painting in the class's colors
+void VirtCtrl::ResetColors() {
+    free(colors);
+    colors = nullptr;
 }
 
 void VirtCtrl::SetTooltip(Str s) {
@@ -1313,6 +1343,8 @@ VirtListBox::VirtListBox() {
     onCaptureLost = MkMethod0<VirtListBox, &VirtListBox::OnCaptureLost>(this);
 
     kind = kindVirtCtrlListBox;
+    colorDefaults = gColsListBox;
+    nColors = kColListCount;
     // like a win32 listbox: takes the focus and is in the window's tab ring, so
     // the arrow keys reach OnKeyDown()
     flags |= vwfClipChildren | vwfFocusable;
@@ -1538,7 +1570,7 @@ Rect VirtListBox::ItemRect(int idx) {
 }
 
 void VirtListBox::Paint(VirtPaintCtx& ctx) {
-    Color colBg = bgColor;
+    Color colBg = GetColor(kColListBg);
     ctx.gfx->FillRect(ctx.bounds, colBg);
     int n = ItemsCount();
     Rect clip = ctx.clip.Intersect(ctx.bounds);
@@ -1557,11 +1589,11 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     int last = (scrollY + items.dy - 1) / dy;
     last = std::min(last, n - 1);
 
+    // the selection stands out more while the list has the keyboard focus,
+    // like a win32 listbox's
     bool isFocused = HasFlag(vwfFocused);
-    Color colSel = selectionColor;
+    Color colSel = GetColor(isFocused ? kColListSelFocused : kColListSel);
     if (colSel == kColorUnset && !ColorSkipsPaint(colBg)) {
-        // the selection stands out more while the list has the keyboard focus,
-        // like a win32 listbox's
         colSel = AccentColor(colBg, isFocused ? 45 : 25);
     }
 
@@ -1584,7 +1616,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
             }
             Rect rt = r;
             rt.SubLR(DpiScaleByDpi(GetDpi(), 4), 0);
-            ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis | gfxTextVCenter, font, textColor);
+            ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis | gfxTextVCenter, font, GetColor(kColListText));
         }
     }
     // the dotted ring around the list says the keys go here, the same way a
@@ -1598,7 +1630,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     if (thumb.IsEmpty()) {
         return;
     }
-    Color colThumb = scrollbarColor;
+    Color colThumb = GetColor(kColListScrollbar);
     if (colThumb == kColorUnset && !ColorSkipsPaint(colBg)) {
         colThumb = AccentColor(colBg, 60);
     }
@@ -1767,6 +1799,8 @@ VirtSplitter::VirtSplitter() {
     onSetCursor = MkMethod1<VirtSplitter, VirtSetCursorEvent*, &VirtSplitter::OnSetCursor>(this);
 
     kind = kindVirtCtrlSplitter;
+    colorDefaults = gColsSplitter;
+    nColors = kColSplitterCount;
     // the mouse belongs to us for the whole drag, wherever it goes
     flags |= vwfCapturesMouse;
 }
@@ -1837,10 +1871,11 @@ Size VirtSplitter::GetIdealSize() {
 }
 
 void VirtSplitter::Paint(VirtPaintCtx& ctx) {
-    if (ColorSkipsPaint(bgColor)) {
+    Color bg = GetColor(kColSplitterBg);
+    if (ColorSkipsPaint(bg)) {
         return;
     }
-    ctx.gfx->FillRect(ctx.bounds, AccentColor(bgColor, 30));
+    ctx.gfx->FillRect(ctx.bounds, AccentColor(bg, 30));
 }
 
 void VirtSplitter::OnMouseDown(VirtMouseEvent* ev) {
@@ -2007,6 +2042,8 @@ static Str TextToDraw(VirtText* w, AccelPrefix* prefixOut) {
 
 VirtText::VirtText(Str str, PlatformFont* f) {
     kind = kindVirtCtrlText;
+    colorDefaults = gColsText;
+    nColors = kColTextCount;
     s = str::Dup(str);
     font = f;
     flags |= vwfNoHitTest;
@@ -2067,6 +2104,12 @@ Size VirtText::GetIdealSize(bool onlyIfEmpty) {
 }
 
 void VirtText::Paint(VirtPaintCtx& ctx) {
+    PaintText(ctx, GetColor(kColText));
+}
+
+// the drawing, in a color the caller picks: a VirtButton paints its label in
+// the disabled color without having to swap a field
+void VirtText::PaintText(VirtPaintCtx& ctx, Color textColor) {
     Rect r = ctx.content;
     if (r.IsEmpty()) {
         return;
@@ -2128,7 +2171,9 @@ void VirtText::Paint(VirtPaintCtx& ctx) {
 
 VirtText* NewVirtText(const VirtTextArgs& args) {
     auto* w = new VirtText(args.s, args.font);
-    w->textColor = args.textColor;
+    if (args.textColor != kColorUnset) {
+        w->SetColor(kColText, args.textColor);
+    }
     w->align = args.align;
     w->withUnderline = args.withUnderline;
     w->isRtl = args.isRtl;
@@ -2150,6 +2195,8 @@ VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
     cursor = CursorId::Hand;
 
     kind = kindVirtCtrlLink;
+    // same slots as VirtText, but a link is drawn in the link color
+    colorDefaults = gColsLink;
     flags &= ~vwfNoHitTest;
 }
 
@@ -2194,6 +2241,8 @@ VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     cursor = CursorId::Hand;
 
     kind = kindVirtCtrlButton;
+    colorDefaults = gColsBtn;
+    nColors = kColBtnCount;
     flags &= ~vwfNoHitTest;
     flags |= vwfFocusable;
     align = VirtTextAlign::Center;
@@ -2202,6 +2251,19 @@ VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
 
 VirtButton::~VirtButton() = default;
 
+bool VirtButton::IsDefault() const {
+    return isDefault;
+}
+
+// a default button takes the stronger of the two button palettes. A caller that
+// pointed us at a palette of its own (the toolbar's) keeps it
+void VirtButton::SetIsDefault(bool v) {
+    isDefault = v;
+    if (colorDefaults == gColsBtn || colorDefaults == gColsBtnDefault) {
+        colorDefaults = v ? gColsBtnDefault : gColsBtn;
+    }
+}
+
 Size VirtButton::GetIdealSize() {
     Size s2 = VirtText::GetIdealSize();
     return {s2.dx + textPadding.left + textPadding.right, s2.dy + textPadding.top + textPadding.bottom};
@@ -2209,33 +2271,36 @@ Size VirtButton::GetIdealSize() {
 
 void VirtButton::Paint(VirtPaintCtx& ctx) {
     bool isEnabled = HasFlag(vwfEnabled);
-    Color bg = (isEnabled && HasFlag(vwfHovered)) ? bgColorHover : bgColor;
+    Color bg = GetColor((isEnabled && HasFlag(vwfHovered)) ? kColBtnBgHover : kColBtnBg);
     ctx.gfx->FillRect(ctx.bounds, bg);
-    if (!ColorSkipsPaint(borderColor)) {
+    Color borderCol = GetColor(kColBtnBorder);
+    if (!ColorSkipsPaint(borderCol)) {
         Rect b = ctx.bounds;
-        ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, borderColor);
-        ctx.gfx->FillRect({b.x, b.Bottom() - 1, b.dx, 1}, borderColor);
-        ctx.gfx->FillRect({b.x, b.y, 1, b.dy}, borderColor);
-        ctx.gfx->FillRect({b.Right() - 1, b.y, 1, b.dy}, borderColor);
+        ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, borderCol);
+        ctx.gfx->FillRect({b.x, b.Bottom() - 1, b.dx, 1}, borderCol);
+        ctx.gfx->FillRect({b.x, b.y, 1, b.dy}, borderCol);
+        ctx.gfx->FillRect({b.Right() - 1, b.y, 1, b.dy}, borderCol);
     }
     Rect r = ctx.content;
     r.SubTB(textPadding.top, textPadding.bottom);
     r.SubLR(textPadding.left, textPadding.right);
     VirtPaintCtx c2 = ctx;
     c2.content = r;
-    Color prevCol = textColor;
-    if (!isEnabled && textColorDisabled != kColorUnset) {
-        textColor = textColorDisabled;
+    Color textCol = GetColor(kColBtnText);
+    if (!isEnabled) {
+        Color disabled = GetColor(kColBtnTextDisabled);
+        if (disabled != kColorUnset) {
+            textCol = disabled;
+        }
     }
-    VirtText::Paint(c2);
-    textColor = prevCol;
+    PaintText(c2, textCol);
 
     if (HasFlag(vwfFocused)) {
         // focus ring, just inside the border
         Rect b = ctx.bounds;
         b.SubTB(2, 2);
         b.SubLR(2, 2);
-        Color col = (textColor != kColorUnset) ? textColor : borderColor;
+        Color col = (textCol != kColorUnset) ? textCol : borderCol;
         if (col != kColorUnset && !b.IsEmpty()) {
             ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, col);
             ctx.gfx->FillRect({b.x, b.Bottom() - 1, b.dx, 1}, col);
@@ -2289,6 +2354,8 @@ VirtIconButton::VirtIconButton() {
     cursor = CursorId::Hand;
 
     kind = kindVirtCtrlIconButton;
+    colorDefaults = gColsIconBtn;
+    nColors = kColIconBtnCount;
 }
 
 int VirtIconButton::DropdownDx() const {
@@ -2316,12 +2383,14 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
         drop.x = ctx.bounds.Right() - dropDx;
         drop.dx = dropDx;
     }
-    if (isSelected && bgColorSelected != kColorUnset) {
-        ctx.gfx->FillRect(action, bgColorSelected);
+    Color bgSel = GetColor(kColIconBtnBgSelected);
+    if (isSelected && bgSel != kColorUnset) {
+        ctx.gfx->FillRect(action, bgSel);
     }
-    if (enabled && HasFlag(vwfHovered) && bgColorHover != kColorUnset) {
+    Color bgHover = GetColor(kColIconBtnBgHover);
+    if (enabled && HasFlag(vwfHovered) && bgHover != kColorUnset) {
         Rect hi = (dropDx > 0 && hoverOnDropdown) ? drop : action;
-        ctx.gfx->FillRect(hi, bgColorHover);
+        ctx.gfx->FillRect(hi, bgHover);
     }
     Pixmap* px = (!enabled && pixmapDisabled) ? pixmapDisabled : pixmap;
     Rect r = ctx.content;
@@ -2335,7 +2404,7 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
         ctx.gfx->DrawPixmap(px, {x, y, s2.dx, s2.dy});
     }
     if (dropDx > 0) {
-        Color col = chevronColor;
+        Color col = GetColor(kColIconBtnChevron);
         if (col == kColorUnset) {
             col = MkGray(enabled ? 0x40 : 0x90);
         }
@@ -2372,18 +2441,14 @@ void VirtIconButton::OnMouseMove(VirtMouseEvent* ev) {
 
 static Kind kindVirtCtrlCloseButton = "virtCtrlCloseButton";
 
-// the default look of the ✕ that closes a tab / panel / notification: a gray
-// glyph that turns white on a red circle when hovered
-#define kColCloseX MkRgb(0xa0, 0xa0, 0xa0)
-#define kColCloseXHover MkRgb(0xf9, 0xeb, 0xeb)   // white-ish
-#define kColCloseXHoverBg MkRgb(0xC1, 0x35, 0x35) // red-ish
-
 VirtCloseButton::VirtCloseButton() {
     onMouseEnter = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseEnter>(this);
     onMouseLeave = MkMethod0<VirtCloseButton, &VirtCloseButton::OnMouseLeave>(this);
     cursor = CursorId::Hand;
 
     kind = kindVirtCtrlCloseButton;
+    colorDefaults = gColsCloseBtn;
+    nColors = kColCloseCount;
 }
 
 Size VirtCloseButton::GetIdealSize() {
@@ -2404,12 +2469,7 @@ void VirtCloseButton::Paint(VirtPaintCtx& ctx) {
 
     // slightly translucent when it sits on content it doesn't own
     u8 a = (withCircle && !isHover) ? 215 : 255;
-    Color circle = isHover ? circleColorHover : circleColor;
-    if (isHover && circle == kColorUnset) {
-        circle = kColCloseXHoverBg;
-    } else if (!isHover && circle == kColorUnset) {
-        circle = MkGray(0xff);
-    }
+    Color circle = GetColor(isHover ? kColCloseCircleHover : kColCloseCircle);
     if (isHover || withCircle) {
         Rect er = r;
         if (mirrorDx) {
@@ -2418,10 +2478,7 @@ void VirtCloseButton::Paint(VirtPaintCtx& ctx) {
         gfx->FillEllipse(er, circle, a);
     }
 
-    Color xcol = isHover ? xColorHover : xColor;
-    if (xcol == kColorUnset) {
-        xcol = isHover ? kColCloseXHover : kColCloseX;
-    }
+    Color xcol = GetColor(isHover ? kColCloseXHover : kColCloseX);
     int pad = r.dx / 3;
     gfx->DrawLineAA({mirrorX(r.x + pad), r.y + pad}, {mirrorX(r.x + r.dx - pad), r.y + r.dy - pad}, xcol, 2.0f, a);
     gfx->DrawLineAA({mirrorX(r.x + r.dx - pad), r.y + pad}, {mirrorX(r.x + pad), r.y + r.dy - pad}, xcol, 2.0f, a);
@@ -2535,6 +2592,8 @@ static Kind kindVirtCtrlFill = "virtCtrlFill";
 
 VirtFill::VirtFill() {
     kind = kindVirtCtrlFill;
+    colorDefaults = gColsFill;
+    nColors = kColFillCount;
     flags |= vwfNoHitTest;
 }
 
@@ -2545,7 +2604,7 @@ Size VirtFill::GetIdealSize() {
 }
 
 void VirtFill::Paint(VirtPaintCtx& ctx) {
-    ctx.gfx->FillRect(ctx.bounds, color);
+    ctx.gfx->FillRect(ctx.bounds, GetColor(kColFillBg));
 }
 
 //--- VirtLine
@@ -2554,6 +2613,8 @@ static Kind kindVirtCtrlLine = "virtCtrlLine";
 
 VirtLine::VirtLine() {
     kind = kindVirtCtrlLine;
+    colorDefaults = gColsLine;
+    nColors = kColLineCount;
     flags |= vwfNoHitTest;
 }
 
@@ -2573,7 +2634,7 @@ void VirtLine::Paint(VirtPaintCtx& ctx) {
     } else {
         r.dy = thickness;
     }
-    ctx.gfx->FillRect(r, color);
+    ctx.gfx->FillRect(r, GetColor(kColLineFg));
 }
 
 //--- VirtSpacer
@@ -2988,6 +3049,8 @@ VirtRichText::VirtRichText() {
     onGetTooltip = MkMethod1<VirtRichText, VirtTooltipEvent*, &VirtRichText::OnGetTooltip>(this);
 
     kind = kindVirtRichText;
+    colorDefaults = gColsRichText;
+    nColors = kColRichCount;
 }
 
 VirtRichText::~VirtRichText() {
@@ -3534,15 +3597,18 @@ void VirtRichText::SetBounds(Rect r) {
     LayoutText(content.dx);
 }
 
-// draws the words (link words in linkColor, underlined; others in textColor;
+// draws the words (link words in kColRichLink, underlined; others in kColRichText;
 // isKbd words as key-caps like the keyboard help sheet)
 void VirtRichText::Paint(VirtPaintCtx& ctx) {
     Gfx* gfx = ctx.gfx;
     u32 fmt = gfxTextLeft | gfxTextNoClip | gfxTextSingleLine;
     PlatformFont* boldFont = nullptr;
-    Color textCol = textColor;
-    Color linkCol = (linkColor == kColorUnset) ? textCol : linkColor;
-    Color bgCol = bgColor;
+    Color textCol = GetColor(kColRichText);
+    Color linkCol = GetColor(kColRichLink);
+    if (linkCol == kColorUnset) {
+        linkCol = textCol;
+    }
+    Color bgCol = GetColor(kColRichBg);
     // key-cap colors: AccentColor on the background the text sits on
     if (bgCol == kColorUnset) {
         bgCol = IsLightColor(textCol) ? MkGray(0x22) : MkGray(0xf2);

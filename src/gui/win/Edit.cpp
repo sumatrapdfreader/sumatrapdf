@@ -12,6 +12,7 @@
 
 #include "gui/Layout.h"
 #include "gui/PlatformFont.h"
+#include "gui/GuiColors.h"
 #include "gui/win/WinGui.h"
 
 //--- Edit
@@ -448,7 +449,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                     RECT tr{inset, inset, w - inset, inset + ncCenterTop};
                     FillRect(hdc, &tr, bgBr);
                 }
-                Color col = EditBottomBorderColor();
+                Color col = gColsEdit[kColEditBottomBorder];
                 if (createdWithFrame) {
                     RECT fr{0, 0, w, h};
                     HBRUSH br = CreateSolidBrush(col);

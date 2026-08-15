@@ -36,6 +36,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 #include "gui/VirtHost.h"
 #include "gui/win/TabsCtrl.h"
@@ -992,23 +993,26 @@ static void ApplyToolbarItemColors(VirtCtrl* w) {
     Color hover = TbHoverColor();
     Color sel = TbSelectedColor();
     if (auto* ib = AsVirtIconButton(w)) {
-        ib->bgColorHover = hover;
-        ib->bgColorSelected = sel;
-        ib->chevronColor = TbTextColor();
+        ib->SetColor(kColIconBtnBgHover, hover);
+        ib->SetColor(kColIconBtnBgSelected, sel);
+        ib->SetColor(kColIconBtnChevron, TbTextColor());
         return;
     }
     if (auto* b = AsVirtButton(w)) {
-        b->bgColorHover = hover;
-        b->textColor = TbTextColor();
-        b->textColorDisabled = TbDisabledColor();
+        // a toolbar button is a label that highlights on hover, not a box
+        b->SetColor(kColBtnBg, kColorTransparent);
+        b->SetColor(kColBtnBorder, kColorTransparent);
+        b->SetColor(kColBtnBgHover, hover);
+        b->SetColor(kColBtnText, TbTextColor());
+        b->SetColor(kColBtnTextDisabled, TbDisabledColor());
         return;
     }
     if (auto* t = AsVirtText(w)) {
-        t->textColor = TbTextColor();
+        t->SetColor(kColText, TbTextColor());
         return;
     }
     if (auto* line = AsVirtLine(w)) {
-        line->color = TbEdgeColor();
+        line->SetColor(kColLineFg, TbEdgeColor());
     }
 }
 
@@ -1036,10 +1040,10 @@ static void RefreshToolbarIcons(MainWindow* win) {
         ib->pixmapDisabled = GetCachedPixmapForSvg(svg, sz, sz, dis, TbBgColor());
     }
     if (tb->pageLabel) {
-        tb->pageLabel->textColor = TbTextColor();
+        tb->pageLabel->SetColor(kColText, TbTextColor());
     }
     if (tb->pageTotal) {
-        tb->pageTotal->textColor = TbTextColor();
+        tb->pageTotal->SetColor(kColText, TbTextColor());
     }
     if (win->pageEdit) {
         win->pageEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
@@ -1224,7 +1228,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             // (10dpi) so "Page:" and "/ N" were not flush against the edit.
             int pageGap = DpiScale(kTextPaddingRight) + DpiScale(kButtonSpacingX);
             auto* label = new VirtText(_TRA("Page:"), tb->platformFont);
-            label->textColor = fg;
+            label->SetColor(kColText, fg);
             label->padding = {0, pageGap, 0, DpiScale(4)};
             label->id = PageInfoId;
             tb->pageLabel = label;
@@ -1235,7 +1239,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             box->AddChild(pageEdit);
 
             auto* total = new VirtText(StrL(" "), tb->platformFont);
-            total->textColor = fg;
+            total->SetColor(kColText, fg);
             total->padding = {0, DpiScale(4), 0, pageGap};
             total->id = PageInfoId;
             tb->pageTotal = total;

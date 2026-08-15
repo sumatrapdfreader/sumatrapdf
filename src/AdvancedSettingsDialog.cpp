@@ -19,6 +19,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
@@ -350,8 +351,9 @@ struct CommentText : VirtRichText {
             return;
         }
         ctx.gfx->PushClip(clip);
-        if (!ColorSkipsPaint(bgColor)) {
-            ctx.gfx->FillRect(ctx.bounds, bgColor);
+        Color bg = GetColor(kColRichBg);
+        if (!ColorSkipsPaint(bg)) {
+            ctx.gfx->FillRect(ctx.bounds, bg);
         }
         VirtRichText::Paint(ctx);
         ctx.gfx->DrawRect(ctx.bounds, ThemeEdgeColor());
@@ -567,8 +569,14 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     Gfx* gfx = ev->gfx;
     Rect rc = ev->itemRect;
 
-    Color colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
-    Color colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    Color colBg = lb->GetColor(kColListBg);
+    Color colText = lb->GetColor(kColListText);
+    if (IsSpecialColor(colBg)) {
+        colBg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(colText)) {
+        colText = GetSysColor(COLOR_WINDOWTEXT);
+    }
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }
@@ -1143,8 +1151,6 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
         c->font = font;
-        c->textColor = colTxt;
-        c->bgColor = colBg;
         c->padding = DpiScaledInsets(4, 0);
         c->onDrawItem =
             MkMethod1<AdvancedSettingsWnd, VirtListBox::DrawItemEvent*, &AdvancedSettingsWnd::DrawListBoxItem>(this);
@@ -1163,8 +1169,6 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     {
         auto* c = new CommentText();
         c->font = font;
-        c->textColor = colTxt;
-        c->bgColor = colBg;
         // don't let the doc text touch the edges of the dialog
         c->padding = DpiScaledInsets(4);
         commentText = c;
@@ -1184,7 +1188,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             hbox->alignMain = MainAxisAlign::MainCenter;
             hbox->alignCross = CrossAxisAlign::CrossCenter;
 
-            auto* c = NewVirtText({.s = hint, .font = font, .textColor = colTxt, .isRtl = isRtl});
+            auto* c = NewVirtText({.s = hint, .font = font, .isRtl = isRtl});
             hbox->AddChild(new Padding(c, DpiScaledInsets(1, 8)));
             vbox->AddChild(hbox);
         }

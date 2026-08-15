@@ -11,6 +11,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -624,9 +625,9 @@ void NotifTextCtrl::Paint(VirtPaintCtx& ctx) {
     if (rich) {
         // the child paints itself; keep its colors in step with the theme
         NotifColors cols = notif->Colors();
-        rich->textColor = cols.txt;
-        rich->linkColor = cols.link;
-        rich->bgColor = cols.bg;
+        rich->SetColor(kColRichText, cols.txt);
+        rich->SetColor(kColRichLink, cols.link);
+        rich->SetColor(kColRichBg, cols.bg);
         return;
     }
     TempStr text = HwndGetTextTemp(notif->hwnd);

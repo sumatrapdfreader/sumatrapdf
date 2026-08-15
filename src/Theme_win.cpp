@@ -27,10 +27,6 @@ Color SysWindowTextColor() {
     return GetSysColor(COLOR_WINDOWTEXT);
 }
 
-Color SysWindowFrameColor() {
-    return GetSysColor(COLOR_WINDOWFRAME);
-}
-
 Color SysControlTextColor() {
     return GetSysColor(COLOR_BTNTEXT);
 }

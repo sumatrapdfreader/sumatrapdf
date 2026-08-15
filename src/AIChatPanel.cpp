@@ -1209,9 +1209,6 @@ void UpdateAIChatTheme(MainWindow* win) {
     }
     Color bgCol = ThemeControlBackgroundColor();
     Color txtCol = ThemeWindowTextColor();
-    if (win->aiChatLabel) {
-        win->aiChatLabel->textColor = txtCol;
-    }
     if (win->aiChatInput) {
         win->aiChatInput->SetColors(txtCol, bgCol);
     }
@@ -1244,7 +1241,6 @@ void CreateAIChatPanel(MainWindow* win) {
     // the splitter is part of the frame's content row and outlives the panel;
     // we only take it over while the panel exists
     if (win->aiChatSplitter) {
-        win->aiChatSplitter->bgColor = ThemeControlBackgroundColor();
         win->aiChatSplitter->SetIsVisible(false);
         win->aiChatSplitter->onMove = MkFunc1Void(OnAIChatSplitterMove);
     }

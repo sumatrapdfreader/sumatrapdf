@@ -798,9 +798,6 @@ void PropertiesWnd::UpdateTheme() {
     if (editProps) {
         editProps->SetColors(colTxt, colBg);
     }
-    if (btnCopyToClipboard) {
-        StyleThemedButton(btnCopyToClipboard, true);
-    }
     DarkModeApplyToWindowAndEraseBg(hwnd);
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (editProps && propsFont) {

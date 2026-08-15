@@ -136,20 +136,8 @@ void PdfToolDialog::OnBrowse(VirtMouseEvent*) {
     BrowseForDest(hwnd, destEdit, browseFilter, browseDefExt);
 }
 
-// the buttons are virtual controls, so they are styled here rather than by the
-// system: a filled box with a border, brighter on hover
 VirtButton* PdfToolDialog::NewButton(Str text, bool isDefault) {
-    auto* b = new VirtButton(text, font);
-    Color bg = ThemeWindowControlBackgroundColor();
-    b->textColor = ThemeWindowTextColor();
-    b->textColorDisabled = ThemeWindowTextDisabledColor();
-    // the default button is a shade stronger, like a native default button
-    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
-    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
-    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
-    b->isDefault = isDefault;
-    b->textPadding = DpiScaledInsets(5, 12);
-    return b;
+    return NewThemedButton(hwnd, text, font, isDefault);
 }
 
 bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {

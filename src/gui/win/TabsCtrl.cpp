@@ -11,10 +11,9 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 #include "gui/win/TabsCtrl.h"
-
-#include "Theme.h"
 
 // Forward declaration - defined in MainWindow.cpp
 struct MainWindow;
@@ -60,8 +59,8 @@ static Gdiplus::Color GdipCol(Color c) {
     return GdiRgbFromColor(c);
 }
 
-static Color TabTextColorForBackground(Color tabBg) {
-    Color text = ThemeWindowTextColor();
+// the text stays readable on a tab that carries a color of its own
+static Color TabTextColorForBackground(Color text, Color tabBg) {
     if (abs((int)GetLightness(text) - (int)GetLightness(tabBg)) >= 80) {
         return text;
     }
@@ -100,6 +99,8 @@ struct TabCtrl : VirtCtrl {
 
 TabCtrl::TabCtrl() {
     kind = kindTabCtrl;
+    colorDefaults = gColsTab;
+    nColors = kColTabCount;
     onMouseDown = MkMethod1<TabCtrl, VirtMouseEvent*, &TabCtrl::OnMouseDown>(this);
     onMouseUp = MkMethod1<TabCtrl, VirtMouseEvent*, &TabCtrl::OnMouseUp>(this);
     onGetTooltip = MkMethod1<TabCtrl, VirtTooltipEvent*, &TabCtrl::OnGetTooltip>(this);
@@ -130,7 +131,7 @@ bool TabCtrl::IsUnderMouse() {
 }
 
 Color TabCtrl::BgColor() {
-    Color selected = ThemeControlBackgroundColor();
+    Color selected = GetColor(kColTabBg);
     bool isSelected = IsSelected();
     bool isUnderMouse = IsUnderMouse();
     // a tab with a color of its own keeps it, shaded when it isn't selected
@@ -216,7 +217,7 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     HWND hwnd = GetHwnd();
     Rect r = ctx.bounds;
     Color tabBgCol = BgColor();
-    Color textColor = TabTextColorForBackground(tabBgCol);
+    Color textColor = TabTextColorForBackground(GetColor(kColTabText), tabBgCol);
 
     gfx->FillRect(r, tabBgCol);
 
@@ -255,7 +256,7 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     }
 
     // the ✕ blends into the tab, so it takes the tab's background
-    closeBtn->circleColor = tabBgCol;
+    closeBtn->SetColor(kColCloseCircle, tabBgCol);
 }
 
 void TabCtrl::OnMouseDown(VirtMouseEvent* ev) {
@@ -318,6 +319,8 @@ static void RegisterTabsCtrlClass() {
 
 TabsCtrl::TabsCtrl() {
     kind = kindTabs;
+    colorDefaults = gColsTab;
+    nColors = kColTabCount;
 }
 
 TabsCtrl::~TabsCtrl() {
@@ -523,8 +526,9 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    Color bgCol = tabSelectedBg;
-    Color textCol = tabSelectedText;
+    // the drag image is the tab as it looks while selected
+    Color bgCol = GetColor(kColTabBg);
+    Color textCol = TabTextColorForBackground(GetColor(kColTabText), bgCol);
 
     SolidBrush br(GdipCol(bgCol));
     Gdiplus::Rect gr(0, 0, r.dx, r.dy);
@@ -940,7 +944,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return 0;
             }
             HDC hdc = GetDC(hwnd);
-            Color bgCol = ThemeControlBackgroundColor();
+            Color bgCol = GetColor(kColTabBg);
             if (vroot) {
                 PaintVirtTree(vroot, hdc, clientRc, bgCol);
             } else {

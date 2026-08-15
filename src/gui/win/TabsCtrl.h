@@ -125,23 +125,8 @@ struct TabsCtrl : VirtCtrl {
     MigrationHandler onTabMigration;
     DraggedHandler onTabDragged;
 
-    Color currBgCol = 0;
-    Color tabBackgroundBg = 0;
-    Color tabBackgroundText = 0;
-    Color tabBackgroundCloseX = 0;
-    Color tabBackgroundCloseCircle = 0;
-    Color tabSelectedBg = 0;
-    Color tabSelectedText = 0;
-    Color tabSelectedCloseX = 0;
-    Color tabSelectedCloseCircle = 0;
-    Color tabHighlightedBg = 0;
-    Color tabHighlightedText = 0;
-    Color tabHighlightedCloseX = 0;
-    Color tabHighlightedCloseCircle = 0;
-    Color tabHoveredCloseX = 0;
-    Color tabHoveredCloseCircle = 0;
-    Color tabClickedCloseX = 0;
-    Color tabClickedCloseCircle = 0;
+    // colors: kColTab* (the unselected and hovered shades are derived from
+    // kColTabBg; a tab with a TabInfo::tabColor of its own overrides it)
 
     Size tabSize{-1, -1};
 

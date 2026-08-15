@@ -202,14 +202,11 @@ void FindBarWnd::CreateButtons() {
     static const int cmds[6] = {
         CmdFindPrev,      CmdFindNext,       CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
         kFindBarPinCmdId, kFindBarCloseCmdId};
-    Color colBg = ThemeWindowControlBackgroundColor();
     int pad = DpiScale(4);
     for (int i = 0; i < 6; i++) {
         auto* b = new VirtIconButton();
         b->id = cmds[i];
         b->padding = Insets{pad, pad, pad, pad};
-        b->bgColorHover = AccentColor(colBg, 20);
-        b->bgColorSelected = AccentColor(colBg, 36);
         b->SetTooltip(FindBarButtonTooltip(cmds[i]));
         b->onClick = MkFunc1(FindBarButtonClicked, this);
         btns[i] = b;
@@ -268,7 +265,6 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     // (taller, bordered) edit box's text instead of sitting at the top
     status = NewVirtText({
         .font = GetAppFont(),
-        .textColor = colTxt,
         .isRtl = IsUIRtl(),
         .ellipsis = true,
     });

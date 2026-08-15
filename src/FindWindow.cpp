@@ -14,6 +14,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -262,14 +263,11 @@ static void FindWindowButtonClicked(FindWindowWnd* w, VirtMouseEvent* ev) {
 void FindWindowWnd::CreateButtons() {
     static const int cmds[5] = {CmdFindPrev, CmdFindNext, CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
                                 kFindWinPinCmdId};
-    Color colBg = ThemeWindowControlBackgroundColor();
     int pad = DpiScale(4);
     for (int i = 0; i < 5; i++) {
         auto* b = new VirtIconButton();
         b->id = cmds[i];
         b->padding = Insets{pad, pad, pad, pad};
-        b->bgColorHover = AccentColor(colBg, 20);
-        b->bgColorSelected = AccentColor(colBg, 36);
         b->SetTooltip(FindWindowButtonTooltip(cmds[i]));
         b->onClick = MkFunc1(FindWindowButtonClicked, this);
         btns[i] = b;
@@ -334,14 +332,12 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
 
     pagesLabel = NewVirtText({
         .font = platformFont,
-        .textColor = colTxt,
         .isRtl = IsUIRtl(),
     });
     UpdatePagesLabel();
 
     status = NewVirtText({
         .font = platformFont,
-        .textColor = colTxt,
         .isRtl = IsUIRtl(),
         // single line, vertically centered (what SS_CENTERIMAGE used to do)
         .ellipsis = true,
@@ -353,8 +349,6 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
         c->font = platformFont;
-        c->textColor = colTxt;
-        c->bgColor = colBg;
         c->onDrawItem = MkMethod1<FindWindowWnd, VirtListBox::DrawItemEvent*, &FindWindowWnd::DrawResultItem>(this);
         c->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
         c->onDoubleClick = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
@@ -488,8 +482,14 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     // and highlight fill cannot paint outside the item / list client (#5796)
     gfx->PushClip(rc);
 
-    Color colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
-    Color colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    Color colBg = lb->GetColor(kColListBg);
+    Color colText = lb->GetColor(kColListText);
+    if (IsSpecialColor(colBg)) {
+        colBg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(colText)) {
+        colText = GetSysColor(COLOR_WINDOWTEXT);
+    }
 
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
@@ -717,23 +717,7 @@ void FindWindowWnd::UpdateTheme() {
     if (editPages) {
         editPages->SetColors(colTxt, colBg);
     }
-    if (results) {
-        results->textColor = colTxt;
-        results->bgColor = colBg;
-    }
-    if (status) {
-        status->textColor = colTxt;
-    }
-    if (pagesLabel) {
-        pagesLabel->textColor = colTxt;
-        UpdatePagesLabel();
-    }
-    for (VirtIconButton* b : btns) {
-        if (b) {
-            b->bgColorHover = AccentColor(colBg, 20);
-            b->bgColorSelected = AccentColor(colBg, 36);
-        }
-    }
+    UpdatePagesLabel();
     // the icons are drawn in the theme's text color, so re-render them
     UpdateButtonIcons();
     DarkModeApplyToTitleBar(hwnd);

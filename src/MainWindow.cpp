@@ -950,17 +950,15 @@ void UpdateControlsColors(MainWindow* win) {
 
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
-    Color splitterCol = ThemeControlBackgroundColor();
-
+    // the panel labels and the splitters are virtual controls: they follow the
+    // gui/ color defaults, which SumatraUpdateTheme() already refreshed
     {
         auto* tocTreeView = win->tocTreeView;
         tocTreeView->SetColors(txtCol, bgCol);
 
-        win->tocLabel->textColor = txtCol;
         if (win->tocFilterEdit) {
             win->tocFilterEdit->SetColors(txtCol, bgCol);
         }
-        win->sidebarSplitter->bgColor = splitterCol;
     }
 
     HomePageUpdateSearchColors(win);
@@ -968,11 +966,9 @@ void UpdateControlsColors(MainWindow* win) {
     auto* favTreeView = win->favTreeView;
     if (favTreeView) {
         favTreeView->SetColors(txtCol, bgCol);
-        win->favLabel->textColor = txtCol;
         if (win->favFilterEdit) {
             win->favFilterEdit->SetColors(txtCol, bgCol);
         }
-        win->favSplitter->bgColor = splitterCol;
     }
 }
 

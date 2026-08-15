@@ -10,6 +10,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -189,12 +190,12 @@ void ReadAloudPlaybackBar::SyncColors() {
     Color colBtnHover = AccentColor(colBg, 16, -16);
     VirtButton* btns[] = {btnPause, btnStop, btnSpeed};
     for (VirtButton* b : btns) {
-        b->bgColor = colBtnBg;
-        b->bgColorHover = colBtnHover;
-        b->borderColor = colBorder;
-        b->textColor = colTxt;
+        b->SetColor(kColBtnBg, colBtnBg);
+        b->SetColor(kColBtnBgHover, colBtnHover);
+        b->SetColor(kColBtnBorder, colBorder);
+        b->SetColor(kColBtnText, colTxt);
     }
-    status->textColor = colTxt;
+    status->SetColor(kColText, colTxt);
 }
 
 void ReadAloudPlaybackBar::SetSession(WindowTab* tab) {

@@ -228,7 +228,6 @@ struct SetHotkeyWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     VirtButton* NewButton(Str text, bool isDefault);
-    void StyleButton(VirtButton*, bool isDefault);
     void UpdateTheme();
     void UpdateUI();
     bool HandleKeyDown(UINT vk);
@@ -348,47 +347,14 @@ void SetHotkeyWnd::CleanupHook() {
     gHotkeyDlgHwnd = nullptr;
 }
 
-// the buttons are virtual controls, so they are styled here rather than by the
-// system: a filled box with a border, brighter on hover (like the PDF tool
-// dialogs and the theme dialog)
-void SetHotkeyWnd::StyleButton(VirtButton* b, bool isDefault) {
-    Color bg = ThemeWindowControlBackgroundColor();
-    b->textColor = ThemeWindowTextColor();
-    b->textColorDisabled = ThemeWindowTextDisabledColor();
-    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
-    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
-    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
-    b->isDefault = isDefault;
-}
-
 VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
-    auto* b = new VirtButton(text, font);
-    StyleButton(b, isDefault);
-    b->textPadding = DpiScaledInsets(5, 12);
-    return b;
+    return NewThemedButton(hwnd, text, font, isDefault);
 }
 
 void SetHotkeyWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (prompt) {
-        prompt->textColor = colTxt;
-    }
-    if (hotkeyDisplay) {
-        hotkeyDisplay->textColor = colTxt;
-        // the key-cap's fill and border are derived from the color it sits on
-        hotkeyDisplay->bgColor = colBg;
-    }
-    if (btnSet) {
-        StyleButton(btnSet, true);
-    }
-    if (btnRemove) {
-        StyleButton(btnRemove, false);
-    }
-    if (btnCancel) {
-        StyleButton(btnCancel, false);
-    }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }

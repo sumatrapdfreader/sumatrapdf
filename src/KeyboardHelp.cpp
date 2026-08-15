@@ -11,6 +11,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -137,8 +138,6 @@ struct KeyboardHelpWnd : WindowBase {
     VirtLine* separator = nullptr;
     HBox* columns = nullptr;
     VirtText* footer = nullptr;
-    // section headers and row descriptions, so SyncColors() can reach them
-    Vec<VirtText*> texts;
 
     // y of the columns; the band above is the drag handle
     int contentTop = 0;
@@ -420,7 +419,6 @@ void KeyboardHelpWnd::BuildContent() {
         // above: a column is a single table, and its rowGap is uniform
         auto* hdr = new VirtText(s.title, fontHdr);
         hdr->padding.top = (row == 0) ? 0 : secGap;
-        texts.Append(hdr);
         TableCell& hdrCell = t->SetCell(row, 0, hdr, 1, 2);
         hdrCell.alignV = CrossAxisAlign::CrossEnd;
         row++;
@@ -440,7 +438,6 @@ void KeyboardHelpWnd::BuildContent() {
             capsCell.alignV = CrossAxisAlign::CrossCenter;
 
             auto* desc = NewVirtText({.s = r.desc, .font = fontRow, .ellipsis = true});
-            texts.Append(desc);
             TableCell& descCell = t->SetCell(row, 1, desc);
             descCell.alignV = CrossAxisAlign::CrossCenter;
             row++;
@@ -458,17 +455,11 @@ void KeyboardHelpWnd::BuildContent() {
     SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER);
 }
 
-// colors are read from the theme on every paint, so a theme change shows
-// through without rebuilding the tree
+// the title, the separator and the key rows paint in the gui/ defaults, which
+// follow the theme. Only the footer differs: it is dimmed
 void KeyboardHelpWnd::SyncColors() {
-    Color txt = ThemeWindowTextColor();
-    Color dim = AccentColor(txt, 90);
-    title->textColor = txt;
-    separator->color = ThemeEdgeColor();
-    footer->textColor = dim;
-    for (VirtText* t : texts) {
-        t->textColor = txt;
-    }
+    Color dim = AccentColor(gColsText[kColText], 90);
+    footer->SetColor(kColText, dim);
 }
 
 void KeyboardHelpWnd::PaintContent(Gfx* gfx, const Rect& client) {

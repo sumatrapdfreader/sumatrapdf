@@ -14,6 +14,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -541,8 +542,14 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     Rect rc = ev->itemRect;
     NavFileEntry& e = m->entries[ev->itemIndex];
 
-    Color colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
-    Color colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    Color colBg = lb->GetColor(kColListBg);
+    Color colText = lb->GetColor(kColListText);
+    if (IsSpecialColor(colBg)) {
+        colBg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(colText)) {
+        colText = GetSysColor(COLOR_WINDOWTEXT);
+    }
 
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
@@ -735,7 +742,6 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     {
         auto* c = NewVirtText({
             .font = font,
-            .textColor = colTxt,
             .isRtl = IsUIRtl(),
             .ellipsis = true,
         });
@@ -747,8 +753,6 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
         c->font = font;
-        c->textColor = colTxt;
-        c->bgColor = colBg;
         c->padding = DpiScaledInsets(4, 0);
         c->onDoubleClick = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnListDoubleClick>(this);
         c->onDrawItem =
@@ -765,7 +769,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto pad = Insets{0, 8, 0, 8};
         for (Str s : strings) {
-            auto* c = NewVirtText({.s = s, .font = font, .textColor = colTxt, .isRtl = IsUIRtl()});
+            auto* c = NewVirtText({.s = s, .font = font, .isRtl = IsUIRtl()});
             hbox->AddChild(new Padding(c, pad));
         }
         vbox->AddChild(hbox);

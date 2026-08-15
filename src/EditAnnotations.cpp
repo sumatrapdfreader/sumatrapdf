@@ -1394,22 +1394,13 @@ static VirtText* CreateStatic(Str s = nullptr) {
     return NewVirtText({
         .s = s,
         .font = GetAppFont(),
-        .textColor = ThemeWindowTextColor(),
         .isRtl = IsUIRtl(),
         .ellipsis = true,
     });
 }
 
-// the buttons are virtual controls, so they are styled here rather than by the
-// system: a filled box with a border, brighter on hover (like the other dialogs)
 static VirtButton* CreateVirtButton(Str text) {
     auto* b = new VirtButton(text, GetAppFont());
-    Color bg = ThemeWindowControlBackgroundColor();
-    b->textColor = ThemeWindowTextColor();
-    b->textColorDisabled = ThemeWindowTextDisabledColor();
-    b->bgColor = AccentColor(bg, 14);
-    b->bgColorHover = AccentColor(bg, 28);
-    b->borderColor = ThemeEdgeColor();
     b->textPadding = DpiScaledInsets(5, 12);
     return b;
 }
@@ -1425,8 +1416,6 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto* w = new VirtListBox();
         w->dpi = ew->GetDpi();
         w->font = fnt;
-        w->textColor = ThemeWindowTextColor();
-        w->bgColor = ThemeWindowControlBackgroundColor();
         w->padding = DpiScaledInsets(4, 0);
         w->idealSizeLines = 5;
         auto* lbModel = new ListBoxModelStrings();

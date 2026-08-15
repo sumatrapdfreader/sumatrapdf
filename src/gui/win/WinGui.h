@@ -327,6 +327,9 @@ struct WindowBase : HwndBase {
     WindowBase* AsWindowBase() override;
     LRESULT OnMessage(HWND, UINT, WPARAM, LPARAM) override;
 
+    // the system theme / colors changed, or the app's own theme did
+    virtual void OnThemeChange();
+
     HWND CreateCustom(const CreateCustomArgs&);
 
     void SetVisibility(Visibility);
@@ -642,7 +645,6 @@ void TooltipRemoveAll(HWND hwnd);
 //--- Edit
 using TextChangedHandler = Func0;
 
-Color EditBottomBorderColor();
 void PostDelayedEditSelectAll(HWND);
 void PostDelayedEditCtrlBack(HWND);
 

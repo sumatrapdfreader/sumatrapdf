@@ -125,7 +125,6 @@ struct SelectionTranslateWnd : WindowBase {
     void Relayout(bool initial = false);
     void UpdateTheme();
     VirtButton* NewButton(Str text, bool isDefault);
-    void StyleButton(VirtButton*, bool isDefault);
     // the label changes width ("Translate" / "Translating..."), so the row is
     // laid out again
     void SetTranslateButtonText(Str);
@@ -924,26 +923,11 @@ void SelectionTranslateWnd::UpdateTheme() {
             w->SetColors(colTxt, colBg);
         }
     };
-    auto setTextColor = [&](VirtText* w) {
-        if (w) {
-            w->textColor = colTxt;
-        }
-    };
-    setTextColor(staticPrompt);
     setColors(dropEngine);
     setColors(editSrcText);
-    setTextColor(staticFromLabel);
     setColors(dropSrcLang);
-    setTextColor(staticToLabel);
     setColors(dropDstLang);
-    setTextColor(staticResultLabel);
     setColors(editResult);
-    if (btnTranslate) {
-        StyleButton(btnTranslate, true);
-    }
-    if (btnClose) {
-        StyleButton(btnClose, false);
-    }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
@@ -961,23 +945,8 @@ void SelectionTranslateWnd::UpdateFont() {
     }
 }
 
-// the buttons are virtual controls, so they are styled here rather than by the
-// system: a filled box with a border, brighter on hover (like the other dialogs)
-void SelectionTranslateWnd::StyleButton(VirtButton* b, bool isDefault) {
-    Color bg = ThemeWindowControlBackgroundColor();
-    b->textColor = ThemeWindowTextColor();
-    b->textColorDisabled = ThemeWindowTextDisabledColor();
-    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
-    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
-    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
-    b->isDefault = isDefault;
-}
-
 VirtButton* SelectionTranslateWnd::NewButton(Str text, bool isDefault) {
-    auto* b = new VirtButton(text, font);
-    StyleButton(b, isDefault);
-    b->textPadding = DpiScaledInsets(5, 12);
-    return b;
+    return NewThemedButton(hwnd, text, font, isDefault);
 }
 
 void SelectionTranslateWnd::SetTranslateButtonText(Str s) {

@@ -129,21 +129,8 @@ void ChangeThemeWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (listBox) {
-        listBox->textColor = colTxt;
-        listBox->bgColor = colBg;
-    }
-    if (labelDocumentColorsFollowTheme) {
-        labelDocumentColorsFollowTheme->textColor = colTxt;
-    }
     if (dropDownDocumentColorsFollowTheme) {
         dropDownDocumentColorsFollowTheme->SetColors(colTxt, colBg);
-    }
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnChange) {
-        StyleThemedButton(btnChange, true);
     }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);

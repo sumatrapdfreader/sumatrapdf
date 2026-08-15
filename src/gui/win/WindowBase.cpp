@@ -13,6 +13,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 // HwndBase is the win32 plumbing WindowBase and ControlBase share: one window
@@ -422,10 +423,27 @@ HWND HwndBase::CreateCustomHwnd(const CreateCustomArgs& args, WStr defaultClassN
 
 WindowBase::WindowBase() {
     kind = kindWindow;
+    GuiColorsInitIfNeeded();
 }
 
 WindowBase* WindowBase::AsWindowBase() {
     return this;
+}
+
+// What a window does when the system theme or colors changed: take the colors
+// the OS draws its own UI in and repaint. An app with a theme of its own has
+// already replaced the gui/ defaults with its palette (SumatraPDF does that in
+// SumatraUpdateTheme()), and gGuiColorsFromSystem says so, so we leave those
+// alone and only repaint.
+void WindowBase::OnThemeChange() {
+    if (gGuiColorsFromSystem) {
+        GuiSetDefaultColorsFromSystem();
+    }
+    if (!hwnd) {
+        return;
+    }
+    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
 LRESULT WindowBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -633,7 +651,7 @@ static VirtButton* FindDefaultVirtButton(ILayout* root) {
     CollectTabStops(root, stops);
     for (TabStop& ts : stops) {
         VirtButton* b = AsVirtButton(ts.vwnd);
-        if (b && b->isDefault) {
+        if (b && b->IsDefault()) {
             return b;
         }
     }
@@ -976,6 +994,13 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             break;
         }
 
+        // the system broadcasts both to every top-level window when its palette
+        // or visual style changed
+        case WM_SYSCOLORCHANGE:
+        case WM_THEMECHANGED:
+            OnThemeChange();
+            break;
+
         case WM_ERASEBKGND: {
             // claim handled so DefWindowProc does not fill with the class brush
             // (custom windows paint the full client in WM_PAINT). But fill with
@@ -1263,6 +1288,7 @@ int WindowBase::GetDpi() const {
 
 ControlBase::ControlBase() {
     kind = kindControl;
+    GuiColorsInitIfNeeded();
 }
 
 ControlBase* ControlBase::AsControlBase() {

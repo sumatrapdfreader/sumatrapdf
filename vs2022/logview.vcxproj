@@ -964,6 +964,7 @@
     <ClInclude Include="..\src\gui\PlatformFont.h" />
     <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\gui\UIModels.h" />
+    <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\VirtCtrl.h" />
   </ItemGroup>
   <ItemGroup>
@@ -981,6 +982,7 @@
     <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\gui\UIModels.cpp" />
     <ClCompile Include="..\src\gui\UiPlatform_win.cpp" />
+    <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\gui\win\Edit.cpp" />
     <ClCompile Include="..\src\gui\win\Tooltip.cpp" />

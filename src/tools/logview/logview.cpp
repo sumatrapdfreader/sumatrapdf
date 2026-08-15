@@ -32,6 +32,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 // ---- logging required by the base library (we don't link SumatraLog.cpp) ----
@@ -49,12 +50,6 @@ void loga(Str s) {
 
 // base's ReportIf() references this crash-reporting hook; we don't crash-report.
 void _uploadDebugReport(Str, Str, bool, bool) {}
-
-// wingui asks the app what color a borderless Edit's underline is; we don't
-// draw one, so any color will do
-Color EditBottomBorderColor() {
-    return GetSysColor(COLOR_WINDOWFRAME);
-}
 
 // opt into the v6 common controls (themed edit box / buttons = modern look).
 // combined with InitCommonControlsEx() at startup.
@@ -1128,10 +1123,10 @@ static void AboutClicked(VirtMouseEvent*) {
 
 static VirtButton* NewToolButton(Str text, const VirtMouseHandler& onClick) {
     auto* b = new VirtButton(text, gUiFont);
-    b->textColor = kColLogText;
-    b->bgColor = MkRgb(0xe6, 0xe6, 0xe6);
-    b->bgColorHover = MkRgb(0xd0, 0xd0, 0xd0);
-    b->borderColor = MkRgb(0xa0, 0xa0, 0xa0);
+    b->SetColor(kColBtnText, kColLogText);
+    b->SetColor(kColBtnBg, MkRgb(0xe6, 0xe6, 0xe6));
+    b->SetColor(kColBtnBgHover, MkRgb(0xd0, 0xd0, 0xd0));
+    b->SetColor(kColBtnBorder, MkRgb(0xa0, 0xa0, 0xa0));
     b->textPadding = {DpiScale(3), DpiScale(8), DpiScale(3), DpiScale(8)};
     b->onClick = onClick;
     return b;

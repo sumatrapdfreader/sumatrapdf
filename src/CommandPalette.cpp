@@ -11,6 +11,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -487,9 +488,10 @@ struct HelpStyle {
 static void InitHelpText(const HelpStyle& st, VirtRichText* t, Str markup) {
     ParseTipInto(t, markup);
     t->font = st.font;
-    t->textColor = st.colTxt;
-    t->linkColor = st.colTxt;
-    t->bgColor = st.colBg;
+    // the help rows are not links, so they take the plain text color
+    t->SetColor(kColRichText, st.colTxt);
+    t->SetColor(kColRichLink, st.colTxt);
+    t->SetColor(kColRichBg, st.colBg);
     int padX = DpiScale(8);
     t->padding = Insets{0, padX, 0, padX};
 }
@@ -587,8 +589,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         c->SetFlag(vwfFocusable, false);
         c->dpi = GetDpi();
         c->font = font;
-        c->textColor = colTxt;
-        c->bgColor = colBg;
+        c->SetColor(kColListText, colTxt);
+        c->SetColor(kColListBg, colBg);
         c->padding = DpiScaledInsets(4, 0);
         c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
         c->onDrawItem =

@@ -15,6 +15,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "PngOptimizer.h"
@@ -1951,16 +1952,16 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
     }
 }
 
-// the buttons are virtual controls, so they are styled here rather than by the
-// system: a filled box with a border, brighter on hover
+// this window is drawn in the system colors, not the app's theme (its own
+// background is COLOR_BTNFACE), so the buttons override the themed defaults
 static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const VirtMouseHandler& onClick) {
     auto* b = new ImageEditButton(Str{}, ew->font);
     Color bg = GetSysColor(COLOR_BTNFACE);
-    b->textColor = GetSysColor(COLOR_BTNTEXT);
-    b->textColorDisabled = GetSysColor(COLOR_GRAYTEXT);
-    b->bgColor = AccentColor(bg, 14);
-    b->bgColorHover = AccentColor(bg, 28);
-    b->borderColor = AccentColor(bg, 40);
+    b->SetColor(kColBtnText, GetSysColor(COLOR_BTNTEXT));
+    b->SetColor(kColBtnTextDisabled, GetSysColor(COLOR_GRAYTEXT));
+    b->SetColor(kColBtnBg, AccentColor(bg, 14));
+    b->SetColor(kColBtnBgHover, AccentColor(bg, 28));
+    b->SetColor(kColBtnBorder, AccentColor(bg, 40));
     b->textPadding = DpiScaledInsets(4, 10);
     b->SetLabel(text);
     b->onClick = onClick;

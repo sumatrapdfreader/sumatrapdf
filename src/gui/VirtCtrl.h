@@ -10,8 +10,8 @@
 // origin; painting and hit-testing carry an origin down the tree, which is what
 // makes VirtScroll cheap (shift the origin, don't re-layout the subtree).
 
-// needs gui/PlatformFont.h (PlatformFont) and gui/Gfx.h (Gfx)
-// included before it
+// needs gui/PlatformFont.h (PlatformFont), gui/Gfx.h (Gfx) and
+// gui/GuiColors.h (the color enums) included before it
 
 struct VirtCtrl;
 struct VirtRoot;
@@ -127,10 +127,24 @@ struct VirtCtrl : ILayout {
     // default cursor; used when onSetCursor is empty
     CursorId cursor = CursorId::None;
 
+    // per-instance color overrides, indexed by the class's kCol* enum. Owned,
+    // allocated on demand by SetColor(); kColorUnset in a slot means "use the
+    // class default". Null until someone overrides a color, which is the common
+    // case: a control normally paints in its class's global colors
+    Color* colors = nullptr;
+    // the class's global default colors (a gCols* array) and how many entries
+    // both arrays have. Set by the class's constructor
+    const Color* colorDefaults = nullptr;
+    int nColors = 0;
+
     VirtCtrl();
     ~VirtCtrl() override;
 
     void SetTooltip(Str);
+
+    Color GetColor(int idx) const;
+    void SetColor(int idx, Color);
+    void ResetColors();
 
     // ILayout
     int MinIntrinsicHeight(int width) override;
@@ -382,11 +396,8 @@ struct VirtListBox : VirtCtrl {
     DrawItemHandler onDrawItem;
 
     PlatformFont* font = nullptr; // not owned, interned
-    Color textColor = kColorUnset;
-    Color bgColor = kColorTransparent;
-    // background of the selected row; derived from bgColor when unset
-    Color selectionColor = kColorUnset;
-    Color scrollbarColor = kColorUnset;
+    // colors: kColList* (kColListSel / kColListScrollbar are derived from
+    // kColListBg when left unset)
 
     // how many rows GetIdealSize() asks for; 0 means "as many as there are",
     // capped at 16
@@ -477,7 +488,7 @@ struct VirtSplitter : VirtCtrl {
     SplitterType type = SplitterType::Horiz;
     // false: the panes only move when the drag ends
     bool isLive = true;
-    Color bgColor = kColorTransparent;
+    // colors: kColSplitterBg
     // how thick the bar is; the other axis is stretched by the layout.
     // 0 keeps whatever bounds it was given
     int thickness = 0;
@@ -553,6 +564,7 @@ struct VirtTextArgs {
 struct VirtText : VirtCtrl {
     Str s;
     PlatformFont* font = nullptr; // not owned, interned
+    // colors: kColText
     bool withUnderline = false;
     bool isRtl = false;
     bool ellipsis = false;
@@ -562,7 +574,6 @@ struct VirtText : VirtCtrl {
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
     VirtTextAlign align = VirtTextAlign::Left;
-    Color textColor = kColorUnset;
 
     Size sz = {0, 0};
 
@@ -579,6 +590,8 @@ struct VirtText : VirtCtrl {
     void SetText(Str);
 
     void Paint(VirtPaintCtx&) override;
+    // the drawing, in a color the caller picks (a disabled button's text)
+    void PaintText(VirtPaintCtx&, Color);
 };
 
 VirtText* NewVirtText(const VirtTextArgs&);
@@ -604,17 +617,16 @@ struct VirtLink : VirtText {
 };
 
 struct VirtButton : VirtText {
-    Color bgColor = kColorTransparent;
-    Color bgColorHover = kColorUnset;
-    Color borderColor = kColorTransparent;
-    // when the button is disabled (vwfEnabled cleared)
-    Color textColorDisabled = kColorUnset;
+    // colors: kColBtn*, defaulting to gColsBtnDefault when isDefault
     Insets textPadding{4, 8, 4, 8};
-    // Enter clicks this when focus is not on another button
-    bool isDefault = false;
 
     VirtButton(Str s, PlatformFont* font = nullptr);
     ~VirtButton() override;
+
+    // Enter clicks a default button when the focus is not on another one, and
+    // it is painted a shade stronger (gColsBtnDefault)
+    bool IsDefault() const;
+    void SetIsDefault(bool);
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
@@ -622,6 +634,9 @@ struct VirtButton : VirtText {
     void OnMouseLeave();
     void OnKeyDown(VirtKeyEvent*);
     bool Click();
+
+  private:
+    bool isDefault = false;
 };
 
 VirtButton* AsVirtButton(ILayout*);
@@ -637,9 +652,7 @@ struct VirtIconButton : VirtCtrl {
     bool hasDropdown = false;
     // which half of a split button is hovered (action vs dropdown)
     bool hoverOnDropdown = false;
-    Color bgColorHover = kColorUnset;
-    Color bgColorSelected = kColorUnset;
-    Color chevronColor = kColorUnset;
+    // colors: kColIconBtn*
     VirtMouseHandler onDropdown;
 
     VirtIconButton();
@@ -659,13 +672,9 @@ VirtIconButton* AsVirtIconButton(ILayout*);
 // gray ✕ that turns white on a red circle when hovered. `withCircle` also fills
 // the circle when not hovered, which is what keeps it readable on top of
 // arbitrary content (a thumbnail).
-// Colors left at kColorUnset use the tab close button's.
+// colors: kColClose*
 struct VirtCloseButton : VirtCtrl {
     bool withCircle = false;
-    Color xColor = kColorUnset;
-    Color xColorHover = kColorUnset;
-    Color circleColor = kColorUnset;
-    Color circleColorHover = kColorUnset;
     Size idealSize;
 
     VirtCloseButton();
@@ -700,8 +709,8 @@ struct VirtImage : VirtCtrl {
     void Paint(VirtPaintCtx&) override;
 };
 
+// colors: kColFillBg
 struct VirtFill : VirtCtrl {
-    Color color = kColorTransparent;
     Size idealSize;
 
     VirtFill();
@@ -711,8 +720,8 @@ struct VirtFill : VirtCtrl {
     void Paint(VirtPaintCtx&) override;
 };
 
+// colors: kColLineFg
 struct VirtLine : VirtCtrl {
-    Color color = kColorTransparent;
     bool isVertical = false;
     int thickness = 1;
 
@@ -812,10 +821,7 @@ struct VirtRichText : VirtCtrl {
     int layoutDx = -1;
 
     PlatformFont* font = nullptr; // not owned
-    Color textColor = kColorUnset;
-    Color linkColor = kColorUnset;
-    // the color the text is painted on; used for the key-cap fill and border
-    Color bgColor = kColorUnset;
+    // colors: kColRich*
     // link commands are sent to this window
     HWND hwndForCmds = nullptr;
     // onClick (from VirtCtrl): fired by a click that didn't land on a link, so

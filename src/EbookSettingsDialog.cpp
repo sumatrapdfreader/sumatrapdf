@@ -426,27 +426,12 @@ void EbookSettingsWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    VirtText* labels[] = {labelFont, labelSize, labelMargin, labelSpacing};
-    for (VirtText* l : labels) {
-        if (l) {
-            l->textColor = colTxt;
-        }
-    }
     ControlBase* ctrls[] = {ddFont,      editSize,    editMargin,    editSpacing,   editCss,
                             cbIgnoreCss, cbCustomCss, radioThisFile, radioAllEbooks};
     for (ControlBase* c : ctrls) {
         if (c) {
             c->SetColors(colTxt, colBg);
         }
-    }
-    if (btnReset) {
-        StyleThemedButton(btnReset, false);
-    }
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnOk) {
-        StyleThemedButton(btnOk, true);
     }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);

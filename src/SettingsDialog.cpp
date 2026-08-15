@@ -75,12 +75,6 @@ static void ClearSettingsWnd() {
     gSettingsWnd = nullptr;
 }
 
-static void ThemeVirtText(VirtText* t, Color colTxt) {
-    if (t) {
-        t->textColor = colTxt;
-    }
-}
-
 static void ThemeDropDown(DropDown* d, Color colTxt, Color colBg) {
     if (d) {
         d->SetColors(colTxt, colBg);
@@ -97,12 +91,6 @@ void SettingsWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    ThemeVirtText(labelView, colTxt);
-    ThemeVirtText(labelLayout, colTxt);
-    ThemeVirtText(labelZoom, colTxt);
-    ThemeVirtText(labelAdvanced, colTxt);
-    ThemeVirtText(labelInverse, colTxt);
-    ThemeVirtText(labelCmdLine, colTxt);
     ThemeDropDown(dropLayout, colTxt, colBg);
     ThemeDropDown(dropZoom, colTxt, colBg);
     ThemeDropDown(dropInverse, colTxt, colBg);
@@ -111,12 +99,6 @@ void SettingsWnd::UpdateTheme() {
     ThemeCheckbox(chkUseTabs, colTxt, colBg);
     ThemeCheckbox(chkCheckUpdates, colTxt, colBg);
     ThemeCheckbox(chkRememberOpened, colTxt, colBg);
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnOk) {
-        StyleThemedButton(btnOk, true);
-    }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }

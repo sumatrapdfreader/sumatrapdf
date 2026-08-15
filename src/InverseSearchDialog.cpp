@@ -55,20 +55,8 @@ void InverseSearchWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (label) {
-        label->textColor = colTxt;
-    }
     if (dropDown) {
         dropDown->SetColors(colTxt, colBg);
-    }
-    if (btnHelp) {
-        StyleThemedButton(btnHelp, false);
-    }
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnOk) {
-        StyleThemedButton(btnOk, true);
     }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);

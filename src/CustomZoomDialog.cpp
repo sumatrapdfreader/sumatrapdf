@@ -58,17 +58,8 @@ void CustomZoomWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (label) {
-        label->textColor = colTxt;
-    }
     if (dropDown) {
         dropDown->SetColors(colTxt, colBg);
-    }
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnZoom) {
-        StyleThemedButton(btnZoom, true);
     }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);

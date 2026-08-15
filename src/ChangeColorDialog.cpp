@@ -195,9 +195,6 @@ void ChangeColorWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (labelRgb) {
-        labelRgb->textColor = colTxt;
-    }
     if (editRgb) {
         editRgb->SetColors(colTxt, colBg);
     }
@@ -206,12 +203,6 @@ void ChangeColorWnd::UpdateTheme() {
     }
     if (radioAllFiles) {
         radioAllFiles->SetColors(colTxt, colBg);
-    }
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnOk) {
-        StyleThemedButton(btnOk, true);
     }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);

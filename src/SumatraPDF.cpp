@@ -2658,7 +2658,6 @@ static VirtSplitter* NewFrameSplitter(SplitterType type, bool isLive) {
     auto* s = new VirtSplitter();
     s->type = type;
     s->isLive = isLive;
-    s->bgColor = ThemeControlBackgroundColor();
     s->SetIsVisible(false); // shown by the relayout when the pane is up
     return s;
 }
@@ -13440,6 +13439,9 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return 0;
 
         case WM_SYSCOLORCHANGE:
+            // the default theme and high contrast mode draw in the system
+            // colors, which just changed under us
+            SumatraUpdateTheme();
             if (gGlobalPrefs->useSysColors) {
                 UpdateDocumentColors();
             }

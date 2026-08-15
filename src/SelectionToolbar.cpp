@@ -12,6 +12,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 #include "gui/VirtHost.h"
 
@@ -208,8 +209,14 @@ static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
 
 // The buttons are pills, not rectangles: they draw their hover background with
 // the same rounded corners as the card they sit on, so they get their own Paint
+// the hover highlight is a rounded rect this draws itself, so the button's own
+// box and border stay unpainted
 struct SelToolbarTextButton : VirtButton {
-    SelToolbarTextButton(Str s, PlatformFont* f) : VirtButton(s, f) {}
+    SelToolbarTextButton(Str s, PlatformFont* f) : VirtButton(s, f) {
+        SetColor(kColBtnBg, kColorTransparent);
+        SetColor(kColBtnBgHover, kColorTransparent);
+        SetColor(kColBtnBorder, kColorTransparent);
+    }
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
             int radius = DpiScale(kButtonRadius);
@@ -221,6 +228,10 @@ struct SelToolbarTextButton : VirtButton {
 };
 
 struct SelToolbarIconButton : VirtIconButton {
+    SelToolbarIconButton() {
+        SetColor(kColIconBtnBgHover, kColorTransparent);
+        SetColor(kColIconBtnBgSelected, kColorTransparent);
+    }
     void Paint(VirtPaintCtx& ctx) override {
         if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
             int radius = DpiScale(kButtonRadius);
@@ -286,8 +297,8 @@ static void LayoutToolbar(SelectionToolbar* tb) {
         } else {
             auto* tbtn = new SelToolbarTextButton(ButtonText(b), tb->font);
             tbtn->textPadding = {padY, padX, padY, padX};
-            tbtn->textColor = textCol;
-            tbtn->textColorDisabled = mutedCol;
+            tbtn->SetColor(kColBtnText, textCol);
+            tbtn->SetColor(kColBtnTextDisabled, mutedCol);
             tbtn->align = VirtTextAlign::Center;
             tbtn->hoverBg = hoverBg;
             tbtn->onClick = MkFunc1(OnSelToolbarButtonClicked, tb);

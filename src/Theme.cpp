@@ -9,6 +9,7 @@ License: GPLv3 */
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -23,44 +24,20 @@ License: GPLv3 */
 // The installer and uninstaller never load settings, so CreateThemeCommands()
 // doesn't run and there is no current theme - every Theme*Color() accessor
 // dereferences gCurrentTheme and would crash. They still create buttons and
-// edits, and wingui asks the app for their colors, so the two hooks that need a
-// theme have to be able to answer without one. Defined next to gCurrentTheme.
+// edits; those paint in gui/'s own defaults, which start out as the system
+// colors, so nothing here has to answer without a theme. Defined next to
+// gCurrentTheme.
 static bool HasCurrentTheme();
 
-void StyleThemedButton(VirtButton* b, bool isDefault) {
-    Color bg = ThemeWindowControlBackgroundColor();
-    b->textColor = ThemeWindowTextColor();
-    b->textColorDisabled = ThemeWindowTextDisabledColor();
-    b->bgColor = AccentColor(bg, isDefault ? 26 : 14);
-    b->bgColorHover = AccentColor(bg, isDefault ? 40 : 28);
-    b->borderColor = isDefault ? ThemeHotEdgeColor() : ThemeEdgeColor();
-    b->isDefault = isDefault;
-}
-
+// A button is a virtual control, so it takes its look from the gui/ color
+// defaults, which SumatraUpdateTheme() fills in from the theme. All this adds
+// is the dpi-scaled padding and the default-button shade
 VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool isDefault) {
     DpiSetFromHwnd(hwndForDpi);
     auto* b = new VirtButton(text, font);
-    StyleThemedButton(b, isDefault);
+    b->SetIsDefault(isDefault);
     b->textPadding = DpiScaledInsets(5, 12);
     return b;
-}
-
-// The underline under a borderless Edit is a separator, so it takes the edge
-// color like every other border and divider. wingui used to blend the control's
-// own text color toward its background, which lands wherever those two happen
-// to be rather than anywhere in the palette: on the Dark theme's black sidebar
-// that gave a bright #535353 line instead of the theme's #374151 (issue #5893).
-// ThemeEdgeColor() derives a color from the control background when the theme
-// doesn't name one, so there is always something sensible to draw.
-// Color of the 1px underline an Edit created withBottomBorder draws, so wingui
-// doesn't have to know about the app's palette. The app implements it (Sumatra
-// returns the theme's edge color); an app that doesn't theme anything can
-// return a fixed gray.
-Color EditBottomBorderColor() {
-    if (!HasCurrentTheme()) {
-        return SysWindowFrameColor();
-    }
-    return ThemeEdgeColor();
 }
 
 /*
@@ -474,6 +451,7 @@ static Str themesTxt = StrL(R"(Themes [
 )");
 
 extern void UpdateAfterThemeChange();
+static void UpdateGuiColorsFromTheme();
 
 int gFirstSetThemeCmdId;
 int gLastSetThemeCmdId;
@@ -624,6 +602,9 @@ void SetThemeByIndex(int themeIdx) {
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     RememberLastLightDarkTheme();
     DarkModeApplyThemeColors();
+    // always, not only when the theme changed: the same theme can resolve to
+    // different colors (the System theme, high contrast, a settings edit)
+    UpdateGuiColorsFromTheme();
     if (themeChanged) {
         UpdateAfterThemeChange();
     }
@@ -758,6 +739,84 @@ Str ToggleLightDarkThemeTargetName() {
     return ThemeGetNameAt(idx);
 }
 
+// Spreads the current theme over gui/'s per-control color defaults. This is the
+// whole of the app -> gui coupling: the controls never ask us for a color, they
+// paint in the defaults, and an individual control that wants something else
+// (the toolbar's palette, a notification's) overrides its own slots.
+static void UpdateGuiColorsFromTheme() {
+    if (!HasCurrentTheme()) {
+        // the installer and uninstaller: gui/ keeps the system colors
+        return;
+    }
+    // fill in the system defaults first, so a control created later doesn't do
+    // it on our behalf and undo what we are about to write. Clearing the flag
+    // is what stops WindowBase::OnThemeChange() from doing the same
+    GuiColorsInitIfNeeded();
+    gGuiColorsFromSystem = false;
+
+    Color text = ThemeWindowTextColor();
+    Color disabled = ThemeWindowTextDisabledColor();
+    Color link = ThemeWindowLinkColor();
+    // what dialogs, side panels and the chrome around the document put their
+    // controls on
+    Color ctlBg = ThemeWindowControlBackgroundColor();
+    Color edge = ThemeEdgeColor();
+    Color hotEdge = ThemeHotEdgeColor();
+
+    gColsText[kColText] = text;
+    gColsLink[kColText] = link;
+
+    gColsBtn[kColBtnText] = text;
+    gColsBtn[kColBtnBg] = AccentColor(ctlBg, 14);
+    gColsBtn[kColBtnBgHover] = AccentColor(ctlBg, 28);
+    gColsBtn[kColBtnBorder] = edge;
+    gColsBtn[kColBtnTextDisabled] = disabled;
+
+    gColsBtnDefault[kColBtnText] = text;
+    gColsBtnDefault[kColBtnBg] = AccentColor(ctlBg, 26);
+    gColsBtnDefault[kColBtnBgHover] = AccentColor(ctlBg, 40);
+    gColsBtnDefault[kColBtnBorder] = hotEdge;
+    gColsBtnDefault[kColBtnTextDisabled] = disabled;
+
+    gColsIconBtn[kColIconBtnBgHover] = AccentColor(ctlBg, 20);
+    gColsIconBtn[kColIconBtnBgSelected] = AccentColor(ctlBg, 36);
+    gColsIconBtn[kColIconBtnChevron] = text;
+
+    // the ✕ keeps its own look in every theme: a tab sets the circle to its own
+    // background, and a withCircle one sits on content we don't own
+
+    gColsListBox[kColListText] = text;
+    gColsListBox[kColListBg] = ctlBg;
+    gColsListBox[kColListSel] = AccentColor(ctlBg, 25);
+    gColsListBox[kColListSelFocused] = AccentColor(ctlBg, 45);
+    gColsListBox[kColListScrollbar] = AccentColor(ctlBg, 60);
+
+    gColsSplitter[kColSplitterBg] = ctlBg;
+    gColsFill[kColFillBg] = ctlBg;
+    gColsLine[kColLineFg] = edge;
+
+    gColsRichText[kColRichText] = text;
+    gColsRichText[kColRichLink] = link;
+    gColsRichText[kColRichBg] = ctlBg;
+
+    gColsTab[kColTabText] = text;
+    gColsTab[kColTabBg] = ctlBg;
+
+    // the underline under a borderless Edit is a separator, so it takes the edge
+    // color like every other border and divider. Blending the control's own text
+    // color toward its background instead lands wherever those two happen to be:
+    // on the Dark theme's black sidebar that gave a bright #535353 line instead
+    // of the theme's #374151 (issue #5893)
+    gColsEdit[kColEditBottomBorder] = edge;
+}
+
+// The app's theme, or the system palette it follows, changed: push our colors
+// into gui/'s defaults, then rebuild and repaint everything that shows them.
+void SumatraUpdateTheme() {
+    UpdateGuiColorsFromTheme();
+    UpdateAfterThemeChange();
+}
+
 // call on WM_SETTINGCHANGE "ImmersiveColorSet": re-resolves the System theme
 // when the user switches Windows between light and dark mode
 void UpdateThemeAfterSystemColorChange() {
@@ -780,7 +839,7 @@ void UpdateThemeAfterHighContrastChange() {
     }
     logf("UpdateThemeAfterHighContrastChange: using high contrast colors: %d\n", (int)gUseHighContrast);
     DarkModeApplyThemeColors();
-    UpdateAfterThemeChange();
+    SumatraUpdateTheme();
     DarkModeRememberTreeViewStyle();
 }
 
@@ -800,6 +859,8 @@ void SetCurrentThemeFromSettings() {
         gThemeLight->controlBackgroundColor.parsedOk = true;
         gThemeLight->controlBackgroundColor.col = bgParsed->col;
     }
+    // SetTheme() above ran before we adjusted the Light theme, so re-push
+    UpdateGuiColorsFromTheme();
 }
 
 #define GetThemeCol(name, def) GetParsedColor(name, def)

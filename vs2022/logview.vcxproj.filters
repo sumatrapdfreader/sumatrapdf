@@ -36,6 +36,9 @@
     <ClInclude Include="..\src\gui\UIModels.h">
       <Filter>gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\GuiColors.h">
+      <Filter>gui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\VirtCtrl.h">
       <Filter>gui</Filter>
     </ClInclude>
@@ -73,6 +76,9 @@
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\GuiColors.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">

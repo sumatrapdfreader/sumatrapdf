@@ -61,12 +61,6 @@ void GetPasswordWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
-    if (labelFile) {
-        labelFile->textColor = colTxt;
-    }
-    if (labelPwd) {
-        labelPwd->textColor = colTxt;
-    }
     if (editPwd) {
         editPwd->SetColors(colTxt, colBg);
     }
@@ -75,12 +69,6 @@ void GetPasswordWnd::UpdateTheme() {
     }
     if (chkRemember) {
         chkRemember->SetColors(colTxt, colBg);
-    }
-    if (btnCancel) {
-        StyleThemedButton(btnCancel, false);
-    }
-    if (btnOk) {
-        StyleThemedButton(btnOk, true);
     }
     DarkModeApplyToWindow(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);

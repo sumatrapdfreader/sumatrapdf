@@ -10,6 +10,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -213,8 +214,14 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
     Gfx* gfx = ev->gfx;
     Rect rc = ev->itemRect;
 
-    Color colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
-    Color colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    Color colBg = lb->GetColor(kColListBg);
+    Color colText = lb->GetColor(kColListText);
+    if (IsSpecialColor(colBg)) {
+        colBg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(colText)) {
+        colText = GetSysColor(COLOR_WINDOWTEXT);
+    }
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }
@@ -262,15 +269,6 @@ void TabGroupsWnd::UpdateTheme() {
         }
     };
     setColors(editName);
-    if (listBox) {
-        listBox->textColor = colTxt;
-        listBox->bgColor = colBg;
-    }
-    if (btnOk) {
-        StyleThemedButton(btnOk, true);
-        StyleThemedButton(btnDelete, false);
-        StyleThemedButton(btnCancel, false);
-    }
     DarkModeApplyToWindowAndEraseBg(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }

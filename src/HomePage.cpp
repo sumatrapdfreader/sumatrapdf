@@ -14,6 +14,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -482,12 +483,12 @@ void AboutCtrl::Sync() {
         AboutRow* el = &gAboutRows[i];
         VirtText* left = LeftAt(i);
         left->font = fontLeftTxt;
-        left->textColor = colText;
 
         VirtText* right = RightAt(i);
         right->font = fontRightTxt;
         bool isLink = canAccessDisk && el->url;
-        right->textColor = isLink ? colLink : colText;
+        // the right column is a link when the row has a url we can open
+        right->SetColor(kColText, isLink ? colLink : colText);
         // without disk access the url can't be opened, so it isn't a link
         right->withUnderline = isLink;
         right->SetFlag(vwfNoHitTest, !isLink);
@@ -778,7 +779,6 @@ void DrawAboutPage(MainWindow* win, Gfx* gfx) {
         VirtLink* link = about->showFreqRead;
         link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
         link->font = GetUserGuiFont("MS Shell Dlg", DpiScale(16));
-        link->textColor = ThemeWindowLinkColor();
         link->sz = {0, 0}; // re-measure: the font may have changed with the DPI
         Size txtSize = link->GetIdealSize(true);
         Rect r = {0, 0, txtSize.dx, txtSize.dy};
@@ -2054,9 +2054,6 @@ void HomeTipCtrl::Sync(const Rect& rcTip, const Rect& rcText) {
     }
     visibility = Visibility::Visible;
     SetBounds(rcTip);
-    rich->textColor = ThemeWindowTextColor();
-    rich->linkColor = ThemeWindowLinkColor();
-    rich->bgColor = ThemeControlBackgroundColor();
     rich->SetBounds(rcText);
 }
 
@@ -2423,7 +2420,6 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     chrome->listView->pixmap = GetCachedPixmapForSvg(gIconHomeList, iconSize.dx, iconSize.dy);
     chrome->listView->SetBounds(l.rcIconListView);
 
-    chrome->hdr->textColor = ThemeWindowTextColor();
     // re-apply: the bounds were set before the parent was positioned
     chrome->hdr->SetBounds(l.freqRead->lastBounds);
 
@@ -2434,7 +2430,8 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     od->pixmap = GetCachedPixmapForSvg(gIconFileOpen, l.rcIconOpen.dx, l.rcIconOpen.dy);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
-    od->text->textColor = ThemeWindowLinkColor();
+    // "Open a document" acts as a link, so it is drawn in the link color
+    od->text->SetColor(kColText, gColsLink[kColText]);
     // re-apply now that the parent moved: bounds are relative to it
     od->text->SetBounds(l.openDoc->lastBounds);
 
