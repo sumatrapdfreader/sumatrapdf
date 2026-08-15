@@ -226,7 +226,7 @@ export function buildApp(opts?: { silent?: boolean }): void {
     console.log("• building SumatraPDF.exe (cmd/build.ts) ...");
   }
   const p = Bun.spawnSync({
-    cmd: ["bun", join(ROOT, "cmd", "build.ts")],
+    cmd: ["bun", join(ROOT, "cmd", "build.ts"), "-debug"],
     cwd: ROOT,
     stdout: "inherit",
     stderr: "inherit",

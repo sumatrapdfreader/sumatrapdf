@@ -275,7 +275,7 @@ additions (we generate via premake).
      and run `bun cmd/gen-code.ts` — never take their generated files.
    - clang-format only our `src/` files; keep `ext/` edits minimal-style.
    - Skip their translations blobs; add new strings through our translation flow.
-   - Build (`bun ./cmd/build.ts`) and run unit tests (`bun cmd/run-unit-tests.ts -dbg`).
+   - Build (`bun cmd/build.ts -debug`) and run unit tests (`bun cmd/run-unit-tests.ts -dbg`).
 6. **Update this file:** bump the "Last reviewed" marker, log decisions and merge
    commits in the Decision log.
 

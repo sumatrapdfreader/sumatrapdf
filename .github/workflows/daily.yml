@@ -21,4 +21,4 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Build
-        run: bun .\cmd\build-ci-daily.ts
+        run: bun .\cmd\build.ts -daily

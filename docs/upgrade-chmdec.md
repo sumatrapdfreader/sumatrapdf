@@ -112,7 +112,7 @@ LZX_test_pretree_make_decode_table
 ### 6. Build and smoke-test
 
 ```bash
-bun ./cmd/build.ts
+bun cmd/build.ts -debug
 # optional CHM regression (needs a sample .chm):
 # out/dbg64/SumatraPDF.exe -for-testing -test-chm path\to\file.chm
 # out/dbg64/SumatraPDF.exe -for-testing -dump-chm path\to\file.chm

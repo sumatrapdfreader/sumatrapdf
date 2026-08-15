@@ -35,4 +35,4 @@ jobs:
 
       - name: Build and run test_util
         if: steps.schedule.outputs.run_build == 'true'
-        run: bun cmd/build-mac.ts -asan
+        run: bun cmd/build.ts -mac -asan

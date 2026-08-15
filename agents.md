@@ -6,13 +6,13 @@ Assume that Visual Studio command-line tools are available in the PATH environme
 
 Our code is in src/ directory. External dependencies are in ext/ directory
 
-To build run: bun ./cmd/build.ts
+To build run: `bun cmd/build.ts -debug` (or `-release`, `-asan`, and the other modes shown by `bun cmd/build.ts -help`). Called with no options it prints usage and exits; unknown options print an error plus usage and exit unsuccessfully.
 
 This creates ./out/dbg64/SumatraPDF.exe executable. The static build target is SumatraPDF-static and produces ./out/<config>/SumatraPDF-static.exe.
 
-To run a Linux build from Windows, use `bun cmd/wsl-build.ts -linux` (defaults to `-asan`) or `bun cmd/wsl-build.ts -linux -debug` / `-release`. To cross-compile the Windows exe with mingw inside WSL, use `bun cmd/wsl-build.ts -win` (optional `-clean`, `-run`). Both require a WSL distro named `Ubuntu` and bun in that distro; Linux deps are `sudo sh cmd/ubuntu-install-deps.sh`. Called with no args it prints usage; unknown args are an error.
+To run a Linux build from Windows, use `bun cmd/build.ts -linux` (defaults to `-asan`) or add `-debug` / `-release`. To cross-compile the Windows exe with mingw inside WSL, use `bun cmd/build.ts -wine` (optional `-clean`, `-run`). The unified build command delegates these Windows-hosted modes to the unchanged `cmd/wsl-build.ts` launcher. Both require a WSL distro named `Ubuntu` and bun in that distro; Linux deps are `sudo sh cmd/ubuntu-install-deps.sh`.
 
-To run the macOS build on the remote Mac, use `bun cmd/build-mac-remote.ts -branch <temporary-branch> -debug` (or `-release`, optionally with `-clean`). The script SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build-mac.ts`, and restores the original remote checkout on success or failure. The macOS build compiles the dependency/base libraries, builds `out/mac-<config>64/test_util`, runs it with `-for-ai`, builds `out/mac-<config>64/test_engines`, and builds `out/mac-<config>64/SumatraPDF.app`.
+To run the macOS build on the remote Mac, use `bun cmd/build.ts -mac-remote -branch <temporary-branch> -debug` (or `-release` / `-asan`, optionally with `-clean`). It SSHes to `kjk@100.120.113.17`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build.ts -mac`, and restores the original remote checkout on success or failure. The macOS build compiles the dependency/base libraries, builds `out/mac-<config>64/test_util`, runs it with `-for-ai`, builds `test_engines`, and builds `SumatraPDF.app`.
 
 To run unit tests with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-rel` / `-asan`). It builds the 64-bit `test_util.exe`, runs it with `-for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
@@ -43,11 +43,11 @@ We are making non-UI library code compile on macOS and Linux while keeping the W
 
 `src/mac/` is an early Cocoa application, not a port of the Windows UI. Keep it small and native for now:
 
-- Build it with `bun cmd/build-mac.ts -debug` (or `-release` / `-asan`). The app bundle is `out/mac-dbg64/SumatraPDF.app` for debug builds.
+- Build it with `bun cmd/build.ts -mac -debug` (or `-release` / `-asan`). The app bundle is `out/mac-dbg64/SumatraPDF.app` for debug builds.
 - Run it with a document path using `open out/mac-dbg64/SumatraPDF.app --args <path>`, for example `open out/mac-dbg64/SumatraPDF.app --args ./ext/a-zlib/zlib.3.pdf`. Relative paths from the repo should work; absolute paths are fine.
 - The current app only opens the first command-line file, renders page 1 through the existing engine layer, displays it, and supports standard macOS Quit / `Cmd-Q`.
 - Keep Objective-C / Cocoa code in `.mm` files under `src/mac/`. Do **not** include `base/Base.h` or other Sumatra headers in files that import Cocoa/AppKit: Apple headers define names such as `Size` that conflict with Sumatra types. Use a small C/C++ bridge (`SumatraMacEngine.*`) between Cocoa code and engine/base code.
-- When adding mac-specific build inputs, update `MAC_APP_SOURCES` in `cmd/build-mac.ts`.
+- When adding mac-specific build inputs, update `MAC_APP_SOURCES` in `cmd/mac-build.ts`.
 
 ### Platform-specific source files
 
@@ -80,9 +80,9 @@ Not every file needs all four platform variants — only split when the implemen
 - **Preserve the public API.** Headers at the module root (`src/base/Foo.h`) should expose the same functions/types on every platform; platform differences stay in suffixed `.cpp` files.
 - **No `#ifdef` sprawl in shared headers** when a platform-specific `.cpp` split is clearer. Small include-guarded typedefs or macros in a shared header are fine.
 - **Prefer POSIX APIs in `_posix` files** (`open`, `read`, `stat`, `pthread`, etc.) and native APIs in `_win` files (Win32). Use `_mac` / `_linux` files for OS-specific extensions (e.g. FSEvents vs inotify).
-- **Keep Windows green.** Every change must still build and pass tests on Windows (`bun ./cmd/build.ts`; use `bun cmd/run-unit-tests.ts -dbg` for base/test_util work). Do not break the existing Windows target while adding macOS/Linux support.
-- **Keep macOS green.** `cmd/build-mac.ts` builds the macOS dependency/base libraries, builds and runs `test_util` with `-for-ai`, builds `test_engines`, and links `SumatraPDF.app`. From Windows, use the remote wrapper on a temporary branch for portability changes.
-- **Keep Linux green.** From Windows, `bun cmd/wsl-build.ts -linux -debug` (or `-release` / `-asan`) runs `cmd/build-linux.ts` in the Ubuntu WSL distro. Use `bun cmd/wsl-build.ts -win` to cross-compile the Windows exe with mingw inside WSL.
+- **Keep Windows green.** Every change must still build and pass tests on Windows (`bun cmd/build.ts -debug`; use `bun cmd/run-unit-tests.ts -dbg` for base/test_util work). Do not break the existing Windows target while adding macOS/Linux support.
+- **Keep macOS green.** `bun cmd/build.ts -mac -debug` builds the macOS dependency/base libraries, builds and runs `test_util` with `-for-ai`, builds `test_engines`, and links `SumatraPDF.app`. From Windows, use `-mac-remote` on a temporary branch for portability changes.
+- **Keep Linux green.** From Windows, `bun cmd/build.ts -linux -debug` (or `-release` / `-asan`) uses the Ubuntu WSL distro. Use `bun cmd/build.ts -wine` to cross-compile the Windows exe with mingw inside WSL.
 - **Make tests platform-aware.** Preserve shared behavior tests on every platform where possible. Guard Windows-only expectations (drive letters, backslash-only paths, Win32 command-line parsing, UI/printing behavior, and similar platform specifics) with `#if OS_WIN`, and add POSIX expectations when the behavior is meant to be portable.
 
 ### Remote macOS verification from Windows
@@ -91,7 +91,7 @@ When doing macOS/Linux portability changes from a Windows machine, test them on 
 
 1. Create a temporary branch locally, e.g. `git switch -c tmp/mac-port-<topic>`.
 2. Commit the portability changes on that temporary branch and push it to origin, e.g. `git push -u origin tmp/mac-port-<topic>`. This temporary commit is for remote build verification; still do not make the final feature commit unless the user explicitly asks.
-3. Run the remote build from Windows with `bun cmd/build-mac-remote.ts -branch tmp/mac-port-<topic> -debug`. The script aborts if the remote checkout is dirty, fetches and switches to the temporary branch, builds, runs macOS `test_util`, and restores the original remote branch or detached checkout on success or failure.
+3. Run the remote build from Windows with `bun cmd/build.ts -mac-remote -branch tmp/mac-port-<topic> -debug`. The command aborts if the remote checkout is dirty, fetches and switches to the temporary branch, builds, runs macOS `test_util`, and restores the original remote branch or detached checkout on success or failure.
 
 ## C/C++ #include conventions
 

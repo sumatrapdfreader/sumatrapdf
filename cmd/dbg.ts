@@ -143,7 +143,7 @@ function appArgs(): string[] {
 }
 
 async function main() {
-  await runLogged("bun", [join(import.meta.dir, "build-asan.ts")]);
+  await runLogged("bun", [join(import.meta.dir, "build.ts"), "-asan"]);
 
   const dbg = findDebugger();
   if (!dbg) {

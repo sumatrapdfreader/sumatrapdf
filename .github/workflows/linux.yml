@@ -43,7 +43,7 @@ jobs:
         run: bun tests/lint-mingw-sources.ts
 
       - name: Cross-compile SumatraPDF.exe
-        run: bun cmd/build-linux-wine.ts
+        run: bun cmd/build.ts -wine
 
       - name: Run unit tests under Wine
         env:

@@ -112,7 +112,7 @@ function checkCore(): Dep[] {
       : {
           name: "SumatraPDF.exe (dbg64)",
           ok: false,
-          install: "bun ./cmd/build.ts",
+          install: "bun cmd/build.ts -debug",
         },
   );
 
@@ -178,7 +178,7 @@ function checkAdHocOptional(): Dep[] {
       : {
           name: "SumatraPDF-static.exe (ASan, issue-chm-lzx)",
           ok: false,
-          install: "bun ./cmd/build-asan.ts",
+          install: "bun cmd/build.ts -asan",
         },
   );
 

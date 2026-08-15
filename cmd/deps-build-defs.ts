@@ -1,4 +1,4 @@
-import type { FileGroup, LibDef } from "./build-deps-common.ts";
+import type { FileGroup, LibDef } from "./deps-build-common.ts";
 
 // ── Library definitions ─────────────────────────────────────────────────────
 // Each matches a project in premake5.lua / premake5.files.lua

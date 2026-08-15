@@ -1,6 +1,6 @@
 #!/bin/sh
 # Install Ubuntu/Debian packages needed to build SumatraPDF on Linux:
-#   bun cmd/build-linux.ts          # libraries + test_util / test_engines
+#   bun cmd/build.ts -linux          # libraries + test_util / test_engines
 #   the GTK 4 viewer (Ubuntu 24.04 / 26.04)
 #
 # Usage:

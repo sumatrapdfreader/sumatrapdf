@@ -33,7 +33,7 @@ rather than emulating Win32 on macOS.
   `SumatraMacEngine` (a plain C API), because Apple headers define names like
   `Size` that collide with Sumatra types — this bridge pattern is the model we
   extend.
-- **Build:** `cmd/build-mac.ts` compiles the dependency libs + `src/base`, then
+- **Build:** `bun cmd/build.ts -mac -debug` compiles the dependency libs + `src/base`, then
   `test_util`, `test_engines`, and `SumatraPDF.app` from explicit source lists
   (`DEP_LIBS_BASE`, `TEST_*_SOURCES`, `MAC_APP_SOURCES`). Porting a file to mac
   means adding it to the relevant list here.
@@ -317,13 +317,13 @@ UIA, DDE, plugin/embedding, Win32 crash minidumps.
   `AppPlatform` service interface.
 - No `#ifdef` sprawl in shared headers; keep public APIs identical per platform
   and push differences into suffixed `.cpp`.
-- Register every new mac input in the source lists in `cmd/build-mac.ts`
+- Register every new mac input in the source lists in `cmd/mac-build.ts`
   (`DEP_LIBS_BASE` for base, `MAC_APP_SOURCES` for the app). Extend
   `test_util`/`test_engines` lists to cover newly-portable model code with
   headless tests.
-- **Every change keeps Windows green** (`bun ./cmd/build.ts`, `bun
+- **Every change keeps Windows green** (`bun cmd/build.ts -debug`, `bun
   cmd/run-unit-tests.ts -dbg`) and **keeps mac green** via the remote build
-  wrapper on a temporary branch (`bun cmd/build-mac-remote.ts -branch … -debug`).
+  wrapper on a temporary branch (`bun cmd/build.ts -mac-remote -branch … -debug`).
 
 ---
 

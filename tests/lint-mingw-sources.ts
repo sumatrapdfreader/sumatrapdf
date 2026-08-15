@@ -1,7 +1,7 @@
-// Lint: cmd/build-with-mingw.ts must compile the same src/*.cpp files as premake.
+// Lint: cmd/mingw-build.ts must compile the same src/*.cpp files as premake.
 //
 // The Linux/Wine CI job cross-compiles with mingw-w64 using its own copy of the
-// source list in cmd/build-with-mingw.ts, which "replicates build logic from
+// source list in cmd/mingw-build.ts, which "replicates build logic from
 // premake5.lua / premake5.files.lua". Adding a new src file to premake (and the
 // .vcxproj) but not to that list builds fine on Windows and then fails the CI
 // job at link time with undefined references -- which is how ScreenshotCapture,
@@ -49,9 +49,9 @@ function premakeSrcPatterns(root: string): string[] {
   return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
 }
 
-// the patterns cmd/build-with-mingw.ts compiles for `dir`
+// the patterns cmd/mingw-build.ts compiles for `dir`
 function mingwPatterns(root: string, dir: string): string[] {
-  const ts = readFileSync(join(root, "cmd", "build-with-mingw.ts"), "utf-8");
+  const ts = readFileSync(join(root, "cmd", "mingw-build.ts"), "utf-8");
   const out: string[] = [];
   const re = new RegExp(`dir:\\s*"${dir}",\\s*patterns:\\s*\\[([^\\]]*)\\]`, "g");
   for (const group of ts.matchAll(re)) {
@@ -60,7 +60,7 @@ function mingwPatterns(root: string, dir: string): string[] {
     }
   }
   if (out.length === 0) {
-    throw new Error(`lint-mingw-sources: no dir: "${dir}" pattern groups found in cmd/build-with-mingw.ts`);
+    throw new Error(`lint-mingw-sources: no dir: "${dir}" pattern groups found in cmd/mingw-build.ts`);
   }
   return out;
 }
@@ -123,9 +123,9 @@ export async function testit(): Promise<void> {
 
   if (missing.length > 0) {
     throw new Error(
-      "these files are compiled on Windows but not by cmd/build-with-mingw.ts,\n" +
+      "these files are compiled on Windows but not by cmd/mingw-build.ts,\n" +
         "so the Linux/Wine CI job will fail to link. Add matching patterns to the\n" +
-        "corresponding dir group in cmd/build-with-mingw.ts (and to premake5.files.lua),\n" +
+        "corresponding dir group in cmd/mingw-build.ts (and to premake5.files.lua),\n" +
         "or to MINGW_EXCLUDED in this file if the cross-compile genuinely can't build them:\n" +
         missing.join("\n"),
     );

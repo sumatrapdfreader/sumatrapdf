@@ -1,6 +1,6 @@
 // Test for chmdec LZX make_decode_table PRETREE overflow (CC-0010 class advisory).
 //
-// Builds SumatraPDF-static.exe with ASan (cmd/build-asan.ts), generates a minimal
+// Builds SumatraPDF-static.exe with ASan (cmd/build.ts -asan), generates a minimal
 // malicious CHM (issue-chm-lzx-make.ts), and runs the control pipe CHM test command.
 // With the fix, the isolated pretree check rejects malformed input and the
 // process exits 0. Without the fix, ASan aborts on the isolated heap buffer test.
@@ -17,8 +17,13 @@ const CHM = join(import.meta.dir, "issue-chm-lzx.chm");
 const MAKE = join(import.meta.dir, "issue-chm-lzx-make.ts");
 
 function buildAsanApp(): void {
-  console.log("• building SumatraPDF-static.exe with ASan (cmd/build-asan.ts) ...");
-  const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build-asan.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
+  console.log("• building SumatraPDF-static.exe with ASan (cmd/build.ts -asan) ...");
+  const p = Bun.spawnSync({
+    cmd: ["bun", join(ROOT, "cmd", "build.ts"), "-asan"],
+    cwd: ROOT,
+    stdout: "inherit",
+    stderr: "inherit",
+  });
   if (p.exitCode !== 0) {
     throw new Error("ASan build failed");
   }

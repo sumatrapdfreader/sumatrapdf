@@ -67,7 +67,7 @@ function ensureEmbeddedIsBuilt(): void {
   }
 }
 
-async function main() {
+export async function buildDaily() {
   if (!(await isGithubMyMasterBranch())) {
     console.log("buildCiDaily: skipping build because not on master branch");
     return;
@@ -109,5 +109,3 @@ async function main() {
   const allElapsed = ((performance.now() - allStart) / 1000).toFixed(1);
   console.log(`all builds took ${allElapsed}s`);
 }
-
-await main();

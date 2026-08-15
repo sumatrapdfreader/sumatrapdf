@@ -26,7 +26,7 @@ Use `cmd/a-mujs.ts` to update the amalgamated MuJS copy used by the build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
 The active MuJS build uses only the amalgamated `ext/a-mujs` source.

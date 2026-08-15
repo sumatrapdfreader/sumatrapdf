@@ -14,6 +14,7 @@
 import { runNamedTests, runSuiteMain, type NamedTest, type SuiteOptions } from "./util.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
+import { testit as buildCli } from "./build-cli.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 import { testit as issue5840 } from "./issue-5840.ts";
@@ -109,6 +110,7 @@ export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
   ["lint-mingw-sources", lintMingwSources],
+  ["build-cli", buildCli],
   ["parse-tip-brackets", parseTipBrackets],
   ["combining-mark-first", combiningMarkFirst],
   ["issue-5840", issue5840],

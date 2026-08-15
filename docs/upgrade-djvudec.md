@@ -135,7 +135,7 @@ clang-format -i src/EngineDjvuDec.cpp
 ### 7. Build and smoke-test
 
 ```bash
-bun ./cmd/build.ts
+bun cmd/build.ts -debug
 ```
 
 Test with:
@@ -177,5 +177,5 @@ Append `prompt: ...` if the change was AI-assisted (per Agents.md).
 - [ ] Updated `src/libsumatrapdf.def` if exports changed
 - [ ] Updated `EngineDjvuDec.cpp` if integration changed
 - [ ] Did **not** clang-format `ext/djvudec/`
-- [ ] `bun ./cmd/build.ts` succeeds
+- [ ] `bun cmd/build.ts -debug` succeeds
 - [ ] Smoke-tested a `.djvu` file

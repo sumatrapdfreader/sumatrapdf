@@ -1,7 +1,6 @@
 /**
  * Build SumatraPDF with mingw-w64 cross-compiler.
- * Usage: bun cmd/build-with-mingw.ts -debug
- *        bun cmd/build-with-mingw.ts -release
+ * Invoked by cmd/build.ts -mingw.
  *
  * Replicates build logic from premake5.lua / premake5.files.lua
  * for x64 targets using x86_64-w64-mingw32-g++.
@@ -15,7 +14,6 @@
 import { mkdirSync, existsSync, rmSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join, extname, dirname, basename } from "node:path";
-import { cpus } from "node:os";
 import {
   type BuildTools,
   type FileGroup,
@@ -28,7 +26,7 @@ import {
   objPath,
   resolveSources,
   spawnCmd,
-} from "./build-deps-common";
+} from "./deps-build-common";
 import {
   zlib,
   unrar,
@@ -51,7 +49,7 @@ import {
   cmarkGfm,
   aGumbo,
   mupdf,
-} from "./build-lib-defs";
+} from "./deps-build-defs";
 
 export interface MingwTools {
   cc: string;
@@ -753,7 +751,7 @@ void TestPreview(WStr) {}
 
 // ── Top-level build functions ───────────────────────────────────────────────
 
-// same def as in build-linux.ts (ext/djvudec is the standalone DjVu decoder)
+// same def as in linux-build.ts (ext/djvudec is the standalone DjVu decoder)
 const djvudec: LibDef = {
   name: "djvudec",
   alwaysOptimize: true,
@@ -849,50 +847,4 @@ async function build(isRelease: boolean, clean: boolean, outDir: string): Promis
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Build complete (${config}) in ${elapsed}s ===\n`);
-}
-
-async function build_debug(clean: boolean): Promise<void> {
-  await build(false, clean, "out/mingw-dbg64");
-}
-
-async function build_release(clean: boolean): Promise<void> {
-  await build(true, clean, "out/mingw-rel64");
-}
-
-// ── Main ────────────────────────────────────────────────────────────────────
-
-if (import.meta.main) {
-  const args = Bun.argv.slice(2);
-  let doDebug = false;
-  let doRelease = false;
-  let doClean = false;
-
-  for (const arg of args) {
-    if (arg === "-debug") doDebug = true;
-    else if (arg === "-release") doRelease = true;
-    else if (arg === "-clean") doClean = true;
-    else {
-      console.error(`Unknown argument: ${arg}`);
-      console.error("Usage: bun cmd/build-with-mingw.ts [-debug] [-release] [-clean]");
-      process.exit(1);
-    }
-  }
-
-  if (!doDebug && !doRelease) {
-    console.error("Usage: bun cmd/build-with-mingw.ts [-debug] [-release] [-clean]");
-    console.error("  -debug    Build Debug x64 configuration");
-    console.error("  -release  Build Release x64 configuration");
-    console.error("  -clean    Delete output directory before building");
-    process.exit(1);
-  }
-
-  (async () => {
-    try {
-      if (doDebug) await build_debug(doClean);
-      if (doRelease) await build_release(doClean);
-    } catch (e: any) {
-      console.error(`\nBuild failed: ${e.message}`);
-      process.exit(1);
-    }
-  })();
 }

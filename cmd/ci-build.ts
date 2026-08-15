@@ -1,4 +1,4 @@
-// ci-build.ts - replaces Go "-ci" flag
+// CI implementation used by cmd/build.ts -ci.
 // Called from GitHub Actions CI on push and repository_dispatch events
 import { existsSync, readFileSync, writeFileSync, statSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -378,7 +378,7 @@ async function uploadPdbBuildArtifacts(preRelVer: string, sha1: string): Promise
 
 // === Main ===
 
-async function main() {
+export async function buildCi() {
   const timeStart = performance.now();
   console.log(`Current directory: ${resolve(".")}`);
 
@@ -416,8 +416,4 @@ async function main() {
 
   const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
   console.log(`Finished in ${elapsed}s`);
-}
-
-if (import.meta.main) {
-  await main();
 }

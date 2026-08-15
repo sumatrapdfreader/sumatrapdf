@@ -27,7 +27,7 @@ Use `cmd/a-zopfli.ts` to update the amalgamated zopfli copy used by the build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
 The active SumatraPDF build uses only the amalgamated `ext/a-zopfli` source.

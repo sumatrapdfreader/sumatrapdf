@@ -8,7 +8,7 @@ Last updated: 2026-07-08.
   removed Win32/wingui include dependencies, preserved Windows character
   classification/case folding under `#if OS_WIN`, added POSIX fallbacks, and
   added both files to `PORTABLE_COMPILE_SOURCES` and `MAC_APP_SOURCES`.
-- Verified with `bun cmd/build-mac.ts -debug`; mac `test_util`,
+- Verified with `bun cmd/build.ts -mac -debug`; mac `test_util`,
   `test_engines`, portable compile checks, and `SumatraPDF.app` all built.
 
 ## Deferred
@@ -25,4 +25,4 @@ Last updated: 2026-07-08.
   `Annotation`, then `DisplayModel` once its Windows UI include dependencies are
   separated.
 - Keep new mac build additions small and verify each slice with
-  `bun cmd/build-mac.ts -debug`.
+  `bun cmd/build.ts -mac -debug`.

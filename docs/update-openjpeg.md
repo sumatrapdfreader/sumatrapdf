@@ -25,7 +25,7 @@ build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
 The active MuPDF build uses only the amalgamated `ext/a-openjpeg` source.
