@@ -9,7 +9,7 @@ out.txt
 out/
 deps/
 agent-tools/
-mupdf/generated/
+ext/mupdf/generated/
 .vs/
 .vscode/db/
 .vscode/ipch/

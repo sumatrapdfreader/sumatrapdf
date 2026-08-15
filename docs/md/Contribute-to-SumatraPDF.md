@@ -43,6 +43,5 @@ We use [GitHub Actions](https://help.github.com/en/actions) for a CI system. See
 Overview of the directories:
 
 - `src` : main Sumatra code
-- `mupdf` : library used to parse / render PDF files (from [https://mupdf.com/](https://mupdf.com/))
-- `ext` : other third-party libraries (some are needed for mupdf, some for Sumatra code)
+- `ext` : third-party libraries, including `ext/mupdf` (from [https://mupdf.com/](https://mupdf.com/))
 - `cmd` : bun scripts that automates common tasks

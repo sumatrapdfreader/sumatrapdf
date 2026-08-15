@@ -1,6 +1,5 @@
 # third-party / vendored code: keep edits minimal and match the local style
 ext/
-mupdf/
 packages/
 
 # build output and scratch dirs

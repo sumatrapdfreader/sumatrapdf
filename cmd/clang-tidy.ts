@@ -9,7 +9,7 @@ import { detectVisualStudio } from "./util";
 // that header's declarations unknown, which silently degrades every check in the
 // files that include it (this used to affect 25 files, SumatraPDF.cpp among them).
 const includeDirs = [
-  "mupdf/include",
+  "ext/mupdf/include",
   "src",
   "src/base",
   "src/gui",
@@ -25,7 +25,7 @@ const includeDirs = [
   "ext/a-zopfli",
   "ext/cmark-gfm/src",
   "ext/cmark-gfm/extensions",
-  "mupdf/scripts/cmark-gfm",
+  "ext/mupdf/scripts/cmark-gfm",
   "ext/heicdec",
   "ext/jxldec",
   "ext/darkmodelib/include",

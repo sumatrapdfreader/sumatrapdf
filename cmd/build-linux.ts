@@ -1,5 +1,5 @@
 /**
- * Build SumatraPDF dependency static libraries on Linux (mupdf/ and ext/).
+ * Build SumatraPDF dependency static libraries on Linux (ext/).
  *
  * Usage:
  *   bun cmd/build-linux.ts -debug
@@ -427,10 +427,10 @@ function makeMupdf(arch: LinuxArch): LibDef {
     "ext/libarchive/libarchive",
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
-    "mupdf/scripts/cmark-gfm",
+    "ext/mupdf/scripts/cmark-gfm",
   );
 
-  const fitz = lib.files.find((g) => g.dir === "mupdf/source/fitz");
+  const fitz = lib.files.find((g) => g.dir === "ext/mupdf/source/fitz");
   if (fitz) {
     const pats = fitz.patterns as string[];
     const jxrIdx = pats.indexOf("load-jxr-win.c");
@@ -439,19 +439,19 @@ function makeMupdf(arch: LinuxArch): LibDef {
       if (!pats.includes(extra)) pats.push(extra);
     }
   }
-  const html = lib.files.find((g) => g.dir === "mupdf/source/html");
+  const html = lib.files.find((g) => g.dir === "ext/mupdf/source/html");
   if (html && !html.patterns.includes("md.c")) {
     (html.patterns as string[]).push("md.c");
   }
-  const pdf = lib.files.find((g) => g.dir === "mupdf/source/pdf");
+  const pdf = lib.files.find((g) => g.dir === "ext/mupdf/source/pdf");
   if (pdf && !pdf.patterns.includes("pdf-struct.c")) {
     (pdf.patterns as string[]).push("pdf-struct.c");
   }
-  const tools = lib.files.find((g) => g.dir === "mupdf/source/tools");
+  const tools = lib.files.find((g) => g.dir === "ext/mupdf/source/tools");
   if (tools && !tools.patterns.includes("muraster.c")) {
     (tools.patterns as string[]).push("muraster.c");
   }
-  const pkcs7 = lib.files.find((g) => g.dir === "mupdf/source/helpers/pkcs7");
+  const pkcs7 = lib.files.find((g) => g.dir === "ext/mupdf/source/helpers/pkcs7");
   if (pkcs7) pkcs7.patterns = ["pkcs7-openssl.c"];
 
   return lib;
@@ -769,7 +769,7 @@ async function compilePortableSources(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Imupdf/include", "-Imupdf/generated"];
+  const includeFlags = ["-Isrc", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
 
   const units = PORTABLE_COMPILE_SOURCES.map((src) => {
     const obj = objPath(outDir, "portable", src);
@@ -884,7 +884,7 @@ async function buildTestEngines(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Imupdf/include", "-Imupdf/generated"];
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
 
   const units = TEST_ENGINES_SOURCES.map((src) => {
     const obj = objPath(outDir, "test_engines", src);

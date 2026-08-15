@@ -101,7 +101,7 @@ const utils: LibDef = {
     "ext/libwebp/src",
     "ext/dav1d/include",
     "ext/jxldec",
-    "mupdf/include",
+    "ext/mupdf/include",
     "ext/a-zlib",
     "ext/libarchive",
   ],
@@ -505,7 +505,7 @@ async function buildSumatraExe(outDir: string, isRelease: boolean, archives: str
 
   const includes = [
     "src",
-    "mupdf/include",
+    "ext/mupdf/include",
     "ext/synctex",
     "ext/djvudec",
     "ext/chmdec",
@@ -518,7 +518,7 @@ async function buildSumatraExe(outDir: string, isRelease: boolean, archives: str
     "ext/libarchive",
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
-    "mupdf/scripts/cmark-gfm",
+    "ext/mupdf/scripts/cmark-gfm",
   ];
   const includeFlags = includes.map((d) => `-I${d}`);
 

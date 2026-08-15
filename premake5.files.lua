@@ -931,7 +931,7 @@ end
 -- Parser-only subset matching mupdf's Makelists CMARKGFM_SRC (no CLI main.c,
 -- no commonmark/latex/man/xml/plaintext renderers). Generated config headers
 -- (config.h, cmark-gfm_export.h, cmark-gfm_version.h) come from
--- mupdf/scripts/cmark-gfm. Build with -DCMARK_GFM_STATIC_DEFINE.
+-- ext/mupdf/scripts/cmark-gfm. Build with -DCMARK_GFM_STATIC_DEFINE.
 function cmark_gfm_files()
   files_in_dir("ext/cmark-gfm/src", {
     "arena.c", "blocks.c", "buffer.c", "cmark.c", "cmark_ctype.c",
@@ -949,13 +949,13 @@ end
 function mupdf_files()
   files { "ext/mupdf_load_system_font.c" }
 
-  files_in_dir("mupdf/source/cbz", {
+  files_in_dir("ext/mupdf/source/cbz", {
     "mucbz.c",
     "muimg.c",
   })
 
-  files { "mupdf/source/fitz/*.h" }
-  files_in_dir("mupdf/source/fitz", {
+  files { "ext/mupdf/source/fitz/*.h" }
+  files_in_dir("ext/mupdf/source/fitz", {
     "archive.c",
     "barcode.c",
     "bbox-device.c",
@@ -1105,7 +1105,7 @@ function mupdf_files()
     "zip.c",
   })
 
-  files_in_dir("mupdf/source/html", {
+  files_in_dir("ext/mupdf/source/html", {
     "css-apply.c",
     "css-parse.c",
     "css-properties.h",
@@ -1124,7 +1124,7 @@ function mupdf_files()
     "xml-dom.c",
   })
 
-  files_in_dir("mupdf/source/pdf", {
+  files_in_dir("ext/mupdf/source/pdf", {
     "*.h",
     "pdf-af.c",
     "pdf-annot.c",
@@ -1184,14 +1184,14 @@ function mupdf_files()
     "pdf-zugferd.c",
   })
 
-  files_in_dir("mupdf/source/svg", {
+  files_in_dir("ext/mupdf/source/svg", {
     "svg-color.c",
     "svg-doc.c",
     "svg-parse.c",
     "svg-run.c",
   })
 
-  files_in_dir("mupdf/source/xps", {
+  files_in_dir("ext/mupdf/source/xps", {
     "xps-common.c",
     "xps-doc.c",
     "xps-glyphs.c",
@@ -1205,10 +1205,10 @@ function mupdf_files()
     "xps-util.c",
     "xps-zip.c",
   })
-  files_in_dir("mupdf/source/reflow", {
+  files_in_dir("ext/mupdf/source/reflow", {
     "reflow-doc.c",
   })
-  files_in_dir("mupdf/source/tools", {
+  files_in_dir("ext/mupdf/source/tools", {
     "muconvert.c",
     "mudraw.c",
     "mugrep.c",
@@ -1230,14 +1230,14 @@ function mupdf_files()
     "pdftrim.c",
   })
   files {
-    "mupdf/include/mupdf/*.h",
-    "mupdf/include/mupdf/fitz/*.h",
-    "mupdf/include/mupdf/helpers/*.h",
-    "mupdf/include/mupdf/pdf/*.h",
+    "ext/mupdf/include/mupdf/*.h",
+    "ext/mupdf/include/mupdf/fitz/*.h",
+    "ext/mupdf/include/mupdf/helpers/*.h",
+    "ext/mupdf/include/mupdf/pdf/*.h",
   }
   files {
-    "mupdf/source/helpers/mu-threads/mu-threads.c",
-    "mupdf/source/helpers/pkcs7/pkcs7-windows.c",
+    "ext/mupdf/source/helpers/mu-threads/mu-threads.c",
+    "ext/mupdf/source/helpers/pkcs7/pkcs7-windows.c",
   }
 end
 

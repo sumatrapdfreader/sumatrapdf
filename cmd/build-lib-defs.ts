@@ -428,7 +428,7 @@ const mupdfThirdPartySources: LibDef = {
   ],
   includes: [
     "ext/libjpeg-turbo/src",
-    "mupdf/scripts/freetype",
+    "ext/mupdf/scripts/freetype",
     "ext/freetype/include",
     "ext/lcms2/include",
     "ext/harfbuzz/src/hb-ucdn",
@@ -702,7 +702,7 @@ export const freetype = thirdPartyLib({
     'FT_CONFIG_OPTIONS_H="slimftoptions.h"',
   ],
   includes: [
-    "mupdf/scripts/freetype",
+    "ext/mupdf/scripts/freetype",
     "ext/freetype/include",
     "ext/brotli/c/include",
   ],
@@ -733,7 +733,7 @@ export const harfbuzz = thirdPartyLib({
   ],
   includes: [
     "ext/harfbuzz/src/hb-ucdn",
-    "mupdf/scripts/freetype",
+    "ext/mupdf/scripts/freetype",
     "ext/freetype/include",
   ],
   files: sourceFiles(5),
@@ -768,7 +768,7 @@ export const cmarkGfm = thirdPartyLib({
   includes: [
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
-    "mupdf/scripts/cmark-gfm",
+    "ext/mupdf/scripts/cmark-gfm",
   ],
   files: [
     {
@@ -836,15 +836,15 @@ export const mupdf: LibDef = {
     "CMARK_GFM_STATIC_DEFINE",
   ],
   includes: [
-    "mupdf/include",
+    "ext/mupdf/include",
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
-    "mupdf/scripts/cmark-gfm",
-    "mupdf/generated",
+    "ext/mupdf/scripts/cmark-gfm",
+    "ext/mupdf/generated",
     "ext/a-jbig2dec",
     "ext/libjpeg-turbo/src",
     "ext/a-openjpeg",
-    "mupdf/scripts/freetype",
+    "ext/mupdf/scripts/freetype",
     "ext/freetype/include",
     "ext/a-mujs",
     "ext/brotli/c/include",
@@ -857,9 +857,9 @@ export const mupdf: LibDef = {
   ],
   files: [
     { dir: "ext", patterns: ["mupdf_load_system_font.c"] },
-    { dir: "mupdf/source/cbz", patterns: ["mucbz.c", "muimg.c"] },
+    { dir: "ext/mupdf/source/cbz", patterns: ["mucbz.c", "muimg.c"] },
     {
-      dir: "mupdf/source/fitz",
+      dir: "ext/mupdf/source/fitz",
       patterns: [
         "archive.c",
         "barcode.c",
@@ -1010,7 +1010,7 @@ export const mupdf: LibDef = {
       ],
     },
     {
-      dir: "mupdf/source/html",
+      dir: "ext/mupdf/source/html",
       patterns: [
         "css-apply.c",
         "css-parse.c",
@@ -1029,7 +1029,7 @@ export const mupdf: LibDef = {
       ],
     },
     {
-      dir: "mupdf/source/pdf",
+      dir: "ext/mupdf/source/pdf",
       patterns: [
         "pdf-af.c",
         "pdf-annot.c",
@@ -1090,11 +1090,11 @@ export const mupdf: LibDef = {
       ],
     },
     {
-      dir: "mupdf/source/svg",
+      dir: "ext/mupdf/source/svg",
       patterns: ["svg-color.c", "svg-doc.c", "svg-parse.c", "svg-run.c"],
     },
     {
-      dir: "mupdf/source/xps",
+      dir: "ext/mupdf/source/xps",
       patterns: [
         "xps-common.c",
         "xps-doc.c",
@@ -1110,9 +1110,9 @@ export const mupdf: LibDef = {
         "xps-zip.c",
       ],
     },
-    { dir: "mupdf/source/reflow", patterns: ["*.c"] },
+    { dir: "ext/mupdf/source/reflow", patterns: ["*.c"] },
     {
-      dir: "mupdf/source/tools",
+      dir: "ext/mupdf/source/tools",
       patterns: [
         "muconvert.c",
         "mudraw.c",
@@ -1134,7 +1134,7 @@ export const mupdf: LibDef = {
         "pdftrim.c",
       ],
     },
-    { dir: "mupdf/source/helpers/pkcs7", patterns: ["pkcs7-windows.c"] },
-    { dir: "mupdf/source/helpers/mu-threads", patterns: ["mu-threads.c"] },
+    { dir: "ext/mupdf/source/helpers/pkcs7", patterns: ["pkcs7-windows.c"] },
+    { dir: "ext/mupdf/source/helpers/mu-threads", patterns: ["mu-threads.c"] },
   ],
 };

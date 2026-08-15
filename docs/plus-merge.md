@@ -11,7 +11,7 @@ Chinese-community fork "Sumatra PDF Plus", GPLv3, same license as upstream).
 - **Fork point:** `2854c78d6` ("re-register OpenWithProgids at startup", 2026-05-21).
 - Fork scope (as of last review): **89 commits, 193 files, +61,677 / −20,075 lines**
   (a chunk of that is machine-generated translations and a whitespace-only
-  `mupdf/source/fitz/font.c` reformat).
+  `ext/mupdf/source/fitz/font.c` reformat).
 - Our master has **~1,600 commits** since the fork point, so a plain `git merge` is
   not viable. We port selectively (see "Merge process" below).
 - They do use our code-gen system (`cmd/gen-settings.ts`, gen-commands) — good; but
@@ -141,14 +141,14 @@ interaction-state polish.
   heavy conflicts. Port ideas, not diffs.
 
 ### G. Ebook (EPUB/MOBI/AZW3) engine work
-Real changes inside vendored `mupdf/source/html/*` (~1,000–1,700 changed lines per file
+Real changes inside vendored `ext/mupdf/source/html/*` (~1,000–1,700 changed lines per file)
 even ignoring whitespace) plus Sumatra-side ebook code: faster loading of large ebooks,
 NCX table of contents for MOBI/AZW3 and EPUB, progressive TOC loading (with graying-out
 of not-yet-reachable in-book links), better Chinese mixed text/image layout, fixes for
 garbled MOBI TOC from corrupt NCX/CNCX labels, blank MOBI picture-book pages
 (self-closing `<img>` + missing image records), Bookworm EPUB comic layout, EPUB/MOBI
 dark-theme switching artifacts.
-- Touches: `mupdf/source/html/{html-layout,html-parse,css-apply,epub-doc,html-font}.c`,
+- Touches: `ext/mupdf/source/html/{html-layout,html-parse,css-apply,epub-doc,html-font}.c`,
   `src/MobiDoc.cpp` (+1,188), `src/EngineEbook.cpp` (+1,370), `src/HtmlFormatter.cpp`,
   `src/EbookFormatter.cpp`, new `src/EbookTypography.h`, `ext/mupdf_load_system_font.c`,
   `src/libsumatrapdf.def`
@@ -157,7 +157,7 @@ dark-theme switching artifacts.
   (garbled TOC), `0a97bc1a0`, `65b413ab1`, `c111312bc`, `d8ac31deb`
 - Caution: this is the riskiest area to port — vendored mupdf may have moved upstream;
   diff their mupdf changes against *our current* mupdf, not the fork base.
-- Note: `mupdf/source/fitz/font.c` diff is whitespace/line-endings only — ignore it.
+- Note: `ext/mupdf/source/fitz/font.c` diff is whitespace/line-endings only — ignore it.
 
 ### H. Selection toolbar
 Floating mini-toolbar after selecting text in a PDF: highlight, underline, strikeout,
@@ -273,7 +273,7 @@ additions (we generate via premake).
      `Ported from dengxibo/sumatrapdf-plus <sha(s)>`.
    - Settings/commands: re-add through `cmd/gen-settings.ts` / `cmd/gen-commands.ts`
      and run `bun cmd/gen-code.ts` — never take their generated files.
-   - clang-format only our `src/` files; keep `mupdf/`/`ext/` edits minimal-style.
+   - clang-format only our `src/` files; keep `ext/` edits minimal-style.
    - Skip their translations blobs; add new strings through our translation flow.
    - Build (`bun ./cmd/build.ts`) and run unit tests (`bun cmd/run-unit-tests.ts -dbg`).
 6. **Update this file:** bump the "Last reviewed" marker, log decisions and merge

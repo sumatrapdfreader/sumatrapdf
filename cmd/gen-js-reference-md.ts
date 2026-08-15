@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
-const refDir = join("mupdf", "docs", "reference", "javascript");
+const refDir = join("ext", "mupdf", "docs", "reference", "javascript");
 const outPath = join("docs", "md", "Tool-run-javascript-reference.md");
 
 const commonTypes = [

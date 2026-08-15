@@ -1,6 +1,6 @@
 -Isrc
 -Isrc/base
--Imupdf/include
+-Iext/mupdf/include
 -Iext/djvudec
 -Iext/chmdec
 -Iext/libarchive

@@ -3,7 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceRoot}/mupdf/include",
+                "${workspaceRoot}/ext/mupdf/include",
                 "${workspaceRoot}/src",
                 "${workspaceRoot}/src/base",
                 "${workspaceRoot}/src/wingui",

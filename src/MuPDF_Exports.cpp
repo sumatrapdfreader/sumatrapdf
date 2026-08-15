@@ -20,7 +20,7 @@ extern "C" {
 #include <mupdf/fitz/geometry.h>
 }
 
-// copied from mupdf/source/fitz/geometry.c
+// copied from ext/mupdf/source/fitz/geometry.c
 // Values MUST match upstream exactly: in DLL builds these symbols shadow
 // the ones in libsumatrapdf.dll for the EXE side, but the DLL's own code keeps
 // using its internal values. A stale value here means EXE-side code passes

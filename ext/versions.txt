@@ -1,6 +1,6 @@
 Project         Version    Date
 ----------------------------------
-../mupdf        1.28.0-rc2
+mupdf           1.28.0-rc2
   https://github.com/ArtifexSoftware/mupdf/releases/tag/1.28.0-rc2
 
 libarchive     3.8.8      2026-06-23

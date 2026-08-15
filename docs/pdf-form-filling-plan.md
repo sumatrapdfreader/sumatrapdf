@@ -52,7 +52,7 @@ Other still-open polish: cross-page Tab (navigation is currently same-page),
 comb cells aren't drawn in the edit overlay (plain edit + max-length only),
 XFA-only forms fall back to read-only.
 
-Reference implementation analyzed: `mupdf/platform/gl/gl-form.c`,
+Reference implementation analyzed: `ext/mupdf/platform/gl/gl-form.c`,
 `gl-input.c`, `gl-main.c` (the mupdf OpenGL viewer's form filling). It polls
 widgets each frame and edits text/choice in a **modal dialog**; we want
 **in-place** editing instead, but the mupdf API surface and the

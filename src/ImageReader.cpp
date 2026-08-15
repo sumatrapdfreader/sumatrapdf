@@ -11,7 +11,7 @@
 
 extern "C" {
 #include "mupdf/fitz.h"
-#include "../mupdf/source/fitz/color-imp.h"
+#include "../ext/mupdf/source/fitz/color-imp.h"
 }
 
 #include "ImageReader.h"

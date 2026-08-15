@@ -19,7 +19,7 @@ extern "C" {
 #if OS_WIN
 #include <mupdf/helpers/pkcs7-windows.h>
 #endif
-#include "../mupdf/source/fitz/color-imp.h"
+#include "../ext/mupdf/source/fitz/color-imp.h"
 }
 
 #include "Annotation.h"

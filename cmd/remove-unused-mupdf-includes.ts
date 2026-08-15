@@ -4,7 +4,7 @@
 //
 // Usage:
 //   bun cmd/remove-unused-mupdf-includes.ts
-//   bun cmd/remove-unused-mupdf-includes.ts --file mupdf/source/fitz/error.c
+//   bun cmd/remove-unused-mupdf-includes.ts --file ext/mupdf/source/fitz/error.c
 //   bun cmd/remove-unused-mupdf-includes.ts --from 42
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { cpus } from "node:os";
@@ -100,9 +100,9 @@ const clArgs = [
   "/I",
   "ext/a-zlib",
   "/I",
-  "mupdf/include",
+  "ext/mupdf/include",
   "/I",
-  "mupdf/generated",
+  "ext/mupdf/generated",
   "/I",
   "ext/a-jbig2dec",
   "/I",
@@ -110,7 +110,7 @@ const clArgs = [
   "/I",
   "ext/a-openjpeg",
   "/I",
-  "mupdf/scripts/freetype",
+  "ext/mupdf/scripts/freetype",
   "/I",
   "ext/freetype/include",
   "/I",
@@ -122,7 +122,7 @@ const clArgs = [
   "/I",
   "ext/cmark-gfm/extensions",
   "/I",
-  "mupdf/scripts/cmark-gfm",
+  "ext/mupdf/scripts/cmark-gfm",
   "/I",
   "ext/harfbuzz/src",
   "/I",
@@ -161,7 +161,7 @@ function parseArgs(): { fileFilter?: string; from: number } {
     }
     if (arg === "--help" || arg === "-h") {
       console.log(`Usage: bun cmd/remove-unused-mupdf-includes.ts [--file <path>] [--from <n>]`);
-      console.log(`  --file   only process this .c file (e.g. mupdf/source/fitz/error.c)`);
+      console.log(`  --file   only process this .c file (e.g. ext/mupdf/source/fitz/error.c)`);
       console.log(`  --from   start at include number n (1-based, for resuming)`);
       process.exit(0);
     }
