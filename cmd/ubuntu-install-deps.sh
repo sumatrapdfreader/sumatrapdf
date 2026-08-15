@@ -1,6 +1,7 @@
 #!/bin/sh
-# Install Ubuntu/Debian packages needed to build SumatraPDF on Linux
-# (bun cmd/build-linux.ts).
+# Install Ubuntu/Debian packages needed to build SumatraPDF on Linux:
+#   bun cmd/build-linux.ts          # libraries + test_util / test_engines
+#   the GTK 4 viewer (Ubuntu 24.04 / 26.04)
 #
 # Usage:
 #   sudo sh cmd/ubuntu-install-deps.sh
@@ -47,11 +48,11 @@ clang_rt_package() {
 echo "> apt-get update"
 apt-get update
 
-# build-essential: gcc, g++, make, binutils (ar, objcopy)
-# clang: preferred compiler for build-linux.ts
+# gcc/g++ and clang/clang++: both toolchains (clang++ is in the clang package)
+# build-essential: make, binutils (ar, objcopy)
 # libssl-dev: openssl headers + libcrypto.so (mupdf pkcs7)
 # xxd: font embedding on Linux arm64
-packages="build-essential clang libssl-dev xxd"
+packages="build-essential gcc g++ clang libssl-dev xxd"
 
 if package_exists libasan8; then
   packages="$packages libasan8"
@@ -62,6 +63,26 @@ if [ -n "$clang_rt" ]; then
   packages="$packages $clang_rt"
 fi
 
+# pkg-config is a dummy that depends on pkgconf on Ubuntu 24.04+
+if package_exists pkgconf; then
+  packages="$packages pkgconf"
+elif package_exists pkg-config; then
+  packages="$packages pkg-config"
+fi
+
+# GTK 4 viewer. libgtk-4-dev pulls glib, cairo, pango, graphene, gdk-pixbuf,
+# epoxy, wayland, and x11; cairo/pango/glib are also listed so a Gfx backend
+# can compile against them without going through gtk4.pc.
+gtk_packages="libgtk-4-dev libcairo2-dev libpango1.0-dev libglib2.0-dev"
+missing_gtk=""
+for pkg in $gtk_packages; do
+  if package_exists "$pkg"; then
+    packages="$packages $pkg"
+  else
+    missing_gtk="$missing_gtk $pkg"
+  fi
+done
+
 echo "> apt-get install -y --no-install-recommends $packages"
 # $packages is a space-separated list of package names
 apt-get install -y --no-install-recommends $packages
@@ -71,3 +92,9 @@ echo "Installed build dependencies:"
 for pkg in $packages; do
   echo "  $pkg"
 done
+
+if [ -n "$missing_gtk" ]; then
+  echo >&2
+  echo "Missing GTK 4 packages (need Ubuntu 24.04 / 26.04 or Debian 12+):$missing_gtk" >&2
+  exit 1
+fi
