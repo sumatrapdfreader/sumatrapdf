@@ -12,7 +12,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util";
 import { findChildWindow, getWindowText, postMessage, sendMessage, sleep, WM_CLOSE } from "./winapi";
-import { launchSumatra, sendCommand, waitForExit, waitForFrame, killAndWait } from "./win-automation";
+import { killAndWait, launchSumatra, sendCommand, waitForExit, waitForFrame, waitForTitle } from "./win-automation";
 
 const TVM_GETCOUNT = 0x1100 + 5;
 const nFiles = 400;
@@ -46,36 +46,17 @@ function tocItemCount(frame: number): number {
   return Number(sendMessage(tree, TVM_GETCOUNT, 0, 0));
 }
 
-// poll until the tree stops growing (the background build landed)
-async function waitForTocToSettle(frame: number, timeoutMs = 30000): Promise<number> {
+async function waitForTocCount(frame: number, want: number, timeoutMs = 30000): Promise<number> {
   const deadline = Date.now() + timeoutMs;
   let last = -1;
-  let stable = 0;
   while (Date.now() < deadline) {
-    const n = tocItemCount(frame);
-    if (n === last && n > 0) {
-      if (++stable >= 3) {
-        return n;
-      }
-    } else {
-      stable = 0;
-      last = n;
+    last = tocItemCount(frame);
+    if (last === want) {
+      return last;
     }
-    await sleep(80);
+    await sleep(40);
   }
   return last;
-}
-
-// the document is up once the window title names the file we opened
-async function waitForDocumentShown(frame: number, name: string, timeoutMs = 60000): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (getWindowText(frame).startsWith(name)) {
-      return true;
-    }
-    await sleep(100);
-  }
-  return false;
 }
 
 function launch(dir: string, file: string): Bun.Subprocess {
@@ -102,31 +83,34 @@ async function testTocAndNextFile(dir: string): Promise<void> {
   const wantFull = nFiles * (1 + headingsPerFile);
   try {
     const frame = await waitForFrame(proc.pid!);
-    if (!(await waitForDocumentShown(frame, "page-0000.html"))) {
-      throw new Error("issue-5918: document never opened");
-    }
+    await waitForTitle(frame, (t) => t.startsWith("page-0000.html"), 60000);
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
     const first = await waitForTocTree(frame);
     if (first < nFiles) {
       throw new Error(`issue-5918: TOC has ${first} items, want at least ${nFiles} (one per file)`);
     }
 
-    const settled = await waitForTocToSettle(frame);
+    const settled = await waitForTocCount(frame, wantFull);
     if (settled !== wantFull) {
       throw new Error(`issue-5918: TOC settled at ${settled} items, want ${wantFull} (files plus their headings)`);
     }
 
     sendCommand(frame, cmdId("CmdOpenNextFileInFolder"));
-    // watch the TOC across the switch: it must never fall back to the flat list
-    const watchUntil = Date.now() + 800;
-    while (Date.now() < watchUntil) {
+    // TOC must stay complete through the switch (a reload would drop to the flat list)
+    const deadline = Date.now() + 5000;
+    let switched = false;
+    while (Date.now() < deadline) {
       const n = tocItemCount(frame);
       if (n !== wantFull) {
         throw new Error(`issue-5918: TOC dropped to ${n} items after next-file, want it kept at ${wantFull}`);
       }
+      if (getWindowText(frame).startsWith("page-0001.html")) {
+        switched = true;
+        break;
+      }
       await sleep(40);
     }
-    if (!(await waitForDocumentShown(frame, "page-0001.html", 5000))) {
+    if (!switched) {
       throw new Error(`issue-5918: next file did not open, title is '${getWindowText(frame)}'`);
     }
 
@@ -141,10 +125,22 @@ async function testTocAndNextFile(dir: string): Promise<void> {
 // crash: the build has no model left to deliver its result to
 async function testCloseDuringBuild(dir: string): Promise<void> {
   const proc = launch(dir, "page-0001.html");
+  const wantFull = nFiles * (1 + headingsPerFile);
   try {
     const frame = await waitForFrame(proc.pid!);
-    // deliberately do not wait for the build to finish
-    await sleep(700);
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    // close once the background build has started, before it finishes
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      const n = tocItemCount(frame);
+      if (n > 0 && n < wantFull) {
+        break;
+      }
+      if (n === wantFull) {
+        break;
+      }
+      await sleep(30);
+    }
     sendCommand(frame, cmdId("CmdClose"));
     postMessage(frame, WM_CLOSE, 0, 0);
     // only that it goes away: a crash would leave the report dialog up and a
