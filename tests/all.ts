@@ -9,7 +9,7 @@
 // When adding a new test, add it to tests/ as issue-<n>.ts (exporting testit)
 // and register it in the `tests` array below.
 
-import { buildApp, formatDuration, isSilentArg, runTest } from "./util.ts";
+import { buildApp, formatDuration, isSilentArg, resetTestTimes, runTest } from "./util.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
@@ -114,6 +114,59 @@ import { testit as issue2258 } from "./issue-2258.ts";
 import { testit as issue2737 } from "./issue-2737.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
+  // tests whose window goes in the upper-right quadrant (see
+  // tests/winapi.ts testWindowPos) run first, so the run settles into one
+  // window position instead of jumping around the desktop
+  ["issue-3769", issue3769],
+  ["issue-3731", issue3731],
+  ["issue-3744", issue3744],
+  ["issue-4973", issue4973],
+  ["issue-5095", issue5095],
+  ["issue-5329", issue5329],
+  ["issue-5718", issue5718],
+  ["issue-5734", issue5734],
+  ["issue-5736", issue5736],
+  ["issue-5751", issue5751],
+  ["issue-5780", issue5780],
+  ["issue-5529", issue5529],
+  ["issue-2629", issue2629],
+  ["issue-4684", issue4684],
+  ["issue-5922", issue5922],
+  ["issue-5924", issue5924],
+  ["issue-5926", issue5926],
+  ["issue-5040", issue5040],
+  ["issue-1914", issue1914],
+  ["issue-2799", issue2799],
+  ["issue-find-match-select", findMatchSelect],
+  ["find-results-sorted", findResultsSorted],
+  ["issue-5874", issue5874],
+  ["issue-2252", issue2252],
+  ["issue-2254", issue2254],
+  ["issue-5792", issue5792],
+  ["issue-5834", issue5834],
+  ["issue-5842", issue5842],
+  ["issue-5845", issue5845],
+  ["issue-5870", issue5870],
+  ["issue-5869", issue5869],
+  ["issue-5881", issue5881],
+  ["rect-selection-drag", rectSelectionDrag],
+  ["issue-5882", issue5882],
+  ["issue-5917", issue5917],
+  ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
+  ["issue-5938", issue5938],
+  ["issue-4753", issue4753],
+  ["issue-4055", issue4055],
+  ["issue-2165", issue2165],
+  ["issue-1203", issue1203],
+  ["issue-2873", issue2873],
+  ["issue-5937", issue5937],
+  ["issue-3472", issue3472],
+  ["pdf-only-menu-items", pdfOnlyMenuItems],
+  ["issue-2258", issue2258],
+  ["issue-2737", issue2737],
+  ["issue-1195", issue1195],
+
+  // the rest: no window at all, or one this test places itself
   ["lint-command-ids", lintCommandIds],
   ["lint-mingw-sources", lintMingwSources],
   ["combining-mark-first", combiningMarkFirst],
@@ -129,15 +182,8 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-3219", issue3219],
   ["issue-3560", issue3560],
   ["issue-3591", issue3591],
-  ["issue-3769", issue3769],
-  ["issue-3731", issue3731],
-  ["issue-3744", issue3744],
   ["issue-4967", issue4967],
-  ["issue-4973", issue4973],
   ["issue-5065", issue5065],
-  ["issue-1195", issue1195],
-  ["issue-5095", issue5095],
-  ["issue-5329", issue5329],
   ["issue-5353", issue5353],
   ["issue-5404", issue5404],
   ["issue-5537", issue5537],
@@ -147,83 +193,47 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-5677", issue5677],
   ["issue-5681", issue5681],
   ["issue-1678", issue1678],
-  ["issue-5718", issue5718],
-  ["issue-5734", issue5734],
-  ["issue-5736", issue5736],
-  ["issue-5751", issue5751],
-  ["issue-5780", issue5780],
-  ["issue-5529", issue5529],
-  ["issue-2629", issue2629],
-  ["issue-4684", issue4684],
-  ["issue-5922", issue5922],
-  ["issue-5924", issue5924],
-  ["issue-5926", issue5926],
-  ["issue-5040", issue5040],
   ["issue-1724", issue1724],
-  ["issue-1914", issue1914],
-  ["issue-2799", issue2799],
-  ["issue-find-match-select", findMatchSelect],
-  ["find-results-sorted", findResultsSorted],
-  ["issue-5874", issue5874],
-  ["issue-2252", issue2252],
-  ["issue-2254", issue2254],
   ["issue-1201", issue1201],
   ["issue-1189", issue1189],
-  ["issue-5792", issue5792],
   ["issue-4576", issue4576],
-  ["issue-5834", issue5834],
   ["issue-5840", issue5840],
-  ["issue-5842", issue5842],
-  ["issue-5845", issue5845],
   ["issue-5846", issue5846],
   ["issue-5850", issue5850],
   ["issue-5865", issue5865],
   ["issue-5866", issue5866],
   ["issue-5867", issue5867],
   ["issue-5868", issue5868],
-  ["issue-5870", issue5870],
   ["issue-5870-list-dirs", issue5870ListDirs],
-  ["issue-5869", issue5869],
   ["issue-5871", issue5871],
   ["issue-5873", issue5873],
   ["issue-5875", issue5875],
-  ["issue-5881", issue5881],
-  ["rect-selection-drag", rectSelectionDrag],
-  ["issue-5882", issue5882],
   ["issue-5899", issue5899],
   ["issue-5907", issue5907],
-  ["issue-5917", issue5917],
   ["issue-5918", issue5918],
   ["reload-debounce", reloadDebounce],
   ["parse-tip-brackets", parseTipBrackets],
-  ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
   ["security-ghsa-crhm-w5qr-wjj4", ghsaCrhmW5qrWjj4],
   ["security-ghsa-jf4v-rw66-j4w2", ghsaJf4vRw66J4w2],
   ["issue-5934", issue5934],
-  ["issue-5938", issue5938],
-  ["issue-4753", issue4753],
-  ["issue-4055", issue4055],
-  ["issue-2165", issue2165],
   ["issue-5317", issue5317],
-  ["issue-1203", issue1203],
-  ["issue-2873", issue2873],
-  ["issue-5937", issue5937],
-  ["issue-3472", issue3472],
-  ["pdf-only-menu-items", pdfOnlyMenuItems],
   ["issue-5694", issue5694],
   ["issue-5941", issue5941],
   ["issue-2447", issue2447],
   ["issue-476", issue476],
-  ["issue-2258", issue2258],
-  ["issue-2737", issue2737],
 ];
 
 export type AllTestOptions = {
   silent?: boolean;
+  // before-release.ts resets the file itself so both suites share one log
+  keepTestTimes?: boolean;
 };
 
 // runs all registered tests in order; throws (stopping) at the first failure
 export async function testit(opts?: AllTestOptions): Promise<void> {
+  if (!opts?.keepTestTimes) {
+    resetTestTimes();
+  }
   const silent = opts?.silent ?? false;
   const t0 = performance.now();
   for (const [name, fn] of tests) {

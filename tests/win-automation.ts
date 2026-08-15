@@ -15,6 +15,7 @@
 import { EXE } from "./util.ts";
 import {
   testWindowPos,
+  waitForWindowIdle,
   enumWindows,
   getClassName,
   findChildWindow,
@@ -68,6 +69,33 @@ export function windowPosArgs(): string[] {
 export function launchSumatra(args: string[], opts?: { defaultWindowPos?: boolean }): Bun.Subprocess {
   const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
   return Bun.spawn([EXE, "-for-testing", ...posArgs, ...args], { stdout: "ignore", stderr: "ignore" });
+}
+
+// Wait for the app to exit by itself, which is also when it has finished
+// writing its settings file. Exact, unlike sleeping "long enough" after
+// CmdExit / WM_CLOSE. Returns false on timeout so the caller can report it
+export async function waitForExit(proc: Bun.Subprocess, timeoutMs = 10000): Promise<boolean> {
+  let exited = false;
+  void proc.exited.then(() => {
+    exited = true;
+  });
+  const deadline = Date.now() + timeoutMs;
+  while (!exited && Date.now() < deadline) {
+    await sleep(25);
+  }
+  return exited;
+}
+
+// Wait for the document to be on screen: the frame exists, the canvas has
+// painted and the picture has stopped changing
+export async function waitForDocument(pid: number, timeoutMs = 12000): Promise<number> {
+  const frame = await waitForFrame(pid, timeoutMs);
+  if (!frame) {
+    return 0;
+  }
+  const canvas = findCanvas(frame);
+  await waitForWindowIdle(canvas || frame);
+  return frame;
 }
 
 // the main SUMATRA_PDF_FRAME window of a process (0 on timeout)

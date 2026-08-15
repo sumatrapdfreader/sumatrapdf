@@ -4,8 +4,8 @@
 // and THROWS on failure (returns normally on success). It does NOT build the app
 // or call process.exit -- that's the runner's job, so tests compose in all.ts.
 
-import { mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { appendFileSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 export const ROOT = join(import.meta.dir, "..");
 export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF.exe");
@@ -115,6 +115,25 @@ export function formatDuration(ms: number): string {
   return `${min}m ${remSec.toFixed(1)}s`;
 }
 
+// every runTest() appends "<ms>\t<name>\t<pass|FAIL>" here, so a run can be
+// picked apart afterwards ("which tests are slow, and did that change?").
+// all.ts / before-release.ts delete it before they start
+export const TEST_TIMES_FILE = join(ROOT, ".work", "test-times.txt");
+
+export function resetTestTimes(): void {
+  mkdirSync(dirname(TEST_TIMES_FILE), { recursive: true });
+  rmSync(TEST_TIMES_FILE, { force: true });
+}
+
+function recordTestTime(name: string, ms: number, ok: boolean): void {
+  try {
+    mkdirSync(dirname(TEST_TIMES_FILE), { recursive: true });
+    appendFileSync(TEST_TIMES_FILE, `${ms.toFixed(0)}\t${name}\t${ok ? "pass" : "FAIL"}\n`);
+  } catch {
+    // timing is a nicety; never fail a test over it
+  }
+}
+
 export type RunTestOptions = {
   silent?: boolean;
 };
@@ -138,6 +157,7 @@ export async function runTest(name: string, fn: () => void | Promise<void>, opts
   try {
     await fn();
     unmute();
+    recordTestTime(name, performance.now() - t0, true);
     const elapsed = formatDuration(performance.now() - t0);
     if (silent) {
       console.log(`== ${name} in ${elapsed}`);
@@ -146,6 +166,7 @@ export async function runTest(name: string, fn: () => void | Promise<void>, opts
     }
   } catch (e) {
     unmute();
+    recordTestTime(name, performance.now() - t0, false);
     const msg = (e as Error)?.message ?? e;
     throw new Error(`${name} failed after ${formatDuration(performance.now() - t0)}: ${msg}`);
   }

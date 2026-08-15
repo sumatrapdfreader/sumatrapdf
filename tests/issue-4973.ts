@@ -6,7 +6,7 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
 import { EXE, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { captureWindowPixels, captureWindowToPng, sleep } from "./winapi.ts";
+import { captureWindowPixels, captureWindowToPng, getClientRect, sleep } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
 
 const kPages = 8;
@@ -122,8 +122,14 @@ export async function testit(): Promise<void> {
       }
       captureWindowToPng(canvas, afterPng);
       const ink = countDarkPixels(canvas);
-      if (ink < 200) {
-        throw new Error(`issue-4973: canvas looks empty after reload (dark pixels=${ink})`);
+      // the fixture is one line of text, so "not blank" is a small number of
+      // dark pixels - and how small depends on how big the page is drawn, so
+      // scale with the canvas rather than hard-coding a count for one window size
+      const cr = getClientRect(canvas);
+      const canvasPx = (cr.right - cr.left) * (cr.bottom - cr.top);
+      const minInk = Math.max(40, Math.floor(canvasPx / 10000));
+      if (ink < minInk) {
+        throw new Error(`issue-4973: canvas looks empty after reload (dark pixels=${ink}, want >= ${minInk})`);
       }
     },
     ["-page", String(kRememberedPage), pdf],

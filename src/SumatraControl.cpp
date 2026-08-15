@@ -14,6 +14,7 @@
 #include "DocProperties.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
+#include "RenderCache.h"
 #include "Commands.h"
 #include "CommandAvailability.h"
 #include "GlobalPrefs.h"
@@ -35,6 +36,8 @@
 #include "AIChatCommon.h"
 #include "AdvancedSettingsDialog.h"
 #include "EditAnnotations.h"
+
+extern bool gIsStartup;
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -271,6 +274,7 @@ enum class ControlCmd : u16 {
     TestCadEnhanceColors = 51,
     TestFindPageRange = 52,
     TestDocumentFontList = 53,
+    WaitRenderIdle = 54,
 };
 
 enum class ControlArgType : u16 {
@@ -305,12 +309,20 @@ static void DeleteControlArg(ControlArg* arg) {
     delete arg;
 }
 
+enum class RenderIdleState : u8 {
+    NotReady = 0,
+    Busy = 1,
+    Idle = 2,
+};
+
 struct ControlRequest {
     u16 cmd = 0;
     u16 reqId = 0;
     Vec<ControlArg*> args;
     str::Builder results;
     HANDLE done = nullptr;
+    RenderIdleState idleState = RenderIdleState::NotReady;
+    char idleInfo[160]{};
 };
 
 static void DeleteControlRequest(ControlRequest* req) {
@@ -1004,6 +1016,93 @@ static void ExecuteControlRequest(ControlRequest* req) {
     SetEvent(req->done);
 }
 
+// Snapshot for WaitRenderIdle. Must run on the UI thread: window/doc state
+// and the cache walk both belong there. Does not block; the control thread
+// polls so WM_PAINT can still request missing tiles.
+static void SnapshotRenderIdle(ControlRequest* req) {
+    req->idleState = RenderIdleState::NotReady;
+    req->idleInfo[0] = 0;
+    if (gIsStartup) {
+        // LoadOnStartup applies -zoom after the first paint; a snapshot
+        // during that window would see the default-zoom tiles as "done"
+        str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("startup"));
+        SetEvent(req->done);
+        return;
+    }
+    if (len(gWindows) == 0) {
+        str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("no-window"));
+        SetEvent(req->done);
+        return;
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("no-doc"));
+        SetEvent(req->done);
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        // ebook / CHM / etc.: nothing in RenderCache to wait for
+        req->idleState = RenderIdleState::Idle;
+        str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("no-fixed"));
+        SetEvent(req->done);
+        return;
+    }
+    // Paint first: that's what queues missing target tiles. Checking the
+    // cache before this paint sees a leftover preview and no in-flight work.
+    // DrainQueue runs RenderFinished from tiles that completed during the
+    // paint; that posts another repaint which may request the next resolution.
+    if (win->hwndCanvas) {
+        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+        UpdateWindow(win->hwndCanvas);
+    }
+    uitask::DrainQueue();
+    if (win->hwndCanvas) {
+        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+        UpdateWindow(win->hwndCanvas);
+    }
+    float zoomV = dm->GetZoomVirtual(true);
+    int pageNo = dm->FirstVisiblePageNo();
+    if (pageNo < 1) {
+        pageNo = 1;
+    }
+    float zoomR = dm->GetZoomReal(pageNo);
+    USHORT res = gRenderCache ? gRenderCache->GetTileRes(dm, pageNo) : (USHORT)0;
+    Size vp = dm->GetViewPort().Size();
+    bool ready = gRenderCache && !gRenderCache->IsBusyFor(dm) && gRenderCache->VisibleTargetTilesReady(dm);
+    int nQ = gRenderCache ? gRenderCache->requestCount : -1;
+    str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), fmt("zoomV=%.1f zoomR=%.3f res=%d vp=%dx%d ready=%d q=%d",
+                                                              zoomV, zoomR, (int)res, vp.dx, vp.dy, ready ? 1 : 0, nQ));
+    req->idleState = ready ? RenderIdleState::Idle : (gRenderCache ? RenderIdleState::Busy : RenderIdleState::NotReady);
+    SetEvent(req->done);
+}
+
+// Block on the control thread until visible tiles are cached at target
+// resolution, or until timeoutMs. Optional first int arg is the timeout.
+static void RunWaitRenderIdle(ControlRequest* req) {
+    i32 timeoutMs = 15000;
+    IntArg(req, 0, timeoutMs);
+    if (timeoutMs < 1) {
+        timeoutMs = 1;
+    }
+    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    for (;;) {
+        ResetEvent(req->done);
+        uitask::Post(MkFunc0<ControlRequest>(SnapshotRenderIdle, req), "WaitRenderIdle");
+        WaitForSingleObject(req->done, INFINITE);
+        if (req->idleState == RenderIdleState::Idle) {
+            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("idle"));
+            return;
+        }
+        if (GetTickCount64() >= deadline) {
+            Str kind = req->idleState == RenderIdleState::NotReady ? StrL("timeout-notready") : StrL("timeout-busy");
+            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("%s %s", kind, Str(req->idleInfo)) : kind);
+            return;
+        }
+        Sleep(20);
+    }
+}
+
 static bool ReadExact(HANDLE h, void* data, DWORD n) {
     u8* d = (u8*)data;
     DWORD total = 0;
@@ -1073,8 +1172,14 @@ static void ProcessControlConnection(HANDLE h) {
         if (!req) {
             return;
         }
-        uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
-        WaitForSingleObject(req->done, INFINITE);
+        // WaitRenderIdle polls on this thread so the UI thread stays free to
+        // paint (and thereby request the tiles we are waiting for)
+        if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {
+            RunWaitRenderIdle(req);
+        } else {
+            uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
+            WaitForSingleObject(req->done, INFINITE);
+        }
         bool ok = WriteControlResponse(h, req);
         DeleteControlRequest(req);
         if (!ok) {

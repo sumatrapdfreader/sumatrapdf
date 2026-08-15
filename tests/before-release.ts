@@ -5,7 +5,7 @@
 // Use before a release to re-verify EXIF parsing and other occasional checks
 // that are too slow or need external repos and are not in tests/all.ts.
 
-import { buildApp, formatDuration, runTest } from "./util.ts";
+import { buildApp, formatDuration, resetTestTimes, runTest } from "./util.ts";
 import { testit as allTests } from "./all.ts";
 import { testit as adHocExif } from "./ad-hoc-exif.ts";
 import { testit as adHocSelectionTranslate } from "./ad-hoc-selection-translate.ts";
@@ -19,20 +19,24 @@ import { testit as latexTests } from "./latex.ts";
 import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const adHocTests: [string, () => void | Promise<void>][] = [
+  // window in the upper-right quadrant first (see tests/winapi.ts
+  // testWindowPos), then the ones that place their own window or have none
+  ["ad-hoc-toc-palette-sync", adHocTocPaletteSync],
+  ["ad-hoc-jpeg-decode", adHocJpegDecode],
+  ["ad-hoc-toolbar-dropdown", adHocToolbarDropdown],
+  ["issue-chm-lzx", issueChmLzx],
   ["ad-hoc-exif", adHocExif],
   ["ad-hoc-selection-translate", adHocSelectionTranslate],
   ["ad-hoc-triple-click-line", adHocTripleClickLine],
-  ["ad-hoc-toc-palette-sync", adHocTocPaletteSync],
-  ["ad-hoc-jpeg-decode", adHocJpegDecode],
   ["ad-hoc-paste-image-annot", adHocPasteImageAnnot],
   ["ad-hoc-uia", adHocUia],
-  ["ad-hoc-toolbar-dropdown", adHocToolbarDropdown],
-  ["issue-chm-lzx", issueChmLzx],
 ];
 
 export async function testit(): Promise<void> {
   const t0 = performance.now();
-  await allTests();
+  // one run, one file: all.ts appends to it as well
+  resetTestTimes();
+  await allTests({ keepTestTimes: true });
 
   console.log("\n========== latex ==========");
   await runTest("latex", latexTests);

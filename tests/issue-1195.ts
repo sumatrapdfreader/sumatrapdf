@@ -12,9 +12,10 @@
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ControlClient, uniquePipeName } from "../cmd/control.ts";
 import { cmdId, EXE, tmpPath } from "./util";
-import { captureWindowPixels, sleep, waitForTopWindow } from "./winapi";
-import { findCanvas, sendCommand } from "./win-automation";
+import { captureWindowPixels, sendMessage, sleep, waitForTopWindow, waitForWindowIdle, WM_COMMAND } from "./winapi";
+import { findCanvas, sendCommand, waitForExit, windowPosArgs } from "./win-automation";
 
 // white pages, with a small black square in the top-left corner of page 1
 function makePdf(nPages: number, square: number): string {
@@ -60,7 +61,13 @@ const LEVELS_50000 = `${DEFAULT_LEVELS} 12800 25600 50000`;
 
 // open the document at the given zoom, optionally zoom in some more, then quit
 // and read back the zoom that was saved for the file
-async function openAtZoom(pdf: string, zoomLevels: string, zoom: string, nZoomIn = 0): Promise<Result> {
+async function openAtZoom(
+  pdf: string,
+  zoomLevels: string,
+  zoom: string,
+  nZoomIn = 0,
+  needPixels = false,
+): Promise<Result> {
   const appdata = tmpPath("issue-1195-appdata");
   rmSync(appdata, { recursive: true, force: true });
   mkdirSync(appdata, { recursive: true });
@@ -68,23 +75,34 @@ async function openAtZoom(pdf: string, zoomLevels: string, zoom: string, nZoomIn
   const settings = ["RestoreSession = false", "CheckForUpdates = false", zoomLevels, ""];
   writeFileSync(settingsPath, settings.join("\n"));
 
-  // -scroll 0,0 so the square in the corner of the page is what's on screen
-  const proc = Bun.spawn([EXE, "-appdata", appdata, "-zoom", zoom, "-scroll", "0,0", pdf], {
-    stdout: "ignore",
-    stderr: "ignore",
-  });
+  // no -for-testing: this test reads the zoom the app writes into settings.
+  // -dbg-control so we can wait for the real tiles, not the blurry preview.
+  const pipe = uniquePipeName("issue-1195");
+  const proc = Bun.spawn(
+    [EXE, "-appdata", appdata, ...windowPosArgs(), "-dbg-control", pipe, "-zoom", zoom, "-scroll", "0,0", pdf],
+    { stdout: "ignore", stderr: "ignore" },
+  );
+  let client: ControlClient | undefined;
   try {
     const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
     if (!frame) {
       throw new Error("SumatraPDF main window did not appear");
     }
-    await sleep(3000);
+    client = await ControlClient.connect(pipe);
+    await client.waitForRenderIdle(30000);
+    const canvas = findCanvas(frame);
     for (let i = 0; i < nZoomIn; i++) {
-      sendCommand(frame, cmdId("CmdZoomIn"));
-      await sleep(700);
+      // SendMessage so the zoom is applied before we ask whether tiles are ready
+      sendMessage(frame, WM_COMMAND, cmdId("CmdZoomIn"), 0);
+      await client.waitForRenderIdle(30000);
+    }
+    // only the dark-pixel comparison needs the second, sharper tile pass.
+    // at high zoom that pass arrives ~2s after the first cached tiles
+    if (needPixels && canvas) {
+      await waitForWindowIdle(canvas, 12000, 2200);
     }
 
-    const px = captureWindowPixels(findCanvas(frame));
+    const px = needPixels ? captureWindowPixels(canvas) : null;
     let dark = 0;
     if (px) {
       for (let i = 0; i < px.data.length; i += 4) {
@@ -95,7 +113,10 @@ async function openAtZoom(pdf: string, zoomLevels: string, zoom: string, nZoomIn
     }
 
     sendCommand(frame, cmdId("CmdExit"));
-    await sleep(2000);
+    // the settings file is complete once the process is gone
+    if (!(await waitForExit(proc))) {
+      throw new Error("SumatraPDF didn't exit after CmdExit");
+    }
     const txt = readFileSync(settingsPath, "utf8");
     const m = txt.split("FileStates")[1]?.match(/\bZoom = ([^\r\n]*)/);
     if (!m) {
@@ -103,6 +124,7 @@ async function openAtZoom(pdf: string, zoomLevels: string, zoom: string, nZoomIn
     }
     return { zoom: parseFloat(m[1]), dark };
   } finally {
+    client?.close();
     proc.kill();
     await sleep(400);
   }
@@ -118,7 +140,7 @@ export async function testit(): Promise<void> {
   await sleep(300);
 
   // without custom zoom levels, 6400% is still the limit
-  const std = await openAtZoom(onePage, "", "25600");
+  const std = await openAtZoom(onePage, "", "25600", 0, true);
   if (Math.round(std.zoom) !== 6400) {
     throw new Error(`expected the zoom to be capped at 6400% by default, got ${std.zoom}%`);
   }
@@ -135,7 +157,7 @@ export async function testit(): Promise<void> {
   }
 
   // listing higher levels raises it - and the page really is four times as large
-  const raised = await openAtZoom(onePage, LEVELS_50000, "25600");
+  const raised = await openAtZoom(onePage, LEVELS_50000, "25600", 0, true);
   if (Math.round(raised.zoom) !== 25600) {
     throw new Error(`expected ZoomLevels up to 50000 to allow 25600%, got ${raised.zoom}%`);
   }

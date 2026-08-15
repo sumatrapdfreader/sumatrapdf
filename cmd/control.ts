@@ -1,4 +1,5 @@
 import { Socket, createConnection } from "node:net";
+import { testWindowPos } from "../tests/winapi.ts";
 
 export enum ControlCommand {
   Ping = 1,
@@ -46,6 +47,7 @@ export enum ControlCommand {
   TestCadEnhanceColors = 51,
   TestFindPageRange = 52,
   TestDocumentFontList = 53,
+  WaitRenderIdle = 54,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -320,6 +322,19 @@ export class ControlClient {
     await this.request(ControlCommand.Quit);
   }
 
+  // Block until the visible page is cached at the resolution a capture would
+  // see — not the low-res preview Paint() blits while tiles are still coming.
+  // timeoutMs is forwarded to the app (default 15s there too).
+  async waitForRenderIdle(timeoutMs = 15000): Promise<string> {
+    const res = await this.request(ControlCommand.WaitRenderIdle, [timeoutMs]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const info = String(res[1] ?? "");
+    if (code !== 0) {
+      throw new Error(`WaitRenderIdle failed: ${info || code}`);
+    }
+    return info;
+  }
+
   close(): void {
     this.socket.end();
   }
@@ -339,12 +354,26 @@ export async function withControlledSumatra<T>(
   exe: string,
   fn: (client: ControlClient, proc: Bun.Subprocess) => Promise<T>,
   extraArgs: string[] = [],
-  options: { cwd?: string; env?: Record<string, string | undefined>; connectTimeoutMs?: number } = {},
+  options: {
+    cwd?: string;
+    env?: Record<string, string | undefined>;
+    connectTimeoutMs?: number;
+    // let the app place its window, for a test about the window's own size or
+    // state (fullscreen, maximized, a remembered position)
+    defaultWindowPos?: boolean;
+  } = {},
 ): Promise<T> {
   const pipeName = uniquePipeName();
+  // a window a quarter of the screen, in a corner, out of the way: see
+  // tests/winapi.ts testWindowPos()
+  let posArgs: string[] = [];
+  if (!options.defaultWindowPos && !extraArgs.includes("-window-pos")) {
+    const p = testWindowPos();
+    posArgs = ["-window-pos", `${p.dx}x${p.dy}@${p.x}x${p.y}`];
+  }
   // stderr is piped: on a debug report the app writes the report text there
   // before terminating, and we surface it in the failure below
-  const proc = Bun.spawn([exe, "-for-testing", "-dbg-control", pipeName, ...extraArgs], {
+  const proc = Bun.spawn([exe, "-for-testing", ...posArgs, "-dbg-control", pipeName, ...extraArgs], {
     stdout: "ignore",
     stderr: "pipe",
     cwd: options.cwd,

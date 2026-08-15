@@ -208,6 +208,8 @@ struct RenderCache {
     void CancelRenderingBlocking(DisplayModel* dm);
     void AbortRendering(DisplayModel* dm);
     bool IsRenderingFor(DisplayModel* dm);
+    bool IsBusyFor(DisplayModel* dm);
+    bool VisibleTargetTilesReady(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);

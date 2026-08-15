@@ -303,6 +303,56 @@ export function getWorkArea(): Rect {
   return { left: buf[0]!, top: buf[1]!, right: buf[2]!, bottom: buf[3]! };
 }
 
+// A cheap fingerprint of what a window is showing: every 16th pixel, mixed
+// together. Two captures with the same fingerprint are the same picture for
+// our purposes, and sampling keeps it to ~30k reads instead of ~500k
+export function windowFingerprint(hwnd: number): number {
+  const cap = captureWindowPixels(hwnd);
+  if (!cap) {
+    return 0;
+  }
+  let h = 2166136261;
+  let distinct = 0;
+  let first = -1;
+  for (let i = 0; i < cap.data.length; i += 64) {
+    const v = cap.data[i]! | (cap.data[i + 1]! << 8) | (cap.data[i + 2]! << 16);
+    if (first < 0) {
+      first = v;
+    } else if (v !== first && distinct === 0) {
+      distinct = 1;
+    }
+    h = Math.imul(h ^ v, 16777619) >>> 0;
+  }
+  // 0 means "nothing to see": an empty capture, or one flat color (a window
+  // that hasn't painted its document yet)
+  return distinct ? h || 1 : 0;
+}
+
+// Wait until a window has painted something and stopped changing - which is
+// what "the document finished loading and rendering" looks like from outside.
+// Returns false if it never settled, so the caller can carry on rather than
+// hang. Replaces sleeping for the worst case
+export async function waitForWindowIdle(hwnd: number, timeoutMs = 5000, settleMs = 120): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  let prev = -1;
+  let stableSince = 0;
+  while (Date.now() < deadline) {
+    const fp = windowFingerprint(hwnd);
+    if (fp !== 0 && fp === prev) {
+      if (stableSince === 0) {
+        stableSince = Date.now();
+      } else if (Date.now() - stableSince >= settleMs) {
+        return true;
+      }
+    } else {
+      stableSince = 0;
+    }
+    prev = fp;
+    await sleep(40);
+  }
+  return false;
+}
+
 // The upper-right quarter of the work area. Tests put SumatraPDF there: a
 // window of that size renders and, more to the point, captures a quarter of
 // the pixels a default-sized one does, and every captureWindowPixels() walk

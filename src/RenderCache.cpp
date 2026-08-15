@@ -869,6 +869,95 @@ bool RenderCache::IsRenderingFor(DisplayModel* dm) {
     return false;
 }
 
+// true if a worker is rendering a visible page of dm or one is queued.
+// Off-screen predictive work does not count: the picture the user (or a
+// test capture) sees does not wait on those.
+bool RenderCache::IsBusyFor(DisplayModel* dm) {
+    if (!dm) {
+        return false;
+    }
+    ScopedRecursiveMutex scope(&requestAccess);
+    auto isVisibleReq = [&](PageRenderRequest* r) -> bool {
+        return r && r->dm == dm && !r->abort && dm->PageVisible(r->pageNo);
+    };
+    for (int i = 0; i < nRenderThreads; i++) {
+        if (isVisibleReq(curReqs[i])) {
+            return true;
+        }
+    }
+    for (int i = 0; i < requestCount; i++) {
+        if (isVisibleReq(&requests[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// true when every on-screen tile of dm is cached at the resolution Paint()
+// would ask for. A low-res preview (res 0, or a tile from another zoom) does
+// not count: that is the picture waitForWindowIdle mistakes for "done".
+bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm) {
+    if (!dm || !dm->GetEngine()) {
+        return false;
+    }
+    int pageCount = dm->PageCount();
+    bool anyVisible = false;
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
+        if (!pi || !pi->isShown || pi->visibleRatio == 0) {
+            continue;
+        }
+        if (pi->pageOnScreen.IsEmpty()) {
+            return false;
+        }
+        anyVisible = true;
+        if (!dm->ShouldCacheRendering(pageNo)) {
+            continue;
+        }
+        int rotation = dm->GetRotation();
+        float zoom = dm->GetZoomReal(pageNo);
+        if (zoom <= 0) {
+            return false;
+        }
+        USHORT targetRes = GetTileRes(dm, pageNo);
+        Rect screen(Point(), dm->GetViewPort().Size());
+        // same subdivision Paint() uses, so we only look at tiles that
+        // actually show — at 1000000% a full 2^res grid would be millions
+        Vec<TilePosition> queue;
+        queue.Append(TilePosition(0, 0, 0));
+        bool sawTarget = false;
+        while (len(queue) > 0) {
+            TilePosition tile = queue.PopAt(0);
+            Rect tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pi->pageOnScreen);
+            if (tileOnScreen.IsEmpty()) {
+                continue;
+            }
+            tileOnScreen = pi->pageOnScreen.Intersect(tileOnScreen);
+            if (tileOnScreen.IsEmpty() || tileOnScreen.Intersect(screen).IsEmpty()) {
+                continue;
+            }
+            if (tile.res == targetRes) {
+                sawTarget = true;
+                if (!Exists(dm, pageNo, rotation, zoom, &tile)) {
+                    return false;
+                }
+                continue;
+            }
+            if (tile.res >= targetRes) {
+                continue;
+            }
+            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)(tile.col * 2)));
+            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)(tile.col * 2 + 1)));
+            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2 + 1), (USHORT)(tile.col * 2)));
+            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2 + 1), (USHORT)(tile.col * 2 + 1)));
+        }
+        if (!sawTarget) {
+            return false;
+        }
+    }
+    return anyVisible;
+}
+
 void RenderCache::AbortRendering(DisplayModel* dm) {
     ScopedRecursiveMutex scope(&requestAccess);
     ClearQueueForDisplayModel(dm);
