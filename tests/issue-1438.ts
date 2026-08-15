@@ -16,9 +16,8 @@
 // one session 1 saved.
 
 import { writeFileSync, mkdirSync, rmSync, readFileSync, existsSync } from "node:fs";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { waitForFrame, sendCommand } from "./win-automation.ts";
-import { sleep } from "./winapi.ts";
+import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { launchControlled, sendCommandSync, waitForExit } from "./win-automation.ts";
 
 const PAGE_COUNT = 12;
 const WIDE_PAGE = 3; // 10x wider than the others
@@ -86,49 +85,41 @@ export async function testit(): Promise<void> {
   mkdirSync(appDataDir, { recursive: true });
   const settingsPath = `${appDataDir}/SumatraPDF-settings.txt`;
 
-  // note: no -for-testing, it deliberately doesn't save settings
-  const launch = () => Bun.spawn([EXE, "-appdata", appDataDir, pdfPath], { stdout: "ignore", stderr: "ignore" });
+  // no -for-testing: this test reads the position the app writes into settings
+  async function session(act: (frame: number) => void): Promise<void> {
+    const { proc, client, frame } = await launchControlled(["-appdata", appDataDir, pdfPath], { saveSettings: true });
+    try {
+      await client.waitForRenderIdle();
+      act(frame);
+      sendCommandSync(frame, cmdId("CmdExit"));
+      if (!(await waitForExit(proc))) {
+        throw new Error("issue-1438: SumatraPDF didn't exit after CmdExit");
+      }
+    } finally {
+      client.close();
+      proc.kill();
+    }
+  }
 
   // session 1: zoom in, go to a page well into the document, exit
-  {
-    const proc = launch();
-    const frame = await waitForFrame(proc.pid!);
-    await sleep(3000);
-    sendCommand(frame, cmdId("CmdZoom200"));
-    await sleep(1000);
+  await session((frame) => {
+    sendCommandSync(frame, cmdId("CmdZoom200"));
     for (let i = 1; i < GO_TO_PAGE; i++) {
-      sendCommand(frame, cmdId("CmdGoToNextPage"));
-      await sleep(200);
+      sendCommandSync(frame, cmdId("CmdGoToNextPage"));
     }
     // scroll inside the page too: the position to restore is then a point
     // within page 9, not just "the top of page 9"
     for (let i = 0; i < 5; i++) {
-      sendCommand(frame, cmdId("CmdScrollDown"));
-      await sleep(150);
+      sendCommandSync(frame, cmdId("CmdScrollDown"));
     }
-    await sleep(800);
-    sendCommand(frame, cmdId("CmdExit"));
-    await sleep(2500);
-    try {
-      proc.kill();
-    } catch {}
-  }
+  });
   const want = savedState(settingsPath);
   if (!/PageNo = 9/.test(want)) {
     throw new Error(`issue-1438: session 1 did not end up on page ${GO_TO_PAGE}: ${want}`);
   }
 
   // session 2: reopen (restoring that position) and exit without touching it
-  {
-    const proc = launch();
-    const frame = await waitForFrame(proc.pid!);
-    await sleep(3500);
-    sendCommand(frame, cmdId("CmdExit"));
-    await sleep(2500);
-    try {
-      proc.kill();
-    } catch {}
-  }
+  await session(() => {});
   const got = savedState(settingsPath);
   if (got !== want) {
     throw new Error(`issue-1438: reopening lost the position: saved '${want}', got '${got}'`);

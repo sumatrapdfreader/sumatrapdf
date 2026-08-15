@@ -43,8 +43,11 @@ import {
   clientToScreen,
   getPopupMenuHandle,
   readMenuTree,
+  getWindowText,
+  getFocusedHwnd,
   type MenuItem,
 } from "./winapi.ts";
+import { ControlClient, uniquePipeName } from "../cmd/control.ts";
 
 export { captureWindowToPng };
 
@@ -69,6 +72,63 @@ export function windowPosArgs(): string[] {
 export function launchSumatra(args: string[], opts?: { defaultWindowPos?: boolean }): Bun.Subprocess {
   const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
   return Bun.spawn([EXE, "-for-testing", ...posArgs, ...args], { stdout: "ignore", stderr: "ignore" });
+}
+
+// Launch with -dbg-control so the test can wait for render-idle (and other
+// control commands) instead of sleeping. saveSettings: skip -for-testing when
+// the test has to read back the settings file.
+export async function launchControlled(
+  args: string[],
+  opts?: { defaultWindowPos?: boolean; saveSettings?: boolean },
+): Promise<{ proc: Bun.Subprocess; client: ControlClient; frame: number }> {
+  const pipe = uniquePipeName();
+  const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
+  const testing = opts?.saveSettings ? [] : ["-for-testing"];
+  const proc = Bun.spawn([EXE, ...testing, ...posArgs, "-dbg-control", pipe, ...args], {
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  try {
+    const client = await ControlClient.connect(pipe);
+    const frame = await waitForFrame(proc.pid!);
+    if (!frame) {
+      client.close();
+      throw new Error("SumatraPDF main window did not appear");
+    }
+    return { proc, client, frame };
+  } catch (e) {
+    proc.kill();
+    throw e;
+  }
+}
+
+export function sendCommandSync(hwnd: number, id: number): void {
+  sendMessage(hwnd, WM_COMMAND, id, 0);
+}
+
+export async function waitForTitle(frame: number, pred: (title: string) => boolean, timeoutMs = 8000): Promise<string> {
+  const deadline = Date.now() + timeoutMs;
+  let last = "";
+  while (Date.now() < deadline) {
+    last = getWindowText(frame);
+    if (pred(last)) {
+      return last;
+    }
+    await sleep(40);
+  }
+  throw new Error(`window title did not match in time (last: '${last}')`);
+}
+
+export async function waitForFocusClass(frame: number, className: string, timeoutMs = 5000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const hwnd = getFocusedHwnd(frame);
+    if (hwnd && getClassName(hwnd) === className) {
+      return hwnd;
+    }
+    await sleep(30);
+  }
+  throw new Error(`focus did not move to ${className}`);
 }
 
 // Wait for the app to exit by itself, which is also when it has finished

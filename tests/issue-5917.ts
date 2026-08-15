@@ -9,8 +9,8 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, ROOT, runStandalone, tmpPath } from "./util";
-import { getWindowText, postMessage, sleep, WM_CLOSE } from "./winapi";
-import { launchSumatra, sendCommand, waitForFrame } from "./win-automation";
+import { getWindowText, postMessage, WM_CLOSE } from "./winapi";
+import { launchControlled, sendCommand, waitForExit, waitForTitle } from "./win-automation";
 
 const GOOD = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
 
@@ -34,27 +34,33 @@ function loadedFile(frame: number): string {
   return getWindowText(frame).split(" - ")[0].trim();
 }
 
-async function navigate(frame: number, cmd: string): Promise<string> {
+async function navigate(frame: number, cmd: string, from: string): Promise<string> {
   sendCommand(frame, cmdId(cmd));
   // the load runs on a background thread and a failed file auto-advances
-  await sleep(2500);
-  return loadedFile(frame);
+  const title = await waitForTitle(frame, (t) => {
+    const name = t.split(" - ")[0].trim();
+    return name.length > 0 && name !== from;
+  });
+  return title.split(" - ")[0].trim();
 }
 
 // open `startFile` in `dir`, run each command in turn, return where each landed
 async function openAndNavigate(dir: string, startFile: string, cmds: string[]): Promise<string[]> {
-  const proc = launchSumatra([join(dir, startFile)]);
+  const { proc, client, frame } = await launchControlled([join(dir, startFile)]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    await sleep(3000); // first render
+    await waitForTitle(frame, (t) => t.includes(startFile));
+    await client.waitForRenderIdle();
+    let current = loadedFile(frame);
     const got: string[] = [];
     for (const cmd of cmds) {
-      got.push(await navigate(frame, cmd));
+      current = await navigate(frame, cmd, current);
+      got.push(current);
     }
     postMessage(frame, WM_CLOSE, 0, 0);
-    await sleep(500);
+    await waitForExit(proc, 5000);
     return got;
   } finally {
+    client.close();
     proc.kill();
   }
 }

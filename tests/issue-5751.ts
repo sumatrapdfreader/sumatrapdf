@@ -8,8 +8,8 @@
 import { mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchSumatra, waitForFrame, pressKey, sendCommand } from "./win-automation.ts";
-import { sleep, findChildWindow, captureWindowToPng, VK_RIGHT } from "./winapi.ts";
+import { launchControlled, pressKey, sendCommandSync } from "./win-automation.ts";
+import { findChildWindow, captureWindowToPng, VK_RIGHT } from "./winapi.ts";
 
 function makePdf(nPages: number): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
@@ -74,12 +74,12 @@ async function captureCanvas(
   mkdirSync(appdata, { recursive: true });
   writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const proc = launchSumatra(["-appdata", appdata, pdf]);
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    await sleep(2000);
+    await client.waitForRenderIdle();
     if (afterLaunch) {
       await afterLaunch(frame);
+      await client.waitForRenderIdle();
     }
     const canvas = findChildWindow(frame, "SUMATRA_PDF_CANVAS");
     if (!canvas) {
@@ -91,8 +91,8 @@ async function captureCanvas(
     }
     return readFileSync(path);
   } finally {
+    client.close();
     proc.kill();
-    await sleep(300);
   }
 }
 
@@ -103,16 +103,12 @@ export async function testit(): Promise<void> {
   const pdf = join(dir, "issue-5751.pdf");
   writeFileSync(pdf, makePdf(5));
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-
   const page1 = await captureCanvas(dir, pdf, "page1");
   const page2Cmd = await captureCanvas(dir, pdf, "page2-cmd", async (frame) => {
-    sendCommand(frame, cmdId("CmdGoToNextPage"));
-    await sleep(700);
+    sendCommandSync(frame, cmdId("CmdGoToNextPage"));
   });
   const page2Key = await captureCanvas(dir, pdf, "page2-key", async (frame) => {
-    await pressKey(frame, VK_RIGHT, 700);
+    await pressKey(frame, VK_RIGHT, 80);
   });
 
   if (page1.equals(page2Key)) {

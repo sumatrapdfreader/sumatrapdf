@@ -10,11 +10,9 @@
 // the per-document state fields.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, ROOT, runStandalone, tmpPath } from "./util";
-import { postMessage, sleep } from "./winapi";
-import { waitForFrame } from "./win-automation";
-
-const WM_CLOSE = 0x0010;
+import { ROOT, runStandalone, tmpPath } from "./util";
+import { postMessage, WM_CLOSE } from "./winapi";
+import { launchControlled, waitForExit } from "./win-automation";
 
 function makeAppDir(name: string, settings: string): string {
   const dir = tmpPath(`issue-5907-${name}`);
@@ -40,14 +38,15 @@ function readFileStates(dir: string): string {
 
 async function openAndClose(dir: string): Promise<void> {
   const pdf = join(ROOT, "tests", "issue-5597.pdf");
-  const proc = Bun.spawn([EXE, "-appdata", dir, pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled(["-appdata", dir, pdf], { saveSettings: true });
   try {
-    const frame = await waitForFrame(proc.pid!);
-    await sleep(3500);
-    // clean shutdown so settings get written
+    await client.waitForRenderIdle();
     postMessage(frame, WM_CLOSE, 0, 0);
-    await sleep(3000);
+    if (!(await waitForExit(proc))) {
+      throw new Error("issue-5907: SumatraPDF didn't exit after WM_CLOSE");
+    }
   } finally {
+    client.close();
     proc.kill();
   }
 }

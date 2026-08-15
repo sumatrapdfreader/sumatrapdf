@@ -9,11 +9,17 @@
 //  - a favorite the user added on purpose is still saved
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, ROOT, cmdId, runStandalone, tmpPath } from "./util";
-import { getFocusedHwnd, postMessage, sleep } from "./winapi";
-import { pressKey, sendCommand, typeIntoInput, waitForFrame } from "./win-automation";
+import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
+import { postMessage, WM_CLOSE } from "./winapi";
+import {
+  launchControlled,
+  pressKey,
+  sendCommand,
+  typeIntoInput,
+  waitForExit,
+  waitForFocusClass,
+} from "./win-automation";
 
-const WM_CLOSE = 0x0010;
 const VK_RETURN = 0x0d;
 
 function makeAppDir(name: string): string {
@@ -41,15 +47,16 @@ function readFileStates(dir: string): string {
 
 async function run(dir: string, act: (frame: number) => Promise<void>): Promise<void> {
   const pdf = join(ROOT, "tests", "issue-5597.pdf");
-  const proc = Bun.spawn([EXE, "-appdata", dir, pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled(["-appdata", dir, pdf], { saveSettings: true });
   try {
-    const frame = await waitForFrame(proc.pid!);
-    await sleep(3500);
+    await client.waitForRenderIdle();
     await act(frame);
-    // clean shutdown so settings get written
     postMessage(frame, WM_CLOSE, 0, 0);
-    await sleep(3000);
+    if (!(await waitForExit(proc))) {
+      throw new Error("issue-5899: SumatraPDF didn't exit after WM_CLOSE");
+    }
   } finally {
+    client.close();
     proc.kill();
   }
 }
@@ -58,12 +65,9 @@ export async function testit(): Promise<void> {
   const searchDir = makeAppDir("search");
   await run(searchDir, async (frame) => {
     sendCommand(frame, cmdId("CmdFindFirst"));
-    await sleep(1500);
-    const edit = getFocusedHwnd(frame);
+    const edit = await waitForFocusClass(frame, "Edit");
     await typeIntoInput(edit, "CAF", false);
-    await sleep(800);
     await pressKey(edit, VK_RETURN);
-    await sleep(2000);
   });
   const afterSearch = readFileStates(searchDir);
   if (afterSearch.includes("FilePath")) {
@@ -73,9 +77,7 @@ export async function testit(): Promise<void> {
   const favDir = makeAppDir("favorite");
   await run(favDir, async (frame) => {
     sendCommand(frame, cmdId("CmdFavoriteAdd"));
-    await sleep(2000);
-    await pressKey(getFocusedHwnd(frame), VK_RETURN); // confirm the add-favorite dialog
-    await sleep(1500);
+    await pressKey(await waitForFocusClass(frame, "Edit"), VK_RETURN);
   });
   const afterFav = readFileStates(favDir);
   if (!afterFav.includes("FilePath") || !afterFav.includes("PageNo")) {
