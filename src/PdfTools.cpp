@@ -204,6 +204,7 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
     browseFilter = filter;
     browseDefExt = defExt;
     HBox* row = AddRow();
+    row->gap = font->averageCharWidth;
 
     Edit::CreateArgs args;
     args.parent = hwnd;
@@ -217,7 +218,6 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
 
     browseBtn = NewButton("...", false);
     browseBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnBrowse>(this);
-    row->AddChild(new Spacer(gap, 0));
     row->AddChild(browseBtn);
 
     // align the source path label's text with the destination edit's text,
@@ -250,6 +250,7 @@ Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
 
 void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
     HBox* row = AddRow();
+    row->gap = font->averageCharWidth;
     if (hint) {
         row->AddChild(NewVirtText({.s = hint, .font = font, .isRtl = IsUIRtl()}));
     }
@@ -262,7 +263,6 @@ void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
 
     cancelBtn = NewButton(_TRA("Cancel"), false);
     cancelBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnCancel>(this);
-    row->AddChild(new Spacer(gap, 0));
     row->AddChild(cancelBtn);
 }
 

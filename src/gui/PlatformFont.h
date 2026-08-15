@@ -32,6 +32,7 @@ struct PlatformFont {
     float sizePt = 0;
     PlatformFontStyle style = PlatformFontStyle::Regular;
     uintptr_t nativeId = 0;
+    int averageCharWidth = 0;
 #if OS_WIN
     // created from the description above; null when the font was adopted from
     // an existing HFONT (one of the app's UI fonts)

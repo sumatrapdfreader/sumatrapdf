@@ -168,6 +168,7 @@ struct VBox : ILayout {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
+    int gap = 0;
     int totalHeight = 0;
     int totalFlex = 0;
 
@@ -196,6 +197,7 @@ struct HBox : ILayout {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
+    int gap = 0;
     // when true, children are placed right-to-left (MainStart packs to the right)
     bool rtl = false;
     int totalWidth = 0;

@@ -99,21 +99,11 @@ void Edit::SetCue(Str s) {
     Edit_SetCueBannerText(hwnd, CWStrTemp(s));
 }
 
-// average character width for sizing edits by character count
-static int EditAverageCharDx(PlatformFont* font) {
-    Size s = PlatformFontMeasureText(font, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-    int ave = (s.dx + 25) / 52;
-    if (ave < 1) {
-        ave = DpiScale(7);
-    }
-    return ave;
-}
-
 static int EditWidthForChars(PlatformFont* font, int nChars) {
     if (nChars <= 0) {
         return 0;
     }
-    return EditAverageCharDx(font) * nChars;
+    return font->averageCharWidth * nChars;
 }
 
 Edit::Edit() {

@@ -1354,12 +1354,12 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         auto* btnRow = new HBox();
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
+        btnRow->gap = font->averageCharWidth;
 
         btnClose = NewButton(_TRA("Close"), false);
         btnClose->onClick =
             MkMethod1<SelectionTranslateWnd, VirtMouseEvent*, &SelectionTranslateWnd::OnCloseClicked>(this);
-        // the gap to the Translate button
-        btnRow->AddChild(new Padding(btnClose, DpiScaledInsets(0, 8, 0, 0)));
+        btnRow->AddChild(btnClose);
 
         btnTranslate = NewButton(_TRA("Translate"), true);
         btnTranslate->onClick =

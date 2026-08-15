@@ -2185,10 +2185,9 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             auto* row2 = new HBox();
             row2->alignMain = MainAxisAlign::MainStart;
             row2->alignCross = CrossAxisAlign::CrossCenter;
+            row2->gap = ew->font->averageCharWidth;
             row2->AddChild(ew->destEdit, 1);
-            ew->btnBrowse->padding = DpiScaledInsets(0, 0, 0, 4);
             row2->AddChild(ew->btnBrowse);
-            ew->btnSave->padding = DpiScaledInsets(0, 0, 0, 4);
             row2->AddChild(ew->btnSave);
             auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(), 0});
             vbox->AddChild(row2Pad);
@@ -2198,17 +2197,15 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             auto* row3 = new HBox();
             row3->alignMain = MainAxisAlign::MainStart;
             row3->alignCross = CrossAxisAlign::CrossCenter;
+            row3->gap = ew->font->averageCharWidth;
             row3->AddChild(ew->staticInfoLabel, 1);
             if (ew->dropFormat) {
-                ew->dropFormat->SetInsetsPt(0, 0, 0, 4);
                 row3->AddChild(ew->dropFormat);
             }
             if (ew->btnCrop) {
-                ew->btnCrop->padding = DpiScaledInsets(0, 0, 0, 4);
                 row3->AddChild(ew->btnCrop);
             }
             if (ew->btnResize) {
-                ew->btnResize->padding = DpiScaledInsets(0, 0, 0, 4);
                 row3->AddChild(ew->btnResize);
             }
             vbox->AddChild(row3);

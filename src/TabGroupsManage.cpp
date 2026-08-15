@@ -363,8 +363,7 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         auto* btnRow = new HBox();
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
-
-        Insets gap = DpiScaledInsets(0, 0, 0, 4);
+        btnRow->gap = font->averageCharWidth;
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::OnCancel>(this);
@@ -372,11 +371,11 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         btnDelete = NewThemedButton(hwnd, _TRA("Delete"), font, false);
         btnDelete->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::DeleteTabGroup>(this);
         btnDelete->SetIsEnabled(false);
-        btnRow->AddChild(new Padding(btnDelete, gap));
+        btnRow->AddChild(btnDelete);
         Str okText = (mode == TabGroupDialogMode::Save) ? Str(_TRA("Save")) : Str(_TRA("Restore"));
         btnOk = NewThemedButton(hwnd, okText, font, true);
         btnOk->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::OnOk>(this);
-        btnRow->AddChild(new Padding(btnOk, gap));
+        btnRow->AddChild(btnOk);
         vbox->AddChild(new Padding(btnRow, DpiScaledInsets(kPadding, 0, 0, 0)));
     }
 

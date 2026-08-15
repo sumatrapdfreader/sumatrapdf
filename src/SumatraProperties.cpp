@@ -902,6 +902,7 @@ bool PropertiesWnd::Create(HWND parent) {
         auto* btnRow = new HBox();
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
+        btnRow->gap = GetAppFont()->averageCharWidth;
         btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetAppFont(), true);
         btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));

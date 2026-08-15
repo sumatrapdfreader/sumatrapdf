@@ -409,15 +409,6 @@ static int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     return totalFlex;
 }
 
-// Inter-child gap for VBox/HBox; margin support not implemented yet (always 0).
-static int CalculateVGap(ILayout* /*prev*/, ILayout* /*current*/) {
-    return 0;
-}
-
-static int CalculateHGap(ILayout* /*prev*/, ILayout* /*current*/) {
-    return 0;
-}
-
 // where a child of size sz sits inside its cell
 static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossAxisAlign alignV) {
     Rect r{cell.x, cell.y, sz.dx, sz.dy};
@@ -453,7 +444,8 @@ static Rect AlignInCell(const Rect& cell, Size sz, CrossAxisAlign alignH, CrossA
 // ILayout
 Size VBox::Layout(const Constraints bc) {
     auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         totalHeight = 0;
         return bc.Constrain(Size{});
     }
@@ -466,9 +458,8 @@ Size VBox::Layout(const Constraints bc) {
     auto cbc = bc;
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto count = (i64)NonCollapsedChildrenCount();
-        auto gap = CalculateVGap(nullptr, nullptr);
-        cbc = cbc.TightenHeight(Scale(cbc.max.dy, 1, count) - Scale(gap, count - 1, count));
+        int childDy = Scale(cbc.max.dy, 1, count) - Scale(gap, count - 1, count);
+        cbc = cbc.TightenHeight(std::max(childDy, 0));
     } else {
         cbc.min.dy = 0;
         cbc.max.dy = Inf;
@@ -492,13 +483,8 @@ Size VBox::Layout(const Constraints bc) {
         if (IsCollapsed(v.layout)) {
             continue;
         }
-        // Determine what gap needs to be inserted between the elements.
-        if (i > 0) {
-            if (IsPacked(alignMain)) {
-                height += CalculateVGap(previous, v.layout);
-            } else {
-                height += CalculateVGap(nullptr, nullptr);
-            }
+        if (previous) {
+            height += gap;
         }
         previous = v.layout;
 
@@ -563,101 +549,76 @@ Size VBox::Layout(const Constraints bc) {
 }
 
 int VBox::MinIntrinsicWidth(int height) {
-    auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         return 0;
     }
     if (alignMain == MainAxisAlign::Homogeneous) {
-        height = GuardInf(height, Scale(height, 1, i64(n)));
-        auto size = children[0].layout->MinIntrinsicWidth(height);
-        for (int i = 1; i < n; i++) {
-            auto& v = children[i];
+        int childDy = Scale(height, 1, count) - Scale(gap, count - 1, count);
+        height = GuardInf(height, std::max(childDy, 0));
+    } else {
+        height = Inf;
+    }
+    int size = 0;
+    for (auto& v : children) {
+        if (!IsCollapsed(v.layout)) {
             size = std::max(size, v.layout->MinIntrinsicWidth(height));
         }
-        return size;
-    }
-    auto size = children[0].layout->MinIntrinsicWidth(Inf);
-    for (int i = 1; i < n; i++) {
-        auto& v = children[i];
-        size = std::max(size, v.layout->MinIntrinsicWidth(Inf));
     }
     return size;
 }
 
 int VBox::MinIntrinsicHeight(int width) {
-    auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         return 0;
     }
-    auto size = children[0].layout->MinIntrinsicHeight(width);
-    if (IsPacked(alignMain)) {
-        auto* previous = children[0].layout;
-        for (int i = 1; i < n; i++) {
-            auto& v = children[i];
-            // Add the preferred gap between this pair of widgets
-            size += CalculateVGap(previous, v.layout);
-            previous = v.layout;
-            // Find minimum size for this widget, and update
-            size += v.layout->MinIntrinsicHeight(width);
-        }
-        return size;
-    }
-
+    int size = 0;
     if (alignMain == MainAxisAlign::Homogeneous) {
-        for (int i = 1; i < n; i++) {
-            auto& v = children[i];
-            size = std::max(size, v.layout->MinIntrinsicHeight(width));
+        for (auto& v : children) {
+            if (!IsCollapsed(v.layout)) {
+                size = std::max(size, v.layout->MinIntrinsicHeight(width));
+            }
         }
-
-        // Add a minimum gap between the controls.
-        auto vgap = CalculateVGap(nullptr, nullptr);
-        size = Scale(size, i64(n), 1) + Scale(vgap, i64(n) - 1, 1);
-        return size;
-    }
-
-    for (int i = 1; i < n; i++) {
-        auto& v = children[i];
-        size += v.layout->MinIntrinsicHeight(width);
-    }
-
-    // Add a minimum gap between the controls.
-    auto vgap = CalculateVGap(nullptr, nullptr);
-    if (alignMain == MainAxisAlign::SpaceBetween) {
-        size += Scale(vgap, i64(n) - 1, 1);
     } else {
-        size += Scale(vgap, i64(n) + 1, 1);
+        for (auto& v : children) {
+            if (!IsCollapsed(v.layout)) {
+                size += v.layout->MinIntrinsicHeight(width);
+            }
+        }
     }
-
-    return size;
+    return size + gap * (count - 1);
 }
 
 void VBox::SetBounds(Rect bounds) {
     lastBounds = bounds;
 
     auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         return;
     }
     dbglayout(fmt("VBox:SetBounds() %d,%d - %d, %d %d children\n", bounds.x, bounds.y, bounds.dx, bounds.dy, n));
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto gap = CalculateVGap(nullptr, nullptr);
         auto dy = bounds.dy + gap;
-        auto count = i64(n);
-
+        int visibleIdx = 0;
         for (int i = 0; i < n; i++) {
             auto& v = children[i];
-            auto y1 = bounds.y + Scale(dy, i, count);
-            auto y2 = bounds.y + Scale(dy, i + 1, count) - gap;
+            if (IsCollapsed(v.layout)) {
+                continue;
+            }
+            auto y1 = bounds.y + Scale(dy, visibleIdx, count);
+            auto y2 = bounds.y + Scale(dy, visibleIdx + 1, count) - gap;
             SetBoundsForChild(i, v.layout, bounds.x, y1, bounds.Right(), y2);
+            visibleIdx++;
         }
         return;
     }
 
-    // Adjust the bounds so that the minimum Y handles vertical alignment
-    // of the controls.  We also calculate 'extraGap' which will adjust
-    // spacing of the controls for non-packed alignments.
-    auto extraGap = 0;
+    // Adjust the bounds for main-axis alignment and add any distributed free
+    // space to the requested inter-child gap.
+    auto between = gap;
     if (totalFlex == 0) {
         switch (alignMain) {
             case MainAxisAlign::MainStart:
@@ -671,16 +632,15 @@ void VBox::SetBounds(Rect bounds) {
                 break;
             case MainAxisAlign::SpaceAround: {
                 int l = (bounds.dy - totalHeight);
-                extraGap = Scale(l, 1, i64(n) + 1);
-                bounds.y += extraGap;
-                extraGap += CalculateVGap(nullptr, nullptr);
+                int extra = Scale(l, 1, i64(count) + 1);
+                bounds.y += extra;
+                between += extra;
                 break;
             }
             case MainAxisAlign::SpaceBetween:
-                if (n > 1) {
+                if (count > 1) {
                     int l = (bounds.dy - totalHeight);
-                    extraGap = Scale(l, 1, i64(n) - 1);
-                    extraGap += CalculateVGap(nullptr, nullptr);
+                    between += Scale(l, 1, i64(count) - 1);
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
@@ -698,16 +658,14 @@ void VBox::SetBounds(Rect bounds) {
         if (IsCollapsed(v.layout)) {
             continue;
         }
-        if (IsPacked(alignMain)) {
-            if (i > 0) {
-                posY += CalculateVGap(previous, v.layout);
-            }
-            previous = v.layout;
+        if (previous) {
+            posY += IsPacked(alignMain) ? gap : between;
         }
+        previous = v.layout;
 
         auto dy = v.size.dy;
         SetBoundsForChild(i, v.layout, bounds.x, posY, bounds.Right(), posY + dy);
-        posY += dy + extraGap;
+        posY += dy;
     }
 }
 
@@ -797,7 +755,8 @@ int HBox::NonCollapsedChildrenCount() {
 
 Size HBox::Layout(const Constraints bc) {
     auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         totalWidth = 0;
         return bc.Constrain(Size{});
     }
@@ -808,10 +767,9 @@ Size HBox::Layout(const Constraints bc) {
     // Determine the constraints for layout of child elements.
     auto cbc = bc;
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto count = (i64)NonCollapsedChildrenCount();
-        auto gap = CalculateHGap(nullptr, nullptr);
         auto maxw = cbc.max.dx;
-        cbc = cbc.TightenWidth(Scale(maxw, 1, count) - Scale(gap, count - 1, count));
+        int childDx = Scale(maxw, 1, count) - Scale(gap, count - 1, count);
+        cbc = cbc.TightenWidth(std::max(childDx, 0));
     } else {
         cbc.min.dx = 0;
         cbc.max.dx = Inf;
@@ -835,13 +793,8 @@ Size HBox::Layout(const Constraints bc) {
         if (IsCollapsed(v.layout)) {
             continue;
         }
-        // Determine what gap needs to be inserted between the elements.
-        if (i > 0) {
-            if (IsPacked(alignMain)) {
-                width += CalculateHGap(previous, v.layout);
-            } else {
-                width += CalculateHGap(nullptr, nullptr);
-            }
+        if (previous) {
+            width += gap;
         }
         previous = v.layout;
 
@@ -908,81 +861,49 @@ Size HBox::Layout(const Constraints bc) {
 }
 
 int HBox::MinIntrinsicHeight(int width) {
-    auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         return 0;
     }
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        width = GuardInf(width, Scale(width, 1, i64(n)));
-        auto size = children[0].layout->MinIntrinsicHeight(width);
-        for (int i = 1; i < n; i++) {
-            auto v = children[i];
+        int childDx = Scale(width, 1, count) - Scale(gap, count - 1, count);
+        width = GuardInf(width, std::max(childDx, 0));
+    } else {
+        width = Inf;
+    }
+    int size = 0;
+    for (auto& v : children) {
+        if (!IsCollapsed(v.layout)) {
             size = std::max(size, v.layout->MinIntrinsicHeight(width));
         }
-        return size;
-    }
-
-    auto size = children[0].layout->MinIntrinsicHeight(Inf);
-    for (int i = 1; i < n; i++) {
-        auto& v = children[i];
-        size = std::max(size, v.layout->MinIntrinsicHeight(Inf));
     }
     return size;
 }
 
 int HBox::MinIntrinsicWidth(int height) {
-    auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         return 0;
     }
 
-    auto size = children[0].layout->MinIntrinsicWidth(height);
-    if (IsPacked(alignMain)) {
-        for (int i = 1; i < n; i++) {
-            auto& v = children[i];
-            // Add the preferred gap between this pair of widgets
-            if (IsCollapsed(v.layout)) {
-                continue;
-            }
-            // Find minimum size for this widget, and update
-            size += v.layout->MinIntrinsicWidth(height);
-        }
-        return size;
-    }
-
+    int size = 0;
     if (alignMain == MainAxisAlign::Homogeneous) {
-        for (int i = 1; i < n; i++) {
-            auto& v = children[i];
+        for (auto& v : children) {
             if (IsCollapsed(v.layout)) {
                 continue;
             }
             size = std::max(size, v.layout->MinIntrinsicWidth(height));
         }
-
-        // Add a minimum gap between the controls.
-        auto hgap = CalculateHGap(nullptr, nullptr);
-        size = Scale(size, i64(n), 1) + Scale(hgap, i64(n) - 1, 1);
-        return size;
-    }
-
-    for (int i = 1; i < n; i++) {
-        auto* l = children[i].layout;
-        if (IsCollapsed(l)) {
-            continue;
-        }
-        size += l->MinIntrinsicWidth(height);
-    }
-
-    // Add a minimum gap between the controls.
-    auto hgap = CalculateHGap(nullptr, nullptr);
-    if (alignMain == MainAxisAlign::SpaceBetween) {
-        size += Scale(hgap, i64(n) - 1, 1);
+        size *= count;
     } else {
-        size += Scale(hgap, i64(n) + 1, 1);
+        for (auto& v : children) {
+            if (!IsCollapsed(v.layout)) {
+                size += v.layout->MinIntrinsicWidth(height);
+            }
+        }
     }
-
-    return size;
+    return size + gap * (count - 1);
 }
 
 // mirror a child's x against the original HBox so MainStart packs to the right
@@ -995,33 +916,35 @@ void HBox::SetBounds(Rect bounds) {
     lastBounds = bounds;
     Rect box = bounds;
     auto n = ChildrenCount();
-    if (n == 0) {
+    int count = NonCollapsedChildrenCount();
+    if (count == 0) {
         return;
     }
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto gap = CalculateHGap(nullptr, nullptr);
         auto dx = bounds.dx + gap;
-        auto count = i64(n);
-
+        int visibleIdx = 0;
         for (int i = 0; i < n; i++) {
             auto* v = children[i].layout;
-            auto x1 = bounds.x + Scale(dx, i, count);
-            auto x2 = bounds.x + Scale(dx, i + 1, count) - gap;
+            if (IsCollapsed(v)) {
+                continue;
+            }
+            auto x1 = bounds.x + Scale(dx, visibleIdx, count);
+            auto x2 = bounds.x + Scale(dx, visibleIdx + 1, count) - gap;
             if (rtl) {
                 int w = x2 - x1;
                 x1 = MirrorX(box, x1, w);
                 x2 = x1 + w;
             }
             SetBoundsForChild(i, v, x1, bounds.y, x2, bounds.Bottom());
+            visibleIdx++;
         }
         return;
     }
 
-    // Adjust the bounds so that the minimum Y handles vertical alignment
-    // of the controls.  We also calculate 'extraGap' which will adjust
-    // spacing of the controls for non-packed alignments.
-    auto extraGap = 0;
+    // Adjust the bounds for main-axis alignment and add any distributed free
+    // space to the requested inter-child gap.
+    auto between = gap;
     if (totalFlex == 0) {
         switch (alignMain) {
             case MainAxisAlign::MainStart:
@@ -1035,15 +958,14 @@ void HBox::SetBounds(Rect bounds) {
                 break;
             case MainAxisAlign::SpaceAround: {
                 auto eg = (bounds.dx - totalWidth);
-                extraGap = Scale(eg, 1, i64(n) + 1);
-                bounds.x += extraGap;
-                extraGap += CalculateHGap(nullptr, nullptr);
+                int extra = Scale(eg, 1, i64(count) + 1);
+                bounds.x += extra;
+                between += extra;
             } break;
             case MainAxisAlign::SpaceBetween:
-                if (n > 1) {
+                if (count > 1) {
                     auto eg = (bounds.dx - totalWidth);
-                    extraGap = Scale(eg, 1, i64(n) - 1);
-                    extraGap += CalculateHGap(nullptr, nullptr);
+                    between += Scale(eg, 1, i64(count) - 1);
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
@@ -1063,12 +985,10 @@ void HBox::SetBounds(Rect bounds) {
         if (IsCollapsed(v.layout)) {
             continue;
         }
-        if (IsPacked(alignMain)) {
-            if (i > 0) {
-                posX += CalculateHGap(previous, v.layout);
-            }
-            previous = v.layout;
+        if (previous) {
+            posX += IsPacked(alignMain) ? gap : between;
         }
+        previous = v.layout;
 
         auto dx = children[i].size.dx;
         int x1 = posX;
@@ -1078,7 +998,7 @@ void HBox::SetBounds(Rect bounds) {
             x2 = x1 + dx;
         }
         SetBoundsForChild(i, v.layout, x1, bounds.y, x2, bounds.Bottom());
-        posX += dx + extraGap;
+        posX += dx;
     }
 }
 
@@ -2117,6 +2037,53 @@ static void Layout_TestHBoxCrossCenter() {
     delete hb;
 }
 
+static void Layout_TestBoxGap() {
+    {
+        auto* a = new Spacer(20, 10);
+        auto* b = new Spacer(30, 20);
+        auto* hb = new HBox();
+        hb->gap = 7;
+        hb->AddChild(a);
+        hb->AddChild(b);
+        Size size = hb->Layout(Loose(Size{100, 100}));
+        utassert(size.dx == 57 && size.dy == 20);
+        hb->SetBounds(Rect{0, 0, size.dx, size.dy});
+        utassert(LayoutRectEq(a->lastBounds, 0, 0, 20, 10));
+        utassert(LayoutRectEq(b->lastBounds, 27, 0, 30, 20));
+        delete hb;
+    }
+    {
+        auto* a = new Spacer(20, 10);
+        auto* collapsed = new Spacer(40, 40);
+        auto* b = new Spacer(30, 20);
+        auto* vb = new VBox();
+        vb->gap = 7;
+        vb->AddChild(a);
+        vb->AddChild(collapsed);
+        vb->AddChild(b);
+        collapsed->SetVisibility(Visibility::Collapse);
+        Size size = vb->Layout(Loose(Size{100, 100}));
+        utassert(size.dx == 30 && size.dy == 37);
+        vb->SetBounds(Rect{0, 0, size.dx, size.dy});
+        utassert(LayoutRectEq(a->lastBounds, 0, 0, 20, 10));
+        utassert(LayoutRectEq(b->lastBounds, 0, 17, 30, 20));
+        delete vb;
+    }
+    {
+        auto* a = new Spacer(20, 10);
+        auto* b = new Spacer(30, 10);
+        auto* hb = new HBox();
+        hb->alignMain = MainAxisAlign::Homogeneous;
+        hb->gap = 10;
+        hb->AddChild(a);
+        hb->AddChild(b);
+        LayoutToSize(hb, Size{100, 10});
+        utassert(LayoutRectEq(a->lastBounds, 0, 0, 45, 10));
+        utassert(LayoutRectEq(b->lastBounds, 55, 0, 45, 10));
+        delete hb;
+    }
+}
+
 static void Layout_TestCollapsed() {
     auto* s0 = new Spacer(50, 10);
     auto* s1 = new Spacer(50, 20);
@@ -2253,6 +2220,7 @@ void Layout_UnitTests() {
     Layout_TestVBoxFlex();
     Layout_TestHBoxFlex();
     Layout_TestHBoxCrossCenter();
+    Layout_TestBoxGap();
     Layout_TestCollapsed();
     Layout_TestAlign();
     Layout_TestHwndSlot();

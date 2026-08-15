@@ -373,6 +373,7 @@ void KeyboardHelpWnd::BuildContent() {
 
     auto* titleRow = new HBox();
     titleRow->alignCross = CrossAxisAlign::CrossCenter;
+    titleRow->gap = fontTitle->averageCharWidth;
     titleRow->AddChild(title, 1);
     titleRow->AddChild(closeBtn);
     container->AddChild(titleRow);

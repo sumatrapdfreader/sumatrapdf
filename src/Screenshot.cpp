@@ -484,18 +484,16 @@ bool SetHotkeyWnd::Create(HWND owner) {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
-        int gap = DpiScale(4);
+        hbox->gap = font->averageCharWidth;
 
         btnCancel = NewButton(_TRA("Cancel"), false);
         btnCancel->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::OnCancel>(this);
         hbox->AddChild(btnCancel);
         btnRemove = NewButton(_TRA("Remove"), false);
         btnRemove->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoRemove>(this);
-        hbox->AddChild(new Spacer(gap, 0));
         hbox->AddChild(btnRemove);
         btnSet = NewButton(_TRA("Set"), true);
         btnSet->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoSet>(this);
-        hbox->AddChild(new Spacer(gap, 0));
         hbox->AddChild(btnSet);
 
         auto* hboxPad = new Padding(hbox, DpiScaledInsets(8, 0, 0, 0));

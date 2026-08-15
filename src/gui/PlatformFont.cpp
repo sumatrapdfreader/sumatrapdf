@@ -12,6 +12,15 @@ static PlatformFont gPlatformFonts;
 // ask for a font
 static Mutex gPlatformFontsMutex;
 
+static int CalculateAverageCharWidth(PlatformFont* font) {
+    Size size = PlatformFontMeasureText(font, StrL("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"));
+    int average = (size.dx + 25) / 52;
+    if (average > 0) {
+        return average;
+    }
+    return std::max((int)(font->sizePt * 0.55f), 1);
+}
+
 bool PlatformFont::SameAs(Str otherName, float otherSizePt, PlatformFontStyle otherStyle) const {
     if (sizePt != otherSizePt) {
         return false;
@@ -45,6 +54,7 @@ static PlatformFont* GetPlatformFontInternal(Str name, float sizePt, PlatformFon
         // the gdiplus font cache used to
         return gPlatformFonts.next;
     }
+    font->averageCharWidth = CalculateAverageCharWidth(font);
     ListInsertFront(&gPlatformFonts.next, font);
     return font;
 }

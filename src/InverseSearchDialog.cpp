@@ -173,7 +173,8 @@ bool InverseSearchWnd::Create(MainWindow* mainWin) {
         auto* row = new HBox();
         row->alignMain = MainAxisAlign::SpaceBetween;
         row->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{4, 8, 4, 8};
+        row->gap = font->averageCharWidth;
+        auto pad = Insets{4, 0, 4, 0};
 
         btnHelp = NewThemedButton(hwnd, _TRA("Help"), font, false);
         btnHelp->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnHelp>(this);
@@ -182,6 +183,7 @@ bool InverseSearchWnd::Create(MainWindow* mainWin) {
         auto* right = new HBox();
         right->alignMain = MainAxisAlign::MainEnd;
         right->alignCross = CrossAxisAlign::CrossCenter;
+        right->gap = font->averageCharWidth;
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnCancel>(this);
         right->AddChild(new Padding(btnCancel, pad));

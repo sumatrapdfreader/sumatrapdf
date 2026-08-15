@@ -1858,8 +1858,8 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 
     auto* dirRow = new HBox();
     dirRow->alignCross = CrossAxisAlign::CrossCenter;
+    dirRow->gap = GetDefaultGuiFont()->averageCharWidth;
     dirRow->AddChild(new HwndSlot(wnd->editInstallationDir->hwnd, DpiScale(80), editDy), 1);
-    dirRow->AddChild(new Spacer(gap, 0));
     dirRow->AddChild(new HwndSlot(wnd->btnBrowseDir->hwnd, browseDx, browseDx));
 
     auto addCheck = [&](Checkbox* cb, VBox* box) {
@@ -1887,6 +1887,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     Size instSz = wnd->btnInstall->GetIdealSize();
     auto* bottom = new HBox();
     bottom->alignCross = CrossAxisAlign::CrossCenter;
+    bottom->gap = GetDefaultGuiFont()->averageCharWidth;
     wnd->optionsBtnSlot = new HwndSlot(wnd->btnOptions->hwnd, optSz.dx, optSz.dy);
     bottom->AddChild(wnd->optionsBtnSlot);
     bottom->AddChild(new Spacer(0, 0), 1);

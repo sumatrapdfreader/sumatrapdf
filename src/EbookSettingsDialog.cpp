@@ -668,17 +668,24 @@ bool EbookSettingsWnd::Create(MainWindow* mainWin) {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::SpaceBetween;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{4, 8, 4, 8};
+        hbox->gap = font->averageCharWidth;
+        auto pad = Insets{4, 0, 4, 0};
 
         btnReset = NewThemedButton(hwnd, _TRA("Reset to defaults"), font, false);
         btnReset->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnReset>(this);
         hbox->AddChild(new Padding(btnReset, pad));
+
+        auto* right = new HBox();
+        right->alignMain = MainAxisAlign::MainEnd;
+        right->alignCross = CrossAxisAlign::CrossCenter;
+        right->gap = font->averageCharWidth;
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
+        right->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
         btnOk->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
+        right->AddChild(new Padding(btnOk, pad));
+        hbox->AddChild(right);
         vbox->AddChild(hbox);
     }
 

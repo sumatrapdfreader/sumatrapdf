@@ -384,9 +384,9 @@ void FindWindowWnd::BuildLayout() {
     // Status is at least ~7 characters so the bar doesn't jump; longer counts can grow.
     auto* tools = new HBox();
     tools->alignCross = CrossAxisAlign::CrossCenter;
+    tools->gap = status->font->averageCharWidth;
     int statusMinDx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
     tools->AddChild(new FindFixedDx(status, statusMinDx));
-    tools->AddChild(new Spacer(gap, 0));
     for (VirtIconButton* b : btns) {
         tools->AddChild(b);
     }

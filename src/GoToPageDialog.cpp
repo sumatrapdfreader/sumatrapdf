@@ -195,7 +195,8 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{4, 8, 4, 8};
+        hbox->gap = font->averageCharWidth;
+        auto pad = Insets{4, 0, 4, 0};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnCancel>(this);

@@ -1195,11 +1195,13 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::SpaceBetween;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{4, 8, 4, 8};
+        hbox->gap = font->averageCharWidth;
+        auto pad = Insets{4, 0, 4, 0};
 
         auto* left = new HBox();
         left->alignMain = MainAxisAlign::MainStart;
         left->alignCross = CrossAxisAlign::CrossCenter;
+        left->gap = font->averageCharWidth;
         btnSave = NewThemedButton(hwnd, _TRA("Save"), font, true);
         btnSave->onClick = MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnSave>(this);
         left->AddChild(new Padding(btnSave, pad));
