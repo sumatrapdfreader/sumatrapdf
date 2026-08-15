@@ -46,6 +46,7 @@ GfxDirect2D::GfxDirect2D(HDC hdc) {
 }
 GfxDirect2D::~GfxDirect2D() = default;
 void GfxDirect2D::FillRect(const Rect&, Color) {}
+void GfxDirect2D::FillRects(const Rect*, int, Color, u8, int) {}
 void GfxDirect2D::DrawRect(const Rect&, Color, int) {}
 void GfxDirect2D::FillRoundedRect(const Rect&, int, Color, Color) {}
 void GfxDirect2D::FillEllipse(const Rect&, Color, u8) {}
@@ -283,6 +284,52 @@ void GfxDirect2D::FillRect(const Rect& r, Color col) {
     // would let the old content show through
     target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
     target->FillRectangle(ToD2DRect(r), br);
+}
+
+void GfxDirect2D::FillRects(const Rect* rects, int count, Color col, u8 alpha, int outlineWidth) {
+    if (!target || ColorSkipsPaint(col) || count <= 0) {
+        return;
+    }
+    ID2D1PathGeometry* path = nullptr;
+    HRESULT hr = gD2DFactory->CreatePathGeometry(&path);
+    if (FAILED(hr)) {
+        return;
+    }
+    ID2D1GeometrySink* sink = nullptr;
+    hr = path->Open(&sink);
+    if (SUCCEEDED(hr)) {
+        sink->SetFillMode(D2D1_FILL_MODE_WINDING);
+        for (int i = 0; i < count; i++) {
+            const Rect& r = rects[i];
+            if (r.IsEmpty()) {
+                continue;
+            }
+            sink->BeginFigure(D2D1::Point2F((float)r.x, (float)r.y), D2D1_FIGURE_BEGIN_FILLED);
+            D2D1_POINT_2F points[] = {
+                D2D1::Point2F((float)r.Right(), (float)r.y),
+                D2D1::Point2F((float)r.Right(), (float)r.Bottom()),
+                D2D1::Point2F((float)r.x, (float)r.Bottom()),
+            };
+            sink->AddLines(points, dimof(points));
+            sink->EndFigure(D2D1_FIGURE_END_CLOSED);
+        }
+        hr = sink->Close();
+        sink->Release();
+    }
+    if (SUCCEEDED(hr)) {
+        target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+        ID2D1SolidColorBrush* br = GetBrush(col, alpha);
+        if (br) {
+            target->FillGeometry(path, br);
+        }
+        if (outlineWidth > 0) {
+            br = GetBrush(kColBlack, alpha);
+            if (br) {
+                target->DrawGeometry(path, br, (float)outlineWidth);
+            }
+        }
+    }
+    path->Release();
 }
 
 void GfxDirect2D::DrawRect(const Rect& r, Color col, int thickness) {

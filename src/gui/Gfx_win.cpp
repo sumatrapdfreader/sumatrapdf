@@ -81,6 +81,28 @@ struct GdiplusOnHdc {
     }
 };
 
+void GfxHdc::FillRects(const Rect* rects, int count, Color col, u8 alpha, int outlineWidth) {
+    if (ColorSkipsPaint(col) || count <= 0) {
+        return;
+    }
+    GdiplusOnHdc gh(hdc);
+    Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
+    for (int i = 0; i < count; i++) {
+        if (!rects[i].IsEmpty()) {
+            path.AddRectangle(ToGdipRect(rects[i]));
+        }
+    }
+    u8 r, g, b;
+    UnpackColor(col, r, g, b);
+    Gdiplus::SolidBrush brush(Gdiplus::Color(alpha, r, g, b));
+    gh.g.FillPath(&brush, &path);
+    if (outlineWidth > 0) {
+        path.Outline(nullptr, 0.2f);
+        Gdiplus::Pen pen(Gdiplus::Color(alpha, 0, 0, 0), (float)outlineWidth);
+        gh.g.DrawPath(&pen, &path);
+    }
+}
+
 // `d` is the diameter of the corner circles, so it is the radius doubled; the
 // callers pass a value tuned to look right rather than a true radius
 static void AddRoundedRectPath(Gdiplus::GraphicsPath& path, const Rect& rc, int d) {

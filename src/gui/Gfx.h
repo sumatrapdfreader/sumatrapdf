@@ -72,6 +72,8 @@ struct Gfx {
 
     // kColorTransparent / kColorUnset skip the fill
     virtual void FillRect(const Rect&, Color) = 0;
+    // fills the union of the rectangles; the optional outline follows its outside edge
+    virtual void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) = 0;
     // 1px-per-thickness outline drawn inside the rect
     virtual void DrawRect(const Rect&, Color, int thickness = 1) = 0;
     // anti-aliased; transparent / unset skip fill / border
@@ -115,6 +117,7 @@ struct GfxHdc : Gfx {
     ~GfxHdc() override = default;
 
     void FillRect(const Rect&, Color) override;
+    void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
     void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
@@ -147,6 +150,7 @@ struct GfxGdiplus : Gfx {
     ~GfxGdiplus() override;
 
     void FillRect(const Rect&, Color) override;
+    void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
     void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
@@ -187,6 +191,7 @@ struct GfxDirect2D : Gfx {
     ~GfxDirect2D() override;
 
     void FillRect(const Rect&, Color) override;
+    void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
     void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;

@@ -11,6 +11,7 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/Gfx.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -323,10 +324,9 @@ void UpdateRectangularSelectionEdit(MainWindow* win, int x, int y) {
     win->selectionMeasure = win->AsFixed() ? win->AsFixed()->CvtFromScreen(win->selectionRect).Size() : SizeF();
 }
 
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, Color selectionColor, u8 alpha, int pad,
+void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color selectionColor, u8 alpha, int pad,
                                 bool drawBorder) {
-    // create path from rectangles
-    Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
+    Vec<Rect> paintedRects;
     screenRc.Inflate(pad, pad);
     for (int i = 0; i < len(rects); i++) {
         Rect rc = rects[i];
@@ -335,23 +335,11 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, Color 
         }
         rc = rc.Intersect(screenRc);
         if (!rc.IsEmpty()) {
-            path.AddRectangle(ToGdipRect(rc));
+            paintedRects.Append(rc);
         }
     }
-
-    Gdiplus::Graphics gs(hdc);
-    u8 r, g, b;
-    UnpackColor(selectionColor, r, g, b);
-    Gdiplus::Color c(alpha, r, g, b);
-    Gdiplus::SolidBrush tmpBrush(c);
-    gs.FillPath(&tmpBrush, &path);
-    if (drawBorder && pad > 0) {
-        // black outline around the filled region (only the selection asks for this;
-        // find-match and read-aloud highlights stay borderless)
-        path.Outline(nullptr, 0.2f);
-        Gdiplus::Pen tmpPen(Gdiplus::Color(alpha, 0, 0, 0), (float)pad);
-        gs.DrawPath(&tmpPen, &path);
-    }
+    int outlineWidth = drawBorder ? pad : 0;
+    gfx->FillRects(paintedRects.els, len(paintedRects), selectionColor, alpha, outlineWidth);
 }
 
 // Touch selection handles: a dot under each end of the selection, big enough
@@ -413,23 +401,18 @@ void HideTouchSelHandles(MainWindow* win) {
     ScheduleRepaint(win, 0);
 }
 
-static void PaintTouchSelHandles(MainWindow* win, HDC hdc) {
+static void PaintTouchSelHandles(MainWindow* win, Gfx* gfx) {
     Rect start, end;
     if (!win->touchSelHandles || !GetTouchSelHandleRects(win, start, end)) {
         return;
     }
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
     Color col = parsedCol->col;
-    AutoDeleteBrush brush(CreateSolidBrush(col));
-    AutoDeletePen pen(CreatePen(PS_SOLID, DpiScale(1), col));
-    ScopedSelectObject restoreBrush(hdc, brush);
-    ScopedSelectObject restorePen(hdc, pen);
-    for (const Rect& r : {start, end}) {
-        Ellipse(hdc, r.x, r.y, r.x + r.dx, r.y + r.dy);
-    }
+    gfx->FillEllipse(start, col);
+    gfx->FillEllipse(end, col);
 }
 
-void PaintSelection(MainWindow* win, HDC hdc) {
+void PaintSelection(MainWindow* win, Gfx* gfx) {
     ReportIf(!win->AsFixed());
 
     Vec<Rect> rects;
@@ -483,8 +466,8 @@ void PaintSelection(MainWindow* win, HDC hdc) {
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
     }
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha, 2, /*drawBorder*/ true);
-    PaintTouchSelHandles(win, hdc);
+    PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha, 2, /*drawBorder*/ true);
+    PaintTouchSelHandles(win, gfx);
 }
 
 void UpdateTextSelection(MainWindow* win, bool select) {

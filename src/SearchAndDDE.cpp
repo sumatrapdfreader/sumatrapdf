@@ -1757,7 +1757,7 @@ static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, TextS
     }
 }
 
-static void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch* ts, HDC hdc) {
+static void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch* ts, Gfx* gfx) {
     if (!ts || ts->result.len == 0) {
         return;
     }
@@ -1769,11 +1769,11 @@ static void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch*
     Vec<Rect> currentRects;
     AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
     if (len(currentRects) > 0) {
-        PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
+        PaintTransparentRectangles(gfx, win->canvasRc, currentRects, parsedCol->col, alpha);
     }
 }
 
-void PaintAllFindMatches(MainWindow* win, HDC hdc) {
+void PaintAllFindMatches(MainWindow* win, Gfx* gfx) {
     if (!win->IsDocLoaded() || !win->AsFixed()) {
         return;
     }
@@ -1799,12 +1799,12 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
     // FindNext navigation is visible (issue #5802). The full match list was
     // cleared on hide; only paint the current TextSearch hit.
     if (!IsFindUIVisible(win)) {
-        PaintCurrentFindMatch(win, dm, ts, hdc);
+        PaintCurrentFindMatch(win, dm, ts, gfx);
         return;
     }
     if (!win->findCountValid && len(win->findMatches) == 0) {
         // count still running: at least highlight the current match
-        PaintCurrentFindMatch(win, dm, ts, hdc);
+        PaintCurrentFindMatch(win, dm, ts, gfx);
         return;
     }
     if (len(win->findMatches) == 0) {
@@ -1843,17 +1843,17 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
     }
 
     if (len(otherRects) > 0) {
-        PaintTransparentRectangles(hdc, win->canvasRc, otherRects, kFindOtherMatchColor, alpha);
+        PaintTransparentRectangles(gfx, win->canvasRc, otherRects, kFindOtherMatchColor, alpha);
     }
     if (len(currentRects) == 0 && ts && ts->result.len > 0) {
         AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
     }
     if (len(currentRects) > 0) {
-        PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
+        PaintTransparentRectangles(gfx, win->canvasRc, currentRects, parsedCol->col, alpha);
     }
 }
 
-void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
+void PaintForwardSearchMark(MainWindow* win, Gfx* gfx) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
     int pageNo = win->fwdSearchMark.page;
@@ -1883,7 +1883,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
     u8 alpha =
         (u8)(0x5f * 1.0f * (float)(HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->forwardSearch.highlightColor);
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
+    PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha);
 }
 
 // Replace in 'pattern' the macros %f %l %c by 'path', 'line' and 'col'

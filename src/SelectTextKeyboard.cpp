@@ -9,6 +9,7 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/Gfx.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -573,7 +574,7 @@ constexpr Color kCaretBarCol = MkRgb(0x19, 0x76, 0xd2);
 constexpr Color kCaretBandCol = kColWhite;
 constexpr u8 kCaretBandAlpha = 90;
 
-void PaintKeyboardTextCaret(MainWindow* win, HDC hdc) {
+void PaintKeyboardTextCaret(MainWindow* win, Gfx* gfx) {
     if (!SelectTextWithKeyboardActive(win)) {
         return;
     }
@@ -590,13 +591,11 @@ void PaintKeyboardTextCaret(MainWindow* win, HDC hdc) {
         if (!vis.IsEmpty()) {
             Vec<Rect> rects;
             rects.Append(vis);
-            PaintTransparentRectangles(hdc, win->canvasRc, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
+            PaintTransparentRectangles(gfx, win->canvasRc, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
         }
     }
     if (!win->textSelectCaretVisible || win->canvasRc.Intersect(bar).IsEmpty()) {
         return;
     }
-    AutoDeleteBrush brush(CreateSolidBrush(kCaretBarCol));
-    RECT rc = ToRECT(bar);
-    FillRect(hdc, &rc, brush);
+    gfx->FillRect(bar, kCaretBarCol);
 }

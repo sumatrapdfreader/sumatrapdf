@@ -3056,6 +3056,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
     WindowTab* tab = win->CurrentTab();
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
+    GfxHdc gfx(hdc);
 
     // draw highlight rectangle around element under cursor during context menu
     if (win->contextMenuHighlightPageNo > 0 && dm->PageVisible(win->contextMenuHighlightPageNo)) {
@@ -3071,22 +3072,22 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     // so it isn't drawn twice; PaintAllFindMatches no-ops unless actively
     // searching). Using "else if" here hid the normal selection highlight
     // when all-match painting was on (issue #5737).
-    PaintAllFindMatches(win, hdc);
+    PaintAllFindMatches(win, &gfx);
     if (win->showSelection) {
-        PaintSelection(win, hdc);
+        PaintSelection(win, &gfx);
     }
     // keep the floating selection toolbar aligned with the selection while
     // scrolling/zooming; hides itself when the selection is gone or off-screen
     UpdateSelectionToolbarPosition(win);
 
-    PaintReadAloudHighlight(win, hdc);
+    PaintReadAloudHighlight(win, &gfx);
 
     if (win->fwdSearchMark.show) {
-        PaintForwardSearchMark(win, hdc);
+        PaintForwardSearchMark(win, &gfx);
     }
 
-    PaintKeyboardLinkTargets(win, hdc);
-    PaintKeyboardTextCaret(win, hdc);
+    PaintKeyboardLinkTargets(win, &gfx);
+    PaintKeyboardTextCaret(win, &gfx);
 
     if (!rendering) {
         DebugShowLinks(dm, hdc);

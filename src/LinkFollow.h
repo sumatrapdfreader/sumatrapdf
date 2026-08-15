@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct MainWindow;
+struct Gfx;
 
 extern Kind kNotifLinkFollow;
 
@@ -14,6 +15,6 @@ bool StopKeyboardLinkFollowing(MainWindow*);
 bool KeyboardLinkFollowingOnChar(MainWindow*, WPARAM key);
 void KeyboardLinkFollowingViewportChanged(MainWindow*);
 void KeyboardLinkFollowingRecompute(MainWindow*);
-void PaintKeyboardLinkTargets(MainWindow*, HDC);
+void PaintKeyboardLinkTargets(MainWindow*, Gfx*);
 
 TempStr KeyboardLinkFollowResultTemp(int* exitCodeOut);

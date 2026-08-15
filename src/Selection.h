@@ -5,6 +5,8 @@
 #define SMOOTHSCROLL_DELAY_IN_MS 20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
 
+struct Gfx;
+
 /* Represents selected area on given page */
 struct SelectionOnPage {
     explicit SelectionOnPage(int pageNo = 0, const RectF* rect = nullptr);
@@ -26,9 +28,9 @@ struct SelectionOnPage {
 constexpr u8 kSelectionDefaultAlpha = 0x5f;
 
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel = false);
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, Color selectionColor,
+void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color selectionColor,
                                 u8 alpha = kSelectionDefaultAlpha, int pad = 2, bool drawBorder = false);
-void PaintSelection(MainWindow* win, HDC hdc);
+void PaintSelection(MainWindow* win, Gfx* gfx);
 void UpdateTextSelection(MainWindow* win, bool select = true);
 void CopySelectionToClipboard(MainWindow* win);
 void OnSelectAll(MainWindow* win, bool textOnly = false);

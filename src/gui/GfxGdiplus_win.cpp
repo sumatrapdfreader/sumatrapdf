@@ -69,6 +69,25 @@ void GfxGdiplus::FillRect(const Rect& r, Color col) {
     gfx->SetSmoothingMode(prev);
 }
 
+void GfxGdiplus::FillRects(const Rect* rects, int count, Color col, u8 alpha, int outlineWidth) {
+    if (ColorSkipsPaint(col) || count <= 0) {
+        return;
+    }
+    GraphicsPath path(Gdiplus::FillModeWinding);
+    for (int i = 0; i < count; i++) {
+        if (!rects[i].IsEmpty()) {
+            path.AddRectangle(ToGdipRect(rects[i]));
+        }
+    }
+    SolidBrush brush(ToGdipColor(col, alpha));
+    gfx->FillPath(&brush, &path);
+    if (outlineWidth > 0) {
+        path.Outline(nullptr, 0.2f);
+        Pen pen(ToGdipColor(kColBlack, alpha), (float)outlineWidth);
+        gfx->DrawPath(&pen, &path);
+    }
+}
+
 void GfxGdiplus::DrawRect(const Rect& r, Color col, int thickness) {
     if (ColorSkipsPaint(col) || r.IsEmpty() || thickness < 1) {
         return;

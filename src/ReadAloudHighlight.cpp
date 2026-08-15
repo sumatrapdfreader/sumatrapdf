@@ -748,7 +748,7 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
     win->readAloudScrollFromCode = false;
 }
 
-void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
+void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
     if (!TtsIsSpeaking()) {
         gReadAloudPaintLogState = 0;
         return;
@@ -836,5 +836,5 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
     }
-    PaintTransparentRectangles(hdc, win->canvasRc, screenRects, parsedCol->col, alpha);
+    PaintTransparentRectangles(gfx, win->canvasRc, screenRects, parsedCol->col, alpha);
 }

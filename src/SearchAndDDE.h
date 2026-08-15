@@ -4,6 +4,8 @@
 #define kSumatraDdeServer L"SUMATRA"
 #define kSumatraDdeTopic L"control"
 
+struct Gfx;
+
 // WM_COPYDATA magic numbers (in COPYDATASTRUCT::dwData):
 // - kCopyDataDdeW   : payload is a null-terminated UTF-16 DDE command string
 //                    ("[Open(\"...\",...)]..."). Handled synchronously via
@@ -48,8 +50,8 @@ bool NeedsFindUI(MainWindow* win);
 void ClearSearchResult(MainWindow* win);
 bool OnInverseSearch(MainWindow* win, int x, int y);
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int col, int ret, int page, Vec<Rect>& rects);
-void PaintForwardSearchMark(MainWindow* win, HDC hdc);
-void PaintAllFindMatches(MainWindow* win, HDC hdc);
+void PaintForwardSearchMark(MainWindow* win, Gfx* gfx);
+void PaintAllFindMatches(MainWindow* win, Gfx* gfx);
 void InvalidateFindMatchPaintCache();
 
 void FindPrev(MainWindow* win);

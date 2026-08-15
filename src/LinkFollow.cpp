@@ -7,6 +7,8 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/Gfx.h"
+#include "gui/PlatformFont.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -258,16 +260,13 @@ constexpr Color kLinkFollowHighlightCol = MkRgb(0xff, 0xf1, 0x00);
 constexpr Color kLinkFollowBadgeBgCol = MkRgb(0xd3, 0x2f, 0x2f);
 constexpr Color kLinkFollowBadgeTextCol = kColWhite;
 
-static void PaintLinkBadge(Gdiplus::Graphics& gs, Gdiplus::Font& font, const Rect& linkRect, int number) {
-    WCHAR label[2] = {(WCHAR)(L'0' + number), 0};
-
-    Gdiplus::RectF layout(0, 0, 1000, 1000);
-    Gdiplus::RectF textRc;
-    gs.MeasureString(label, 1, &font, layout, &textRc);
-
-    int padX = (int)textRc.Height / 3;
-    int dx = (int)textRc.Width + (2 * padX);
-    int dy = (int)textRc.Height;
+static void PaintLinkBadge(Gfx* gfx, PlatformFont* font, const Rect& linkRect, int number) {
+    char labelBuf[2] = {(char)('0' + number), 0};
+    Str label(labelBuf, 1);
+    Size textSize = gfx->MeasureText(label, font);
+    int padX = textSize.dy / 3;
+    int dx = textSize.dx + (2 * padX);
+    int dy = textSize.dy;
     // sit at the link's top-left corner, pulled slightly outside it so the badge
     // doesn't cover the link text itself
     int x = linkRect.x - (dx / 3);
@@ -279,18 +278,12 @@ static void PaintLinkBadge(Gdiplus::Graphics& gs, Gdiplus::Font& font, const Rec
         y = linkRect.y;
     }
 
-    u8 r, g, b;
-    UnpackColor(kLinkFollowBadgeBgCol, r, g, b);
-    Gdiplus::SolidBrush bgBrush(Gdiplus::Color(235, r, g, b));
-    gs.FillRectangle(&bgBrush, x, y, dx, dy);
-
-    UnpackColor(kLinkFollowBadgeTextCol, r, g, b);
-    Gdiplus::SolidBrush textBrush(Gdiplus::Color(255, r, g, b));
-    Gdiplus::PointF at((float)(x + padX), (float)y);
-    gs.DrawString(label, 1, &font, at, &textBrush);
+    Rect badge{x, y, dx, dy};
+    gfx->FillRects(&badge, 1, kLinkFollowBadgeBgCol, 235);
+    gfx->DrawTextAt(label, {x + padX, y}, gfxTextSingleLine | gfxTextNoClip, font, kLinkFollowBadgeTextCol);
 }
 
-void PaintKeyboardLinkTargets(MainWindow* win, HDC hdc) {
+void PaintKeyboardLinkTargets(MainWindow* win, Gfx* gfx) {
     if (!KeyboardLinkFollowingActive(win)) {
         return;
     }
@@ -308,12 +301,10 @@ void PaintKeyboardLinkTargets(MainWindow* win, HDC hdc) {
         const KeyboardLinkTarget& t = win->linkFollowTargets[i];
         screenRects.Append(dm->CvtToScreen(t.pageNo, t.rect));
     }
-    PaintTransparentRectangles(hdc, win->canvasRc, screenRects, kLinkFollowHighlightCol, 90, 2, false);
+    PaintTransparentRectangles(gfx, win->canvasRc, screenRects, kLinkFollowHighlightCol, 90, 2, false);
 
-    Gdiplus::Graphics gs(hdc);
-    gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    Gdiplus::Font font(L"Segoe UI", (float)DpiScale(11), Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+    PlatformFont* font = GetBoldPlatformFont(GetUserGuiFont("Segoe UI", DpiScale(11)));
     for (int i = 0; i < n; i++) {
-        PaintLinkBadge(gs, font, screenRects[i], i + 1);
+        PaintLinkBadge(gfx, font, screenRects[i], i + 1);
     }
 }
