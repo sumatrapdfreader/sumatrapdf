@@ -4,6 +4,7 @@
 /* styling for About/Properties windows */
 
 struct MainWindow;
+struct Gfx;
 
 constexpr const char* kLeftTextFont = "Arial";
 constexpr int kLeftTextFontSize = 14;
@@ -21,7 +22,7 @@ void SetPromoString(Str s);
 void FreeHomePageTips();
 void HomePageInvalidateLayoutCache();
 
-void DrawHomePage(MainWindow* win, HDC hdc);
+void DrawHomePage(MainWindow* win, Gfx* gfx);
 void PickAnotherRandomPromotion();
 void HomePageOnVScroll(MainWindow* win, WPARAM wp);
 void HomePageOnMouseWheel(MainWindow* win, int delta);

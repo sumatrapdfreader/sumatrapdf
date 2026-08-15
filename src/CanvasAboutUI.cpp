@@ -9,6 +9,7 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/Gfx.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -35,7 +36,9 @@ static void OnPaintAbout(MainWindow* win) {
     bool hasPerms = HasPermission(Perm::SavePreferences | Perm::DiskAccess);
     bool drawHome = hasPerms && prefs->rememberOpenedFiles && prefs->showStartPage;
     if (drawHome) {
-        DrawHomePage(win, bufDC);
+        Gfx* gfx = GfxCreate(bufDC);
+        DrawHomePage(win, gfx);
+        delete gfx;
     } else {
         HomePageDestroySearch(win);
         // DrawAboutPage swaps the canvas root's child from the home page's

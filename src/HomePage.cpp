@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/GdiPlusUtil.h"
 #include "base/ScopedWin.h"
 #include "gui/Dpi.h"
 #include "base/File.h"
@@ -114,6 +115,8 @@ Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 
 static Str promoFromServer;
 
+static void FreeHomeFileIcons();
+
 // the tip markup, one line each; the selected one is parsed by the tip band
 static StrVec gTipLines;
 static StrVec gPromoLines;
@@ -179,6 +182,7 @@ void FreeHomePageTips() {
         gTipsParsed = false;
     }
     str::Free(promoFromServer);
+    FreeHomeFileIcons();
     ClearHomeLayoutCache();
 }
 
@@ -876,8 +880,7 @@ void SetHomePageListView(bool listView) {
 
 struct HomePageLayout {
     // args in
-    HWND hwnd = nullptr;
-    HDC hdc = nullptr;
+    Gfx* gfx = nullptr;
     Rect rc;
     MainWindow* win = nullptr;
 
@@ -1031,6 +1034,10 @@ constexpr int kSearchEditDy = 28;
 constexpr int kHeaderSearchGapY = 12;
 constexpr int kSearchThumbnailsGapY = 12;
 
+static PlatformFont* HomePageFont(int size) {
+    return GetUserGuiFont("MS Shell Dlg", DpiScale(size));
+}
+
 static void HomeSelectFromSearchReturnCol(MainWindow* win);
 static void HomePageShowSelectionTooltip(MainWindow* win);
 
@@ -1116,9 +1123,7 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
         return;
     }
     HWND parent = win->hwndCanvas;
-    HDC hdc = GetDC(parent);
-    PlatformFont* font = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    ReleaseDC(parent, hdc);
+    PlatformFont* font = HomePageFont(14);
 
     Edit::CreateArgs args;
     args.parent = parent;
@@ -1363,7 +1368,6 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
 static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     auto& c = gHomeLayoutCache;
     auto* win = l.win;
-    auto* hdc = l.hdc;
     bool isRtl = IsUIRtl();
 
     // clamp scroll using cached content height
@@ -1394,8 +1398,8 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.thumbnails = c.thumbs;
     l.filterWords = c.filterWords;
 
-    PlatformFont* hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
-    PlatformFont* fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    PlatformFont* hdrFont = HomePageFont(24);
+    PlatformFont* fontText = HomePageFont(14);
 
     Str txt = _TRA("Recently Opened");
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
@@ -1444,7 +1448,6 @@ static void LayoutHomePage(HomePageLayout& l) {
     } else {
         FileHistoryGetRecentlyOpenedOrder(allFileStates);
     }
-    auto* hdc = l.hdc;
     auto rc = l.rc;
     auto* win = l.win;
 
@@ -1474,8 +1477,8 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
 
     bool isRtl = IsUIRtl();
-    PlatformFont* fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    PlatformFont* hdrFont = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    PlatformFont* fontText = HomePageFont(14);
+    PlatformFont* hdrFont = HomePageFont(24);
 
     // --- Pre-compute thumbnail grid x offset so header can align with it ---
     // use unfiltered count so layout stays stable when search filters results
@@ -1583,7 +1586,7 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
     int tipHeight = 0;
-    PlatformFont* fontTip = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 16);
+    PlatformFont* fontTip = HomePageFont(16);
     HomeTipCtrl* tipCtrl = EnsureHomeChrome(l.win)->tip;
     tipCtrl->SetTipLine(SelectedTipLine(), fontTip);
     VirtRichText* tip = tipCtrl->rich;
@@ -1752,6 +1755,47 @@ static void GetFileStateIcon(FileState* fs) {
     fs->iconIdx = sfi.iIcon;
 }
 
+struct HomeFileIcon {
+    HIMAGELIST imageList = nullptr;
+    int iconIdx = -1;
+    Pixmap* pixmap = nullptr;
+};
+
+static Vec<HomeFileIcon> gHomeFileIcons;
+
+static void FreeHomeFileIcons() {
+    for (HomeFileIcon& icon : gHomeFileIcons) {
+        FreePixmap(icon.pixmap);
+    }
+    gHomeFileIcons.Reset();
+}
+
+// Shell image lists are Windows drawing objects. Convert each distinct icon to
+// a Pixmap once so home-page painting stays entirely within Gfx.
+static Pixmap* GetFileStateIconPixmap(FileState* fs) {
+    GetFileStateIcon(fs);
+    if (!fs->himl || fs->iconIdx < 0) {
+        return nullptr;
+    }
+    for (HomeFileIcon& icon : gHomeFileIcons) {
+        if (icon.imageList == fs->himl && icon.iconIdx == fs->iconIdx) {
+            return icon.pixmap;
+        }
+    }
+
+    HICON hicon = ImageList_GetIcon(fs->himl, fs->iconIdx, ILD_TRANSPARENT);
+    Pixmap* pixmap = nullptr;
+    if (hicon) {
+        {
+            Gdiplus::Bitmap bmp(hicon);
+            pixmap = PixmapFromGdiplus(&bmp);
+        }
+        DestroyIcon(hicon);
+    }
+    gHomeFileIcons.Append({fs->himl, fs->iconIdx, pixmap});
+    return pixmap;
+}
+
 // --- Close (✕) button for Frequently Read thumbnails (issue #283, #5745) ---
 //
 // Drawn onto the home-page canvas (over the top-right corner of the thumbnail
@@ -1798,11 +1842,17 @@ static TempStr FileSizeForHomeListTemp(i64 size) {
 // dark page background
 constexpr Color kHomeSelectionColor = MkRgb(0x4c, 0xa6, 0xff);
 
-static void DrawHomeSelectionOutline(HDC hdc, const Rect& r, int radius) {
+static void DrawHomeRoundedOutline(Gfx* gfx, const Rect& r, int radius, Color color, int thickness) {
+    Rect line = r;
+    for (int i = 0; i < thickness && !line.IsEmpty(); i++) {
+        gfx->FillRoundedRect(line, std::max(radius - (2 * i), 1), kColorTransparent, color);
+        line.Inflate(-1, -1);
+    }
+}
+
+static void DrawHomeSelectionOutline(Gfx* gfx, const Rect& r, int radius) {
     int penDx = DpiScale(2);
-    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, penDx, kHomeSelectionColor), true);
-    ScopedSelectObject brush(hdc, GetStockBrush(NULL_BRUSH));
-    RoundRect(hdc, r.x, r.y, r.x + r.dx, r.y + r.dy, radius, radius);
+    DrawHomeRoundedOutline(gfx, r, radius, kHomeSelectionColor, penDx);
 }
 
 // Give the file name the width it needs and put the directory path in what's
@@ -1810,7 +1860,7 @@ static void DrawHomeSelectionOutline(HDC hdc, const Rect& r, int radius) {
 // during layout: measuring every history entry made layout (and so scrolling)
 // slow, and measuring only the rows visible at layout time meant rows scrolled
 // into view later never got a directory.
-static void MeasureHomeListRowText(ThumbnailLayout& thumb, PlatformFont* font, bool isRtl) {
+static void MeasureHomeListRowText(Gfx* gfx, ThumbnailLayout& thumb, PlatformFont* font, bool isRtl) {
     if (thumb.listTextMeasured) {
         return;
     }
@@ -1818,7 +1868,7 @@ static void MeasureHomeListRowText(ThumbnailLayout& thumb, PlatformFont* font, b
 
     Rect rcFileName = thumb.rcListFileName;
     TempStr fileName = path::GetBaseNameTemp(thumb.fs->filePath);
-    int nameDx = PlatformFontMeasureText(font, fileName).dx + DpiScale(4);
+    int nameDx = gfx->MeasureText(fileName, font).dx + DpiScale(4);
     int minPathDx = DpiScale(80);
     if (nameDx + kHomeListRowGapDx + minPathDx > rcFileName.dx) {
         // no room for a path, the name gets the whole span
@@ -1842,21 +1892,20 @@ static bool HomeSearchHasFocus(MainWindow* win) {
 
 static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformFont* fontText, Color backgroundColor,
                             bool isRtl, bool isSelected) {
-    HDC hdc = l.hdc;
+    Gfx* gfx = l.gfx;
     FileState* fs = thumb.fs;
     Rect row = thumb.rcListRow;
     if (!IsHomeThumbOnScreen(row, l.rcThumbsArea)) {
         return;
     }
-    MeasureHomeListRowText(thumb, fontText, isRtl);
+    MeasureHomeListRowText(gfx, thumb, fontText, isRtl);
     // no selection chrome while typing in the search box
     if (isSelected && !HomeSearchHasFocus(l.win)) {
-        DrawHomeSelectionOutline(hdc, Rect(row.x, row.y, row.dx, row.dy - 1), 4);
+        DrawHomeSelectionOutline(gfx, Rect(row.x, row.y, row.dx, row.dy - 1), 4);
     }
 
     Color lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
-    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, lineCol), true);
-    HdcDrawLine(hdc, Rect(row.x, row.y + row.dy - 1, row.dx, 0));
+    gfx->DrawLine(Rect(row.x, row.y + row.dy - 1, row.dx, 0), lineCol);
 
     // LoadThumbnail only hits disk the first time; result stays on fs->thumbnail
     Pixmap* thumbImg = LoadThumbnail(fs);
@@ -1864,28 +1913,23 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformF
     if (thumbImg) {
         Size szThumb(thumbImg->width, thumbImg->height);
         Rect thumbDst = FitRectInRect(szThumb, thumbBox);
-        BlitPixmap(thumbImg, hdc, thumbDst);
+        gfx->DrawPixmap(thumbImg, thumbDst);
         thumb.szThumb = szThumb;
     }
     Str path = fs->filePath;
     TempStr fileName = path::GetBaseNameTemp(path);
     u32 nameFmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
-    SelectObject(hdc, fontText->GetHFont());
-    {
-        GfxHdc gfx(hdc);
-        DrawMaybeHighlightedText(&gfx, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor,
-                                 isRtl, false, nameFmt, fontText);
-    }
+    DrawMaybeHighlightedText(gfx, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl,
+                             false, nameFmt, fontText);
 
     // directory path, right-aligned and muted, in the space the file name doesn't need.
     // Must use DrawTextW: dirPath is UTF-8; DrawTextA treated it as the system ANSI
     // code page and mangled non-ASCII path characters (#5824).
     if (!thumb.rcListPath.IsEmpty()) {
         TempStr dirPath = path::GetDirTemp(path);
-        SetTextColor(hdc, ThemeWindowTextDisabledColor());
-        UINT pathFmt = DT_SINGLELINE | DT_VCENTER | DT_PATH_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
+        u32 pathFmt = gfxTextVCenter | gfxTextPathEllipsis | (isRtl ? gfxTextLeft : gfxTextRight);
         Rect pathRect = thumb.rcListPath;
-        HdcDrawText(hdc, dirPath, pathRect, pathFmt);
+        gfx->DrawText(dirPath, pathRect, pathFmt, fontText, ThemeWindowTextDisabledColor());
     }
 
     // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses
@@ -1896,20 +1940,19 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformF
         thumb.fileSize = (sz < 0) ? kSizeFetchFail : sz;
     }
     TempStr fileSize = FileSizeForHomeListTemp(thumb.fileSize);
-    SetTextColor(hdc, ThemeWindowTextColor());
-    UINT sizeFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
+    u32 sizeFmt = gfxTextVCenter | gfxTextEllipsis | (isRtl ? gfxTextLeft : gfxTextRight);
     Rect sizeRect = thumb.rcListSize;
-    HdcDrawText(hdc, fileSize, sizeRect, sizeFmt);
+    gfx->DrawText(fileSize, sizeRect, sizeFmt, fontText, ThemeWindowTextColor());
 
     if (fs->isPinned) {
-        HdcFillRect(hdc, thumb.rcListPin, ThemeControlBackgroundColor());
+        gfx->FillRect(thumb.rcListPin, ThemeControlBackgroundColor());
     }
     {
         int pinDx = thumb.rcListPin.dx > 0 ? thumb.rcListPin.dx : DpiScale(16);
         int pinDy = thumb.rcListPin.dy > 0 ? thumb.rcListPin.dy : pinDx;
         Pixmap* pin = GetCachedPixmapForSvg(gIconPin, pinDx, pinDy);
         if (pin) {
-            BlitPixmapAlpha(pin, hdc, thumb.rcListPin);
+            gfx->DrawPixmap(pin, thumb.rcListPin);
         }
     }
 }
@@ -1919,10 +1962,7 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformF
 // nothing is painted outside it, so the page background shows through.
 static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
     gfx->FillEllipse(r, kColWhite);
-    // the screen dc is only for sizing the font (it is cached and interned by
-    // both helpers, so this doesn't create anything per paint)
-    AutoReleaseDC dc(nullptr);
-    PlatformFont* font = HdcCreateSimpleFont(dc, "MS Shell Dlg", 14);
+    PlatformFont* font = HomePageFont(14);
     gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
@@ -2419,53 +2459,28 @@ static void HomePageSyncChrome(HomePageLayout& l) {
 
 static void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
-    auto* hdc = l.hdc;
+    Gfx* gfx = l.gfx;
     auto* win = l.win;
     auto backgroundColor = ThemeMainWindowBackgroundColor();
 
-    {
-        Rect rc = HwndClientRect(win->hwndCanvas);
-        auto color = ThemeMainWindowBackgroundColor();
-        HdcFillRect(hdc, rc, color);
-    }
+    gfx->FillRect(l.rc, backgroundColor);
 
     // draw search edit border and background on the canvas
     {
         Color bgCol = ThemeControlBackgroundColor();
         const Rect& sb = l.rcSearchBorder;
-        RECT rcBorder = {sb.x, sb.y, sb.x + sb.dx, sb.y + sb.dy};
         // fill interior with control background so padding matches the edit
-        HBRUSH brBg = CreateSolidBrush(bgCol);
-        HdcFillRect(hdc, ToRect(rcBorder), brBg);
-        DeleteObject(brBg);
+        gfx->FillRect(sb, bgCol);
         // draw border frame
         Color borderCol = AccentColor(bgCol, 40);
-        HBRUSH brBorder = CreateSolidBrush(borderCol);
-        FrameRect(hdc, &rcBorder, brBorder);
-        DeleteObject(brBorder);
+        gfx->DrawRect(sb, borderCol);
     }
 
-    auto color = ThemeWindowTextColor();
-    PlatformFont* fontText = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-
-    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
-    color = ThemeWindowLinkColor();
-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
-
-    SelectObject(hdc, penThumbBorder);
-    SetBkMode(hdc, TRANSPARENT);
-    color = ThemeWindowTextColor();
-    SetTextColor(hdc, color);
-
-    SelectObject(hdc, GetStockBrush(NULL_BRUSH));
+    Color color = ThemeWindowTextColor();
+    PlatformFont* fontText = HomePageFont(14);
 
     // clip thumbnails to the middle area
-    {
-        const Rect& ta = l.rcThumbsArea;
-        HRGN thumbsClip = CreateRectRgn(ta.x, ta.y, ta.x + ta.dx, ta.y + ta.dy);
-        SelectClipRgn(hdc, thumbsClip);
-        DeleteObject(thumbsClip);
-    }
+    gfx->PushClip(l.rcThumbsArea);
 
     int nThumbs = len(l.thumbnails);
     // keep the keyboard selection inside the (possibly filtered) list
@@ -2497,32 +2512,27 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         Pixmap* thumbImg = LoadThumbnail(fs);
         if (thumbImg) {
             thumb.szThumb = Size(thumbImg->width, thumbImg->height);
-            int savedDC = SaveDC(hdc);
-            HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
-            ExtSelectClipRgn(hdc, clip, RGN_AND);
+            gfx->PushClip(page);
             // note: we used to invert bitmaps in dark theme but that doesn't
             // make sense for thumbnails
-            BlitPixmap(thumbImg, hdc, page);
-            RestoreDC(hdc, savedDC);
-            DeleteObject(clip);
+            gfx->DrawPixmap(thumbImg, page);
+            gfx->PopClip();
         }
-        RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+        DrawHomeRoundedOutline(gfx, page, 10, color, kThumbsBorderDx);
 
         const Rect& rect = thumb.rcText;
         Str path = fs->filePath;
         TempStr fileName = path::GetBaseNameTemp(path);
         u32 fmt = gfxTextEllipsis | (isRtl ? gfxTextRight : gfxTextLeft);
 
-        SelectObject(hdc, fontText->GetHFont());
-        {
-            GfxHdc gfx(hdc);
-            DrawMaybeHighlightedText(&gfx, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
-                                     fmt, fontText);
-        }
+        DrawMaybeHighlightedText(gfx, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false, fmt,
+                                 fontText);
 
-        GetFileStateIcon(fs);
+        Pixmap* icon = GetFileStateIconPixmap(fs);
         int x = isRtl ? page.x + page.dx - DpiScale(16) : page.x;
-        ImageList_Draw(fs->himl, fs->iconIdx, hdc, x, rect.y, ILD_TRANSPARENT);
+        if (icon) {
+            gfx->DrawPixmap(icon, {x, rect.y, icon->width, icon->height});
+        }
 
         if (isSelected) {
             Rect sel = page.Union(rect);
@@ -2533,35 +2543,27 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     }
 
     // restore full clip region
-    SelectClipRgn(hdc, nullptr);
+    gfx->PopClip();
 
     if (hasPendingThumbSel) {
-        DrawHomeSelectionOutline(hdc, pendingThumbSel, 10);
+        DrawHomeSelectionOutline(gfx, pendingThumbSel, 10);
     }
-
-    color = ThemeWindowLinkColor();
-    SetTextColor(hdc, color);
-    SelectObject(hdc, penLinkLine);
 
     // the tip band's background; the markup itself is part of the chrome tree
     if (l.hasTip) {
-        HdcFillRect(hdc, l.rcTip, ThemeControlBackgroundColor());
+        gfx->FillRect(l.rcTip, ThemeControlBackgroundColor());
     }
 
     // the chrome (header, view buttons, "Open a document...", help button)
     // paints last: none of it overlaps the thumbnails, and the help button has
     // to land on top of the tip band
-    GfxHdc gfx(hdc);
-    win->homeRoot->Paint(&gfx, l.rc);
+    win->homeRoot->Paint(gfx, l.rc);
 }
 
-void DrawHomePage(MainWindow* win, HDC hdc) {
-    HWND hwnd = win->hwndFrame;
-
+void DrawHomePage(MainWindow* win, Gfx* gfx) {
     HomePageLayout l;
     l.rc = HwndClientRect(win->hwndCanvas);
-    l.hdc = hdc;
-    l.hwnd = hwnd;
+    l.gfx = gfx;
     l.win = win;
 
     TempStr filterText = HomeSearchQueryTemp(win);
@@ -2951,10 +2953,8 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
 
 void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
     USHORT msg = LOWORD(wp);
-    HDC hdc = GetDC(win->hwndCanvas);
     int lineDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
     int pageDy = lineDy * 3;
-    ReleaseDC(win->hwndCanvas, hdc);
 
     int newScrollY = win->homePageScrollY;
     switch (msg) {
@@ -2995,9 +2995,7 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
 }
 
 void HomePageOnMouseWheel(MainWindow* win, int delta) {
-    HDC hdc = GetDC(win->hwndCanvas);
     int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
-    ReleaseDC(win->hwndCanvas, hdc);
 
     int scrollBy = thumbsRowDy / 3;
     if (delta > 0) {
