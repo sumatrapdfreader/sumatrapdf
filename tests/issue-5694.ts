@@ -6,7 +6,7 @@
 // Run:  bun tests/issue-5694.ts [--no-build]   (or via tests/all.ts)
 
 import { writeFileSync } from "node:fs";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 function makePdf(): Buffer {
@@ -55,12 +55,18 @@ function pagesOf(raw: string): number[] {
   return out;
 }
 
-async function search(pdf: string, first: number, last: number, spec?: string): Promise<number[]> {
+async function search(
+  client: ControlClient,
+  pdf: string,
+  first: number,
+  last: number,
+  spec?: string,
+): Promise<number[]> {
   const args: Array<number | string> = [pdf, "ALPHA", first, last];
   if (spec !== undefined) {
     args.push(spec);
   }
-  const [exitCode, raw] = await runControlCommand(EXE, ControlCommand.TestFindPageRange, args);
+  const [exitCode, raw] = await client.request(ControlCommand.TestFindPageRange, args);
   if (exitCode !== 0) {
     throw new Error(
       `issue-5694: search first=${first} last=${last} spec=${spec ?? ""} failed: ${String(raw ?? "").trim()}`,
@@ -79,12 +85,14 @@ export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-5694.pdf");
   writeFileSync(pdf, makePdf());
 
-  expectPages(await search(pdf, 0, 0), [1, 2, 3], "all pages");
-  expectPages(await search(pdf, 2, 2), [2], "only page 2");
-  expectPages(await search(pdf, 2, 3), [2, 3], "pages 2-3");
-  expectPages(await search(pdf, 1, 1), [1], "only page 1");
-  expectPages(await search(pdf, 0, 0, "1,3"), [1, 3], "pages 1 and 3");
-  expectPages(await search(pdf, 0, 0, "2-"), [2, 3], "page 2 through end");
+  await withControlledSumatra(EXE, async (client) => {
+    expectPages(await search(client, pdf, 0, 0), [1, 2, 3], "all pages");
+    expectPages(await search(client, pdf, 2, 2), [2], "only page 2");
+    expectPages(await search(client, pdf, 2, 3), [2, 3], "pages 2-3");
+    expectPages(await search(client, pdf, 1, 1), [1], "only page 1");
+    expectPages(await search(client, pdf, 0, 0, "1,3"), [1, 3], "pages 1 and 3");
+    expectPages(await search(client, pdf, 0, 0, "2-"), [2, 3], "page 2 through end");
+  });
 }
 
 if (import.meta.main) {

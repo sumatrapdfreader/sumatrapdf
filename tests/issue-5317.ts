@@ -8,7 +8,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // 1x1 transparent PNG
@@ -95,12 +95,12 @@ function writeZip(path: string, files: { name: string; data: Buffer }[]): void {
   writeFileSync(path, Buffer.from([...local, ...central, ...eocd]));
 }
 
-async function tocOf(path: string): Promise<string> {
-  const [exitCode, raw] = await runControlCommand(EXE, ControlCommand.TestGetToc, [path]);
+async function tocOf(client: ControlClient, path: string): Promise<string> {
+  const [exitCode, raw] = await client.request(ControlCommand.TestGetToc, [path]);
   if (exitCode !== 0) {
     throw new Error(`issue-5317: TestGetToc failed for ${path}: ${(raw ?? "").trim()}`);
   }
-  return raw ?? "";
+  return String(raw ?? "");
 }
 
 export async function testit(): Promise<void> {
@@ -116,10 +116,6 @@ export async function testit(): Promise<void> {
   const nestedWant =
     ["Chapter 01|page=1", "  001.png|page=1", "  002.png|page=2", "Chapter 02|page=3", "  001.png|page=3"].join("\n") +
     "\n";
-  const nestedGot = await tocOf(nested);
-  if (nestedGot !== nestedWant) {
-    throw new Error(`issue-5317: nested TOC mismatch.\nexpected:\n${nestedWant}got:\n${nestedGot}`);
-  }
 
   const shared = join(dir, "images-prefix.cbz");
   writeZip(shared, [
@@ -127,10 +123,6 @@ export async function testit(): Promise<void> {
     { name: "images/002.png", data: PNG },
   ]);
   const sharedWant = ["001.png|page=1", "002.png|page=2"].join("\n") + "\n";
-  const sharedGot = await tocOf(shared);
-  if (sharedGot !== sharedWant) {
-    throw new Error(`issue-5317: shared-folder TOC should stay flat.\nexpected:\n${sharedWant}got:\n${sharedGot}`);
-  }
 
   const flat = join(dir, "flat.cbz");
   writeZip(flat, [
@@ -138,10 +130,23 @@ export async function testit(): Promise<void> {
     { name: "002.png", data: PNG },
   ]);
   const flatWant = ["001.png|page=1", "002.png|page=2"].join("\n") + "\n";
-  const flatGot = await tocOf(flat);
-  if (flatGot !== flatWant) {
-    throw new Error(`issue-5317: flat TOC mismatch.\nexpected:\n${flatWant}got:\n${flatGot}`);
-  }
+
+  await withControlledSumatra(EXE, async (client) => {
+    const nestedGot = await tocOf(client, nested);
+    if (nestedGot !== nestedWant) {
+      throw new Error(`issue-5317: nested TOC mismatch.\nexpected:\n${nestedWant}got:\n${nestedGot}`);
+    }
+
+    const sharedGot = await tocOf(client, shared);
+    if (sharedGot !== sharedWant) {
+      throw new Error(`issue-5317: shared-folder TOC should stay flat.\nexpected:\n${sharedWant}got:\n${sharedGot}`);
+    }
+
+    const flatGot = await tocOf(client, flat);
+    if (flatGot !== flatWant) {
+      throw new Error(`issue-5317: flat TOC mismatch.\nexpected:\n${flatWant}got:\n${flatGot}`);
+    }
+  });
 }
 
 if (import.meta.main) {
