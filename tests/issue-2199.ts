@@ -13,7 +13,8 @@
 
 import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
-import { cmdId, EXE, tmpPath } from "./util";
+import { cmdId, tmpPath } from "./util";
+import { findCanvas, launchControlled } from "./win-automation";
 import {
   captureWindowPixels,
   isZoomed,
@@ -21,8 +22,6 @@ import {
   sendMessage,
   showWindow,
   sleep,
-  waitForChildWindow,
-  waitForTopWindow,
   SW_RESTORE,
   WM_COMMAND,
 } from "./winapi";
@@ -146,24 +145,17 @@ export async function testit(): Promise<void> {
     ]),
   );
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing", cbz], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled([cbz], { defaultWindowPos: true });
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
     if (isZoomed(frame)) {
       showWindow(frame, SW_RESTORE);
-      await sleep(300);
     }
     moveWindow(frame, 60, 60, 1000, 800);
-    const canvas = await waitForChildWindow(frame, "SUMATRA_PDF_CANVAS");
+    await client.waitForRenderIdle();
+    const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("could not find the canvas window");
     }
-    await sleep(1800);
 
     const painted1 = paintedPixelsInMiddle(canvas);
     if (painted1 < 50) {
@@ -171,8 +163,16 @@ export async function testit(): Promise<void> {
     }
 
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdGoToNextPage")), 0n);
-    await sleep(1800);
-    const painted2 = paintedPixelsInMiddle(canvas);
+    // the broken page never caches tiles, so wait for the error message to paint
+    const deadline2 = Date.now() + 5000;
+    let painted2 = 0;
+    while (Date.now() < deadline2) {
+      painted2 = paintedPixelsInMiddle(canvas);
+      if (painted2 >= 20 && painted2 <= painted1 / 2) {
+        break;
+      }
+      await sleep(40);
+    }
     // the broken page is black; only the "Couldn't render page 2" message is on
     // it, so expect a modest but clearly non-zero number of painted pixels
     if (painted2 < 20) {
@@ -186,15 +186,15 @@ export async function testit(): Promise<void> {
     }
 
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdGoToNextPage")), 0n);
-    await sleep(1800);
+    await client.waitForRenderIdle();
     const painted3 = paintedPixelsInMiddle(canvas);
     if (painted3 < 50) {
       throw new Error(`page 3 stopped rendering after the broken page: ${painted3} px`);
     }
     console.log(`  broken cbz page reports itself (${painted2} px painted, normal pages ${painted1}/${painted3}) ✓`);
   } finally {
+    client.close();
     proc.kill();
-    await sleep(300);
   }
 }
 

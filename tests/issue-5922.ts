@@ -10,7 +10,7 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
 import { EXE, cmdId, runStandalone, tmpPath } from "./util";
-import { FRAME_CLASS, sendCommand } from "./win-automation";
+import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
 
 const VK_RIGHT = 0x27;
@@ -61,6 +61,19 @@ async function getState(client: ControlClient): Promise<State> {
   return { active: m[1] === "1", selRects: +m[2]!, text: text ? text[1]! : "", dump };
 }
 
+async function waitForState(client: ControlClient, pred: (s: State) => boolean, timeoutMs = 4000): Promise<State> {
+  const deadline = Date.now() + timeoutMs;
+  let last: State = { active: false, selRects: 0, text: "", dump: "" };
+  while (Date.now() < deadline) {
+    last = await getState(client);
+    if (pred(last)) {
+      return last;
+    }
+    await sleep(25);
+  }
+  throw new Error(`selection state did not match in time\n${last.dump}`);
+}
+
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-5922.pdf");
   writeFileSync(pdf, makeTextPdf());
@@ -72,15 +85,14 @@ export async function testit(): Promise<void> {
       if (!frame) {
         throw new Error("no frame window");
       }
-      await sleep(1200);
+      await client.waitForRenderIdle();
 
       const fail = (msg: string, st: State) => {
         throw new Error(`${msg}\nstate dump:\n${st.dump}`);
       };
-      const extend = async (cmd: string) => {
-        sendCommand(frame, cmdId(cmd));
-        await sleep(400);
-        return getState(client);
+      const extend = async (cmd: string, want: string) => {
+        sendCommandSync(frame, cmdId(cmd));
+        return waitForState(client, (s) => s.text === want);
       };
       const expectText = (st: State, want: string, what: string) => {
         if (st.text !== want) {
@@ -89,37 +101,33 @@ export async function testit(): Promise<void> {
       };
 
       // make a selection: F7 caret browsing, visual mode, 9 glyphs right
-      sendCommand(frame, cmdId("CmdSelectTextViaKeyboard"));
-      await sleep(600);
+      sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+      await waitForState(client, (s) => s.active);
       postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
-      await sleep(400);
       for (let i = 0; i < 9; i++) {
         postMessage(frame, WM_KEYDOWN, VK_RIGHT, 0);
         postMessage(frame, WM_KEYUP, VK_RIGHT, 0);
-        await sleep(60);
       }
-      await sleep(500);
-      let st = await getState(client);
+      let st = await waitForState(client, (s) => s.text === LINE.slice(0, 9));
       expectText(st, LINE.slice(0, 9), "setup");
 
       // --- with keyboard selection active: the commands move the caret ---
-      st = await extend("CmdExtendSelectionWordRight");
+      st = await extend("CmdExtendSelectionWordRight", LINE.slice(0, 15));
       expectText(st, LINE.slice(0, 15), "word right (caret mode)"); // "The quick brown"
 
-      st = await extend("CmdExtendSelectionCharRight");
+      st = await extend("CmdExtendSelectionCharRight", LINE.slice(0, 16));
       expectText(st, LINE.slice(0, 16), "char right (caret mode)");
 
-      st = await extend("CmdExtendSelectionCharLeft");
+      st = await extend("CmdExtendSelectionCharLeft", LINE.slice(0, 15));
       expectText(st, LINE.slice(0, 15), "char left (caret mode)");
 
-      st = await extend("CmdExtendSelectionWordLeft");
+      st = await extend("CmdExtendSelectionWordLeft", LINE.slice(0, 10));
       expectText(st, LINE.slice(0, 10), "word left (caret mode)"); // back to "The quick "
 
       // --- leave the mode; the selection stays and is still extendable, which
       // is the case from the discussion (a selection made with the mouse) ---
-      sendCommand(frame, cmdId("CmdSelectTextViaKeyboard"));
-      await sleep(500);
-      st = await getState(client);
+      sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+      st = await waitForState(client, (s) => !s.active);
       if (st.active) {
         fail("F7 should have turned keyboard selection off", st);
       }
@@ -128,16 +136,16 @@ export async function testit(): Promise<void> {
       }
       expectText(st, LINE.slice(0, 10), "after leaving caret mode");
 
-      st = await extend("CmdExtendSelectionWordRight");
+      st = await extend("CmdExtendSelectionWordRight", LINE.slice(0, 15));
       expectText(st, LINE.slice(0, 15), "word right (plain selection)");
 
-      st = await extend("CmdExtendSelectionCharRight");
+      st = await extend("CmdExtendSelectionCharRight", LINE.slice(0, 16));
       expectText(st, LINE.slice(0, 16), "char right (plain selection)");
 
-      st = await extend("CmdExtendSelectionWordLeft");
+      st = await extend("CmdExtendSelectionWordLeft", LINE.slice(0, 10));
       expectText(st, LINE.slice(0, 10), "word left (plain selection)");
 
-      st = await extend("CmdExtendSelectionCharLeft");
+      st = await extend("CmdExtendSelectionCharLeft", LINE.slice(0, 9));
       expectText(st, LINE.slice(0, 9), "char left (plain selection)");
     },
     [pdf],

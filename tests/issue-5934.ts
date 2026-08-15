@@ -6,7 +6,8 @@
 // covered by code review / manual check rather than this script.
 
 import { writeFileSync } from "node:fs";
-import { cmdId, EXE, tmpPath } from "./util";
+import { cmdId, tmpPath } from "./util";
+import { launchControlled } from "./win-automation";
 import {
   enumWindows,
   getClassName,
@@ -16,7 +17,6 @@ import {
   postMessage,
   sendMessage,
   sleep,
-  waitForTopWindow,
   VK_ESCAPE,
   WM_COMMAND,
   WM_KEYDOWN,
@@ -124,13 +124,9 @@ async function testAnnotationsEscDoesNotClose(): Promise<void> {
   const pdf = tmpPath("issue-5934-annots.pdf");
   writeFileSync(pdf, makeAnnotPdf(), "latin1");
 
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled([pdf]);
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("annotations: main window did not appear");
-    }
-    await sleep(1500);
+    await client.waitForRenderIdle();
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdEditAnnotations")), 0n);
     const ew = await waitForSecondary(proc.pid!, frame, undefined, 4000);
     if (!ew) {
@@ -138,14 +134,17 @@ async function testAnnotationsEscDoesNotClose(): Promise<void> {
     }
 
     pressEscape(ew);
-    await sleep(600);
-    if (!isWindowVisible(ew) || !findSecondaryWindow(proc.pid!, frame)) {
-      throw new Error("annotations: Esc closed the edit annotations window (must not)");
+    const stillThere = Date.now() + 250;
+    while (Date.now() < stillThere) {
+      if (!isWindowVisible(ew) || !findSecondaryWindow(proc.pid!, frame)) {
+        throw new Error("annotations: Esc closed the edit annotations window (must not)");
+      }
+      await sleep(30);
     }
     console.log("  edit annotations: Esc does not close ✓");
   } finally {
+    client.close();
     proc.kill();
-    await sleep(300);
   }
 }
 
@@ -153,22 +152,15 @@ async function testTranslateEscCloses(): Promise<void> {
   const pdf = tmpPath("issue-5934-translate.pdf");
   writeFileSync(pdf, makeTextPdf());
 
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled([pdf]);
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("translate: main window did not appear");
-    }
-    await sleep(1500);
+    await client.waitForRenderIdle();
 
     // select some text so CmdTranslateSelection has something to show
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdSelectTextViaKeyboard")), 0n);
-    await sleep(500);
     for (let i = 0; i < 5; i++) {
       sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdExtendSelectionWordRight")), 0n);
-      await sleep(120);
     }
-    await sleep(300);
 
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdTranslateSelection")), 0n);
     const tw = await waitForSecondary(proc.pid!, frame, "translate", 4000);
@@ -177,20 +169,22 @@ async function testTranslateEscCloses(): Promise<void> {
     }
 
     pressEscape(tw);
-    await sleep(800);
-    if (isWindowVisible(tw) || findSecondaryWindow(proc.pid!, frame, "translate")) {
-      throw new Error("translate: Esc did not close the translate dialog");
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+      if (!isWindowVisible(tw) && !findSecondaryWindow(proc.pid!, frame, "translate")) {
+        console.log("  translate: Esc closes ✓");
+        return;
+      }
+      await sleep(30);
     }
-    console.log("  translate: Esc closes ✓");
+    throw new Error("translate: Esc did not close the translate dialog");
   } finally {
+    client.close();
     proc.kill();
-    await sleep(300);
   }
 }
 
 export async function testit(): Promise<void> {
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
   await testAnnotationsEscDoesNotClose();
   await testTranslateEscCloses();
 }

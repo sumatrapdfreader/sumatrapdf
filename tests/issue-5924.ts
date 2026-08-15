@@ -79,7 +79,7 @@ export async function testit(): Promise<void> {
       if (!frame) {
         throw new Error("issue-5924: no frame window");
       }
-      await sleep(1500);
+      await client.waitForRenderIdle();
 
       // click the link, then read the tabs back: opening a linked document is
       // queued on the UI thread, and by the time it ran the current tab is no
@@ -87,9 +87,16 @@ export async function testit(): Promise<void> {
       const follow = async (href: string): Promise<Result> => {
         const res = await client.request(ControlCommand.TestMarkdownFollowLink, [href, 1]);
         const clicked = parse(String(res[1] ?? ""));
-        await sleep(600);
-        const res2 = await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]);
-        const settled = parse(String(res2[1] ?? ""));
+        const deadline = Date.now() + 4000;
+        let settled = clicked;
+        while (Date.now() < deadline) {
+          const res2 = await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]);
+          settled = parse(String(res2[1] ?? ""));
+          if (settled.tabs.length >= clicked.tabs.length) {
+            break;
+          }
+          await sleep(30);
+        }
         return { navigate: clicked.navigate, tabs: settled.tabs, dump: `${clicked.dump}${settled.dump}` };
       };
       const fail = (msg: string, r: Result) => {
@@ -137,13 +144,20 @@ export async function testit(): Promise<void> {
       if (!frame) {
         throw new Error("issue-5924: no frame window");
       }
-      await sleep(1500);
+      await client.waitForRenderIdle();
 
       const res = await client.request(ControlCommand.TestMarkdownFollowLink, [`${HOST}doc.pdf`, 1]);
       const clicked = parse(String(res[1] ?? ""));
-      await sleep(600);
-      const res2 = await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]);
-      const settled = parse(String(res2[1] ?? ""));
+      const deadline = Date.now() + 4000;
+      let settled = clicked;
+      while (Date.now() < deadline) {
+        const res2 = await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]);
+        settled = parse(String(res2[1] ?? ""));
+        if (settled.tabs.some((t) => t.file.toLowerCase().endsWith("\\doc.pdf"))) {
+          break;
+        }
+        await sleep(30);
+      }
       const doc = settled.tabs.find((t) => t.file.toLowerCase().endsWith("\\doc.pdf"));
       if (clicked.navigate || !doc || !doc.current || settled.tabs.length !== 2) {
         throw new Error(

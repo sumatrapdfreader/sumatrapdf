@@ -15,7 +15,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, cmdId, tmpPath } from "./util.ts";
-import { launchSumatra, waitForFrame, sendCommand } from "./win-automation.ts";
+import { launchSumatra, sendCommandSync, waitForExit, waitForFrame } from "./win-automation.ts";
 import {
   getWindowRect,
   isZoomed,
@@ -58,25 +58,23 @@ export async function testit(): Promise<void> {
     if (!frame) {
       throw new Error("SumatraPDF frame window not found");
     }
-    // let maximized startup settle
-    await sleep(1500);
-
+    const deadline0 = Date.now() + 5000;
+    while (!isZoomed(frame) && Date.now() < deadline0) {
+      await sleep(30);
+    }
     if (!isZoomed(frame)) {
       throw new Error("expected window to start maximized (WindowState = 2)");
     }
     const maximizedBefore = rectSize(getWindowRect(frame));
 
     // --- path 1: maximized → fullscreen → exit → re-maximized ---
-    sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    await sleep(800);
-
+    sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
     const fsSize = rectSize(getWindowRect(frame));
     if (fsSize.w < 640 || fsSize.h < 480) {
       throw new Error(`fullscreen did not expand the frame: ${fsSize.w}x${fsSize.h}`);
     }
 
-    sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    await sleep(800);
+    sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
 
     if (!isZoomed(frame)) {
       throw new Error("after leaving fullscreen, window should be maximized again");
@@ -89,13 +87,11 @@ export async function testit(): Promise<void> {
     }
 
     // --- path 2: fullscreen + WM_DISPLAYCHANGE → still FS → exit → maximized ---
-    sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    await sleep(800);
+    sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
     const fsBefore = rectSize(getWindowRect(frame));
 
     // wParam = bits/pixel (unused); lParam packs cx/cy of the new mode
     sendMessage(frame, WM_DISPLAYCHANGE, 32, (fsBefore.h << 16) | (fsBefore.w & 0xffff));
-    await sleep(400);
 
     const fsAfter = rectSize(getWindowRect(frame));
     if (!nearlySameSize(fsAfter, fsBefore, 4)) {
@@ -104,8 +100,7 @@ export async function testit(): Promise<void> {
       );
     }
 
-    sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    await sleep(800);
+    sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
 
     if (!isZoomed(frame)) {
       throw new Error("after display-change + exit fullscreen, window should be maximized");
@@ -119,7 +114,7 @@ export async function testit(): Promise<void> {
   } finally {
     if (frame) {
       postMessage(frame, WM_CLOSE, 0, 0);
-      await sleep(500);
+      await waitForExit(proc, 5000);
     }
     proc.kill();
     rmSync(appDataDir, { recursive: true, force: true });
