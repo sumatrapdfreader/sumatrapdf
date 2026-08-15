@@ -241,14 +241,18 @@ void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
 
     Color colBg = ThemeNotificationsBackgroundColor();
     Color colBorder = kColGray;
-    HdcFillRect(hdc, rc, colBg);
 
     SyncColors();
-    GfxHdc gfx(hdc);
-    if (vroot) {
-        vroot->Paint(&gfx, rc);
+    // scoped: GfxDirect2D reaches the dc only when destroyed
+    {
+        Gfx* gfx = CreateGfx(hdc);
+        gfx->FillRect(rc, colBg);
+        if (vroot) {
+            vroot->Paint(gfx, rc);
+        }
+        gfx->DrawRect(rc, colBorder);
+        delete gfx;
     }
-    gfx.DrawRect(rc, colBorder);
 
     buffer.Flush(hdcIn);
 }

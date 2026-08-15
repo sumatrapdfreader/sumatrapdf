@@ -2865,12 +2865,15 @@ void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, Color bg) {
     Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC memDC = buffer.GetDC();
-    if (!ColorSkipsPaint(bg)) {
-        HdcFillRect(memDC, rc, bg);
-    }
     SetBkMode(memDC, TRANSPARENT);
-    GfxHdc gfx(memDC);
-    root->Paint(&gfx, clip);
+    // scoped: GfxDirect2D reaches the dc only when destroyed, so the gfx must
+    // die before the buffer is flushed
+    {
+        Gfx* gfx = CreateGfx(memDC);
+        gfx->FillRect(rc, bg);
+        root->Paint(gfx, clip);
+        delete gfx;
+    }
     buffer.Flush(hdc);
 }
 

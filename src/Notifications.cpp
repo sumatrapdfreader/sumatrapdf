@@ -602,15 +602,17 @@ void NotificationWnd::OnPaint(WindowBase::PaintEvent* ev) {
     ScopedSelectObject fontPrev(hdc, GetHFont());
 
     NotifColors cols = Colors();
-    HdcFillRect(hdc, rc, cols.bg);
-
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, cols.txt);
     // the controls (message / custom content, close button, progress) paint
-    // themselves
-    GfxHdc gfx(hdc);
-    if (vroot) {
-        vroot->Paint(&gfx, rc);
+    // themselves. Scoped: GfxDirect2D reaches the dc only when destroyed
+    {
+        Gfx* gfx = CreateGfx(hdc);
+        gfx->FillRect(rc, cols.bg);
+        if (vroot) {
+            vroot->Paint(gfx, rc);
+        }
+        delete gfx;
     }
 
     buffer.Flush(hdcIn);

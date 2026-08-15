@@ -1168,14 +1168,19 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmp);
 
-    GfxHdc gfx(hdcMem);
-    VirtListBox::DrawItemEvent ev;
-    ev.listBox = fw->results;
-    ev.gfx = &gfx;
-    ev.itemRect = {0, 0, w, h};
-    ev.itemIndex = 0;
-    ev.selected = false;
-    fw->DrawResultItem(&ev);
+    // scoped: GfxDirect2D reaches the bitmap only when destroyed, and the
+    // GetPixel() probe below needs the pixels to be there
+    {
+        Gfx* gfx = CreateGfx(hdcMem);
+        VirtListBox::DrawItemEvent ev;
+        ev.listBox = fw->results;
+        ev.gfx = gfx;
+        ev.itemRect = {0, 0, w, h};
+        ev.itemIndex = 0;
+        ev.selected = false;
+        fw->DrawResultItem(&ev);
+        delete gfx;
+    }
 
     Color px = GetPixel(hdcMem, w - 3, h / 2);
     SelectObject(hdcMem, oldBmp);

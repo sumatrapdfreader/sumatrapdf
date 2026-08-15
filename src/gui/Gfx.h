@@ -3,8 +3,10 @@
 
 // Gfx is the drawing surface the VirtCtrl controls paint on. It exists so the
 // controls don't name an OS imaging API: it's an abstract base class and each
-// platform provides an implementation (on Windows GfxHdc draws with gdi into an
-// HDC and GfxGdiplus draws with gdiplus).
+// platform provides an implementation. On Windows the virtual-control paint
+// paths get one from CreateGfx(): Direct2D when available, gdiplus otherwise,
+// both anti-aliased. GfxHdc (plain gdi, immediate) survives for surfaces that
+// mix raw gdi drawing with Gfx drawing; see its comment.
 //
 // Rects are in the coordinates of whatever the surface was created for (for
 // VirtCtrl painting: HWND client coords).
@@ -90,6 +92,12 @@ struct Gfx {
 };
 
 #if OS_WIN
+// Draws with plain gdi, immediately and without anti-aliasing. Kept for the
+// surfaces that interleave raw gdi drawing with Gfx drawing on the same HDC
+// (the home page, the caption frame, the installer): GfxDirect2D writes to the
+// HDC only when destroyed and would overwrite the gdi-drawn content, and only
+// gdi honors the DC's world transform (an offset DoubleBuffer). Everything
+// that draws purely through Gfx should use CreateGfx() instead.
 struct GfxHdc : Gfx {
     HDC hdc = nullptr;
     Vec<int> savedDCs; // one per PushClip()

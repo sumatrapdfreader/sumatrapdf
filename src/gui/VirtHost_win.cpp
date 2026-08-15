@@ -42,24 +42,27 @@ static void PaintHost(VirtHost* host, HWND hwnd) {
     Rect rc = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rc);
     HDC memDC = buffer.GetDC();
-    GfxHdc gfx(memDC);
-
-    VirtHostPaintEvent ev;
-    ev.host = host;
-    ev.gfx = &gfx;
-    ev.clientRect = rc;
-    if (host->onPaintBackground.IsValid()) {
-        host->onPaintBackground.Call(&ev);
-    } else {
-        gfx.FillRect(rc, host->bgColor);
-    }
-    if (host->vroot) {
-        // the virtual controls draw text over what we just filled
-        SetBkMode(memDC, TRANSPARENT);
-        host->vroot->Paint(&gfx, rc);
-    }
-    if (host->onPaint.IsValid()) {
-        host->onPaint.Call(&ev);
+    SetBkMode(memDC, TRANSPARENT);
+    // scoped: GfxDirect2D reaches the dc only when destroyed, so the gfx must
+    // die before the buffer is flushed
+    {
+        Gfx* gfx = CreateGfx(memDC);
+        VirtHostPaintEvent ev;
+        ev.host = host;
+        ev.gfx = gfx;
+        ev.clientRect = rc;
+        if (host->onPaintBackground.IsValid()) {
+            host->onPaintBackground.Call(&ev);
+        } else {
+            gfx->FillRect(rc, host->bgColor);
+        }
+        if (host->vroot) {
+            host->vroot->Paint(gfx, rc);
+        }
+        if (host->onPaint.IsValid()) {
+            host->onPaint.Call(&ev);
+        }
+        delete gfx;
     }
     buffer.Flush(hdc);
     EndPaint(hwnd, &ps);

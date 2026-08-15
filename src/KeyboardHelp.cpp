@@ -472,15 +472,16 @@ void KeyboardHelpWnd::SyncColors() {
 
 void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
     Color bg = ThemeWindowControlBackgroundColor();
-    SetBkColor(hdc, bg);
-    HdcFillRectWithBkColor(hdc, client);
     SetBkMode(hdc, TRANSPARENT);
 
     SyncColors();
-    GfxHdc gfx(hdc);
+    // the caller blits the bitmap after we return, which is after the gfx died
+    Gfx* gfx = CreateGfx(hdc);
+    gfx->FillRect(client, bg);
     if (vroot) {
-        vroot->Paint(&gfx, client);
+        vroot->Paint(gfx, client);
     }
+    delete gfx;
 }
 
 void KeyboardHelpWnd::OnPaint(WindowBase::PaintEvent* ev) {
