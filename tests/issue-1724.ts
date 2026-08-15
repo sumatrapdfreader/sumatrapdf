@@ -12,10 +12,8 @@
 // must still offer their URL rather than their /Contents.
 
 import { writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { ControlClient, ControlCommand } from "../cmd/control.ts";
-import { EXE, tmpPath } from "./util";
-import { sleep } from "./winapi";
+import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { EXE, runStandalone, tmpPath } from "./util";
 
 const URL = "https://www.sumatrapdfreader.org";
 
@@ -57,12 +55,7 @@ export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-1724.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const pipe = "sumatra-test-1724";
-  const proc = Bun.spawn([EXE, "-for-testing", "-dbg-control", pipe, pdf], { stdout: "ignore", stderr: "ignore" });
-  try {
-    const client = await ControlClient.connect(pipe, 20000);
+  await withControlledSumatra(EXE, async (client) => {
     const res = await client.request(ControlCommand.TestPageLinks, [pdf, 1]);
     const out = String(res[1] ?? res[0] ?? "");
     const values = [...out.matchAll(/^kind=(\S+) page=(-?\d+) value=(.*)$/gm)].map((m) => ({
@@ -91,16 +84,10 @@ export async function testit(): Promise<void> {
         throw new Error(`an external link shows '${v.value}' instead of its URL:\n${out}`);
       }
     }
-    await client.request(ControlCommand.Quit, []);
-    client.close();
     console.log(`  links into the document show their /Contents: ${inDoc.map((v) => `'${v.value}'`).join(", ")} ✓`);
-  } finally {
-    proc.kill();
-    await sleep(300);
-  }
+  });
 }
 
 if (import.meta.main) {
-  const { runStandalone } = await import("./util");
   await runStandalone(testit);
 }

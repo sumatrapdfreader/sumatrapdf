@@ -12,10 +12,9 @@
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, uniquePipeName } from "../cmd/control.ts";
-import { cmdId, EXE, tmpPath } from "./util";
-import { captureWindowPixels, sendMessage, sleep, waitForTopWindow, waitForWindowIdle, WM_COMMAND } from "./winapi";
-import { findCanvas, sendCommand, waitForExit, windowPosArgs } from "./win-automation";
+import { cmdId, tmpPath } from "./util";
+import { captureWindowPixels, sendMessage, waitForWindowIdle, WM_COMMAND } from "./winapi";
+import { findCanvas, launchControlled, sendCommand, waitForExit } from "./win-automation";
 
 // white pages, with a small black square in the top-left corner of page 1
 function makePdf(nPages: number, square: number): string {
@@ -72,23 +71,15 @@ async function openAtZoom(
   rmSync(appdata, { recursive: true, force: true });
   mkdirSync(appdata, { recursive: true });
   const settingsPath = join(appdata, "SumatraPDF-settings.txt");
-  const settings = ["RestoreSession = false", "CheckForUpdates = false", zoomLevels, ""];
+  const settings = ["RestoreSession = false", "ReuseInstance = false", "CheckForUpdates = false", zoomLevels, ""];
   writeFileSync(settingsPath, settings.join("\n"));
 
   // no -for-testing: this test reads the zoom the app writes into settings.
   // -dbg-control so we can wait for the real tiles, not the blurry preview.
-  const pipe = uniquePipeName("issue-1195");
-  const proc = Bun.spawn(
-    [EXE, "-appdata", appdata, ...windowPosArgs(), "-dbg-control", pipe, "-zoom", zoom, "-scroll", "0,0", pdf],
-    { stdout: "ignore", stderr: "ignore" },
-  );
-  let client: ControlClient | undefined;
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, "-zoom", zoom, "-scroll", "0,0", pdf], {
+    saveSettings: true,
+  });
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
-    client = await ControlClient.connect(pipe);
     await client.waitForRenderIdle(30000);
     const canvas = findCanvas(frame);
     for (let i = 0; i < nZoomIn; i++) {
@@ -124,9 +115,8 @@ async function openAtZoom(
     }
     return { zoom: parseFloat(m[1]), dark };
   } finally {
-    client?.close();
+    client.close();
     proc.kill();
-    await sleep(400);
   }
 }
 
@@ -135,9 +125,6 @@ export async function testit(): Promise<void> {
   writeFileSync(onePage, makePdf(1, 0.5), "latin1");
   const longDoc = tmpPath("issue-1195-long.pdf");
   writeFileSync(longDoc, makePdf(400, 0.5), "latin1");
-
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
 
   // without custom zoom levels, 6400% is still the limit
   const std = await openAtZoom(onePage, "", "25600", 0, true);

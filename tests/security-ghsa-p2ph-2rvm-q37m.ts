@@ -18,10 +18,14 @@ export async function testit(): Promise<void> {
 
     const missingExe = `${EXE}.ghsa-p2ph-2rvm-q37m-missing`;
     sendCopyDataW(frame, kCopyDataDdeW, `[CmdExec "${missingExe}"]`);
-    await sleep(500);
-
-    if (proc.exitCode !== null || getWindowPid(frame) !== proc.pid) {
-      throw new Error("CmdExec with no document tab terminated SumatraPDF");
+    // SendMessage already ran CmdExec; a crash still takes a beat to tear the
+    // process down, so poll briefly instead of sleeping a fixed 500ms
+    const deadline = Date.now() + 250;
+    while (Date.now() < deadline) {
+      if (proc.exitCode !== null || getWindowPid(frame) !== proc.pid) {
+        throw new Error("CmdExec with no document tab terminated SumatraPDF");
+      }
+      await sleep(20);
     }
   } finally {
     if (proc.exitCode === null) {

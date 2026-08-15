@@ -61,7 +61,7 @@ async function waitForTocToSettle(frame: number, timeoutMs = 30000): Promise<num
       stable = 0;
       last = n;
     }
-    await sleep(300);
+    await sleep(80);
   }
   return last;
 }
@@ -94,9 +94,12 @@ async function waitForTocTree(frame: number, timeoutMs = 8000): Promise<number> 
   throw new Error("issue-5918: TOC tree never appeared");
 }
 
-// the TOC is complete once the background build finished
-async function testTocCompletes(dir: string): Promise<void> {
+// the TOC is complete once the background build finished; next/prev file in
+// folder then navigates within the browser view instead of reloading (a reload
+// would drop the TOC back to the flat file list)
+async function testTocAndNextFile(dir: string): Promise<void> {
   const proc = launch(dir, "page-0000.html");
+  const wantFull = nFiles * (1 + headingsPerFile);
   try {
     const frame = await waitForFrame(proc.pid!);
     if (!(await waitForDocumentShown(frame, "page-0000.html"))) {
@@ -109,43 +112,19 @@ async function testTocCompletes(dir: string): Promise<void> {
     }
 
     const settled = await waitForTocToSettle(frame);
-    const wantFull = nFiles * (1 + headingsPerFile);
     if (settled !== wantFull) {
       throw new Error(`issue-5918: TOC settled at ${settled} items, want ${wantFull} (files plus their headings)`);
-    }
-    postMessage(frame, WM_CLOSE, 0, 0);
-    await waitForExit(proc, 5000);
-  } finally {
-    proc.kill();
-  }
-}
-
-// next/prev file in folder navigates within the browser view when the target is
-// one of its pages, instead of loading the document again. A reload would drop
-// the TOC back to the flat file list and rebuild it, so the full TOC staying
-// put is the observable difference.
-async function testNextFileKeepsToc(dir: string): Promise<void> {
-  const proc = launch(dir, "page-0000.html");
-  const wantFull = nFiles * (1 + headingsPerFile);
-  try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!(await waitForDocumentShown(frame, "page-0000.html"))) {
-      throw new Error("issue-5918: document never opened");
-    }
-    sendCommand(frame, cmdId("CmdToggleBookmarks"));
-    await waitForTocTree(frame);
-    if ((await waitForTocToSettle(frame)) !== wantFull) {
-      throw new Error("issue-5918: TOC did not complete before the next-file test");
     }
 
     sendCommand(frame, cmdId("CmdOpenNextFileInFolder"));
     // watch the TOC across the switch: it must never fall back to the flat list
-    for (let i = 0; i < 12; i++) {
-      await sleep(120);
+    const watchUntil = Date.now() + 800;
+    while (Date.now() < watchUntil) {
       const n = tocItemCount(frame);
       if (n !== wantFull) {
         throw new Error(`issue-5918: TOC dropped to ${n} items after next-file, want it kept at ${wantFull}`);
       }
+      await sleep(40);
     }
     if (!(await waitForDocumentShown(frame, "page-0001.html", 5000))) {
       throw new Error(`issue-5918: next file did not open, title is '${getWindowText(frame)}'`);
@@ -183,8 +162,7 @@ async function testCloseDuringBuild(dir: string): Promise<void> {
 
 export async function testit(): Promise<void> {
   const dir = makeFolder();
-  await testTocCompletes(dir);
-  await testNextFileKeepsToc(dir);
+  await testTocAndNextFile(dir);
   await testCloseDuringBuild(dir);
   console.log("issue-5918: OK");
 }
