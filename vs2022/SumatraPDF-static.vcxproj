@@ -1277,11 +1277,11 @@
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\UtAssert.h" />
     <ClInclude Include="..\src\gui\Gfx.h" />
+    <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
     <ClInclude Include="..\src\gui\PlatformFont.h" />
     <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\gui\UIModels.h" />
-    <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\VirtCtrl.h" />
     <ClInclude Include="..\src\gui\VirtHost.h" />
     <ClInclude Include="..\src\gui\win\BrowserDocView.h" />
@@ -1722,6 +1722,7 @@
     <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp" />
     <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
     <ClCompile Include="..\src\gui\Gfx_win.cpp" />
+    <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
     <ClCompile Include="..\src\gui\PlatformFont.cpp" />
     <ClCompile Include="..\src\gui\PlatformFont_win.cpp" />
@@ -1729,7 +1730,6 @@
     <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\gui\UIModels.cpp" />
     <ClCompile Include="..\src\gui\UiPlatform_win.cpp" />
-    <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\gui\VirtHost_win.cpp" />
     <ClCompile Include="..\src\gui\win\BrowserDocView.cpp" />

@@ -483,6 +483,9 @@
     <ClInclude Include="..\src\gui\Gfx.h">
       <Filter>src\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\GuiColors.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\Layout.h">
       <Filter>src\gui</Filter>
     </ClInclude>
@@ -493,9 +496,6 @@
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\UIModels.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gui\GuiColors.h">
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\VirtCtrl.h">
@@ -1145,6 +1145,9 @@
     <ClCompile Include="..\src\gui\Gfx_win.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gui\GuiColors.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gui\Layout.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
@@ -1164,9 +1167,6 @@
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\GuiColors.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">

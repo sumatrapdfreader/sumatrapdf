@@ -869,6 +869,7 @@ function gui_files()
     "Gfx_win.cpp",
     "GfxGdiplus_win.cpp",
     "GfxDirect2D_win.cpp",
+    "GuiColors.*",
     "Layout.*",
     "PlatformFont.*",
     "PlatformFont_win.*",
@@ -1414,6 +1415,7 @@ function logview_files()
     "Gfx_win.cpp",
     "GfxGdiplus_win.cpp",
     "GfxDirect2D_win.cpp",
+    "GuiColors.*",
     "UiPlatform_win.*",
     "VirtCtrl.*",
   })
