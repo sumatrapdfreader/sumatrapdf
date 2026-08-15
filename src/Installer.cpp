@@ -1926,7 +1926,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 //] ACCESSKEY_GROUP Installer
 
 static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    DpiSetFromHwnd(hwnd);
+    DpiScope dpiScope(hwnd);
     bool handled;
 
     LRESULT res = 0;

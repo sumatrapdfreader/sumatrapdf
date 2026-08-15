@@ -82,6 +82,9 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         return DefWindowProcW(hwnd, msg, wp, lp);
     }
 
+    // the host previously relied on whatever dpi the last window left behind
+    DpiScope dpiScope(hwnd);
+
     switch (msg) {
         case WM_MOUSEACTIVATE:
             if (host->noActivate) {

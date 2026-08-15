@@ -245,7 +245,7 @@ static void ShowUsage() {
 }
 
 static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    DpiSetFromHwnd(hwnd);
+    DpiScope dpiScope(hwnd);
     bool handled;
 
     LRESULT res = 0;

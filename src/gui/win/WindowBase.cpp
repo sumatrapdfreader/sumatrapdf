@@ -428,6 +428,7 @@ WindowBase* WindowBase::AsWindowBase() {
 }
 
 LRESULT WindowBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    DpiScope dpi(hwnd);
     if (onWndProc.IsValid()) {
         WndProcEvent ev;
         ev.w = this;
@@ -440,7 +441,6 @@ LRESULT WindowBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             return ev.result;
         }
     }
-    DpiSetFromHwnd(hwnd);
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
@@ -981,7 +981,6 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
 
         case WM_PAINT: {
-            DpiSetFromHwnd(hwnd);
             if (subclassId) {
                 // Allow window controls to do their default drawing.
                 return FinalWindowProc(msg, wparam, lparam);
@@ -1091,7 +1090,6 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
 
         case WM_SIZE: {
-            DpiSetFromHwnd(hwnd);
             Size size = {LOWORD(lparam), HIWORD(lparam)};
             // most WindowBase windows just want `layout` stretched to the new
             // client size. CreateCustom sends WM_SIZE before the tree exists,
@@ -1155,6 +1153,8 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 // WM_CHAR Escape is needed because an Edit can eat KEYDOWN Escape (IME / some
 // locales); KEYDOWN is still handled so we close before TranslateMessage.
 bool WindowBase::PreTranslateMessage(MSG& msg) {
+    // runs from the message loop, outside any wndproc's DpiScope
+    DpiScope dpiScope(hwnd);
     if (onPreTranslate.IsValid()) {
         PreTranslateEvent pev;
         pev.w = this;
@@ -1236,6 +1236,7 @@ ControlBase* ControlBase::AsControlBase() {
 }
 
 LRESULT ControlBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    DpiScope dpi(hwnd);
     if (onWndProc.IsValid()) {
         WndProcEvent ev;
         ev.w = this;
@@ -1248,7 +1249,6 @@ LRESULT ControlBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
             return ev.result;
         }
     }
-    DpiSetFromHwnd(hwnd);
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
@@ -1490,7 +1490,6 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         }
 
         case WM_PAINT: {
-            DpiSetFromHwnd(hwnd);
             if (subclassId) {
                 // Allow window controls to do their default drawing.
                 return FinalWindowProc(msg, wparam, lparam);
@@ -1587,7 +1586,6 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         }
 
         case WM_SIZE: {
-            DpiSetFromHwnd(hwnd);
             if (onSize.IsValid()) {
                 SizeEvent sev;
                 sev.w = this;

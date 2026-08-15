@@ -5031,7 +5031,7 @@ void RevokeCanvasDropTarget(HWND hwndCanvas) {
 }
 
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    DpiSetFromHwnd(hwnd);
+    DpiScope dpiScope(hwnd);
     // messages that don't require win
 
     if (msg == WM_NCCALCSIZE && wp == TRUE) {

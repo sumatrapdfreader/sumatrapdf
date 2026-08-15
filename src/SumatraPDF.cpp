@@ -13138,7 +13138,7 @@ static void ApplyEmbeddedWindowChrome(MainWindow* win) {
 }
 
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    DpiSetFromHwnd(hwnd);
+    DpiScope dpiScope(hwnd);
     MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     // DbgLogMsg("frame:", hwnd, msg, wp, lp);
