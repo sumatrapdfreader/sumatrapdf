@@ -94,17 +94,23 @@ export async function testit(): Promise<void> {
   } catch {
     /* ok */
   }
-  const p1 = spawn(
-    EXE,
-    ["-for-testing", "-pwd", "test", "-log", "-log-to-file", log1, a, b, a],
-    { cwd: ROOT, stdio: "ignore" },
-  );
-  await sleep(2500);
+  const p1 = spawn(EXE, ["-for-testing", "-pwd", "test", "-log", "-log-to-file", log1, a, b, a], {
+    cwd: ROOT,
+    stdio: "ignore",
+  });
+  const deadline1 = Date.now() + 8000;
+  let loadsA1 = 0;
+  let loadsB1 = 0;
+  while (Date.now() < deadline1) {
+    loadsA1 = await countLoads(log1, "a-pwd.pdf");
+    loadsB1 = await countLoads(log1, "b-pwd.pdf");
+    if (loadsA1 >= 1 && loadsB1 >= 1) {
+      break;
+    }
+    await sleep(40);
+  }
   p1.kill();
-  await sleep(200);
-
-  const loadsA1 = await countLoads(log1, "a-pwd.pdf");
-  const loadsB1 = await countLoads(log1, "b-pwd.pdf");
+  await sleep(50);
   if (loadsA1 !== 1) {
     throw new Error(`cmdline multi-open: expected 1 load of a-pwd.pdf, got ${loadsA1}`);
   }
@@ -134,20 +140,31 @@ export async function testit(): Promise<void> {
     /* ok */
   }
 
-  const primary = spawn(
-    EXE,
-    ["-appdata", appdata, "-pwd", "test", "-log", "-log-to-file", log2, a],
-    { cwd: ROOT, stdio: "ignore" },
-  );
-  await sleep(800);
+  const primary = spawn(EXE, ["-appdata", appdata, "-pwd", "test", "-log", "-log-to-file", log2, a], {
+    cwd: ROOT,
+    stdio: "ignore",
+  });
+  const deadlineP = Date.now() + 5000;
+  while (Date.now() < deadlineP) {
+    if ((await countLoads(log2, "a-pwd.pdf")) >= 1) {
+      break;
+    }
+    await sleep(40);
+  }
   const secB = spawn(EXE, ["-appdata", appdata, "-pwd", "test", b], { cwd: ROOT, stdio: "ignore" });
-  await sleep(400);
+  const deadlineB = Date.now() + 4000;
+  while (Date.now() < deadlineB) {
+    const text = existsSync(log2) ? await Bun.file(log2).text() : "";
+    if ((text.match(/CreateControllerForEngineOrFile: '.*b-pwd\.pdf'/g) || []).length >= 1) {
+      break;
+    }
+    await sleep(40);
+  }
   const secA = spawn(EXE, ["-appdata", appdata, "-pwd", "test", a], { cwd: ROOT, stdio: "ignore" });
-  await sleep(2500);
+  await sleep(400);
   secB.kill();
   secA.kill();
   primary.kill();
-  await sleep(200);
 
   // Primary log: one sync load of A. B is async (StartLoadDocument) so it may not
   // emit "LoadDocument: N pages" — but a second A must not produce a second

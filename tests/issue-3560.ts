@@ -9,17 +9,9 @@
 // is blue, then reads the colours of the bookmarks tree straight off the screen.
 
 import { writeFileSync } from "node:fs";
-import { EXE, tmpPath } from "./util";
-import {
-  captureWindowPixels,
-  findChildWindow,
-  isZoomed,
-  moveWindow,
-  showWindow,
-  sleep,
-  waitForTopWindow,
-  SW_RESTORE,
-} from "./winapi";
+import { tmpPath } from "./util";
+import { launchControlled } from "./win-automation";
+import { captureWindowPixels, findChildWindow, isZoomed, moveWindow, showWindow, sleep, SW_RESTORE } from "./winapi";
 
 // two pages and an outline with a red bold entry and a blue one. PageMode
 // UseOutlines so the bookmarks sidebar opens with the document.
@@ -84,27 +76,31 @@ export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-3560.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled([pdf], { defaultWindowPos: true });
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
-    await sleep(1200);
+    await client.waitForRenderIdle();
     if (isZoomed(frame)) {
       showWindow(frame, SW_RESTORE);
-      await sleep(400);
     }
     moveWindow(frame, 40, 20, 1000, 800);
-    await sleep(1500);
+    await client.waitForRenderIdle();
 
-    const tree = findChildWindow(frame, "SysTreeView32");
+    const deadline = Date.now() + 5000;
+    let tree = 0;
+    let n = { red: 0, blue: 0 };
+    while (Date.now() < deadline) {
+      tree = findChildWindow(frame, "SysTreeView32");
+      if (tree) {
+        n = countColoredText(tree);
+        if (n.red >= 40 && n.blue >= 40) {
+          break;
+        }
+      }
+      await sleep(40);
+    }
     if (!tree) {
       throw new Error("the bookmarks tree did not appear");
     }
-    const n = countColoredText(tree);
     // each title is a long word, so the coloured glyphs are hundreds of pixels
     if (n.red < 40) {
       throw new Error(`the bold red bookmark is not red (${n.red} red px, ${n.blue} blue px)`);
@@ -114,8 +110,8 @@ export async function testit(): Promise<void> {
     }
     console.log(`  outline colors reach the bookmarks tree: ${n.red} red px, ${n.blue} blue px ✓`);
   } finally {
+    client.close();
     proc.kill();
-    await sleep(300);
   }
 }
 

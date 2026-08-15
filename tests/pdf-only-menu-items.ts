@@ -4,21 +4,17 @@
 // The gate used CouldBePDFDoc(), which is true for epub/mobi/fb2/xps/svg too;
 // it now asks the engine whether there is really a pdf_document behind the tab.
 
-import { findCanvas, findSubMenu, launchSumatra, readContextMenuTree, waitForFrame } from "./win-automation.ts";
-import { setForegroundWindow, sleep } from "./winapi.ts";
+import { findCanvas, findSubMenu, launchControlled, readContextMenuTree } from "./win-automation.ts";
+import { setForegroundWindow } from "./winapi.ts";
 import { runStandalone } from "./util.ts";
 
 const kDocumentSubMenu = "Document";
 
 async function documentMenuItems(file: string): Promise<string[]> {
-  const proc = launchSumatra([file]);
+  const { proc, client, frame } = await launchControlled([file]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!frame) {
-      throw new Error(`pdf-only-menu-items: window didn't open for ${file}`);
-    }
+    await client.waitForRenderIdle();
     setForegroundWindow(frame);
-    await sleep(2500);
     const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error(`pdf-only-menu-items: no canvas for ${file}`);
@@ -33,6 +29,7 @@ async function documentMenuItems(file: string): Promise<string[]> {
     }
     return doc.items.map((it) => it.text);
   } finally {
+    client.close();
     proc.kill();
   }
 }

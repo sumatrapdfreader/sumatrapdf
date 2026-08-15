@@ -8,21 +8,17 @@
 // GUI automation rather than -dbg-control: the whole point is what the layout
 // does with the real window size.
 
-import { findCanvas, launchSumatra, waitForFrame } from "./win-automation.ts";
-import { getClientRect, getScrollInfo, setForegroundWindow, sleep, SB_VERT } from "./winapi.ts";
+import { findCanvas, launchControlled } from "./win-automation.ts";
+import { getClientRect, getScrollInfo, setForegroundWindow, SB_VERT } from "./winapi.ts";
 import { runStandalone } from "./util.ts";
 
 const EPUB = "tests/issue-5846.epub";
 
 export async function testit(): Promise<void> {
-  const proc = launchSumatra(["-view", "single page", "-zoom", "fit width", EPUB]);
+  const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit width", EPUB]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!frame) {
-      throw new Error("issue-3472: SumatraPDF window didn't open");
-    }
+    await client.waitForRenderIdle();
     setForegroundWindow(frame);
-    await sleep(3000);
     const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("issue-3472: no canvas");
@@ -43,6 +39,7 @@ export async function testit(): Promise<void> {
     }
     console.log(`issue-3472: canvas ${cr.right}x${cr.bottom}, Fit Width page overflow ${overflow}px`);
   } finally {
+    client.close();
     proc.kill();
   }
 }

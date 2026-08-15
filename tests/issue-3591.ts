@@ -16,7 +16,8 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, tmpPath } from "./util";
+import { cmdId, tmpPath } from "./util";
+import { findCanvas, launchControlled, sendCommandSync } from "./win-automation";
 import {
   getScrollInfo,
   getWindowRect,
@@ -24,9 +25,6 @@ import {
   moveWindow,
   sendMessage,
   showWindow,
-  sleep,
-  waitForChildWindow,
-  waitForTopWindow,
   SB_HORZ,
   SW_RESTORE,
 } from "./winapi";
@@ -81,30 +79,22 @@ export async function testit(): Promise<void> {
 
   // kill stale dev-build instances so reuse-instance can't forward our launch
   // to an old window (which would leave our process window-less)
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-
-  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf], { defaultWindowPos: true });
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
+    await client.waitForRenderIdle();
     if (isZoomed(frame)) {
       showWindow(frame, SW_RESTORE);
-      await sleep(300);
     }
     moveWindow(frame, 60, 60, 1200, 900);
-    await sleep(1200);
+    await client.waitForRenderIdle();
 
-    const canvas = await waitForChildWindow(frame, "SUMATRA_PDF_CANVAS");
+    const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("could not find the canvas window");
     }
 
     // page 3 is the second page of the [2,3] row (page 1 is the cover, alone)
-    sendMessage(frame, 0x0111 /*WM_COMMAND*/, BigInt(cmdId("CmdGoToNextPage")), 0n);
-    await sleep(500);
+    sendCommandSync(frame, cmdId("CmdGoToNextPage"));
 
     // scroll right until the row's first page is off-screen to the left
     let h = 0;
@@ -114,7 +104,6 @@ export async function testit(): Promise<void> {
         break;
       }
       sendMessage(canvas, WM_HSCROLL, BigInt(SB_PAGERIGHT), 0n);
-      await sleep(250);
       if (getScrollInfo(canvas, SB_HORZ).pos === si.pos) {
         break; // can't scroll any further
       }
@@ -133,7 +122,7 @@ export async function testit(): Promise<void> {
     // Get/SetScrollState round trip in SetViewPortSize() must preserve x
     const r = getWindowRect(frame);
     moveWindow(frame, r.left, r.top, r.right - r.left, r.bottom - r.top - 60);
-    await sleep(1200);
+    await client.waitForRenderIdle();
 
     const after = getScrollInfo(canvas, SB_HORZ).pos;
     if (Math.abs(after - h) > 2) {
@@ -143,8 +132,8 @@ export async function testit(): Promise<void> {
       );
     }
   } finally {
+    client.close();
     proc.kill();
-    await sleep(300);
   }
 }
 

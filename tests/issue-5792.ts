@@ -17,8 +17,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, EXE, extractPageText, runStandalone } from "./util.ts";
-import { sleep } from "./winapi.ts";
-import { launchSumatra, sendCommand, waitForFrame } from "./win-automation.ts";
+import { launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const FB2 = join(import.meta.dir, "issue-5792.fb2");
 
@@ -42,41 +41,30 @@ function assertSoftJoinedParagraphs(text: string, label: string): void {
   }
   // Soft-join spaces at wrap points (not "visuallines")
   if (!alphaBlock.includes("visual lines") || !alphaBlock.includes("hard newlines")) {
-    throw new Error(
-      `#5793 ${label}: missing soft-join spaces at wrap points:\n${JSON.stringify(alphaBlock)}`,
-    );
+    throw new Error(`#5793 ${label}: missing soft-join spaces at wrap points:\n${JSON.stringify(alphaBlock)}`);
   }
   if (!bravoBlock.includes("paragraphs stay")) {
-    throw new Error(
-      `#5793 ${label}: missing soft-join space in Bravo:\n${JSON.stringify(bravoBlock)}`,
-    );
+    throw new Error(`#5793 ${label}: missing soft-join space in Bravo:\n${JSON.stringify(bravoBlock)}`);
   }
   // Paragraph boundaries kept as newlines
   if (!/[\r\n]+\s*Bravo paragraph/.test(text) || !/[\r\n]+\s*Charlie paragraph/.test(text)) {
-    throw new Error(
-      `#5793 ${label}: expected hard newlines between paragraphs:\n${JSON.stringify(text)}`,
-    );
+    throw new Error(`#5793 ${label}: expected hard newlines between paragraphs:\n${JSON.stringify(text)}`);
   }
 }
 
 async function copyAllViaUi(): Promise<string> {
-  const proc = launchSumatra([FB2]);
+  const { proc, client, frame } = await launchControlled([FB2]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!frame) {
-      throw new Error("#5793: no frame window");
-    }
-    await sleep(2500);
-    sendCommand(frame, cmdId("CmdSelectAll"));
-    await sleep(300);
-    sendCommand(frame, cmdId("CmdCopySelection"));
-    await sleep(300);
+    await client.waitForRenderIdle();
+    sendCommandSync(frame, cmdId("CmdSelectAll"));
+    sendCommandSync(frame, cmdId("CmdCopySelection"));
     const clip = Bun.spawnSync(["powershell", "-NoProfile", "-Command", "Get-Clipboard -Raw"], {
       stdout: "pipe",
       stderr: "pipe",
     });
     return clip.stdout.toString();
   } finally {
+    client.close();
     try {
       proc.kill();
     } catch {
