@@ -80,7 +80,12 @@ struct GdiplusOnHdc {
     Gdiplus::Graphics g;
 
     explicit GdiplusOnHdc(HDC hdc) : g(hdc) {
-        g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
+        // deliberately not CompositingQualityHighQuality: that blends alpha in
+        // linear space, which makes every translucent overlay far more opaque
+        // than the alpha says (the selection's 0x5f over red came out at 0xa4
+        // instead of 0x5f). The alphas in the app are all picked against the
+        // default sRGB blending, which is also what GfxGdiplus uses, so the
+        // same overlay looks the same in both backends
         g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
         g.SetPageUnit(Gdiplus::UnitPixel);
         DWORD layout = GetLayout(hdc);
