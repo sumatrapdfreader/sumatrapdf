@@ -2132,6 +2132,9 @@ static void HomeViewModeClicked(MainWindow* win, VirtMouseEvent* ev) {
         return;
     }
     SetHomePageListView(btn->listView);
+    if (btn->listView) {
+        win->DeleteToolTip();
+    }
     win->homePageScrollY = 0;
     SaveSettings();
     win->RedrawAll(true);
@@ -2370,12 +2373,17 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
         return false;
     }
     // no tooltip of its own means "leave the tooltip alone", not "hide it": a
-    // file entry's tip is put up by HomePageShowSelectionTooltip() and would
+    // thumbnail entry's tip is put up by HomePageShowSelectionTooltip() and would
     // otherwise be torn down by the WM_SETCURSOR that follows the hover
     TempStr tip = w->GetTooltipTemp(ptLocal);
     if (tip && *tip.s) {
         Rect r = w->BoundsInWindow();
         win->ShowToolTip(tip, r);
+    } else if (HomePageIsListView()) {
+        HomeEntriesCtrl* entries = HomeEntries(win);
+        if (entries && entries->EntryForCtrl(w)) {
+            win->DeleteToolTip();
+        }
     }
     res = TRUE;
     return true;
@@ -2735,12 +2743,12 @@ static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t) {
     return sel;
 }
 
-// Show/update the infotip for the keyboard-selected home entry. Placed just
+// Show/update the infotip for the keyboard-selected home thumbnail. Placed just
 // below the blue selection outline, left-aligned with the outline's left edge;
 // shifted left if it would extend past the right edge of the last outline in
 // that row.
 static void HomePageShowSelectionTooltip(MainWindow* win) {
-    if (!win || HomeSearchHasFocus(win)) {
+    if (!win || HomePageIsListView() || HomeSearchHasFocus(win)) {
         if (win) {
             win->DeleteToolTip();
         }
@@ -2848,9 +2856,7 @@ void HomePageClearActiveEntry(MainWindow* win) {
     entries->SetActiveEntry(-1);
 }
 
-// mouse over a file entry: update homePageSelIdx and show the tip at that entry
-// (not at the cursor). Returns true if (x,y) is over a file thumbnail/list row
-// file of the entry at (x,y), empty if there is no entry there. Replaces the
+// File of the entry at (x,y), empty if there is no entry there. Replaces the
 // old "look the click up in win->staticLinks" - entries are VirtCtrls now
 Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
     HomeEntriesCtrl* entries = HomeEntries(win);
@@ -2867,6 +2873,8 @@ Str HomePageFilePathAtTemp(MainWindow* win, int x, int y) {
     return str::DupTemp(e->filePath);
 }
 
+// Mouse over a file entry: update homePageSelIdx and, in thumbnail view, show
+// the tip at that entry (not at the cursor).
 bool HomePageOnHover(MainWindow* win, int x, int y) {
     HomeEntriesCtrl* entries = HomeEntries(win);
     if (!entries) {
