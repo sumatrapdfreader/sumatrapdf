@@ -11,6 +11,11 @@ namespace uitask {
 
 static HWND gTaskDispatchHwnd = nullptr;
 
+// set by Destroy(). From then on gTaskDispatchHwnd is null because the app is
+// shutting down, which is a different situation from it never having been
+// created - see Post()
+static bool gWasDestroyed = false;
+
 static UINT gExecuteTaskMessage = 0;
 
 static ThreadId gMainUIThreadId = 0;
@@ -82,6 +87,7 @@ constexpr const WCHAR* UITASK_CLASS_NAME = L"UITask_Wnd_Class";
 // Call Initialize() at program startup and Destroy() at the end
 void Initialize() {
     gMainUIThreadId = GetCurrentThreadId();
+    gWasDestroyed = false;
 
     ReportIf(gExecuteTaskMessage != 0);
     gExecuteTaskMessage = RegisterWindowMessageA("UITask_Msg_StdFunction");
@@ -111,16 +117,20 @@ void Destroy() {
     DrainQueue();
     DestroyWindow(gTaskDispatchHwnd);
     gTaskDispatchHwnd = nullptr;
+    gWasDestroyed = true;
     delete (TaskInfo*)AtomicPtrExchange(&gTaskInfoCache, nullptr);
 }
 
 void Post(const Func0& f, Kind kind) {
-    // Without the dispatch window PostMessageW() would get a null hwnd, which
-    // posts a *thread* message: it succeeds, so we'd keep the allocation, but
-    // DispatchMessage() never routes thread messages to a window proc, so the
-    // task would silently never run. Fail loudly instead of leaking it.
-    ReportIf(!gTaskDispatchHwnd);
     if (!gTaskDispatchHwnd) {
+        // After Destroy() this is a worker that outlived the UI finishing its
+        // work (the file-existence checker is the usual one). Nothing can run
+        // the task any more, so drop it - quietly, because the process is on
+        // its way out and a debug report here would race the rest of shutdown.
+        // Before Initialize() it is a real bug: PostMessageW() with a null hwnd
+        // posts a *thread* message, which succeeds but is never routed to a
+        // window proc, so the task would silently never run.
+        ReportIf(!gWasDestroyed);
         return;
     }
     TaskInfo* ti = AllocTaskInfo();
