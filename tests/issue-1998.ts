@@ -14,7 +14,7 @@
 //
 // Drives the app from Bun via FFI (tests/winapi.ts). Needs a PDF with a
 // multi-level outline; uses one from the local bugs folder and skips cleanly if
-// it isn't present (so tests/all.ts keeps going).
+// it isn't present (so tests/run-almost-all.ts keeps going).
 
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

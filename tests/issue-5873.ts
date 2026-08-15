@@ -9,7 +9,7 @@
 //
 // Fixture: tests/issue-5873.pdf (copy of the bug report PDF).
 //
-// Run:  bun tests/issue-5873.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5873.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";

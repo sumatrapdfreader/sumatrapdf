@@ -16,7 +16,7 @@
 // extraction is garbled ("POČÍTAMDRÝKEŇ"). When pdfjs-dist is installed it also
 // confirms pdf.js reads the same field value (the baseline).
 //
-// Run:  bun tests/issue-5404.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5404.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";

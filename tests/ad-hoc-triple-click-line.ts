@@ -4,9 +4,8 @@
 // the middle of "shareholders" via -dbg-control TestTripleClickLineSelect, and
 // checks the selected text is the full line.
 //
-// NOT registered in tests/all.ts — run directly:
+// NOT registered in tests/run-almost-all.ts — run directly:
 //   bun tests/ad-hoc-triple-click-line.ts [--no-build]
-// or as part of: bun tests/before-release.ts
 
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

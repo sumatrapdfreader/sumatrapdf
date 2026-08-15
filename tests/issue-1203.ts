@@ -3,7 +3,7 @@
 // ClickEdgeToTurnPage: a click (not a drag) on the left fifth of the canvas
 // goes to the previous page, the right fifth to the next page.
 //
-// Run:  bun tests/issue-1203.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-1203.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

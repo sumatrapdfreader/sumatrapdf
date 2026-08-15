@@ -9,7 +9,7 @@
 //   - AllowExternalImages = true  -> the image renders (canvas has color)
 //   - AllowExternalImages = false -> blank (secure default; image not loaded)
 //
-// Run:  bun tests/issue-3731.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-3731.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";

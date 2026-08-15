@@ -4,7 +4,7 @@
 // selection stayed on the previous item.
 //
 // This is GUI automation (there's no -dbg-control hook for palette TOC
-// navigation), so it lives as an ad-hoc test, not in tests/all.ts. Run directly:
+// navigation), so it lives as an ad-hoc test, not in tests/run-almost-all.ts. Run directly:
 //   bun tests/ad-hoc-toc-palette-sync.ts [--no-build]
 //
 // Reverting the fix (the selectInTree path in TableOfContents.cpp's GoToTocLink)

@@ -16,7 +16,7 @@
 //   - "nope"          (unknown)                          -> NOTFOUND
 // Before the fix, "nameddest=ch2" resolved to NOTFOUND and would fail here.
 //
-// Run:  bun tests/issue-5642.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5642.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";

@@ -285,9 +285,9 @@ function main(): void {
   const adHoc = checkAdHocOptional();
 
   let missing = 0;
-  missing += printSection("Core (tests/all.ts)", core);
+  missing += printSection("Core (tests/run-almost-all.ts)", core);
   missing += printSection("LaTeX / SyncTeX (tests/latex.ts)", latex);
-  missing += printSection("Ad-hoc / before-release (optional)", adHoc);
+  missing += printSection("Ad-hoc / pre-release (optional)", adHoc);
 
   printLatexSummary(latex);
 

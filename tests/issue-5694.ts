@@ -3,7 +3,7 @@
 // Find can be limited to a page range. "ALPHA" is on pages 1, 2 and 3 of the
 // fixture; restricting to 2-2 must return only page 2.
 //
-// Run:  bun tests/issue-5694.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5694.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";

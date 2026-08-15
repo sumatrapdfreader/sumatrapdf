@@ -13,7 +13,7 @@
 // "Embedded". pdf.js recovers these glyph names in _simpleFontToUnicode(); the
 // mupdf fix mirrors that heuristic in pdf_load_to_unicode (pdf-unicode.c).
 //
-// Run:  bun tests/issue-3219.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-3219.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";

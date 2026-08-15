@@ -12,7 +12,7 @@
 //
 // Fixture: tests/issue-5871.pdf (one page from the issue attachment).
 //
-// Run:  bun tests/issue-5871.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5871.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";

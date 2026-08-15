@@ -7,9 +7,8 @@
 // Tier B (strict): MakerNote Tag 0xXXXX and Canon TIFF makernote tags
 // Other MakerNote proprietary names (Apple, Olympus, ...) are skipped.
 //
-// NOT registered in tests/all.ts — run occasionally:
+// NOT registered in tests/run-almost-all.ts — run occasionally:
 //   bun tests/ad-hoc-exif.ts [--no-build]
-// or as part of: bun tests/before-release.ts
 //
 // Requires git and network access on first run (to clone exif-py).
 

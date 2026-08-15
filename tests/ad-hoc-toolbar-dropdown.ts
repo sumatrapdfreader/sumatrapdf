@@ -8,7 +8,7 @@
 // test drives that guard: open the menu, dismiss it, click the arrow again
 // straight away, and check the menu does not come back.
 //
-// Not in tests/all.ts: it drives a modal menu through posted messages, which is
+// Not in tests/run-almost-all.ts: it drives a modal menu through posted messages, which is
 // more environment-sensitive than the rest of the suite.
 //
 // Uses -appdata so it never touches the user's real settings.

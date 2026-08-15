@@ -9,7 +9,7 @@
 // Other DefaultDisplayMode values (the default is automatic) keep the
 // chosen layout / DefaultZoom.
 //
-// Run:  bun tests/issue-4055.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-4055.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

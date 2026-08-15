@@ -3,7 +3,7 @@
 // Feature: SidebarOnRight puts the bookmarks / favorites sidebar on the right
 // of the window (left is the default).
 //
-// Run:  bun tests/issue-2165.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-2165.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

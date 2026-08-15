@@ -4,7 +4,7 @@
 // folders as nested Bookmarks entries. A single shared directory is stripped
 // so a flat comic stays a flat list. ComicInfo.xml bookmarks still win.
 //
-// Run:  bun tests/issue-5317.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5317.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

@@ -9,7 +9,7 @@
 // This pipes two lines into `run issue-5665.js` and asserts the script read
 // them back via readline().
 //
-// Run:  bun tests/issue-5665.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5665.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";

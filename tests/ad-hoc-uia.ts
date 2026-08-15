@@ -12,7 +12,7 @@
 //   - walking by character / word / line advances instead of repeating
 //   - reading the whole document line by line terminates
 //
-// It is ad-hoc (not in tests/all.ts) because it needs the Visual Studio
+// It is ad-hoc (not in tests/run-almost-all.ts) because it needs the Visual Studio
 // command-line tools to build the client; without cl.exe it skips.
 
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";

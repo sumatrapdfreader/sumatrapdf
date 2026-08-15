@@ -9,7 +9,7 @@
 // has no tabs otherwise), calls RememberDefaultWindowPosition with maximized
 // prefs on a restored frame, then repeats without Loading for the empty case.
 //
-// Run:  bun tests/issue-5529.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5529.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
 import { EXE, runStandalone } from "./util.ts";

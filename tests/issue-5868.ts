@@ -9,7 +9,7 @@
 // the filter must still drop the near-zero "tracking" spaces that split words
 // into syllables.
 //
-// Run:  bun tests/issue-5868.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5868.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";

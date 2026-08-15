@@ -9,7 +9,7 @@
 // the next/prev commands via WM_COMMAND, asserting the window title follows
 // aaa -> bbb -> ccc -> bbb.
 //
-// Run:  bun tests/issue-5780.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5780.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, copyFileSync, rmSync } from "node:fs";
 import { join } from "node:path";

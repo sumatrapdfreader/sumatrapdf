@@ -3,9 +3,8 @@
 // Exercises the C++ translation path via -dbg-control TestSelectionTranslate.
 // Requires the corresponding CLI to be installed; missing backends are skipped.
 //
-// NOT registered in tests/all.ts — run directly:
+// NOT registered in tests/run-almost-all.ts — run directly:
 //   bun tests/ad-hoc-selection-translate.ts [--no-build]
-// or as part of: bun tests/before-release.ts
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";

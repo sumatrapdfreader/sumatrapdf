@@ -4,7 +4,7 @@
 //
 // It puts a solid-red bitmap on the clipboard, opens a PDF, runs the command,
 // and verifies a red region was stamped onto the page. Because it touches the
-// system clipboard and drives the GUI, it's an ad-hoc test (not in all.ts).
+// system clipboard and drives the GUI, it's an ad-hoc test (not in run-almost-all.ts).
 //
 // Run:  bun tests/ad-hoc-paste-image-annot.ts [--no-build]
 

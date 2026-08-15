@@ -10,7 +10,7 @@
 // This compares the src patterns of premake's sumatrapdf_files() against the
 // mingw list and fails on any src/*.cpp premake compiles that mingw doesn't.
 //
-// Run standalone: bun tests/lint-mingw-sources.ts  (also runs in all.ts)
+// Run standalone: bun tests/lint-mingw-sources.ts  (also runs in run-almost-all.ts)
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";

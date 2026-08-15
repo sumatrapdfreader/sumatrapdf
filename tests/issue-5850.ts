@@ -14,7 +14,7 @@
 // canvas's window DC (PrintWindow renders the NC area blank). A painted bar has
 // a track plus a thumb; the bug shows up as a single flat color.
 //
-// Run:  bun tests/issue-5850.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5850.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

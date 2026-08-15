@@ -8,7 +8,7 @@
 // shrinks and still decodes to the same dimensions.
 //
 // Touches the system clipboard and the real Downloads folder, so it's an
-// ad-hoc test (not in all.ts). Cleans up the file it creates.
+// ad-hoc test (not in run-almost-all.ts). Cleans up the file it creates.
 //
 // Run:  bun tests/ad-hoc-png-optimize.ts
 

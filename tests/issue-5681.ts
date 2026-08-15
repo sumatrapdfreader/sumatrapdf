@@ -8,7 +8,7 @@
 // Piped multi-line REPL input exercises the same REPL loop without requiring
 // interactive console automation.
 //
-// Run:  bun tests/issue-5681.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5681.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync } from "node:fs";
 import { EXE, runStandalone } from "./util.ts";

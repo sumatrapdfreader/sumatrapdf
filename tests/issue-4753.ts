@@ -12,7 +12,7 @@
 //     presentation still forces single page (old behavior)
 //     windowed fullscreen keeps continuous
 //
-// Run:  bun tests/issue-4753.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-4753.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

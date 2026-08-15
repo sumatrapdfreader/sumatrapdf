@@ -5,7 +5,7 @@
 // search fixture with the bundled `clean` tool, then checks that the control search command
 // can only load/search it when the password is provided.
 //
-// Run:  bun tests/issue-906.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-906.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";

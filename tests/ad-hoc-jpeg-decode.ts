@@ -6,7 +6,7 @@
 // This exercises the full mupdf -> libjpeg-turbo decode path, including the
 // x86-64 NASM SIMD (YCbCr->RGB color conversion, IDCT, upsampling).
 //
-// GUI automation, so it lives as an ad-hoc test (not in tests/all.ts). Run:
+// GUI automation, so it lives as an ad-hoc test (not in tests/run-almost-all.ts). Run:
 //   bun tests/ad-hoc-jpeg-decode.ts [--no-build]
 
 import { existsSync } from "node:fs";

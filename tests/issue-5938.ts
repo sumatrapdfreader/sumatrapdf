@@ -17,7 +17,7 @@
 // Either way the destination still decides the page, which is checked too --
 // the option must not turn bookmarks into no-ops.
 //
-// Run:  bun tests/issue-5938.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5938.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

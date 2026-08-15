@@ -24,7 +24,7 @@
 // Keep this fast: F11 is near-instant; do not pad with multi-second sleeps or
 // dense GetPixel grids (a 200px × every-6px strip was ~64k FFI calls × 2).
 //
-// Run:  bun tests/issue-5866.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5866.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

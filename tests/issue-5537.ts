@@ -12,7 +12,7 @@
 //   3. /XYZ 100 700 1    -> zoom 1    (explicit 100%, NOT retained)
 // Before the fix, dest 1 resolved to zoom 1 (forced 100%) and would fail here.
 //
-// Run:  bun tests/issue-5537.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5537.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";

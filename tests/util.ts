@@ -2,7 +2,8 @@
 //
 // Each tests/issue-<n>.ts exports `async function testit()` that runs the test
 // and THROWS on failure (returns normally on success). It does NOT build the app
-// or call process.exit -- that's the runner's job, so tests compose in all.ts.
+// or call process.exit -- that's the runner's job, so tests compose in
+// run-almost-all.ts / run-all.ts.
 
 import { appendFileSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -117,7 +118,7 @@ export function formatDuration(ms: number): string {
 
 // every runTest() appends "<ms>\t<name>\t<pass|FAIL>" here, so a run can be
 // picked apart afterwards ("which tests are slow, and did that change?").
-// all.ts / before-release.ts delete it before they start
+// run-almost-all.ts / run-all.ts / run-pre-release.ts delete it before they start
 export const TEST_TIMES_FILE = join(ROOT, ".work", "test-times.txt");
 
 export function resetTestTimes(): void {
@@ -174,6 +175,49 @@ export async function runTest(name: string, fn: () => void | Promise<void>, opts
 
 export function isSilentArg(argv: string[] = process.argv): boolean {
   return argv.includes("-silent") || argv.includes("--silent");
+}
+
+export type NamedTest = [string, () => void | Promise<void>];
+
+export type SuiteOptions = {
+  silent?: boolean;
+  // run-pre-release.ts / run-all.ts reset the file themselves so suites share one log
+  keepTestTimes?: boolean;
+  heading?: string;
+  summary?: boolean;
+};
+
+export async function runNamedTests(tests: NamedTest[], opts?: SuiteOptions): Promise<void> {
+  if (!opts?.keepTestTimes) {
+    resetTestTimes();
+  }
+  const silent = opts?.silent ?? false;
+  const summary = opts?.summary ?? true;
+  const t0 = performance.now();
+  for (const [name, fn] of tests) {
+    if (!silent) {
+      console.log(`\n========== ${name} ==========`);
+    }
+    await runTest(name, fn, { silent });
+  }
+  if (summary && !silent) {
+    const label = opts?.heading ?? "all";
+    console.log(`\n✅ ${label}: ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
+  }
+}
+
+export async function runSuiteMain(testit: (opts: SuiteOptions) => Promise<void>): Promise<void> {
+  const silent = isSilentArg();
+  if (!process.argv.includes("--no-build")) {
+    buildApp({ silent });
+  }
+  try {
+    await testit({ silent });
+  } catch (e) {
+    console.error(`\n❌ ${(e as Error)?.message ?? e}`);
+    process.exit(1);
+  }
+  process.exit(0);
 }
 
 // build SumatraPDF.exe the same way cmd/build.ts does

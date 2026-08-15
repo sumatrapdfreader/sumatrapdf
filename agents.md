@@ -277,7 +277,7 @@ Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Nami
 
 ### Which tests to run after a change
 
-Do **not** run the full suites (`tests/all.ts`, `tests/before-release.ts`, or unrelated
+Do **not** run the full suites (`tests/run-almost-all.ts`, `tests/run-all.ts`, `tests/run-pre-release.ts`, or unrelated
 unit tests) to verify a change. The release process runs them; that is what it is for.
 A full run costs ~4-5 minutes and tells you almost nothing about the ten lines you just
 edited. Run broader suites only when the user explicitly asks.
@@ -292,13 +292,13 @@ Instead, run only what the change can plausibly break:
   manual check (launch with `-for-testing`, screenshot, probe log) is worth more than a
   green suite that never touched the code.
 
-Never edit `tests/all.ts` to skip tests so a run gets further. If a test fails and you
+Never edit `tests/run-almost-all.ts` or `tests/run-all.ts` to skip tests so a run gets further. If a test fails and you
 suspect it is unrelated, check it out on a clean tree (`git stash`) and run it standalone
 several times - some are environment- and focus-dependent and fail intermittently
 regardless of the change (`issue-1136` and `issue-2254` have both done this). One passing
 run and one failing run is not evidence; compare several runs on each side.
 
-Structure of each test (so they compose in tests/all.ts):
+Structure of each test (so they compose in tests/run-almost-all.ts / tests/run-all.ts):
 
 - each `tests/issue-<number>.ts` exports `export async function testit(): Promise<void>` that runs the test logic and THROWS on failure (returns normally on success). It must NOT call `process.exit` or build the app itself.
 - end the file with a standalone runner so it can still be run directly:
@@ -309,31 +309,30 @@ Structure of each test (so they compose in tests/all.ts):
   ```
   `runStandalone` (from `tests/util.ts`) builds the app (unless `--no-build`), runs `testit()`, and exits 0 on pass / 1 on failure.
 - shared helpers (`EXE` path, `buildApp`, `runStandalone`) live in `tests/util.ts` — use them instead of re-implementing per file.
-- register every new test in `tests/all.ts` (import its `testit` and add it to the `tests` array). `bun tests/all.ts` builds once and runs them all in order, stopping at the first failure.
+- register every new test in `tests/run-almost-all.ts` (import its `testit` and add it to the `tests` array). If the test cannot be made faster (print-to-PDF, LaTeX, a measured wait, high-zoom tile settle, a huge fixture, copying the exe next to restrict.ini), add it to `slowTests` in `tests/run-all.ts` instead. `bun tests/run-almost-all.ts` is the fast suite; `bun tests/run-all.ts` runs that then the slow tests, stopping at the first failure.
 
 ### Ad-hoc tests
 
-Some checks are too slow, need large external corpora, or require network/git and should **not** run on every `tests/all.ts` invocation. Put those in `tests/ad-hoc-<name>.ts` (not `issue-<n>.ts`):
+Some checks are too slow, need large external corpora, or require network/git and should **not** run on every `tests/run-almost-all.ts` invocation. Put those in `tests/ad-hoc-<name>.ts` (not `issue-<n>.ts`):
 
 - export `async function testit()` the same way as regular tests
 - end with the usual `if (import.meta.main) { await runStandalone(testit); }` standalone runner
-- do **not** register them in `tests/all.ts`
-- register them in `tests/before-release.ts` instead (that runner calls `all.ts` first, then each ad-hoc test)
+- do **not** register them in `tests/run-almost-all.ts` or `tests/run-all.ts`
 - run ad-hoc tests directly when working on that area: `bun tests/ad-hoc-<name>.ts`
-- run the full pre-release suite: `bun tests/before-release.ts`
+- the pre-release suite is `bun tests/run-pre-release.ts` (run-almost-all + LaTeX)
 
 Example: `tests/ad-hoc-exif.ts` clones/updates `../exif-py` and compares `-dump-exif` output to exif-py's `dump.txt`.
 
 Guidelines for test scripts:
 
 - build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF.exe
-- if a needed external tool (e.g. MiKTeX) isn't installed, don't fail the test: print a clear message (with instructions to install it) and skip that part, returning normally so `tests/all.ts` continues
+- if a needed external tool (e.g. MiKTeX) isn't installed, don't fail the test: print a clear message (with instructions to install it) and skip that part, returning normally so `tests/run-almost-all.ts` continues
 - a good test fails when the fix is reverted (verify this) — not just passes with the fix present
 - write ad-hoc GUI automation (driving the app via window messages, screenshots) in **Bun TypeScript, not PowerShell** — bun has FFI. Put raw Win32 wrappers in `tests/winapi.ts` and higher-level actions in `tests/win-automation.ts`; extend and reuse those rather than re-declaring FFI per script. The ad-hoc scripts themselves don't need to be checked in, but the reusable helpers in those two files do.
   - `tests/winapi.ts` = raw winapi: FFI bindings + thin wrappers + constants (enum/find windows, SendMessage/PostMessage, getWindow{Text,Rect}, sendText, `captureWindowToPng` which uses PrintWindow+GDI+ so it works on occluded/background windows).
   - `tests/win-automation.ts` = high-level actions built on winapi: `launchSumatra` (passes `-for-testing`), `waitForFrame`/`findCanvas`, `clickAt`, `pressEnter/Tab/Escape`, `typeIntoInput` / `fillFormFieldAt`, `openContextMenu`/`waitForContextMenu`, `sendCommand`.
   - on this machine injected SendInput mouse/keyboard is dropped, but posting (and sending) window messages cross-process works. There is no interactive desktop, so real-cursor probes prove nothing, and a canvas text selection can't be driven at all — check a suspicious result against a clean build before blaming your change.
-- resolve command ids by name with `cmdId("CmdName")` (from `tests/util.ts`), never hardcode the numeric id. Command ids are auto-numbered in `src/Commands.h` and shift whenever commands are added or removed, so a hardcoded constant silently starts sending a _different_ command. This broke `tests/issue-5780.ts` (it sent `CmdCommandPalette` instead of `CmdOpenNextFileInFolder` after ids shifted) and had stale ids lurking in several ad-hoc tests. `tests/lint-command-ids.ts` (runs first in `tests/all.ts`) enforces this — it fails the suite on any hardcoded `const Cmd... = <number>` or numeric `sendCommand(win, <number>)`.
+- resolve command ids by name with `cmdId("CmdName")` (from `tests/util.ts`), never hardcode the numeric id. Command ids are auto-numbered in `src/Commands.h` and shift whenever commands are added or removed, so a hardcoded constant silently starts sending a _different_ command. This broke `tests/issue-5780.ts` (it sent `CmdCommandPalette` instead of `CmdOpenNextFileInFolder` after ids shifted) and had stale ids lurking in several ad-hoc tests. `tests/lint-command-ids.ts` (runs first in `tests/run-almost-all.ts`) enforces this — it fails the suite on any hardcoded `const Cmd... = <number>` or numeric `sendCommand(win, <number>)`.
 - prefer driving the app through `-dbg-control <named-pipe>` and `cmd/control.ts` over GUI automation or adding new test-only command-line flags. Tests should pick a unique pipe name, launch `SumatraPDF.exe -for-testing -dbg-control <name>`, send binary request/response commands, and quit the app through the control client.
 - `-dbg-control` protocol: requests are `[u32 payloadSize][u16 command][u16 requestId][args...]`; responses are `[u32 payloadSize][u16 requestId][results...]`. Arguments/results are encoded as `[u16 type]` where `0=end`, `1=i32` plus 4 bytes, `2=bytes` plus u32 length and data, `3=utf8 string` plus u32 length, bytes, and a zero terminator, and `4=list` plus u16 element count followed by encoded elements.
 - never write runtime scratch / result files directly into `tests/` — that leaves the repo dirty. Write them under `tests/tmp/` (gitignored), using `tmpPath("name")` from `tests/util.ts` (it creates the dir on demand); the OS temp dir (`os.tmpdir()`) is also fine if you clean up after
