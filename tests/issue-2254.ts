@@ -22,7 +22,7 @@ import {
   WM_GETTEXT,
   WM_GETTEXTLENGTH,
 } from "./winapi.ts";
-import { launchSumatra, sendCommand, waitForFrame } from "./win-automation.ts";
+import { launchControlled, sendCommandSync } from "./win-automation.ts";
 import { ptr } from "bun:ffi";
 
 const FB2 = join(import.meta.dir, "issue-2254.fb2");
@@ -94,15 +94,11 @@ export async function testit(): Promise<void> {
     throw new Error(`exe missing: ${EXE}`);
   }
 
-  const proc = launchSumatra([FB2]);
+  const { proc, client, frame } = await launchControlled([FB2]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!frame) {
-      throw new Error("issue-2254: no frame window");
-    }
-    await sleep(2000); // let FB2 load / reflow
+    await client.waitForRenderIdle();
 
-    sendCommand(frame, cmdId("CmdProperties"));
+    sendCommandSync(frame, cmdId("CmdProperties"));
     const { props, edit } = await waitForPropertiesEdit(proc.pid!);
     if (!props) {
       throw new Error("issue-2254: Document Properties window did not open");
@@ -132,8 +128,8 @@ export async function testit(): Promise<void> {
     }
 
     postMessage(props, WM_CLOSE, 0, 0);
-    await sleep(200);
   } finally {
+    client.close();
     try {
       proc.kill();
     } catch {

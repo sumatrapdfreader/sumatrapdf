@@ -8,7 +8,7 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
 import { EXE, cmdId, runStandalone, tmpPath } from "./util";
-import { FRAME_CLASS, clickAt, findCanvas, sendCommand } from "./win-automation";
+import { FRAME_CLASS, clickAt, findCanvas, sendCommandSync } from "./win-automation";
 import { sleep, waitForTopWindow } from "./winapi";
 
 // 2 pages. Page 1 carries a pushbutton widget (/FT /Btn with the pushbutton
@@ -97,7 +97,7 @@ export async function testit(): Promise<void> {
       if (!frame) {
         throw new Error("no frame window");
       }
-      await sleep(1500);
+      await client.waitForRenderIdle();
       const canvas = findCanvas(frame);
       if (!canvas) {
         throw new Error("no canvas window");
@@ -105,9 +105,17 @@ export async function testit(): Promise<void> {
 
       // ask where the link is on screen (link-following numbers every link it
       // finds, so this also proves the button is in the app's link list)
-      sendCommand(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      await sleep(700);
-      let { st, dump } = await getLinkState(client);
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      const deadline = Date.now() + 4000;
+      let st: LinkState = { page: 0, count: 0, rects: [] };
+      let dump = "";
+      while (Date.now() < deadline) {
+        ({ st, dump } = await getLinkState(client));
+        if (st.count === 1 && st.rects.length === 1) {
+          break;
+        }
+        await sleep(25);
+      }
       if (st.page !== 1) {
         throw new Error(`should start on page 1\n${dump}`);
       }
@@ -117,11 +125,16 @@ export async function testit(): Promise<void> {
       const r = st.rects[0]!;
 
       // leave the mode and click the button like a user would
-      sendCommand(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      await sleep(500);
-      await clickAt(canvas, r.x + r.dx / 2, r.y + r.dy / 2, 900);
-
-      ({ st, dump } = await getLinkState(client));
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      await clickAt(canvas, r.x + r.dx / 2, r.y + r.dy / 2, 200);
+      const deadline2 = Date.now() + 4000;
+      while (Date.now() < deadline2) {
+        ({ st, dump } = await getLinkState(client));
+        if (st.page === 2) {
+          break;
+        }
+        await sleep(25);
+      }
       if (st.page !== 2) {
         throw new Error(`clicking the pushbutton should go to page 2, on page ${st.page}\n${dump}`);
       }

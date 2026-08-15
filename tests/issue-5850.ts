@@ -19,7 +19,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, tmpPath } from "./util.ts";
-import { launchSumatra, waitForFrame, findCanvas, vScrollbarColorCount } from "./win-automation.ts";
+import { launchControlled, waitForExit, findCanvas, vScrollbarColorCount } from "./win-automation.ts";
 import { setProcessDpiAware, sleep, postMessage, WM_CLOSE } from "./winapi.ts";
 
 // zlib.3.pdf is 2 pages, so at the default "fit page" zoom it needs a vertical
@@ -47,22 +47,23 @@ export async function testit(): Promise<void> {
   mkdirSync(appDataDir, { recursive: true });
   writeFileSync(join(appDataDir, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const proc = launchSumatra(["-appdata", appDataDir, PDF], { defaultWindowPos: true });
-  let frame = 0;
+  const { proc, client, frame } = await launchControlled(["-appdata", appDataDir, PDF], { defaultWindowPos: true });
   try {
-    frame = await waitForFrame(proc.pid!);
-    if (!frame) {
-      throw new Error("SumatraPDF frame window not found");
-    }
+    await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("SumatraPDF canvas window not found");
     }
-    // let the document render and the startup relayout settle. Nothing here
-    // scrolls or moves the mouse: the scrollbar must be painted on its own.
-    await sleep(2500);
-
-    const nColors = vScrollbarColorCount(canvas);
+    // the scrollbar must paint on its own after startup relayout (no hover)
+    const deadline = Date.now() + 5000;
+    let nColors = 0;
+    while (Date.now() < deadline) {
+      nColors = vScrollbarColorCount(canvas);
+      if (nColors >= 2) {
+        break;
+      }
+      await sleep(40);
+    }
     if (nColors < 2) {
       throw new Error(
         `vertical scrollbar was not painted: its column is a single flat color ` +
@@ -70,10 +71,9 @@ export async function testit(): Promise<void> {
       );
     }
   } finally {
-    if (frame) {
-      postMessage(frame, WM_CLOSE, 0, 0);
-      await sleep(500);
-    }
+    postMessage(frame, WM_CLOSE, 0, 0);
+    await waitForExit(proc, 5000);
+    client.close();
     proc.kill();
     rmSync(appDataDir, { recursive: true, force: true });
   }
