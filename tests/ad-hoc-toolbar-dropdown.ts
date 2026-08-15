@@ -14,7 +14,7 @@
 // Uses -appdata so it never touches the user's real settings.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlCommand, withControlledSumatra } from "./control";
 import { cmdId, EXE, ROOT, runStandalone, tmpPath } from "./util";
 import { findChildByClass } from "./win-automation";
 import { enumWindows, getClassName, postMessage, WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi";

@@ -1,4 +1,4 @@
-// Compatibility entry point used by the unchanged WSL launcher.
+// Compatibility entry point used by the WSL launcher.
 const proc = Bun.spawn(["bun", "cmd/build.ts", "-wine", ...Bun.argv.slice(2)], {
   stdout: "inherit",
   stderr: "inherit",

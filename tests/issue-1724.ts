@@ -12,7 +12,7 @@
 // must still offer their URL rather than their /Contents.
 
 import { writeFileSync } from "node:fs";
-import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util";
 
 const URL = "https://www.sumatrapdfreader.org";

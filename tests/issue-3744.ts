@@ -14,7 +14,7 @@ import {
   ControlClient,
   ControlCommand,
   withControlledSumatra,
-} from "../cmd/control.ts";
+} from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // minimal N-page PDF (content doesn't matter; we assert CurrentPageNo).

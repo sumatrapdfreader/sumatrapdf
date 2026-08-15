@@ -7,7 +7,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { clickAt, findCanvas, waitForFrame } from "./win-automation.ts";
 import { getClientRect } from "./winapi.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";

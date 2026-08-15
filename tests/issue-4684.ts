@@ -8,7 +8,7 @@
 // position and the selected text) and posts real WM_COMMAND / key messages, so
 // the command and key paths are exercised, not just the internals.
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, cmdId, runStandalone, tmpPath } from "./util";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";

@@ -317,7 +317,7 @@ UIA, DDE, plugin/embedding, Win32 crash minidumps.
   `AppPlatform` service interface.
 - No `#ifdef` sprawl in shared headers; keep public APIs identical per platform
   and push differences into suffixed `.cpp`.
-- Register every new mac input in the source lists in `cmd/mac-build.ts`
+- Register every new mac input in the source lists in `cmd/helper/mac-build.ts`
   (`DEP_LIBS_BASE` for base, `MAC_APP_SOURCES` for the app). Extend
   `test_util`/`test_engines` lists to cover newly-portable model code with
   headless tests.

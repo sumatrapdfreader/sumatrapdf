@@ -299,7 +299,7 @@ async function showBuildNo(buildNo?: number): Promise<void> {
 
 async function runWslLauncher(args: string[], target: "linux" | "wine"): Promise<void> {
   const selector = target === "linux" ? "-linux" : "-win";
-  const proc = Bun.spawn(["bun", "cmd/wsl-build.ts", selector, ...args], {
+  const proc = Bun.spawn(["bun", "cmd/helper/wsl-build.ts", selector, ...args], {
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",
@@ -322,20 +322,20 @@ async function runBuild(opts: BuildOptions): Promise<void> {
   } else if (mode === "all") await buildAll(opts.clean);
   else if (mode === "smoke") await buildSmoke();
   else if (mode === "ci") {
-    const { buildCi } = await import("./ci-build");
+    const { buildCi } = await import("./helper/ci-build");
     await buildCi();
   } else if (mode === "daily") {
-    const { buildDaily } = await import("./daily-build");
+    const { buildDaily } = await import("./helper/daily-build");
     await buildDaily();
   } else if (mode === "codeql") {
-    const { buildCodeql } = await import("./codeql-build");
+    const { buildCodeql } = await import("./helper/codeql-build");
     await buildCodeql();
   } else if (mode === "linux") {
     const config = portableConfig(opts, "asan");
     if (process.platform === "win32") {
       await runWslLauncher([`-${config}`, ...(opts.clean ? ["-clean"] : [])], "linux");
     } else {
-      const { buildLinux } = await import("./linux-build");
+      const { buildLinux } = await import("./helper/linux-build");
       await buildLinux({
         outDir: `out/linux-${config === "debug" ? "dbg" : config === "release" ? "rel" : "asan"}64`,
         isRelease: config === "release",
@@ -346,7 +346,7 @@ async function runBuild(opts: BuildOptions): Promise<void> {
     }
   } else if (mode === "mac") {
     const config = portableConfig(opts, "debug");
-    const { buildMac } = await import("./mac-build");
+    const { buildMac } = await import("./helper/mac-build");
     await buildMac({
       outDir: `out/mac-${config === "debug" ? "dbg" : config === "release" ? "rel" : "asan"}64`,
       isRelease: config === "release",
@@ -356,10 +356,10 @@ async function runBuild(opts: BuildOptions): Promise<void> {
     });
   } else if (mode === "mac-remote") {
     const config = portableConfig(opts, "debug");
-    const { buildMacRemote } = await import("./mac-remote-build");
+    const { buildMacRemote } = await import("./helper/mac-remote-build");
     await buildMacRemote(opts.branch!, [`-${config}`, ...(opts.clean ? ["-clean"] : [])]);
   } else if (mode === "mingw") {
-    const { buildMingw } = await import("./mingw-build");
+    const { buildMingw } = await import("./helper/mingw-build");
     await buildMingw({
       outDir: `out/mingw-${opts.config === "release" ? "rel" : "dbg"}64`,
       isRelease: opts.config === "release",
@@ -371,7 +371,7 @@ async function runBuild(opts: BuildOptions): Promise<void> {
       if (opts.runArgs.length) args.push("--", ...opts.runArgs);
       await runWslLauncher(args, "wine");
     } else {
-      const { buildWine } = await import("./wine-build");
+      const { buildWine } = await import("./helper/wine-build");
       await buildWine({ clean: opts.clean, run: opts.run, runArgs: opts.runArgs });
     }
   } else if (mode === "build-no") await showBuildNo(opts.buildNo);

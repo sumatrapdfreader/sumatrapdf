@@ -3,7 +3,7 @@
 // Additional related file extensions should map to the correct viewer types
 // (compared via the type's canonical extension).
 
-import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone } from "./util.ts";
 
 const CASES: [string, string][] = [

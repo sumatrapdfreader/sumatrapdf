@@ -269,7 +269,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 **New command-line arguments:**
 
 - `-for-testing` : for ad-hoc testing; always starts a new instance, doesn't restore a session, doesn't save settings
-- `-dbg-control <named-pipe>` : drive automated tests over a named-pipe request/response protocol (`cmd/control.ts`)
+- `-dbg-control <named-pipe>` : drive automated tests over a named-pipe request/response protocol (`tests/control.ts`)
 - `-dump-chm <file>` : headlessly list CHM contents, unpack entries to memory, and print TOC/index metadata
 - `-pwd <password>` : open password-protected documents from the command line (fixes #906)
 - `-log-to-file <file>` : log to a specific file (like `-log` but with a custom log file path)

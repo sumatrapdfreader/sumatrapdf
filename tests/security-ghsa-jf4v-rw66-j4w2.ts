@@ -16,7 +16,7 @@
 // and v in [5784862,46220574]; a point inside it maps to the malicious node.
 import { gzipSync } from "node:zlib";
 import { writeFileSync } from "node:fs";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // the injection payload used as the synctex source file name. The leading real

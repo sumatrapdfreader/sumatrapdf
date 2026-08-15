@@ -7,7 +7,7 @@
 // Requires the chosen backend's CLI installed and authenticated, and network
 // access, so it isn't part of the default CI suite - run it directly:
 //   bun tests/ai-chat.ts --no-build grok "C:\\path\\doc.pdf" "summarize page 1"
-import { ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlCommand, withControlledSumatra } from "./control";
 import { EXE, runStandalone } from "./util";
 
 // AIChatBackend enum order in src/AIChatCommon.h

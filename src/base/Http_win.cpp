@@ -10,7 +10,7 @@
 // MinGW's winhttp.h redefines INTERNET_SCHEME as int after wininet.h (via Base.h)
 // already typedef'd it as an enum, which is a hard error. MSVC headers are fine
 // together. On MinGW declare only the WinHTTP bits HttpPostUrl needs and link
-// -lwinhttp (see cmd/mingw-build.ts).
+// -lwinhttp (see cmd/helper/mingw-build.ts).
 #if defined(__MINGW32__) || defined(__MINGW64__)
 #ifndef WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY
 #define WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY 4

@@ -10,7 +10,7 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 const LINE = "To our shareholders";

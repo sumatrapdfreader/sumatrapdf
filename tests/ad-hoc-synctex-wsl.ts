@@ -16,7 +16,7 @@
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 
 const TEX_NAME = "test.tex";
 const PDF_NAME = TEX_NAME.replace(/\.tex$/, ".pdf");

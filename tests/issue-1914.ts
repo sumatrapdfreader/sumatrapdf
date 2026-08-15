@@ -6,7 +6,7 @@
 // Checks the engine really reports the button as a link destination, and that
 // clicking it in the app navigates.
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, cmdId, runStandalone, tmpPath } from "./util";
 import { FRAME_CLASS, clickAt, findCanvas, sendCommandSync } from "./win-automation";
 import { sleep, waitForTopWindow } from "./winapi";

@@ -6,7 +6,7 @@
 // separator) keeps one break each; trailing blank lines are dropped.
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // \r and \n inside a PDF literal string are written as the escapes \r and \n so

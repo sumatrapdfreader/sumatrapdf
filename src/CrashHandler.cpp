@@ -65,7 +65,7 @@ is still possible, the probability should be greatly reduced. */
 static Arena* gCrashHandlerArena = nullptr;
 
 // exit code for a debug report (ReportIf) in a -for-testing run; test runners
-// (cmd/control.ts) treat it as "assertion fired", so keep the value in sync
+// (tests/control.ts) treat it as "assertion fired", so keep the value in sync
 constexpr UINT kDebugReportTestExitCode = 105;
 
 // Note: intentionally not using ScopedMem<> to avoid

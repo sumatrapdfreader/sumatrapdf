@@ -9,7 +9,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 
 const PDF = join(import.meta.dir, "issue-1189.pdf");
 

@@ -36,7 +36,7 @@ import {
   sleep,
 } from "./winapi.ts";
 import { sendCommand, waitForFrame } from "./win-automation.ts";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { cmdId, EXE, runStandalone } from "./util.ts";
 
 const WM_CLOSE = 0x0010;

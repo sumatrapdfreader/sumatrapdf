@@ -23,7 +23,7 @@ import {
   embedBinaryFile,
   objPath,
   spawnCmd,
-} from "./deps-build-common";
+} from "../deps-build-common";
 import {
   aGumbo,
   zlib,
@@ -42,7 +42,7 @@ import {
   brotli,
   cmarkGfm,
   mupdf as mupdfBase,
-} from "./deps-build-defs";
+} from "../deps-build-defs";
 
 type MacArch = "arm64" | "x64";
 
@@ -607,6 +607,7 @@ const PORTABLE_COMPILE_SOURCES = [
   "src/HtmlFormatter.cpp",
   "src/EbookFormatter.cpp",
   "src/EngineEbook.cpp",
+  "src/gui/GuiColors.cpp",
   "src/SvgIcons.cpp",
   "src/TextSelection.cpp",
   "src/TextSearch.cpp",

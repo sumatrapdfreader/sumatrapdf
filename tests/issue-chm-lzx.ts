@@ -10,7 +10,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, runStandalone } from "./util.ts";
-import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 
 const ASAN_EXE = join(ROOT, "out", "dbg64_asan", "SumatraPDF-static.exe");
 const CHM = join(import.meta.dir, "issue-chm-lzx.chm");

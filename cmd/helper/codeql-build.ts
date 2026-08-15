@@ -1,7 +1,7 @@
 // CodeQL implementation used by cmd/build.ts -codeql.
 // Just a static 64-bit release build for CodeQL analysis
 import { join } from "node:path";
-import { detectVisualStudio, runLogged } from "./util";
+import { detectVisualStudio, runLogged } from "../util";
 
 function buildConfigPath(): string {
   return join("src", "BuildConfig.h");
@@ -20,13 +20,18 @@ export async function buildCodeql() {
   console.log("build-codeql: static 64-bit release build for CodeQL analysis");
 
   // SumatraPDF.rc embeds .work/embedded.dat; generate it first (same as build-ci).
-  const { main: genDocs } = await import("./gen-docs");
+  const { main: genDocs } = await import("../gen-docs");
   await genDocs();
 
   const { msbuildPath } = detectVisualStudio();
   const slnPath = join("vs2022", "SumatraPDF.sln");
 
-  await runLogged(msbuildPath, [slnPath, `/t:SumatraPDF-static:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`]);
+  await runLogged(msbuildPath, [
+    slnPath,
+    `/t:SumatraPDF-static:Rebuild`,
+    `/p:Configuration=Release;Platform=x64`,
+    `/m`,
+  ]);
 
   await revertBuildConfig();
 

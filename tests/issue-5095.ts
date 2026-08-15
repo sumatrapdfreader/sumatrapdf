@@ -14,7 +14,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
 
 type Button = { visible: boolean; idx: number };

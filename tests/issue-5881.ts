@@ -12,7 +12,7 @@
 // so the whole canvas mouse path runs, and checks nothing is selected after.
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 const WORD = "selectme";

@@ -5,7 +5,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const FIXTURE = join(ROOT, "tests", "issue-1201.cbz");

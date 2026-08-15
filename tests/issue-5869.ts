@@ -12,7 +12,7 @@
 // Uses -appdata so it never touches the user's real settings.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlCommand, withControlledSumatra } from "./control";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util";
 
 const SHORTCUT_NAMES = ["SVG test dummy A", "SVG test dummy B", "SVG test dummy C"];

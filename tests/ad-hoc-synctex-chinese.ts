@@ -20,7 +20,7 @@ import { gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 
 const DATA = join(import.meta.dir, "issue-5633-data");
 const TEX_FILE = "test.tex";

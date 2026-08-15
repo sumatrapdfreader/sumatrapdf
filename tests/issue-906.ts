@@ -11,7 +11,7 @@ import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 
 const SRC_PDF = join(import.meta.dir, "issue-5597.pdf");
 const PASSWORD = "issue-906-password";

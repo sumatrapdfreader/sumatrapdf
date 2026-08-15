@@ -7,7 +7,7 @@ import {
   ControlClient,
   ControlCommand,
   withControlledSumatra,
-} from "../cmd/control.ts";
+} from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 const TARGET_DEST_NO = 3;

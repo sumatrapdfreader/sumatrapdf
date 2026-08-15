@@ -55,12 +55,12 @@ void GuiColorsInitIfNeeded() {
     }
 }
 
-// The colors Windows draws its own UI in, spread over the per-control defaults.
-// This is what gui/ looks like with no app theming at all, and the starting
-// point every theme overwrites.
+// The platform UI colors spread over the per-control defaults. On POSIX we use
+// a neutral light palette until the native app provides its own theme colors.
 void GuiSetDefaultColorsFromSystem() {
     gDefaultColorsInited = true;
     gGuiColorsFromSystem = true;
+#if OS_WIN
     Color winBg = GetSysColor(COLOR_WINDOW);
     Color winText = GetSysColor(COLOR_WINDOWTEXT);
     Color ctlBg = GetSysColor(COLOR_BTNFACE);
@@ -68,6 +68,15 @@ void GuiSetDefaultColorsFromSystem() {
     Color disabledText = GetSysColor(COLOR_GRAYTEXT);
     Color link = GetSysColor(COLOR_HOTLIGHT);
     Color edge = GetSysColor(COLOR_WINDOWFRAME);
+#else
+    Color winBg = MkGray(0xff);
+    Color winText = MkGray(0x00);
+    Color ctlBg = MkGray(0xf0);
+    Color ctlText = MkGray(0x00);
+    Color disabledText = MkGray(0x6d);
+    Color link = MkRgb(0x00, 0x66, 0xcc);
+    Color edge = MkGray(0xa0);
+#endif
 
     gColsText[kColText] = winText;
 

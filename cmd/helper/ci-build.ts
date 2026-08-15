@@ -3,7 +3,7 @@
 import { existsSync, readFileSync, writeFileSync, statSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createHmac, createHash } from "node:crypto";
-import { getGitLinearVersion, extractSumatraVersion, runLogged, getGitSha1, detectVisualStudio2026 } from "./util";
+import { getGitLinearVersion, extractSumatraVersion, runLogged, getGitSha1, detectVisualStudio2026 } from "../util";
 
 // const { msbuildPath, llvmPdbutilPath } = detectVisualStudio2022();
 // const slnPath = join("vs2022", "SumatraPDF.sln");
@@ -271,7 +271,7 @@ async function buildSmoke(): Promise<void> {
 
   removeReleaseBuilds();
 
-  const { main: genDocs } = await import("./gen-docs");
+  const { main: genDocs } = await import("../gen-docs");
   await genDocs();
 
   const makeLzsa = resolve(join("bin", "MakeLZSA.exe"));
@@ -399,7 +399,7 @@ export async function buildCi() {
       removeReleaseBuilds();
       // generate HTML docs
       {
-        const { main: genDocs } = await import("./gen-docs");
+        const { main: genDocs } = await import("../gen-docs");
         await genDocs();
       }
       await buildPreRelease(preRelVer, sha1, "Win32", join("out", "rel32"));

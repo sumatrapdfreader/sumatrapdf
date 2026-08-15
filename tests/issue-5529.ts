@@ -11,7 +11,7 @@
 //
 // Run:  bun tests/issue-5529.ts [--no-build]   (or via tests/run-almost-all.ts)
 
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone } from "./util.ts";
 
 async function requestWithRetry(client: ControlClient): Promise<string> {

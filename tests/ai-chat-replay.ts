@@ -4,7 +4,7 @@
 // real turn does (addUser + appendText + flushBlock). Lets you iterate on the
 // webview render fast; watch the app window to see it render. Needs a PDF path.
 //   bun tests/ai-chat-replay.ts --no-build "C:\\path\\doc.pdf"
-import { ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlCommand, withControlledSumatra } from "./control";
 import { EXE, runStandalone } from "./util";
 
 const PDF = process.argv.slice(2).filter((a) => a !== "--no-build")[0] ??

@@ -2,8 +2,8 @@
  * Run a Linux-side build from Windows via WSL Ubuntu.
  *
  * Usage:
- *   bun cmd/wsl-build.ts -linux [options]
- *   bun cmd/wsl-build.ts -win [options]
+ *   bun cmd/helper/wsl-build.ts -linux [options]
+ *   bun cmd/helper/wsl-build.ts -win [options]
  *
  *   -linux              native Linux build (cmd/build-linux.ts)
  *                       default: -asan (same as Linux CI)
@@ -38,8 +38,8 @@ const LINUX_FLAGS = new Set(["-debug", "-release", "-asan", "-clean"]);
 const WIN_FLAGS = new Set(["-clean", "-run"]);
 
 function usage(): string {
-  return `Usage: bun cmd/wsl-build.ts -linux [options]
-       bun cmd/wsl-build.ts -win [options]
+  return `Usage: bun cmd/helper/wsl-build.ts -linux [options]
+       bun cmd/helper/wsl-build.ts -win [options]
 
   -linux              native Linux build (cmd/build-linux.ts)
                       default: -asan (same as Linux CI)

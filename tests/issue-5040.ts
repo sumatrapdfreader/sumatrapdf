@@ -18,7 +18,7 @@
 // synctex, since the plain one always worked.
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, runStandalone, tmpPath } from "./util";
 import { sleep } from "./winapi";
 import { findLatexEngine } from "./issue-5633";

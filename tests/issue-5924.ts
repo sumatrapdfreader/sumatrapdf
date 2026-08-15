@@ -13,7 +13,7 @@
 // before the callback, while a TOC destination carries the full virtual url.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlCommand, withControlledSumatra } from "./control";
 import { EXE, makeMinimalPdf, runStandalone, tmpPath } from "./util";
 import { FRAME_CLASS } from "./win-automation";
 import { sleep, waitForTopWindow } from "./winapi";

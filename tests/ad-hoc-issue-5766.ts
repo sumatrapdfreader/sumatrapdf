@@ -14,7 +14,7 @@
 //
 //   bun tests/ad-hoc-issue-5766.ts [--no-build]
 
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 import { EXE, runStandalone } from "./util.ts";
 
 const PDF = "C:\\Users\\kjk\\Downloads\\bug-5766-bad-text-copy.pdf";

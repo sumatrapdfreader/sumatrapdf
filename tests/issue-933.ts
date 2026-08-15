@@ -11,7 +11,7 @@
 
 import { writeFileSync } from "node:fs";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
-import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 
 // Build a minimal single-page PDF that shows the given lines using Helvetica
 // with WinAnsiEncoding (so byte 0xDF renders/extracts as ß). `lines` are raw

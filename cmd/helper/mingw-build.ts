@@ -26,7 +26,7 @@ import {
   objPath,
   resolveSources,
   spawnCmd,
-} from "./deps-build-common";
+} from "../deps-build-common";
 import {
   zlib,
   unrar,
@@ -49,7 +49,7 @@ import {
   cmarkGfm,
   aGumbo,
   mupdf,
-} from "./deps-build-defs";
+} from "../deps-build-defs";
 
 export interface MingwTools {
   cc: string;
@@ -218,6 +218,7 @@ const sumatraFiles: FileGroup[] = [
       "Gfx_win.cpp",
       "GfxGdiplus_win.cpp",
       "GfxDirect2D_win.cpp",
+      "GuiColors.cpp",
       "Layout.cpp",
       "PlatformFont.cpp",
       "PlatformFont_win.cpp",

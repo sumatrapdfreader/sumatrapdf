@@ -13,7 +13,7 @@
 //     space, which the app opens in a tab (discussion #5924)
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, makeMinimalPdf, runStandalone, tmpPath } from "./util";
 
 // the .md and the .pdf it links to, both with a space and an umlaut in the name

@@ -1,5 +1,5 @@
 import { Socket, createConnection } from "node:net";
-import { killAndWait, testWindowPos } from "../tests/winapi.ts";
+import { killAndWait, testWindowPos } from "./winapi.ts";
 
 export enum ControlCommand {
   Ping = 1,
@@ -446,7 +446,7 @@ export async function runControlCommand(
 if (import.meta.main) {
   const [exe, cmdName, ...args] = process.argv.slice(2);
   if (!exe || !cmdName) {
-    console.log("Usage: bun cmd/control.ts <SumatraPDF.exe> <ping|test-search> [args...]");
+    console.log("Usage: bun tests/control.ts <SumatraPDF.exe> <ping|test-search> [args...]");
     process.exit(1);
   }
   const cmd = cmdName === "ping" ? ControlCommand.Ping : cmdName === "test-search" ? ControlCommand.TestSearch : 0;

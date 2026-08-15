@@ -4,7 +4,7 @@
 // horizontally after the link is followed (viewport was pinned to the left).
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 function buildWidePdfWithLink(): Buffer {

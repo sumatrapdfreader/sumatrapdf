@@ -14,7 +14,7 @@
 // and the test failed with "file size not shown" while the app was fine.
 import { mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util";
 
 const SETTINGS = `UiLanguage = en

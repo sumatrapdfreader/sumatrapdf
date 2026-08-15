@@ -11,7 +11,7 @@
 // the context menu performs and verifies the selection text is unchanged.
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 const LINE = "alpha beta gamma delta epsilon";

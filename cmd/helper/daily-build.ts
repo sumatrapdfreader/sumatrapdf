@@ -8,7 +8,7 @@ import {
   isGitClean,
   getGitSha1,
   detectVisualStudio2026,
-} from "./util";
+} from "../util";
 
 //const { msbuildPath } = detectVisualStudio();
 //const slnPath = join("vs2022", "SumatraPDF.sln");
@@ -86,7 +86,7 @@ export async function buildDaily() {
   console.log(`building unsigned pre-release version ${preRelVer}`);
 
   // generate HTML docs
-  const { main: genDocs } = await import("./gen-docs");
+  const { main: genDocs } = await import("../gen-docs");
   await genDocs();
   ensureEmbeddedIsBuilt();
 

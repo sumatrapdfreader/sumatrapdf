@@ -49,7 +49,7 @@ import {
   killProcessesNamed,
   type MenuItem,
 } from "./winapi.ts";
-import { ControlClient, uniquePipeName } from "../cmd/control.ts";
+import { ControlClient, uniquePipeName } from "./control.ts";
 
 export { captureWindowToPng, killAndWait, killProcessesNamed };
 

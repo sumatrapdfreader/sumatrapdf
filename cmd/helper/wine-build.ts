@@ -9,7 +9,7 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { cpus } from "node:os";
 import { join } from "node:path";
-import { clearDirPreserveSettings } from "./clean";
+import { clearDirPreserveSettings } from "../clean";
 import { buildMingw, type MingwTools } from "./mingw-build";
 
 const OUT_DIR = join("out", "dbg64-wine");

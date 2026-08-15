@@ -5,7 +5,7 @@
 // which is how exporters often draw lines, must still be darkened.
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 const AREA_GRAY = 153; // 0.6 gray, as a big filled rectangle
