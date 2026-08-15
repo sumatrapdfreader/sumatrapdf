@@ -78,9 +78,6 @@
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\win\ControlBase.cpp">
-      <Filter>gui\win</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\win\Edit.cpp">
       <Filter>gui\win</Filter>
     </ClCompile>

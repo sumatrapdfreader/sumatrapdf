@@ -21,14 +21,14 @@ enum WindowBorderStyle {
 };
 
 struct WindowBase;
+struct ControlBase;
+struct HwndBase;
 struct VirtRoot;
 struct PlatformFont;
 
+HwndBase* HwndBaseFromHwnd(HWND);
 WindowBase* WindowBaseFromHwnd(HWND);
-void MarkHWNDDestroyed(HWND);
-bool HwndWasDestroyed(HWND);
-
-struct ControlBase;
+ControlBase* ControlFromHwnd(HWND);
 
 struct ContextMenuEvent {
     ControlBase* w = nullptr;
@@ -96,10 +96,74 @@ struct KeyEvent {
     bool didHandle = false;
 };
 
+// The win32 plumbing WindowBase and ControlBase share: the HWND and its
+// window-proc glue, subclassing, font, colors, an optional layout tree, and
+// the single HWND -> object list used to route messages to both kinds
+struct HwndBase {
+    HWND hwnd = nullptr;
+    PlatformFont* font = nullptr; // interned, not owned
+    UINT_PTR subclassId = 0;
+
+    Color bgColor = kColorUnset;
+    HBRUSH bgBrush = nullptr;
+    Color textColor = kColorUnset;
+
+    // the layout of our children, if we have one. It can hold HWND controls
+    // (ControlBase) and virtual ones (VirtCtrl) side by side
+    ILayout* layout = nullptr;
+    // the virtual controls of `layout`, if it has any. Created on demand by
+    // DoLayout(), owned here, but it doesn't own the controls - `layout` does
+    VirtRoot* vroot = nullptr;
+
+    uintptr_t userData = 0;
+
+    HwndBase() = default;
+    HwndBase(const HwndBase&) = delete;
+    HwndBase& operator=(const HwndBase&) = delete;
+    virtual ~HwndBase();
+
+    virtual WindowBase* AsWindowBase();
+    virtual ControlBase* AsControlBase();
+    // full per-class message handling: the onWndProc hook, then WndProcDefault
+    virtual LRESULT OnMessage(HWND, UINT, WPARAM, LPARAM) = 0;
+
+    void Destroy();
+    void Subclass();
+    void UnSubclass();
+    HWND Detach();
+
+    void SetText(Str);
+    TempStr GetTextTemp();
+    void SetPos(Rect* r);
+    void SetColors(Color textColor, Color bgColor);
+    HBRUSH BackgroundBrush();
+
+    PlatformFont* GetFont();
+    HFONT GetHFont() const;
+    void SetFont(PlatformFont*);
+
+    void SetIsEnabled(bool isEnabled) const;
+    bool IsEnabled() const;
+
+    void SuspendRedraw() const;
+    void ResumeRedraw() const;
+
+    // lays `layout` out at the given size / the client size and refreshes the
+    // virtual controls
+    void DoLayout(Size);
+    void DoLayout();
+
+    // sends a control's own messages (colors, owner draw, ...) back to it
+    LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
+    LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
+
+    HWND CreateCustomHwnd(const CreateCustomArgs&, WStr defaultClassName);
+};
+
 // Base of the top-level windows (and the child windows that place themselves,
 // like the notification toasts). Not an ILayout: a window isn't positioned by a
 // parent's layout - it has a `layout` of its own children instead
-struct WindowBase {
+struct WindowBase : HwndBase {
     struct CloseEvent {
         WmEvent* e = nullptr;
     };
@@ -253,9 +317,9 @@ struct WindowBase {
     using NotifyHandler = Func1<NotifyEvent*>;
 
     WindowBase();
-    WindowBase(HWND hwnd);
-    virtual ~WindowBase();
-    void Destroy();
+
+    WindowBase* AsWindowBase() override;
+    LRESULT OnMessage(HWND, UINT, WPARAM, LPARAM) override;
 
     HWND CreateCustom(const CreateCustomArgs&);
 
@@ -263,50 +327,22 @@ struct WindowBase {
     Visibility GetVisibility();
 
     void Attach(HWND hwnd);
-    HWND Detach();
-
-    void Subclass();
-    void UnSubclass();
 
     // PreTranslateMessage: onPreTranslate, then key-down -> onKeyDown, then
     // closeOnEsc / closeOnCtrlW, then Enter (focused or default button), then
     // Tab default
     bool PreTranslateMessage(MSG& msg);
 
-    void SetColors(Color textColor, Color bgColor);
-
     void ScheduleDelete();
 
     void Close();
-    void SetPos(Rect* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
-    void SetText(Str);
-    TempStr GetTextTemp();
-
-    PlatformFont* GetFont();
-    HFONT GetHFont() const;
-    void SetFont(PlatformFont*);
 
     // dpi of the monitor this window is on
     int GetDpi() const;
 
-    void SetIsEnabled(bool isEnabled) const;
-    bool IsEnabled() const;
-
-    void SuspendRedraw() const;
-    void ResumeRedraw() const;
-
-    // sends a control's own messages (colors, owner draw, ...) back to it
-    LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-    LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
-
-    HBRUSH BackgroundBrush();
-
-    // lays `layout` out at `size` and refreshes the virtual controls
-    void DoLayout(Size);
-    void DoLayout();
 
     // Tab ring over `layout`, across HWND and virtual controls alike. A virtual
     // control holding the focus means this window holds the win32 focus and
@@ -317,25 +353,10 @@ struct WindowBase {
     void SetFocusTo(VirtCtrl*);
 
     Kind kind = nullptr;
-    uintptr_t userData = 0;
 
     // data that can be set before calling Create()
     Visibility visibility{Visibility::Visible};
 
-    HWND hwnd = nullptr;
-    PlatformFont* font = nullptr; // interned, not owned
-    UINT_PTR subclassId = 0;
-
-    Color bgColor = kColorUnset;
-    HBRUSH bgBrush = nullptr;
-    Color textColor = kColorUnset;
-
-    // the layout of our children, if we have one. It can hold HWND controls
-    // (ControlBase) and virtual ones (VirtCtrl) side by side
-    ILayout* layout = nullptr;
-    // the virtual controls of `layout`, if it has any. Created on demand by
-    // DoLayout(), owned here, but it doesn't own the controls - `layout` does
-    VirtRoot* vroot = nullptr;
     // reflow `layout` on WM_SIZE. On by default; set false when onSize does a
     // custom layout (FindBar sizes the HWND, annotations grow controls first,
     // SimpleBrowser / image edit split the client between a strip and a view)
@@ -388,7 +409,7 @@ bool PreTranslateMessage(MSG& msg);
 // VirtListBox, ...) derive from VirtCtrl instead.
 // It is an ILayout, and it has no window-only machinery (no WM_CLOSE handler,
 // no min/max info, no drop files, no taskbar callback)
-struct ControlBase : ILayout {
+struct ControlBase : ILayout, HwndBase {
     struct DestroyEvent {
         WmEvent* e = nullptr;
     };
@@ -476,8 +497,9 @@ struct ControlBase : ILayout {
     using MessageReflectHandler = Func1<MessageReflectEvent*>;
 
     ControlBase();
-    ~ControlBase() override;
-    void Destroy();
+
+    ControlBase* AsControlBase() override;
+    LRESULT OnMessage(HWND, UINT, WPARAM, LPARAM) override;
 
     HWND CreateControl(const CreateControlArgs&);
     HWND CreateCustom(const CreateCustomArgs&);
@@ -498,60 +520,22 @@ struct ControlBase : ILayout {
 
     void Attach(HWND hwnd);
     void AttachDlgItem(UINT id, HWND parent);
-    HWND Detach();
-
-    void Subclass();
-    void UnSubclass();
 
     // for reflection from parents (WindowBase / ControlBase WndProcDefault)
     bool DispatchCommand(WPARAM wparam, LPARAM lparam);
     LRESULT DispatchMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT DispatchNotifyReflect(WPARAM wparam, LPARAM lparam);
 
-    void SetColors(Color textColor, Color bgColor);
-
-    void SetPos(Rect* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
-    void SetText(Str);
-    TempStr GetTextTemp();
 
-    PlatformFont* GetFont();
-    HFONT GetHFont() const;
-    void SetFont(PlatformFont* font);
-
-    void SetIsEnabled(bool isEnabled) const;
-    bool IsEnabled() const;
     bool IsFocused() const;
     void SetFocus();
 
-    void SuspendRedraw() const;
-    void ResumeRedraw() const;
-
-    LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-    LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
-
-    HBRUSH BackgroundBrush();
-
-    uintptr_t userData = 0;
 
     Insets insets{};
     Size childSize;
-
-    HWND hwnd = nullptr;
-    PlatformFont* font = nullptr; // interned, not owned
-    UINT_PTR subclassId = 0;
-
-    Color bgColor = kColorUnset;
-    HBRUSH bgBrush = nullptr;
-    Color textColor = kColorUnset;
-
-    // a control can host a layout tree of its own, real and virtual mixed
-    ILayout* layout = nullptr;
-    VirtRoot* vroot = nullptr;
-
-    void DoLayout(Size);
 
     // if false, WM_ERASEBKGND returns TRUE without painting (WM_PAINT covers).
     // default true: native subclassed controls keep system erase
@@ -573,7 +557,6 @@ struct ControlBase : ILayout {
     DestroyHandler onDestroy;
 };
 
-ControlBase* ControlFromHwnd(HWND);
 void SizeToIdealSize(ControlBase* c);
 
 struct VirtRoot;

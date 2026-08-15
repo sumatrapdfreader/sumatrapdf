@@ -1175,9 +1175,6 @@
     <ClCompile Include="..\src\gui\win\Checkbox.cpp">
       <Filter>src\gui\win</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\win\ControlBase.cpp">
-      <Filter>src\gui\win</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\win\DialogSizer.cpp">
       <Filter>src\gui\win</Filter>
     </ClCompile>

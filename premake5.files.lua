@@ -1419,7 +1419,6 @@ function logview_files()
   })
   files_in_dir("src/gui/win", {
     "WindowBase.*",
-    "ControlBase.*",
     "Edit.*",
     "Tooltip.*",
   })

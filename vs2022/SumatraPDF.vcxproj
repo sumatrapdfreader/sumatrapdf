@@ -1762,7 +1762,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\gui\win\BrowserDocView.cpp" />
     <ClCompile Include="..\src\gui\win\Button.cpp" />
     <ClCompile Include="..\src\gui\win\Checkbox.cpp" />
-    <ClCompile Include="..\src\gui\win\ControlBase.cpp" />
     <ClCompile Include="..\src\gui\win\DialogSizer.cpp" />
     <ClCompile Include="..\src\gui\win\DropDown.cpp" />
     <ClCompile Include="..\src\gui\win\Edit.cpp" />
