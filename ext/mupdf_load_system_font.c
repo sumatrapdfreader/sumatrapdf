@@ -30,33 +30,33 @@ typedef uint32_t u32;
 
 #define MAX_FACENAME 256
 
-#define GROW_BY 128
-
-typedef struct {
-    const char* file_path;
+// a font file we've seen, and its contents once something needed them.
+// intrusive list: a win_font_info points at one of these, so they have to keep
+// their address. file_path is allocated with the node, right after it
+typedef struct font_file {
+    struct font_file* next;
     void* data;
     size_t size;
+    const char* file_path;
 } font_file;
 
-typedef struct {
-    const char* fontface;
-    u32 index;
-    u32 file_idx;
+// one name a font answers to. Intrusive list, in registration order, which is
+// also the order a lookup walks. Both names live in the same allocation as the
+// node: full_name is how the font spells it ("Courier New"), clean_name is the
+// form a lookup is normalized to ("CourierNew"), and the lengths are kept so a
+// comparison can reject a candidate without touching its characters
+typedef struct win_font_info {
+    struct win_font_info* next;
+    font_file* file;
+    u32 index; // the face within the file, for .ttc collections
+    int full_name_len;
+    int clean_name_len;
+    const char* full_name;
+    const char* clean_name;
 } win_font_info;
 
-typedef struct {
-    win_font_info* fontmap;
-    int len;
-    int cap;
-} win_fonts;
-
-typedef struct {
-    font_file* files;
-    int len;
-    int cap;
-} font_files;
-
-font_files g_font_files;
+static font_file* g_font_files = NULL;
+static font_file* g_font_files_last = NULL;
 
 typedef struct {
     ULONG uVersion;
@@ -174,7 +174,8 @@ static struct {
     {"Kaiti TC", "KaiTi"},
 };
 
-static win_fonts g_win_fonts = {0};
+static win_font_info* g_win_fonts = NULL;
+static win_font_info* g_win_fonts_last = NULL;
 
 static int did_init = 0;
 static CRITICAL_SECTION cs_fonts;
@@ -206,6 +207,8 @@ static void add_font_failed(const char* name) {
     memcpy(gFontsFailedToLoad + gFontsFailedToLoadLen, name, n);
     gFontsFailedToLoadLen += n;
 }
+
+static void remove_spaces(char* srcDest);
 
 static int streq(const char* s1, const char* s2) {
     if (strcmp(s1, s2) == 0) {
@@ -249,27 +252,38 @@ static int font_name_eq(const char* name1, const char* name2) {
     return cmp_font_name(name1, name2) == 0;
 }
 
-static int cmp_win_font_info(const void* el1, const void* el2) {
-    win_font_info* i1 = (win_font_info*)el1;
-    win_font_info* i2 = (win_font_info*)el2;
-    if (!i1->fontface) {
-        return i2->fontface ? -1 : 0;
+/* cmp_font_name() for names whose length we already know: the lengths settle
+   most candidates outright, and only the two tolerated mismatches (a trailing
+   "," or "-roman") need to look at the characters */
+static int font_name_matches(const char* n1, int len1, const char* n2, int len2) {
+    if (len1 != len2) {
+        const char* rest = len1 > len2 ? n1 + len2 : n2 + len1;
+        if (*rest != ',' && !streqi(rest, "-roman")) {
+            return 0;
+        }
+        return _strnicmp(n1, n2, (size_t)(len1 < len2 ? len1 : len2)) == 0;
     }
-    if (!i2->fontface) {
-        return 1;
-    }
-    return cmp_font_name(i1->fontface, i2->fontface);
+    return _strnicmp(n1, n2, (size_t)len1) == 0;
 }
 
-static win_font_info* pdf_find_windows_font_path(const char* fontname) {
-    win_font_info* map = &(g_win_fonts.fontmap[0]);
-    size_t n = (size_t)g_win_fonts.len;
-    size_t elSize = sizeof(win_font_info);
-    win_font_info el;
-    el.fontface = fontname;
-    el.index = 0;
-    win_font_info* res = (win_font_info*)bsearch(&el, map, n, elSize, cmp_win_font_info);
-    return res;
+/* the first name registered wins, so a font that answers to a name under its
+   own spelling is preferred over one that only matches after normalizing.
+   use_clean_name compares against the space-less form, which is what a family
+   name written the way a human writes it turns into */
+static win_font_info* find_font(const char* name, int name_len, int use_clean_name) {
+    win_font_info* fi;
+    for (fi = g_win_fonts; fi; fi = fi->next) {
+        const char* cand = use_clean_name ? fi->clean_name : fi->full_name;
+        int cand_len = use_clean_name ? fi->clean_name_len : fi->full_name_len;
+        if (font_name_matches(cand, cand_len, name, name_len)) {
+            return fi;
+        }
+    }
+    return NULL;
+}
+
+static win_font_info* find_font_name(const char* name, int use_clean_name) {
+    return find_font(name, (int)strlen(name), use_clean_name);
 }
 
 /* source and dest can be same */
@@ -327,70 +341,67 @@ static void decode_platform_string(fz_context* ctx, int platform, int enctype, c
 // on my machine it's ~21k for facename and path
 static int g_font_allocated = 0;
 
-static int get_font_file(const char* file_path) {
-    int i;
+static font_file* get_or_append_font_file(const char* file_path) {
     font_file* ff;
-    for (i = 0; i < g_font_files.len; i++) {
-        ff = &(g_font_files.files[i]);
+    for (ff = g_font_files; ff; ff = ff->next) {
         if (streq(file_path, ff->file_path)) {
-            return i;
+            return ff;
         }
     }
-    return -1;
-}
-static int get_or_append_font_file(const char* file_path) {
-    font_file* ff;
-    int i = get_font_file(file_path);
-    if (i >= 0) {
-        return i;
+    // one allocation: the node, then the path right after it
+    size_t path_size = strlen(file_path) + 1;
+    ff = (font_file*)malloc(sizeof(font_file) + path_size);
+    if (!ff) {
+        return NULL;
     }
-    if (g_font_files.len >= g_font_files.cap) {
-        int newCap = g_font_files.cap + GROW_BY;
-        font_file* newFiles = (font_file*)realloc(g_font_files.files, newCap * sizeof(font_file));
-        if (!newFiles) {
-            return -1;
-        }
-        memset(newFiles + g_font_files.cap, 0, GROW_BY * sizeof(font_file));
-        g_font_files.files = newFiles;
-        g_font_files.cap = newCap;
-    }
-    i = g_font_files.len;
-    ff = &g_font_files.files[i];
-    g_font_allocated += strlen(file_path) + 1;
-    ff->file_path = strdup(file_path);
+    g_font_allocated += (int)(sizeof(font_file) + path_size);
+    char* path_copy = (char*)(ff + 1);
+    memcpy(path_copy, file_path, path_size);
+    ff->next = NULL;
     ff->data = NULL;
     ff->size = 0;
-    g_font_files.len++;
-    return i;
+    ff->file_path = path_copy;
+    if (g_font_files_last) {
+        g_font_files_last->next = ff;
+    } else {
+        g_font_files = ff;
+    }
+    g_font_files_last = ff;
+    return ff;
 }
 
 static void append_mapping(fz_context* ctx, const char* facename, const char* path, int index) {
-    win_fonts* fl = &g_win_fonts;
-    int file_idx = get_or_append_font_file(path);
-    if (file_idx < 0) {
+    font_file* file = get_or_append_font_file(path);
+    if (!file) {
         return;
     }
-    if (fl->len >= fl->cap) {
-        int newCap = fl->cap + GROW_BY;
-        win_font_info* newMap = (win_font_info*)realloc(fl->fontmap, newCap * sizeof(win_font_info));
-        if (!newMap) {
-            return;
-        }
-        memset(newMap + fl->cap, 0, GROW_BY * sizeof(win_font_info));
-        fl->fontmap = newMap;
-        fl->cap = newCap;
-    }
-
-    win_font_info* i = &fl->fontmap[fl->len];
-    g_font_allocated += strlen(facename) + 1;
-    // TODO: allocate facename and path from a pool allocator
-    i->fontface = strdup(facename);
-    if (!i->fontface) {
+    // one allocation: the node, then the name, then the name without spaces
+    // (which can only be shorter, so the same size is always enough)
+    int name_len = (int)strlen(facename);
+    size_t size = sizeof(win_font_info) + 2 * ((size_t)name_len + 1);
+    win_font_info* fi = (win_font_info*)malloc(size);
+    if (!fi) {
         return;
     }
-    i->file_idx = (u32)file_idx;
-    i->index = (u32)index;
-    fl->len++;
+    g_font_allocated += (int)size;
+    char* full = (char*)(fi + 1);
+    char* clean = full + name_len + 1;
+    memcpy(full, facename, (size_t)name_len + 1);
+    memcpy(clean, facename, (size_t)name_len + 1);
+    remove_spaces(clean);
+    fi->next = NULL;
+    fi->file = file;
+    fi->index = (u32)index;
+    fi->full_name = full;
+    fi->full_name_len = name_len;
+    fi->clean_name = clean;
+    fi->clean_name_len = (int)strlen(clean);
+    if (g_win_fonts_last) {
+        g_win_fonts_last->next = fi;
+    } else {
+        g_win_fonts = fi;
+    }
+    g_win_fonts_last = fi;
 }
 
 static void safe_read(fz_context* ctx, fz_stream* file, int offset, char* buf, int size) {
@@ -521,27 +532,23 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
     }
     if (szTTName[0]) {
         // every face of a family carries the same TT family name, so only the
-        // regular one may answer to it: registering it for the others too made
-        // a lookup for "Georgia" land on whichever of the four the binary
-        // search happened to hit (georgiai.ttf, the italic one)
-        int isRegularFace = !szStyle[0] || streqi(szStyle, "Regular");
-        // derive a PostScript-like name and add it, if it's different from the font's
-        // included PostScript name; cf. https://code.google.com/archive/p/sumatrapdf/issues/376
-        // compare the two names before adding this one
-        if (isRegularFace && !font_name_eq(szTTName, szPSName)) {
-            append_mapping(ctx, szTTName, path, index);
+        // regular one may answer to it - a lookup for "Georgia" used to land on
+        // whichever face came first, the italic one. The others are registered
+        // with the style appended, which is how a PDF asks for them
+        // ("Georgia,Bold" is normalized to "Georgia-Bold")
+        // cf. https://code.google.com/archive/p/sumatrapdf/issues/376
+        char szStyledName[MAX_FACENAME];
+        const char* ttName = szTTName;
+        if (szStyle[0] && !streqi(szStyle, "Regular")) {
+            fz_strlcpy(szStyledName, szTTName, MAX_FACENAME);
+            makeFakePSName(szStyledName, szStyle);
+            ttName = szStyledName;
         }
-        // a lookup strips the spaces out of the name it's given
-        // (load_windows_font_by_name), so a family whose PostScript name isn't
-        // simply itself without spaces - "Courier New" is "CourierNewPSMT" -
-        // could not be found by its family name at all (#4600). Register the
-        // same PostScript-like form the CJK names below use, which keeps the
-        // style in the name so asking for the family gets the regular face
-        char szFakePSName[MAX_FACENAME];
-        fz_strlcpy(szFakePSName, szTTName, MAX_FACENAME);
-        makeFakePSName(szFakePSName, szStyle);
-        if (!font_name_eq(szFakePSName, szPSName) && !font_name_eq(szFakePSName, szTTName)) {
-            append_mapping(ctx, szFakePSName, path, index);
+        // the space-less form a lookup uses is computed by append_mapping, so
+        // "Courier New" is found by its family name even though its PostScript
+        // name is "CourierNewPSMT" (#4600)
+        if (!font_name_eq(ttName, szPSName)) {
+            append_mapping(ctx, ttName, path, index);
         }
     }
     if (szCJKName[0]) {
@@ -647,15 +654,6 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define CURRENT_HMODULE ((HMODULE) & __ImageBase)
 
-// clang-cl notices the mismatch in function parameters with qsort
-// as _stricmp is int _stricmp(const char *string1, const char *string2);
-// and qsort expects int (*compar)(const void*,const void*)).
-static int stricmp_wrapper(const void* ptr1, const void* ptr2) {
-    const char* string1 = (const char*)ptr1;
-    const char* string2 = (const char*)ptr2;
-    return _stricmp(string1, string2);
-}
-
 static void create_system_font_list(fz_context* ctx) {
     WCHAR szFontDir[MAX_PATH];
     UINT cch;
@@ -666,7 +664,7 @@ static void create_system_font_list(fz_context* ctx) {
         extend_system_font_list(ctx, szFontDir);
     }
 
-    if (g_win_fonts.len == 0) {
+    if (!g_win_fonts) {
         fz_warn(ctx, "couldn't find any usable system fonts");
     }
 
@@ -684,30 +682,23 @@ static void create_system_font_list(fz_context* ctx) {
     }
 #endif
 
-    // sort the font list, so that it can be searched binarily
-    void* map = (void*)&(g_win_fonts.fontmap[0]);
-    size_t n = (size_t)g_win_fonts.len;
-    size_t elSize = sizeof(win_font_info);
-    qsort(map, n, elSize, cmp_win_font_info);
-
 #ifdef DEBUG
     // allow to overwrite system fonts for debugging purposes
     // (either pass a full path or a search pattern such as "fonts\*.ttf")
     cch = GetEnvironmentVariable(L"MUPDF_FONTS_PATTERN", szFontDir, nelem(szFontDir));
     if (0 < cch && cch < nelem(szFontDir)) {
-        int i, prev_len = g_win_fonts.len;
+        win_font_info* prev_head = g_win_fonts;
+        win_font_info* prev_last = g_win_fonts_last;
         extend_system_font_list(ctx, szFontDir);
-        for (i = prev_len; i < g_win_fonts.len; i++) {
-            win_font_info* entry = bsearch(g_win_fonts.fontmap[i].fontface, g_win_fonts.fontmap, prev_len,
-                                           sizeof(win_font_info), cmp_win_font_info);
-            if (entry) {
-                *entry = g_win_fonts.fontmap[i];
-            }
+        // a lookup takes the first match, so move what we just added to the
+        // front for it to override the system fonts of the same name
+        if (prev_last && prev_last->next) {
+            win_font_info* added = prev_last->next;
+            prev_last->next = NULL;
+            g_win_fonts_last->next = prev_head;
+            g_win_fonts_last = prev_last;
+            g_win_fonts = added;
         }
-        void* map = (void*)&(g_win_fonts.fontmap[0]);
-        size_t n = (size_t)g_win_fonts.len;
-        size_t elSize = sizeof(win_font_info);
-        qsort(map, n, elSize, cmp_win_font_info);
     }
 #endif
 }
@@ -721,11 +712,9 @@ static void* fz_resize_array(fz_context* ctx, void* p, unsigned int count, unsig
 
 static fz_buffer* load_and_cache_font(fz_context* ctx, win_font_info* fi, const char* font_name) {
     fz_buffer* buffer = NULL;
-    int file_idx = (int)fi->file_idx;
-    font_file* ff;
+    font_file* ff = fi->file;
 
     EnterCriticalSection(&cs_fonts);
-    ff = &g_font_files.files[file_idx];
     if (ff->data) {
         buffer = fz_new_buffer_from_shared_data(ctx, ff->data, ff->size);
         // fz_warn(ctx, "found cached font '%s' from '%s'", font_name, ff->file_path);
@@ -761,18 +750,25 @@ static int str_ends_with(const char* str, const char* end) {
     return len1 >= len2 && streq(str + len1 - len2, end);
 }
 
-static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name) {
+/* needs_exact_metrics is a PDF asking for one of the base-14 fonts without a
+   descriptor: the name it uses is a PostScript name, which the font spells the
+   same way, so only full_name may answer. Everyone else - a family named in a
+   stylesheet, a fallback we pick ourselves - also gets the space-less
+   clean_name, which is what "Courier New" has to match to find the font whose
+   PostScript name is "CourierNewPSMT" */
+static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name, int needs_exact_metrics) {
     win_font_info* found = NULL;
     char *comma, *fontname;
     fz_font* font = NULL;
     fz_buffer* buffer;
+    int use_clean_name = !needs_exact_metrics;
 
     if (is_font_failed(orig_name)) {
         return NULL;
     }
 
     EnterCriticalSection(&cs_fonts);
-    if (g_win_fonts.len == 0) {
+    if (!g_win_fonts) {
         fz_try(ctx) {
             create_system_font_list(ctx);
         }
@@ -782,8 +778,16 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     }
     LeaveCriticalSection(&cs_fonts);
 
-    if (g_win_fonts.len == 0) {
+    if (!g_win_fonts) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: couldn't find any fonts");
+    }
+
+    // the name as given, before any normalizing: a font that spells its name
+    // that way is a better answer than one that only matches once both sides
+    // have had their spaces taken out
+    found = find_font_name(orig_name, 0);
+    if (found) {
+        goto ExitNoFree;
     }
 
     // work on a normalized copy of the font name
@@ -794,7 +798,7 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     comma = strchr(fontname, ',');
     if (comma) {
         *comma = '-';
-        found = pdf_find_windows_font_path(fontname);
+        found = find_font_name(fontname, use_clean_name);
         if (found) {
             goto Exit;
         }
@@ -804,14 +808,14 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
         int i;
         for (i = 0; i < nelem(baseSubstitutes) && !found; i++)
             if (streq(fontname, baseSubstitutes[i].name)) {
-                found = pdf_find_windows_font_path(baseSubstitutes[i].pattern);
+                found = find_font_name(baseSubstitutes[i].pattern, use_clean_name);
                 if (found) {
                     goto Exit;
                 }
             }
     }
     // third, search for the font name without additional style information
-    found = pdf_find_windows_font_path(fontname);
+    found = find_font_name(fontname, use_clean_name);
     if (found) {
         goto Exit;
     }
@@ -822,12 +826,12 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
         comma = fontname + strlen(fontname) - styleLen;
         memmove(comma + 1, comma, styleLen + 1);
         *comma = '-';
-        found = pdf_find_windows_font_path(fontname);
+        found = find_font_name(fontname, use_clean_name);
         if (found) {
             goto Exit;
         }
         *comma = ',';
-        found = pdf_find_windows_font_path(fontname);
+        found = find_font_name(fontname, use_clean_name);
         if (found) {
             goto Exit;
         }
@@ -841,13 +845,13 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
             comma = strchr(cjkName, ',');
             if (comma) {
                 *comma = '-';
-                found = pdf_find_windows_font_path(cjkName);
+                found = find_font_name(cjkName, use_clean_name);
                 if (found) {
                     goto Exit;
                 }
                 *comma = ',';
             }
-            found = pdf_find_windows_font_path(cjkName);
+            found = find_font_name(cjkName, use_clean_name);
             if (found) {
                 goto Exit;
             }
@@ -855,13 +859,14 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     }
 Exit:
     fz_free(ctx, fontname);
+ExitNoFree:
     if (!found) {
         fz_warn(ctx, "couldn't find system font '%s'", orig_name);
         add_font_failed(orig_name);
         return NULL;
     }
     buffer = load_and_cache_font(ctx, found, orig_name);
-    int use_glyph_bbox = !streq(found->fontface, "DroidSansFallback");
+    int use_glyph_bbox = !streq(found->full_name, "DroidSansFallback");
     fz_try(ctx) {
         font = fz_new_font_from_buffer(ctx, orig_name, buffer, found->index, use_glyph_bbox);
         font->flags.ft_substitute = 1;
@@ -913,7 +918,7 @@ static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bol
         if (clean_name != fontname && !strncmp(clean_name, "Times-", 6)) return NULL;
     }
 
-    font = load_windows_font_by_name(ctx, fontname);
+    font = load_windows_font_by_name(ctx, fontname, needs_exact_metrics);
     if (!font) return NULL;
     /* use the font's own metrics for base 14 fonts */
     if (is_base_14) font->flags.ft_substitute = 0;
@@ -924,7 +929,7 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
     fz_font* font = NULL;
 
     /* try to find a matching system font before falling back to an approximate one */
-    font = load_windows_font_by_name(ctx, fontname);
+    font = load_windows_font_by_name(ctx, fontname, 0);
     if (font) return font;
 
     /* try to fall back to a reasonable system font */
@@ -932,16 +937,16 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
         if (serif) {
             switch (ros) {
                 case FZ_ADOBE_CNS:
-                    font = load_windows_font_by_name(ctx, "MingLiU");
+                    font = load_windows_font_by_name(ctx, "MingLiU", 0);
                     break;
                 case FZ_ADOBE_GB:
-                    font = load_windows_font_by_name(ctx, "SimSun");
+                    font = load_windows_font_by_name(ctx, "SimSun", 0);
                     break;
                 case FZ_ADOBE_JAPAN:
-                    font = load_windows_font_by_name(ctx, "MS-Mincho");
+                    font = load_windows_font_by_name(ctx, "MS-Mincho", 0);
                     break;
                 case FZ_ADOBE_KOREA:
-                    font = load_windows_font_by_name(ctx, "Batang");
+                    font = load_windows_font_by_name(ctx, "Batang", 0);
                     break;
                 default:
                     fz_throw(ctx, FZ_ERROR_GENERIC, "invalid serif ros");
@@ -949,19 +954,19 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
         } else {
             switch (ros) {
                 case FZ_ADOBE_CNS:
-                    font = load_windows_font_by_name(ctx, "DFKaiShu-SB-Estd-BF");
+                    font = load_windows_font_by_name(ctx, "DFKaiShu-SB-Estd-BF", 0);
                     break;
                 case FZ_ADOBE_GB:
-                    font = load_windows_font_by_name(ctx, "KaiTi");
+                    font = load_windows_font_by_name(ctx, "KaiTi", 0);
                     if (!font) {
-                        font = load_windows_font_by_name(ctx, "KaiTi_GB2312");
+                        font = load_windows_font_by_name(ctx, "KaiTi_GB2312", 0);
                     }
                     break;
                 case FZ_ADOBE_JAPAN:
-                    font = load_windows_font_by_name(ctx, "MS-Gothic");
+                    font = load_windows_font_by_name(ctx, "MS-Gothic", 0);
                     break;
                 case FZ_ADOBE_KOREA:
-                    font = load_windows_font_by_name(ctx, "Gulim");
+                    font = load_windows_font_by_name(ctx, "Gulim", 0);
                     break;
                 default:
                     fz_throw(ctx, FZ_ERROR_GENERIC, "invalid sans-serif ros");
@@ -971,7 +976,7 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
     fz_catch(ctx) {
 #ifdef NOCJKFONT
         /* If no CJK fallback font is builtin, maybe one has been shipped separately */
-        font = load_windows_font_by_name(ctx, "DroidSansFallback");
+        font = load_windows_font_by_name(ctx, "DroidSansFallback", 0);
 #else
         fz_rethrow(ctx);
 #endif
@@ -1101,7 +1106,7 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
     }
 
     /* try to find a matching system font before falling back to an approximate one */
-    font = load_windows_font_by_name(ctx, font_name);
+    font = load_windows_font_by_name(ctx, font_name, 0);
     return font;
 }
 
@@ -1111,32 +1116,34 @@ void init_system_font_list(void) {
         return;
     }
     InitializeCriticalSection(&cs_fonts);
-    g_win_fonts.fontmap = NULL;
-    g_win_fonts.len = 0;
-    g_win_fonts.cap = 0;
-    g_font_files.files = NULL;
-    g_font_files.len = 0;
-    g_font_files.cap = 0;
+    g_win_fonts = NULL;
+    g_win_fonts_last = NULL;
+    g_font_files = NULL;
+    g_font_files_last = NULL;
     did_init = 1;
 }
 
 void destroy_system_font_list(void) {
-    int i;
-    for (i = 0; i < g_win_fonts.len; i++) {
-        free((void*)g_win_fonts.fontmap[i].fontface);
+    // both names are part of the node's allocation, so the node is all there
+    // is to free
+    win_font_info* fi = g_win_fonts;
+    while (fi) {
+        win_font_info* next = fi->next;
+        free(fi);
+        fi = next;
     }
-    free(g_win_fonts.fontmap);
-    g_win_fonts.fontmap = NULL;
-    g_win_fonts.len = 0;
-    g_win_fonts.cap = 0;
-    for (i = 0; i < g_font_files.len; i++) {
-        free((void*)g_font_files.files[i].file_path);
-        free(g_font_files.files[i].data);
+    g_win_fonts = NULL;
+    g_win_fonts_last = NULL;
+    // ... and so is file_path, but the file's contents are their own block
+    font_file* ff = g_font_files;
+    while (ff) {
+        font_file* next = ff->next;
+        free(ff->data);
+        free(ff);
+        ff = next;
     }
-    free(g_font_files.files);
-    g_font_files.files = NULL;
-    g_font_files.len = 0;
-    g_font_files.cap = 0;
+    g_font_files = NULL;
+    g_font_files_last = NULL;
     DeleteCriticalSection(&cs_fonts);
 }
 
