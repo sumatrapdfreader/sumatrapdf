@@ -35,6 +35,9 @@ class Graphics;
 struct ID2D1DCRenderTarget;
 struct ID2D1SolidColorBrush;
 struct ID2D1StrokeStyle;
+#elif OS_LINUX
+struct _cairo;
+using cairo_t = struct _cairo;
 #endif
 
 // how text is placed in the rect it is drawn into
@@ -221,4 +224,8 @@ extern bool gUseDirect2D;
 Gfx* GfxCreate(HDC);
 Gfx* GfxCreateWithDoubleBuffer(HwndBase*, HDC);
 void GfxDestroyDoubleBuffer(HwndBase*);
+#endif
+
+#if OS_LINUX
+Gfx* GfxCreate(cairo_t*);
 #endif

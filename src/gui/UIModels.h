@@ -23,6 +23,7 @@ enum class CursorId {
     IBeam,
     Hand,
     Cross,
+    Move,
     SizeNS,
     SizeWE,
     No,

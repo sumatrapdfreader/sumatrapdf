@@ -3,6 +3,23 @@
 
 struct MainWindow;
 
-// Shows (or, if already up, hides) a compact keyboard-shortcuts cheat sheet
-// laid out from the command table and the current key bindings. Bound to '?'.
-void ToggleKeyboardHelp(MainWindow* win);
+struct KeyboardHelpDataSource {
+    virtual ~KeyboardHelpDataSource() = default;
+    virtual Str Translate(Str) = 0;
+    virtual TempStr CommandDescriptionTemp(int cmdId) = 0;
+    virtual TempStr CommandShortcutTemp(int cmdId, int maxCount) = 0;
+};
+
+struct KeyboardHelpArgs {
+    void* parent = nullptr;
+    bool parentFullscreen = false;
+    KeyboardHelpDataSource* dataSource = nullptr;
+};
+
+KeyboardHelpDataSource* GetDefaultKeyboardHelpDataSource();
+void ToggleKeyboardHelp(const KeyboardHelpArgs&);
+bool IsKeyboardHelpVisible();
+
+#if OS_WIN
+void ToggleKeyboardHelp(MainWindow*);
+#endif

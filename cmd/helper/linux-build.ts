@@ -665,6 +665,19 @@ const PORTABLE_COMPILE_SOURCES = [
   "src/SvgIcons.cpp",
 ];
 
+const GTK4_KEYBOARD_HELP_SOURCES = [
+  "src/Commands.cpp",
+  "src/CrashHandlerNoOp.cpp",
+  "src/KeyboardHelp.cpp",
+  "src/SumatraLog_posix.cpp",
+  "src/gui/GuiColors.cpp",
+  "src/gui/PlatformFont.cpp",
+  "src/gui/gtk4/GfxGtk.cpp",
+  "src/gui/gtk4/PlatformFontGtk.cpp",
+  "src/gui/gtk4/PlatformWindowGtk.cpp",
+  "src/gui/gtk4/KeyboardHelpGtkMain.cpp",
+];
+
 export interface LinuxBuildOptions {
   outDir: string;
   isRelease?: boolean;
@@ -746,11 +759,81 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
 
   await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await compilePortableSources(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildGtk4KeyboardHelp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
   console.log(`Static libraries: ${join(outDir, "lib")}\n`);
+}
+
+function pkgConfigFlags(kind: "--cflags" | "--libs", pkg: string): string[] {
+  const pkgConfig = resolveTool("pkg-config", ["pkg-config", "pkgconf"]);
+  const result = Bun.spawnSync([pkgConfig, kind, pkg]);
+  if (result.exitCode !== 0) {
+    throw new Error(`${pkgConfig} ${kind} ${pkg} failed: ${result.stderr.toString()}`);
+  }
+  return result.stdout.toString().trim().split(/\s+/).filter(Boolean);
+}
+
+async function buildGtk4KeyboardHelp(
+  outDir: string,
+  isRelease: boolean,
+  tools: BuildTools,
+  jobs: number,
+  commonDefines: string[],
+  commonFlags: string[],
+  cxxFlags: string[],
+): Promise<void> {
+  console.log("Building GTK 4 keyboard-help viewer...");
+  const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
+  const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
+  const defineFlags = [...commonDefines, ...configDefines, "SUMATRA_TEST_UTIL=1"].map((d) => `-D${d}`);
+  const gtkCflags = pkgConfigFlags("--cflags", "gtk4");
+  const gtkLibs = pkgConfigFlags("--libs", "gtk4");
+  const units = GTK4_KEYBOARD_HELP_SOURCES.map((src) => {
+    const obj = objPath(outDir, "gtk4-keyboard-help", src);
+    return {
+      src,
+      obj,
+      args: [
+        tools.cxx,
+        ...optFlags,
+        ...defineFlags,
+        "-Isrc",
+        ...gtkCflags,
+        ...commonFlags,
+        "-w",
+        "-std=c++23",
+        ...cxxFlags,
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-c",
+        src,
+        "-o",
+        obj,
+      ],
+    };
+  });
+  await compileAll(units, jobs);
+
+  const exePath = join(outDir, "keyboard_help_gtk4");
+  const result = await spawnCmd([
+    tools.cxx,
+    "-o",
+    exePath,
+    ...commonFlags,
+    "-Wl,--gc-sections",
+    ...units.map((unit) => unit.obj),
+    join(outDir, "lib", "libbase.a"),
+    ...gtkLibs,
+  ]);
+  if (!result.ok) {
+    throw new Error(`link keyboard_help_gtk4 failed: ${result.stderr}`);
+  }
+  console.log(`  -> ${exePath}`);
 }
 
 async function compilePortableSources(

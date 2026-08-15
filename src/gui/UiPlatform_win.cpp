@@ -40,6 +40,8 @@ static LPWSTR ToWin32Cursor(CursorId id) {
             return IDC_HAND;
         case CursorId::Cross:
             return IDC_CROSS;
+        case CursorId::Move:
+            return IDC_SIZEALL;
         case CursorId::SizeNS:
             return IDC_SIZENS;
         case CursorId::SizeWE:

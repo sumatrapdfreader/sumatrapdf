@@ -1309,6 +1309,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\gui\Layout.h" />
     <ClInclude Include="..\src\gui\PlatformFont.h" />
     <ClInclude Include="..\src\gui\PlatformText.h" />
+    <ClInclude Include="..\src\gui\PlatformWindow.h" />
     <ClInclude Include="..\src\gui\UIModels.h" />
     <ClInclude Include="..\src\gui\VirtCtrl.h" />
     <ClInclude Include="..\src\gui\VirtHost.h" />
@@ -1452,6 +1453,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\InverseSearchDialog.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\KeyboardHelp.cpp" />
+    <ClCompile Include="..\src\KeyboardHelp_win.cpp" />
     <ClCompile Include="..\src\LinkFollow.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
     <ClCompile Include="..\src\MarkdownModel.cpp" />
@@ -1769,6 +1771,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\gui\win\Edit.cpp" />
     <ClCompile Include="..\src\gui\win\FrameRateWnd.cpp" />
     <ClCompile Include="..\src\gui\win\HtmlWindow.cpp" />
+    <ClCompile Include="..\src\gui\win\PlatformWindowWin.cpp" />
     <ClCompile Include="..\src\gui\win\Progress.cpp" />
     <ClCompile Include="..\src\gui\win\TabsCtrl.cpp" />
     <ClCompile Include="..\src\gui\win\Tooltip.cpp" />

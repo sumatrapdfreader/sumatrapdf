@@ -39,6 +39,8 @@ struct PlatformFont {
     Gdiplus::Font* gdiFont = nullptr;
     // for gdiFont, created lazily by GetHFont(); set upfront when adopted
     HFONT hfont = nullptr;
+#elif OS_LINUX
+    void* nativeFont = nullptr;
 #endif
     // memoized by GetBoldPlatformFont()
     PlatformFont* boldVariant = nullptr;
@@ -65,15 +67,16 @@ bool PlatformFontCreateNative(PlatformFont*);
 Size PlatformFontMeasureText(PlatformFont*, Str s, int maxDx = -1);
 int PlatformFontLineHeight(PlatformFont*);
 
-#if OS_WIN
-// adopts an existing HFONT (e.g. one of the app's UI fonts, which live for the
-// whole run) so it can be used with the portable drawing API. Not owned
-PlatformFont* GetPlatformFont(HFONT);
-PlatformFont* HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSize);
 PlatformFont* GetDefaultGuiFont(bool bold = false, bool italic = false);
 PlatformFont* GetDefaultGuiFontOfSize(int size);
 PlatformFont* GetUserGuiFont(Str fontName, int size);
 PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic);
 PlatformFont* GetScaledPlatformFont(PlatformFont*, int percent);
+
+#if OS_WIN
+// adopts an existing HFONT (e.g. one of the app's UI fonts, which live for the
+// whole run) so it can be used with the portable drawing API. Not owned
+PlatformFont* GetPlatformFont(HFONT);
+PlatformFont* HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSize);
 void DeleteCreatedFonts();
 #endif
