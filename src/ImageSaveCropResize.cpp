@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/Win.h"
@@ -168,6 +169,7 @@ struct ImageEditWindow : WindowBase {
     // source image
     Str filePath;
     Bitmap* srcBitmap = nullptr;
+    Pixmap* srcPixmap = nullptr;
     int imgW = 0;
     int imgH = 0;
 
@@ -206,6 +208,7 @@ struct ImageEditWindow : WindowBase {
     ImageEditWindow() = default;
     ~ImageEditWindow() override {
         delete srcBitmap;
+        FreePixmap(srcPixmap);
         str::Free(filePath);
         // ~WindowBase deletes `layout`, which is controlLayout
     }
@@ -929,32 +932,45 @@ static HCURSOR GetCursorForEdge(DragEdge edge) {
     }
 }
 
-static void PaintSaveImage(ImageEditWindow* ew, HDC hdc) {
-    Rect cRc = HwndClientRect(ew->hwnd);
-
-    HdcPaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
-
-    if (!ew->srcBitmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
-        return;
+static void PaintCheckerboard(Gfx* gfx, Rect rc) {
+    constexpr int kCheckerSize = 8;
+    constexpr Color kCheckerDark = MkRgb(204, 204, 204);
+    for (int y = 0; y < rc.dy; y += kCheckerSize) {
+        for (int x = 0; x < rc.dx; x += kCheckerSize) {
+            int dx = std::min(kCheckerSize, rc.dx - x);
+            int dy = std::min(kCheckerSize, rc.dy - y);
+            bool dark = ((x / kCheckerSize) + (y / kCheckerSize)) % 2 != 0;
+            gfx->FillRect({rc.x + x, rc.y + y, dx, dy}, dark ? kCheckerDark : kColWhite);
+        }
     }
-
-    Graphics g(hdc);
-    g.DrawImage(ew->srcBitmap, ew->imgDisplayX, ew->imgDisplayY, ew->imgDisplayW, ew->imgDisplayH);
 }
 
-static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
-    Rect cRc = HwndClientRect(ew->hwnd);
+static void PaintSaveImage(ImageEditWindow* ew, Gfx* gfx, Rect imageArea) {
+    PaintCheckerboard(gfx, imageArea);
 
-    HdcPaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
+    if (!ew->srcPixmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
+        return;
+    }
+    gfx->DrawPixmap(ew->srcPixmap, {ew->imgDisplayX, ew->imgDisplayY, ew->imgDisplayW, ew->imgDisplayH});
+}
 
-    if (!ew->srcBitmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
+static void PaintDragHandle(Gfx* gfx, int x, int y) {
+    int hs = kDragHandleSize;
+    int hh = hs / 2;
+    Rect r{x - hh, y - hh, hs, hs};
+    gfx->FillRect(r, kColWhite);
+    gfx->DrawRect(r, kColBlack);
+}
+
+static void PaintCropImage(ImageEditWindow* ew, Gfx* gfx, Rect imageArea) {
+    PaintCheckerboard(gfx, imageArea);
+
+    if (!ew->srcPixmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
         return;
     }
 
-    Graphics g(hdc);
-
     // draw the image
-    g.DrawImage(ew->srcBitmap, ew->imgDisplayX, ew->imgDisplayY, ew->imgDisplayW, ew->imgDisplayH);
+    gfx->DrawPixmap(ew->srcPixmap, {ew->imgDisplayX, ew->imgDisplayY, ew->imgDisplayW, ew->imgDisplayH});
 
     // draw semi-transparent overlay over non-cropped areas
     int cropDispX = ImageToDisplayX(ew, ew->cropX);
@@ -969,76 +985,53 @@ static void PaintCropImage(ImageEditWindow* ew, HDC hdc) {
     int ir = ix + iw;
     int ib = iy + ih;
 
-    // draw semi-transparent overlay using GDI+ with explicit Gdiplus::Brush pointer
-    Gdiplus::SolidBrush overlayBrush(Gdiplus::Color(128, 0, 0, 0));
-    Gdiplus::Brush* pBrush = &overlayBrush;
-
-    // top strip
+    Vec<Rect> overlay;
     if (cropDispY > iy) {
-        g.FillRectangle(pBrush, ix, iy, iw, cropDispY - iy);
+        overlay.Append({ix, iy, iw, cropDispY - iy});
     }
-    // bottom strip
     if (cropDispB < ib) {
-        g.FillRectangle(pBrush, ix, cropDispB, iw, ib - cropDispB);
+        overlay.Append({ix, cropDispB, iw, ib - cropDispB});
     }
-    // left strip (between top and bottom crop)
     if (cropDispX > ix) {
-        g.FillRectangle(pBrush, ix, cropDispY, cropDispX - ix, cropDispB - cropDispY);
+        overlay.Append({ix, cropDispY, cropDispX - ix, cropDispB - cropDispY});
     }
-    // right strip
     if (cropDispR < ir) {
-        g.FillRectangle(pBrush, cropDispR, cropDispY, ir - cropDispR, cropDispB - cropDispY);
+        overlay.Append({cropDispR, cropDispY, ir - cropDispR, cropDispB - cropDispY});
     }
+    gfx->FillRects(overlay.els, len(overlay), kColBlack, 128);
 
     // draw crop border
-    Gdiplus::Pen pen(Gdiplus::Color(255, 255, 255), 1.0f);
-    pen.SetDashStyle(Gdiplus::DashStyleDash);
-    g.DrawRectangle(&pen, cropDispX, cropDispY, cropDispR - cropDispX, cropDispB - cropDispY);
+    gfx->DrawDashedRect({cropDispX, cropDispY, cropDispR - cropDispX, cropDispB - cropDispY}, kColWhite);
 
     // draw drag handles at corners and edge midpoints
-    int hs = kDragHandleSize;
-    int hh = hs / 2;
     int midX = (cropDispX + cropDispR) / 2;
     int midY = (cropDispY + cropDispB) / 2;
 
-    Gdiplus::SolidBrush handleBrush(Gdiplus::Color(255, 255, 255, 255));
-    Gdiplus::Pen handlePen(Gdiplus::Color(255, 0, 0, 0), 1);
-
-    auto drawHandle = [&](int cx, int cy) {
-        g.FillRectangle(&handleBrush, cx - hh, cy - hh, hs, hs);
-        g.DrawRectangle(&handlePen, cx - hh, cy - hh, hs, hs);
-    };
-
     // corners
-    drawHandle(cropDispX, cropDispY);
-    drawHandle(cropDispR, cropDispY);
-    drawHandle(cropDispX, cropDispB);
-    drawHandle(cropDispR, cropDispB);
+    PaintDragHandle(gfx, cropDispX, cropDispY);
+    PaintDragHandle(gfx, cropDispR, cropDispY);
+    PaintDragHandle(gfx, cropDispX, cropDispB);
+    PaintDragHandle(gfx, cropDispR, cropDispB);
     // edge midpoints
-    drawHandle(midX, cropDispY);
-    drawHandle(midX, cropDispB);
-    drawHandle(cropDispX, midY);
-    drawHandle(cropDispR, midY);
+    PaintDragHandle(gfx, midX, cropDispY);
+    PaintDragHandle(gfx, midX, cropDispB);
+    PaintDragHandle(gfx, cropDispX, midY);
+    PaintDragHandle(gfx, cropDispR, midY);
 }
 
-static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
-    Rect cRc = HwndClientRect(ew->hwnd);
+static void PaintResizeImage(ImageEditWindow* ew, Gfx* gfx, Rect imageArea) {
+    PaintCheckerboard(gfx, imageArea);
 
-    HdcPaintCheckerboard(hdc, 0, 0, cRc.dx, ew->imgAreaH);
-
-    if (!ew->srcBitmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
+    if (!ew->srcPixmap || ew->imgDisplayW <= 0 || ew->imgDisplayH <= 0) {
         return;
     }
 
-    Graphics g(hdc);
-
     // draw the full image
-    g.DrawImage(ew->srcBitmap, ew->imgDisplayX, ew->imgDisplayY, ew->imgDisplayW, ew->imgDisplayH);
+    Rect imageRect{ew->imgDisplayX, ew->imgDisplayY, ew->imgDisplayW, ew->imgDisplayH};
+    gfx->DrawPixmap(ew->srcPixmap, imageRect);
 
     // draw semi-transparent overlay over the entire image
-    Gdiplus::SolidBrush overlayBrush(Gdiplus::Color(128, 0, 0, 0));
-    Gdiplus::Brush* pBrush = &overlayBrush;
-    g.FillRectangle(pBrush, ew->imgDisplayX, ew->imgDisplayY, ew->imgDisplayW, ew->imgDisplayH);
+    gfx->FillRects(&imageRect, 1, kColBlack, 128);
 
     // draw the "new size" rectangle showing the resized portion, centered
     int dispNewW = ImageToDisplayW(ew, ew->newW);
@@ -1050,37 +1043,26 @@ static void PaintResizeImage(ImageEditWindow* ew, HDC hdc) {
 
     // redraw the image portion at the new size area (clear overlay there)
     // clip source to full image, draw scaled into the new rect
-    g.DrawImage(ew->srcBitmap, newLeft, newTop, dispNewW, dispNewH);
+    Rect newRect{newLeft, newTop, dispNewW, dispNewH};
+    gfx->DrawPixmap(ew->srcPixmap, newRect);
 
     // draw border around the new size rectangle
-    Gdiplus::Pen pen(Gdiplus::Color(255, 255, 255), 1.0f);
-    pen.SetDashStyle(Gdiplus::DashStyleDash);
-    g.DrawRectangle(&pen, newLeft, newTop, dispNewW, dispNewH);
+    gfx->DrawDashedRect(newRect, kColWhite);
 
     // draw drag handles
-    int hs = kDragHandleSize;
-    int hh = hs / 2;
     int midX = newLeft + (dispNewW / 2);
     int midY = newTop + (dispNewH / 2);
     int right = newLeft + dispNewW;
     int bottom = newTop + dispNewH;
 
-    Gdiplus::SolidBrush handleBrush(Gdiplus::Color(255, 255, 255, 255));
-    Gdiplus::Pen handlePen(Gdiplus::Color(255, 0, 0, 0), 1);
-
-    auto drawHandle = [&](int hx, int hy) {
-        g.FillRectangle(&handleBrush, hx - hh, hy - hh, hs, hs);
-        g.DrawRectangle(&handlePen, hx - hh, hy - hh, hs, hs);
-    };
-
-    drawHandle(newLeft, newTop);
-    drawHandle(right, newTop);
-    drawHandle(newLeft, bottom);
-    drawHandle(right, bottom);
-    drawHandle(midX, newTop);
-    drawHandle(midX, bottom);
-    drawHandle(newLeft, midY);
-    drawHandle(right, midY);
+    PaintDragHandle(gfx, newLeft, newTop);
+    PaintDragHandle(gfx, right, newTop);
+    PaintDragHandle(gfx, newLeft, bottom);
+    PaintDragHandle(gfx, right, bottom);
+    PaintDragHandle(gfx, midX, newTop);
+    PaintDragHandle(gfx, midX, bottom);
+    PaintDragHandle(gfx, newLeft, midY);
+    PaintDragHandle(gfx, right, midY);
 }
 
 static void LayoutControls(ImageEditWindow* ew) {
@@ -1338,11 +1320,19 @@ static void SwitchToSaveMode(ImageEditWindow* ew) {
     SetFocus(ew->hwnd);
 }
 
-static void ReplaceSrcBitmap(ImageEditWindow* ew, Bitmap* newBmp) {
+static bool ReplaceSrcBitmap(ImageEditWindow* ew, Bitmap* newBmp) {
+    Pixmap* newPixmap = PixmapFromGdiplus(newBmp);
+    if (!newPixmap) {
+        delete newBmp;
+        return false;
+    }
     delete ew->srcBitmap;
+    FreePixmap(ew->srcPixmap);
     ew->srcBitmap = newBmp;
+    ew->srcPixmap = newPixmap;
     ew->imgW = (int)newBmp->GetWidth();
     ew->imgH = (int)newBmp->GetHeight();
+    return true;
 }
 
 static bool IsCropChanged(ImageEditWindow* ew) {
@@ -1385,7 +1375,9 @@ static void ApplyCrop(ImageEditWindow* ew) {
     if (cropped) {
         int prevW = ew->imgW;
         int prevH = ew->imgH;
-        ReplaceSrcBitmap(ew, cropped);
+        if (!ReplaceSrcBitmap(ew, cropped)) {
+            return;
+        }
         ew->cropX = 0;
         ew->cropY = 0;
         ew->cropW = ew->imgW;
@@ -1410,7 +1402,9 @@ static void ApplyResize(ImageEditWindow* ew) {
         Graphics g(resized);
         g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
         g.DrawImage(ew->srcBitmap, 0, 0, ew->newW, ew->newH);
-        ReplaceSrcBitmap(ew, resized);
+        if (!ReplaceSrcBitmap(ew, resized)) {
+            return;
+        }
         ew->newW = ew->imgW;
         ew->newH = ew->imgH;
         UpdateModeButtons(ew);
@@ -1628,29 +1622,22 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
             }
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            // double-buffer only the image area to avoid flicker
             Rect cRc = HwndClientRect(hwnd);
-            int paintH = ew->imgAreaH;
-            paintH = std::min(paintH, cRc.dy);
-            HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP memBmp = CreateCompatibleBitmap(hdc, cRc.dx, paintH);
-            HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
+            Rect imageArea{0, 0, cRc.dx, std::min(ew->imgAreaH, cRc.dy)};
+            Gfx* gfx = GfxCreateWithDoubleBuffer(ew, hdc);
             if (ew->mode == ImageEditMode::Save) {
-                PaintSaveImage(ew, memDC);
+                PaintSaveImage(ew, gfx, imageArea);
             } else if (ew->mode == ImageEditMode::Crop) {
-                PaintCropImage(ew, memDC);
+                PaintCropImage(ew, gfx, imageArea);
             } else {
-                PaintResizeImage(ew, memDC);
+                PaintResizeImage(ew, gfx, imageArea);
             }
-            BitBlt(hdc, 0, 0, cRc.dx, paintH, memDC, 0, 0, SRCCOPY);
-            SelectObject(memDC, oldBmp);
-            DeleteObject(memBmp);
-            DeleteDC(memDC);
-            // the control area's background was filled by WM_ERASEBKGND
+            Rect controlArea{0, imageArea.dy, cRc.dx, cRc.dy - imageArea.dy};
+            gfx->FillRect(controlArea, GetSysColor(COLOR_BTNFACE));
             if (ew->vroot) {
-                GfxHdc gfx(hdc);
-                ew->vroot->Paint(&gfx, ToRect(ps.rcPaint));
+                ew->vroot->Paint(gfx, controlArea);
             }
+            delete gfx;
             EndPaint(hwnd, &ps);
             {
                 ev->result = 0;
@@ -1665,11 +1652,6 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
                 ev->didHandle = true;
                 return;
             }
-            // paint control area background, skip image area (double-buffered)
-            HDC hdc = (HDC)wp;
-            Rect crc = HwndClientRect(hwnd);
-            Rect ctrlRc = {0, ew->imgAreaH, crc.dx, crc.dy - ew->imgAreaH};
-            HdcFillRect(hdc, ctrlRc, GetSysColorBrush(COLOR_BTNFACE));
             {
                 ev->result = 1;
                 ev->didHandle = true;
@@ -2033,6 +2015,11 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     ew->fromRenderedBitmap = fromRenderedBitmap;
     ew->filePath = filePath ? str::Dup(filePath) : Str();
     ew->srcBitmap = bmp;
+    ew->srcPixmap = PixmapFromGdiplus(bmp);
+    if (!ew->srcPixmap) {
+        delete ew;
+        return;
+    }
     ew->imgW = imgW;
     ew->imgH = imgH;
 

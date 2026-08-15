@@ -104,6 +104,18 @@ void GfxGdiplus::DrawRect(const Rect& r, Color col, int thickness) {
     gfx->SetSmoothingMode(prev);
 }
 
+void GfxGdiplus::DrawDashedRect(const Rect& r, Color col) {
+    if (ColorSkipsPaint(col) || r.IsEmpty()) {
+        return;
+    }
+    Pen pen(ToGdipColor(col));
+    pen.SetDashStyle(Gdiplus::DashStyleDash);
+    Gdiplus::SmoothingMode prev = gfx->GetSmoothingMode();
+    gfx->SetSmoothingMode(Gdiplus::SmoothingModeNone);
+    gfx->DrawRectangle(&pen, r.x, r.y, r.dx, r.dy);
+    gfx->SetSmoothingMode(prev);
+}
+
 // `d` is the diameter of the corner circles (see the same helper in Gfx_win.cpp)
 static void AddRoundedRectPath(GraphicsPath& path, const Rect& rc, int d) {
     path.AddArc(rc.x, rc.y, d, d, 180, 90);

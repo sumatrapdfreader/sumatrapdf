@@ -76,6 +76,7 @@ struct Gfx {
     virtual void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) = 0;
     // 1px-per-thickness outline drawn inside the rect
     virtual void DrawRect(const Rect&, Color, int thickness = 1) = 0;
+    virtual void DrawDashedRect(const Rect&, Color) = 0;
     // anti-aliased; transparent / unset skip fill / border
     virtual void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) = 0;
     virtual void FillEllipse(const Rect&, Color, u8 alpha = 255) = 0;
@@ -119,6 +120,7 @@ struct GfxHdc : Gfx {
     void FillRect(const Rect&, Color) override;
     void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
+    void DrawDashedRect(const Rect&, Color) override;
     void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
     void DrawLine(const Rect&, Color, int thickness = 1) override;
@@ -152,6 +154,7 @@ struct GfxGdiplus : Gfx {
     void FillRect(const Rect&, Color) override;
     void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
+    void DrawDashedRect(const Rect&, Color) override;
     void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
     void DrawLine(const Rect&, Color, int thickness = 1) override;
@@ -193,6 +196,7 @@ struct GfxDirect2D : Gfx {
     void FillRect(const Rect&, Color) override;
     void FillRects(const Rect*, int count, Color, u8 alpha = 255, int outlineWidth = 0) override;
     void DrawRect(const Rect&, Color, int thickness = 1) override;
+    void DrawDashedRect(const Rect&, Color) override;
     void FillRoundedRect(const Rect&, int radius, Color fill, Color border = kColorTransparent) override;
     void FillEllipse(const Rect&, Color, u8 alpha = 255) override;
     void DrawLine(const Rect&, Color, int thickness = 1) override;

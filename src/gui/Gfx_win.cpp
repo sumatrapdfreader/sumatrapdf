@@ -47,6 +47,16 @@ void GfxHdc::DrawRect(const Rect& r, Color col, int thickness) {
     }
 }
 
+void GfxHdc::DrawDashedRect(const Rect& r, Color col) {
+    if (ColorSkipsPaint(col) || r.IsEmpty()) {
+        return;
+    }
+    AutoDeletePen pen(CreatePen(PS_DASH, 1, col));
+    ScopedSelectObject restorePen(hdc, pen);
+    ScopedSelectObject restoreBrush(hdc, GetStockObject(HOLLOW_BRUSH));
+    Rectangle(hdc, r.x, r.y, r.Right() + 1, r.Bottom() + 1);
+}
+
 // how wide the thing the DC draws into is, for mirroring
 static int HdcSurfaceDx(HDC hdc) {
     HWND hwnd = WindowFromDC(hdc);

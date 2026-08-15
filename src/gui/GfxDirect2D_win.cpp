@@ -48,6 +48,7 @@ GfxDirect2D::~GfxDirect2D() = default;
 void GfxDirect2D::FillRect(const Rect&, Color) {}
 void GfxDirect2D::FillRects(const Rect*, int, Color, u8, int) {}
 void GfxDirect2D::DrawRect(const Rect&, Color, int) {}
+void GfxDirect2D::DrawDashedRect(const Rect&, Color) {}
 void GfxDirect2D::FillRoundedRect(const Rect&, int, Color, Color) {}
 void GfxDirect2D::FillEllipse(const Rect&, Color, u8) {}
 void GfxDirect2D::DrawLine(const Rect&, Color, int) {}
@@ -347,6 +348,26 @@ void GfxDirect2D::DrawRect(const Rect& r, Color col, int thickness) {
         D2D1::RectF((float)r.x + half, (float)r.y + half, (float)r.Right() - half, (float)r.Bottom() - half);
     target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
     target->DrawRectangle(rf, br, (float)thickness);
+}
+
+void GfxDirect2D::DrawDashedRect(const Rect& r, Color col) {
+    if (!target || ColorSkipsPaint(col) || r.IsEmpty()) {
+        return;
+    }
+    ID2D1SolidColorBrush* br = GetBrush(col);
+    if (!br) {
+        return;
+    }
+    D2D1_STROKE_STYLE_PROPERTIES props = D2D1::StrokeStyleProperties();
+    props.dashStyle = D2D1_DASH_STYLE_DASH;
+    ID2D1StrokeStyle* stroke = nullptr;
+    gD2DFactory->CreateStrokeStyle(props, nullptr, 0, &stroke);
+    D2D1_RECT_F rf = D2D1::RectF((float)r.x, (float)r.y, (float)r.Right(), (float)r.Bottom());
+    target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+    target->DrawRectangle(rf, br, 1.0f, stroke);
+    if (stroke) {
+        stroke->Release();
+    }
 }
 
 void GfxDirect2D::FillRoundedRect(const Rect& r, int radius, Color fill, Color border) {
