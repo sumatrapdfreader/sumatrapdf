@@ -35,7 +35,7 @@ import {
   readWindowDCColumn,
   sleep,
 } from "./winapi.ts";
-import { waitForFrame, sendCommand } from "./win-automation.ts";
+import { sendCommand, waitForFrame } from "./win-automation.ts";
 import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control";
 import { cmdId, EXE, runStandalone } from "./util.ts";
 
@@ -182,17 +182,23 @@ function blankRatio(isBlank: boolean[]): number {
   return isBlank.filter(Boolean).length / isBlank.length;
 }
 
+async function waitForDialog(pid: number, timeoutMs = 8000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const dlg = findDialog(pid);
+    if (dlg) {
+      return dlg;
+    }
+    await sleep(30);
+  }
+  throw new Error("issue-5882: Advanced Settings dialog not found");
+}
+
 export async function testit(): Promise<void> {
   await withControlledSumatra(EXE, async (client, proc) => {
     const frame = await waitForFrame(proc.pid!);
-    await sleep(1200);
     sendCommand(frame, cmdId("CmdAdvancedSettings"));
-    await sleep(1500);
-
-    const dlg = findDialog(proc.pid!);
-    if (!dlg) {
-      throw new Error("issue-5882: Advanced Settings dialog not found");
-    }
+    const dlg = await waitForDialog(proc.pid!);
 
     let g = await advSettingsRows(client, "geom");
     if (g.itemDy <= 1) {
@@ -209,7 +215,6 @@ export async function testit(): Promise<void> {
     let best = { extra: 0, leftover: -1 };
     for (let extra = 0; extra < g.itemDy; extra++) {
       moveWindow(dlg, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top + extra, true);
-      await sleep(120);
       g = await advSettingsRows(client, "geom");
       const leftover = g.content.dy - g.usableDy;
       if (best.leftover < 0 || Math.abs(leftover - want) < Math.abs(best.leftover - want)) {
@@ -223,7 +228,6 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-5882: could not leave a half-row strip (best leftover ${best.leftover}/${g.itemDy})`);
     }
     moveWindow(dlg, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top + best.extra, true);
-    await sleep(600);
 
     g = await advSettingsRows(client, "geom");
     checkRowsTile(g, "before scrolling");
@@ -250,9 +254,7 @@ export async function testit(): Promise<void> {
     // scroll a row at a time, the way the report does
     for (let i = 0; i < 40; i++) {
       await advSettingsRows(client, "scroll", 1);
-      await sleep(60);
     }
-    await sleep(700);
 
     g = await advSettingsRows(client, "geom");
     checkRowsTile(g, "after scrolling");
@@ -273,7 +275,6 @@ export async function testit(): Promise<void> {
     );
 
     postMessage(dlg, WM_CLOSE, 0, 0);
-    await sleep(400);
   });
 }
 

@@ -10,9 +10,9 @@
 // in flight doesn't take the app down with it.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util";
+import { cmdId, runStandalone, tmpPath } from "./util";
 import { findChildWindow, getWindowText, postMessage, sendMessage, sleep, WM_CLOSE } from "./winapi";
-import { sendCommand, waitForFrame } from "./win-automation";
+import { launchSumatra, sendCommand, waitForExit, waitForFrame } from "./win-automation";
 
 const TVM_GETCOUNT = 0x1100 + 5;
 const nFiles = 400;
@@ -79,7 +79,19 @@ async function waitForDocumentShown(frame: number, name: string, timeoutMs = 600
 }
 
 function launch(dir: string, file: string): Bun.Subprocess {
-  return Bun.spawn([EXE, "-for-testing", join(dir, file)], { stdout: "ignore", stderr: "ignore" });
+  return launchSumatra([join(dir, file)]);
+}
+
+async function waitForTocTree(frame: number, timeoutMs = 8000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const n = tocItemCount(frame);
+    if (n > 0) {
+      return n;
+    }
+    await sleep(40);
+  }
+  throw new Error("issue-5918: TOC tree never appeared");
 }
 
 // the TOC is complete once the background build finished
@@ -91,9 +103,7 @@ async function testTocCompletes(dir: string): Promise<void> {
       throw new Error("issue-5918: document never opened");
     }
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
-    await sleep(1200);
-
-    const first = tocItemCount(frame);
+    const first = await waitForTocTree(frame);
     if (first < nFiles) {
       throw new Error(`issue-5918: TOC has ${first} items, want at least ${nFiles} (one per file)`);
     }
@@ -104,7 +114,7 @@ async function testTocCompletes(dir: string): Promise<void> {
       throw new Error(`issue-5918: TOC settled at ${settled} items, want ${wantFull} (files plus their headings)`);
     }
     postMessage(frame, WM_CLOSE, 0, 0);
-    await sleep(600);
+    await waitForExit(proc, 5000);
   } finally {
     proc.kill();
   }
@@ -123,7 +133,7 @@ async function testNextFileKeepsToc(dir: string): Promise<void> {
       throw new Error("issue-5918: document never opened");
     }
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
-    await sleep(1200);
+    await waitForTocTree(frame);
     if ((await waitForTocToSettle(frame)) !== wantFull) {
       throw new Error("issue-5918: TOC did not complete before the next-file test");
     }
@@ -142,7 +152,7 @@ async function testNextFileKeepsToc(dir: string): Promise<void> {
     }
 
     postMessage(frame, WM_CLOSE, 0, 0);
-    await sleep(600);
+    await waitForExit(proc, 5000);
   } finally {
     proc.kill();
   }
@@ -157,7 +167,6 @@ async function testCloseDuringBuild(dir: string): Promise<void> {
     // deliberately do not wait for the build to finish
     await sleep(700);
     sendCommand(frame, cmdId("CmdClose"));
-    await sleep(1500);
     postMessage(frame, WM_CLOSE, 0, 0);
     // only that it goes away: a crash would leave the report dialog up and a
     // deadlock would hang here. The exit code isn't asserted because closing

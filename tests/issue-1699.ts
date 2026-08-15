@@ -15,15 +15,14 @@
 // keyboard state doesn't stick on the test machine).
 
 import { writeFileSync } from "node:fs";
-import { cmdId, EXE, tmpPath } from "./util";
+import { cmdId, tmpPath } from "./util";
+import { findCanvas, launchControlled } from "./win-automation";
 import {
   captureWindowPixels,
   packCoords,
   postMessage,
   sendMessage,
   sleep,
-  waitForChildWindow,
-  waitForTopWindow,
   MK_LBUTTON,
   WM_COMMAND,
   WM_LBUTTONDOWN,
@@ -168,20 +167,15 @@ export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-1699.pdf");
   writeFileSync(pdf, makeQuadrantPdf(), "latin1");
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled([pdf]);
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
-    const canvas = await waitForChildWindow(frame, "SUMATRA_PDF_CANVAS");
+    await client.waitForRenderIdle();
+    const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("could not find the canvas window");
     }
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdZoomFitPage")), 0n);
-    await sleep(1500);
+    await client.waitForRenderIdle();
 
     const before = colorCounts(canvas);
     if (before.red < 1000 || before.blue < 1000) {
@@ -193,15 +187,12 @@ export async function testit(): Promise<void> {
     // here, and Select All selects the whole page rather than the text.
     const tr = textRectOnScreen(canvas);
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdSelectTextViaKeyboard")), 0n);
-    await sleep(700);
     for (let i = 0; i < 3; i++) {
       sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdExtendSelectionWordRight")), 0n);
-      await sleep(250);
     }
-    await sleep(500);
 
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdZoomToSelection")), 0n);
-    await sleep(1800);
+    await client.waitForRenderIdle();
 
     const after = colorCounts(canvas);
     if (after.red < after.total * 0.5) {
@@ -216,7 +207,7 @@ export async function testit(): Promise<void> {
 
     // Back returns to the view it was zoomed from
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdNavigateBack")), 0n);
-    await sleep(1800);
+    await client.waitForRenderIdle();
     const back = colorCounts(canvas);
     if (back.blue < before.blue / 2 || back.yellow < before.yellow / 2) {
       throw new Error(
@@ -226,8 +217,8 @@ export async function testit(): Promise<void> {
     }
     console.log(`  zoom to selection: red ${before.red} -> ${after.red} px, Back restored the page ✓`);
   } finally {
+    client.close();
     proc.kill();
-    await sleep(300);
   }
 }
 
