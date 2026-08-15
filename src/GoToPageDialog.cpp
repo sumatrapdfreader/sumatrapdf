@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -45,26 +44,12 @@ struct GoToPageWnd : WindowBase {
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static GoToPageWnd* gGoToPageWnd = nullptr;
 
-void SafeDeleteGoToPageDialog() {
-    if (!gGoToPageWnd) {
-        return;
-    }
-    auto* tmp = gGoToPageWnd;
+static void ClearGoToPageWnd() {
     gGoToPageWnd = nullptr;
-    delete tmp;
-}
-
-void GoToPageWnd::ScheduleDelete() {
-    if (gGoToPageWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteGoToPageDialog);
-    uitask::Post(fn, "SafeDeleteGoToPageDialog");
 }
 
 void GoToPageWnd::UpdateTheme() {
@@ -256,6 +241,7 @@ void ShowGoToPageDialog(MainWindow* win) {
     }
     auto* wnd = new GoToPageWnd();
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearGoToPageWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

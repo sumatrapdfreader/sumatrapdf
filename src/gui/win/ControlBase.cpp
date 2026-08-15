@@ -518,7 +518,7 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
                 mev.wparam = wparam;
                 mev.lparam = lparam;
                 onMouseEvent.Call(&mev);
-                if (mev.result != -1) {
+                if (mev.didHandle) {
                     return mev.result;
                 }
             }

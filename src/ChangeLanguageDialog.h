@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowChangeLanguageDialog(MainWindow* win);
-void SafeDeleteChangeLanguageDialog();

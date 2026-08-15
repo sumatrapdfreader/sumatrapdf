@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowCustomZoomDialog(MainWindow* win);
-void SafeDeleteCustomZoomDialog();

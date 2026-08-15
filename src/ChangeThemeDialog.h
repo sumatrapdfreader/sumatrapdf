@@ -5,4 +5,3 @@ struct MainWindow;
 
 void ShowChangeThemeDialog(MainWindow* win);
 void ShowSetDocumentColorsFollowThemeDialog(MainWindow* win);
-void SafeDeleteChangeThemeDialog();

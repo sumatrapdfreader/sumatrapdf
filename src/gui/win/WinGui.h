@@ -3,6 +3,14 @@
 
 //--- WindowBase
 
+// Event handler conventions:
+// - onXxx members are notifications: each is a single-assignment Func1 taking a
+//   XxxEvent*. A handler that consumed the event sets `didHandle` (plus
+//   `result` when an LRESULT must flow back to the window procedure);
+//   unhandled events fall through to the default processing.
+// - onGetXxx members are queries: the event struct carries an out-param the
+//   handler fills in (e.g. VirtCtrl::onGetTooltip), and there is no didHandle.
+
 TempStr WinMsgNameTemp(UINT);
 
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -167,7 +175,8 @@ struct WindowBase {
         UINT msg = 0;
         WPARAM wparam = 0;
         LPARAM lparam = 0;
-        LRESULT result = -1; // -1 = not handled
+        LRESULT result = 0;
+        bool didHandle = false;
     };
     struct MoveEvent {
         WindowBase* w = nullptr;
@@ -266,6 +275,8 @@ struct WindowBase {
 
     void SetColors(Color textColor, Color bgColor);
 
+    void ScheduleDelete();
+
     void Close();
     void SetPos(Rect* r);
     void SetIsVisible(bool isVisible);
@@ -338,7 +349,12 @@ struct WindowBase {
     bool closeOnEsc = false;
     // Close() on Ctrl+W (no Alt). Off by default
     bool closeOnCtrlW = false;
+    // set by ScheduleDelete(); once set the window must only die via that path
+    bool deleteScheduled = false;
 
+    // runs right before a ScheduleDelete()-ed window is deleted, so the owner
+    // can clear the pointer it keeps to this window
+    Func0 onBeforeDelete;
     AttachHandler onAttach;
     FocusHandler onFocus;
     ActivateHandler onActivate;
@@ -398,7 +414,8 @@ struct ControlBase : ILayout {
         UINT msg = 0;
         WPARAM wparam = 0;
         LPARAM lparam = 0;
-        LRESULT result = -1; // -1 = not handled
+        LRESULT result = 0;
+        bool didHandle = false;
     };
     struct PaintEvent {
         ControlBase* w = nullptr;
@@ -1014,6 +1031,7 @@ void DeleteWnd(T** wnd) {
 }
 
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
+void RunModalWindow(HWND hwndDialog, HWND hwndParent);
 
 HWND GetCurrentModelessDialog();
 void SetCurrentModelessDialog(HWND);

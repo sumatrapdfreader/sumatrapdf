@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
@@ -19,22 +18,11 @@ struct TextViewWnd : WindowBase {
     Edit* edit = nullptr;
     PlatformFont* monoFont = nullptr;
     HWND* hwndPtr = nullptr;
-    bool isDialog = false;
 
     bool Create(Str title, Str text);
     void UpdateTheme();
     static Str FormatTextForEdit(Str text);
-    void ScheduleDelete();
 };
-
-static void DeleteTextViewWndInstance(TextViewWnd* w) {
-    delete w;
-}
-
-void TextViewWnd::ScheduleDelete() {
-    auto fn = MkFunc0<TextViewWnd>(DeleteTextViewWndInstance, this);
-    uitask::Post(fn, "SafeDeleteTextViewWnd");
-}
 
 void TextViewWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();
@@ -118,9 +106,6 @@ static void TeardownTextViewWnd(TextViewWnd* w) {
     if (w->hwndPtr) {
         *w->hwndPtr = nullptr;
     }
-    if (w->isDialog) {
-        PostQuitMessage(0);
-    }
     w->ScheduleDelete();
 }
 
@@ -147,7 +132,6 @@ HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
 
 void ShowTextInWindowDialog(Str title, Str text) {
     auto* wnd = new TextViewWnd();
-    wnd->isDialog = true;
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
@@ -155,12 +139,6 @@ void ShowTextInWindowDialog(Str title, Str text) {
         delete wnd;
         return;
     }
-    MSG msg;
-    while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (PreTranslateMessage(msg)) {
-            continue;
-        }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+    // returns once the scheduled delete has run and destroyed the window
+    RunModalWindow(wnd->hwnd, nullptr);
 }

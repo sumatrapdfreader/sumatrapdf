@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -45,26 +44,12 @@ struct ChangeLanguageWnd : WindowBase {
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void OnListDoubleClick();
-    void ScheduleDelete();
 };
 
 static ChangeLanguageWnd* gChangeLanguageWnd = nullptr;
 
-void SafeDeleteChangeLanguageDialog() {
-    if (!gChangeLanguageWnd) {
-        return;
-    }
-    auto* tmp = gChangeLanguageWnd;
+static void ClearChangeLanguageWnd() {
     gChangeLanguageWnd = nullptr;
-    delete tmp;
-}
-
-void ChangeLanguageWnd::ScheduleDelete() {
-    if (gChangeLanguageWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteChangeLanguageDialog);
-    uitask::Post(fn, "SafeDeleteChangeLanguageDialog");
 }
 
 void ChangeLanguageWnd::UpdateTheme() {
@@ -247,6 +232,7 @@ void ShowChangeLanguageDialog(MainWindow* win) {
     }
     auto* wnd = new ChangeLanguageWnd();
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearChangeLanguageWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<ChangeLanguageWnd, KeyEvent*, &ChangeLanguageWnd::OnKeyDown>(wnd);

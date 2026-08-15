@@ -44,9 +44,6 @@ struct PropertiesWnd : WindowBase {
     PlatformFont* propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
-    // CloseDocumentInCurrentTab and DeleteMainWindow can both try to tear the
-    // properties window down; only one deferred delete may run.
-    bool deleteScheduled = false;
 
     bool Create(HWND parent);
     void UpdateTheme();
@@ -54,23 +51,9 @@ struct PropertiesWnd : WindowBase {
     void SizeToContent();
     void CopyToClipboard(VirtMouseEvent* ev = nullptr);
     void OnCommand(WindowBase::CommandEvent* ev);
-    void ScheduleDelete();
 };
 
 static Vec<PropertiesWnd*> gPropertiesWindows;
-
-static void DeletePropertiesWndInstance(PropertiesWnd* w) {
-    delete w;
-}
-
-void PropertiesWnd::ScheduleDelete() {
-    if (deleteScheduled) {
-        return;
-    }
-    deleteScheduled = true;
-    auto fn = MkFunc0<PropertiesWnd>(DeletePropertiesWndInstance, this);
-    uitask::Post(fn, "SafeDeletePropertiesWnd");
-}
 
 static int ButtonPadding() {
     return DpiScale(kButtonPadding);

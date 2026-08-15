@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -90,7 +89,6 @@ struct EbookSettingsWnd : WindowBase {
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnReset(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static EbookSettingsWnd* gEbookSettingsWnd = nullptr;
@@ -105,21 +103,8 @@ EbookSettingsWnd::~EbookSettingsWnd() {
     str::Free(customCssText);
 }
 
-void SafeDeleteEbookSettingsDialog() {
-    if (!gEbookSettingsWnd) {
-        return;
-    }
-    auto* tmp = gEbookSettingsWnd;
+static void ClearEbookSettingsWnd() {
     gEbookSettingsWnd = nullptr;
-    delete tmp;
-}
-
-void EbookSettingsWnd::ScheduleDelete() {
-    if (gEbookSettingsWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteEbookSettingsDialog);
-    uitask::Post(fn, "SafeDeleteEbookSettingsDialog");
 }
 
 // a multi-line edit shows only CRLF as a line break, while our CSS (and what
@@ -405,9 +390,9 @@ void EbookSettingsWnd::Apply() {
         fs = NewFileState(filePath);
         FileHistoryAppend(fs);
     }
-    bool differs = !str::Eq(v.fontName, g->fontName) || v.fontSize != g->fontSize ||
-                   !MarginEq(v.margin, g->margin) || v.lineSpacing != g->lineSpacing ||
-                   v.ignoreDocumentCSS != g->ignoreDocumentCSS || !str::Eq(v.customCSS, g->customCSS);
+    bool differs = !str::Eq(v.fontName, g->fontName) || v.fontSize != g->fontSize || !MarginEq(v.margin, g->margin) ||
+                   v.lineSpacing != g->lineSpacing || v.ignoreDocumentCSS != g->ignoreDocumentCSS ||
+                   !str::Eq(v.customCSS, g->customCSS);
     if (!differs) {
         // nothing left that isn't the global setting: drop the block entirely
         // so it stops being written out
@@ -447,9 +432,8 @@ void EbookSettingsWnd::UpdateTheme() {
             l->textColor = colTxt;
         }
     }
-    ControlBase* ctrls[] = {ddFont,      editSize,    editMargin,    editSpacing,
-                            editCss,     cbIgnoreCss, cbCustomCss,   radioThisFile,
-                            radioAllEbooks};
+    ControlBase* ctrls[] = {ddFont,      editSize,    editMargin,    editSpacing,   editCss,
+                            cbIgnoreCss, cbCustomCss, radioThisFile, radioAllEbooks};
     for (ControlBase* c : ctrls) {
         if (c) {
             c->SetColors(colTxt, colBg);
@@ -725,6 +709,7 @@ void ShowEbookSettingsDialog(MainWindow* win) {
     auto* wnd = new EbookSettingsWnd();
     wnd->filePath = str::Dup(win->CurrentTab()->filePath);
     // no closeOnEsc: Esc while editing the CSS would throw the edits away
+    wnd->onBeforeDelete = MkFunc0Void(ClearEbookSettingsWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

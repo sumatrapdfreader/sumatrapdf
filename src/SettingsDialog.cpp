@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -68,26 +67,12 @@ struct SettingsWnd : WindowBase {
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static SettingsWnd* gSettingsWnd = nullptr;
 
-void SafeDeleteSettingsDialog() {
-    if (!gSettingsWnd) {
-        return;
-    }
-    auto* tmp = gSettingsWnd;
+static void ClearSettingsWnd() {
     gSettingsWnd = nullptr;
-    delete tmp;
-}
-
-void SettingsWnd::ScheduleDelete() {
-    if (gSettingsWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteSettingsDialog);
-    uitask::Post(fn, "SafeDeleteSettingsDialog");
 }
 
 static void ThemeVirtText(VirtText* t, Color colTxt) {
@@ -503,6 +488,7 @@ void ShowSettingsDialog(MainWindow* win) {
     }
     auto* wnd = new SettingsWnd();
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearSettingsWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowSettingsDialog(MainWindow* win);
-void SafeDeleteSettingsDialog();

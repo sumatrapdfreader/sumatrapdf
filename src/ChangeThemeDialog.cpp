@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -51,7 +50,6 @@ struct ChangeThemeWnd : WindowBase {
     void PreviewDocumentColors();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnChange(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static ChangeThemeWnd* gChangeThemeWnd = nullptr;
@@ -82,21 +80,8 @@ ChangeThemeWnd::~ChangeThemeWnd() {
     str::Free(startThemePref);
 }
 
-void SafeDeleteChangeThemeDialog() {
-    if (!gChangeThemeWnd) {
-        return;
-    }
-    auto* tmp = gChangeThemeWnd;
+static void ClearChangeThemeWnd() {
     gChangeThemeWnd = nullptr;
-    delete tmp;
-}
-
-void ChangeThemeWnd::ScheduleDelete() {
-    if (gChangeThemeWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteChangeThemeDialog);
-    uitask::Post(fn, "SafeDeleteChangeThemeDialog");
 }
 
 // Put the dialog beside the main window instead of on top of it, so the page
@@ -339,6 +324,7 @@ static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly)
     auto* wnd = new ChangeThemeWnd();
     wnd->documentColorsFollowThemeOnly = documentColorsFollowThemeOnly;
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearChangeThemeWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

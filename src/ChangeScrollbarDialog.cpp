@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -40,7 +39,6 @@ struct ChangeScrollbarWnd : WindowBase {
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void OnListDoubleClick();
-    void ScheduleDelete();
 };
 
 static ChangeScrollbarWnd* gChangeScrollbarWnd = nullptr;
@@ -58,21 +56,8 @@ static Str ScrollbarModeDisplayName(int idx) {
     return _TRA("Windows");
 }
 
-void SafeDeleteChangeScrollbarDialog() {
-    if (!gChangeScrollbarWnd) {
-        return;
-    }
-    auto* tmp = gChangeScrollbarWnd;
+static void ClearChangeScrollbarWnd() {
     gChangeScrollbarWnd = nullptr;
-    delete tmp;
-}
-
-void ChangeScrollbarWnd::ScheduleDelete() {
-    if (gChangeScrollbarWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteChangeScrollbarDialog);
-    uitask::Post(fn, "SafeDeleteChangeScrollbarDialog");
 }
 
 void ChangeScrollbarWnd::UpdateTheme() {
@@ -202,6 +187,7 @@ void ShowChangeScrollbarDialog(MainWindow* win) {
     }
     auto* wnd = new ChangeScrollbarWnd();
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearChangeScrollbarWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

@@ -10,7 +10,6 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -237,7 +236,6 @@ struct SetHotkeyWnd : WindowBase {
     void DoRemove(VirtMouseEvent* ev = nullptr);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     static void CleanupHook();
-    void ScheduleDelete();
 };
 
 static SetHotkeyWnd* gSetHotkeyWnd = nullptr;
@@ -245,15 +243,6 @@ static SetHotkeyWnd* gSetHotkeyWnd = nullptr;
 SetHotkeyWnd::~SetHotkeyWnd() {
     str::Free(currentHotkey);
     str::Free(newHotkey);
-}
-
-static void DeleteSetHotkeyWndInstance(SetHotkeyWnd* w) {
-    delete w;
-}
-
-void SetHotkeyWnd::ScheduleDelete() {
-    auto fn = MkFunc0<SetHotkeyWnd>(DeleteSetHotkeyWndInstance, this);
-    uitask::Post(fn, "SafeDeleteSetHotkeyWnd");
 }
 
 void SetHotkeyWnd::UpdateUI() {

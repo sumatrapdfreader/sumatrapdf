@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
-void SafeDeleteAddFavoriteDialog();

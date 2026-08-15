@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -44,26 +43,12 @@ struct InverseSearchWnd : WindowBase {
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void OnHelp(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static InverseSearchWnd* gInverseSearchWnd = nullptr;
 
-void SafeDeleteInverseSearchDialog() {
-    if (!gInverseSearchWnd) {
-        return;
-    }
-    auto* tmp = gInverseSearchWnd;
+static void ClearInverseSearchWnd() {
     gInverseSearchWnd = nullptr;
-    delete tmp;
-}
-
-void InverseSearchWnd::ScheduleDelete() {
-    if (gInverseSearchWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteInverseSearchDialog);
-    uitask::Post(fn, "SafeDeleteInverseSearchDialog");
 }
 
 void InverseSearchWnd::UpdateTheme() {
@@ -237,6 +222,7 @@ void ShowInverseSearchDialog(MainWindow* win) {
     }
     auto* wnd = new InverseSearchWnd();
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearInverseSearchWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

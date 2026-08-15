@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 #include "base/Pixmap.h"
 
 #include "gui/UIModels.h"
@@ -103,7 +102,6 @@ struct ChangeColorWnd : WindowBase {
     void ApplyBackground();
     void ApplyTabColor();
     WindowTab* TargetTab();
-    void ScheduleDelete();
 };
 
 static ChangeColorWnd* gChangeColorWnd = nullptr;
@@ -113,21 +111,8 @@ ChangeColorWnd::~ChangeColorWnd() {
     FreePixmap(hsvPx);
 }
 
-void SafeDeleteChangeColorDialog() {
-    if (!gChangeColorWnd) {
-        return;
-    }
-    auto* tmp = gChangeColorWnd;
+static void ClearChangeColorWnd() {
     gChangeColorWnd = nullptr;
-    delete tmp;
-}
-
-void ChangeColorWnd::ScheduleDelete() {
-    if (gChangeColorWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteChangeColorDialog);
-    uitask::Post(fn, "SafeDeleteChangeColorDialog");
 }
 
 static void HsvToRgb(float h, float s, float v, u8& r, u8& g, u8& b) {
@@ -973,6 +958,7 @@ void ShowChangeBackgroundColorDialog(MainWindow* win) {
     auto* wnd = new ChangeColorWnd();
     wnd->SetTargetBackground(win);
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearChangeColorWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());
@@ -1000,6 +986,7 @@ void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab) {
     auto* wnd = new ChangeColorWnd();
     wnd->SetTargetTab(win, tab);
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearChangeColorWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

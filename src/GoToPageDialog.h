@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowGoToPageDialog(MainWindow* win);
-void SafeDeleteGoToPageDialog();

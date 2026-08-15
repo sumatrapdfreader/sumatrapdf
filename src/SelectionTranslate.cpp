@@ -134,7 +134,6 @@ struct SelectionTranslateWnd : WindowBase {
     void StartTranslation(VirtMouseEvent* ev = nullptr);
     void OnTranslationFinished(bool ok, Str msg);
     void OnCloseClicked(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 
     void UpdateFont();
 
@@ -145,15 +144,6 @@ struct SelectionTranslateWnd : WindowBase {
 static SelectionTranslateWnd* gSelectionTranslateWnd = nullptr;
 
 SelectionTranslateWnd::~SelectionTranslateWnd() = default;
-
-static void DeleteSelectionTranslateWndInstance(SelectionTranslateWnd* w) {
-    delete w;
-}
-
-void SelectionTranslateWnd::ScheduleDelete() {
-    auto fn = MkFunc0<SelectionTranslateWnd>(DeleteSelectionTranslateWndInstance, this);
-    uitask::Post(fn, "SafeDeleteSelectionTranslateWnd");
-}
 
 struct SelectionTranslateTaskData {
     // the dialog can be closed and deleted (via ScheduleDelete) while the

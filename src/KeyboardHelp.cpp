@@ -520,7 +520,7 @@ void KeyboardHelpWnd::OnMouseEvent(WindowBase::MouseEvent* ev) {
     if (y < contentTop) {
         ReleaseCapture();
         SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-        ev->result = 0;
+        ev->didHandle = true;
     }
 }
 

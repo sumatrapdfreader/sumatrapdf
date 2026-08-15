@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
+#include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 
@@ -276,6 +277,28 @@ bool WindowBase::TabNavigate(bool backwards) {
 void WindowBase::Close() {
     ReportIf(!::IsWindow(hwnd));
     PostMessageW(hwnd, WM_CLOSE, 0, 0);
+}
+
+static void DoScheduledDelete(WindowBase* w) {
+    if (w->onBeforeDelete.IsValid()) {
+        w->onBeforeDelete.Call();
+    }
+    delete w;
+}
+
+// Deletes this window on the next message-loop turn: a window can't `delete
+// this` while one of its own messages (WM_CLOSE / WM_DESTROY / a click
+// handler) is still on the stack. Repeated calls post once, so wiring it to
+// both onClose and onDestroy is safe. onBeforeDelete runs right before the
+// delete, so the owner can clear the pointer it keeps to this window. Once
+// scheduled, the window must not be deleted any other way.
+void WindowBase::ScheduleDelete() {
+    if (deleteScheduled) {
+        return;
+    }
+    deleteScheduled = true;
+    auto fn = MkFunc0(DoScheduledDelete, this);
+    uitask::Post(fn, "WindowBase::ScheduleDelete");
 }
 
 static bool HwndOrAncestorComboIsDropped(HWND focus, HWND top) {
@@ -830,7 +853,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 ev.wparam = wparam;
                 ev.lparam = lparam;
                 onMouseEvent.Call(&ev);
-                if (ev.result != -1) {
+                if (ev.didHandle) {
                     return ev.result;
                 }
             }
@@ -1205,43 +1228,37 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
     return (int)msg.wParam;
 }
 
-#if 0
-// TODO: support accelerator table?
-// TODO: a better way to stop the loop e.g. via shared
-// atomic int to signal termination and sending WM_IDLE
-// to trigger processing of the loop
+// Runs a message loop until hwndDialog is destroyed, making it modal to
+// hwndParent (disabled for the duration). A WM_QUIT ends the loop too and is
+// re-posted so the outer message loop sees it. Keyboard handling (Esc, Enter,
+// Tab) goes through the same PreTranslateMessage as the main loop.
 void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
-    if (hwndParent != nullptr) {
+    bool reEnableParent = false;
+    if (hwndParent && IsWindowEnabled(hwndParent)) {
         EnableWindow(hwndParent, FALSE);
+        reEnableParent = true;
     }
 
     MSG msg;
-    bool isFinished = false;
-    while (!isFinished) {
-        BOOL ok = WaitMessage();
+    while (::IsWindow(hwndDialog)) {
+        BOOL ok = GetMessage(&msg, nullptr, 0, 0);
         if (!ok) {
-            DWORD err = GetLastError();
-            LogLastError(err);
-            isFinished = true;
+            // WM_QUIT: leave and let the outer loop see it too
+            PostQuitMessage((int)msg.wParam);
+            break;
+        }
+        if (PreTranslateMessage(msg)) {
             continue;
         }
-        while (!isFinished && PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
-                isFinished = true;
-                break;
-            }
-            if (!IsDialogMessage(hwndDialog, &msg)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
-    if (hwndParent != nullptr) {
+    if (reEnableParent) {
         EnableWindow(hwndParent, TRUE);
+        SetActiveWindow(hwndParent);
     }
 }
-#endif
 
 #if 0
 // sets initial position of w within hwnd. Assumes w->initialSize is set.

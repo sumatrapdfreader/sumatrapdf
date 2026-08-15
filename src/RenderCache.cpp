@@ -1236,17 +1236,7 @@ struct DebugTextWnd : WindowBase {
     bool Create(Str title, int fontSize);
     void UpdateTheme();
     void SetTextContent(Str text);
-    void ScheduleDelete();
 };
-
-static void DeleteDebugTextWndInstance(DebugTextWnd* w) {
-    delete w;
-}
-
-void DebugTextWnd::ScheduleDelete() {
-    auto fn = MkFunc0<DebugTextWnd>(DeleteDebugTextWndInstance, this);
-    uitask::Post(fn, "SafeDeleteDebugTextWnd");
-}
 
 void DebugTextWnd::UpdateTheme() {
     Color colBg = ThemeWindowControlBackgroundColor();

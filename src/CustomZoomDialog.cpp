@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -47,26 +46,12 @@ struct CustomZoomWnd : WindowBase {
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static CustomZoomWnd* gCustomZoomWnd = nullptr;
 
-void SafeDeleteCustomZoomDialog() {
-    if (!gCustomZoomWnd) {
-        return;
-    }
-    auto* tmp = gCustomZoomWnd;
+static void ClearCustomZoomWnd() {
     gCustomZoomWnd = nullptr;
-    delete tmp;
-}
-
-void CustomZoomWnd::ScheduleDelete() {
-    if (gCustomZoomWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteCustomZoomDialog);
-    uitask::Post(fn, "SafeDeleteCustomZoomDialog");
 }
 
 void CustomZoomWnd::UpdateTheme() {
@@ -260,6 +245,7 @@ void ShowCustomZoomDialog(MainWindow* win) {
     }
     auto* wnd = new CustomZoomWnd();
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearCustomZoomWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

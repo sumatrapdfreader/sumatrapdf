@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowEbookSettingsDialog(MainWindow* win);
-void SafeDeleteEbookSettingsDialog();

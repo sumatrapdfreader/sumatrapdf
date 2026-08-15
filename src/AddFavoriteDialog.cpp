@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -45,7 +44,6 @@ struct AddFavoriteWnd : WindowBase {
     void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static AddFavoriteWnd* gAddFavoriteWnd = nullptr;
@@ -55,21 +53,8 @@ AddFavoriteWnd::~AddFavoriteWnd() {
     str::Free(filePath);
 }
 
-void SafeDeleteAddFavoriteDialog() {
-    if (!gAddFavoriteWnd) {
-        return;
-    }
-    auto* tmp = gAddFavoriteWnd;
+static void ClearAddFavoriteWnd() {
     gAddFavoriteWnd = nullptr;
-    delete tmp;
-}
-
-void AddFavoriteWnd::ScheduleDelete() {
-    if (gAddFavoriteWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteAddFavoriteDialog);
-    uitask::Post(fn, "SafeDeleteAddFavoriteDialog");
 }
 
 static TempStr FavoritePromptTemp(Str pageLabel) {
@@ -229,6 +214,7 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
     }
     auto* wnd = new AddFavoriteWnd();
     wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearAddFavoriteWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

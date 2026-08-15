@@ -6,4 +6,3 @@ struct WindowTab;
 
 void ShowChangeBackgroundColorDialog(MainWindow* win);
 void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab);
-void SafeDeleteChangeColorDialog();

@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowChangeScrollbarDialog(MainWindow* win);
-void SafeDeleteChangeScrollbarDialog();

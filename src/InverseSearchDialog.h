@@ -4,4 +4,3 @@
 struct MainWindow;
 
 void ShowInverseSearchDialog(MainWindow* win);
-void SafeDeleteInverseSearchDialog();

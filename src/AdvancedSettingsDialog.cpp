@@ -434,7 +434,6 @@ struct AdvancedSettingsWnd : WindowBase {
     void OnSave(VirtMouseEvent* ev = nullptr);
 
     void ApplyChangesAndSave();
-    void ScheduleDelete();
 };
 
 static AdvancedSettingsWnd* gAdvancedSettingsWnd = nullptr;
@@ -455,21 +454,8 @@ AdvancedSettingsWnd::~AdvancedSettingsWnd() {
     str::Free(dropDownOrigVal);
 }
 
-void SafeDeleteAdvancedSettingsDialog() {
-    if (!gAdvancedSettingsWnd) {
-        return;
-    }
-    auto* tmp = gAdvancedSettingsWnd;
+static void ClearAdvancedSettingsWnd() {
     gAdvancedSettingsWnd = nullptr;
-    delete tmp;
-}
-
-void AdvancedSettingsWnd::ScheduleDelete() {
-    if (gAdvancedSettingsWnd != this) {
-        return;
-    }
-    auto fn = MkFunc0Void(SafeDeleteAdvancedSettingsDialog);
-    uitask::Post(fn, "SafeDeleteAdvancedSettingsDialog");
 }
 
 // Match setting name against a pre-split filter so "use tabs" hits "UseTabs".
@@ -1356,6 +1342,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
         return;
     }
     auto* wnd = new AdvancedSettingsWnd();
+    wnd->onBeforeDelete = MkFunc0Void(ClearAdvancedSettingsWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onSize = MkMethod1<AdvancedSettingsWnd, WindowBase::SizeEvent*, &AdvancedSettingsWnd::OnSize>(wnd);

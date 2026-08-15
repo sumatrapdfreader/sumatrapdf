@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "gui/Dpi.h"
-#include "base/UITask.h"
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
@@ -77,21 +76,11 @@ struct TabGroupsWnd : WindowBase {
     void UpdateDeleteButton();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
-    void ScheduleDelete();
 };
 
 static Vec<TabGroupsWnd*> gTabGroupsWnds;
 
 TabGroupsWnd::~TabGroupsWnd() = default;
-
-static void DeleteTabGroupsWndInstance(TabGroupsWnd* w) {
-    delete w;
-}
-
-void TabGroupsWnd::ScheduleDelete() {
-    auto fn = MkFunc0<TabGroupsWnd>(DeleteTabGroupsWndInstance, this);
-    uitask::Post(fn, "SafeDeleteTabGroupsWnd");
-}
 
 static void PopulateListBox(TabGroupsWnd* w) {
     w->model->Reload();
