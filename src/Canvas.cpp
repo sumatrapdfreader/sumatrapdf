@@ -19,6 +19,7 @@
 #pragma comment(lib, "winmm.lib")
 
 #include "gui/UIModels.h"
+#include "gui/Gfx.h"
 #include "gui/Layout.h"
 #include "gui/PlatformFont.h"
 #include "gui/win/WinGui.h"
@@ -4279,36 +4280,33 @@ static LRESULT WndProcCanvasChmUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM w
 // translation decides where the name sits in the sentence, so split its format
 // string around the %s instead of assuming the name comes last. Falls back to
 // one plain run for RTL, where laying runs out left to right would be wrong.
-static void DrawLoadErrorLine(HDC hdc, Rect r, Str name, PlatformFont* font) {
+static void DrawLoadErrorLine(Gfx* gfx, Rect r, Str name, PlatformFont* font, Color textColor) {
     Str tmpl = _TRA("Error loading %s");
     int at = str::IndexOf(tmpl, StrL("%s"));
     if (at < 0 || IsUIRtl()) {
-        HdcDrawCenteredText(hdc, r, fmt(tmpl.s, name), IsUIRtl());
+        u32 flags = gfxTextCenter | gfxTextVCenter | (IsUIRtl() ? gfxTextRtl : 0);
+        gfx->DrawText(fmt(tmpl.s, name), r, flags, font, textColor);
         return;
     }
     Str prefix = Str(tmpl.s, at);
     Str suffix = Str(tmpl.s + at + 2, tmpl.len - at - 2);
 
     PlatformFont* boldFont = GetBoldPlatformFont(font);
-    Size szName = PlatformFontMeasureText(boldFont, name);
-    int dxPrefix = len(prefix) > 0 ? PlatformFontMeasureText(font, prefix).dx : 0;
-    int dxSuffix = len(suffix) > 0 ? PlatformFontMeasureText(font, suffix).dx : 0;
+    Size szName = gfx->MeasureText(name, boldFont);
+    int dxPrefix = len(prefix) > 0 ? gfx->MeasureText(prefix, font).dx : 0;
+    int dxSuffix = len(suffix) > 0 ? gfx->MeasureText(suffix, font).dx : 0;
     int x = r.x + ((r.dx - (dxPrefix + szName.dx + dxSuffix)) / 2);
     int y = r.y + ((r.dy - szName.dy) / 2);
 
-    uint format = DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP;
-    int prevMode = SetBkMode(hdc, TRANSPARENT);
+    u32 flags = gfxTextSingleLine | gfxTextNoClip;
     if (len(prefix) > 0) {
-        HdcDrawText(hdc, prefix, Point{x, y}, format, font->GetHFont());
+        gfx->DrawTextAt(prefix, {x, y}, flags, font, textColor);
         x += dxPrefix;
     }
-    HdcDrawText(hdc, name, Point{x, y}, format, boldFont->GetHFont());
+    gfx->DrawTextAt(name, {x, y}, flags, boldFont, textColor);
     x += szName.dx;
     if (len(suffix) > 0) {
-        HdcDrawText(hdc, suffix, Point{x, y}, format, font->GetHFont());
-    }
-    if (prevMode != 0) {
-        SetBkMode(hdc, prevMode);
+        gfx->DrawTextAt(suffix, {x, y}, flags, font, textColor);
     }
 }
 
@@ -4324,11 +4322,10 @@ static void OnPaintDocumentStatus(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt->GetHFont());
+    Gfx* gfx = GfxCreate(hdc);
+    PlatformFont* fontRightTxt = GetUserGuiFont("MS Shell Dlg", DpiScale(14));
     auto bgCol = ThemeMainWindowBackgroundColor();
-    AutoDeleteBrush bgBrush = CreateSolidBrush(bgCol);
-    HdcFillRect(hdc, ToRect(ps.rcPaint), bgBrush);
+    gfx->FillRect(ToRect(ps.rcPaint), bgCol);
     auto* tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
@@ -4366,8 +4363,8 @@ static void OnPaintDocumentStatus(MainWindow* win) {
                     msg = fmt("%s %s", msg, elapsed);
                 }
             }
-            SetTextColor(hdc, ThemeWindowTextColor());
-            HdcDrawCenteredText(hdc, HwndClientRect(win->hwndCanvas), msg, IsUIRtl());
+            u32 flags = gfxTextCenter | gfxTextVCenter | (IsUIRtl() ? gfxTextRtl : 0);
+            gfx->DrawText(msg, HwndClientRect(win->hwndCanvas), flags, fontRightTxt, ThemeWindowTextColor());
         } else {
             // red, with the file name in bold and the reason (file gone, no
             // permission, locked by another program) on a second line: a bare
@@ -4383,12 +4380,13 @@ static void OnPaintDocumentStatus(MainWindow* win) {
                 Rect bottom = rc;
                 bottom.y += lineDy;
                 bottom.dy -= lineDy;
-                HdcDrawCenteredText(hdc, bottom, reason, IsUIRtl());
+                u32 flags = gfxTextCenter | gfxTextVCenter | (IsUIRtl() ? gfxTextRtl : 0);
+                gfx->DrawText(reason, bottom, flags, fontRightTxt, LoadErrorTextColor());
             }
-            DrawLoadErrorLine(hdc, top, name, fontRightTxt);
+            DrawLoadErrorLine(gfx, top, name, fontRightTxt, LoadErrorTextColor());
         }
     }
-    SelectObject(hdc, hPrevFont);
+    delete gfx;
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
