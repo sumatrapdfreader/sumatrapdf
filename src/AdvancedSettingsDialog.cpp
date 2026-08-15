@@ -1279,7 +1279,7 @@ static void RecordAdvSettingsRows(AdvancedSettingsWnd* wnd, Vec<AdvSettingsRowRe
         gAdvSettingsRowRec = &out;
         wnd->listBox->onDrawItem = MkFunc1Void<VirtListBox::DrawItemEvent*>(RecordAdvSettingsRow);
         {
-            Gfx* gfx = CreateGfx(memDC);
+            Gfx* gfx = GfxCreate(memDC);
             wnd->vroot->Paint(gfx, client);
             delete gfx;
         }

@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "gui/Dpi.h"
-#include "base/ScopedWin.h"
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
@@ -234,27 +233,19 @@ void ReadAloudPlaybackBar::UpdateLayout() {
 }
 
 void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
-    HDC hdcIn = ev->hdc;
     Rect rc = HwndClientRect(hwnd);
-    DoubleBuffer buffer(hwnd, rc);
-    HDC hdc = buffer.GetDC();
 
     Color colBg = ThemeNotificationsBackgroundColor();
     Color colBorder = kColGray;
 
     SyncColors();
-    // scoped: GfxDirect2D reaches the dc only when destroyed
-    {
-        Gfx* gfx = CreateGfx(hdc);
-        gfx->FillRect(rc, colBg);
-        if (vroot) {
-            vroot->Paint(gfx, rc);
-        }
-        gfx->DrawRect(rc, colBorder);
-        delete gfx;
+    Gfx* gfx = GfxCreateWithDoubleBuffer(this, ev->hdc);
+    gfx->FillRect(rc, colBg);
+    if (vroot) {
+        vroot->Paint(gfx, rc);
     }
-
-    buffer.Flush(hdcIn);
+    gfx->DrawRect(rc, colBorder);
+    delete gfx;
 }
 
 static ReadAloudPlaybackBar* ReadAloudPlaybackBarEnsure(MainWindow* win) {

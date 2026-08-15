@@ -108,6 +108,12 @@ struct HwndBase {
     HBRUSH bgBrush = nullptr;
     Color textColor = kColorUnset;
 
+    HDC gfxDoubleBufferHdc = nullptr;
+    HBITMAP gfxDoubleBufferBitmap = nullptr;
+    HGDIOBJ gfxDoubleBufferPrevBitmap = nullptr;
+    int gfxDoubleBufferDx = 0;
+    int gfxDoubleBufferDy = 0;
+
     // the layout of our children, if we have one. It can hold HWND controls
     // (ControlBase) and virtual ones (VirtCtrl) side by side
     ILayout* layout = nullptr;

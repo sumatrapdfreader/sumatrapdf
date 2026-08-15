@@ -36,7 +36,7 @@
 #include "gui/Gfx.h"
 
 #if !SUMATRA_HAS_D2D
-// mingw-w64 on some distros has no d2d1.h / dwrite.h. CreateGfx() still
+// mingw-w64 on some distros has no d2d1.h / dwrite.h. GfxCreate() still
 // links, and Direct2DAvailable() is false so it always uses GfxGdiplus.
 bool Direct2DAvailable() {
     return false;

@@ -7,8 +7,20 @@
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+
+// A buffered Gfx must finish its backend drawing before copying pixels to the
+// target. Derived destructors run first, so this base destructor is late enough
+// for Direct2D's EndDraw() and GDI+'s Graphics teardown to have completed.
+Gfx::~Gfx() {
+    if (doubleBufferTarget && doubleBufferSource && !doubleBufferSize.IsEmpty()) {
+        BitBlt(doubleBufferTarget, 0, 0, doubleBufferSize.dx, doubleBufferSize.dy, doubleBufferSource, 0, 0, SRCCOPY);
+    }
+}
 
 GfxHdc::GfxHdc(HDC hdc) {
     this->hdc = hdc;
@@ -267,9 +279,64 @@ bool gUseDirect2D = true;
 // own text layout), so that flipping gUseDirect2D swaps the backend under
 // whatever is painting and the two can be compared. Direct2D only when the OS
 // actually has it. The caller owns the result.
-Gfx* CreateGfx(HDC hdc) {
+Gfx* GfxCreate(HDC hdc) {
     if (gUseDirect2D && Direct2DAvailable()) {
         return new GfxDirect2D(hdc);
     }
     return new GfxGdiplus(hdc);
+}
+
+void GfxDestroyDoubleBuffer(HwndBase* w) {
+    if (!w) {
+        return;
+    }
+    if (w->gfxDoubleBufferHdc && w->gfxDoubleBufferPrevBitmap) {
+        SelectObject(w->gfxDoubleBufferHdc, w->gfxDoubleBufferPrevBitmap);
+    }
+    DeleteObject(w->gfxDoubleBufferBitmap);
+    DeleteDC(w->gfxDoubleBufferHdc);
+    w->gfxDoubleBufferHdc = nullptr;
+    w->gfxDoubleBufferBitmap = nullptr;
+    w->gfxDoubleBufferPrevBitmap = nullptr;
+    w->gfxDoubleBufferDx = 0;
+    w->gfxDoubleBufferDy = 0;
+}
+
+// Keep one bitmap per HwndBase. A repaint at the same client size reuses it;
+// resizing replaces it, and a failed allocation falls back to direct drawing.
+Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
+    if (!w || !w->hwnd || !hdc) {
+        return GfxCreate(hdc);
+    }
+
+    Size size = HwndClientRect(w->hwnd).Size();
+    bool sizeChanged = size.dx != w->gfxDoubleBufferDx || size.dy != w->gfxDoubleBufferDy;
+    if (sizeChanged) {
+        GfxDestroyDoubleBuffer(w);
+        w->gfxDoubleBufferDx = size.dx;
+        w->gfxDoubleBufferDy = size.dy;
+        if (!size.IsEmpty()) {
+            w->gfxDoubleBufferHdc = CreateCompatibleDC(hdc);
+            w->gfxDoubleBufferBitmap = CreateCompatibleBitmap(hdc, size.dx, size.dy);
+            if (w->gfxDoubleBufferHdc && w->gfxDoubleBufferBitmap) {
+                w->gfxDoubleBufferPrevBitmap = SelectObject(w->gfxDoubleBufferHdc, w->gfxDoubleBufferBitmap);
+            }
+            if (!w->gfxDoubleBufferHdc || !w->gfxDoubleBufferBitmap || !w->gfxDoubleBufferPrevBitmap) {
+                GfxDestroyDoubleBuffer(w);
+                w->gfxDoubleBufferDx = size.dx;
+                w->gfxDoubleBufferDy = size.dy;
+            }
+        }
+    }
+
+    HDC bufferHdc = w->gfxDoubleBufferHdc;
+    if (!bufferHdc) {
+        return GfxCreate(hdc);
+    }
+    SetBkMode(bufferHdc, TRANSPARENT);
+    Gfx* gfx = GfxCreate(bufferHdc);
+    gfx->doubleBufferTarget = hdc;
+    gfx->doubleBufferSource = bufferHdc;
+    gfx->doubleBufferSize = size;
+    return gfx;
 }

@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
-#include "base/ScopedWin.h"
 #include "gui/Dpi.h"
 #include "base/UITask.h"
 
@@ -591,31 +590,16 @@ void NotificationWnd::Layout(Str message) {
     }
 }
 
-// TODO: figure out why it flickers
 void NotificationWnd::OnPaint(WindowBase::PaintEvent* ev) {
-    HDC hdcIn = ev->hdc;
     Rect rc = HwndClientRect(hwnd);
-    DoubleBuffer buffer(hwnd, rc);
-    HDC hdc = buffer.GetDC();
-    // HDC hdc = hdcIn;
-
-    ScopedSelectObject fontPrev(hdc, GetHFont());
 
     NotifColors cols = Colors();
-    SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, cols.txt);
-    // the controls (message / custom content, close button, progress) paint
-    // themselves. Scoped: GfxDirect2D reaches the dc only when destroyed
-    {
-        Gfx* gfx = CreateGfx(hdc);
-        gfx->FillRect(rc, cols.bg);
-        if (vroot) {
-            vroot->Paint(gfx, rc);
-        }
-        delete gfx;
+    Gfx* gfx = GfxCreateWithDoubleBuffer(this, ev->hdc);
+    gfx->FillRect(rc, cols.bg);
+    if (vroot) {
+        vroot->Paint(gfx, rc);
     }
-
-    buffer.Flush(hdcIn);
+    delete gfx;
 }
 
 //--- the VirtCtrl controls making up a notification

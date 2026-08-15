@@ -1171,7 +1171,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     // scoped: GfxDirect2D reaches the bitmap only when destroyed, and the
     // GetPixel() probe below needs the pixels to be there
     {
-        Gfx* gfx = CreateGfx(hdcMem);
+        Gfx* gfx = GfxCreate(hdcMem);
         VirtListBox::DrawItemEvent ev;
         ev.listBox = fw->results;
         ev.gfx = gfx;

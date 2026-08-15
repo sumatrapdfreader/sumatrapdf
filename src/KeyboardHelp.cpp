@@ -147,7 +147,7 @@ struct KeyboardHelpWnd : WindowBase {
     bool Create(MainWindow* win);
     void BuildContent();
     void SyncColors();
-    void PaintContent(HDC hdc, const Rect& client);
+    void PaintContent(Gfx* gfx, const Rect& client);
     void OnPaint(WindowBase::PaintEvent* ev);
     void OnSetCursor(WindowBase::SetCursorEvent* ev);
     void OnMouseEvent(WindowBase::MouseEvent* ev);
@@ -471,31 +471,21 @@ void KeyboardHelpWnd::SyncColors() {
     }
 }
 
-void KeyboardHelpWnd::PaintContent(HDC hdc, const Rect& client) {
+void KeyboardHelpWnd::PaintContent(Gfx* gfx, const Rect& client) {
     Color bg = ThemeWindowControlBackgroundColor();
-    SetBkMode(hdc, TRANSPARENT);
 
     SyncColors();
-    // the caller blits the bitmap after we return, which is after the gfx died
-    Gfx* gfx = CreateGfx(hdc);
     gfx->FillRect(client, bg);
     if (vroot) {
         vroot->Paint(gfx, client);
     }
-    delete gfx;
 }
 
 void KeyboardHelpWnd::OnPaint(WindowBase::PaintEvent* ev) {
     Rect client = HwndClientRect(hwnd);
-    // double-buffer: a lot of small draws would otherwise flicker
-    HDC memDC = CreateCompatibleDC(ev->hdc);
-    HBITMAP bmp = CreateCompatibleBitmap(ev->hdc, client.dx, client.dy);
-    HGDIOBJ oldBmp = SelectObject(memDC, bmp);
-    PaintContent(memDC, client);
-    BitBlt(ev->hdc, 0, 0, client.dx, client.dy, memDC, 0, 0, SRCCOPY);
-    SelectObject(memDC, oldBmp);
-    DeleteObject(bmp);
-    DeleteDC(memDC);
+    Gfx* gfx = GfxCreate(ev->hdc);
+    PaintContent(gfx, client);
+    delete gfx;
 }
 
 // title-band cursor. VirtTree for content is handled after this in WndProcDefault

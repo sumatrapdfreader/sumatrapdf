@@ -4,7 +4,7 @@
 // Gfx is the drawing surface the VirtCtrl controls paint on. It exists so the
 // controls don't name an OS imaging API: it's an abstract base class and each
 // platform provides an implementation. On Windows the virtual-control paint
-// paths get one from CreateGfx(): Direct2D when available, gdiplus otherwise,
+// paths get one from GfxCreate(): Direct2D when available, gdiplus otherwise,
 // both anti-aliased. GfxHdc (plain gdi, immediate) survives for surfaces that
 // mix raw gdi drawing with Gfx drawing; see its comment.
 //
@@ -24,6 +24,7 @@
 
 struct PlatformFont;
 struct Pixmap;
+struct HwndBase;
 
 #if OS_WIN
 namespace Gdiplus {
@@ -60,7 +61,14 @@ enum GfxTextFlags : u32 {
 
 struct Gfx {
     Gfx() = default;
+#if OS_WIN
+    virtual ~Gfx();
+    HDC doubleBufferTarget = nullptr;
+    HDC doubleBufferSource = nullptr;
+    Size doubleBufferSize;
+#else
     virtual ~Gfx() = default;
+#endif
 
     // kColorTransparent / kColorUnset skip the fill
     virtual void FillRect(const Rect&, Color) = 0;
@@ -97,7 +105,7 @@ struct Gfx {
 // (the home page, the caption frame, the installer): GfxDirect2D writes to the
 // HDC only when destroyed and would overwrite the gdi-drawn content, and only
 // gdi honors the DC's world transform (an offset DoubleBuffer). Everything
-// that draws purely through Gfx should use CreateGfx() instead.
+// that draws purely through Gfx should use GfxCreate() instead.
 struct GfxHdc : Gfx {
     HDC hdc = nullptr;
     Vec<int> savedDCs; // one per PushClip()
@@ -201,5 +209,7 @@ bool Direct2DAvailable();
 // flip to draw with Direct2D instead of gdiplus, for comparing the two
 extern bool gUseDirect2D;
 
-Gfx* CreateGfx(HDC);
+Gfx* GfxCreate(HDC);
+Gfx* GfxCreateWithDoubleBuffer(HwndBase*, HDC);
+void GfxDestroyDoubleBuffer(HwndBase*);
 #endif

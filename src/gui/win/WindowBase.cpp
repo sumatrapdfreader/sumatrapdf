@@ -140,6 +140,7 @@ ControlBase* HwndBase::AsControlBase() {
 
 HwndBase::~HwndBase() {
     Destroy();
+    GfxDestroyDoubleBuffer(this);
     // the tree first: a virtual control tells its root it's going away
     delete layout;
     delete vroot;
@@ -476,7 +477,11 @@ bool WindowBase::IsVisible() const {
 // default paint when onPaint is not set: virtual tree, or solid background
 static void WindowBaseDefaultPaint(WindowBase* w, HDC hdc, PAINTSTRUCT* ps) {
     if (w->vroot) {
-        PaintVirtTree(w->vroot, hdc, ToRect(ps->rcPaint), w->bgColor);
+        Rect rc = HwndClientRect(w->hwnd);
+        Gfx* gfx = GfxCreateWithDoubleBuffer(w, hdc);
+        gfx->FillRect(rc, w->bgColor);
+        w->vroot->Paint(gfx, ToRect(ps->rcPaint));
+        delete gfx;
         return;
     }
     auto* br = w->BackgroundBrush();

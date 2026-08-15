@@ -46,7 +46,7 @@ static void PaintHost(VirtHost* host, HWND hwnd) {
     // scoped: GfxDirect2D reaches the dc only when destroyed, so the gfx must
     // die before the buffer is flushed
     {
-        Gfx* gfx = CreateGfx(memDC);
+        Gfx* gfx = GfxCreate(memDC);
         VirtHostPaintEvent ev;
         ev.host = host;
         ev.gfx = gfx;

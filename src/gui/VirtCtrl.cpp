@@ -2869,7 +2869,7 @@ void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, Color bg) {
     // scoped: GfxDirect2D reaches the dc only when destroyed, so the gfx must
     // die before the buffer is flushed
     {
-        Gfx* gfx = CreateGfx(memDC);
+        Gfx* gfx = GfxCreate(memDC);
         gfx->FillRect(rc, bg);
         root->Paint(gfx, clip);
         delete gfx;
