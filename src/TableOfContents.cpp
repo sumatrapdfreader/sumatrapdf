@@ -1285,17 +1285,14 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     PlatformFont* font = tv->GetFont();
     if (tocItem->fontFlags != 0) {
         font = UpdateFont(hdc, tocItem->fontFlags);
-    } else if (font) {
-        SelectObject(hdc, font->GetHFont());
     }
+    GfxHdc gfx(hdc);
 
-    TempWStr pageW{};
     Size pageSize{};
     int pageReserve = 0;
     if (showPage) {
-        pageW = ToWStrTemp(pageLabel);
-        if (pageW.len > 0) {
-            pageSize = HdcGetTextExtentPoint32(hdc, pageLabel);
+        if (len(pageLabel) > 0) {
+            pageSize = gfx.MeasureText(pageLabel, font);
             pageReserve = pageSize.dx + DpiScale(8);
         } else {
             showPage = false;
@@ -1303,43 +1300,36 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     }
 
     Rect drawRect = ToRect(drawRc);
-    HBRUSH brushBg = CreateSolidBrush(bgCol);
-    HdcFillRect(hdc, drawRect, brushBg);
-    DeleteObject(brushBg);
+    gfx.FillRect(drawRect, bgCol);
 
     Rect titleRect = drawRect;
     titleRect.dx = std::max(0, titleRect.dx - pageReserve);
     titleRect.Inflate(-2, -1);
 
-    SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, txtCol);
-    SetBkColor(hdc, bgCol);
-
     if (filterActive) {
-        DrawTreeItemFilterHighlight(hdc, titleRect, tocItem->title, words, bgCol, txtCol, font);
+        DrawTreeItemFilterHighlight(&gfx, titleRect, tocItem->title, words, bgCol, txtCol, font);
     } else {
-        HdcDrawText(hdc, tocItem->title, titleRect,
-                    DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_LEFT);
+        gfx.DrawText(tocItem->title, titleRect, gfxTextVCenter | gfxTextEllipsis, font, txtCol);
     }
 
-    if (showPage && pageW.len > 0) {
+    if (showPage && len(pageLabel) > 0) {
         Rect pageRect = drawRect;
         pageRect.Inflate(-2, -1);
         int right = pageRect.x + pageRect.dx;
         pageRect.x = std::max(pageRect.x, right - pageSize.dx);
         pageRect.dx = right - pageRect.x;
         // Slightly muted vs title when not selected (keeps numbers secondary).
+        Color pageCol = txtCol;
         if (!(isTreeSelected && hasFocus)) {
-            Color muted =
+            pageCol =
                 MkRgb((GetRValue(txtCol) * 2 + GetRValue(bgCol)) / 3, (GetGValue(txtCol) * 2 + GetGValue(bgCol)) / 3,
                       (GetBValue(txtCol) * 2 + GetBValue(bgCol)) / 3);
-            SetTextColor(hdc, muted);
         }
-        HdcDrawText(hdc, pageW, pageRect, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_RIGHT);
+        gfx.DrawText(pageLabel, pageRect, gfxTextVCenter | gfxTextRight, font, pageCol);
     }
 
     if ((cd->uItemState & CDIS_FOCUS) && isTreeSelected && hasFocus) {
-        DrawFocusRect(hdc, &drawRc);
+        gfx.DrawFocusRect(drawRect);
     }
 }
 

@@ -1227,7 +1227,8 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     bool hasFocus = (GetFocus() == tv->hwnd);
     Color bgCol, txtCol;
     ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
-    DrawTreeItemFilterHighlight(hdc, labelRect, fti->text, words, bgCol, txtCol, tv->GetFont());
+    GfxHdc gfx(hdc);
+    DrawTreeItemFilterHighlight(&gfx, labelRect, fti->text, words, bgCol, txtCol, tv->GetFont());
 }
 
 static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
