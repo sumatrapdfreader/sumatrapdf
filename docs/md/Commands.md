@@ -100,6 +100,7 @@ CmdToggleMenuBar,F9,Toggle Menu Bar,
 CmdTogglePageInfo,i,Show / Hide Current Page Number,was Shift + i before 3.6
 CmdChangeScrollbar,,Change Scrollbar,"Opens dialog to choose scrollbar mode (windows/smart/overlay/hidden)"
 CmdChangeBackgroundColor,,Change Background Color,"Opens color picker to change document background color"
+CmdChangeEbookSettings,,Change eBook Settings,"ver 3.7+, opens a dialog for the font, size, line spacing and CSS of a reflowable document (EPUB, MOBI, FB2, ...), for that document only or for all ebooks. Not shown for fixed-page documents. See Customize-eBook-UI.md"
 CmdToggleToolbar,F8,Toggle Toolbar,
 CmdAIChatWithClaudeCode,,AI Chat with document using Claude Code,"Toggle Claude Code chat sidebar, ver 3.7+. See AI-Chat-with-document.md"
 CmdAIChatWithGrokBuild,,AI Chat with document using Grok Build,"Toggle Grok Build chat sidebar, ver 3.7+. See AI-Chat-with-document.md#grok-build"

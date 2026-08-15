@@ -306,6 +306,7 @@ const sumatraFiles: FileGroup[] = [
       "ChangeScrollbarDialog.*",
       "ChangeThemeDialog.*",
       "CustomZoomDialog.*",
+      "EbookSettingsDialog.*",
       "GetPasswordDialog.*",
       "GoToPageDialog.*",
       "InverseSearchDialog.*",

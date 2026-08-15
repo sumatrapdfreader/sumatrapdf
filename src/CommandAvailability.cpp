@@ -380,6 +380,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         if (engine && engine->IsImageCollection()) {
             ctx.isImageCollection = true;
         }
+        ctx.isReflowable = engine && engine->isReflowable;
         ctx.engineKind = ctx.tab->GetEngineType();
         ctx.canSendEmail = CanSendAsEmailAttachment(ctx.tab);
         ctx.isPdf = IsPdfDoc(ctx.tab);
@@ -584,6 +585,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (!ctx.canSendEmail && cmdId == CmdSendByEmail) {
+        return CommandVisibility::Hide;
+    }
+
+    if (!ctx.isReflowable && cmdId == CmdChangeEbookSettings) {
+        // font, line spacing and CSS only mean something for a reflowed document
         return CommandVisibility::Hide;
     }
 

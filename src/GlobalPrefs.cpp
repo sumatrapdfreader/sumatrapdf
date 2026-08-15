@@ -60,11 +60,15 @@ FileState* NewFileState(Str filePath) {
     return fs;
 }
 
+FileEBookUI* NewFileEBookUI() {
+    return (FileEBookUI*)DeserializeStruct(&gFileEBookUIInfo, nullptr);
+}
+
 FileEBookUI* CopyFileEBookUI(const FileEBookUI* src) {
     if (!src) {
         return nullptr;
     }
-    auto* res = (FileEBookUI*)DeserializeStruct(&gFileEBookUIInfo, nullptr);
+    auto* res = NewFileEBookUI();
     str::ReplaceWithCopy(&res->fontName, src->fontName);
     res->fontSize = src->fontSize;
     res->lineSpacing = src->lineSpacing;

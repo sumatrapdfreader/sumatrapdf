@@ -220,6 +220,7 @@ static SeqStrings gCommandNames =
     "CmdTabGroupSave\0"
     "CmdTabGroupRestore\0"
     "CmdChangeBackgroundColor\0"
+    "CmdChangeEbookSettings\0"
     "CmdSetTabColor\0"
     "CmdPdfCompress\0"
     "CmdPdfDecompress\0"
@@ -503,6 +504,7 @@ static i32 gCommandIds[] = {
     CmdTabGroupSave,
     CmdTabGroupRestore,
     CmdChangeBackgroundColor,
+    CmdChangeEbookSettings,
     CmdSetTabColor,
     CmdPdfCompress,
     CmdPdfDecompress,
@@ -786,6 +788,7 @@ SeqStrings gCommandDescriptions =
     "Save Tab Group...\0"
     "Restore Tab Group...\0"
     "Change Background Color...\0"
+    "Change eBook Settings...\0"
     "Change Tab Color...\0"
     "Compress PDF...\0"
     "Decompress PDF...\0"

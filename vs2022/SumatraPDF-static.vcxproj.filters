@@ -186,6 +186,9 @@
     <ClInclude Include="..\src\EbookFormatter.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\EbookSettingsDialog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\EditAnnotations.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -693,6 +696,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EbookFormatter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EbookSettingsDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EditAnnotations.cpp">

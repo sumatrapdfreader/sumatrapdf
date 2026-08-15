@@ -60,6 +60,10 @@ void EngineEbookCleanup();
 // the text came out in the default font; null if that didn't happen (#4600)
 Str EngineEbookFontUnavailable(EngineBase* engine);
 
+// the user CSS generated from ebook settings (font family + line height), so
+// the Ebook Settings dialog can show exactly what the engine will apply
+TempStr EbookGeneratedCssTemp(Str fontName, float lineSpacing);
+
 /* EngineImages.cpp */
 
 // how many leading bytes of an image file are enough, in practice, to parse the

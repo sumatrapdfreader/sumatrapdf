@@ -1178,6 +1178,7 @@
     <ClInclude Include="..\src\DocumentLayout.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
+    <ClInclude Include="..\src\EbookSettingsDialog.h" />
     <ClInclude Include="..\src\EditAnnotations.h" />
     <ClInclude Include="..\src\EmbeddedResources.h" />
     <ClInclude Include="..\src\EngineAll.h" />
@@ -1384,6 +1385,7 @@
     <ClCompile Include="..\src\DocumentLayout.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
+    <ClCompile Include="..\src\EbookSettingsDialog.cpp" />
     <ClCompile Include="..\src\EditAnnotations.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />

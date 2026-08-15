@@ -3173,6 +3173,22 @@ static TempStr EbookFontFamilyCssTemp(Str fontName) {
         fontName);
 }
 
+// the user CSS we generate from the ebook settings: what the Ebook Settings
+// dialog shows in its preview, so the two can't drift apart. The built-in
+// img { height: auto } fix (#5805) is not part of it -- that one is ours, not
+// something the user configured
+TempStr EbookGeneratedCssTemp(Str fontName, float lineSpacing) {
+    TempStr css = EbookFontFamilyCssTemp(EbookFontNameFromSetting(fontName));
+    TempStr spacing = EbookLineSpacingCssTemp(lineSpacing);
+    if (!css) {
+        return spacing;
+    }
+    if (!spacing) {
+        return css;
+    }
+    return str::JoinTemp(css, spacing);
+}
+
 #if defined(DEBUG)
 bool EngineMupdf_UnitTestEbookLineSpacingCss() {
     return !EbookLineSpacingCssTemp(0) && !EbookLineSpacingCssTemp(0.49f) && !EbookLineSpacingCssTemp(5.01f) &&
@@ -3377,13 +3393,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             ldy = limitValue(ldx * gEbookLayoutAspect, 150.f, 5000.f);
         }
         requestedFontName = EbookFontNameFromSetting(s.fontName);
-        TempStr fontCss = EbookFontFamilyCssTemp(requestedFontName);
-        if (fontCss) {
-            userCss = str::JoinTemp(fontCss, userCss);
-        }
-        TempStr lineSpacingCss = EbookLineSpacingCssTemp(s.lineSpacing);
-        if (lineSpacingCss) {
-            userCss = str::JoinTemp(lineSpacingCss, userCss);
+        TempStr generated = EbookGeneratedCssTemp(s.fontName, s.lineSpacing);
+        if (generated) {
+            userCss = str::JoinTemp(generated, userCss);
         }
         if (s.customCSS) {
             userCss = str::JoinTemp(userCss, s.customCSS);
@@ -3441,10 +3453,12 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         return false;
     }
 
+    isReflowable = fz_is_document_reflowable(ctx, _doc) != 0;
+
     // EBookUI.FontName only affects reflowable documents, and a name we can't
     // resolve silently renders in the default font. Note it for the UI (#4600).
     // After fz_layout_document, so a font that was used is already cached.
-    if (requestedFontName && fz_is_document_reflowable(ctx, _doc)) {
+    if (requestedFontName && isReflowable) {
         if (!EbookFontIsAvailable(ctx, requestedFontName)) {
             ebookFontUnavailable = str::Dup(requestedFontName);
         }

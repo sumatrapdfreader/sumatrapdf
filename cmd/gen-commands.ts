@@ -213,6 +213,7 @@ export const commands = [
     "CmdTabGroupSave", "Save Tab Group...",
     "CmdTabGroupRestore", "Restore Tab Group...",
     "CmdChangeBackgroundColor", "Change Background Color...",
+    "CmdChangeEbookSettings", "Change eBook Settings...",
     "CmdSetTabColor", "Change Tab Color...",
     "CmdPdfCompress", "Compress PDF...",
     "CmdPdfDecompress", "Decompress PDF...",

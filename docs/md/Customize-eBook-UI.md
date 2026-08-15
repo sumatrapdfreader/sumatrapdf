@@ -2,9 +2,34 @@
 
 EPUB, MOBI, FB2, and similar formats use SumatraPDF's **eBook UI** (HTML-based layout). Since **version 3.4** the engine is MuPDF-based: text selection, in-document search, and bookmarks work much like PDF.
 
+## The eBook Settings dialog (**ver 3.7+**)
+
+With an ebook open, run **Change eBook Settings** (`CmdChangeEbookSettings`) from
+the [command palette](Command-Palette.md) (`Ctrl + K`). It has the font, size and
+line spacing, and shows the CSS those values produce in a read-only box, so you
+can see exactly what is applied. Tick **Custom CSS** and the box becomes
+editable: what you type there is then used instead of the generated rules (it
+starts out holding them, so nothing is lost by taking over).
+
+At the bottom, **This file** stores the settings for the open document only and
+**For all ebooks** stores them globally, the same way **Change Background Color**
+works. In per-document mode only the values that differ from the global ones are
+stored, so everything else keeps following the global setting. The document is
+reloaded when you press OK.
+
+**Reset to defaults** undoes the customization at whichever of the two is
+selected: for one document that means inheriting everything from the global
+section again, for all ebooks it means the values SumatraPDF ships with. `Tab`
+moves between the controls; `Esc` does *not* close the dialog, so a long piece
+of CSS can't be lost by a stray keypress — use **Cancel**.
+
+The command is only offered for reflowable documents — for a PDF or an image
+there is no font or CSS to change.
+
 ## What you can customize
 
-Open **Settings → Advanced Options...** and edit the `EBookUI` section:
+The same settings, and a few more, are in **Settings → Advanced Options...**,
+in the `EBookUI` section:
 
 ```
 EBookUI [

@@ -448,6 +448,10 @@ class EngineBase {
     PageLayout preferredLayout;
     float fileDPI = 96.0f;
     bool isImageCollection = false;
+    // a document laid out into pages we choose (epub, mobi, fb2, html...),
+    // as opposed to one with fixed pages. the ebook settings only apply to
+    // these, so the UI uses it to decide what to offer (#4600)
+    bool isReflowable = false;
     bool allowsPrinting = true;
     bool allowsCopyingText = true;
     bool isPasswordProtected = false;

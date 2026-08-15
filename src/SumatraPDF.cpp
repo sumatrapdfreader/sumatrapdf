@@ -113,6 +113,7 @@
 #include "ChangeScrollbarDialog.h"
 #include "ChangeThemeDialog.h"
 #include "ChangeColorDialog.h"
+#include "EbookSettingsDialog.h"
 #include "CustomZoomDialog.h"
 #include "GetPasswordDialog.h"
 #include "GoToPageDialog.h"
@@ -10310,6 +10311,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdChangeBackgroundColor:
             ShowChangeBackgroundColorDialog(win);
+            break;
+
+        case CmdChangeEbookSettings:
+            ShowEbookSettingsDialog(win);
             break;
 
         case CmdSaveAnnotations: {

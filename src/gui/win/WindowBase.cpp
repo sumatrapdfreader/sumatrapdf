@@ -237,15 +237,23 @@ bool WindowBase::TabNavigate(bool backwards) {
     int idx = -1;
     VirtCtrl* focusedVirt = vroot ? vroot->focused : nullptr;
     HWND focusedHwnd = ::GetFocus();
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n && idx < 0; i++) {
         TabStop& ts = stops[i];
         if (focusedVirt && ts.vwnd == focusedVirt) {
             idx = i;
             break;
         }
-        if (!focusedVirt && ts.ctrl && ts.ctrl->hwnd == focusedHwnd) {
-            idx = i;
-            break;
+        if (focusedVirt || !ts.ctrl) {
+            continue;
+        }
+        // the focus can be on a child of the control rather than the control
+        // itself - an editable ComboBox puts it on its inner Edit - so walk up
+        // to this window. Without this every Tab restarts at the first stop
+        for (HWND h = focusedHwnd; h && h != hwnd; h = ::GetParent(h)) {
+            if (ts.ctrl->hwnd == h) {
+                idx = i;
+                break;
+            }
         }
     }
     if (idx < 0) {
