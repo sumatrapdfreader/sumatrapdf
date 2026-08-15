@@ -474,19 +474,29 @@ static bool SettingNameMatchesFilter(Str name, const StrVec& words) {
     return FilterMatches(name, words);
 }
 
+// Keep the metadata order within each group, but put customized settings first
+// so the values users are most likely to review are immediately visible.
+static void CollectFilteredSettings(Vec<SettingItem*>& items, const StrVec& words, Vec<int>& filtered) {
+    filtered.Reset();
+    for (int group = 0; group < 2; group++) {
+        bool wantNonDefault = group == 0;
+        int n = len(items);
+        for (int i = 0; i < n; i++) {
+            SettingItem* item = items[i];
+            if (SettingDiffersFromDefault(item) == wantNonDefault && SettingNameMatchesFilter(item->name, words)) {
+                filtered.Append(i);
+            }
+        }
+    }
+}
+
 void AdvancedSettingsWnd::QueryChanged() {
     CancelEditValue();
     Str filter = editFilter->GetTextTemp();
     // split trims leading/trailing/internal runs of whitespace into words
     filterWords.Reset();
     SplitFilterToWords(filter, filterWords);
-    model->filtered.Reset();
-    int n = len(items);
-    for (int i = 0; i < n; i++) {
-        if (SettingNameMatchesFilter(items[i]->name, filterWords)) {
-            model->filtered.Append(i);
-        }
-    }
+    CollectFilteredSettings(items, filterWords, model->filtered);
     listBox->SetModel(model); // resets selection to -1
     OnSelectionChanged();
 }
@@ -1141,10 +1151,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         listBox = c;
         model = new ListBoxModelSettings();
         model->items = &items;
-        int n = len(items);
-        for (int i = 0; i < n; i++) {
-            model->filtered.Append(i);
-        }
+        CollectFilteredSettings(items, filterWords, model->filtered);
         c->onSelectionChanged = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnSelectionChanged>(this);
         c->onDoubleClick = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnItemDoubleClicked>(this);
         c->SetModel(model);
