@@ -220,6 +220,7 @@ const sumatraFiles: FileGroup[] = [
       "GfxDirect2D_win.cpp",
       "GuiColors.cpp",
       "Layout.cpp",
+      "Layout_win.cpp",
       "PlatformFont.cpp",
       "PlatformFont_win.cpp",
       "PlatformText.cpp",

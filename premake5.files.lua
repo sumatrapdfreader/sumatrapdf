@@ -872,6 +872,7 @@ function gui_files()
     "GfxDirect2D_win.cpp",
     "GuiColors.*",
     "Layout.*",
+    "Layout_win.*",
     "PlatformFont.*",
     "PlatformFont_win.*",
     "PlatformText.*",
@@ -1319,6 +1320,8 @@ function test_util_files()
   files_in_dir("src/gui", {
     "Dpi.h",
     "Dpi_win.cpp",
+    "Layout.h",
+    "Layout.cpp",
   })
   files_in_dir("src", {
     --"AppTools.*",
@@ -1409,6 +1412,7 @@ function logview_files()
   files_in_dir("src/gui", {
     "UIModels.*",
     "Layout.*",
+    "Layout_win.*",
     "PlatformFont.*",
     "PlatformFont_win.*",
     "PlatformText.*",

@@ -126,6 +126,9 @@
     <ClInclude Include="..\src\gui\Dpi.h">
       <Filter>gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\Layout.h">
+      <Filter>gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
@@ -298,6 +301,9 @@
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\Dpi_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Layout.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\test_util.cpp">

@@ -8,6 +8,7 @@
 #include "base/File.h"
 
 #include "gui/UIModels.h"
+#include "gui/Layout.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -306,6 +307,9 @@ static void DocPropertiesTest() {
 }
 
 void SumatraPDF_UnitTests() {
+#if defined(DEBUG)
+    Layout_UnitTests();
+#endif
     DocPropertiesTest();
     parseCommandsTest();
     colorTest();

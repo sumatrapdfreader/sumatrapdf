@@ -30,6 +30,9 @@
     <ClInclude Include="..\src\gui\Layout.h">
       <Filter>gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\Layout_win.h">
+      <Filter>gui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\PlatformFont.h">
       <Filter>gui</Filter>
     </ClInclude>
@@ -61,6 +64,9 @@
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\Layout.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Layout_win.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\PlatformFont.cpp">

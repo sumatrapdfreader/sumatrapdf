@@ -1001,6 +1001,7 @@
     <ClInclude Include="..\src\base\Win.h" />
     <ClInclude Include="..\src\base\WinDynCalls.h" />
     <ClInclude Include="..\src\gui\Dpi.h" />
+    <ClInclude Include="..\src\gui\Layout.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp">
@@ -1073,6 +1074,7 @@
     <ClCompile Include="..\src\base\tests\Vec_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Win_ut.cpp" />
     <ClCompile Include="..\src\gui\Dpi_win.cpp" />
+    <ClCompile Include="..\src\gui\Layout.cpp" />
     <ClCompile Include="..\src\tools\test_util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

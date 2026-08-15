@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "gui/Dpi.h"
-#include "base/Win.h"
 
 #include "gui/Layout.h"
 
@@ -13,7 +12,7 @@ void dbglayout(Str s) {
     if (!gEnableDebugLayout) {
         return;
     }
-    OutputDebugStringA(s.s);
+    log(s);
 }
 
 static void LogAppendNum(str::Builder& s, int n, Str suffix) {
@@ -1391,21 +1390,6 @@ void Table::SetBounds(Rect r) {
     }
 }
 
-void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
-    DpiSetFromHwnd(hwnd);
-    dbglayout(fmt("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy));
-
-    Constraints c = ExpandInf();
-    c.min = {minDx, minDy};
-    auto size = layout->Layout(c);
-    Point min{0, 0};
-    Point max{size.dx, size.dy};
-    Rect bounds{min, max};
-    layout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-    HwndScheduleRepaint(hwnd);
-}
-
 Size LayoutToSize(ILayout* layout, const Size size) {
     dbglayout(fmt("\nLayoutToSize() %d,%d\n", size.dx, size.dy));
     auto c = Tight(size);
@@ -1471,51 +1455,6 @@ void Spacer::SetBounds(Rect bounds) {
     // the AI chat panel positions its lazily-created webview into the slot) read
     // lastBounds, so record it
     lastBounds = bounds;
-}
-
-//--- HwndSlot
-
-static Kind kindHwndSlot = "hwnd-slot";
-
-HwndSlot::HwndSlot(HWND hwndIn, int dxIn, int dyIn) {
-    kind = kindHwndSlot;
-    hwnd = hwndIn;
-    dx = dxIn;
-    dy = dyIn;
-}
-
-HwndSlot::~HwndSlot() {
-    // does not own hwnd
-}
-
-Size HwndSlot::Layout(const Constraints bc) {
-    return bc.Constrain({dx, dy});
-}
-
-int HwndSlot::MinIntrinsicHeight(int /*width*/) {
-    return dy;
-}
-
-int HwndSlot::MinIntrinsicWidth(int /*height*/) {
-    return dx;
-}
-
-// Move the HWND into bounds (batched when winPos is set). A null or collapsed
-// slot still records lastBounds so callers can place a lazily-created window.
-void HwndSlot::SetBounds(Rect bounds) {
-    lastBounds = bounds;
-    if (!hwnd || IsCollapsed(this)) {
-        return;
-    }
-    if (mapRtlX) {
-        HWND parent = GetParent(hwnd);
-        bounds.x = HwndMapChildXForRtlParent(parent, bounds.x, bounds.dx);
-    }
-    if (winPos) {
-        winPos->MoveWindow(hwnd, bounds);
-        return;
-    }
-    HwndMoveWindow(hwnd, &bounds);
 }
 
 //--- Overlay
@@ -2113,15 +2052,6 @@ static void Layout_TestAlign() {
     delete al;
 }
 
-static void Layout_TestHwndSlot() {
-    // no HWND: same as Spacer (records lastBounds, preferred size)
-    HwndSlot slot(nullptr, 30, 20);
-    Size sz = slot.Layout(Loose(Size{100, 100}));
-    utassert(sz.dx == 30 && sz.dy == 20);
-    slot.SetBounds(Rect{5, 6, 40, 41});
-    utassert(LayoutRectEq(slot.lastBounds, 5, 6, 40, 41));
-}
-
 static void Layout_TestOverlay() {
     auto* body = new Spacer(80, 20);
     auto* close = new Spacer(10, 10);
@@ -2223,7 +2153,6 @@ void Layout_UnitTests() {
     Layout_TestBoxGap();
     Layout_TestCollapsed();
     Layout_TestAlign();
-    Layout_TestHwndSlot();
     Layout_TestOverlay();
     Layout_TestWrap();
     Layout_TestHBoxRtl();

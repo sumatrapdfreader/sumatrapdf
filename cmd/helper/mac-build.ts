@@ -475,7 +475,7 @@ const DEP_LIBS_BASE = [
       },
       {
         dir: "src/gui",
-        patterns: ["Dpi_posix.cpp"],
+        patterns: ["Dpi_posix.cpp", "Layout.cpp"],
       },
     ],
   },

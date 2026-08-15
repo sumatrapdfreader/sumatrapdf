@@ -147,6 +147,9 @@ int RunAppUnitTests() {
 #if defined(DEBUG)
     TextSelection_UnitTests();
     Layout_UnitTests();
+#if OS_WIN
+    LayoutWin_UnitTests();
+#endif
     VirtCtrl_UnitTests();
     utassert(TableOfContents_UnitTestSnapshotNamedDest());
     utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
