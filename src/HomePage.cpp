@@ -935,17 +935,22 @@ struct HomeListIconCtrl : VirtCtrl {
     void OnGetTooltip(VirtTooltipEvent*);
 };
 
-// one file entry (a thumbnail or a list row). Painting still happens in
-// DrawHomePageLayout(); this owns hit-testing, hover and clicks
+// one file entry (a thumbnail or a list row): hit-testing, hover, clicks and
+// painting of the row / thumbnail content
 struct HomeEntryCtrl : VirtCtrl {
     Str filePath; // owned
     int idx = 0;
     VirtCloseButton* closeBtn = nullptr;
     VirtCloseButton* removeBtn = nullptr;
     HomeListIconCtrl* pinBtn = nullptr;
+    // per-paint: points into the HomePageLayout being painted. Set by
+    // HomePageSyncChrome right before every paint; only valid during the
+    // homeRoot->Paint() that follows
+    ThumbnailLayout* layout = nullptr;
 
     HomeEntryCtrl();
     ~HomeEntryCtrl() override;
+    void Paint(VirtPaintCtx&) override;
 };
 
 // page-level list: still knows the MainWindow so it can wire entry actions and
@@ -956,6 +961,10 @@ struct HomeEntriesCtrl : VirtCtrl {
     // selection, which follows the mouse
     int activeIdx = -1;
     Point lastHoverPt{-1, -1};
+    // per-paint search-filter state, owned by the HomePageLayout being painted
+    // (same lifetime rules as HomeEntryCtrl::layout)
+    const StrVec* filterWords = nullptr;
+    Vec<u8>* highlighted = nullptr;
 
     HomeEntriesCtrl();
     void OnMouseMove(VirtMouseEvent*);
@@ -980,12 +989,21 @@ struct HomeTipCtrl : VirtCtrl {
     ~HomeTipCtrl() override;
     void SetTipLine(Str line, PlatformFont* font);
     void Sync(const Rect& rcTip, const Rect& rcText);
+    void Paint(VirtPaintCtx&) override;
+};
+
+// paints the border and background around the home search edit (the edit
+// itself is a real HWND on top). Decoration only, never a click target
+struct HomeSearchBorderCtrl : VirtCtrl {
+    HomeSearchBorderCtrl();
+    void Paint(VirtPaintCtx&) override;
 };
 
 static Kind kindHomeChromeCtrl = "homeChromeCtrl";
 
 struct HomeChromeCtrl : VirtCtrl {
     HomeTipCtrl* tip = nullptr;
+    HomeSearchBorderCtrl* searchBorder = nullptr;
     HomeEntriesCtrl* entries = nullptr;
     VirtText* hdr = nullptr;
     HomeViewIconCtrl* thumbView = nullptr;
@@ -1882,17 +1900,12 @@ static bool HomeSearchHasFocus(MainWindow* win) {
     return win && win->homeSearch && GetFocus() == win->homeSearch->hwnd;
 }
 
-static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformFont* fontText, Color backgroundColor,
-                            bool isRtl, bool isSelected) {
-    Gfx* gfx = l.gfx;
+static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filterWords, Vec<u8>& highlighted,
+                            PlatformFont* fontText, Color backgroundColor, bool isRtl, bool isSelected) {
     FileState* fs = thumb.fs;
     Rect row = thumb.rcListRow;
-    if (!IsHomeThumbOnScreen(row, l.rcThumbsArea)) {
-        return;
-    }
     MeasureHomeListRowText(gfx, thumb, fontText, isRtl);
-    // no selection chrome while typing in the search box
-    if (isSelected && !HomeSearchHasFocus(l.win)) {
+    if (isSelected) {
         DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(thumb), 4);
     }
 
@@ -1913,7 +1926,7 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformF
     Str path = fs->filePath;
     TempStr fileName = path::GetBaseNameTemp(path);
     u32 nameFmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
-    DrawMaybeHighlightedText(gfx, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl,
+    DrawMaybeHighlightedText(gfx, thumb.rcListFileName, fileName, filterWords, highlighted, backgroundColor, isRtl,
                              false, nameFmt, fontText, ThemeWindowTextColor());
 
     // directory path, right-aligned and muted, in the space the file name doesn't need.
@@ -1948,6 +1961,38 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformF
         if (pin) {
             gfx->DrawPixmap(pin, thumb.rcListPin);
         }
+    }
+}
+
+// one thumbnail: the page image with a rounded outline, the caption (with
+// search-filter highlights) and the file-type icon
+static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filterWords, Vec<u8>& highlighted,
+                              PlatformFont* fontText, Color backgroundColor, bool isRtl) {
+    FileState* fs = thumb.fs;
+    const Rect& page = thumb.rcPage;
+    // disk load only first time; stays on fs->thumbnail afterwards
+    Pixmap* thumbImg = LoadThumbnail(fs);
+    if (thumbImg) {
+        thumb.szThumb = Size(thumbImg->width, thumbImg->height);
+        gfx->PushClip(page);
+        // note: we used to invert bitmaps in dark theme but that doesn't
+        // make sense for thumbnails
+        gfx->DrawPixmap(thumbImg, page);
+        gfx->PopClip();
+    }
+    DrawHomeRoundedOutline(gfx, page, 10, ThemeWindowTextColor(), kThumbsBorderDx);
+
+    const Rect& rect = thumb.rcText;
+    Str path = fs->filePath;
+    TempStr fileName = path::GetBaseNameTemp(path);
+    u32 fmt = gfxTextEllipsis | (isRtl ? gfxTextRight : gfxTextLeft);
+    DrawMaybeHighlightedText(gfx, rect, fileName, filterWords, highlighted, backgroundColor, isRtl, false, fmt,
+                             fontText, ThemeWindowTextColor());
+
+    Pixmap* icon = GetFileStateIconPixmap(fs);
+    int x = isRtl ? page.x + page.dx - DpiScale(16) : page.x;
+    if (icon) {
+        gfx->DrawPixmap(icon, {x, rect.y, icon->width, icon->height});
     }
 }
 
@@ -2029,6 +2074,18 @@ void HomeHelpBtnCtrl::Paint(VirtPaintCtx& ctx) {
     DrawHomeHelpButton(ctx.gfx, ctx.bounds);
 }
 
+HomeSearchBorderCtrl::HomeSearchBorderCtrl() {
+    SetFlag(vwfNoHitTest, true);
+}
+
+// border and fill around the search edit; the edit HWND sits inside, so only
+// the 1px frame and the padding around it are actually visible
+void HomeSearchBorderCtrl::Paint(VirtPaintCtx& ctx) {
+    Color bgCol = ThemeControlBackgroundColor();
+    ctx.gfx->FillRect(ctx.bounds, bgCol);
+    ctx.gfx->DrawRect(ctx.bounds, AccentColor(bgCol, 40));
+}
+
 //--- tip links
 
 HomeTipCtrl::~HomeTipCtrl() {
@@ -2054,6 +2111,11 @@ void HomeTipCtrl::SetTipLine(Str line, PlatformFont* font) {
     rich->font = font;
     rich->hwndForCmds = hwndForCmds;
     AddChild(rich);
+}
+
+// the band's background; the markup (VirtRichText child) paints over it
+void HomeTipCtrl::Paint(VirtPaintCtx& ctx) {
+    ctx.gfx->FillRect(ctx.bounds, ThemeControlBackgroundColor());
 }
 
 // rcTip is the whole band (its background), rcText where the markup goes
@@ -2162,6 +2224,33 @@ HomeEntryCtrl::~HomeEntryCtrl() {
 
 HomeEntryCtrl::HomeEntryCtrl() {
     cursor = CursorId::Hand;
+}
+
+// paints this entry's list row or thumbnail. `layout` points into the
+// HomePageLayout being painted; HomePageSyncChrome set it just before
+void HomeEntryCtrl::Paint(VirtPaintCtx& ctx) {
+    ThumbnailLayout* t = layout;
+    auto* entries = (HomeEntriesCtrl*)parent;
+    if (!t || !entries || !entries->win || !entries->filterWords || !entries->highlighted) {
+        return;
+    }
+    MainWindow* win = entries->win;
+    Gfx* gfx = ctx.gfx;
+    bool isRtl = IsUIRtl();
+    PlatformFont* fontText = HomePageFont(14);
+    Color backgroundColor = ThemeMainWindowBackgroundColor();
+    // no selection chrome while typing in the search box
+    bool isSelected = (idx == win->homePageSelIdx) && !HomeSearchHasFocus(win);
+    // ctx.clip is the entries band (vwfClipChildren on the parent): an entry
+    // scrolled partially out must not paint over the header / tip band
+    gfx->PushClip(ctx.clip);
+    if (HomePageIsListView()) {
+        DrawHomeListRow(gfx, *t, *entries->filterWords, *entries->highlighted, fontText, backgroundColor, isRtl,
+                        isSelected);
+    } else {
+        DrawHomeThumbnail(gfx, *t, *entries->filterWords, *entries->highlighted, fontText, backgroundColor, isRtl);
+    }
+    gfx->PopClip();
 }
 
 HomeEntryCtrl* HomeEntriesCtrl::EntryAt(int idx) {
@@ -2284,6 +2373,9 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->tip->onClick = MkFunc1(HomeTipBandClicked, win);
     chrome->AddChild(chrome->tip);
 
+    chrome->searchBorder = new HomeSearchBorderCtrl();
+    chrome->AddChild(chrome->searchBorder);
+
     chrome->entries = new HomeEntriesCtrl();
     chrome->entries->win = win;
     // hit-testable so that moving into the gaps between thumbnails still
@@ -2391,9 +2483,15 @@ static void HomePageSyncChrome(HomePageLayout& l) {
 
     chrome->tip->Sync(l.rcTip, l.rcTipText);
 
+    chrome->searchBorder->visibility = l.rcSearchBorder.IsEmpty() ? Visibility::Collapse : Visibility::Visible;
+    chrome->searchBorder->SetBounds(l.rcSearchBorder);
+
     // file entries: clipped to the thumbnails band, like the static links were
     HomeEntriesCtrl* entries = chrome->entries;
     entries->SetBounds(l.rcThumbsArea);
+    // what the entries paint with; owned by l, which outlives the paint
+    entries->filterWords = &l.filterWords;
+    entries->highlighted = &l.highlighted;
     int nEntries = len(l.thumbnails);
     entries->SetEntryCount(nEntries);
     bool listView = HomePageIsListView();
@@ -2401,6 +2499,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
         ThumbnailLayout& t = l.thumbnails[i];
         HomeEntryCtrl* e = entries->EntryAt(i);
         e->idx = i;
+        e->layout = &t;
         Str path = t.fs ? t.fs->filePath : Str{};
         if (!str::Eq(e->filePath, path)) {
             str::ReplaceWithCopy(&e->filePath, path);
@@ -2456,106 +2555,34 @@ static void HomePageSyncChrome(HomePageLayout& l) {
 }
 
 static void DrawHomePageLayout(HomePageLayout& l) {
-    bool isRtl = IsUIRtl();
     Gfx* gfx = l.gfx;
     auto* win = l.win;
-    auto backgroundColor = ThemeMainWindowBackgroundColor();
 
-    gfx->FillRect(l.rc, backgroundColor);
-
-    // draw search edit border and background on the canvas
-    {
-        Color bgCol = ThemeControlBackgroundColor();
-        const Rect& sb = l.rcSearchBorder;
-        // fill interior with control background so padding matches the edit
-        gfx->FillRect(sb, bgCol);
-        // draw border frame
-        Color borderCol = AccentColor(bgCol, 40);
-        gfx->DrawRect(sb, borderCol);
-    }
-
-    Color color = ThemeWindowTextColor();
-    PlatformFont* fontText = HomePageFont(14);
-
-    // clip thumbnails to the middle area
-    gfx->PushClip(l.rcThumbsArea);
+    gfx->FillRect(l.rc, ThemeMainWindowBackgroundColor());
 
     int nThumbs = len(l.thumbnails);
     // keep the keyboard selection inside the (possibly filtered) list
     if (win->homePageSelIdx >= nThumbs) {
         win->homePageSelIdx = nThumbs - 1;
     }
-    // no selection rectangle while the search box has focus
-    const bool showKeyboardSel = !HomeSearchHasFocus(win);
-    // draw selection after restoring the thumbs clip so the outline on the
-    // first row isn't clipped at the top edge of rcThumbsArea
-    Rect pendingThumbSel;
-    bool hasPendingThumbSel = false;
-    for (int thumbIdx = 0; thumbIdx < nThumbs; thumbIdx++) {
-        ThumbnailLayout& thumb = l.thumbnails[thumbIdx];
-        FileState* fs = thumb.fs;
-        bool isSelected = showKeyboardSel && (thumbIdx == win->homePageSelIdx);
-        if (HomePageIsListView()) {
-            DrawHomeListRow(l, thumb, fontText, backgroundColor, isRtl, isSelected);
-            continue;
-        }
-        const Rect& page = thumb.rcPage;
-        // skip off-screen thumbs (scroll was redoing Blit+text for every history
-        // entry and dominated CPU in DrawHomePageLayout)
-        if (!IsHomeThumbOnScreen(page.Union(thumb.rcText), l.rcThumbsArea)) {
-            continue;
-        }
 
-        // disk load only first time; stays on fs->thumbnail afterwards
-        Pixmap* thumbImg = LoadThumbnail(fs);
-        if (thumbImg) {
-            thumb.szThumb = Size(thumbImg->width, thumbImg->height);
-            gfx->PushClip(page);
-            // note: we used to invert bitmaps in dark theme but that doesn't
-            // make sense for thumbnails
-            gfx->DrawPixmap(thumbImg, page);
-            gfx->PopClip();
-        }
-        DrawHomeRoundedOutline(gfx, page, 10, color, kThumbsBorderDx);
-
-        const Rect& rect = thumb.rcText;
-        Str path = fs->filePath;
-        TempStr fileName = path::GetBaseNameTemp(path);
-        u32 fmt = gfxTextEllipsis | (isRtl ? gfxTextRight : gfxTextLeft);
-
-        DrawMaybeHighlightedText(gfx, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false, fmt,
-                                 fontText, ThemeWindowTextColor());
-
-        Pixmap* icon = GetFileStateIconPixmap(fs);
-        int x = isRtl ? page.x + page.dx - DpiScale(16) : page.x;
-        if (icon) {
-            gfx->DrawPixmap(icon, {x, rect.y, icon->width, icon->height});
-        }
-
-        if (isSelected) {
-            Rect sel = page.Union(rect);
-            sel.Inflate(DpiScale(4), DpiScale(3));
-            pendingThumbSel = sel;
-            hasPendingThumbSel = true;
-        }
-    }
-
-    // restore full clip region
-    gfx->PopClip();
-
-    if (hasPendingThumbSel) {
-        DrawHomeSelectionOutline(gfx, pendingThumbSel, 10);
-    }
-
-    // the tip band's background; the markup itself is part of the chrome tree
-    if (l.hasTip) {
-        gfx->FillRect(l.rcTip, ThemeControlBackgroundColor());
-    }
-
-    // the chrome (header, view buttons, "Open a document...", help button)
-    // paints last: none of it overlaps the thumbnails, and the help button has
-    // to land on top of the tip band
+    // the chrome tree paints everything else: search border, file entries
+    // (thumbnails / list rows), tip band, header, view buttons, "Open a
+    // document..." and the help button (which has to land on top of the tip
+    // band, so the chrome keeps it as the last child)
     win->homeRoot->Paint(gfx, l.rc);
+
+    // thumbnails selection outline: over the chrome and unclipped, so its top
+    // edge isn't cut off on the first row (list rows draw their own outline,
+    // under the row content, in HomeEntryCtrl::Paint)
+    int selIdx = win->homePageSelIdx;
+    bool showSel = !HomePageIsListView() && !HomeSearchHasFocus(win) && selIdx >= 0 && selIdx < nThumbs;
+    if (showSel) {
+        ThumbnailLayout& t = l.thumbnails[selIdx];
+        if (IsHomeThumbOnScreen(t.rcPage.Union(t.rcText), l.rcThumbsArea)) {
+            DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(t), 10);
+        }
+    }
 }
 
 void DrawHomePage(MainWindow* win, Gfx* gfx) {
