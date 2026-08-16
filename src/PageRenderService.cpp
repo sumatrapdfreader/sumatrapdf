@@ -6,7 +6,7 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "PageRenderPolicy.h"
 #include "gui/Gfx.h"

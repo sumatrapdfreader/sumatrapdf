@@ -10,7 +10,7 @@
 #endif
 
 #include "DocProperties.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "TextSelection.h"

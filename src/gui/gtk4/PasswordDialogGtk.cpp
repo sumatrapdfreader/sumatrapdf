@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "gui/PlatformWindow.h"
 

@@ -595,3 +595,20 @@ Verification:
 - The Windows x64 static release target compiled and linked with no warnings.
 - An isolated remote macOS debug build passed 102,741 assertions, linked `test_engines` and the 43-source
   `SumatraPDF.app`, and produced the debug application archive.
+
+### Portable tree model
+
+Completed 2026-08-16.
+
+- Moved the shared tree-model contract and traversal helper from `src/TreeModel.*` into `src/gui/UIModels.*`.
+- Made `TreeItem` an opaque `uintptr_t` and replaced the Win32-shaped handle accessors with portable user-data
+  accessors.
+- Confined conversion between the opaque user data and `HTREEITEM` to the Windows TreeView implementation.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,895 assertions, and the GTK application,
+  `test_engines`, and portable archive were produced.
+- An isolated remote macOS debug build passed 102,681 assertions and 23 portable compile checks, linked
+  `test_engines` and the 43-source `SumatraPDF.app`, and produced the debug application archive.

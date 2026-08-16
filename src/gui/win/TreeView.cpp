@@ -94,7 +94,7 @@ HWND TreeView::GetToolTipsHwnd() {
 }
 
 HTREEITEM TreeView::GetHandleByTreeItem(TreeItem item) {
-    return treeModel->GetHandle(item);
+    return (HTREEITEM)treeModel->GetUserData(item);
 }
 
 // the result only valid until the next GetItem call
@@ -409,7 +409,7 @@ static void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent
     for (int i = 0; i < n; i++) {
         auto ti = a[i];
         HTREEITEM h = insertItemFront(treeView, ti, parent);
-        tm->SetHandle(ti, h);
+        tm->SetUserData(ti, (uintptr_t)h);
         // avoid recursing if not needed because we use a lot of stack space
         if (tm->ChildCount(ti) > 0) {
             PopulateTreeItem(treeView, ti, h);

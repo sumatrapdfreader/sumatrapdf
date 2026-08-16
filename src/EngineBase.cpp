@@ -5,7 +5,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 
 #include "EngineBase.h"
 
@@ -278,16 +278,16 @@ bool TocTree::IsChecked(TreeItem ti) {
     return !tocItem->isUnchecked;
 }
 
-void TocTree::SetHandle(TreeItem ti, HTREEITEM hItem) {
+void TocTree::SetUserData(TreeItem ti, uintptr_t userData) {
     ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
-    tocItem->hItem = hItem;
+    tocItem->userData = userData;
 }
 
-HTREEITEM TocTree::GetHandle(TreeItem ti) {
+uintptr_t TocTree::GetUserData(TreeItem ti) {
     ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
-    return tocItem->hItem;
+    return tocItem->userData;
 }
 
 // TODO: speed up by removing recursion

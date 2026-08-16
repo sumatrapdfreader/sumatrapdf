@@ -650,7 +650,7 @@ const PORTABLE_ENGINE_SOURCES = [
   "src/PdfCadDetect.cpp",
   "src/PdfCadEnhanceDevice.cpp",
   "src/PdfDarkModeNoOp.cpp",
-  "src/TreeModel.cpp",
+  "src/gui/UIModels.cpp",
 ];
 
 const TEST_ENGINES_SOURCES = [

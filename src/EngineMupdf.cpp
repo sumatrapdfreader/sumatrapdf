@@ -24,7 +24,7 @@ extern "C" {
 
 #include "Annotation.h"
 #include "DocProperties.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"
 #include "PdfCadEnhanceDevice.h"

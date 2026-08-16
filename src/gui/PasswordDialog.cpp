@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "gui/PlatformWindow.h"
 #include "gui/PasswordDialog.h"

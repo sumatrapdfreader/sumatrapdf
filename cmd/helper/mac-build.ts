@@ -583,7 +583,7 @@ const TEST_ENGINES_SOURCES = [
   "src/PdfDarkModeNoOp.cpp",
   "src/TextSelection.cpp",
   "src/TextSearch.cpp",
-  "src/TreeModel.cpp",
+  "src/gui/UIModels.cpp",
   "src/tools/test_engines.cpp",
 ];
 
@@ -616,7 +616,7 @@ const MAC_APP_SOURCES = [
   "src/SumatraConfig.cpp",
   "src/TextSelection.cpp",
   "src/TextSearch.cpp",
-  "src/TreeModel.cpp",
+  "src/gui/UIModels.cpp",
   "src/KeyboardHelp.cpp",
   "src/gui/GuiColors.cpp",
   "src/gui/CommandPaletteModel.cpp",

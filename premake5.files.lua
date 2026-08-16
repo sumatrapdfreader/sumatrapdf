@@ -738,7 +738,6 @@ function sumatrapdf_files()
     "Toolbar_win.*",
     "TranslationLangs.cpp",
     "Translations.*",
-    "TreeModel.*",
     "Uninstaller.cpp",
     "UpdateCheck.*",
     "BuildConfig.h",
@@ -1390,8 +1389,8 @@ function test_engines_files()
     "src/PdfDarkMode.h",
     "src/PdfDarkModeNoOp.cpp",
     "src/WebpReader.cpp",
-    "src/TreeModel.cpp",
-    "src/TreeModel.h",
+    "src/gui/UIModels.cpp",
+    "src/gui/UIModels.h",
     "src/tools/test_engines.cpp",
   }
 end

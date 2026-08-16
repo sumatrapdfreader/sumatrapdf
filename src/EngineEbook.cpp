@@ -16,7 +16,7 @@
 
 #include "DocProperties.h"
 #include "ImageReader.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"

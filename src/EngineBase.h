@@ -325,7 +325,7 @@ extern Kind kindTocDjvu;
 
 // an item in a document's Table of Content
 struct TocItem {
-    HTREEITEM hItem;
+    uintptr_t userData = 0;
 
     TocItem* parent;
 
@@ -396,8 +396,8 @@ struct TocTree : TreeModel {
     bool IsExpanded(TreeItem) override;
     bool IsChecked(TreeItem) override;
 
-    void SetHandle(TreeItem, HTREEITEM) override;
-    HTREEITEM GetHandle(TreeItem) override;
+    void SetUserData(TreeItem, uintptr_t) override;
+    uintptr_t GetUserData(TreeItem) override;
 };
 
 struct VisitTocTreeData {

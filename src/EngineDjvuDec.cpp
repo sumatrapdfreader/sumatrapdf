@@ -13,7 +13,7 @@ extern "C" {
 #include "djvu.h"
 }
 
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 

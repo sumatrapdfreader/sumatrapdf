@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/FileWatcher.h"
 
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "gui/DocumentView.h"
 #include "gui/PlatformWindow.h"

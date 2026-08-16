@@ -25,7 +25,7 @@ extern "C" {
 #include "ImageReader.h"
 #include "DocProperties.h"
 #include "DocController.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 

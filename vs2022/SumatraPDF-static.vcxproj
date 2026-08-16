@@ -1262,7 +1262,6 @@
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\ToolbarInternal.h" />
     <ClInclude Include="..\src\Translations.h" />
-    <ClInclude Include="..\src\TreeModel.h" />
     <ClInclude Include="..\src\UpdateCheck.h" />
     <ClInclude Include="..\src\Version.h" />
     <ClInclude Include="..\src\WebpReader.h" />
@@ -1538,7 +1537,6 @@
     <ClCompile Include="..\src\Toolbar_win.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />
-    <ClCompile Include="..\src\TreeModel.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\UpdateCheck.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />

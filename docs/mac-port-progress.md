@@ -57,6 +57,8 @@ Reconciled 2026-08-16.
 - Microsoft Reader `.lit` ebooks use the same portable converter and in-memory EPUB engine path as Windows and
   Linux. The app bundle advertises `.lit` to Finder, and the macOS build includes the required `msdes`, `chmdec`, and
   ZIP support.
+- The shared tree-model contract and traversal helper live in `src/gui/UIModels.*`; tree items carry opaque
+  `uintptr_t` user data, with Win32 `HTREEITEM` conversion confined to the Windows TreeView implementation.
 
 ## Verification
 
@@ -73,5 +75,8 @@ Reconciled 2026-08-16.
   produced.
 - The `.lit` integration passed an isolated remote macOS debug build on 2026-08-16: 102,741 `test_util` assertions
   passed, `test_engines` linked, and the 43-source `SumatraPDF.app` and debug archive were produced.
+- The portable tree-model migration passed Windows and Linux debug builds and an isolated remote macOS debug build
+  on 2026-08-16. macOS passed 102,681 `test_util` assertions and 23 portable compile checks, then linked
+  `test_engines`, the 43-source `SumatraPDF.app`, and its debug archive.
 
 All stages were verified from temporary branch `tmp/mac-port-parity-20260816`.

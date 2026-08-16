@@ -40,7 +40,7 @@ void UpdateFavoritesTreeForAllWindows();
 struct FavTreeItem {
     ~FavTreeItem();
 
-    HTREEITEM hItem = nullptr;
+    uintptr_t userData = 0;
     FavTreeItem* parent = nullptr;
     Str text;
     bool isExpanded = false;
@@ -67,8 +67,8 @@ struct FavTreeModel : TreeModel {
     TreeItem ChildAt(TreeItem ti, int idx) override;
     bool IsExpanded(TreeItem ti) override;
     bool IsChecked(TreeItem ti) override;
-    void SetHandle(TreeItem ti, HTREEITEM hItem) override;
-    HTREEITEM GetHandle(TreeItem ti) override;
+    void SetUserData(TreeItem ti, uintptr_t userData) override;
+    uintptr_t GetUserData(TreeItem ti) override;
 
     FavTreeItem* root = nullptr;
 };
@@ -115,16 +115,16 @@ bool FavTreeModel::IsChecked(TreeItem /*ti*/) {
     return false;
 }
 
-void FavTreeModel::SetHandle(TreeItem ti, HTREEITEM hItem) {
+void FavTreeModel::SetUserData(TreeItem ti, uintptr_t userData) {
     ReportIf(ti < 0);
     FavTreeItem* treeItem = (FavTreeItem*)ti;
-    treeItem->hItem = hItem;
+    treeItem->userData = userData;
 }
 
-HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
+uintptr_t FavTreeModel::GetUserData(TreeItem ti) {
     ReportIf(ti < 0);
     FavTreeItem* treeItem = (FavTreeItem*)ti;
-    return treeItem->hItem;
+    return treeItem->userData;
 }
 
 static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
@@ -735,7 +735,7 @@ static void GoToFavForTreeItem(MainWindow* win, TreeItem ti) {
 
 #if 0
 static void GoToFavForTVItem(MainWindow* win, TreeCtrl* treeView, HTREEITEM hItem = nullptr) {
-    TreeItem ti = nullptr;
+    TreeItem ti = 0;
     if (nullptr == hItem) {
         ti = treeView->GetSelection();
     } else {

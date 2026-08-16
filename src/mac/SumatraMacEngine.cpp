@@ -7,7 +7,7 @@
 #include "DocumentLayout.h"
 #include "DocProperties.h"
 #include "KeyboardHelp.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "PageRenderPolicy.h"
 #include "PageRenderService.h"

@@ -323,7 +323,6 @@ const sumatraFiles: FileGroup[] = [
       "MarkdownToc.*",
       "NavFilesInFolder.*",
       "SelectionTranslate.*",
-      "TreeModel.*",
       "GrokBuild.*",
       "CodexBuild.*",
       "Commands.*",

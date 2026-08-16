@@ -48,7 +48,7 @@ struct ListBoxModelStrings : ListBoxModel {
 using DropDownModelStrings = ListBoxModelStrings;
 
 // TreeItem represents an item in a TreeView control
-typedef UINT_PTR TreeItem;
+typedef uintptr_t TreeItem;
 
 // TreeModel provides data to TreeCtrl
 struct TreeModel {
@@ -66,8 +66,8 @@ struct TreeModel {
     virtual bool IsExpanded(TreeItem) = 0;
     // when showing checkboxes
     virtual bool IsChecked(TreeItem) = 0;
-    virtual void SetHandle(TreeItem, HTREEITEM) = 0;
-    virtual HTREEITEM GetHandle(TreeItem) = 0;
+    virtual void SetUserData(TreeItem, uintptr_t) = 0;
+    virtual uintptr_t GetUserData(TreeItem) = 0;
 };
 
 struct TreeItemVisitorData {

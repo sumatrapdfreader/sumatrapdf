@@ -8,7 +8,7 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "LitDoc.h"
