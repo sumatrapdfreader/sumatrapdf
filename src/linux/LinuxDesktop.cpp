@@ -113,8 +113,40 @@ static bool ShowItemThroughFileManager(Str path) {
     return true;
 }
 
+static bool ShowItemThroughWindowsExplorer(Str path) {
+    if (!g_getenv("WSL_INTEROP") && !g_getenv("WSL_DISTRO_NAME")) {
+        return false;
+    }
+
+    char* wslPathArgs[] = {(char*)"wslpath", (char*)"-w", CStrTemp(path), nullptr};
+    char* windowsPath = nullptr;
+    char* stderrText = nullptr;
+    int exitStatus = 0;
+    GError* error = nullptr;
+    bool ok = g_spawn_sync(nullptr, wslPathArgs, nullptr, G_SPAWN_SEARCH_PATH, nullptr, nullptr, &windowsPath,
+                           &stderrText, &exitStatus, &error);
+    if (ok) {
+        ok = g_spawn_check_wait_status(exitStatus, &error);
+    }
+    g_free(stderrText);
+    g_clear_error(&error);
+    if (!ok || !windowsPath) {
+        g_free(windowsPath);
+        return false;
+    }
+
+    g_strchomp(windowsPath);
+    char* selectArg = g_strdup_printf("/select,%s", windowsPath);
+    char* explorerArgs[] = {(char*)"explorer.exe", selectArg, nullptr};
+    ok = g_spawn_async(nullptr, explorerArgs, nullptr, G_SPAWN_SEARCH_PATH, nullptr, nullptr, nullptr, &error);
+    g_free(selectArg);
+    g_free(windowsPath);
+    g_clear_error(&error);
+    return ok;
+}
+
 bool LinuxShowFileInFolder(Str filePath) {
-    if (!filePath || ShowItemThroughFileManager(filePath)) {
+    if (!filePath || ShowItemThroughWindowsExplorer(filePath) || ShowItemThroughFileManager(filePath)) {
         return !!filePath;
     }
     TempStr dirPath = path::GetDirTemp(filePath);

@@ -44,6 +44,7 @@ struct LinuxWindow {
     GtkWidget* closeButton = nullptr;
     GtkWidget* reopenButton = nullptr;
     GtkWidget* continuousButton = nullptr;
+    GtkWidget* menuButton = nullptr;
     Vec<LinuxTab*> tabs;
     StrVec closedPaths;
     bool fullscreen = false;
@@ -544,6 +545,7 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
     if (!window) {
         return;
     }
+    gtk_menu_button_popdown(GTK_MENU_BUTTON(window->menuButton));
     switch (commandId) {
         case CmdOpenFile:
             ShowOpenDialog(window);
@@ -781,11 +783,11 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
 
     result->header = gtk_header_bar_new();
     gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(result->header), TRUE);
-    GtkWidget* menu = gtk_menu_button_new();
-    gtk_menu_button_set_icon_name(GTK_MENU_BUTTON(menu), "open-menu-symbolic");
-    gtk_widget_set_tooltip_text(menu, "Main menu");
-    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(menu), gtk_application_get_menubar(app));
-    gtk_header_bar_pack_end(GTK_HEADER_BAR(result->header), menu);
+    result->menuButton = gtk_menu_button_new();
+    gtk_menu_button_set_icon_name(GTK_MENU_BUTTON(result->menuButton), "open-menu-symbolic");
+    gtk_widget_set_tooltip_text(result->menuButton, "Main menu");
+    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(result->menuButton), gtk_application_get_menubar(app));
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(result->header), result->menuButton);
     GtkWidget* fullscreen = NewCommandButton(result, "Fullscreen", "Toggle fullscreen (F11)", CmdToggleFullscreen);
     gtk_header_bar_pack_end(GTK_HEADER_BAR(result->header), fullscreen);
     gtk_window_set_titlebar(GTK_WINDOW(result->window), result->header);
