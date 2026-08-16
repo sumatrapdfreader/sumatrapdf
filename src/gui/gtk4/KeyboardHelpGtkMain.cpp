@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 
+#include "gui/PlatformFont.h"
 #include "gui/PlatformWindow.h"
 
 #include "KeyboardHelp.h"
@@ -17,5 +18,8 @@ int main(int, char**) {
     while (IsKeyboardHelpVisible()) {
         g_main_context_iteration(nullptr, TRUE);
     }
+    PlatformFontShutdown();
+    DestroyTempArena();
+    DestroyPermArena();
     return 0;
 }

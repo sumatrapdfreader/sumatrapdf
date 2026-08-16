@@ -4,7 +4,7 @@
  */
 
 import { Glob } from "bun";
-import { mkdirSync, existsSync, statSync, rmSync } from "node:fs";
+import { mkdirSync, existsSync, readFileSync, statSync, rmSync, writeFileSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join, extname, dirname, basename } from "node:path";
 import { cpus } from "node:os";
@@ -47,6 +47,28 @@ export interface BuildLibraryOptions {
 }
 
 export const DEFAULT_JOBS = Math.max(1, Math.min(4, cpus().length));
+
+export function invalidateObjsIfBuildChanged(
+  outDir: string,
+  tools: BuildTools,
+  config: string,
+  commonFlags: string[],
+): void {
+  const stampPath = join(outDir, ".compiler");
+  const stamp = `${tools.cc}\n${tools.cxx}\n${config}\n${commonFlags.join("\n")}\n`;
+  let same = false;
+  if (existsSync(stampPath)) {
+    try {
+      same = readFileSync(stampPath, "utf8") === stamp;
+    } catch {}
+  }
+  if (!same && existsSync(join(outDir, "obj"))) {
+    console.log("Compiler, config, or common flags changed; rebuilding objects...");
+    rmSync(join(outDir, "obj"), { recursive: true, force: true });
+  }
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(stampPath, stamp);
+}
 
 const kX86OnlyCflagRe = /^-m(no-)?(sse|avx|mmx|f16c|fma|aes|pclmul|popcnt|bmi|lzcnt|movbe|xop)/;
 

@@ -22,6 +22,7 @@ import {
   compileAll,
   dropX86OnlyCflags,
   embedBinaryFile,
+  invalidateObjsIfBuildChanged,
   objPath,
   spawnCmd,
 } from "../deps-build-common";
@@ -79,6 +80,16 @@ function resolveMacTools(): BuildTools {
   // ld from cctools; clang driver also works but plain ld is what mupdf uses on Unix
   const embed = resolveTool("linker for binary embedding", ["ld", "/usr/bin/ld"]);
   return { cc, cxx, ar, embed };
+}
+
+async function generateDsym(exePath: string, outputPath = `${exePath}.dSYM`): Promise<void> {
+  const dsymutil = resolveTool("debug symbol generator", ["dsymutil"]);
+  rmSync(outputPath, { recursive: true, force: true });
+  const result = await spawnCmd([dsymutil, exePath, "-o", outputPath]);
+  if (!result.ok) {
+    throw new Error(`dsymutil failed for ${exePath}: ${result.stderr}`);
+  }
+  console.log(`  -> ${outputPath}`);
 }
 
 function makeLibarchive(outDir: string): LibDef {
@@ -664,6 +675,9 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
 
   const startTime = performance.now();
   const config = isAsan ? (isRelease ? "release-asan" : "asan") : isRelease ? "release" : "debug";
+  const commonDefines: string[] = isAsan ? ["ASAN_BUILD"] : [];
+  const commonFlags = ["-g", ...(isAsan ? ["-fsanitize=address", "-fno-omit-frame-pointer"] : [])];
+  invalidateObjsIfBuildChanged(outDir, tools, config, commonFlags);
   console.log(`\n=== Building SumatraPDF dependencies (${config}, macOS ${arch}) ===\n`);
   console.log(`Output: ${outDir}`);
   console.log(`Tools: ${tools.cc}, ${tools.cxx}`);
@@ -674,8 +688,6 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   await writeDav1dConfig(generatedDir, arch);
   await writeLiblzmaConfig(outDir);
 
-  const commonDefines: string[] = isAsan ? ["ASAN_BUILD"] : [];
-  const commonFlags = isAsan ? ["-fsanitize=address", "-fno-omit-frame-pointer"] : [];
   const cxxFlags: string[] = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1"];
 
   const fontObjs = await embedFonts(tools, outDir);
@@ -820,6 +832,7 @@ async function buildTestUtil(
     throw new Error(`link test_util failed: ${res.stderr}`);
   }
   console.log(`  -> ${exePath}`);
+  await generateDsym(exePath);
 
   const env = commonFlags.includes("-fsanitize=address")
     ? {
@@ -917,6 +930,7 @@ async function buildMacApp(
   if (!res.ok) {
     throw new Error(`link SumatraPDF.app failed: ${res.stderr}`);
   }
+  await generateDsym(exePath, `${appDir}.dSYM`);
 
   await writeFile(
     join(contentsDir, "Info.plist"),
@@ -1076,4 +1090,5 @@ async function buildTestEngines(
     throw new Error(`link test_engines failed: ${res.stderr}`);
   }
   console.log(`  -> ${exePath}`);
+  await generateDsym(exePath);
 }

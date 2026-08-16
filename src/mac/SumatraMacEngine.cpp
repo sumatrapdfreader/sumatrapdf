@@ -6,6 +6,7 @@
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
 #include "DocProperties.h"
+#include "KeyboardHelp.h"
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "PageRenderPolicy.h"
@@ -15,6 +16,7 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "gui/CommandPaletteModel.h"
+#include "gui/PlatformFont.h"
 #include "mac/SumatraMacEngine.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
@@ -756,5 +758,16 @@ void MacCloseDocument(void* document) {
 }
 
 void MacShutdown() {
+    static bool didShutdown = false;
+    if (didShutdown) {
+        return;
+    }
+    didShutdown = true;
+    CloseKeyboardHelp();
+    PlatformFontShutdown();
     DestroyTempArena();
+}
+
+void MacFinalize() {
+    DestroyPermArena();
 }

@@ -62,6 +62,9 @@ PlatformFont* GetBoldPlatformFont(PlatformFont*);
 // fills in the platform font object; implemented per platform. Returns false if
 // no font could be created at all
 bool PlatformFontCreateNative(PlatformFont*);
+void PlatformFontDestroyNative(PlatformFont*);
+void PlatformFontShutdownNative();
+void PlatformFontShutdown();
 
 // maxDx < 0 means "as wide as it needs to be" (no wrapping)
 Size PlatformFontMeasureText(PlatformFont*, Str s, int maxDx = -1);

@@ -32,6 +32,7 @@ import {
   compileAll,
   dropX86OnlyCflags,
   embedBinaryFile,
+  invalidateObjsIfBuildChanged,
   objPath,
   spawnCmd,
 } from "../deps-build-common";
@@ -158,25 +159,6 @@ function ensureAsanLinker(tools: BuildTools): BuildTools {
   console.error(`${tools.cxx} cannot link -fsanitize=address (compiler-rt ASan libs are missing).`);
   console.error(`Install one of:\n  ${asanInstallHint()}`);
   process.exit(1);
-}
-
-// Rebuild objects if the compiler (or asan/debug/release) changed so we don't
-// mix clang-asan objects with a g++ link, or vice versa.
-function invalidateObjsIfCompilerChanged(outDir: string, tools: BuildTools, config: string): void {
-  const stampPath = join(outDir, ".compiler");
-  const stamp = `${tools.cc}\n${tools.cxx}\n${config}\n`;
-  let same = false;
-  if (existsSync(stampPath)) {
-    try {
-      same = readFileSync(stampPath, "utf8") === stamp;
-    } catch {}
-  }
-  if (!same && existsSync(join(outDir, "obj"))) {
-    console.log("Compiler or config changed; rebuilding objects...");
-    rmSync(join(outDir, "obj"), { recursive: true, force: true });
-  }
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(stampPath, stamp);
 }
 
 function makeLibarchive(outDir: string): LibDef {
@@ -772,7 +754,9 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
 
   const startTime = performance.now();
   const config = isAsan ? (isRelease ? "release-asan" : "asan") : isRelease ? "release" : "debug";
-  invalidateObjsIfCompilerChanged(outDir, tools, config);
+  const commonDefines: string[] = isAsan ? ["ASAN_BUILD"] : [];
+  const commonFlags = ["-g", ...(isAsan ? ["-fsanitize=address", "-fno-omit-frame-pointer"] : [])];
+  invalidateObjsIfBuildChanged(outDir, tools, config, commonFlags);
   console.log(`\n=== Building SumatraPDF dependencies (${config}, Linux ${arch}) ===\n`);
   console.log(`Output: ${outDir}`);
   console.log(`Tools: ${tools.cc}, ${tools.cxx}`);
@@ -783,8 +767,6 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   await writeDav1dConfig(generatedDir, arch);
   await writeLiblzmaConfig(outDir);
 
-  const commonDefines: string[] = isAsan ? ["ASAN_BUILD"] : [];
-  const commonFlags = isAsan ? ["-fsanitize=address", "-fno-omit-frame-pointer"] : [];
   const cxxFlags: string[] = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1"];
 
   const fontObjs = await embedFonts(tools, outDir, arch);
@@ -940,7 +922,7 @@ async function buildGtk4LinuxApp(
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
   const gtkCflags = [...pkgConfigFlags("--cflags", "gtk4"), ...pkgConfigFlags("--cflags", "gio-unix-2.0")];
-  const gtkLibs = pkgConfigFlags("--libs", "gtk4");
+  const gtkLibs = [...pkgConfigFlags("--libs", "gtk4"), ...pkgConfigFlags("--libs", "fontconfig")];
   const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
   const units = GTK4_APP_SOURCES.map((src) => {
     const obj = objPath(outDir, "gtk4-app", src);
@@ -1036,7 +1018,7 @@ async function buildGtk4KeyboardHelp(
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines, "SUMATRA_TEST_UTIL=1"].map((d) => `-D${d}`);
   const gtkCflags = pkgConfigFlags("--cflags", "gtk4");
-  const gtkLibs = pkgConfigFlags("--libs", "gtk4");
+  const gtkLibs = [...pkgConfigFlags("--libs", "gtk4"), ...pkgConfigFlags("--libs", "fontconfig")];
   const units = GTK4_KEYBOARD_HELP_SOURCES.map((src) => {
     const obj = objPath(outDir, "gtk4-keyboard-help", src);
     return {

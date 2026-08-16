@@ -45,16 +45,34 @@ function parseArgs(args: string[]): RunOptions | undefined {
   return { config, asan, clean };
 }
 
-async function run(command: string[], description: string): Promise<void> {
+async function run(
+  command: string[],
+  description: string,
+  env: Record<string, string | undefined> = process.env,
+): Promise<void> {
   console.log(`> ${command.join(" ")}`);
   const proc = Bun.spawn(command, {
     cwd: ".",
+    env,
     stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
   });
   const exitCode = await proc.exited;
   if (exitCode !== 0) throw new Error(`${description} failed with exit code ${exitCode}`);
+}
+
+function asanEnv(...options: string[]): Record<string, string | undefined> {
+  const current = process.env.ASAN_OPTIONS;
+  return { ...process.env, ASAN_OPTIONS: [...(current ? [current] : []), ...options].join(":") };
+}
+
+function linuxAsanEnv(): Record<string, string | undefined> {
+  const symbolizer = Bun.which("llvm-symbolizer");
+  if (symbolizer && !symbolizer.toLowerCase().endsWith(".exe")) {
+    return asanEnv("symbolize=1", `external_symbolizer_path=${symbolizer}`);
+  }
+  return asanEnv("symbolize=1", "allow_addr2line=1", "external_symbolizer_path=/usr/bin/addr2line");
 }
 
 function portableOutDir(platform: "linux" | "mac", opts: RunOptions): string {
@@ -86,9 +104,15 @@ async function runApp(opts: RunOptions): Promise<void> {
   if (process.platform === "win32") {
     runWindows(opts);
   } else if (process.platform === "linux") {
-    await run([`./out/${portableOutDir("linux", opts)}/SumatraPDF`], "SumatraPDF");
+    const env = opts.asan ? linuxAsanEnv() : process.env;
+    await run([`./out/${portableOutDir("linux", opts)}/SumatraPDF`], "SumatraPDF", env);
   } else if (process.platform === "darwin") {
-    await run(["open", join("out", portableOutDir("mac", opts), "SumatraPDF.app")], "SumatraPDF");
+    const app = join("out", portableOutDir("mac", opts), "SumatraPDF.app");
+    if (opts.asan) {
+      await run([join(app, "Contents", "MacOS", "SumatraPDF")], "SumatraPDF", asanEnv("symbolize=1"));
+    } else {
+      await run(["open", app], "SumatraPDF");
+    }
   }
 }
 

@@ -261,6 +261,10 @@ void* MacGuiFontCreate(const char* name, int nameLen, float sizePt, bool bold, b
     return [font retain];
 }
 
+void MacGuiFontDestroy(void* nativeFont) {
+    [(NSFont*)nativeFont release];
+}
+
 void MacGuiFontMeasure(void* nativeFont, const char* text, int textLen, int maxDx, int* dx, int* dy) {
     NSFont* font = (NSFont*)nativeFont;
     NSString* string = StringFromUtf8(text, textLen);

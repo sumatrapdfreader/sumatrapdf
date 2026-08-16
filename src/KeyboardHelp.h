@@ -18,6 +18,7 @@ struct KeyboardHelpArgs {
 
 KeyboardHelpDataSource* GetDefaultKeyboardHelpDataSource();
 void ToggleKeyboardHelp(const KeyboardHelpArgs&);
+void CloseKeyboardHelp();
 bool IsKeyboardHelpVisible();
 
 #if OS_WIN

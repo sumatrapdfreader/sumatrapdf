@@ -6,6 +6,7 @@
 #include "base/FileWatcher.h"
 
 #include "Commands.h"
+#include "KeyboardHelp.h"
 
 #include <gtk/gtk.h>
 
@@ -247,6 +248,20 @@ static void OnShutdown(GtkApplication* app, gpointer) {
     }
 }
 
+static void DestroyTopLevelWindows() {
+    CloseKeyboardHelp();
+    GListModel* windows = gtk_window_get_toplevels();
+    Vec<GtkWindow*> snapshot;
+    guint count = g_list_model_get_n_items(windows);
+    for (guint i = 0; i < count; i++) {
+        snapshot.Append(GTK_WINDOW(g_list_model_get_item(windows, i)));
+    }
+    for (GtkWindow* window : snapshot) {
+        gtk_window_destroy(window);
+        g_object_unref(window);
+    }
+}
+
 int RunLinuxApp(int argc, char** argv) {
     FileWatcherInit();
     LinuxPrefsInit();
@@ -326,6 +341,7 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.properties", propertiesAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
+    DestroyTopLevelWindows();
     g_object_unref(app);
     FileWatcherWaitForShutdown();
     while (g_main_context_pending(nullptr)) {

@@ -2276,7 +2276,9 @@ int main(int argc, char** argv) {
     InstallMainMenu(delegate);
     [app run];
 
+    MacShutdown();
     [delegate release];
     [pool release];
+    MacFinalize();
     return 0;
 }

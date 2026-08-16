@@ -184,6 +184,10 @@ static void SafeDeleteKeyboardHelpWindow() {
     PlatformWindowActivateIfForeground(parent);
 }
 
+void CloseKeyboardHelp() {
+    SafeDeleteKeyboardHelpWindow();
+}
+
 static void ScheduleCloseKeyboardHelp() {
     if (gKeyboardHelpWindow) {
         PlatformPostTask(MkFunc0Void(SafeDeleteKeyboardHelpWindow));

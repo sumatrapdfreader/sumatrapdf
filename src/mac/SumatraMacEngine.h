@@ -160,3 +160,4 @@ void MacFreeDocumentLayout(MacDocumentLayout* layout);
 void MacFreeRenderedPage(MacRenderedPage* page);
 void MacCloseDocument(void* document);
 void MacShutdown();
+void MacFinalize();

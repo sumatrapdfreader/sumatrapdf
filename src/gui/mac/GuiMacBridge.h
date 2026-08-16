@@ -55,6 +55,7 @@ enum MacGuiTextFlags : uint32_t {
 };
 
 void* MacGuiFontCreate(const char* name, int nameLen, float sizePt, bool bold, bool italic);
+void MacGuiFontDestroy(void* font);
 void MacGuiFontMeasure(void* font, const char* text, int textLen, int maxDx, int* dx, int* dy);
 float MacGuiDefaultFontSize();
 

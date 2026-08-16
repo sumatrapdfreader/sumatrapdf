@@ -199,6 +199,20 @@ bool PlatformFontCreateNative(PlatformFont* f) {
     return true;
 }
 
+void PlatformFontDestroyNative(PlatformFont* font) {
+    if (!font->gdiFont) {
+        return;
+    }
+    delete font->gdiFont;
+    font->gdiFont = nullptr;
+    if (font->hfont) {
+        DeleteFont(font->hfont);
+        font->hfont = nullptr;
+    }
+}
+
+void PlatformFontShutdownNative() {}
+
 HFONT PlatformFont::GetHFont() {
     if (hfont) {
         return hfont;

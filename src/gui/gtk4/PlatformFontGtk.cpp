@@ -5,6 +5,7 @@
 
 #include "gui/PlatformFont.h"
 
+#include <fontconfig/fontconfig.h>
 #include <pango/pangocairo.h>
 
 static PangoFontDescription* NativeFont(PlatformFont* font) {
@@ -28,6 +29,19 @@ bool PlatformFontCreateNative(PlatformFont* font) {
     }
     font->nativeFont = desc;
     return true;
+}
+
+void PlatformFontDestroyNative(PlatformFont* font) {
+    PangoFontDescription* desc = NativeFont(font);
+    if (desc) {
+        pango_font_description_free(desc);
+        font->nativeFont = nullptr;
+    }
+}
+
+void PlatformFontShutdownNative() {
+    pango_cairo_font_map_set_default(nullptr);
+    FcFini();
 }
 
 static PangoLayout* NewLayout(PlatformFont* font, Str s) {

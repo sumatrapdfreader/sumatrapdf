@@ -49,10 +49,12 @@ echo "> apt-get update"
 apt-get update
 
 # gcc/g++ and clang/clang++: both toolchains (clang++ is in the clang package)
+# llvm: llvm-symbolizer for source locations in sanitizer reports
+# gdb: native debugger for Linux builds
 # build-essential: make, binutils (ar, objcopy)
 # libssl-dev: openssl headers + libcrypto.so (mupdf pkcs7)
 # xxd: font embedding on Linux arm64
-packages="build-essential gcc g++ clang libssl-dev xxd"
+packages="build-essential gcc g++ clang llvm gdb libssl-dev xxd"
 
 if package_exists libasan8; then
   packages="$packages libasan8"
@@ -73,7 +75,7 @@ fi
 # GTK 4 viewer. libgtk-4-dev pulls glib, cairo, pango, graphene, gdk-pixbuf,
 # epoxy, wayland, and x11; cairo/pango/glib are also listed so a Gfx backend
 # can compile against them without going through gtk4.pc.
-gtk_packages="libgtk-4-dev libcairo2-dev libpango1.0-dev libglib2.0-dev"
+gtk_packages="libgtk-4-dev libcairo2-dev libpango1.0-dev libfontconfig1-dev libglib2.0-dev"
 missing_gtk=""
 for pkg in $gtk_packages; do
   if package_exists "$pkg"; then

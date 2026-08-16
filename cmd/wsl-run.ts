@@ -55,9 +55,15 @@ function windowsPathToWsl(path: string): string {
   return `/mnt/${match[1].toLowerCase()}/${match[2].replace(/\\/g, "/")}`;
 }
 
-async function run(command: string[], description: string, displayCommand?: string): Promise<void> {
+async function run(
+  command: string[],
+  description: string,
+  displayCommand?: string,
+  env: Record<string, string | undefined> = process.env,
+): Promise<void> {
   console.log(`> ${displayCommand ?? command.join(" ")}`);
   const proc = Bun.spawn(command, {
+    env,
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",
@@ -68,9 +74,21 @@ async function run(command: string[], description: string, displayCommand?: stri
   }
 }
 
-async function runLinuxApp(exePath: string): Promise<void> {
+async function runLinuxApp(exePath: string, asan: boolean): Promise<void> {
   if (process.platform === "linux") {
-    await run([exePath], "SumatraPDF");
+    const current = process.env.ASAN_OPTIONS;
+    const symbolizer = Bun.which("llvm-symbolizer");
+    const symbolizerOptions =
+      symbolizer && !symbolizer.toLowerCase().endsWith(".exe")
+        ? [`external_symbolizer_path=${symbolizer}`]
+        : ["allow_addr2line=1", "external_symbolizer_path=/usr/bin/addr2line"];
+    const env = asan
+      ? {
+          ...process.env,
+          ASAN_OPTIONS: [...(current ? [current] : []), "symbolize=1", ...symbolizerOptions].join(":"),
+        }
+      : process.env;
+    await run([exePath], "SumatraPDF", undefined, env);
     return;
   }
   if (process.platform !== "win32") {
@@ -81,7 +99,21 @@ async function runLinuxApp(exePath: string): Promise<void> {
   }
 
   const wslCwd = windowsPathToWsl(process.cwd());
-  const remoteScript = ["set -euo pipefail", `cd ${shellQuote(wslCwd)}`, `exec ${shellQuote(exePath)}`, ""].join("\n");
+  const asanSetup = [
+    'symbolizer="$(command -v llvm-symbolizer || true)"',
+    'if [ -n "$symbolizer" ]; then',
+    '  export ASAN_OPTIONS="${ASAN_OPTIONS:+${ASAN_OPTIONS}:}symbolize=1:external_symbolizer_path=$symbolizer"',
+    "else",
+    '  export ASAN_OPTIONS="${ASAN_OPTIONS:+${ASAN_OPTIONS}:}symbolize=1:allow_addr2line=1:external_symbolizer_path=/usr/bin/addr2line"',
+    "fi",
+  ];
+  const remoteScript = [
+    "set -euo pipefail",
+    `cd ${shellQuote(wslCwd)}`,
+    ...(asan ? asanSetup : []),
+    `exec ${shellQuote(exePath)}`,
+    "",
+  ].join("\n");
   const encodedScript = Buffer.from(remoteScript, "utf8").toString("base64");
   const wrapper = `echo ${encodedScript} | base64 -d | bash -l`;
   await run(["wsl", "-d", WSL_DISTRO, "-e", "bash", "-lc", wrapper], "SumatraPDF", `wsl -d ${WSL_DISTRO}: ${exePath}`);
@@ -112,7 +144,7 @@ async function main(): Promise<void> {
   const buildFlag = variant === "debug" ? "-debug" : variant === "release" ? "-release" : "-asan";
   const outDir = variant === "debug" ? "linux-dbg64" : variant === "release" ? "linux-rel64" : "linux-asan64";
   await run(["bun", "cmd/build.ts", "-linux", buildFlag], "Linux build");
-  await runLinuxApp(`./out/${outDir}/SumatraPDF`);
+  await runLinuxApp(`./out/${outDir}/SumatraPDF`, variant === "asan");
 }
 
 if (import.meta.main) {

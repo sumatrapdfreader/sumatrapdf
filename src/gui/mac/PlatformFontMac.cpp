@@ -14,6 +14,15 @@ bool PlatformFontCreateNative(PlatformFont* font) {
     return font->nativeFont != nullptr;
 }
 
+void PlatformFontDestroyNative(PlatformFont* font) {
+    if (font->nativeFont) {
+        MacGuiFontDestroy(font->nativeFont);
+        font->nativeFont = nullptr;
+    }
+}
+
+void PlatformFontShutdownNative() {}
+
 Size PlatformFontMeasureText(PlatformFont* font, Str s, int maxDx) {
     if (!font || len(s) == 0) {
         return {};
