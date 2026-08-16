@@ -265,16 +265,6 @@ static Checkbox* MakeCheckbox(HWND parent, Str text, bool isRtl, bool checked, i
     return c;
 }
 
-static HBox* LabelAndDrop(VirtText* label, DropDown* drop, int topPt) {
-    auto* row = new HBox();
-    row->alignMain = MainAxisAlign::MainStart;
-    row->alignCross = CrossAxisAlign::CrossCenter;
-    row->AddChild(label);
-    drop->SetInsetsPt(topPt, 0, 0, 8);
-    row->AddChild(drop, 1);
-    return row;
-}
-
 bool SettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     showInverseSearch = gGlobalPrefs && gGlobalPrefs->enableTeXEnhancements && CanAccessDisk();
@@ -310,28 +300,42 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        auto* lab = NewVirtText({
+        // Default Layout / Default Zoom in a 2x2 table so the labels share a
+        // column and the two drop-downs line up at the same left edge
+        auto* labLayout = NewVirtText({
             .s = _TRA("Default &Layout:"),
             .font = font,
             .isRtl = isRtl,
             .prefix = true,
         });
-        labelLayout = lab;
+        labelLayout = labLayout;
         dropLayout = MakeDropDown(hwnd, GetFont(), isRtl, false);
-        vbox->AddChild(LabelAndDrop(lab, dropLayout, 0));
-        FillLayout();
-    }
 
-    {
-        auto* lab = NewVirtText({
+        auto* labZoom = NewVirtText({
             .s = _TRA("Default &Zoom:"),
             .font = font,
             .isRtl = isRtl,
             .prefix = true,
         });
-        labelZoom = lab;
+        labelZoom = labZoom;
         dropZoom = MakeDropDown(hwnd, GetFont(), isRtl, true);
-        vbox->AddChild(LabelAndDrop(lab, dropZoom, 4));
+
+        auto* table = new Table();
+        table->SetSize(2, 2);
+        table->colGap = DpiScale(8);
+        table->rowGap = DpiScale(4);
+        auto& lc = table->SetCell(0, 0, labLayout);
+        lc.alignV = CrossAxisAlign::CrossCenter;
+        auto& ld = table->SetCell(0, 1, dropLayout);
+        ld.alignH = CrossAxisAlign::Stretch;
+        ld.alignV = CrossAxisAlign::CrossCenter;
+        auto& zc = table->SetCell(1, 0, labZoom);
+        zc.alignV = CrossAxisAlign::CrossCenter;
+        auto& zd = table->SetCell(1, 1, dropZoom);
+        zd.alignH = CrossAxisAlign::Stretch;
+        zd.alignV = CrossAxisAlign::CrossCenter;
+        vbox->AddChild(table);
+        FillLayout();
         FillZoom();
     }
 
