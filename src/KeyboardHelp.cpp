@@ -9,6 +9,12 @@
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
 #include "gui/PlatformWindow.h"
+#if OS_WIN
+#include "base/Win.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/VirtCtrl.h"
+#endif
 
 #include "Commands.h"
 #include "KeyboardHelp.h"
@@ -118,6 +124,233 @@ static DefaultKeyboardHelpDataSource gDefaultDataSource;
 KeyboardHelpDataSource* GetDefaultKeyboardHelpDataSource() {
     return &gDefaultDataSource;
 }
+
+// next to the parent window on whichever side has more room, or docked to the
+// right edge of the work area when the parent is fullscreen / maximized
+static Rect PositionHelpWindow(NativeWnd parent, bool fullscreen, Size size) {
+    Rect work = PlatformWindowWorkArea(parent);
+    if (work.IsEmpty()) {
+        work = {0, 0, std::max(size.dx, 1920), std::max(size.dy, 1080)};
+    }
+    Rect frame = PlatformWindowRect(parent);
+    if (!parent || frame.IsEmpty()) {
+        return {work.x + ((work.dx - size.dx) / 2), work.y + ((work.dy - size.dy) / 2), size.dx, size.dy};
+    }
+    if (fullscreen || PlatformWindowIsMaximized(parent)) {
+        int x = std::max(work.x, work.Right() - size.dx);
+        int y = limitValue(work.y + ((work.dy - size.dy) / 2), work.y, std::max(work.y, work.Bottom() - size.dy));
+        return {x, y, size.dx, size.dy};
+    }
+    int rightSpace = work.Right() - frame.Right();
+    int leftSpace = frame.x - work.x;
+    int x = rightSpace >= leftSpace ? frame.Right() : frame.x - size.dx;
+    x = limitValue(x, work.x, std::max(work.x, work.Right() - size.dx));
+    int y = limitValue(frame.y, work.y, std::max(work.y, work.Bottom() - size.dy));
+    return {x, y, size.dx, size.dy};
+}
+
+#if OS_WIN
+
+// The window's whole content is a layout tree: VirtText for the title, section
+// headers and descriptions, VirtRichText key-caps for the shortcuts, a
+// VirtCloseButton for the ✕ and a VirtLine under the title. There is no
+// painting or positioning code here: WindowBase paints the tree and the
+// containers (VBox / HBox / Table) place everything
+struct KeyboardHelpWnd : WindowBase {
+    HWND parentFrame = nullptr;
+
+    ~KeyboardHelpWnd() override = default;
+    bool Create(const KeyboardHelpArgs&);
+};
+
+static KeyboardHelpWnd* gKeyboardHelpWnd = nullptr;
+
+static void ScheduleCloseKeyboardHelp() {
+    if (gKeyboardHelpWnd) {
+        gKeyboardHelpWnd->ScheduleDelete();
+    }
+}
+
+static void OnHelpBeforeDelete(KeyboardHelpWnd* w) {
+    gKeyboardHelpWnd = nullptr;
+    PlatformWindowActivateIfForeground(w->parentFrame);
+}
+
+static void OnHelpClose(WindowBase::CloseEvent*) {
+    ScheduleCloseKeyboardHelp();
+}
+
+// the frame owns this window, so closing the frame destroys it behind our back
+static void OnHelpDestroy(WindowBase::DestroyEvent*) {
+    ScheduleCloseKeyboardHelp();
+}
+
+static void OnHelpCloseClicked(VirtMouseEvent*) {
+    ScheduleCloseKeyboardHelp();
+}
+
+// '?' toggles the help, so it also closes it while it has the focus
+static void OnHelpWndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_CHAR && ev->wparam == '?') {
+        ev->result = 0;
+        ev->didHandle = true;
+        ScheduleCloseKeyboardHelp();
+    }
+}
+
+static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title) {
+    PlatformFont* fontRow = GetDefaultGuiFont();
+    PlatformFont* fontHeader = GetBoldPlatformFont(fontRow);
+    PlatformFont* fontTitle = GetScaledPlatformFont(fontHeader, 125);
+    if (!fontRow || !fontHeader || !fontTitle) {
+        return nullptr;
+    }
+
+    int columnGap = DpiScale(16);
+    int keysDescriptionGap = DpiScale(12);
+    int rowGap = DpiScale(8);
+    int sectionGap = DpiScale(14);
+
+    VBox* columns[2] = {new VBox(), new VBox()};
+    for (VBox* column : columns) {
+        column->gap = sectionGap;
+    }
+
+    for (const KbSectionDef& definition : kSections) {
+        StrVec keys;
+        StrVec descriptions;
+        for (const int* cmdId = definition.commands; *cmdId; cmdId++) {
+            TempStr k = ds->CommandShortcutTemp(*cmdId, 2);
+            TempStr d = ds->CommandDescriptionTemp(*cmdId);
+            // skip commands with no keyboard shortcut (e.g. un-bound by the user)
+            if (len(k) == 0 || len(d) == 0) {
+                continue;
+            }
+            keys.Append(k);
+            descriptions.Append(d);
+        }
+        int nRows = len(keys);
+        if (nRows == 0) {
+            continue;
+        }
+        auto* section = new VBox();
+        section->gap = rowGap;
+        section->AddChild(new VirtText(ds->Translate(Str(definition.title)), fontHeader));
+
+        auto* table = new Table();
+        table->SetSize(nRows, 2);
+        table->colGap = keysDescriptionGap;
+        table->rowGap = rowGap;
+        for (int i = 0; i < nRows; i++) {
+            auto* caps = new VirtRichText();
+            caps->font = fontRow;
+            ParseTipInto(caps, fmt("(Kbd/%s)", keys.At(i)));
+            TableCell& keysCell = table->SetCell(i, 0, caps);
+            keysCell.alignH = CrossAxisAlign::CrossEnd;
+            keysCell.alignV = CrossAxisAlign::CrossCenter;
+            TableCell& descCell = table->SetCell(i, 1, new VirtText(descriptions.At(i), fontRow));
+            descCell.alignV = CrossAxisAlign::CrossCenter;
+        }
+        section->AddChild(table);
+        columns[definition.column]->AddChild(section);
+    }
+
+    auto* header = new HBox();
+    header->alignCross = CrossAxisAlign::CrossCenter;
+    header->AddChild(new VirtText(title, fontTitle), 1);
+    auto* closeBtn = new VirtCloseButton();
+    int btnDx = DpiScale(16);
+    int btnPad = DpiScale(4);
+    // the padding is part of the ideal size, so it enlarges the hit area
+    // without shrinking the ✕ itself
+    closeBtn->padding = Insets{btnPad, btnPad, btnPad, btnPad};
+    closeBtn->idealSize = {btnDx + (2 * btnPad), btnDx + (2 * btnPad)};
+    closeBtn->onClick = MkFunc1Void<VirtMouseEvent*>(OnHelpCloseClicked);
+    header->AddChild(closeBtn);
+
+    auto* content = new HBox();
+    content->gap = columnGap;
+    content->AddChild(columns[0]);
+    content->AddChild(columns[1]);
+
+    auto* separator = new VirtLine();
+    separator->thickness = DpiScale(1);
+
+    auto* root = new VBox();
+    root->alignCross = CrossAxisAlign::Stretch;
+    root->AddChild(header);
+    root->AddChild(new Spacer(0, DpiScale(6)));
+    root->AddChild(separator);
+    root->AddChild(new Spacer(0, DpiScale(10)));
+    root->AddChild(content);
+
+    int pad = DpiScale(20);
+    return new Padding(root, Insets{pad, pad, pad, pad});
+}
+
+bool KeyboardHelpWnd::Create(const KeyboardHelpArgs& helpArgs) {
+    parentFrame = (HWND)helpArgs.parent;
+    KeyboardHelpDataSource* ds = helpArgs.dataSource ? helpArgs.dataSource : GetDefaultKeyboardHelpDataSource();
+    // scale to the monitor the parent (and so the help) is on
+    DpiScope dpiScope(parentFrame);
+    Str title = ds->Translate(StrL("Keyboard Shortcuts"));
+
+    CreateCustomArgs args;
+    args.title = title;
+    args.style = WS_POPUP;
+    args.exStyle = WS_EX_TOOLWINDOW;
+    args.visible = false;
+    CreateCustom(args);
+    if (!hwnd) {
+        return false;
+    }
+    // owned by the frame (not created as its child: CreateCustomHwnd would add
+    // WS_CHILD) so the help stays above it and is destroyed with it
+    if (parentFrame) {
+        SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)parentFrame);
+    }
+
+    layout = BuildKeyboardHelpLayout(ds, title);
+    if (!layout) {
+        return false;
+    }
+    Size size = layout->Layout(ExpandInf());
+    Rect wr = PositionHelpWindow(parentFrame, helpArgs.parentFullscreen, size);
+    SetWindowPos(hwnd, nullptr, wr.x, wr.y, wr.dx, wr.dy, SWP_NOZORDER | SWP_NOACTIVATE);
+    DoLayout(wr.Size());
+    UpdateTheme();
+    SetIsVisible(true);
+    HwndSetFocus(hwnd);
+    return true;
+}
+
+void ToggleKeyboardHelp(const KeyboardHelpArgs& args) {
+    if (gKeyboardHelpWnd) {
+        ScheduleCloseKeyboardHelp();
+        return;
+    }
+    auto* w = new KeyboardHelpWnd();
+    w->closeOnEsc = true;
+    w->onBeforeDelete = MkFunc0(OnHelpBeforeDelete, w);
+    w->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnHelpClose);
+    w->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnHelpDestroy);
+    w->onWndProc = MkFunc1Void<WindowBase::WndProcEvent*>(OnHelpWndProc);
+    if (!w->Create(args)) {
+        delete w;
+        return;
+    }
+    gKeyboardHelpWnd = w;
+}
+
+void CloseKeyboardHelp() {
+    ScheduleCloseKeyboardHelp();
+}
+
+bool IsKeyboardHelpVisible() {
+    return gKeyboardHelpWnd != nullptr;
+}
+
+#else // !OS_WIN: mac / gtk4 draw into a PlatformWindow (VirtCtrl is win-only)
 
 struct KbRow {
     Str keys;
@@ -309,28 +542,6 @@ Size KeyboardHelpWindow::LayoutContent() {
     return {width, height};
 }
 
-static Rect PositionHelpWindow(NativeWnd parent, bool fullscreen, Size size) {
-    Rect work = PlatformWindowWorkArea(parent);
-    if (work.IsEmpty()) {
-        work = {0, 0, std::max(size.dx, 1920), std::max(size.dy, 1080)};
-    }
-    Rect frame = PlatformWindowRect(parent);
-    if (!parent || frame.IsEmpty()) {
-        return {work.x + ((work.dx - size.dx) / 2), work.y + ((work.dy - size.dy) / 2), size.dx, size.dy};
-    }
-    if (fullscreen || PlatformWindowIsMaximized(parent)) {
-        int x = std::max(work.x, work.Right() - size.dx);
-        int y = limitValue(work.y + ((work.dy - size.dy) / 2), work.y, std::max(work.y, work.Bottom() - size.dy));
-        return {x, y, size.dx, size.dy};
-    }
-    int rightSpace = work.Right() - frame.Right();
-    int leftSpace = frame.x - work.x;
-    int x = rightSpace >= leftSpace ? frame.Right() : frame.x - size.dx;
-    x = limitValue(x, work.x, std::max(work.x, work.Right() - size.dx));
-    int y = limitValue(frame.y, work.y, std::max(work.y, work.Bottom() - size.dy));
-    return {x, y, size.dx, size.dy};
-}
-
 static void PaintCloseButton(KeyboardHelpWindow* help, Gfx* gfx) {
     Rect r = help->closeRect;
     Color glyph = gColsCloseBtn[help->closeHovered ? kColCloseXHover : kColCloseX];
@@ -472,3 +683,5 @@ void ToggleKeyboardHelp(const KeyboardHelpArgs& args) {
 bool IsKeyboardHelpVisible() {
     return gKeyboardHelpWindow != nullptr;
 }
+
+#endif
