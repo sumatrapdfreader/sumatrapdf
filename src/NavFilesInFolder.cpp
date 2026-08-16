@@ -762,17 +762,45 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        Str strings[4] = {_TRA("Alt + Up: go to parent directory"), _TRA("Enter: open file in current tab"),
-                          _TRA("Ctrl + Enter: open file in a new tab"), _TRA("Del: delete file")};
-        auto* hbox = new VBox();
-        hbox->alignMain = MainAxisAlign::MainCenter;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{0, 8, 0, 8};
-        for (Str s : strings) {
-            auto* c = NewVirtText({.s = s, .font = font, .isRtl = IsUIRtl()});
-            hbox->AddChild(new Padding(c, pad));
+        // {shortcut, description} pairs, two per table row; translators keep
+        // the key names in English
+        Str strings[4][2] = {{_TRA("Enter"), _TRA("open file in current tab")},
+                             {_TRA("Ctrl + Enter"), _TRA("open file in a new tab")},
+                             {_TRA("Alt + Up"), _TRA("go to parent directory")},
+                             {_TRA("Del"), _TRA("delete file")}};
+        int n = dimofi(strings);
+        // the hints are secondary information, so they get a smaller font
+        PlatformFont* helpFont = GetDefaultGuiFontOfSize(std::max(GetAppFontSize() - 2, 8));
+        auto* table = new Table();
+        table->SetSize(n / 2, 4);
+        table->colGap = DpiScale(8);
+        table->rowGap = DpiScale(2);
+        for (int i = 0; i < n; i++) {
+            int row = i / 2;
+            int col = (i % 2) * 2;
+            // key-cap rendering, like the command palette help row
+            auto* k = new VirtRichText();
+            ParseTipInto(k, fmt("(Kbd/%s)", strings[i][0]));
+            k->font = helpFont;
+            k->SetColor(kColRichText, colTxt);
+            k->SetColor(kColRichLink, colTxt);
+            k->SetColor(kColRichBg, colBg);
+            ILayout* kbd = k;
+            if (col > 0) {
+                // extra space between the two pairs in a row
+                kbd = new Padding(k, Insets{0, 0, 0, DpiScale(16)});
+            }
+            auto& kbdCell = table->SetCell(row, col, kbd);
+            kbdCell.alignH = CrossAxisAlign::CrossEnd;
+            kbdCell.alignV = CrossAxisAlign::CrossCenter;
+
+            auto* d = NewVirtText({.s = strings[i][1], .font = helpFont, .isRtl = IsUIRtl()});
+            auto& descCell = table->SetCell(row, col + 1, d);
+            descCell.alignV = CrossAxisAlign::CrossCenter;
         }
-        vbox->AddChild(hbox);
+        auto* center = new Align(table);
+        center->HAlign = AlignCenter;
+        vbox->AddChild(center);
     }
 
     auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
