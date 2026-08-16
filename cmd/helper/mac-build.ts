@@ -3,7 +3,7 @@
  *
  * Invoked by cmd/build.ts -mac.
  *
- * Output: out/mac-dbg64/lib/*.a (or out/mac-rel64 / out/mac-asan64)
+ * Output: out/mac-dbg64/lib/*.a (or out/mac-rel64 / out/mac-asan64 / out/mac-rel64_asan)
  *
  * Mirrors the dependency projects in premake5.lua / premake5.files.lua.
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
@@ -663,7 +663,7 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   }
 
   const startTime = performance.now();
-  const config = isAsan ? "asan" : isRelease ? "release" : "debug";
+  const config = isAsan ? (isRelease ? "release-asan" : "asan") : isRelease ? "release" : "debug";
   console.log(`\n=== Building SumatraPDF dependencies (${config}, macOS ${arch}) ===\n`);
   console.log(`Output: ${outDir}`);
   console.log(`Tools: ${tools.cc}, ${tools.cxx}`);

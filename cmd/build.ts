@@ -45,11 +45,11 @@ Windows builds:
   -codeql                 Build the static release target for CodeQL
 
 Portable and cross-platform builds:
-  -linux [-debug|-release|-asan] [-clean]
+  -linux [-debug|-release] [-asan] [-clean]
                            Native Linux build; defaults to -asan
-  -mac [-debug|-release|-asan] [-clean]
+  -mac [-debug|-release] [-asan] [-clean]
                            Native macOS build; defaults to -debug
-  -mac-remote -branch <name> [-debug|-release|-asan] [-clean]
+  -mac-remote -branch <name> [-debug|-release] [-asan] [-clean]
                            Build a temporary branch on the remote Mac
   -mingw <-debug|-release> [-clean]
                            Direct MinGW cross-build on the current host
@@ -172,9 +172,6 @@ function validateOptions(opts: BuildOptions): void {
   if (mode === "windows") {
     reject(!opts.config && !opts.asan, "Windows builds require -debug, -release, or -asan");
     reject(opts.win32 && (opts.config !== "release" || opts.asan), "-32 requires a non-ASan -release build");
-  }
-  if (mode === "linux" || mode === "mac" || mode === "mac-remote") {
-    reject(opts.asan && !!opts.config, "-asan cannot be combined with -debug or -release");
   }
   if (mode === "mingw") {
     reject(!opts.config, "-mingw requires -debug or -release");
@@ -308,9 +305,20 @@ async function runWslLauncher(args: string[], target: "linux" | "wine"): Promise
   if (code !== 0) throw new Error(`WSL ${target} build failed with exit code ${code}`);
 }
 
-function portableConfig(opts: BuildOptions, defaultConfig: "debug" | "asan"): "debug" | "release" | "asan" {
-  if (opts.asan) return "asan";
-  return opts.config ?? defaultConfig;
+interface PortableConfig {
+  isRelease: boolean;
+  asan: boolean;
+}
+
+function portableConfig(opts: BuildOptions, defaultConfig: "debug" | "asan"): PortableConfig {
+  const asan = opts.asan || (!opts.config && defaultConfig === "asan");
+  const isRelease = opts.config === "release";
+  return { isRelease, asan };
+}
+
+function portableOutDir(platform: "linux" | "mac", config: PortableConfig): string {
+  if (config.asan) return `out/${platform}-${config.isRelease ? "rel64_asan" : "asan64"}`;
+  return `out/${platform}-${config.isRelease ? "rel" : "dbg"}64`;
 }
 
 async function runBuild(opts: BuildOptions): Promise<void> {
@@ -333,13 +341,14 @@ async function runBuild(opts: BuildOptions): Promise<void> {
   } else if (mode === "linux") {
     const config = portableConfig(opts, "asan");
     if (process.platform === "win32") {
-      await runWslLauncher([`-${config}`, ...(opts.clean ? ["-clean"] : [])], "linux");
+      const flags = [config.isRelease ? "-release" : "-debug", ...(config.asan ? ["-asan"] : [])];
+      await runWslLauncher([...flags, ...(opts.clean ? ["-clean"] : [])], "linux");
     } else {
       const { buildLinux } = await import("./helper/linux-build");
       await buildLinux({
-        outDir: `out/linux-${config === "debug" ? "dbg" : config === "release" ? "rel" : "asan"}64`,
-        isRelease: config === "release",
-        asan: config === "asan",
+        outDir: portableOutDir("linux", config),
+        isRelease: config.isRelease,
+        asan: config.asan,
         clean: opts.clean,
         jobs: Math.max(1, Math.min(4, cpus().length)),
       });
@@ -348,16 +357,17 @@ async function runBuild(opts: BuildOptions): Promise<void> {
     const config = portableConfig(opts, "debug");
     const { buildMac } = await import("./helper/mac-build");
     await buildMac({
-      outDir: `out/mac-${config === "debug" ? "dbg" : config === "release" ? "rel" : "asan"}64`,
-      isRelease: config === "release",
-      asan: config === "asan",
+      outDir: portableOutDir("mac", config),
+      isRelease: config.isRelease,
+      asan: config.asan,
       clean: opts.clean,
       jobs: Math.max(1, Math.min(4, cpus().length)),
     });
   } else if (mode === "mac-remote") {
     const config = portableConfig(opts, "debug");
     const { buildMacRemote } = await import("./helper/mac-remote-build");
-    await buildMacRemote(opts.branch!, [`-${config}`, ...(opts.clean ? ["-clean"] : [])]);
+    const flags = [config.isRelease ? "-release" : "-debug", ...(config.asan ? ["-asan"] : [])];
+    await buildMacRemote(opts.branch!, [...flags, ...(opts.clean ? ["-clean"] : [])]);
   } else if (mode === "mingw") {
     const { buildMingw } = await import("./helper/mingw-build");
     await buildMingw({

@@ -3,7 +3,7 @@
  *
  * Invoked by cmd/build.ts -linux.
  *
- * Output: out/linux-dbg64/lib/*.a (or out/linux-rel64 / out/linux-asan64)
+ * Output: out/linux-dbg64/lib/*.a (or out/linux-rel64 / out/linux-asan64 / out/linux-rel64_asan)
  *
  * Mirrors the dependency projects in premake5.lua / premake5.files.lua.
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
@@ -771,7 +771,7 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   }
 
   const startTime = performance.now();
-  const config = isAsan ? "asan" : isRelease ? "release" : "debug";
+  const config = isAsan ? (isRelease ? "release-asan" : "asan") : isRelease ? "release" : "debug";
   invalidateObjsIfCompilerChanged(outDir, tools, config);
   console.log(`\n=== Building SumatraPDF dependencies (${config}, Linux ${arch}) ===\n`);
   console.log(`Output: ${outDir}`);
