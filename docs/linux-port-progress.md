@@ -5,16 +5,16 @@ after its relevant Windows, Linux, and portable checks pass.
 
 ## Status
 
-| Stage | Status      | Summary                                      |
-| ----- | ----------- | -------------------------------------------- |
-| 1     | Complete    | GTK4 application executable and file opening |
-| 2     | Complete    | Shared portable reader model                 |
-| 3     | Complete    | Embeddable canvas and document viewer        |
-| 4     | Complete    | Portable asynchronous rendering              |
-| 5     | Complete    | Application shell, tabs, and commands        |
-| 6     | Complete    | Reader features                              |
-| 7     | Complete    | Linux desktop services                       |
-| 8     | Not started | Packaging and deferred features              |
+| Stage | Status   | Summary                                      |
+| ----- | -------- | -------------------------------------------- |
+| 1     | Complete | GTK4 application executable and file opening |
+| 2     | Complete | Shared portable reader model                 |
+| 3     | Complete | Embeddable canvas and document viewer        |
+| 4     | Complete | Portable asynchronous rendering              |
+| 5     | Complete | Application shell, tabs, and commands        |
+| 6     | Complete | Reader features                              |
+| 7     | Complete | Linux desktop services                       |
+| 8     | Complete | Portable packaging; distro formats deferred  |
 
 ## Stage 1: Linux application target
 
@@ -521,3 +521,32 @@ Verification:
   `detect_leaks=0` passed 102,754 assertions.
 - Byte-for-byte comparisons confirmed that both debug and ASan staged resources match their source files, and the
   staged AppStream file passed `appstreamcli validate --no-net`.
+
+## Stage 8: Packaging and deferred features
+
+Completed 2026-08-16 for the initial portable-reader scope.
+
+- Made every Linux configuration produce a versioned, architecture-specific `.tar.gz` archive after all build and
+  test targets pass. Debug and ASan names retain their configuration suffix; the release artifact is
+  `out/linux-rel64/SumatraPDF-3.7-linux-x64.tar.gz`.
+- Packaged the application under `bin/`, desktop/AppStream/icon resources under the standard `share/` hierarchy, and
+  included the project license and Linux-specific run/install instructions.
+- Assembled archives on the native Linux temporary filesystem so files extracted from Windows-hosted WSL builds have
+  normal `0755` executable/directory and `0644` data-file permissions.
+- Normalized archive entry ordering, timestamps, ownership, and group metadata for reproducible packaging inputs.
+- Kept GTK and other platform libraries as system dependencies and documented that boundary. Debian, RPM, and Flatpak
+  packages remain deliberately deferred until the application and its supported-format policy stabilize, as planned.
+- The resident/autostart mode, privileged self-updater, automatic OCR/translation installation, and forced renderer
+  selection remain outside the initial reader-port scope.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,902 assertions and produced the debug archive.
+- `bun cmd/build.ts -linux -release`: passed; an explicit release `test_util` run passed 102,674 assertions and produced
+  the unsuffixed release archive.
+- `bun cmd/build.ts -linux`: the ASan build passed; an explicit run with `detect_leaks=0` passed 102,758 assertions and
+  produced the ASan archive.
+- Extracted the release archive into a fresh WSL temporary directory, checked its file modes and packaged binary byte
+  for byte, validated its AppStream metadata, and opened `ext/a-zlib/zlib.3.pdf` from the packaged executable under
+  WSLg until the expected timeout. Only the existing non-fatal Mesa renderer warnings appeared.

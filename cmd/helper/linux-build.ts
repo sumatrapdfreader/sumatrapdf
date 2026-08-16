@@ -9,7 +9,16 @@
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
  */
 
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, basename, dirname } from "node:path";
 import { tmpdir } from "node:os";
@@ -45,6 +54,7 @@ import {
   cmarkGfm,
   mupdf as mupdfBase,
 } from "../deps-build-defs";
+import { extractSumatraVersion } from "../util";
 
 type LinuxArch = "arm64" | "x64";
 
@@ -817,10 +827,68 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   await buildGtk4LinuxApp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   stageLinuxDesktopResources(outDir);
   await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildLinuxPortableArchive(outDir, arch, config);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
   console.log(`Static libraries: ${join(outDir, "lib")}\n`);
+}
+
+async function buildLinuxPortableArchive(outDir: string, arch: LinuxArch, config: string): Promise<void> {
+  const version = extractSumatraVersion();
+  const configSuffix = config === "release" ? "" : `-${config}`;
+  const packageName = `SumatraPDF-${version}-linux-${arch}${configSuffix}`;
+  const tempRoot = mkdtempSync(join(tmpdir(), "sumatrapdf-linux-package-"));
+  const packageDir = join(tempRoot, packageName);
+  const archivePath = join(outDir, `${packageName}.tar.gz`);
+  rmSync(archivePath, { force: true });
+
+  const files = [
+    [join(outDir, "SumatraPDF"), join(packageDir, "bin", "SumatraPDF")],
+    ["COPYING", join(packageDir, "COPYING")],
+    ["packaging/linux/README.md", join(packageDir, "README.md")],
+    [
+      join(outDir, "share", "applications", `${LINUX_APP_ID}.desktop`),
+      join(packageDir, "share", "applications", `${LINUX_APP_ID}.desktop`),
+    ],
+    [
+      join(outDir, "share", "metainfo", `${LINUX_APP_ID}.metainfo.xml`),
+      join(packageDir, "share", "metainfo", `${LINUX_APP_ID}.metainfo.xml`),
+    ],
+    [
+      join(outDir, "share", "icons", "hicolor", "scalable", "apps", `${LINUX_APP_ID}.svg`),
+      join(packageDir, "share", "icons", "hicolor", "scalable", "apps", `${LINUX_APP_ID}.svg`),
+    ],
+  ];
+  console.log("Building portable Linux archive...");
+  try {
+    for (const [src, dst] of files) {
+      mkdirSync(dirname(dst), { recursive: true });
+      copyFileSync(src, dst);
+      chmodSync(dst, dst.endsWith("/bin/SumatraPDF") ? 0o755 : 0o644);
+    }
+
+    const tar = resolveTool("tar archiver", ["tar"]);
+    const result = await spawnCmd([
+      tar,
+      "--sort=name",
+      "--mtime=@0",
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "-czf",
+      archivePath,
+      "-C",
+      tempRoot,
+      packageName,
+    ]);
+    if (!result.ok) {
+      throw new Error(`create portable Linux archive failed: ${result.stderr}`);
+    }
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+  console.log(`  -> ${archivePath}`);
 }
 
 function requireResourceText(path: string, text: string, expected: string): void {
