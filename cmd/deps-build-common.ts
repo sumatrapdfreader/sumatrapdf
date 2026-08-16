@@ -250,7 +250,7 @@ export async function embedBinaryFile(
         "-B",
         "i386:x86-64",
         "--rename-section",
-        ".data=.rodata,alloc,load,readonly,data",
+        ".data=.rodata,contents,alloc,load,readonly,data",
         "--redefine-sym",
         `_binary_${cleanFileName}_start=${symbolPrefix}_start`,
         "--redefine-sym",
@@ -285,6 +285,22 @@ export async function embedBinaryFile(
 
   if (!res.ok) {
     throw new Error(`Failed to embed ${inputFile}: ${res.stderr}`);
+  }
+  if (format === "elf") {
+    const verifyOutput = `${outAbsolute}.embedded-data`;
+    rmSync(verifyOutput, { force: true });
+    try {
+      const verify = await spawnCmd([tools.embed, "-O", "binary", "--only-section=.rodata", outAbsolute, verifyOutput]);
+      if (!verify.ok) {
+        throw new Error(`Failed to verify embedded data for ${inputFile}: ${verify.stderr}`);
+      }
+      const embeddedData = await readFile(verifyOutput);
+      if (!data.equals(embeddedData)) {
+        throw new Error(`Embedded data differs from ${inputFile}`);
+      }
+    } finally {
+      rmSync(verifyOutput, { force: true });
+    }
   }
   try {
     await Bun.write(tmpInput, "");
