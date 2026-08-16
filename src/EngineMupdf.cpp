@@ -2528,15 +2528,20 @@ static void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec
     for (int i = 0; i < n; i += 2) {
         pdf_obj* info = pdf_array_get(ctx, obj, i + 1);
         PageLabelInfo pli;
-        pli.startAt = pdf_to_int(ctx, pdf_array_get(ctx, obj, i)) + 1;
-        if (pli.startAt < 1) {
+        // the key is attacker-controlled: INT_MAX + 1 in int is signed
+        // overflow, undefined behavior (issue #5952)
+        i64 startAt = (i64)pdf_to_int(ctx, pdf_array_get(ctx, obj, i)) + 1;
+        if (startAt < 1 || startAt > (i64)pageCount) {
             continue;
         }
+        pli.startAt = (int)startAt;
 
         pli.type = pdf_to_name(ctx, pdf_dict_gets(ctx, info, "S"));
         pli.prefix = pdf_dict_gets(ctx, info, "P");
         pli.countFrom = pdf_to_int(ctx, pdf_dict_gets(ctx, info, "St"));
-        pli.countFrom = std::max(pli.countFrom, 1);
+        // BuildPageLabelVec computes countFrom + j for j < pageCount: keep the
+        // sum representable for an attacker-controlled /St near INT_MAX
+        pli.countFrom = limitValue(pli.countFrom, 1, INT_MAX - pageCount);
         data.Append(pli);
     }
 }
