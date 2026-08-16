@@ -34,9 +34,14 @@ static void fz_unlock_context_cs(void* user, int lock) {
 
 // route mupdf's warnings/errors through our log() instead of the default
 // callback, which does fputs() to stderr; that first fputs makes the CRT
-// allocate a stdio buffer it never frees, which shows up as a leak
+// allocate a stdio buffer it never frees, which shows up as a leak.
+// mupdf hands us the message without the newline its default callback prints
 static void fz_log_cb(void* /*user*/, const char* msg) {
-    log(Str(msg));
+    Str msgStr = Str(msg);
+    if (!str::EndsWith(msgStr, StrL("\n"))) {
+        msgStr = str::JoinTemp(msgStr, StrL("\n"));
+    }
+    log(msgStr);
 }
 
 fz_context* fz_new_context_windows(size_t maxStore) {

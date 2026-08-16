@@ -92,22 +92,13 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
     return img;
 }
 
-static void fz_print_cb(void* /*user*/, const char* msg) {
-    log(Str(msg));
-}
-
-static void installFitzErrorCallbacks(fz_context* ctx) {
-    fz_set_warning_callback(ctx, fz_print_cb, nullptr);
-    fz_set_error_callback(ctx, fz_print_cb, nullptr);
-}
-
 PdfCreator::PdfCreator() {
+    // fz_new_context_windows() routes mupdf warnings / errors to log()
     ctx = fz_new_context_windows(kFzStoreUnlimited);
     if (!ctx) {
         return;
     }
 
-    installFitzErrorCallbacks(ctx);
     fz_try(ctx) {
         doc = pdf_create_document(ctx);
     }
