@@ -11,7 +11,7 @@ after its relevant Windows, Linux, and portable checks pass.
 | 2     | Complete    | Shared portable reader model                 |
 | 3     | Complete    | Embeddable canvas and document viewer        |
 | 4     | Complete    | Portable asynchronous rendering              |
-| 5     | In progress | Application shell, tabs, and commands        |
+| 5     | Complete    | Application shell, tabs, and commands        |
 | 6     | Not started | Reader features                              |
 | 7     | Not started | Linux desktop services                       |
 | 8     | Not started | Packaging and deferred features              |
@@ -108,7 +108,7 @@ Verification:
 
 ## Stage 5: Application shell and commands
 
-In progress.
+Completed 2026-08-16.
 
 ### Native reader controls
 
@@ -169,3 +169,24 @@ Verification:
 - The debug and ASan applications rendered `tests/combining-mark-first.pdf` and `tests/issue-1189.pdf`, which both
   reproduced the invalid embedded-font read before the fix. The two-tab switch, close, reopen, and quit lifecycle
   exited with status 0, and ASan reported no errors.
+
+### Native menu, presentation, and keyboard help
+
+Completed 2026-08-16.
+
+- Added a native application menu and menu button for document/tab lifecycle, fullscreen, presentation, keyboard
+  help, and quit actions, with GTK accelerators backed by the generated `Cmd*` identifiers.
+- Added presentation mode. It temporarily hides the toolbar and tab strip, selects single-page fit-page layout,
+  enters fullscreen, and restores the previous layout, zoom, and fullscreen state on exit.
+- Integrated the portable `KeyboardHelp.cpp` dialog into the real Linux application instead of keeping it only as
+  a standalone GTK4 build target.
+- Registered the application menu during GTK startup so it is available before the first window is activated and
+  satisfies GTK's application-registration lifecycle.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,734 assertions and all Linux targets linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,583 assertions.
+- Under WSLg, both debug and ASan applications entered and exited presentation and fullscreen modes, opened and
+  closed keyboard help, and quit through application actions with status 0. ASan reported no errors; WSLg only
+  emitted its existing non-fatal Mesa renderer warnings.

@@ -5,6 +5,7 @@
 
 #include "Settings.h"
 #include "Commands.h"
+#include "KeyboardHelp.h"
 #include "gui/DocumentView.h"
 
 #include <gtk/gtk.h>
@@ -14,6 +15,7 @@
 
 struct LinuxWindow {
     GtkWidget* window = nullptr;
+    GtkWidget* header = nullptr;
     GtkWidget* root = nullptr;
     GtkWidget* toolbar = nullptr;
     GtkWidget* content = nullptr;
@@ -28,6 +30,11 @@ struct LinuxWindow {
     Vec<LinuxTab*> tabs;
     StrVec closedPaths;
     bool fullscreen = false;
+    bool presentation = false;
+    bool wasFullscreen = false;
+    bool previousContinuous = false;
+    float previousZoom = kZoomFitWidth;
+    LinuxTab* presentationTab = nullptr;
 };
 
 static void UpdateControls(LinuxWindow* window);
@@ -92,13 +99,61 @@ static void ShowOpenDialog(LinuxWindow* window) {
     gtk_native_dialog_show(GTK_NATIVE_DIALOG(dialog));
 }
 
-static void ToggleFullscreen(LinuxWindow* window) {
-    window->fullscreen = !window->fullscreen;
-    if (window->fullscreen) {
+static void SetFullscreen(LinuxWindow* window, bool fullscreen) {
+    window->fullscreen = fullscreen;
+    if (fullscreen) {
         gtk_window_fullscreen(GTK_WINDOW(window->window));
     } else {
         gtk_window_unfullscreen(GTK_WINDOW(window->window));
     }
+}
+
+static void ToggleFullscreen(LinuxWindow* window) {
+    SetFullscreen(window, !window->fullscreen);
+}
+
+static void TogglePresentation(LinuxWindow* window) {
+    if (!window->presentation) {
+        LinuxTab* tab = ActiveTab(window);
+        DocumentView* view = LinuxTabView(tab);
+        if (!view || view->PageCount() == 0) {
+            return;
+        }
+        window->presentation = true;
+        window->presentationTab = tab;
+        window->previousContinuous = view->IsContinuous();
+        window->previousZoom = view->Zoom();
+        window->wasFullscreen = window->fullscreen;
+        gtk_widget_set_visible(window->toolbar, FALSE);
+        gtk_notebook_set_show_tabs(GTK_NOTEBOOK(window->notebook), FALSE);
+        view->SetContinuous(false);
+        view->SetZoom(kZoomFitPage);
+        SetFullscreen(window, true);
+    } else {
+        LinuxTab* tab = window->presentationTab;
+        DocumentView* view = FindTabIndex(window, tab) >= 0 ? LinuxTabView(tab) : nullptr;
+        bool wasFullscreen = window->wasFullscreen;
+        window->presentation = false;
+        window->presentationTab = nullptr;
+        gtk_widget_set_visible(window->toolbar, TRUE);
+        gtk_notebook_set_show_tabs(GTK_NOTEBOOK(window->notebook), TRUE);
+        if (view) {
+            view->SetContinuous(window->previousContinuous);
+            view->SetZoom(window->previousZoom);
+        }
+        if (!wasFullscreen) {
+            SetFullscreen(window, false);
+        }
+    }
+    UpdateControls(window);
+}
+
+static void ShowKeyboardHelp(LinuxWindow* window) {
+    KeyboardHelpArgs args;
+    args.parent = window->window;
+    args.parentFullscreen = window->fullscreen;
+    args.dataSource = GetDefaultKeyboardHelpDataSource();
+    ToggleKeyboardHelp(args);
 }
 
 static void SelectRelativeTab(LinuxWindow* window, int direction) {
@@ -124,6 +179,9 @@ static void CloseTab(LinuxWindow* window, LinuxTab* tab) {
     int tabIndex = FindTabIndex(window, tab);
     if (tabIndex < 0) {
         return;
+    }
+    if (tab == window->presentationTab) {
+        TogglePresentation(window);
     }
     RememberClosedPath(window, LinuxTabPath(tab));
     int pageIndex = gtk_notebook_page_num(GTK_NOTEBOOK(window->notebook), LinuxTabWidget(tab));
@@ -159,13 +217,25 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             ReopenClosedTab(window);
             return;
         case CmdNextTab:
+            if (window->presentation) {
+                TogglePresentation(window);
+            }
             SelectRelativeTab(window, 1);
             return;
         case CmdPrevTab:
+            if (window->presentation) {
+                TogglePresentation(window);
+            }
             SelectRelativeTab(window, -1);
             return;
         case CmdToggleFullscreen:
             ToggleFullscreen(window);
+            return;
+        case CmdTogglePresentationMode:
+            TogglePresentation(window);
+            return;
+        case CmdToggleKeyboardHelp:
+            ShowKeyboardHelp(window);
             return;
     }
 
@@ -234,6 +304,14 @@ static gboolean OnWindowKey(GtkEventControllerKey*, guint keyval, guint, GdkModi
     } else if (!ctrl && (keyval == GDK_KEY_c || keyval == GDK_KEY_C)) {
         command = CmdToggleContinuousView;
     } else if (keyval == GDK_KEY_F11) {
+        command = CmdToggleFullscreen;
+    } else if (keyval == GDK_KEY_F5) {
+        command = CmdTogglePresentationMode;
+    } else if (keyval == GDK_KEY_question) {
+        command = CmdToggleKeyboardHelp;
+    } else if (keyval == GDK_KEY_Escape && window->presentation) {
+        command = CmdTogglePresentationMode;
+    } else if (keyval == GDK_KEY_Escape && window->fullscreen) {
         command = CmdToggleFullscreen;
     }
     if (!command) {
@@ -314,11 +392,16 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     gtk_window_set_title(GTK_WINDOW(result->window), "SumatraPDF");
     gtk_window_set_default_size(GTK_WINDOW(result->window), 1000, 720);
 
-    GtkWidget* header = gtk_header_bar_new();
-    gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(header), TRUE);
+    result->header = gtk_header_bar_new();
+    gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(result->header), TRUE);
+    GtkWidget* menu = gtk_menu_button_new();
+    gtk_menu_button_set_icon_name(GTK_MENU_BUTTON(menu), "open-menu-symbolic");
+    gtk_widget_set_tooltip_text(menu, "Main menu");
+    gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(menu), gtk_application_get_menubar(app));
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(result->header), menu);
     GtkWidget* fullscreen = NewCommandButton(result, "Fullscreen", "Toggle fullscreen (F11)", CmdToggleFullscreen);
-    gtk_header_bar_pack_end(GTK_HEADER_BAR(header), fullscreen);
-    gtk_window_set_titlebar(GTK_WINDOW(result->window), header);
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(result->header), fullscreen);
+    gtk_window_set_titlebar(GTK_WINDOW(result->window), result->header);
 
     result->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     result->toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);

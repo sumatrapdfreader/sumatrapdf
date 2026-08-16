@@ -64,7 +64,9 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
     }
     const char* name = g_action_get_name(G_ACTION(action));
     int command = 0;
-    if (str::Eq(Str(name), StrL("close-tab"))) {
+    if (str::Eq(Str(name), StrL("open"))) {
+        command = CmdOpenFile;
+    } else if (str::Eq(Str(name), StrL("close-tab"))) {
         command = CmdCloseCurrentDocument;
     } else if (str::Eq(Str(name), StrL("reopen-tab"))) {
         command = CmdReopenLastClosedFile;
@@ -72,26 +74,75 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdNextTab;
     } else if (str::Eq(Str(name), StrL("previous-tab"))) {
         command = CmdPrevTab;
+    } else if (str::Eq(Str(name), StrL("fullscreen"))) {
+        command = CmdToggleFullscreen;
+    } else if (str::Eq(Str(name), StrL("presentation"))) {
+        command = CmdTogglePresentationMode;
+    } else if (str::Eq(Str(name), StrL("keyboard-help"))) {
+        command = CmdToggleKeyboardHelp;
     }
     LinuxWindowDispatchCommand(window, command);
+}
+
+static GMenu* CreateMainMenu() {
+    GMenu* menu = g_menu_new();
+    GMenu* file = g_menu_new();
+    g_menu_append(file, "Open...", "app.open");
+    g_menu_append(file, "Close Tab", "app.close-tab");
+    g_menu_append(file, "Reopen Closed Tab", "app.reopen-tab");
+    g_menu_append(file, "Quit", "app.quit");
+    g_menu_append_section(menu, nullptr, G_MENU_MODEL(file));
+    g_object_unref(file);
+
+    GMenu* view = g_menu_new();
+    g_menu_append(view, "Fullscreen", "app.fullscreen");
+    g_menu_append(view, "Presentation", "app.presentation");
+    g_menu_append(view, "Keyboard Shortcuts", "app.keyboard-help");
+    g_menu_append_section(menu, nullptr, G_MENU_MODEL(view));
+    g_object_unref(view);
+    return menu;
+}
+
+static void OnStartup(GtkApplication* app, gpointer) {
+    GMenu* menu = CreateMainMenu();
+    gtk_application_set_menubar(app, G_MENU_MODEL(menu));
+    g_object_unref(menu);
 }
 
 int RunLinuxApp(int argc, char** argv) {
     GtkApplication* app = gtk_application_new("org.sumatrapdf.SumatraPDF", G_APPLICATION_HANDLES_OPEN);
     auto* state = new LinuxAppState();
     g_object_set_data_full(G_OBJECT(app), "sumatra-linux-state", state, FreeState);
+    g_signal_connect(app, "startup", G_CALLBACK(OnStartup), nullptr);
     g_signal_connect(app, "activate", G_CALLBACK(OnActivate), nullptr);
     g_signal_connect(app, "open", G_CALLBACK(OnOpen), nullptr);
     const GActionEntry actions[] = {
         {"quit", OnQuit},
+        {"open", OnWindowCommand},
         {"close-tab", OnWindowCommand},
         {"reopen-tab", OnWindowCommand},
         {"next-tab", OnWindowCommand},
         {"previous-tab", OnWindowCommand},
+        {"fullscreen", OnWindowCommand},
+        {"presentation", OnWindowCommand},
+        {"keyboard-help", OnWindowCommand},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
+
     const char* quitAccels[] = {"<Primary>q", nullptr};
+    const char* openAccels[] = {"<Primary>o", nullptr};
+    const char* closeAccels[] = {"<Primary>w", nullptr};
+    const char* reopenAccels[] = {"<Primary><Shift>t", nullptr};
+    const char* fullscreenAccels[] = {"F11", nullptr};
+    const char* presentationAccels[] = {"F5", nullptr};
+    const char* helpAccels[] = {"question", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
+    gtk_application_set_accels_for_action(app, "app.open", openAccels);
+    gtk_application_set_accels_for_action(app, "app.close-tab", closeAccels);
+    gtk_application_set_accels_for_action(app, "app.reopen-tab", reopenAccels);
+    gtk_application_set_accels_for_action(app, "app.fullscreen", fullscreenAccels);
+    gtk_application_set_accels_for_action(app, "app.presentation", presentationAccels);
+    gtk_application_set_accels_for_action(app, "app.keyboard-help", helpAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);

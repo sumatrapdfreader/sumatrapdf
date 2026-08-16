@@ -684,15 +684,18 @@ const GTK4_KEYBOARD_HELP_SOURCES = [
 ];
 
 const GTK4_APP_SOURCES = [
+  "src/Commands.cpp",
   "src/CrashHandlerNoOp.cpp",
   "src/DisplayMode.cpp",
   "src/DocumentLayout.cpp",
   "src/PageRenderPolicy.cpp",
   "src/PageRenderService.cpp",
   "src/ReaderModel.cpp",
+  "src/KeyboardHelp.cpp",
   "src/SumatraLog_posix.cpp",
   ...PORTABLE_ENGINE_SOURCES,
   "src/gui/DocumentView.cpp",
+  "src/gui/GuiColors.cpp",
   "src/gui/PlatformFont.cpp",
   "src/gui/gtk4/GfxGtk.cpp",
   "src/gui/gtk4/PlatformCanvasGtk.cpp",
@@ -812,6 +815,7 @@ async function buildGtk4LinuxApp(
   const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
   const units = GTK4_APP_SOURCES.map((src) => {
     const obj = objPath(outDir, "gtk4-app", src);
+    const sourceDefines = src === "src/Commands.cpp" ? ["-DSUMATRA_TEST_UTIL=1"] : [];
     return {
       src,
       obj,
@@ -819,6 +823,7 @@ async function buildGtk4LinuxApp(
         tools.cxx,
         ...optFlags,
         ...defineFlags,
+        ...sourceDefines,
         ...includeFlags,
         ...gtkCflags,
         ...commonFlags,
