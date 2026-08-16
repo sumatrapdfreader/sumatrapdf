@@ -374,6 +374,9 @@ Verification:
 - `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,580 assertions and all Linux targets linked.
 - `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,408 assertions and all Linux targets
   linked.
+- `bun cmd/build.ts -mac-remote -branch tmp/mac-port-command-palette-20260816 -debug`: passed after bringing the
+  macOS test manifests up to date; macOS `test_util` passed 102,656 assertions, `test_engines` linked, and
+  `SumatraPDF.app` linked.
 - Under WSLg, both debug and ASan applications opened the GTK command palette over
   `ext/a-zlib/zlib.3.pdf` and quit through application actions with status 0. ASan used `detect_leaks=0`, reported no
   memory-safety errors, and WSLg only emitted its existing non-fatal Mesa renderer warnings.
