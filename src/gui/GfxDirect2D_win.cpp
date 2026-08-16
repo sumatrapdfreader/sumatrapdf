@@ -175,9 +175,23 @@ static IDWriteTextFormat* GetTextFormat(PlatformFont* font, IDWriteInlineObject*
     HDC dc = CreateCompatibleDC(nullptr);
     if (dc) {
         HGDIOBJ prevFont = SelectObject(dc, hf);
-        WCHAR realized[LF_FACESIZE]{};
-        if (GetTextFaceW(dc, LF_FACESIZE, realized) > 0 && realized[0]) {
-            memcpy(lf.lfFaceName, realized, sizeof(realized));
+        // GetTextFace() reports the alias itself back, so ask for the outline
+        // metrics instead: otmpFamilyName is the physical font GDI realized
+        // ("Microsoft Sans Serif" for "MS Shell Dlg")
+        UINT cb = GetOutlineTextMetricsW(dc, 0, nullptr);
+        if (cb >= sizeof(OUTLINETEXTMETRICW)) {
+            auto* otm = (OUTLINETEXTMETRICW*)AllocArrayTemp<u8>((int)cb);
+            otm->otmSize = cb;
+            if (GetOutlineTextMetricsW(dc, cb, otm) && otm->otmpFamilyName) {
+                // the string members are offsets from the start of the struct
+                const WCHAR* family = (const WCHAR*)((const u8*)otm + (uintptr_t)otm->otmpFamilyName);
+                if (family[0]) {
+                    memset(lf.lfFaceName, 0, sizeof(lf.lfFaceName));
+                    for (int i = 0; i < LF_FACESIZE - 1 && family[i]; i++) {
+                        lf.lfFaceName[i] = family[i];
+                    }
+                }
+            }
         }
         SelectObject(dc, prevFont);
         DeleteDC(dc);
