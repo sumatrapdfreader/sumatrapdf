@@ -695,6 +695,7 @@ const GTK4_APP_SOURCES = [
   "src/gui/gtk4/PlatformFontGtk.cpp",
   "src/gui/gtk4/PlatformWindowGtk.cpp",
   "src/linux/LinuxApp.cpp",
+  "src/linux/LinuxTab.cpp",
   "src/linux/LinuxWindow.cpp",
   "src/linux/SumatraLinux.cpp",
 ];

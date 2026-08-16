@@ -129,3 +129,25 @@ Verification:
 - The GTK application opened and rendered `ext/a-zlib/zlib.3.pdf` under WSLg with the native shell visible, accepted
   the `app.quit` action after five seconds, and exited with status 0. WSLg only emitted its existing non-fatal Mesa
   renderer warnings.
+
+### Document tabs
+
+Completed 2026-08-16.
+
+- Added a Linux tab owner around each portable `DocumentView`; every tab has independent layout, navigation state,
+  engine, asynchronous worker, and render cache.
+- Added scrollable, reorderable GTK tabs with close buttons, active-tab title/control synchronization, and an empty
+  window state when the last tab closes.
+- Open all files delivered in one `GtkApplication::open` request instead of ignoring all but the first.
+- Added next/previous tab commands, `Ctrl+Tab` and `Ctrl+Page Up/Down` switching, `Ctrl+W` close, and a bounded
+  ten-document reopen history exposed through `Ctrl+Shift+T` and the toolbar.
+- Exposed close, reopen, next, and previous tab application actions so the native lifecycle can be smoke-tested
+  without synthetic pointer or keyboard input.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,787 assertions and all Linux targets linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,840 assertions.
+- Under WSLg, the ASan app opened two document tabs, switched forward and backward, closed a tab, reopened it, and
+  quit through application actions. Both per-tab render workers shut down cleanly, the process exited with status 0,
+  and ASan reported no errors. WSLg only emitted its existing non-fatal Mesa renderer warnings.

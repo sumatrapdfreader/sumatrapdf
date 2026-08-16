@@ -3,6 +3,8 @@
 
 #include "base/Base.h"
 
+#include "Commands.h"
+
 #include <gtk/gtk.h>
 
 #include "linux/LinuxWindow.h"
@@ -40,8 +42,8 @@ static void OnActivate(GtkApplication* app, gpointer) {
 
 static void OnOpen(GtkApplication* app, GFile** files, int nFiles, const char*, gpointer) {
     LinuxWindow* window = EnsureWindow(app);
-    if (nFiles > 0) {
-        LinuxWindowOpenFile(window, files[0]);
+    for (int i = 0; i < nFiles; i++) {
+        LinuxWindowOpenFile(window, files[i]);
     }
     LinuxWindowPresent(window);
 }
@@ -54,13 +56,39 @@ static void OnQuit(GSimpleAction*, GVariant*, gpointer data) {
     g_application_quit(G_APPLICATION(data));
 }
 
+static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
+    GtkApplication* app = GTK_APPLICATION(data);
+    LinuxWindow* window = GetState(app)->window;
+    if (!window) {
+        return;
+    }
+    const char* name = g_action_get_name(G_ACTION(action));
+    int command = 0;
+    if (str::Eq(Str(name), StrL("close-tab"))) {
+        command = CmdCloseCurrentDocument;
+    } else if (str::Eq(Str(name), StrL("reopen-tab"))) {
+        command = CmdReopenLastClosedFile;
+    } else if (str::Eq(Str(name), StrL("next-tab"))) {
+        command = CmdNextTab;
+    } else if (str::Eq(Str(name), StrL("previous-tab"))) {
+        command = CmdPrevTab;
+    }
+    LinuxWindowDispatchCommand(window, command);
+}
+
 int RunLinuxApp(int argc, char** argv) {
     GtkApplication* app = gtk_application_new("org.sumatrapdf.SumatraPDF", G_APPLICATION_HANDLES_OPEN);
     auto* state = new LinuxAppState();
     g_object_set_data_full(G_OBJECT(app), "sumatra-linux-state", state, FreeState);
     g_signal_connect(app, "activate", G_CALLBACK(OnActivate), nullptr);
     g_signal_connect(app, "open", G_CALLBACK(OnOpen), nullptr);
-    const GActionEntry actions[] = {{"quit", OnQuit}};
+    const GActionEntry actions[] = {
+        {"quit", OnQuit},
+        {"close-tab", OnWindowCommand},
+        {"reopen-tab", OnWindowCommand},
+        {"next-tab", OnWindowCommand},
+        {"previous-tab", OnWindowCommand},
+    };
     g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
     const char* quitAccels[] = {"<Primary>q", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
