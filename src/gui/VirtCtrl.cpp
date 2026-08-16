@@ -2384,7 +2384,9 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
         drop.dx = dropDx;
     }
     Color bgSel = GetColor(kColIconBtnBgSelected);
-    if (isSelected && bgSel != kColorUnset) {
+    // a disabled button's last checked state is leftover (e.g. Fit Single Page
+    // after switching to the home page); don't paint it as selected
+    if (isSelected && enabled && bgSel != kColorUnset) {
         ctx.gfx->FillRect(action, bgSel);
     }
     Color bgHover = GetColor(kColIconBtnBgHover);
