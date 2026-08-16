@@ -20,7 +20,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "GetPasswordDialog.h"
+#include "SumatraDialogs.h"
 
 // Labels and buttons are VirtCtrl; the password field and checkboxes are HWNDs.
 // Same WindowBase layout as Change Theme. The dialog itself stays modal: engine

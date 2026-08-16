@@ -22,7 +22,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "CustomZoomDialog.h"
+#include "SumatraDialogs.h"
 
 // Label and buttons are VirtCtrl; the zoom field is an editable DropDown.
 // Same WindowBase layout pattern as Change Theme / Add Favorite.

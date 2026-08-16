@@ -29,7 +29,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "ChangeColorDialog.h"
+#include "SumatraDialogs.h"
 
 static const int kMaxCustomColors = 13;
 static const int kNumPresets = 3;

@@ -21,7 +21,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "ChangeLanguageDialog.h"
+#include "SumatraDialogs.h"
 
 // Search edit is a real HWND; the language list and buttons are VirtCtrl.
 // Same layout / WindowBase pattern as Change Theme.

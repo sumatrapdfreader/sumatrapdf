@@ -99,12 +99,6 @@
     <ClInclude Include="..\src\Accelerators.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AddFavoriteDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\AdvancedSettingsDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Annotation.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -126,18 +120,6 @@
     <ClInclude Include="..\src\CaptionGlyphs.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ChangeColorDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ChangeLanguageDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ChangeScrollbarDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ChangeThemeDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ChmDump.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -157,9 +139,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\CrashHandler.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\CustomZoomDialog.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DarkMode_win.h">
@@ -184,9 +163,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\EbookFormatter.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\EbookSettingsDialog.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\EditAnnotations.h">
@@ -237,13 +213,7 @@
     <ClInclude Include="..\src\FormFields.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\GetPasswordDialog.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\GlobalPrefs.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\GoToPageDialog.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\GumboHelpers.h">
@@ -268,9 +238,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Installer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\InverseSearchDialog.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\JxlReader.h">
@@ -406,9 +373,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Settings.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SettingsDialog.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ShortcutParse.h">

@@ -22,7 +22,7 @@
 #include "Translations.h"
 #include "DarkMode_win.h"
 #include "PdfDarkMode.h"
-#include "ChangeThemeDialog.h"
+#include "SumatraDialogs.h"
 
 // The theme list, the label and the buttons are virtual controls (VirtCtrl);
 // only the drop-down is a real HWND. They all sit in the same layout tree,

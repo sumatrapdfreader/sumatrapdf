@@ -25,7 +25,7 @@
 #include "AppTools.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "SettingsDialog.h"
+#include "SumatraDialogs.h"
 
 // Section headers, labels and OK/Cancel are VirtCtrl; layout/zoom/command
 // combos and the checkboxes are HWNDs. Same WindowBase layout as Inverse Search.

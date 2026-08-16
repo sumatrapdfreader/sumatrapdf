@@ -25,7 +25,7 @@
 #include "Commands.h"
 #include "AppSettings.h"
 #include "Menu.h"
-#include "AddFavoriteDialog.h"
+#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Accelerators.h"
 #include "Tabs.h"

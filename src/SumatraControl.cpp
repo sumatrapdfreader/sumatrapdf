@@ -34,7 +34,7 @@
 #include "SelectTextKeyboard.h"
 #include "HomePage.h"
 #include "AIChatCommon.h"
-#include "AdvancedSettingsDialog.h"
+#include "SumatraDialogs.h"
 #include "EditAnnotations.h"
 
 extern bool gIsStartup;

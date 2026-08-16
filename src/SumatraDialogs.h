@@ -1,6 +1,25 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct MainWindow;
+struct WindowTab;
+
+void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
+void ShowAdvancedSettingsDialog(MainWindow* win);
+TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut);
+void ShowChangeBackgroundColorDialog(MainWindow* win);
+void ShowChangeLanguageDialog(MainWindow* win);
+void ShowChangeScrollbarDialog(MainWindow* win);
+void ShowChangeThemeDialog(MainWindow* win);
+void ShowSetDocumentColorsFollowThemeDialog(MainWindow* win);
+void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab);
+void ShowCustomZoomDialog(MainWindow* win);
+void ShowEbookSettingsDialog(MainWindow* win);
+Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword);
+void ShowGoToPageDialog(MainWindow* win);
+void ShowInverseSearchDialog(MainWindow* win);
+void ShowSettingsDialog(MainWindow* win);
+
 enum class PrintRangeAdv {
     All = 0,
     Even,

@@ -38,7 +38,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "FilterHighlightDraw.h"
-#include "AdvancedSettingsDialog.h"
+#include "SumatraDialogs.h"
 
 constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/settings/settings3-7.html";
 

@@ -22,7 +22,7 @@
 #include "AppTools.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "InverseSearchDialog.h"
+#include "SumatraDialogs.h"
 
 // Label, Help and OK/Cancel are VirtCtrl; the command line is an editable DropDown.
 // Same WindowBase layout as Change Theme / Custom Zoom.

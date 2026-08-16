@@ -1177,8 +1177,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\AIChatCommon.h" />
     <ClInclude Include="..\src\AIChatPanel.h" />
     <ClInclude Include="..\src\Accelerators.h" />
-    <ClInclude Include="..\src\AddFavoriteDialog.h" />
-    <ClInclude Include="..\src\AdvancedSettingsDialog.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
     <ClInclude Include="..\src\AppTools.h" />
@@ -1186,10 +1184,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\BuildConfig.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\CaptionGlyphs.h" />
-    <ClInclude Include="..\src\ChangeColorDialog.h" />
-    <ClInclude Include="..\src\ChangeLanguageDialog.h" />
-    <ClInclude Include="..\src\ChangeScrollbarDialog.h" />
-    <ClInclude Include="..\src\ChangeThemeDialog.h" />
     <ClInclude Include="..\src\ChmDump.h" />
     <ClInclude Include="..\src\ChmFile.h" />
     <ClInclude Include="..\src\ChmModel.h" />
@@ -1197,7 +1191,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
-    <ClInclude Include="..\src\CustomZoomDialog.h" />
     <ClInclude Include="..\src\DarkMode_win.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
@@ -1206,7 +1199,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\DocumentLayout.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
-    <ClInclude Include="..\src\EbookSettingsDialog.h" />
     <ClInclude Include="..\src\EditAnnotations.h" />
     <ClInclude Include="..\src\EmbeddedResources.h" />
     <ClInclude Include="..\src\EngineAll.h" />
@@ -1223,9 +1215,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\FormFields.h" />
-    <ClInclude Include="..\src\GetPasswordDialog.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
-    <ClInclude Include="..\src\GoToPageDialog.h" />
     <ClInclude Include="..\src\GumboHelpers.h" />
     <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\HangDetector.h" />
@@ -1234,7 +1224,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\ImageReader.h" />
     <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
-    <ClInclude Include="..\src\InverseSearchDialog.h" />
     <ClInclude Include="..\src\JxlReader.h" />
     <ClInclude Include="..\src\KeyboardHelp.h" />
     <ClInclude Include="..\src\LinkFollow.h" />
@@ -1280,7 +1269,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\SelectionToolbar.h" />
     <ClInclude Include="..\src\SelectionTranslate.h" />
     <ClInclude Include="..\src\Settings.h" />
-    <ClInclude Include="..\src\SettingsDialog.h" />
     <ClInclude Include="..\src\ShortcutParse.h" />
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
     <ClInclude Include="..\src\StressTesting.h" />

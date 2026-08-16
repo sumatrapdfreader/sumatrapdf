@@ -22,7 +22,7 @@
 #include "Favorites.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "AddFavoriteDialog.h"
+#include "SumatraDialogs.h"
 
 // Label and buttons are VirtCtrl; the name field is a real HWND Edit.
 // Same WindowBase layout pattern as Change Theme / Change Language.

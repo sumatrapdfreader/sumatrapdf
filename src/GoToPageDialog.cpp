@@ -22,7 +22,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "GoToPageDialog.h"
+#include "SumatraDialogs.h"
 
 // Labels and buttons are VirtCtrl; the page field is a real HWND Edit.
 // Same WindowBase layout pattern as Change Theme / Add Favorite.

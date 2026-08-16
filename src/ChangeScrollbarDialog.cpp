@@ -21,7 +21,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "DarkMode_win.h"
-#include "ChangeScrollbarDialog.h"
+#include "SumatraDialogs.h"
 
 // Mode list and buttons are VirtCtrl. Same WindowBase layout as Change Theme.
 struct ChangeScrollbarWnd : WindowBase {
