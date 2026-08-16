@@ -163,10 +163,60 @@ static IDWriteTextFormat* GetTextFormat(PlatformFont* font, IDWriteInlineObject*
     }
     auto weight = (DWRITE_FONT_WEIGHT)(lf.lfWeight > 0 ? lf.lfWeight : FW_NORMAL);
     DWRITE_FONT_STYLE style = lf.lfItalic ? DWRITE_FONT_STYLE_ITALIC : DWRITE_FONT_STYLE_NORMAL;
+    DWRITE_FONT_STRETCH stretch = DWRITE_FONT_STRETCH_NORMAL;
+
+    // lfFaceName is a GDI face name: it can be a registry alias ("MS Shell Dlg"
+    // -> Microsoft Sans Serif) or a face DirectWrite folds into a family plus
+    // weight ("Arial Black" -> Arial, black). CreateTextFormat() wants a
+    // DirectWrite family name and silently falls back to a default font for
+    // anything else, which drew the about page and home page tips in the wrong
+    // font. Realize the font through GDI (resolves the aliases), then map the
+    // LOGFONT through the GDI interop to the real family / weight / style
+    HDC dc = CreateCompatibleDC(nullptr);
+    if (dc) {
+        HGDIOBJ prevFont = SelectObject(dc, hf);
+        WCHAR realized[LF_FACESIZE]{};
+        if (GetTextFaceW(dc, LF_FACESIZE, realized) > 0 && realized[0]) {
+            memcpy(lf.lfFaceName, realized, sizeof(realized));
+        }
+        SelectObject(dc, prevFont);
+        DeleteDC(dc);
+    }
+    WCHAR familyName[LF_FACESIZE]{};
+    IDWriteGdiInterop* interop = nullptr;
+    gDWriteFactory->GetGdiInterop(&interop);
+    if (interop) {
+        IDWriteFont* dwFont = nullptr;
+        interop->CreateFontFromLOGFONT(&lf, &dwFont);
+        if (dwFont) {
+            IDWriteFontFamily* family = nullptr;
+            dwFont->GetFontFamily(&family);
+            if (family) {
+                IDWriteLocalizedStrings* names = nullptr;
+                family->GetFamilyNames(&names);
+                if (names) {
+                    UINT32 idx = 0;
+                    BOOL exists = FALSE;
+                    names->FindLocaleName(L"en-us", &idx, &exists);
+                    if (!exists) {
+                        idx = 0;
+                    }
+                    names->GetString(idx, familyName, dimof(familyName));
+                    names->Release();
+                }
+                family->Release();
+            }
+            weight = dwFont->GetWeight();
+            style = dwFont->GetStyle();
+            stretch = dwFont->GetStretch();
+            dwFont->Release();
+        }
+        interop->Release();
+    }
+    const WCHAR* familyToUse = familyName[0] ? familyName : lf.lfFaceName;
 
     IDWriteTextFormat* format = nullptr;
-    HRESULT hr = gDWriteFactory->CreateTextFormat(lf.lfFaceName, nullptr, weight, style, DWRITE_FONT_STRETCH_NORMAL,
-                                                  emSize, L"", &format);
+    HRESULT hr = gDWriteFactory->CreateTextFormat(familyToUse, nullptr, weight, style, stretch, emSize, L"", &format);
     if (FAILED(hr) || !format) {
         logf("GetTextFormat: CreateTextFormat('%s') failed 0x%x\n", ToUtf8Temp(WStr(lf.lfFaceName)), (int)hr);
         return nullptr;
