@@ -23,6 +23,9 @@ struct DocumentViewData {
     PageRenderService* renderer = nullptr;
     TextSelection* textSelection = nullptr;
     TextSearch* textSearch = nullptr;
+    TocTree* toc = nullptr;
+    Vec<TocItem*> tocItems;
+    Vec<int> tocDepths;
     DocumentLayout layout;
     Size viewSize;
     Point viewOffset;
@@ -155,6 +158,15 @@ static CursorId CursorAtPoint(DocumentViewData* data, Point pt) {
         return CursorId::Hand;
     }
     return TextAtPoint(data, pt) ? CursorId::IBeam : CursorId::Arrow;
+}
+
+static void AppendTocItems(DocumentViewData* data, TocItem* item, int depth) {
+    while (item) {
+        data->tocItems.Append(item);
+        data->tocDepths.Append(depth);
+        AppendTocItems(data, item->child, depth + 1);
+        item = item->next;
+    }
 }
 
 static void ScrollToDestination(DocumentView* view, int pageNo, RectF rect, float zoom) {
@@ -579,6 +591,7 @@ bool DocumentView::Open(Str path) {
     }
     auto* textSelection = new TextSelection(reader->GetEngine());
     auto* textSearch = new TextSearch(reader->GetEngine());
+    TocTree* toc = reader->GetEngine()->GetToc();
     delete viewData->renderer;
     delete viewData->textSelection;
     delete viewData->textSearch;
@@ -587,6 +600,12 @@ bool DocumentView::Open(Str path) {
     viewData->renderer = renderer;
     viewData->textSelection = textSelection;
     viewData->textSearch = textSearch;
+    viewData->toc = toc;
+    viewData->tocItems.Reset();
+    viewData->tocDepths.Reset();
+    if (toc && toc->root) {
+        AppendTocItems(viewData, toc->root->child, 0);
+    }
     viewData->viewOffset = {};
     viewData->startPage = 1;
     Relayout(this, canvas->ClientRect().Size());
@@ -760,4 +779,43 @@ bool DocumentView::FindText(Str text, bool forward, bool restart) {
     GoToPage(search->GetSearchHitStartPageNo());
     Invalidate(this);
     return true;
+}
+
+int DocumentView::TocItemCount() const {
+    return len(ViewData((DocumentView*)this)->tocItems);
+}
+
+Str DocumentView::TocItemTitle(int index) const {
+    auto* viewData = ViewData((DocumentView*)this);
+    if (index < 0 || index >= len(viewData->tocItems)) {
+        return {};
+    }
+    return viewData->tocItems[index]->title;
+}
+
+int DocumentView::TocItemDepth(int index) const {
+    auto* viewData = ViewData((DocumentView*)this);
+    if (index < 0 || index >= len(viewData->tocDepths)) {
+        return 0;
+    }
+    return viewData->tocDepths[index];
+}
+
+bool DocumentView::GoToTocItem(int index) {
+    auto* viewData = ViewData(this);
+    if (!viewData->reader || index < 0 || index >= len(viewData->tocItems)) {
+        return false;
+    }
+    TocItem* item = viewData->tocItems[index];
+    IPageDestination* dest = item->GetPageDestination();
+    if (dest) {
+        DocumentViewLinkHandler handler(this);
+        viewData->reader->GetEngine()->HandleLink(dest, &handler);
+        return true;
+    }
+    if (item->pageNo >= 1 && item->pageNo <= viewData->reader->PageCount()) {
+        GoToPage(item->pageNo);
+        return true;
+    }
+    return false;
 }

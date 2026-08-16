@@ -25,6 +25,9 @@ struct LinuxWindow {
     GtkWidget* findEntry = nullptr;
     GtkWidget* findStatus = nullptr;
     GtkWidget* content = nullptr;
+    GtkWidget* documentPane = nullptr;
+    GtkWidget* tocScroll = nullptr;
+    GtkWidget* tocList = nullptr;
     GtkWidget* notebook = nullptr;
     GtkWidget* emptyStatus = nullptr;
     GtkWidget* pageStatus = nullptr;
@@ -37,6 +40,8 @@ struct LinuxWindow {
     StrVec closedPaths;
     bool fullscreen = false;
     bool presentation = false;
+    bool tocVisible = false;
+    bool previousTocVisible = false;
     bool wasFullscreen = false;
     bool previousContinuous = false;
     float previousZoom = kZoomFitWidth;
@@ -44,6 +49,7 @@ struct LinuxWindow {
 };
 
 static void UpdateControls(LinuxWindow* window);
+static void UpdateToc(LinuxWindow* window);
 
 static LinuxTab* ActiveTab(LinuxWindow* window) {
     int index = gtk_notebook_get_current_page(GTK_NOTEBOOK(window->notebook));
@@ -136,6 +142,45 @@ static void CopyText(LinuxWindow* window, Str text) {
     gdk_clipboard_set_text(clipboard, CStrTemp(text));
 }
 
+static void OnTocRowActivated(GtkListBox*, GtkListBoxRow* row, gpointer data) {
+    auto* window = (LinuxWindow*)data;
+    int index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(row), "sumatra-toc-index"));
+    LinuxWindowGoToTocItem(window, index);
+}
+
+static void UpdateToc(LinuxWindow* window) {
+    GtkWidget* child = gtk_widget_get_first_child(window->tocList);
+    while (child) {
+        GtkWidget* next = gtk_widget_get_next_sibling(child);
+        gtk_list_box_remove(GTK_LIST_BOX(window->tocList), child);
+        child = next;
+    }
+
+    DocumentView* view = ActiveView(window);
+    int count = view ? view->TocItemCount() : 0;
+    for (int i = 0; i < count; i++) {
+        Str title = view->TocItemTitle(i);
+        GtkWidget* label = gtk_label_new(CStrTemp(title));
+        gtk_label_set_xalign(GTK_LABEL(label), 0);
+        gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+        gtk_widget_set_margin_start(label, 8 + view->TocItemDepth(i) * 16);
+        gtk_widget_set_margin_end(label, 8);
+        gtk_widget_set_margin_top(label, 4);
+        gtk_widget_set_margin_bottom(label, 4);
+        gtk_widget_set_tooltip_text(label, CStrTemp(title));
+        GtkWidget* row = gtk_list_box_row_new();
+        gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(row), label);
+        g_object_set_data(G_OBJECT(row), "sumatra-toc-index", GINT_TO_POINTER(i));
+        gtk_list_box_append(GTK_LIST_BOX(window->tocList), row);
+    }
+    gtk_widget_set_visible(window->tocScroll, window->tocVisible && !window->presentation && count > 0);
+}
+
+static void ToggleToc(LinuxWindow* window) {
+    window->tocVisible = !window->tocVisible;
+    UpdateToc(window);
+}
+
 static bool RunFind(LinuxWindow* window, bool forward, bool restart) {
     DocumentView* view = ActiveView(window);
     const char* text = gtk_editable_get_text(GTK_EDITABLE(window->findEntry));
@@ -196,8 +241,10 @@ static void TogglePresentation(LinuxWindow* window) {
         window->previousContinuous = view->IsContinuous();
         window->previousZoom = view->Zoom();
         window->wasFullscreen = window->fullscreen;
+        window->previousTocVisible = window->tocVisible;
         gtk_widget_set_visible(window->toolbar, FALSE);
         gtk_notebook_set_show_tabs(GTK_NOTEBOOK(window->notebook), FALSE);
+        gtk_widget_set_visible(window->tocScroll, FALSE);
         view->SetContinuous(false);
         view->SetZoom(kZoomFitPage);
         SetFullscreen(window, true);
@@ -207,6 +254,7 @@ static void TogglePresentation(LinuxWindow* window) {
         bool wasFullscreen = window->wasFullscreen;
         window->presentation = false;
         window->presentationTab = nullptr;
+        window->tocVisible = window->previousTocVisible;
         gtk_widget_set_visible(window->toolbar, TRUE);
         gtk_notebook_set_show_tabs(GTK_NOTEBOOK(window->notebook), TRUE);
         if (view) {
@@ -216,6 +264,7 @@ static void TogglePresentation(LinuxWindow* window) {
         if (!wasFullscreen) {
             SetFullscreen(window, false);
         }
+        UpdateToc(window);
     }
     UpdateControls(window);
 }
@@ -308,6 +357,10 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             return;
         case CmdToggleKeyboardHelp:
             ShowKeyboardHelp(window);
+            return;
+        case CmdToggleBookmarks:
+        case CmdToggleTableOfContents:
+            ToggleToc(window);
             return;
     }
 
@@ -448,6 +501,7 @@ static void OnContinuousToggled(GtkToggleButton* button, gpointer data) {
 
 static void OnSwitchPage(GtkNotebook*, GtkWidget*, guint, gpointer data) {
     auto* window = (LinuxWindow*)data;
+    UpdateToc(window);
     UpdateControls(window);
     DocumentView* view = ActiveView(window);
     if (view) {
@@ -563,7 +617,19 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     gtk_widget_set_vexpand(result->notebook, TRUE);
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(result->notebook), TRUE);
     g_signal_connect(result->notebook, "switch-page", G_CALLBACK(OnSwitchPage), result);
-    gtk_stack_add_named(GTK_STACK(result->content), result->notebook, "notebook");
+    result->documentPane = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    result->tocList = gtk_list_box_new();
+    gtk_list_box_set_selection_mode(GTK_LIST_BOX(result->tocList), GTK_SELECTION_SINGLE);
+    g_signal_connect(result->tocList, "row-activated", G_CALLBACK(OnTocRowActivated), result);
+    result->tocScroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(result->tocScroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(result->tocScroll), result->tocList);
+    gtk_widget_set_size_request(result->tocScroll, 240, -1);
+    gtk_paned_set_start_child(GTK_PANED(result->documentPane), result->tocScroll);
+    gtk_paned_set_end_child(GTK_PANED(result->documentPane), result->notebook);
+    gtk_paned_set_resize_start_child(GTK_PANED(result->documentPane), FALSE);
+    gtk_widget_set_visible(result->tocScroll, FALSE);
+    gtk_stack_add_named(GTK_STACK(result->content), result->documentPane, "notebook");
     gtk_stack_set_visible_child_name(GTK_STACK(result->content), "empty");
     gtk_box_append(GTK_BOX(result->root), result->content);
     gtk_window_set_child(GTK_WINDOW(result->window), result->root);
@@ -598,6 +664,7 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     window->tabs.Append(tab);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(window->notebook), index);
     LinuxTabOpenFile(tab, file);
+    UpdateToc(window);
     UpdateControls(window);
 }
 
@@ -608,6 +675,14 @@ void LinuxWindowFindText(LinuxWindow* window, Str text) {
     gtk_editable_set_text(GTK_EDITABLE(window->findEntry), CStrTemp(text));
     ShowFindBar(window);
     RunFind(window, true, true);
+}
+
+void LinuxWindowGoToTocItem(LinuxWindow* window, int index) {
+    DocumentView* view = window ? ActiveView(window) : nullptr;
+    if (view && view->GoToTocItem(index)) {
+        view->Focus();
+        UpdateControls(window);
+    }
 }
 
 void LinuxWindowPresent(LinuxWindow* window) {

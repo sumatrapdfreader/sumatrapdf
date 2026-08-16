@@ -34,4 +34,8 @@ struct DocumentView {
     void SelectAll();
     void CopySelection();
     bool FindText(Str text, bool forward, bool restart);
+    int TocItemCount() const;
+    Str TocItemTitle(int index) const;
+    int TocItemDepth(int index) const;
+    bool GoToTocItem(int index);
 };

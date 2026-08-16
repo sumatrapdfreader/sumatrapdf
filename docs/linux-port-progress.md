@@ -263,3 +263,27 @@ Verification:
 - Under WSLg, both debug and ASan applications searched for `zlib`, navigated to the next and previous matches, and
   quit through application actions with status 0. ASan reported no errors; WSLg only emitted its existing non-fatal
   Mesa renderer warnings.
+
+### Table of contents
+
+Completed 2026-08-16.
+
+- Added a small toolkit-neutral TOC surface to `DocumentView` that flattens the existing `TocTree` into stable
+  title/depth/index accessors while keeping engine-owned destinations and navigation inside the portable view.
+- Added a native GTK bookmarks sidebar with hierarchy indentation, scrolling, tooltips, row activation, menu and
+  `F12` toggle actions, per-tab rebuilding, and presentation-mode hiding/restoration.
+- Routed TOC destinations through the same portable `ILinkHandler` used by document links so internal page,
+  coordinate, URL, and file targets retain engine-specific handling.
+- Added `test_engines <path> -list-toc` as a focused engine and hierarchy probe, plus a parameterized GTK action for
+  deterministic navigation checks.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,903 assertions and all Linux targets linked.
+- The debug and ASan TOC probes found the same 178 nested entries in
+  `bug-1352-merged_manuals-1.4.2.pdf`.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,744 assertions.
+- Under WSLg, the debug and ASan applications displayed the bookmarks sidebar, activated entry 10, closed the tab,
+  and quit through application actions. There were no sanitizer memory-access errors; LeakSanitizer reports the
+  known GTK/Pango/fontconfig process-lifetime caches after the outline creates many labels, and WSLg emitted its
+  existing non-fatal Mesa renderer warnings.

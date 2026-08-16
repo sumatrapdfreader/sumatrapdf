@@ -90,6 +90,8 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdFindNext;
     } else if (str::Eq(Str(name), StrL("find-previous"))) {
         command = CmdFindPrev;
+    } else if (str::Eq(Str(name), StrL("bookmarks"))) {
+        command = CmdToggleBookmarks;
     }
     LinuxWindowDispatchCommand(window, command);
 }
@@ -100,6 +102,14 @@ static void OnSearchText(GSimpleAction*, GVariant* parameter, gpointer data) {
     const char* text = parameter ? g_variant_get_string(parameter, nullptr) : nullptr;
     if (window && text) {
         LinuxWindowFindText(window, Str(text));
+    }
+}
+
+static void OnTocItem(GSimpleAction*, GVariant* parameter, gpointer data) {
+    auto* app = GTK_APPLICATION(data);
+    LinuxWindow* window = GetState(app)->window;
+    if (window && parameter) {
+        LinuxWindowGoToTocItem(window, g_variant_get_int32(parameter));
     }
 }
 
@@ -123,6 +133,7 @@ static GMenu* CreateMainMenu() {
     GMenu* view = g_menu_new();
     g_menu_append(view, "Fullscreen", "app.fullscreen");
     g_menu_append(view, "Presentation", "app.presentation");
+    g_menu_append(view, "Bookmarks", "app.bookmarks");
     g_menu_append(view, "Keyboard Shortcuts", "app.keyboard-help");
     g_menu_append_section(menu, nullptr, G_MENU_MODEL(view));
     g_object_unref(view);
@@ -158,6 +169,8 @@ int RunLinuxApp(int argc, char** argv) {
         {"find-next", OnWindowCommand},
         {"find-previous", OnWindowCommand},
         {"search", OnSearchText, "s"},
+        {"bookmarks", OnWindowCommand},
+        {"toc-item", OnTocItem, "i"},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
 
@@ -173,6 +186,7 @@ int RunLinuxApp(int argc, char** argv) {
     const char* findAccels[] = {"<Primary>f", nullptr};
     const char* findNextAccels[] = {"F3", nullptr};
     const char* findPreviousAccels[] = {"<Shift>F3", nullptr};
+    const char* bookmarksAccels[] = {"F12", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
     gtk_application_set_accels_for_action(app, "app.open", openAccels);
     gtk_application_set_accels_for_action(app, "app.close-tab", closeAccels);
@@ -185,6 +199,7 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.find", findAccels);
     gtk_application_set_accels_for_action(app, "app.find-next", findNextAccels);
     gtk_application_set_accels_for_action(app, "app.find-previous", findPreviousAccels);
+    gtk_application_set_accels_for_action(app, "app.bookmarks", bookmarksAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);

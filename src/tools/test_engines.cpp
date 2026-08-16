@@ -45,6 +45,7 @@ static void Usage() {
     printf("       test_engines <path> -list-links       list link targets and rectangles\n");
     printf("       test_engines <path> -select-all-text  exercise text selection and extraction\n");
     printf("       test_engines <path> -find-text <term> search all pages for text\n");
+    printf("       test_engines <path> -list-toc        list table-of-contents entries\n");
 }
 
 static EngineBase* CreateEngineForPath(Str path) {
@@ -161,6 +162,29 @@ static bool FindText(Str path, Str term) {
     printf("matches: %d\n", matches);
     engine->Release();
     return matches > 0;
+}
+
+static int PrintTocItems(TocItem* item, int depth) {
+    int count = 0;
+    while (item) {
+        printf("%*s%.*s -> page %d\n", depth * 2, "", item->title.len, item->title.s, item->pageNo);
+        count += 1 + PrintTocItems(item->child, depth + 1);
+        item = item->next;
+    }
+    return count;
+}
+
+static bool ListToc(Str path) {
+    EngineBase* engine = CreateEngineForPath(path);
+    if (!engine) {
+        printf("failed to load: %.*s\n", path.len, path.s);
+        return false;
+    }
+    TocTree* toc = engine->GetToc();
+    int count = toc && toc->root ? PrintTocItems(toc->root->child, 0) : 0;
+    printf("toc entries: %d\n", count);
+    engine->Release();
+    return count > 0;
 }
 
 // Times PageMediabox() for every page: that's what the UI needs before it can
@@ -397,6 +421,11 @@ static bool BenchReadN(Str dir) {
 int main(int argc, char** argv) {
     if (argc == 4 && str::Eq(argv[2], StrL("-find-text"))) {
         bool ok = FindText(Str(argv[1]), Str(argv[3]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
+    if (argc == 3 && str::Eq(argv[2], StrL("-list-toc"))) {
+        bool ok = ListToc(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
