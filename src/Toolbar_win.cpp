@@ -126,7 +126,6 @@ Edit* ToolbarCreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
     // the box is as tall as the icons, so without this the digits would sit at
     // its top instead of on the same line as "Page:" and "/ N"
     args.centerTextVert = true;
-    args.text = StrL("0");
     args.marginLeft = PageEditPadL();
     args.marginRight = PageEditPadR();
     auto* e = new Edit();
