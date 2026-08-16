@@ -17,6 +17,7 @@
 
 struct LinuxAppState {
     LinuxWindow* window = nullptr;
+    bool handledInitialLaunch = false;
 };
 
 struct EBookUI;
@@ -42,10 +43,17 @@ static LinuxWindow* EnsureWindow(GtkApplication* app) {
 }
 
 static void OnActivate(GtkApplication* app, gpointer) {
-    LinuxWindowPresent(EnsureWindow(app));
+    LinuxAppState* state = GetState(app);
+    LinuxWindow* window = EnsureWindow(app);
+    if (!state->handledInitialLaunch) {
+        state->handledInitialLaunch = true;
+        LinuxWindowRestoreSession(window);
+    }
+    LinuxWindowPresent(window);
 }
 
 static void OnOpen(GtkApplication* app, GFile** files, int nFiles, const char*, gpointer) {
+    GetState(app)->handledInitialLaunch = true;
     LinuxWindow* window = EnsureWindow(app);
     for (int i = 0; i < nFiles; i++) {
         LinuxWindowOpenFile(window, files[i]);
@@ -58,7 +66,9 @@ static void FreeState(gpointer data) {
 }
 
 static void OnQuit(GSimpleAction*, GVariant*, gpointer data) {
-    g_application_quit(G_APPLICATION(data));
+    GtkApplication* app = GTK_APPLICATION(data);
+    LinuxWindowSaveSession(GetState(app)->window);
+    g_application_quit(G_APPLICATION(app));
 }
 
 static void OnMakeDefaultPdfReader(GSimpleAction*, GVariant*, gpointer data) {
@@ -230,6 +240,13 @@ static void OnStartup(GtkApplication* app, gpointer) {
     g_object_unref(menu);
 }
 
+static void OnShutdown(GtkApplication* app, gpointer) {
+    for (GList* item = gtk_application_get_windows(app); item; item = item->next) {
+        auto* window = (LinuxWindow*)g_object_get_data(G_OBJECT(item->data), "sumatra-linux-window");
+        LinuxWindowSaveSession(window);
+    }
+}
+
 int RunLinuxApp(int argc, char** argv) {
     FileWatcherInit();
     LinuxPrefsInit();
@@ -239,6 +256,7 @@ int RunLinuxApp(int argc, char** argv) {
     g_signal_connect(app, "startup", G_CALLBACK(OnStartup), nullptr);
     g_signal_connect(app, "activate", G_CALLBACK(OnActivate), nullptr);
     g_signal_connect(app, "open", G_CALLBACK(OnOpen), nullptr);
+    g_signal_connect(app, "shutdown", G_CALLBACK(OnShutdown), nullptr);
     const GActionEntry actions[] = {
         {"quit", OnQuit},
         {"make-default-pdf-reader", OnMakeDefaultPdfReader},

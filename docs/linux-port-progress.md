@@ -474,3 +474,27 @@ Verification:
   `org.sumatrapdf.SumatraPDF.desktop` was the selected handler. The application then quit cleanly.
 - `desktop-file-validate` is not installed in the WSL image; successful GIO discovery and registration provided the
   functional desktop-entry validation for this step.
+
+### Session restore and clean shutdown
+
+Completed 2026-08-16.
+
+- Reused the existing serialized `SessionData` and `TabState` structures to store the open Linux tabs, their notebook
+  order, selected tab, and independent page/layout/zoom/rotation state.
+- Restored the saved session only for a bare initial launch. Explicit document arguments start with exactly those
+  documents, and missing saved files are skipped instead of creating stale error tabs.
+- Captured the live session before GTK dismantles the notebook on window close, explicit Quit, or application
+  shutdown. Existing tab, render-service, and file-watcher teardown remains deterministic afterward.
+- Honored the existing `RememberOpenedFiles` and `RestoreSession` preferences instead of adding Linux-only settings.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,641 assertions and all Linux targets linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,822 assertions and all Linux targets
+  linked.
+- An isolated two-run WSLg smoke opened two PDFs, selected page 2 in the second tab, quit, and relaunched without
+  arguments. Both tabs and the selected second tab were restored; after switching to the first tab and selecting page
+  1, clean shutdown persisted `TabIndex = 1` and independent page 1/page 2 tab states.
+- The same two-run smoke passed under ASan with `detect_leaks=0` for the documented GTK/Pango process caches and no
+  AddressSanitizer errors. WSLg only emitted its existing non-fatal Mesa renderer warnings.

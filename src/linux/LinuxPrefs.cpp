@@ -59,6 +59,17 @@ static void SaveSettings() {
     str::Free(serialized);
 }
 
+static void ApplyViewState(DocumentView* view, Str displayMode, Str zoom, int rotation, int pageNo) {
+    if (!view) {
+        return;
+    }
+    DisplayMode mode = DisplayModeFromString(displayMode, DisplayMode::Continuous);
+    view->SetContinuous(IsContinuous(mode));
+    view->SetZoom(ZoomFromString(zoom, kZoomFitWidth));
+    view->RotateBy(rotation - view->Rotation());
+    view->GoToPage(pageNo);
+}
+
 void LinuxPrefsShutdown() {
     SaveSettings();
     DeleteGlobalPrefs(gGlobalPrefs);
@@ -73,11 +84,7 @@ void LinuxPrefsOpenView(DocumentView* view, Str path) {
     }
     FileState* state = FindFileState(path);
     if (state && !state->useDefaultState) {
-        DisplayMode mode = DisplayModeFromString(state->displayMode, DisplayMode::Continuous);
-        view->SetContinuous(IsContinuous(mode));
-        view->SetZoom(ZoomFromString(state->zoom, kZoomFitWidth));
-        view->RotateBy(state->rotation - view->Rotation());
-        view->GoToPage(state->pageNo);
+        ApplyViewState(view, state->displayMode, state->zoom, state->rotation, state->pageNo);
     }
     if (!state) {
         state = NewFileState(path);
@@ -102,6 +109,71 @@ void LinuxPrefsSaveView(DocumentView* view, Str path) {
     state->pageNo = view->CurrentPageNo();
     ZoomToString(&state->zoom, view->Zoom(), state);
     state->rotation = view->Rotation();
+}
+
+void LinuxPrefsSaveSession(const Vec<DocumentView*>& views, const StrVec& paths, int activeTab) {
+    if (!gGlobalPrefs || !gGlobalPrefs->sessionData) {
+        return;
+    }
+    FreeSessionDataVec(gGlobalPrefs->sessionData);
+    if (!gGlobalPrefs->rememberOpenedFiles || len(views) != len(paths)) {
+        return;
+    }
+
+    SessionData* session = NewSessionData();
+    for (int i = 0; i < len(views); i++) {
+        DocumentView* view = views[i];
+        Str path = paths[i];
+        if (!view || !path) {
+            continue;
+        }
+        LinuxPrefsSaveView(view, path);
+        FileState* state = FindFileState(path);
+        if (state) {
+            session->tabStates->Append(NewTabState(state));
+        }
+    }
+    if (len(*session->tabStates) == 0) {
+        FreeSessionData(session);
+        return;
+    }
+    session->tabIndex = limitValue(activeTab + 1, 1, len(*session->tabStates));
+    gGlobalPrefs->sessionData->Append(session);
+}
+
+static SessionData* SavedSession() {
+    if (!gGlobalPrefs || !gGlobalPrefs->restoreSession || !gGlobalPrefs->rememberOpenedFiles ||
+        !gGlobalPrefs->sessionData || len(*gGlobalPrefs->sessionData) == 0) {
+        return nullptr;
+    }
+    return (*gGlobalPrefs->sessionData)[0];
+}
+
+int LinuxPrefsSessionTabCount() {
+    SessionData* session = SavedSession();
+    return session && session->tabStates ? len(*session->tabStates) : 0;
+}
+
+Str LinuxPrefsSessionPath(int index) {
+    SessionData* session = SavedSession();
+    if (!session || !session->tabStates || index < 0 || index >= len(*session->tabStates)) {
+        return {};
+    }
+    return (*session->tabStates)[index]->filePath;
+}
+
+void LinuxPrefsRestoreSessionView(DocumentView* view, int index) {
+    SessionData* session = SavedSession();
+    if (!view || !session || !session->tabStates || index < 0 || index >= len(*session->tabStates)) {
+        return;
+    }
+    TabState* state = (*session->tabStates)[index];
+    ApplyViewState(view, state->displayMode, state->zoom, state->rotation, state->pageNo);
+}
+
+int LinuxPrefsSessionActiveTab() {
+    SessionData* session = SavedSession();
+    return session ? session->tabIndex - 1 : 0;
 }
 
 int LinuxPrefsRecentCount() {

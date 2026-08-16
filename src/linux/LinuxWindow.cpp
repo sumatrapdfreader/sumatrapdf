@@ -106,6 +106,37 @@ static void FreeLinuxWindow(gpointer data) {
     delete window;
 }
 
+void LinuxWindowSaveSession(LinuxWindow* window) {
+    if (!window) {
+        return;
+    }
+    Vec<DocumentView*> views;
+    StrVec paths;
+    LinuxTab* selectedTab = ActiveTab(window);
+    int activeTab = 0;
+    int pageCount = gtk_notebook_get_n_pages(GTK_NOTEBOOK(window->notebook));
+    for (int i = 0; i < pageCount; i++) {
+        GtkWidget* child = gtk_notebook_get_nth_page(GTK_NOTEBOOK(window->notebook), i);
+        auto* tab = (LinuxTab*)g_object_get_data(G_OBJECT(child), "sumatra-linux-tab");
+        DocumentView* view = LinuxTabView(tab);
+        Str path = LinuxTabPath(tab);
+        if (!view || view->PageCount() < 1 || !path) {
+            continue;
+        }
+        if (tab == selectedTab) {
+            activeTab = len(views);
+        }
+        views.Append(view);
+        paths.Append(path);
+    }
+    LinuxPrefsSaveSession(views, paths, activeTab);
+}
+
+static gboolean OnWindowCloseRequest(GtkWindow*, gpointer data) {
+    LinuxWindowSaveSession((LinuxWindow*)data);
+    return FALSE;
+}
+
 static void OnCommandClicked(GtkButton* sender, gpointer data) {
     auto* window = (LinuxWindow*)data;
     int command = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(sender), "sumatra-command"));
@@ -857,6 +888,7 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     gtk_stack_set_visible_child_name(GTK_STACK(result->content), "empty");
     gtk_box_append(GTK_BOX(result->root), result->content);
     gtk_window_set_child(GTK_WINDOW(result->window), result->root);
+    g_signal_connect(result->window, "close-request", G_CALLBACK(OnWindowCloseRequest), result);
 
     GtkEventController* keys = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(keys, GTK_PHASE_CAPTURE);
@@ -870,7 +902,7 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     return result;
 }
 
-void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
+static void OpenFile(LinuxWindow* window, GFile* file, int sessionIndex) {
     if (!window || !file) {
         return;
     }
@@ -893,11 +925,46 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     if (LinuxTabOpenFile(tab, file)) {
         window->suppressStateSave = true;
         LinuxPrefsOpenView(LinuxTabView(tab), LinuxTabPath(tab));
+        if (sessionIndex >= 0) {
+            LinuxPrefsRestoreSessionView(LinuxTabView(tab), sessionIndex);
+        }
         window->suppressStateSave = false;
     }
     UpdateToc(window);
     UpdateFavorites(window);
     UpdateControls(window);
+}
+
+void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
+    OpenFile(window, file, -1);
+}
+
+void LinuxWindowRestoreSession(LinuxWindow* window) {
+    if (!window) {
+        return;
+    }
+    int tabCount = LinuxPrefsSessionTabCount();
+    int restoredCount = 0;
+    int activeTab = LinuxPrefsSessionActiveTab();
+    int restoredActiveTab = 0;
+    for (int i = 0; i < tabCount; i++) {
+        Str path = LinuxPrefsSessionPath(i);
+        if (!file::Exists(path)) {
+            continue;
+        }
+        GFile* file = g_file_new_for_path(CStrTemp(path));
+        OpenFile(window, file, i);
+        g_object_unref(file);
+        if (i == activeTab) {
+            restoredActiveTab = restoredCount;
+        }
+        restoredCount++;
+    }
+    if (restoredCount > 0) {
+        gtk_notebook_set_current_page(GTK_NOTEBOOK(window->notebook), restoredActiveTab);
+        UpdateToc(window);
+        UpdateControls(window);
+    }
 }
 
 void LinuxWindowFindText(LinuxWindow* window, Str text) {
