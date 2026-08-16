@@ -390,6 +390,7 @@ extern SeqStrings gCommandDescriptions;
 
 int GetCommandIdByName(Str);
 int GetCommandIdByDesc(Str);
+Str GetCommandDescription(int commandId);
 
 CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args, Str name = {}, Str key = {});
 CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name = {}, Str key = {});

@@ -635,6 +635,7 @@ function sumatrapdf_files()
     "CommandPaletteCollect.*",
     "CommandPaletteDraw.*",
     "CommandPaletteFilter.*",
+    "FilterUtil.*",
     "FilterHighlightDraw.*",
     "Commands.*",
     "CrashHandler.*",
@@ -646,6 +647,7 @@ function sumatrapdf_files()
     "PageRenderPolicy.*",
     "PageRenderService.*",
     "ReaderModel.*",
+    "gui/CommandPaletteModel.*",
     "DocController.h",
     "DocProperties.*",
     "EditAnnotations.*",
@@ -1323,6 +1325,7 @@ function test_util_files()
     "Win.*",
   })
   files_in_dir("src/gui", {
+    "CommandPaletteModel.*",
     "Dpi.h",
     "Dpi_win.cpp",
     "Layout.h",
@@ -1335,6 +1338,7 @@ function test_util_files()
     "DisplayMode.*",
     "DocProperties.*",
     "Flags.*",
+    "FilterUtil.*",
     "PageRenderPolicy.*",
     "RefHoverDetect.*",
     "RefHoverTextDetect.*",

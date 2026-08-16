@@ -222,6 +222,9 @@
     <ClInclude Include="..\src\FilterHighlightDraw.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\FilterUtil.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\FindBar.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -488,6 +491,9 @@
     </ClInclude>
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>src\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\CommandPaletteModel.h">
+      <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\DocumentView.h">
       <Filter>src\gui</Filter>
@@ -771,6 +777,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FilterHighlightDraw.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\FilterUtil.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FindBar.cpp">
@@ -1165,6 +1174,9 @@
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp">
+      <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
       <Filter>src\gui</Filter>

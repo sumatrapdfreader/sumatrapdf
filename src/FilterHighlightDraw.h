@@ -5,6 +5,8 @@ struct StrVec;
 struct Gfx;
 struct PlatformFont;
 
+#include "FilterUtil.h"
+
 template <typename T>
 struct Vec;
 
@@ -17,6 +19,3 @@ void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVe
 
 void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, Color treeBg, Color treeTxt, bool isSelected, bool hasFocus,
                                  Color* bgOut, Color* txtOut);
-
-void SplitFilterToWords(Str filter, StrVec& words);
-bool FilterMatches(Str str, const StrVec& words);

@@ -12,7 +12,7 @@ after its relevant Windows, Linux, and portable checks pass.
 | 3     | Complete    | Embeddable canvas and document viewer        |
 | 4     | Complete    | Portable asynchronous rendering              |
 | 5     | Complete    | Application shell, tabs, and commands        |
-| 6     | In progress | Reader features                              |
+| 6     | Complete    | Reader features                              |
 | 7     | Not started | Linux desktop services                       |
 | 8     | Not started | Packaging and deferred features              |
 
@@ -353,3 +353,27 @@ Verification:
   linked.
 - The same isolated ASan WSLg action sequence exited with status 0 under `detect_leaks=0`, saved the page 2 favorite,
   and reported no memory-safety errors. WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+### Command palette
+
+Completed 2026-08-16, completing Stage 6.
+
+- Extracted word splitting and case-insensitive multi-word matching from the Win32 drawing implementation into
+  portable `FilterUtil` code, retaining the same filtering behavior in the Windows palette and related views.
+- Added a portable command-palette model that collects generated command descriptions, sorts them, filters them,
+  and preserves command IDs independently of a native UI toolkit.
+- Added a modal GTK command palette with live search, mouse activation, arrow-key selection, Enter execution,
+  Escape dismissal, and the existing `Ctrl+K` shortcut. Its supported commands route through the normal Linux
+  command dispatcher.
+- Added portable unit coverage for collection, ordering, case-insensitive multi-word filtering, and empty results.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with no warnings after regenerating the Visual Studio projects for the new
+  portable sources.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,580 assertions and all Linux targets linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,408 assertions and all Linux targets
+  linked.
+- Under WSLg, both debug and ASan applications opened the GTK command palette over
+  `ext/a-zlib/zlib.3.pdf` and quit through application actions with status 0. ASan used `detect_leaks=0`, reported no
+  memory-safety errors, and WSLg only emitted its existing non-fatal Mesa renderer warnings.

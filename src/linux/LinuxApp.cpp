@@ -82,6 +82,8 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdTogglePresentationMode;
     } else if (str::Eq(Str(name), StrL("keyboard-help"))) {
         command = CmdToggleKeyboardHelp;
+    } else if (str::Eq(Str(name), StrL("command-palette"))) {
+        command = CmdCommandPalette;
     } else if (str::Eq(Str(name), StrL("copy"))) {
         command = CmdCopySelection;
     } else if (str::Eq(Str(name), StrL("select-all"))) {
@@ -180,6 +182,7 @@ static GMenu* CreateMainMenu() {
     g_menu_append(edit, "Copy", "app.copy");
     g_menu_append(edit, "Select All", "app.select-all");
     g_menu_append(edit, "Find...", "app.find");
+    g_menu_append(edit, "Command Palette...", "app.command-palette");
     g_menu_append_section(menu, nullptr, G_MENU_MODEL(edit));
     g_object_unref(edit);
 
@@ -224,6 +227,7 @@ int RunLinuxApp(int argc, char** argv) {
         {"fullscreen", OnWindowCommand},
         {"presentation", OnWindowCommand},
         {"keyboard-help", OnWindowCommand},
+        {"command-palette", OnWindowCommand},
         {"copy", OnWindowCommand},
         {"select-all", OnWindowCommand},
         {"find", OnWindowCommand},
@@ -249,6 +253,7 @@ int RunLinuxApp(int argc, char** argv) {
     const char* fullscreenAccels[] = {"F11", nullptr};
     const char* presentationAccels[] = {"F5", nullptr};
     const char* helpAccels[] = {"question", nullptr};
+    const char* commandPaletteAccels[] = {"<Primary>k", nullptr};
     const char* copyAccels[] = {"<Primary>c", nullptr};
     const char* selectAllAccels[] = {"<Primary>a", nullptr};
     const char* findAccels[] = {"<Primary>f", nullptr};
@@ -264,6 +269,7 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.fullscreen", fullscreenAccels);
     gtk_application_set_accels_for_action(app, "app.presentation", presentationAccels);
     gtk_application_set_accels_for_action(app, "app.keyboard-help", helpAccels);
+    gtk_application_set_accels_for_action(app, "app.command-palette", commandPaletteAccels);
     gtk_application_set_accels_for_action(app, "app.copy", copyAccels);
     gtk_application_set_accels_for_action(app, "app.select-all", selectAllAccels);
     gtk_application_set_accels_for_action(app, "app.find", findAccels);

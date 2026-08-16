@@ -18,6 +18,7 @@
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DocProperties.h" />
+    <ClInclude Include="..\src\FilterUtil.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\PageRenderPolicy.h" />
     <ClInclude Include="..\src\PdfDarkMode.h" />
@@ -124,6 +125,9 @@
     <ClInclude Include="..\src\base\WinDynCalls.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\CommandPaletteModel.h">
+      <Filter>gui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\Dpi.h">
       <Filter>gui</Filter>
     </ClInclude>
@@ -137,6 +141,7 @@
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
+    <ClCompile Include="..\src\FilterUtil.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\PdfDarkModeImageClassifier_ut.cpp" />
@@ -301,6 +306,9 @@
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp">
+      <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\Dpi_win.cpp">
       <Filter>gui</Filter>

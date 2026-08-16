@@ -85,19 +85,7 @@ static const KbCommandDef* FindCommandDef(int cmdId) {
 struct DefaultKeyboardHelpDataSource : KeyboardHelpDataSource {
     Str Translate(Str s) override { return s; }
 
-    TempStr CommandDescriptionTemp(int cmdId) override {
-        int off = 0;
-        int id = (int)CmdFirst + 1;
-        while (SeqStrAt(gCommandDescriptions, off).s) {
-            if (id == cmdId) {
-                return str::DupTemp(SeqStrAt(gCommandDescriptions, off));
-            }
-            if (!SeqStrAdvance(gCommandDescriptions, off, &id)) {
-                break;
-            }
-        }
-        return {};
-    }
+    TempStr CommandDescriptionTemp(int cmdId) override { return str::DupTemp(GetCommandDescription(cmdId)); }
 
     TempStr CommandShortcutTemp(int cmdId, int) override {
         const KbCommandDef* command = FindCommandDef(cmdId);

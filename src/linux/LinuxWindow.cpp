@@ -15,6 +15,7 @@
 #include <gtk/gtk.h>
 
 #include "linux/LinuxTab.h"
+#include "linux/LinuxCommandPalette.h"
 #include "linux/LinuxPrefs.h"
 #include "linux/LinuxWindow.h"
 
@@ -415,6 +416,43 @@ static void ShowKeyboardHelp(LinuxWindow* window) {
     ToggleKeyboardHelp(args);
 }
 
+static void DispatchPaletteCommand(LinuxWindow* window, int commandId) {
+    LinuxWindowDispatchCommand(window, commandId);
+}
+
+static void ShowCommandPalette(LinuxWindow* window) {
+    static const int commands[] = {
+        CmdOpenFile,
+        CmdCloseCurrentDocument,
+        CmdReopenLastClosedFile,
+        CmdNextTab,
+        CmdPrevTab,
+        CmdGoToPrevPage,
+        CmdGoToNextPage,
+        CmdZoomFitPage,
+        CmdZoomFitWidth,
+        CmdZoomActualSize,
+        CmdRotateLeft,
+        CmdRotateRight,
+        CmdToggleContinuousView,
+        CmdToggleFullscreen,
+        CmdTogglePresentationMode,
+        CmdToggleKeyboardHelp,
+        CmdToggleBookmarks,
+        CmdFavoriteAdd,
+        CmdFavoriteDel,
+        CmdFavoriteToggle,
+        CmdProperties,
+        CmdFindFirst,
+        CmdFindNext,
+        CmdFindPrev,
+        CmdCopySelection,
+        CmdSelectAll,
+    };
+    ShowLinuxCommandPalette(GTK_WINDOW(window->window), commands, dimofi(commands),
+                            MkFunc1(DispatchPaletteCommand, window));
+}
+
 static void SelectRelativeTab(LinuxWindow* window, int direction) {
     int count = gtk_notebook_get_n_pages(GTK_NOTEBOOK(window->notebook));
     if (count < 2) {
@@ -496,6 +534,9 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             return;
         case CmdToggleKeyboardHelp:
             ShowKeyboardHelp(window);
+            return;
+        case CmdCommandPalette:
+            ShowCommandPalette(window);
             return;
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents:

@@ -961,6 +961,7 @@
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DocProperties.h" />
+    <ClInclude Include="..\src\FilterUtil.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\PageRenderPolicy.h" />
     <ClInclude Include="..\src\PdfDarkMode.h" />
@@ -1001,6 +1002,7 @@
     <ClInclude Include="..\src\base\Vec.h" />
     <ClInclude Include="..\src\base\Win.h" />
     <ClInclude Include="..\src\base\WinDynCalls.h" />
+    <ClInclude Include="..\src\gui\CommandPaletteModel.h" />
     <ClInclude Include="..\src\gui\Dpi.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
   </ItemGroup>
@@ -1012,6 +1014,7 @@
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
+    <ClCompile Include="..\src\FilterUtil.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\PdfDarkModeImageClassifier_ut.cpp" />
@@ -1075,6 +1078,7 @@
     <ClCompile Include="..\src\base\tests\Str_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Vec_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Win_ut.cpp" />
+    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp" />
     <ClCompile Include="..\src\gui\Dpi_win.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
     <ClCompile Include="..\src\tools\test_util.cpp" />

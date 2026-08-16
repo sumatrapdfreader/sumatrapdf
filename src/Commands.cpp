@@ -988,6 +988,21 @@ int GetCommandIdByDesc(Str cmdDesc) {
     return -1;
 }
 
+Str GetCommandDescription(int commandId) {
+    int off = 0;
+    int id = (int)CmdFirst + 1;
+    while (SeqStrAt(gCommandDescriptions, off)) {
+        Str description = SeqStrAt(gCommandDescriptions, off);
+        if (id == commandId) {
+            return description;
+        }
+        if (!SeqStrAdvance(gCommandDescriptions, off, &id)) {
+            break;
+        }
+    }
+    return {};
+}
+
 // arg names are case insensitive
 static bool IsArgName(Str name, Str argName) {
     if (str::EqI(name, argName)) {

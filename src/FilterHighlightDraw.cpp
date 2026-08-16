@@ -313,37 +313,3 @@ void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVe
         gfx->DrawText(run, runRect, gfxTextSingleLine | gfxTextNoClip, font, isHl ? matchTxtCol : txtCol);
     }
 }
-
-bool FilterMatches(Str str, const StrVec& words) {
-    int nWords = len(words);
-    for (int i = 0; i < nWords; i++) {
-        Str word = words[i];
-        if (len(word) == 0) {
-            continue;
-        }
-        if (!str::ContainsI(str, word)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void SplitFilterToWords(Str filter, StrVec& words) {
-    int i = 0;
-    while (i < filter.len && filter.s[i]) {
-        while (i < filter.len && str::IsWs(filter.s[i])) {
-            i++;
-        }
-        if (i >= filter.len || !filter.s[i]) {
-            break;
-        }
-        int start = i;
-        while (i < filter.len && filter.s[i] && !str::IsWs(filter.s[i])) {
-            i++;
-        }
-        Str word(filter.s + start, i - start);
-        if (len(word) > 0) {
-            AppendIfNotExists(&words, word);
-        }
-    }
-}

@@ -25,6 +25,7 @@
 
 #if defined(DEBUG)
 void PageRenderPolicy_UnitTests();
+void CommandPaletteModel_UnitTests();
 #endif
 
 #if OS_WIN
@@ -314,6 +315,7 @@ void SumatraPDF_UnitTests() {
 #if defined(DEBUG)
     Layout_UnitTests();
     PageRenderPolicy_UnitTests();
+    CommandPaletteModel_UnitTests();
 #endif
     DocPropertiesTest();
     parseCommandsTest();

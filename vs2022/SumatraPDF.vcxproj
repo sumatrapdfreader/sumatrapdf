@@ -1218,6 +1218,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\FileHistory.h" />
     <ClInclude Include="..\src\FileThumbnails.h" />
     <ClInclude Include="..\src\FilterHighlightDraw.h" />
+    <ClInclude Include="..\src\FilterUtil.h" />
     <ClInclude Include="..\src\FindBar.h" />
     <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\Flags.h" />
@@ -1307,6 +1308,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\WindowTab.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\UtAssert.h" />
+    <ClInclude Include="..\src\gui\CommandPaletteModel.h" />
     <ClInclude Include="..\src\gui\DocumentView.h" />
     <ClInclude Include="..\src\gui\Gfx.h" />
     <ClInclude Include="..\src\gui\GuiColors.h" />
@@ -1438,6 +1440,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
     <ClCompile Include="..\src\FilterHighlightDraw.cpp" />
+    <ClCompile Include="..\src\FilterUtil.cpp" />
     <ClCompile Include="..\src\FindBar.cpp" />
     <ClCompile Include="..\src\FindWindow.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
@@ -1759,6 +1762,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp" />
     <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp" />
     <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
     <ClCompile Include="..\src\gui\Gfx_win.cpp" />
