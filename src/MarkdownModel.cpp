@@ -1054,12 +1054,16 @@ static void MarkdownTocBuildFinished(MarkdownTocBuildTask* task) {
     AutoDelete<MarkdownTocBuildTask> delTask(task);
     ScopedMutex scope(&task->lock);
     MarkdownModel* mm = task->model;
+    // the task is deleted on every path, so the model must drop its pointer
+    // even when the result is discarded, or ~MarkdownModel touches freed memory
+    if (mm) {
+        mm->tocBuildTask = nullptr;
+    }
     // a model that no longer belongs to a tab is on its way out and its
     // callback (owned by the window) may be gone already, so drop the result
     if (!mm || !FindTabByController(mm)) {
         return;
     }
-    mm->tocBuildTask = nullptr;
     mm->SetToc(task->tocTree);
     task->tocTree = nullptr;
 }
