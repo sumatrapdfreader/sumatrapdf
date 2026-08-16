@@ -1,6 +1,8 @@
 name: Linux
 on:
   push:
+    branches:
+      - master
   pull_request:
 jobs:
   wine:
