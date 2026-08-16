@@ -2,6 +2,7 @@
 #include "base/Pixmap.h"
 
 #include "Settings.h"
+#include "Commands.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
 #include "DocProperties.h"
@@ -13,6 +14,7 @@
 #include "ReaderModel.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "gui/CommandPaletteModel.h"
 #include "mac/SumatraMacEngine.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
@@ -525,6 +527,124 @@ void MacFreeLink(MacLink* link) {
     }
     free(link->value);
     *link = {};
+}
+
+void* MacCreateCommandPalette() {
+    const int commands[] = {
+        CmdOpenFile,
+        CmdCloseCurrentDocument,
+        CmdPrint,
+        CmdShowInFolder,
+        CmdProperties,
+        CmdSinglePageView,
+        CmdToggleContinuousView,
+        CmdRotateLeft,
+        CmdRotateRight,
+        CmdToggleFullscreen,
+        CmdCopySelection,
+        CmdSelectAll,
+        CmdGoToNextPage,
+        CmdGoToPrevPage,
+        CmdGoToFirstPage,
+        CmdGoToLastPage,
+        CmdGoToPage,
+        CmdFindFirst,
+        CmdFindNext,
+        CmdFindPrev,
+        CmdZoomFitPage,
+        CmdZoomActualSize,
+        CmdZoomFitWidth,
+        CmdZoomIn,
+        CmdZoomOut,
+        CmdToggleBookmarks,
+        CmdToggleKeyboardHelp,
+    };
+    auto* palette = new CommandPaletteModel();
+    palette->SetCommands(commands, dimofi(commands));
+    return palette;
+}
+
+void MacFilterCommandPalette(void* palette, const char* query) {
+    if (!palette) {
+        return;
+    }
+    ((CommandPaletteModel*)palette)->Filter(query ? Str((char*)query) : Str{});
+}
+
+int MacCommandPaletteCount(void* palette) {
+    return palette ? ((CommandPaletteModel*)palette)->Count() : 0;
+}
+
+char* MacCopyCommandPaletteItem(void* palette, int index) {
+    return palette ? DupCString(((CommandPaletteModel*)palette)->ItemText(index)) : nullptr;
+}
+
+int MacCommandPaletteItemCommand(void* palette, int index) {
+    return palette ? ((CommandPaletteModel*)palette)->ItemCommandId(index) : 0;
+}
+
+MacCommandAction MacCommandPaletteAction(int commandId) {
+    switch (commandId) {
+        case CmdOpenFile:
+            return MacCommandAction::Open;
+        case CmdCloseCurrentDocument:
+            return MacCommandAction::Close;
+        case CmdPrint:
+            return MacCommandAction::Print;
+        case CmdShowInFolder:
+            return MacCommandAction::ShowInFolder;
+        case CmdProperties:
+            return MacCommandAction::Properties;
+        case CmdSinglePageView:
+            return MacCommandAction::SinglePage;
+        case CmdToggleContinuousView:
+            return MacCommandAction::ToggleContinuous;
+        case CmdRotateLeft:
+            return MacCommandAction::RotateLeft;
+        case CmdRotateRight:
+            return MacCommandAction::RotateRight;
+        case CmdToggleFullscreen:
+            return MacCommandAction::Fullscreen;
+        case CmdCopySelection:
+            return MacCommandAction::Copy;
+        case CmdSelectAll:
+            return MacCommandAction::SelectAll;
+        case CmdGoToNextPage:
+            return MacCommandAction::NextPage;
+        case CmdGoToPrevPage:
+            return MacCommandAction::PreviousPage;
+        case CmdGoToFirstPage:
+            return MacCommandAction::FirstPage;
+        case CmdGoToLastPage:
+            return MacCommandAction::LastPage;
+        case CmdGoToPage:
+            return MacCommandAction::GoToPage;
+        case CmdFindFirst:
+            return MacCommandAction::Find;
+        case CmdFindNext:
+            return MacCommandAction::FindNext;
+        case CmdFindPrev:
+            return MacCommandAction::FindPrevious;
+        case CmdZoomFitPage:
+            return MacCommandAction::FitPage;
+        case CmdZoomActualSize:
+            return MacCommandAction::ActualSize;
+        case CmdZoomFitWidth:
+            return MacCommandAction::FitWidth;
+        case CmdZoomIn:
+            return MacCommandAction::ZoomIn;
+        case CmdZoomOut:
+            return MacCommandAction::ZoomOut;
+        case CmdToggleBookmarks:
+            return MacCommandAction::Toc;
+        case CmdToggleKeyboardHelp:
+            return MacCommandAction::KeyboardHelp;
+    }
+    return MacCommandAction::None;
+}
+
+void MacDestroyCommandPalette(void* palette) {
+    delete (CommandPaletteModel*)palette;
 }
 
 int MacTocItemCount(void* document) {

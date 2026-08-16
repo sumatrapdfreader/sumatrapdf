@@ -34,8 +34,10 @@ Reconciled 2026-08-16.
   rectangles. Shared engine TOC and property models drive native Table of Contents and Document Properties dialogs.
 - Shared `TextSelection` drives mouse selection, Select All, and UTF-8 clipboard copy. Engine page-element hit testing
   drives internal-page, URL, and file links.
+- The Cocoa command chooser filters the supported native action set through shared `CommandPaletteModel`; unsupported
+  platform commands are not offered.
 - The application still owns a single document, and several menu entries remain disabled placeholders. Text
-  selection refinements, favorites/history, and the command palette are not exposed in the Cocoa reader yet.
+  selection refinements and favorites/history are not exposed in the Cocoa reader yet.
 - The application bundle advertises its supported document extensions to Finder. Every successful macOS build emits
   a versioned `.tar.gz` containing `SumatraPDF.app`, the license, and macOS installation notes; signing and
   notarization remain deferred release-infrastructure work.

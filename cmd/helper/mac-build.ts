@@ -566,6 +566,7 @@ const TEST_ENGINES_SOURCES = [
 
 const MAC_APP_SOURCES = [
   "src/Commands.cpp",
+  "src/FilterUtil.cpp",
   "src/base/GuessFileType.cpp",
   "src/DisplayMode.cpp",
   "src/DocumentLayout.cpp",
@@ -592,6 +593,7 @@ const MAC_APP_SOURCES = [
   "src/TreeModel.cpp",
   "src/KeyboardHelp.cpp",
   "src/gui/GuiColors.cpp",
+  "src/gui/CommandPaletteModel.cpp",
   "src/gui/PlatformFont.cpp",
   "src/gui/mac/GfxMac.cpp",
   "src/gui/mac/KeyboardHelpMac.cpp",

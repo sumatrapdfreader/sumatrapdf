@@ -56,6 +56,37 @@ enum class MacLinkKind {
     File,
 };
 
+enum class MacCommandAction {
+    None,
+    Open,
+    Close,
+    Print,
+    ShowInFolder,
+    Properties,
+    SinglePage,
+    ToggleContinuous,
+    RotateLeft,
+    RotateRight,
+    Fullscreen,
+    Copy,
+    SelectAll,
+    NextPage,
+    PreviousPage,
+    FirstPage,
+    LastPage,
+    GoToPage,
+    Find,
+    FindNext,
+    FindPrevious,
+    FitPage,
+    ActualSize,
+    FitWidth,
+    ZoomIn,
+    ZoomOut,
+    Toc,
+    KeyboardHelp,
+};
+
 struct MacLink {
     MacLinkKind kind;
     int pageNo;
@@ -101,6 +132,14 @@ char* MacCopySelectionText(void* document);
 
 bool MacLinkAtPoint(void* document, int pageNo, double x, double y, double zoom, int rotation, MacLink* link);
 void MacFreeLink(MacLink* link);
+
+void* MacCreateCommandPalette();
+void MacFilterCommandPalette(void* palette, const char* query);
+int MacCommandPaletteCount(void* palette);
+char* MacCopyCommandPaletteItem(void* palette, int index);
+int MacCommandPaletteItemCommand(void* palette, int index);
+MacCommandAction MacCommandPaletteAction(int commandId);
+void MacDestroyCommandPalette(void* palette);
 
 int MacTocItemCount(void* document);
 char* MacCopyTocItemTitle(void* document, int index);

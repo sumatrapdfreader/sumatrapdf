@@ -452,13 +452,16 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 @end
 
 @interface SumatraAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, NSToolbarDelegate,
-                                         SumatraDocumentViewOwner>
+                                         NSTextFieldDelegate, SumatraDocumentViewOwner>
 @property(nonatomic, retain) NSWindow* window;
 @property(nonatomic, retain) NSScrollView* scrollView;
 @property(nonatomic, retain) SumatraDocumentView* documentView;
 @property(nonatomic, retain) NSToolbar* toolbar;
 @property(nonatomic, retain) NSTextField* pageLabel;
 @property(nonatomic, copy) NSString* findText;
+@property(nonatomic) void* commandPalette;
+@property(nonatomic, retain) NSTextField* commandPaletteQuery;
+@property(nonatomic, retain) NSPopUpButton* commandPaletteItems;
 @property(nonatomic) void* document;
 @property(nonatomic, copy) NSString* documentPath;
 @property(nonatomic) int pageCount;
@@ -1349,6 +1352,142 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [self renderCurrentPage];
 }
 
+- (void)rebuildCommandPaletteItems {
+    [_commandPaletteItems removeAllItems];
+    MacFilterCommandPalette(_commandPalette, [[_commandPaletteQuery stringValue] UTF8String]);
+    int count = MacCommandPaletteCount(_commandPalette);
+    for (int i = 0; i < count; i++) {
+        char* textUtf8 = MacCopyCommandPaletteItem(_commandPalette, i);
+        NSString* item = textUtf8 ? [NSString stringWithUTF8String:textUtf8] : @"";
+        MacFreeString(textUtf8);
+        [_commandPaletteItems addItemWithTitle:item ?: @""];
+    }
+    [_commandPaletteItems setEnabled:count > 0];
+}
+
+- (void)controlTextDidChange:(NSNotification*)notification {
+    if ([notification object] == _commandPaletteQuery) {
+        [self rebuildCommandPaletteItems];
+    }
+}
+
+- (void)dispatchPaletteAction:(MacCommandAction)action {
+    switch (action) {
+        case MacCommandAction::Open:
+            [self openDocument:nil];
+            break;
+        case MacCommandAction::Close:
+            [self performClose:nil];
+            break;
+        case MacCommandAction::Print:
+            [self printDocument:nil];
+            break;
+        case MacCommandAction::ShowInFolder:
+            [self showInFolder:nil];
+            break;
+        case MacCommandAction::Properties:
+            [self showProperties:nil];
+            break;
+        case MacCommandAction::SinglePage:
+            [self setSinglePageView:nil];
+            break;
+        case MacCommandAction::ToggleContinuous:
+            _continuousView ? [self setSinglePageView:nil] : [self setContinuousView:nil];
+            break;
+        case MacCommandAction::RotateLeft:
+            [self rotateLeft:nil];
+            break;
+        case MacCommandAction::RotateRight:
+            [self rotateRight:nil];
+            break;
+        case MacCommandAction::Fullscreen:
+            [self toggleFullScreen:nil];
+            break;
+        case MacCommandAction::Copy:
+            [self copySelection:nil];
+            break;
+        case MacCommandAction::SelectAll:
+            [self selectAll:nil];
+            break;
+        case MacCommandAction::NextPage:
+            [self goToNextPage:nil];
+            break;
+        case MacCommandAction::PreviousPage:
+            [self goToPrevPage:nil];
+            break;
+        case MacCommandAction::FirstPage:
+            [self goToFirstPage:nil];
+            break;
+        case MacCommandAction::LastPage:
+            [self goToLastPage:nil];
+            break;
+        case MacCommandAction::GoToPage:
+            [self goToPageDialog:nil];
+            break;
+        case MacCommandAction::Find:
+            [self findDocument:nil];
+            break;
+        case MacCommandAction::FindNext:
+            [self findNext:nil];
+            break;
+        case MacCommandAction::FindPrevious:
+            [self findPrevious:nil];
+            break;
+        case MacCommandAction::FitPage:
+            [self zoomFitPage:nil];
+            break;
+        case MacCommandAction::ActualSize:
+            [self zoomActualSize:nil];
+            break;
+        case MacCommandAction::FitWidth:
+            [self zoomFitWidth:nil];
+            break;
+        case MacCommandAction::ZoomIn:
+            [self zoomIn:nil];
+            break;
+        case MacCommandAction::ZoomOut:
+            [self zoomOut:nil];
+            break;
+        case MacCommandAction::Toc:
+            [self showToc:nil];
+            break;
+        case MacCommandAction::KeyboardHelp:
+            [self showKeyboardShortcuts:nil];
+            break;
+        case MacCommandAction::None:
+            break;
+    }
+}
+
+- (IBAction)showCommandPalette:(id)sender {
+    (void)sender;
+    _commandPalette = MacCreateCommandPalette();
+    self.commandPaletteQuery = [[[NSTextField alloc] initWithFrame:NSMakeRect(0, 38, 460, 24)] autorelease];
+    self.commandPaletteItems = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 460, 28) pullsDown:NO] autorelease];
+    [_commandPaletteQuery setPlaceholderString:@"Type a command"];
+    [_commandPaletteQuery setDelegate:self];
+    NSView* accessory = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 460, 64)] autorelease];
+    [accessory addSubview:_commandPaletteQuery];
+    [accessory addSubview:_commandPaletteItems];
+    [self rebuildCommandPaletteItems];
+
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setMessageText:@"Command Palette"];
+    [alert addButtonWithTitle:@"Run"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setAccessoryView:accessory];
+    NSInteger result = [alert runModal];
+    int index = (int)[_commandPaletteItems indexOfSelectedItem];
+    int commandId = result == NSAlertFirstButtonReturn ? MacCommandPaletteItemCommand(_commandPalette, index) : 0;
+    MacCommandAction action = MacCommandPaletteAction(commandId);
+    [_commandPaletteQuery setDelegate:nil];
+    self.commandPaletteQuery = nil;
+    self.commandPaletteItems = nil;
+    MacDestroyCommandPalette(_commandPalette);
+    _commandPalette = nullptr;
+    [self dispatchPaletteAction:action];
+}
+
 - (IBAction)rotateLeft:(id)sender {
     (void)sender;
     if (!_document) {
@@ -1532,6 +1671,8 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_window release];
     [_documentPath release];
     [_findText release];
+    [_commandPaletteQuery release];
+    [_commandPaletteItems release];
     [super dealloc];
 }
 
@@ -1628,6 +1769,8 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     [viewMenu addItem:[NSMenuItem separatorItem]];
     AddItem(viewMenu, @"Show Bookmarks", @selector(showToc:), delegate, @"", 0);
     AddItem(viewMenu, @"Show Toolbar", @selector(toggleToolbarShown:), nil, @"", 0);
+    AddItem(viewMenu, @"Command Palette…", @selector(showCommandPalette:), delegate, @"p",
+            NSEventModifierFlagCommand | NSEventModifierFlagShift);
     [viewItem setSubmenu:viewMenu];
 
     // Go To menu
