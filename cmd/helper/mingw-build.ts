@@ -220,6 +220,7 @@ const sumatraFiles: FileGroup[] = [
       "GfxDirect2D_win.cpp",
       "CommandPaletteModel.cpp",
       "GuiColors.cpp",
+      "PasswordDialog.cpp",
       "Layout.cpp",
       "Layout_win.cpp",
       "PlatformFont.cpp",
@@ -257,6 +258,7 @@ const sumatraFiles: FileGroup[] = [
       "EbookFormatter.*",
       "GumboHtmlParser.*",
       "HtmlFormatter.*",
+      "LitDoc.*",
       "MobiDoc.*",
       "PdfCadDetect.*",
       "PdfCadEnhanceDevice.*",
@@ -514,6 +516,7 @@ async function buildSumatraExe(outDir: string, isRelease: boolean, archives: str
     "ext/synctex",
     "ext/djvudec",
     "ext/chmdec",
+    "ext/msdes",
     "ext/a-zopfli",
     "ext/darkmodelib/include",
     "ext/heicdec",
@@ -767,6 +770,15 @@ const djvudec: LibDef = {
   files: [{ dir: "ext/djvudec", patterns: ["djvu.c"] }],
 };
 
+// public domain d3des, used by LitDoc.cpp to unseal .lit DRM1
+const msdes: LibDef = {
+  name: "msdes",
+  alwaysOptimize: true,
+  defines: [],
+  includes: ["ext/msdes"],
+  files: [{ dir: "ext/msdes", patterns: ["des.c"] }],
+};
+
 // Order: libraries that have no deps first, then dependents.
 // The link order for archives is: most-dependent first, least-dependent last.
 const ALL_LIBS: LibDef[] = [
@@ -774,6 +786,7 @@ const ALL_LIBS: LibDef[] = [
   unrar,
   djvudec,
   chmdec,
+  msdes,
   libarchive,
   libwebp,
   dav1d,
