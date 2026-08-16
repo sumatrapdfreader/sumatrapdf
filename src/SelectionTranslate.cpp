@@ -742,6 +742,7 @@ static Str EngineDisplayName(TranslateEngine engine) {
         case TranslateEngine::Grok:
         case TranslateEngine::Claude:
         case TranslateEngine::Codex:
+        case TranslateEngine::AntiGravity:
             return BackendDisplayName(BackendFromEngine(engine));
         default:
             return StrL("Google");
@@ -895,13 +896,15 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     return true;
 }
 
-// backend: 0=Claude, 1=Grok, 2=Codex
+// backend: 0=Claude, 1=Grok, 2=Codex, 3=AntiGravity
 TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str text, int* exitCode) {
     AIChatBackend chatBackend = AIChatBackend::Grok;
     if (backend == 0) {
         chatBackend = AIChatBackend::Claude;
     } else if (backend == 2) {
         chatBackend = AIChatBackend::Codex;
+    } else if (backend == 3) {
+        chatBackend = AIChatBackend::AntiGravity;
     }
     Str msg;
     bool ok = RunTranslation(chatBackend, srcLang, dstLang, text, msg);

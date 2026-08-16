@@ -960,7 +960,7 @@ struct GlobalPrefs {
     // Auto
     Str translateFromLang;
     // remembered engine for Translate Selection: Google, DeepL, Grok
-    // Build, Claude Code or OpenAI Codex
+    // Build, Claude Code, OpenAI Codex or Antigravity
     Str translateEngine;
     // default values for annotations in PDF documents
     Annotations annotations;
@@ -2005,8 +2005,8 @@ static const StructInfo gGlobalPrefsInfo = {
     "of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
     "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
     "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
-    "DeepL, Grok Build, Claude Code or OpenAI Codex\0\0default values for annotations in PDF documents\0\0list of "
-    "additional external viewers for various file types. See [docs for more "
+    "DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity\0\0default values for annotations in PDF "
+    "documents\0\0list of additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

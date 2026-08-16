@@ -168,7 +168,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - pen/stylus input now works for text selection on Windows tablets
 - use `GetFileAttributesEx` instead of opening files for change detection on network drives, avoiding Windows Defender re-scans
 - add citation/reference hover preview: hovering an internal-document link (e.g. a `[1]` citation, figure reference, or footnote marker) now shows a small popup rendering the destination region, so you can see the bibliography entry / figure / footnote without leaving the current page. The `CitationHoverDelay` advanced setting sets the hover delay in ms (-1 disables the popup) (fixes [#128](https://github.com/sumatrapdfreader/sumatrapdf/issues/128), [#4221](https://github.com/sumatrapdfreader/sumatrapdf/issues/4221))
-- translate selected text with Grok Build, Claude Code, or OpenAI Codex when the corresponding CLI is installed (selection context menu); opens a dialog to edit the text, pick source and destination languages, and show the translation inline
+- translate selected text with Grok Build, Claude Code, OpenAI Codex, or Antigravity when the corresponding CLI is installed (selection context menu); opens a dialog to edit the text, pick source and destination languages, and show the translation inline
 - add a **Match whole word** toggle to the Find bar (next to **Match Case**) so a search only matches complete words, e.g. `cat` no longer matches `category` (fixes #4295)
 - when searching, the **current** match is now highlighted with the customizable `FixedPageUI.SelectionColor` (the color users tune to be most noticeable) and all other matches use a secondary orange highlight, so the active match is easier to spot; previously it was the other way around (fixes #5740)
 - find-as-you-type now waits briefly after you stop typing before searching (500 ms, or 1 s for 1–2 character terms) instead of searching on every keystroke; pressing Enter searches immediately (fixes #4626)
@@ -262,6 +262,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdTranslateSelectionWithClaudeCode` : "Translate Selection with Claude Code"
 - `CmdTranslateSelectionWithGrokBuild` : "Translate Selection with Grok Build"
 - `CmdTranslateSelectionWithOpenAICodex` : "Translate Selection with OpenAI Codex"
+- `CmdTranslateSelectionWithAntiGravity` : "Translate Selection with Antigravity"
 - `CmdZoomFitByOrientation` : "Fit by Orientation"
 - `CmdZoomShrinkToFit` : "Shrink To Fit"
 - `CmdDebugShowFitContentArea` : "Debug: Show Fit Content Area" — Debug menu checkbox; outlines in red the area **Fit Content** zoom would fit to, without changing the zoom

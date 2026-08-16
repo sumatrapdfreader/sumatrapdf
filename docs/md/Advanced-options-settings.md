@@ -625,7 +625,7 @@ TranslateToLang =
 TranslateFromLang = 
 
 ; remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude
-; Code or OpenAI Codex (introduced in version 3.7)
+; Code, OpenAI Codex or Antigravity (introduced in version 3.7)
 TranslateEngine = 
 
 ; default values for annotations in PDF documents (introduced in version 3.3)

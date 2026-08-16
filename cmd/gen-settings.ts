@@ -1480,7 +1480,7 @@ const globalPrefs: Field[] = [
     "TranslateEngine",
     Str,
     "",
-    "remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex",
+    "remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity",
   )
     .internal()
     .ver("3.7"),
