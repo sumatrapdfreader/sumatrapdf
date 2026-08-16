@@ -1,13 +1,10 @@
 #include "base/Base.h"
-#include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
-#include "TreeModel.h"
-#include "EngineBase.h"
-#include "EngineAll.h"
+#include "ReaderModel.h"
 #include "mac/SumatraMacEngine.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
@@ -30,27 +27,6 @@ EBookUI* GetEBookUI() {
 
 struct FileEBookUI;
 FileEBookUI* GetFileEBookUI(Str) {
-    return nullptr;
-}
-
-static EngineBase* CreateEngineForPath(Str path) {
-    if (IsEngineImageDirSupportedFile(path)) {
-        return CreateEngineImageDirFromFile(path);
-    }
-
-    FileType kind = GuessFileTypeFromName(path);
-    if (IsEngineDjVuSupportedFileType(kind)) {
-        return CreateEngineDjvuDecFromFile(path);
-    }
-    if (IsEngineImageSupportedFileType(kind)) {
-        return CreateEngineImageFromFile(path);
-    }
-    if (IsEngineCbxSupportedFileType(kind)) {
-        return CreateEngineCbxFromFile(path, nullptr, kind);
-    }
-    if (IsEngineMupdfSupportedFileType(kind)) {
-        return CreateEngineMupdfFromFile(path, kind, 96, nullptr);
-    }
     return nullptr;
 }
 
@@ -124,21 +100,14 @@ void* MacOpenDocument(const char* path, char** errorOut) {
         return nullptr;
     }
 
-    EngineBase* engine = CreateEngineForPath(Str((char*)path));
-    if (!engine) {
+    ReaderModel* model = ReaderModel::Create(Str((char*)path));
+    if (!model) {
         if (errorOut) {
             *errorOut = DupCString("Could not open the document.");
         }
         return nullptr;
     }
-    if (engine->PageCount() < 1) {
-        engine->Release();
-        if (errorOut) {
-            *errorOut = DupCString("Document has no pages.");
-        }
-        return nullptr;
-    }
-    return engine;
+    return model;
 }
 
 // Number of pages, or 0 if the handle is invalid.
@@ -146,7 +115,7 @@ int MacPageCount(void* document) {
     if (!document) {
         return 0;
     }
-    return ((EngineBase*)document)->PageCount();
+    return ((ReaderModel*)document)->PageCount();
 }
 
 // Mediabox size of pageNo (1-based) in points. Returns false if invalid.
@@ -154,11 +123,11 @@ bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut
     if (!document) {
         return false;
     }
-    auto* engine = (EngineBase*)document;
-    if (pageNo < 1 || pageNo > engine->PageCount()) {
+    auto* model = (ReaderModel*)document;
+    if (pageNo < 1 || pageNo > model->PageCount()) {
         return false;
     }
-    RectF mb = engine->PageMediabox(pageNo);
+    RectF mb = model->PageMediabox(pageNo);
     if (widthOut) {
         *widthOut = mb.dx;
     }
@@ -172,8 +141,7 @@ double MacFileDPI(void* document) {
     if (!document) {
         return 96.0;
     }
-    double dpi = ((EngineBase*)document)->GetFileDPI();
-    return dpi > 0 ? dpi : 96.0;
+    return ((ReaderModel*)document)->FileDPI();
 }
 
 bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumentLayout* layout) {
@@ -182,16 +150,10 @@ bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumen
     }
     *layout = {};
 
-    auto* engine = (EngineBase*)document;
-    int pageCount = engine->PageCount();
+    auto* model = (ReaderModel*)document;
+    int pageCount = model->PageCount();
     if (pageCount <= 0) {
         return false;
-    }
-
-    DocumentLayout docLayout;
-    docLayout.Reset(pageCount);
-    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
-        docLayout.SetPageMediaBox(pageNo, engine->PageMediabox(pageNo));
     }
 
     DocumentLayoutParams p;
@@ -200,11 +162,14 @@ bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumen
     p.viewPortSize = Size(params->viewWidth, params->viewHeight);
     p.viewPortOffset = Point(params->viewX, params->viewY);
     p.zoomVirtual = (float)params->zoomVirtual;
-    p.dpiFactor = 72.0f / engine->GetFileDPI();
+    p.dpiFactor = 72.0f / model->FileDPI();
     p.rotation = params->rotation;
     p.windowMargin = {12, 12, 12, 12};
     p.pageSpacing = Size(0, 14);
-    docLayout.Relayout(p);
+    DocumentLayout docLayout;
+    if (!model->Layout(p, &docLayout)) {
+        return false;
+    }
 
     auto* pages = (MacLayoutPage*)malloc(sizeof(MacLayoutPage) * (size_t)pageCount);
     if (!pages) {
@@ -246,16 +211,15 @@ bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRend
     if (!document) {
         return false;
     }
-    auto* engine = (EngineBase*)document;
-    if (pageNo < 1 || pageNo > engine->PageCount()) {
+    auto* model = (ReaderModel*)document;
+    if (pageNo < 1 || pageNo > model->PageCount()) {
         return false;
     }
     if (zoom <= 0) {
         zoom = 1.0f;
     }
 
-    RenderPageArgs renderArgs(pageNo, zoom, rotation);
-    Pixmap* pixmap = engine->RenderPage(renderArgs);
+    Pixmap* pixmap = model->RenderPage(pageNo, zoom, rotation);
     bool ok = CopyPixmap(pixmap, page);
     FreePixmap(pixmap);
     return ok;
@@ -281,7 +245,7 @@ void MacCloseDocument(void* document) {
     if (!document) {
         return;
     }
-    ((EngineBase*)document)->Release();
+    delete (ReaderModel*)document;
 }
 
 void MacShutdown() {

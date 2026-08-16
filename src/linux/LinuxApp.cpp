@@ -12,6 +12,16 @@ struct LinuxAppState {
     LinuxWindow* window = nullptr;
 };
 
+struct EBookUI;
+EBookUI* GetEBookUI() {
+    return nullptr;
+}
+
+struct FileEBookUI;
+FileEBookUI* GetFileEBookUI(Str) {
+    return nullptr;
+}
+
 static LinuxAppState* GetState(GtkApplication* app) {
     return (LinuxAppState*)g_object_get_data(G_OBJECT(app), "sumatra-linux-state");
 }

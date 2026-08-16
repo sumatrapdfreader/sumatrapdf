@@ -3,6 +3,8 @@
 
 #include "base/Base.h"
 
+#include "ReaderModel.h"
+
 #include <gtk/gtk.h>
 
 #include "linux/LinuxWindow.h"
@@ -10,10 +12,13 @@
 struct LinuxWindow {
     GtkWidget* window = nullptr;
     GtkWidget* status = nullptr;
+    ReaderModel* reader = nullptr;
 };
 
 static void FreeLinuxWindow(gpointer data) {
-    delete (LinuxWindow*)data;
+    auto* window = (LinuxWindow*)data;
+    delete window->reader;
+    delete window;
 }
 
 LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
@@ -41,7 +46,15 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     }
     char* path = g_file_get_path(file);
     char* name = g_file_get_parse_name(file);
-    gtk_label_set_text(GTK_LABEL(window->status), path ? path : name);
+    delete window->reader;
+    window->reader = path ? ReaderModel::Create(Str(path)) : nullptr;
+    if (window->reader) {
+        TempStr status = fmt("%s\n%d pages", Str(path), window->reader->PageCount());
+        gtk_label_set_text(GTK_LABEL(window->status), CStrTemp(status));
+    } else {
+        TempStr status = fmt("Could not open %s", Str(path ? path : name));
+        gtk_label_set_text(GTK_LABEL(window->status), CStrTemp(status));
+    }
     gtk_window_set_title(GTK_WINDOW(window->window), name);
     g_free(name);
     g_free(path);

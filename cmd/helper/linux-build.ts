@@ -618,8 +618,7 @@ const TEST_UTIL_SOURCES = [
   "src/tools/test_util.cpp",
 ];
 
-const TEST_ENGINES_SOURCES = [
-  "src/base/GuessFileType.cpp",
+const PORTABLE_ENGINE_SOURCES = [
   "src/DocProperties.cpp",
   "src/EbookDoc.cpp",
   "src/EngineBase.cpp",
@@ -636,8 +635,9 @@ const TEST_ENGINES_SOURCES = [
   "src/PdfCadEnhanceDevice.cpp",
   "src/PdfDarkModeNoOp.cpp",
   "src/TreeModel.cpp",
-  "src/tools/test_engines.cpp",
 ];
+
+const TEST_ENGINES_SOURCES = ["src/base/GuessFileType.cpp", ...PORTABLE_ENGINE_SOURCES, "src/tools/test_engines.cpp"];
 
 const PORTABLE_COMPILE_SOURCES = [
   // unblocked by LRESULT / HBITMAP / HBRUSH in base/Base.h
@@ -680,7 +680,11 @@ const GTK4_KEYBOARD_HELP_SOURCES = [
 
 const GTK4_APP_SOURCES = [
   "src/CrashHandlerNoOp.cpp",
+  "src/DisplayMode.cpp",
+  "src/DocumentLayout.cpp",
+  "src/ReaderModel.cpp",
   "src/SumatraLog_posix.cpp",
+  ...PORTABLE_ENGINE_SOURCES,
   "src/linux/LinuxApp.cpp",
   "src/linux/LinuxWindow.cpp",
   "src/linux/SumatraLinux.cpp",
@@ -791,6 +795,7 @@ async function buildGtk4LinuxApp(
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
   const gtkCflags = pkgConfigFlags("--cflags", "gtk4");
   const gtkLibs = pkgConfigFlags("--libs", "gtk4");
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
   const units = GTK4_APP_SOURCES.map((src) => {
     const obj = objPath(outDir, "gtk4-app", src);
     return {
@@ -800,7 +805,7 @@ async function buildGtk4LinuxApp(
         tools.cxx,
         ...optFlags,
         ...defineFlags,
-        "-Isrc",
+        ...includeFlags,
         ...gtkCflags,
         ...commonFlags,
         "-w",
@@ -827,7 +832,7 @@ async function buildGtk4LinuxApp(
     ...commonFlags,
     "-Wl,--gc-sections",
     ...units.map((unit) => unit.obj),
-    join(outDir, "lib", "libbase.a"),
+    ...portableEngineLinkArgs(outDir),
     ...gtkLibs,
   ]);
   if (!result.ok) {
@@ -843,6 +848,30 @@ function pkgConfigFlags(kind: "--cflags" | "--libs", pkg: string): string[] {
     throw new Error(`${pkgConfig} ${kind} ${pkg} failed: ${result.stderr.toString()}`);
   }
   return result.stdout.toString().trim().split(/\s+/).filter(Boolean);
+}
+
+function portableEngineLinkArgs(outDir: string): string[] {
+  return [
+    "-Wl,--start-group",
+    join(outDir, "lib", "libbase.a"),
+    join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "liba-gumbo.a"),
+    join(outDir, "lib", "libcmark-gfm.a"),
+    join(outDir, "lib", "liba-mujs.a"),
+    join(outDir, "lib", "liba-extract.a"),
+    join(outDir, "lib", "libharfbuzz.a"),
+    join(outDir, "lib", "libfreetype.a"),
+    join(outDir, "lib", "libbrotli.a"),
+    join(outDir, "lib", "liblcms2.a"),
+    join(outDir, "lib", "liba-openjpeg.a"),
+    join(outDir, "lib", "liba-jbig2dec.a"),
+    join(outDir, "lib", "liblibjpeg-turbo.a"),
+    join(outDir, "lib", "libdjvudec.a"),
+    join(outDir, "lib", "liblibarchive.a"),
+    join(outDir, "lib", "liba-zlib.a"),
+    "-Wl,--end-group",
+    ...libCryptoLinkFlags(),
+  ];
 }
 
 async function buildGtk4KeyboardHelp(
@@ -1071,25 +1100,7 @@ async function buildTestEngines(
     exePath,
     ...commonFlags,
     ...units.map((u) => u.obj),
-    "-Wl,--start-group",
-    join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libmupdf.a"),
-    join(outDir, "lib", "liba-gumbo.a"),
-    join(outDir, "lib", "libcmark-gfm.a"),
-    join(outDir, "lib", "liba-mujs.a"),
-    join(outDir, "lib", "liba-extract.a"),
-    join(outDir, "lib", "libharfbuzz.a"),
-    join(outDir, "lib", "libfreetype.a"),
-    join(outDir, "lib", "libbrotli.a"),
-    join(outDir, "lib", "liblcms2.a"),
-    join(outDir, "lib", "liba-openjpeg.a"),
-    join(outDir, "lib", "liba-jbig2dec.a"),
-    join(outDir, "lib", "liblibjpeg-turbo.a"),
-    join(outDir, "lib", "libdjvudec.a"),
-    join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "liba-zlib.a"),
-    "-Wl,--end-group",
-    ...libCryptoLinkFlags(),
+    ...portableEngineLinkArgs(outDir),
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {

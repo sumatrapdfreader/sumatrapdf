@@ -643,6 +643,7 @@ function sumatrapdf_files()
     "DisplayMode.*",
     "DisplayModel.*",
     "DocumentLayout.*",
+    "ReaderModel.*",
     "DocController.h",
     "DocProperties.*",
     "EditAnnotations.*",
