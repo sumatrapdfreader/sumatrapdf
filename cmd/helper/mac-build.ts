@@ -511,6 +511,7 @@ const TEST_UTIL_SOURCES = [
   "src/DocProperties.cpp",
   "src/Flags.cpp",
   "src/FilterUtil.cpp",
+  "src/GlobalPrefs.cpp",
   "src/PageRenderPolicy.cpp",
   "src/RefHoverDetect.cpp",
   "src/RefHoverTextDetect.cpp",
@@ -567,6 +568,7 @@ const TEST_ENGINES_SOURCES = [
 const MAC_APP_SOURCES = [
   "src/Commands.cpp",
   "src/FilterUtil.cpp",
+  "src/GlobalPrefs.cpp",
   "src/base/GuessFileType.cpp",
   "src/DisplayMode.cpp",
   "src/DocumentLayout.cpp",
@@ -588,6 +590,7 @@ const MAC_APP_SOURCES = [
   "src/PageRenderPolicy.cpp",
   "src/PageRenderService.cpp",
   "src/ReaderModel.cpp",
+  "src/SumatraConfig.cpp",
   "src/TextSelection.cpp",
   "src/TextSearch.cpp",
   "src/TreeModel.cpp",
@@ -601,6 +604,7 @@ const MAC_APP_SOURCES = [
   "src/gui/mac/PlatformWindowMac.cpp",
   "src/gui/mac/GuiMacBridge.mm",
   "src/mac/SumatraMacEngine.cpp",
+  "src/mac/MacPrefs.cpp",
   "src/mac/SumatraMac.mm",
 ];
 

@@ -5,16 +5,16 @@ those commits are verification artifacts rather than authorization for final fea
 
 ## Status
 
-| Stage | Status      | Summary                                           |
-| ----- | ----------- | ------------------------------------------------- |
-| 1     | Complete    | Cocoa application bundle and file opening         |
-| 2     | Complete    | Shared portable reader model                      |
-| 3     | Complete    | Scrollable multi-page Cocoa document viewer       |
-| 4     | Complete    | Portable asynchronous rendering and bounded cache |
-| 5     | In progress | Native shell, toolbar, menus, and commands        |
-| 6     | In progress | Core portable reader interactions are exposed     |
-| 7     | In progress | Native print/Finder/bundle integration            |
-| 8     | Complete    | Versioned portable application archive            |
+| Stage | Status      | Summary                                            |
+| ----- | ----------- | -------------------------------------------------- |
+| 1     | Complete    | Cocoa application bundle and file opening          |
+| 2     | Complete    | Shared portable reader model                       |
+| 3     | Complete    | Scrollable multi-page Cocoa document viewer        |
+| 4     | Complete    | Portable asynchronous rendering and bounded cache  |
+| 5     | In progress | Native shell, toolbar, menus, and commands         |
+| 6     | In progress | Core portable reader interactions are exposed      |
+| 7     | In progress | Reload, print, Finder, session, bundle integration |
+| 8     | Complete    | Versioned portable application archive             |
 
 ## Existing baseline
 
@@ -36,13 +36,18 @@ Reconciled 2026-08-16.
   drives internal-page, URL, and file links.
 - The Cocoa command chooser filters the supported native action set through shared `CommandPaletteModel`; unsupported
   platform commands are not offered.
+- Per-file view state, recent documents, favorites, and bare-launch session restore use the existing
+  `GlobalPrefs`/`FileState` serialization in Application Support, keeping settings compatible with the portable
+  preference model.
 - The application still owns a single document, and several menu entries remain disabled placeholders. Text
-  selection refinements and favorites/history are not exposed in the Cocoa reader yet.
+  selection refinements remain incomplete.
 - The application bundle advertises its supported document extensions to Finder. Every successful macOS build emits
   a versioned `.tar.gz` containing `SumatraPDF.app`, the license, and macOS installation notes; signing and
   notarization remain deferred release-infrastructure work.
 - Native `NSPrintOperation` prints the document through the shared engine render path with Cocoa page ranges and the
   current rotation.
+- A native vnode dispatch source reloads the active document after writes or atomic replacements while preserving its
+  saved view state.
 
 ## Verification
 

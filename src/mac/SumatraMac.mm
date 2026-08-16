@@ -1,6 +1,10 @@
 #import <Cocoa/Cocoa.h>
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "mac/SumatraMacEngine.h"
+#include "mac/MacPrefs.h"
 #include "gui/mac/KeyboardHelpMacBridge.h"
 
 // The website / manual URL opened from the Help menu.
@@ -462,6 +466,8 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 @property(nonatomic) void* commandPalette;
 @property(nonatomic, retain) NSTextField* commandPaletteQuery;
 @property(nonatomic, retain) NSPopUpButton* commandPaletteItems;
+@property(nonatomic) dispatch_source_t fileWatcher;
+@property(nonatomic) int watchedFile;
 @property(nonatomic) void* document;
 @property(nonatomic, copy) NSString* documentPath;
 @property(nonatomic) int pageCount;
@@ -662,9 +668,16 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
     (void)notification;
+    NSArray<NSString*>* supportDirs =
+        NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSString* supportDir = [supportDirs count] ? [supportDirs objectAtIndex:0] : NSTemporaryDirectory();
+    NSString* settingsPath = [[supportDir stringByAppendingPathComponent:@"SumatraPDF"]
+        stringByAppendingPathComponent:@"SumatraPDF-settings.txt"];
+    MacPrefsInit([settingsPath fileSystemRepresentation]);
     _zoom = kMacZoomFitPage;
     _rotation = 0;
     _continuousView = YES;
+    _watchedFile = -1;
 
     NSRect frame = NSMakeRect(0, 0, 900, 1100);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
@@ -702,6 +715,16 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     NSArray<NSString*>* args = [[NSProcessInfo processInfo] arguments];
     if ([args count] >= 2) {
         [self openPath:[args objectAtIndex:1]];
+    } else {
+        MacPrefsViewState savedState = {};
+        char* savedPath = MacPrefsCopySessionPath(&savedState);
+        if (savedPath) {
+            NSString* path = [NSString stringWithUTF8String:savedPath];
+            MacFreeString(savedPath);
+            if (path) {
+                [self openPath:path];
+            }
+        }
     }
 
     [_window center];
@@ -713,8 +736,59 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     return _document != nullptr;
 }
 
+- (void)stopWatchingDocument {
+    if (_fileWatcher) {
+        dispatch_source_cancel(_fileWatcher);
+        dispatch_release(_fileWatcher);
+        _fileWatcher = nullptr;
+        _watchedFile = -1;
+    } else if (_watchedFile >= 0) {
+        close(_watchedFile);
+        _watchedFile = -1;
+    }
+}
+
+- (void)startWatchingDocument {
+    [self stopWatchingDocument];
+    if (!_documentPath) {
+        return;
+    }
+    _watchedFile = open([_documentPath fileSystemRepresentation], O_EVTONLY);
+    if (_watchedFile < 0) {
+        return;
+    }
+    _fileWatcher = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, (uintptr_t)_watchedFile,
+                                          DISPATCH_VNODE_WRITE | DISPATCH_VNODE_DELETE | DISPATCH_VNODE_RENAME,
+                                          dispatch_get_main_queue());
+    if (!_fileWatcher) {
+        close(_watchedFile);
+        _watchedFile = -1;
+        return;
+    }
+    NSString* watchedPath = [[_documentPath copy] autorelease];
+    int watchedFile = _watchedFile;
+    dispatch_source_set_cancel_handler(_fileWatcher, ^{
+      close(watchedFile);
+    });
+    dispatch_source_set_event_handler(_fileWatcher, ^{
+      if (_document && [_documentPath isEqualToString:watchedPath] &&
+          [[NSFileManager defaultManager] fileExistsAtPath:watchedPath]) {
+          [self openPath:watchedPath];
+      }
+    });
+    dispatch_resume(_fileWatcher);
+}
+
 - (void)closeDocument {
+    [self stopWatchingDocument];
     if (_document) {
+        MacPrefsViewState state = {};
+        state.valid = true;
+        state.continuous = _continuousView;
+        state.zoomVirtual = [self layoutZoomVirtual];
+        state.rotation = _rotation;
+        state.pageNo = _currentPage;
+        MacPrefsSaveDocument([_documentPath fileSystemRepresentation], &state);
         MacCloseDocument(_document);
         _document = nullptr;
     }
@@ -773,10 +847,18 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     _currentPage = 1;
     _rotation = 0;
     _zoom = kMacZoomFitPage;
+    MacPrefsViewState state = {};
+    if (MacPrefsOpenDocument([path fileSystemRepresentation], &state) && state.valid) {
+        _continuousView = state.continuous;
+        _rotation = state.rotation;
+        _currentPage = MAX(1, MIN(_pageCount, state.pageNo));
+        _zoom = state.zoomVirtual > 0 ? state.zoomVirtual / 100.0 : state.zoomVirtual;
+    }
     [_documentView setImage:nullptr];
     [_documentView setPages:nil];
     [_documentView setMessage:nil];
     [self renderDocumentShowingErrors:YES];
+    [self startWatchingDocument];
     [_window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
 }
@@ -1033,6 +1115,12 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         action == @selector(openWebsite:)) {
         return YES;
     }
+    if (action == @selector(openRecentDocument:)) {
+        return MacPrefsRecentCount() > 0;
+    }
+    if (action == @selector(toggleFavorite:)) {
+        return [self hasDocument];
+    }
     if (action == @selector(goToPrevPage:) || action == @selector(goToFirstPage:)) {
         return [self hasDocument] && _currentPage > 1;
     }
@@ -1114,8 +1202,36 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
 }
 
+- (IBAction)openRecentDocument:(id)sender {
+    (void)sender;
+    int count = MacPrefsRecentCount();
+    if (count == 0) {
+        return;
+    }
+    NSPopUpButton* items = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 440, 28) pullsDown:NO] autorelease];
+    NSMutableArray* paths = [NSMutableArray arrayWithCapacity:(NSUInteger)count];
+    for (int i = 0; i < count; i++) {
+        char* pathUtf8 = MacPrefsCopyRecentPath(i);
+        NSString* path = pathUtf8 ? [NSString stringWithUTF8String:pathUtf8] : nil;
+        MacFreeString(pathUtf8);
+        if (path) {
+            [paths addObject:path];
+            [items addItemWithTitle:[path lastPathComponent]];
+        }
+    }
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setMessageText:@"Open Recent"];
+    [alert addButtonWithTitle:@"Open"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setAccessoryView:items];
+    if ([alert runModal] == NSAlertFirstButtonReturn && [items indexOfSelectedItem] >= 0) {
+        [self openPath:[paths objectAtIndex:(NSUInteger)[items indexOfSelectedItem]]];
+    }
+}
+
 - (IBAction)performClose:(id)sender {
     (void)sender;
+    MacPrefsSaveSession(nullptr, nullptr);
     [self closeDocument];
     self.documentPath = nil;
     [_documentView setScaleToFit:YES];
@@ -1125,6 +1241,60 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_documentView setImageSize:NSZeroSize];
     [_documentView setMessage:nil];
     [self updateTitle];
+}
+
+- (IBAction)toggleFavorite:(id)sender {
+    (void)sender;
+    if (!_documentPath || _currentPage < 1) {
+        return;
+    }
+    const char* path = [_documentPath fileSystemRepresentation];
+    if (MacPrefsHasFavorite(path, _currentPage)) {
+        MacPrefsRemoveFavorite(path, _currentPage);
+    } else {
+        MacPrefsAddFavorite(path, _currentPage);
+    }
+}
+
+- (IBAction)showFavorites:(id)sender {
+    (void)sender;
+    int count = MacPrefsFavoriteCount();
+    if (count == 0) {
+        NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+        [alert setMessageText:@"Favorites"];
+        [alert setInformativeText:@"No favorite pages have been saved."];
+        [alert beginSheetModalForWindow:_window completionHandler:nil];
+        return;
+    }
+    NSPopUpButton* items = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 440, 28) pullsDown:NO] autorelease];
+    NSMutableArray* paths = [NSMutableArray arrayWithCapacity:(NSUInteger)count];
+    NSMutableArray* pages = [NSMutableArray arrayWithCapacity:(NSUInteger)count];
+    for (int i = 0; i < count; i++) {
+        char* pathUtf8 = MacPrefsCopyFavoritePath(i);
+        NSString* path = pathUtf8 ? [NSString stringWithUTF8String:pathUtf8] : nil;
+        MacFreeString(pathUtf8);
+        int pageNo = MacPrefsFavoritePage(i);
+        if (path) {
+            [paths addObject:path];
+            [pages addObject:[NSNumber numberWithInt:pageNo]];
+            [items addItemWithTitle:[NSString stringWithFormat:@"%@ — page %d", [path lastPathComponent], pageNo]];
+        }
+    }
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setMessageText:@"Favorites"];
+    [alert addButtonWithTitle:@"Go"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setAccessoryView:items];
+    if ([alert runModal] != NSAlertFirstButtonReturn || [items indexOfSelectedItem] < 0) {
+        return;
+    }
+    NSUInteger index = (NSUInteger)[items indexOfSelectedItem];
+    NSString* path = [paths objectAtIndex:index];
+    int pageNo = [[pages objectAtIndex:index] intValue];
+    if (![_documentPath isEqualToString:path]) {
+        [self openPath:path];
+    }
+    [self goToPage:pageNo];
 }
 
 - (IBAction)showInFolder:(id)sender {
@@ -1616,6 +1786,9 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         [item setState:(!_continuousView && [self hasDocument]) ? NSControlStateValueOn : NSControlStateValueOff];
     } else if (action == @selector(setContinuousView:)) {
         [item setState:(_continuousView && [self hasDocument]) ? NSControlStateValueOn : NSControlStateValueOff];
+    } else if (action == @selector(toggleFavorite:)) {
+        bool favorite = _documentPath && MacPrefsHasFavorite([_documentPath fileSystemRepresentation], _currentPage);
+        [item setState:favorite ? NSControlStateValueOn : NSControlStateValueOff];
     }
     return [self canPerformAction:action];
 }
@@ -1651,7 +1824,19 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 
 - (void)applicationWillTerminate:(NSNotification*)notification {
     (void)notification;
+    if (_document && _documentPath) {
+        MacPrefsViewState state = {};
+        state.valid = true;
+        state.continuous = _continuousView;
+        state.zoomVirtual = [self layoutZoomVirtual];
+        state.rotation = _rotation;
+        state.pageNo = _currentPage;
+        MacPrefsSaveSession([_documentPath fileSystemRepresentation], &state);
+    } else {
+        MacPrefsSaveSession(nullptr, nullptr);
+    }
     [self closeDocument];
+    MacPrefsShutdown();
     MacShutdown();
 }
 
@@ -1673,6 +1858,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_findText release];
     [_commandPaletteQuery release];
     [_commandPaletteItems release];
+    [self stopWatchingDocument];
     [super dealloc];
 }
 
@@ -1725,6 +1911,7 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     NSMenu* fileMenu = [[[NSMenu alloc] initWithTitle:@"File"] autorelease];
     AddPlaceholder(fileMenu, @"New Window", delegate);
     AddItem(fileMenu, @"Open…", @selector(openDocument:), delegate, @"o", NSEventModifierFlagCommand);
+    AddItem(fileMenu, @"Open Recent…", @selector(openRecentDocument:), delegate, @"", 0);
     AddItem(fileMenu, @"Close", @selector(performClose:), delegate, @"w", NSEventModifierFlagCommand);
     AddItem(fileMenu, @"Show in Folder", @selector(showInFolder:), delegate, @"", 0);
     AddPlaceholder(fileMenu, @"Open Next File in Folder", delegate);
@@ -1768,6 +1955,8 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
             NSEventModifierFlagCommand | NSEventModifierFlagControl);
     [viewMenu addItem:[NSMenuItem separatorItem]];
     AddItem(viewMenu, @"Show Bookmarks", @selector(showToc:), delegate, @"", 0);
+    AddItem(viewMenu, @"Add/Remove Favorite", @selector(toggleFavorite:), delegate, @"b", NSEventModifierFlagCommand);
+    AddItem(viewMenu, @"Show Favorites…", @selector(showFavorites:), delegate, @"", 0);
     AddItem(viewMenu, @"Show Toolbar", @selector(toggleToolbarShown:), nil, @"", 0);
     AddItem(viewMenu, @"Command Palette…", @selector(showCommandPalette:), delegate, @"p",
             NSEventModifierFlagCommand | NSEventModifierFlagShift);
