@@ -4445,11 +4445,17 @@ void LoadModelIntoTab(WindowTab* tab) {
     InvalidateFindForDocumentChange(win);
 
     if (win->AsChm()) {
+        // wipe before SetParentHwnd shows the WebView2: the canvas has
+        // WS_CLIPCHILDREN, so once the (transparent-background) webview is
+        // visible the fill is clipped away and a previous tab's leftover pixels
+        // would show through. Closing a tab gets here with the leftover pixels
+        // still on the canvas: RemoveTab nulls win->ctrl, which skips the wipe
+        // in CloseDocumentInCurrentTab that covers a regular tab switch
+        FillCanvasThemeBackground(win->hwndCanvas);
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
-        FillCanvasThemeBackground(win->hwndCanvas);
     } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
         FillCanvasThemeBackground(win->hwndCanvas);
+        win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
     } else if (win->AsFixed() && win->uiaProvider) {
         // tell UI Automation about content change
         win->uiaProvider->OnDocumentLoad(win->AsFixed());
