@@ -997,6 +997,7 @@ struct HomeChromeCtrl : VirtCtrl {
 static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win);
 static HomeEntriesCtrl* HomeEntries(MainWindow* win);
 static void HomePageSyncChrome(HomePageLayout& l);
+static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t);
 
 static int HomePageIconSize() {
     int sz = DpiScale(gGlobalPrefs->toolbarSize);
@@ -1007,6 +1008,8 @@ static int HomePageIconSize() {
 }
 
 constexpr int kThumbsMiddleMargin = 32;
+// draw a gray separator line between list-view rows
+static bool gShowListSeparatorLine = false;
 constexpr int kSearchEditDy = 28;
 constexpr int kHeaderSearchGapY = 12;
 constexpr int kSearchThumbnailsGapY = 12;
@@ -1890,11 +1893,13 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformF
     MeasureHomeListRowText(gfx, thumb, fontText, isRtl);
     // no selection chrome while typing in the search box
     if (isSelected && !HomeSearchHasFocus(l.win)) {
-        DrawHomeSelectionOutline(gfx, Rect(row.x, row.y, row.dx, row.dy - 1), 4);
+        DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(thumb), 4);
     }
 
-    Color lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
-    gfx->DrawLine(Rect(row.x, row.y + row.dy - 1, row.dx, 0), lineCol);
+    if (gShowListSeparatorLine) {
+        Color lineCol = AccentColor(ThemeMainWindowBackgroundColor(), 30);
+        gfx->DrawLine(Rect(row.x, row.y + row.dy - 1, row.dx, 0), lineCol);
+    }
 
     // LoadThumbnail only hits disk the first time; result stays on fs->thumbnail
     Pixmap* thumbImg = LoadThumbnail(fs);
@@ -2719,8 +2724,10 @@ static void HomeScrollSelectionIntoView(MainWindow* win) {
 // Selection outline rect — must match DrawHomePageLayout / DrawHomeListRow.
 static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t) {
     if (HomePageIsListView()) {
-        // list: outline is the row, 1px shorter (separator line)
-        return {t.rcListRow.x, t.rcListRow.y, t.rcListRow.dx, t.rcListRow.dy - 1};
+        // list: outline is the row, 1px shorter (separator line), with 0.5rem
+        // of breathing room on the left and right
+        int pad = DpiScale(8);
+        return {t.rcListRow.x - pad, t.rcListRow.y, t.rcListRow.dx + (2 * pad), t.rcListRow.dy - 1};
     }
     // thumbnails: page ∪ name, inflated by the same amounts as paint
     Rect sel = t.rcPage.Union(t.rcText);
