@@ -2125,7 +2125,7 @@ void VirtText::PaintText(VirtPaintCtx& ctx, Color textColor) {
     }
     switch (align) {
         case VirtTextAlign::Center:
-            fmt |= gfxTextCenter;
+            fmt |= gfxTextCenter | gfxTextVCenter;
             break;
         case VirtTextAlign::Right:
             fmt |= gfxTextRight;
