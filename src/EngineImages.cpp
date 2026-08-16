@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Archive.h"
+#include "base/ByteReaderWriter.h"
 #include "base/Exif.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
@@ -1366,15 +1367,130 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, Props& p
     }
 }
 
+static void AddDpiIfMissing(Props& propsOut, float dpiX, float dpiY) {
+    if (dpiX < 1 || dpiY < 1) {
+        return;
+    }
+    if (GetPropIdx(propsOut, DocProp::Dpi) >= 0) {
+        return;
+    }
+    if (fabsf(dpiX - dpiY) < 0.5f) {
+        AddProp(propsOut, DocProp::Dpi, fmt("%.0f", dpiX));
+    } else {
+        AddProp(propsOut, DocProp::Dpi, fmt("%.0f x %.0f", dpiX, dpiY));
+    }
+}
+
+// PNG pHYs (pixels/meter) and JPEG JFIF density. Used when there is no EXIF
+// resolution — most PNGs have none, but they still have a size and often pHYs.
+static bool ImageDpiFromData(Str data, float& dpiX, float& dpiY) {
+    dpiX = dpiY = 0;
+    if (len(data) < 16) {
+        return false;
+    }
+    const u8* d = (const u8*)data.s;
+    int n = data.len;
+
+    static const u8 kPngSig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+    if (n >= 8 && memeq(d, kPngSig, 8)) {
+        int idx = 8;
+        while (idx + 12 <= n) {
+            u32 chunkLen = UInt32BE(d + idx);
+            const u8* type = d + idx + 4;
+            if (memeq(type, "pHYs", 4) && chunkLen >= 9 && idx + 17 <= n) {
+                const u8* p = d + idx + 8;
+                u32 x = UInt32BE(p);
+                u32 y = UInt32BE(p + 4);
+                // unit 1 = meter; 0 is only an aspect ratio
+                if (p[8] == 1 && x > 0 && y > 0) {
+                    dpiX = (float)x * 0.0254f;
+                    dpiY = (float)y * 0.0254f;
+                    return true;
+                }
+                return false;
+            }
+            if (memeq(type, "IEND", 4)) {
+                break;
+            }
+            if (chunkLen > (u32)(n - idx)) {
+                break;
+            }
+            idx += 12 + (int)chunkLen;
+        }
+        return false;
+    }
+
+    if (d[0] == 0xFF && d[1] == 0xD8) {
+        int i = 2;
+        while (i + 4 <= n) {
+            if (d[i] != 0xFF) {
+                break;
+            }
+            while (i < n && d[i] == 0xFF) {
+                i++;
+            }
+            if (i >= n) {
+                break;
+            }
+            u8 marker = d[i++];
+            if (marker == 0xD8 || marker == 0xD9 || (marker >= 0xD0 && marker <= 0xD7)) {
+                continue;
+            }
+            if (i + 2 > n) {
+                break;
+            }
+            int seglen = (d[i] << 8) | d[i + 1];
+            if (seglen < 2 || i + seglen > n) {
+                break;
+            }
+            if (marker == 0xE0 && seglen >= 16 && memeq(d + i + 2, "JFIF", 4)) {
+                u8 units = d[i + 9];
+                u32 x = (u32)((d[i + 10] << 8) | d[i + 11]);
+                u32 y = (u32)((d[i + 12] << 8) | d[i + 13]);
+                if (x > 0 && y > 0) {
+                    if (units == 1) {
+                        dpiX = (float)x;
+                        dpiY = (float)y;
+                        return true;
+                    }
+                    if (units == 2) {
+                        dpiX = (float)x * 2.54f;
+                        dpiY = (float)y * 2.54f;
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (marker == 0xDA) {
+                break;
+            }
+            i += seglen;
+        }
+    }
+    return false;
+}
+
 static void GetExifPropertiesFromData(Str data, Props& propsOut) {
     if (len(data) == 0) {
         return;
     }
     AddProp(propsOut, DocProp::ImageFileSize, fmt("%d", (int)data.len));
 
+    // Size lives in the image header (IHDR / SOF / …), not in EXIF. Gating
+    // it on ExifParser left PNG and other EXIF-less files with no size.
+    Size imgSize = ImageSizeFromDataPortable(data);
+    if (!imgSize.IsEmpty()) {
+        AddProp(propsOut, DocProp::ImageSize, fmt("%d x %d", imgSize.dx, imgSize.dy));
+    }
+
     ExifParser parser;
     if (parser.Parse(data)) {
         AddParsedExifProperties(data, parser, propsOut);
+    }
+
+    float dpiX = 0, dpiY = 0;
+    if (ImageDpiFromData(data, dpiX, dpiY)) {
+        AddDpiIfMissing(propsOut, dpiX, dpiY);
     }
 }
 
@@ -1389,6 +1505,21 @@ void EngineImages::GetImageProperties(int pageNo, Props& propsOut) {
     }
     Str data = GetImageData(pageNo);
     GetExifPropertiesFromData(data, propsOut);
+    if (GetPropIdx(propsOut, DocProp::ImageSize) < 0) {
+        RectF box = PageMediabox(pageNo);
+        if (box.dx > 0 && box.dy > 0) {
+            AddProp(propsOut, DocProp::ImageSize, fmt("%d x %d", (int)box.dx, (int)box.dy));
+        }
+    }
+    // Already-decoded frames (EngineImage) have WIC/GDI+ resolution, which is
+    // what we used to show even when the file has no EXIF / pHYs.
+    if (GetPropIdx(propsOut, DocProp::Dpi) < 0 && kind == kindEngineImage) {
+        auto* img = (EngineImage*)this;
+        int idx = pageNo - 1;
+        if (idx >= 0 && idx < len(img->frames) && img->frames[idx]) {
+            AddDpiIfMissing(propsOut, img->frames[idx]->xres, img->frames[idx]->yres);
+        }
+    }
 }
 
 Pixmap* EngineImage::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {

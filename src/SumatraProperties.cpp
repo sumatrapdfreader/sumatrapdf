@@ -530,8 +530,28 @@ static void AppendFileType(str::Builder& out, Str path) {
 // Which way the pages run, and where that came from. An EPUB can state it with
 // page-progression-direction; for everything else it's the manga-mode default
 // or the user's own toggle (issue #1264).
-static void AppendReadingDirection(str::Builder& out, DisplayModel* dm) {
+// Not shown for a standalone image (no page sequence) or a one-page document
+// that neither declares a direction nor has had manga mode toggled (#5950).
+static bool ShouldShowReadingDirection(DisplayModel* dm) {
     if (!dm) {
+        return false;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || engine->kind == kindEngineImage) {
+        return false;
+    }
+    const PageLayout& layout = engine->preferredLayout;
+    if (layout.r2lDeclared) {
+        return true;
+    }
+    if (dm->GetDisplayR2L() != layout.r2l) {
+        return true;
+    }
+    return dm->PageCount() > 1;
+}
+
+static void AppendReadingDirection(str::Builder& out, DisplayModel* dm) {
+    if (!ShouldShowReadingDirection(dm)) {
         return;
     }
     bool r2l = dm->GetDisplayR2L();
