@@ -865,6 +865,7 @@ struct HomePageLayout {
     Rect rcIconOpen;
     Rect rcIconListView;
     Rect rcIconThumbnailView;
+    Rect rcLogo;
 
     VirtText* freqRead = nullptr;
     VirtText* openDoc = nullptr;
@@ -1006,6 +1007,7 @@ struct HomeChromeCtrl : VirtCtrl {
     HomeSearchBorderCtrl* searchBorder = nullptr;
     HomeEntriesCtrl* entries = nullptr;
     VirtText* hdr = nullptr;
+    SumatraLogo* logo = nullptr;
     HomeViewIconCtrl* thumbView = nullptr;
     HomeViewIconCtrl* listView = nullptr;
     HomeOpenDocCtrl* openDoc = nullptr;
@@ -1207,6 +1209,7 @@ struct HomePageLayoutCache {
     Rect rcIconOpen;
     Rect rcIconListView;
     Rect rcIconThumbnailView;
+    Rect rcLogo;
     Rect rcTip;
     Rect rcFreqRead;
     Rect rcOpenDoc;
@@ -1355,6 +1358,7 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.rcIconOpen = l.rcIconOpen;
     c.rcIconListView = l.rcIconListView;
     c.rcIconThumbnailView = l.rcIconThumbnailView;
+    c.rcLogo = l.rcLogo;
     c.rcTip = l.rcTip;
     c.rcFreqRead = l.freqRead ? l.freqRead->lastBounds : Rect{};
     c.rcOpenDoc = l.openDoc ? l.openDoc->lastBounds : Rect{};
@@ -1392,6 +1396,7 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.rcIconOpen = c.rcIconOpen;
     l.rcIconListView = c.rcIconListView;
     l.rcIconThumbnailView = c.rcIconThumbnailView;
+    l.rcLogo = c.rcLogo;
     l.rcTip = c.rcTip;
     l.totalContentDy = c.totalContentDy;
     l.thumbsVisibleDy = c.thumbsVisibleDy;
@@ -1500,7 +1505,8 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
     int thumbsContentWidth = (thumbsColsForLayout * kThumbnailDx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
 
-    // --- Step 1: single header row: [view icons] [search edit] [open link] ---
+    // --- Step 1: two header rows: the app logo centered on top, then
+    // [open link] [search edit] [view icons] ---
     Rect rcIconView(0, 0, 0, 0);
     rcIconView.dx = rcIconView.dy = HomePageIconSize();
 
@@ -1515,15 +1521,21 @@ static void LayoutHomePage(HomePageLayout& l) {
     int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
     int borderDy = searchEditDy + 2; // 1px border on each side
 
-    int hdrY = DpiScale(8);
+    // the app name in colorful letters, same font as the About window
+    chrome->logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
+    Size logoSize = chrome->logo->GetIdealSize();
+    int logoY = DpiScale(8);
+    l.rcLogo = {thumbsStartX + ((thumbsContentWidth - logoSize.dx) / 2), logoY, logoSize.dx, logoSize.dy};
+
+    int hdrY = logoY + logoSize.dy + DpiScale(8);
     int iconGap = DpiScale(4);
     int rowDy = std::max(rcIconView.dy, borderDy);
-    // every row item (view icons, search box, folder icon, link) is centered
-    // on the row's vertical centerline
+    // every row item (link, search box, view icons) is centered on the row's
+    // vertical centerline
     int centerY = hdrY + (rowDy / 2);
     int viewIconsDx = (2 * rcIconView.dx) + iconGap;
 
-    /* "Open..." link at the right edge */
+    /* "Open..." link at the left edge */
     Rect rcIconOpen(0, 0, 0, 0);
     rcIconOpen.dx = rcIconOpen.dy = HomePageIconSize();
 
@@ -1537,15 +1549,17 @@ static void LayoutHomePage(HomePageLayout& l) {
     Size txtSize = openDoc->GetIdealSize(true);
     int openGroupDx = rcIconOpen.dx + 3 + txtSize.dx;
 
-    l.rcIconThumbnailView = {thumbsStartX, centerY - (rcIconView.dy / 2), rcIconView.dx, rcIconView.dy};
-    l.rcIconListView = {l.rcIconThumbnailView.x + rcIconView.dx + iconGap, l.rcIconThumbnailView.y, rcIconView.dx,
-                        rcIconView.dy};
-
-    rcIconOpen.x = thumbsStartX + thumbsContentWidth - openGroupDx;
+    rcIconOpen.x = thumbsStartX;
     rcIconOpen.y = centerY - (rcIconOpen.dy / 2);
     Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, centerY - (txtSize.dy / 2), txtSize.dx, txtSize.dy);
 
-    // the search box takes what is left between the icons and the link; both
+    /* view-mode icons at the right edge */
+    l.rcIconThumbnailView = {thumbsStartX + thumbsContentWidth - viewIconsDx, centerY - (rcIconView.dy / 2),
+                             rcIconView.dx, rcIconView.dy};
+    l.rcIconListView = {l.rcIconThumbnailView.x + rcIconView.dx + iconGap, l.rcIconThumbnailView.y, rcIconView.dx,
+                        rcIconView.dy};
+
+    // the search box takes what is left between the link and the icons; both
     // sides are padded to the wider of the two, so the box sits centered
     int rowGapX = DpiScale(16);
     int flankDx = std::max(viewIconsDx, openGroupDx) + rowGapX;
@@ -1556,6 +1570,7 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     if (isRtl) {
         auto mirrorX = [&rc](Rect& r) { r.x = rc.dx - r.x - r.dx; };
+        mirrorX(l.rcLogo);
         mirrorX(l.rcIconThumbnailView);
         mirrorX(l.rcIconListView);
         mirrorX(rcIconOpen);
@@ -2391,6 +2406,10 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->hdr = new VirtText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
+    // the app name in colorful letters, same as the About window
+    chrome->logo = new SumatraLogo();
+    chrome->AddChild(chrome->logo);
+
     chrome->openDoc = new HomeOpenDocCtrl();
     chrome->openDoc->text = new VirtText(StrL(""));
     chrome->openDoc->text->withUnderline = true;
@@ -2523,6 +2542,11 @@ static void HomePageSyncChrome(HomePageLayout& l) {
 
     // re-apply: the bounds were set before the parent was positioned
     chrome->hdr->SetBounds(l.freqRead->lastBounds);
+
+    // font also set here so the cached-layout path (ApplyHomeLayoutCache)
+    // repaints the logo without a full relayout
+    chrome->logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
+    chrome->logo->SetBounds(l.rcLogo);
 
     // one click target covering the icon and the link text
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
