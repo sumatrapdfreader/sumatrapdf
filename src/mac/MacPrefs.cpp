@@ -11,6 +11,7 @@
 
 static Str gSettingsPath;
 static Str gPreviousSettings;
+static SessionData* gBuildingSession = nullptr;
 
 static char* CopyCString(Str value) {
     char* result = (char*)malloc((size_t)len(value) + 1);
@@ -126,11 +127,26 @@ void MacPrefsSaveDocument(const char* path, const MacPrefsViewState* state) {
 }
 
 void MacPrefsSaveSession(const char* path, const MacPrefsViewState* state) {
+    MacPrefsBeginSession();
+    MacPrefsAppendSession(path, state);
+    MacPrefsFinishSession(0);
+}
+
+void MacPrefsBeginSession() {
     if (!gGlobalPrefs || !gGlobalPrefs->sessionData) {
         return;
     }
     FreeSessionDataVec(gGlobalPrefs->sessionData);
-    if (!path || !state || !gGlobalPrefs->rememberOpenedFiles) {
+    gBuildingSession = nullptr;
+    if (!gGlobalPrefs->rememberOpenedFiles) {
+        return;
+    }
+    gBuildingSession = NewSessionData();
+    gGlobalPrefs->sessionData->Append(gBuildingSession);
+}
+
+void MacPrefsAppendSession(const char* path, const MacPrefsViewState* state) {
+    if (!gBuildingSession || !path || !state) {
         return;
     }
     MacPrefsSaveDocument(path, state);
@@ -138,18 +154,37 @@ void MacPrefsSaveSession(const char* path, const MacPrefsViewState* state) {
     if (!fileState) {
         return;
     }
-    SessionData* session = NewSessionData();
-    session->tabStates->Append(NewTabState(fileState));
-    session->tabIndex = 1;
-    gGlobalPrefs->sessionData->Append(session);
+    gBuildingSession->tabStates->Append(NewTabState(fileState));
+}
+
+void MacPrefsFinishSession(int activeTab) {
+    if (!gBuildingSession) {
+        return;
+    }
+    if (len(*gBuildingSession->tabStates) == 0) {
+        gGlobalPrefs->sessionData->Remove(gBuildingSession);
+        FreeSessionData(gBuildingSession);
+    } else {
+        gBuildingSession->tabIndex = limitValue(activeTab + 1, 1, len(*gBuildingSession->tabStates));
+    }
+    gBuildingSession = nullptr;
 }
 
 char* MacPrefsCopySessionPath(MacPrefsViewState* state) {
+    return MacPrefsCopySessionTab(0, state);
+}
+
+int MacPrefsSessionCount() {
     SessionData* session = SavedSession();
-    if (!session || !session->tabStates || len(*session->tabStates) == 0) {
+    return session && session->tabStates ? len(*session->tabStates) : 0;
+}
+
+char* MacPrefsCopySessionTab(int index, MacPrefsViewState* state) {
+    SessionData* session = SavedSession();
+    if (!session || !session->tabStates || index < 0 || index >= len(*session->tabStates)) {
         return nullptr;
     }
-    TabState* tab = (*session->tabStates)[0];
+    TabState* tab = (*session->tabStates)[index];
     if (state) {
         *state = {};
         state->valid = true;
@@ -159,6 +194,11 @@ char* MacPrefsCopySessionPath(MacPrefsViewState* state) {
         state->pageNo = tab->pageNo;
     }
     return CopyCString(tab->filePath);
+}
+
+int MacPrefsSessionActiveTab() {
+    SessionData* session = SavedSession();
+    return session ? session->tabIndex - 1 : 0;
 }
 
 int MacPrefsRecentCount() {

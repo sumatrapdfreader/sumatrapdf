@@ -83,6 +83,7 @@ static const CGFloat kMacZoomFitPage = -1.0;
 static const CGFloat kMacZoomFitWidth = -2.0;
 
 static NSString* const kToolbarOpen = @"sumatra.toolbar.open";
+static NSString* const kToolbarTabs = @"sumatra.toolbar.tabs";
 static NSString* const kToolbarPrevPage = @"sumatra.toolbar.prev-page";
 static NSString* const kToolbarNextPage = @"sumatra.toolbar.next-page";
 static NSString* const kToolbarPageStatus = @"sumatra.toolbar.page-status";
@@ -137,6 +138,26 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
         CGImageRelease(_image);
     }
     _image = image ? CGImageRetain(image) : nullptr;
+}
+
+@end
+
+@interface SumatraTabState : NSObject
+@property(nonatomic) void* document;
+@property(nonatomic, copy) NSString* path;
+@property(nonatomic) int pageCount;
+@property(nonatomic) int currentPage;
+@property(nonatomic) int rotation;
+@property(nonatomic) CGFloat zoom;
+@property(nonatomic) BOOL continuous;
+@property(nonatomic) NSPoint scrollOrigin;
+@end
+
+@implementation SumatraTabState
+
+- (void)dealloc {
+    [_path release];
+    [super dealloc];
 }
 
 @end
@@ -468,6 +489,10 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 @property(nonatomic, retain) NSPopUpButton* commandPaletteItems;
 @property(nonatomic) dispatch_source_t fileWatcher;
 @property(nonatomic) int watchedFile;
+@property(nonatomic, retain) NSMutableArray* tabs;
+@property(nonatomic, retain) NSMutableArray* closedPaths;
+@property(nonatomic, retain) NSSegmentedControl* tabSelector;
+@property(nonatomic) int activeTab;
 @property(nonatomic) void* document;
 @property(nonatomic, copy) NSString* documentPath;
 @property(nonatomic) int pageCount;
@@ -503,6 +528,8 @@ static NSImage* ToolbarImage(NSString* symbolName, NSString* fallbackName) {
 static NSArray<NSString*>* ToolbarDefaultItems() {
     return @[
         kToolbarOpen,
+        NSToolbarSeparatorItemIdentifier,
+        kToolbarTabs,
         NSToolbarSeparatorItemIdentifier,
         kToolbarPrevPage,
         kToolbarNextPage,
@@ -561,6 +588,22 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     return item;
 }
 
+- (NSToolbarItem*)tabsToolbarItem:(NSString*)identifier {
+    NSToolbarItem* item = [[[NSToolbarItem alloc] initWithItemIdentifier:identifier] autorelease];
+    [item setLabel:@"Documents"];
+    [item setPaletteLabel:@"Documents"];
+    NSSegmentedControl* control = [[[NSSegmentedControl alloc] initWithFrame:NSMakeRect(0, 0, 280, 28)] autorelease];
+    [control setSegmentStyle:NSSegmentStyleTexturedRounded];
+    [control setTrackingMode:NSSegmentSwitchTrackingSelectOne];
+    [control setTarget:self];
+    [control setAction:@selector(selectTab:)];
+    self.tabSelector = control;
+    [item setView:control];
+    [item setMinSize:NSMakeSize(120, 28)];
+    [item setMaxSize:NSMakeSize(420, 28)];
+    return item;
+}
+
 - (void)installToolbar {
     NSToolbar* toolbar = [[[NSToolbar alloc] initWithIdentifier:@"sumatra.toolbar.main"] autorelease];
     [toolbar setDelegate:self];
@@ -596,6 +639,9 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
                          tooltip:@"Open a document"
                            image:ToolbarImage(@"doc", NSImageNameFolder)
                           action:@selector(openDocument:)];
+    }
+    if ([identifier isEqualToString:kToolbarTabs]) {
+        return [self tabsToolbarItem:identifier];
     }
     if ([identifier isEqualToString:kToolbarPrevPage]) {
         return [self toolbarItem:identifier
@@ -678,6 +724,9 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     _rotation = 0;
     _continuousView = YES;
     _watchedFile = -1;
+    _activeTab = -1;
+    _tabs = [[NSMutableArray alloc] init];
+    _closedPaths = [[NSMutableArray alloc] init];
 
     NSRect frame = NSMakeRect(0, 0, 900, 1100);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
@@ -716,14 +765,19 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     if ([args count] >= 2) {
         [self openPath:[args objectAtIndex:1]];
     } else {
-        MacPrefsViewState savedState = {};
-        char* savedPath = MacPrefsCopySessionPath(&savedState);
-        if (savedPath) {
-            NSString* path = [NSString stringWithUTF8String:savedPath];
+        int sessionCount = MacPrefsSessionCount();
+        int sessionActiveTab = MacPrefsSessionActiveTab();
+        for (int i = 0; i < sessionCount; i++) {
+            MacPrefsViewState savedState = {};
+            char* savedPath = MacPrefsCopySessionTab(i, &savedState);
+            NSString* path = savedPath ? [NSString stringWithUTF8String:savedPath] : nil;
             MacFreeString(savedPath);
             if (path) {
                 [self openPath:path];
             }
+        }
+        if (sessionCount > 0) {
+            [self activateTabAtIndex:sessionActiveTab];
         }
     }
 
@@ -734,6 +788,113 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 
 - (BOOL)hasDocument {
     return _document != nullptr;
+}
+
+- (void)saveActiveTabState {
+    if (_activeTab < 0 || _activeTab >= (int)[_tabs count]) {
+        return;
+    }
+    SumatraTabState* tab = [_tabs objectAtIndex:(NSUInteger)_activeTab];
+    [tab setCurrentPage:_currentPage];
+    [tab setRotation:_rotation];
+    [tab setZoom:_zoom];
+    [tab setContinuous:_continuousView];
+    [tab setScrollOrigin:[[_scrollView contentView] bounds].origin];
+}
+
+- (void)refreshTabSelector {
+    NSInteger count = (NSInteger)[_tabs count];
+    [_tabSelector setSegmentCount:count];
+    for (NSInteger i = 0; i < count; i++) {
+        SumatraTabState* tab = [_tabs objectAtIndex:(NSUInteger)i];
+        [_tabSelector setLabel:[[tab path] lastPathComponent] forSegment:i];
+        [_tabSelector setToolTip:[tab path] forSegment:i];
+    }
+    [_tabSelector setSelectedSegment:_activeTab];
+}
+
+- (void)showEmptyDocumentView {
+    _document = nullptr;
+    self.documentPath = nil;
+    _pageCount = 0;
+    _currentPage = 0;
+    _rotation = 0;
+    _zoom = kMacZoomFitPage;
+    _continuousView = YES;
+    [_documentView setScaleToFit:YES];
+    [_documentView setFrame:[[_scrollView contentView] bounds]];
+    [_documentView setImage:nullptr];
+    [_documentView setPages:nil];
+    [_documentView setImageSize:NSZeroSize];
+    [_documentView setMessage:nil];
+    [self updateTitle];
+}
+
+- (void)activateTabAtIndex:(int)index {
+    if (index < 0 || index >= (int)[_tabs count]) {
+        return;
+    }
+    [self saveActiveTabState];
+    [self stopWatchingDocument];
+    _activeTab = index;
+    SumatraTabState* tab = [_tabs objectAtIndex:(NSUInteger)index];
+    _document = [tab document];
+    self.documentPath = [tab path];
+    _pageCount = [tab pageCount];
+    _currentPage = [tab currentPage];
+    _rotation = [tab rotation];
+    _zoom = [tab zoom];
+    _continuousView = [tab continuous];
+    [_documentView setImage:nullptr];
+    [_documentView setPages:nil];
+    [self renderCurrentPage];
+    [[_scrollView contentView] scrollToPoint:[tab scrollOrigin]];
+    [_scrollView reflectScrolledClipView:[_scrollView contentView]];
+    if (_continuousView) {
+        [self renderCurrentPage];
+    }
+    [self startWatchingDocument];
+    [self refreshTabSelector];
+    [_window makeFirstResponder:_documentView];
+}
+
+- (IBAction)selectTab:(id)sender {
+    (void)sender;
+    [self activateTabAtIndex:(int)[_tabSelector selectedSegment]];
+}
+
+- (int)tabIndexForPath:(NSString*)path {
+    for (NSUInteger i = 0; i < [_tabs count]; i++) {
+        if ([[[_tabs objectAtIndex:i] path] isEqualToString:path]) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+- (void)destroyTab:(SumatraTabState*)tab {
+    MacPrefsViewState state = {};
+    state.valid = true;
+    state.continuous = [tab continuous];
+    CGFloat zoom = [tab zoom];
+    state.zoomVirtual = zoom > 0 ? zoom * 100.0 : zoom;
+    state.rotation = [tab rotation];
+    state.pageNo = [tab currentPage];
+    MacPrefsSaveDocument([[tab path] fileSystemRepresentation], &state);
+    MacCloseDocument([tab document]);
+    [tab setDocument:nullptr];
+}
+
+- (void)closeAllTabs {
+    [self saveActiveTabState];
+    [self stopWatchingDocument];
+    for (SumatraTabState* tab in _tabs) {
+        [self destroyTab:tab];
+    }
+    [_tabs removeAllObjects];
+    _activeTab = -1;
+    [self refreshTabSelector];
+    [self showEmptyDocumentView];
 }
 
 - (void)stopWatchingDocument {
@@ -773,29 +934,36 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     dispatch_source_set_event_handler(_fileWatcher, ^{
       if (_document && [_documentPath isEqualToString:watchedPath] &&
           [[NSFileManager defaultManager] fileExistsAtPath:watchedPath]) {
-          [self openPath:watchedPath];
+          [self reloadActiveTab];
       }
     });
     dispatch_resume(_fileWatcher);
 }
 
-- (void)closeDocument {
-    [self stopWatchingDocument];
-    if (_document) {
-        MacPrefsViewState state = {};
-        state.valid = true;
-        state.continuous = _continuousView;
-        state.zoomVirtual = [self layoutZoomVirtual];
-        state.rotation = _rotation;
-        state.pageNo = _currentPage;
-        MacPrefsSaveDocument([_documentPath fileSystemRepresentation], &state);
-        MacCloseDocument(_document);
-        _document = nullptr;
+- (void)reloadActiveTab {
+    if (_activeTab < 0 || _activeTab >= (int)[_tabs count] || !_documentPath) {
+        return;
     }
-    _pageCount = 0;
-    _currentPage = 0;
-    _rotation = 0;
-    _zoom = kMacZoomFitPage;
+    [self saveActiveTabState];
+    char* error = nullptr;
+    void* document = MacOpenDocument([_documentPath fileSystemRepresentation], PageRenderReady, self, &error);
+    free(error);
+    if (!document) {
+        [self startWatchingDocument];
+        return;
+    }
+    [self stopWatchingDocument];
+    SumatraTabState* tab = [_tabs objectAtIndex:(NSUInteger)_activeTab];
+    MacCloseDocument([tab document]);
+    [tab setDocument:document];
+    [tab setPageCount:MacPageCount(document)];
+    [tab setCurrentPage:MAX(1, MIN([tab pageCount], [tab currentPage]))];
+    _document = document;
+    _pageCount = [tab pageCount];
+    _currentPage = [tab currentPage];
+    MacResetRenderer(_document);
+    [self renderCurrentPage];
+    [self startWatchingDocument];
 }
 
 - (void)showOpenError:(NSString*)message forPath:(NSString*)path {
@@ -826,6 +994,12 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
 
+    int existing = [self tabIndexForPath:path];
+    if (existing >= 0) {
+        [self activateTabAtIndex:existing];
+        return;
+    }
+
     char* error = nullptr;
     void* doc = MacOpenDocument([path fileSystemRepresentation], PageRenderReady, self, &error);
     if (!doc) {
@@ -840,25 +1014,23 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
 
-    [self closeDocument];
-    _document = doc;
-    self.documentPath = path;
-    _pageCount = MacPageCount(doc);
-    _currentPage = 1;
-    _rotation = 0;
-    _zoom = kMacZoomFitPage;
+    SumatraTabState* tab = [[[SumatraTabState alloc] init] autorelease];
+    [tab setDocument:doc];
+    [tab setPath:path];
+    [tab setPageCount:MacPageCount(doc)];
+    [tab setCurrentPage:1];
+    [tab setRotation:0];
+    [tab setZoom:kMacZoomFitPage];
+    [tab setContinuous:YES];
     MacPrefsViewState state = {};
     if (MacPrefsOpenDocument([path fileSystemRepresentation], &state) && state.valid) {
-        _continuousView = state.continuous;
-        _rotation = state.rotation;
-        _currentPage = MAX(1, MIN(_pageCount, state.pageNo));
-        _zoom = state.zoomVirtual > 0 ? state.zoomVirtual / 100.0 : state.zoomVirtual;
+        [tab setContinuous:state.continuous];
+        [tab setRotation:state.rotation];
+        [tab setCurrentPage:MAX(1, MIN([tab pageCount], state.pageNo))];
+        [tab setZoom:state.zoomVirtual > 0 ? state.zoomVirtual / 100.0 : state.zoomVirtual];
     }
-    [_documentView setImage:nullptr];
-    [_documentView setPages:nil];
-    [_documentView setMessage:nil];
-    [self renderDocumentShowingErrors:YES];
-    [self startWatchingDocument];
+    [_tabs addObject:tab];
+    [self activateTabAtIndex:(int)[_tabs count] - 1];
     [_window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
 }
@@ -1118,6 +1290,12 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     if (action == @selector(openRecentDocument:)) {
         return MacPrefsRecentCount() > 0;
     }
+    if (action == @selector(reopenClosedTab:)) {
+        return [_closedPaths count] > 0;
+    }
+    if (action == @selector(selectNextTab:) || action == @selector(selectPreviousTab:)) {
+        return [_tabs count] > 1;
+    }
     if (action == @selector(toggleFavorite:)) {
         return [self hasDocument];
     }
@@ -1135,7 +1313,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         action == @selector(rotateRight:) || action == @selector(zoomFitPage:) ||
         action == @selector(zoomFitWidth:) || action == @selector(zoomActualSize:) ||
         action == @selector(zoomIn:) || action == @selector(zoomOut:) || action == @selector(setSinglePageView:) ||
-        action == @selector(setContinuousView:) || action == @selector(findDocument:) ||
+        action == @selector(setContinuousPageView:) || action == @selector(findDocument:) ||
         action == @selector(findNext:) || action == @selector(findPrevious:) || action == @selector(showToc:) ||
         action == @selector(showProperties:) || action == @selector(selectAll:) || action == @selector(printDocument:)) {
         return [self hasDocument];
@@ -1232,15 +1410,57 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 - (IBAction)performClose:(id)sender {
     (void)sender;
     MacPrefsSaveSession(nullptr, nullptr);
-    [self closeDocument];
-    self.documentPath = nil;
-    [_documentView setScaleToFit:YES];
-    [_documentView setFrame:[[_scrollView contentView] bounds]];
-    [_documentView setImage:nullptr];
-    [_documentView setPages:nil];
-    [_documentView setImageSize:NSZeroSize];
-    [_documentView setMessage:nil];
-    [self updateTitle];
+    if (_activeTab < 0 || _activeTab >= (int)[_tabs count]) {
+        return;
+    }
+    [self saveActiveTabState];
+    SumatraTabState* tab = [[[_tabs objectAtIndex:(NSUInteger)_activeTab] retain] autorelease];
+    if ([tab path]) {
+        [_closedPaths addObject:[tab path]];
+        while ([_closedPaths count] > 10) {
+            [_closedPaths removeObjectAtIndex:0];
+        }
+    }
+    int nextTab = MIN(_activeTab, (int)[_tabs count] - 2);
+    [self stopWatchingDocument];
+    [self destroyTab:tab];
+    [_tabs removeObjectAtIndex:(NSUInteger)_activeTab];
+    _activeTab = -1;
+    _document = nullptr;
+    if ([_tabs count] > 0) {
+        [self activateTabAtIndex:nextTab];
+    } else {
+        [self refreshTabSelector];
+        [self showEmptyDocumentView];
+    }
+}
+
+- (IBAction)reopenClosedTab:(id)sender {
+    (void)sender;
+    if ([_closedPaths count] == 0) {
+        return;
+    }
+    NSString* path = [[[_closedPaths lastObject] retain] autorelease];
+    [_closedPaths removeLastObject];
+    [self openPath:path];
+}
+
+- (void)selectRelativeTab:(int)direction {
+    int count = (int)[_tabs count];
+    if (count < 2) {
+        return;
+    }
+    [self activateTabAtIndex:(_activeTab + direction + count) % count];
+}
+
+- (IBAction)selectNextTab:(id)sender {
+    (void)sender;
+    [self selectRelativeTab:1];
+}
+
+- (IBAction)selectPreviousTab:(id)sender {
+    (void)sender;
+    [self selectRelativeTab:-1];
 }
 
 - (IBAction)toggleFavorite:(id)sender {
@@ -1549,6 +1769,15 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         case MacCommandAction::Close:
             [self performClose:nil];
             break;
+        case MacCommandAction::ReopenClosed:
+            [self reopenClosedTab:nil];
+            break;
+        case MacCommandAction::NextTab:
+            [self selectNextTab:nil];
+            break;
+        case MacCommandAction::PreviousTab:
+            [self selectPreviousTab:nil];
+            break;
         case MacCommandAction::Print:
             [self printDocument:nil];
             break;
@@ -1562,7 +1791,11 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
             [self setSinglePageView:nil];
             break;
         case MacCommandAction::ToggleContinuous:
-            _continuousView ? [self setSinglePageView:nil] : [self setContinuousView:nil];
+            if (_continuousView) {
+                [self setSinglePageView:nil];
+            } else {
+                [self setContinuousPageView:nil];
+            }
             break;
         case MacCommandAction::RotateLeft:
             [self rotateLeft:nil];
@@ -1695,7 +1928,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_scrollView reflectScrolledClipView:[_scrollView contentView]];
 }
 
-- (IBAction)setContinuousView:(id)sender {
+- (IBAction)setContinuousPageView:(id)sender {
     (void)sender;
     if (!_document) {
         return;
@@ -1784,7 +2017,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     if (action == @selector(setSinglePageView:)) {
         [item setState:(!_continuousView && [self hasDocument]) ? NSControlStateValueOn : NSControlStateValueOff];
-    } else if (action == @selector(setContinuousView:)) {
+    } else if (action == @selector(setContinuousPageView:)) {
         [item setState:(_continuousView && [self hasDocument]) ? NSControlStateValueOn : NSControlStateValueOff];
     } else if (action == @selector(toggleFavorite:)) {
         bool favorite = _documentPath && MacPrefsHasFavorite([_documentPath fileSystemRepresentation], _currentPage);
@@ -1824,18 +2057,20 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 
 - (void)applicationWillTerminate:(NSNotification*)notification {
     (void)notification;
-    if (_document && _documentPath) {
+    [self saveActiveTabState];
+    MacPrefsBeginSession();
+    for (SumatraTabState* tab in _tabs) {
         MacPrefsViewState state = {};
         state.valid = true;
-        state.continuous = _continuousView;
-        state.zoomVirtual = [self layoutZoomVirtual];
-        state.rotation = _rotation;
-        state.pageNo = _currentPage;
-        MacPrefsSaveSession([_documentPath fileSystemRepresentation], &state);
-    } else {
-        MacPrefsSaveSession(nullptr, nullptr);
+        state.continuous = [tab continuous];
+        CGFloat zoom = [tab zoom];
+        state.zoomVirtual = zoom > 0 ? zoom * 100.0 : zoom;
+        state.rotation = [tab rotation];
+        state.pageNo = [tab currentPage];
+        MacPrefsAppendSession([[tab path] fileSystemRepresentation], &state);
     }
-    [self closeDocument];
+    MacPrefsFinishSession(_activeTab);
+    [self closeAllTabs];
     MacPrefsShutdown();
     MacShutdown();
 }
@@ -1859,6 +2094,9 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_commandPaletteQuery release];
     [_commandPaletteItems release];
     [self stopWatchingDocument];
+    [_tabSelector release];
+    [_closedPaths release];
+    [_tabs release];
     [super dealloc];
 }
 
@@ -1913,6 +2151,8 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     AddItem(fileMenu, @"Open…", @selector(openDocument:), delegate, @"o", NSEventModifierFlagCommand);
     AddItem(fileMenu, @"Open Recent…", @selector(openRecentDocument:), delegate, @"", 0);
     AddItem(fileMenu, @"Close", @selector(performClose:), delegate, @"w", NSEventModifierFlagCommand);
+    AddItem(fileMenu, @"Reopen Closed Tab", @selector(reopenClosedTab:), delegate, @"t",
+            NSEventModifierFlagCommand | NSEventModifierFlagShift);
     AddItem(fileMenu, @"Show in Folder", @selector(showInFolder:), delegate, @"", 0);
     AddPlaceholder(fileMenu, @"Open Next File in Folder", delegate);
     AddPlaceholder(fileMenu, @"Open Previous File in Folder", delegate);
@@ -1944,7 +2184,7 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     AddItem(viewMenu, @"Single Page", @selector(setSinglePageView:), delegate, @"", 0);
     AddPlaceholder(viewMenu, @"Facing", delegate);
     AddPlaceholder(viewMenu, @"Book View", delegate);
-    AddItem(viewMenu, @"Show Pages Continuously", @selector(setContinuousView:), delegate, @"", 0);
+    AddItem(viewMenu, @"Show Pages Continuously", @selector(setContinuousPageView:), delegate, @"", 0);
     AddPlaceholder(viewMenu, @"Manga Mode", delegate);
     [viewMenu addItem:[NSMenuItem separatorItem]];
     AddItem(viewMenu, @"Rotate Left", @selector(rotateLeft:), delegate, @"[", NSEventModifierFlagCommand);
@@ -2001,6 +2241,11 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     NSMenu* windowMenu = [[[NSMenu alloc] initWithTitle:@"Window"] autorelease];
     AddItem(windowMenu, @"Minimize", @selector(performMiniaturize:), nil, @"m", NSEventModifierFlagCommand);
     AddItem(windowMenu, @"Zoom", @selector(performZoom:), nil, @"", 0);
+    [windowMenu addItem:[NSMenuItem separatorItem]];
+    AddItem(windowMenu, @"Show Next Tab", @selector(selectNextTab:), delegate, @"]",
+            NSEventModifierFlagCommand | NSEventModifierFlagShift);
+    AddItem(windowMenu, @"Show Previous Tab", @selector(selectPreviousTab:), delegate, @"[",
+            NSEventModifierFlagCommand | NSEventModifierFlagShift);
     [windowItem setSubmenu:windowMenu];
     [NSApp setWindowsMenu:windowMenu];
 

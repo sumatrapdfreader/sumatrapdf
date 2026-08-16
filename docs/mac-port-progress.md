@@ -11,7 +11,7 @@ those commits are verification artifacts rather than authorization for final fea
 | 2     | Complete    | Shared portable reader model                       |
 | 3     | Complete    | Scrollable multi-page Cocoa document viewer        |
 | 4     | Complete    | Portable asynchronous rendering and bounded cache  |
-| 5     | In progress | Native shell, toolbar, menus, and commands         |
+| 5     | Complete    | Native tabs, shell, toolbar, menus, and commands   |
 | 6     | In progress | Core portable reader interactions are exposed      |
 | 7     | In progress | Reload, print, Finder, session, bundle integration |
 | 8     | Complete    | Versioned portable application archive             |
@@ -28,6 +28,9 @@ Reconciled 2026-08-16.
   backing-scale changes.
 - A native configurable toolbar, application menus, open/go-to panels, fullscreen, Show in Finder, and the portable
   keyboard-help dialog are present.
+- A native toolbar tab selector keeps independent reader/render-service state per document, restores page/zoom/layout
+  and scroll position when switching, switches to already-open files, supports next/previous tab commands, and keeps a
+  bounded reopen-closed stack.
 - Visible pages render through the portable asynchronous `PageRenderService`. Its bounded cache replaces the old
   unbounded Cocoa image cache, and nearby pages are prefetched at lower priorities.
 - Shared `TextSearch` drives Find, Find Next, and Find Previous, including wrapped search and highlighted result

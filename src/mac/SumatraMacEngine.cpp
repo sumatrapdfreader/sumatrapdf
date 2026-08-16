@@ -533,6 +533,9 @@ void* MacCreateCommandPalette() {
     const int commands[] = {
         CmdOpenFile,
         CmdCloseCurrentDocument,
+        CmdReopenLastClosedFile,
+        CmdNextTab,
+        CmdPrevTab,
         CmdPrint,
         CmdShowInFolder,
         CmdProperties,
@@ -589,6 +592,12 @@ MacCommandAction MacCommandPaletteAction(int commandId) {
             return MacCommandAction::Open;
         case CmdCloseCurrentDocument:
             return MacCommandAction::Close;
+        case CmdReopenLastClosedFile:
+            return MacCommandAction::ReopenClosed;
+        case CmdNextTab:
+            return MacCommandAction::NextTab;
+        case CmdPrevTab:
+            return MacCommandAction::PreviousTab;
         case CmdPrint:
             return MacCommandAction::Print;
         case CmdShowInFolder:
