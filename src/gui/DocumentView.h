@@ -9,6 +9,7 @@ struct DocumentView {
     Func0 onStateChanged;
     Func1<Str> onOpenUrl;
     Func1<Str> onOpenFile;
+    Func1<Str> onCopyText;
 
     DocumentView() = default;
     DocumentView(const DocumentView&) = delete;
@@ -29,4 +30,7 @@ struct DocumentView {
     float Zoom() const;
     void RotateBy(int degrees);
     int Rotation() const;
+    bool HasTextSelection() const;
+    void SelectAll();
+    void CopySelection();
 };

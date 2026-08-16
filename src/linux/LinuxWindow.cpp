@@ -128,6 +128,11 @@ static void OpenLinkedFile(LinuxWindow* window, Str linkPath) {
     g_object_unref(file);
 }
 
+static void CopyText(LinuxWindow* window, Str text) {
+    GdkClipboard* clipboard = gtk_widget_get_clipboard(window->window);
+    gdk_clipboard_set_text(clipboard, CStrTemp(text));
+}
+
 static void SetFullscreen(LinuxWindow* window, bool fullscreen) {
     window->fullscreen = fullscreen;
     if (fullscreen) {
@@ -296,6 +301,12 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             break;
         case CmdToggleContinuousView:
             view->SetContinuous(!view->IsContinuous());
+            break;
+        case CmdCopySelection:
+            view->CopySelection();
+            break;
+        case CmdSelectAll:
+            view->SelectAll();
             break;
         default:
             break;
@@ -502,7 +513,7 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     char* baseName = g_file_get_basename(file);
     Str title(baseName ? baseName : "Document");
     LinuxTab* tab = LinuxTabCreate(title, MkFunc0(UpdateControls, window), MkFunc1(OpenLinkedUrl, window),
-                                   MkFunc1(OpenLinkedFile, window));
+                                   MkFunc1(OpenLinkedFile, window), MkFunc1(CopyText, window));
     g_free(baseName);
     if (!tab) {
         return;

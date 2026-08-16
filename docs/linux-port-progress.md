@@ -217,3 +217,26 @@ Verification:
 - Both debug and ASan applications opened and rendered the link-bearing zlib manual, then shut down through the
   application action with status 0. ASan reported no errors; WSLg only emitted its existing non-fatal Mesa renderer
   warnings.
+
+### Text selection and clipboard
+
+Completed 2026-08-16.
+
+- Integrated the existing portable `TextSelection` engine into each `DocumentView` and kept its lifetime tied to
+  the tab's reader engine.
+- Added glyph hit testing and drag selection across pages while retaining canvas panning when a drag starts outside
+  text and giving document links priority over text beneath them.
+- Painted selection rectangles through portable `Gfx`, with page-to-screen transforms that honor per-page zoom and
+  document rotation.
+- Added generated-command routing for Select All and Copy, GTK clipboard export, `Ctrl+A` / `Ctrl+C` accelerators,
+  and Escape-to-clear behavior.
+- Added `test_engines <path> -select-all-text` as a focused probe for portable selection extraction and geometry.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,815 assertions and all Linux targets linked.
+- The debug selection probe selected 4,284 UTF-8 bytes from `ext/a-zlib/zlib.3.pdf` into 74 highlight rectangles.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,692 assertions.
+- Under WSLg, both debug and ASan applications ran Select All, Copy, and Quit through application actions with
+  status 0. The ASan engine probe reproduced the same 4,284-byte, 74-rectangle selection and reported no errors;
+  WSLg only emitted its existing non-fatal Mesa renderer warnings.

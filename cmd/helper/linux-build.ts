@@ -642,7 +642,12 @@ const PORTABLE_ENGINE_SOURCES = [
   "src/TreeModel.cpp",
 ];
 
-const TEST_ENGINES_SOURCES = ["src/base/GuessFileType.cpp", ...PORTABLE_ENGINE_SOURCES, "src/tools/test_engines.cpp"];
+const TEST_ENGINES_SOURCES = [
+  "src/base/GuessFileType.cpp",
+  ...PORTABLE_ENGINE_SOURCES,
+  "src/TextSelection.cpp",
+  "src/tools/test_engines.cpp",
+];
 
 const PORTABLE_COMPILE_SOURCES = [
   // unblocked by LRESULT / HBITMAP / HBRUSH in base/Base.h
@@ -691,6 +696,7 @@ const GTK4_APP_SOURCES = [
   "src/PageRenderPolicy.cpp",
   "src/PageRenderService.cpp",
   "src/ReaderModel.cpp",
+  "src/TextSelection.cpp",
   "src/KeyboardHelp.cpp",
   "src/SumatraLog_posix.cpp",
   ...PORTABLE_ENGINE_SOURCES,

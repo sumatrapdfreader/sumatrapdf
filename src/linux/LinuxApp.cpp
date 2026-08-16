@@ -80,6 +80,10 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdTogglePresentationMode;
     } else if (str::Eq(Str(name), StrL("keyboard-help"))) {
         command = CmdToggleKeyboardHelp;
+    } else if (str::Eq(Str(name), StrL("copy"))) {
+        command = CmdCopySelection;
+    } else if (str::Eq(Str(name), StrL("select-all"))) {
+        command = CmdSelectAll;
     }
     LinuxWindowDispatchCommand(window, command);
 }
@@ -93,6 +97,12 @@ static GMenu* CreateMainMenu() {
     g_menu_append(file, "Quit", "app.quit");
     g_menu_append_section(menu, nullptr, G_MENU_MODEL(file));
     g_object_unref(file);
+
+    GMenu* edit = g_menu_new();
+    g_menu_append(edit, "Copy", "app.copy");
+    g_menu_append(edit, "Select All", "app.select-all");
+    g_menu_append_section(menu, nullptr, G_MENU_MODEL(edit));
+    g_object_unref(edit);
 
     GMenu* view = g_menu_new();
     g_menu_append(view, "Fullscreen", "app.fullscreen");
@@ -126,6 +136,8 @@ int RunLinuxApp(int argc, char** argv) {
         {"fullscreen", OnWindowCommand},
         {"presentation", OnWindowCommand},
         {"keyboard-help", OnWindowCommand},
+        {"copy", OnWindowCommand},
+        {"select-all", OnWindowCommand},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
 
@@ -136,6 +148,8 @@ int RunLinuxApp(int argc, char** argv) {
     const char* fullscreenAccels[] = {"F11", nullptr};
     const char* presentationAccels[] = {"F5", nullptr};
     const char* helpAccels[] = {"question", nullptr};
+    const char* copyAccels[] = {"<Primary>c", nullptr};
+    const char* selectAllAccels[] = {"<Primary>a", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
     gtk_application_set_accels_for_action(app, "app.open", openAccels);
     gtk_application_set_accels_for_action(app, "app.close-tab", closeAccels);
@@ -143,6 +157,8 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.fullscreen", fullscreenAccels);
     gtk_application_set_accels_for_action(app, "app.presentation", presentationAccels);
     gtk_application_set_accels_for_action(app, "app.keyboard-help", helpAccels);
+    gtk_application_set_accels_for_action(app, "app.copy", copyAccels);
+    gtk_application_set_accels_for_action(app, "app.select-all", selectAllAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);

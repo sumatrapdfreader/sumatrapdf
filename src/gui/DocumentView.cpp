@@ -11,6 +11,7 @@
 #include "PageRenderPolicy.h"
 #include "PageRenderService.h"
 #include "ReaderModel.h"
+#include "TextSelection.h"
 #include "gui/Gfx.h"
 #include "gui/PlatformCanvas.h"
 #include "gui/DocumentView.h"
@@ -18,6 +19,7 @@
 struct DocumentViewData {
     ReaderModel* reader = nullptr;
     PageRenderService* renderer = nullptr;
+    TextSelection* textSelection = nullptr;
     DocumentLayout layout;
     Size viewSize;
     Point viewOffset;
@@ -26,6 +28,7 @@ struct DocumentViewData {
     int startPage = 1;
     int rotation = 0;
     bool isDragging = false;
+    bool isSelectingText = false;
     IPageElement* pressedLink = nullptr;
     Point dragStart;
     Point dragOffset;
@@ -99,21 +102,56 @@ static int PageAtPoint(DocumentViewData* data, Point pt) {
     return data->layout.CurrentPageNo();
 }
 
-static IPageElement* LinkAtPoint(DocumentViewData* data, Point pt) {
+static bool PagePointAt(DocumentViewData* data, Point pt, int* pageNoOut, PointF* pagePointOut) {
     if (!data->reader) {
-        return nullptr;
+        return false;
     }
     int pageNo = PageAtPoint(data, pt);
     const DocumentLayoutPage* page = data->layout.GetPage(pageNo);
     if (!page || !page->isShown || !page->pageOnScreen.Contains(pt)) {
-        return nullptr;
+        return false;
     }
     PointF pagePoint((float)pt.x - 0.499f - (float)page->pageOnScreen.x,
                      (float)pt.y - 0.499f - (float)page->pageOnScreen.y);
     EngineBase* engine = data->reader->GetEngine();
     pagePoint = engine->Transform(pagePoint, pageNo, page->zoomReal, data->rotation, true);
+    *pageNoOut = pageNo;
+    *pagePointOut = pagePoint;
+    return true;
+}
+
+static IPageElement* LinkAtPoint(DocumentViewData* data, Point pt) {
+    int pageNo = 0;
+    PointF pagePoint;
+    if (!PagePointAt(data, pt, &pageNo, &pagePoint)) {
+        return nullptr;
+    }
+    EngineBase* engine = data->reader->GetEngine();
     IPageElement* element = engine->GetElementAtPos(pageNo, pagePoint);
     return element && element->Is(kindPageElementDest) ? element : nullptr;
+}
+
+static bool TextAtPoint(DocumentViewData* data, Point pt, int* pageNoOut = nullptr, PointF* pagePointOut = nullptr) {
+    int pageNo = 0;
+    PointF pagePoint;
+    if (!data->textSelection || !PagePointAt(data, pt, &pageNo, &pagePoint) ||
+        !data->textSelection->IsOverGlyph(pageNo, pagePoint.x, pagePoint.y)) {
+        return false;
+    }
+    if (pageNoOut) {
+        *pageNoOut = pageNo;
+    }
+    if (pagePointOut) {
+        *pagePointOut = pagePoint;
+    }
+    return true;
+}
+
+static CursorId CursorAtPoint(DocumentViewData* data, Point pt) {
+    if (LinkAtPoint(data, pt)) {
+        return CursorId::Hand;
+    }
+    return TextAtPoint(data, pt) ? CursorId::IBeam : CursorId::Arrow;
 }
 
 static void ScrollToDestination(DocumentView* view, int pageNo, RectF rect, float zoom) {
@@ -263,6 +301,24 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
         ev->gfx->DrawRect(target, MkGray(155));
     }
 
+    if (data->textSelection && data->textSelection->result.len > 0) {
+        Vec<Rect> selectionRects;
+        TextSel& selection = data->textSelection->result;
+        for (int i = 0; i < selection.len; i++) {
+            int pageNo = selection.pages[i];
+            DocumentLayoutPage* page = data->layout.GetPage(pageNo);
+            if (!page || !page->isShown) {
+                continue;
+            }
+            RectF transformed = data->reader->GetEngine()->Transform(ToRectF(selection.rects[i]), pageNo,
+                                                                     page->zoomReal, data->rotation);
+            Rect screenRect = transformed.Round();
+            screenRect.Offset(page->pageOnScreen.x, page->pageOnScreen.y);
+            selectionRects.Append(screenRect);
+        }
+        ev->gfx->FillRects(selectionRects.els, len(selectionRects), MkRgb(255, 225, 70), 115);
+    }
+
     int current = data->layout.CurrentPageNo();
     for (int distance = 1; distance <= 2; distance++) {
         PageRenderPriority priority = distance == 1 ? PageRenderPriority::Nearby : PageRenderPriority::Background;
@@ -316,20 +372,41 @@ static void OnCanvasPointer(DocumentView* view, PlatformCanvasPointerEvent* ev) 
     if (ev->type == PlatformCanvasPointerEventType::Down && ev->button == 1) {
         view->canvas->Focus();
         data->pressedLink = LinkAtPoint(data, ev->pos);
-        data->isDragging = data->pressedLink == nullptr;
-        if (data->isDragging) {
+        data->isDragging = false;
+        data->isSelectingText = false;
+        int pageNo = 0;
+        PointF pagePoint;
+        if (!data->pressedLink && TextAtPoint(data, ev->pos, &pageNo, &pagePoint)) {
+            data->textSelection->Reset();
+            data->textSelection->StartAt(pageNo, pagePoint.x, pagePoint.y);
+            data->textSelection->SelectUpTo(pageNo, pagePoint.x, pagePoint.y);
+            data->isSelectingText = true;
+            Invalidate(view);
+        } else if (!data->pressedLink) {
+            data->textSelection->Reset();
+            data->isDragging = true;
             data->dragStart = ev->pos;
             data->dragOffset = data->viewOffset;
+            Invalidate(view);
         }
-        view->canvas->SetCursor(data->pressedLink ? CursorId::Hand : CursorId::Move);
+        CursorId cursor = data->pressedLink ? CursorId::Hand : data->isSelectingText ? CursorId::IBeam : CursorId::Move;
+        view->canvas->SetCursor(cursor);
+        ev->didHandle = true;
+    } else if (ev->type == PlatformCanvasPointerEventType::Move && data->isSelectingText) {
+        int pageNo = 0;
+        PointF pagePoint;
+        if (PagePointAt(data, ev->pos, &pageNo, &pagePoint)) {
+            data->textSelection->SelectUpTo(pageNo, pagePoint.x, pagePoint.y);
+            Invalidate(view);
+        }
         ev->didHandle = true;
     } else if (ev->type == PlatformCanvasPointerEventType::Move && data->isDragging) {
         Point delta(ev->pos.x - data->dragStart.x, ev->pos.y - data->dragStart.y);
         SetViewOffset(view, Point(data->dragOffset.x - delta.x, data->dragOffset.y - delta.y));
         ev->didHandle = true;
     } else if (ev->type == PlatformCanvasPointerEventType::Move) {
-        view->canvas->SetCursor(LinkAtPoint(data, ev->pos) ? CursorId::Hand : CursorId::Arrow);
-    } else if (ev->type == PlatformCanvasPointerEventType::Leave && !data->isDragging) {
+        view->canvas->SetCursor(CursorAtPoint(data, ev->pos));
+    } else if (ev->type == PlatformCanvasPointerEventType::Leave && !data->isDragging && !data->isSelectingText) {
         view->canvas->SetCursor(CursorId::Arrow);
     } else if (ev->type == PlatformCanvasPointerEventType::Up && data->pressedLink) {
         IPageElement* releasedLink = LinkAtPoint(data, ev->pos);
@@ -340,9 +417,19 @@ static void OnCanvasPointer(DocumentView* view, PlatformCanvasPointerEvent* ev) 
         }
         view->canvas->SetCursor(releasedLink ? CursorId::Hand : CursorId::Arrow);
         ev->didHandle = true;
+    } else if (ev->type == PlatformCanvasPointerEventType::Up && data->isSelectingText) {
+        int pageNo = 0;
+        PointF pagePoint;
+        if (PagePointAt(data, ev->pos, &pageNo, &pagePoint)) {
+            data->textSelection->SelectUpTo(pageNo, pagePoint.x, pagePoint.y);
+        }
+        data->isSelectingText = false;
+        view->canvas->SetCursor(CursorAtPoint(data, ev->pos));
+        Invalidate(view);
+        ev->didHandle = true;
     } else if (ev->type == PlatformCanvasPointerEventType::Up && data->isDragging) {
         data->isDragging = false;
-        view->canvas->SetCursor(LinkAtPoint(data, ev->pos) ? CursorId::Hand : CursorId::Arrow);
+        view->canvas->SetCursor(CursorAtPoint(data, ev->pos));
         ev->didHandle = true;
     }
 }
@@ -359,6 +446,13 @@ static void OnCanvasKey(DocumentView* view, PlatformCanvasKeyEvent* ev) {
     }
     int pageStep = std::max(data->viewSize.dy - 60, 60);
     switch (ev->key) {
+        case PlatformKey::Escape:
+            if (view->HasTextSelection()) {
+                data->textSelection->Reset();
+                Invalidate(view);
+                ev->didHandle = true;
+            }
+            return;
         case PlatformKey::Home:
             view->GoToPage(1);
             ev->didHandle = true;
@@ -421,7 +515,9 @@ static void OnCanvasKey(DocumentView* view, PlatformCanvasKeyEvent* ev) {
     if (c >= 'A' && c <= 'Z') {
         c += 'a' - 'A';
     }
-    if (c == 'c') {
+    if (ev->isCtrl && c == 'c') {
+        view->CopySelection();
+    } else if (c == 'c') {
         view->SetContinuous(!view->IsContinuous());
     } else if (c == 'f') {
         view->SetZoom(kZoomFitPage);
@@ -457,6 +553,7 @@ DocumentView::~DocumentView() {
     auto* viewData = ViewData(this);
     if (viewData) {
         delete viewData->renderer;
+        delete viewData->textSelection;
         delete viewData->reader;
         delete viewData;
     }
@@ -476,10 +573,13 @@ bool DocumentView::Open(Str path) {
         delete reader;
         return false;
     }
+    auto* textSelection = new TextSelection(reader->GetEngine());
     delete viewData->renderer;
+    delete viewData->textSelection;
     delete viewData->reader;
     viewData->reader = reader;
     viewData->renderer = renderer;
+    viewData->textSelection = textSelection;
     viewData->viewOffset = {};
     viewData->startPage = 1;
     Relayout(this, canvas->ClientRect().Size());
@@ -594,4 +694,32 @@ void DocumentView::RotateBy(int degrees) {
 
 int DocumentView::Rotation() const {
     return ViewData((DocumentView*)this)->rotation;
+}
+
+bool DocumentView::HasTextSelection() const {
+    auto* viewData = ViewData((DocumentView*)this);
+    return viewData->textSelection && viewData->textSelection->result.len > 0;
+}
+
+void DocumentView::CopySelection() {
+    auto* viewData = ViewData(this);
+    if (!HasTextSelection()) {
+        return;
+    }
+    Str text = viewData->textSelection->ExtractText(StrL("\n"));
+    if (text) {
+        onCopyText.Call(text);
+    }
+    str::Free(text);
+}
+
+void DocumentView::SelectAll() {
+    auto* viewData = ViewData(this);
+    if (!viewData->textSelection || !viewData->reader) {
+        return;
+    }
+    viewData->textSelection->Reset();
+    viewData->textSelection->StartAt(1, 0);
+    viewData->textSelection->SelectUpTo(viewData->reader->PageCount(), -1);
+    Invalidate(this);
 }

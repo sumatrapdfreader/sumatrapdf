@@ -12,6 +12,7 @@
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "TextSelection.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
@@ -40,6 +41,7 @@ static void Usage() {
     printf("usage: test_engines <document-or-image-path>\n");
     printf("       test_engines <path> -bench-mediabox   time PageMediabox() for every page\n");
     printf("       test_engines <path> -list-links       list link targets and rectangles\n");
+    printf("       test_engines <path> -select-all-text  exercise text selection and extraction\n");
 }
 
 static EngineBase* CreateEngineForPath(Str path) {
@@ -117,6 +119,25 @@ static bool ListLinks(Str path) {
     printf("links: %d\n", linkCount);
     engine->Release();
     return true;
+}
+
+static bool SelectAllText(Str path) {
+    EngineBase* engine = CreateEngineForPath(path);
+    if (!engine) {
+        printf("failed to load: %.*s\n", path.len, path.s);
+        return false;
+    }
+
+    TextSelection selection(engine);
+    selection.StartAt(1, 0);
+    selection.SelectUpTo(engine->PageCount(), -1);
+    Str text = selection.ExtractText(StrL("\n"));
+    printf("selected bytes: %d\n", len(text));
+    printf("selection rectangles: %d\n", selection.result.len);
+    bool ok = len(text) > 0 && selection.result.len > 0;
+    str::Free(text);
+    engine->Release();
+    return ok;
 }
 
 // Times PageMediabox() for every page: that's what the UI needs before it can
@@ -375,6 +396,11 @@ int main(int argc, char** argv) {
     }
     if (argc == 3 && str::Eq(argv[2], StrL("-list-links"))) {
         bool ok = ListLinks(Str(argv[1]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
+    if (argc == 3 && str::Eq(argv[2], StrL("-select-all-text"))) {
+        bool ok = SelectAllText(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
