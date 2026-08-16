@@ -2146,7 +2146,7 @@ void VirtText::PaintText(VirtPaintCtx& ctx, Color textColor) {
         Size ch = chLen > 0 ? ctx.gfx->MeasureText(Str(draw.s + pref.ulOff, chLen), font) : Size{};
         int textX = r.x;
         if (fmt & gfxTextCenter) {
-            textX = r.x + (r.dx - full.dx) / 2;
+            textX = r.x + ((r.dx - full.dx) / 2);
         } else if (fmt & gfxTextRight) {
             textX = r.x + r.dx - full.dx;
         }
@@ -2157,7 +2157,7 @@ void VirtText::PaintText(VirtPaintCtx& ctx, Color textColor) {
         }
         int textY = r.y;
         if (fmt & gfxTextVCenter) {
-            textY = r.y + (r.dy - full.dy) / 2;
+            textY = r.y + ((r.dy - full.dy) / 2);
         }
         int ulY = textY + full.dy + underlineOffsetY - 1;
         ctx.gfx->DrawLine({ulX, ulY, ch.dx, 0}, textColor);

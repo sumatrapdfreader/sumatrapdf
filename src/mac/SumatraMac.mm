@@ -250,7 +250,7 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
                 };
                 NSString* text = [NSString stringWithFormat:@"Page %d", [page pageNo]];
                 NSSize size = [text sizeWithAttributes:attrs];
-                NSPoint p = NSMakePoint(NSMidX(drawRect) - size.width / 2.0, NSMidY(drawRect) - size.height / 2.0);
+                NSPoint p = NSMakePoint(NSMidX(drawRect) - (size.width / 2.0), NSMidY(drawRect) - (size.height / 2.0));
                 [text drawAtPoint:p withAttributes:attrs];
             }
             if ([[page highlights] count] > 0) {

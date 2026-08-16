@@ -947,9 +947,10 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm) {
                 continue;
             }
             queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)(tile.col * 2)));
-            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)(tile.col * 2 + 1)));
-            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2 + 1), (USHORT)(tile.col * 2)));
-            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2 + 1), (USHORT)(tile.col * 2 + 1)));
+            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)((tile.col * 2) + 1)));
+            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)((tile.row * 2) + 1), (USHORT)(tile.col * 2)));
+            queue.Append(
+                TilePosition((USHORT)(tile.res + 1), (USHORT)((tile.row * 2) + 1), (USHORT)((tile.col * 2) + 1)));
         }
         if (!sawTarget) {
             return false;

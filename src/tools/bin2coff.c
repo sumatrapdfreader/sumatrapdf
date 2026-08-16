@@ -342,7 +342,7 @@ int
     short_label = (strlen(label) + addUnderscore) <= IMAGE_SIZEOF_SHORT_NAME;
     short_size = (strlen(label) + addUnderscore + strlen(SIZE_LABEL_SUFFIX)) <= IMAGE_SIZEOF_SHORT_NAME;
     alloc_size = sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_SECTION_HEADER) + size + sizeof(SIZE_TYPE) +
-                 2 * sizeof(IMAGE_SYMBOL) + sizeof(IMAGE_STRINGS);
+                 (2 * sizeof(IMAGE_SYMBOL)) + sizeof(IMAGE_STRINGS);
     if (!short_label) {
         alloc_size += addUnderscore + strlen(label) + 1;
     }
@@ -360,7 +360,7 @@ int
     symbol_table =
         (IMAGE_SYMBOL*)&buffer[sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_SECTION_HEADER) + size + sizeof(SIZE_TYPE)];
     string_table = (IMAGE_STRINGS*)&buffer[sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_SECTION_HEADER) + size +
-                                           sizeof(SIZE_TYPE) + 2 * sizeof(IMAGE_SYMBOL)];
+                                           sizeof(SIZE_TYPE) + (2 * sizeof(IMAGE_SYMBOL))];
 
     /* Populate file header */
     file_header->Machine = machine;

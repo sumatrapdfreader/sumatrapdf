@@ -370,7 +370,7 @@ bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut) {
         }
         int n = 0;
         while (p < end && *p >= '0' && *p <= '9') {
-            n = n * 10 + (*p - '0');
+            n = (n * 10) + (*p - '0');
             p++;
         }
         out = n;

@@ -586,7 +586,7 @@ int VBox::MinIntrinsicHeight(int width) {
             }
         }
     }
-    return size + gap * (count - 1);
+    return size + (gap * (count - 1));
 }
 
 void VBox::SetBounds(Rect bounds) {
@@ -902,7 +902,7 @@ int HBox::MinIntrinsicWidth(int height) {
             }
         }
     }
-    return size + gap * (count - 1);
+    return size + (gap * (count - 1));
 }
 
 // mirror a child's x against the original HBox so MainStart packs to the right

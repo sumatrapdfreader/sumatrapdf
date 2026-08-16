@@ -126,8 +126,8 @@ static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix) {
             bgr = fz_new_pixmap(ctx, csdest, w, h, nullptr, 0);
             fz_convert_pixmap_samples(ctx, pix, bgr, nullptr, nullptr, fz_default_color_params, 0);
             for (int y = 0; y < h; y++) {
-                const u8* s = bgr->samples + (size_t)y * (size_t)bgr->stride;
-                u8* d = px->data + (size_t)y * (size_t)px->stride;
+                const u8* s = bgr->samples + ((size_t)y * (size_t)bgr->stride);
+                u8* d = px->data + ((size_t)y * (size_t)px->stride);
                 for (int x = 0; x < w; x++) {
                     d[0] = s[0];
                     d[1] = s[1];

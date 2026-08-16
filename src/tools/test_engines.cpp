@@ -230,7 +230,7 @@ static bool BenchMediabox(Str path) {
         if (ms > maxMs) {
             maxMs = ms;
         }
-        digest = digest * 1000003 + (u64)(int)mb.dx * 65599 + (u64)(int)mb.dy;
+        digest = (digest * 1000003) + ((u64)(int)mb.dx * 65599) + (u64)(int)mb.dy;
         if (mb.IsEmpty()) {
             nEmpty++;
             printf("page %d: empty mediabox\n", pageNo);

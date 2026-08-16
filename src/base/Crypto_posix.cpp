@@ -53,7 +53,7 @@ static void Md5Transform(u32 state[4], const u8 block[64]) {
     u32 a = state[0], b = state[1], c = state[2], d = state[3];
     u32 x[16];
     for (int i = 0; i < 16; i++) {
-        x[i] = LoadLE32(block + i * 4);
+        x[i] = LoadLE32(block + (i * 4));
     }
 #define MD5_F(x, y, z) ((x & y) | (~x & z))
 #define MD5_G(x, y, z) ((x & z) | (y & ~z))
@@ -159,14 +159,14 @@ static void HashMd5(const u8* data, size_t len, u8 digest[16]) {
     StoreLE32(block + 60, (u32)(bits >> 32));
     Md5Transform(state, block);
     for (int k = 0; k < 4; k++) {
-        StoreLE32(digest + k * 4, state[k]);
+        StoreLE32(digest + (k * 4), state[k]);
     }
 }
 
 static void Sha1Transform(u32 state[5], const u8 block[64]) {
     u32 w[80];
     for (int i = 0; i < 16; i++) {
-        w[i] = LoadBE32(block + i * 4);
+        w[i] = LoadBE32(block + (i * 4));
     }
     for (int i = 16; i < 80; i++) {
         w[i] = Rol32(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
@@ -223,7 +223,7 @@ static void HashSha1(const u8* data, size_t len, u8 digest[20]) {
     StoreBE32(block + 60, (u32)bits);
     Sha1Transform(state, block);
     for (int k = 0; k < 5; k++) {
-        StoreBE32(digest + k * 4, state[k]);
+        StoreBE32(digest + (k * 4), state[k]);
     }
 }
 
@@ -241,7 +241,7 @@ static const u32 kSha256K[64] = {
 static void Sha256Transform(u32 state[8], const u8 block[64]) {
     u32 w[64];
     for (int i = 0; i < 16; i++) {
-        w[i] = LoadBE32(block + i * 4);
+        w[i] = LoadBE32(block + (i * 4));
     }
     for (int i = 16; i < 64; i++) {
         u32 s0 = Rol32(w[i - 15], 25) ^ Rol32(w[i - 15], 14) ^ (w[i - 15] >> 3);
@@ -298,7 +298,7 @@ static void HashSha256(const u8* data, size_t len, u8 digest[32]) {
     StoreBE32(block + 60, (u32)bits);
     Sha256Transform(state, block);
     for (int k = 0; k < 8; k++) {
-        StoreBE32(digest + k * 4, state[k]);
+        StoreBE32(digest + (k * 4), state[k]);
     }
 }
 

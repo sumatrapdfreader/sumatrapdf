@@ -134,7 +134,7 @@ void GfxGtk::FillEllipse(const Rect& r, Color color, u8 alpha) {
         return;
     }
     cairo_save(cr);
-    cairo_translate(cr, r.x + r.dx / 2.0, r.y + r.dy / 2.0);
+    cairo_translate(cr, r.x + (r.dx / 2.0), r.y + (r.dy / 2.0));
     cairo_scale(cr, r.dx / 2.0, r.dy / 2.0);
     cairo_arc(cr, 0, 0, 1, 0, 2 * M_PI);
     SetSource(cr, color, alpha);
@@ -243,8 +243,8 @@ static cairo_surface_t* SurfaceFromPixmap(Pixmap* pixmap, u8** ownedData) {
         data = AllocArray<u8>((size_t)stride * pixmap->height);
         *ownedData = data;
         for (int y = 0; y < pixmap->height; y++) {
-            const u8* src = pixmap->data + y * pixmap->stride;
-            u8* dst = data + y * stride;
+            const u8* src = pixmap->data + (y * pixmap->stride);
+            u8* dst = data + (y * stride);
             for (int x = 0; x < pixmap->width; x++) {
                 u8 r = 0;
                 u8 g = 0;
@@ -267,9 +267,9 @@ static cairo_surface_t* SurfaceFromPixmap(Pixmap* pixmap, u8** ownedData) {
                         src += 3;
                     }
                 }
-                dst[0] = (u8)((b * a + 127) / 255);
-                dst[1] = (u8)((g * a + 127) / 255);
-                dst[2] = (u8)((r * a + 127) / 255);
+                dst[0] = (u8)(((b * a) + 127) / 255);
+                dst[1] = (u8)(((g * a) + 127) / 255);
+                dst[2] = (u8)(((r * a) + 127) / 255);
                 dst[3] = a;
                 dst += 4;
             }

@@ -446,7 +446,7 @@ struct LineSplitter {
     ~LineSplitter() { free(buf); }
     void Append(const char* d, int n) {
         if (len + n > cap) {
-            int newCap = (len + n) * 2 + 1024;
+            int newCap = ((len + n) * 2) + 1024;
             buf = (char*)realloc(buf, (size_t)newCap);
             cap = newCap;
         }
@@ -627,7 +627,7 @@ static void DrawValuesOverlay(HDC hdc, RECT client, Tab* tab) {
     int pad = DpiScale(4);
     int boxW = DpiScale(240);
     int rowH = gLineDy;
-    int boxH = nVals * rowH + pad * 2;
+    int boxH = (nVals * rowH) + (pad * 2);
     RECT box;
     box.right = client.right - DpiScale(20);
     box.left = box.right - boxW;
@@ -675,7 +675,7 @@ static void PaintLog(HWND hwnd) {
 
         Tab* tab = SelTab();
         if (tab && len(tab->filtered) > 0) {
-            int rows = clientH / gLineDy + 1;
+            int rows = (clientH / gLineDy) + 1;
             int top = tab->scrollTop;
             int nFiltered = len(tab->filtered);
             int x = -tab->scrollX;

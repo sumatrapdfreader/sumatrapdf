@@ -141,8 +141,8 @@ static u8* PixmapAsPremultipliedBgra(Pixmap* pixmap, int* strideOut) {
         return nullptr;
     }
     for (int y = 0; y < pixmap->height; y++) {
-        const u8* src = pixmap->data + y * pixmap->stride;
-        u8* dst = result + y * *strideOut;
+        const u8* src = pixmap->data + (y * pixmap->stride);
+        u8* dst = result + (y * *strideOut);
         for (int x = 0; x < pixmap->width; x++) {
             u8 r = 0;
             u8 g = 0;
@@ -166,9 +166,9 @@ static u8* PixmapAsPremultipliedBgra(Pixmap* pixmap, int* strideOut) {
                 }
             }
             if (!pixmap->premultiplied) {
-                r = (u8)((r * a + 127) / 255);
-                g = (u8)((g * a + 127) / 255);
-                b = (u8)((b * a + 127) / 255);
+                r = (u8)(((r * a) + 127) / 255);
+                g = (u8)(((g * a) + 127) / 255);
+                b = (u8)(((b * a) + 127) / 255);
             }
             dst[0] = b;
             dst[1] = g;

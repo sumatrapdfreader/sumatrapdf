@@ -220,7 +220,7 @@ void KeyboardHelpWindow::CollectContent() {
             FreeSection(section);
             continue;
         }
-        section->estimatedHeight = headerHeight + len(section->rows) * rowHeight + sectionGap;
+        section->estimatedHeight = headerHeight + (len(section->rows) * rowHeight) + sectionGap;
         sections.Append(section);
     }
 
@@ -265,7 +265,7 @@ Size KeyboardHelpWindow::LayoutContent() {
         for (KbRow* row : section->rows) {
             int keysDx = 0;
             for (int i = 0; i < row->tokens.size; i++) {
-                keysDx += PlatformFontMeasureText(fontRow, row->tokens.At(i)).dx + 2 * capPadX;
+                keysDx += PlatformFontMeasureText(fontRow, row->tokens.At(i)).dx + (2 * capPadX);
             }
             keysDx += std::max(row->tokens.size - 1, 0) * capGap;
             keyWidths[column] = std::max(keyWidths[column], keysDx);
@@ -279,15 +279,15 @@ Size KeyboardHelpWindow::LayoutContent() {
         columnWidths[column] =
             std::max(headerWidths[column], keyWidths[column] + keysDescriptionGap + descriptionWidths[column]);
     }
-    int width = 2 * pad + columnWidths[0];
+    int width = (2 * pad) + columnWidths[0];
     if (columnWidths[1] > 0) {
         width += columnGap + columnWidths[1];
     }
 
     int titleHeight = std::max(PlatformFontLineHeight(fontTitle), DpiScale(24));
-    titleRect = {pad, pad, width - 2 * pad - titleHeight - DpiScale(8), titleHeight};
+    titleRect = {pad, pad, width - (2 * pad) - titleHeight - DpiScale(8), titleHeight};
     closeRect = {width - pad - titleHeight, pad, titleHeight, titleHeight};
-    separatorRect = {pad, pad + titleHeight + DpiScale(6), width - 2 * pad, DpiScale(1)};
+    separatorRect = {pad, pad + titleHeight + DpiScale(6), width - (2 * pad), DpiScale(1)};
     contentTop = separatorRect.Bottom() + DpiScale(10);
 
     int columnX[2] = {pad, pad + columnWidths[0] + columnGap};
@@ -312,7 +312,7 @@ Size KeyboardHelpWindow::LayoutContent() {
     }
 
     int footerY = std::max(columnY[0], columnY[1]) + DpiScale(12);
-    footerRect = {pad, footerY, width - 2 * pad, PlatformFontLineHeight(fontRow)};
+    footerRect = {pad, footerY, width - (2 * pad), PlatformFontLineHeight(fontRow)};
     int height = footerRect.Bottom() + pad;
     return {width, height};
 }
@@ -324,11 +324,11 @@ static Rect PositionHelpWindow(NativeWnd parent, bool fullscreen, Size size) {
     }
     Rect frame = PlatformWindowRect(parent);
     if (!parent || frame.IsEmpty()) {
-        return {work.x + (work.dx - size.dx) / 2, work.y + (work.dy - size.dy) / 2, size.dx, size.dy};
+        return {work.x + ((work.dx - size.dx) / 2), work.y + ((work.dy - size.dy) / 2), size.dx, size.dy};
     }
     if (fullscreen || PlatformWindowIsMaximized(parent)) {
         int x = std::max(work.x, work.Right() - size.dx);
-        int y = limitValue(work.y + (work.dy - size.dy) / 2, work.y, std::max(work.y, work.Bottom() - size.dy));
+        int y = limitValue(work.y + ((work.dy - size.dy) / 2), work.y, std::max(work.y, work.Bottom() - size.dy));
         return {x, y, size.dx, size.dy};
     }
     int rightSpace = work.Right() - frame.Right();
@@ -370,12 +370,12 @@ void KeyboardHelpWindow::Paint(PlatformWindowPaintEvent* ev) {
         for (KbRow* row : section->rows) {
             int capsDx = std::max(row->tokens.size - 1, 0) * capGap;
             for (int i = 0; i < row->tokens.size; i++) {
-                capsDx += PlatformFontMeasureText(fontRow, row->tokens.At(i)).dx + 2 * capPadX;
+                capsDx += PlatformFontMeasureText(fontRow, row->tokens.At(i)).dx + (2 * capPadX);
             }
             int x = row->keysRect.Right() - capsDx;
             for (int i = 0; i < row->tokens.size; i++) {
                 Str token = row->tokens.At(i);
-                int dx = PlatformFontMeasureText(fontRow, token).dx + 2 * capPadX;
+                int dx = PlatformFontMeasureText(fontRow, token).dx + (2 * capPadX);
                 Rect cap{x, row->keysRect.y, dx, row->keysRect.dy};
                 gfx->FillRoundedRect(cap, capRadius, capBackground, border);
                 gfx->DrawText(token, cap, gfxTextCenter | gfxTextVCenter | gfxTextEllipsis, fontRow, text);

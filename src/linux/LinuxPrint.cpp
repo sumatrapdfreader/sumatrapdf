@@ -49,10 +49,10 @@ static void DrawPrintPage(GtkPrintOperation*, GtkPrintContext* context, int page
         return;
     }
 
-    int width = (int)(mediaWidth * fit + 0.5);
-    int height = (int)(mediaHeight * fit + 0.5);
-    int x = (int)((printWidth - width) / 2.0 + 0.5);
-    int y = (int)((printHeight - height) / 2.0 + 0.5);
+    int width = (int)((mediaWidth * fit) + 0.5);
+    int height = (int)((mediaHeight * fit) + 0.5);
+    int x = (int)(((printWidth - width) / 2.0) + 0.5);
+    int y = (int)(((printHeight - height) / 2.0) + 0.5);
     Gfx* gfx = GfxCreate(gtk_print_context_get_cairo_context(context));
     gfx->DrawPixmap(pixmap, {x, y, width, height});
     delete gfx;
