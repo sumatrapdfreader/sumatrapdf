@@ -5,6 +5,7 @@
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
+#include "base/GuessFileType.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 #include "base/GdiPlusUtil.h"
@@ -95,6 +96,67 @@ constexpr int kPdfFormatIdx = 6;
 
 constexpr int kDefaultFormatIdx = 0; // PNG
 
+Str ImageSaveExtFromData(Str data) {
+    if (len(data) == 0) {
+        return {};
+    }
+    switch (GuessFileTypeFromData(data)) {
+        case FileType::Png:
+            return StrL(".png");
+        case FileType::Jpeg:
+            return StrL(".jpg");
+        case FileType::Gif:
+            return StrL(".gif");
+        case FileType::Tiff:
+            return StrL(".tif");
+        case FileType::Bmp:
+            return StrL(".bmp");
+        case FileType::Webp:
+            return StrL(".webp");
+        case FileType::Jxl:
+            return StrL(".jxl");
+        case FileType::Jp2:
+            return StrL(".jp2");
+        default:
+            return {};
+    }
+}
+
+static bool ExtMatchesOriginal(Str ext, Str originalExt) {
+    if (!ext || !originalExt) {
+        return false;
+    }
+    if (str::EqI(ext, originalExt)) {
+        return true;
+    }
+    if (str::EqI(originalExt, StrL(".jpg")) && str::EqI(ext, StrL(".jpeg"))) {
+        return true;
+    }
+    if (str::EqI(originalExt, StrL(".tif")) && str::EqI(ext, StrL(".tiff"))) {
+        return true;
+    }
+    return false;
+}
+
+static int FormatIdxFromExt(Str ext) {
+    if (str::EqI(ext, StrL(".jpeg"))) {
+        ext = StrL(".jpg");
+    } else if (str::EqI(ext, StrL(".tiff"))) {
+        ext = StrL(".tif");
+    }
+    for (int i = 0; i < dimofi(gImageFormats); i++) {
+        if (gImageFormats[i].available && str::EqI(gImageFormats[i].ext, ext)) {
+            return i;
+        }
+    }
+    return kDefaultFormatIdx;
+}
+
+static TempStr PathWithExtTemp(Str path, Str ext) {
+    TempStr noExt = path::GetPathNoExtTemp(path);
+    return fmt("%s%s", noExt, ext);
+}
+
 static bool gFormatsProbed = false;
 
 static void ProbeImageFormats() {
@@ -169,6 +231,11 @@ struct ImageEditWindow : WindowBase {
 
     // source image
     Str filePath;
+    // encoded original (JPEG/PNG/…); written as-is when dest ext matches
+    // and the bitmap has not been cropped or resized
+    Str originalData;
+    Str originalExt;
+    bool srcWasModified = false;
     Bitmap* srcBitmap = nullptr;
     Pixmap* srcPixmap = nullptr;
     int imgW = 0;
@@ -211,6 +278,7 @@ struct ImageEditWindow : WindowBase {
         delete srcBitmap;
         FreePixmap(srcPixmap);
         str::Free(filePath);
+        str::Free(originalData);
         // ~WindowBase deletes `layout`, which is controlLayout
     }
 
@@ -1234,17 +1302,43 @@ static void OnSave(ImageEditWindow* ew) {
         return;
     }
 
-    // ensure extension matches selected format
+    bool unmodified = !ew->srcWasModified;
+    if (ew->mode == ImageEditMode::Crop && IsCropChanged(ew)) {
+        unmodified = false;
+    }
+    if (ew->mode == ImageEditMode::Resize && IsResizeChanged(ew)) {
+        unmodified = false;
+    }
+
     int fmtIdx = GetSelectedFormatIdx(ew);
     Str fmtExt = gImageFormats[fmtIdx].ext;
     TempStr destExt = path::GetExtTemp(rawDest);
+    bool writeOriginal = unmodified && len(ew->originalData) > 0 && ExtMatchesOriginal(destExt, ew->originalExt) &&
+                         !gImageFormats[fmtIdx].isPdf;
+
     TempStr dest;
-    if (str::EqI(destExt, fmtExt)) {
+    if (writeOriginal) {
+        dest = str::DupTemp(rawDest);
+    } else if (str::EqI(destExt, fmtExt)) {
         dest = str::DupTemp(rawDest);
     } else {
-        int baseLen = len(rawDest) - len(destExt);
-        TempStr base = str::DupTemp(Str(rawDest.s, baseLen));
-        dest = fmt("%s%s", base, fmtExt);
+        dest = PathWithExtTemp(rawDest, fmtExt);
+    }
+
+    if (writeOriginal) {
+        bool saved = file::WriteFile(dest, ew->originalData);
+        if (!saved) {
+            WarnBox(ew->hwnd, "Failed to save image", "Save Image");
+            return;
+        }
+        HWND hwndParent = ew->hwndParent;
+        Str savedPath = str::Dup(dest);
+        DestroyWindow(ew->hwnd);
+        if (gImageEditHost.OpenSavedFile) {
+            gImageEditHost.OpenSavedFile(hwndParent, savedPath);
+        }
+        str::Free(savedPath);
+        return;
     }
 
     Bitmap* result = nullptr;
@@ -1379,6 +1473,7 @@ static void ApplyCrop(ImageEditWindow* ew) {
         if (!ReplaceSrcBitmap(ew, cropped)) {
             return;
         }
+        ew->srcWasModified = true;
         ew->cropX = 0;
         ew->cropY = 0;
         ew->cropW = ew->imgW;
@@ -1406,6 +1501,7 @@ static void ApplyResize(ImageEditWindow* ew) {
         if (!ReplaceSrcBitmap(ew, resized)) {
             return;
         }
+        ew->srcWasModified = true;
         ew->newW = ew->imgW;
         ew->newH = ew->imgH;
         UpdateModeButtons(ew);
@@ -1968,7 +2064,8 @@ static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const 
     return b;
 }
 
-void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf) {
+void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf,
+                         Str originalData) {
     ProbeImageFormats();
 
     Bitmap* bmp = nullptr;
@@ -2011,10 +2108,20 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         return;
     }
 
+    Str origOwned;
+    if (len(originalData) > 0) {
+        origOwned = str::Dup(originalData);
+    } else if (!fromRenderedBitmap && filePath && file::Exists(filePath)) {
+        origOwned = file::ReadFile(filePath);
+    }
+    Str origExt = ImageSaveExtFromData(origOwned);
+
     auto* ew = new ImageEditWindow();
     ew->mode = mode;
     ew->fromRenderedBitmap = fromRenderedBitmap;
     ew->filePath = filePath ? str::Dup(filePath) : Str();
+    ew->originalData = origOwned;
+    ew->originalExt = origExt;
     ew->srcBitmap = bmp;
     ew->srcPixmap = PixmapFromGdiplus(bmp);
     if (!ew->srcPixmap) {
@@ -2081,7 +2188,14 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     ew->font = ImageEditFont(hwnd);
 
     // create child controls
-    TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
+    TempStr destPath = StrL("");
+    if (filePath) {
+        destPath = filePath;
+        if (origExt && !ExtMatchesOriginal(path::GetExtTemp(destPath), origExt)) {
+            destPath = PathWithExtTemp(destPath, origExt);
+        }
+        destPath = MakeUniqueFilePathTemp(destPath);
+    }
     {
         auto* edit = new Edit();
         Edit::CreateArgs editArgs;
@@ -2137,7 +2251,12 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         dd->Create(args);
         StrVec items;
         int defaultDdIdx = 0;
-        int wantFmtIdx = selectPdf ? kPdfFormatIdx : kDefaultFormatIdx;
+        int wantFmtIdx = kDefaultFormatIdx;
+        if (selectPdf) {
+            wantFmtIdx = kPdfFormatIdx;
+        } else if (origExt) {
+            wantFmtIdx = FormatIdxFromExt(origExt);
+        }
         for (int i = 0; i < dimofi(gImageFormats); i++) {
             if (!gImageFormats[i].available) {
                 continue;

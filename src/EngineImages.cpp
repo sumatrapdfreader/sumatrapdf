@@ -115,6 +115,7 @@ class EngineImages : public EngineBase {
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
     RenderedBitmap* GetImageForPageElement(IPageElement* ipel) override;
+    Str GetImageDataForPageElement(IPageElement* ipel) override;
 
     bool BenchLoadPage(int pageNo) override {
         ImagePage* page = GetPage(pageNo);
@@ -733,6 +734,13 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
     DropPage(page, false);
     return RenderedBitmapFromPixmap(pixmap);
 #endif
+}
+
+Str EngineImages::GetImageDataForPageElement(IPageElement* pel) {
+    if (!pel || pel->GetKind() != kindPageElementImage) {
+        return {};
+    }
+    return str::Dup(GetImageData(pel->GetPageNo()));
 }
 
 Str EngineImages::GetFileData() {

@@ -102,6 +102,7 @@ class EngineMupdf : public EngineBase {
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
+    Str GetImageDataForPageElement(IPageElement*) override;
 
     IPageDestination* GetNamedDest(Str name) override;
     int GetOpenActionPageNo() override;

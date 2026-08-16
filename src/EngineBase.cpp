@@ -722,6 +722,13 @@ RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement* /*ipel*/) {
     return nullptr;
 }
 
+// Encoded file bytes of a page-element image, when the engine still has them
+// (a JPEG stream in a PDF, a page of a CBZ, …). Empty if the image only
+// exists as decoded pixels. Caller must str::Free.
+Str EngineBase::GetImageDataForPageElement(IPageElement*) {
+    return {};
+}
+
 // protected:
 void EngineBase::SetFilePath(Str s) {
     fileNameBase = s ? str::Dup(arena, s) : Str();

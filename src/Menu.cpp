@@ -2222,14 +2222,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 HwndSendCommand(win->hwndFrame, cmdId);
                 return;
             }
-            RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
-            if (!bmp) {
-                return;
-            }
-            TempStr dir = path::GetDirTemp(filePath);
-            TempStr base = path::GetBaseNameTemp(filePath);
-            TempStr noExt = path::GetPathNoExtTemp(base);
-            TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d.png", noExt, pageNoUnderCursor));
+            EngineBase* imgEngine = dm->GetEngine();
             ImageEditMode m = ImageEditMode::Save;
             bool selectPdf = false;
             if (cmdId == CmdCropImage) {
@@ -2239,7 +2232,27 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             } else if (cmdId == CmdConvertImageToPdf) {
                 selectPdf = true;
             }
-            ShowImageEditWindow(win->hwndFrame, m, destPath, bmp, selectPdf);
+            // a standalone image file: load from disk so Save can write the original
+            // bytes when the image is not cropped or resized
+            if (imgEngine->kind == kindEngineImage && imgEngine->FilePath()) {
+                ShowImageEditWindow(win->hwndFrame, m, imgEngine->FilePath(), nullptr, selectPdf);
+                return;
+            }
+            RenderedBitmap* bmp = imgEngine->GetImageForPageElement(pageEl);
+            if (!bmp) {
+                return;
+            }
+            TempStr dir = path::GetDirTemp(filePath);
+            TempStr base = path::GetBaseNameTemp(filePath);
+            TempStr noExt = path::GetPathNoExtTemp(base);
+            Str origData = imgEngine->GetImageDataForPageElement(pageEl);
+            Str ext = ImageSaveExtFromData(origData);
+            if (!ext) {
+                ext = StrL(".png");
+            }
+            TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d%s", noExt, pageNoUnderCursor, ext));
+            ShowImageEditWindow(win->hwndFrame, m, destPath, bmp, selectPdf, origData);
+            str::Free(origData);
             delete bmp;
             return;
         };

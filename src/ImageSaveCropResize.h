@@ -42,10 +42,16 @@ enum class ImageEditMode {
     Resize
 };
 
+// Canonical save extension for encoded image bytes (.jpg/.png/…); empty if unknown.
+Str ImageSaveExtFromData(Str data);
+
 // parent is the window the editor is owned by and centred on. Either filePath
 // names an image to load or rbmp holds one already rendered; with neither
 // there is nothing to edit and the call does nothing.
+// originalData, when set, is the encoded source (JPEG stream, CBZ page, …);
+// Save writes those bytes if the image is not cropped/resized and the dest
+// extension still matches the original format. Caller keeps ownership.
 void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath = {}, RenderedBitmap* rbmp = nullptr,
-                         bool selectPdf = false);
+                         bool selectPdf = false, Str originalData = {});
 
 TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut = nullptr);

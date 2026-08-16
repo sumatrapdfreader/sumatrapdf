@@ -5790,6 +5790,43 @@ RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
 #endif
 }
 
+// JPEG/PNG/GIF/BMP/TIFF streams that are already a complete file. Flate-raw
+// samples, JPEG2000, JBIG2, and images with a decode/mask are not.
+Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
+    if (!ipel || ipel->GetKind() != kindPageElementImage) {
+        return {};
+    }
+    auto* pel = (PageElementImage*)ipel;
+    FzPageInfo* pageInfo = GetFzPageInfo(pel->pageNo, false);
+    if (!pageInfo || !pageInfo->page) {
+        return {};
+    }
+    auto* ctx = Ctx();
+    ScopedRecursiveMutex scope(&docLock);
+    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, pel->imageID);
+    if (!image) {
+        return {};
+    }
+    fz_compressed_buffer* cbuf = fz_compressed_image_buffer(ctx, image);
+    if (!cbuf || !cbuf->buffer) {
+        return {};
+    }
+    int type = cbuf->params.type;
+    if (image->use_colorkey || image->use_decode || image->mask) {
+        return {};
+    }
+    if (type != FZ_IMAGE_JPEG && type != FZ_IMAGE_PNG && type != FZ_IMAGE_GIF && type != FZ_IMAGE_BMP &&
+        type != FZ_IMAGE_TIFF) {
+        return {};
+    }
+    unsigned char* data = nullptr;
+    size_t n = fz_buffer_storage(ctx, cbuf->buffer, &data);
+    if (!data || n == 0 || n > (size_t)INT_MAX) {
+        return {};
+    }
+    return str::Dup(Str((char*)data, (int)n));
+}
+
 bool EngineMupdf::BenchLoadPage(int pageNo) {
     return GetFzPageInfo(pageNo, false) != nullptr;
 }

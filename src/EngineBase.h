@@ -559,6 +559,7 @@ class EngineBase {
     Str FilePath() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
+    virtual Str GetImageDataForPageElement(IPageElement*);
 
     virtual bool HandleLink(IPageDestination*, ILinkHandler*);
 

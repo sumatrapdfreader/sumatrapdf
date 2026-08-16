@@ -10116,6 +10116,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowSetScreenshotHotkeyDialog(win->hwndFrame);
             break;
 
+        case CmdSaveImage:
+            ShowImageEditWindow(win->hwndFrame, ImageEditMode::Save, CurrentImageTabPathTemp(win));
+            break;
+
         case CmdCropImage:
             ShowImageEditWindow(win->hwndFrame, ImageEditMode::Crop, CurrentImageTabPathTemp(win));
             break;

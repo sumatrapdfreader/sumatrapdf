@@ -374,6 +374,8 @@ EXPORTS
 
 	fz_compressed_buffer_size
 
+	fz_compressed_image_buffer
+
 	fz_open_compressed_buffer
 
 	fz_open_image_decomp_stream_from_buffer

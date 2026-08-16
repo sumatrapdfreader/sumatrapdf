@@ -145,6 +145,7 @@ class EngineEbook : public EngineBase {
 
     IPageDestination* GetNamedDest(Str name) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
+    Str GetImageDataForPageElement(IPageElement* el) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -604,6 +605,22 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     ReportIf(i.type != DrawInstrType::Image);
     return getImageFromData(i.GetImage());
 #endif
+}
+
+Str EngineEbook::GetImageDataForPageElement(IPageElement* iel) {
+    if (!iel || iel->GetKind() != kindPageElementImage) {
+        return {};
+    }
+    PageElementImage* el = (PageElementImage*)iel;
+    Vec<DrawInstr>* pageInstrs = GetHtmlPage(el->pageNo);
+    if (!pageInstrs || el->imageID < 0 || el->imageID >= len(*pageInstrs)) {
+        return {};
+    }
+    auto&& i = (*pageInstrs)[el->imageID];
+    if (i.type != DrawInstrType::Image) {
+        return {};
+    }
+    return str::Dup(i.GetImage());
 }
 
 // don't delete the result
