@@ -748,6 +748,116 @@ bool WindowBase::ActivateOnEnter() {
     return false;
 }
 
+//--- mnemonic (&X in a label) navigation
+
+// what a mnemonic can land on, in layout order: focusable controls (targeted
+// directly when the mnemonic is their own) and non-focusable labels (their
+// mnemonic focuses the next focusable stop, like statics in resource dialogs)
+struct MnemonicStop {
+    ControlBase* ctrl = nullptr;
+    VirtCtrl* vwnd = nullptr;
+    char mnemonic = 0;
+    bool focusable = false;
+};
+
+static bool IsCtrlHwndFocusable(HWND h) {
+    if (!h || !::IsWindowVisible(h) || !::IsWindowEnabled(h)) {
+        return false;
+    }
+    DWORD style = (DWORD)GetWindowLongW(h, GWL_STYLE);
+    return (style & WS_TABSTOP) != 0;
+}
+
+static void CollectMnemonicStopsVirt(VirtCtrl* w, Vec<MnemonicStop>& out) {
+    if (!w || !w->IsHitTestable()) {
+        return;
+    }
+    MnemonicStop ms;
+    ms.vwnd = w;
+    ms.focusable = w->HasFlag(vwfFocusable) && !w->HasFlag(vwfSkipTabStop);
+    // parsed once when the control's text was set
+    ms.mnemonic = w->mnemonic;
+    if (ms.focusable || ms.mnemonic) {
+        out.Append(ms);
+    }
+    for (VirtCtrl* c : w->children) {
+        CollectMnemonicStopsVirt(c, out);
+    }
+}
+
+static void CollectMnemonicStops(ILayout* root, Vec<MnemonicStop>& out) {
+    if (!root || IsCollapsed(root)) {
+        return;
+    }
+    ControlBase* c = root->AsControl();
+    if (c) {
+        MnemonicStop ms;
+        ms.ctrl = c;
+        ms.focusable = IsCtrlHwndFocusable(c->hwnd);
+        if (c->hwnd && ::IsWindowVisible(c->hwnd) && ::IsWindowEnabled(c->hwnd)) {
+            ms.mnemonic = MnemonicCharInStr(HwndGetTextTemp(c->hwnd));
+        }
+        if (ms.focusable || ms.mnemonic) {
+            out.Append(ms);
+        }
+        return;
+    }
+    VirtCtrl* w = root->AsVirtCtrl();
+    if (w) {
+        CollectMnemonicStopsVirt(w, out);
+        return;
+    }
+    int n = root->LayoutChildCount();
+    for (int i = 0; i < n; i++) {
+        CollectMnemonicStops(root->LayoutChildAt(i), out);
+    }
+}
+
+// focus the control whose label contains &<c>; a focusable match is targeted
+// directly (buttons / checkboxes are also clicked, like in a dialog), a match
+// on a non-focusable label focuses the next focusable stop after it
+bool WindowBase::MnemonicNavigate(char c) {
+    if (!layout) {
+        return false;
+    }
+    Vec<MnemonicStop> stops;
+    CollectMnemonicStops(layout, stops);
+    int n = len(stops);
+    c = (char)toupper((u8)c);
+    for (int i = 0; i < n; i++) {
+        char m = stops[i].mnemonic;
+        if (!m || (char)toupper((u8)m) != c) {
+            continue;
+        }
+        // the match itself if focusable, else the next focusable stop after it
+        for (int j = 0; j < n; j++) {
+            MnemonicStop& target = stops[(i + j) % n];
+            if (!target.focusable) {
+                continue;
+            }
+            if (target.vwnd) {
+                SetFocusTo(target.vwnd);
+                VirtButton* b = AsVirtButton(target.vwnd);
+                if (j == 0 && b) {
+                    b->Click();
+                }
+                return true;
+            }
+            if (vroot) {
+                vroot->SetFocus(nullptr);
+            }
+            SetFocusTo(target.ctrl);
+            TempStr cls = HwndGetClassName(target.ctrl->hwnd);
+            if (j == 0 && str::EqI(cls, StrL("Button"))) {
+                SendMessageW(target.ctrl->hwnd, BM_CLICK, 0, 0);
+            }
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
 // for interop with windows not wrapped in WindowBase, run this at the beginning of message loop
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     // hwnd is a parent of control sending WM_NOTIFY message
@@ -1287,6 +1397,23 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
     if (closeOnEsc && msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
         Close();
         return true;
+    }
+    // Alt+<char> (WM_SYSCHAR), or a plain <char> when the focused control
+    // doesn't consume characters: jump to the control labeled &<char>
+    // (mnemonics, lost when resource dialogs became WindowBase)
+    if (msg.message == WM_SYSCHAR || msg.message == WM_CHAR) {
+        char c = (msg.wParam > 0x20 && msg.wParam < 128) ? (char)msg.wParam : 0;
+        if (c && layout) {
+            bool tryMnemonic = (msg.message == WM_SYSCHAR) && IsAltPressed();
+            if (!tryMnemonic && msg.message == WM_CHAR) {
+                HWND focus = ::GetFocus();
+                LRESULT code = focus ? SendMessageW(focus, WM_GETDLGCODE, 0, 0) : 0;
+                tryMnemonic = (code & DLGC_WANTCHARS) == 0;
+            }
+            if (tryMnemonic && MnemonicNavigate(c)) {
+                return true;
+            }
+        }
     }
     if (msg.message != WM_KEYDOWN && msg.message != WM_SYSKEYDOWN) {
         return false;

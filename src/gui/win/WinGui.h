@@ -382,6 +382,7 @@ struct WindowBase : HwndBase {
     // `vroot->focused` says which one it is
     bool TabNavigate(bool backwards);
     bool ActivateOnEnter();
+    bool MnemonicNavigate(char c);
     void SetFocusTo(ControlBase*);
     void SetFocusTo(VirtCtrl*);
 

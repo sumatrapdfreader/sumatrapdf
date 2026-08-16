@@ -2026,6 +2026,29 @@ static AccelPrefix ParseAccelPrefixTemp(Str s) {
     return res;
 }
 
+// first mnemonic char in a label: "De&fault" => 'f'; "&&" is a literal '&';
+// 0 if none
+char MnemonicCharInStr(Str s) {
+    int n = len(s);
+    for (int i = 0; i + 1 < n; i++) {
+        if (s.s[i] != '&') {
+            continue;
+        }
+        if (s.s[i + 1] == '&') {
+            i++; // "&&" is an escaped '&'
+            continue;
+        }
+        return s.s[i + 1];
+    }
+    return 0;
+}
+
+// cache the "&F" mnemonic of a prefix-enabled text in VirtCtrl::mnemonic.
+// Called whenever the text or the prefix flag is set
+static void UpdateMnemonic(VirtText* w) {
+    w->mnemonic = w->prefix ? MnemonicCharInStr(w->s) : 0;
+}
+
 static Str TextToDraw(VirtText* w, AccelPrefix* prefixOut) {
     if (!w->prefix) {
         if (prefixOut) {
@@ -2057,6 +2080,7 @@ void VirtText::SetText(Str str) {
     str::Free(s);
     s = str::Dup(str);
     sz = {0, 0};
+    UpdateMnemonic(this);
 }
 
 // all three go through the virtual GetIdealSize(), so a subclass that adds to
@@ -2180,6 +2204,7 @@ VirtText* NewVirtText(const VirtTextArgs& args) {
     w->ellipsis = args.ellipsis;
     w->pathEllipsis = args.pathEllipsis;
     w->prefix = args.prefix;
+    UpdateMnemonic(w);
     w->underlineOffsetY = args.underlineOffsetY;
     w->padding = args.padding;
     return w;
@@ -2247,6 +2272,7 @@ VirtButton::VirtButton(Str str, PlatformFont* f) : VirtText(str, f) {
     flags |= vwfFocusable;
     align = VirtTextAlign::Center;
     prefix = true;
+    UpdateMnemonic(this);
 }
 
 VirtButton::~VirtButton() = default;

@@ -120,6 +120,10 @@ struct VirtCtrl : ILayout {
     Insets padding{};
     int id = 0;
     uintptr_t userData = 0;
+    // keyboard mnemonic ("&File" => 'F', 0 = none). Parsed when the text is
+    // set, so readers (mnemonic navigation in WindowBase) don't re-parse the
+    // text every time
+    char mnemonic = 0;
     // for debugging; not owned
     Str name;
     // static tooltip (owned); used when onGetTooltip is empty
@@ -595,6 +599,8 @@ struct VirtText : VirtCtrl {
 };
 
 VirtText* NewVirtText(const VirtTextArgs&);
+
+char MnemonicCharInStr(Str s);
 
 // Checked downcasts: null unless the layout really is that control. Code that
 // walks a layout tree it didn't build (the toolbar, whose items are a mix of
