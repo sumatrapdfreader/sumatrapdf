@@ -245,7 +245,8 @@ static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND /*hwnd*/, UINT msg
 
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
     Str linkLabel = _TRA("AI Chat documentation");
-    TempStr content = fmt(_TRA("See <a href=\"#\">%s</a> for setup instructions.").s, linkLabel);
+    TempStr link = fmt(R"(<a href="#">%s</a>)", linkLabel);
+    TempStr content = fmt(_TRA("See %s for setup instructions.").s, link);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
