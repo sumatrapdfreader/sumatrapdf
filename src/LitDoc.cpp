@@ -895,14 +895,20 @@ struct UnBinaryCtx {
 };
 
 static const char* LitTagName(UnBinaryCtx* ctx, int tag) {
+    if (tag < 0) {
+        return nullptr;
+    }
     if (ctx->isHtml) {
-        if (tag >= 0 && tag < dimofi(gLitHtmlTags)) {
-            return gLitHtmlTags[tag];
+        // gLitHtmlTags is a SeqStrings indexed by tag code; a code with no tag
+        // is stored as the "\x01" sentinel (empty isn't representable mid-list)
+        Str name = SeqStrByIndex(gLitHtmlTags, tag);
+        if (len(name) > 0 && name.s[0] != '\x01') {
+            return name.s; // points into the static literal
         }
-    } else {
-        if (tag >= 0 && tag < dimofi(gLitOpfTags)) {
-            return gLitOpfTags[tag];
-        }
+        return nullptr;
+    }
+    if (tag < dimofi(gLitOpfTags)) {
+        return gLitOpfTags[tag];
     }
     return nullptr;
 }

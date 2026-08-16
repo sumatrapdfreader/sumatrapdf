@@ -9,17 +9,17 @@ struct LitAttrCode {
     const char* name;
 };
 
-static const char* gLitHtmlTags[] = {
-    nullptr, nullptr, nullptr, "a", "acronym", "address", "applet", "area", "b", "base", "basefont", "bdo", "bgsound",
-    "big", "blink", "blockquote", "body", "br", "button", "caption", "center", "cite", "code", "col", "colgroup",
-    nullptr, nullptr, "dd", "del", "dfn", "dir", "div", "dl", "dt", "em", "embed", "fieldset", "font", "form",
-    "frame", "frameset", nullptr, "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", "html", "i", "iframe", "img",
-    "input", "ins", "kbd", "label", "legend", "li", "link", "tag61", "map", "tag63", "tag64", "meta", "nextid",
-    "nobr", "noembed", "noframes", "noscript", "object", "ol", "option", "p", "param", "plaintext", "pre", "q", "rp",
-    "rt", "ruby", "s", "samp", "script", "select", "small", "span", "strike", "strong", "style", "sub", "sup",
-    "table", "tbody", "tc", "td", "textarea", "tfoot", "th", "thead", "title", "tr", "tt", "u", "ul", "var", "wbr",
-    nullptr,
-};
+// tag code -> name, indexed by the code; "\x01" marks a code with no tag
+static SeqStrings gLitHtmlTags =
+    "\x01\0" "\x01\0" "\x01\0" "a\0" "acronym\0" "address\0" "applet\0" "area\0" "b\0" "base\0" "basefont\0" "bdo\0"
+    "bgsound\0" "big\0" "blink\0" "blockquote\0" "body\0" "br\0" "button\0" "caption\0" "center\0" "cite\0" "code\0"
+    "col\0" "colgroup\0" "\x01\0" "\x01\0" "dd\0" "del\0" "dfn\0" "dir\0" "div\0" "dl\0" "dt\0" "em\0" "embed\0"
+    "fieldset\0" "font\0" "form\0" "frame\0" "frameset\0" "\x01\0" "h1\0" "h2\0" "h3\0" "h4\0" "h5\0" "h6\0" "head\0"
+    "hr\0" "html\0" "i\0" "iframe\0" "img\0" "input\0" "ins\0" "kbd\0" "label\0" "legend\0" "li\0" "link\0" "tag61\0"
+    "map\0" "tag63\0" "tag64\0" "meta\0" "nextid\0" "nobr\0" "noembed\0" "noframes\0" "noscript\0" "object\0" "ol\0"
+    "option\0" "p\0" "param\0" "plaintext\0" "pre\0" "q\0" "rp\0" "rt\0" "ruby\0" "s\0" "samp\0" "script\0" "select\0"
+    "small\0" "span\0" "strike\0" "strong\0" "style\0" "sub\0" "sup\0" "table\0" "tbody\0" "tc\0" "td\0" "textarea\0"
+    "tfoot\0" "th\0" "thead\0" "title\0" "tr\0" "tt\0" "u\0" "ul\0" "var\0" "wbr\0" "\x01\0" "\0";
 
 static const LitAttrCode gLitHtmlAttrs[] = {
     {0x8010, "tabindex"}, {0x8046, "title"}, {0x804b, "style"}, {0x804d, "disabled"}, {0x83ea, "class"},
