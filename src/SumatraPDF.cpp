@@ -2009,6 +2009,18 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
     if (win->pageEdit) {
         win->pageEdit->SetNumbersOnly(onlyNumbers);
+        // a tab without a document (home page, failed load) has no page to go
+        // to: disable the page box and drop the previous tab's page number.
+        // With a document, sync the number here: PageNoChanged skips the
+        // update when win->currPageNo already matches (e.g. home tab cleared
+        // the box, then back to the same document and page)
+        bool hasDoc = win->ctrl != nullptr;
+        win->pageEdit->SetIsEnabled(hasDoc);
+        if (hasDoc) {
+            win->pageEdit->SetText(win->ctrl->GetPageLabeTemp(win->ctrl->CurrentPageNo()));
+        } else {
+            win->pageEdit->SetText({});
+        }
     }
 }
 
