@@ -10,7 +10,7 @@ after its relevant Windows, Linux, and portable checks pass.
 | 1     | Complete    | GTK4 application executable and file opening |
 | 2     | Complete    | Shared portable reader model                 |
 | 3     | Complete    | Embeddable canvas and document viewer        |
-| 4     | Not started | Portable asynchronous rendering              |
+| 4     | Complete    | Portable asynchronous rendering              |
 | 5     | Not started | Application shell, tabs, and commands        |
 | 6     | Not started | Reader features                              |
 | 7     | Not started | Linux desktop services                       |
@@ -77,3 +77,31 @@ Verification:
 - `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 103,142 assertions and all Linux targets linked.
 - `timeout 5s ./out/linux-dbg64/SumatraPDF ext/a-zlib/zlib.3.pdf` under WSLg: the rendered-document window stayed
   alive until the expected timeout; Mesa emitted non-fatal renderer warnings.
+
+## Stage 4: Portable asynchronous rendering
+
+Completed 2026-08-16.
+
+- Added a portable page-render policy with visible, nearby, and background priorities, same-page request
+  replacement, generation filtering, and LRU eviction selection.
+- Added `PageRenderService`, which renders away from the UI thread through a worker-local `EngineBase::Clone`, uses
+  `AbortCookie` during cancellation and shutdown, rejects results from stale generations, and posts completion to
+  the native main thread through `PlatformPostTask`.
+- Bounded the rendered-page cache to 96 MB. Oversized pages are not cached, and older entries are evicted by recent
+  use before a new entry can take the cache over budget.
+- Connected `DocumentView` to the service. Paints request missing visible pages first and prefetch nearby and
+  background pages; zoom, rotation, fit-mode resize, layout changes, and single-page navigation cancel obsolete
+  work.
+- Added a standard `app.quit` action and `Ctrl-Q` accelerator so orderly Linux shutdown can cancel and join the
+  rendering worker.
+- Added portable unit coverage for priority order, request replacement, stale-generation removal, and LRU eviction.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with no warnings.
+- `bun cmd/run-unit-tests.ts -dbg`: passed, including the new render-policy tests.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,514 assertions and all Linux targets linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,648 assertions.
+- Both debug and ASan applications opened `ext/a-zlib/zlib.3.pdf`, rendered for several seconds, accepted
+  `gapplication action org.sumatrapdf.SumatraPDF quit`, joined the render worker, and exited with status 0. ASan
+  reported no error; WSLg only emitted its existing non-fatal Mesa renderer warnings.

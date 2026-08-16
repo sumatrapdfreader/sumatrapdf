@@ -2,27 +2,22 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Pixmap.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
+#include "PageRenderPolicy.h"
+#include "PageRenderService.h"
 #include "ReaderModel.h"
 #include "gui/UIModels.h"
 #include "gui/Gfx.h"
 #include "gui/PlatformCanvas.h"
 #include "gui/DocumentView.h"
 
-struct CachedDocumentPage {
-    Pixmap* pixmap = nullptr;
-    float zoom = 0;
-    int rotation = 0;
-};
-
 struct DocumentViewData {
     ReaderModel* reader = nullptr;
+    PageRenderService* renderer = nullptr;
     DocumentLayout layout;
-    Vec<CachedDocumentPage> cache;
     Size viewSize;
     Point viewOffset;
     float zoomVirtual = kZoomFitWidth;
@@ -36,13 +31,6 @@ struct DocumentViewData {
 
 static DocumentViewData* ViewData(DocumentView* view) {
     return (DocumentViewData*)view->data;
-}
-
-static void FreeCache(DocumentViewData* data) {
-    for (CachedDocumentPage& page : data->cache) {
-        FreePixmap(page.pixmap);
-    }
-    data->cache.Reset();
 }
 
 static DocumentLayoutParams MakeLayoutParams(DocumentViewData* data) {
@@ -80,6 +68,10 @@ static void Invalidate(DocumentView* view) {
     }
 }
 
+static void OnPageReady(DocumentView* view) {
+    Invalidate(view);
+}
+
 static void SetViewOffset(DocumentView* view, Point offset) {
     auto* data = ViewData(view);
     data->viewOffset = offset;
@@ -101,7 +93,11 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
     auto* data = ViewData(view);
     Size size = ev->clientRect.Size();
     if (size != data->viewSize) {
+        float oldZoomReal = data->layout.zoomReal;
         Relayout(view, size);
+        if (data->renderer && data->zoomVirtual < 0 && oldZoomReal != data->layout.zoomReal) {
+            data->renderer->NewGeneration();
+        }
     }
 
     ev->gfx->FillRect(ev->clientRect, MkRgb(78, 81, 86));
@@ -111,10 +107,7 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
 
     for (int pageNo = 1; pageNo <= len(data->layout.pages); pageNo++) {
         DocumentLayoutPage* page = data->layout.GetPage(pageNo);
-        CachedDocumentPage& cached = data->cache[pageNo - 1];
         if (!page->isShown || page->visibleRatio <= 0) {
-            FreePixmap(cached.pixmap);
-            cached = {};
             continue;
         }
 
@@ -124,16 +117,23 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
         ev->gfx->FillRect(shadow, MkGray(40));
         ev->gfx->FillRect(target, kColWhite);
 
-        if (!cached.pixmap || cached.zoom != page->zoomReal || cached.rotation != data->rotation) {
-            FreePixmap(cached.pixmap);
-            cached.pixmap = data->reader->RenderPage(pageNo, page->zoomReal, data->rotation);
-            cached.zoom = page->zoomReal;
-            cached.rotation = data->rotation;
-        }
-        if (cached.pixmap) {
-            ev->gfx->DrawPixmap(cached.pixmap, target);
+        PageRenderKey key{pageNo, page->zoomReal, data->rotation};
+        if (!data->renderer->DrawPage(ev->gfx, key, target)) {
+            data->renderer->Request(key, PageRenderPriority::Visible);
         }
         ev->gfx->DrawRect(target, MkGray(155));
+    }
+
+    int current = data->layout.CurrentPageNo();
+    for (int distance = 1; distance <= 2; distance++) {
+        PageRenderPriority priority = distance == 1 ? PageRenderPriority::Nearby : PageRenderPriority::Background;
+        int candidates[] = {current - distance, current + distance};
+        for (int pageNo : candidates) {
+            DocumentLayoutPage* page = data->layout.GetPage(pageNo);
+            if (page) {
+                data->renderer->Request({pageNo, page->zoomReal, data->rotation}, priority);
+            }
+        }
     }
 }
 
@@ -301,7 +301,7 @@ DocumentView* DocumentView::Create() {
 DocumentView::~DocumentView() {
     auto* viewData = ViewData(this);
     if (viewData) {
-        FreeCache(viewData);
+        delete viewData->renderer;
         delete viewData->reader;
         delete viewData;
     }
@@ -316,10 +316,15 @@ bool DocumentView::Open(Str path) {
     if (!reader) {
         return false;
     }
-    FreeCache(viewData);
+    PageRenderService* renderer = PageRenderService::Create(reader->GetEngine(), MkFunc0(OnPageReady, this));
+    if (!renderer) {
+        delete reader;
+        return false;
+    }
+    delete viewData->renderer;
     delete viewData->reader;
     viewData->reader = reader;
-    VecResize(viewData->cache, reader->PageCount());
+    viewData->renderer = renderer;
     viewData->viewOffset = {};
     viewData->startPage = 1;
     Relayout(this, canvas->ClientRect().Size());
@@ -361,6 +366,7 @@ void DocumentView::GoToPage(int pageNo) {
         }
     } else {
         viewData->viewOffset = {};
+        viewData->renderer->NewGeneration();
     }
     Relayout(this, viewData->viewSize);
     Invalidate(this);
@@ -374,6 +380,7 @@ void DocumentView::SetContinuous(bool continuous) {
     viewData->startPage = viewData->layout.CurrentPageNo();
     viewData->displayMode = continuous ? DisplayMode::Continuous : DisplayMode::SinglePage;
     viewData->viewOffset = {};
+    viewData->renderer->NewGeneration();
     Relayout(this, viewData->viewSize);
     Invalidate(this);
 }
@@ -399,8 +406,7 @@ void DocumentView::SetZoom(float zoomVirtual, Point* anchor) {
                      : 0.5f;
 
     viewData->zoomVirtual = zoomVirtual;
-    FreeCache(viewData);
-    VecResize(viewData->cache, viewData->reader->PageCount());
+    viewData->renderer->NewGeneration();
     Relayout(this, viewData->viewSize);
     DocumentLayoutPage* newPage = viewData->layout.GetPage(pageNo);
     if (anchor && newPage) {
@@ -421,8 +427,7 @@ void DocumentView::RotateBy(int degrees) {
         return;
     }
     viewData->rotation = NormalizeRotation(viewData->rotation + degrees);
-    FreeCache(viewData);
-    VecResize(viewData->cache, viewData->reader->PageCount());
+    viewData->renderer->NewGeneration();
     Relayout(this, viewData->viewSize);
     Invalidate(this);
 }

@@ -50,12 +50,20 @@ static void FreeState(gpointer data) {
     delete (LinuxAppState*)data;
 }
 
+static void OnQuit(GSimpleAction*, GVariant*, gpointer data) {
+    g_application_quit(G_APPLICATION(data));
+}
+
 int RunLinuxApp(int argc, char** argv) {
     GtkApplication* app = gtk_application_new("org.sumatrapdf.SumatraPDF", G_APPLICATION_HANDLES_OPEN);
     auto* state = new LinuxAppState();
     g_object_set_data_full(G_OBJECT(app), "sumatra-linux-state", state, FreeState);
     g_signal_connect(app, "activate", G_CALLBACK(OnActivate), nullptr);
     g_signal_connect(app, "open", G_CALLBACK(OnOpen), nullptr);
+    const GActionEntry actions[] = {{"quit", OnQuit}};
+    g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
+    const char* quitAccels[] = {"<Primary>q", nullptr};
+    gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);

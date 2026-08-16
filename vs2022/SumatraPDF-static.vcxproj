@@ -1217,6 +1217,8 @@
     <ClInclude Include="..\src\NavFilesInFolder.h" />
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\OverlayScrollbar.h" />
+    <ClInclude Include="..\src\PageRenderPolicy.h" />
+    <ClInclude Include="..\src\PageRenderService.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
     <ClInclude Include="..\src\PdfCadDetect.h" />
     <ClInclude Include="..\src\PdfCadEnhanceDevice.h" />
@@ -1439,6 +1441,8 @@
     <ClCompile Include="..\src\NavFilesInFolder.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
+    <ClCompile Include="..\src\PageRenderPolicy.cpp" />
+    <ClCompile Include="..\src\PageRenderService.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCadDetect.cpp" />
     <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp" />

@@ -303,6 +303,12 @@
     <ClInclude Include="..\src\OverlayScrollbar.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PageRenderPolicy.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PageRenderService.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\PalmDbReader.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -861,6 +867,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\OverlayScrollbar.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PageRenderPolicy.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PageRenderService.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PalmDbReader.cpp">
