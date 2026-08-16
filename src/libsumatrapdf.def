@@ -1997,3 +1997,10 @@ EXPORTS
 	chm_read_entry
 	chm_get_entries
 	LZX_test_pretree_make_decode_table
+
+; the raw LZX decompressor inside chmdec, used by LitDoc.cpp (.lit sections)
+
+	LZXinit
+	LZXteardown
+	LZXreset
+	LZXdecompress

@@ -2026,7 +2026,7 @@ static bool showTocByDefault(Str path) {
 
 static bool IsEbookFileType(FileType ft) {
     return ft == FileType::Epub || ft == FileType::Mobi || ft == FileType::Fb2 || ft == FileType::Fb2z ||
-           ft == FileType::PalmDoc || ft == FileType::HTML || ft == FileType::Txt;
+           ft == FileType::PalmDoc || ft == FileType::HTML || ft == FileType::Txt || ft == FileType::Lit;
 }
 
 // Per-type DefaultDisplayMode (empty = inherit the global DefaultDisplayMode).
@@ -6156,6 +6156,7 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
         {_TRA("CHM documents"), "*.chm", true},
         {_TRA("SVG documents"), "*.svg", true},
         {_TRA("EPUB ebooks"), "*.epub", true},
+        {_TRA("Microsoft Reader ebooks"), "*.lit", true},
         {_TRA("Markdown documents"), "*.md;*.markdown", true},
         {_TRA("Mobi documents"), "*.mobi", true},
         {_TRA("FictionBook documents"), "*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},

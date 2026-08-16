@@ -477,6 +477,17 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4456", "4996" }
     files { "ext/chmdec/*.c", "ext/chmdec/*.h" }
 
+  -- msdes: public domain d3des, used by LitDoc.cpp to unseal .lit DRM1.
+  -- Tiny, so it links directly into both SumatraPDF.exe flavors.
+  project "msdes"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4131", "4244" }
+    files { "ext/msdes/*.c", "ext/msdes/*.h" }
+
   -- cmark-gfm: linked into mupdf → libsumatrapdf.dll (md.c + MarkdownToc imports).
   -- Do not also link into SumatraPDF.exe; re-export via libsumatrapdf.def instead.
   project "cmark-gfm"
@@ -1292,7 +1303,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "ext/mupdf/scripts/cmark-gfm" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
@@ -1356,7 +1367,7 @@ workspace "SumatraPDF"
     -- (freetype) + needed by heic.
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
-      "mupdf", "libarchive", "base", "unrar", "chmdec", "a-zopfli"
+      "mupdf", "libarchive", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1395,7 +1406,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/darkmodelib/include" }
     -- headers only: webp/jxl/heic/chm symbols come from libsumatrapdf.dll (libsumatrapdf.def)
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
@@ -1465,7 +1476,7 @@ workspace "SumatraPDF"
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libsumatrapdf", "base", "a-zopfli"
+      "libsumatrapdf", "base", "a-zopfli", "msdes"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

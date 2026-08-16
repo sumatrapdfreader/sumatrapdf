@@ -917,6 +917,7 @@ function engines_files()
     "GumboHtmlParser.*",
     "GumboHelpers.*",
     "HtmlFormatter.*",
+    "LitDoc.*",
     "MobiDoc.*",
     "PalmDbReader.*",
     "PdfCadDetect.*",

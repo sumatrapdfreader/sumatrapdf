@@ -31,6 +31,7 @@
     V(".ps", FileType::PS)             \
     V(".ps.gz", FileType::PS)          \
     V(".eps", FileType::PS)            \
+    V(".lit", FileType::Lit)           \
     V(".fb2", FileType::Fb2)           \
     V(".fb2z", FileType::Fb2z)         \
     V(".fbz", FileType::Fb2z)          \
@@ -150,6 +151,7 @@ int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
     V(0, "Rar!\x1A\x07\x01\x00", FileType::Rar)           \
     V(0, "7z\xBC\xAF\x27\x1C", FileType::SevenZ)          \
     V(0, "PK\x03\x04", FileType::Zip)                     \
+    V(0, "ITOLITLS", FileType::Lit)                       \
     V(0, "ITSF", FileType::Chm)                           \
     V(0x3c, "BOOKMOBI", FileType::Mobi)                   \
     V(0x3c, "TEXtREAd", FileType::PalmDoc)                \
