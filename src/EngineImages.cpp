@@ -623,7 +623,13 @@ PointF EngineImages::TransformPoint(PointF pt, int pageNo, float zoom, int rotat
     if (zoom <= 0) {
         return pt;
     }
-    SizeF page = PageMediabox(pageNo).Size();
+    // Rotation 0 only scales. Don't force-load the media box: continuous
+    // fit-width used to call Transform for every page, and LoadMediabox on a
+    // comic archive extracts that page.
+    SizeF page;
+    if (NormalizeRotation(rotation) != 0) {
+        page = PageMediabox(pageNo).Size();
+    }
     if (inverse) {
         page.dx *= zoom;
         page.dy *= zoom;

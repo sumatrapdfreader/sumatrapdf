@@ -329,6 +329,17 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->decryptionKey = engine->decryptionKey.s ? str::Dup(engine->decryptionKey.s) : nullptr;
 }
 
+// Display rotation of an already-known rectangle. Engine::Transform also
+// applies the engine's page transform and may load the page; use this when
+// we only have an estimate and must not poke the engine.
+static SizeF SizeAfterDisplayRotation(SizeF size, int rotation) {
+    rotation = NormalizeRotation(rotation);
+    if (rotation == 90 || rotation == 270) {
+        std::swap(size.dx, size.dy);
+    }
+    return size;
+}
+
 SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     ReportIf(!pageInfo);
@@ -342,6 +353,14 @@ SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
 
     RectF pageBox = PageMediaBoxForLayout(pageNo);
     RectF box = fitToContent ? pageInfo->contentBox : pageBox;
+    // EngineImages::Transform calls PageMediabox, which extracts (and may
+    // decode) that page. Continuous fit-width walks every page here; for
+    // un-measured comic/image pages we only have an estimate and must not
+    // load them. Visible pages are measured later in
+    // EnsureMediaBoxesForVisiblePages().
+    if (useLazyMediaBoxes && !IsMediaBoxKnown(pageInfo->mediaBox)) {
+        return SizeAfterDisplayRotation(box.Size(), rotation);
+    }
     return engine->Transform(box, pageNo, 1.0, rotation).Size();
 }
 
