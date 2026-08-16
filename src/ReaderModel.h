@@ -22,5 +22,6 @@ struct ReaderModel {
     float FileDPI() const;
     bool Layout(const DocumentLayoutParams& params, DocumentLayout* layout) const;
     Pixmap* RenderPage(int pageNo, float zoom, int rotation) const;
+    Pixmap* RenderPageForPrint(int pageNo, float zoom, int rotation) const;
     EngineBase* GetEngine() const;
 };

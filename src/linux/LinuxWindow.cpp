@@ -16,6 +16,7 @@
 
 #include "linux/LinuxTab.h"
 #include "linux/LinuxCommandPalette.h"
+#include "linux/LinuxPrint.h"
 #include "linux/LinuxPrefs.h"
 #include "linux/LinuxWindow.h"
 
@@ -428,6 +429,7 @@ static void DispatchPaletteCommand(LinuxWindow* window, int commandId) {
 static void ShowCommandPalette(LinuxWindow* window) {
     static const int commands[] = {
         CmdOpenFile,
+        CmdPrint,
         CmdCloseCurrentDocument,
         CmdReopenLastClosedFile,
         CmdNextTab,
@@ -512,6 +514,9 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
     switch (commandId) {
         case CmdOpenFile:
             ShowOpenDialog(window);
+            return;
+        case CmdPrint:
+            ShowLinuxPrintDialog(GTK_WINDOW(window->window), ActiveView(window));
             return;
         case CmdCloseCurrentDocument:
             CloseTab(window, ActiveTab(window));

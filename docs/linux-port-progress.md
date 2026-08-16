@@ -406,3 +406,25 @@ Verification:
   linked.
 - Debug and ASan WSLg smokes opened a copied PDF, atomically replaced the watched file, and quit cleanly with status 0.
   ASan used `detect_leaks=0` and reported no memory-safety errors; only the existing WSLg Mesa warnings appeared.
+
+### Native printing
+
+Completed 2026-08-16.
+
+- Added a GTK `GtkPrintOperation` implementation in `src/linux/LinuxPrint.cpp`, exposed through the File menu,
+  `Ctrl+P`, and the command palette.
+- Added narrow portable print accessors to `ReaderModel` and `DocumentView`. Page rasterization uses the engine's
+  `RenderTarget::Print` path while native dialog, settings, page setup, and Cairo presentation remain Linux-only.
+- Fit and center each selected page inside the printer's imageable area, preserve the reader's current rotation, and
+  cap rasterization at 300 DPI to bound per-page memory use.
+- Retain the native print settings and page setup between print jobs and release them during clean application shutdown.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,795 assertions and all Linux targets,
+  including the 46-source GTK application, linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,775 assertions and all Linux targets
+  linked.
+- The WSL environment has no configured physical printer, so verification covers native print API compilation and
+  linkage rather than submitting a real printer job.

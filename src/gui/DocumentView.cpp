@@ -751,6 +751,26 @@ int DocumentView::Rotation() const {
     return ViewData((DocumentView*)this)->rotation;
 }
 
+bool DocumentView::CanPrint() const {
+    auto* viewData = ViewData((DocumentView*)this);
+    return viewData->reader && viewData->reader->GetEngine()->AllowsPrinting();
+}
+
+RectF DocumentView::PageMediabox(int pageNo) const {
+    auto* viewData = ViewData((DocumentView*)this);
+    return viewData->reader ? viewData->reader->PageMediabox(pageNo) : RectF{};
+}
+
+float DocumentView::FileDPI() const {
+    auto* viewData = ViewData((DocumentView*)this);
+    return viewData->reader ? viewData->reader->FileDPI() : 96.0f;
+}
+
+Pixmap* DocumentView::RenderPageForPrint(int pageNo, float zoom) const {
+    auto* viewData = ViewData((DocumentView*)this);
+    return viewData->reader ? viewData->reader->RenderPageForPrint(pageNo, zoom, viewData->rotation) : nullptr;
+}
+
 bool DocumentView::HasTextSelection() const {
     auto* viewData = ViewData((DocumentView*)this);
     return viewData->textSelection && viewData->textSelection->result.len > 0;

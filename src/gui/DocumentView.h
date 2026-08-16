@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct PlatformCanvas;
+struct Pixmap;
 
 struct DocumentView {
     PlatformCanvas* canvas = nullptr;
@@ -30,6 +31,10 @@ struct DocumentView {
     float Zoom() const;
     void RotateBy(int degrees);
     int Rotation() const;
+    bool CanPrint() const;
+    RectF PageMediabox(int pageNo) const;
+    float FileDPI() const;
+    Pixmap* RenderPageForPrint(int pageNo, float zoom) const;
     bool HasTextSelection() const;
     void SelectAll();
     void CopySelection();

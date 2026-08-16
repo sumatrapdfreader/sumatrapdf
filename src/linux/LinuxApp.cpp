@@ -10,6 +10,7 @@
 #include <gtk/gtk.h>
 
 #include "linux/LinuxWindow.h"
+#include "linux/LinuxPrint.h"
 #include "linux/LinuxPrefs.h"
 #include "linux/LinuxApp.h"
 
@@ -69,6 +70,8 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
     int command = 0;
     if (str::Eq(Str(name), StrL("open"))) {
         command = CmdOpenFile;
+    } else if (str::Eq(Str(name), StrL("print"))) {
+        command = CmdPrint;
     } else if (str::Eq(Str(name), StrL("close-tab"))) {
         command = CmdCloseCurrentDocument;
     } else if (str::Eq(Str(name), StrL("reopen-tab"))) {
@@ -159,6 +162,7 @@ static GMenu* CreateMainMenu() {
     GMenu* menu = g_menu_new();
     GMenu* file = g_menu_new();
     g_menu_append(file, "Open...", "app.open");
+    g_menu_append(file, "Print...", "app.print");
     g_menu_append(file, "Close Tab", "app.close-tab");
     g_menu_append(file, "Reopen Closed Tab", "app.reopen-tab");
     g_menu_append(file, "Properties...", "app.properties");
@@ -222,6 +226,7 @@ int RunLinuxApp(int argc, char** argv) {
     const GActionEntry actions[] = {
         {"quit", OnQuit},
         {"open", OnWindowCommand},
+        {"print", OnWindowCommand},
         {"close-tab", OnWindowCommand},
         {"reopen-tab", OnWindowCommand},
         {"next-tab", OnWindowCommand},
@@ -250,6 +255,7 @@ int RunLinuxApp(int argc, char** argv) {
 
     const char* quitAccels[] = {"<Primary>q", nullptr};
     const char* openAccels[] = {"<Primary>o", nullptr};
+    const char* printAccels[] = {"<Primary>p", nullptr};
     const char* closeAccels[] = {"<Primary>w", nullptr};
     const char* reopenAccels[] = {"<Primary><Shift>t", nullptr};
     const char* fullscreenAccels[] = {"F11", nullptr};
@@ -266,6 +272,7 @@ int RunLinuxApp(int argc, char** argv) {
     const char* propertiesAccels[] = {"<Primary>d", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
     gtk_application_set_accels_for_action(app, "app.open", openAccels);
+    gtk_application_set_accels_for_action(app, "app.print", printAccels);
     gtk_application_set_accels_for_action(app, "app.close-tab", closeAccels);
     gtk_application_set_accels_for_action(app, "app.reopen-tab", reopenAccels);
     gtk_application_set_accels_for_action(app, "app.fullscreen", fullscreenAccels);
@@ -287,6 +294,7 @@ int RunLinuxApp(int argc, char** argv) {
     while (g_main_context_pending(nullptr)) {
         g_main_context_iteration(nullptr, FALSE);
     }
+    LinuxPrintShutdown();
     LinuxPrefsShutdown();
     return code;
 }

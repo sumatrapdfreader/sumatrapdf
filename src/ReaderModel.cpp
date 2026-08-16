@@ -110,6 +110,17 @@ Pixmap* ReaderModel::RenderPage(int pageNo, float zoom, int rotation) const {
     return engine->RenderPage(args);
 }
 
+Pixmap* ReaderModel::RenderPageForPrint(int pageNo, float zoom, int rotation) const {
+    if (!engine || pageNo < 1 || pageNo > engine->PageCount()) {
+        return nullptr;
+    }
+    if (zoom <= 0) {
+        zoom = 1.0f;
+    }
+    RenderPageArgs args(pageNo, zoom, rotation, nullptr, RenderTarget::Print);
+    return engine->RenderPage(args);
+}
+
 EngineBase* ReaderModel::GetEngine() const {
     return engine;
 }
