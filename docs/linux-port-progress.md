@@ -240,3 +240,26 @@ Verification:
 - Under WSLg, both debug and ASan applications ran Select All, Copy, and Quit through application actions with
   status 0. The ASan engine probe reproduced the same 4,284-byte, 74-rectangle selection and reported no errors;
   WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+### Find
+
+Completed 2026-08-16.
+
+- Integrated the existing portable `TextSearch` state machine into each document view and reused text-selection
+  geometry to highlight the current match.
+- Added forward and backward navigation with document-boundary wrapping, current-match page navigation, and stale
+  highlight clearing when a term has no matches.
+- Added a native GTK search bar with entry activation, Previous, Next, status, and Close controls, plus `Ctrl+F`,
+  `F3`, `Shift+F3`, and Escape handling through generated command identifiers.
+- Added a parameterized application search action for deterministic integration checks and
+  `test_engines <path> -find-text <term>` as a focused portable search probe.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,854 assertions and all Linux targets linked.
+- The debug search probe found 27 matches for `zlib` in `ext/a-zlib/zlib.3.pdf`.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,796 assertions, and the ASan search
+  probe found the same 27 matches.
+- Under WSLg, both debug and ASan applications searched for `zlib`, navigated to the next and previous matches, and
+  quit through application actions with status 0. ASan reported no errors; WSLg only emitted its existing non-fatal
+  Mesa renderer warnings.

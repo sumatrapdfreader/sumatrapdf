@@ -13,6 +13,8 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "TextSelection.h"
+#include "ProgressUpdateUI.h"
+#include "TextSearch.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
@@ -42,6 +44,7 @@ static void Usage() {
     printf("       test_engines <path> -bench-mediabox   time PageMediabox() for every page\n");
     printf("       test_engines <path> -list-links       list link targets and rectangles\n");
     printf("       test_engines <path> -select-all-text  exercise text selection and extraction\n");
+    printf("       test_engines <path> -find-text <term> search all pages for text\n");
 }
 
 static EngineBase* CreateEngineForPath(Str path) {
@@ -138,6 +141,26 @@ static bool SelectAllText(Str path) {
     str::Free(text);
     engine->Release();
     return ok;
+}
+
+static bool FindText(Str path, Str term) {
+    EngineBase* engine = CreateEngineForPath(path);
+    if (!engine) {
+        printf("failed to load: %.*s\n", path.len, path.s);
+        return false;
+    }
+
+    TextSearch search(engine);
+    search.SetDirection(TextSearch::Direction::Forward);
+    TextSel* result = search.FindFirst(1, term);
+    int matches = 0;
+    while (result) {
+        matches++;
+        result = search.FindNext();
+    }
+    printf("matches: %d\n", matches);
+    engine->Release();
+    return matches > 0;
 }
 
 // Times PageMediabox() for every page: that's what the UI needs before it can
@@ -372,6 +395,11 @@ static bool BenchReadN(Str dir) {
 }
 
 int main(int argc, char** argv) {
+    if (argc == 4 && str::Eq(argv[2], StrL("-find-text"))) {
+        bool ok = FindText(Str(argv[1]), Str(argv[3]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
     if (argc == 3 && str::Eq(argv[2], StrL("-bench-readn"))) {
         bool ok = BenchReadN(Str(argv[1]));
         DestroyTempArena();

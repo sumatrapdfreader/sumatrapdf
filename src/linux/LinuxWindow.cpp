@@ -21,6 +21,9 @@ struct LinuxWindow {
     GtkWidget* header = nullptr;
     GtkWidget* root = nullptr;
     GtkWidget* toolbar = nullptr;
+    GtkWidget* findBar = nullptr;
+    GtkWidget* findEntry = nullptr;
+    GtkWidget* findStatus = nullptr;
     GtkWidget* content = nullptr;
     GtkWidget* notebook = nullptr;
     GtkWidget* emptyStatus = nullptr;
@@ -131,6 +134,41 @@ static void OpenLinkedFile(LinuxWindow* window, Str linkPath) {
 static void CopyText(LinuxWindow* window, Str text) {
     GdkClipboard* clipboard = gtk_widget_get_clipboard(window->window);
     gdk_clipboard_set_text(clipboard, CStrTemp(text));
+}
+
+static bool RunFind(LinuxWindow* window, bool forward, bool restart) {
+    DocumentView* view = ActiveView(window);
+    const char* text = gtk_editable_get_text(GTK_EDITABLE(window->findEntry));
+    bool found = view && text && text[0] && view->FindText(Str(text), forward, restart);
+    gtk_label_set_text(GTK_LABEL(window->findStatus), found ? "Found" : "No matches");
+    return found;
+}
+
+static void ShowFindBar(LinuxWindow* window) {
+    gtk_widget_set_visible(window->findBar, TRUE);
+    gtk_widget_grab_focus(window->findEntry);
+    gtk_editable_select_region(GTK_EDITABLE(window->findEntry), 0, -1);
+}
+
+static void OnFindEntryActivate(GtkEntry*, gpointer data) {
+    RunFind((LinuxWindow*)data, true, false);
+}
+
+static void OnFindPrevious(GtkButton*, gpointer data) {
+    RunFind((LinuxWindow*)data, false, false);
+}
+
+static void OnFindNext(GtkButton*, gpointer data) {
+    RunFind((LinuxWindow*)data, true, false);
+}
+
+static void OnFindClose(GtkButton*, gpointer data) {
+    auto* window = (LinuxWindow*)data;
+    gtk_widget_set_visible(window->findBar, FALSE);
+    DocumentView* view = ActiveView(window);
+    if (view) {
+        view->Focus();
+    }
 }
 
 static void SetFullscreen(LinuxWindow* window, bool fullscreen) {
@@ -308,6 +346,15 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
         case CmdSelectAll:
             view->SelectAll();
             break;
+        case CmdFindFirst:
+            ShowFindBar(window);
+            break;
+        case CmdFindNext:
+            RunFind(window, true, false);
+            break;
+        case CmdFindPrev:
+            RunFind(window, false, false);
+            break;
         default:
             break;
     }
@@ -351,6 +398,9 @@ static gboolean OnWindowKey(GtkEventControllerKey*, guint keyval, guint, GdkModi
         command = CmdToggleKeyboardHelp;
     } else if (keyval == GDK_KEY_Escape && window->presentation) {
         command = CmdTogglePresentationMode;
+    } else if (keyval == GDK_KEY_Escape && gtk_widget_get_visible(window->findBar)) {
+        OnFindClose(nullptr, window);
+        return TRUE;
     } else if (keyval == GDK_KEY_Escape && window->fullscreen) {
         command = CmdToggleFullscreen;
     }
@@ -479,6 +529,28 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     gtk_box_append(GTK_BOX(result->toolbar), result->continuousButton);
     gtk_box_append(GTK_BOX(result->root), result->toolbar);
 
+    result->findBar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_widget_set_margin_start(result->findBar, 8);
+    gtk_widget_set_margin_end(result->findBar, 8);
+    gtk_widget_set_margin_bottom(result->findBar, 6);
+    result->findEntry = gtk_search_entry_new();
+    gtk_widget_set_hexpand(result->findEntry, TRUE);
+    g_signal_connect(result->findEntry, "activate", G_CALLBACK(OnFindEntryActivate), result);
+    GtkWidget* findPrevious = gtk_button_new_with_label("Previous");
+    GtkWidget* findNext = gtk_button_new_with_label("Next");
+    GtkWidget* findClose = gtk_button_new_with_label("Close");
+    result->findStatus = gtk_label_new("");
+    g_signal_connect(findPrevious, "clicked", G_CALLBACK(OnFindPrevious), result);
+    g_signal_connect(findNext, "clicked", G_CALLBACK(OnFindNext), result);
+    g_signal_connect(findClose, "clicked", G_CALLBACK(OnFindClose), result);
+    gtk_box_append(GTK_BOX(result->findBar), result->findEntry);
+    gtk_box_append(GTK_BOX(result->findBar), findPrevious);
+    gtk_box_append(GTK_BOX(result->findBar), findNext);
+    gtk_box_append(GTK_BOX(result->findBar), result->findStatus);
+    gtk_box_append(GTK_BOX(result->findBar), findClose);
+    gtk_widget_set_visible(result->findBar, FALSE);
+    gtk_box_append(GTK_BOX(result->root), result->findBar);
+
     result->content = gtk_stack_new();
     result->emptyStatus = gtk_label_new("Open a document to start reading.");
     gtk_widget_set_hexpand(result->emptyStatus, TRUE);
@@ -527,6 +599,15 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     gtk_notebook_set_current_page(GTK_NOTEBOOK(window->notebook), index);
     LinuxTabOpenFile(tab, file);
     UpdateControls(window);
+}
+
+void LinuxWindowFindText(LinuxWindow* window, Str text) {
+    if (!window || !text) {
+        return;
+    }
+    gtk_editable_set_text(GTK_EDITABLE(window->findEntry), CStrTemp(text));
+    ShowFindBar(window);
+    RunFind(window, true, true);
 }
 
 void LinuxWindowPresent(LinuxWindow* window) {

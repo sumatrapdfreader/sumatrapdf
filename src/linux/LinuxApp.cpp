@@ -84,8 +84,23 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdCopySelection;
     } else if (str::Eq(Str(name), StrL("select-all"))) {
         command = CmdSelectAll;
+    } else if (str::Eq(Str(name), StrL("find"))) {
+        command = CmdFindFirst;
+    } else if (str::Eq(Str(name), StrL("find-next"))) {
+        command = CmdFindNext;
+    } else if (str::Eq(Str(name), StrL("find-previous"))) {
+        command = CmdFindPrev;
     }
     LinuxWindowDispatchCommand(window, command);
+}
+
+static void OnSearchText(GSimpleAction*, GVariant* parameter, gpointer data) {
+    auto* app = GTK_APPLICATION(data);
+    LinuxWindow* window = GetState(app)->window;
+    const char* text = parameter ? g_variant_get_string(parameter, nullptr) : nullptr;
+    if (window && text) {
+        LinuxWindowFindText(window, Str(text));
+    }
 }
 
 static GMenu* CreateMainMenu() {
@@ -101,6 +116,7 @@ static GMenu* CreateMainMenu() {
     GMenu* edit = g_menu_new();
     g_menu_append(edit, "Copy", "app.copy");
     g_menu_append(edit, "Select All", "app.select-all");
+    g_menu_append(edit, "Find...", "app.find");
     g_menu_append_section(menu, nullptr, G_MENU_MODEL(edit));
     g_object_unref(edit);
 
@@ -138,6 +154,10 @@ int RunLinuxApp(int argc, char** argv) {
         {"keyboard-help", OnWindowCommand},
         {"copy", OnWindowCommand},
         {"select-all", OnWindowCommand},
+        {"find", OnWindowCommand},
+        {"find-next", OnWindowCommand},
+        {"find-previous", OnWindowCommand},
+        {"search", OnSearchText, "s"},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
 
@@ -150,6 +170,9 @@ int RunLinuxApp(int argc, char** argv) {
     const char* helpAccels[] = {"question", nullptr};
     const char* copyAccels[] = {"<Primary>c", nullptr};
     const char* selectAllAccels[] = {"<Primary>a", nullptr};
+    const char* findAccels[] = {"<Primary>f", nullptr};
+    const char* findNextAccels[] = {"F3", nullptr};
+    const char* findPreviousAccels[] = {"<Shift>F3", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
     gtk_application_set_accels_for_action(app, "app.open", openAccels);
     gtk_application_set_accels_for_action(app, "app.close-tab", closeAccels);
@@ -159,6 +182,9 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.keyboard-help", helpAccels);
     gtk_application_set_accels_for_action(app, "app.copy", copyAccels);
     gtk_application_set_accels_for_action(app, "app.select-all", selectAllAccels);
+    gtk_application_set_accels_for_action(app, "app.find", findAccels);
+    gtk_application_set_accels_for_action(app, "app.find-next", findNextAccels);
+    gtk_application_set_accels_for_action(app, "app.find-previous", findPreviousAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);

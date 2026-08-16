@@ -646,6 +646,7 @@ const TEST_ENGINES_SOURCES = [
   "src/base/GuessFileType.cpp",
   ...PORTABLE_ENGINE_SOURCES,
   "src/TextSelection.cpp",
+  "src/TextSearch.cpp",
   "src/tools/test_engines.cpp",
 ];
 
@@ -697,6 +698,7 @@ const GTK4_APP_SOURCES = [
   "src/PageRenderService.cpp",
   "src/ReaderModel.cpp",
   "src/TextSelection.cpp",
+  "src/TextSearch.cpp",
   "src/KeyboardHelp.cpp",
   "src/SumatraLog_posix.cpp",
   ...PORTABLE_ENGINE_SOURCES,

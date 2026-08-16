@@ -12,6 +12,8 @@
 #include "PageRenderService.h"
 #include "ReaderModel.h"
 #include "TextSelection.h"
+#include "ProgressUpdateUI.h"
+#include "TextSearch.h"
 #include "gui/Gfx.h"
 #include "gui/PlatformCanvas.h"
 #include "gui/DocumentView.h"
@@ -20,6 +22,7 @@ struct DocumentViewData {
     ReaderModel* reader = nullptr;
     PageRenderService* renderer = nullptr;
     TextSelection* textSelection = nullptr;
+    TextSearch* textSearch = nullptr;
     DocumentLayout layout;
     Size viewSize;
     Point viewOffset;
@@ -554,6 +557,7 @@ DocumentView::~DocumentView() {
     if (viewData) {
         delete viewData->renderer;
         delete viewData->textSelection;
+        delete viewData->textSearch;
         delete viewData->reader;
         delete viewData;
     }
@@ -574,12 +578,15 @@ bool DocumentView::Open(Str path) {
         return false;
     }
     auto* textSelection = new TextSelection(reader->GetEngine());
+    auto* textSearch = new TextSearch(reader->GetEngine());
     delete viewData->renderer;
     delete viewData->textSelection;
+    delete viewData->textSearch;
     delete viewData->reader;
     viewData->reader = reader;
     viewData->renderer = renderer;
     viewData->textSelection = textSelection;
+    viewData->textSearch = textSearch;
     viewData->viewOffset = {};
     viewData->startPage = 1;
     Relayout(this, canvas->ClientRect().Size());
@@ -722,4 +729,35 @@ void DocumentView::SelectAll() {
     viewData->textSelection->StartAt(1, 0);
     viewData->textSelection->SelectUpTo(viewData->reader->PageCount(), -1);
     Invalidate(this);
+}
+
+bool DocumentView::FindText(Str text, bool forward, bool restart) {
+    auto* viewData = ViewData(this);
+    if (!viewData->textSearch || !viewData->textSelection || len(text) == 0) {
+        return false;
+    }
+
+    TextSearch* search = viewData->textSearch;
+    bool newText = !str::Eq(search->lastText, text);
+    search->SetDirection(forward ? TextSearch::Direction::Forward : TextSearch::Direction::Backward);
+    TextSel* result = nullptr;
+    if (restart || newText || !search->findText) {
+        result = search->FindFirst(CurrentPageNo(), text);
+    } else {
+        result = search->FindNext();
+    }
+    if (!result) {
+        int wrapPage = forward ? search->RestrictFirst() : search->RestrictLast();
+        result = search->FindFirst(wrapPage, text);
+    }
+    if (!result) {
+        viewData->textSelection->Reset();
+        Invalidate(this);
+        return false;
+    }
+
+    viewData->textSelection->CopySelection(search);
+    GoToPage(search->GetSearchHitStartPageNo());
+    Invalidate(this);
+    return true;
 }

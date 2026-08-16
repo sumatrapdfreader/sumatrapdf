@@ -33,4 +33,5 @@ struct DocumentView {
     bool HasTextSelection() const;
     void SelectAll();
     void CopySelection();
+    bool FindText(Str text, bool forward, bool restart);
 };
