@@ -28,10 +28,6 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 static Kind kindTabs = "tabs";
 static Kind kindTabCtrl = "tabCtrl";
 
-// non-selected tabs narrower than this hide their close button so that
-// clicks drag/select instead of accidentally closing the tab
-constexpr int kMinTabWidthForClose = 64;
-
 using Gdiplus::Bitmap;
 using Gdiplus::CompositingQualityHighQuality;
 using Gdiplus::Font;
@@ -205,11 +201,10 @@ void TabCtrl::SetBounds(Rect r) {
     closeBtn->SetBounds(hit);
 }
 
+// like Chrome: only the selected tab shows (and hit-tests) its ✕, so a click
+// on a non-selected tab always selects it and can't accidentally close it
 bool TabCtrl::CloseVisible() {
-    if (!ti->canClose) {
-        return false;
-    }
-    return IsSelected() || (IsUnderMouse() && bounds.dx >= kMinTabWidthForClose);
+    return ti->canClose && IsSelected();
 }
 
 void TabCtrl::Paint(VirtPaintCtx& ctx) {
