@@ -9,6 +9,7 @@
 
 #include <gtk/gtk.h>
 
+#include "linux/LinuxDesktop.h"
 #include "linux/LinuxWindow.h"
 #include "linux/LinuxPrint.h"
 #include "linux/LinuxPrefs.h"
@@ -58,6 +59,14 @@ static void FreeState(gpointer data) {
 
 static void OnQuit(GSimpleAction*, GVariant*, gpointer data) {
     g_application_quit(G_APPLICATION(data));
+}
+
+static void OnMakeDefaultPdfReader(GSimpleAction*, GVariant*, gpointer data) {
+    GtkApplication* app = GTK_APPLICATION(data);
+    GtkWindow* window = gtk_application_get_active_window(app);
+    if (window) {
+        LinuxMakeDefaultPdfReader(window);
+    }
 }
 
 static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
@@ -171,6 +180,7 @@ static GMenu* CreateMainMenu() {
     g_menu_append(file, "Close Tab", "app.close-tab");
     g_menu_append(file, "Reopen Closed Tab", "app.reopen-tab");
     g_menu_append(file, "Properties...", "app.properties");
+    g_menu_append(file, "Make Default PDF Reader", "app.make-default-pdf-reader");
     GMenu* recent = g_menu_new();
     int recentCount = LinuxPrefsRecentCount();
     for (int i = 0; i < recentCount; i++) {
@@ -231,6 +241,7 @@ int RunLinuxApp(int argc, char** argv) {
     g_signal_connect(app, "open", G_CALLBACK(OnOpen), nullptr);
     const GActionEntry actions[] = {
         {"quit", OnQuit},
+        {"make-default-pdf-reader", OnMakeDefaultPdfReader},
         {"open", OnWindowCommand},
         {"print", OnWindowCommand},
         {"show-in-folder", OnWindowCommand},

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=SumatraPDF
+Comment=View PDF documents
+Exec=SumatraPDF %U
+Icon=org.sumatrapdf.SumatraPDF
+Terminal=false
+StartupNotify=true
+Categories=Office;Viewer;
+MimeType=application/pdf;

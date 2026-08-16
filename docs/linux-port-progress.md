@@ -451,3 +451,26 @@ Verification:
   linked.
 - An isolated WSLg smoke opened `ext/a-zlib/zlib.3.pdf`, invoked the Copy File Path application action, and quit
   cleanly with status 0. WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+### XDG default PDF reader
+
+Completed 2026-08-16.
+
+- Added a minimal `org.sumatrapdf.SumatraPDF.desktop` application entry with PDF MIME support under
+  `packaging/linux/`.
+- Added an explicit Make Default PDF Reader menu action. It locates the installed desktop entry through GIO, updates
+  the user's MIME association without a shell command, verifies the selected handler, and reports success or a useful
+  installation/error message in a native modal window.
+- Kept registration user-initiated; the application does not change associations or prompt during startup.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,550 assertions and all Linux targets linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,729 assertions and all Linux targets
+  linked.
+- An isolated WSLg smoke installed only the new desktop entry under a temporary `XDG_DATA_HOME`, invoked Make Default
+  PDF Reader, and confirmed with a fresh `gio mime application/pdf` query that
+  `org.sumatrapdf.SumatraPDF.desktop` was the selected handler. The application then quit cleanly.
+- `desktop-file-validate` is not installed in the WSL image; successful GIO discovery and registration provided the
+  functional desktop-entry validation for this step.

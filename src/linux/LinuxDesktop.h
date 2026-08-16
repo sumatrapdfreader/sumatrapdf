@@ -3,3 +3,4 @@
 
 void LinuxClipboardSetText(GtkWidget* widget, Str text);
 bool LinuxShowFileInFolder(Str path);
+void LinuxMakeDefaultPdfReader(GtkWindow* parent);

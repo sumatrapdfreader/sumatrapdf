@@ -830,7 +830,7 @@ async function buildGtk4LinuxApp(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const gtkCflags = pkgConfigFlags("--cflags", "gtk4");
+  const gtkCflags = [...pkgConfigFlags("--cflags", "gtk4"), ...pkgConfigFlags("--cflags", "gio-unix-2.0")];
   const gtkLibs = pkgConfigFlags("--libs", "gtk4");
   const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
   const units = GTK4_APP_SOURCES.map((src) => {
