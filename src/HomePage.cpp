@@ -1006,7 +1006,6 @@ static int HomePageIconSize() {
     return RoundUp(sz, 4);
 }
 
-constexpr int kOpenDocumentYShift = 7;
 constexpr int kThumbsMiddleMargin = 32;
 constexpr int kSearchEditDy = 28;
 constexpr int kHeaderSearchGapY = 12;
@@ -1523,14 +1522,15 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     int openDocSpacing = DpiScale(16);
     rcIconOpen.x = rcHdr.x + rcHdr.dx + openDocSpacing;
-    rcIconOpen.y = rcHdr.y + rcHdr.dy - rcIconOpen.dy - kOpenDocumentYShift + 3;
+    // every header item (view icons, title, folder icon, link) is centered on
+    // the header's vertical centerline
+    rcIconOpen.y = rcHdr.y + ((rcHdr.dy - rcIconOpen.dy) / 2);
     if (isRtl) {
         rcIconOpen.x = rcHdr.x - openDocSpacing - rcIconOpen.dx;
     }
     l.rcIconOpen = rcIconOpen;
 
-    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, rcHdr.y + rcHdr.dy - txtSize.dy - kOpenDocumentYShift, txtSize.dx,
-                   txtSize.dy);
+    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, rcHdr.y + ((rcHdr.dy - txtSize.dy) / 2), txtSize.dx, txtSize.dy);
     if (isRtl) {
         rcOpenDoc.x = rcIconOpen.x - rcOpenDoc.dx - 3;
     }
@@ -1789,11 +1789,16 @@ static Pixmap* GetFileStateIconPixmap(FileState* fs) {
 // white X on hover). It is a HomeCloseBtnCtrl in the chrome tree, shown on the
 // entry the mouse is on.
 
-static void DrawHomeViewButton(Gfx* gfx, Pixmap* icon, Rect r, bool selected) {
-    if (selected) {
-        Color bg = ThemeControlBackgroundColor();
+static void DrawHomeViewButton(Gfx* gfx, Pixmap* icon, Rect r, bool selected, bool hovered) {
+    if (selected || hovered) {
+        Color bg = selected ? ThemeControlBackgroundColor() : ThemeMainWindowBackgroundColor();
+        if (hovered) {
+            bg = AccentColor(bg, 20);
+        }
         gfx->FillRect(r, bg);
-        gfx->DrawRect(r, AccentColor(bg, 40));
+        if (selected) {
+            gfx->DrawRect(r, AccentColor(bg, 40));
+        }
     }
     if (icon) {
         gfx->DrawPixmap(icon, {r.x, r.y, icon->width, icon->height});
@@ -1995,7 +2000,7 @@ HomeViewIconCtrl::HomeViewIconCtrl() {
 
 void HomeViewIconCtrl::Paint(VirtPaintCtx& ctx) {
     bool selected = (listView == HomePageIsListView());
-    DrawHomeViewButton(ctx.gfx, pixmap, ctx.bounds, selected);
+    DrawHomeViewButton(ctx.gfx, pixmap, ctx.bounds, selected, HasFlag(vwfHovered));
 }
 
 HomeOpenDocCtrl::HomeOpenDocCtrl() {
