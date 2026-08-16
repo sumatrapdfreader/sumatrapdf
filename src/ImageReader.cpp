@@ -102,16 +102,41 @@ static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix) {
     // Zero-copy: borrow the Pixmap's buffer in an fz_pixmap and convert the decoded image
     // straight into it. fz_device_bgr lays the samples out as B,G,R,A, matching BGRA8.
     fz_pixmap* dest = nullptr;
+    fz_pixmap* bgr = nullptr;
     fz_var(px);
     fz_var(dest);
+    fz_var(bgr);
 
     fz_try(ctx) {
         fz_colorspace* csdest = fz_device_bgr(ctx);
-        dest = fz_new_pixmap_with_data(ctx, csdest, w, h, nullptr, 1, px->stride, px->data);
-        fz_convert_pixmap_samples(ctx, pix, dest, nullptr, nullptr, fz_default_color_params, 0);
+        if (pix->alpha) {
+            dest = fz_new_pixmap_with_data(ctx, csdest, w, h, nullptr, 1, px->stride, px->data);
+            fz_convert_pixmap_samples(ctx, pix, dest, nullptr, nullptr, fz_default_color_params, 0);
+        } else {
+            // mupdf's ICC pixmap transform needs the alpha channels to match; converting a
+            // decoded JPEG (no alpha) straight into BGRA made lcms reject the transform
+            // ("Mismatched alpha channels") and every image with an embedded ICC profile
+            // fell back to the non-color-managed fast conversion, with a warning per page.
+            // Convert to BGR first, then expand to BGRA with an opaque alpha
+            bgr = fz_new_pixmap(ctx, csdest, w, h, nullptr, 0);
+            fz_convert_pixmap_samples(ctx, pix, bgr, nullptr, nullptr, fz_default_color_params, 0);
+            for (int y = 0; y < h; y++) {
+                const u8* s = bgr->samples + (size_t)y * (size_t)bgr->stride;
+                u8* d = px->data + (size_t)y * (size_t)px->stride;
+                for (int x = 0; x < w; x++) {
+                    d[0] = s[0];
+                    d[1] = s[1];
+                    d[2] = s[2];
+                    d[3] = 0xff;
+                    s += 3;
+                    d += 4;
+                }
+            }
+        }
     }
     fz_always(ctx) {
         fz_drop_pixmap(ctx, dest);
+        fz_drop_pixmap(ctx, bgr);
         fz_drop_pixmap(ctx, pix);
     }
     fz_catch(ctx) {
