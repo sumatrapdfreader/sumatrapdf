@@ -509,6 +509,7 @@ const TEST_UTIL_SOURCES = [
   "src/DocProperties.cpp",
   "src/Flags.cpp",
   "src/FilterUtil.cpp",
+  "src/PageRenderPolicy.cpp",
   "src/RefHoverDetect.cpp",
   "src/RefHoverTextDetect.cpp",
   "src/gui/CommandPaletteModel.cpp",
