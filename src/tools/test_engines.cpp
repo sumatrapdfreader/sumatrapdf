@@ -9,6 +9,7 @@
 #include <shlwapi.h>
 #endif
 
+#include "DocProperties.h"
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -46,6 +47,7 @@ static void Usage() {
     printf("       test_engines <path> -select-all-text  exercise text selection and extraction\n");
     printf("       test_engines <path> -find-text <term> search all pages for text\n");
     printf("       test_engines <path> -list-toc        list table-of-contents entries\n");
+    printf("       test_engines <path> -list-properties list document properties\n");
 }
 
 static EngineBase* CreateEngineForPath(Str path) {
@@ -185,6 +187,23 @@ static bool ListToc(Str path) {
     printf("toc entries: %d\n", count);
     engine->Release();
     return count > 0;
+}
+
+static bool ListProperties(Str path) {
+    EngineBase* engine = CreateEngineForPath(path);
+    if (!engine) {
+        printf("failed to load: %.*s\n", path.len, path.s);
+        return false;
+    }
+    Props props;
+    engine->GetProperties(props);
+    for (const PropValue& value : props) {
+        TempStr name = PropNameTemp(value.prop);
+        printf("%.*s: %.*s\n", name.len, name.s, value.val.len, value.val.s);
+    }
+    printf("properties: %d\n", len(props));
+    engine->Release();
+    return len(props) > 0;
 }
 
 // Times PageMediabox() for every page: that's what the UI needs before it can
@@ -426,6 +445,11 @@ int main(int argc, char** argv) {
     }
     if (argc == 3 && str::Eq(argv[2], StrL("-list-toc"))) {
         bool ok = ListToc(Str(argv[1]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
+    if (argc == 3 && str::Eq(argv[2], StrL("-list-properties"))) {
+        bool ok = ListProperties(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }

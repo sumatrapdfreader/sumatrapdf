@@ -92,6 +92,8 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdFindPrev;
     } else if (str::Eq(Str(name), StrL("bookmarks"))) {
         command = CmdToggleBookmarks;
+    } else if (str::Eq(Str(name), StrL("properties"))) {
+        command = CmdProperties;
     }
     LinuxWindowDispatchCommand(window, command);
 }
@@ -119,6 +121,7 @@ static GMenu* CreateMainMenu() {
     g_menu_append(file, "Open...", "app.open");
     g_menu_append(file, "Close Tab", "app.close-tab");
     g_menu_append(file, "Reopen Closed Tab", "app.reopen-tab");
+    g_menu_append(file, "Properties...", "app.properties");
     g_menu_append(file, "Quit", "app.quit");
     g_menu_append_section(menu, nullptr, G_MENU_MODEL(file));
     g_object_unref(file);
@@ -170,6 +173,7 @@ int RunLinuxApp(int argc, char** argv) {
         {"find-previous", OnWindowCommand},
         {"search", OnSearchText, "s"},
         {"bookmarks", OnWindowCommand},
+        {"properties", OnWindowCommand},
         {"toc-item", OnTocItem, "i"},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
@@ -187,6 +191,7 @@ int RunLinuxApp(int argc, char** argv) {
     const char* findNextAccels[] = {"F3", nullptr};
     const char* findPreviousAccels[] = {"<Shift>F3", nullptr};
     const char* bookmarksAccels[] = {"F12", nullptr};
+    const char* propertiesAccels[] = {"<Primary>d", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
     gtk_application_set_accels_for_action(app, "app.open", openAccels);
     gtk_application_set_accels_for_action(app, "app.close-tab", closeAccels);
@@ -200,6 +205,7 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.find-next", findNextAccels);
     gtk_application_set_accels_for_action(app, "app.find-previous", findPreviousAccels);
     gtk_application_set_accels_for_action(app, "app.bookmarks", bookmarksAccels);
+    gtk_application_set_accels_for_action(app, "app.properties", propertiesAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);

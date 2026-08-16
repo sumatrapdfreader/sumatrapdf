@@ -38,4 +38,7 @@ struct DocumentView {
     Str TocItemTitle(int index) const;
     int TocItemDepth(int index) const;
     bool GoToTocItem(int index);
+    int PropertyCount();
+    Str PropertyName(int index);
+    Str PropertyValue(int index);
 };

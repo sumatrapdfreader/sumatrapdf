@@ -181,6 +181,52 @@ static void ToggleToc(LinuxWindow* window) {
     UpdateToc(window);
 }
 
+static void ShowProperties(LinuxWindow* window) {
+    DocumentView* view = ActiveView(window);
+    if (!view) {
+        return;
+    }
+
+    GtkWidget* dialog = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(dialog), "Document Properties");
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(window->window));
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 620, 480);
+
+    GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    gtk_widget_set_margin_start(root, 16);
+    gtk_widget_set_margin_end(root, 16);
+    gtk_widget_set_margin_top(root, 16);
+    gtk_widget_set_margin_bottom(root, 16);
+    GtkWidget* grid = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 16);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 8);
+    int count = view->PropertyCount();
+    for (int i = 0; i < count; i++) {
+        TempStr propertyName = fmt("%s:", view->PropertyName(i));
+        GtkWidget* name = gtk_label_new(CStrTemp(propertyName));
+        gtk_label_set_xalign(GTK_LABEL(name), 1);
+        gtk_widget_set_valign(name, GTK_ALIGN_START);
+        GtkWidget* value = gtk_label_new(CStrTemp(view->PropertyValue(i)));
+        gtk_label_set_xalign(GTK_LABEL(value), 0);
+        gtk_label_set_wrap(GTK_LABEL(value), TRUE);
+        gtk_label_set_selectable(GTK_LABEL(value), TRUE);
+        gtk_widget_set_hexpand(value, TRUE);
+        gtk_grid_attach(GTK_GRID(grid), name, 0, i, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), value, 1, i, 1, 1);
+    }
+    GtkWidget* scroll = gtk_scrolled_window_new();
+    gtk_widget_set_vexpand(scroll, TRUE);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), grid);
+    gtk_box_append(GTK_BOX(root), scroll);
+    GtkWidget* close = gtk_button_new_with_label("Close");
+    gtk_widget_set_halign(close, GTK_ALIGN_END);
+    g_signal_connect_swapped(close, "clicked", G_CALLBACK(gtk_window_destroy), dialog);
+    gtk_box_append(GTK_BOX(root), close);
+    gtk_window_set_child(GTK_WINDOW(dialog), root);
+    gtk_window_present(GTK_WINDOW(dialog));
+}
+
 static bool RunFind(LinuxWindow* window, bool forward, bool restart) {
     DocumentView* view = ActiveView(window);
     const char* text = gtk_editable_get_text(GTK_EDITABLE(window->findEntry));
@@ -361,6 +407,9 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents:
             ToggleToc(window);
+            return;
+        case CmdProperties:
+            ShowProperties(window);
             return;
     }
 

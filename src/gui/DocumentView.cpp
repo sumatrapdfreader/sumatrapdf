@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
+#include "DocProperties.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "PageRenderPolicy.h"
@@ -26,6 +27,8 @@ struct DocumentViewData {
     TocTree* toc = nullptr;
     Vec<TocItem*> tocItems;
     Vec<int> tocDepths;
+    Props properties;
+    bool propertiesLoaded = false;
     DocumentLayout layout;
     Size viewSize;
     Point viewOffset;
@@ -166,6 +169,18 @@ static void AppendTocItems(DocumentViewData* data, TocItem* item, int depth) {
         data->tocDepths.Append(depth);
         AppendTocItems(data, item->child, depth + 1);
         item = item->next;
+    }
+}
+
+static void LoadProperties(DocumentViewData* data) {
+    if (data->propertiesLoaded || !data->reader) {
+        return;
+    }
+    data->propertiesLoaded = true;
+    Props engineProperties;
+    data->reader->GetEngine()->GetProperties(engineProperties);
+    for (const PropValue& value : engineProperties) {
+        AddPropOwned(data->properties, value.prop, value.val);
     }
 }
 
@@ -567,6 +582,7 @@ DocumentView* DocumentView::Create() {
 DocumentView::~DocumentView() {
     auto* viewData = ViewData(this);
     if (viewData) {
+        FreeProps(viewData->properties);
         delete viewData->renderer;
         delete viewData->textSelection;
         delete viewData->textSearch;
@@ -606,6 +622,8 @@ bool DocumentView::Open(Str path) {
     if (toc && toc->root) {
         AppendTocItems(viewData, toc->root->child, 0);
     }
+    FreeProps(viewData->properties);
+    viewData->propertiesLoaded = false;
     viewData->viewOffset = {};
     viewData->startPage = 1;
     Relayout(this, canvas->ClientRect().Size());
@@ -818,4 +836,28 @@ bool DocumentView::GoToTocItem(int index) {
         return true;
     }
     return false;
+}
+
+int DocumentView::PropertyCount() {
+    auto* viewData = ViewData(this);
+    LoadProperties(viewData);
+    return len(viewData->properties);
+}
+
+Str DocumentView::PropertyName(int index) {
+    auto* viewData = ViewData(this);
+    LoadProperties(viewData);
+    if (index < 0 || index >= len(viewData->properties)) {
+        return {};
+    }
+    return PropNameTemp(viewData->properties[index].prop);
+}
+
+Str DocumentView::PropertyValue(int index) {
+    auto* viewData = ViewData(this);
+    LoadProperties(viewData);
+    if (index < 0 || index >= len(viewData->properties)) {
+        return {};
+    }
+    return viewData->properties[index].val;
 }

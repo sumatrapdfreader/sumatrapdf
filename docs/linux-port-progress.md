@@ -287,3 +287,23 @@ Verification:
   and quit through application actions. There were no sanitizer memory-access errors; LeakSanitizer reports the
   known GTK/Pango/fontconfig process-lifetime caches after the outline creates many labels, and WSLg emitted its
   existing non-fatal Mesa renderer warnings.
+
+### Document properties
+
+Completed 2026-08-16.
+
+- Added lazy property loading to `DocumentView` through the existing `EngineBase::GetProperties` and `DocProp`
+  APIs. Values are copied into view-owned storage on first use, so temporary engine strings remain valid without
+  adding metadata work to document startup.
+- Added a native modal GTK properties window with a scrollable name/value grid, selectable wrapped values, a menu
+  action, and the existing `Ctrl+D` shortcut.
+- Added `test_engines <path> -list-properties` as a focused portable metadata probe.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,796 assertions and all Linux targets linked.
+- The debug and ASan property probes returned the same six properties for `ext/a-zlib/zlib.3.pdf`.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,703 assertions.
+- Under WSLg, both the debug and ASan applications opened the properties window and quit through application
+  actions with status 0. The ASan UI smoke used `detect_leaks=0` for the previously documented GTK/Pango process
+  caches and reported no memory-safety errors; WSLg only emitted its existing non-fatal Mesa renderer warnings.
