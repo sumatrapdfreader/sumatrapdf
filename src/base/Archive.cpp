@@ -2,6 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#if !OS_WIN
+#include <locale.h>
+#endif
+
 #include "base/File.h"
 #include "base/GuessFileType.h"
 
@@ -246,6 +251,13 @@ static int ArchiveReadOpenFilename(struct archive* a, Str path) {
 #endif
 
 static struct archive* NewLibarchiveReader(Str password) {
+#if !OS_WIN
+    // libarchive converts archive member names through the C locale. Programs
+    // start in the ASCII-only "C" locale even when the environment requests
+    // UTF-8, which makes valid Unicode ZIP path fields come back as null.
+    static const char* locale = setlocale(LC_CTYPE, "");
+    (void)locale;
+#endif
     struct archive* a = archive_read_new();
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
@@ -274,10 +286,7 @@ bool Archive::OpenFromData(Str data) {
         return false;
     }
 
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
+    struct archive* a = NewLibarchiveReader(password);
     int r = archive_read_open_memory(a, data.s, (size_t)data.len);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);
@@ -296,10 +305,7 @@ bool Archive::OpenFromData(Str data) {
 }
 
 bool Archive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
+    struct archive* a = NewLibarchiveReader(password);
     int r = ArchiveReadOpenFilename(a, path);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);

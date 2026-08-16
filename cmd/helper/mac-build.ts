@@ -909,6 +909,7 @@ async function buildMacApp(
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "liba-zlib.a"),
+    "-liconv",
     "-framework",
     "Cocoa",
   ];
@@ -1068,6 +1069,7 @@ async function buildTestEngines(
     join(outDir, "lib", "libdjvudec.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "liba-zlib.a"),
+    "-liconv",
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {
