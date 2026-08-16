@@ -1426,10 +1426,21 @@ void HtmlWindow::OnLButtonDown() const {
     }
 }
 
+// BrowserDocView keeps the IE control alive across tab switches. Its parent is
+// the shared document canvas, so the IE subclass must not keep intercepting
+// paint, scroll, and input messages while another tab is active.
 void HtmlWindow::SetVisible(bool visible) {
-    HwndSetVisible(hwndParent, visible);
+    if (visible && !subclassId) {
+        SubclassHwnd();
+    }
     if (webBrowser) {
         webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
+    }
+    if (oleObjectHwnd) {
+        HwndSetVisible(oleObjectHwnd, visible);
+    }
+    if (!visible) {
+        UnsubclassHwnd();
     }
 }
 

@@ -425,8 +425,8 @@ void BrowserDocView::SetVisible(bool show) {
             }
             wv->SetControllerVisible(true);
             wv->UpdateWebviewSize();
-        } else if (backend == Backend::IE && ie && ie->oleObjectHwnd) {
-            HwndSetVisible(ie->oleObjectHwnd, true);
+        } else if (backend == Backend::IE && ie) {
+            ie->SetVisible(true);
         }
         return;
     }
@@ -435,8 +435,8 @@ void BrowserDocView::SetVisible(bool show) {
         if (wv->hwnd) {
             ::ShowWindow(wv->hwnd, SW_HIDE);
         }
-    } else if (backend == Backend::IE && ie && ie->oleObjectHwnd) {
-        HwndSetVisible(ie->oleObjectHwnd, false);
+    } else if (backend == Backend::IE && ie) {
+        ie->SetVisible(false);
     }
     UnsubclassParent();
 }
@@ -554,9 +554,7 @@ BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, 
     if (view->ie) {
         view->backend = Backend::IE;
         // hide IE until the tab is shown
-        if (view->ie->oleObjectHwnd) {
-            HwndSetVisible(view->ie->oleObjectHwnd, false);
-        }
+        view->ie->SetVisible(false);
         return view;
     }
 
