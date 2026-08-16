@@ -5,4 +5,5 @@ struct LinuxWindow;
 
 LinuxWindow* LinuxWindowCreate(GtkApplication* app);
 void LinuxWindowOpenFile(LinuxWindow* window, GFile* file);
+void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId);
 void LinuxWindowPresent(LinuxWindow* window);

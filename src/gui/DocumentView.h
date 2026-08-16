@@ -6,6 +6,7 @@ struct PlatformCanvas;
 struct DocumentView {
     PlatformCanvas* canvas = nullptr;
     void* data = nullptr;
+    Func0 onStateChanged;
 
     DocumentView() = default;
     DocumentView(const DocumentView&) = delete;

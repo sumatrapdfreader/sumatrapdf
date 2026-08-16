@@ -68,15 +68,23 @@ static void Invalidate(DocumentView* view) {
     }
 }
 
+static void NotifyStateChanged(DocumentView* view) {
+    view->onStateChanged.Call();
+}
+
 static void OnPageReady(DocumentView* view) {
     Invalidate(view);
 }
 
 static void SetViewOffset(DocumentView* view, Point offset) {
     auto* data = ViewData(view);
+    int oldPageNo = data->layout.CurrentPageNo();
     data->viewOffset = offset;
     Relayout(view, data->viewSize);
     Invalidate(view);
+    if (oldPageNo != data->layout.CurrentPageNo()) {
+        NotifyStateChanged(view);
+    }
 }
 
 static int PageAtPoint(DocumentViewData* data, Point pt) {
@@ -329,6 +337,7 @@ bool DocumentView::Open(Str path) {
     viewData->startPage = 1;
     Relayout(this, canvas->ClientRect().Size());
     Invalidate(this);
+    NotifyStateChanged(this);
     return true;
 }
 
@@ -370,6 +379,7 @@ void DocumentView::GoToPage(int pageNo) {
     }
     Relayout(this, viewData->viewSize);
     Invalidate(this);
+    NotifyStateChanged(this);
 }
 
 void DocumentView::SetContinuous(bool continuous) {
@@ -383,6 +393,7 @@ void DocumentView::SetContinuous(bool continuous) {
     viewData->renderer->NewGeneration();
     Relayout(this, viewData->viewSize);
     Invalidate(this);
+    NotifyStateChanged(this);
 }
 
 bool DocumentView::IsContinuous() const {
@@ -415,6 +426,7 @@ void DocumentView::SetZoom(float zoomVirtual, Point* anchor) {
         Relayout(this, viewData->viewSize);
     }
     Invalidate(this);
+    NotifyStateChanged(this);
 }
 
 float DocumentView::Zoom() const {
@@ -430,6 +442,7 @@ void DocumentView::RotateBy(int degrees) {
     viewData->renderer->NewGeneration();
     Relayout(this, viewData->viewSize);
     Invalidate(this);
+    NotifyStateChanged(this);
 }
 
 int DocumentView::Rotation() const {

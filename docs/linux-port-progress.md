@@ -11,7 +11,7 @@ after its relevant Windows, Linux, and portable checks pass.
 | 2     | Complete    | Shared portable reader model                 |
 | 3     | Complete    | Embeddable canvas and document viewer        |
 | 4     | Complete    | Portable asynchronous rendering              |
-| 5     | Not started | Application shell, tabs, and commands        |
+| 5     | In progress | Application shell, tabs, and commands        |
 | 6     | Not started | Reader features                              |
 | 7     | Not started | Linux desktop services                       |
 | 8     | Not started | Packaging and deferred features              |
@@ -105,3 +105,27 @@ Verification:
 - Both debug and ASan applications opened `ext/a-zlib/zlib.3.pdf`, rendered for several seconds, accepted
   `gapplication action org.sumatrapdf.SumatraPDF quit`, joined the render worker, and exited with status 0. ASan
   reported no error; WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+## Stage 5: Application shell and commands
+
+In progress.
+
+### Native reader controls
+
+Completed 2026-08-16.
+
+- Added a GTK header and reader toolbar with file open, previous/next page, page status, fit-page, fit-width,
+  actual-size, rotation, continuous-layout, and fullscreen controls.
+- Routed toolbar and window shortcuts through the generated `Cmd*` identifiers instead of adding a separate Linux
+  command vocabulary.
+- Added a GTK native file chooser and concise document/error window titles.
+- Added a portable `DocumentView::onStateChanged` callback so native shells can keep page and mode controls current
+  after keyboard, mouse, or toolbar navigation without introducing GTK dependencies in `src/gui`.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with no warnings.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,679 assertions and all Linux targets linked.
+- The GTK application opened and rendered `ext/a-zlib/zlib.3.pdf` under WSLg with the native shell visible, accepted
+  the `app.quit` action after five seconds, and exited with status 0. WSLg only emitted its existing non-fatal Mesa
+  renderer warnings.
