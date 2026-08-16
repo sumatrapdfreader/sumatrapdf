@@ -426,5 +426,7 @@ Verification:
   including the 46-source GTK application, linked.
 - `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,775 assertions and all Linux targets
   linked.
+- `bun cmd/build.ts -mac-remote -branch tmp/mac-port-linux-print-20260816 -debug`: passed; macOS `test_util` passed
+  102,793 assertions, `test_engines` linked, and `SumatraPDF.app` linked with the shared reader change.
 - The WSL environment has no configured physical printer, so verification covers native print API compilation and
   linkage rather than submitting a real printer job.
