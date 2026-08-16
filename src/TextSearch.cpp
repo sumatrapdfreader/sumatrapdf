@@ -187,7 +187,7 @@ bool TextSearch::PageAllowed(int pageNo) const {
 
 int TextSearch::RestrictFirst() const {
     if (len(pageAllowed) == 0) {
-        return nPages > 0 ? 1 : 1;
+        return 1;
     }
     int n = std::min(len(pageAllowed), nPages);
     for (int i = 0; i < n; i++) {

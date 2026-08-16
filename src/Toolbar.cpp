@@ -332,7 +332,6 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
     switch (cmdId) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
-            return !IsBrowserDocController(win->ctrl);
         case CmdRotateLeft:
         case CmdRotateRight:
             return !IsBrowserDocController(win->ctrl);

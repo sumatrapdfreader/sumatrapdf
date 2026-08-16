@@ -1317,9 +1317,7 @@ static void OnSave(ImageEditWindow* ew) {
                          !gImageFormats[fmtIdx].isPdf;
 
     TempStr dest;
-    if (writeOriginal) {
-        dest = str::DupTemp(rawDest);
-    } else if (str::EqI(destExt, fmtExt)) {
+    if (writeOriginal || str::EqI(destExt, fmtExt)) {
         dest = str::DupTemp(rawDest);
     } else {
         dest = PathWithExtTemp(rawDest, fmtExt);
