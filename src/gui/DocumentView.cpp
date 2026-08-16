@@ -35,6 +35,7 @@ struct DocumentViewData {
     float zoomVirtual = kZoomFitWidth;
     DisplayMode displayMode = DisplayMode::Continuous;
     int startPage = 1;
+    int pendingPageNo = 0;
     int rotation = 0;
     bool isDragging = false;
     bool isSelectingText = false;
@@ -304,6 +305,11 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
         Relayout(view, size);
         if (data->renderer && data->zoomVirtual < 0 && oldZoomReal != data->layout.zoomReal) {
             data->renderer->NewGeneration();
+        }
+        if (data->pendingPageNo > 0) {
+            int pageNo = data->pendingPageNo;
+            data->pendingPageNo = 0;
+            view->GoToPage(pageNo);
         }
     }
 
@@ -626,6 +632,7 @@ bool DocumentView::Open(Str path) {
     viewData->propertiesLoaded = false;
     viewData->viewOffset = {};
     viewData->startPage = 1;
+    viewData->pendingPageNo = 0;
     Relayout(this, canvas->ClientRect().Size());
     Invalidate(this);
     NotifyStateChanged(this);
@@ -659,6 +666,10 @@ void DocumentView::GoToPage(int pageNo) {
     }
     pageNo = limitValue(pageNo, 1, viewData->reader->PageCount());
     viewData->startPage = pageNo;
+    if (viewData->viewSize.dx <= 0 || viewData->viewSize.dy <= 0) {
+        viewData->pendingPageNo = pageNo;
+        return;
+    }
     if (::IsContinuous(viewData->displayMode)) {
         DocumentLayoutPage* page = viewData->layout.GetPage(pageNo);
         if (page) {

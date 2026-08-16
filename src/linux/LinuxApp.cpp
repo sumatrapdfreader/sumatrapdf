@@ -2,12 +2,14 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
 
 #include "Commands.h"
 
 #include <gtk/gtk.h>
 
 #include "linux/LinuxWindow.h"
+#include "linux/LinuxPrefs.h"
 #include "linux/LinuxApp.h"
 
 struct LinuxAppState {
@@ -107,11 +109,32 @@ static void OnSearchText(GSimpleAction*, GVariant* parameter, gpointer data) {
     }
 }
 
+static void OnOpenPath(GSimpleAction*, GVariant* parameter, gpointer data) {
+    auto* app = GTK_APPLICATION(data);
+    const char* path = parameter ? g_variant_get_string(parameter, nullptr) : nullptr;
+    if (!path) {
+        return;
+    }
+    GFile* file = g_file_new_for_path(path);
+    LinuxWindow* window = EnsureWindow(app);
+    LinuxWindowOpenFile(window, file);
+    g_object_unref(file);
+    LinuxWindowPresent(window);
+}
+
 static void OnTocItem(GSimpleAction*, GVariant* parameter, gpointer data) {
     auto* app = GTK_APPLICATION(data);
     LinuxWindow* window = GetState(app)->window;
     if (window && parameter) {
         LinuxWindowGoToTocItem(window, g_variant_get_int32(parameter));
+    }
+}
+
+static void OnGoToPage(GSimpleAction*, GVariant* parameter, gpointer data) {
+    auto* app = GTK_APPLICATION(data);
+    LinuxWindow* window = GetState(app)->window;
+    if (window && parameter) {
+        LinuxWindowGoToPage(window, g_variant_get_int32(parameter));
     }
 }
 
@@ -122,6 +145,19 @@ static GMenu* CreateMainMenu() {
     g_menu_append(file, "Close Tab", "app.close-tab");
     g_menu_append(file, "Reopen Closed Tab", "app.reopen-tab");
     g_menu_append(file, "Properties...", "app.properties");
+    GMenu* recent = g_menu_new();
+    int recentCount = LinuxPrefsRecentCount();
+    for (int i = 0; i < recentCount; i++) {
+        Str filePath = LinuxPrefsRecentPath(i);
+        GMenuItem* item = g_menu_item_new(CStrTemp(path::GetBaseNameTemp(filePath)), nullptr);
+        g_menu_item_set_action_and_target(item, "app.open-path", "s", CStrTemp(filePath));
+        g_menu_append_item(recent, item);
+        g_object_unref(item);
+    }
+    if (recentCount > 0) {
+        g_menu_append_submenu(file, "Recent Files", G_MENU_MODEL(recent));
+    }
+    g_object_unref(recent);
     g_menu_append(file, "Quit", "app.quit");
     g_menu_append_section(menu, nullptr, G_MENU_MODEL(file));
     g_object_unref(file);
@@ -150,6 +186,7 @@ static void OnStartup(GtkApplication* app, gpointer) {
 }
 
 int RunLinuxApp(int argc, char** argv) {
+    LinuxPrefsInit();
     GtkApplication* app = gtk_application_new("org.sumatrapdf.SumatraPDF", G_APPLICATION_HANDLES_OPEN);
     auto* state = new LinuxAppState();
     g_object_set_data_full(G_OBJECT(app), "sumatra-linux-state", state, FreeState);
@@ -172,9 +209,11 @@ int RunLinuxApp(int argc, char** argv) {
         {"find-next", OnWindowCommand},
         {"find-previous", OnWindowCommand},
         {"search", OnSearchText, "s"},
+        {"open-path", OnOpenPath, "s"},
         {"bookmarks", OnWindowCommand},
         {"properties", OnWindowCommand},
         {"toc-item", OnTocItem, "i"},
+        {"go-to-page", OnGoToPage, "i"},
     };
     g_action_map_add_action_entries(G_ACTION_MAP(app), actions, dimofi(actions), app);
 
@@ -208,6 +247,8 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.properties", propertiesAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
+    LinuxWindowSaveState(state->window);
     g_object_unref(app);
+    LinuxPrefsShutdown();
     return code;
 }

@@ -307,3 +307,25 @@ Verification:
 - Under WSLg, both the debug and ASan applications opened the properties window and quit through application
   actions with status 0. The ASan UI smoke used `detect_leaks=0` for the previously documented GTK/Pango process
   caches and reported no memory-safety errors; WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+### Recent files and per-document state
+
+Completed 2026-08-16.
+
+- Added a Linux preferences bridge that uses the existing `GlobalPrefs` / `FileState` parser and serializer, stored
+  at `$XDG_CONFIG_HOME/sumatrapdf/SumatraPDF-settings.txt` or the equivalent `$HOME/.config` path.
+- Added a native Recent Files submenu backed by the ten most recent non-missing document states.
+- Persisted and restored each document's page, continuous/single-page layout, zoom, and rotation, including every
+  live tab during orderly shutdown and each tab when it is closed.
+- Deferred an initial restored page jump until GTK has allocated the canvas, avoiding a zero-sized first layout
+  that could otherwise reset the document to page 1.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,736 assertions and all Linux targets linked.
+- An isolated two-run WSLg smoke opened `ext/a-zlib/zlib.3.pdf`, navigated to page 2, quit, and reopened it from the
+  same XDG configuration. The second run retained page 2 without another navigation command.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,736 assertions and all Linux targets
+  linked.
+- The isolated ASan WSLg smoke saved page 2 and exited with status 0 under `detect_leaks=0`; it reported no
+  memory-safety errors, and WSLg only emitted its existing non-fatal Mesa renderer warnings.

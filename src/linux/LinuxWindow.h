@@ -7,5 +7,7 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app);
 void LinuxWindowOpenFile(LinuxWindow* window, GFile* file);
 void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId);
 void LinuxWindowFindText(LinuxWindow* window, Str text);
+void LinuxWindowGoToPage(LinuxWindow* window, int pageNo);
 void LinuxWindowGoToTocItem(LinuxWindow* window, int index);
+void LinuxWindowSaveState(LinuxWindow* window);
 void LinuxWindowPresent(LinuxWindow* window);

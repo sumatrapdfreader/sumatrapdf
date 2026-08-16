@@ -14,6 +14,7 @@
 #include <gtk/gtk.h>
 
 #include "linux/LinuxTab.h"
+#include "linux/LinuxPrefs.h"
 #include "linux/LinuxWindow.h"
 
 struct LinuxWindow {
@@ -73,6 +74,7 @@ static int FindTabIndex(LinuxWindow* window, LinuxTab* tab) {
 static void FreeLinuxWindow(gpointer data) {
     auto* window = (LinuxWindow*)data;
     for (LinuxTab* tab : window->tabs) {
+        LinuxPrefsSaveView(LinuxTabView(tab), LinuxTabPath(tab));
         LinuxTabDestroy(tab);
     }
     window->tabs.Reset();
@@ -351,6 +353,7 @@ static void CloseTab(LinuxWindow* window, LinuxTab* tab) {
         TogglePresentation(window);
     }
     RememberClosedPath(window, LinuxTabPath(tab));
+    LinuxPrefsSaveView(LinuxTabView(tab), LinuxTabPath(tab));
     int pageIndex = gtk_notebook_page_num(GTK_NOTEBOOK(window->notebook), LinuxTabWidget(tab));
     gtk_notebook_remove_page(GTK_NOTEBOOK(window->notebook), pageIndex);
     window->tabs.RemoveAt(tabIndex);
@@ -712,7 +715,9 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(window->notebook), child, TRUE);
     window->tabs.Append(tab);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(window->notebook), index);
-    LinuxTabOpenFile(tab, file);
+    if (LinuxTabOpenFile(tab, file)) {
+        LinuxPrefsOpenView(LinuxTabView(tab), LinuxTabPath(tab));
+    }
     UpdateToc(window);
     UpdateControls(window);
 }
@@ -731,6 +736,23 @@ void LinuxWindowGoToTocItem(LinuxWindow* window, int index) {
     if (view && view->GoToTocItem(index)) {
         view->Focus();
         UpdateControls(window);
+    }
+}
+
+void LinuxWindowGoToPage(LinuxWindow* window, int pageNo) {
+    DocumentView* view = window ? ActiveView(window) : nullptr;
+    if (view) {
+        view->GoToPage(pageNo);
+        UpdateControls(window);
+    }
+}
+
+void LinuxWindowSaveState(LinuxWindow* window) {
+    if (!window) {
+        return;
+    }
+    for (LinuxTab* tab : window->tabs) {
+        LinuxPrefsSaveView(LinuxTabView(tab), LinuxTabPath(tab));
     }
 }
 
