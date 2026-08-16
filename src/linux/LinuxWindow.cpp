@@ -144,6 +144,15 @@ static void OnCommandClicked(GtkButton* sender, gpointer data) {
     LinuxWindowDispatchCommand(window, command);
 }
 
+// WSLg can leave a closed GTK popover surface stacked behind its parent, which
+// also prevents the menu from opening normally on later clicks. Destroy the
+// hidden native surface; GTK realizes a fresh one the next time the menu opens.
+static void OnMainMenuClosed(GtkPopover* popover, gpointer) {
+    if (g_getenv("WSL_INTEROP") || g_getenv("WSL_DISTRO_NAME")) {
+        gtk_widget_unrealize(GTK_WIDGET(popover));
+    }
+}
+
 static GtkWidget* NewCommandButton(LinuxWindow* window, const char* label, const char* tooltip, int commandId) {
     GtkWidget* button = gtk_button_new_with_label(label);
     gtk_widget_set_tooltip_text(button, tooltip);
@@ -787,6 +796,8 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     gtk_menu_button_set_icon_name(GTK_MENU_BUTTON(result->menuButton), "open-menu-symbolic");
     gtk_widget_set_tooltip_text(result->menuButton, "Main menu");
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(result->menuButton), gtk_application_get_menubar(app));
+    GtkPopover* menuPopover = gtk_menu_button_get_popover(GTK_MENU_BUTTON(result->menuButton));
+    g_signal_connect(menuPopover, "closed", G_CALLBACK(OnMainMenuClosed), nullptr);
     gtk_header_bar_pack_end(GTK_HEADER_BAR(result->header), result->menuButton);
     GtkWidget* fullscreen = NewCommandButton(result, "Fullscreen", "Toggle fullscreen (F11)", CmdToggleFullscreen);
     gtk_header_bar_pack_end(GTK_HEADER_BAR(result->header), fullscreen);
