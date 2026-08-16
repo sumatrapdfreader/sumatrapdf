@@ -395,6 +395,62 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 
 @end
 
+@interface SumatraPrintView : NSView
+@property(nonatomic) void* document;
+@property(nonatomic) int pageCount;
+@property(nonatomic) int pageNo;
+@property(nonatomic) int rotation;
+@end
+
+@implementation SumatraPrintView
+
+- (BOOL)isFlipped {
+    return YES;
+}
+
+- (BOOL)knowsPageRange:(NSRangePointer)range {
+    range->location = 1;
+    range->length = (NSUInteger)_pageCount;
+    return YES;
+}
+
+- (NSRect)rectForPage:(NSInteger)page {
+    _pageNo = (int)page;
+    double width = 612, height = 792;
+    MacPageSize(_document, _pageNo, &width, &height);
+    if (_rotation == 90 || _rotation == 270) {
+        double value = width;
+        width = height;
+        height = value;
+    }
+    return NSMakeRect(0, 0, width, height);
+}
+
+- (void)drawRect:(NSRect)dirtyRect {
+    (void)dirtyRect;
+    double dpi = MacFileDPI(_document);
+    float zoom = (float)(2.0 * kCocoaPointsPerInch / (dpi > 0 ? dpi : 96.0));
+    MacRenderedPage page = {};
+    if (!MacRenderPage(_document, _pageNo, zoom, _rotation, &page)) {
+        return;
+    }
+    CGImageRef image = CreateImageFromRenderedPage(&page);
+    MacFreeRenderedPage(&page);
+    if (!image) {
+        return;
+    }
+    NSRect bounds = [self bounds];
+    CGContextRef ctx = [[NSGraphicsContext currentContext] CGContext];
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, 0, bounds.size.height);
+    CGContextScaleCTM(ctx, 1, -1);
+    CGContextDrawImage(ctx, NSRectToCGRect(bounds), image);
+    CGContextRestoreGState(ctx);
+    CGImageRelease(image);
+}
+
+@end
+
 @interface SumatraAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, NSToolbarDelegate,
                                          SumatraDocumentViewOwner>
 @property(nonatomic, retain) NSWindow* window;
@@ -990,7 +1046,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         action == @selector(zoomIn:) || action == @selector(zoomOut:) || action == @selector(setSinglePageView:) ||
         action == @selector(setContinuousView:) || action == @selector(findDocument:) ||
         action == @selector(findNext:) || action == @selector(findPrevious:) || action == @selector(showToc:) ||
-        action == @selector(showProperties:) || action == @selector(selectAll:)) {
+        action == @selector(showProperties:) || action == @selector(selectAll:) || action == @selector(printDocument:)) {
         return [self hasDocument];
     }
     return YES;
@@ -1254,6 +1310,21 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [alert addButtonWithTitle:@"OK"];
     [alert setAccessoryView:scroll];
     [alert runModal];
+}
+
+- (IBAction)printDocument:(id)sender {
+    (void)sender;
+    if (!_document) {
+        return;
+    }
+    SumatraPrintView* view = [[[SumatraPrintView alloc] initWithFrame:NSMakeRect(0, 0, 612, 792)] autorelease];
+    [view setDocument:_document];
+    [view setPageCount:_pageCount];
+    [view setRotation:_rotation];
+    NSPrintOperation* operation = [NSPrintOperation printOperationWithView:view printInfo:[NSPrintInfo sharedPrintInfo]];
+    [operation setShowsPrintPanel:YES];
+    [operation setShowsProgressPanel:YES];
+    [operation runOperation];
 }
 
 - (IBAction)copySelection:(id)sender {
@@ -1520,7 +1591,7 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     [fileMenu addItem:[NSMenuItem separatorItem]];
     AddPlaceholder(fileMenu, @"Save As…", delegate);
     AddPlaceholder(fileMenu, @"Rename…", delegate);
-    AddPlaceholder(fileMenu, @"Print…", delegate);
+    AddItem(fileMenu, @"Print…", @selector(printDocument:), delegate, @"p", NSEventModifierFlagCommand);
     [fileMenu addItem:[NSMenuItem separatorItem]];
     AddItem(fileMenu, @"Properties", @selector(showProperties:), delegate, @"", 0);
     [fileItem setSubmenu:fileMenu];

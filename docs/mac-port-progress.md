@@ -13,7 +13,7 @@ those commits are verification artifacts rather than authorization for final fea
 | 4     | Complete    | Portable asynchronous rendering and bounded cache |
 | 5     | In progress | Native shell, toolbar, menus, and commands        |
 | 6     | In progress | Core portable reader interactions are exposed     |
-| 7     | In progress | Finder integration and bundle associations        |
+| 7     | In progress | Native print/Finder/bundle integration            |
 | 8     | Complete    | Versioned portable application archive            |
 
 ## Existing baseline
@@ -39,6 +39,8 @@ Reconciled 2026-08-16.
 - The application bundle advertises its supported document extensions to Finder. Every successful macOS build emits
   a versioned `.tar.gz` containing `SumatraPDF.app`, the license, and macOS installation notes; signing and
   notarization remain deferred release-infrastructure work.
+- Native `NSPrintOperation` prints the document through the shared engine render path with Cocoa page ranges and the
+  current rotation.
 
 ## Verification
 
