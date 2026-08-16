@@ -253,6 +253,18 @@ void PageRenderService::Request(PageRenderKey key, PageRenderPriority priority) 
     serviceData->condition.Wake();
 }
 
+Pixmap* PageRenderService::CopyPage(PageRenderKey key) {
+    auto* serviceData = ServiceData(this);
+    ScopedMutex lock(&serviceData->mutex);
+    int idx = FindCached(serviceData, key);
+    if (idx < 0) {
+        return nullptr;
+    }
+    PageRenderCacheEntry& entry = serviceData->cache[idx];
+    entry.policy.lastUse = ++serviceData->useSerial;
+    return ClonePixmap(entry.pixmap);
+}
+
 bool PageRenderService::DrawPage(Gfx* gfx, PageRenderKey key, const Rect& target) {
     auto* serviceData = ServiceData(this);
     ScopedMutex lock(&serviceData->mutex);

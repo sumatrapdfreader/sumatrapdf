@@ -18,6 +18,7 @@ struct PageRenderService {
 
     void NewGeneration();
     void Request(PageRenderKey key, PageRenderPriority priority);
+    Pixmap* CopyPage(PageRenderKey key);
     bool DrawPage(Gfx* gfx, PageRenderKey key, const Rect& target);
     i64 CacheBytes() const;
 };

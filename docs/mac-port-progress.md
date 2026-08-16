@@ -1,28 +1,66 @@
-# macOS Port Progress
+# macOS Cocoa port progress
 
-Last updated: 2026-07-08.
+This file tracks implementation of [mac-port-plan.md](mac-port-plan.md). Remote verification uses temporary branches;
+those commits are verification artifacts rather than authorization for final feature commits.
 
-## Completed
+## Status
 
-- `46654fb25` — Ported `TextSelection.cpp` and `TextSearch.cpp` enough for macOS:
-  removed Win32/wingui include dependencies, preserved Windows character
-  classification/case folding under `#if OS_WIN`, added POSIX fallbacks, and
-  added both files to `PORTABLE_COMPILE_SOURCES` and `MAC_APP_SOURCES`.
-- Verified with `bun cmd/build.ts -mac -debug`; mac `test_util`,
-  `test_engines`, portable compile checks, and `SumatraPDF.app` all built.
+| Stage | Status   | Summary                                            |
+| ----- | -------- | -------------------------------------------------- |
+| 1     | Complete | Cocoa application bundle and file opening          |
+| 2     | Complete | Shared portable reader model                       |
+| 3     | Complete | Scrollable multi-page Cocoa document viewer        |
+| 4     | Complete | Portable asynchronous rendering and bounded cache  |
+| 5     | Complete | Native tabs, shell, toolbar, menus, and commands   |
+| 6     | Complete | Portable reader interactions and saved state       |
+| 7     | Complete | Reload, print, Finder, session, bundle integration |
+| 8     | Complete | Versioned portable application archive             |
 
-## Deferred
+## Existing baseline
 
-- `PdfSync.cpp` / SyncTeX forward-inverse search is intentionally deferred. It is
-  not needed for the near-term native mac viewer milestones: open, render,
-  scroll, zoom, selection, and text search. The file also pulls in external
-  SyncTeX C sources and Windows-specific local-codepage/path handling, so port
-  it later only when mac TeX integration becomes a feature target.
+Reconciled 2026-08-16.
 
-## Next Candidates
+- `SumatraPDF.app` is built by the unified macOS build and accepts both command-line paths and Finder open events.
+- `SumatraMacEngine` uses the shared `ReaderModel`, preserving the portable engine set rather than calling MuPDF
+  directly.
+- The Cocoa viewer uses shared `DocumentLayout` for continuous and single-page modes, renders all visible pages,
+  supports scrolling, fit-page/fit-width/actual-size zoom, page navigation, rotation, resize relayout, and Retina
+  backing-scale changes.
+- A native configurable toolbar, application menus, open/go-to panels, fullscreen, Show in Finder, and the portable
+  keyboard-help dialog are present.
+- A native toolbar tab selector keeps independent reader/render-service state per document, restores page/zoom/layout
+  and scroll position when switching, switches to already-open files, supports next/previous tab commands, and keeps a
+  bounded reopen-closed stack.
+- Visible pages render through the portable asynchronous `PageRenderService`. Its bounded cache replaces the old
+  unbounded Cocoa image cache, and nearby pages are prefetched at lower priorities.
+- Shared `TextSearch` drives Find, Find Next, and Find Previous, including wrapped search and highlighted result
+  rectangles. Shared engine TOC and property models drive native Table of Contents and Document Properties dialogs.
+- Shared `TextSelection` drives mouse selection, Select All, and UTF-8 clipboard copy. Engine page-element hit testing
+  drives internal-page, URL, and file links.
+- The Cocoa command chooser filters the supported native action set through shared `CommandPaletteModel`; unsupported
+  platform commands are not offered.
+- Per-file view state, recent documents, favorites, and bare-launch session restore use the existing
+  `GlobalPrefs`/`FileState` serialization in Application Support, keeping settings compatible with the portable
+  preference model.
+- Multi-tab sessions restore on a bare launch. Commands that remain disabled are features outside the Linux parity
+  target, such as save/rename, facing/book layouts, and presentation mode.
+- The application bundle advertises its supported document extensions to Finder. Every successful macOS build emits
+  a versioned `.tar.gz` containing `SumatraPDF.app`, the license, and macOS installation notes; signing and
+  notarization remain deferred release-infrastructure work.
+- Native `NSPrintOperation` prints the document through the shared engine render path with Cocoa page ranges and the
+  current rotation.
+- A native vnode dispatch source reloads the active document after writes or atomic replacements while preserving its
+  saved view state.
 
-- Continue Phase 1 with document-model files that directly support the viewer:
-  `Annotation`, then `DisplayModel` once its Windows UI include dependencies are
-  separated.
-- Keep new mac build additions small and verify each slice with
-  `bun cmd/build.ts -mac -debug`.
+## Verification
+
+- Windows debug build: passed on 2026-08-16.
+- Linux/WSL debug build: passed on 2026-08-16, including 102,600 `test_util` assertions and the portable Linux
+  archive.
+- Remote macOS debug build: passed on 2026-08-16, including 102,736 `test_util` assertions, 23 portable compile checks,
+  `test_engines`, the 40-source `SumatraPDF.app` link, and creation of
+  `SumatraPDF-3.7-mac-arm64-debug.tar.gz`.
+- `plutil` accepted the packaged `Info.plist`; the application executable retained its executable mode and the
+  archive contained the app bundle, license, and macOS README.
+
+All stages were verified from temporary branch `tmp/mac-port-parity-20260816`.
