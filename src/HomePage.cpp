@@ -1029,7 +1029,6 @@ constexpr int kThumbsMiddleMargin = 32;
 // draw a gray separator line between list-view rows
 static bool gShowListSeparatorLine = false;
 constexpr int kSearchEditDy = 28;
-constexpr int kHeaderSearchGapY = 12;
 constexpr int kSearchThumbnailsGapY = 12;
 
 static PlatformFont* HomePageFont(int size) {
@@ -1198,6 +1197,7 @@ struct HomePageLayoutCache {
     bool listView = false;
     bool sortByFreq = false;
     bool showTips = false;
+    bool isRtl = false;
     int tipIdx = -1;
     bool tipIsPromo = false;
     Str filterText; // owned
@@ -1281,6 +1281,9 @@ static bool HomeLayoutCacheMatches(const Rect& rc, Str filterText) {
     if (c.showTips != (gGlobalPrefs && gGlobalPrefs->showTips)) {
         return false;
     }
+    if (c.isRtl != IsUIRtl()) {
+        return false;
+    }
     if (c.tipIdx != gSelectedTipIdx || c.tipIsPromo != gSelectedIsPromo) {
         return false;
     }
@@ -1343,6 +1346,7 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.listView = HomePageIsListView();
     c.sortByFreq = gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead;
     c.showTips = gGlobalPrefs && gGlobalPrefs->showTips;
+    c.isRtl = IsUIRtl();
     c.tipIdx = gSelectedTipIdx;
     c.tipIsPromo = gSelectedIsPromo;
     str::ReplaceWithCopy(&c.filterText, filterText);
@@ -1411,8 +1415,10 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     hdr->SetBounds(c.rcFreqRead);
     l.freqRead = hdr;
 
+    TempStr openTxt = str::DupTemp(_TRA("&Open..."));
+    str::RemoveCharsInPlace(openTxt, StrL("&"));
     VirtText* openDoc = chrome->openDoc->text;
-    openDoc->SetText(_TRA("Open a document..."));
+    openDoc->SetText(openTxt);
     openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
@@ -1476,7 +1482,6 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     bool isRtl = IsUIRtl();
     PlatformFont* fontText = HomePageFont(14);
-    PlatformFont* hdrFont = HomePageFont(24);
 
     // --- Pre-compute thumbnail grid x offset so header can align with it ---
     // use unfiltered count so layout stays stable when search filters results
@@ -1495,93 +1500,81 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
     int thumbsContentWidth = (thumbsColsForLayout * kThumbnailDx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
 
-    // --- Step 1: layout header at the top ---
+    // --- Step 1: single header row: [view icons] [search edit] [open link] ---
     Rect rcIconView(0, 0, 0, 0);
     rcIconView.dx = rcIconView.dy = HomePageIconSize();
 
-    Str txt = _TRA("Recently Opened");
-    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
-        txt = _TRA("Frequently Read");
-    }
     HomeChromeCtrl* chrome = EnsureHomeChrome(win);
+    // the section title is no longer shown; empty bounds keep it unpainted
     VirtText* hdr = chrome->hdr;
-    hdr->SetText(txt);
-    hdr->font = hdrFont;
+    hdr->SetBounds({});
     l.freqRead = hdr;
-    hdr->isRtl = isRtl;
-    Size txtSize = hdr->GetIdealSize(true);
+
+    EnsureHomeSearchCreated(win);
+    int searchEditDy = DpiScale(kSearchEditDy);
+    int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
+    int borderDy = searchEditDy + 2; // 1px border on each side
 
     int hdrY = DpiScale(8);
     int iconGap = DpiScale(4);
-    int titleGap = DpiScale(8);
+    int rowDy = std::max(rcIconView.dy, borderDy);
+    // every row item (view icons, search box, folder icon, link) is centered
+    // on the row's vertical centerline
+    int centerY = hdrY + (rowDy / 2);
     int viewIconsDx = (2 * rcIconView.dx) + iconGap;
-    Rect rcHdr(thumbsStartX + viewIconsDx + titleGap, hdrY, txtSize.dx, txtSize.dy);
-    l.rcIconThumbnailView = {thumbsStartX, rcHdr.y + ((rcHdr.dy - rcIconView.dy) / 2), rcIconView.dx, rcIconView.dy};
-    l.rcIconListView = {l.rcIconThumbnailView.x + rcIconView.dx + iconGap, l.rcIconThumbnailView.y, rcIconView.dx,
-                        rcIconView.dy};
-    if (isRtl) {
-        int groupDx = viewIconsDx + titleGap + rcHdr.dx;
-        int groupX = rc.dx - thumbsStartX - groupDx;
-        rcHdr.x = groupX;
-        l.rcIconListView = {rcHdr.x + rcHdr.dx + titleGap, l.rcIconListView.y, rcIconView.dx, rcIconView.dy};
-        l.rcIconThumbnailView = {l.rcIconListView.x + rcIconView.dx + iconGap, l.rcIconThumbnailView.y, rcIconView.dx,
-                                 rcIconView.dy};
-    }
-    hdr->SetBounds(rcHdr);
 
-    /* "Open a document" link next to header */
+    /* "Open..." link at the right edge */
     Rect rcIconOpen(0, 0, 0, 0);
     rcIconOpen.dx = rcIconOpen.dy = HomePageIconSize();
 
-    txt = _TRA("Open a document...");
+    TempStr openTxt = str::DupTemp(_TRA("&Open..."));
+    str::RemoveCharsInPlace(openTxt, StrL("&"));
     VirtText* openDoc = chrome->openDoc->text;
-    openDoc->SetText(txt);
+    openDoc->SetText(openTxt);
     openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
-    txtSize = openDoc->GetIdealSize(true);
+    Size txtSize = openDoc->GetIdealSize(true);
+    int openGroupDx = rcIconOpen.dx + 3 + txtSize.dx;
 
-    int openDocSpacing = DpiScale(16);
-    rcIconOpen.x = rcHdr.x + rcHdr.dx + openDocSpacing;
-    // every header item (view icons, title, folder icon, link) is centered on
-    // the header's vertical centerline
-    rcIconOpen.y = rcHdr.y + ((rcHdr.dy - rcIconOpen.dy) / 2);
+    l.rcIconThumbnailView = {thumbsStartX, centerY - (rcIconView.dy / 2), rcIconView.dx, rcIconView.dy};
+    l.rcIconListView = {l.rcIconThumbnailView.x + rcIconView.dx + iconGap, l.rcIconThumbnailView.y, rcIconView.dx,
+                        rcIconView.dy};
+
+    rcIconOpen.x = thumbsStartX + thumbsContentWidth - openGroupDx;
+    rcIconOpen.y = centerY - (rcIconOpen.dy / 2);
+    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, centerY - (txtSize.dy / 2), txtSize.dx, txtSize.dy);
+
+    // the search box takes what is left between the icons and the link; both
+    // sides are padded to the wider of the two, so the box sits centered
+    int rowGapX = DpiScale(16);
+    int flankDx = std::max(viewIconsDx, openGroupDx) + rowGapX;
+    int borderDx = thumbsContentWidth - (2 * flankDx);
+    borderDx = std::max(borderDx, DpiScale(200));
+    int borderX = thumbsStartX + ((thumbsContentWidth - borderDx) / 2);
+    l.rcSearchBorder = {borderX, hdrY + ((rowDy - borderDy) / 2), borderDx, borderDy};
+
     if (isRtl) {
-        rcIconOpen.x = rcHdr.x - openDocSpacing - rcIconOpen.dx;
+        auto mirrorX = [&rc](Rect& r) { r.x = rc.dx - r.x - r.dx; };
+        mirrorX(l.rcIconThumbnailView);
+        mirrorX(l.rcIconListView);
+        mirrorX(rcIconOpen);
+        mirrorX(rcOpenDoc);
+        mirrorX(l.rcSearchBorder);
     }
     l.rcIconOpen = rcIconOpen;
-
-    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, rcHdr.y + ((rcHdr.dy - txtSize.dy) / 2), txtSize.dx, txtSize.dy);
-    if (isRtl) {
-        rcOpenDoc.x = rcIconOpen.x - rcOpenDoc.dx - 3;
-    }
     openDoc->SetBounds(rcOpenDoc);
-
     l.openDoc = openDoc;
 
-    int headerBottomY = rcHdr.y + rcHdr.dy;
-
-    // --- Position search edit below header ---
-    EnsureHomeSearchCreated(win);
-    int searchEditDy = DpiScale(kSearchEditDy);
-    int headerSearchGap = DpiScale(kHeaderSearchGapY);
-    int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
     {
-        int borderDx = thumbsContentWidth * 3 / 4;
-        borderDx = std::max(borderDx, DpiScale(200));
-        int borderX = thumbsStartX + ((thumbsContentWidth - borderDx) / 2);
-        int borderY = headerBottomY + headerSearchGap;
-        int borderDy = searchEditDy + 2; // 1px border on each side
-        l.rcSearchBorder = {borderX, borderY, borderDx, borderDy};
         // inside the 1px border: the layout gives the edit the full width and
         // its own (text-sized) height, centered vertically
-        Rect rcEdit = {borderX + 1, borderY + 1, borderDx - 2, searchEditDy};
+        Rect rcEdit = {l.rcSearchBorder.x + 1, l.rcSearchBorder.y + 1, l.rcSearchBorder.dx - 2, searchEditDy};
         LayoutToSize(win->homeSearchLayout, rcEdit.Size());
         win->homeSearchLayout->SetBounds(rcEdit);
     }
-    // border is 1px top + 1px bottom = 2px
-    int searchAreaDy = headerSearchGap + searchEditDy + 2 + searchThumbsGap;
-    headerBottomY += searchAreaDy;
+
+    int headerBottomY = hdrY + rowDy + searchThumbsGap;
 
     // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
     int tipHeight = 0;
