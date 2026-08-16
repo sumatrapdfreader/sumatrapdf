@@ -13,7 +13,7 @@ after its relevant Windows, Linux, and portable checks pass.
 | 4     | Complete    | Portable asynchronous rendering              |
 | 5     | Complete    | Application shell, tabs, and commands        |
 | 6     | Complete    | Reader features                              |
-| 7     | In progress | Linux desktop services                       |
+| 7     | Complete    | Linux desktop services                       |
 | 8     | Not started | Packaging and deferred features              |
 
 ## Stage 1: Linux application target
@@ -498,3 +498,26 @@ Verification:
   1, clean shutdown persisted `TabIndex = 1` and independent page 1/page 2 tab states.
 - The same two-run smoke passed under ASan with `detect_leaks=0` for the documented GTK/Pango process caches and no
   AddressSanitizer errors. WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+### Desktop and AppStream resources
+
+Completed 2026-08-16, completing Stage 7.
+
+- Expanded the freedesktop desktop entry with a generic name and searchable keywords while retaining the application
+  ID, command line, icon name, and PDF MIME association used by the default-reader integration.
+- Added AppStream metadata describing the native Linux reader, its desktop entry, executable, supported media type,
+  project links, license, and content rating.
+- Made every Linux build validate the identifiers and essential integration fields, then stage the desktop entry,
+  AppStream metadata, and existing scalable SumatraPDF icon under the output directory's standard `share/` hierarchy.
+
+Verification:
+
+- `appstreamcli validate --no-net packaging/linux/org.sumatrapdf.SumatraPDF.metainfo.xml`: passed. Pedantic mode only
+  noted the established mixed-case application ID and the intentionally absent release history.
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,840 assertions, all Linux targets linked, and
+  all three desktop resources were staged.
+- `bun cmd/build.ts -linux`: the ASan build passed and staged the same resources; an explicit test run with
+  `detect_leaks=0` passed 102,754 assertions.
+- Byte-for-byte comparisons confirmed that both debug and ASan staged resources match their source files, and the
+  staged AppStream file passed `appstreamcli validate --no-net`.

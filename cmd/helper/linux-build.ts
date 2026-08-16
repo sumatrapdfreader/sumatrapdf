@@ -9,7 +9,7 @@
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
  */
 
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, basename, dirname } from "node:path";
 import { tmpdir } from "node:os";
@@ -47,6 +47,11 @@ import {
 } from "../deps-build-defs";
 
 type LinuxArch = "arm64" | "x64";
+
+const LINUX_APP_ID = "org.sumatrapdf.SumatraPDF";
+const LINUX_DESKTOP_FILE = `packaging/linux/${LINUX_APP_ID}.desktop`;
+const LINUX_METAINFO_FILE = `packaging/linux/${LINUX_APP_ID}.metainfo.xml`;
+const LINUX_ICON_FILE = "gfx/svg/pdf-32bit.svg";
 
 function requireLinux(): void {
   if (process.platform !== "linux") {
@@ -810,11 +815,47 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   await compilePortableSources(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildGtk4KeyboardHelp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildGtk4LinuxApp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  stageLinuxDesktopResources(outDir);
   await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
   console.log(`Static libraries: ${join(outDir, "lib")}\n`);
+}
+
+function requireResourceText(path: string, text: string, expected: string): void {
+  if (!text.includes(expected)) {
+    throw new Error(`${path} is missing required metadata: ${expected}`);
+  }
+}
+
+function stageLinuxDesktopResources(outDir: string): void {
+  const desktop = readFileSync(LINUX_DESKTOP_FILE, "utf8");
+  const metainfo = readFileSync(LINUX_METAINFO_FILE, "utf8");
+  requireResourceText(LINUX_DESKTOP_FILE, desktop, "[Desktop Entry]");
+  requireResourceText(LINUX_DESKTOP_FILE, desktop, "Type=Application");
+  requireResourceText(LINUX_DESKTOP_FILE, desktop, "Exec=SumatraPDF %U");
+  requireResourceText(LINUX_DESKTOP_FILE, desktop, `Icon=${LINUX_APP_ID}`);
+  requireResourceText(LINUX_DESKTOP_FILE, desktop, "MimeType=application/pdf;");
+  requireResourceText(LINUX_METAINFO_FILE, metainfo, `<id>${LINUX_APP_ID}</id>`);
+  requireResourceText(
+    LINUX_METAINFO_FILE,
+    metainfo,
+    `<launchable type="desktop-id">${LINUX_APP_ID}.desktop</launchable>`,
+  );
+  requireResourceText(LINUX_METAINFO_FILE, metainfo, `<icon type="stock">${LINUX_APP_ID}</icon>`);
+
+  const files = [
+    [LINUX_DESKTOP_FILE, join(outDir, "share", "applications", `${LINUX_APP_ID}.desktop`)],
+    [LINUX_METAINFO_FILE, join(outDir, "share", "metainfo", `${LINUX_APP_ID}.metainfo.xml`)],
+    [LINUX_ICON_FILE, join(outDir, "share", "icons", "hicolor", "scalable", "apps", `${LINUX_APP_ID}.svg`)],
+  ];
+  console.log("Staging Linux desktop resources...");
+  for (const [src, dst] of files) {
+    mkdirSync(dirname(dst), { recursive: true });
+    copyFileSync(src, dst);
+    console.log(`  -> ${dst}`);
+  }
 }
 
 async function buildGtk4LinuxApp(
