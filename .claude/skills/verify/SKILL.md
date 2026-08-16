@@ -7,7 +7,7 @@ description: Build, launch and drive SumatraPDF on Windows to verify a change en
 
 ## Build & launch
 
-- Build: `bun ./cmd/build.ts` → `out/dbg64/SumatraPDF-dll.exe` (NOT `SumatraPDF.exe`, which is a stale static target).
+- Build: `bun ./cmd/build.ts -debug` → `out/dbg64/SumatraPDF.exe` (the exe `tests/util.ts` EXE points at; `SumatraPDF-static.exe` is the static target and is usually stale).
 - If new source files were added to `premake5.files.lua` / `premake5.lua`, run `bun cmd/premake.ts` first to regenerate `vs2022/*.vcxproj`, or the build fails with stale projects / link errors.
 - Always launch with `-for-testing` (fresh instance, no session restore, doesn't touch user settings).
 - Capture engine/app logs: `-log -log-to-file <path>` (collects `logf`/`logfa` output).
@@ -51,6 +51,22 @@ postMessage(frame, 0x0010 /*WM_CLOSE*/, 0, 0);
   works, dump the drawing to a bitmap via a temporary harness (render into a
   `CreateDIBSection` DC, save with `HBITMAPToBmpFormat` + `file::WriteFile`,
   view, then remove the harness).
+
+- On this machine (OS in dark mode) `captureWindowToPng` (PrintWindow with
+  PW_RENDERFULLCONTENT) NONDETERMINISTICALLY renders WindowBase dialogs with the
+  OS dark theme — dark background, dark combos/checkboxes, dark caption — even
+  when the app theme is Light and the screen shows the dialog correctly light.
+  Across runs it can come out fully dark, fully light, or mixed, so it proves
+  nothing about theming. For any color/theme assertion on a dialog use
+  `captureWindowDCToPng` (BitBlts the window's real surface); PrintWindow is
+  fine for layout/text content.
+
+- All WindowBase dialogs share one window class, `SumatraWgDefaultWinClass`,
+  and a hidden find-bar strip of that class exists from startup — finding a
+  dialog by class alone (`waitForTopWindow`) can return that ~431x38 strip
+  (captures as a black band). Match by class AND `getWindowText(hwnd)` against
+  the dialog's `args.title`. Also: `CmdGoToPage` doesn't open its dialog while
+  the toolbar is visible — it focuses the toolbar's page box instead.
 
 - Reading a control's text cross-process needs `getControlText` (WM_GETTEXT);
   `GetWindowTextW` only returns captions for windows of another process, so
