@@ -1904,7 +1904,7 @@ static void DrawHomeListRow(HomePageLayout& l, ThumbnailLayout& thumb, PlatformF
     TempStr fileName = path::GetBaseNameTemp(path);
     u32 nameFmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
     DrawMaybeHighlightedText(gfx, thumb.rcListFileName, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl,
-                             false, nameFmt, fontText);
+                             false, nameFmt, fontText, ThemeWindowTextColor());
 
     // directory path, right-aligned and muted, in the space the file name doesn't need.
     // Must use DrawTextW: dirPath is UTF-8; DrawTextA treated it as the system ANSI
@@ -2514,7 +2514,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         u32 fmt = gfxTextEllipsis | (isRtl ? gfxTextRight : gfxTextLeft);
 
         DrawMaybeHighlightedText(gfx, rect, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false, fmt,
-                                 fontText);
+                                 fontText, ThemeWindowTextColor());
 
         Pixmap* icon = GetFileStateIconPixmap(fs);
         int x = isRtl ? page.x + page.dx - DpiScale(16) : page.x;
