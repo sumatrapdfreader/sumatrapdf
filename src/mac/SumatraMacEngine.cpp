@@ -9,7 +9,9 @@
 #include "EngineBase.h"
 #include "PageRenderPolicy.h"
 #include "PageRenderService.h"
+#include "ProgressUpdateUI.h"
 #include "ReaderModel.h"
+#include "TextSelection.h"
 #include "TextSearch.h"
 #include "mac/SumatraMacEngine.h"
 
@@ -52,6 +54,7 @@ static char* DupCString(const char* s) {
 struct MacDocument {
     ReaderModel* model = nullptr;
     PageRenderService* renderer = nullptr;
+    TextSelection* textSelection = nullptr;
     TextSearch* textSearch = nullptr;
     TocTree* toc = nullptr;
     Vec<TocItem*> tocItems;
@@ -87,6 +90,44 @@ static void LoadProperties(MacDocument* document) {
     }
     document->propertiesLoaded = true;
     document->model->GetEngine()->GetProperties(document->properties);
+}
+
+static PointF ToPagePoint(MacDocument* document, int pageNo, double x, double y, double zoom, int rotation) {
+    PointF point((float)x, (float)y);
+    return document->model->GetEngine()->Transform(point, pageNo, (float)zoom, rotation, true);
+}
+
+static int ResultRectCount(const TextSel& result, int pageNo) {
+    int count = 0;
+    for (int i = 0; i < result.len; i++) {
+        if (result.pages[i] == pageNo) {
+            count++;
+        }
+    }
+    return count;
+}
+
+static bool TransformResultRect(MacDocument* document, const TextSel& result, int pageNo, int index, double zoom,
+                                int rotation, MacDisplayRect* rect) {
+    if (!rect || index < 0) {
+        return false;
+    }
+    for (int i = 0; i < result.len; i++) {
+        if (result.pages[i] != pageNo) {
+            continue;
+        }
+        if (index-- != 0) {
+            continue;
+        }
+        RectF transformed =
+            document->model->GetEngine()->Transform(ToRectF(result.rects[i]), pageNo, (float)zoom, rotation);
+        rect->x = transformed.x;
+        rect->y = transformed.y;
+        rect->width = transformed.dx;
+        rect->height = transformed.dy;
+        return true;
+    }
+    return false;
 }
 
 static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
@@ -159,6 +200,7 @@ void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* 
     }
     auto* document = new MacDocument();
     document->model = model;
+    document->textSelection = new TextSelection(model->GetEngine());
     document->textSearch = new TextSearch(model->GetEngine());
     document->toc = model->GetEngine()->GetToc();
     if (document->toc && document->toc->root) {
@@ -168,6 +210,7 @@ void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* 
     document->callbackContext = callbackContext;
     document->renderer = PageRenderService::Create(model->GetEngine(), MkFunc0(OnPageReady, document));
     if (!document->renderer) {
+        delete document->textSelection;
         delete document->textSearch;
         delete document->toc;
         delete model;
@@ -370,14 +413,7 @@ int MacFindResultRectCount(void* document, int pageNo) {
     if (!doc || !doc->textSearch) {
         return 0;
     }
-    int count = 0;
-    TextSel& result = doc->textSearch->result;
-    for (int i = 0; i < result.len; i++) {
-        if (result.pages[i] == pageNo) {
-            count++;
-        }
-    }
-    return count;
+    return ResultRectCount(doc->textSearch->result, pageNo);
 }
 
 bool MacFindResultRect(void* document, int pageNo, int index, double zoom, int rotation, MacDisplayRect* rect) {
@@ -385,22 +421,110 @@ bool MacFindResultRect(void* document, int pageNo, int index, double zoom, int r
     if (!doc || !doc->textSearch || !rect || index < 0) {
         return false;
     }
-    TextSel& result = doc->textSearch->result;
-    for (int i = 0; i < result.len; i++) {
-        if (result.pages[i] != pageNo) {
-            continue;
-        }
-        if (index-- != 0) {
-            continue;
-        }
-        RectF transformed = doc->model->GetEngine()->Transform(ToRectF(result.rects[i]), pageNo, (float)zoom, rotation);
-        rect->x = transformed.x;
-        rect->y = transformed.y;
-        rect->width = transformed.dx;
-        rect->height = transformed.dy;
+    return TransformResultRect(doc, doc->textSearch->result, pageNo, index, zoom, rotation, rect);
+}
+
+bool MacTextAtPoint(void* document, int pageNo, double x, double y, double zoom, int rotation) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSelection || pageNo < 1 || pageNo > doc->model->PageCount()) {
+        return false;
+    }
+    PointF point = ToPagePoint(doc, pageNo, x, y, zoom, rotation);
+    return doc->textSelection->IsOverGlyph(pageNo, point.x, point.y);
+}
+
+bool MacStartSelection(void* document, int pageNo, double x, double y, double zoom, int rotation) {
+    MacDocument* doc = AsDocument(document);
+    if (!MacTextAtPoint(document, pageNo, x, y, zoom, rotation)) {
+        return false;
+    }
+    PointF point = ToPagePoint(doc, pageNo, x, y, zoom, rotation);
+    doc->textSelection->Reset();
+    doc->textSelection->StartAt(pageNo, point.x, point.y);
+    return true;
+}
+
+bool MacUpdateSelection(void* document, int pageNo, double x, double y, double zoom, int rotation) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSelection || doc->textSelection->startPage < 1 || pageNo < 1 ||
+        pageNo > doc->model->PageCount()) {
+        return false;
+    }
+    PointF point = ToPagePoint(doc, pageNo, x, y, zoom, rotation);
+    doc->textSelection->SelectUpTo(pageNo, point.x, point.y);
+    return true;
+}
+
+void MacSelectAll(void* document) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSelection) {
+        return;
+    }
+    doc->textSelection->Reset();
+    doc->textSelection->StartAt(1, 0);
+    doc->textSelection->SelectUpTo(doc->model->PageCount(), -1);
+}
+
+bool MacHasSelection(void* document) {
+    MacDocument* doc = AsDocument(document);
+    return doc && doc->textSelection && doc->textSelection->result.len > 0;
+}
+
+int MacSelectionRectCount(void* document, int pageNo) {
+    MacDocument* doc = AsDocument(document);
+    return doc && doc->textSelection ? ResultRectCount(doc->textSelection->result, pageNo) : 0;
+}
+
+bool MacSelectionRect(void* document, int pageNo, int index, double zoom, int rotation, MacDisplayRect* rect) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSelection) {
+        return false;
+    }
+    return TransformResultRect(doc, doc->textSelection->result, pageNo, index, zoom, rotation, rect);
+}
+
+char* MacCopySelectionText(void* document) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSelection || doc->textSelection->result.len == 0) {
+        return nullptr;
+    }
+    return DupCString(doc->textSelection->ExtractText(StrL("\n")));
+}
+
+bool MacLinkAtPoint(void* document, int pageNo, double x, double y, double zoom, int rotation, MacLink* link) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !link || pageNo < 1 || pageNo > doc->model->PageCount()) {
+        return false;
+    }
+    *link = {};
+    PointF point = ToPagePoint(doc, pageNo, x, y, zoom, rotation);
+    IPageElement* element = doc->model->GetEngine()->GetElementAtPos(pageNo, point);
+    IPageDestination* dest = element ? element->AsLink() : nullptr;
+    if (!dest) {
+        return false;
+    }
+    int targetPage = PageDestGetPageNo(dest);
+    if (targetPage >= 1 && targetPage <= doc->model->PageCount()) {
+        link->kind = MacLinkKind::Page;
+        link->pageNo = targetPage;
         return true;
     }
-    return false;
+    Str value = PageDestGetValue(dest);
+    if (!value) {
+        return false;
+    }
+    Kind kind = dest->GetKind();
+    link->kind = kind == kindDestinationLaunchFile ? MacLinkKind::File : MacLinkKind::Url;
+    link->value = DupCString(value);
+    return link->value != nullptr;
+}
+
+void MacFreeLink(MacLink* link) {
+    if (!link) {
+        return;
+    }
+    free(link->value);
+    *link = {};
 }
 
 int MacTocItemCount(void* document) {
@@ -494,6 +618,7 @@ void MacCloseDocument(void* document) {
     }
     MacDocument* doc = AsDocument(document);
     delete doc->renderer;
+    delete doc->textSelection;
     delete doc->textSearch;
     delete doc->toc;
     FreeProps(doc->properties);

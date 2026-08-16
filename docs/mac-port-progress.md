@@ -12,9 +12,9 @@ those commits are verification artifacts rather than authorization for final fea
 | 3     | Complete    | Scrollable multi-page Cocoa document viewer       |
 | 4     | Complete    | Portable asynchronous rendering and bounded cache |
 | 5     | In progress | Native shell, toolbar, menus, and commands        |
-| 6     | In progress | Find, TOC, and properties are exposed in Cocoa    |
-| 7     | In progress | Finder integration and clean shutdown are present |
-| 8     | Not started | Versioned application archive                     |
+| 6     | In progress | Core portable reader interactions are exposed     |
+| 7     | In progress | Finder integration and bundle associations        |
+| 8     | Complete    | Versioned portable application archive            |
 
 ## Existing baseline
 
@@ -32,8 +32,13 @@ Reconciled 2026-08-16.
   unbounded Cocoa image cache, and nearby pages are prefetched at lower priorities.
 - Shared `TextSearch` drives Find, Find Next, and Find Previous, including wrapped search and highlighted result
   rectangles. Shared engine TOC and property models drive native Table of Contents and Document Properties dialogs.
+- Shared `TextSelection` drives mouse selection, Select All, and UTF-8 clipboard copy. Engine page-element hit testing
+  drives internal-page, URL, and file links.
 - The application still owns a single document, and several menu entries remain disabled placeholders. Text
-  selection, links, favorites/history, and the command palette are not exposed in the Cocoa reader yet.
+  selection refinements, favorites/history, and the command palette are not exposed in the Cocoa reader yet.
+- The application bundle advertises its supported document extensions to Finder. Every successful macOS build emits
+  a versioned `.tar.gz` containing `SumatraPDF.app`, the license, and macOS installation notes; signing and
+  notarization remain deferred release-infrastructure work.
 
 ## Verification
 

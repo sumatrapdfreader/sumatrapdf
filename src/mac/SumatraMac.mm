@@ -92,9 +92,25 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 
 @class SumatraAppDelegate;
 
+@protocol SumatraDocumentViewOwner
+- (void*)documentHandle;
+- (int)documentRotation;
+- (void)activateLinkAtPage:(int)pageNo x:(double)x y:(double)y zoom:(double)zoom;
+- (void)selectionChanged;
+- (IBAction)goToNextPage:(id)sender;
+- (IBAction)goToPrevPage:(id)sender;
+- (IBAction)goToFirstPage:(id)sender;
+- (IBAction)goToLastPage:(id)sender;
+- (IBAction)zoomIn:(id)sender;
+- (IBAction)zoomOut:(id)sender;
+- (IBAction)zoomActualSize:(id)sender;
+- (IBAction)showKeyboardShortcuts:(id)sender;
+@end
+
 @interface SumatraPageImage : NSObject
 @property(nonatomic) int pageNo;
 @property(nonatomic) NSRect frame;
+@property(nonatomic) double layoutZoom;
 @property(nonatomic) CGImageRef image;
 @property(nonatomic, retain) NSArray* highlights;
 @end
@@ -130,7 +146,8 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 @property(nonatomic, retain) NSArray* pages;
 @property(nonatomic, copy) NSString* message;
 @property(nonatomic) BOOL scaleToFit;
-@property(nonatomic, assign) SumatraAppDelegate* owner;
+@property(nonatomic) BOOL selectingText;
+@property(nonatomic, assign) id<SumatraDocumentViewOwner> owner;
 @end
 
 @implementation SumatraDocumentView
@@ -267,12 +284,72 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
     [self drawPageImage:_image inRect:drawRect bounds:bounds];
 }
 
+- (SumatraPageImage*)pageAtPoint:(NSPoint)point {
+    for (SumatraPageImage* page in _pages) {
+        if (NSPointInRect(point, [page frame])) {
+            return page;
+        }
+    }
+    return nil;
+}
+
+- (void)mouseDown:(NSEvent*)event {
+    SumatraPageImage* page = [self pageAtPoint:[self convertPoint:[event locationInWindow] fromView:nil]];
+    void* document = [_owner documentHandle];
+    if (!page || !document) {
+        [super mouseDown:event];
+        return;
+    }
+    NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
+    NSRect frame = [page frame];
+    double x = point.x - frame.origin.x;
+    double y = point.y - frame.origin.y;
+    MacLink link = {};
+    if (MacLinkAtPoint(document, [page pageNo], x, y, [page layoutZoom], [_owner documentRotation], &link)) {
+        MacFreeLink(&link);
+        [_owner activateLinkAtPage:[page pageNo] x:x y:y zoom:[page layoutZoom]];
+        return;
+    }
+    _selectingText = MacStartSelection(document, [page pageNo], x, y, [page layoutZoom], [_owner documentRotation]);
+    if (_selectingText) {
+        [_owner selectionChanged];
+        return;
+    }
+    [super mouseDown:event];
+}
+
+- (void)mouseDragged:(NSEvent*)event {
+    if (!_selectingText) {
+        [super mouseDragged:event];
+        return;
+    }
+    NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
+    SumatraPageImage* page = [self pageAtPoint:point];
+    if (!page) {
+        return;
+    }
+    NSRect frame = [page frame];
+    if (MacUpdateSelection([_owner documentHandle], [page pageNo], point.x - frame.origin.x, point.y - frame.origin.y,
+                           [page layoutZoom], [_owner documentRotation])) {
+        [_owner selectionChanged];
+    }
+}
+
+- (void)mouseUp:(NSEvent*)event {
+    if (_selectingText) {
+        _selectingText = NO;
+        [_owner selectionChanged];
+        return;
+    }
+    [super mouseUp:event];
+}
+
 // Page navigation and zoom via the keyboard. Menu items provide the ⌘-modified
 // equivalents; bare keys are handled here so arrows/space/page keys just work.
 - (void)keyDown:(NSEvent*)event {
     NSString* chars = [event charactersIgnoringModifiers];
     unichar c = [chars length] ? [chars characterAtIndex:0] : 0;
-    SumatraAppDelegate* owner = _owner;
+    id<SumatraDocumentViewOwner> owner = _owner;
     if (!owner) {
         [super keyDown:event];
         return;
@@ -318,7 +395,8 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 
 @end
 
-@interface SumatraAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, NSToolbarDelegate>
+@interface SumatraAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, NSToolbarDelegate,
+                                         SumatraDocumentViewOwner>
 @property(nonatomic, retain) NSWindow* window;
 @property(nonatomic, retain) NSScrollView* scrollView;
 @property(nonatomic, retain) SumatraDocumentView* documentView;
@@ -765,6 +843,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         SumatraPageImage* pageView = [[[SumatraPageImage alloc] init] autorelease];
         [pageView setPageNo:page->pageNo];
         [pageView setFrame:NSMakeRect(page->x, page->y, page->width, page->height)];
+        [pageView setLayoutZoom:page->layoutZoom];
         if (page->visibleRatio > 0 || !_continuousView) {
             CGImageRef image =
                 [self renderedImageForPage:page->pageNo renderZoom:page->renderZoom showErrors:showErrors];
@@ -774,11 +853,21 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
             }
         }
         int highlightCount = MacFindResultRectCount(_document, page->pageNo);
-        if (highlightCount > 0) {
-            NSMutableArray* highlights = [NSMutableArray arrayWithCapacity:(NSUInteger)highlightCount];
+        int selectionCount = MacSelectionRectCount(_document, page->pageNo);
+        if (highlightCount > 0 || selectionCount > 0) {
+            NSMutableArray* highlights =
+                [NSMutableArray arrayWithCapacity:(NSUInteger)(highlightCount + selectionCount)];
             for (int j = 0; j < highlightCount; j++) {
                 MacDisplayRect rect = {};
                 if (!MacFindResultRect(_document, page->pageNo, j, page->layoutZoom, _rotation, &rect)) {
+                    continue;
+                }
+                NSRect highlight = NSMakeRect(page->x + rect.x, page->y + rect.y, rect.width, rect.height);
+                [highlights addObject:[NSValue valueWithRect:highlight]];
+            }
+            for (int j = 0; j < selectionCount; j++) {
+                MacDisplayRect rect = {};
+                if (!MacSelectionRect(_document, page->pageNo, j, page->layoutZoom, _rotation, &rect)) {
                     continue;
                 }
                 NSRect highlight = NSMakeRect(page->x + rect.x, page->y + rect.y, rect.width, rect.height);
@@ -843,6 +932,43 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_toolbar validateVisibleItems];
 }
 
+- (void*)documentHandle {
+    return _document;
+}
+
+- (int)documentRotation {
+    return _rotation;
+}
+
+- (void)selectionChanged {
+    [self renderCurrentPage];
+}
+
+- (void)activateLinkAtPage:(int)pageNo x:(double)x y:(double)y zoom:(double)zoom {
+    MacLink link = {};
+    if (!MacLinkAtPoint(_document, pageNo, x, y, zoom, _rotation, &link)) {
+        return;
+    }
+    if (link.kind == MacLinkKind::Page) {
+        [self goToPage:link.pageNo];
+    } else if (link.value) {
+        NSString* value = [NSString stringWithUTF8String:link.value];
+        if (link.kind == MacLinkKind::Url) {
+            NSURL* url = [NSURL URLWithString:value];
+            if (url) {
+                [[NSWorkspace sharedWorkspace] openURL:url];
+            }
+        } else if (link.kind == MacLinkKind::File) {
+            NSString* path = [value stringByStandardizingPath];
+            if (![path isAbsolutePath]) {
+                path = [[_documentPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:path];
+            }
+            [[NSWorkspace sharedWorkspace] openURL:[NSURL fileURLWithPath:path]];
+        }
+    }
+    MacFreeLink(&link);
+}
+
 - (BOOL)canPerformAction:(SEL)action {
     if (!action || action == @selector(openDocument:) || action == @selector(toggleFullScreen:) ||
         action == @selector(openWebsite:)) {
@@ -850,6 +976,9 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     if (action == @selector(goToPrevPage:) || action == @selector(goToFirstPage:)) {
         return [self hasDocument] && _currentPage > 1;
+    }
+    if (action == @selector(copySelection:)) {
+        return [self hasDocument] && MacHasSelection(_document);
     }
     if (action == @selector(goToNextPage:) || action == @selector(goToLastPage:)) {
         return [self hasDocument] && _currentPage < _pageCount;
@@ -861,7 +990,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         action == @selector(zoomIn:) || action == @selector(zoomOut:) || action == @selector(setSinglePageView:) ||
         action == @selector(setContinuousView:) || action == @selector(findDocument:) ||
         action == @selector(findNext:) || action == @selector(findPrevious:) || action == @selector(showToc:) ||
-        action == @selector(showProperties:)) {
+        action == @selector(showProperties:) || action == @selector(selectAll:)) {
         return [self hasDocument];
     }
     return YES;
@@ -1127,6 +1256,28 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [alert runModal];
 }
 
+- (IBAction)copySelection:(id)sender {
+    (void)sender;
+    char* textUtf8 = MacCopySelectionText(_document);
+    if (!textUtf8) {
+        return;
+    }
+    NSString* text = [NSString stringWithUTF8String:textUtf8];
+    MacFreeString(textUtf8);
+    if (!text) {
+        return;
+    }
+    NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+    [pasteboard clearContents];
+    [pasteboard setString:text forType:NSPasteboardTypeString];
+}
+
+- (IBAction)selectAll:(id)sender {
+    (void)sender;
+    MacSelectAll(_document);
+    [self renderCurrentPage];
+}
+
 - (IBAction)rotateLeft:(id)sender {
     (void)sender;
     if (!_document) {
@@ -1374,6 +1525,19 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     AddItem(fileMenu, @"Properties", @selector(showProperties:), delegate, @"", 0);
     [fileItem setSubmenu:fileMenu];
 
+    // Edit menu
+    NSMenuItem* editItem = [[[NSMenuItem alloc] initWithTitle:@"Edit" action:nil keyEquivalent:@""] autorelease];
+    [mainMenu addItem:editItem];
+    NSMenu* editMenu = [[[NSMenu alloc] initWithTitle:@"Edit"] autorelease];
+    AddItem(editMenu, @"Copy", @selector(copySelection:), delegate, @"c", NSEventModifierFlagCommand);
+    AddItem(editMenu, @"Select All", @selector(selectAll:), delegate, @"a", NSEventModifierFlagCommand);
+    [editMenu addItem:[NSMenuItem separatorItem]];
+    AddItem(editMenu, @"Find…", @selector(findDocument:), delegate, @"f", NSEventModifierFlagCommand);
+    AddItem(editMenu, @"Find Next", @selector(findNext:), delegate, @"g", NSEventModifierFlagCommand);
+    AddItem(editMenu, @"Find Previous", @selector(findPrevious:), delegate, @"g",
+            NSEventModifierFlagCommand | NSEventModifierFlagShift);
+    [editItem setSubmenu:editMenu];
+
     // View menu
     NSMenuItem* viewItem = [[[NSMenuItem alloc] initWithTitle:@"View" action:nil keyEquivalent:@""] autorelease];
     [mainMenu addItem:viewItem];
@@ -1411,11 +1575,6 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     [goMenu addItem:[NSMenuItem separatorItem]];
     AddPlaceholder(goMenu, @"Back", delegate);
     AddPlaceholder(goMenu, @"Forward", delegate);
-    [goMenu addItem:[NSMenuItem separatorItem]];
-    AddItem(goMenu, @"Find…", @selector(findDocument:), delegate, @"f", NSEventModifierFlagCommand);
-    AddItem(goMenu, @"Find Next", @selector(findNext:), delegate, @"g", NSEventModifierFlagCommand);
-    AddItem(goMenu, @"Find Previous", @selector(findPrevious:), delegate, @"g",
-            NSEventModifierFlagCommand | NSEventModifierFlagShift);
     [goItem setSubmenu:goMenu];
 
     // Zoom menu

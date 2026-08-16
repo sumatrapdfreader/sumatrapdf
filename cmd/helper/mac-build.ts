@@ -9,9 +9,10 @@
  * Builds portable src/ test tools, but not the Windows-only SumatraPDF UI.
  */
 
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, basename } from "node:path";
+import { tmpdir } from "node:os";
 import {
   type BuildTools,
   type LibDef,
@@ -43,6 +44,7 @@ import {
   cmarkGfm,
   mupdf as mupdfBase,
 } from "../deps-build-defs";
+import { extractSumatraVersion } from "../util";
 
 type MacArch = "arm64" | "x64";
 
@@ -708,6 +710,7 @@ export async function buildMac(opts: MacBuildOptions): Promise<void> {
   await compilePortableSources(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildMacApp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildMacPortableArchive(outDir, arch, config);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
@@ -923,7 +926,44 @@ async function buildMacApp(
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1</string>
+  <string>${extractSumatraVersion()}</string>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Documents</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>pdf</string>
+        <string>xps</string>
+        <string>oxps</string>
+        <string>epub</string>
+        <string>mobi</string>
+        <string>fb2</string>
+        <string>cbz</string>
+        <string>cbr</string>
+        <string>cb7</string>
+        <string>cbt</string>
+        <string>djvu</string>
+        <string>djv</string>
+        <string>chm</string>
+        <string>png</string>
+        <string>jpg</string>
+        <string>jpeg</string>
+        <string>gif</string>
+        <string>tif</string>
+        <string>tiff</string>
+        <string>tga</string>
+        <string>bmp</string>
+        <string>webp</string>
+        <string>jxl</string>
+        <string>heic</string>
+        <string>avif</string>
+      </array>
+    </dict>
+  </array>
   <key>NSHighResolutionCapable</key>
   <true/>
 </dict>
@@ -931,6 +971,31 @@ async function buildMacApp(
 `,
   );
   console.log(`  -> ${appDir}`);
+}
+
+async function buildMacPortableArchive(outDir: string, arch: MacArch, config: string): Promise<void> {
+  const version = extractSumatraVersion();
+  const configSuffix = config === "release" ? "" : `-${config}`;
+  const packageName = `SumatraPDF-${version}-mac-${arch}${configSuffix}`;
+  const tempRoot = mkdtempSync(join(tmpdir(), "sumatrapdf-mac-package-"));
+  const packageDir = join(tempRoot, packageName);
+  const archivePath = join(outDir, `${packageName}.tar.gz`);
+  rmSync(archivePath, { force: true });
+
+  console.log("Building portable macOS archive...");
+  try {
+    mkdirSync(packageDir, { recursive: true });
+    cpSync(join(outDir, "SumatraPDF.app"), join(packageDir, "SumatraPDF.app"), { recursive: true });
+    copyFileSync("COPYING", join(packageDir, "COPYING"));
+    copyFileSync("packaging/mac/README.md", join(packageDir, "README.md"));
+    const result = await spawnCmd(["tar", "-czf", archivePath, "-C", tempRoot, packageName]);
+    if (!result.ok) {
+      throw new Error(`create portable macOS archive failed: ${result.stderr}`);
+    }
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+  console.log(`  -> ${archivePath}`);
 }
 
 async function buildTestEngines(

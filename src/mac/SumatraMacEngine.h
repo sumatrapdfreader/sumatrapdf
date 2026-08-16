@@ -49,6 +49,19 @@ struct MacDisplayRect {
     double height;
 };
 
+enum class MacLinkKind {
+    None,
+    Page,
+    Url,
+    File,
+};
+
+struct MacLink {
+    MacLinkKind kind;
+    int pageNo;
+    char* value;
+};
+
 struct MacDocumentLayout {
     int pageCount;
     int currentPage;
@@ -76,6 +89,18 @@ bool MacFindText(void* document, int currentPage, const char* text, bool forward
 int MacFindResultPage(void* document);
 int MacFindResultRectCount(void* document, int pageNo);
 bool MacFindResultRect(void* document, int pageNo, int index, double zoom, int rotation, MacDisplayRect* rect);
+
+bool MacTextAtPoint(void* document, int pageNo, double x, double y, double zoom, int rotation);
+bool MacStartSelection(void* document, int pageNo, double x, double y, double zoom, int rotation);
+bool MacUpdateSelection(void* document, int pageNo, double x, double y, double zoom, int rotation);
+void MacSelectAll(void* document);
+bool MacHasSelection(void* document);
+int MacSelectionRectCount(void* document, int pageNo);
+bool MacSelectionRect(void* document, int pageNo, int index, double zoom, int rotation, MacDisplayRect* rect);
+char* MacCopySelectionText(void* document);
+
+bool MacLinkAtPoint(void* document, int pageNo, double x, double y, double zoom, int rotation, MacLink* link);
+void MacFreeLink(MacLink* link);
 
 int MacTocItemCount(void* document);
 char* MacCopyTocItemTitle(void* document, int index);
