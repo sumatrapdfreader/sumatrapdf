@@ -9,6 +9,7 @@ struct LitAttrCode {
     const char* name;
 };
 
+// clang-format off
 // tag code -> name, indexed by the code; "\x01" marks a code with no tag
 static SeqStrings gLitHtmlTags =
     "\x01\0" "\x01\0" "\x01\0" "a\0" "acronym\0" "address\0" "applet\0" "area\0" "b\0" "base\0" "basefont\0" "bdo\0"
@@ -549,3 +550,4 @@ static const LitAttrCode gLitOpfAttrs[] = {
     {0xc, "xmlns:oebpackage"}, {0xd, "role"}, {0xe, "file-as"}, {0xf, "event"}, {0x10, "scheme"}, {0x11, "title"},
     {0x12, "type"}, {0x13, "unique-identifier"}, {0x14, "name"}, {0x15, "content"}, {0x16, "xml:lang"},
 };
+// clang-format on

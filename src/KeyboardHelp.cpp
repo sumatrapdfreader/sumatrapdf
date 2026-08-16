@@ -50,10 +50,9 @@ static const int kSecAnnot[] = {
     CmdDeleteAnnotation, 0,
 };
 static const int kSecIface[] = {
-    CmdToggleBookmarks, CmdToggleToolbar, CmdToggleMenuBar,
-    CmdToggleCursorPosition, CmdTogglePageInfo, CmdCommandPalette,
-    CmdFavoriteAdd, CmdFavoriteToggle, CmdHelpOpenManual,
-    CmdToggleKeyboardHelp, 0,
+    CmdCommandPalette, CmdToggleBookmarks, CmdToggleToolbar, CmdToggleMenuBar,
+    CmdToggleCursorPosition, CmdTogglePageInfo,
+    CmdFavoriteAdd, CmdFavoriteToggle, CmdHelpOpenManual,0,
 };
 // clang-format on
 
