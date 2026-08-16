@@ -534,9 +534,6 @@
     <ClInclude Include="..\src\gui\win\BrowserDocView.h">
       <Filter>src\gui\win</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\win\DialogSizer.h">
-      <Filter>src\gui\win</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\win\FrameRateWnd.h">
       <Filter>src\gui\win</Filter>
     </ClInclude>
@@ -1227,9 +1224,6 @@
       <Filter>src\gui\win</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\win\Checkbox.cpp">
-      <Filter>src\gui\win</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\win\DialogSizer.cpp">
       <Filter>src\gui\win</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\win\DropDown.cpp">

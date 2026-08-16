@@ -1294,7 +1294,6 @@
     <ClInclude Include="..\src\gui\VirtCtrl.h" />
     <ClInclude Include="..\src\gui\VirtHost.h" />
     <ClInclude Include="..\src\gui\win\BrowserDocView.h" />
-    <ClInclude Include="..\src\gui\win\DialogSizer.h" />
     <ClInclude Include="..\src\gui\win\FrameRateWnd.h" />
     <ClInclude Include="..\src\gui\win\HtmlWindow.h" />
     <ClInclude Include="..\src\gui\win\TabsCtrl.h" />
@@ -1751,7 +1750,6 @@
     <ClCompile Include="..\src\gui\win\BrowserDocView.cpp" />
     <ClCompile Include="..\src\gui\win\Button.cpp" />
     <ClCompile Include="..\src\gui\win\Checkbox.cpp" />
-    <ClCompile Include="..\src\gui\win\DialogSizer.cpp" />
     <ClCompile Include="..\src\gui\win\DropDown.cpp" />
     <ClCompile Include="..\src\gui\win\Edit.cpp" />
     <ClCompile Include="..\src\gui\win\FrameRateWnd.cpp" />
