@@ -2181,7 +2181,6 @@ void HomeEntriesCtrl::SetEntryCount(int n) {
         e->closeBtn = new VirtCloseButton();
         // it sits on the thumbnail, so it needs the circle behind it
         e->closeBtn->withCircle = true;
-        e->closeBtn->SetTooltip(_TRA("Remove from Frequently Read"));
         e->closeBtn->onClick = MkFunc1(HomeForgetEntryClicked, win);
         e->closeBtn->visibility = Visibility::Collapse;
         e->AddChild(e->closeBtn);
