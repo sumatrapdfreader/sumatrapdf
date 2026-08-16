@@ -430,3 +430,24 @@ Verification:
   102,793 assertions, `test_engines` linked, and `SumatraPDF.app` linked with the shared reader change.
 - The WSL environment has no configured physical printer, so verification covers native print API compilation and
   linkage rather than submitting a real printer job.
+
+### Clipboard and file-manager integration
+
+Completed 2026-08-16.
+
+- Consolidated Linux clipboard writes in a small desktop-services module and reused it for selected text and file
+  paths.
+- Added Copy File Path to the Edit menu, application actions, and the command palette.
+- Added Show in Folder to the File menu, application actions, and the command palette. It first uses the standard
+  `org.freedesktop.FileManager1.ShowItems` D-Bus interface so file managers can select the document, then falls back
+  to opening the containing directory through the desktop's default URI handler.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,757 assertions and all Linux targets,
+  including the 47-source GTK application, linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,888 assertions and all Linux targets
+  linked.
+- An isolated WSLg smoke opened `ext/a-zlib/zlib.3.pdf`, invoked the Copy File Path application action, and quit
+  cleanly with status 0. WSLg only emitted its existing non-fatal Mesa renderer warnings.

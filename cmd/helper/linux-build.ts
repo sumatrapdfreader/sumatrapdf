@@ -719,6 +719,7 @@ const GTK4_APP_SOURCES = [
   "src/gui/gtk4/PlatformWindowGtk.cpp",
   "src/linux/LinuxApp.cpp",
   "src/linux/LinuxCommandPalette.cpp",
+  "src/linux/LinuxDesktop.cpp",
   "src/linux/LinuxPrefs.cpp",
   "src/linux/LinuxPrint.cpp",
   "src/linux/LinuxTab.cpp",

@@ -16,6 +16,7 @@
 
 #include "linux/LinuxTab.h"
 #include "linux/LinuxCommandPalette.h"
+#include "linux/LinuxDesktop.h"
 #include "linux/LinuxPrint.h"
 #include "linux/LinuxPrefs.h"
 #include "linux/LinuxWindow.h"
@@ -163,8 +164,7 @@ static void OpenLinkedFile(LinuxWindow* window, Str linkPath) {
 }
 
 static void CopyText(LinuxWindow* window, Str text) {
-    GdkClipboard* clipboard = gtk_widget_get_clipboard(window->window);
-    gdk_clipboard_set_text(clipboard, CStrTemp(text));
+    LinuxClipboardSetText(window->window, text);
 }
 
 static void OnTocRowActivated(GtkListBox*, GtkListBoxRow* row, gpointer data) {
@@ -430,6 +430,7 @@ static void ShowCommandPalette(LinuxWindow* window) {
     static const int commands[] = {
         CmdOpenFile,
         CmdPrint,
+        CmdShowInFolder,
         CmdCloseCurrentDocument,
         CmdReopenLastClosedFile,
         CmdNextTab,
@@ -454,6 +455,7 @@ static void ShowCommandPalette(LinuxWindow* window) {
         CmdFindNext,
         CmdFindPrev,
         CmdCopySelection,
+        CmdCopyFilePath,
         CmdSelectAll,
     };
     ShowLinuxCommandPalette(GTK_WINDOW(window->window), commands, dimofi(commands),
@@ -517,6 +519,9 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             return;
         case CmdPrint:
             ShowLinuxPrintDialog(GTK_WINDOW(window->window), ActiveView(window));
+            return;
+        case CmdShowInFolder:
+            LinuxShowFileInFolder(LinuxTabPath(ActiveTab(window)));
             return;
         case CmdCloseCurrentDocument:
             CloseTab(window, ActiveTab(window));
@@ -591,6 +596,9 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             break;
         case CmdCopySelection:
             view->CopySelection();
+            break;
+        case CmdCopyFilePath:
+            LinuxClipboardSetText(window->window, LinuxTabPath(ActiveTab(window)));
             break;
         case CmdSelectAll:
             view->SelectAll();

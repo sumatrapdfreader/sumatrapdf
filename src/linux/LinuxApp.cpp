@@ -72,6 +72,8 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdOpenFile;
     } else if (str::Eq(Str(name), StrL("print"))) {
         command = CmdPrint;
+    } else if (str::Eq(Str(name), StrL("show-in-folder"))) {
+        command = CmdShowInFolder;
     } else if (str::Eq(Str(name), StrL("close-tab"))) {
         command = CmdCloseCurrentDocument;
     } else if (str::Eq(Str(name), StrL("reopen-tab"))) {
@@ -90,6 +92,8 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdCommandPalette;
     } else if (str::Eq(Str(name), StrL("copy"))) {
         command = CmdCopySelection;
+    } else if (str::Eq(Str(name), StrL("copy-file-path"))) {
+        command = CmdCopyFilePath;
     } else if (str::Eq(Str(name), StrL("select-all"))) {
         command = CmdSelectAll;
     } else if (str::Eq(Str(name), StrL("find"))) {
@@ -163,6 +167,7 @@ static GMenu* CreateMainMenu() {
     GMenu* file = g_menu_new();
     g_menu_append(file, "Open...", "app.open");
     g_menu_append(file, "Print...", "app.print");
+    g_menu_append(file, "Show in Folder", "app.show-in-folder");
     g_menu_append(file, "Close Tab", "app.close-tab");
     g_menu_append(file, "Reopen Closed Tab", "app.reopen-tab");
     g_menu_append(file, "Properties...", "app.properties");
@@ -185,6 +190,7 @@ static GMenu* CreateMainMenu() {
 
     GMenu* edit = g_menu_new();
     g_menu_append(edit, "Copy", "app.copy");
+    g_menu_append(edit, "Copy File Path", "app.copy-file-path");
     g_menu_append(edit, "Select All", "app.select-all");
     g_menu_append(edit, "Find...", "app.find");
     g_menu_append(edit, "Command Palette...", "app.command-palette");
@@ -227,6 +233,7 @@ int RunLinuxApp(int argc, char** argv) {
         {"quit", OnQuit},
         {"open", OnWindowCommand},
         {"print", OnWindowCommand},
+        {"show-in-folder", OnWindowCommand},
         {"close-tab", OnWindowCommand},
         {"reopen-tab", OnWindowCommand},
         {"next-tab", OnWindowCommand},
@@ -236,6 +243,7 @@ int RunLinuxApp(int argc, char** argv) {
         {"keyboard-help", OnWindowCommand},
         {"command-palette", OnWindowCommand},
         {"copy", OnWindowCommand},
+        {"copy-file-path", OnWindowCommand},
         {"select-all", OnWindowCommand},
         {"find", OnWindowCommand},
         {"find-next", OnWindowCommand},
