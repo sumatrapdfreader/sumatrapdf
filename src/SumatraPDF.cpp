@@ -3506,8 +3506,10 @@ static void ShowLoadErrorInTab(MainWindow* win, LoadArgs* args, Str path) {
     if (!isNewTab) {
         SetTabLoadError(tab, path);
     }
-    win->ctrl = nullptr;
     if (tab == win->CurrentTab()) {
+        // a failed load into a background tab must not clobber win->ctrl,
+        // which mirrors the current tab's (possibly loaded) document
+        win->ctrl = nullptr;
         // the title bar names the file that failed, like it did before the tab
         // went away
         SetFrameTitleForTab(tab, false);
