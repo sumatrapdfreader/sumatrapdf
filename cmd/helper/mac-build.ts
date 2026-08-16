@@ -556,6 +556,8 @@ const TEST_ENGINES_SOURCES = [
   "src/PdfCadDetect.cpp",
   "src/PdfCadEnhanceDevice.cpp",
   "src/PdfDarkModeNoOp.cpp",
+  "src/TextSelection.cpp",
+  "src/TextSearch.cpp",
   "src/TreeModel.cpp",
   "src/tools/test_engines.cpp",
 ];
