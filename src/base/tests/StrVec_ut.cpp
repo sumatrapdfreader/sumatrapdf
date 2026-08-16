@@ -747,6 +747,182 @@ static void StrVecTest9() {
     utassert(StrLessNoCase(Str("ABz", 2), Str("ABZ", 3)));
 }
 
+// Find/FindI with an out-of-range startAt must return -1, not crash
+static void StrVecTestFindStartAt() {
+    StrVec v;
+    utassert(v.Find("x") == -1);
+    utassert(v.Find("x", 1) == -1);
+    utassert(v.FindI("x", 5) == -1);
+    v.Append("a");
+    v.Append("b");
+    utassert(v.Find("b", 1) == 1);
+    utassert(v.Find("a", 1) == -1);
+    utassert(v.Find("a", 2) == -1);
+    utassert(v.Find("a", 3) == -1);
+    utassert(v.FindI("A", 17) == -1);
+    utassert(v.Find("a", -1) == -1);
+}
+
+// mutations on a SortIndex()-sorted vec must target the logical element,
+// not whatever physically sits at that slot
+static void StrVecTestSortedMutation() {
+    StrVecWithData<Data1> v; // dataSize != 0 => Sort() uses SortIndex
+    const char* strings[] = {"c", "a", "d", "b"};
+    for (int i = 0; i < 4; i++) {
+        Data1 d{};
+        d.n = (u16)i;
+        v.Append(strings[i], d);
+    }
+
+    Sort(&v); // logical order: a b c d
+    Str removed = v.RemoveAt(0);
+    utassert(str::Eq(removed, StrL("a")));
+    utassert(len(v) == 3);
+    utassert(!v.Contains("a"));
+    utassert(v.Contains("b") && v.Contains("c") && v.Contains("d"));
+
+    Sort(&v); // b c d
+    bool ok = v.Remove("c");
+    utassert(ok);
+    utassert(!v.Contains("c"));
+    utassert(v.Contains("b") && v.Contains("d"));
+
+    Sort(&v);         // b d
+    v.SetAt(1, "zz"); // logical idx 1 is "d"
+    utassert(v.Contains("b") && v.Contains("zz"));
+    utassert(!v.Contains("d"));
+
+    Sort(&v); // b zz
+    removed = v.RemoveAtFast(0);
+    utassert(str::Eq(removed, StrL("b")));
+    utassert(len(v) == 1);
+    utassert(str::Eq(v.At(0), StrL("zz")));
+}
+
+// a copy of a SortIndex()-sorted vec must preserve the logical (sorted) order
+static void StrVecTestSortedCopy() {
+    StrVecWithData<Data1> v;
+    const char* strings[] = {"c", "a", "b"};
+    for (int i = 0; i < 3; i++) {
+        Data1 d{};
+        d.n = (u16)i;
+        v.Append(strings[i], d);
+    }
+    Sort(&v); // a b c
+
+    StrVecWithData<Data1> v2 = v;
+    utassert(len(v2) == 3);
+    for (int i = 0; i < 3; i++) {
+        strEq(v2.At(i), v.At(i));
+        utassert(v2.AtData(i)->n == v.AtData(i)->n);
+    }
+
+    StrVecWithData<Data1> v3;
+    Data1 d{};
+    d.n = 77;
+    v3.Append("x", d);
+    v3 = v;
+    utassert(len(v3) == 3);
+    for (int i = 0; i < 3; i++) {
+        strEq(v3.At(i), v.At(i));
+        utassert(v3.AtData(i)->n == v.AtData(i)->n);
+    }
+}
+
+// Split() into a non-empty vec must behave the same as into a fresh one:
+// the "add trailing empty string" rule depends on what this call added,
+// not on the pre-existing size of the vec
+static void StrVecTestSplitNonEmpty() {
+    StrVec v;
+    v.Append("existing");
+    int n = Split(&v, "", " ", true);
+    utassert(n == 1);
+    utassert(len(v) == 2);
+    utassert(len(v.At(1)) == 0);
+
+    v.Reset();
+    v.Append("existing");
+    n = Split(&v, ",,", ",", true);
+    utassert(n == 1);
+    utassert(len(v) == 2);
+    utassert(len(v.At(1)) == 0);
+}
+
+// SetAt/InsertAt with a string pointing into the same vec must survive
+// the page compaction fallback (which frees the old pages)
+static void StrVecTestSetAtSelfRef() {
+    char buf[300];
+    memset(buf, 'x', sizeof(buf));
+    Str big(buf, 299);
+
+    StrVec v;
+    v.Append(big); // fills first page almost completely
+    v.Append("small");
+    v.SetAt(1, v.At(0)); // no room => compaction; arg points into freed pages
+    Str got = v.At(1);
+    utassert(len(got) == 299);
+    utassert(memcmp(got.s, buf, 299) == 0);
+
+    v.Reset();
+    v.Append(big);
+    v.Append("small");
+    v.InsertAt(1, v.At(0));
+    utassert(len(v) == 3);
+    got = v.At(1);
+    utassert(len(got) == 299);
+    utassert(memcmp(got.s, buf, 299) == 0);
+}
+
+// sorting must use the stored string lengths, so strings with embedded NUL
+// compare by their full content
+static void StrVecTestSortEmbeddedNul() {
+    StrVec v; // dataSize == 0 => Sort() uses SortNoData
+    v.Append(Str("a\0c", 3));
+    v.Append(Str("a\0b", 3));
+    v.Append(Str("a", 1));
+    Sort(&v);
+    utassert(len(v.At(0)) == 1);
+    Str s = v.At(1);
+    utassert(len(s) == 3 && memcmp(s.s, "a\0b", 3) == 0);
+    s = v.At(2);
+    utassert(len(s) == 3 && memcmp(s.s, "a\0c", 3) == 0);
+}
+
+// iterator operator+ must return an advanced copy, not mutate in place
+static void StrVecTestIterPlus() {
+    StrVec v;
+    v.Append("a");
+    v.Append("b");
+    v.Append("c");
+    auto it = v.begin();
+    auto it2 = it + 2;
+    utassert(it.idx == 0);
+    strEq(*it, "a");
+    utassert(it2.idx == 2);
+    strEq(*it2, "c");
+}
+
+// appends across many pages, with a compaction in the middle
+// (exercises tail-page tracking in Append)
+static void StrVecTestManyAppend() {
+    StrVec v;
+    int n = 3000;
+    for (int i = 0; i < n; i++) {
+        TempStr s = fmt("s%d", i);
+        v.Append(s);
+    }
+    utassert(len(v) == n);
+    ValidateSize(&v);
+    strEq(v.At(0), "s0");
+    strEq(v.At(n - 1), "s2999");
+    // force compaction, then append again
+    v.SetAt(0, "this is a much longer replacement string than the original was");
+    v.Append("after-compact");
+    ValidateSize(&v);
+    strEq(v.At(len(v) - 1), "after-compact");
+    utassert(v.Find("s1500") >= 0);
+}
+
 void StrVecTest() {
     StrVecTest9();
     StrVecTest8();
@@ -757,4 +933,12 @@ void StrVecTest() {
     StrVecTest5();
     StrVecTest6();
     StrVecTest7();
+    StrVecTestFindStartAt();
+    StrVecTestSortedMutation();
+    StrVecTestSortedCopy();
+    StrVecTestSplitNonEmpty();
+    StrVecTestSetAtSelfRef();
+    StrVecTestSortEmbeddedNul();
+    StrVecTestIterPlus();
+    StrVecTestManyAppend();
 }

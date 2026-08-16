@@ -331,6 +331,7 @@ static void CompactPages(StrVec* v, int extraSize) {
     auto* first = CompactStrVecPages(v->first, extraSize);
     FreePages(v->first);
     v->first = first;
+    v->last = first;
     ReportIf(first && (v->size != first->nStrings));
 }
 
@@ -345,12 +346,14 @@ void StrVec::Reset(StrVecPage* initWith) {
     InvalidateSortIndexes(this);
     FreePages(first);
     first = nullptr;
+    last = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
     size = 0;
     if (initWith == nullptr) {
         return;
     }
     first = CompactStrVecPages(initWith, 0);
+    last = first;
     size = first->nStrings;
 }
 
@@ -365,17 +368,34 @@ StrVec::~StrVec() {
     Reset(nullptr);
 }
 
+// copies in logical order: for a SortIndex()-sorted source, page compaction
+// alone would materialize the copy in physical (insertion) order and silently
+// drop the sorted view
+static void CopyStrVec(StrVec* v, const StrVec& that) {
+    v->dataSize = that.dataSize;
+    if (!that.sortIndexes) {
+        v->Reset(that.first);
+        return;
+    }
+    v->Reset(nullptr);
+    int n = len(that);
+    for (int i = 0; i < n; i++) {
+        v->Append(that.At(i));
+        if (v->dataSize > 0) {
+            memcpy(v->AtDataRaw(i), that.AtDataRaw(i), (size_t)v->dataSize);
+        }
+    }
+}
+
 StrVec::StrVec(const StrVec& that) {
-    Reset(that.first);
-    dataSize = that.dataSize;
+    CopyStrVec(this, that);
 }
 
 StrVec& StrVec::operator=(const StrVec& that) {
     if (this == &that) {
         return *this;
     }
-    Reset(that.first);
-    dataSize = that.dataSize;
+    CopyStrVec(this, that);
     return *this;
 }
 
@@ -421,6 +441,7 @@ static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
         ReportIf(v->first);
         v->first = page;
     }
+    v->last = page;
     return page;
 }
 
@@ -430,14 +451,11 @@ Str StrVec::Append(Str s) {
     if (!str::IsNull(s)) {
         cbNeeded += (s.len + 1); // +1 for zero termination
     }
-    auto* last = first;
-    while (last && last->next) {
-        last = last->next;
+    auto* page = last;
+    if (!page || page->BytesLeft() < cbNeeded) {
+        page = AllocatePage(this, page, cbNeeded);
     }
-    if (!last || last->BytesLeft() < cbNeeded) {
-        last = AllocatePage(this, last, cbNeeded);
-    }
-    auto res = last->Append(s);
+    auto res = page->Append(s);
     ReportIf(res.noSpace);
     size++;
     InvalidateSortIndexes(this);
@@ -472,6 +490,10 @@ static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
 Str StrVec::SetAt(int idx, Str s) {
+    if (sortIndexes) {
+        // callers use logical (sorted) indexes, pages use physical order
+        idx = sortIndexes[idx];
+    }
     {
         int idxInPage;
         auto* page = PageForIdx(this, idx, &idxInPage);
@@ -480,6 +502,10 @@ Str StrVec::SetAt(int idx, Str s) {
             InvalidateSortIndexes(this);
             return res.s;
         }
+    }
+    // s might point into one of our pages, which CompactPages() frees
+    if (!str::IsNull(s)) {
+        s = str::DupTemp(s);
     }
     // perf: we assume that there will be more SetAt() calls so pre-allocate
     // extra space to make many SetAt() calls less expensive
@@ -498,6 +524,10 @@ Str StrVec::InsertAt(int idx, Str s) {
     if (idx == size) {
         return Append(s);
     }
+    if (sortIndexes) {
+        // callers use logical (sorted) indexes, pages use physical order
+        idx = sortIndexes[idx];
+    }
 
     {
         int idxInPage;
@@ -510,6 +540,10 @@ Str StrVec::InsertAt(int idx, Str s) {
         }
     }
 
+    // s might point into one of our pages, which CompactPages() frees
+    if (!str::IsNull(s)) {
+        s = str::DupTemp(s);
+    }
     // perf: we assume that there will be more InsertAt() calls so pre-allocate
     // extra space to make many InsertAt() calls less expensive
     int extraSpace = RoundUp(s.len + 1, 2048);
@@ -524,6 +558,10 @@ Str StrVec::InsertAt(int idx, Str s) {
 // remove string at idx and return it
 // return value is valid as long as StrVec is valid
 Str StrVec::RemoveAt(int idx) {
+    if (sortIndexes) {
+        // callers use logical (sorted) indexes, pages use physical order
+        idx = sortIndexes[idx];
+    }
     int idxInPage;
     auto* page = PageForIdx(this, idx, &idxInPage);
     Str removed = page->AtStr(idxInPage);
@@ -536,6 +574,10 @@ Str StrVec::RemoveAt(int idx) {
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec is valid
 Str StrVec::RemoveAtFast(int idx) {
+    if (sortIndexes) {
+        // callers use logical (sorted) indexes, pages use physical order
+        idx = sortIndexes[idx];
+    }
     int idxInPage;
     auto* page = PageForIdx(this, idx, &idxInPage);
     Str removed = page->AtStr(idxInPage);
@@ -580,6 +622,9 @@ Str StrVec::operator[](int idx) const {
 }
 
 int StrVec::Find(Str s, int startAt) const {
+    if (startAt < 0 || startAt >= size) {
+        return -1;
+    }
     int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
@@ -592,6 +637,9 @@ int StrVec::Find(Str s, int startAt) const {
 }
 
 int StrVec::FindI(Str s, int startAt) const {
+    if (startAt < 0 || startAt >= size) {
+        return -1;
+    }
     int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
@@ -643,6 +691,10 @@ static void AdvanceStrVecIter(StrVec::iterator& it, int n) {
     // TODO: optimize for n > 1
     for (int i = 0; i < n; i++) {
         it.idx++;
+        if (!it.page) {
+            // advanced past the end
+            continue;
+        }
         it.idxInPage++;
         if (it.idxInPage >= it.page->nStrings) {
             it.idxInPage = 0;
@@ -666,9 +718,10 @@ StrVec::iterator& StrVec::iterator::operator++() {
     return *this;
 }
 
-StrVec::iterator& StrVec::iterator::operator+(int n) {
-    AdvanceStrVecIter(*this, n);
-    return *this;
+StrVec::iterator StrVec::iterator::operator+(int n) const {
+    iterator res = *this;
+    AdvanceStrVecIter(res, n);
+    return res;
 }
 
 bool operator==(const StrVec::iterator& a, const StrVec::iterator& b) {
@@ -694,8 +747,10 @@ static void SortNoData(StrVec* v, StrLessFunc lessFn) {
     std::sort(b, e, [pageStart, lessFn](u64 offLen1, u64 offLen2) -> bool {
         u32 off1 = (u32)(offLen1 & 0xffffffff);
         u32 off2 = (u32)(offLen2 & 0xffffffff);
-        Str s1 = (off1 == kNullOffset) ? Str{} : Str((char*)(pageStart + off1));
-        Str s2 = (off2 == kNullOffset) ? Str{} : Str((char*)(pageStart + off2));
+        int len1 = (int)(offLen1 >> 32);
+        int len2 = (int)(offLen2 >> 32);
+        Str s1 = (off1 == kNullOffset) ? Str{} : Str((char*)(pageStart + off1), len1);
+        Str s2 = (off2 == kNullOffset) ? Str{} : Str((char*)(pageStart + off2), len2);
         bool ret = lessFn(s1, s2);
         return ret;
     });
@@ -789,7 +844,7 @@ int Split(StrVec* v, Str s, Str separator, bool collapse, int max) {
         // if we're collapsing, we're not adding empty string
         // at the end, unless we haven't added any strings yet
         // i.e. to match other languages, "".split(" ") => [""]
-        shouldAddRest = !collapse || len(*v) == 0;
+        shouldAddRest = !collapse || nAdded == 0;
     }
     if (shouldAddRest) {
         v->Append(Str(s.s + off, s.len - off));
