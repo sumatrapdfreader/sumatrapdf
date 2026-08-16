@@ -157,6 +157,102 @@ export async function spawnCmd(
   return { ok: code === 0, stderr, stdout };
 }
 
+function depPathForObj(obj: string): string {
+  return obj.replace(/\.o$/i, ".d");
+}
+
+function isUnderSrc(src: string): boolean {
+  const n = src.replaceAll("\\", "/");
+  return n.startsWith("src/") || n.includes("/src/");
+}
+
+// gcc/clang -MMD output: "foo.o: bar.cpp baz.h \\\n  qux.h"
+function parseDepFile(depPath: string): string[] {
+  let text: string;
+  try {
+    text = readFileSync(depPath, "utf8");
+  } catch {
+    return [];
+  }
+  const colon = text.indexOf(":");
+  if (colon < 0) {
+    return [];
+  }
+  return text
+    .slice(colon + 1)
+    .replace(/\\\r?\n/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+let cachedSrcHeaderMaxMtime: number | undefined;
+
+async function srcHeaderMaxMtime(): Promise<number> {
+  if (cachedSrcHeaderMaxMtime !== undefined) {
+    return cachedSrcHeaderMaxMtime;
+  }
+  let max = 0;
+  const glob = new Glob("src/**/*.{h,hh,hpp,inc}");
+  for await (const path of glob.scan({ dot: false })) {
+    try {
+      const t = statSync(path).mtimeMs;
+      if (t > max) {
+        max = t;
+      }
+    } catch {}
+  }
+  cachedSrcHeaderMaxMtime = max;
+  return max;
+}
+
+function newerThanObj(path: string, objMtime: number): boolean {
+  try {
+    return statSync(path).mtimeMs >= objMtime;
+  } catch {
+    return true;
+  }
+}
+
+async function objectNeedsCompile(src: string, obj: string): Promise<boolean> {
+  if (!existsSync(obj)) {
+    return true;
+  }
+  let objMtime: number;
+  try {
+    objMtime = statSync(obj).mtimeMs;
+  } catch {
+    return true;
+  }
+  if (newerThanObj(src, objMtime)) {
+    return true;
+  }
+  const depPath = depPathForObj(obj);
+  if (existsSync(depPath)) {
+    for (const dep of parseDepFile(depPath)) {
+      if (newerThanObj(dep, objMtime)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  // No .d yet (object from before header tracking). For src/ treat any
+  // newer project header as a dep so a StrVec.h-sized layout change
+  // rebuilds Dict_ut.o instead of linking a mixed ABI. ext/ stays
+  // src-mtime-only until the next compile writes a .d.
+  if (isUnderSrc(src) && (await srcHeaderMaxMtime()) >= objMtime) {
+    return true;
+  }
+  return false;
+}
+
+function withDepArgs(args: string[], obj: string): string[] {
+  if (args.includes("-MMD") || args.includes("-MD")) {
+    return args;
+  }
+  return [...args, "-MMD", "-MP", "-MF", depPathForObj(obj)];
+}
+
 /** Compile a list of {src, obj, args} units in parallel */
 export async function compileAll(units: { src: string; obj: string; args: string[] }[], jobs: number): Promise<void> {
   let idx = 0;
@@ -171,26 +267,23 @@ export async function compileAll(units: { src: string; obj: string; args: string
       process.stdout.write(`  [${i + 1}/${total}] ${u.src}\n`);
       mkdirSync(dirname(u.obj), { recursive: true });
 
-      if (existsSync(u.obj)) {
-        try {
-          const srcMtime = statSync(u.src).mtimeMs;
-          const objMtime = statSync(u.obj).mtimeMs;
-          if (objMtime > srcMtime) {
-            continue;
-          }
-        } catch {}
+      if (!(await objectNeedsCompile(u.src, u.obj))) {
+        continue;
       }
 
       try {
         rmSync(u.obj);
       } catch {}
-      const res = await spawnCmd(u.args);
+      const res = await spawnCmd(withDepArgs(u.args, u.obj));
       if (!res.ok) {
         console.error(`FAILED: ${u.src}`);
         if (res.stderr) console.error(res.stderr.trimEnd().slice(0, 1000));
         failed++;
         try {
           rmSync(u.obj);
+        } catch {}
+        try {
+          rmSync(depPathForObj(u.obj));
         } catch {}
       }
       const done = i + 1;

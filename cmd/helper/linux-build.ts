@@ -1162,12 +1162,16 @@ async function buildTestUtil(
   }
   console.log(`  -> ${exePath}`);
 
-  const env = commonFlags.includes("-fsanitize=address")
-    ? {
-        ...process.env,
-        ASAN_OPTIONS: "abort_on_error=1:halt_on_error=1:detect_leaks=0",
-      }
-    : process.env;
+  const env = { ...process.env };
+  if (commonFlags.includes("-fsanitize=address")) {
+    env.ASAN_OPTIONS = "abort_on_error=1:halt_on_error=1:detect_leaks=0";
+    const symbolizer = ["llvm-symbolizer", "llvm-symbolizer-20", "llvm-symbolizer-19", "llvm-symbolizer-18"]
+      .map((n) => Bun.which(n))
+      .find(Boolean);
+    if (symbolizer) {
+      env.ASAN_SYMBOLIZER_PATH = symbolizer;
+    }
+  }
   const run = Bun.spawn([exePath, "-for-ai"], {
     env,
     stdout: "inherit",
