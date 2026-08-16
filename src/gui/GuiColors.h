@@ -52,6 +52,7 @@ enum {
     kColIconBtnBgHover,
     kColIconBtnBgSelected,
     kColIconBtnChevron,
+    kColIconBtnChevronDisabled,
     kColIconBtnCount,
 };
 extern Color gColsIconBtn[kColIconBtnCount];

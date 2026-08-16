@@ -995,6 +995,7 @@ static void ApplyToolbarItemColors(VirtCtrl* w) {
         ib->SetColor(kColIconBtnBgHover, hover);
         ib->SetColor(kColIconBtnBgSelected, sel);
         ib->SetColor(kColIconBtnChevron, TbTextColor());
+        ib->SetColor(kColIconBtnChevronDisabled, TbDisabledColor());
         return;
     }
     if (auto* b = AsVirtButton(w)) {

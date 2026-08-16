@@ -2432,7 +2432,7 @@ void VirtIconButton::Paint(VirtPaintCtx& ctx) {
         ctx.gfx->DrawPixmap(px, {x, y, s2.dx, s2.dy});
     }
     if (dropDx > 0) {
-        Color col = GetColor(kColIconBtnChevron);
+        Color col = GetColor(enabled ? kColIconBtnChevron : kColIconBtnChevronDisabled);
         if (col == kColorUnset) {
             col = MkGray(enabled ? 0x40 : 0x90);
         }

@@ -781,6 +781,7 @@ static void UpdateGuiColorsFromTheme() {
     gColsIconBtn[kColIconBtnBgHover] = AccentColor(ctlBg, 20);
     gColsIconBtn[kColIconBtnBgSelected] = AccentColor(ctlBg, 36);
     gColsIconBtn[kColIconBtnChevron] = text;
+    gColsIconBtn[kColIconBtnChevronDisabled] = disabled;
 
     // the ✕ keeps its own look in every theme: a tab sets the circle to its own
     // background, and a withCircle one sits on content we don't own

@@ -98,6 +98,7 @@ void GuiSetDefaultColorsFromSystem() {
     gColsIconBtn[kColIconBtnBgHover] = AccentColor(ctlBg, 20);
     gColsIconBtn[kColIconBtnBgSelected] = AccentColor(ctlBg, 36);
     gColsIconBtn[kColIconBtnChevron] = ctlText;
+    gColsIconBtn[kColIconBtnChevronDisabled] = disabledText;
 
     gColsCloseBtn[kColCloseX] = kColCloseXDef;
     gColsCloseBtn[kColCloseXHover] = kColCloseXHoverDef;
