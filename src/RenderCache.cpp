@@ -1323,23 +1323,21 @@ struct DebugTextWnd : WindowBase {
     PlatformFont* monoFont = nullptr;
 
     bool Create(Str title, int fontSize);
-    void UpdateTheme();
+    void UpdateTheme() override;
+    void ApplyDarkMode() override;
     void SetTextContent(Str text);
 };
 
-void DebugTextWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (edit) {
-        edit->SetColors(colTxt, colBg);
-    }
+void DebugTextWnd::ApplyDarkMode() {
     DarkModeApplyToWindowAndEraseBg(hwnd);
+}
+
+void DebugTextWnd::UpdateTheme() {
+    WindowBase::UpdateTheme();
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (edit && monoFont) {
         edit->SetFont(monoFont);
     }
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void DebugTextWnd::SetTextContent(Str text) {

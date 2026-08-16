@@ -223,11 +223,21 @@ void HwndBase::SetColors(Color textCol, Color bgCol) {
 }
 
 HBRUSH HwndBase::BackgroundBrush() {
-    if (bgBrush == nullptr) {
-        if (bgColor != kColorUnset) {
-            bgBrush = CreateSolidBrush(bgColor);
-        }
+    return BackgroundBrush(bgColor);
+}
+
+// the brush for `col`, cached in bgBrush; rebuilt when the color changed (a
+// theme change moves a WindowBase's resolved color without SetColors())
+HBRUSH HwndBase::BackgroundBrush(Color col) {
+    if (col == kColorUnset) {
+        return nullptr;
     }
+    if (bgBrush && bgBrushColor == col) {
+        return bgBrush;
+    }
+    DeleteBrushSafe(&bgBrush);
+    bgBrush = CreateSolidBrush(col);
+    bgBrushColor = col;
     return bgBrush;
 }
 
@@ -435,6 +445,55 @@ WindowBase* WindowBase::AsWindowBase() {
 // already replaced the gui/ defaults with its palette (SumatraPDF does that in
 // SumatraUpdateTheme()), and gGuiColorsFromSystem says so, so we leave those
 // alone and only repaint.
+// kColWin* resolved like VirtCtrl::GetColor(): the window's own textColor /
+// bgColor when set, the gColsWin defaults otherwise, so a window follows the
+// palette the app pushed into GuiColors without being told its colors
+Color WindowBase::GetColor(int idx) const {
+    const Color overrides[kColWinCount] = {textColor, bgColor};
+    return GetCol(gColsWin, overrides, idx);
+}
+
+void (*gWindowBaseApplyDarkMode)(HWND) = nullptr;
+
+void WindowBase::ApplyDarkMode() {
+    if (gWindowBaseApplyDarkMode) {
+        gWindowBaseApplyDarkMode(hwnd);
+    }
+}
+
+struct RecolorChildrenCtx {
+    Color txt = kColorUnset;
+    Color bg = kColorUnset;
+};
+
+static BOOL CALLBACK RecolorChildProc(HWND hwnd, LPARAM lp) {
+    auto* ctx = (RecolorChildrenCtx*)lp;
+    ControlBase* c = ControlFromHwnd(hwnd);
+    if (c) {
+        c->SetColors(ctx->txt, ctx->bg);
+    }
+    return TRUE;
+}
+
+// The app pushed a new palette into GuiColors: take the gColsWin defaults over
+// whatever explicit colors the last theme left behind. They are set explicitly,
+// not just resolved on demand, because WM_ERASEBKGND only erases under a
+// darkmode-subclassed checkbox when there is an explicit background (#5947)
+void WindowBase::UpdateTheme() {
+    if (!hwnd) {
+        return;
+    }
+    Color colTxt = gColsWin[kColWinText];
+    Color colBg = gColsWin[kColWinBg];
+    SetColors(colTxt, colBg);
+    // the native child controls carry explicit colors; the virtual ones paint
+    // straight from the GuiColors defaults and need nothing
+    RecolorChildrenCtx ctx{colTxt, colBg};
+    EnumChildWindows(hwnd, RecolorChildProc, (LPARAM)&ctx);
+    ApplyDarkMode();
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
+
 void WindowBase::OnThemeChange() {
     if (gGuiColorsFromSystem) {
         GuiSetDefaultColorsFromSystem();
@@ -494,15 +553,16 @@ bool WindowBase::IsVisible() const {
 
 // default paint when onPaint is not set: virtual tree, or solid background
 static void WindowBaseDefaultPaint(WindowBase* w, HDC hdc, PAINTSTRUCT* ps) {
+    Color bg = w->GetColor(kColWinBg);
     if (w->vroot) {
         Rect rc = HwndClientRect(w->hwnd);
         Gfx* gfx = GfxCreateWithDoubleBuffer(w, hdc);
-        gfx->FillRect(rc, w->bgColor);
+        gfx->FillRect(rc, bg);
         w->vroot->Paint(gfx, ToRect(ps->rcPaint));
         delete gfx;
         return;
     }
-    auto* br = w->BackgroundBrush();
+    auto* br = w->BackgroundBrush(bg);
     if (br != nullptr) {
         HdcFillRect(hdc, ToRect(ps->rcPaint), br);
     }
@@ -1025,13 +1085,14 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             // radio asks its parent to paint the background under it through
             // this (the dc is clipped and shifted to the child's rect). Not
             // answering leaves the child's pixels stale, so its label text
-            // accumulated on every repaint (#5947)
+            // accumulated on every repaint (#5947). The resolved color, so a
+            // window that paints in the gColsWin default answers correctly too
             if (subclassId) {
                 // a subclassed native window answers it itself
                 break;
             }
             HDC hdc = (HDC)wparam;
-            auto* br = BackgroundBrush();
+            auto* br = BackgroundBrush(GetColor(kColWinBg));
             if (hdc && br) {
                 HdcFillRect(hdc, HwndClientRect(hwnd), br);
                 return 0;

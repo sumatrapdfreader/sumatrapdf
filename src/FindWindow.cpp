@@ -181,7 +181,8 @@ struct FindWindowWnd : WindowBase {
     void Layout();
     void SavePos();
     void RefreshResults(bool allowNavigation = true);
-    void UpdateTheme();
+    void UpdateTheme() override;
+    void ApplyDarkMode() override;
     void UpdatePagesLabel();
 
     void OnTextChanged();
@@ -707,21 +708,15 @@ void FindWindowWnd::SavePos() {
 // re-apply theme colors after the user switches themes. The toolbar icons are
 // baked into an image list at the current text color, so rebuild it; the
 // controls and caption also need recoloring.
+void FindWindowWnd::ApplyDarkMode() {
+    DarkModeApplyToTitleBar(hwnd);
+}
+
 void FindWindowWnd::UpdateTheme() {
-    auto colBg = ThemeWindowControlBackgroundColor();
-    auto colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (edit) {
-        edit->SetColors(colTxt, colBg);
-    }
-    if (editPages) {
-        editPages->SetColors(colTxt, colBg);
-    }
+    WindowBase::UpdateTheme();
     UpdatePagesLabel();
     // the icons are drawn in the theme's text color, so re-render them
     UpdateButtonIcons();
-    DarkModeApplyToTitleBar(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void FindWindowWnd::OnTextChanged() {

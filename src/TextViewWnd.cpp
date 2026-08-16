@@ -20,23 +20,21 @@ struct TextViewWnd : WindowBase {
     HWND* hwndPtr = nullptr;
 
     bool Create(Str title, Str text);
-    void UpdateTheme();
+    void UpdateTheme() override;
+    void ApplyDarkMode() override;
     static Str FormatTextForEdit(Str text);
 };
 
-void TextViewWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (edit) {
-        edit->SetColors(colTxt, colBg);
-    }
+void TextViewWnd::ApplyDarkMode() {
     DarkModeApplyToWindowAndEraseBg(hwnd);
+}
+
+void TextViewWnd::UpdateTheme() {
+    WindowBase::UpdateTheme();
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (edit && monoFont) {
         edit->SetFont(monoFont);
     }
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 // Returns a temp-arena string: ToStr() would be a view into the local Builder

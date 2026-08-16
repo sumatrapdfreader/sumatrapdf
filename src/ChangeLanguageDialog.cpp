@@ -40,7 +40,6 @@ struct ChangeLanguageWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     void FilterList();
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void OnListDoubleClick();
@@ -50,17 +49,6 @@ static ChangeLanguageWnd* gChangeLanguageWnd = nullptr;
 
 static void ClearChangeLanguageWnd() {
     gChangeLanguageWnd = nullptr;
-}
-
-void ChangeLanguageWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (editSearch) {
-        editSearch->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 // Rebuild the list from the search box; keep the current UI language selected

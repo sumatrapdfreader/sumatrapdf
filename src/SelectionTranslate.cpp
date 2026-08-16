@@ -123,7 +123,6 @@ struct SelectionTranslateWnd : WindowBase {
     bool Create(HWND owner, Str selText, Str title);
     // initial: size to content and center; later: reflow keeping (or growing) current size
     void Relayout(bool initial = false);
-    void UpdateTheme();
     VirtButton* NewButton(Str text, bool isDefault);
     // the label changes width ("Translate" / "Translating..."), so the row is
     // laid out again
@@ -912,24 +911,6 @@ TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str 
     TempStr res = str::DupTemp(msg);
     str::Free(msg);
     return res;
-}
-
-void SelectionTranslateWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    auto setColors = [&](ControlBase* w) {
-        if (w) {
-            w->SetColors(colTxt, colBg);
-        }
-    };
-    setColors(dropEngine);
-    setColors(editSrcText);
-    setColors(dropSrcLang);
-    setColors(dropDstLang);
-    setColors(editResult);
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 // re-pick the app font for the window's current DPI and push it to every child.

@@ -106,6 +106,9 @@ struct HwndBase {
 
     Color bgColor = kColorUnset;
     HBRUSH bgBrush = nullptr;
+    // the color bgBrush was created from, so BackgroundBrush(Color) can tell
+    // when a theme change moved the resolved color under a cached brush
+    Color bgBrushColor = kColorUnset;
     Color textColor = kColorUnset;
 
     HDC gfxDoubleBufferHdc = nullptr;
@@ -143,6 +146,7 @@ struct HwndBase {
     void SetPos(Rect* r);
     void SetColors(Color textColor, Color bgColor);
     HBRUSH BackgroundBrush();
+    HBRUSH BackgroundBrush(Color);
 
     PlatformFont* GetFont();
     HFONT GetHFont() const;
@@ -165,6 +169,11 @@ struct HwndBase {
 
     HWND CreateCustomHwnd(const CreateCustomArgs&, WStr defaultClassName);
 };
+
+// installed by the app (DarkMode_win.cpp): how WindowBase::ApplyDarkMode()
+// re-applies OS dark mode to a window. gui/ doesn't name darkmodelib; null
+// means there is nothing to apply
+extern void (*gWindowBaseApplyDarkMode)(HWND);
 
 // Base of the top-level windows (and the child windows that place themselves,
 // like the notification toasts). Not an ILayout: a window isn't positioned by a
@@ -329,6 +338,21 @@ struct WindowBase : HwndBase {
 
     // the system theme / colors changed, or the app's own theme did
     virtual void OnThemeChange();
+
+    // kColWin* (GuiColors.h) resolved: this window's textColor / bgColor when
+    // set, the gColsWin defaults otherwise
+    Color GetColor(int idx) const;
+
+    // the app pushed a new palette into GuiColors (its theme changed):
+    // re-apply the gColsWin colors to this window and its native child
+    // controls, re-apply dark mode, repaint. A window with more to refresh
+    // (icons drawn in the text color, a font darkmode resets) overrides this
+    // and calls the base
+    virtual void UpdateTheme();
+    // dark mode as UpdateTheme() re-applies it: gWindowBaseApplyDarkMode.
+    // Overridden by the windows that need a different flavor (an erase-bg
+    // subclass, title bar only)
+    virtual void ApplyDarkMode();
 
     HWND CreateCustom(const CreateCustomArgs&);
 

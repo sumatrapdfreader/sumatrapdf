@@ -85,7 +85,6 @@ struct EbookSettingsWnd : WindowBase {
     void OnCustomCssToggled();
     void OnTargetChanged();
     void Apply();
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnReset(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
@@ -420,21 +419,6 @@ void EbookSettingsWnd::Apply() {
     str::ReplaceWithCopy(&f->ignoreDocumentCSS, ignore);
     str::ReplaceWithCopy(&f->customCSS, str::Eq(v.customCSS, g->customCSS) ? Str{} : v.customCSS);
     SaveSettings();
-}
-
-void EbookSettingsWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    ControlBase* ctrls[] = {ddFont,      editSize,    editMargin,    editSpacing,   editCss,
-                            cbIgnoreCss, cbCustomCss, radioThisFile, radioAllEbooks};
-    for (ControlBase* c : ctrls) {
-        if (c) {
-            c->SetColors(colTxt, colBg);
-        }
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void EbookSettingsWnd::OnCancel(VirtMouseEvent*) {

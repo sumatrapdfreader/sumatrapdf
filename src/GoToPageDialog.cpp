@@ -41,7 +41,6 @@ struct GoToPageWnd : WindowBase {
     bool Create(MainWindow* win);
     void SetTarget(MainWindow* win);
 
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
 };
@@ -50,17 +49,6 @@ static GoToPageWnd* gGoToPageWnd = nullptr;
 
 static void ClearGoToPageWnd() {
     gGoToPageWnd = nullptr;
-}
-
-void GoToPageWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (editPage) {
-        editPage->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void GoToPageWnd::SetTarget(MainWindow* mainWin) {

@@ -64,7 +64,6 @@ struct SettingsWnd : WindowBase {
     float SelectedZoom();
     void OnRememberOpenedChanged();
 
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
 };
@@ -73,34 +72,6 @@ static SettingsWnd* gSettingsWnd = nullptr;
 
 static void ClearSettingsWnd() {
     gSettingsWnd = nullptr;
-}
-
-static void ThemeDropDown(DropDown* d, Color colTxt, Color colBg) {
-    if (d) {
-        d->SetColors(colTxt, colBg);
-    }
-}
-
-static void ThemeCheckbox(Checkbox* c, Color colTxt, Color colBg) {
-    if (c) {
-        c->SetColors(colTxt, colBg);
-    }
-}
-
-void SettingsWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    ThemeDropDown(dropLayout, colTxt, colBg);
-    ThemeDropDown(dropZoom, colTxt, colBg);
-    ThemeDropDown(dropInverse, colTxt, colBg);
-    ThemeCheckbox(chkShowToc, colTxt, colBg);
-    ThemeCheckbox(chkRememberState, colTxt, colBg);
-    ThemeCheckbox(chkUseTabs, colTxt, colBg);
-    ThemeCheckbox(chkCheckUpdates, colTxt, colBg);
-    ThemeCheckbox(chkRememberOpened, colTxt, colBg);
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void SettingsWnd::FillLayout() {

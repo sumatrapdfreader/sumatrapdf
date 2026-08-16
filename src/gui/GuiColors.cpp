@@ -17,6 +17,7 @@ Color gColsFill[kColFillCount];
 Color gColsLine[kColLineCount];
 Color gColsRichText[kColRichCount];
 Color gColsTab[kColTabCount];
+Color gColsWin[kColWinCount];
 Color gColsEdit[kColEditCount];
 
 // An override wins unless its slot is kColorUnset, which means "I didn't say".
@@ -123,6 +124,10 @@ void GuiSetDefaultColorsFromSystem() {
 
     gColsTab[kColTabText] = winText;
     gColsTab[kColTabBg] = ctlBg;
+
+    // a custom top-level window's own surface, like the OS paints a window's
+    gColsWin[kColWinText] = winText;
+    gColsWin[kColWinBg] = winBg;
 
     gColsEdit[kColEditBottomBorder] = edge;
 }

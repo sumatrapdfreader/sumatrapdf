@@ -46,7 +46,8 @@ struct PropertiesWnd : WindowBase {
     Point initialPos;
 
     bool Create(HWND parent);
-    void UpdateTheme();
+    void UpdateTheme() override;
+    void ApplyDarkMode() override;
     void SetPropsText(Str text);
     void SizeToContent();
     void CopyToClipboard(VirtMouseEvent* ev = nullptr);
@@ -791,19 +792,16 @@ void PropertiesWnd::SizeToContent() {
     DoLayout();
 }
 
-void PropertiesWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (editProps) {
-        editProps->SetColors(colTxt, colBg);
-    }
+void PropertiesWnd::ApplyDarkMode() {
     DarkModeApplyToWindowAndEraseBg(hwnd);
+}
+
+void PropertiesWnd::UpdateTheme() {
+    WindowBase::UpdateTheme();
     // Re-apply monospaced font after darkmode child theming (may reset font).
     if (editProps && propsFont) {
         editProps->SetFont(propsFont);
     }
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void PropertiesWnd::OnCommand(WindowBase::CommandEvent* ev) {

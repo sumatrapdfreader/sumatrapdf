@@ -228,7 +228,6 @@ struct SetHotkeyWnd : WindowBase {
     void OnKeyDown(KeyEvent* ev);
 
     VirtButton* NewButton(Str text, bool isDefault);
-    void UpdateTheme();
     void UpdateUI();
     bool HandleKeyDown(UINT vk);
     void DoSet(VirtMouseEvent* ev = nullptr);
@@ -349,14 +348,6 @@ void SetHotkeyWnd::CleanupHook() {
 
 VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
     return NewThemedButton(hwnd, text, font, isDefault);
-}
-
-void SetHotkeyWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void SetHotkeyWnd::WndProc(WindowBase::WndProcEvent* ev) {

@@ -35,7 +35,6 @@ struct ChangeScrollbarWnd : WindowBase {
 
     bool Create(MainWindow* win);
 
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void OnListDoubleClick();
@@ -58,14 +57,6 @@ static Str ScrollbarModeDisplayName(int idx) {
 
 static void ClearChangeScrollbarWnd() {
     gChangeScrollbarWnd = nullptr;
-}
-
-void ChangeScrollbarWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void ChangeScrollbarWnd::OnCancel(VirtMouseEvent*) {

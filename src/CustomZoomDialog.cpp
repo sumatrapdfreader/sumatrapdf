@@ -43,7 +43,6 @@ struct CustomZoomWnd : WindowBase {
     void FillZoom();
     float SelectedZoom();
 
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
 };
@@ -52,17 +51,6 @@ static CustomZoomWnd* gCustomZoomWnd = nullptr;
 
 static void ClearCustomZoomWnd() {
     gCustomZoomWnd = nullptr;
-}
-
-void CustomZoomWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (dropDown) {
-        dropDown->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void CustomZoomWnd::FillZoom() {

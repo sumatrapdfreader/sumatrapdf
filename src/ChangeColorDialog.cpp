@@ -96,7 +96,6 @@ struct ChangeColorWnd : WindowBase {
     void OnEditChanged();
     void RelayoutRadios();
 
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void ApplyBackground();
@@ -189,23 +188,6 @@ static void PaintCheckerboard(Gfx* gfx, Rect rc) {
             gfx->FillRect({rc.x + cx, rc.y + cy, cellW, cellH}, isDark ? dark : light);
         }
     }
-}
-
-void ChangeColorWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (editRgb) {
-        editRgb->SetColors(colTxt, colBg);
-    }
-    if (radioThisFile) {
-        radioThisFile->SetColors(colTxt, colBg);
-    }
-    if (radioAllFiles) {
-        radioAllFiles->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void ChangeColorWnd::ParseCustomColors() {

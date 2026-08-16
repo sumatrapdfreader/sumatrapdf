@@ -48,30 +48,11 @@ struct GetPasswordWnd : WindowBase {
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void Finish(bool ok);
-
-    void UpdateTheme();
 };
 
 GetPasswordWnd::~GetPasswordWnd() {
     str::Free(fileName);
     str::Free(pwdOut);
-}
-
-void GetPasswordWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (editPwd) {
-        editPwd->SetColors(colTxt, colBg);
-    }
-    if (chkShow) {
-        chkShow->SetColors(colTxt, colBg);
-    }
-    if (chkRemember) {
-        chkRemember->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void GetPasswordWnd::Finish(bool ok) {

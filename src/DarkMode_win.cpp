@@ -52,6 +52,10 @@ Color DarkModeDialogBgColor() {
 }
 
 void DarkModeInit() {
+    // WindowBase::UpdateTheme() re-applies dark mode through this hook, so
+    // gui/ never names darkmodelib. Installed even when the lib isn't used:
+    // DarkModeApplyToWindow() no-ops then
+    gWindowBaseApplyDarkMode = DarkModeApplyToWindow;
     if (!gUseDarkModeLib) {
         return;
     }

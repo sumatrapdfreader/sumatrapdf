@@ -43,7 +43,6 @@ struct ChangeThemeWnd : WindowBase {
 
     bool Create(MainWindow* win);
 
-    void UpdateTheme();
     void KeepFocus();
     void OnSelectionChanged();
     void OnDocumentColorsFollowThemeChanged();
@@ -123,17 +122,6 @@ void ChangeThemeWnd::PreviewDocumentColors() {
     if (win && win->AsFixed()) {
         MainWindowRerender(win);
     }
-}
-
-void ChangeThemeWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (dropDownDocumentColorsFollowTheme) {
-        dropDownDocumentColorsFollowTheme->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 // Picking a theme refreshes the whole app: the main window's toolbar, find bar,

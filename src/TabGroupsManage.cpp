@@ -70,7 +70,7 @@ struct TabGroupsWnd : WindowBase {
     MainWindow* win = nullptr;
 
     bool Create(MainWindow* winIn, TabGroupDialogMode modeIn);
-    void UpdateTheme();
+    void ApplyDarkMode() override;
     void SaveTabGroup();
     void OpenTabGroup();
     void DeleteTabGroup(VirtMouseEvent* ev = nullptr);
@@ -259,18 +259,8 @@ static void OnListDoubleClick(TabGroupsWnd* w) {
     }
 }
 
-void TabGroupsWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    auto setColors = [&](ControlBase* c) {
-        if (c) {
-            c->SetColors(colTxt, colBg);
-        }
-    };
-    setColors(editName);
+void TabGroupsWnd::ApplyDarkMode() {
     DarkModeApplyToWindowAndEraseBg(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void TabGroupsWnd::OnCancel(VirtMouseEvent*) {

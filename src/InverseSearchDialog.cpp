@@ -39,7 +39,6 @@ struct InverseSearchWnd : WindowBase {
     bool Create(MainWindow* win);
     void FillCommands();
 
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
     void OnHelp(VirtMouseEvent* ev = nullptr);
@@ -49,17 +48,6 @@ static InverseSearchWnd* gInverseSearchWnd = nullptr;
 
 static void ClearInverseSearchWnd() {
     gInverseSearchWnd = nullptr;
-}
-
-void InverseSearchWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (dropDown) {
-        dropDown->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void InverseSearchWnd::FillCommands() {

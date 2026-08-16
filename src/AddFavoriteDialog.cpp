@@ -41,7 +41,6 @@ struct AddFavoriteWnd : WindowBase {
     bool Create(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
     void SetTarget(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
 
-    void UpdateTheme();
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
 };
@@ -73,17 +72,6 @@ void AddFavoriteWnd::SetTarget(MainWindow* mainWin, Str path, int page, Str labe
         editName->SetText(name);
         editName->SelectAll();
     }
-}
-
-void AddFavoriteWnd::UpdateTheme() {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (editName) {
-        editName->SetColors(colTxt, colBg);
-    }
-    DarkModeApplyToWindow(hwnd);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void AddFavoriteWnd::OnCancel(VirtMouseEvent*) {

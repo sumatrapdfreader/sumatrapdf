@@ -121,6 +121,17 @@ enum {
 };
 extern Color gColsTab[kColTabCount];
 
+//--- win32 WindowBase
+// The per-instance overrides are HwndBase::textColor / bgColor (two plain
+// fields, not an owned array); WindowBase::GetColor(idx) resolves them
+// against these defaults
+enum {
+    kColWinText,
+    kColWinBg,
+    kColWinCount,
+};
+extern Color gColsWin[kColWinCount];
+
 //--- win32 Edit
 enum {
     // the 1px underline an Edit created withBottomBorder draws. It is a

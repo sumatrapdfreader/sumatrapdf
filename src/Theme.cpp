@@ -802,6 +802,12 @@ static void UpdateGuiColorsFromTheme() {
     gColsTab[kColTabText] = text;
     gColsTab[kColTabBg] = ctlBg;
 
+    // custom top-level windows (dialogs, popups) sit their content on ctlBg,
+    // like the side panels; a window that wants something else (the toolbar's
+    // palette) sets its own textColor / bgColor
+    gColsWin[kColWinText] = text;
+    gColsWin[kColWinBg] = ctlBg;
+
     // the underline under a borderless Edit is a separator, so it takes the edge
     // color like every other border and divider. Blending the control's own text
     // color toward its background instead lands wherever those two happen to be:
