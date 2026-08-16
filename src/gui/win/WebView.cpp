@@ -9,6 +9,7 @@
 
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/GuiColors.h"
 
 // #include "Theme.h"
 
@@ -2077,6 +2078,12 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     if (!hwnd) {
         return nullptr;
     }
+    // erase to the theme window background: the embedded page may be
+    // transparent (put_DefaultBackgroundColor alpha 0) and without a
+    // background brush the hwnd keeps whatever pixels were on screen when it
+    // appeared - e.g. an edit border painted during startup relayout showed
+    // through a restored document (stale-pixel ghosts)
+    SetColors(kColorNoChange, gColsWin[kColWinBg]);
 
     auto fn = MkFunc1<void, Str>(OnBrowserMessageCbHwnd, (void*)hwnd);
     if (!Embed(fn)) {
