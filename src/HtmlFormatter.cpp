@@ -325,8 +325,9 @@ static bool IsVisibleDrawInstr(DrawInstr& i) {
         case DrawInstrType::Line:
         case DrawInstrType::Image:
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 // sum of widths of all elements with a fixed size and flexible
@@ -1040,8 +1041,9 @@ inline bool IsTagH(HtmlTag tag) {
         case Tag_H5:
         case Tag_H6:
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 void HtmlFormatter::HandleTagHx(HtmlToken* t) {
