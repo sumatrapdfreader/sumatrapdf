@@ -4,9 +4,13 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
+#include "DocProperties.h"
+#include "TreeModel.h"
+#include "EngineBase.h"
 #include "PageRenderPolicy.h"
 #include "PageRenderService.h"
 #include "ReaderModel.h"
+#include "TextSearch.h"
 #include "mac/SumatraMacEngine.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
@@ -32,18 +36,28 @@ FileEBookUI* GetFileEBookUI(Str) {
     return nullptr;
 }
 
-static char* DupCString(const char* s) {
-    size_t len = strlen(s);
-    char* res = (char*)malloc(len + 1);
+static char* DupCString(Str s) {
+    char* res = (char*)malloc((size_t)len(s) + 1);
     if (res) {
-        memcpy(res, s, len + 1);
+        memcpy(res, s.s, (size_t)len(s));
+        res[len(s)] = 0;
     }
     return res;
+}
+
+static char* DupCString(const char* s) {
+    return DupCString(Str((char*)s));
 }
 
 struct MacDocument {
     ReaderModel* model = nullptr;
     PageRenderService* renderer = nullptr;
+    TextSearch* textSearch = nullptr;
+    TocTree* toc = nullptr;
+    Vec<TocItem*> tocItems;
+    Vec<int> tocDepths;
+    Props properties;
+    bool propertiesLoaded = false;
     MacPageReadyCallback onPageReady = nullptr;
     void* callbackContext = nullptr;
 };
@@ -56,6 +70,23 @@ static void OnPageReady(MacDocument* document) {
     if (document->onPageReady) {
         document->onPageReady(document->callbackContext);
     }
+}
+
+static void AppendTocItems(MacDocument* document, TocItem* item, int depth) {
+    while (item) {
+        document->tocItems.Append(item);
+        document->tocDepths.Append(depth);
+        AppendTocItems(document, item->child, depth + 1);
+        item = item->next;
+    }
+}
+
+static void LoadProperties(MacDocument* document) {
+    if (document->propertiesLoaded) {
+        return;
+    }
+    document->propertiesLoaded = true;
+    document->model->GetEngine()->GetProperties(document->properties);
 }
 
 static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
@@ -128,10 +159,17 @@ void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* 
     }
     auto* document = new MacDocument();
     document->model = model;
+    document->textSearch = new TextSearch(model->GetEngine());
+    document->toc = model->GetEngine()->GetToc();
+    if (document->toc && document->toc->root) {
+        AppendTocItems(document, document->toc->root->child, 0);
+    }
     document->onPageReady = onPageReady;
     document->callbackContext = callbackContext;
     document->renderer = PageRenderService::Create(model->GetEngine(), MkFunc0(OnPageReady, document));
     if (!document->renderer) {
+        delete document->textSearch;
+        delete document->toc;
         delete model;
         delete document;
         if (errorOut) {
@@ -221,6 +259,7 @@ bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumen
         dst->screenWidth = page->pageOnScreen.dx;
         dst->screenHeight = page->pageOnScreen.dy;
         dst->visibleRatio = page->visibleRatio;
+        dst->layoutZoom = page->zoomReal;
         dst->renderZoom = page->zoomReal * params->backingScale;
         dst->shown = page->isShown;
     }
@@ -293,6 +332,146 @@ void MacResetRenderer(void* document) {
     }
 }
 
+bool MacFindText(void* document, int currentPage, const char* text, bool forward, bool restart) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSearch || !text || !text[0]) {
+        return false;
+    }
+    TextSearch* search = doc->textSearch;
+    Str query((char*)text);
+    bool newText = !str::Eq(search->lastText, query);
+    search->SetDirection(forward ? TextSearch::Direction::Forward : TextSearch::Direction::Backward);
+    TextSel* result = nullptr;
+    if (restart || newText || !search->findText) {
+        result = search->FindFirst(currentPage, query);
+    } else {
+        result = search->FindNext();
+    }
+    if (!result) {
+        int wrapPage = forward ? search->RestrictFirst() : search->RestrictLast();
+        result = search->FindFirst(wrapPage, query);
+    }
+    if (!result) {
+        search->Reset();
+    }
+    return result != nullptr;
+}
+
+int MacFindResultPage(void* document) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSearch || doc->textSearch->result.len == 0) {
+        return 0;
+    }
+    return doc->textSearch->GetSearchHitStartPageNo();
+}
+
+int MacFindResultRectCount(void* document, int pageNo) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSearch) {
+        return 0;
+    }
+    int count = 0;
+    TextSel& result = doc->textSearch->result;
+    for (int i = 0; i < result.len; i++) {
+        if (result.pages[i] == pageNo) {
+            count++;
+        }
+    }
+    return count;
+}
+
+bool MacFindResultRect(void* document, int pageNo, int index, double zoom, int rotation, MacDisplayRect* rect) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->textSearch || !rect || index < 0) {
+        return false;
+    }
+    TextSel& result = doc->textSearch->result;
+    for (int i = 0; i < result.len; i++) {
+        if (result.pages[i] != pageNo) {
+            continue;
+        }
+        if (index-- != 0) {
+            continue;
+        }
+        RectF transformed = doc->model->GetEngine()->Transform(ToRectF(result.rects[i]), pageNo, (float)zoom, rotation);
+        rect->x = transformed.x;
+        rect->y = transformed.y;
+        rect->width = transformed.dx;
+        rect->height = transformed.dy;
+        return true;
+    }
+    return false;
+}
+
+int MacTocItemCount(void* document) {
+    MacDocument* doc = AsDocument(document);
+    return doc ? len(doc->tocItems) : 0;
+}
+
+char* MacCopyTocItemTitle(void* document, int index) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || index < 0 || index >= len(doc->tocItems)) {
+        return nullptr;
+    }
+    return DupCString(doc->tocItems[index]->title);
+}
+
+int MacTocItemDepth(void* document, int index) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || index < 0 || index >= len(doc->tocDepths)) {
+        return 0;
+    }
+    return doc->tocDepths[index];
+}
+
+int MacTocItemPage(void* document, int index) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || index < 0 || index >= len(doc->tocItems)) {
+        return 0;
+    }
+    TocItem* item = doc->tocItems[index];
+    IPageDestination* dest = item->GetPageDestination();
+    int pageNo = dest ? PageDestGetPageNo(dest) : item->pageNo;
+    return pageNo >= 1 && pageNo <= doc->model->PageCount() ? pageNo : 0;
+}
+
+int MacPropertyCount(void* document) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc) {
+        return 0;
+    }
+    LoadProperties(doc);
+    return len(doc->properties);
+}
+
+char* MacCopyPropertyName(void* document, int index) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc) {
+        return nullptr;
+    }
+    LoadProperties(doc);
+    if (index < 0 || index >= len(doc->properties)) {
+        return nullptr;
+    }
+    return DupCString(PropNameTemp(doc->properties[index].prop));
+}
+
+char* MacCopyPropertyValue(void* document, int index) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc) {
+        return nullptr;
+    }
+    LoadProperties(doc);
+    if (index < 0 || index >= len(doc->properties)) {
+        return nullptr;
+    }
+    return DupCString(doc->properties[index].val);
+}
+
+void MacFreeString(char* value) {
+    free(value);
+}
+
 void MacFreeDocumentLayout(MacDocumentLayout* layout) {
     if (!layout) {
         return;
@@ -315,6 +494,9 @@ void MacCloseDocument(void* document) {
     }
     MacDocument* doc = AsDocument(document);
     delete doc->renderer;
+    delete doc->textSearch;
+    delete doc->toc;
+    FreeProps(doc->properties);
     delete doc->model;
     delete doc;
 }

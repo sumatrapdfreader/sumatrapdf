@@ -37,8 +37,16 @@ struct MacLayoutPage {
     int screenWidth;
     int screenHeight;
     double visibleRatio;
+    double layoutZoom;
     double renderZoom;
     bool shown;
+};
+
+struct MacDisplayRect {
+    double x;
+    double y;
+    double width;
+    double height;
 };
 
 struct MacDocumentLayout {
@@ -63,6 +71,21 @@ bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRend
 void MacRequestPage(void* document, int pageNo, float zoom, int rotation, int priority);
 bool MacCopyRenderedPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page);
 void MacResetRenderer(void* document);
+
+bool MacFindText(void* document, int currentPage, const char* text, bool forward, bool restart);
+int MacFindResultPage(void* document);
+int MacFindResultRectCount(void* document, int pageNo);
+bool MacFindResultRect(void* document, int pageNo, int index, double zoom, int rotation, MacDisplayRect* rect);
+
+int MacTocItemCount(void* document);
+char* MacCopyTocItemTitle(void* document, int index);
+int MacTocItemDepth(void* document, int index);
+int MacTocItemPage(void* document, int index);
+
+int MacPropertyCount(void* document);
+char* MacCopyPropertyName(void* document, int index);
+char* MacCopyPropertyValue(void* document, int index);
+void MacFreeString(char* value);
 
 bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumentLayout* layout);
 void MacFreeDocumentLayout(MacDocumentLayout* layout);

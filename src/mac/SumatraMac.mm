@@ -96,6 +96,7 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 @property(nonatomic) int pageNo;
 @property(nonatomic) NSRect frame;
 @property(nonatomic) CGImageRef image;
+@property(nonatomic, retain) NSArray* highlights;
 @end
 
 @implementation SumatraPageImage
@@ -104,6 +105,7 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
     if (_image) {
         CGImageRelease(_image);
     }
+    [_highlights release];
     [super dealloc];
 }
 
@@ -208,6 +210,12 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
                 NSSize size = [text sizeWithAttributes:attrs];
                 NSPoint p = NSMakePoint(NSMidX(drawRect) - size.width / 2.0, NSMidY(drawRect) - size.height / 2.0);
                 [text drawAtPoint:p withAttributes:attrs];
+            }
+            if ([[page highlights] count] > 0) {
+                [[NSColor colorWithCalibratedRed:1.0 green:0.82 blue:0.1 alpha:0.45] setFill];
+                for (NSValue* value in [page highlights]) {
+                    NSRectFillUsingOperation([value rectValue], NSCompositingOperationSourceOver);
+                }
             }
         }
         return;
@@ -316,7 +324,7 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 @property(nonatomic, retain) SumatraDocumentView* documentView;
 @property(nonatomic, retain) NSToolbar* toolbar;
 @property(nonatomic, retain) NSTextField* pageLabel;
-@property(nonatomic, retain) NSMutableDictionary* pageImageCache;
+@property(nonatomic, copy) NSString* findText;
 @property(nonatomic) void* document;
 @property(nonatomic, copy) NSString* documentPath;
 @property(nonatomic) int pageCount;
@@ -520,7 +528,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     _zoom = kMacZoomFitPage;
     _rotation = 0;
     _continuousView = YES;
-    _pageImageCache = [[NSMutableDictionary alloc] init];
 
     NSRect frame = NSMakeRect(0, 0, 900, 1100);
     NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
@@ -578,7 +585,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     _currentPage = 0;
     _rotation = 0;
     _zoom = kMacZoomFitPage;
-    [_pageImageCache removeAllObjects];
 }
 
 - (void)showOpenError:(NSString*)message forPath:(NSString*)path {
@@ -630,7 +636,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     _currentPage = 1;
     _rotation = 0;
     _zoom = kMacZoomFitPage;
-    [_pageImageCache removeAllObjects];
     [_documentView setImage:nullptr];
     [_documentView setPages:nil];
     [_documentView setMessage:nil];
@@ -697,15 +702,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return kMacZoomFitPage;
     }
     return _zoom * 100.0;
-}
-
-- (NSString*)cacheKeyForPage:(int)pageNo renderZoom:(double)renderZoom {
-    return [NSString stringWithFormat:@"%d:%.4f:%d", pageNo, renderZoom, _rotation];
-}
-
-- (CGImageRef)cachedImageForPage:(int)pageNo renderZoom:(double)renderZoom {
-    SumatraPageImage* cached = [_pageImageCache objectForKey:[self cacheKeyForPage:pageNo renderZoom:renderZoom]];
-    return cached ? [cached image] : nullptr;
 }
 
 - (CGImageRef)renderedImageForPage:(int)pageNo renderZoom:(double)renderZoom showErrors:(BOOL)showErrors {
@@ -776,6 +772,19 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
             if (image) {
                 CGImageRelease(image);
             }
+        }
+        int highlightCount = MacFindResultRectCount(_document, page->pageNo);
+        if (highlightCount > 0) {
+            NSMutableArray* highlights = [NSMutableArray arrayWithCapacity:(NSUInteger)highlightCount];
+            for (int j = 0; j < highlightCount; j++) {
+                MacDisplayRect rect = {};
+                if (!MacFindResultRect(_document, page->pageNo, j, page->layoutZoom, _rotation, &rect)) {
+                    continue;
+                }
+                NSRect highlight = NSMakeRect(page->x + rect.x, page->y + rect.y, rect.width, rect.height);
+                [highlights addObject:[NSValue valueWithRect:highlight]];
+            }
+            [pageView setHighlights:highlights];
         }
         [pageViews addObject:pageView];
     }
@@ -850,7 +859,9 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         action == @selector(rotateRight:) || action == @selector(zoomFitPage:) ||
         action == @selector(zoomFitWidth:) || action == @selector(zoomActualSize:) ||
         action == @selector(zoomIn:) || action == @selector(zoomOut:) || action == @selector(setSinglePageView:) ||
-        action == @selector(setContinuousView:)) {
+        action == @selector(setContinuousView:) || action == @selector(findDocument:) ||
+        action == @selector(findNext:) || action == @selector(findPrevious:) || action == @selector(showToc:) ||
+        action == @selector(showProperties:)) {
         return [self hasDocument];
     }
     return YES;
@@ -977,6 +988,145 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
 }
 
+- (void)showSearchNotFound {
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setAlertStyle:NSAlertStyleInformational];
+    [alert setMessageText:@"Text not found"];
+    [alert setInformativeText:_findText ?: @""];
+    [alert beginSheetModalForWindow:_window completionHandler:nil];
+}
+
+- (BOOL)findForward:(BOOL)forward restart:(BOOL)restart {
+    if (!_document || [_findText length] == 0) {
+        return NO;
+    }
+    bool found = MacFindText(_document, _currentPage, [_findText UTF8String], forward, restart);
+    if (!found) {
+        [self renderCurrentPage];
+        [self showSearchNotFound];
+        return NO;
+    }
+    int pageNo = MacFindResultPage(_document);
+    if (pageNo > 0) {
+        [self goToPage:pageNo];
+        [self renderCurrentPage];
+    }
+    return YES;
+}
+
+- (IBAction)findDocument:(id)sender {
+    (void)sender;
+    if (!_document) {
+        return;
+    }
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setMessageText:@"Find in document"];
+    [alert addButtonWithTitle:@"Find"];
+    [alert addButtonWithTitle:@"Cancel"];
+    NSTextField* input = [[[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 300, 24)] autorelease];
+    [input setStringValue:_findText ?: @""];
+    [alert setAccessoryView:input];
+    if ([alert runModal] == NSAlertFirstButtonReturn && [[input stringValue] length] > 0) {
+        self.findText = [input stringValue];
+        [self findForward:YES restart:YES];
+    }
+}
+
+- (IBAction)findNext:(id)sender {
+    (void)sender;
+    if ([_findText length] == 0) {
+        [self findDocument:nil];
+        return;
+    }
+    [self findForward:YES restart:NO];
+}
+
+- (IBAction)findPrevious:(id)sender {
+    (void)sender;
+    if ([_findText length] == 0) {
+        [self findDocument:nil];
+        return;
+    }
+    [self findForward:NO restart:NO];
+}
+
+- (IBAction)showToc:(id)sender {
+    (void)sender;
+    int count = MacTocItemCount(_document);
+    if (count == 0) {
+        NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+        [alert setMessageText:@"Table of Contents"];
+        [alert setInformativeText:@"This document has no table of contents."];
+        [alert beginSheetModalForWindow:_window completionHandler:nil];
+        return;
+    }
+
+    NSPopUpButton* items = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 440, 28) pullsDown:NO] autorelease];
+    int selectedIndex = 0;
+    for (int i = 0; i < count; i++) {
+        char* titleUtf8 = MacCopyTocItemTitle(_document, i);
+        NSString* title = titleUtf8 ? [NSString stringWithUTF8String:titleUtf8] : @"";
+        MacFreeString(titleUtf8);
+        NSMutableString* indented = [NSMutableString string];
+        for (int depth = MacTocItemDepth(_document, i); depth > 0; depth--) {
+            [indented appendString:@"  "];
+        }
+        [indented appendString:title ?: @""];
+        [items addItemWithTitle:indented];
+        int pageNo = MacTocItemPage(_document, i);
+        if (pageNo > 0 && pageNo <= _currentPage) {
+            selectedIndex = i;
+        }
+    }
+    [items selectItemAtIndex:selectedIndex];
+
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setMessageText:@"Table of Contents"];
+    [alert addButtonWithTitle:@"Go"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setAccessoryView:items];
+    if ([alert runModal] == NSAlertFirstButtonReturn) {
+        int pageNo = MacTocItemPage(_document, (int)[items indexOfSelectedItem]);
+        if (pageNo > 0) {
+            [self goToPage:pageNo];
+        }
+    }
+}
+
+- (IBAction)showProperties:(id)sender {
+    (void)sender;
+    NSMutableString* text = [NSMutableString string];
+    int count = MacPropertyCount(_document);
+    for (int i = 0; i < count; i++) {
+        char* nameUtf8 = MacCopyPropertyName(_document, i);
+        char* valueUtf8 = MacCopyPropertyValue(_document, i);
+        NSString* name = nameUtf8 ? [NSString stringWithUTF8String:nameUtf8] : @"";
+        NSString* value = valueUtf8 ? [NSString stringWithUTF8String:valueUtf8] : @"";
+        MacFreeString(nameUtf8);
+        MacFreeString(valueUtf8);
+        [text appendFormat:@"%@: %@\n", name ?: @"", value ?: @""];
+    }
+    if ([text length] == 0) {
+        [text appendString:@"No document properties are available."];
+    }
+
+    NSTextView* textView = [[[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 520, 300)] autorelease];
+    [textView setString:text];
+    [textView setEditable:NO];
+    [textView setSelectable:YES];
+    [textView setFont:[NSFont systemFontOfSize:13]];
+    NSScrollView* scroll = [[[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 520, 300)] autorelease];
+    [scroll setHasVerticalScroller:YES];
+    [scroll setBorderType:NSBezelBorder];
+    [scroll setDocumentView:textView];
+
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setMessageText:@"Document Properties"];
+    [alert addButtonWithTitle:@"OK"];
+    [alert setAccessoryView:scroll];
+    [alert runModal];
+}
+
 - (IBAction)rotateLeft:(id)sender {
     (void)sender;
     if (!_document) {
@@ -984,7 +1134,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     _rotation = (_rotation + 270) % 360;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -995,7 +1144,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     _rotation = (_rotation + 90) % 360;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -1011,7 +1159,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     _continuousView = NO;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
     [[_scrollView contentView] scrollToPoint:NSZeroPoint];
     [_scrollView reflectScrolledClipView:[_scrollView contentView]];
@@ -1024,7 +1171,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     _continuousView = YES;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -1035,7 +1181,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     _zoom = kMacZoomFitPage;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -1046,7 +1191,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     _zoom = kMacZoomFitWidth;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -1057,7 +1201,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     _zoom = 1.0;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -1073,7 +1216,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     z = MAX(kZoomMin, MIN(kZoomMax, z));
     _zoom = z;
     MacResetRenderer(_document);
-    [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
 
@@ -1136,7 +1278,6 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 - (void)windowDidChangeBackingProperties:(NSNotification*)notification {
     (void)notification;
     if (_document) {
-        [_pageImageCache removeAllObjects];
         [self renderCurrentPage];
     }
 }
@@ -1163,12 +1304,12 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     [_window setDelegate:nil];
     [_toolbar setDelegate:nil];
     [_pageLabel release];
-    [_pageImageCache release];
     [_toolbar release];
     [_documentView release];
     [_scrollView release];
     [_window release];
     [_documentPath release];
+    [_findText release];
     [super dealloc];
 }
 
@@ -1230,7 +1371,7 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     AddPlaceholder(fileMenu, @"Rename…", delegate);
     AddPlaceholder(fileMenu, @"Print…", delegate);
     [fileMenu addItem:[NSMenuItem separatorItem]];
-    AddPlaceholder(fileMenu, @"Properties", delegate);
+    AddItem(fileMenu, @"Properties", @selector(showProperties:), delegate, @"", 0);
     [fileItem setSubmenu:fileMenu];
 
     // View menu
@@ -1250,7 +1391,7 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
     AddItem(viewMenu, @"Enter Full Screen", @selector(toggleFullScreen:), delegate, @"f",
             NSEventModifierFlagCommand | NSEventModifierFlagControl);
     [viewMenu addItem:[NSMenuItem separatorItem]];
-    AddPlaceholder(viewMenu, @"Show Bookmarks", delegate);
+    AddItem(viewMenu, @"Show Bookmarks", @selector(showToc:), delegate, @"", 0);
     AddItem(viewMenu, @"Show Toolbar", @selector(toggleToolbarShown:), nil, @"", 0);
     [viewItem setSubmenu:viewMenu];
 
@@ -1266,12 +1407,15 @@ static void InstallMainMenu(SumatraAppDelegate* delegate) {
             NSEventModifierFlagCommand | NSEventModifierFlagFunction);
     AddItem(goMenu, @"Last Page", @selector(goToLastPage:), delegate, ArrowKey(NSDownArrowFunctionKey),
             NSEventModifierFlagCommand | NSEventModifierFlagFunction);
-    AddItem(goMenu, @"Page…", @selector(goToPageDialog:), delegate, @"g", NSEventModifierFlagCommand);
+    AddItem(goMenu, @"Page…", @selector(goToPageDialog:), delegate, @"l", NSEventModifierFlagCommand);
     [goMenu addItem:[NSMenuItem separatorItem]];
     AddPlaceholder(goMenu, @"Back", delegate);
     AddPlaceholder(goMenu, @"Forward", delegate);
     [goMenu addItem:[NSMenuItem separatorItem]];
-    AddPlaceholder(goMenu, @"Find…", delegate);
+    AddItem(goMenu, @"Find…", @selector(findDocument:), delegate, @"f", NSEventModifierFlagCommand);
+    AddItem(goMenu, @"Find Next", @selector(findNext:), delegate, @"g", NSEventModifierFlagCommand);
+    AddItem(goMenu, @"Find Previous", @selector(findPrevious:), delegate, @"g",
+            NSEventModifierFlagCommand | NSEventModifierFlagShift);
     [goItem setSubmenu:goMenu];
 
     // Zoom menu

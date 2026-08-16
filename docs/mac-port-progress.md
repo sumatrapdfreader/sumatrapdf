@@ -10,9 +10,9 @@ those commits are verification artifacts rather than authorization for final fea
 | 1     | Complete    | Cocoa application bundle and file opening         |
 | 2     | Complete    | Shared portable reader model                      |
 | 3     | Complete    | Scrollable multi-page Cocoa document viewer       |
-| 4     | Not started | Portable asynchronous rendering                   |
+| 4     | Complete    | Portable asynchronous rendering and bounded cache |
 | 5     | In progress | Native shell, toolbar, menus, and commands        |
-| 6     | Not started | Reader features                                   |
+| 6     | In progress | Find, TOC, and properties are exposed in Cocoa    |
 | 7     | In progress | Finder integration and clean shutdown are present |
 | 8     | Not started | Versioned application archive                     |
 
@@ -28,10 +28,19 @@ Reconciled 2026-08-16.
   backing-scale changes.
 - A native configurable toolbar, application menus, open/go-to panels, fullscreen, Show in Finder, and the portable
   keyboard-help dialog are present.
-- Rendering remains synchronous on the main thread and cached without a fixed memory bound. The application still
-  owns a single document, and several menu entries are disabled placeholders.
-- `TextSelection.cpp` and `TextSearch.cpp` compile in the macOS application and engine tests, but are not exposed in
-  the Cocoa reader yet.
+- Visible pages render through the portable asynchronous `PageRenderService`. Its bounded cache replaces the old
+  unbounded Cocoa image cache, and nearby pages are prefetched at lower priorities.
+- Shared `TextSearch` drives Find, Find Next, and Find Previous, including wrapped search and highlighted result
+  rectangles. Shared engine TOC and property models drive native Table of Contents and Document Properties dialogs.
+- The application still owns a single document, and several menu entries remain disabled placeholders. Text
+  selection, links, favorites/history, and the command palette are not exposed in the Cocoa reader yet.
 
-Previously verified by the macOS build as the relevant functionality was introduced; the next implementation slice
-will establish a fresh remote-build baseline against this reconciled plan.
+## Verification
+
+- Windows debug build: passed on 2026-08-16.
+- Linux/WSL debug build: passed on 2026-08-16, including 102,889 `test_util` assertions.
+- Remote macOS debug build: passed on 2026-08-16, including 102,892 `test_util` assertions, 23 portable compile checks,
+  `test_engines`, and the 35-source `SumatraPDF.app` link.
+
+The asynchronous-rendering baseline was verified from temporary branch `tmp/mac-port-parity-20260816`. Reader-feature
+verification continues from the same temporary branch as each slice lands.
