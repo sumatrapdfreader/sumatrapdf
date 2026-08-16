@@ -6,7 +6,7 @@
 import { Glob } from "bun";
 import { mkdirSync, existsSync, statSync, rmSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import { join, extname, dirname } from "node:path";
+import { join, extname, dirname, basename } from "node:path";
 import { cpus } from "node:os";
 
 export interface BuildTools {
@@ -211,7 +211,8 @@ export async function embedBinaryFile(
 ): Promise<void> {
   mkdirSync(dirname(outputObj), { recursive: true });
   const outAbsolute = join(process.cwd(), outputObj);
-  const cleanFileName = symbolPrefix.replace(/^_binary_/, "");
+  const cleanFileName =
+    format === "elf" ? basename(inputFile).replace(/[.-]/g, "_") : symbolPrefix.replace(/^_binary_/, "");
   const tmpDir = join(dirname(outputObj), "_fonttmp");
   mkdirSync(tmpDir, { recursive: true });
   const tmpInput = join(tmpDir, cleanFileName);
@@ -251,7 +252,9 @@ export async function embedBinaryFile(
         "--rename-section",
         ".data=.rodata,alloc,load,readonly,data",
         "--redefine-sym",
-        `_binary_${cleanFileName}_start=${symbolPrefix}`,
+        `_binary_${cleanFileName}_start=${symbolPrefix}_start`,
+        "--redefine-sym",
+        `_binary_${cleanFileName}_end=${symbolPrefix}_end`,
         cleanFileName,
         outAbsolute,
       ],

@@ -11,7 +11,7 @@
 
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
-import { join, basename } from "node:path";
+import { join, basename, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import {
   type BuildTools,
@@ -413,6 +413,9 @@ function makeMupdf(arch: LinuxArch): LibDef {
     "CMARK_GFM_STATIC_DEFINE",
     "HAVE_PTHREAD",
   );
+  if (arch === "x64") {
+    lib.defines.push("HAVE_OBJCOPY");
+  }
   if (arch === "arm64") {
     lib.defines.push("ARCH_HAS_NEON=1");
     lib.extraCflags = ["-fms-extensions"];
@@ -491,7 +494,8 @@ async function embedFonts(tools: BuildTools, outDir: string, arch: LinuxArch): P
       continue;
     }
     const base = basename(font.path, `.${font.ext}`).replace(/-/g, "_");
-    const sym = `_binary_${base}_${font.ext}`;
+    const forge = basename(dirname(font.path));
+    const sym = arch === "x64" ? `_binary_resources_fonts_${forge}_${base}_${font.ext}` : `_binary_${base}_${font.ext}`;
     const obj = join(outDir, "obj", "fonts", `${base}.o`);
     await embedBinaryFile(tools, format, font.path, obj, sym);
     objs.push(obj);

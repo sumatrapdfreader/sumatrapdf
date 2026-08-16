@@ -151,3 +151,21 @@ Verification:
 - Under WSLg, the ASan app opened two document tabs, switched forward and backward, closed a tab, reopened it, and
   quit through application actions. Both per-tab render workers shut down cleanly, the process exited with status 0,
   and ASan reported no errors. WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+### Embedded MuPDF fonts
+
+Completed 2026-08-16.
+
+- Fixed the Linux x64 font-object contract by compiling MuPDF with `HAVE_OBJCOPY` and exporting the resource-path
+  `_start` and `_end` symbols its font table expects.
+- Removed the invalid fallback that treated GNU `objcopy`'s absolute `_size` symbols as addressable integer objects.
+  PDFs that use MuPDF's embedded Base-14 fonts now render instead of dereferencing the encoded size as a pointer.
+- Kept the generated-C font path used by macOS and Linux arm64 unchanged.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug -clean`: passed; Linux `test_util` passed 102,701 assertions and all targets linked.
+- `bun cmd/build.ts -linux`: the rebuilt ASan target passed; Linux `test_util` passed 102,688 assertions.
+- The debug and ASan applications rendered `tests/combining-mark-first.pdf` and `tests/issue-1189.pdf`, which both
+  reproduced the invalid embedded-font read before the fix. The two-tab switch, close, reopen, and quit lifecycle
+  exited with status 0, and ASan reported no errors.
