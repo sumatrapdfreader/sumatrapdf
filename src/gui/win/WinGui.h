@@ -571,6 +571,11 @@ struct ControlBase : ILayout, HwndBase {
     Insets insets{};
     Size childSize;
 
+    // like HwndSlot::mapRtlX: SetBounds() x is an offset from the physical
+    // left even when the parent is RTL (a control inside a tree that already
+    // arranged itself right-to-left, like the toolbar's page box)
+    bool mapRtlX = false;
+
     // if false, WM_ERASEBKGND returns TRUE without painting (WM_PAINT covers).
     // default true: native subclassed controls keep system erase
     bool shouldEraseBackground = true;

@@ -1612,6 +1612,9 @@ void ControlBase::SetBounds(Rect bounds) {
     bounds.dx -= (insets.right + insets.left);
     bounds.dy -= (insets.bottom + insets.top);
 
+    if (mapRtlX) {
+        bounds.x = HwndMapChildXForRtlParent(GetParent(hwnd), bounds.x, bounds.dx);
+    }
     HwndMoveWindow(hwnd, &bounds);
     // TODO: optimize if doesn't change position
     HwndInvalidate(hwnd, true);

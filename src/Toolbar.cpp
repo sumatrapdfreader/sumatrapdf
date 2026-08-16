@@ -1228,6 +1228,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             // (10dpi) so "Page:" and "/ N" were not flush against the edit.
             int pageGap = DpiScale(kTextPaddingRight) + DpiScale(kButtonSpacingX);
             auto* label = new VirtText(_TRA("Page:"), tb->platformFont);
+            label->isRtl = box->rtl;
             label->SetColor(kColText, fg);
             label->padding = {0, pageGap, 0, DpiScale(4)};
             label->id = PageInfoId;
@@ -1239,6 +1240,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             box->AddChild(pageEdit);
 
             auto* total = new VirtText(StrL(" "), tb->platformFont);
+            total->isRtl = box->rtl;
             total->SetColor(kColText, fg);
             total->padding = {0, DpiScale(4), 0, pageGap};
             total->id = PageInfoId;
@@ -1251,6 +1253,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             w = MakeToolbarSeparator(tb->rowDy);
         } else if (bi.isText) {
             auto* b = new VirtButton(noTranslate ? bi.toolTip : trans::GetTranslation(bi.toolTip), tb->platformFont);
+            b->isRtl = box->rtl;
             b->textPadding = {cyPad, iconPad, cyPad, iconPad};
             w = b;
         } else {

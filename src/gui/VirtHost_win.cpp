@@ -64,7 +64,20 @@ static void PaintHost(VirtHost* host, HWND hwnd) {
         }
         delete gfx;
     }
+    // An RTL host (WS_EX_LAYOUTRTL) hands out a mirrored hdc, which would flip
+    // the buffer as a whole on the blit - reversing every glyph and putting the
+    // controls at mirrored positions. The tree already arranged itself
+    // right-to-left (HBox.rtl) and the mouse coordinates are unmirrored to
+    // match (VirtTreeOnMessage), so copy the buffer verbatim
+    DWORD layout = GetLayout(hdc);
+    bool mirrored = layout != GDI_ERROR && (layout & LAYOUT_RTL);
+    if (mirrored) {
+        SetLayout(hdc, 0);
+    }
     buffer.Flush(hdc);
+    if (mirrored) {
+        SetLayout(hdc, layout);
+    }
     EndPaint(hwnd, &ps);
 }
 

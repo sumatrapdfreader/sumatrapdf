@@ -131,6 +131,9 @@ Edit* ToolbarCreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
     auto* e = new Edit();
     e->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
     e->Create(args);
+    // the toolbar tree arranges itself right-to-left (HBox.rtl), so its bounds
+    // are offsets from the physical left; don't let the RTL host mirror them
+    e->mapRtlX = true;
     // #5949: fixed width, or the box would resize to every page label while
     // scrolling a document with named pages, shifting the icons next to it.
     // ideal == max pins GetIdealSize() to this width
