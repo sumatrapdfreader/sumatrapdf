@@ -13,74 +13,91 @@
 #include "Commands.h"
 #include "KeyboardHelp.h"
 
-struct KbCommandDef {
-    int id;
-    const char* defaultShortcut;
-};
-
+// A section is an ordered list of command ids (terminated by 0). The keyboard
+// shortcut for each command is looked up from its actual binding, not hard-coded
+// here, so re-binding or clearing a shortcut is reflected automatically.
 // clang-format off
-static const KbCommandDef kSecNav[] = {
-    {CmdScrollUp, "Up, K"}, {CmdScrollDown, "Down, J"}, {CmdScrollLeft, "Left, H"}, {CmdScrollRight, "Right, L"},
-    {CmdScrollUpPage, "Page Up"}, {CmdScrollDownPage, "Page Down"},
-    {CmdGoToNextPage, "N"}, {CmdGoToPrevPage, "P"},
-    {CmdGoToFirstPage, "Home"}, {CmdGoToLastPage, "End"}, {CmdGoToPage, "Ctrl + G"},
-    {CmdNavigateBack, "Alt + Left"}, {CmdNavigateForward, "Alt + Right"}, {0, nullptr},
+static const int kSecNav[] = {
+    CmdScrollUp, CmdScrollDown, CmdScrollLeft, CmdScrollRight,
+    CmdScrollUpPage, CmdScrollDownPage,
+    CmdGoToNextPage, CmdGoToPrevPage,
+    CmdGoToFirstPage, CmdGoToLastPage, CmdGoToPage,
+    CmdNavigateBack, CmdNavigateForward, 0,
 };
-static const KbCommandDef kSecView[] = {
-    {CmdZoomIn, "Ctrl + +"}, {CmdZoomOut, "Ctrl + -"},
-    {CmdZoomFitPage, "Ctrl + 0"}, {CmdZoomFitWidth, "Ctrl + 2"}, {CmdZoomActualSize, "Ctrl + 1"},
-    {CmdToggleZoom, "Z"}, {CmdSinglePageView, "Ctrl + 6"}, {CmdFacingView, "Ctrl + 7"},
-    {CmdBookView, "Ctrl + 8"}, {CmdToggleContinuousView, "C"},
-    {CmdRotateLeft, "["}, {CmdRotateRight, "]"}, {CmdToggleFullscreen, "F"},
-    {CmdTogglePresentationMode, "F5"}, {CmdInvertColors, "Shift + I"}, {0, nullptr},
+static const int kSecView[] = {
+    CmdZoomIn, CmdZoomOut,
+    CmdZoomFitPage, CmdZoomFitWidth, CmdZoomActualSize,
+    CmdToggleZoom, CmdSinglePageView, CmdFacingView,
+    CmdBookView, CmdToggleContinuousView,
+    CmdRotateLeft, CmdRotateRight, CmdToggleFullscreen, 0,
 };
-static const KbCommandDef kSecDoc[] = {
-    {CmdOpenFile, "Ctrl + O"}, {CmdSaveAs, "Ctrl + S"}, {CmdPrint, "Ctrl + P"}, {CmdReloadDocument, "R"},
-    {CmdClose, "Ctrl + W"}, {CmdNewWindow, "Ctrl + N"}, {CmdOpenNextFileInFolder, "Ctrl + Shift + Right"},
-    {CmdOpenPrevFileInFolder, "Ctrl + Shift + Left"}, {CmdRenameFile, "F2"}, {CmdProperties, "Ctrl + D"}, {0, nullptr},
+static const int kSecDoc[] = {
+    CmdOpenFile, CmdSaveAs, CmdPrint, CmdReloadDocument,
+    CmdClose, CmdNewWindow, CmdOpenNextFileInFolder,
+    CmdOpenPrevFileInFolder, CmdRenameFile, CmdProperties, 0,
 };
-static const KbCommandDef kSecFind[] = {
-    {CmdFindFirst, "Ctrl + F"}, {CmdFindNext, "F3"}, {CmdFindPrev, "Shift + F3"},
-    {CmdSelectAll, "Ctrl + A"}, {CmdCopySelection, "Ctrl + C"}, {CmdSelectTextViaKeyboard, "F7"},
-    {CmdToggleKeyboardLinkFollowing, "Shift + F"}, {0, nullptr},
+static const int kSecFind[] = {
+    CmdFindFirst, CmdFindNext, CmdFindPrev,
+    CmdSelectAll, CmdCopySelection, CmdSelectTextViaKeyboard,
+    CmdToggleKeyboardLinkFollowing, 0,
 };
-static const KbCommandDef kSecTabs[] = {
-    {CmdNextTabSmart, "Ctrl + Tab"}, {CmdNextTab, "Ctrl + Page Down"}, {CmdPrevTab, "Ctrl + Page Up"},
-    {CmdMoveTabLeft, "Ctrl + Shift + Page Up"}, {CmdMoveTabRight, "Ctrl + Shift + Page Down"},
-    {CmdReopenLastClosedFile, "Ctrl + Shift + T"}, {0, nullptr},
+static const int kSecTabs[] = {
+    CmdNextTabSmart, CmdNextTab, CmdPrevTab,
+    CmdMoveTabLeft, CmdMoveTabRight, CmdReopenLastClosedFile, 0,
 };
-static const KbCommandDef kSecAnnot[] = {
-    {CmdCreateAnnotHighlight, "A"}, {CmdCreateAnnotUnderline, "U"}, {CmdSaveAnnotations, "Ctrl + Shift + S"},
-    {CmdDeleteAnnotation, "Ctrl + Delete"}, {0, nullptr},
+static const int kSecAnnot[] = {
+    CmdCreateAnnotHighlight, CmdCreateAnnotUnderline, CmdSaveAnnotations,
+    CmdDeleteAnnotation, 0,
 };
-static const KbCommandDef kSecIface[] = {
-    {CmdToggleBookmarks, "F12"}, {CmdToggleToolbar, "F8"}, {CmdToggleMenuBar, "F9"},
-    {CmdToggleCursorPosition, "M"}, {CmdTogglePageInfo, "I"}, {CmdCommandPalette, "Ctrl + K"},
-    {CmdFavoriteAdd, "Ctrl + B"}, {CmdFavoriteToggle, ""}, {CmdHelpOpenManual, "F1"},
-    {CmdToggleKeyboardHelp, "?"}, {0, nullptr},
+static const int kSecIface[] = {
+    CmdToggleBookmarks, CmdToggleToolbar, CmdToggleMenuBar,
+    CmdToggleCursorPosition, CmdTogglePageInfo, CmdCommandPalette,
+    CmdFavoriteAdd, CmdFavoriteToggle, CmdHelpOpenManual,
+    CmdToggleKeyboardHelp, 0,
 };
 // clang-format on
 
 struct KbSectionDef {
     const char* title;
-    const KbCommandDef* commands;
+    const int* commands;
+    int column; // which of the two columns this section is laid out in
 };
 
+// column 0 (left): Navigation, Interface, Find & Select
+// column 1 (right): View & Zoom, Document, Tabs, Annotations
 static const KbSectionDef kSections[] = {
-    {"Navigation", kSecNav}, {"View & Zoom", kSecView},  {"Document", kSecDoc},    {"Find & Select", kSecFind},
-    {"Tabs", kSecTabs},      {"Annotations", kSecAnnot}, {"Interface", kSecIface},
+    {"Navigation", kSecNav, 0},    {"View & Zoom", kSecView, 1},   {"Interface", kSecIface, 0},
+    {"Document", kSecDoc, 1},      {"Find & Select", kSecFind, 0}, {"Tabs", kSecTabs, 1},
+    {"Annotations", kSecAnnot, 1},
 };
 
-static const KbCommandDef* FindCommandDef(int cmdId) {
-    for (const KbSectionDef& section : kSections) {
-        for (const KbCommandDef* command = section.commands; command->id; command++) {
-            if (command->id == cmdId) {
-                return command;
-            }
-        }
-    }
-    return nullptr;
-}
+// fallback shortcuts for platforms without an accelerator table (the Windows
+// data source looks up the real bindings instead). {id, ""} means "no default".
+// clang-format off
+static const struct {
+    int id;
+    const char* shortcut;
+} kFallbackShortcuts[] = {
+    {CmdScrollUp, "Up, K"}, {CmdScrollDown, "Down, J"}, {CmdScrollLeft, "Left, H"}, {CmdScrollRight, "Right, L"},
+    {CmdScrollUpPage, "Page Up"}, {CmdScrollDownPage, "Page Down"}, {CmdGoToNextPage, "N"}, {CmdGoToPrevPage, "P"},
+    {CmdGoToFirstPage, "Home"}, {CmdGoToLastPage, "End"}, {CmdGoToPage, "Ctrl + G"}, {CmdNavigateBack, "Alt + Left"},
+    {CmdNavigateForward, "Alt + Right"}, {CmdZoomIn, "Ctrl + +"}, {CmdZoomOut, "Ctrl + -"}, {CmdZoomFitPage, "Ctrl + 0"},
+    {CmdZoomFitWidth, "Ctrl + 2"}, {CmdZoomActualSize, "Ctrl + 1"}, {CmdToggleZoom, "Z"}, {CmdSinglePageView, "Ctrl + 6"},
+    {CmdFacingView, "Ctrl + 7"}, {CmdBookView, "Ctrl + 8"}, {CmdToggleContinuousView, "C"}, {CmdRotateLeft, "["},
+    {CmdRotateRight, "]"}, {CmdToggleFullscreen, "F"}, {CmdOpenFile, "Ctrl + O"}, {CmdSaveAs, "Ctrl + S"},
+    {CmdPrint, "Ctrl + P"}, {CmdReloadDocument, "R"}, {CmdClose, "Ctrl + W"}, {CmdNewWindow, "Ctrl + N"},
+    {CmdOpenNextFileInFolder, "Ctrl + Shift + Right"}, {CmdOpenPrevFileInFolder, "Ctrl + Shift + Left"},
+    {CmdRenameFile, "F2"}, {CmdProperties, "Ctrl + D"}, {CmdFindFirst, "Ctrl + F"}, {CmdFindNext, "F3"},
+    {CmdFindPrev, "Shift + F3"}, {CmdSelectAll, "Ctrl + A"}, {CmdCopySelection, "Ctrl + C"},
+    {CmdSelectTextViaKeyboard, "F7"}, {CmdToggleKeyboardLinkFollowing, "Shift + F"}, {CmdNextTabSmart, "Ctrl + Tab"},
+    {CmdNextTab, "Ctrl + Page Down"}, {CmdPrevTab, "Ctrl + Page Up"}, {CmdMoveTabLeft, "Ctrl + Shift + Page Up"},
+    {CmdMoveTabRight, "Ctrl + Shift + Page Down"}, {CmdReopenLastClosedFile, "Ctrl + Shift + T"},
+    {CmdCreateAnnotHighlight, "A"}, {CmdCreateAnnotUnderline, "U"}, {CmdSaveAnnotations, "Ctrl + Shift + S"},
+    {CmdDeleteAnnotation, "Ctrl + Delete"}, {CmdToggleBookmarks, "F12"}, {CmdToggleToolbar, "F8"},
+    {CmdToggleMenuBar, "F9"}, {CmdToggleCursorPosition, "M"}, {CmdTogglePageInfo, "I"}, {CmdCommandPalette, "Ctrl + K"},
+    {CmdFavoriteAdd, "Ctrl + B"}, {CmdHelpOpenManual, "F1"}, {CmdToggleKeyboardHelp, "?"},
+};
+// clang-format on
 
 struct DefaultKeyboardHelpDataSource : KeyboardHelpDataSource {
     Str Translate(Str s) override { return s; }
@@ -88,8 +105,12 @@ struct DefaultKeyboardHelpDataSource : KeyboardHelpDataSource {
     TempStr CommandDescriptionTemp(int cmdId) override { return str::DupTemp(GetCommandDescription(cmdId)); }
 
     TempStr CommandShortcutTemp(int cmdId, int) override {
-        const KbCommandDef* command = FindCommandDef(cmdId);
-        return command ? str::DupTemp(command->defaultShortcut) : TempStr{};
+        for (const auto& e : kFallbackShortcuts) {
+            if (e.id == cmdId) {
+                return str::DupTemp(e.shortcut);
+            }
+        }
+        return {};
     }
 };
 
@@ -111,7 +132,6 @@ struct KbSection {
     Str title;
     Vec<KbRow*> rows;
     Rect titleRect;
-    int estimatedHeight = 0;
     int column = 0;
 };
 
@@ -127,13 +147,11 @@ struct KeyboardHelpWindow {
     PlatformFont* fontHeader = nullptr;
     PlatformFont* fontRow = nullptr;
     Str title;
-    Str footer;
     Vec<KbSection*> sections;
 
     Rect titleRect;
     Rect closeRect;
     Rect separatorRect;
-    Rect footerRect;
     int contentTop = 0;
     int capPadX = 0;
     int capGap = 0;
@@ -167,7 +185,6 @@ KeyboardHelpWindow::~KeyboardHelpWindow() {
     delete window;
     window = nullptr;
     str::Free(title);
-    str::Free(footer);
     for (KbSection* section : sections) {
         FreeSection(section);
     }
@@ -196,17 +213,15 @@ static void ScheduleCloseKeyboardHelp() {
 
 void KeyboardHelpWindow::CollectContent() {
     title = str::Dup(dataSource->Translate(StrL("Keyboard Shortcuts")));
-    footer = str::Dup(dataSource->Translate(StrL("Press ? to close")));
-    int rowHeight = PlatformFontLineHeight(fontRow) + DpiScale(8);
-    int headerHeight = PlatformFontLineHeight(fontHeader) + DpiScale(8);
-    int sectionGap = DpiScale(14);
 
     for (const KbSectionDef& definition : kSections) {
         auto* section = new KbSection();
         section->title = str::Dup(dataSource->Translate(Str(definition.title)));
-        for (const KbCommandDef* command = definition.commands; command->id; command++) {
-            TempStr keys = dataSource->CommandShortcutTemp(command->id, 2);
-            TempStr description = dataSource->CommandDescriptionTemp(command->id);
+        section->column = definition.column;
+        for (const int* cmdId = definition.commands; *cmdId; cmdId++) {
+            TempStr keys = dataSource->CommandShortcutTemp(*cmdId, 2);
+            TempStr description = dataSource->CommandDescriptionTemp(*cmdId);
+            // skip commands with no keyboard shortcut (e.g. un-bound by the user)
             if (len(keys) == 0 || len(description) == 0) {
                 continue;
             }
@@ -220,27 +235,7 @@ void KeyboardHelpWindow::CollectContent() {
             FreeSection(section);
             continue;
         }
-        section->estimatedHeight = headerHeight + (len(section->rows) * rowHeight) + sectionGap;
         sections.Append(section);
-    }
-
-    int totalHeight = 0;
-    for (KbSection* section : sections) {
-        totalHeight += section->estimatedHeight;
-    }
-    int bestSplit = len(sections);
-    int bestBalance = totalHeight;
-    int prefix = 0;
-    for (int i = 1; i < len(sections); i++) {
-        prefix += sections[i - 1]->estimatedHeight;
-        int balance = std::max(prefix, totalHeight - prefix);
-        if (balance < bestBalance) {
-            bestBalance = balance;
-            bestSplit = i;
-        }
-    }
-    for (int i = 0; i < len(sections); i++) {
-        sections[i]->column = i < bestSplit ? 0 : 1;
     }
 }
 
@@ -311,9 +306,7 @@ Size KeyboardHelpWindow::LayoutContent() {
         }
     }
 
-    int footerY = std::max(columnY[0], columnY[1]) + DpiScale(12);
-    footerRect = {pad, footerY, width - (2 * pad), PlatformFontLineHeight(fontRow)};
-    int height = footerRect.Bottom() + pad;
+    int height = std::max(columnY[0], columnY[1]) + pad;
     return {width, height};
 }
 
@@ -384,8 +377,6 @@ void KeyboardHelpWindow::Paint(PlatformWindowPaintEvent* ev) {
             gfx->DrawText(row->description, row->descriptionRect, gfxTextVCenter | gfxTextSingleLine, fontRow, text);
         }
     }
-    Color footerColor = AccentColor(text, 90);
-    gfx->DrawText(footer, footerRect, gfxTextVCenter | gfxTextSingleLine, fontRow, footerColor);
 }
 
 void KeyboardHelpWindow::OnPointer(PlatformPointerEvent* ev) {
