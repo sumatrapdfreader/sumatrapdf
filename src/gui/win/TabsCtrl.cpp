@@ -224,19 +224,22 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     bool isRtl = IsTabsRtl(hwnd);
     PlatformFont* font = tabsCtrl->GetFont();
 
-    // draw text — inset from the close glyph (size varies with tab height)
+    // draw text — inset from the close glyph (size varies with tab height),
+    // or using the full tab width when the ✕ is hidden
     Rect rTxt = r;
     int textPad = DpiScale(8);
     int textGap = DpiScale(4);
+    bool closeVisible = CloseVisible();
     if (isRtl) {
         // RTL: close on the left — text after the close circle
-        int textLeft = rClose.x + rClose.dx + textGap;
+        int textLeft = closeVisible ? rClose.x + rClose.dx + textGap : r.x + textPad;
         rTxt.x = textLeft;
         rTxt.dx = std::max(0, (r.x + r.dx - textPad) - textLeft);
     } else {
         // LTR: close on the right — text before the close circle
         rTxt.x = r.x + textPad;
-        rTxt.dx = std::max(0, rClose.x - textGap - rTxt.x);
+        int textRight = closeVisible ? rClose.x - textGap : r.x + r.dx - textPad;
+        rTxt.dx = std::max(0, textRight - rTxt.x);
     }
     u32 fmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
     gfx->DrawText(ti->text, rTxt, fmt, font, textColor);
