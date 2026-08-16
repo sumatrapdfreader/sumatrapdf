@@ -483,6 +483,9 @@
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>src\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\DocumentView.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\Gfx.h">
       <Filter>src\gui</Filter>
     </ClInclude>
@@ -493,6 +496,9 @@
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\Layout_win.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\PlatformCanvas.h">
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\PlatformFont.h">

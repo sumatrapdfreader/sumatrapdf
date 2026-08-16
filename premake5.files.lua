@@ -867,6 +867,7 @@ end
 
 function gui_files()
   files_in_dir("src/gui", {
+    "DocumentView.h",
     "Gfx.h",
     "Gfx_win.cpp",
     "GfxGdiplus_win.cpp",
@@ -876,6 +877,7 @@ function gui_files()
     "Layout_win.*",
     "PlatformFont.*",
     "PlatformFont_win.*",
+    "PlatformCanvas.h",
     "PlatformText.*",
     "PlatformText_win.*",
     "PlatformWindow.h",

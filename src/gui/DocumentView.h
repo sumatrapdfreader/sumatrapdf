@@ -1,0 +1,29 @@
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+struct PlatformCanvas;
+
+struct DocumentView {
+    PlatformCanvas* canvas = nullptr;
+    void* data = nullptr;
+
+    DocumentView() = default;
+    DocumentView(const DocumentView&) = delete;
+    DocumentView& operator=(const DocumentView&) = delete;
+    ~DocumentView();
+
+    static DocumentView* Create();
+
+    bool Open(Str path);
+    void* NativeWidget() const;
+    void Focus();
+    int PageCount() const;
+    int CurrentPageNo() const;
+    void GoToPage(int pageNo);
+    void SetContinuous(bool continuous);
+    bool IsContinuous() const;
+    void SetZoom(float zoomVirtual, Point* anchor = nullptr);
+    float Zoom() const;
+    void RotateBy(int degrees);
+    int Rotation() const;
+};
