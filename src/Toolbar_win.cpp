@@ -132,7 +132,11 @@ Edit* ToolbarCreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
     auto* e = new Edit();
     e->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
     e->Create(args);
-    e->SetIdealWidthFromText(StrL("999999"), DpiScale(24));
+    // #5949: fixed width, or the box would resize to every page label while
+    // scrolling a document with named pages, shifting the icons next to it.
+    // ideal == max pins GetIdealSize() to this width
+    e->SetIdealWidthChars(6);
+    e->SetMaxWidthChars(6);
     e->idealDy = iconDy;
     e->onChar = MkFunc1(OnPageEditChar, win);
     return e;
