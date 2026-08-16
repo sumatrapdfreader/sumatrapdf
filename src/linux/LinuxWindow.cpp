@@ -80,6 +80,11 @@ static void OnDocumentStateChanged(LinuxWindow* window) {
     UpdateControls(window);
 }
 
+static void OnDocumentReloaded(LinuxWindow* window) {
+    UpdateToc(window);
+    UpdateControls(window);
+}
+
 static int FindTabIndex(LinuxWindow* window, LinuxTab* tab) {
     for (int i = 0; i < len(window->tabs); i++) {
         if (window->tabs[i] == tab) {
@@ -858,8 +863,9 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     }
     char* baseName = g_file_get_basename(file);
     Str title(baseName ? baseName : "Document");
-    LinuxTab* tab = LinuxTabCreate(title, MkFunc0(OnDocumentStateChanged, window), MkFunc1(OpenLinkedUrl, window),
-                                   MkFunc1(OpenLinkedFile, window), MkFunc1(CopyText, window));
+    LinuxTab* tab =
+        LinuxTabCreate(title, MkFunc0(OnDocumentStateChanged, window), MkFunc0(OnDocumentReloaded, window),
+                       MkFunc1(OpenLinkedUrl, window), MkFunc1(OpenLinkedFile, window), MkFunc1(CopyText, window));
     g_free(baseName);
     if (!tab) {
         return;

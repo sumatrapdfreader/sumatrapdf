@@ -26,6 +26,9 @@
 #if defined(DEBUG)
 void PageRenderPolicy_UnitTests();
 void CommandPaletteModel_UnitTests();
+#if OS_LINUX
+void FileWatcher_UnitTests();
+#endif
 #endif
 
 #if OS_WIN
@@ -316,6 +319,9 @@ void SumatraPDF_UnitTests() {
     Layout_UnitTests();
     PageRenderPolicy_UnitTests();
     CommandPaletteModel_UnitTests();
+#if OS_LINUX
+    FileWatcher_UnitTests();
+#endif
 #endif
     DocPropertiesTest();
     parseCommandsTest();

@@ -13,7 +13,7 @@ after its relevant Windows, Linux, and portable checks pass.
 | 4     | Complete    | Portable asynchronous rendering              |
 | 5     | Complete    | Application shell, tabs, and commands        |
 | 6     | Complete    | Reader features                              |
-| 7     | Not started | Linux desktop services                       |
+| 7     | In progress | Linux desktop services                       |
 | 8     | Not started | Packaging and deferred features              |
 
 ## Stage 1: Linux application target
@@ -380,3 +380,29 @@ Verification:
 - Under WSLg, both debug and ASan applications opened the GTK command palette over
   `ext/a-zlib/zlib.3.pdf` and quit through application actions with status 0. ASan used `detect_leaks=0`, reported no
   memory-safety errors, and WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+## Stage 7: Linux desktop services
+
+### Automatic document reload
+
+Completed 2026-08-16.
+
+- Added `src/base/FileWatcher_linux.cpp`, implementing the existing `FileWatcher` API with one `inotify` descriptor,
+  shared directory watches, an `eventfd` shutdown wakeup, synchronized subscribe/unsubscribe operations, ignored-file
+  support, and deterministic worker-thread shutdown.
+- Added a Linux-only unit test that watches a temporary file, rewrites it, observes the asynchronous notification,
+  unsubscribes, and shuts the service down.
+- Subscribed every successfully opened Linux tab to its document path. Notifications are coalesced and posted back to
+  the GTK main thread; reload preserves the current page, zoom, rotation, and continuous/single-page mode.
+- Made pending reload tasks retain their tab shell safely across tab/window teardown, and drain posted callbacks during
+  application shutdown.
+
+Verification:
+
+- `bun cmd/build.ts -debug`: passed with 0 warnings and 0 errors after regenerating the Visual Studio projects.
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,813 assertions, including the new real
+  `inotify` test, and all Linux targets linked.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,790 assertions and all Linux targets
+  linked.
+- Debug and ASan WSLg smokes opened a copied PDF, atomically replaced the watched file, and quit cleanly with status 0.
+  ASan used `detect_leaks=0` and reported no memory-safety errors; only the existing WSLg Mesa warnings appeared.

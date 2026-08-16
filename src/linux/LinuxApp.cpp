@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/FileWatcher.h"
 
 #include "Commands.h"
 
@@ -210,6 +211,7 @@ static void OnStartup(GtkApplication* app, gpointer) {
 }
 
 int RunLinuxApp(int argc, char** argv) {
+    FileWatcherInit();
     LinuxPrefsInit();
     GtkApplication* app = gtk_application_new("org.sumatrapdf.SumatraPDF", G_APPLICATION_HANDLES_OPEN);
     auto* state = new LinuxAppState();
@@ -281,6 +283,10 @@ int RunLinuxApp(int argc, char** argv) {
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);
+    FileWatcherWaitForShutdown();
+    while (g_main_context_pending(nullptr)) {
+        g_main_context_iteration(nullptr, FALSE);
+    }
     LinuxPrefsShutdown();
     return code;
 }
