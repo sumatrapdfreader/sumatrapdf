@@ -550,3 +550,48 @@ Verification:
 - Extracted the release archive into a fresh WSL temporary directory, checked its file modes and packaged binary byte
   for byte, validated its AppStream metadata, and opened `ext/a-zlib/zlib.3.pdf` from the packaged executable under
   WSLg until the expected timeout. Only the existing non-fatal Mesa renderer warnings appeared.
+
+## Post-roadmap reader features
+
+### Password-protected documents
+
+Completed 2026-08-16.
+
+- Added a portable password-dialog request/result contract and a shared `PasswordUI` adapter under `src/gui`.
+- Kept the established Windows password window behind the shared contract and added native GTK4 and Cocoa backends.
+- Passed the adapter through `DocumentView` and `ReaderModel` to the MuPDF and comic-book engines, preserving their
+  existing wrong-password retry and cancellation behavior.
+- Made the GTK dialog modal to its reader window, with password masking, an explicit Show password option, Enter to
+  accept, and Escape/cancel handling. Cocoa uses the equivalent native controls.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,817 assertions and all Linux targets linked.
+- `bun cmd/build.ts -linux -asan -clean`: passed; Linux `test_util` passed 103,168 assertions and all Linux targets
+  linked.
+- A WSLg smoke generated an AES-256 encrypted copy of `ext/a-zlib/zlib.3.pdf`, submitted a wrong password, observed a
+  new prompt, submitted the correct password, opened the document, and shut down cleanly. A separate Escape/cancel
+  smoke also exited cleanly. The retry/open/shutdown sequence passed under ASan with leak detection disabled for the
+  documented GTK/Pango process-lifetime caches.
+- The Windows x64 static release target compiled and linked the shared adapter and existing Windows backend with no
+  warnings.
+- An isolated remote macOS debug build passed 102,431 assertions, linked `test_engines` and the 42-source
+  `SumatraPDF.app`, and produced the debug application archive.
+
+### Microsoft Reader ebooks
+
+Completed 2026-08-16.
+
+- Added the portable `.lit` converter to the shared reader engine set used by Linux and macOS.
+- Built and linked the converter's `msdes`, `chmdec` LZX, and ZIP dependencies on both Unix platforms.
+- Centralized `.lit` file loading and in-memory EPUB engine creation so Windows, the portable reader, and
+  `test_engines` use the same path.
+- Made `base/Zip.cpp` portable by encoding POSIX file modification times directly as ZIP DOS timestamps.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,911 assertions, and the GTK application,
+  `test_engines`, and portable archive were produced.
+- The Windows x64 static release target compiled and linked with no warnings.
+- An isolated remote macOS debug build passed 102,741 assertions, linked `test_engines` and the 43-source
+  `SumatraPDF.app`, and produced the debug application archive.

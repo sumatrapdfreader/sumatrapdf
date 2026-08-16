@@ -1275,6 +1275,7 @@
     <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
     <ClInclude Include="..\src\gui\Layout_win.h" />
+    <ClInclude Include="..\src\gui\PasswordDialog.h" />
     <ClInclude Include="..\src\gui\PlatformCanvas.h" />
     <ClInclude Include="..\src\gui\PlatformFont.h" />
     <ClInclude Include="..\src\gui\PlatformText.h" />
@@ -1729,6 +1730,7 @@
     <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
     <ClCompile Include="..\src\gui\Layout_win.cpp" />
+    <ClCompile Include="..\src\gui\PasswordDialog.cpp" />
     <ClCompile Include="..\src\gui\PlatformFont.cpp" />
     <ClCompile Include="..\src\gui\PlatformFont_win.cpp" />
     <ClCompile Include="..\src\gui\PlatformText.cpp" />

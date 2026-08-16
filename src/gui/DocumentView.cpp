@@ -631,9 +631,9 @@ DocumentView::~DocumentView() {
     data = nullptr;
 }
 
-bool DocumentView::Open(Str path) {
+bool DocumentView::Open(Str path, PasswordUI* pwdUI) {
     auto* viewData = ViewData(this);
-    ReaderModel* reader = ReaderModel::Create(path);
+    ReaderModel* reader = ReaderModel::Create(path, pwdUI);
     if (!reader) {
         return false;
     }

@@ -4,8 +4,11 @@
 #include "base/Base.h"
 #include "base/FileWatcher.h"
 
+#include "TreeModel.h"
+#include "EngineBase.h"
 #include "gui/DocumentView.h"
 #include "gui/PlatformWindow.h"
+#include "gui/PasswordDialog.h"
 
 #include <gtk/gtk.h>
 
@@ -15,6 +18,7 @@ struct LinuxTab {
     GtkWidget* stack = nullptr;
     GtkWidget* status = nullptr;
     DocumentView* view = nullptr;
+    NativeWnd passwordParent = nullptr;
     WatchedFile* watcher = nullptr;
     Func0 onReloaded;
     Str title;
@@ -66,9 +70,10 @@ static void OnWatchedFileChanged(LinuxTab* tab) {
     PlatformPostTask(MkFunc0(ReloadLinuxTabOnMainThread, tab));
 }
 
-LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged, const Func0& onReloaded, const Func1<Str>& onOpenUrl,
-                         const Func1<Str>& onOpenFile, const Func1<Str>& onCopyText) {
+LinuxTab* LinuxTabCreate(NativeWnd passwordParent, Str title, const Func0& onStateChanged, const Func0& onReloaded,
+                         const Func1<Str>& onOpenUrl, const Func1<Str>& onOpenFile, const Func1<Str>& onCopyText) {
     auto* tab = new LinuxTab();
+    tab->passwordParent = passwordParent;
     tab->title = str::Dup(title);
     tab->onReloaded = onReloaded;
     tab->stack = gtk_stack_new();
@@ -116,7 +121,8 @@ bool LinuxTabOpenFile(LinuxTab* tab, GFile* file) {
     char* displayName = g_file_get_parse_name(file);
     FileWatcherUnsubscribe(tab->watcher);
     tab->watcher = nullptr;
-    bool ok = path && tab->view && tab->view->Open(Str(path));
+    DialogPasswordUI pwdUI(tab->passwordParent);
+    bool ok = path && tab->view && tab->view->Open(Str(path), &pwdUI);
     if (path) {
         str::Free(tab->path);
         tab->path = str::Dup(Str(path));

@@ -6,9 +6,12 @@
 #include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
+#include "EngineBase.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
+#include "gui/PlatformWindow.h"
+#include "gui/PasswordDialog.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
 
@@ -222,19 +225,25 @@ bool GetPasswordWnd::Create() {
 
 // Modal: disable the parent and pump until OK / Cancel / close. Engine load
 // (often on a worker thread) calls this and cannot continue without a result.
-Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword) {
+bool ShowPasswordDialog(const PasswordDialogArgs& args, PasswordDialogResult* result) {
+    if (!result) {
+        return false;
+    }
+    *result = {};
+    bool rememberPassword = args.rememberPassword;
+    bool showPassword = args.showPassword;
     auto* wnd = new GetPasswordWnd();
-    wnd->hwndParent = hwndParent && IsWindow(hwndParent) ? hwndParent : nullptr;
-    wnd->fileName = str::Dup(fileName);
-    wnd->remember = rememberPassword;
-    wnd->showPassword = showPassword;
+    wnd->hwndParent = args.parent && IsWindow(args.parent) ? args.parent : nullptr;
+    wnd->fileName = str::Dup(args.fileName);
+    wnd->remember = args.canRemember ? &rememberPassword : nullptr;
+    wnd->showPassword = &showPassword;
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create();
     if (!ok) {
         delete wnd;
-        return {};
+        return false;
     }
 
     HWND parent = wnd->hwndParent;
@@ -263,7 +272,30 @@ Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword,
         SetForegroundWindow(parent);
     }
 
-    Str result = wnd->accepted ? str::Dup(wnd->pwdOut) : Str{};
+    result->accepted = wnd->accepted;
+    result->rememberPassword = rememberPassword;
+    result->showPassword = showPassword;
+    if (wnd->accepted) {
+        result->password = str::Dup(wnd->pwdOut);
+    }
     delete wnd;
-    return result;
+    return result->accepted;
+}
+
+Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword) {
+    PasswordDialogArgs args;
+    args.parent = hwndParent;
+    args.fileName = fileName;
+    args.canRemember = rememberPassword != nullptr;
+    args.rememberPassword = rememberPassword && *rememberPassword;
+    args.showPassword = showPassword && *showPassword;
+    PasswordDialogResult result;
+    ShowPasswordDialog(args, &result);
+    if (rememberPassword && result.accepted) {
+        *rememberPassword = result.rememberPassword;
+    }
+    if (showPassword) {
+        *showPassword = result.showPassword;
+    }
+    return result.password;
 }

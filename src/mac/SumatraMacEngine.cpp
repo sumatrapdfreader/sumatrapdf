@@ -17,6 +17,8 @@
 #include "TextSearch.h"
 #include "gui/CommandPaletteModel.h"
 #include "gui/PlatformFont.h"
+#include "gui/PlatformWindow.h"
+#include "gui/PasswordDialog.h"
 #include "mac/SumatraMacEngine.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
@@ -187,7 +189,8 @@ static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
 
 // Opens a document. Returns an opaque handle, or nullptr on failure; on failure
 // *errorOut (if non-null) is set to a malloc'd message the caller must free().
-void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* callbackContext, char** errorOut) {
+void* MacOpenDocument(void* passwordParent, const char* path, MacPageReadyCallback onPageReady, void* callbackContext,
+                      char** errorOut) {
     if (!path || !path[0]) {
         if (errorOut) {
             *errorOut = DupCString("Pass a document path on the command line.");
@@ -195,7 +198,8 @@ void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* 
         return nullptr;
     }
 
-    ReaderModel* model = ReaderModel::Create(Str((char*)path));
+    DialogPasswordUI pwdUI(passwordParent);
+    ReaderModel* model = ReaderModel::Create(Str((char*)path), &pwdUI);
     if (!model) {
         if (errorOut) {
             *errorOut = DupCString("Could not open the document.");

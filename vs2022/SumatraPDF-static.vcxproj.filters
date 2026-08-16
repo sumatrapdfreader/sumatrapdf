@@ -477,6 +477,9 @@
     <ClInclude Include="..\src\gui\Layout_win.h">
       <Filter>src\gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\PasswordDialog.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\PlatformCanvas.h">
       <Filter>src\gui</Filter>
     </ClInclude>
@@ -1161,6 +1164,9 @@
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\Layout_win.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PasswordDialog.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\PlatformFont.cpp">

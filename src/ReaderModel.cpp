@@ -11,9 +11,10 @@
 #include "TreeModel.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "LitDoc.h"
 #include "ReaderModel.h"
 
-static EngineBase* CreateReaderEngine(Str path) {
+static EngineBase* CreateReaderEngine(Str path, PasswordUI* pwdUI) {
     if (IsEngineImageDirSupportedFile(path)) {
         return CreateEngineImageDirFromFile(path);
     }
@@ -26,19 +27,22 @@ static EngineBase* CreateReaderEngine(Str path) {
         return CreateEngineImageFromFile(path);
     }
     if (IsEngineCbxSupportedFileType(kind)) {
-        return CreateEngineCbxFromFile(path, nullptr, kind);
+        return CreateEngineCbxFromFile(path, pwdUI, kind);
+    }
+    if (kind == FileType::Lit) {
+        return CreateEngineLitFromFile(path, pwdUI);
     }
     if (IsEngineMupdfSupportedFileType(kind)) {
-        return CreateEngineMupdfFromFile(path, kind, 96, nullptr);
+        return CreateEngineMupdfFromFile(path, kind, 96, pwdUI);
     }
     return nullptr;
 }
 
-ReaderModel* ReaderModel::Create(Str path) {
+ReaderModel* ReaderModel::Create(Str path, PasswordUI* pwdUI) {
     if (!path) {
         return nullptr;
     }
-    EngineBase* engine = CreateReaderEngine(path);
+    EngineBase* engine = CreateReaderEngine(path, pwdUI);
     if (!engine) {
         return nullptr;
     }

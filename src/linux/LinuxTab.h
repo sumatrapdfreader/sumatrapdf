@@ -4,8 +4,8 @@
 struct DocumentView;
 struct LinuxTab;
 
-LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged, const Func0& onReloaded, const Func1<Str>& onOpenUrl,
-                         const Func1<Str>& onOpenFile, const Func1<Str>& onCopyText);
+LinuxTab* LinuxTabCreate(NativeWnd passwordParent, Str title, const Func0& onStateChanged, const Func0& onReloaded,
+                         const Func1<Str>& onOpenUrl, const Func1<Str>& onOpenFile, const Func1<Str>& onCopyText);
 void LinuxTabDestroy(LinuxTab* tab);
 bool LinuxTabOpenFile(LinuxTab* tab, GFile* file);
 bool LinuxTabReload(LinuxTab* tab);

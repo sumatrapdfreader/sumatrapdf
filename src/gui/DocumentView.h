@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct PlatformCanvas;
+struct PasswordUI;
 struct Pixmap;
 
 struct DocumentView {
@@ -19,7 +20,7 @@ struct DocumentView {
 
     static DocumentView* Create();
 
-    bool Open(Str path);
+    bool Open(Str path, PasswordUI* pwdUI = nullptr);
     void* NativeWidget() const;
     void Focus();
     int PageCount() const;

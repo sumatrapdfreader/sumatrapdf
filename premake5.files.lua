@@ -880,6 +880,7 @@ function gui_files()
     "GuiColors.*",
     "Layout.*",
     "Layout_win.*",
+    "PasswordDialog.*",
     "PlatformFont.*",
     "PlatformFont_win.*",
     "PlatformCanvas.h",

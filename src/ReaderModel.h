@@ -4,6 +4,7 @@
 struct DocumentLayout;
 struct DocumentLayoutParams;
 class EngineBase;
+struct PasswordUI;
 struct Pixmap;
 
 struct ReaderModel {
@@ -14,7 +15,7 @@ struct ReaderModel {
     ReaderModel& operator=(const ReaderModel&) = delete;
     ~ReaderModel();
 
-    static ReaderModel* Create(Str path);
+    static ReaderModel* Create(Str path, PasswordUI* pwdUI = nullptr);
 
     Str FilePath() const;
     int PageCount() const;

@@ -86,6 +86,55 @@ static NSEventModifierFlags DeviceIndependentModifiers(NSEvent* event) {
     return [event modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask;
 }
 
+@interface SumatraPasswordDialogController : NSObject {
+    NSTextField* _plainText;
+    NSSecureTextField* _secureText;
+    NSButton* _showPassword;
+    NSWindow* _window;
+}
+- (id)initWithPlainText:(NSTextField*)plainText
+             secureText:(NSSecureTextField*)secureText
+            showPassword:(NSButton*)showPassword;
+- (void)setWindow:(NSWindow*)window;
+- (IBAction)togglePasswordVisibility:(id)sender;
+- (NSString*)password;
+@end
+
+@implementation SumatraPasswordDialogController
+
+- (id)initWithPlainText:(NSTextField*)plainText
+             secureText:(NSSecureTextField*)secureText
+            showPassword:(NSButton*)showPassword {
+    self = [super init];
+    if (self) {
+        _plainText = plainText;
+        _secureText = secureText;
+        _showPassword = showPassword;
+    }
+    return self;
+}
+
+- (void)setWindow:(NSWindow*)window {
+    _window = window;
+}
+
+- (IBAction)togglePasswordVisibility:(id)sender {
+    (void)sender;
+    bool show = [_showPassword state] == NSControlStateValueOn;
+    NSTextField* from = show ? _secureText : _plainText;
+    NSTextField* to = show ? _plainText : _secureText;
+    [to setStringValue:[from stringValue]];
+    [from setHidden:YES];
+    [to setHidden:NO];
+    [_window makeFirstResponder:to];
+}
+
+- (NSString*)password {
+    return [_showPassword state] == NSControlStateValueOn ? [_plainText stringValue] : [_secureText stringValue];
+}
+
+@end
+
 static MacGuiPointerEvent PointerEvent(SumatraPlatformView* view, NSEvent* event, int type) {
     NSPoint p = [view convertPoint:[event locationInWindow] fromView:nil];
     NSEventModifierFlags modifiers = DeviceIndependentModifiers(event);
@@ -461,6 +510,86 @@ void MacGuiWindowActivateIfForeground(void* handle) {
 
 void MacGuiPostTask(void (*fn)(void*), void* data) {
     dispatch_async_f(dispatch_get_main_queue(), data, fn);
+}
+
+bool MacGuiShowPasswordDialog(void* parent, const char* fileName, int fileNameLen, bool canRemember,
+                              bool rememberPassword, bool showPassword, bool* rememberPasswordOut,
+                              bool* showPasswordOut, char** passwordOut, int* passwordLenOut) {
+    (void)parent;
+    if (passwordOut) {
+        *passwordOut = nullptr;
+    }
+    if (passwordLenOut) {
+        *passwordLenOut = 0;
+    }
+
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setAlertStyle:NSAlertStyleInformational];
+    [alert setMessageText:@"Enter password"];
+    NSString* name = StringFromUtf8(fileName, fileNameLen);
+    [alert setInformativeText:[NSString stringWithFormat:@"Enter password for %@", name]];
+    [alert addButtonWithTitle:@"OK"];
+    [alert addButtonWithTitle:@"Cancel"];
+
+    CGFloat height = canRemember ? 92 : 66;
+    NSView* accessory = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 360, height)] autorelease];
+    CGFloat textY = height - 26;
+    NSSecureTextField* secureText =
+        [[[NSSecureTextField alloc] initWithFrame:NSMakeRect(0, textY, 360, 24)] autorelease];
+    NSTextField* plainText = [[[NSTextField alloc] initWithFrame:NSMakeRect(0, textY, 360, 24)] autorelease];
+    [plainText setHidden:!showPassword];
+    [secureText setHidden:showPassword];
+    [accessory addSubview:secureText];
+    [accessory addSubview:plainText];
+
+    NSButton* show = [[[NSButton alloc] initWithFrame:NSMakeRect(0, textY - 26, 180, 22)] autorelease];
+    [show setButtonType:NSButtonTypeSwitch];
+    [show setTitle:@"Show password"];
+    [show setState:showPassword ? NSControlStateValueOn : NSControlStateValueOff];
+    [accessory addSubview:show];
+
+    NSButton* remember = nil;
+    if (canRemember) {
+        remember = [[[NSButton alloc] initWithFrame:NSMakeRect(0, textY - 52, 340, 22)] autorelease];
+        [remember setButtonType:NSButtonTypeSwitch];
+        [remember setTitle:@"Remember the password for this document"];
+        [remember setState:rememberPassword ? NSControlStateValueOn : NSControlStateValueOff];
+        [accessory addSubview:remember];
+    }
+
+    SumatraPasswordDialogController* controller =
+        [[SumatraPasswordDialogController alloc] initWithPlainText:plainText secureText:secureText showPassword:show];
+    [show setTarget:controller];
+    [show setAction:@selector(togglePasswordVisibility:)];
+    [alert setAccessoryView:accessory];
+    [controller setWindow:[alert window]];
+    [[alert window] setInitialFirstResponder:showPassword ? plainText : secureText];
+
+    NSModalResponse response = [alert runModal];
+    bool accepted = response == NSAlertFirstButtonReturn;
+    bool showValue = [show state] == NSControlStateValueOn;
+    bool rememberValue = remember && [remember state] == NSControlStateValueOn;
+    if (showPasswordOut) {
+        *showPasswordOut = showValue;
+    }
+    if (rememberPasswordOut) {
+        *rememberPasswordOut = rememberValue;
+    }
+    if (accepted && passwordOut && passwordLenOut) {
+        NSData* utf8 = [[controller password] dataUsingEncoding:NSUTF8StringEncoding];
+        int n = (int)[utf8 length];
+        char* password = (char*)malloc((size_t)n + 1);
+        if (password) {
+            memcpy(password, [utf8 bytes], (size_t)n);
+            password[n] = 0;
+            *passwordOut = password;
+            *passwordLenOut = n;
+        } else {
+            accepted = false;
+        }
+    }
+    [controller release];
+    return accepted;
 }
 
 void MacGuiFillRect(void* nativeContext, MacGuiRect rect, uint32_t color, uint8_t alpha) {

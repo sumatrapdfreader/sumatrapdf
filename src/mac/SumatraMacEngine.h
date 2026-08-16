@@ -106,7 +106,8 @@ struct MacDocumentLayout {
 
 using MacPageReadyCallback = void (*)(void* context);
 
-void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* callbackContext, char** errorOut);
+void* MacOpenDocument(void* passwordParent, const char* path, MacPageReadyCallback onPageReady, void* callbackContext,
+                      char** errorOut);
 
 int MacPageCount(void* document);
 

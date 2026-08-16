@@ -64,6 +64,32 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
     return newdstlen;
 }
 
+static u32 FileTimeToDosDateTime(FILETIME ft) {
+#if OS_WIN
+    FILETIME ftLocal;
+    WORD dosDate = 0;
+    WORD dosTime = 0;
+    if (!FileTimeToLocalFileTime(&ft, &ftLocal) || !::FileTimeToDosDateTime(&ftLocal, &dosDate, &dosTime)) {
+        return 0;
+    }
+    return MAKELONG(dosTime, dosDate);
+#else
+    u64 ns = ((u64)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+    time_t seconds = (time_t)(ns / 1000000000ULL);
+    struct tm local{};
+    if (!localtime_r(&seconds, &local)) {
+        return 0;
+    }
+    int year = local.tm_year + 1900;
+    if (year < 1980 || year > 2107) {
+        return 0;
+    }
+    u16 dosDate = (u16)(((year - 1980) << 9) | ((local.tm_mon + 1) << 5) | local.tm_mday);
+    u16 dosTime = (u16)((local.tm_hour << 11) | (local.tm_min << 5) | (local.tm_sec / 2));
+    return ((u32)dosDate << 16) | dosTime;
+#endif
+}
+
 bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     int size = data.len;
     ReportIf(size >= UINT32_MAX);
@@ -148,11 +174,7 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
     u32 dosdatetime = 0;
     FILETIME ft = file::GetModificationTime(path);
     if (ft.dwLowDateTime || ft.dwHighDateTime) {
-        FILETIME ftLocal;
-        WORD dosDate, dosTime;
-        if (FileTimeToLocalFileTime(&ft, &ftLocal) && FileTimeToDosDateTime(&ftLocal, &dosDate, &dosTime)) {
-            dosdatetime = MAKELONG(dosTime, dosDate);
-        }
+        dosdatetime = FileTimeToDosDateTime(ft);
     }
 
     if (!nameInZip) {

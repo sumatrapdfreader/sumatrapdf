@@ -16,6 +16,7 @@
 #include "TextSelection.h"
 #include "ProgressUpdateUI.h"
 #include "TextSearch.h"
+#include "LitDoc.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
@@ -64,6 +65,9 @@ static EngineBase* CreateEngineForPath(Str path) {
     }
     if (IsEngineCbxSupportedFileType(kind)) {
         return CreateEngineCbxFromFile(path, nullptr, kind);
+    }
+    if (kind == FileType::Lit) {
+        return CreateEngineLitFromFile(path, nullptr);
     }
     if (IsEngineMupdfSupportedFileType(kind)) {
         return CreateEngineMupdfFromFile(path, kind, 96, nullptr);

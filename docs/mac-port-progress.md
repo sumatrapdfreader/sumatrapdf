@@ -51,6 +51,12 @@ Reconciled 2026-08-16.
   current rotation.
 - A native vnode dispatch source reloads the active document after writes or atomic replacements while preserving its
   saved view state.
+- Password-protected MuPDF and comic-book documents now use the shared `PasswordUI` adapter and portable dialog
+  contract. The Cocoa backend presents native masked/plain text controls and participates in the engine's retry and
+  cancellation loop; GTK4 and the existing Windows dialog implement the same contract.
+- Microsoft Reader `.lit` ebooks use the same portable converter and in-memory EPUB engine path as Windows and
+  Linux. The app bundle advertises `.lit` to Finder, and the macOS build includes the required `msdes`, `chmdec`, and
+  ZIP support.
 
 ## Verification
 
@@ -62,5 +68,10 @@ Reconciled 2026-08-16.
   `SumatraPDF-3.7-mac-arm64-debug.tar.gz`.
 - `plutil` accepted the packaged `Info.plist`; the application executable retained its executable mode and the
   archive contained the app bundle, license, and macOS README.
+- The portable password-dialog changes passed an isolated remote macOS debug build on 2026-08-16: 102,431
+  `test_util` assertions passed, `test_engines` linked, and the 42-source `SumatraPDF.app` and debug archive were
+  produced.
+- The `.lit` integration passed an isolated remote macOS debug build on 2026-08-16: 102,741 `test_util` assertions
+  passed, `test_engines` linked, and the 43-source `SumatraPDF.app` and debug archive were produced.
 
 All stages were verified from temporary branch `tmp/mac-port-parity-20260816`.

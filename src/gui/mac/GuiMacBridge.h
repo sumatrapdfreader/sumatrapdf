@@ -75,6 +75,10 @@ bool MacGuiWindowIsMaximized(void* window);
 void MacGuiWindowActivateIfForeground(void* window);
 void MacGuiPostTask(void (*fn)(void*), void* data);
 
+bool MacGuiShowPasswordDialog(void* parent, const char* fileName, int fileNameLen, bool canRemember,
+                              bool rememberPassword, bool showPassword, bool* rememberPasswordOut,
+                              bool* showPasswordOut, char** passwordOut, int* passwordLenOut);
+
 void MacGuiFillRect(void* ctx, MacGuiRect rect, uint32_t color, uint8_t alpha);
 void MacGuiDrawRect(void* ctx, MacGuiRect rect, uint32_t color, int thickness, bool dashed);
 void MacGuiFillRoundedRect(void* ctx, MacGuiRect rect, int radius, uint32_t fill, bool hasFill, uint32_t border,

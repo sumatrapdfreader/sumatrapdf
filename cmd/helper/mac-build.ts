@@ -323,6 +323,14 @@ function makeChmdec(): LibDef {
   };
 }
 
+const msdes: LibDef = {
+  name: "msdes",
+  alwaysOptimize: true,
+  defines: [],
+  includes: ["ext/msdes"],
+  files: [{ dir: "ext/msdes", patterns: ["des.c"] }],
+};
+
 const djvudec: LibDef = {
   name: "djvudec",
   alwaysOptimize: true,
@@ -484,6 +492,7 @@ const DEP_LIBS_BASE = [
           "StrVec.cpp",
           "Strconv.cpp",
           "TgaReader.cpp",
+          "Zip.cpp",
         ],
       },
       {
@@ -496,6 +505,7 @@ const DEP_LIBS_BASE = [
   aGumbo,
   makeUnrar,
   makeChmdec,
+  msdes,
   djvudec,
   "libarchive",
   libwebp,
@@ -565,6 +575,7 @@ const TEST_ENGINES_SOURCES = [
   "src/ImageReader_posix.cpp",
   "src/GumboHtmlParser.cpp",
   "src/GumboHelpers.cpp",
+  "src/LitDoc.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
   "src/PdfCadDetect.cpp",
@@ -593,6 +604,7 @@ const MAC_APP_SOURCES = [
   "src/ImageReader_posix.cpp",
   "src/GumboHtmlParser.cpp",
   "src/GumboHelpers.cpp",
+  "src/LitDoc.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
   "src/PdfCadDetect.cpp",
@@ -608,10 +620,12 @@ const MAC_APP_SOURCES = [
   "src/KeyboardHelp.cpp",
   "src/gui/GuiColors.cpp",
   "src/gui/CommandPaletteModel.cpp",
+  "src/gui/PasswordDialog.cpp",
   "src/gui/PlatformFont.cpp",
   "src/gui/mac/GfxMac.cpp",
   "src/gui/mac/KeyboardHelpMac.cpp",
   "src/gui/mac/PlatformFontMac.cpp",
+  "src/gui/mac/PasswordDialogMac.cpp",
   "src/gui/mac/PlatformWindowMac.cpp",
   "src/gui/mac/GuiMacBridge.mm",
   "src/mac/SumatraMacEngine.cpp",
@@ -864,7 +878,7 @@ async function buildMacApp(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/msdes", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
 
   const units = MAC_APP_SOURCES.map((src) => {
     const obj = objPath(outDir, "sumatrapdf_app", src);
@@ -920,6 +934,8 @@ async function buildMacApp(
     join(outDir, "lib", "liba-jbig2dec.a"),
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
+    join(outDir, "lib", "libchmdec.a"),
+    join(outDir, "lib", "libmsdes.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "liba-zlib.a"),
     "-liconv",
@@ -963,6 +979,7 @@ async function buildMacApp(
         <string>epub</string>
         <string>mobi</string>
         <string>fb2</string>
+        <string>lit</string>
         <string>cbz</string>
         <string>cbr</string>
         <string>cb7</string>
@@ -1032,7 +1049,7 @@ async function buildTestEngines(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/msdes", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
 
   const units = TEST_ENGINES_SOURCES.map((src) => {
     const obj = objPath(outDir, "test_engines", src);
@@ -1081,6 +1098,8 @@ async function buildTestEngines(
     join(outDir, "lib", "liba-jbig2dec.a"),
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
+    join(outDir, "lib", "libchmdec.a"),
+    join(outDir, "lib", "libmsdes.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "liba-zlib.a"),
     "-liconv",

@@ -12,11 +12,15 @@
    account) is not supported. */
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Zip.h"
 
-#include "LitDoc.h"
+#include "TreeModel.h"
+#include "EngineBase.h"
+#include "EngineAll.h"
 #include "LitDocMaps.h"
+#include "LitDoc.h"
 
 #include "SumatraLog.h"
 
@@ -1447,4 +1451,22 @@ Str LitToEpubConvert(Str litData) {
         return {};
     }
     return zipData.TakeStr();
+}
+
+EngineBase* CreateEngineLitFromFile(Str path, PasswordUI* pwdUI) {
+    Str litData = file::ReadFile(path);
+    if (str::IsNull(litData)) {
+        return nullptr;
+    }
+    Str epubData = LitToEpubConvert(litData);
+    str::Free(litData);
+    if (str::IsNull(epubData)) {
+        return nullptr;
+    }
+    EngineBase* engine = CreateEngineMupdfFromData(epubData, StrL("book.epub"), pwdUI);
+    str::Free(epubData);
+    if (engine) {
+        engine->SetFilePath(path);
+    }
+    return engine;
 }

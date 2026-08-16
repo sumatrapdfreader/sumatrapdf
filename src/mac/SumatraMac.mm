@@ -946,7 +946,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
     [self saveActiveTabState];
     char* error = nullptr;
-    void* document = MacOpenDocument([_documentPath fileSystemRepresentation], PageRenderReady, self, &error);
+    void* document = MacOpenDocument(_window, [_documentPath fileSystemRepresentation], PageRenderReady, self, &error);
     free(error);
     if (!document) {
         [self startWatchingDocument];
@@ -1001,7 +1001,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
 
     char* error = nullptr;
-    void* doc = MacOpenDocument([path fileSystemRepresentation], PageRenderReady, self, &error);
+    void* doc = MacOpenDocument(_window, [path fileSystemRepresentation], PageRenderReady, self, &error);
     if (!doc) {
         NSString* message = error ? [NSString stringWithUTF8String:error] : @"Could not open the document.";
         free(error);

@@ -215,23 +215,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
         return engine;
     }
     if (kind == FileType::Lit) {
-        // Microsoft Reader ebook: converted to an in-memory epub, rendered
-        // by the mupdf engine
-        Str litData = file::ReadFile(path);
-        if (str::IsNull(litData)) {
-            return nullptr;
-        }
-        Str epubData = LitToEpubConvert(litData);
-        str::Free(litData);
-        if (str::IsNull(epubData)) {
-            return nullptr;
-        }
-        engine = CreateEngineMupdfFromData(epubData, "book.epub", pwdUI);
-        str::Free(epubData);
-        if (engine) {
-            engine->SetFilePath(path);
-        }
-        return engine;
+        return CreateEngineLitFromFile(path, pwdUI);
     }
     if (enableChmEngine && (kind == FileType::Chm)) {
         engine = CreateEngineChmFromFile(path);

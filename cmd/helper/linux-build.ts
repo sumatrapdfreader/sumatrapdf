@@ -391,6 +391,14 @@ function makeChmdec(): LibDef {
   };
 }
 
+const msdes: LibDef = {
+  name: "msdes",
+  alwaysOptimize: true,
+  defines: [],
+  includes: ["ext/msdes"],
+  files: [{ dir: "ext/msdes", patterns: ["des.c"] }],
+};
+
 const djvudec: LibDef = {
   name: "djvudec",
   alwaysOptimize: true,
@@ -554,6 +562,7 @@ const DEP_LIBS_BASE = [
           "StrVec.cpp",
           "Strconv.cpp",
           "TgaReader.cpp",
+          "Zip.cpp",
         ],
       },
       {
@@ -566,6 +575,7 @@ const DEP_LIBS_BASE = [
   zlib,
   makeUnrar,
   makeChmdec,
+  msdes,
   djvudec,
   "libarchive",
   libwebp,
@@ -634,6 +644,7 @@ const PORTABLE_ENGINE_SOURCES = [
   "src/ImageReader_posix.cpp",
   "src/GumboHtmlParser.cpp",
   "src/GumboHelpers.cpp",
+  "src/LitDoc.cpp",
   "src/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
   "src/PdfCadDetect.cpp",
@@ -709,10 +720,12 @@ const GTK4_APP_SOURCES = [
   "src/gui/DocumentView.cpp",
   "src/gui/CommandPaletteModel.cpp",
   "src/gui/GuiColors.cpp",
+  "src/gui/PasswordDialog.cpp",
   "src/gui/PlatformFont.cpp",
   "src/gui/gtk4/GfxGtk.cpp",
   "src/gui/gtk4/PlatformCanvasGtk.cpp",
   "src/gui/gtk4/PlatformFontGtk.cpp",
+  "src/gui/gtk4/PasswordDialogGtk.cpp",
   "src/gui/gtk4/PlatformWindowGtk.cpp",
   "src/linux/LinuxApp.cpp",
   "src/linux/LinuxCommandPalette.cpp",
@@ -923,7 +936,7 @@ async function buildGtk4LinuxApp(
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
   const gtkCflags = [...pkgConfigFlags("--cflags", "gtk4"), ...pkgConfigFlags("--cflags", "gio-unix-2.0")];
   const gtkLibs = [...pkgConfigFlags("--libs", "gtk4"), ...pkgConfigFlags("--libs", "fontconfig")];
-  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/msdes", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
   const units = GTK4_APP_SOURCES.map((src) => {
     const obj = objPath(outDir, "gtk4-app", src);
     const sourceDefines = src === "src/Commands.cpp" ? ["-DSUMATRA_TEST_UTIL=1"] : [];
@@ -997,6 +1010,8 @@ function portableEngineLinkArgs(outDir: string): string[] {
     join(outDir, "lib", "liba-jbig2dec.a"),
     join(outDir, "lib", "liblibjpeg-turbo.a"),
     join(outDir, "lib", "libdjvudec.a"),
+    join(outDir, "lib", "libchmdec.a"),
+    join(outDir, "lib", "libmsdes.a"),
     join(outDir, "lib", "liblibarchive.a"),
     join(outDir, "lib", "liba-zlib.a"),
     "-Wl,--end-group",
@@ -1196,7 +1211,7 @@ async function buildTestEngines(
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
   const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
-  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
+  const includeFlags = ["-Isrc", "-Iext/djvudec", "-Iext/msdes", "-Iext/mupdf/include", "-Iext/mupdf/generated"];
 
   const units = TEST_ENGINES_SOURCES.map((src) => {
     const obj = objPath(outDir, "test_engines", src);
