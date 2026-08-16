@@ -2361,6 +2361,15 @@ TempStr EngineCbx::GetPropertyTemp(DocProp prop) {
     return {};
 }
 
+// like AppTools' FormatFileSizeTransTemp ("6.20 MB (6,501,436 Bytes)") but with
+// untranslated units: this file is also built into PdfPreview, which has
+// neither AppTools nor translations
+static TempStr FormatFileSizeTemp(i64 size) {
+    TempStr n1 = str::FormatSizeShortTemp(size);
+    TempStr n2 = str::FormatNumWithThousandSepTemp(size);
+    return fmt("%s (%s Bytes)", n1, n2);
+}
+
 void EngineCbx::GetProperties(Props& propsOut) {
     EngineBase::GetProperties(propsOut);
 
@@ -2377,6 +2386,10 @@ void EngineCbx::GetProperties(Props& propsOut) {
         }
         filesStr.AppendChar('\n');
         filesStr.Append(fi->name);
+        if (fi->fileSizeUncompressed > 0) {
+            filesStr.Append(StrL("  "));
+            filesStr.Append(FormatFileSizeTemp(fi->fileSizeUncompressed));
+        }
     }
     // show paths in Windows style (#5543)
     Str filesStrView = ToStr(filesStr);
