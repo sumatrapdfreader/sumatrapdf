@@ -276,6 +276,9 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
         case PaperFormat::Statement:
             formatName = StrL(" (Statement)");
             break;
+        case PaperFormat::Other:
+            formatName = StrL(" (Other)");
+            break;
     }
 
     TempStr inStr = FormatPageSizeUnitTemp(size, 1.0, StrL("in"));
