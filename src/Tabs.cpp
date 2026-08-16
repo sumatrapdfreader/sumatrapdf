@@ -743,6 +743,8 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     newTab->tooltip = str::Dup(MakeTabTooltipTemp(tab->filePath, false));
     newTab->userData = (UINT_PTR)tab;
     newTab->tabColor = tab->tabColor;
+    // a failed load can arrive in a tab created for it (ShowLoadErrorInTab)
+    newTab->isError = tab->loadState == WindowTab::LoadState::Error;
 
     int insertedIdx = tabs->InsertTab(idx, newTab, !deferUpdate);
     ReportIf(insertedIdx == -1);
@@ -768,6 +770,22 @@ void SetTabInfoColor(WindowTab* tab) {
         return;
     }
     ti->tabColor = tab->tabColor;
+    win->tabsCtrl->ScheduleRepaint();
+}
+
+// The tab control paints from TabInfo::isError, so it has to be re-synced from
+// WindowTab::loadState when a load fails or a reload succeeds
+void UpdateTabIsError(WindowTab* tab) {
+    if (!tab || !tab->win || !tab->win->tabsCtrl) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    TabInfo* ti = win->tabsCtrl->GetTab(win->GetTabIdx(tab));
+    bool isError = tab->loadState == WindowTab::LoadState::Error;
+    if (!ti || ti->isError == isError) {
+        return;
+    }
+    ti->isError = isError;
     win->tabsCtrl->ScheduleRepaint();
 }
 

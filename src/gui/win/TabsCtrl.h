@@ -23,6 +23,8 @@ struct TabInfo {
     bool isPinned = false;
     bool canClose = true; // TODO: same as !isPinned?
     bool isDirty = false;
+    // document failed to load: the title paints in red
+    bool isError = false;
     UINT_PTR userData = 0;
     Color tabColor = (Color)(0xfeffffff); // kColorUnset; use default tab color
 

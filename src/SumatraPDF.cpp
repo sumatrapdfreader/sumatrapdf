@@ -3457,6 +3457,8 @@ static void SetTabLoadError(WindowTab* tab, Str path) {
     tab->loadState = WindowTab::LoadState::Error;
     str::Free(tab->loadErrorReason);
     tab->loadErrorReason = str::Dup(FileLoadErrorReasonTemp(path));
+    // the tab title paints in red while in error state
+    UpdateTabIsError(tab);
 }
 
 static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
@@ -3581,6 +3583,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         targetTab->loadState = WindowTab::LoadState::None;
         targetTab->loadCopyBytesCopied = -1;
         targetTab->loadCopyBytesTotal = 0;
+        UpdateTabIsError(targetTab);
     } else if (win->IsCurrentTabAbout()) {
         // drop the About / home page's virtual controls; rebuilt on next paint
         HomePageDestroyChrome(win);
@@ -3644,6 +3647,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     currTab->loadState = WindowTab::LoadState::None;
     currTab->loadCopyBytesCopied = -1;
     currTab->loadCopyBytesTotal = 0;
+    UpdateTabIsError(currTab);
     Str path = currTab->filePath;
 #if 0
     int nPages = 0;
@@ -3945,6 +3949,8 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     if (args->targetTab && args->targetTab != win->CurrentTab()) {
         WindowTab* tab = args->targetTab;
         tab->loadState = WindowTab::LoadState::LoadedPending;
+        // a background reload of a previously failed tab succeeded
+        UpdateTabIsError(tab);
         tab->pendingLoadArgs = args;
         d->args = nullptr;
         args->onFinished.Call(true);

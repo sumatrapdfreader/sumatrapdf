@@ -18,6 +18,7 @@ void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
 void RemoveTab(WindowTab*);
 void SetTabInfoColor(WindowTab*);
+void UpdateTabIsError(WindowTab*);
 TempStr MakeTabTooltipTemp(Str path, bool dirty = false);
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft);

@@ -218,6 +218,11 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     Rect r = ctx.bounds;
     Color tabBgCol = BgColor();
     Color textColor = TabTextColorForBackground(GetColor(kColTabText), tabBgCol);
+    if (ti->isError) {
+        // a tab whose document failed to load shows its title in red, shaded
+        // to stay readable on light and dark tab backgrounds
+        textColor = IsLightColor(tabBgCol) ? MkRgb(0xC4, 0x1E, 0x1E) : MkRgb(0xFF, 0x6A, 0x6A);
+    }
 
     gfx->FillRect(r, tabBgCol);
 
