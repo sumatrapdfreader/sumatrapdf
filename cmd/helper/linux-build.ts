@@ -678,6 +678,14 @@ const GTK4_KEYBOARD_HELP_SOURCES = [
   "src/gui/gtk4/KeyboardHelpGtkMain.cpp",
 ];
 
+const GTK4_APP_SOURCES = [
+  "src/CrashHandlerNoOp.cpp",
+  "src/SumatraLog_posix.cpp",
+  "src/linux/LinuxApp.cpp",
+  "src/linux/LinuxWindow.cpp",
+  "src/linux/SumatraLinux.cpp",
+];
+
 export interface LinuxBuildOptions {
   outDir: string;
   isRelease?: boolean;
@@ -760,11 +768,72 @@ export async function buildLinux(opts: LinuxBuildOptions): Promise<void> {
   await buildTestUtil(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await compilePortableSources(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildGtk4KeyboardHelp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
+  await buildGtk4LinuxApp(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
   await buildTestEngines(outDir, isRelease, tools, jobs, commonDefines, commonFlags, cxxFlags);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log(`\n=== Dependency build complete (${config}) in ${elapsed}s ===`);
   console.log(`Static libraries: ${join(outDir, "lib")}\n`);
+}
+
+async function buildGtk4LinuxApp(
+  outDir: string,
+  isRelease: boolean,
+  tools: BuildTools,
+  jobs: number,
+  commonDefines: string[],
+  commonFlags: string[],
+  cxxFlags: string[],
+): Promise<void> {
+  console.log("Building GTK 4 SumatraPDF application...");
+  const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
+  const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
+  const defineFlags = [...commonDefines, ...configDefines].map((d) => `-D${d}`);
+  const gtkCflags = pkgConfigFlags("--cflags", "gtk4");
+  const gtkLibs = pkgConfigFlags("--libs", "gtk4");
+  const units = GTK4_APP_SOURCES.map((src) => {
+    const obj = objPath(outDir, "gtk4-app", src);
+    return {
+      src,
+      obj,
+      args: [
+        tools.cxx,
+        ...optFlags,
+        ...defineFlags,
+        "-Isrc",
+        ...gtkCflags,
+        ...commonFlags,
+        "-w",
+        "-std=c++23",
+        ...cxxFlags,
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-c",
+        src,
+        "-o",
+        obj,
+      ],
+    };
+  });
+  await compileAll(units, jobs);
+
+  const exePath = join(outDir, "SumatraPDF");
+  const result = await spawnCmd([
+    tools.cxx,
+    "-o",
+    exePath,
+    ...commonFlags,
+    "-Wl,--gc-sections",
+    ...units.map((unit) => unit.obj),
+    join(outDir, "lib", "libbase.a"),
+    ...gtkLibs,
+  ]);
+  if (!result.ok) {
+    throw new Error(`link SumatraPDF failed: ${result.stderr}`);
+  }
+  console.log(`  -> ${exePath}`);
 }
 
 function pkgConfigFlags(kind: "--cflags" | "--libs", pkg: string): string[] {
