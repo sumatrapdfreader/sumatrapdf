@@ -312,7 +312,6 @@ int RunLinuxApp(int argc, char** argv) {
     const char* reopenAccels[] = {"<Primary><Shift>t", nullptr};
     const char* fullscreenAccels[] = {"F11", nullptr};
     const char* presentationAccels[] = {"F5", nullptr};
-    const char* helpAccels[] = {"question", nullptr};
     const char* commandPaletteAccels[] = {"<Primary>k", nullptr};
     const char* copyAccels[] = {"<Primary>c", nullptr};
     const char* selectAllAccels[] = {"<Primary>a", nullptr};
@@ -329,7 +328,6 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.reopen-tab", reopenAccels);
     gtk_application_set_accels_for_action(app, "app.fullscreen", fullscreenAccels);
     gtk_application_set_accels_for_action(app, "app.presentation", presentationAccels);
-    gtk_application_set_accels_for_action(app, "app.keyboard-help", helpAccels);
     gtk_application_set_accels_for_action(app, "app.command-palette", commandPaletteAccels);
     gtk_application_set_accels_for_action(app, "app.copy", copyAccels);
     gtk_application_set_accels_for_action(app, "app.select-all", selectAllAccels);

@@ -30,22 +30,29 @@ static void ReleaseLinuxTab(LinuxTab* tab) {
     }
 }
 
-static void ReloadLinuxTabOnMainThread(LinuxTab* tab) {
-    if (tab->alive && tab->path && tab->view) {
-        int pageNo = tab->view->CurrentPageNo();
-        float zoom = tab->view->Zoom();
-        int rotation = tab->view->Rotation();
-        bool continuous = tab->view->IsContinuous();
-        GFile* file = g_file_new_for_path(CStrTemp(tab->path));
-        if (LinuxTabOpenFile(tab, file)) {
-            tab->view->SetContinuous(continuous);
-            tab->view->SetZoom(zoom);
-            tab->view->RotateBy(rotation);
-            tab->view->GoToPage(pageNo);
-            tab->onReloaded.Call();
-        }
-        g_object_unref(file);
+bool LinuxTabReload(LinuxTab* tab) {
+    if (!tab || !tab->alive || !tab->path || !tab->view) {
+        return false;
     }
+    int pageNo = tab->view->CurrentPageNo();
+    float zoom = tab->view->Zoom();
+    int rotation = tab->view->Rotation();
+    bool continuous = tab->view->IsContinuous();
+    GFile* file = g_file_new_for_path(CStrTemp(tab->path));
+    bool ok = LinuxTabOpenFile(tab, file);
+    g_object_unref(file);
+    if (ok) {
+        tab->view->SetContinuous(continuous);
+        tab->view->SetZoom(zoom);
+        tab->view->RotateBy(rotation);
+        tab->view->GoToPage(pageNo);
+        tab->onReloaded.Call();
+    }
+    return ok;
+}
+
+static void ReloadLinuxTabOnMainThread(LinuxTab* tab) {
+    LinuxTabReload(tab);
     AtomicBoolSet(&tab->reloadPending, false);
     ReleaseLinuxTab(tab);
 }

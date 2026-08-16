@@ -475,12 +475,23 @@ static void ScrollBy(DocumentView* view, int dx, int dy) {
     SetViewOffset(view, Point(data->viewOffset.x + dx, data->viewOffset.y + dy));
 }
 
+static void ScrollByPage(DocumentView* view, int direction) {
+    auto* data = ViewData(view);
+    if (IsContinuous(data->displayMode)) {
+        int pageStep = std::max(data->viewSize.dy - 60, 60);
+        ScrollBy(view, 0, direction * pageStep);
+    } else {
+        view->GoToPage(data->startPage + direction);
+    }
+}
+
 static void OnCanvasKey(DocumentView* view, PlatformCanvasKeyEvent* ev) {
     auto* data = ViewData(view);
     if (!data->reader) {
         return;
     }
     int pageStep = std::max(data->viewSize.dy - 60, 60);
+    int horizontalPageStep = std::max(data->viewSize.dx - 60, 60);
     switch (ev->key) {
         case PlatformKey::Escape:
             if (view->HasTextSelection()) {
@@ -497,36 +508,40 @@ static void OnCanvasKey(DocumentView* view, PlatformCanvasKeyEvent* ev) {
             view->GoToPage(data->reader->PageCount());
             ev->didHandle = true;
             return;
+        case PlatformKey::Enter:
+            ScrollByPage(view, ev->isShift ? -1 : 1);
+            ev->didHandle = true;
+            return;
         case PlatformKey::PageUp:
-            if (IsContinuous(data->displayMode)) {
-                ScrollBy(view, 0, -pageStep);
-            } else {
-                view->GoToPage(data->startPage - 1);
-            }
+            ScrollByPage(view, -1);
             ev->didHandle = true;
             return;
         case PlatformKey::PageDown:
-            if (IsContinuous(data->displayMode)) {
-                ScrollBy(view, 0, pageStep);
-            } else {
-                view->GoToPage(data->startPage + 1);
-            }
+            ScrollByPage(view, 1);
             ev->didHandle = true;
             return;
         case PlatformKey::Left:
-            ScrollBy(view, -45, 0);
+            ScrollBy(view, ev->isShift ? -horizontalPageStep : -45, 0);
             ev->didHandle = true;
             return;
         case PlatformKey::Up:
-            ScrollBy(view, 0, -45);
+            if (ev->isCtrl) {
+                ScrollByPage(view, -1);
+            } else {
+                ScrollBy(view, 0, ev->isShift ? -(pageStep / 2) : -45);
+            }
             ev->didHandle = true;
             return;
         case PlatformKey::Right:
-            ScrollBy(view, 45, 0);
+            ScrollBy(view, ev->isShift ? horizontalPageStep : 45, 0);
             ev->didHandle = true;
             return;
         case PlatformKey::Down:
-            ScrollBy(view, 0, 45);
+            if (ev->isCtrl) {
+                ScrollByPage(view, 1);
+            } else {
+                ScrollBy(view, 0, ev->isShift ? pageStep / 2 : 45);
+            }
             ev->didHandle = true;
             return;
         case PlatformKey::Plus:
@@ -553,6 +568,22 @@ static void OnCanvasKey(DocumentView* view, PlatformCanvasKeyEvent* ev) {
     }
     if (ev->isCtrl && c == 'c') {
         view->CopySelection();
+    } else if (ev->isCtrl || ev->isAlt) {
+        return;
+    } else if (c == ' ') {
+        ScrollByPage(view, ev->isShift ? -1 : 1);
+    } else if (c == 'h') {
+        ScrollBy(view, -45, 0);
+    } else if (c == 'j') {
+        ScrollBy(view, 0, 45);
+    } else if (c == 'k') {
+        ScrollBy(view, 0, -45);
+    } else if (c == 'l') {
+        ScrollBy(view, 45, 0);
+    } else if (c == 'n') {
+        view->GoToPage(data->startPage + 1);
+    } else if (c == 'p') {
+        view->GoToPage(data->startPage - 1);
     } else if (c == 'c') {
         view->SetContinuous(!view->IsContinuous());
     } else if (c == 'f') {

@@ -395,6 +395,76 @@ static void OnFindClose(GtkButton*, gpointer data) {
     }
 }
 
+static void AcceptGoToPage(GtkButton*, gpointer data) {
+    GtkWindow* dialog = GTK_WINDOW(data);
+    auto* window = (LinuxWindow*)g_object_get_data(G_OBJECT(dialog), "sumatra-linux-window");
+    auto* page = GTK_SPIN_BUTTON(g_object_get_data(G_OBJECT(dialog), "sumatra-page-number"));
+    gtk_spin_button_update(page);
+    LinuxWindowGoToPage(window, gtk_spin_button_get_value_as_int(page));
+    gtk_window_destroy(dialog);
+}
+
+static gboolean OnGoToPageKey(GtkEventControllerKey*, guint keyval, guint, GdkModifierType, gpointer data) {
+    if (keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter) {
+        AcceptGoToPage(nullptr, data);
+        return TRUE;
+    }
+    if (keyval == GDK_KEY_Escape) {
+        gtk_window_destroy(GTK_WINDOW(data));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static void ShowGoToPageDialog(LinuxWindow* window) {
+    DocumentView* view = ActiveView(window);
+    if (!view || view->PageCount() < 1) {
+        return;
+    }
+    GtkWidget* dialog = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(dialog), "Go to Page");
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(window->window));
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_resizable(GTK_WINDOW(dialog), FALSE);
+
+    GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    gtk_widget_set_margin_start(root, 16);
+    gtk_widget_set_margin_end(root, 16);
+    gtk_widget_set_margin_top(root, 16);
+    gtk_widget_set_margin_bottom(root, 16);
+    TempStr prompt = fmt("Page number (1-%d):", view->PageCount());
+    GtkWidget* label = gtk_label_new(CStrTemp(prompt));
+    gtk_label_set_xalign(GTK_LABEL(label), 0);
+    gtk_box_append(GTK_BOX(root), label);
+
+    GtkWidget* page = gtk_spin_button_new_with_range(1, view->PageCount(), 1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(page), view->CurrentPageNo());
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(page), TRUE);
+    gtk_box_append(GTK_BOX(root), page);
+
+    GtkWidget* buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_widget_set_halign(buttons, GTK_ALIGN_END);
+    GtkWidget* cancel = gtk_button_new_with_label("Cancel");
+    GtkWidget* go = gtk_button_new_with_label("Go");
+    g_signal_connect_swapped(cancel, "clicked", G_CALLBACK(gtk_window_destroy), dialog);
+    g_signal_connect(go, "clicked", G_CALLBACK(AcceptGoToPage), dialog);
+    gtk_box_append(GTK_BOX(buttons), cancel);
+    gtk_box_append(GTK_BOX(buttons), go);
+    gtk_box_append(GTK_BOX(root), buttons);
+
+    g_object_set_data(G_OBJECT(dialog), "sumatra-linux-window", window);
+    g_object_set_data(G_OBJECT(dialog), "sumatra-page-number", page);
+    GtkEventController* keys = gtk_event_controller_key_new();
+    gtk_event_controller_set_propagation_phase(keys, GTK_PHASE_CAPTURE);
+    g_signal_connect(keys, "key-pressed", G_CALLBACK(OnGoToPageKey), dialog);
+    gtk_widget_add_controller(dialog, keys);
+    gtk_window_set_default_widget(GTK_WINDOW(dialog), go);
+    gtk_window_set_child(GTK_WINDOW(dialog), root);
+    gtk_window_present(GTK_WINDOW(dialog));
+    gtk_widget_grab_focus(page);
+    gtk_editable_select_region(GTK_EDITABLE(page), 0, -1);
+}
+
 static void SetFullscreen(LinuxWindow* window, bool fullscreen) {
     window->fullscreen = fullscreen;
     if (fullscreen) {
@@ -476,8 +546,14 @@ static void ShowCommandPalette(LinuxWindow* window) {
         CmdReopenLastClosedFile,
         CmdNextTab,
         CmdPrevTab,
+        CmdMoveTabLeft,
+        CmdMoveTabRight,
+        CmdReloadDocument,
         CmdGoToPrevPage,
         CmdGoToNextPage,
+        CmdGoToFirstPage,
+        CmdGoToLastPage,
+        CmdGoToPage,
         CmdZoomFitPage,
         CmdZoomFitWidth,
         CmdZoomActualSize,
@@ -510,6 +586,19 @@ static void SelectRelativeTab(LinuxWindow* window, int direction) {
     }
     int current = gtk_notebook_get_current_page(GTK_NOTEBOOK(window->notebook));
     gtk_notebook_set_current_page(GTK_NOTEBOOK(window->notebook), (current + direction + count) % count);
+}
+
+static void MoveActiveTab(LinuxWindow* window, int direction) {
+    int current = gtk_notebook_get_current_page(GTK_NOTEBOOK(window->notebook));
+    int count = gtk_notebook_get_n_pages(GTK_NOTEBOOK(window->notebook));
+    if (current < 0 || count < 2) {
+        return;
+    }
+    int target = limitValue(current + direction, 0, count - 1);
+    if (target != current) {
+        GtkWidget* child = gtk_notebook_get_nth_page(GTK_NOTEBOOK(window->notebook), current);
+        gtk_notebook_reorder_child(GTK_NOTEBOOK(window->notebook), child, target);
+    }
 }
 
 static void RememberClosedPath(LinuxWindow* window, Str path) {
@@ -583,6 +672,18 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             }
             SelectRelativeTab(window, -1);
             return;
+        case CmdMoveTabLeft:
+            MoveActiveTab(window, -1);
+            return;
+        case CmdMoveTabRight:
+            MoveActiveTab(window, 1);
+            return;
+        case CmdReloadDocument:
+            LinuxTabReload(ActiveTab(window));
+            return;
+        case CmdGoToPage:
+            ShowGoToPageDialog(window);
+            return;
         case CmdToggleFullscreen:
             ToggleFullscreen(window);
             return;
@@ -617,6 +718,12 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             break;
         case CmdGoToNextPage:
             view->GoToPage(view->CurrentPageNo() + 1);
+            break;
+        case CmdGoToFirstPage:
+            view->GoToPage(1);
+            break;
+        case CmdGoToLastPage:
+            view->GoToPage(view->PageCount());
             break;
         case CmdZoomFitPage:
             view->SetZoom(kZoomFitPage);
@@ -672,12 +779,25 @@ static gboolean OnWindowKey(GtkEventControllerKey*, guint keyval, guint, GdkModi
     auto* window = (LinuxWindow*)data;
     bool ctrl = (state & GDK_CONTROL_MASK) != 0;
     bool shift = (state & GDK_SHIFT_MASK) != 0;
+    bool alt = (state & GDK_ALT_MASK) != 0;
+    GtkWidget* focus = gtk_window_get_focus(GTK_WINDOW(window->window));
+    bool editable = focus && GTK_IS_EDITABLE(focus);
+    bool bare = !ctrl && !alt && !editable;
     int command = 0;
     if (ctrl && shift && (keyval == GDK_KEY_t || keyval == GDK_KEY_T)) {
         command = CmdReopenLastClosedFile;
+    } else if (ctrl && shift && keyval == GDK_KEY_Page_Down) {
+        command = CmdMoveTabRight;
+    } else if (ctrl && shift && keyval == GDK_KEY_Page_Up) {
+        command = CmdMoveTabLeft;
+    } else if (ctrl && shift && (keyval == GDK_KEY_plus || keyval == GDK_KEY_equal || keyval == GDK_KEY_KP_Add)) {
+        command = CmdRotateRight;
+    } else if (ctrl && shift &&
+               (keyval == GDK_KEY_minus || keyval == GDK_KEY_underscore || keyval == GDK_KEY_KP_Subtract)) {
+        command = CmdRotateLeft;
     } else if (ctrl && (keyval == GDK_KEY_w || keyval == GDK_KEY_W)) {
         command = CmdCloseCurrentDocument;
-    } else if (ctrl && keyval == GDK_KEY_Tab) {
+    } else if (ctrl && (keyval == GDK_KEY_Tab || keyval == GDK_KEY_ISO_Left_Tab)) {
         command = shift ? CmdPrevTab : CmdNextTab;
     } else if (ctrl && keyval == GDK_KEY_Page_Down) {
         command = CmdNextTab;
@@ -685,23 +805,43 @@ static gboolean OnWindowKey(GtkEventControllerKey*, guint keyval, guint, GdkModi
         command = CmdPrevTab;
     } else if (ctrl && (keyval == GDK_KEY_o || keyval == GDK_KEY_O)) {
         command = CmdOpenFile;
-    } else if (ctrl && keyval == GDK_KEY_0) {
+    } else if (ctrl && (keyval == GDK_KEY_g || keyval == GDK_KEY_G)) {
+        command = CmdGoToPage;
+    } else if (ctrl && (keyval == GDK_KEY_l || keyval == GDK_KEY_L)) {
+        command = CmdTogglePresentationMode;
+    } else if (ctrl && keyval == GDK_KEY_Insert) {
+        command = CmdCopySelection;
+    } else if (ctrl && (keyval == GDK_KEY_0 || keyval == GDK_KEY_KP_0)) {
         command = CmdZoomFitPage;
-    } else if (ctrl && keyval == GDK_KEY_1) {
+    } else if (ctrl && (keyval == GDK_KEY_1 || keyval == GDK_KEY_KP_1)) {
         command = CmdZoomActualSize;
-    } else if (ctrl && keyval == GDK_KEY_2) {
+    } else if (ctrl && (keyval == GDK_KEY_2 || keyval == GDK_KEY_KP_2)) {
         command = CmdZoomFitWidth;
-    } else if (!ctrl && keyval == GDK_KEY_bracketleft) {
+    } else if (bare && keyval == GDK_KEY_bracketleft) {
         command = CmdRotateLeft;
-    } else if (!ctrl && keyval == GDK_KEY_bracketright) {
+    } else if (bare && keyval == GDK_KEY_bracketright) {
         command = CmdRotateRight;
-    } else if (!ctrl && (keyval == GDK_KEY_c || keyval == GDK_KEY_C)) {
+    } else if (bare && !shift && (keyval == GDK_KEY_q || keyval == GDK_KEY_Q)) {
+        command = CmdCloseCurrentDocument;
+    } else if (bare && !shift && (keyval == GDK_KEY_r || keyval == GDK_KEY_R)) {
+        command = CmdReloadDocument;
+    } else if (bare && !shift && (keyval == GDK_KEY_n || keyval == GDK_KEY_N)) {
+        command = CmdGoToNextPage;
+    } else if (bare && !shift && (keyval == GDK_KEY_p || keyval == GDK_KEY_P)) {
+        command = CmdGoToPrevPage;
+    } else if (bare && !shift && (keyval == GDK_KEY_g || keyval == GDK_KEY_G)) {
+        command = CmdGoToPage;
+    } else if (bare && !shift && (keyval == GDK_KEY_c || keyval == GDK_KEY_C)) {
         command = CmdToggleContinuousView;
+    } else if (bare && !shift && (keyval == GDK_KEY_f || keyval == GDK_KEY_F)) {
+        command = CmdToggleFullscreen;
+    } else if (shift && keyval == GDK_KEY_F11) {
+        command = CmdTogglePresentationMode;
     } else if (keyval == GDK_KEY_F11) {
         command = CmdToggleFullscreen;
     } else if (keyval == GDK_KEY_F5) {
         command = CmdTogglePresentationMode;
-    } else if (keyval == GDK_KEY_question) {
+    } else if (bare && keyval == GDK_KEY_question) {
         command = CmdToggleKeyboardHelp;
     } else if (keyval == GDK_KEY_Escape && window->presentation) {
         command = CmdTogglePresentationMode;

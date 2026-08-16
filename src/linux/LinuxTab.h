@@ -8,6 +8,7 @@ LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged, const Func0& on
                          const Func1<Str>& onOpenFile, const Func1<Str>& onCopyText);
 void LinuxTabDestroy(LinuxTab* tab);
 bool LinuxTabOpenFile(LinuxTab* tab, GFile* file);
+bool LinuxTabReload(LinuxTab* tab);
 GtkWidget* LinuxTabWidget(LinuxTab* tab);
 DocumentView* LinuxTabView(LinuxTab* tab);
 Str LinuxTabTitle(LinuxTab* tab);
