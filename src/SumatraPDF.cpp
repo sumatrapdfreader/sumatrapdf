@@ -4444,7 +4444,8 @@ void LoadModelIntoTab(WindowTab* tab) {
     // all-match highlights if find UI is still open.
     InvalidateFindForDocumentChange(win);
 
-    if (win->AsChm()) {
+    bool isBrowserTab = win->AsChm() || win->AsMarkdown();
+    if (isBrowserTab) {
         // wipe before SetParentHwnd shows the WebView2: the canvas has
         // WS_CLIPCHILDREN, so once the (transparent-background) webview is
         // visible the fill is clipped away and a previous tab's leftover pixels
@@ -4452,13 +4453,16 @@ void LoadModelIntoTab(WindowTab* tab) {
         // still on the canvas: RemoveTab nulls win->ctrl, which skips the wipe
         // in CloseDocumentInCurrentTab that covers a regular tab switch
         FillCanvasThemeBackground(win->hwndCanvas);
-        win->AsChm()->SetParentHwnd(win->hwndCanvas);
-    } else if (win->AsMarkdown()) {
-        FillCanvasThemeBackground(win->hwndCanvas);
-        win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
     } else if (win->AsFixed() && win->uiaProvider) {
         // tell UI Automation about content change
         win->uiaProvider->OnDocumentLoad(win->AsFixed());
+    }
+    // the home page's search edit is a child of the shared canvas and is
+    // normally torn down lazily by the canvas WndProc. Over a webview tab the
+    // canvas may not receive a message for a long time, leaving the edit (and
+    // its "Search %d files" cue) floating over the document
+    if (!tab->IsAboutTab()) {
+        HomePageDestroySearch(win);
     }
 
     UpdateUiForCurrentTab(win);
@@ -4474,6 +4478,15 @@ void LoadModelIntoTab(WindowTab* tab) {
     // (deferred ScheduleUiUpdate would leave canvas hidden / wrong size).
     win->uiState.layout = {};
     RelayoutFrame(win, true, -1);
+
+    // show the webview only now, when the toolbar/sidebar layout is final:
+    // showing it earlier (at the previous tab's canvas geometry) made it
+    // visibly jump when e.g. the Home tab has no toolbar or ToC sidebar
+    if (win->AsChm()) {
+        win->AsChm()->SetParentHwnd(win->hwndCanvas);
+    } else if (win->AsMarkdown()) {
+        win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
+    }
 
     DisplayModel* dm = win->AsFixed();
     if (dm) {
