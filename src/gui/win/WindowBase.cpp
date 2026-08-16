@@ -530,8 +530,10 @@ void WindowBase::SetVisibility(Visibility newVisibility) {
     ReportIf(!hwnd);
     visibility = newVisibility;
     bool isVisible = IsVisible();
-    // TODO: a different way to determine if is top level vs. child window?
-    if (GetParent(hwnd) == nullptr) {
+    // ask the style, not GetParent(): for an owned popup (WS_POPUP plus
+    // GWLP_HWNDPARENT, like the keyboard help) GetParent() returns the owner,
+    // and just flipping WS_VISIBLE on a top-level window doesn't show it
+    if (!HwndIsWindowStyleSet(hwnd, WS_CHILD)) {
         ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
     } else {
         BOOL bIsVisible = toBOOL(isVisible);
@@ -1504,8 +1506,9 @@ void ControlBase::SetVisibility(Visibility newVisibility) {
     ReportIf(!hwnd);
     visibility = newVisibility;
     bool isVisible = IsVisible();
-    // TODO: a different way to determine if is top level vs. child window?
-    if (GetParent(hwnd) == nullptr) {
+    // see WindowBase::SetVisibility(): only a WS_CHILD window can be shown by
+    // flipping WS_VISIBLE
+    if (!HwndIsWindowStyleSet(hwnd, WS_CHILD)) {
         ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
     } else {
         BOOL bIsVisible = toBOOL(isVisible);
