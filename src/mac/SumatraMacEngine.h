@@ -49,7 +49,9 @@ struct MacDocumentLayout {
     MacLayoutPage* pages;
 };
 
-void* MacOpenDocument(const char* path, char** errorOut);
+using MacPageReadyCallback = void (*)(void* context);
+
+void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* callbackContext, char** errorOut);
 
 int MacPageCount(void* document);
 
@@ -58,6 +60,9 @@ bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut
 double MacFileDPI(void* document);
 
 bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page);
+void MacRequestPage(void* document, int pageNo, float zoom, int rotation, int priority);
+bool MacCopyRenderedPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page);
+void MacResetRenderer(void* document);
 
 bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumentLayout* layout);
 void MacFreeDocumentLayout(MacDocumentLayout* layout);

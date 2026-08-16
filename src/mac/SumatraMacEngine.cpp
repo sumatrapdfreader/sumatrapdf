@@ -4,6 +4,8 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
+#include "PageRenderPolicy.h"
+#include "PageRenderService.h"
 #include "ReaderModel.h"
 #include "mac/SumatraMacEngine.h"
 
@@ -37,6 +39,23 @@ static char* DupCString(const char* s) {
         memcpy(res, s, len + 1);
     }
     return res;
+}
+
+struct MacDocument {
+    ReaderModel* model = nullptr;
+    PageRenderService* renderer = nullptr;
+    MacPageReadyCallback onPageReady = nullptr;
+    void* callbackContext = nullptr;
+};
+
+static MacDocument* AsDocument(void* document) {
+    return (MacDocument*)document;
+}
+
+static void OnPageReady(MacDocument* document) {
+    if (document->onPageReady) {
+        document->onPageReady(document->callbackContext);
+    }
 }
 
 static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
@@ -92,7 +111,7 @@ static bool CopyPixmap(Pixmap* pixmap, MacRenderedPage* page) {
 
 // Opens a document. Returns an opaque handle, or nullptr on failure; on failure
 // *errorOut (if non-null) is set to a malloc'd message the caller must free().
-void* MacOpenDocument(const char* path, char** errorOut) {
+void* MacOpenDocument(const char* path, MacPageReadyCallback onPageReady, void* callbackContext, char** errorOut) {
     if (!path || !path[0]) {
         if (errorOut) {
             *errorOut = DupCString("Pass a document path on the command line.");
@@ -107,7 +126,20 @@ void* MacOpenDocument(const char* path, char** errorOut) {
         }
         return nullptr;
     }
-    return model;
+    auto* document = new MacDocument();
+    document->model = model;
+    document->onPageReady = onPageReady;
+    document->callbackContext = callbackContext;
+    document->renderer = PageRenderService::Create(model->GetEngine(), MkFunc0(OnPageReady, document));
+    if (!document->renderer) {
+        delete model;
+        delete document;
+        if (errorOut) {
+            *errorOut = DupCString("Could not start the page renderer.");
+        }
+        return nullptr;
+    }
+    return document;
 }
 
 // Number of pages, or 0 if the handle is invalid.
@@ -115,7 +147,7 @@ int MacPageCount(void* document) {
     if (!document) {
         return 0;
     }
-    return ((ReaderModel*)document)->PageCount();
+    return AsDocument(document)->model->PageCount();
 }
 
 // Mediabox size of pageNo (1-based) in points. Returns false if invalid.
@@ -123,7 +155,7 @@ bool MacPageSize(void* document, int pageNo, double* widthOut, double* heightOut
     if (!document) {
         return false;
     }
-    auto* model = (ReaderModel*)document;
+    ReaderModel* model = AsDocument(document)->model;
     if (pageNo < 1 || pageNo > model->PageCount()) {
         return false;
     }
@@ -141,7 +173,7 @@ double MacFileDPI(void* document) {
     if (!document) {
         return 96.0;
     }
-    return ((ReaderModel*)document)->FileDPI();
+    return AsDocument(document)->model->FileDPI();
 }
 
 bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumentLayout* layout) {
@@ -150,7 +182,7 @@ bool MacLayoutDocument(void* document, const MacLayoutParams* params, MacDocumen
     }
     *layout = {};
 
-    auto* model = (ReaderModel*)document;
+    ReaderModel* model = AsDocument(document)->model;
     int pageCount = model->PageCount();
     if (pageCount <= 0) {
         return false;
@@ -211,7 +243,7 @@ bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRend
     if (!document) {
         return false;
     }
-    auto* model = (ReaderModel*)document;
+    ReaderModel* model = AsDocument(document)->model;
     if (pageNo < 1 || pageNo > model->PageCount()) {
         return false;
     }
@@ -223,6 +255,42 @@ bool MacRenderPage(void* document, int pageNo, float zoom, int rotation, MacRend
     bool ok = CopyPixmap(pixmap, page);
     FreePixmap(pixmap);
     return ok;
+}
+
+void MacRequestPage(void* document, int pageNo, float zoom, int rotation, int priority) {
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->renderer || pageNo < 1 || pageNo > doc->model->PageCount()) {
+        return;
+    }
+    PageRenderPriority renderPriority = PageRenderPriority::Background;
+    if (priority <= 0) {
+        renderPriority = PageRenderPriority::Visible;
+    } else if (priority == 1) {
+        renderPriority = PageRenderPriority::Nearby;
+    }
+    doc->renderer->Request({pageNo, zoom, rotation}, renderPriority);
+}
+
+bool MacCopyRenderedPage(void* document, int pageNo, float zoom, int rotation, MacRenderedPage* page) {
+    if (!page) {
+        return false;
+    }
+    *page = {};
+    MacDocument* doc = AsDocument(document);
+    if (!doc || !doc->renderer) {
+        return false;
+    }
+    Pixmap* pixmap = doc->renderer->CopyPage({pageNo, zoom, rotation});
+    bool ok = CopyPixmap(pixmap, page);
+    FreePixmap(pixmap);
+    return ok;
+}
+
+void MacResetRenderer(void* document) {
+    MacDocument* doc = AsDocument(document);
+    if (doc && doc->renderer) {
+        doc->renderer->NewGeneration();
+    }
 }
 
 void MacFreeDocumentLayout(MacDocumentLayout* layout) {
@@ -245,7 +313,10 @@ void MacCloseDocument(void* document) {
     if (!document) {
         return;
     }
-    delete (ReaderModel*)document;
+    MacDocument* doc = AsDocument(document);
+    delete doc->renderer;
+    delete doc->model;
+    delete doc;
 }
 
 void MacShutdown() {

@@ -328,7 +328,12 @@ static NSString* const kToolbarRotateRight = @"sumatra.toolbar.rotate-right";
 - (void)updateToolbarStatus;
 - (BOOL)canPerformAction:(SEL)action;
 - (void)renderDocumentShowingErrors:(BOOL)showErrors;
+- (void)pageRenderReady;
 @end
+
+static void PageRenderReady(void* context) {
+    [(SumatraAppDelegate*)context pageRenderReady];
+}
 
 @implementation SumatraAppDelegate
 
@@ -605,7 +610,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     }
 
     char* error = nullptr;
-    void* doc = MacOpenDocument([path fileSystemRepresentation], &error);
+    void* doc = MacOpenDocument([path fileSystemRepresentation], PageRenderReady, self, &error);
     if (!doc) {
         NSString* message = error ? [NSString stringWithUTF8String:error] : @"Could not open the document.";
         free(error);
@@ -704,18 +709,11 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 }
 
 - (CGImageRef)renderedImageForPage:(int)pageNo renderZoom:(double)renderZoom showErrors:(BOOL)showErrors {
-    CGImageRef cached = [self cachedImageForPage:pageNo renderZoom:renderZoom];
-    if (cached) {
-        return cached;
-    }
-
     MacRenderedPage page = {};
-    bool ok = MacRenderPage(_document, pageNo, (float)renderZoom, _rotation, &page);
+    bool ok = MacCopyRenderedPage(_document, pageNo, (float)renderZoom, _rotation, &page);
     if (!ok) {
         MacFreeRenderedPage(&page);
-        if (showErrors) {
-            [self showOpenError:@"Could not render the page." forPath:_documentPath];
-        }
+        MacRequestPage(_document, pageNo, (float)renderZoom, _rotation, 0);
         return nullptr;
     }
 
@@ -728,12 +726,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return nullptr;
     }
 
-    SumatraPageImage* cacheEntry = [[[SumatraPageImage alloc] init] autorelease];
-    [cacheEntry setPageNo:pageNo];
-    [cacheEntry setImage:image];
-    [_pageImageCache setObject:cacheEntry forKey:[self cacheKeyForPage:pageNo renderZoom:renderZoom]];
-    CGImageRelease(image);
-    return [cacheEntry image];
+    return image;
 }
 
 - (BOOL)buildDocumentLayout:(MacDocumentLayout*)layout {
@@ -777,9 +770,25 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         [pageView setPageNo:page->pageNo];
         [pageView setFrame:NSMakeRect(page->x, page->y, page->width, page->height)];
         if (page->visibleRatio > 0 || !_continuousView) {
-            [pageView setImage:[self renderedImageForPage:page->pageNo renderZoom:page->renderZoom showErrors:showErrors]];
+            CGImageRef image =
+                [self renderedImageForPage:page->pageNo renderZoom:page->renderZoom showErrors:showErrors];
+            [pageView setImage:image];
+            if (image) {
+                CGImageRelease(image);
+            }
         }
         [pageViews addObject:pageView];
+    }
+
+    int nearbyPages[] = {layout.currentPage - 1, layout.currentPage + 1, layout.currentPage - 2,
+                         layout.currentPage + 2};
+    for (int pageNo : nearbyPages) {
+        if (pageNo < 1 || pageNo > layout.pageCount) {
+            continue;
+        }
+        MacLayoutPage* page = &layout.pages[pageNo - 1];
+        int priority = abs(pageNo - layout.currentPage) == 1 ? 1 : 2;
+        MacRequestPage(_document, pageNo, (float)page->renderZoom, _rotation, priority);
     }
 
     [_documentView setScaleToFit:NO];
@@ -798,6 +807,12 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
 
 - (void)renderCurrentPage {
     [self renderDocumentShowingErrors:NO];
+}
+
+- (void)pageRenderReady {
+    if (_document) {
+        [self renderCurrentPage];
+    }
 }
 
 - (void)updateTitle {
@@ -968,6 +983,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _rotation = (_rotation + 270) % 360;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
@@ -978,6 +994,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _rotation = (_rotation + 90) % 360;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
@@ -993,6 +1010,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _continuousView = NO;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
     [[_scrollView contentView] scrollToPoint:NSZeroPoint];
@@ -1005,6 +1023,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _continuousView = YES;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
@@ -1015,6 +1034,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _zoom = kMacZoomFitPage;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
@@ -1025,6 +1045,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _zoom = kMacZoomFitWidth;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
@@ -1035,6 +1056,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
         return;
     }
     _zoom = 1.0;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }
@@ -1050,6 +1072,7 @@ static NSArray<NSString*>* ToolbarAllowedItems() {
     CGFloat z = base * factor;
     z = MAX(kZoomMin, MIN(kZoomMax, z));
     _zoom = z;
+    MacResetRenderer(_document);
     [_pageImageCache removeAllObjects];
     [self renderCurrentPage];
 }

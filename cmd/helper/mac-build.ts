@@ -582,6 +582,8 @@ const MAC_APP_SOURCES = [
   "src/PdfCadDetect.cpp",
   "src/PdfCadEnhanceDevice.cpp",
   "src/PdfDarkModeNoOp.cpp",
+  "src/PageRenderPolicy.cpp",
+  "src/PageRenderService.cpp",
   "src/ReaderModel.cpp",
   "src/TextSelection.cpp",
   "src/TextSearch.cpp",
