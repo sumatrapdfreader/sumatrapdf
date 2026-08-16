@@ -315,8 +315,8 @@ Completed 2026-08-16.
 - Added a Linux preferences bridge that uses the existing `GlobalPrefs` / `FileState` parser and serializer, stored
   at `$XDG_CONFIG_HOME/sumatrapdf/SumatraPDF-settings.txt` or the equivalent `$HOME/.config` path.
 - Added a native Recent Files submenu backed by the ten most recent non-missing document states.
-- Persisted and restored each document's page, continuous/single-page layout, zoom, and rotation, including every
-  live tab during orderly shutdown and each tab when it is closed.
+- Persisted and restored each document's page, continuous/single-page layout, zoom, and rotation by keeping its
+  in-memory file state current as the view changes and when a tab is closed.
 - Deferred an initial restored page jump until GTK has allocated the canvas, avoiding a zero-sized first layout
   that could otherwise reset the document to page 1.
 
@@ -325,7 +325,31 @@ Verification:
 - `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,736 assertions and all Linux targets linked.
 - An isolated two-run WSLg smoke opened `ext/a-zlib/zlib.3.pdf`, navigated to page 2, quit, and reopened it from the
   same XDG configuration. The second run retained page 2 without another navigation command.
+- A restore smoke also retained an explicitly seeded single-page layout, 100% zoom, and 90-degree rotation without
+  overwriting partially restored state through view-change callbacks.
 - `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,736 assertions and all Linux targets
   linked.
 - The isolated ASan WSLg smoke saved page 2 and exited with status 0 under `detect_leaks=0`; it reported no
   memory-safety errors, and WSLg only emitted its existing non-fatal Mesa renderer warnings.
+
+### Favorites
+
+Completed 2026-08-16.
+
+- Reused the existing serialized `FileState::favorites` data rather than introducing a Linux-only bookmark format.
+- Added native actions for adding and removing the current page, with the existing `Ctrl+B` shortcut for adding a
+  favorite.
+- Added a native Favorites sidebar shared with the table-of-contents pane. It lists favorites across documents,
+  persists its visibility, switches to an already-open tab when possible, and otherwise opens the target document.
+- Kept temporary search marks out of the Linux favorites list and made Linux path matching case-sensitive.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,570 assertions and all Linux targets linked.
+- An isolated WSLg action smoke added page 2 of `ext/a-zlib/zlib.3.pdf`, displayed the Favorites sidebar, moved to
+  page 1, activated favorite 0, returned to page 2, and exited with status 0. The saved settings contained the page
+  2 favorite and sidebar visibility; a second run removed the favorite successfully.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,976 assertions and all Linux targets
+  linked.
+- The same isolated ASan WSLg action sequence exited with status 0 under `detect_leaks=0`, saved the page 2 favorite,
+  and reported no memory-safety errors. WSLg only emitted its existing non-fatal Mesa renderer warnings.

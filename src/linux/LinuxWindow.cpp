@@ -6,6 +6,7 @@
 
 #include "Settings.h"
 #include "Commands.h"
+#include "GlobalPrefs.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "KeyboardHelp.h"
@@ -27,8 +28,11 @@ struct LinuxWindow {
     GtkWidget* findStatus = nullptr;
     GtkWidget* content = nullptr;
     GtkWidget* documentPane = nullptr;
+    GtkWidget* sidebar = nullptr;
     GtkWidget* tocScroll = nullptr;
     GtkWidget* tocList = nullptr;
+    GtkWidget* favoritesScroll = nullptr;
+    GtkWidget* favoritesList = nullptr;
     GtkWidget* notebook = nullptr;
     GtkWidget* emptyStatus = nullptr;
     GtkWidget* pageStatus = nullptr;
@@ -42,15 +46,20 @@ struct LinuxWindow {
     bool fullscreen = false;
     bool presentation = false;
     bool tocVisible = false;
+    bool favoritesVisible = false;
     bool previousTocVisible = false;
+    bool previousFavoritesVisible = false;
     bool wasFullscreen = false;
     bool previousContinuous = false;
+    bool suppressStateSave = false;
     float previousZoom = kZoomFitWidth;
     LinuxTab* presentationTab = nullptr;
 };
 
 static void UpdateControls(LinuxWindow* window);
 static void UpdateToc(LinuxWindow* window);
+static void UpdateFavorites(LinuxWindow* window);
+static void UpdateSidebar(LinuxWindow* window);
 
 static LinuxTab* ActiveTab(LinuxWindow* window) {
     int index = gtk_notebook_get_current_page(GTK_NOTEBOOK(window->notebook));
@@ -60,6 +69,14 @@ static LinuxTab* ActiveTab(LinuxWindow* window) {
 
 static DocumentView* ActiveView(LinuxWindow* window) {
     return LinuxTabView(ActiveTab(window));
+}
+
+static void OnDocumentStateChanged(LinuxWindow* window) {
+    LinuxTab* tab = ActiveTab(window);
+    if (tab && !window->suppressStateSave) {
+        LinuxPrefsSaveView(LinuxTabView(tab), LinuxTabPath(tab));
+    }
+    UpdateControls(window);
 }
 
 static int FindTabIndex(LinuxWindow* window, LinuxTab* tab) {
@@ -74,7 +91,6 @@ static int FindTabIndex(LinuxWindow* window, LinuxTab* tab) {
 static void FreeLinuxWindow(gpointer data) {
     auto* window = (LinuxWindow*)data;
     for (LinuxTab* tab : window->tabs) {
-        LinuxPrefsSaveView(LinuxTabView(tab), LinuxTabPath(tab));
         LinuxTabDestroy(tab);
     }
     window->tabs.Reset();
@@ -150,6 +166,23 @@ static void OnTocRowActivated(GtkListBox*, GtkListBoxRow* row, gpointer data) {
     LinuxWindowGoToTocItem(window, index);
 }
 
+static void OnFavoriteRowActivated(GtkListBox*, GtkListBoxRow* row, gpointer data) {
+    int index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(row), "sumatra-favorite-index"));
+    LinuxWindowGoToFavorite((LinuxWindow*)data, index);
+}
+
+static void UpdateSidebar(LinuxWindow* window) {
+    DocumentView* view = ActiveView(window);
+    bool showToc = window->tocVisible && view && view->TocItemCount() > 0;
+    bool showFavorites = window->favoritesVisible;
+    if (showFavorites) {
+        gtk_stack_set_visible_child_name(GTK_STACK(window->sidebar), "favorites");
+    } else if (showToc) {
+        gtk_stack_set_visible_child_name(GTK_STACK(window->sidebar), "toc");
+    }
+    gtk_widget_set_visible(window->sidebar, !window->presentation && (showToc || showFavorites));
+}
+
 static void UpdateToc(LinuxWindow* window) {
     GtkWidget* child = gtk_widget_get_first_child(window->tocList);
     while (child) {
@@ -175,12 +208,62 @@ static void UpdateToc(LinuxWindow* window) {
         g_object_set_data(G_OBJECT(row), "sumatra-toc-index", GINT_TO_POINTER(i));
         gtk_list_box_append(GTK_LIST_BOX(window->tocList), row);
     }
-    gtk_widget_set_visible(window->tocScroll, window->tocVisible && !window->presentation && count > 0);
+    UpdateSidebar(window);
 }
 
 static void ToggleToc(LinuxWindow* window) {
     window->tocVisible = !window->tocVisible;
+    if (window->tocVisible) {
+        window->favoritesVisible = false;
+    }
+    if (gGlobalPrefs) {
+        gGlobalPrefs->showToc = window->tocVisible;
+        gGlobalPrefs->showFavorites = window->favoritesVisible;
+    }
     UpdateToc(window);
+}
+
+static void UpdateFavorites(LinuxWindow* window) {
+    GtkWidget* child = gtk_widget_get_first_child(window->favoritesList);
+    while (child) {
+        GtkWidget* next = gtk_widget_get_next_sibling(child);
+        gtk_list_box_remove(GTK_LIST_BOX(window->favoritesList), child);
+        child = next;
+    }
+
+    int count = LinuxPrefsFavoriteCount();
+    for (int i = 0; i < count; i++) {
+        Str filePath = LinuxPrefsFavoritePath(i);
+        Str favoriteLabel = LinuxPrefsFavoriteLabel(i);
+        int pageNo = LinuxPrefsFavoritePageNo(i);
+        TempStr page = favoriteLabel ? str::DupTemp(favoriteLabel) : fmt("Page %d", pageNo);
+        TempStr text = fmt("%s — %s", path::GetBaseNameTemp(filePath), page);
+        GtkWidget* label = gtk_label_new(CStrTemp(text));
+        gtk_label_set_xalign(GTK_LABEL(label), 0);
+        gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+        gtk_widget_set_margin_start(label, 8);
+        gtk_widget_set_margin_end(label, 8);
+        gtk_widget_set_margin_top(label, 4);
+        gtk_widget_set_margin_bottom(label, 4);
+        gtk_widget_set_tooltip_text(label, CStrTemp(filePath));
+        GtkWidget* row = gtk_list_box_row_new();
+        gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(row), label);
+        g_object_set_data(G_OBJECT(row), "sumatra-favorite-index", GINT_TO_POINTER(i));
+        gtk_list_box_append(GTK_LIST_BOX(window->favoritesList), row);
+    }
+    UpdateSidebar(window);
+}
+
+static void ToggleFavorites(LinuxWindow* window) {
+    window->favoritesVisible = !window->favoritesVisible;
+    if (window->favoritesVisible) {
+        window->tocVisible = false;
+    }
+    if (gGlobalPrefs) {
+        gGlobalPrefs->showFavorites = window->favoritesVisible;
+        gGlobalPrefs->showToc = window->tocVisible;
+    }
+    UpdateFavorites(window);
 }
 
 static void ShowProperties(LinuxWindow* window) {
@@ -290,11 +373,14 @@ static void TogglePresentation(LinuxWindow* window) {
         window->previousZoom = view->Zoom();
         window->wasFullscreen = window->fullscreen;
         window->previousTocVisible = window->tocVisible;
+        window->previousFavoritesVisible = window->favoritesVisible;
         gtk_widget_set_visible(window->toolbar, FALSE);
         gtk_notebook_set_show_tabs(GTK_NOTEBOOK(window->notebook), FALSE);
-        gtk_widget_set_visible(window->tocScroll, FALSE);
+        gtk_widget_set_visible(window->sidebar, FALSE);
+        window->suppressStateSave = true;
         view->SetContinuous(false);
         view->SetZoom(kZoomFitPage);
+        window->suppressStateSave = false;
         SetFullscreen(window, true);
     } else {
         LinuxTab* tab = window->presentationTab;
@@ -303,16 +389,20 @@ static void TogglePresentation(LinuxWindow* window) {
         window->presentation = false;
         window->presentationTab = nullptr;
         window->tocVisible = window->previousTocVisible;
+        window->favoritesVisible = window->previousFavoritesVisible;
         gtk_widget_set_visible(window->toolbar, TRUE);
         gtk_notebook_set_show_tabs(GTK_NOTEBOOK(window->notebook), TRUE);
         if (view) {
+            window->suppressStateSave = true;
             view->SetContinuous(window->previousContinuous);
             view->SetZoom(window->previousZoom);
+            window->suppressStateSave = false;
         }
         if (!wasFullscreen) {
             SetFullscreen(window, false);
         }
         UpdateToc(window);
+        UpdateFavorites(window);
     }
     UpdateControls(window);
 }
@@ -411,6 +501,9 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
         case CmdToggleTableOfContents:
             ToggleToc(window);
             return;
+        case CmdFavoriteToggle:
+            ToggleFavorites(window);
+            return;
         case CmdProperties:
             ShowProperties(window);
             return;
@@ -459,6 +552,14 @@ void LinuxWindowDispatchCommand(LinuxWindow* window, int commandId) {
             break;
         case CmdFindPrev:
             RunFind(window, false, false);
+            break;
+        case CmdFavoriteAdd:
+            LinuxPrefsAddFavorite(LinuxTabPath(ActiveTab(window)), view->CurrentPageNo());
+            UpdateFavorites(window);
+            break;
+        case CmdFavoriteDel:
+            LinuxPrefsRemoveFavorite(LinuxTabPath(ActiveTab(window)), view->CurrentPageNo());
+            UpdateFavorites(window);
             break;
         default:
             break;
@@ -670,17 +771,29 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(result->notebook), TRUE);
     g_signal_connect(result->notebook, "switch-page", G_CALLBACK(OnSwitchPage), result);
     result->documentPane = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    result->sidebar = gtk_stack_new();
     result->tocList = gtk_list_box_new();
     gtk_list_box_set_selection_mode(GTK_LIST_BOX(result->tocList), GTK_SELECTION_SINGLE);
     g_signal_connect(result->tocList, "row-activated", G_CALLBACK(OnTocRowActivated), result);
     result->tocScroll = gtk_scrolled_window_new();
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(result->tocScroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(result->tocScroll), result->tocList);
-    gtk_widget_set_size_request(result->tocScroll, 240, -1);
-    gtk_paned_set_start_child(GTK_PANED(result->documentPane), result->tocScroll);
+    gtk_stack_add_named(GTK_STACK(result->sidebar), result->tocScroll, "toc");
+    result->favoritesList = gtk_list_box_new();
+    gtk_list_box_set_selection_mode(GTK_LIST_BOX(result->favoritesList), GTK_SELECTION_SINGLE);
+    g_signal_connect(result->favoritesList, "row-activated", G_CALLBACK(OnFavoriteRowActivated), result);
+    result->favoritesScroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(result->favoritesScroll), GTK_POLICY_NEVER,
+                                   GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(result->favoritesScroll), result->favoritesList);
+    gtk_stack_add_named(GTK_STACK(result->sidebar), result->favoritesScroll, "favorites");
+    gtk_widget_set_size_request(result->sidebar, 240, -1);
+    gtk_paned_set_start_child(GTK_PANED(result->documentPane), result->sidebar);
     gtk_paned_set_end_child(GTK_PANED(result->documentPane), result->notebook);
     gtk_paned_set_resize_start_child(GTK_PANED(result->documentPane), FALSE);
-    gtk_widget_set_visible(result->tocScroll, FALSE);
+    result->tocVisible = gGlobalPrefs && gGlobalPrefs->showToc;
+    result->favoritesVisible = gGlobalPrefs && gGlobalPrefs->showFavorites;
+    gtk_widget_set_visible(result->sidebar, FALSE);
     gtk_stack_add_named(GTK_STACK(result->content), result->documentPane, "notebook");
     gtk_stack_set_visible_child_name(GTK_STACK(result->content), "empty");
     gtk_box_append(GTK_BOX(result->root), result->content);
@@ -692,6 +805,8 @@ LinuxWindow* LinuxWindowCreate(GtkApplication* app) {
     gtk_widget_add_controller(result->window, keys);
 
     g_object_set_data_full(G_OBJECT(result->window), "sumatra-linux-window", result, FreeLinuxWindow);
+    UpdateToc(result);
+    UpdateFavorites(result);
     UpdateControls(result);
     return result;
 }
@@ -702,7 +817,7 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     }
     char* baseName = g_file_get_basename(file);
     Str title(baseName ? baseName : "Document");
-    LinuxTab* tab = LinuxTabCreate(title, MkFunc0(UpdateControls, window), MkFunc1(OpenLinkedUrl, window),
+    LinuxTab* tab = LinuxTabCreate(title, MkFunc0(OnDocumentStateChanged, window), MkFunc1(OpenLinkedUrl, window),
                                    MkFunc1(OpenLinkedFile, window), MkFunc1(CopyText, window));
     g_free(baseName);
     if (!tab) {
@@ -716,9 +831,12 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     window->tabs.Append(tab);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(window->notebook), index);
     if (LinuxTabOpenFile(tab, file)) {
+        window->suppressStateSave = true;
         LinuxPrefsOpenView(LinuxTabView(tab), LinuxTabPath(tab));
+        window->suppressStateSave = false;
     }
     UpdateToc(window);
+    UpdateFavorites(window);
     UpdateControls(window);
 }
 
@@ -729,6 +847,31 @@ void LinuxWindowFindText(LinuxWindow* window, Str text) {
     gtk_editable_set_text(GTK_EDITABLE(window->findEntry), CStrTemp(text));
     ShowFindBar(window);
     RunFind(window, true, true);
+}
+
+void LinuxWindowGoToFavorite(LinuxWindow* window, int index) {
+    if (!window) {
+        return;
+    }
+    TempStr filePath = str::DupTemp(LinuxPrefsFavoritePath(index));
+    int pageNo = LinuxPrefsFavoritePageNo(index);
+    if (!filePath || pageNo < 1) {
+        return;
+    }
+    for (int i = 0; i < len(window->tabs); i++) {
+        LinuxTab* tab = window->tabs[i];
+        if (str::Eq(LinuxTabPath(tab), filePath)) {
+            int pageIndex = gtk_notebook_page_num(GTK_NOTEBOOK(window->notebook), LinuxTabWidget(tab));
+            gtk_notebook_set_current_page(GTK_NOTEBOOK(window->notebook), pageIndex);
+            LinuxTabView(tab)->GoToPage(pageNo);
+            UpdateControls(window);
+            return;
+        }
+    }
+    GFile* file = g_file_new_for_path(CStrTemp(filePath));
+    LinuxWindowOpenFile(window, file);
+    g_object_unref(file);
+    LinuxWindowGoToPage(window, pageNo);
 }
 
 void LinuxWindowGoToTocItem(LinuxWindow* window, int index) {
@@ -744,15 +887,6 @@ void LinuxWindowGoToPage(LinuxWindow* window, int pageNo) {
     if (view) {
         view->GoToPage(pageNo);
         UpdateControls(window);
-    }
-}
-
-void LinuxWindowSaveState(LinuxWindow* window) {
-    if (!window) {
-        return;
-    }
-    for (LinuxTab* tab : window->tabs) {
-        LinuxPrefsSaveView(LinuxTabView(tab), LinuxTabPath(tab));
     }
 }
 

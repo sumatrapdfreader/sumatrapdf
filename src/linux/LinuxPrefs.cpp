@@ -18,7 +18,7 @@ static FileState* FindFileState(Str path) {
         return nullptr;
     }
     for (FileState* state : *gGlobalPrefs->fileStates) {
-        if (str::EqI(state->filePath, path)) {
+        if (str::Eq(state->filePath, path)) {
             return state;
         }
     }
@@ -134,4 +134,101 @@ Str LinuxPrefsRecentPath(int index) {
         index--;
     }
     return {};
+}
+
+static Favorite* FindFavorite(FileState* state, int pageNo) {
+    if (!state || !state->favorites) {
+        return nullptr;
+    }
+    for (Favorite* favorite : *state->favorites) {
+        if (!favorite->isTemporary && favorite->pageNo == pageNo) {
+            return favorite;
+        }
+    }
+    return nullptr;
+}
+
+bool LinuxPrefsAddFavorite(Str path, int pageNo) {
+    if (!gGlobalPrefs || !path || pageNo < 1) {
+        return false;
+    }
+    FileState* state = FindFileState(path);
+    if (!state) {
+        state = NewFileState(path);
+        MoveFileStateToFront(state);
+    }
+    if (FindFavorite(state, pageNo)) {
+        return false;
+    }
+    state->favorites->Append(NewFavorite(pageNo, {}, {}));
+    return true;
+}
+
+bool LinuxPrefsRemoveFavorite(Str path, int pageNo) {
+    FileState* state = FindFileState(path);
+    Favorite* favorite = FindFavorite(state, pageNo);
+    if (!favorite) {
+        return false;
+    }
+    state->favorites->Remove(favorite);
+    DeleteFavorite(favorite);
+    return true;
+}
+
+static Favorite* GetFavoriteAt(int index, FileState** stateOut = nullptr) {
+    if (!gGlobalPrefs || !gGlobalPrefs->fileStates || index < 0) {
+        return nullptr;
+    }
+    for (FileState* state : *gGlobalPrefs->fileStates) {
+        if (!state->favorites) {
+            continue;
+        }
+        for (Favorite* favorite : *state->favorites) {
+            if (favorite->isTemporary) {
+                continue;
+            }
+            if (index == 0) {
+                if (stateOut) {
+                    *stateOut = state;
+                }
+                return favorite;
+            }
+            index--;
+        }
+    }
+    return nullptr;
+}
+
+int LinuxPrefsFavoriteCount() {
+    int count = 0;
+    if (!gGlobalPrefs || !gGlobalPrefs->fileStates) {
+        return count;
+    }
+    for (FileState* state : *gGlobalPrefs->fileStates) {
+        if (!state->favorites) {
+            continue;
+        }
+        for (Favorite* favorite : *state->favorites) {
+            count += !favorite->isTemporary;
+        }
+    }
+    return count;
+}
+
+Str LinuxPrefsFavoritePath(int index) {
+    FileState* state = nullptr;
+    return GetFavoriteAt(index, &state) && state ? state->filePath : Str{};
+}
+
+Str LinuxPrefsFavoriteLabel(int index) {
+    Favorite* favorite = GetFavoriteAt(index);
+    if (!favorite) {
+        return {};
+    }
+    return favorite->name ? favorite->name : favorite->pageLabel;
+}
+
+int LinuxPrefsFavoritePageNo(int index) {
+    Favorite* favorite = GetFavoriteAt(index);
+    return favorite ? favorite->pageNo : 0;
 }

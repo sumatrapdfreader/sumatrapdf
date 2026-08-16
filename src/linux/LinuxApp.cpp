@@ -94,6 +94,12 @@ static void OnWindowCommand(GSimpleAction* action, GVariant*, gpointer data) {
         command = CmdFindPrev;
     } else if (str::Eq(Str(name), StrL("bookmarks"))) {
         command = CmdToggleBookmarks;
+    } else if (str::Eq(Str(name), StrL("favorite-add"))) {
+        command = CmdFavoriteAdd;
+    } else if (str::Eq(Str(name), StrL("favorite-remove"))) {
+        command = CmdFavoriteDel;
+    } else if (str::Eq(Str(name), StrL("favorites"))) {
+        command = CmdFavoriteToggle;
     } else if (str::Eq(Str(name), StrL("properties"))) {
         command = CmdProperties;
     }
@@ -138,6 +144,14 @@ static void OnGoToPage(GSimpleAction*, GVariant* parameter, gpointer data) {
     }
 }
 
+static void OnFavoriteItem(GSimpleAction*, GVariant* parameter, gpointer data) {
+    auto* app = GTK_APPLICATION(data);
+    LinuxWindow* window = GetState(app)->window;
+    if (window && parameter) {
+        LinuxWindowGoToFavorite(window, g_variant_get_int32(parameter));
+    }
+}
+
 static GMenu* CreateMainMenu() {
     GMenu* menu = g_menu_new();
     GMenu* file = g_menu_new();
@@ -168,6 +182,13 @@ static GMenu* CreateMainMenu() {
     g_menu_append(edit, "Find...", "app.find");
     g_menu_append_section(menu, nullptr, G_MENU_MODEL(edit));
     g_object_unref(edit);
+
+    GMenu* favorites = g_menu_new();
+    g_menu_append(favorites, "Add Current Page", "app.favorite-add");
+    g_menu_append(favorites, "Remove Current Page", "app.favorite-remove");
+    g_menu_append(favorites, "Show Favorites", "app.favorites");
+    g_menu_append_section(menu, nullptr, G_MENU_MODEL(favorites));
+    g_object_unref(favorites);
 
     GMenu* view = g_menu_new();
     g_menu_append(view, "Fullscreen", "app.fullscreen");
@@ -211,6 +232,10 @@ int RunLinuxApp(int argc, char** argv) {
         {"search", OnSearchText, "s"},
         {"open-path", OnOpenPath, "s"},
         {"bookmarks", OnWindowCommand},
+        {"favorite-add", OnWindowCommand},
+        {"favorite-remove", OnWindowCommand},
+        {"favorites", OnWindowCommand},
+        {"favorite-item", OnFavoriteItem, "i"},
         {"properties", OnWindowCommand},
         {"toc-item", OnTocItem, "i"},
         {"go-to-page", OnGoToPage, "i"},
@@ -230,6 +255,7 @@ int RunLinuxApp(int argc, char** argv) {
     const char* findNextAccels[] = {"F3", nullptr};
     const char* findPreviousAccels[] = {"<Shift>F3", nullptr};
     const char* bookmarksAccels[] = {"F12", nullptr};
+    const char* favoriteAddAccels[] = {"<Primary>b", nullptr};
     const char* propertiesAccels[] = {"<Primary>d", nullptr};
     gtk_application_set_accels_for_action(app, "app.quit", quitAccels);
     gtk_application_set_accels_for_action(app, "app.open", openAccels);
@@ -244,10 +270,10 @@ int RunLinuxApp(int argc, char** argv) {
     gtk_application_set_accels_for_action(app, "app.find-next", findNextAccels);
     gtk_application_set_accels_for_action(app, "app.find-previous", findPreviousAccels);
     gtk_application_set_accels_for_action(app, "app.bookmarks", bookmarksAccels);
+    gtk_application_set_accels_for_action(app, "app.favorite-add", favoriteAddAccels);
     gtk_application_set_accels_for_action(app, "app.properties", propertiesAccels);
 
     int code = g_application_run(G_APPLICATION(app), argc, argv);
-    LinuxWindowSaveState(state->window);
     g_object_unref(app);
     LinuxPrefsShutdown();
     return code;
