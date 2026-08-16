@@ -478,7 +478,8 @@ workspace "SumatraPDF"
     files { "ext/chmdec/*.c", "ext/chmdec/*.h" }
 
   -- msdes: public domain d3des, used by LitDoc.cpp to unseal .lit DRM1.
-  -- Tiny, so it links directly into both SumatraPDF.exe flavors.
+  -- Linked into libsumatrapdf.dll (and the static EXE); dynamic consumers
+  -- import the required functions through libsumatrapdf.def.
   project "msdes"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -1012,10 +1013,11 @@ workspace "SumatraPDF"
     -- static EXE). Archive.cpp RAR* APIs are re-exported via libsumatrapdf.def so
     -- SumatraPDF / PdfFilter / PdfPreview do not carry a second copy.
     -- chmdec: same pattern — ChmFile / -dump-chm import chm_* via libsumatrapdf.def.
+    -- msdes: LitDoc imports deskey/des through libsumatrapdf.def.
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec"
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes"
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1408,7 +1410,7 @@ workspace "SumatraPDF"
     includedirs { "src", "ext/mupdf/include" }
     includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/darkmodelib/include" }
-    -- headers only: webp/jxl/heic/chm symbols come from libsumatrapdf.dll (libsumatrapdf.def)
+    -- headers only: webp/jxl/heic/chm/DES symbols come from libsumatrapdf.dll (libsumatrapdf.def)
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
@@ -1476,7 +1478,7 @@ workspace "SumatraPDF"
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
-      "libsumatrapdf", "base", "a-zopfli", "msdes"
+      "libsumatrapdf", "base", "a-zopfli"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

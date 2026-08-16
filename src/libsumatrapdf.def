@@ -2004,3 +2004,8 @@ EXPORTS
 	LZXteardown
 	LZXreset
 	LZXdecompress
+
+; msdes exports used by LitDoc.cpp to unseal .lit DRM1 content
+
+	deskey
+	des

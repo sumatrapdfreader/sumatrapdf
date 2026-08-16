@@ -1840,9 +1840,6 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ProjectReference Include="a-zopfli.vcxproj">
       <Project>{87C84EAD-7395-A9B8-9CAE-976088DADE46}</Project>
     </ProjectReference>
-    <ProjectReference Include="msdes.vcxproj">
-      <Project>{8135F40F-ED49-1CC1-B6CB-BF20229F18F2}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

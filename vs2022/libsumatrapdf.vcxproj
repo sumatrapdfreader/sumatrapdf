@@ -1121,6 +1121,9 @@
     <ProjectReference Include="chmdec.vcxproj">
       <Project>{892B65F6-75CD-8FCC-5E88-A3204AC9161D}</Project>
     </ProjectReference>
+    <ProjectReference Include="msdes.vcxproj">
+      <Project>{8135F40F-ED49-1CC1-B6CB-BF20229F18F2}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
