@@ -7,6 +7,8 @@ struct DocumentView {
     PlatformCanvas* canvas = nullptr;
     void* data = nullptr;
     Func0 onStateChanged;
+    Func1<Str> onOpenUrl;
+    Func1<Str> onOpenFile;
 
     DocumentView() = default;
     DocumentView(const DocumentView&) = delete;

@@ -17,7 +17,8 @@ struct LinuxTab {
     Str path;
 };
 
-LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged) {
+LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged, const Func1<Str>& onOpenUrl,
+                         const Func1<Str>& onOpenFile) {
     auto* tab = new LinuxTab();
     tab->title = str::Dup(title);
     tab->stack = gtk_stack_new();
@@ -31,6 +32,8 @@ LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged) {
     tab->view = DocumentView::Create();
     if (tab->view) {
         tab->view->onStateChanged = onStateChanged;
+        tab->view->onOpenUrl = onOpenUrl;
+        tab->view->onOpenFile = onOpenFile;
         gtk_stack_add_named(GTK_STACK(tab->stack), GTK_WIDGET(tab->view->NativeWidget()), "document");
     }
     gtk_stack_set_visible_child_name(GTK_STACK(tab->stack), "status");

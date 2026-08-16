@@ -12,7 +12,7 @@ after its relevant Windows, Linux, and portable checks pass.
 | 3     | Complete    | Embeddable canvas and document viewer        |
 | 4     | Complete    | Portable asynchronous rendering              |
 | 5     | Complete    | Application shell, tabs, and commands        |
-| 6     | Not started | Reader features                              |
+| 6     | In progress | Reader features                              |
 | 7     | Not started | Linux desktop services                       |
 | 8     | Not started | Packaging and deferred features              |
 
@@ -190,3 +190,30 @@ Verification:
 - Under WSLg, both debug and ASan applications entered and exited presentation and fullscreen modes, opened and
   closed keyboard help, and quit through application actions with status 0. ASan reported no errors; WSLg only
   emitted its existing non-fatal Mesa renderer warnings.
+
+## Stage 6: Reader features
+
+In progress.
+
+### Document links
+
+Completed 2026-08-16.
+
+- Added page-coordinate link hit testing to the portable `DocumentView`, including zoom and rotation transforms,
+  hand-cursor feedback, and click-versus-pan handling.
+- Added a portable `ILinkHandler` implementation for internal pages, named destinations, destination positions and
+  zooms, relative files, HTTP/HTTPS URLs, mail links, and engine-specific MuPDF and DjVu destinations.
+- Kept desktop actions outside the portable view: the Linux shell launches permitted external URIs through GIO and
+  opens local or document-relative targets in a new application tab.
+- Added `test_engines <path> -list-links` as a focused engine probe that prints link targets and page rectangles.
+
+Verification:
+
+- `bun cmd/build.ts -linux -debug`: passed; Linux `test_util` passed 102,820 assertions and all Linux targets linked.
+- `out/linux-dbg64/test_engines ext/a-zlib/zlib.3.pdf -list-links`: found all 13 URL and mail links across the two
+  pages.
+- `bun cmd/build.ts -linux`: the ASan build passed; Linux `test_util` passed 102,833 assertions, and the ASan link
+  probe also found 13 links.
+- Both debug and ASan applications opened and rendered the link-bearing zlib manual, then shut down through the
+  application action with status 0. ASan reported no errors; WSLg only emitted its existing non-fatal Mesa renderer
+  warnings.

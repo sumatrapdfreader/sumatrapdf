@@ -2,9 +2,12 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
 
 #include "Settings.h"
 #include "Commands.h"
+#include "gui/UIModels.h"
+#include "EngineBase.h"
 #include "KeyboardHelp.h"
 #include "gui/DocumentView.h"
 
@@ -97,6 +100,32 @@ static void ShowOpenDialog(LinuxWindow* window) {
                                                                GTK_FILE_CHOOSER_ACTION_OPEN, "Open", "Cancel");
     g_signal_connect(dialog, "response", G_CALLBACK(OnOpenDialogResponse), window);
     gtk_native_dialog_show(GTK_NATIVE_DIALOG(dialog));
+}
+
+static void OpenLinkedUrl(LinuxWindow*, Str url) {
+    if (!IsExternalUrl(url)) {
+        return;
+    }
+    GError* error = nullptr;
+    if (!g_app_info_launch_default_for_uri(CStrTemp(url), nullptr, &error)) {
+        g_warning("Could not open link: %s", error ? error->message : "unknown error");
+        g_clear_error(&error);
+    }
+}
+
+static void OpenLinkedFile(LinuxWindow* window, Str linkPath) {
+    if (!linkPath) {
+        return;
+    }
+    TempStr fullPath = linkPath;
+    if (!path::IsAbsolute(fullPath)) {
+        LinuxTab* source = ActiveTab(window);
+        Str sourcePath = LinuxTabPath(source);
+        fullPath = path::NormalizeTemp(path::JoinTemp(path::GetDirTemp(sourcePath), fullPath));
+    }
+    GFile* file = g_file_new_for_path(CStrTemp(fullPath));
+    LinuxWindowOpenFile(window, file);
+    g_object_unref(file);
 }
 
 static void SetFullscreen(LinuxWindow* window, bool fullscreen) {
@@ -472,7 +501,8 @@ void LinuxWindowOpenFile(LinuxWindow* window, GFile* file) {
     }
     char* baseName = g_file_get_basename(file);
     Str title(baseName ? baseName : "Document");
-    LinuxTab* tab = LinuxTabCreate(title, MkFunc0(UpdateControls, window));
+    LinuxTab* tab = LinuxTabCreate(title, MkFunc0(UpdateControls, window), MkFunc1(OpenLinkedUrl, window),
+                                   MkFunc1(OpenLinkedFile, window));
     g_free(baseName);
     if (!tab) {
         return;

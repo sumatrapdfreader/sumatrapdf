@@ -39,6 +39,7 @@ FileEBookUI* GetFileEBookUI(Str) {
 static void Usage() {
     printf("usage: test_engines <document-or-image-path>\n");
     printf("       test_engines <path> -bench-mediabox   time PageMediabox() for every page\n");
+    printf("       test_engines <path> -list-links       list link targets and rectangles\n");
 }
 
 static EngineBase* CreateEngineForPath(Str path) {
@@ -88,6 +89,34 @@ static bool RenderPath(Str path) {
 
     engine->Release();
     return ok;
+}
+
+static bool ListLinks(Str path) {
+    EngineBase* engine = CreateEngineForPath(path);
+    if (!engine) {
+        printf("failed to load: %.*s\n", path.len, path.s);
+        return false;
+    }
+
+    int linkCount = 0;
+    for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
+        engine->BenchLoadPage(pageNo);
+        Vec<IPageElement*> elements = engine->GetElements(pageNo);
+        for (IPageElement* element : elements) {
+            IPageDestination* dest = element->AsLink();
+            if (!dest) {
+                continue;
+            }
+            RectF rect = element->GetRect();
+            Str value = PageDestGetValue(dest);
+            printf("page %d: %.2f %.2f %.2f %.2f -> %.*s\n", pageNo, rect.x, rect.y, rect.dx, rect.dy, len(value),
+                   value.s ? value.s : "");
+            linkCount++;
+        }
+    }
+    printf("links: %d\n", linkCount);
+    engine->Release();
+    return true;
 }
 
 // Times PageMediabox() for every page: that's what the UI needs before it can
@@ -341,6 +370,11 @@ int main(int argc, char** argv) {
     }
     if (argc == 3 && str::Eq(argv[2], StrL("-bench-mediabox"))) {
         bool ok = BenchMediabox(Str(argv[1]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
+    if (argc == 3 && str::Eq(argv[2], StrL("-list-links"))) {
+        bool ok = ListLinks(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }

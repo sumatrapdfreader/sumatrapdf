@@ -6,10 +6,11 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
+#include "gui/UIModels.h"
+#include "EngineBase.h"
 #include "PageRenderPolicy.h"
 #include "PageRenderService.h"
 #include "ReaderModel.h"
-#include "gui/UIModels.h"
 #include "gui/Gfx.h"
 #include "gui/PlatformCanvas.h"
 #include "gui/DocumentView.h"
@@ -25,6 +26,7 @@ struct DocumentViewData {
     int startPage = 1;
     int rotation = 0;
     bool isDragging = false;
+    IPageElement* pressedLink = nullptr;
     Point dragStart;
     Point dragOffset;
 };
@@ -95,6 +97,135 @@ static int PageAtPoint(DocumentViewData* data, Point pt) {
         }
     }
     return data->layout.CurrentPageNo();
+}
+
+static IPageElement* LinkAtPoint(DocumentViewData* data, Point pt) {
+    if (!data->reader) {
+        return nullptr;
+    }
+    int pageNo = PageAtPoint(data, pt);
+    const DocumentLayoutPage* page = data->layout.GetPage(pageNo);
+    if (!page || !page->isShown || !page->pageOnScreen.Contains(pt)) {
+        return nullptr;
+    }
+    PointF pagePoint((float)pt.x - 0.499f - (float)page->pageOnScreen.x,
+                     (float)pt.y - 0.499f - (float)page->pageOnScreen.y);
+    EngineBase* engine = data->reader->GetEngine();
+    pagePoint = engine->Transform(pagePoint, pageNo, page->zoomReal, data->rotation, true);
+    IPageElement* element = engine->GetElementAtPos(pageNo, pagePoint);
+    return element && element->Is(kindPageElementDest) ? element : nullptr;
+}
+
+static void ScrollToDestination(DocumentView* view, int pageNo, RectF rect, float zoom) {
+    auto* data = ViewData(view);
+    if (!data->reader || pageNo < 1 || pageNo > data->reader->PageCount()) {
+        return;
+    }
+
+    bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitHeight ||
+                         zoom == kZoomFitContent || zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
+    if (isVirtualZoom) {
+        view->SetZoom(zoom);
+    } else if (zoom > 0) {
+        view->SetZoom(zoom * 100.0f);
+    }
+    view->GoToPage(pageNo);
+
+    DocumentLayoutPage* page = data->layout.GetPage(pageNo);
+    if (!page) {
+        return;
+    }
+    PointF destination = rect.TL();
+    bool hasX = destination.x != kDestUseDefault;
+    if (!hasX) {
+        destination.x = 0;
+    }
+    if (destination.y == kDestUseDefault) {
+        destination.y = 0;
+    }
+    PointF transformed = data->reader->GetEngine()->Transform(destination, pageNo, page->zoomReal, data->rotation);
+    Point offset = data->viewOffset;
+    if (hasX) {
+        offset.x = page->pos.x + (int)transformed.x;
+    }
+    offset.y = page->pos.y + (int)transformed.y;
+    SetViewOffset(view, offset);
+}
+
+struct DocumentViewLinkHandler : ILinkHandler {
+    DocumentView* view = nullptr;
+
+    explicit DocumentViewLinkHandler(DocumentView* view) : view(view) {}
+
+    void GotoLink(IPageDestination* dest) override {
+        if (!dest) {
+            return;
+        }
+        Kind kind = dest->GetKind();
+        if (kind == kindDestinationScrollTo) {
+            ScrollTo(dest);
+        } else if (kind == kindDestinationLaunchURL) {
+            auto* urlDest = (PageDestinationURL*)dest;
+            LaunchURL(urlDest->url);
+        } else if (kind == kindDestinationLaunchFile) {
+            auto* fileDest = (PageDestinationFile*)dest;
+            LaunchFile(fileDest->path, dest);
+        }
+    }
+
+    void GotoNamedDest(Str name) override {
+        auto* data = ViewData(view);
+        IPageDestination* dest = data->reader ? data->reader->GetEngine()->GetNamedDest(name) : nullptr;
+        if (dest) {
+            ScrollTo(dest);
+            delete dest;
+        }
+    }
+
+    void GoToPage(int pageNo, bool) override { view->GoToPage(pageNo); }
+
+    bool GoToNextPage() override {
+        int oldPageNo = view->CurrentPageNo();
+        view->GoToPage(oldPageNo + 1);
+        return view->CurrentPageNo() != oldPageNo;
+    }
+
+    bool GoToPrevPage(bool) override {
+        int oldPageNo = view->CurrentPageNo();
+        view->GoToPage(oldPageNo - 1);
+        return view->CurrentPageNo() != oldPageNo;
+    }
+
+    void ScrollTo(IPageDestination* dest) override {
+        ScrollToDestination(view, PageDestGetPageNo(dest), PageDestGetRect(dest), PageDestGetZoom(dest));
+    }
+
+    void ScrollTo(int pageNo, RectF rect, float zoom) override { ScrollToDestination(view, pageNo, rect, zoom); }
+
+    void LaunchURL(Str url) override {
+        if (IsExternalUrl(url)) {
+            view->onOpenUrl.Call(url);
+        } else {
+            view->onOpenFile.Call(url);
+        }
+    }
+
+    void LaunchFile(Str path, IPageDestination*) override { view->onOpenFile.Call(path); }
+
+    TocItem* FindTocItem(TocItem*, Str, bool) override { return nullptr; }
+};
+
+static void ActivateLink(DocumentView* view, IPageElement* element) {
+    auto* data = ViewData(view);
+    if (!data->reader || !element) {
+        return;
+    }
+    IPageDestination* dest = element->AsLink();
+    if (!dest) {
+        return;
+    }
+    DocumentViewLinkHandler handler(view);
+    data->reader->GetEngine()->HandleLink(dest, &handler);
 }
 
 static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
@@ -183,19 +314,35 @@ static void OnCanvasScroll(DocumentView* view, PlatformCanvasScrollEvent* ev) {
 static void OnCanvasPointer(DocumentView* view, PlatformCanvasPointerEvent* ev) {
     auto* data = ViewData(view);
     if (ev->type == PlatformCanvasPointerEventType::Down && ev->button == 1) {
-        data->isDragging = true;
-        data->dragStart = ev->pos;
-        data->dragOffset = data->viewOffset;
         view->canvas->Focus();
-        view->canvas->SetCursor(CursorId::Move);
+        data->pressedLink = LinkAtPoint(data, ev->pos);
+        data->isDragging = data->pressedLink == nullptr;
+        if (data->isDragging) {
+            data->dragStart = ev->pos;
+            data->dragOffset = data->viewOffset;
+        }
+        view->canvas->SetCursor(data->pressedLink ? CursorId::Hand : CursorId::Move);
         ev->didHandle = true;
     } else if (ev->type == PlatformCanvasPointerEventType::Move && data->isDragging) {
         Point delta(ev->pos.x - data->dragStart.x, ev->pos.y - data->dragStart.y);
         SetViewOffset(view, Point(data->dragOffset.x - delta.x, data->dragOffset.y - delta.y));
         ev->didHandle = true;
+    } else if (ev->type == PlatformCanvasPointerEventType::Move) {
+        view->canvas->SetCursor(LinkAtPoint(data, ev->pos) ? CursorId::Hand : CursorId::Arrow);
+    } else if (ev->type == PlatformCanvasPointerEventType::Leave && !data->isDragging) {
+        view->canvas->SetCursor(CursorId::Arrow);
+    } else if (ev->type == PlatformCanvasPointerEventType::Up && data->pressedLink) {
+        IPageElement* releasedLink = LinkAtPoint(data, ev->pos);
+        IPageElement* pressedLink = data->pressedLink;
+        data->pressedLink = nullptr;
+        if (releasedLink == pressedLink) {
+            ActivateLink(view, pressedLink);
+        }
+        view->canvas->SetCursor(releasedLink ? CursorId::Hand : CursorId::Arrow);
+        ev->didHandle = true;
     } else if (ev->type == PlatformCanvasPointerEventType::Up && data->isDragging) {
         data->isDragging = false;
-        view->canvas->SetCursor(CursorId::Arrow);
+        view->canvas->SetCursor(LinkAtPoint(data, ev->pos) ? CursorId::Hand : CursorId::Arrow);
         ev->didHandle = true;
     }
 }

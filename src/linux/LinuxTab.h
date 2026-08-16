@@ -4,7 +4,8 @@
 struct DocumentView;
 struct LinuxTab;
 
-LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged);
+LinuxTab* LinuxTabCreate(Str title, const Func0& onStateChanged, const Func1<Str>& onOpenUrl,
+                         const Func1<Str>& onOpenFile);
 void LinuxTabDestroy(LinuxTab* tab);
 bool LinuxTabOpenFile(LinuxTab* tab, GFile* file);
 GtkWidget* LinuxTabWidget(LinuxTab* tab);
