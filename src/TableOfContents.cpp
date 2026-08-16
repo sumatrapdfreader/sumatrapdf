@@ -1254,7 +1254,10 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
         txtCol = tocItem->color;
     }
 
-    bool showPage = gGlobalPrefs->showTocPageNumbers && win && win->IsDocLoaded() && win->ctrl && tocItem->pageNo > 0;
+    // check win->ctrl directly, not IsDocLoaded(): a paint can arrive while
+    // win->ctrl and CurrentTab()->ctrl transiently disagree (tab close/switch,
+    // pending load) and IsDocLoaded() asserts on that mismatch
+    bool showPage = gGlobalPrefs->showTocPageNumbers && win && win->ctrl && tocItem->pageNo > 0;
     TempStr pageLabel{};
     if (showPage) {
         pageLabel = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
