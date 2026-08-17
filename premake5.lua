@@ -100,6 +100,16 @@ function winver7_defines()
 
   -- v143 is the last that supports windows 7
   toolset "v143"   -- this is the official way in recent Premake versions
+
+  -- ...but only x86 / x64 need to run on Windows 7, and the v143 ARM64 tools
+  -- are not on the GitHub windows-2025-vs2026 runner image (MSB8020), which is
+  -- what the daily build hits. ARM64 never had a Windows 7 to support, so build
+  -- it with the VS 2026 toolset that is there. That toolset is v145 -- the
+  -- v180 in the MSBuild path is the targets-directory version, not a toolset
+  -- name (MSBuild\Microsoft\VC\v180\Platforms\ARM64\PlatformToolsets\v145).
+  filter "platforms:arm64"
+  toolset "v145"
+  filter {}
 end
 
 function winver_latest_defines()
