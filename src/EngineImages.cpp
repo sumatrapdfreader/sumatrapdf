@@ -380,6 +380,40 @@ static Pixmap* FzPixmapToPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return res;
 }
 
+// A page is what the viewer shows, so it has to be opaque: an image with
+// transparency (a PNG with an alpha channel, or one whose mupdf pixmap carries
+// alpha) is composited onto white, the same backdrop the GDI+ and fallback
+// paths below use. Without this the mupdf fast path handed back the alpha
+// channel untouched and transparent areas came out black, so the same file
+// flipped between black and white depending on which path drew it - rotating
+// it was enough to change the colour (issue #5844).
+// mupdf's alpha is premultiplied, so over-white is c + (255 - a).
+static void FlattenAlphaOntoWhite(Pixmap* pix) {
+    if (!pix || pix->format != PixmapFormat::BGRA8 || !pix->data) {
+        return;
+    }
+    for (int y = 0; y < pix->height; y++) {
+        u8* d = pix->data + ((size_t)y * pix->stride);
+        for (int x = 0; x < pix->width; x++, d += 4) {
+            u8 a = d[3];
+            if (a == 255) {
+                continue;
+            }
+            if (pix->premultiplied) {
+                d[0] = (u8)std::min(255, d[0] + (255 - a));
+                d[1] = (u8)std::min(255, d[1] + (255 - a));
+                d[2] = (u8)std::min(255, d[2] + (255 - a));
+            } else {
+                d[0] = (u8)(((d[0] * a) + (255 * (255 - a))) / 255);
+                d[1] = (u8)(((d[1] * a) + (255 * (255 - a))) / 255);
+                d[2] = (u8)(((d[2] * a) + (255 * (255 - a))) / 255);
+            }
+            d[3] = 255;
+        }
+    }
+    pix->premultiplied = false;
+}
+
 static Pixmap* FzImageToPixmap(fz_context* ctx, fz_image* img) {
     fz_pixmap* pixmap = nullptr;
     fz_var(pixmap);
@@ -518,6 +552,8 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             fz_pixmap* final = scaled ? scaled : decoded;
             if (final) {
                 result = FzPixmapToPixmap(ctx, final);
+                // the page has to be opaque; see FlattenAlphaOntoWhite
+                FlattenAlphaOntoWhite(result);
             }
             if (scaled) {
                 fz_drop_pixmap(ctx, scaled);
