@@ -102,8 +102,8 @@ static void logToPipe(Str s) {
     gPipeMutex.Unlock();
 }
 
-static void log2(Str s, bool always) {
-    bool skipLog = !always && gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
+void log(Str s) {
+    bool skipLog = gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
 
     if (!skipLog) {
         // in reduced logging mode, we do want to log to at least the debugger
@@ -161,17 +161,6 @@ static void log2(Str s, bool always) {
     }
     logToPipe(s);
     gLogMutex.Unlock();
-}
-
-void log(Str s) {
-    log2(s, false);
-}
-
-void loga(Str s) {
-    if (gDestroyedLogging) {
-        return;
-    }
-    log2(s, true);
 }
 
 void StartLogToFile(Str path, bool removeIfExists) {

@@ -369,7 +369,7 @@ bool StartsWithN(Str path, Str s) {
     if (ReadN(path, buf, s.len) != s.len) {
         return false;
     }
-    return memeq(buf, s.s, s.len);
+    return MemEq(buf, s.s, s.len);
 }
 
 bool StartsWith(Str path, Str s) {

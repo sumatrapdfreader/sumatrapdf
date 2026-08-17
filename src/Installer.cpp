@@ -2348,7 +2348,7 @@ int RunInstaller() {
     logf("------------- Starting SumatraPDF installation\n");
     LogParentProcessChain();
     if (!gCli->silent && !IsProcessAndOsArchSame()) {
-        logfa("quitting because !IsProcessAndOsArchSame()\n");
+        logf("quitting because !IsProcessAndOsArchSame()\n");
         bool ok = ShouldInstallMismatchedArch(nullptr);
         if (!ok) return 1;
     }
@@ -2431,7 +2431,7 @@ int RunInstaller() {
         SetForegroundWindow(gWnd->hwnd);
         log("Before RunApp()\n");
         ret = RunApp();
-        logfa("RunApp() returned %d\n", ret);
+        logf("RunApp() returned %d\n", ret);
     }
 
     log("Installer finished\n");

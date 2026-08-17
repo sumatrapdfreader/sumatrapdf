@@ -632,7 +632,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
     bool badState =
         (tabIdxFrom == tabIdxTo) || (tabIdxFrom < 0) || (tabIdxTo < 0) || (tabIdxFrom >= nTabs) || (tabIdxTo > nTabs);
     if (badState) {
-        logfa("tabIdxFrom: %d, tabIdxTo: %d, nTabs: %d\n", tabIdxFrom, tabIdxTo, nTabs);
+        logf("tabIdxFrom: %d, tabIdxTo: %d, nTabs: %d\n", tabIdxFrom, tabIdxTo, nTabs);
         ReportDebugIf(true);
         return;
     }
@@ -795,7 +795,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 TabCtrl* hlCtrl = TabCtrlAt(hl);
                 HBITMAP hbmp = RenderForDragging(hl);
                 if (!hbmp || !hlCtrl) {
-                    logfa("TabsCtrl::WndProc: RenderForDragging failed for tab %d\n", hl);
+                    logf("TabsCtrl::WndProc: RenderForDragging failed for tab %d\n", hl);
                     return 0;
                 }
                 Rect r = hlCtrl->BoundsInWindow();

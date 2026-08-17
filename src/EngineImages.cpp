@@ -1078,7 +1078,7 @@ bool EngineImage::LoadSingleFile(Str path) {
         imageFormat = GuessFileTypeFromName(path);
     }
     if (imageFormat == FileType::Unknown) {
-        logfa("EngineImage::LoadSingleFile: '%s'\n", path);
+        logf("EngineImage::LoadSingleFile: '%s'\n", path);
         ReportIf(imageFormat == FileType::Unknown);
     }
 
@@ -1436,12 +1436,12 @@ static bool ImageDpiFromData(Str data, float& dpiX, float& dpiY) {
     int n = data.len;
 
     static const u8 kPngSig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
-    if (n >= 8 && memeq(d, kPngSig, 8)) {
+    if (n >= 8 && MemEq(d, kPngSig, 8)) {
         int idx = 8;
         while (idx + 12 <= n) {
             u32 chunkLen = UInt32BE(d + idx);
             const u8* type = d + idx + 4;
-            if (memeq(type, "pHYs", 4) && chunkLen >= 9 && idx + 17 <= n) {
+            if (MemEq(type, "pHYs", 4) && chunkLen >= 9 && idx + 17 <= n) {
                 const u8* p = d + idx + 8;
                 u32 x = UInt32BE(p);
                 u32 y = UInt32BE(p + 4);
@@ -1453,7 +1453,7 @@ static bool ImageDpiFromData(Str data, float& dpiX, float& dpiY) {
                 }
                 return false;
             }
-            if (memeq(type, "IEND", 4)) {
+            if (MemEq(type, "IEND", 4)) {
                 break;
             }
             if (chunkLen > (u32)(n - idx)) {
@@ -1487,7 +1487,7 @@ static bool ImageDpiFromData(Str data, float& dpiX, float& dpiY) {
             if (seglen < 2 || i + seglen > n) {
                 break;
             }
-            if (marker == 0xE0 && seglen >= 16 && memeq(d + i + 2, "JFIF", 4)) {
+            if (marker == 0xE0 && seglen >= 16 && MemEq(d + i + 2, "JFIF", 4)) {
                 u8 units = d[i + 9];
                 u32 x = (u32)((d[i + 10] << 8) | d[i + 11]);
                 u32 y = (u32)((d[i + 12] << 8) | d[i + 13]);

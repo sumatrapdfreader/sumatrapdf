@@ -1270,8 +1270,8 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
         return;
     }
     if (!annotations.isValidIndex(itemNo)) {
-        logfa("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(annotations)=%d\n", itemNo,
-              len(annotations));
+        logf("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(annotations)=%d\n", itemNo,
+             len(annotations));
         ReportDebugIf(true);
         return;
     }

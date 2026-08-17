@@ -598,19 +598,19 @@ static TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
     // use file::ReadFile which uses CreateFileW (handles Unicode)
     Str data = file::ReadFile(pathSync);
     if (len(data) == 0) {
-        logfa("CopyPlainSyncToTempFile: source file '.synctex' '%s' is empty.\n", pathSync);
+        logf("CopyPlainSyncToTempFile: source file '.synctex' '%s' is empty.\n", pathSync);
         // return {};
     }
     TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
     if (!tempPath) {
         str::Free(data);
-        logfa("CopyPlainSyncToTempFile: unable to get temp file path. error: %d.\n", errno);
+        logf("CopyPlainSyncToTempFile: unable to get temp file path. error: %d.\n", errno);
         return {};
     }
     bool ok = file::WriteFile(tempPath, data);
     str::Free(data);
     if (!ok) {
-        logfa("CopyPlainSyncToTempFile: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
+        logf("CopyPlainSyncToTempFile: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
         return {};
     }
 
@@ -618,11 +618,11 @@ static TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
     TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
     int ret = rename(tempPath.s, tempPathSync.s);
     if (ret) {
-        logfa("CopyPlainSyncToTempFile: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
+        logf("CopyPlainSyncToTempFile: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
         return {};
     }
 
-    logfa("CopyPlainSyncToTempFile: copied '%s' to '%s'\n", pathSync, tempPathSync);
+    logf("CopyPlainSyncToTempFile: copied '%s' to '%s'\n", pathSync, tempPathSync);
     return tempPathSync;
 }
 
@@ -644,37 +644,37 @@ static TempStr DealPlainSync(TempStr pathSync) {
     logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
     Str converted = ConvertLocalToUTF8(srcZ);
     if (!converted) {
-        logfa("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
+        logf("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
         return {};
     }
     Str dst = converted;
 
     if (len(dst) == 0) {
-        logfa("DealPlainSync: decoded content is empty.\n", pathSync);
+        logf("DealPlainSync: decoded content is empty.\n", pathSync);
         return {};
     }
     TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
     if (!tempPath) {
         str::Free(dst);
-        logfa("DealPlainSync: unable to get temp file path. error: %d.\n", errno);
+        logf("DealPlainSync: unable to get temp file path. error: %d.\n", errno);
         return {};
     }
     bool ok = file::WriteFile(tempPath, dst);
     str::Free(dst);
     if (!ok) {
-        logfa("DealPlainSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
+        logf("DealPlainSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
         return {};
     }
-    logfa("DealPlainSync: utf-8 written to temp file '%s'.\n", tempPath);
+    logf("DealPlainSync: utf-8 written to temp file '%s'.\n", tempPath);
 
     TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);              // stxabcdef
     TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
     int ret = rename(tempPath.s, tempPathSync.s);
     if (ret) {
-        logfa("DealPlainSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
+        logf("DealPlainSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
         return {};
     }
-    logfa("DealPlainSync: copied '%s' to '%s'\n", pathSync, tempPathSync);
+    logf("DealPlainSync: copied '%s' to '%s'\n", pathSync, tempPathSync);
     return tempPathSync;
 }
 
@@ -707,13 +707,13 @@ static TempStr ungzipToTempSync(Str gzPath) {
     TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
     if (!tempPath) {
         str::Free(uncompr);
-        logfa("ungzipToTempSync: unable to get temp file path. error: %d.\n", errno);
+        logf("ungzipToTempSync: unable to get temp file path. error: %d.\n", errno);
         return {};
     }
     bool ok = file::WriteFile(tempPath, uncompr);
     str::Free(uncompr);
     if (!ok) {
-        logfa("ungzipToTempSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
+        logf("ungzipToTempSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
         return {};
     }
 
@@ -721,18 +721,18 @@ static TempStr ungzipToTempSync(Str gzPath) {
     TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
     int ret = rename(tempPath.s, tempPathSync.s);
     if (ret) {
-        logfa("ungzipToTempSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
+        logf("ungzipToTempSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
         return {};
     }
 
-    logfa("ungzipToTempSync: ungzip '%s' to '%s'\n", gzPath, tempPathSync);
+    logf("ungzipToTempSync: ungzip '%s' to '%s'\n", gzPath, tempPathSync);
     return tempPathSync;
 }
 
 // SYNCTEX synchronizer
 int SyncTex::RebuildIndexIfNeeded() {
     if (!NeedsToRebuildIndex()) {
-        logfa("SyncTex::RebuildIndexIfNeeded: no need to rebuild\n");
+        logf("SyncTex::RebuildIndexIfNeeded: no need to rebuild\n");
         return PDFSYNCERR_SUCCESS;
     }
     synctex_scanner_free(scanner);
@@ -782,10 +782,10 @@ int SyncTex::RebuildIndexIfNeeded() {
             return PDFSYNCERR_SYNCFILE_NOTFOUND;
         }
     }
-    logfa("[dbg]: tempsync1: %s\n", tempsync1 ? tempsync1 : StrL("[NULL]"));
-    logfa("[dbg]: tempsync2: %s\n", tempsync2 ? tempsync2 : StrL("[NULL]"));
+    logf("[dbg]: tempsync1: %s\n", tempsync1 ? tempsync1 : StrL("[NULL]"));
+    logf("[dbg]: tempsync2: %s\n", tempsync2 ? tempsync2 : StrL("[NULL]"));
     if (!tempsync2) {
-        logfa("SyncTex::RebuildIndexIfNeeded: temp file for origin file '%s' not found\n", pathSync);
+        logf("SyncTex::RebuildIndexIfNeeded: temp file for origin file '%s' not found\n", pathSync);
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
     fsize = file::GetSize(tempsync2);
@@ -794,7 +794,7 @@ int SyncTex::RebuildIndexIfNeeded() {
 
     scanner = synctex_scanner_new_with_output_file(CStrTemp(tempsync2), nullptr, 1);
     if (scanner) {
-        logfa("SyncTex::RebuildIndexIfNeeded: file '%s' is ok.\n", pathSync);
+        logf("SyncTex::RebuildIndexIfNeeded: file '%s' is ok.\n", pathSync);
     } else {
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
@@ -824,7 +824,7 @@ static bool IsUnixSourcePath(Str syncFilePath, Str resolvedSrcPath) {
 }
 
 int SyncTex::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) {
-    logfa("SyncTex::DocToSource: '%s', pageNo: %d\n", syncFilePath, pageNo);
+    logf("SyncTex::DocToSource: '%s', pageNo: %d\n", syncFilePath, pageNo);
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
         ReportDebugIf(true);
@@ -915,7 +915,7 @@ static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, Str srcPat
         if (!variant) {
             continue;
         }
-        logfa("SynctexDisplayQueryWithVariants: '%s' failed, retrying with '%s'\n", srcPath, variant);
+        logf("SynctexDisplayQueryWithVariants: '%s' failed, retrying with '%s'\n", srcPath, variant);
         int ret2 = synctex_display_query(scanner, CStrTemp(variant), line, col, 0);
         if (ret2 > 0) {
             return ret2;
@@ -925,7 +925,7 @@ static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, Str srcPat
 }
 
 int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
-    logfa("SyncTex::SourceToDoc: '%s', line: %d, col: %d\n", srcfilename, line, col);
+    logf("SyncTex::SourceToDoc: '%s', line: %d, col: %d\n", srcfilename, line, col);
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
         return res;

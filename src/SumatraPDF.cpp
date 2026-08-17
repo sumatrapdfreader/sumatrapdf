@@ -2573,7 +2573,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
         logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
         return;
     }
-    logfa("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
+    logf("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
 
     // Save display state before potentially destroying the old controller
     FileState* fs = NewFileState(path);

@@ -15,20 +15,7 @@ void* AllocZero(int count, int size) {
     return calloc(count, size);
 }
 
-// extraBytes will be filled with 0. Useful for copying zero-terminated strings
-void* memdup(const void* data, int n, int extraBytes) {
-    // to simplify callers, if data is nullptr, ignore the sizes
-    if (!data) {
-        return nullptr;
-    }
-    void* dup = AllocZero(n + extraBytes, 1);
-    if (dup) {
-        memcpy(dup, data, n);
-    }
-    return dup;
-}
-
-bool memeq(const void* s1, const void* s2, int n) {
+bool MemEq(const void* s1, const void* s2, int n) {
     return 0 == memcmp(s1, s2, n);
 }
 
@@ -208,7 +195,7 @@ float limitValue(float val, float min, float max) {
 Func0 MkFunc0Void(funcVoidPtr fn) {
     auto res = Func0{};
     res.fn = (void*)fn;
-    res.userData = kFuncNoArg;
+    res.userData = Func0::kFuncNoArg;
     return res;
 }
 
@@ -217,7 +204,7 @@ template <typename T>
 Func0 MkMethod0Void(funcVoidPtr fn, T* self) {
     UINT_PTR fnTagged = (UINT_PTR)fn;
     res.fn = (void*)fn;
-    res.userData = kFuncNoArg;
+    res.userData = Func0::kFuncNoArg;
     res.self = self;
 }
 #endif

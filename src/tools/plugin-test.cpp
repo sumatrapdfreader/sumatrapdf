@@ -15,9 +15,6 @@ void log(Str s) {
     }
     fwrite(s.s, 1, (size_t)s.len, stderr);
 }
-void loga(Str s) {
-    log(s);
-}
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
 #define PLUGIN_TEST_NAMEA "SumatraPDF Plugin Test"

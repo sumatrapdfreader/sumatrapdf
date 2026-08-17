@@ -27,9 +27,6 @@ void log(Str s) {
     OutputDebugStringA(s.s);
     fwrite(s.s, 1, (size_t)s.len, stdout);
 }
-void loga(Str s) {
-    log(s);
-}
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
 static Str kPdfPreviewDllName = StrL("PdfPreview.dll");

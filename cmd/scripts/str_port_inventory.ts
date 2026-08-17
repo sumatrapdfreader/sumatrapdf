@@ -51,7 +51,7 @@ function tagExclusion(line: string, kind: Kind, contextLines: string[]): string 
   if (/\bextern\s+"C"/.test(t)) {
     return "extern-c";
   }
-  if (/\b(?:printf|fprintf|sprintf|snprintf|sscanf|scanf|str::Parse|logf|logfa|CliPrintf)\s*\(/.test(t)) {
+  if (/\b(?:printf|fprintf|sprintf|snprintf|sscanf|scanf|str::Parse|logf|CliPrintf)\s*\(/.test(t)) {
     return "format-string";
   }
   if (/\bMAKEINTRESOURCEW?\s*\(/.test(t)) {

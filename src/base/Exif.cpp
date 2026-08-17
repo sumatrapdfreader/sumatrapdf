@@ -967,7 +967,7 @@ bool ExtractJpegExif(Str d, Str& out) {
 }
 
 bool HasWebpSignature(Str d) {
-    return d.len >= 12 && memeq(d.s, "RIFF", 4) && memeq(d.s + 8, "WEBP", 4);
+    return d.len >= 12 && MemEq(d.s, "RIFF", 4) && MemEq(d.s + 8, "WEBP", 4);
 }
 
 bool ExtractWebpExif(Str d, Str& out) {
@@ -1169,9 +1169,9 @@ TempStr ExifParser::GetStringProp(ExifProp prop, ExifProp altProp) const {
         res = TrimmedAsciiTemp(r, entry->dataOff, entry->count);
     } else if (prop == ExifProp::UserComment && entry->type == TiffUndefined && EntryBoundsOk(*this, *entry, 8)) {
         Str bytes((char*)(r.d + entry->dataOff), (int)entry->count);
-        if (bytes.len > 8 && memeq(bytes.s, "ASCII\0\0\0", 8)) {
+        if (bytes.len > 8 && MemEq(bytes.s, "ASCII\0\0\0", 8)) {
             res = TrimmedAsciiTemp(r, entry->dataOff + 8, entry->count - 8);
-        } else if (bytes.len > 10 && memeq(bytes.s, "UNICODE\0", 8)) {
+        } else if (bytes.len > 10 && MemEq(bytes.s, "UNICODE\0", 8)) {
             res = Utf16LeToUtf8Temp(Str(bytes.s + 8, bytes.len - 8));
         }
     }

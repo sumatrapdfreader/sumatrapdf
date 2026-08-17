@@ -44,10 +44,6 @@ void log(Str s) {
     OutputDebugStringA(s.s);
 }
 
-void loga(Str s) {
-    log(s);
-}
-
 // base's ReportIf() references this crash-reporting hook; we don't crash-report.
 void _uploadDebugReport(Str, Str, bool, bool) {}
 

@@ -473,7 +473,7 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
 
     USHORT res = 0;
     if (factorAvg > 1.5) {
-        res = (USHORT)ceilf(math_logf(factorAvg) / math_logf(2.0f));
+        res = (USHORT)ceilf(logf(factorAvg) / logf(2.0f));
     }
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
     return std::min(res, (USHORT)30);
@@ -877,8 +877,8 @@ bool RenderCache::IsRenderingFor(DisplayModel* dm) {
 TempStr RenderCache::BusyInfoTemp(DisplayModel* dm) {
     ScopedRecursiveMutex scope(&requestAccess);
     u64 now = GetTickCount64();
-    TempStr res = fmt("tile=%dx%d cache=%d reduced=%d", maxTileSize.dx, maxTileSize.dy, cacheCount,
-                      nTileSizeReductions);
+    TempStr res =
+        fmt("tile=%dx%d cache=%d reduced=%d", maxTileSize.dx, maxTileSize.dy, cacheCount, nTileSizeReductions);
     for (int i = 0; i < nRenderThreads; i++) {
         auto* r = curReqs[i];
         if (!r) {
@@ -1116,7 +1116,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         auto durMs = TimeSinceInMs(timeStart);
         if (durMs > 100) {
             auto path = engine->FilePath();
-            logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
+            logf("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
         }
 
         req.bmp = bmp;

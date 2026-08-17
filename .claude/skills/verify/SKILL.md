@@ -10,7 +10,7 @@ description: Build, launch and drive SumatraPDF on Windows to verify a change en
 - Build: `bun ./cmd/build.ts -debug` → `out/dbg64/SumatraPDF.exe` (the exe `tests/util.ts` EXE points at; `SumatraPDF-static.exe` is the static target and is usually stale).
 - If new source files were added to `premake5.files.lua` / `premake5.lua`, run `bun cmd/premake.ts` first to regenerate `vs2022/*.vcxproj`, or the build fails with stale projects / link errors.
 - Always launch with `-for-testing` (fresh instance, no session restore, doesn't touch user settings).
-- Capture engine/app logs: `-log -log-to-file <path>` (collects `logf`/`logfa` output).
+- Capture engine/app logs: `-log -log-to-file <path>` (collects `logf` output).
 
 ## Driving the GUI
 

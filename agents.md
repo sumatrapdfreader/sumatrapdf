@@ -159,10 +159,10 @@ the temp arena and returns a `TempStr`, so call sites read `fmt("page %d", n)`.
 For a `%s` fed a **string literal**, wrap it with `StrL(...)` (see next section)
 so the length is computed at compile time: `fmt("%s", StrL("done"))`.
 
-`logf` / `logfa` are macros in `base/Base.h` that format via `::fmt(...)` and
-route the result through `log()` / `loga()`, so they follow the same type-safe
-rules. Base only declares those two; the app implements them (`SumatraLog.cpp`,
-declared in `SumatraLog.h`).
+`logf` is a variadic function template in `base/Base.h` that formats via
+`str::FormatTemp(...)` and routes the result through `log()`, so it follows the
+same type-safe rules. Base only declares `log()`; the app implements it
+(`SumatraLog.cpp`, declared in `SumatraLog.h`).
 
 Functions that take an already-formatted `Str` (so the caller formats with
 `fmt(...)`): `str::Builder::Append`, `dbglayout`, `MaybeDelayedWarningNotification`.

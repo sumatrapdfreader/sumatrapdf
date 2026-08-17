@@ -18,7 +18,7 @@ Str gLogFilePath;
 static Mutex gLogMutex;
 static bool gDestroyedLogging = false;
 
-static void log2(Str s, bool /*always*/) {
+void log(Str s) {
     if (!s || gDestroyedLogging) {
         return;
     }
@@ -46,14 +46,6 @@ static void log2(Str s, bool /*always*/) {
         }
     }
     gLogMutex.Unlock();
-}
-
-void log(Str s) {
-    log2(s, false);
-}
-
-void loga(Str s) {
-    log2(s, true);
 }
 
 void StartLogToFile(Str path, bool removeIfExists) {

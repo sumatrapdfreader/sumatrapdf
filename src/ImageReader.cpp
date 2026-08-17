@@ -168,7 +168,7 @@ Pixmap* PixmapFromDataFz(Str d) {
 
     Pixmap* result = nullptr;
     // jpeg or jpeg 2000
-    if (str::StartsWith(d, StrL("\xFF\xD8")) || memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
+    if (str::StartsWith(d, StrL("\xFF\xD8")) || MemEq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
         result = PixmapFromImageData(ctx, data, n);
     }
 

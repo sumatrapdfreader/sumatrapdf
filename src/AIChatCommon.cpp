@@ -202,7 +202,7 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
         return;
     }
     if (logger->logTag) {
-        logfa("%s %s: %s", logger->logTag, direction, text);
+        logf("%s %s: %s", logger->logTag, direction, text);
     }
 
     TempStr dir = GetSumatraDataDirTemp();

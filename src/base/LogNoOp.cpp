@@ -4,5 +4,3 @@
 #include "base/Base.h"
 
 void log(Str /*s*/) {}
-
-void loga(Str /*s*/) {}

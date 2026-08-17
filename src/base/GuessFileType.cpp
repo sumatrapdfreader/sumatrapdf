@@ -280,8 +280,8 @@ static bool HasJxlSignature(Str d) {
     static const u8 jxlContainer[] = {0x00, 0x00, 0x00, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a};
 
     const u8* data = (const u8*)d.s;
-    return (d.len >= sizeofi(jxlCodestream) && memeq(data, jxlCodestream, sizeofi(jxlCodestream))) ||
-           (d.len >= sizeofi(jxlContainer) && memeq(data, jxlContainer, sizeofi(jxlContainer)));
+    return (d.len >= sizeofi(jxlCodestream) && MemEq(data, jxlCodestream, sizeofi(jxlCodestream))) ||
+           (d.len >= sizeofi(jxlContainer) && MemEq(data, jxlContainer, sizeofi(jxlContainer)));
 }
 
 #pragma pack(push, 1)
@@ -378,7 +378,7 @@ static FileType DetectFileTypeFromData(Str d) {
         int sigLen = gFileSigs[i].sigLen;
         int sigMaxLen = off + sigLen;
         u8* dat = data + off;
-        if ((dataLen > sigMaxLen) && memeq(dat, sig.s, sigLen)) {
+        if ((dataLen > sigMaxLen) && MemEq(dat, sig.s, sigLen)) {
             return gFileSigs[i].ft;
         }
     }
@@ -424,7 +424,7 @@ static void AppendImageSize(FileTypeInfo& res, int n, int& cap, int dx, int dy) 
 // frame count and each fcTL chunk a frame's size
 static void ParsePng(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
-    if (r.len < 24 || !memeq(r.d + 12, "IHDR", 4)) {
+    if (r.len < 24 || !MemEq(r.d + 12, "IHDR", 4)) {
         return;
     }
     res.imageDx = (int)r.UInt32BE(16);
@@ -439,13 +439,13 @@ static void ParsePng(ByteReader r, FileTypeInfo& res) {
         }
         u32 chunkLen = r.UInt32BE(idx);
         const u8* type = r.d + idx + 4;
-        if (memeq(type, "acTL", 4)) {
+        if (MemEq(type, "acTL", 4)) {
             nDeclared = (int)r.UInt32BE(idx + 8);
-        } else if (memeq(type, "fcTL", 4) && chunkLen >= 12) {
+        } else if (MemEq(type, "fcTL", 4) && chunkLen >= 12) {
             // sequence number, then u32 width and height
             AppendImageSize(res, nFcTL, cap, (int)r.UInt32BE(idx + 12), (int)r.UInt32BE(idx + 16));
             nFcTL++;
-        } else if (memeq(type, "IEND", 4)) {
+        } else if (MemEq(type, "IEND", 4)) {
             break;
         }
         if (chunkLen > (u32)r.len) {
@@ -766,18 +766,18 @@ static void ParseWebp(ByteReader r, FileTypeInfo& res) {
         const u8* fourcc = r.d + idx;
         u32 size = r.UInt32LE(idx + 4);
         int payload = idx + 8;
-        if (memeq(fourcc, "VP8X", 4) && size >= 10) {
+        if (MemEq(fourcc, "VP8X", 4) && size >= 10) {
             // 4 flag bytes, then 24-bit little-endian width-1 and height-1
             res.imageDx = 1 + (r.UInt8(payload + 4) | (r.UInt8(payload + 5) << 8) | (r.UInt8(payload + 6) << 16));
             res.imageDy = 1 + (r.UInt8(payload + 7) | (r.UInt8(payload + 8) << 8) | (r.UInt8(payload + 9) << 16));
-        } else if (memeq(fourcc, "VP8 ", 4) && res.imageDx == 0 && size >= 10) {
+        } else if (MemEq(fourcc, "VP8 ", 4) && res.imageDx == 0 && size >= 10) {
             res.imageDx = r.UInt16LE(payload + 6) & 0x3fff;
             res.imageDy = r.UInt16LE(payload + 8) & 0x3fff;
-        } else if (memeq(fourcc, "VP8L", 4) && res.imageDx == 0 && size >= 5 && r.UInt8(payload) == 0x2f) {
+        } else if (MemEq(fourcc, "VP8L", 4) && res.imageDx == 0 && size >= 5 && r.UInt8(payload) == 0x2f) {
             u32 bits = r.UInt32LE(payload + 1);
             res.imageDx = (int)(bits & 0x3FFF) + 1;
             res.imageDy = (int)((bits >> 14) & 0x3FFF) + 1;
-        } else if (memeq(fourcc, "ANMF", 4) && size >= 12) {
+        } else if (MemEq(fourcc, "ANMF", 4) && size >= 12) {
             // 24-bit little-endian frame x, y, then width-1 and height-1
             int w = 1 + (r.UInt8(payload + 6) | (r.UInt8(payload + 7) << 8) | (r.UInt8(payload + 8) << 16));
             int h = 1 + (r.UInt8(payload + 9) | (r.UInt8(payload + 10) << 8) | (r.UInt8(payload + 11) << 16));
@@ -921,7 +921,7 @@ static int FindIsoBmffBox(ByteReader r, int idx, int end, const char* type, int*
         if (size < hdr || size > end - idx) {
             return -1;
         }
-        if (memeq(r.d + idx + 4, type, 4)) {
+        if (MemEq(r.d + idx + 4, type, 4)) {
             *boxEndOut = idx + (int)size;
             return idx + hdr;
         }
@@ -1002,7 +1002,7 @@ static void ParseHeif(ByteReader r, FileTypeInfo& res) {
             break;
         }
         const u8* type = r.d + idx + 4;
-        if (memeq(type, "ispe", 4) && size >= 20) {
+        if (MemEq(type, "ispe", 4) && size >= 20) {
             // version/flags, then u32 width and height
             int w = (int)r.UInt32BE(idx + 12);
             int h = (int)r.UInt32BE(idx + 16);
@@ -1010,7 +1010,7 @@ static void ParseHeif(ByteReader r, FileTypeInfo& res) {
                 dx = w;
                 dy = h;
             }
-        } else if (memeq(type, "irot", 4) && size >= 9) {
+        } else if (MemEq(type, "irot", 4) && size >= 9) {
             // one byte: rotation in 90-degree counter-clockwise units
             swapDims = (r.UInt8(idx + 8) & 1) != 0;
         }

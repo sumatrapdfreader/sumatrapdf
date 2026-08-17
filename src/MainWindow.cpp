@@ -247,7 +247,7 @@ bool MainWindow::IsDocLoaded() const {
     bool isLoaded = (ctrl != nullptr);
     bool isTabLoaded = (CurrentTab() && CurrentTab()->ctrl != nullptr);
     if (isLoaded != isTabLoaded) {
-        logfa("MainWindow::IsDocLoaded(): isLoaded: %d, isTabLoaded: %d\n", (int)isLoaded, (int)isTabLoaded);
+        logf("MainWindow::IsDocLoaded(): isLoaded: %d, isTabLoaded: %d\n", (int)isLoaded, (int)isTabLoaded);
         ReportIf(!gPluginMode);
     }
     return isLoaded;
@@ -948,7 +948,7 @@ void UpdateControlsColors(MainWindow* win) {
     Color bgCol = ThemeControlBackgroundColor();
     Color txtCol = ThemeWindowTextColor();
 
-    // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
+    // logf("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
     // the panel labels and the splitters are virtual controls: they follow the
     // gui/ color defaults, which SumatraUpdateTheme() already refreshed

@@ -1507,7 +1507,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     if (pdex.dwResultAction == PD_RESULT_PRINT || pdex.dwResultAction == PD_RESULT_APPLY) {
         // remember settings for this process
         if (devMode) {
-            defaultDevMode.Set((DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
+            defaultDevMode.Set((DEVMODEW*)MemDup(nullptr, devMode, (size_t)(devMode->dmSize + devMode->dmDriverExtra)));
         }
         defaultScaleAdv = advanced.scale;
     }
@@ -1522,7 +1522,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (devMode) {
-        auto* dmCopy = (DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra);
+        auto* dmCopy = (DEVMODEW*)MemDup(nullptr, devMode, (size_t)(devMode->dmSize + devMode->dmDriverExtra));
         printer->SetDevMode(dmCopy);
         GlobalUnlock(pdex.hDevMode);
     }
@@ -2143,7 +2143,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
         PrintData pd(engine, printer, ranges, advanced);
         ok = PrintToDevice(pd);
         if (!ok) {
-            logfa("PrintToDevice: failed\n");
+            logf("PrintToDevice: failed\n");
             MessageBoxWarningCond(displayErrors, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
         }
     }
@@ -2165,6 +2165,6 @@ PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str set
     }
     PrintResult res = PrintFile2(engine, printerName, displayErrors, settings);
     SafeEngineRelease(&engine);
-    logfa("PrintFile: finished ok\n");
+    logf("PrintFile: finished ok\n");
     return res;
 }

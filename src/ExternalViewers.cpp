@@ -418,7 +418,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     }
     ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmdId(cmdId);
     if (!ev || !ev->exeFullPath) {
-        // logfa("CanViewWithKnownExternalViewer cmd: %d, !ev || ev->exeFullPath == nullptr\n", cmd);
+        // logf("CanViewWithKnownExternalViewer cmd: %d, !ev || ev->exeFullPath == nullptr\n", cmd);
         return false;
     }
     // must match file extension
@@ -426,7 +426,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     if (!filterMatchesEverything(ev->exts)) {
         TempStr ext = path::GetExtTemp(tab->filePath);
         if (!str::ContainsI(ev->exts, ext)) {
-            // logfa("CanViewWithKnownExternalViewer cmd: %d, !pos\n", cmd);
+            // logf("CanViewWithKnownExternalViewer cmd: %d, !pos\n", cmd);
             return false;
         }
     }
@@ -434,8 +434,8 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     if (engineKind != nullptr) {
         if (ev->engineKind != nullptr) {
             if (ev->engineKind != engineKind) {
-                logfa("CanViewWithKnownExternalViewer cmd: %d, ev->engineKind '%s' != engineKind '%s'\n", cmdId,
-                      Str(ev->engineKind), Str(engineKind));
+                logf("CanViewWithKnownExternalViewer cmd: %d, ev->engineKind '%s' != engineKind '%s'\n", cmdId,
+                     Str(ev->engineKind), Str(engineKind));
                 return false;
             }
         }
@@ -560,7 +560,7 @@ static TempStr GetDocumentPathQuoted(WindowTab* tab) {
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     bool canView = CanViewWithKnownExternalViewer(tab, cmdId);
     if (!canView) {
-        logfa("ViewWithKnownExternalViewer cmd: %d\n", cmdId);
+        logf("ViewWithKnownExternalViewer cmd: %d\n", cmdId);
         // with command palette can send un-enforcable command so not ReportIf
         ReportDebugIf(!canView);
         return false;

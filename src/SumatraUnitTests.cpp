@@ -187,7 +187,7 @@ static void hexstrTest() {
     utassert(str::Eq(s, StrL("010221ff0012")));
     bool ok = str::HexToMem(s, Str((char*)buf2, dimofi(buf2)));
     utassert(ok);
-    utassert(memeq(buf, buf2, dimofi(buf)));
+    utassert(MemEq(buf, buf2, dimofi(buf)));
 
     FILETIME ft1{123, 456}, ft2;
     s = str::MemToHexTemp(Str((const char*)&ft1, sizeofi(ft1)));

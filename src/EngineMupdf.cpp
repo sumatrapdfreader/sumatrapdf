@@ -1752,7 +1752,7 @@ static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
             }
             auto r2 = els[j]->GetRect();
             if (RectFullyContains(r1, r2)) {
-                // logfa("el %d fully obscures %d\n", i, j);
+                // logf("el %d fully obscures %d\n", i, j);
                 els.RemoveAtFast(i);
                 return true;
             }
@@ -1823,15 +1823,6 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
         fz_rect ir = img->rect;
         if (IsPointInRect(ir, p)) {
             res.Append(img->imageElement);
-        }
-    }
-
-    if (false) {
-        int i = 0;
-        for (auto&& el : res) {
-            Rect r = el->GetRect().Round();
-            logfa("el %d: pos: %d-%d, size: %d-%d, kind: %s\n", (int)i, r.x, r.y, r.dx, r.dy, Str(el->GetKind()));
-            i++;
         }
     }
     return PickBestElement(res);
@@ -2358,7 +2349,7 @@ static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        logfa("PdfLoadAttachment() failed\n");
+        logf("PdfLoadAttachment() failed\n");
     }
     return res;
 }
@@ -2382,7 +2373,7 @@ static Str PdfLoadAnnotationAttachment(fz_context* ctx, pdf_document* doc, int o
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        logfa("PdfLoadAnnotationAttachment(objNum=%d) failed\n", objNum);
+        logf("PdfLoadAnnotationAttachment(objNum=%d) failed\n", objNum);
     }
     return res;
 }
@@ -2430,7 +2421,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, Str pa
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        logfa("PdfLoadAttachments() failed for '%s'\n", path);
+        logf("PdfLoadAttachments() failed for '%s'\n", path);
     }
     return root.next;
 }
@@ -3928,7 +3919,7 @@ bool EngineMupdf::FinishLoading() {
             mbox = {};
         }
         if (fz_is_empty_rect(mbox)) {
-            logfa("cannot find page size for page %d", pageNo);
+            logf("cannot find page size for page %d", pageNo);
             mbox.x0 = 0;
             mbox.y0 = 0;
             mbox.x1 = 612;
@@ -3948,7 +3939,7 @@ bool EngineMupdf::FinishLoading() {
         // this information is not critical and checking the
         // error might prevent loading some pdfs that would
         // otherwise get displayed
-        logfa("Couldn't load outline for '%s'\n", FilePath());
+        logf("Couldn't load outline for '%s'\n", FilePath());
     }
 
     attachments = PdfLoadAttachments(ctx, pdfdoc, FilePath());
@@ -5467,11 +5458,11 @@ void EngineMupdf::RunCadDetection() {
     cadHairlineVector = res.hairlineVector;
     cadDetectDone = true;
     if (cadDetectEnable) {
-        logfa("CAD enhance detect: score=%d reason=%s raster=%d hairline=%d\n", cadDetectScore,
-              Str(CadEnhanceReasonName(res.reason)), (int)cadRasterDominant, (int)cadHairlineVector);
+        logf("CAD enhance detect: score=%d reason=%s raster=%d hairline=%d\n", cadDetectScore,
+             Str(CadEnhanceReasonName(res.reason)), (int)cadRasterDominant, (int)cadHairlineVector);
     } else if (cadDetectScore >= 30) {
-        logfa("CAD enhance not enabled: score=%d hairline=%d (auto threshold 60, or metadata+45)\n", cadDetectScore,
-              (int)cadHairlineVector);
+        logf("CAD enhance not enabled: score=%d hairline=%d (auto threshold 60, or metadata+45)\n", cadDetectScore,
+             (int)cadHairlineVector);
     }
 }
 
@@ -5749,7 +5740,7 @@ static void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        logfa("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
+        logf("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
     }
     if (pageNo < 0) {
         TempStr localPath;

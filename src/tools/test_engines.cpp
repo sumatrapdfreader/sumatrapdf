@@ -27,10 +27,6 @@ void log(Str s) {
     fwrite(s.s, 1, (size_t)s.len, stderr);
 }
 
-void loga(Str s) {
-    log(s);
-}
-
 struct EBookUI;
 EBookUI* GetEBookUI() {
     return nullptr;

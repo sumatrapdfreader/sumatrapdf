@@ -617,7 +617,7 @@ bool MobiDoc::ParseHeader() {
 }
 
 bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
-    if (dataLen < 12 || !memeq(data, "EXTH", 4)) {
+    if (dataLen < 12 || !MemEq(data, "EXTH", 4)) {
         return false;
     }
 

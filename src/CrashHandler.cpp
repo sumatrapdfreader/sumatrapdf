@@ -28,9 +28,8 @@
 #include "AppSettings.h"
 #include "SumatraLog.h"
 
-// logf()/logfa() are now macros that format with fmt() and route through
-// log()/loga(), so they keep logging (to at least the debugger) even when
-// gReducedLogging is set.
+// logf() is a template that formats with fmt() and routes through log(), so it
+// keeps logging (to at least the debugger) even when gReducedLogging is set.
 
 #define kCrashHandlerServer "www.sumatrapdfreader.org"
 #define kCrashHandlerServerPort 443
@@ -507,9 +506,9 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     // in release builds ReportIf()/ReportIfFast() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
-        logfa("_uploadDebugReport: %s %s\n", condStr, fileLine);
+        logf("_uploadDebugReport: %s %s\n", condStr, fileLine);
     } else {
-        loga("_uploadDebugReport\n");
+        log("_uploadDebugReport\n");
     }
 
     bool shouldUpload = true;
@@ -528,18 +527,18 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         InitializeDbgHelp(false);
         auto s = BuildLocalCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
         if (len(s) == 0) {
-            loga("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
+            log("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
             return;
         }
         Str d = s;
         SaveCrashInfo(d);
         WriteCrashInfoToStdErr(d);
-        loga(s);
-        loga("_uploadDebugReport() finished local-only\n");
+        log(s);
+        log("_uploadDebugReport() finished local-only\n");
         if (gForTesting && !isCrash && !IsDebuggerPresent()) {
             // automated tests must fail on debug reports (crashes already
             // kill the process with a non-zero code on their own)
-            loga("_uploadDebugReport(): -for-testing, terminating with exit code 105\n");
+            log("_uploadDebugReport(): -for-testing, terminating with exit code 105\n");
             ::TerminateProcess(GetCurrentProcess(), kDebugReportTestExitCode);
         }
         return;
@@ -552,7 +551,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
             InitializeDbgHelp(false);
             auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
             if (len(s) == 0) {
-                loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
+                log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
                 return;
             }
             Str d = s;
@@ -585,8 +584,8 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         return;
     }
 
-    logfa("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolsDir: '%s'\n", (int)isCrash,
-          (int)captureCallstack, gSymbolsDir);
+    logf("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolsDir: '%s'\n", (int)isCrash,
+         (int)captureCallstack, gSymbolsDir);
 
     if (captureCallstack && downloadSymbols) {
         // we proceed even if we fail to download symbols
@@ -595,7 +594,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
 
     auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
     if (len(s) == 0) {
-        loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
+        log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
     Str d = s;
@@ -603,8 +602,8 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
 
     UploadCrashReport(d);
     // gCrashHandlerArena->Free((const void*)d.data());
-    loga(s);
-    loga("_uploadDebugReport() finished\n");
+    log(s);
+    log("_uploadDebugReport() finished\n");
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {

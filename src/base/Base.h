@@ -400,26 +400,12 @@ inline void ReportDebugIfNoOp(bool) {}
 #define ReportDebugIf(cond) ReportDebugIfNoOp(!!(cond))
 #endif
 
-// ugly hack: logf() is our logging macro so we must provide a way to call logf() from math library
-inline float math_logf(float f) {
-    return logf(f);
-}
-
-/* Logging macros are defined here but must be implemented by the app because different apps have different logging
+/* Logging is declared here but must be implemented by the app because different apps have different logging
  * needs. */
 void log(Str s);
-void loga(Str s); // log always
 
-#define logf(...)                     \
-    do {                              \
-        Str s__ = ::fmt(__VA_ARGS__); \
-        ::log(s__);                   \
-    } while (0)
-#define logfa(...)                    \
-    do {                              \
-        Str s__ = ::fmt(__VA_ARGS__); \
-        ::loga(s__);                  \
-    } while (0)
+// logf() is defined at the end of this file, after
+// base/StrFormatParse.h brings in str::FormatTemp()
 
 void* AllocZero(int count, int size);
 
@@ -495,8 +481,7 @@ inline bool mulSafe(T* valInOut, T n) {
     return true;
 }
 
-void* memdup(const void* data, int n, int extraBytes = 0);
-bool memeq(const void* s1, const void* s2, int n);
+bool MemEq(const void* s1, const void* s2, int n);
 
 int RoundToPowerOf2(int size);
 u32 MurmurHash2(const void* key, int n);
@@ -655,15 +640,15 @@ class ExitScopeHelp {
 using func0Ptr = void (*)(void*);
 using funcVoidPtr = void (*)();
 
-// Func1 keeps a flag in userData's lowest bit, so every value stored there
-// has to be even - including this sentinel, which is why it is ~1 and not -1
-#define kFuncNoArg ((void*)~(uintptr_t)1)
-
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
 struct Func0 {
+    // Func1 keeps a flag in userData's lowest bit, so every value stored there
+    // has to be even - including this sentinel, which is why it is ~1 and not -1
+    static constexpr uintptr_t kFuncNoArg = ~(uintptr_t)1;
+
     void* fn = nullptr;
-    void* userData = nullptr;
+    uintptr_t userData = 0;
 
     Func0() = default;
     // copy constructor
@@ -681,7 +666,6 @@ struct Func0 {
     }
     ~Func0() = default;
 
-    bool IsEmpty() const { return fn == nullptr; }
     bool IsValid() const { return fn != nullptr; }
     void Call() const {
         if (!fn) {
@@ -693,7 +677,7 @@ struct Func0 {
             return;
         }
         auto func = (func0Ptr)fn;
-        func(userData);
+        func((void*)userData);
     }
 };
 Func0 MkFunc0Void(funcVoidPtr fn);
@@ -702,7 +686,7 @@ template <typename T>
 Func0 MkFunc0(void (*fn)(T*), T* d) {
     auto res = Func0{};
     res.fn = (void*)fn;
-    res.userData = (void*)d;
+    res.userData = (uintptr_t)d;
     return res;
 }
 
@@ -715,7 +699,7 @@ template <typename T, void (T::*Method)()>
 Func0 MkMethod0(T* obj) {
     auto res = Func0{};
     res.fn = (void*)&MethodTrampoline<T, Method>;
-    res.userData = (void*)obj;
+    res.userData = (uintptr_t)obj;
     return res;
 }
 
@@ -726,6 +710,7 @@ struct Func1 {
     // least 2-byte aligned (and kFuncNoArg is even), so the bit is free and the
     // struct stays two words
     static constexpr uintptr_t kDropsArgBit = 1;
+    static constexpr uintptr_t kFuncNoArg = Func0::kFuncNoArg;
 
     void (*fn)(void*, T) = nullptr;
     uintptr_t userData = 0;
@@ -734,7 +719,7 @@ struct Func1 {
     // a Func0 is a Func1 that doesn't look at its argument
     Func1(const Func0& that) {
         this->fn = (void (*)(void*, T))that.fn;
-        this->SetData(that.userData, true);
+        this->SetData((void*)that.userData, true);
     }
     // copy constructor
     Func1(const Func1& that) {
@@ -763,14 +748,14 @@ struct Func1 {
         if (!fn) {
             return;
         }
-        void* d = (void*)(userData & ~kDropsArgBit);
+        uintptr_t d = userData & ~kDropsArgBit;
         if (userData & kDropsArgBit) {
             if (d == kFuncNoArg) {
                 auto func = (funcVoidPtr)fn;
                 func();
             } else {
                 auto func = (func0Ptr)fn;
-                func(d);
+                func((void*)d);
             }
             return;
         }
@@ -780,7 +765,7 @@ struct Func1 {
             func(arg);
             return;
         }
-        fn(d, arg);
+        fn((void*)d, arg);
     }
 };
 
@@ -812,7 +797,7 @@ Func1<T2> MkFunc1Void(void (*fn)(T2)) {
     auto res = Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res.fn = (fptr)fn;
-    res.SetData(kFuncNoArg, false);
+    res.SetData((void*)Func1<T2>::kFuncNoArg, false);
     return res;
 }
 
@@ -845,6 +830,14 @@ extern AtomicInt gAllowAllocFailure;
 #include "base/Strconv.h"
 #include "base/Scoped.h"
 #include "base/Color.h"
+
+// logf() formats with fmt() and logs. A template rather than a macro so it
+// merely overloads the math library's logf(float) instead of mangling every
+// use of it
+template <typename... TArgs>
+void logf(const char* s, const TArgs&... args) {
+    ::log(str::FormatTemp(s, args...));
+}
 
 // Windows/MSVC string APIs: use str::/wstr:: BufSet, EqI, CmpI instead.
 #ifdef lstrcpy

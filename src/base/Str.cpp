@@ -355,7 +355,7 @@ bool Eq(Str s1, Str s2) {
     if (str::IsNull(s1) || str::IsNull(s2)) {
         return false;
     }
-    return memeq(s1.s, s2.s, len1);
+    return MemEq(s1.s, s2.s, len1);
 }
 
 // return true if s1 == s2, case insensitive
@@ -462,7 +462,7 @@ bool EqN(Str s1, Str s2, int n) {
     if (s1.len < n || s2.len < n) {
         return false;
     }
-    return memeq(s1.s, s2.s, n);
+    return MemEq(s1.s, s2.s, n);
 }
 
 bool EqNI(Str s1, Str s2, int n) {
@@ -782,7 +782,7 @@ int IndexOf(Str buf, Str toFind) {
     char c = toFind.s[0];
     int end = buf.len - toFindLen;
     for (int i = 0; i <= end; i++) {
-        if (buf.s[i] == c && memeq(buf.s + i, toFind.s, toFindLen)) {
+        if (buf.s[i] == c && MemEq(buf.s + i, toFind.s, toFindLen)) {
             return i;
         }
     }
@@ -2661,7 +2661,7 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
         return s;
     }
     char* pos = s.s + idx;
-    if (!memeq(pos, toReplace.s, n)) {
+    if (!MemEq(pos, toReplace.s, n)) {
         toReplace = str::DupTemp(Str(pos, n));
     }
     return str::ReplaceTemp(s, toReplace, replaceWith);

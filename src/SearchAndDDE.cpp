@@ -2759,7 +2759,7 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     }
     MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
-        logfa("HandleCmdCommand: not executing DDE because MainWindow for hwnd 0x%p not found\n", hwnd);
+        logf("HandleCmdCommand: not executing DDE because MainWindow for hwnd 0x%p not found\n", hwnd);
         return {};
     }
 
@@ -2772,7 +2772,7 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
         }
     }
 
-    logfa("HandleCmdCommand: sending %d (%s) command\n", idToSend, cmdContent);
+    logf("HandleCmdCommand: sending %d (%s) command\n", idToSend, cmdContent);
     SendMessageW(win->hwndFrame, WM_COMMAND, idToSend, 0);
     *ack = true;
     return next;
