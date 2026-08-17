@@ -1,15 +1,20 @@
-// Test for issue #5844: an image with transparency renders black.
+// Test for issue #5844: transparency in an image has to show the document
+// background, not a backdrop baked into the page.
 //
-// EngineImages has three render paths and they disagreed about what is behind a
-// transparent pixel: the GDI+ scaler clears to white and the nearest-neighbor
-// fallback fills the pixmap white, but the mupdf fast path (unrotated, no
-// tiling - the common case) handed the alpha channel back untouched, so the
-// canvas drew the transparent parts black. Rotating the image switched to the
-// fallback path and the very same file turned white.
+// EngineImages has three render paths and they used to disagree about what is
+// behind a transparent pixel: the GDI+ scaler cleared to white and the
+// nearest-neighbor fallback filled the pixmap white, but the mupdf fast path
+// (unrotated, no tiling - the common case) handed the alpha channel back
+// untouched, so the canvas drew the transparent parts black. Rotating the image
+// switched paths and the very same file changed colour.
+//
+// All three now keep the alpha and the canvas composites the page over the
+// document background, so transparency shows whatever is behind the page -
+// black by default for images, the user's colour, or the checkered pattern.
 //
 // The test opens a PNG that is red on the left and fully transparent on the
-// right and checks that the transparent half is white - both as opened (mupdf
-// path) and after rotating (fallback path).
+// right and checks that the transparent half matches the canvas background -
+// both as opened (mupdf path) and after rotating (fallback path).
 
 import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
@@ -125,8 +130,34 @@ function fmt(c: Color): string {
   return `rgb(${c.r.toFixed(0)},${c.g.toFixed(0)},${c.b.toFixed(0)})`;
 }
 
-function isWhite(c: Color): boolean {
-  return c.b > 200 && c.g > 200 && c.r > 200;
+// average colour of a block at a fraction of the whole canvas, for sampling the
+// background outside the page
+function canvasColorAt(canvas: number, fx: number, fy: number): Color {
+  const cap = captureWindowPixels(canvas);
+  if (!cap) {
+    throw new Error("issue-5844: could not capture the canvas");
+  }
+  const { w, h, data } = cap;
+  const cx = Math.round(w * fx);
+  const cy = Math.round(h * fy);
+  let b = 0;
+  let g = 0;
+  let r = 0;
+  let n = 0;
+  for (let y = cy - 3; y <= cy + 3; y++) {
+    for (let x = cx - 3; x <= cx + 3; x++) {
+      const i = (y * w + x) * 4;
+      b += data[i]!;
+      g += data[i + 1]!;
+      r += data[i + 2]!;
+      n++;
+    }
+  }
+  return { b: b / n, g: g / n, r: r / n };
+}
+
+function sameColor(a: Color, b: Color): boolean {
+  return Math.abs(a.r - b.r) < 24 && Math.abs(a.g - b.g) < 24 && Math.abs(a.b - b.b) < 24;
 }
 
 function isRed(c: Color): boolean {
@@ -146,21 +177,25 @@ export async function testit(): Promise<void> {
       throw new Error("issue-5844: could not find the canvas window");
     }
 
+    // the canvas background, sampled well outside the page
+    const bg = canvasColorAt(canvas, 0.02, 0.02);
+
     // as opened: mupdf fast path (no rotation, whole page in one bitmap)
     const opaque = pageColorAt(canvas, 0.25, 0.5);
     const transparent = pageColorAt(canvas, 0.75, 0.5);
     if (!isRed(opaque)) {
       throw new Error(`issue-5844: the opaque half of the png isn't red: ${fmt(opaque)}`);
     }
-    if (!isWhite(transparent)) {
+    if (!sameColor(transparent, bg)) {
       throw new Error(
-        `issue-5844: the transparent half of the png rendered ${fmt(transparent)}, want white: ` +
-          `the mupdf render path kept the alpha channel instead of compositing onto white`,
+        `issue-5844: the transparent half of the png rendered ${fmt(transparent)}, want the ` +
+          `document background ${fmt(bg)}: the page was drawn with a backdrop baked in ` +
+          `instead of being composited over the background`,
       );
     }
 
-    // rotated: the fallback path, which always composited onto white. Rotating
-    // right puts the transparent half at the bottom.
+    // rotated: the nearest-neighbor fallback path. Rotating right puts the
+    // transparent half at the bottom. The two paths have to agree.
     sendCommandSync(frame, cmdId("CmdRotateRight"));
     await client.waitForRenderIdle();
     const opaqueRot = pageColorAt(canvas, 0.5, 0.25);
@@ -168,10 +203,16 @@ export async function testit(): Promise<void> {
     if (!isRed(opaqueRot)) {
       throw new Error(`issue-5844: after rotating, the opaque half isn't red: ${fmt(opaqueRot)}`);
     }
-    if (!isWhite(transparentRot)) {
-      throw new Error(`issue-5844: after rotating, the transparent half rendered ${fmt(transparentRot)}, want white`);
+    if (!sameColor(transparentRot, bg)) {
+      throw new Error(
+        `issue-5844: after rotating, the transparent half rendered ${fmt(transparentRot)}, ` +
+          `want the document background ${fmt(bg)}`,
+      );
     }
-    console.log(`  transparent png is white both ways (${fmt(transparent)} / ${fmt(transparentRot)}) ✓`);
+    console.log(
+      `  transparent png shows the background ${fmt(bg)} both ways ` +
+        `(${fmt(transparent)} / ${fmt(transparentRot)}) ✓`,
+    );
   } finally {
     client.close();
     await killAndWait(proc);

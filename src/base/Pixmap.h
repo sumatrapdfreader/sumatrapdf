@@ -41,6 +41,11 @@ struct Pixmap {
     int stride = 0; // bytes per row; top-down (row y starts at data + y*stride); multiple of 4
     PixmapFormat format = PixmapFormat::BGRA8;
     bool premultiplied = false; // alpha premultiplied into RGB
+    // the alpha channel is meaningful, so drawing has to composite this pixmap
+    // over whatever is already on the target instead of doing a plain SRCCOPY
+    // (which paints the transparent parts black). Renderers that produce an
+    // opaque result leave this false so the common case stays a straight blit.
+    bool hasAlpha = false;
     float xres = 96.0f;
     float yres = 96.0f;
     u8* data = nullptr; // pixel buffer; owned by malloc, or by hbmp when DIB-section-backed
@@ -147,6 +152,7 @@ inline Pixmap* ClonePixmap(const Pixmap* src) {
     }
     p->xres = src->xres;
     p->yres = src->yres;
+    p->hasAlpha = src->hasAlpha;
     memcpy(p->data, src->data, (size_t)src->stride * (size_t)src->height);
     return p;
 }

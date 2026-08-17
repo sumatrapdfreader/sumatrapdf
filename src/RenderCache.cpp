@@ -1098,6 +1098,9 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         EngineBase* engine = req.dm->GetEngine();
 
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
+        // the canvas paints the document background before drawing the page,
+        // so a page with transparency composites over it (#5844)
+        args.keepAlpha = true;
         DarkModeProfile darkProfile;
         BuildViewDarkModeProfile(engine, &darkProfile);
         if (darkProfile.mode != PageColorMode::Normal) {
@@ -1275,6 +1278,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
+        args.keepAlpha = true; // see the other RenderPageArgs above (#5844)
         Pixmap* bmp = dm->GetEngine()->RenderPage(args);
         bool success = bmp && BlitPixmap(bmp, hdc, bounds);
         FreePixmap(bmp);

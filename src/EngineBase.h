@@ -427,6 +427,11 @@ struct RenderPageArgs {
     /* if nullptr: defaults to the page's mediabox */
     RectF* pageRect = nullptr;
     RenderTarget target = RenderTarget::View;
+    // the caller paints a background first and composites the page over it, so
+    // a page with transparency should keep its alpha instead of being flattened
+    // onto white. Only the canvas does that; print and export need an opaque
+    // page, and so does anything that blits the result with SRCCOPY (#5844)
+    bool keepAlpha = false;
     AbortCookie** cookie_out = nullptr;
     // dark/recolor rendering profile for View renders (see PdfDarkMode.h);
     // owned by the caller, only valid for the duration of RenderPage()
