@@ -144,7 +144,7 @@ Instance methods
 
 		var sText = page.toStructuredText("preserve-whitespace")
 
-.. method:: Page.prototype.search(needle, maxHits)
+.. method:: Page.prototype.search(needle, options)
 
 	Search the page text for all instances of the ``needle`` value,
 	and return an array of search hits.
@@ -153,7 +153,7 @@ Instance methods
 	to a character in the search hit.
 
 	:param string needle: The text to search for.
-	:param number options: Optional options for the search. A logical or of options such as `StructuredText.SEARCH_EXACT`.
+	:param string options: See :doc:`/reference/common/search-options`.
 
 	:returns: Array of Array of `Quad`
 

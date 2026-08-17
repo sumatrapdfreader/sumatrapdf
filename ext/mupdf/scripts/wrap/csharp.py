@@ -1,16 +1,18 @@
 '''
 Things for generating C#-specific output.
 '''
+import textwrap
+import os
+
+import pipcl
+
+import jlib
+
 from . import cpp
 from . import parse
 from . import rename
 from . import state
 from . import util
-
-import jlib
-
-import textwrap
-import os
 
 
 def make_outparam_helper_csharp(
@@ -316,8 +318,7 @@ def csharp_settings(build_dirs):
     # which might be because of mixing gcc and clang?
     #
     if state.state_.windows:
-        import wdev
-        vs = wdev.WindowsVS()
+        vs = pipcl.wdev.windows_vs()
         jlib.log('{vs.description_ml()=}')
         csc = vs.csc
         jlib.log('{csc=}')

@@ -10,7 +10,7 @@ SumatraPDF opts in. The bytes are decoded through the /FFilter and
 /DecodeParms).
 ---
 diff --git a/include/mupdf/pdf/document.h b/include/mupdf/pdf/document.h
-index 981e84a..c930474 100644
+index 4df07ae..e368ccd 100644
 --- a/include/mupdf/pdf/document.h
 +++ b/include/mupdf/pdf/document.h
 @@ -38,6 +38,13 @@ typedef struct pdf_annot pdf_annot;

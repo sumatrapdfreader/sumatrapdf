@@ -634,7 +634,27 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 
 		fz_try(ctx)
 		{
-			pixmap = fz_clone_pixmap(ctx, original);
+			enum fz_colorspace_type type = fz_colorspace_type(ctx, original ? original->colorspace : NULL);
+retry_with_base:
+			switch (type)
+			{
+				case FZ_COLORSPACE_NONE:
+				case FZ_COLORSPACE_RGB:
+				case FZ_COLORSPACE_GRAY:
+				case FZ_COLORSPACE_CMYK:
+				case FZ_COLORSPACE_LAB:
+					pixmap = fz_clone_pixmap(ctx, original);
+					break;
+				case FZ_COLORSPACE_INDEXED:
+					type = original->colorspace->u.indexed.base ? original->colorspace->u.indexed.base->type : FZ_COLORSPACE_NONE;
+					goto retry_with_base;
+				case FZ_COLORSPACE_SEPARATION:
+					pixmap = fz_convert_pixmap(ctx, original, fz_device_cmyk(ctx), NULL, NULL, fz_default_color_params, 1);
+					break;
+				default:
+					pixmap = fz_convert_pixmap(ctx, original, fz_device_rgb(ctx), NULL, NULL, fz_default_color_params, 1);
+					break;
+			}
 			if (imagemask)
 				fz_invert_pixmap_alpha(ctx, pixmap);
 		}
@@ -1214,14 +1234,14 @@ static int clip_culler(fz_context *ctx, void *opaque, fz_rect bbox, fz_cull_type
 	case FZ_CULL_GLYPH:
 	case FZ_CULL_IMAGE:
 	case FZ_CULL_SHADING:
-		return (fz_is_empty_rect(fz_intersect_rect(bbox, hc->clip)));
+		return fz_is_empty_rect(fz_intersect_rect(bbox, hc->clip));
 	default:
 		return 0;
 	}
 }
 
 static
-void init_clip_filter(fz_context *ctx, struct clip_filter_state *hc, pdf_page *page, fz_rect *clip)
+void init_clip_filter(fz_context *ctx, struct clip_filter_state *hc, pdf_page *page, fz_rect clip)
 {
 	memset(&hc->filter_opts, 0, sizeof hc->filter_opts);
 	memset(&hc->sanitize_opts, 0, sizeof hc->sanitize_opts);
@@ -1231,7 +1251,7 @@ void init_clip_filter(fz_context *ctx, struct clip_filter_state *hc, pdf_page *p
 	hc->filter_opts.ascii = 0;
 	hc->filter_opts.opaque = hc;
 	hc->filter_opts.filters = hc->filter_list;
-	hc->clip = *clip;
+	hc->clip = clip;
 
 	hc->sanitize_opts.opaque = hc;
 	hc->sanitize_opts.culler = clip_culler;
@@ -1292,15 +1312,20 @@ restart:
 }
 
 void
-pdf_clip_page(fz_context *ctx, pdf_page *page, fz_rect *clip)
+pdf_clip_page(fz_context *ctx, pdf_page *page, fz_rect clip)
 {
 	pdf_document *doc;
 	struct clip_filter_state hc;
+	fz_matrix page_ctm, inv_page_ctm;
 
 	if (page == NULL)
 		return;
 
 	doc = page->doc;
+
+	pdf_page_transform(ctx, page, NULL, &page_ctm);
+	inv_page_ctm = fz_invert_matrix(page_ctm);
+	clip = fz_transform_rect(clip, inv_page_ctm);
 
 	init_clip_filter(ctx, &hc, page, clip);
 

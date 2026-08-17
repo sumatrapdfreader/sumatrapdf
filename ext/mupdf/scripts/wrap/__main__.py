@@ -531,7 +531,7 @@ Windows builds:
     Building the DLLs:
 
         We build Windows binaries by running devenv.com directly. We search
-        for this using scripts/wdev.py.
+        for this using pipcl.wdev.
 
         Building _mupdf.pyd is tricky because it needs to be built with a
         specific Python.h and linked with a specific python.lib. This is done
@@ -912,10 +912,30 @@ import platform
 import re
 import shlex
 import shutil
+import subprocess
 import sys
 import sysconfig
 import tempfile
 import textwrap
+
+sys.path.insert(0, os.path.normpath(f'{__file__}/../..'))
+try:
+    import autovenv
+finally:
+    del sys.path[0]
+
+autovenv.enter()
+
+# Install/import pipcl. We don't pass 'pipcl' to above call to autovenv.enter()
+# because this would do `pip install pipcl`, which seems to fail if we are
+# being run via `pip install`. It looks like `pip install` deliberately does
+# not install pip in a build venv.
+#
+try:
+    import pipcl
+except ImportError:
+    subprocess.run(f'pip install --upgrade pipcl', shell=1, check=1)
+    import pipcl
 
 if platform.system() == 'Windows':
     '''
@@ -938,8 +958,6 @@ except ModuleNotFoundError:
     resource = None
 
 import jlib
-import pipcl
-import wdev
 
 from . import classes
 from . import cpp
@@ -1289,8 +1307,8 @@ def build_0(
 
     # On 32-bit Windows, libclang doesn't work. So we attempt to run 64-bit `-b
     # 0` to generate C++ code.
-    jlib.log1( '{state.state_.windows=} {build_dirs.cpu.bits=}')
     if state.state_.windows and build_dirs.cpu.bits == 32:
+        jlib.log1( '{state.state_.windows=} {build_dirs.cpu.bits=}')
         try:
             jlib.log( 'Windows 32-bit: trying dummy call of clang.cindex.Index.create()')
             state.clang.cindex.Index.create()
@@ -1405,7 +1423,7 @@ def build_so_windows(
     if isinstance(libs, str):       libs = libs,
     if isinstance(libpaths, str):   libpaths = libpaths,
     if vs is None:
-        vs = wdev.WindowsVS()
+        vs = pipcl.wdev.windows_vs()
     path_cpp_rel = os.path.relpath(path_cpp)
     path_o = f'{path_cpp}.o'
     # Compile.
@@ -1523,7 +1541,10 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
     devenv = 'devenv.com'
     if state.state_.windows:
         # Search for devenv.com in standard locations.
-        windows_vs = wdev.WindowsVS(cpu=wdev.WindowsCpu(build_dirs.cpu.name))
+        # 2026-07-10: Fixme: pipcl-12's pipcl.wdev.windows_vs() is
+        # missing <cpu> arg so we use pipcl.wdev.WindowsVS(). Change to
+        # pipcl.wdev.windows_vs() after pipcl-13 is released.
+        windows_vs = pipcl.wdev.WindowsVS(cpu=pipcl.wdev.WindowsCpu(build_dirs.cpu.name))
         devenv = windows_vs.devenv
 
     #jlib.log('{build_dirs.dir_so=}')
@@ -1905,10 +1926,9 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
 
                 if state.state_.windows:
 
-                    libdir = f'{build_dirs.dir_mupdf}/platform/win32/'
-                    mupdfcpp_lib = f'{build_dirs.dir_mupdf}/platform/win32/'
-                    if build_dirs.cpu.bits == 64:
-                        libdir += 'x64/'
+                    libdir = f'{build_dirs.dir_mupdf}/platform/{win32_infix}/'
+                    mupdfcpp_lib = f'{build_dirs.dir_mupdf}/platform/{win32_infix}/'
+                    libdir += build_dirs.cpu.windows_subdir
                     libdir += 'Debug/' if debug else 'Memento/' if memento else 'Release/'
                     libs = list()
                     libs.append(libdir + ('mupdfcpp64.lib' if build_dirs.cpu.bits == 64 else 'mupdfcpp.lib'))
@@ -1916,7 +1936,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                         libs.append(libdir + 'libmupdf.lib')
 
                     if build_python:
-                        wp = wdev.WindowsPython(build_dirs.cpu, build_dirs.python_version)
+                        wp = pipcl.wdev.WindowsPython(build_dirs.cpu, build_dirs.python_version)
                         jlib.log( '{wp=}:')
                         if 0:
                             # Show contents of include directory.
@@ -2273,7 +2293,7 @@ def python_settings(build_dirs, startdir=None):
         # python. Also, Windows appears to be able to find
         # _mupdf.pyd in same directory as mupdf.py.
         #
-        wp = wdev.WindowsPython(build_dirs.cpu, build_dirs.python_version)
+        wp = pipcl.wdev.WindowsPython(build_dirs.cpu, build_dirs.python_version)
         python_path = wp.path.replace('\\', '/')    # Allows use on Cygwin.
         command_prefix = f'"{python_path}"'
     else:
@@ -2803,7 +2823,7 @@ def main2():
                     win32_infix = _windows_vs_upgrade( vs_upgrade, build_dirs, devenv=None)
                     windows_build_type = build_dirs.windows_build_type()
                     lib = f'{build_dirs.dir_mupdf}/platform/{win32_infix}/{build_dirs.cpu.windows_subdir}{windows_build_type}/mupdfcpp{build_dirs.cpu.windows_suffix}.lib'
-                    vs = wdev.WindowsVS()
+                    vs = pipcl.wdev.windows_vs()
                     command = textwrap.dedent(f'''
                             "{vs.vcvars}"&&"{vs.cl}"
                                 /Tp{src}
@@ -2912,10 +2932,13 @@ def main2():
                 if 1:
                     # Build and run simple test.
                     out = 'test-csharp.exe'
+                    plat = ''
+                    if state.state_.windows and build_dirs.cpu.name == 'x32':
+                        plat = ' -platform:x86'
                     jlib.build(
                             (f'{build_dirs.dir_mupdf}/scripts/mupdfwrap_test.cs', mupdf_cs),
                             out,
-                            f'"{csc}"{" -platform:x86" if build_dirs.cpu.name == "x32" else ""} -out:{{OUT}} {{IN}}',
+                            f'"{csc}"{plat} -out:{{OUT}} {{IN}}',
                             )
                     if state.state_.windows:
                         out_rel = os.path.relpath( out, build_dirs.dir_so)
@@ -2933,10 +2956,12 @@ def main2():
                 if 1:
                     # Build and run test using minimal swig library to test
                     # handling of Unicode strings.
-                    swig.test_swig_csharp_unicode(x32 = build_dirs.cpu.name == 'x32')
+                    x32 = state.cpu_name() == 'x32'
+                    swig.test_swig_csharp_unicode(x32=x32)
 
             elif arg == '--test-csharp-exceptions':
-                swig.test_swig_charp_exceptions(x32 = build_dirs.cpu.name == 'x32')
+                x32 = state.cpu_name() == 'x32'
+                swig.test_swig_charp_exceptions(x32=x32)
 
             elif arg == '--test-csharp-gui':
                 csc, mono, mupdf_cs = csharp.csharp_settings(build_dirs)

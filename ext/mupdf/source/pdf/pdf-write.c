@@ -59,6 +59,7 @@ typedef struct
 	int do_preserve_metadata;
 	int do_use_objstms;
 	int compression_effort;
+	int reproducible;
 
 	int list_len;
 	int *use_list;
@@ -1659,10 +1660,13 @@ writeobjects(fz_context *ctx, pdf_document *doc, pdf_write_state *opts)
 		fz_write_string(ctx, opts->out, "%\xC2\xB5\xC2\xB6\n");
 	}
 
+	if (opts->reproducible)
+		fz_write_string(ctx, opts->out, "% Written by MuPDF\n\n");
+	else
 #ifdef CLUSTER
-	fz_write_string(ctx, opts->out, "% Written by MuPDF CLUSTER\n\n");
+		fz_write_string(ctx, opts->out, "% Written by MuPDF CLUSTER\n\n");
 #else
-	fz_write_string(ctx, opts->out, "% Written by MuPDF " FZ_VERSION "\n\n");
+		fz_write_string(ctx, opts->out, "% Written by MuPDF " FZ_VERSION "\n\n");
 #endif
 
 	for (num = 0; num < xref_len; num++)
@@ -1910,6 +1914,7 @@ static void initialise_write_state(fz_context *ctx, pdf_document *doc, const pdf
 	opts->dont_regenerate_id = in_opts->dont_regenerate_id;
 	opts->do_preserve_metadata = in_opts->do_preserve_metadata;
 	opts->do_use_objstms = in_opts->do_use_objstms;
+	opts->reproducible = in_opts->reproducible;
 
 	opts->permissions = in_opts->permissions;
 	memcpy(opts->opwd_utf8, in_opts->opwd_utf8, nelem(opts->opwd_utf8));
@@ -2005,6 +2010,7 @@ const char *fz_pdf_write_options_usage =
 	"\tuser-password=PASSWORD: password required to read document\n"
 	"\towner-password=PASSWORD: password required to edit document\n"
 	"\tregenerate-id: (default yes) regenerate document id\n"
+	"\treproducible: (default no) attempt to make document writes reproducible\n"
 	"\n";
 
 void
@@ -2067,6 +2073,7 @@ pdf_apply_write_options(fz_context *ctx, pdf_write_options *opts, fz_options *ar
 	fz_lookup_option_boolean(ctx, args, "sanitize", &opts->do_sanitize);
 	fz_lookup_option_boolean(ctx, args, "incremental", &opts->do_incremental);
 	fz_lookup_option_boolean(ctx, args, "objstms", &opts->do_use_objstms);
+	fz_lookup_option_boolean(ctx, args, "reproducible", &opts->reproducible);
 
 	fz_lookup_option_integer(ctx, args, "compression-effort", &opts->compression_effort);
 

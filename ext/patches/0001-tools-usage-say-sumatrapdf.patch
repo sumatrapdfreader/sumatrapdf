@@ -216,7 +216,7 @@ index 36444ee..fae4c86 100644
  		"\t-o -\toutput file\n"
  		"\t-e\tleave stream contents in their original form\n"
 diff --git a/source/tools/pdfsign.c b/source/tools/pdfsign.c
-index 5402b72..e10ca48 100644
+index e3e1746..0041b5a 100644
 --- a/source/tools/pdfsign.c
 +++ b/source/tools/pdfsign.c
 @@ -44,7 +44,7 @@ static int list = 1;

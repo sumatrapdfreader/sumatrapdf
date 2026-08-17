@@ -288,22 +288,14 @@ fz_new_document_writer_with_output(fz_context *ctx, fz_output *out, const char *
 		return fz_new_docx_writer_with_output(ctx, out, options);
 #endif
 
+	fz_drop_output(ctx, out);
 	fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown output document format: %s", format);
 }
 
 fz_document_writer *
 fz_new_document_writer_with_buffer(fz_context *ctx, fz_buffer *buffer, const char *format, const char *options)
 {
-	fz_document_writer *wri;
-	fz_output *out = fz_new_output_with_buffer(ctx, buffer);
-	fz_try(ctx) {
-		wri = fz_new_document_writer_with_output(ctx, out, format, options);
-	}
-	fz_catch(ctx) {
-		fz_drop_output(ctx, out);
-		fz_rethrow(ctx);
-	}
-	return wri;
+	return fz_new_document_writer_with_output(ctx, fz_new_output_with_buffer(ctx, buffer), format, options);
 }
 
 void

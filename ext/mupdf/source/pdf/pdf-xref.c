@@ -1731,7 +1731,7 @@ pdf_prime_xref_index(fz_context *ctx, pdf_document *doc)
 			for (j = start; j < end; j++)
 			{
 				char t = subsec->table[j-start].type;
-				if (t != 0 && t != 'f')
+				if (t != 0)
 					idx[j] = i;
 			}
 
@@ -4612,7 +4612,7 @@ change_found:
 			oval = pdf_dict_get(ctx, old_obj, key);
 
 			if (nval == NULL && oval != NULL)
-				changes->obj_changes[pdf_to_num(ctx, nval)] |= FIELD_CHANGE_INVALID;
+				changes->obj_changes[obj_num] |= FIELD_CHANGE_INVALID;
 		}
 		changes->obj_changes[obj_num] |= FIELD_CHANGE_VALID;
 
@@ -5204,21 +5204,16 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 	return v;
 }
 
-int pdf_validate_signature(fz_context *ctx, pdf_annot *widget)
+int pdf_validate_signature(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 {
-	pdf_document *doc;
 	int unsaved_versions, num_versions, version, i;
 	pdf_locked_fields *locked = NULL;
 	int o_xref_base;
 	int repaired = 0;
 
-	if (!widget->page)
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
-
-	doc = widget->page->doc;
 	unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
 	num_versions = pdf_count_versions(ctx, doc) + unsaved_versions;
-	version = pdf_find_version_for_obj(ctx, doc, widget->obj);
+	version = pdf_find_version_for_obj(ctx, doc, field);
 
 	if (version > num_versions-1)
 		version = num_versions-1;
@@ -5233,7 +5228,7 @@ retry_after_repair:
 
 	fz_try(ctx)
 	{
-		locked = pdf_find_locked_fields_for_sig(ctx, doc, widget->obj);
+		locked = pdf_find_locked_fields_for_sig(ctx, doc, field);
 		for (i = version-1; i >= unsaved_versions; i--)
 		{
 			doc->xref_base = i;
@@ -5264,6 +5259,14 @@ retry_after_repair:
 		pdf_maybe_throw_after_repair(ctx, doc);
 
 	return i+1-unsaved_versions;
+}
+
+int pdf_validate_signature_widget(fz_context *ctx, pdf_annot *widget)
+{
+	if (!widget->page)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
+
+	return pdf_validate_signature(ctx, widget->page->doc, widget->obj);
 }
 
 int pdf_was_pure_xfa(fz_context *ctx, pdf_document *doc)

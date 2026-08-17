@@ -8,6 +8,8 @@ import platform
 import re
 import sys
 
+import pipcl
+
 import jlib
 
 from . import parse
@@ -198,48 +200,6 @@ def abspath(path):
     return ret
 
 
-class Cpu:
-    '''
-    For Windows only. Paths and names that depend on cpu.
-
-    Members:
-        .bits
-            .
-        .name:
-            'x32' or 'x64'.
-        .windows_subdir
-            '' or 'x64/', e.g. platform/win32/x64/Release.
-        .windows_name
-            'x86' or 'x64'.
-        .windows_config
-            'x64' or 'Win32', e.g. /Build Release|x64
-        .windows_suffix
-            '64' or '', e.g. mupdfcpp64.dll
-    '''
-    def __init__(self, name=None):
-        if name is None:
-            name = cpu_name()
-        self.name = name
-        if name == 'x32':
-            self.bits = 32
-            self.windows_subdir = ''
-            self.windows_name = 'x86'
-            self.windows_config = 'Win32'
-            self.windows_suffix = ''
-        elif name == 'x64':
-            self.bits = 64
-            self.windows_subdir = 'x64/'
-            self.windows_name = 'x64'
-            self.windows_config = 'x64'
-            self.windows_suffix = '64'
-        else:
-            assert 0, f'Unrecognised cpu name: {name}'
-
-    def __str__(self):
-        return self.name
-    def __repr__(self):
-        return f'Cpu:{self.name}'
-
 def python_version():
     '''
     Returns two-digit version number of Python as a string, e.g. '3.9'.
@@ -250,11 +210,13 @@ def python_version():
 
 def cpu_name():
     '''
-    Returns 'x32' or 'x64' depending on Python build.
+    Returns `arm32`, `arm64`, `x32` or `x64` depending on Python build.
     '''
-    ret = f'x{32 if sys.maxsize == 2**31 - 1 else 64}'
-    #jlib.log(f'returning ret={ret!r}')
-    return ret
+    bits = int.bit_length(sys.maxsize+1)
+    if platform.machine().startswith('ARM'):
+        return f'arm{bits}'
+    else:
+        return f'x{bits}'
 
 def cmd_run_multiple(commands, prefix=None):
     '''
@@ -273,6 +235,8 @@ def cmd_run_multiple(commands, prefix=None):
 class BuildDirs:
     '''
     Locations of various generated files.
+
+    self.cpu: (Windows only) a pipcl.wdev.WindowsCpu instance.
     '''
     def __init__( self):
 
@@ -346,12 +310,12 @@ class BuildDirs:
             self.cpu = None
             self.python_version = None
             for flag in flags:
-                if flag in ('x32', 'x64'):
-                    self.cpu = Cpu(flag)
+                if flag in ('x32', 'x64', 'arm32', 'arm64'):
+                    self.cpu = pipcl.wdev.WindowsCpu(flag)
                 if flag.startswith('py'):
                     self.python_version = flag[2:]
             if not self.cpu:
-                self.cpu = Cpu(cpu_name())
+                self.cpu = pipcl.wdev.WindowsCpu()
                 self.dir_so += f'-{self.cpu.name}'
             if not self.python_version:
                 self.python_version = python_version()
@@ -359,7 +323,6 @@ class BuildDirs:
             #jlib.log('{self.cpu=} {self.python_version=} {dir_so=}')
         else:
             # Use Python we are running under.
-            self.cpu = Cpu(cpu_name())
             self.python_version = python_version()
 
         # Set self.Py_LIMITED_API and self.nogil.

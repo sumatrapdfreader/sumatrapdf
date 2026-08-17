@@ -16,7 +16,7 @@ Constructors
 	Create a new search looking for the specified pattern according to the given options.
 
 	:param string needle: Pattern to search for.
-	:param string options: A comma-separated string of search options, see :doc:`/reference/common/search-options`.
+	:param string options: See :doc:`/reference/common/search-options`.
 
 	.. code-block:
 

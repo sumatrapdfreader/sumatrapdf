@@ -118,6 +118,7 @@ typedef struct
 	float thickness;
 	fz_rect rect;
 	int argb;
+	fz_stext_block *blk;
 } rect_details;
 
 typedef struct
@@ -136,7 +137,7 @@ typedef struct
 	fz_stext_line *lastline;
 	int lastbidi;
 	int flags;
-	int color;
+	uint32_t color;
 	int last_was_fake_bold;
 	const fz_text *lasttext;
 	fz_stext_options opts;
@@ -189,6 +190,8 @@ const char *fz_stext_options_usage =
 	"\tsegment: attempt to segment the page\n"
 	"\ttable-hunt: hunt for tables within a (segmented) page\n"
 	"\tresolution: resolution to render at\n"
+	"Also, the following options for table-hunt, which are currently experimental and subject to change without notice:\n"
+	"\tvertically-collapse-bordered-cells: if true, consider the contents of completely bordered super-cells as being vertically collapsable\n"
 	"\n";
 
 /* Find the current actualtext, if any. Will abort if dev == NULL. */
@@ -602,8 +605,30 @@ font_equiv(fz_context *ctx, fz_font *f, fz_font *g)
 	return (memcmp(fdigest, gdigest, 16) == 0);
 }
 
+
+/* Utility to merge 2 colors.
+ *
+ * This conceptually works by blending col on top of *oldp to
+ * update *oldp.
+ */
+static void
+merge_color(uint32_t *oldp, uint32_t col)
+{
+	uint32_t old = *oldp;
+	uint32_t a = (col>>24) & 0xFF;
+	uint32_t r, g, b, mul;
+
+	mul = a + (a>>7);
+	b = FZ_BLEND(col & 0xFF, old & 0xFF, mul);
+	g = FZ_BLEND((col>>8) & 0xFF, (old>>8) & 0xFF, mul);
+	r = FZ_BLEND((col>>16) & 0xFF, (old>>16) & 0xFF, mul);
+	a = FZ_BLEND(0xFF, (old>>24) & 0xFF, mul);
+
+	*oldp = (a<<24) | (r<<16) | (g<<8) | b;
+}
+
 static int
-check_for_fake_bold(fz_context *ctx, fz_stext_block *block, fz_font *font, int c, fz_point p, float size, int flags)
+check_for_fake_bold(fz_context *ctx, fz_stext_block *block, fz_font *font, int c, fz_point p, float size, int flags, uint32_t color)
 {
 	fz_stext_line *line;
 	fz_stext_char *ch;
@@ -612,7 +637,7 @@ check_for_fake_bold(fz_context *ctx, fz_stext_block *block, fz_font *font, int c
 	{
 		if (block->type == FZ_STEXT_BLOCK_STRUCT)
 		{
-			if (block->u.s.down != NULL && check_for_fake_bold(ctx, block->u.s.down->first_block, font, c, p, size, flags))
+			if (block->u.s.down != NULL && check_for_fake_bold(ctx, block->u.s.down->first_block, font, c, p, size, flags, color))
 				return 1;
 		}
 		else if (block->type == FZ_STEXT_BLOCK_TEXT)
@@ -631,6 +656,13 @@ check_for_fake_bold(fz_context *ctx, fz_stext_block *block, fz_font *font, int c
 						{
 							/* Update this to be filled + stroked, but don't specifically mark it as fake bold. */
 							ch->flags |= flags;
+
+							/* How should we merge the colors here? A typical case might be a glyph being filled in one colour,
+							 * with a thin stroke in another color - the effective color is therefore the fill color. BUT... if
+							 * the stroke is large compared with with the font size, it might be the other way around.
+							 * We could scale the alpha on this new color based upon stroke width/font_size... but at the moment
+							 * we have no way of judging the stroke size here. So for now, we just keep the original fill
+							 * color. */
 							return 1;
 						}
 						/* Overlaying spaces is tricksy. How can that count as boldening when it doesn't mark? We only accept these
@@ -645,6 +677,8 @@ check_for_fake_bold(fz_context *ctx, fz_stext_block *block, fz_font *font, int c
 								/* OK, we can be bold. */
 								ch->flags |= FZ_STEXT_BOLD;
 							}
+							/* Keep the later color */
+							merge_color(&ch->argb, color);
 							/* Whether we have recorded this as being bold or not, still
 							 * claim we did, so we swallow the space and don't reemit it. */
 							return 1;
@@ -652,6 +686,8 @@ check_for_fake_bold(fz_context *ctx, fz_stext_block *block, fz_font *font, int c
 						else
 						{
 							ch->flags |= FZ_STEXT_BOLD;
+							/* Keep the later color */
+							merge_color(&ch->argb, color);
 							return 1;
 						}
 					}
@@ -799,7 +835,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 			if (dev->last_was_fake_bold)
 				return;
 		}
-		else if (check_for_fake_bold(ctx, page->first_block, font, c, p, size, flags))
+		else if (check_for_fake_bold(ctx, page->first_block, font, c, p, size, flags, dev->color))
 		{
 			dev->last_was_fake_bold = 1;
 			return;
@@ -815,18 +851,9 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 
 	/* We use glyph == -2 to indicate the first no-glyph char from an actualtext. The position
 	 * is valid though, so we want to advance the pen for these. */
-	if (cur_line && glyph == -1)
-	{
-		/* Don't advance pen or break lines for no-glyph characters in a cluster */
-		add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &dev->pen, &dev->pen, bidi, dev->color, 0, flags, dev->flags);
-		dev->lastbidi = bidi;
-		dev->lastchar = c;
-		dev->lastline = cur_line;
-		return;
-	}
 
-	/* Don't move pen for marking non-spacing characters */
-	if (cur_line && ucdn_get_general_category(c) == UCDN_GENERAL_CATEGORY_MN)
+	/* Don't advance pen or break lines for either no-glyph or marking non-spacing characters in a cluster */
+	if (cur_line && (glyph == -1 || ucdn_get_general_category(c) == UCDN_GENERAL_CATEGORY_MN))
 	{
 		add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &dev->pen, &dev->pen, bidi, dev->color, 0, flags, dev->flags);
 		dev->lastbidi = bidi;
@@ -978,7 +1005,8 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	}
 
 	/* Start a new block (but only at the beginning of a text object) */
-	if (new_para || !cur_block)
+	/* OR, if we have pending lazy vectors, and we are about to start a new line) */
+	if (new_para || !cur_block || (dev->lazy_vectors != NULL && (new_line || !cur_line || force_new_line)))
 	{
 		flush_lazy_vectors(ctx, page, dev);
 		cur_block = add_text_block_to_page(ctx, page, dev->id);
@@ -1919,9 +1947,11 @@ static int feq(float a,float b)
 	return a < EPSILON;
 }
 
-static void
+static int
 check_strikeout(fz_context *ctx, fz_stext_block *block, fz_point from, fz_point to, fz_point dir, float thickness)
 {
+	int style_flags = 0;
+
 	for ( ; block; block = block->next)
 	{
 		fz_stext_line *line;
@@ -1958,7 +1988,10 @@ check_strikeout(fz_context *ctx, fz_stext_block *block, fz_point from, fz_point 
 				{
 					/* Distinguish from a background fill */
 					if (thickness <= ch->size*1.5f)
+					{
 						ch->flags |= FZ_STEXT_HIGHLIGHT;
+						style_flags |= FZ_STEXT_VECTOR_IS_HIGHLIGHT;
+					}
 					continue;
 				}
 
@@ -1975,12 +2008,20 @@ check_strikeout(fz_context *ctx, fz_stext_block *block, fz_point from, fz_point 
 				dot = dx * up.x + dy * up.y;
 
 				if (dot > 0 && dot <= 0.8f * ch->font->ascender * ch->size)
+				{
 					ch->flags |= FZ_STEXT_STRIKEOUT;
+					style_flags |= FZ_STEXT_VECTOR_IS_STRIKEOUT;
+				}
 				else
+				{
 					ch->flags |= FZ_STEXT_UNDERLINE;
+					style_flags |= FZ_STEXT_VECTOR_IS_UNDERLINE;
+				}
 			}
 		}
 	}
+
+	return style_flags;
 }
 
 static void
@@ -1994,11 +2035,14 @@ check_rects_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page 
 		fz_point to = tdev->rects[i].to;
 		float thickness = tdev->rects[i].thickness;
 		fz_point dir;
+		int type;
 		dir.x = to.x - from.x;
 		dir.y = to.y - from.y;
 		dir = fz_normalize_vector(dir);
 
-		check_strikeout(ctx, page->first_block, from, to, dir, thickness);
+		type = check_strikeout(ctx, page->first_block, from, to, dir, thickness);
+		if (tdev->rects[i].blk)
+			tdev->rects[i].blk->u.v.flags |= type;
 	}
 }
 
@@ -2028,7 +2072,7 @@ fz_stext_close_device(fz_context *ctx, fz_device *dev)
 		fz_paragraph_break(ctx, page);
 
 	if (tdev->opts.flags & FZ_STEXT_TABLE_HUNT)
-		fz_table_hunt(ctx, page);
+		fz_table_hunt(ctx, page, NULL);
 }
 
 static void
@@ -2074,6 +2118,7 @@ val_is_rect(const char *val, fz_rect *rp)
 void fz_init_stext_options(fz_context *ctx, fz_stext_options *opts)
 {
 	memset(opts, 0, sizeof *opts);
+	fz_init_table_hunt_options(ctx, &opts->table_hunt_options);
 
 	opts->flags |= FZ_STEXT_CLIP;
 	opts->scale = 1;
@@ -2163,174 +2208,35 @@ fz_apply_stext_options(fz_context *ctx, fz_stext_options *opts, fz_options *stri
 	if (fz_lookup_option_float(ctx, string, "resolution", &x))
 		opts->scale = x / 96.0f; /* HTML base resolution is 96ppi */
 
+	fz_apply_table_hunt_options(ctx, &opts->table_hunt_options, string);
+
 	fz_validate_options(ctx, string, "stext");
 }
 
-typedef struct
-{
-	int fail;
-	int count;
-	fz_point corners[4];
-} is_rect_data;
-
 static void
-stash_point(is_rect_data *rd, float x, float y)
-{
-	if (rd->count > 3)
-	{
-		rd->fail = 1;
-		return;
-	}
-
-	rd->corners[rd->count].x = x;
-	rd->corners[rd->count].y = y;
-	rd->count++;
-}
-
-static void
-is_rect_moveto(fz_context *ctx, void *arg, float x, float y)
-{
-	is_rect_data *rd = arg;
-	if (rd->fail)
-		return;
-
-	if (rd->count != 0)
-	{
-		rd->fail = 1;
-		return;
-	}
-	stash_point(rd, x, y);
-}
-
-static void
-is_rect_lineto(fz_context *ctx, void *arg, float x, float y)
-{
-	is_rect_data *rd = arg;
-	if (rd->fail)
-		return;
-
-	if (rd->count == 4 && rd->corners[0].x == x && rd->corners[1].y == y)
-		return;
-
-	stash_point(rd, x, y);
-}
-
-static void
-is_rect_curveto(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2, float x3, float y3)
-{
-	is_rect_data *rd = arg;
-	rd->fail = 1;
-}
-
-static void
-is_rect_closepath(fz_context *ctx, void *arg)
-{
-	is_rect_data *rd = arg;
-	if (rd->fail)
-		return;
-	if (rd->count == 3)
-		stash_point(rd, rd->corners[0].x, rd->corners[0].y);
-	if (rd->count != 4)
-		rd->fail = 1;
-}
-
-static int
-is_path_rect(fz_context *ctx, const fz_path *path, fz_point *from, fz_point *to, float *thickness, fz_matrix ctm, fz_rect *r)
-{
-	float d01, d01x, d01y, d03, d03x, d03y, d32x, d32y;
-	is_rect_data rd = { 0 };
-	static const fz_path_walker walker =
-	{
-		is_rect_moveto, is_rect_lineto, is_rect_curveto, is_rect_closepath
-	};
-	int i;
-
-	fz_walk_path(ctx, path, &walker, &rd);
-
-	if (rd.fail)
-		return 0;
-
-	if (rd.count == 2)
-	{
-		stash_point(&rd, rd.corners[1].x, rd.corners[1].y);
-		stash_point(&rd, rd.corners[0].x, rd.corners[0].y);
-	}
-
-	for (i = 0 ; i < 4; i++)
-	{
-		fz_point p = fz_transform_point(rd.corners[i], ctm);
-
-		rd.corners[i].x = p.x;
-		rd.corners[i].y = p.y;
-	}
-
-	/* So we have a 4 cornered path. Hopefully something like:
-	 * 0---------1
-	 * |         |
-	 * 3---------2
-	 * but it might be:
-	 * 0---------3
-	 * |         |
-	 * 1---------2
-	*/
-	while (1)
-	{
-		d01x = rd.corners[1].x - rd.corners[0].x;
-		d01y = rd.corners[1].y - rd.corners[0].y;
-		d01 = d01x * d01x + d01y * d01y;
-		d03x = rd.corners[3].x - rd.corners[0].x;
-		d03y = rd.corners[3].y - rd.corners[0].y;
-		d03 = d03x * d03x + d03y * d03y;
-		if(d01 < d03)
-		{
-			/* We are the latter case. Transpose it. */
-			fz_point p = rd.corners[1];
-			rd.corners[1] = rd.corners[3];
-			rd.corners[3] = p;
-		}
-		else
-			break;
-	}
-	d32x = rd.corners[2].x - rd.corners[3].x;
-	d32y = rd.corners[2].y - rd.corners[3].y;
-
-	/* So d32x and d01x need to be the same for this to be a strikeout. */
-	if (!feq(d32x, d01x) || !feq(d32y, d01y))
-		return 0;
-
-	/* We are plausibly a rectangle. */
-	*thickness = sqrtf(d03x * d03x + d03y * d03y);
-
-	from->x = (rd.corners[0].x + rd.corners[3].x)/2;
-	from->y = (rd.corners[0].y + rd.corners[3].y)/2;
-	to->x = (rd.corners[1].x + rd.corners[2].x)/2;
-	to->y = (rd.corners[1].y + rd.corners[2].y)/2;
-
-	*r = fz_empty_rect;
-	if ((rd.corners[0].x == rd.corners[3].x && rd.corners[1].x == rd.corners[2].x &&
-		rd.corners[0].y == rd.corners[1].y && rd.corners[2].y == rd.corners[3].y) ||
-		(rd.corners[0].x == rd.corners[1].x && rd.corners[3].x == rd.corners[2].x &&
-		rd.corners[0].y == rd.corners[3].y && rd.corners[2].y == rd.corners[1].y))
-	{
-		*r = fz_include_point_in_rect(*r, rd.corners[0]);
-		*r = fz_include_point_in_rect(*r, rd.corners[2]);
-	}
-
-	return 1;
-}
-
-static void
-check_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page, const fz_path *path, fz_matrix ctm, int argb)
+check_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page, fz_rect r, int argb, fz_stext_block *block)
 {
 	float thickness;
 	fz_point from, to;
 	int i, n = tdev->rect_len;
-	fz_rect r;
+	float w = r.x1 - r.x0;
+	float h = r.y1 - r.y0;
 
-	/* Is this path a thin rectangle (possibly rotated)? If so, then we need to
-	 * consider it as being a strikeout or underline. */
-	if (!is_path_rect(ctx, path, &from, &to, &thickness, ctm, &r))
-		return;
+	/* We know the path is a rectangle, or we wouldn't be here. */
+	if (w >= h)
+	{
+		thickness = h;
+		from.x = r.x0;
+		to.x = r.x1;
+		from.y = to.y = (r.y0 + r.y1)/2;
+	}
+	else
+	{
+		thickness = w;
+		from.y = r.y0;
+		to.y = r.y1;
+		from.x = to.x = (r.x0 + r.x1)/2;
+	}
 
 	/* If we've already had a rectangle of the same colour that covers this region
 	 * then that was probably a cell background color, and this is probably a
@@ -2358,11 +2264,12 @@ check_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page,
 	tdev->rects[tdev->rect_len].thickness = thickness;
 	tdev->rects[tdev->rect_len].rect = r;
 	tdev->rects[tdev->rect_len].argb = argb;
+	tdev->rects[tdev->rect_len].blk = block;
 	tdev->rect_len++;
 }
 
-static void
-add_vector(fz_context *ctx, fz_stext_page *page, fz_stext_device *tdev, fz_rect bbox, uint32_t flags, uint32_t argb, int id, float exp)
+static fz_stext_block *
+add_vector_imp(fz_context *ctx, fz_stext_page *page, fz_stext_device *tdev, fz_rect bbox, uint32_t flags, uint32_t argb, int id, float exp)
 {
 	fz_stext_block *b;
 
@@ -2379,7 +2286,7 @@ add_vector(fz_context *ctx, fz_stext_page *page, fz_stext_device *tdev, fz_rect 
 		fz_rect r = current_clip(ctx, tdev);
 		bbox = fz_intersect_rect(bbox, r);
 		if (!fz_is_valid_rect(bbox))
-			return;
+			return NULL;
 	}
 
 	/* Can we just add this one onto the previous one? */
@@ -2404,14 +2311,14 @@ add_vector(fz_context *ctx, fz_stext_page *page, fz_stext_device *tdev, fz_rect 
 				/* Stacks vertically. */
 				b->bbox.y0 = fz_min(b->bbox.y0, bbox.y0);
 				b->bbox.y1 = fz_max(b->bbox.y1, bbox.y1);
-				return;
+				return b;
 			}
 			else if (b->bbox.y0 == bbox.y0 && b->bbox.y1 == bbox.y1 && b->bbox.x1 + fudge >= bbox.x0 && b->bbox.x0 - fudge <= bbox.x1)
 			{
 				/* Stacks horizontally. */
 				b->bbox.x0 = fz_min(b->bbox.x0, bbox.x0);
 				b->bbox.x1 = fz_max(b->bbox.x1, bbox.x1);
-				return;
+				return b;
 			}
 
 			/* So, we can't add our new vector onto the previous one. But can we merge the 2 previous ones? */
@@ -2441,14 +2348,14 @@ add_vector(fz_context *ctx, fz_stext_page *page, fz_stext_device *tdev, fz_rect 
 					/* Stacks exactly vertically. Very rarely hit. */
 					prev->bbox.y0 = fz_min(prev->bbox.y0, b->bbox.y0);
 					prev->bbox.y1 = fz_max(prev->bbox.y1, b->bbox.y1);
-					return;
+					return prev;
 				}
 				else if (prev->bbox.y0 == b->bbox.y0 && prev->bbox.y1 == b->bbox.y1 && prev->bbox.x1 + fudge >= b->bbox.x0 && prev->bbox.x0 - fudge <= b->bbox.x1)
 				{
 					/* Stacks horizontally.  Very rarely hit. */
 					prev->bbox.x0 = fz_min(prev->bbox.x0, b->bbox.x0);
 					prev->bbox.x1 = fz_max(prev->bbox.x1, b->bbox.x1);
-					return;
+					return prev;
 				}
 				if (tdev->flags & FZ_STEXT_FUZZY_VECTORS)
 				{
@@ -2513,6 +2420,8 @@ add_vector(fz_context *ctx, fz_stext_page *page, fz_stext_device *tdev, fz_rect 
 	b->bbox = bbox;
 	b->u.v.flags = flags;
 	b->u.v.argb = argb;
+
+	return b;
 }
 
 typedef struct
@@ -2524,44 +2433,62 @@ typedef struct
 	fz_stext_page *page;
 	fz_rect seg_bounds;
 	fz_rect leftovers;
-	fz_rect pending;
 	int count;
 	fz_point p[5];
 	int id;
 	float exp;
+	fz_stext_block *prev_block;
+	const fz_stroke_state *stroke;
+	fz_stext_block *rect_block;
 } split_path_data;
 
 static void
-maybe_rect(fz_context *ctx, split_path_data *sp)
+add_vector(fz_context *ctx, split_path_data *sp, fz_rect bbox, uint32_t flags)
 {
-	int rect = 0;
-	int i;
-	fz_rect leftovers;
+	fz_stext_block *b = NULL;
 
-	if (sp->count >= 3)
+	if (sp->stroke == NULL && fz_is_empty_rect(bbox))
 	{
-		/* Allow for multiple monotonic points in a horizontal or vertical line,
-		 * such as seen in borders of tables where each column or row is written
-		 * individually. (e.g. move 0 0 line 100 0 line 200 0 line 300 0) */
-		if (feq(sp->p[sp->count-1].x, sp->p[sp->count-2].x) &&
-			feq(sp->p[sp->count-1].x, sp->p[sp->count-3].x) &&
-			((sp->p[sp->count-1].y <= sp->p[sp->count-2].y && sp->p[sp->count-2].y <= sp->p[sp->count-3].y) ||
-			(sp->p[sp->count-1].y >= sp->p[sp->count-2].y && sp->p[sp->count-2].y >= sp->p[sp->count-3].y)))
+		/* If we're filling empty bounds, do nothing. */
+		return;
+	}
+	if (!fz_is_valid_rect(bbox))
+		return;
+
+	flags |= sp->flags;
+	if (sp->dev->flags & FZ_STEXT_COLLECT_VECTORS)
+	{
+		/* Try to add the vector (this may resolve to an amendement to an existing vector block),
+		 * or a new block, or even being dropped entirely if it's clipped away. */
+		b = add_vector_imp(ctx, sp->page, sp->dev, bbox, flags, sp->argb, sp->id, sp->exp);
+		if (b)
 		{
-			/*  y---->y---->y - Remove the central y */
-			sp->p[sp->count-2].y = sp->p[sp->count-1].y;
-			sp->count--;
-		}
-		else if (feq(sp->p[sp->count-1].y, sp->p[sp->count-2].y) &&
-			feq(sp->p[sp->count-1].y, sp->p[sp->count-3].y) &&
-			((sp->p[sp->count-1].x <= sp->p[sp->count-2].x && sp->p[sp->count-2].x <= sp->p[sp->count-3].x) ||
-			(sp->p[sp->count-1].x >= sp->p[sp->count-2].x && sp->p[sp->count-2].x >= sp->p[sp->count-3].x)))
-		{
-			/*  x---->x---->x - Remove the central x */
-			sp->p[sp->count-2].x = sp->p[sp->count-1].x;
-			sp->count--;
+			/* b is the block we just modified. If we have a previous block (and it's different to
+			 * b), then mark that as continuing. */
+			if (sp->prev_block && sp->prev_block != b)
+				sp->prev_block->u.v.flags |= FZ_STEXT_VECTOR_CONTINUES;
+			/* Remember b as being our previous block. */
+			sp->prev_block = b;
 		}
 	}
+
+	if ((sp->dev->flags & FZ_STEXT_COLLECT_STYLES) && (flags & FZ_STEXT_VECTOR_IS_RECTANGLE))
+		check_for_strikeout(ctx, sp->dev, sp->page, bbox, sp->argb, b);
+}
+
+/*
+	This is called whenever we finish a segment (either a new move, or a close, or
+	the end of the path). We check for the last segment (represented by sp->count, and
+	sp->p[0 to 4]) being a rectangle or not; if it is, we send it. If it isn't it goes
+	into leftovers.
+*/
+static void
+segment_finished(fz_context *ctx, split_path_data *sp)
+{
+	int rect = 0;
+	fz_rect bounds = sp->seg_bounds;
+
+	sp->seg_bounds = fz_empty_rect;
 
 	if (sp->count >= 0)
 	{
@@ -2585,27 +2512,18 @@ maybe_rect(fz_context *ctx, split_path_data *sp)
 		}
 		if (rect)
 		{
-			fz_rect bounds;
-
-			bounds.x0 = bounds.x1 = sp->p[0].x;
-			bounds.y0 = bounds.y1 = sp->p[0].y;
-			for (i = 1; i < sp->count; i++)
-				bounds = fz_include_point_in_rect(bounds, sp->p[i]);
-			if (fz_is_valid_rect(sp->pending))
-				add_vector(ctx, sp->page, sp->dev, sp->pending, sp->flags | FZ_STEXT_VECTOR_IS_RECTANGLE | FZ_STEXT_VECTOR_CONTINUES, sp->argb, sp->id, sp->exp);
-			sp->pending = bounds;
+			add_vector(ctx, sp, bounds, FZ_STEXT_VECTOR_IS_RECTANGLE);
 			return;
 		}
 	}
 
 	/* We aren't a rectangle! */
-	leftovers = sp->seg_bounds;
 
 	if (sp->dev->flags & (FZ_STEXT_CLIP_RECT | FZ_STEXT_CLIP))
-		leftovers = fz_intersect_rect(leftovers, current_clip(ctx, sp->dev));
+		bounds = fz_intersect_rect(bounds, current_clip(ctx, sp->dev));
 
-	if (fz_is_valid_rect(leftovers))
-		sp->leftovers = fz_union_rect(sp->leftovers, leftovers);
+	if (fz_is_valid_rect(bounds))
+		sp->leftovers = fz_union_rect(sp->leftovers, bounds);
 
 	/* Remember we're not a rect. */
 	sp->count = -1;
@@ -2617,7 +2535,7 @@ split_move(fz_context *ctx, void *arg, float x, float y)
 	split_path_data *sp = (split_path_data *)arg;
 	fz_point p = fz_transform_point_xy(x, y, sp->ctm);
 
-	maybe_rect(ctx, sp);
+	segment_finished(ctx, sp);
 	sp->p[0] = p;
 	sp->count = 1;
 	sp->seg_bounds.x0 = sp->seg_bounds.x1 = p.x;
@@ -2637,6 +2555,32 @@ split_line(fz_context *ctx, void *arg, float x, float y)
 		/* Check for lines to the same point. */
 		if (sp->count > 0 && feq(sp->p[sp->count-1].x, p.x) && feq(sp->p[sp->count-1].y, p.y))
 			return;
+
+		if (sp->count >= 2)
+		{
+			/* Allow for multiple monotonic points in a horizontal or vertical line,
+			 * such as seen in borders of tables where each column or row is written
+			 * individually. (e.g. move 0 0 line 100 0 line 200 0 line 300 0) */
+			if (feq(p.x, sp->p[sp->count-1].x) &&
+				feq(sp->p[sp->count-1].x, sp->p[sp->count-2].x) &&
+				((p.y <= sp->p[sp->count-1].y && sp->p[sp->count-1].y <= sp->p[sp->count-2].y) ||
+				(p.y >= sp->p[sp->count-1].y && sp->p[sp->count-1].y >= sp->p[sp->count-2].y)))
+			{
+				/*  y---->y---->y - Update the previous y */
+				sp->p[sp->count-1].y = p.y;
+				return;
+			}
+			else if (feq(p.y, sp->p[sp->count-1].y) &&
+				feq(sp->p[sp->count-1].y, sp->p[sp->count-2].y) &&
+				((p.x <= sp->p[sp->count-1].x && sp->p[sp->count-1].x <= sp->p[sp->count-2].x) ||
+				(p.x >= sp->p[sp->count-1].x && sp->p[sp->count-1].x >= sp->p[sp->count-2].x)))
+			{
+				/*  x---->x---->x - Remove the previous x */
+				sp->p[sp->count-1].x = p.x;
+				return;
+			}
+		}
+
 		/* If we're still maybe a rect, just record the point. */
 		if (sp->count < 4)
 		{
@@ -2678,7 +2622,7 @@ split_close(fz_context *ctx, void *arg)
 {
 	split_path_data *sp = (split_path_data *)arg;
 
-	maybe_rect(ctx, sp);
+	segment_finished(ctx, sp);
 	sp->count = 0;
 }
 
@@ -2692,10 +2636,9 @@ fz_path_walker split_path_rects =
 	split_close
 };
 
-static void
+static fz_stext_block *
 add_vectors_from_path(fz_context *ctx, fz_stext_page *page, fz_stext_device *tdev, const fz_path *path, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp, const fz_stroke_state *stroke, float exp)
 {
-	int have_leftovers;
 	split_path_data sp;
 	int id = tdev->id;
 	int trailing_moves_acceptable = (stroke == NULL || stroke->end_cap != FZ_LINECAP_ROUND);
@@ -2708,20 +2651,36 @@ add_vectors_from_path(fz_context *ctx, fz_stext_page *page, fz_stext_device *tde
 	sp.count = 0;
 	sp.leftovers = fz_empty_rect;
 	sp.seg_bounds = fz_empty_rect;
-	sp.pending = fz_empty_rect;
 	sp.id = id;
 	sp.exp = exp;
+	sp.prev_block = NULL;
+	sp.stroke = stroke;
 	fz_walk_path(ctx, path, &split_path_rects, &sp);
 
-	have_leftovers = fz_is_valid_rect(sp.leftovers);
+	if (trailing_moves_acceptable && sp.count == 1)
+	{
+		/* The last thing was a move, in a circumstance where it can't
+		 * make any difference. For instance:
+		 *
+		 *  0 0 100 100 re
+		 *  2000 800 m
+		 *  f
+		 *
+		 * or
+		 *
+		 *  0 0 100 100 re
+		 *  2000 800 m
+		 *  S   (when we aren't using a round endcap)
+		 *
+		 * Just drop it. */
+	}
+	else
+		segment_finished(ctx, &sp);
 
-	if (!trailing_moves_acceptable || sp.count != 1)
-		maybe_rect(ctx, &sp);
+	/* And flush any leftovers (not a rect - by construction!) */
+	add_vector(ctx, &sp, sp.leftovers, 0);
 
-	if ((!trailing_moves_acceptable || sp.count != 1) && fz_is_valid_rect(sp.pending))
-		add_vector(ctx, page, sp.dev, sp.pending, sp.flags | FZ_STEXT_VECTOR_IS_RECTANGLE | (have_leftovers ? FZ_STEXT_VECTOR_CONTINUES : 0), sp.argb, id, exp);
-	if (have_leftovers)
-		add_vector(ctx, page, sp.dev, sp.leftovers, sp.flags, sp.argb, id, exp);
+	return sp.rect_block;
 }
 
 static void
@@ -2736,10 +2695,7 @@ fz_stext_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int eve
 	if (bounds != NULL)
 		*bounds = fz_union_rect(*bounds, path_bounds);
 
-	if (tdev->flags & FZ_STEXT_COLLECT_STYLES)
-		check_for_strikeout(ctx, tdev, page, path, ctm, hexrgba_from_color(ctx, cs, color, alpha));
-
-	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
+	if (tdev->flags & (FZ_STEXT_COLLECT_VECTORS | FZ_STEXT_COLLECT_STYLES))
 		add_vectors_from_path(ctx, page, tdev, path, ctm, cs, color, alpha, cp, NULL, 0);
 }
 
@@ -2756,10 +2712,7 @@ fz_stext_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const
 	if (bounds != NULL)
 		*bounds = fz_union_rect(*bounds, path_bounds);
 
-	if (tdev->flags & FZ_STEXT_COLLECT_STYLES)
-		check_for_strikeout(ctx, tdev, page, path, ctm, hexrgba_from_color(ctx, cs, color, alpha));
-
-	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
+	if (tdev->flags & (FZ_STEXT_COLLECT_VECTORS | FZ_STEXT_COLLECT_STYLES))
 		add_vectors_from_path(ctx, page, tdev, path, ctm, cs, color, alpha, cp, ss, exp);
 }
 

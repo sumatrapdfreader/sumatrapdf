@@ -25,8 +25,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-/* #define DEBUG_WRITE_AS_PS */
-
 /* #define DEBUG_TABLE_SPLITS */
 
 /* #define DEBUG_TABLE_STRUCTURE */
@@ -1639,6 +1637,10 @@ background_hunt(fz_context *ctx, grid_walker_data *gd, fz_stext_block *block0, f
 			if (!fz_is_valid_rect(s))
 				continue;
 
+			/* Ignore highlight, strikeout or underlined blocks. */
+			if (block->u.v.flags & (FZ_STEXT_VECTOR_IS_HIGHLIGHT | FZ_STEXT_VECTOR_IS_STRIKEOUT | FZ_STEXT_VECTOR_IS_UNDERLINE))
+				continue;
+
 			/* Only rectangular && non-stroked blocks can possibly be background
 			 * fills. */
 			if ((block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE) == 0 ||
@@ -1739,6 +1741,10 @@ walk_grid_lines(fz_context *ctx, grid_walker_data *gd, fz_stext_block *block)
 			if ((block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE) == 0)
 				continue;
 
+			/* Ignore highlight, strikeout or underlined blocks. */
+			if (block->u.v.flags & (FZ_STEXT_VECTOR_IS_HIGHLIGHT | FZ_STEXT_VECTOR_IS_STRIKEOUT | FZ_STEXT_VECTOR_IS_UNDERLINE))
+				continue;
+
 			r = fz_collate_small_vector_run(&block);
 			r = fz_intersect_rect(r, gd->bounds);
 			if (!fz_is_valid_rect(r))
@@ -1783,6 +1789,10 @@ walk_grid_lines2(fz_context *ctx, grid_walker_data *gd, fz_stext_block *block)
 
 			/* Only process rectangle blocks. */
 			if ((block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE) == 0)
+				continue;
+
+			/* Ignore highlight, strikeout or underlined blocks. */
+			if (block->u.v.flags & (FZ_STEXT_VECTOR_IS_HIGHLIGHT | FZ_STEXT_VECTOR_IS_STRIKEOUT | FZ_STEXT_VECTOR_IS_UNDERLINE))
 				continue;
 
 			r = fz_collate_small_vector_run(&block);
@@ -3155,6 +3165,79 @@ transcribe_table(fz_context *ctx, grid_walker_data *gd, fz_stext_page *page, fz_
 	return table->up;
 }
 
+/* Is cell (x,y) plausibly part of a bordered cell (or 'super-cell'
+ * allowing for spanning)? */
+static int
+plausibly_bordered_spanned_cell(cells_t *cells, int x, int y)
+{
+	int minx, miny, maxx, maxy;
+
+	for (minx = x; minx >= 0; minx--)
+	{
+		cell_t *cell = get_cell(cells, minx, y);
+		if (cell->v_line)
+			break;
+	}
+	if (minx < 0)
+		return 0;
+	for (maxx = x+1; maxx < cells->w-1; maxx++)
+	{
+		cell_t *cell = get_cell(cells, maxx, y);
+		if (cell->v_line)
+			break;
+	}
+	if (maxx == cells->w)
+		return 0;
+	for (miny = y; miny >= 0; miny--)
+	{
+		cell_t *cell = get_cell(cells, x, miny);
+		if (cell->h_line)
+			break;
+	}
+	if (miny < 0)
+		return 0;
+	for (maxy = y+1; maxy < cells->h-1; maxy++)
+	{
+		cell_t *cell = get_cell(cells, x, maxy);
+		if (cell->h_line)
+			break;
+	}
+	if (maxy == cells->h)
+		return 0;
+
+	/* So we know have a plausible size for this large cell. */
+	/* Now check that borders exist everywhere we expect. */
+	for (x = minx; x < maxx; x++)
+	{
+		cell_t *cell = get_cell(cells, x, miny);
+		if (!cell->h_line)
+			return 0;
+		cell = get_cell(cells, x, maxy);
+		if (!cell->h_line)
+			return 0;
+	}
+	for (y = miny; y < maxy; y++)
+	{
+		cell_t *cell = get_cell(cells, minx, y);
+		if (!cell->v_line)
+			return 0;
+		cell = get_cell(cells, maxx, y);
+		if (!cell->v_line)
+			return 0;
+	}
+
+	/* And now nowhere we don't. */
+	for (y = miny+1; y < maxy-1; y++)
+		for (x = minx+1; x < maxx-1; x++)
+		{
+			cell_t *cell = get_cell(cells, x, y);
+			if (cell->h_line || cell->v_line)
+				return 0;
+		}
+
+	return 1;
+}
+
 static void
 merge_column(grid_walker_data *gd, int x)
 {
@@ -3191,6 +3274,22 @@ merge_columns(grid_walker_data *gd)
 	for (x = gd->cells->w-3; x >= 0; x--)
 	{
 		/* Can column x be merged with column x+1? */
+		/* A column can be merged if there is no reinforcement, the h_lines are
+		 * all the same, no v_lines and the gap is very small. */
+#define MIN_COL_DIVIDER_WIDTH 4
+		if (gd->xpos->list[x+1].max - gd->xpos->list[x+1].min <= MIN_COL_DIVIDER_WIDTH)
+		{
+			for (y = 0; y < gd->cells->h-1; y++)
+			{
+				cell_t *a = get_cell(gd->cells, x, y);
+				cell_t *b = get_cell(gd->cells, x+1, y);
+				if (!!a->h_line != !!b->h_line || b->v_line)
+					break;
+			}
+			if (y == gd->cells->h-1)
+				goto merge_column;
+		}
+
 		/* An empty column can certainly be merged if the h_lines are the same,
 		 * and there is no v_line. */
 		for (y = 0; y < gd->cells->h-1; y++)
@@ -3406,7 +3505,7 @@ merge_row(grid_walker_data *gd, int y)
 }
 
 static void
-merge_rows(grid_walker_data *gd)
+merge_rows(grid_walker_data *gd, const fz_table_hunt_options *opts)
 {
 	int x, y;
 
@@ -3434,6 +3533,19 @@ merge_rows(grid_walker_data *gd)
 		}
 		if (x == gd->cells->w-1)
 			goto merge_row;
+		if (opts != NULL && opts->vertically_collapse_bordered_cells != FZ_TABLE_HUNT_VERTICAL_COLLAPSE_NO)
+		{
+			/* If every cell in a row is plausibly bounded, and none have a horizontal
+			 * line under them, we can merge. */
+			for (x = 0; x < gd->cells->w-1; x++)
+			{
+				cell_t *b = get_cell(gd->cells, x, y+1);
+				if (!plausibly_bordered_spanned_cell(gd->cells, x, y) || b->h_line)
+					break;
+			}
+			if (x == gd->cells->w-1)
+				goto merge_row;
+		}
 		/* This requires all the pairs of cells in those 2 rows to be mergeable. */
 		for (x = 0; x < gd->cells->w-1; x++)
 		{
@@ -3639,79 +3751,6 @@ bad_region:
 	return changed;
 }
 
-/* Is cell (x,y) plausibly part of a bordered cell (or 'super-cell'
- * allowing for spanning)? */
-static int
-plausibly_bordered_spanned_cell(cells_t *cells, int x, int y)
-{
-	int minx, miny, maxx, maxy;
-
-	for (minx = x; minx >= 0; minx--)
-	{
-		cell_t *cell = get_cell(cells, minx, y);
-		if (cell->v_line)
-			break;
-	}
-	if (minx < 0)
-		return 0;
-	for (maxx = x+1; maxx < cells->w-1; maxx++)
-	{
-		cell_t *cell = get_cell(cells, maxx, y);
-		if (cell->v_line)
-			break;
-	}
-	if (maxx == cells->w)
-		return 0;
-	for (miny = y; miny >= 0; miny--)
-	{
-		cell_t *cell = get_cell(cells, x, miny);
-		if (cell->h_line)
-			break;
-	}
-	if (miny < 0)
-		return 0;
-	for (maxy = y+1; maxy < cells->h-1; maxy++)
-	{
-		cell_t *cell = get_cell(cells, x, maxy);
-		if (cell->h_line)
-			break;
-	}
-	if (maxy == cells->h)
-		return 0;
-
-	/* So we know have a plausible size for this large cell. */
-	/* Now check that borders exist everywhere we expect. */
-	for (x = minx; x < maxx; x++)
-	{
-		cell_t *cell = get_cell(cells, x, miny);
-		if (!cell->h_line)
-			return 0;
-		cell = get_cell(cells, x, maxy);
-		if (!cell->h_line)
-			return 0;
-	}
-	for (y = miny; y < maxy; y++)
-	{
-		cell_t *cell = get_cell(cells, minx, y);
-		if (!cell->v_line)
-			return 0;
-		cell = get_cell(cells, maxx, y);
-		if (!cell->v_line)
-			return 0;
-	}
-
-	/* And now nowhere we don't. */
-	for (y = miny+1; y < maxy-1; y++)
-		for (x = minx+1; x < maxx-1; x++)
-		{
-			cell_t *cell = get_cell(cells, x, y);
-			if (cell->h_line || cell->v_line)
-				return 0;
-		}
-
-	return 1;
-}
-
 /* The score for a table can be thought of as a judgement of
  * how 'awkward' a table is.
  *
@@ -3741,7 +3780,7 @@ score_table(fz_context *ctx, grid_walker_data *gd)
 			cell_t *cell = get_cell(gd->cells, x, y);
 			cell_t *right = get_cell(gd->cells, x+1, y);
 			cell_t *below = get_cell(gd->cells, x, y+1);
-			score += cell->h_crossed + cell->v_crossed;
+			score += !!cell->h_crossed + !!cell->v_crossed;
 			if (cell->full)
 			{
 				/* We have content. */
@@ -3784,7 +3823,7 @@ init_cell_regions(fz_context *ctx, cells_t *cells)
 
 
 static int
-find_table(fz_context *ctx, grid_walker_data *gd, fz_stext_block *content)
+find_table(fz_context *ctx, grid_walker_data *gd, fz_stext_block *content, const fz_table_hunt_options *opts)
 {
 	div_list xs = { 0 };
 	div_list ys = { 0 };
@@ -3874,7 +3913,7 @@ find_table(fz_context *ctx, grid_walker_data *gd, fz_stext_block *content)
 		do
 		{
 			merge_columns(gd);
-			merge_rows(gd);
+			merge_rows(gd, opts);
 		}
 		while (remove_bordered_empty_cells(gd));
 
@@ -3910,7 +3949,7 @@ find_table(fz_context *ctx, grid_walker_data *gd, fz_stext_block *content)
 }
 
 int
-fz_propose_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds, fz_stext_grid_positions **xposp, fz_stext_grid_positions **yposp)
+fz_propose_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds, fz_stext_grid_positions **xposp, fz_stext_grid_positions **yposp, const fz_table_hunt_options *opts)
 {
 	grid_walker_data gd = { 0 };
 	int ret = 0;
@@ -3924,7 +3963,7 @@ fz_propose_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bou
 
 	fz_try(ctx)
 	{
-		ret = find_table(ctx, &gd, page->first_block);
+		ret = find_table(ctx, &gd, page->first_block, opts);
 
 		*xposp = gd.xpos;
 		*yposp = gd.ypos;
@@ -4153,7 +4192,7 @@ table_size_cmp(const void *a_, const void *b_)
 
 /* Takes ownership of list, and frees before return. */
 static fz_stext_block *
-hunt_potential_tables(fz_context *ctx, fz_stext_page *page, fz_potential_table_list *list, float limit)
+hunt_potential_tables(fz_context *ctx, fz_stext_page *page, fz_potential_table_list *list, const fz_table_hunt_options *opts, float limit)
 {
 	int i, j, k, n;
 	fz_stext_block *last = NULL;
@@ -4172,7 +4211,7 @@ hunt_potential_tables(fz_context *ctx, fz_stext_page *page, fz_potential_table_l
 		/* Look for tables in all the possible positions */
 		n = list->len;
 		for (i = 0; i < n; i++)
-			list->tables[i].found = find_table(ctx, &list->tables[i].data, page->first_block);
+			list->tables[i].found = find_table(ctx, &list->tables[i].data, page->first_block, opts);
 
 		/* Cull the tables that weren't found. */
 		n = list->len;
@@ -4373,9 +4412,9 @@ hunt_potential_tables(fz_context *ctx, fz_stext_page *page, fz_potential_table_l
 }
 
 void
-fz_table_hunt(fz_context *ctx, fz_stext_page *page)
+fz_table_hunt(fz_context *ctx, fz_stext_page *page, const fz_table_hunt_options *opts)
 {
-	fz_table_hunt_within_bounds(ctx, page, fz_infinite_rect);
+	fz_table_hunt_within_bounds(ctx, page, fz_infinite_rect, opts);
 }
 
 static void
@@ -4504,7 +4543,7 @@ push_segment_areas(fz_context *ctx, fz_potential_table_list *list, fz_stext_page
 }
 
 void
-fz_table_hunt_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds)
+fz_table_hunt_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds, const fz_table_hunt_options *opts)
 {
 	fz_potential_table_list *list;
 	fz_flotilla *flot = NULL;
@@ -4546,11 +4585,11 @@ fz_table_hunt_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds
 		fz_rethrow(ctx);
 	}
 
-	hunt_potential_tables(ctx, page, list, 0.3f/* Nasty heuristic constant! */);
+	hunt_potential_tables(ctx, page, list, opts, 0.3f/* Nasty heuristic constant! */);
 }
 
 fz_stext_block *
-fz_find_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds)
+fz_find_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds, const fz_table_hunt_options *opts)
 {
 	fz_potential_table_list *list;
 
@@ -4568,7 +4607,7 @@ fz_find_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds
 		fz_rethrow(ctx);
 	}
 
-	return hunt_potential_tables(ctx, page, list, 9999999.0f);
+	return hunt_potential_tables(ctx, page, list, opts, 9999999.0f);
 }
 
 fz_stext_grid_positions *
@@ -4586,7 +4625,7 @@ fz_clone_stext_grid_positions(fz_context *ctx, fz_stext_grid_positions *src)
 }
 
 fz_stext_block *
-fz_find_table_within_grid(fz_context *ctx, fz_stext_page *page, fz_stext_grid_positions *xpos, fz_stext_grid_positions *ypos, float limit)
+fz_find_table_within_grid(fz_context *ctx, fz_stext_page *page, fz_stext_grid_positions *xpos, fz_stext_grid_positions *ypos, float limit, const fz_table_hunt_options *opts)
 {
 	fz_potential_table_list *list;
 	fz_rect bounds;
@@ -4616,5 +4655,38 @@ fz_find_table_within_grid(fz_context *ctx, fz_stext_page *page, fz_stext_grid_po
 		fz_rethrow(ctx);
 	}
 
-	return hunt_potential_tables(ctx, page, list, limit);
+	return hunt_potential_tables(ctx, page, list, opts, limit);
+}
+
+void
+fz_init_table_hunt_options(fz_context *ctx, fz_table_hunt_options *opts)
+{
+	memset(opts, 0, sizeof *opts);
+}
+
+fz_table_hunt_options *
+fz_parse_table_hunt_options(fz_context *ctx, fz_table_hunt_options *opts, const char *args)
+{
+	fz_options *options = fz_new_options(ctx, args);
+	fz_try(ctx)
+	{
+		fz_init_table_hunt_options(ctx, opts);
+		fz_apply_table_hunt_options(ctx, opts, options);
+		fz_throw_on_unused_options(ctx, options, "table hunt");
+	}
+	fz_always(ctx)
+		fz_drop_options(ctx, options);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return opts;
+}
+
+void
+fz_apply_table_hunt_options(fz_context *ctx, fz_table_hunt_options *opts, fz_options *args)
+{
+
+	fz_lookup_option_boolean(ctx, args, "vertically-collapse-bordered-cells", &opts->vertically_collapse_bordered_cells);
+
+	fz_validate_options(ctx, args, "table hunt");
 }

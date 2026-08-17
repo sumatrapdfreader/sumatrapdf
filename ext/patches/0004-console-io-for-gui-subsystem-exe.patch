@@ -168,7 +168,7 @@ index 3357e43..274991b 100644
 +	return 1;
 +}
 diff --git a/source/tools/murun.c b/source/tools/murun.c
-index d043c5f..c52afcb 100644
+index 82b90bd..e36fb25 100644
 --- a/source/tools/murun.c
 +++ b/source/tools/murun.c
 @@ -36,6 +36,9 @@
@@ -195,7 +195,7 @@ index d043c5f..c52afcb 100644
  	js_pushstring(J, line);
  }
  
-@@ -13572,7 +13571,7 @@ int murun_main(int argc, char **argv)
+@@ -13597,7 +13596,7 @@ int murun_main(int argc, char **argv)
  	} else {
  		char line[256];
  		fputs(PS1, stdout);

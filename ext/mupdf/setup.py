@@ -44,6 +44,8 @@ import re
 import subprocess
 import time
 
+import pipcl
+
 
 def log(text=''):
     for line in text.split('\n'):
@@ -101,9 +103,6 @@ def build_dir():
 @cache
 def in_sdist():
     return os.path.exists(f'{root_dir()}/PKG-INFO')
-
-sys.path.append(f'{root_dir()}/scripts')
-import pipcl
 
 
 @cache
@@ -535,7 +534,7 @@ def get_requires_for_build_wheel(config_settings=None):
     control over what packages we require.
     '''
     ret = list()
-    ret.append('setuptools')
+    ret.append('pipcl')
     if openbsd():
         #print(f'OpenBSD: libclang not available via pip; assuming `pkg_add py3-llvm`.')
         pass

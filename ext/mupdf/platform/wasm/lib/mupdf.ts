@@ -463,6 +463,14 @@ function COLOR(c?: AnnotColor) {
 	return _wasm_color << 2 as Pointer<"float">
 }
 
+function ensureOptions(value: any): String {
+	if (value === (void 0) || value === null)
+		return ""
+	if (typeof value === "string")
+		return value
+	return JSON.stringify(value)
+}
+
 /* -------------------------------------------------------------------------- */
 
 function fromColor(n: number): Color {
@@ -615,21 +623,24 @@ function colorFromNumber(argb: number): Color {
 /* -------------------------------------------------------------------------- */
 
 type SearchFunction = (
-	display_list: any,
+	haystack: any,
 	needle: Pointer<"char">,
 	marks: Pointer<"int">,
 	hits: Pointer<"fz_quad">,
-	hit_max: number
+	hit_max: number,
+	options: Pointer<"char">,
 ) => number
 
-function runSearch(searchFun: SearchFunction, searchThis: number, needle: string, max_hits = 500) {
+function runSearch(searchFun: SearchFunction, haystack: number, needle: string, options: any) {
+	const max_hits = 500
 	checkType(needle, "string")
+	options = ensureOptions(options)
 	let hits = 0 as Pointer<"fz_quad">
 	let marks = 0 as Pointer<"int">
 	try {
 		hits = Malloc<"fz_quad">(32 * max_hits)
 		marks = Malloc<"int">(4 * max_hits)
-		let n = searchFun(searchThis as any, STRING(needle), marks, hits, max_hits)
+		let n = searchFun(haystack as any, STRING(needle), marks, hits, max_hits, STRING2(options))
 		let outer: Quad[][] = []
 		if (n > 0) {
 			let inner: Quad[] = []
@@ -1319,8 +1330,8 @@ export class DisplayList extends Userdata<"fz_display_list"> {
 		)
 	}
 
-	toStructuredText(options = "") {
-		checkType(options, "string")
+	toStructuredText(options: any) {
+		options = ensureOptions(options)
 		return new StructuredText(libmupdf._wasm_new_stext_page_from_display_list(this.pointer, STRING(options)))
 	}
 
@@ -1330,8 +1341,8 @@ export class DisplayList extends Userdata<"fz_display_list"> {
 		libmupdf._wasm_run_display_list(this.pointer, device.pointer, MATRIX(matrix))
 	}
 
-	search(needle: string, max_hits = 500) {
-		return runSearch(libmupdf._wasm_search_display_list, this.pointer, needle, max_hits)
+	search(needle: string, options: any) {
+		return runSearch(libmupdf._wasm_search_display_list, this.pointer, needle, options)
 	}
 }
 
@@ -1633,8 +1644,8 @@ export class StructuredText extends Userdata<"fz_stext_page"> {
 		return result
 	}
 
-	search(needle: string, max_hits = 500) {
-		return runSearch(libmupdf._wasm_search_stext_page, this.pointer, needle, max_hits)
+	search(needle: string, options: any) {
+		return runSearch(libmupdf._wasm_search_stext_page, this.pointer, needle, options)
 	}
 }
 
@@ -1886,7 +1897,8 @@ export class DisplayListDevice extends Device {
 export class DocumentWriter extends Userdata<"fz_document_writer"> {
 	static override readonly _drop = libmupdf._wasm_drop_document_writer
 
-	constructor(buffer: Buffer, format: string, options: string) {
+	constructor(buffer: Buffer, format: string, options: any) {
+		options = ensureOptions(options)
 		super(
 			libmupdf._wasm_new_document_writer_with_buffer(
 				BUFFER(buffer),
@@ -2374,8 +2386,8 @@ export class Page extends Userdata<"any_page"> {
 		return new DisplayList(result)
 	}
 
-	toStructuredText(options = "") {
-		checkType(options, "string")
+	toStructuredText(options: any) {
+		options = ensureOptions(options)
 		return new StructuredText(libmupdf._wasm_new_stext_page_from_page(this.pointer, STRING(options)))
 	}
 
@@ -2399,8 +2411,8 @@ export class Page extends Userdata<"any_page"> {
 		libmupdf._wasm_delete_link(this.pointer, link.pointer)
 	}
 
-	search(needle: string, max_hits = 500) {
-		return runSearch(libmupdf._wasm_search_page, this.pointer, needle, max_hits)
+	search(needle: string, options: any) {
+		return runSearch(libmupdf._wasm_search_page, this.pointer, needle, options)
 	}
 
 }
@@ -2754,26 +2766,12 @@ export class PDFDocument extends Document {
 		}
 	}
 
-	saveToBuffer(options: string | Record<string,any> = "") {
-		var options_string
-		if (typeof options === "object") {
-			options_string = Object.entries(options).map(kv => {
-				var k: string = kv[0]
-				var v: any = kv[1]
-				if (v === true)
-					return k + "=" + "yes"
-				else if (v === false)
-					return k + "=" + "no"
-				else
-					return k + "=" + String(v).replaceAll(",", ":")
-			}).join(",")
-		} else {
-			options_string = options
-		}
-		return new Buffer(libmupdf._wasm_pdf_write_document_buffer(this.pointer, STRING(options_string)))
+	saveToBuffer(options: any) {
+		options = ensureOptions(options)
+		return new Buffer(libmupdf._wasm_pdf_write_document_buffer(this.pointer, STRING(options)))
 	}
 
-	save(filename: string, options: string | Record<string,any> = "") {
+	save(filename: string, options: any) {
 		if (node_fs)
 			node_fs.writeFileSync(filename, this.saveToBuffer(options).asUint8Array())
 		else

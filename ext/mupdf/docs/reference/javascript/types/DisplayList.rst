@@ -90,7 +90,7 @@ Instance methods
 
 		var sText = displayList.toStructuredText("preserve-whitespace")
 
-.. method:: DisplayList.prototype.search(needle, max_hits)
+.. method:: DisplayList.prototype.search(needle, options)
 
 	Search the display list text for all instances of the text value
 	``needle``, and return an array of search hits. Each search hit is an
@@ -98,7 +98,7 @@ Instance methods
 	hit.
 
 	:param string needle: The text to search for.
-	:param number options: Optional options for the search. A logical or of options such as `StructuredText.SEARCH_EXACT`.
+	:param string options: See :doc:`/reference/common/search-options`.
 
 	:returns: Array of Array of `Quad`
 

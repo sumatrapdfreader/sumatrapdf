@@ -528,16 +528,28 @@ do_adjust_simple_font(fz_context *ctx, pdf_document *doc, font_usage_t *font, in
 	if (old_widths)
 	{
 		int j = 0;
-		widths = pdf_dict_put_array(ctx, obj, PDF_NAME(Widths), new_lastchar - new_firstchar + 1);
-		for (i = new_firstchar; i <= new_lastchar; i++)
+		pdf_keep_obj(ctx, old_widths);
+		fz_try(ctx)
 		{
-			if (font->cids.heap[j] == i)
+			widths = pdf_dict_put_array(ctx, obj, PDF_NAME(Widths), new_lastchar - new_firstchar + 1);
+			for (i = new_firstchar; i <= new_lastchar; i++)
 			{
-				pdf_array_push_int(ctx, widths, pdf_array_get_int(ctx, old_widths, i - old_firstchar));
-				j++;
+				if (font->cids.heap[j] == i)
+				{
+					pdf_array_push_int(ctx, widths, pdf_array_get_int(ctx, old_widths, i - old_firstchar));
+					j++;
+				}
+				else
+					pdf_array_push_int(ctx, widths, 0);
 			}
-			else
-				pdf_array_push_int(ctx, widths, 0);
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_obj(ctx, old_widths);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
 		}
 	}
 }

@@ -526,8 +526,23 @@ Windows only
   * Also see: https://docs.python.org/3/using/windows.html
 
 *
-  Install Visual Studio 2019. Later versions may not work with MuPDF's
-  solution and build files.
+  Install Visual Studio.
+
+*
+  Note that MuPDF's Visual Studio project files specify the 142 tools.
+
+  With Visual Studio 2022 and later these tools may not be installed.
+
+  Possible workarounds are:
+
+  * Install the 142 tools into Visual Studio.
+  * Or build with ``scripts/mupdfwrap.py --vs-upgrade 1 ...``.
+
+    This will create a parallel set of upgraded project files
+    (with devenv's ``/upgrade`` option)
+    and use them in preference to the originals.
+
+    This should allow the build to work.
 
 
 All platforms

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -276,8 +276,8 @@ int pdf_validate_change_history(fz_context *ctx, pdf_document *doc);
 int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 
 /*
-	Return the number of updates ago when a signature became invalid,
-	not counting any unsaved changes.
+	Return the number of updates ago when a signature field
+	became invalid, not counting any unsaved changes.
 
 	Thus:
 	 -1 => Has changed in the current unsaved changes.
@@ -285,7 +285,8 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 	  1 => became invalid on the last save
 	  n => became invalid n saves ago
 */
-int pdf_validate_signature(fz_context *ctx, pdf_annot *widget);
+int pdf_validate_signature(fz_context *ctx, pdf_document *doc, pdf_obj *field);
+int pdf_validate_signature_widget(fz_context *ctx, pdf_annot *widget);
 int pdf_was_pure_xfa(fz_context *ctx, pdf_document *doc);
 
 /* Local xrefs - designed for holding stuff that shouldn't be written

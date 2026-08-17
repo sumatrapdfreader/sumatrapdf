@@ -23,7 +23,7 @@
 #include "mupdf/fitz.h"
 #include "html-imp.h"
 
-#ifdef FZ_ENABLE_MD
+#if FZ_ENABLE_MD
 
 #include "cmark-gfm.h"
 #include "cmark-gfm-core-extensions.h"
@@ -101,7 +101,7 @@ fz_md_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_a
 
 	fz_try(ctx)
 	{
-		int options = CMARK_OPT_UNSAFE | CMARK_OPT_LIBERAL_HTML_TAG | CMARK_OPT_FOOTNOTES;
+		int options = CMARK_OPT_UNSAFE | CMARK_OPT_LIBERAL_HTML_TAG | CMARK_OPT_FOOTNOTES | CMARK_OPT_VALIDATE_UTF8;
 
 		register_plugins(ctx);
 

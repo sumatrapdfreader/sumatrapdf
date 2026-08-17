@@ -3,24 +3,24 @@
 The options are specified using an <a href="option-strings.html">option string</a> of key-value pairs.
 
 exact
-: Search for the given string exactly as written
+: Search for the given string exactly as written.
 
 regexp
-: The search needle is interpreted as a JS regular expression
+: The search needle is interpreted as a JS regular expression.
 
 ignore-case
-: During searching, ignore case differences in search needle and page text
+: Ignore case differences in search needle and page text.
 
 ignore-diacritics
-: During searching, ignore diacritics differences in search needle and page text
+: Ignore diacritics differences in search needle and page text.
 
 keep-lines
-: With this option line endings are kept as ``\n``, otherwise they are transformed into spaces in the page text before searching begins.
+: Keep line endings as ``\n``, otherwise they are transformed into spaces.
 
 keep-paragraphs
-: With this option paragraph endings are kept as ``\n``, otherwise they are transformed into spaces in the page text before searching begins.
+: Keep paragraph endings as ``\n``, otherwise they are transformed into spaces.
 
 : Combining ``keep-lines`` with ``keep-paragraphs`` means that lines end in ``\n`` and paragraphs in ``\n\n``.
 
 keep-hyphens
-: Without this option hyphens will be removed and lines joined in the page text before searching begins.
+: Normally hyphenated words at the end of a line are joined together. This option disables that behavior, and searches for hyphenated words as they are.

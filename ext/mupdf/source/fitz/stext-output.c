@@ -1061,11 +1061,14 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out, fz_stext_xml_flag
 			fz_write_printf(ctx, out, "<vector ");
 			if (flags & FZ_STEXT_XML_FLAGS_POINTERS)
 				fz_write_printf(ctx, out, "p=\"%p\" ", block);
-			fz_write_printf(ctx, out, "bbox=\"%g %g %g %g\" stroke=\"%d\" rectangle=\"%d\" continues=\"%d\" argb=\"%08x\"/>\n",
+			fz_write_printf(ctx, out, "bbox=\"%g %g %g %g\" stroke=\"%d\" rectangle=\"%d\" continues=\"%d\" mark=\"%d\" s=\"%d\" u=\"%d\" argb=\"%08x\"/>\n",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1,
 					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED),
 					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE),
 					!!(block->u.v.flags & FZ_STEXT_VECTOR_CONTINUES),
+					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_HIGHLIGHT),
+					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_STRIKEOUT),
+					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_UNDERLINE),
 					block->u.v.argb);
 			break;
 
@@ -1219,6 +1222,9 @@ as_json(fz_context *ctx, fz_stext_block *block, fz_output *out, float scale)
 			fz_write_printf(ctx, out, ",%q:%d", "stroked", !!(block->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED));
 			fz_write_printf(ctx, out, ",%q:%d", "rectangle", !!(block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE));
 			fz_write_printf(ctx, out, ",%q:%d", "continues", !!(block->u.v.flags & FZ_STEXT_VECTOR_CONTINUES));
+			fz_write_printf(ctx, out, ",%q:%d", "mark", !!(block->u.v.flags & FZ_STEXT_VECTOR_IS_HIGHLIGHT));
+			fz_write_printf(ctx, out, ",%q:%d", "s", !!(block->u.v.flags & FZ_STEXT_VECTOR_IS_STRIKEOUT));
+			fz_write_printf(ctx, out, ",%q:%d", "u", !!(block->u.v.flags & FZ_STEXT_VECTOR_IS_UNDERLINE));
 			fz_write_printf(ctx, out, "}");
 			break;
 

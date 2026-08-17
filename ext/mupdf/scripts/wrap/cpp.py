@@ -1156,8 +1156,8 @@ g_extra_declarations = textwrap.dedent(f'''
         fz_pixmap *fz_new_pixmap_from_display_list_culling_text_etc2(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders);
 
         /** Swig-friendly wrapper for fz_find_table_within_grid(). */
-        fz_stext_block *fz_find_table_within_grid_floats(fz_context *ctx, fz_stext_page *page, const std::vector<float>& xs, const std::vector<float>& ys, float limit);
-        fz_stext_block *fz_find_table_within_grid_dividers(fz_context *ctx, fz_stext_page *page, const std::vector<fz_stext_grid_divider>& xs, const std::vector<fz_stext_grid_divider>& ys, float limit);
+        fz_stext_block *fz_find_table_within_grid_floats(fz_context *ctx, fz_stext_page *page, const std::vector<float>& xs, const std::vector<float>& ys, float limit, fz_table_hunt_options *opts);
+        fz_stext_block *fz_find_table_within_grid_dividers(fz_context *ctx, fz_stext_page *page, const std::vector<fz_stext_grid_divider>& xs, const std::vector<fz_stext_grid_divider>& ys, float limit, fz_table_hunt_options *opts);
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
@@ -1199,7 +1199,7 @@ g_extra_definitions = textwrap.dedent(f'''
         FZ_FUNCTION std::vector<unsigned char> fz_md5_pixmap2(fz_context* ctx, fz_pixmap* pixmap)
         {{
             std::vector<unsigned char>  ret(16);
-            fz_md5_pixmap( ctx, pixmap, &ret[0]);
+            fz_md5_pixmap( ctx, pixmap, ret.data());
             return ret;
         }}
 
@@ -1222,7 +1222,7 @@ g_extra_definitions = textwrap.dedent(f'''
         FZ_FUNCTION std::vector<unsigned char> fz_md5_final2(fz_md5* md5)
         {{
             std::vector<unsigned char>  ret(16);
-            fz_md5_final( md5, &ret[0]);
+            fz_md5_final( md5, ret.data());
             return ret;
         }}
 
@@ -1233,7 +1233,7 @@ g_extra_definitions = textwrap.dedent(f'''
                 int n;
                 fz_try(ctx)
                 {{
-                    n = fz_highlight_selection(ctx, page, a, b, &ret[0], max_quads);
+                    n = fz_highlight_selection(ctx, page, a, b, ret.data(), max_quads);
                 }}
                 fz_catch(ctx)
                 {{
@@ -1254,7 +1254,7 @@ g_extra_definitions = textwrap.dedent(f'''
         {{
             std::vector<fz_quad>    quads(hit_max);
             std::vector<int>        marks(hit_max);
-            int n = fz_search_page_number(ctx, doc, number, needle, &marks[0], &quads[0], hit_max);
+            int n = fz_search_page_number(ctx, doc, number, needle, marks.data(), quads.data(), hit_max);
             std::vector<fz_search_page2_hit>    ret(n);
             for (int i=0; i<n; ++i)
             {{
@@ -1299,13 +1299,15 @@ g_extra_definitions = textwrap.dedent(f'''
         {{
             int n = pdf_choice_widget_options(ctx, tw, exportval, nullptr);
             std::vector<std::string> ret(n);
+            #if 0
             if (n==0)
             {{
                 /* Evaluating &opts[0] causes assert failure on linx in debug builds. */
                 return ret;
             }}
+            #endif
             std::vector<const char*> opts(n);
-            int n2 = pdf_choice_widget_options(ctx, tw, exportval, &opts[0]);
+            int n2 = pdf_choice_widget_options(ctx, tw, exportval, opts.data());
             assert(n2 == n);
             for (int i=0; i<n; ++i)
             {{
@@ -1360,12 +1362,12 @@ g_extra_definitions = textwrap.dedent(f'''
                 pdf_clean_options_structure structure
                 )
         {{
-            return pdf_rearrange_pages(ctx, doc, pages.size(), &pages[0], structure);
+            return pdf_rearrange_pages(ctx, doc, pages.size(), pages.data(), structure);
         }}
 
         void pdf_subset_fonts2(fz_context *ctx, pdf_document *doc, const std::vector<int>& pages)
         {{
-            return pdf_subset_fonts(ctx, doc, pages.size(), &pages[0]);
+            return pdf_subset_fonts(ctx, doc, pages.size(), pages.data());
         }}
 
         static void s_format_check(fz_context* ctx, const char* fmt, const char* specifiers)
@@ -1401,7 +1403,7 @@ g_extra_definitions = textwrap.dedent(f'''
 
         void pdf_set_annot_callout_line2(fz_context *ctx, pdf_annot *annot, std::vector<fz_point>& callout)
         {{
-            pdf_set_annot_callout_line(ctx, annot, &callout[0], callout.size());
+            pdf_set_annot_callout_line(ctx, annot, callout.data(), callout.size());
         }}
 
         std::string fz_decode_barcode_from_display_list2(fz_context *ctx, fz_barcode_type *type, fz_display_list *list, fz_rect subarea, int rotate)
@@ -1431,47 +1433,47 @@ g_extra_definitions = textwrap.dedent(f'''
         /** Swig-friendly wrapper for fz_new_culling_device_with_rects(). */
         fz_device *fz_new_culling_device_with_rects2(fz_context *ctx, fz_device *passthrough, const std::vector<fz_rect>& rects)
         {{
-            return fz_new_culling_device_with_rects(ctx, passthrough, rects.size(), &rects[0]);
+            return fz_new_culling_device_with_rects(ctx, passthrough, rects.size(), rects.data());
         }}
 
         /** Swig-friendly wrapper for fz_new_pixmap_from_page_culling_text(). */
         fz_pixmap *fz_new_pixmap_from_page_culling_text2(fz_context *ctx, fz_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects)
         {{
-            return fz_new_pixmap_from_page_culling_text(ctx, page, ctm, cs, alpha, rects.size(), &rects[0]);
+            return fz_new_pixmap_from_page_culling_text(ctx, page, ctm, cs, alpha, rects.size(), rects.data());
         }}
 
         /** Swig-friendly wrapper for fz_new_pixmap_from_page_number_culling_text(). */
         fz_pixmap *fz_new_pixmap_from_page_number_culling_text2(fz_context *ctx, fz_document *doc, int number, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects)
         {{
-            return fz_new_pixmap_from_page_number_culling_text(ctx, doc, number, ctm, cs, alpha, rects.size(), &rects[0]);
+            return fz_new_pixmap_from_page_number_culling_text(ctx, doc, number, ctm, cs, alpha, rects.size(), rects.data());
         }}
 
         /** Swig-friendly wrapper for fz_new_pixmap_from_display_list_culling_text(). */
         fz_pixmap *fz_new_pixmap_from_display_list_culling_text2(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects)
         {{
-            return fz_new_pixmap_from_display_list_culling_text(ctx, list, ctm, cs, alpha, rects.size(), &rects[0]);
+            return fz_new_pixmap_from_display_list_culling_text(ctx, list, ctm, cs, alpha, rects.size(), rects.data());
         }}
 
         /** Swig-friendly wrapper for fz_new_pixmap_from_page_culling_text_etc(). */
         fz_pixmap *fz_new_pixmap_from_page_culling_text_etc2(fz_context *ctx, fz_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders)
         {{
-            return fz_new_pixmap_from_page_culling_text_etc(ctx, page, ctm, cs, alpha, rects.size(), &rects[0], borders);
+            return fz_new_pixmap_from_page_culling_text_etc(ctx, page, ctm, cs, alpha, rects.size(), rects.data(), borders);
         }}
 
         /** Swig-friendly wrapper for fz_new_pixmap_from_page_number_culling_text_etc(). */
         fz_pixmap *fz_new_pixmap_from_page_number_culling_text_etc2(fz_context *ctx, fz_document *doc, int number, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders)
         {{
-            return fz_new_pixmap_from_page_number_culling_text_etc(ctx, doc, number, ctm, cs, alpha, rects.size(), &rects[0], borders);
+            return fz_new_pixmap_from_page_number_culling_text_etc(ctx, doc, number, ctm, cs, alpha, rects.size(), rects.data(), borders);
         }}
 
         /** Swig-friendly wrapper for fz_new_pixmap_from_display_list_culling_text_etc(). */
         fz_pixmap *fz_new_pixmap_from_display_list_culling_text_etc2(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders)
         {{
-            return fz_new_pixmap_from_display_list_culling_text_etc(ctx, list, ctm, cs, alpha, rects.size(), &rects[0], borders);
+            return fz_new_pixmap_from_display_list_culling_text_etc(ctx, list, ctm, cs, alpha, rects.size(), rects.data(), borders);
         }}
 
         /** Swig-friendly wrapper for fz_find_table_within_grid(). */
-        fz_stext_block *fz_find_table_within_grid_floats(fz_context *ctx, fz_stext_page *page, const std::vector<float>& xs, const std::vector<float>& ys, float limit)
+        fz_stext_block *fz_find_table_within_grid_floats(fz_context *ctx, fz_stext_page *page, const std::vector<float>& xs, const std::vector<float>& ys, float limit, fz_table_hunt_options *opts)
 	{{
 		fz_stext_grid_positions *xpos = NULL;
 		fz_stext_grid_positions *ypos = NULL;
@@ -1504,7 +1506,7 @@ g_extra_definitions = textwrap.dedent(f'''
 				ypos->list[i].pos = ys[i];
 			}}
 
-			ret = fz_find_table_within_grid(ctx, page, xpos, ypos, limit);
+			ret = fz_find_table_within_grid(ctx, page, xpos, ypos, limit, opts);
 		}}
 		fz_always(ctx)
 		{{
@@ -1519,7 +1521,7 @@ g_extra_definitions = textwrap.dedent(f'''
 		return ret;
 	}}
 
-        fz_stext_block *fz_find_table_within_grid_dividers(fz_context *ctx, fz_stext_page *page, const std::vector<fz_stext_grid_divider>& xs, const std::vector<fz_stext_grid_divider>& ys, float limit)
+        fz_stext_block *fz_find_table_within_grid_dividers(fz_context *ctx, fz_stext_page *page, const std::vector<fz_stext_grid_divider>& xs, const std::vector<fz_stext_grid_divider>& ys, float limit, fz_table_hunt_options *opts)
 	{{
 		fz_stext_grid_positions *xpos = NULL;
 		fz_stext_grid_positions *ypos = NULL;
@@ -1556,7 +1558,7 @@ g_extra_definitions = textwrap.dedent(f'''
 			}}
 			ypos->max_uncertainty = max;
 
-			ret = fz_find_table_within_grid(ctx, page, xpos, ypos, limit);
+			ret = fz_find_table_within_grid(ctx, page, xpos, ypos, limit, opts);
 		}}
 		fz_always(ctx)
 		{{
@@ -4209,7 +4211,11 @@ def pod_struct_fns(
     out_cpp.write( f'FZ_FUNCTION bool operator==( const ::{struct_name}& lhs, const ::{struct_name}& rhs)\n')
     out_cpp.write( f'{{\n')
     for cursor in parse.get_members(struct_cursor):
-        out_cpp.write( f'    if (lhs.{cursor.spelling} != rhs.{cursor.spelling}) return false;\n')
+        if cursor.type.get_array_size() >= 0:
+            # This struct member is an array, so compare with memcmp().
+            out_cpp.write( f'    if (memcmp(lhs.{cursor.spelling}, rhs.{cursor.spelling}, sizeof(lhs.{cursor.spelling}))) return false;\n')
+        else:
+            out_cpp.write( f'    if (lhs.{cursor.spelling} != rhs.{cursor.spelling}) return false;\n')
     out_cpp.write( f'    return true;\n')
     out_cpp.write( f'}}\n')
     out_cpp.write( f'FZ_FUNCTION bool operator!=( const ::{struct_name}& lhs, const ::{struct_name}& rhs)\n')

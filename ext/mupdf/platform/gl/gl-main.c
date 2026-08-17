@@ -957,7 +957,7 @@ void load_page(void)
 					char *signatory = NULL;
 					char buf[500];
 
-					valid_until = pdf_validate_signature(ctx, w);
+					valid_until = pdf_validate_signature_widget(ctx, w);
 					is_readonly = pdf_widget_is_readonly(ctx, w);
 					verifier = pkcs7_openssl_new_verifier(ctx);
 					cert_error = pdf_signature_error_description(pdf_check_widget_certificate(ctx, verifier, w));

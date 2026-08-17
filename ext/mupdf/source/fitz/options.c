@@ -386,6 +386,7 @@ static void fz_parse_options_json(fz_context *ctx, fz_options *options, const ch
 		// optional comma
 		if (*s != ',' && *s != '}')
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid option syntax (expected ',' or '}')");
+		++s;
 
 		add_option(ctx, options, k, kk, v, vv, unescape_json);
 	}

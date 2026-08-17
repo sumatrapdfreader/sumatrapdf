@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -251,7 +251,7 @@ FUN(PDFWidget_validateSignature)(JNIEnv *env, jobject self)
 	if (!ctx || !widget) return 0;
 
 	fz_try(ctx)
-		val = pdf_validate_signature(ctx, widget);
+		val = pdf_validate_signature_widget(ctx, widget);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 

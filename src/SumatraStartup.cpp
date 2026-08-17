@@ -1824,7 +1824,7 @@ int fz_redirect_io_to_existing_console();
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1
 #define FZ_ENABLE_BARCODE 0
-#define FZ_VERSION "1.27.2"
+#define FZ_VERSION "1.28.2"
 
 using MutoolFunc = int (*)(int argc, char* argv[]);
 

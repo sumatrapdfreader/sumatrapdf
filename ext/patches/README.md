@@ -8,7 +8,7 @@ This directory is that record. Each `.patch` is one logical change against the
 mupdf revision we vendored, in `git diff` format, with a description of what it
 does and why.
 
-**Base revision: mupdf `1.28.0-rc2`** (tag `1.28.0-rc2`, commit `a299549f8`), the
+**Base revision: mupdf `1.28.2`** (tag `1.28.2`, commit `fe374accd`), the
 version recorded for mupdf in `ext/versions.txt`. Paths in the patches are
 relative to `ext/mupdf`, so `-p1` from inside that directory.
 
@@ -34,13 +34,12 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0016-css-user-stylesheet-important-wins` | user-origin `!important` outranks inline style |
 | `0017-xps-bound-metadata-recursion` | stack overflow on deeply nested XPS metadata (#5032) |
 | `0018-stext-search-mujs-include-path` | we build the amalgamated `ext/a-mujs` |
-| `0019-stext-device-guard-null-line` | null deref on a combining mark with no current line |
-| `0020-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
-| `0021-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
-| `0022-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
-| `0023-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
+| `0019-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
+| `0020-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
+| `0021-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
+| `0022-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 
-That is the whole list: `ext/mupdf` is byte-for-byte `1.28.0-rc2` plus these
+That is the whole list: `ext/mupdf` is byte-for-byte `1.28.2` plus these
 patches, and nothing else.
 
 ## Applying them
@@ -58,13 +57,18 @@ Work through whatever needs hand-merging, copy the result over `ext/mupdf`
 `ext/versions.txt`, and then regenerate this directory so the patches are
 against the *new* base.
 
+A conflict is sometimes good news: upstream may have fixed the same thing. That
+is what happened to the old `0019-stext-device-guard-null-line` in 1.28.2 —
+mupdf added the identical `cur_line &&` guard, so the patch was deleted rather
+than re-merged. Always read the conflict before resolving it.
+
 ## Verifying them
 
 Applying every patch to a pristine base must reproduce `ext/mupdf` exactly:
 
 ```sh
 mkdir /tmp/check
-git -C ~/src/mupdf -c core.autocrlf=false -c core.eol=lf archive 1.28.0-rc2 | tar -x -C /tmp/check
+git -C ~/src/mupdf -c core.autocrlf=false -c core.eol=lf archive 1.28.2 | tar -x -C /tmp/check
 cd /tmp/check
 for p in ~/src/sumatrapdf/ext/patches/*.patch; do git apply "$p" || echo "FAIL $p"; done
 diff -r /tmp/check ~/src/sumatrapdf/ext/mupdf   # only reports files we do not vendor

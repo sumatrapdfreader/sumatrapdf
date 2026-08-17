@@ -31,6 +31,8 @@ update between versions.
 - Setting overprint simulation in mutool draw moved from -O to -M.
 - The mutool draw command now accepts device specific options with -O.
 - PDF write option "decrypt" is deprecated; use "encrypt=none" instead.
+- `pdf_validate_signature` renamed `pdf_validate_signature_widget`. The
+  new `pdf_validate_signature` operates directly on a signature field.
 
 ## Changes from 1.26 to 1.27
 

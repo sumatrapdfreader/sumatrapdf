@@ -67,3 +67,5 @@ segment
 
 table-hunt
 : Hunt for tables within a (segmented) page
+
+Also, options from the <a href="table-hunt-options.html">Table Hunt Options</a> set can be included here.

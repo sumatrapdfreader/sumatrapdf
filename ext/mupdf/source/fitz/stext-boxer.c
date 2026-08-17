@@ -709,6 +709,8 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, fz_re
 		if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
 			block->u.s.down->parent = newblock->u.s.down;
 	}
+	if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
+		block->u.s.down->parent = newblock->u.s.down;
 
 	newblock->bbox = fz_union_rect(newblock->bbox, block->bbox);
 	newblock->u.s.down->last_block = block;

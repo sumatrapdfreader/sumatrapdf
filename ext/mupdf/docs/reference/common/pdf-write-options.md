@@ -81,3 +81,6 @@ owner-password=PASSWORD
 
 regenerate-id
 : Regenerate document id (default yes)
+
+reproducible
+: Attempt to make writes reproducible (default no)

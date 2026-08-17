@@ -5,3 +5,4 @@ readthedocs-sphinx-search==0.3.2
 sphinx==8.2.3
 sphinxcontrib-googleanalytics
 sphinxcontrib-imagesvg
+pipcl

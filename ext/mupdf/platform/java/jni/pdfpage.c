@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -371,7 +371,7 @@ FUN(PDFPage_clip)(JNIEnv *env, jobject self, jobject jrect)
 		return;
 
 	fz_try(ctx)
-		pdf_clip_page(ctx, page, &rect);
+		pdf_clip_page(ctx, page, rect);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
 }

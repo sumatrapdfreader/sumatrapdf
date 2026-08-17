@@ -1434,6 +1434,10 @@ Attempt to segment the page.
 .TP
 .B table-hunt
 Hunt for tables within a (segmented) page.
+.TP
+.B vertically-collapse-bordered-cells (experimental)
+If true, consider the contents of completely bordered super-cells as being
+vertically collapsible.
 .
 .
 .SH PDF OUTPUT OPTIONS
@@ -1518,6 +1522,9 @@ Password required to edit document.
 .TP
 .BR regenerate-id= ( yes | no )
 Regenerate document id (default yes).
+.TP
+.BR reproducible= ( yes | no )
+Attempt to make produced documents reproducible (default no).
 .
 .SH EXIT STATUS
 The exit status is 0 upon successful execution and non-zero upon error.

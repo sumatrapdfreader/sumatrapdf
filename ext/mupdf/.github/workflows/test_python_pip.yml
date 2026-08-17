@@ -20,10 +20,10 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
 
       - name: Pip build/install and test of Python Bindings
 
@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: generated-code
+          name: generated-code-${{ matrix.os }}
           path: |
             platform/c++/
             platform/python/

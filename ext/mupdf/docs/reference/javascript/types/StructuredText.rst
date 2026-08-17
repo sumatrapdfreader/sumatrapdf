@@ -17,37 +17,6 @@ Constructors
 
 To obtain a StructuredText instance use `Page.prototype.toStructuredText()`.
 
-Static properties
------------------
-
-.. data:: StructuredText.SEARCH_EXACT
-
-	used to search untransformed text
-
-.. data:: StructuredText.SEARCH_IGNORE_CASE
-
-	used to search text ignoring case differences
-
-.. data:: StructuredText.SEARCH_IGNORE_DIACRITICS
-
-	used to search text ignoring diacritics
-
-.. data:: StructuredText.SEARCH_REGEXP
-
-	used to search text with the needle being a regexp
-
-.. data:: StructuredText.SEARCH_KEEP_LINES
-
-	used to search text preserving line breaks.
-
-.. data:: StructuredText.SEARCH_KEEP_PARAGRAPHS
-
-	used to search text preserving paragraph breaks.
-
-.. data:: StructuredText.SEARCH_KEEP_HYPHENS
-
-	used to search text preserving hyphens and not joining lines.
-
 Instance methods
 ----------------
 
@@ -58,7 +27,7 @@ Instance methods
 	Each match in the result is an array containing one or more Quads that cover the matching text.
 
 	:param string needle: The text to search for.
-	:param number options: Optional options for the search. A logical or of options such as `StructuredText.SEARCH_EXACT`.
+	:param string options: See :doc:`/reference/common/search-options`.
 
 	:returns: Array of Array of `Quad`
 

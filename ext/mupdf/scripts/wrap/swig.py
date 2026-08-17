@@ -8,6 +8,8 @@ import os
 import re
 import textwrap
 
+import pipcl
+
 import jlib
 
 from . import cpp
@@ -2083,8 +2085,7 @@ def test_swig_csharp_internal(name, code_i, code_test, x32):
     # Compile/link {name}.cpp to create {name}.dll.
     #
     if state.state_.windows:
-        import wdev
-        vs = wdev.WindowsVS(cpu = wdev.WindowsCpu('x32') if x32 else None)
+        vs = pipcl.wdev.WindowsVS(cpu = pipcl.wdev.WindowsCpu('x32') if x32 else None)
         jlib.system(
                 f'''
                 cd {build_dir} && "{vs.vcvars}"&&"{vs.cl}"

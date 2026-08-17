@@ -1569,7 +1569,22 @@ classextras = ClassExtras(
                 constructor_raw=True,
                 ),
 
-        fz_stext_options = ClassExtra(
+        fz_table_hunt_options = ClassExtra(
+                constructors_extra = [
+                    ExtraConstructor( '(int vertically_collapse_bordered_cells)',
+                        '''
+                        :
+                        vertically_collapse_bordered_cells(vertically_collapse_bordered_cells)
+                        {
+                        }
+                        ''',
+                        comment = '/* Construct */',
+                        ),
+                    ],
+                pod='inline',
+                ),
+
+            fz_stext_options = ClassExtra(
                 constructors_extra = [
                     ExtraConstructor( '(int flags, float scale=1.0)',
                         '''

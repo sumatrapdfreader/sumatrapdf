@@ -654,9 +654,11 @@ fz_stext_page * wasm_new_stext_page_from_display_list(fz_display_list *display_l
 }
 
 EXPORT
-int wasm_search_display_list(fz_display_list *display_list, char *needle, int *marks, fz_quad *hits, int hit_max)
+int wasm_search_display_list(fz_display_list *display_list, char *needle, int *marks, fz_quad *hits, int hit_max, const char *options)
 {
-	INTEGER(fz_search_display_list, display_list, needle, marks, hits, hit_max)
+	fz_search_options so;
+	TRY({ fz_parse_search_options(ctx, &so, options); })
+	INTEGER(fz_match_display_list, display_list, needle, marks, hits, hit_max, so)
 }
 
 // --- Path ---
@@ -945,9 +947,11 @@ unsigned char * wasm_print_stext_page_as_json(fz_stext_page *page, float scale)
 }
 
 EXPORT
-int wasm_search_stext_page(fz_stext_page *text, char *needle, int *marks, fz_quad *hits, int hit_max)
+int wasm_search_stext_page(fz_stext_page *text, char *needle, int *marks, fz_quad *hits, int hit_max, const char *options)
 {
-	INTEGER(fz_search_stext_page, text, needle, marks, hits, hit_max)
+	fz_search_options so;
+	TRY({ fz_parse_search_options(ctx, &so, options); })
+	INTEGER(fz_match_stext_page, text, needle, marks, hits, hit_max, so)
 }
 
 EXPORT
@@ -1210,9 +1214,11 @@ char * wasm_page_label(fz_page *page)
 }
 
 EXPORT
-int wasm_search_page(fz_page *page, char *needle, int *marks, fz_quad *hits, int hit_max)
+int wasm_search_page(fz_page *page, char *needle, int *marks, fz_quad *hits, int hit_max, const char *options)
 {
-	INTEGER(fz_search_page, page, needle, marks, hits, hit_max)
+	fz_search_options so;
+	TRY({ fz_parse_search_options(ctx, &so, options); })
+	INTEGER(fz_match_page, page, needle, marks, hits, hit_max, so)
 }
 
 

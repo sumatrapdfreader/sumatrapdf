@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -303,7 +303,7 @@ fz_transition *pdf_page_presentation(fz_context *ctx, pdf_page *page, fz_transit
 
 fz_default_colorspaces *pdf_load_default_colorspaces(fz_context *ctx, pdf_document *doc, pdf_page *page);
 
-void pdf_clip_page(fz_context *ctx, pdf_page *page, fz_rect *clip);
+void pdf_clip_page(fz_context *ctx, pdf_page *page, fz_rect clip);
 
 void pdf_vectorize_page(fz_context *ctx, pdf_page *page);
 
