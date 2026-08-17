@@ -1386,6 +1386,8 @@ function test_engines_files()
     "src/GumboHtmlParser.cpp",
     "src/GumboHelpers.cpp",
     "src/JxlReader.cpp",
+    "src/LitDoc.cpp",
+    "src/LitDoc.h",
     "src/MobiDoc.cpp",
     "src/PalmDbReader.cpp",
     "src/PdfCadDetect.cpp",
@@ -1394,11 +1396,19 @@ function test_engines_files()
     "src/PdfCadEnhanceDevice.h",
     "src/PdfDarkMode.h",
     "src/PdfDarkModeNoOp.cpp",
+    "src/TextSearch.cpp",
+    "src/TextSearch.h",
+    "src/TextSelection.cpp",
+    "src/TextSelection.h",
     "src/WebpReader.cpp",
     "src/gui/UIModels.cpp",
     "src/gui/UIModels.h",
     "src/tools/test_engines.cpp",
   }
+  -- TextSelection.cpp ends in a #if DEBUG unit-test block calling utassert()
+  files_in_dir("src/base", {
+    "UtAssert.*",
+  })
 end
 
 function bench_image_files()
