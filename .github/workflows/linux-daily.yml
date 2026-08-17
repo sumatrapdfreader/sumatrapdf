@@ -33,6 +33,13 @@ jobs:
             echo "run_build=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # The Linux build links the GTK 4 keyboard-help viewer and SumatraPDF app,
+      # so gtk4.pc & friends must be present; ubuntu-install-deps.sh is the
+      # single place where those package names live.
+      - name: Install build dependencies
+        if: steps.schedule.outputs.run_build == 'true'
+        run: sudo sh cmd/ubuntu-install-deps.sh
+
       - name: Build and run test_util
         if: steps.schedule.outputs.run_build == 'true'
         run: bun cmd/build.ts -linux -asan
