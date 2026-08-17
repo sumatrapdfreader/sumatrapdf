@@ -1,5 +1,6 @@
 import { Socket, createConnection } from "node:net";
 import { killAndWait, testWindowPos } from "./winapi.ts";
+import { SLOW_BUILD_FACTOR } from "./util.ts";
 
 export enum ControlCommand {
   Ping = 1,
@@ -276,7 +277,7 @@ export class ControlClient {
 
   constructor(readonly socket: Socket) {}
 
-  static async connect(pipeName: string, timeoutMs = 10000): Promise<ControlClient> {
+  static async connect(pipeName: string, timeoutMs = 10000 * SLOW_BUILD_FACTOR): Promise<ControlClient> {
     const path = pipePath(pipeName);
     const deadline = Date.now() + timeoutMs;
     let lastErr: unknown;
@@ -326,7 +327,8 @@ export class ControlClient {
   // see — not the low-res preview Paint() blits while tiles are still coming.
   // timeoutMs is forwarded to the app (default 15s there too).
   async waitForRenderIdle(timeoutMs = 15000): Promise<string> {
-    const res = await this.request(ControlCommand.WaitRenderIdle, [timeoutMs]);
+    // scaled, so a test that asks for "30s" gets 30s of debug-build rendering
+    const res = await this.request(ControlCommand.WaitRenderIdle, [timeoutMs * SLOW_BUILD_FACTOR]);
     const code = typeof res[0] === "number" ? res[0] : -1;
     const info = String(res[1] ?? "");
     if (code !== 0) {

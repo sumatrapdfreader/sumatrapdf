@@ -16,6 +16,12 @@ export const ROOT = join(import.meta.dir, "..");
 // It is read at import time, so set it in the environment (not at runtime).
 export const EXE = process.env.SUMATRA_TEST_EXE || join(ROOT, "out", "dbg64", "SumatraPDF.exe");
 
+// An ASan build renders and starts several times slower than the debug one, so
+// waits sized for a debug build time out against it (a 25600% zoom needs far
+// more than the 30s issue-1195 asks for). Tests don't size their own waits for
+// it: control.ts multiplies its timeouts by this.
+export const SLOW_BUILD_FACTOR = /asan/i.test(EXE) ? 4 : 1;
+
 // Extract page text via the debug -extract-text harness (hex-encoded UTF-8).
 // The GUI exe's stdout often does not reach a Bun pipe on Windows; PowerShell
 // (a console app) relays it. pageNo -1 means all pages (same as the flag).

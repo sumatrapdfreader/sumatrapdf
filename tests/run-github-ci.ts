@@ -32,6 +32,13 @@ export const excludedTests: Record<string, string> = {
   // a TeX distribution is a big install we don't want on the runner; the LaTeX
   // suite itself (tests/latex.ts) is only in run-pre-release, not here
   "issue-5040": "needs pdflatex (MiKTeX / TeX Live)",
+  // it needs a maximized window on a monitor whose work area is the whole
+  // screen, which it arranges by toggling taskbar auto-hide; a runner has no
+  // Explorer taskbar, so the premise doesn't hold and the pixels mean nothing
+  "issue-5866": "needs a real desktop taskbar to auto-hide",
+  // renders a page at 25600% zoom; the ASan build never gets there (locally it
+  // still had no document 2m in), so the wait scaling below can't save it
+  "issue-1195": "renders at 25600% zoom, far too slow for an ASan build",
   // agents.md flags these two as focus-dependent even on a developer machine;
   // on a runner nothing has focus. Re-enable if they turn out to be fine.
   "issue-1136": "depends on keyboard focus, flaky without an interactive desktop",
