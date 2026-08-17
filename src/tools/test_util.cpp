@@ -30,6 +30,7 @@ extern void StrVecTest();
 extern void PdfDarkModeOklab_UnitTests();
 extern void PdfDarkModeImageClassifier_UnitTests();
 #if OS_WIN
+extern void AppendStoreTest();
 extern void WinUtilTest();
 #endif
 
@@ -125,6 +126,7 @@ int main(int argc, char** argv) {
     PdfDarkModeOklab_UnitTests();
     PdfDarkModeImageClassifier_UnitTests();
 #if OS_WIN
+    AppendStoreTest();
     WinUtilTest();
 #endif
     SumatraPDF_UnitTests();

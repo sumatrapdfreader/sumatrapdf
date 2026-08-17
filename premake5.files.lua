@@ -800,6 +800,8 @@ end
 
 function base_files()
   files_in_dir("src/base", {
+    "AppendStore.h",
+    "AppendStore_win.cpp",
     "ApiHook.*",
     "Archive.*",
     "Arena.*",
@@ -1278,6 +1280,8 @@ end
 
 function test_util_files()
   files_in_dir("src/base", {
+    "AppendStore.h",
+    "AppendStore_win.cpp",
     "Arena.*",
     "Arena_win.cpp",
     "Base.h",

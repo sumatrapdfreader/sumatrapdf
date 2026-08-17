@@ -1094,6 +1094,9 @@
     <ClCompile Include="..\src\base\UtAssert.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\tests\AppendStore_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\tests\Base_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>

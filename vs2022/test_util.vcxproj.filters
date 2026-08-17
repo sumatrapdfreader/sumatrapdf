@@ -26,6 +26,9 @@
     <ClInclude Include="..\src\RefHoverTextDetect.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
+    <ClInclude Include="..\src\base\AppendStore.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Arena.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -154,6 +157,9 @@
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
+    <ClCompile Include="..\src\base\AppendStore_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -258,6 +264,9 @@
     </ClCompile>
     <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
       <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\AppendStore_ut.cpp">
+      <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Base_ut.cpp">
       <Filter>base\tests</Filter>

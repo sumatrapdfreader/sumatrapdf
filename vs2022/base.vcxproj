@@ -906,6 +906,7 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\base\AppendStore.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\Arena.h" />
     <ClInclude Include="..\src\base\Base.h" />
@@ -958,6 +959,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\base\AppendStore_win.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\Arena_win.cpp" />
