@@ -12,6 +12,12 @@ import { clickAt, findCanvas, waitForFrame } from "./win-automation.ts";
 import { getClientRect } from "./winapi.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
+// This test is about geometry -- which fifth of the canvas a click lands in,
+// and which page the viewport then reports -- so it pins the window instead of
+// taking the runner's layout (a work-area-sized window shows enough of the
+// next page that GoToPrevPage leaves the reported page unchanged).
+const WINDOW_POS = ["-window-pos", "900x700@40x40"];
+
 const SETTINGS_HEAD = `UiLanguage = en
 CheckForUpdates = false
 RestoreSession = false
@@ -134,7 +140,7 @@ export async function testit(): Promise<void> {
         throw new Error("issue-1203 on: middle click should stay on page 1");
       }
     },
-    ["-appdata", onDir, pdf],
+    [...WINDOW_POS, "-appdata", onDir, pdf],
   );
 
   const offDir = tmpPath("issue-1203-off");
@@ -153,7 +159,7 @@ export async function testit(): Promise<void> {
         throw new Error("issue-1203 off: right-edge click should not turn the page");
       }
     },
-    ["-appdata", offDir, pdf],
+    [...WINDOW_POS, "-appdata", offDir, pdf],
   );
 }
 
