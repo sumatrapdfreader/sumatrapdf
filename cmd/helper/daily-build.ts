@@ -35,7 +35,9 @@ async function isGithubMyMasterBranch(): Promise<boolean> {
     return false;
   }
   const event = process.env["GITHUB_EVENT_NAME"] ?? "";
-  return event === "push" || event === "repository_dispatch";
+  // schedule / workflow_dispatch are how windows-daily.yml runs this: without
+  // them the daily cron checked out master and then skipped the build
+  return event === "push" || event === "repository_dispatch" || event === "schedule" || event === "workflow_dispatch";
 }
 
 function buildConfigPath(): string {
