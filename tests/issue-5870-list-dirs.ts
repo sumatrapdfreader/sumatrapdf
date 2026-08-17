@@ -18,6 +18,13 @@ const SB_PAGEDOWN = 3;
 const nFiles = 30;
 const kMinTextPixels = 400;
 
+// The checks below sample fixed fractions of the window, and whether 30 rows
+// are more than one page depends on how tall it is, so the window can't be
+// whatever size the screen (or a CI runner's work area) suggests: at
+// 1853x1111 the list is laid out with the directory column outside the sampled
+// band and every row fits on one page, and the test failed for both reasons.
+const WINDOW_POS = ["-window-pos", "900x700@40x40"];
+
 // Pixels differing from the background in the directory column, over a band of
 // rows. x covers only the path text: file names end well to its left, the size
 // column sits to its right.
@@ -61,7 +68,7 @@ export async function testit(): Promise<void> {
       `HomePageViewMode = list\nFileStates [\n${states.join("\n")}\n]\n`,
   );
 
-  const proc = launchSumatra(["-appdata", dir]);
+  const proc = launchSumatra([...WINDOW_POS, "-appdata", dir]);
   try {
     const frame = await waitForFrame(proc.pid!);
     if (!frame) {
