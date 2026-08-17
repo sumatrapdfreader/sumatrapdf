@@ -896,9 +896,15 @@ bool RenderCache::IsBusyFor(DisplayModel* dm) {
 // true when every on-screen tile of dm is cached at the resolution Paint()
 // would ask for. A low-res preview (res 0, or a tile from another zoom) does
 // not count: that is the picture waitForWindowIdle mistakes for "done".
-bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm) {
-    if (!dm || !dm->GetEngine()) {
+bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot) {
+    auto no = [whyNot](TempStr reason) -> bool {
+        if (whyNot) {
+            *whyNot = str::DupTemp(reason);
+        }
         return false;
+    };
+    if (!dm || !dm->GetEngine()) {
+        return no(StrL("no-dm"));
     }
     int pageCount = dm->PageCount();
     bool anyVisible = false;
@@ -908,7 +914,7 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm) {
             continue;
         }
         if (pi->pageOnScreen.IsEmpty()) {
-            return false;
+            return no(fmt("p%d no-rect", pageNo));
         }
         anyVisible = true;
         if (!dm->ShouldCacheRendering(pageNo)) {
@@ -917,7 +923,7 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm) {
         int rotation = dm->GetRotation();
         float zoom = dm->GetZoomReal(pageNo);
         if (zoom <= 0) {
-            return false;
+            return no(fmt("p%d zoom=%.2f", pageNo, zoom));
         }
         USHORT targetRes = GetTileRes(dm, pageNo);
         Rect screen(Point(), dm->GetViewPort().Size());
@@ -939,7 +945,7 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm) {
             if (tile.res == targetRes) {
                 sawTarget = true;
                 if (!Exists(dm, pageNo, rotation, zoom, &tile)) {
-                    return false;
+                    return no(fmt("p%d miss res=%d r%d,c%d", pageNo, (int)tile.res, (int)tile.row, (int)tile.col));
                 }
                 continue;
             }
@@ -953,10 +959,22 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm) {
                 TilePosition((USHORT)(tile.res + 1), (USHORT)((tile.row * 2) + 1), (USHORT)((tile.col * 2) + 1)));
         }
         if (!sawTarget) {
-            return false;
+            return no(fmt("p%d no-tile-at-res=%d", pageNo, (int)targetRes));
         }
     }
-    return anyVisible;
+    if (!anyVisible) {
+        // No page overlaps the viewport. That is a real, settled state, not
+        // work in progress: a document with one page far wider than the rest
+        // centers the narrow ones in a canvas as wide as the widest, so
+        // scrolled to the left edge the viewport can show no page at all
+        // (issue #1438's document). There is nothing left to render, so this
+        // is idle - unless the pages have not been laid out yet, which is what
+        // an empty canvas means.
+        if (dm->GetCanvasSize().IsEmpty()) {
+            return no(StrL("no-layout"));
+        }
+    }
+    return true;
 }
 
 void RenderCache::AbortRendering(DisplayModel* dm) {

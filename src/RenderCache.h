@@ -209,7 +209,9 @@ struct RenderCache {
     void AbortRendering(DisplayModel* dm);
     bool IsRenderingFor(DisplayModel* dm);
     bool IsBusyFor(DisplayModel* dm);
-    bool VisibleTargetTilesReady(DisplayModel* dm);
+    // whyNot (optional) gets a short reason when the answer is false, e.g.
+    // "p3 miss r0/0,0": a harness that only says "not ready" is unactionable
+    bool VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot = nullptr);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);

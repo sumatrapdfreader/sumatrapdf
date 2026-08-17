@@ -1092,10 +1092,16 @@ static void SnapshotRenderIdle(ControlRequest* req) {
     float zoomR = dm->GetZoomReal(pageNo);
     USHORT res = gRenderCache ? gRenderCache->GetTileRes(dm, pageNo) : (USHORT)0;
     Size vp = dm->GetViewPort().Size();
-    bool ready = gRenderCache && !gRenderCache->IsBusyFor(dm) && gRenderCache->VisibleTargetTilesReady(dm);
+    Str whyNot;
+    bool busy = gRenderCache && gRenderCache->IsBusyFor(dm);
+    bool ready = gRenderCache && !busy && gRenderCache->VisibleTargetTilesReady(dm, &whyNot);
+    if (busy) {
+        whyNot = StrL("rendering");
+    }
     int nQ = gRenderCache ? gRenderCache->requestCount : -1;
-    str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), fmt("zoomV=%.1f zoomR=%.3f res=%d vp=%dx%d ready=%d q=%d",
-                                                              zoomV, zoomR, (int)res, vp.dx, vp.dy, ready ? 1 : 0, nQ));
+    str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)),
+                fmt("zoomV=%.1f zoomR=%.3f res=%d vp=%dx%d ready=%d q=%d why=%s", zoomV, zoomR, (int)res, vp.dx, vp.dy,
+                    ready ? 1 : 0, nQ, whyNot));
     req->idleState = ready ? RenderIdleState::Idle : (gRenderCache ? RenderIdleState::Busy : RenderIdleState::NotReady);
     SetEvent(req->done);
 }
