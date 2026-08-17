@@ -10,11 +10,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  ControlClient,
-  ControlCommand,
-  withControlledSumatra,
-} from "./control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // minimal N-page PDF (content doesn't matter; we assert CurrentPageNo).
@@ -64,11 +60,7 @@ function parsePage(raw: string): number {
   return Number(m[1]);
 }
 
-async function favNav(
-  client: ControlClient,
-  action: string,
-  pageNo?: number,
-): Promise<number> {
+async function favNav(client: ControlClient, action: string, pageNo?: number): Promise<number> {
   const deadline = Date.now() + 20_000;
   for (;;) {
     const args: (string | number)[] = pageNo === undefined ? [action] : [action, pageNo];

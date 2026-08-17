@@ -76,10 +76,7 @@ async function runCppCheck(all: boolean): Promise<void> {
     }
   }
 
-  await Promise.all([
-    pipeStream(proc.stdout, process.stdout),
-    pipeStream(proc.stderr, process.stderr),
-  ]);
+  await Promise.all([pipeStream(proc.stdout, process.stdout), pipeStream(proc.stderr, process.stderr)]);
 
   writer.end();
   const exitCode = await proc.exited;

@@ -18,7 +18,10 @@ async function expectOpensWithToc(path: string, label: string): Promise<void> {
   if (exitCode !== 0) {
     throw new Error(`issue-1201: ${label} failed: ${(raw ?? "").trim()}`);
   }
-  const lines = (raw ?? "").trim().split("\n").filter((l) => l.length > 0);
+  const lines = (raw ?? "")
+    .trim()
+    .split("\n")
+    .filter((l) => l.length > 0);
   if (lines.length === 0) {
     throw new Error(`issue-1201: ${label} has empty TOC`);
   }

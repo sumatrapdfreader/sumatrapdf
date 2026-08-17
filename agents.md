@@ -24,7 +24,7 @@ When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing`
 
 After making a change to a .cpp, .c or .h file under `src/` (and before running build.ts), run clang-format on those files to reformat them in place. Do **not** clang-format third-party / vendored code (`ext/`, etc.) — keep edits there minimal and match the existing local style.
 
-For .ts / .js / .json / .md files, the equivalent is `bunx prettier --write <files>`. Settings live in `.prettierrc.json` (`printWidth` 120, `endOfLine` lf) and `.prettierignore` (vendored code, build output, and the generated `docs/md/Advanced-options-settings.md`). Format only the files you touched: most of `cmd/` and `tests/` predates the config and would produce large unrelated diffs.
+After changing a .ts file under `cmd/` or `tests/`, run `bun cmd/format.ts` — it runs prettier over `cmd/**/*.ts` and `tests/**/*.ts` and then clang-formats the C/C++ sources. Use `bun cmd/format.ts -ts` to run only the prettier pass (no Visual Studio / clang-format needed). Prettier settings live in `.prettierrc.json` (`printWidth` 120, `endOfLine` lf) and `.prettierignore` (vendored code, build output, scratch `tmp/` dirs, and the generated `docs/md/Advanced-options-settings.md`). For other prettier-owned files (.js / .json / .md) run `bunx prettier --write <files>` on the files you touched.
 
 Never commit changes automatically. Always wait for explicit command to commit changes.
 

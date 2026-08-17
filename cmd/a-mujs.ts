@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -59,11 +51,7 @@ function parseArgs(): Args {
   };
 }
 
-async function checkout(
-  repo: string,
-  rev: string,
-  keep: boolean,
-): Promise<void> {
+async function checkout(repo: string, rev: string, keep: boolean): Promise<void> {
   mkdirSync(depsDir, { recursive: true });
   if (!keep && existsSync(checkoutDir)) {
     rmSync(checkoutDir, { recursive: true, force: true });
@@ -225,12 +213,7 @@ function expandLocalIncludes(
       throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
     }
     included.add(incPath);
-    out.push(
-      expandLocalIncludes(incPath, byName, skipIncludes, included, [
-        ...stack,
-        path,
-      ]),
-    );
+    out.push(expandLocalIncludes(incPath, byName, skipIncludes, included, [...stack, path]));
   }
   return out.join("\n");
 }
@@ -241,9 +224,7 @@ function prepareChunk(
   skipIncludes = new Set<string>(),
   included?: Set<string>,
 ): string {
-  return normalizeBlankLines(
-    stripComments(expandLocalIncludes(path, byName, skipIncludes, included)),
-  );
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, byName, skipIncludes, included)));
 }
 
 function generateAmalgamation(root: string): {
@@ -253,24 +234,14 @@ function generateAmalgamation(root: string): {
   const byName = new Map(listFiles(root).map((path) => [basename(path), path]));
   const header = prepareChunk(join(root, "mujs.h"), byName);
   const source = normalizeBlankLines(
-    [
-      sourcePreamble,
-      prepareChunk(
-        join(root, "one.c"),
-        byName,
-        new Set(["mujs.h"]),
-        new Set<string>(),
-      ),
-    ].join("\n"),
+    [sourcePreamble, prepareChunk(join(root, "one.c"), byName, new Set(["mujs.h"]), new Set<string>())].join("\n"),
   );
   return { header, source };
 }
 
 function versionText(repo: string, rev: string): string {
   const commitSha1 = gitOutput(["rev-parse", "HEAD"], checkoutDir);
-  const originUrl =
-    gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) ||
-    repo;
+  const originUrl = gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) || repo;
   const githubUrl = normalizeGithubUrl(originUrl);
   const lines = [
     `project_homepage: ${homepage}`,

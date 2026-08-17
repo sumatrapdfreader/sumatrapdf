@@ -267,14 +267,20 @@ function parseHeader(headerPath: string): Candidate[] {
         i = declStart;
         continue;
       }
-      if (/^(struct|class|enum|namespace|typedef|using|template|constexpr|const\s|static\s+constexpr)\b/.test(firstDeclLine)) {
+      if (
+        /^(struct|class|enum|namespace|typedef|using|template|constexpr|const\s|static\s+constexpr)\b/.test(
+          firstDeclLine,
+        )
+      ) {
         // comment documents type/constant — keep
         // but `static Type foo();` is a function — constexpr function rare as decl
-        if (!/^\s*(static\s+)?(inline\s+)?(constexpr\s+)?[\w:<>\*&]+\s+[\w:]+\s*\(/.test(firstDeclLine) &&
-            !/^\s*(static\s+)?(inline\s+)?[\w:<>\*&]+\s*[\*&]?\s*[\w:]+\s*\(/.test(firstDeclLine) &&
-            !/^\s*[\w:<>\*&]+\s+[\w:]+\s*\(/.test(firstDeclLine) &&
-            !/^\s*virtual\b/.test(firstDeclLine) &&
-            !/^\s*explicit\b/.test(firstDeclLine)) {
+        if (
+          !/^\s*(static\s+)?(inline\s+)?(constexpr\s+)?[\w:<>\*&]+\s+[\w:]+\s*\(/.test(firstDeclLine) &&
+          !/^\s*(static\s+)?(inline\s+)?[\w:<>\*&]+\s*[\*&]?\s*[\w:]+\s*\(/.test(firstDeclLine) &&
+          !/^\s*[\w:<>\*&]+\s+[\w:]+\s*\(/.test(firstDeclLine) &&
+          !/^\s*virtual\b/.test(firstDeclLine) &&
+          !/^\s*explicit\b/.test(firstDeclLine)
+        ) {
           // check more carefully with extractFuncName after full decl
           if (/^\s*(struct|class|enum|namespace|typedef|using|template)\b/.test(firstDeclLine)) {
             i = declStart;
@@ -377,8 +383,7 @@ function parseHeaderFixed(headerPath: string): Candidate[] {
     }
     return null;
   };
-  const currentNamespaces = (): string[] =>
-    stack.filter((f) => f.kind === "ns" && f.name).map((f) => f.name as string);
+  const currentNamespaces = (): string[] => stack.filter((f) => f.kind === "ns" && f.name).map((f) => f.name as string);
 
   function trackLine(line: string) {
     // remove comments and strings (rough)
@@ -512,15 +517,9 @@ function parseHeaderFixed(headerPath: string): Candidate[] {
       const decl = declLines.join("\n");
       const declStart = j;
 
-      if (
-        looksLikeFunctionDecl(decl) &&
-        !hasBodyInHeader(decl) &&
-        !isPureVirtual(decl) &&
-        !isDefaultOrDelete(decl)
-      ) {
+      if (looksLikeFunctionDecl(decl) && !hasBodyInHeader(decl) && !isPureVirtual(decl) && !isDefaultOrDelete(decl)) {
         const firstDeclLine = lines[j].trim();
-        const isTypeIntro =
-          /^(struct|class|enum|namespace|typedef|using|template)\b/.test(firstDeclLine);
+        const isTypeIntro = /^(struct|class|enum|namespace|typedef|using|template)\b/.test(firstDeclLine);
         // field / var with initializer call: Type name = Foo(...);
         const eqBeforeParen = (() => {
           const idxEq = decl.indexOf("=");
@@ -751,10 +750,7 @@ function isFunctionDefinitionAt(lines: string[], lineIdx: number, openParenCol: 
   return false;
 }
 
-function findDefinitions(
-  cand: Candidate,
-  searchFiles: string[],
-): { file: string; line: number }[] {
+function findDefinitions(cand: Candidate, searchFiles: string[]): { file: string; line: number }[] {
   const hits: { file: string; line: number }[] = [];
   const name = cand.funcName;
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -807,7 +803,9 @@ function findDefinitions(
           const hasTypeOnLine =
             /\b(static|inline|constexpr|virtual|explicit|extern|const|unsigned|signed|struct|class|enum|void|bool|int|char|long|short|float|double|auto|size_t|u8|u16|u32|u64|i8|i16|i32|i64|Str|WStr|TempStr|TempWStr|Size|Rect|Point|Color|HWND|HDC|BOOL|DWORD|LRESULT|HRESULT|UINT|BYTE|HANDLE|HFONT|HBITMAP|COLORREF|Vec|ByteSlice|Pixmap|RenderedBitmap|FILETIME|PointF|RectF|INT_PTR|UINT_PTR|WPARAM|LPARAM|ATOM|WCHAR)\b/.test(
               before,
-            ) || /[>*&]\s*$/.test(before.trim()) || /::\s*$/.test(before);
+            ) ||
+            /[>*&]\s*$/.test(before.trim()) ||
+            /::\s*$/.test(before);
           if (!hasTypeOnLine) {
             let p = li - 1;
             while (p >= 0 && lines[p].trim() === "") {
@@ -987,7 +985,7 @@ function main() {
       for (let i = r.start; i < r.end; i++) {
         remove.add(i);
       }
-      // also remove a single blank line that would be left between prev and decl? 
+      // also remove a single blank line that would be left between prev and decl?
       // If line after commentEnd is blank and was only separator, keep one blank as before.
       // Removing only comment lines is fine.
     }

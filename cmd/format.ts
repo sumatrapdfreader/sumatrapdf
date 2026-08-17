@@ -35,7 +35,37 @@ async function formatFile(clangFormatPath: string, path: string): Promise<void> 
   }
 }
 
+// prettier owns our .ts sources; .prettierrc.json / .prettierignore have the settings
+const prettierGlobs = ["cmd/**/*.ts", "tests/**/*.ts"];
+
+async function formatTsFiles(): Promise<void> {
+  console.log(`running prettier on ${prettierGlobs.join(" ")}`);
+  await $`bunx prettier --write --log-level warn ${prettierGlobs}`;
+}
+
+function usage(): string {
+  return `Usage: bun cmd/format.ts [-ts]
+
+  (no options)  format C/C++ sources with clang-format and .ts sources with prettier
+  -ts           only run prettier on the .ts sources
+`;
+}
+
 async function main() {
+  const args = process.argv.slice(2);
+  const tsOnly = args.includes("-ts");
+  const unknown = args.filter((a) => a !== "-ts");
+  if (unknown.length > 0) {
+    console.error(`unknown option: ${unknown[0]}\n`);
+    console.error(usage());
+    process.exit(1);
+  }
+
+  await formatTsFiles();
+  if (tsOnly) {
+    return;
+  }
+
   const { clangFormatPath: cfPath } = detectVisualStudio();
   const clangFormatPath = cfPath || "clang-format.exe";
   console.log(`using '${clangFormatPath}'`);

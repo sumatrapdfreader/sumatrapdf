@@ -186,9 +186,7 @@ export function scanFileContent(rel: string, content: string): Entry[] {
     if (charPtrRe.test(line) || wcharPtrRe.test(line)) {
       // Match first param (open-paren immediately before char*) and later params (comma before char*).
       const ptrSig = "(?:const\\s+)?(?:char|WCHAR|wchar_t)\\s*\\*";
-      const isParam =
-        new RegExp("\\w\\s*\\(\\s*" + ptrSig).test(line) ||
-        new RegExp("[(,]\\s*" + ptrSig).test(line);
+      const isParam = new RegExp("\\w\\s*\\(\\s*" + ptrSig).test(line) || new RegExp("[(,]\\s*" + ptrSig).test(line);
       if (isParam) {
         const m = line.match(charPtrRe) ?? line.match(wcharPtrRe);
         entries.push({

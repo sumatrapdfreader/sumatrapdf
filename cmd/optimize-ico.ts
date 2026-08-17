@@ -16,7 +16,8 @@ import { tmpdir } from "node:os";
 const ZOPFLIPNG = join(import.meta.dir, "..", "bin", "zopflipng.exe");
 
 function zopfli(png: Buffer, scratch: string): Buffer {
-  const inP = join(scratch, "in.png"), outP = join(scratch, "out.png");
+  const inP = join(scratch, "in.png"),
+    outP = join(scratch, "out.png");
   writeFileSync(inP, png);
   const p = Bun.spawnSync({ cmd: [ZOPFLIPNG, "-y", inP, outP], stdout: "ignore", stderr: "ignore" });
   if (p.exitCode !== 0) return png;
@@ -34,7 +35,8 @@ function optimizeIco(path: string, scratch: string): boolean {
   const notes: string[] = [];
   for (let i = 0; i < count; i++) {
     const o = 6 + i * 16;
-    const w = buf[o] || 256, h = buf[o + 1] || 256;
+    const w = buf[o] || 256,
+      h = buf[o + 1] || 256;
     const bpp = buf.readUInt16LE(o + 6);
     const size = buf.readUInt32LE(o + 8);
     const fo = buf.readUInt32LE(o + 12);
@@ -60,14 +62,17 @@ function optimizeIco(path: string, scratch: string): boolean {
   // reassemble
   const n = frames.length;
   const head = Buffer.alloc(6 + n * 16);
-  head.writeUInt16LE(0, 0); head.writeUInt16LE(1, 2); head.writeUInt16LE(n, 4);
+  head.writeUInt16LE(0, 0);
+  head.writeUInt16LE(1, 2);
+  head.writeUInt16LE(n, 4);
   let dataOff = 6 + n * 16;
   const blobs: Buffer[] = [];
   frames.forEach((f, i) => {
     const o = 6 + i * 16;
     head[o] = f.w >= 256 ? 0 : f.w;
     head[o + 1] = f.h >= 256 ? 0 : f.h;
-    head[o + 2] = 0; head[o + 3] = 0;
+    head[o + 2] = 0;
+    head[o + 3] = 0;
     head.writeUInt16LE(1, o + 4); // planes
     head.writeUInt16LE(f.bpp, o + 6);
     head.writeUInt32LE(f.data.length, o + 8);
@@ -79,7 +84,9 @@ function optimizeIco(path: string, scratch: string): boolean {
   if (out.length >= buf.length) return false;
   writeFileSync(path, out);
   const name = path.split(/[\\/]/).pop();
-  console.log(`  ${name}: ${buf.length} -> ${out.length} (-${(((buf.length - out.length) / buf.length) * 100).toFixed(0)}%)  [${notes.join(", ")}]`);
+  console.log(
+    `  ${name}: ${buf.length} -> ${out.length} (-${(((buf.length - out.length) / buf.length) * 100).toFixed(0)}%)  [${notes.join(", ")}]`,
+  );
   return true;
 }
 
@@ -94,7 +101,9 @@ function main() {
     } else if (t.toLowerCase().endsWith(".ico")) icos.push(t);
   }
   const scratch = mkdtempSync(join(tmpdir(), "ico-"));
-  let totalBefore = 0, totalAfter = 0, nChanged = 0;
+  let totalBefore = 0,
+    totalAfter = 0,
+    nChanged = 0;
   console.log(`optimizing ${icos.length} .ico files:`);
   for (const ico of icos) {
     const before = statSync(ico).size;
@@ -104,7 +113,9 @@ function main() {
     if (did) nChanged++;
   }
   rmSync(scratch, { recursive: true, force: true });
-  console.log(`\noptimized ${nChanged}/${icos.length} files: ${totalBefore} -> ${totalAfter} bytes (-${(((totalBefore - totalAfter) / totalBefore) * 100).toFixed(1)}%)`);
+  console.log(
+    `\noptimized ${nChanged}/${icos.length} files: ${totalBefore} -> ${totalAfter} bytes (-${(((totalBefore - totalAfter) / totalBefore) * 100).toFixed(1)}%)`,
+  );
 }
 
 main();

@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -74,11 +66,7 @@ function parseArgs(): Args {
   };
 }
 
-async function checkout(
-  repo: string,
-  rev: string,
-  keep: boolean,
-): Promise<void> {
+async function checkout(repo: string, rev: string, keep: boolean): Promise<void> {
   mkdirSync(depsDir, { recursive: true });
   if (!keep && existsSync(checkoutDir)) {
     rmSync(checkoutDir, { recursive: true, force: true });
@@ -254,12 +242,7 @@ function expandLocalIncludes(
         throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
       }
       includedIncludes?.add(incPath);
-      out.push(
-        expandLocalIncludes(incPath, byName, skipIncludes, includedIncludes, [
-          ...stack,
-          path,
-        ]),
-      );
+      out.push(expandLocalIncludes(incPath, byName, skipIncludes, includedIncludes, [...stack, path]));
     } else {
       out.push(line);
     }
@@ -273,14 +256,8 @@ function prepareHeader(path: string, byName: Map<string, string>): string {
 
 function patchPublicHeader(text: string): string {
   return text
-    .replace(
-      "#if HAVE_UNISTD_H-0\n#  define Z_HAVE_UNISTD_H",
-      "#ifdef HAVE_UNISTD_H\n#  define Z_HAVE_UNISTD_H",
-    )
-    .replace(
-      "#if HAVE_STDARG_H-0\n#  define Z_HAVE_STDARG_H",
-      "#ifdef HAVE_STDARG_H\n#  define Z_HAVE_STDARG_H",
-    );
+    .replace("#if HAVE_UNISTD_H-0\n#  define Z_HAVE_UNISTD_H", "#ifdef HAVE_UNISTD_H\n#  define Z_HAVE_UNISTD_H")
+    .replace("#if HAVE_STDARG_H-0\n#  define Z_HAVE_STDARG_H", "#ifdef HAVE_STDARG_H\n#  define Z_HAVE_STDARG_H");
 }
 
 function prepareChunk(
@@ -289,11 +266,7 @@ function prepareChunk(
   skipIncludes = new Set<string>(),
   includedIncludes?: Set<string>,
 ): string {
-  return normalizeBlankLines(
-    stripComments(
-      expandLocalIncludes(path, byName, skipIncludes, includedIncludes),
-    ),
-  );
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, byName, skipIncludes, includedIncludes)));
 }
 
 function generateAmalgamation(root: string): {
@@ -301,33 +274,20 @@ function generateAmalgamation(root: string): {
   source: string;
 } {
   const srcDir = findZlibSrcDir(root);
-  const byName = new Map(
-    listFiles(srcDir).map((path) => [basename(path), path]),
-  );
-  const header = patchPublicHeader(
-    prepareHeader(join(srcDir, "zlib.h"), byName),
-  );
+  const byName = new Map(listFiles(srcDir).map((path) => [basename(path), path]));
+  const header = patchPublicHeader(prepareHeader(join(srcDir, "zlib.h"), byName));
   const chunks: string[] = [sourcePreamble];
   const sourceSkipIncludes = new Set(["zlib.h"]);
   const includedIncludes = new Set<string>();
   for (const name of sourceFiles) {
-    chunks.push(
-      prepareChunk(
-        join(srcDir, name),
-        byName,
-        sourceSkipIncludes,
-        includedIncludes,
-      ),
-    );
+    chunks.push(prepareChunk(join(srcDir, name), byName, sourceSkipIncludes, includedIncludes));
   }
   return { header, source: normalizeBlankLines(chunks.join("\n")) };
 }
 
 function versionText(repo: string, rev: string): string {
   const commitSha1 = gitOutput(["rev-parse", "HEAD"], checkoutDir);
-  const originUrl =
-    gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) ||
-    repo;
+  const originUrl = gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) || repo;
   const githubUrl = normalizeGithubUrl(originUrl);
   const lines = [
     `project_homepage: ${homepage}`,

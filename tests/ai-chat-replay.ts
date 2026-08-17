@@ -7,7 +7,8 @@
 import { ControlCommand, withControlledSumatra } from "./control";
 import { EXE, runStandalone } from "./util";
 
-const PDF = process.argv.slice(2).filter((a) => a !== "--no-build")[0] ??
+const PDF =
+  process.argv.slice(2).filter((a) => a !== "--no-build")[0] ??
   "C:\\Users\\kjk\\Downloads\\a_players_guide_to_talislanta.1.pdf";
 
 const USER = "summarize page 1";

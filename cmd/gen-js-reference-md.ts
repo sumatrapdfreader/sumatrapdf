@@ -141,10 +141,7 @@ function skipDirectiveOptions(lines: string[], start: number): number {
   return i;
 }
 
-function parseListTable(
-  lines: string[],
-  start: number,
-): { md: string[]; next: number } {
+function parseListTable(lines: string[], start: number): { md: string[]; next: number } {
   let i = skipDirectiveOptions(lines, start + 1);
   const rows: string[][] = [];
   while (i < lines.length && !lines[i].trim()) {
@@ -167,10 +164,7 @@ function parseListTable(
   return { md: markdownTableFromRows(rows), next: i };
 }
 
-function parseGridTable(
-  lines: string[],
-  start: number,
-): { md: string[]; next: number } {
+function parseGridTable(lines: string[], start: number): { md: string[]; next: number } {
   let i = skipDirectiveOptions(lines, start + 1);
   const rows: string[][] = [];
   while (i < lines.length) {
@@ -227,10 +221,7 @@ function markdownTableFromRows(rows: string[][]): string[] {
   return md;
 }
 
-function renderCodeBlock(
-  lines: string[],
-  start: number,
-): { md: string[]; next: number } {
+function renderCodeBlock(lines: string[], start: number): { md: string[]; next: number } {
   const langMatch = lines[start].match(/^\.\. code-block::\s*(\w*)/);
   const lang = langMatch?.[1] ?? "";
   const fenceLang = lang === "javascript" ? "js" : lang === "default" ? "" : lang;
@@ -259,10 +250,7 @@ function renderCodeBlock(
   };
 }
 
-function collectIndentedBlock(
-  lines: string[],
-  start: number,
-): { block: string[]; next: number } {
+function collectIndentedBlock(lines: string[], start: number): { block: string[]; next: number } {
   const block: string[] = [];
   let i = start;
   while (i < lines.length && !lines[i].trim()) {
@@ -307,10 +295,7 @@ function processBody(lines: string[]): string[] {
       continue;
     }
     if (line.match(/^\.\. code-block::/)) {
-      const { md, next } = renderCodeBlock(
-        lines.map(normalizeIndent),
-        i,
-      );
+      const { md, next } = renderCodeBlock(lines.map(normalizeIndent), i);
       out.push(...md);
       i = next;
       continue;
@@ -376,10 +361,7 @@ function rstToMarkdown(content: string, titleOffset: number): string {
 
     if (isSkippableTopDirective(line)) {
       i++;
-      while (
-        i < lines.length &&
-        (lines[i].startsWith("\t") || (lines[i].trim() && lines[i].match(/^\s{2,}/)))
-      ) {
+      while (i < lines.length && (lines[i].startsWith("\t") || (lines[i].trim() && lines[i].match(/^\s{2,}/)))) {
         i++;
       }
       continue;
@@ -476,11 +458,7 @@ function extractTypeTitle(rst: string): string {
 }
 
 function buildContents(): string {
-  const items: string[] = [
-    "- [Introduction](#introduction)",
-    "- [Functions](#functions)",
-    "- [Types](#types)",
-  ];
+  const items: string[] = ["- [Introduction](#introduction)", "- [Functions](#functions)", "- [Types](#types)"];
   for (const t of commonTypes) {
     const title = extractTypeTitle(readTypeRst(t)) || t;
     items.push(`  - [${title}](#${slugify(title)})`);
@@ -497,9 +475,7 @@ function main(): void {
 
   parts.push("# JavaScript API reference for SumatraPDF run");
   parts.push("");
-  parts.push(
-    "**Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**",
-  );
+  parts.push("**Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**");
   parts.push("");
   parts.push(
     "API reference for [SumatraPDF run](Tool-run.md). The scripting engine is the same as [`mutool run`](https://mupdf.readthedocs.io/en/latest/tools/mutool-run.html); this page is adapted from the [MuPDF JavaScript reference](https://mupdf.readthedocs.io/en/latest/reference/javascript/index.html).",

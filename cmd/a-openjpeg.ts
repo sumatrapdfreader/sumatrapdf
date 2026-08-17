@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -276,7 +268,7 @@ function generateAmalgamation(srcDir: string): { headers: Map<string, string>; s
   // #pragma GCC poison can't be undone, so the first include poisons them and the
   // later SIMD headers fail to compile (clang-18's mm_malloc.h uses malloc/free).
   // Disable the poison for the whole amalgamated TU.
-  const chunks = ['#define OPJ_SKIP_POISON\n', '#include "openjpeg.h"\n'];
+  const chunks = ["#define OPJ_SKIP_POISON\n", '#include "openjpeg.h"\n'];
   for (const name of sourceFiles) {
     chunks.push(prepareChunk(join(srcDir, name), srcDir, includedIncludes));
   }

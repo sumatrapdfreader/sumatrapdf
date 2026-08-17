@@ -42,9 +42,7 @@ function buildPdf(cff: Buffer): Buffer {
       "/FontBBox [-12 -274 615 768] /FontName /SUBSET+MSTT31c39b /ItalicAngle 0 /StemV 0 " +
       "/CharSet (/G45/G62/G64/G65/G6D/G72) /FontFile3 7 0 R >>",
   );
-  objs.push(
-    `<< /Filter /FlateDecode /Length ${cffZ.length} /Subtype /Type1C >>\nstream\n`,
-  );
+  objs.push(`<< /Filter /FlateDecode /Length ${cffZ.length} /Subtype /Type1C >>\nstream\n`);
   objs.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
 
   let pdf = "%PDF-1.3\n%\xe2\xe3\xcf\xd3\n";

@@ -47,16 +47,12 @@ export async function testit(): Promise<void> {
 
   for (const bad of BAD) {
     if (text.includes(bad)) {
-      throw new Error(
-        `header word spaces were dropped (issue #5871 regressed): found '${bad}'`,
-      );
+      throw new Error(`header word spaces were dropped (issue #5871 regressed): found '${bad}'`);
     }
   }
   for (const w of WANTED) {
     if (!text.includes(w)) {
-      throw new Error(
-        `extracted text is missing word spacing: expected '${w}' (issue #5871)`,
-      );
+      throw new Error(`extracted text is missing word spacing: expected '${w}' (issue #5871)`);
     }
   }
   console.log(`PASS: condensed headers keep word spaces (issue #5871)`);

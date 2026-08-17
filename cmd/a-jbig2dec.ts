@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -213,12 +207,7 @@ function expandLocalIncludes(
       throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
     }
     includedIncludes?.add(incPath);
-    out.push(
-      expandLocalIncludes(incPath, skipIncludes, includedIncludes, [
-        ...stack,
-        path,
-      ]),
-    );
+    out.push(expandLocalIncludes(incPath, skipIncludes, includedIncludes, [...stack, path]));
   }
   return out.join("\n");
 }
@@ -227,14 +216,8 @@ function prepareHeader(path: string): string {
   return normalizeBlankLines(stripComments(expandLocalIncludes(path)));
 }
 
-function prepareChunk(
-  path: string,
-  skipIncludes: Set<string>,
-  includedIncludes: Set<string>,
-): string {
-  return normalizeBlankLines(
-    stripComments(expandLocalIncludes(path, skipIncludes, includedIncludes)),
-  );
+function prepareChunk(path: string, skipIncludes: Set<string>, includedIncludes: Set<string>): string {
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, skipIncludes, includedIncludes)));
 }
 
 function generateAmalgamation(root: string): { header: string; source: string } {

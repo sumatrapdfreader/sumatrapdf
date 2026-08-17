@@ -20,11 +20,7 @@ export async function testit(): Promise<void> {
   // collapse soft newlines so multi-line phrases still match with spaces
   const text = extractPageText(pdf, 1).replaceAll("\n", " ");
   // spans a font change (roman -> bold -> roman), where the spaces used to go
-  const wanted = [
-    "Library Functions Manual",
-    "see zlib.h for full description",
-    "The zlib library is a general",
-  ];
+  const wanted = ["Library Functions Manual", "see zlib.h for full description", "The zlib library is a general"];
   for (const w of wanted) {
     if (!text.includes(w)) {
       throw new Error(`extracted text is missing word spacing: expected '${w}'`);

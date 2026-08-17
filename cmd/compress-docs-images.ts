@@ -4,7 +4,8 @@ import { join } from "node:path";
 const binDir = join("bin");
 const zopflipngPath = join(binDir, "zopflipng.exe");
 const imgDir = join("docs", "md", "img");
-const downloadUrl = "https://drpleaserespect.github.io/drpleaserespect-webassets/compiled_binaries/google/zopflipng.exe";
+const downloadUrl =
+  "https://drpleaserespect.github.io/drpleaserespect-webassets/compiled_binaries/google/zopflipng.exe";
 
 async function ensureZopflipng(): Promise<void> {
   if (existsSync(zopflipngPath)) {

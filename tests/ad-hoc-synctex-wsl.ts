@@ -26,23 +26,23 @@ const WIN_TEX_SRC = join(import.meta.dir, "issue-5702-data", TEX_NAME);
 
 const WSL_DISTRO = "Ubuntu";
 const WSL_TEST_DIR = `\\\\wsl.localhost\\${WSL_DISTRO}\\tmp\\sumatra-test-5702`;
-const WSL_TEX_SRC = join(WSL_TEST_DIR, TEX_NAME)
+const WSL_TEX_SRC = join(WSL_TEST_DIR, TEX_NAME);
 
 // line 4 of issue-5702-data/test.tex is a body paragraph that synctex maps to a position
 const TARGET_LINE = 4;
 
 type Rect = {
-  x: number,
-  y: number,
-  dx: number,
-  dy: number,
-}
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+};
 
 type FwdSearchResult = {
   ret: number;
   page: number;
   nrects: number;
-  rect?: Rect,
+  rect?: Rect;
   raw: string;
 };
 
@@ -55,7 +55,6 @@ type InvSearchResult = {
   col: number;
   raw: string;
 };
-
 
 function run(cmd: string[]): { ok: boolean; stdout: string; stderr: string } {
   try {
@@ -79,9 +78,9 @@ function findWslTectonic(): boolean {
   if (!r.ok) {
     console.log(
       `\nSKIP issue-5702: WSL distro '${WSL_DISTRO}' with tectonic not available, skipping.\n` +
-      `To run this test, install a WSL distro and tectonic inside it, e.g.:\n` +
-      `    wsl --install -d ${WSL_DISTRO}\n` +
-      `    wsl -d ${WSL_DISTRO} -- bash -lc "curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net |sh"`,
+        `To run this test, install a WSL distro and tectonic inside it, e.g.:\n` +
+        `    wsl --install -d ${WSL_DISTRO}\n` +
+        `    wsl -d ${WSL_DISTRO} -- bash -lc "curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net |sh"`,
     );
   }
   return r.ok;
@@ -92,9 +91,9 @@ function findWindowsTectonic(): boolean {
   if (!r.ok) {
     console.log(
       `\nSKIP issue-5702: tectonic not found on Windows, skipping.\n` +
-      `To install it, run this in PowerShell:\n` +
-      `    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072` +
-      `    iex ((New-Object System.Net.WebClient).DownloadString('https://drop-ps1.fullyjustified.net'))`,
+        `To install it, run this in PowerShell:\n` +
+        `    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072` +
+        `    iex ((New-Object System.Net.WebClient).DownloadString('https://drop-ps1.fullyjustified.net'))`,
     );
   }
   return r.ok;
@@ -118,9 +117,7 @@ function windowsPathToWslMountPath(winPath: string): string | null {
 // "/home/user/file.tex"), for invoking tectonic from inside WSL and for
 // computing expected DocToSource results.
 function wslUncPathToUnixPath(wslUncpath: string): string | null {
-  const match = wslUncpath.match(
-    /^\\\\(?:wsl\$|wsl\.localhost)\\[^\\]+\\(.*)$/
-  );
+  const match = wslUncpath.match(/^\\\\(?:wsl\$|wsl\.localhost)\\[^\\]+\\(.*)$/);
 
   if (!match) {
     return null;
@@ -132,10 +129,7 @@ function wslUncPathToUnixPath(wslUncpath: string): string | null {
 // runs the app's control-pipe synctex forward-search for the given pdf and
 // returns the parsed result (ret is a PDFSYNCERR_* code; 0 == PDFSYNCERR_SUCCESS),
 // including the first rect's coordinates.
-async function forwardSearch(
-  pdfPath: string,
-  srcPath: string,
-): Promise<FwdSearchResult> {
+async function forwardSearch(pdfPath: string, srcPath: string): Promise<FwdSearchResult> {
   const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestSynctex, [pdfPath, srcPath, TARGET_LINE]);
   const raw = String(rawArg).trim();
 
@@ -148,9 +142,7 @@ async function forwardSearch(
     raw,
   };
   // parse rect separately, since it's only present when nrects >= 1
-  const n = raw.match(
-    /rect_x=(-?\d+)\s+rect_y=(-?\d+)\s+rect_dx=(-?\d+)\s+rect_dy=(-?\d+)/,
-  );
+  const n = raw.match(/rect_x=(-?\d+)\s+rect_y=(-?\d+)\s+rect_dx=(-?\d+)\s+rect_dy=(-?\d+)/);
   if (n) {
     result["rect"] = {
       x: parseInt(n[1]),
@@ -165,12 +157,7 @@ async function forwardSearch(
 
 // runs the app's control-pipe synctex inverse-search for the given pdf and
 // returns the parsed result (ret is a PDFSYNCERR_* code; 0 == PDFSYNCERR_SUCCESS)
-async function inverseSearch(
-  pdfPath: string,
-  page: number,
-  x: number,
-  y: number,
-): Promise<InvSearchResult> {
+async function inverseSearch(pdfPath: string, page: number, x: number, y: number): Promise<InvSearchResult> {
   const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestInverseSearch, [pdfPath, page, x, y]);
   const raw = String(rawArg).trim();
 
@@ -201,7 +188,7 @@ function pointFromFwdSearchResult(res: FwdSearchResult): FwdSearchPoint | null {
 function compileFiles(
   workDir: string,
   srcPath: string,
-  { useWsl = true }: { useWsl?: boolean; } = {}
+  { useWsl = true }: { useWsl?: boolean } = {},
 ): { pdfPath: string; srcPath: string } {
   // clean up working directory
   rmSync(workDir, { recursive: true, force: true });
@@ -218,7 +205,7 @@ function compileFiles(
     if (!WslCompatibleSrcPath) {
       throw new Error(`Source path is neither a Windows path nor a WSL UNC path: ${srcPath}`);
     }
-    srcPathForTectonic  = WslCompatibleSrcPath;
+    srcPathForTectonic = WslCompatibleSrcPath;
   }
 
   let workDirForTectonic = workDir;
@@ -234,9 +221,7 @@ function compileFiles(
   console.log(`• compiling ${srcPathForTectonic} in ${useWsl ? "WSL" : "Windows"}`);
   const cmd = useWsl ? ["wsl.exe", "-d", WSL_DISTRO, "--"] : [];
 
-  cmd.push(
-    "tectonic", "-X", "compile", srcPathForTectonic, "--synctex", "--outdir", workDirForTectonic,
-  );
+  cmd.push("tectonic", "-X", "compile", srcPathForTectonic, "--synctex", "--outdir", workDirForTectonic);
 
   const compile = run(cmd);
   if (!compile.ok) {
@@ -252,11 +237,11 @@ async function testForwardSearch(
   pdfPath: string,
   srcPath: string,
   label: string,
-): Promise<{ ok: boolean, result: FwdSearchResult }> {
-    const res = await forwardSearch(pdfPath, srcPath);
-    const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
-    console.log(`${pass ? "PASS" : "FAIL"} forward search (${label}) -> nrects: ${res.nrects}`);
-    return { ok: pass, result: res };
+): Promise<{ ok: boolean; result: FwdSearchResult }> {
+  const res = await forwardSearch(pdfPath, srcPath);
+  const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
+  console.log(`${pass ? "PASS" : "FAIL"} forward search (${label}) -> nrects: ${res.nrects}`);
+  return { ok: pass, result: res };
 }
 
 async function testInverseSearch(
@@ -264,14 +249,14 @@ async function testInverseSearch(
   srcPath: string,
   fwdResult: FwdSearchResult,
   label: string,
-  { expectAsIs = false }: { expectAsIs?: boolean; } = {},
+  { expectAsIs = false }: { expectAsIs?: boolean } = {},
 ): Promise<{ ok: boolean }> {
   const pt = pointFromFwdSearchResult(fwdResult);
   if (!pt) {
     console.log(`FAIL inverse search (${label}) -> could not discover point: ${fwdResult.raw}`);
     return { ok: false };
   }
-  const expectedSrcFile = expectAsIs ? srcPath : windowsPathToWslMountPath(srcPath) ?? wslUncPathToUnixPath(srcPath);
+  const expectedSrcFile = expectAsIs ? srcPath : (windowsPathToWslMountPath(srcPath) ?? wslUncPathToUnixPath(srcPath));
   const res = await inverseSearch(pdfPath, pt.page, pt.x, pt.y);
   const pass = res.ret === 0 && res.srcfile === expectedSrcFile && res.line === TARGET_LINE;
   console.log(`${pass ? "PASS" : "FAIL"} inverse search (${label}) -> srcfile: ${res.srcfile}`);
@@ -320,11 +305,11 @@ export async function testit(): Promise<void> {
 
     const fwd = await testForwardSearch(files.pdfPath, files.srcPath, scenario.name);
     const inv = await testInverseSearch(files.pdfPath, files.srcPath, fwd.result, scenario.name, {
-        // Windows-tectonic-compiled files: DocToSource returns the path
-        // as-is (it's already a normal Windows/WSL-UNC path the compiler
-        // itself recorded), not converted to /mnt/... or Unix form.
-        expectAsIs: scenario.toolchain === "windows",
-      });
+      // Windows-tectonic-compiled files: DocToSource returns the path
+      // as-is (it's already a normal Windows/WSL-UNC path the compiler
+      // itself recorded), not converted to /mnt/... or Unix form.
+      expectAsIs: scenario.toolchain === "windows",
+    });
 
     results.push({ name: `forward search (${scenario.name})`, ok: fwd.ok });
     results.push({ name: `inverse search (${scenario.name})`, ok: inv.ok });

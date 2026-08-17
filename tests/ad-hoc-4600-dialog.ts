@@ -120,7 +120,9 @@ function writeSettings(extra: string[]): void {
   mkdirSync(APPDATA, { recursive: true });
   writeFileSync(
     join(APPDATA, "SumatraPDF-settings.txt"),
-    [`EBookUI [`, `\tFontName = Georgia`, `\tLineSpacing = 1.4`, `]`, `RestoreSession = false`, ...extra, ``].join("\n"),
+    [`EBookUI [`, `\tFontName = Georgia`, `\tLineSpacing = 1.4`, `]`, `RestoreSession = false`, ...extra, ``].join(
+      "\n",
+    ),
   );
 }
 

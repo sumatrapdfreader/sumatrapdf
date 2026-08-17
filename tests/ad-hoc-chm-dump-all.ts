@@ -80,9 +80,8 @@ export async function testit(): Promise<void> {
       // DotZLib.Codec.html and CodecBaseMethods.html have run-to-run variable
       // decompressed bytes (pre-existing); ignore sha1 on those two lines only.
       const norm = (s: string) =>
-        s.replace(
-          /^(file class=.* path=\/DotZLib\.Codec(?:BaseMethods)?\.html)$/gm,
-          (line) => line.replace(/sha1=[a-f0-9]{40}/, "sha1=*"),
+        s.replace(/^(file class=.* path=\/DotZLib\.Codec(?:BaseMethods)?\.html)$/gm, (line) =>
+          line.replace(/sha1=[a-f0-9]{40}/, "sha1=*"),
         );
       if (norm(a) !== norm(b)) {
         throw new Error("MISMATCH: -dump-chm output differs from tests/chm-dump-all-baseline.txt");

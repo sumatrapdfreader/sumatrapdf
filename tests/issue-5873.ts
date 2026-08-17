@@ -33,19 +33,13 @@ export async function testit(): Promise<void> {
   console.log(`extracted ${text.length} chars`);
 
   if (text.includes(MOJIBAKE_TITLE)) {
-    throw new Error(
-      `mupdf still extracts Latin-1 mojibake for Russian title (issue #5873 regressed)`,
-    );
+    throw new Error(`mupdf still extracts Latin-1 mojibake for Russian title (issue #5873 regressed)`);
   }
   if (!text.includes(TARGET_TITLE)) {
-    throw new Error(
-      `mupdf text extraction is missing '${TARGET_TITLE}' (issue #5873)`,
-    );
+    throw new Error(`mupdf text extraction is missing '${TARGET_TITLE}' (issue #5873)`);
   }
   if (!text.includes(TARGET_WORD)) {
-    throw new Error(
-      `mupdf text extraction is missing '${TARGET_WORD}' (issue #5873)`,
-    );
+    throw new Error(`mupdf text extraction is missing '${TARGET_WORD}' (issue #5873)`);
   }
   console.log(`PASS: mupdf extracts Russian text correctly (issue #5873)`);
 }

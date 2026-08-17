@@ -151,8 +151,7 @@ function parseModules(raw: string): Map<number, ModuleInfo> {
 
 function parseSectionContribs(raw: string): SectionContrib[] {
   const contribs: SectionContrib[] = [];
-  const re =
-    /^\s*SC\[([^\]]+)\]\s+\|\s+mod\s+=\s+(\d+),\s+([0-9A-Fa-f]+):(\d+),\s+size\s+=\s+(\d+)/;
+  const re = /^\s*SC\[([^\]]+)\]\s+\|\s+mod\s+=\s+(\d+),\s+([0-9A-Fa-f]+):(\d+),\s+size\s+=\s+(\d+)/;
   for (const line of raw.split(/\r?\n/)) {
     const m = line.match(re);
     if (!m) {
@@ -382,7 +381,9 @@ function renderReport(
   lines.push("");
   lines.push("Notes:");
   lines.push("- Sizes come from `llvm-pdbutil dump --section-contribs`, grouped through `dump --modules`.");
-  lines.push("- This measures linked contribution size, not static .lib file size; unused library members are not counted.");
+  lines.push(
+    "- This measures linked contribution size, not static .lib file size; unused library members are not counted.",
+  );
   lines.push("- PE headers, alignment padding, certificate data, and gaps are shown only in the unattributed total.");
   lines.push(...renderBucketTable("By Project", projects, attributedSize));
   lines.push(...renderBucketTable(`Top ${top} Object Files`, objects, attributedSize, top));
@@ -424,7 +425,9 @@ async function main() {
   writeFileSync(out, report);
 
   const attributedSize = contribs.reduce((sum, c) => sum + c.size, 0);
-  console.log(`Attributed ${formatSize(attributedSize)} bytes across ${contribs.length.toLocaleString()} contributions.`);
+  console.log(
+    `Attributed ${formatSize(attributedSize)} bytes across ${contribs.length.toLocaleString()} contributions.`,
+  );
   console.log(`Wrote ${out}`);
 }
 

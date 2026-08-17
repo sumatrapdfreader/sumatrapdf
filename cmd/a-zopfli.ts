@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize, relative } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -267,11 +261,7 @@ function buildIncludeMap(root: string): Map<string, string> {
   return map;
 }
 
-function resolveInclude(
-  fromPath: string,
-  inc: string,
-  byName: Map<string, string>,
-): string | undefined {
+function resolveInclude(fromPath: string, inc: string, byName: Map<string, string>): string | undefined {
   const relativePath = normPath(join(dirname(fromPath), inc));
   if (existsSync(relativePath)) {
     return relativePath;
@@ -310,12 +300,7 @@ function expandLocalIncludes(
         throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
       }
       includedIncludes?.add(incPath);
-      out.push(
-        expandLocalIncludes(incPath, byName, skipIncludes, includedIncludes, [
-          ...stack,
-          path,
-        ]),
-      );
+      out.push(expandLocalIncludes(incPath, byName, skipIncludes, includedIncludes, [...stack, path]));
     } else {
       out.push(line);
     }
@@ -324,11 +309,7 @@ function expandLocalIncludes(
 }
 
 function prepareHeader(path: string, byName: Map<string, string>): string {
-  return normalizeBlankLines(
-    stripComments(
-      expandLocalIncludes(path, byName, new Set([basename(path)])),
-    ),
-  );
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, byName, new Set([basename(path)]))));
 }
 
 function prepareChunk(
@@ -337,18 +318,11 @@ function prepareChunk(
   skipIncludes: Set<string>,
   includedIncludes: Set<string>,
 ): string {
-  return normalizeBlankLines(
-    stripComments(
-      expandLocalIncludes(path, byName, skipIncludes, includedIncludes),
-    ),
-  );
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, byName, skipIncludes, includedIncludes)));
 }
 
 function stripZlibContainerAdler32(text: string): string {
-  return text.replace(
-    /static unsigned adler32\(const unsigned char\* data, size_t size\)\s*\{[\s\S]*?\n\}\n\n/,
-    "",
-  );
+  return text.replace(/static unsigned adler32\(const unsigned char\* data, size_t size\)\s*\{[\s\S]*?\n\}\n\n/, "");
 }
 
 function stripLodepngAdler32(text: string): string {
@@ -376,40 +350,19 @@ function generateAmalgamation(root: string): {
 } {
   const srcDir = join(root, "src");
   const byName = buildIncludeMap(root);
-  const lodepngHeader = prepareHeader(
-    join(srcDir, "zopflipng", "lodepng", "lodepng.h"),
-    byName,
-  );
-  const zopflipngHeader = prepareHeader(
-    join(srcDir, "zopflipng", "zopflipng_lib.h"),
-    byName,
-  );
+  const lodepngHeader = prepareHeader(join(srcDir, "zopflipng", "lodepng", "lodepng.h"), byName);
+  const zopflipngHeader = prepareHeader(join(srcDir, "zopflipng", "zopflipng_lib.h"), byName);
 
-  const skipIncludes = new Set([
-    "zopflipng_lib.h",
-    "lodepng.h",
-    "zopflipng/lodepng/lodepng.h",
-    "lodepng/lodepng.h",
-  ]);
+  const skipIncludes = new Set(["zopflipng_lib.h", "lodepng.h", "zopflipng/lodepng/lodepng.h", "lodepng/lodepng.h"]);
   const includedIncludes = new Set<string>();
   const chunks = [sourcePreamble, adler32Helpers];
   for (const name of zopfliSources) {
     const path = join(srcDir, "zopfli", name);
-    chunks.push(
-      postProcessChunk(
-        name,
-        prepareChunk(path, byName, skipIncludes, includedIncludes),
-      ),
-    );
+    chunks.push(postProcessChunk(name, prepareChunk(path, byName, skipIncludes, includedIncludes)));
   }
   for (const name of cppSources) {
     const path = join(srcDir, name);
-    chunks.push(
-      postProcessChunk(
-        name,
-        prepareChunk(path, byName, skipIncludes, includedIncludes),
-      ),
-    );
+    chunks.push(postProcessChunk(name, prepareChunk(path, byName, skipIncludes, includedIncludes)));
   }
 
   return {
@@ -421,9 +374,7 @@ function generateAmalgamation(root: string): {
 
 function versionText(repo: string, rev: string): string {
   const commitSha1 = gitOutput(["rev-parse", "HEAD"], checkoutDir);
-  const originUrl =
-    gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) ||
-    repo;
+  const originUrl = gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) || repo;
   const githubUrl = normalizeGithubUrl(originUrl);
   const lines = [
     `project_homepage: ${homepage}`,
@@ -438,11 +389,7 @@ function versionText(repo: string, rev: string): string {
   return lines.join("\n") + "\n";
 }
 
-async function validateCompile(
-  lodepngHeader: string,
-  zopflipngHeader: string,
-  source: string,
-): Promise<void> {
+async function validateCompile(lodepngHeader: string, zopflipngHeader: string, source: string): Promise<void> {
   rmSync(tmpDir, { recursive: true, force: true });
   mkdirSync(join(tmpDir, "zopflipng", "lodepng"), { recursive: true });
   writeFileSync(join(tmpDir, "zopflipng", "lodepng", "lodepng.h"), lodepngHeader);
@@ -496,8 +443,7 @@ async function main() {
   const args = parseArgs();
   await checkout(args.repo, args.rev, args.keep);
 
-  const { lodepngHeader, zopflipngHeader, source } =
-    generateAmalgamation(checkoutDir);
+  const { lodepngHeader, zopflipngHeader, source } = generateAmalgamation(checkoutDir);
   const version = versionText(args.repo, args.rev);
   await validateCompile(lodepngHeader, zopflipngHeader, source);
 

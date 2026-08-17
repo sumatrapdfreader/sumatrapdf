@@ -32,9 +32,7 @@ function loadSearchFns(): {
   const src = readFileSync(join(ROOT, "docs", "gen_docs.fulltext_search.js"), "utf-8");
   // Guard: the bug was using markers[i+1].index without storing index.
   if (!/index:\s*match\.index/.test(src)) {
-    throw new Error(
-      "issue-5875: parseAllDocs must store match.index (doc end bound); fix regressed",
-    );
+    throw new Error("issue-5875: parseAllDocs must store match.index (doc end bound); fix regressed");
   }
   const parseSrc = extractFn(src, "parseAllDocs");
   const lineMatchesSrc = extractFn(src, "lineMatchesAll");
@@ -76,9 +74,7 @@ export async function testit(): Promise<void> {
   }
   const earlyText = early.lines.join("\n");
   if (earlyText.includes("Show Links") || earlyText.includes("show links")) {
-    throw new Error(
-      "Early.md content must not include later docs (parseAllDocs end-bound bug)",
-    );
+    throw new Error("Early.md content must not include later docs (parseAllDocs end-bound bug)");
   }
   if (!earlyText.includes("unique early content only")) {
     throw new Error("Early.md missing its own content");
@@ -106,17 +102,12 @@ export async function testit(): Promise<void> {
       throw new Error('real all-docs.md: expected some hits for "show links"');
     }
     if (realHits.length >= 32) {
-      throw new Error(
-        `real all-docs.md: "show links" returned ${realHits.length} hits (likely parse bug)`,
-      );
+      throw new Error(`real all-docs.md: "show links" returned ${realHits.length} hits (likely parse bug)`);
     }
     const names = realHits.map((h) => h.title || h.file).join("; ");
     // Commands page should be among real hits (CmdToggleLinks / Show Links)
     const hasCommands = realHits.some(
-      (h) =>
-        /commands/i.test(h.file) ||
-        /commands/i.test(h.title) ||
-        /show links/i.test(h.text),
+      (h) => /commands/i.test(h.file) || /commands/i.test(h.title) || /show links/i.test(h.text),
     );
     if (!hasCommands) {
       throw new Error(`real all-docs.md: no Commands/show-links hit among: ${names}`);

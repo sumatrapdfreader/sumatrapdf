@@ -317,12 +317,7 @@ export const libwebp: LibDef = {
 export const dav1d: LibDef = {
   name: "dav1d",
   alwaysOptimize: true,
-  defines: [
-    "_CRT_SECURE_NO_WARNINGS",
-    "ARCH_X86_32=0",
-    "ARCH_X86_64=1",
-    "HAVE_ASM=0",
-  ],
+  defines: ["_CRT_SECURE_NO_WARNINGS", "ARCH_X86_32=0", "ARCH_X86_64=1", "HAVE_ASM=0"],
   // NOTE: do NOT include ext/dav1d/include/compat/msvc — it shadows GCC's
   // native <stdatomic.h> with an MSVC-only version
   includes: ["ext/dav1d", "ext/dav1d/include"],
@@ -387,18 +382,8 @@ export const heicdec: LibDef = {
   name: "heicdec",
   alwaysOptimize: true,
   extraCflags: ["-msse4.1"],
-  defines: [
-    "_CRT_SECURE_NO_WARNINGS",
-    "HEIC_HAVE_DAV1D",
-    "HEIC_HAVE_ZLIB",
-    "HEIC_HAVE_BROTLI",
-  ],
-  includes: [
-    "ext/heicdec",
-    "ext/dav1d/include",
-    "ext/a-zlib",
-    "ext/brotli/c/include",
-  ],
+  defines: ["_CRT_SECURE_NO_WARNINGS", "HEIC_HAVE_DAV1D", "HEIC_HAVE_ZLIB", "HEIC_HAVE_BROTLI"],
+  includes: ["ext/heicdec", "ext/dav1d/include", "ext/a-zlib", "ext/brotli/c/include"],
   files: [
     {
       dir: "ext/heicdec",
@@ -649,9 +634,7 @@ const mupdfThirdPartySources: LibDef = {
 };
 
 function sourceFiles(...indexes: number[]): FileGroup[] {
-  return indexes.map((index) =>
-    structuredClone(mupdfThirdPartySources.files[index]),
-  );
+  return indexes.map((index) => structuredClone(mupdfThirdPartySources.files[index]));
 }
 
 function thirdPartyLib(args: {
@@ -696,16 +679,8 @@ export const openjpeg = thirdPartyLib({
 
 export const freetype = thirdPartyLib({
   name: "freetype",
-  defines: [
-    "FT2_BUILD_LIBRARY",
-    'FT_CONFIG_MODULES_H="slimftmodules.h"',
-    'FT_CONFIG_OPTIONS_H="slimftoptions.h"',
-  ],
-  includes: [
-    "ext/mupdf/scripts/freetype",
-    "ext/freetype/include",
-    "ext/brotli/c/include",
-  ],
+  defines: ["FT2_BUILD_LIBRARY", 'FT_CONFIG_MODULES_H="slimftmodules.h"', 'FT_CONFIG_OPTIONS_H="slimftoptions.h"'],
+  includes: ["ext/mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include"],
   files: sourceFiles(2, 3),
 });
 
@@ -724,18 +699,8 @@ const harfbuzzAllocDefines = [
 
 export const harfbuzz = thirdPartyLib({
   name: "harfbuzz",
-  defines: [
-    "_CRT_SECURE_NO_WARNINGS",
-    "HAVE_FALLBACK=1",
-    "HAVE_OT",
-    "HAVE_UCDN",
-    "HAVE_FREETYPE",
-  ],
-  includes: [
-    "ext/harfbuzz/src/hb-ucdn",
-    "ext/mupdf/scripts/freetype",
-    "ext/freetype/include",
-  ],
+  defines: ["_CRT_SECURE_NO_WARNINGS", "HAVE_FALLBACK=1", "HAVE_OT", "HAVE_UCDN", "HAVE_FREETYPE"],
+  includes: ["ext/harfbuzz/src/hb-ucdn", "ext/mupdf/scripts/freetype", "ext/freetype/include"],
   files: sourceFiles(5),
   debugExtraDefines: ["HAVE_ATEXIT", ...harfbuzzAllocDefines],
   releaseExtraDefines: harfbuzzAllocDefines,
@@ -765,11 +730,7 @@ export const brotli = thirdPartyLib({
 export const cmarkGfm = thirdPartyLib({
   name: "cmark-gfm",
   defines: ["CMARK_GFM_STATIC_DEFINE", "_CRT_SECURE_NO_WARNINGS"],
-  includes: [
-    "ext/cmark-gfm/src",
-    "ext/cmark-gfm/extensions",
-    "ext/mupdf/scripts/cmark-gfm",
-  ],
+  includes: ["ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "ext/mupdf/scripts/cmark-gfm"],
   files: [
     {
       dir: "ext/cmark-gfm/src",

@@ -72,7 +72,9 @@ export async function testit(): Promise<void> {
 
   for (const t of TARGETS) {
     if (!mupdfText.includes(t)) {
-      throw new Error(`mupdf appearance synthesis dropped '${t}' (issue #5404 regressed): got ${JSON.stringify(mupdfText.trim())}`);
+      throw new Error(
+        `mupdf appearance synthesis dropped '${t}' (issue #5404 regressed): got ${JSON.stringify(mupdfText.trim())}`,
+      );
     }
   }
   console.log(`PASS: mupdf synthesises Central European diacritics in form fields (issue #5404)`);

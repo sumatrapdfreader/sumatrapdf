@@ -16,12 +16,7 @@ import { EXE, runStandalone, tmpPath } from "./util.ts";
 const LINE = "To our shareholders";
 const CLICK_WORD = "shareholders";
 
-const AMAZON_LETTERS_PDF = join(
-  homedir(),
-  "OneDrive",
-  "!sumatra",
-  "All Amazon Shareholder Letters.pdf",
-);
+const AMAZON_LETTERS_PDF = join(homedir(), "OneDrive", "!sumatra", "All Amazon Shareholder Letters.pdf");
 const AMAZON_LINE = "To our shareholders:";
 
 function buildPdf(line: string): Buffer {
@@ -49,11 +44,7 @@ function buildPdf(line: string): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-async function runTripleClickCase(
-  pdfPath: string,
-  expectedLine: string,
-  label: string,
-): Promise<void> {
+async function runTripleClickCase(pdfPath: string, expectedLine: string, label: string): Promise<void> {
   console.log(`• ${label} ...`);
   const [exitCode, raw] = await runControlCommand(EXE, ControlCommand.TestTripleClickLineSelect, [
     pdfPath,
