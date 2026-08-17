@@ -23,6 +23,26 @@ There are many ways to navigate around the document.
 - press `Alt` while scrolling : scrolls faster (by half page instead of by line)
 - mouse over scrollbar : scrolls faster (by half page instead of by line)
 
+## Reading zoomed-in pages without the keyboard
+
+When a page is zoomed past the window you usually care about one band of it — the music staves, the text inside wide scan margins — and want the next page to open at that same place. Two advanced settings do that:
+
+- `RememberViewOffsetOnPageTurn = true` : next / previous page keeps the view where it is instead of jumping to the top of the new page. It applies to page turns you ask for (`n` / `p`, click-to-turn, the toolbar arrows). Wheeling off the bottom of a page still opens the next page at its top, since that is you reading on, not turning a page.
+- `MouseWheelTurnsPage = true` : one wheel notch is a page turn rather than a scroll. `Alt + wheel` still scrolls, so you can always reach the rest of the page; `Shift + wheel` (horizontal) and `Ctrl + wheel` (zoom) are unchanged.
+
+Turn on both and the wheel becomes a page turner while the view stays parked where you put it. To switch the mode on and off without editing the settings file, bind it to a key or a toolbar button with [`CmdToggleBoolSetting`](Commands.md#cmdtoggleboolsetting):
+
+```
+Shortcuts [
+    [
+        Cmd = CmdToggleBoolSetting MouseWheelTurnsPage
+        Key = w
+        Name = Wheel Turns Page
+        ToolbarText = Wheel Turns Page
+    ]
+]
+```
+
 # Zooming and changing view
 
 ## With keyboard

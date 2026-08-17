@@ -178,6 +178,12 @@ DisableLinks = false
 ; (introduced in version 3.7)
 RememberViewOffsetOnPageTurn = false
 
+; if true, one mouse-wheel notch goes to the next / previous page instead of
+; scrolling; combine with RememberViewOffsetOnPageTurn to read zoomed-in pages
+; without touching the keyboard. Alt + wheel still scrolls, Shift + wheel
+; scrolls horizontally and Ctrl + wheel zooms (introduced in version 3.7)
+MouseWheelTurnsPage = false
+
 ; if true, draw a focus ring around the document when it has keyboard focus (Tab
 ; to the page area) (introduced in version 3.7)
 ShowDocumentFocusIndicator = false

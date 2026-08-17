@@ -1989,6 +1989,16 @@ static void GetRememberedViewOffset(DisplayModel* dm, int pageNo, int* scrollXOu
    Returns true if advanced to the next page or false if couldn't advance
    (e.g. because already was at the last page) */
 bool DisplayModel::GoToNextPage() {
+    return GoToNextPage(gGlobalPrefs->rememberViewOffsetOnPageTurn);
+}
+
+// keepViewOffset: land on the new page at the same offset we're at now
+// (RememberViewOffsetOnPageTurn) instead of at its top. It's false when the
+// page turn is the continuation of a scroll (wheeling past the bottom of a
+// page), because then "where we are now" is the bottom - keeping it would skip
+// the top of the new page and, since we'd still be at the bottom, every further
+// notch would flip another page
+bool DisplayModel::GoToNextPage(bool keepViewOffset) {
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     int currPageNo = CurrentPageNo();
     // Fully display the current page, if the previous page is still visible
@@ -2004,7 +2014,7 @@ bool DisplayModel::GoToNextPage() {
     }
     int scrollY = 0;
     int scrollX = -1;
-    if (gGlobalPrefs->rememberViewOffsetOnPageTurn) {
+    if (keepViewOffset) {
         GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
     }
     GoToPage(firstPageInNewRow, scrollY, false, scrollX);

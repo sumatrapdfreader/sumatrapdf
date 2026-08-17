@@ -227,6 +227,7 @@ struct DisplayModel : DocController {
     RectF GetContentBox(int pageNo) const;
     void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
+    bool GoToNextPage(bool keepViewOffset);
     bool GoToPrevPage(int scrollY);
     int GetPageNextToPoint(Point pt) const;
 

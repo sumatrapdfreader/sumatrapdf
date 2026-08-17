@@ -3507,6 +3507,25 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         scrollIntent.armed = true;
     }
 
+    // MouseWheelTurnsPage: a wheel notch is a page turn, not a scroll, even when
+    // the page is zoomed past the window. Pairs with RememberViewOffsetOnPageTurn
+    // for reading zoomed-in pages (sheet music, scans with wide margins) without
+    // the keyboard. Alt + wheel still scrolls, so the rest of the page is
+    // reachable; Shift + wheel and Ctrl + wheel are unchanged
+    if (vScroll && !isAlt && gGlobalPrefs->mouseWheelTurnsPage) {
+        win->wheelAccumDelta += delta;
+        if (win->wheelAccumDelta >= WHEEL_DELTA) {
+            win->ctrl->GoToPrevPage();
+            win->wheelAccumDelta -= WHEEL_DELTA;
+            ReadAloudOnUserViewChanged(win);
+        } else if (win->wheelAccumDelta <= -WHEEL_DELTA) {
+            win->ctrl->GoToNextPage();
+            win->wheelAccumDelta += WHEEL_DELTA;
+            ReadAloudOnUserViewChanged(win);
+        }
+        return 0;
+    }
+
     // fit content: flip page on wheel, regardless of scrollbar state
     if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
         win->wheelAccumDelta += delta;
@@ -3700,6 +3719,11 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // logf("  flip page: delta: %d, accumDelta: %d\n", (int)delta, (int)win->wheelAccumDelta);
     if (delta > 0) {
         win->ctrl->GoToPrevPage(true);
+    } else if (dm) {
+        // this page turn continues a scroll, so start the new page at its top
+        // even with RememberViewOffsetOnPageTurn on - we're at the bottom of the
+        // old page only because we scrolled there (see GoToNextPage(bool))
+        dm->GoToNextPage(false);
     } else {
         win->ctrl->GoToNextPage();
     }

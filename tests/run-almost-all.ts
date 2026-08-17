@@ -75,6 +75,7 @@ import { testit as issue5780 } from "./issue-5780.ts";
 import { testit as issue2254 } from "./issue-2254.ts";
 import { testit as issue5950 } from "./issue-5950.ts";
 import { testit as issue5958 } from "./issue-5958.ts";
+import { testit as issue5069 } from "./issue-5069.ts";
 import { testit as issue5792 } from "./issue-5792.ts";
 import { testit as issue5845 } from "./issue-5845.ts";
 import { testit as issue5870 } from "./issue-5870.ts";
@@ -171,6 +172,7 @@ export const tests: NamedTest[] = [
   ["issue-2254", issue2254],
   ["issue-5950", issue5950],
   ["issue-5958", issue5958],
+  ["issue-5069", issue5069],
   ["issue-5792", issue5792],
   ["issue-3472", issue3472],
   ["pdf-only-menu-items", pdfOnlyMenuItems],

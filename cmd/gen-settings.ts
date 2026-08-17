@@ -1173,6 +1173,14 @@ const globalPrefs: Field[] = [
       "instead of jumping to the top (useful when zoomed in on similarly sized pages)",
   ).ver("3.7"),
   field(
+    "MouseWheelTurnsPage",
+    Bool,
+    false,
+    "if true, one mouse-wheel notch goes to the next / previous page instead of scrolling; " +
+      "combine with RememberViewOffsetOnPageTurn to read zoomed-in pages without touching the keyboard. " +
+      "Alt + wheel still scrolls, Shift + wheel scrolls horizontally and Ctrl + wheel zooms",
+  ).ver("3.7"),
+  field(
     "ShowDocumentFocusIndicator",
     Bool,
     false,

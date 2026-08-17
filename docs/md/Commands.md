@@ -537,6 +537,21 @@ Shortcuts [
 ]
 ```
 
+Add `ToolbarText` to the same entry to also get a toolbar button for it. Example: turn the reading mode of [`MouseWheelTurnsPage`](Advanced-options-settings.md) on and off with `w` or from the toolbar:
+
+```
+Shortcuts [
+	[
+		Cmd = CmdToggleBoolSetting MouseWheelTurnsPage
+		Key = w
+		Name = Wheel Turns Page
+		ToolbarText = Wheel Turns Page
+	]
+]
+```
+
+The same works for any other boolean advanced setting, e.g. `CmdToggleBoolSetting RememberViewOffsetOnPageTurn` or `CmdToggleBoolSetting ClickEdgeToTurnPage`.
+
 ## `CmdZoomCustom`
 
 **Ver 3.6+**
