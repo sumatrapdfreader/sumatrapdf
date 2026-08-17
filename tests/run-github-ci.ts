@@ -36,9 +36,10 @@ export const excludedTests: Record<string, string> = {
   // screen, which it arranges by toggling taskbar auto-hide; a runner has no
   // Explorer taskbar, so the premise doesn't hold and the pixels mean nothing
   "issue-5866": "needs a real desktop taskbar to auto-hide",
-  // agents.md flags these two as focus-dependent even on a developer machine;
-  // on a runner nothing has focus. Re-enable if they turn out to be fine.
-  "issue-1136": "depends on keyboard focus, flaky without an interactive desktop",
+  // agents.md flags this one as focus-dependent even on a developer machine;
+  // on a runner nothing has focus. Re-enable if it turns out to be fine.
+  // (issue-1136 was the other one; it now waits on the home page's own state
+  // over -dbg-control instead of on focus, so it runs here.)
   "issue-2254": "depends on keyboard focus, flaky without an interactive desktop",
 };
 

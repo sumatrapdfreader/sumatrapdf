@@ -50,9 +50,20 @@ export enum ControlCommand {
   TestDocumentFontList = 53,
   WaitRenderIdle = 54,
   SetNotificationsEnabled = 55,
+  TestHomeSelection = 56,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
+
+export type HomeSelection = {
+  ready: boolean;
+  sel: number;
+  entries: number;
+  searchFocus: boolean;
+  searchBox: boolean;
+  path: string;
+  raw: string;
+};
 
 const enum ArgType {
   End = 0,
@@ -336,6 +347,31 @@ export class ControlClient {
       throw new Error(`WaitRenderIdle failed: ${info || code}`);
     }
     return info;
+  }
+
+  // What the home page's keyboard navigation is doing: the selected entry, how
+  // many entries the search box currently leaves, and whether it has the focus.
+  // Wait on this after sending a key rather than sleeping.
+  async homeSelection(): Promise<HomeSelection> {
+    const res = await this.request(ControlCommand.TestHomeSelection, []);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      return { ready: false, sel: -1, entries: 0, searchFocus: false, searchBox: false, path: "", raw };
+    }
+    const m = /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) path=(.*)$/.exec(raw);
+    if (!m) {
+      throw new Error(`homeSelection: could not parse '${raw}'`);
+    }
+    return {
+      ready: true,
+      sel: parseInt(m[1], 10),
+      entries: parseInt(m[2], 10),
+      searchFocus: m[3] === "1",
+      searchBox: m[4] === "1",
+      path: m[5].trim(),
+      raw,
+    };
   }
 
   // Notifications are drawn over the document and linger for ~2s, so a test

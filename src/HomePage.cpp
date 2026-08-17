@@ -2013,6 +2013,39 @@ static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
     gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
+// The home page's keyboard state: which entry the arrows have selected, how
+// many entries are currently shown (the search box filters them) and whether
+// the search box has the focus. A test driving the home page with keys waits on
+// this instead of sleeping after each key, which is what made tests/issue-1136
+// flaky: a key posted while focus was still moving went to the wrong window.
+TempStr HomeSelectionResultTemp(int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    auto& c = gHomeLayoutCache;
+    if (!c.valid) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-layout")));
+    }
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    int sel = win->homePageSelIdx;
+    Str path;
+    if (sel >= 0 && sel < len(c.thumbs) && c.thumbs[sel].fs) {
+        path = c.thumbs[sel].fs->filePath;
+    }
+    int searchFocus = HomeSearchHasFocus(win) ? 1 : 0;
+    // the search box is created while the home page lays out; until it exists
+    // Up from the first row has nowhere to move the focus to
+    int searchBox = win->homeSearch ? 1 : 0;
+    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d path=%s", sel, len(c.thumbs), searchFocus,
+                         searchBox, path));
+}
+
 // What the home page list drew for each row: the path, the size text as drawn,
 // and the size column's rect. Reads the layout cache, so it needs a paint to
 // have happened; NOTREADY until then. A test can't sample the size text from

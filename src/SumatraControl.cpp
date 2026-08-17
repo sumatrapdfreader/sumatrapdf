@@ -277,6 +277,7 @@ enum class ControlCmd : u16 {
     TestDocumentFontList = 53,
     WaitRenderIdle = 54,
     SetNotificationsEnabled = 55,
+    TestHomeSelection = 56,
 };
 
 enum class ControlArgType : u16 {
@@ -937,6 +938,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestHomeSelection: {
+            int exitCode = 0;
+            Str res = HomeSelectionResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
