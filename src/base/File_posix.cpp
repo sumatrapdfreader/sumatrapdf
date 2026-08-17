@@ -245,6 +245,79 @@ FileHandle OpenReadOnly(Str path) {
     return open(PathZTemp(path), O_RDONLY);
 }
 
+// Opens path for reading and writing, creating it when createIfMissing.
+FileHandle OpenReadWrite(Str path, bool createIfMissing) {
+    int flags = O_RDWR | (createIfMissing ? O_CREAT : 0);
+    return open(PathZTemp(path), flags, 0666);
+}
+
+void Close(FileHandle h) {
+    if (h != kInvalidFileHandle) {
+        close(h);
+    }
+}
+
+// Moves the file position to the end and returns it, i.e. the current file
+// size, or -1 on failure. That offset is where the next write lands.
+i64 SeekEnd(FileHandle h) {
+    off_t pos = lseek(h, 0, SEEK_END);
+    if (pos < 0) {
+        return -1;
+    }
+    return (i64)pos;
+}
+
+// Writes all of data at the current file position, looping over partial writes.
+bool WriteAll(FileHandle h, Str data) {
+    const char* d = data.s;
+    size_t left = (size_t)data.len;
+    while (left > 0) {
+        ssize_t n = write(h, d, left);
+        if (n < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return false;
+        }
+        d += n;
+        left -= (size_t)n;
+    }
+    return true;
+}
+
+// Reads exactly size bytes at offset; a short read (e.g. hitting the end of
+// the file) is a failure. pread() doesn't move the file position, but the
+// Windows implementation does, so callers must not rely on either.
+bool ReadAt(FileHandle h, i64 offset, void* buf, int size) {
+    char* d = (char*)buf;
+    int left = size;
+    while (left > 0) {
+        ssize_t n = pread(h, d, (size_t)left, (off_t)offset);
+        if (n < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return false;
+        }
+        if (n == 0) {
+            return false;
+        }
+        d += n;
+        offset += n;
+        left -= (int)n;
+    }
+    return true;
+}
+
+bool Flush(FileHandle h) {
+    return fsync(h) == 0;
+}
+
+// Text of the error left behind by the last failed call, for error messages.
+TempStr LastErrorTemp() {
+    return str::DupTemp(Str(strerror(errno)));
+}
+
 bool Exists(Str path) {
     struct stat st;
     return StatPath(path, st) && S_ISREG(st.st_mode);
@@ -469,6 +542,11 @@ bool Rename(Str newPath, Str oldPath) {
         return false;
     }
     return rename(PathZTemp(oldPath), PathZTemp(newPath)) == 0;
+}
+
+// rename() already replaces an existing newPath, so this is Rename().
+bool RenameReplace(Str newPath, Str oldPath) {
+    return Rename(newPath, oldPath);
 }
 
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {

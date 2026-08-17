@@ -40,8 +40,8 @@ struct AppendStore {
     void* userData = nullptr;
 
     Arena* arena = nullptr;
-    HANDLE indexFile = INVALID_HANDLE_VALUE;
-    HANDLE dataFile = INVALID_HANDLE_VALUE;
+    file::FileHandle indexFile = file::kInvalidFileHandle;
+    file::FileHandle dataFile = file::kInvalidFileHandle;
     Str indexFilePath;
     Str dataFilePath;
     char error[512] = {};

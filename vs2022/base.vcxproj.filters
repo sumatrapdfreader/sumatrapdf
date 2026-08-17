@@ -158,7 +158,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\AppendStore_win.cpp">
+    <ClCompile Include="..\src\base\AppendStore.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Archive.cpp">

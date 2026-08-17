@@ -90,6 +90,16 @@ bool Exists(Str path);
 
 FILE* OpenFILE(Str path);
 FileHandle OpenReadOnly(Str path);
+
+// handle-based i/o, for files kept open across many reads / appends
+FileHandle OpenReadWrite(Str path, bool createIfMissing);
+void Close(FileHandle);
+i64 SeekEnd(FileHandle);
+bool WriteAll(FileHandle, Str data);
+bool ReadAt(FileHandle, i64 offset, void* buf, int size);
+bool Flush(FileHandle);
+TempStr LastErrorTemp();
+
 Str ReadFileWithArena(Str path, Arena*);
 Str ReadFile(Str path);
 int ReadN(Str path, u8* buf, size_t toRead);
@@ -138,6 +148,7 @@ extern thread_local CopyProgressCb gFileCopyProgressCb;
 bool Copy(Str dst, Str src, bool dontOverwrite);
 bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress);
 bool Rename(Str newPath, Str oldPath);
+bool RenameReplace(Str newPath, Str oldPath);
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs);
 
 bool SetAccessTime(Str path, FILETIME accessTime);

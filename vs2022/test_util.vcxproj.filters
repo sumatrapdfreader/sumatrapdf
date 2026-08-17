@@ -157,7 +157,7 @@
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
-    <ClCompile Include="..\src\base\AppendStore_win.cpp">
+    <ClCompile Include="..\src\base\AppendStore.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Arena.cpp">

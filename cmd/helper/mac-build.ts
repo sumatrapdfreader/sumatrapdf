@@ -454,6 +454,7 @@ const DEP_LIBS_BASE = [
       {
         dir: "src/base",
         patterns: [
+          "AppendStore.cpp",
           "Base.cpp",
           "Base_posix.cpp",
           "Archive.cpp",
@@ -545,6 +546,7 @@ const TEST_UTIL_SOURCES = [
   "src/SumatraConfig.cpp",
   "src/SumatraLog_posix.cpp",
   "src/SumatraUnitTests.cpp",
+  "src/base/tests/AppendStore_ut.cpp",
   "src/base/tests/Base_ut.cpp",
   "src/base/tests/ByteReaderWriter_ut.cpp",
   "src/base/tests/Crypto_ut.cpp",

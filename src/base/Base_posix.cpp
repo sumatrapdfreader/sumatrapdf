@@ -60,3 +60,11 @@ u64 GetTickCount64() {
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return ((u64)ts.tv_sec * 1000) + ((u64)ts.tv_nsec / 1000000);
 }
+
+// milliseconds since the unix epoch (1970-01-01), for timestamps we persist.
+// CLOCK_REALTIME, not the monotonic clock GetTickCount64() uses.
+i64 UnixTimeMsNow() {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return ((i64)ts.tv_sec * 1000) + ((i64)ts.tv_nsec / 1000000);
+}

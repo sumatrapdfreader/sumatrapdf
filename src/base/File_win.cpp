@@ -13,6 +13,7 @@
 
 // Defined in Win.cpp; avoid pulling all of Win.h into this file.
 void LogLastError(DWORD err = 0);
+Str GetLastErrorAsStr(Arena* arena);
 
 // Same value as HINSTANCE in WinMain for this image (exe or DLL).
 // Using __ImageBase (not GetModuleHandle(nullptr)) so DLL builds report the
@@ -795,6 +796,75 @@ FileHandle OpenReadOnly(Str path) {
                        nullptr);
 }
 
+// Opens path for reading and writing, creating it when createIfMissing.
+// Shares the file with other readers/writers so a store can stay open while
+// someone else inspects it.
+FileHandle OpenReadWrite(Str path, bool createIfMissing) {
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    DWORD disposition = createIfMissing ? OPEN_ALWAYS : OPEN_EXISTING;
+    return CreateFileW(CWStrTemp(path), GENERIC_READ | GENERIC_WRITE, share, nullptr, disposition,
+                       FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+void Close(FileHandle h) {
+    if (h != kInvalidFileHandle && h != nullptr) {
+        CloseHandle(h);
+    }
+}
+
+// Moves the file position to the end and returns it, i.e. the current file
+// size, or -1 on failure. That offset is where the next write lands.
+i64 SeekEnd(FileHandle h) {
+    LARGE_INTEGER zero = {};
+    LARGE_INTEGER pos = {};
+    if (!SetFilePointerEx(h, zero, &pos, FILE_END)) {
+        return -1;
+    }
+    return pos.QuadPart;
+}
+
+// Writes all of data at the current file position, looping over partial writes.
+bool WriteAll(FileHandle h, Str data) {
+    int written = 0;
+    while (written < data.len) {
+        DWORD n = 0;
+        if (!::WriteFile(h, data.s + written, (DWORD)(data.len - written), &n, nullptr) || n == 0) {
+            return false;
+        }
+        written += (int)n;
+    }
+    return true;
+}
+
+// Reads exactly size bytes at offset; a short read (e.g. hitting the end of
+// the file) is a failure. Leaves the file position unspecified, so callers
+// that also write must seek first.
+bool ReadAt(FileHandle h, i64 offset, void* buf, int size) {
+    LARGE_INTEGER pos;
+    pos.QuadPart = offset;
+    if (!SetFilePointerEx(h, pos, nullptr, FILE_BEGIN)) {
+        return false;
+    }
+    int total = 0;
+    while (total < size) {
+        DWORD n = 0;
+        if (!::ReadFile(h, (char*)buf + total, (DWORD)(size - total), &n, nullptr) || n == 0) {
+            return false;
+        }
+        total += (int)n;
+    }
+    return true;
+}
+
+bool Flush(FileHandle h) {
+    return FlushFileBuffers(h) != 0;
+}
+
+// Text of the error left behind by the last failed call, for error messages.
+TempStr LastErrorTemp() {
+    return GetLastErrorAsStr(GetTempArena());
+}
+
 // Reads up to toRead bytes from the front of the file, zero-filling the rest of
 // buf. Returns the number of bytes read or -1 on failure.
 //
@@ -1117,6 +1187,16 @@ bool Rename(Str newPath, Str oldPath) {
         return false;
     }
     return true;
+}
+
+// Like Rename() but overwrites newPath if it exists, and doesn't return until
+// the rename is on disk. Used to publish a file written to a temp path.
+bool RenameReplace(Str newPath, Str oldPath) {
+    if (!newPath || !oldPath) {
+        return false;
+    }
+    DWORD flags = MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH;
+    return MoveFileExW(CWStrTemp(oldPath), CWStrTemp(newPath), flags) != 0;
 }
 
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {

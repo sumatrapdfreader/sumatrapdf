@@ -3,15 +3,15 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/Win.h"
 #include "base/AppendStore.h"
 
 static void SetStoreError(AppendStore* store, Str error) {
     str::BufSet(Str(store->error, dimofi(store->error)), error);
 }
 
-static void SetStoreWinError(AppendStore* store, Str what) {
-    SetStoreError(store, str::JoinTemp(what, StrL(": "), GetLastErrorAsStr(GetTempArena())));
+// what the caller was doing plus the OS error that stopped it
+static void SetStoreOSError(AppendStore* store, Str what) {
+    SetStoreError(store, str::JoinTemp(what, StrL(": "), file::LastErrorTemp()));
 }
 
 Str AppendStoreError(AppendStore* store) {
@@ -46,55 +46,38 @@ static bool ValidateInlineData(AppendStore* store, Str data) {
     return true;
 }
 
-static i64 UnixTimeMsNow() {
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
-    ULARGE_INTEGER value;
-    value.LowPart = ft.dwLowDateTime;
-    value.HighPart = ft.dwHighDateTime;
-    return ((i64)value.QuadPart - 116444736000000000LL) / 10000;
-}
-
-static bool OpenAppendFile(AppendStore* store, Str path, HANDLE* fileOut) {
-    if (*fileOut != INVALID_HANDLE_VALUE) {
+static bool OpenAppendFile(AppendStore* store, Str path, file::FileHandle* fileOut) {
+    if (*fileOut != file::kInvalidFileHandle) {
         return true;
     }
-    HANDLE file = CreateFileW(ToWStrTemp(path).s, GENERIC_READ | GENERIC_WRITE,
-                              FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_ALWAYS,
-                              FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE) {
-        SetStoreWinError(store, str::JoinTemp(StrL("could not open "), path));
+    file::FileHandle file = file::OpenReadWrite(path, true);
+    if (file == file::kInvalidFileHandle) {
+        SetStoreOSError(store, str::JoinTemp(StrL("could not open "), path));
         return false;
     }
     *fileOut = file;
     return true;
 }
 
-static bool WriteAll(AppendStore* store, HANDLE file, Str data) {
-    int written = 0;
-    while (written < data.len) {
-        DWORD n = 0;
-        if (!WriteFile(file, data.s + written, (DWORD)(data.len - written), &n, nullptr) || n == 0) {
-            SetStoreWinError(store, StrL("could not append data"));
-            return false;
-        }
-        written += (int)n;
+static bool WriteAll(AppendStore* store, file::FileHandle file, Str data) {
+    if (!file::WriteAll(file, data)) {
+        SetStoreOSError(store, StrL("could not append data"));
+        return false;
     }
     return true;
 }
 
-static bool AppendToFile(AppendStore* store, Str path, HANDLE* filePtr, Str data, i64* offsetOut) {
+static bool AppendToFile(AppendStore* store, Str path, file::FileHandle* filePtr, Str data, i64* offsetOut) {
     if (!OpenAppendFile(store, path, filePtr)) {
         return false;
     }
-    LARGE_INTEGER zero = {};
-    LARGE_INTEGER offset = {};
-    if (!SetFilePointerEx(*filePtr, zero, &offset, FILE_END)) {
-        SetStoreWinError(store, StrL("could not seek to the end of append store"));
+    i64 offset = file::SeekEnd(*filePtr);
+    if (offset < 0) {
+        SetStoreOSError(store, StrL("could not seek to the end of append store"));
         return false;
     }
     if (offsetOut) {
-        *offsetOut = offset.QuadPart;
+        *offsetOut = offset;
     }
     if (!WriteAll(store, *filePtr, data)) {
         return false;
@@ -102,8 +85,8 @@ static bool AppendToFile(AppendStore* store, Str path, HANDLE* filePtr, Str data
     if (data.len > 0 && data.s[data.len - 1] != '\n' && !WriteAll(store, *filePtr, StrL("\n"))) {
         return false;
     }
-    if (store->syncWrite && !FlushFileBuffers(*filePtr)) {
-        SetStoreWinError(store, StrL("could not flush append store"));
+    if (store->syncWrite && !file::Flush(*filePtr)) {
+        SetStoreOSError(store, StrL("could not flush append store"));
         return false;
     }
     return true;
@@ -243,8 +226,8 @@ bool AppendStoreOpen(AppendStore* store) {
     store->dataDir = str::Dup(store->arena, dataDir);
     store->indexFileName = str::Dup(store->arena, indexName);
     store->dataFileName = str::Dup(store->arena, dataName);
-    store->indexFilePath = str::Join(store->arena, store->dataDir, StrL("\\"), store->indexFileName);
-    store->dataFilePath = str::Join(store->arena, store->dataDir, StrL("\\"), store->dataFileName);
+    store->indexFilePath = path::Join(store->arena, store->dataDir, store->indexFileName);
+    store->dataFilePath = path::Join(store->arena, store->dataDir, store->dataFileName);
     store->error[0] = 0;
 
     if (!dir::CreateAll(store->dataDir)) {
@@ -261,13 +244,13 @@ void AppendStoreClose(AppendStore* store) {
     if (!store) {
         return;
     }
-    if (store->indexFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(store->indexFile);
-        store->indexFile = INVALID_HANDLE_VALUE;
+    if (store->indexFile != file::kInvalidFileHandle) {
+        file::Close(store->indexFile);
+        store->indexFile = file::kInvalidFileHandle;
     }
-    if (store->dataFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(store->dataFile);
-        store->dataFile = INVALID_HANDLE_VALUE;
+    if (store->dataFile != file::kInvalidFileHandle) {
+        file::Close(store->dataFile);
+        store->dataFile = file::kInvalidFileHandle;
     }
     ArenaDelete(store->arena);
     store->arena = nullptr;
@@ -287,10 +270,6 @@ static TempStr SerializeRecordTemp(const AppendStoreRecord* rec) {
         return fmt("%s %lld %lld %s\n", offset, rec->dataSize, rec->timestampMs, rec->kind);
     }
     return fmt("%s %lld %lld %s %s\n", offset, rec->dataSize, rec->timestampMs, rec->kind, meta);
-}
-
-static bool ReplaceFile(Str from, Str to) {
-    return MoveFileExW(ToWStrTemp(from).s, ToWStrTemp(to).s, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
 }
 
 bool AppendStoreAppend(AppendStore* store, const AppendStoreAppendOptions& opts, AppendStoreRecord** recOut) {
@@ -328,11 +307,11 @@ bool AppendStoreAppend(AppendStore* store, const AppendStoreAppendOptions& opts,
     } else {
         rec->dataSize = opts.inlineMeta.len;
         callbackData = opts.inlineMeta;
-        publishedPath = str::JoinTemp(store->dataDir, StrL("\\"), opts.fileName);
+        publishedPath = path::JoinTemp(store->dataDir, opts.fileName);
         tempPath = str::JoinTemp(publishedPath, StrL(".tmp"));
         if (!dir::CreateForFile(publishedPath) || !file::WriteFile(tempPath, opts.fileData)) {
             file::Delete(tempPath);
-            SetStoreWinError(store, str::JoinTemp(StrL("could not write "), publishedPath));
+            SetStoreOSError(store, str::JoinTemp(StrL("could not write "), publishedPath));
             return false;
         }
     }
@@ -345,16 +324,15 @@ bool AppendStoreAppend(AppendStore* store, const AppendStoreAppendOptions& opts,
         return false;
     }
     if ((opts.mode == AppendStoreMode::Inline || opts.mode == AppendStoreMode::File) && callbackData.len > 0) {
-        LARGE_INTEGER zero = {};
-        LARGE_INTEGER offset = {};
-        if (!SetFilePointerEx(store->indexFile, zero, &offset, FILE_END)) {
+        i64 offset = file::SeekEnd(store->indexFile);
+        if (offset < 0) {
             if (tempPath.s) {
                 file::Delete(tempPath);
             }
-            SetStoreWinError(store, StrL("could not seek in index file"));
+            SetStoreOSError(store, StrL("could not seek in index file"));
             return false;
         }
-        rec->dataOffset = offset.QuadPart;
+        rec->dataOffset = offset;
         if (!WriteAll(store, store->indexFile, callbackData) ||
             (callbackData.s[callbackData.len - 1] != '\n' && !WriteAll(store, store->indexFile, StrL("\n")))) {
             if (tempPath.s) {
@@ -362,17 +340,17 @@ bool AppendStoreAppend(AppendStore* store, const AppendStoreAppendOptions& opts,
             }
             return false;
         }
-        if (store->syncWrite && !FlushFileBuffers(store->indexFile)) {
+        if (store->syncWrite && !file::Flush(store->indexFile)) {
             if (tempPath.s) {
                 file::Delete(tempPath);
             }
-            SetStoreWinError(store, StrL("could not flush index file"));
+            SetStoreOSError(store, StrL("could not flush index file"));
             return false;
         }
     }
-    if (opts.mode == AppendStoreMode::File && !ReplaceFile(tempPath, publishedPath)) {
+    if (opts.mode == AppendStoreMode::File && !file::RenameReplace(publishedPath, tempPath)) {
         file::Delete(tempPath);
-        SetStoreWinError(store, str::JoinTemp(StrL("could not publish "), publishedPath));
+        SetStoreOSError(store, str::JoinTemp(StrL("could not publish "), publishedPath));
         return false;
     }
     if (store->onRecord) {
@@ -384,34 +362,25 @@ bool AppendStoreAppend(AppendStore* store, const AppendStoreAppendOptions& opts,
     return true;
 }
 
-static Str ReadFilePart(AppendStore* store, Str path, HANDLE* filePtr, i64 offset, i64 size) {
+static Str ReadFilePart(AppendStore* store, Str path, file::FileHandle* filePtr, i64 offset, i64 size) {
     if (size <= 0 || size > INT_MAX) {
         return size == 0 ? str::Dup(Str()) : Str();
     }
-    if (*filePtr == INVALID_HANDLE_VALUE) {
-        *filePtr = CreateFileW(ToWStrTemp(path).s, GENERIC_READ | GENERIC_WRITE,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
-                               FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (*filePtr == INVALID_HANDLE_VALUE) {
-            SetStoreWinError(store, str::JoinTemp(StrL("could not read "), path));
+    if (*filePtr == file::kInvalidFileHandle) {
+        *filePtr = file::OpenReadWrite(path, false);
+        if (*filePtr == file::kInvalidFileHandle) {
+            SetStoreOSError(store, str::JoinTemp(StrL("could not read "), path));
             return Str();
         }
     }
-    LARGE_INTEGER pos;
-    pos.QuadPart = offset;
-    bool ok = SetFilePointerEx(*filePtr, pos, nullptr, FILE_BEGIN) != 0;
     char* buf = AllocArray<char>(nullptr, (int)size + 1);
-    int total = 0;
-    while (ok && total < size) {
-        DWORD n = 0;
-        ok = ReadFile(*filePtr, buf + total, (DWORD)(size - total), &n, nullptr) != 0 && n > 0;
-        total += (int)n;
-    }
-    if (!ok) {
-        CloseHandle(*filePtr);
-        *filePtr = INVALID_HANDLE_VALUE;
+    if (!file::ReadAt(*filePtr, offset, buf, (int)size)) {
+        // the handle may be at an unknown position now, so drop it and let the
+        // next read re-open the file
+        file::Close(*filePtr);
+        *filePtr = file::kInvalidFileHandle;
         str::Free(Str(buf, (int)size));
-        SetStoreWinError(store, str::JoinTemp(StrL("could not read payload from "), path));
+        SetStoreOSError(store, str::JoinTemp(StrL("could not read payload from "), path));
         return Str();
     }
     return Str(buf, (int)size);
@@ -424,7 +393,7 @@ Str AppendStoreReadPayloadPart(AppendStore* store, const AppendStoreRecord* rec,
     i64 size = rec->dataSize < maxBytes ? rec->dataSize : maxBytes;
     bool inDataFile = rec->mode == AppendStoreMode::DataFile;
     Str path = inDataFile ? store->dataFilePath : store->indexFilePath;
-    HANDLE* file = inDataFile ? &store->dataFile : &store->indexFile;
+    file::FileHandle* file = inDataFile ? &store->dataFile : &store->indexFile;
     return ReadFilePart(store, path, file, rec->dataOffset, size);
 }
 
@@ -436,5 +405,5 @@ Str AppendStoreReadFile(AppendStore* store, const AppendStoreRecord* rec) {
     if (!store || !rec || rec->mode != AppendStoreMode::File) {
         return Str();
     }
-    return file::ReadFile(str::JoinTemp(store->dataDir, StrL("\\"), rec->fileName));
+    return file::ReadFile(path::JoinTemp(store->dataDir, rec->fileName));
 }

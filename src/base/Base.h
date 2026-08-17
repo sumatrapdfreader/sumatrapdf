@@ -233,6 +233,8 @@ void* AtomicPtrExchange(AtomicPtr* p, void* v);
 u64 GetTickCount64();
 #endif
 
+i64 UnixTimeMsNow();
+
 struct Arena;
 
 struct Str {
