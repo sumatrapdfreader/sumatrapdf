@@ -8,6 +8,11 @@ on:
   repository_dispatch:
     types: [build-daily]
   workflow_dispatch:
+    inputs:
+      tests:
+        description: "only these tests (comma-separated, e.g. issue-1195); empty = all"
+        required: false
+        default: ""
 jobs:
   build-daily:
     name: Daily build
@@ -58,7 +63,7 @@ jobs:
       - name: Run tests
         env:
           SUMATRA_TEST_EXE: ${{ github.workspace }}\out\dbg64_asan\SumatraPDF-static.exe
-        run: bun tests/run-github-ci.ts
+        run: bun tests/run-github-ci.ts ${{ inputs.tests }}
 
       # what the failing tests left behind: screenshots, logs, generated files
       - name: Upload test output

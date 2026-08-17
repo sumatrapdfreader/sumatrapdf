@@ -325,7 +325,7 @@ struct ControlRequest {
     str::Builder results;
     HANDLE done = nullptr;
     RenderIdleState idleState = RenderIdleState::NotReady;
-    char idleInfo[160]{};
+    char idleInfo[320]{};
 };
 
 static void DeleteControlRequest(ControlRequest* req) {
@@ -1099,9 +1099,10 @@ static void SnapshotRenderIdle(ControlRequest* req) {
         whyNot = StrL("rendering");
     }
     int nQ = gRenderCache ? gRenderCache->requestCount : -1;
+    TempStr busyInfo = gRenderCache ? gRenderCache->BusyInfoTemp(dm) : (TempStr) "";
     str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)),
-                fmt("zoomV=%.1f zoomR=%.3f res=%d vp=%dx%d ready=%d q=%d why=%s", zoomV, zoomR, (int)res, vp.dx, vp.dy,
-                    ready ? 1 : 0, nQ, whyNot));
+                fmt("zoomV=%.1f zoomR=%.3f res=%d vp=%dx%d ready=%d q=%d why=%s %s", zoomV, zoomR, (int)res, vp.dx,
+                    vp.dy, ready ? 1 : 0, nQ, whyNot, busyInfo));
     req->idleState = ready ? RenderIdleState::Idle : (gRenderCache ? RenderIdleState::Busy : RenderIdleState::NotReady);
     SetEvent(req->done);
 }

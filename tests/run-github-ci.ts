@@ -14,7 +14,11 @@
 // It does not build: the workflow builds (debug ASan) and points
 // SUMATRA_TEST_EXE at the resulting exe.
 //
-// Run:  bun tests/run-github-ci.ts
+// Run:  bun tests/run-github-ci.ts [test-name ...]
+//
+// Naming tests (on the command line, or through the workflow's "tests" input)
+// runs only those, which is how a single CI failure is iterated on without
+// waiting for the whole suite.
 
 import { existsSync } from "node:fs";
 import { EXE, formatDuration, resetTestTimes, runTest, type NamedTest } from "./util.ts";
@@ -94,9 +98,29 @@ export async function testit(tests: NamedTest[] = ciTests()): Promise<void> {
   throw new Error(`${failures.length} test(s) failed: ${failures.map((f) => f.name).join(", ")}`);
 }
 
+// names given on the command line, if any: "issue-1195" or "issue-1195,issue-906"
+function testsFromArgs(argv: string[]): NamedTest[] | undefined {
+  const names = argv
+    .slice(2)
+    .flatMap((a) => a.split(","))
+    .map((a) => a.trim())
+    .filter((a) => a && !a.startsWith("-"));
+  if (names.length === 0) {
+    return undefined;
+  }
+  const byName = new Map(allTests);
+  return names.map((name) => {
+    const fn = byName.get(name);
+    if (!fn) {
+      throw new Error(`no test named '${name}' (it must be registered in run-all.ts)`);
+    }
+    return [name, fn] as NamedTest;
+  });
+}
+
 if (import.meta.main) {
   try {
-    await testit();
+    await testit(testsFromArgs(process.argv));
   } catch (e) {
     console.error(`\n${(e as Error)?.message ?? e}`);
     process.exit(1);

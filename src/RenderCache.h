@@ -183,6 +183,9 @@ struct RenderCache {
     int idleThreads = 0;
 
     Size maxTileSize;
+    // how often ReduceTileSize() had to halve maxTileSize (and drop the whole
+    // cache with it); reported by BusyInfoTemp
+    int nTileSizeReductions = 0;
     bool isRemoteSession = false;
 
     Color textColor = 0;
@@ -209,6 +212,9 @@ struct RenderCache {
     void AbortRendering(DisplayModel* dm);
     bool IsRenderingFor(DisplayModel* dm);
     bool IsBusyFor(DisplayModel* dm);
+    // one line on what the render threads and the cache are doing, for the
+    // -dbg-control render-idle snapshot
+    TempStr BusyInfoTemp(DisplayModel* dm);
     // whyNot (optional) gets a short reason when the answer is false, e.g.
     // "p3 miss r0/0,0": a harness that only says "not ready" is unactionable
     bool VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot = nullptr);

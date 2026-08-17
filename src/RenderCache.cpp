@@ -507,6 +507,7 @@ bool RenderCache::ReduceTileSize() {
     } else {
         maxTileSize.dy /= 2;
     }
+    nTileSizeReductions++;
 
     // invalidate all rendered bitmaps and all requests (force-clear: PaintTile may
     // hold refs from Find(), so DropCacheEntryIfNotUsed would never make progress)
@@ -867,6 +868,30 @@ bool RenderCache::IsRenderingFor(DisplayModel* dm) {
         }
     }
     return false;
+}
+
+// What the render threads and the cache are doing right now, in one line. A
+// test (or a CI run) that times out waiting for a render otherwise only knows
+// "still busy", which doesn't say whether one tile is taking forever, tiles
+// keep being thrown away and rendered again, or the tiles are simply huge.
+TempStr RenderCache::BusyInfoTemp(DisplayModel* dm) {
+    ScopedRecursiveMutex scope(&requestAccess);
+    u64 now = GetTickCount64();
+    TempStr res = fmt("tile=%dx%d cache=%d reduced=%d", maxTileSize.dx, maxTileSize.dy, cacheCount,
+                      nTileSizeReductions);
+    for (int i = 0; i < nRenderThreads; i++) {
+        auto* r = curReqs[i];
+        if (!r) {
+            continue;
+        }
+        u64 age = r->timestamp <= now ? now - r->timestamp : 0;
+        Str aborted = r->abort ? StrL(",abort") : Str();
+        Str otherDm = (dm && r->dm != dm) ? StrL(",other-dm") : Str();
+        TempStr one = fmt(" t%d=p%d,res%d,r%dc%d,%dms%s%s", i, r->pageNo, (int)r->tile.res, (int)r->tile.row,
+                          (int)r->tile.col, (int)age, aborted, otherDm);
+        res = str::JoinTemp(res, one);
+    }
+    return res;
 }
 
 // true if a worker is rendering a visible page of dm or one is queued.
