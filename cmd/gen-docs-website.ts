@@ -1,16 +1,6 @@
-import {
-  existsSync,
-  rmSync,
-  readdirSync,
-  statSync,
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-  copyFileSync,
-} from "node:fs";
-import { join, resolve, extname } from "node:path";
-import { $ } from "bun";
-import { copyFileNormalized, isGitClean } from "./util";
+import { existsSync, rmSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { copyFileNormalized } from "./util";
 
 function getWebsiteDir(): string {
   return resolve(join("..", "hack", "webapps", "sumatra-website"));

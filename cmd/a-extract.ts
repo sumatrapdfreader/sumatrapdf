@@ -5,7 +5,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, join, normalize } from "node:path";
+import { dirname, join, normalize } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
 type Args = { repo: string; rev: string; keep: boolean };

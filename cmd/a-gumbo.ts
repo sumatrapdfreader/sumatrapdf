@@ -229,19 +229,6 @@ function listFiles(dir: string, suffix: string): string[] {
     .sort((a, b) => basename(a).localeCompare(basename(b)));
 }
 
-function internalIncludes(text: string): string[] {
-  const res: string[] = [];
-  const re = /^\s*#\s*include\s+"([^"]+)"/gm;
-  for (;;) {
-    const m = re.exec(text);
-    if (!m) {
-      break;
-    }
-    res.push(m[1]);
-  }
-  return res;
-}
-
 function stripComments(text: string): string {
   let out = "";
   let i = 0;

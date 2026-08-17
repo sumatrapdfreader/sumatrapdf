@@ -332,7 +332,7 @@ export async function testit(): Promise<void> {
     if (scenario.fileLocation == "Windows") {
       // forward search on a Windows source path using forward slashes
       // (C:/foo/bar.tex), to make sure that variant is handled too
-      const label = `${scenario.name} with forward-slash win path`
+      const label = `${scenario.name} with forward-slash win path`;
       const fwdSlash = await testForwardSearch(files.pdfPath, files.srcPath.replace(/\\/g, "/"), label);
       results.push({ name: `forward search (${label})`, ok: fwdSlash.ok });
     }

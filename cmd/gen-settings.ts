@@ -2,7 +2,7 @@
 // Generates src/Settings.h, website HTML docs, and markdown docs from settings definitions
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname, resolve, basename } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { extractSumatraVersion, clangFormatFiles, runLogged, isGitClean } from "./util";
 
 async function runCapture(cmd: string, args: string[], cwd?: string): Promise<string> {

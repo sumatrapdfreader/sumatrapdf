@@ -132,9 +132,7 @@ export function detectVisualStudio2026(): VisualStudioInfo {
 export function detectVisualStudio(): VisualStudioInfo {
   let res = detectVisualStudioVer("2022");
   if (res) return res;
-  if (!res) {
-    res = detectVisualStudioVer("18");
-  }
+  res = detectVisualStudioVer("18");
   if (!res) {
     throw new Error(`couldn't find vs 2026 or vs 2022`);
   }

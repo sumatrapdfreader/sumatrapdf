@@ -1,5 +1,5 @@
 import { $, Glob } from "bun";
-import { join, basename } from "node:path";
+import { basename } from "node:path";
 import { cpus } from "node:os";
 import { detectVisualStudio } from "./util";
 

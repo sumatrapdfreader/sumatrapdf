@@ -1,4 +1,3 @@
-import { $ } from "bun";
 import { existsSync } from "node:fs";
 import { unlink } from "node:fs/promises";
 
