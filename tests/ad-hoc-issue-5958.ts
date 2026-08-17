@@ -1,4 +1,4 @@
-// Regression test for https://github.com/sumatrapdfreader/sumatrapdf/issues/5958
+// Ad-hoc regression test for https://github.com/sumatrapdfreader/sumatrapdf/issues/5958
 //
 // CmdToggleKeyboardHelp ("?") created the help window but nothing showed up on
 // screen: the window is an owned WS_POPUP, GetParent() returns its owner, so
@@ -11,7 +11,14 @@
 // window sits and require they changed when it opened and reverted when it
 // closed.
 //
-// Run:  bun tests/issue-5958.ts [--no-build]
+// That is also why this is ad-hoc rather than part of run-almost-all: reading
+// the real screen means anything that covers that spot -- another window, a
+// notification, someone using the machine while the suite runs -- fails the
+// test, and a white window over a white background reads as "never painted"
+// even when it did paint. Run it on an idle desktop when touching the help
+// window or WindowBase visibility.
+//
+// Run:  bun tests/ad-hoc-issue-5958.ts [--no-build]
 
 import { cmdId, runStandalone } from "./util.ts";
 import {
