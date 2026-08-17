@@ -477,13 +477,13 @@ jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_
 
 	if (!onlymeta)
 	{
-	if (!opj_decode(codec, stream, jpx))
-	{
-		opj_stream_destroy(stream);
-		opj_destroy_codec(codec);
-		opj_image_destroy(jpx);
-		fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to decode JPX image");
-	}
+		if (!opj_decode(codec, stream, jpx))
+		{
+			opj_stream_destroy(stream);
+			opj_destroy_codec(codec);
+			opj_image_destroy(jpx);
+			fz_throw(ctx, FZ_ERROR_LIBRARY, "Failed to decode JPX image");
+		}
 	}
 
 	opj_stream_destroy(stream);
@@ -543,13 +543,13 @@ jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_
 	if (!onlymeta)
 	{
 		for (k = 0; k < numcomps; ++k)
-	{
-		if (!jpx->comps[k].data)
 		{
-			opj_image_destroy(jpx);
-			fz_throw(ctx, FZ_ERROR_FORMAT, "image components are missing data");
+			if (!jpx->comps[k].data)
+			{
+				opj_image_destroy(jpx);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "image components are missing data");
+			}
 		}
-	}
 	}
 
 	w = state->width = jpx->x1 - jpx->x0;

@@ -2682,7 +2682,7 @@ pdf_load_object(fz_context *ctx, pdf_document *doc, int num)
 		return NULL;
 	entry = pdf_cache_object(ctx, doc, num);
 	if (entry)
-	return pdf_keep_obj(ctx, entry->obj);
+		return pdf_keep_obj(ctx, entry->obj);
 	return NULL;
 }
 

@@ -1029,9 +1029,9 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
 					break;
 				if (gstate->fill.alpha != 1)
 					fz_begin_group(ctx, pr->dev, bbox, NULL, 0, 0, FZ_BLEND_NORMAL, gstate->fill.alpha);
-					fz_clip_path(ctx, pr->dev, path, even_odd, gstate->ctm, bbox);
-					gstate = pdf_show_pattern(ctx, pr, gstate->fill.pattern, gstate->fill.gstate_num, bbox, PDF_FILL);
-					fz_pop_clip(ctx, pr->dev);
+				fz_clip_path(ctx, pr->dev, path, even_odd, gstate->ctm, bbox);
+				gstate = pdf_show_pattern(ctx, pr, gstate->fill.pattern, gstate->fill.gstate_num, bbox, PDF_FILL);
+				fz_pop_clip(ctx, pr->dev);
 				if (gstate->fill.alpha != 1)
 					fz_end_group(ctx, pr->dev);
 				break;
@@ -1064,9 +1064,9 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
 					break;
 				if (gstate->stroke.alpha != 1)
 					fz_begin_group(ctx, pr->dev, bbox, NULL, 0, 0, FZ_BLEND_NORMAL, gstate->stroke.alpha);
-					fz_clip_stroke_path(ctx, pr->dev, path, gstate->stroke_state, gstate->ctm, bbox);
-					gstate = pdf_show_pattern(ctx, pr, gstate->stroke.pattern, gstate->stroke.gstate_num, bbox, PDF_STROKE);
-					fz_pop_clip(ctx, pr->dev);
+				fz_clip_stroke_path(ctx, pr->dev, path, gstate->stroke_state, gstate->ctm, bbox);
+				gstate = pdf_show_pattern(ctx, pr, gstate->stroke.pattern, gstate->stroke.gstate_num, bbox, PDF_STROKE);
+				fz_pop_clip(ctx, pr->dev);
 				if (gstate->stroke.alpha != 1)
 					fz_end_group(ctx, pr->dev);
 				break;
@@ -1630,8 +1630,8 @@ pdf_show_text(fz_context *ctx, pdf_run_processor *pr, pdf_obj *text)
 				/* Bug 708615: pdf_show_char inside show_string can realloc gstate. */
 				gstate = pr->gstate + pr->gtop;
 				pdf_show_space(ctx, pr, - pdf_to_real(ctx, item) * gstate->text.size * 0.001f);
+			}
 		}
-	}
 	}
 	else if (pdf_is_string(ctx, text))
 	{
@@ -2013,7 +2013,7 @@ get_lineage(fz_context *ctx, pdf_obj *a, int *lenp)
 		{
 			/* Put a into lineage. */
 			if (max == len)
-{
+			{
 				max *= 2;
 				if (max == 0)
 					max = 32;
@@ -2026,8 +2026,8 @@ get_lineage(fz_context *ctx, pdf_obj *a, int *lenp)
 				break;
 
 			if (a == line[len>>1])
-			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in structure tree");
-	}
+				fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in structure tree");
+		}
 	}
 	fz_catch(ctx)
 	{
@@ -2245,13 +2245,13 @@ push_marked_content(fz_context *ctx, pdf_run_processor *proc, const char *tagstr
 		/* No point in layer processing unnecessarily */
 		if (proc->process_layers)
 		{
-		/* Start any optional content layers. */
-		if (pdf_name_eq(ctx, tag, PDF_NAME(OC)))
-			begin_oc(ctx, proc, val, NULL);
+			/* Start any optional content layers. */
+			if (pdf_name_eq(ctx, tag, PDF_NAME(OC)))
+				begin_oc(ctx, proc, val, NULL);
 
-		/* Special handling for common non-spec extension. */
-		if (pdf_name_eq(ctx, tag, PDF_NAME(Layer)))
-			begin_layer(ctx, proc, val);
+			/* Special handling for common non-spec extension. */
+			if (pdf_name_eq(ctx, tag, PDF_NAME(Layer)))
+				begin_layer(ctx, proc, val);
 		}
 
 		/* Structure */
@@ -3308,7 +3308,7 @@ pdf_close_run_processor(fz_context *ctx, pdf_processor *proc)
 	pop_nest_until_empty(ctx, pr);
 
 	if (pr->process_structure)
-	pop_structure_to(ctx, pr, NULL);
+		pop_structure_to(ctx, pr, NULL);
 
 	clear_marked_content(ctx, pr);
 }

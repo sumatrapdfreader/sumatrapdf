@@ -976,10 +976,10 @@ flush_transform_cache(fz_context *ctx, char *output, size_t *index, fz_text_tran
 		{
 			int i_ccc = ucdn_get_combining_class(cache->cache[i]);
 			for (j = i+1; j < n; j++)
-	{
+			{
 				int j_ccc = ucdn_get_combining_class(cache->cache[j]);
 				if (i_ccc > j_ccc)
-		{
+				{
 					int t = cache->cache[j];
 					cache->cache[j] = cache->cache[i];
 					cache->cache[i] = t;
@@ -1013,7 +1013,7 @@ flush_transform_cache(fz_context *ctx, char *output, size_t *index, fz_text_tran
 			}
 		}
 		n = i+1;
-}
+	}
 
 	/* Now actually do the output */
 	len = 0;
@@ -1113,10 +1113,10 @@ transform_char(fz_context *ctx, char *output, size_t *index, int c, size_t pos, 
 		c = fz_toupper(c);
 
 	if (c == '\n' && (transform & (FZ_TEXT_TRANSFORM_KEEP_LINES | FZ_TEXT_TRANSFORM_KEEP_PARAGRAPHS)))
-		{
+	{
 		/* Don't strip \n if we might need it. */
-		}
-		else
+	}
+	else
 		c = canon(c);
 
 	/* Squash runs of spaces. */
@@ -1136,7 +1136,7 @@ transform_char(fz_context *ctx, char *output, size_t *index, int c, size_t pos, 
 		cache->pos[cache->len] = pos;
 		cache->len++;
 		return 0;
-		}
+	}
 	/* Alternatively, if we've got a combining character, then we want to store that in the cache. */
 	if (ccc > 0)
 	{
@@ -1195,7 +1195,7 @@ do_transform(fz_context *ctx, fz_text_transform transform, char *output, size_t 
 		*index = pos;
 	}
 	if (output)
-			{
+	{
 		output += len;
 		*output = 0;
 	}
@@ -1206,25 +1206,25 @@ do_transform(fz_context *ctx, fz_text_transform transform, char *output, size_t 
 
 static char *
 transform_text_with_index(fz_context *ctx, fz_text_transform transform, const char *input, size_t **indexp)
-				{
+{
 	char *output;
 	size_t len = do_transform(ctx, transform, NULL, NULL, input);
 
 	output = fz_malloc(ctx, len);
 	fz_try(ctx)
-					{
+	{
 		*indexp = fz_malloc_array(ctx, len+1, size_t);
 	}
 	fz_catch(ctx)
-						{
+	{
 		fz_free(ctx, output);
 		fz_rethrow(ctx);
-						}
+	}
 
 	(void)do_transform(ctx, transform, output, *indexp, input);
 
 	return output;
-					}
+}
 
 static char *
 transform_text_without_index(fz_context *ctx, fz_text_transform transform, const char *input)

@@ -40,17 +40,8 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0022-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
 | `0023-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 
-Then one that is **not** ours and must **not** be carried forward:
-
-| Patch | What |
-| --- | --- |
-| `9001-NOT-A-CHANGE-whitespace-drift` | reindentation a stray formatter pass left behind |
-
-It exists only so that applying the whole series reproduces `ext/mupdf` exactly,
-which is what makes the series verifiable. Drop it on the next update. It does
-contain one genuine bit of damage worth fixing rather than keeping: a newline
-sitting in the middle of a getopt string literal in `platform/x11/x11_main.c`
-(not built on Windows, which is why nobody noticed).
+That is the whole list: `ext/mupdf` is byte-for-byte `1.28.0-rc2` plus these
+patches, and nothing else.
 
 ## Applying them
 
@@ -69,23 +60,26 @@ against the *new* base.
 
 ## Verifying them
 
-Applying every patch to a pristine base must reproduce `ext/mupdf`:
+Applying every patch to a pristine base must reproduce `ext/mupdf` exactly:
 
 ```sh
-git -C ~/src/mupdf -c core.autocrlf=false archive 1.28.0-rc2 | tar -x -C /tmp/check
+mkdir /tmp/check
+git -C ~/src/mupdf -c core.autocrlf=false -c core.eol=lf archive 1.28.0-rc2 | tar -x -C /tmp/check
 cd /tmp/check
 for p in ~/src/sumatrapdf/ext/patches/*.patch; do git apply "$p" || echo "FAIL $p"; done
-diff -r --strip-trailing-cr /tmp/check ~/src/sumatrapdf/ext/mupdf   # only files we do not vendor
+diff -r /tmp/check ~/src/sumatrapdf/ext/mupdf   # only reports files we do not vendor
 ```
 
-That check passes for all 1407 vendored files as of this writing.
+That is a byte comparison, and it passes for all 1407 vendored files as of this
+writing. Keep it that way: if it starts reporting a vendored file, either a
+patch is missing or the vendored tree drifted.
 
 ## Line endings
 
-The patches are LF-only. Most files under `ext/mupdf` are checked out with CRLF,
-so compare with `diff --strip-trailing-cr` (or `git apply` on an LF tree) rather
-than byte for byte. Line endings are a checkout artifact, not one of our
-changes.
+`ext/mupdf` uses LF throughout, like upstream, and the patches are LF-only. Do
+not let an editor or a checkout rewrite it to CRLF: the repo's `.gitattributes`
+sets `* -text`, so whatever bytes get committed are what everyone gets, and a
+CRLF file would break the byte comparison above for no reason.
 
 ## Keeping this current
 

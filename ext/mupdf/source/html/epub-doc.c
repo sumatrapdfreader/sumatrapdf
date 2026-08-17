@@ -69,7 +69,6 @@ typedef struct
 	 * to the most recently used html block here, thus
 	 * ensuring that the stored copy won't be evicted. */
 	fz_html *most_recent_html;
-
 } epub_document;
 
 struct epub_chapter

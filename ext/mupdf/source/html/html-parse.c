@@ -642,33 +642,33 @@ static void generate_text(fz_context *ctx, fz_html_box *box, const char *text, i
 				const char *p = mark;
 				n = fz_chartorune(&c, p);
 				while (p < text)
-			{
+				{
 					p += n;
 					if (fz_isletter_or_apos(c))
-				{
+					{
 						while (p < text)
 						{
 							n = fz_chartorune(&c, p);
 							if (!fz_isletter_or_apos(c))
 								break;
 							p += n;
-				}
+						}
 						generate_text_run_with_hyphens(ctx, box, flow, mark, p, lang, hyph, g);
 					}
 					else
-				{
-						while (p < text)
 					{
+						while (p < text)
+						{
 							n = fz_chartorune(&c, p);
 							if (fz_isletter_or_apos(c))
 								break;
 							p += n;
 						}
 						generate_text_run(ctx, box, flow, mark, p, lang, g);
-						}
-					mark = p;
 					}
+					mark = p;
 				}
+			}
 			else
 			{
 				generate_text_run(ctx, box, flow, mark, text, lang, g);
@@ -1435,16 +1435,16 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 
 	if (style->direction == FZ_BIDI_UNSET)
 	{
-	dir_att = fz_xml_att(node, "dir");
-	if (dir_att)
-	{
-		if (!strcmp(dir_att, "auto"))
-			g->markup_dir = FZ_BIDI_NEUTRAL;
-		else if (!strcmp(dir_att, "rtl"))
-			g->markup_dir = FZ_BIDI_RTL;
-		else if (!strcmp(dir_att, "ltr"))
-			g->markup_dir = FZ_BIDI_LTR;
-		else
+		dir_att = fz_xml_att(node, "dir");
+		if (dir_att)
+		{
+			if (!strcmp(dir_att, "auto"))
+				g->markup_dir = FZ_BIDI_NEUTRAL;
+			else if (!strcmp(dir_att, "rtl"))
+				g->markup_dir = FZ_BIDI_RTL;
+			else if (!strcmp(dir_att, "ltr"))
+				g->markup_dir = FZ_BIDI_LTR;
+			else
 				g->markup_dir = FZ_BIDI_LTR;
 		}
 	}
@@ -2729,9 +2729,9 @@ fz_debug_html_box(fz_context *ctx, fz_html_box *box, int level)
 			fz_debug_css_number(level, "height", box->style->height);
 			if (box->u.block.margin[0] != 0 || box->u.block.margin[1] != 0 || box->u.block.margin[2] != 0 || box->u.block.margin[3] != 0)
 			{
-			indent(level+1);
-			printf(">margin=(%g %g %g %g)\n", box->u.block.margin[0], box->u.block.margin[1], box->u.block.margin[2], box->u.block.margin[3]);
-		}
+				indent(level+1);
+				printf(">margin=(%g %g %g %g)\n", box->u.block.margin[0], box->u.block.margin[1], box->u.block.margin[2], box->u.block.margin[3]);
+			}
 			if (box->u.block.border[0] != 0 || box->u.block.border[1] != 0 || box->u.block.border[2] != 0 || box->u.block.border[3] != 0)
 			{
 				indent(level+1);
