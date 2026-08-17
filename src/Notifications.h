@@ -71,6 +71,8 @@ struct NotificationCreateArgs {
 void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS = 0, bool highlight = false);
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd);
 void RemoveNotification(NotificationWnd*);
+bool AreNotificationsEnabled();
+void SetNotificationsEnabled(bool);
 bool RemoveNotificationsForGroup(HWND, Kind);
 void RemoveNotificationsForHwnd(HWND);
 NotificationWnd* GetNotificationForGroup(HWND, Kind);

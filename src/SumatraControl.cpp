@@ -33,6 +33,7 @@
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
 #include "HomePage.h"
+#include "Notifications.h"
 #include "AIChatCommon.h"
 #include "SumatraDialogs.h"
 #include "EditAnnotations.h"
@@ -275,6 +276,7 @@ enum class ControlCmd : u16 {
     TestFindPageRange = 52,
     TestDocumentFontList = 53,
     WaitRenderIdle = 54,
+    SetNotificationsEnabled = 55,
 };
 
 enum class ControlArgType : u16 {
@@ -533,6 +535,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendArgEnd(req->results);
             PostAppExit();
             break;
+
+        // A notification covers part of the document for a couple of seconds,
+        // so a test that reads pixels either waits it out or turns them off.
+        case ControlCmd::SetNotificationsEnabled: {
+            i32 enabled = 0;
+            if (!IntArg(req, 0, enabled)) {
+                AppendError(req, "SetNotificationsEnabled expects int enabled");
+                break;
+            }
+            SetNotificationsEnabled(enabled != 0);
+            AppendTestResult(req, 0, enabled ? StrL("OK enabled") : StrL("OK disabled"));
+            break;
+        }
 
         case ControlCmd::TestSynctex: {
             i32 line = 0;

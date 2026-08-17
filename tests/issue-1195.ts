@@ -13,7 +13,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, tmpPath } from "./util";
-import { captureWindowPixels, sendMessage, waitForWindowIdle, WM_COMMAND } from "./winapi";
+import { captureWindowPixels, sendMessage, WM_COMMAND } from "./winapi";
 import { findCanvas, launchControlled, sendCommand, waitForExit, killAndWait } from "./win-automation";
 
 // white pages, with a small black square in the top-left corner of page 1
@@ -80,6 +80,11 @@ async function openAtZoom(
     saveSettings: true,
   });
   try {
+    // the "Zoom: N%" notification is drawn over the top-left of the page, which
+    // is exactly where the black square is, and it lingers ~2s. Turning
+    // notifications off (which also takes down the one -zoom already showed)
+    // is what makes the pixel measurements below immediate instead of a wait.
+    await client.setNotificationsEnabled(false);
     await client.waitForRenderIdle(30000);
     const canvas = findCanvas(frame);
     for (let i = 0; i < nZoomIn; i++) {
@@ -87,12 +92,6 @@ async function openAtZoom(
       sendMessage(frame, WM_COMMAND, cmdId("CmdZoomIn"), 0);
       await client.waitForRenderIdle(30000);
     }
-    // only the dark-pixel comparison needs the second, sharper tile pass.
-    // at high zoom that pass arrives ~2s after the first cached tiles
-    if (needPixels && canvas) {
-      await waitForWindowIdle(canvas, 12000, 2200);
-    }
-
     const px = needPixels ? captureWindowPixels(canvas) : null;
     let dark = 0;
     if (px) {

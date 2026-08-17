@@ -49,6 +49,7 @@ export enum ControlCommand {
   TestFindPageRange = 52,
   TestDocumentFontList = 53,
   WaitRenderIdle = 54,
+  SetNotificationsEnabled = 55,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -335,6 +336,17 @@ export class ControlClient {
       throw new Error(`WaitRenderIdle failed: ${info || code}`);
     }
     return info;
+  }
+
+  // Notifications are drawn over the document and linger for ~2s, so a test
+  // that reads pixels would have to wait them out. Turning them off also takes
+  // down any that are already showing.
+  async setNotificationsEnabled(enabled: boolean): Promise<void> {
+    const res = await this.request(ControlCommand.SetNotificationsEnabled, [enabled ? 1 : 0]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    if (code !== 0) {
+      throw new Error(`SetNotificationsEnabled failed: ${String(res[1] ?? code)}`);
+    }
   }
 
   close(): void {
