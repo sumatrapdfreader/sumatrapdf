@@ -609,6 +609,7 @@ function sumatrapdf_files()
     "ChangeScrollbarDialog.*",
     "ChangeThemeDialog.*",
     "CustomZoomDialog.*",
+    "SignDocumentDialog.*",
     "EbookSettingsDialog.*",
     "GetPasswordDialog.*",
     "GoToPageDialog.*",
@@ -903,6 +904,7 @@ end
 function engines_files()
   files_in_dir("src", {
     "Annotation.*",
+    "PdfSign.*",
     "ChmFile.*",
     "DocProperties.*",
     "EbookDoc.*",

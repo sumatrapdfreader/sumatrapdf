@@ -896,6 +896,9 @@
     <ClCompile Include="..\src\PdfDarkModeScanProcess.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PdfSign.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\PdfSync.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -987,6 +990,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ShortcutParse.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SignDocumentDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp">

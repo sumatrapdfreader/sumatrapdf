@@ -246,6 +246,7 @@ const sumatraFiles: FileGroup[] = [
     dir: "src",
     patterns: [
       "Annotation.*",
+      "PdfSign.*",
       "ChmFile.*",
       "DocProperties.*",
       "EngineBase.*",
@@ -312,6 +313,7 @@ const sumatraFiles: FileGroup[] = [
       "ChangeScrollbarDialog.*",
       "ChangeThemeDialog.*",
       "CustomZoomDialog.*",
+      "SignDocumentDialog.*",
       "EbookSettingsDialog.*",
       "GetPasswordDialog.*",
       "GoToPageDialog.*",

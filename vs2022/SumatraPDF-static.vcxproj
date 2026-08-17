@@ -1451,6 +1451,7 @@
     <ClCompile Include="..\src\PdfDarkModeOklab.cpp" />
     <ClCompile Include="..\src\PdfDarkModeProfile.cpp" />
     <ClCompile Include="..\src\PdfDarkModeScanProcess.cpp" />
+    <ClCompile Include="..\src\PdfSign.cpp" />
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\PdfTools.cpp" />
     <ClCompile Include="..\src\PngOptimizer.cpp" />
@@ -1491,6 +1492,7 @@
     <ClCompile Include="..\src\SelectionTranslate.cpp" />
     <ClCompile Include="..\src\SettingsDialog.cpp" />
     <ClCompile Include="..\src\ShortcutParse.cpp" />
+    <ClCompile Include="..\src\SignDocumentDialog.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />

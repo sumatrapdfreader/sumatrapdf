@@ -209,6 +209,7 @@ CmdDeleteAnnotation,Delete,Delete Annotation,
 CmdEditAnnotations,,Edit Annotations,
 CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF,
 CmdSaveAnnotationsNewFile,,Save Annotations to new PDF,ver 3.6+
+CmdSignDocument,,Sign Document...,"digitally sign a PDF with a certificate from a .pfx / .p12 file, ver 3.7+"
 CmdDiscardChanges,,Discard Changes,"reloads the document from disk, discarding unsaved annotations and form changes; also on the tab context menu when there are unsaved changes, ver 3.7+ (renamed from `CmdDiscardAnnotations`)"
 CmdShowAnnotations,,Show Annotations,"ver 3.6+, for current document"
 CmdHideAnnotations,,Hide Annotations,"ver 3.6+, for current document"

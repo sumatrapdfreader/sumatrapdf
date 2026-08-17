@@ -113,6 +113,10 @@ static MenuDef menuDefFile[] = {
         _TRN("Save Annotations to existing PDF"),
         CmdSaveAnnotations,
     },
+    {
+        _TRN("Sign Document..."),
+        CmdSignDocument,
+    },
 //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
     {
@@ -1038,6 +1042,10 @@ static MenuDef menuDefDocumentOperations[] = {
     {
         _TRN("Bake PDF"),
         CmdPdfBake,
+    },
+    {
+        _TRN("Sign Document..."),
+        CmdSignDocument,
     },
     {
         _TRN("Convert to PDF..."),

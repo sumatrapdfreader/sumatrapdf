@@ -14,6 +14,7 @@ void ShowChangeThemeDialog(MainWindow* win);
 void ShowSetDocumentColorsFollowThemeDialog(MainWindow* win);
 void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab);
 void ShowCustomZoomDialog(MainWindow* win);
+void ShowSignDocumentDialog(MainWindow* win);
 void ShowEbookSettingsDialog(MainWindow* win);
 Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword);
 void ShowGoToPageDialog(MainWindow* win);

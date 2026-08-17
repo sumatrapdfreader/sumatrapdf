@@ -289,7 +289,8 @@ enum {
     CmdZoomToSelection = 478,
     CmdToggleHoverPreview = 479,
     CmdToggleDisableLinks = 480,
-    CmdNone = 481,
+    CmdSignDocument = 481,
+    CmdNone = 482,
 
     /* range for file history */
     CmdFileHistoryFirst,

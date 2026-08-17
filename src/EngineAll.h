@@ -106,6 +106,22 @@ bool EngineMupdfIsPdf(EngineBase* engine);
 bool EngineMupdfIsEncrypted(EngineBase* engine);
 Str EngineMupdfGetPassword(EngineBase* engine);
 bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);
+
+// digitally signing a PDF (SignDocumentDialog.cpp drives this)
+struct PdfSignArgs {
+    Str certPath;     // .pfx / .p12 holding the certificate + private key
+    Str certPassword; // password protecting it, may be empty
+    Str reason;       // optional, shown in the signature
+    Str location;     // optional, shown in the signature
+    Str fieldName;    // existing unsigned signature field to fill in
+    int pageNo = 1;   // page for a new field, when fieldName is empty
+    RectF rect;       // where the new field goes, empty for mupdf's default box
+};
+
+#if OS_WIN
+void EngineMupdfGetUnsignedSignatureFields(EngineBase*, StrVec& names, Vec<int>& pageNos);
+bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
+#endif
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);

@@ -10436,6 +10436,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdSignDocument:
+            ShowSignDocumentDialog(win);
+            break;
+
         case CmdToggleMenuBar: {
             if (ShouldToggle(cmd, gGlobalPrefs->showMenubar)) {
                 ToggleMenuBar(win, false);

@@ -187,6 +187,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add `Annotations.FreeTextAlignment` advanced setting (`left`, `center`, `right`): how text is aligned in newly created free text annotations, so the **Text Alignment** you want no longer has to be set by hand on every annotation. Right-to-left scripts (Arabic, Hebrew, Persian) want `right`. `CmdCreateAnnotFreeText` and the other `CmdCreateAnnot*` commands take a matching `alignment` argument (issue #4799)
 - clearer rendering of CAD / engineering-drawing PDFs: hairline strokes get a zoom-aware minimum width and typical CAD-export grays are darkened toward Acrobat-like contrast, so drawings stay readable when zoomed out. Applied automatically when a drawing is detected (PDF/E marker, CAD authoring tool in the metadata, or content heuristics; screenshot/raster and WPS-style hairline exports are handled too); control it with the `EngineeringDrawingEnhance` advanced setting (`off` / `auto` / `on`) or per document with **Toggle Engineering Drawing Enhancement** (`Ctrl + K` command palette). Ported from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
 - **Fit Content** (`Ctrl + 3`) now works on print-ready PDFs. Those draw crop and registration marks in the bleed area outside the page, and the content detection used to count them, so it reported the whole page and zooming to content did nothing. Ink drawn outside the page is now ignored. Same for **Shrink** / **Fit to printable area** printing, which uses the same detection. Fit Content also crops the margins properly in the non-continuous **Single Page**, **Facing** and **Book View** modes (it used to show the top/left margin with the content cut off at the other end), and in the continuous modes the mouse wheel now scrolls the document instead of flipping a whole page per notch
+- PDF documents can be digitally signed from the UI: **Sign Document...** (in the **File** menu and in the right-click **Document** submenu, for PDFs only) asks for a certificate (a `.pfx` / `.p12` file plus its password) and an optional reason and location, then fills in an empty signature field the document already has, or adds a new signature to the current page (over the selection, if there is one) and saves to a file you pick. Previously signing was only possible with the bundled `sumatrapdf-tool sign` command line. The signature is written incrementally, so signatures already in the document stay valid, and Document Properties reports the signer and whether the document changed since signing (fixes #5962)
 
 **New commands:**
 
@@ -268,6 +269,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdZoomFitByOrientation` : "Fit by Orientation"
 - `CmdZoomShrinkToFit` : "Shrink To Fit"
 - `CmdDebugShowFitContentArea` : "Debug: Show Fit Content Area" — Debug menu checkbox; outlines in red the area **Fit Content** zoom would fit to, without changing the zoom
+- `CmdSignDocument` : "Sign Document..." — sign a PDF with a `.pfx` / `.p12` certificate (fixes #5962)
 
 **New command-line arguments:**
 

@@ -1922,6 +1922,17 @@ EXPORTS
 	pkcs7_windows_check_digest
 	pkcs7_windows_distinguished_name
 
+; signing a pdf (PdfSign.cpp): reading the certificate + filling in a
+; signature field
+
+	pkcs7_windows_read_pfx
+	pdf_drop_signer
+	pdf_sign_signature
+	pdf_create_signature_widget
+	pdf_widget_is_signed
+	pdf_load_field_name
+	pdf_keep_annot
+
 ; cmark-gfm exports (required for MarkdownToc; also used by mupdf md.c).
 ; Keep the cmark-gfm static-lib project; link it only into mupdf/libsumatrapdf.dll
 ; and re-export these so SumatraPDF.exe does not carry a second copy.

@@ -212,6 +212,9 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
 static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSaveAnnotationsNewFile,
+    // signing writes a signature widget into the PDF, so it needs the same
+    // "this engine can be edited and re-saved" support annotations do
+    CmdSignDocument,
     CmdEditAnnotations,
     CmdDeleteAnnotation,
     CmdShowAnnotations,
