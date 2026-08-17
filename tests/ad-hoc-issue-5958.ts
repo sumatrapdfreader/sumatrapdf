@@ -28,6 +28,7 @@ import {
   getWindowText,
   isWindowVisible,
   readWindowDCRow,
+  topLevelWindowFromPoint,
   sleep,
   type Rect,
 } from "./winapi.ts";
@@ -50,17 +51,24 @@ function findHelpWindow(pid: number): number {
   return found;
 }
 
-async function waitForHelpWindow(pid: number, want: boolean, timeoutMs = 5000): Promise<number> {
+// Waits until the help window is (or is no longer) on screen; returns whether
+// that happened. Closing it deletes the window from a queued task, so for a
+// moment the hwnd still exists while already hidden -- "not visible" is what
+// closed means here, and returning the hwnd instead of a verdict is how this
+// test used to report that lingering window as "did not close".
+async function waitForHelpShown(pid: number, want: boolean, timeoutMs = 5000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
-  let hwnd = 0;
-  while (Date.now() < deadline) {
-    hwnd = findHelpWindow(pid);
-    if (want === (hwnd !== 0 && isWindowVisible(hwnd))) {
-      return hwnd;
+  for (;;) {
+    const hwnd = findHelpWindow(pid);
+    const shown = hwnd !== 0 && isWindowVisible(hwnd);
+    if (shown === want) {
+      return true;
+    }
+    if (Date.now() > deadline) {
+      return false;
     }
     await sleep(100);
   }
-  return hwnd;
 }
 
 // hwnd 0 is the screen DC, so this is what a user would actually see
@@ -88,20 +96,31 @@ export async function testit(): Promise<void> {
     await sleep(700);
 
     sendCommand(frame, cmdId("CmdToggleKeyboardHelp"));
-    const help = await waitForHelpWindow(pid, true);
-    if (!help) {
+    if (!(await waitForHelpShown(pid, true))) {
       throw new Error("issue-5958: keyboard help window was not created");
     }
+    const help = findHelpWindow(pid);
     const r = getWindowRect(help);
     if (r.right - r.left < 100 || r.bottom - r.top < 100) {
       throw new Error(`issue-5958: keyboard help window is degenerate: ${JSON.stringify(r)}`);
+    }
+    // reading the screen only says anything if our window is the one on screen
+    // there; anything covering it (an always-on-top window, someone using the
+    // machine) looks exactly like the window not painting
+    const mid = { x: r.left + 3, y: Math.floor((r.top + r.bottom) / 2) };
+    const onTop = topLevelWindowFromPoint(mid.x, mid.y);
+    if (onTop !== help) {
+      console.log(
+        `\nSKIP issue-5958: another window (hwnd ${onTop}) covers the help window at ` +
+          `${mid.x},${mid.y}; run this on an idle desktop.`,
+      );
+      return;
     }
     // a few pixels in from the left edge: window background, no text
     const shown = screenPixels(r, 3);
 
     sendCommand(frame, cmdId("CmdToggleKeyboardHelp"));
-    const still = await waitForHelpWindow(pid, false);
-    if (still) {
+    if (!(await waitForHelpShown(pid, false))) {
       throw new Error("issue-5958: keyboard help window did not close");
     }
     await sleep(400);

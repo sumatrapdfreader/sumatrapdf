@@ -38,6 +38,8 @@ const user32 = dlopen("user32.dll", {
   GetWindowTextW: { args: [FFIType.ptr, FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
   GetWindowRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   IsWindowVisible: { args: [FFIType.ptr], returns: FFIType.bool },
+  WindowFromPoint: { args: [FFIType.i64], returns: FFIType.u64 },
+  GetAncestor: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.u64 },
   SetForegroundWindow: { args: [FFIType.ptr], returns: FFIType.bool },
   GetForegroundWindow: { args: [], returns: FFIType.u64 },
   GetWindowDC: { args: [FFIType.ptr], returns: FFIType.u64 },
@@ -689,6 +691,21 @@ export function getWindowRect(hwnd: number): Rect {
 // it rather than resizing it to nothing). Ask the OS instead.
 export function isWindowVisible(hwnd: number): boolean {
   return user32.symbols.IsWindowVisible(hwnd);
+}
+
+// The top-level window that owns whatever is drawn at this screen point, i.e.
+// what a click there would hit. Use it to check that the window you are about
+// to read pixels from is really the one on screen at that spot -- another
+// (possibly always-on-top) window covering it is otherwise indistinguishable
+// from your window not painting.
+export function topLevelWindowFromPoint(x: number, y: number): number {
+  const pt = (BigInt(y >>> 0) << 32n) | BigInt(x >>> 0);
+  const h = Number(user32.symbols.WindowFromPoint(pt));
+  if (!h) {
+    return 0;
+  }
+  const GA_ROOT = 2;
+  return Number(user32.symbols.GetAncestor(h, GA_ROOT)) || h;
 }
 
 export function setForegroundWindow(hwnd: number): boolean {
