@@ -9,7 +9,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, ROOT, runStandalone, tmpPath } from "./util";
-import { getWindowText, postMessage, WM_CLOSE } from "./winapi";
+import { getWindowText, postMessage, sleep, WM_CLOSE } from "./winapi";
 import { launchControlled, sendCommand, waitForExit, waitForTitle, killAndWait } from "./win-automation";
 
 const GOOD = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
@@ -36,11 +36,25 @@ function loadedFile(frame: number): string {
 
 async function navigate(frame: number, cmd: string, from: string): Promise<string> {
   sendCommand(frame, cmdId(cmd));
-  // the load runs on a background thread and a failed file auto-advances
-  const title = await waitForTitle(frame, (t) => {
+  // The load runs on a background thread and a file that fails to load
+  // auto-advances, so the first title that differs can be one we are only
+  // passing through: a.pdf -> b-broken.pdf -> c.pdf. Wait for the title to
+  // change and then to stop changing, so this reports where navigation landed
+  // rather than what flashed by. (The last-file case legitimately stays on the
+  // error page; there the title settles on it.)
+  let title = await waitForTitle(frame, (t) => {
     const name = t.split(" - ")[0].trim();
     return name.length > 0 && name !== from;
   });
+  const deadline = Date.now() + 6000;
+  for (let stable = 0; stable < 3 && Date.now() < deadline; stable++) {
+    await sleep(200);
+    const cur = getWindowText(frame);
+    if (cur !== title) {
+      title = cur;
+      stable = -1; // changed again: start counting over
+    }
+  }
   return title.split(" - ")[0].trim();
 }
 
