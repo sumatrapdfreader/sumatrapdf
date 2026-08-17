@@ -9,7 +9,12 @@ import { appendFileSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 export const ROOT = join(import.meta.dir, "..");
-export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF.exe");
+
+// The exe under test: the debug build, unless SUMATRA_TEST_EXE names another
+// one. The GitHub CI job sets it to the debug ASan build
+// (out/dbg64_asan/SumatraPDF-static.exe), which is the same app plus ASan.
+// It is read at import time, so set it in the environment (not at runtime).
+export const EXE = process.env.SUMATRA_TEST_EXE || join(ROOT, "out", "dbg64", "SumatraPDF.exe");
 
 // Extract page text via the debug -extract-text harness (hex-encoded UTF-8).
 // The GUI exe's stdout often does not reach a Bun pipe on Windows; PowerShell

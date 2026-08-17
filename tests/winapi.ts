@@ -361,13 +361,35 @@ export async function waitForWindowIdle(hwnd: number, timeoutMs = 5000, settleMs
   return false;
 }
 
-// The upper-right quarter of the work area. Tests put SumatraPDF there: a
-// window of that size renders and, more to the point, captures a quarter of
-// the pixels a default-sized one does, and every captureWindowPixels() walk
-// over the result costs a quarter as much. Upper-right keeps it clear of the
-// taskbar's usual place and of anything at the top-left of the desktop
+// Where tests put the SumatraPDF window. "quarter" is the default and what a
+// developer wants: a quarter of the screen stays out of the way of whatever
+// else is on the desktop and renders (and captures) a quarter of the pixels.
+// "workArea" is for a runner on a machine nobody is looking at, where the
+// screen is small (a GitHub runner boots at 1024x768) and a quarter of it is
+// too cramped for toolbars, sidebars and dialogs.
+export type TestWindowLayout = "quarter" | "workArea";
+
+let gTestWindowLayout: TestWindowLayout = "quarter";
+
+// Set by the test runner (run-all.ts vs run-github-ci.ts) before running any
+// test; every launch path takes its geometry from testWindowPos(), so this is
+// the only knob.
+export function setTestWindowLayout(layout: TestWindowLayout): void {
+  gTestWindowLayout = layout;
+}
+
+export function getTestWindowLayout(): TestWindowLayout {
+  return gTestWindowLayout;
+}
+
+// The upper-right quarter of the work area (or all of it, see
+// setTestWindowLayout). Upper-right keeps it clear of the taskbar's usual
+// place and of anything at the top-left of the desktop.
 export function testWindowPos(): WindowPos {
   const wa = getWorkArea();
+  if (gTestWindowLayout === "workArea") {
+    return { x: wa.left, y: wa.top, dx: wa.right - wa.left, dy: wa.bottom - wa.top };
+  }
   const dx = Math.floor((wa.right - wa.left) / 2);
   const dy = Math.floor((wa.bottom - wa.top) / 2);
   return { x: wa.left + dx, y: wa.top, dx, dy };

@@ -66,6 +66,36 @@ function sampleChrome(hwnd: number): number[] {
   return px;
 }
 
+// Chrome pixels once they stop changing: a slow build (ASan, a loaded CI
+// runner) is still painting when a fixed sleep expires, and a half-painted
+// "before" makes every later comparison differ.
+async function sampleStableChrome(hwnd: number, timeoutMs = 5000): Promise<number[]> {
+  const deadline = Date.now() + timeoutMs;
+  let prev = sampleChrome(hwnd);
+  for (;;) {
+    await sleep(120);
+    const cur = sampleChrome(hwnd);
+    if (countDifferingPixels(prev, cur) === 0 || Date.now() > deadline) {
+      return cur;
+    }
+    prev = cur;
+  }
+}
+
+// How many sampled pixels still differ from `before`, once they stop coming
+// back (or the deadline passes). The bug never repaints, so it still fails --
+// just after waiting instead of after a fixed sleep that a slow build misses.
+async function waitForChromeRestored(hwnd: number, before: number[], timeoutMs = 5000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const nDiff = countDifferingPixels(before, sampleChrome(hwnd));
+    if (nDiff === 0 || Date.now() > deadline) {
+      return nDiff;
+    }
+    await sleep(120);
+  }
+}
+
 export async function testit(): Promise<void> {
   // window rects and window-DC pixel coordinates must agree; no-op at 100% DPI
   setProcessDpiAware();
@@ -90,22 +120,16 @@ export async function testit(): Promise<void> {
     if (!frame) {
       throw new Error("SumatraPDF frame window not found");
     }
-    // Short settle for first paint / maximized layout (not full-page render)
-    await sleep(250);
-
-    const before = sampleChrome(frame);
+    // settle for first paint / maximized layout (not full-page render)
+    const before = await sampleStableChrome(frame);
 
     sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    await sleep(120);
+    await sleep(200);
     sendCommand(frame, cmdId("CmdToggleFullscreen"));
-    // ExitFullScreen + RelayoutFrame is synchronous on the UI thread; a short
-    // beat is enough for WM_PAINT to run after EndFrameRedrawSuppression.
-    await sleep(150);
 
     // nothing here scrolls, switches tabs or moves the mouse: leaving full
     // screen must repaint the chrome on its own
-    const after = sampleChrome(frame);
-    const nDiff = countDifferingPixels(before, after);
+    const nDiff = await waitForChromeRestored(frame, before);
     if (nDiff > 0) {
       throw new Error(
         `the caption/tab row did not repaint after leaving full screen: ` +

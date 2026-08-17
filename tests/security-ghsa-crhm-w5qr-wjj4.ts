@@ -2,13 +2,18 @@
 // policy initialization must start fully restricted and only add explicitly
 // enabled permissions. Invalid policy files must also fail closed.
 
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
 import { enumWindows, getClassName, getWindowPid, sleep } from "./winapi.ts";
 import { sendCommand, waitForFrame, killAndWait } from "./win-automation.ts";
 
-const DLL = join(dirname(EXE), "libsumatrapdf.dll");
+// What the exe needs beside it once copied out of the build directory. The
+// regular build loads the engine from libsumatrapdf.dll; the static (ASan) one
+// has it linked in but needs the ASan runtime, so copy whichever is there.
+const SIDE_BY_SIDE_DLLS = ["libsumatrapdf.dll", "clang_rt.asan_dynamic-x86_64.dll"].map((name) =>
+  join(dirname(EXE), name),
+);
 
 async function assertFileDialog(name: string, ini: string, expected: boolean): Promise<void> {
   const appDir = tmpPath(`ghsa-crhm-w5qr-wjj4-${name}`);
@@ -17,7 +22,11 @@ async function assertFileDialog(name: string, ini: string, expected: boolean): P
 
   const testExe = join(appDir, "SumatraPDF.exe");
   copyFileSync(EXE, testExe);
-  copyFileSync(DLL, join(appDir, basename(DLL)));
+  for (const dll of SIDE_BY_SIDE_DLLS) {
+    if (existsSync(dll)) {
+      copyFileSync(dll, join(appDir, basename(dll)));
+    }
+  }
   writeFileSync(join(appDir, "sumatrapdfrestrict.ini"), ini);
 
   const proc = Bun.spawn([testExe, "-for-testing"], {

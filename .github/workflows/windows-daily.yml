@@ -1,0 +1,44 @@
+name: windows-daily
+on:
+  schedule:
+    # 04:20 UTC, offset from the other daily jobs so they don't queue together
+    - cron: "20 4 * * *"
+  workflow_dispatch:
+jobs:
+  test:
+    name: Windows debug ASan build + tests
+    runs-on: windows-2025-vs2026
+    # the suite drives a real GUI; a hung test should fail the run, not sit
+    # there burning runner minutes
+    timeout-minutes: 120
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v6
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      # ASan so the run catches memory errors the tests walk into, not just
+      # wrong behavior. Produces out/dbg64_asan/SumatraPDF-static.exe plus the
+      # ASan runtime dll next to it.
+      - name: Build (debug, ASan)
+        run: bun cmd/build.ts -asan -debug
+
+      # run-github-ci.ts runs every test that can run here, doesn't stop at the
+      # first failure, and exits non-zero if any failed
+      - name: Run tests
+        env:
+          SUMATRA_TEST_EXE: ${{ github.workspace }}\out\dbg64_asan\SumatraPDF-static.exe
+        run: bun tests/run-github-ci.ts
+
+      # what the failing tests left behind: screenshots, logs, generated files
+      - name: Upload test output
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-output
+          path: |
+            tests/tmp
+            .work/test-times.txt
+          if-no-files-found: ignore
+          retention-days: 7
