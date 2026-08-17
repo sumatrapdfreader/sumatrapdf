@@ -13,6 +13,8 @@ generated/resources/fonts/sil
 tags
 cscope.*
 node_modules
+docs/generated
+docs/_static/generated
 
 # Editor and file browser turds:
 *~

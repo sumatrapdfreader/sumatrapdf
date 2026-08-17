@@ -1,0 +1,69 @@
+tools: reset fz_optind so tool mains can be called more than once
+
+fz_optind is a global that a tool main leaves pointing past the arguments it
+just parsed. SumatraPDF calls those mains in-process and can call them more
+than once per run, so the second invocation started parsing in the wrong
+place.
+
+Adds fz_set_optind() for callers outside source/tools, and resets fz_optind at
+the top of the two mains that had no reset of their own.
+---
+diff --git a/include/mupdf/fitz/getopt.h b/include/mupdf/fitz/getopt.h
+index 5357b6f..0e8d76e 100644
+--- a/include/mupdf/fitz/getopt.h
++++ b/include/mupdf/fitz/getopt.h
+@@ -84,6 +84,12 @@ extern int fz_getopt(int nargc, char * const *nargv, const char *ostr);
+ */
+ FZ_DATA extern int fz_optind;
+ 
++/**
++	Reset fz_optind to allow re-calling tool main functions.
++	Needed because fz_optind is a global that persists across calls.
++*/
++void fz_set_optind(int val);
++
+ /**
+ 	fz_optarg is a pointer to the argument data for the most recently
+ 	read option.
+diff --git a/source/fitz/getopt.c b/source/fitz/getopt.c
+index 9c5353d..157d7d0 100644
+--- a/source/fitz/getopt.c
++++ b/source/fitz/getopt.c
+@@ -13,6 +13,11 @@
+ 
+ char *fz_optarg; /* Global argument pointer. */
+ int fz_optind = 0; /* Global argv index. */
++
++void fz_set_optind(int val)
++{
++	fz_optind = val;
++}
+ const fz_getopt_long_options *fz_optlong = NULL;
+ int fz_optitem = 0; /* Which item in a long opt list is selected? */
+ 
+diff --git a/source/tools/muconvert.c b/source/tools/muconvert.c
+index cdc755f..faf1d64 100644
+--- a/source/tools/muconvert.c
++++ b/source/tools/muconvert.c
+@@ -138,6 +138,8 @@ int muconvert_main(int argc, char **argv)
+ 	int i, c;
+ 	int retval = EXIT_SUCCESS;
+ 
++	fz_optind = 1;
++
+ 	while ((c = fz_getopt(argc, argv, "p:A:W:H:S:U:Xo:F:O:b:")) != -1)
+ 	{
+ 		switch (c)
+diff --git a/source/tools/pdfbake.c b/source/tools/pdfbake.c
+index 4faddd0..7e59f3d 100644
+--- a/source/tools/pdfbake.c
++++ b/source/tools/pdfbake.c
+@@ -54,6 +54,8 @@ int pdfbake_main(int argc, char **argv)
+ 	char *input;
+ 	int c, code = EXIT_SUCCESS;
+ 
++	fz_optind = 1;
++
+ 	while ((c = fz_getopt(argc, argv, "AFO:")) != -1)
+ 	{
+ 		switch (c)

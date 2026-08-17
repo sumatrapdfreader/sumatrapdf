@@ -6,6 +6,12 @@ Assume that Visual Studio command-line tools are available in the PATH environme
 
 Our code is in src/ directory. External dependencies are in ext/ directory
 
+`ext/mupdf` is vendored and we edit it in place. Every change we make there must
+also be recorded as a patch in `ext/patches/` (one logical change per `.patch`,
+against the mupdf revision in `ext/versions.txt`) in the **same commit** — see
+`ext/patches/README.md`. A change that only lives in the vendored tree is one
+the next mupdf update silently drops.
+
 To build run: `bun cmd/build.ts -debug` (or `-release`, `-asan`, and the other modes shown by `bun cmd/build.ts -help`). Called with no options it prints usage and exits; unknown options print an error plus usage and exit unsuccessfully.
 
 Keep `cmd/build.ts` as the single build entry point. Build-mode implementation modules live under `cmd/helper/` and are not invoked directly, except for internal delegation such as the WSL launcher.

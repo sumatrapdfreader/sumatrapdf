@@ -1,0 +1,40 @@
+fonts: add a TOFU_NOTO_SUMATRA subset of the Noto fallback fonts
+
+Adds a TOFU_NOTO_SUMATRA switch that selects a small subset of the Noto fallback
+fonts.
+
+Ideally we would just #undef TOFU_NOTO, but that is a lot of fonts to add to
+fonts_*.asm first.
+---
+diff --git a/source/fitz/font-table.h b/source/fitz/font-table.h
+index e583529..89e4760 100644
+--- a/source/fitz/font-table.h
++++ b/source/fitz/font-table.h
+@@ -79,9 +79,25 @@ FONT(sil,	CharisSIL_Bold_cff,		"Charis SIL",		ANY_SCRIPT,	FZ_LANG_UNSET,	NO_SUBF
+ FONT(sil,	CharisSIL_BoldItalic_cff,	"Charis SIL",		ANY_SCRIPT,	FZ_LANG_UNSET,	NO_SUBFONT,	BOLD|ITALIC)
+ #endif
+ 
+-#ifndef TOFU_NOTO
+-FONT(urw,	NimbusBoxes_Regular_cff,	"Nimbus Boxes",		ANY_SCRIPT,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++/* SumatraPDF: TODO: just undef TOFU_NOTO, but that's a lot fonts to add to fonts_*.asm */
++#ifdef TOFU_NOTO_SUMATRA
++FONT(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_LATIN,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_GREEK,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_CYRILLIC,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_COMMON,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_INHERITED,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_UNKNOWN,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+ 
++FONT(noto,	NotoSansMath_Regular_otf,	"Noto Sans Math",	MUPDF_SCRIPT_MATH,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++FONT(noto,	NotoMusic_Regular_otf,		"Noto Music",		MUPDF_SCRIPT_MUSIC,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++FONT(noto,	NotoSansSymbols_Regular_otf,	"Noto Sans Symbols",	MUPDF_SCRIPT_SYMBOLS,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++ALIAS(noto,	NotoSansSymbols_Regular_otf,	"Noto Sans Symbols",	UCDN_SCRIPT_BRAILLE,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++FONT(noto,	NotoSansSymbols2_Regular_otf,	"Noto Sans Symbols2",	MUPDF_SCRIPT_SYMBOLS2,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++FONT(noto,	NotoEmoji_Regular_ttf,		"Noto Emoji",		MUPDF_SCRIPT_EMOJI,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
++
++#endif
++
++#ifndef TOFU_NOTO
+ FONT(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_LATIN,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+ ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_GREEK,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
+ ALIAS(noto,	NotoSerif_Regular_otf,	"Noto Serif",	UCDN_SCRIPT_CYRILLIC,	FZ_LANG_UNSET,	NO_SUBFONT,	REGULAR)
