@@ -24,3 +24,4 @@ TempStr DestZoomNavResultTemp(int destNo, int startZoomPerc, int* exitCodeOut = 
 TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeOut = nullptr);
 TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut = nullptr);
 TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut = nullptr);
+TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut = nullptr);

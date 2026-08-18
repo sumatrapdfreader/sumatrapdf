@@ -278,6 +278,7 @@ enum class ControlCmd : u16 {
     WaitRenderIdle = 54,
     SetNotificationsEnabled = 55,
     TestHomeSelection = 56,
+    TestImageRenderEdges = 57,
 };
 
 enum class ControlArgType : u16 {
@@ -799,6 +800,22 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageLinksResultTemp(path, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestImageRenderEdges: {
+            Str path = StringArg(req, 0);
+            i32 zoomPercent = 100;
+            i32 clipKind = 0;
+            if (!path) {
+                AppendError(req, "TestImageRenderEdges expects string path [, int zoomPercent] [, int clipKind]");
+                break;
+            }
+            IntArg(req, 1, zoomPercent);
+            IntArg(req, 2, clipKind);
+            int exitCode = 0;
+            Str res = ImageRenderEdgesResultTemp(path, zoomPercent, clipKind, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

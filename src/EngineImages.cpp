@@ -514,6 +514,23 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     RectF mediabox = PageMediabox(pageNo);
     RectF pageRc = pageRect ? *pageRect : mediabox;
+    // Image page space is pixels. A selection that went through CvtFromScreen
+    // comes back ~0.499px off the grid, which enlarges the dest by 1px and
+    // shifts the sample by half a pixel (issue #3434).
+    if (pageRect) {
+        pageRc.x = floorf(pageRc.x + 0.5f);
+        pageRc.y = floorf(pageRc.y + 0.5f);
+        pageRc.dx = floorf(pageRc.dx + 0.5f);
+        pageRc.dy = floorf(pageRc.dy + 0.5f);
+        if (pageRc.dx < 0) {
+            pageRc.x += pageRc.dx;
+            pageRc.dx = -pageRc.dx;
+        }
+        if (pageRc.dy < 0) {
+            pageRc.y += pageRc.dy;
+            pageRc.dy = -pageRc.dy;
+        }
+    }
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     if (screen.IsEmpty()) {
         DropPage(page, false);
@@ -619,7 +636,10 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             if (dstBmp && dstBmp->GetLastStatus() == Gdiplus::Ok) {
                 Gdiplus::Graphics g(dstBmp);
                 g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-                g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
+                // HighQuality/Half offsets samples by -0.5px, so a 1:1 or
+                // integer-scaled image lands a half-pixel off and looks
+                // fuzzy (issue #3434). None keeps the image on the pixel grid.
+                g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
                 // start transparent, not white: the transparent parts of the
                 // image have to stay transparent so the canvas can put the
                 // document background behind them (#5844)

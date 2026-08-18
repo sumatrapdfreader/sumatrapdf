@@ -5567,6 +5567,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 fz_clear_pixmap_with_value(ctx, pix, 0xff);
             }
             dev = fz_new_draw_device(ctx, ctm, pix);
+            if (disableAntiAlias) {
+                fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
+            }
             DarkModeReplayState replayState{};
             if (objectLevelDark && pdfdoc) {
                 DarkModePageAnalysis* analysis =
@@ -5623,6 +5626,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
             dev = fz_new_draw_device(ctx, ctm, pix);
+            if (disableAntiAlias) {
+                fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
+            }
             if (hideAnnotations) {
                 pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
                 pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
@@ -5651,6 +5657,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
             dev = fz_new_draw_device(ctx, ctm, pix);
+            if (disableAntiAlias) {
+                fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
+            }
             fz_run_page_contents(ctx, page, dev, fz_identity, nullptr);
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
