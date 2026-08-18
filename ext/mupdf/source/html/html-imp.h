@@ -352,6 +352,13 @@ typedef struct
 	fz_html_box *root;
 } fz_html_tree;
 
+typedef struct
+{
+	char *title;
+	char *author;
+	char *subject;
+} fz_html_metadata;
+
 struct fz_html_s
 {
 	/* fz_html is derived from fz_html_tree, so must start with that. */
@@ -362,10 +369,7 @@ struct fz_html_s
 	float meta_w, meta_h;
 	float layout_w, layout_h, layout_em;
 	float page_margin[4];
-	char *title;
-	/* SumatraPDF: FB2 title-info author + annotation (pool-allocated). NULL if absent. */
-	char *author;
-	char *subject;
+	fz_html_metadata metadata;
 };
 
 typedef enum

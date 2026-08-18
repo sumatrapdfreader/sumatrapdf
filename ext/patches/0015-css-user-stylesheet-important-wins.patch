@@ -90,7 +90,7 @@ index 3b97063..49dc692 100644
 +	}
  }
 diff --git a/source/html/html-imp.h b/source/html/html-imp.h
-index 04004a9..55db886 100644
+index 6901c78..ce0be26 100644
 --- a/source/html/html-imp.h
 +++ b/source/html/html-imp.h
 @@ -90,6 +90,10 @@ struct fz_css_rule_s

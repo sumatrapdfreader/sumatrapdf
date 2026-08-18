@@ -30,20 +30,20 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0012-pdf-external-file-streams` | app callback for streams that point at an external file |
 | `0013-xml-recover-from-mismatched-close-tags` | badly nested FB2 / HTML (#5792) |
 | `0014-html-bound-generate-boxes-recursion` | stack overflow on deeply nested markup |
-| `0015-html-fb2-author-and-annotation` | FB2 author + annotation as document metadata |
-| `0016-css-user-stylesheet-important-wins` | user-origin `!important` outranks inline style |
-| `0017-stext-search-mujs-include-path` | we build the amalgamated `ext/a-mujs` |
-| `0018-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
-| `0019-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
-| `0020-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
-| `0021-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
+| `0015-css-user-stylesheet-important-wins` | user-origin `!important` outranks inline style |
+| `0016-stext-search-mujs-include-path` | we build the amalgamated `ext/a-mujs` |
+| `0017-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
+| `0018-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
+| `0019-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
+| `0020-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 
-And two that are not ours but that we carry ahead of the release we vendor:
+And three that are not ours but that we carry ahead of the release we vendor:
 
 | Patch | What |
 | --- | --- |
-| `0022-backport-709471-single-line-field-box` | upstream fix for the single-line field content box and a zero `/DA` font size |
-| `0023-backport-709480-bound-xml-recursion` | upstream depth limits for XPS metadata and epub outlines (covers #5032) |
+| `0021-backport-709471-single-line-field-box` | upstream fix for the single-line field content box and a zero `/DA` font size |
+| `0022-backport-709480-bound-xml-recursion` | upstream depth limits for XPS metadata and epub outlines (covers #5032) |
+| `0023-backport-709574-html-metadata` | upstream title/author/subject metadata for HTML and FB2 (covers #2254) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.2` plus these
 patches, and nothing else.
@@ -58,8 +58,10 @@ a change the base already contains.
 
 Prefer a backport to a patch of our own whenever upstream has fixed the same
 thing: it is code we do not have to re-merge, and upstream usually covers more
-cases. `0023` replaced our own XPS depth limit for exactly that reason — it
-guards the two epub outline parsers as well. Check before writing a new patch,
+cases. `0022` replaced our own XPS depth limit for exactly that reason — it
+guards the two epub outline parsers as well, and `0023` is our own FB2 metadata
+patch after Artifex upstreamed it ("Based on a patch from Krzysztof Kowalczyk of
+SumatraPDF"). Check before writing a new patch,
 and check again at each update, since upstream may have caught up.
 
 ## Applying them
