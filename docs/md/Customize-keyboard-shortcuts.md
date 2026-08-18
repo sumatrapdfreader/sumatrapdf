@@ -65,7 +65,7 @@ Explanation of the first example:
 ## Format of `Key` section:
 
 - just a key (like `a`, `Z`, `5`) i.e. letters `a` to `z`, `A` to `Z`, and numbers `0` to `9`
-- modifiers + key. Modifiers are: `Shift`, `Alt`, `Ctrl` e.g. `Alt + F1`, `Ctrl + Shift + Y`
+- modifiers + key. Modifiers are: `Shift`, `Alt`, `Ctrl`, `AltGr` (also `RAlt` / `RightAlt`) e.g. `Alt + F1`, `Ctrl + Shift + Y`, `AltGr + Return`. On Windows `AltGr` is the same as `Ctrl + Alt`
 - there are some special keys (e.g. `Alt + F3`)
   - `F1` - `F24`
   - `numpad0` - `numpad9` : `0` to `9` but on a numerical keyboard

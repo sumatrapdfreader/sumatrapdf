@@ -229,6 +229,12 @@ static bool ParseShortcut(Str shortcut, ACCEL& accel) {
 
 again:
     skipWS(cursor);
+    // before "alt": "AltGr + Return" would otherwise match "alt" and leave "Gr"
+    if (skipVirtKey(cursor, "altgr") || skipVirtKey(cursor, "ralt") || skipVirtKey(cursor, "rightalt")) {
+        // Windows reports Right Alt / AltGr as Ctrl+Alt
+        fVirt |= (FCONTROL | FALT | FVIRTKEY);
+        goto again;
+    }
     if (skipVirtKey(cursor, "alt")) {
         fVirt |= (FALT | FVIRTKEY);
         goto again;
@@ -372,14 +378,16 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     str::Builder str(Str(strScratch, sizeofi(strScratch)));
     str.Append("\t"); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
-    if (virt & FALT) {
+    if ((virt & FALT) && (virt & FCONTROL)) {
+        // same bits as AltGr on Windows; keep the name the user would type
+        str.Append("AltGr + ");
+    } else if (virt & FALT) {
         Str s = "Alt + ";
         if (isGerman) {
             s = "Größe + ";
         }
         str.Append(s);
-    }
-    if (virt & FCONTROL) {
+    } else if (virt & FCONTROL) {
         Str s = "Ctrl + ";
         if (isGerman) {
             s = "Strg + ";

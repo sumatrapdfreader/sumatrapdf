@@ -134,13 +134,17 @@ void UnregisterScreenshotHotkey(HWND hwnd) {
 // --- Set Screenshot Hotkey dialog ---
 
 // serialize VK code + modifiers to a shortcut string like "Ctrl+Shift+F5"
-static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
+static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt, bool altGr) {
     str::Builder s;
-    if (ctrl) {
-        s.Append("Ctrl+");
-    }
-    if (alt) {
-        s.Append("Alt+");
+    if (altGr) {
+        s.Append("AltGr+");
+    } else {
+        if (ctrl) {
+            s.Append("Ctrl+");
+        }
+        if (alt) {
+            s.Append("Alt+");
+        }
     }
     if (shift) {
         s.Append("Shift+");
@@ -152,6 +156,16 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
         s.AppendChar((char)vk);
     } else if (vk == VK_SNAPSHOT) {
         s.Append("PrtSc");
+    } else if (vk == VK_RETURN) {
+        s.Append("Return");
+    } else if (vk == VK_LEFT) {
+        s.Append("Left");
+    } else if (vk == VK_RIGHT) {
+        s.Append("Right");
+    } else if (vk == VK_UP) {
+        s.Append("Up");
+    } else if (vk == VK_DOWN) {
+        s.Append("Down");
     } else if (vk == VK_DELETE) {
         s.Append("Delete");
     } else if (vk == VK_INSERT) {
@@ -269,7 +283,8 @@ void SetHotkeyWnd::UpdateUI() {
 }
 
 bool SetHotkeyWnd::HandleKeyDown(UINT vk) {
-    if (vk == VK_CONTROL || vk == VK_SHIFT || vk == VK_MENU || vk == VK_LWIN || vk == VK_RWIN) {
+    if (vk == VK_CONTROL || vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_SHIFT || vk == VK_MENU ||
+        vk == VK_LMENU || vk == VK_RMENU || vk == VK_LWIN || vk == VK_RWIN) {
         return true;
     }
     if (vk == VK_ESCAPE) {
@@ -279,7 +294,14 @@ bool SetHotkeyWnd::HandleKeyDown(UINT vk) {
     bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
     bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
     bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-    TempStr hotkey = SerializeHotkeyTemp(vk, ctrl, shift, alt);
+    bool altGr = (GetKeyState(VK_RMENU) & 0x8000) != 0;
+    // Return / arrows as a global hotkey without a modifier would steal
+    // Enter and cursor keys from every app
+    bool needsMod = (vk == VK_RETURN) || (vk == VK_LEFT) || (vk == VK_RIGHT) || (vk == VK_UP) || (vk == VK_DOWN);
+    if (needsMod && !ctrl && !shift && !alt) {
+        return true;
+    }
+    TempStr hotkey = SerializeHotkeyTemp(vk, ctrl, shift, alt, altGr);
     if (hotkey) {
         str::ReplaceWithCopy(&newHotkey, hotkey);
         UpdateUI();
