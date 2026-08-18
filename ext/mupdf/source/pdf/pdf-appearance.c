@@ -2304,9 +2304,8 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
 	// this matches the math in write_variable_text.
 	if (!multiline)
 	{
-		float ty = ((h - b * 2) - size) / 2;
-		content_box.y0 = h - b - 0.8f * size + ty;
-		content_box.y1 = content_box.y0 + size * 2;
+		float gap = (h - b*2 - size) / 2;
+		content_box = fz_make_rect(b, b + gap, w - b * 2, h + gap + size * 2);
 	}
 
 	fz_try(ctx)
@@ -2577,6 +2576,10 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	lang = pdf_annot_language(ctx, annot);
 	rd = pdf_annot_rect_diff(ctx, annot);
 
+	/* FreeText is always multi-line so default size to 12pts if it is zero. */
+	if (size <= 0)
+		size = 12;
+
 	/* /Rotate is an undocumented annotation property supported by Adobe.
 	 * When Rotate is used, neither the box, nor the arrow move at all.
 	 * Only the position of the text moves within the box. Thus we don't
@@ -2764,6 +2767,9 @@ pdf_write_tx_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 		rc = free_rc = escape_text(ctx, text);
 		if (!ds)
 		{
+			// TODO: measure accurate width to fit box if single-line!
+			if (size <= 0)
+				size = (ff & PDF_TX_FIELD_IS_MULTILINE) ? 12 : h - b*2;
 			fz_snprintf(ds_buf, sizeof ds_buf,
 				"font-family:%s;font-size:%gpt;color:#%06x;text-align:%s",
 				full_font_name(&font),

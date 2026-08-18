@@ -1,0 +1,65 @@
+backport: fix the content box and zero font size for single-line fields (bug 709471)
+
+BACKPORT of upstream mupdf 38958bd665b6e57fa19e1024871dc196fc36da49, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2, which comes off a maintenance branch that
+forked at 205b8cf43, before it.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709471
+
+Two fixes to the rich-text appearance path:
+  - the content box for a single-line field was computed wrongly, putting the
+    text entirely outside the clipped area, i.e. rendering it blank
+  - a /DA font size of 0 stayed 0, so a FreeText annotation rendered at
+    font-size:0. It now defaults to 12pt (and to the field height for a
+    single-line widget).
+
+This overlaps with 0009 but does not replace it. On its own it makes issue
+#5404 render, but as two wrapped lines in a single-line field, because
+upstream's auto-size for that case is the field height and the width is not
+measured (their own TODO). 0009 keeps CP-1250 text on the simple path, whose
+auto-size does fit the width, so with both applied #5404 renders on one line
+exactly as it does today. Nor is this the more general fix it looks like:
+pdf_add_substitute_font() is still a stub upstream, so text needing a font we
+cannot embed (Turkish, Vietnamese, ...) renders blank on the rich path either
+way.
+
+What it buys us today is the FreeText size-0 case, which 0009 does not touch.
+---
+diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
+index 6395623..ab82fa3 100644
+--- a/source/pdf/pdf-appearance.c
++++ b/source/pdf/pdf-appearance.c
+@@ -2304,9 +2304,8 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
+ 	// this matches the math in write_variable_text.
+ 	if (!multiline)
+ 	{
+-		float ty = ((h - b * 2) - size) / 2;
+-		content_box.y0 = h - b - 0.8f * size + ty;
+-		content_box.y1 = content_box.y0 + size * 2;
++		float gap = (h - b*2 - size) / 2;
++		content_box = fz_make_rect(b, b + gap, w - b * 2, h + gap + size * 2);
+ 	}
+ 
+ 	fz_try(ctx)
+@@ -2577,6 +2576,10 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
+ 	lang = pdf_annot_language(ctx, annot);
+ 	rd = pdf_annot_rect_diff(ctx, annot);
+ 
++	/* FreeText is always multi-line so default size to 12pts if it is zero. */
++	if (size <= 0)
++		size = 12;
++
+ 	/* /Rotate is an undocumented annotation property supported by Adobe.
+ 	 * When Rotate is used, neither the box, nor the arrow move at all.
+ 	 * Only the position of the text moves within the box. Thus we don't
+@@ -2764,6 +2767,9 @@ pdf_write_tx_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
+ 		rc = free_rc = escape_text(ctx, text);
+ 		if (!ds)
+ 		{
++			// TODO: measure accurate width to fit box if single-line!
++			if (size <= 0)
++				size = (ff & PDF_TX_FIELD_IS_MULTILINE) ? 12 : h - b*2;
+ 			fz_snprintf(ds_buf, sizeof ds_buf,
+ 				"font-family:%s;font-size:%gpt;color:#%06x;text-align:%s",
+ 				full_font_name(&font),

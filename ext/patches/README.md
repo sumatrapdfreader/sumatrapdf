@@ -39,8 +39,22 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0021-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
 | `0022-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 
+And one that is not ours but that we carry ahead of the release we vendor:
+
+| Patch | What |
+| --- | --- |
+| `0023-backport-709471-single-line-field-box` | upstream fix for the single-line field content box and a zero `/DA` font size |
+
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.2` plus these
 patches, and nothing else.
+
+## Backports
+
+A patch named `backport-*` is an upstream commit we apply early, because it is
+on mupdf `master` but not in the release we vendor (the `1.28.x` tags come off a
+maintenance branch that forked before it). **Delete it when the vendored mupdf
+moves past the commit it names** — otherwise the next update will try to apply
+a change the base already contains.
 
 ## Applying them
 
