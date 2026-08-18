@@ -539,7 +539,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         Edit::CreateArgs args;
         args.parent = hwnd;
         args.isMultiLine = false;
-        args.withBorder = false;
+        args.withBorder = true;
         args.cueText = "enter search term";
         args.text = prefix;
         args.font = GetFont();

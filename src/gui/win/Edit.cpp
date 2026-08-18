@@ -239,11 +239,14 @@ HWND Edit::Create(const CreateArgs& args) {
         cargs.style |= ES_PASSWORD;
     }
     if (args.withBorder) {
-        cargs.exStyle = WS_EX_CLIENTEDGE;
         createdWithBorder = true;
+        // no WS_EX_CLIENTEDGE: a themed edit draws a blue bottom accent (Win11)
+        createdWithFrame = true;
     }
-    createdWithBottomBorder = args.withBottomBorder && !args.withBorder && !args.withFrame;
-    createdWithFrame = args.withFrame && !args.withBorder;
+    if (args.withFrame) {
+        createdWithFrame = true;
+    }
+    createdWithBottomBorder = args.withBottomBorder && !createdWithFrame;
     centerTextVert = args.centerTextVert && !args.isMultiLine;
     selectAllOnFocus = args.selectAllOnFocus;
     if (args.isMultiLine) {
@@ -258,7 +261,8 @@ HWND Edit::Create(const CreateArgs& args) {
     if (!hwnd) {
         return nullptr;
     }
-    if (args.noTheme) {
+    if (args.noTheme || createdWithFrame) {
+        // strip the Win11 CFD/fluent style so it cannot draw a blue accent
         SetWindowTheme(hwnd, L"", L"");
     }
     // character-based ideal/max width (needs hwnd + font for measurement)
@@ -277,8 +281,8 @@ HWND Edit::Create(const CreateArgs& args) {
     SizeToIdealSize(this);
     ApplyTextPadding();
 
-    if (createdWithBottomBorder || createdWithFrame) {
-        // apply the NC strip from WM_NCCALCSIZE
+    if (createdWithBottomBorder || createdWithFrame || centerTextVert) {
+        // apply the NC strip from WM_NCCALCSIZE (frame and/or vertical centering)
         SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     }
@@ -478,9 +482,8 @@ int Edit::LineDy() {
 }
 
 bool Edit::HasBorder() {
-    // don't infer from window styles: with themes darkmodelib strips
-    // WS_EX_CLIENTEDGE / WS_BORDER and draws the border in a subclass, which
-    // made GetIdealSize() too small for the font
+    // CreateArgs.withBorder, not window styles: we draw a 1px frame instead
+    // of WS_EX_CLIENTEDGE (a themed client-edge is a blue bottom accent on Win11)
     return createdWithBorder;
 }
 
@@ -518,15 +521,15 @@ Size Edit::GetIdealSize() {
     dx += lm + rm;
 
     if (HasBorder()) {
+        // room for the 1px frame plus a bit of padding, so a dialog edit is
+        // not just text-height + 1px (withFrame-only callers set their own size)
         dx += DpiScale(4);
         dy += DpiScale(8);
-    }
-    if (createdWithBottomBorder) {
-        dy += kEditBottomBorderDy;
-    }
-    if (createdWithFrame) {
+    } else if (createdWithFrame) {
         dx += 2;
         dy += 2;
+    } else if (createdWithBottomBorder) {
+        dy += kEditBottomBorderDy;
     }
     // the text is inset on all 4 sides, so the client area has to grow to still
     // show idealSizeLines lines

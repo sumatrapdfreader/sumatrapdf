@@ -1776,9 +1776,7 @@ void CreateToc(MainWindow* win) {
     {
         Edit::CreateArgs eargs;
         eargs.parent = win->hwndTocBox;
-        eargs.withBorder = false;
-        // underline so the filter field is visible on flat sidebar backgrounds
-        eargs.withBottomBorder = true;
+        eargs.withBorder = true;
         eargs.cueText = _TRA("Search Bookmarks");
         eargs.font = GetAppFont();
         filterEdit->Create(eargs);

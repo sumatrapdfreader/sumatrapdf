@@ -685,7 +685,8 @@ struct Edit : ControlBase {
         bool withBorder = false;
         // 1px NC underline under the client area (no WS_EX_CLIENTEDGE)
         bool withBottomBorder = false;
-        // 1px NC rectangle (not the themed WS_EX_CLIENTEDGE / Win11 accent)
+        // 1px NC rectangle in the theme edge color (not WS_EX_CLIENTEDGE / Win11 accent).
+        // withBorder uses this same frame and adds GetIdealSize padding.
         bool withFrame = false;
         bool numbersOnly = false;
         bool isPassword = false;
@@ -705,8 +706,8 @@ struct Edit : ControlBase {
         int marginLeft = 0;
         int marginRight = 0;
         // center the text vertically when the control is taller than one line
-        // (single-line only; a single-line edit otherwise sits the text at the top)
-        bool centerTextVert = false;
+        // (single-line only; no-op if the box is just one line tall)
+        bool centerTextVert = true;
         PlatformFont* font = nullptr;
         bool isRtl = false;
     };
@@ -733,9 +734,8 @@ struct Edit : ControlBase {
     // DPI-scaled CreateArgs.textPadding
     int textPadding = 0;
 
-    // remembers CreateArgs.withBorder: with themes darkmodelib strips
-    // WS_EX_CLIENTEDGE / WS_BORDER and draws the border in a subclass, so
-    // window styles can't be used to detect the border
+    // remembers CreateArgs.withBorder (padded 1px frame). Not inferred from
+    // window styles: we no longer use WS_EX_CLIENTEDGE (Win11 blue accent)
     bool createdWithBorder = false;
     bool createdWithBottomBorder = false;
     bool createdWithFrame = false;

@@ -135,8 +135,8 @@ extern Color gColsWin[kColWinCount];
 
 //--- win32 Edit
 enum {
-    // the 1px underline an Edit created withBottomBorder draws. It is a
-    // separator, so it takes the same color as every other border and divider
+    // the 1px frame / underline a custom-bordered Edit draws. Same color as
+    // every other border and divider
     kColEditBottomBorder,
     kColEditCount,
 };

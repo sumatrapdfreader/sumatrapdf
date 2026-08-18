@@ -1131,9 +1131,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         Edit::CreateArgs args;
         args.parent = hwnd;
         args.isMultiLine = false;
-        args.withBorder = false;
-        // underline so the filter field reads clearly against the dialog bg
-        args.withBottomBorder = true;
+        args.withBorder = true;
         args.cueText = _TRA("enter search term to filter settings");
         args.font = GetFont();
         args.isRtl = isRtl;

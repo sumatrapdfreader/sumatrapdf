@@ -1471,9 +1471,7 @@ void CreateFavorites(MainWindow* win) {
     {
         Edit::CreateArgs eargs;
         eargs.parent = win->hwndFavBox;
-        eargs.withBorder = false;
-        // underline so the filter field is visible on flat sidebar/tab backgrounds
-        eargs.withBottomBorder = true;
+        eargs.withBorder = true;
         eargs.cueText = _TRA("Search Favorites");
         eargs.font = GetAppFont();
         filterEdit->Create(eargs);
