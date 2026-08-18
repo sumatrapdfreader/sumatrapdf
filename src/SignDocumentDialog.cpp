@@ -531,7 +531,6 @@ void SignDocumentWnd::OnBrowse(VirtMouseEvent*) {
     ofn.lpstrFilter = CWStrTemp(fileFilterStr);
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    str::Free(fileFilterStr);
     if (!GetOpenFileNameW(&ofn)) {
         return;
     }
@@ -566,7 +565,6 @@ void SignDocumentWnd::OnBrowseImage(VirtMouseEvent*) {
     ofn.lpstrFilter = CWStrTemp(fileFilterStr);
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    str::Free(fileFilterStr);
     if (!GetOpenFileNameW(&ofn)) {
         return;
     }
