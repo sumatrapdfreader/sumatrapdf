@@ -42,6 +42,7 @@
 
 extern bool gIsStartup;
 TempStr FindHistoryResultTemp(int* exitCodeOut);
+TempStr LinkDestHighlightResultTemp(int* exitCodeOut);
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -361,6 +362,7 @@ enum class ControlCmd : u16 {
     TestCommandPalette = 65,
     TestFindHistory = 66,
     TestImageResizeEdges = 67,
+    TestLinkDestHighlight = 68,
 };
 
 enum class ControlArgType : u16 {
@@ -1147,6 +1149,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestLinkDestHighlight: {
+            int exitCode = 0;
+            Str res = LinkDestHighlightResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

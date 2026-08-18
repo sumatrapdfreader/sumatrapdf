@@ -611,6 +611,7 @@ void LinkHandler::ScrollTo(int pageNo, RectF rect, float zoom) {
         return;
     }
     win->ctrl->ScrollTo(pageNo, rect, zoom);
+    ShowLinkDestHighlight(win, pageNo, rect);
 }
 
 // Convert file:// / file:/// / file: URIs to a local path (+ optional #fragment).

@@ -236,6 +236,12 @@ PaddingAfterLastPage = false
 ; Destination actions' (introduced in version 3.7)
 IgnoreDestinationZoom = false
 
+; if true, following an internal link or bookmark flashes a highlight at the
+; destination so you can see where you landed (a bibliography entry, figure, or
+; named destination). The color and fade match ForwardSearch. Off when the
+; destination is only a page with no position (introduced in version 3.7)
+HighlightLinkDestination = false
+
 ; how long an internal-document link has to be hovered, in milliseconds, before
 ; a popup rendering the destination region (citation entry, figure, footnote)
 ; appears. -1 (the default) disables the popup; set a positive value like 300 to

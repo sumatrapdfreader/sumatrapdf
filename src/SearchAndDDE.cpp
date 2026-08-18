@@ -2071,6 +2071,97 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
+// Build a page-space box to flash after an internal jump. FitR dests already
+// have a rectangle. /XYZ is a point: a short strip at dest Y from dest X to
+// the right of the page, like the LaTeX forward-search mark. Page-level
+// /Fit with no coordinates returns empty (nothing useful to highlight).
+static bool LinkDestHighlightRect(DisplayModel* dm, int pageNo, RectF dest, Rect* out) {
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || !out) {
+        return false;
+    }
+    RectF box = engine->PageMediabox(pageNo);
+    if (box.IsEmpty()) {
+        return false;
+    }
+    bool hasX = dest.x != kDestUseDefault;
+    bool hasY = dest.y != kDestUseDefault;
+    bool hasWH = dest.dx != kDestUseDefault && dest.dy != kDestUseDefault && dest.dx > 1.f && dest.dy > 1.f;
+    if (hasWH) {
+        Rect r = dest.Round();
+        if (r.IsEmpty()) {
+            return false;
+        }
+        *out = r;
+        return true;
+    }
+    if (!hasX && !hasY) {
+        return false;
+    }
+    float x = hasX ? dest.x : box.x;
+    float y = hasY ? dest.y : box.y;
+    float lineH = 20.f;
+    float y0 = y - 2.f;
+    if (y0 < box.y) {
+        y0 = box.y;
+    }
+    float w = (box.x + box.dx) - x;
+    if (w < 8.f) {
+        x = box.x;
+        w = box.dx;
+    }
+    Rect r = RectF{x, y0, w, lineH}.Round();
+    if (r.IsEmpty()) {
+        return false;
+    }
+    *out = r;
+    return true;
+}
+
+// Flash the same mark used for LaTeX forward search at an internal-link dest
+// (issues #1085, #5945). Always fades; ForwardSearch.HighlightPermanent stays
+// a SyncTeX-only option.
+void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest) {
+    if (!win || !win->AsFixed()) {
+        return;
+    }
+    win->fwdSearchMark.rects.Reset();
+    win->fwdSearchMark.show = false;
+    if (!gGlobalPrefs || !gGlobalPrefs->highlightLinkDestination) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm->ValidPageNo(pageNo)) {
+        return;
+    }
+    Rect hl;
+    if (!LinkDestHighlightRect(dm, pageNo, dest, &hl)) {
+        return;
+    }
+    win->fwdSearchMark.rects.Append(hl);
+    win->fwdSearchMark.page = pageNo;
+    win->fwdSearchMark.show = true;
+    win->fwdSearchMark.hideStep = 0;
+    SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, nullptr);
+    ScheduleRepaint(win, 0);
+}
+
+TempStr LinkDestHighlightResultTemp(int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    int n = len(win->fwdSearchMark.rects);
+    return finish(0, fmt("OK show=%d page=%d nrects=%d enabled=%d", win->fwdSearchMark.show ? 1 : 0,
+                         win->fwdSearchMark.page, n, gGlobalPrefs && gGlobalPrefs->highlightLinkDestination ? 1 : 0));
+}
+
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col */, int ret, int page,
                              Vec<Rect>& rects) {
     ReportIf(!win->AsFixed());

@@ -50,6 +50,7 @@ import { testit as issue5869 } from "./issue-5869.ts";
 import { testit as issue5881 } from "./issue-5881.ts";
 import { testit as rectSelectionDrag } from "./rect-selection-drag.ts";
 import { testit as issue5938 } from "./issue-5938.ts";
+import { testit as issue1085 } from "./issue-1085.ts";
 import { testit as issue2873 } from "./issue-2873.ts";
 import { testit as issue5937 } from "./issue-5937.ts";
 import { testit as issue933 } from "./issue-933.ts";
@@ -172,6 +173,7 @@ export const tests: NamedTest[] = [
   ["issue-5881", issue5881],
   ["rect-selection-drag", rectSelectionDrag],
   ["issue-5938", issue5938],
+  ["issue-1085", issue1085],
   ["issue-2873", issue2873],
   ["issue-5937", issue5937],
   ["issue-933", issue933],

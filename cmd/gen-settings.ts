@@ -1238,6 +1238,15 @@ const globalPrefs: Field[] = [
       "factor during execution of Go to Destination actions'",
   ).ver("3.7"),
   field(
+    "HighlightLinkDestination",
+    Bool,
+    false,
+    "if true, following an internal link or bookmark flashes a highlight at the " +
+      "destination so you can see where you landed (a bibliography entry, figure, " +
+      "or named destination). The color and fade match ForwardSearch. Off when the " +
+      "destination is only a page with no position",
+  ).ver("3.7"),
+  field(
     "CitationHoverDelay",
     Int,
     -1,
