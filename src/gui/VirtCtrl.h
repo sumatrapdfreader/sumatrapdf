@@ -415,6 +415,9 @@ struct VirtListBox : VirtCtrl {
     int dpi = 96;
 
     int scrollY = 0;
+    // Shift/Ctrl click, Shift+arrows and Ctrl+A; off by default so other
+    // lists stay single-select
+    bool multiSelect = false;
 
     VirtListBox();
     ~VirtListBox() override;
@@ -438,6 +441,11 @@ struct VirtListBox : VirtCtrl {
     int GetCurrentSelection();
     // -1 clears the selection; doesn't call onSelectionChanged
     bool SetCurrentSelection(int);
+    bool IsSelected(int idx);
+    int SelectedCount();
+    void GetSelectedIndices(Vec<int>& out);
+    void SelectAll();
+    void SelectRange(int from, int to);
     int ItemFromPoint(Point ptLocal);
     // the row's rectangle in window coords; empty when the row isn't visible
     Rect ItemRect(int idx);
@@ -451,6 +459,8 @@ struct VirtListBox : VirtCtrl {
 
   private:
     int selIdx = -1;
+    int anchorIdx = -1;
+    Vec<u8> selected;
     // EnsureVisible() called before the first layout; applied by SetBounds()
     int pendingVisibleIdx = -1;
     bool draggingThumb = false;
@@ -459,6 +469,10 @@ struct VirtListBox : VirtCtrl {
     int dragStartY = 0;
     int dragStartScrollY = 0;
 
+    void EnsureSelectedSize();
+    void ApplyClick(int idx, bool ctrl, bool shift);
+    void ApplyNav(int idx, bool ctrl, bool shift);
+    void ToggleSelected(int idx);
     int GetDpi();
     int ScrollbarDx();
     Rect ContentRectLocal();

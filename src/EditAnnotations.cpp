@@ -197,6 +197,7 @@ static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
 }
 
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
+static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
 
 // Drop non-owning Annotation* held by UI (selection, drag, hover, form edit).
 // Call before DeleteAnnotation frees the wrapper, or when the engine is about
@@ -264,28 +265,53 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
 }
 
 static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
-    int idx = ew->listBox->GetCurrentSelection();
-    if (idx < 0) {
+    if (!ew || !ew->listBox || !ew->tab) {
+        return;
+    }
+    Vec<int> idxs;
+    ew->listBox->GetSelectedIndices(idxs);
+    if (len(idxs) == 0) {
+        int idx = ew->listBox->GetCurrentSelection();
+        if (idx >= 0) {
+            idxs.Append(idx);
+        }
+    }
+    if (len(idxs) == 0) {
         // can get out of sync e.g. after UpdateAnnotationsList during save/reload
         ew->tab->selectedAnnotation = nullptr;
         return;
     }
-    Annotation* annot = ew->annotations[idx];
-    if (ew->tab->selectedAnnotation != annot) {
-        // can get out of sync if e.g. keyboard navigation in listbox
-        // hasn't triggered ListBoxSelectionChanged yet
-        ew->tab->selectedAnnotation = annot;
+    Vec<Annotation*> toDelete;
+    for (int idx : idxs) {
+        if (ew->annotations.isValidIndex(idx)) {
+            toDelete.Append(ew->annotations[idx]);
+        }
     }
-    DeleteAnnotationAndUpdateUI(ew->tab, annot);
-
-    // Note: auto-selecting next annotation might cause page jumping
-#if 0
-    annot = PickNewSelectedAnnotation(this, idx);
-    skipGoToPage = false;
-    if (annot) {
-        SetSelectedAnnotation(tab, annot);
+    if (len(toDelete) == 0) {
+        return;
     }
-#endif
+    // After rebuild, the first remaining item after the last deleted one
+    // lands at lastIdx - (count-1). If that is past the end, take the last.
+    int nextIdxHint = idxs[len(idxs) - 1] - (len(idxs) - 1);
+    FlushContentsFromEdit(ew);
+    for (Annotation* annot : toDelete) {
+        DetachAnnotationFromUI(annot);
+        DeleteAnnotation(annot);
+    }
+    UpdateAnnotationsList(ew);
+    Annotation* selectNext = nullptr;
+    int n = len(ew->annotations);
+    if (n > 0) {
+        int pick = nextIdxHint;
+        if (pick >= n) {
+            pick = n - 1;
+        }
+        if (pick < 0) {
+            pick = 0;
+        }
+        selectNext = ew->annotations[pick];
+    }
+    SetSelectedAnnotation(ew->tab, selectNext);
 }
 
 static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
@@ -356,9 +382,6 @@ static bool IsAnnotationTypeInArray(AnnotationType* arr, int arrSize, Annotation
     }
     return false;
 }
-
-// return true if closed the window, false if there was no window to close
-static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
 
 bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
     if (!tab->editAnnotsWindow) {
@@ -569,9 +592,23 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
         if (str::EqI(cls, StrL("Edit"))) {
             return;
         }
-        // Ctrl+Delete (and plain Delete) remove the selected annotation
+        // Ctrl+Delete (and plain Delete) remove the selected annotation(s)
         DeleteSelectedAnnotation(this);
         ev->didHandle = true;
+        return;
+    }
+    if (ev->vkey == 'A' && ev->isCtrl && !ev->isAlt && !ev->isShift) {
+        // Ctrl+A selects every annotation, like a win32 listbox. Leave it
+        // to the Contents edit when that has focus (issue #5976).
+        HWND focused = ::GetFocus();
+        if (focused && focused != hwnd && ::IsChild(hwnd, focused)) {
+            return;
+        }
+        if (listBox && listBox->multiSelect && listBox->ItemsCount() > 0) {
+            FocusAnnotationsList(this);
+            listBox->SelectAll();
+            ev->didHandle = true;
+        }
         return;
     }
     if (ev->vkey == 'S' && ev->isShift && ev->isCtrl) {
@@ -1073,7 +1110,11 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         DoOpacity(ew, annot);
         DoSaveEmbed(ew, annot);
 
-        ew->listBox->SetCurrentSelection(itemNo);
+        // Don't collapse a Shift/Ctrl multi-select when the caret is already
+        // on this row (issue #5976).
+        if (ew->listBox->GetCurrentSelection() != itemNo) {
+            ew->listBox->SetCurrentSelection(itemNo);
+        }
         ew->buttonDelete->SetIsVisible(true);
 
         // NOLINTNEXTLINE(bugprone-branch-clone): branch order matters, an explicit focus wins over isNew
@@ -1457,6 +1498,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->font = fnt;
         w->padding = DpiScaledInsets(4, 0);
         w->idealSizeLines = 5;
+        w->multiSelect = true;
         auto* lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
         w->onSelectionChanged = MkFunc0(ListBoxSelectionChanged, ew);
@@ -1999,8 +2041,9 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
 
 // Resize the annotation editor to clientDy and report list / Contents / gap
 // sizes for tests/issue-3769.ts and tests/issue-5834.ts. selectItem is
-// 1-based; 0 leaves the selection alone.
-TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut) {
+// 1-based; 0 leaves the selection alone; -1 selects every row. selectLast
+// (1-based) with selectItem > 0 selects that inclusive range (issue #5976).
+TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut, int selectLast) {
     str::Builder out;
     auto finish = [&](Str msg, int code) -> TempStr {
         out.Append(msg);
@@ -2029,12 +2072,26 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
         return finish(StrL("ERROR no-editor"), 1);
     }
 
-    if (selectItem > 0) {
+    if (selectItem < 0) {
+        if (len(ew->annotations) == 0) {
+            return finish(StrL("ERROR no-annot"), 1);
+        }
+        ew->listBox->SelectAll();
+        ew->ListBoxSelectionChanged();
+    } else if (selectItem > 0) {
         int idx = selectItem - 1;
         if (!ew->annotations.isValidIndex(idx)) {
             return finish(fmt("ERROR no-annot item=%d n=%d", selectItem, len(ew->annotations)), 1);
         }
-        ew->listBox->SetCurrentSelection(idx);
+        int last = selectLast > 0 ? selectLast - 1 : idx;
+        if (selectLast > 0 && !ew->annotations.isValidIndex(last)) {
+            return finish(fmt("ERROR no-annot item=%d n=%d", selectLast, len(ew->annotations)), 1);
+        }
+        if (last != idx) {
+            ew->listBox->SelectRange(idx, last);
+        } else {
+            ew->listBox->SetCurrentSelection(idx);
+        }
         ew->ListBoxSelectionChanged();
     }
 
@@ -2056,7 +2113,8 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
     int gapBelow = cr.dy - (listR.y + listR.dy);
     int sel = ew->listBox->GetCurrentSelection();
     int n = len(ew->annotations);
-    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d", cr.dy, listR.dy, contentsDy,
-                      gapBelow, sel, n),
+    int selCount = ew->listBox->SelectedCount();
+    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d selCount=%d", cr.dy, listR.dy,
+                      contentsDy, gapBelow, sel, n, selCount),
                   0);
 }

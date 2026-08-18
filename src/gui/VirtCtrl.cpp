@@ -1505,22 +1505,145 @@ int VirtListBox::GetCurrentSelection() {
     return selIdx;
 }
 
+void VirtListBox::EnsureSelectedSize() {
+    int n = ItemsCount();
+    if (len(selected) == n) {
+        return;
+    }
+    selected.Reset();
+    if (n <= 0) {
+        return;
+    }
+    u8* p = selected.AppendBlanks(n);
+    if (p) {
+        memset(p, 0, (size_t)n);
+    }
+    if (selIdx >= 0 && selIdx < n) {
+        selected[selIdx] = 1;
+    }
+}
+
+bool VirtListBox::IsSelected(int idx) {
+    if (idx < 0 || idx >= ItemsCount()) {
+        return false;
+    }
+    if (!multiSelect) {
+        return idx == selIdx;
+    }
+    EnsureSelectedSize();
+    return selected[idx] != 0;
+}
+
+int VirtListBox::SelectedCount() {
+    if (!multiSelect) {
+        return selIdx >= 0 ? 1 : 0;
+    }
+    EnsureSelectedSize();
+    int n = 0;
+    for (u8 v : selected) {
+        if (v) {
+            n++;
+        }
+    }
+    return n;
+}
+
+void VirtListBox::GetSelectedIndices(Vec<int>& out) {
+    out.Reset();
+    if (!multiSelect) {
+        if (selIdx >= 0) {
+            out.Append(selIdx);
+        }
+        return;
+    }
+    EnsureSelectedSize();
+    int n = ItemsCount();
+    for (int i = 0; i < n; i++) {
+        if (selected[i]) {
+            out.Append(i);
+        }
+    }
+}
+
+void VirtListBox::ToggleSelected(int idx) {
+    if (idx < 0 || idx >= ItemsCount()) {
+        return;
+    }
+    EnsureSelectedSize();
+    selected[idx] = selected[idx] ? 0 : 1;
+}
+
+// Exclusive of other items; caret at `to`, anchor at `from`.
+void VirtListBox::SelectRange(int from, int to) {
+    int n = ItemsCount();
+    if (n == 0) {
+        return;
+    }
+    from = Clamp(from, 0, n - 1);
+    to = Clamp(to, 0, n - 1);
+    if (!multiSelect) {
+        SetCurrentSelection(to);
+        return;
+    }
+    EnsureSelectedSize();
+    int a = std::min(from, to);
+    int b = std::max(from, to);
+    for (int i = 0; i < n; i++) {
+        selected[i] = (i >= a && i <= b) ? 1 : 0;
+    }
+    anchorIdx = from;
+    selIdx = to;
+    EnsureVisible(to);
+    Invalidate();
+}
+
+void VirtListBox::SelectAll() {
+    int n = ItemsCount();
+    if (n == 0 || !multiSelect) {
+        return;
+    }
+    EnsureSelectedSize();
+    for (int i = 0; i < n; i++) {
+        selected[i] = 1;
+    }
+    if (selIdx < 0) {
+        selIdx = 0;
+    }
+    if (anchorIdx < 0) {
+        anchorIdx = selIdx;
+    }
+    Invalidate();
+    onSelectionChanged.Call();
+}
+
 bool VirtListBox::SetCurrentSelection(int idx) {
     if (idx < 0) {
         idx = -1;
     } else if (idx >= ItemsCount()) {
         return false;
     }
-    if (idx != selIdx) {
-        selIdx = idx;
-        Invalidate();
+    selIdx = idx;
+    anchorIdx = idx;
+    if (multiSelect) {
+        int n = ItemsCount();
+        selected.Reset();
+        if (n > 0) {
+            u8* p = selected.AppendBlanks(n);
+            if (p) {
+                memset(p, 0, (size_t)n);
+            }
+        }
+        if (idx >= 0) {
+            selected[idx] = 1;
+        }
     }
+    Invalidate();
     EnsureVisible(idx);
     return true;
 }
 
 bool VirtListBox::SelectAndNotify(int idx) {
-    if (idx == selIdx) {
+    if (!multiSelect && idx == selIdx) {
         return false;
     }
     if (!SetCurrentSelection(idx)) {
@@ -1530,12 +1653,55 @@ bool VirtListBox::SelectAndNotify(int idx) {
     return true;
 }
 
+void VirtListBox::ApplyClick(int idx, bool ctrl, bool shift) {
+    if (!multiSelect) {
+        SelectAndNotify(idx);
+        return;
+    }
+    if (shift) {
+        if (anchorIdx < 0) {
+            anchorIdx = (selIdx >= 0) ? selIdx : idx;
+        }
+        SelectRange(anchorIdx, idx);
+    } else if (ctrl) {
+        ToggleSelected(idx);
+        selIdx = idx;
+        EnsureVisible(idx);
+        Invalidate();
+    } else {
+        SetCurrentSelection(idx);
+    }
+    onSelectionChanged.Call();
+}
+
+void VirtListBox::ApplyNav(int idx, bool ctrl, bool shift) {
+    if (!multiSelect) {
+        SelectAndNotify(idx);
+        return;
+    }
+    if (shift) {
+        if (anchorIdx < 0) {
+            anchorIdx = (selIdx >= 0) ? selIdx : idx;
+        }
+        SelectRange(anchorIdx, idx);
+    } else if (ctrl) {
+        selIdx = idx;
+        EnsureVisible(idx);
+        Invalidate();
+    } else {
+        SetCurrentSelection(idx);
+    }
+    onSelectionChanged.Call();
+}
+
 void VirtListBox::SetModel(ListBoxModel* m) {
     if (model && (model != m)) {
         delete model;
     }
     model = m;
     selIdx = -1;
+    anchorIdx = -1;
+    selected.Reset();
     // the items are new even when the model object is the same one refilled
     scrollY = 0;
     Invalidate();
@@ -1601,7 +1767,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     ctx.gfx->PushClip(clip);
     for (int i = first; i <= last; i++) {
         Rect r = {items.x, items.y + (i * dy) - scrollY, items.dx, dy};
-        bool isSel = (i == selIdx);
+        bool isSel = IsSelected(i);
         if (onDrawItem.IsValid()) {
             DrawItemEvent ev;
             ev.listBox = this;
@@ -1666,7 +1832,7 @@ void VirtListBox::OnMouseDown(VirtMouseEvent* ev) {
         ev->didHandle = true;
         return;
     }
-    SelectAndNotify(idx);
+    ApplyClick(idx, ev->isCtrl, ev->isShift);
     ev->didHandle = true;
     return;
 }
@@ -1724,6 +1890,20 @@ void VirtListBox::OnKeyDown(VirtKeyEvent* ev) {
     if (n == 0) {
         return;
     }
+    if (multiSelect && ev->vkey == 'A' && ev->isCtrl && !ev->isAlt) {
+        SelectAll();
+        ev->didHandle = true;
+        return;
+    }
+    if (multiSelect && ev->vkey == VK_SPACE && ev->isCtrl) {
+        if (selIdx >= 0) {
+            ToggleSelected(selIdx);
+            Invalidate();
+            onSelectionChanged.Call();
+        }
+        ev->didHandle = true;
+        return;
+    }
     int perPage = std::max(UsableDy() / GetItemHeight(), 1);
     int idx = selIdx;
     switch (ev->vkey) {
@@ -1748,7 +1928,8 @@ void VirtListBox::OnKeyDown(VirtKeyEvent* ev) {
         default:
             return;
     }
-    SelectAndNotify(Clamp(idx, 0, n - 1));
+    idx = Clamp(idx, 0, n - 1);
+    ApplyNav(idx, ev->isCtrl, ev->isShift);
     ev->didHandle = true;
     return;
 }
