@@ -4,20 +4,28 @@
 // certificates from the current user's Windows store and can sign with one
 // without exporting it. This drives the engine path the dialog uses: create a
 // throw-away self-signed cert, confirm ListWindowsSigningCertificates sees it,
-// sign a PDF by thumbprint (no file), and check the result with
-// sumatrapdf-tool sign -v.
+// sign a PDF by thumbprint (no file), and check the result (via
+// sumatrapdf-tool sign -v when that exe is present).
 //
 // Skips (does not fail) if this machine cannot create a test certificate.
 //
 // Run:  bun tests/issue-5965.ts [--no-build]   (or via tests/run-almost-all.ts)
 
-import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const kCertSubject = "CN=SumatraPDF StoreSignTest";
-const kToolExe = join(dirname(EXE), "sumatrapdf-tool.exe");
+
+function findToolExe(): string | null {
+  const candidates = [
+    join(dirname(EXE), "sumatrapdf-tool.exe"),
+    join(ROOT, "out", "dbg64", "sumatrapdf-tool.exe"),
+    join(ROOT, "out", "rel64", "sumatrapdf-tool.exe"),
+  ];
+  return candidates.find((p) => existsSync(p)) ?? null;
+}
 
 function ps(script: string): { ok: boolean; out: string } {
   const r = Bun.spawnSync(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script]);
@@ -92,9 +100,25 @@ function writePdfWithEmptySigField(path: string): void {
   writeFileSync(path, pdf, "latin1");
 }
 
-function verifySignature(path: string): string {
-  const r = Bun.spawnSync([kToolExe, "sign", "-v", path]);
-  return (r.stdout.toString() + r.stderr.toString()).trim();
+// CI's ASan job only builds SumatraPDF-static.exe, so the tool may be missing.
+// Prefer `sign -v` when we have it; otherwise check the incremental signature
+// dictionary the signer writes.
+function verifySignedPdf(path: string): void {
+  const tool = findToolExe();
+  if (tool) {
+    const r = Bun.spawnSync([tool, "sign", "-v", path]);
+    const out = (r.stdout.toString() + r.stderr.toString()).trim();
+    if (!out.includes("Distinguished name") || !out.includes("The document is unchanged since signing")) {
+      throw new Error(`issue-5965: signed file did not verify:\n${out}`);
+    }
+    console.log("  verified with sumatrapdf-tool sign -v ✓");
+    return;
+  }
+  const text = readFileSync(path).toString("latin1");
+  if (!/\/Type\s*\/Sig/.test(text) || !/\/ByteRange/.test(text) || !/\/Contents/.test(text)) {
+    throw new Error("issue-5965: signed file has no signature dictionary");
+  }
+  console.log("  signed PDF has a signature dictionary (no sumatrapdf-tool.exe) ✓");
 }
 
 export async function testit(): Promise<void> {
@@ -127,11 +151,8 @@ export async function testit(): Promise<void> {
       if (!existsSync(signed)) {
         throw new Error("issue-5965: signed file was not written");
       }
-      const out = verifySignature(signed);
-      if (!out.includes("Distinguished name") || !out.includes("The document is unchanged since signing")) {
-        throw new Error(`issue-5965: signed file did not verify:\n${out}`);
-      }
-      console.log("  signed from the Windows store and verified ✓");
+      console.log("  signed from the Windows store ✓");
+      verifySignedPdf(signed);
     });
   } finally {
     removeTestCert(thumb);

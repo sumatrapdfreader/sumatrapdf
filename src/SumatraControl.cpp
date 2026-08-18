@@ -283,6 +283,7 @@ enum class ControlCmd : u16 {
     TestRenderPageColors = 59,
     TestListSigningCerts = 60,
     TestSignDocument = 61,
+    TestGetPolicies = 62,
 };
 
 enum class ControlArgType : u16 {
@@ -847,6 +848,23 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str res = SignDocumentResultTemp(pdfPath, destPath, thumbprint, certPath, certPassword, imagePath,
                                              appearanceFlags, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        // What InitializePolicies actually granted. Used by the restrict.ini
+        // GHSA test so it does not have to detect an IFileOpenDialog window
+        // (that dialog is often hosted out-of-process and misses a 3s poll).
+        case ControlCmd::TestGetPolicies: {
+            str::Builder out;
+            out.Append(fmt("restricted=%d\n", HasPermission(Perm::RestrictedUse) ? 1 : 0));
+            out.Append(fmt("internet=%d\n", HasPermission(Perm::InternetAccess) ? 1 : 0));
+            out.Append(fmt("disk=%d\n", HasPermission(Perm::DiskAccess) ? 1 : 0));
+            out.Append(fmt("prefs=%d\n", HasPermission(Perm::SavePreferences) ? 1 : 0));
+            out.Append(fmt("registry=%d\n", HasPermission(Perm::RegistryAccess) ? 1 : 0));
+            out.Append(fmt("printer=%d\n", HasPermission(Perm::PrinterAccess) ? 1 : 0));
+            out.Append(fmt("copy=%d\n", HasPermission(Perm::CopySelection) ? 1 : 0));
+            out.Append(fmt("fullscreen=%d\n", HasPermission(Perm::FullscreenAccess) ? 1 : 0));
+            AppendTestResult(req, 0, ToStrTemp(out));
             break;
         }
 
