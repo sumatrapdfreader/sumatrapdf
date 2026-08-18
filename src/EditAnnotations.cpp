@@ -507,8 +507,21 @@ static void OnDestroy(WindowBase::DestroyEvent* ev) {
     }
 }
 
+static void FocusAnnotationsList(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->listBox || ew->listBox->ItemsCount() == 0) {
+        return;
+    }
+    ew->SetFocusTo(ew->listBox);
+}
+
 void EditAnnotationsWindow::OnFocus(WindowBase::FocusEvent*) {
     SelectTabInWindow(tab);
+    // WM_KILLFOCUS clears virtual focus. If the window itself got HWND focus
+    // back (not a child Edit), put it on the list so Home / End / arrows
+    // navigate annotations again (issue #5975).
+    if (::GetFocus() == hwnd && (!vroot || !vroot->focused)) {
+        FocusAnnotationsList(this);
+    }
 }
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
@@ -533,6 +546,10 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     // SaveAnnotationsToExistingFile closes this window and reloads the PDF
     // (engine/Annotation* become invalid). Do not touch ew after this call.
     SaveAnnotationsToExistingFile(ew->tab);
+}
+
+static bool IsAnnotationListNavKey(int vkey) {
+    return vkey == VK_UP || vkey == VK_DOWN || vkey == VK_PRIOR || vkey == VK_NEXT || vkey == VK_HOME || vkey == VK_END;
 }
 
 void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
@@ -563,6 +580,29 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
         // be more sophisticated and match the shortcut
         ButtonSaveToCurrentPDFHandler(this);
         ev->didHandle = true;
+        return;
+    }
+    // Home / End / PageUp / PageDown / arrows used to move the native ListBox
+    // in 3.6.1. The list is a VirtListBox now, so those keys only reach it when
+    // it has virtual focus — which is often missing (window just opened, or
+    // WM_KILLFOCUS cleared it). Drive the list from here unless a child HWND
+    // (Contents edit, drop-down, trackbar) has focus (issue #5975).
+    if (IsAnnotationListNavKey(ev->vkey)) {
+        HWND focused = ::GetFocus();
+        if (focused && focused != hwnd && ::IsChild(hwnd, focused)) {
+            return;
+        }
+        if (!listBox || listBox->ItemsCount() == 0) {
+            return;
+        }
+        FocusAnnotationsList(this);
+        VirtKeyEvent ke;
+        ke.vkey = ev->vkey;
+        ke.isCtrl = ev->isCtrl;
+        ke.isShift = ev->isShift;
+        ke.isAlt = ev->isAlt;
+        listBox->OnKeyDown(&ke);
+        ev->didHandle = ke.didHandle;
     }
 }
 
@@ -1949,6 +1989,12 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     ew->SetIsVisible(true);
+    // SetSelectedAnnotation focuses the list when an annot is selected; if the
+    // window opened on an empty selection, give the list the keys so Home /
+    // End / arrows work immediately (issue #5975).
+    if (!annot) {
+        FocusAnnotationsList(ew);
+    }
 }
 
 // Resize the annotation editor to clientDy and report list / Contents / gap
@@ -2008,5 +2054,9 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
         contentsDy = HwndClientRect(ew->editContents->hwnd).dy;
     }
     int gapBelow = cr.dy - (listR.y + listR.dy);
-    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d", cr.dy, listR.dy, contentsDy, gapBelow), 0);
+    int sel = ew->listBox->GetCurrentSelection();
+    int n = len(ew->annotations);
+    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d", cr.dy, listR.dy, contentsDy,
+                      gapBelow, sel, n),
+                  0);
 }
