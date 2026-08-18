@@ -39,6 +39,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
 | `0026-pkcs7-windows-store` | load a signing cert from CurrentUser\\MY by SHA-1 thumbprint (#5965) |
 | `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
+| `0028-pkcs7-windows-inspect` | algorithms, issuer, digest, RFC 3161 timestamp from a PKCS#7 signature (#5581) |
 
 And three that are not ours but that we carry ahead of the release we vendor:
 

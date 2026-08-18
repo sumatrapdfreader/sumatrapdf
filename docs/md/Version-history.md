@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Document Properties for digitally signed PDFs shows the hash and signature algorithms, the document hash, the issuer and expiry, whether the signature is LTV-enabled, an RFC 3161 timestamp when one is present (device time vs secure TSA time), a PAdES level when the signature is CAdES, and whether the certificate is on the EU Trusted List. **View Certificate...** opens the Windows certificate dialog; **Update EU Trusted List** downloads the EU LOTL (fixes #5581)
 - Kindle Print Replica (`.azw4`) files open as the embedded PDF instead of as a reflowable MOBI ebook (fixes #1315)
 - Command Palette: type `%` for the table of contents of the current document (like `$` for favorites). `% TOC` appears in the mode row when the document has a TOC. The old `*` prefix still works
 - Command Palette mode switches at the top (`#` File History, `>` Commands, …) use the same smaller font as the hints at the bottom

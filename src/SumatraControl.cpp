@@ -37,6 +37,7 @@
 #include "AIChatCommon.h"
 #include "SumatraDialogs.h"
 #include "EditAnnotations.h"
+#include "EutlTrust.h"
 
 extern bool gIsStartup;
 
@@ -247,6 +248,34 @@ static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
                   0);
 }
 
+static TempStr DocumentSignaturesResultTemp(int* exitCodeOut) {
+    auto finish = [exitCodeOut](Str result, int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return str::DupTemp(result);
+    };
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(StrL("NOTREADY no-fixed-document"), 2);
+    }
+#if OS_WIN
+    EutlRegisterLookup();
+#endif
+    Props props;
+    engine->GetProperties(props);
+    Str sigs = GetPropValueTemp(props, DocProp::Signatures);
+    if (len(sigs) == 0) {
+        return finish(StrL("ERROR no-signatures"), 1);
+    }
+    return finish(str::DupTemp(sigs), 0);
+}
+
 static TempStr DocumentFontListResultTemp(int* exitCodeOut) {
     auto finish = [exitCodeOut](Str result, int code) -> TempStr {
         if (exitCodeOut) {
@@ -326,6 +355,7 @@ enum class ControlCmd : u16 {
     TestSignDocument = 61,
     TestGetPolicies = 62,
     TestPageBoxes = 63,
+    TestDocumentSignatures = 64,
 };
 
 enum class ControlArgType : u16 {
@@ -1014,6 +1044,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = DisplayModeResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDocumentSignatures: {
+            int exitCode = 0;
+            Str res = DocumentSignaturesResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

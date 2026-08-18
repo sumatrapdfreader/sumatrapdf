@@ -1895,6 +1895,14 @@ EXPORTS
 
 	pdf_check_widget_digest
 
+	pdf_check_certificate
+
+	pdf_check_digest
+
+	pdf_signature_contents
+
+	pdf_walk_tree
+
 	pdf_signature_get_widget_signatory
 
 	pdf_signature_drop_distinguished_name
@@ -1921,6 +1929,9 @@ EXPORTS
 	pkcs7_windows_check_certificate
 	pkcs7_windows_check_digest
 	pkcs7_windows_distinguished_name
+	pkcs7_windows_inspect
+	pkcs7_windows_sig_info_clear
+	pkcs7_windows_sig_info_free
 
 ; signing a pdf (PdfSign.cpp): reading the certificate + filling in a
 ; signature field

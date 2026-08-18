@@ -120,6 +120,7 @@ import { testit as issue5963 } from "./issue-5963.ts";
 import { testit as issue5964 } from "./issue-5964.ts";
 import { testit as issue5965 } from "./issue-5965.ts";
 import { testit as issue1315 } from "./issue-1315.ts";
+import { testit as issue5581 } from "./issue-5581.ts";
 
 export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
@@ -140,6 +141,7 @@ export const tests: NamedTest[] = [
   // --- default session: -for-testing + quadrant window + -dbg-control ----
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
+  ["issue-5581", issue5581],
   ["issue-4973", issue4973],
   ["issue-5329", issue5329],
   ["issue-5718", issue5718],

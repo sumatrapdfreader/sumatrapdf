@@ -137,6 +137,13 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase*, StrVec& names, Vec<int>&
 bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
+void SetEutlLookupFn(bool (*fn)(const u8* der, int derLen));
+struct PdfSigCert {
+    Str label;
+    Str der;
+};
+void EngineMupdfGetSignatureCerts(EngineBase*, Vec<PdfSigCert>& out);
+void FreePdfSigCerts(Vec<PdfSigCert>&);
 #endif
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);

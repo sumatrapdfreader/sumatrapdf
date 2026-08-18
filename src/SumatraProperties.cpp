@@ -32,6 +32,13 @@
 #include "Print.h"
 #include "Theme.h"
 #include "DarkMode_win.h"
+#include "EutlTrust.h"
+
+#if OS_WIN
+#include <wincrypt.h>
+#include <cryptuiapi.h>
+#pragma comment(lib, "cryptui.lib")
+#endif
 
 void ShowProperties(HWND parent, DocController* ctrl);
 
@@ -41,6 +48,8 @@ struct PropertiesWnd : WindowBase {
     HWND hwndParent = nullptr;
     Edit* editProps = nullptr;
     VirtButton* btnCopyToClipboard = nullptr;
+    VirtButton* btnViewCert = nullptr;
+    VirtButton* btnUpdateEutl = nullptr;
     PlatformFont* propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
@@ -51,6 +60,8 @@ struct PropertiesWnd : WindowBase {
     void SetPropsText(Str text);
     void SizeToContent();
     void CopyToClipboard(VirtMouseEvent* ev = nullptr);
+    void ViewCertificate(VirtMouseEvent* ev = nullptr);
+    void UpdateEutl(VirtMouseEvent* ev = nullptr);
     void OnCommand(WindowBase::CommandEvent* ev);
 };
 
@@ -341,6 +352,7 @@ static const PropLabel propToName[] = {
     {DocProp::Files, _TRN("Files:")},
     {DocProp::Keywords, _TRN("Keywords:")},
     {DocProp::Encryption, _TRN("Encryption:")},
+    {DocProp::Signatures, _TRN("Signatures:")},
     {DocProp::ImageSize, _TRN("Image Size:")},
     {DocProp::Dpi, _TRN("DPI:")},
     {DocProp::Comment, _TRN("Comment:")},
@@ -745,6 +757,88 @@ void PropertiesWnd::CopyToClipboard(VirtMouseEvent*) {
     CopyTextToClipboard(ToStr(propsText));
 }
 
+#if OS_WIN
+static void ViewCertDer(HWND parent, Str der) {
+    if (len(der) == 0) {
+        return;
+    }
+    PCCERT_CONTEXT cert =
+        CertCreateCertificateContext(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, (const BYTE*)der.s, (DWORD)len(der));
+    if (!cert) {
+        return;
+    }
+    CryptUIDlgViewContext(CERT_STORE_CERTIFICATE_CONTEXT, cert, parent, L"Certificate", 0, nullptr);
+    CertFreeCertificateContext(cert);
+}
+
+void PropertiesWnd::ViewCertificate(VirtMouseEvent*) {
+    MainWindow* win = FindMainWindowByHwnd(hwndParent);
+    DisplayModel* dm = win && win->ctrl ? win->ctrl->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        MessageBoxW(hwnd, L"No PDF document is open.", L"View Certificate", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    Vec<PdfSigCert> certs;
+    EngineMupdfGetSignatureCerts(engine, certs);
+    if (len(certs) == 0) {
+        MessageBoxW(hwnd, L"This document has no signature certificates to view.", L"View Certificate",
+                    MB_OK | MB_ICONINFORMATION);
+        FreePdfSigCerts(certs);
+        return;
+    }
+    if (len(certs) == 1) {
+        ViewCertDer(hwnd, certs[0].der);
+        FreePdfSigCerts(certs);
+        return;
+    }
+    HMENU menu = CreatePopupMenu();
+    for (int i = 0; i < len(certs); i++) {
+        AppendMenuW(menu, MF_STRING, (UINT_PTR)(i + 1), CWStrTemp(certs[i].label));
+    }
+    POINT pt{};
+    GetCursorPos(&pt);
+    int id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hwnd, nullptr);
+    DestroyMenu(menu);
+    if (id >= 1 && id <= len(certs)) {
+        ViewCertDer(hwnd, certs[id - 1].der);
+    }
+    FreePdfSigCerts(certs);
+}
+
+struct EutlUpdateJob {
+    HWND hwnd = nullptr;
+    bool ok = false;
+    Str msg;
+};
+
+static void OnEutlUpdateDone(EutlUpdateJob* job) {
+    if (job->hwnd && IsWindow(job->hwnd)) {
+        MessageBoxW(job->hwnd, CWStrTemp(job->msg), L"EU Trusted List",
+                    MB_OK | (job->ok ? MB_ICONINFORMATION : MB_ICONWARNING));
+    }
+    str::Free(job->msg);
+    delete job;
+}
+
+static void EutlUpdateThread(EutlUpdateJob* job) {
+    Str err;
+    job->ok = EutlUpdate(&err);
+    TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
+    job->msg = str::Dup(msg);
+    str::Free(err);
+    auto fn = MkFunc0<EutlUpdateJob>(OnEutlUpdateDone, job);
+    uitask::Post(fn, "EutlUpdateDone");
+}
+
+void PropertiesWnd::UpdateEutl(VirtMouseEvent*) {
+    auto* job = new EutlUpdateJob;
+    job->hwnd = hwnd;
+    auto fn = MkFunc0<EutlUpdateJob>(EutlUpdateThread, job);
+    RunAsync(fn, "EutlUpdate");
+}
+#endif
+
 void PropertiesWnd::SetPropsText(Str text) {
     if (!editProps) {
         return;
@@ -924,6 +1018,14 @@ bool PropertiesWnd::Create(HWND parent) {
         btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetAppFont(), true);
         btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+#if OS_WIN
+        btnViewCert = NewThemedButton(hwnd, _TRA("View Certificate..."), GetAppFont(), true);
+        btnViewCert->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::ViewCertificate>(this);
+        btnRow->AddChild(new Padding(btnViewCert, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+        btnUpdateEutl = NewThemedButton(hwnd, _TRA("Update EU Trusted List"), GetAppFont(), true);
+        btnUpdateEutl->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::UpdateEutl>(this);
+        btnRow->AddChild(new Padding(btnUpdateEutl, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+#endif
         vbox->AddChild(btnRow);
     }
 
@@ -994,6 +1096,9 @@ void ShowProperties(HWND parent, DocController* ctrl) {
 
     auto* wnd = new PropertiesWnd();
     gPropertiesWindows.Append(wnd);
+#if OS_WIN
+    EutlRegisterLookup();
+#endif
     GetPropsText(ctrl, wnd->propsText);
     AlignPropertiesText(wnd->propsText);
     EndWithSingleNewline(wnd->propsText);

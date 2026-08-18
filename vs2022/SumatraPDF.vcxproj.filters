@@ -180,6 +180,9 @@
     <ClInclude Include="..\src\EngineMupdf.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\EutlTrust.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ExifDump.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -723,6 +726,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EnginePs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EutlTrust.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ExifDump.cpp">

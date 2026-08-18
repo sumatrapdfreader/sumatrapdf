@@ -719,6 +719,7 @@ function sumatrapdf_files()
     "SumatraPDF.h",
     "SumatraPDF.rc",
     "SumatraProperties.*",
+    "EutlTrust.*",
     "SumatraLog.*",
     "SumatraStartup.cpp",
     "SumatraTest.*",
