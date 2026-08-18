@@ -998,6 +998,8 @@ static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangin
     MainWindowRerender(ew->tab->win);
 }
 
+static void RelayoutEditAnnotationsWindow(EditAnnotationsWindow* ew, int clientDx, int clientDy);
+
 // TODO: maybe use ew->tab->selectedAnnotation instead of annot
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation* annot, bool isNew = false,
                                           EditAnnotFocus focus = EditAnnotFocus::Default) {
@@ -1059,9 +1061,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         dx = currBounds.dx;
         dy = currBounds.dy;
     }
-    LayoutAndSizeToContent(ew->mainLayout, dx, dy, ew->hwnd);
-    // pick up the virtual controls so we paint them and they get their input
-    ew->DoLayout(HwndClientRect(ew->hwnd).Size());
+    RelayoutEditAnnotationsWindow(ew, dx, dy);
 
     if (!annot) {
         return;
@@ -1357,12 +1357,11 @@ static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientD
     Size natural = ew->mainLayout->Layout(ExpandInf());
     int extraDy = targetClientDy - natural.dy;
 
-    if (extraDy > 0 && growContents) {
-        // share it: the list is for finding an annotation, the Contents box for
-        // reading and writing the one you found, and both want the room
+    if (growContents && extraDy != 0) {
+        // share leftover (or shortage) between the list and Contents
         int forContents = extraDy / 2;
         extraDy -= forContents;
-        contents->idealSizeLines = kPreferredLines + (forContents / EditLineDy(contents));
+        contents->idealSizeLines = std::max(1, kPreferredLines + (forContents / EditLineDy(contents)));
     }
     // one line is the floor: better a cramped list than a window taller than
     // the screen
@@ -1782,20 +1781,80 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 }
 
 static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative, Size& size) {
-    Rect work = GetWorkAreaRect(HwndWindowRect(hwndRelative), hwndRelative);
+    // nullptr hwnd so we use the nearest monitor, not the primary
+    Rect work = GetWorkAreaRect(HwndWindowRect(hwndRelative), nullptr);
     WINDOWINFO wi{};
     wi.cbSize = sizeof(wi);
-    if (!GetWindowInfo(hwnd, &wi)) {
-        size = HwndLimitSizeToScreen(hwndRelative, size);
-        return;
+    int nonClientDx = 0;
+    int nonClientDy = 0;
+    if (GetWindowInfo(hwnd, &wi)) {
+        nonClientDx = RectDx(wi.rcWindow) - RectDx(wi.rcClient);
+        nonClientDy = RectDy(wi.rcWindow) - RectDy(wi.rcClient);
     }
-
-    int nonClientDx = RectDx(wi.rcWindow) - RectDx(wi.rcClient);
-    int nonClientDy = RectDy(wi.rcWindow) - RectDy(wi.rcClient);
-    int maxClientDx = work.dx - nonClientDx;
-    int maxClientDy = work.dy - nonClientDy;
+    // a newly created hidden window can report rcWindow == rcClient
+    if (nonClientDx <= 0 || nonClientDy <= 0) {
+        RECT rc{0, 0, 100, 100};
+        DWORD style = hwnd ? (DWORD)GetWindowLongW(hwnd, GWL_STYLE) : WS_OVERLAPPEDWINDOW;
+        DWORD exStyle = hwnd ? (DWORD)GetWindowLongW(hwnd, GWL_EXSTYLE) : 0;
+        AdjustWindowRectEx(&rc, style, FALSE, exStyle);
+        nonClientDx = (rc.right - rc.left) - 100;
+        nonClientDy = (rc.bottom - rc.top) - 100;
+    }
+    int maxClientDx = std::max(work.dx - nonClientDx, 1);
+    int maxClientDy = std::max(work.dy - nonClientDy, 1);
     size.dx = std::min(size.dx, maxClientDx);
     size.dy = std::min(size.dy, maxClientDy);
+}
+
+static HWND AnnotEditorRelativeHwnd(EditAnnotationsWindow* ew) {
+    if (ew && ew->tab && ew->tab->win && ew->tab->win->hwndFrame) {
+        return ew->tab->win->hwndFrame;
+    }
+    return ew ? ew->hwnd : nullptr;
+}
+
+// Size the HWND to a client size that fits the work area and lay out the
+// growing list / Contents box inside it. Does not grow the window to fit
+// every field — extra annot controls take space from the list instead.
+static void RelayoutEditAnnotationsWindow(EditAnnotationsWindow* ew, int clientDx, int clientDy) {
+    if (!ew || !ew->hwnd || !ew->mainLayout) {
+        return;
+    }
+    Size size{clientDx, clientDy};
+    if (size.dx <= 0 || size.dy <= 0) {
+        Rect cr = HwndClientRect(ew->hwnd);
+        size = {cr.dx, cr.dy};
+    }
+    HWND rel = AnnotEditorRelativeHwnd(ew);
+    if (rel) {
+        LimitEditAnnotationsClientSizeToScreen(ew->hwnd, rel, size);
+    }
+    if (size.dx <= 0 || size.dy <= 0) {
+        return;
+    }
+    SetGrowingControlsToFit(ew, size.dy);
+    ResizeHwndToClientArea(ew->hwnd, size.dx, size.dy, false);
+    ew->DoLayout({size.dx, size.dy});
+}
+
+static void ClampEditAnnotationsWindowToWorkArea(HWND hwnd, HWND hwndRelative) {
+    if (!hwnd) {
+        return;
+    }
+    Rect r = HwndWindowRect(hwnd);
+    Rect probe = hwndRelative ? HwndWindowRect(hwndRelative) : r;
+    Rect work = GetWorkAreaRect(probe, nullptr);
+    if (work.IsEmpty()) {
+        return;
+    }
+    if (r.dx > work.dx) {
+        r.dx = work.dx;
+    }
+    if (r.dy > work.dy) {
+        r.dy = work.dy;
+    }
+    r = ShiftRectToWorkArea(r, nullptr, true);
+    SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER);
 }
 
 void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus focus) {
@@ -1865,18 +1924,11 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     }
 
     if (lastPos.IsEmpty()) {
-        Size size = {520, minDy};
-        LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        SetGrowingControlsToFit(ew, size.dy);
-        LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
-        ew->DoLayout(HwndClientRect(ew->hwnd).Size());
+        RelayoutEditAnnotationsWindow(ew, 520, minDy);
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
+        ClampEditAnnotationsWindowToWorkArea(ew->hwnd, tab->win->hwndFrame);
     } else {
-        Size size = {lastPos.dx, minDy};
-        LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        SetGrowingControlsToFit(ew, size.dy);
-        LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
-        ew->DoLayout(HwndClientRect(ew->hwnd).Size());
+        RelayoutEditAnnotationsWindow(ew, lastPos.dx, minDy);
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)
         Rect r = HwndWindowRect(ew->hwnd);
@@ -1884,6 +1936,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         r.y = lastPos.y;
         r = ShiftRectToWorkArea(r, nullptr, true);
         SetWindowPos(ew->hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+        ClampEditAnnotationsWindowToWorkArea(ew->hwnd, tab->win->hwndFrame);
     }
     if (!annot) annot = ew->tab->selectedAnnotation;
     ew->skipGoToPage = (annot != nullptr);
