@@ -50,6 +50,22 @@ function makeTwoPagePdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
+async function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      p,
+      new Promise<never>((_, reject) => {
+        t = setTimeout(() => reject(new Error(msg)), ms);
+      }),
+    ]);
+  } finally {
+    if (t !== undefined) {
+      clearTimeout(t);
+    }
+  }
+}
+
 async function queryZoom(client: ControlClient): Promise<string> {
   const deadline = Date.now() + 20_000 * SLOW_BUILD_FACTOR;
   for (;;) {
@@ -73,13 +89,25 @@ async function queryZoom(client: ControlClient): Promise<string> {
   }
 }
 
-async function zoomInOrHang(client: ControlClient, frame: number): Promise<void> {
+// The hang is a UI-thread loop in UpdateScrollbars. A control command that
+// runs on that thread is enough to prove we did not hang. Do not wait for
+// tiles: a maximized 400–800% view often stays WaitRenderIdle timeout-busy
+// (q=0, a tile still in flight) even though the app is responding.
+async function zoomInOrHang(client: ControlClient, frame: number, prevZoom: string): Promise<string> {
   sendCommand(frame, cmdId("CmdZoomIn"));
-  const idle = client.waitForRenderIdle(8000);
-  const hung = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error("issue-5969: app stopped responding after Zoom In")), 15_000 * SLOW_BUILD_FACTOR);
-  });
-  await Promise.race([idle, hung]);
+  const deadline = Date.now() + 15_000 * SLOW_BUILD_FACTOR;
+  const hangMsg = "issue-5969: app stopped responding after Zoom In";
+  for (;;) {
+    const left = deadline - Date.now();
+    if (left <= 0) {
+      throw new Error(`${hangMsg} (still ${prevZoom})`);
+    }
+    const z = await withTimeout(queryZoom(client), left, hangMsg);
+    if (z !== prevZoom) {
+      return z;
+    }
+    await new Promise((r) => setTimeout(r, 50));
+  }
 }
 
 async function zoomInSinglePage(client: ControlClient, proc: { pid?: number }, label: string): Promise<void> {
@@ -88,16 +116,21 @@ async function zoomInSinglePage(client: ControlClient, proc: { pid?: number }, l
     throw new Error(`${label}: no frame`);
   }
   sendCommand(frame, cmdId("CmdZoomFitPageAndSinglePage"));
-  await client.waitForRenderIdle();
-  const before = await queryZoom(client);
+  // Fit-page tiles are small; this also fails the test if Fit Single Page hangs.
+  await withTimeout(
+    client.waitForRenderIdle(),
+    15_000 * SLOW_BUILD_FACTOR,
+    `${label}: app stopped responding after Fit Single Page`,
+  );
+  let zoom = await queryZoom(client);
+  const before = zoom;
   for (let i = 0; i < 8; i++) {
-    await zoomInOrHang(client, frame);
+    zoom = await zoomInOrHang(client, frame, zoom);
   }
-  const after = await queryZoom(client);
-  if (after === before) {
+  if (zoom === before) {
     throw new Error(`${label}: zoom did not change after Zoom In (was ${before})`);
   }
-  console.log(`  ${label}: fit-page ${before} -> ${after} without hanging ✓`);
+  console.log(`  ${label}: fit-page ${before} -> ${zoom} without hanging ✓`);
 }
 
 export async function testit(): Promise<void> {
