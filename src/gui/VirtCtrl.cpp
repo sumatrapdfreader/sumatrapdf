@@ -3525,7 +3525,6 @@ void VirtRichText::LayoutText(int areaWidth) {
     HWND hwnd = GetHwnd();
     PlatformFont* boldFont = nullptr;
     int kbdPadX = DpiScale(7);
-    int kbdPadY = DpiScale(5);
     for (TipWord* w = words.next; w; w = w->next) {
         if (w->isBold && !boldFont) {
             boldFont = GetBoldPlatformFont(font);
@@ -3533,9 +3532,9 @@ void VirtRichText::LayoutText(int areaWidth) {
         PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
         Size sz = PlatformFontMeasureText(use, w->text);
         if (w->isKbd) {
-            // key-cap padding matches KeyboardHelp's key caps
+            // side padding only: top/bottom of the cap is the text height
             w->dx = sz.dx + (2 * kbdPadX);
-            w->dy = sz.dy + kbdPadY;
+            w->dy = sz.dy;
         } else {
             w->dx = sz.dx;
             w->dy = sz.dy;
@@ -3566,24 +3565,6 @@ void VirtRichText::LayoutText(int areaWidth) {
         x += w->dx;
         maxX = std::max(x, maxX);
         lineHeight = std::max(w->dy, lineHeight);
-    }
-    // A key-cap's box is taller than a word: its text is centered in it, which
-    // put the cap's baseline below the baseline of the words around it. Nudge
-    // the plain words down by the cap's top padding instead, so everything on a
-    // line with caps sits on one baseline. Words on a line all share the same y
-    Vec<int> capLineYs;
-    for (TipWord* w = words.next; w; w = w->next) {
-        if (w->isKbd && !capLineYs.Contains(w->y)) {
-            capLineYs.Append(w->y);
-        }
-    }
-    if (len(capLineYs) > 0) {
-        int capLift = kbdPadY / 2;
-        for (TipWord* w = words.next; w; w = w->next) {
-            if (!w->isKbd && capLineYs.Contains(w->y)) {
-                w->y += capLift;
-            }
-        }
     }
 
     totalDx = maxX - startX;

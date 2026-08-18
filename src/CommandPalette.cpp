@@ -555,6 +555,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     if (!smartTabMode) {
+        vbox->AddChild(new Spacer(0, DpiScale(4)));
         auto* box = new HBox();
         // same smaller app font as the bottom hint row
         HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};

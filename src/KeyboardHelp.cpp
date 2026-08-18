@@ -478,7 +478,7 @@ Size KeyboardHelpWindow::LayoutContent() {
     int rowGap = DpiScale(8);
     int sectionGap = DpiScale(14);
     int headerHeight = PlatformFontLineHeight(fontHeader) + DpiScale(8);
-    int rowHeight = PlatformFontLineHeight(fontRow) + DpiScale(5);
+    int rowHeight = PlatformFontLineHeight(fontRow);
     capPadX = DpiScale(7);
     capGap = DpiScale(5);
     capRadius = DpiScale(5);
