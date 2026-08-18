@@ -58,7 +58,7 @@ export async function testit(): Promise<void> {
   await withControlledSumatra(EXE, async (client) => {
     const res = await client.request(ControlCommand.TestPageLinks, [pdf, 1]);
     const out = String(res[1] ?? res[0] ?? "");
-    const values = [...out.matchAll(/^kind=(\S+) page=(-?\d+) value=(.*)$/gm)].map((m) => ({
+    const values = [...out.matchAll(/^kind=(\S+) page=(-?\d+).* value=(.*)$/gm)].map((m) => ({
       kind: m[1]!,
       value: m[3]!.trim(),
     }));

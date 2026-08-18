@@ -145,11 +145,14 @@ struct PageDestinationMupdf : IPageDestination {
     Str value;
     Str name;
 
-    // anchor (x, y) on the destination page resolved from the link URI.
-    // Valid after hasResolvedCoords; values may be kDestUseDefault when the
+    // destination on the target page, resolved from the link URI.
+    // Valid after hasResolvedCoords; x/y/w/h may be kDestUseDefault when the
     // PDF destination left a coordinate unspecified (null / Fit).
+    // IPageDestination::rect stays the source annotation box (issue #5944).
     float destX = 0.f;
     float destY = 0.f;
+    float destW = kDestUseDefault;
+    float destH = kDestUseDefault;
     bool hasResolvedCoords = false;
     // /XYZ zoom level requested by the link (1.0 = 100%). 0 means
     // "not specified" — caller should use document default.
@@ -165,12 +168,11 @@ struct PageDestinationMupdf : IPageDestination {
     RectF GetRect2() override {
         // Prefer URI-resolved coords (page-level /Fit and /XYZ nulls become
         // kDestUseDefault). outline->x/y are often 0 and would scroll to the
-        // bottom of the page in PDF space. FitR keeps width/height on `rect`.
+        // bottom of the page in PDF space. FitR keeps width/height on destW/H;
+        // `rect` is the source annotation and must not be used as the dest
+        // (issue #5944).
         if (hasResolvedCoords) {
-            if (rect.dx != kDestUseDefault && rect.dy != kDestUseDefault && rect.dx > 0 && rect.dy > 0) {
-                return rect;
-            }
-            return RectF{destX, destY, kDestUseDefault, kDestUseDefault};
+            return RectF{destX, destY, destW, destH};
         }
         if (outline) {
             RectF r{outline->x, outline->y, 0, 0};
@@ -458,12 +460,10 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     if (pageNo > 0) {
         dest->destX = destRect.x;
         dest->destY = destRect.y;
+        dest->destW = destRect.dx;
+        dest->destH = destRect.dy;
         dest->destZoom = z;
         dest->hasResolvedCoords = true;
-        // For FitR, w/h must reach ScrollTo; store on base rect as well.
-        if (destRect.dx != kDestUseDefault || destRect.dy != kDestUseDefault) {
-            dest->rect = destRect;
-        }
     }
     return dest;
 }
