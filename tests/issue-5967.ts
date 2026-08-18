@@ -8,8 +8,10 @@
 //
 // Needs a Windows-store signing certificate. Creates a throw-away one; skips
 // (does not fail) if this machine cannot create one and has none already.
+// Not in run-almost-all / run-all: after placing the signature it opens the
+// system's Save As dialog, which needs someone at the keyboard.
 //
-// Run:  bun tests/issue-5967.ts [--no-build]   (or via tests/run-almost-all.ts)
+// Run:  bun tests/issue-5967.ts [--no-build]
 
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";

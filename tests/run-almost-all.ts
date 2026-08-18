@@ -116,7 +116,6 @@ import { testit as issue5934 } from "./issue-5934.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
 import { testit as issue5964 } from "./issue-5964.ts";
 import { testit as issue5965 } from "./issue-5965.ts";
-import { testit as issue5967 } from "./issue-5967.ts";
 
 export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
@@ -197,7 +196,6 @@ export const tests: NamedTest[] = [
   ["issue-5963", issue5963],
   ["issue-5964", issue5964],
   ["issue-5965", issue5965],
-  ["issue-5967", issue5967],
 
   // --- isolated session: -appdata, saveSettings, or own window placement -
   ["issue-3744", issue3744],
