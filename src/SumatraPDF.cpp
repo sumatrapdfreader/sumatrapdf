@@ -7550,11 +7550,11 @@ static void SetToolbarModeAndApply(int mode) {
     }
 }
 
-// TODO: should use currently active window, but most of the time
-// there's only one window
 void MaybeRedrawHomePage() {
-    if (len(gWindows) > 0 && gWindows[0]->IsCurrentTabAbout()) {
-        gWindows[0]->RedrawAll(true);
+    for (MainWindow* w : gWindows) {
+        if (w && w->IsCurrentTabAbout()) {
+            w->RedrawAll(true);
+        }
     }
 }
 
@@ -9320,9 +9320,11 @@ static void RemoveDeletedFilesFromHistory(MainWindow* win) {
         if (!path) {
             continue;
         }
-        // files on network / removable drives can be temporarily missing,
-        // so only remove files we're confident are really gone
-        if (!path::IsOnFixedDrive(path)) {
+        // Skip only when we can't tell deleted from "drive is away": an
+        // unplugged USB or offline share. A present removable / mapped
+        // volume with a missing file is safe to drop (fixes #5970).
+        if (!path::IsOnAvailableDrive(path)) {
+            logf("RemoveDeletedFilesFromHistory: skip (volume not present) '%s'\n", path);
             continue;
         }
         if (DocumentPathExists(path)) {
@@ -9332,6 +9334,7 @@ static void RemoveDeletedFilesFromHistory(MainWindow* win) {
         if (FindTabByFile(path)) {
             continue;
         }
+        logf("RemoveDeletedFilesFromHistory: removed '%s'\n", path);
         DeleteThumbnailForFile(path);
         // drops the home page layout cache, which points at fs
         FileHistoryRemove(fs);

@@ -152,6 +152,20 @@ bool IsOnFixedDrive(Str /*path*/) {
     return true;
 }
 
+bool IsOnAvailableDrive(Str path) {
+    if (!path) {
+        return false;
+    }
+    if (file::Exists(path) || dir::Exists(path)) {
+        return true;
+    }
+    TempStr dir = path::GetDirTemp(path);
+    if (!dir || str::Eq(dir, path)) {
+        return false;
+    }
+    return dir::Exists(dir);
+}
+
 bool SupportsChangeNotifications(Str /*path*/) {
     return false;
 }

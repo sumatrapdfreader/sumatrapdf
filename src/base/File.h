@@ -47,6 +47,7 @@ bool IsSame(Str path1, Str path2);
 bool HasVariableDriveLetter(Str path);
 bool IsOnFixedDrive(Str path);
 bool IsOnNetworkDrive(Str path);
+bool IsOnAvailableDrive(Str path);
 bool IsCloudPlaceholder(Str path);
 bool SupportsChangeNotifications(Str path);
 bool IsAbsolute(Str path);

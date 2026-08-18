@@ -664,6 +664,54 @@ bool IsOnFixedDrive(Str path) {
     return DRIVE_FIXED == type;
 }
 
+// True if the volume behind `path` is reachable right now. Used when the user
+// explicitly asks to drop deleted history entries: a present USB stick or
+// mapped share with a missing file should be cleaned up, but an unplugged
+// drive / offline share must not — we can't tell those files from deleted.
+bool IsOnAvailableDrive(Str path) {
+    if (!path) {
+        return false;
+    }
+
+    char keyBuf[128];
+    if (GetNonFixedDriveKey(path, keyBuf, dimof(keyBuf))) {
+        Str key(keyBuf);
+        const u64 now = GetTickCount64();
+        {
+            ScopedMutex lock(&gAttrsCacheMutex);
+            DriveAvailEntry* e = FindDriveAvailLocked(key, now);
+            if (e) {
+                return e->isAvailable;
+            }
+        }
+        bool avail = ProbeDriveRootAccessible(key);
+        ScopedMutex lock(&gAttrsCacheMutex);
+        StoreDriveAvailLocked(key, avail, GetTickCount64());
+        return avail;
+    }
+
+    WCHAR* ws = CWStrTemp(path);
+    WCHAR root[MAX_PATH];
+    if (GetVolumePathNameW(ws, root, dimof(root))) {
+        return GetFileAttributesW(root) != INVALID_FILE_ATTRIBUTES;
+    }
+
+    int n = len(path);
+    if (n >= 2 && path.s[1] == ':') {
+        WCHAR driveRoot[] = L"X:\\";
+        driveRoot[0] = (WCHAR)toupper((u8)path.s[0]);
+        if (driveRoot[0] < L'A' || driveRoot[0] > L'Z') {
+            return false;
+        }
+        UINT type = GetDriveTypeW(driveRoot);
+        if (type == DRIVE_NO_ROOT_DIR || type == DRIVE_UNKNOWN) {
+            return false;
+        }
+        return GetFileAttributesW(driveRoot) != INVALID_FILE_ATTRIBUTES;
+    }
+    return false;
+}
+
 bool SupportsChangeNotifications(Str pathA) {
     WCHAR* path = CWStrTemp(pathA);
     if (PathIsNetworkPathW(path)) {
