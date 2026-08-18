@@ -279,6 +279,7 @@ enum class ControlCmd : u16 {
     SetNotificationsEnabled = 55,
     TestHomeSelection = 56,
     TestImageRenderEdges = 57,
+    TestInsertImage = 58,
 };
 
 enum class ControlArgType : u16 {
@@ -800,6 +801,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageLinksResultTemp(path, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestInsertImage: {
+            Str pdfPath = StringArg(req, 0);
+            Str imagePath = StringArg(req, 1);
+            if (!pdfPath || !imagePath) {
+                AppendError(req, "TestInsertImage expects string pdfPath, string imagePath");
+                break;
+            }
+            int exitCode = 0;
+            Str res = ImageInsertResultTemp(pdfPath, imagePath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -55,6 +55,16 @@ You can also create annotation object at your mouse location:
 - free text
 - stamp
 - caret
+- image from the clipboard
+- image from a file (`Insert Image...`)
+
+To put a picture of your signature (or any other image) on a PDF page:
+
+- **File → Insert Image...**, or
+- right-click the page → **Document → Insert Image...**, or
+- right-click the page → **Create annotation under cursor → Image From File...**
+
+Pick a PNG (or JPEG, etc.). The image is stamped on the page and you can drag or resize it. Save with **File → Save Annotations to existing PDF** (or save as a new PDF). This is an electronic signature image, not a cryptographic digital signature (`File → Sign Document...`).
 
 ![Context Menu Annotation Under Cursor](img/context-menu-annot-under-cursor.png)
 

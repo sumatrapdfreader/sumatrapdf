@@ -1476,6 +1476,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     fz_context* ctx = epdf->Ctx();
 
     auto* pageInfo = epdf->GetFzPageInfo(pageNo, true);
+    if (!pageInfo || !pageInfo->page) {
+        return nullptr;
+    }
     pdf_annot* annot = nullptr;
     pdf_page* page = nullptr;
     auto typ = args->annotType;
@@ -1573,21 +1576,31 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 } break;
             }
             if (typ == AnnotationType::Stamp && args->stampImage) {
-                // image stamp (e.g. pasted from the clipboard): embed the image
-                // and size the rect to the image's natural size, anchored at pos
+                // image stamp (e.g. pasted from the clipboard or Insert Image):
+                // embed the image and size the rect to the image's natural size,
+                // anchored at pos. PDF has no DeviceBGR, so convert BGR/BGRA to RGB.
                 Pixmap* stamp = args->stampImage;
                 fz_image* img = nullptr;
                 fz_pixmap* pix = nullptr;
+                fz_pixmap* rgbPix = nullptr;
                 fz_var(img);
                 fz_var(pix);
+                fz_var(rgbPix);
                 fz_try(ctx) {
+                    bool isRgb = stamp->format == PixmapFormat::RGBA8;
                     int alpha = stamp->format == PixmapFormat::BGR8 ? 0 : 1;
-                    fz_colorspace* colorSpace =
-                        stamp->format == PixmapFormat::RGBA8 ? fz_device_rgb(ctx) : fz_device_bgr(ctx);
-                    pix = fz_new_pixmap_with_data(ctx, colorSpace, stamp->width, stamp->height, nullptr, alpha,
+                    fz_colorspace* srcCs = isRgb ? fz_device_rgb(ctx) : fz_device_bgr(ctx);
+                    pix = fz_new_pixmap_with_data(ctx, srcCs, stamp->width, stamp->height, nullptr, alpha,
                                                   stamp->stride, stamp->data);
                     pix->xres = (int)stamp->xres;
                     pix->yres = (int)stamp->yres;
+                    if (!isRgb) {
+                        rgbPix = fz_convert_pixmap(ctx, pix, fz_device_rgb(ctx), nullptr, nullptr,
+                                                   fz_default_color_params, 1);
+                        fz_drop_pixmap(ctx, pix);
+                        pix = rgbPix;
+                        rgbPix = nullptr;
+                    }
                     img = fz_new_image_from_pixmap(ctx, pix, nullptr);
                     pdf_set_annot_stamp_image(ctx, annot, img);
                     int xres = img->xres > 0 ? img->xres : 96;
@@ -1599,6 +1612,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 }
                 fz_always(ctx) {
                     fz_drop_image(ctx, img);
+                    fz_drop_pixmap(ctx, rgbPix);
                     fz_drop_pixmap(ctx, pix);
                 }
                 fz_catch(ctx) {

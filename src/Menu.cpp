@@ -116,6 +116,10 @@ static MenuDef menuDefFile[] = {
         CmdSaveAnnotations,
     },
     {
+        _TRN("Insert Image..."),
+        CmdInsertImage,
+    },
+    {
         _TRN("Sign Document..."),
         CmdSignDocument,
     },
@@ -909,6 +913,10 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
         CmdCreateAnnotImageFromClipboard,
     },
     {
+        _TRN("Image From &File..."),
+        CmdInsertImage,
+    },
+    {
         _TRN("&Caret"),
         CmdCreateAnnotCaret,
     },
@@ -1044,6 +1052,10 @@ static MenuDef menuDefDocumentOperations[] = {
     {
         _TRN("Bake PDF"),
         CmdPdfBake,
+    },
+    {
+        _TRN("Insert Image..."),
+        CmdInsertImage,
     },
     {
         _TRN("Sign Document..."),

@@ -290,6 +290,7 @@ export const commands = [
     "CmdToggleHoverPreview", "Toggle Hover Preview",
     "CmdToggleDisableLinks", "Toggle Disable Links",
     "CmdSignDocument", "Sign Document...",
+    "CmdInsertImage", "Insert Image...",
     "CmdNone", "Do nothing",
 ];
 
