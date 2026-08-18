@@ -798,19 +798,20 @@ static Str FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
 
 struct SeenGlyph {
     int rune;
-    Rect r;
+    RectF r;
 };
 
-static bool HasSeenGlyph(const Vec<SeenGlyph>& seen, int rune, const Rect& r) {
+static bool HasSeenGlyph(const Vec<SeenGlyph>& seen, int rune, const RectF& r) {
     // A "duplicate" glyph is one drawn on top of an earlier one (e.g. faux-bold
     // double-strike or an overprinted shadow); its box overlaps the earlier one
     // almost entirely. Two *adjacent* identical letters (e.g. the "ll" in
     // "Yellow") sit side by side and barely overlap, so they must NOT be treated
-    // as duplicates. Comparing coordinates with a fixed +-1px tolerance can't
-    // tell them apart once the glyph advance rounds to <=1px (small fonts),
-    // which dropped a letter on copy (issue #5766). Require the boxes to overlap
-    // by more than half the smaller glyph instead.
-    i64 area = (i64)r.dx * (i64)r.dy;
+    // as duplicates. Comparing integer-rounded boxes can't tell them apart
+    // once the glyph is ~1px wide (small CAD net names, issue #5968):
+    // RectF::Round() expands outward, so "II" / "22" share most of a 1–2px
+    // box and the second letter was dropped. Compare the float boxes instead
+    // (#5766 still holds: adjacent "ll" barely overlap in float space).
+    float area = r.dx * r.dy;
     if (area <= 0) {
         return false;
     }
@@ -818,13 +819,13 @@ static bool HasSeenGlyph(const Vec<SeenGlyph>& seen, int rune, const Rect& r) {
         if (glyph.rune != rune) {
             continue;
         }
-        Rect inter = glyph.r.Intersect(r);
+        RectF inter = glyph.r.Intersect(r);
         if (inter.IsEmpty()) {
             continue;
         }
-        i64 interArea = (i64)inter.dx * (i64)inter.dy;
-        i64 seenArea = (i64)glyph.r.dx * (i64)glyph.r.dy;
-        i64 minArea = std::min(area, seenArea);
+        float interArea = inter.dx * inter.dy;
+        float seenArea = glyph.r.dx * glyph.r.dy;
+        float minArea = std::min(area, seenArea);
         if (minArea > 0 && interArea * 2 > minArea) {
             return true;
         }
@@ -832,7 +833,7 @@ static bool HasSeenGlyph(const Vec<SeenGlyph>& seen, int rune, const Rect& r) {
     return false;
 }
 
-static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const Rect& r) {
+static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const RectF& r) {
     seen.Append({rune, r});
 }
 
@@ -895,9 +896,10 @@ static bool IsTrackingSpace(const fz_stext_char* prevNonSpace, const fz_stext_ch
 static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects,
                         Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
-    Rect r = ToRectF(bbox).Round();
+    RectF rf = ToRectF(bbox);
+    Rect r = rf.Round();
     int rune = c->c;
-    if (HasSeenGlyph(seen, rune, r)) {
+    if (HasSeenGlyph(seen, rune, rf)) {
         return;
     }
 
@@ -908,7 +910,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
     if (!IsUnicodeScalar(rune) || (isNonPrintable && !isWhitespace)) {
         s.AppendChar('?');
         rects.Append(r);
-        AddSeenGlyph(seen, rune, r);
+        AddSeenGlyph(seen, rune, rf);
         return;
     }
     if (isWhitespace) {
@@ -919,7 +921,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
         }
         s.AppendChar(' ');
         rects.Append(r);
-        AddSeenGlyph(seen, rune, r);
+        AddSeenGlyph(seen, rune, rf);
         return;
     }
     char buf[4];
@@ -929,7 +931,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
         return;
     }
     rects.Append(r);
-    AddSeenGlyph(seen, rune, r);
+    AddSeenGlyph(seen, rune, rf);
 }
 
 static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
