@@ -37,7 +37,7 @@ extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 // Fills in a signature field with a certificate from a .pfx / .p12 file.
 // Same WindowBase layout pattern as Add Favorite / Change Color.
 struct SignDocumentWnd : WindowBase {
-    ~SignDocumentWnd() override = default;
+    ~SignDocumentWnd() override { str::Free(preselectField); }
 
     MainWindow* win = nullptr;
     // unsigned signature fields the document already has; the placement
@@ -45,6 +45,10 @@ struct SignDocumentWnd : WindowBase {
     StrVec fieldNames;
     Vec<int> fieldPages;
     int currPageNo = 1;
+    // field the user clicked, so the drop-down opens on it rather than on the
+    // first unsigned field in the document (issue #5964). Empty = no preference
+    Str preselectField;
+    bool hasPreselect = false;
 
     Edit* editCert = nullptr;
     Edit* editPassword = nullptr;
@@ -127,7 +131,16 @@ void SignDocumentWnd::FillPlacement() {
     }
     items.Append(fmt(_TRA("New signature on page %d").s, currPageNo));
     ddPlacement->SetItems(items);
-    ddPlacement->SetCurrentSelection(0);
+    int sel = 0;
+    if (hasPreselect) {
+        for (int i = 0; i < len(fieldNames); i++) {
+            if (str::Eq(fieldNames[i], preselectField)) {
+                sel = i;
+                break;
+            }
+        }
+    }
+    ddPlacement->SetCurrentSelection(sel);
 }
 
 // Turns the dialog state into what the engine needs; false if something the
@@ -391,15 +404,27 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
     return true;
 }
 
-void ShowSignDocumentDialog(MainWindow* win) {
+// fieldName selects that signature field in the placement drop-down; pass
+// hasField = false (the default) to leave the choice at the first unsigned
+// field, as the Sign Document command does.
+void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
     if (!GetPdfEngine(win)) {
         return;
     }
     if (gSignDocumentWnd) {
+        if (hasField) {
+            str::ReplaceWithCopy(&gSignDocumentWnd->preselectField, fieldName);
+            gSignDocumentWnd->hasPreselect = true;
+            gSignDocumentWnd->FillPlacement();
+        }
         HwndSetFocus(gSignDocumentWnd->hwnd);
         return;
     }
     auto* wnd = new SignDocumentWnd();
+    if (hasField) {
+        str::ReplaceWithCopy(&wnd->preselectField, fieldName);
+        wnd->hasPreselect = true;
+    }
     wnd->closeOnEsc = true;
     wnd->onBeforeDelete = MkFunc0Void(ClearSignDocumentWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);

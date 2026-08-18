@@ -2054,6 +2054,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         win->mouseAction = MouseAction::None;
         return;
     }
+    // an unsigned signature field is there to be signed: open Sign Document on
+    // it rather than making the user find the command in a menu (issue #5964)
+    if (StartSignatureFieldSigning(win, widget)) {
+        win->mouseAction = MouseAction::None;
+        return;
+    }
 
     // Resize handles sit outside the selected annotation's rect. Check them
     // before hit-testing other annotations: otherwise an overlapping annot

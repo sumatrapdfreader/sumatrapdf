@@ -8,6 +8,7 @@ struct MainWindow;
 struct Annotation;
 
 bool StartFormFieldEdit(MainWindow* win, Annotation* widget);
+bool StartSignatureFieldSigning(MainWindow* win, Annotation* widget);
 
 void CommitFormFieldEdit(bool save);
 

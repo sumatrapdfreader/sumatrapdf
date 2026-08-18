@@ -25,6 +25,39 @@ extern "C" {
 #include "EngineAll.h"
 #include "EngineMupdf.h"
 
+// True when this widget is a signature field the document's author left for
+// someone to sign, i.e. a signature field with no signature in it yet. Its
+// field name (which may legitimately be empty) goes to fieldNameOut, so the
+// Sign Document dialog can preselect that field (issue #5964).
+bool IsUnsignedSignatureWidget(Annotation* widget, TempStr* fieldNameOut) {
+    if (!AnnotationIsLive(widget) || widget->type != AnnotationType::Widget) {
+        return false;
+    }
+    EngineMupdf* e = widget->engine;
+    pdf_annot* a = widget->pdfannot;
+    if (!e || !a) {
+        return false;
+    }
+    fz_context* ctx = e->Ctx();
+    ScopedRecursiveMutex scope(&e->docLock);
+    bool res = false;
+    fz_try(ctx) {
+        if (pdf_widget_type(ctx, a) == PDF_WIDGET_TYPE_SIGNATURE && !pdf_widget_is_signed(ctx, a)) {
+            res = true;
+            if (fieldNameOut) {
+                char* name = pdf_load_field_name(ctx, pdf_annot_obj(ctx, a));
+                *fieldNameOut = name ? str::DupTemp(Str(name)) : StrL("");
+                fz_free(ctx, name);
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        res = false;
+    }
+    return res;
+}
+
 // Names of the signature fields that are present but not signed yet, plus the
 // 1-based page each sits on. A PDF prepared for signing has such a field, and
 // signing it (rather than adding another) is what the author intended.
