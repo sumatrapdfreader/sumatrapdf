@@ -25,6 +25,22 @@
 constexpr Color kColWindowBg = MkRgb(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;
 constexpr UINT kUwmPaintAgain = (WM_USER + 101);
+// Engine-scale zoom (1 = 100%). Below fit-page we snap back to fit.
+constexpr float kPreviewZoomMin = 0.1f;
+constexpr float kPreviewZoomMax = 16.f;
+constexpr float kPreviewZoomStep = 1.2f;
+// Render the whole page when it stays under this many pixels (~32 MB at 32bpp).
+// Past that, only the visible region plus a pan slop is rendered.
+constexpr i64 kPreviewMaxFullPagePixels = 8 * 1024 * 1024;
+constexpr int kPreviewPanPad = 256;
+
+static bool SameZoom(float a, float b) {
+    return fabsf(a - b) < 0.0001f;
+}
+
+static PdfPreview* PreviewFromHwnd(HWND hwnd) {
+    return (PdfPreview*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+}
 
 EBookUI* GetEBookUI() {
     return nullptr;
@@ -134,17 +150,42 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     return S_OK;
 }
 
+// Page at userZoom (or fit), pan when it is larger than the pane.
+// userZoom == 0 means "fit page". Zooming back to fit-or-smaller snaps to fit.
+struct PreviewLayout {
+    Rect content;
+    RectF page;
+    float fitZoom = 0;
+    float zoom = 0;
+    Rect onScreen;
+    Rect visible;
+    bool canPanX = false;
+    bool canPanY = false;
+};
+
+static void ResetPreviewView(PdfPreview* preview) {
+    if (!preview) {
+        return;
+    }
+    preview->userZoom = 0;
+    preview->panX = 0;
+    preview->panY = 0;
+    preview->panning = false;
+}
+
 class PageRenderer {
     EngineBase* engine = nullptr;
     HWND hwnd = nullptr;
 
     int currPage = 0;
+    float currZoom = 0.f;
+    Rect currClip;
     Pixmap* currBmp = nullptr;
-    // due to rounding differences, currBmp->Size() and currSize can differ slightly
-    Size currSize;
     int reqPage = 0;
     float reqZoom = 0.f;
-    Size reqSize;
+    Rect reqClip;
+    RectF reqPageRect;
+    bool reqUseClip = false;
     bool reqAbort = false;
     AbortCookie* abortCookie = nullptr;
 
@@ -183,45 +224,57 @@ class PageRenderer {
         return bbox;
     }
 
-    void Render(HDC hdc, Rect target, int pageNo, float zoom) {
-        log("PageRenderer::Render()\n");
-
-        ScopedMutex scope(&currAccess);
-        if (currBmp && currPage == pageNo && currSize == target.Size()) {
-            BlitPixmap(currBmp, hdc, target);
-        } else if (!thread) {
-            reqPage = pageNo;
-            reqZoom = zoom;
-            reqSize = target.Size();
-            reqAbort = false;
-            thread = CreateThread(nullptr, 0, RenderThread, this, 0, nullptr);
-        } else if (reqPage != pageNo || reqSize != target.Size()) {
-            if (abortCookie) {
-                abortCookie->Abort();
-            }
-            reqAbort = true;
-        }
-    }
+    void Render(HDC hdc, const PreviewLayout& lo, int pageNo);
 
   protected:
+    RectF ScreenToPage(int pageNo, float zoom, RectF screen) {
+        if (preventRecursion) {
+            return {};
+        }
+        preventRecursion = true;
+        RectF r = engine->Transform(screen, pageNo, zoom, 0, true);
+        preventRecursion = false;
+        return r;
+    }
+
+    static bool ClipCovers(int page, float zoom, Rect clip, int wantPage, float wantZoom, Rect visInPage) {
+        return page == wantPage && SameZoom(zoom, wantZoom) && clip.Intersect(visInPage) == visInPage;
+    }
+
+    static void BlitCached(HDC hdc, Pixmap* bmp, Rect clip, Rect visInPage, Rect onScreen) {
+        if (!bmp) {
+            return;
+        }
+        Rect overlap = clip.Intersect(visInPage);
+        if (overlap.IsEmpty()) {
+            return;
+        }
+        Rect src(overlap.x - clip.x, overlap.y - clip.y, overlap.dx, overlap.dy);
+        src = src.Intersect(Rect(0, 0, bmp->width, bmp->height));
+        if (src.IsEmpty()) {
+            return;
+        }
+        Rect dst(onScreen.x + clip.x + src.x, onScreen.y + clip.y + src.y, src.dx, src.dy);
+        BlitPixmapRegion(bmp, hdc, dst, src);
+    }
+
     static DWORD WINAPI RenderThread(LPVOID data) {
         log("PageRenderer::RenderThread started\n");
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
         PageRenderer* pr = (PageRenderer*)data;
-        RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
+        RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, pr->reqUseClip ? &pr->reqPageRect : nullptr,
+                            RenderTarget::View, &pr->abortCookie);
         Pixmap* bmp = pr->engine->RenderPage(args);
-        if (!bmp) {
-            return 0;
-        }
 
         ScopedMutex scope(&pr->currAccess);
 
-        if (!pr->reqAbort) {
+        if (bmp && !pr->reqAbort) {
             FreePixmap(pr->currBmp);
             pr->currBmp = bmp;
             pr->currPage = pr->reqPage;
-            pr->currSize = pr->reqSize;
+            pr->currZoom = pr->reqZoom;
+            pr->currClip = pr->reqClip;
         } else {
             FreePixmap(bmp);
         }
@@ -238,6 +291,108 @@ class PageRenderer {
     }
 };
 
+void PageRenderer::Render(HDC hdc, const PreviewLayout& lo, int pageNo) {
+    if (lo.visible.IsEmpty() || lo.zoom <= 0) {
+        return;
+    }
+
+    Rect visInPage(lo.visible.x - lo.onScreen.x, lo.visible.y - lo.onScreen.y, lo.visible.dx, lo.visible.dy);
+    Rect pageRectPx(0, 0, lo.onScreen.dx, lo.onScreen.dy);
+    visInPage = visInPage.Intersect(pageRectPx);
+    if (visInPage.IsEmpty()) {
+        return;
+    }
+
+    i64 fullPixels = (i64)lo.onScreen.dx * (i64)lo.onScreen.dy;
+    Rect wantClip;
+    if (fullPixels > 0 && fullPixels <= kPreviewMaxFullPagePixels) {
+        wantClip = pageRectPx;
+    } else {
+        wantClip = visInPage;
+        wantClip.Inflate(kPreviewPanPad, kPreviewPanPad);
+        wantClip = wantClip.Intersect(pageRectPx);
+    }
+
+    ScopedMutex scope(&currAccess);
+
+    if (currBmp && ClipCovers(currPage, currZoom, currClip, pageNo, lo.zoom, visInPage)) {
+        BlitCached(hdc, currBmp, currClip, visInPage, lo.onScreen);
+        return;
+    }
+
+    if (currBmp && currPage == pageNo && SameZoom(currZoom, lo.zoom)) {
+        BlitCached(hdc, currBmp, currClip, visInPage, lo.onScreen);
+    }
+
+    if (!thread) {
+        bool useClip = wantClip != pageRectPx;
+        RectF pageClip;
+        if (useClip) {
+            RectF screenClip((float)wantClip.x, (float)wantClip.y, (float)wantClip.dx, (float)wantClip.dy);
+            pageClip = ScreenToPage(pageNo, lo.zoom, screenClip);
+            if (pageClip.IsEmpty()) {
+                return;
+            }
+        }
+        reqPage = pageNo;
+        reqZoom = lo.zoom;
+        reqClip = wantClip;
+        reqPageRect = pageClip;
+        reqUseClip = useClip;
+        reqAbort = false;
+        thread = CreateThread(nullptr, 0, RenderThread, this, 0, nullptr);
+    } else if (!ClipCovers(reqPage, reqZoom, reqClip, pageNo, lo.zoom, visInPage)) {
+        if (abortCookie) {
+            abortCookie->Abort();
+        }
+        reqAbort = true;
+    }
+}
+
+static PreviewLayout ComputePreviewLayout(HWND hwnd, PdfPreview* preview, int pageNo) {
+    PreviewLayout lo;
+    lo.content = HwndClientRect(hwnd);
+    lo.content.Inflate(-kPreviewMargin, -kPreviewMargin);
+    if (!preview || !preview->renderer || lo.content.IsEmpty()) {
+        return lo;
+    }
+    lo.page = preview->renderer->GetPageRect(pageNo);
+    if (lo.page.IsEmpty() || lo.page.dx <= 0 || lo.page.dy <= 0) {
+        return lo;
+    }
+    lo.fitZoom = std::min((float)lo.content.dx / lo.page.dx, (float)lo.content.dy / lo.page.dy) - 0.001f;
+    if (lo.fitZoom < kPreviewZoomMin) {
+        lo.fitZoom = kPreviewZoomMin;
+    }
+    if (preview->userZoom > 0 && preview->userZoom <= lo.fitZoom) {
+        preview->userZoom = 0;
+        preview->panX = 0;
+        preview->panY = 0;
+    }
+    lo.zoom = preview->userZoom > 0 ? preview->userZoom : lo.fitZoom;
+    Rect pagePx = RectF(0, 0, lo.page.dx * lo.zoom, lo.page.dy * lo.zoom).Round();
+    lo.canPanX = pagePx.dx > lo.content.dx;
+    lo.canPanY = pagePx.dy > lo.content.dy;
+    if (lo.canPanX) {
+        preview->panX = limitValue(preview->panX, lo.content.dx - pagePx.dx, 0);
+        lo.onScreen.x = lo.content.x + preview->panX;
+    } else {
+        preview->panX = 0;
+        lo.onScreen.x = lo.content.x + (lo.content.dx - pagePx.dx) / 2;
+    }
+    if (lo.canPanY) {
+        preview->panY = limitValue(preview->panY, lo.content.dy - pagePx.dy, 0);
+        lo.onScreen.y = lo.content.y + preview->panY;
+    } else {
+        preview->panY = 0;
+        lo.onScreen.y = lo.content.y + (lo.content.dy - pagePx.dy) / 2;
+    }
+    lo.onScreen.dx = pagePx.dx;
+    lo.onScreen.dy = pagePx.dy;
+    lo.visible = lo.onScreen.Intersect(lo.content);
+    return lo;
+}
+
 static LRESULT OnPaint(HWND hwnd) {
     Rect rect = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rect);
@@ -247,19 +402,13 @@ static LRESULT OnPaint(HWND hwnd) {
     RECT rcClient = ToRECT(rect);
     HdcFillRect(hdc, ToRect(rcClient), brushBg);
 
-    PdfPreview* preview = (PdfPreview*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    PdfPreview* preview = PreviewFromHwnd(hwnd);
     if (preview && preview->renderer) {
         int pageNo = GetScrollPos(hwnd, SB_VERT);
-        RectF page = preview->renderer->GetPageRect(pageNo);
-        if (!page.IsEmpty()) {
-            rect.Inflate(-kPreviewMargin, -kPreviewMargin);
-            float zoom = (float)std::min((float)rect.dx / page.dx, (float)rect.dy / page.dy) - 0.001f;
-            Rect onScreen = RectF((float)rect.x, (float)rect.y, page.dx * zoom, page.dy * zoom).Round();
-            onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
-
-            RECT rcPage = ToRECT(onScreen);
-            HdcFillRect(hdc, ToRect(rcPage), brushWhite);
-            preview->renderer->Render(hdc, onScreen, pageNo, zoom);
+        PreviewLayout lo = ComputePreviewLayout(hwnd, preview, pageNo);
+        if (!lo.visible.IsEmpty()) {
+            HdcFillRect(hdc, lo.visible, brushWhite);
+            preview->renderer->Render(hdc, lo, pageNo);
         }
     }
 
@@ -272,11 +421,17 @@ static LRESULT OnPaint(HWND hwnd) {
     return 0;
 }
 
-static LRESULT OnVScroll(HWND hwnd, WPARAM wp) {
+enum class PreviewPagePan {
+    Top,
+    Bottom
+};
+
+static LRESULT OnVScroll(HWND hwnd, WPARAM wp, PreviewPagePan pagePan = PreviewPagePan::Top) {
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(hwnd, SB_VERT, &si);
+    int oldPos = si.nPos;
 
     switch (LOWORD(wp)) {
         case SB_TOP:
@@ -304,7 +459,15 @@ static LRESULT OnVScroll(HWND hwnd, WPARAM wp) {
     si.fMask = SIF_POS;
     SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 
-    HwndInvalidate(hwnd, true);
+    if (si.nPos != oldPos) {
+        if (PdfPreview* preview = PreviewFromHwnd(hwnd)) {
+            preview->panX = 0;
+            preview->panY = pagePan == PreviewPagePan::Bottom ? INT_MIN : 0;
+            preview->panning = false;
+        }
+    }
+
+    HwndInvalidate(hwnd, false);
     UpdateWindow(hwnd);
     return 0;
 }
@@ -328,40 +491,204 @@ static LRESULT OnKeydown(HWND hwnd, WPARAM key) {
     }
 }
 
+static bool PreviewTryPan(HWND hwnd, PdfPreview* preview, int dx, int dy) {
+    if (!preview) {
+        return false;
+    }
+    int pageNo = GetScrollPos(hwnd, SB_VERT);
+    PreviewLayout lo = ComputePreviewLayout(hwnd, preview, pageNo);
+    if (!lo.canPanX && !lo.canPanY) {
+        return false;
+    }
+    int oldX = preview->panX;
+    int oldY = preview->panY;
+    if (lo.canPanX) {
+        preview->panX += dx;
+    }
+    if (lo.canPanY) {
+        preview->panY += dy;
+    }
+    ComputePreviewLayout(hwnd, preview, pageNo);
+    if (preview->panX == oldX && preview->panY == oldY) {
+        return false;
+    }
+    HwndInvalidate(hwnd, false);
+    return true;
+}
+
+static void PreviewZoomAt(HWND hwnd, PdfPreview* preview, Point focus, int wheelDelta) {
+    if (!preview) {
+        return;
+    }
+    int pageNo = GetScrollPos(hwnd, SB_VERT);
+    PreviewLayout lo = ComputePreviewLayout(hwnd, preview, pageNo);
+    if (lo.zoom <= 0 || lo.page.IsEmpty()) {
+        return;
+    }
+    float notches = (float)wheelDelta / (float)WHEEL_DELTA;
+    float newZoom = lo.zoom * powf(kPreviewZoomStep, notches);
+    float zoomMax = std::max(kPreviewZoomMax, lo.fitZoom * 4.f);
+    newZoom = limitValue(newZoom, kPreviewZoomMin, zoomMax);
+    if (newZoom <= lo.fitZoom) {
+        if (preview->userZoom == 0) {
+            return;
+        }
+        ResetPreviewView(preview);
+        HwndInvalidate(hwnd, false);
+        return;
+    }
+    if (SameZoom(newZoom, lo.zoom) && preview->userZoom > 0) {
+        return;
+    }
+    if (!lo.onScreen.Contains(focus)) {
+        focus = Point(lo.onScreen.x + lo.onScreen.dx / 2, lo.onScreen.y + lo.onScreen.dy / 2);
+    }
+    float pageX = (float)(focus.x - lo.onScreen.x) / lo.zoom;
+    float pageY = (float)(focus.y - lo.onScreen.y) / lo.zoom;
+    preview->userZoom = newZoom;
+    Rect newPx = RectF(0, 0, lo.page.dx * newZoom, lo.page.dy * newZoom).Round();
+    if (newPx.dx > lo.content.dx) {
+        preview->panX = focus.x - lo.content.x - (int)floorf(pageX * newZoom + 0.5f);
+    } else {
+        preview->panX = 0;
+    }
+    if (newPx.dy > lo.content.dy) {
+        preview->panY = focus.y - lo.content.y - (int)floorf(pageY * newZoom + 0.5f);
+    } else {
+        preview->panY = 0;
+    }
+    ComputePreviewLayout(hwnd, preview, pageNo);
+    HwndInvalidate(hwnd, false);
+}
+
+static void PreviewStartPan(HWND hwnd, PdfPreview* preview, Point pt) {
+    if (!preview) {
+        return;
+    }
+    int pageNo = GetScrollPos(hwnd, SB_VERT);
+    PreviewLayout lo = ComputePreviewLayout(hwnd, preview, pageNo);
+    if (!lo.canPanX && !lo.canPanY) {
+        return;
+    }
+    preview->panning = true;
+    preview->panLast = pt;
+    SetCapture(hwnd);
+    SetCursorCached(IDC_SIZEALL);
+}
+
+static void PreviewEndPan(HWND hwnd, PdfPreview* preview) {
+    if (!preview || !preview->panning) {
+        return;
+    }
+    preview->panning = false;
+    if (GetCapture() == hwnd) {
+        ReleaseCapture();
+    }
+}
+
+static LRESULT OnMouseWheel(HWND hwnd, WPARAM wp, LPARAM lp, bool horizontal) {
+    PdfPreview* preview = PreviewFromHwnd(hwnd);
+    short delta = GET_WHEEL_DELTA_WPARAM(wp);
+    bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
+    bool isShift = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
+    if (!horizontal && isCtrl) {
+        Point pt = HwndScreenToClient(hwnd, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
+        PreviewZoomAt(hwnd, preview, pt, delta);
+        return 0;
+    }
+    int pageNo = GetScrollPos(hwnd, SB_VERT);
+    PreviewLayout lo = ComputePreviewLayout(hwnd, preview, pageNo);
+    int step = std::max(40, lo.content.dy / 8);
+    int dist = MulDiv((int)delta, step, WHEEL_DELTA);
+    if (horizontal || isShift) {
+        PreviewTryPan(hwnd, preview, horizontal ? -dist : dist, 0);
+        return 0;
+    }
+    if (lo.canPanY) {
+        if (PreviewTryPan(hwnd, preview, 0, dist)) {
+            return 0;
+        }
+        if (dist == 0) {
+            return 0;
+        }
+        return OnVScroll(hwnd, dist > 0 ? SB_LINEUP : SB_LINEDOWN,
+                         dist > 0 ? PreviewPagePan::Bottom : PreviewPagePan::Top);
+    }
+    return OnVScroll(hwnd, delta > 0 ? SB_LINEUP : SB_LINEDOWN);
+}
+
 static LRESULT OnDestroy(HWND hwnd) {
-    PdfPreview* preview = (PdfPreview*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    PdfPreview* preview = PreviewFromHwnd(hwnd);
     if (preview) {
         delete preview->renderer;
         preview->renderer = nullptr;
+        preview->panning = false;
     }
     return 0;
 }
 
 static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    PdfPreview* preview = PreviewFromHwnd(hwnd);
     switch (msg) {
         case WM_PAINT:
             return OnPaint(hwnd);
+        case WM_ERASEBKGND:
+            return 1;
         case WM_VSCROLL:
             return OnVScroll(hwnd, wp);
         case WM_KEYDOWN:
             return OnKeydown(hwnd, wp);
         case WM_LBUTTONDOWN:
+        case WM_MBUTTONDOWN:
             HwndSetFocus(hwnd);
+            PreviewStartPan(hwnd, preview, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
             return 0;
-        case WM_MOUSEWHEEL: {
-            auto delta = GET_WHEEL_DELTA_WPARAM(wp);
-            wp = delta > 0 ? SB_LINEUP : SB_LINEDOWN;
-            return OnVScroll(hwnd, wp);
-        }
+        case WM_LBUTTONUP:
+        case WM_MBUTTONUP:
+            PreviewEndPan(hwnd, preview);
+            return 0;
+        case WM_LBUTTONDBLCLK:
+            PreviewEndPan(hwnd, preview);
+            if (preview && preview->userZoom > 0) {
+                ResetPreviewView(preview);
+                HwndInvalidate(hwnd, false);
+            }
+            return 0;
+        case WM_MOUSEMOVE:
+            if (preview && preview->panning) {
+                Point pt(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+                int dx = pt.x - preview->panLast.x;
+                int dy = pt.y - preview->panLast.y;
+                preview->panLast = pt;
+                PreviewTryPan(hwnd, preview, dx, dy);
+            }
+            return 0;
+        case WM_CAPTURECHANGED:
+        case WM_CANCELMODE:
+            if (preview) {
+                preview->panning = false;
+            }
+            return 0;
+        case WM_SETCURSOR:
+            if (LOWORD(lp) == HTCLIENT && preview && (preview->panning || preview->userZoom > 0)) {
+                SetCursorCached(IDC_SIZEALL);
+                return TRUE;
+            }
+            break;
+        case WM_MOUSEWHEEL:
+            return OnMouseWheel(hwnd, wp, lp, false);
+        case WM_MOUSEHWHEEL:
+            return OnMouseWheel(hwnd, wp, lp, true);
         case WM_DESTROY:
             return OnDestroy(hwnd);
         case kUwmPaintAgain:
-            HwndInvalidate(hwnd, true);
+            HwndInvalidate(hwnd, false);
             UpdateWindow(hwnd);
             return 0;
         default:
-            return DefWindowProc(hwnd, msg, wp, lp);
+            break;
     }
+    return DefWindowProc(hwnd, msg, wp, lp);
 }
 
 IFACEMETHODIMP PdfPreview::DoPreview() {
@@ -372,7 +699,7 @@ IFACEMETHODIMP PdfPreview::DoPreview() {
     wcex.lpfnWndProc = PreviewWndProc;
     wcex.hCursor = GetCachedCursor(IDC_ARROW);
     wcex.lpszClassName = L"SumatraPDF_PreviewPane";
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     RegisterClassEx(&wcex);
 
     m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE, m_rcParent.x, m_rcParent.x,
@@ -382,6 +709,7 @@ IFACEMETHODIMP PdfPreview::DoPreview() {
     }
 
     this->renderer = nullptr;
+    ResetPreviewView(this);
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
 
     EngineBase* engine = GetEngine();

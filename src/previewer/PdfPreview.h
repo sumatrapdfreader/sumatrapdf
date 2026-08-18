@@ -138,6 +138,10 @@ class PdfPreview : public IThumbnailProvider,
             DestroyWindow(m_hwnd);
             m_hwnd = nullptr;
         }
+        userZoom = 0;
+        panX = 0;
+        panY = 0;
+        panning = false;
         str::FreePtr(&m_data);
         if (m_engine) {
             m_engine->Release();
@@ -167,6 +171,12 @@ class PdfPreview : public IThumbnailProvider,
     }
 
     PageRenderer* renderer = nullptr;
+    // 0 = fit page; otherwise engine-scale zoom (1 = 100%)
+    float userZoom = 0.f;
+    int panX = 0;
+    int panY = 0;
+    bool panning = false;
+    Point panLast;
 
   protected:
     AtomicInt m_lRef = 1;
