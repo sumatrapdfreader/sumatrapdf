@@ -87,7 +87,7 @@ treated as a trailing-whitespace marker, not a dollar sign.
 
 This matters for `CmdCommandPalette` mode arguments: use
 `CmdCommandPaletteFavorites` (or `CmdCommandPaletteTOC` for table of contents)
-instead of `CmdCommandPalette $` / `CmdCommandPalette *` when binding shortcuts.
+instead of `CmdCommandPalette $` / `CmdCommandPalette %` when binding shortcuts.
 
 ## Notes
 

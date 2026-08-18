@@ -595,7 +595,7 @@ Argument:
   - `@` for opened files (tabs)
   - `#` for history of files
   - `>` for commands
-  - `*` for table of contents (`CmdCommandPaletteTOC`, `Shift + F12`)
+  - `%` for table of contents (`CmdCommandPaletteTOC`, `Shift + F12`; `*` still works)
   - `$` for favorites (`CmdCommandPaletteFavorites`)
 
 Without an argument it defaults to `>`.

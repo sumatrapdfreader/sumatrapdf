@@ -13,7 +13,7 @@ Command palette is fast and convenient way to:
 - access all SumatraPDF functionality via commands : default view and `>`
 - `#` : open file from history
 - `@` : switch to another tab
-- `*` : jump to a table of contents entry of current document
+- `%` : jump to a table of contents entry of current document
 - `$` : jump to a favorite (current document's favorites first, then others)
 - `:` : combined view (replicates behavior before ver 3.6)
 
@@ -41,7 +41,7 @@ Type `#` to open a file from list of previously opened files:
 
 ## Table of contents
 
-Type `*` to jump to a table of contents entry of the current document (or press
+Type `%` to jump to a table of contents entry of the current document (or press
 `Shift + F12`, which is bound to the `CmdCommandPaletteTOC` command):
 
 The list shows the fully expanded table of contents, indented to reflect the

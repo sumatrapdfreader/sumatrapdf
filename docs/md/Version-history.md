@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Command Palette: type `%` for table of contents (was `*`; `*` still works). The mode switches at the top (`#` File History, `>` Commands, …) use the same smaller font as the hints at the bottom
 - Explorer and Outlook preview pane: Ctrl+wheel zooms, drag pans when zoomed in, and the wheel pans then turns the page at the edge. Double-click returns to fit-page (fixes #859)
 - Toggle Page Boxes (`CmdTogglePageBoxes`) outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each visible page — only boxes that page actually declares — and labels them `media`, `crop`, `trim`, and so on. For PDF development (print marks, trim vs crop). Palette and Debug menu; no default shortcut (fixes #814)
 - Change Language is a modeless window like Change Theme (search box, language list, OK / Cancel) instead of a modal dialog
@@ -203,7 +204,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdChangeBackgroundColor` : "Change Background Color"
 - `CmdChangeTheme` : "Change Theme..." — dialog to pick a UI theme and document-color follow mode
 - `CmdChangeScrollbar` : "Change Scrollbar"
-- `CmdCommandPalette *` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
+- `CmdCommandPalette %` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
 - `CmdCommandPalette $` : command palette favorites mode (`CmdCommandPaletteFavorites`)
 - `CmdCommandPaletteFavorites` : "Command Palette: Favorites"
 - `CmdContinueReadAloud` : "Continue Reading"

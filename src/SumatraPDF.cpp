@@ -10197,7 +10197,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdCommandPaletteTOC:
-            // alias for `CmdCommandPalette *`: open the palette in TOC mode
+            // alias for `CmdCommandPalette %`: open the palette in TOC mode
             RunCommandPalette(win, kPalettePrefixTOC, 0);
             break;
 

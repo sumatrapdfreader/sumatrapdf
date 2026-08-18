@@ -514,7 +514,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     if (str::Eq(prefix, kPalettePrefixTabs)) {
         smartTabMode = smartTabAdvance != 0;
     }
-    tocMode = str::Eq(prefix, kPalettePrefixTOC);
+    tocMode = str::Eq(prefix, kPalettePrefixTOC) || str::Eq(prefix, kPalettePrefixTOCLegacy);
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -556,7 +556,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
     if (!smartTabMode) {
         auto* box = new HBox();
-        HelpStyle st{hwnd, font, colTxt, colBg};
+        // same smaller app font as the bottom hint row
+        HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
         // in "# File History" and friends the first character is what you type
         // to get there, so it becomes a key-cap
         auto addSwitch = [this, box, &st](Str s, Str switchTo) {
@@ -573,7 +574,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         addSwitch(_TRA("@ Tabs"), kPalettePrefixTabs);
         addSwitch(_TRA(": Everything"), kPalettePrefixEverything);
         if (len(toc) > 0) {
-            addSwitch(_TRA("* TOC"), kPalettePrefixTOC);
+            addSwitch(_TRA("% TOC"), kPalettePrefixTOC);
         }
         if (len(favorites) > 0) {
             addSwitch(_TRA("$ Favorites"), kPalettePrefixFavorites);

@@ -41,7 +41,7 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
         searchTabs = true;
     } else if (str::TrimPrefix(filter, kPalettePrefixFileHistory)) {
         searchHistory = true;
-    } else if (str::TrimPrefix(filter, kPalettePrefixTOC)) {
+    } else if (str::TrimPrefix(filter, kPalettePrefixTOC) || str::TrimPrefix(filter, kPalettePrefixTOCLegacy)) {
         searchToc = true;
     } else if (str::TrimPrefix(filter, kPalettePrefixFavorites)) {
         searchFavorites = true;
@@ -93,7 +93,8 @@ void CommandPaletteWnd::QueryChanged() {
         CommandPaletteSetCurrentSelection(this, currSelIdx);
         return;
     }
-    if (str::StartsWith(filter, kPalettePrefixTOC) && len(filterWords) == 0) {
+    if ((str::StartsWith(filter, kPalettePrefixTOC) || str::StartsWith(filter, kPalettePrefixTOCLegacy)) &&
+        len(filterWords) == 0) {
         int idx = (currTocIdx >= 0 && currTocIdx < nItems) ? currTocIdx : 0;
         CommandPaletteSetCurrentSelection(this, idx);
         return;
