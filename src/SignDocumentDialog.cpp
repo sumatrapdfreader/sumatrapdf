@@ -63,21 +63,39 @@ struct SignDocumentWnd : WindowBase {
     VirtButton* btnBrowse = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnSign = nullptr;
+    // appearance (issue #5963): which bits of the cert / labels to draw, and
+    // an optional image that replaces the large name on the left
+    Checkbox* cbShowLabels = nullptr;
+    Checkbox* cbShowName = nullptr;
+    Checkbox* cbShowDN = nullptr;
+    Checkbox* cbShowDate = nullptr;
+    Checkbox* cbShowGraphicName = nullptr;
+    Edit* editImage = nullptr;
+    VirtButton* btnBrowseImage = nullptr;
 
     bool Create(MainWindow* win);
     void CollectFields();
     void FillCertificates();
     void FillPlacement();
+    void FillAppearance();
     bool UsingCertFile() const;
     void UpdateCertFileEnabled();
+    void UpdateGraphicNameEnabled();
     bool BuildSignArgs(PdfSignArgs& args);
     void DoSign(const PdfSignArgs& args);
 
     void OnCertChanged();
+    void OnImageChanged();
     void OnBrowse(VirtMouseEvent* ev = nullptr);
+    void OnBrowseImage(VirtMouseEvent* ev = nullptr);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnSign(VirtMouseEvent* ev = nullptr);
 };
+
+// last appearance the user signed with, so the next Sign Document opens
+// the same way (this process only; not written to settings)
+static int gLastAppearanceFlags = -1;
+static Str gLastImagePath;
 
 static SignDocumentWnd* gSignDocumentWnd = nullptr;
 // true while the Sign Document dialog is hidden and the next click / drag on
@@ -339,6 +357,48 @@ void SignDocumentWnd::OnCertChanged() {
     UpdateCertFileEnabled();
 }
 
+void SignDocumentWnd::UpdateGraphicNameEnabled() {
+    bool hasImage = false;
+    if (editImage) {
+        TempStr path = editImage->GetTextTemp();
+        str::TrimWSInPlace(path, str::TrimOpt::Both);
+        hasImage = len(path) > 0;
+    }
+    if (cbShowGraphicName) {
+        cbShowGraphicName->SetIsEnabled(!hasImage);
+        if (hasImage) {
+            cbShowGraphicName->SetIsChecked(false);
+        }
+    }
+}
+
+void SignDocumentWnd::OnImageChanged() {
+    UpdateGraphicNameEnabled();
+}
+
+void SignDocumentWnd::FillAppearance() {
+    int flags = gLastAppearanceFlags >= 0 ? gLastAppearanceFlags : kPdfSignDefaultAppearance;
+    if (cbShowLabels) {
+        cbShowLabels->SetIsChecked((flags & kPdfSignShowLabels) != 0);
+    }
+    if (cbShowName) {
+        cbShowName->SetIsChecked((flags & kPdfSignShowTextName) != 0);
+    }
+    if (cbShowDN) {
+        cbShowDN->SetIsChecked((flags & kPdfSignShowDN) != 0);
+    }
+    if (cbShowDate) {
+        cbShowDate->SetIsChecked((flags & kPdfSignShowDate) != 0);
+    }
+    if (cbShowGraphicName) {
+        cbShowGraphicName->SetIsChecked((flags & kPdfSignShowGraphicName) != 0);
+    }
+    if (editImage && gLastImagePath) {
+        editImage->SetText(gLastImagePath);
+    }
+    UpdateGraphicNameEnabled();
+}
+
 void SignDocumentWnd::FillPlacement() {
     if (!ddPlacement) {
         return;
@@ -398,6 +458,39 @@ bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
         args.location = {};
     }
 
+    TempStr imagePath = editImage ? editImage->GetTextTemp() : Str{};
+    str::TrimWSInPlace(imagePath, str::TrimOpt::Both);
+    if (len(imagePath) > 0) {
+        if (!file::Exists(imagePath)) {
+            MessageBoxWarning(hwnd, fmt(_TRA("Image file %s doesn't exist.").s, imagePath), _TRA("Sign Document"));
+            return false;
+        }
+        args.imagePath = imagePath;
+    }
+
+    int flags = 0;
+    if (cbShowLabels && cbShowLabels->IsChecked()) {
+        flags |= kPdfSignShowLabels;
+    }
+    if (cbShowName && cbShowName->IsChecked()) {
+        flags |= kPdfSignShowTextName;
+    }
+    if (cbShowDN && cbShowDN->IsChecked()) {
+        flags |= kPdfSignShowDN;
+    }
+    if (cbShowDate && cbShowDate->IsChecked()) {
+        flags |= kPdfSignShowDate;
+    }
+    if (!args.imagePath && cbShowGraphicName && cbShowGraphicName->IsChecked()) {
+        flags |= kPdfSignShowGraphicName;
+    }
+    // an empty appearance (no text bits and no reason/location) would draw a
+    // blank box; keep the name so something is visible, like mupdf-gl
+    if ((flags & (kPdfSignShowTextName | kPdfSignShowDN | kPdfSignShowDate)) == 0 && !args.reason && !args.location) {
+        flags |= kPdfSignShowLabels | kPdfSignShowTextName;
+    }
+    args.appearanceFlags = flags;
+
     int idx = ddPlacement ? ddPlacement->GetCurrentSelection() : -1;
     if (idx >= 0 && idx < len(fieldNames)) {
         args.fieldName = fieldNames[idx];
@@ -450,6 +543,39 @@ void SignDocumentWnd::OnBrowse(VirtMouseEvent*) {
     }
 }
 
+void SignDocumentWnd::OnBrowseImage(VirtMouseEvent*) {
+    WCHAR fileName[MAX_PATH + 1]{};
+    TempStr curr = editImage ? editImage->GetTextTemp() : Str{};
+    if (len(curr) > 0 && len(curr) < MAX_PATH) {
+        wstr::BufSet(WStr(fileName, dimof(fileName)), ToWStrTemp(curr));
+    }
+
+    str::Builder fileFilter(256);
+    fileFilter.Append(_TRA("Image files"));
+    fileFilter.Append("\1*.png;*.jpg;*.jpeg\1");
+    fileFilter.Append(_TRA("All files"));
+    fileFilter.Append("\1*.*\1");
+    Str fileFilterStr = ToStr(fileFilter);
+    str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
+
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = dimof(fileName);
+    ofn.lpstrFilter = CWStrTemp(fileFilterStr);
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    str::Free(fileFilterStr);
+    if (!GetOpenFileNameW(&ofn)) {
+        return;
+    }
+    if (editImage) {
+        editImage->SetText(ToUtf8Temp(WStr(fileName)));
+    }
+    UpdateGraphicNameEnabled();
+}
+
 void SignDocumentWnd::OnCancel(VirtMouseEvent*) {
     gPlacingSignature = false;
     ClearSignaturePlacementNotif(win);
@@ -473,6 +599,10 @@ static TempStr SignErrorMessageTemp(Str err) {
         str::Contains(err, StrL("invalid certificate thumbprint"))) {
         return _TRA("Could not use that certificate from the Windows certificate store.");
     }
+    if (str::Contains(err, StrL("could not read signature image")) || str::Contains(err, StrL("cannot create image")) ||
+        str::Contains(err, StrL("unknown image format"))) {
+        return _TRA("Could not read the signature image.");
+    }
     return str::DupTemp(err);
 }
 
@@ -493,6 +623,9 @@ void SignDocumentWnd::DoSign(const PdfSignArgs& args) {
         return;
     }
     str::Free(err);
+
+    gLastAppearanceFlags = args.appearanceFlags;
+    str::ReplaceWithCopy(&gLastImagePath, args.imagePath);
 
     // the signature is only computed while saving, so the document has to be
     // written out now; ask where, since signing rewrites the file
@@ -553,6 +686,18 @@ static Edit* AddEdit(VBox* vbox, HWND hwnd, PlatformFont* font, bool isRtl, bool
     args.isRtl = isRtl;
     args.isPassword = isPassword;
     auto* c = new Edit();
+    c->Create(args);
+    vbox->AddChild(c);
+    return c;
+}
+
+static Checkbox* AddCheckbox(VBox* vbox, HWND hwnd, Str text, bool isRtl, int padTop) {
+    Checkbox::CreateArgs args;
+    args.parent = hwnd;
+    args.text = text;
+    args.isRtl = isRtl;
+    auto* c = new Checkbox();
+    c->SetInsetsPt(padTop, 0, 0, 0);
     c->Create(args);
     vbox->AddChild(c);
     return c;
@@ -640,6 +785,38 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(c);
         FillPlacement();
     }
+
+    AddLabel(vbox, _TRA("Appearance:"), f, isRtl, 8);
+    cbShowLabels = AddCheckbox(vbox, hwnd, _TRA("Show &labels"), isRtl, 2);
+    cbShowName = AddCheckbox(vbox, hwnd, _TRA("Show &name"), isRtl, 2);
+    cbShowDN = AddCheckbox(vbox, hwnd, _TRA("Show &DN"), isRtl, 2);
+    cbShowDate = AddCheckbox(vbox, hwnd, _TRA("Show da&te"), isRtl, 2);
+    cbShowGraphicName = AddCheckbox(vbox, hwnd, _TRA("Show name as &graphic"), isRtl, 2);
+    AddLabel(vbox, _TRA("&Image (optional):"), f, isRtl, 8);
+    {
+        auto* row = new HBox();
+        row->alignMain = MainAxisAlign::MainStart;
+        row->alignCross = CrossAxisAlign::CrossCenter;
+        row->gap = f->averageCharWidth;
+
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.font = f;
+        args.withBorder = true;
+        args.isRtl = isRtl;
+        args.idealWidthChars = 40;
+        auto* e = new Edit();
+        e->Create(args);
+        editImage = e;
+        e->onTextChanged = MkMethod0<SignDocumentWnd, &SignDocumentWnd::OnImageChanged>(this);
+        row->AddChild(e);
+
+        btnBrowseImage = NewThemedButton(hwnd, _TRA("C&hoose..."), f, false);
+        btnBrowseImage->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnBrowseImage>(this);
+        row->AddChild(btnBrowseImage);
+        vbox->AddChild(row);
+    }
+    FillAppearance();
 
     {
         auto* hbox = new HBox();

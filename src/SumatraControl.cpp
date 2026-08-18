@@ -834,14 +834,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str thumbprint = StringArg(req, 2);
             Str certPath = StringArg(req, 3);
             Str certPassword = StringArg(req, 4);
+            Str imagePath = StringArg(req, 5);
+            i32 appearanceFlags = -1;
+            IntArg(req, 6, appearanceFlags);
             if (!pdfPath || !destPath) {
                 AppendError(req,
                             "TestSignDocument expects string pdfPath, string destPath [, thumbprint] [, certPath] [, "
-                            "password]");
+                            "password] [, imagePath] [, appearanceFlags]");
                 break;
             }
             int exitCode = 0;
-            Str res = SignDocumentResultTemp(pdfPath, destPath, thumbprint, certPath, certPassword, &exitCode);
+            Str res = SignDocumentResultTemp(pdfPath, destPath, thumbprint, certPath, certPassword, imagePath,
+                                             appearanceFlags, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

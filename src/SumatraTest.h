@@ -29,4 +29,4 @@ TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut = nul
 TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut = nullptr);
 TempStr ListSigningCertsResultTemp(int* exitCodeOut = nullptr);
 TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword,
-                               int* exitCodeOut = nullptr);
+                               Str imagePath = {}, int appearanceFlags = -1, int* exitCodeOut = nullptr);

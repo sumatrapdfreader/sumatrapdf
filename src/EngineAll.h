@@ -108,15 +108,26 @@ Str EngineMupdfGetPassword(EngineBase* engine);
 bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);
 
 // digitally signing a PDF (SignDocumentDialog.cpp drives this)
+// appearance flag bits match mupdf's PDF_SIGNATURE_SHOW_* (logo is never used)
+constexpr int kPdfSignShowLabels = 1;
+constexpr int kPdfSignShowDN = 2;
+constexpr int kPdfSignShowDate = 4;
+constexpr int kPdfSignShowTextName = 8;
+constexpr int kPdfSignShowGraphicName = 16;
+constexpr int kPdfSignDefaultAppearance =
+    kPdfSignShowLabels | kPdfSignShowDN | kPdfSignShowDate | kPdfSignShowTextName | kPdfSignShowGraphicName;
+
 struct PdfSignArgs {
-    Str certPath;       // .pfx / .p12 holding the certificate + private key
-    Str certPassword;   // password protecting it, may be empty
-    Str certThumbprint; // SHA-1 of a CurrentUser\MY cert; if set, used instead of certPath
-    Str reason;         // optional, shown in the signature
-    Str location;       // optional, shown in the signature
-    Str fieldName;      // existing unsigned signature field to fill in
-    int pageNo = 1;     // page for a new field, when fieldName is empty
-    RectF rect;         // where the new field goes; empty uses mupdf's default box
+    Str certPath;             // .pfx / .p12 holding the certificate + private key
+    Str certPassword;         // password protecting it, may be empty
+    Str certThumbprint;       // SHA-1 of a CurrentUser\MY cert; if set, used instead of certPath
+    Str reason;               // optional, shown in the signature
+    Str location;             // optional, shown in the signature
+    Str fieldName;            // existing unsigned signature field to fill in
+    int pageNo = 1;           // page for a new field, when fieldName is empty
+    RectF rect;               // where the new field goes; empty uses mupdf's default box
+    int appearanceFlags = -1; // -1 = kPdfSignDefaultAppearance
+    Str imagePath;            // optional PNG/JPEG drawn on the left of the appearance
 };
 
 #if OS_WIN

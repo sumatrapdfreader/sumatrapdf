@@ -8,6 +8,7 @@
 // exporting them for no one.
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/ScopedWin.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -205,13 +206,23 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
     pdf_pkcs7_signer* signer = nullptr;
     pdf_annot* widget = nullptr;
     pdf_page* page = nullptr;
+    fz_image* graphic = nullptr;
+    fz_buffer* imgBuf = nullptr;
     int pageNo = args.pageNo;
     bool ok = false;
     fz_var(signer);
     fz_var(widget);
     fz_var(page);
+    fz_var(graphic);
+    fz_var(imgBuf);
     fz_var(ok);
     fz_var(pageNo);
+
+    static_assert(kPdfSignShowLabels == PDF_SIGNATURE_SHOW_LABELS);
+    static_assert(kPdfSignShowDN == PDF_SIGNATURE_SHOW_DN);
+    static_assert(kPdfSignShowDate == PDF_SIGNATURE_SHOW_DATE);
+    static_assert(kPdfSignShowTextName == PDF_SIGNATURE_SHOW_TEXT_NAME);
+    static_assert(kPdfSignShowGraphicName == PDF_SIGNATURE_SHOW_GRAPHIC_NAME);
 
     fz_try(ctx) {
         if (args.certThumbprint) {
@@ -234,21 +245,32 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
                 pdf_set_annot_rect(ctx, widget, ToFzRect(args.rect));
             }
         }
+        if (args.imagePath) {
+            Str imgData = file::ReadFile(args.imagePath);
+            if (!imgData) {
+                fz_throw(ctx, FZ_ERROR_ARGUMENT, "could not read signature image");
+            }
+            imgBuf = fz_new_buffer_from_copied_data(ctx, (const unsigned char*)imgData.s, (size_t)len(imgData));
+            str::Free(imgData);
+            graphic = fz_new_image_from_buffer(ctx, imgBuf);
+        }
         const char* reason = args.reason ? CStrTemp(args.reason) : nullptr;
         const char* location = args.location ? CStrTemp(args.location) : nullptr;
         // PDF_SIGNATURE_DEFAULT_APPEARANCE, minus the logo: that draws mupdf's
         // logo into the signature, which has no business in a user's document
-        int appearance = PDF_SIGNATURE_SHOW_LABELS | PDF_SIGNATURE_SHOW_DN | PDF_SIGNATURE_SHOW_DATE |
-                         PDF_SIGNATURE_SHOW_TEXT_NAME | PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+        int appearance = args.appearanceFlags >= 0 ? args.appearanceFlags : kPdfSignDefaultAppearance;
+        appearance &= ~PDF_SIGNATURE_SHOW_LOGO;
         // note: mupdf draws the reason / location into the signature's
         // appearance but doesn't put /Reason and /Location in the signature
         // dictionary, and they can't be added afterwards: signing already
         // reserved a /ByteRange for the bytes as they are now, so any extra
         // dictionary entry shifts the offsets and invalidates the signature.
-        pdf_sign_signature(ctx, widget, signer, appearance, nullptr, reason, location);
+        pdf_sign_signature(ctx, widget, signer, appearance, graphic, reason, location);
         ok = true;
     }
     fz_always(ctx) {
+        fz_drop_image(ctx, graphic);
+        fz_drop_buffer(ctx, imgBuf);
         pdf_drop_annot(ctx, widget);
         fz_drop_page(ctx, (fz_page*)page);
         pdf_drop_signer(ctx, signer);
