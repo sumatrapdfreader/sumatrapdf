@@ -667,7 +667,12 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
     HACCEL accTable = accTables[0];
     HACCEL editAccTable = accTables[1];
     HACCEL treeViewAccTable = accTables[2];
-    if (FindPropertyWindowByHwnd(hwnd)) {
+    // Only the properties window and its children use the edit table.
+    // FindPropertyWindowByHwnd() also matches the owner frame (so we can
+    // find the dialog for that document); treating the frame as an edit
+    // dropped Home/End (not in the edit table) while Properties stayed open
+    // (issue #5971).
+    if (IsHwndInPropertiesWindow(hwnd)) {
         *hwndAccel = hwnd;
         return editAccTable;
     }

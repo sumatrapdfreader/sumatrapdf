@@ -81,6 +81,21 @@ PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
     return nullptr;
 }
 
+// True for the properties dialog and its children (the read-only edit),
+// but not the owner frame. Used so Home/End keep navigating the document
+// while Properties stays open (issue #5971).
+bool IsHwndInPropertiesWindow(HWND hwnd) {
+    if (!hwnd) {
+        return false;
+    }
+    for (PropertiesWnd* w : gPropertiesWindows) {
+        if (w->hwnd == hwnd || (w->hwnd && IsChild(w->hwnd, hwnd))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd);
 
 void DeletePropertiesWindow(HWND hwndParent) {
