@@ -96,6 +96,7 @@ import { testit as pdfOnlyMenuItems } from "./pdf-only-menu-items.ts";
 import { testit as issue2258 } from "./issue-2258.ts";
 import { testit as issue2737 } from "./issue-2737.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
+import { testit as issue1422 } from "./issue-1422.ts";
 import { testit as issue1438 } from "./issue-1438.ts";
 import { testit as issue1136 } from "./issue-1136.ts";
 import { testit as issue1699 } from "./issue-1699.ts";
@@ -212,6 +213,7 @@ export const tests: NamedTest[] = [
   ["issue-2258", issue2258],
   ["issue-2737", issue2737],
   ["issue-1106", issue1106],
+  ["issue-1422", issue1422],
   ["issue-1438", issue1438],
   ["issue-1136", issue1136],
   ["issue-1998", issue1998],

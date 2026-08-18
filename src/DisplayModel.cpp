@@ -2316,9 +2316,18 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     cb->ZoomChanged(this, zoomLevel);
 }
 
+// Absolute zoom is the page the user is looking at, not zoomReal (the smallest
+// fit-zoom in the document). Fit Width/Page give each page its own scale, so
+// stepping from that minimum shrinks a narrower page (issue #1422).
 float DisplayModel::GetZoomVirtual(bool absolute) const {
     if (absolute) {
-        // revert the dpiFactor premultiplication for converting zoomReal back to zoomVirtual
+        int pageNo = CurrentPageNo();
+        if (ValidPageNo(pageNo)) {
+            float pageZoom = GetZoomReal(pageNo);
+            if (pageZoom > 0) {
+                return pageZoom * 100 / dpiFactor;
+            }
+        }
         return zoomReal * 100 / dpiFactor;
     }
     return zoomVirtual;
