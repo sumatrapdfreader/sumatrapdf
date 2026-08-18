@@ -714,13 +714,16 @@ path_from_prop(char *path, fz_xml *manifest, const char *base_uri, const char *p
 }
 
 static fz_outline *
-epub_parse_ncx_imp(fz_context *ctx, epub_document *doc, fz_xml *node, char *base_uri)
+epub_parse_ncx_imp(fz_context *ctx, epub_document *doc, fz_xml *node, char *base_uri, int depth)
 {
 	char path[2048];
 	fz_outline *outline, *head, **tailp;
 
 	head = NULL;
 	tailp = &head;
+
+	if (depth == 100)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Overly nested epub ncx");
 
 	node = fz_xml_find_down(node, "navPoint");
 	while (node)
@@ -742,7 +745,7 @@ epub_parse_ncx_imp(fz_context *ctx, epub_document *doc, fz_xml *node, char *base
 				outline->title = Memento_label(fz_strdup(ctx, text), "outline_title");
 				outline->uri = Memento_label(fz_strdup(ctx, path), "outline_uri");
 				outline->page = fz_make_location(-1, -1);
-				outline->down = epub_parse_ncx_imp(ctx, doc, node, base_uri);
+				outline->down = epub_parse_ncx_imp(ctx, doc, node, base_uri, depth+1);
 				outline->is_open = 1;
 			}
 			fz_catch(ctx)
@@ -773,7 +776,7 @@ epub_parse_ncx(fz_context *ctx, epub_document *doc, const char *path)
 		fz_dirname(base_uri, path, sizeof base_uri);
 		buf = fz_read_archive_entry(ctx, zip, path);
 		ncx = fz_parse_xml(ctx, buf, 0);
-		doc->outline = epub_parse_ncx_imp(ctx, doc, fz_xml_find_down(fz_xml_root(ncx), "navMap"), base_uri);
+		doc->outline = epub_parse_ncx_imp(ctx, doc, fz_xml_find_down(fz_xml_root(ncx), "navMap"), base_uri, 0);
 	}
 	fz_always(ctx)
 	{
@@ -785,7 +788,7 @@ epub_parse_ncx(fz_context *ctx, epub_document *doc, const char *path)
 }
 
 static fz_outline *
-epub_parse_nav_imp(fz_context *ctx, epub_document *doc, fz_xml *ol, char *base_uri)
+epub_parse_nav_imp(fz_context *ctx, epub_document *doc, fz_xml *ol, char *base_uri, int depth)
 {
 	/* see https://www.w3.org/TR/epub-33/#sec-nav
 
@@ -809,6 +812,9 @@ epub_parse_nav_imp(fz_context *ctx, epub_document *doc, fz_xml *ol, char *base_u
 
 	head = NULL;
 	tailp = &head;
+
+	if (depth >= 100)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Overly nested epub nav");
 
 	fz_try(ctx)
 	{
@@ -841,7 +847,7 @@ epub_parse_nav_imp(fz_context *ctx, epub_document *doc, fz_xml *ol, char *base_u
 			outline->title = fz_new_text_from_xml(ctx, li_a);
 
 			if (fz_xml_is_tag(li_ol, "ol"))
-				outline->down = epub_parse_nav_imp(ctx, doc, li_ol, base_uri);
+				outline->down = epub_parse_nav_imp(ctx, doc, li_ol, base_uri, depth+1);
 
 			li = fz_xml_find_next(li, "li");
 		}
@@ -873,7 +879,7 @@ epub_parse_nav(fz_context *ctx, epub_document *doc, const char *path)
 		nav_doc = fz_parse_xml(ctx, buf, 0);
 		nav = fz_xml_find_dfs(fz_xml_root(nav_doc), "nav", "epub:type", "toc");
 		if (nav)
-			doc->outline = epub_parse_nav_imp(ctx, doc, fz_xml_find_down(nav, "ol"), base_uri);
+			doc->outline = epub_parse_nav_imp(ctx, doc, fz_xml_find_down(nav, "ol"), base_uri, 0);
 	}
 	fz_always(ctx)
 	{

@@ -32,18 +32,18 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0014-html-bound-generate-boxes-recursion` | stack overflow on deeply nested markup |
 | `0015-html-fb2-author-and-annotation` | FB2 author + annotation as document metadata |
 | `0016-css-user-stylesheet-important-wins` | user-origin `!important` outranks inline style |
-| `0017-xps-bound-metadata-recursion` | stack overflow on deeply nested XPS metadata (#5032) |
-| `0018-stext-search-mujs-include-path` | we build the amalgamated `ext/a-mujs` |
-| `0019-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
-| `0020-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
-| `0021-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
-| `0022-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
+| `0017-stext-search-mujs-include-path` | we build the amalgamated `ext/a-mujs` |
+| `0018-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
+| `0019-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
+| `0020-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
+| `0021-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 
-And one that is not ours but that we carry ahead of the release we vendor:
+And two that are not ours but that we carry ahead of the release we vendor:
 
 | Patch | What |
 | --- | --- |
-| `0023-backport-709471-single-line-field-box` | upstream fix for the single-line field content box and a zero `/DA` font size |
+| `0022-backport-709471-single-line-field-box` | upstream fix for the single-line field content box and a zero `/DA` font size |
+| `0023-backport-709480-bound-xml-recursion` | upstream depth limits for XPS metadata and epub outlines (covers #5032) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.2` plus these
 patches, and nothing else.
@@ -55,6 +55,12 @@ on mupdf `master` but not in the release we vendor (the `1.28.x` tags come off a
 maintenance branch that forked before it). **Delete it when the vendored mupdf
 moves past the commit it names** — otherwise the next update will try to apply
 a change the base already contains.
+
+Prefer a backport to a patch of our own whenever upstream has fixed the same
+thing: it is code we do not have to re-merge, and upstream usually covers more
+cases. `0023` replaced our own XPS depth limit for exactly that reason — it
+guards the two epub outline parsers as well. Check before writing a new patch,
+and check again at each update, since upstream may have caught up.
 
 ## Applying them
 
