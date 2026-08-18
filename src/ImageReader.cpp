@@ -167,8 +167,12 @@ Pixmap* PixmapFromDataFz(Str d) {
     }
 
     Pixmap* result = nullptr;
-    // jpeg or jpeg 2000
-    if (str::StartsWith(d, StrL("\xFF\xD8")) || MemEq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
+    Str icc;
+    bool jpegOrJp2 = str::StartsWith(d, StrL("\xFF\xD8")) || MemEq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12);
+    // WebP with an ICCP chunk: mupdf applies the profile. Plain WebP stays on
+    // the faster libwebp path in ImageReader_win / webp::PixmapFromData.
+    bool webpIcc = FindWebpChunk(d, "ICCP", icc);
+    if (jpegOrJp2 || webpIcc) {
         result = PixmapFromImageData(ctx, data, n);
     }
 

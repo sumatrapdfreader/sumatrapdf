@@ -75,6 +75,7 @@ struct FileTypeInfo {
 FileTypeInfo GuessFileInfoFromData(Str d);
 void FreeFileTypeInfo(FileTypeInfo*);
 int WebpExifOrientation(Str d);
+bool FindWebpChunk(Str d, const char fourcc[4], Str& out);
 bool ExifOrientationSwapsDimensions(int orientation);
 FileType GuessFileTypeFromFile(Str path);
 FileType GuessFileTypeFromData(Str d);

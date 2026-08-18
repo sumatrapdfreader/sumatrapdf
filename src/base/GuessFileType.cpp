@@ -272,7 +272,37 @@ static FileType DetectHicAndAvif(Str d) {
 }
 
 static bool HasWebpSignature(Str d) {
-    return d.len > 12 && str::StartsWith(d, StrL("RIFF")) && str::StartsWith(Str(d.s + 8, d.len - 8), StrL("WEBP"));
+    return d.len >= 12 && str::StartsWith(d, StrL("RIFF")) && str::StartsWith(Str(d.s + 8, d.len - 8), StrL("WEBP"));
+}
+
+// payload of the first RIFF chunk whose FourCC is fourcc. out is a view into d.
+bool FindWebpChunk(Str d, const char fourcc[4], Str& out) {
+    out = {};
+    if (!fourcc || !HasWebpSignature(d)) {
+        return false;
+    }
+    ByteReader r(d);
+    int idx = 12;
+    while (idx + 8 <= r.len) {
+        int size = (int)r.UInt32LE(idx + 4);
+        int payload = idx + 8;
+        if (size < 0 || payload + size > r.len) {
+            return false;
+        }
+        if (MemEq(r.d + idx, fourcc, 4)) {
+            out = Str((char*)(r.d + payload), size);
+            return true;
+        }
+        int chunkSize = size + (size & 1);
+        if (chunkSize < size) {
+            return false;
+        }
+        idx = payload + chunkSize;
+        if (idx < 8) {
+            return false;
+        }
+    }
+    return false;
 }
 
 static bool HasJxlSignature(Str d) {
@@ -868,33 +898,11 @@ static int JpegExifOrientation(ByteReader r) {
 
 // Read EXIF orientation from a WebP EXIF chunk. Returns 1-8 or 0 if not found.
 int WebpExifOrientation(Str d) {
-    if (!HasWebpSignature(d)) {
+    Str exif;
+    if (!FindWebpChunk(d, "EXIF", exif) || exif.len < 8) {
         return 0;
     }
-    ByteReader r(d);
-    int idx = 12;
-    while (idx + 8 <= r.len) {
-        if (r.UInt8(idx) == 'E' && r.UInt8(idx + 1) == 'X' && r.UInt8(idx + 2) == 'I' && r.UInt8(idx + 3) == 'F') {
-            int size = (int)r.UInt32LE(idx + 4);
-            int payload = idx + 8;
-            if (payload + size <= r.len && size >= 8) {
-                int orient = ExifOrientationFromTiff(r, payload);
-                if (orient != 0) {
-                    return orient;
-                }
-            }
-        }
-        int size = (int)r.UInt32LE(idx + 4);
-        int chunkSize = size + (size & 1);
-        if (chunkSize < size) {
-            return 0;
-        }
-        idx += 8 + chunkSize;
-        if (idx < 8) {
-            return 0;
-        }
-    }
-    return 0;
+    return ExifOrientationFromTiff(ByteReader(exif), 0);
 }
 
 // find a box of the given type among the ISO BMFF boxes in [idx, end).

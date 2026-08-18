@@ -260,6 +260,10 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
 Pixmap* PixmapFromData(Str bmpData) {
     Pixmap* px = PixmapFromDataFz(bmpData);
     if (px) {
+        // ICC WebP comes from mupdf, which does not apply EXIF orientation
+        if (GuessFileTypeFromData(bmpData) == FileType::Webp) {
+            px = PixmapApplyExifOrientation(px, WebpExifOrientation(bmpData));
+        }
         return px;
     }
     FileType kind = GuessFileTypeFromData(bmpData);

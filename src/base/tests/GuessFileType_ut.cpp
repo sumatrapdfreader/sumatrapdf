@@ -267,6 +267,20 @@ static void webpTest() {
     utassert(fti.imageSizes);
     utassert(fti.imageSizes[0] == Size(2, 1));
     utassert(fti.imageSizes[1] == Size(4, 3));
+
+    // RIFF walk: EXIF + ICCP chunks, no image data needed
+    static const u8 webpChunks[] = {
+        'R', 'I', 'F', 'F', 40, 0, 0, 0, 'W', 'E', 'B', 'P', 'E', 'X', 'I', 'F', 8,   0,   0,   0,
+        'I', 'I', 42,  0,   8,  0, 0, 0, 'I', 'C', 'C', 'P', 4,   0,   0,   0,   'a', 'c', 's', 'p',
+    };
+    Str chunkFile = Str((char*)webpChunks, dimofi(webpChunks));
+    Str payload;
+    utassert(FindWebpChunk(chunkFile, "EXIF", payload));
+    utassert(payload.len == 8 && payload.s[0] == 'I' && payload.s[1] == 'I');
+    utassert(FindWebpChunk(chunkFile, "ICCP", payload));
+    utassert(payload.len == 4 && MemEq(payload.s, "acsp", 4));
+    utassert(!FindWebpChunk(chunkFile, "XMP ", payload));
+    utassert(!FindWebpChunk(Str((char*)webp, dimofi(webp)), "ICCP", payload));
     FreeFileTypeInfo(&fti);
 }
 

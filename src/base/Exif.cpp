@@ -966,36 +966,8 @@ bool ExtractJpegExif(Str d, Str& out) {
     }
 }
 
-bool HasWebpSignature(Str d) {
-    return d.len >= 12 && MemEq(d.s, "RIFF", 4) && MemEq(d.s + 8, "WEBP", 4);
-}
-
 bool ExtractWebpExif(Str d, Str& out) {
-    if (!HasWebpSignature(d)) {
-        return false;
-    }
-    ByteReader r(d);
-    int idx = 12;
-    while (idx + 8 <= r.len) {
-        if (r.UInt8(idx) == 'E' && r.UInt8(idx + 1) == 'X' && r.UInt8(idx + 2) == 'I' && r.UInt8(idx + 3) == 'F') {
-            int size = (int)r.UInt32LE(idx + 4);
-            int payload = idx + 8;
-            if (payload + size <= r.len && size >= 8) {
-                out = Str((char*)(r.d + payload), size);
-                return true;
-            }
-        }
-        int size = (int)r.UInt32LE(idx + 4);
-        int chunkSize = size + (size & 1);
-        if (chunkSize < size) {
-            return false;
-        }
-        idx += 8 + chunkSize;
-        if (idx < 8) {
-            return false;
-        }
-    }
-    return false;
+    return FindWebpChunk(d, "EXIF", out) && out.len >= 8;
 }
 
 bool LooksLikeTiffExif(const u8* p, int n) {

@@ -38,6 +38,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0020-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 | `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
 | `0026-pkcs7-windows-store` | load a signing cert from CurrentUser\\MY by SHA-1 thumbprint (#5965) |
+| `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
 
 And three that are not ours but that we carry ahead of the release we vendor:
 
