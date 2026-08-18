@@ -283,14 +283,35 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    logf("PdfBakeDoIt: baking '%s' to '%s'\n", srcPath, destPath);
+    Str inputPath = srcPath;
+    Str tmpPath;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    // pdfbake_main re-opens the file from disk, so unsaved session
+    // annotations would be missing unless we write them out first (issue #5977).
+    if (engine && EngineHasUnsavedAnnotations(engine)) {
+        tmpPath = str::Dup(GetTempFilePathTemp(StrL("bake")));
+        if (!tmpPath || !EngineMupdfSaveCopy(engine, tmpPath)) {
+            str::Free(tmpPath);
+            MessageBoxWarning(hwnd, "Failed to bake PDF file.", _TRA("Bake PDF"));
+            return;
+        }
+        inputPath = tmpPath;
+        logf("PdfBakeDoIt: unsaved annotations, baking from temp '%s'\n", tmpPath);
+    }
+
+    logf("PdfBakeDoIt: baking '%s' to '%s'\n", inputPath, destPath);
 
     // build argv for pdfbake_main: "bake" input output
-    char* argv[] = {(char*)"bake", CStrTemp(srcPath), CStrTemp(destPath)};
+    char* argv[] = {(char*)"bake", CStrTemp(inputPath), CStrTemp(destPath)};
     int argc = 3;
 
     fz_set_optind(0);
     int res = pdfbake_main(argc, argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+        str::Free(tmpPath);
+    }
     if (res == 0) {
         logf("PdfBakeDoIt: baked successfully\n");
         MainWindow* w = win;

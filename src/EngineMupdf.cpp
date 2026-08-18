@@ -6997,6 +6997,32 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
     return ok;
 }
 
+// Write a standalone (non-incremental) copy of the live PDF, including
+// unsaved annotations, without marking the document clean. Used so tools
+// that re-open the file from disk (bake) see the current session (issue #5977).
+bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc || !path) {
+        return false;
+    }
+    auto* ctx = epdf->Ctx();
+    ScopedRecursiveMutex scope(&epdf->docLock);
+    pdf_write_options save_opts{};
+    save_opts = pdf_default_write_options2;
+    save_opts.do_incremental = 0;
+    save_opts.do_compress = 1;
+    bool ok = false;
+    fz_try(ctx) {
+        pdf_save_document(ctx, epdf->pdfdoc, CStrTemp(path), &save_opts);
+        ok = true;
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("EngineMupdfSaveCopy: saving '%s' failed: '%s'\n", path, Str(fz_caught_message(ctx)));
+    }
+    return ok;
+}
+
 // caller must hold pagesLock (protects pages[] and pageInfo->images)
 static bool HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
     ReportIf(pageNo < 1 || pageNo > e->pageCount);
