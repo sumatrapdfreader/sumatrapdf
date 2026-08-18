@@ -87,6 +87,25 @@ If you provide `Name`, it'll be available in [Command Palette](Command-Palette.m
 
 See [customize shortcuts](Customize-keyboard-shortcuts.md) for more complete docs on `Shortcuts` [advanced setting](Advanced-options-settings.md).
 
+## Command palette on the toolbar
+
+`Ctrl + K` then `$` opens the [command palette](Command-Palette.md) in favorites
+mode (a floating list that closes when it loses focus). To put that on the
+toolbar, add a shortcut with `ToolbarText` or `ToolbarSvgIcon`:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdCommandPaletteFavorites
+        Name = Favorites
+        ToolbarText = $
+    ]
+]
+```
+
+The table of contents (document bookmarks) is `Ctrl + K` then `%`, or
+`Shift + F12`. For a toolbar button use `CmdCommandPaletteTOC` the same way.
+
 See [customize external viewers](Customize-external-viewers.md) for adding external-viewer toolbar buttons.
 
 ## Using SVG icons

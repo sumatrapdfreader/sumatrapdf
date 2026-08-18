@@ -46,4 +46,22 @@ You can also use `CmdCommandPalette` with a `$` mode argument, but in settings
 files a literal `$` must be escaped as `$$` (e.g. `Cmd = CmdCommandPalette $$`).
 Prefer `CmdCommandPaletteFavorites` to avoid that.
 
+## Favorites button on the toolbar
+
+Add `ToolbarText` (or `ToolbarSvgIcon`) on the same shortcut entry to put a
+button on the toolbar. The button opens the same floating list as `Ctrl + K`
+then `$`. See [Customize toolbar](Customize-toolbar.md).
+
+```
+Shortcuts [
+    [
+        Cmd = CmdCommandPaletteFavorites
+        Name = Favorites
+        ToolbarText = $
+    ]
+]
+```
+
+`Name` is the tooltip. The button is added after the built-in toolbar buttons.
+
 See [customize keyboard shortcuts](Customize-keyboard-shortcuts.md) for details.

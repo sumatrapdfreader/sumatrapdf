@@ -45,7 +45,8 @@ Type `#` to open a file from list of previously opened files:
 ## Table of contents
 
 Type `%` to jump to a table of contents entry of the current document (or press
-`Shift + F12`, which is bound to the `CmdCommandPaletteTOC` command):
+`Shift + F12`, which is bound to the `CmdCommandPaletteTOC` command). That
+command can also be a [toolbar button](./Customize-toolbar.md#command-palette-on-the-toolbar).
 
 The list shows the fully expanded table of contents, indented to reflect the
 tree hierarchy. The entry closest to the current page is pre-selected. Type to
@@ -62,7 +63,8 @@ another document opens that document.
 
 You can bind a keyboard shortcut to open the palette directly in favorites mode
 with the `CmdCommandPaletteFavorites` [command](./Commands.md) (see
-[Managing favorites](./Managing-favorites.md)).
+[Managing favorites](./Managing-favorites.md)). The same command can be a
+[toolbar button](./Customize-toolbar.md#command-palette-on-the-toolbar).
 
 ## Combined view
 
