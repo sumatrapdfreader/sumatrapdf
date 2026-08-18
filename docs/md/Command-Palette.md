@@ -22,6 +22,9 @@ How to use it:
 - press `Ctrl-K` to show command palette window
 - enter text to narrow down list of matches
 - `up` / `down` arrow navigate between matches
+- `Page Up` / `Page Down` jump a page of matches
+- `Home` / `End` go to the first / last match when the caret is already at the start / end of the query (`Ctrl + Home` / `Ctrl + End` always do)
+- `Ctrl + A` selects the query
 - `Enter` to execute selected match (or double-click with mouse)
 - `Escape` to close the window (or click outside of it)
 

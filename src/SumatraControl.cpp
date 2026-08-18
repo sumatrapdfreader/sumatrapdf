@@ -38,6 +38,7 @@
 #include "SumatraDialogs.h"
 #include "EditAnnotations.h"
 #include "EutlTrust.h"
+#include "CommandPalette.h"
 
 extern bool gIsStartup;
 
@@ -356,6 +357,7 @@ enum class ControlCmd : u16 {
     TestGetPolicies = 62,
     TestPageBoxes = 63,
     TestDocumentSignatures = 64,
+    TestCommandPalette = 65,
 };
 
 enum class ControlArgType : u16 {
@@ -1051,6 +1053,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestDocumentSignatures: {
             int exitCode = 0;
             Str res = DocumentSignaturesResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestCommandPalette: {
+            int exitCode = 0;
+            Str res = CommandPaletteStateTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -70,6 +70,7 @@ struct CommandPaletteWnd : WindowBase {
 
     void ExecuteCurrentSelection();
     bool AdvanceSelection(int dir);
+    bool MoveSelection(int vkey);
     bool RemoveSelectedItem();
     void SwitchToPrefix(Str prefix);
     void SwitchToCommands();

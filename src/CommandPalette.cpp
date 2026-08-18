@@ -200,6 +200,14 @@ void CommandPaletteWnd::OnCommand(WindowBase::CommandEvent* ev) {
             ev->didHandle = true;
             return;
         }
+        case CmdSelectAll:
+            // Ctrl+A is an accelerator (CmdSelectAll) sent to this window;
+            // select the query instead of the document (issue #5972).
+            if (editQuery) {
+                editQuery->SelectAll();
+            }
+            ev->didHandle = true;
+            return;
     }
 }
 
@@ -299,7 +307,6 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
 }
 
 void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
-    int dir = 0;
     if (ev->vkey == VK_ESCAPE) {
         ScheduleDeleteAndExecCommand();
         ev->didHandle = true;
@@ -320,18 +327,90 @@ void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
         return;
     }
 
-    if (ev->vkey == VK_UP) {
-        dir = -1;
-    } else if (ev->vkey == VK_DOWN) {
-        dir = 1;
-    }
-
     if (ev->vkey == VK_TAB) {
         if (ev->isCtrl) {
-            dir = ev->isShift ? -1 : 1;
+            ev->didHandle = AdvanceSelection(ev->isShift ? -1 : 1);
+        }
+        return;
+    }
+
+    if (ev->vkey == VK_UP || ev->vkey == VK_DOWN || ev->vkey == VK_NEXT || ev->vkey == VK_PRIOR) {
+        ev->didHandle = MoveSelection(ev->vkey);
+        return;
+    }
+
+    if (ev->vkey == VK_HOME || ev->vkey == VK_END) {
+        // Ctrl+Home / Ctrl+End: always first / last row
+        if (ev->isCtrl) {
+            ev->didHandle = MoveSelection(ev->vkey);
+            return;
+        }
+        if (!editQuery || ev->hwnd != editQuery->hwnd) {
+            ev->didHandle = MoveSelection(ev->vkey);
+            return;
+        }
+        // Home / End: if the caret is already at the start/end of the query,
+        // move the list; otherwise let the Edit control move the caret.
+        int selStart = 0, selEnd = 0;
+        editQuery->GetSelection(selStart, selEnd);
+        int textLen = editQuery->GetTextLen();
+        bool toEnd = (ev->vkey == VK_END);
+        bool caretAtBound = (selStart == selEnd) && (toEnd ? selEnd == textLen : selStart == 0);
+        if (caretAtBound) {
+            ev->didHandle = MoveSelection(ev->vkey);
         }
     }
-    ev->didHandle = AdvanceSelection(dir);
+}
+
+// Home / End / PageUp / PageDown move the list the same way as the Find
+// window: Home/End go to the first/last row, PageUp/PageDown jump a page
+// (no wrap). Up/Down still wrap via AdvanceSelection.
+bool CommandPaletteWnd::MoveSelection(int vkey) {
+    if (vkey == VK_UP) {
+        return AdvanceSelection(-1);
+    }
+    if (vkey == VK_DOWN) {
+        return AdvanceSelection(1);
+    }
+    if (!listBox) {
+        return false;
+    }
+    int n = listBox->ItemsCount();
+    if (n == 0) {
+        return false;
+    }
+    int curr = listBox->GetCurrentSelection();
+    int perPage = std::max(listBox->UsableDy() / listBox->GetItemHeight(), 1);
+    int idx = curr;
+    switch (vkey) {
+        case VK_HOME:
+            idx = 0;
+            break;
+        case VK_END:
+            idx = n - 1;
+            break;
+        case VK_NEXT:
+            if (curr < 0) {
+                idx = 0;
+            } else {
+                idx = std::min(curr + perPage, n - 1);
+            }
+            break;
+        case VK_PRIOR:
+            if (curr < 0) {
+                idx = n - 1;
+            } else {
+                idx = std::max(curr - perPage, 0);
+            }
+            break;
+        default:
+            return false;
+    }
+    if (idx == curr) {
+        return true;
+    }
+    CommandPaletteSetCurrentSelection(this, idx);
+    return true;
 }
 
 // smart-tab releases Ctrl after the palette is open; key-downs go via onKeyDown
@@ -422,7 +501,7 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 // wrapped wherever they ended up in the sentence. Translators leave key names
 // in English, so matching on them works in every language
 static const char* kHelpKeys[] = {
-    "Ctrl+Tab", "Ctrl", "Enter", "Space", "Del", "Esc", "\u2191", "\u2193",
+    "Ctrl+Tab", "Ctrl", "Enter", "Space", "Del", "Esc", "PgUp", "PgDn", "\u2191", "\u2193",
 };
 
 // s[at..] is tok and isn't part of a longer word
@@ -614,7 +693,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             strings[nHelp++] = _TRA("Space for sticky mode");
             strings[nHelp++] = _TRA("Del to remove item");
         } else {
-            strings[nHelp++] = _TRA("↑ ↓ to navigate");
+            strings[nHelp++] = _TRA("↑ ↓ PgUp PgDn to navigate");
             strings[nHelp++] = _TRA("Enter to select");
             strings[nHelp++] = _TRA("Del to remove item");
             strings[nHelp++] = _TRA("Esc to close");
@@ -708,4 +787,29 @@ HWND CommandPaletteHwndForAccelerator(HWND hwnd) {
         return wHwnd;
     }
     return nullptr;
+}
+
+// Selected list row and query-edit selection, for -dbg-control tests.
+TempStr CommandPaletteStateTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (!gCommandPaletteWnd || !gCommandPaletteWnd->hwnd) {
+        out.Append("NOTREADY no-palette\n");
+        return finish(2);
+    }
+    auto* wnd = gCommandPaletteWnd;
+    int sel = wnd->listBox ? wnd->listBox->GetCurrentSelection() : -1;
+    int n = wnd->listBox ? wnd->listBox->ItemsCount() : 0;
+    int qStart = 0, qEnd = 0, qLen = 0;
+    if (wnd->editQuery) {
+        wnd->editQuery->GetSelection(qStart, qEnd);
+        qLen = wnd->editQuery->GetTextLen();
+    }
+    out.Append(fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d\n", sel, n, qStart, qEnd, qLen));
+    return finish(0);
 }

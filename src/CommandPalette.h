@@ -13,3 +13,4 @@ constexpr const char* kPalettePrefixFavorites = "$";
 
 void RunCommandPalette(MainWindow*, Str prefix, int smartTabAdvance);
 HWND CommandPaletteHwndForAccelerator(HWND hwnd);
+TempStr CommandPaletteStateTemp(int* exitCodeOut);
