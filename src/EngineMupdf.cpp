@@ -7069,6 +7069,61 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bo
     return nullptr;
 }
 
+static bool FormFieldValueIsEmpty(int wt, const char* val) {
+    if (!val || !val[0]) {
+        return true;
+    }
+    if (wt == PDF_WIDGET_TYPE_CHECKBOX || wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
+        return str::Eq(val, "Off");
+    }
+    return str::IsEmptyOrWhiteSpace(Str(val));
+}
+
+// Page-space rects of empty fillable fields on pageNo (issue #5966). skip is
+// the field currently being edited, if any, so its overlay isn't double-tinted.
+void EngineMupdfGetFormFieldHighlightRects(EngineBase* engine, int pageNo, Annotation* skip, Vec<RectF>& out) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc) {
+        return;
+    }
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    if (!pi) {
+        return;
+    }
+    auto* ctx = epdf->Ctx();
+    ScopedRecursiveMutex cs(&epdf->docLock);
+    for (Annotation* w : pi->widgets) {
+        if (!w || w == skip || !w->pdfannot || w->bounds.IsEmpty()) {
+            continue;
+        }
+        bool highlight = false;
+        fz_try(ctx) {
+            int aflags = pdf_annot_flags(ctx, w->pdfannot);
+            int hidden = PDF_ANNOT_IS_HIDDEN | PDF_ANNOT_IS_NO_VIEW | PDF_ANNOT_IS_INVISIBLE;
+            if (!(aflags & hidden)) {
+                int flags = pdf_annot_field_flags(ctx, w->pdfannot);
+                if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
+                    int wt = (int)pdf_widget_type(ctx, w->pdfannot);
+                    if (wt == PDF_WIDGET_TYPE_SIGNATURE) {
+                        highlight = !pdf_widget_is_signed(ctx, w->pdfannot);
+                    } else if (wt == PDF_WIDGET_TYPE_TEXT || wt == PDF_WIDGET_TYPE_COMBOBOX ||
+                               wt == PDF_WIDGET_TYPE_LISTBOX || wt == PDF_WIDGET_TYPE_CHECKBOX ||
+                               wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
+                        highlight = FormFieldValueIsEmpty(wt, pdf_annot_field_value(ctx, w->pdfannot));
+                    }
+                }
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            highlight = false;
+        }
+        if (highlight) {
+            out.Append(w->bounds);
+        }
+    }
+}
+
 // Note: this code is compiled in release mode even if debug build so
 // DEBUG is not defined so we can't do #if defined(DEBUG) here
 // so we use this runtime boolean instead

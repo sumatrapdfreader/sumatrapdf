@@ -162,6 +162,10 @@ SidebarOnRight = false
 ; version 3.6)
 ShowLinks = false
 
+; if true, highlight empty fillable PDF form fields in pale blue so they are
+; easy to find (introduced in version 3.7)
+HighlightFormFields = true
+
 ; if true, a click (not a drag) on the left fifth of the page area goes to the
 ; previous page and a click on the right fifth goes to the next page (reversed
 ; in manga / right-to-left mode). Links, annotations and presentation-mode

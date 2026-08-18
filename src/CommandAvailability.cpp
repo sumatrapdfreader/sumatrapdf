@@ -68,6 +68,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdToggleToolbar,
     CmdToggleInverseSearch,
     CmdToggleLinks,
+    CmdToggleHighlightFormFields,
     CmdToggleDisableLinks,
     CmdToggleImages,
     CmdToggleHoverPreview,

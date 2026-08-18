@@ -298,6 +298,7 @@ static SeqStrings gCommandNames =
     "CmdToggleDisableLinks\0"
     "CmdSignDocument\0"
     "CmdInsertImage\0"
+    "CmdToggleHighlightFormFields\0"
     "CmdNone\0"
     "\0";
 
@@ -584,6 +585,7 @@ static i32 gCommandIds[] = {
     CmdToggleDisableLinks,
     CmdSignDocument,
     CmdInsertImage,
+    CmdToggleHighlightFormFields,
     CmdNone,
 };
 
@@ -870,6 +872,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Disable Links\0"
     "Sign Document...\0"
     "Insert Image...\0"
+    "Toggle Highlight Form Fields\0"
     "Do nothing\0"
     "\0";
 // clang-format on

@@ -8,8 +8,10 @@
 #include <mupdf/pdf.h>
 
 #include "gui/UIModels.h"
+#include "gui/Gfx.h"
 
 #include "Settings.h"
+#include "GlobalPrefs.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -40,6 +42,47 @@ static bool gCommitting = false;
 // True while a form field is being edited in place.
 bool IsFormFieldEditActive() {
     return gEdit.hwnd != nullptr;
+}
+
+// Acrobat / Chrome pale blue, translucent so the page still shows through.
+constexpr Color kFormFieldHighlightCol = MkRgb(166, 202, 240);
+constexpr u8 kFormFieldHighlightAlpha = 96;
+
+// Tint empty fillable fields so they are visible without hovering (issue #5966).
+void PaintFormFieldHighlights(MainWindow* win, Gfx* gfx) {
+    if (!gGlobalPrefs || !gGlobalPrefs->highlightFormFields || !gfx) {
+        return;
+    }
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!EngineMupdfIsPdf(engine)) {
+        return;
+    }
+    Vec<Rect> screenRects;
+    int pageCount = dm->PageCount();
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
+        if (!pi || !pi->isShown || pi->visibleRatio == 0) {
+            continue;
+        }
+        Vec<RectF> pageRects;
+        EngineMupdfGetFormFieldHighlightRects(engine, pageNo, gEdit.widget, pageRects);
+        for (RectF& pr : pageRects) {
+            Rect rc = dm->CvtToScreen(pageNo, pr);
+            if (!rc.IsEmpty()) {
+                screenRects.Append(rc);
+            }
+        }
+    }
+    if (len(screenRects) > 0) {
+        gfx->FillRects(screenRects.els, len(screenRects), kFormFieldHighlightCol, kFormFieldHighlightAlpha);
+    }
 }
 
 // Cancel the active form edit if it is for this widget (no save). Safe no-op

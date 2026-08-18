@@ -89,6 +89,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showLinks;
         } break;
+        case CmdToggleHighlightFormFields: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->highlightFormFields;
+        } break;
         case CmdToggleDisableLinks: {
             isToggle = true;
             newIsOn = !gGlobalPrefs->disableLinks;

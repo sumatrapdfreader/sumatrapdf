@@ -10086,6 +10086,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     HideSelectionToolbar(w);
                 }
             }
+            if (str::EqI(settingName, StrL("HighlightFormFields"))) {
+                for (MainWindow* w : gWindows) {
+                    w->RedrawAll(true);
+                }
+            }
             break;
         }
 
@@ -11074,6 +11079,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleLinks:
             gGlobalPrefs->showLinks = !gGlobalPrefs->showLinks;
+            for (auto& w : gWindows) {
+                w->RedrawAll(true);
+            }
+            break;
+
+        case CmdToggleHighlightFormFields:
+            gGlobalPrefs->highlightFormFields = !gGlobalPrefs->highlightFormFields;
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }

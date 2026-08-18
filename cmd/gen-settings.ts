@@ -1142,6 +1142,12 @@ const globalPrefs: Field[] = [
   ).ver("3.7"),
   field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
+    "HighlightFormFields",
+    Bool,
+    true,
+    "if true, highlight empty fillable PDF form fields in pale blue so they are easy to find",
+  ).ver("3.7"),
+  field(
     "ClickEdgeToTurnPage",
     Bool,
     false,

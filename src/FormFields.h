@@ -6,6 +6,7 @@
 
 struct MainWindow;
 struct Annotation;
+struct Gfx;
 
 bool StartFormFieldEdit(MainWindow* win, Annotation* widget);
 bool StartSignatureFieldSigning(MainWindow* win, Annotation* widget);
@@ -15,3 +16,4 @@ void CommitFormFieldEdit(bool save);
 void CancelFormFieldEditIfWidget(Annotation* widget);
 
 bool IsFormFieldEditActive();
+void PaintFormFieldHighlights(MainWindow* win, Gfx* gfx);

@@ -3064,6 +3064,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
     GfxHdc gfx(hdc);
 
+    // empty form fields, under find/selection so those stay visible
+    PaintFormFieldHighlights(win, &gfx);
+
     // draw highlight rectangle around element under cursor during context menu
     if (win->contextMenuHighlightPageNo > 0 && dm->PageVisible(win->contextMenuHighlightPageNo)) {
         Rect rc = dm->CvtToScreen(win->contextMenuHighlightPageNo, win->contextMenuHighlightRect);

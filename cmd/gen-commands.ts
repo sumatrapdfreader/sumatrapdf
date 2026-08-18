@@ -291,6 +291,7 @@ export const commands = [
     "CmdToggleDisableLinks", "Toggle Disable Links",
     "CmdSignDocument", "Sign Document...",
     "CmdInsertImage", "Insert Image...",
+    "CmdToggleHighlightFormFields", "Toggle Highlight Form Fields",
     "CmdNone", "Do nothing",
 ];
 
