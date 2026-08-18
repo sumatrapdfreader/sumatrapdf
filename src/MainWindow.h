@@ -491,6 +491,8 @@ struct MainWindow {
     // switches and visits to Home/About where the notification cannot show
     // (issue #4454); restored when a document tab is active again.
     bool pageInfoWanted = false;
+    // CmdTogglePageBoxes: outline PDF Media/Crop/Bleed/Trim/Art boxes
+    bool showPageBoxes = false;
 
     // overlay scrollbars (used when scrollbars mode is "smart" or "overlay")
     struct OverlayScrollbar* overlayScrollV = nullptr;

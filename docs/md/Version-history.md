@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Toggle Page Boxes (`CmdTogglePageBoxes`) outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each visible page — only boxes that page actually declares — and labels them `media`, `crop`, `trim`, and so on. For PDF development (print marks, trim vs crop). Palette and Debug menu; no default shortcut (fixes #814)
 - Change Language is a modeless window like Change Theme (search box, language list, OK / Cancel) instead of a modal dialog
 - Add Favorite is a modeless window like Change Theme instead of a modal dialog
 - Change Scrollbar is a modeless window like Change Theme instead of a modal dialog
@@ -275,6 +276,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdZoomFitByOrientation` : "Fit by Orientation"
 - `CmdZoomShrinkToFit` : "Shrink To Fit"
 - `CmdDebugShowFitContentArea` : "Debug: Show Fit Content Area" — Debug menu checkbox; outlines in red the area **Fit Content** zoom would fit to, without changing the zoom
+- `CmdTogglePageBoxes` : "Toggle Page Boxes" — palette / Debug menu; outlines PDF Media/Crop/Bleed/Trim/Art boxes that the page actually has (fixes #814)
 - `CmdSignDocument` : "Sign Document..." — sign a PDF with a Windows-store or `.pfx` / `.p12` certificate (fixes #5962)
 
 **New command-line arguments:**

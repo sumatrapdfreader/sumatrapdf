@@ -292,7 +292,8 @@ enum {
     CmdSignDocument = 481,
     CmdInsertImage = 482,
     CmdToggleHighlightFormFields = 483,
-    CmdNone = 484,
+    CmdTogglePageBoxes = 484,
+    CmdNone = 485,
 
     /* range for file history */
     CmdFileHistoryFirst,

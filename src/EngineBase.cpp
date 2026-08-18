@@ -626,6 +626,27 @@ RectF EngineBase::PageContentBox(int pageNo, RenderTarget /*target*/) {
     return PageMediabox(pageNo);
 }
 
+const char* PdfPageBoxName(PdfPageBoxKind kind) {
+    switch (kind) {
+        case PdfPageBoxKind::Media:
+            return "media";
+        case PdfPageBoxKind::Crop:
+            return "crop";
+        case PdfPageBoxKind::Bleed:
+            return "bleed";
+        case PdfPageBoxKind::Trim:
+            return "trim";
+        case PdfPageBoxKind::Art:
+            return "art";
+    }
+    return "";
+}
+
+// Non-PDF engines have no page boxes.
+void EngineBase::GetPdfPageBoxes(int /*pageNo*/, Vec<PdfPageBox>& out) {
+    out.Reset();
+}
+
 // the layout type this document's author suggests (if the user doesn't care)
 // whether the content should be displayed as images instead of as document pages
 // (e.g. with a black background and less padding in between and without search UI)

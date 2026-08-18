@@ -168,6 +168,47 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     return finish(res, 0);
 }
 
+// Boxes the current page actually declares (issue #814). Optional int arg is pageNo.
+static TempStr PageBoxesResultTemp(int pageNo, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(StrL("ERROR not-fixed-page"), 1);
+    }
+    if (pageNo < 1) {
+        pageNo = win->ctrl->CurrentPageNo();
+    }
+    if (!win->ctrl->ValidPageNo(pageNo)) {
+        return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
+    }
+    Vec<PdfPageBox> boxes;
+    engine->GetPdfPageBoxes(pageNo, boxes);
+    str::Builder line;
+    line.Append(fmt("OK page=%d show=%d", pageNo, win->showPageBoxes ? 1 : 0));
+    for (const PdfPageBox& box : boxes) {
+        line.Append(fmt(" %s=%.2f,%.2f,%.2f,%.2f", Str(PdfPageBoxName(box.kind)), box.rect.x, box.rect.y, box.rect.dx,
+                        box.rect.dy));
+    }
+    return finish(ToStrTemp(line), 0);
+}
+
 // Reports sidebar vs canvas client x positions so tests can check SidebarOnRight.
 static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
     str::Builder out;
@@ -284,6 +325,7 @@ enum class ControlCmd : u16 {
     TestListSigningCerts = 60,
     TestSignDocument = 61,
     TestGetPolicies = 62,
+    TestPageBoxes = 63,
 };
 
 enum class ControlArgType : u16 {
@@ -972,6 +1014,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = DisplayModeResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageBoxes: {
+            i32 pageNo = 0;
+            IntArg(req, 0, pageNo);
+            int exitCode = 0;
+            Str res = PageBoxesResultTemp(pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

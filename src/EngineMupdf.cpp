@@ -4763,6 +4763,70 @@ RectF EngineMupdf::PageMediabox(int pageNo) {
     return pi->mediabox;
 }
 
+// Boxes the page (or an ancestor /Pages node) actually names. Crop/Bleed/Trim/Art
+// default to Crop/Media when absent; we skip those so the overlay only draws
+// what is in the file (issue #814). Rects are in the same space as PageMediabox.
+void EngineMupdf::GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) {
+    out.Reset();
+    if (!pdfdoc || pageNo < 1 || pageNo > pageCount) {
+        return;
+    }
+    FzPageInfo* pi = GetFzPageInfo(pageNo, true);
+    if (!pi || !pi->page) {
+        return;
+    }
+    fz_context* ctx = Ctx();
+    ScopedRecursiveMutex scope(&docLock);
+    pdf_page* page = nullptr;
+    fz_try(ctx) {
+        page = pdf_page_from_fz_page(ctx, pi->page);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return;
+    }
+    if (!page) {
+        return;
+    }
+
+    struct BoxSpec {
+        pdf_obj* name;
+        PdfPageBoxKind kind;
+        fz_box_type fzBox;
+    };
+    const BoxSpec specs[] = {
+        {PDF_NAME(MediaBox), PdfPageBoxKind::Media, FZ_MEDIA_BOX},
+        {PDF_NAME(CropBox), PdfPageBoxKind::Crop, FZ_CROP_BOX},
+        {PDF_NAME(BleedBox), PdfPageBoxKind::Bleed, FZ_BLEED_BOX},
+        {PDF_NAME(TrimBox), PdfPageBoxKind::Trim, FZ_TRIM_BOX},
+        {PDF_NAME(ArtBox), PdfPageBoxKind::Art, FZ_ART_BOX},
+    };
+    for (const BoxSpec& spec : specs) {
+        pdf_obj* obj = nullptr;
+        fz_rect r{};
+        fz_try(ctx) {
+            obj = pdf_dict_get_inheritable(ctx, page->obj, spec.name);
+            if (pdf_is_array(ctx, obj)) {
+                r = pdf_bound_page(ctx, page, spec.fzBox);
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            obj = nullptr;
+        }
+        if (!pdf_is_array(ctx, obj)) {
+            continue;
+        }
+        PdfPageBox box;
+        box.kind = spec.kind;
+        box.rect = ToRectF(r);
+        if (box.rect.IsEmpty()) {
+            continue;
+        }
+        out.Append(box);
+    }
+}
+
 // returns a kept reference to the cached "View" display list for the page,
 // building+caching it on first call. Caller must fz_drop_display_list when done.
 // must be called with pi->renderLock held (this both protects pi->displayList

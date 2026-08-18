@@ -75,6 +75,23 @@ struct PageLayout {
     bool nonContinuous = false;
 };
 
+// PDF page boxes (ISO 32000). MediaBox is required; Crop/Bleed/Trim/Art are
+// optional and inherit from the parent /Pages node. They are per-page.
+enum class PdfPageBoxKind : u8 {
+    Media = 0,
+    Crop,
+    Bleed,
+    Trim,
+    Art
+};
+
+struct PdfPageBox {
+    PdfPageBoxKind kind{};
+    RectF rect;
+};
+
+const char* PdfPageBoxName(PdfPageBoxKind kind);
+
 extern Kind kindDestinationNone;
 extern Kind kindDestinationScrollTo;
 extern Kind kindDestinationLaunchURL;
@@ -488,6 +505,7 @@ class EngineBase {
     // the box containing the visible page content (usually RectF(0, 0, pageWidth, pageHeight))
     virtual RectF PageMediabox(int pageNo) = 0;
     virtual RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View);
+    virtual void GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out);
 
     // renders a page into a cacheable Pixmap
     // (*cookie_out must be deleted after the call returns)

@@ -149,6 +149,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !win->pageInfoWanted;
         } break;
+        case CmdTogglePageBoxes: {
+            isToggle = true;
+            newIsOn = !win->showPageBoxes;
+        } break;
         case CmdTogglePreservePdfImages: {
             isToggle = true;
             newIsOn = !GetPreservePdfImagesInDarkMode();

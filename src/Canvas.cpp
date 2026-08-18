@@ -2727,6 +2727,121 @@ bool ShowFitContentArea() {
 /* debug code to visualize the area "Fit Content" zoom would fit to, without
    actually switching the zoom. When no content box is detected we outline the
    whole page, which is the same fallback PageSizeAfterRotation() uses */
+static Color ColorForPdfPageBox(PdfPageBoxKind kind) {
+    switch (kind) {
+        case PdfPageBoxKind::Media:
+            return MkRgb(0x20, 0x20, 0x20);
+        case PdfPageBoxKind::Crop:
+            return MkRgb(0xc0, 0x20, 0x20);
+        case PdfPageBoxKind::Bleed:
+            return MkRgb(0x20, 0x40, 0xc0);
+        case PdfPageBoxKind::Trim:
+            return MkRgb(0x10, 0x90, 0x20);
+        case PdfPageBoxKind::Art:
+            return MkRgb(0xc0, 0x80, 0x00);
+    }
+    return kColBlack;
+}
+
+// Place the label so coincident boxes (crop == media, etc.) stay readable.
+static Point PdfPageBoxLabelPos(const Rect& r, PdfPageBoxKind kind) {
+    constexpr int kPad = 3;
+    switch (kind) {
+        case PdfPageBoxKind::Media:
+            return Point(r.x + kPad, r.y + kPad);
+        case PdfPageBoxKind::Crop:
+            return Point(r.x + r.dx - kPad, r.y + kPad);
+        case PdfPageBoxKind::Bleed:
+            return Point(r.x + kPad, r.y + r.dy - kPad);
+        case PdfPageBoxKind::Trim:
+            return Point(r.x + r.dx - kPad, r.y + r.dy - kPad);
+        case PdfPageBoxKind::Art:
+            return Point(r.x + (r.dx / 2), r.y + kPad);
+    }
+    return r.TL();
+}
+
+static uint PdfPageBoxLabelFormat(PdfPageBoxKind kind) {
+    switch (kind) {
+        case PdfPageBoxKind::Crop:
+        case PdfPageBoxKind::Trim:
+            return DT_RIGHT | DT_TOP | DT_SINGLELINE;
+        case PdfPageBoxKind::Bleed:
+            return DT_LEFT | DT_BOTTOM | DT_SINGLELINE;
+        case PdfPageBoxKind::Art:
+            return DT_CENTER | DT_TOP | DT_SINGLELINE;
+        case PdfPageBoxKind::Media:
+        default:
+            return DT_LEFT | DT_TOP | DT_SINGLELINE;
+    }
+}
+
+static Rect PdfPageBoxLabelRect(const Rect& box, PdfPageBoxKind kind) {
+    Point p = PdfPageBoxLabelPos(box, kind);
+    constexpr int kW = 44;
+    constexpr int kH = 14;
+    switch (kind) {
+        case PdfPageBoxKind::Crop:
+        case PdfPageBoxKind::Trim:
+            return Rect(p.x - kW, p.y, kW, kH);
+        case PdfPageBoxKind::Bleed:
+            return Rect(p.x, p.y - kH, kW, kH);
+        case PdfPageBoxKind::Art:
+            return Rect(p.x - (kW / 2), p.y, kW, kH);
+        case PdfPageBoxKind::Media:
+        default:
+            return Rect(p.x, p.y, kW, kH);
+    }
+}
+
+// CmdTogglePageBoxes: outline the PDF boxes this page actually declares
+// (MediaBox / CropBox / BleedBox / TrimBox / ArtBox) and label them.
+static void PaintPdfPageBoxes(DisplayModel* dm, HDC hdc) {
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return;
+    }
+    Rect viewPortRect(Point(), dm->GetViewPort().Size());
+    PlatformFont* font = GetDefaultGuiFont(true, false);
+    HFONT hfont = font ? font->GetHFont() : nullptr;
+
+    Vec<PdfPageBox> boxes;
+    for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
+        if (!pi || !pi->isShown || 0.0 == pi->visibleRatio) {
+            continue;
+        }
+        engine->GetPdfPageBoxes(pageNo, boxes);
+        int n = len(boxes);
+        for (int i = 0; i < n; i++) {
+            const PdfPageBox& box = boxes[i];
+            Rect rect = dm->CvtToScreen(pageNo, box.rect);
+            // coincident boxes (crop == media) would paint on top of each
+            // other; inset later kinds so every outline stays visible
+            rect.Inflate(-(int)box.kind, -(int)box.kind);
+            if (rect.dx < 2 || rect.dy < 2) {
+                continue;
+            }
+            Rect vis = viewPortRect.Intersect(rect);
+            if (vis.IsEmpty()) {
+                continue;
+            }
+            Color col = ColorForPdfPageBox(box.kind);
+            ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
+            HdcDrawRect(hdc, rect);
+
+            Str name = Str(PdfPageBoxName(box.kind));
+            // MediaBox often extends past CropBox (the drawn page); pin the
+            // label to the on-screen part so it isn't clipped off-canvas
+            Rect labelRc = PdfPageBoxLabelRect(vis, box.kind);
+            SetBkColor(hdc, RGB(255, 255, 255));
+            SetBkMode(hdc, OPAQUE);
+            SetTextColor(hdc, col);
+            HdcDrawText(hdc, name, labelRc, PdfPageBoxLabelFormat(box.kind), hfont);
+        }
+    }
+}
+
 static void DebugShowFitContentArea(DisplayModel* dm, HDC hdc) {
     if (!gShowFitContentArea) {
         return;
@@ -3116,6 +3231,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     if (!rendering) {
         DebugShowLinks(dm, hdc);
         DebugShowFitContentArea(dm, hdc);
+        if (win->showPageBoxes) {
+            PaintPdfPageBoxes(dm, hdc);
+        }
     }
     return shouldPaint;
 }

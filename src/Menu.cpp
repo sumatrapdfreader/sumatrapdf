@@ -658,6 +658,10 @@ static MenuDef menuDefDebug[] = {
         CmdToggleLinks,
     },
     {
+        "Show page boxes",
+        CmdTogglePageBoxes,
+    },
+    {
         "Show images",
         CmdToggleImages,
     },
@@ -1896,6 +1900,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     CheckMenuRadioItem(win->menu, gFirstSetThemeCmdId, gLastSetThemeCmdId, gCurrSetThemeCmdId, MF_BYCOMMAND);
 
     MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
+    MenuSetChecked(win->menu, CmdTogglePageBoxes, win->showPageBoxes);
     MenuSetChecked(win->menu, CmdToggleHighlightFormFields, gGlobalPrefs->highlightFormFields);
     MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
     MenuSetChecked(win->menu, CmdDebugShowFitContentArea, ShowFitContentArea());

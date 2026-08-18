@@ -11310,6 +11310,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             TogglePageInfoHelper(win);
         } break;
 
+        case CmdTogglePageBoxes: {
+            win->showPageBoxes = !win->showPageBoxes;
+            win->RedrawAll(true);
+        } break;
+
         case CmdInvertColors: {
             // swaps the page colors for this session, whatever they are and
             // whatever the theme is. Use CmdSetDocumentColorsFollowTheme to

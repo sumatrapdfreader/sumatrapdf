@@ -98,6 +98,7 @@ CmdToggleFullscreen,"f, Shift + Ctrl + L, F11",Toggle Fullscreen,
 CmdToggleMangaMode,,Toggle Manga Mode,"Right-to-left facing/book layout for fixed-page documents; before 3.7 this was limited to comic books"
 CmdToggleMenuBar,F9,Toggle Menu Bar,
 CmdTogglePageInfo,i,Show / Hide Current Page Number,was Shift + i before 3.6
+CmdTogglePageBoxes,,Toggle Page Boxes,"ver 3.7+, outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each page (only boxes that page actually has) and labels them. Palette and Debug menu. No default shortcut (fixes #814)"
 CmdChangeScrollbar,,Change Scrollbar,"Opens dialog to choose scrollbar mode (windows/smart/overlay/hidden)"
 CmdChangeBackgroundColor,,Change Background Color,"Opens color picker to change document background color"
 CmdChangeEbookSettings,,Change eBook Settings,"ver 3.7+, opens a dialog for the font, size, line spacing and CSS of a reflowable document (EPUB, MOBI, FB2, ...), for that document only or for all ebooks. Not shown for fixed-page documents. See Customize-eBook-UI.md"
