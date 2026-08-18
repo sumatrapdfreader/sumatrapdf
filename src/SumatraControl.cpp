@@ -360,6 +360,7 @@ enum class ControlCmd : u16 {
     TestDocumentSignatures = 64,
     TestCommandPalette = 65,
     TestFindHistory = 66,
+    TestImageResizeEdges = 67,
 };
 
 enum class ControlArgType : u16 {
@@ -769,6 +770,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ImageResizeArrowKeyResultTemp(imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestImageResizeEdges: {
+            Str imagePath = StringArg(req, 0);
+            i32 newW = 0;
+            i32 newH = 0;
+            if (!imagePath || !IntArg(req, 1, newW) || !IntArg(req, 2, newH)) {
+                AppendError(req, "TestImageResizeEdges expects string imagePath, int newW, int newH");
+                break;
+            }
+            int exitCode = 0;
+            Str res = ImageResizeEdgesResultTemp(imagePath, newW, newH, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

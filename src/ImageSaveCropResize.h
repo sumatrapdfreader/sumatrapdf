@@ -55,3 +55,4 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath = {}, Ren
                          bool selectPdf = false, Str originalData = {});
 
 TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut = nullptr);
+TempStr ImageResizeEdgesResultTemp(Str imagePath, int newW, int newH, int* exitCodeOut = nullptr);

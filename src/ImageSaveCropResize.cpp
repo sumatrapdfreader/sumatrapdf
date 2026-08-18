@@ -58,6 +58,15 @@ using Gdiplus::Graphics;
 using Gdiplus::Ok;
 using Gdiplus::Status;
 
+// HighQuality/Half offsets samples by -0.5px, so a 1:1 or integer-scaled
+// image lands a half-pixel off and looks shifted (issue #3434). None keeps
+// the image on the pixel grid — same as EngineImages::RenderPage.
+static void DrawResizedBitmap(Graphics& g, Bitmap* src, int destW, int destH) {
+    g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+    g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
+    g.DrawImage(src, 0, 0, destW, destH);
+}
+
 constexpr const WCHAR* kImageEditWinClassName = L"SUMATRA_PDF_IMAGE_EDIT";
 
 constexpr int kMinWindowWidth = 640;
@@ -1363,8 +1372,7 @@ static void OnSave(ImageEditWindow* ew) {
             return;
         }
         Graphics g(result);
-        g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-        g.DrawImage(ew->srcBitmap, 0, 0, ew->newW, ew->newH);
+        DrawResizedBitmap(g, ew->srcBitmap, ew->newW, ew->newH);
     }
 
     bool saved;
@@ -1494,8 +1502,7 @@ static void ApplyResize(ImageEditWindow* ew) {
         int prevW = ew->imgW;
         int prevH = ew->imgH;
         Graphics g(resized);
-        g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-        g.DrawImage(ew->srcBitmap, 0, 0, ew->newW, ew->newH);
+        DrawResizedBitmap(g, ew->srcBitmap, ew->newW, ew->newH);
         if (!ReplaceSrcBitmap(ew, resized)) {
             return;
         }
@@ -1575,8 +1582,7 @@ static Bitmap* CreateBitmapForClipboard(ImageEditWindow* ew) {
             return nullptr;
         }
         Graphics g(resized);
-        g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-        g.DrawImage(ew->srcBitmap, 0, 0, ew->newW, ew->newH);
+        DrawResizedBitmap(g, ew->srcBitmap, ew->newW, ew->newH);
         return resized;
     }
     return ew->srcBitmap->Clone(0, 0, ew->imgW, ew->imgH, ew->srcBitmap->GetPixelFormat());
@@ -2381,5 +2387,53 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
         *exitCodeOut = 0;
     }
     DestroyWindow(ew->hwnd);
+    return ToStrTemp(out);
+}
+
+// Resize via the same DrawResizedBitmap path as Apply Resize / Save, and
+// report dest size plus the RGB of the left and right edge pixels so a test
+// can catch the half-pixel shift (issue #3434, resize follow-up).
+TempStr ImageResizeEdgesResultTemp(Str imagePath, int newW, int newH, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(imagePath) == 0 || !file::Exists(imagePath) || newW < 2 || newH < 1) {
+        return fail(StrL("ERROR bad-args"));
+    }
+    if (!gImageEditHost.LoadImageFile) {
+        return fail(StrL("ERROR no-loader"));
+    }
+    Bitmap* src = gImageEditHost.LoadImageFile(imagePath);
+    if (!src) {
+        return fail(StrL("ERROR load-failed"));
+    }
+    Bitmap* dst = new Bitmap(newW, newH, src->GetPixelFormat());
+    if (!dst) {
+        delete src;
+        return fail(StrL("ERROR alloc-failed"));
+    }
+    {
+        Graphics g(dst);
+        DrawResizedBitmap(g, src, newW, newH);
+    }
+    delete src;
+
+    Gdiplus::Color left, right;
+    dst->GetPixel(0, newH / 2, &left);
+    dst->GetPixel(newW - 1, newH / 2, &right);
+    delete dst;
+
+    out.Append(fmt("size=%dx%d left=%d,%d,%d right=%d,%d,%d\n", newW, newH, left.GetR(), left.GetG(), left.GetB(),
+                   right.GetR(), right.GetG(), right.GetB()));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
     return ToStrTemp(out);
 }

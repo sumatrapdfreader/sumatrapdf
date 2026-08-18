@@ -61,6 +61,7 @@ export enum ControlCommand {
   TestDocumentSignatures = 64,
   TestCommandPalette = 65,
   TestFindHistory = 66,
+  TestImageResizeEdges = 67,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

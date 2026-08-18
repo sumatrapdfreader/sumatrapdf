@@ -8,7 +8,8 @@
 // The fixture is 32x32: 4 green columns on the left, 4 blue on the right, red
 // in the middle. A full-page render and a Copy-Selection-style clip (page rect
 // at -0.499) must both come back 32x32 with a green left edge and a blue right
-// edge — not 33x33, and not a red or mixed edge.
+// edge — not 33x33, and not a red or mixed edge. Image → Resize uses the same
+// GDI+ draw, so 1:1 / 2x / half-size copies must keep those edges too.
 //
 // Run:  bun tests/issue-3434.ts [--no-build]   (or via tests/run-almost-all.ts)
 
@@ -118,6 +119,31 @@ export async function testit(): Promise<void> {
       const want = (W * zoom) / 100;
       if (e.w !== want || e.h !== want) {
         throw new Error(`issue-3434 ${label}: dest ${e.w}x${e.h}, want ${want}x${want}:\n${raw}`);
+      }
+      if (!isGreen(e.left)) {
+        throw new Error(`issue-3434 ${label}: left edge ${e.left.join(",")} is not green (shifted?):\n${raw}`);
+      }
+      if (!isBlue(e.right)) {
+        throw new Error(`issue-3434 ${label}: right edge ${e.right.join(",")} is not blue (shifted?):\n${raw}`);
+      }
+      console.log(`  ${label}: ${e.w}x${e.h} left green right blue ✓`);
+    }
+
+    // Image → Resize used the same GDI+ HighQuality pixel-offset, so a
+    // scaled copy was still shifted (issue #3434 comment).
+    for (const [label, newW, newH] of [
+      ["resize 1:1", 32, 32],
+      ["resize 2x", 64, 64],
+      ["resize 1/2", 16, 16],
+    ] as const) {
+      const res = await client.request(ControlCommand.TestImageResizeEdges, [png, newW, newH]);
+      const raw = String(res[1] ?? "");
+      if (res[0] !== 0) {
+        throw new Error(`issue-3434 ${label}: ${raw.trim()}`);
+      }
+      const e = parseEdges(raw);
+      if (e.w !== newW || e.h !== newH) {
+        throw new Error(`issue-3434 ${label}: dest ${e.w}x${e.h}, want ${newW}x${newH}:\n${raw}`);
       }
       if (!isGreen(e.left)) {
         throw new Error(`issue-3434 ${label}: left edge ${e.left.join(",")} is not green (shifted?):\n${raw}`);
