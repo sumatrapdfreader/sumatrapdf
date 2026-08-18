@@ -145,7 +145,7 @@ static int FindMatchIndex(MainWindow* win, int page, int glyph) {
 
 struct FindWindowWnd : WindowBase {
     MainWindow* win = nullptr;
-    Edit* edit = nullptr;
+    DropDown* edit = nullptr;
     Edit* editPages = nullptr;      // optional page range, e.g. "10-25" (issue #5694)
     VirtText* pagesLabel = nullptr; // "Limit to pages 1-N:"
     // the status text, the buttons and the results list are virtual controls;
@@ -186,6 +186,7 @@ struct FindWindowWnd : WindowBase {
     void UpdatePagesLabel();
 
     void OnTextChanged();
+    void OnHistorySelected();
     void DrawResultItem(VirtListBox::DrawItemEvent* ev);
     void OnResultSelected();
     void SaveSelectedMatch();
@@ -304,16 +305,18 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
     DarkModeApplyToTitleBar(hwnd);
 
     {
-        Edit::CreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.isMultiLine = false;
-        args.withBorder = true;
-        args.cueText = _TRA("Find");
+        args.font = GetAppFont();
         args.isRtl = IsUIRtl();
-        edit = new Edit();
+        args.isEditable = true;
+        edit = new DropDown();
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
+        edit->SetCueBanner(_TRA("Find"));
         edit->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
+        edit->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnHistorySelected>(this);
+        ApplyFindHistory(edit);
     }
 
     {
@@ -723,6 +726,14 @@ void FindWindowWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
+void FindWindowWnd::OnHistorySelected() {
+    if (!edit || edit->GetCurrentSelection() < 0) {
+        return;
+    }
+    OnFindBarTextChanged(win);
+    FindFlushPendingSearch(win);
+}
+
 void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
     if (ev->msg == WM_ENTERSIZEMOVE) {
         inSizeMove = true;
@@ -796,6 +807,10 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
         case VK_UP:
         case VK_NEXT:
         case VK_PRIOR:
+            // let the combo walk its own history list while dropped
+            if (edit && ComboBox_GetDroppedState(edit->hwnd)) {
+                break;
+            }
             // walk the results list from the search edit
             ev->didHandle = MoveResultSelection(ev->vkey);
             break;
@@ -807,9 +822,11 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
                 break;
             }
             // Home / End: if the caret is already at the start/end of the search
-            // text, move the results list; otherwise let the Edit control move
+            // text, move the results list; otherwise let the combo move
             // the caret (same idea as the two-press pattern in the request).
-            if (!edit || ev->hwnd != edit->hwnd) {
+            // Focus is on the combo's child edit, not the combo HWND.
+            bool editFocused = edit && (ev->hwnd == edit->hwnd || (edit->EditHwnd() && ev->hwnd == edit->EditHwnd()));
+            if (!editFocused) {
                 // focus is on the list itself: Home/End jump first/last
                 ev->didHandle = MoveResultSelection(ev->vkey);
                 break;
@@ -1020,6 +1037,12 @@ void FindWindowSaveSelectedMatch(MainWindow* win) {
 void UpdateFindWindowTheme(MainWindow* win) {
     if (win->findWindow) {
         win->findWindow->UpdateTheme();
+    }
+}
+
+void FindWindowSyncHistory(MainWindow* win) {
+    if (win && win->findWindow && win->findWindow->edit) {
+        ApplyFindHistory(win->findWindow->edit);
     }
 }
 

@@ -16,6 +16,7 @@ void FindWindowRefreshResults(MainWindow* win, bool allowNavigation = true);
 void FindWindowUpdatePagesLabel(MainWindow* win);
 void FindWindowSaveSelectedMatch(MainWindow* win);
 void UpdateFindWindowTheme(MainWindow* win);
+void FindWindowSyncHistory(MainWindow* win);
 
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut = nullptr);
 TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut = nullptr);

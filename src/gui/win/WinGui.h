@@ -563,7 +563,7 @@ struct ControlBase : ILayout, HwndBase {
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
 
-    bool IsFocused() const;
+    virtual bool IsFocused() const;
     void SetFocus();
 
     LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -861,6 +861,12 @@ struct DropDown : ControlBase {
     SelectionChangedHandler onSelectionChanged;
     TextChangedHandler onTextChanged;
     SelectionChangedHandler onCloseUp;
+    // cap preferred width the same way Edit does (find bar / find window)
+    int idealDx = 0;
+    int maxDx = 0;
+    LPWSTR cursorId = nullptr;
+    // SetItems / SetText can send CBN_*; skip handlers while we rebuild the list
+    bool suppressNotify = false;
 
     DropDown();
     ~DropDown() override = default;
@@ -868,12 +874,23 @@ struct DropDown : ControlBase {
 
     Size GetIdealSize() override;
     void OnCommand(ControlBase::CommandEvent* ev);
+    bool IsFocused() const override;
 
     int GetCurrentSelection();
     void SetCurrentSelection(int n);
     void SetItems(StrVec& newItems);
+    void SetItemsKeepText(StrVec& newItems);
     void SetItemsSeqStrings(SeqStrings items);
     void SetCueBanner(Str);
+
+    int GetTextLen() const;
+    void SelectAll();
+    void SetSelection(int start, int end);
+    void GetSelection(int& start, int& end) const;
+    void SetModified(bool);
+    bool IsModified() const;
+    void SetCursorId(LPWSTR);
+    HWND EditHwnd() const;
 };
 
 //--- Trackbar

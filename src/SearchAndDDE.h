@@ -72,5 +72,10 @@ void BrowserFindAllResultReceived(MainWindow* win, Str payload);
 bool AbortFinding(MainWindow* win, bool hideMessage);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified, bool showProgress);
+
+struct DropDown;
+void RememberFindQuery(Str);
+void ApplyFindHistory(DropDown*);
+TempStr FindHistoryResultTemp(int* exitCodeOut);
 extern bool gIsStartup;
 extern StrVec gDdeOpenOnStartup;

@@ -189,7 +189,7 @@ struct MainWindow {
     HWND hwndMenuReBar = nullptr;
     HWND hwndMenuToolbar = nullptr;
     // the search input of the active find UI (compact bar or floating window)
-    Edit* findEdit = nullptr;
+    DropDown* findEdit = nullptr;
     // optional "10-25" page-range field of the active find UI (issue #5694)
     Edit* findPagesEdit = nullptr;
     FindBarWnd* findBar = nullptr;       // compact toolbar overlay

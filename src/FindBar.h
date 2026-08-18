@@ -18,3 +18,4 @@ void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked);
 
 void ToggleFloatingFindUI(MainWindow* win);
 void FocusFindEditSelectAll(MainWindow* win);
+void FindBarSyncHistory(MainWindow* win);

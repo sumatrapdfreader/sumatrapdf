@@ -110,7 +110,7 @@ struct FindBarWnd : WindowBase {
     MainWindow* win = nullptr;
     // the status text and the buttons are virtual controls; the search field is
     // the only HWND child. Owned by `layout` once BuildLayout() runs
-    Edit* edit = nullptr;
+    DropDown* edit = nullptr;
     VirtText* status = nullptr;
     // prev / next / match-case / match-whole-word / pop-out / close
     VirtIconButton* btns[6]{};
@@ -137,6 +137,7 @@ struct FindBarWnd : WindowBase {
     int MinBarDx() const;
 
     void OnTextChanged();
+    void OnHistorySelected();
 
     void OnSize(WindowBase::SizeEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
@@ -243,17 +244,18 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     SetColors(colTxt, colBg);
 
     {
-        Edit::CreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = hwnd;
         args.font = GetAppFont();
-        args.isMultiLine = false;
-        args.withBorder = true;
-        args.cueText = _TRA("Find");
         args.isRtl = IsUIRtl();
-        edit = new Edit();
+        args.isEditable = true;
+        edit = new DropDown();
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
+        edit->SetCueBanner(_TRA("Find"));
         edit->onTextChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnTextChanged>(this);
+        edit->onSelectionChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnHistorySelected>(this);
+        ApplyFindHistory(edit);
         if (!win->findEdit) {
             // don't steal it from the floating find window: this can run while
             // that one is up (RecreateFindBar on a theme change)
@@ -343,6 +345,14 @@ void FindBarWnd::OnTextChanged() {
         return;
     }
     OnFindBarTextChanged(win);
+}
+
+void FindBarWnd::OnHistorySelected() {
+    if (suppressTextChanged || !edit || edit->GetCurrentSelection() < 0) {
+        return;
+    }
+    OnFindBarTextChanged(win);
+    FindFlushPendingSearch(win);
 }
 
 void FindBarWnd::OnSize(WindowBase::SizeEvent* ev) {
@@ -595,6 +605,12 @@ void FocusFindEditSelectAll(MainWindow* win) {
     }
     win->findEdit->SetFocus();
     win->findEdit->SelectAll();
+}
+
+void FindBarSyncHistory(MainWindow* win) {
+    if (win && win->findBar && win->findBar->edit) {
+        ApplyFindHistory(win->findBar->edit);
+    }
 }
 
 // switch the find UI between the compact toolbar overlay and the floating

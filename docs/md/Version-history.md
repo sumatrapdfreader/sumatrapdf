@@ -204,6 +204,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - PDF documents can be digitally signed from the UI: **Sign Document...** (in the **File** menu and in the right-click **Document** submenu, for PDFs only) asks for a certificate (a `.pfx` / `.p12` file plus its password) and an optional reason and location, then fills in an empty signature field the document already has, or adds a new signature: you click or drag on the page to place it (or it uses the current selection if there is one) and saves to a file you pick. Previously signing was only possible with the bundled `sumatrapdf-tool sign` command line. The signature is written incrementally, so signatures already in the document stay valid, and Document Properties reports the signer and whether the document changed since signing (fixes #5962, #5967)
 - The Annotations window can select many annotations with the usual Windows keys (`Shift` or `Ctrl` click, `Shift` + arrows, `Ctrl + A`) and `Del` deletes all of them (fixes #5976)
 - **Bake PDF** includes annotations created in the current session. It used to re-open the file from disk, so a bake without saving first dropped those annotations (fixes #5977)
+- Find remembers the last 10 search queries for the session (not saved to settings) and offers them from a drop-down on the find field (fixes #893)
 
 **New commands:**
 

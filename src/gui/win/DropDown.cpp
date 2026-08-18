@@ -32,6 +32,9 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
 }
 
 void DropDown::OnCommand(ControlBase::CommandEvent* ev) {
+    if (suppressNotify) {
+        return;
+    }
     auto code = HIWORD(ev->wparam);
     if (code == CBN_EDITCHANGE && onTextChanged.IsValid()) {
         onTextChanged.Call();
@@ -54,9 +57,9 @@ HWND DropDown::Create(const CreateArgs& args) {
     cargs.isRtl = args.isRtl;
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     if (args.isEditable) {
-        cargs.style |= CBS_DROPDOWN | WS_VSCROLL;
+        cargs.style |= CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL;
     } else {
-        cargs.style |= CBS_DROPDOWNLIST;
+        cargs.style |= CBS_DROPDOWNLIST | WS_VSCROLL;
     }
     cargs.className = WC_COMBOBOX;
     cargs.font = args.font;
@@ -68,9 +71,33 @@ HWND DropDown::Create(const CreateArgs& args) {
 
     // SetDropDownItems(hwnd, items);
     SetCurrentSelection(-1);
+    ComboBox_SetMinVisible(hwnd, 10);
 
     SizeToIdealSize(this);
     return hwnd;
+}
+
+HWND DropDown::EditHwnd() const {
+    if (!hwnd) {
+        return nullptr;
+    }
+    COMBOBOXINFO info{};
+    info.cbSize = sizeof(info);
+    if (!GetComboBoxInfo(hwnd, &info)) {
+        return nullptr;
+    }
+    return info.hwndItem;
+}
+
+bool DropDown::IsFocused() const {
+    if (!hwnd) {
+        return false;
+    }
+    if (HwndIsFocused(hwnd)) {
+        return true;
+    }
+    HWND edit = EditHwnd();
+    return edit && HwndIsFocused(edit);
 }
 
 // -1 means no selection
@@ -106,6 +133,29 @@ void DropDown::SetItems(StrVec& newItems) {
     SetCurrentSelection(-1);
 }
 
+// ComboBox_ResetContent clears the edit; keep whatever the user is typing
+// and the caret / selection (SetText would otherwise put the caret at 0).
+// Do not CB_SETCURSEL(-1) afterwards: that clears a CBS_DROPDOWN edit.
+void DropDown::SetItemsKeepText(StrVec& newItems) {
+    Str cur = str::Dup(GetTextTemp());
+    int selStart = 0, selEnd = 0;
+    GetSelection(selStart, selEnd);
+    bool prev = suppressNotify;
+    suppressNotify = true;
+    SetItems(newItems);
+    SetText(cur);
+    int n = len(cur);
+    if (selStart > n) {
+        selStart = n;
+    }
+    if (selEnd > n) {
+        selEnd = n;
+    }
+    SetSelection(selStart, selEnd);
+    suppressNotify = prev;
+    str::Free(cur);
+}
+
 static void DropDownItemsFromStringArray(StrVec& items, SeqStrings strings) {
     for (int off = 0; SeqStrAt(strings, off);) {
         items.Append(SeqStrAt(strings, off));
@@ -134,10 +184,57 @@ Size DropDown::GetIdealSize() {
     // TODO: not sure if I want scrollbar. Only needed if a lot of items
     int dxPad = DpiGetSystemMetrics(SM_CXVSCROLL);
     int dx = s1.dx + dxPad + DpiScale(8);
+    if (idealDx > 0 && dx < idealDx) {
+        dx = idealDx;
+    }
+    if (maxDx > 0 && dx > maxDx) {
+        dx = maxDx;
+    }
     // TODO: 5 is a guessed number.
     int dyPad = DpiScale(4);
     int dy = s1.dy + dyPad;
     Rect rc = HwndWindowRect(hwnd);
     dy = std::max(rc.dy, dy);
     return {dx, dy};
+}
+
+int DropDown::GetTextLen() const {
+    return hwnd ? HwndGetTextLen(hwnd) : 0;
+}
+
+void DropDown::SelectAll() {
+    SetSelection(0, -1);
+}
+
+void DropDown::SetSelection(int start, int end) {
+    if (hwnd) {
+        ComboBox_SetEditSel(hwnd, start, end);
+    }
+}
+
+void DropDown::GetSelection(int& start, int& end) const {
+    start = 0;
+    end = 0;
+    if (!hwnd) {
+        return;
+    }
+    DWORD sel = ComboBox_GetEditSel(hwnd);
+    start = (int)LOWORD(sel);
+    end = (int)HIWORD(sel);
+}
+
+void DropDown::SetModified(bool on) {
+    HWND edit = EditHwnd();
+    if (edit) {
+        Edit_SetModify(edit, on);
+    }
+}
+
+bool DropDown::IsModified() const {
+    HWND edit = EditHwnd();
+    return edit && Edit_GetModify(edit);
+}
+
+void DropDown::SetCursorId(LPWSTR id) {
+    cursorId = id;
 }

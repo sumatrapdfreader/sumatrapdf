@@ -41,6 +41,7 @@
 #include "CommandPalette.h"
 
 extern bool gIsStartup;
+TempStr FindHistoryResultTemp(int* exitCodeOut);
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -358,6 +359,7 @@ enum class ControlCmd : u16 {
     TestPageBoxes = 63,
     TestDocumentSignatures = 64,
     TestCommandPalette = 65,
+    TestFindHistory = 66,
 };
 
 enum class ControlArgType : u16 {
@@ -1130,6 +1132,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFindHistory: {
+            int exitCode = 0;
+            Str res = FindHistoryResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

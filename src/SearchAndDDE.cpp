@@ -41,6 +41,56 @@
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;
 
+// last 10 find queries, newest first. Session-only (issue #893).
+constexpr int kFindHistoryMax = 10;
+static StrVec gFindHistory;
+
+void ApplyFindHistory(DropDown* dd) {
+    if (dd) {
+        dd->SetItemsKeepText(gFindHistory);
+    }
+}
+
+void RememberFindQuery(Str q) {
+    if (!q) {
+        return;
+    }
+    TempStr trimmed = str::DupTemp(q);
+    str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
+    if (len(trimmed) == 0) {
+        return;
+    }
+    int existing = gFindHistory.Find(trimmed);
+    if (existing == 0) {
+        return; // already the most recent
+    }
+    if (existing > 0) {
+        gFindHistory.RemoveAt(existing);
+    }
+    gFindHistory.InsertAt(0, trimmed);
+    while (len(gFindHistory) > kFindHistoryMax) {
+        gFindHistory.RemoveAt(len(gFindHistory) - 1);
+    }
+    for (MainWindow* w : gWindows) {
+        FindBarSyncHistory(w);
+        FindWindowSyncHistory(w);
+    }
+}
+
+TempStr FindHistoryResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    for (int i = 0; i < len(gFindHistory); i++) {
+        if (i > 0) {
+            out.AppendChar('\n');
+        }
+        out.Append(gFindHistory[i]);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Chrome-style orange for the non-active find matches. The active (current)
 // match uses the user-customizable FixedPageUI.SelectionColor instead, so it
 // stands out with the color the user finds most noticeable (issue #5740).
@@ -104,6 +154,7 @@ static void BrowserFindStartSearch(MainWindow* win, DocController* md) {
     if (len(term) == 0) {
         return;
     }
+    RememberFindQuery(term);
     // intentional search start (Sioyek-style "/" mark; session-only, #5862)
     SetSearchStartFavorite(win);
     str::ReplaceWithCopy(&win->browserFindTerm, term);
@@ -1583,6 +1634,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
     if (len(text) == 0) {
         return;
     }
+    RememberFindQuery(text);
     if (ApplyFindPageRange(win)) {
         wasModified = true;
     }
