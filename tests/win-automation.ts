@@ -41,6 +41,7 @@ import {
   VK_ESCAPE,
   getClientRect,
   clientToScreen,
+  setCursorPos,
   getPopupMenuHandle,
   readMenuTree,
   getWindowText,
@@ -195,7 +196,13 @@ export async function waitForFormEditor(canvas: number, timeoutMs = 1500): Promi
 
 // Left-click at client (x,y) of hwnd. Sent synchronously, so the click is fully
 // handled before returning, then we wait settleMs for any re-render.
+//
+// The cursor is moved to the click first: SetCapture (from a drag start) injects
+// WM_MOUSEMOVE at the real cursor, and if that is far from (x,y) the app treats
+// the click as a drag (ClickEdgeToTurnPage and similar then no-op).
 export async function clickAt(hwnd: number, x: number, y: number, settleMs = 350): Promise<void> {
+  const screen = clientToScreen(hwnd, x, y);
+  setCursorPos(screen.x, screen.y);
   const lp = packCoords(x, y);
   sendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
   sendMessage(hwnd, WM_LBUTTONUP, 0, lp);

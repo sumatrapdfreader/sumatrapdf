@@ -12,8 +12,8 @@
 // Run:  bun tests/issue-5964.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { writeFileSync } from "node:fs";
-import { runStandalone, tmpPath } from "./util.ts";
-import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
+import { runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import {
   enumChildWindows,
   enumWindows,
@@ -26,14 +26,6 @@ import {
   sleep,
   WM_CLOSE,
 } from "./winapi.ts";
-
-const WM_LBUTTONDOWN = 0x0201;
-const WM_LBUTTONUP = 0x0202;
-const MK_LBUTTON = 0x0001;
-
-function packCoords(x: number, y: number): number {
-  return (y << 16) | (x & 0xffff);
-}
 
 // one page, one empty signature field named CEO covering most of the page
 function writePdfWithBigSigField(path: string): void {
@@ -77,7 +69,7 @@ function findWindowByTitle(pid: number, title: string): number {
   return found;
 }
 
-async function waitForWindowByTitle(pid: number, title: string, timeoutMs = 4000): Promise<number> {
+async function waitForWindowByTitle(pid: number, title: string, timeoutMs = 4000 * SLOW_BUILD_FACTOR): Promise<number> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const h = findWindowByTitle(pid, title);
@@ -132,8 +124,7 @@ export async function testit(): Promise<void> {
     const cr = getClientRect(canvas);
     const cx = Math.floor(cr.right / 2);
     const cy = Math.floor(cr.bottom / 2);
-    postMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(cx, cy));
-    postMessage(canvas, WM_LBUTTONUP, 0, packCoords(cx, cy));
+    await clickAt(canvas, cx, cy, 0);
 
     const dlg = await waitForWindowByTitle(pid, "Sign Document");
     if (!dlg) {
@@ -144,7 +135,7 @@ export async function testit(): Promise<void> {
     // signature on page N". The window shows up before its controls are
     // filled in, so give the drop-down a moment.
     let placement = "";
-    for (const deadline = Date.now() + 3000; Date.now() < deadline;) {
+    for (const deadline = Date.now() + 3000 * SLOW_BUILD_FACTOR; Date.now() < deadline;) {
       placement = comboText(dlg);
       if (placement) {
         break;

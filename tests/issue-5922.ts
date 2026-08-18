@@ -9,7 +9,7 @@
 // they do for a selection made with the mouse.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
-import { EXE, cmdId, runStandalone, tmpPath } from "./util";
+import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
 
@@ -61,7 +61,11 @@ async function getState(client: ControlClient): Promise<State> {
   return { active: m[1] === "1", selRects: +m[2]!, text: text ? text[1]! : "", dump };
 }
 
-async function waitForState(client: ControlClient, pred: (s: State) => boolean, timeoutMs = 4000): Promise<State> {
+async function waitForState(
+  client: ControlClient,
+  pred: (s: State) => boolean,
+  timeoutMs = 4000 * SLOW_BUILD_FACTOR,
+): Promise<State> {
   const deadline = Date.now() + timeoutMs;
   let last: State = { active: false, selRects: 0, text: "", dump: "" };
   while (Date.now() < deadline) {

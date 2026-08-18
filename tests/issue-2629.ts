@@ -9,7 +9,7 @@
 // accelerator and key paths are exercised, not just the internals.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
-import { EXE, cmdId, runStandalone, tmpPath } from "./util";
+import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { VK_ESCAPE, WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
 
@@ -107,7 +107,7 @@ async function getState(client: ControlClient): Promise<{ state: State; dump: st
 async function waitForState(
   client: ControlClient,
   pred: (s: State) => boolean,
-  timeoutMs = 4000,
+  timeoutMs = 4000 * SLOW_BUILD_FACTOR,
 ): Promise<{ state: State; dump: string }> {
   const deadline = Date.now() + timeoutMs;
   let last = { state: { active: false, canFollow: false, page: 0, count: 0, accel: "" }, dump: "" };

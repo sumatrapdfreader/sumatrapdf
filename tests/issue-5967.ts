@@ -15,8 +15,8 @@
 
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { findCanvas, killAndWait, launchControlled, pressEnter, sendCommand } from "./win-automation.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled, pressEnter, sendCommand } from "./win-automation.ts";
 import {
   enumChildWindows,
   enumWindows,
@@ -25,13 +25,9 @@ import {
   getWindowPid,
   getWindowText,
   isWindowVisible,
-  packCoords,
   postMessage,
   sleep,
   WM_CLOSE,
-  WM_LBUTTONDOWN,
-  WM_LBUTTONUP,
-  MK_LBUTTON,
 } from "./winapi.ts";
 
 const kCertSubject = "CN=SumatraPDF PlaceSignTest";
@@ -122,7 +118,7 @@ function findTopWindow(pid: number, className: string, title?: string): number {
   return found;
 }
 
-async function waitFor<T>(what: string, fn: () => T, timeoutMs = 12000): Promise<T> {
+async function waitFor<T>(what: string, fn: () => T, timeoutMs = 12000 * SLOW_BUILD_FACTOR): Promise<T> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const v = fn();
@@ -206,9 +202,7 @@ export async function testit(): Promise<void> {
     // typical test-window zoom, so this is on the page
     const x = Math.min(80, Math.max(20, Math.floor(cr.right / 8)));
     const y = Math.min(80, Math.max(20, Math.floor(cr.bottom / 8)));
-    postMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x, y));
-    postMessage(canvas, WM_LBUTTONUP, 0, packCoords(x, y));
-    await sleep(600);
+    await clickAt(canvas, x, y, 600);
 
     const anyDlg = findTopWindow(pid, "#32770");
     if (anyDlg && getWindowText(anyDlg) !== "Save As") {
