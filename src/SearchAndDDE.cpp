@@ -2120,7 +2120,8 @@ static bool LinkDestHighlightRect(DisplayModel* dm, int pageNo, RectF dest, Rect
 
 // Flash the same mark used for LaTeX forward search at an internal-link dest
 // (issues #1085, #5945). Always fades; ForwardSearch.HighlightPermanent stays
-// a SyncTeX-only option.
+// a SyncTeX-only option. Held longer than SyncTeX (HIDE_LINKDESTMARK_DELAY_IN_MS)
+// so the mark is still visible after the page jump.
 void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest) {
     if (!win || !win->AsFixed()) {
         return;
@@ -2142,7 +2143,7 @@ void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest) {
     win->fwdSearchMark.page = pageNo;
     win->fwdSearchMark.show = true;
     win->fwdSearchMark.hideStep = 0;
-    SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, nullptr);
+    SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_LINKDESTMARK_DELAY_IN_MS, nullptr);
     ScheduleRepaint(win, 0);
 }
 

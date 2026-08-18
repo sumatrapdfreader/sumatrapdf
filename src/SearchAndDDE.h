@@ -40,6 +40,9 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp);
 
 #define HIDE_FWDSRCHMARK_TIMER_ID 4
 #define HIDE_FWDSRCHMARK_DELAY_IN_MS 400
+// dest highlight after a link/bookmark jump (#5945): stay solid longer than
+// SyncTeX so the mark is still there after you look at the new page
+#define HIDE_LINKDESTMARK_DELAY_IN_MS 2000
 #define HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS 100
 #define HIDE_FWDSRCHMARK_STEPS 5
 
