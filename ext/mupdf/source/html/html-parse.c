@@ -2096,8 +2096,9 @@ collect_text(fz_context *ctx, fz_pool *pool, fz_xml *node)
 
 /* SumatraPDF: an FB2 <author> is structured - first-name, middle-name and
  * last-name, next to home-page/email/nickname/id which are not part of the
- * name. collect_text() would sweep those up too ("Ivan Petrov https://... 
- * ivan@..."), so gather just the name parts. And a book can list several
+ * name. collect_text() would sweep those up too, as
+ * "Ivan Petrov https://example.org/ivan ivan@example.org", so gather just the
+ * name parts. And a book can list several
  * authors; report all of them, not only the first. (issue #2254) */
 static void
 fb2_append_author_name(fz_context *ctx, fz_buffer *buf, fz_xml *author)

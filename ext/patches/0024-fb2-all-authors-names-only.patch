@@ -19,17 +19,18 @@ The same two defects existed in our own Fb2Doc parser (src/EbookDoc.cpp, the
 EngineEbook fallback) and are fixed there in the same commit.
 ---
 diff --git a/source/html/html-parse.c b/source/html/html-parse.c
-index 6d4d26e..a32f965 100644
+index 6d4d26e..5352b15 100644
 --- a/source/html/html-parse.c
 +++ b/source/html/html-parse.c
-@@ -2094,6 +2094,75 @@ collect_text(fz_context *ctx, fz_pool *pool, fz_xml *node)
+@@ -2094,6 +2094,76 @@ collect_text(fz_context *ctx, fz_pool *pool, fz_xml *node)
  	return s;
  }
  
 +/* SumatraPDF: an FB2 <author> is structured - first-name, middle-name and
 + * last-name, next to home-page/email/nickname/id which are not part of the
-+ * name. collect_text() would sweep those up too ("Ivan Petrov https://... 
-+ * ivan@..."), so gather just the name parts. And a book can list several
++ * name. collect_text() would sweep those up too, as
++ * "Ivan Petrov https://example.org/ivan ivan@example.org", so gather just the
++ * name parts. And a book can list several
 + * authors; report all of them, not only the first. (issue #2254) */
 +static void
 +fb2_append_author_name(fz_context *ctx, fz_buffer *buf, fz_xml *author)
@@ -98,7 +99,7 @@ index 6d4d26e..a32f965 100644
  static void
  xml_to_boxes(fz_context *ctx,
  	fz_html_font_set *set,
-@@ -2234,8 +2303,7 @@ xml_to_boxes(fz_context *ctx,
+@@ -2234,8 +2304,7 @@ xml_to_boxes(fz_context *ctx,
  				node = fz_xml_find_down(node, "title-info");
  				node2 = fz_xml_find_down(node, "book-title");
  				metadata->title = collect_text(ctx, g.pool, node2);
