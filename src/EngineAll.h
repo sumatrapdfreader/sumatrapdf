@@ -116,7 +116,7 @@ struct PdfSignArgs {
     Str location;       // optional, shown in the signature
     Str fieldName;      // existing unsigned signature field to fill in
     int pageNo = 1;     // page for a new field, when fieldName is empty
-    RectF rect;         // where the new field goes, empty for mupdf's default box
+    RectF rect;         // where the new field goes; empty uses mupdf's default box
 };
 
 #if OS_WIN

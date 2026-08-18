@@ -28,6 +28,7 @@
 #include "DisplayMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
+#include "SumatraDialogs.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -2015,6 +2016,16 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     ReportIf(!dm);
     Point pt{x, y};
 
+    // placing a new signature: the next drag draws the box, a click puts a
+    // default-size one at the pointer (issue #5967). Consume the press so it
+    // doesn't toggle a form field or start a text selection.
+    if (IsPlacingSignature(win)) {
+        win->dragStartPending = true;
+        win->dragStart = pt;
+        OnSelectionStart(win, x, y, key, true);
+        return;
+    }
+
     // remember how this sequence started: WM_CONTEXTMENU, which a long press
     // turns into, doesn't say whether a finger or a mouse produced it
     win->lastInputWasTouch = IsMouseMessageFromTouch();
@@ -2266,6 +2277,10 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         OnSelectionStop(win, x, y, !didDragMouse);
         if (MouseAction::Selecting == ma && win->showSelection) {
             win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
+        }
+        if (FinishSignaturePlacement(win, x, y, !didDragMouse)) {
+            win->mouseAction = MouseAction::None;
+            return;
         }
     }
 
@@ -3267,6 +3282,12 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     // the laser dot replaces every other cursor, and while pointing at the page
     // during a talk a link tooltip popping up is just in the way
     if (SetLaserPointerCursor(win)) {
+        win->DeleteToolTip();
+        return TRUE;
+    }
+
+    if (IsPlacingSignature(win)) {
+        SetCursorCached(IDC_CROSS);
         win->DeleteToolTip();
         return TRUE;
     }

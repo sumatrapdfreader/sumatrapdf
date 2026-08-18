@@ -4763,6 +4763,9 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
+    // signing writes into this document's engine; a tab switch or close would
+    // leave the hidden placement dialog aimed at a dead model
+    CloseSignDocumentDialog(win);
     bool wasntFixed = !win->AsFixed();
     // the canvas HWND is shared across tabs; wipe leftover page pixels so a
     // following markdown/CHM tab cannot flash this document on resize
@@ -8324,6 +8327,9 @@ static void OnFrameKeyEsc(MainWindow* win) {
         return;
     }
     if (StopSelectTextWithKeyboard(win)) {
+        return;
+    }
+    if (CancelPlacingSignature(win)) {
         return;
     }
     if (AbortFinding(win, true)) {

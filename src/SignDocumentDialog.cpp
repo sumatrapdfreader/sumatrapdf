@@ -29,6 +29,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Notifications.h"
 #include "DarkMode_win.h"
 #include "SumatraDialogs.h"
 
@@ -70,6 +71,7 @@ struct SignDocumentWnd : WindowBase {
     bool UsingCertFile() const;
     void UpdateCertFileEnabled();
     bool BuildSignArgs(PdfSignArgs& args);
+    void DoSign(const PdfSignArgs& args);
 
     void OnCertChanged();
     void OnBrowse(VirtMouseEvent* ev = nullptr);
@@ -78,9 +80,32 @@ struct SignDocumentWnd : WindowBase {
 };
 
 static SignDocumentWnd* gSignDocumentWnd = nullptr;
+// true while the Sign Document dialog is hidden and the next click / drag on
+// the page will place a new signature (issue #5967)
+static bool gPlacingSignature = false;
+static Kind kNotifSignPlacement = "notifSignPlacement";
+static void ClearSignaturePlacementNotif(MainWindow* win);
+
+// Default size of a new signature when the user clicks rather than dragging
+// a rectangle. 2" x 0.75" at 72 pt/in — enough for name, date and reason.
+constexpr float kDefaultSignatureDx = 144;
+constexpr float kDefaultSignatureDy = 54;
 
 static void ClearSignDocumentWnd() {
+    gPlacingSignature = false;
     gSignDocumentWnd = nullptr;
+}
+
+void CloseSignDocumentDialog(MainWindow* win) {
+    if (!gSignDocumentWnd) {
+        return;
+    }
+    if (win && gSignDocumentWnd->win != win) {
+        return;
+    }
+    gPlacingSignature = false;
+    ClearSignaturePlacementNotif(gSignDocumentWnd->win);
+    gSignDocumentWnd->ScheduleDelete();
 }
 
 static EngineBase* GetPdfEngine(MainWindow* win) {
@@ -95,20 +120,169 @@ static EngineBase* GetPdfEngine(MainWindow* win) {
     return engine;
 }
 
-// Bounding box of the selection on pageNo, so a signature can be placed by
-// selecting where it should go. Empty if nothing is selected on that page.
-static RectF SelectionRectOnPage(WindowTab* tab, int pageNo) {
+// Bounding box of the current selection. Sets pageNoOut to the page of the
+// first non-empty piece. Empty if nothing is selected.
+static RectF SelectionRect(WindowTab* tab, int* pageNoOut) {
     RectF res;
     if (!tab || !tab->selectionOnPage) {
         return res;
     }
     for (auto& sel : *tab->selectionOnPage) {
-        if (sel.pageNo != pageNo || sel.rect.IsEmpty()) {
+        if (sel.rect.IsEmpty()) {
             continue;
         }
-        res = res.IsEmpty() ? sel.rect : res.Union(sel.rect);
+        if (res.IsEmpty()) {
+            if (pageNoOut) {
+                *pageNoOut = sel.pageNo;
+            }
+            res = sel.rect;
+        } else if (!pageNoOut || sel.pageNo == *pageNoOut) {
+            res = res.Union(sel.rect);
+        }
     }
     return res;
+}
+
+static void ClearSignaturePlacementNotif(MainWindow* win) {
+    if (win && win->hwndCanvas) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifSignPlacement);
+    }
+}
+
+static void ShowSignaturePlacementNotif(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = _TRA("Click or drag on the page to place the signature. Esc to cancel.");
+    args.timeoutMs = kNotifNoTimeout;
+    args.groupId = kNotifSignPlacement;
+    args.corner = NotifCorner::BottomBar;
+    args.warning = true;
+    args.tab = win->CurrentTab();
+    ShowNotification(args);
+}
+
+bool IsPlacingSignature(MainWindow* win) {
+    return gPlacingSignature && gSignDocumentWnd && gSignDocumentWnd->win == win;
+}
+
+// Leaves placement mode. Returns true if it was active. The hidden dialog is
+// shown again so the user can change the certificate or cancel.
+bool CancelPlacingSignature(MainWindow* win) {
+    if (!IsPlacingSignature(win)) {
+        if (gPlacingSignature) {
+            gPlacingSignature = false;
+        }
+        return false;
+    }
+    gPlacingSignature = false;
+    ClearSignaturePlacementNotif(win);
+    if (gSignDocumentWnd) {
+        gSignDocumentWnd->SetIsVisible(true);
+        HwndSetFocus(gSignDocumentWnd->hwnd);
+    }
+    return true;
+}
+
+static void StartSignaturePlacement(SignDocumentWnd* wnd) {
+    if (!wnd || !wnd->win) {
+        return;
+    }
+    gPlacingSignature = true;
+    wnd->SetIsVisible(false);
+    DeleteOldSelectionInfo(wnd->win, true);
+    ShowSignaturePlacementNotif(wnd->win);
+    HwndSetFocus(wnd->win->hwndFrame);
+}
+
+static RectF ClampRectToPage(RectF r, RectF page) {
+    if (page.IsEmpty()) {
+        return r;
+    }
+    if (r.dx > page.dx) {
+        r.dx = page.dx;
+    }
+    if (r.dy > page.dy) {
+        r.dy = page.dy;
+    }
+    if (r.x < page.x) {
+        r.x = page.x;
+    }
+    if (r.y < page.y) {
+        r.y = page.y;
+    }
+    if (r.x + r.dx > page.x + page.dx) {
+        r.x = page.x + page.dx - r.dx;
+    }
+    if (r.y + r.dy > page.y + page.dy) {
+        r.y = page.y + page.dy - r.dy;
+    }
+    return r;
+}
+
+// A default-size box centered on the click, kept on the page.
+static RectF DefaultSignatureRectAt(DisplayModel* dm, int pageNo, PointF pt) {
+    RectF r(pt.x - kDefaultSignatureDx / 2, pt.y - kDefaultSignatureDy / 2, kDefaultSignatureDx, kDefaultSignatureDy);
+    PageInfo* pi = dm ? dm->GetPageInfo(pageNo) : nullptr;
+    if (!pi || !IsMediaBoxKnown(pi->mediaBox)) {
+        return r;
+    }
+    return ClampRectToPage(r, pi->mediaBox);
+}
+
+// The click or drag that places a new signature. aborted is a click (no drag).
+// Returns true if this press belonged to placement (even if we keep waiting).
+bool FinishSignaturePlacement(MainWindow* win, int x, int y, bool aborted) {
+    if (!IsPlacingSignature(win) || !gSignDocumentWnd) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        CancelPlacingSignature(win);
+        return true;
+    }
+
+    int pageNo = gSignDocumentWnd->currPageNo;
+    RectF rect;
+    if (aborted) {
+        Point pt(x, y);
+        pageNo = dm->GetPageNoByPoint(pt);
+        if (!dm->ValidPageNo(pageNo)) {
+            return true; // click off the page: keep waiting
+        }
+        rect = DefaultSignatureRectAt(dm, pageNo, dm->CvtFromScreen(pt, pageNo));
+    } else {
+        rect = SelectionRect(win->CurrentTab(), &pageNo);
+        if (rect.IsEmpty() || rect.dx < 8 || rect.dy < 8) {
+            Point pt(x, y);
+            int clickPage = dm->GetPageNoByPoint(pt);
+            if (!dm->ValidPageNo(clickPage)) {
+                return true;
+            }
+            pageNo = clickPage;
+            rect = DefaultSignatureRectAt(dm, pageNo, dm->CvtFromScreen(pt, pageNo));
+        }
+    }
+    if (rect.IsEmpty()) {
+        return true;
+    }
+
+    PdfSignArgs args;
+    if (!gSignDocumentWnd->BuildSignArgs(args)) {
+        CancelPlacingSignature(win);
+        return true;
+    }
+    args.pageNo = pageNo;
+    args.rect = rect;
+    args.fieldName = {};
+
+    gPlacingSignature = false;
+    ClearSignaturePlacementNotif(win);
+    DeleteOldSelectionInfo(win, true);
+    gSignDocumentWnd->DoSign(args);
+    return true;
 }
 
 void SignDocumentWnd::CollectFields() {
@@ -230,9 +404,14 @@ bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
         args.pageNo = fieldPages[idx];
         return true;
     }
-    // a new field on the current page, where the selection is if there is one
+    // a new field: use the selection if there is one, otherwise the caller
+    // will ask the user to click or drag on the page (issue #5967)
     args.pageNo = currPageNo;
-    args.rect = SelectionRectOnPage(win ? win->CurrentTab() : nullptr, currPageNo);
+    int selPage = currPageNo;
+    args.rect = SelectionRect(win ? win->CurrentTab() : nullptr, &selPage);
+    if (!args.rect.IsEmpty()) {
+        args.pageNo = selPage;
+    }
     return true;
 }
 
@@ -272,6 +451,8 @@ void SignDocumentWnd::OnBrowse(VirtMouseEvent*) {
 }
 
 void SignDocumentWnd::OnCancel(VirtMouseEvent*) {
+    gPlacingSignature = false;
+    ClearSignaturePlacementNotif(win);
     ScheduleDelete();
 }
 
@@ -295,20 +476,18 @@ static TempStr SignErrorMessageTemp(Str err) {
     return str::DupTemp(err);
 }
 
-void SignDocumentWnd::OnSign(VirtMouseEvent*) {
+void SignDocumentWnd::DoSign(const PdfSignArgs& args) {
     EngineBase* engine = GetPdfEngine(win);
     if (!engine) {
         ScheduleDelete();
-        return;
-    }
-    PdfSignArgs args;
-    if (!BuildSignArgs(args)) {
         return;
     }
 
     Str err;
     bool ok = EngineMupdfSignDocument(engine, args, &err);
     if (!ok) {
+        SetIsVisible(true);
+        HwndSetFocus(hwnd);
         MessageBoxWarning(hwnd, SignErrorMessageTemp(err), _TRA("Sign Document"));
         str::Free(err);
         return;
@@ -320,6 +499,25 @@ void SignDocumentWnd::OnSign(VirtMouseEvent*) {
     WindowTab* tab = win->CurrentTab();
     ScheduleDelete();
     SaveAnnotationsToMaybeNewPdfFile(tab);
+}
+
+void SignDocumentWnd::OnSign(VirtMouseEvent*) {
+    EngineBase* engine = GetPdfEngine(win);
+    if (!engine) {
+        ScheduleDelete();
+        return;
+    }
+    PdfSignArgs args;
+    if (!BuildSignArgs(args)) {
+        return;
+    }
+    // a new field with nowhere to put it: hide this dialog and let the user
+    // click or drag on the page (issue #5967)
+    if (!args.fieldName && args.rect.IsEmpty()) {
+        StartSignaturePlacement(this);
+        return;
+    }
+    DoSign(args);
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {
@@ -485,11 +683,15 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
         return;
     }
     if (gSignDocumentWnd) {
+        if (gPlacingSignature) {
+            CancelPlacingSignature(win);
+        }
         if (hasField) {
             str::ReplaceWithCopy(&gSignDocumentWnd->preselectField, fieldName);
             gSignDocumentWnd->hasPreselect = true;
             gSignDocumentWnd->FillPlacement();
         }
+        gSignDocumentWnd->SetIsVisible(true);
         HwndSetFocus(gSignDocumentWnd->hwnd);
         return;
     }

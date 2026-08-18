@@ -738,7 +738,7 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     }
 }
 
-void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/) {
+void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/, bool forceRect) {
     ReportIf(!win->AsFixed());
     // selecting with the mouse takes over: leave keyboard selection mode so its
     // caret and help bar don't linger over a mouse selection
@@ -754,8 +754,9 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/) {
     bool isShift = IsShiftPressed();
     bool isCtrl = IsCtrlPressed();
 
-    // Ctrl+drag forces a rectangular selection
-    if (!isCtrl || isShift) {
+    // Ctrl+drag (or forceRect, used when placing a new signature) is a
+    // rectangular selection, not a text one
+    if (!forceRect && (!isCtrl || isShift)) {
         DisplayModel* dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(Point(x, y));
         if (dm->ValidPageNo(pageNo)) {

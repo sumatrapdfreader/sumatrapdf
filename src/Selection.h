@@ -36,7 +36,7 @@ void CopySelectionToClipboard(MainWindow* win);
 void OnSelectAll(MainWindow* win, bool textOnly = false);
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
 void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
-void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key);
+void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key, bool forceRect = false);
 void OnSelectionStop(MainWindow* win, int x, int y, bool aborted);
 TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelectionOut);
 

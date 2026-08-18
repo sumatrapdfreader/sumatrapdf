@@ -10,12 +10,13 @@
 import { copyFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { EXE, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchSumatra, pressEnter, sendCommand, waitForFrame } from "./win-automation.ts";
+import { clickAt, findCanvas, launchSumatra, pressEnter, sendCommand, waitForFrame } from "./win-automation.ts";
 import {
   captureWindowToPng,
   enumChildWindows,
   enumWindows,
   getClassName,
+  getClientRect,
   getControlText,
   getWindowPid,
   getWindowText,
@@ -216,6 +217,13 @@ async function runSigningChecks(pfx: string): Promise<void> {
   if (!good.placement.includes("New signature")) {
     throw new Error(`expected a "new signature" placement, got '${good.placement}'`);
   }
+  // a new signature is placed by clicking the page (issue #5967)
+  const canvas = findCanvas(frame);
+  if (!canvas) {
+    throw new Error("plain PDF: could not find the canvas to place the signature");
+  }
+  const cr = getClientRect(canvas);
+  await clickAt(canvas, Math.floor(cr.right / 2), Math.floor(cr.bottom / 2), 400);
   await acceptSaveDialog(pid);
   await waitFor("signed file", () => existsSync(plainOut), 20000);
   await sleep(2000);
