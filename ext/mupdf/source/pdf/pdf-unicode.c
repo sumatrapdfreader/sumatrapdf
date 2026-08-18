@@ -122,283 +122,42 @@ unicode_from_coded_glyph_name(const char *name)
 	return 0;
 }
 
-/* True when most mapped codes in 0xC0-0xFF are the Latin-1 identity
- * (code -> U+00xx). Distiller emits this for Type1 fonts whose Encoding
- * uses Latin glyph names, including Russian CP1251 Type1 faces. */
+/* Distiller Type1 ToUnicode is often identity Latin-1 even for CP1251
+ * faces that reuse Latin Encoding names. Treat the font as CP1251 when
+ * the name is a known family / has a Cyrillic tag, or the document
+ * title/author is Cyrillic. (issue #5873) */
 static int
-to_unicode_is_latin1_identity_high(pdf_cmap *cmap)
+pdf_simple_font_looks_cp1251(fz_context *ctx, pdf_document *doc, pdf_font_desc *font)
 {
-	unsigned int c;
-	int n_mapped = 0;
-	int n_identity = 0;
+	const char *name = font->font ? fz_font_name(ctx, font->font) : "";
+	char buf[1024];
+	int i, k;
+	static const char *keys[] = { FZ_META_INFO_TITLE, FZ_META_INFO_AUTHOR, NULL };
 
-	if (!cmap)
-		return 0;
+	if (strlen(name) > 7 && name[6] == '+')
+		name += 7;
 
-	for (c = 0xC0; c <= 0xFF; c++)
-	{
-		int u = pdf_lookup_cmap(cmap, c);
-		if (u < 0)
-			continue;
-		n_mapped++;
-		if (u == (int)c)
-			n_identity++;
-	}
-
-	/* Need a solid high-byte map that is mostly identity. */
-	return n_mapped >= 32 && n_identity * 4 >= n_mapped * 3;
-}
-
-static int
-cid_to_ucs_is_latin1_identity_high(const unsigned short *cid_to_ucs, size_t len)
-{
-	unsigned int c;
-	int n_mapped = 0;
-	int n_identity = 0;
-
-	if (!cid_to_ucs || len < 256)
-		return 0;
-
-	for (c = 0xC0; c <= 0xFF; c++)
-	{
-		unsigned short u = cid_to_ucs[c];
-		if (u == 0 || u == FZ_REPLACEMENT_CHARACTER)
-			continue;
-		n_mapped++;
-		if (u == c)
-			n_identity++;
-	}
-
-	return n_mapped >= 32 && n_identity * 4 >= n_mapped * 3;
-}
-
-static int
-utf8_contains_cyrillic(const char *s)
-{
-	if (!s)
-		return 0;
-	while (*s)
-	{
-		int rune;
-		int n = fz_chartorune(&rune, s);
-		if (n <= 0)
-			break;
-		/* Cyrillic block + Cyrillic Supplement */
-		if ((rune >= 0x0400 && rune <= 0x04FF) || (rune >= 0x0500 && rune <= 0x052F))
-			return 1;
-		s += n;
-	}
-	return 0;
-}
-
-/* Strip optional PDF subset tag "ABCDEF+". */
-static const char *
-font_name_without_subset(const char *name)
-{
-	int i;
-
-	if (!name || strlen(name) <= 7 || name[6] != '+')
-		return name;
-	for (i = 0; i < 6; i++)
-	{
-		char c = name[i];
-		if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')))
-			return name;
-	}
-	return name + 7;
-}
-
-/* Family token before style suffix (-Bold, -Italic, …). */
-static size_t
-font_family_len(const char *name)
-{
-	const char *p = name;
-	while (*p && *p != '-' && *p != ',' && *p != ' ')
-		p++;
-	return (size_t)(p - name);
-}
-
-static int
-ascii_contains_ci(const char *hay, const char *needle)
-{
-	size_t n;
-
-	if (!hay || !needle || !needle[0])
-		return 0;
-	n = strlen(needle);
-	for (; *hay; hay++)
-	{
-		if (fz_strncasecmp(hay, needle, n) == 0)
-			return 1;
-	}
-	return 0;
-}
-
-static int
-font_name_suggests_cyrillic(const char *name)
-{
-	/* Classic ParaType / ParaGraph CP1251 Type1 faces and explicit Cyrillic tags.
-	 * Match the family token only so "AcademyEngraved" is not treated as Academy. */
-	static const char *families[] = {
-		"literaturnaya",
-		"academy",
-		"schoolbook",
-		"petersburg",
-		"freeset",
-		"pragmatica",
-		"newton",
-		"baltica",
-		"magazine",
-		"zhurnalnaya",
-		"zhurnal",
-		"journal",
-		"kudryashev",
-		"kudriashov",
-		"octava",
-		"textbook",
-		"certum",
-		"pushkin",
-		"karolla",
-		"hermes",
-		"futuris",
-		"gazeta",
-		"arialcyr",
-		"timescyr",
-		"courcyr",
-		NULL
-	};
-	const char *base;
-	size_t flen;
-	int i;
-
-	if (!name || !name[0])
-		return 0;
-
-	base = font_name_without_subset(name);
-
-	/* Explicit markers anywhere in the name. */
-	if (ascii_contains_ci(base, "cyrillic") || ascii_contains_ci(base, "cyrl") ||
-		ascii_contains_ci(base, "paratype") || ascii_contains_ci(base, "cp1251") ||
-		ascii_contains_ci(base, "windows-1251"))
+	if (fz_strncasecmp(name, "literaturnaya", 13) == 0)
 		return 1;
-
-	flen = font_family_len(base);
-	if (flen == 0)
-		return 0;
-
-	for (i = 0; families[i]; i++)
-	{
-		size_t n = strlen(families[i]);
-		if (flen == n && fz_strncasecmp(base, families[i], n) == 0)
+	/* "Academy" / "Academy-Bold", but not "AcademyEngraved". */
+	if (fz_strncasecmp(name, "academy", 7) == 0 && (name[7] == 0 || name[7] == '-'))
+		return 1;
+	for (i = 0; name[i]; i++)
+		if (fz_strncasecmp(name + i, "cyr", 3) == 0 || fz_strncasecmp(name + i, "1251", 4) == 0)
 			return 1;
-	}
-	return 0;
-}
-
-static int
-pdf_doc_suggests_cyrillic(fz_context *ctx, pdf_document *doc)
-{
-	static const char *info_keys[] = {
-		FZ_META_INFO_TITLE,
-		FZ_META_INFO_SUBJECT,
-		FZ_META_INFO_AUTHOR,
-		FZ_META_INFO_KEYWORDS,
-		NULL
-	};
-	pdf_obj *root;
-	pdf_obj *lang;
-	char buf[2048];
-	int i;
 
 	if (!doc)
 		return 0;
-
-	root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
-	lang = pdf_dict_get(ctx, root, PDF_NAME(Lang));
-	if (pdf_is_string(ctx, lang))
+	for (k = 0; keys[k]; k++)
 	{
-		const char *l = pdf_to_text_string(ctx, lang);
-		/* ru, uk, bg, be, sr, mk, … */
-		if (l && l[0] && l[1])
-		{
-			char a = l[0] | 0x20;
-			char b = l[1] | 0x20;
-			if ((a == 'r' && b == 'u') || (a == 'u' && b == 'k') ||
-				(a == 'b' && b == 'g') || (a == 'b' && b == 'e') ||
-				(a == 's' && b == 'r') || (a == 'm' && b == 'k'))
+		if (pdf_lookup_metadata(ctx, doc, keys[k], buf, sizeof buf) <= 0)
+			continue;
+		/* UTF-8 Cyrillic (U+0400-U+047F) starts with D0/D1. */
+		for (i = 0; buf[i]; i++)
+			if ((unsigned char)buf[i] == 0xD0 || (unsigned char)buf[i] == 0xD1)
 				return 1;
-		}
-	}
-
-	for (i = 0; info_keys[i]; i++)
-	{
-		if (pdf_lookup_metadata(ctx, doc, info_keys[i], buf, sizeof buf) > 0 &&
-			utf8_contains_cyrillic(buf))
-			return 1;
 	}
 	return 0;
-}
-
-/* Rebuild simple-font Unicode as Windows-1251. Prefer cid_to_ucs and drop a
- * misleading identity-Latin ToUnicode so extraction uses the CP1251 table. */
-static void
-pdf_apply_windows_1251_unicode(fz_context *ctx, pdf_font_desc *font)
-{
-	unsigned int c;
-
-	if (font->to_unicode)
-	{
-		font->size -= pdf_cmap_size(ctx, font->to_unicode);
-		pdf_drop_cmap(ctx, font->to_unicode);
-		font->to_unicode = NULL;
-	}
-
-	if (!font->cid_to_ucs)
-	{
-		font->cid_to_ucs = Memento_label(fz_malloc_array(ctx, 256, unsigned short), "cid_to_ucs");
-		font->cid_to_ucs_len = 256;
-		font->size += 256 * sizeof *font->cid_to_ucs;
-	}
-	else if (font->cid_to_ucs_len < 256)
-	{
-		font->cid_to_ucs = fz_realloc_array(ctx, font->cid_to_ucs, 256, unsigned short);
-		font->size += (256 - font->cid_to_ucs_len) * sizeof *font->cid_to_ucs;
-		font->cid_to_ucs_len = 256;
-	}
-
-	for (c = 0; c < 256; c++)
-		font->cid_to_ucs[c] = fz_unicode_from_windows_1251[c];
-}
-
-/* Acrobat Distiller (and similar) often emit Type1 ToUnicode CMaps that
- * identity-map 0xC0-0xFF to U+00C0-U+00FF from Latin Encoding glyph names.
- * Russian CP1251 Type1 fonts (Literaturnaya, Academy, …) put Cyrillic glyphs
- * at those codes under the same Latin names, so extract/copy becomes mojibake.
- * When the high-byte map is identity Latin-1 and the font or document looks
- * Cyrillic, reinterpret via Windows-1251. (issue #5873) */
-static void
-pdf_fix_cyrillic_cp1251_tounicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font)
-{
-	int high_is_latin1;
-	const char *fname = NULL;
-	int cyrillic_hint;
-
-	high_is_latin1 = to_unicode_is_latin1_identity_high(font->to_unicode);
-	if (!high_is_latin1)
-		high_is_latin1 = cid_to_ucs_is_latin1_identity_high(font->cid_to_ucs, font->cid_to_ucs_len);
-	if (!high_is_latin1)
-		return;
-
-	if (font->font)
-		fname = fz_font_name(ctx, font->font);
-
-	cyrillic_hint = font_name_suggests_cyrillic(fname);
-	if (!cyrillic_hint)
-		cyrillic_hint = pdf_doc_suggests_cyrillic(ctx, doc);
-	if (!cyrillic_hint)
-		return;
-
-	pdf_apply_windows_1251_unicode(ctx, font);
 }
 
 void
@@ -446,6 +205,7 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
 	if (strings)
 	{
 		/* TODO one-to-many mappings */
+		int n_high = 0, n_id = 0;
 
 		font->cid_to_ucs = Memento_label(fz_malloc_array(ctx, 256, unsigned short), "cid_to_ucs");
 		font->cid_to_ucs_len = 256;
@@ -466,6 +226,29 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
 			}
 			else
 				font->cid_to_ucs[cpt] = FZ_REPLACEMENT_CHARACTER;
+
+			if (cpt >= 0xC0 && font->cid_to_ucs[cpt] != 0 &&
+				font->cid_to_ucs[cpt] != FZ_REPLACEMENT_CHARACTER)
+			{
+				n_high++;
+				if (font->cid_to_ucs[cpt] == cpt)
+					n_id++;
+			}
+		}
+
+		/* Encoding names mapped 0xC0-0xFF to U+00C0-U+00FF. Distiller's
+		 * ToUnicode does the same, which is wrong for CP1251 Type1 faces. */
+		if (n_high >= 32 && n_id * 4 >= n_high * 3 &&
+			pdf_simple_font_looks_cp1251(ctx, doc, font))
+		{
+			if (font->to_unicode)
+			{
+				font->size -= pdf_cmap_size(ctx, font->to_unicode);
+				pdf_drop_cmap(ctx, font->to_unicode);
+				font->to_unicode = NULL;
+			}
+			for (cpt = 0; cpt < 256; cpt++)
+				font->cid_to_ucs[cpt] = fz_unicode_from_windows_1251[cpt];
 		}
 	}
 
@@ -474,6 +257,4 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
 		/* TODO: synthesize a ToUnicode if it's a freetype font with
 		 * cmap and/or post tables or if it has glyph names. */
 	}
-
-	pdf_fix_cyrillic_cp1251_tounicode(ctx, doc, font);
 }

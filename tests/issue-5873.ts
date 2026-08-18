@@ -4,8 +4,8 @@
 // ToUnicode CMap that identity-maps 0xC0-0xFF to Latin-1 U+00C0-U+00FF, derived
 // from Latin Encoding glyph names, while the content stream uses Windows-1251
 // codes for Cyrillic. mupdf then extracts mojibake ("ÏÐÅÄÈÑËÎÂÈÅ" instead of
-// "ПРЕДИСЛОВИЕ"). The fix remaps via Windows-1251 when the high-byte map is
-// identity Latin-1 and the font or document looks Cyrillic.
+// "ПРЕДИСЛОВИЕ"). The fix remaps via Windows-1251 when Encoding names are
+// identity Latin-1 and the font name or document title/author looks Cyrillic.
 //
 // Fixture: tests/issue-5873.pdf (copy of the bug report PDF).
 //
