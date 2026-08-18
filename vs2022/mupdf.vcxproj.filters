@@ -668,6 +668,9 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\load-tiff.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\mupdf\source\fitz\load-webp.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\log.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>

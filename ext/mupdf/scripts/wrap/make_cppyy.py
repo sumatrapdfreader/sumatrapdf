@@ -763,7 +763,7 @@ def make_cppyy(
                     ''')
 
             # Provide an overload for mfz_recognize_image_format(), because
-            # the default unsigned char p[8] causes problems.
+            # the default unsigned char p[12] causes problems.
             #
             cppyy.cppdef(f'''
                     namespace mupdf

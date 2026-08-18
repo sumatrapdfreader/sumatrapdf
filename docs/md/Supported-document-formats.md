@@ -23,7 +23,7 @@ SumatraPDF reader supports the following document types:
   - TIFF (.tif, .tiff), including multi-page
   - BMP (.bmp, .dib)
   - TGA (.tga)
-  - WebP (.webp)
+  - WebP (.webp) — also images inside EPUB, MOBI and HTML
   - JPEG XR (.jxr, .hdp, .wdp)
   - JPEG 2000 (.jp2, .j2k, .jpx, .jpf, .jpm, .j2c)
   - AVIF (.avif)

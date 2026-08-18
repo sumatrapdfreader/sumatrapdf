@@ -1054,6 +1054,7 @@ function mupdf_files()
     "load-pnm.c",
     "load-psd.c",
     "load-tiff.c",
+    "load-webp.c",
     "log.c",
     "memento.c",
     "memory.c",

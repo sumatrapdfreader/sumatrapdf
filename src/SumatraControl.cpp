@@ -280,6 +280,7 @@ enum class ControlCmd : u16 {
     TestHomeSelection = 56,
     TestImageRenderEdges = 57,
     TestInsertImage = 58,
+    TestRenderPageColors = 59,
 };
 
 enum class ControlArgType : u16 {
@@ -814,6 +815,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ImageInsertResultTemp(pdfPath, imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRenderPageColors: {
+            Str path = StringArg(req, 0);
+            if (!path) {
+                AppendError(req, "TestRenderPageColors expects string path");
+                break;
+            }
+            int exitCode = 0;
+            Str res = PageRenderColorsResultTemp(path, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

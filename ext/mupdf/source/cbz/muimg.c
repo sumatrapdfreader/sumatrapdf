@@ -191,8 +191,14 @@ img_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream
 		len = fz_buffer_storage(ctx, doc->buffer, &data);
 
 		fmt = FZ_IMAGE_UNKNOWN;
-		if (len >= 8)
+		if (len >= 12)
 			fmt = fz_recognize_image_format(ctx, data);
+		else if (len >= 8)
+		{
+			unsigned char head[12] = {0};
+			memcpy(head, data, len);
+			fmt = fz_recognize_image_format(ctx, head);
+		}
 		if (fmt == FZ_IMAGE_TIFF)
 		{
 			doc->page_count = fz_load_tiff_subimage_count(ctx, data, len);
@@ -236,7 +242,7 @@ img_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream
 static int
 img_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **state, fz_document_recognize_state_free_fn **free_state)
 {
-	unsigned char data[8];
+	unsigned char data[12] = {0};
 	size_t n;
 	int fmt;
 
@@ -248,9 +254,9 @@ img_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_st
 	if (free_state)
 		*free_state = NULL;
 
-	n = fz_read(ctx, stream, data, 8);
+	n = fz_read(ctx, stream, data, 12);
 
-	if (n != 8)
+	if (n < 8)
 		return 0;
 
 	fmt = fz_recognize_image_format(ctx, data);

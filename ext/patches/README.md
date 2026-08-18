@@ -36,6 +36,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0018-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
 | `0019-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
 | `0020-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
+| `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
 
 And three that are not ours but that we carry ahead of the release we vendor:
 

@@ -938,7 +938,7 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
-    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
+    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1", "HAVE_WEBP=1" }
     defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
@@ -976,6 +976,7 @@ workspace "SumatraPDF"
       "ext/a-gumbo",
       "ext/a-extract",
       "ext/libarchive",
+      "ext/libwebp/src",
     }
     fonts()
 

@@ -5821,7 +5821,7 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
         return {};
     }
     if (type != FZ_IMAGE_JPEG && type != FZ_IMAGE_PNG && type != FZ_IMAGE_GIF && type != FZ_IMAGE_BMP &&
-        type != FZ_IMAGE_TIFF) {
+        type != FZ_IMAGE_TIFF && type != FZ_IMAGE_WEBP) {
         return {};
     }
     unsigned char* data = nullptr;

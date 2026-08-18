@@ -69,6 +69,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - HEIC / HEIF still images now decode with a built-in decoder (no Windows HEIC codec required for most phone photos); AVIF still uses dav1d. The system WIC path remains as a fallback if built-in decode fails
 - Read Aloud: adjustable playback speed — pick 0.5x .. 3x in the new `Speed` submenu (next to `Voice` in the Read Aloud menu, toolbar dropdown and context menu) or click the speed button on the playback bar to cycle presets (right-click cycles backwards); the speed persists across sessions via the `ReadAloudSpeed` advanced setting
 - clicking an empty signature field in a PDF opens **Sign Document** with that field already selected, instead of doing nothing and leaving the command to be found in a menu (fixes #5964)
+- EPUB, MOBI and HTML documents show WebP images instead of an IMAGE placeholder (fixes #3415). Standalone `.webp` files and comics already worked.
 - updated the bundled MuPDF rendering engine to 1.28.2
 - add [AI Chat with document](AI-Chat-with-document.md) sidebar (in View menu and `Ctrl + k` [command palette](Command-Palette.md)) for asking questions about the open PDF or image via [Claude Code](https://docs.anthropic.com/en/docs/claude-code); per-tab session state, model/effort selection, and session history from `~/.claude/projects/`
 - add `ClaudeCode` advanced settings (`Model`, `Effort`, `SkipPermissions`, `BgColor`, `SidebarDx`) in `SumatraPDF-settings.txt`

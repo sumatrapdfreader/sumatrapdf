@@ -49,6 +49,7 @@ static const char *cbz_ext_list[] = {
 	".tif",
 	".tiff",
 	".wdp",
+	".webp",
 	NULL
 };
 

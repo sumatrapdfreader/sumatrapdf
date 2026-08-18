@@ -784,6 +784,7 @@ export const mupdf: LibDef = {
     "USE_JPIP",
     "OPJ_EXPORTS",
     "HAVE_LCMS2MT=1",
+    "HAVE_WEBP=1",
     "OPJ_STATIC",
     "SHARE_JPEG",
     "TOFU_NOTO",
@@ -815,6 +816,7 @@ export const mupdf: LibDef = {
     "ext/a-extract",
     "ext/a-zlib",
     "ext/libarchive",
+    "ext/libwebp/src",
   ],
   files: [
     { dir: "ext", patterns: ["mupdf_load_system_font.c"] },
@@ -901,6 +903,7 @@ export const mupdf: LibDef = {
         "load-pnm.c",
         "load-psd.c",
         "load-tiff.c",
+        "load-webp.c",
         "log.c",
         "cull-device.c",
         "memento.c",
