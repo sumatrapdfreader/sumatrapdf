@@ -325,6 +325,9 @@ MarkdownModel* MainWindow::AsMarkdown() const {
 // Notify both display model and double-buffer (if they exist)
 // about a potential change of available canvas size
 void MainWindow::UpdateCanvasSize() {
+    if (suppressCanvasSizeUpdate) {
+        return;
+    }
     Rect rc = HwndClientRect(hwndCanvas);
     if (buffer && canvasRc == rc) {
         return;

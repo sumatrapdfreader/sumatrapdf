@@ -1343,6 +1343,19 @@ static void makeFullScrollbar(SCROLLINFO& si) {
     si.nPage = 100;
 }
 
+// ShowScrollBar is a no-op when the style bit already matches. Calling it
+// anyway sends WINDOWPOS/WM_SIZE, which re-enters UpdateCanvasSize and
+// UpdateScrollbars (hang: ScrollbarInSinglePage + zoom, issue #5969).
+static void ShowWinScrollBar(HWND hwnd, int bar, BOOL show) {
+    DWORD bit = (bar == SB_HORZ) ? WS_HSCROLL : WS_VSCROLL;
+    DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
+    bool isShown = (style & bit) != 0;
+    if (isShown == (show != FALSE)) {
+        return;
+    }
+    ShowScrollBar(hwnd, bar, show);
+}
+
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
 
 int ScrollbarModeFromPrefs() {
@@ -1446,6 +1459,23 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     // the recompute itself is debounced
     KeyboardLinkFollowingViewportChanged(win);
 
+    // ShowScrollBar can send WM_SIZE synchronously. Apply the new client size
+    // once the bars are configured, not in the middle of this call (issue #5969).
+    static int depth = 0;
+    if (depth >= 3) {
+        return;
+    }
+    depth++;
+    win->suppressCanvasSizeUpdate = true;
+    Rect rcBefore = HwndClientRect(win->hwndCanvas);
+    defer {
+        win->suppressCanvasSizeUpdate = false;
+        depth--;
+        if (win->hwndCanvas && !(HwndClientRect(win->hwndCanvas) == rcBefore)) {
+            win->UpdateCanvasSize();
+        }
+    };
+
     bool hideScrollbar = ScrollbarsAreHidden();
     bool useOverlay = ScrollbarsUseOverlay();
     SCROLLINFO si{};
@@ -1469,7 +1499,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         // SetScrollInfo's last arg is redraw, not visibility, and a non-empty
         // range re-shows the window scrollbar -- hide it explicitly so overlay
         // mode doesn't show both the window scrollbar and the overlay one
-        ShowScrollBar(win->hwndCanvas, SB_HORZ, FALSE);
+        ShowWinScrollBar(win->hwndCanvas, SB_HORZ, FALSE);
         if (!win->overlayScrollH) {
             win->overlayScrollH =
                 OverlayScrollbarCreate(win->hwndCanvas, OverlayScrollbar::Type::Horz, ScrollbarsOverlayMode());
@@ -1482,8 +1512,12 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         }
     } else {
         // Set range/page before showing so first paint has a thumb (issue #5850)
+        if (showHScroll) {
+            si.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
+        }
         SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
-        ShowScrollBar(win->hwndCanvas, SB_HORZ, showHScroll);
+        ShowWinScrollBar(win->hwndCanvas, SB_HORZ, showHScroll);
+        si.fMask = SIF_ALL;
     }
 
     bool isSinglePageMode = gGlobalPrefs->scrollbarInSinglePage && (dm->GetDisplayMode() == DisplayMode::SinglePage);
@@ -1518,14 +1552,20 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     if (useOverlay || hideScrollbar) {
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, FALSE);
         // hide the window scrollbar explicitly (see SB_HORZ note above)
-        ShowScrollBar(win->hwndCanvas, SB_VERT, FALSE);
+        ShowWinScrollBar(win->hwndCanvas, SB_VERT, FALSE);
     } else {
         // SetScrollInfo first so the NC area is not a blank strip on first show
         // (ShowScrollBar alone can paint an empty white track — issue #5850).
         DWORD styleBefore = (DWORD)GetWindowLongW(win->hwndCanvas, GWL_STYLE);
         bool wantV = showWinScrollbar && showVScroll;
+        // Without SIF_DISABLENOSCROLL, SetScrollInfo hides a bar whose range
+        // does not need scrolling (1-page SinglePage + ScrollbarInSinglePage).
+        // ShowScrollBar then shows it again, WM_SIZE loops (issue #5969).
+        if (wantV) {
+            si.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
+        }
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
-        ShowScrollBar(win->hwndCanvas, SB_VERT, wantV);
+        ShowWinScrollBar(win->hwndCanvas, SB_VERT, wantV);
         // Dark scrollbar theme is applied at canvas create / theme change —
         // not on every UpdateScrollbars. SetWindowTheme mid-update re-enters
         // uxtheme/comctl32 and can AV (crash 8c1831c15000001).

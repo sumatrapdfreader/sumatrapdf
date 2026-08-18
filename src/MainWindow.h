@@ -181,6 +181,8 @@ struct MainWindow {
 
     HWND hwndFrame = nullptr;
     HWND hwndCanvas = nullptr;
+    // ShowScrollBar sends WM_SIZE; ignore it until UpdateScrollbars finishes (issue #5969)
+    bool suppressCanvasSizeUpdate = false;
 
     HWND hwndToolbar = nullptr;
     ToolbarVirt* toolbarVirt = nullptr;
