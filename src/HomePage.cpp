@@ -1018,6 +1018,7 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win);
 static HomeEntriesCtrl* HomeEntries(MainWindow* win);
 static void HomePageSyncChrome(HomePageLayout& l);
 static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t);
+static Rect HomeOutlinePaintClip(const Rect& thumbsArea, const Rect& searchBorder, const Rect& tip, bool hasTip);
 
 static int HomePageIconSize() {
     int sz = DpiScale(gGlobalPrefs->toolbarSize);
@@ -2013,11 +2014,39 @@ static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
     gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
+// Slack so the first/last row's rounded outline isn't cut by rcThumbsArea.
+// The search field and tip band stay outside this clip (issue #5978).
+static Rect HomeOutlinePaintClip(const Rect& thumbsArea, const Rect& searchBorder, const Rect& tip, bool hasTip) {
+    if (thumbsArea.IsEmpty()) {
+        return {};
+    }
+    Rect clip = thumbsArea;
+    clip.Inflate(0, DpiScale(8));
+    if (!searchBorder.IsEmpty() && clip.y < searchBorder.Bottom()) {
+        int d = searchBorder.Bottom() - clip.y;
+        clip.y += d;
+        clip.dy -= d;
+    }
+    if (hasTip && !tip.IsEmpty() && clip.y + clip.dy > tip.y) {
+        clip.dy = tip.y - clip.y;
+    }
+    if (clip.dx <= 0 || clip.dy <= 0) {
+        return {};
+    }
+    return clip;
+}
+
+static TempStr RectCsvTemp(const Rect& r) {
+    return fmt("%d,%d,%d,%d", r.x, r.y, r.dx, r.dy);
+}
+
 // The home page's keyboard state: which entry the arrows have selected, how
 // many entries are currently shown (the search box filters them) and whether
 // the search box has the focus. A test driving the home page with keys waits on
 // this instead of sleeping after each key, which is what made tests/issue-1136
 // flaky: a key posted while focus was still moving went to the wrong window.
+// search / outline / outlineFull are canvas rects so a test can check that the
+// hover outline does not paint over the search field (issue #5978).
 TempStr HomeSelectionResultTemp(int* exitCodeOut) {
     auto finish = [&](int code, TempStr s) -> TempStr {
         if (exitCodeOut) {
@@ -2042,8 +2071,17 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
     // the search box is created while the home page lays out; until it exists
     // Up from the first row has nowhere to move the focus to
     int searchBox = win->homeSearch ? 1 : 0;
-    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d path=%s", sel, len(c.thumbs), searchFocus,
-                         searchBox, path));
+    Rect search = c.rcSearchBorder;
+    Rect outlineFull;
+    Rect outline;
+    bool showSel = !HomePageIsListView() && !searchFocus && sel >= 0 && sel < len(c.thumbs);
+    if (showSel) {
+        outlineFull = HomeSelectionOutlineRect(c.thumbs[sel]);
+        outline = outlineFull.Intersect(HomeOutlinePaintClip(c.rcThumbsArea, c.rcSearchBorder, c.rcTip, c.hasTip));
+    }
+    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s",
+                         sel, len(c.thumbs), searchFocus, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
+                         RectCsvTemp(outlineFull), path));
 }
 
 // What the home page list drew for each row: the path, the size text as drawn,
@@ -2622,15 +2660,28 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     // band, so the chrome keeps it as the last child)
     win->homeRoot->Paint(gfx, l.rc);
 
-    // thumbnails selection outline: over the chrome and unclipped, so its top
-    // edge isn't cut off on the first row (list rows draw their own outline,
-    // under the row content, in HomeEntryCtrl::Paint)
+    // thumbnails selection outline: after the entries so it sits on top of the
+    // thumbnail, clipped so it cannot paint over the search field or the tip
+    // band (issue #5978). A little slack above/below the thumbs band keeps the
+    // first row's top curve from being cut off.
     int selIdx = win->homePageSelIdx;
     bool showSel = !HomePageIsListView() && !HomeSearchHasFocus(win) && selIdx >= 0 && selIdx < nThumbs;
     if (showSel) {
         ThumbnailLayout& t = l.thumbnails[selIdx];
         if (IsHomeThumbOnScreen(t.rcPage.Union(t.rcText), l.rcThumbsArea)) {
-            DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(t), 10);
+            Rect clip = HomeOutlinePaintClip(l.rcThumbsArea, l.rcSearchBorder, l.rcTip, l.hasTip);
+            if (!clip.IsEmpty()) {
+                gfx->PushClip(clip);
+                DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(t), 10);
+                gfx->PopClip();
+            }
+        }
+        // the edit HWND is on top of the canvas; this is the canvas-drawn
+        // border/fill around it. Repaint so a 1px antialiased leak cannot
+        // show through the field.
+        HomeChromeCtrl* chrome = EnsureHomeChrome(win);
+        if (chrome->searchBorder) {
+            chrome->searchBorder->PaintStandalone(gfx);
         }
     }
 }

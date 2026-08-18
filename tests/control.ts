@@ -70,6 +70,9 @@ export type HomeSelection = {
   entries: number;
   searchFocus: boolean;
   searchBox: boolean;
+  search: number[];
+  outline: number[];
+  outlineFull: number[];
   path: string;
   raw: string;
 };
@@ -366,9 +369,23 @@ export class ControlClient {
     const code = typeof res[0] === "number" ? res[0] : -1;
     const raw = String(res[1] ?? "").trim();
     if (code !== 0) {
-      return { ready: false, sel: -1, entries: 0, searchFocus: false, searchBox: false, path: "", raw };
+      return {
+        ready: false,
+        sel: -1,
+        entries: 0,
+        searchFocus: false,
+        searchBox: false,
+        search: [0, 0, 0, 0],
+        outline: [0, 0, 0, 0],
+        outlineFull: [0, 0, 0, 0],
+        path: "",
+        raw,
+      };
     }
-    const m = /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) path=(.*)$/.exec(raw);
+    const m =
+      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*)$/.exec(
+        raw,
+      );
     if (!m) {
       throw new Error(`homeSelection: could not parse '${raw}'`);
     }
@@ -378,7 +395,10 @@ export class ControlClient {
       entries: parseInt(m[2], 10),
       searchFocus: m[3] === "1",
       searchBox: m[4] === "1",
-      path: m[5].trim(),
+      search: [parseInt(m[5], 10), parseInt(m[6], 10), parseInt(m[7], 10), parseInt(m[8], 10)],
+      outline: [parseInt(m[9], 10), parseInt(m[10], 10), parseInt(m[11], 10), parseInt(m[12], 10)],
+      outlineFull: [parseInt(m[13], 10), parseInt(m[14], 10), parseInt(m[15], 10), parseInt(m[16], 10)],
+      path: m[17].trim(),
       raw,
     };
   }
