@@ -118,6 +118,19 @@ Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb) {
     return p;
 }
 
+// The alpha in a DIB section is straight, not premultiplied: that is what PNG,
+// CF_DIBV5 and GDI+ all expect of a 32bpp bitmap, and mupdf hands us
+// premultiplied pixels. Undoing it here keeps the invariant in one place.
+static void UnpremultiplyBgra(u8* d) {
+    u32 a = d[3];
+    if (a == 0 || a == 255) {
+        return;
+    }
+    d[0] = (u8)std::min<u32>(255, ((u32)d[0] * 255 + (a / 2)) / a);
+    d[1] = (u8)std::min<u32>(255, ((u32)d[1] * 255 + (a / 2)) / a);
+    d[2] = (u8)std::min<u32>(255, ((u32)d[2] * 255 + (a / 2)) / a);
+}
+
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
     if (!px) {
         return nullptr;
@@ -151,6 +164,9 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
                 } else {
                     memcpy(dst, src, 4);
                     src += 4;
+                }
+                if (px->premultiplied) {
+                    UnpremultiplyBgra(dst);
                 }
                 dst += 4;
             }

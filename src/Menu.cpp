@@ -8,6 +8,8 @@
 #include "base/BitManip.h"
 #include "gui/Dpi.h"
 #include "base/Win.h"
+#include "base/Pixmap.h"
+#include "base/GdiPlusUtil.h"
 
 #include "gui/UIModels.h"
 #include "gui/Gfx.h"
@@ -2306,9 +2308,12 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             if (pageEl) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
-                    CopyImageToClipboard(bmp->GetBitmap(), false);
+                    // via the Pixmap, so an image with an alpha channel reaches
+                    // the clipboard with its transparency intact (#5844, #5598)
+                    Pixmap* px = PixmapFromRenderedBitmap(bmp); // takes ownership of bmp
+                    CopyPixmapToClipboard(px, false);
+                    FreePixmap(px);
                 }
-                delete bmp;
             }
             return;
         }

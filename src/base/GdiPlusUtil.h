@@ -26,3 +26,6 @@ void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, i
 
 void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
 CLSID GetGdiPlusEncoderClsid(WStr format);
+// put an image on the clipboard keeping its transparency (PNG + CF_DIBV5
+// when it has any); the caller still owns p
+bool CopyPixmapToClipboard(Pixmap* p, bool appendOnly);

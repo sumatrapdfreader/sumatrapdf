@@ -1109,6 +1109,9 @@
     <ClCompile Include="..\src\base\tests\ByteReaderWriter_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\tests\ClipboardImage_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\tests\Crypto_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>

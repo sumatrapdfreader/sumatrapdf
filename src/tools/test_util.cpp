@@ -32,6 +32,7 @@ extern void PdfDarkModeImageClassifier_UnitTests();
 extern void AppendStoreTest();
 #if OS_WIN
 extern void WinUtilTest();
+extern void ClipboardImageTest();
 #endif
 
 void GetPrintersInfo(struct str::Builder&) {
@@ -128,6 +129,7 @@ int main(int argc, char** argv) {
     AppendStoreTest();
 #if OS_WIN
     WinUtilTest();
+    ClipboardImageTest();
 #endif
     SumatraPDF_UnitTests();
 

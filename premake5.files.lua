@@ -1311,6 +1311,7 @@ function test_util_files()
     "FileWatcher.cpp",
     "Geom.*",
     "GuessFileType.*",
+    "GdiPlusUtil.*",
     "HtmlTags.*",
     "JsonParser.*",
     "Log.h",

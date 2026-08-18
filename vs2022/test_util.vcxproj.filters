@@ -68,6 +68,9 @@
     <ClInclude Include="..\src\base\FileWatcher.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\GdiPlusUtil.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Geom.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -211,6 +214,9 @@
     <ClCompile Include="..\src\base\File_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\GdiPlusUtil.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Geom.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -272,6 +278,9 @@
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\ByteReaderWriter_ut.cpp">
+      <Filter>base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\ClipboardImage_ut.cpp">
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Crypto_ut.cpp">
