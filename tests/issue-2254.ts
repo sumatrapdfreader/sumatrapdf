@@ -123,8 +123,13 @@ export async function testit(): Promise<void> {
     if (!/Subject:\s*Unique annotation marker for issue 2254/.test(text)) {
       throw new Error(`issue-2254: missing Subject from FB2 annotation:\n${text}`);
     }
-    if (!/Author:\s*Test Author/.test(text)) {
-      throw new Error(`issue-2254: missing Author in properties:\n${text}`);
+    // every <author> in <title-info>, and only the name parts: the fixture's
+    // first author also carries <home-page> and <email>, which are not the name
+    if (!/Author:\s*Test Author, Second Writer/.test(text)) {
+      throw new Error(`issue-2254: want both authors and only their names:\n${text}`);
+    }
+    if (/example\.org/.test(text)) {
+      throw new Error(`issue-2254: the author's home-page/email leaked into a property:\n${text}`);
     }
 
     postMessage(props, WM_CLOSE, 0, 0);

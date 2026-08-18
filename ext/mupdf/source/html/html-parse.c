@@ -2094,6 +2094,75 @@ collect_text(fz_context *ctx, fz_pool *pool, fz_xml *node)
 	return s;
 }
 
+/* SumatraPDF: an FB2 <author> is structured - first-name, middle-name and
+ * last-name, next to home-page/email/nickname/id which are not part of the
+ * name. collect_text() would sweep those up too ("Ivan Petrov https://... 
+ * ivan@..."), so gather just the name parts. And a book can list several
+ * authors; report all of them, not only the first. (issue #2254) */
+static void
+fb2_append_author_name(fz_context *ctx, fz_buffer *buf, fz_xml *author)
+{
+	static const char *parts[] = { "first-name", "middle-name", "last-name", NULL };
+	size_t was = fz_buffer_storage(ctx, buf, NULL);
+	int i;
+
+	for (i = 0; parts[i]; i++)
+	{
+		fz_xml *part = fz_xml_find_down(author, parts[i]);
+		const char *text = part ? fz_xml_text(fz_xml_down(part)) : NULL;
+		if (!text || !text[0])
+			continue;
+		if (fz_buffer_storage(ctx, buf, NULL) > was)
+			fz_append_byte(ctx, buf, ' ');
+		fz_append_string(ctx, buf, text);
+	}
+	if (fz_buffer_storage(ctx, buf, NULL) == was)
+	{
+		/* no name parts: a nickname is all some FB2 files give */
+		fz_xml *nick = fz_xml_find_down(author, "nickname");
+		const char *text = nick ? fz_xml_text(fz_xml_down(nick)) : NULL;
+		if (text && text[0])
+			fz_append_string(ctx, buf, text);
+	}
+}
+
+static char *
+fb2_collect_authors(fz_context *ctx, fz_pool *pool, fz_xml *title_info)
+{
+	fz_buffer *buf;
+	char *res = NULL;
+	fz_xml *author;
+	unsigned char *data = NULL;
+	size_t len;
+
+	if (!title_info)
+		return NULL;
+
+	buf = fz_new_buffer(ctx, 128);
+	fz_try(ctx)
+	{
+		for (author = fz_xml_find_down(title_info, "author"); author; author = fz_xml_find_next(author, "author"))
+		{
+			size_t was = fz_buffer_storage(ctx, buf, NULL);
+			if (was > 0)
+				fz_append_string(ctx, buf, ", ");
+			fb2_append_author_name(ctx, buf, author);
+			/* nothing usable in this <author>; drop the separator again */
+			if (fz_buffer_storage(ctx, buf, NULL) == was + (was > 0 ? 2 : 0))
+				buf->len = was;
+		}
+		fz_terminate_buffer(ctx, buf);
+		len = fz_buffer_storage(ctx, buf, &data);
+		if (len > 0 && data && data[0])
+			res = fz_pool_strdup(ctx, pool, (char *)data);
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return res;
+}
+
 static void
 xml_to_boxes(fz_context *ctx,
 	fz_html_font_set *set,
@@ -2234,8 +2303,7 @@ xml_to_boxes(fz_context *ctx,
 				node = fz_xml_find_down(node, "title-info");
 				node2 = fz_xml_find_down(node, "book-title");
 				metadata->title = collect_text(ctx, g.pool, node2);
-				node2 = fz_xml_find_down(node, "author");
-				metadata->author = collect_text(ctx, g.pool, node2);
+				metadata->author = fb2_collect_authors(ctx, g.pool, node); /* SumatraPDF: #2254 */
 				node2 = fz_xml_find_down(node, "annotation");
 				metadata->subject = collect_text(ctx, g.pool, node2);
 			}

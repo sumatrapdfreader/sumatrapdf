@@ -1083,6 +1083,7 @@ bool Fb2Doc::Load(Str srcData) {
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     Str bodyStart;
+    TempStr titleAuthors = nullptr; // every <author> in <title-info>, joined
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!inTitleInfo && !inDocInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
             if (!inBody++) {
@@ -1115,24 +1116,53 @@ bool Fb2Doc::Load(Str srcData) {
                 AddPropOwned(props, DocProp::Title, val);
             }
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS(StrL("author"), FB2_MAIN_NS())) {
+            // an FB2 <author> is structured: first-name / middle-name / last-name
+            // next to home-page / email / id, which are not part of the name.
+            // Taking every text node would give "Ivan Petrov https://... ivan@..."
+            // (issue #2254)
             TempStr docAuthor = nullptr;
+            TempStr nickname = nullptr;
+            bool inNamePart = false;
+            bool inNickname = false;
+            auto appendTo = [](TempStr cur, TempStr add) -> TempStr {
+                return cur ? str::JoinTemp(cur, StrL(" "), add) : add;
+            };
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                    !(tok->IsEndTag() && tok->NameIsNS(StrL("author"), FB2_MAIN_NS()))) {
-                if (tok->IsText()) {
-                    TempStr author = ResolveHtmlEntitiesTemp(tok->s);
-                    if (docAuthor) {
-                        docAuthor = str::JoinTemp(docAuthor, StrL(" "), author);
-                    } else {
-                        docAuthor = author;
+                if (tok->IsStartTag() || tok->IsEndTag()) {
+                    bool isName = tok->NameIsNS(StrL("first-name"), FB2_MAIN_NS()) ||
+                                  tok->NameIsNS(StrL("middle-name"), FB2_MAIN_NS()) ||
+                                  tok->NameIsNS(StrL("last-name"), FB2_MAIN_NS());
+                    if (isName) {
+                        inNamePart = tok->IsStartTag();
+                    } else if (tok->NameIsNS(StrL("nickname"), FB2_MAIN_NS())) {
+                        inNickname = tok->IsStartTag();
                     }
+                    continue;
                 }
+                if (!tok->IsText()) {
+                    continue;
+                }
+                if (inNamePart) {
+                    docAuthor = appendTo(docAuthor, ResolveHtmlEntitiesTemp(tok->s));
+                } else if (inNickname) {
+                    nickname = appendTo(nickname, ResolveHtmlEntitiesTemp(tok->s));
+                }
+            }
+            if (!docAuthor) {
+                // some files give only a nickname
+                docAuthor = nickname;
             }
             if (docAuthor) {
                 docAuthor.len -= str::NormalizeWSInPlace(docAuthor);
                 if (len(docAuthor) > 0) {
-                    TempStr val = docAuthor;
-                    bool replaceIfExists = inTitleInfo != 0;
-                    AddPropOwned(props, DocProp::Author, val, replaceIfExists);
+                    if (inTitleInfo) {
+                        // a book can list several authors; report all of them
+                        titleAuthors = titleAuthors ? str::JoinTemp(titleAuthors, StrL(", "), docAuthor) : docAuthor;
+                        AddPropOwned(props, DocProp::Author, titleAuthors, true);
+                    } else {
+                        AddPropOwned(props, DocProp::Author, docAuthor, false);
+                    }
                 }
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), FB2_MAIN_NS())) {

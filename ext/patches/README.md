@@ -45,6 +45,12 @@ And three that are not ours but that we carry ahead of the release we vendor:
 | `0022-backport-709480-bound-xml-recursion` | upstream depth limits for XPS metadata and epub outlines (covers #5032) |
 | `0023-backport-709574-html-metadata` | upstream title/author/subject metadata for HTML and FB2 (covers #2254) |
 
+And one of ours that has to come after a backport, because it builds on it:
+
+| Patch | What |
+| --- | --- |
+| `0024-fb2-all-authors-names-only` | every FB2 `<author>`, and only the name parts, not their home page and email (#2254) |
+
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.2` plus these
 patches, and nothing else.
 
