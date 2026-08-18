@@ -1000,6 +1000,8 @@ function portableEngineLinkArgs(outDir: string): string[] {
     "-Wl,--start-group",
     join(outDir, "lib", "libbase.a"),
     join(outDir, "lib", "libmupdf.a"),
+    // load-webp.c in libmupdf calls libwebp
+    join(outDir, "lib", "liblibwebp.a"),
     join(outDir, "lib", "liba-gumbo.a"),
     join(outDir, "lib", "libcmark-gfm.a"),
     join(outDir, "lib", "liba-mujs.a"),

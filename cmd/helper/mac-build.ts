@@ -867,6 +867,33 @@ async function buildTestUtil(
   }
 }
 
+// Archive names must match LibDef.name (libmupdf.a, liba-zlib.a, …).
+// libwebp is required because mupdf's load-webp.c calls WebPDecode* / WebPGetFeatures.
+function portableEngineLinkArgs(outDir: string): string[] {
+  return [
+    join(outDir, "lib", "libbase.a"),
+    join(outDir, "lib", "libmupdf.a"),
+    join(outDir, "lib", "liblibwebp.a"),
+    join(outDir, "lib", "liba-gumbo.a"),
+    join(outDir, "lib", "libcmark-gfm.a"),
+    join(outDir, "lib", "liba-mujs.a"),
+    join(outDir, "lib", "liba-extract.a"),
+    join(outDir, "lib", "libharfbuzz.a"),
+    join(outDir, "lib", "libfreetype.a"),
+    join(outDir, "lib", "libbrotli.a"),
+    join(outDir, "lib", "liblcms2.a"),
+    join(outDir, "lib", "liba-openjpeg.a"),
+    join(outDir, "lib", "liba-jbig2dec.a"),
+    join(outDir, "lib", "liblibjpeg-turbo.a"),
+    join(outDir, "lib", "libdjvudec.a"),
+    join(outDir, "lib", "libchmdec.a"),
+    join(outDir, "lib", "libmsdes.a"),
+    join(outDir, "lib", "liblibarchive.a"),
+    join(outDir, "lib", "liba-zlib.a"),
+    "-liconv",
+  ];
+}
+
 async function buildMacApp(
   outDir: string,
   isRelease: boolean,
@@ -922,25 +949,7 @@ async function buildMacApp(
     exePath,
     ...commonFlags,
     ...units.map((u) => u.obj),
-    join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libmupdf.a"),
-    join(outDir, "lib", "liba-gumbo.a"),
-    join(outDir, "lib", "libcmark-gfm.a"),
-    join(outDir, "lib", "liba-mujs.a"),
-    join(outDir, "lib", "liba-extract.a"),
-    join(outDir, "lib", "libharfbuzz.a"),
-    join(outDir, "lib", "libfreetype.a"),
-    join(outDir, "lib", "libbrotli.a"),
-    join(outDir, "lib", "liblcms2.a"),
-    join(outDir, "lib", "liba-openjpeg.a"),
-    join(outDir, "lib", "liba-jbig2dec.a"),
-    join(outDir, "lib", "liblibjpeg-turbo.a"),
-    join(outDir, "lib", "libdjvudec.a"),
-    join(outDir, "lib", "libchmdec.a"),
-    join(outDir, "lib", "libmsdes.a"),
-    join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "liba-zlib.a"),
-    "-liconv",
+    ...portableEngineLinkArgs(outDir),
     "-framework",
     "Cocoa",
   ];
@@ -1086,25 +1095,7 @@ async function buildTestEngines(
     exePath,
     ...commonFlags,
     ...units.map((u) => u.obj),
-    join(outDir, "lib", "libbase.a"),
-    join(outDir, "lib", "libmupdf.a"),
-    join(outDir, "lib", "liba-gumbo.a"),
-    join(outDir, "lib", "libcmark-gfm.a"),
-    join(outDir, "lib", "liba-mujs.a"),
-    join(outDir, "lib", "liba-extract.a"),
-    join(outDir, "lib", "libharfbuzz.a"),
-    join(outDir, "lib", "libfreetype.a"),
-    join(outDir, "lib", "libbrotli.a"),
-    join(outDir, "lib", "liblcms2.a"),
-    join(outDir, "lib", "liba-openjpeg.a"),
-    join(outDir, "lib", "liba-jbig2dec.a"),
-    join(outDir, "lib", "liblibjpeg-turbo.a"),
-    join(outDir, "lib", "libdjvudec.a"),
-    join(outDir, "lib", "libchmdec.a"),
-    join(outDir, "lib", "libmsdes.a"),
-    join(outDir, "lib", "liblibarchive.a"),
-    join(outDir, "lib", "liba-zlib.a"),
-    "-liconv",
+    ...portableEngineLinkArgs(outDir),
   ];
   const res = await spawnCmd(linkArgs);
   if (!res.ok) {
