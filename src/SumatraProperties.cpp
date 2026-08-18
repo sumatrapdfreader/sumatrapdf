@@ -36,8 +36,6 @@
 
 #if OS_WIN
 #include <wincrypt.h>
-#include <cryptuiapi.h>
-#pragma comment(lib, "cryptui.lib")
 #endif
 
 void ShowProperties(HWND parent, DocController* ctrl);
@@ -758,6 +756,8 @@ void PropertiesWnd::CopyToClipboard(VirtMouseEvent*) {
 }
 
 #if OS_WIN
+// CryptUIDlgViewContext is in cryptui.dll. MSVC can pull that via
+// #pragma comment; mingw-w64 often has no import lib, so load it here.
 static void ViewCertDer(HWND parent, Str der) {
     if (len(der) == 0) {
         return;
@@ -767,7 +767,15 @@ static void ViewCertDer(HWND parent, Str der) {
     if (!cert) {
         return;
     }
-    CryptUIDlgViewContext(CERT_STORE_CERTIFICATE_CONTEXT, cert, parent, L"Certificate", 0, nullptr);
+    using Fn = BOOL(WINAPI*)(DWORD, const void*, HWND, LPCWSTR, DWORD, void*);
+    HMODULE h = LoadLibraryW(L"cryptui.dll");
+    Fn fn = h ? (Fn)GetProcAddress(h, "CryptUIDlgViewContext") : nullptr;
+    if (fn) {
+        fn(CERT_STORE_CERTIFICATE_CONTEXT, cert, parent, L"Certificate", 0, nullptr);
+    }
+    if (h) {
+        FreeLibrary(h);
+    }
     CertFreeCertificateContext(cert);
 }
 
