@@ -281,6 +281,8 @@ enum class ControlCmd : u16 {
     TestImageRenderEdges = 57,
     TestInsertImage = 58,
     TestRenderPageColors = 59,
+    TestListSigningCerts = 60,
+    TestSignDocument = 61,
 };
 
 enum class ControlArgType : u16 {
@@ -815,6 +817,31 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ImageInsertResultTemp(pdfPath, imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestListSigningCerts: {
+            int exitCode = 0;
+            Str res = ListSigningCertsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSignDocument: {
+            Str pdfPath = StringArg(req, 0);
+            Str destPath = StringArg(req, 1);
+            Str thumbprint = StringArg(req, 2);
+            Str certPath = StringArg(req, 3);
+            Str certPassword = StringArg(req, 4);
+            if (!pdfPath || !destPath) {
+                AppendError(req,
+                            "TestSignDocument expects string pdfPath, string destPath [, thumbprint] [, certPath] [, "
+                            "password]");
+                break;
+            }
+            int exitCode = 0;
+            Str res = SignDocumentResultTemp(pdfPath, destPath, thumbprint, certPath, certPassword, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

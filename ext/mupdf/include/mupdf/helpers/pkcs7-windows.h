@@ -13,6 +13,7 @@
 // Signing:
 //   - pkcs7_windows_read_pfx             — load a PFX/PKCS#12 file
 //   - pkcs7_windows_read_pfx_from_buffer — load a PFX/PKCS#12 from memory
+//   - pkcs7_windows_read_store           — load a cert from CurrentUser\MY by SHA-1 thumbprint
 
 #ifndef MUPDF_PKCS7_WINDOWS_H
 #define MUPDF_PKCS7_WINDOWS_H
@@ -32,6 +33,7 @@ pdf_pkcs7_verifier* pkcs7_windows_new_verifier(fz_context* ctx);
 
 pdf_pkcs7_signer* pkcs7_windows_read_pfx(fz_context* ctx, const char* pfile, const char* pw);
 pdf_pkcs7_signer* pkcs7_windows_read_pfx_from_buffer(fz_context* ctx, fz_buffer* buf, const char* pw);
+pdf_pkcs7_signer* pkcs7_windows_read_store(fz_context* ctx, const char* thumbprint_hex);
 
 #ifdef __cplusplus
 }

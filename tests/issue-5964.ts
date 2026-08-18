@@ -89,17 +89,26 @@ async function waitForWindowByTitle(pid: number, title: string, timeoutMs = 4000
   return 0;
 }
 
-// text of the first ComboBox child, i.e. the selected placement
+// text of the placement ComboBox (the one that names a signature field or
+// "new signature"). The dialog also has a certificate drop-down now (#5965).
 function comboText(hwnd: number): string {
-  let text = "";
+  let first = "";
+  let placement = "";
   enumChildWindows(hwnd, (h) => {
     if (getClassName(h) !== "ComboBox") {
       return true;
     }
-    text = getControlText(h);
-    return false;
+    const t = getControlText(h);
+    if (!first) {
+      first = t;
+    }
+    if (/signature|CEO|page/i.test(t)) {
+      placement = t;
+      return false;
+    }
+    return true;
   });
-  return text;
+  return placement || first;
 }
 
 export async function testit(): Promise<void> {

@@ -50,6 +50,10 @@ struct SignDocumentWnd : WindowBase {
     Str preselectField;
     bool hasPreselect = false;
 
+    // CurrentUser\MY certs that can sign; the drop-down lists these, then
+    // "Certificate file..." which uses editCert / editPassword instead
+    StrVec certThumbs;
+    DropDown* ddCert = nullptr;
     Edit* editCert = nullptr;
     Edit* editPassword = nullptr;
     Edit* editReason = nullptr;
@@ -61,9 +65,13 @@ struct SignDocumentWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void CollectFields();
+    void FillCertificates();
     void FillPlacement();
+    bool UsingCertFile() const;
+    void UpdateCertFileEnabled();
     bool BuildSignArgs(PdfSignArgs& args);
 
+    void OnCertChanged();
     void OnBrowse(VirtMouseEvent* ev = nullptr);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnSign(VirtMouseEvent* ev = nullptr);
@@ -117,6 +125,46 @@ void SignDocumentWnd::CollectFields() {
     EngineMupdfGetUnsignedSignatureFields(engine, fieldNames, fieldPages);
 }
 
+void SignDocumentWnd::FillCertificates() {
+    if (!ddCert) {
+        return;
+    }
+    certThumbs.Reset();
+    StrVec labels;
+    ListWindowsSigningCertificates(certThumbs, labels);
+    StrVec items;
+    for (int i = 0; i < len(labels); i++) {
+        items.Append(labels[i]);
+    }
+    items.Append(_TRA("Certificate file..."));
+    ddCert->SetItems(items);
+    // a store cert if we have one; otherwise the file picker
+    ddCert->SetCurrentSelection(len(certThumbs) > 0 ? 0 : len(items) - 1);
+    UpdateCertFileEnabled();
+}
+
+bool SignDocumentWnd::UsingCertFile() const {
+    int idx = ddCert ? ddCert->GetCurrentSelection() : -1;
+    return idx < 0 || idx >= len(certThumbs);
+}
+
+void SignDocumentWnd::UpdateCertFileEnabled() {
+    bool file = UsingCertFile();
+    if (editCert) {
+        editCert->SetIsEnabled(file);
+    }
+    if (btnBrowse) {
+        btnBrowse->SetIsEnabled(file);
+    }
+    if (editPassword) {
+        editPassword->SetIsEnabled(file);
+    }
+}
+
+void SignDocumentWnd::OnCertChanged() {
+    UpdateCertFileEnabled();
+}
+
 void SignDocumentWnd::FillPlacement() {
     if (!ddPlacement) {
         return;
@@ -146,18 +194,23 @@ void SignDocumentWnd::FillPlacement() {
 // Turns the dialog state into what the engine needs; false if something the
 // user has to fix is missing.
 bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
-    TempStr certPath = editCert ? editCert->GetTextTemp() : Str{};
-    str::TrimWSInPlace(certPath, str::TrimOpt::Both);
-    if (len(certPath) == 0) {
-        MessageBoxWarning(hwnd, _TRA("Please choose the certificate file to sign with."), _TRA("Sign Document"));
-        return false;
+    if (UsingCertFile()) {
+        TempStr certPath = editCert ? editCert->GetTextTemp() : Str{};
+        str::TrimWSInPlace(certPath, str::TrimOpt::Both);
+        if (len(certPath) == 0) {
+            MessageBoxWarning(hwnd, _TRA("Please choose the certificate file to sign with."), _TRA("Sign Document"));
+            return false;
+        }
+        if (!file::Exists(certPath)) {
+            MessageBoxWarning(hwnd, fmt(_TRA("Certificate file %s doesn't exist.").s, certPath), _TRA("Sign Document"));
+            return false;
+        }
+        args.certPath = certPath;
+        args.certPassword = editPassword ? editPassword->GetTextTemp() : Str{};
+    } else {
+        int idx = ddCert->GetCurrentSelection();
+        args.certThumbprint = certThumbs[idx];
     }
-    if (!file::Exists(certPath)) {
-        MessageBoxWarning(hwnd, fmt(_TRA("Certificate file %s doesn't exist.").s, certPath), _TRA("Sign Document"));
-        return false;
-    }
-    args.certPath = certPath;
-    args.certPassword = editPassword ? editPassword->GetTextTemp() : Str{};
     args.reason = editReason ? editReason->GetTextTemp() : Str{};
     args.location = editLocation ? editLocation->GetTextTemp() : Str{};
     str::TrimWSInPlace(args.reason, str::TrimOpt::Both);
@@ -234,6 +287,10 @@ static TempStr SignErrorMessageTemp(Str err) {
             return _TRA("Wrong password for the certificate file.");
         }
         return fmt(_TRA("Could not read the certificate file: %s").s, err);
+    }
+    if (str::Contains(err, StrL("not found in the Windows certificate store")) ||
+        str::Contains(err, StrL("invalid certificate thumbprint"))) {
+        return _TRA("Could not use that certificate from the Windows certificate store.");
     }
     return str::DupTemp(err);
 }
@@ -326,7 +383,19 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
-    AddLabel(vbox, _TRA("&Certificate file (.pfx, .p12):"), f, isRtl, 0);
+    AddLabel(vbox, _TRA("&Certificate:"), f, isRtl, 0);
+    {
+        DropDown::CreateArgs args;
+        args.parent = hwnd;
+        args.font = f;
+        args.isRtl = isRtl;
+        auto* c = new DropDown();
+        c->Create(args);
+        ddCert = c;
+        c->onSelectionChanged = MkMethod0<SignDocumentWnd, &SignDocumentWnd::OnCertChanged>(this);
+        vbox->AddChild(c);
+        FillCertificates();
+    }
     {
         auto* row = new HBox();
         row->alignMain = MainAxisAlign::MainStart;
@@ -348,10 +417,12 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
         btnBrowse->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnBrowse>(this);
         row->AddChild(btnBrowse);
         vbox->AddChild(row);
+        UpdateCertFileEnabled();
     }
 
     AddLabel(vbox, _TRA("&Password:"), f, isRtl, 8);
     editPassword = AddEdit(vbox, hwnd, f, isRtl, true);
+    UpdateCertFileEnabled();
 
     AddLabel(vbox, _TRA("&Reason (optional):"), f, isRtl, 8);
     editReason = AddEdit(vbox, hwnd, f, isRtl, false);
@@ -398,8 +469,10 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
     UpdateTheme();
 
     SetIsVisible(true);
-    if (editCert) {
+    if (UsingCertFile() && editCert) {
         HwndSetFocus(editCert->hwnd);
+    } else if (ddCert) {
+        HwndSetFocus(ddCert->hwnd);
     }
     return true;
 }

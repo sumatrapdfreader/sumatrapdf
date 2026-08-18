@@ -610,6 +610,76 @@ static WCHAR* utf8_to_wide(fz_context* ctx, const char* s) {
     return w;
 }
 
+// Takes ownership of hStore and cert on success. On failure the caller still
+// owns them. The private key is acquired once here to fail early; CryptSignMessage
+// reacquires it via the cert's CERT_KEY_PROV_INFO_PROP_ID.
+static pdf_pkcs7_signer* windows_make_signer(fz_context* ctx, HCERTSTORE hStore, PCCERT_CONTEXT cert) {
+    HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hKey = 0;
+    DWORD keySpec = 0;
+    BOOL mustFree = FALSE;
+    // ALLOW_NCRYPT: CurrentUser\MY certs are often CNG (software or smart card).
+    // COMPARE_KEY is CAPI-oriented and fails those with NTE_BAD_PROV_TYPE.
+    if (!CryptAcquireCertificatePrivateKey(cert, CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG, NULL, &hKey, &keySpec,
+                                           &mustFree)) {
+        fz_throw(ctx, FZ_ERROR_GENERIC, "CryptAcquireCertificatePrivateKey failed (gle=%lu)", GetLastError());
+    }
+    if (mustFree) {
+        if (keySpec == CERT_NCRYPT_KEY_SPEC) {
+            NCryptFreeObject((NCRYPT_KEY_HANDLE)hKey);
+        } else {
+            CryptReleaseContext((HCRYPTPROV)hKey, 0);
+        }
+    }
+
+    windows_signer* signer = fz_malloc_struct(ctx, windows_signer);
+    signer->base.keep = windows_keep_signer;
+    signer->base.drop = windows_drop_signer;
+    signer->base.get_signing_name = windows_get_signing_name;
+    signer->base.max_digest_size = windows_max_digest_size;
+    signer->base.create_digest = windows_create_digest;
+    signer->refs = 1;
+    signer->hStore = hStore;
+    signer->cert = cert;
+    return &signer->base;
+}
+
+static int hex_nibble(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    return -1;
+}
+
+// Decode a SHA-1 thumbprint (40 hex digits, optional spaces or colons) into
+// 20 bytes. Returns 0 on success.
+static int parse_thumbprint(const char* hex, BYTE out[20]) {
+    int n = 0;
+    if (!hex) {
+        return -1;
+    }
+    for (const char* p = hex; *p; p++) {
+        if (*p == ' ' || *p == ':' || *p == '-') {
+            continue;
+        }
+        int hi = hex_nibble(*p);
+        if (hi < 0 || !p[1]) {
+            return -1;
+        }
+        int lo = hex_nibble(*++p);
+        if (lo < 0 || n >= 20) {
+            return -1;
+        }
+        out[n++] = (BYTE)((hi << 4) | lo);
+    }
+    return n == 20 ? 0 : -1;
+}
+
 static pdf_pkcs7_signer* pkcs7_windows_read_pfx_imp(fz_context* ctx, const char* pfile, fz_buffer* pfxBuf,
                                                     const char* pw) {
     windows_signer* signer = NULL;
@@ -647,32 +717,7 @@ static pdf_pkcs7_signer* pkcs7_windows_read_pfx_imp(fz_context* ctx, const char*
             fz_throw(ctx, FZ_ERROR_GENERIC, "PFX has no cert with a private key");
         }
 
-        // Validate at load time: acquire the key once, release it. CryptSignMessage
-        // reacquires via the cert's stored CERT_KEY_PROV_INFO_PROP_ID.
-        HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hKey = 0;
-        DWORD keySpec = 0;
-        BOOL mustFree = FALSE;
-        if (!CryptAcquireCertificatePrivateKey(cert, CRYPT_ACQUIRE_COMPARE_KEY_FLAG, NULL, &hKey, &keySpec,
-                                               &mustFree)) {
-            fz_throw(ctx, FZ_ERROR_GENERIC, "CryptAcquireCertificatePrivateKey failed (gle=%lu)", GetLastError());
-        }
-        if (mustFree) {
-            if (keySpec == CERT_NCRYPT_KEY_SPEC) {
-                NCryptFreeObject((NCRYPT_KEY_HANDLE)hKey);
-            } else {
-                CryptReleaseContext((HCRYPTPROV)hKey, 0);
-            }
-        }
-
-        signer = fz_malloc_struct(ctx, windows_signer);
-        signer->base.keep = windows_keep_signer;
-        signer->base.drop = windows_drop_signer;
-        signer->base.get_signing_name = windows_get_signing_name;
-        signer->base.max_digest_size = windows_max_digest_size;
-        signer->base.create_digest = windows_create_digest;
-        signer->refs = 1;
-        signer->hStore = hStore;
-        signer->cert = cert;
+        signer = (windows_signer*)windows_make_signer(ctx, hStore, cert);
         // ownership transferred to signer — null out locals so fz_catch doesn't free them
         hStore = NULL;
         cert = NULL;
@@ -699,4 +744,50 @@ pdf_pkcs7_signer* pkcs7_windows_read_pfx(fz_context* ctx, const char* pfile, con
 
 pdf_pkcs7_signer* pkcs7_windows_read_pfx_from_buffer(fz_context* ctx, fz_buffer* buf, const char* pw) {
     return pkcs7_windows_read_pfx_imp(ctx, NULL, buf, pw);
+}
+
+// Load a signing cert from the current user's Personal (MY) store by SHA-1
+// thumbprint. The private key stays in the store; Windows will prompt for a
+// PIN if the key container is protected.
+pdf_pkcs7_signer* pkcs7_windows_read_store(fz_context* ctx, const char* thumbprint_hex) {
+    windows_signer* signer = NULL;
+    HCERTSTORE hStore = NULL;
+    PCCERT_CONTEXT cert = NULL;
+    BYTE hash[20];
+    CRYPT_HASH_BLOB blob;
+
+    fz_var(signer);
+    fz_var(hStore);
+    fz_var(cert);
+
+    fz_try(ctx) {
+        if (parse_thumbprint(thumbprint_hex, hash) != 0) {
+            fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid certificate thumbprint");
+        }
+        hStore = CertOpenSystemStoreW(0, L"MY");
+        if (!hStore) {
+            fz_throw(ctx, FZ_ERROR_GENERIC, "CertOpenSystemStore failed (gle=%lu)", GetLastError());
+        }
+        blob.cbData = sizeof(hash);
+        blob.pbData = hash;
+        cert = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_HASH, &blob,
+                                          NULL);
+        if (!cert) {
+            fz_throw(ctx, FZ_ERROR_GENERIC, "certificate %s not found in the Windows certificate store",
+                     thumbprint_hex ? thumbprint_hex : "");
+        }
+        signer = (windows_signer*)windows_make_signer(ctx, hStore, cert);
+        hStore = NULL;
+        cert = NULL;
+    }
+    fz_catch(ctx) {
+        if (cert) {
+            CertFreeCertificateContext(cert);
+        }
+        if (hStore) {
+            CertCloseStore(hStore, 0);
+        }
+        fz_rethrow(ctx);
+    }
+    return &signer->base;
 }

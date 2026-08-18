@@ -10,6 +10,11 @@
 #include "base/Base.h"
 #include "base/ScopedWin.h"
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <wincrypt.h>
+
 extern "C" {
 #include <mupdf/pdf.h>
 #include <mupdf/helpers/pkcs7-windows.h>
@@ -115,8 +120,11 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase* engine, StrVec& names, Ve
 }
 
 // Finds the unsigned signature widget named name; returns a kept reference the
-// caller drops. Null if there is no such field.
-static pdf_annot* FindUnsignedSignatureWidget(fz_context* ctx, pdf_document* doc, Str name, int* pageNoOut) {
+// caller drops. The page that owns it is left loaded and returned in pageOut
+// (caller drops it). Dropping that page before signing unbinds the annot
+// ("annotation not bound to any page") if nothing else is holding it.
+static pdf_annot* FindUnsignedSignatureWidget(fz_context* ctx, pdf_document* doc, Str name, int* pageNoOut,
+                                              pdf_page** pageOut) {
     pdf_page* page = nullptr;
     pdf_annot* found = nullptr;
     fz_var(page);
@@ -137,6 +145,10 @@ static pdf_annot* FindUnsignedSignatureWidget(fz_context* ctx, pdf_document* doc
                     if (pageNoOut) {
                         *pageNoOut = pageIdx + 1;
                     }
+                    if (pageOut) {
+                        *pageOut = page;
+                    }
+                    page = nullptr;
                     break;
                 }
             }
@@ -202,9 +214,13 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
     fz_var(pageNo);
 
     fz_try(ctx) {
-        signer = pkcs7_windows_read_pfx(ctx, CStrTemp(args.certPath), CStrTemp(args.certPassword));
+        if (args.certThumbprint) {
+            signer = pkcs7_windows_read_store(ctx, CStrTemp(args.certThumbprint));
+        } else {
+            signer = pkcs7_windows_read_pfx(ctx, CStrTemp(args.certPath), CStrTemp(args.certPassword));
+        }
         if (args.fieldName) {
-            widget = FindUnsignedSignatureWidget(ctx, epdf->pdfdoc, args.fieldName, &pageNo);
+            widget = FindUnsignedSignatureWidget(ctx, epdf->pdfdoc, args.fieldName, &pageNo, &page);
             if (!widget) {
                 fz_throw(ctx, FZ_ERROR_ARGUMENT, "signature field '%s' is gone", CStrTemp(args.fieldName));
             }
@@ -249,4 +265,62 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
         epdf->modifiedAnnotations = true;
     }
     return ok;
+}
+
+// Certificates in the current user's Personal store that have a private key
+// and are currently valid. Labels are what the Sign Document drop-down shows;
+// thumbprints are what EngineMupdfSignDocument wants in certThumbprint.
+void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels) {
+    thumbprints.Reset();
+    labels.Reset();
+    HCERTSTORE hStore = CertOpenSystemStoreW(0, L"MY");
+    if (!hStore) {
+        return;
+    }
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    PCCERT_CONTEXT cert = nullptr;
+    while ((cert = CertEnumCertificatesInStore(hStore, cert)) != nullptr) {
+        DWORD provSz = 0;
+        if (!CertGetCertificateContextProperty(cert, CERT_KEY_PROV_INFO_PROP_ID, nullptr, &provSz)) {
+            continue;
+        }
+        if (cert->pCertInfo) {
+            if (CompareFileTime(&cert->pCertInfo->NotBefore, &now) > 0) {
+                continue;
+            }
+            if (CompareFileTime(&cert->pCertInfo->NotAfter, &now) < 0) {
+                continue;
+            }
+            BYTE ku[2]{};
+            if (CertGetIntendedKeyUsage(X509_ASN_ENCODING, cert->pCertInfo, ku, sizeof(ku))) {
+                if ((ku[0] & CERT_DIGITAL_SIGNATURE_KEY_USAGE) == 0) {
+                    continue;
+                }
+            }
+        }
+        BYTE hash[20];
+        DWORD hashLen = sizeof(hash);
+        if (!CertGetCertificateContextProperty(cert, CERT_HASH_PROP_ID, hash, &hashLen) || hashLen != 20) {
+            continue;
+        }
+        char hex[41];
+        for (DWORD i = 0; i < 20; i++) {
+            snprintf(hex + (i * 2), 3, "%02X", hash[i]);
+        }
+        WCHAR nameW[256]{};
+        CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, nameW, dimof(nameW));
+        TempStr name = ToUtf8Temp(WStr(nameW));
+        if (len(name) == 0) {
+            name = StrL("(unnamed)");
+        }
+        SYSTEMTIME st{};
+        if (cert->pCertInfo) {
+            FileTimeToSystemTime(&cert->pCertInfo->NotAfter, &st);
+        }
+        TempStr label = st.wYear ? fmt("%s (expires %04d-%02d-%02d)", name, st.wYear, st.wMonth, st.wDay) : name;
+        thumbprints.Append(Str(hex, 40));
+        labels.Append(label);
+    }
+    CertCloseStore(hStore, 0);
 }

@@ -145,7 +145,9 @@ async function signWith(pid: number, frame: number, pfx: string, password: strin
     throw new Error(`Sign dialog: expected 4 edit fields, got ${edits.length}`);
   }
   const combos = childrenOfClass(dlg, "ComboBox");
-  const placement = combos.length ? getControlText(combos[0]) : "";
+  const placement =
+    combos.map(getControlText).find((t) => /signature|CEO|page/i.test(t)) ??
+    (combos.length ? getControlText(combos[combos.length - 1]) : "");
   sendText(edits[0], pfx);
   sendText(edits[1], password);
   await sleep(300);

@@ -54,6 +54,8 @@ export enum ControlCommand {
   TestImageRenderEdges = 57,
   TestInsertImage = 58,
   TestRenderPageColors = 59,
+  TestListSigningCerts = 60,
+  TestSignDocument = 61,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

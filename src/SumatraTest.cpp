@@ -1718,3 +1718,86 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut) {
     }
     return ToStrTemp(out);
 }
+
+// SHA-1 thumbprints and drop-down labels of CurrentUser\MY certs that can
+// sign, one pair per cert. Used to check the store enumeration for #5965.
+TempStr ListSigningCertsResultTemp(int* exitCodeOut) {
+    StrVec thumbs;
+    StrVec labels;
+    ListWindowsSigningCertificates(thumbs, labels);
+    str::Builder out;
+    out.Append(fmt("n=%d\n", len(thumbs)));
+    for (int i = 0; i < len(thumbs); i++) {
+        out.Append(fmt("thumb=%s\nlabel=%s\n", thumbs[i], labels[i]));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// Sign pdfPath with a Windows-store cert (thumbprint) or a .pfx (certPath +
+// password), write destPath, and report ok=1 on success. The dest file is a
+// copy of the source so the signature can be saved incrementally.
+TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword,
+                               int* exitCodeOut) {
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    if (len(thumbprint) == 0 && len(certPath) == 0) {
+        return fail(StrL("ERROR need thumbprint or certPath\n"));
+    }
+    if (!file::Exists(pdfPath)) {
+        return fail(fmt("ERROR pdf-missing path=%s\n", pdfPath));
+    }
+    if (!file::Copy(destPath, pdfPath, false)) {
+        return fail(fmt("ERROR copy-failed dest=%s\n", destPath));
+    }
+
+    EngineBase* engine = CreateEngineFromFile(destPath, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", destPath));
+    }
+
+    PdfSignArgs args;
+    args.certThumbprint = thumbprint;
+    args.certPath = certPath;
+    args.certPassword = certPassword;
+    args.pageNo = 1;
+    StrVec fieldNames;
+    Vec<int> fieldPages;
+    EngineMupdfGetUnsignedSignatureFields(engine, fieldNames, fieldPages);
+    if (len(fieldNames) > 0) {
+        args.fieldName = fieldNames[0];
+        args.pageNo = fieldPages[0];
+    }
+
+    Str err;
+    bool ok = EngineMupdfSignDocument(engine, args, &err);
+    if (!ok) {
+        TempStr msg = fmt("ERROR sign-failed %s\n", err ? err : StrL("(no message)"));
+        str::Free(err);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    str::Free(err);
+
+    if (!EngineMupdfSaveUpdated(engine, destPath, {})) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR save-failed\n"));
+    }
+    SafeEngineRelease(&engine);
+    out.Append(StrL("ok=1\n"));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
