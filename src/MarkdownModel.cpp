@@ -808,7 +808,11 @@ void MarkdownModel::OnDocumentComplete(Str url) {
         str::ReplaceWithCopy(&this->fileName, pages[pageNo - 1]);
     }
 
-    if (GetSavedHtmlScrollPosForUrl(plainUrl, &htmlScrollPos)) {
+    // a heading fragment is the destination; don't overwrite it with a
+    // previously saved scroll (often 0 from the initial page load)
+    if (UrlFragmentTemp(url)) {
+        restoreHtmlScrollPos = false;
+    } else if (GetSavedHtmlScrollPosForUrl(plainUrl, &htmlScrollPos)) {
         restoreHtmlScrollPos = true;
     }
     ZoomTo(zoomVirtual);

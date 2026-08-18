@@ -4,7 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 
 const TARGET_DEST_NO = 3;
 const MIN_TARGET_SCROLL_Y = 500;
@@ -15,11 +15,13 @@ async function requestUntilReady(
   minScrollY: number,
   expected: string,
 ): Promise<string> {
-  const deadline = Date.now() + 20_000;
+  const deadline = Date.now() + 20_000 * SLOW_BUILD_FACTOR;
+  let last = "";
   for (;;) {
     const res = await client.request(ControlCommand.TestMarkdownTocNavigate, [destNo, minScrollY]);
     const exitCode = res[0] as number;
     const output = String(res[1] ?? "").trim();
+    last = output;
     if (exitCode === 0 && output.startsWith(expected)) {
       return output;
     }
@@ -27,7 +29,7 @@ async function requestUntilReady(
       throw new Error(`#5842 WebView TOC navigation failed: ${output}`);
     }
     if (Date.now() > deadline) {
-      throw new Error(`#5842 WebView TOC navigation timed out: ${output}`);
+      throw new Error(`#5842 WebView TOC navigation timed out: ${last}`);
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
@@ -69,7 +71,13 @@ export async function testit(): Promise<void> {
   const result = await withControlledSumatra(
     EXE,
     async (client) => {
+      // wait until WebView has painted and reported a scroll position, so the
+      // heading jump is not the first navigation (which can land in a 0-size view)
+      await requestUntilReady(client, 0, 0, "OK");
       const started = await requestUntilReady(client, TARGET_DEST_NO, MIN_TARGET_SCROLL_Y, "NAVIGATING");
+      if (!started.includes("target-heading")) {
+        throw new Error(`#5842 dest ${TARGET_DEST_NO} is not the target heading: ${started}`);
+      }
       const landed = await requestUntilReady(client, 0, MIN_TARGET_SCROLL_Y, "OK");
       return `${started}\n${landed}`;
     },

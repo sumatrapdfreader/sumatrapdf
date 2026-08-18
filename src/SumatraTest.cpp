@@ -1094,7 +1094,9 @@ TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeO
         int counter = 0;
         TocItem* item = toc && toc->root ? NthTocItemWithDest(toc->root, destNo, counter) : nullptr;
         if (!item) {
-            return finish(fmt("ERROR no-dest destNo=%d", destNo), 1);
+            // headings are filled in on a background thread; the files-only
+            // stub TOC is installed first, so dest 3 may not exist yet
+            return finish(fmt("NOTREADY no-dest destNo=%d", destNo), 2);
         }
         GoToTocItem(win, item);
         return finish(fmt("NAVIGATING dest=%d name=%s", destNo, PageDestGetName(item->dest)), 0);

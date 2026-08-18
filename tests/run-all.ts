@@ -8,6 +8,7 @@
 
 import { formatDuration, runNamedTests, runSuiteMain, type NamedTest, type SuiteOptions } from "./util.ts";
 import { tests as almostAllTests, testit as runAlmostAll } from "./run-almost-all.ts";
+import { testit as issue5842 } from "./issue-5842.ts";
 import { testit as issue4967 } from "./issue-4967.ts";
 import { testit as issue5065 } from "./issue-5065.ts";
 import { testit as issue5353 } from "./issue-5353.ts";
@@ -20,6 +21,8 @@ import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as issue1195 } from "./issue-1195.ts";
 
 export const slowTests: NamedTest[] = [
+  // WebView TOC; also the first test in run-pre-release.ts
+  ["issue-5842", issue5842],
   ["issue-4967", issue4967],
   ["issue-5065", issue5065],
   ["issue-5353", issue5353],

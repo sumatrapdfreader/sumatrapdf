@@ -46,7 +46,6 @@ import { testit as findResultsSorted } from "./find-results-sorted.ts";
 import { testit as issue5874 } from "./issue-5874.ts";
 import { testit as issue2252 } from "./issue-2252.ts";
 import { testit as issue5834 } from "./issue-5834.ts";
-import { testit as issue5842 } from "./issue-5842.ts";
 import { testit as issue5869 } from "./issue-5869.ts";
 import { testit as issue5881 } from "./issue-5881.ts";
 import { testit as rectSelectionDrag } from "./rect-selection-drag.ts";
@@ -160,7 +159,6 @@ export const tests: NamedTest[] = [
   ["issue-5874", issue5874],
   ["issue-2252", issue2252],
   ["issue-5834", issue5834],
-  ["issue-5842", issue5842],
   ["issue-5869", issue5869],
   ["issue-5881", issue5881],
   ["rect-selection-drag", rectSelectionDrag],

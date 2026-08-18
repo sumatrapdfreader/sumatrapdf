@@ -449,14 +449,16 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
     WebviewWnd* m_wnd = nullptr;
 };
 
-static TempWStr UriPathFromPrefix(WStr uri, WStr prefix);
+static TempWStr UriPathFromPrefix(WStr uri, WStr prefix, bool keepQueryAndFragment = false);
 
 static TempStr UrlForWebViewEvent(WStr uri, WStr prefix) {
     if (!uri) {
         return {};
     }
     if (prefix && wstr::StartsWith(uri, prefix)) {
-        TempWStr pathW = UriPathFromPrefix(uri, prefix);
+        // keep ?query and #fragment: navigation handlers (markdown heading
+        // dests, CHM) need the hash; resource fetches strip it separately
+        TempWStr pathW = UriPathFromPrefix(uri, prefix, true);
         if (!pathW) {
             return {};
         }
@@ -776,7 +778,7 @@ static TempWStr MimeHeaderFromContentType(Str contentType) {
     return str::JoinTemp(WStrL(L"Content-Type: "), contentTypeW);
 }
 
-static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
+static TempWStr UriPathFromPrefix(WStr uri, WStr prefix, bool keepQueryAndFragment) {
     if (!uri || !prefix || !wstr::StartsWith(uri, prefix)) {
         return {};
     }
@@ -788,13 +790,15 @@ static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
         return {};
     }
     WStr path = WStr(uri.s + pathOff, uri.len - pathOff);
-    int q = wstr::IndexOfChar(path, L'?');
-    if (q >= 0) {
-        path = WStr(path.s, q);
-    }
-    int h = wstr::IndexOfChar(path, L'#');
-    if (h >= 0) {
-        path = WStr(path.s, h);
+    if (!keepQueryAndFragment) {
+        int q = wstr::IndexOfChar(path, L'?');
+        if (q >= 0) {
+            path = WStr(path.s, q);
+        }
+        int h = wstr::IndexOfChar(path, L'#');
+        if (h >= 0) {
+            path = WStr(path.s, h);
+        }
     }
     return wstr::Dup(path);
 }

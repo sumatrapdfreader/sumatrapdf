@@ -19,16 +19,34 @@
 constexpr const char* kChmVirtualHost = "https://sumatrapdf.chm/";
 constexpr const WCHAR* kChmVirtualHostW = L"https://sumatrapdf.chm/";
 
-// Injected on every WebView2 navigation. Reports the document scroll position
-// back to the host on each scroll so BrowserDocView can answer GetScrollPos()
-// synchronously (WebView2 script eval is async and can't return a value here).
-// notify() rather than call(): scrolling fires constantly and there's nothing to
-// reply with, so this must not allocate a promise per event
-constexpr const char* kReportScrollJs =
-    "(function(){var post=function(){try{var x=Math.round(window.scrollX||window.pageXOffset||0);"
-    "var y=Math.round(window.scrollY||window.pageYOffset||0);"
-    "window.__sumatra__.notify('scroll',x,y);}catch(e){}};"
-    "window.addEventListener('scroll',post,true);})();";
+// Reports the document scroll position back to the host so GetScrollPos() can
+// answer synchronously (WebView2 script eval is async and can't return a value).
+// Posted through chrome.webview, not __sumatra__.notify: AddScriptToExecuteOnDocumentCreated
+// is async and often loses the race with the first Navigate, so the bridge
+// script may be missing on this document. Hash navigation often never fires a
+// 'scroll' event either, which left GetScrollPos() at (-1,-1). So we post
+// immediately, on scroll/hashchange/load/resize, and again shortly after.
+constexpr const char* kReportScrollJs = R"JS((function(){
+  var post = function() {
+    try {
+      var wv = window.chrome && window.chrome.webview;
+      if (!wv) { return; }
+      var x = Math.round(window.scrollX || window.pageXOffset || 0);
+      var y = Math.round(window.scrollY || window.pageYOffset || 0);
+      wv.postMessage(JSON.stringify({__sumatraNotify:1,method:"scroll",params:JSON.stringify([x,y])}));
+    } catch (e) {}
+  };
+  if (!window.__sumatraScrollHooked) {
+    window.__sumatraScrollHooked = true;
+    window.addEventListener("scroll", post, true);
+    window.addEventListener("hashchange", post);
+    window.addEventListener("load", post);
+    window.addEventListener("resize", post);
+  }
+  post();
+  setTimeout(post, 0);
+  setTimeout(post, 50);
+})();)JS";
 
 // Injected on every WebView2 navigation. In-page find driven by the host's
 // own find UI: searches the *rendered* DOM text (so what we find is exactly
@@ -334,7 +352,13 @@ bool BrowserDocView::NavigationStarting(void* ctx, Str url, bool newWindow) {
     if (!view || !view->cb) {
         return false;
     }
-    return view->cb->OnBeforeNavigate(url, newWindow);
+    bool allow = view->cb->OnBeforeNavigate(url, newWindow);
+    // drop the previous page's position so GetScrollPos() does not keep a stale
+    // y while the new document (or hash) is still applying
+    if (allow && !newWindow) {
+        view->webviewScrollPos = Point(-1, -1);
+    }
+    return allow;
 }
 
 void BrowserDocView::NavigationCompleted(void* ctx, Str url, bool success) {
@@ -348,6 +372,11 @@ void BrowserDocView::NavigationCompleted(void* ctx, Str url, bool success) {
         view->wv->RegisterForwardingDropTarget();
     }
     view->cb->OnDocumentComplete(url);
+    // after zoom / restore have applied: init scripts may have missed this
+    // document, and hash navigation often never fires a 'scroll' event
+    if (view->wv) {
+        view->wv->Eval(kReportScrollJs);
+    }
 }
 
 void BrowserDocView::HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
