@@ -246,6 +246,16 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
         return engine;
     }
     if (kind == FileType::Mobi) {
+        // AZW4 / Kindle Print Replica is a PDF inside a MOBI wrapper.
+        Str pdf = ExtractPdfFromPrintReplicaFile(path);
+        if (len(pdf) > 0) {
+            engine = CreateEngineMupdfFromData(pdf, StrL("file.pdf"), pwdUI);
+            str::Free(pdf);
+            if (engine) {
+                engine->SetFilePath(path);
+                return engine;
+            }
+        }
         engine = CreateEngineMobiFromFile(path);
         return engine;
     }

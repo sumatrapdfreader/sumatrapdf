@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Kindle Print Replica (`.azw4`) files open as the embedded PDF instead of as a reflowable MOBI ebook (fixes #1315)
 - Command Palette: type `%` for the table of contents of the current document (like `$` for favorites). `% TOC` appears in the mode row when the document has a TOC. The old `*` prefix still works
 - Command Palette mode switches at the top (`#` File History, `>` Commands, …) use the same smaller font as the hints at the bottom
 - Explorer and Outlook preview pane: Ctrl+wheel zooms, drag pans when zoomed in, and the wheel pans then turns the page at the edge. Double-click returns to fit-page (fixes #859)

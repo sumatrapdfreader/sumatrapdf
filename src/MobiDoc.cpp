@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/ByteReaderWriter.h"
+#include "base/File.h"
 #include "base/GuessFileType.h"
 
 #include "gui/UIModels.h"
@@ -863,6 +864,16 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
         return false;
     }
 
+    // Print Replica / AZW4 is a PDF in a MOBI wrapper. Do not treat the
+    // binary records as HTML (issue #1315).
+    if (pdbReader->GetRecordCount() >= 2) {
+        auto rec1 = pdbReader->GetRecord(1);
+        if (len(rec1) >= 4 && MemEq(rec1.s, "%MOP", 4)) {
+            logf("MobiDoc: Print Replica / AZW4, not a MOBI ebook\n");
+            return false;
+        }
+    }
+
     ReportIf(len(doc) != 0);
     doc.Reset();
     doc.cap = docUncompressedSize; // capacity hint, same trick as ByteWriter ctor
@@ -1104,4 +1115,225 @@ MobiDoc* MobiDoc::CreateFromData(Str data) {
         return nullptr;
     }
     return mb;
+}
+
+// KindleUnpack: extra-data flags are only valid for MOBI header length >= 0xE4
+// and format version >= 5. Print Replica files often have a long header but
+// version 4 and must not have trailers stripped (that would corrupt the PDF).
+static void PrintReplicaTrailerInfo(const MobiHeader& mobi, int& trailersCount, bool& multibyte) {
+    trailersCount = 0;
+    multibyte = false;
+    if (mobi.hdrLen < 228 || mobi.minRequiredMobiFormatVersion < 5) {
+        return;
+    }
+    u16 flags = mobi.extraDataFlags;
+    multibyte = ((flags & 1) != 0);
+    while (flags > 1) {
+        if (0 != (flags & 2)) {
+            trailersCount++;
+        }
+        flags = flags >> 1;
+    }
+}
+
+// First section of the first %MOP table is the PDF (KindleUnpack processPrintReplica).
+static Str ExtractPdfFromMopRaw(Str raw) {
+    if (len(raw) < 8) {
+        return {};
+    }
+    if (!MemEq(raw.s, "%MOP", 4)) {
+        int idx = str::IndexOf(raw, StrL("%PDF-"));
+        if (idx < 0) {
+            return {};
+        }
+        return str::Dup(Str(raw.s + idx, raw.len - idx));
+    }
+
+    ByteReader d(raw);
+    d.Skip(4);
+    u32 numTables = d.UInt32BE();
+    if (!d.IsOk() || numTables == 0 || numTables > 32) {
+        return {};
+    }
+    // All per-table section counts come first, then the section index.
+    for (u32 t = 0; t < numTables; t++) {
+        d.UInt32BE();
+    }
+    if (!d.IsOk()) {
+        return {};
+    }
+    u32 sectionOffset = d.UInt32BE();
+    u32 sectionLength = d.UInt32BE();
+    if (!d.IsOk()) {
+        return {};
+    }
+    if (sectionOffset > (u32)raw.len || sectionLength > (u32)raw.len - sectionOffset) {
+        return {};
+    }
+    if (sectionLength < 5) {
+        return {};
+    }
+    Str pdf(raw.s + (int)sectionOffset, (int)sectionLength);
+    if (!str::StartsWith(pdf, StrL("%PDF-"))) {
+        logf("ExtractPdfFromPrintReplica: first %MOP section is not a PDF\n");
+        return {};
+    }
+    return str::Dup(pdf);
+}
+
+static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
+    if (!pdb || pdb->GetRecordCount() < 2) {
+        return {};
+    }
+    if (GetPdbDocType(pdb->GetDbType()) != PdbDocType::Mobipocket) {
+        return {};
+    }
+
+    auto rec0 = pdb->GetRecord(0);
+    if (len(rec0) < kPalmDocHeaderLen + 12) {
+        return {};
+    }
+
+    PalmDocHeader palm;
+    DecodePalmDocHeader((const u8*)rec0.s, &palm);
+    u16 encrType = ByteReader(rec0).UInt16BE(12);
+    if (encrType != ENCRYPTION_NONE) {
+        logf("ExtractPdfFromPrintReplica: encrypted\n");
+        return {};
+    }
+
+    bool isPrintReplica = false;
+    int trailersCount = 0;
+    bool multibyte = false;
+    if (len(rec0) >= kPalmDocHeaderLen + kMobiHeaderMinLen) {
+        MobiHeader mobi{};
+        DecodeMobiDocHeader((const u8*)rec0.s + kPalmDocHeaderLen, rec0.len - kPalmDocHeaderLen, &mobi);
+        if (str::EqN(StrL("MOBI"), Str(mobi.id, 4), 4)) {
+            // MOBI type 8 is Print Replica (AZW4).
+            if (mobi.type == 8) {
+                isPrintReplica = true;
+            }
+            PrintReplicaTrailerInfo(mobi, trailersCount, multibyte);
+        }
+    }
+
+    auto rec1 = pdb->GetRecord(1);
+    if (len(rec1) >= 4 && MemEq(rec1.s, "%MOP", 4)) {
+        isPrintReplica = true;
+    }
+    if (!isPrintReplica) {
+        return {};
+    }
+
+    if (!IsValidCompression(palm.compressionType) || palm.compressionType == COMPRESSION_HUFF) {
+        logf("ExtractPdfFromPrintReplica: unsupported compression %d\n", (int)palm.compressionType);
+        return {};
+    }
+
+    int recCount = palm.recordsCount;
+    if (recCount >= pdb->GetRecordCount()) {
+        recCount = pdb->GetRecordCount() - 1;
+    }
+    if (recCount < 1) {
+        return {};
+    }
+
+    constexpr u32 kMaxPrintReplicaRaw = 512 * 1024 * 1024;
+    if (palm.uncompressedDocSize > kMaxPrintReplicaRaw) {
+        logf("ExtractPdfFromPrintReplica: raw markup too large (%u)\n", palm.uncompressedDocSize);
+        return {};
+    }
+
+    str::Builder raw((int)palm.uncompressedDocSize);
+    for (int i = 1; i <= recCount; i++) {
+        auto rec = pdb->GetRecord(i);
+        if (len(rec) == 0) {
+            return {};
+        }
+        int recSize = GetRealRecordSize((const u8*)rec.s, rec.len, trailersCount, multibyte);
+        if (kInvalidSize == recSize) {
+            recSize = rec.len;
+        }
+        if (COMPRESSION_NONE == palm.compressionType) {
+            raw.Append(Str(rec.s, recSize));
+        } else if (COMPRESSION_PALM == palm.compressionType) {
+            if (!PalmdocUncompress((const u8*)rec.s, recSize, raw)) {
+                logf("ExtractPdfFromPrintReplica: PalmDoc decompression failed\n");
+                return {};
+            }
+        }
+    }
+
+    Str pdf = ExtractPdfFromMopRaw(ToStr(raw));
+    if (len(pdf) > 0) {
+        logf("ExtractPdfFromPrintReplica: extracted %d byte PDF\n", len(pdf));
+    }
+    return pdf;
+}
+
+// Owned PDF bytes from an AZW4 / Kindle Print Replica (PDF in a MOBI wrapper).
+// Cheap peek so regular MOBI files are not fully re-read just to reject them.
+static bool FileMightBePrintReplica(Str path) {
+    constexpr int kPeek = 256 * 1024;
+    u8 buf[kPeek];
+    int n = file::ReadN(path, buf, kPeek);
+    if (n < 80) {
+        return false;
+    }
+    if (!MemEq(buf + 0x3c, "BOOKMOBI", 8)) {
+        return false;
+    }
+    ByteReader r(buf, n);
+    u16 numRecs = r.UInt16BE(76);
+    if (numRecs < 2) {
+        return false;
+    }
+    int tableBytes = (int)numRecs * 8;
+    if (78 + tableBytes > n) {
+        return true;
+    }
+    u32 off0 = r.UInt32BE(78);
+    u32 off1 = r.UInt32BE(86);
+    bool isType8 = false;
+    bool sawType = false;
+    if (off0 + 28 <= (u32)n && MemEq(buf + off0 + 16, "MOBI", 4)) {
+        sawType = true;
+        isType8 = r.UInt32BE((int)off0 + 24) == 8;
+    }
+    bool sawRec1 = false;
+    bool rec1Mop = false;
+    if (off1 + 4 <= (u32)n) {
+        sawRec1 = true;
+        rec1Mop = MemEq(buf + off1, "%MOP", 4);
+    }
+    if (isType8 || rec1Mop) {
+        return true;
+    }
+    if (sawType && sawRec1) {
+        return false;
+    }
+    return true;
+}
+
+Str ExtractPdfFromPrintReplicaFile(Str path) {
+    if (!FileMightBePrintReplica(path)) {
+        return {};
+    }
+    PdbReader* pdb = PdbReader::CreateFromFile(path);
+    if (!pdb) {
+        return {};
+    }
+    Str pdf = ExtractPdfFromPrintReplica(pdb);
+    delete pdb;
+    return pdf;
+}
+
+Str ExtractPdfFromPrintReplicaData(Str data) {
+    PdbReader* pdb = PdbReader::CreateFromData(str::Dup(data));
+    if (!pdb) {
+        return {};
+    }
+    Str pdf = ExtractPdfFromPrintReplica(pdb);
+    delete pdb;
+    return pdf;
 }

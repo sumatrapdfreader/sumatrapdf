@@ -830,8 +830,15 @@ EngineBase* PdfPreview::LoadEngine(const Str& data) {
             return CreateEngineEpubFromData(data);
         case PreviewType::Fb2:
             return CreateFb2PreviewEngine(data);
-        case PreviewType::Mobi:
+        case PreviewType::Mobi: {
+            Str pdf = ExtractPdfFromPrintReplicaData(data);
+            if (len(pdf) > 0) {
+                EngineBase* engine = CreateEngineMupdfFromData(pdf, StrL("file.pdf"), nullptr);
+                str::Free(pdf);
+                return engine;
+            }
             return CreateEngineMobiFromData(data);
+        }
         case PreviewType::Cbx:
             return CreateEngineCbxFromData(data);
         case PreviewType::Tga:
