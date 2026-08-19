@@ -2672,6 +2672,7 @@ void ToggleShowImageOutlines() {
 /* debug code to visualize links and images (can block while rendering) */
 static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
+    Kind elementKind = images ? kindPageElementImage : kindPageElementDest;
 
     // blue for links, green for images, so both can be on at once
     Color col = images ? MkRgb(0x00, 0xa0, 0x00) : kColBlue;
@@ -2689,7 +2690,7 @@ static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
         dm->GetEngine()->TryGetElements(pageNo, &els);
 
         for (auto& el : els) {
-            if (el->Is(kindPageElementImage) != images) {
+            if (!el->Is(elementKind)) {
                 continue;
             }
             Rect rect = dm->CvtToScreen(pageNo, el->GetRect());

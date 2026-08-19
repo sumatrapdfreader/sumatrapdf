@@ -131,6 +131,7 @@ import { testit as issue5965 } from "./issue-5965.ts";
 import { testit as issue1315 } from "./issue-1315.ts";
 import { testit as issue5581 } from "./issue-5581.ts";
 import { testit as issue5991 } from "./issue-5991.ts";
+import { testit as issue5980 } from "./issue-5980.ts";
 
 export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
@@ -256,6 +257,7 @@ export const tests: NamedTest[] = [
   ["issue-5975", issue5975],
   ["issue-5968", issue5968],
   ["issue-5978", issue5978],
+  ["issue-5980", issue5980],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
