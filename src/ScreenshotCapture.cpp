@@ -763,7 +763,7 @@ static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
     HWND owner = gScreenshotHost.GetOwnerHwnd ? gScreenshotHost.GetOwnerHwnd() : nullptr;
     HBITMAP hbmpCopy = (HBITMAP)CopyImage(cs.bmp, IMAGE_BITMAP, cs.origW, cs.origH, 0);
     RenderedBitmap* rbmp = new RenderedBitmap(hbmpCopy, Size(cs.origW, cs.origH));
-    ShowImageEditWindow(owner, ImageEditMode::Crop, filePath, rbmp);
+    ShowImageEditWindow(owner, ImageEditMode::Crop, filePath, rbmp, false, {}, true);
     delete rbmp;
 }
 

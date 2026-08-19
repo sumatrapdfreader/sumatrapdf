@@ -2069,7 +2069,7 @@ static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const 
 }
 
 void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf,
-                         Str originalData) {
+                         Str originalData, bool closeOnEsc) {
     ProbeImageFormats();
 
     Bitmap* bmp = nullptr;
@@ -2121,6 +2121,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     Str origExt = ImageSaveExtFromData(origOwned);
 
     auto* ew = new ImageEditWindow();
+    ew->closeOnEsc = closeOnEsc;
     ew->mode = mode;
     ew->fromRenderedBitmap = fromRenderedBitmap;
     ew->filePath = filePath ? str::Dup(filePath) : Str();

@@ -52,7 +52,7 @@ Str ImageSaveExtFromData(Str data);
 // Save writes those bytes if the image is not cropped/resized and the dest
 // extension still matches the original format. Caller keeps ownership.
 void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath = {}, RenderedBitmap* rbmp = nullptr,
-                         bool selectPdf = false, Str originalData = {});
+                         bool selectPdf = false, Str originalData = {}, bool closeOnEsc = false);
 
 TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut = nullptr);
 TempStr ImageResizeEdgesResultTemp(Str imagePath, int newW, int newH, int* exitCodeOut = nullptr);
