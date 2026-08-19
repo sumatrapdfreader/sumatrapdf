@@ -44,6 +44,7 @@ constexpr int kButtonPadding = 8;
 
 struct PropertiesWnd : WindowBase {
     HWND hwndParent = nullptr;
+    bool showPdfCertActions = false;
     Edit* editProps = nullptr;
     VirtButton* btnCopyToClipboard = nullptr;
     VirtButton* btnViewCert = nullptr;
@@ -1042,12 +1043,14 @@ bool PropertiesWnd::Create(HWND parent) {
         btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
 #if OS_WIN
-        btnViewCert = NewThemedButton(hwnd, _TRA("View Certificate..."), GetAppFont(), true);
-        btnViewCert->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::ViewCertificate>(this);
-        btnRow->AddChild(new Padding(btnViewCert, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
-        btnUpdateEutl = NewThemedButton(hwnd, _TRA("Update EU Trusted List"), GetAppFont(), true);
-        btnUpdateEutl->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::UpdateEutl>(this);
-        btnRow->AddChild(new Padding(btnUpdateEutl, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+        if (showPdfCertActions) {
+            btnViewCert = NewThemedButton(hwnd, _TRA("View Certificate..."), GetAppFont(), true);
+            btnViewCert->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::ViewCertificate>(this);
+            btnRow->AddChild(new Padding(btnViewCert, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+            btnUpdateEutl = NewThemedButton(hwnd, _TRA("Update EU Trusted List"), GetAppFont(), true);
+            btnUpdateEutl->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::UpdateEutl>(this);
+            btnRow->AddChild(new Padding(btnUpdateEutl, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+        }
 #endif
         vbox->AddChild(btnRow);
     }
@@ -1119,8 +1122,13 @@ void ShowProperties(HWND parent, DocController* ctrl) {
 
     auto* wnd = new PropertiesWnd();
     gPropertiesWindows.Append(wnd);
+    DisplayModel* dm = ctrl->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    wnd->showPdfCertActions = EngineMupdfIsPdf(engine);
 #if OS_WIN
-    EutlRegisterLookup();
+    if (wnd->showPdfCertActions) {
+        EutlRegisterLookup();
+    }
 #endif
     GetPropsText(ctrl, wnd->propsText);
     AlignPropertiesText(wnd->propsText);
@@ -1151,7 +1159,6 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         wnd->initialPos = {rc.x, rc.y};
     }
 
-    DisplayModel* dm = ctrl->AsFixed();
     if (!dm || !dm->engine) {
         auto* result = new GetFontsResult;
         result->hwnd = wnd->hwnd;
