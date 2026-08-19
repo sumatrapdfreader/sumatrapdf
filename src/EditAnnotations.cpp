@@ -20,6 +20,7 @@ extern "C" {
 
 #include "Settings.h"
 #include "AppSettings.h"
+#include "GlobalPrefs.h"
 #include "DocController.h"
 #include "Annotation.h"
 #include "EngineBase.h"
@@ -1962,7 +1963,9 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew = new EditAnnotationsWindow();
     // OnSize grows the list / Contents box before DoLayout
     ew->autoLayout = false;
-    // Esc does not close — user may be editing text (issue #5934)
+    // Esc normally does not close because the user may be editing text
+    // (issue #5934). EscToExit is the explicit opt-in to close anyway.
+    ew->closeOnEsc = gGlobalPrefs->escToExit;
     ew->closeOnCtrlW = true;
     ew->onClose = MkFunc1Void(OnClose);
     ew->onDestroy = MkFunc1Void(OnDestroy);

@@ -222,6 +222,7 @@ struct ImageEditButton : VirtButton {
 struct ImageEditWindow : WindowBase {
     ImageEditMode mode = ImageEditMode::Crop;
     bool fromRenderedBitmap = false;
+    bool closeWithEsc = false;
 
     HWND hwndParent = nullptr;
 
@@ -1606,10 +1607,15 @@ static bool CopyEditedImageToClipboard(ImageEditWindow* ew) {
 // Tab moves between the dest edit, the format drop-down and the buttons; the
 // ring is the layout order and covers HWND and virtual controls alike
 void ImageEditWindow::OnKeyDown(KeyEvent* ev) {
-    if (ev->vkey != VK_TAB) {
+    if (ev->hwnd != hwnd && !::IsChild(hwnd, ev->hwnd)) {
         return;
     }
-    if (ev->hwnd != hwnd && !::IsChild(hwnd, ev->hwnd)) {
+    if (ev->vkey == VK_ESCAPE && closeWithEsc) {
+        DestroyWindow(hwnd);
+        ev->didHandle = true;
+        return;
+    }
+    if (ev->vkey != VK_TAB) {
         return;
     }
     TabNavigate(ev->isShift);
@@ -2021,10 +2027,10 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
                 }
             }
             if (wp == VK_ESCAPE) {
-                if (ew->mode != ImageEditMode::Save) {
-                    SwitchToSaveMode(ew);
-                } else if (gImageEditHost.escToExit) {
+                if (ew->closeWithEsc) {
                     DestroyWindow(hwnd);
+                } else if (ew->mode != ImageEditMode::Save) {
+                    SwitchToSaveMode(ew);
                 }
                 {
                     ev->result = 0;
@@ -2121,7 +2127,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     Str origExt = ImageSaveExtFromData(origOwned);
 
     auto* ew = new ImageEditWindow();
-    ew->closeOnEsc = closeOnEsc;
+    ew->closeWithEsc = closeOnEsc || gImageEditHost.escToExit;
     ew->mode = mode;
     ew->fromRenderedBitmap = fromRenderedBitmap;
     ew->filePath = filePath ? str::Dup(filePath) : Str();

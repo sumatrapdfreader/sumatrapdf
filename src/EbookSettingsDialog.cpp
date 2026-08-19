@@ -684,7 +684,9 @@ void ShowEbookSettingsDialog(MainWindow* win) {
     }
     auto* wnd = new EbookSettingsWnd();
     wnd->filePath = str::Dup(win->CurrentTab()->filePath);
-    // no closeOnEsc: Esc while editing the CSS would throw the edits away
+    // Usually Esc while editing CSS should not throw the edits away. EscToExit
+    // is the explicit opt-in to close this window anyway.
+    wnd->closeOnEsc = gGlobalPrefs->escToExit;
     wnd->onBeforeDelete = MkFunc0Void(ClearEbookSettingsWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);

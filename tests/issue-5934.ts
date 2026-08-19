@@ -148,6 +148,35 @@ async function testAnnotationsEscDoesNotClose(): Promise<void> {
   }
 }
 
+async function testAnnotationsEscToExitCloses(): Promise<void> {
+  const pdf = tmpPath("issue-5934-annots-esc-to-exit.pdf");
+  writeFileSync(pdf, makeAnnotPdf(), "latin1");
+
+  const { proc, client, frame } = await launchControlled(["-esc-to-exit", pdf]);
+  try {
+    await client.waitForRenderIdle();
+    sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdEditAnnotations")), 0n);
+    const ew = await waitForSecondary(proc.pid!, frame, undefined, 4000);
+    if (!ew) {
+      throw new Error("annotations with EscToExit: editor window did not appear");
+    }
+
+    pressEscape(ew);
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+      if (!isWindowVisible(ew) && !findSecondaryWindow(proc.pid!, frame)) {
+        console.log("  edit annotations: EscToExit closes ✓");
+        return;
+      }
+      await sleep(30);
+    }
+    throw new Error("annotations with EscToExit: Esc did not close the editor");
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 async function testTranslateEscCloses(): Promise<void> {
   const pdf = tmpPath("issue-5934-translate.pdf");
   writeFileSync(pdf, makeTextPdf());
@@ -186,6 +215,7 @@ async function testTranslateEscCloses(): Promise<void> {
 
 export async function testit(): Promise<void> {
   await testAnnotationsEscDoesNotClose();
+  await testAnnotationsEscToExitCloses();
   await testTranslateEscCloses();
 }
 

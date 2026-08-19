@@ -9755,6 +9755,7 @@ void LaunchDocumentation(Str docURI) {
         args.resourceUriPrefix = kManualVirtualHostW;
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
         if (gManualBrowserWindow != nullptr) {
+            gManualBrowserWindow->closeOnEsc = gGlobalPrefs->escToExit;
             auto fn = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroyManualBrowserWindow);
             gManualBrowserWindow->onDestroy = fn;
             return;

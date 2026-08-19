@@ -158,7 +158,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     // LayoutControls sizes the nav row to its natural height and the webview
     // into the leftover client area, not a full-client DoLayout
     autoLayout = false;
-    // docs window: Ctrl+W closes; Esc does not (search dialog, issue #5942)
+    // Ctrl+W closes. The manual caller can additionally opt into Esc via EscToExit.
     closeOnCtrlW = true;
     onFocus = MkMethod1<SimpleBrowserWindow, WindowBase::FocusEvent*, &SimpleBrowserWindow::OnFocus>(this);
     onSize = MkMethod1<SimpleBrowserWindow, WindowBase::SizeEvent*, &SimpleBrowserWindow::OnSize>(this);
