@@ -2270,6 +2270,7 @@ void WebviewWnd::FailInit() {}
 void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str, int) {}
 void WebviewWnd::FlushPendingOps() {}
 void WebviewWnd::SetControllerVisible(bool) {}
+void WebviewWnd::RefreshControllerSurface() {}
 void WebviewWnd::OnBrowserMessage(Str) {}
 void WebviewWnd::OnTimer(WindowBase::TimerEvent*) {}
 void WebviewWnd::OnSize(WindowBase::SizeEvent*) {}
