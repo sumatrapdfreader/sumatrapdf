@@ -6905,7 +6905,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // would hide the frame on every mouse move and flash the TOC through the
     // transparent WebView2 in the strip the canvas just inherited
     bool isSplitterDrag = sidebarDx != -1;
-    bool discardCanvasBits = isSplitterDrag && IsBrowserDocController(win->ctrl);
+    // Fullscreen changes both the canvas origin and size while frame redraw is
+    // disabled. Preserving its old screen bits copies the normal-window tabs,
+    // toolbar, and document into the fullscreen surface until a later paint.
+    bool discardCanvasBits = win->suppressFrameRedraw || (isSplitterDrag && IsBrowserDocController(win->ctrl));
     bool suppressIntermediateRedraws =
         !isSplitterDrag && !isFrameResize && !win->suppressFrameRedraw && HwndIsVisible(win->hwndFrame);
     if (suppressIntermediateRedraws) {
@@ -7237,7 +7240,10 @@ static void EndFrameRedrawSuppression(MainWindow* win) {
         win->frameRedrawSuppressSent = false;
     }
     HwndInvalidate(win->hwndCanvas);
-    RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
+    // Finish the transition with real pixels before returning to the message
+    // loop; otherwise the user briefly sees the copied pre-transition surface.
+    RedrawWindow(win->hwndFrame, nullptr, nullptr,
+                 RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
 }
 
 static void UpdateOverlayScrollbarPositions(MainWindow* win) {
@@ -8039,11 +8045,11 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     HwndSetFocus(win->hwndFrame);
     // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
     gGlobalPrefs->showFavorites = showFavoritesTmp;
-    EndFrameRedrawSuppression(win);
     // ensure layout is correct after fullscreen transition
     RelayoutFrame(win);
     // show menu bar rebar after layout positions it correctly
     ShowMenuBarRebar(win);
+    EndFrameRedrawSuppression(win);
 
     if (gGlobalPrefs->preventSleepInFullscreen) {
         SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);

@@ -876,6 +876,47 @@ export function captureWindowPixels(hwnd: number): { w: number; h: number; data:
   return { w, h, data };
 }
 
+// Copy a window-DC region into a 32bpp top-down DIB and return its BGRA bytes.
+// Unlike PrintWindow this reads the pixels currently displayed by the window,
+// but avoids thousands of slow GetPixel FFI calls when a test needs a region.
+export function captureWindowDCRegionPixels(
+  hwnd: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): Uint8Array | null {
+  if (w <= 0 || h <= 0) {
+    return null;
+  }
+  const winDC = user32.symbols.GetWindowDC(hwnd);
+  const memDC = gdi32.symbols.CreateCompatibleDC(winDC);
+  const bmi = new ArrayBuffer(40);
+  const dv = new DataView(bmi);
+  dv.setUint32(0, 40, true);
+  dv.setInt32(4, w, true);
+  dv.setInt32(8, -h, true);
+  dv.setUint16(12, 1, true);
+  dv.setUint16(14, 32, true);
+  const bitsPtr = new BigUint64Array(1);
+  const bmp = gdi32.symbols.CreateDIBSection(memDC, ptr(bmi), 0, ptr(bitsPtr), 0n, 0);
+  if (!bmp || !bitsPtr[0]) {
+    gdi32.symbols.DeleteDC(memDC);
+    user32.symbols.ReleaseDC(hwnd, winDC);
+    return null;
+  }
+  const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
+  const copied = gdi32.symbols.BitBlt(memDC, 0, 0, w, h, winDC, x, y, SRCCOPY);
+  gdi32.symbols.SelectObject(memDC, oldObj);
+
+  const bits = Number(bitsPtr[0]) as unknown as Parameters<typeof toArrayBuffer>[0];
+  const data = copied ? new Uint8Array(toArrayBuffer(bits, 0, w * h * 4)).slice() : null;
+  gdi32.symbols.DeleteObject(bmp);
+  gdi32.symbols.DeleteDC(memDC);
+  user32.symbols.ReleaseDC(hwnd, winDC);
+  return data;
+}
+
 // Toolbar (ToolbarWindow32) helpers. A button is addressed by its command id.
 export const TB_GETSTATE = 0x0412;
 export const TB_COMMANDTOINDEX = 0x0419;

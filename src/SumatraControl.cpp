@@ -8,6 +8,10 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/Layout_win.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
+#include "gui/win/TabsCtrl.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -331,8 +335,8 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
     AppendHwndLayoutRect(out, win, StrL("frame"), win->hwndFrame);
     AppendHwndLayoutRect(out, win, StrL("canvas"), win->hwndCanvas);
     AppendHwndLayoutRect(out, win, StrL("toolbar"), win->hwndToolbar);
-    AppendHwndLayoutRect(out, win, StrL("tabs"), win->tabsSlot ? win->tabsSlot->hwnd : nullptr);
-    AppendHwndLayoutRect(out, win, StrL("menu"), win->menuSlot ? win->menuSlot->hwnd : nullptr);
+    AppendHwndLayoutRect(out, win, StrL("tabs"), win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr);
+    AppendHwndLayoutRect(out, win, StrL("menu"), win->hwndMenuReBar);
     AppendHwndLayoutRect(out, win, StrL("toc"), win->hwndTocBox);
     AppendHwndLayoutRect(out, win, StrL("favorites"), win->hwndFavBox);
     AppendHwndLayoutRect(out, win, StrL("aiChat"), win->hwndAiChatBox);

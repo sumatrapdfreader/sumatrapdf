@@ -46,6 +46,9 @@ const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
 // to stay out of the document canvas (where progressive render is noisy).
 const STRIP_DY = 80;
 const X_STEP = 16;
+// DWM occasionally changes a handful of anti-aliased caption pixels between
+// otherwise identical paints. The regression leaves thousands different.
+const MAX_CHANGED_PIXELS = 20;
 
 // WindowState = 2 is maximized, the other half of the repro
 const SETTINGS = `WindowState = 2
@@ -89,7 +92,7 @@ async function waitForChromeRestored(hwnd: number, before: number[], timeoutMs =
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const nDiff = countDifferingPixels(before, sampleChrome(hwnd));
-    if (nDiff === 0 || Date.now() > deadline) {
+    if (nDiff <= MAX_CHANGED_PIXELS || Date.now() > deadline) {
       return nDiff;
     }
     await sleep(120);
@@ -130,7 +133,7 @@ export async function testit(): Promise<void> {
     // nothing here scrolls, switches tabs or moves the mouse: leaving full
     // screen must repaint the chrome on its own
     const nDiff = await waitForChromeRestored(frame, before);
-    if (nDiff > 0) {
+    if (nDiff > MAX_CHANGED_PIXELS) {
       throw new Error(
         `the caption/tab row did not repaint after leaving full screen: ` +
           `${nDiff} of ${before.length} sampled pixels still differ from before`,
