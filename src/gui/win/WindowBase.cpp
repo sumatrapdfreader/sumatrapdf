@@ -1608,12 +1608,6 @@ void ControlBase::SetBounds(Rect bounds) {
     dbglayout(
         fmt("ControlBase:SetBounds() %s %d,%d - %d, %d\n", Str(GetKind()), bounds.x, bounds.y, bounds.dx, bounds.dy));
 
-    // MoveWindow copies existing bits and paints only the newly exposed strip.
-    // A full erase-invalidate after that blanks the TOC/favorites tree on every
-    // parent WM_SIZE (window resize, splitter drag).
-    if (bounds == lastBounds) {
-        return;
-    }
     lastBounds = bounds;
 
     bounds.x += insets.left;
@@ -1623,6 +1617,13 @@ void ControlBase::SetBounds(Rect bounds) {
 
     if (mapRtlX) {
         bounds.x = HwndMapChildXForRtlParent(GetParent(hwnd), bounds.x, bounds.dx);
+    }
+    // Skip a no-op MoveWindow (it still sends WM_WINDOWPOSCHANGED and flashes
+    // the TOC). Compare the HWND, not lastBounds: a parent DeferWindowPos can
+    // leave the child at a stale client y while lastBounds still matches layout
+    // (toolbar page box ended up below the bar).
+    if (hwnd && ChildPosWithinParent(hwnd) == bounds) {
+        return;
     }
     HwndMoveWindow(hwnd, &bounds);
 }
