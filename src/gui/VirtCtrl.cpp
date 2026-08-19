@@ -3122,9 +3122,16 @@ void LayoutTreeToSize(HWND hwnd, ILayout* layout, Size size, VirtRoot** rootInOu
     if (!layout) {
         return;
     }
+    int prevDx = layout->lastBounds.dx;
     DpiSetFromHwnd(hwnd);
     LayoutToSize(layout, size);
     RefreshVirtTops(hwnd, layout, Rect{0, 0, size.dx, size.dy}, rootInOut);
+    // Virtual header (Bookmarks + close) has no HWND. MoveWindow copies the
+    // host's bits, so a width change leaves the ✕ at its old x until we
+    // invalidate. CLIPCHILDREN keeps the tree/filter from being over-painted.
+    if (hwnd && *rootInOut && size.dx != prevDx) {
+        HwndInvalidate(hwnd, false);
+    }
 }
 
 void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, Color bg) {
