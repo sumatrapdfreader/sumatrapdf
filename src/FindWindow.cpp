@@ -550,7 +550,7 @@ void FindWindowWnd::OnResultSelected() {
         return; // already on this match
     }
     DisplayModel* dm = win->AsFixed();
-    if (dm && dm->textSearch && dm->textSearch->startPage == fm.startPage &&
+    if (dm && dm->textSearch && dm->textSearch->result.len > 0 && dm->textSearch->startPage == fm.startPage &&
         dm->textSearch->startGlyph == fm.startGlyph) {
         return; // already on this match
     }
@@ -591,7 +591,7 @@ int FindWindowWnd::CurrentMatchIndex() {
         return win->browserFindCurrent;
     }
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !dm->textSearch) {
+    if (!dm || !dm->textSearch || dm->textSearch->result.len == 0) {
         return -1;
     }
     return FindMatchIndex(win, dm->textSearch->startPage, dm->textSearch->startGlyph);
