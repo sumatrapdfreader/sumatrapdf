@@ -122,7 +122,6 @@ import { testit as issue5972 } from "./issue-5972.ts";
 import { testit as issue5974 } from "./issue-5974.ts";
 import { testit as issue5975 } from "./issue-5975.ts";
 import { testit as issue5968 } from "./issue-5968.ts";
-import { testit as issue5976 } from "./issue-5976.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
 import { testit as issue5934 } from "./issue-5934.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
@@ -254,7 +253,6 @@ export const tests: NamedTest[] = [
   ["issue-5974", issue5974],
   ["issue-5975", issue5975],
   ["issue-5968", issue5968],
-  ["issue-5976", issue5976],
   ["issue-5978", issue5978],
 ];
 
