@@ -130,6 +130,7 @@ import { testit as issue5964 } from "./issue-5964.ts";
 import { testit as issue5965 } from "./issue-5965.ts";
 import { testit as issue1315 } from "./issue-1315.ts";
 import { testit as issue5581 } from "./issue-5581.ts";
+import { testit as issue5991 } from "./issue-5991.ts";
 
 export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
@@ -151,6 +152,7 @@ export const tests: NamedTest[] = [
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],
+  ["issue-5991", issue5991],
   ["issue-4973", issue4973],
   ["issue-5329", issue5329],
   ["issue-5718", issue5718],

@@ -22,6 +22,7 @@
 #include "ImageReader.h"
 #include "PngOptimizer.h"
 #include "base/Pixmap.h"
+#include "base/GdiPlusUtil.h"
 #include "SumatraPDF.h"
 #include "SumatraConfig.h"
 #include "MainWindow.h"
@@ -1160,6 +1161,537 @@ void ShowConvertToPdfDialog(MainWindow* win) {
     logf("ShowConvertToPdfDialog: opening for '%s'\n", tab->filePath);
 
     auto* dlg = new ConvertToPdfDialog();
+    if (!dlg->Create(win, tab)) {
+        delete dlg;
+    }
+}
+
+// --- Convert PDF to Images dialog (issue #5991) ---
+
+constexpr float kConvertPdfToImagesDpi = 150.0f;
+
+// PNG / JPEG / BMP, same core formats as the Save Image dialog
+struct ConvertImageFormat {
+    Str label;
+    Str ext; // including the dot, e.g. ".png"
+    WStr mime;
+    WStr defExt; // OPENFILENAME lpstrDefExt, no dot
+};
+
+static const ConvertImageFormat kConvertImageFormats[] = {
+    {StrL("PNG"), StrL(".png"), L"image/png", L"png"},
+    {StrL("JPEG"), StrL(".jpg"), L"image/jpeg", L"jpg"},
+    {StrL("BMP"), StrL(".bmp"), L"image/bmp", L"bmp"},
+};
+
+static int ConvertImageFormatCount() {
+    return dimofi(kConvertImageFormats);
+}
+
+static int ConvertImageFormatIdxFromPath(Str path) {
+    if (str::EndsWithI(path, StrL(".jpg")) || str::EndsWithI(path, StrL(".jpeg"))) {
+        return 1;
+    }
+    if (str::EndsWithI(path, StrL(".bmp"))) {
+        return 2;
+    }
+    return 0; // PNG
+}
+
+static bool IsSupportedConvertImageExt(Str path) {
+    return str::EndsWithI(path, StrL(".png")) || str::EndsWithI(path, StrL(".jpg")) ||
+           str::EndsWithI(path, StrL(".jpeg")) || str::EndsWithI(path, StrL(".bmp"));
+}
+
+static bool PathHasPagePlaceholder(Str path) {
+    return str::ContainsI(path, StrL("<N>"));
+}
+
+// dest template: if <N> is missing and we'll write more than one file, insert
+// it before the extension so pages don't overwrite each other
+static TempStr EnsurePagePlaceholderTemp(Str path, bool multiPage) {
+    if (PathHasPagePlaceholder(path) || !multiPage) {
+        return str::DupTemp(path);
+    }
+    TempStr ext = path::GetExtTemp(path);
+    TempStr noExt = path::GetPathNoExtTemp(path);
+    if (!ext) {
+        return str::JoinTemp(noExt, StrL("-<N>.png"));
+    }
+    return str::JoinTemp(noExt, StrL("-<N>"), ext);
+}
+
+static TempStr WithDefaultImageExtTemp(Str path) {
+    if (IsSupportedConvertImageExt(path)) {
+        return str::DupTemp(path);
+    }
+    TempStr ext = path::GetExtTemp(path);
+    if (ext) {
+        // has an extension we don't write
+        return {};
+    }
+    return str::JoinTemp(path, StrL(".png"));
+}
+
+static TempStr ReplacePagePlaceholderTemp(Str path, int pageNo) {
+    TempStr n = fmt("%d", pageNo);
+    TempStr s = str::ReplaceTemp(path, "<N>", n);
+    if (str::Contains(s, "<n>")) {
+        s = str::ReplaceTemp(s, "<n>", n);
+    }
+    return s;
+}
+
+static bool GetImageEncoderForPath(Str path, CLSID* encOut) {
+    if (!IsSupportedConvertImageExt(path)) {
+        return false;
+    }
+    int idx = ConvertImageFormatIdxFromPath(path);
+    CLSID enc = GetGdiPlusEncoderClsid(kConvertImageFormats[idx].mime);
+    if (enc.Data1 == 0 && enc.Data2 == 0 && enc.Data3 == 0) {
+        return false;
+    }
+    *encOut = enc;
+    return true;
+}
+
+static bool SavePixmapAsImageFile(Pixmap* px, Str path) {
+    if (!px || !path) {
+        return false;
+    }
+    CLSID enc{};
+    if (!GetImageEncoderForPath(path, &enc)) {
+        return false;
+    }
+    Pixmap* converted = nullptr;
+    Pixmap* use = px;
+    if (px->format == PixmapFormat::Native) {
+        converted = PixmapCopyAs32bppDIB(px);
+        if (!converted) {
+            return false;
+        }
+        use = converted;
+    }
+    Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(use);
+    bool ok = false;
+    if (bmp) {
+        bmp->SetResolution(use->xres, use->yres);
+        WCHAR* pathW = CWStrTemp(path);
+        ok = bmp->Save(pathW, &enc, nullptr) == Gdiplus::Ok;
+        delete bmp;
+    } else if (use->hbmp) {
+        Gdiplus::Bitmap gbmp(use->hbmp, nullptr);
+        gbmp.SetResolution(use->xres, use->yres);
+        WCHAR* pathW = CWStrTemp(path);
+        ok = gbmp.Save(pathW, &enc, nullptr) == Gdiplus::Ok;
+    }
+    FreePixmap(converted);
+    if (!ok) {
+        file::Delete(path);
+    }
+    return ok;
+}
+
+// render each page at kConvertPdfToImagesDpi and write it to templatePath with
+// <N> replaced by the 1-based page number. Returns how many files were written.
+static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages,
+                                Str* firstPathOwnedOut) {
+    if (firstPathOwnedOut) {
+        *firstPathOwnedOut = {};
+    }
+    if (!engine || len(pages) == 0 || len(templatePath) == 0) {
+        return 0;
+    }
+    TempStr withExt = WithDefaultImageExtTemp(templatePath);
+    if (!withExt) {
+        return 0;
+    }
+    TempStr templ = EnsurePagePlaceholderTemp(withExt, len(pages) > 1);
+    float fileDpi = engine->GetFileDPI();
+    if (fileDpi <= 0) {
+        fileDpi = 72.0f;
+    }
+    float zoom = kConvertPdfToImagesDpi / fileDpi;
+    int nOk = 0;
+    StrVec pngs;
+    for (int pageNo : pages) {
+        TempStr dest = ReplacePagePlaceholderTemp(templ, pageNo);
+        RenderPageArgs args(pageNo, zoom, rotation);
+        Pixmap* px = engine->RenderPage(args);
+        if (!px) {
+            logf("ConvertPagesToImages: RenderPage failed for page %d\n", pageNo);
+            continue;
+        }
+        px->xres = kConvertPdfToImagesDpi;
+        px->yres = kConvertPdfToImagesDpi;
+        bool ok = SavePixmapAsImageFile(px, dest);
+        FreePixmap(px);
+        if (!ok) {
+            logf("ConvertPagesToImages: save failed for '%s'\n", dest);
+            continue;
+        }
+        if (nOk == 0 && firstPathOwnedOut) {
+            *firstPathOwnedOut = str::Dup(dest);
+        }
+        if (str::EndsWithI(dest, StrL(".png"))) {
+            pngs.Append(dest);
+        }
+        nOk++;
+    }
+    OptimizePngFilesAsync(pngs);
+    return nOk;
+}
+
+static void CollectAllPages(int pageCount, Vec<int>& pages) {
+    pages.Reset();
+    for (int i = 1; i <= pageCount; i++) {
+        pages.Append(i);
+    }
+}
+
+TempStr ConvertPagesToImagesResultTemp(Str templatePath, Str pagesSpec, int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    if (len(gWindows) == 0) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-engine")));
+    }
+    int pageCount = engine->PageCount();
+    Vec<int> pages;
+    if (str::EqI(pagesSpec, StrL("current"))) {
+        int cur = dm->CurrentPageNo();
+        if (cur < 1 || cur > pageCount) {
+            return finish(1, str::DupTemp(StrL("ERROR bad-current")));
+        }
+        pages.Append(cur);
+    } else if (str::EqI(pagesSpec, StrL("all"))) {
+        CollectAllPages(pageCount, pages);
+    } else if (!ParseDeletePages(pagesSpec, pageCount, pages)) {
+        return finish(1, str::DupTemp(StrL("ERROR bad-pages")));
+    }
+    Str firstPath;
+    int n = ConvertPagesToImages(engine, dm->GetRotation(), templatePath, pages, &firstPath);
+    if (n == 0) {
+        str::Free(firstPath);
+        return finish(1, str::DupTemp(StrL("ERROR convert-failed")));
+    }
+    TempStr res = fmt("OK n=%d first=%s", n, firstPath);
+    str::Free(firstPath);
+    return finish(0, res);
+}
+
+struct ConvertPdfToImagesDialog : PdfToolDialog {
+    int pageCount = 0;
+    Checkbox* radioCurrent = nullptr;
+    Checkbox* radioAll = nullptr;
+    Checkbox* radioCustom = nullptr;
+    Edit* pagesEdit = nullptr;
+    DropDown* dropFormat = nullptr;
+    bool syncingFormat = false;
+
+    bool Create(MainWindow* win, WindowTab* tab);
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
+    void OnBrowseTemplate(VirtMouseEvent* ev = nullptr);
+    void UpdateButton();
+    void OnPagesModeChanged();
+    void OnFormatChanged();
+    void SetDestExtFromFormat();
+    void SyncFormatFromPath(Str path);
+    int SelectedFormatIdx() const;
+};
+
+static Checkbox* NewPagesRadio(HWND parent, PlatformFont* font, Str text, bool groupStart, bool checked) {
+    Checkbox::CreateArgs args;
+    args.parent = parent;
+    args.text = text;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    args.isRadio = true;
+    args.isGroupStart = groupStart;
+    args.initialState = checked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
+    auto* c = new Checkbox();
+    c->Create(args);
+    c->SetColors(ThemeWindowTextColor(), DarkModeDialogBgColor());
+    return c;
+}
+
+int ConvertPdfToImagesDialog::SelectedFormatIdx() const {
+    if (!dropFormat) {
+        return 0;
+    }
+    int idx = dropFormat->GetCurrentSelection();
+    if (idx < 0 || idx >= ConvertImageFormatCount()) {
+        return 0;
+    }
+    return idx;
+}
+
+void ConvertPdfToImagesDialog::SetDestExtFromFormat() {
+    if (!destEdit) {
+        return;
+    }
+    TempStr dest = destEdit->GetTextTemp();
+    if (len(dest) == 0) {
+        return;
+    }
+    Str ext = kConvertImageFormats[SelectedFormatIdx()].ext;
+    TempStr noExt = path::GetPathNoExtTemp(dest);
+    TempStr newDest = str::JoinTemp(noExt, ext);
+    if (str::EqI(dest, newDest)) {
+        return;
+    }
+    destEdit->SetText(newDest);
+}
+
+void ConvertPdfToImagesDialog::SyncFormatFromPath(Str path) {
+    if (!dropFormat) {
+        return;
+    }
+    int idx = ConvertImageFormatIdxFromPath(path);
+    if (idx == dropFormat->GetCurrentSelection()) {
+        return;
+    }
+    syncingFormat = true;
+    dropFormat->SetCurrentSelection(idx);
+    syncingFormat = false;
+}
+
+void ConvertPdfToImagesDialog::OnFormatChanged() {
+    if (syncingFormat) {
+        return;
+    }
+    SetDestExtFromFormat();
+}
+
+void ConvertPdfToImagesDialog::OnPagesModeChanged() {
+    bool custom = radioCustom && radioCustom->IsChecked();
+    if (pagesEdit) {
+        pagesEdit->SetIsEnabled(custom);
+    }
+    UpdateButton();
+}
+
+void ConvertPdfToImagesDialog::UpdateButton() {
+    if (!actionBtn) {
+        return;
+    }
+    TempStr dest = destEdit ? destEdit->GetTextTemp() : TempStr{};
+    bool destOk = len(dest) > 0;
+    bool pagesOk = true;
+    if (radioCustom && radioCustom->IsChecked()) {
+        TempStr pages = pagesEdit ? pagesEdit->GetTextTemp() : TempStr{};
+        Vec<int> parsed;
+        pagesOk = ParseDeletePages(pages, pageCount, parsed);
+    }
+    bool valid = destOk && pagesOk;
+    if (valid == actionBtn->HasFlag(vwfEnabled)) {
+        return;
+    }
+    actionBtn->SetFlag(vwfEnabled, valid);
+    actionBtn->Invalidate();
+}
+
+void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
+    WCHAR dstFileName[MAX_PATH + 1]{};
+    TempStr current = destEdit->GetTextTemp();
+    // < and > are illegal in Windows filenames; show {N} in the save dialog
+    TempStr shown = str::ReplaceTemp(current, "<N>", "{N}");
+    if (str::Contains(shown, "<n>")) {
+        shown = str::ReplaceTemp(shown, "<n>", "{N}");
+    }
+    wstr::BufSet(WStr(dstFileName, MAX_PATH), ToWStrTemp(shown));
+
+    int fmtIdx = SelectedFormatIdx();
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0All Files\0*.*\0";
+    ofn.nFilterIndex = (DWORD)(fmtIdx + 1);
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;
+
+    if (!GetSaveFileNameW(&ofn)) {
+        return;
+    }
+    TempStr picked = ToUtf8Temp(dstFileName);
+    if (str::Contains(picked, "{N}")) {
+        picked = str::ReplaceTemp(picked, "{N}", "<N>");
+    } else if (!PathHasPagePlaceholder(picked)) {
+        picked = EnsurePagePlaceholderTemp(picked, true);
+    }
+    destEdit->SetText(picked);
+    int filterIdx = (int)ofn.nFilterIndex - 1;
+    if (filterIdx >= 0 && filterIdx < ConvertImageFormatCount()) {
+        syncingFormat = true;
+        dropFormat->SetCurrentSelection(filterIdx);
+        syncingFormat = false;
+        SetDestExtFromFormat();
+    } else {
+        SyncFormatFromPath(picked);
+    }
+}
+
+void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
+    TempStr destPath = destEdit->GetTextTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        MessageBoxWarning(hwnd, "Failed to convert PDF to images.", _TRA("Convert PDF to Images"));
+        return;
+    }
+
+    Vec<int> pages;
+    if (radioCurrent && radioCurrent->IsChecked()) {
+        int cur = dm->CurrentPageNo();
+        if (cur < 1 || cur > pageCount) {
+            return;
+        }
+        pages.Append(cur);
+    } else if (radioAll && radioAll->IsChecked()) {
+        CollectAllPages(pageCount, pages);
+    } else {
+        TempStr custom = pagesEdit ? pagesEdit->GetTextTemp() : TempStr{};
+        if (!ParseDeletePages(custom, pageCount, pages)) {
+            return;
+        }
+    }
+
+    logf("ConvertPdfToImages: '%s' -> '%s', %d page(s)\n", srcPath, destPath, len(pages));
+
+    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
+    Str firstPath;
+    int nOk = ConvertPagesToImages(engine, dm->GetRotation(), destPath, pages, &firstPath);
+    SetCursor(prev);
+
+    if (nOk == 0) {
+        str::Free(firstPath);
+        MessageBoxWarning(hwnd, "Failed to convert PDF to images.", _TRA("Convert PDF to Images"));
+        return;
+    }
+    logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
+    TempStr openPath = str::DupTemp(firstPath);
+    str::Free(firstPath);
+    Close();
+    OpenPathInDefaultFileManager(openPath);
+}
+
+bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
+    if (!CreateToolDialog(w, tab, _TRA("Convert PDF to Images"))) {
+        return false;
+    }
+    pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
+    AddPathRow();
+
+    TempStr noExt = path::GetPathNoExtTemp(srcPath);
+    TempStr pngPath = str::JoinTemp(noExt, StrL("-<N>.png"));
+
+    HBox* destRow = AddRow();
+    destRow->gap = font->averageCharWidth;
+
+    Edit::CreateArgs dargs;
+    dargs.parent = hwnd;
+    dargs.withBorder = true;
+    dargs.font = font;
+    dargs.text = pngPath;
+    dargs.isRtl = IsUIRtl();
+    destEdit = new Edit();
+    destEdit->Create(dargs);
+    destRow->AddChild(destEdit, 1);
+
+    {
+        auto* dd = new DropDown();
+        DropDown::CreateArgs ddargs;
+        ddargs.parent = hwnd;
+        ddargs.font = font;
+        ddargs.isRtl = IsUIRtl();
+        dd->Create(ddargs);
+        StrVec items;
+        for (int i = 0; i < ConvertImageFormatCount(); i++) {
+            items.Append(kConvertImageFormats[i].label);
+        }
+        dd->SetItems(items);
+        dd->SetCurrentSelection(0);
+        dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+        dd->onSelectionChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnFormatChanged>(this);
+        dropFormat = dd;
+        destRow->AddChild(dropFormat);
+    }
+
+    browseBtn = NewButton("...", false);
+    browseBtn->onClick =
+        MkMethod1<ConvertPdfToImagesDialog, VirtMouseEvent*, &ConvertPdfToImagesDialog::OnBrowseTemplate>(this);
+    destRow->AddChild(browseBtn);
+
+    if (pathLabel) {
+        pathLabel->padding.left = destEdit->GetLeftTextMargin();
+    }
+
+    HBox* row = AddRow();
+    row->gap = font->averageCharWidth;
+    row->AddChild(NewVirtText({.s = _TRA("Pages:"), .font = font, .isRtl = IsUIRtl()}));
+
+    radioCurrent = NewPagesRadio(hwnd, font, _TRA("Current"), true, false);
+    radioCurrent->onStateChanged =
+        MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
+    row->AddChild(radioCurrent);
+
+    radioAll = NewPagesRadio(hwnd, font, _TRA("All"), false, true);
+    radioAll->onStateChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
+    row->AddChild(radioAll);
+
+    radioCustom = NewPagesRadio(hwnd, font, _TRA("Custom"), false, false);
+    radioCustom->onStateChanged =
+        MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
+    row->AddChild(radioCustom);
+
+    Edit::CreateArgs eargs;
+    eargs.parent = hwnd;
+    eargs.withBorder = true;
+    eargs.font = font;
+    eargs.text = fmt("1-%d", pageCount);
+    eargs.isRtl = IsUIRtl();
+    pagesEdit = new Edit();
+    pagesEdit->Create(eargs);
+    pagesEdit->SetIsEnabled(false);
+    row->AddChild(pagesEdit, 1);
+
+    AddButtonsRow(_TRA("Convert"), _TRA("Use <N> for the page number"));
+    FinishDialog(destEdit);
+
+    destEdit->onTextChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::UpdateButton>(this);
+    pagesEdit->onTextChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::UpdateButton>(this);
+    UpdateButton();
+    return true;
+}
+
+void ShowConvertPdfToImagesDialog(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath) {
+        return;
+    }
+    if (!IsPdfDoc(tab)) {
+        return;
+    }
+    logf("ShowConvertPdfToImagesDialog: opening for '%s'\n", tab->filePath);
+
+    auto* dlg = new ConvertPdfToImagesDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }

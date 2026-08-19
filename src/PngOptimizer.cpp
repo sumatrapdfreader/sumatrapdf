@@ -156,6 +156,40 @@ void OptimizePngFileAsync(Str path) {
     RunAsync(MkFunc0(OptimizePngThread, d), "OptimizePngThread");
 }
 
+struct OptimizePngFilesData {
+    StrVec paths;
+};
+
+static void OptimizePngFilesThread(OptimizePngFilesData* d) {
+    int n = len(d->paths);
+    for (int i = 0; i < n; i++) {
+        Str p = d->paths[i];
+        if (str::EndsWithI(p, StrL(".png"))) {
+            OptimizePngFile(p);
+        }
+    }
+    delete d;
+}
+
+// Same as OptimizePngFileAsync for each .png path, one after another on a
+// single background thread so converting many pages does not spawn one
+// zopfli thread per file
+void OptimizePngFilesAsync(const StrVec& paths) {
+    auto* d = new OptimizePngFilesData();
+    int n = len(paths);
+    for (int i = 0; i < n; i++) {
+        Str p = paths[i];
+        if (str::EndsWithI(p, StrL(".png"))) {
+            d->paths.Append(p);
+        }
+    }
+    if (len(d->paths) == 0) {
+        delete d;
+        return;
+    }
+    RunAsync(MkFunc0(OptimizePngFilesThread, d), "OptimizePngFilesThread");
+}
+
 // Pack pixmap pixels as tightly packed RGBA8 for lodepng_encode32.
 static u8* PixmapToRgbaContiguous(const Pixmap* px) {
     if (!px || !px->data || px->width <= 0 || px->height <= 0) {

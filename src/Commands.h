@@ -293,7 +293,8 @@ enum {
     CmdInsertImage = 482,
     CmdToggleHighlightFormFields = 483,
     CmdTogglePageBoxes = 484,
-    CmdNone = 485,
+    CmdConvertPdfToImages = 485,
+    CmdNone = 486,
 
     /* range for file history */
     CmdFileHistoryFirst,

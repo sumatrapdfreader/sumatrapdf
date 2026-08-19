@@ -120,6 +120,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - comics / images: advanced settings `ComicBookUI.LimitToWindowWidth` / `LimitToWindowHeight` and the same under `ImageUI` — when true, absolute zoom never makes a page wider (or taller) than the window; each page is capped independently so double-page spreads stay on screen while single pages can stay large (fixes #2197)
 - comic book archives (`.cbz`, `.cbr`, …) whose images live in chapter folders now show those folders as nested Bookmarks (table of contents) entries. A directory shared by every file is still omitted so a single-folder comic stays a flat list. ComicInfo.xml bookmarks still win when present (fixes #5317)
 - **Convert to PDF** (`CmdConvertToPDF`) for comic books (`.cbz`, `.cbr`, …), image folders, and single images: dialog suggests a unique `.pdf` path next to the source; original images are embedded when possible (fixes #4118, #5532). Docs: [Convert to PDF](Convert-to-PDF.md)
+- **Convert PDF to Images** (`CmdConvertPdfToImages`): dialog like Extract Text, with a destination path template (`<N>` is the page number), a PNG / JPEG / BMP format drop-down that updates the extension, and **Current** / **All** / **Custom** page radios (custom takes a range such as `1,3-5`). Writes one file per page at 150 DPI; PNGs are losslessly recompressed in the background (fixes #5991). Docs: [Convert PDF to Images](Convert-PDF-to-images.md)
 - Explorer preview / thumbnails for FictionBook: plain `.fb2` and zip containers `.fb2z`, `.fbz`, `.zfb2`, and `.fb2.zip` (reinstall or re-enable the preview handler to pick up the extra extensions) (fixes #1677)
 - add `sumatrapdf-tool.exe` command-line tools for PDF manipulation (see [Tools](Tools.md))
 - [command palette](Command-Palette.md) has a new `*` mode that jumps to a table of contents entry of the current document (`Shift + F12`). Shows the fully expanded outline, indented by nesting level, with the entry closest to the current page pre-selected (fixes #5676)
@@ -242,6 +243,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdReadAloudSelection` : "Start Reading Selection"
 - `CmdConvertImageToPdf` : "Convert Page To PDF" — image editor path for one page
 - `CmdConvertToPDF` : "Convert To PDF..." — comic / image folder / image → multi-page PDF (fixes #4118, #5532)
+- `CmdConvertPdfToImages` : "Convert PDF to Images..." — PDF pages → PNG / JPEG / BMP (fixes #5991)
 - `CmdCropImage` : "Crop Image"
 - `CmdDocumentExtractText` : "Extract Text From Document"
 - `CmdDocumentShowOutline` : "Show Document Outline"

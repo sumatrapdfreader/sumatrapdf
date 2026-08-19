@@ -793,6 +793,7 @@ struct Checkbox : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         Str text;
+        PlatformFont* font = nullptr;
         State initialState = State::Unchecked;
         bool isRtl = false;
         bool isRadio = false;

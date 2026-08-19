@@ -112,6 +112,10 @@ static MenuDef menuDefFile[] = {
         CmdConvertToPDF,
     },
     {
+        _TRN("Convert PDF to Images..."),
+        CmdConvertPdfToImages,
+    },
+    {
         _TRN("Save Annotations to existing PDF"),
         CmdSaveAnnotations,
     },
@@ -1072,6 +1076,10 @@ static MenuDef menuDefDocumentOperations[] = {
     {
         _TRN("Convert to PDF..."),
         CmdConvertToPDF,
+    },
+    {
+        _TRN("Convert PDF to Images..."),
+        CmdConvertPdfToImages,
     },
     {
         _TRN("Show in &folder"),

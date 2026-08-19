@@ -39,6 +39,7 @@
 #include "EditAnnotations.h"
 #include "EutlTrust.h"
 #include "CommandPalette.h"
+#include "PdfTools.h"
 
 extern bool gIsStartup;
 TempStr FindHistoryResultTemp(int* exitCodeOut);
@@ -363,6 +364,7 @@ enum class ControlCmd : u16 {
     TestFindHistory = 66,
     TestImageResizeEdges = 67,
     TestLinkDestHighlight = 68,
+    TestConvertToImages = 69,
 };
 
 enum class ControlArgType : u16 {
@@ -1156,6 +1158,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestLinkDestHighlight: {
             int exitCode = 0;
             Str res = LinkDestHighlightResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestConvertToImages: {
+            Str templatePath = StringArg(req, 0);
+            Str pagesSpec = StringArg(req, 1);
+            if (!templatePath || !pagesSpec) {
+                AppendError(req, "TestConvertToImages expects string templatePath, string pages");
+                break;
+            }
+            int exitCode = 0;
+            Str res = ConvertPagesToImagesResultTemp(templatePath, pagesSpec, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

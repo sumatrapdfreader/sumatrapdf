@@ -300,6 +300,7 @@ static SeqStrings gCommandNames =
     "CmdInsertImage\0"
     "CmdToggleHighlightFormFields\0"
     "CmdTogglePageBoxes\0"
+    "CmdConvertPdfToImages\0"
     "CmdNone\0"
     "\0";
 
@@ -588,6 +589,7 @@ static i32 gCommandIds[] = {
     CmdInsertImage,
     CmdToggleHighlightFormFields,
     CmdTogglePageBoxes,
+    CmdConvertPdfToImages,
     CmdNone,
 };
 
@@ -876,6 +878,7 @@ SeqStrings gCommandDescriptions =
     "Insert Image...\0"
     "Toggle Highlight Form Fields\0"
     "Toggle Page Boxes\0"
+    "Convert PDF to Images...\0"
     "Do nothing\0"
     "\0";
 // clang-format on

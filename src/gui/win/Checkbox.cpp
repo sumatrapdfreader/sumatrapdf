@@ -36,6 +36,7 @@ HWND Checkbox::Create(const CreateArgs& args) {
     cargs.parent = args.parent;
     cargs.isRtl = args.isRtl;
     cargs.text = args.text;
+    cargs.font = args.font;
     cargs.className = WC_BUTTONW;
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     cargs.style |= args.isRadio ? BS_AUTORADIOBUTTON : BS_AUTOCHECKBOX;

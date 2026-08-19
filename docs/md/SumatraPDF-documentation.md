@@ -128,6 +128,8 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 
 [Convert to PDF (GUI: comics / images)](Convert-to-PDF.md)
 
+[Convert PDF to Images](Convert-PDF-to-images.md)
+
 [Compress a PDF](Tool-x-compress-pdf.md)
 
 [Decompress a PDF](Tool-x-decompress-pdf.md)

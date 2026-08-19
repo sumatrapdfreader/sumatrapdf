@@ -293,6 +293,7 @@ export const commands = [
     "CmdInsertImage", "Insert Image...",
     "CmdToggleHighlightFormFields", "Toggle Highlight Form Fields",
     "CmdTogglePageBoxes", "Toggle Page Boxes",
+    "CmdConvertPdfToImages", "Convert PDF to Images...",
     "CmdNone", "Do nothing",
 ];
 
