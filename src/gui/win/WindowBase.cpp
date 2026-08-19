@@ -1614,6 +1614,10 @@ void ControlBase::SetBounds(Rect bounds) {
     if (bounds == lastBounds) {
         return;
     }
+    // Layout x/y is often 1px off ChildPos (caption-border inset). Re-applying
+    // it on a width-only change nudges the filter and tree during splitter drag.
+    bool samePos = bounds.x == lastBounds.x && bounds.y == lastBounds.y;
+    bool sameDy = bounds.dy == lastBounds.dy;
     lastBounds = bounds;
 
     bounds.x += insets.left;
@@ -1623,6 +1627,17 @@ void ControlBase::SetBounds(Rect bounds) {
 
     if (mapRtlX) {
         bounds.x = HwndMapChildXForRtlParent(GetParent(hwnd), bounds.x, bounds.dx);
+    }
+    if (hwnd && samePos) {
+        Rect cur = ChildPosWithinParent(hwnd);
+        bounds.x = cur.x;
+        bounds.y = cur.y;
+        if (sameDy) {
+            bounds.dy = cur.dy;
+        }
+        if (cur == bounds) {
+            return;
+        }
     }
     HwndMoveWindow(hwnd, &bounds);
 }

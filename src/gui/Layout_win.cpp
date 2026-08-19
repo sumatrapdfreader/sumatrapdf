@@ -51,6 +51,8 @@ int HwndSlot::MinIntrinsicWidth(int /*height*/) {
 // Move the HWND into bounds (batched when winPos is set). A null or collapsed
 // slot still records lastBounds so callers can place a lazily-created window.
 void HwndSlot::SetBounds(Rect bounds) {
+    bool samePos = bounds.x == lastBounds.x && bounds.y == lastBounds.y;
+    bool sameDy = bounds.dy == lastBounds.dy;
     lastBounds = bounds;
     if (!hwnd || IsCollapsed(this)) {
         return;
@@ -59,10 +61,17 @@ void HwndSlot::SetBounds(Rect bounds) {
         HWND parent = GetParent(hwnd);
         bounds.x = HwndMapChildXForRtlParent(parent, bounds.x, bounds.dx);
     }
-    // A no-op SetWindowPos still sends WM_WINDOWPOSCHANGED and the TOC tree
-    // shimmers 1-2px. Window resize must not touch the sidebar when its
-    // client rect did not change (width is independent of the frame).
-    if (ChildPosWithinParent(hwnd) == bounds) {
+    Rect cur = ChildPosWithinParent(hwnd);
+    // Layout x/y can disagree with the HWND by 1px. A width-only change must
+    // not re-apply that offset (TOC label/filter/tree shimmer on splitter drag).
+    if (samePos) {
+        bounds.x = cur.x;
+        bounds.y = cur.y;
+        if (sameDy) {
+            bounds.dy = cur.dy;
+        }
+    }
+    if (cur == bounds) {
         return;
     }
     if (winPos) {

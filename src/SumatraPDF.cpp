@@ -6704,6 +6704,19 @@ static void StretchHwndHeight(DeferWinPosHelper& dh, HWND hwnd, const Rect& want
     }
 }
 
+// Keep x/y/height, apply a new width. Used on a live sidebar-splitter drag so
+// the TOC (label, filter, tree) is not nudged 1-2px; only the right edge moves.
+static void StretchHwndWidth(DeferWinPosHelper& dh, HWND hwnd, int dx) {
+    if (!hwnd) {
+        return;
+    }
+    Rect cur = ChildPosWithinParent(hwnd);
+    Rect next{cur.x, cur.y, dx, cur.dy};
+    if (next != cur) {
+        dh.MoveWindow(hwnd, next);
+    }
+}
+
 // sizes and shows the caption-tree children for the current mode (single row
 // vs. menu-bar + tabs). RelayoutFrame measures the tree after this; the
 // buttons' lastBounds become captionBtn[].rect
@@ -6960,10 +6973,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->sidebarDx = sidebarDxApplied; // remember what's applied
     }
 
-    // A live frame resize must not nudge the sidebar. The 1px caption-border
-    // inset can change between WM_SIZE steps and would otherwise MoveWindow
-    // the TOC by 1-2px (and paint the splitter over its edge).
-    if (isFrameResize && sidebarVisible) {
+    // A live frame or splitter resize must not nudge the sidebar origin. The
+    // 1px caption-border inset can disagree with the HWND's x and would
+    // otherwise MoveWindow the TOC by 1-2px (label, filter, and tree together).
+    if ((isFrameResize || isSplitterDrag) && sidebarVisible) {
         HWND sideHwnd = tocVisible ? win->hwndTocBox : win->hwndFavBox;
         if (sideHwnd) {
             Rect side = ChildPosWithinParent(sideHwnd);
@@ -6971,8 +6984,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
                 int right = rc.x + rc.dx;
                 rc.x = side.x;
                 rc.dx = std::max(0, right - rc.x);
-                sidebarDxApplied = side.dx;
-                win->sidebarDx = side.dx;
+                if (isFrameResize) {
+                    sidebarDxApplied = side.dx;
+                    win->sidebarDx = side.dx;
+                }
             }
         }
     }
@@ -7036,8 +7051,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
              updateToolbars && capTwoRow && capHasFileTabs);
     BindSlot(win->toolbarTopSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && !toolbarBottom);
     BindSlot(win->toolbarBottomSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && toolbarBottom);
-    BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible && !isFrameResize);
-    BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav && !isFrameResize);
+    BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible && !isFrameResize && !isSplitterDrag);
+    BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav && !isFrameResize && !isSplitterDrag);
     BindSlot(win->fullFavSlot, win->hwndFavBox, &dh, favAsTab);
     BindSlot(win->canvasSlot, win->hwndCanvas, &dh, !discardCanvasBits);
     BindSlot(win->aiChatSlot, win->hwndAiChatBox, &dh, aiChatVisible);
@@ -7048,12 +7063,20 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         dh.MoveWindowNoCopyBits(win->hwndCanvas, win->canvasSlot->lastBounds);
     }
     // Frame resize: keep the sidebar's x/width, only stretch its height.
+    // Splitter drag: keep x/y/height, only stretch its width.
     if (isFrameResize) {
         if (tocVisible) {
             StretchHwndHeight(dh, win->hwndTocBox, win->tocSlot->lastBounds);
         }
         if (sidebarFav) {
             StretchHwndHeight(dh, win->hwndFavBox, win->favSlot->lastBounds);
+        }
+    } else if (isSplitterDrag) {
+        if (tocVisible) {
+            StretchHwndWidth(dh, win->hwndTocBox, win->tocSlot->lastBounds.dx);
+        }
+        if (sidebarFav) {
+            StretchHwndWidth(dh, win->hwndFavBox, win->favSlot->lastBounds.dx);
         }
     }
 
