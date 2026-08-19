@@ -1293,6 +1293,21 @@ static void SetDevModeCollate(HGLOBAL hDevMode, int collate) {
     }
 }
 
+// PD_USEDEVMODECOPIESANDCOLLATE makes PrintDlgEx ignore PRINTDLGEX::nCopies.
+// Reset the DEVMODE value so a previous print job's copy count doesn't carry
+// over to the next dialog (issue #5981).
+static void SetDevModeCopies(HGLOBAL hDevMode, short copies) {
+    if (!hDevMode) {
+        return;
+    }
+    DEVMODEW* dm = (DEVMODEW*)GlobalLock(hDevMode);
+    if (dm) {
+        dm->dmCopies = copies;
+        dm->dmFields |= DM_COPIES;
+        GlobalUnlock(hDevMode);
+    }
+}
+
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
 
@@ -1430,6 +1445,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         delete seed;
     }
 
+    SetDevModeCopies(pdex.hDevMode, 1);
     int collatePref = CollateDefaultPref();
     if (collatePref >= 0) {
         SetDevModeCollate(pdex.hDevMode, collatePref);
