@@ -105,6 +105,7 @@ bool InverseSearchWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
+        args.parent = win ? win->hwndFrame : nullptr;
         args.title = _TRA("Set inverse search command line");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
@@ -210,4 +211,5 @@ void ShowInverseSearchDialog(MainWindow* win) {
         return;
     }
     gInverseSearchWnd = wnd;
+    RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }

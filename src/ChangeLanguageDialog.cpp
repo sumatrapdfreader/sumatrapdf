@@ -132,6 +132,7 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
+        args.parent = win ? win->hwndFrame : nullptr;
         args.title = _TRA("Change Language");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
@@ -222,4 +223,5 @@ void ShowChangeLanguageDialog(MainWindow* win) {
         return;
     }
     gChangeLanguageWnd = wnd;
+    RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }

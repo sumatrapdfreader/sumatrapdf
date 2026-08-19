@@ -111,6 +111,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
+        args.parent = win ? win->hwndFrame : nullptr;
         args.title = _TRA("Go to page");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
@@ -228,4 +229,5 @@ void ShowGoToPageDialog(MainWindow* win) {
         return;
     }
     gGoToPageWnd = wnd;
+    RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }

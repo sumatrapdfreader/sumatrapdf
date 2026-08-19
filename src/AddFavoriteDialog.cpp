@@ -105,6 +105,7 @@ bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn
 
     {
         CreateCustomArgs args;
+        args.parent = win ? win->hwndFrame : nullptr;
         args.title = _TRA("Add Favorite");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
@@ -204,4 +205,5 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
         return;
     }
     gAddFavoriteWnd = wnd;
+    RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }

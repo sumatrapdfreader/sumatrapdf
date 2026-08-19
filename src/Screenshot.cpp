@@ -428,6 +428,7 @@ bool SetHotkeyWnd::Create(HWND owner) {
     bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
+        args.parent = owner;
         args.title = _TRA("Set Screenshot Hotkey");
         args.visible = false;
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
@@ -528,4 +529,5 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     gHotkeyDlgHwnd = wnd->hwnd;
     HINSTANCE h = GetModuleHandleW(nullptr);
     gKeyboardHook = SetWindowsHookExW(WH_KEYBOARD_LL, LowLevelKeyboardProc, h, 0);
+    RunModalWindow(wnd->hwnd, hwndOwner);
 }

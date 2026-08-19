@@ -41,6 +41,8 @@ struct SignDocumentWnd : WindowBase {
     ~SignDocumentWnd() override { str::Free(preselectField); }
 
     MainWindow* win = nullptr;
+    HWND hwndOwner = nullptr;
+    bool modalDisablesOwner = false;
     // unsigned signature fields the document already has; the placement
     // drop-down lists them first, then "new signature on the current page"
     StrVec fieldNames;
@@ -104,6 +106,12 @@ static bool gPlacingSignature = false;
 static Kind kNotifSignPlacement = "notifSignPlacement";
 static void ClearSignaturePlacementNotif(MainWindow* win);
 
+static void SetSignDocumentOwnerEnabled(SignDocumentWnd* wnd, bool enabled) {
+    if (wnd && wnd->modalDisablesOwner && wnd->hwndOwner && IsWindow(wnd->hwndOwner)) {
+        EnableWindow(wnd->hwndOwner, enabled);
+    }
+}
+
 // Default size of a new signature when the user clicks rather than dragging
 // a rectangle. 2" x 0.75" at 72 pt/in — enough for name, date and reason.
 constexpr float kDefaultSignatureDx = 144;
@@ -111,6 +119,7 @@ constexpr float kDefaultSignatureDy = 54;
 
 static void ClearSignDocumentWnd() {
     gPlacingSignature = false;
+    SetSignDocumentOwnerEnabled(gSignDocumentWnd, true);
     gSignDocumentWnd = nullptr;
 }
 
@@ -198,6 +207,7 @@ bool CancelPlacingSignature(MainWindow* win) {
     gPlacingSignature = false;
     ClearSignaturePlacementNotif(win);
     if (gSignDocumentWnd) {
+        SetSignDocumentOwnerEnabled(gSignDocumentWnd, false);
         gSignDocumentWnd->SetIsVisible(true);
         HwndSetFocus(gSignDocumentWnd->hwnd);
     }
@@ -210,6 +220,7 @@ static void StartSignaturePlacement(SignDocumentWnd* wnd) {
     }
     gPlacingSignature = true;
     wnd->SetIsVisible(false);
+    SetSignDocumentOwnerEnabled(wnd, true);
     DeleteOldSelectionInfo(wnd->win, true);
     ShowSignaturePlacementNotif(wnd->win);
     HwndSetFocus(wnd->win->hwndFrame);
@@ -299,6 +310,7 @@ bool FinishSignaturePlacement(MainWindow* win, int x, int y, bool aborted) {
     gPlacingSignature = false;
     ClearSignaturePlacementNotif(win);
     DeleteOldSelectionInfo(win, true);
+    SetSignDocumentOwnerEnabled(gSignDocumentWnd, false);
     gSignDocumentWnd->DoSign(args);
     return true;
 }
@@ -628,6 +640,8 @@ void SignDocumentWnd::DoSign(const PdfSignArgs& args) {
     // the signature is only computed while saving, so the document has to be
     // written out now; ask where, since signing rewrites the file
     WindowTab* tab = win->CurrentTab();
+    SetIsVisible(false);
+    SetSignDocumentOwnerEnabled(this, true);
     ScheduleDelete();
     SaveAnnotationsToMaybeNewPdfFile(tab);
 }
@@ -703,6 +717,7 @@ static Checkbox* AddCheckbox(VBox* vbox, HWND hwnd, Str text, bool isRtl, int pa
 
 bool SignDocumentWnd::Create(MainWindow* mainWin) {
     win = mainWin;
+    hwndOwner = win ? win->hwndFrame : nullptr;
     CollectFields();
 
     {
@@ -886,4 +901,6 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
         return;
     }
     gSignDocumentWnd = wnd;
+    wnd->modalDisablesOwner = wnd->hwndOwner && IsWindowEnabled(wnd->hwndOwner);
+    SetSignDocumentOwnerEnabled(wnd, false);
 }
