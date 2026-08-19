@@ -2102,7 +2102,11 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !PageDestHasAddress(pageEl->AsLink())) {
         MenuRemove(popup, CmdCopyLinkTarget);
     }
-    if (!pageEl || !pageEl->Is(kindPageElementComment) || !value) {
+    bool hasCommentToCopy = pageEl && pageEl->Is(kindPageElementComment) && value;
+    if (ctx->annotationUnderCursor) {
+        hasCommentToCopy = !str::IsEmptyOrWhiteSpace(Contents(ctx->annotationUnderCursor));
+    }
+    if (!hasCommentToCopy) {
         MenuRemove(popup, CmdCopyComment);
     }
     // show "Save Attachment" only for file attachment annotations
@@ -2305,8 +2309,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             return;
         };
         case CmdCopyComment: {
-            if (len(value) > 0) {
-                CopyTextToClipboard(value);
+            Str comment = value;
+            if (ctx->annotationUnderCursor) {
+                // The page element's value is hover text. For FreeText that is
+                // only the author because the contents are already on the page.
+                comment = Contents(ctx->annotationUnderCursor);
+            }
+            if (!str::IsEmptyOrWhiteSpace(comment)) {
+                CopyTextToClipboard(comment);
             }
             return;
         }

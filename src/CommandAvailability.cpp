@@ -422,6 +422,9 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
             ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
             ctx.cursorOnImage = pageEl->Is(kindPageElementImage);
         }
+        if (ctx.annotationUnderCursor) {
+            ctx.cursorOnComment = !str::IsEmptyOrWhiteSpace(Contents(ctx.annotationUnderCursor));
+        }
     }
 
     if (!CanAccessDisk()) {
