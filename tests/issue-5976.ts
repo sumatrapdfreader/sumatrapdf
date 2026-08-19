@@ -5,7 +5,7 @@ import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand } from "./control";
 import { cmdId, runStandalone, tmpPath } from "./util";
 import { enumWindows, getWindowPid, getWindowText, postMessage, sleep, WM_CLOSE, WM_KEYDOWN } from "./winapi";
-import { killAndWait, launchControlled, sendCommand, waitForExit } from "./win-automation";
+import { killAndWait, launchControlled, sendCommand, sendCommandSync, waitForExit } from "./win-automation";
 
 const VK_DELETE = 0x2e;
 const kAnnotCount = 8;
@@ -135,6 +135,11 @@ export async function testit(): Promise<void> {
     st = await waitN(client, 0, "Del after select all");
     console.log("  Del removes every selected annotation ✓");
 
+    // Deleting annotations intentionally makes the PDF dirty. Discard those
+    // test changes before closing; otherwise WM_CLOSE waits in the unsaved
+    // annotations dialog for user input that CI cannot provide.
+    sendCommandSync(frame, cmdId("CmdDiscardChanges"));
+    await client.waitForRenderIdle();
     postMessage(frame, WM_CLOSE, 0, 0);
     if (!(await waitForExit(proc))) {
       throw new Error("issue-5976: SumatraPDF didn't exit after WM_CLOSE");
