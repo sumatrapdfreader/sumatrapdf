@@ -56,6 +56,7 @@ struct CapturedScreenshot {
 
 struct ScreenshotOverlayData {
     Vec<CapturedScreenshot> captures;
+    HWND hwndForeground = nullptr;
     int selected = 0; // index of currently selected (hovered/arrow-keyed)
     int cols = 0;
     int rows = 0;
@@ -998,6 +999,20 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     ReleaseDC(nullptr, hdcScreen);
 }
 
+// Destroying the picker directly leaves its UI thread without keyboard focus.
+// Return cancellation to the window that was active before the picker opened.
+static void CancelScreenshotOverlay(HWND hwnd, ScreenshotOverlayData* data) {
+    HWND hwndForeground = data->hwndForeground;
+    DestroyWindow(hwnd);
+    if (!hwndForeground || !IsWindow(hwndForeground)) {
+        return;
+    }
+    SetForegroundWindow(hwndForeground);
+    if (GetWindowThreadProcessId(hwndForeground, nullptr) == GetCurrentThreadId()) {
+        SetFocus(hwndForeground);
+    }
+}
+
 static LRESULT CALLBACK WndProcScreenshotOverlay(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     ScreenshotOverlayData* data = (ScreenshotOverlayData*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
@@ -1022,7 +1037,7 @@ static LRESULT CALLBACK WndProcScreenshotOverlay(HWND hwnd, UINT msg, WPARAM wp,
             }
             switch (wp) {
                 case VK_ESCAPE:
-                    DestroyWindow(hwnd);
+                    CancelScreenshotOverlay(hwnd, data);
                     return 0;
                 case VK_LEFT:
                     if (data->selected > 0) {
@@ -1113,6 +1128,7 @@ void TakeScreenshots() {
     HWND hwndForeground = GetForegroundWindow();
 
     auto* data = new ScreenshotOverlayData();
+    data->hwndForeground = hwndForeground;
     CaptureAllScreenshots(data, nullptr);
 
     int screenW = GetSystemMetrics(SM_CXSCREEN);
