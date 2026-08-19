@@ -9,6 +9,7 @@
 import { copyFileSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync, writeSync, closeSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util";
+import { windowPosArgs } from "./win-automation";
 import { sleep, killAndWait } from "./winapi";
 
 function reloadCount(s: string): number {
@@ -35,7 +36,10 @@ export async function testit(): Promise<void> {
   copyFileSync(src, doc);
   writeFileSync(join(dir, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const proc = Bun.spawn([EXE, "-appdata", dir, doc], { stdout: "pipe", stderr: "ignore" });
+  const proc = Bun.spawn([EXE, "-for-testing", ...windowPosArgs(), "-appdata", dir, doc], {
+    stdout: "pipe",
+    stderr: "ignore",
+  });
   let out = "";
   const pump = (async () => {
     for await (const chunk of proc.stdout as ReadableStream) {

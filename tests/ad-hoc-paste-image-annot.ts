@@ -10,8 +10,15 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { waitForFrame, sendCommand, findCanvas, killAndWait, killProcessesNamed } from "./win-automation.ts";
+import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import {
+  launchSumatra,
+  waitForFrame,
+  sendCommand,
+  findCanvas,
+  killAndWait,
+  killProcessesNamed,
+} from "./win-automation.ts";
 import { sleep, captureWindowToPng } from "./winapi.ts";
 
 function makePdf(n: number): Buffer {
@@ -77,7 +84,7 @@ export async function testit(): Promise<void> {
   }
 
   await killProcessesNamed("SumatraPDF.exe");
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
+  const proc = launchSumatra([pdf]);
   try {
     const frame = await waitForFrame(proc.pid!);
     await sleep(1500);

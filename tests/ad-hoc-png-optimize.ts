@@ -14,8 +14,8 @@
 
 import { readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone } from "./util.ts";
-import { waitForFrame, sendCommand, killAndWait, killProcessesNamed } from "./win-automation.ts";
+import { cmdId, runStandalone } from "./util.ts";
+import { launchSumatra, waitForFrame, sendCommand, killAndWait, killProcessesNamed } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
 const IMG_W = 1200;
@@ -78,7 +78,7 @@ export async function testit(): Promise<void> {
   setClipboardImage();
 
   await killProcessesNamed("SumatraPDF.exe");
-  const proc = Bun.spawn([EXE, "-for-testing"], { stdout: "ignore", stderr: "ignore" });
+  const proc = launchSumatra([]);
   let newFile = "";
   try {
     const frame = await waitForFrame(proc.pid!);

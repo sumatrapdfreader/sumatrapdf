@@ -11,8 +11,15 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { waitForFrame, sendCommand, findCanvas, killAndWait, killProcessesNamed } from "./win-automation.ts";
+import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import {
+  launchSumatra,
+  waitForFrame,
+  sendCommand,
+  findCanvas,
+  killAndWait,
+  killProcessesNamed,
+} from "./win-automation.ts";
 import {
   sleep,
   enumWindows,
@@ -76,7 +83,7 @@ export async function testit(): Promise<void> {
   writeFileSync(md, "# Find test\n\nzebra one\n\nsome ze**br**a bold\n\nlast Zebra here\n\nnothing else\n");
 
   await killProcessesNamed("SumatraPDF.exe");
-  const proc = Bun.spawn([EXE, "-for-testing", md], { stdout: "ignore", stderr: "ignore" });
+  const proc = launchSumatra([md]);
   try {
     const frame = await waitForFrame(proc.pid!);
     await sleep(3000); // let the WebView2 initialize and render the markdown

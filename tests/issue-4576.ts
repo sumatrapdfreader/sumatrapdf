@@ -11,6 +11,7 @@ import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 import { spawn } from "node:child_process";
+import { windowPosArgs } from "./win-automation.ts";
 import { killAndWait } from "./winapi.ts";
 
 const mutoolCandidates = [
@@ -95,7 +96,7 @@ export async function testit(): Promise<void> {
   } catch {
     /* ok */
   }
-  const p1 = spawn(EXE, ["-for-testing", "-pwd", "test", "-log", "-log-to-file", log1, a, b, a], {
+  const p1 = spawn(EXE, ["-for-testing", ...windowPosArgs(), "-pwd", "test", "-log", "-log-to-file", log1, a, b, a], {
     cwd: ROOT,
     stdio: "ignore",
   });
@@ -140,10 +141,14 @@ export async function testit(): Promise<void> {
     /* ok */
   }
 
-  const primary = spawn(EXE, ["-appdata", appdata, "-pwd", "test", "-log", "-log-to-file", log2, a], {
-    cwd: ROOT,
-    stdio: "ignore",
-  });
+  const primary = spawn(
+    EXE,
+    [...windowPosArgs(), "-appdata", appdata, "-pwd", "test", "-log", "-log-to-file", log2, a],
+    {
+      cwd: ROOT,
+      stdio: "ignore",
+    },
+  );
   const deadlineP = Date.now() + 5000;
   while (Date.now() < deadlineP) {
     if ((await countLoads(log2, "a-pwd.pdf")) >= 1) {
