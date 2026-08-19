@@ -108,7 +108,7 @@ CmdAIChatWithGrokBuild,,AI Chat with document using Grok Build,"Toggle Grok Buil
 CmdAIChatWithOpenAICodex,,AI Chat with document using OpenAI Codex,"Toggle OpenAI Codex chat sidebar, ver 3.7+. See AI-Chat-with-document.md#openai-codex"
 CmdAIChatWithAntiGravity,,AI Chat with document using Antigravity,"Toggle Antigravity chat sidebar, ver 3.7+. See AI-Chat-with-document.md#antigravity"
 CmdTranslateSelectionWithAntiGravity,,Translate Selection with Antigravity,"Translate selected text with Antigravity CLI, ver 3.7+"
-CmdChangeTheme,,Change Theme...,"ver 3.7+, opens a dialog to pick a UI theme and optionally how document colors follow the theme (`DocumentColorsFollowTheme`)"
+CmdChangeTheme,,Change Theme...,"ver 3.7+, opens a dialog to pick a UI theme (including **Follow Windows**, which automatically tracks Windows light/dark app mode) and optionally how document colors follow the theme (`DocumentColorsFollowTheme`)"
 CmdToggleLightDarkTheme,,Toggle Light/Dark Theme,"ver 3.7+, switches between the last used light and dark themes (see `LastLightTheme` / `LastDarkTheme` advanced settings)"
 CmdToggleEngineeringDrawingEnhance,,Toggle Engineering Drawing Enhancement,"ver 3.7+, toggles CAD/engineering-drawing line enhancement for the current PDF (see the `EngineeringDrawingEnhance` advanced setting)"
 CmdSetDocumentColorsFollowTheme,,Set Document Colors Follow Theme,"ver 3.7+, opens a dialog to pick how MuPDF-rendered documents follow the UI theme (`DocumentColorsFollowTheme`: off, smart, legacy)"

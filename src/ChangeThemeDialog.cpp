@@ -53,6 +53,7 @@ struct ChangeThemeWnd : WindowBase {
 
 static ChangeThemeWnd* gChangeThemeWnd = nullptr;
 
+static constexpr int kFollowWindowsThemeListIndex = 0;
 static SeqStrings gDocumentColorsFollowThemeNames = "off\0smart\0legacy\0";
 
 static int DocumentColorsFollowThemeToDropDownIndex(DocumentColorsFollowTheme mode) {
@@ -142,7 +143,11 @@ void ChangeThemeWnd::OnSelectionChanged() {
     if (idx < 0) {
         return;
     }
-    SetThemeByIndex(idx);
+    if (idx == kFollowWindowsThemeListIndex) {
+        SetTheme(StrL("System"));
+    } else {
+        SetThemeByIndex(idx - 1);
+    }
     UpdateTheme();
     PreviewDocumentColors();
     KeepFocus();
@@ -209,19 +214,25 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     if (!documentColorsFollowThemeOnly) {
-        int n = ThemeGetCount();
+        int nThemes = ThemeGetCount();
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
         c->font = font;
         listBox = c;
         model = new ListBoxModelStrings();
-        for (int i = 0; i < n; i++) {
+        // This is a mode, not another color theme, so keep its user-facing
+        // name distinct from the persisted Theme = System value.
+        model->strings.Append(_TRA("Follow Windows"));
+        for (int i = 0; i < nThemes; i++) {
             model->strings.Append(ThemeGetNameAt(i));
         }
         c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnSelectionChanged>(this);
         c->SetModel(model);
-        int currIdx = ThemeGetCurrentIndex();
-        if (currIdx >= 0 && currIdx < n) {
+        int currIdx = kFollowWindowsThemeListIndex;
+        if (!str::EqI(gGlobalPrefs->theme, StrL("System"))) {
+            currIdx = ThemeGetCurrentIndex() + 1;
+        }
+        if (currIdx >= 0 && currIdx < len(model->strings)) {
             c->SetCurrentSelection(currIdx);
         }
         vbox->AddChild(c);
