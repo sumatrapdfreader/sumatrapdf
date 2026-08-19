@@ -12,7 +12,7 @@ void HideFindBar(MainWindow* win);
 bool IsFindBarVisible(MainWindow* win);
 bool IsFindUIVisible(MainWindow* win);
 void FindBarReposition(MainWindow* win);
-void FindBarSetStatus(MainWindow* win, Str s);
+void FindBarSetStatus(MainWindow* win, Str s, int totalHits = -1);
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked);
 

@@ -48,7 +48,7 @@ constexpr int kFindWinMinEditDx = 48;
 
 namespace {
 
-// min-width box: at least `dx`, wider if the child needs more
+// exact-width box: the child is constrained to `dx`
 struct FindFixedDx : ILayout {
     ILayout* child = nullptr;
     int dx = 0;
@@ -81,9 +81,8 @@ ILayout* FindFixedDx::LayoutChildAt(int) {
     return child;
 }
 
-int FindFixedDx::MinIntrinsicWidth(int height) {
-    int childDx = child ? child->MinIntrinsicWidth(height) : 0;
-    return std::max(dx, childDx);
+int FindFixedDx::MinIntrinsicWidth(int) {
+    return dx;
 }
 
 int FindFixedDx::MinIntrinsicHeight(int width) {
@@ -107,6 +106,24 @@ void FindFixedDx::SetBounds(Rect r) {
     if (child) {
         child->SetBounds(r);
     }
+}
+
+static int DecimalDigits(int n) {
+    int digits = 1;
+    while (n >= 10) {
+        n /= 10;
+        digits++;
+    }
+    return digits;
+}
+
+static int FindStatusDx(PlatformFont* font, int totalHits, bool capped) {
+    int digits = DecimalDigits(std::max(totalHits, 0));
+    int nChars = (2 * digits) + 3; // N, " / ", M
+    if (capped) {
+        nChars++; // the trailing '+' in e.g. "999 / 999+"
+    }
+    return nChars * font->averageCharWidth;
 }
 
 } // namespace
@@ -151,6 +168,7 @@ struct FindWindowWnd : WindowBase {
     // the status text, the buttons and the results list are virtual controls;
     // the search fields are HWND children. Owned by `layout` once built
     VirtText* status = nullptr;
+    FindFixedDx* statusBox = nullptr;
     // prev / next / match-case / match-whole-word / unpin(dock)
     VirtIconButton* btns[5]{};
     VirtListBox* results = nullptr;
@@ -179,6 +197,7 @@ struct FindWindowWnd : WindowBase {
     void UpdateButtonIcons();
     void BuildLayout();
     void Layout();
+    bool UpdateStatusWidth(int totalHits, bool capped);
     void SavePos();
     void RefreshResults(bool allowNavigation = true);
     void UpdateTheme() override;
@@ -378,13 +397,12 @@ void FindWindowWnd::BuildLayout() {
     editPages->idealDx = pagesDx;
     editPages->maxDx = pagesDx;
 
-    // status + buttons stay together so they wrap as a unit under the edit.
-    // Status is at least ~7 characters so the bar doesn't jump; longer counts can grow.
+    // status + buttons stay together so they wrap as a unit under the edit
     auto* tools = new HBox();
     tools->alignCross = CrossAxisAlign::CrossCenter;
     tools->gap = status->font->averageCharWidth;
-    int statusMinDx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
-    tools->AddChild(new FindFixedDx(status, statusMinDx));
+    statusBox = new FindFixedDx(status, FindStatusDx(status->font, 0, false));
+    tools->AddChild(statusBox);
     for (VirtIconButton* b : btns) {
         tools->AddChild(b);
     }
@@ -411,6 +429,18 @@ void FindWindowWnd::BuildLayout() {
     vbox->AddChild(results, 1);
 
     layout = new Padding(vbox, Insets{pad, pad, pad, pad});
+}
+
+bool FindWindowWnd::UpdateStatusWidth(int totalHits, bool capped) {
+    if (!statusBox || totalHits < 0) {
+        return false;
+    }
+    int dx = FindStatusDx(status->font, totalHits, capped);
+    if (statusBox->dx == dx) {
+        return false;
+    }
+    statusBox->dx = dx;
+    return true;
 }
 
 void FindWindowWnd::Layout() {
@@ -973,11 +1003,19 @@ bool IsFindWindowVisible(MainWindow* win) {
     return win->findWindow && HwndIsVisible(win->findWindow->hwnd);
 }
 
-void FindWindowSetStatus(MainWindow* win, Str s) {
+void FindWindowSetStatus(MainWindow* win, Str s, int totalHits) {
     if (win->findWindow && win->findWindow->status) {
-        win->findWindow->status->SetText(s ? s : StrL(""));
+        FindWindowWnd* w = win->findWindow;
+        Str text = s ? s : StrL("");
+        bool capped = str::EndsWith(text, StrL("+"));
+        bool widthChanged = w->UpdateStatusWidth(totalHits, capped);
+        w->status->SetText(text);
         if (IsFindWindowVisible(win)) {
-            win->findWindow->Layout();
+            if (widthChanged) {
+                w->Layout();
+            } else {
+                w->status->Invalidate();
+            }
         }
     }
 }

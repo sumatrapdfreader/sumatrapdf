@@ -186,12 +186,12 @@ static void BrowserFindUpdateStatus(MainWindow* win, DocController* md, int page
     if (win->browserFindTotal < 0) {
         // the all-pages sweep hasn't finished: show per-page numbers for now
         TempStr s = fmt("%d / %d", pageCur, pageTotal);
-        FindBarSetStatus(win, s);
+        FindBarSetStatus(win, s, pageTotal);
         return;
     }
     win->browserFindCurrent = BrowserFindGlobalMatchIdx(win, md->CurrentPageNo(), pageCur);
     TempStr s = fmt("%d / %d", win->browserFindCurrent + 1, win->browserFindTotal);
-    FindBarSetStatus(win, s);
+    FindBarSetStatus(win, s, win->browserFindTotal);
     FindWindowRefreshResults(win); // mirror the current match in the results list
 }
 
@@ -796,7 +796,7 @@ struct FindThreadData {
             FindBarSetStatus(win, "");
         } else if (!success && loopedAround) {
             // keep it compact and consistent with the "n / m" counter
-            FindBarSetStatus(win, "0 / 0");
+            FindBarSetStatus(win, "0 / 0", 0);
         }
         // else: a match was found; the "n / m" counter (set by UpdateMatchCount
         // after this) is the only feedback - no beep on wrap-around
@@ -894,7 +894,7 @@ static void ShowMatchCount(MainWindow* win) {
         n = MatchIndexInCache(win, key);
     }
     TempStr s = fmt("%d / %d%s", n, total, Str(win->findCountCapped ? "+" : ""));
-    FindBarSetStatus(win, s);
+    FindBarSetStatus(win, s, total);
 }
 
 // cap on how many per-match snippets we build for the floating results list

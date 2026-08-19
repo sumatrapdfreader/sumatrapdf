@@ -9,7 +9,7 @@ void DeleteFindWindow(MainWindow* win);
 void ShowFindWindow(MainWindow* win);
 void HideFindWindow(MainWindow* win);
 bool IsFindWindowVisible(MainWindow* win);
-void FindWindowSetStatus(MainWindow* win, Str s);
+void FindWindowSetStatus(MainWindow* win, Str s, int totalHits = -1);
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked);
 void FindWindowRefreshResults(MainWindow* win, bool allowNavigation = true);

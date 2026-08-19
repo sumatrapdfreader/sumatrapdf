@@ -661,9 +661,9 @@ void FindBarReposition(MainWindow* win) {
 }
 
 // show n/m or "No matches" style status in the bar
-void FindBarSetStatus(MainWindow* win, Str s) {
+void FindBarSetStatus(MainWindow* win, Str s, int totalHits) {
     if (gGlobalPrefs->searchUIFloating) {
-        FindWindowSetStatus(win, s);
+        FindWindowSetStatus(win, s, totalHits);
         return;
     }
     if (win->findBar && win->findBar->status) {
