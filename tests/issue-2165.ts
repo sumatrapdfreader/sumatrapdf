@@ -66,7 +66,9 @@ async function queryLayout(client: ControlClient): Promise<Layout> {
         canvasX: parseInt(m[4]!, 10),
         raw,
       };
-      if (layout.favVis === 1 && layout.favX >= 0 && layout.canvasX >= 0) {
+      // Fav and canvas can share a rect for a frame before RelayoutFrame
+      // separates them (SidebarOnRight); that used to fail the side check.
+      if (layout.favVis === 1 && layout.favX >= 0 && layout.canvasX >= 0 && layout.favX !== layout.canvasX) {
         return layout;
       }
     } else if (exitCode !== 2) {

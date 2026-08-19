@@ -1121,13 +1121,17 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             if (zoom <= 0) {
                 zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
             }
-            ReportDebugIf(zoom < 0.01f);
-            pi->zoomReal = zoom;
-            if (zoom > 0) {
-                minZoom = std::min(minZoom, zoom);
+            if (zoom < 0.01f) {
+                // empty/tiny viewport: LoadDocument Relayouts before the canvas
+                // is sized; ReportDebugIf here killed -for-testing (issue-2165)
+                continue;
             }
+            pi->zoomReal = zoom;
+            minZoom = std::min(minZoom, zoom);
         }
-        ReportIf(minZoom == (float)HUGE_VAL);
+        if (minZoom == (float)HUGE_VAL) {
+            return;
+        }
         zoomReal = minZoom;
     } else if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitHeight == newZoomVirtual) ||
                (kZoomFitPage == newZoomVirtual) || (kZoomShrinkToFit == newZoomVirtual) ||
@@ -1140,12 +1144,16 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             PageInfo* pi = GetPageInfo(pageNo);
             if (pi->isShown) {
                 float zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
-                ReportDebugIf(zoom < 0.01f);
+                if (zoom < 0.01f) {
+                    continue;
+                }
                 pi->zoomReal = zoom;
                 minZoom = std::min(minZoom, zoom);
             }
         }
-        ReportIf(minZoom == (float)HUGE_VAL);
+        if (minZoom == (float)HUGE_VAL) {
+            return;
+        }
         zoomReal = minZoom;
     } else if (kZoomFitContent == newZoomVirtual) {
         float newZoom = ZoomRealFromVirtualForPage(newZoomVirtual, CurrentPageNo());
@@ -1169,7 +1177,9 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             zoomReal < ZoomRealFromVirtualForPage(kZoomFitPage, CurrentPageNo())) {
             zoomReal = newZoom;
         }
-        ReportIf(zoomReal < 0.01f);
+        if (zoomReal < 0.01f) {
+            return;
+        }
         for (int pageNo = 1; pageNo <= nPages; pageNo++) {
             PageInfo* pageInfo = GetPageInfo(pageNo);
             pageInfo->zoomReal = zoomReal;
@@ -1231,10 +1241,18 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
     }
 
     rotation = NormalizeRotation(newRotation);
+    zoomVirtual = newZoomVirtual;
 
     bool needHScroll = false;
     bool needVScroll = false;
     viewPort = Rect(viewPort.TL(), totalViewPortSize);
+    // Fit zoom is viewport minus windowMargin. LoadDocument Relayouts before
+    // the canvas is sized (and WM_SIZE during RelayoutFrame can be 0x0), which
+    // made CalcZoomReal's zoom < 0.01f ReportDebugIf kill -for-testing.
+    if (viewPort.dx <= windowMargin.left + windowMargin.right ||
+        viewPort.dy <= windowMargin.top + windowMargin.bottom) {
+        return;
+    }
     bool hideScrollbars = ScrollbarsAreHidden();
     bool useOverlayScrollbar = ScrollbarsUseOverlay();
 

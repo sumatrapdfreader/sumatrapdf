@@ -6974,9 +6974,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     // A live frame or splitter resize must not nudge the sidebar origin. The
-    // 1px caption-border inset can disagree with the HWND's x and would
-    // otherwise MoveWindow the TOC by 1-2px (label, filter, and tree together).
-    if ((isFrameResize || isSplitterDrag) && sidebarVisible) {
+    // 1px caption-border inset can disagree with the HWND's x. Only pin when
+    // the sidebar is on the left: on the right, side.x is the right pane and
+    // using it as rc.x stacked fav+canvas at the same x (issue-2165).
+    if ((isFrameResize || isSplitterDrag) && sidebarVisible && !SidebarOnRightLayout()) {
         HWND sideHwnd = tocVisible ? win->hwndTocBox : win->hwndFavBox;
         if (sideHwnd) {
             Rect side = ChildPosWithinParent(sideHwnd);
