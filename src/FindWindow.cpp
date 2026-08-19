@@ -169,6 +169,14 @@ struct FindWindowWnd : WindowBase {
     // the search fields are HWND children. Owned by `layout` once built
     VirtText* status = nullptr;
     FindFixedDx* statusBox = nullptr;
+    FindFixedDx* pagesBox = nullptr;
+    HBox* toolsLayout = nullptr;
+    Wrap* headerLayout = nullptr;
+    Spacer* pagesLabelGap = nullptr;
+    Spacer* headerPagesGap = nullptr;
+    Spacer* pagesResultsGap = nullptr;
+    Padding* rootPadding = nullptr;
+    int layoutDpi = 96;
     // prev / next / match-case / match-whole-word / unpin(dock)
     VirtIconButton* btns[5]{};
     VirtListBox* results = nullptr;
@@ -194,9 +202,10 @@ struct FindWindowWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void CreateButtons();
-    void UpdateButtonIcons();
+    void UpdateButtonIcons(int dpi = 0);
     void BuildLayout();
     void Layout();
+    void UpdateDpi(int dpi);
     bool UpdateStatusWidth(int totalHits, bool capped);
     void SavePos();
     void RefreshResults(bool allowNavigation = true);
@@ -214,6 +223,7 @@ struct FindWindowWnd : WindowBase {
     int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
     void OnSize(WindowBase::SizeEvent* ev);
+    void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
     void OnClose(WindowBase::CloseEvent* ev);
     void OnKeyDown(KeyEvent* ev);
@@ -262,10 +272,13 @@ FindWindowWnd::~FindWindowWnd() {
 
 // the pixmaps belong to the icon cache, which re-renders them for the current
 // theme and size
-void FindWindowWnd::UpdateButtonIcons() {
+void FindWindowWnd::UpdateButtonIcons(int dpi) {
     static const char* icons[5] = {gIconChevronUp, gIconChevronDown, gIconMatchCase, gIconMatchWholeWord,
                                    gIconArrowsDiagonalMinimize};
-    int isz = RoundUp(DpiScale(16), 4);
+    if (dpi <= 0) {
+        dpi = GetDpi();
+    }
+    int isz = RoundUp(DpiScaleByDpi(dpi, 16), 4);
     for (int i = 0; i < 5; i++) {
         if (btns[i]) {
             btns[i]->pixmap = GetCachedPixmapForSvg(icons[i], isz, isz);
@@ -399,6 +412,7 @@ void FindWindowWnd::BuildLayout() {
 
     // status + buttons stay together so they wrap as a unit under the edit
     auto* tools = new HBox();
+    toolsLayout = tools;
     tools->alignCross = CrossAxisAlign::CrossCenter;
     tools->gap = status->font->averageCharWidth;
     statusBox = new FindFixedDx(status, FindStatusDx(status->font, 0, false));
@@ -408,6 +422,7 @@ void FindWindowWnd::BuildLayout() {
     }
 
     auto* header = new Wrap();
+    headerLayout = header;
     header->alignCross = CrossAxisAlign::CrossCenter;
     header->colGap = gap;
     header->rowGap = gap;
@@ -417,18 +432,62 @@ void FindWindowWnd::BuildLayout() {
     auto* pagesRow = new HBox();
     pagesRow->alignCross = CrossAxisAlign::CrossCenter;
     pagesRow->AddChild(pagesLabel);
-    pagesRow->AddChild(new Spacer(gap, 0));
-    pagesRow->AddChild(new FindFixedDx(editPages, pagesDx));
+    pagesLabelGap = new Spacer(gap, 0);
+    pagesRow->AddChild(pagesLabelGap);
+    pagesBox = new FindFixedDx(editPages, pagesDx);
+    pagesRow->AddChild(pagesBox);
 
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(header);
-    vbox->AddChild(new Spacer(0, gap));
+    headerPagesGap = new Spacer(0, gap);
+    vbox->AddChild(headerPagesGap);
     vbox->AddChild(pagesRow);
-    vbox->AddChild(new Spacer(0, pad));
+    pagesResultsGap = new Spacer(0, pad);
+    vbox->AddChild(pagesResultsGap);
     vbox->AddChild(results, 1);
 
-    layout = new Padding(vbox, Insets{pad, pad, pad, pad});
+    rootPadding = new Padding(vbox, Insets{pad, pad, pad, pad});
+    layout = rootPadding;
+    layoutDpi = DpiGet();
+}
+
+void FindWindowWnd::UpdateDpi(int dpi) {
+    if (dpi <= 0 || dpi == layoutDpi) {
+        return;
+    }
+    PlatformFont* appFont = GetAppFontForDpi(dpi);
+    edit->SetFont(appFont);
+    editPages->SetFont(appFont);
+    pagesLabel->font = appFont;
+    status->font = appFont;
+    results->font = appFont;
+    results->dpi = dpi;
+
+    int pad = DpiScaleByDpi(dpi, kFindWinPadding);
+    int gap = DpiScaleByDpi(dpi, kFindWinGap);
+    int minEditDx = DpiScaleByDpi(dpi, kFindWinMinEditDx);
+    edit->idealDx = minEditDx;
+    edit->maxDx = minEditDx;
+    int pagesDx = DpiScaleByDpi(dpi, 160);
+    editPages->idealDx = pagesDx;
+    editPages->maxDx = pagesDx;
+    pagesBox->dx = pagesDx;
+    toolsLayout->gap = appFont->averageCharWidth;
+    headerLayout->colGap = gap;
+    headerLayout->rowGap = gap;
+    pagesLabelGap->dx = gap;
+    headerPagesGap->dy = gap;
+    pagesResultsGap->dy = pad;
+    rootPadding->insets = Insets{pad, pad, pad, pad};
+    statusBox->dx = MulDiv(statusBox->dx, dpi, layoutDpi);
+    int buttonPad = DpiScaleByDpi(dpi, 4);
+    for (VirtIconButton* button : btns) {
+        button->padding = Insets{buttonPad, buttonPad, buttonPad, buttonPad};
+    }
+    layoutDpi = dpi;
+    UpdateButtonIcons(dpi);
+    Layout();
 }
 
 bool FindWindowWnd::UpdateStatusWidth(int totalHits, bool capped) {
@@ -782,6 +841,16 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
     }
 }
 
+void FindWindowWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
+    RECT* r = ev->suggested;
+    if (r) {
+        SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    UpdateDpi((int)ev->dpiX);
+    ev->didHandle = true;
+}
+
 void FindWindowWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
     auto* mmi = ev->mmi;
     if (layout) {
@@ -911,6 +980,7 @@ FindWindowWnd* CreateFindWindow(MainWindow* win) {
     auto* w = new FindWindowWnd();
     w->onCommand = MkMethod1<FindWindowWnd, WindowBase::CommandEvent*, &FindWindowWnd::OnCommand>(w);
     w->onSize = MkMethod1<FindWindowWnd, WindowBase::SizeEvent*, &FindWindowWnd::OnSize>(w);
+    w->onDpiChanged = MkMethod1<FindWindowWnd, WindowBase::DpiChangedEvent*, &FindWindowWnd::OnDpiChanged>(w);
     w->onGetMinMaxInfo = MkMethod1<FindWindowWnd, WindowBase::GetMinMaxInfoEvent*, &FindWindowWnd::OnGetMinMaxInfo>(w);
     w->onClose = MkMethod1<FindWindowWnd, WindowBase::CloseEvent*, &FindWindowWnd::OnClose>(w);
     w->onKeyDown = MkMethod1<FindWindowWnd, KeyEvent*, &FindWindowWnd::OnKeyDown>(w);
@@ -1076,6 +1146,13 @@ void UpdateFindWindowTheme(MainWindow* win) {
     if (win->findWindow) {
         win->findWindow->UpdateTheme();
     }
+}
+
+int FindWindowFontHeight(MainWindow* win) {
+    if (!win || !win->findWindow || !win->findWindow->edit) {
+        return 0;
+    }
+    return PlatformFontLineHeight(win->findWindow->edit->GetFont());
 }
 
 void FindWindowSyncHistory(MainWindow* win) {

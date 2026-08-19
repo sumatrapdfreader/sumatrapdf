@@ -65,6 +65,7 @@ export enum ControlCommand {
   TestLinkDestHighlight = 68,
   TestConvertToImages = 69,
   TestLayout = 70,
+  TestDpi = 71,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

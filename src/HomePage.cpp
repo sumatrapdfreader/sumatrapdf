@@ -1180,6 +1180,25 @@ void HomePageUpdateSearchColors(MainWindow* win) {
     }
 }
 
+// The search edit survives while the frame moves between monitors. Its HFONT
+// and text margins do not follow WM_DPICHANGED automatically, and the page's
+// cached rectangles were measured at the previous DPI.
+void HomePageOnDpiChanged(MainWindow* win, int dpi) {
+    ClearHomeLayoutCache();
+    if (!win || dpi <= 0) {
+        return;
+    }
+    if (win->homeSearch) {
+        int fontSize = DpiScaleByDpi(dpi, 14);
+        win->homeSearch->SetFont(GetUserGuiFont(StrL("MS Shell Dlg"), fontSize));
+        int margin = DpiScaleByDpi(dpi, 6);
+        win->homeSearch->SetMargins(margin, margin);
+    }
+    if (win->hwndCanvas) {
+        HwndInvalidate(win->hwndCanvas, true);
+    }
+}
+
 void HomePageFocusSearch(MainWindow* win) {
     EnsureHomeSearchCreated(win);
     win->homeSearch->SetIsVisible(true);
@@ -1194,6 +1213,7 @@ void PickAnotherRandomPromotion() {
 // filter changes; pure scrollY changes just offset stored thumb rects ---
 struct HomePageLayoutCache {
     bool valid = false;
+    int dpi = 0;
     Rect canvasRc;
     int scrollY = 0;
     int nFiles = 0;
@@ -1273,6 +1293,9 @@ static bool HomeLayoutCacheMatches(const Rect& rc, Str filterText) {
     if (!c.valid) {
         return false;
     }
+    if (c.dpi != DpiGet()) {
+        return false;
+    }
     if (c.canvasRc != rc) {
         return false;
     }
@@ -1344,6 +1367,7 @@ static void CollectHomePageFiles(MainWindow* win, Vec<FileState*>& fileStates, S
 static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scrollY) {
     auto& c = gHomeLayoutCache;
     c.valid = true;
+    c.dpi = DpiGet();
     c.canvasRc = l.rc;
     c.scrollY = scrollY;
     c.nFiles = len(l.thumbnails);

@@ -7407,6 +7407,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
         if (other == win) {
             continue;
         }
+        DpiScope dpiScope(other->hwndFrame);
         UpdateToolbarAfterThemeChange(other);
         RecreateFindBar(other);
         UpdateFindWindowTheme(other);
@@ -7432,6 +7433,8 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
         UpdateTabWidth(win);
     }
     ApplySidebarDpiFonts(win, dpi);
+    HomePageOnDpiChanged(win, dpi);
+    UpdateAIChatDpi(win, dpi);
 
     // window margin / page spacing are dpi-scaled, so they change too
     DisplayModel* dm = win->AsFixed();
@@ -7472,6 +7475,7 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi, bool
     if (dpi <= 0) {
         dpi = 96;
     }
+    DpiSet(dpi, dpi);
 
     if (suggested) {
         int dx = suggested->right - suggested->left;

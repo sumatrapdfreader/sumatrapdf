@@ -88,6 +88,16 @@ static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
         return;
     }
     if (!DpiIsDesktopHwnd(hwnd)) {
+        HWND root = GetAncestor(hwnd, GA_ROOT);
+        if (root && !IsWindowVisible(root)) {
+            // A newly-created hidden popup with CW_USEDEFAULT is parked on the
+            // primary monitor until its owner positions it. Keep the DPI the
+            // caller seeded from the owner; querying the temporary position
+            // here makes its layout use the primary monitor's scale.
+            *outX = dpiX > 0 ? dpiX : 96;
+            *outY = dpiY > 0 ? dpiY : *outX;
+            return;
+        }
         if (DpiFromMonitor(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &x, &y)) {
             *outX = x;
             *outY = y;

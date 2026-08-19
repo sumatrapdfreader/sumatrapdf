@@ -11,6 +11,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/UITask.h"
+#include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -1212,6 +1213,9 @@ void UpdateAIChatTheme(MainWindow* win) {
     if (win->aiChatInput) {
         win->aiChatInput->SetColors(txtCol, bgCol);
     }
+    if (win->aiChatCheckbox) {
+        win->aiChatCheckbox->SetColors(txtCol, bgCol);
+    }
     // the panel is created after the frame-wide dark mode pass, so its
     // controls (e.g. the checkbox) need their own subclass + theme pass
     DarkModeApplyToChildControls(win->hwndAiChatBox);
@@ -1245,10 +1249,10 @@ void CreateAIChatPanel(MainWindow* win) {
         win->aiChatSplitter->onMove = MkFunc1Void(OnAIChatSplitterMove);
     }
 
-    PlatformFont* font = GetDefaultGuiFont();
+    PlatformFont* font = GetAppFont();
 
     // label
-    PlatformFont* labelFont = GetDefaultGuiFont(true, false);
+    PlatformFont* labelFont = GetAppSidebarLabelFont();
     auto header = NewLabelWithClose(win->hwndAiChatBox, labelFont, MkFunc0(CloseAIChatPanelFromLabel, win));
     win->aiChatLabel = header.label;
     win->aiChatHeader = header.box;
@@ -1293,6 +1297,7 @@ void CreateAIChatPanel(MainWindow* win) {
         Checkbox::CreateArgs args;
         args.parent = win->hwndAiChatBox;
         args.text = "Skip Permissions";
+        args.font = font;
         args.isRtl = IsUIRtl();
         win->aiChatCheckbox = new Checkbox();
         win->aiChatCheckbox->Create(args);
@@ -1314,6 +1319,7 @@ void CreateAIChatPanel(MainWindow* win) {
         args.idealSizeLines = 3;
         args.withBorder = true;
         args.cueText = "Ask about this document...";
+        args.font = font;
         win->aiChatInput = new Edit();
         win->aiChatInput->Create(args);
     }
@@ -1357,6 +1363,26 @@ void CreateAIChatPanel(MainWindow* win) {
 
     AIChatApplySavedSidebarDx(win);
     UpdateAIChatTheme(win);
+}
+
+void UpdateAIChatDpi(MainWindow* win, int dpi) {
+    if (!win || !win->hwndAiChatBox || dpi <= 0) {
+        return;
+    }
+    PlatformFont* font = GetAppFontForDpi(dpi);
+    PlatformFont* labelFont = GetAppSidebarLabelFontForDpi(dpi);
+    win->aiChatLabel->font = labelFont;
+    win->aiChatSessionCombo->SetFont(font);
+    win->aiChatModelCombo->SetFont(font);
+    win->aiChatOptionCombo->SetFont(font);
+    win->aiChatCheckbox->SetFont(font);
+    win->aiChatInput->SetFont(font);
+    win->aiChatStopBtn->font = font;
+    int padY = DpiScaleByDpi(dpi, 5);
+    int padX = DpiScaleByDpi(dpi, 12);
+    win->aiChatStopBtn->textPadding = Insets{padY, padX, padY, padX};
+    RelayoutAIChatPanel(win);
+    HwndInvalidate(win->hwndAiChatBox, true);
 }
 
 // close the panel for the current tab (label's close button)

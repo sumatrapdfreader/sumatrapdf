@@ -5,6 +5,7 @@
 #include "base/GdiPlusUtil.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
+#include "gui/Dpi.h"
 
 #include "gui/PlatformFont.h"
 
@@ -132,8 +133,10 @@ PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
 PlatformFont* GetDefaultGuiFont(bool bold, bool italic) {
     u16 flags = (bold ? kFontFlagBold : 0) | (italic ? kFontFlagItalic : 0);
     NONCLIENTMETRICS ncm{};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    if (!GetNonClientMetricsForDpi(DpiGet(), &ncm)) {
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    }
     int size = (int)std::abs(ncm.lfMessageFont.lfHeight);
     auto* font = FindCreatedFont(Str(), size, flags);
     if (font) {

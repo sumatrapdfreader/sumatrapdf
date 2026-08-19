@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/UITask.h"
 #include "base/Win.h"
+#include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -11,6 +12,7 @@
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
+#include "gui/win/WinGui.h"
 #include "gui/win/TabsCtrl.h"
 
 #include "Settings.h"
@@ -50,6 +52,53 @@
 extern bool gIsStartup;
 TempStr FindHistoryResultTemp(int* exitCodeOut);
 TempStr LinkDestHighlightResultTemp(int* exitCodeOut);
+
+static int FontHeight(PlatformFont* font) {
+    return font ? PlatformFontLineHeight(font) : 0;
+}
+
+static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::Eq(action, StrL("hidden"))) {
+        int prevX = dpiX;
+        int prevY = dpiY;
+        DpiSet(240, 240);
+        WindowBase w;
+        CreateCustomArgs args;
+        args.visible = false;
+        args.title = StrL("DPI test");
+        w.CreateCustom(args);
+        int layoutDpi = DpiGet();
+        int windowDpi = w.GetDpi();
+        int fontDy = FontHeight(GetDefaultGuiFont());
+        w.Destroy();
+        DpiSet(prevX, prevY);
+        out.Append(fmt("layout=%d window=%d font=%d\n", layoutDpi, windowDpi, fontDy));
+        return finish(layoutDpi == 240 && windowDpi == 240 && fontDy >= 24 ? 0 : 1);
+    }
+
+    if (!str::Eq(action, StrL("state")) || len(gWindows) == 0) {
+        out.Append(StrL("ERROR TestDpi expects hidden or state\n"));
+        return finish(1);
+    }
+    MainWindow* win = gWindows[0];
+    out.Append(fmt("frame=%d current=%d home=%d tocLabel=%d tocEdit=%d aiLabel=%d aiInput=%d aiCheckbox=%d find=%d\n",
+                   win->frameDpi, DpiGet(), FontHeight(win->homeSearch ? win->homeSearch->GetFont() : nullptr),
+                   FontHeight(win->tocLabel ? win->tocLabel->font : nullptr),
+                   FontHeight(win->tocFilterEdit ? win->tocFilterEdit->GetFont() : nullptr),
+                   FontHeight(win->aiChatLabel ? win->aiChatLabel->font : nullptr),
+                   FontHeight(win->aiChatInput ? win->aiChatInput->GetFont() : nullptr),
+                   FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr),
+                   FindWindowFontHeight(win)));
+    return finish(0);
+}
 
 // Silent add for -dbg-control tests (no name dialog, no settings flush).
 static void AddFavoriteSilent(MainWindow* win, int pageNo) {
@@ -465,6 +514,7 @@ enum class ControlCmd : u16 {
     TestLinkDestHighlight = 68,
     TestConvertToImages = 69,
     TestLayout = 70,
+    TestDpi = 71,
 };
 
 enum class ControlArgType : u16 {
@@ -1233,6 +1283,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = LayoutInfoResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDpi: {
+            Str action = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = DpiResultTemp(action, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
