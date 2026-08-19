@@ -515,7 +515,7 @@ TempStr GetWebViewDataDirTemp() {
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
-static TempStr FormatSizeShortTransTemp(i64 size) {
+TempStr FormatFileSizeShortTransTemp(i64 size) {
     Str units[3] = {_TRA("GB"), _TRA("MB"), _TRA("KB")};
     return str::FormatSizeShortTemp(size, units);
 }
@@ -526,7 +526,7 @@ TempStr FormatFileSizeTransTemp(i64 size) {
     if (size <= 0) {
         return fmt("%d", size);
     }
-    TempStr n1 = FormatSizeShortTransTemp(size);
+    TempStr n1 = FormatFileSizeShortTransTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
     return fmt("%s (%s %s)", n1, n2, _TRA("Bytes"));
 }

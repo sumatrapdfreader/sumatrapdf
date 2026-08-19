@@ -374,7 +374,7 @@ CmdNone,,Do nothing,
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
-CmdInstallPrereleaseUpdate,,internal,"used by the pre-release update notification link (Download and install latest version); not for user shortcuts or DDE"
+CmdInstallPrereleaseUpdate,,internal,"used by the pre-release update notification link (Update); not for user shortcuts or DDE"
 CmdTogglePdfPreviewLogging,,internal,"toggles PDF shell-preview logging for debugging the Windows preview handler; not for normal use"
 CmdDebugCorruptMemory,,don't use,
 CmdOpenWithKnownExternalViewerFirst,,don't use,

@@ -393,7 +393,7 @@ static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
 }
 
 static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
-    TempStr size = FormatFileSizeTransTemp(data->nDownloaded);
+    TempStr size = FormatFileSizeShortTransTemp(data->nDownloaded);
     logf("UpdateDownloadProgressNotif: %s\n", size);
     auto* wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
     if (wnd) {
@@ -449,7 +449,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     if (!win || !updateInfo) {
         return;
     }
-    TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and install latest version"));
+    TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Update"));
     // pre-release "Latest" is a build number (e.g. 17616); show as 3.7.17616
     TempStr displayVer = updateInfo->latestVer;
     if (!str::ContainsChar(displayVer, '.')) {
@@ -797,7 +797,10 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
         Str uri = ToStr(url);
         rsp = new HttpRsp;
         str::ReplaceWithCopy(&rsp->url, uri);
-        if (HttpGet(uri, rsp)) {
+        bool ok = HttpGet(uri, rsp);
+        logf("UpdateCheckAsync: response from '%s': error=%d, status=%d, %d bytes\n%s\n", rsp->url, (int)rsp->error,
+             (int)rsp->httpStatusCode, (int)len(rsp->data), ToStr(rsp->data));
+        if (ok) {
             break;
         }
     }

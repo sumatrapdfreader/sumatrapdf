@@ -45,6 +45,7 @@ void SaveCallstackLogs();
 Str Sha1OfAppExe();
 TempStr GetWebViewDataDirTemp();
 
+TempStr FormatFileSizeShortTransTemp(i64);
 TempStr FormatFileSizeTransTemp(i64);
 
 bool LaunchFileIfExists(Str path);
