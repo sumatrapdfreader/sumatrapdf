@@ -805,11 +805,18 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     auto* wnd = gCommandPaletteWnd;
     int sel = wnd->listBox ? wnd->listBox->GetCurrentSelection() : -1;
     int n = wnd->listBox ? wnd->listBox->ItemsCount() : 0;
+    int selectedCmdId = 0;
+    if (sel >= 0 && sel < n) {
+        auto* model = (ListBoxModelCP*)wnd->listBox->model;
+        ItemDataCP* data = model->Data(sel);
+        selectedCmdId = data ? data->cmdId : 0;
+    }
     int qStart = 0, qEnd = 0, qLen = 0;
     if (wnd->editQuery) {
         wnd->editQuery->GetSelection(qStart, qEnd);
         qLen = wnd->editQuery->GetTextLen();
     }
-    out.Append(fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d\n", sel, n, qStart, qEnd, qLen));
+    out.Append(
+        fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d\n", sel, n, qStart, qEnd, qLen, selectedCmdId));
     return finish(0);
 }

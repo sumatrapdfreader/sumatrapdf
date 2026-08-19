@@ -495,6 +495,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (CmdIdInI32List(cmdId, gBlacklistCommandsFromPalette)) {
             return CommandVisibility::Hide;
         }
+        // Copy Image is handled by the canvas context menu, which retains the
+        // page element under the cursor. Palette dispatch has no image element.
+        if (cmdId == CmdCopyImage) {
+            return CommandVisibility::Hide;
+        }
     }
 
     if (CmdCloseOtherTabs == cmdId) {
@@ -665,6 +670,16 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         bool isImage =
             k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
         if (!ctx.isDocLoaded || !isImage) {
+            return CommandVisibility::Hide;
+        }
+    }
+
+    if (surface == CommandSurface::Palette && ctx.engineKind != kindEngineImage) {
+        // The context menu can edit an image embedded in another document because it
+        // retains the page element under the cursor. Palette commands only receive the
+        // current tab, so these operations are available for standalone images only.
+        if (cmdId == CmdSaveImage || cmdId == CmdCropImage || cmdId == CmdResizeImage ||
+            cmdId == CmdConvertImageToPdf) {
             return CommandVisibility::Hide;
         }
     }
