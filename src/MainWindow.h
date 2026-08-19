@@ -32,12 +32,16 @@ struct FindBarWnd;
 struct FindWindowWnd;
 struct ToolbarVirt;
 
-// one link numbered by keyboard link following (CmdToggleKeyboardLinkFollowing).
-// stored in page coordinates so the badges stay glued to their links while
-// scrolling, between the debounced recomputes
+constexpr int kMaxKeyboardLinkHintLength = 9;
+
+// One link labeled by keyboard link following (CmdToggleKeyboardLinkFollowing).
+// Stored in page coordinates so the badges stay glued to their links while
+// scrolling, between the debounced recomputes.
 struct KeyboardLinkTarget {
     int pageNo = 0;
     RectF rect;
+    char hint[kMaxKeyboardLinkHintLength + 1]{};
+    int hintLen = 0;
 };
 
 // one search match with a text snippet around it, for the floating results list
@@ -552,10 +556,12 @@ struct MainWindow {
     Str browserFindTerm;            // owned; the term the current md find ran with
 
     ILinkHandler* linkHandler = nullptr;
-    // keyboard link following: when on, visible links are numbered 1..9 and
-    // pressing a digit follows that link (see LinkFollow.cpp)
+    // keyboard link following: type the letter hint shown on a visible link
+    // to follow it (see LinkFollow.cpp)
     bool linkFollowActive = false;
     Vec<KeyboardLinkTarget> linkFollowTargets;
+    char linkFollowInput[kMaxKeyboardLinkHintLength + 1]{};
+    int linkFollowInputLen = 0;
 
     // keyboard text selection: a caret you move with the arrow keys to select
     // text without the mouse (see SelectTextKeyboard.cpp)

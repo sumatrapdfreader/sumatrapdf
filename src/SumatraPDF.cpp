@@ -4426,7 +4426,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
     win->DeleteToolTip();
-    // the numbered link overlay and the selection caret belong to the outgoing
+    // the link-hint overlay and the selection caret belong to the outgoing
     // document
     StopKeyboardLinkFollowing(win);
     StopSelectTextWithKeyboard(win);
@@ -8718,7 +8718,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
         return;
     }
 
-    // while keyboard link following is on, 1..9 pick a numbered link
+    // while keyboard link following is on, type a link's letter hint
     if (!isCtrl && !isAlt && KeyboardLinkFollowingOnChar(win, key)) {
         return;
     }

@@ -93,7 +93,7 @@ CmdRotateRight,"], Shift + Ctrl + Add",Rotate Right,
 CmdSinglePageView,"Ctrl + 6, Ctrl + Numpad 6",Single Page View,
 CmdToggleContinuousView,c,Toggle Continuous View,
 CmdSelectTextViaKeyboard,F7,Select Text With Keyboard,"ver 3.7+, caret browsing: puts a text caret in the page which the arrow keys move; Shift + arrows extend the selection, v toggles visual mode (arrows select without Shift), Home/End go to the line ends, Ctrl + Home/End to the document ends, Ctrl + arrows move by word, Ctrl + C or y copies, Esc or F7 leaves the mode. Not available for documents with no extractable text (fixes #4684, #4116)"
-CmdToggleKeyboardLinkFollowing,Shift + F,Follow Link With Keyboard,"ver 3.7+, numbers the links visible on screen 1..9; pressing a digit follows that link, Esc or Shift + F again leaves the mode. Not available for comic books, image folders and images (fixes #2629)"
+CmdToggleKeyboardLinkFollowing,Shift + F,Follow Link With Keyboard,"ver 3.7+, labels visible links with Vimium-style letter hints; type a hint to follow its link, Esc or Shift + F again leaves the mode. Multi-letter hints are used when needed. Not available for comic books, image folders and images (fixes #2629)"
 CmdToggleFullscreen,"f, Shift + Ctrl + L, F11",Toggle Fullscreen,
 CmdToggleMangaMode,,Toggle Manga Mode,"Right-to-left facing/book layout for fixed-page documents; before 3.7 this was limited to comic books"
 CmdToggleMenuBar,F9,Toggle Menu Bar,

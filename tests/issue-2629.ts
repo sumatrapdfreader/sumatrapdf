@@ -1,11 +1,12 @@
-// #2629: Zathura-style keyboard link following. `f`
-// (CmdToggleKeyboardLinkFollowing) numbers the links visible on screen 1..9 and
-// pressing that digit follows the link. The numbering is recalculated shortly
-// after scrolling stops, and the whole feature is unavailable for formats whose
-// pages can't have links (comic books, image folders, images).
+// #2629: Vimium-style keyboard link following. Shift + F
+// (CmdToggleKeyboardLinkFollowing) labels the links visible on screen with
+// letters and pressing a complete hint follows the link. The labels are
+// recalculated shortly after scrolling stops, and the whole feature is
+// unavailable for formats whose pages can't have links (comic books, image
+// folders, images).
 //
 // Drives the app over -dbg-control (TestKeyboardLinkFollow reports the mode and
-// the numbered targets) and posts the real WM_COMMAND / WM_CHAR messages, so the
+// the labeled targets) and posts the real WM_COMMAND / WM_CHAR messages, so the
 // accelerator and key paths are exercised, not just the internals.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
@@ -24,24 +25,21 @@ function pressVKey(hwnd: number, vk: number): void {
   postMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
-// 3 pages. Page 1 carries 3 link annotations (2 internal + 1 URL) in the top
-// half and 1 more near the bottom, so scrolling changes what is on screen.
-// Page height is 2000 so a single page doesn't fit in the window.
+// 3 pages. Page 1 carries 20 link annotations in a stack (enough to require
+// multi-letter hints); pages 2 and 3 have none.
 function makeLinkedPdf(): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
   const body: Record<number, Buffer> = {};
   body[1] = enc("<< /Type /Catalog /Pages 2 0 R >>");
   body[2] = enc("<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 >>");
 
-  // link rects are in PDF space (origin bottom-left); page is 612x2000
-  // top-of-page links (visible when scrolled to the top)
-  const links = [
-    { rect: "[72 1900 300 1930]", dest: "/Dest [4 0 R /Fit]" }, // -> page 2
-    { rect: "[72 1850 300 1880]", dest: "/Dest [5 0 R /Fit]" }, // -> page 3
-    { rect: "[72 1800 300 1830]", dest: "/A << /S /URI /URI (https://example.com/) >>" },
-    // bottom-of-page link, only visible after scrolling down
-    { rect: "[72 100 300 130]", dest: "/Dest [5 0 R /Fit]" },
-  ];
+  // Link rects are in PDF space (origin bottom-left); page is 612x2000.
+  const links: { rect: string; dest: string }[] = [];
+  for (let i = 0; i < 20; i++) {
+    const y2 = 1950 - i * 70;
+    const pageObj = i % 2 === 0 ? 4 : 5;
+    links.push({ rect: `[72 ${y2 - 30} 300 ${y2}]`, dest: `/Dest [${pageObj} 0 R /Fit]` });
+  }
   const linkObjs: number[] = [];
   let objNo = 20;
   for (const l of links) {
@@ -64,7 +62,7 @@ function makeLinkedPdf(): Buffer {
   }
   body[6] = enc("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
 
-  const maxN = 24;
+  const maxN = objNo - 1;
   const parts: Buffer[] = [enc("%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")];
   const offsets: Record<number, number> = {};
   let pos = parts[0]!.length;
@@ -88,14 +86,22 @@ const PNG_1PX = Buffer.from(
   "base64",
 );
 
-type State = { active: boolean; canFollow: boolean; page: number; count: number; accel: string };
+type State = { active: boolean; canFollow: boolean; page: number; count: number; accel: string; hints: string[] };
 
 function parseState(dump: string): State {
   const m = /active=(\d+) canFollow=(\d+) page=(-?\d+) count=(\d+) accel=(.*)/.exec(dump);
   if (!m) {
     throw new Error(`unexpected TestKeyboardLinkFollow output:\n${dump}`);
   }
-  return { active: m[1] === "1", canFollow: m[2] === "1", page: +m[3]!, count: +m[4]!, accel: m[5]!.trim() };
+  const hints = [...dump.matchAll(/ hint=([A-Z]+)$/gm)].map((match) => match[1]!);
+  return {
+    active: m[1] === "1",
+    canFollow: m[2] === "1",
+    page: +m[3]!,
+    count: +m[4]!,
+    accel: m[5]!.trim(),
+    hints,
+  };
 }
 
 async function getState(client: ControlClient): Promise<{ state: State; dump: string }> {
@@ -110,7 +116,7 @@ async function waitForState(
   timeoutMs = 4000 * SLOW_BUILD_FACTOR,
 ): Promise<{ state: State; dump: string }> {
   const deadline = Date.now() + timeoutMs;
-  let last = { state: { active: false, canFollow: false, page: 0, count: 0, accel: "" }, dump: "" };
+  let last = { state: { active: false, canFollow: false, page: 0, count: 0, accel: "", hints: [] }, dump: "" };
   while (Date.now() < deadline) {
     last = await getState(client);
     if (pred(last.state)) {
@@ -127,7 +133,8 @@ async function setupPdfView(client: ControlClient, proc: Bun.Subprocess): Promis
     throw new Error("no frame window");
   }
   await client.waitForRenderIdle();
-  sendCommandSync(frame, cmdId("CmdZoomActualSize"));
+  sendCommandSync(frame, cmdId("CmdZoomFitPage"));
+  await client.waitForRenderIdle();
   sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
   await client.waitForRenderIdle();
   return frame;
@@ -140,9 +147,7 @@ async function testLinkedPdf(): Promise<void> {
   await withControlledSumatra(
     EXE,
     async (client, proc) => {
-      // 100% zoom, so the 2000pt-tall page doesn't fit the window and only
-      // the links near its top are on screen. Zooming keeps the view
-      // centered, so go back to the top of page 1.
+      // Fit the whole first page so all 20 link hints are visible.
       const frame = await setupPdfView(client, proc);
 
       const fail = (msg: string, dump: string) => {
@@ -165,9 +170,13 @@ async function testLinkedPdf(): Promise<void> {
       // turn the mode on
       sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
       ({ state, dump } = await waitForState(client, (s) => s.active));
-      // 3 links are near the top of page 1; the 4th is far below the fold
-      if (state.count !== 3) {
-        fail(`expected 3 numbered links at the top of page 1, got ${state.count}`, dump);
+      // All 20 links on page 1 are visible.
+      if (state.count !== 20) {
+        fail(`expected 20 labeled links at the top of page 1, got ${state.count}`, dump);
+      }
+      const expectedHints = "A SA C D SD E F SF G H J SJ K SK L SL M P SS W".split(" ");
+      if (state.hints.join(" ") !== expectedHints.join(" ")) {
+        fail(`unexpected Vimium-style hints: ${state.hints.join(" ")}`, dump);
       }
 
       // the command toggles: a second one leaves the mode
@@ -180,6 +189,9 @@ async function testLinkedPdf(): Promise<void> {
       ({ state, dump } = await getState(client));
       const wrongKey = state.active;
       pressVKey(frame, VK_F);
+      // Let the WM_CHAR generated from the posted keydown drain before link
+      // mode is activated below; F is now itself a valid link-hint letter.
+      await sleep(50 * SLOW_BUILD_FACTOR);
       if (wrongKey) {
         fail("plain 'f' must toggle fullscreen, not keyboard link following", dump);
       }
@@ -190,20 +202,42 @@ async function testLinkedPdf(): Promise<void> {
       pressVKey(frame, VK_ESCAPE);
       ({ state, dump } = await waitForState(client, (s) => !s.active));
 
-      // back on, then follow a link. Links are numbered in reading order,
-      // so #2 is the second one from the top, which points at page 3
+      // B is not in Vimium's ergonomic hint alphabet. It cancels the mode and
+      // is consumed instead of falling through to an unrelated shortcut.
       sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 3));
-      postMessage(frame, WM_CHAR, 0x32, 0);
-      ({ state, dump } = await waitForState(client, (s) => s.page === 3 && !s.active));
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      postMessage(frame, WM_CHAR, "b".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => !s.active && s.page === 1));
+
+      // A is a complete single-letter hint for the first link.
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      postMessage(frame, WM_CHAR, "a".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
+      const singleHintPage = state.page;
+
+      // SA is a two-letter hint for the second link. S alone must keep the mode
+      // active instead of following a different link or falling through to an
+      // application shortcut.
+      sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
+      await client.waitForRenderIdle();
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      postMessage(frame, WM_CHAR, "s".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.page === 1));
+      postMessage(frame, WM_CHAR, "a".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
+      if (state.page === singleHintPage) {
+        fail(`A and SA should follow different adjacent links, but both went to page ${state.page}`, dump);
+      }
     },
     [pdf],
   );
 }
 
-// the numbering must be recalculated after scrolling brings other links into
-// view (debounced by 300ms, so wait longer than that)
-async function testRecomputeAfterScroll(): Promise<void> {
+// The labels must be recalculated after navigating to a page with no links
+// (debounced by 300ms, so wait longer than that).
+async function testRecomputeAfterNavigation(): Promise<void> {
   const pdf = tmpPath("issue-2629-links.pdf");
   writeFileSync(pdf, makeLinkedPdf());
 
@@ -212,20 +246,18 @@ async function testRecomputeAfterScroll(): Promise<void> {
     async (client, proc) => {
       const frame = await setupPdfView(client, proc);
       sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      let { state, dump } = await waitForState(client, (s) => s.active && s.count === 3);
+      let { state, dump } = await waitForState(client, (s) => s.active && s.count === 20);
       const atTop = state.count;
 
-      // scroll to the bottom of page 1, where only the 4th link is visible.
-      // numbering is recalculated 300ms after scrolling stops
-      sendCommandSync(frame, cmdId("CmdScrollDownPage"));
-      sendCommandSync(frame, cmdId("CmdScrollDownPage"));
+      // Page 2 has no links. Labels are recalculated 300ms after navigation.
+      sendCommandSync(frame, cmdId("CmdGoToNextPage"));
       await sleep(350);
       ({ state, dump } = await waitForState(client, (s) => s.active && s.count !== atTop));
       if (!state.active) {
-        throw new Error(`scrolling must not leave the mode\n${dump}`);
+        throw new Error(`page navigation must not leave the mode\n${dump}`);
       }
       if (state.count === atTop) {
-        throw new Error(`link numbering was not recalculated after scrolling (still ${state.count})\n${dump}`);
+        throw new Error(`link labels were not recalculated after page navigation (still ${state.count})\n${dump}`);
       }
     },
     [pdf],
@@ -262,7 +294,7 @@ async function testImageUnavailable(): Promise<void> {
 
 export async function testit(): Promise<void> {
   await testLinkedPdf();
-  await testRecomputeAfterScroll();
+  await testRecomputeAfterNavigation();
   await testImageUnavailable();
 }
 

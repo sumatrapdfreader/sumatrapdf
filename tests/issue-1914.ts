@@ -68,7 +68,7 @@ async function getLinkState(client: ControlClient): Promise<{ st: LinkState; dum
     throw new Error(`unexpected TestKeyboardLinkFollow output:\n${dump}`);
   }
   const rects: LinkState["rects"] = [];
-  for (const m of dump.matchAll(/^link=\d+ page=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/gm)) {
+  for (const m of dump.matchAll(/^link=\d+ page=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) hint=[A-Z]+$/gm)) {
     rects.push({ x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! });
   }
   return { st: { page: +head[1]!, count: +head[2]!, rects }, dump };
@@ -103,7 +103,7 @@ export async function testit(): Promise<void> {
         throw new Error("no canvas window");
       }
 
-      // ask where the link is on screen (link-following numbers every link it
+      // ask where the link is on screen (link-following labels every link it
       // finds, so this also proves the button is in the app's link list)
       sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
       const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;

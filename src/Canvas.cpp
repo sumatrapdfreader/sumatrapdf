@@ -4708,7 +4708,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
 
         case kLinkFollowTimerID:
-            // scrolling settled: re-number the links that are on screen now
+            // scrolling settled: relabel the links that are on screen now
             KillTimer(hwnd, kLinkFollowTimerID);
             KeyboardLinkFollowingRecompute(win);
             ScheduleRepaint(win, 0);
