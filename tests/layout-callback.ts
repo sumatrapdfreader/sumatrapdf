@@ -5,11 +5,13 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, ROOT, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, killAndWait, sendCommandSync } from "./win-automation.ts";
-import { captureWindowDCRegionPixels, sleep } from "./winapi.ts";
+import { launchControlled, killAndWait, sendCommandSync, waitForTitle } from "./win-automation.ts";
+import { captureWindowDCRegionPixels, sendCopyDataW, setProcessDpiAware, sleep } from "./winapi.ts";
 import type { LayoutInfo, LayoutItem } from "./control.ts";
 
 const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+const EPUB = join(import.meta.dir, "issue-5846.epub");
+const kCopyDataDdeW = 0x44646557;
 
 function requireItem(layout: LayoutInfo, name: string): LayoutItem {
   const item = layout.items[name];
@@ -56,13 +58,62 @@ async function sampleStableFullscreenTop(frame: number): Promise<Uint8Array> {
   }
 }
 
+function nearWhiteFraction(pixels: Uint8Array): number {
+  let white = 0;
+  for (let i = 0; i < pixels.length; i += 4) {
+    if (pixels[i] >= 250 && pixels[i + 1] >= 250 && pixels[i + 2] >= 250) {
+      white++;
+    }
+  }
+  return white / (pixels.length / 4);
+}
+
+async function waitForWhiteRegion(frame: number, x: number, y: number, w: number, h: number): Promise<number> {
+  const deadline = Date.now() + 3000;
+  let fraction = 0;
+  do {
+    const pixels = captureWindowDCRegionPixels(frame, x, y, w, h);
+    if (!pixels) {
+      throw new Error("layout-callback: failed to read webview pixels");
+    }
+    fraction = nearWhiteFraction(pixels);
+    if (fraction >= 0.98) {
+      // The WebView2 composition surface can arrive just after the Win32
+      // layout. Require the white result to survive that handoff; otherwise a
+      // transiently blank host would hide stale chrome that appears next.
+      await sleep(250);
+      const confirmed = captureWindowDCRegionPixels(frame, x, y, w, h);
+      if (!confirmed) {
+        throw new Error("layout-callback: failed to confirm webview pixels");
+      }
+      fraction = nearWhiteFraction(confirmed);
+      if (fraction >= 0.98) {
+        return fraction;
+      }
+    }
+    await sleep(50);
+  } while (Date.now() < deadline);
+  return fraction;
+}
+
 export async function testit(): Promise<void> {
+  setProcessDpiAware();
   const appdata = tmpPath("layout-callback-appdata");
   rmSync(appdata, { recursive: true, force: true });
   mkdirSync(appdata, { recursive: true });
   writeFileSync(
     join(appdata, "SumatraPDF-settings.txt"),
-    "ShowToolbar = true\nShowMenubar = false\nRestoreSession = false\nCheckForUpdates = false\n",
+    [
+      "ShowToolbar = true",
+      "ShowMenubar = false",
+      "UseTabs = true",
+      "RestoreSession = false",
+      "CheckForUpdates = false",
+      "HtmlUI [",
+      "\tUseFixedPageUI = false",
+      "]",
+      "",
+    ].join("\n"),
   );
 
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, PDF]);
@@ -171,6 +222,87 @@ export async function testit(): Promise<void> {
   } finally {
     client.close();
     await killAndWait(proc);
+  }
+
+  const html = join(appdata, "webview-layout.html");
+  writeFileSync(
+    html,
+    "<html style='background:transparent'><head><title>WebView layout</title></head>" +
+      "<body style='background:transparent;margin:120px'>content</body></html>",
+  );
+  const web = await launchControlled(["-appdata", appdata, html]);
+  try {
+    await web.client.setNotificationsEnabled(false);
+    const normal = await web.client.layout();
+    const normalCanvas = requireItem(normal, "canvas");
+    let white = await waitForWhiteRegion(
+      web.frame,
+      normalCanvas.rect.x + 20,
+      normalCanvas.rect.y + 20,
+      Math.min(160, normalCanvas.rect.dx - 30),
+      60,
+    );
+    if (white < 0.98) {
+      throw new Error(`layout-callback: initial HTML page was only ${(white * 100).toFixed(1)}% white`);
+    }
+
+    sendCommandSync(web.frame, cmdId("CmdToggleFullscreen"));
+    let fullscreen = await web.client.layout();
+    let deadline = Date.now() + 3000;
+    while (
+      (requireItem(fullscreen, "tabs").visible || requireItem(fullscreen, "canvas").rect.y !== 0) &&
+      Date.now() < deadline
+    ) {
+      await sleep(20);
+      fullscreen = await web.client.layout();
+    }
+    const fullCanvas = requireItem(fullscreen, "canvas");
+    white = await waitForWhiteRegion(
+      web.frame,
+      fullCanvas.rect.x + 20,
+      fullCanvas.rect.y,
+      Math.min(160, fullCanvas.rect.dx - 30),
+      60,
+    );
+    if (white < 0.98) {
+      throw new Error(`layout-callback: fullscreen HTML top retained chrome; only ${(white * 100).toFixed(1)}% white`);
+    }
+    console.log("  webview fullscreen discarded the old window chrome ✓");
+  } finally {
+    web.client.close();
+    await killAndWait(web.proc);
+  }
+
+  const tabs = await launchControlled(["-appdata", appdata, html]);
+  try {
+    await tabs.client.setNotificationsEnabled(false);
+    sendCopyDataW(tabs.frame, kCopyDataDdeW, `[Open("${EPUB}")]`);
+    await waitForTitle(tabs.frame, (title) => title.includes("issue-5846.epub"));
+    await tabs.client.waitForRenderIdle();
+    for (let attempt = 0; attempt < 3; attempt++) {
+      sendCommandSync(tabs.frame, cmdId("CmdPrevTab"));
+      await waitForTitle(tabs.frame, (title) => title.includes("webview-layout.html"));
+      const restored = await tabs.client.layout();
+      const restoredCanvas = requireItem(restored, "canvas");
+      const white = await waitForWhiteRegion(
+        tabs.frame,
+        restoredCanvas.rect.x + 20,
+        restoredCanvas.rect.y + 20,
+        Math.min(160, restoredCanvas.rect.dx - 30),
+        60,
+      );
+      if (white < 0.98) {
+        throw new Error(`layout-callback: restored HTML background was only ${(white * 100).toFixed(1)}% white`);
+      }
+      if (attempt < 2) {
+        sendCommandSync(tabs.frame, cmdId("CmdNextTab"));
+        await waitForTitle(tabs.frame, (title) => title.includes("issue-5846.epub"));
+      }
+    }
+    console.log("  webview tab restore kept an opaque white page ✓");
+  } finally {
+    tabs.client.close();
+    await killAndWait(tabs.proc);
   }
 }
 

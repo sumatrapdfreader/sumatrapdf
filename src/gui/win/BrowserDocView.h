@@ -22,6 +22,7 @@ class BrowserDocView {
     // the tab; SetVisible(true) reattaches the canvas subclass and shows it.
     void SetVisible(bool visible);
     bool IsVisible() const;
+    void RefreshControllerSurface();
     HWND GetParentHwnd() const { return hwndParent; }
 
     void NavigateToDataUrl(Str url);

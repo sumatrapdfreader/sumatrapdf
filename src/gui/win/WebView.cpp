@@ -1205,6 +1205,19 @@ void WebviewWnd::SetControllerVisible(bool visible) {
     webview3->Release();
 }
 
+// WebView2 can keep a hidden or old-size composition surface after showing a
+// tab or after its parent changes from a normal window to fullscreen. Briefly
+// detaching that surface makes it rebuild without reloading the document.
+void WebviewWnd::RefreshControllerSurface() {
+    if (!controller || !desiredVisible) {
+        return;
+    }
+    controller->put_IsVisible(FALSE);
+    controller->put_IsVisible(TRUE);
+    isVisible = true;
+    UpdateWebviewSize();
+}
+
 void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     if (!controller) {
         FailInit();
@@ -1223,7 +1236,13 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     ICoreWebView2Controller2* controller2 = nullptr;
     HRESULT bgHr = controller->QueryInterface(IID_PPV_ARGS(&controller2));
     if (SUCCEEDED(bgHr) && controller2) {
-        COREWEBVIEW2_COLOR bg = {0, 0, 0, 0};
+        COREWEBVIEW2_COLOR bg = {};
+        if (!ColorSkipsPaint(defaultBackgroundColor)) {
+            bg.A = 255;
+            bg.R = GetRed(defaultBackgroundColor);
+            bg.G = GetGreen(defaultBackgroundColor);
+            bg.B = GetBlue(defaultBackgroundColor);
+        }
         controller2->put_DefaultBackgroundColor(bg);
         controller2->Release();
     }
@@ -1356,6 +1375,7 @@ void WebviewWnd::UpdateWebviewSize() {
         return;
     }
     Rect bounds = HwndClientRect(hwnd);
+    controller->NotifyParentWindowPositionChanged();
     if (hasLastBounds && bounds == lastBounds) {
         return;
     }
@@ -2082,12 +2102,12 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     if (!hwnd) {
         return nullptr;
     }
-    // erase to the theme window background: the embedded page may be
-    // transparent (put_DefaultBackgroundColor alpha 0) and without a
-    // background brush the hwnd keeps whatever pixels were on screen when it
-    // appeared - e.g. an edit border painted during startup relayout showed
-    // through a restored document (stale-pixel ghosts)
-    SetColors(kColorNoChange, gColsWin[kColWinBg]);
+    // Keep the host fallback and WebView2's composition background in sync.
+    // Transparent general-purpose webviews use the chrome background; document
+    // webviews supply their page color so resize and tab transitions cannot
+    // reveal stale pixels or the gray canvas behind the page.
+    Color fallbackBg = ColorSkipsPaint(defaultBackgroundColor) ? gColsWin[kColWinBg] : defaultBackgroundColor;
+    SetColors(kColorNoChange, fallbackBg);
 
     auto fn = MkFunc1<void, Str>(OnBrowserMessageCbHwnd, (void*)hwnd);
     if (!Embed(fn)) {

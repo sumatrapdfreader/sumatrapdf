@@ -11,10 +11,10 @@
 #include "gui/win/WinGui.h"
 #include "gui/win/HtmlWindow.h"
 #include "gui/win/WebView.h"
-#include "gui/win/BrowserDocView.h"
 
 #include "AppTools.h"
 #include "Accelerators.h"
+#include "gui/win/BrowserDocView.h"
 
 constexpr const char* kChmVirtualHost = "https://sumatrapdf.chm/";
 constexpr const WCHAR* kChmVirtualHostW = L"https://sumatrapdf.chm/";
@@ -429,6 +429,12 @@ bool BrowserDocView::IsVisible() const {
     return visible;
 }
 
+void BrowserDocView::RefreshControllerSurface() {
+    if (visible && backend == Backend::WebView2 && wv) {
+        wv->RefreshControllerSurface();
+    }
+}
+
 // show/hide without destroying WebView2 / IE. Creating a browser is slow, so
 // tab switches hide the view and show it again instead of recreate.
 void BrowserDocView::SetVisible(bool show) {
@@ -454,6 +460,7 @@ void BrowserDocView::SetVisible(bool show) {
             }
             wv->SetControllerVisible(true);
             wv->UpdateWebviewSize();
+            wv->RefreshControllerSurface();
         } else if (backend == Backend::IE && ie) {
             ie->SetVisible(true);
         }
@@ -527,6 +534,7 @@ bool BrowserDocView::CreateWebView2() {
     wv->events.resolveAccelCmd = ChmResolveAccelCmd;
     wv->events.jsNotify = BrowserWebviewWnd::OnJsNotifyCb;
     wv->allowClipboardRead = false;
+    wv->defaultBackgroundColor = kColWhite;
     // forward app accelerators (Ctrl+W close tab, Ctrl+K command palette, etc.)
     // to the main window so they work while the WebView2 has keyboard focus
     wv->forwardAppAccelerators = true;

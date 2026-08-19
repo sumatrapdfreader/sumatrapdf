@@ -26,6 +26,7 @@
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
 #include "gui/win/WebView.h"
+#include "gui/win/BrowserDocView.h"
 
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
@@ -8049,6 +8050,15 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     RelayoutFrame(win);
     // show menu bar rebar after layout positions it correctly
     ShowMenuBarRebar(win);
+    BrowserDocView* browserView = nullptr;
+    if (win->AsChm()) {
+        browserView = win->AsChm()->docView;
+    } else if (win->AsMarkdown()) {
+        browserView = win->AsMarkdown()->docView;
+    }
+    if (browserView) {
+        browserView->RefreshControllerSurface();
+    }
     EndFrameRedrawSuppression(win);
 
     if (gGlobalPrefs->preventSleepInFullscreen) {
