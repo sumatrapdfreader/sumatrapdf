@@ -30,7 +30,9 @@ function buildPdf(): Buffer {
   const kids: number[] = [];
   let objNum = 4;
   for (let page = 1; page <= PAGE_COUNT; page++) {
-    const line = MATCH_PAGES.includes(page) ? `page ${page} has a ${WORD} on it` : `page ${page} filler`;
+    // Repeated/edge whitespace also checks that normalized snippets update
+    // their Str length instead of retaining an embedded NUL and stale tail.
+    const line = MATCH_PAGES.includes(page) ? `  page ${page} has   a ${WORD} on it  ` : `page ${page} filler`;
     const pageNum = objNum++;
     const contentNum = objNum++;
     kids.push(pageNum);

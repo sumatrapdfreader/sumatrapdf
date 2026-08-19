@@ -1139,6 +1139,11 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
     }
 
     int n = len(win->findMatches);
+    for (int i = 0; i < n; i++) {
+        if (str::ContainsChar(win->findMatches[i].snippet, '\0')) {
+            return fail(fmt("ERROR embedded-nul snippet=%d", i));
+        }
+    }
     out.Append(fmt("OK n=%d sel=%d pages=", n, fw->results->GetCurrentSelection()));
     for (int i = 0; i < n; i++) {
         if (i > 0) {
