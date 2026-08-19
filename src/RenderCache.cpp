@@ -1117,7 +1117,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             continue;
         }
         auto durMs = TimeSinceInMs(timeStart);
-        if (durMs > 100) {
+        if (durMs > 300) {
             auto path = engine->FilePath();
             logf("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
         }
