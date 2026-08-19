@@ -1407,10 +1407,10 @@ static void UpdateMatchCount(MainWindow* win, Str text) {
                     str::Eq(win->findCountRangeText, win->findPageRangeText) &&
                     (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : len(win->findMatches) > 0));
     if (cacheHit) {
-        // matches are unchanged: just refresh n/m. Don't rebuild the results
-        // list here -- it's already populated and rebuilding clears the user's
-        // selection (the list is rebuilt only when a new count installs matches).
+        // Matches are unchanged, but Find Next/Prev may have moved the active
+        // document match while focus was outside the floating Find window.
         ShowMatchCount(win);
+        FindWindowRefreshResults(win, false);
     } else {
         StartFindCount(win, text, win->findMatchCase, win->findMatchWholeWord);
     }
