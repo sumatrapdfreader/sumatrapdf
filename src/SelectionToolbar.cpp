@@ -77,14 +77,10 @@ struct SelectionToolbar {
 // candidate buttons; per-window visibility/enabled state comes from
 // GetCommandVisibility (hidden buttons are dropped, disabled ones grayed)
 static const SelectionToolbarButton gCandidateButtons[] = {
-    {CmdCopySelection, "Copy"},
-    {CmdTranslateSelection, "Translate"},
-    {CmdReadAloudSelection, "Read Aloud"},
-    {CmdCreateAnnotHighlight, "Highlight"},
-    {CmdCreateAnnotUnderline, "Underline"},
-    {CmdCreateAnnotSquiggly, "Squiggly"},
-    {CmdCreateAnnotStrikeOut, "Strike Out"},
-    {CmdCreateAnnotText, "Text"},
+    {CmdCopySelection, _TRN("Copy")},        {CmdTranslateSelection, "Translate"},
+    {CmdReadAloudSelection, "Read Aloud"},   {CmdCreateAnnotHighlight, "Highlight"},
+    {CmdCreateAnnotUnderline, "Underline"},  {CmdCreateAnnotSquiggly, "Squiggly"},
+    {CmdCreateAnnotStrikeOut, "Strike Out"}, {CmdCreateAnnotText, "Text"},
 };
 
 // selection handlers that asked for a button with SelectToolbarNameOrSvg
