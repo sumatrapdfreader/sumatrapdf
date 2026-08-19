@@ -64,6 +64,7 @@ export enum ControlCommand {
   TestImageResizeEdges = 67,
   TestLinkDestHighlight = 68,
   TestConvertToImages = 69,
+  TestLayout = 70,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -78,6 +79,27 @@ export type HomeSelection = {
   outline: number[];
   outlineFull: number[];
   path: string;
+  raw: string;
+};
+
+export type LayoutRect = { x: number; y: number; dx: number; dy: number };
+
+export type LayoutItem = {
+  visible: boolean;
+  rect: LayoutRect;
+};
+
+export type LayoutNode = LayoutItem & {
+  path: string;
+  kind: string;
+  visibility: number;
+};
+
+export type LayoutInfo = {
+  count: number;
+  watching: boolean;
+  items: Record<string, LayoutItem>;
+  nodes: LayoutNode[];
   raw: string;
 };
 
@@ -403,6 +425,49 @@ export class ControlClient {
       outline: [parseInt(m[9], 10), parseInt(m[10], 10), parseInt(m[11], 10), parseInt(m[12], 10)],
       outlineFull: [parseInt(m[13], 10), parseInt(m[14], 10), parseInt(m[15], 10), parseInt(m[16], 10)],
       path: m[17].trim(),
+      raw,
+    };
+  }
+
+  // Snapshot the frame's HWND geometry and every node in its layout trees.
+  // "start"/"reset" also installs gAfterLayout so count measures subsequent
+  // completed relayouts; "stop" removes the probe.
+  async layout(action: "get" | "start" | "reset" | "stop" = "get"): Promise<LayoutInfo> {
+    const res = await this.request(ControlCommand.TestLayout, [action]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestLayout failed: ${raw || code}`);
+    }
+    const lines = raw.split("\n");
+    const header = /^OK count=(\d+) watching=(\d)$/.exec(lines[0] ?? "");
+    if (!header) {
+      throw new Error(`TestLayout: could not parse '${raw}'`);
+    }
+    const rect = (m: RegExpExecArray, at: number): LayoutRect => ({
+      x: parseInt(m[at], 10),
+      y: parseInt(m[at + 1], 10),
+      dx: parseInt(m[at + 2], 10),
+      dy: parseInt(m[at + 3], 10),
+    });
+    const items: Record<string, LayoutItem> = {};
+    const nodes: LayoutNode[] = [];
+    for (const line of lines.slice(1)) {
+      let m = /^item name=(\S+) visible=(\d) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(line);
+      if (m) {
+        items[m[1]] = { visible: m[2] === "1", rect: rect(m, 3) };
+        continue;
+      }
+      m = /^layout path=(\S+) kind=(\S+) visibility=(\d+) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(line);
+      if (m) {
+        nodes.push({ path: m[1], kind: m[2], visibility: parseInt(m[3], 10), visible: m[3] === "0", rect: rect(m, 4) });
+      }
+    }
+    return {
+      count: parseInt(header[1], 10),
+      watching: header[2] === "1",
+      items,
+      nodes,
       raw,
     };
   }

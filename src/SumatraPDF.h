@@ -91,6 +91,7 @@ inline constexpr Perm operator~(Perm lhs) {
 struct Favorites;
 struct FileHistory;
 struct MainWindow;
+extern Func1<MainWindow*> gAfterLayout;
 // tells the frame's virtual tree which splitters exist (they are created
 // with their panes)
 void FrameSyncSplitters(MainWindow*);

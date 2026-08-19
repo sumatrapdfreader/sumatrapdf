@@ -5,11 +5,12 @@
 //
 // Run: bun tests/issue-5751.ts [--no-build]
 
-import { mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { launchControlled, pressKey, sendCommandSync, killAndWait } from "./win-automation.ts";
-import { findChildWindow, captureWindowToPng, VK_RIGHT } from "./winapi.ts";
+import { sleep, VK_RIGHT } from "./winapi.ts";
+import { ControlClient, ControlCommand } from "./control.ts";
 
 function makePdf(nPages: number): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
@@ -64,36 +65,27 @@ const SETTINGS = [
   "]",
 ].join("\n");
 
-async function captureCanvas(
-  dir: string,
-  pdf: string,
-  tag: string,
-  afterLaunch?: (frame: number) => Promise<void>,
-): Promise<Buffer> {
-  const appdata = join(dir, `appdata-${tag}`);
-  mkdirSync(appdata, { recursive: true });
-  writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
-
-  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
-  try {
-    await client.waitForRenderIdle();
-    if (afterLaunch) {
-      await afterLaunch(frame);
-      await client.waitForRenderIdle();
-    }
-    const canvas = findChildWindow(frame, "SUMATRA_PDF_CANVAS");
-    if (!canvas) {
-      throw new Error("canvas not found");
-    }
-    const path = join(dir, `${tag}.png`);
-    if (!captureWindowToPng(canvas, path)) {
-      throw new Error(`capture failed: ${tag}`);
-    }
-    return readFileSync(path);
-  } finally {
-    client.close();
-    await killAndWait(proc);
+async function currentPage(client: ControlClient): Promise<number> {
+  const res = await client.request(ControlCommand.TestFavoriteNav, ["page", 0]);
+  const raw = String(res[1] ?? "");
+  const m = /OK page=(\d+)/.exec(raw);
+  if (!m) {
+    throw new Error(`issue-5751: could not read current page: ${raw.trim()}`);
   }
+  return parseInt(m[1], 10);
+}
+
+async function waitForPage(client: ControlClient, want: number): Promise<void> {
+  const deadline = Date.now() + 3000;
+  let page = 0;
+  while (Date.now() < deadline) {
+    page = await currentPage(client);
+    if (page === want) {
+      return;
+    }
+    await sleep(20);
+  }
+  throw new Error(`issue-5751: current page is ${page}, want ${want}`);
 }
 
 export async function testit(): Promise<void> {
@@ -102,23 +94,26 @@ export async function testit(): Promise<void> {
   mkdirSync(dir, { recursive: true });
   const pdf = join(dir, "issue-5751.pdf");
   writeFileSync(pdf, makePdf(5));
+  const appdata = join(dir, "appdata");
+  mkdirSync(appdata, { recursive: true });
+  writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const page1 = await captureCanvas(dir, pdf, "page1");
-  const page2Cmd = await captureCanvas(dir, pdf, "page2-cmd", async (frame) => {
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
+  try {
+    await waitForPage(client, 1);
     sendCommandSync(frame, cmdId("CmdGoToNextPage"));
-  });
-  const page2Key = await captureCanvas(dir, pdf, "page2-key", async (frame) => {
+    await waitForPage(client, 2);
+
+    sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
+    await waitForPage(client, 1);
     await pressKey(frame, VK_RIGHT, 80);
-  });
-
-  if (page1.equals(page2Key)) {
-    throw new Error("rebound Right key did not leave page 1 (issue #5751)");
-  }
-  if (!page2Key.equals(page2Cmd)) {
-    throw new Error("rebound Right key did not match CmdGoToNextPage (issue #5751)");
+    await waitForPage(client, 2);
+  } finally {
+    client.close();
+    await killAndWait(proc);
   }
 
-  console.log("PASS: Right keyboard shortcut rebind overrides CmdScrollRight (issue #5751)");
+  console.log("PASS: Right keyboard shortcut rebind reaches the same page as CmdGoToNextPage (issue #5751)");
 }
 
 if (import.meta.main) {

@@ -6,6 +6,8 @@
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/Layout_win.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -252,6 +254,99 @@ static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
                   0);
 }
 
+struct LayoutProbeState {
+    MainWindow* win = nullptr;
+    int count = 0;
+    bool active = false;
+};
+
+static LayoutProbeState gLayoutProbe;
+
+static void LayoutProbeAfterLayout(MainWindow* win) {
+    if (gLayoutProbe.active && gLayoutProbe.win == win) {
+        gLayoutProbe.count++;
+    }
+}
+
+static void AppendLayoutRect(str::Builder& out, Str name, bool visible, Rect rect) {
+    out.Append(
+        fmt("item name=%s visible=%d rect=%d,%d,%d,%d\n", name, visible ? 1 : 0, rect.x, rect.y, rect.dx, rect.dy));
+}
+
+static void AppendHwndLayoutRect(str::Builder& out, MainWindow* win, Str name, HWND hwnd) {
+    Rect rect;
+    if (hwnd) {
+        rect = hwnd == win->hwndFrame ? HwndWindowRect(hwnd) : ChildPosWithinParent(hwnd);
+    }
+    AppendLayoutRect(out, name, hwnd && HwndIsVisible(hwnd), rect);
+}
+
+static void AppendLayoutTree(str::Builder& out, Str path, ILayout* layout, int depth = 0) {
+    if (!layout || depth > 64) {
+        return;
+    }
+    Rect rect = layout->lastBounds;
+    Kind kind = layout->GetKind();
+    Str kindName = kind ? Str(kind) : StrL("none");
+    out.Append(fmt("layout path=%s kind=%s visibility=%d rect=%d,%d,%d,%d\n", path, kindName,
+                   (int)layout->GetVisibility(), rect.x, rect.y, rect.dx, rect.dy));
+    int n = layout->LayoutChildCount();
+    for (int i = 0; i < n; i++) {
+        AppendLayoutTree(out, fmt("%s/%d", path, i), layout->LayoutChildAt(i), depth + 1);
+    }
+}
+
+static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0 || !gWindows[0] || !gWindows[0]->hwndFrame) {
+        return finish(StrL("NOTREADY no-window\n"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!action || str::EqI(action, StrL("get"))) {
+        // report only
+    } else if (str::EqI(action, StrL("start")) || str::EqI(action, StrL("reset"))) {
+        gLayoutProbe.win = win;
+        gLayoutProbe.count = 0;
+        gLayoutProbe.active = true;
+        gAfterLayout = MkFunc1Void(LayoutProbeAfterLayout);
+    } else if (str::EqI(action, StrL("stop"))) {
+        if (gLayoutProbe.active) {
+            gAfterLayout = {};
+            gLayoutProbe.active = false;
+        }
+    } else {
+        return finish(fmt("ERROR unknown-action action=%s\n", action), 1);
+    }
+
+    bool watching = gLayoutProbe.active && gLayoutProbe.win == win;
+    out.Append(fmt("OK count=%d watching=%d\n", gLayoutProbe.count, watching ? 1 : 0));
+    AppendHwndLayoutRect(out, win, StrL("frame"), win->hwndFrame);
+    AppendHwndLayoutRect(out, win, StrL("canvas"), win->hwndCanvas);
+    AppendHwndLayoutRect(out, win, StrL("toolbar"), win->hwndToolbar);
+    AppendHwndLayoutRect(out, win, StrL("tabs"), win->tabsSlot ? win->tabsSlot->hwnd : nullptr);
+    AppendHwndLayoutRect(out, win, StrL("menu"), win->menuSlot ? win->menuSlot->hwnd : nullptr);
+    AppendHwndLayoutRect(out, win, StrL("toc"), win->hwndTocBox);
+    AppendHwndLayoutRect(out, win, StrL("favorites"), win->hwndFavBox);
+    AppendHwndLayoutRect(out, win, StrL("aiChat"), win->hwndAiChatBox);
+
+    AppendLayoutTree(out, StrL("chrome"), win->chromeLayout);
+    AppendLayoutTree(out, StrL("frameLayout"), win->frameLayout);
+    AppendLayoutTree(out, StrL("caption"), win->captionLayout);
+    AppendLayoutTree(out, StrL("toc"), win->tocLayout);
+    AppendLayoutTree(out, StrL("favorites"), win->favLayout);
+    AppendLayoutTree(out, StrL("aiChat"), win->aiChatLayout);
+    AppendLayoutTree(out, StrL("homeSearch"), win->homeSearchLayout);
+    return finish({}, 0);
+}
+
 static TempStr DocumentSignaturesResultTemp(int* exitCodeOut) {
     auto finish = [exitCodeOut](Str result, int code) -> TempStr {
         if (exitCodeOut) {
@@ -365,6 +460,7 @@ enum class ControlCmd : u16 {
     TestImageResizeEdges = 67,
     TestLinkDestHighlight = 68,
     TestConvertToImages = 69,
+    TestLayout = 70,
 };
 
 enum class ControlArgType : u16 {
@@ -1125,6 +1221,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSidebarLayout: {
             int exitCode = 0;
             Str res = SidebarLayoutResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestLayout: {
+            Str action = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = LayoutInfoResultTemp(action, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

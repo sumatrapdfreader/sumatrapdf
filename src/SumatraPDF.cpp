@@ -180,6 +180,9 @@ bool gSupressNextAltMenuTrigger = false;
 bool gCrashOnOpen = false;
 bool gRedrawLog = false;
 
+// Test/debug code can inspect every part of the completed layout through win.
+Func1<MainWindow*> gAfterLayout;
+
 // returns false when the relayout was skipped (nothing layout-affecting changed)
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sidebarDx = -1);
 static void UpdateOverlayScrollbarPositions(MainWindow* win);
@@ -6874,6 +6877,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         // make the black/white canvas cover the entire window
         HwndMoveWindow(win->hwndCanvas, &rc);
+        gAfterLayout.Call(win);
         return true;
     }
 
@@ -7205,6 +7209,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             RedrawWindow(win->hwndToolbar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
     }
+    gAfterLayout.Call(win);
     return true;
 }
 

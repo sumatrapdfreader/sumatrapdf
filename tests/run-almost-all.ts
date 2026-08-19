@@ -15,6 +15,7 @@ import { runNamedTests, runSuiteMain, type NamedTest, type SuiteOptions } from "
 import { setTestWindowLayout } from "./winapi.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
+import { testit as layoutCallback } from "./layout-callback.ts";
 import { testit as buildCli } from "./build-cli.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
@@ -148,6 +149,7 @@ export const tests: NamedTest[] = [
   ["issue-5875", issue5875],
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----
+  ["layout-callback", layoutCallback],
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],
