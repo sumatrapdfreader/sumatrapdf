@@ -145,8 +145,11 @@ export async function testit(): Promise<void> {
     async (client, proc) => {
       await client.setNotificationsEnabled(false);
       await client.waitForRenderIdle();
-      if ((await queryPage(client)) !== 1) {
-        throw new Error("issue-1203 on: expected to start on page 1");
+      {
+        const page = await waitForPage(client, 1);
+        if (page !== 1) {
+          throw new Error(`issue-1203 on: expected to start on page 1, got ${page}`);
+        }
       }
       await clickEdgeUntilPage(client, proc.pid!, "right", 2, "issue-1203 on");
       await clickEdgeUntilPage(client, proc.pid!, "left", 1, "issue-1203 on");
@@ -168,8 +171,11 @@ export async function testit(): Promise<void> {
     async (client, proc) => {
       await client.setNotificationsEnabled(false);
       await client.waitForRenderIdle();
-      if ((await queryPage(client)) !== 1) {
-        throw new Error("issue-1203 off: expected to start on page 1");
+      {
+        const page = await waitForPage(client, 1);
+        if (page !== 1) {
+          throw new Error(`issue-1203 off: expected to start on page 1, got ${page}`);
+        }
       }
       await clickCanvasEdge(proc.pid!, "right");
       if ((await queryPage(client)) !== 1) {

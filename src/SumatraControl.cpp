@@ -1334,7 +1334,14 @@ static void SnapshotRenderIdle(ControlRequest* req) {
     Size vp = dm->GetViewPort().Size();
     Str whyNot;
     bool busy = gRenderCache && gRenderCache->IsBusyFor(dm);
-    bool ready = gRenderCache && !busy && gRenderCache->VisibleTargetTilesReady(dm, &whyNot);
+    bool ready = false;
+    // LoadDocument Relayouts before the canvas has a real size; fit zoom then
+    // stays unset and no page is visible. That is not idle (issue-1203).
+    if (dm->zoomReal < 0.01f || dm->GetCanvasSize().IsEmpty() || vp.IsEmpty()) {
+        whyNot = StrL("no-layout");
+    } else {
+        ready = gRenderCache && !busy && gRenderCache->VisibleTargetTilesReady(dm, &whyNot);
+    }
     if (busy) {
         whyNot = StrL("rendering");
     }

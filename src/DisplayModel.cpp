@@ -1061,7 +1061,10 @@ int DisplayModel::FirstVisiblePageNo() const {
 // we consider the most visible page the current one
 // (in continuous layout, there's no better criteria)
 int DisplayModel::CurrentPageNo() const {
-    if (!IsContinuous(GetDisplayMode())) {
+    // Relayout can return before laying out (empty canvas, or fit zoom < 0.01
+    // on a tiny viewport). No page is visible then; PageCount() would look like
+    // we opened on the last page (issue-1203).
+    if (!IsContinuous(GetDisplayMode()) || zoomReal < 0.01f || canvasSize.IsEmpty()) {
         return startPage;
     }
 
@@ -1264,6 +1267,12 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
     for (;;) {
         float currZoomReal = zoomReal;
         CalcZoomReal(newZoomVirtual);
+        // CalcZoomReal returns without setting zoomReal when every page's fit
+        // zoom is < 0.01 (viewport barely larger than windowMargin). Applying
+        // that empty layout made CurrentPageNo() report PageCount().
+        if (zoomReal < 0.01f) {
+            return;
+        }
 
         int newViewPortOffsetX = 0;
         if (0 != currZoomReal && kInvalidZoom != currZoomReal) {
