@@ -263,9 +263,9 @@ static TempStr FormatPageSizeUnitTemp(SizeF sizeInches, double unitsPerInch, Str
     return fmt("%sx%s %s", strWidth, strHeight, unit);
 }
 
-// Format page size in cm/mm/in (locale unit first) and pixels (issue #2186).
-// Metric: "21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 px (A4)"
-// US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 px (A4)"
+// Format page size in cm/mm/in (locale unit first) and points (issue #2186).
+// Metric: "21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 pt (A4)"
+// US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 pt (A4)"
 static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
     float fileDpi = engine->GetFileDPI();
@@ -310,17 +310,16 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     TempStr cmStr = FormatPageSizeUnitTemp(size, 2.54, StrL("cm"));
     TempStr mmStr = FormatPageSizeUnitTemp(size, 25.4, StrL("mm"));
 
-    // Pixel size at the document's native DPI (PDF media box is typically 72 dpi)
-    int pxW = (int)lroundf(size.dx * fileDpi);
-    int pxH = (int)lroundf(size.dy * fileDpi);
-    TempStr pxStr = fmt("%dx%d px", pxW, pxH);
+    int ptW = (int)lroundf(size.dx * 72.0f);
+    int ptH = (int)lroundf(size.dy * 72.0f);
+    TempStr ptStr = fmt("%dx%d pt", ptW, ptH);
 
-    // Locale unit first, then the other two, then pixels (issue #2186)
+    // Locale unit first, then the other two, then points (issue #2186)
     bool isMetric = GetMeasurementSystem() == 0;
     if (isMetric) {
-        return fmt("%s, %s, %s, %s%s", cmStr, mmStr, inStr, pxStr, formatName);
+        return fmt("%s, %s, %s, %s%s", cmStr, mmStr, inStr, ptStr, formatName);
     }
-    return fmt("%s, %s, %s, %s%s", inStr, cmStr, mmStr, pxStr, formatName);
+    return fmt("%s, %s, %s, %s%s", inStr, cmStr, mmStr, ptStr, formatName);
 }
 
 // returns a list of permissions denied by this document
