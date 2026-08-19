@@ -2130,10 +2130,7 @@ void DeferWinPosHelper::SetWindowPos(HWND hwnd, const Rect rc) {
 }
 
 void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint) {
-    // SWP_NOCOPYBITS: a sibling that grows into another's old screen rect
-    // (canvas into a shrinking TOC) otherwise inherits those pixels. WebView2
-    // is transparent, so that leftover TOC flash is visible until it composites.
-    uint uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOCOPYBITS;
+    uint uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
     if (!bRepaint) {
         uFlags |= SWP_NOREDRAW;
     }
@@ -2142,6 +2139,13 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL
 
 void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
     this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
+}
+
+// A transparent WebView canvas growing into a sibling's old rectangle must
+// discard those screen bits or the sibling remains visible until composition.
+void DeferWinPosHelper::MoveWindowNoCopyBits(HWND hWnd, Rect r) {
+    uint flags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOCOPYBITS;
+    this->SetWindowPos(hWnd, nullptr, r.x, r.y, r.dx, r.dy, flags);
 }
 
 void MenuSetChecked(HMENU m, int id, bool isChecked) {

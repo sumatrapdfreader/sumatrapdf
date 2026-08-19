@@ -467,7 +467,8 @@ struct MainWindow {
             int aiChatDx = 0;
             bool sidebarOnRight = false;
         };
-        Layout layout; // last applied layout state
+        Layout layout;    // last applied layout state
+        Rect lastFrameRc; // previous frame client size; a change skips WM_SETREDRAW
         // desired visibility of the sidebar / AI chat panels; applied
         // (HwndSetVisible) by RelayoutFrame
         bool tocVisible = false;

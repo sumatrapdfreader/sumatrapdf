@@ -482,37 +482,51 @@ static bool TocMatchingItemsContains(const Vec<TocItem*>& items, TocItem* item) 
     return false;
 }
 
+static bool TocMatchingItemsEq(const Vec<TocItem*>& a, const Vec<TocItem*>& b) {
+    if (len(a) != len(b)) {
+        return false;
+    }
+    for (int i = 0; i < len(a); i++) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // Fill win->tocMatchingItems with every entry that should look "current" for
 // bestMatch: all TOC items on the same page, plus the ancestor chain (so a
 // nested 6 / 6.1 / 6.1.1 path all highlight together). TreeView still has only
 // one selection; extras are painted in OnTocCustomDraw when gShowAllMatchingTOC.
 static void SetTocMultiHighlight(MainWindow* win, TreeView* treeView, TocItem* bestMatch) {
-    win->tocMatchingItems.Reset();
-    if (!gShowAllMatchingTOC || !bestMatch || !treeView) {
-        return;
-    }
+    Vec<TocItem*> next;
+    if (gShowAllMatchingTOC && bestMatch && treeView) {
+        // All bookmarks that point at the same page as the best match (the issue's
+        // "subsequent" same-page entries that TreeView single-select cannot show).
+        if (bestMatch->pageNo >= 1 && treeView->treeModel) {
+            CollectSamePageData d;
+            d.pageNo = bestMatch->pageNo;
+            d.out = &next;
+            auto fn = MkFunc1<CollectSamePageData, TreeItemVisitorData*>(visitCollectSamePage, &d);
+            VisitTreeModelItems(treeView->treeModel, fn);
+        }
 
-    // All bookmarks that point at the same page as the best match (the issue's
-    // "subsequent" same-page entries that TreeView single-select cannot show).
-    if (bestMatch->pageNo >= 1 && treeView->treeModel) {
-        CollectSamePageData d;
-        d.pageNo = bestMatch->pageNo;
-        d.out = &win->tocMatchingItems;
-        auto fn = MkFunc1<CollectSamePageData, TreeItemVisitorData*>(visitCollectSamePage, &d);
-        VisitTreeModelItems(treeView->treeModel, fn);
-    }
-
-    // Ancestor chain (chapter → section → subsection), including bestMatch.
-    for (TocItem* p = bestMatch; p; p = p->parent) {
-        if (!TocMatchingItemsContains(win->tocMatchingItems, p)) {
-            win->tocMatchingItems.Append(p);
+        // Ancestor chain (chapter → section → subsection), including bestMatch.
+        for (TocItem* p = bestMatch; p; p = p->parent) {
+            if (!TocMatchingItemsContains(next, p)) {
+                next.Append(p);
+            }
         }
     }
 
-    // TreeView selection paint won't cover the extra matches; repaint so
-    // OnTocCustomDraw can draw them.
-    if (treeView->hwnd) {
-        HwndInvalidate(treeView->hwnd, true);
+    // RelayoutFrame calls this on every resize. Re-invalidating an unchanged
+    // set blanks the tree via WM_ERASEBKGND.
+    if (TocMatchingItemsEq(win->tocMatchingItems, next)) {
+        return;
+    }
+    win->tocMatchingItems = next;
+    if (treeView && treeView->hwnd) {
+        HwndInvalidate(treeView->hwnd, false);
     }
 }
 
@@ -1556,7 +1570,13 @@ static void LayoutTocContainer(MainWindow* win) {
     if (!win->tocLayout) {
         return;
     }
-    Rect rc = HwndWindowRect(win->hwndTocBox);
+    Rect rc = HwndClientRect(win->hwndTocBox);
+    if (rc.IsEmpty()) {
+        return;
+    }
+    if (win->tocLayout->lastBounds.dx == rc.dx && win->tocLayout->lastBounds.dy == rc.dy) {
+        return;
+    }
     LayoutTreeToSize(win->hwndTocBox, win->tocLayout, {rc.dx, rc.dy}, &win->tocRoot);
 }
 

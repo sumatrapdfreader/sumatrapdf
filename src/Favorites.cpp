@@ -1419,6 +1419,9 @@ void LayoutFavoritesContainer(MainWindow* win) {
     if (rc.IsEmpty()) {
         return;
     }
+    if (win->favLayout->lastBounds.dx == rc.dx && win->favLayout->lastBounds.dy == rc.dy) {
+        return;
+    }
     LayoutTreeToSize(win->hwndFavBox, win->favLayout, {rc.dx, rc.dy}, &win->favRoot);
 }
 

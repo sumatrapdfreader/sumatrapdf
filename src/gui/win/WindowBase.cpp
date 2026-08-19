@@ -1608,6 +1608,12 @@ void ControlBase::SetBounds(Rect bounds) {
     dbglayout(
         fmt("ControlBase:SetBounds() %s %d,%d - %d, %d\n", Str(GetKind()), bounds.x, bounds.y, bounds.dx, bounds.dy));
 
+    // MoveWindow copies existing bits and paints only the newly exposed strip.
+    // A full erase-invalidate after that blanks the TOC/favorites tree on every
+    // parent WM_SIZE (window resize, splitter drag).
+    if (bounds == lastBounds) {
+        return;
+    }
     lastBounds = bounds;
 
     bounds.x += insets.left;
@@ -1619,8 +1625,6 @@ void ControlBase::SetBounds(Rect bounds) {
         bounds.x = HwndMapChildXForRtlParent(GetParent(hwnd), bounds.x, bounds.dx);
     }
     HwndMoveWindow(hwnd, &bounds);
-    // TODO: optimize if doesn't change position
-    HwndInvalidate(hwnd, true);
 }
 
 LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -1735,15 +1739,11 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         }
 
         case WM_ERASEBKGND: {
-            // claim handled so DefWindowProc / DefSubclassProc does not fill,
-            // but paint our background when we have one; see the note in
-            // WindowBase::WndProcDefault (#5947)
+            // TreeView sets shouldEraseBackground false so WM_PAINT covers.
+            // Filling here blanks the control on every resize; the #5947
+            // parent-background fill belongs on WindowBase (checkbox
+            // DrawThemeParentBackground target), not on native controls.
             if (!shouldEraseBackground) {
-                HDC hdc = (HDC)wparam;
-                auto* br = BackgroundBrush();
-                if (hdc && br) {
-                    HdcFillRect(hdc, HwndClientRect(hwnd), br);
-                }
                 return TRUE;
             }
             break;

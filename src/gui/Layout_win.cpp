@@ -59,6 +59,12 @@ void HwndSlot::SetBounds(Rect bounds) {
         HWND parent = GetParent(hwnd);
         bounds.x = HwndMapChildXForRtlParent(parent, bounds.x, bounds.dx);
     }
+    // A no-op SetWindowPos still sends WM_WINDOWPOSCHANGED and the TOC tree
+    // shimmers 1-2px. Window resize must not touch the sidebar when its
+    // client rect did not change (width is independent of the frame).
+    if (ChildPosWithinParent(hwnd) == bounds) {
+        return;
+    }
     if (winPos) {
         winPos->MoveWindow(hwnd, bounds);
         return;

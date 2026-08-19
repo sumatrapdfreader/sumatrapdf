@@ -1012,6 +1012,7 @@ struct TreeView : ControlBase {
     void OnNotifyReflect(ControlBase::NotifyReflectEvent* ev);
 
     Size GetIdealSize() override;
+    void SetBounds(Rect) override;
     void SetToolTipsDelayTime(int type, int timeInMs);
     HWND GetToolTipsHwnd();
 

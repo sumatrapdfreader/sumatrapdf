@@ -6691,6 +6691,19 @@ static void ClearSlotDefer(HwndSlot* slot) {
     slot->winPos = nullptr;
 }
 
+// Keep x/width, apply the layout's y/height. Used on a live frame resize so
+// the sidebar is not nudged 1px when the caption-border inset changes.
+static void StretchHwndHeight(DeferWinPosHelper& dh, HWND hwnd, const Rect& want) {
+    if (!hwnd) {
+        return;
+    }
+    Rect cur = ChildPosWithinParent(hwnd);
+    Rect next{cur.x, want.y, cur.dx, want.dy};
+    if (next != cur) {
+        dh.MoveWindow(hwnd, next);
+    }
+}
+
 // sizes and shows the caption-tree children for the current mode (single row
 // vs. menu-bar + tabs). RelayoutFrame measures the tree after this; the
 // buttons' lastBounds become captionBtn[].rect
@@ -6792,6 +6805,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.aiChatDx = win->aiChatDx;
     curState.sidebarOnRight = SidebarOnRightLayout();
 
+    // A top-level size change is already a live, batched sibling resize.
+    // Toggling WM_SETREDRAW on the frame for every step makes Windows discard
+    // the visible TOC and repaint the whole tree instead of preserving its
+    // unchanged rows, which visibly flashes while dragging the window border.
+    bool isFrameResize = !win->uiState.lastFrameRc.IsEmpty() && !(curState.rc == win->uiState.lastFrameRc);
+    win->uiState.lastFrameRc = curState.rc;
+
     // skip redundant relayouts when all layout-affecting state is unchanged
     if (IsUiLayoutEq(&curState, &win->uiState.layout) && updateToolbars && sidebarDx == -1) {
         return false;
@@ -6868,7 +6888,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // would hide the frame on every mouse move and flash the TOC through the
     // transparent WebView2 in the strip the canvas just inherited
     bool isSplitterDrag = sidebarDx != -1;
-    bool suppressIntermediateRedraws = !isSplitterDrag && !win->suppressFrameRedraw && HwndIsVisible(win->hwndFrame);
+    bool discardCanvasBits = isSplitterDrag && IsBrowserDocController(win->ctrl);
+    bool suppressIntermediateRedraws =
+        !isSplitterDrag && !isFrameResize && !win->suppressFrameRedraw && HwndIsVisible(win->hwndFrame);
     if (suppressIntermediateRedraws) {
         // suppress intermediate repaints during relayout
         SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
@@ -6938,6 +6960,23 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->sidebarDx = sidebarDxApplied; // remember what's applied
     }
 
+    // A live frame resize must not nudge the sidebar. The 1px caption-border
+    // inset can change between WM_SIZE steps and would otherwise MoveWindow
+    // the TOC by 1-2px (and paint the splitter over its edge).
+    if (isFrameResize && sidebarVisible) {
+        HWND sideHwnd = tocVisible ? win->hwndTocBox : win->hwndFavBox;
+        if (sideHwnd) {
+            Rect side = ChildPosWithinParent(sideHwnd);
+            if (!side.IsEmpty()) {
+                int right = rc.x + rc.dx;
+                rc.x = side.x;
+                rc.dx = std::max(0, right - rc.x);
+                sidebarDxApplied = side.dx;
+                win->sidebarDx = side.dx;
+            }
+        }
+    }
+
     int chromeDy = captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy;
     int contentDy = std::max(rc.dy - chromeDy, 0);
 
@@ -6997,14 +7036,26 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
              updateToolbars && capTwoRow && capHasFileTabs);
     BindSlot(win->toolbarTopSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && !toolbarBottom);
     BindSlot(win->toolbarBottomSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && toolbarBottom);
-    BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible);
-    BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav);
+    BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible && !isFrameResize);
+    BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav && !isFrameResize);
     BindSlot(win->fullFavSlot, win->hwndFavBox, &dh, favAsTab);
-    BindSlot(win->canvasSlot, win->hwndCanvas, &dh, true);
+    BindSlot(win->canvasSlot, win->hwndCanvas, &dh, !discardCanvasBits);
     BindSlot(win->aiChatSlot, win->hwndAiChatBox, &dh, aiChatVisible);
 
     LayoutToSize(win->chromeLayout, {rc.dx, rc.dy});
     win->chromeLayout->SetBounds(rc);
+    if (discardCanvasBits) {
+        dh.MoveWindowNoCopyBits(win->hwndCanvas, win->canvasSlot->lastBounds);
+    }
+    // Frame resize: keep the sidebar's x/width, only stretch its height.
+    if (isFrameResize) {
+        if (tocVisible) {
+            StretchHwndHeight(dh, win->hwndTocBox, win->tocSlot->lastBounds);
+        }
+        if (sidebarFav) {
+            StretchHwndHeight(dh, win->hwndFavBox, win->favSlot->lastBounds);
+        }
+    }
 
     HwndSlot* chromeSlots[] = {win->tabsSlot,    win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot,
                                win->capMenuSlot, win->capTabsRow1, win->capTabsRow2,    win->tocSlot,
@@ -7039,12 +7090,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     dh.End();
 
     if (isSplitterDrag) {
-        // EndDeferWindowPos should have sent WM_SIZE; send it again so the
-        // tree/filter are clipped to the new width before the next paint
-        if (win->hwndTocBox && HwndIsVisible(win->hwndTocBox)) {
-            SendMessageW(win->hwndTocBox, WM_SIZE, 0, 0);
-        }
-        if (IsBrowserDocController(win->ctrl)) {
+        if (discardCanvasBits) {
             FillCanvasThemeBackground(win->hwndCanvas);
         }
     }
@@ -7079,20 +7125,18 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         // (issue #5866). Matches EndFrameRedrawSuppression, which has always done this.
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
     }
-    if (tocVisible) {
-        RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-    }
-    if (favVisible) {
-        RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-    }
     if (win->uiState.aiChatVisible && win->hwndAiChatBox) {
         RelayoutAIChatPanel(win);
     }
-    if (tocVisible || favVisible) {
-        win->sidebarSplitter->Invalidate();
-    }
-    if (tocVisible && favVisible) {
-        win->favSplitter->Invalidate();
+    // A frame-size drag does not move the splitter; invalidating it paints a
+    // 1-2px strip against the TOC and looks like the tree is shimmering.
+    if (!isFrameResize) {
+        if (tocVisible || favVisible) {
+            win->sidebarSplitter->Invalidate();
+        }
+        if (tocVisible && favVisible) {
+            win->favSplitter->Invalidate();
+        }
     }
     if (updateToolbars && win->isToolbarVisible) {
         RedrawWindow(win->hwndToolbar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
@@ -7115,9 +7159,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // TODO: if a document with ToC and a broken document are loaded
     //       and the first document is closed with the ToC still visible,
     //       we have tocVisible but !win->ctrl
-    if (tocVisible && win->ctrl) {
-        // the ToC selection may change due to resizing
-        // (and SetSidebarVisibility relies on this for initialization)
+    // SetSidebarVisibility relies on this for initialization. A live window
+    // resize must not: SelectItem redraws the tree and shimmers the rows.
+    if (tocVisible && win->ctrl && !isFrameResize) {
         UpdateTocSelection(win, win->ctrl->CurrentPageNo());
     }
 

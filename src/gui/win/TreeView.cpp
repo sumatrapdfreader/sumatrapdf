@@ -80,6 +80,17 @@ Size TreeView::GetIdealSize() {
     return {idealSize.dx, idealSize.dy};
 }
 
+void TreeView::SetBounds(Rect bounds) {
+    int prevDx = lastBounds.dx;
+    ControlBase::SetBounds(bounds);
+    // Width changes (sidebar splitter) need a new paint so ellipsis and
+    // full-row selection match the new clip. Height-only (window resize)
+    // must not: MoveWindow copies the rows and only the new strip paints.
+    if (hwnd && bounds.dx != prevDx) {
+        HwndInvalidate(hwnd, false);
+    }
+}
+
 void TreeView::SetToolTipsDelayTime(int type, int timeInMs) {
     ReportIf(!IsValidDelayType(type));
     ReportIf(timeInMs < 0);

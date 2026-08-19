@@ -267,6 +267,7 @@ class DeferWinPosHelper {
     void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
     void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
     void MoveWindow(HWND hWnd, Rect r);
+    void MoveWindowNoCopyBits(HWND hWnd, Rect r);
 };
 
 //--- DC state
