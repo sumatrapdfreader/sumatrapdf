@@ -11,6 +11,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Command Palette: `Ctrl + A` selects the query; `Home` / `End` jump to the first / last match when the caret is already at the start / end of the query (`Ctrl + Home` / `Ctrl + End` always do); `Page Up` / `Page Down` move the list a page at a time (fixes #5972)
 - Command Palette: type `%` for the table of contents of the current document (like `$` for favorites). `% TOC` appears in the mode row when the document has a TOC. The old `*` prefix still works
 - connecting Remote Desktop at a different scale no longer leaves the toolbar, title bar, bookmarks and menus at the old size; they follow the session DPI without restarting (fixes #4581)
+- installer `-x` no longer tries to overwrite the running `SumatraPDF.exe` when extracting into that exe's own directory; extract errors are printed to an already-attached console (fixes #6003)
 - comic book archives of 32 MB or less on a network drive are loaded into memory instead of being copied to the local `cbx-cache`
 - PDFs opened from OneNote or Outlook (and other host-app cache folders) are copied first so the original file is not left locked; OneNote can sync the section instead of showing "We can't sync this section because we were denied access to the file" (fixes #4705)
 - if a PDF has no outline, the Bookmarks sidebar is filled from numbered headings in the text (`I. Introduction`, `II.A. Nested`, `1.2 Title`) so you can still jump around papers and reports that never stored a TOC (fixes #5724)

@@ -9,7 +9,7 @@ Available options:
 - `-d <directory>` e.g. `Sumatra-install.exe -install -d "c:\Sumatra PDF"`
     set directory where program is installed. The default is `%LOCALAPPDATA%\SumatraPDF` or `%PROGRAMFILES%\SumatraPDF` with `-all-users`
 - `-x` : don't install, extract the files
-    extracts files to current directory or directory provided with `-d` option
+    extracts files to the current directory, or to `-d <directory>` if given. When the destination is this executable's own directory, `SumatraPDF.exe` is left in place and only the payload (`libsumatrapdf.dll` and the other install files) is unpacked. Errors are printed to the console if one is already attached.
 - `-with-filter` : install search filter
 - `-with-preview` : install shell preview for PDF files
 - `-uninstall` : uninstalls SumatraPDF

@@ -836,9 +836,16 @@ static void MoveAsideOrDeleteLegacyLibmupdf(Str installDir) {
     LogLastError();
 }
 
+// destDir\SumatraPDF.exe is the running installer (e.g. `./SumatraPDF.exe -x`
+// from the exe's own directory). Overwriting/renaming it is confusing and fails.
+static bool IsExtractingOverSelf(Str destDir) {
+    TempStr dstExe = path::JoinTemp(destDir, kExeName);
+    return path::IsSame(dstExe, GetSelfExePathTemp());
+}
+
 // Rename lockable DLLs aside before extract so new files can be written freely.
-static bool PrepareInstallDirByRenaming(Str installDir, bool silent) {
-    logf("PrepareInstallDirByRenaming('%s' silent=%d)\n", installDir, (int)silent);
+static bool PrepareInstallDirByRenaming(Str installDir, bool silent, bool skipExe) {
+    logf("PrepareInstallDirByRenaming('%s' silent=%d skipExe=%d)\n", installDir, (int)silent, (int)skipExe);
     StopWindowsSearchService();
     // Order: filter/preview first (often locked by Search/Explorer), then engine DLL.
     static const Str kFiles[] = {
@@ -855,7 +862,9 @@ static bool PrepareInstallDirByRenaming(Str installDir, bool silent) {
     // instance can still map SumatraPDF.exe, which would make CopySelfToDir's
     // overwrite fail with a sharing violation. Rename it aside too - renaming a
     // mapped image is allowed even though overwriting/deleting it is not.
-    if (!MoveAsideInstallFile(installDir, Str(kExeName), silent)) {
+    // Skip when -x extracts into this exe's own directory: we keep the running
+    // file and only unpack the payload.
+    if (!skipExe && !MoveAsideInstallFile(installDir, Str(kExeName), silent)) {
         return false;
     }
     // Older installs: move libmupdf.dll out of the way without blocking on it.
@@ -2254,18 +2263,23 @@ bool ExtractInstallerFiles(Str dir) {
     // extract. Dialog retries every 3s if a file stays locked; user can abort.
     // Legacy libmupdf.dll (through 3.6) is moved/deleted best-effort (different name).
     bool silent = gCliNew.silent || (gCli && gCli->silent);
-    if (!PrepareInstallDirByRenaming(dir, silent)) {
+    bool skipSelfExe = gCli && gCli->justExtractFiles && IsExtractingOverSelf(dir);
+    if (!PrepareInstallDirByRenaming(dir, silent, skipSelfExe)) {
         log("ExtractInstallerFiles: PrepareInstallDirByRenaming failed\n");
         // Some files may already be *.copy; put them back before aborting.
         RestoreInstallCopyFiles(dir);
         return false;
     }
 
-    ok = CopySelfToDir(dir);
-    if (!ok) {
-        // NotifyFailed already called inside CopySelfToDir with a specific reason.
-        RestoreInstallCopyFiles(dir);
-        return false;
+    if (skipSelfExe) {
+        logf("ExtractInstallerFiles: dest is this exe's directory, not copying SumatraPDF.exe\n");
+    } else {
+        ok = CopySelfToDir(dir);
+        if (!ok) {
+            // NotifyFailed already called inside CopySelfToDir with a specific reason.
+            RestoreInstallCopyFiles(dir);
+            return false;
+        }
     }
     ProgressStep();
 

@@ -2422,15 +2422,23 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     // so poster’s own -x never sets justExtractFiles; MaybeRunMutool still runs
     // for tools after we load the DLL below.
     if (flags.justExtractFiles) {
-        RedirectIOToExistingConsole();
+        bool attached = RedirectIOToExistingConsole();
+        auto printExtractErr = [attached](Str msg) {
+            logf("%s\n", msg);
+            if (attached) {
+                fprintf(stderr, "%s\n", CStrTemp(msg));
+                fflush(stderr);
+            }
+        };
         if (!HasEmbeddedLibsumatrapdf()) {
-            log("this is not a SumatraPDF installer, -x option not available\n");
+            printExtractErr(StrL("this is not a SumatraPDF installer, -x option not available"));
             HandleRedirectedConsoleOnShutdown();
             return 1;
         }
         exitCode = 0;
         if (!ExtractInstallerFiles(gCli->installDir)) {
-            log("failed to extract files");
+            Str err = gFirstError ? gFirstError : StrL("failed to extract files");
+            printExtractErr(err);
             LogLastError();
             exitCode = 1;
         }
