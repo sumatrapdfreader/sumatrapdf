@@ -129,7 +129,7 @@ After installing, follow [Set as default PDF viewer](Set-as-default-pdf-viewer.m
 
 ## See also
 
-- [Portable vs installer / libsumatrapdf.dll](SumatraPDF-portable.md) — pre-3.7 vs 3.7 single-EXE layout, where the DLL is extracted, installer name / `-install` flag
+- [Portable vs installer](SumatraPDF-portable.md) — pre-3.7 vs 3.7 single-EXE layout, where the DLL is extracted, installer name / `-install` flag
 - [FAQ](FAQ.md)
 - [Corrupted installation](Corrupted-installation.md)
 - [Uninstalling SumatraPDF](Uninstalling-SumatraPDF.md)
