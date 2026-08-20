@@ -31,12 +31,14 @@
 #include "SumatraLog.h"
 
 #define kQuickLookAgentClass L"SUMATRA_PDF_QUICKLOOK_AGENT"
+#define kQuickLookAgentMutexName L"SumatraPDF-QuickLookAgent"
 #define kQuickLookRunValue StrL("SumatraPDF-QuickLook")
 #define kQuickLookRunKey StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Run")
 constexpr UINT kMsgQuickLookSpace = WM_APP + 40;
 
 static HWND gQuickLookAgentHwnd = nullptr;
 static HHOOK gQuickLookHook = nullptr;
+static HANDLE gQuickLookAgentMutex = nullptr;
 
 MainWindow* FindExplorerQuickLookWindow() {
     for (MainWindow* win : gWindows) {
@@ -389,6 +391,16 @@ static LRESULT CALLBACK QuickLookAgentWndProc(HWND hwnd, UINT msg, WPARAM wp, LP
         OnQuickLookSpace();
         return 0;
     }
+    if (msg == WM_QUERYENDSESSION) {
+        // we never block logging off / shutting down
+        return TRUE;
+    }
+    if (msg == WM_ENDSESSION) {
+        if (wp) {
+            DestroyWindow(hwnd);
+        }
+        return 0;
+    }
     if (msg == WM_DESTROY) {
         if (gQuickLookHook) {
             UnhookWindowsHookEx(gQuickLookHook);
@@ -414,14 +426,32 @@ static void WriteQuickLookRunKey() {
 }
 
 static HWND FindQuickLookAgentHwnd() {
-    return FindWindowW(kQuickLookAgentClass, nullptr);
+    HWND hwnd = FindWindowW(kQuickLookAgentClass, nullptr);
+    if (hwnd) {
+        return hwnd;
+    }
+    // the agent used to be a message-only window, which FindWindowW never sees
+    // (it only enumerates top-level windows). Look for those too so a stray
+    // agent left over from an older build can still be found and stopped
+    return FindWindowExW(HWND_MESSAGE, nullptr, kQuickLookAgentClass, nullptr);
 }
 
-static void StopQuickLookAgentProcess() {
-    HWND hwnd = FindQuickLookAgentHwnd();
-    if (hwnd) {
+static void StopAgentsUnder(HWND parent) {
+    HWND hwnd = nullptr;
+    for (;;) {
+        hwnd = FindWindowExW(parent, hwnd, kQuickLookAgentClass, nullptr);
+        if (!hwnd) {
+            return;
+        }
         PostMessageW(hwnd, WM_CLOSE, 0, 0);
     }
+}
+
+// stop all of them: before we used a top-level window, EnsureQuickLookAgentProcess()
+// couldn't tell an agent was already running and started a new one on every run
+static void StopQuickLookAgentProcess() {
+    StopAgentsUnder(nullptr);
+    StopAgentsUnder(HWND_MESSAGE);
 }
 
 static void EnsureQuickLookAgentProcess() {
@@ -461,6 +491,15 @@ void ExplorerQuickLookApplyFromSettings() {
 }
 
 bool RunExplorerQuickLookAgentLoop() {
+    // belt and braces on top of the FindQuickLookAgentHwnd() check in
+    // EnsureQuickLookAgentProcess(): that one races when 2 instances start at
+    // the same time, and a duplicate agent means a duplicate low-level
+    // keyboard hook (and a process nobody can find or stop)
+    gQuickLookAgentMutex = CreateMutexW(nullptr, TRUE, kQuickLookAgentMutexName);
+    if (gQuickLookAgentMutex && GetLastError() == ERROR_ALREADY_EXISTS) {
+        SafeCloseHandle(&gQuickLookAgentMutex);
+        return true;
+    }
     WNDCLASSEXW wc{};
     wc.cbSize = sizeof(wc);
     wc.lpfnWndProc = QuickLookAgentWndProc;
@@ -469,15 +508,22 @@ bool RunExplorerQuickLookAgentLoop() {
     if (!RegisterClassExW(&wc)) {
         HWND already = FindQuickLookAgentHwnd();
         if (already) {
+            SafeCloseHandle(&gQuickLookAgentMutex);
             return true;
         }
         logf("RunExplorerQuickLookAgentLoop: RegisterClassEx failed\n");
+        SafeCloseHandle(&gQuickLookAgentMutex);
         return false;
     }
-    gQuickLookAgentHwnd =
-        CreateWindowExW(0, kQuickLookAgentClass, L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, wc.hInstance, nullptr);
+    // a hidden top-level window, not a message-only window: message-only
+    // windows are invisible to FindWindowW() and don't get WM_QUERYENDSESSION /
+    // WM_ENDSESSION, so the agent could neither be found nor asked to quit
+    DWORD exStyle = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+    gQuickLookAgentHwnd = CreateWindowExW(exStyle, kQuickLookAgentClass, L"", WS_POPUP, 0, 0, 0, 0, nullptr, nullptr,
+                                          wc.hInstance, nullptr);
     if (!gQuickLookAgentHwnd) {
         logf("RunExplorerQuickLookAgentLoop: CreateWindowEx failed\n");
+        SafeCloseHandle(&gQuickLookAgentMutex);
         return false;
     }
     gQuickLookHook = SetWindowsHookExW(WH_KEYBOARD_LL, QuickLookKeyboardProc, wc.hInstance, 0);
@@ -485,6 +531,7 @@ bool RunExplorerQuickLookAgentLoop() {
         logf("RunExplorerQuickLookAgentLoop: SetWindowsHookEx failed\n");
         DestroyWindow(gQuickLookAgentHwnd);
         gQuickLookAgentHwnd = nullptr;
+        SafeCloseHandle(&gQuickLookAgentMutex);
         return false;
     }
     MSG msg;
@@ -493,5 +540,6 @@ bool RunExplorerQuickLookAgentLoop() {
         DispatchMessageW(&msg);
     }
     gQuickLookAgentHwnd = nullptr;
+    SafeCloseHandle(&gQuickLookAgentMutex);
     return true;
 }
