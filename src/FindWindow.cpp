@@ -309,6 +309,22 @@ void FindWindowWnd::CreateButtons() {
     UpdateButtonIcons();
 }
 
+// Destination rect: saved position, or a default size near the top-right of
+// the frame. CreateCustom uses this so the hwnd is born on the right monitor;
+// CW_USEDEFAULT parks a hidden popup on the primary and Per-Monitor V2 then
+// sends WM_DPICHANGED at the primary's DPI before our children exist (#5998).
+static Rect FindWindowPlacementRect(MainWindow* win) {
+    Rect r = gGlobalPrefs->searchUIWindowPos;
+    if (r.IsEmpty()) {
+        Rect fr = HwndWindowRect(win->hwndFrame);
+        int dpi = DpiGetForHwnd(win->hwndFrame);
+        int dx = DpiScaleByDpi(dpi, 520);
+        int dy = DpiScaleByDpi(dpi, 360);
+        r = {fr.x + fr.dx - dx - DpiScaleByDpi(dpi, 40), fr.y + DpiScaleByDpi(dpi, 80), dx, dy};
+    }
+    return ShiftRectToWorkArea(r, win->hwndFrame, true);
+}
+
 bool FindWindowWnd::Create(MainWindow* mainWin) {
     win = mainWin;
 
@@ -326,6 +342,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         args.style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN;
         args.exStyle = WS_EX_TOOLWINDOW; // small caption, off the taskbar
         args.isRtl = IsUIRtl();
+        args.pos = FindWindowPlacementRect(win);
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -456,6 +473,12 @@ void FindWindowWnd::UpdateDpi(int dpi) {
     if (dpi <= 0 || dpi == layoutDpi) {
         return;
     }
+    // WM_DPICHANGED can arrive during CreateCustom, before the child controls
+    // exist (a hidden WS_CAPTION popup is parked on the primary, #5998).
+    // Layout() already ignores WM_SIZE then.
+    if (!layout || !edit || !editPages) {
+        return;
+    }
     PlatformFont* appFont = GetAppFontForDpi(dpi);
     edit->SetFont(appFont);
     editPages->SetFont(appFont);
@@ -483,7 +506,9 @@ void FindWindowWnd::UpdateDpi(int dpi) {
     statusBox->dx = MulDiv(statusBox->dx, dpi, layoutDpi);
     int buttonPad = DpiScaleByDpi(dpi, 4);
     for (VirtIconButton* button : btns) {
-        button->padding = Insets{buttonPad, buttonPad, buttonPad, buttonPad};
+        if (button) {
+            button->padding = Insets{buttonPad, buttonPad, buttonPad, buttonPad};
+        }
     }
     layoutDpi = dpi;
     UpdateButtonIcons(dpi);
@@ -842,6 +867,12 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
 }
 
 void FindWindowWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
+    // Don't apply the suggested rect until Create() finished: it would pin the
+    // still-hidden popup to the primary monitor (#5998).
+    if (!layout) {
+        ev->didHandle = true;
+        return;
+    }
     RECT* r = ev->suggested;
     if (r) {
         SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
@@ -1008,16 +1039,7 @@ void DeleteFindWindow(MainWindow* win) {
 }
 
 static void PositionFindWindow(FindWindowWnd* w) {
-    MainWindow* win = w->win;
-    Rect r = gGlobalPrefs->searchUIWindowPos;
-    if (r.IsEmpty()) {
-        // default: a reasonable size near the top-right of the frame
-        Rect fr = HwndWindowRect(win->hwndFrame);
-        int dx = DpiScale(520);
-        int dy = DpiScale(360);
-        r = {fr.x + fr.dx - dx - DpiScale(40), fr.y + DpiScale(80), dx, dy};
-    }
-    r = ShiftRectToWorkArea(r, win->hwndFrame, true);
+    Rect r = FindWindowPlacementRect(w->win);
     SetWindowPos(w->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
 }
 
@@ -1035,6 +1057,10 @@ void ShowFindWindow(MainWindow* win) {
     FindWindowSetMatchCaseChecked(win, win->findMatchCase);
     FindWindowSetMatchWholeWordChecked(win, win->findMatchWholeWord);
     PositionFindWindow(w);
+    // Hidden-window DPI queries keep the caller's scale; use the monitor we
+    // actually placed the window on (issue #5998).
+    Rect wr = HwndWindowRect(w->hwnd);
+    w->UpdateDpi(DpiGetForPoint(wr.x + wr.dx / 2, wr.y + wr.dy / 2));
     w->Layout();
     ShowWindow(w->hwnd, SW_SHOW);
     win->findEdit->SetFocus();
