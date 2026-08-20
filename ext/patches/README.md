@@ -40,6 +40,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0026-pkcs7-windows-store` | load a signing cert from CurrentUser\\MY by SHA-1 thumbprint (#5965) |
 | `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
 | `0028-pkcs7-windows-inspect` | algorithms, issuer, digest, RFC 3161 timestamp from a PKCS#7 signature (#5581) |
+| `0029-pdf-tj-array-tc-tw` | `Tc`/`Tw` inside a `TJ` array is not a syntax error that dumps the rest of the page (#4157) |
 
 And three that are not ours but that we carry ahead of the release we vendor:
 
