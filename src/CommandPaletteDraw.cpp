@@ -55,10 +55,14 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     gfx->FillRect(rc, colBg);
 
-    // drawing text into a mirrored surface would mirror the glyphs; we lay the
-    // row out right-to-left ourselves instead
-    bool isRtl = HwndIsRtl(hwndList);
-    bool prevMirrored = isRtl ? gfx->SetMirrored(false) : false;
+    // Gfx (Direct2D / GDI+) does not pick up WS_EX_LAYOUTRTL, so we lay the
+    // row out right-to-left ourselves. Do not use HwndIsRtl(): the palette
+    // hwnd stays LTR so mouse hit-testing and virtual-control coords match
+    // (issue #5956). If the DC is still mirrored (nested RTL hwnd), turn it
+    // off so Hebrew glyphs are not reversed.
+    bool isRtl = CommandPaletteUiRtl();
+    bool hwndRtl = HwndIsRtl(hwndList);
+    bool prevMirrored = hwndRtl ? gfx->SetMirrored(false) : false;
 
     Str itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
@@ -119,7 +123,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         u32 rightFmt = gfxTextVCenter;
         if (isRtl) {
             rcRight.dx = rightW;
-            rightFmt |= gfxTextLeft | gfxTextRtl;
+            rightFmt |= gfxTextLeft;
         } else {
             rcRight.x += rcRight.dx - rightW;
             rcRight.dx = rightW;
@@ -128,7 +132,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
         gfx->DrawText(rightStr, rcRight, rightFmt, lb->font, AccentColor(colText, 80));
     }
 
-    if (isRtl) {
+    if (hwndRtl) {
         gfx->SetMirrored(prevMirrored);
     }
 }

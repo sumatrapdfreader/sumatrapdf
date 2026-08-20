@@ -2079,6 +2079,10 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), hdcCanvas(::Ge
     if (!hdcBuffer) {
         return;
     }
+    // CreateCompatibleDC copies LAYOUT_RTL from an RTL hwnd's DC. The document
+    // canvas must stay LTR (issue #5326); a mirrored buffer would flip the
+    // page and keep it flipped after the hwnd is set back to LTR.
+    SetLayout(hdcBuffer, 0);
 
     if (rect.x != 0 || rect.y != 0) {
         SetGraphicsMode(hdcBuffer, GM_ADVANCED);
@@ -2103,8 +2107,19 @@ HDC DoubleBuffer::GetDC() const {
 
 void DoubleBuffer::Flush(HDC hdc) const {
     ReportIf(hdc == hdcBuffer);
-    if (hdcBuffer) {
-        BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+    if (!hdcBuffer) {
+        return;
+    }
+    // BitBlt onto a LAYOUT_RTL DC mirrors the whole bitmap (glyphs included).
+    // The buffer is painted in LTR; copy it verbatim, same as VirtHost.
+    DWORD layout = GetLayout(hdc);
+    bool mirrored = layout != GDI_ERROR && (layout & LAYOUT_RTL);
+    if (mirrored) {
+        SetLayout(hdc, 0);
+    }
+    BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+    if (mirrored) {
+        SetLayout(hdc, layout);
     }
 }
 

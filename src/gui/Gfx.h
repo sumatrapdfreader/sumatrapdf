@@ -41,6 +41,10 @@ using cairo_t = struct _cairo;
 #endif
 
 // how text is placed in the rect it is drawn into
+// gfxTextLeft / gfxTextRight are physical edges (GDI DT_LEFT / DT_RIGHT).
+// gfxTextRtl is only the reading direction. DirectWrite and GDI+ Near/Far
+// follow reading direction, so with gfxTextRtl they would swap unless we map
+// physical right to the reading-direction start (LEADING/Near).
 enum GfxTextFlags : u32 {
     gfxTextLeft = 0,
     gfxTextCenter = 1 << 0,
@@ -61,6 +65,12 @@ enum GfxTextFlags : u32 {
     // the "…" replaces the tail of a word too long to wrap
     gfxTextWrap = 1 << 8,
 };
+
+inline bool GfxTextAlignToReadingStart(u32 flags) {
+    bool rtl = (flags & gfxTextRtl) != 0;
+    bool right = (flags & gfxTextRight) != 0;
+    return rtl == right;
+}
 
 struct Gfx {
     Gfx() = default;

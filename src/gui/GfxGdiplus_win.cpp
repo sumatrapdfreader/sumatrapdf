@@ -224,10 +224,10 @@ static void InitStringFormat(StringFormat& sf, u32 flags) {
 
     if (flags & gfxTextCenter) {
         sf.SetAlignment(Gdiplus::StringAlignmentCenter);
-    } else if (flags & gfxTextRight) {
-        sf.SetAlignment(Gdiplus::StringAlignmentFar);
-    } else {
+    } else if (GfxTextAlignToReadingStart(flags)) {
         sf.SetAlignment(Gdiplus::StringAlignmentNear);
+    } else {
+        sf.SetAlignment(Gdiplus::StringAlignmentFar);
     }
     bool vcenter = !wrap && (flags & gfxTextVCenter) != 0;
     sf.SetLineAlignment(vcenter ? Gdiplus::StringAlignmentCenter : Gdiplus::StringAlignmentNear);

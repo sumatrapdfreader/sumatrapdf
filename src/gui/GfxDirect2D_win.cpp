@@ -534,10 +534,10 @@ static void SetTextFormatFlags(IDWriteTextFormat* format, IDWriteInlineObject* e
 
     if (flags & gfxTextCenter) {
         format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-    } else if (flags & gfxTextRight) {
-        format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_TRAILING);
-    } else {
+    } else if (GfxTextAlignToReadingStart(flags)) {
         format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+    } else {
+        format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_TRAILING);
     }
     bool vcenter = !wrap && (flags & gfxTextVCenter) != 0;
     format->SetParagraphAlignment(vcenter ? DWRITE_PARAGRAPH_ALIGNMENT_CENTER : DWRITE_PARAGRAPH_ALIGNMENT_NEAR);

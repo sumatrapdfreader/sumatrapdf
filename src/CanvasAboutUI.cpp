@@ -27,6 +27,7 @@ static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
+    SetLayout(hdc, 0);
     if (!win->buffer) {
         EndPaint(win->hwndCanvas, &ps);
         return;

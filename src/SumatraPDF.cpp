@@ -901,6 +901,15 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
     if (win->tabsCtrl) {
         HwndSetRtl(win->tabsCtrl->hwnd, false);
     }
+    // Setting WS_EX_LAYOUTRTL on the canvas (EnumChildWindows above) can
+    // recreate the double-buffer from an RTL DC. Rebuild it now that the
+    // canvas is LTR again, or the page stays mirrored after leaving RTL.
+    if (win->buffer) {
+        delete win->buffer;
+        win->buffer = nullptr;
+        win->canvasRc = {};
+        win->UpdateCanvasSize();
+    }
 
     bool tocVisible = win->uiState.tocVisible;
     bool favVisible = gGlobalPrefs->showFavorites;

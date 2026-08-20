@@ -127,6 +127,7 @@ import { testit as issue5907 } from "./issue-5907.ts";
 import { testit as issue5970 } from "./issue-5970.ts";
 import { testit as issue5971 } from "./issue-5971.ts";
 import { testit as issue5972 } from "./issue-5972.ts";
+import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as issue5974 } from "./issue-5974.ts";
 import { testit as issue5975 } from "./issue-5975.ts";
@@ -153,6 +154,7 @@ import { testit as issue5512 } from "./issue-5512.ts";
 
 export const tests: NamedTest[] = [
   ["issue-5972", issue5972],
+  ["issue-5956", issue5956],
   ["issue-5989", issue5989],
 
   // --- no Sumatra process -------------------------------------------------

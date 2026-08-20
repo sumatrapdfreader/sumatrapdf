@@ -3288,6 +3288,8 @@ static void OnPaintDocument(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
+    // page is never mirrored, even when the frame is RTL (issue #5326)
+    SetLayout(hdc, 0);
 
     if (win->presentation == PM_BLACK_SCREEN) {
         HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(BLACK_BRUSH));
@@ -4495,6 +4497,7 @@ static Color LoadErrorTextColor() {
 static void OnPaintDocumentStatus(MainWindow* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
+    SetLayout(hdc, 0);
 
     Gfx* gfx = GfxCreate(hdc);
     PlatformFont* fontRightTxt = GetUserGuiFont("MS Shell Dlg", DpiScale(14));

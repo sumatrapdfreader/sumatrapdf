@@ -69,6 +69,12 @@ static bool IsCmdInList(i32 cmdId, i32* ids) {
     return false;
 }
 
+// UI language (and the debug RTL toggle), not the palette hwnd: that window
+// stays LTR so virtual-control coords and clicks are not mirrored (#5956).
+bool CommandPaletteUiRtl() {
+    return IsUIRtl();
+}
+
 Str CommandPaletteSkipWS(Str s) {
     if (!s.s) {
         return {};
@@ -636,6 +642,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     if (!smartTabMode) {
         vbox->AddChild(new Spacer(0, DpiScale(4)));
         auto* box = new HBox();
+        box->rtl = CommandPaletteUiRtl();
         // same smaller app font as the bottom hint row
         HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
         // in "# File History" and friends the first character is what you type
@@ -699,6 +706,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             strings[nHelp++] = _TRA("Esc to close");
         }
         auto* box = new HBox();
+        box->rtl = CommandPaletteUiRtl();
         // the hints are secondary information, so they use the regular (smaller)
         // app font, not the bigger font of the query / list
         HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
@@ -816,7 +824,7 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
         wnd->editQuery->GetSelection(qStart, qEnd);
         qLen = wnd->editQuery->GetTextLen();
     }
-    out.Append(
-        fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d\n", sel, n, qStart, qEnd, qLen, selectedCmdId));
+    out.Append(fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d\n", sel, n, qStart, qEnd, qLen,
+                   selectedCmdId, (int)CommandPaletteUiRtl()));
     return finish(0);
 }
