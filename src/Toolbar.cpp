@@ -62,7 +62,6 @@ struct ToolbarButtonInfo {
 
 static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconFileOpen, CmdOpenFile, _TRN("Open")},
-    {gIconPrint, CmdPrint, _TRN("Print")},
     {nullptr, 0, nullptr},          // separator
     {nullptr, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
     {gIconPagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
