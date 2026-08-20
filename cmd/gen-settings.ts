@@ -493,6 +493,14 @@ const comicBookUI: Field[] = [
       "valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
+  field(
+    "LandscapeAsSpread",
+    Bool,
+    true,
+    "if true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row " +
+      "instead of pairing with the next page. For comics that store double-page spreads as one image " +
+      "(issues #1324, #872)",
+  ).ver("3.7"),
 ];
 
 const imageUI: Field[] = [
@@ -516,6 +524,13 @@ const imageUI: Field[] = [
     Bool,
     false,
     "if true, absolute zoom never makes a page taller than the window (each page is capped at Fit Height)",
+  ).ver("3.7"),
+  field(
+    "LandscapeAsSpread",
+    Bool,
+    true,
+    "if true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row " +
+      "instead of pairing with the next page (issues #1324, #872)",
   ).ver("3.7"),
 ];
 

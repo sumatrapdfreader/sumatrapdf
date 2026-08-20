@@ -16,6 +16,60 @@ static int ColumnsFromDisplayMode(DisplayMode displayMode) {
     return 1;
 }
 
+static bool PageIsSpread(const Vec<u8>& flags, int pageNo) {
+    int i = pageNo - 1;
+    if (i < 0 || i >= len(flags)) {
+        return false;
+    }
+    return flags[i] != 0;
+}
+
+// Facing / book view rows: a landscape page (spreadFlags) occupies the whole
+// two-page row instead of pairing with the next page. Book view still keeps
+// page 1 alone. With no spreads this matches the old 2-column arithmetic.
+void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags) {
+    out.Reset();
+    if (pageCount < 1) {
+        return;
+    }
+    int page = 1;
+    if (bookView) {
+        FacingRow row;
+        row.firstPage = 1;
+        row.lastPage = 1;
+        row.isSpread = PageIsSpread(spreadFlags, 1);
+        out.Append(row);
+        page = 2;
+    }
+    while (page <= pageCount) {
+        FacingRow row;
+        row.firstPage = page;
+        if (PageIsSpread(spreadFlags, page)) {
+            row.lastPage = page;
+            row.isSpread = true;
+            page++;
+        } else if (page + 1 <= pageCount && !PageIsSpread(spreadFlags, page + 1)) {
+            row.lastPage = page + 1;
+            row.isSpread = false;
+            page += 2;
+        } else {
+            row.lastPage = page;
+            row.isSpread = false;
+            page++;
+        }
+        out.Append(row);
+    }
+}
+
+static const FacingRow* FindFacingRow(const Vec<FacingRow>& rows, int pageNo) {
+    for (int i = 0; i < len(rows); i++) {
+        if (rows[i].firstPage <= pageNo && pageNo <= rows[i].lastPage) {
+            return &rows[i];
+        }
+    }
+    return nullptr;
+}
+
 void DocumentLayout::Reset(int pageCount) {
     pages.Reset();
     if (pageCount > 0) {
@@ -68,8 +122,12 @@ static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoom
 
     int columns = ColumnsFromDisplayMode(params.displayMode);
     SizeF row = PageSizeAfterRotation(layout.GetPage(pageNo), params.rotation);
-    row.dx *= (float)columns;
-    row.dx += (float)((double)params.pageSpacing.dx * (double)(columns - 1));
+    int nCols = columns;
+    if (columns > 1 && params.landscapeAsSpread && PageIsSpread(params.spreadFlags, pageNo)) {
+        nCols = 1;
+    }
+    row.dx *= (float)nCols;
+    row.dx += (float)((double)params.pageSpacing.dx * (double)(nCols - 1));
 
     if (RectF(PointF(), row).IsEmpty()) {
         return 0;
@@ -127,6 +185,213 @@ static void CalcZoomReal(DocumentLayout& layout, float zoomVirtual) {
     }
 }
 
+static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, bool isFitContent) {
+    const DocumentLayoutParams& params = layout.params;
+    Rect& viewPort = layout.viewPort;
+
+    if (canvasDy < viewPort.dy) {
+        int offY = params.windowMargin.top + ((viewPort.dy - canvasDy) / 2);
+        for (int pageNo = 1; pageNo <= layout.pages.len; pageNo++) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            if (page->isShown) {
+                page->pos.y += offY;
+            }
+        }
+    }
+
+    // Fit Page never needs to scroll, so pin the canvas to the window and no
+    // scrollbars appear. Not for Fit Content: clamping leaves it no scroll range,
+    // so limitValue() in GoToPage() would drop the scroll to the content start
+    // and the page would show its top/left margin with the content cut off at
+    // the other end (it looked right only in continuous modes).
+    if (params.zoomVirtual == kZoomFitPage && !isFitContent && !IsContinuous(params.displayMode)) {
+        canvasDy = std::min(canvasDy, viewPort.dy);
+        canvasDx = std::min(canvasDx, viewPort.dx);
+    }
+
+    // Continuous mode: extra space after the last page so it can be scrolled
+    // up (e.g. last lines to the top of the window when the frame is partly
+    // covered by another app) (issue #411). Need canvas tall enough that
+    // max scroll (canvasDy - viewPort.dy) can place the last page's top at y=0.
+    // Controlled by advanced setting PaddingAfterLastPage (default off).
+    if (params.paddingAfterLastPage && IsContinuous(params.displayMode) && viewPort.dy > 0) {
+        int lastPageTop = -1;
+        for (int pageNo = layout.pages.len; pageNo >= 1; pageNo--) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            if (page->isShown) {
+                lastPageTop = page->pos.y;
+                break;
+            }
+        }
+        if (lastPageTop >= 0) {
+            int minCanvasDy = lastPageTop + viewPort.dy;
+            canvasDy = std::max(canvasDy, minCanvasDy);
+        }
+    }
+
+    layout.canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
+    if (viewPort.x > layout.canvasSize.dx - viewPort.dx) {
+        viewPort.x = std::max(0, layout.canvasSize.dx - viewPort.dx);
+    }
+    if (viewPort.y > layout.canvasSize.dy - viewPort.dy) {
+        viewPort.y = std::max(0, layout.canvasSize.dy - viewPort.dy);
+    }
+    layout.RecalcVisibleParts();
+}
+
+static void SetPageDisplaySize(DocumentLayoutPage* page, int rotation, int currPosY) {
+    SizeF pageSize = PageSizeAfterRotation(page, rotation);
+    float zoom = page->zoomReal;
+    page->pos.dx = (int)((pageSize.dx * zoom) + 0.499f);
+    page->pos.dy = (int)((pageSize.dy * zoom) + 0.499f);
+    page->pos.y = currPosY;
+}
+
+static void RelayoutFacingWithSpreads(DocumentLayout& layout, bool isFitContent) {
+    const DocumentLayoutParams& params = layout.params;
+    const int pageCount = layout.pages.len;
+    Vec<FacingRow> rows;
+    CollectFacingRows(rows, pageCount, IsBookView(params.displayMode), params.spreadFlags);
+
+    int startFirst = params.startPage;
+    int startLast = params.startPage;
+    const FacingRow* startRow = FindFacingRow(rows, params.startPage);
+    if (startRow) {
+        startFirst = startRow->firstPage;
+        startLast = startRow->lastPage;
+    }
+
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        auto& page = layout.pages[pageNo - 1];
+        page.visibleRatio = 0;
+        page.pageOnScreen = {};
+        page.pos = {};
+        page.isShown = IsContinuous(params.displayMode) || (startFirst <= pageNo && pageNo <= startLast);
+    }
+
+    int currPosY = params.windowMargin.top;
+    CalcZoomReal(layout, params.zoomVirtual);
+
+    int columnMaxWidth[2] = {0, 0};
+    int maxSpreadWidth = 0;
+    for (int ri = 0; ri < len(rows); ri++) {
+        const FacingRow& row = rows[ri];
+        int rowMaxPageDy = 0;
+        int nShown = 0;
+        for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            if (!page->isShown) {
+                continue;
+            }
+            nShown++;
+            SetPageDisplaySize(page, params.rotation, currPosY);
+            rowMaxPageDy = std::max(rowMaxPageDy, page->pos.dy);
+        }
+        if (nShown == 0) {
+            continue;
+        }
+        if (row.isSpread) {
+            maxSpreadWidth = std::max(maxSpreadWidth, layout.GetPage(row.firstPage)->pos.dx);
+        } else if (row.firstPage == row.lastPage) {
+            bool cover = IsBookView(params.displayMode) && row.firstPage == 1;
+            int col = cover ? 1 : 0;
+            columnMaxWidth[col] = std::max(columnMaxWidth[col], layout.GetPage(row.firstPage)->pos.dx);
+        } else {
+            int col = 0;
+            for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
+                DocumentLayoutPage* page = layout.GetPage(pageNo);
+                if (!page->isShown) {
+                    continue;
+                }
+                ReportIf(col >= 2);
+                columnMaxWidth[col] = std::max(columnMaxWidth[col], page->pos.dx);
+                col++;
+            }
+        }
+        currPosY += rowMaxPageDy + params.pageSpacing.dy;
+    }
+
+    int canvasDy = currPosY + params.windowMargin.bottom - params.pageSpacing.dy;
+
+    if (pageCount == 1) {
+        if (IsBookView(params.displayMode)) {
+            columnMaxWidth[0] = columnMaxWidth[1];
+        } else {
+            columnMaxWidth[1] = columnMaxWidth[0];
+        }
+    }
+
+    int twoColDx = columnMaxWidth[0] + params.pageSpacing.dx + columnMaxWidth[1];
+    int pagesDx = std::max(twoColDx, maxSpreadWidth);
+    int canvasDx = params.windowMargin.left + pagesDx + params.windowMargin.right;
+
+    int offX = 0;
+    if (canvasDx < layout.viewPort.dx) {
+        layout.viewPort.x = 0;
+        offX = (layout.viewPort.dx - canvasDx) / 2;
+        canvasDx = layout.viewPort.dx;
+    }
+
+    for (int ri = 0; ri < len(rows); ri++) {
+        const FacingRow& row = rows[ri];
+        bool anyShown = false;
+        for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
+            if (layout.GetPage(pageNo)->isShown) {
+                anyShown = true;
+                break;
+            }
+        }
+        if (!anyShown) {
+            continue;
+        }
+
+        int pageOffX = offX + params.windowMargin.left;
+        if (row.isSpread) {
+            DocumentLayoutPage* page = layout.GetPage(row.firstPage);
+            page->pos.x = pageOffX + ((pagesDx - page->pos.dx) / 2);
+            if (params.displayR2L) {
+                page->pos.x = canvasDx - page->pos.x - page->pos.dx;
+            }
+            continue;
+        }
+        if (row.firstPage == row.lastPage) {
+            DocumentLayoutPage* page = layout.GetPage(row.firstPage);
+            bool cover = IsBookView(params.displayMode) && row.firstPage == 1;
+            if (cover && !IsContinuous(params.displayMode)) {
+                page->pos.x = offX + params.windowMargin.left + ((pagesDx - page->pos.dx) / 2);
+            } else if (cover) {
+                page->pos.x = pageOffX + columnMaxWidth[0] + params.pageSpacing.dx;
+            } else {
+                page->pos.x = pageOffX + columnMaxWidth[0] - page->pos.dx;
+            }
+            if (params.displayR2L) {
+                page->pos.x = canvasDx - page->pos.x - page->pos.dx;
+            }
+            continue;
+        }
+        int col = 0;
+        int x = pageOffX;
+        for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            if (!page->isShown) {
+                continue;
+            }
+            if (col == 0) {
+                page->pos.x = x + columnMaxWidth[0] - page->pos.dx;
+            } else {
+                page->pos.x = x;
+            }
+            if (params.displayR2L) {
+                page->pos.x = canvasDx - page->pos.x - page->pos.dx;
+            }
+            x += columnMaxWidth[col] + params.pageSpacing.dx;
+            col++;
+        }
+    }
+
+    FinishRelayout(layout, canvasDx, canvasDy, isFitContent);
+}
+
 void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     if (pages.len == 0) {
         Reset(0);
@@ -155,6 +420,11 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     viewPort = Rect(params.viewPortOffset, params.viewPortSize);
 
     int columns = ColumnsFromDisplayMode(params.displayMode);
+    if (columns == 2 && params.landscapeAsSpread) {
+        RelayoutFacingWithSpreads(*this, isFitContent);
+        return;
+    }
+
     int firstShown = params.startPage;
     if (IsBookView(params.displayMode) && firstShown == 1 && columns > 1) {
         firstShown--;
@@ -262,54 +532,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         }
     }
 
-    if (canvasDy < viewPort.dy) {
-        int offY = params.windowMargin.top + ((viewPort.dy - canvasDy) / 2);
-        for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
-            DocumentLayoutPage* page = GetPage(pageNo);
-            if (page->isShown) {
-                page->pos.y += offY;
-            }
-        }
-    }
-
-    // Fit Page never needs to scroll, so pin the canvas to the window and no
-    // scrollbars appear. Not for Fit Content: clamping leaves it no scroll range,
-    // so limitValue() in GoToPage() would drop the scroll to the content start
-    // and the page would show its top/left margin with the content cut off at
-    // the other end (it looked right only in continuous modes).
-    if (params.zoomVirtual == kZoomFitPage && !isFitContent && !IsContinuous(params.displayMode)) {
-        canvasDy = std::min(canvasDy, viewPort.dy);
-        canvasDx = std::min(canvasDx, viewPort.dx);
-    }
-
-    // Continuous mode: extra space after the last page so it can be scrolled
-    // up (e.g. last lines to the top of the window when the frame is partly
-    // covered by another app) (issue #411). Need canvas tall enough that
-    // max scroll (canvasDy - viewPort.dy) can place the last page's top at y=0.
-    // Controlled by advanced setting PaddingAfterLastPage (default off).
-    if (params.paddingAfterLastPage && IsContinuous(params.displayMode) && viewPort.dy > 0) {
-        int lastPageTop = -1;
-        for (int pageNo = pages.len; pageNo >= 1; pageNo--) {
-            DocumentLayoutPage* page = GetPage(pageNo);
-            if (page->isShown) {
-                lastPageTop = page->pos.y;
-                break;
-            }
-        }
-        if (lastPageTop >= 0) {
-            int minCanvasDy = lastPageTop + viewPort.dy;
-            canvasDy = std::max(canvasDy, minCanvasDy);
-        }
-    }
-
-    canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
-    if (viewPort.x > canvasSize.dx - viewPort.dx) {
-        viewPort.x = std::max(0, canvasSize.dx - viewPort.dx);
-    }
-    if (viewPort.y > canvasSize.dy - viewPort.dy) {
-        viewPort.y = std::max(0, canvasSize.dy - viewPort.dy);
-    }
-    RecalcVisibleParts();
+    FinishRelayout(*this, canvasDx, canvasDy, isFitContent);
 }
 
 void DocumentLayout::RecalcVisibleParts() {

@@ -495,6 +495,12 @@ ComicBookUI [
     ; values: fit page, fit width, fit height, fit content, shrink to fit or
     ; percent like 100% (introduced in version 3.7)
     DefaultZoom = 
+
+    ; if true, in facing and book view a landscape page (wider than tall)
+    ; occupies the whole two-page row instead of pairing with the next page. For
+    ; comics that store double-page spreads as one image (issues #1324, #872)
+    ; (introduced in version 3.7)
+    LandscapeAsSpread = true
 ]
 
 ; customization options for image files UI
@@ -516,6 +522,11 @@ ImageUI [
     ; if true, absolute zoom never makes a page taller than the window (each
     ; page is capped at Fit Height) (introduced in version 3.7)
     LimitToWindowHeight = false
+
+    ; if true, in facing and book view a landscape page (wider than tall)
+    ; occupies the whole two-page row instead of pairing with the next page
+    ; (issues #1324, #872) (introduced in version 3.7)
+    LandscapeAsSpread = true
 ]
 
 ; customization options for CHM UI. UseFixedPageUI switches to the PDF-style

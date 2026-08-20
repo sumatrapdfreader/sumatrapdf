@@ -31,9 +31,21 @@ struct DocumentLayoutParams {
     bool usePageZooms = false;
     // extra scroll room after last page in continuous view (issue #411)
     bool paddingAfterLastPage = false;
+    // comic/image facing and book view: a page wider than it is tall occupies
+    // the whole two-page row (issues #1324, #872)
+    bool landscapeAsSpread = false;
+    Vec<u8> spreadFlags;
     DocumentLayoutMargin windowMargin{};
     Size pageSpacing;
 };
+
+struct FacingRow {
+    int firstPage = 1;
+    int lastPage = 1;
+    bool isSpread = false;
+};
+
+void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags);
 
 struct DocumentLayout {
     Vec<DocumentLayoutPage> pages;

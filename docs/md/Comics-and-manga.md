@@ -33,7 +33,7 @@ Use the same page layout commands as for PDF:
 | Book view (facing, first page alone) | `Ctrl + 8` (`CmdBookView`)       |
 | Continuous scroll                    | `c` (`CmdToggleContinuousView`)  |
 
-Facing or book view is useful for double-page spreads. Continuous mode is natural for long webtoon-style strips. See [Scrolling and zooming](Scrolling-and-zooming.md).
+Facing or book view is useful for double-page spreads. A landscape page (wider than it is tall) occupies the **whole two-page row** instead of sitting next to the following page — comics that store a centerfold as one image show it that way. Turn this off with `LandscapeAsSpread = false` under `ComicBookUI` (or `ImageUI` for image folders) if you want every page in a single-page slot even in double-page mode. Continuous mode is natural for long webtoon-style strips. See [Scrolling and zooming](Scrolling-and-zooming.md).
 
 To turn the page by clicking the left or right edge of the window (like many comic readers), set `ClickEdgeToTurnPage = true` in [advanced settings](Advanced-options-settings.md). In manga mode the sides are reversed so a click on the left still advances.
 
@@ -87,6 +87,22 @@ Enable **both** to cap at Fit Page. Caps apply **per page**, so:
 3. Wide spreads shrink to the window width; smaller pages stay at your chosen zoom.
 
 Virtual zoom modes (**Fit Width**, **Fit Page**, **Shrink to Fit**, etc.) already size relative to the window; the limit settings only affect **percentage** zooms.
+
+### Landscape pages as spreads (ver 3.7+)
+
+In **facing** and **book view**, a page wider than it is tall is treated as a double-page spread: it takes the full row and is not paired with the next page. Book view still keeps the cover (page 1) alone.
+
+```
+ComicBookUI [
+    LandscapeAsSpread = true
+]
+
+ImageUI [
+    LandscapeAsSpread = true
+]
+```
+
+Default is **true**. Set it to `false` to keep the old pairing: every page occupies one slot of the two-page row, even if it is landscape (issue #872).
 
 ### Other useful zoom modes
 
@@ -146,7 +162,7 @@ Right-click a comic or image page and choose **Copy Image** (`CmdCopyImage`) to 
 
 ## Image folders
 
-Opening a **folder of images** treats each image as a page (ordered by file name). Bookmarks sidebar lists the files. The same `ImageUI` settings apply (`DefaultZoom`, `LimitToWindowWidth` / `Height`, `WindowBgCol`).
+Opening a **folder of images** treats each image as a page (ordered by file name). Bookmarks sidebar lists the files. The same `ImageUI` settings apply (`DefaultZoom`, `LimitToWindowWidth` / `Height`, `LandscapeAsSpread`, `WindowBgCol`).
 
 ## What is not available for comics / images
 
@@ -171,6 +187,7 @@ ComicBookUI [
     LimitToWindowHeight = false
     DefaultDisplayMode =
     DefaultZoom =
+    LandscapeAsSpread = true
 ]
 ```
 
@@ -182,6 +199,7 @@ ImageUI [
     DefaultZoom = shrink to fit
     LimitToWindowWidth = false
     LimitToWindowHeight = false
+    LandscapeAsSpread = true
 ]
 ```
 

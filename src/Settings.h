@@ -151,6 +151,11 @@ struct ComicBookUI {
     Str defaultZoom;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
+    // if true, in facing and book view a landscape page (wider than tall)
+    // occupies the whole two-page row instead of pairing with the next
+    // page. For comics that store double-page spreads as one image (issues
+    // #1324, #872)
+    bool landscapeAsSpread;
 };
 
 // customization options for image files UI
@@ -169,6 +174,10 @@ struct ImageUI {
     // if true, absolute zoom never makes a page taller than the window
     // (each page is capped at Fit Height)
     bool limitToWindowHeight;
+    // if true, in facing and book view a landscape page (wider than tall)
+    // occupies the whole two-page row instead of pairing with the next
+    // page (issues #1324, #872)
+    bool landscapeAsSpread;
 };
 
 // customization options for CHM UI. UseFixedPageUI switches to the
@@ -1180,13 +1189,14 @@ static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, limitToWindowHeight), SettingType::Bool, false},
     {offsetof(ComicBookUI, defaultDisplayMode), SettingType::String, (intptr_t)""},
     {offsetof(ComicBookUI, defaultZoom), SettingType::String, (intptr_t)""},
+    {offsetof(ComicBookUI, landscapeAsSpread), SettingType::Bool, true},
 };
 static const StructInfo gComicBookUIInfo = {
     sizeof(ComicBookUI),
-    8,
+    9,
     gComicBookUIFields,
     "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight\0DefaultDisplayMode"
-    "\0DefaultZoom",
+    "\0DefaultZoom\0LandscapeAsSpread",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical distance "
     "between two pages in facing and book view modes\0if true, documents that don't state their own reading direction "
     "default to manga mode, i.e. right to left. A document that states a direction (e.g. an EPUB with "
@@ -1196,7 +1206,9 @@ static const StructInfo gComicBookUIInfo = {
     "absolute zoom never makes a page taller than the window (each page is capped at Fit Height)\0default page layout "
     "for comic books; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book "
     "view, continuous, continuous facing, continuous book view\0default zoom for comic books; empty uses the global "
-    "DefaultZoom. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
+    "DefaultZoom. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%\0if "
+    "true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row instead of "
+    "pairing with the next page. For comics that store double-page spreads as one image (issues #1324, #872)",
     false};
 
 static const FieldInfo gImageUIFields[] = {
@@ -1204,17 +1216,19 @@ static const FieldInfo gImageUIFields[] = {
     {offsetof(ImageUI, defaultZoom), SettingType::String, (intptr_t)"shrink to fit"},
     {offsetof(ImageUI, limitToWindowWidth), SettingType::Bool, false},
     {offsetof(ImageUI, limitToWindowHeight), SettingType::Bool, false},
+    {offsetof(ImageUI, landscapeAsSpread), SettingType::Bool, true},
 };
 static const StructInfo gImageUIInfo = {
     sizeof(ImageUI),
-    4,
+    5,
     gImageUIFields,
-    "WindowBgCol\0DefaultZoom\0LimitToWindowWidth\0LimitToWindowHeight",
+    "WindowBgCol\0DefaultZoom\0LimitToWindowWidth\0LimitToWindowHeight\0LandscapeAsSpread",
     "if given, sets the canvas background color for image files\0default zoom for image files. valid values: fit page, "
     "fit width, fit height, fit content, shrink to fit or percent like 100%\0if true, absolute zoom never makes a page "
     "wider than the window (each page is capped at Fit Width). Useful for image folders with mixed aspect ratios "
     "(issue #2197)\0if true, absolute zoom never makes a page taller than the window (each page is capped at Fit "
-    "Height)",
+    "Height)\0if true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row "
+    "instead of pairing with the next page (issues #1324, #872)",
     false};
 
 static const FieldInfo gChmUIFields[] = {

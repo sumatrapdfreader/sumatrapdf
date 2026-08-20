@@ -221,6 +221,10 @@ struct DisplayModel : DocController {
     void BuildPagesInfo();
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
     SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
+    bool ShouldTreatLandscapeAsSpread() const;
+    void EnsureSpreadFlags() const;
+    int FirstPageInRow(int pageNo) const;
+    int LastPageInRow(int pageNo) const;
     void ChangeStartPage(int startPage);
     Point GetContentStart(int pageNo) const;
     void RecalcVisibleParts() const;
@@ -308,6 +312,13 @@ struct DisplayModel : DocController {
        this value is extracted from the PDF document */
     bool displayR2L = false;
     bool uniformPageWidth = false;
+
+    /* landscape image pages that occupy a full facing/book row
+       (ComicBookUI / ImageUI LandscapeAsSpread; issues #1324, #872) */
+    mutable Vec<u8> spreadFlags;
+    mutable Vec<int> rowFirst;
+    mutable Vec<int> rowLast;
+    mutable bool spreadCacheValid = false;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
     bool inPresentation = false;
