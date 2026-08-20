@@ -1254,7 +1254,7 @@ const globalPrefs: Field[] = [
     "SmoothScroll",
     Bool,
     true,
-    "if true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)",
+    "if true, smooth mouse-wheel and arrow-key scrolling (exponential chase of the target; continuous input stays fluid)",
   ).ver("3.6"),
   field(
     "ScrollLineAmount",

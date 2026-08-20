@@ -1174,15 +1174,17 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 
     // Original logic for other display modes
 
-    bool smoothWheel = gGlobalPrefs->smoothScroll && gInMouseWheelScroll;
+    // SmoothScroll eases wheel input and arrow-key / scrollbar line steps
+    // (issue #4662). Page-up/down and thumb stay instant.
+    bool isLineScroll = (msg == SB_LINEUP || msg == SB_LINEDOWN);
+    bool useSmoothScroll = gGlobalPrefs->smoothScroll && (gInMouseWheelScroll || isLineScroll);
     // While a smooth scroll is in flight the animation moves the view a bit at a
     // time, and ScrollYTo -> UpdateScrollbars keeps nPos on that lagging
     // position. Stepping from it discards the distance still to be travelled, so
-    // a fast stream of wheel events (touchpads send many small ones) advances
-    // only a fraction of what the same events do with SmoothScroll off
-    // (issue #5857). Step from the pending target instead, so wheel events
-    // accumulate the same total distance either way.
-    if (smoothWheel && win->scrollAnimActive) {
+    // a fast stream of wheel / key-repeat events advances only a fraction of
+    // what the same events do with SmoothScroll off (issue #5857). Step from
+    // the pending target instead, so they accumulate the same total distance.
+    if (useSmoothScroll && win->scrollAnimActive) {
         si.nPos = win->scrollTargetY;
     }
 
@@ -1226,16 +1228,17 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     bool showScrollbar = !ScrollbarsAreHidden();
     BOOL showWinScrollbar = showScrollbar && !overlayMode;
     BOOL showOverScrollbar = showScrollbar && useOverlay;
-    if (smoothWheel) {
+    if (useSmoothScroll) {
         // Don't hand the target to the scrollbar: the thumb would jump ahead of
         // the view and be pulled back by the next animation tick (which updates
         // it via ScrollYTo -> UpdateScrollbars as the view actually moves).
         // Clamp the way SetScrollInfo would have, so the target stays in range.
         int maxPos = si.nMax - (int)si.nPage + 1;
         si.nPos = limitValue(si.nPos, si.nMin, std::max(si.nMin, maxPos));
-        // Still reveal the thin smart bar on wheel input (without moving the
-        // thumb to the pending target). Mouse-move tracking alone is not enough
-        // when the user scrolls with the wheel while the cursor is still (#5859).
+        // Still reveal the thin smart bar on wheel / key input (without moving
+        // the thumb to the pending target). Mouse-move tracking alone is not
+        // enough when the user scrolls with the wheel while the cursor is still
+        // (#5859).
         if (showOverScrollbar) {
             OverlayScrollbarNotifyScroll(win->overlayScrollV);
         }
@@ -1250,10 +1253,10 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
-        if (smoothWheel) {
+        if (useSmoothScroll) {
             StartOrUpdateSmoothScrollY(win, si.nPos);
         } else {
-            // Keyboard / scrollbar / programmatic scroll, or SmoothScroll off: apply immediately.
+            // Page / thumb / programmatic scroll, or SmoothScroll off: apply immediately.
             StopSmoothScroll(win);
             win->AsFixed()->ScrollYTo(si.nPos);
             ReadAloudOnUserViewChanged(win);

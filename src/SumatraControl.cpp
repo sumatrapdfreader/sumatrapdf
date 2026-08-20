@@ -1542,6 +1542,10 @@ static void SnapshotRenderIdle(ControlRequest* req) {
     if (busy) {
         whyNot = StrL("rendering");
     }
+    if (win->scrollAnimActive) {
+        whyNot = StrL("scrolling");
+        ready = false;
+    }
     int nQ = gRenderCache ? gRenderCache->requestCount : -1;
     TempStr busyInfo = gRenderCache ? gRenderCache->BusyInfoTemp(dm) : (TempStr) "";
     str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)),

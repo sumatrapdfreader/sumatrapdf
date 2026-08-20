@@ -825,8 +825,8 @@ struct GlobalPrefs {
     Str scrollbars;
     // if true, show a scrollbar in single page mode as well
     bool scrollbarInSinglePage;
-    // if true, smooth mouse-wheel scrolling (exponential chase of the
-    // target; continuous wheel input stays fluid)
+    // if true, smooth mouse-wheel and arrow-key scrolling (exponential
+    // chase of the target; continuous input stays fluid)
     bool smoothScroll;
     // distance, in screen pixels at 96 DPI, scrolled by an arrow-key press
     // or one mouse-wheel line; values below 1 use 16
@@ -2018,8 +2018,8 @@ static const StructInfo gGlobalPrefsInfo = {
     "the favorites / bookmarks sidebar in screen pixels, as last resized (0 means the default)\0scrollbar mode: "
     "windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay "
     "scrollbar), hidden (no scrollbars)\0if true, show a scrollbar in single page mode as well\0if true, smooth "
-    "mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)\0distance, in screen "
-    "pixels at 96 DPI, scrolled by an arrow-key press or one mouse-wheel line; values below 1 use 16\0if true, "
+    "mouse-wheel and arrow-key scrolling (exponential chase of the target; continuous input stays fluid)\0distance, in "
+    "screen pixels at 96 DPI, scrolled by an arrow-key press or one mouse-wheel line; values below 1 use 16\0if true, "
     "continuous view has extra scroll room after the last page so you can scroll the end of the document to the top of "
     "the window\0if true, going to a destination (clicking a bookmark or a link inside the document) keeps the current "
     "zoom instead of applying the zoom the destination asks for; it still goes to the page and the position. Same as "

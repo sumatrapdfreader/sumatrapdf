@@ -216,8 +216,8 @@ Scrollbars = windows
 ; 3.6)
 ScrollbarInSinglePage = false
 
-; if true, smooth mouse-wheel scrolling (exponential chase of the target;
-; continuous wheel input stays fluid) (introduced in version 3.6)
+; if true, smooth mouse-wheel and arrow-key scrolling (exponential chase of the
+; target; continuous input stays fluid) (introduced in version 3.6)
 SmoothScroll = true
 
 ; distance, in screen pixels at 96 DPI, scrolled by an arrow-key press or one
