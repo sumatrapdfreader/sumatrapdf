@@ -1,0 +1,44 @@
+pdf: strip ABCDEF+ subset tags when matching base-14 font names (issue #4655)
+
+A non-embedded Type1 font named YFLGZT+Symbol with Encoding Differences for
+the math-bracket pieces (bracketlefttp/ex/bt) was substituted with Helvetica,
+so matrix square brackets never drew. PDF 1.7 9.6.4 tags subsets with six
+uppercase letters and a plus; strip that before matching the builtin names.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/4655
+---
+diff --git a/source/pdf/pdf-font.c b/source/pdf/pdf-font.c
+index 37e298eea..bf207347e 100644
+--- a/source/pdf/pdf-font.c
++++ b/source/pdf/pdf-font.c
+@@ -155,12 +155,29 @@ static int strcmp_ignore_space(const char *a, const char *b)
+ 	}
+ }
+ 
++/* PDF subset fonts are tagged "ABCDEF+" in front of the original name
++ * (PDF 1.7 9.6.4). A non-embedded subset of a base-14 font, typically
++ * "XXXXXX+Symbol", must still resolve to that builtin; otherwise we
++ * substitute Helvetica and drop Symbol glyph names such as
++ * bracketlefttp used for matrix delimiters (issue #4655). */
++static int is_pdf_subset_prefix(const char *name)
++{
++	int i;
++	for (i = 0; i < 6; ++i)
++		if (name[i] < 'A' || name[i] > 'Z')
++			return 0;
++	return name[6] == '+' && name[7] != 0;
++}
++
+ const char *pdf_clean_font_name(const char *fontname)
+ {
+ 	int i, k;
++	const char *bare = fontname;
++	if (is_pdf_subset_prefix(fontname))
++		bare = fontname + 7;
+ 	for (i = 0; i < (int)nelem(base_font_names); i++)
+ 		for (k = 0; base_font_names[i][k]; k++)
+-			if (!strcmp_ignore_space(base_font_names[i][k], fontname))
++			if (!strcmp_ignore_space(base_font_names[i][k], bare))
+ 				return base_font_names[i][0];
+ 	return fontname;
+ }
