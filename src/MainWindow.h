@@ -142,6 +142,10 @@ struct TouchState {
     POINTS pressRestPos{};
     DWORD pressRestTime = 0;
     bool longPressFired = false;
+    // The engine's first jump is ignored. A second move means this contact is
+    // scrolling, so a later pause must not select (issue #6006).
+    bool panMovedOnce = false;
+    bool panDidScroll = false;
 };
 
 // Which end of a touch text selection a finger is dragging (issue #538).

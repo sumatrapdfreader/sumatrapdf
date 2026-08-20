@@ -1495,12 +1495,13 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 // Everything here logs under "touch:" so a session on a real touchscreen can be
 // read back from the log (run with -log -log-to-file <path>).
 
-// How long a finger has to hold still before it counts as a long press. The
-// gesture engine only reports a contact once it has decided it is a pan, and
-// the finger drifts while settling, so this is measured from when it comes to
-// rest rather than from touch-down -- which leaves a lot less time than the
-// second or so Windows' own press-and-hold takes.
-constexpr DWORD kTouchLongPressMs = 300;
+// How long a finger has to hold still before it counts as a long press.
+// 500ms is the usual touch long-press (Chrome, Android). 300ms was too easy
+// to trip while starting a scroll (issue #6006). The gesture engine only
+// reports a contact once it has decided it is a pan, and the finger drifts
+// while settling, so the GID_PAN path measures from when it comes to rest
+// rather than from touch-down.
+constexpr DWORD kTouchLongPressMs = 500;
 
 // How far from the word the press may land and still count as meaning it.
 constexpr int kTouchLongPressMaxDistDip = 40;
@@ -1527,6 +1528,20 @@ static Str TouchSelHandleName(TouchSelHandle h) {
         default:
             return StrL("none");
     }
+}
+
+// This contact is scrolling, so a later pause must not become a long press
+// (issue #6006).
+static void MarkTouchPanDidScroll(MainWindow* win) {
+    win->touchState.panDidScroll = true;
+    KillTimer(win->hwndCanvas, kTouchLongPressTimerID);
+}
+
+static void ResetTouchLongPress(MainWindow* win) {
+    win->touchState.longPressFired = false;
+    win->touchState.panMovedOnce = false;
+    win->touchState.panDidScroll = false;
+    win->touchLongPressDone = false;
 }
 
 // Dragging a touch selection handle: the other end stays put and the selection
@@ -1637,6 +1652,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
         // a finger that wanders isn't holding still, so it isn't a long press
         int slop = DpiScale(10);
         if (abs(x - win->touchDownPos.x) > slop || abs(y - win->touchDownPos.y) > slop) {
+            // Only kill the timer. Synthesized mouse moves around a touch can
+            // carry a stale position, so this must not mark the contact as a
+            // scroll or a still hold would never select.
             KillTimer(win->hwndCanvas, kTouchLongPressTimerID);
         }
     }
@@ -2035,8 +2053,13 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         logf("touch: down at %d,%d, handles=%d, mouseAction=%d\n", x, y, (int)win->touchSelHandles,
              (int)win->mouseAction);
         // when touch arrives as mouse messages rather than gestures, this is
-        // what turns a held finger into a long press (issue #538)
-        SetTimer(win->hwndCanvas, kTouchLongPressTimerID, kTouchLongPressMs, nullptr);
+        // what turns a held finger into a long press (issue #538). Skip if
+        // WM_POINTER is already timing this contact -- a late synthesized
+        // mouse-down must not restart the hold or un-mark a scroll.
+        if (win->touchPointerId < 0) {
+            ResetTouchLongPress(win);
+            SetTimer(win->hwndCanvas, kTouchLongPressTimerID, kTouchLongPressMs, nullptr);
+        }
     }
 
     // grabbing a touch selection handle drags that end of the selection rather
@@ -4002,6 +4025,14 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 touchState.pressRestPos = gi.ptsLocation;
                 touchState.pressRestTime = (DWORD)GetMessageTime();
                 touchState.longPressFired = false;
+                touchState.panMovedOnce = false;
+                // POINTERDOWN already reset these for this contact. Don't
+                // clear panDidScroll here: the finger may have started
+                // scrolling before the gesture engine sent GF_BEGIN.
+                if (win->touchPointerId < 0) {
+                    touchState.panDidScroll = false;
+                    win->touchLongPressDone = false;
+                }
                 TouchSelHandle h = HitTestTouchSelHandle(win, cpt.x, cpt.y);
                 if (h != TouchSelHandle::None) {
                     // this finger is here to move the selection, not the page
@@ -4026,19 +4057,26 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 DWORD now = (DWORD)GetMessageTime();
                 DWORD restMs = now - touchState.pressRestTime;
                 if (dx > slop || dy > slop) {
-                    // still moving: the hold has to start over from here
+                    // The first jump is the gesture engine deciding this is a
+                    // pan; further movement is the user scrolling, and a pause
+                    // after that must not select (issue #6006).
+                    if (touchState.panMovedOnce) {
+                        MarkTouchPanDidScroll(win);
+                    }
+                    touchState.panMovedOnce = true;
                     touchState.pressRestPos = gi.ptsLocation;
                     touchState.pressRestTime = now;
                     restMs = 0;
                 }
-                if (gi.dwFlags & GF_END) {
-                }
-                if (!touchState.longPressFired && restMs >= kTouchLongPressMs) {
+                if (!touchState.panDidScroll && !touchState.longPressFired && !win->touchLongPressDone &&
+                    restMs >= kTouchLongPressMs) {
                     touchState.longPressFired = true;
                     logf("touch: finger at rest for %dms at %d,%d -> long press\n", (int)restMs, cpt.x, cpt.y);
                     if (OnTouchLongPress(win, cpt.x, cpt.y)) {
                         // the page must not scroll out from under the selection
                         touchState.panStarted = false;
+                        win->touchLongPressDone = true;
+                        win->touchSuppressContextMenu = true;
                         break;
                     }
                 }
@@ -4204,7 +4242,7 @@ static void OnTouchPointer(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
         win->touchDownPos = pt;
         win->touchDownTime = now;
         win->touchPointerId = LOWORD(wp);
-        win->touchLongPressDone = false;
+        ResetTouchLongPress(win);
         logf("touch: pointer down at %d,%d\n", pt.x, pt.y);
         SetTimer(hwnd, kTouchLongPressTimerID, kTouchLongPressMs, nullptr);
         return;
@@ -4223,8 +4261,8 @@ static void OnTouchPointer(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
         }
         int slop = DpiScale(10);
         if (abs(pt.x - win->touchDownPos.x) > slop || abs(pt.y - win->touchDownPos.y) > slop) {
-            // moved: this is a pan, not a press
-            KillTimer(hwnd, kTouchLongPressTimerID);
+            // the finger itself moved: this contact is a scroll, not a press
+            MarkTouchPanDidScroll(win);
         }
         return;
     }
@@ -4417,7 +4455,8 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             // On a device where a hold does arrive as WM_CONTEXTMENU (a pen,
             // or touch with panning off) treat it as a long press too; the
             // gesture path above has usually handled it already.
-            if (!fromKeyboard && (win->lastInputWasTouch || IsMouseMessageFromTouch()) && OnTouchLongPress(win, x, y)) {
+            if (!fromKeyboard && !win->touchState.panDidScroll &&
+                (win->lastInputWasTouch || IsMouseMessageFromTouch()) && OnTouchLongPress(win, x, y)) {
                 return 0;
             }
             OnWindowContextMenu(win, x, y);
@@ -4671,9 +4710,14 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
 
         case kTouchLongPressTimerID: {
             KillTimer(hwnd, kTouchLongPressTimerID);
+            if (win->touchState.panDidScroll || win->touchState.longPressFired) {
+                logf("touch: long press timer ignored (already panned or fired)\n");
+                break;
+            }
             Point dp = win->touchDownPos;
             logf("touch: long press timer fired at %d,%d, mouseAction=%d\n", dp.x, dp.y, (int)win->mouseAction);
             win->touchLongPressDone = true;
+            win->touchState.longPressFired = true;
             if (OnTouchLongPress(win, dp.x, dp.y)) {
                 // The press selects the word and stops there. Carrying straight
                 // on into a drag looks like a good idea but the finger is never
