@@ -4409,6 +4409,21 @@ static Str NormalizeCommentNewlinesTemp(Str s) {
     return res;
 }
 
+// Acrobat hover tooltip for a form field is /TU. pdf_annot_field_label also
+// falls back to /T (the field name) and "Unnamed", which are not tooltips.
+// must be called inside fz_try
+static Str WidgetTooltipTemp(fz_context* ctx, pdf_annot* annot) {
+    pdf_obj* tu = pdf_dict_get_inheritable(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(TU));
+    if (!tu) {
+        return {};
+    }
+    const char* s = pdf_to_text_string(ctx, tu);
+    if (!s || !s[0]) {
+        return {};
+    }
+    return s;
+}
+
 // Hover tip for an annotation: author and/or contents (issue #5329).
 // FreeText already draws its contents on the page, so the tip is just the author.
 // must be called inside fz_try
@@ -4416,7 +4431,6 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     fz_rect rect = pdf_bound_annot(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
     Str contents = NormalizeCommentNewlinesTemp(pdf_annot_contents(ctx, annot));
-    Str label = pdf_annot_field_label(ctx, annot);
     Str author;
     if (pdf_annot_has_author(ctx, annot)) {
         author = pdf_annot_author(ctx, annot);
@@ -4429,18 +4443,17 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     }
 
     Str s;
-    if (tp == PDF_ANNOT_WIDGET) {
-        s = contents ? contents : label;
-    } else if (tp == PDF_ANNOT_FREE_TEXT) {
+    if (tp == PDF_ANNOT_FREE_TEXT) {
         s = author ? author : StrL("Anonymous");
     } else if (author && contents) {
         s = str::JoinTemp(author, StrL("\n"), contents);
     } else if (contents) {
         s = contents;
-    } else if (author) {
-        s = author;
     } else {
-        s = label;
+        s = author;
+    }
+    if (!s) {
+        return nullptr;
     }
     return NewFzComment(s, pageNo, ToRectF(rect));
 }
@@ -4454,8 +4467,6 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         contents = str::DupTemp(Str(contents.s, 128));
     }
     bool isContentsEmpty = !contents;
-    Str label = pdf_annot_field_label(ctx, annot); // don't free
-    bool isLabelEmpty = !label;
     Str author;
     if (pdf_annot_has_author(ctx, annot)) {
         author = pdf_annot_author(ctx, annot);
@@ -4463,12 +4474,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
             author = {};
         }
     }
-    int flags = pdf_annot_field_flags(ctx, annot);
-    bool isEmpty = isContentsEmpty && isLabelEmpty && !author;
-
-    // const char* tpStr = pdf_string_from_annot_type(ctx, tp);
-    //  logf("MakePageElementCommentsFromAnnotations: annot %d '%s', contents: '%s', label: '%s'\n", tp, tpStr,
-    //  contents, abel);
+    bool isEmpty = isContentsEmpty && !author;
 
     if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
         logf("found file attachment annotation\n");
@@ -4501,16 +4507,25 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         return;
     }
 
-    if (tp == PDF_ANNOT_FREE_TEXT || (!isEmpty && tp != PDF_ANNOT_WIDGET)) {
-        auto* comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
-        comments.Append(comment);
+    // Acrobat hover tooltip for a form field is /TU. Widgets live on
+    // page->widgets, not page->annots, and pdfcomment/hyperref buttons are
+    // usually read-only — skipping those left no tip at all (issue #2083).
+    if (tp == PDF_ANNOT_WIDGET) {
+        Str tu = WidgetTooltipTemp(ctx, annot);
+        if (!tu) {
+            return;
+        }
+        fz_rect rect = pdf_bound_annot(ctx, annot);
+        if (fz_is_empty_rect(rect)) {
+            return;
+        }
+        comments.Append(NewFzComment(tu, pageNo, ToRectF(rect)));
         return;
     }
 
-    if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
-        bool isReadOnly = flags & PDF_FIELD_IS_READ_ONLY;
-        if (!isReadOnly) {
-            auto* comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+    if (tp == PDF_ANNOT_FREE_TEXT || !isEmpty) {
+        auto* comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+        if (comment) {
             comments.Append(comment);
         }
     }
@@ -4531,6 +4546,15 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
 
     pdf_annot* annot;
     for (annot = pdf_first_annot(ctx, pdfpage); annot; annot = pdf_next_annot(ctx, annot)) {
+        fz_try(ctx) {
+            RebuildCommentsFromAnnotationsInner(ctx, annot, pageNo, comments);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+    }
+    // form widgets are a separate list from markup annotations
+    for (annot = pdf_first_widget(ctx, pdfpage); annot; annot = pdf_next_widget(ctx, annot)) {
         fz_try(ctx) {
             RebuildCommentsFromAnnotationsInner(ctx, annot, pageNo, comments);
         }
