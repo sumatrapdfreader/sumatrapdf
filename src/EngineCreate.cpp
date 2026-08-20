@@ -67,11 +67,43 @@ static void OnCbxCopyProgress(CbxCopyProgressState* s, file::CopyProgress* p) {
     }
 }
 
+constexpr i64 kCbxNetworkLoadInMemoryMax = 32LL * 1024 * 1024;
+
+// Network-drive cbx under 32 MB: one sequential read into RAM, then extract
+// pages from those bytes. Avoids a local cache copy and the per-page re-open
+// over the wire. On failure the caller falls through to the cache-copy path.
+static EngineBase* MaybeCreateCbxFromMemory(Str path) {
+    if (!path::IsOnNetworkDrive(path) || IsStressTesting()) {
+        return nullptr;
+    }
+    i64 fileSize = file::GetSize(path);
+    if (fileSize <= 0 || fileSize > kCbxNetworkLoadInMemoryMax) {
+        return nullptr;
+    }
+    auto timeStart = TimeGet();
+    Str data = file::ReadFile(path);
+    if (!data) {
+        logf("MaybeCreateCbxFromMemory: ReadFile('%s') failed\n", path);
+        return nullptr;
+    }
+    EngineBase* engine = CreateEngineCbxFromData(data);
+    str::Free(data);
+    if (!engine) {
+        logf("MaybeCreateCbxFromMemory: CreateEngineCbxFromData('%s') failed\n", path);
+        return nullptr;
+    }
+    engine->SetFilePath(path);
+    logf("MaybeCreateCbxFromMemory: loaded '%s' (%lld bytes) in %.2f ms\n", path, (long long)fileSize,
+         TimeSinceInMs(timeStart));
+    return engine;
+}
+
 // If `path` is on a network drive and the local cache dir is not, copy
 // it into a deterministically named file under <dataDir>/cbx-cache and
-// return the cache path. On cache hit we bump the access time so the
-// stale-files sweep in DeleteStaleFilesAsync() keeps the file warm. Any
-// failure (copy error, cache dir unavailable, ...) returns nullptr and
+// return the cache path. Files under 32 MB are loaded in memory instead
+// (see MaybeCreateCbxFromMemory). On cache hit we bump the access time so
+// the stale-files sweep in DeleteStaleFilesAsync() keeps the file warm.
+// Any failure (copy error, cache dir unavailable, ...) returns nullptr and
 // the caller falls back to opening the original file directly.
 static TempStr MaybeCopyCbxToLocalCache(Str path) {
     if (!path::IsOnNetworkDrive(path)) {
@@ -275,10 +307,14 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
 
     if (IsEngineCbxSupportedFileType(kind)) {
         // reading a cbx straight off a network drive is painfully slow
-        // (lazy-load re-opens the file for every page and even eager-load
-        // reads the whole archive over the wire). Copy it to a local
-        // cache once and load from there; FilePath() still reports the
-        // user's original path so file history / bookmarks are unchanged.
+        // (lazy-load re-opens the file for every page). Files under 32 MB
+        // are read once into memory; larger ones are copied to a local
+        // cache. FilePath() still reports the user's original path so file
+        // history / bookmarks are unchanged.
+        engine = MaybeCreateCbxFromMemory(path);
+        if (engine) {
+            return engine;
+        }
         TempStr realPath = MaybeCopyCbxToLocalCache(path);
         engine = CreateEngineCbxFromFile(path, pwdUI, contentHintKind, realPath);
         return engine;

@@ -52,7 +52,7 @@ struct Archive {
     Format format = Format::Unknown;
 
     bool Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExtractProgressCb& cbProgress);
-    bool OpenFromData(Str data);
+    bool OpenFromData(Str data, bool eagerLoad = true);
 
     Vec<FileInfo*> const& GetFileInfos();
 
@@ -73,6 +73,8 @@ struct Archive {
     Vec<FileInfo*> fileInfos_;
 
     Str archivePath_;
+    // compressed bytes when opened from memory; kept so we can re-open for lazy extract
+    Str archiveData_;
 
     // only set when we loaded file infos using unrar.dll fallback
     Str rarFilePath_;

@@ -1510,9 +1510,9 @@ static void ShowNotValidInstallerError() {
 }
 
 // delete locally cached copies of cbx files that haven't been opened in a
-// while. We cache network-drive cbx archives under <data>/cbx-cache/ to
-// avoid slow re-reads; they're pure cache so evicting cold entries is
-// safe.
+// while. Network-drive cbx archives over 32 MB are copied under
+// <data>/cbx-cache/ to avoid slow re-reads; they're pure cache so evicting
+// cold entries is safe.
 static void DeleteStaleCbxCacheFiles() {
     TempStr dataDir = GetSumatraDataDirTemp();
     if (!dataDir) {

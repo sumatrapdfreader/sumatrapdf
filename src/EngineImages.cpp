@@ -2811,11 +2811,11 @@ EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* f
 }
 
 EngineBase* EngineCbx::CreateFromData(Str data) {
-    // libarchive inside OpenArchiveFromData tries every container it
-    // knows (zip/rar/7z/tar/...) in one pass, so a single call replaces
-    // the old try-each-format cascade.
-    Archive* archive = OpenArchiveFromData(data);
-    if (!archive) {
+    // libarchive auto-detects the container. Keep the compressed bytes and
+    // extract pages on demand — uncompressed size can far exceed the file.
+    Archive* archive = new Archive();
+    if (!archive->OpenFromData(data, /*eagerLoad=*/false)) {
+        delete archive;
         return nullptr;
     }
     EngineCbx* engine = new EngineCbx(archive);

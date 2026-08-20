@@ -11,7 +11,7 @@ SumatraPDF can open comic-book archives and folders of images as multi-page docu
 | Image folder        | open a directory of images (each file is a page)                                                                     |
 | Single image        | PNG, JPEG, WebP, AVIF, HEIC, GIF (including animation), TIFF, and [other image types](Supported-document-formats.md) |
 
-Encrypted `.cbz` / `.cbr` files are supported (password prompt when needed). Archives opened from a **network drive** may be copied into a local cache (`cbx-cache` under the [settings data directory](How-we-store-settings.md)) so page turns stay fast. Clear that cache with **Delete Cached Files** in the [command palette](Command-Palette.md) (`CmdDeleteCachedFiles`).
+Encrypted `.cbz` / `.cbr` files are supported (password prompt when needed). Archives opened from a **network drive** that are 32 MB or smaller are loaded into memory; larger ones may be copied into a local cache (`cbx-cache` under the [settings data directory](How-we-store-settings.md)) so page turns stay fast. Clear that cache with **Delete Cached Files** in the [command palette](Command-Palette.md) (`CmdDeleteCachedFiles`).
 
 Document properties (`Ctrl + D`) for comic archives list image files and, where present, EXIF and ComicInfo / ComicBookInfo metadata.
 

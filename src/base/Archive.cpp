@@ -70,6 +70,7 @@ Archive::~Archive() {
         free((void*)fi->data);
     }
     str::Free(archivePath_);
+    str::Free(archiveData_);
     str::Free(password);
     ArenaDelete(a);
 }
@@ -281,26 +282,68 @@ static struct archive* OpenLibarchiveFile(Str path, Str password) {
     return nullptr;
 }
 
-bool Archive::OpenFromData(Str data) {
+static struct archive* OpenLibarchiveMemory(Str data, Str password) {
+    if (!data) {
+        return nullptr;
+    }
+    struct archive* a = NewLibarchiveReader(password);
+    if (archive_read_open_memory(a, data.s, (size_t)data.len) == ARCHIVE_OK) {
+        return a;
+    }
+    archive_read_free(a);
+    return nullptr;
+}
+
+static struct archive* OpenLibarchiveSource(Archive* ar) {
+    if (ar->archiveData_) {
+        return OpenLibarchiveMemory(ar->archiveData_, ar->password);
+    }
+    if (ar->archivePath_) {
+        return OpenLibarchiveFile(ar->archivePath_, ar->password);
+    }
+    return nullptr;
+}
+
+// eagerLoad true (the default, used by ebooks): decompress every entry now,
+// then drop the source bytes. False: keep archiveData_ and extract pages
+// later, same as opening a file with lazy load.
+bool Archive::OpenFromData(Str data, bool eagerLoad) {
     if (len(data) == 0) {
         return false;
     }
 
-    struct archive* a = NewLibarchiveReader(password);
-    int r = archive_read_open_memory(a, data.s, (size_t)data.len);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
+    str::Free(archiveData_);
+    archiveData_ = str::Dup(data);
+    if (!archiveData_) {
         return false;
     }
-    // no file path to re-open from, so load all file data now; no
-    // progress reporting on this path.
+
+    // tar archives can't seek, so we have to eager-load even when the
+    // caller didn't ask for it.
+    FileType ft = GuessFileTypeFromData(archiveData_);
+    if (ft == FileType::Tar || ft == FileType::Cbt) {
+        eagerLoad = true;
+    }
+
+    struct archive* a = OpenLibarchiveMemory(archiveData_, password);
+    if (!a) {
+        str::Free(archiveData_);
+        archiveData_ = {};
+        return false;
+    }
     ArchiveExtractProgressCb emptyCb;
-    format = FormatFromArchive(a);
-    bool ok = ParseEntries(a, /*eagerLoad=*/true, emptyCb);
+    bool ok = ParseEntries(a, eagerLoad, emptyCb);
+    if (ok) {
+        format = FormatFromArchive(a);
+    }
     if (archive_read_has_encrypted_entries(a) > 0) {
         isEncrypted = true;
     }
     archive_read_free(a);
+    if (!ok || eagerLoad) {
+        str::Free(archiveData_);
+        archiveData_ = {};
+    }
     return ok;
 }
 
@@ -389,14 +432,14 @@ Archive::FileInfo* Archive::GetFileDataById(int fileId) {
 
 void Archive::LoadFileDataByIdLibarchive(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
-    if (!archivePath_) {
-        fileInfo->failed = true;
-        return;
-    }
-
-    // re-open the archive and skip to the right entry
-    struct archive* a = OpenLibarchiveFile(archivePath_, password);
+    // re-open the archive (from the file or from kept in-memory bytes)
+    // and skip to the right entry
+    struct archive* a = OpenLibarchiveSource(this);
     if (!a) {
+        if (!archivePath_ && !archiveData_) {
+            fileInfo->failed = true;
+            return;
+        }
         // Transient I/O (sleep, network drop). Leave failed=false so
         // the next GetFileDataById retries.
         return;
@@ -461,11 +504,7 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
         return GetFileDataPartByIdUnrarDll(fileId, sizeHint);
     }
 
-    if (!archivePath_) {
-        return {};
-    }
-
-    struct archive* a = OpenLibarchiveFile(archivePath_, password);
+    struct archive* a = OpenLibarchiveSource(this);
     if (!a) {
         return {};
     }
@@ -518,7 +557,7 @@ Archive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgr
 }
 
 // Open from in-memory data. libarchive auto-detects the container (zip/rar/
-// 7z/tar/etc.). Always eager-loads (can't re-open data); no progress reporting.
+// 7z/tar/etc.). Eager-loads by default (ebooks want every member now).
 Archive* OpenArchiveFromData(Str data) {
     auto* archive = new Archive();
     if (!archive->OpenFromData(data)) {
