@@ -149,6 +149,7 @@ import { testit as issue5512 } from "./issue-5512.ts";
 
 export const tests: NamedTest[] = [
   ["issue-5972", issue5972],
+  ["issue-5989", issue5989],
 
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
@@ -281,7 +282,6 @@ export const tests: NamedTest[] = [
   ["issue-5984", issue5984],
   ["issue-5979", issue5979],
   ["issue-5988", issue5988],
-  ["issue-5989", issue5989],
   ["issue-5995", issue5995],
   ["issue-5997", issue5997],
   ["issue-4494", issue4494],

@@ -10363,7 +10363,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdScreenshot:
-            TakeScreenshots();
+            TakeScreenshots(win->hwndFrame);
             break;
 
         case CmdSetScreenshotHotkey:

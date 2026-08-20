@@ -18,4 +18,4 @@ struct ScreenshotHost {
 
 extern ScreenshotHost gScreenshotHost;
 
-void TakeScreenshots();
+void TakeScreenshots(HWND hwndRestore = nullptr);

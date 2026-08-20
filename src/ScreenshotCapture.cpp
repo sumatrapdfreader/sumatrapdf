@@ -56,7 +56,7 @@ struct CapturedScreenshot {
 
 struct ScreenshotOverlayData {
     Vec<CapturedScreenshot> captures;
-    HWND hwndForeground = nullptr;
+    HWND hwndRestore = nullptr;
     int selected = 0; // index of currently selected (hovered/arrow-keyed)
     int cols = 0;
     int rows = 0;
@@ -1002,14 +1002,14 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 // Destroying the picker directly leaves its UI thread without keyboard focus.
 // Return cancellation to the window that was active before the picker opened.
 static void CancelScreenshotOverlay(HWND hwnd, ScreenshotOverlayData* data) {
-    HWND hwndForeground = data->hwndForeground;
+    HWND hwndRestore = data->hwndRestore;
     DestroyWindow(hwnd);
-    if (!hwndForeground || !IsWindow(hwndForeground)) {
+    if (!hwndRestore || !IsWindow(hwndRestore)) {
         return;
     }
-    SetForegroundWindow(hwndForeground);
-    if (GetWindowThreadProcessId(hwndForeground, nullptr) == GetCurrentThreadId()) {
-        SetFocus(hwndForeground);
+    SetForegroundWindow(hwndRestore);
+    if (GetWindowThreadProcessId(hwndRestore, nullptr) == GetCurrentThreadId()) {
+        SetFocus(hwndRestore);
     }
 }
 
@@ -1120,15 +1120,17 @@ static void RegisterScreenshotOverlayClass() {
 
 // Captures every eligible window plus the desktop, then puts up the picker
 // overlay. Choosing one opens it in the image editor.
-void TakeScreenshots() {
+void TakeScreenshots(HWND hwndRestore) {
     RegisterScreenshotOverlayClass();
 
-    // Remember the foreground window and capture screenshots before creating
-    // our overlay window to avoid disturbing what's on screen
-    HWND hwndForeground = GetForegroundWindow();
+    // Menu commands supply their frame; a global hotkey restores the window
+    // that was in the foreground when it fired.
+    if (!hwndRestore) {
+        hwndRestore = GetForegroundWindow();
+    }
 
     auto* data = new ScreenshotOverlayData();
-    data->hwndForeground = hwndForeground;
+    data->hwndRestore = hwndRestore;
     CaptureAllScreenshots(data, nullptr);
 
     int screenW = GetSystemMetrics(SM_CXSCREEN);
@@ -1155,10 +1157,10 @@ void TakeScreenshots() {
 
     // Select the previously active window's thumbnail, or first if not found
     data->selected = 0;
-    if (hwndForeground) {
+    if (hwndRestore) {
         int n = len(data->captures);
         for (int i = 0; i < n; i++) {
-            if (data->captures[i].srcHwnd == hwndForeground) {
+            if (data->captures[i].srcHwnd == hwndRestore) {
                 data->selected = i;
                 break;
             }

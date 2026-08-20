@@ -48,6 +48,8 @@ export async function testit(): Promise<void> {
 
   const { proc, client, frame } = await launchControlled(["-appdata", appData]);
   try {
+    await waitForDocumentFocus(frame);
+
     sendCommand(frame, cmdId("CmdScreenshot"));
     const overlay = await waitForTopWindow(proc.pid!, SCREENSHOT_OVERLAY_CLASS);
     if (!overlay) {
