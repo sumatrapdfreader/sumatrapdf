@@ -73,7 +73,7 @@ Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.c
 
 [Uninstalling SumatraPDF](Uninstalling-SumatraPDF.md)
 
-[Portable vs installer](SumatraPDF-portable.md) (through 3.6: `libmupdf.dll`)
+[Portable vs installer](SumatraPDF-portable.md)
 
 :columns
 

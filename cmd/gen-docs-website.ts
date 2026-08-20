@@ -104,6 +104,11 @@ async function main() {
     die(`sumatra-website must be on master (currently '${branch}')`);
   }
 
+  const dirty = (await runGitInDir(websiteDir, "status", "--porcelain", "--", ".")).trim();
+  if (dirty) {
+    die(`sumatra-website must be clean (no uncommitted changes):\n${dirty}`);
+  }
+
   try {
     const pullOut = await runGitInDir(websiteDir, "pull");
     if (pullOut.trim()) {
