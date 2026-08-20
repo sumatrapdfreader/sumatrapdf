@@ -5032,17 +5032,36 @@ static Annotation* FindMatchingAnnotation(WindowTab* tab, const SavedAnnotSel& k
     return nullptr;
 }
 
-bool SaveAnnotationsToExistingFile(WindowTab* tab) {
-    if (!tab) {
-        return false;
+// Returns the current engine only after proving that tab still belongs to a live window.
+// Modal UI can dispatch messages that close the tab or replace its engine.
+static EngineBase* GetLiveTabEngine(WindowTab* tab, MainWindow** winOut) {
+    if (winOut) {
+        *winOut = nullptr;
+    }
+    MainWindow* win = FindMainWindowByTab(tab);
+    if (!win) {
+        return nullptr;
     }
     DisplayModel* dm = tab->AsFixed();
-    if (!dm) {
-        return false;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (engine && winOut) {
+        *winOut = win;
     }
-    EngineBase* engine = dm->GetEngine();
+    return engine;
+}
+
+bool SaveAnnotationsToExistingFile(WindowTab* tab) {
+    MainWindow* win = nullptr;
+    EngineBase* engine = GetLiveTabEngine(tab, &win);
     if (!engine) {
         return false;
+    }
+    if (win->CurrentTab() != tab) {
+        SelectTabInWindow(tab);
+        engine = GetLiveTabEngine(tab, &win);
+        if (!engine || win->CurrentTab() != tab) {
+            return false;
+        }
     }
     Str path = engine->FilePath();
     tab->ignoreNextAutoReload = true;
@@ -5053,14 +5072,14 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
         tab->ignoreNextAutoReload = false;
         return false;
     }
-    ShowSavedAnnotationsNotification(tab->win->hwndCanvas, path);
+    ShowSavedAnnotationsNotification(win->hwndCanvas, path);
 
     // Capture selection before the engine (and Annotation*) is torn down.
     SavedAnnotSel sel = CaptureSelectedAnnotation(tab);
     // have to re-open edit annotations window because the current has
     // a reference to deleted Engine
     bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
-    ReloadDocument(tab->win, false);
+    ReloadDocument(win, false);
     // Re-arm: the save notifies the file watcher, which schedules an auto-reload.
     // We already reloaded above; skip that one watcher event so we do not open
     // the PDF twice (and race background work against a just-rewritten file).
@@ -5087,9 +5106,21 @@ static void InvokeInverseSearch(WindowTab* tab) {
 
 // returns true if saved successully
 bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
-    if (!tab) {
+    MainWindow* win = nullptr;
+    EngineBase* engine = GetLiveTabEngine(tab, &win);
+    if (!engine) {
         return false;
     }
+    if (win->CurrentTab() != tab) {
+        SelectTabInWindow(tab);
+        engine = GetLiveTabEngine(tab, &win);
+        if (!engine || win->CurrentTab() != tab) {
+            return false;
+        }
+    }
+    EngineBase* engineBeforeDialog = engine;
+    engineBeforeDialog->AddRef();
+    AutoCall releaseEngine(SafeEngineRelease<EngineBase>, &engineBeforeDialog);
     WCHAR dstFileName[MAX_PATH + 1]{};
 
     OPENFILENAME ofn{};
@@ -5101,7 +5132,6 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
     WCHAR* fileFilterW = CWStrTemp(fileFilterStr);
 
-    EngineBase* engine = tab->AsFixed()->GetEngine();
     TempStr srcFileName = str::DupTemp(engine->FilePath());
     // Seed the dialog with "foo Copy.pdf" so Save doesn't overwrite the source
     // unless the user deliberately picks the original name.
@@ -5112,7 +5142,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     wstr::BufSet(WStr(dstFileName, dimof(dstFileName)), suggestedW);
 
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = tab->win->hwndFrame;
+    ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilterW;
@@ -5124,6 +5154,14 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
+        return false;
+    }
+
+    // The file dialog pumps messages. The original tab might have been closed,
+    // switched away from, or reloaded with a different engine while it was open.
+    engine = GetLiveTabEngine(tab, &win);
+    if (!engine || engine != engineBeforeDialog || win->CurrentTab() != tab ||
+        !str::Eq(engine->FilePath(), srcFileName)) {
         return false;
     }
     TempStr dstFilePath = ToUtf8Temp(dstFileName);
@@ -5145,7 +5183,6 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     // a reference to deleted Engine
     bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
 
-    auto* win = tab->win;
     UpdateTabFileDisplayStateForTab(tab);
     CloseDocumentInCurrentTab(win, true, true);
     HwndSetFocus(win->hwndFrame);
@@ -5280,17 +5317,28 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
     }
     tab->askedToSaveAnnotations = true;
     MainWindow* win = tab->win;
-    auto path = dm->GetFilePath();
-    auto choice = ShouldSaveAnnotationsDialog(win->hwndFrame, path);
-    // the dialog pumps messages; during that, the window can be destroyed
-    // (e.g. WM_CLOSE from plugin host) which frees win and tab
-    if (!IsMainWindowValid(win)) {
+    EngineBase* engineBeforeDialog = engine;
+    engineBeforeDialog->AddRef();
+    AutoCall releaseEngine(SafeEngineRelease<EngineBase>, &engineBeforeDialog);
+    auto choice = ShouldSaveAnnotationsDialog(win->hwndFrame, dm->GetFilePath());
+    // The dialog pumps messages; validate tab itself, not just its former window.
+    // A tab can be closed or its engine replaced while the window stays alive.
+    win = FindMainWindowByTab(tab);
+    if (!win) {
         return true;
+    }
+    engine = tab->GetEngine();
+    if (!engine || engine != engineBeforeDialog) {
+        tab->askedToSaveAnnotations = false;
+        return false;
     }
     switch (choice) {
         case SaveChoice::Discard:
             return true;
         case SaveChoice::SaveNew: {
+            if (!EngineHasUnsavedAnnotations(engine)) {
+                return true;
+            }
             bool didSave = SaveAnnotationsToMaybeNewPdfFile(tab);
             if (!didSave) {
                 tab->askedToSaveAnnotations = false;
@@ -5298,7 +5346,10 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
             return didSave;
         }
         case SaveChoice::SaveExisting: {
-            // const char* path = engine->FileName();
+            if (!EngineHasUnsavedAnnotations(engine)) {
+                return true;
+            }
+            Str path = engine->FilePath();
             ShowErrorData data{tab, path};
             auto fn = MkFunc1(ShowSaveAnnotationError, &data);
             bool didSave = EngineMupdfSaveUpdated(engine, nullptr, fn);
