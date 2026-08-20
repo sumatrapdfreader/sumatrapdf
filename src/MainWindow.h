@@ -468,6 +468,7 @@ struct MainWindow {
             bool isFullScreen = false;
             bool tabsVisible = false;
             bool isToolbarVisible = false;
+            bool isToolbarOverlay = false;
             bool tocVisible = false;
             bool showFavorites = false;
             // full-window Favorites tab vs. sidebar panel: different geometry

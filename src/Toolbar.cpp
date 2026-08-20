@@ -828,8 +828,13 @@ void ShowOrHideToolbar(MainWindow* win) {
         if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
             ToolbarFocusFrame(win);
         }
+        if (win->hwndToolbar) {
+            ShowWindow(win->hwndToolbar, SW_HIDE);
+        }
     }
-    ScheduleUiUpdate(win);
+    // overlay <-> hide does not flip isToolbarVisible, so RelayoutFrame would
+    // skip without this (sidebar stays at the overlay y, toolbar HWND stays)
+    ScheduleUiUpdate(win, kUiForceRelayout | kUiRelayout);
     if (enteredOverlay) {
         ScheduleOverlayHide(win);
     }
