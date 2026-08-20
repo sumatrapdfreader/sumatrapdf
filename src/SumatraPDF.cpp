@@ -2304,11 +2304,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // SetInitialViewSettings() has just taken the direction from the
-            // engine. A document that states its own (an EPUB with
-            // page-progression-direction) keeps it: a remembered `false` is
-            // indistinguishable from "never chosen", so it must not overrule
-            // the document. Only a remembered `true` is restored on top.
-            // Anything that says nothing falls back to the manga-mode default.
+            // engine. A document that states its own (PDF ViewerPreferences
+            // /Direction, or an EPUB with page-progression-direction) keeps
+            // it: a remembered `false` is indistinguishable from "never
+            // chosen", so it must not overrule the document. Only a
+            // remembered `true` is restored on top. Anything that says
+            // nothing falls back to the manga-mode default.
             bool declared = dm->GetEngine()->preferredLayout.r2lDeclared;
             if (fs && (fs->displayR2L || !declared)) {
                 dm->SetDisplayR2L(fs->displayR2L);

@@ -555,9 +555,10 @@ static void AppendFileType(str::Builder& out, Str path) {
     AppendProp(out, _TRA("File Type:"), name);
 }
 
-// Which way the pages run, and where that came from. An EPUB can state it with
-// page-progression-direction; for everything else it's the manga-mode default
-// or the user's own toggle (issue #1264).
+// Which way the pages run, and where that came from. A PDF can state it with
+// ViewerPreferences /Direction; an EPUB with page-progression-direction.
+// Otherwise it's the manga-mode default or the user's own toggle
+// (issues #1264, #2022).
 // Not shown for a standalone image (no page sequence) or a one-page document
 // that neither declares a direction nor has had manga mode toggled (#5950).
 static bool ShouldShowReadingDirection(DisplayModel* dm) {

@@ -468,7 +468,7 @@ const comicBookUI: Field[] = [
     "CbxMangaMode",
     Bool,
     false,
-    "if true, documents that don't state their own reading direction default to manga mode, i.e. right to left. A document that states a direction (e.g. an EPUB with page-progression-direction) is shown the way it asks for",
+    "if true, documents that don't state their own reading direction default to manga mode, i.e. right to left. A document that states a direction (PDF ViewerPreferences/Direction, or an EPUB with page-progression-direction) is shown the way it asks for",
   ),
   field("WindowBgCol", Color, "", "if given, sets the canvas background color for comic book files").ver("3.7"),
   field(

@@ -128,8 +128,8 @@ struct ComicBookUI {
     Size pageSpacing;
     // if true, documents that don't state their own reading direction
     // default to manga mode, i.e. right to left. A document that states a
-    // direction (e.g. an EPUB with page-progression-direction) is shown
-    // the way it asks for
+    // direction (PDF ViewerPreferences/Direction, or an EPUB with
+    // page-progression-direction) is shown the way it asks for
     bool cbxMangaMode;
     // if given, sets the canvas background color for comic book files
     ParsedColor windowBgCol;
@@ -1202,16 +1202,17 @@ static const StructInfo gComicBookUIInfo = {
     "\0DefaultZoom\0LandscapeAsSpread",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical distance "
     "between two pages in facing and book view modes\0if true, documents that don't state their own reading direction "
-    "default to manga mode, i.e. right to left. A document that states a direction (e.g. an EPUB with "
-    "page-progression-direction) is shown the way it asks for\0if given, sets the canvas background color for comic "
-    "book files\0if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). "
-    "Useful for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)\0if true, "
-    "absolute zoom never makes a page taller than the window (each page is capped at Fit Height)\0default page layout "
-    "for comic books; empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book "
-    "view, continuous, continuous facing, continuous book view\0default zoom for comic books; empty uses the global "
-    "DefaultZoom. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%\0if "
-    "true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row instead of "
-    "pairing with the next page. For comics that store double-page spreads as one image (issues #1324, #872)",
+    "default to manga mode, i.e. right to left. A document that states a direction (PDF ViewerPreferences/Direction, "
+    "or an EPUB with page-progression-direction) is shown the way it asks for\0if given, sets the canvas background "
+    "color for comic book files\0if true, absolute zoom never makes a page wider than the window (each page is capped "
+    "at Fit Width). Useful for comics/manga with double-page spreads that are much wider than regular pages (issue "
+    "#2197)\0if true, absolute zoom never makes a page taller than the window (each page is capped at Fit "
+    "Height)\0default page layout for comic books; empty uses the global DefaultDisplayMode. valid values: automatic, "
+    "single page, facing, book view, continuous, continuous facing, continuous book view\0default zoom for comic "
+    "books; empty uses the global DefaultZoom. valid values: fit page, fit width, fit height, fit content, shrink to "
+    "fit or percent like 100%\0if true, in facing and book view a landscape page (wider than tall) occupies the whole "
+    "two-page row instead of pairing with the next page. For comics that store double-page spreads as one image "
+    "(issues #1324, #872)",
     false};
 
 static const FieldInfo gImageUIFields[] = {

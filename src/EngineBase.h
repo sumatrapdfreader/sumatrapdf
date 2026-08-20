@@ -69,8 +69,9 @@ struct PageLayout {
     explicit PageLayout(Type t) { type = t; }
     Type type{Type::Single};
     bool r2l = false;
-    // the document stated its reading direction, so r2l is its wish rather
-    // than our default. A remembered setting must not silently overrule it
+    // the document stated its reading direction (PDF /Direction or EPUB
+    // page-progression-direction), so r2l is its wish rather than our default.
+    // A remembered setting must not silently overrule it
     bool r2lDeclared = false;
     bool nonContinuous = false;
 };

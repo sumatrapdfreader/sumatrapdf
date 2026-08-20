@@ -3648,6 +3648,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     return ok;
 }
 
+// Catalog /PageLayout (facing vs book) and /ViewerPreferences /Direction
+// (R2L vs L2R). Direction is a document-stated wish: r2lDeclared keeps a
+// remembered manga-mode "off" from silently overriding it (issue #2022).
 static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     PageLayout layout(PageLayout::Type::Single);
     pdf_document* pdfdoc = pdf_specifics(ctx, doc);
@@ -3691,6 +3694,9 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
         direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
         if (str::Eq(Str(direction), StrL("R2L"))) {
             layout.r2l = true;
+            layout.r2lDeclared = true;
+        } else if (str::Eq(Str(direction), StrL("L2R"))) {
+            layout.r2lDeclared = true;
         }
     }
     fz_catch(ctx) {
