@@ -186,6 +186,9 @@
     <ClInclude Include="..\src\ExifDump.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ExplorerQuickLook.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ExternalViewers.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -734,6 +737,9 @@
     <ClCompile Include="..\src\ExifDump.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ExplorerQuickLook.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ExternalViewers.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -969,9 +975,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Scratch.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ExplorerQuickLook.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Screenshot.cpp">
