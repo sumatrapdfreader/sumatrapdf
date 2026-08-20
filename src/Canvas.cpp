@@ -2366,7 +2366,8 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         SetCanvasCursor(win, IDC_ARROW);
 
         // Ctrl+click on internal link: open in new tab and navigate there
-        bool isInternal = (kindDestinationLaunchURL != kind && kindDestinationLaunchFile != kind);
+        bool isInternal =
+            (kindDestinationLaunchURL != kind && kindDestinationLaunchFile != kind && kindDestinationJsMenu != kind);
         if (IsCtrlPressed() && dest && isInternal && tab->filePath) {
             LoadArgs args(tab->filePath, win);
             args.showWin = true;

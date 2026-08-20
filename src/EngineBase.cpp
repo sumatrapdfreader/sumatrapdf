@@ -21,6 +21,7 @@ Kind kindDestinationAttachment = "launchAttachment";
 Kind kindDestinationLaunchFile = "launchFile";
 Kind kindDestinationDjVu = "destinationDjVu";
 Kind kindDestinationMupdf = "destinationMupdf";
+Kind kindDestinationJsMenu = "jsMenu";
 
 // clang-format off
 static Kind destKinds[] = {
@@ -31,7 +32,8 @@ static Kind destKinds[] = {
     kindDestinationAttachment,
     kindDestinationLaunchFile,
     kindDestinationDjVu,
-    kindDestinationMupdf
+    kindDestinationMupdf,
+    kindDestinationJsMenu
 };
 // clang-format on
 
@@ -82,6 +84,38 @@ Str PageDestination::GetValue2() {
 // (mainly applicable for links of type "LaunchFile" to PDF documents)
 Str PageDestination::GetName2() {
     return name;
+}
+
+PageDestinationJsMenu::PageDestinationJsMenu() {
+    kind = kindDestinationJsMenu;
+    pageNo = -1;
+}
+
+PageDestinationJsMenu::~PageDestinationJsMenu() {
+    str::Free(tooltip);
+}
+
+// Hover text: one menu line per row, skipping "-" separators.
+Str PageDestinationJsMenu::GetValue2() {
+    if (tooltip) {
+        return tooltip;
+    }
+    if (len(items) == 0) {
+        return {};
+    }
+    str::Builder b;
+    for (int i = 0; i < len(items); i++) {
+        Str it = items[i];
+        if (str::Eq(it, StrL("-"))) {
+            continue;
+        }
+        if (!b.IsEmpty()) {
+            b.AppendChar('\n');
+        }
+        b.Append(it);
+    }
+    tooltip = b.TakeStr();
+    return tooltip;
 }
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, Str value) {

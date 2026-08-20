@@ -547,6 +547,47 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
 
+    if (kindDestinationJsMenu == kind) {
+        auto* menuDest = (PageDestinationJsMenu*)dest;
+        if (len(menuDest->items) == 0) {
+            return;
+        }
+        HMENU menu = CreatePopupMenu();
+        if (!menu) {
+            return;
+        }
+        for (int i = 0; i < len(menuDest->items); i++) {
+            Str item = menuDest->items[i];
+            if (str::Eq(item, StrL("-"))) {
+                AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+                continue;
+            }
+            AppendMenuW(menu, MF_STRING, (UINT)(i + 1), CWStrTemp(MenuToSafeStringTemp(item)));
+        }
+        POINT pt{};
+        GetCursorPos(&pt);
+        int cmd =
+            TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+        DestroyMenu(menu);
+        if (cmd < 1 || cmd > len(menuDest->items)) {
+            return;
+        }
+        Str chosen = menuDest->items[cmd - 1];
+        Str url = chosen;
+        int colon = str::IndexOf(chosen, StrL(": "));
+        if (colon >= 0) {
+            url = Str(chosen.s + colon + 2, chosen.len - colon - 2);
+            while (len(url) > 0 && str::IsWs(url.s[0])) {
+                url.s++;
+                url.len--;
+            }
+        }
+        if (IsExternalUrl(url) || str::StartsWithI(url, StrL("ftp://"))) {
+            LaunchURL(url);
+        }
+        return;
+    }
+
     if (kindDestinationLaunchURL == kind) {
         return;
     }

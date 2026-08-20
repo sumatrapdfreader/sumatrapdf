@@ -1558,6 +1558,8 @@ EXPORTS
 
 	pdf_load_stream
 
+	pdf_load_stream_or_string_as_utf8
+
 	pdf_open_raw_stream
 
 	pdf_open_stream

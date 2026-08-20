@@ -513,11 +513,14 @@ bool MacLinkAtPoint(void* document, int pageNo, double x, double y, double zoom,
         link->pageNo = targetPage;
         return true;
     }
+    Kind kind = dest->GetKind();
+    if (kind == kindDestinationJsMenu) {
+        return false;
+    }
     Str value = PageDestGetValue(dest);
     if (!value) {
         return false;
     }
-    Kind kind = dest->GetKind();
     link->kind = kind == kindDestinationLaunchFile ? MacLinkKind::File : MacLinkKind::Url;
     link->value = DupCString(value);
     return link->value != nullptr;

@@ -101,6 +101,7 @@ extern Kind kindDestinationAttachment;
 extern Kind kindDestinationLaunchFile;
 extern Kind kindDestinationDjVu;
 extern Kind kindDestinationMupdf;
+extern Kind kindDestinationJsMenu;
 
 enum class TextExtractionState {
     NotExtracted,
@@ -254,6 +255,17 @@ struct PageDestination : IPageDestination {
 
     Str GetValue2() override;
     Str GetName2() override;
+};
+
+// JavaScript app.popUpMenu items (Altium schematic PDFs, issue #1198).
+struct PageDestinationJsMenu : IPageDestination {
+    StrVec items;
+    Str tooltip;
+
+    PageDestinationJsMenu();
+    ~PageDestinationJsMenu() override;
+
+    Str GetValue2() override;
 };
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, Str value = {});

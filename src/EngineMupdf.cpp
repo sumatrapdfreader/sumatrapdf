@@ -2360,6 +2360,355 @@ static fz_link* MakePushButtonWidgetLinks(fz_context* ctx, pdf_document* doc, pd
     return head;
 }
 
+static void SkipJsWs(const char*& p, const char* end) {
+    while (p < end && str::IsWs(*p)) {
+        p++;
+    }
+}
+
+static bool IsJsIdentStart(char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '$';
+}
+
+static bool IsJsIdentChar(char c) {
+    return IsJsIdentStart(c) || (c >= '0' && c <= '9');
+}
+
+static int JsHexNibble(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+    return -1;
+}
+
+static bool IsJsReservedCallName(Str ident) {
+    return str::Eq(ident, StrL("function")) || str::Eq(ident, StrL("if")) || str::Eq(ident, StrL("for")) ||
+           str::Eq(ident, StrL("while")) || str::Eq(ident, StrL("switch")) || str::Eq(ident, StrL("catch")) ||
+           str::Eq(ident, StrL("with")) || str::Eq(ident, StrL("return")) || str::Eq(ident, StrL("typeof")) ||
+           str::Eq(ident, StrL("void")) || str::Eq(ident, StrL("delete")) || str::Eq(ident, StrL("new")) ||
+           str::Eq(ident, StrL("throw")) || str::Eq(ident, StrL("else")) || str::Eq(ident, StrL("do")) ||
+           str::Eq(ident, StrL("try"));
+}
+
+// Decode one JS '...' or "..." string at p. Advances p past the closing quote.
+static bool ParseJsQuotedString(const char*& p, const char* end, Str* out) {
+    *out = {};
+    if (p >= end || (*p != '"' && *p != '\'')) {
+        return false;
+    }
+    char quote = *p++;
+    str::Builder b;
+    while (p < end && *p != quote) {
+        char c = *p++;
+        if (c != '\\') {
+            b.AppendChar(c);
+            continue;
+        }
+        if (p >= end) {
+            break;
+        }
+        char e = *p++;
+        switch (e) {
+            case 'n':
+                b.AppendChar('\n');
+                break;
+            case 'r':
+                b.AppendChar('\r');
+                break;
+            case 't':
+                b.AppendChar('\t');
+                break;
+            case 'b':
+                b.AppendChar('\b');
+                break;
+            case 'f':
+                b.AppendChar('\f');
+                break;
+            case 'v':
+                b.AppendChar('\v');
+                break;
+            case '0':
+                b.AppendChar('\0');
+                break;
+            case '\\':
+            case '\'':
+            case '"':
+                b.AppendChar(e);
+                break;
+            case 'x': {
+                if (p + 2 > end) {
+                    b.AppendChar(e);
+                    break;
+                }
+                int h1 = JsHexNibble(p[0]);
+                int h2 = JsHexNibble(p[1]);
+                if (h1 < 0 || h2 < 0) {
+                    b.AppendChar(e);
+                    break;
+                }
+                p += 2;
+                b.AppendChar((char)((h1 << 4) | h2));
+                break;
+            }
+            case 'u': {
+                if (p + 4 > end) {
+                    b.AppendChar(e);
+                    break;
+                }
+                int cp = 0;
+                bool ok = true;
+                for (int i = 0; i < 4; i++) {
+                    int h = JsHexNibble(p[i]);
+                    if (h < 0) {
+                        ok = false;
+                        break;
+                    }
+                    cp = (cp << 4) | h;
+                }
+                if (!ok) {
+                    b.AppendChar(e);
+                    break;
+                }
+                p += 4;
+                char utf8[4];
+                int off = 0;
+                str::Utf8Encode(utf8, off, cp);
+                b.Append(Str(utf8, off));
+                break;
+            }
+            default:
+                b.AppendChar(e);
+                break;
+        }
+    }
+    if (p >= end || *p != quote) {
+        return false;
+    }
+    p++;
+    *out = b.TakeStr();
+    return true;
+}
+
+static bool SkipJsNested(const char*& p, const char* end, char open, char close) {
+    if (p >= end || *p != open) {
+        return false;
+    }
+    int depth = 1;
+    p++;
+    while (p < end && depth > 0) {
+        if (*p == '"' || *p == '\'') {
+            Str dummy;
+            if (!ParseJsQuotedString(p, end, &dummy)) {
+                str::Free(dummy);
+                return false;
+            }
+            str::Free(dummy);
+            continue;
+        }
+        if (*p == open) {
+            depth++;
+        } else if (*p == close) {
+            depth--;
+        }
+        p++;
+    }
+    return depth == 0;
+}
+
+// Collect the quoted arguments of app.popUpMenu(...) / app.popUpMenuEx(...).
+static bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
+    int idx = str::IndexOf(js, StrL("popUpMenu"));
+    if (idx < 0) {
+        return false;
+    }
+    const char* p = js.s + idx + 9; // strlen("popUpMenu")
+    const char* end = js.s + len(js);
+    if (p + 2 <= end && p[0] == 'E' && p[1] == 'x') {
+        p += 2;
+    }
+    SkipJsWs(p, end);
+    if (p >= end || *p != '(') {
+        return false;
+    }
+    p++;
+    while (p < end) {
+        SkipJsWs(p, end);
+        if (p >= end) {
+            break;
+        }
+        if (*p == ')') {
+            break;
+        }
+        if (*p == ',') {
+            p++;
+            continue;
+        }
+        if (*p == '[') {
+            if (!SkipJsNested(p, end, '[', ']')) {
+                break;
+            }
+            continue;
+        }
+        if (*p == '"' || *p == '\'') {
+            Str item;
+            if (!ParseJsQuotedString(p, end, &item)) {
+                str::Free(item);
+                break;
+            }
+            items.Append(item);
+            str::Free(item);
+            continue;
+        }
+        p++;
+    }
+    return len(items) > 0;
+}
+
+// First identifier that is followed by '(', skipping JS keywords.
+static Str ExtractJsCallName(Str js) {
+    if (!js) {
+        return {};
+    }
+    const char* p = js.s;
+    const char* end = js.s + len(js);
+    while (p < end) {
+        SkipJsWs(p, end);
+        if (p >= end) {
+            break;
+        }
+        if (!IsJsIdentStart(*p)) {
+            p++;
+            continue;
+        }
+        const char* start = p;
+        p++;
+        while (p < end && IsJsIdentChar(*p)) {
+            p++;
+        }
+        Str ident{start, (int)(p - start)};
+        SkipJsWs(p, end);
+        if (p < end && *p == '(' && !IsJsReservedCallName(ident)) {
+            return ident;
+        }
+    }
+    return {};
+}
+
+static char* LookupNamedJavaScript(fz_context* ctx, pdf_document* doc, Str name) {
+    if (!ctx || !doc || !name) {
+        return nullptr;
+    }
+    pdf_obj* needle = nullptr;
+    char* js = nullptr;
+    fz_var(needle);
+    fz_var(js);
+    fz_try(ctx) {
+        needle = pdf_new_string(ctx, name.s, (size_t)len(name));
+        pdf_obj* found = pdf_lookup_name(ctx, doc, PDF_NAME(JavaScript), needle);
+        if (found) {
+            if (pdf_is_dict(ctx, found)) {
+                found = pdf_dict_get(ctx, found, PDF_NAME(JS));
+            }
+            if (found) {
+                js = pdf_load_stream_or_string_as_utf8(ctx, found);
+            }
+        }
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(ctx, needle);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        js = nullptr;
+    }
+    return js;
+}
+
+// Altium schematic PDFs (and similar) put component metadata on /Link annots
+// whose action is Acrobat JavaScript: either app.popUpMenu("...") inline, or a
+// call to a named ShowCompProps_* function in catalog /Names /JavaScript.
+// MuPDF does not turn JavaScript actions into fz_links (pdf_parse_link_action
+// returns null), and pdf_first_annot skips /Link annots, so walk /Annots.
+// Parse the menu strings without executing JS (issue #1198).
+static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfpage, int pageNo,
+                              Vec<PageElementDestination*>& links) {
+    if (!ctx || !doc || !pdfpage) {
+        return;
+    }
+    pdf_obj* annots = nullptr;
+    int n = 0;
+    fz_matrix ctm{};
+    fz_try(ctx) {
+        fz_rect mediabox;
+        pdf_page_transform(ctx, pdfpage, &mediabox, &ctm);
+        pdf_obj* pageObj = pdf_lookup_page_obj(ctx, doc, pageNo - 1);
+        annots = pdf_dict_get(ctx, pageObj, PDF_NAME(Annots));
+        n = pdf_array_len(ctx, annots);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        char* js = nullptr;
+        fz_rect rect{};
+        fz_var(js);
+        fz_try(ctx) {
+            pdf_obj* annot = pdf_array_get(ctx, annots, i);
+            pdf_obj* subtype = pdf_dict_get(ctx, annot, PDF_NAME(Subtype));
+            if (pdf_name_eq(ctx, subtype, PDF_NAME(Link))) {
+                pdf_obj* action = pdf_dict_get(ctx, annot, PDF_NAME(A));
+                pdf_obj* s = pdf_dict_get(ctx, action, PDF_NAME(S));
+                if (pdf_name_eq(ctx, s, PDF_NAME(JavaScript))) {
+                    pdf_obj* jsObj = pdf_dict_get(ctx, action, PDF_NAME(JS));
+                    if (jsObj) {
+                        js = pdf_load_stream_or_string_as_utf8(ctx, jsObj);
+                        rect = pdf_dict_get_rect(ctx, annot, PDF_NAME(Rect));
+                        rect = fz_transform_rect(rect, ctm);
+                    }
+                }
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            js = nullptr;
+        }
+        if (!js) {
+            continue;
+        }
+        StrVec items;
+        ParseJsPopUpMenuItems(Str(js), items);
+        if (len(items) == 0) {
+            Str name = ExtractJsCallName(Str(js));
+            if (name) {
+                char* namedJs = LookupNamedJavaScript(ctx, doc, name);
+                if (namedJs) {
+                    ParseJsPopUpMenuItems(Str(namedJs), items);
+                    fz_free(ctx, namedJs);
+                }
+            }
+        }
+        fz_free(ctx, js);
+        if (len(items) == 0) {
+            continue;
+        }
+        auto* dest = new PageDestinationJsMenu();
+        dest->items = items;
+        dest->rect = ToRectF(rect);
+        auto* pel = new PageElementDestination(dest);
+        pel->pageNo = pageNo;
+        pel->rect = dest->rect;
+        links.Append(pel);
+    }
+}
+
 static pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* /*doc*/, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
@@ -5008,6 +5357,15 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
             pageInfo->links.Append(pel);
         }
         link = link->next;
+    }
+
+    if (e->pdfdoc && pdfpage) {
+        fz_try(ctx) {
+            AppendJsMenuLinks(ctx, e->pdfdoc, pdfpage, pageNo, pageInfo->links);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
     }
 
     if (!stext) {

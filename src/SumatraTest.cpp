@@ -1316,11 +1316,13 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
         }
         nLinks++;
         Str value = PageDestGetValue(dest);
+        TempStr valueShown = str::ReplaceTemp(value, StrL("\r\n"), StrL("|"));
+        valueShown = str::ReplaceTemp(valueShown, StrL("\n"), StrL("|"));
         RectF src = el->GetRect();
         RectF destRc = PageDestGetRect(dest);
         out.Append(fmt("kind=%s page=%d src=%g,%g,%g,%g dest=%g,%g,%g,%g value=%s\n", Str(dest->GetKind()),
                        PageDestGetPageNo(dest), src.x, src.y, src.dx, src.dy, destRc.x, destRc.y, destRc.dx, destRc.dy,
-                       value));
+                       valueShown));
     }
     if (nLinks == 0) {
         if (exitCodeOut) {
