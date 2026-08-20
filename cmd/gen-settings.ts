@@ -313,6 +313,11 @@ const windowPos: Field[] = [
   field("Dy", Int, 0, "height, in screen pixels"),
 ];
 
+const windowSize: Field[] = [
+  field("Dx", Int, 0, "width, in screen pixels"),
+  field("Dy", Int, 0, "height, in screen pixels"),
+];
+
 const pointPos: Field[] = [
   field("X", Int, 0, "x coordinate, in screen pixels"),
   field("Y", Int, 0, "y coordinate, in screen pixels"),
@@ -1563,6 +1568,10 @@ const globalPrefs: Field[] = [
     windowPos,
     "position/size of the floating find window (see SearchUIFloating)",
   ).structName("Rect"),
+  compactStruct("AnnotationsWindowSize", windowSize, "last-used client size of the annotations window")
+    .structName("Size")
+    .ver("3.7")
+    .internal(),
 
   array("FileStates", fileSettings, "information about opened files (in most recently used order)"),
   array("SessionData", sessionData, "state of the last session, usage depends on RestoreSession").ver("3.1"),

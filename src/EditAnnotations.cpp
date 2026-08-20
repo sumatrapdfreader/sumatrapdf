@@ -403,6 +403,7 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     auto cr = HwndClientRect(hwnd);
     tab->lastEditAnnotsWindowPos.dx = cr.dx;
     tab->lastEditAnnotsWindowPos.dy = cr.dy;
+    gGlobalPrefs->annotationsWindowSize = {cr.dx, cr.dy};
 
     if (tab->selectedAnnotation != nullptr) {
         tab->selectedAnnotation = nullptr;
@@ -1462,6 +1463,9 @@ void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
     if (dx == 0 || dy == 0) {
         return;
     }
+    // Save while the window is live: app shutdown writes settings before it
+    // destroys tabs and their annotation editors.
+    gGlobalPrefs->annotationsWindowSize = {dx, dy};
     HwndInvalidate(hwnd);
     if (false && mainLayout->lastBounds.EqSize(dx, dy)) {
         // avoid un-necessary layout
@@ -1996,24 +2000,27 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     UpdateAnnotationsList(ew);
 
     Rect lastPos = tab->lastEditAnnotsWindowPos;
-    // size our editor window to be the same height as main window
-    int minDy = lastPos.dy;
-    if (minDy == 0) {
-        minDy = 720;
+    Size lastSize = gGlobalPrefs->annotationsWindowSize;
+    if (lastSize.IsEmpty() && !lastPos.IsEmpty()) {
+        lastSize = {lastPos.dx, lastPos.dy};
+    }
+    if (lastSize.IsEmpty()) {
+        lastSize = {520, 720};
+        // size our editor window to be the same height as main window
         // TODO: this is slightly less that wanted
         HWND hwnd = tab->win->hwndCanvas;
         auto rc = HwndClientRect(hwnd);
         if (rc.dy > 0) {
-            minDy = rc.dy;
+            lastSize.dy = rc.dy;
         }
     }
 
     if (lastPos.IsEmpty()) {
-        RelayoutEditAnnotationsWindow(ew, 520, minDy);
+        RelayoutEditAnnotationsWindow(ew, lastSize.dx, lastSize.dy);
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
         ClampEditAnnotationsWindowToWorkArea(ew->hwnd, tab->win->hwndFrame);
     } else {
-        RelayoutEditAnnotationsWindow(ew, lastPos.dx, minDy);
+        RelayoutEditAnnotationsWindow(ew, lastSize.dx, lastSize.dy);
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)
         Rect r = HwndWindowRect(ew->hwnd);
