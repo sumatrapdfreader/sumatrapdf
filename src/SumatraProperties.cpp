@@ -16,7 +16,6 @@
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
-#include "AppSettings.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -960,8 +959,9 @@ static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
     Rect rc = HwndWindowRect(hwnd);
     Point pos = {rc.x, rc.y};
     if (pos != w->initialPos) {
+        // Only stash the point. SaveSettings() walks every tab and can re-enter
+        // IsDocLoaded while CloseDocumentInCurrentTab has already cleared win->ctrl.
         gGlobalPrefs->propWinPos = pos;
-        SaveSettings();
     }
 }
 
