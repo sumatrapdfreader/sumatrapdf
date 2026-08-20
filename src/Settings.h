@@ -1851,7 +1851,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, highlightFormFields), SettingType::Bool, true},
     {offsetof(GlobalPrefs, clickEdgeToTurnPage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, disableLinks), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, explorerQuickLook), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, explorerQuickLook), SettingType::Bool, false},
     {offsetof(GlobalPrefs, rememberViewOffsetOnPageTurn), SettingType::Bool, false},
     {offsetof(GlobalPrefs, mouseWheelTurnsPage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showDocumentFocusIndicator), SettingType::Bool, false},

@@ -1206,7 +1206,7 @@ const globalPrefs: Field[] = [
   field(
     "ExplorerQuickLook",
     Bool,
-    true,
+    false,
     "if true, Space in File Explorer (or on the desktop) previews the selected " +
       "file in a popup window, like macOS Quick Look. Esc or Space closes it; " +
       "Left / Right open the previous / next file in the folder. Starts a small " +

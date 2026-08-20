@@ -182,7 +182,7 @@ DisableLinks = false
 ; open the previous / next file in the folder. Starts a small background helper
 ; at logon so it works even when SumatraPDF is not open (introduced in version
 ; 3.7)
-ExplorerQuickLook = true
+ExplorerQuickLook = false
 
 ; if true, next/previous page keeps the same view position on the page instead
 ; of jumping to the top (useful when zoomed in on similarly sized pages)
