@@ -112,31 +112,6 @@ static void TooltipTrackDeactivate(HWND hwndTT, HWND owner, int id) {
     SendMessageW(hwndTT, TTM_TRACKACTIVATE, FALSE, (LPARAM)&ti);
 }
 
-static void TooltipTrackActivateAtScreen(HWND hwndTT, HWND owner, int id, int screenX, int screenY) {
-    if (!hwndTT || !owner || id == 0) {
-        return;
-    }
-    SendMessageW(hwndTT, TTM_TRACKPOSITION, 0, MAKELPARAM(screenX, screenY));
-    TOOLINFOW ti = {};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = owner;
-    ti.uId = (UINT_PTR)id;
-    ti.uFlags = kTrackToolFlags;
-    SendMessageW(hwndTT, TTM_TRACKACTIVATE, TRUE, (LPARAM)&ti);
-}
-
-static void TooltipTrackActivateAtCursor(HWND hwndTT, HWND owner, int id) {
-    if (!hwndTT || !owner || id == 0) {
-        return;
-    }
-    POINT pt;
-    if (!GetCursorPos(&pt)) {
-        return;
-    }
-    // Slight offset so the tip is not under the cursor hot-spot.
-    TooltipTrackActivateAtScreen(hwndTT, owner, id, pt.x + 12, pt.y + 18);
-}
-
 // Tip bubble size after the tool exists (for placement under a keyboard selection).
 static Size TooltipGetBubbleSize(HWND hwndTT, HWND owner, int id) {
     TOOLINFOW ti = {};
@@ -149,6 +124,76 @@ static Size TooltipGetBubbleSize(HWND hwndTT, HWND owner, int id) {
         return {};
     }
     return {LOWORD(lr), HIWORD(lr)};
+}
+
+// TTF_ABSOLUTE disables the tooltip control's own edge-flip, so a wide
+// annotation / link tip at the right (or bottom) of the screen was clipped
+// (issue #6002). Shift (x,y) so a tip of size tipSz stays in the work area.
+static void ClampTipPosToWorkArea(int& x, int& y, Size tipSz) {
+    if (tipSz.dx <= 0 || tipSz.dy <= 0) {
+        return;
+    }
+    HMONITOR mon = MonitorFromPoint(POINT{x, y}, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi{sizeof(mi)};
+    if (!GetMonitorInfoW(mon, &mi)) {
+        return;
+    }
+    RECT wa = mi.rcWork;
+    if (x + tipSz.dx > wa.right) {
+        x = wa.right - tipSz.dx;
+    }
+    x = std::max<LONG>(x, wa.left);
+    if (y + tipSz.dy > wa.bottom) {
+        y = wa.bottom - tipSz.dy;
+    }
+    y = std::max<LONG>(y, wa.top);
+}
+
+static void TooltipMoveOntoWorkArea(HWND hwndTT) {
+    if (!hwndTT) {
+        return;
+    }
+    RECT wr;
+    if (!GetWindowRect(hwndTT, &wr)) {
+        return;
+    }
+    int x = wr.left;
+    int y = wr.top;
+    Size sz{wr.right - wr.left, wr.bottom - wr.top};
+    ClampTipPosToWorkArea(x, y, sz);
+    if (x != wr.left || y != wr.top) {
+        SetWindowPos(hwndTT, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+}
+
+static void TooltipTrackActivateAtScreen(HWND hwndTT, HWND owner, int id, int screenX, int screenY) {
+    if (!hwndTT || !owner || id == 0) {
+        return;
+    }
+    SendMessageW(hwndTT, TTM_TRACKPOSITION, 0, MAKELPARAM(screenX, screenY));
+    TOOLINFOW ti = {};
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = owner;
+    ti.uId = (UINT_PTR)id;
+    ti.uFlags = kTrackToolFlags;
+    SendMessageW(hwndTT, TTM_TRACKACTIVATE, TRUE, (LPARAM)&ti);
+    // TTM_GETBUBBLESIZE can be 0 before the first show; use the real window.
+    TooltipMoveOntoWorkArea(hwndTT);
+}
+
+static void TooltipTrackActivateAtCursor(HWND hwndTT, HWND owner, int id) {
+    if (!hwndTT || !owner || id == 0) {
+        return;
+    }
+    POINT pt;
+    if (!GetCursorPos(&pt)) {
+        return;
+    }
+    // Slight offset so the tip is not under the cursor hot-spot.
+    int x = pt.x + 12;
+    int y = pt.y + 18;
+    ClampTipPosToWorkArea(x, y, TooltipGetBubbleSize(hwndTT, owner, id));
+    TooltipTrackActivateAtScreen(hwndTT, owner, id, x, y);
 }
 
 Tooltip::Tooltip() {
@@ -280,21 +325,7 @@ int Tooltip::SetSingleAt(Str s, const Rect& rc, Point screenPos, bool multiline,
             x = maxRightScreen - tipSz.dx;
         }
     }
-    if (tipSz.dx > 0 && tipSz.dy > 0) {
-        HMONITOR mon = MonitorFromPoint(POINT{x, y}, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO mi{sizeof(mi)};
-        if (GetMonitorInfoW(mon, &mi)) {
-            RECT wa = mi.rcWork;
-            if (x + tipSz.dx > wa.right) {
-                x = wa.right - tipSz.dx;
-            }
-            x = std::max<LONG>(x, wa.left);
-            if (y + tipSz.dy > wa.bottom) {
-                y = wa.bottom - tipSz.dy;
-            }
-            y = std::max<LONG>(y, wa.top);
-        }
-    }
+    ClampTipPosToWorkArea(x, y, tipSz);
     TooltipTrackActivateAtScreen(hwnd, parent, id, x, y);
     return id;
 }
