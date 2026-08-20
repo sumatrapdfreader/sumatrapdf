@@ -380,7 +380,53 @@ static Pixmap* FzPixmapToPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return res;
 }
 
+static bool FzImageTooBigToFullyDecode(const fz_image* img) {
+    if (!img || img->w <= 0 || img->h <= 0) {
+        return false;
+    }
+    int n = img->n > 0 ? img->n : 4;
+    return (i64)img->w * img->h * std::max(n, 4) > kMaxDecodedPixmapBytes;
+}
+
+// Shrink a get_pixmap CTM size so mupdf picks an l2factor whose decoded
+// RGB pixmap stays under FZ_MAX_SAMPLES and our BGRA budget. A 39137x22279
+// JPEG at 100% would otherwise decode full-res and throw "Overly large image".
+static void CapFzImageDecodeSize(const fz_image* img, int* w, int* h) {
+    if (!img || !w || !h || *w < 1 || *h < 1) {
+        return;
+    }
+    int n = img->n > 0 ? img->n : 3;
+    i64 maxBytes = kMaxDecodedPixmapBytes;
+    i64 maxSamples = std::min(maxBytes, (i64)(1 << 29));
+    i64 iw = img->w > 0 ? img->w : *w;
+    i64 ih = img->h > 0 ? img->h : *h;
+    int l2 = 0;
+    for (; l2 < 6; l2++) {
+        i64 dw = (iw + (1LL << l2) - 1) >> l2;
+        i64 dh = (ih + (1LL << l2) - 1) >> l2;
+        i64 rgb = dw * dh * n;
+        i64 bgra = dw * dh * 4;
+        if (rgb <= maxSamples && bgra <= maxBytes && dw * n < (INT_MAX / 2)) {
+            break;
+        }
+    }
+    i64 maxW = (iw + (1LL << l2) - 1) >> l2;
+    i64 maxH = (ih + (1LL << l2) - 1) >> l2;
+    // mupdf increments l2 while img>>(l2+1) >= req+2, so leave slack
+    int capW = (int)std::max((i64)1, maxW - 4);
+    int capH = (int)std::max((i64)1, maxH - 4);
+    if (*w > capW) {
+        *w = capW;
+    }
+    if (*h > capH) {
+        *h = capH;
+    }
+}
+
 static Pixmap* FzImageToPixmap(fz_context* ctx, fz_image* img) {
+    if (FzImageTooBigToFullyDecode(img)) {
+        return nullptr;
+    }
     fz_pixmap* pixmap = nullptr;
     fz_var(pixmap);
     fz_try(ctx) {
@@ -537,74 +583,99 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    // Mupdf fast path: rotation 0 + full-page render + cached fz_image available.
-    // Tiles (pageRect != mediabox) and rotations fall through to the GDI+ path.
-    // Images with EXIF orientation also use the GDI+ path, which applies it.
+    // Mupdf path: rotation 0 + cached fz_image. CTM is the *full page* at the
+    // current zoom (not the tile dest), so JPEG 1/2, 1/4, 1/8 downsampling
+    // kicks in. Tiles pass a subarea; huge images cap the request so a
+    // full-res pixmap cannot exceed FZ_MAX_SAMPLES ("Overly large image").
     uint8_t fzOrientation = page->img ? page->img->orientation : 0;
     bool needsExifOrientation = fzOrientation != 0 && fzOrientation != 1;
     if (page->img && rotation == 0 && !page->failedToLoad && !needsExifOrientation) {
         Rect mediaScreen = Transform(mediabox, pageNo, zoom, rotation).Round();
         bool isFullPage = (mediaScreen.dx == screen.dx && mediaScreen.dy == screen.dy);
-        if (isFullPage) {
-            // Per-thread cloned context lets multiple workers decode/scale concurrently.
-            fz_context* ctx = Ctx();
-            Pixmap* result = nullptr;
-            fz_pixmap* decoded = nullptr;
-            fz_pixmap* scaled = nullptr;
-            fz_var(decoded);
-            fz_var(scaled);
-            // Build a CTM mapping the fz_image unit box (1x1) to target
-            // screen dimensions. mupdf reads |ctm| as the output pixel size
-            // (w = sqrt(ctm.a^2 + ctm.b^2)) and picks a JPEG decode scale
-            // (1, 1/2, 1/4, 1/8) so huge images at small zooms decode
-            // dramatically faster.
-            fz_matrix ctm = fz_scale((float)screen.dx, (float)screen.dy);
-            fz_try(ctx) {
-                int dw = 0, dh = 0;
-                decoded = fz_get_pixmap_from_image(ctx, page->img, nullptr, &ctm, &dw, &dh);
-                if (decoded && (decoded->w != screen.dx || decoded->h != screen.dy)) {
-                    // mupdf decoded at a JPEG-friendly scale that's >= target;
-                    // do the final exact-size scale on the much smaller pixmap.
-                    scaled = fz_scale_pixmap(ctx, decoded, 0, 0, (float)screen.dx, (float)screen.dy, nullptr);
-                }
+        fz_context* ctx = Ctx();
+        Pixmap* result = nullptr;
+        fz_pixmap* decoded = nullptr;
+        fz_pixmap* scaled = nullptr;
+        fz_var(decoded);
+        fz_var(scaled);
+        int reqW = mediaScreen.dx > 0 ? mediaScreen.dx : screen.dx;
+        int reqH = mediaScreen.dy > 0 ? mediaScreen.dy : screen.dy;
+        if (reqW < 1) {
+            reqW = 1;
+        }
+        if (reqH < 1) {
+            reqH = 1;
+        }
+        CapFzImageDecodeSize(page->img, &reqW, &reqH);
+        fz_matrix ctm = fz_scale((float)reqW, (float)reqH);
+        fz_irect subarea;
+        fz_irect* subPtr = nullptr;
+        if (!isFullPage && pageRect) {
+            subarea.x0 = pageRc.x;
+            subarea.y0 = pageRc.y;
+            subarea.x1 = pageRc.x + pageRc.dx;
+            subarea.y1 = pageRc.y + pageRc.dy;
+            if (subarea.x0 < 0) {
+                subarea.x0 = 0;
             }
-            fz_catch(ctx) {
-                fz_report_error(ctx);
+            if (subarea.y0 < 0) {
+                subarea.y0 = 0;
             }
-            fz_pixmap* final = scaled ? scaled : decoded;
-            if (final) {
-                result = FzPixmapToPixmap(ctx, final);
-                // BGRA8 means the image brought an alpha channel; keep it so the
-                // canvas composites the page over the document background rather
-                // than baking in a backdrop the viewer may not want (#5844)
-                if (result) {
-                    result->hasAlpha = result->format == PixmapFormat::BGRA8;
-                }
+            if (subarea.x1 > page->img->w) {
+                subarea.x1 = page->img->w;
             }
-            if (scaled) {
-                fz_drop_pixmap(ctx, scaled);
+            if (subarea.y1 > page->img->h) {
+                subarea.y1 = page->img->h;
             }
-            if (decoded) {
-                fz_drop_pixmap(ctx, decoded);
+            if (subarea.x1 > subarea.x0 && subarea.y1 > subarea.y0) {
+                subPtr = &subarea;
             }
+        }
+        fz_try(ctx) {
+            int dw = 0, dh = 0;
+            decoded = fz_get_pixmap_from_image(ctx, page->img, subPtr, &ctm, &dw, &dh);
+            if (decoded && (decoded->w != screen.dx || decoded->h != screen.dy)) {
+                scaled = fz_scale_pixmap(ctx, decoded, 0, 0, (float)screen.dx, (float)screen.dy, nullptr);
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+        fz_pixmap* final = scaled ? scaled : decoded;
+        if (final) {
+            result = FzPixmapToPixmap(ctx, final);
             if (result) {
-                DropPage(page, false);
-                return FinishRenderedPage(result, args.keepAlpha);
+                result->hasAlpha = result->format == PixmapFormat::BGRA8;
             }
-            // fall through to full decode on failure
+        }
+        if (scaled) {
+            fz_drop_pixmap(ctx, scaled);
+        }
+        if (decoded) {
+            fz_drop_pixmap(ctx, decoded);
+        }
+        if (result) {
+            DropPage(page, false);
+            return FinishRenderedPage(result, args.keepAlpha);
+        }
+        // Huge images cannot fall through to a full-res pixmap
+        if (FzImageTooBigToFullyDecode(page->img)) {
+            logf("EngineImages::RenderPage: scaled decode failed for huge image page %d\n", pageNo);
+            DropPage(page, false);
+            return nullptr;
         }
     }
 
     // Pixmap path: needs page->pixmap. If we only have img (subclass loaded via
     // mupdf), lazy-load/decode the Pixmap on demand for this rare path
-    // (rotation, sub-rect tile, or mupdf decode/scale failure).
+    // (rotation, or mupdf decode/scale failure on a small image).
     if (!page->pixmap && !page->failedToLoad) {
         ScopedMutex scope(&page->drawLock);
         if (!page->pixmap) {
             bool ownPixmap = true;
             page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
             page->ownPixmap = ownPixmap;
-            if (!page->pixmap && page->img) {
+            if (!page->pixmap && page->img && !FzImageTooBigToFullyDecode(page->img)) {
                 page->pixmap = FzImageToPixmap(Ctx(), page->img);
                 page->ownPixmap = true;
             }
@@ -1139,8 +1210,15 @@ bool EngineImage::LoadSingleFile(Str path) {
         fileExt = StrL("");
     }
     SetDefaultExt(defaultExt, fileExt);
-    frames = PixmapsFromData(data);
     Size fallbackSize = ImageSizeFromDataPortable(data);
+    // Huge scans (e.g. 39137x22279 JPEG ≈ 3.5GB BGRA) must not be fully
+    // decoded on open. 3.5.2 kept a GDI+ Bitmap and drew it at window size;
+    // we keep the encoded bytes and let RenderPage decode at display scale.
+    if (!ImageDecodedPixmapWouldBeHuge(data)) {
+        frames = PixmapsFromData(data);
+    } else {
+        logf("EngineImage::LoadSingleFile: skip eager decode of %dx%d '%s'\n", fallbackSize.dx, fallbackSize.dy, path);
+    }
     bool ok = FinishLoading(fallbackSize);
     if (ok) {
         pageInfos[0]->rawData = data;
@@ -1162,8 +1240,10 @@ bool EngineImage::LoadFromData(Str data) {
     }
     SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
 
-    frames = PixmapsFromData(data);
     Size fallbackSize = ImageSizeFromDataPortable(data);
+    if (!ImageDecodedPixmapWouldBeHuge(data)) {
+        frames = PixmapsFromData(data);
+    }
     bool ok = FinishLoading(fallbackSize);
     if (ok) {
         pageInfos[0]->rawData = str::Dup(data);

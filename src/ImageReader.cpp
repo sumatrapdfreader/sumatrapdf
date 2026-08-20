@@ -153,6 +153,17 @@ static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix) {
     return px;
 }
 
+bool ImageDecodedPixmapWouldBeHuge(Str d) {
+    FileTypeInfo fti = GuessFileInfoFromData(d);
+    i64 w = fti.imageDx;
+    i64 h = fti.imageDy;
+    FreeFileTypeInfo(&fti);
+    if (w <= 0 || h <= 0) {
+        return false;
+    }
+    return w * h * 4 > kMaxDecodedPixmapBytes;
+}
+
 // Decode via MuPDF (JPEG / JPEG2000 currently).
 Pixmap* PixmapFromDataFz(Str d) {
     const u8* data = (const u8*)d.s;

@@ -78,6 +78,12 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
 
     uint w, h;
     HR(pConverter->GetSize(&w, &h));
+    if (w == 0 || h == 0 || w > (uint)INT_MAX || h > (uint)INT_MAX) {
+        return nullptr;
+    }
+    if ((i64)w * (i64)h * 4 > kMaxDecodedPixmapBytes) {
+        return nullptr;
+    }
     double xres, yres;
     HR(pConverter->GetResolution(&xres, &yres));
     Bitmap bmp((INT)w, (INT)h, PixelFormat32bppARGB);
@@ -87,7 +93,12 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     if (ok != Ok) {
         return nullptr;
     }
-    HR(pConverter->CopyPixels(nullptr, bmpData.Stride, bmpData.Stride * h, (BYTE*)bmpData.Scan0));
+    size_t bufBytes = (size_t)bmpData.Stride * (size_t)h;
+    if (bufBytes > UINT_MAX) {
+        bmp.UnlockBits(&bmpData);
+        return nullptr;
+    }
+    HR(pConverter->CopyPixels(nullptr, bmpData.Stride, (UINT)bufBytes, (BYTE*)bmpData.Scan0));
     bmp.UnlockBits(&bmpData);
     bmp.SetResolution((float)xres, (float)yres);
 #undef HR
@@ -258,6 +269,9 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
 // Windows: JPEG→turbo, WebP→libwebp, JXL→jxldec; HEIC/AVIF→heicdec then WIC in
 // Debug, WIC then heicdec in Release; else TGA/GDI+/WIC. POSIX: MuPDF for now.
 Pixmap* PixmapFromData(Str bmpData) {
+    if (ImageDecodedPixmapWouldBeHuge(bmpData)) {
+        return nullptr;
+    }
     Pixmap* px = PixmapFromDataFz(bmpData);
     if (px) {
         // ICC WebP comes from mupdf, which does not apply EXIF orientation
