@@ -1021,6 +1021,95 @@ static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
     rects.RemoveLast();
 }
 
+static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& content, Vec<Rect>& rects,
+                                 Vec<SeenGlyph>& seen, Str hardLineSep, Str softLineSep) {
+    fz_stext_line* line = block->u.t.first_line;
+    while (line) {
+        // Walk each line with prev/next non-space so tracking spaces can be
+        // dropped (issue #5627: Turkish PDFs that space every syllable).
+        fz_stext_char* prevNonSpace = nullptr;
+        fz_stext_char* c = line->first_char;
+        while (c) {
+            int rune = c->c;
+            // Soft hyphens (U+00AD) are never typed by the user; drop them
+            // so search for "softhyphen" matches text that contains SHY
+            // mid-word (issue #1189). End-of-line hard hyphens are dropped
+            // when joining via MaybeDropTrailingSoftHyphen below.
+            if (rune == 0xAD) {
+                c = c->next;
+                continue;
+            }
+            bool isWs = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
+            if (isWs) {
+                fz_stext_char* nextNonSpace = c->next;
+                while (nextNonSpace) {
+                    int nr = nextNonSpace->c;
+                    bool nWs = nr > 0 && nr <= 0x7f && str::IsWs((char)nr);
+                    if (!nWs) {
+                        break;
+                    }
+                    nextNonSpace = nextNonSpace->next;
+                }
+                if (IsTrackingSpace(prevNonSpace, nextNonSpace)) {
+                    c = c->next;
+                    continue;
+                }
+            }
+            AddCharUtf8(line, c, content, rects, seen);
+            if (!isWs) {
+                prevNonSpace = c;
+            }
+            c = c->next;
+        }
+        // Soft-join reflow lines within a paragraph for better copy (#5793);
+        // keep a hard newline between paragraphs / blocks.
+        // Dehyphenation (#1189): when MuPDF marked the line JOINED (EOL
+        // hyphen + DEHYPHENATE), or we soft-break after a trailing hyphen,
+        // drop the hyphen and join with no separator so "hyphen-\\nated"
+        // becomes searchable as "hyphenated". Plain soft wraps still get a
+        // space.
+        fz_stext_line* nextLine = line->next;
+        bool dehyphen = nextLine && (line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0;
+        bool soft = nextLine && IsSoftLineBreak(line, nextLine, block);
+        if (dehyphen || soft) {
+            bool hadHyphen = false;
+            {
+                Str cur = ToStr(content);
+                if (cur && cur.len > 0) {
+                    int bi = cur.len;
+                    int last = Utf8CodepointPrev(cur, bi);
+                    hadHyphen = IsUnicodeHyphenRune(last);
+                }
+            }
+            if (dehyphen || hadHyphen) {
+                MaybeDropTrailingSoftHyphen(content, rects);
+                // no separator: dehyphenated word continues on next line
+            } else {
+                AddLineSepUtf8(content, rects, softLineSep);
+            }
+        } else {
+            AddLineSepUtf8(content, rects, hardLineSep);
+        }
+        // each line has independent glyph positions; reset duplicate detection
+        seen.Reset();
+        line = line->next;
+    }
+}
+
+static void AppendStextBlocks(fz_stext_block* block, str::Builder& content, Vec<Rect>& rects, Vec<SeenGlyph>& seen,
+                              Str hardLineSep, Str softLineSep) {
+    while (block) {
+        if (block->type == FZ_STEXT_BLOCK_TEXT) {
+            AppendStextTextBlock(block, content, rects, seen, hardLineSep, softLineSep);
+        } else if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down) {
+            // Tagged-PDF structure nodes; MuPDF's do_as_text walks these too.
+            // They only appear when FZ_STEXT_COLLECT_STRUCTURE is set (#4859).
+            AppendStextBlocks(block->u.s.down->first_block, content, rects, seen, hardLineSep, softLineSep);
+        }
+        block = block->next;
+    }
+}
+
 static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     Str hardLineSep = StrL("\n");
     Str softLineSep = StrL(" ");
@@ -1028,85 +1117,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     Vec<Rect> rects;
     Vec<SeenGlyph> seen;
 
-    fz_stext_block* block = text->first_block;
-    while (block) {
-        if (block->type != FZ_STEXT_BLOCK_TEXT) {
-            block = block->next;
-            continue;
-        }
-        fz_stext_line* line = block->u.t.first_line;
-        while (line) {
-            // Walk each line with prev/next non-space so tracking spaces can be
-            // dropped (issue #5627: Turkish PDFs that space every syllable).
-            fz_stext_char* prevNonSpace = nullptr;
-            fz_stext_char* c = line->first_char;
-            while (c) {
-                int rune = c->c;
-                // Soft hyphens (U+00AD) are never typed by the user; drop them
-                // so search for "softhyphen" matches text that contains SHY
-                // mid-word (issue #1189). End-of-line hard hyphens are dropped
-                // when joining via MaybeDropTrailingSoftHyphen below.
-                if (rune == 0xAD) {
-                    c = c->next;
-                    continue;
-                }
-                bool isWs = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
-                if (isWs) {
-                    fz_stext_char* nextNonSpace = c->next;
-                    while (nextNonSpace) {
-                        int nr = nextNonSpace->c;
-                        bool nWs = nr > 0 && nr <= 0x7f && str::IsWs((char)nr);
-                        if (!nWs) {
-                            break;
-                        }
-                        nextNonSpace = nextNonSpace->next;
-                    }
-                    if (IsTrackingSpace(prevNonSpace, nextNonSpace)) {
-                        c = c->next;
-                        continue;
-                    }
-                }
-                AddCharUtf8(line, c, content, rects, seen);
-                if (!isWs) {
-                    prevNonSpace = c;
-                }
-                c = c->next;
-            }
-            // Soft-join reflow lines within a paragraph for better copy (#5793);
-            // keep a hard newline between paragraphs / blocks.
-            // Dehyphenation (#1189): when MuPDF marked the line JOINED (EOL
-            // hyphen + DEHYPHENATE), or we soft-break after a trailing hyphen,
-            // drop the hyphen and join with no separator so "hyphen-\\nated"
-            // becomes searchable as "hyphenated". Plain soft wraps still get a
-            // space.
-            fz_stext_line* nextLine = line->next;
-            bool dehyphen = nextLine && (line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0;
-            bool soft = nextLine && IsSoftLineBreak(line, nextLine, block);
-            if (dehyphen || soft) {
-                bool hadHyphen = false;
-                {
-                    Str cur = ToStr(content);
-                    if (cur && cur.len > 0) {
-                        int bi = cur.len;
-                        int last = Utf8CodepointPrev(cur, bi);
-                        hadHyphen = IsUnicodeHyphenRune(last);
-                    }
-                }
-                if (dehyphen || hadHyphen) {
-                    MaybeDropTrailingSoftHyphen(content, rects);
-                    // no separator: dehyphenated word continues on next line
-                } else {
-                    AddLineSepUtf8(content, rects, softLineSep);
-                }
-            } else {
-                AddLineSepUtf8(content, rects, hardLineSep);
-            }
-            // each line has independent glyph positions; reset duplicate detection
-            seen.Reset();
-            line = line->next;
-        }
-        block = block->next;
-    }
+    AppendStextBlocks(text->first_block, content, rects, seen, hardLineSep, softLineSep);
 
     ReportIf(Utf8CodepointCount(ToStr(content)) != len(rects));
 

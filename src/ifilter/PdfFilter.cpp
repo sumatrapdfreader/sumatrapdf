@@ -147,9 +147,12 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                     FreePageText(&pageText);
                     continue;
                 }
+                // IFilter text is CRLF; extraction uses \n. CHUNK_EOP: each
+                // page is its own paragraph so the indexer doesn't glue pages
+                // together (#4859).
                 TempStr crlfText = str::ReplaceTemp(pageText.text, StrL("\n"), StrL("\r\n"));
                 TempWStr text = ToWStrTemp(crlfText);
-                chunkValue.SetTextValue(PKEY_Search_Contents, text.s, CHUNK_TEXT);
+                chunkValue.SetTextValue(PKEY_Search_Contents, text.s, CHUNK_TEXT, 0, 0, 0, CHUNK_EOP);
                 FreePageText(&pageText);
                 return S_OK;
             }

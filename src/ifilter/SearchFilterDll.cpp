@@ -87,13 +87,23 @@ class FilterClassFactory : public IClassFactory {
     CLSID m_clsid;
 };
 
-STDAPI_(BOOL) DllMain(__unused HINSTANCE hInstance, DWORD dwReason, __unused LPVOID lpReserved) {
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
+        gLogAppName = StrL("PdfFilter");
+        gLogToConsole = false;
+        log("DllMain\n");
+    } else if (dwReason == DLL_PROCESS_DETACH) {
+        // lpReserved is non-null when the process is exiting; skip teardown
+        // then so we don't take locks under the loader as other DLLs die.
+        // FreeLibrary unload (ifilttst, SearchFilterHost) is lpReserved == 0
+        // and that's the leak the CRT dump sees (#4859).
+        if (!lpReserved) {
+            DestroyLogging();
+            DestroyTempArena();
+            DestroyPermArena();
+        }
     }
-    gLogAppName = StrL("PdfFilter");
-    gLogToConsole = false;
-    log("DllMain\n");
     return TRUE;
 }
 
