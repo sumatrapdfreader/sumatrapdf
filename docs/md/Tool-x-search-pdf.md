@@ -1,6 +1,6 @@
 # Search text in PDF from command line
 
-> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+> Use `sumatrapdf-tool.exe` or [SumatraPDF.exe](Tools.md) with the same arguments.
 
 To search text in `file.pdf`:
 

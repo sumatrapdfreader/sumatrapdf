@@ -125,7 +125,7 @@ After installing, follow [Set as default PDF viewer](Set-as-default-pdf-viewer.m
 
 ## Command-line tools
 
-`sumatrapdf-tool.exe` is installed next to `SumatraPDF.exe` by the installer. It is not included in the single-file portable build. See [Tools](Tools.md).
+After a full install, `sumatrapdf-tool.exe` is next to `SumatraPDF.exe` and on PATH. With the portable EXE you can run the same commands as `SumatraPDF.exe <tool>` (see [Tools](Tools.md)), or extract `sumatrapdf-tool.exe` with `-x`. No install required.
 
 ## See also
 

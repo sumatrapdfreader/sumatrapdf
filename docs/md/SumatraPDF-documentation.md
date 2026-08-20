@@ -79,7 +79,7 @@ Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.c
 
 ## Using SumatraPDF to convert and modify PDF and other files
 
-Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you can use `sumatrapdf-tool.exe <tool> <option> <files>` commands to convert, extract, search PDF and other files. `sumatrapdf-tool.exe` is installed next to `SumatraPDF.exe`, so this only works after SumatraPDF has been installed.
+Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you can use `sumatrapdf-tool.exe <tool> <option> <files>` or [SumatraPDF.exe <tool>](Tools.md) to convert, extract, search PDF and other files.
 
 :columns
 [All cmd-line tools](Tools.md)

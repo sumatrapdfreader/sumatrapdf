@@ -60,7 +60,7 @@ For a single open image file, **Convert to PDF…** and converting that one page
 
 ## From the command line
 
-To convert images or other documents to PDF without the GUI dialog, use `sumatrapdf-tool` (installed next to `SumatraPDF.exe` after a normal install):
+To convert images or other documents to PDF without the GUI dialog, use `sumatrapdf-tool.exe convert` or [SumatraPDF.exe convert](Tools.md):
 
 ```
 sumatrapdf-tool convert -o output.pdf input.png
