@@ -393,6 +393,7 @@ const sumatraFiles: FileGroup[] = [
       "RegistryPreview.*",
       "RegistrySearchFilter.*",
       "SearchAndDDE.*",
+      "ExplorerQuickLook.*",
       "Screenshot.*",
       "ScreenshotCapture.*",
       "Selection.*",

@@ -630,7 +630,7 @@ static int ToolbarModeForWindow(MainWindow* win) {
 }
 
 bool ShouldShowToolbar(MainWindow* win) {
-    if (win->presentation) {
+    if (win->presentation || win->isQuickLook) {
         return false;
     }
     int mode = ToolbarModeForWindow(win);
@@ -638,7 +638,7 @@ bool ShouldShowToolbar(MainWindow* win) {
 }
 
 bool ShouldOverlayToolbar(MainWindow* win) {
-    if (win->presentation) {
+    if (win->presentation || win->isQuickLook) {
         return false;
     }
     if (ToolbarModeForWindow(win) != kToolbarOverlay) {

@@ -158,6 +158,8 @@ static void UninstallerThread() {
 
     RemoveInstallDirFromPath(gCli->allUsers, gCli->installDir);
     RemoveInstalledFiles();
+    LoggedDeleteRegValue(HKEY_CURRENT_USER, StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+                         StrL("SumatraPDF-QuickLook"));
 
     // always succeed, even for partial uninstallations
     success = true;

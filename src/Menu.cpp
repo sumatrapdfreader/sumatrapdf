@@ -3221,7 +3221,7 @@ bool IsShowingMenuBarRebar(MainWindow* win) {
     if (gMyWindowWasEmbedded) {
         return false;
     }
-    if (win->presentation) {
+    if (win->presentation || win->isQuickLook) {
         return false;
     }
     return true;

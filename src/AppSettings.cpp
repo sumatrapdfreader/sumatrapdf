@@ -38,6 +38,7 @@
 #include "PdfDarkMode.h"
 #include "TextToSpeech.h"
 #include "Notifications.h"
+#include "ExplorerQuickLook.h"
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.
@@ -361,6 +362,7 @@ bool LoadSettings() {
     EngineMupdfSetDisableJavaScript(gGlobalPrefs->disableJavaScript);
     EngineMupdfSetAllowExternalImages(gGlobalPrefs->allowExternalImages);
     SetEngineeringDrawingEnhanceMode(gGlobalPrefs->engineeringDrawingEnhance);
+    ExplorerQuickLookApplyFromSettings();
 
     if (trans::ValidateLangCode(gprefs->uiLanguage)) {
         SetCurrentLang(gprefs->uiLanguage);
@@ -636,6 +638,9 @@ static void RememberSessionState() {
     }
 
     for (auto* win : gWindows) {
+        if (win->isQuickLook) {
+            continue;
+        }
         SessionData* windowState = NewSessionData();
         for (WindowTab* tab : win->Tabs()) {
             if (!tab->filePath) {

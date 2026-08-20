@@ -75,6 +75,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Bookmarks context menu **Collapse Same Level** collapses every outline entry that shares the parent of the selected/clicked item (siblings at that nesting level) (fixes #1895)
 - FB2 document properties (`Ctrl+D`) now show the book annotation from `title-info` as Subject (fixes #2254)
 - hovering a link that goes to a place inside the document shows the description the PDF gives it (the link annotation's `/Contents`), the way hovering an external link shows its URL; before, such links showed nothing (fixes #1724)
+- Space in File Explorer (or on the desktop) previews the selected file in a popup, like macOS Quick Look. Esc or Space closes it; Left / Right open the previous / next file in the folder. Off with `ExplorerQuickLook = false` (fixes #2568)
 - clicking a component on an Altium Designer schematic PDF shows a popup with the part's properties (comment, footprint, value, …). A line that contains a URL can be opened. Those hotspots used Acrobat JavaScript and previously did nothing (fixes #1198)
 - bookmarks (PDF outline) entries are drawn with the color and the bold / italic style the document asks for again; they had been shown as plain text since 3.3 (fixes #3560)
 - zoom further than 6400%, for documents like large maps where the old limit hid detail that is in the file: the largest level in the `ZoomLevels` advanced setting is now the maximum zoom, so adding e.g. `12800 25600 51200` to it zooms that far. Values up to 1000000 are accepted; a given document is also limited by its own size, since all of its pages have to fit on one canvas. [Scrolling and zooming](Scrolling-and-zooming.md) documents the built-in levels as a `ZoomLevels` line to copy and edit (fixes #1195)
@@ -305,6 +306,8 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 **New command-line arguments:**
 
 - `-for-testing` : for ad-hoc testing; always starts a new instance, doesn't restore a session, doesn't save settings
+- `-quicklook` : open a chrome-less always-on-top preview window (Explorer Space preview) (fixes #2568)
+- `-quicklook-agent` : hidden File Explorer Space-bar helper (started when `ExplorerQuickLook` is true)
 - `-dbg-control <named-pipe>` : drive automated tests over a named-pipe request/response protocol (`tests/control.ts`)
 - `-dump-chm <file>` : headlessly list CHM contents, unpack entries to memory, and print TOC/index metadata
 - `-pwd <password>` : open password-protected documents from the command line (fixes #906)

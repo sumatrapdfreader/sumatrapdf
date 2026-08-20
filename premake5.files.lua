@@ -701,6 +701,7 @@ function sumatrapdf_files()
     "resource.h",
     "SearchAndDDE.*",
     "OverlayScrollbar.*",
+    "ExplorerQuickLook.*",
     "Screenshot.*",
     "ScreenshotCapture.*",
     "SelectTextKeyboard.*",

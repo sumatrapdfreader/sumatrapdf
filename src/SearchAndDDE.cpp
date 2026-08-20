@@ -30,6 +30,7 @@
 #include "Commands.h"
 #include "AppTools.h"
 #include "SearchAndDDE.h"
+#include "ExplorerQuickLook.h"
 #include "Selection.h"
 #include "Toolbar.h"
 #include "FindBar.h"
@@ -3181,6 +3182,10 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
     COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
     if (!cds || wp) {
         return FALSE;
+    }
+
+    if (HandleExplorerQuickLookCopyData(cds)) {
+        return TRUE;
     }
 
     if (cds->dwData == kCopyDataOpen) {

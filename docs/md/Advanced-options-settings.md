@@ -177,6 +177,13 @@ ClickEdgeToTurnPage = false
 ; version 3.7)
 DisableLinks = false
 
+; if true, Space in File Explorer (or on the desktop) previews the selected file
+; in a popup window, like macOS Quick Look. Esc or Space closes it; Left / Right
+; open the previous / next file in the folder. Starts a small background helper
+; at logon so it works even when SumatraPDF is not open (introduced in version
+; 3.7)
+ExplorerQuickLook = true
+
 ; if true, next/previous page keeps the same view position on the page instead
 ; of jumping to the top (useful when zoomed in on similarly sized pages)
 ; (introduced in version 3.7)

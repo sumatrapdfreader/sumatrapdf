@@ -120,6 +120,7 @@
 #include "TextToSpeech.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
+#include "ExplorerQuickLook.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;
@@ -761,6 +762,9 @@ static bool WindowHasDocumentLoading(MainWindow* win) {
 void RememberDefaultWindowPosition(MainWindow* win) {
     // ignore spurious WM_SIZE and WM_MOVE messages happening during initialization
     if (!HwndIsVisible(win->hwndFrame)) {
+        return;
+    }
+    if (win->isQuickLook) {
         return;
     }
 
@@ -6832,8 +6836,9 @@ static void SyncCaptionLayout(MainWindow* win) {
         win->capRow2Lead->dx = winBtn;
         win->capRow2Trail->dx = 3 * winBtn;
         if (win->tabsCtrl) {
-            win->tabsVisible = hasFileTabs;
-            win->tabsCtrl->SetIsVisible(hasFileTabs);
+            bool showTabs = hasFileTabs && !win->isQuickLook;
+            win->tabsVisible = showTabs;
+            win->tabsCtrl->SetIsVisible(showTabs);
         }
     }
 }
@@ -8469,6 +8474,21 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
         return true;
     }
 
+    if (win->isQuickLook && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
+        if (key == VK_LEFT || key == VK_PRIOR) {
+            if (!win->IsCurrentTabAbout()) {
+                OpenNextPrevFileInFolder(win, false);
+            }
+            return true;
+        }
+        if (key == VK_RIGHT || key == VK_NEXT) {
+            if (!win->IsCurrentTabAbout()) {
+                OpenNextPrevFileInFolder(win, true);
+            }
+            return true;
+        }
+    }
+
     if (VK_ESCAPE == key) {
         CancelDrag(win);
         // and leave a selected annotation's edit mode (issue #5933)
@@ -8550,6 +8570,10 @@ static WCHAR SingleCharLowerW(WCHAR c) {
 }
 
 static void OnFrameKeyEsc(MainWindow* win) {
+    if (win->isQuickLook) {
+        CloseWindow(win, true, false);
+        return;
+    }
     if (StopKeyboardLinkFollowing(win)) {
         return;
     }
@@ -8803,6 +8827,12 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
         case VK_ESCAPE:
             OnFrameKeyEsc(win);
             return;
+        case ' ':
+            if (win->isQuickLook) {
+                CloseWindow(win, true, false);
+                return;
+            }
+            break;
         case VK_TAB:
             AdvanceFocus(win);
             break;
@@ -9332,6 +9362,7 @@ SettingsApplyState GetSettingsApplyState() {
     s.disableAntiAlias = p->disableAntiAlias;
     s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
     s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
+    s.explorerQuickLook = p->explorerQuickLook;
     return s;
 }
 
@@ -9371,6 +9402,10 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
         for (MainWindow* w : gWindows) {
             ApplyMenuBarVisibility(w);
         }
+    }
+
+    if (before.explorerQuickLook != p->explorerQuickLook) {
+        ExplorerQuickLookApplyFromSettings();
     }
 
     // re-layout so toolbar / menu / findbox changes take effect

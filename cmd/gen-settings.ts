@@ -1204,6 +1204,15 @@ const globalPrefs: Field[] = [
       "(useful for drawings with many links); if false, clicking a link follows it",
   ).ver("3.7"),
   field(
+    "ExplorerQuickLook",
+    Bool,
+    true,
+    "if true, Space in File Explorer (or on the desktop) previews the selected " +
+      "file in a popup window, like macOS Quick Look. Esc or Space closes it; " +
+      "Left / Right open the previous / next file in the folder. Starts a small " +
+      "background helper at logon so it works even when SumatraPDF is not open",
+  ).ver("3.7"),
+  field(
     "RememberViewOffsetOnPageTurn",
     Bool,
     false,

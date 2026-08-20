@@ -85,6 +85,8 @@ const args = [
     "SetColorRange", "set-color-range",
     "UpgradeFrom", "upgrade-from",
     "ForTesting", "for-testing",
+    "QuickLook", "quicklook",
+    "QuickLookAgent", "quicklook-agent",
     "WindowPos", "window-pos",
     "DumpExif", "dump-exif",
     "DumpChm", "dump-chm",

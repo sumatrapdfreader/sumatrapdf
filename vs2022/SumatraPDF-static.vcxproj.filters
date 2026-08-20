@@ -968,6 +968,9 @@
     <ClCompile Include="..\src\Scratch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ExplorerQuickLook.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Screenshot.cpp">
       <Filter>src</Filter>
     </ClCompile>

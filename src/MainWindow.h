@@ -441,6 +441,8 @@ struct MainWindow {
     // a hide of the overlay toolbar is scheduled (after kDelayToolbarHide)
     bool toolbarOverlayHidePending = false;
     bool isFullScreen = false;
+    // chrome-less always-on-top preview from Explorer Space (issue #2568)
+    bool isQuickLook = false;
     PresentationMode presentation = PM_DISABLED;
     int windowStateBeforePresentation = 0;
     bool suppressFrameRedraw = false;

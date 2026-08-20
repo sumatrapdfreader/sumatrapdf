@@ -44,6 +44,7 @@ import { testit as issue5924 } from "./issue-5924.ts";
 import { testit as issue5926 } from "./issue-5926.ts";
 import { testit as issue1914 } from "./issue-1914.ts";
 import { testit as issue1198 } from "./issue-1198.ts";
+import { testit as issue2568 } from "./issue-2568.ts";
 import { testit as issue2799 } from "./issue-2799.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as findResultsSorted } from "./find-results-sorted.ts";
@@ -201,6 +202,7 @@ export const tests: NamedTest[] = [
   ["issue-5926", issue5926],
   ["issue-1914", issue1914],
   ["issue-1198", issue1198],
+  ["issue-2568", issue2568],
   ["issue-2799", issue2799],
   ["issue-find-match-select", findMatchSelect],
   ["find-results-sorted", findResultsSorted],

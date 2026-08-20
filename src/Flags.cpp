@@ -42,8 +42,9 @@ enum class Arg {
     FwdSearchColor = 68, FwdSearchPermanent = 69, MangaMode = 70, Search = 71,
     AllUsers = 72, AllUsers2 = 73, RunInstallNow = 74, Adobe = 75,
     DDE = 76, Pwd = 77, EngineDump = 78, SetColorRange = 79,
-    UpgradeFrom = 80, ForTesting = 81, WindowPos = 82, DumpExif = 83,
-    DumpChm = 84, Control = 85, UnitTests = 86,
+    UpgradeFrom = 80, ForTesting = 81, QuickLook = 82, QuickLookAgent = 83,
+    WindowPos = 84, DumpExif = 85, DumpChm = 86, Control = 87,
+    UnitTests = 88,
 };
 
 static SeqStrings gArgNames =
@@ -67,8 +68,9 @@ static SeqStrings gArgNames =
     "fwdsearch-color\0" "fwdsearch-permanent\0" "manga-mode\0" "search\0"
     "all-users\0" "allusers\0" "run-install-now\0" "a\0"
     "dde\0" "pwd\0" "engine-dump\0" "set-color-range\0"
-    "upgrade-from\0" "for-testing\0" "window-pos\0" "dump-exif\0"
-    "dump-chm\0" "dbg-control\0" "unit-tests\0";
+    "upgrade-from\0" "for-testing\0" "quicklook\0" "quicklook-agent\0"
+    "window-pos\0" "dump-exif\0" "dump-chm\0" "dbg-control\0"
+    "unit-tests\0";
 // clang-format on
 // @gen-end flags
 
@@ -526,6 +528,14 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::ForTesting) {
             i.forTesting = true;
+            continue;
+        }
+        if (arg == Arg::QuickLook) {
+            i.quickLook = true;
+            continue;
+        }
+        if (arg == Arg::QuickLookAgent) {
+            i.quickLookAgent = true;
             continue;
         }
         if (arg == Arg::UnitTests) {
