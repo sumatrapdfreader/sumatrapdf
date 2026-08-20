@@ -3433,7 +3433,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
         ShowMainWindow(win, gGlobalPrefs->windowState);
     }
 
-    // display the notification ASAP (SaveSettings() can introduce a notable delay)
+    // display the notification ASAP (serializing settings can introduce a notable delay)
     win->RedrawAll(true);
 
     if (!FileHistoryMarkFileInexistent(path)) {
@@ -3441,7 +3441,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     }
     // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
     if (!noSavePrefs) {
-        SaveSettings();
+        ScheduleSaveSettings();
     }
     // update the Frequently Read list
     if (1 == len(gWindows) && gWindows[0]->IsCurrentTabAbout()) {
@@ -3600,14 +3600,6 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, b
 
 extern void SetTabState(WindowTab* tab, TabState* state);
 
-// we call this via uitask::Post so that SaveSettings() doesn't run
-// synchronously in the middle of LoadDocumentFinish while other
-// documents may still be loading or tabs are being closed
-// (fixes crashes with dangling tab->ctrl under rapid DDE opens + hooks)
-static void SaveSettingsVoid() {
-    SaveSettings();
-}
-
 // delete a loaded-but-not-yet-attached controller when its target window went
 // away mid-load. If the window was already destroyed, its cbHandler is gone
 // too, so null cb to keep ~DisplayModel from calling into freed memory
@@ -3759,8 +3751,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         // TODO: this seems to save the state of file that we just opened
         // add a way to skip saving currTab?
         if (!args->noSavePrefs) {
-            auto fn = MkFunc0Void(SaveSettingsVoid);
-            uitask::Post(fn, "SaveSettingsAfterDocLoad");
+            ScheduleSaveSettings();
         }
     }
 
@@ -5417,7 +5408,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         }
     }
 
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 // closes the current tab, selecting the next one
@@ -5536,7 +5527,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     bool saveAfterClose = !lastWindow;
     defer {
         if (saveAfterClose) {
-            SaveSettings();
+            ScheduleSaveSettings();
         }
     };
     // RememberDefaultWindowPosition becomes a no-op once the window is hidden
@@ -6133,8 +6124,6 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     if (!tab || tab->IsAboutTab()) {
         return;
     }
-    // so that the file is opened in the same state
-    SaveSettings();
 
     Str path = tab->filePath;
     ReportIf(!path);
@@ -6193,9 +6182,7 @@ static void DuplicateInNewTab(MainWindow* win) {
         return;
     }
 
-    // Save current window/tab state before loading new tab
     TabState* state = NewTabStateFromTab(currentTab);
-    SaveSettings();
 
     LoadArgs args(path, win);
     args.showWin = true;
@@ -6365,7 +6352,7 @@ static void ToggleFilePicker() {
         // empty or "os" (or anything else) → sumatrapdf
         str::ReplaceWithCopy(&gGlobalPrefs->filePicker, StrL("sumatrapdf"));
     }
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 static void OpenFile(MainWindow* win) {
@@ -7681,7 +7668,7 @@ void SetCurrentLanguageAndRefreshUI(Str langCode) {
         UpdateWindowRtlLayout(win);
     }
 
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 // cycle the toolbar mode show -> overlay -> hide -> show
@@ -10226,7 +10213,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             auto theme = GetCommandStringArg(cmd, kCmdArgTheme, nullptr);
             if (theme) {
                 SetTheme(theme);
-                SaveSettings();
+                ScheduleSaveSettings();
             }
             return 0;
         }
@@ -10350,7 +10337,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 break;
             }
             *p = !*p;
-            SaveSettings();
+            ScheduleSaveSettings();
             // selection toolbar respects the setting on next show; hide if turned off
             if (str::EqI(settingName, StrL("SelectionToolbar")) && !*p) {
                 for (MainWindow* w : gWindows) {
@@ -10684,7 +10671,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             for (MainWindow* w : gWindows) {
                 ToolbarUpdateStateForWindow(w, true);
             }
-            SaveSettings();
+            ScheduleSaveSettings();
             break;
         }
 
@@ -11373,7 +11360,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdToggleDisableLinks:
             if (ShouldToggle(cmd, gGlobalPrefs->disableLinks)) {
                 gGlobalPrefs->disableLinks = !gGlobalPrefs->disableLinks;
-                SaveSettings();
+                ScheduleSaveSettings();
                 if (gGlobalPrefs->disableLinks) {
                     for (MainWindow* w : gWindows) {
                         RefHoverHide(w->refHover, w->hwndCanvas);
@@ -11615,7 +11602,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     RefHoverHide(w->refHover, w->hwndCanvas);
                 }
             }
-            SaveSettings();
+            ScheduleSaveSettings();
             break;
 
         case CmdSelectTextViaKeyboard:
@@ -11814,7 +11801,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleLightDarkTheme:
             ToggleLightDarkTheme();
-            SaveSettings();
+            ScheduleSaveSettings();
             break;
 
         case CmdToggleInverseSearch:
@@ -12643,7 +12630,7 @@ static void ReadAloudSaveVoicePref(Str voiceId) {
         return;
     }
     str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, voiceId);
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 // WinRT speech synthesis is too slow for whole-document requests; speak in chunks.
@@ -13003,7 +12990,7 @@ static void ReadAloudSetSpeed(float speed) {
     TtsSetSpeed(speed);
     gGlobalPrefs->readAloudSpeed = TtsGetSpeed();
     logf("ReadAloud: SetSpeed: %s\n", ReadAloudSpeedLabelTemp(TtsGetSpeed()));
-    SaveSettings();
+    ScheduleSaveSettings();
 
     // the WinRT backend applies the new speed only to newly synthesized
     // chunks, so re-speak from the current position

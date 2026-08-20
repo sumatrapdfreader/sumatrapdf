@@ -663,7 +663,7 @@ void AIChatUpdateSidebarDx(MainWindow* win, int dx, bool persist) {
         gGlobalPrefs->aiChatSidebarDx = dx;
     }
     if (persist) {
-        SaveSettings();
+        ScheduleSaveSettings();
     }
 }
 

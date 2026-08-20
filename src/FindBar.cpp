@@ -627,7 +627,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
     HideFindBar(win); // dispatches: hides whichever find UI is currently visible
 
     gGlobalPrefs->searchUIFloating = !gGlobalPrefs->searchUIFloating;
-    SaveSettings();
+    ScheduleSaveSettings();
 
     if (!wasShowing) {
         return; // just persist the preference; nothing was open

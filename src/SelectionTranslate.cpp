@@ -314,7 +314,7 @@ static void MaybeSaveTranslatePrefs(TranslateEngine engine, Str srcLang, Str dst
     changed |= UpdateTranslatePref(&gGlobalPrefs->translateFromLang, srcLang);
     changed |= UpdateTranslatePref(&gGlobalPrefs->translateToLang, dstLang);
     if (changed) {
-        SaveSettings();
+        ScheduleSaveSettings();
     }
 }
 

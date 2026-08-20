@@ -44,6 +44,10 @@
 // if this flag is set, CloseWindow will not save prefs before closing the window.
 bool gDontSaveSettings = false;
 
+// coalesces ScheduleSaveSettings() onto one uitask; a sync SaveSettings()
+// clears it so a pending post becomes a no-op
+static bool gSaveSettingsPending = false;
+
 static bool ApplyReadAloudVoiceFromSettings() {
     if (!gGlobalPrefs) {
         return false;
@@ -701,10 +705,35 @@ static void RememberSessionState() {
     }
 }
 
+static void SaveSettingsPosted() {
+    if (!gSaveSettingsPending) {
+        return;
+    }
+    gSaveSettingsPending = false;
+    SaveSettings();
+}
+
+// Flush prefs on the next UI turn. Use when the caller mutated gGlobalPrefs
+// (or tab display state) but must not walk tabs in the middle of load/close,
+// and a later SaveSettings() / process exit will still persist if we crash
+// before the post runs.
+void ScheduleSaveSettings() {
+    if (gSaveSettingsPending || gForTesting || gDontSaveSettings) {
+        return;
+    }
+    if (!HasPermission(Perm::SavePreferences)) {
+        return;
+    }
+    gSaveSettingsPending = true;
+    auto fn = MkFunc0Void(SaveSettingsPosted);
+    uitask::Post(fn, "SaveSettings");
+}
+
 // called whenever global preferences change or a file is
 // added or removed from the file history (in order to keep
 // the list of recently opened documents in sync)
 bool SaveSettings() {
+    gSaveSettingsPending = false;
     if (gForTesting) {
         // started with -for-testing for ad-hoc testing: don't modify
         // the settings of the tester

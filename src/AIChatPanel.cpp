@@ -446,7 +446,7 @@ static void SyncAIChatSettingsFromUI(MainWindow* win) {
         p->SetFlag(win->aiChatCheckbox->IsChecked());
     }
     AIChatUpdateSidebarDx(win, win->aiChatDx, false);
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 // --- Working state ---

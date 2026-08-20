@@ -2292,7 +2292,7 @@ static void HomeViewModeClicked(MainWindow* win, VirtMouseEvent* ev) {
         win->DeleteToolTip();
     }
     win->homePageScrollY = 0;
-    SaveSettings();
+    ScheduleSaveSettings();
     win->RedrawAll(true);
 }
 
