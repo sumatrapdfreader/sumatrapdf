@@ -127,6 +127,25 @@ async function waitForState(
   throw new Error(`keyboard-link state did not match in time\n${last.dump}`);
 }
 
+async function waitForFullscreenState(client: ControlClient, expected: boolean): Promise<void> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let dump = "";
+  while (Date.now() < deadline) {
+    const res = await client.request(ControlCommand.TestDisplayMode, ["get"]);
+    dump = String(res[1] ?? "");
+    const m = /fullscreen=(\d+)/.exec(dump);
+    if (m && (m[1] === "1") === expected) {
+      // TranslateMessage can append a WM_CHAR behind the control request that
+      // observed the completed key command. A second UI-thread request drains
+      // that message before the test activates link following.
+      await getState(client);
+      return;
+    }
+    await sleep(25);
+  }
+  throw new Error(`fullscreen state did not become ${expected ? "on" : "off"}\n${dump}`);
+}
+
 async function setupPdfView(client: ControlClient, proc: Bun.Subprocess): Promise<number> {
   const frame = await waitForTopWindow(proc.pid!, FRAME_CLASS);
   if (!frame) {
@@ -186,12 +205,11 @@ async function testLinkedPdf(): Promise<void> {
       // plain 'f' still belongs to fullscreen: it must not turn the mode on
       // (pressed twice so the window doesn't stay fullscreen)
       pressVKey(frame, VK_F);
+      await waitForFullscreenState(client, true);
       ({ state, dump } = await getState(client));
       const wrongKey = state.active;
       pressVKey(frame, VK_F);
-      // Let the WM_CHAR generated from the posted keydown drain before link
-      // mode is activated below; F is now itself a valid link-hint letter.
-      await sleep(50 * SLOW_BUILD_FACTOR);
+      await waitForFullscreenState(client, false);
       if (wrongKey) {
         fail("plain 'f' must toggle fullscreen, not keyboard link following", dump);
       }
