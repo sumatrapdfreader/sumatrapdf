@@ -7245,9 +7245,14 @@ static void EndFrameRedrawSuppression(MainWindow* win) {
     }
     HwndInvalidate(win->hwndCanvas);
     // Finish the transition with real pixels before returning to the message
-    // loop; otherwise the user briefly sees the copied pre-transition surface.
+    // loop. RedrawWindow dispatches WM_PAINT synchronously, but GDI and DWM can
+    // still defer the result and briefly present the copied pre-transition surface.
     RedrawWindow(win->hwndFrame, nullptr, nullptr,
                  RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
+    GdiFlush();
+    if (!IsRunningOnWine()) {
+        DwmFlush();
+    }
 }
 
 static void UpdateOverlayScrollbarPositions(MainWindow* win) {
