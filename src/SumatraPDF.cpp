@@ -3721,7 +3721,12 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     FileWatcherUnsubscribe(currTab->watcher);
     currTab->watcher = nullptr;
 
-    if (gGlobalPrefs->reloadModifiedDocuments) {
+    // Host-app cache extracts (OneNote, Outlook) and our copies of them are
+    // not the user's file: don't watch, don't remember, don't pin the original
+    // via Recent / thumbnails (issue #4705).
+    bool transient = IsOpenCachePath(fullPath) || path::IsEphemeralHostFile(fullPath);
+
+    if (gGlobalPrefs->reloadModifiedDocuments && !transient) {
         auto fn = MkFunc0(ScheduleReloadTab, currTab);
         // was gGlobalPrefs->enableTeXEnhancements because people complained
         // about network traffic. but then people complained it stopped working
@@ -3731,7 +3736,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         currTab->watcher = FileWatcherSubscribe(path, fn, enableManualCheck);
     }
 
-    if (SettingsRememberOpenedFiles()) {
+    if (SettingsRememberOpenedFiles() && !transient) {
         ReportIf(!str::Eq(fullPath, path));
         FileState* ds = FileHistoryMarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage) {
@@ -3747,7 +3752,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    if (CanAccessDisk() && !gPluginMode && !IsStressTesting()) {
+    if (CanAccessDisk() && !gPluginMode && !IsStressTesting() && !transient) {
         AddPathToRecentDocs(fullPath);
 
         // Remove Zone.Identifier (Mark of the Web) so that Windows Explorer
@@ -4135,6 +4140,8 @@ static float EbookLayoutAspectForWindow(MainWindow* win) {
     return (float)rc.dy / (float)rc.dx;
 }
 
+static void MaybeDetachEphemeralHostFile(LoadArgs* args);
+
 void StartLoadDocument(LoadArgs* argsIn) {
     if (gCrashOnOpen) {
         log("LoadDocumentAsync: about to call CrashMe()\n");
@@ -4172,6 +4179,9 @@ void StartLoadDocument(LoadArgs* argsIn) {
         argsIn->onFinished.Call(false);
         return;
     }
+
+    MaybeDetachEphemeralHostFile(argsIn);
+    path = argsIn->FilePath();
 
     if (argsIn->targetTab) {
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
@@ -4340,6 +4350,23 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win) {
     }
 }
 
+// OneNote / Outlook extract the attachment to a cache file then need it back
+// exclusively to sync. Copy to our open-cache and load that instead (#4705).
+static void MaybeDetachEphemeralHostFile(LoadArgs* args) {
+    Str path = args->FilePath();
+    if (!path::IsEphemeralHostFile(path) || IsOpenCachePath(path)) {
+        return;
+    }
+    if (!args->DisplayName()) {
+        args->SetDisplayName(path::GetBaseNameTemp(path));
+    }
+    TempStr copy = MaybeCopyEphemeralHostFile(path);
+    if (!copy) {
+        return;
+    }
+    args->SetFilePath(copy);
+}
+
 // reads page count and creates a child element for each page
 MainWindow* LoadDocument(LoadArgs* args) {
     if (gCrashOnOpen) {
@@ -4377,6 +4404,9 @@ MainWindow* LoadDocument(LoadArgs* args) {
     if (!win) {
         return nullptr;
     }
+
+    MaybeDetachEphemeralHostFile(args);
+    path = args->FilePath();
 
     // see the same call in StartLoadDocument (issue #3472)
     EngineMupdfSetEbookLayoutAspect(EbookLayoutAspectForWindow(win));

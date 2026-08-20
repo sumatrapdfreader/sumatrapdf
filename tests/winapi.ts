@@ -161,6 +161,11 @@ const kernel32 = dlopen("kernel32.dll", {
   WaitForSingleObject: { args: [FFIType.u64, FFIType.u32], returns: FFIType.u32 },
   CloseHandle: { args: [FFIType.u64], returns: FFIType.bool },
   GetLastError: { args: [], returns: FFIType.u32 },
+  CreateFileW: {
+    args: [FFIType.ptr, FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.u32, FFIType.u32, FFIType.u64],
+    returns: FFIType.u64,
+  },
+  DeleteFileW: { args: [FFIType.ptr], returns: FFIType.bool },
 });
 
 // Authenticode helpers (mirror src/base/Crypto_win.cpp GetExecutableSignerTemp / IsPEFileSigned).
@@ -662,6 +667,31 @@ export function wideZ(s: string): Uint16Array {
   }
   buf[s.length] = 0;
   return buf;
+}
+
+const GENERIC_WRITE = 0x40000000;
+const OPEN_EXISTING = 3;
+const FILE_ATTRIBUTE_NORMAL = 0x80;
+
+// CreateFileW with dwShareMode=0: what OneNote does when it tries to rewrite
+// an extracted attachment. ok=false means another process is still holding it.
+export function tryOpenExclusive(path: string): { ok: boolean; error: number } {
+  const w = wideZ(path);
+  const h = kernel32.symbols.CreateFileW(ptr(w), GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0n);
+  if (h === 0xffffffffffffffffn || h === -1n) {
+    return { ok: false, error: kernel32.symbols.GetLastError() };
+  }
+  kernel32.symbols.CloseHandle(h);
+  return { ok: true, error: 0 };
+}
+
+export function tryDeleteFile(path: string): { ok: boolean; error: number } {
+  const w = wideZ(path);
+  const ok = kernel32.symbols.DeleteFileW(ptr(w));
+  if (ok) {
+    return { ok: true, error: 0 };
+  }
+  return { ok: false, error: kernel32.symbols.GetLastError() };
 }
 
 export function getWindowText(hwnd: number): string {

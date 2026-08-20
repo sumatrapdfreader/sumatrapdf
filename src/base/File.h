@@ -49,6 +49,7 @@ bool IsOnFixedDrive(Str path);
 bool IsOnNetworkDrive(Str path);
 bool IsOnAvailableDrive(Str path);
 bool IsCloudPlaceholder(Str path);
+bool IsEphemeralHostFile(Str path);
 bool SupportsChangeNotifications(Str path);
 bool IsAbsolute(Str path);
 

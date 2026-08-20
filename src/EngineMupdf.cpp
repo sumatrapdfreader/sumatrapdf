@@ -725,9 +725,23 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
 }
 
 static fz_stream* FzOpenOrReadFile(fz_context* ctx, Str path) {
-    fz_stream* stm = FzReadFileIfSmall(ctx, path);
-    if (stm) {
-        return stm;
+    fz_stream* stm = nullptr;
+    // OneNote/Outlook cache files: always load fully so we drop the original
+    // handle even when the copy-on-open path could not run (issue #4705).
+    if (path::IsEphemeralHostFile(path)) {
+        Str d = file::ReadFile(path);
+        if (len(d) > 0) {
+            stm = FzStreamFromData(ctx, (u8*)d.s, len(d));
+        }
+        str::Free(d);
+        if (stm) {
+            return stm;
+        }
+    } else {
+        stm = FzReadFileIfSmall(ctx, path);
+        if (stm) {
+            return stm;
+        }
     }
 #if OS_WIN
     WCHAR* pathW = CWStrTemp(path);

@@ -115,6 +115,79 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
     return cachePath;
 }
 
+static AtomicInt gOpenCacheSeq;
+
+static TempStr GetOpenCacheDirTemp() {
+    TempStr dataDir = GetSumatraDataDirTemp();
+    if (!dataDir) {
+        return {};
+    }
+    return path::JoinTemp(dataDir, StrL("open-cache"));
+}
+
+// Copies we made of OneNote / Outlook extracts live under <dataDir>/open-cache.
+bool IsOpenCachePath(Str path) {
+    TempStr dir = GetOpenCacheDirTemp();
+    if (!path || !dir) {
+        return false;
+    }
+    if (!str::StartsWithI(path, dir)) {
+        return false;
+    }
+    int n = len(dir);
+    return len(path) > n && path::IsSep(path.s[n]);
+}
+
+// Read the source with FILE_SHARE_READ|WRITE|DELETE so the host can still
+// exclusive-open or delete it the moment we close, then write our private copy.
+static bool CopyUnlockingSource(Str dst, Str src) {
+    Str data = file::ReadFile(src);
+    if (!data) {
+        return false;
+    }
+    bool ok = file::WriteFile(dst, data);
+    str::Free(data);
+    if (!ok) {
+        file::Delete(dst);
+    }
+    return ok;
+}
+
+// OneNote and Outlook extract the attachment to a cache file, launch us, then
+// need exclusive access to that file (or its folder) to sync the section.
+// Copy it into our open-cache and load the copy so we are not holding the
+// original (issue #4705).
+TempStr MaybeCopyEphemeralHostFile(Str path) {
+    if (!path::IsEphemeralHostFile(path)) {
+        return {};
+    }
+    if (IsOpenCachePath(path)) {
+        return {};
+    }
+    i64 fileSize = file::GetSize(path);
+    if (fileSize <= 0) {
+        return {};
+    }
+    TempStr dir = GetOpenCacheDirTemp();
+    if (!dir) {
+        return {};
+    }
+    if (!dir::CreateAll(dir)) {
+        logf("MaybeCopyEphemeralHostFile: dir::CreateAll('%s') failed\n", dir);
+        return {};
+    }
+    TempStr ext = path::GetExtTemp(path);
+    int seq = AtomicIntInc(&gOpenCacheSeq);
+    TempStr name = fmt("%d%s", seq, ext);
+    TempStr dst = path::JoinTemp(dir, name);
+    if (!CopyUnlockingSource(dst, path)) {
+        logf("MaybeCopyEphemeralHostFile: copy '%s' -> '%s' failed\n", path, dst);
+        return {};
+    }
+    logf("MaybeCopyEphemeralHostFile: '%s' -> '%s'\n", path, dst);
+    return dst;
+}
+
 /* EngineCreate.cpp */
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
     if (kind == FileType::Unknown) {

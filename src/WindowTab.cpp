@@ -30,6 +30,9 @@ WindowTab::WindowTab(MainWindow* win) {
 
 void WindowTab::SetFilePath(Str path) {
     type = Type::Document;
+    if (filePath && !path::IsSame(filePath, path) && IsOpenCachePath(filePath)) {
+        file::Delete(filePath);
+    }
     str::ReplaceWithCopy(&filePath, path);
 }
 
@@ -102,6 +105,9 @@ WindowTab::~WindowTab() {
         SafeEngineRelease(&pendingLoadArgs->engine);
     }
     delete pendingLoadArgs;
+    if (IsOpenCachePath(filePath)) {
+        file::Delete(filePath);
+    }
     str::Free(filePath);
     filePath = {};
     str::Free(displayName);

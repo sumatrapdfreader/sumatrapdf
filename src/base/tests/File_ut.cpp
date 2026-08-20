@@ -48,6 +48,18 @@ void FileUtilTest() {
     utassert(path::Match("C:\\file.pdf", "f??e.p?f"));
     utassert(!path::Match("C:\\file.pdf", "*.xps;*.djvu"));
     utassert(!path::Match("C:\\dir.xps\\file.pdf", "*.xps;*.djvu"));
+
+    utassert(path::IsEphemeralHostFile(StrL("C:\\Users\\x\\AppData\\Local\\Microsoft\\OneNote\\16.0\\cache\\a.pdf")));
+    utassert(path::IsEphemeralHostFile(StrL("C:\\Users\\x\\AppData\\Local\\Temp\\OneNote\\tmp\\a.pdf")));
+    utassert(path::IsEphemeralHostFile(
+        StrL("C:\\Users\\x\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\ABC\\a.pdf")));
+    utassert(
+        path::IsEphemeralHostFile(StrL("C:\\Users\\x\\AppData\\Local\\Microsoft\\Windows\\INetCache\\IE\\xyz\\a.pdf")));
+    utassert(path::IsEphemeralHostFile(
+        StrL("C:\\Users\\x\\AppData\\Local\\Packages\\Microsoft.Office.OneNote_8wekyb3d8bbwe\\LocalState\\a.pdf")));
+    utassert(!path::IsEphemeralHostFile(StrL("C:\\docs\\paper.pdf")));
+    utassert(!path::IsEphemeralHostFile(StrL("C:\\docs\\OneNotePDFs\\a.pdf")));
+    utassert(!path::IsEphemeralHostFile(StrL("C:\\docs\\my-onenote-export.pdf")));
     utassert(!path::Match("C:\\file.pdf", "f??f.p?f"));
     utassert(!path::Match("C:\\.pdf", "?.pdf"));
     {

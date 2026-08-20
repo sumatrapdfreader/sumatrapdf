@@ -148,6 +148,10 @@ bool IsCloudPlaceholder(Str /*path*/) {
     return false;
 }
 
+bool IsEphemeralHostFile(Str /*path*/) {
+    return false;
+}
+
 bool IsOnFixedDrive(Str /*path*/) {
     return true;
 }

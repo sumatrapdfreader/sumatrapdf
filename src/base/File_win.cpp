@@ -648,6 +648,51 @@ bool IsCloudPlaceholder(Str path) {
     return (attrs & cloudBits) != 0;
 }
 
+// True if this directory name is one used by OneNote / Outlook / IE to extract
+// an attachment that the host still needs to rewrite or delete.
+static bool IsEphemeralHostDirName(Str name) {
+    if (str::EqI(name, StrL("OneNote"))) {
+        return true;
+    }
+    if (str::StartsWithI(name, StrL("Microsoft.Office.OneNote"))) {
+        return true;
+    }
+    if (str::EqI(name, StrL("Content.Outlook"))) {
+        return true;
+    }
+    if (str::EqI(name, StrL("INetCache"))) {
+        return true;
+    }
+    if (str::EqI(name, StrL("Temporary Internet Files"))) {
+        return true;
+    }
+    return false;
+}
+
+// Files extracted by OneNote, Outlook, and similar hosts into a cache folder.
+// Opening those in place keeps a handle (or a directory watch) on the host's
+// file, and the host then fails to sync with "denied access to the file"
+// (issue #4705). Detection is by path component only; the file need not exist.
+bool IsEphemeralHostFile(Str path) {
+    if (!path) {
+        return false;
+    }
+    int start = 0;
+    int nPath = len(path);
+    for (int i = 0; i <= nPath; i++) {
+        bool sep = (i == nPath) || IsSep(path.s[i]);
+        if (!sep) {
+            continue;
+        }
+        int n = i - start;
+        if (n > 0 && IsEphemeralHostDirName(Str(path.s + start, n))) {
+            return true;
+        }
+        start = i + 1;
+    }
+    return false;
+}
+
 bool IsOnFixedDrive(Str path) {
     WCHAR* ws = CWStrTemp(path);
     if (PathIsNetworkPathW(ws)) {

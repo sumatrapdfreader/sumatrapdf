@@ -170,6 +170,9 @@ bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);
 
 EngineBase* CreateEngineFromFile(Str filePath, PasswordUI* pwdUI, bool enableChmEngine);
 
+bool IsOpenCachePath(Str path);
+TempStr MaybeCopyEphemeralHostFile(Str path);
+
 bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineHasUnsavedAnnotations(EngineBase*);

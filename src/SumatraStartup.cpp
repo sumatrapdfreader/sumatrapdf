@@ -1647,8 +1647,46 @@ static void DeleteOldPdfPreviewLogs(int keep) {
     }
 }
 
+// Copies of OneNote/Outlook extracts. Delete leftovers from a crash; live
+// tabs delete their own copy when the tab closes.
+static void DeleteStaleOpenCacheFiles() {
+    TempStr dataDir = GetSumatraDataDirTemp();
+    if (!dataDir) {
+        return;
+    }
+    TempStr cacheDir = path::JoinTemp(dataDir, StrL("open-cache"));
+    if (path::GetType(cacheDir) != path::Type::Dir) {
+        return;
+    }
+
+    constexpr i64 kMaxAgeSec = 24LL * 60 * 60;
+    FILETIME nowFt;
+    GetSystemTimeAsFileTime(&nowFt);
+    ULARGE_INTEGER now;
+    now.LowPart = nowFt.dwLowDateTime;
+    now.HighPart = nowFt.dwHighDateTime;
+
+    DirIter di{cacheDir};
+    di.includeFiles = true;
+    di.includeDirs = false;
+    for (DirIterEntry* de : di) {
+        FILETIME atime = de->accessTime;
+        ULARGE_INTEGER a;
+        a.LowPart = atime.dwLowDateTime;
+        a.HighPart = atime.dwHighDateTime;
+        i64 ageSec = (i64)((now.QuadPart - a.QuadPart) / 10000000ULL);
+        if (ageSec < kMaxAgeSec) {
+            continue;
+        }
+        bool ok = file::Delete(de->filePath);
+        logf("DeleteStaleOpenCacheFiles: delete '%s' (age %lld h) -> %d\n", de->filePath, (long long)(ageSec / 3600),
+             (int)ok);
+    }
+}
+
 static void DeleteStaleFilesAsync() {
     DeleteStaleCbxCacheFiles();
+    DeleteStaleOpenCacheFiles();
     DeleteOldPdfPreviewLogs(32);
 
     if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
