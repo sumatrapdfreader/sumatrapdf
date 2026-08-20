@@ -375,6 +375,38 @@ struct VirtScroll : VirtCtrl {
     void NotifyVisibleRange();
 };
 
+// Scrolls an ILayout child (VBox/HBox/Table) inside a clipped viewport.
+struct ScrollBox : VirtCtrl {
+    ILayout* child = nullptr; // owned
+    int scrollY = 0;
+    Size contentSize;
+    int lineDy = 16;
+    bool syncScrollbar = true;
+
+    explicit ScrollBox(ILayout* child);
+    ~ScrollBox() override;
+
+    Size Layout(Constraints bc) override;
+    void SetBounds(Rect) override;
+    Point ScrollOffset() override;
+    void Paint(VirtPaintCtx&) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size GetIdealSize() override;
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+
+    int MaxScrollY() const;
+    bool ScrollTo(int y);
+    bool ScrollBy(int dy);
+    bool ScrollPage(int dir);
+    void OnMouseWheel(VirtMouseEvent*);
+    void OnVScroll(WPARAM);
+
+  private:
+    void UpdateScrollbar();
+};
+
 // A list of rows: it owns the model, the selection and the scroll position, and
 // paints only the rows that are visible. The virtual counterpart of the HWND
 // ListBox, minus the win32 listbox's habits (it doesn't steal the keyboard

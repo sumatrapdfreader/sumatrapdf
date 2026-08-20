@@ -1328,6 +1328,172 @@ void VirtScroll::NotifyVisibleRange() {
     onVisibleRangeChanged.Call(&r);
 }
 
+//--- ScrollBox
+
+static Kind kindScrollBox = "scrollBox";
+
+ScrollBox::ScrollBox(ILayout* childIn) {
+    kind = kindScrollBox;
+    child = childIn;
+    flags |= vwfClipChildren;
+    onMouseWheel = MkMethod1<ScrollBox, VirtMouseEvent*, &ScrollBox::OnMouseWheel>(this);
+}
+
+ScrollBox::~ScrollBox() {
+    delete child;
+    child = nullptr;
+}
+
+Size ScrollBox::Layout(Constraints bc) {
+    Constraints cc = bc;
+    cc.min = {0, 0};
+    cc.max.dy = Inf;
+    if (child) {
+        contentSize = child->Layout(cc);
+    } else {
+        contentSize = {};
+    }
+    Size sz = contentSize;
+    if (bc.HasBoundedHeight()) {
+        sz.dy = std::min(sz.dy, bc.max.dy);
+    }
+    return bc.Constrain(sz);
+}
+
+void ScrollBox::SetBounds(Rect r) {
+    VirtCtrl::SetBounds(r);
+    if (child) {
+        child->SetBounds({r.x, r.y - scrollY, r.dx, contentSize.dy});
+    }
+    ScrollTo(scrollY);
+    UpdateScrollbar();
+}
+
+Point ScrollBox::ScrollOffset() {
+    return {0, scrollY};
+}
+
+void ScrollBox::Paint(VirtPaintCtx& ctx) {
+    if (!child) {
+        return;
+    }
+    Rect clip = ctx.clip.Intersect(ctx.bounds);
+    if (clip.IsEmpty()) {
+        return;
+    }
+    ctx.gfx->PushClip(clip);
+    Vec<VirtCtrl*> inner;
+    CollectVirtCtrls(child, inner);
+    for (VirtCtrl* w : inner) {
+        w->PaintTree(ctx.gfx, {0, 0}, clip);
+    }
+    ctx.gfx->PopClip();
+}
+
+int ScrollBox::MinIntrinsicHeight(int width) {
+    return child ? child->MinIntrinsicHeight(width) : 0;
+}
+
+int ScrollBox::MinIntrinsicWidth(int height) {
+    return child ? child->MinIntrinsicWidth(height) : 0;
+}
+
+Size ScrollBox::GetIdealSize() {
+    return contentSize;
+}
+
+int ScrollBox::LayoutChildCount() {
+    return child ? 1 : 0;
+}
+
+ILayout* ScrollBox::LayoutChildAt(int) {
+    return child;
+}
+
+int ScrollBox::MaxScrollY() const {
+    int visible = bounds.dy;
+    int res = contentSize.dy - visible;
+    return res > 0 ? res : 0;
+}
+
+bool ScrollBox::ScrollTo(int y) {
+    int maxY = MaxScrollY();
+    y = Clamp(y, 0, maxY);
+    if (y == scrollY) {
+        UpdateScrollbar();
+        return false;
+    }
+    scrollY = y;
+    if (child) {
+        Rect r = lastBounds;
+        child->SetBounds({r.x, r.y - scrollY, r.dx, contentSize.dy});
+    }
+    UpdateScrollbar();
+    Invalidate();
+    return true;
+}
+
+bool ScrollBox::ScrollBy(int dy) {
+    return ScrollTo(scrollY + dy);
+}
+
+bool ScrollBox::ScrollPage(int dir) {
+    return ScrollBy(dir * bounds.dy);
+}
+
+void ScrollBox::OnMouseWheel(VirtMouseEvent* ev) {
+    if (ev->wheelDelta == 0) {
+        return;
+    }
+    int lines = -(ev->wheelDelta * 3) / WHEEL_DELTA;
+    if (ScrollBy(lines * lineDy)) {
+        ev->didHandle = true;
+    }
+}
+
+void ScrollBox::OnVScroll(WPARAM wp) {
+    int visible = bounds.dy;
+    switch (LOWORD(wp)) {
+        case SB_TOP:
+            ScrollTo(0);
+            break;
+        case SB_BOTTOM:
+            ScrollTo(MaxScrollY());
+            break;
+        case SB_LINEUP:
+            ScrollBy(-lineDy);
+            break;
+        case SB_LINEDOWN:
+            ScrollBy(lineDy);
+            break;
+        case SB_PAGEUP:
+            ScrollBy(-visible);
+            break;
+        case SB_PAGEDOWN:
+            ScrollBy(visible);
+            break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION:
+            ScrollTo(HIWORD(wp));
+            break;
+    }
+}
+
+void ScrollBox::UpdateScrollbar() {
+    HWND hwnd = GetHwnd();
+    if (!syncScrollbar || !hwnd) {
+        return;
+    }
+    SCROLLINFO si{};
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_ALL;
+    si.nMin = 0;
+    si.nMax = contentSize.dy > 0 ? contentSize.dy - 1 : 0;
+    si.nPage = (UINT)std::max(bounds.dy, 0);
+    si.nPos = scrollY;
+    SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+}
+
 //--- VirtListBox
 
 static Kind kindVirtCtrlListBox = "virtCtrlListBox";
@@ -3084,6 +3250,25 @@ static void CollectTabStops_Test() {
     delete box;
 }
 
+static void ScrollBox_Test() {
+    auto* inner = new VBox();
+    inner->AddChild(new Spacer(40, 200));
+    auto* sb = new ScrollBox(inner);
+    Size full = sb->Layout(ExpandInf());
+    utassert(full.dy == 200);
+    Size view = sb->Layout(Tight({40, 80}));
+    utassert(view.dy == 80);
+    utassert(sb->contentSize.dy == 200);
+    sb->SetBounds({0, 0, 40, 80});
+    utassert(sb->MaxScrollY() == 120);
+    utassert(sb->ScrollTo(50));
+    utassert(sb->scrollY == 50);
+    utassert(!sb->ScrollTo(50));
+    utassert(sb->ScrollTo(999));
+    utassert(sb->scrollY == 120);
+    delete sb;
+}
+
 void VirtCtrl_UnitTests() {
     Table_TestGrid();
     Table_TestAlign();
@@ -3091,6 +3276,7 @@ void VirtCtrl_UnitTests() {
     Table_TestHitTest();
     CollectVirtCtrls_Test();
     CollectTabStops_Test();
+    ScrollBox_Test();
 }
 #endif
 

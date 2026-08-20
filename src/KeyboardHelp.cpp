@@ -132,6 +132,9 @@ static Rect PositionHelpWindow(NativeWnd parent, bool fullscreen, Size size) {
     if (work.IsEmpty()) {
         work = {0, 0, std::max(size.dx, 1920), std::max(size.dy, 1080)};
     }
+    // never taller or wider than the work area (issue #5999)
+    size.dx = std::min(size.dx, work.dx);
+    size.dy = std::min(size.dy, work.dy);
     Rect frame = PlatformWindowRect(parent);
     if (!parent || frame.IsEmpty()) {
         return {work.x + ((work.dx - size.dx) / 2), work.y + ((work.dy - size.dy) / 2), size.dx, size.dy};
@@ -158,6 +161,7 @@ static Rect PositionHelpWindow(NativeWnd parent, bool fullscreen, Size size) {
 // containers (VBox / HBox / Table) place everything
 struct KeyboardHelpWnd : WindowBase {
     HWND parentFrame = nullptr;
+    ScrollBox* scroll = nullptr;
 
     ~KeyboardHelpWnd() override = default;
     bool Create(const KeyboardHelpArgs&);
@@ -195,10 +199,62 @@ static void OnHelpWndProc(WindowBase::WndProcEvent* ev) {
         ev->result = 0;
         ev->didHandle = true;
         ScheduleCloseKeyboardHelp();
+        return;
+    }
+    auto* help = (KeyboardHelpWnd*)ev->w;
+    ScrollBox* scroll = help ? help->scroll : nullptr;
+    if (!scroll) {
+        return;
+    }
+    if (ev->msg == WM_VSCROLL && ev->lparam == 0) {
+        scroll->OnVScroll(ev->wparam);
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
+    }
+    if (ev->msg == WM_MOUSEWHEEL) {
+        VirtMouseEvent mev;
+        mev.wheelDelta = GET_WHEEL_DELTA_WPARAM(ev->wparam);
+        scroll->OnMouseWheel(&mev);
+        ev->result = 0;
+        ev->didHandle = true;
     }
 }
 
-static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title) {
+static void OnHelpKeyDown(KeyEvent* ev) {
+    ScrollBox* scroll = gKeyboardHelpWnd ? gKeyboardHelpWnd->scroll : nullptr;
+    if (!scroll) {
+        return;
+    }
+    switch (ev->vkey) {
+        case VK_UP:
+            scroll->ScrollBy(-scroll->lineDy);
+            ev->didHandle = true;
+            break;
+        case VK_DOWN:
+            scroll->ScrollBy(scroll->lineDy);
+            ev->didHandle = true;
+            break;
+        case VK_PRIOR:
+            scroll->ScrollPage(-1);
+            ev->didHandle = true;
+            break;
+        case VK_NEXT:
+            scroll->ScrollPage(1);
+            ev->didHandle = true;
+            break;
+        case VK_HOME:
+            scroll->ScrollTo(0);
+            ev->didHandle = true;
+            break;
+        case VK_END:
+            scroll->ScrollTo(scroll->MaxScrollY());
+            ev->didHandle = true;
+            break;
+    }
+}
+
+static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title, ScrollBox** scrollOut) {
     PlatformFont* fontRow = GetDefaultGuiFont();
     PlatformFont* fontHeader = GetBoldPlatformFont(fontRow);
     PlatformFont* fontTitle = GetScaledPlatformFont(fontHeader, 125);
@@ -272,6 +328,11 @@ static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title) {
     content->gap = columnGap;
     content->AddChild(columns[0]);
     content->AddChild(columns[1]);
+    auto* scroll = new ScrollBox(content);
+    scroll->lineDy = DpiScale(24);
+    if (scrollOut) {
+        *scrollOut = scroll;
+    }
 
     auto* separator = new VirtLine();
     separator->thickness = DpiScale(1);
@@ -282,7 +343,8 @@ static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title) {
     root->AddChild(new Spacer(0, DpiScale(6)));
     root->AddChild(separator);
     root->AddChild(new Spacer(0, DpiScale(10)));
-    root->AddChild(content);
+    // flex so the columns shrink to the window and ScrollBox scrolls them
+    root->AddChild(scroll, 1);
 
     int pad = DpiScale(20);
     return new Padding(root, Insets{pad, pad, pad, pad});
@@ -295,9 +357,22 @@ bool KeyboardHelpWnd::Create(const KeyboardHelpArgs& helpArgs) {
     DpiScope dpiScope(parentFrame);
     Str title = ds->Translate(StrL("Keyboard Shortcuts"));
 
+    layout = BuildKeyboardHelpLayout(ds, title, &scroll);
+    if (!layout) {
+        return false;
+    }
+    Size size = layout->Layout(ExpandInf());
+    Rect work = PlatformWindowWorkArea(parentFrame);
+    DWORD style = WS_POPUP;
+    if (!work.IsEmpty() && size.dy > work.dy) {
+        size.dy = work.dy;
+        size.dx += DpiGetSystemMetrics(SM_CXVSCROLL);
+        style |= WS_VSCROLL;
+    }
+
     CreateCustomArgs args;
     args.title = title;
-    args.style = WS_POPUP;
+    args.style = style;
     args.exStyle = WS_EX_TOOLWINDOW;
     args.visible = false;
     CreateCustom(args);
@@ -310,14 +385,9 @@ bool KeyboardHelpWnd::Create(const KeyboardHelpArgs& helpArgs) {
         SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)parentFrame);
     }
 
-    layout = BuildKeyboardHelpLayout(ds, title);
-    if (!layout) {
-        return false;
-    }
-    Size size = layout->Layout(ExpandInf());
     Rect wr = PositionHelpWindow(parentFrame, helpArgs.parentFullscreen, size);
     SetWindowPos(hwnd, nullptr, wr.x, wr.y, wr.dx, wr.dy, SWP_NOZORDER | SWP_NOACTIVATE);
-    DoLayout(wr.Size());
+    DoLayout();
     UpdateTheme();
     SetIsVisible(true);
     HwndSetFocus(hwnd);
@@ -335,6 +405,7 @@ void ToggleKeyboardHelp(const KeyboardHelpArgs& args) {
     w->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnHelpClose);
     w->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnHelpDestroy);
     w->onWndProc = MkFunc1Void<WindowBase::WndProcEvent*>(OnHelpWndProc);
+    w->onKeyDown = MkFunc1Void<KeyEvent*>(OnHelpKeyDown);
     if (!w->Create(args)) {
         delete w;
         return;
