@@ -5,9 +5,9 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { ROOT, cmdId, runStandalone } from "./util";
 import {
-  enumWindows,
-  findChildWindow,
-  getWindowPid,
+  getClassName,
+  getFocusedHwnd,
+  getRootWindow,
   postMessage,
   sendText,
   sleep,
@@ -53,19 +53,13 @@ async function waitPalette(client: ControlClient): Promise<PaletteState> {
   }
 }
 
-function findPalette(pid: number, frame: number): { palette: number; edit: number } {
-  let palette = 0;
-  enumWindows((hwnd) => {
-    if (hwnd === frame || getWindowPid(hwnd) !== pid) {
-      return true;
-    }
-    if (findChildWindow(hwnd, "Edit")) {
-      palette = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return { palette, edit: palette ? findChildWindow(palette, "Edit") : 0 };
+function findPalette(frame: number): { palette: number; edit: number } {
+  const edit = getFocusedHwnd(frame);
+  if (!edit || getClassName(edit) !== "Edit") {
+    return { palette: 0, edit: 0 };
+  }
+  const palette = getRootWindow(edit);
+  return { palette: palette === frame ? 0 : palette, edit };
 }
 
 export async function testit(): Promise<void> {
@@ -75,7 +69,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdCommandPalette"));
     let st = await waitPalette(client);
-    const { palette, edit } = findPalette(proc.pid!, frame);
+    const { palette, edit } = findPalette(frame);
     if (!palette || !edit) {
       throw new Error("issue-5972: no command palette edit");
     }

@@ -309,6 +309,10 @@ several times - some are environment- and focus-dependent and fail intermittentl
 regardless of the change (`issue-1136` and `issue-2254` have both done this). One passing
 run and one failing run is not evidence; compare several runs on each side.
 
+After fixing a flaky test, place it among the first tests run by the applicable
+`tests/run-*.ts` suite scripts. Update their shared source list when they derive their
+ordering from one another, and account for runner-specific tests scheduled before it.
+
 Structure of each test (so they compose in tests/run-almost-all.ts / tests/run-all.ts):
 
 - each `tests/issue-<number>.ts` exports `export async function testit(): Promise<void>` that runs the test logic and THROWS on failure (returns normally on success). It must NOT call `process.exit` or build the app itself.

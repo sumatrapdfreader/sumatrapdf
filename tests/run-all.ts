@@ -21,7 +21,7 @@ import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as issue1195 } from "./issue-1195.ts";
 
 export const slowTests: NamedTest[] = [
-  // WebView TOC; also the first test in run-pre-release.ts
+  // WebView TOC
   ["issue-5842", issue5842],
   ["issue-4967", issue4967],
   ["issue-5065", issue5065],

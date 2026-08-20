@@ -1,5 +1,5 @@
-// Pre-release suite: issue-5842 first (WebView TOC), then the fast regular
-// tests, then LaTeX / SyncTeX.
+// Pre-release suite: fast regular tests, then the slow WebView TOC test,
+// then LaTeX / SyncTeX.
 //
 // Run:  bun tests/run-pre-release.ts [--no-build] [-silent]
 
@@ -12,8 +12,8 @@ export async function testit(opts?: SuiteOptions): Promise<void> {
   const silent = opts?.silent ?? false;
   const t0 = performance.now();
   resetTestTimes();
-  await runTest("issue-5842", issue5842, { silent });
   await runAlmostAll({ silent, keepTestTimes: true, summary: false });
+  await runTest("issue-5842", issue5842, { silent });
 
   if (!silent) {
     console.log("\n========== latex ==========");
@@ -22,7 +22,7 @@ export async function testit(opts?: SuiteOptions): Promise<void> {
 
   if (!silent) {
     console.log(
-      `\n✅ pre-release checks passed (issue-5842 + run-almost-all + latex) in ${formatDuration(performance.now() - t0)}`,
+      `\n✅ pre-release checks passed (run-almost-all + issue-5842 + latex) in ${formatDuration(performance.now() - t0)}`,
     );
   }
 }

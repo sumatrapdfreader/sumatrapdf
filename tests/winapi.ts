@@ -739,8 +739,12 @@ export function topLevelWindowFromPoint(x: number, y: number): number {
   if (!h) {
     return 0;
   }
+  return getRootWindow(h);
+}
+
+export function getRootWindow(hwnd: number): number {
   const GA_ROOT = 2;
-  return Number(user32.symbols.GetAncestor(h, GA_ROOT)) || h;
+  return Number(user32.symbols.GetAncestor(hwnd, GA_ROOT)) || hwnd;
 }
 
 export function setForegroundWindow(hwnd: number): boolean {
