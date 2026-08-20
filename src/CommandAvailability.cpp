@@ -667,6 +667,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         // way the page turns and which side of the canvas advances (#1264)
     }
 
+    if (cmdId == CmdToggleUniformPageWidth && !ctx.isFixedPage) {
+        return CommandVisibility::Hide;
+    }
+
     if (cmdId == CmdConvertToPDF) {
         // comic books, image folders, single images (issue #4118)
         Kind k = ctx.engineKind;

@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- **Uniform Page Width** in the View menu keeps mixed-size pages at the same displayed width at percentage zoom levels, using page 1 as the reference. The chosen reading size stays unchanged when the window or fullscreen size changes, and the choice is remembered per document (fixes #5512)
 - Document Properties for digitally signed PDFs shows the hash and signature algorithms, the document hash, the issuer and expiry, whether the signature is LTV-enabled, an RFC 3161 timestamp when one is present (device time vs secure TSA time), a PAdES level when the signature is CAdES, and whether the certificate is on the EU Trusted List. **View Certificate...** opens the Windows certificate dialog; **Update EU Trusted List** downloads the EU LOTL (fixes #5581)
 - Kindle Print Replica (`.azw4`) files open as the embedded PDF instead of as a reflowable MOBI ebook (fixes #1315)
 - keyboard shortcuts accept `AltGr` (also `RAlt` / `RightAlt`) as a modifier, the same as `Ctrl + Alt` on Windows, so bindings like `AltGr + Return` and `AltGr + Shift + Return` work (fixes #5973). Set Screenshot Hotkey can record Return and the arrow keys when a modifier (including AltGr) is held; unmodified Return / arrows are ignored so they are not registered as a global hotkey
@@ -210,6 +211,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 **New commands:**
 
+- `CmdToggleUniformPageWidth` : "Toggle Uniform Page Width"
 - `CmdAIChatWithClaudeCode` : "AI Chat"
 - `CmdChangeBackgroundColor` : "Change Background Color"
 - `CmdChangeTheme` : "Change Theme..." — dialog to pick a UI theme and document-color follow mode

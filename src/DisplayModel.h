@@ -209,6 +209,8 @@ struct DisplayModel : DocController {
     void SetUiDpi(int dpi);
     void SetDisplayR2L(bool r2l);
     bool GetDisplayR2L() const;
+    void SetUniformPageWidth(bool enable);
+    bool GetUniformPageWidth() const;
     bool GoToPageHorizontal(bool toRight);
 
     bool ShouldCacheRendering(int pageNo) const;
@@ -305,6 +307,7 @@ struct DisplayModel : DocController {
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */
     bool displayR2L = false;
+    bool uniformPageWidth = false;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
     bool inPresentation = false;

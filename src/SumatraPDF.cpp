@@ -2290,6 +2290,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             // WindowMargin / PageSpacing follow the window's dpi, not the
             // (physical-size) CustomScreenDPI used for zoom
             dm->SetUiDpi(win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame));
+            if (fs) {
+                dm->SetUniformPageWidth(fs->uniformPageWidth);
+            }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // SetInitialViewSettings() has just taken the direction from the
             // engine. A document that states its own (an EPUB with
@@ -7677,6 +7680,17 @@ static void ToggleMangaMode(MainWindow* win) {
     dm->SetScrollState(state);
 }
 
+static void ToggleUniformPageWidth(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    ScrollState state = dm->GetScrollState();
+    dm->SetUniformPageWidth(!dm->GetUniformPageWidth());
+    dm->Relayout(dm->GetZoomVirtual(), dm->GetRotation());
+    dm->SetScrollState(state);
+}
+
 static Point GetSelectionCenter(MainWindow* win) {
     bool hasSelection = win->showSelection && win->CurrentTab()->selectionOnPage;
     if (!hasSelection) {
@@ -10522,6 +10536,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleMangaMode:
             ToggleMangaMode(win);
+            break;
+
+        case CmdToggleUniformPageWidth:
+            ToggleUniformPageWidth(win);
             break;
 
         case CmdToggleToolbar:

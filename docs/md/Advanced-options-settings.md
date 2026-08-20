@@ -1082,6 +1082,10 @@ FileStates [
     ; modes
     DisplayR2L = false
 
+    ; if true, percentage zoom scales every page to the width page 1 has at that
+    ; zoom level (introduced in version 3.7)
+    UniformPageWidth = false
+
     ; if given, overrides the background color for this document (introduced in
     ; version 3.7)
     BgCol = 

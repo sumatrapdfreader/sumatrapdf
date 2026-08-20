@@ -600,6 +600,9 @@ struct FileState {
     // if true, the document is displayed right-to-left in facing and book
     // view modes
     bool displayR2L;
+    // if true, percentage zoom scales every page to the width page 1 has
+    // at that zoom level
+    bool uniformPageWidth;
     // if given, overrides the background color for this document
     ParsedColor bgCol;
     // if given, overrides the tab color for this document
@@ -1656,6 +1659,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, showToc), SettingType::Bool, true},
     {offsetof(FileState, sidebarDx), SettingType::Int, 0},
     {offsetof(FileState, displayR2L), SettingType::Bool, false},
+    {offsetof(FileState, uniformPageWidth), SettingType::Bool, false},
     {offsetof(FileState, bgCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, tabCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, reparseIdx), SettingType::Int, 0},
@@ -1663,11 +1667,11 @@ static const FieldInfo gFileStateFields[] = {
 };
 static StructInfo gFileStateInfo = {
     sizeof(FileState),
-    22,
+    23,
     gFileStateFields,
     "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0EBookUI\0UseDefaultState\0DisplayMode\0ScrollP"
-    "os\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0BgCol\0TabCol\0ReparseIdx\0Toc"
-    "State",
+    "os\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0UniformPageWidth\0BgCol\0TabCo"
+    "l\0ReparseIdx\0TocState",
     "path of the document\0pages of this document bookmarked in the Favorites menu\0if true, the document is "
     "\"pinned\" to the Frequently Read list, so that recently opened documents don't displace it\0if true, the file is "
     "considered missing and won't be shown in any list\0number of times this document has been opened recently\0data "
@@ -1681,9 +1685,10 @@ static StructInfo gFileStateInfo = {
     "multiple of 90 degrees\0state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is "
     "minimized\0default position (can be on any monitor)\0if true, show the table of contents (Bookmarks) sidebar when "
     "the document has one\0width of the bookmarks / favorites sidebar in screen pixels, as last resized\0if true, the "
-    "document is displayed right-to-left in facing and book view modes\0if given, overrides the background color for "
-    "this document\0if given, overrides the tab color for this document\0data required to restore the last read page "
-    "in the ebook UI\0data required to determine which parts of the table of contents have been expanded",
+    "document is displayed right-to-left in facing and book view modes\0if true, percentage zoom scales every page to "
+    "the width page 1 has at that zoom level\0if given, overrides the background color for this document\0if given, "
+    "overrides the tab color for this document\0data required to restore the last read page in the ebook UI\0data "
+    "required to determine which parts of the table of contents have been expanded",
     false};
 
 static const FieldInfo gPointF_1_Fields[] = {

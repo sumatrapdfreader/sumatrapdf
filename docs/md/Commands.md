@@ -96,6 +96,7 @@ CmdSelectTextViaKeyboard,F7,Select Text With Keyboard,"ver 3.7+, caret browsing:
 CmdToggleKeyboardLinkFollowing,Shift + F,Follow Link With Keyboard,"ver 3.7+, labels visible links with Vimium-style letter hints; type a hint to follow its link, Esc or Shift + F again leaves the mode. Multi-letter hints are used when needed. Not available for comic books, image folders and images (fixes #2629)"
 CmdToggleFullscreen,"f, Shift + Ctrl + L, F11",Toggle Fullscreen,
 CmdToggleMangaMode,,Toggle Manga Mode,"Right-to-left facing/book layout for fixed-page documents; before 3.7 this was limited to comic books"
+CmdToggleUniformPageWidth,,Toggle Uniform Page Width,"At percentage zoom levels, scales every page to the width page 1 has at that zoom; remembered per document (fixes #5512)"
 CmdToggleMenuBar,F9,Toggle Menu Bar,
 CmdTogglePageInfo,i,Show / Hide Current Page Number,was Shift + i before 3.6
 CmdTogglePageBoxes,,Toggle Page Boxes,"ver 3.7+, outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each page (only boxes that page actually has) and labels them. Palette and Debug menu. No default shortcut (fixes #814)"

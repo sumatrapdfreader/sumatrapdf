@@ -294,7 +294,8 @@ enum {
     CmdToggleHighlightFormFields = 483,
     CmdTogglePageBoxes = 484,
     CmdConvertPdfToImages = 485,
-    CmdNone = 486,
+    CmdToggleUniformPageWidth = 486,
+    CmdNone = 487,
 
     /* range for file history */
     CmdFileHistoryFirst,

@@ -253,6 +253,10 @@ static MenuDef menuDefView[] = {
         CmdToggleMangaMode,
     },
     {
+        _TRN("&Uniform Page Width"),
+        CmdToggleUniformPageWidth,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -1842,6 +1846,8 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
         bool mangaMode = dm->GetDisplayR2L();
         MenuSetChecked(win->menu, CmdToggleMangaMode, mangaMode);
         MenuSetEnabled(win->menu, CmdToggleMangaMode, true);
+        MenuSetChecked(win->menu, CmdToggleUniformPageWidth, dm->GetUniformPageWidth());
+        MenuSetEnabled(win->menu, CmdToggleUniformPageWidth, true);
     }
 }
 

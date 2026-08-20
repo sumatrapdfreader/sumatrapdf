@@ -231,6 +231,14 @@ bool DisplayModel::GetDisplayR2L() const {
     return displayR2L;
 }
 
+void DisplayModel::SetUniformPageWidth(bool enable) {
+    uniformPageWidth = enable;
+}
+
+bool DisplayModel::GetUniformPageWidth() const {
+    return uniformPageWidth;
+}
+
 // toRight: user moved/keyed toward the right (VK_RIGHT, swipe right).
 // LTR: right = next page; manga R2L: left = next page (issue #3964).
 bool DisplayModel::GoToPageHorizontal(bool toRight) {
@@ -324,6 +332,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     }
     fs->rotation = rotation;
     fs->displayR2L = displayR2L;
+    fs->uniformPageWidth = uniformPageWidth;
 
     str::Free(fs->decryptionKey);
     fs->decryptionKey = engine->decryptionKey.s ? str::Dup(engine->decryptionKey.s) : nullptr;
@@ -953,6 +962,15 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         // never exceeds the window width and/or height — lets single pages stay
         // large while double-page spreads shrink to fit (issue #2197).
         float zoom = zoomVirtual * 0.01f * dpiFactor;
+        if (uniformPageWidth) {
+            // Keep percentage zoom independent of the viewport while normalizing
+            // every page to the width page 1 has at this zoom (issue #5512).
+            SizeF reference = PageSizeAfterRotation(1);
+            SizeF page = PageSizeAfterRotation(pageNo);
+            if (reference.dx > 0 && page.dx > 0) {
+                zoom *= reference.dx / page.dx;
+            }
+        }
         bool limitWidth = false;
         bool limitHeight = false;
         GetImageLimitToWindowFlags(engine, limitWidth, limitHeight);
@@ -1212,6 +1230,9 @@ float DisplayModel::GetZoomReal(int pageNo) const {
         return pageInfo->zoomReal;
     }
     if (IsSingle(mode)) {
+        return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
+    }
+    if (uniformPageWidth && zoomVirtual > 0) {
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
     }
     // facing / book: comics match heights per page (issue #5921); PDFs keep a

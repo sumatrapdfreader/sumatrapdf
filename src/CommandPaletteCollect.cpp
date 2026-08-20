@@ -133,6 +133,13 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
                 newIsOn = !dm->GetDisplayR2L();
             }
         } break;
+        case CmdToggleUniformPageWidth: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !dm->GetUniformPageWidth();
+            }
+        } break;
         case CmdFindToggleMatchCase: {
             isToggle = true;
             newIsOn = !win->findMatchCase;
