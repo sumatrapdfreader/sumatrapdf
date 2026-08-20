@@ -347,6 +347,13 @@ const scrollPos: Field[] = [
   field("Y", Float, 0, "vertical scroll offset, in document units"),
 ];
 
+// -1 means "not stored" so old favorites without ScrollPos keep jumping to the
+// top of the page (GetScrollState / SetScrollState use the same sentinel)
+const favoriteScrollPos: Field[] = [
+  field("X", Float, -1, "horizontal position on the page, in document units; -1 if not stored"),
+  field("Y", Float, -1, "vertical position on the page, in document units; -1 if not stored"),
+];
+
 // a Windows FILETIME (100-nanosecond intervals since 1601-01-01), split in two
 // because the settings file has no 64-bit integer type
 const fileTime: Field[] = [
@@ -807,6 +814,13 @@ const favorite: Field[] = [
     null,
     "label for this page (only present if logical and physical page numbers are not the same)",
   ),
+  compactStruct(
+    "ScrollPos",
+    favoriteScrollPos,
+    "position on the page when the favorite was added (document units; -1 if not stored)",
+  )
+    .structName("PointF")
+    .ver("3.7"),
   field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)").notSaved(),
   // search-start mark ("/") from Find; session-only. Field is in metadata so
   // SerializeStruct can skip array elements with IsTemporary=true; the field

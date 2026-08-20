@@ -14,8 +14,10 @@
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
+#include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "DisplayModel.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
@@ -186,6 +188,46 @@ static FileState* GetFavByFilePath(Str filePath) {
     return fs;
 }
 
+static PointF CurrentFavoriteScrollPos(MainWindow* win, int pageNo) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return PointF(-1, -1);
+    }
+    ScrollState ss = dm->GetScrollState();
+    if (ss.page != pageNo) {
+        return PointF(-1, -1);
+    }
+    return PointF((float)ss.x, (float)ss.y);
+}
+
+// Restore the favorite's page and the stored position on it. addNavPt so
+// Navigate Back returns to wherever we jumped from.
+static void ApplyFavoriteView(MainWindow* win, int pageNo, PointF scrollPos, bool addNavPt) {
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return;
+    }
+    if (!win->ctrl->ValidPageNo(pageNo)) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        if (addNavPt) {
+            dm->AddNavPoint();
+        }
+        dm->SetScrollState(ScrollState(pageNo, scrollPos.x, scrollPos.y));
+        return;
+    }
+    win->ctrl->GoToPage(pageNo, addNavPt);
+}
+
+void JumpToFavorite(MainWindow* win, Favorite* fav) {
+    if (!win || !fav) {
+        return;
+    }
+    ApplyFavoriteView(win, fav->pageNo, fav->scrollPos, true);
+    win->Focus();
+}
+
 bool IsPageInFavorites(Str filePath, int pageNo) {
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
@@ -212,22 +254,22 @@ void GoToNextFavorite(MainWindow* win, bool forward) {
     int cur = win->currPageNo;
     // pick the favorite page closest to the current page in the requested
     // direction (no wrap-around)
-    int best = -1;
+    Favorite* bestFav = nullptr;
     for (int i = 0; i < len(*fs->favorites); i++) {
-        int p = (*fs->favorites)[i]->pageNo;
+        Favorite* fav = (*fs->favorites)[i];
+        int p = fav->pageNo;
         if (forward) {
-            if (p > cur && (best == -1 || p < best)) {
-                best = p;
+            if (p > cur && (!bestFav || p < bestFav->pageNo)) {
+                bestFav = fav;
             }
         } else {
-            if (p < cur && (best == -1 || p > best)) {
-                best = p;
+            if (p < cur && (!bestFav || p > bestFav->pageNo)) {
+                bestFav = fav;
             }
         }
     }
-    if (best != -1 && win->ctrl->ValidPageNo(best)) {
-        win->ctrl->GoToPage(best, true);
-        win->Focus();
+    if (bestFav) {
+        JumpToFavorite(win, bestFav);
     }
 }
 
@@ -316,7 +358,7 @@ void ToggleSortFavoritesByName() {
     SaveSettings();
 }
 
-static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel) {
+static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel, PointF scrollPos) {
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
         // we were asked to add a favorite for current file but couldn't find
@@ -329,9 +371,11 @@ static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel) {
     if (fn) {
         str::ReplaceWithCopy(&fn->name, name);
         ReportIf(fn->pageLabel && !str::Eq(fn->pageLabel, pageLabel));
+        fn->scrollPos = scrollPos;
         SortFileFavorites(fav);
     } else {
         fn = NewFavorite(pageNo, name, pageLabel);
+        fn->scrollPos = scrollPos;
         fav->favorites->Append(fn);
         SortFileFavorites(fav);
     }
@@ -388,18 +432,22 @@ void SetSearchStartFavorite(MainWindow* win) {
 
     Str markName = SearchStartFavName();
     Favorite* fn = FindByName(fs, markName);
+    PointF scrollPos = CurrentFavoriteScrollPos(win, pageNo);
     if (fn) {
-        if (fn->isTemporary && fn->pageNo == pageNo && str::Eq(fn->pageLabel, pl)) {
-            return; // already marks this page
+        if (fn->isTemporary && fn->pageNo == pageNo && str::Eq(fn->pageLabel, pl) && fn->scrollPos.x == scrollPos.x &&
+            fn->scrollPos.y == scrollPos.y) {
+            return; // already marks this view
         }
         fn->pageNo = pageNo;
         str::ReplaceWithCopy(&fn->pageLabel, pl);
+        fn->scrollPos = scrollPos;
         // mark as session-only even if a prior build persisted a "/" entry
         fn->isTemporary = true;
         SortFileFavorites(fs);
     } else {
         fn = NewFavorite(pageNo, markName, pl);
         fn->isTemporary = true;
+        fn->scrollPos = scrollPos;
         fs->favorites->Append(fn);
         SortFileFavorites(fs);
     }
@@ -639,13 +687,11 @@ WindowTab* FindFavoritesTab(MainWindow* win) {
     return nullptr;
 }
 
-static void GoToFavoritePage(MainWindow* win, int pageNo) {
+static void GoToFavoritePage(MainWindow* win, int pageNo, PointF scrollPos) {
     if (!IsMainWindowValid(win)) {
         return;
     }
-    if (win->IsDocLoaded() && win->ctrl->ValidPageNo(pageNo)) {
-        win->ctrl->GoToPage(pageNo, true);
-    }
+    ApplyFavoriteView(win, pageNo, scrollPos, true);
     // we might have been invoked by clicking on a tree view
     // switch focus so that keyboard navigation works, which enables
     // a fluid experience
@@ -655,10 +701,11 @@ static void GoToFavoritePage(MainWindow* win, int pageNo) {
 struct GoToFavoritePageData {
     MainWindow* win;
     int pageNo;
+    PointF scrollPos;
 };
 
 static void GoToFavoritePage(GoToFavoritePageData* d) {
-    GoToFavoritePage(d->win, d->pageNo);
+    GoToFavoritePage(d->win, d->pageNo, d->scrollPos);
     delete d;
 }
 
@@ -676,6 +723,7 @@ void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     if (existingWin) {
         auto* data = new GoToFavoritePageData;
         data->pageNo = fav->pageNo;
+        data->scrollPos = fav->scrollPos;
         data->win = existingWin;
         auto fn = MkFunc0<GoToFavoritePageData>(GoToFavoritePage, data);
         uitask::Post(fn, "TaskGoToFavorite");
@@ -691,18 +739,20 @@ void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     // A hacky solution because I don't want to add even more parameters to
     // LoadDocument() and LoadDocumentInto()
     int pageNo = fav->pageNo;
+    PointF scrollPos = fav->scrollPos;
     FileState* ds = FileHistoryFindByPath(fs->filePath);
     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
         ds->pageNo = fav->pageNo;
-        ds->scrollPos = PointF(-1, -1); // don't scroll the page
+        ds->scrollPos = fav->scrollPos;
         pageNo = -1;
     }
 
     LoadArgs args(fs->filePath, win);
     win = LoadDocument(&args);
-    if (win) {
+    if (win && pageNo > 0) {
         auto* data = new GoToFavoritePageData;
         data->pageNo = pageNo;
+        data->scrollPos = scrollPos;
         data->win = win;
         auto fn = MkFunc0<GoToFavoritePageData>(GoToFavoritePage, data);
         uitask::Post(fn, "TaskGoToFavorite2");
@@ -1100,7 +1150,7 @@ void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, 
 
     RememberFavTreeExpansionStateForAllWindows();
     Str pl = needsLabel ? pageLabel : Str{};
-    AddOrReplaceFav(filePath, pageNo, name, pl);
+    AddOrReplaceFav(filePath, pageNo, name, pl, CurrentFavoriteScrollPos(win, pageNo));
     // expand newly added favorites by default
     FileState* fav = GetFavByFilePath(filePath);
     if (fav && len(*fav->favorites) == 2) {

@@ -8,11 +8,10 @@ table of contents)).
 
 We can have multiple favorites per file.
 
-Favorites are accurate to a page - it's simple and should be good enough
-for the user.
-
-A favorite is identified by a (mandatory) page number and (optional) name
-(provided by the user) and page label (from EngineBase::GetPageLabel).
+A favorite is identified by a (mandatory) page number, an optional name
+(provided by the user), an optional page label (from EngineBase::GetPageLabel),
+and the scroll position on that page (so jumping back lands where you were,
+not only at the top).
 
 Favorites do not remember presentation settings like zoom or viewing mode -
 they are for navigation only. Presentation settings are remembered on a
@@ -43,6 +42,7 @@ void GoToNextFavorite(MainWindow* win, bool forward);
 
 TempStr FavReadableNameTemp(Favorite* fn);
 void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav);
+void JumpToFavorite(MainWindow* win, Favorite* fav);
 
 void SetSearchStartFavorite(MainWindow* win);
 

@@ -127,7 +127,13 @@ static void AddFavoriteSilent(MainWindow* win, int pageNo) {
     TempStr plainLabel = fmt("%d", pageNo);
     bool needsLabel = pageLabel && !str::Eq(plainLabel, pageLabel);
     Str pl = needsLabel ? pageLabel : Str{};
-    fs->favorites->Append(NewFavorite(pageNo, {}, pl));
+    Favorite* fn = NewFavorite(pageNo, {}, pl);
+    DisplayModel* dm = win->AsFixed();
+    if (dm && dm->GetScrollState().page == pageNo) {
+        ScrollState ss = dm->GetScrollState();
+        fn->scrollPos = PointF((float)ss.x, (float)ss.y);
+    }
+    fs->favorites->Append(fn);
 }
 
 // Drive favorites on the already-open document for tests/issue-3744.ts.
@@ -161,6 +167,24 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
             return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
         }
         win->ctrl->GoToPage(pageNo, true);
+    } else if (str::EqI(action, "goto-fav")) {
+        if (!win->ctrl->ValidPageNo(pageNo)) {
+            return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
+        }
+        FileState* fs = FileHistoryFindByPath(win->ctrl->GetFilePath());
+        Favorite* fav = nullptr;
+        if (fs && fs->favorites) {
+            for (Favorite* f : *fs->favorites) {
+                if (f->pageNo == pageNo) {
+                    fav = f;
+                    break;
+                }
+            }
+        }
+        if (!fav) {
+            return finish(fmt("ERROR no-fav page=%d", pageNo), 1);
+        }
+        JumpToFavorite(win, fav);
     } else if (str::EqI(action, "next")) {
         GoToNextFavorite(win, true);
     } else if (str::EqI(action, "prev")) {
@@ -172,7 +196,14 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
     }
 
     int cur = win->ctrl->CurrentPageNo();
-    return finish(fmt("OK page=%d", cur), 0);
+    int y = -1;
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        ScrollState ss = dm->GetScrollState();
+        y = (int)ss.y;
+        cur = ss.page;
+    }
+    return finish(fmt("OK page=%d y=%d", cur, y), 0);
 }
 
 // action: "get" | "r2l" | "presentation" | "fullscreen"

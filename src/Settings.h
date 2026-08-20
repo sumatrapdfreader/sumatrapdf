@@ -517,6 +517,9 @@ struct Favorite {
     // label for this page (only present if logical and physical page
     // numbers are not the same)
     Str pageLabel;
+    // position on the page when the favorite was added (document units; -1
+    // if not stored)
+    PointF scrollPos;
     // id of this favorite in the menu (assigned by AppendFavMenuItems)
     int menuId;
     // session-only favorite; omitted when serializing array elements
@@ -1587,20 +1590,33 @@ static const FieldInfo gSize_2_Fields[] = {
 static const StructInfo gSize_2_Info = {
     sizeof(Size), 2, gSize_2_Fields, "Dx\0Dy", "width, in screen pixels\0height, in screen pixels", false};
 
+static const FieldInfo gPointFFields[] = {
+    {offsetof(PointF, x), SettingType::Float, (intptr_t)"-1"},
+    {offsetof(PointF, y), SettingType::Float, (intptr_t)"-1"},
+};
+static const StructInfo gPointFInfo = {sizeof(PointF),
+                                       2,
+                                       gPointFFields,
+                                       "X\0Y",
+                                       "horizontal position on the page, in document units; -1 if not stored\0vertical "
+                                       "position on the page, in document units; -1 if not stored",
+                                       false};
+
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), SettingType::String, 0},
     {offsetof(Favorite, pageNo), SettingType::Int, 0},
     {offsetof(Favorite, pageLabel), SettingType::String, 0},
+    {offsetof(Favorite, scrollPos), SettingType::Compact, (intptr_t)&gPointFInfo},
     {offsetof(Favorite, isTemporary), SettingType::Bool, false, true},
 };
 static const StructInfo gFavoriteInfo = {
     sizeof(Favorite),
-    4,
+    5,
     gFavoriteFields,
-    "Name\0PageNo\0PageLabel\0IsTemporary",
+    "Name\0PageNo\0PageLabel\0ScrollPos\0IsTemporary",
     "name of this favorite as shown in the menu\0number of the bookmarked page\0label for this page (only present if "
-    "logical and physical page numbers are not the same)\0session-only favorite; omitted when serializing array "
-    "elements",
+    "logical and physical page numbers are not the same)\0position on the page when the favorite was added (document "
+    "units; -1 if not stored)\0session-only favorite; omitted when serializing array elements",
     true};
 
 static const FieldInfo gFileEBookUIFields[] = {
@@ -1627,14 +1643,14 @@ static const StructInfo gFileEBookUIInfo = {
     "to this document; empty uses EBookUI.CustomCSS",
     false};
 
-static const FieldInfo gPointFFields[] = {
+static const FieldInfo gPointF_1_Fields[] = {
     {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
     {offsetof(PointF, y), SettingType::Float, (intptr_t)"0"},
 };
-static const StructInfo gPointFInfo = {
+static const StructInfo gPointF_1_Info = {
     sizeof(PointF),
     2,
-    gPointFFields,
+    gPointF_1_Fields,
     "X\0Y",
     "horizontal scroll offset, in document units\0vertical scroll offset, in document units",
     false};
@@ -1664,7 +1680,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, eBookUI), SettingType::StructPtr, (intptr_t)&gFileEBookUIInfo},
     {offsetof(FileState, useDefaultState), SettingType::Bool, false},
     {offsetof(FileState, displayMode), SettingType::String, (intptr_t)"automatic"},
-    {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointFInfo},
+    {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
     {offsetof(FileState, pageNo), SettingType::Int, 1},
     {offsetof(FileState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(FileState, rotation), SettingType::Int, 0},
@@ -1705,14 +1721,14 @@ static StructInfo gFileStateInfo = {
     "required to determine which parts of the table of contents have been expanded",
     false};
 
-static const FieldInfo gPointF_1_Fields[] = {
+static const FieldInfo gPointF_2_Fields[] = {
     {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
     {offsetof(PointF, y), SettingType::Float, (intptr_t)"0"},
 };
-static const StructInfo gPointF_1_Info = {
+static const StructInfo gPointF_2_Info = {
     sizeof(PointF),
     2,
-    gPointF_1_Fields,
+    gPointF_2_Fields,
     "X\0Y",
     "horizontal scroll offset, in document units\0vertical scroll offset, in document units",
     false};
@@ -1723,7 +1739,7 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, pageNo), SettingType::Int, 1},
     {offsetof(TabState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(TabState, rotation), SettingType::Int, 0},
-    {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
+    {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_2_Info},
     {offsetof(TabState, showToc), SettingType::Bool, true},
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
 };

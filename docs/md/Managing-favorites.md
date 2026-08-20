@@ -4,7 +4,7 @@ Favorites let you save important places in documents and jump back to them later
 
 ## Add a favorite
 
-Press `Ctrl + B` to add the current page to favorites.
+Press `Ctrl + B` to add the current page to favorites. The favorite stores the page **and** how far you had scrolled on it, so jumping back returns you to the same place on the page, not only the top.
 
 You can also use `Ctrl + K` command palette and run `Add Favorite`.
 

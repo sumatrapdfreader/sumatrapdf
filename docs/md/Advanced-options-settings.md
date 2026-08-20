@@ -994,6 +994,10 @@ FileStates [
         ; are not the same)
         PageLabel =
 
+        ; position on the page when the favorite was added (document units; -1
+        ; if not stored) (introduced in version 3.7)
+        ScrollPos = -1 -1
+
         ; session-only favorite; omitted when serializing array elements
         ; (introduced in version 3.7)
         IsTemporary = false
