@@ -6,6 +6,7 @@
 import { formatDuration, resetTestTimes, runSuiteMain, runTest, type SuiteOptions } from "./util.ts";
 import { testit as runAlmostAll } from "./run-almost-all.ts";
 import { testit as issue5842 } from "./issue-5842.ts";
+import { testit as issue6003 } from "./issue-6003.ts";
 import { testit as latexTests } from "./latex.ts";
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
@@ -14,6 +15,7 @@ export async function testit(opts?: SuiteOptions): Promise<void> {
   resetTestTimes();
   await runAlmostAll({ silent, keepTestTimes: true, summary: false });
   await runTest("issue-5842", issue5842, { silent });
+  await runTest("issue-6003", issue6003, { silent });
 
   if (!silent) {
     console.log("\n========== latex ==========");
@@ -22,7 +24,7 @@ export async function testit(opts?: SuiteOptions): Promise<void> {
 
   if (!silent) {
     console.log(
-      `\n✅ pre-release checks passed (run-almost-all + issue-5842 + latex) in ${formatDuration(performance.now() - t0)}`,
+      `\n✅ pre-release checks passed (run-almost-all + issue-5842 + issue-6003 + latex) in ${formatDuration(performance.now() - t0)}`,
     );
   }
 }
