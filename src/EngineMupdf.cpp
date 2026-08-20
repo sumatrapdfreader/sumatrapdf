@@ -4183,35 +4183,239 @@ static void ApplyOutlineStyles(fz_context* ctx, fz_document* doc, TocItem* first
     fz_drop_outline_iterator(ctx, iter);
 }
 
+static void AppendTocChild(TocItem* parent, TocItem* item) {
+    item->parent = parent;
+    item->next = nullptr;
+    if (!parent->child) {
+        parent->child = item;
+        return;
+    }
+    TocItem* p = parent->child;
+    while (p->next) {
+        p = p->next;
+    }
+    p->next = item;
+}
+
+// Numbered heading prefix as in academic papers: "I.", "II.A.", "1.2."
+// (sioyek is_string_titlish). Match must start at the beginning of the title.
+static int HeadingNumberPrefixLen(Str s) {
+    int n = len(s);
+    int i = 0;
+    bool any = false;
+    while (i < n) {
+        int start = i;
+        while (i < n) {
+            char c = s.s[i];
+            if ((c >= '0' && c <= '9') || c == 'I' || c == 'V' || c == 'X' || c == 'C') {
+                i++;
+            } else {
+                break;
+            }
+        }
+        if (i == start || i >= n || s.s[i] != '.') {
+            break;
+        }
+        i++;
+        any = true;
+    }
+    if (!any) {
+        return 0;
+    }
+    return i;
+}
+
+static bool IsHeadingTitle(Str s) {
+    int n = len(s);
+    if (n < 6 || n > 160) {
+        return false;
+    }
+    int prefix = HeadingNumberPrefixLen(s);
+    if (prefix <= 0) {
+        return false;
+    }
+    int i = prefix;
+    while (i < n && s.s[i] == ' ') {
+        i++;
+    }
+    if (i >= n) {
+        return false;
+    }
+    unsigned char c = (unsigned char)s.s[i];
+    if (c >= 'a' && c <= 'z') {
+        return false;
+    }
+    return true;
+}
+
+// sioyek is_title_parent_of: walk until the parent hits a space. Same title if
+// the child hits a space there too (running headers). Else the parent owns
+// numbered children such as "II." → "II.A.".
+static bool HeadingIsParentOf(Str parent, Str child, bool* sameOut) {
+    *sameOut = false;
+    int n = std::min(len(parent), len(child));
+    for (int i = 0; i < n; i++) {
+        if (parent.s[i] == ' ') {
+            if (child.s[i] == ' ') {
+                *sameOut = true;
+                return false;
+            }
+            return true;
+        }
+        if (child.s[i] != parent.s[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static void AppendHeadingLineText(fz_stext_line* line, str::Builder& b) {
+    for (fz_stext_char* c = line->first_char; c; c = c->next) {
+        int rune = c->c;
+        if (rune <= 0 || rune == 0xFFFD) {
+            continue;
+        }
+        bool isWs = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
+        if (isWs) {
+            if (b.IsEmpty() || b.LastChar() == ' ') {
+                continue;
+            }
+            b.AppendChar(' ');
+            continue;
+        }
+        if (rune < 32) {
+            continue;
+        }
+        char buf[4];
+        int n = fz_runetochar(buf, rune);
+        if (n > 0) {
+            b.Append(Str(buf, n));
+        }
+    }
+}
+
+static constexpr int kMaxGeneratedTocEntries = 400;
+
+// When the PDF has no outline, build one from numbered headings (issue #5724),
+// same heuristic as sioyek: a short line starting with "I." / "1.2." / "II.A.".
+static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
+    if (!e || !e->_doc || e->pageCount <= 0) {
+        return nullptr;
+    }
+    auto* ctx = e->Ctx();
+    if (!ctx) {
+        return nullptr;
+    }
+
+    Vec<TocItem*> stack;
+    TocItem* first = nullptr;
+    TocItem* lastTop = nullptr;
+    int nAdded = 0;
+    fz_stext_options opts = NewTextPageOptions();
+
+    auto addNode = [&](TocItem* node) {
+        bool same = false;
+        while (len(stack) > 0 && !HeadingIsParentOf(stack[len(stack) - 1]->title, node->title, &same) && !same) {
+            stack.RemoveLast();
+        }
+        if (same) {
+            FreeTocItemRec(nullptr, node);
+            return;
+        }
+        nAdded++;
+        if (len(stack) == 0) {
+            node->parent = nullptr;
+            if (lastTop) {
+                lastTop->next = node;
+            } else {
+                first = node;
+            }
+            lastTop = node;
+        } else {
+            AppendTocChild(stack[len(stack) - 1], node);
+        }
+        stack.Append(node);
+    };
+
+    auto walkBlocks = [&](auto& self, fz_stext_block* block, int pageNo) -> void {
+        while (block && nAdded < kMaxGeneratedTocEntries) {
+            if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down) {
+                self(self, block->u.s.down->first_block, pageNo);
+            } else if (block->type == FZ_STEXT_BLOCK_TEXT) {
+                for (fz_stext_line* line = block->u.t.first_line; line && nAdded < kMaxGeneratedTocEntries;
+                     line = line->next) {
+                    str::Builder b;
+                    AppendHeadingLineText(line, b);
+                    Str title = b.TakeStr();
+                    str::TrimWSInPlace(title, str::TrimOpt::Both);
+                    if (IsHeadingTitle(title)) {
+                        IPageDestination* dest = NewSimpleDest(pageNo, RectF{0, line->bbox.y0, 0, 0}, 0, {});
+                        TocItem* item = NewTocItemWithDestination(nullptr, title, dest);
+                        item->pageNo = pageNo;
+                        item->id = ++idCounter;
+                        item->isOpenDefault = true;
+                        addNode(item);
+                    }
+                    str::Free(title);
+                }
+            }
+            block = block->next;
+        }
+    };
+
+    for (int i = 0; i < e->pageCount && nAdded < kMaxGeneratedTocEntries; i++) {
+        fz_page* page = nullptr;
+        fz_stext_page* stext = nullptr;
+        fz_var(page);
+        fz_var(stext);
+        fz_try(ctx) {
+            page = fz_load_page(ctx, e->_doc, i);
+            stext = fz_new_stext_page_from_page(ctx, page, &opts);
+        }
+        fz_always(ctx) {
+            fz_drop_page(ctx, page);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            stext = nullptr;
+        }
+        if (stext) {
+            walkBlocks(walkBlocks, stext->first_block, i + 1);
+            fz_drop_stext_page(ctx, stext);
+        }
+    }
+    return first;
+}
+
 // TODO: maybe build in FinishLoading
 TocTree* EngineMupdf::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    if (outline == nullptr && attachments == nullptr) {
-        return nullptr;
-    }
 
     int idCounter = 0;
 
     ScopedRecursiveMutex cs(&docLock);
+    if (tocTree) {
+        return tocTree;
+    }
 
     TocItem* root = nullptr;
     TocItem* att = nullptr;
     if (outline) {
         root = BuildTocTree(nullptr, outline, idCounter, false, 0);
         ApplyOutlineStyles(Ctx(), _doc, root);
-    }
-    if (!attachments) {
-        goto MakeTree;
-    }
-    att = BuildTocTree(nullptr, attachments, idCounter, true, 0);
-    if (root) {
-        root->AddSiblingAtEnd(att);
     } else {
-        root = att;
+        root = GenerateTocFromHeadings(this, idCounter);
     }
-MakeTree:
+    if (attachments) {
+        att = BuildTocTree(nullptr, attachments, idCounter, true, 0);
+        if (root) {
+            root->AddSiblingAtEnd(att);
+        } else {
+            root = att;
+        }
+    }
     if (!root) {
         return nullptr;
     }
