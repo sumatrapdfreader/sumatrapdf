@@ -318,7 +318,12 @@ bool gUseDirect2D = true;
 // actually has it. The caller owns the result.
 Gfx* GfxCreate(HDC hdc) {
     if (gUseDirect2D && Direct2DAvailable()) {
-        return new GfxDirect2D(hdc);
+        auto* d2d = new GfxDirect2D(hdc);
+        // BindDC fails on a 24-bit DDB memory DC; don't return a no-op painter
+        if (d2d->target) {
+            return d2d;
+        }
+        delete d2d;
     }
     return new GfxGdiplus(hdc);
 }
@@ -354,7 +359,8 @@ Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
         w->gfxDoubleBufferDy = size.dy;
         if (!size.IsEmpty()) {
             w->gfxDoubleBufferHdc = CreateCompatibleDC(hdc);
-            w->gfxDoubleBufferBitmap = CreateCompatibleBitmap(hdc, size.dx, size.dy);
+            // 32-bit DIB: Direct2D BindDC rejects a 24-bit DDB from CreateCompatibleBitmap
+            w->gfxDoubleBufferBitmap = CreateMemoryBitmap(size);
             if (w->gfxDoubleBufferHdc && w->gfxDoubleBufferBitmap) {
                 w->gfxDoubleBufferPrevBitmap = SelectObject(w->gfxDoubleBufferHdc, w->gfxDoubleBufferBitmap);
             }

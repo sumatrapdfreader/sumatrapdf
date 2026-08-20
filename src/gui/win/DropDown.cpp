@@ -50,8 +50,23 @@ void DropDown::OnCommand(ControlBase::CommandEvent* ev) {
     }
 }
 
+void DropDown::OnMessageReflect(ControlBase::MessageReflectEvent* ev) {
+    if (ev->msg == WM_CTLCOLOREDIT || ev->msg == WM_CTLCOLORSTATIC || ev->msg == WM_CTLCOLORLISTBOX) {
+        HDC hdc = (HDC)ev->wparam;
+        if (!IsSpecialColor(textColor)) {
+            SetTextColor(hdc, textColor);
+        }
+        if (!IsSpecialColor(bgColor)) {
+            SetBkColor(hdc, bgColor);
+            SetBkMode(hdc, OPAQUE);
+        }
+        ev->result = (LRESULT)BackgroundBrush();
+    }
+}
+
 HWND DropDown::Create(const CreateArgs& args) {
     onCommand = MkMethod1<DropDown, ControlBase::CommandEvent*, &DropDown::OnCommand>(this);
+    onMessageReflect = MkMethod1<DropDown, ControlBase::MessageReflectEvent*, &DropDown::OnMessageReflect>(this);
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.isRtl = args.isRtl;

@@ -2069,7 +2069,8 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), hdcCanvas(::Ge
         return;
     }
 
-    doubleBuffer = CreateCompatibleBitmap(hdcCanvas, rect.dx, rect.dy);
+    // 32-bit DIB so Direct2D can BindDC this memory DC (a 24-bit DDB fails)
+    doubleBuffer = CreateMemoryBitmap({rect.dx, rect.dy});
     if (!doubleBuffer) {
         return;
     }

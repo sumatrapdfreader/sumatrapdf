@@ -266,7 +266,7 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     DoLayout(size);
 
     HwndCenterDialog(hwnd, win->hwndFrame);
-    DarkModeApplyToWindowAndEraseBg(hwnd);
+    UpdateTheme();
     SetIsVisible(true);
     if (focusOn) {
         HwndSetFocus(focusOn->hwnd);

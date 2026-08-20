@@ -875,6 +875,7 @@ struct DropDown : ControlBase {
 
     Size GetIdealSize() override;
     void OnCommand(ControlBase::CommandEvent* ev);
+    void OnMessageReflect(ControlBase::MessageReflectEvent* ev);
     bool IsFocused() const override;
 
     int GetCurrentSelection();

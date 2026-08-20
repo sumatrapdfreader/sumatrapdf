@@ -7,7 +7,17 @@
 #include "gui/UIModels.h"
 
 #include "gui/Layout.h"
+#include "gui/GuiColors.h"
 #include "gui/win/WinGui.h"
+
+static void TooltipApplyColors(HWND hwnd) {
+    if (!hwnd) {
+        return;
+    }
+    GuiColorsInitIfNeeded();
+    SendMessageW(hwnd, TTM_SETTIPBKCOLOR, (WPARAM)gColsWin[kColWinBg], 0);
+    SendMessageW(hwnd, TTM_SETTIPTEXTCOLOR, (WPARAM)gColsWin[kColWinText], 0);
+}
 
 //--- Tooltip
 
@@ -218,6 +228,7 @@ HWND Tooltip::Create(const CreateArgs& args) {
 
     ControlBase::CreateControl(cargs);
     SetDelayTime(TTDT_AUTOPOP, 32767);
+    TooltipApplyColors(hwnd);
     return hwnd;
 }
 Size Tooltip::GetIdealSize() {
@@ -230,6 +241,7 @@ void Tooltip::SetMaxWidth(int dx) {
 }
 
 int Tooltip::Add(Str s, const Rect& rc, bool multiline) {
+    TooltipApplyColors(hwnd);
     int id = GetNextTooltipID();
     SetMaxWidthForText(hwnd, s, multiline);
     TempWStr ws = ToWStrTemp(s);

@@ -339,6 +339,10 @@ LRESULT HwndBase::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 
     ControlBase* pWnd = ControlFromHwnd(wnd);
+    if (!pWnd) {
+        // ComboBox's inner EDIT is not a ControlBase; color via the combo
+        pWnd = ControlFromHwnd(GetParent(wnd));
+    }
     if (pWnd != nullptr) {
         return pWnd->DispatchMessageReflect(msg, wparam, lparam);
     }
