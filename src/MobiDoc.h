@@ -38,6 +38,8 @@ struct MobiDoc {
     bool LoadImage(int imageNo);
     bool LoadForPdbReader(PdbReader* pdbReader);
     bool DecodeExthHeader(const u8* data, int dataLen);
+    int CountLoadedImages() const;
+    void MaybeSynthesizeImagePages();
 
     str::Builder doc;
 
@@ -59,3 +61,5 @@ struct MobiDoc {
     static MobiDoc* CreateFromFile(Str path);
     static MobiDoc* CreateFromData(Str data);
 };
+
+int KindleEmbedToRecIndex(Str src);

@@ -889,7 +889,13 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     // is detected.
     // Figure out if this is a bug in my decoding.
     if (nFailed > docRecCount / 2) {
-        return false;
+        if (CountLoadedImages() < 2) {
+            return false;
+        }
+        // KF8 / AZW3 image books often have a tiny or undecompressible PalmDoc
+        // stub; keep going so MaybeSynthesizeImagePages can use the JPEGs.
+        logf("MobiDoc: %d/%d text records failed, falling back to images\n", nFailed, docRecCount);
+        doc.Reset();
     }
 
     // replace unexpected \0 with spaces
@@ -907,7 +913,139 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
             doc.Append(docUtf8);
         }
     }
+    MaybeSynthesizeImagePages();
     return true;
+}
+
+int MobiDoc::CountLoadedImages() const {
+    int n = 0;
+    for (int i = 0; i < imagesCount; i++) {
+        if (len(images[i]) > 0) {
+            n++;
+        }
+    }
+    return n;
+}
+
+// KF8 <img src="kindle:embed:XXXX"> uses a base-32 resource id (alphabet 0-9A-V).
+int KindleEmbedToRecIndex(Str src) {
+    Str prefix = StrL("kindle:embed:");
+    if (!str::StartsWithI(src, prefix)) {
+        return 0;
+    }
+    const char* p = src.s + len(prefix);
+    const char* end = src.s + len(src);
+    int n = 0;
+    bool any = false;
+    while (p < end) {
+        char c = *p;
+        int digit = -1;
+        if (c >= '0' && c <= '9') {
+            digit = c - '0';
+        } else if (c >= 'A' && c <= 'V') {
+            digit = 10 + (c - 'A');
+        } else if (c >= 'a' && c <= 'v') {
+            digit = 10 + (c - 'a');
+        } else {
+            break;
+        }
+        n = n * 32 + digit;
+        any = true;
+        p++;
+    }
+    return any ? n : 0;
+}
+
+static void CollectKindleEmbedRecIndexes(Str html, Vec<int>& out) {
+    Str prefix = StrL("kindle:embed:");
+    if (!html.s || len(html) < len(prefix)) {
+        return;
+    }
+    const char* p = html.s;
+    const char* end = html.s + len(html);
+    while (p + len(prefix) <= end) {
+        if (*p != 'k' && *p != 'K') {
+            p++;
+            continue;
+        }
+        Str rest(p, (int)(end - p));
+        if (!str::StartsWithI(rest, prefix)) {
+            p++;
+            continue;
+        }
+        int n = KindleEmbedToRecIndex(rest);
+        if (n > 0) {
+            out.Append(n);
+        }
+        p += len(prefix);
+    }
+}
+
+static void EmitRecindexPages(str::Builder& doc, const Vec<int>& recs) {
+    doc.Reset();
+    doc.Append(StrL("<html><body>"));
+    for (int i = 0; i < len(recs); i++) {
+        doc.Append(fmt("<img recindex=\"%d\"/><mbp:pagebreak/>", recs[i]));
+    }
+    doc.Append(StrL("</body></html>"));
+}
+
+// AZW3 / KF8 fixed-layout books (Kindle comics, photo books, some textbooks)
+// store each page as a JPEG in the PDB. PalmDoc markup is either empty or KF8
+// fragments with kindle:embed (and leftover CSS). EngineMobi would otherwise
+// show a blank document or CSS junk (issue #4315). Classic MOBI recindex
+// markup is left alone. Reflowable KF8 that uses kindle:embed without a
+// viewport stays as-is so MobiFormatter can resolve the images in place.
+void MobiDoc::MaybeSynthesizeImagePages() {
+    int nImg = CountLoadedImages();
+    if (nImg < 2) {
+        return;
+    }
+    Str html = ToStr(doc);
+    if (html && str::ContainsI(html, StrL("recindex"))) {
+        return;
+    }
+
+    Vec<int> embedIdx;
+    CollectKindleEmbedRecIndexes(html, embedIdx);
+    bool fixedLayout =
+        html && (str::ContainsI(html, StrL("name=\"viewport\"")) || str::ContainsI(html, StrL("name='viewport'")));
+    if (len(embedIdx) >= 2 && fixedLayout) {
+        logf("MobiDoc: synthesizing %d pages from kindle:embed (htmlLen=%d)\n", len(embedIdx), len(html));
+        EmitRecindexPages(doc, embedIdx);
+        return;
+    }
+    if (len(embedIdx) >= 2) {
+        return;
+    }
+
+    int maxImgLen = 0;
+    for (int i = 0; i < imagesCount; i++) {
+        maxImgLen = std::max(maxImgLen, len(images[i]));
+    }
+    // Drop HD-media thumbnails (often ~10KB next to 200KB page JPEGs).
+    int minKeep = maxImgLen / 8;
+    logf("MobiDoc: synthesizing %d image pages (htmlLen=%d, minKeep=%d)\n", nImg, len(html), minKeep);
+    int coverNo = -1;
+    if (coverImageRec >= imageFirstRec) {
+        coverNo = coverImageRec - imageFirstRec;
+    }
+    Vec<int> recs;
+    for (int i = 0; i < imagesCount; i++) {
+        int imgLen = len(images[i]);
+        if (imgLen == 0 || imgLen < minKeep) {
+            continue;
+        }
+        if (i == coverNo) {
+            // MobiFormatter already emits the cover on its own page
+            continue;
+        }
+        recs.Append(i + 1);
+    }
+    if (len(recs) < 2) {
+        return;
+    }
+    EmitRecindexPages(doc, recs);
 }
 
 // don't free the result
@@ -1100,7 +1238,13 @@ bool MobiDoc::IsSupportedFileType(FileType kind) {
 MobiDoc* MobiDoc::CreateFromFile(Str path) {
     MobiDoc* mb = new MobiDoc(path);
     PdbReader* pdbReader = PdbReader::CreateFromFile(path);
-    if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
+    if (!pdbReader) {
+        logf("MobiDoc::CreateFromFile: PdbReader failed for '%s'\n", path);
+        delete mb;
+        return nullptr;
+    }
+    if (!mb->LoadForPdbReader(pdbReader)) {
+        logf("MobiDoc::CreateFromFile: LoadForPdbReader failed for '%s'\n", path);
         delete mb;
         return nullptr;
     }
