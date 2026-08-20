@@ -2765,8 +2765,9 @@ static Point PdfPageBoxLabelPos(const Rect& r, PdfPageBoxKind kind) {
 static uint PdfPageBoxLabelFormat(PdfPageBoxKind kind) {
     switch (kind) {
         case PdfPageBoxKind::Crop:
-        case PdfPageBoxKind::Trim:
             return DT_RIGHT | DT_TOP | DT_SINGLELINE;
+        case PdfPageBoxKind::Trim:
+            return DT_RIGHT | DT_BOTTOM | DT_SINGLELINE;
         case PdfPageBoxKind::Bleed:
             return DT_LEFT | DT_BOTTOM | DT_SINGLELINE;
         case PdfPageBoxKind::Art:
@@ -2783,8 +2784,11 @@ static Rect PdfPageBoxLabelRect(const Rect& box, PdfPageBoxKind kind) {
     constexpr int kH = 14;
     switch (kind) {
         case PdfPageBoxKind::Crop:
-        case PdfPageBoxKind::Trim:
             return Rect(p.x - kW, p.y, kW, kH);
+        case PdfPageBoxKind::Trim:
+            // Bottom-right, above p (like Bleed). Drawing below the box clips
+            // "trim" off the last/only page (#6005).
+            return Rect(p.x - kW, p.y - kH, kW, kH);
         case PdfPageBoxKind::Bleed:
             return Rect(p.x, p.y - kH, kW, kH);
         case PdfPageBoxKind::Art:
@@ -2793,6 +2797,31 @@ static Rect PdfPageBoxLabelRect(const Rect& box, PdfPageBoxKind kind) {
         default:
             return Rect(p.x, p.y, kW, kH);
     }
+}
+
+// Keep the label fully inside bounds so a box flush with the viewport
+// does not clip the last few letters.
+static Rect ClampRectTo(const Rect& r, const Rect& bounds) {
+    Rect o = r;
+    if (o.dx > bounds.dx) {
+        o.dx = bounds.dx;
+    }
+    if (o.dy > bounds.dy) {
+        o.dy = bounds.dy;
+    }
+    if (o.x < bounds.x) {
+        o.x = bounds.x;
+    }
+    if (o.y < bounds.y) {
+        o.y = bounds.y;
+    }
+    if (o.Right() > bounds.Right()) {
+        o.x = bounds.Right() - o.dx;
+    }
+    if (o.Bottom() > bounds.Bottom()) {
+        o.y = bounds.Bottom() - o.dy;
+    }
+    return o;
 }
 
 // CmdTogglePageBoxes: outline the PDF boxes this page actually declares
@@ -2834,7 +2863,7 @@ static void PaintPdfPageBoxes(DisplayModel* dm, HDC hdc) {
             Str name = Str(PdfPageBoxName(box.kind));
             // MediaBox often extends past CropBox (the drawn page); pin the
             // label to the on-screen part so it isn't clipped off-canvas
-            Rect labelRc = PdfPageBoxLabelRect(vis, box.kind);
+            Rect labelRc = ClampRectTo(PdfPageBoxLabelRect(vis, box.kind), viewPortRect);
             SetBkColor(hdc, RGB(255, 255, 255));
             SetBkMode(hdc, OPAQUE);
             SetTextColor(hdc, col);
