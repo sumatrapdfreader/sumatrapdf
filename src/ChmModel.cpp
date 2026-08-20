@@ -564,7 +564,7 @@ bool ChmModel::Load(Str fileName) {
     }
 
     // always make the document's homepage page 1
-    TempStr page = strconv::AnsiToUtf8(doc->GetHomePath());
+    TempStr page = strconv::AnsiToUtf8Temp(doc->GetHomePath());
     pages.Append(page);
 
     // parse the ToC here, since page numbering depends on it

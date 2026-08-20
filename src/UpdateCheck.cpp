@@ -303,7 +303,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     auto mainInstr = _TRA("New version available");
     auto ver = updateInfo->latestVer;
     auto fmtStr = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install the new version?");
-    auto content = str::Dup(fmt(fmtStr.s, StrL(CURR_VERSION_STRA), ver));
+    TempStr content = fmt(fmtStr.s, StrL(CURR_VERSION_STRA), ver);
 
     auto installerPath = updateInfo->installerPath;
     bool didDownloadInstaller = file::Exists(installerPath);

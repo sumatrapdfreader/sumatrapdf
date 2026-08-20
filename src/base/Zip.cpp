@@ -166,6 +166,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
 
 // add a given file under (optional) nameInZip
 bool ZipCreator::AddFile(Str path, Str nameInZip) {
+    AutoArenaSavepoint tempScope;
     Str fileData = file::ReadFile(path);
     if (!fileData) {
         return false;
@@ -181,7 +182,7 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
         nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : path;
     }
 
-    Str name = str::Dup(nameInZip);
+    TempStr name = str::DupTemp(nameInZip);
     str::TransCharsInPlace(name, StrL("\\"), StrL("/"));
 
     bool res = AddFileData(name, fileData, dosdatetime);

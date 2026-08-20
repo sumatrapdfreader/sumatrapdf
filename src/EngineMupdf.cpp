@@ -3998,12 +3998,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
 #if OS_WIN
         if (!ok) {
             // TODO: this is only part of SASLprep
-            // NormalizeString() returns a TempStr; dup because pwd is owned and freed below
             TempStr normalized = NormalizeString(pwd, 5 /* NormalizationKC */);
-            str::Free(pwd);
-            pwd = str::Dup(normalized);
-            if (pwd) {
-                pwdA = pwd;
+            pwdA = normalized;
+            if (pwdA) {
                 ok = fz_authenticate_password(ctx, _doc, pwdA.s);
             }
         }
@@ -4012,7 +4009,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         // note: such passwords aren't portable when stored as Unicode text
 #if OS_WIN
         if (!ok && GetACP() != 1252) {
-            TempStr pwd_ansi = pwd;
+            TempStr pwd_ansi = pwdA;
             TempWStr pwdCp1252 = strconv::StrCPToWStrTemp(pwd_ansi, 1252);
             pwdA = ToUtf8Temp(pwdCp1252);
             ok = fz_authenticate_password(ctx, _doc, pwdA.s);

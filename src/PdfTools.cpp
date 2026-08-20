@@ -285,15 +285,14 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
     }
 
     Str inputPath = srcPath;
-    Str tmpPath;
+    TempStr tmpPath;
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
     // pdfbake_main re-opens the file from disk, so unsaved session
     // annotations would be missing unless we write them out first (issue #5977).
     if (engine && EngineHasUnsavedAnnotations(engine)) {
-        tmpPath = str::Dup(GetTempFilePathTemp(StrL("bake")));
+        tmpPath = GetTempFilePathTemp(StrL("bake"));
         if (!tmpPath || !EngineMupdfSaveCopy(engine, tmpPath)) {
-            str::Free(tmpPath);
             MessageBoxWarning(hwnd, "Failed to bake PDF file.", _TRA("Bake PDF"));
             return;
         }
@@ -311,7 +310,6 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
     int res = pdfbake_main(argc, argv);
     if (tmpPath) {
         file::Delete(tmpPath);
-        str::Free(tmpPath);
     }
     if (res == 0) {
         logf("PdfBakeDoIt: baked successfully\n");

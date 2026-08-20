@@ -5102,7 +5102,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR* fileFilterW = CWStrTemp(fileFilterStr);
 
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    TempStr srcFileName = str::Dup(engine->FilePath());
+    TempStr srcFileName = str::DupTemp(engine->FilePath());
     // Seed the dialog with "foo Copy.pdf" so Save doesn't overwrite the source
     // unless the user deliberately picks the original name.
     TempStr noExt = path::GetPathNoExtTemp(srcFileName);
@@ -5124,13 +5124,11 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
-        str::Free(srcFileName);
         return false;
     }
     TempStr dstFilePath = ToUtf8Temp(dstFileName);
     bool savingToExisting = str::Eq(dstFilePath, srcFileName);
     if (savingToExisting) {
-        str::Free(srcFileName);
         return SaveAnnotationsToExistingFile(tab);
     }
 
@@ -5138,7 +5136,6 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     auto fn = MkFunc1(ShowSaveAnnotationError, &data);
     ok = EngineMupdfSaveUpdated(engine, dstFilePath, fn);
     if (!ok) {
-        str::Free(srcFileName);
         return false;
     }
 
@@ -5156,7 +5153,6 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     TempStr newPath = path::NormalizeTemp(dstFilePath);
     // TODO: this should be 'duplicate FileInHistory"
     RenameFileInHistory(srcFileName, newPath);
-    str::Free(srcFileName);
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;

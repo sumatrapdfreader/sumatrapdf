@@ -166,7 +166,7 @@ void DropDown::SetItems(StrVec& newItems) {
 // and the caret / selection (SetText would otherwise put the caret at 0).
 // Do not CB_SETCURSEL(-1) afterwards: that clears a CBS_DROPDOWN edit.
 void DropDown::SetItemsKeepText(StrVec& newItems) {
-    Str cur = str::Dup(GetTextTemp());
+    TempStr cur = GetTextTemp();
     int selStart = 0, selEnd = 0;
     GetSelection(selStart, selEnd);
     bool prev = suppressNotify;
@@ -182,7 +182,6 @@ void DropDown::SetItemsKeepText(StrVec& newItems) {
     }
     SetSelection(selStart, selEnd);
     suppressNotify = prev;
-    str::Free(cur);
 }
 
 static void DropDownItemsFromStringArray(StrVec& items, SeqStrings strings) {

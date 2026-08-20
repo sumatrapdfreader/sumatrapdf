@@ -823,7 +823,7 @@ TempWStr GetSelfExePathW() {
     DWORD nChars = dimof(buf) - 1;
     // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
     GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
-    return wstr::Dup(buf);
+    return str::DupTemp(WStr(buf));
 }
 
 // Path of this process image (exe or DLL that contains this code).

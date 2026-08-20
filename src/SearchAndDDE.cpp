@@ -974,11 +974,9 @@ static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     const int kCtx = 40;
     int from = std::max(0, mStart - kCtx);
     int to = std::min(textLen, mEnd + kCtx);
-    Str sub = str::Dup(Utf8SliceByCodepoints(pageText, from, to - from));
+    TempStr sub = str::DupTemp(Utf8SliceByCodepoints(pageText, from, to - from));
     sub.len -= str::NormalizeWSInPlace(sub);
-    TempStr u = str::DupTemp(sub);
-    str::FreePtr(&sub);
-    return fmt("%s%s%s", Str(from > 0 ? "..." : ""), u, Str(to < textLen ? "..." : ""));
+    return fmt("%s%s%s", Str(from > 0 ? "..." : ""), sub, Str(to < textLen ? "..." : ""));
 }
 
 struct CountThreadData {

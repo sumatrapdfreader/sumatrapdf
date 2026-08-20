@@ -812,8 +812,7 @@ TempStr RegKeyNameTemp(HKEY key) {
 }
 
 static TempStr RegKeyNameWTemp(HKEY key) {
-    auto k = RegKeyNameTemp(key);
-    return str::Dup(k);
+    return RegKeyNameTemp(key);
 }
 
 // Open a registry key's DACL so we can delete protected uninstall/keys.

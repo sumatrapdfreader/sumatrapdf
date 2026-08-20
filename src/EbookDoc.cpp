@@ -1619,13 +1619,14 @@ Str HtmlDoc::GetFileData(Str relPath) {
 }
 
 Str HtmlDoc::LoadURL(Str url) {
+    AutoArenaSavepoint tempScope;
     if (str::StartsWith(url, StrL("data:"))) {
         return str::Dup(DecodeDataURITemp(url));
     }
     if (str::ContainsChar(url, ':')) {
         return {};
     }
-    Str path = str::Dup(url);
+    TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
     return file::ReadFile(path);
 }

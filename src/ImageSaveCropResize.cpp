@@ -1340,12 +1340,11 @@ static void OnSave(ImageEditWindow* ew) {
             return;
         }
         HWND hwndParent = ew->hwndParent;
-        Str savedPath = str::Dup(dest);
+        TempStr savedPath = dest;
         DestroyWindow(ew->hwnd);
         if (gImageEditHost.OpenSavedFile) {
             gImageEditHost.OpenSavedFile(hwndParent, savedPath);
         }
-        str::Free(savedPath);
         return;
     }
 
@@ -1393,13 +1392,12 @@ static void OnSave(ImageEditWindow* ew) {
 
     // load the saved image
     HWND hwndParent = ew->hwndParent;
-    Str savedPath = str::Dup(dest);
+    TempStr savedPath = dest;
     DestroyWindow(ew->hwnd);
 
     if (gImageEditHost.OpenSavedFile) {
         gImageEditHost.OpenSavedFile(hwndParent, savedPath);
     }
-    str::Free(savedPath);
 }
 
 static void SwitchToSaveMode(ImageEditWindow* ew) {

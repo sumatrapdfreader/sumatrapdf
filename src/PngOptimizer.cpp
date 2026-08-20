@@ -275,11 +275,8 @@ Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
         return {};
     }
     Str rawPng((char*)pngOut, (int)pngSize);
-    // lodepng allocates with malloc; transfer ownership into Optimize via Dup then free
-    Str owned = str::Dup(rawPng);
+    Str optimized = OptimizePngBytesOwned(rawPng);
     free(pngOut);
-    Str optimized = OptimizePngBytesOwned(owned);
-    str::Free(owned);
     if (len(optimized) > 0) {
         logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, (int)pngSize,
              len(optimized));

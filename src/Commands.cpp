@@ -1321,10 +1321,10 @@ static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
     }
     TempStr val = nullptr;
     if (!valEnd) {
-        val = str::Dup(rest);
+        val = str::DupTemp(rest);
         *argsInOut = {};
     } else {
-        val = str::Dup(Str(rest.s, (int)(valEnd.s - rest.s)));
+        val = str::DupTemp(Str(rest.s, (int)(valEnd.s - rest.s)));
         *argsInOut = valEnd;
         str::SkipChar(*argsInOut, ' ');
     }

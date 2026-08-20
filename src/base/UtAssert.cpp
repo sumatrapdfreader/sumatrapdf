@@ -30,8 +30,7 @@ static void OutputDebugString(Str s) {
         return;
     }
 #if OS_WIN
-    TempStr s0 = str::Dup(s);
-    OutputDebugStringA(s0.s);
+    OutputDebugStringA(CStrTemp(s));
 #else
     fprintf(stderr, "%.*s", s.len, s.s);
 #endif

@@ -450,9 +450,7 @@ again:
     if (StrQueue::IsSentinel(path)) {
         return {};
     }
-    path = str::Dup(path);
     if (!IsStressTestSupportedFile(path, fileFilter)) {
-        str::Free(path);
         goto again;
     }
     AtomicIntInc(&nFiles);

@@ -463,7 +463,6 @@ static TempStr UrlForWebViewEvent(WStr uri, WStr prefix) {
             return {};
         }
         TempStr path = ToUtf8Temp(pathW);
-        wstr::Free(pathW);
         return path;
     }
     return ToUtf8Temp(uri);
@@ -800,7 +799,7 @@ static TempWStr UriPathFromPrefix(WStr uri, WStr prefix, bool keepQueryAndFragme
             path = WStr(path.s, h);
         }
     }
-    return wstr::Dup(path);
+    return str::DupTemp(path);
 }
 
 static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, Str data,
@@ -893,7 +892,6 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
         }
 
         TempStr path = ToUtf8Temp(pathW);
-        wstr::Free(pathW);
         WebViewResourceResult res;
         if (!m_wnd->resourceProvider.getResource(m_wnd->resourceProvider.ctx, path, &res)) {
             CreateWebResourceResponseFromData(args, {}, "text/plain", 404);
