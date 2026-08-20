@@ -1237,17 +1237,50 @@ static bool IsWhitespaceRune(int c) {
     return c <= 0xffff && iswspace((wint_t)c);
 }
 
-static bool LinkifyCheckMultiline(Utf8PageText pageText, int posOff, Rect* coords) {
+// True when the glyph at posOff is a newline that continues a URL started at
+// startOff. Wrapped URLs end in a non-alphanumeric, resume slightly below and
+// to the left of the previous line's end, and do not start a new column
+// (issue #2239: a two-column table glued "Languagehat" onto archive.org/).
+static bool LinkifyCheckMultiline(Utf8PageText pageText, int startOff, int posOff, Rect* coords) {
     int pageLen = pageText.len;
-    // multiline links end in a non-alphanumeric character and continue on a line
-    // that starts left and only slightly below where the current line ended
-    // (and that doesn't start with http or a footnote numeral)
-    return posOff > 0 && posOff < pageLen && '\n' == RuneAt(pageText, posOff) && (posOff + 1) < pageLen &&
-           !IsAlphaNumRune(RuneAt(pageText, posOff - 1)) && !IsWhitespaceRune(RuneAt(pageText, posOff + 1)) &&
-           coords[posOff + 1].BR().y > coords[posOff - 1].y &&
-           coords[posOff + 1].y <= coords[posOff - 1].BR().y + (coords[posOff - 1].dy * 0.35) &&
-           coords[posOff + 1].x < coords[posOff - 1].BR().x && coords[posOff + 1].dy >= coords[posOff - 1].dy * 0.85 &&
-           coords[posOff + 1].dy <= coords[posOff - 1].dy * 1.2 && !StartsWithAscii(pageText, posOff + 1, "http");
+    if (startOff < 0 || startOff >= posOff || posOff <= 0 || posOff >= pageLen || (posOff + 1) >= pageLen) {
+        return false;
+    }
+    if ('\n' != RuneAt(pageText, posOff)) {
+        return false;
+    }
+    if (IsAlphaNumRune(RuneAt(pageText, posOff - 1)) || IsWhitespaceRune(RuneAt(pageText, posOff + 1))) {
+        return false;
+    }
+    if (StartsWithAscii(pageText, posOff + 1, "http")) {
+        return false;
+    }
+    Rect next = coords[posOff + 1];
+    Rect last = coords[posOff - 1];
+    Rect first = coords[startOff];
+    // stext glyph boxes use page space with y growing down.
+    if (next.BR().y <= last.y) {
+        return false;
+    }
+    if (next.y > last.BR().y + last.dy * 1.5f) {
+        return false;
+    }
+    if (next.x >= last.BR().x) {
+        return false;
+    }
+    // Continuation stays near the URL's left edge. The next row of a
+    // left-hand column starts much further left than that.
+    float slack = last.dy * 1.5f;
+    if (first.dx > 0) {
+        slack = std::max(slack, (float)first.dx * 3);
+    }
+    if (next.x < first.x - slack) {
+        return false;
+    }
+    if (next.dy < last.dy * 0.85f || next.dy > last.dy * 1.2f) {
+        return false;
+    }
+    return true;
 }
 
 static bool EndsURL(int c) {
@@ -1322,7 +1355,7 @@ static int LinkifyMultilineText(LinkRectList* list, Utf8PageText pageText, int s
     do {
         int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
         endOff = LinkifyFindEndOff(nextOff, prevChar, pageText);
-        multiline = LinkifyCheckMultiline(pageText, endOff, coords);
+        multiline = LinkifyCheckMultiline(pageText, startOff, endOff, coords);
 
         Str part = SliceByRuneOff(pageText, nextOff, endOff);
         uri = str::JoinTemp(uri, part);
@@ -1448,11 +1481,11 @@ static LinkRectList* LinkifyText(Utf8PageText pageText, Rect* coords) {
                                         StartsWithAscii(pageText, startOff, "https://"))) {
             int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
             endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
-            multiline = LinkifyCheckMultiline(pageText, endOff, coords);
+            multiline = LinkifyCheckMultiline(pageText, startOff, endOff, coords);
         } else if ('w' == startChar && StartsWithAscii(pageText, startOff, "www.")) {
             int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
             endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
-            multiline = LinkifyCheckMultiline(pageText, endOff, coords);
+            multiline = LinkifyCheckMultiline(pageText, startOff, endOff, coords);
             protocol = StrL("http://");
             // ignore www. links without a top-level domain
             int dotOff = IndexOfRune(pageText, startOff + 5, endOff, '.');
@@ -1905,7 +1938,10 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         fz_rect bbox = list->coords[i];
         bool overlaps = false;
         for (auto* pel : pageInfo->links) {
-            overlaps = FzRectOverlap(bbox, pel->GetRect()) >= 0.25f;
+            if (FzRectOverlap(bbox, pel->GetRect()) >= 0.25f) {
+                overlaps = true;
+                break;
+            }
         }
         if (overlaps) {
             continue;
