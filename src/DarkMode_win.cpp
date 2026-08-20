@@ -177,14 +177,13 @@ void DarkModeApplyToChildControls(HWND hwnd) {
     DarkMode::setChildCtrlsSubclassAndTheme(hwnd);
 }
 
-// Theming a tooltip applies a visual style to it, which resets its font to the
-// theme's - wrong for a control we size and populate ourselves, so put our font
-// back afterwards (issue #5894).
+// Infotip colors come from TooltipApplyColors (unthemed TTM_SETTIP*).
+// DarkMode_Explorer would ignore those colors and, with Windows in light
+// mode, leave a white bubble (issue #6000).
 static void ApplyToInfotip(MainWindow* win) {
     if (!win || !win->infotip || !win->infotip->hwnd) {
         return;
     }
-    DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
     win->infotip->SetFont(GetAppFont());
 }
 

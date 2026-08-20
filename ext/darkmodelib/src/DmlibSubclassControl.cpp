@@ -1690,6 +1690,9 @@ static void paintCombobox(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comb
 
 	RECT rcClient{};
 	::GetClientRect(hWnd, &rcClient);
+	// Win11 draws a rounded frame; fill first so the four corners aren't
+	// leftover white from the unpainted client (SumatraPDF #6000).
+	::FillRect(hdc, &rcClient, DarkMode::getDlgBackgroundBrush());
 
 	POINT ptCursor{};
 	::GetCursorPos(&ptCursor);

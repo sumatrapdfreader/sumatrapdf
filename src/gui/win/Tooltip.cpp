@@ -15,6 +15,9 @@ static void TooltipApplyColors(HWND hwnd) {
         return;
     }
     GuiColorsInitIfNeeded();
+    // TOOLTIPS_CLASS ships with a visual style; TTM_SETTIP* colors are
+    // ignored until the style is stripped (issue #6000).
+    SetWindowTheme(hwnd, L"", L"");
     SendMessageW(hwnd, TTM_SETTIPBKCOLOR, (WPARAM)gColsWin[kColWinBg], 0);
     SendMessageW(hwnd, TTM_SETTIPTEXTCOLOR, (WPARAM)gColsWin[kColWinText], 0);
 }

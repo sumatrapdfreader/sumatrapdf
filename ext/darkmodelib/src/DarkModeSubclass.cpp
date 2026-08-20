@@ -1460,8 +1460,9 @@ static void setComboBoxCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p)
 				DarkMode::replaceClientEdgeWithBorderSafe(cbi.hwndList);
 			}
 
-			// dark scroll bar for list box of combo box
-			::SetWindowTheme(cbi.hwndList, p.m_themeClassName, nullptr);
+			// DarkMode_Explorer does not restyle ComboLBox items (they stay
+			// white). Strip the visual style so WM_CTLCOLORLISTBOX is used.
+			::SetWindowTheme(cbi.hwndList, L"", L"");
 		}
 
 		if (!dmlib_subclass::isThemePrefered() && p.m_subclass)
