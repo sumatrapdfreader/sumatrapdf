@@ -3301,6 +3301,19 @@ void RefreshVirtTops(HWND hwnd, ILayout* layout, Rect bounds, VirtRoot** rootInO
     }
     root->bounds = bounds;
     root->SetTops(tops);
+    // A top-level control's `bounds` is relative to the root's origin, but
+    // SetBounds() computed it against whatever origin the root had *then* -
+    // for a first layout that's no root at all, and for a caller that lays out
+    // before refreshing it's the previous origin. One incremental resize hides
+    // it (the next pass agrees again), a single-shot one like maximizing does
+    // not: everything paints an origin off and disappears. Re-apply the layout
+    // rects now that the origin is current; descendants are relative to their
+    // parent, which this fixes for them.
+    for (VirtCtrl* w : tops) {
+        if (!w->lastBounds.IsEmpty()) {
+            w->SetBounds(w->lastBounds);
+        }
+    }
     root->needsLayout = false;
 }
 
