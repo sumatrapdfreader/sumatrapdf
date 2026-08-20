@@ -7538,6 +7538,41 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi, bool
     ApplyMainWindowDpiChromeRefresh(win, hwnd);
 }
 
+// RDP connect/disconnect and some display-mode changes update the session DPI
+// without sending WM_DPICHANGED (issue #4581). Re-query each frame and run the
+// same chrome refresh as a real DPI change when it moved.
+static void MaybeRefreshAllWindowsDpi() {
+    for (MainWindow* w : gWindows) {
+        if (!IsMainWindowValid(w) || !w->hwndFrame) {
+            continue;
+        }
+        int dpi = RoundUp(DpiGetForHwnd(w->hwndFrame), 4);
+        if (dpi <= 0 || dpi == w->frameDpi) {
+            continue;
+        }
+        logf("MaybeRefreshAllWindowsDpi: hwnd=0x%p old=%d new=%d\n", w->hwndFrame, w->frameDpi, dpi);
+        OnDpiChanged(w, nullptr, dpi, true);
+    }
+}
+
+static bool gDpiDisplayChangePosted = false;
+
+static void MaybeRefreshAllWindowsDpiLater() {
+    gDpiDisplayChangePosted = false;
+    MaybeRefreshAllWindowsDpi();
+}
+
+// Immediate check plus one queued re-check: GetDpiForWindow can still report
+// the pre-RDP value when WM_DISPLAYCHANGE first arrives.
+static void ScheduleDpiRefreshAfterDisplayChange() {
+    MaybeRefreshAllWindowsDpi();
+    if (gDpiDisplayChangePosted) {
+        return;
+    }
+    gDpiDisplayChangePosted = true;
+    uitask::Post(MkFunc0Void(MaybeRefreshAllWindowsDpiLater), "DpiAfterDisplayChange");
+}
+
 struct CollectTopWindowsCtx {
     Vec<HWND>* hwnds;
 };
@@ -13726,9 +13761,12 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_DISPLAYCHANGE:
             // Screen rotation / resolution change (tablets, display settings).
             // Keep fullscreen covering the monitor and fix the restore rect.
+            // RDP connect also arrives here and may change session DPI without
+            // WM_DPICHANGED (issue #4581).
             if (win) {
                 ResizeFullScreenToCurrentDisplay(win);
             }
+            ScheduleDpiRefreshAfterDisplayChange();
             return 0;
 
         case WM_SETTINGCHANGE:
@@ -13748,6 +13786,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                 // some tablet rotation paths). Resize fullscreen if needed.
                 ResizeFullScreenToCurrentDisplay(win);
             }
+            // Logical DPI override / RDP can show up as SETTINGCHANGE as well.
+            ScheduleDpiRefreshAfterDisplayChange();
 
             return 0;
 
