@@ -722,6 +722,7 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
+        args.owner = hwndOwner;
         args.title = _TRA("Sign Document");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;

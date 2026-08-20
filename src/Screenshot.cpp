@@ -428,7 +428,7 @@ bool SetHotkeyWnd::Create(HWND owner) {
     bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
-        args.parent = owner;
+        args.owner = owner;
         args.title = _TRA("Set Screenshot Hotkey");
         args.visible = false;
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;

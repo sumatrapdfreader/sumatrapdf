@@ -56,6 +56,7 @@ struct CreateControlArgs {
 
 struct CreateCustomArgs {
     HWND parent = nullptr;
+    HWND owner = nullptr;
     WStr className;
     Str title;
     DWORD style = 0;

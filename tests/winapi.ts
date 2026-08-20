@@ -17,6 +17,7 @@ const user32 = dlopen("user32.dll", {
   EnumChildWindows: { args: [FFIType.ptr, FFIType.function, FFIType.i64], returns: FFIType.bool },
   GetClassNameW: { args: [FFIType.ptr, FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
   GetWindowThreadProcessId: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
+  GetWindow: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.u64 },
   PostMessageW: { args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64], returns: FFIType.bool },
   SendMessageW: { args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64], returns: FFIType.i64 },
   MoveWindow: {
@@ -38,6 +39,7 @@ const user32 = dlopen("user32.dll", {
   GetWindowTextW: { args: [FFIType.ptr, FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
   GetWindowRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   IsWindowVisible: { args: [FFIType.ptr], returns: FFIType.bool },
+  IsWindowEnabled: { args: [FFIType.ptr], returns: FFIType.bool },
   WindowFromPoint: { args: [FFIType.i64], returns: FFIType.u64 },
   GetAncestor: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.u64 },
   SetForegroundWindow: { args: [FFIType.ptr], returns: FFIType.bool },
@@ -714,6 +716,16 @@ export function getWindowRect(hwnd: number): Rect {
 // it rather than resizing it to nothing). Ask the OS instead.
 export function isWindowVisible(hwnd: number): boolean {
   return user32.symbols.IsWindowVisible(hwnd);
+}
+
+export function isWindowEnabled(hwnd: number): boolean {
+  return user32.symbols.IsWindowEnabled(hwnd);
+}
+
+const GW_OWNER = 4;
+
+export function getWindowOwner(hwnd: number): number {
+  return Number(user32.symbols.GetWindow(hwnd, GW_OWNER));
 }
 
 // The top-level window that owns whatever is drawn at this screen point, i.e.

@@ -138,7 +138,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
-        args.parent = win ? win->hwndFrame : nullptr;
+        args.owner = win ? win->hwndFrame : nullptr;
         args.title = _TRA("Zoom factor");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;

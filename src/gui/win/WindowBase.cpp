@@ -364,13 +364,14 @@ HWND HwndBase::CreateCustomHwnd(const CreateCustomArgs& args, WStr defaultClassN
     WStr className = args.className ? args.className : defaultClassName;
     // TODO: validate className is not win32 control class
     RegisterWndClass(className);
-    HWND parent = args.parent;
+    ReportIf(args.parent && args.owner);
+    HWND parentOrOwner = args.parent ? args.parent : args.owner;
 
     DWORD style = args.style;
     if (style == 0) {
         style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
     }
-    if (parent) {
+    if (args.parent) {
         style |= WS_CHILD;
     } else {
         style &= ~WS_CHILD;
@@ -406,7 +407,8 @@ HWND HwndBase::CreateCustomHwnd(const CreateCustomArgs& args, WStr defaultClassN
     void* createParams = this;
     WCHAR* titleW = CWStrTemp(args.title);
 
-    HWND hwndTmp = ::CreateWindowExW(exStyle, className.s, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
+    HWND hwndTmp =
+        ::CreateWindowExW(exStyle, className.s, titleW, style, x, y, dx, dy, parentOrOwner, m, inst, createParams);
 
     ReportIf(!hwndTmp);
     // hwnd should be assigned in WM_NCCREATE
@@ -2042,6 +2044,9 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
 // re-posted so the outer message loop sees it. Keyboard handling (Esc, Enter,
 // Tab) goes through the same PreTranslateMessage as the main loop.
 void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
+    // Disabling an ancestor also disables the dialog and deadlocks this loop.
+    ReportIf(hwndParent && ::IsChild(hwndParent, hwndDialog));
+
     bool reEnableParent = false;
     if (hwndParent && IsWindowEnabled(hwndParent)) {
         EnableWindow(hwndParent, FALSE);
