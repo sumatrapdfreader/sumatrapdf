@@ -758,6 +758,7 @@ struct Edit : ControlBase {
 
     Size GetIdealSize() override;
     int LineDy();
+    HBRUSH CtlColorBrush(HDC);
 
     void SetIdealWidthChars(int nChars);
     void SetMaxWidthChars(int nChars);

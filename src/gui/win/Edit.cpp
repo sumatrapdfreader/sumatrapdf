@@ -312,6 +312,24 @@ void Edit::ApplyTextPadding() {
     SendMessageW(hwnd, EM_SETRECTNP, 0, (LPARAM)&rc);
 }
 
+// the brush the control's client is painted with: whatever the parent answers
+// to the control-color message (which our own OnMessageReflect answers when
+// the colors were set), or the system default if it doesn't answer
+HBRUSH Edit::CtlColorBrush(HDC hdc) {
+    HWND parent = GetParent(hwnd);
+    if (!parent || !hdc) {
+        return nullptr;
+    }
+    // a read-only edit is coloured with WM_CTLCOLORSTATIC (see OnMessageReflect)
+    bool readOnly = bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), (long)ES_READONLY);
+    UINT msg = readOnly ? WM_CTLCOLORSTATIC : WM_CTLCOLOREDIT;
+    auto br = (HBRUSH)SendMessageW(parent, msg, (WPARAM)hdc, (LPARAM)hwnd);
+    if (!br) {
+        br = (HBRUSH)DefWindowProcW(parent, msg, (WPARAM)hdc, (LPARAM)hwnd);
+    }
+    return br;
+}
+
 void Edit::WndProc(ControlBase::WndProcEvent* ev) {
     HWND hwnd = ev->hwnd;
     UINT msg = ev->msg;
@@ -447,7 +465,18 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                 int h = wr.bottom - wr.top;
                 // the strip WM_NCCALCSIZE took off the top is outside the client
                 // area, so the edit never paints it: fill it like the client
+                // SetColors() is optional, so BackgroundBrush() can be null - and
+                // then the strip kept whatever pixels happened to be on screen
+                // under the control. Nobody else ever paints them: they are
+                // outside the client area the edit paints and inside the child
+                // rect WS_CLIPCHILDREN keeps the parent out of. Restoring the
+                // maximized Save Image window moves the path box onto where the
+                // image was, so the image's checkered background stayed in the
+                // strip, a few pixels inside the box's top edge.
                 HBRUSH bgBr = BackgroundBrush();
+                if (!bgBr && ncCenterTop > 0) {
+                    bgBr = CtlColorBrush(hdc);
+                }
                 if (ncCenterTop > 0 && bgBr) {
                     int inset = createdWithFrame ? 1 : 0;
                     RECT tr{inset, inset, w - inset, inset + ncCenterTop};
