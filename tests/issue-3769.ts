@@ -1,28 +1,30 @@
-// Test for issue #3769: "annotation editor's list of annotations is not
-// consistently sized".
+// Test for issue #3769: annotation editor list height.
 //
-// The list of annotations used to be a fixed number of lines - 5, or 14 once
-// the window was taller than 1024 - so it stayed the same size no matter how
-// big the window was (a 1000px tall editor left ~750px of empty space below the
-// list), and a small difference in window height flipped it between two very
-// different sizes. It now takes whatever vertical space the rest of the window
-// doesn't need.
-//
-// The list is a VirtListBox (no Win32 ListBox HWND), so the test drives the
-// editor through -dbg-control: resize it and check the list follows. The space
-// below the list stays about the same while the list itself grows and shrinks
-// with the window.
+// The list is as tall as the annotations, capped at 12 rows. Extra window
+// height goes to Contents, not the list, so resizing the window or moving
+// between annotations (which shows different per-type fields) does not
+// change the list height.
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
-// a one-page PDF; the editor opens even with no annotations
+const kAnnotCount = 20;
+
 function makePdf(): string {
+  const annots: string[] = [];
+  annots.push(`<< /Type /Annot /Subtype /Text /Rect [50 700 70 720] /T (t1) /Contents (note one) >>`);
+  annots.push(
+    `<< /Type /Annot /Subtype /FreeText /Rect [80 650 220 690] /Contents (free text) /DA (/Helv 12 Tf 0 0 0 rg) >>`,
+  );
+  for (let i = 2; i < kAnnotCount; i++) {
+    const y = 640 - i * 12;
+    annots.push(`<< /Type /Annot /Subtype /Highlight /Rect [50 ${y} 200 ${y + 10}] /Contents (hl ${i}) >>`);
+  }
   const objs = [
     `<< /Type /Catalog /Pages 2 0 R >>`,
     `<< /Type /Pages /Count 1 /Kids [3 0 R] >>`,
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>`,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [${annots.join(" ")}] >>`,
   ];
   let body = "%PDF-1.4\n";
   const offsets: number[] = [];
@@ -40,7 +42,7 @@ function makePdf(): string {
   return body;
 }
 
-type Layout = { windowDy: number; listDy: number; contentsDy: number; gapBelow: number; raw: string };
+type Layout = { windowDy: number; listDy: number; contentsDy: number; n: number; raw: string };
 
 async function measure(client: ControlClient, clientDy: number, selectItem = 0): Promise<Layout> {
   const deadline = Date.now() + 15_000;
@@ -49,7 +51,7 @@ async function measure(client: ControlClient, clientDy: number, selectItem = 0):
     const exitCode = res[0] as number;
     const raw = String(res[1] ?? "").trim();
     if (exitCode === 0) {
-      const m = /windowDy=(\d+) listDy=(\d+) contentsDy=(\d+) gapBelow=(-?\d+)/.exec(raw);
+      const m = /windowDy=(\d+) listDy=(\d+) contentsDy=(\d+).* n=(\d+)/.exec(raw);
       if (!m) {
         throw new Error(`issue-3769: could not parse: ${raw}`);
       }
@@ -57,7 +59,7 @@ async function measure(client: ControlClient, clientDy: number, selectItem = 0):
         windowDy: parseInt(m[1]!, 10),
         listDy: parseInt(m[2]!, 10),
         contentsDy: parseInt(m[3]!, 10),
-        gapBelow: parseInt(m[4]!, 10),
+        n: parseInt(m[4]!, 10),
         raw,
       };
     }
@@ -78,27 +80,29 @@ export async function testit(): Promise<void> {
   await withControlledSumatra(
     EXE,
     async (client) => {
-      const tall = await measure(client, 1000);
-      const short = await measure(client, 560);
-      const tallAgain = await measure(client, 1000);
-
-      const grew = tall.listDy - short.listDy;
-      const windowGrew = tall.windowDy - short.windowDy;
-      if (grew < windowGrew / 2) {
+      const short = await measure(client, 560, 0);
+      const tall = await measure(client, 1000, 0);
+      if (short.n !== kAnnotCount) {
+        throw new Error(`issue-3769: expected ${kAnnotCount} annotations, got n=${short.n} (${short.raw})`);
+      }
+      if (Math.abs(tall.listDy - short.listDy) > 8) {
         throw new Error(
-          `the list does not take the available space: window ${short.windowDy} -> ${tall.windowDy} ` +
-            `but list only ${short.listDy} -> ${tall.listDy} (${tall.raw} / ${short.raw})`,
+          `list height should not follow the window: ${short.listDy}px at ${short.windowDy} vs ` +
+            `${tall.listDy}px at ${tall.windowDy} (${short.raw} / ${tall.raw})`,
         );
       }
-      if (tall.gapBelow > 200) {
-        throw new Error(`${tall.gapBelow}px of unused space below the list in a ${tall.windowDy}px tall window`);
-      }
-      if (Math.abs(tallAgain.listDy - tall.listDy) > 4) {
-        throw new Error(`same window height gave different list sizes: ${tall.listDy} then ${tallAgain.listDy}`);
+
+      const text = await measure(client, 720, 1);
+      const freeText = await measure(client, 720, 2);
+      if (Math.abs(text.listDy - freeText.listDy) > 4) {
+        throw new Error(
+          `list height changed when navigating: Text ${text.listDy}px vs FreeText ${freeText.listDy}px ` +
+            `(${text.raw} / ${freeText.raw})`,
+        );
       }
       console.log(
-        `  annotation list follows the window: ${short.listDy}px at ${short.windowDy} -> ` +
-          `${tall.listDy}px at ${tall.windowDy} (gap below ${tall.gapBelow}px) ✓`,
+        `  annotation list stays put: ${short.listDy}px at ${short.windowDy}/${tall.windowDy}, ` +
+          `Text/FreeText ${text.listDy}/${freeText.listDy} ✓`,
       );
     },
     [pdf],

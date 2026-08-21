@@ -1257,9 +1257,17 @@ static int TracksSize(Vec<int>& tracks, int start, int span, int gap) {
     if (span < 1) {
         return 0;
     }
-    int size = gap * (span - 1);
+    int size = 0;
+    int n = 0;
     for (int i = start; i < start + span; i++) {
+        if (tracks[i] <= 0) {
+            continue;
+        }
+        if (n > 0) {
+            size += gap;
+        }
         size += tracks[i];
+        n++;
     }
     return size;
 }
@@ -1267,8 +1275,19 @@ static int TracksSize(Vec<int>& tracks, int start, int span, int gap) {
 // where track idx starts, relative to the first track
 static int TracksStart(Vec<int>& tracks, int idx, int gap) {
     int pos = 0;
+    int n = 0;
     for (int i = 0; i < idx; i++) {
-        pos += tracks[i] + gap;
+        if (tracks[i] <= 0) {
+            continue;
+        }
+        if (n > 0) {
+            pos += gap;
+        }
+        pos += tracks[i];
+        n++;
+    }
+    if (n > 0 && idx < len(tracks) && tracks[idx] > 0) {
+        pos += gap;
     }
     return pos;
 }
@@ -1377,6 +1396,10 @@ void Table::SetBounds(Rect r) {
     if (len(colWidths) != cols || len(rowHeights) != rows) {
         // SetBounds() without a preceding Layout()
         Measure();
+    }
+    int extraDx = ContentRect().dx - TracksSize(colWidths, 0, cols, colGap);
+    if (extraDx > 0 && cols > 0) {
+        colWidths[cols - 1] += extraDx;
     }
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {

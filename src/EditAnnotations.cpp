@@ -43,6 +43,7 @@ extern "C" {
 
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
+constexpr int kMaxAnnotListLines = 12;
 
 // clang-format off
 static SeqStrings gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
@@ -471,6 +472,14 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     int prevScrollY = ew->listBox->scrollY;
     ew->listBox->SetModel(model); // resets the scroll position
     ew->listBox->ScrollTo(prevScrollY);
+    int listLines = n;
+    if (listLines < 1) {
+        listLines = 1;
+    }
+    if (listLines > kMaxAnnotListLines) {
+        listLines = kMaxAnnotListLines;
+    }
+    ew->listBox->idealSizeLines = listLines;
     EnableSaveIfAnnotationsChanged(ew);
 }
 
@@ -1481,41 +1490,37 @@ static int EditLineDy(Edit* e) {
     return std::max(dy2 - dy1, 1);
 }
 
-// Hand the vertical space the rest of the window doesn't need to the two
-// controls that can use it: the list of annotations and, when an annotation is
-// selected, its Contents box. Both used to be a fixed number of lines, so a
-// taller window just grew its empty area - the list stayed put (#3769) and a
-// multi-line annotation stayed cut off with room to spare below it (#5834).
+// The list is as tall as the annotations (capped at kMaxAnnotListLines) so
+// moving between items does not resize it when per-annot controls appear.
+// Leftover window height goes to the Contents box (#5834).
 static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientDy) {
-    constexpr int kPreferredLines = 5;
+    constexpr int kPreferredContentsLines = 5;
     if (!ew->listBox || !ew->mainLayout) {
         return;
     }
-    int listLineDy = ew->listBox->GetItemHeight();
-    if (listLineDy <= 0 || targetClientDy <= 0) {
+    if (ew->listBox->GetItemHeight() <= 0 || targetClientDy <= 0) {
         return;
     }
+    int n = ew->listBox->ItemsCount();
+    int listLines = n;
+    if (listLines < 1) {
+        listLines = 1;
+    }
+    if (listLines > kMaxAnnotListLines) {
+        listLines = kMaxAnnotListLines;
+    }
+    ew->listBox->idealSizeLines = listLines;
+
     Edit* contents = ew->editContents;
     bool growContents = contents && contents->IsVisible();
-
-    // how tall everything is with the smallest list and Contents box we'd like
-    // to show
-    ew->listBox->idealSizeLines = kPreferredLines;
     if (growContents) {
-        contents->idealSizeLines = kPreferredLines;
+        contents->idealSizeLines = kPreferredContentsLines;
     }
     Size natural = ew->mainLayout->Layout(ExpandInf());
     int extraDy = targetClientDy - natural.dy;
-
-    if (growContents && extraDy != 0) {
-        // share leftover (or shortage) between the list and Contents
-        int forContents = extraDy / 2;
-        extraDy -= forContents;
-        contents->idealSizeLines = std::max(1, kPreferredLines + (forContents / EditLineDy(contents)));
+    if (growContents) {
+        contents->idealSizeLines = std::max(1, kPreferredContentsLines + (extraDy / EditLineDy(contents)));
     }
-    // one line is the floor: better a cramped list than a window taller than
-    // the screen
-    ew->listBox->idealSizeLines = std::max(kPreferredLines + (extraDy / listLineDy), 1);
 }
 
 void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
@@ -1551,6 +1556,25 @@ static VirtText* CreateStatic(Str s = nullptr) {
     });
 }
 
+static VirtText* CreateAnnotOptLabel(Str s) {
+    return NewVirtText({
+        .s = s,
+        .font = GetAppFont(),
+        .align = VirtTextAlign::Right,
+        .isRtl = IsUIRtl(),
+        .ellipsis = true,
+    });
+}
+
+static void AddAnnotOptRow(Table* t, int row, VirtText* label, ILayout* ctrl) {
+    auto& lc = t->SetCell(row, 0, label);
+    lc.alignH = CrossAxisAlign::Stretch;
+    lc.alignV = CrossAxisAlign::CrossCenter;
+    auto& rc = t->SetCell(row, 1, ctrl);
+    rc.alignH = CrossAxisAlign::Stretch;
+    rc.alignV = CrossAxisAlign::CrossCenter;
+}
+
 static VirtButton* CreateVirtButton(Str text) {
     auto* b = new VirtButton(text, GetAppFont());
     b->textPadding = DpiScaledInsets(5, 12);
@@ -1569,7 +1593,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->dpi = ew->GetDpi();
         w->font = fnt;
         w->padding = DpiScaledInsets(4, 0);
-        w->idealSizeLines = 5;
+        w->idealSizeLines = 1;
         w->multiSelect = true;
         auto* lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
@@ -1605,6 +1629,27 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         vbox->AddChild(w);
     }
 
+    auto makeDropDown = [&]() -> DropDown* {
+        DropDown::CreateArgs args;
+        args.parent = parent;
+        args.font = fnt;
+        args.isRtl = IsUIRtl();
+        auto* w = new DropDown();
+        w->Create(args);
+        return w;
+    };
+    auto makeTrackbar = [&](int rangeMin, int rangeMax) -> Trackbar* {
+        Trackbar::CreateArgs args;
+        args.parent = parent;
+        args.rangeMin = rangeMin;
+        args.rangeMax = rangeMax;
+        args.font = fnt;
+        args.isRtl = IsUIRtl();
+        auto* w = new Trackbar();
+        w->Create(args);
+        return w;
+    };
+
     {
         auto* w = CreateStatic(_TRA("Contents:"));
         ew->staticContents = w;
@@ -1622,7 +1667,6 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto* w = new Edit();
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
-        w->maxDx = 150;
         w->onTextChanged = MkFunc0(ContentsChanged, ew);
         // flush Contents on blur (EN_KILLFOCUS); do not fold this into
         // onTextChanged — that must stay EN_CHANGE-only (Advanced Settings UAF)
@@ -1631,253 +1675,75 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         vbox->AddChild(w);
     }
 
-    {
-        auto* w = CreateStatic(_TRA("Text Alignment:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticTextAlignment = w;
-        vbox->AddChild(w);
-    }
+    auto* opts = new Table();
+    opts->SetSize(11, 2);
+    opts->colGap = DpiScale(8);
+    opts->rowGap = DpiScale(4);
+    opts->padding = DpiScaledInsets(4, 0, 0, 0);
+    int optRow = 0;
 
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
+    ew->staticTextAlignment = CreateAnnotOptLabel(_TRA("Text Alignment:"));
+    ew->dropDownTextAlignment = makeDropDown();
+    ew->dropDownTextAlignment->SetItemsSeqStrings(gQuaddingNames);
+    ew->dropDownTextAlignment->onSelectionChanged = MkFunc0(TextAlignmentSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticTextAlignment, ew->dropDownTextAlignment);
 
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
-        w->Create(args);
+    ew->staticTextFont = CreateAnnotOptLabel(_TRA("Text Font:"));
+    ew->dropDownTextFont = makeDropDown();
+    ew->dropDownTextFont->SetItemsSeqStrings(gQuaddingNames);
+    ew->dropDownTextFont->onSelectionChanged = MkFunc0(TextFontSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticTextFont, ew->dropDownTextFont);
 
-        w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = MkFunc0(TextAlignmentSelectionChanged, ew);
-        ew->dropDownTextAlignment = w;
-        vbox->AddChild(w);
-    }
+    ew->staticTextSize = CreateAnnotOptLabel(_TRA("Text Size:"));
+    ew->trackbarTextSize = makeTrackbar(8, 36);
+    ew->trackbarTextSize->onPositionChanging = MkFunc1(TextFontSizeChanging, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticTextSize, ew->trackbarTextSize);
 
-    {
-        auto* w = CreateStatic(_TRA("Text Font:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticTextFont = w;
-        vbox->AddChild(w);
-    }
+    ew->staticTextColor = CreateAnnotOptLabel(_TRA("Text Color:"));
+    ew->dropDownTextColor = makeDropDown();
+    ew->dropDownTextColor->SetItemsSeqStrings(gColors);
+    ew->dropDownTextColor->onSelectionChanged = MkFunc0(TextColorSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticTextColor, ew->dropDownTextColor);
 
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
+    ew->staticLineStart = CreateAnnotOptLabel(_TRA("Line Start:"));
+    ew->dropDownLineStart = makeDropDown();
+    ew->dropDownLineStart->onSelectionChanged = MkFunc0(LineStartSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticLineStart, ew->dropDownLineStart);
 
-        w->Create(args);
-        w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = MkFunc0(TextFontSelectionChanged, ew);
-        ew->dropDownTextFont = w;
-        vbox->AddChild(w);
-    }
+    ew->staticLineEnd = CreateAnnotOptLabel(_TRA("Line End:"));
+    ew->dropDownLineEnd = makeDropDown();
+    ew->dropDownLineEnd->onSelectionChanged = MkFunc0(LineEndSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticLineEnd, ew->dropDownLineEnd);
 
-    {
-        auto* w = CreateStatic(_TRA("Text Size:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticTextSize = w;
-        vbox->AddChild(w);
-    }
+    ew->staticIcon = CreateAnnotOptLabel(_TRA("Icon:"));
+    ew->dropDownIcon = makeDropDown();
+    ew->dropDownIcon->onSelectionChanged = MkFunc0(IconSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticIcon, ew->dropDownIcon);
 
-    {
-        Trackbar::CreateArgs args;
-        args.parent = parent;
-        args.rangeMin = 8;
-        args.rangeMax = 36;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
+    ew->staticBorder = CreateAnnotOptLabel(_TRA("Border:"));
+    ew->trackbarBorder = makeTrackbar(borderWidthMin, borderWidthMax);
+    ew->trackbarBorder->onPositionChanging = MkFunc1(BorderWidthChanging, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticBorder, ew->trackbarBorder);
 
-        auto* w = new Trackbar();
-        w->SetInsetsPt(4, 0, 0, 0);
+    ew->staticColor = CreateAnnotOptLabel(_TRA("Color:"));
+    ew->dropDownColor = makeDropDown();
+    ew->dropDownColor->SetItemsSeqStrings(gColors);
+    ew->dropDownColor->onSelectionChanged = MkFunc0(ColorSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticColor, ew->dropDownColor);
 
-        w->Create(args);
+    ew->staticInteriorColor = CreateAnnotOptLabel(_TRA("Interior Color:"));
+    ew->dropDownInteriorColor = makeDropDown();
+    ew->dropDownInteriorColor->SetItemsSeqStrings(gColors);
+    ew->dropDownInteriorColor->onSelectionChanged = MkFunc0(InteriorColorSelectionChanged, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticInteriorColor, ew->dropDownInteriorColor);
 
-        w->onPositionChanging = MkFunc1(TextFontSizeChanging, ew);
-        ew->trackbarTextSize = w;
-        vbox->AddChild(w);
-    }
+    ew->staticOpacity = CreateAnnotOptLabel(_TRA("Opacity:"));
+    ew->trackbarOpacity = makeTrackbar(0, 255);
+    ew->trackbarOpacity->onPositionChanging = MkFunc1(OpacityChanging, ew);
+    AddAnnotOptRow(opts, optRow++, ew->staticOpacity, ew->trackbarOpacity);
 
-    {
-        auto* w = CreateStatic(_TRA("Text Color:"));
-        ew->staticTextColor = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
-        w->Create(args);
-
-        w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = MkFunc0(TextColorSelectionChanged, ew);
-        ew->dropDownTextColor = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateStatic(_TRA("Line Start:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticLineStart = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
-        w->Create(args);
-
-        w->onSelectionChanged = MkFunc0(LineStartSelectionChanged, ew);
-        ew->dropDownLineStart = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateStatic(_TRA("Line End:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticLineEnd = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
-        w->Create(args);
-
-        w->onSelectionChanged = MkFunc0(LineEndSelectionChanged, ew);
-        ew->dropDownLineEnd = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateStatic(_TRA("Icon:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticIcon = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
-        w->Create(args);
-
-        w->onSelectionChanged = MkFunc0(IconSelectionChanged, ew);
-        ew->dropDownIcon = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateStatic("Border:");
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticBorder = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        Trackbar::CreateArgs args;
-        args.parent = parent;
-        args.rangeMin = borderWidthMin;
-        args.rangeMax = borderWidthMax;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new Trackbar();
-        w->Create(args);
-        w->onPositionChanging = MkFunc1(BorderWidthChanging, ew);
-        ew->trackbarBorder = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateStatic(_TRA("Color:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticColor = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
-        w->Create(args);
-        w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = MkFunc0(ColorSelectionChanged, ew);
-        ew->dropDownColor = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateStatic(_TRA("Interior Color:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticInteriorColor = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        DropDown::CreateArgs args;
-        args.parent = parent;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new DropDown();
-        w->SetInsetsPt(4, 0, 0, 0);
-        w->Create(args);
-
-        w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = MkFunc0(InteriorColorSelectionChanged, ew);
-        ew->dropDownInteriorColor = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateStatic(_TRA("Opacity:"));
-        w->padding = DpiScaledInsets(8, 0, 0, 0);
-        ew->staticOpacity = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        Trackbar::CreateArgs args;
-        args.parent = parent;
-        args.rangeMin = 0;
-        args.rangeMax = 255;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto* w = new Trackbar();
-        w->Create(args);
-
-        w->onPositionChanging = MkFunc1(OpacityChanging, ew);
-        ew->trackbarOpacity = w;
-        vbox->AddChild(w);
-    }
+    ReportIf(optRow != 11);
+    vbox->AddChild(opts);
 
     {
         auto* w = CreateVirtButton(_TRA("Save..."));
@@ -1969,8 +1835,8 @@ static HWND AnnotEditorRelativeHwnd(EditAnnotationsWindow* ew) {
 }
 
 // Size the HWND to a client size that fits the work area and lay out the
-// growing list / Contents box inside it. Does not grow the window to fit
-// every field — extra annot controls take space from the list instead.
+// Contents box in leftover space. The annotations list stays at
+// min(n, kMaxAnnotListLines) rows so navigating does not change its height.
 static void RelayoutEditAnnotationsWindow(EditAnnotationsWindow* ew, int clientDx, int clientDy) {
     if (!ew || !ew->hwnd || !ew->mainLayout) {
         return;
@@ -2033,7 +1899,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         return;
     }
     ew = new EditAnnotationsWindow();
-    // OnSize grows the list / Contents box before DoLayout
+    // OnSize grows the Contents box before DoLayout; the list is a fixed n rows
     ew->autoLayout = false;
     // Esc normally does not close because the user may be editing text
     // (issue #5934). EscToExit is the explicit opt-in to close anyway.
