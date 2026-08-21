@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.sumatrapdf.SumatraPDF</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <name>SumatraPDF</name>
+  <summary>A fast document viewer</summary>
+  <description>
+    <p>
+      SumatraPDF is a fast document viewer focused on a simple reading experience. The native Linux application
+      supports opening and reading PDF documents with tabs, search, selection, outlines, favorites, printing, and
+      restored sessions.
+    </p>
+  </description>
+  <launchable type="desktop-id">org.sumatrapdf.SumatraPDF.desktop</launchable>
+  <icon type="stock">org.sumatrapdf.SumatraPDF</icon>
+  <provides>
+    <binary>SumatraPDF</binary>
+    <mediatype>application/pdf</mediatype>
+  </provides>
+  <categories>
+    <category>Office</category>
+    <category>Viewer</category>
+  </categories>
+  <url type="homepage">https://www.sumatrapdfreader.org/</url>
+  <url type="bugtracker">https://github.com/sumatrapdfreader/sumatrapdf/issues</url>
+  <developer id="org.sumatrapdf">
+    <name>SumatraPDF contributors</name>
+  </developer>
+  <content_rating type="oars-1.1" />
+</component>

@@ -5,7 +5,7 @@
 #include "base/Zip.h"
 
 #include "base/ByteReaderWriter.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 
 extern "C" {
@@ -64,6 +64,32 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
     return newdstlen;
 }
 
+static u32 FileTimeToDosDateTime(FILETIME ft) {
+#if OS_WIN
+    FILETIME ftLocal;
+    WORD dosDate = 0;
+    WORD dosTime = 0;
+    if (!FileTimeToLocalFileTime(&ft, &ftLocal) || !::FileTimeToDosDateTime(&ftLocal, &dosDate, &dosTime)) {
+        return 0;
+    }
+    return MAKELONG(dosTime, dosDate);
+#else
+    u64 ns = ((u64)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+    time_t seconds = (time_t)(ns / 1000000000ULL);
+    struct tm local{};
+    if (!localtime_r(&seconds, &local)) {
+        return 0;
+    }
+    int year = local.tm_year + 1900;
+    if (year < 1980 || year > 2107) {
+        return 0;
+    }
+    u16 dosDate = (u16)(((year - 1980) << 9) | ((local.tm_mon + 1) << 5) | local.tm_mday);
+    u16 dosTime = (u16)((local.tm_hour << 11) | (local.tm_min << 5) | (local.tm_sec / 2));
+    return ((u32)dosDate << 16) | dosTime;
+#endif
+}
+
 bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     int size = data.len;
     ReportIf(size >= UINT32_MAX);
@@ -81,12 +107,11 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     }
 
     u16 method = Z_DEFLATED;
-    uLongf compressedSize = (u32)size;
     char* compressed = AllocArrayTemp<char>(size);
     if (!compressed) {
         return false;
     }
-    compressedSize = zip_compress(compressed, (u32)size, data.s, (u32)size);
+    uLongf compressedSize = zip_compress(compressed, (u32)size, data.s, (u32)size);
     if (!compressedSize) {
         method = 0; // Store
         memcpy(compressed, data.s, size);
@@ -141,6 +166,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
 
 // add a given file under (optional) nameInZip
 bool ZipCreator::AddFile(Str path, Str nameInZip) {
+    AutoArenaSavepoint tempScope;
     Str fileData = file::ReadFile(path);
     if (!fileData) {
         return false;
@@ -149,18 +175,14 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
     u32 dosdatetime = 0;
     FILETIME ft = file::GetModificationTime(path);
     if (ft.dwLowDateTime || ft.dwHighDateTime) {
-        FILETIME ftLocal;
-        WORD dosDate, dosTime;
-        if (FileTimeToLocalFileTime(&ft, &ftLocal) && FileTimeToDosDateTime(&ftLocal, &dosDate, &dosTime)) {
-            dosdatetime = MAKELONG(dosTime, dosDate);
-        }
+        dosdatetime = FileTimeToDosDateTime(ft);
     }
 
     if (!nameInZip) {
         nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : path;
     }
 
-    Str name = str::Dup(nameInZip);
+    TempStr name = str::DupTemp(nameInZip);
     str::TransCharsInPlace(name, StrL("\\"), StrL("/"));
 
     bool res = AddFileData(name, fileData, dosdatetime);
@@ -170,13 +192,14 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
 
 // we use the filePath relative to dir as the zip name
 bool ZipCreator::AddFileFromDir(Str filePath, Str dir) {
-    if (len(dir) == 0 || !str::StartsWith(filePath, dir)) {
+    Str nameInZip = filePath;
+    if (len(dir) == 0 || !str::TrimPrefix(nameInZip, dir)) {
         return false;
     }
-    if (!path::IsSep(filePath.s[dir.len])) {
+    if (!path::IsSep(nameInZip.s[0])) {
         return false;
     }
-    Str nameInZip = Str(filePath.s + dir.len + 1, filePath.len - dir.len - 1);
+    nameInZip = Str(nameInZip.s + 1, nameInZip.len - 1);
     return AddFile(filePath, nameInZip);
 }
 
@@ -243,12 +266,15 @@ Str ZipDirToData(Str dirPath, bool recursive) {
 // the returned data will have 2 zero bytes at end to make sure it's also
 // a 0-terminated char* or WCHA* string
 // those 2 bytes are not reported as
-Str Ungzip(const Str& d) {
+Str Ungzip(const Str& d, int maxSize) {
     int n = d.len;
+    if (n <= 0 || maxSize <= 0) {
+        return {};
+    }
     u8* dataCompr = (u8*)d.s;
     // aggressive growth for uncompressed buffer because I use this
     // for .syntex files and they compress really well
-    int lenUncr = n * 2;
+    int lenUncr = (int)std::min((i64)maxSize, (i64)n * 2);
 
     bool done = false;
     int res;
@@ -268,12 +294,16 @@ Str Ungzip(const Str& d) {
     // +2 for space for terminating char* or WCHAR*
     u8* dataUncr = AllocArray<u8>(lenUncr + 2);
     if (!dataUncr) {
+        inflateEnd(&strm);
         return {};
     }
 
     while (!done) {
         if (strm.total_out >= (uLong)lenUncr) {
-            int newLen = lenUncr * 2;
+            if (lenUncr >= maxSize) {
+                break;
+            }
+            int newLen = (int)std::min((i64)maxSize, (i64)lenUncr * 2);
             u8* dataUncr2 = (u8*)realloc(dataUncr, newLen + 2);
             if (!dataUncr2) {
                 free((void*)dataUncr);
@@ -301,7 +331,7 @@ Str Ungzip(const Str& d) {
         return {};
     }
 
-    lenUncr = strm.total_out;
+    lenUncr = (int)strm.total_out;
     // also make it a valid 0-terminated char* or WCHAR* string
     dataUncr[lenUncr] = 0;
     dataUncr[lenUncr + 1] = 0;

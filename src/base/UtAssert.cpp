@@ -30,8 +30,7 @@ static void OutputDebugString(Str s) {
         return;
     }
 #if OS_WIN
-    TempStr s0 = str::Dup(s);
-    OutputDebugStringA(s0.s);
+    OutputDebugStringA(CStrTemp(s));
 #else
     fprintf(stderr, "%.*s", s.len, s.s);
 #endif
@@ -48,6 +47,9 @@ static void PrintStdout(Str s) {
     printf("%.*s", s.len, s.s);
 }
 
+/* This is assert for unit tests that can be used in non-interactive usage.
+Instead of showing a UI to the user, like regular assert(), it simply
+remembers number of failed asserts. */
 void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
     ++g_nTotal;
     if (ok) {

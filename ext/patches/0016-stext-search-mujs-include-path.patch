@@ -1,0 +1,19 @@
+stext-search: include regexp.h from the amalgamated ext/a-mujs
+
+We build the amalgamated ext/a-mujs rather than mupdf's thirdparty/mujs, so
+regexp.h is somewhere else.
+---
+diff --git a/source/fitz/stext-search.c b/source/fitz/stext-search.c
+index 325f105..ce08148 100644
+--- a/source/fitz/stext-search.c
++++ b/source/fitz/stext-search.c
+@@ -22,7 +22,8 @@
+ 
+ #include "mupdf/fitz.h"
+ 
+-#include "../thirdparty/mujs/regexp.h"
++/* SumatraPDF: different location (amalgamated a-mujs) */
++#include "../../../ext/a-mujs/regexp.h"
+ 
+ #include "mupdf/ucdn.h"
+ 

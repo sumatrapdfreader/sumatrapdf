@@ -6,7 +6,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
+    <ClCompile Include="..\src\BasePch.cpp" />
     <ClCompile Include="..\src\tools\plugin-test.cpp">
       <Filter>tools</Filter>
     </ClCompile>

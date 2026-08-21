@@ -36,8 +36,7 @@ TempStr GetAppDataDirTemp();
 TempStr GetPathInAppDataDirTemp(Str fileName);
 
 void DetectTextEditors(Vec<TextEditor*>&);
-
-bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+void CollectInverseSearchCommands(StrVec& out, Str cmdLine);
 
 void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();
@@ -46,6 +45,7 @@ void SaveCallstackLogs();
 Str Sha1OfAppExe();
 TempStr GetWebViewDataDirTemp();
 
+TempStr FormatFileSizeShortTransTemp(i64);
 TempStr FormatFileSizeTransTemp(i64);
 
 bool LaunchFileIfExists(Str path);

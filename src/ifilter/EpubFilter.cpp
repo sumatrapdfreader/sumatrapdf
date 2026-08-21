@@ -7,13 +7,14 @@
 #include "base/HtmlTags.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
+#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 
 #include "FilterBase.h"
@@ -34,12 +35,10 @@ HRESULT EpubFilter::OnInit() {
 
     CleanUp();
 
-    Str data = ReadIStream(m_pStream);
-    if (str::IsNull(data)) {
+    if (str::IsNull(m_data)) {
         return E_FAIL;
     }
-    m_epubDoc = EpubDoc::CreateFromData(data);
-    str::Free(data);
+    m_epubDoc = EpubDoc::CreateFromData(m_data);
     if (!m_epubDoc) {
         return E_FAIL;
     }

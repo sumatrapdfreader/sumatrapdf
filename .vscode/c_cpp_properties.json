@@ -3,7 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceRoot}/mupdf/include",
+                "${workspaceRoot}/ext/mupdf/include",
                 "${workspaceRoot}/src",
                 "${workspaceRoot}/src/base",
                 "${workspaceRoot}/src/wingui",
@@ -11,7 +11,7 @@
                 "${workspaceRoot}/ext/unarr",
                 "${workspaceRoot}/ext/brotli/c/include",
                 "${workspaceRoot}/ext/darkmodelib/include",
-                "${workspaceRoot}/ext/zlib",
+                "${workspaceRoot}/ext/a-zlib",
                 "${workspaceRoot}/ext/libchm",
                 "${workspaceRoot}/packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include"
             ],

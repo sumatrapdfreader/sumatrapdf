@@ -92,9 +92,9 @@ struct DarkModePalette {
 
 struct DarkModeProfile {
     PageColorMode mode = PageColorMode::Normal;
-    COLORREF foreground = 0;
-    COLORREF pageBackground = 0;
-    COLORREF linkColor = 0;
+    Color foreground = 0;
+    Color pageBackground = 0;
+    Color linkColor = 0;
     float strength = 1.f;
     bool debugOverlay = false;
     bool preservePdfImages = false;
@@ -106,7 +106,7 @@ struct DarkModeProfile {
 
 struct ImageOccurrenceInfo {
     int occurrenceIndex = 0;
-    RectF pageBounds{};
+    RectF pageBounds;
     bool isImageMask = false;
     bool hasAlpha = false;
     float pageCoverage = 0.f;
@@ -117,7 +117,7 @@ struct ImageOccurrenceInfo {
 
 struct DarkModePageAnalysis {
     int pageNumber = 0;
-    RectF pageBounds{};
+    RectF pageBounds;
     bool isScannedPage = false;
     Vec<ImageOccurrenceInfo> images;
     u32 optionsHash = 0;
@@ -128,7 +128,6 @@ struct DarkModeReplayState {
     int nextImageOccurrence = 0;
 };
 
-// PDF dark mode runtime options (not stored in settings file)
 bool GetPreservePdfImagesInDarkMode();
 void SetPreservePdfImagesInDarkMode(bool preserve);
 int GetPreservePdfImagesMinSize();
@@ -142,7 +141,10 @@ u32 PdfDarkModeComputeProfileHash(const DarkModeProfile* profile);
 bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine);
 bool DocumentColorsFollowThemeEnabled();
 DocumentColorsFollowTheme GetDocumentColorsFollowTheme();
+DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v);
 void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode);
+void SetDocumentColorsFollowThemePreview(DocumentColorsFollowTheme mode);
+void ClearDocumentColorsFollowThemePreview();
 const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode);
 DarkModeOptions PdfDarkModeCurrentOptions();
 u32 PdfDarkModeComputeOptionsHash();
@@ -156,32 +158,26 @@ void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePale
 
 bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds);
 
-// OKLab perceptual remap for SmartDark text/vector colors (Phase 2).
 void MapRgbToDarkThemeOklab(float r, float g, float b, const DarkModePalette& palette, float* outRgb);
 
-// Perceptual distance in OKLab (Phase 4 background matching).
 float PdfDarkModeOklabDistance(float r1, float g1, float b1, float r2, float g2, float b2);
 
-// Phase 4: edge-connected light background removal for LightBackgroundArtwork.
 bool PdfDarkModeShouldBlendLightBackground(const DarkImageAnalysis& analysis);
 
-// Phase 5: full-page scan remapping (Smart path only).
 void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysis& analysis,
                                const DarkModePalette& palette, float* outR, float* outG, float* outB);
 
 bool PdfDarkModeImageLooksLikePhoto(fz_context* ctx, fz_image* image);
 bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, float pageCoverage);
+bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage);
 
 RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH);
 
-// Cap bbox when embedded image dimensions are unknown (common with content-stream tiles).
 RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight);
 
-// Gate for Legacy skip-rect preserve: combines bbox size, pixel stats, and artwork heuristics.
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH);
 
-// Stricter pixel gate used by PdfDarkModeShouldPreserveEmbeddedImageRect.
 bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage = 0.f, int devW = 0,
                                             int devH = 0);
 

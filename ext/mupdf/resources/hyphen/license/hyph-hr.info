@@ -1,0 +1,66 @@
+% title: Hyphenation patterns for Croatian
+% copyright: Copyright (C) 1994, 1996, 2011, 2015 Igor Marinović
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Croatian
+%     tag: hr
+% authors:
+%   -
+%     name: Igor Marinović
+%     contact: marinowski (at) gmail.com
+% licence:
+%     - This file is available under any of these licences:
+%     -
+%         name: LPPL
+%         version: 1
+%         or_later: true
+%         url: http://www.latex-project.org/lppl/lppl-1-0.html
+%     -
+%         text: >
+%             Permission is hereby granted, free of charge, to any person obtaining
+%             a copy of this file and any associated documentation
+%             (the "Data Files") to deal in the Data Files
+%             without restriction, including without limitation the rights to use,
+%             copy, modify, merge, publish, distribute, and/or sell copies of
+%             the Data Files, and to permit persons to whom the Data Files
+%             are furnished to do so, provided that
+%             (a) this copyright and permission notice appear with all copies
+%             of the Data Files,
+%             (b) this copyright and permission notice appear in associated
+%             documentation, and
+%             (c) there is clear notice in each modified Data File
+%             as well as in the documentation associated with the Data File(s)
+%             that the data has been modified.
+%
+%             THE DATA FILES ARE PROVIDED "AS IS", WITHOUT WARRANTY OF
+%             ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+%             WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+%             NONINFRINGEMENT OF THIRD PARTY RIGHTS.
+%             IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS
+%             NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL
+%             DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+%             DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+%             TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+%             PERFORMANCE OF THE DATA FILES.
+%
+%             Except as contained in this notice, the name of a copyright holder
+%             shall not be used in advertising or otherwise to promote the sale,
+%             use or other dealings in these Data Files without prior
+%             written authorization of the copyright holder.
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - Late 1994 first version
+%     - Beginning of 1996 much more improved version (date of last change: 19.03.1996).
+%     - In summer 2008 patterns incorporated into hyph-utf8 and renamed from hrhyph.tex to hyph-hr.tex.
+%     - 06.06.2011 LPPL licence added.
+% texlive:
+%     encoding: ec
+%     babelname: croatian
+%     legacy_patterns: hrhyph.tex
+%     message: Croatian hyphenation patterns
+%     description: Hyphenation patterns for Croatian in T1/EC and UTF-8 encodings.
+%

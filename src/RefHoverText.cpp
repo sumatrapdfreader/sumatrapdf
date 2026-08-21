@@ -7,9 +7,8 @@
 // UI / render machinery stays separate from the citation-resolution logic.
 
 #include "base/Base.h"
-#include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"
@@ -132,7 +131,7 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
     }
 
     // Convert surname to wide string for engine text matching.
-    WStr surnameW = ToWStr(surname);
+    TempWStr surnameW = ToWStrTemp(surname);
     if (!surnameW || len(surnameW) < 2) {
         return false;
     }
@@ -151,7 +150,6 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
             break;
         }
     }
-    wstr::Free(surnameW);
     return found;
 }
 
@@ -231,6 +229,15 @@ static bool LookupOrSearchNumeric(RefHoverState* s, EngineBase* engine, int srcP
     return false;
 }
 
+// Plain-text citation hover: when no link element is under the cursor, try
+// to detect a "(Surname et al., 2020)" / "Surname (2020)" pattern at pagePos
+// on srcPage, find the bibliography entry that matches, and return its
+// location. Returns true on success and fills destPage/destX/destY.
+// Lookups are cached on s.
+// srcRectOut: on success, set to a stable per-occurrence source key (page
+// coords, including horizontal span) so the caller can tell two occurrences
+// of the same citation apart — even on one text line — and reposition the
+// popup instead of treating it as the same hover.
 bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Point pagePos, int& destPageOut,
                           float& destXOut, float& destYOut, RectF& srcRectOut) {
     if (!s || !engine || srcPage <= 0) {
@@ -319,6 +326,9 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     return result;
 }
 
+// When a link destination is page-level (no specific destY), extract the
+// source link's text from srcRect on srcPage and search destPage for a
+// matching entry anchor. Returns -1 if no match.
 float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage) {
     if (srcPage <= 0 || destPage <= 0 || srcRect.dx <= 0.f || srcRect.dy <= 0.f) {
         return -1.f;
@@ -383,12 +393,8 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     }
     for (int i = 0; i < ncands - 1; i++) {
         for (int j = i + 1; j < ncands; j++) {
-            bool swap = false;
-            if (cands[j].flanked && !cands[i].flanked) {
-                swap = true;
-            } else if (cands[j].flanked == cands[i].flanked && cands[j].len > cands[i].len) {
-                swap = true;
-            }
+            bool swap = (cands[j].flanked && !cands[i].flanked) ||
+                        (cands[j].flanked == cands[i].flanked && cands[j].len > cands[i].len);
             if (swap) {
                 Cand t = cands[i];
                 cands[i] = cands[j];

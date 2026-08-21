@@ -35,10 +35,10 @@ static bool IsEpubArchive(Archive* archive) {
     }
 
     Str mtStr = Str(mt, n);
-    if (str::Eq(mtStr, "application/epub+zip")) {
+    if (str::Eq(mtStr, StrL("application/epub+zip"))) {
         return true;
     }
-    return str::Eq(mtStr, "application/x-ibooks+zip");
+    return str::Eq(mtStr, StrL("application/x-ibooks+zip"));
 }
 
 static bool IsXpsArchive(Archive* archive) {
@@ -47,14 +47,20 @@ static bool IsXpsArchive(Archive* archive) {
     return res;
 }
 
+// Single .fb2 member, optionally with companion .url files (same rule as
+// Fb2Doc::loadFromFile / loadFromData).
 static bool IsFb2Archive(Archive* archive) {
     auto files = archive->GetFileInfos();
-    if (len(files) != 1) {
-        return false;
+    int nFb2 = 0;
+    for (auto* fi : files) {
+        auto name = fi->name;
+        if (str::EndsWithI(name, StrL(".fb2"))) {
+            nFb2++;
+        } else if (!str::EndsWithI(name, StrL(".url"))) {
+            return false;
+        }
     }
-    auto fi = files[0];
-    auto name = fi->name;
-    return str::EndsWithI(name, ".fb2");
+    return nFb2 == 1;
 }
 
 FileType GuessFileTypeFromFile(Str path) {

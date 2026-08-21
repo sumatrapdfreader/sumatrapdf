@@ -2,26 +2,42 @@
 License: GPLv3 */
 
 #include "base/Base.h"
+#include "gui/Dpi.h"
+
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/GuiColors.h"
+#include "gui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Commands.h"
 #include "Theme.h"
+#include "DarkMode_win.h"
 #include "GlobalPrefs.h"
 #include "Translations.h"
-#include "DarkModeSubclass.h"
 #include "PdfDarkMode.h"
 
-// allow only x64 and arm64 for compatibility for older OS
-#if !defined(_DARKMODELIB_NOT_USED) && \
-    (defined(__x86_64__) || defined(_M_X64) || defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))
-bool gUseDarkModeLib = true;
-#else
-bool gUseDarkModeLib = false;
-#endif
+// The installer and uninstaller never load settings, so CreateThemeCommands()
+// doesn't run and there is no current theme - every Theme*Color() accessor
+// dereferences gCurrentTheme and would crash. They still create buttons and
+// edits; those paint in gui/'s own defaults, which start out as the system
+// colors, so nothing here has to answer without a theme. Defined next to
+// gCurrentTheme.
+static bool HasCurrentTheme();
 
-bool UseDarkModeLib() {
-    return gUseDarkModeLib;
+// A button is a virtual control, so it takes its look from the gui/ color
+// defaults, which SumatraUpdateTheme() fills in from the theme. All this adds
+// is the dpi-scaled padding and the default-button shade
+VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool isDefault) {
+    DpiSetFromHwnd(hwndForDpi);
+    auto* b = new VirtButton(text, font);
+    b->SetIsDefault(isDefault);
+    b->textPadding = DpiScaledInsets(5, 12);
+    return b;
 }
 
 /*
@@ -30,10 +46,6 @@ _TRN("Dark")
 _TRN("Light")
 _TRN("Charcoal")
 */
-
-constexpr COLORREF kColBlack = 0x000000;
-constexpr COLORREF kColWhite = 0xFFFFFF;
-constexpr COLORREF kRedColor = RgbToCOLORREF(0xff0000);
 
 // Optional colors (DisabledTextColor … NotificationHighlightTextColor) fix
 // muddy derived hues when TextColor is not neutral gray (e.g. Dracula #f8f8f2).
@@ -71,8 +83,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1F2937
         ErrorBackgroundColor = #7F1D1D
         NotificationBackgroundColor = #111827
-        NotificationHighlightColor = #374151
-        NotificationHighlightTextColor = #F9FAFB
+        NotificationHighlightColor = #422006
+        NotificationHighlightTextColor = #fde68a
         ColorizeControls = true
     ]
     [
@@ -107,8 +119,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1e272c
         ErrorBackgroundColor = #5c2b2b
         NotificationBackgroundColor = #2e3c43
-        NotificationHighlightColor = #455a64
-        NotificationHighlightTextColor = #eceff1
+        NotificationHighlightColor = #4a3a12
+        NotificationHighlightTextColor = #ffdf9e
         ColorizeControls = true
     ]
     [
@@ -125,8 +137,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #252528
         ErrorBackgroundColor = #5a1d1d
         NotificationBackgroundColor = #38383c
-        NotificationHighlightColor = #505058
-        NotificationHighlightTextColor = #ffffff
+        NotificationHighlightColor = #4a3c16
+        NotificationHighlightTextColor = #ffe2a0
         ColorizeControls = true
     ]
     [
@@ -143,8 +155,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #eee8d5
         ErrorBackgroundColor = #f8d0c8
         NotificationBackgroundColor = #f5efdc
-        NotificationHighlightColor = #eee8d5
-        NotificationHighlightTextColor = #073642
+        NotificationHighlightColor = #f3e2b3
+        NotificationHighlightTextColor = #5c4405
         ColorizeControls = true
     ]
     [
@@ -161,8 +173,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #002b36
         ErrorBackgroundColor = #5c1a1a
         NotificationBackgroundColor = #003543
-        NotificationHighlightColor = #073642
-        NotificationHighlightTextColor = #fdf6e3
+        NotificationHighlightColor = #3d3208
+        NotificationHighlightTextColor = #eec97a
         ColorizeControls = true
     ]
     [
@@ -179,8 +191,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #343746
         ErrorBackgroundColor = #ff5555
         NotificationBackgroundColor = #343746
-        NotificationHighlightColor = #bd93f9
-        NotificationHighlightTextColor = #f8f8f2
+        NotificationHighlightColor = #4a3c14
+        NotificationHighlightTextColor = #f1fa8c
         ColorizeControls = true
     ]
     [
@@ -197,8 +209,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #15132a
         ErrorBackgroundColor = #5c1a2e
         NotificationBackgroundColor = #1a1830
-        NotificationHighlightColor = #3e3a5c
-        NotificationHighlightTextColor = #CBE3E7
+        NotificationHighlightColor = #3d2f12
+        NotificationHighlightTextColor = #f0d9a0
         ColorizeControls = true
     ]
     [
@@ -215,8 +227,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #152808
         ErrorBackgroundColor = #5c2810
         NotificationBackgroundColor = #3a4a28
-        NotificationHighlightColor = #6a7a40
-        NotificationHighlightTextColor = #FDD085
+        NotificationHighlightColor = #5c4a18
+        NotificationHighlightTextColor = #fde7b0
         ColorizeControls = true
     ]
     [
@@ -233,8 +245,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #0e1820
         ErrorBackgroundColor = #5c2010
         NotificationBackgroundColor = #1e2e3c
-        NotificationHighlightColor = #3a4a58
-        NotificationHighlightTextColor = #D7AD62
+        NotificationHighlightColor = #4a3208
+        NotificationHighlightTextColor = #f5d89b
         ColorizeControls = true
     ]
     [
@@ -251,8 +263,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #140018
         ErrorBackgroundColor = #5c1a2a
         NotificationBackgroundColor = #28203a
-        NotificationHighlightColor = #4a3060
-        NotificationHighlightTextColor = #E2C3C3
+        NotificationHighlightColor = #46360f
+        NotificationHighlightTextColor = #f0d9a8
         ColorizeControls = true
     ]
     [
@@ -269,8 +281,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1b1d23
         ErrorBackgroundColor = #be5046
         NotificationBackgroundColor = #2c313a
-        NotificationHighlightColor = #3e4451
-        NotificationHighlightTextColor = #abb2bf
+        NotificationHighlightColor = #40351a
+        NotificationHighlightTextColor = #e5c07b
         ColorizeControls = true
     ]
     [
@@ -287,8 +299,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1e1f1c
         ErrorBackgroundColor = #f92672
         NotificationBackgroundColor = #34352f
-        NotificationHighlightColor = #49483e
-        NotificationHighlightTextColor = #f8f8f2
+        NotificationHighlightColor = #46411c
+        NotificationHighlightTextColor = #e6db74
         ColorizeControls = true
     ]
     [
@@ -305,8 +317,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #2e3440
         ErrorBackgroundColor = #bf616a
         NotificationBackgroundColor = #3b4252
-        NotificationHighlightColor = #434c5e
-        NotificationHighlightTextColor = #eceff4
+        NotificationHighlightColor = #4a3f26
+        NotificationHighlightTextColor = #ebcb8b
         ColorizeControls = true
     ]
     [
@@ -323,8 +335,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #21262d
         ErrorBackgroundColor = #da3633
         NotificationBackgroundColor = #161b22
-        NotificationHighlightColor = #1f6feb
-        NotificationHighlightTextColor = #ffffff
+        NotificationHighlightColor = #3d2a04
+        NotificationHighlightTextColor = #e3b341
         ColorizeControls = true
     ]
     [
@@ -341,8 +353,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #11111b
         ErrorBackgroundColor = #f38ba8
         NotificationBackgroundColor = #181825
-        NotificationHighlightColor = #45475a
-        NotificationHighlightTextColor = #cdd6f4
+        NotificationHighlightColor = #45391f
+        NotificationHighlightTextColor = #f9e2af
         ColorizeControls = true
     ]
     [
@@ -359,8 +371,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #0f0f14
         ErrorBackgroundColor = #f7768e
         NotificationBackgroundColor = #16161e
-        NotificationHighlightColor = #33467c
-        NotificationHighlightTextColor = #c0caf5
+        NotificationHighlightColor = #3d3117
+        NotificationHighlightTextColor = #e0af68
         ColorizeControls = true
     ]
     [
@@ -377,8 +389,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #1d2021
         ErrorBackgroundColor = #fb4934
         NotificationBackgroundColor = #3c3836
-        NotificationHighlightColor = #504945
-        NotificationHighlightTextColor = #ebdbb2
+        NotificationHighlightColor = #4a3a1a
+        NotificationHighlightTextColor = #fabd2f
         ColorizeControls = true
     ]
     [
@@ -395,8 +407,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #01111d
         ErrorBackgroundColor = #ef5350
         NotificationBackgroundColor = #0b2942
-        NotificationHighlightColor = #1d3b53
-        NotificationHighlightTextColor = #d6deeb
+        NotificationHighlightColor = #3a2d16
+        NotificationHighlightTextColor = #ecc48d
         ColorizeControls = true
     ]
     [
@@ -413,8 +425,8 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #06070a
         ErrorBackgroundColor = #f07178
         NotificationBackgroundColor = #0d1017
-        NotificationHighlightColor = #1b2733
-        NotificationHighlightTextColor = #bfbdb6
+        NotificationHighlightColor = #362a12
+        NotificationHighlightTextColor = #e6b450
         ColorizeControls = true
     ]
     [
@@ -431,14 +443,15 @@ static Str themesTxt = StrL(R"(Themes [
         DisabledEdgeColor = #151820
         ErrorBackgroundColor = #ff5370
         NotificationBackgroundColor = #1b1e2b
-        NotificationHighlightColor = #32374d
-        NotificationHighlightTextColor = #a6accd
+        NotificationHighlightColor = #3f3520
+        NotificationHighlightTextColor = #ffcb6b
         ColorizeControls = true
     ]
 ]
 )");
 
 extern void UpdateAfterThemeChange();
+static void UpdateGuiColorsFromTheme();
 
 int gFirstSetThemeCmdId;
 int gLastSetThemeCmdId;
@@ -451,8 +464,46 @@ static Theme* gCurrentTheme = nullptr;
 static Theme* gThemeLight = nullptr;
 static Themes* gParsedThemes = nullptr;
 
+static bool HasCurrentTheme() {
+    return gCurrentTheme != nullptr;
+}
+
 bool IsCurrentThemeDefault() {
     return gCurrThemeIndex == 0;
+}
+
+// Windows high contrast mode. The user picked a system-wide palette because
+// they need it to read the screen, so an app is expected to use those colors
+// instead of its own. We only do that for the default theme: choosing any
+// other theme is an explicit decision about colors and it wins (issue #2124).
+static bool gIsHighContrast = false;
+
+// true when the UI colors have to come from the system palette instead of the
+// theme. Every color accessor tests this, so it's computed once by
+// RecalcUseHighContrast() instead of on every call. Page rendering deliberately
+// does not consult it: recoloring the document is not part of high contrast
+// mode and inverting images was the original complaint in #2124.
+static bool gUseHighContrast = false;
+
+static void DetectHighContrastMode() {
+    HIGHCONTRASTW hc{};
+    hc.cbSize = sizeof(hc);
+    if (!SystemParametersInfoW(SPI_GETHIGHCONTRAST, sizeof(hc), &hc, 0)) {
+        gIsHighContrast = false;
+        return;
+    }
+    gIsHighContrast = (hc.dwFlags & HCF_HIGHCONTRASTON) != 0;
+}
+
+// call whenever the OS high contrast setting or the current theme changes
+static void RecalcUseHighContrast() {
+    gUseHighContrast = gIsHighContrast && HasCurrentTheme() && IsCurrentThemeDefault();
+}
+
+// exported so the few places that hardcode a color for the default theme (a
+// white page box on the toolbar, say) can defer to the palette instead
+bool ThemeUsesHighContrastColors() {
+    return gUseHighContrast;
 }
 
 void FreeThemes() {
@@ -464,6 +515,7 @@ void FreeThemes() {
 
 void CreateThemeCommands() {
     FreeThemes();
+    DetectHighContrastMode();
 
     gThemes = new Vec<Theme*>();
     gParsedThemes = ParseThemes(themesTxt);
@@ -481,14 +533,14 @@ void CreateThemeCommands() {
     }
     gCurrentTheme = (*gThemes)[gCurrThemeIndex];
     gThemeLight = (*gThemes)[0];
+    RecalcUseHighContrast();
 
     CustomCommand* cmd;
     for (int i = 0; i < gThemeCount; i++) {
         Theme* theme = (*gThemes)[i];
         Str themeName = theme->name;
-        auto args = NewStringArg(kCmdArgTheme, themeName);
-        cmd = CreateCustomCommand(themeName, CmdSetTheme, args);
-        cmd->name = str::Dup(fmt(_TRA("Set theme '%s'").s, themeName));
+        auto* args = NewStringArg(kCmdArgTheme, themeName);
+        cmd = CreateCustomCommand(themeName, CmdSetTheme, args, fmt(_TRA("Set theme '%s'").s, themeName));
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;
         } else if (i == gThemeCount - 1) {
@@ -507,6 +559,11 @@ static bool gThemeFollowsSystem = false;
 // toggle and the System theme know what to switch to
 static void RememberLastLightDarkTheme() {
     if (!gGlobalPrefs || !gCurrentTheme) {
+        return;
+    }
+    if (gUseHighContrast) {
+        // the theme's own colors are not in use, so they say nothing about
+        // whether the user's light or dark preference is this theme
         return;
     }
     if (IsLightColor(ThemeWindowBackgroundColor())) {
@@ -541,48 +598,17 @@ void SetThemeByIndex(int themeIdx) {
     gCurrThemeIndex = themeIdx;
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
     gCurrentTheme = (*gThemes)[gCurrThemeIndex];
+    RecalcUseHighContrast(); // it depends on which theme is current
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     RememberLastLightDarkTheme();
-    if (UseDarkModeLib()) {
-        // TODO: we should apply themes to every theme other than 0
-        // but in Solarized Light in Find dialog's input field text is invisible i.e. black
-        // UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
-        const bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
-        const UINT mode = static_cast<UINT>(isDarkCol         ? DarkMode::DarkModeType::dark
-                                            : (themeIdx == 0) ? DarkMode::DarkModeType::classic
-                                                              : DarkMode::DarkModeType::light);
-        DarkMode::setDarkModeConfigEx(mode);
-        DarkMode::setDefaultColors(false);
-
-        DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
-        DarkMode::setCtrlBackgroundColor(ThemeWindowControlBackgroundColor());
-        COLORREF ctrlBg = ThemeWindowControlBackgroundColor();
-        DarkMode::setHotBackgroundColor(ThemeHotBackgroundColor());
-        DarkMode::setTextColor(ThemeWindowTextColor());
-        DarkMode::setDarkerTextColor(ThemeWindowDarkerTextColor());
-        DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
-        DarkMode::setDlgBackgroundColor(ctrlBg);
-        DarkMode::setLinkTextColor(ThemeWindowLinkColor());
-        DarkMode::setEdgeColor(ThemeEdgeColor());
-        DarkMode::setHotEdgeColor(ThemeHotEdgeColor());
-        DarkMode::setDisabledEdgeColor(ThemeDisabledEdgeColor());
-        DarkMode::setErrorBackgroundColor(ThemeErrorBackgroundColor());
-        DarkMode::updateThemeBrushesAndPens();
-
-        DarkMode::setViewTextColor(ThemeWindowTextColor());
-        DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
-        DarkMode::calculateTreeViewStyle();
-
-        if (themeChanged) {
-            UpdateAfterThemeChange();
-        }
-
-        DarkMode::setPrevTreeViewStyle();
-    } else {
-        if (themeChanged) {
-            UpdateAfterThemeChange();
-        }
+    DarkModeApplyThemeColors();
+    // always, not only when the theme changed: the same theme can resolve to
+    // different colors (the System theme, high contrast, a settings edit)
+    UpdateGuiColorsFromTheme();
+    if (themeChanged) {
+        UpdateAfterThemeChange();
     }
+    DarkModeRememberTreeViewStyle();
 };
 
 // Map removed / renamed themes so existing settings keep working.
@@ -591,6 +617,46 @@ static Str ResolveThemeAlias(Str name) {
         return StrL("Charcoal");
     }
     return name;
+}
+
+// a Themes[] entry the user wrote themselves; that theme does exist, whatever
+// we once shipped under the same name, so it must not be migrated away
+static bool HasCustomThemeNamed(Str name) {
+    if (!gGlobalPrefs || !gGlobalPrefs->themes) {
+        return false;
+    }
+    for (Theme* theme : *gGlobalPrefs->themes) {
+        if (str::EqI(theme->name, name)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Rewrite the theme names dropped in 971623174 to what replaced them.
+// ResolveThemeAlias() already makes them work, but only in memory: the settings
+// file keeps naming a theme that no longer exists, is saved back that way every
+// time, and shows a stale name to anyone who looks (#5887). Returns true if
+// anything changed, so the caller can save.
+bool MigrateRenamedThemeNames() {
+    if (!gGlobalPrefs) {
+        return false;
+    }
+    Str* names[] = {&gGlobalPrefs->theme, &gGlobalPrefs->lastLightTheme, &gGlobalPrefs->lastDarkTheme};
+    bool changed = false;
+    for (Str* name : names) {
+        if (str::IsEmptyOrWhiteSpace(*name)) {
+            continue;
+        }
+        Str newName = ResolveThemeAlias(*name);
+        if (str::EqI(*name, newName) || HasCustomThemeNamed(*name)) {
+            continue;
+        }
+        logf("MigrateRenamedThemeNames: '%s' -> '%s'\n", *name, newName);
+        str::ReplaceWithCopy(name, newName);
+        changed = true;
+    }
+    return changed;
 }
 
 // not case sensitive
@@ -606,7 +672,7 @@ static int GetThemeByName(Str name) {
 }
 
 // this is the default aggressive yellow that we suppress
-constexpr COLORREF kMainWinBgColDefault = (RGB(0xff, 0xf2, 0) - 0x80000000);
+constexpr Color kMainWinBgColDefault = (MkRgb(0xff, 0xf2, 0) - 0x80000000);
 
 static bool IsDefaultMainWinColor(ParsedColor* col) {
     return col->parsedOk && col->col == kMainWinBgColDefault;
@@ -665,6 +731,99 @@ void ToggleLightDarkTheme() {
     SetThemeByIndex(idx);
 }
 
+// name of the theme ToggleLightDarkTheme() would switch to, for the command
+// palette: ": set to true" says nothing useful when a toggle picks a theme
+Str ToggleLightDarkThemeTargetName() {
+    bool isDark = !IsLightColor(ThemeWindowBackgroundColor());
+    int idx = isDark ? GetPreferredLightThemeIndex() : GetPreferredDarkThemeIndex();
+    return ThemeGetNameAt(idx);
+}
+
+// Spreads the current theme over gui/'s per-control color defaults. This is the
+// whole of the app -> gui coupling: the controls never ask us for a color, they
+// paint in the defaults, and an individual control that wants something else
+// (the toolbar's palette, a notification's) overrides its own slots.
+static void UpdateGuiColorsFromTheme() {
+    if (!HasCurrentTheme()) {
+        // the installer and uninstaller: gui/ keeps the system colors
+        return;
+    }
+    // fill in the system defaults first, so a control created later doesn't do
+    // it on our behalf and undo what we are about to write. Clearing the flag
+    // is what stops WindowBase::OnThemeChange() from doing the same
+    GuiColorsInitIfNeeded();
+    gGuiColorsFromSystem = false;
+
+    Color text = ThemeWindowTextColor();
+    Color disabled = ThemeWindowTextDisabledColor();
+    Color link = ThemeWindowLinkColor();
+    // what dialogs, side panels and the chrome around the document put their
+    // controls on
+    Color ctlBg = ThemeWindowControlBackgroundColor();
+    Color edge = ThemeEdgeColor();
+    Color hotEdge = ThemeHotEdgeColor();
+
+    gColsText[kColText] = text;
+    gColsLink[kColText] = link;
+
+    gColsBtn[kColBtnText] = text;
+    gColsBtn[kColBtnBg] = AccentColor(ctlBg, 14);
+    gColsBtn[kColBtnBgHover] = AccentColor(ctlBg, 28);
+    gColsBtn[kColBtnBorder] = edge;
+    gColsBtn[kColBtnTextDisabled] = disabled;
+
+    gColsBtnDefault[kColBtnText] = text;
+    gColsBtnDefault[kColBtnBg] = AccentColor(ctlBg, 26);
+    gColsBtnDefault[kColBtnBgHover] = AccentColor(ctlBg, 40);
+    gColsBtnDefault[kColBtnBorder] = hotEdge;
+    gColsBtnDefault[kColBtnTextDisabled] = disabled;
+
+    gColsIconBtn[kColIconBtnBgHover] = AccentColor(ctlBg, 20);
+    gColsIconBtn[kColIconBtnBgSelected] = AccentColor(ctlBg, 36);
+    gColsIconBtn[kColIconBtnChevron] = text;
+    gColsIconBtn[kColIconBtnChevronDisabled] = disabled;
+
+    // the ✕ keeps its own look in every theme: a tab sets the circle to its own
+    // background, and a withCircle one sits on content we don't own
+
+    gColsListBox[kColListText] = text;
+    gColsListBox[kColListBg] = ctlBg;
+    gColsListBox[kColListSel] = AccentColor(ctlBg, 25);
+    gColsListBox[kColListSelFocused] = AccentColor(ctlBg, 45);
+    gColsListBox[kColListScrollbar] = AccentColor(ctlBg, 60);
+
+    gColsSplitter[kColSplitterBg] = ctlBg;
+    gColsFill[kColFillBg] = ctlBg;
+    gColsLine[kColLineFg] = edge;
+
+    gColsRichText[kColRichText] = text;
+    gColsRichText[kColRichLink] = link;
+    gColsRichText[kColRichBg] = ctlBg;
+
+    gColsTab[kColTabText] = text;
+    gColsTab[kColTabBg] = ctlBg;
+
+    // custom top-level windows (dialogs, popups) sit their content on ctlBg,
+    // like the side panels; a window that wants something else (the toolbar's
+    // palette) sets its own textColor / bgColor
+    gColsWin[kColWinText] = text;
+    gColsWin[kColWinBg] = ctlBg;
+
+    // the underline under a borderless Edit is a separator, so it takes the edge
+    // color like every other border and divider. Blending the control's own text
+    // color toward its background instead lands wherever those two happen to be:
+    // on the Dark theme's black sidebar that gave a bright #535353 line instead
+    // of the theme's #374151 (issue #5893)
+    gColsEdit[kColEditBottomBorder] = edge;
+}
+
+// The app's theme, or the system palette it follows, changed: push our colors
+// into gui/'s defaults, then rebuild and repaint everything that shows them.
+void SumatraUpdateTheme() {
+    UpdateGuiColorsFromTheme();
+    UpdateAfterThemeChange();
+}
+
 // call on WM_SETTINGCHANGE "ImmersiveColorSet": re-resolves the System theme
 // when the user switches Windows between light and dark mode
 void UpdateThemeAfterSystemColorChange() {
@@ -674,6 +833,23 @@ void UpdateThemeAfterSystemColorChange() {
     SetTheme(StrL("System")); // no-op unless the resolved theme changed
 }
 
+// call on WM_SETTINGCHANGE: the user can turn high contrast on and off at any
+// time (Alt+Shift+PrtScr), which swaps the whole palette out from under us
+void UpdateThemeAfterHighContrastChange() {
+    bool wasUsingHighContrast = gUseHighContrast;
+    DetectHighContrastMode();
+    RecalcUseHighContrast();
+    if (wasUsingHighContrast == gUseHighContrast) {
+        // also the common case of toggling it while a custom theme is current,
+        // which changes nothing we draw
+        return;
+    }
+    logf("UpdateThemeAfterHighContrastChange: using high contrast colors: %d\n", (int)gUseHighContrast);
+    DarkModeApplyThemeColors();
+    SumatraUpdateTheme();
+    DarkModeRememberTreeViewStyle();
+}
+
 // call after loading settings
 void SetCurrentThemeFromSettings() {
     SetTheme(gGlobalPrefs->theme);
@@ -681,51 +857,61 @@ void SetCurrentThemeFromSettings() {
     bool isDefault = IsDefaultMainWinColor(bgParsed);
     if (isDefault) {
         gThemeLight->colorizeControls = false;
-        gThemeLight->controlBackgroundColorParsed.wasParsed = true;
-        gThemeLight->controlBackgroundColorParsed.parsedOk = true;
-        gThemeLight->controlBackgroundColorParsed.col = kColWhite;
+        gThemeLight->controlBackgroundColor.wasParsed = true;
+        gThemeLight->controlBackgroundColor.parsedOk = true;
+        gThemeLight->controlBackgroundColor.col = kColWhite;
     } else if (bgParsed->parsedOk) {
         gThemeLight->colorizeControls = true;
-        gThemeLight->controlBackgroundColorParsed.wasParsed = true;
-        gThemeLight->controlBackgroundColorParsed.parsedOk = true;
-        gThemeLight->controlBackgroundColorParsed.col = bgParsed->col;
+        gThemeLight->controlBackgroundColor.wasParsed = true;
+        gThemeLight->controlBackgroundColor.parsedOk = true;
+        gThemeLight->controlBackgroundColor.col = bgParsed->col;
     }
+    // SetTheme() above ran before we adjusted the Light theme, so re-push
+    UpdateGuiColorsFromTheme();
 }
 
-COLORREF AccentColor(COLORREF col, int light, int dark) {
-    if (dark == 0) {
-        dark = light;
-    }
-    if (IsLightColor(col)) {
-        return AdjustLightness2(col, (float)-light);
-    }
-    return AdjustLightness2(col, (float)dark);
-}
-
-#define GetThemeCol(name, def) GetParsedCOLORREF(name, name##Parsed, def)
+#define GetThemeCol(name, def) GetParsedColor(name, def)
 
 // canvas/window background color around the document pages
 // not affected by FixedPageUI.TextColor/BackgroundColor (those affect page rendering)
-COLORREF ThemeDocumentColors(COLORREF& bg) {
+Color ThemeDocumentColors(Color& bg) {
     bg = ThemeMainWindowBackgroundColor();
 
     if (!DocumentColorsFollowThemeEnabled()) {
         return ThemeWindowTextColor();
     }
 
-    COLORREF text = ThemeWindowTextColor();
+    Color text = ThemeWindowTextColor();
     bg = ThemeMainWindowBackgroundColor();
 
-    if (gCurrThemeIndex < 3) {
+    // the system palette is exact: tinting it away from COLOR_WINDOW is the
+    // kind of "close enough" color high contrast mode exists to avoid
+    if (gCurrThemeIndex < 3 && !gUseHighContrast) {
         bg = AccentColor(bg, 8);
     }
     return text;
 }
 
+// CmdInvertColors: session-only, not a setting. Before 3.7 it swapped the page
+// colors outright and had nothing to do with theming; 37f920ff0 reduced it to a
+// DocumentColorsFollowTheme toggle, which does nothing at all when the page
+// colors don't come from the theme - custom FixedPageUI colors, for instance,
+// are used as-is in every mode, so pressing it only repainted the same pixels
+// (issue #5887). Swapping the effective page colors works whatever they are.
+static bool gInvertPageColors = false;
+
+bool GetInvertPageColors() {
+    return gInvertPageColors;
+}
+
+void SetInvertPageColors(bool invert) {
+    gInvertPageColors = invert;
+}
+
 // colors for page bitmap recoloring (render cache)
 // TextColor substitutes black, BackgroundColor substitutes white in rendered pages
-COLORREF ThemePageRenderColors(COLORREF& bg) {
-    COLORREF text = kColBlack;
+static Color ThemePageRenderColorsNoInvert(Color& bg) {
+    Color text = kColBlack;
     bg = kColWhite;
 
     ParsedColor* parsedCol;
@@ -752,6 +938,13 @@ COLORREF ThemePageRenderColors(COLORREF& bg) {
         return text;
     }
 
+    if (gUseHighContrast) {
+        // High contrast mode is about the app's own UI. Recoloring the document
+        // is not part of it - that's what made images come out inverted for no
+        // reason (#2124) - so the page keeps its black-on-white default.
+        return text;
+    }
+
     // Defaults: page colors follow the window theme (light theme → dark text on
     // light paper; dark theme → light text on dark paper).
     text = ThemeWindowTextColor();
@@ -763,14 +956,29 @@ COLORREF ThemePageRenderColors(COLORREF& bg) {
     return text;
 }
 
-COLORREF ThemeControlBackgroundColor() {
+Color ThemePageRenderColors(Color& bg) {
+    Color text = ThemePageRenderColorsNoInvert(bg);
+    if (!gInvertPageColors) {
+        return text;
+    }
+    std::swap(text, bg);
+    return text;
+}
+
+Color ThemeControlBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
     // note: we can change it in ThemeUpdateAfterLoadSettings()
-    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kRedColor);
+    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
     return col;
 }
 
-COLORREF ThemeMainWindowBackgroundColor() {
-    COLORREF bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
+Color ThemeMainWindowBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
+    Color bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
     if (gCurrThemeIndex == 0) {
         // Special behavior for light theme.
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
@@ -781,105 +989,162 @@ COLORREF ThemeMainWindowBackgroundColor() {
     return bgColor;
 }
 
-COLORREF ThemeWindowBackgroundColor() {
-    auto col = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
+Color ThemeWindowBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
+    auto col = GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
     return col;
 }
 
-COLORREF ThemeWindowTextColor() {
-    auto col = GetThemeCol(gCurrentTheme->textColor, kRedColor);
+Color ThemeWindowTextColor() {
+    if (gUseHighContrast) {
+        return SysWindowTextColor();
+    }
+    auto col = GetThemeCol(gCurrentTheme->textColor, kColRed);
     return col;
 }
 
-static COLORREF BlendTextAndBgHalfway() {
+static Color BlendTextAndBgHalfway() {
     // fallback when DisabledTextColor is unset: mute text toward background
-    COLORREF txt = ThemeWindowTextColor();
-    COLORREF bg = ThemeMainWindowBackgroundColor();
+    Color txt = ThemeWindowTextColor();
+    Color bg = ThemeMainWindowBackgroundColor();
     u8 r = (u8)((GetRValue(txt) + GetRValue(bg)) / 2);
     u8 g = (u8)((GetGValue(txt) + GetGValue(bg)) / 2);
     u8 b = (u8)((GetBValue(txt) + GetBValue(bg)) / 2);
-    return RGB(r, g, b);
+    return MkRgb(r, g, b);
 }
 
-COLORREF ThemeWindowTextDisabledColor() {
+Color ThemeWindowTextDisabledColor() {
+    if (gUseHighContrast) {
+        return SysDisabledTextColor();
+    }
     return GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
 }
 
-COLORREF ThemeWindowDarkerTextColor() {
+Color ThemeWindowDarkerTextColor() {
+    if (gUseHighContrast) {
+        // high contrast has no muted text: muting it is the opposite of the point
+        return SysWindowTextColor();
+    }
     // fallback: slightly muted primary text (not as flat as disabled)
-    COLORREF fallback = AccentColor(ThemeWindowTextColor(), 40);
+    Color fallback = AccentColor(ThemeWindowTextColor(), 40);
     return GetThemeCol(gCurrentTheme->darkerTextColor, fallback);
 }
 
-COLORREF ThemeWindowControlBackgroundColor() {
-    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kRedColor);
+Color ThemeWindowControlBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
+    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
     return col;
 }
 
-COLORREF ThemeWindowLinkColor() {
-    auto col = GetThemeCol(gCurrentTheme->linkColor, kRedColor);
+Color ThemeWindowLinkColor() {
+    if (gUseHighContrast) {
+        return SysLinkColor();
+    }
+    auto col = GetThemeCol(gCurrentTheme->linkColor, kColRed);
     return col;
 }
 
-COLORREF ThemeHotBackgroundColor() {
-    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 20);
+Color ThemeHotBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysHighlightBgColor();
+    }
+    Color fallback = AccentColor(ThemeWindowControlBackgroundColor(), 20);
     return GetThemeCol(gCurrentTheme->hotBackgroundColor, fallback);
 }
 
-COLORREF ThemeEdgeColor() {
-    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 40);
+Color ThemeEdgeColor() {
+    if (gUseHighContrast) {
+        // borders have to stay visible, so they take the text color
+        return SysWindowTextColor();
+    }
+    Color fallback = AccentColor(ThemeWindowControlBackgroundColor(), 40);
     return GetThemeCol(gCurrentTheme->edgeColor, fallback);
 }
 
-COLORREF ThemeHotEdgeColor() {
-    COLORREF fallback = AccentColor(ThemeEdgeColor(), 30);
+Color ThemeHotEdgeColor() {
+    if (gUseHighContrast) {
+        return SysHighlightBgColor();
+    }
+    Color fallback = AccentColor(ThemeEdgeColor(), 30);
     return GetThemeCol(gCurrentTheme->hotEdgeColor, fallback);
 }
 
-COLORREF ThemeDisabledEdgeColor() {
-    COLORREF fallback = AccentColor(ThemeWindowControlBackgroundColor(), 15);
+Color ThemeDisabledEdgeColor() {
+    if (gUseHighContrast) {
+        return SysDisabledTextColor();
+    }
+    Color fallback = AccentColor(ThemeWindowControlBackgroundColor(), 15);
     return GetThemeCol(gCurrentTheme->disabledEdgeColor, fallback);
 }
 
-COLORREF ThemeErrorBackgroundColor() {
+Color ThemeErrorBackgroundColor() {
+    if (gUseHighContrast) {
+        // no error color in the system palette; the text carries the message
+        return SysWindowBgColor();
+    }
     // soft red tint of control background when unset
-    COLORREF fallback = RgbToCOLORREF(0x5c1a1a);
+    Color fallback = RgbToColor(0x5c1a1a);
     if (IsLightColor(ThemeWindowControlBackgroundColor())) {
-        fallback = RgbToCOLORREF(0xffe0e0);
+        fallback = RgbToColor(0xffe0e0);
     }
     return GetThemeCol(gCurrentTheme->errorBackgroundColor, fallback);
 }
 
-COLORREF ThemeNotificationsBackgroundColor() {
-    COLORREF fallback = AdjustLightness2(ThemeWindowBackgroundColor(), 10);
+Color ThemeNotificationsBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
+    Color fallback = AdjustLightness2(ThemeWindowBackgroundColor(), 10);
     return GetThemeCol(gCurrentTheme->notificationBackgroundColor, fallback);
 }
 
-COLORREF ThemeNotificationsTextColor() {
+Color ThemeNotificationsTextColor() {
     return ThemeWindowTextColor();
 }
 
-COLORREF ThemeNotificationsHighlightColor() {
-    COLORREF fallback;
-    if (gCurrentTheme->colorizeControls) {
-        fallback = AccentColor(ThemeWindowBackgroundColor(), 20);
+// Warning notifications are meant to read as warnings, so the fallback is amber
+// in both directions: light themes get the classic yellow, dark themes a muted
+// dark amber. Deriving it from the theme's own accent (as we used to) produced
+// saturated, unrelated hues -- Dracula's warnings came out bright purple.
+Color ThemeNotificationsHighlightColor() {
+    if (gUseHighContrast) {
+        return SysHighlightBgColor();
+    }
+    Color fallback;
+    if (IsLightColor(ThemeNotificationsBackgroundColor())) {
+        fallback = RgbToColor(0xFFEE70); // yellowish
     } else {
-        fallback = RgbToCOLORREF(0xFFEE70); // yellowish
+        fallback = RgbToColor(0x422006); // dark amber
     }
     return GetThemeCol(gCurrentTheme->notificationHighlightColor, fallback);
 }
 
-COLORREF ThemeNotificationsHighlightTextColor() {
-    COLORREF fallback;
-    if (gCurrentTheme->colorizeControls) {
-        fallback = AccentColor(ThemeWindowTextColor(), 20);
+Color ThemeNotificationsHighlightTextColor() {
+    if (gUseHighContrast) {
+        return SysHighlightTextColor();
+    }
+    Color fallback;
+    if (IsLightColor(ThemeNotificationsBackgroundColor())) {
+        fallback = RgbToColor(0x8d0801); // reddish
     } else {
-        fallback = RgbToCOLORREF(0x8d0801); // reddish
+        fallback = RgbToColor(0xFDE68A); // light amber
     }
     return GetThemeCol(gCurrentTheme->notificationHighlightTextColor, fallback);
 }
 
-COLORREF ThemeNotificationsProgressColor() {
+// Links inside a warning notification. The theme's link color is picked to sit on
+// the window background and can vanish on the amber warning background (Dracula's
+// cyan, Choco's yellow). Links are underlined, so reusing the warning text color
+// stays legible and still reads as a link.
+Color ThemeNotificationsHighlightLinkColor() {
+    return ThemeNotificationsHighlightTextColor();
+}
+
+Color ThemeNotificationsProgressColor() {
     return ThemeWindowLinkColor();
 }
 

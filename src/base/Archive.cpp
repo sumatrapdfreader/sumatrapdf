@@ -2,6 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#if !OS_WIN
+#include <locale.h>
+#endif
+
 #include "base/File.h"
 #include "base/GuessFileType.h"
 
@@ -65,6 +70,7 @@ Archive::~Archive() {
         free((void*)fi->data);
     }
     str::Free(archivePath_);
+    str::Free(archiveData_);
     str::Free(password);
     ArenaDelete(a);
 }
@@ -89,11 +95,17 @@ static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
 }
 
 bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+    constexpr i64 kMaxEagerArchiveSize = 256LL * 1024 * 1024;
+    constexpr int kMaxArchiveEntries = 100'000;
     struct archive_entry* entry;
     int fileId = 0;
+    i64 eagerSize = 0;
     ArchiveExtractProgress prog{};
     prog.nTotal = -1; // libarchive streams; total is only known at end
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+        if (fileId >= kMaxArchiveEntries) {
+            return false;
+        }
         Str entryName;
         const char* nameZ = archive_entry_pathname_utf8(entry);
         if (nameZ) {
@@ -102,9 +114,19 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
             nameZ = archive_entry_pathname(entry);
             entryName = nameZ ? Str(nameZ) : Str{};
         }
+        i64 entrySize = archive_entry_size(entry);
+        if (entrySize < 0 || entrySize > INT_MAX) {
+            return false;
+        }
+        if (eagerLoad) {
+            eagerSize += entrySize;
+            if (eagerSize > kMaxEagerArchiveSize) {
+                return false;
+            }
+        }
         FileInfo* i = AllocArray<FileInfo>(this->a);
         i->fileId = fileId;
-        i->fileSizeUncompressed = (int)archive_entry_size(entry);
+        i->fileSizeUncompressed = (int)entrySize;
         i->filePos = (i64)fileId; // use fileId as position identifier
         i->fileTime = (i64)archive_entry_mtime(entry);
         i->name = str::Dup(this->a, entryName);
@@ -229,38 +251,104 @@ static int ArchiveReadOpenFilename(struct archive* a, Str path) {
 }
 #endif
 
-bool Archive::OpenFromData(Str data) {
+static struct archive* NewLibarchiveReader(Str password) {
+#if !OS_WIN
+    // libarchive converts archive member names through the C locale. Programs
+    // start in the ASCII-only "C" locale even when the environment requests
+    // UTF-8, which makes valid Unicode ZIP path fields come back as null.
+    static const char* locale = setlocale(LC_CTYPE, "");
+    (void)locale;
+#endif
+    struct archive* a = archive_read_new();
+    archive_read_support_format_all(a);
+    archive_read_support_filter_all(a);
+    SetArchivePassword(a, password);
+    return a;
+}
+
+// Open path for on-demand extraction. Retry once: after sleep or a brief
+// SMB disconnect the first open often fails and the second reconnects.
+static struct archive* OpenLibarchiveFile(Str path, Str password) {
+    struct archive* a = NewLibarchiveReader(password);
+    if (ArchiveReadOpenFilename(a, path) == ARCHIVE_OK) {
+        return a;
+    }
+    archive_read_free(a);
+    a = NewLibarchiveReader(password);
+    if (ArchiveReadOpenFilename(a, path) == ARCHIVE_OK) {
+        return a;
+    }
+    archive_read_free(a);
+    return nullptr;
+}
+
+static struct archive* OpenLibarchiveMemory(Str data, Str password) {
+    if (!data) {
+        return nullptr;
+    }
+    struct archive* a = NewLibarchiveReader(password);
+    if (archive_read_open_memory(a, data.s, (size_t)data.len) == ARCHIVE_OK) {
+        return a;
+    }
+    archive_read_free(a);
+    return nullptr;
+}
+
+static struct archive* OpenLibarchiveSource(Archive* ar) {
+    if (ar->archiveData_) {
+        return OpenLibarchiveMemory(ar->archiveData_, ar->password);
+    }
+    if (ar->archivePath_) {
+        return OpenLibarchiveFile(ar->archivePath_, ar->password);
+    }
+    return nullptr;
+}
+
+// eagerLoad true (the default, used by ebooks): decompress every entry now,
+// then drop the source bytes. False: keep archiveData_ and extract pages
+// later, same as opening a file with lazy load.
+bool Archive::OpenFromData(Str data, bool eagerLoad) {
     if (len(data) == 0) {
         return false;
     }
 
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
-    int r = archive_read_open_memory(a, data.s, (size_t)data.len);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
-        str::Free(data);
+    str::Free(archiveData_);
+    archiveData_ = str::Dup(data);
+    if (!archiveData_) {
         return false;
     }
-    // no file path to re-open from, so load all file data now; no
-    // progress reporting on this path.
+
+    // tar archives can't seek, so we have to eager-load even when the
+    // caller didn't ask for it.
+    FileType ft = GuessFileTypeFromData(archiveData_);
+    if (ft == FileType::Tar || ft == FileType::Cbt) {
+        eagerLoad = true;
+    }
+
+    struct archive* a = OpenLibarchiveMemory(archiveData_, password);
+    if (!a) {
+        str::Free(archiveData_);
+        archiveData_ = {};
+        return false;
+    }
     ArchiveExtractProgressCb emptyCb;
-    format = FormatFromArchive(a);
-    bool ok = ParseEntries(a, /*eagerLoad=*/true, emptyCb);
+    bool ok = ParseEntries(a, eagerLoad, emptyCb);
+    if (ok) {
+        format = FormatFromArchive(a);
+    }
     if (archive_read_has_encrypted_entries(a) > 0) {
         isEncrypted = true;
     }
     archive_read_free(a);
+    if (!ok || eagerLoad) {
+        str::Free(archiveData_);
+        archiveData_ = {};
+    }
     return ok;
 }
 
 bool Archive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
+    struct archive* a = NewLibarchiveReader(password);
     int r = ArchiveReadOpenFilename(a, path);
     if (r != ARCHIVE_OK) {
         archive_read_free(a);
@@ -282,8 +370,8 @@ Vec<Archive::FileInfo*> const& Archive::GetFileInfos() {
     return fileInfos_;
 }
 
-int getFileIdByName(Vec<Archive::FileInfo*>& fileInfos, Str name) {
-    for (auto fileInfo : fileInfos) {
+static int getFileIdByName(Vec<Archive::FileInfo*>& fileInfos, Str name) {
+    for (auto* fileInfo : fileInfos) {
         if (str::EqI(fileInfo->name, name)) {
             return fileInfo->fileId;
         }
@@ -295,6 +383,20 @@ int Archive::GetFileId(Str fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
+// Return the FileInfo record for a given entry, loading its data into
+// fileInfo->data on demand (on a miss, re-opens the archive unless
+// that was disabled by eager-load mode).
+//
+// Ownership: the returned FileInfo* is owned by this archive. By
+// default fileInfo->data is *not* transferred to the caller — a later
+// call for the same entry returns the same cached buffer, and the
+// archive destructor frees it. If the caller wants the buffer to
+// outlive the archive, they should set fileInfo->data = nullptr after
+// saving the pointer; they then become responsible for free()ing it.
+//
+// Returns nullptr for an unknown name / out-of-range fileId. For an
+// entry whose decompression failed check fileInfo->failed — data will
+// be nullptr in that case.
 Archive::FileInfo* Archive::GetFileDataByName(Str fileName) {
     int fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
@@ -330,20 +432,16 @@ Archive::FileInfo* Archive::GetFileDataById(int fileId) {
 
 void Archive::LoadFileDataByIdLibarchive(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
-    if (!archivePath_) {
-        fileInfo->failed = true;
-        return;
-    }
-
-    // re-open the archive and skip to the right entry
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
-    int r = ArchiveReadOpenFilename(a, archivePath_);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
-        fileInfo->failed = true;
+    // re-open the archive (from the file or from kept in-memory bytes)
+    // and skip to the right entry
+    struct archive* a = OpenLibarchiveSource(this);
+    if (!a) {
+        if (!archivePath_ && !archiveData_) {
+            fileInfo->failed = true;
+            return;
+        }
+        // Transient I/O (sleep, network drop). Leave failed=false so
+        // the next GetFileDataById retries.
         return;
     }
 
@@ -364,14 +462,17 @@ void Archive::LoadFileDataByIdLibarchive(int fileId) {
         u8* data = AllocArray<u8>(size + ZERO_PADDING_COUNT);
         if (!data) {
             archive_read_free(a);
-            fileInfo->failed = true;
-            return;
+            return; // OOM: retry later
         }
         la_ssize_t n = archive_read_data(a, data, (size_t)size);
         archive_read_free(a);
-        if (n < 0 || (int)n != size) {
+        if (n < 0) {
             free(data);
-            fileInfo->failed = true;
+            return; // I/O error: retry later
+        }
+        if ((int)n != size) {
+            free(data);
+            fileInfo->failed = true; // truncated/corrupt entry
             return;
         }
         fileInfo->data = (char*)data;
@@ -403,17 +504,8 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
         return GetFileDataPartByIdUnrarDll(fileId, sizeHint);
     }
 
-    if (!archivePath_) {
-        return {};
-    }
-
-    struct archive* a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    SetArchivePassword(a, password);
-    int r = ArchiveReadOpenFilename(a, archivePath_);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
+    struct archive* a = OpenLibarchiveSource(this);
+    if (!a) {
         return {};
     }
 
@@ -443,11 +535,6 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
     return {};
 }
 
-Str Archive::GetComment() {
-    // libarchive doesn't support zip global comments
-    return {};
-}
-
 ///// format specific handling /////
 
 // Open a file on disk. Archive::Open(path) detects RAR via a
@@ -470,7 +557,7 @@ Archive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgr
 }
 
 // Open from in-memory data. libarchive auto-detects the container (zip/rar/
-// 7z/tar/etc.). Always eager-loads (can't re-open data); no progress reporting.
+// 7z/tar/etc.). Eager-loads by default (ebooks want every member now).
 Archive* OpenArchiveFromData(Str data) {
     auto* archive = new Archive();
     if (!archive->OpenFromData(data)) {
@@ -544,6 +631,34 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, WStr fileName) {
     }
 }
 
+static HANDLE TryOpenUnrarFile(WCHAR* rarPath, UnrarData* uncompressedBuf) {
+    RAROpenArchiveDataEx arcData = {nullptr};
+    arcData.ArcNameW = rarPath;
+    arcData.OpenMode = RAR_OM_EXTRACT;
+    arcData.Callback = unrarCallback;
+    arcData.UserData = (LPARAM)uncompressedBuf;
+    HANDLE hArc = RAROpenArchiveEx(&arcData);
+    if (hArc && arcData.OpenResult == 0) {
+        return hArc;
+    }
+    if (hArc) {
+        RARCloseArchive(hArc);
+    }
+    return nullptr;
+}
+
+// Open a RAR for on-demand extraction. Retry once: after sleep or a
+// brief SMB disconnect the first open often fails and the second reconnects.
+static HANDLE OpenUnrarFile(WCHAR* rarPath, UnrarData* uncompressedBuf) {
+    HANDLE h = TryOpenUnrarFile(rarPath, uncompressedBuf);
+    if (h) {
+        return h;
+    }
+    return TryOpenUnrarFile(rarPath, uncompressedBuf);
+}
+
+// Populate fileInfos_[fileId]->data via the respective backend; set
+// ->failed when extraction didn't produce the expected bytes.
 void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
@@ -560,15 +675,10 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     UnrarData uncompressedBuf;
     uncompressedBuf.password = password;
 
-    RAROpenArchiveDataEx arcData = {nullptr};
-    arcData.ArcNameW = rarPath;
-    arcData.OpenMode = RAR_OM_EXTRACT;
-    arcData.Callback = unrarCallback;
-    arcData.UserData = (LPARAM)&uncompressedBuf;
-
-    HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0) {
-        fileInfo->failed = true;
+    HANDLE hArc = OpenUnrarFile(rarPath, &uncompressedBuf);
+    if (!hArc) {
+        // Transient I/O (sleep, network drop). Leave failed=false so
+        // the next GetFileDataById retries.
         return;
     }
 
@@ -577,13 +687,15 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     auto fileName = ToWStrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     int res;
+    bool permanent = false;
     bool ok = FindFile(hArc, &rarHeader, fileName);
     if (!ok) {
-        goto Exit;
+        goto Exit; // I/O or missing entry: retry later
     }
     size = fileInfo->fileSizeUncompressed;
     ReportIf(size != (int)rarHeader.UnpSize);
     if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
+        permanent = true;
         ok = false;
         goto Exit;
     }
@@ -591,7 +703,7 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     data = AllocArray<char>(size + ZERO_PADDING_COUNT);
     if (!data) {
         ok = false;
-        goto Exit;
+        goto Exit; // OOM: retry later
     }
 
     uncompressedBuf.d = (u8*)data;
@@ -604,7 +716,9 @@ Exit:
     RARCloseArchive(hArc);
     if (!ok) {
         free(data);
-        fileInfo->failed = true;
+        if (permanent) {
+            fileInfo->failed = true;
+        }
         return;
     }
     fileInfo->data = data;
@@ -630,14 +744,8 @@ Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
     UnrarData uncompressedBuf;
     uncompressedBuf.password = password;
 
-    RAROpenArchiveDataEx arcData = {nullptr};
-    arcData.ArcNameW = rarPath;
-    arcData.OpenMode = RAR_OM_EXTRACT;
-    arcData.Callback = unrarCallback;
-    arcData.UserData = (LPARAM)&uncompressedBuf;
-
-    HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0) {
+    HANDLE hArc = OpenUnrarFile(rarPath, &uncompressedBuf);
+    if (!hArc) {
         return {};
     }
 
@@ -780,6 +888,8 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
     return true;
 }
 #else
+// Populate fileInfos_[fileId]->data via the respective backend; set
+// ->failed when extraction didn't produce the expected bytes.
 void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     fileInfos_[fileId]->failed = true;
 }

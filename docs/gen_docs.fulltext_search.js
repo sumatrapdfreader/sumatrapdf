@@ -33,7 +33,13 @@
     const markers = [];
     let match;
     while ((match = re.exec(text)) !== null) {
-      markers.push({ file: match[1].trim(), start: match.index + match[0].length });
+      // index: start of the "::file" marker line; start: first content byte after it.
+      // end of this doc is the next marker's index (not start) so we don't include "::next".
+      markers.push({
+        file: match[1].trim(),
+        index: match.index,
+        start: match.index + match[0].length,
+      });
     }
     for (let i = 0; i < markers.length; i++) {
       const start = markers[i].start;

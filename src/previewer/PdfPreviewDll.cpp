@@ -6,7 +6,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"
@@ -14,11 +14,11 @@
 #include "PdfPreview.h"
 #include "SumatraLog.h"
 
-long g_lRefCount = 0;
+static AtomicInt g_lRefCount = 0;
 
 class PreviewClassFactory : public IClassFactory {
   public:
-    explicit PreviewClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { InterlockedIncrement(&g_lRefCount); }
+    explicit PreviewClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { AtomicIntInc(&g_lRefCount); }
 
     ~PreviewClassFactory() { InterlockedDecrement(&g_lRefCount); }
 
@@ -29,7 +29,7 @@ class PreviewClassFactory : public IClassFactory {
         return QISearch(this, qit, riid, ppv);
     }
 
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
 
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
@@ -87,7 +87,7 @@ class PreviewClassFactory : public IClassFactory {
 
     IFACEMETHODIMP LockServer(BOOL bLock) {
         if (bLock) {
-            InterlockedIncrement(&g_lRefCount);
+            AtomicIntInc(&g_lRefCount);
         } else {
             InterlockedDecrement(&g_lRefCount);
         }
@@ -95,7 +95,7 @@ class PreviewClassFactory : public IClassFactory {
     }
 
   private:
-    long m_lRef;
+    AtomicInt m_lRef;
     CLSID m_clsid;
 };
 
@@ -113,7 +113,7 @@ static Str GetReason(DWORD dwReason) {
     return "Unknown reason";
 }
 
-STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void*) {
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void* /*lpReserved*/) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
     }

@@ -13,31 +13,37 @@ extern bool gDontSaveSettings;
 
 extern Vec<SessionData*>* gInitialSessionData;
 
+struct PlatformFont;
+
 TempStr GetSettingsPathTemp();
 TempStr GetSettingsFileNameTemp();
 
 bool LoadSettings();
 bool SaveSettings();
+void ScheduleSaveSettings();
 void ForceReloadSettings();
 void ApplySettingsToOpenWindows();
 void CleanUpSettings();
 void RegisterSettingsForFileChanges();
 void UnregisterSettingsForFileChanges();
-int GetAppFontSize(HWND hwnd);
+int GetAppFontSize();
 int GetAppFontSizeForDpi(int dpi);
-HFONT GetAppFont(HWND hwnd);
-HFONT GetAppFontForDpi(int dpi);
-int GetAppMenuFontSize(HWND hwnd);
+PlatformFont* GetAppFont();
+PlatformFont* GetAppFontForDpi(int dpi);
+int GetAppMenuFontSize();
 int GetAppMenuFontSizeForDpi(int dpi);
 bool IsAppFontSizeDefault();
-HFONT GetAppMenuFont(HWND hwnd);
-HFONT GetAppMenuFontForDpi(int dpi);
-HFONT GetAppBiggerFont(HWND hwnd);
-HFONT GetAppBiggerFontForDpi(int dpi);
-HFONT GetAppTreeFont(HWND hwnd);
-HFONT GetAppTreeFontForDpi(int dpi);
-HFONT GetAppTreeFontEx(HWND hwnd, bool bold, bool italic);
-HFONT GetAppTreeFontExForDpi(int dpi, bool bold, bool italic);
-HFONT GetAppSidebarLabelFont(HWND hwnd);
-HFONT GetAppSidebarLabelFontForDpi(int dpi);
+PlatformFont* GetAppMenuFont();
+PlatformFont* GetAppMenuFontForDpi(int dpi);
+PlatformFont* GetAppBiggerFont();
+PlatformFont* GetAppBiggerFontForDpi(int dpi);
+PlatformFont* GetAppTreeFont();
+PlatformFont* GetAppTreeFontForDpi(int dpi);
+PlatformFont* GetAppTreeFontEx(bool bold, bool italic);
+PlatformFont* GetAppTreeFontExForDpi(int dpi, bool bold, bool italic);
+PlatformFont* GetAppSidebarLabelFont();
+PlatformFont* GetAppSidebarLabelFontForDpi(int dpi);
 bool IsMenuFontSizeDefault();
+
+TempStr ZoomLevelStr(float zoom);
+void CollectZoomLevels(Vec<float>& out, bool forChm);

@@ -9,11 +9,12 @@
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
-#include "mui/Mui.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "base/Win.h"
 #include "base/Zip.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocProperties.h"
 #include "DocController.h"
@@ -76,21 +77,20 @@ int TesterMain() {
 
     // InitAllCommonControls();
     // ScopedGdiPlus gdi;
-    // mui::Initialize();
 
     int i = 2; // skip program name and "/tester"
     while (i < nArgs) {
         Str arg = argv.at(i);
-        if (str::Eq(arg, "-layout")) {
+        if (str::Eq(arg, StrL("-layout"))) {
             gLayout = true;
             ++i;
-        } else if (str::Eq(arg, "-save-html")) {
+        } else if (str::Eq(arg, StrL("-save-html"))) {
             gSaveHtml = true;
             ++i;
-        } else if (str::Eq(arg, "-save-images")) {
+        } else if (str::Eq(arg, StrL("-save-images"))) {
             gSaveImages = true;
             ++i;
-        } else if (str::Eq(arg, "-zip-create")) {
+        } else if (str::Eq(arg, StrL("-zip-create"))) {
             ZipCreateTest();
             ++i;
         } else {
@@ -103,7 +103,6 @@ int TesterMain() {
         return Usage();
     }
 
-    mui::Destroy();
     system("pause");
     return 0;
 }

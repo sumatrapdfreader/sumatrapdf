@@ -45,25 +45,18 @@ int PdfDarkModeTakeShadeForwardCount();
 void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModePalette& palette, float strength,
                                       float* outR, float* outG, float* outB);
 
-// Margin strips, drop shadows, and similar layout art — not photos to preserve.
-bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds);
-
 void PdfDarkModeFreeProcessCache(fz_context* ctx, DarkModePageAnalysis* analysis);
 
-// Returns a kept fz_image for fill_image, or nullptr to use the source image.
 fz_image* PdfDarkModeGetCachedImage(fz_context* ctx, DarkModeEngineCache* engineCache, DarkModePageAnalysis* analysis,
                                     int occurrenceIndex, fz_image* srcImage, DarkImagePolicy policy,
                                     const DarkModePalette& palette, u32 profileHash);
 
-// Phase 4: returns kept fz_image with alpha, or nullptr to fall back to per-pixel adaptive recolor.
 fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* src, const DarkImageAnalysis& analysis,
                                                    const DarkModePalette& palette);
 
-// Phase 5: returns processed pixmap for FullPageScan, or nullptr to fall back.
 fz_pixmap* PdfDarkModeProcessScanPixmap(fz_context* ctx, fz_pixmap* src, const DarkImageAnalysis& analysis,
                                         const DarkModePalette& palette);
 
-// Returns a kept fz_image covering bounds, or nullptr to fall back to direct shade fill.
 fz_image* PdfDarkModeGetCachedShade(fz_context* ctx, DarkModePageAnalysis* analysis, fz_shade* shade, fz_matrix ctm,
                                     float alpha, fz_irect bounds, const DarkModePalette& palette);
 

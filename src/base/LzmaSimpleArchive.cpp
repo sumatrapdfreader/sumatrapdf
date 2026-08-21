@@ -2,11 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include <LzmaDec.h>
-#include <Bra.h>
 #include "base/ByteReaderWriter.h"
 #include "base/LzmaSimpleArchive.h"
 #include "base/File.h"
+
+#include <LzmaDec.h>
+#include <Bra.h>
 
 /*
 Implements extracting data from a simple archive format, made up by me.
@@ -28,18 +29,18 @@ namespace lzma {
 struct ISzAllocatorAlloc : ISzAlloc {
     Arena* a;
 
-    static void* _Alloc(void* p, size_t size) {
+    static void* AllocCb(void* p, size_t size) {
         ISzAllocatorAlloc* alloc = (ISzAllocatorAlloc*)p;
         return ::Alloc(alloc->a, size);
     }
-    static void _Free(void* p, void* address) {
+    static void FreeCb(void* p, void* address) {
         ISzAllocatorAlloc* alloc = (ISzAllocatorAlloc*)p;
         ::Free(alloc->a, address);
     }
 
     explicit ISzAllocatorAlloc(Arena* a) {
-        this->Alloc = _Alloc;
-        this->Free = _Free;
+        this->Alloc = AllocCb;
+        this->Free = FreeCb;
         this->a = a;
     }
 };
@@ -48,7 +49,7 @@ struct ISzAllocatorAlloc : ISzAlloc {
 static bool crc_table_ready = false;
 static u32 crc_table[256];
 
-u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
+static u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
     if (!crc_table_ready) {
         u32 i, j;
         u32 h = 1;
@@ -158,7 +159,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
     }
 
     u32 filesCount = br.UInt32LE();
-    archiveOut->filesCount = filesCount;
+    archiveOut->filesCount = (int)filesCount;
     if (filesCount > dimof(archiveOut->files)) {
         return false;
     }
@@ -226,14 +227,18 @@ int GetIdxFromName(SimpleArchive* archive, Str fileName) {
 }
 
 u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* a) {
-    if (idx >= archive->filesCount) {
+    if (idx < 0 || idx >= archive->filesCount) {
         return nullptr;
     }
 
     FileInfo* fi = &archive->files[idx];
+    if (fi->uncompressedSize > INT_MAX - 2) {
+        return nullptr;
+    }
 
     // over-allocate by 2 bytes and zero them so the result is always null-terminated
-    u8* uncompressed = (u8*)Alloc(a, (size_t)(fi->uncompressedSize + 2));
+    size_t allocSize = (size_t)fi->uncompressedSize + 2;
+    u8* uncompressed = (u8*)Alloc(a, allocSize);
     if (!uncompressed) {
         return nullptr;
     }
@@ -284,6 +289,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena*
     return ok;
 }
 
+// files is an array of Str entries, last element must be empty
 bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* a) {
     auto d = file::ReadFileWithArena(archivePath, a);
     if (len(d) == 0) {

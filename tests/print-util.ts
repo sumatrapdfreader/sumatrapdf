@@ -13,10 +13,7 @@ export function printOutputPath(path: string): string {
 export function pdfPageCount(path: string): number {
   const data = readFileSync(path);
   const text = data.toString("latin1");
-  const patterns = [
-    /\/Type\s*\/Pages[\s\S]*?\/Count\s+(\d+)/,
-    /\/Count\s+(\d+)[\s\S]*?\/Type\s*\/Pages/,
-  ];
+  const patterns = [/\/Type\s*\/Pages[\s\S]*?\/Count\s+(\d+)/, /\/Count\s+(\d+)[\s\S]*?\/Type\s*\/Pages/];
   for (const re of patterns) {
     const m = text.match(re);
     if (m) {
@@ -63,7 +60,8 @@ export function writeMultiPagePdf(path: string, labels: string[]): void {
     const pos = idPositions.get(id);
     xrefEntries.push(pos === undefined ? "0000000000 00000 n \n" : `${String(pos).padStart(10, "0")} 00000 n \n`);
   }
-  const trailer = `xref\n0 ${maxId + 1}\n${xrefEntries.join("")}` +
+  const trailer =
+    `xref\n0 ${maxId + 1}\n${xrefEntries.join("")}` +
     `trailer\n<< /Size ${maxId + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
   writeFileSync(path, body + trailer);
 }
@@ -85,7 +83,7 @@ function waitForFile(path: string, timeoutMs = 15000): boolean {
         lastSize = size;
       }
     }
-    Bun.sleepSync(200);
+    Bun.sleepSync(50);
   }
   return existsSync(path) && statSync(path).size > 0;
 }
@@ -102,7 +100,17 @@ export function runPrintToPdf(
     settings = settings ? `output=${out},${settings}` : `output=${out}`;
   }
   const p = Bun.spawnSync({
-    cmd: [EXE, "-for-testing", "-silent", "-exit-when-done", "-print-to", PRINT_TO_PDF, "-print-settings", settings, inputPath],
+    cmd: [
+      EXE,
+      "-for-testing",
+      "-silent",
+      "-exit-when-done",
+      "-print-to",
+      PRINT_TO_PDF,
+      "-print-settings",
+      settings,
+      inputPath,
+    ],
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -120,7 +128,12 @@ export function tempPrintOutput(name: string): string {
 
 export function requirePrintToPdf(): void {
   const p = Bun.spawnSync({
-    cmd: ["powershell", "-NoProfile", "-Command", `(Get-Printer -Name '${PRINT_TO_PDF}' -ErrorAction SilentlyContinue) -ne $null`],
+    cmd: [
+      "powershell",
+      "-NoProfile",
+      "-Command",
+      `(Get-Printer -Name '${PRINT_TO_PDF}' -ErrorAction SilentlyContinue) -ne $null`,
+    ],
     stdout: "pipe",
   });
   if (p.stdout.toString().trim() !== "True") {

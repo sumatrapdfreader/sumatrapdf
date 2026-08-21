@@ -5,9 +5,12 @@
 #include "base/Win.h"
 #include "base/File.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -19,6 +22,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
+#include "Canvas.h"
 #include "Commands.h"
 #include "Favorites.h"
 #include "FileHistory.h"
@@ -28,6 +32,10 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 #include "Notifications.h"
+#include "PdfDarkMode.h"
+#include "Theme.h"
+#include "base/GuessFileType.h"
+#include "EngineAll.h"
 #include "CommandAvailability.h"
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
@@ -59,7 +67,9 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdToggleToolbar: {
             isToggle = true;
-            newIsOn = !gGlobalPrefs->showToolbar;
+            bool currentlyOn =
+                win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+            newIsOn = !currentlyOn;
         } break;
         case CmdToggleMenuBar: {
             isToggle = true;
@@ -78,6 +88,30 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         case CmdToggleLinks: {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showLinks;
+        } break;
+        case CmdToggleHighlightFormFields: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->highlightFormFields;
+        } break;
+        case CmdToggleDisableLinks: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->disableLinks;
+        } break;
+        case CmdToggleImages: {
+            isToggle = true;
+            newIsOn = !ShowImageOutlines();
+        } break;
+        case CmdToggleLaserPointer: {
+            isToggle = true;
+            newIsOn = !IsLaserPointerActive();
+        } break;
+        case CmdToggleHoverPreview: {
+            isToggle = true;
+            newIsOn = gGlobalPrefs->citationHoverDelay < 0;
+        } break;
+        case CmdDebugShowFitContentArea: {
+            isToggle = true;
+            newIsOn = !ShowFitContentArea();
         } break;
         case CmdToggleShowAnnotations: {
             WindowTab* tab = win->CurrentTab();
@@ -99,6 +133,13 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
                 newIsOn = !dm->GetDisplayR2L();
             }
         } break;
+        case CmdToggleUniformPageWidth: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !dm->GetUniformPageWidth();
+            }
+        } break;
         case CmdFindToggleMatchCase: {
             isToggle = true;
             newIsOn = !win->findMatchCase;
@@ -111,20 +152,61 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showFavorites;
         } break;
-        case CmdToggleZoom: {
-            // TODO: this toggles via different values
-        } break;
-        case CmdToggleCursorPosition: {
-            // TODO: this toggles 3 states
-        } break;
         case CmdTogglePageInfo: {
             isToggle = true;
             newIsOn = !win->pageInfoWanted;
+        } break;
+        case CmdTogglePageBoxes: {
+            isToggle = true;
+            newIsOn = !win->showPageBoxes;
+        } break;
+        case CmdTogglePreservePdfImages: {
+            isToggle = true;
+            newIsOn = !GetPreservePdfImagesInDarkMode();
+        } break;
+        case CmdDebugTogglePredictiveRender: {
+            isToggle = true;
+            newIsOn = !gPredictiveRender;
+        } break;
+        case CmdToggleEngineeringDrawingEnhance: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !EngineMupdfCadEnhanceActive(dm->GetEngine());
+            }
         } break;
     }
 
     if (isToggle) {
         return str::JoinTemp(s, newIsOn ? StrL(": set to true") : StrL(": set to false"));
+    }
+
+    // these two cycle through values rather than on and off, so they name what
+    // comes next instead of saying set to true / false
+    if (cmdId == CmdToggleZoom) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab && tab->IsDocLoaded()) {
+            Str zoomName;
+            ZoomToString(&zoomName, tab->NextToggleZoom(), nullptr);
+            TempStr res = str::JoinTemp(s, StrL(": switch to "), zoomName);
+            str::Free(zoomName);
+            return res;
+        }
+    }
+
+    if (cmdId == CmdToggleCursorPosition) {
+        Str unit = NextCursorPositionUnitName(win);
+        if (unit) {
+            return str::JoinTemp(s, StrL(": switch to "), unit);
+        }
+    }
+
+    if (cmdId == CmdToggleLightDarkTheme) {
+        // this toggle picks a theme, so name it instead of saying true / false
+        Str target = ToggleLightDarkThemeTargetName();
+        if (target) {
+            return str::JoinTemp(s, StrL(": switch to "), target);
+        }
     }
 
     if (cmdId == CmdToggleWindowsPreviewer) {
@@ -150,6 +232,9 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     if (cmdId == CmdAIChatWithOpenAICodex) {
         return _TRA("AI Codex chat with document");
     }
+    if (cmdId == CmdAIChatWithAntiGravity) {
+        return _TRA("AI Antigravity chat with document");
+    }
 
     return s;
 }
@@ -172,7 +257,7 @@ static void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& c
     }
 }
 
-void CommandPaletteWnd::CollectTabsRegular(MainWindow* mainWin, WindowTab* currTab) {
+void CommandPaletteWnd::CollectTabsRegular(MainWindow* /*mainWin*/, WindowTab* currTab) {
     currTabIdx = 0;
     tabs.Reset();
     for (MainWindow* w : gWindows) {
@@ -338,6 +423,8 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         ReportIf(len(name) == 0);
         ItemDataCP data;
         data.cmdId = (i32)cmdId;
+        // test against the English name: a translation may not carry the prefix
+        data.isDebug = str::StartsWith(name, StrL("Debug: "));
         auto nameTranslated = trans::GetTranslation(name);
         auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, nameTranslated);
         tempCommands.Append(nameUpdated, data);
@@ -346,7 +433,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         }
     }
 
-    auto curr = gFirstCustomCommand;
+    auto* curr = gFirstCustomCommand;
     while (curr) {
         TempStr name = curr->name;
         cmdId = curr->id;
@@ -364,7 +451,14 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     SortNoCase(&tempCommands);
     int n = len(tempCommands);
     commands.Reset();
-    for (int i = 0; i < n; i++) {
-        commands.AppendFrom(&tempCommands, i);
+    // dev-only commands go last instead of sitting in the middle of the list
+    // under "D"; each group keeps its alphabetical order
+    for (int pass = 0; pass < 2; pass++) {
+        bool wantDebug = (pass == 1);
+        for (int i = 0; i < n; i++) {
+            if (tempCommands.AtData(i)->isDebug == wantDebug) {
+                commands.AppendFrom(&tempCommands, i);
+            }
+        }
     }
 }

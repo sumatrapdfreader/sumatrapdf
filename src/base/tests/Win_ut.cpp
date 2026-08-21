@@ -20,7 +20,7 @@ static void QuoteCmdLineArgTest() {
         StrVec args;
         ParseCmdLine(cmdLine, args);
         utassert(len(args) >= 1);
-        utassert(str::Eq(args[0], "exe"));
+        utassert(str::Eq(args[0], StrL("exe")));
         if (len(input) == 0) {
             // `exe ""` → only "exe" after empty-token skip in ParseCmdLine
             utassert(len(args) == 1);
@@ -60,14 +60,13 @@ void WinUtilTest() {
     QuoteCmdLineArgTest();
 
     {
-        Str string = "abcde";
-        size_t stringSize = string.len;
-        auto strm = CreateStreamFromData(Str((char*)string.s, (int)stringSize));
+        Str string = StrL("abcde");
+        auto strm = CreateStreamFromData(string);
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         Str data = ReadIStream(stream);
         utassert((u8*)data.s);
-        utassert(stringSize == (size_t)data.len);
+        utassert(string.len == data.len);
         utassert(data.s[data.len] == 0);
         utassert(data.s[data.len + 1] == 0);
         Str s = data;
@@ -98,16 +97,16 @@ void WinUtilTest() {
     // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
 #if 0
     {
-        COLORREF c = AdjustLightness(RGB(255, 0, 0), 1.0f);
-        utassert(c == RGB(255, 0, 0));
-        c = AdjustLightness(RGB(255, 0, 0), 2.0f);
-        utassert(c == RGB(255, 255, 255));
-        c = AdjustLightness(RGB(255, 0, 0), 0.25f);
-        utassert(c == RGB(64, 0, 0));
-        c = AdjustLightness(RGB(226, 196, 226), 95 / 255.0f);
-        utassert(c == RGB(105, 52, 105));
-        c = AdjustLightness(RGB(255, 255, 255), 0.5f);
-        utassert(c == RGB(128, 128, 128));
+        Color c = AdjustLightness(kColRed, 1.0f);
+        utassert(c == kColRed);
+        c = AdjustLightness(kColRed, 2.0f);
+        utassert(c == kColWhite);
+        c = AdjustLightness(kColRed, 0.25f);
+        utassert(c == MkRgb(64, 0, 0));
+        c = AdjustLightness(MkRgb(226, 196, 226), 95 / 255.0f);
+        utassert(c == MkRgb(105, 52, 105));
+        c = AdjustLightness(kColWhite, 0.5f);
+        utassert(c == MkRgb(128, 128, 128));
     }
 #endif
 }

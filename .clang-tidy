@@ -9,16 +9,36 @@ Checks: >
   performance-*,
   portability-*,
   readability-*,
+  -bugprone-easily-swappable-parameters,
+  -misc-const-correctness,
+  -misc-include-cleaner,
+  -misc-no-recursion,
   -misc-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace,
   -modernize-use-trailing-return-type,
   -modernize-avoid-c-arrays,
   -modernize-avoid-c-style-cast,
   -modernize-use-nodiscard,
   -modernize-use-using,
   -performance-no-int-to-ptr,
+  -performance-enum-size,
   -readability-identifier-length,
   -readability-implicit-bool-conversion,
   -readability-magic-numbers,
   -readability-non-const-parameter,
-  -readability-uppercase-literal-suffix
+  -readability-braces-around-statements,
+  -readability-uppercase-literal-suffix,
+  -readability-make-member-function-const,
+  -readability-convert-member-functions-to-static,
+  -readability-use-anyofallof
+
+# Diagnose our own headers, but not vendored ones. Matching '/src/' positively
+# would misfire: the checkout itself lives under a path containing 'src'
+# (~/src/sumatrapdf), so every mupdf header would match. Exclude by vendor dir
+# name instead.
+HeaderFilterRegex: '.*'
+ExcludeHeaderFilterRegex: '[/\\](mupdf|ext|packages)[/\\]'
+
+# so --fix reformats what it rewrites, using our .clang-format
+FormatStyle: file
 ...

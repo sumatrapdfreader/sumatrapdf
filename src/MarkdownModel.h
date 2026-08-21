@@ -5,6 +5,8 @@ class BrowserDocView;
 enum class FileType : u8;
 struct HtmlWindowCallback;
 struct MarkdownCacheEntry;
+struct MarkdownLaunchTask;
+struct MarkdownTocBuildTask;
 
 struct MarkdownModel : DocController {
     explicit MarkdownModel(DocControllerCallback* cb);
@@ -41,9 +43,14 @@ struct MarkdownModel : DocController {
 
     static MarkdownModel* Create(Str fileName, DocControllerCallback* cb = nullptr);
     static bool IsSupportedFileType(FileType);
+    // a subset of IsSupportedFileType: .html/.htm rendered raw in the browser view
+    static bool IsHtmlFileType(FileType);
 
     bool SetParentHwnd(HWND hwnd);
+    // hide for tab switch (keep WebView2 for fast re-show)
     void RemoveParentHwnd();
+    // full teardown (tab/window close); DestroyWindow can pump messages
+    void DestroyParentHwnd();
 
     void PrintCurrentPage(bool showUI) const;
     void FindInCurrentPage() const;
@@ -68,12 +75,19 @@ struct MarkdownModel : DocController {
 
     Str fileName;
     Str baseDir;
+    // true when displaying .html/.htm files: they are served to the browser raw
+    // instead of being rendered from markdown, and the sibling TOC scans .html
+    bool isHtml = false;
     StrVec pages;
     int currentPageNo = 1;
     Str currentPageUrl;
     BrowserDocView* docView = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     TocTree* tocTree = nullptr;
+    // set while the full TOC (file headings included) is built in the background
+    MarkdownTocBuildTask* tocBuildTask = nullptr;
+    // set while opening a document a link points at is queued on the UI thread
+    MarkdownLaunchTask* launchTask = nullptr;
     Mutex docAccess;
     float initZoom = kInvalidZoom;
     float zoomVirtual = 100.0f;
@@ -94,6 +108,7 @@ struct MarkdownModel : DocController {
     Arena* poolAlloc = nullptr;
 
     bool Load(Str fileName);
+    void SetToc(TocTree*);
     bool DisplayPage(Str pageUrl);
 
     MarkdownCacheEntry* FindDataForUrl(Str url) const;
@@ -108,4 +123,6 @@ struct MarkdownModel : DocController {
 
     TempStr FileToVirtualUrlTemp(Str filePath) const;
     TempStr VirtualUrlToFileTemp(Str url) const;
+    TempStr LinkedDocPathTemp(Str url) const;
+    bool MaybeLaunchLinkedDoc(Str url);
 };

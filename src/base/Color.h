@@ -3,58 +3,95 @@
 
 // note: include Base.h instead of including directly
 
-// a "unset" state for COLORREF value. technically all colors are valid
+// Win32 COLORREF layout (0x00bbggrr); typically no alpha
+#if OS_WIN
+using Color = COLORREF;
+#else
+using Color = uint32_t;
+#endif
+
+// a "unset" state for Color value. technically all colors are valid
 // this one is hopefully not used in practice
-constexpr COLORREF kColorUnset = ((COLORREF)(0xfeffffff));
+constexpr Color kColorUnset = ((Color)(0xfeffffff));
 // kColorNoChange indicates that we shouldn't change the color
-constexpr COLORREF kColorNoChange((COLORREF)(0xfdffffff));
+constexpr Color kColorNoChange((Color)(0xfdffffff));
+// explicit "don't paint" / no fill / no border (not inherit/default)
+constexpr Color kColorTransparent = ((Color)(0xfcffffff));
+
+constexpr bool ColorSkipsPaint(Color c) {
+    return c == kColorUnset || c == kColorTransparent;
+}
 
 // PdfColor is aarrggbb, where 0xff alpha is opaque and 0x0 alpha is transparent
-// this is different than COLORREF, which ggrrbb and no alpha
+// Color is ggrrbb (Win32 COLORREF layout) and typically has no alpha
 using PdfColor = uint64_t;
 
+// A color setting: the text the user wrote (e.g. "#ff0000", "checkered") and
+// the parse of it, filled in on first use. Settings hold one of these rather
+// than a string and a separate cache, so the two can't drift apart.
 struct ParsedColor {
+    Str s;
     bool wasParsed = false;
     bool parsedOk = false;
-    COLORREF col = 0;
+    Color col = 0;
     PdfColor pdfCol = 0;
 };
 
-COLORREF MkGray(u8 x);
-COLORREF MkColor(u8 r, u8 g, u8 b, u8 a = 0);
-void UnpackColor(COLORREF, u8& r, u8& g, u8& b);
-void UnpackColor(COLORREF, u8& r, u8& g, u8& b, u8& a);
+constexpr Color MkRgb(u8 r, u8 g, u8 b) {
+    return (Color)r | ((Color)g << 8) | ((Color)b << 16);
+}
+constexpr Color MkRgba(u8 r, u8 g, u8 b, u8 a) {
+    return MkRgb(r, g, b) | ((Color)a << 24);
+}
+constexpr Color MkGray(u8 x) {
+    return MkRgb(x, x, x);
+}
+constexpr Color kColWhite = MkRgb(0xff, 0xff, 0xff);
+constexpr Color kColBlack = MkRgb(0, 0, 0);
+constexpr Color kColRed = MkRgb(0xff, 0, 0);
+constexpr Color kColGreen = MkRgb(0, 0xff, 0);
+constexpr Color kColBlue = MkRgb(0, 0, 0xff);
+constexpr Color kColYellow = MkRgb(0xff, 0xff, 0);
+constexpr Color kColGray = MkGray(0xdd);
+void UnpackColor(Color, u8& r, u8& g, u8& b);
+void UnpackColor(Color, u8& r, u8& g, u8& b, u8& a);
 
-bool IsSpecialColor(COLORREF col);
+bool IsSpecialColor(Color col);
 
 void ParseColor(ParsedColor& parsed, Str txt);
-bool ParseColor(COLORREF* destColor, Str s);
-COLORREF ParseColor(Str s, COLORREF defCol = 0);
-TempStr SerializeColorTemp(COLORREF);
+// parse ParsedColor::s, if it hasn't been parsed yet
+void ParseColor(ParsedColor& parsed);
+// replace the text and drop the cached parse
+void SetColorText(ParsedColor& parsed, Str txt);
+void FreeColorText(ParsedColor& parsed);
+bool ParseColor(Color* destColor, Str s);
+Color ParseColor(Str s, Color defCol = 0);
+TempStr SerializeColorTemp(Color);
 
 PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a = 0xff); // 0xff is opaque
 void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
 void SerializePdfColor(PdfColor c, str::Builder& out);
 
-COLORREF AdjustLightness(COLORREF c, float factor);
-COLORREF AdjustLightness2(COLORREF c, float units);
-float GetLightness(COLORREF c);
-bool IsLightColor(COLORREF c);
-bool IsNearBlack(COLORREF c);
-DWORD PremultiplyPixel(COLORREF c, u8 alpha);
+Color AdjustLightness(Color c, float factor);
+Color AdjustLightness2(Color c, float units);
+float GetLightness(Color c);
+bool IsLightColor(Color c);
+Color AccentColor(Color col, int light, int dark = 0);
+bool IsNearBlack(Color c);
+DWORD PremultiplyPixel(Color c, u8 alpha);
 
-Gdiplus::Color Unblend(COLORREF c, u8 alpha);
-Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c);
-Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);
+// GDI+ only exists on Windows; portable code works with Color
+#if OS_WIN
+Gdiplus::Color Unblend(Color c, u8 alpha);
+Gdiplus::Color GdiRgbFromColor(Color c);
+Gdiplus::Color GdiRgbaFromColor(Color c);
+#endif
 
-constexpr COLORREF RgbToCOLORREF(COLORREF rgb) {
+constexpr Color RgbToColor(Color rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
 }
 
-/* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
-This adds equivalent functions that don't have this problem and ugly
-substitutions to make sure we don't use Get*Value() in the future */
-u8 GetRed(COLORREF rgb);
-u8 GetGreen(COLORREF rgb);
-u8 GetBlue(COLORREF rgb);
-u8 GetAlpha(COLORREF rgb);
+u8 GetRed(Color rgb);
+u8 GetGreen(Color rgb);
+u8 GetBlue(Color rgb);
+u8 GetAlpha(Color rgb);

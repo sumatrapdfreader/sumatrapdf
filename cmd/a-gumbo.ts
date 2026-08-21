@@ -1,13 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-  cpSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, cpSync } from "node:fs";
 import { basename, join } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -125,11 +116,7 @@ function parseArgs(): Args {
   };
 }
 
-async function checkout(
-  repo: string,
-  rev: string,
-  keep: boolean,
-): Promise<void> {
+async function checkout(repo: string, rev: string, keep: boolean): Promise<void> {
   mkdirSync(depsDir, { recursive: true });
   if (!keep && existsSync(checkoutDir)) {
     rmSync(checkoutDir, { recursive: true, force: true });
@@ -199,21 +186,14 @@ function versionText(repo: string, rev: string): string {
   let commitSha1 = rev;
   if (existsSync(join(checkoutDir, ".git"))) {
     commitSha1 = gitOutput(["rev-parse", "HEAD"], checkoutDir);
-    const originUrl = gitOutputMaybe(
-      ["config", "--get", "remote.origin.url"],
-      checkoutDir,
-    );
+    const originUrl = gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir);
     if (originUrl) {
       repoUrl = originUrl;
     }
   }
 
   const githubUrl = normalizeGithubUrl(repoUrl);
-  const lines = [
-    `repo_url: ${repoUrl}`,
-    `revision: ${rev}`,
-    `commit_sha1: ${commitSha1}`,
-  ];
+  const lines = [`repo_url: ${repoUrl}`, `revision: ${rev}`, `commit_sha1: ${commitSha1}`];
   if (githubUrl) {
     lines.push(`github_url: ${githubUrl}`);
     lines.push(`github_commit_url: ${githubUrl}/commit/${commitSha1}`);
@@ -227,19 +207,6 @@ function listFiles(dir: string, suffix: string): string[] {
     .map((name) => join(dir, name))
     .filter((path) => statSync(path).isFile())
     .sort((a, b) => basename(a).localeCompare(basename(b)));
-}
-
-function internalIncludes(text: string): string[] {
-  const res: string[] = [];
-  const re = /^\s*#\s*include\s+"([^"]+)"/gm;
-  for (;;) {
-    const m = re.exec(text);
-    if (!m) {
-      break;
-    }
-    res.push(m[1]);
-  }
-  return res;
 }
 
 function stripComments(text: string): string {
@@ -351,23 +318,15 @@ function expandLocalIncludes(
       throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
     }
     out.push(`/* begin ${inc} */`);
-    out.push(
-      expandLocalIncludes(incPath, byName, skipIncludes, [...stack, path]),
-    );
+    out.push(expandLocalIncludes(incPath, byName, skipIncludes, [...stack, path]));
     out.push(`/* end ${inc} */`);
   }
   return out.join("\n");
 }
 
-function prepareExpandedChunk(
-  path: string,
-  byName: Map<string, string>,
-  skipIncludes = new Set<string>(),
-): string {
+function prepareExpandedChunk(path: string, byName: Map<string, string>, skipIncludes = new Set<string>()): string {
   return normalizeBlankLines(
-    removeObsoleteSystemIncludes(
-      stripComments(expandLocalIncludes(path, byName, skipIncludes)),
-    ),
+    removeObsoleteSystemIncludes(stripComments(expandLocalIncludes(path, byName, skipIncludes))),
   );
 }
 
@@ -396,10 +355,7 @@ function generateAmalgamation(root: string): {
   if (lastEndif < 0) {
     throw new Error("could not find final #endif in gumbo.h");
   }
-  header =
-    header.slice(0, lastEndif) +
-    normalizeBlankLines(sumatraHeaderAdditions) +
-    header.slice(lastEndif);
+  header = header.slice(0, lastEndif) + normalizeBlankLines(sumatraHeaderAdditions) + header.slice(lastEndif);
   const chunks: string[] = [sourcePreamble];
   const sourceSkipIncludes = new Set(["gumbo.h"]);
   for (const c of sources) {

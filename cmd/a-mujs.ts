@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -31,9 +23,10 @@ const sourcePreamble = `#include "mujs.h"
 function usage(): never {
   console.error(`Usage: bun cmd/a-mujs.ts [mujs-repo-url] [git-tag-or-checkin] [--keep]
 
-Clones/checks out MuJS under deps/mujs, generates ext/a-mujs/mujs.h and
-ext/a-mujs/mujs.c, validates the amalgamated C file with cl.exe, and leaves
-the generated files ready for the a-mujs Premake project.
+Clones/checks out MuJS under deps/mujs, generates ext/a-mujs/mujs.h,
+ext/a-mujs/mujs.c, ext/a-mujs/regexp.h, and ext/a-mujs/COPYING, validates
+the amalgamated C file with cl.exe, and leaves the generated files ready
+for the a-mujs Premake project.
 
 Defaults:
   repo: ${defaultRepo}
@@ -58,11 +51,7 @@ function parseArgs(): Args {
   };
 }
 
-async function checkout(
-  repo: string,
-  rev: string,
-  keep: boolean,
-): Promise<void> {
+async function checkout(repo: string, rev: string, keep: boolean): Promise<void> {
   mkdirSync(depsDir, { recursive: true });
   if (!keep && existsSync(checkoutDir)) {
     rmSync(checkoutDir, { recursive: true, force: true });
@@ -224,12 +213,7 @@ function expandLocalIncludes(
       throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
     }
     included.add(incPath);
-    out.push(
-      expandLocalIncludes(incPath, byName, skipIncludes, included, [
-        ...stack,
-        path,
-      ]),
-    );
+    out.push(expandLocalIncludes(incPath, byName, skipIncludes, included, [...stack, path]));
   }
   return out.join("\n");
 }
@@ -240,9 +224,7 @@ function prepareChunk(
   skipIncludes = new Set<string>(),
   included?: Set<string>,
 ): string {
-  return normalizeBlankLines(
-    stripComments(expandLocalIncludes(path, byName, skipIncludes, included)),
-  );
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, byName, skipIncludes, included)));
 }
 
 function generateAmalgamation(root: string): {
@@ -252,24 +234,14 @@ function generateAmalgamation(root: string): {
   const byName = new Map(listFiles(root).map((path) => [basename(path), path]));
   const header = prepareChunk(join(root, "mujs.h"), byName);
   const source = normalizeBlankLines(
-    [
-      sourcePreamble,
-      prepareChunk(
-        join(root, "one.c"),
-        byName,
-        new Set(["mujs.h"]),
-        new Set<string>(),
-      ),
-    ].join("\n"),
+    [sourcePreamble, prepareChunk(join(root, "one.c"), byName, new Set(["mujs.h"]), new Set<string>())].join("\n"),
   );
   return { header, source };
 }
 
 function versionText(repo: string, rev: string): string {
   const commitSha1 = gitOutput(["rev-parse", "HEAD"], checkoutDir);
-  const originUrl =
-    gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) ||
-    repo;
+  const originUrl = gitOutputMaybe(["config", "--get", "remote.origin.url"], checkoutDir) || repo;
   const githubUrl = normalizeGithubUrl(originUrl);
   const lines = [
     `project_homepage: ${homepage}`,
@@ -330,12 +302,29 @@ async function main() {
   await validateCompile(header, source);
 
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(join(outDir, "mujs.h"), header);
-  writeFileSync(join(outDir, "mujs.c"), source);
-  writeFileSync(join(outDir, "version.txt"), version);
-  console.log(`wrote ${join(outDir, "mujs.h")}`);
-  console.log(`wrote ${join(outDir, "mujs.c")}`);
-  console.log(`wrote ${join(outDir, "version.txt")}`);
+  const outHeader = join(outDir, "mujs.h");
+  const outSource = join(outDir, "mujs.c");
+  const outVersion = join(outDir, "version.txt");
+  const outRegexp = join(outDir, "regexp.h");
+  const outCopying = join(outDir, "COPYING");
+  const srcRegexp = join(checkoutDir, "regexp.h");
+  const srcCopying = join(checkoutDir, "COPYING");
+  if (!existsSync(srcRegexp)) {
+    throw new Error(`missing regexp header: ${srcRegexp}`);
+  }
+  if (!existsSync(srcCopying)) {
+    throw new Error(`missing license file: ${srcCopying}`);
+  }
+  writeFileSync(outHeader, header);
+  writeFileSync(outSource, source);
+  writeFileSync(outVersion, version);
+  writeFileSync(outRegexp, readFileSync(srcRegexp));
+  writeFileSync(outCopying, readFileSync(srcCopying));
+  console.log(`wrote ${outHeader}`);
+  console.log(`wrote ${outSource}`);
+  console.log(`wrote ${outVersion}`);
+  console.log(`wrote ${outRegexp}`);
+  console.log(`wrote ${outCopying}`);
 }
 
 await main();

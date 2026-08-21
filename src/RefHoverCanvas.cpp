@@ -7,7 +7,7 @@
 #include "base/Base.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -17,6 +17,7 @@
 #include "RefHover.h"
 #include "RefHoverText.h"
 
+// Canvas wiring entry points (RefHoverCanvas.cpp) — keep Canvas.cpp thin.
 bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm) {
     if (!el || !el->Is(kindPageElementDest)) {
         return false;

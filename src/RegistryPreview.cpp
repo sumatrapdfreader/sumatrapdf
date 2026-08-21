@@ -31,7 +31,12 @@ static struct {
     {kDjVuPreviewClsid, ".djvu"},
     {kXpsPreviewClsid, ".xps", ".oxps"},
     {kEpubPreviewClsid, ".epub"},
+    // FictionBook: plain .fb2 and common zip containers (.fb2z, .fbz, .zfb2,
+    // .fb2.zip). Multi-dot .fb2.zip needs its own Classes key so Explorer does
+    // not treat it as a generic .zip (issue #1677).
     {kFb2PreviewClsid, ".fb2", ".fb2z"},
+    {kFb2PreviewClsid, ".fbz", ".zfb2"},
+    {kFb2PreviewClsid, ".fb2.zip"},
     {kMobiPreviewClsid, ".mobi"},
 };
 // clang-format on
@@ -137,7 +142,7 @@ bool UninstallPreviewDll() {
 // TODO: is anyone using this functionality?
 void DisablePreviewInstallExts(Str cmdLine) {
     // allows installing only a subset of available preview handlers
-    if (str::StartsWithI(cmdLine, "exts:")) {
+    if (str::StartsWithI(cmdLine, StrL("exts:"))) {
         TempStr extsList = str::DupTemp(Str(cmdLine.s + 5, cmdLine.len - 5));
         str::ToLowerInPlace(extsList);
         str::TransCharsInPlace(extsList, StrL(";. :"), StrL(",,,\0"));
@@ -180,6 +185,7 @@ void SetPdfPreviewLoggingEnabled(bool enable) {
 // this module: in SumatraPDF.exe that's the running exe, in PdfPreview.dll it's
 // the sibling exe -- either way it resolves to the same directory SumatraPDF.exe
 // uses (see GetSumatraBuildSpecificDirTemp), so logs land next to its crashinfo/logs.
+// per-build data dir, same one SumatraPDF.exe uses (...\SumatraPDF-data\<sha1>)
 TempStr GetPdfPreviewLogDirTemp() {
     TempStr exeDir = GetSelfExeDirTemp();
     if (!exeDir) {
@@ -195,7 +201,7 @@ TempStr GetPdfPreviewLogDirTemp() {
     str::Free(d);
     char id[7];
     for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetSumatraBuildSpecificDirTemp
-        sprintf_s(&id[2 * i], 3, "%02x", sha1[i]);
+        sprintf_s(&id[(size_t)2 * i], 3, "%02x", sha1[i]);
     }
     TempStr local = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (!local) {
@@ -221,6 +227,7 @@ static TempStr GetNewPdfPreviewLogFilePathTemp() {
     return path::JoinTemp(dir.s, name.s);
 }
 
+// if logging is enabled, route this module's log to a fresh unique file
 void StartPdfPreviewLoggingIfEnabled() {
     static bool started = false;
     if (started || !IsPdfPreviewLoggingEnabled()) {

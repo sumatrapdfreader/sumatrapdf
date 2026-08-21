@@ -5,12 +5,13 @@ struct MainWindow;
 struct WindowTab;
 struct WebViewResourceResult;
 
-constexpr int kAIChatProviderCount = 3;
+constexpr int kAIChatProviderCount = 4;
 
 enum class AIChatBackend {
     Claude,
     Grok,
     Codex,
+    AntiGravity,
     None,
 };
 
@@ -58,9 +59,7 @@ struct AIChatStreamCtx {
     Str sessionId; // owned; the session the output belongs to
 };
 
-// post an update to be applied on the UI thread (implemented in AIChatPanel.cpp)
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text);
-// record a session id the provider assigned mid-stream
 void AIChatStreamSetSessionId(AIChatStreamCtx* ctx, Str sessionId);
 
 // everything needed to build a provider's command line
@@ -141,6 +140,19 @@ void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions);
 i64 AIChatFileTimeToMs(const FILETIME& ft);
 
 void AIChatLog(AIChatLogger* logger, Str direction, Str text);
+
+// in-memory record of the most recent chat traffic, for debugging failures
+void AIChatDebugReset();
+TempStr AIChatDebugGetTemp();
+
+// Run one chat turn synchronously (headless) with the given backend, file and
+// message, using the same provider code the panel does; returns "OK\n<text>" or
+// "FAIL: <reason>\n--- debug log ---\n<log>". For -dbg-control tests.
+TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCode);
+
+// Inject a canned (user, assistant) turn into the chat webview (opening the grok
+// panel if needed) to debug webview rendering without a live provider call.
+TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode);
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 
 TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt = nullptr);
@@ -156,8 +168,8 @@ TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor);
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning);
 bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out);
 
-int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx);
-TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docName, int maxDx);
+int AIChatLabelMaxTextDx(int labelDx);
+TempStr AIChatFitPanelTitleTemp(PlatformFont* font, Str prefix, Str docName, int maxDx);
 TempStr AIChatGenerateSessionIdTemp();
 
 AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab);

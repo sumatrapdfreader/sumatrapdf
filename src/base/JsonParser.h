@@ -1,8 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// simple push parser for JSON files (cf. http://www.json.org/ )
-
 namespace json {
 
 enum class Type {
@@ -12,21 +10,37 @@ enum class Type {
     Null
 };
 
-// parsing JSON data will call the ValueVisitor for every
-// primitive data value with a string representation of that
-// value and a path to it
+// Path is a StrNode list (outermost segment first). Each node's s stores:
+//   '/' + key   object key (rest is the key bytes, may contain '/' etc.)
+//   'i' + digits  array index
+//   '*'         match-only "any segment" (not produced by the parser)
+// Path is only valid during the VisitFn call; the parser reuses/mutates the list after.
+constexpr char kSegKey = '/';
+constexpr char kSegIdx = 'i';
+constexpr char kSegAny = '*';
 
-// e.g. the following JSON data will lead to two calls:
-// { "key": [false, { "name": "valu\u0065" }] }
-// 1. "/key[0]", "false", Type::Bool
-// 2. "/key[1]/name", "value", Type::String
-
-struct ValueVisitor {
-    // return false to stop parsing
-    virtual bool Visit(Str path, Str value, Type type) = 0;
-    virtual ~ValueVisitor() = default;
+// One primitive value from Parse. path/value are only valid for the duration of
+// the VisitFn call (path may be mutated when the parser pops; value is a
+// temp-arena copy). Set stop to true to cancel further visits (Parse still
+// returns true).
+struct Value {
+    StrNode* path = nullptr;
+    Str value;
+    Type type = Type::String;
+    bool stop = false;
 };
 
-bool Parse(Str data, ValueVisitor* visitor);
+using VisitFn = Func1<Value*>;
+
+bool Parse(Str data, const VisitFn& onValue);
+TempStr EscapeStrTemp(Str s);
+
+// path helpers (pattern segments use the same encoding as path nodes)
+bool PathMatch(StrNode* path, Str a = {}, Str b = {}, Str c = {}, Str d = {}, Str e = {}, Str f = {});
+StrNode* PathBuildTemp(Str a, Str b = {}, Str c = {}, Str d = {}, Str e = {}, Str f = {});
+TempStr PathFormatTemp(StrNode* path);
+StrNode* PathNth(StrNode* path, int n);
+int PathSegIndex(StrNode* seg);
+Str PathSegKey(StrNode* seg);
 
 } // namespace json

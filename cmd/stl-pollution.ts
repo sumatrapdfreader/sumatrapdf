@@ -119,9 +119,7 @@ async function runPdbutil(args: string[]): Promise<string> {
   const stderr = await new Response(proc.stderr).text();
   const exitCode = await proc.exited;
   if (exitCode !== 0) {
-    throw new Error(
-      `llvm-pdbutil ${args.join(" ")} failed with ${exitCode}\n${stderr}`,
-    );
+    throw new Error(`llvm-pdbutil ${args.join(" ")} failed with ${exitCode}\n${stderr}`);
   }
   return stdout;
 }
@@ -130,9 +128,7 @@ async function checkLlvmPdbutil(): Promise<void> {
   try {
     await runPdbutil(["--help"]);
   } catch {
-    throw new Error(
-      "llvm-pdbutil not found in PATH. Run from a Visual Studio developer environment.",
-    );
+    throw new Error("llvm-pdbutil not found in PATH. Run from a Visual Studio developer environment.");
   }
 }
 
@@ -169,8 +165,7 @@ function parseModules(raw: string): Map<number, ModuleInfo> {
 
 function parseSectionContribs(raw: string): SectionContrib[] {
   const res: SectionContrib[] = [];
-  const re =
-    /^\s*SC\[[^\]]+\]\s+\|\s+mod\s+=\s+(\d+),\s+([0-9A-Fa-f]+):([0-9A-Fa-f]+),\s+size\s+=\s+(\d+)/;
+  const re = /^\s*SC\[[^\]]+\]\s+\|\s+mod\s+=\s+(\d+),\s+([0-9A-Fa-f]+):([0-9A-Fa-f]+),\s+size\s+=\s+(\d+)/;
   for (const line of raw.split(/\r?\n/)) {
     const m = line.match(re);
     if (!m) {
@@ -182,9 +177,7 @@ function parseSectionContribs(raw: string): SectionContrib[] {
     const size = parseInt(m[4], 10);
     res.push({ section, start, end: start + size, mod });
   }
-  res.sort(
-    (a, b) => a.section - b.section || a.start - b.start || a.end - b.end,
-  );
+  res.sort((a, b) => a.section - b.section || a.start - b.start || a.end - b.end);
   return res;
 }
 
@@ -297,17 +290,11 @@ function attachModules(
   }
 }
 
-function findSectionHeader(
-  headers: SectionHeader[],
-  rva: number,
-): SectionHeader | undefined {
+function findSectionHeader(headers: SectionHeader[], rva: number): SectionHeader | undefined {
   return headers.find((h) => rva >= h.rva && rva < h.rva + h.size);
 }
 
-function findContrib(
-  contribs: SectionContrib[],
-  offset: number,
-): SectionContrib | undefined {
+function findContrib(contribs: SectionContrib[], offset: number): SectionContrib | undefined {
   let lo = 0;
   let hi = contribs.length - 1;
   while (lo <= hi) {
@@ -325,9 +312,7 @@ function findContrib(
 }
 
 function projectName(objPath: string, libPath: string): string {
-  const s = normalize(`${libPath} ${objPath}`)
-    .replaceAll("\\", "/")
-    .toLowerCase();
+  const s = normalize(`${libPath} ${objPath}`).replaceAll("\\", "/").toLowerCase();
   const originalLib = normalize(libPath).replaceAll("\\", "/");
   const originalObj = normalize(objPath).replaceAll("\\", "/");
 
@@ -371,10 +356,7 @@ function objectName(m?: ModuleInfo): string {
   return normalize(m.obj).replaceAll("\\", "/");
 }
 
-function bucketBy(
-  symbols: SymbolInfo[],
-  keyFn: (s: SymbolInfo) => string,
-): Bucket[] {
+function bucketBy(symbols: SymbolInfo[], keyFn: (s: SymbolInfo) => string): Bucket[] {
   const map = new Map<string, Bucket>();
   for (const s of symbols) {
     const key = keyFn(s);
@@ -395,10 +377,7 @@ function bucketBy(
   return buckets;
 }
 
-function moduleStlRuntimeBuckets(
-  modules: Map<number, ModuleInfo>,
-  contribs: SectionContrib[],
-): Bucket[] {
+function moduleStlRuntimeBuckets(modules: Map<number, ModuleInfo>, contribs: SectionContrib[]): Bucket[] {
   const map = new Map<number, Bucket>();
   for (const c of contribs) {
     const m = modules.get(c.mod);
@@ -416,21 +395,12 @@ function moduleStlRuntimeBuckets(
   return [...map.values()].sort((a, b) => b.size - a.size);
 }
 
-function renderBucketTable(
-  title: string,
-  buckets: Bucket[],
-  limit: number,
-): string[] {
+function renderBucketTable(title: string, buckets: Bucket[], limit: number): string[] {
   const lines = [``, title, "-".repeat(title.length)];
   const shown = buckets.slice(0, limit);
-  const width = Math.max(
-    4,
-    ...shown.map((b) => b.size.toLocaleString().length),
-  );
+  const width = Math.max(4, ...shown.map((b) => b.size.toLocaleString().length));
   for (const b of shown) {
-    lines.push(
-      `${b.size.toLocaleString().padStart(width)}  ${b.count.toString().padStart(5)}  ${b.key}`,
-    );
+    lines.push(`${b.size.toLocaleString().padStart(width)}  ${b.count.toString().padStart(5)}  ${b.key}`);
   }
   if (buckets.length > shown.length) {
     lines.push(`... ${buckets.length - shown.length} more`);
@@ -438,17 +408,10 @@ function renderBucketTable(
   return lines;
 }
 
-function renderSymbolList(
-  title: string,
-  symbols: SymbolInfo[],
-  limit: number,
-): string[] {
+function renderSymbolList(title: string, symbols: SymbolInfo[], limit: number): string[] {
   const lines = [``, title, "-".repeat(title.length)];
   const shown = symbols.slice(0, limit);
-  const width = Math.max(
-    4,
-    ...shown.map((s) => s.size.toLocaleString().length),
-  );
+  const width = Math.max(4, ...shown.map((s) => s.size.toLocaleString().length));
   for (const s of shown) {
     lines.push(
       `${s.size.toLocaleString().padStart(width)}  ${s.module?.project ?? "(unmapped)"}  ${objectName(s.module)}`,
@@ -471,10 +434,7 @@ function renderReport(
   symbols.sort((a, b) => b.size - a.size);
   const total = symbols.reduce((sum, s) => sum + s.size, 0);
   const unmapped = symbols.filter((s) => !s.module);
-  const projectBuckets = bucketBy(
-    symbols,
-    (s) => s.module?.project ?? "(unmapped)",
-  );
+  const projectBuckets = bucketBy(symbols, (s) => s.module?.project ?? "(unmapped)");
   const objectBuckets = bucketBy(symbols, (s) => objectName(s.module));
   const runtimeBuckets = moduleStlRuntimeBuckets(modules, contribs);
   const runtimeTotal = runtimeBuckets.reduce((sum, b) => sum + b.size, 0);
@@ -491,23 +451,17 @@ function renderReport(
   );
   lines.push(``);
   lines.push(`Notes:`);
-  lines.push(
-    `- Symbol sizes come from "llvm-pdbutil pretty --globals --symbol-order=size".`,
-  );
+  lines.push(`- Symbol sizes come from "llvm-pdbutil pretty --globals --symbol-order=size".`);
   lines.push(
     `- Ownership is inferred by converting symbol RVAs through "dump --section-headers", then mapping to "dump --section-contribs" module ranges.`,
   );
   lines.push(
     `- The "MSVC STL runtime" table is object-level section contribution size for libcpmt STL objects, not just matched std:: symbol names.`,
   );
-  lines.push(
-    `- Inline/template STL code is attributed to the object file that emitted it.`,
-  );
+  lines.push(`- Inline/template STL code is attributed to the object file that emitted it.`);
   lines.push(...renderBucketTable("By Project", projectBuckets, top));
   lines.push(...renderBucketTable("By Object File", objectBuckets, top));
-  lines.push(
-    ...renderBucketTable("MSVC STL Runtime Objects", runtimeBuckets, top),
-  );
+  lines.push(...renderBucketTable("MSVC STL Runtime Objects", runtimeBuckets, top));
   lines.push(...renderSymbolList("Largest Matched STL Symbols", symbols, top));
 
   lines.push(``);
@@ -515,13 +469,9 @@ function renderReport(
   lines.push(`-----------------------`);
   for (const b of projectBuckets.slice(0, top)) {
     lines.push(``);
-    lines.push(
-      `${b.key}: ${formatSize(b.size)} in ${b.count.toLocaleString()} symbols`,
-    );
+    lines.push(`${b.key}: ${formatSize(b.size)} in ${b.count.toLocaleString()} symbols`);
     for (const s of b.symbols.slice(0, Math.min(10, top))) {
-      lines.push(
-        `  ${s.size.toLocaleString().padStart(8)}  ${objectName(s.module)}`,
-      );
+      lines.push(`  ${s.size.toLocaleString().padStart(8)}  ${objectName(s.module)}`);
       lines.push(`            ${s.name}`);
     }
   }
@@ -544,12 +494,7 @@ async function main() {
   await checkLlvmPdbutil();
 
   console.log(`Reading globals from ${pdb}...`);
-  const globalsRaw = await runPdbutil([
-    "pretty",
-    "--globals",
-    "--symbol-order=size",
-    pdb,
-  ]);
+  const globalsRaw = await runPdbutil(["pretty", "--globals", "--symbol-order=size", pdb]);
   console.log(`Reading modules...`);
   const modulesRaw = await runPdbutil(["dump", "--modules", pdb]);
   console.log(`Reading section contributions...`);
@@ -574,9 +519,7 @@ async function main() {
   writeFileSync(out, report);
 
   const total = symbols.reduce((sum, s) => sum + s.size, 0);
-  console.log(
-    `Matched ${symbols.length.toLocaleString()} STL-looking globals (${formatSize(total)}).`,
-  );
+  console.log(`Matched ${symbols.length.toLocaleString()} STL-looking globals (${formatSize(total)}).`);
   console.log(`Wrote ${out}`);
 }
 

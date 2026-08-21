@@ -41,8 +41,7 @@ function buildPdf(): Buffer {
   objs.push("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
   // 3 Page (the widget is its only annotation)
   objs.push(
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 360 120] " +
-      "/Resources << >> /Annots [5 0 R] /Contents 7 0 R >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 360 120] " + "/Resources << >> /Annots [5 0 R] /Contents 7 0 R >>",
   );
   // 4 base-14 font used by the field's default appearance
   objs.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
@@ -52,10 +51,7 @@ function buildPdf(): Buffer {
       `/V ${v} /DA (/Helv 0 Tf 0 g) /Rect [10 40 350 85] /P 3 0 R /F 4 >>`,
   );
   // 6 AcroForm: NeedAppearances forces synthesis; DR provides the DA font
-  objs.push(
-    "<< /Fields [5 0 R] /NeedAppearances true /DA (/Helv 0 Tf 0 g) " +
-      "/DR << /Font << /Helv 4 0 R >> >> >>",
-  );
+  objs.push("<< /Fields [5 0 R] /NeedAppearances true /DA (/Helv 0 Tf 0 g) " + "/DR << /Font << /Helv 4 0 R >> >> >>");
   // 7 page content (empty)
   objs.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
 

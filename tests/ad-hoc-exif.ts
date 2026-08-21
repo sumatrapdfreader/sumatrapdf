@@ -7,22 +7,21 @@
 // Tier B (strict): MakerNote Tag 0xXXXX and Canon TIFF makernote tags
 // Other MakerNote proprietary names (Apple, Olympus, ...) are skipped.
 //
-// NOT registered in tests/all.ts — run occasionally:
+// NOT registered in tests/run-almost-all.ts — run occasionally:
 //   bun tests/ad-hoc-exif.ts [--no-build]
-// or as part of: bun tests/before-release.ts
 //
 // Requires git and network access on first run (to clone exif-py).
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, runStandalone } from "./util.ts";
+import { killAndWait } from "./winapi.ts";
 
 const EXIF_PY = join(ROOT, "..", "exif-py");
 const RESOURCES = join(EXIF_PY, "tests", "resources");
 const DUMP_TXT = join(RESOURCES, "dump.txt");
 
-const CANON_MAKERNOTE_RE =
-  /\/(jpg|tiff)\/(Canon_|canon_)/i;
+const CANON_MAKERNOTE_RE = /\/(jpg|tiff)\/(Canon_|canon_)/i;
 
 function fail(msg: string): never {
   throw new Error(msg);
@@ -115,7 +114,7 @@ async function runDumpExif(absPath: string): Promise<string[]> {
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
-    proc.kill();
+    await killAndWait(proc);
   }, SPAWN_TIMEOUT_MS);
   const out = await new Response(proc.stdout).text();
   const exitCode = await proc.exited;

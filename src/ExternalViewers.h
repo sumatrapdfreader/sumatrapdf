@@ -12,6 +12,7 @@ bool CanSendAsEmailAttachment(WindowTab* tab = nullptr);
 bool SendAsEmailAttachment(WindowTab* tab, HWND hwndParent = nullptr);
 
 bool CouldBePDFDoc(WindowTab*);
+bool IsPdfDoc(WindowTab*);
 bool PathMatchFilter(Str path, Str filter);
 
 bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter);

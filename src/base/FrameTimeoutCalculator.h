@@ -33,10 +33,9 @@ class FrameTimeoutCalculator {
         elapsedTicks = timeCurr.QuadPart - timeLast.QuadPart;
         if (elapsedTicks > ticksPerFrame) {
             return 0;
-        } else {
-            LONGLONG timeoutMs = (ticksPerFrame - elapsedTicks) / ticsPerMs;
-            return (DWORD)timeoutMs;
         }
+        LONGLONG timeoutMs = (ticksPerFrame - elapsedTicks) / ticsPerMs;
+        return (DWORD)timeoutMs;
     }
 
     void Step() { timeLast.QuadPart += ticksPerFrame; }

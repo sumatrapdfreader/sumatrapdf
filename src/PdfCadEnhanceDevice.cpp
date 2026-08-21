@@ -20,8 +20,8 @@ typedef struct {
 } pdf_cad_enhance_device;
 
 static bool CadIsNeutralGray(float r, float g, float b, float* outLum) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     if (outLum) {
         *outLum = lum;
@@ -48,9 +48,7 @@ static fz_matrix CadEmboldenTinyTextMatrix(fz_matrix ctm, bool hairlineDoc) {
         boost = 1.55f;
     } else {
         boost = 1.f + ((0.22f - expansion) * 2.5f);
-        if (boost > 1.55f) {
-            boost = 1.55f;
-        }
+        boost = std::min(boost, 1.55f);
     }
     return fz_concat(ctm, fz_scale(boost, boost));
 }
@@ -61,12 +59,7 @@ static float CadEnhanceBlendForExpansion(float expansion) {
         expansion = 1.f;
     }
     float blend = (0.84f - expansion) / 0.60f;
-    if (blend < 0.f) {
-        blend = 0.f;
-    }
-    if (blend > 1.f) {
-        blend = 1.f;
-    }
+    blend = limitValue(blend, 0.f, 1.f);
     return blend;
 }
 
@@ -93,9 +86,7 @@ static void CadAcrobatGrayRgb(float r, float g, float b, float* outR, float* out
         return;
     }
     float t = (lum - 0.50f) / 0.32f;
-    if (t > 1.f) {
-        t = 1.f;
-    }
+    t = std::min(t, 1.f);
     float targetLum = 0.15f + (t * 0.21f);
     if (targetLum >= lum || lum < 0.0001f) {
         *outR = r;
@@ -164,9 +155,30 @@ static void cad_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text
     fz_stroke_text(ctx, d->inner, text, stroke, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
+// device pixels: below this on its shorter side, a filled path is a line an
+// exporter drew as a thin rectangle rather than a region
+constexpr float kCadFillLineMaxDy = 4.0f;
+
+// This device darkens grays so thin CAD lines stay readable when zoomed out.
+// Exporters do draw lines as thin filled rectangles, so fills can't be skipped
+// outright, but a fill that covers real area is a region -- a building, a hatch
+// block, a legend swatch -- and Acrobat leaves its gray alone. Darkening those
+// too turned mid-grays near-black: 0.6 gray rendered as 54 and 0.8 gray as 88
+// (issue #5937).
+static bool CadFillIsLineLike(fz_context* ctx, const fz_path* path, fz_matrix ctm) {
+    fz_rect r = fz_bound_path(ctx, path, nullptr, ctm);
+    float dx = r.x1 - r.x0;
+    float dy = r.y1 - r.y0;
+    return std::min(dx, dy) <= kCadFillLineMaxDy;
+}
+
 static void cad_fill_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,
                           fz_colorspace* colorspace, const float* color, float alpha, fz_color_params color_params) {
     pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
+    if (!CadFillIsLineLike(ctx, path, ctm)) {
+        fz_fill_path(ctx, d->inner, path, even_odd, ctm, colorspace, color, alpha, color_params);
+        return;
+    }
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
     fz_fill_path(ctx, d->inner, path, even_odd, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
@@ -350,32 +362,34 @@ static unsigned char CadClampByte(float v) {
     if (v >= 255.f) {
         return 255;
     }
-    return (unsigned char)(v + 0.5f);
+    return (unsigned char)lroundf(v);
 }
 
 // Post-process a rendered page bitmap for raster/screenshot CAD PDFs: darken
 // mid-gray pixels toward Acrobat-like line contrast, leaving near-white
 // background alone. Used instead of the wrap device for pages whose content
 // is one big embedded image.
-void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDominant) {
-    if (!pix || pix->n < 3 || !rasterDominant) {
+void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool rasterDominant) {
+    if (!pix || !rasterDominant) {
+        return;
+    }
+    // we read s[0], s[1], s[2] as R, G, B, so anything else (e.g. CMYK, which
+    // also passes an n >= 3 test) would be misinterpreted
+    if (!fz_colorspace_is_rgb(ctx, pix->colorspace)) {
         return;
     }
 
     float expansion = zoom > 0.01f ? 1.f / zoom : 1.f;
     float blend = CadEnhanceBlendForExpansion(expansion);
-    if (blend < 0.55f) {
-        blend = 0.55f;
-    }
+    blend = std::max(blend, 0.55f);
 
     unsigned char* s = pix->samples;
     int n = pix->n;
-    int n1 = pix->n - pix->alpha;
     for (int y = 0; y < pix->h; y++) {
         for (int x = 0; x < pix->w; x++) {
-            float fr = s[0] / 255.f;
-            float fg = s[1] / 255.f;
-            float fb = s[2] / 255.f;
+            float fr = (float)s[0] / 255.f;
+            float fg = (float)s[1] / 255.f;
+            float fb = (float)s[2] / 255.f;
             if (fr > 0.96f && fg > 0.96f && fb > 0.96f) {
                 s += n;
                 continue;
@@ -386,8 +400,8 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
             CadBlendRgb(fr, fg, fb, outR, outG, outB, blend, &outR, &outG, &outB);
 
             float lum = (0.2126f * outR) + (0.7152f * outG) + (0.0722f * outB);
-            float maxC = outR > outG ? (outR > outB ? outR : outB) : (outG > outB ? outG : outB);
-            float minC = outR < outG ? (outR < outB ? outR : outB) : (outG < outB ? outG : outB);
+            float maxC = std::max({outR, outG, outB});
+            float minC = std::min({outR, outG, outB});
             if (lum > 0.40f && lum < 0.90f && maxC - minC < 0.15f) {
                 float factor = 1.f - (0.28f * blend * (lum - 0.40f) / 0.50f);
                 outR *= factor;
@@ -395,31 +409,24 @@ void PdfCadEnhancePixmap(fz_context*, fz_pixmap* pix, float zoom, bool rasterDom
                 outB *= factor;
             }
 
-            for (int k = 0; k < n1; k++) {
-                float c = k == 0 ? outR : (k == 1 ? outG : outB);
-                s[k] = CadClampByte(c * 255.f);
-            }
+            s[0] = CadClampByte(outR * 255.f);
+            s[1] = CadClampByte(outG * 255.f);
+            s[2] = CadClampByte(outB * 255.f);
             s += n;
         }
-        s += pix->stride - (pix->w * n);
+        s += pix->stride - ((size_t)pix->w * n);
     }
 }
 
 static float CadMinLineWidthForZoom(float zoom, bool hairlineDoc) {
     float z = zoom;
-    if (z < 0.20f) {
-        z = 0.20f;
-    }
+    z = std::max(z, 0.20f);
     // Device pixels. Hairline CAD needs a modest floor; avoid double-boosting with stroke rewrites.
     float minLw = hairlineDoc ? (0.50f + (0.55f / z)) : (0.14f + (0.38f / z));
     float maxLw = hairlineDoc ? 1.25f : 0.62f;
     float minFloor = hairlineDoc ? 0.50f : 0.14f;
-    if (minLw > maxLw) {
-        minLw = maxLw;
-    }
-    if (minLw < minFloor) {
-        minLw = minFloor;
-    }
+    minLw = std::min(minLw, maxLw);
+    minLw = std::max(minLw, minFloor);
     return minLw;
 }
 

@@ -7,6 +7,12 @@
    <author>
     <first-name>Test</first-name>
     <last-name>Author</last-name>
+    <home-page>https://example.org/test</home-page>
+    <email>test@example.org</email>
+   </author>
+   <author>
+    <first-name>Second</first-name>
+    <last-name>Writer</last-name>
    </author>
    <book-title>Annotation Prop Test</book-title>
    <annotation>

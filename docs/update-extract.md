@@ -26,8 +26,7 @@ build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
-The old `ext/extract` checkout is intentionally left in the tree for now, but
-the active MuPDF build uses the amalgamated `ext/a-extract` source.
+The active MuPDF build uses only the amalgamated `ext/a-extract` source.

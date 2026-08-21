@@ -1,0 +1,78 @@
+name: windows-daily
+on:
+  schedule:
+    # the daily pre-release artifacts
+    - cron: "0 1 * * *"
+    # the test run, offset so the two don't queue for a runner together
+    - cron: "20 4 * * *"
+  repository_dispatch:
+    types: [build-daily]
+  workflow_dispatch:
+    inputs:
+      tests:
+        description: "only these tests (comma-separated, e.g. issue-1195); empty = all"
+        required: false
+        default: ""
+jobs:
+  build-daily:
+    name: Daily build
+    # only its own cron; a workflow_dispatch or the build-daily dispatch runs it too
+    if: github.event_name != 'schedule' || github.event.schedule == '0 1 * * *'
+    #runs-on: SumatraBuilder
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v6
+        with:
+          # needed to calc build number via git log --oneline
+          fetch-depth: 0
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      # cmd/build.ts -daily only builds master of this repo; on a fork or a
+      # branch it exits early
+      - name: Build
+        run: bun .\cmd\build.ts -daily
+
+  test:
+    name: Windows debug ASan build + tests
+    # not for the build-daily dispatch: that one asks for artifacts, not tests
+    if: >-
+      github.event_name != 'repository_dispatch' &&
+      (github.event_name != 'schedule' || github.event.schedule == '20 4 * * *')
+    runs-on: windows-2025-vs2026
+    # the suite drives a real GUI; a hung test should fail the run, not sit
+    # there burning runner minutes
+    timeout-minutes: 120
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v6
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      # ASan so the run catches memory errors the tests walk into, not just
+      # wrong behavior. Produces out/dbg64_asan/SumatraPDF-static.exe plus the
+      # ASan runtime dll next to it.
+      - name: Build (debug, ASan)
+        run: bun cmd/build.ts -asan -debug
+
+      # run-github-ci.ts runs every test that can run here, doesn't stop at the
+      # first failure, and exits non-zero if any failed
+      - name: Run tests
+        env:
+          SUMATRA_TEST_EXE: ${{ github.workspace }}\out\dbg64_asan\SumatraPDF-static.exe
+        run: bun tests/run-github-ci.ts ${{ inputs.tests }}
+
+      # what the failing tests left behind: screenshots, logs, generated files
+      - name: Upload test output
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-output
+          path: |
+            tests/tmp
+            .work/test-times.txt
+          if-no-files-found: ignore
+          retention-days: 7

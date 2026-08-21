@@ -8,6 +8,8 @@
 #define HAVE_ERRNO_H 1
 #define HAVE_FCNTL_H 1
 #define HAVE_FCNTL 1
+#define HAVE_ICONV 1
+#define HAVE_ICONV_H 1
 #define HAVE_LIMITS_H 1
 #define HAVE_ARC4RANDOM_BUF 1
 #define HAVE_FCHDIR 1
@@ -95,6 +97,7 @@
 
 #define SIZEOF_WCHAR_T 4
 #define HAVE_EILSEQ 1
+#define ICONV_CONST
 
 /* bundled codecs */
 #define HAVE_LIBZ 1

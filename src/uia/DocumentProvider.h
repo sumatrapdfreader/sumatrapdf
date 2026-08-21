@@ -10,7 +10,7 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
                                             public IRawElementProviderSimple,
                                             public ITextProvider,
                                             public IAccIdentity {
-    LONG refCount;
+    AtomicInt refCount;
     HWND canvasHwnd;
     SumatraUIAutomationProvider* root;
     bool released;
@@ -24,13 +24,13 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
     SumatraUIAutomationDocumentProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root);
     ~SumatraUIAutomationDocumentProvider();
 
-    // reads page count and creates a child element for each page
     void LoadDocument(DisplayModel* dm);
     void FreeDocument();
     bool IsDocumentLoaded() const;
 
     // GetDM() must not be called if IsDocumentLoaded()==FALSE
     DisplayModel* GetDM();
+    HWND GetCanvasHwnd() const;
 
     SumatraUIAutomationPageProvider* GetFirstPage();
     SumatraUIAutomationPageProvider* GetLastPage();

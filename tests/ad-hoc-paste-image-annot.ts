@@ -4,14 +4,21 @@
 //
 // It puts a solid-red bitmap on the clipboard, opens a PDF, runs the command,
 // and verifies a red region was stamped onto the page. Because it touches the
-// system clipboard and drives the GUI, it's an ad-hoc test (not in all.ts).
+// system clipboard and drives the GUI, it's an ad-hoc test (not in run-almost-all.ts).
 //
 // Run:  bun tests/ad-hoc-paste-image-annot.ts [--no-build]
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { waitForFrame, sendCommand, findCanvas } from "./win-automation.ts";
+import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import {
+  launchSumatra,
+  waitForFrame,
+  sendCommand,
+  findCanvas,
+  killAndWait,
+  killProcessesNamed,
+} from "./win-automation.ts";
 import { sleep, captureWindowToPng } from "./winapi.ts";
 
 function makePdf(n: number): Buffer {
@@ -76,9 +83,8 @@ export async function testit(): Promise<void> {
     throw new Error(`failed to set clipboard image: ${set.stderr.toString()}`);
   }
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing", pdf], { stdout: "ignore", stderr: "ignore" });
+  await killProcessesNamed("SumatraPDF.exe");
+  const proc = launchSumatra([pdf]);
   try {
     const frame = await waitForFrame(proc.pid!);
     await sleep(1500);
@@ -104,8 +110,7 @@ export async function testit(): Promise<void> {
     }
     console.log("PASS: clipboard image pasted as an image Stamp annotation");
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
   }
 }
 

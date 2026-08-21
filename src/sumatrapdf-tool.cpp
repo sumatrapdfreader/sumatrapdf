@@ -117,7 +117,7 @@ int main() {
     }
     if (argc < 2) {
         PrintUsage();
-        LocalFree(wargv);
+        LocalFree((void*)wargv);
         return 1;
     }
 
@@ -125,7 +125,7 @@ int main() {
     // tool sees its own name as argv[0], matching what the mupdf tools expect.
     int toolArgc = argc - 1;
     char** toolArgv = fz_argv_from_wargv(toolArgc, wargv + 1);
-    LocalFree(wargv); // fz_argv_from_wargv copied the strings, so this is safe
+    LocalFree((void*)wargv); // fz_argv_from_wargv copied the strings, so this is safe
 
     const Tool* tool = FindTool(toolArgv[0]);
     int res;

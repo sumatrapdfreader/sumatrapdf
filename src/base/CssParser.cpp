@@ -53,15 +53,20 @@ static bool SkipQuotedString(Str data, int& off) {
 
 static bool SkipBlock(Str data, int& off) {
     ReportIf(off >= data.len || data.s[off] != '{');
-    off++;
-    while (off < data.len && data.s[off] != '}') {
+    int depth = 0;
+    while (off < data.len) {
         if (data.s[off] == '"' || data.s[off] == '\'') {
             if (!SkipQuotedString(data, off)) {
                 return false;
             }
         } else if (data.s[off] == '{') {
-            if (!SkipBlock(data, off)) {
-                return false;
+            depth++;
+            off++;
+        } else if (data.s[off] == '}') {
+            depth--;
+            off++;
+            if (depth == 0) {
+                return true;
             }
         } else if (data.s[off] == '\\' && off < data.len - 1) {
             off += 2;
@@ -69,13 +74,11 @@ static bool SkipBlock(Str data, int& off) {
             off++;
         }
     }
-    if (off >= data.len) {
-        return false;
-    }
-    off++;
-    return true;
+    return false;
 }
 
+// call NextRule first for parsing a style element and
+// NextProperty only for parsing a single style attribute
 bool CssPullParser::NextRule() {
     if (inProps) {
         while (NextProperty()) {
@@ -166,10 +169,11 @@ const CssSelector* CssPullParser::NextSelector() {
     for (; c > selStart && (isalnum((u8)src.s[c - 1]) || src.s[c - 1] == '-'); c--) {
         ;
     }
-    if (sel.clazz && sel.clazz.s == src.s + selStart + 1) {
-        sel.tag = Tag_Any;
-    } else if (c == (sel.clazz ? (int)(sel.clazz.s - src.s - 1) : sEnd) && c == selStart + 1 &&
-               src.s[selStart] == '*') {
+    // either the selector is just a class (".c"), or it starts with the universal selector ("*")
+    bool isAnyTag =
+        (sel.clazz && sel.clazz.s == src.s + selStart + 1) ||
+        (c == (sel.clazz ? (int)(sel.clazz.s - src.s - 1) : sEnd) && c == selStart + 1 && src.s[selStart] == '*');
+    if (isAnyTag) {
         sel.tag = Tag_Any;
     } else if (c == selStart) {
         size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - src.s - selStart - 1) : (size_t)sel.s.len;

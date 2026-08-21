@@ -1,0 +1,13 @@
+Here are some examples implementing custom streams to load documents.
+
+	fetch.js
+		Example of loading document using fetch instead of from a file
+
+	fetch-stream.js
+		Example of using fetch to load a document progressively,
+		using TRYLATER signaling.
+
+	custom-stream.js
+		More examples of custom streams:
+		- using Node's synchronous file descriptor API.
+		- using FileReaderSync on Blob or File objects in Web Worker contexts.

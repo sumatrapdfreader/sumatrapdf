@@ -60,7 +60,7 @@ struct Annotation {
     int pageNo = -1;
 
     // in page coordinates
-    RectF bounds = {};
+    RectF bounds;
 
     EngineMupdf* engine = nullptr;
     pdf_annot* pdfannot = nullptr; // not owned
@@ -85,6 +85,8 @@ struct AnnotCreateArgs {
     int textSize = -1;
     // for free text, < 0 means not given
     int borderWidth = -1;
+    // for free text, PDF /Q text alignment, < 0 means not given (MuPDF's left)
+    int quadding = -1;
     bool setContentToSelection = false;
     Str content;
     Pixmap* stampImage = nullptr;
@@ -96,7 +98,6 @@ RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 
-// EditAnnotations.cpp
 Str Author(Annotation*);
 time_t ModificationDate(Annotation*);
 int PopupId(Annotation*); // -1 if not exist
@@ -109,6 +110,14 @@ int DefaultAppearanceTextSize(Annotation*);
 Str Contents(Annotation*);
 PdfColor GetColor(Annotation*);      // kColorUnset if no color
 PdfColor InteriorColor(Annotation*); // kColorUnset if no color
+// PDF /Q: how free text is aligned in its box ("Text Alignment" in the
+// annotation editor). Right is also what right-to-left scripts want.
+constexpr int kQuaddingLeft = 0;
+constexpr int kQuaddingCenter = 1;
+constexpr int kQuaddingRight = 2;
+extern SeqStrings gQuaddingNames; // "Left\0Center\0Right\0"
+
+int QuaddingFromName(Str);
 int Quadding(Annotation*);
 int BorderWidth(Annotation*);
 Str IconName(Annotation*); // empty if no icon
@@ -128,8 +137,6 @@ void SetIconName(Annotation*, Str);
 void SetLineEndStyles(Annotation*, int end);
 void SetLineStartStyles(Annotation*, int start);
 
-// PDF form (widget) fields. GetWidgetType returns a pdf_widget_type value
-// (PDF_WIDGET_TYPE_*), or 0 (UNKNOWN) when annot isn't a form widget.
 int GetWidgetType(Annotation*);
 // which mouse cursor a form field warrants on hover. None for non-widgets and
 // read-only fields, Text (I-beam) for text/combo/listbox, Button (hand) for
@@ -140,23 +147,16 @@ enum class WidgetCursorKind {
     Button
 };
 WidgetCursorKind GetWidgetCursorKind(Annotation*);
-// pdf_annot_field_flags (PDF_FIELD_IS_*, PDF_TX_FIELD_IS_* bits), or 0.
 int GetWidgetFieldFlags(Annotation*);
-// current text value of a form field (owned temp copy), or "" .
 Str GetWidgetValue(Annotation*);
-// font size from the field's /DA (in PDF points), or 0 for auto-size.
 float GetWidgetFontSize(Annotation*);
-// max length of a text field (chars), or 0 for unlimited.
 int GetWidgetMaxLen(Annotation*);
-// set a text field's value (runs validation); returns true if accepted.
 bool SetWidgetTextValue(Annotation*, Str value);
-// options of a combobox/listbox field (display strings), appended to `out`.
 void GetWidgetChoiceOptions(Annotation*, StrVec& out);
-// set a choice field's value to one of its options; returns true if applied.
 bool SetWidgetChoiceValue(Annotation*, Str value);
-// Toggle a checkbox / radio-button form field in place. Returns true if it was
-// a (non-read-only) checkbox/radio and got toggled.
 bool ToggleFormButton(Annotation*);
+
+bool AnnotationIsLive(Annotation*);
 
 void DeleteAnnotation(Annotation*);
 bool AnnotationCanBeMoved(AnnotationType);

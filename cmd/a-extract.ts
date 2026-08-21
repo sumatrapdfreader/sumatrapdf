@@ -1,11 +1,5 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { basename, dirname, join, normalize } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, normalize } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
 type Args = { repo: string; rev: string; keep: boolean };
@@ -195,11 +189,7 @@ function shouldKeepInclude(inc: string): boolean {
   return inc.startsWith("extract/") || inc === "memento.h";
 }
 
-function expandLocalIncludes(
-  path: string,
-  includedIncludes: Set<string>,
-  stack: string[] = [],
-): string {
+function expandLocalIncludes(path: string, includedIncludes: Set<string>, stack: string[] = []): string {
   const out: string[] = [];
   for (const line of readText(path).split("\n")) {
     const m = /^\s*#\s*include\s+"([^"]+)"/.exec(line);
@@ -235,9 +225,7 @@ function preparePublicHeader(path: string): string {
 }
 
 function prepareChunk(path: string, includedIncludes: Set<string>): string {
-  return normalizeBlankLines(
-    stripComments(expandLocalIncludes(path, includedIncludes)),
-  );
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, includedIncludes)));
 }
 
 function generateAmalgamation(root: string): {
@@ -251,16 +239,13 @@ function generateAmalgamation(root: string): {
   headers.set("memento.h", preparePublicHeader(join(root, "src", "memento.h")));
 
   const includedIncludes = new Set<string>();
-  const chunks = [
-    '#include "extract/extract.h"\n#include "extract/buffer.h"\n#include "memento.h"\n',
-  ];
+  const chunks = ['#include "extract/extract.h"\n#include "extract/buffer.h"\n#include "memento.h"\n'];
   for (const name of sourceFiles) {
     let chunk = prepareChunk(join(root, "src", name), includedIncludes);
     // mupdf already ships memento.c; when extract is compiled into the mupdf
     // static lib we define EXTRACT_NO_OWN_MEMENTO to avoid LNK4006 duplicates.
     if (name === "memento.c") {
-      chunk =
-        "#ifndef EXTRACT_NO_OWN_MEMENTO\n" + chunk + "\n#endif /* EXTRACT_NO_OWN_MEMENTO */\n";
+      chunk = "#ifndef EXTRACT_NO_OWN_MEMENTO\n" + chunk + "\n#endif /* EXTRACT_NO_OWN_MEMENTO */\n";
     }
     chunks.push(chunk);
   }

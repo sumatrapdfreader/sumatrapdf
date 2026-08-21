@@ -11,7 +11,7 @@
 // keeps the best time.
 
 #include "base/Base.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/ScopedWin.h"
 #include "base/Timer.h"
@@ -34,10 +34,6 @@ void log(Str s) {
         return;
     }
     fwrite(s.s, 1, (size_t)s.len, stderr);
-}
-
-void loga(Str s) {
-    log(s);
 }
 
 void _uploadDebugReport(Str, Str, bool, bool) {}

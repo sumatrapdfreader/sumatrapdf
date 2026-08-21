@@ -4,12 +4,12 @@
 // to read stdin via readline(). SumatraPDF.exe is a GUI-subsystem app, so its
 // CRT stdin wasn't wired to the inherited input handle and readline() failed
 // with "cannot read line from stdin". The fix wires stdin in
-// fz_redirect_io_to_existing_console() (mupdf/source/tools/mudraw.c).
+// fz_redirect_io_to_existing_console() (ext/mupdf/source/tools/mudraw.c).
 //
 // This pipes two lines into `run issue-5665.js` and asserts the script read
 // them back via readline().
 //
-// Run:  bun tests/issue-5665.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5665.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";

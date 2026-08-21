@@ -9,14 +9,9 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 
 const PDF = join(import.meta.dir, "issue-1189.pdf");
-
-async function search(needle: string): Promise<string> {
-  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestSearch, [PDF, needle]);
-  return String(rawArg).trim();
-}
 
 export async function testit(): Promise<void> {
   if (!existsSync(EXE)) {
@@ -26,20 +21,25 @@ export async function testit(): Promise<void> {
     throw new Error(`test pdf not found: ${PDF}`);
   }
 
-  const dehyphenated = await search("hyphenated");
-  if (!dehyphenated.startsWith("FOUND")) {
-    throw new Error(
-      `search "hyphenated" should find line-broken "hyphen-\\nated", got: ${dehyphenated}`,
-    );
-  }
-  console.log(`✅ ${dehyphenated}`);
+  await withControlledSumatra(EXE, async (client) => {
+    const search = async (needle: string): Promise<string> => {
+      const [, rawArg] = await client.request(ControlCommand.TestSearch, [PDF, needle]);
+      return String(rawArg).trim();
+    };
 
-  // sanity: the first half still matches as a substring
-  const partial = await search("hyphen");
-  if (!partial.startsWith("FOUND")) {
-    throw new Error(`search "hyphen" should still find the first line, got: ${partial}`);
-  }
-  console.log(`✅ ${partial}`);
+    const dehyphenated = await search("hyphenated");
+    if (!dehyphenated.startsWith("FOUND")) {
+      throw new Error(`search "hyphenated" should find line-broken "hyphen-\\nated", got: ${dehyphenated}`);
+    }
+    console.log(`✅ ${dehyphenated}`);
+
+    // sanity: the first half still matches as a substring
+    const partial = await search("hyphen");
+    if (!partial.startsWith("FOUND")) {
+      throw new Error(`search "hyphen" should still find the first line, got: ${partial}`);
+    }
+    console.log(`✅ ${partial}`);
+  });
 }
 
 if (import.meta.main) {

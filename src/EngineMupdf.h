@@ -42,7 +42,7 @@ struct FzPageInfo {
     Vec<IPageElement*> allElements;
     bool elementsNeedRebuilding = true;
 
-    RectF mediabox{};
+    RectF mediabox;
     Vec<FitzPageImageInfo*> images;
 
     // if false, only loaded page (fast)
@@ -79,6 +79,7 @@ class EngineMupdf : public EngineBase {
 
     RectF PageMediabox(int pageNo) override;
     RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    void GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) override;
 
     Pixmap* RenderPage(RenderPageArgs& args) override;
 
@@ -97,14 +98,22 @@ class EngineMupdf : public EngineBase {
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*> GetElements(int pageNo) override;
+    bool TryGetElements(int pageNo, Vec<IPageElement*>* out) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
+    Str GetImageDataForPageElement(IPageElement*) override;
 
     IPageDestination* GetNamedDest(Str name) override;
     int GetOpenActionPageNo() override;
+    bool HasToc() override;
     TocTree* GetToc() override;
+    TocTree* BuildToc();
+    void StartHeadingTocIfNeeded();
+    bool HeadingTocPending() const;
+
+    Func0 headingTocDoneCb;
 
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
@@ -134,9 +143,14 @@ class EngineMupdf : public EngineBase {
     //                         pagesLock inside GetFzPageInfo.
     //   docLock             - serializes document-scope mupdf operations:
     //                         outline, fonts, info, named dests, page-tree
-    //                         access, annotation mutations. Independent of
-    //                         renderLock; never acquire pagesLock while
-    //                         holding docLock.
+    //                         access, annotation mutations. Never acquire
+    //                         pagesLock while holding docLock.
+    //                         Anything that *runs a page* (display list build,
+    //                         stext extraction, image collection) must hold
+    //                         this too, not just renderLock: running a page
+    //                         reads its annotations, and an annotation edit on
+    //                         the UI thread frees those objects underneath it
+    //                         (crash in pdf_annot_flags on a freed annot dict).
     //
     // docLock must NOT alias one of fz_locks[] -- mupdf takes those briefly
     // for its own internal coordination, and reusing one as a long-held outer
@@ -163,6 +177,12 @@ class EngineMupdf : public EngineBase {
 
     TocTree* tocTree = nullptr;
 
+    AtomicInt headingTocCancel = 0;
+    bool headingTocStarted = false;
+    bool headingTocDone = false;
+    TocItem* pendingHeadingToc = nullptr;
+    int pendingHeadingTocIdCounter = 0;
+
     // password used to decrypt the document (needed for re-encryption/decryption)
     TempStr pdfPassword;
 
@@ -172,6 +192,12 @@ class EngineMupdf : public EngineBase {
 
     // smart dark mode: engine-level image feature/processed caches
     DarkModeEngineCache* darkModeEngineCache = nullptr;
+
+    // the ebook font (EBookUI.FontName, or this document's own override) that
+    // we couldn't load, null if there was none or it loaded: the text silently
+    // comes out in the default font, so the UI names it in a notification after
+    // the document opens (issue #4600). owned by the engine
+    Str ebookFontUnavailable;
 
     void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
                                    Vec<Rect>& skipRects) override;
@@ -189,8 +215,6 @@ class EngineMupdf : public EngineBase {
     void ToggleCadEnhanceOverride();
 
     bool Load(Str filePath, PasswordUI* pwdUI = nullptr);
-    // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
-    // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
     RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
@@ -200,7 +224,7 @@ class EngineMupdf : public EngineBase {
     FzPageInfo* GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* cookie = nullptr);
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation) const;
-    TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
+    TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment, int depth);
     TempStr ExtractFontListTemp();
 
     Str LoadStreamFromPDFFile(Str filePath);

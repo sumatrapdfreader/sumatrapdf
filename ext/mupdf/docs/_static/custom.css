@@ -1,0 +1,53 @@
+/* reset list indentation */
+ol, ul { padding-left: 40px; }
+
+/* glossary terms should be bold */
+dl.glossary > dt {
+	font-weight: bold
+}
+
+/* sidebar logo and brand */
+img.logo {
+	max-width: 100%;
+}
+.sidebar-logo {
+	max-width: 80px;
+}
+.sidebar-brand-text {
+	font-size: 14px;
+	padding: 0;
+	margin: 10px 0;
+	text-align: center;
+}
+
+/* discord link in footer */
+.discord-link { font-size: 14px; }
+.discord-link svg { vertical-align: -4px; margin-left: 2px; }
+
+/* blue h1 header */
+h1 {
+	padding: 5px 15px;
+	background-color: #007aff !important; /* override :target highlighting */
+	color: #fff;
+	border-radius: 5px;
+	margin-top: 16px;
+	margin-left: -10px;
+}
+/* theme icon buttons - invert color because they're on our blue background instead of white/black */
+.content-icon-container button {
+	filter: invert(100%);
+}
+
+/* custom |tags| */
+.only_mutool, .only_mupdfjs {
+	font: bold 12px monospace;
+	padding: 5px 10px;
+	border-radius: 5px;
+}
+.only_mutool { color: white; background-color: #2ab57c; }
+.only_mupdfjs { color: white; background-color: #2c5cbd; }
+
+/* Hide the "Made with Furo" text */
+.bottom-of-page .left-details { font-size: 0; }
+.bottom-of-page .left-details .copyright { font-size:12px; }
+.bottom-of-page .left-details .last-updated { font-size:12px; }

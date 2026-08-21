@@ -186,7 +186,9 @@ static void SapiSetNotify() {
         return;
     }
 
-    const ULONGLONG events = SPFEI(SPEI_END_INPUT_STREAM) | SPFEI(SPEI_WORD_BOUNDARY);
+    // equivalent to SPFEI(END_INPUT_STREAM)|SPFEI(WORD_BOUNDARY); written this way
+    // so FLAGCHECK is only or'd once (avoids misc-redundant-expression on SPFEI|SPFEI)
+    const ULONGLONG events = (1ull << SPEI_END_INPUT_STREAM) | (1ull << SPEI_WORD_BOUNDARY) | SPFEI_FLAGCHECK;
     eventSource->SetInterest(events, events);
 
     if (gTtsNotifyHwnd && gTtsNotifyMsg) {
@@ -490,7 +492,7 @@ static Str HStringToUtf8Dup(HSTRING hs) {
 }
 
 class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
-    LONG refCount = 1;
+    AtomicInt refCount = 1;
 
   public:
     // IUnknown
@@ -507,7 +509,7 @@ class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
         return E_NOINTERFACE;
     }
 
-    STDMETHODIMP_(ULONG) AddRef() override { return (ULONG)InterlockedIncrement(&refCount); }
+    STDMETHODIMP_(ULONG) AddRef() override { return (ULONG)AtomicIntInc(&refCount); }
 
     STDMETHODIMP_(ULONG) Release() override {
         ULONG res = (ULONG)InterlockedDecrement(&refCount);
@@ -519,7 +521,7 @@ class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
 
     // can be called on a background thread; actual handling happens
     // on the UI thread in WinTtsProcessEvents()
-    STDMETHODIMP Invoke(SynthAsyncOp*, AsyncStatus) override {
+    STDMETHODIMP Invoke(SynthAsyncOp* /*asyncInfo*/, AsyncStatus /*status*/) override {
         TtsPostNotifyMsg();
         return S_OK;
     }
@@ -830,7 +832,7 @@ static bool WinTtsSpeak(WStr textW) {
         return false;
     }
 
-    auto handler = new WinTtsSynthCompletedHandler();
+    auto* handler = new WinTtsSynthCompletedHandler();
     op->put_Completed(handler);
     handler->Release();
 
@@ -965,9 +967,7 @@ static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** 
 
         if (str::EqN(chunkId, StrL("fmt "), 4) && chunkSize >= 16) {
             size_t toCopy = (size_t)chunkSize;
-            if (toCopy > sizeof(WAVEFORMATEX)) {
-                toCopy = sizeof(WAVEFORMATEX);
-            }
+            toCopy = std::min(toCopy, sizeof(WAVEFORMATEX));
             *wfx = {};
             memcpy(wfx, d + off, toCopy);
             wfx->cbSize = 0;
@@ -989,7 +989,8 @@ static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** 
     return true;
 }
 
-static void CALLBACK WinTtsWaveOutCb(HWAVEOUT, UINT msg, DWORD_PTR, DWORD_PTR, DWORD_PTR) {
+static void CALLBACK WinTtsWaveOutCb(HWAVEOUT /*hwo*/, UINT msg, DWORD_PTR /*instance*/, DWORD_PTR /*param1*/,
+                                     DWORD_PTR /*param2*/) {
     if (msg != WOM_DONE) {
         return;
     }
@@ -1194,6 +1195,8 @@ bool TtsIsSpeaking() {
     return gTtsActive;
 }
 
+// utf8 offset of the most recently spoken word within the text passed
+// to TtsSpeakUtf8, -1 if not known
 int TtsGetSpokenPosUtf8() {
     int wpos;
     if (gTtsBackend == TtsBackend::WinRt) {

@@ -22,7 +22,5 @@ Str AnsiToUtf8(Str src);
 TempStr AnsiToUtf8Temp(Str src);
 } // namespace strconv
 
-// shorter names
-// TODO: eventually we want to migrate all strconv:: to them
 Str ToUtf8(WStr s, Arena* a = nullptr);
 WStr ToWStr(Str s, Arena* a = nullptr);

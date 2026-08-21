@@ -4,7 +4,7 @@
 // overlay should refresh via UpdateUiForCurrentTab.
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 function buildPdf(pageCount: number): Buffer {

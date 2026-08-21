@@ -1,17 +1,19 @@
 # Compress a PDF
 
-> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+> Use `sumatrapdf-tool.exe` or [SumatraPDF.exe](Tools.md) with the same arguments.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 ## In application
 
 To compress a PDF in SumatraPDF:
+
 - open PDF document
 - `Ctrl + k` for [command palette](Command-Palette.md)
 - `Compress PDF`
 
 Or:
+
 - open PDF document
 - right-click for context menu
 - `Document` > `Compress PDF`

@@ -1,0 +1,100 @@
+pdf: reinterpret identity-Latin ToUnicode as CP-1251 for Cyrillic Type1 fonts (#5873)
+
+Acrobat Distiller emits Type1 ToUnicode CMaps that identity-map
+0xC0-0xFF to U+00C0-U+00FF from Latin Encoding glyph names. Russian
+CP1251 Type1 faces (Literaturnaya, Academy, ...) put Cyrillic glyphs
+at those codes under the same names, so extraction produced mojibake.
+
+When Encoding names identity-map the high bytes and the font name or
+document title/author looks Cyrillic, drop ToUnicode and use
+Windows-1251.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/5873
+---
+diff --git a/source/pdf/pdf-unicode.c b/source/pdf/pdf-unicode.c
+index 4d6250c56..7387435ef 100644
+--- a/source/pdf/pdf-unicode.c
++++ b/source/pdf/pdf-unicode.c
+@@ -122,6 +122,44 @@ unicode_from_coded_glyph_name(const char *name)
+ 	return 0;
+ }
+ 
++/* Distiller Type1 ToUnicode is often identity Latin-1 even for CP1251
++ * faces that reuse Latin Encoding names. Treat the font as CP1251 when
++ * the name is a known family / has a Cyrillic tag, or the document
++ * title/author is Cyrillic. (issue #5873) */
++static int
++pdf_simple_font_looks_cp1251(fz_context *ctx, pdf_document *doc, pdf_font_desc *font)
++{
++	const char *name = font->font ? fz_font_name(ctx, font->font) : "";
++	char buf[1024];
++	int i, k;
++	static const char *keys[] = { FZ_META_INFO_TITLE, FZ_META_INFO_AUTHOR, NULL };
++
++	if (strlen(name) > 7 && name[6] == '+')
++		name += 7;
++
++	if (fz_strncasecmp(name, "literaturnaya", 13) == 0)
++		return 1;
++	/* "Academy" / "Academy-Bold", but not "AcademyEngraved". */
++	if (fz_strncasecmp(name, "academy", 7) == 0 && (name[7] == 0 || name[7] == '-'))
++		return 1;
++	for (i = 0; name[i]; i++)
++		if (fz_strncasecmp(name + i, "cyr", 3) == 0 || fz_strncasecmp(name + i, "1251", 4) == 0)
++			return 1;
++
++	if (!doc)
++		return 0;
++	for (k = 0; keys[k]; k++)
++	{
++		if (pdf_lookup_metadata(ctx, doc, keys[k], buf, sizeof buf) <= 0)
++			continue;
++		/* UTF-8 Cyrillic (U+0400-U+047F) starts with D0/D1. */
++		for (i = 0; buf[i]; i++)
++			if ((unsigned char)buf[i] == 0xD0 || (unsigned char)buf[i] == 0xD1)
++				return 1;
++	}
++	return 0;
++}
++
+ void
+ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
+ 	const char **strings, char *collection, pdf_obj *cmapstm)
+@@ -167,6 +205,7 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
+ 	if (strings)
+ 	{
+ 		/* TODO one-to-many mappings */
++		int n_high = 0, n_id = 0;
+ 
+ 		font->cid_to_ucs = Memento_label(fz_malloc_array(ctx, 256, unsigned short), "cid_to_ucs");
+ 		font->cid_to_ucs_len = 256;
+@@ -187,6 +226,29 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
+ 			}
+ 			else
+ 				font->cid_to_ucs[cpt] = FZ_REPLACEMENT_CHARACTER;
++
++			if (cpt >= 0xC0 && font->cid_to_ucs[cpt] != 0 &&
++				font->cid_to_ucs[cpt] != FZ_REPLACEMENT_CHARACTER)
++			{
++				n_high++;
++				if (font->cid_to_ucs[cpt] == cpt)
++					n_id++;
++			}
++		}
++
++		/* Encoding names mapped 0xC0-0xFF to U+00C0-U+00FF. Distiller's
++		 * ToUnicode does the same, which is wrong for CP1251 Type1 faces. */
++		if (n_high >= 32 && n_id * 4 >= n_high * 3 &&
++			pdf_simple_font_looks_cp1251(ctx, doc, font))
++		{
++			if (font->to_unicode)
++			{
++				font->size -= pdf_cmap_size(ctx, font->to_unicode);
++				pdf_drop_cmap(ctx, font->to_unicode);
++				font->to_unicode = NULL;
++			}
++			for (cpt = 0; cpt < 256; cpt++)
++				font->cid_to_ucs[cpt] = fz_unicode_from_windows_1251[cpt];
+ 		}
+ 	}
+ 

@@ -35,7 +35,7 @@ Use `cmd/a-gumbo.ts` to update the amalgamated Gumbo copy used by the build.
 7. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
 The old `ext/gumbo-parser` checkout is intentionally left in the tree for now,

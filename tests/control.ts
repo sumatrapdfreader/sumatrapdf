@@ -1,0 +1,607 @@
+import { Socket, createConnection } from "node:net";
+import { killAndWait, testWindowPos } from "./winapi.ts";
+import { SLOW_BUILD_FACTOR } from "./util.ts";
+
+export enum ControlCommand {
+  Ping = 1,
+  Quit = 2,
+  TestSynctex = 10,
+  TestSearch = 11,
+  TestDest = 12,
+  TestNamedDest = 13,
+  TestChm = 14,
+  TestSelectionTranslate = 15,
+  TestTripleClickLineSelect = 16,
+  TestContextMenuSelection = 17,
+  TestGoToFindMatch = 18,
+  // IDs 19-21 unused (reserved on the -dbg-control wire protocol; do not renumber).
+  // Assign new test commands starting at 23.
+  TestInverseSearch = 22,
+  TestImageResizeArrowKey = 23,
+  TestFindResultPageColumnClip = 24,
+  TestFileKind = 25,
+  TestScrollToLink = 26,
+  TestI18nErrorString = 27,
+  TestPageInfoOverlay = 28,
+  TestGetToc = 29,
+  TestPageLinks = 30,
+  TestWindowStateDuringLoad = 31,
+  TestTocNavigate = 32,
+  TestMarkdownTocNavigate = 33,
+  TestFavoriteNav = 34,
+  TestToolbarButtons = 35,
+  TestKeyboardLinkFollow = 36,
+  TestFindResultsOrder = 37,
+  TestClickClearsSelection = 38,
+  TestRectSelectionDrag = 39,
+  TestSelectTextKeyboard = 40,
+  TestAIChat = 41,
+  TestAIChatReplay = 42,
+  TestMarkdownFollowLink = 43,
+  TestHomeListRows = 44,
+  TestPageComments = 45,
+  TestAdvSettingsRows = 46,
+  TestDestZoomNav = 47,
+  TestAnnotEditorLayout = 48,
+  TestDisplayMode = 49,
+  TestSidebarLayout = 50,
+  TestCadEnhanceColors = 51,
+  TestFindPageRange = 52,
+  TestDocumentFontList = 53,
+  WaitRenderIdle = 54,
+  SetNotificationsEnabled = 55,
+  TestHomeSelection = 56,
+  TestImageRenderEdges = 57,
+  TestInsertImage = 58,
+  TestRenderPageColors = 59,
+  TestListSigningCerts = 60,
+  TestSignDocument = 61,
+  TestGetPolicies = 62,
+  TestPageBoxes = 63,
+  TestDocumentSignatures = 64,
+  TestCommandPalette = 65,
+  TestFindHistory = 66,
+  TestImageResizeEdges = 67,
+  TestLinkDestHighlight = 68,
+  TestConvertToImages = 69,
+  TestLayout = 70,
+  TestDpi = 71,
+}
+
+export type ControlArg = number | string | Uint8Array | ControlArg[];
+
+export type HomeSelection = {
+  ready: boolean;
+  sel: number;
+  entries: number;
+  searchFocus: boolean;
+  searchBox: boolean;
+  search: number[];
+  outline: number[];
+  outlineFull: number[];
+  path: string;
+  raw: string;
+};
+
+export type LayoutRect = { x: number; y: number; dx: number; dy: number };
+
+export type LayoutItem = {
+  visible: boolean;
+  rect: LayoutRect;
+};
+
+export type LayoutNode = LayoutItem & {
+  path: string;
+  kind: string;
+  visibility: number;
+};
+
+export type LayoutInfo = {
+  count: number;
+  watching: boolean;
+  items: Record<string, LayoutItem>;
+  nodes: LayoutNode[];
+  raw: string;
+};
+
+const enum ArgType {
+  End = 0,
+  Int32 = 1,
+  Bytes = 2,
+  String = 3,
+  List = 4,
+}
+
+function appendU16(out: number[], v: number): void {
+  out.push(v & 0xff, (v >>> 8) & 0xff);
+}
+
+function appendU32(out: number[], v: number): void {
+  out.push(v & 0xff, (v >>> 8) & 0xff, (v >>> 16) & 0xff, (v >>> 24) & 0xff);
+}
+
+function appendBytes(out: number[], bytes: Uint8Array): void {
+  for (const b of bytes) {
+    out.push(b);
+  }
+}
+
+function encodeArg(out: number[], arg: ControlArg): void {
+  if (typeof arg === "number") {
+    appendU16(out, ArgType.Int32);
+    appendU32(out, arg | 0);
+    return;
+  }
+  if (typeof arg === "string") {
+    const bytes = new TextEncoder().encode(arg);
+    appendU16(out, ArgType.String);
+    appendU32(out, bytes.length);
+    appendBytes(out, bytes);
+    out.push(0);
+    return;
+  }
+  if (Array.isArray(arg)) {
+    appendU16(out, ArgType.List);
+    appendU16(out, arg.length);
+    for (const el of arg) {
+      encodeArg(out, el);
+    }
+    return;
+  }
+  appendU16(out, ArgType.Bytes);
+  appendU32(out, arg.byteLength);
+  appendBytes(out, arg);
+}
+
+function encodeRequest(cmd: number, id: number, args: ControlArg[]): Buffer {
+  const payload: number[] = [];
+  appendU16(payload, cmd);
+  appendU16(payload, id);
+  for (const arg of args) {
+    encodeArg(payload, arg);
+  }
+  appendU16(payload, ArgType.End);
+
+  const packet: number[] = [];
+  appendU32(packet, payload.length);
+  packet.push(...payload);
+  return Buffer.from(packet);
+}
+
+class PacketReader {
+  pos = 0;
+
+  constructor(readonly data: Buffer) {}
+
+  u16(): number {
+    const v = this.data.readUInt16LE(this.pos);
+    this.pos += 2;
+    return v;
+  }
+
+  u32(): number {
+    const v = this.data.readUInt32LE(this.pos);
+    this.pos += 4;
+    return v;
+  }
+
+  i32(): number {
+    const v = this.data.readInt32LE(this.pos);
+    this.pos += 4;
+    return v;
+  }
+
+  bytes(len: number): Buffer {
+    const v = this.data.subarray(this.pos, this.pos + len);
+    this.pos += len;
+    return v;
+  }
+}
+
+function decodeArg(r: PacketReader): ControlArg | undefined {
+  const type = r.u16();
+  if (type === ArgType.End) {
+    return undefined;
+  }
+  if (type === ArgType.Int32) {
+    return r.i32();
+  }
+  if (type === ArgType.Bytes) {
+    return r.bytes(r.u32());
+  }
+  if (type === ArgType.String) {
+    const len = r.u32();
+    const bytes = r.bytes(len);
+    const zero = r.bytes(1)[0];
+    if (zero !== 0) {
+      throw new Error("invalid control string terminator");
+    }
+    return new TextDecoder().decode(bytes);
+  }
+  if (type === ArgType.List) {
+    const n = r.u16();
+    const list: ControlArg[] = [];
+    for (let i = 0; i < n; i++) {
+      const arg = decodeArg(r);
+      if (arg === undefined) {
+        throw new Error("unexpected end marker in control list");
+      }
+      list.push(arg);
+    }
+    return list;
+  }
+  throw new Error(`unknown control argument type ${type}`);
+}
+
+function pipePath(pipeName: string): string {
+  return pipeName.startsWith("\\\\.\\pipe\\") ? pipeName : `\\\\.\\pipe\\${pipeName}`;
+}
+
+async function readExactly(socket: Socket, len: number): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let total = 0;
+  while (total < len) {
+    const chunk = socket.read(len - total) as Buffer | null;
+    if (chunk) {
+      chunks.push(chunk);
+      total += chunk.length;
+      continue;
+    }
+    await waitForReadable(socket);
+  }
+  return Buffer.concat(chunks, total);
+}
+
+function waitForReadable(socket: Socket): Promise<void> {
+  // if the pipe already closed (e.g. the app died on a debug report), the
+  // close/end events fired in the past and will never fire again -- reject
+  // instead of waiting forever
+  if (socket.destroyed || socket.readableEnded) {
+    return Promise.reject(new Error("control pipe closed while reading"));
+  }
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      socket.off("readable", onReadable);
+      socket.off("end", onEnd);
+      socket.off("close", onClose);
+      socket.off("error", onError);
+    };
+    const onReadable = () => {
+      cleanup();
+      resolve();
+    };
+    const onEnd = () => {
+      cleanup();
+      reject(new Error("control pipe closed while reading"));
+    };
+    const onClose = () => {
+      cleanup();
+      reject(new Error("control pipe closed while reading"));
+    };
+    const onError = (err: Error) => {
+      cleanup();
+      reject(err);
+    };
+    socket.once("readable", onReadable);
+    socket.once("end", onEnd);
+    socket.once("close", onClose);
+    socket.once("error", onError);
+  });
+}
+
+function connectSocket(path: string): Promise<Socket> {
+  return new Promise((resolve, reject) => {
+    const socket = createConnection(path);
+    const cleanup = () => {
+      socket.off("connect", onConnect);
+      socket.off("error", onError);
+    };
+    const onConnect = () => {
+      cleanup();
+      resolve(socket);
+    };
+    const onError = (err: Error) => {
+      cleanup();
+      socket.destroy();
+      reject(err);
+    };
+    socket.once("connect", onConnect);
+    socket.once("error", onError);
+  });
+}
+
+function cleanEnv(env: Record<string, string | undefined> | undefined): Record<string, string> | undefined {
+  if (!env) {
+    return undefined;
+  }
+  const res: Record<string, string> = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (value !== undefined) {
+      res[key] = value;
+    }
+  }
+  return res;
+}
+
+export class ControlClient {
+  private nextId = 1;
+
+  constructor(readonly socket: Socket) {}
+
+  static async connect(pipeName: string, timeoutMs = 10000 * SLOW_BUILD_FACTOR): Promise<ControlClient> {
+    const path = pipePath(pipeName);
+    const deadline = Date.now() + timeoutMs;
+    let lastErr: unknown;
+    while (Date.now() < deadline) {
+      try {
+        const socket = await connectSocket(path);
+        return new ControlClient(socket);
+      } catch (e) {
+        lastErr = e;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+    }
+    throw new Error(`failed to connect to Sumatra control pipe ${path}: ${lastErr}`);
+  }
+
+  async request(cmd: ControlCommand, args: ControlArg[] = []): Promise<ControlArg[]> {
+    if (this.socket.destroyed) {
+      throw new Error("control pipe closed");
+    }
+    const id = this.nextId++ & 0xffff;
+    this.socket.write(encodeRequest(cmd, id, args));
+
+    const sizeBuf = await readExactly(this.socket, 4);
+    const size = sizeBuf.readUInt32LE(0);
+    const payload = await readExactly(this.socket, size);
+    const r = new PacketReader(payload);
+    const responseId = r.u16();
+    if (responseId !== id) {
+      throw new Error(`control response id mismatch: got ${responseId}, expected ${id}`);
+    }
+    const result: ControlArg[] = [];
+    for (;;) {
+      const arg = decodeArg(r);
+      if (arg === undefined) {
+        break;
+      }
+      result.push(arg);
+    }
+    return result;
+  }
+
+  async quit(): Promise<void> {
+    await this.request(ControlCommand.Quit);
+  }
+
+  // Block until the visible page is cached at the resolution a capture would
+  // see — not the low-res preview Paint() blits while tiles are still coming.
+  // timeoutMs is forwarded to the app (default 15s there too).
+  async waitForRenderIdle(timeoutMs = 15000): Promise<string> {
+    // scaled, so a test that asks for "30s" gets 30s of debug-build rendering
+    const res = await this.request(ControlCommand.WaitRenderIdle, [timeoutMs * SLOW_BUILD_FACTOR]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const info = String(res[1] ?? "");
+    if (code !== 0) {
+      throw new Error(`WaitRenderIdle failed: ${info || code}`);
+    }
+    return info;
+  }
+
+  // What the home page's keyboard navigation is doing: the selected entry, how
+  // many entries the search box currently leaves, and whether it has the focus.
+  // Wait on this after sending a key rather than sleeping.
+  async homeSelection(): Promise<HomeSelection> {
+    const res = await this.request(ControlCommand.TestHomeSelection, []);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      return {
+        ready: false,
+        sel: -1,
+        entries: 0,
+        searchFocus: false,
+        searchBox: false,
+        search: [0, 0, 0, 0],
+        outline: [0, 0, 0, 0],
+        outlineFull: [0, 0, 0, 0],
+        path: "",
+        raw,
+      };
+    }
+    const m =
+      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*)$/.exec(
+        raw,
+      );
+    if (!m) {
+      throw new Error(`homeSelection: could not parse '${raw}'`);
+    }
+    return {
+      ready: true,
+      sel: parseInt(m[1], 10),
+      entries: parseInt(m[2], 10),
+      searchFocus: m[3] === "1",
+      searchBox: m[4] === "1",
+      search: [parseInt(m[5], 10), parseInt(m[6], 10), parseInt(m[7], 10), parseInt(m[8], 10)],
+      outline: [parseInt(m[9], 10), parseInt(m[10], 10), parseInt(m[11], 10), parseInt(m[12], 10)],
+      outlineFull: [parseInt(m[13], 10), parseInt(m[14], 10), parseInt(m[15], 10), parseInt(m[16], 10)],
+      path: m[17].trim(),
+      raw,
+    };
+  }
+
+  // Snapshot the frame's HWND geometry and every node in its layout trees.
+  // "start"/"reset" also installs gAfterLayout so count measures subsequent
+  // completed relayouts; "stop" removes the probe.
+  async layout(action: "get" | "start" | "reset" | "stop" = "get"): Promise<LayoutInfo> {
+    const res = await this.request(ControlCommand.TestLayout, [action]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestLayout failed: ${raw || code}`);
+    }
+    const lines = raw.split("\n");
+    const header = /^OK count=(\d+) watching=(\d)$/.exec(lines[0] ?? "");
+    if (!header) {
+      throw new Error(`TestLayout: could not parse '${raw}'`);
+    }
+    const rect = (m: RegExpExecArray, at: number): LayoutRect => ({
+      x: parseInt(m[at], 10),
+      y: parseInt(m[at + 1], 10),
+      dx: parseInt(m[at + 2], 10),
+      dy: parseInt(m[at + 3], 10),
+    });
+    const items: Record<string, LayoutItem> = {};
+    const nodes: LayoutNode[] = [];
+    for (const line of lines.slice(1)) {
+      let m = /^item name=(\S+) visible=(\d) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(line);
+      if (m) {
+        items[m[1]] = { visible: m[2] === "1", rect: rect(m, 3) };
+        continue;
+      }
+      m = /^layout path=(\S+) kind=(\S+) visibility=(\d+) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(line);
+      if (m) {
+        nodes.push({ path: m[1], kind: m[2], visibility: parseInt(m[3], 10), visible: m[3] === "0", rect: rect(m, 4) });
+      }
+    }
+    return {
+      count: parseInt(header[1], 10),
+      watching: header[2] === "1",
+      items,
+      nodes,
+      raw,
+    };
+  }
+
+  // Notifications are drawn over the document and linger for ~2s, so a test
+  // that reads pixels would have to wait them out. Turning them off also takes
+  // down any that are already showing.
+  async setNotificationsEnabled(enabled: boolean): Promise<void> {
+    const res = await this.request(ControlCommand.SetNotificationsEnabled, [enabled ? 1 : 0]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    if (code !== 0) {
+      throw new Error(`SetNotificationsEnabled failed: ${String(res[1] ?? code)}`);
+    }
+  }
+
+  close(): void {
+    this.socket.end();
+  }
+}
+
+export function uniquePipeName(prefix = "sumatra-control"): string {
+  return `${prefix}-${process.pid}-${Date.now()}-${Math.floor(Math.random() * 0x100000000).toString(16)}`;
+}
+
+// exit code SumatraPDF uses when a debug report (ReportIf) fires in a
+// -for-testing run; must match kDebugReportTestExitCode in src/CrashHandler.cpp
+export const DEBUG_REPORT_EXIT_CODE = 105;
+
+// fn also gets the spawned process so a test can combine control commands with
+// real window messages (its pid is what finds the app's windows)
+export async function withControlledSumatra<T>(
+  exe: string,
+  fn: (client: ControlClient, proc: Bun.Subprocess) => Promise<T>,
+  extraArgs: string[] = [],
+  options: {
+    cwd?: string;
+    env?: Record<string, string | undefined>;
+    connectTimeoutMs?: number;
+    // let the app place its window, for a test about the window's own size or
+    // state (fullscreen, maximized, a remembered position)
+    defaultWindowPos?: boolean;
+  } = {},
+): Promise<T> {
+  const pipeName = uniquePipeName();
+  // a window on the right half of the screen, out of the way: see
+  // tests/winapi.ts testWindowPos()
+  let posArgs: string[] = [];
+  if (!options.defaultWindowPos && !extraArgs.includes("-window-pos")) {
+    const p = testWindowPos();
+    posArgs = ["-window-pos", `${p.dx}x${p.dy}@${p.x}x${p.y}`];
+  }
+  // stderr is piped: on a debug report the app writes the report text there
+  // before terminating, and we surface it in the failure below
+  const proc = Bun.spawn([exe, "-for-testing", ...posArgs, "-dbg-control", pipeName, ...extraArgs], {
+    stdout: "ignore",
+    stderr: "pipe",
+    cwd: options.cwd,
+    env: cleanEnv(options.env),
+  });
+  let client: ControlClient | undefined;
+  let killed = false;
+  let result: T | undefined;
+  let fnErr: unknown;
+  let fnOk = false;
+  try {
+    client = await ControlClient.connect(pipeName, options.connectTimeoutMs ?? 10000);
+    result = await fn(client, proc);
+    fnOk = true;
+  } catch (e) {
+    fnErr = e;
+  } finally {
+    if (client) {
+      try {
+        await client.quit();
+      } catch {
+        await killAndWait(proc);
+        killed = true;
+      }
+      client.close();
+    } else {
+      await killAndWait(proc);
+      killed = true;
+    }
+  }
+  // quit is graceful (CmdExit) and could in theory be blocked by a dialog;
+  // don't let a test hang forever waiting for the process to go away
+  let exitTimer: ReturnType<typeof setTimeout> | undefined;
+  const exitCode = await Promise.race([
+    proc.exited,
+    new Promise<"timeout">((resolve) => {
+      exitTimer = setTimeout(() => resolve("timeout"), 30_000);
+    }),
+  ]);
+  clearTimeout(exitTimer);
+  if (exitCode === "timeout") {
+    await killAndWait(proc);
+    throw new Error("SumatraPDF did not exit within 30s of Quit");
+  }
+  const stderrText = proc.stderr ? (await new Response(proc.stderr).text()).trim() : "";
+  if (!fnOk) {
+    if (stderrText) {
+      console.error(stderrText);
+    }
+    throw fnErr;
+  }
+  // a debug report (ReportIf) or crash during the run / shutdown must fail the test
+  if (!killed && exitCode !== 0) {
+    const what = exitCode === DEBUG_REPORT_EXIT_CODE ? "debug report (ReportIf) fired" : `exit code ${exitCode}`;
+    const details = stderrText ? `\n${stderrText}` : "";
+    throw new Error(`SumatraPDF: ${what}${details}`);
+  }
+  return result as T;
+}
+
+export async function runControlCommand(
+  exe: string,
+  cmd: ControlCommand,
+  args: ControlArg[] = [],
+  extraArgs: string[] = [],
+): Promise<ControlArg[]> {
+  return await withControlledSumatra(exe, (client) => client.request(cmd, args), extraArgs);
+}
+
+if (import.meta.main) {
+  const [exe, cmdName, ...args] = process.argv.slice(2);
+  if (!exe || !cmdName) {
+    console.log("Usage: bun tests/control.ts <SumatraPDF.exe> <ping|test-search> [args...]");
+    process.exit(1);
+  }
+  const cmd = cmdName === "ping" ? ControlCommand.Ping : cmdName === "test-search" ? ControlCommand.TestSearch : 0;
+  if (!cmd) {
+    throw new Error(`unknown command: ${cmdName}`);
+  }
+  const res = await runControlCommand(exe, cmd, args);
+  console.log(JSON.stringify(res));
+}

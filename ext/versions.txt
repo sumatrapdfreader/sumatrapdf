@@ -1,7 +1,8 @@
 Project         Version    Date
 ----------------------------------
-../mupdf        1.28.0-rc2
-  https://github.com/ArtifexSoftware/mupdf/releases/tag/1.28.0-rc2
+mupdf           1.28.2     2026-08-03
+  https://github.com/ArtifexSoftware/mupdf/releases/tag/1.28.2
+  our changes to the vendored tree are recorded in ext/patches/ (see its README)
 
 libarchive     3.8.8      2026-06-23
   https://github.com/libarchive/libarchive
@@ -32,7 +33,7 @@ harfbuzz        13.0.1
 
 jbig2dec        0.20
   https://github.com/ArtifexSoftware/jbig2dec/commits/artifex
-  mupdf thirdparty submodule, commit dc15c39bbbddc90f79c14563d2eb5a794106be8f
+  amalgamated into ext/a-jbig2dec by cmd/a-jbig2dec.ts, see ext/a-jbig2dec/version.txt
 
 libjpeg-turbo   3.1.4.1    2026-03-27
   https://github.com/libjpeg-turbo/libjpeg-turbo/tags
@@ -40,9 +41,9 @@ libjpeg-turbo   3.1.4.1    2026-03-27
   vendored src/ + simd/ (x86/x86-64 NASM); jconfig.h, jconfigint.h, jversion.h
   hand-generated (v8 API). See ext/libjpeg-turbo/src/jconfig.h
 
-djvudec         main       2026-07-28
+djvudec         main       2026-08-01
   https://github.com/kjk/djvudec
-  commit b77aaebfc62b8e010eb899737243b2e7b12c05c0
+  commit c8bf1b3e6704fd99d6feaba8d8ebc417e013bdb8
   amalgamated dist/djvu.c + dist/djvu.h only
 
 libwebp         1.6.0      2025-06-30
@@ -105,13 +106,13 @@ darkmodelib     trunk      2026-01-16
   https://github.com/ozone10/darkmodelib
   https://github.com/ozone10/darkmodelib/commit/57cc10c819d17c47b6afd295b424153082144193
 
-jxldec          dist       2026-07-28
+jxldec          dist       2026-08-11
   https://github.com/kjk/jxldec
-  commit 0867c84ac9de7d445b14d29e4d20bd660cb7acc0
+  commit 54c8f53001b5f82886a8d96526ad1b0281e7c89a
   amalgamated dist/jxl.c + dist/jxl.h only
   Replaces libjxl + highway + skcms for JPEG XL decode.
 
 zopfli         1.0.3+     2024-04-11
   https://github.com/google/zopfli
   https://github.com/google/zopfli/commit/ccf9f0588d4a4509cb1040310ec122243e670ee6
-  vendored: src/zopfli (minus zopfli_bin.c), src/zopflipng (minus zopflipng_bin.cc), COPYING
+  amalgamated as ext/a-zopfli (zopfli.cpp + public headers + COPYING)

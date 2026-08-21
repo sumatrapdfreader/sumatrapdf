@@ -28,6 +28,11 @@ enum class PixmapFormat : u8 {
     BGRA8, // 32bpp B,G,R,A -> Gdiplus 32bppARGB/PARGB
     BGR8,  // 24bpp B,G,R    -> Gdiplus 24bppRGB (rows still padded to a multiple of 4)
     RGBA8, // 32bpp R,G,B,A  -> needs a swizzle for any platform API; for source data
+    // the pixels are laid out in a way we can't describe (e.g. the 8-bit palette
+    // DIBs the mupdf engine renders to when a page has few enough colors). Only
+    // the platform bitmap (hbmp) knows how to read them: blit it, or copy it into
+    // a Pixmap we can describe with PixmapCopyAs32bppDIB()
+    Native,
 };
 
 struct Pixmap {
@@ -36,11 +41,16 @@ struct Pixmap {
     int stride = 0; // bytes per row; top-down (row y starts at data + y*stride); multiple of 4
     PixmapFormat format = PixmapFormat::BGRA8;
     bool premultiplied = false; // alpha premultiplied into RGB
+    // the alpha channel is meaningful, so drawing has to composite this pixmap
+    // over whatever is already on the target instead of doing a plain SRCCOPY
+    // (which paints the transparent parts black). Renderers that produce an
+    // opaque result leave this false so the common case stays a straight blit.
+    bool hasAlpha = false;
     float xres = 96.0f;
     float yres = 96.0f;
     u8* data = nullptr; // pixel buffer; owned by malloc, or by hbmp when DIB-section-backed
 
-#if defined(_WIN32)
+#if OS_WIN
     // When non-null, the Pixmap is backed by a GDI DIB section: `data` is its pixels and
     // the bitmap is directly blittable (BlitPixmap). Owns these handles.
     HBITMAP hbmp = nullptr;
@@ -51,19 +61,24 @@ struct Pixmap {
 Str PixmapToBmpFormat(const Pixmap* pixmap);
 Pixmap* GetClipboardImageAsPixmap();
 
-#if defined(_WIN32)
+#if OS_WIN
 struct RenderedBitmap;
 
+// DIB-section-backed 32bpp BGRA8. Use only when this pixmap must be SelectObject'd
+// or must adopt a GDI HBITMAP / Native DIB. Heap pixels blit via StretchDIBits
+// with no extra copy (BlitPixmap / BlitPixmapAlpha).
 Pixmap* AllocPixmapDIB(int w, int h);
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
+bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target);
 bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source);
 Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
+// an opaque 32bpp copy of a DIB-backed Pixmap, for code that needs to read pixels
+// out of one whose format is Native. Returns null if there's nothing to copy
+Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p);
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
-void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor = 0,
-                   Vec<Rect>* skipRects = nullptr);
+void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor = 0, Vec<Rect>* skipRects = nullptr);
 
-// frees a DIB-section-backed Pixmap's native handles (and its pixels).
 void FreePixmapNativeBitmap(Pixmap* p);
 #endif
 
@@ -77,6 +92,8 @@ inline i64 PixmapByteSize(const Pixmap* p) {
 }
 
 // allocate a top-down Pixmap; data is uninitialized. returns nullptr on bad args / OOM.
+// Default for decode / generate / cache. On Windows, AllocPixmapDIB only when the
+// pixmap must be SelectObject'd or must adopt a GDI HBITMAP / Native DIB.
 inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8, bool premultiplied = false) {
     if (w <= 0 || h <= 0) {
         return nullptr;
@@ -102,13 +119,19 @@ inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8,
     return p;
 }
 
+#if !OS_WIN
+// No GDI DIB section off Windows; same heap buffer as AllocPixmap.
+inline Pixmap* AllocPixmapDIB(int w, int h) {
+    return AllocPixmap(w, h);
+}
+#endif
+
 inline void FreePixmap(Pixmap* p) {
     if (!p) {
         return;
     }
-#if defined(_WIN32)
+#if OS_WIN
     if (p->hbmp) {
-        // DIB-section-backed: GDI owns the pixels, free via the native handles
         FreePixmapNativeBitmap(p);
         delete p;
         return;
@@ -129,6 +152,7 @@ inline Pixmap* ClonePixmap(const Pixmap* src) {
     }
     p->xres = src->xres;
     p->yres = src->yres;
+    p->hasAlpha = src->hasAlpha;
     memcpy(p->data, src->data, (size_t)src->stride * (size_t)src->height);
     return p;
 }

@@ -48,23 +48,21 @@ const char* CadEnhanceReasonName(CadEnhanceReason reason) {
 
 // The manual toggle wins over the global mode, which wins over auto-detection.
 bool CadEnhanceEnabledForEngine(const CadDetectResult& detect, CadEnhanceOverride overrideState) {
-    switch (overrideState) {
-        case CadEnhanceOverride::ForceOn:
-            return true;
-        case CadEnhanceOverride::ForceOff:
-            return false;
-        default:
-            break;
+    if (overrideState == CadEnhanceOverride::ForceOn) {
+        return true;
     }
-    switch (GetEngineeringDrawingEnhanceMode()) {
-        case EngineeringDrawingEnhanceMode::On:
-            return true;
-        case EngineeringDrawingEnhanceMode::Off:
-            return false;
-        case EngineeringDrawingEnhanceMode::Auto:
-        default:
-            return detect.enable;
+    if (overrideState == CadEnhanceOverride::ForceOff) {
+        return false;
     }
+    EngineeringDrawingEnhanceMode mode = GetEngineeringDrawingEnhanceMode();
+    if (mode == EngineeringDrawingEnhanceMode::On) {
+        return true;
+    }
+    if (mode == EngineeringDrawingEnhanceMode::Off) {
+        return false;
+    }
+    // Auto (or unknown): follow detection
+    return detect.enable;
 }
 
 static bool ContainsAnyI(Str haystack, const char* const* needles, int count) {
@@ -232,8 +230,8 @@ static float CadRectArea(fz_rect r) {
 
 // Mid-luminance, low-chroma colors typical of CAD line work.
 static bool CadIsGrayRgb(float r, float g, float b) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
     if (chroma > 0.12f) {
@@ -252,9 +250,9 @@ static void cad_analysis_note_stroke(CadPageStats* stats, const fz_stroke_state*
     }
 }
 
-static void cad_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_path*, const fz_stroke_state* stroke,
-                                     fz_matrix, fz_colorspace* colorspace, const float* color, float,
-                                     fz_color_params color_params) {
+static void cad_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* /*path*/,
+                                     const fz_stroke_state* stroke, fz_matrix /*ctm*/, fz_colorspace* colorspace,
+                                     const float* color, float /*alpha*/, fz_color_params color_params) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     float rgb[FZ_MAX_COLORS] = {};
     fz_colorspace* ds = fz_device_rgb(ctx);
@@ -262,14 +260,16 @@ static void cad_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_p
     cad_analysis_note_stroke(d->stats, stroke, rgb[0], rgb[1], rgb[2]);
 }
 
-static void cad_analysis_fill_path(fz_context*, fz_device* dev, const fz_path*, int, fz_matrix, fz_colorspace*,
-                                   const float*, float, fz_color_params) {
+static void cad_analysis_fill_path(fz_context* /*ctx*/, fz_device* dev, const fz_path* /*path*/, int /*even_odd*/,
+                                   fz_matrix /*ctm*/, fz_colorspace* /*colorspace*/, const float* /*color*/,
+                                   float /*alpha*/, fz_color_params /*color_params*/) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     d->stats->fills++;
 }
 
-static void cad_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_text*, fz_matrix,
-                                   fz_colorspace* colorspace, const float* color, float, fz_color_params color_params) {
+static void cad_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_text* /*text*/, fz_matrix /*ctm*/,
+                                   fz_colorspace* colorspace, const float* color, float /*alpha*/,
+                                   fz_color_params color_params) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     d->stats->textOps++;
     float rgb[FZ_MAX_COLORS] = {};
@@ -278,20 +278,19 @@ static void cad_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_tex
     cad_analysis_note_stroke(d->stats, nullptr, rgb[0], rgb[1], rgb[2]);
 }
 
-static void cad_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text, const fz_stroke_state*,
-                                     fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
-                                     fz_color_params color_params) {
+static void cad_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text,
+                                     const fz_stroke_state* /*stroke*/, fz_matrix ctm, fz_colorspace* colorspace,
+                                     const float* color, float alpha, fz_color_params color_params) {
     cad_analysis_fill_text(ctx, dev, text, ctm, colorspace, color, alpha, color_params);
 }
 
-static void cad_analysis_fill_image(fz_context*, fz_device* dev, fz_image*, fz_matrix ctm, float, fz_color_params) {
+static void cad_analysis_fill_image(fz_context* /*ctx*/, fz_device* dev, fz_image* /*image*/, fz_matrix ctm,
+                                    float /*alpha*/, fz_color_params /*color_params*/) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     fz_rect bbox = fz_transform_rect(fz_unit_rect, ctm);
     if (d->stats->pageArea > 0.f) {
         float coverage = CadRectArea(bbox) / d->stats->pageArea;
-        if (coverage > d->stats->maxImageCoverage) {
-            d->stats->maxImageCoverage = coverage;
-        }
+        d->stats->maxImageCoverage = std::max(coverage, d->stats->maxImageCoverage);
     }
 }
 
@@ -495,12 +494,8 @@ CadDetectResult DetectCadPdf(fz_context* ctx, pdf_document* doc) {
             fz_rect bounds = pdf_bound_page(ctx, page, FZ_CROP_BOX);
             float side = bounds.x1 - bounds.x0;
             float sideY = bounds.y1 - bounds.y0;
-            if (sideY > side) {
-                side = sideY;
-            }
-            if (side > maxPageSide) {
-                maxPageSide = side;
-            }
+            side = std::max(sideY, side);
+            maxPageSide = std::max(side, maxPageSide);
         }
         fz_always(ctx) {
             fz_drop_page(ctx, (fz_page*)page);

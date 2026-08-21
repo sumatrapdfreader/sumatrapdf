@@ -303,6 +303,8 @@ bool ByteReader::UnpackBE(void* strct, int size, Str format, int off) const {
     return Unpack(strct, size, format, off, true);
 }
 
+// Unpacks a structure from the data according to the given format
+// e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
 bool ByteReader::Unpack(void* strct, int size, Str format, bool isBE, int off) const {
     return Unpack(strct, size, format, off, isBE);
 }
@@ -326,7 +328,7 @@ u32 UInt32LE(const u8* d) {
 // --- ByteWriter
 
 ByteWriter::ByteWriter(int sizeHint) {
-    d.cap = (u32)sizeHint;
+    d.cap = sizeHint;
 }
 
 void ByteWriter::Write8(u8 b) {
@@ -342,9 +344,10 @@ void ByteWriter::Write16(u16 val) {
     u8 b1 = val & 0xFF;
     u8 b2 = (val >> 8) & 0xFF;
     if (isLE) {
-        return Write8x2(b1, b2);
+        Write8x2(b1, b2);
+        return;
     }
-    return Write8x2(b2, b1);
+    Write8x2(b2, b1);
 }
 
 void ByteWriter::Write32(u32 val) {
@@ -382,6 +385,6 @@ Str ByteWriter::AsByteSlice() const {
 }
 
 ByteWriterLE::ByteWriterLE(int sizeHint) {
-    d.cap = (u32)sizeHint;
+    d.cap = sizeHint;
     isLE = true;
 }

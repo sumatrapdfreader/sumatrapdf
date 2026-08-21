@@ -1,0 +1,285 @@
+.TH MUPDF 1 "June 3, 2026"
+.\" Please adjust this date whenever revising the manpage.
+.\" no hyphenation
+.nh
+.\" adjust left
+.ad l
+.
+.SH NAME
+mupdf \- MuPDF is a lightweight PDF viewer written in portable C
+.
+.SH SYNOPSIS
+.SY mupdf
+.RI [ options ]
+.I file
+.RI [ page-number ]
+.
+.SH DESCRIPTION
+.B MuPDF
+is a document viewer that can show
+.BR PDF ,
+.BR XPS ,
+.BR EPUB ,
+.BR XHTML ,
+.BR CBZ ,
+and various image formats such as
+.BR PNG ,
+.BR JPEG ,
+.BR GIF ,
+and
+.BR TIFF .
+.
+.SH OPTIONS
+A description of each of the supported options is included below.
+.
+.TP
+.BI \-b\~ box-name
+Use the given page box (MediaBox, CropBox, BleedBox, TrimBox, or ArtBox)
+.TP
+.BI \-c\~ profile-filename
+Set the display ICC profile to the one in the named file.
+.TP
+.BI \-p\~ password
+Uses the given password to open an encrypted PDF file.
+The password is tried both as user and owner password.
+.TP
+.BI \-r\~ resolution
+Changes the initial zoom level, specified as the resolution in dpi.
+The default value is 72.
+.TP
+.BI \-A\~ bits
+Changes the anti-aliasing quality, specified as a number of bits between 0
+(off) and 8 (best).
+The default value is 8.
+.TP
+.BI \-B\~ RRGGBB
+Sets the full-page black tint using hexadecimal color syntax.
+The default value is 303030.
+.TP
+.BI \-C\~ RRGGBB
+Sets the full-page white tint using hexadecimal color syntax.
+The default value is FFFFF0.
+.TP
+.BI \-H\~ height
+Page height in points for EPUB layout.
+.TP
+.B \-I
+Invert colors.
+.TP
+.B \-J
+Disable JavaScripts in PDF forms.
+.TP
+.BI \-R\~ extraction-options
+Enable reflow and set the text extraction options.
+.TP
+.BI \-S\~ size
+Font size in points for EPUB layout.
+.TP
+.BI \-U\~ CSS-file
+User style sheet for EPUB layout.
+.TP
+.BI \-W\~ width
+Page width in points for EPUB layout.
+.TP
+.B \-X
+Disable document styles for EPUB layout.
+.TP
+.BI \-Y\~ factor
+Set the UI scaling factor.
+.
+.SH MOUSE BEHAVIOR
+.
+.TP
+.B Left mouse button click
+A left click on a hyper link follows the link.
+In presentation mode advances to the next page.
+.TP
+.B Right mouse button click
+In presentation mode goes back to the previous page.
+.TP
+.B Left mouse button drag
+Pan the page.
+Panning beyond the bottom or top
+edge will go to the next or previous page.
+.TP
+.B Right mouse button drag
+Select text in an area.
+On X11, the selected text
+can be pasted in another application with a middle click.
+Press
+.B Ctrl+C
+to copy the selected text to the clipboard.
+On Windows, the selected text will automatically be copied
+to the clipboard.
+.TP
+.B Scroll wheel
+Pan page up or down.
+Does not change page when reaching the bottom or top edge.
+.TP
+.B Shift + Scroll wheel
+Pan page left or right.
+.TP
+.B Control + Scroll wheel
+Zoom in or out.
+.
+.SH KEY BINDINGS
+.SS Page navigation
+.TP
+.B . pgdn space
+Go to the next page.
+.TP
+.B , pgup b
+Go to the previous page.
+.TP
+.B 123g
+Go to page 123.
+.TP
+.BR g ,\~ G
+Go to the first or last page.
+.TP
+.B m
+Mark current page for snap back.
+Up to 256 pages can be marked.
+.TP
+.B t
+Go backward one step in mark history.
+.TP
+.B T
+Go forward one step in mark history.
+.TP
+.RI [ 0\(en9 ]\c
+.B m
+Save the current page number in the numbered register.
+.TP
+.RI [ 0\(en9 ]\c
+.B t
+Go to the page saved in the numbered register.
+.
+.SS Zooming and rotating
+.TP
+.BR + ,\~ \-
+Zoom in or out.
+.TP
+.BR W ,\~ H
+Zoom page to exactly fit width/height of window.
+.TP
+.B Z
+Zoom page to fit either to width or height of window.
+.TP
+.B z
+Reset zoom level.
+.TP
+.BR [ ,\~ ]
+Rotate page left (counter-clockwise) or right (clockwise).
+.TP
+.B w
+Shrinkwrap window to fit the page.
+.TP
+.B f
+Toggles fullscreen mode.
+.
+.SS Panning
+.TP
+.BR h ,\~ left ,\~ j ,\~ k ,\~ l ,\~ right
+Pan page left, down, up, or right.
+.
+.SS Searching
+.TP
+.BR / ,\~ ?
+Search for text forwards or backwards.
+.TP
+.BR n ,\~ N
+Find the next/previous search result.
+.
+.SS Miscellaneous
+.TP
+.B F1
+Show key bindings help.
+.TP
+.B Escape
+Stop searching and/or remove focus from annotation/widget.
+.TP
+.BR < ,\~ >
+Increase/decrease EPUB/XHTML font size.
+.TP
+.B r
+Reload file.
+.TP
+.B p
+Toggle presentation mode. (mupdf-x11 only)
+.TP
+.B c
+Toggle between color and grayscale rendering. (mupdf-x11 only)
+.TP
+.B C
+Toggle full-page color tinting.
+.TP
+.B I
+Toggle between normal and inverted color rendering.
+.TP
+.B E
+Toggle ICC color mode.
+.TP
+.B e
+Toggle spot color mode.
+.TP
+.B A
+Set bit of anti-aliasing to use. The default is 8.
+0 means no anti-aliasing,
+9 means no anti-aliasing, centre-of-pixel rule,
+10 means no anti-aliasing, any-part-of-a-pixel rule.
+.TP
+.B P
+Show page number and total number of pages.
+.TP
+.B i
+Show dialog box with information about the opened document.
+.TP
+.B B
+Change used page box. (MediaBox, CropBox, BleedBox, TrimBox, or ArtBox)
+The active page box is mentioned in the information dialog box.
+.TP
+.B o
+Show/hide document outline panel.
+.TP
+.B a
+Show/hide annotation panel.
+.TP
+.B R
+Show/hide redaction panel.
+.TP
+.B u
+Show/hide undo/redo panel.
+.TP
+.B Y
+Show/hide layers list.
+.TP
+.B o
+Start/stop highlighting links.
+.TP
+.B F
+Start/stop highlighting form widgets.
+.TP
+.BR ` ,\~ F12
+Show JS console.
+.TP
+.B S
+Save updated document file.
+.TP
+.B q
+Quit.
+.
+.SH SIGNALS
+.
+.TP
+.B SIGHUP
+Sending a
+.B SIGHUP
+signal to the mupdf process will also cause the viewed file to be reloaded
+automatically, for use in e.g. build scripts.
+.
+.SH SEE ALSO
+.BR mutool (1).
+.
+.SH AUTHOR
+MuPDF is Copyright 2006\(en2026 Artifex Software, Inc.

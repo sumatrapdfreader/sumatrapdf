@@ -3,7 +3,7 @@
 
 class SumatraUIAutomationProvider;
 class SumatraUIAutomationStartPageProvider : public IRawElementProviderFragment, public IRawElementProviderSimple {
-    LONG refCount;
+    AtomicInt refCount;
     HWND canvasHwnd;
     SumatraUIAutomationProvider* root;
 
@@ -11,12 +11,10 @@ class SumatraUIAutomationStartPageProvider : public IRawElementProviderFragment,
     SumatraUIAutomationStartPageProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root);
     ~SumatraUIAutomationStartPageProvider();
 
-    // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
     ULONG STDMETHODCALLTYPE AddRef();
     ULONG STDMETHODCALLTYPE Release();
 
-    // IRawElementProviderFragment
     HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction, IRawElementProviderFragment** pRetVal);
     HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY** pRetVal);
     HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal);
@@ -24,7 +22,6 @@ class SumatraUIAutomationStartPageProvider : public IRawElementProviderFragment,
     HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect* pRetVal);
     HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal);
 
-    // IRawElementProviderSimple
     HRESULT STDMETHODCALLTYPE GetPatternProvider(PATTERNID patternId, IUnknown** pRetVal);
     HRESULT STDMETHODCALLTYPE GetPropertyValue(PROPERTYID propertyId, VARIANT* pRetVal);
     HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple** pRetVal);

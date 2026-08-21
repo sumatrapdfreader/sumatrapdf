@@ -36,7 +36,9 @@ Shortcuts [
 
 ### Restore pre-3.6 Ctrl+Tab (no Smart Tab Switch popup)
 
-**Ver 3.6+** binds `Ctrl + Tab` / `Ctrl + Shift + Tab` to **Smart Tab Switch** (`CmdNextTabSmart` / `CmdPrevTabSmart`), which shows a tab list while Ctrl is held. In 3.5 those keys switched tabs immediately in strip order (`CmdNextTab` / `CmdPrevTab`). To get the old behavior back:
+**Ver 3.6+** binds `Ctrl + Tab` / `Ctrl + Shift + Tab` to **Smart Tab Switch** (`CmdNextTabSmart` / `CmdPrevTabSmart`), which shows a tab list while Ctrl is held. In 3.5 those keys switched tabs immediately in strip order (`CmdNextTab` / `CmdPrevTab`).
+
+**Ver 3.7+:** the simplest way to get the old behavior back is setting `CtrlTabSimple = true` in advanced settings. You can also rebind the keys:
 
 ```
 Shortcuts [
@@ -63,7 +65,7 @@ Explanation of the first example:
 ## Format of `Key` section:
 
 - just a key (like `a`, `Z`, `5`) i.e. letters `a` to `z`, `A` to `Z`, and numbers `0` to `9`
-- modifiers + key. Modifiers are: `Shift`, `Alt`, `Ctrl` e.g. `Alt + F1`, `Ctrl + Shift + Y`
+- modifiers + key. Modifiers are: `Shift`, `Alt`, `Ctrl`, `AltGr` (also `RAlt` / `RightAlt`) e.g. `Alt + F1`, `Ctrl + Shift + Y`, `AltGr + Return`. On Windows `AltGr` is the same as `Ctrl + Alt`
 - there are some special keys (e.g. `Alt + F3`)
   - `F1` - `F24`
   - `numpad0` - `numpad9` : `0` to `9` but on a numerical keyboard
@@ -85,7 +87,7 @@ treated as a trailing-whitespace marker, not a dollar sign.
 
 This matters for `CmdCommandPalette` mode arguments: use
 `CmdCommandPaletteFavorites` (or `CmdCommandPaletteTOC` for table of contents)
-instead of `CmdCommandPalette $` / `CmdCommandPalette *` when binding shortcuts.
+instead of `CmdCommandPalette $` / `CmdCommandPalette %` when binding shortcuts.
 
 ## Notes
 

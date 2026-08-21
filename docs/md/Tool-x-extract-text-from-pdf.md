@@ -1,24 +1,26 @@
 # Extract text from PDF using SumatraPDF
 
-> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+> Use `sumatrapdf-tool.exe` or [SumatraPDF.exe](Tools.md) with the same arguments.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 ## In application
 
 To extract pages from a PDF in SumatraPDF:
+
 - open PDF document
 - `Ctrl + k` for [command palette](Command-Palette.md)
 - `Extract Text From Document`
 
 Or:
+
 - open PDF document
 - right-click for context menu
 - `Document` > `Extract Text From Document`
 
 ![Extract text from PDF in SumatraPDF](img/extract-text-dialog.png)
 
-This extract text from the document and saves it as a text file. 
+This extract text from the document and saves it as a text file.
 
 You can also extract from all pages or select a subset of pages.
 

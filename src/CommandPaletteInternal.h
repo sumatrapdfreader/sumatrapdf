@@ -9,6 +9,8 @@ struct Favorite;
 
 struct ItemDataCP {
     i32 cmdId = 0;
+    // a "Debug: ..." command; those are listed after all the others
+    bool isDebug = false;
     WindowTab* tab = nullptr;
     Str filePath;
     TocItem* tocItem = nullptr;
@@ -30,9 +32,8 @@ struct ListBoxModelCP : ListBoxModel {
     ItemDataCP* Data(int i) { return strings.AtData(i); }
 };
 
-struct CommandPaletteWnd : Wnd {
+struct CommandPaletteWnd : WindowBase {
     ~CommandPaletteWnd() override = default;
-    HFONT font = nullptr;
     MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;
@@ -41,8 +42,7 @@ struct CommandPaletteWnd : Wnd {
     StrVecCP commands;
     StrVecCP toc;
     StrVecCP favorites;
-    ListBox* listBox = nullptr;
-    Static* staticInfo = nullptr;
+    VirtListBox* listBox = nullptr;
 
     StrVec filterWords;
     Vec<u8> highlighted;
@@ -53,8 +53,10 @@ struct CommandPaletteWnd : Wnd {
     bool smartTabMode = false;
     bool stickyMode = false;
 
-    bool PreTranslateMessage(MSG&) override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    void PreTranslate(WindowBase::PreTranslateEvent*);
+    void OnKeyDown(KeyEvent*);
+    void OnActivate(WindowBase::ActivateEvent*);
+    void OnCommand(WindowBase::CommandEvent*);
 
     void CollectStrings(MainWindow*);
     void CollectTabsRegular(MainWindow*, WindowTab* currTab);
@@ -68,6 +70,8 @@ struct CommandPaletteWnd : Wnd {
 
     void ExecuteCurrentSelection();
     bool AdvanceSelection(int dir);
+    bool MoveSelection(int vkey);
+    bool RemoveSelectedItem();
     void SwitchToPrefix(Str prefix);
     void SwitchToCommands();
     void SwitchToTabs();
@@ -77,13 +81,13 @@ struct CommandPaletteWnd : Wnd {
     void SwitchToFavorites();
     void OnSelectionChange();
     void OnListDoubleClick();
-    void DrawListBoxItem(ListBox::DrawItemEvent* ev);
+    void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
 };
 
 extern CommandPaletteWnd* gCommandPaletteWnd;
-extern HWND gCommandPaletteHwnd;
 
 Str CommandPaletteSkipWS(Str s);
+bool CommandPaletteUiRtl();
 void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx);
 void ScheduleDeleteAndExecCommand(i32 cmdId = 0);
 void SafeDeleteCommandPaletteWnd();

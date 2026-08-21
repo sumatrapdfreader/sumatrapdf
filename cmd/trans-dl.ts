@@ -3,7 +3,7 @@
  *
  * Local cache (gitignored via .work/):
  *   .work/translations.txt       languages complete enough for the binary
- *   .work/translations.txt.lzsa  compressed archive embedded in the exe
+ *   (packed into .work/embedded.dat with marked/mermaid/manual via pack-embedded.ts)
  *
  * Flow:
  *   1. Extract _TR* strings from src + command names
@@ -13,6 +13,7 @@
  *   4. If any language is missing translations:
  *        - translate with Claude or Grok
  *        - submit each via /api/edittranslation as user "ai claude" / "ai grok"
+ *          only when that lang+string has no translation yet (never overwrite)
  *   5. Re-download (should now include submitted translations)
  *   6. Write filtered .work/translations.txt and build .lzsa
  *
@@ -23,16 +24,11 @@
  *   bun cmd/trans-dl.ts --ai=claude|grok|none
  *   bun cmd/trans-dl.ts --no-ai         # download + fix suspicious + filter + lzsa (no AI fill)
  *   bun cmd/trans-dl.ts --lang de       # only fill missing for one language
+ *   bun cmd/trans-dl.ts --lang br --retranslate  # refill AI/wrong br (not Breton)
  *   bun cmd/trans-dl.ts --max-submit N  # cap AI submissions (for testing; fixes always run)
  */
 
-import {
-  readFileSync,
-  writeFileSync,
-  readdirSync,
-  existsSync,
-  mkdirSync,
-} from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from "node:fs";
 import { join, extname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -40,11 +36,7 @@ import { commands } from "./gen-commands";
 
 // strings that should not be sent for translation
 // (e.g. command names whose display text is set dynamically)
-const translationBlacklist: string[] = [
-  "don't use",
-  "Toggle Windows Previewer",
-  "Toggle Windows Search Filter",
-];
+const translationBlacklist: string[] = ["don't use", "Toggle Windows Previewer", "Toggle Windows Search Filter"];
 
 const DEFAULT_SERVER = "https://www.apptranslator.org";
 const LOCAL_SERVER = "http://127.0.0.1:9311";
@@ -52,7 +44,7 @@ const APP_NAME = "SumatraPDF";
 
 const workDir = ".work";
 const translationsTxtPath = join(workDir, "translations.txt");
-const translationsLzsaPath = join(workDir, "translations.txt.lzsa");
+// legacy path kept only for cleanup messaging; packing is pack-embedded.ts
 
 const translationPattern = /\b_TR[ANW]?\("(.*?)"\)/g;
 
@@ -64,6 +56,7 @@ interface CliArgs {
   langs: Set<string> | null; // null = all
   maxSubmit: number; // 0 = unlimited
   skipLzsa: boolean;
+  retranslate: boolean; // refill existing AI/wrong translations for --lang
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -72,6 +65,7 @@ function parseArgs(argv: string[]): CliArgs {
   let langs: Set<string> | null = null;
   let maxSubmit = 0;
   let skipLzsa = false;
+  let retranslate = false;
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -89,23 +83,26 @@ function parseArgs(argv: string[]): CliArgs {
       ai = parseAi(a.slice("--ai=".length));
     } else if (a === "--lang" && argv[i + 1]) {
       if (!langs) langs = new Set();
-      langs.add(argv[++i]);
+      langs.add(normalizeLangCode(argv[++i]));
     } else if (a.startsWith("--lang=")) {
       if (!langs) langs = new Set();
-      langs.add(a.slice("--lang=".length));
+      langs.add(normalizeLangCode(a.slice("--lang=".length)));
     } else if (a === "--max-submit" && argv[i + 1]) {
       maxSubmit = parseInt(argv[++i], 10) || 0;
     } else if (a.startsWith("--max-submit=")) {
       maxSubmit = parseInt(a.slice("--max-submit=".length), 10) || 0;
     } else if (a === "--skip-lzsa") {
       skipLzsa = true;
+    } else if (a === "--retranslate") {
+      retranslate = true;
     } else if (a === "--help" || a === "-h") {
       console.log(`Usage: bun cmd/trans-dl.ts [options]
   --local              use ${LOCAL_SERVER}
   --server URL         apptranslator base URL (default ${DEFAULT_SERVER})
   --ai=claude|grok|none  AI for missing translations (default claude)
   --no-ai              same as --ai=none
-  --lang CODE          only fill this language (repeatable)
+  --lang CODE          only fill this language (repeatable; br-pt/pt-br → br)
+  --retranslate        refill AI-authored (and Breton-looking br) strings; requires --lang
   --max-submit N       stop after N AI submissions (testing)
   --skip-lzsa          do not run MakeLZSA`);
       process.exit(0);
@@ -113,7 +110,17 @@ function parseArgs(argv: string[]): CliArgs {
       throw new Error(`Unknown arg: ${a} (try --help)`);
     }
   }
-  return { server: server.replace(/\/$/, ""), ai, langs, maxSubmit, skipLzsa };
+  if (retranslate && (!langs || langs.size === 0)) {
+    throw new Error("--retranslate requires --lang");
+  }
+  return { server: server.replace(/\/$/, ""), ai, langs, maxSubmit, skipLzsa, retranslate };
+}
+
+// Project codes are not always ISO 639-1 (br = Brazilian Portuguese, not Breton).
+function normalizeLangCode(code: string): string {
+  const c = code.trim();
+  if (c === "br-pt" || c.toLowerCase() === "pt-br") return "br";
+  return c;
 }
 
 function parseAi(s: string): AiProvider {
@@ -370,15 +377,25 @@ async function submitFixedSuspicious(
     await submitTranslation(server, secret, "ai fix", lang, bt.currString, translation);
     n++;
   }
-  console.log(
-    `submitted ${n} fixed suspicious translation(s)${nSkip > 0 ? ` (${nSkip} skipped)` : ""}`,
-  );
+  console.log(`submitted ${n} fixed suspicious translation(s)${nSkip > 0 ? ` (${nSkip} skipped)` : ""}`);
   return n;
 }
 
 interface ParsedTranslations {
   perLang: Map<string, Map<string, string>>;
   allStrings: string[];
+  // snapshot of perLang from the download, before in-memory auto-fill.
+  // /api/edittranslation always appends (latest wins), so AI/auto submit
+  // must consult this — not perLang, which autoAdd mutates.
+  fromServer: Map<string, Map<string, string>>;
+}
+
+function clonePerLang(src: Map<string, Map<string, string>>): Map<string, Map<string, string>> {
+  const out = new Map<string, Map<string, string>>();
+  for (const [lang, m] of src) {
+    out.set(lang, new Map(m));
+  }
+  return out;
 }
 
 function parseTranslations(d: string): ParsedTranslations {
@@ -412,7 +429,7 @@ function parseTranslations(d: string): ParsedTranslations {
     }
     m.set(currString, trans);
   }
-  return { perLang, allStrings };
+  return { perLang, allStrings, fromServer: clonePerLang(perLang) };
 }
 
 function stripAmpersand(s: string): string {
@@ -453,20 +470,35 @@ function autoAddNoPrefixTranslations(pt: ParsedTranslations): Map<string, Map<st
   return added;
 }
 
-/** Language codes we ship (from trans-gen.ts gLangs), excluding English. */
-function loadSupportedLangCodes(): string[] {
+interface SupportedLang {
+  code: string;
+  name: string;
+}
+
+/** Languages we ship (from trans-gen.ts gLangs), excluding English. */
+function loadSupportedLangs(): SupportedLang[] {
   const path = join(import.meta.dir, "trans-gen.ts");
   const text = readFileSync(path, "utf-8");
   const startIdx = text.indexOf("const gLangs");
   const endIdx = text.indexOf("];", startIdx);
   const block = text.substring(startIdx, endIdx);
-  const codes: string[] = [];
-  const re = /\["([^"]+)"/g;
+  const langs: SupportedLang[] = [];
+  const re = /\["([^"]+)",\s*"([^"]+)"/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(block)) !== null) {
-    if (m[1] !== "en") codes.push(m[1]);
+    if (m[1] !== "en") langs.push({ code: m[1], name: m[2] });
   }
-  return codes;
+  return langs;
+}
+
+function loadSupportedLangCodes(): string[] {
+  return loadSupportedLangs().map((l) => l.code);
+}
+
+const kLangNameByCode = new Map(loadSupportedLangs().map((l) => [l.code, l.name]));
+
+function langDisplayName(code: string): string {
+  return kLangNameByCode.get(code) ?? code;
 }
 
 // AI translation order: most widely spoken first (rough L1+L2 speaker ranks).
@@ -556,12 +588,87 @@ function aiLangRank(lang: string): number {
 
 /** Sort language codes by static popularity (Polish first). */
 function sortLangsByPopularity(langs: Iterable<string>): string[] {
-  return [...new Set(langs)].filter((l) => l !== "en").sort((a, b) => {
-    const ra = aiLangRank(a);
-    const rb = aiLangRank(b);
-    if (ra !== rb) return ra - rb;
-    return a.localeCompare(b);
-  });
+  return [...new Set(langs)]
+    .filter((l) => l !== "en")
+    .sort((a, b) => {
+      const ra = aiLangRank(a);
+      const rb = aiLangRank(b);
+      if (ra !== rb) return ra - rb;
+      return a.localeCompare(b);
+    });
+}
+
+function isAiFillAuthor(user: string): boolean {
+  const u = user.trim().toLowerCase();
+  return u === "ai" || u === "ai claude" || u === "ai grok" || u === "ai auto";
+}
+
+// Distinctive Breton (ISO 639-1 "br") — used when AI treated project code "br" as Breton.
+function looksLikeBreton(s: string): boolean {
+  return /c'h|n'eo|pennroll|skeudenn|diouzh|a-raok|war-lerc|teñval|golver|ivinell|drekleur|hêrezh|flapañ|teuliadur|nullañ|poazhañ|staliadur|sinedoù|bihanaat|astenn betek|n'haller|kreizañ|glaou|dibab mammenn|gwaskañ|dizielfennañ|disifriñ|dilemel|restroù|stagañ|pellgargañ|embann|gant an |ar restr |ar stali|endalc|kemmañ|kenderc'hel|n'eus ket|amdreiñ|krouiñ|troc'hañ|livioù|gwintañ|liester|klask er|diskouez|mont d'ar/i.test(
+    s,
+  );
+}
+
+async function latestAuthors(server: string, lang: string): Promise<Map<string, string>> {
+  const uri = `${server}/api/transhist?app=${encodeURIComponent(APP_NAME)}&lang=${encodeURIComponent(lang)}`;
+  const resp = await fetch(uri);
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`transhist HTTP ${resp.status}: ${body.slice(0, 200)}`);
+  }
+  const raw: unknown = await resp.json();
+  const out = new Map<string, string>();
+  if (!Array.isArray(raw)) return out;
+  for (const entry of raw) {
+    if (!Array.isArray(entry) || entry.length < 2 || typeof entry[0] !== "string") continue;
+    const last = entry[entry.length - 1];
+    if (Array.isArray(last) && typeof last[1] === "string") {
+      out.set(entry[0], last[1]);
+    }
+  }
+  return out;
+}
+
+// Drop selected existing translations so findMissing/submitMany will refill them.
+async function markRetranslateAsMissing(
+  server: string,
+  langs: Iterable<string>,
+  pt: ParsedTranslations,
+): Promise<number> {
+  let n = 0;
+  for (const lang of langs) {
+    const want = new Set<string>();
+    try {
+      const authors = await latestAuthors(server, lang);
+      for (const [en, user] of authors) {
+        if (isAiFillAuthor(user)) want.add(en);
+      }
+      console.log(`retranslate ${lang}: ${want.size} AI-authored current translation(s)`);
+    } catch (e) {
+      console.log(`retranslate ${lang}: transhist failed (${e}); heuristic only`);
+    }
+    const m = pt.perLang.get(lang);
+    if (m && (lang === "br" || lang === "br-pt")) {
+      let nBret = 0;
+      for (const [en, tr] of m) {
+        if (looksLikeBreton(tr)) {
+          want.add(en);
+          nBret++;
+        }
+      }
+      if (nBret > 0) {
+        console.log(`retranslate ${lang}: ${nBret} Breton-looking string(s)`);
+      }
+    }
+    for (const en of want) {
+      pt.fromServer.get(lang)?.delete(en);
+      pt.perLang.get(lang)?.delete(en);
+      n++;
+    }
+    console.log(`retranslate ${lang}: ${want.size} string(s) marked for refill`);
+  }
+  return n;
 }
 
 function findMissing(
@@ -622,6 +729,40 @@ async function submitTranslation(
   }
 }
 
+function previewEnglish(s: string): string {
+  return s.length > 70 ? s.slice(0, 70) + "…" : s;
+}
+
+function existingTranslation(
+  perLang: Map<string, Map<string, string>>,
+  lang: string,
+  english: string,
+): string | undefined {
+  const t = perLang.get(lang)?.get(english);
+  return t !== undefined && t.length > 0 ? t : undefined;
+}
+
+function setTranslation(
+  perLang: Map<string, Map<string, string>>,
+  lang: string,
+  english: string,
+  translation: string,
+): void {
+  let m = perLang.get(lang);
+  if (!m) {
+    m = new Map();
+    perLang.set(lang, m);
+  }
+  m.set(english, translation);
+}
+
+function rememberTranslation(pt: ParsedTranslations, lang: string, english: string, translation: string): void {
+  setTranslation(pt.perLang, lang, english, translation);
+  setTranslation(pt.fromServer, lang, english, translation);
+}
+
+// AI / auto-derived uploads must not replace a translation that already exists.
+// /api/edittranslation always appends an edit (latest wins), so the guard is here.
 async function submitMany(
   server: string,
   secret: string,
@@ -630,16 +771,32 @@ async function submitMany(
   pairs: Map<string, string>,
   maxSubmit: number,
   submittedSoFar: { n: number },
+  pt: ParsedTranslations,
 ): Promise<number> {
   let n = 0;
+  let nSkip = 0;
   for (const [english, translation] of pairs) {
     if (maxSubmit > 0 && submittedSoFar.n >= maxSubmit) {
       console.log(`--max-submit ${maxSubmit} reached, stopping submissions`);
       break;
     }
+    if (existingTranslation(pt.fromServer, lang, english) !== undefined) {
+      console.log(`  skip existing ${lang}: ${previewEnglish(english)}`);
+      nSkip++;
+      continue;
+    }
+    if (translation.length === 0) {
+      console.log(`  skip empty ${lang}: ${previewEnglish(english)}`);
+      nSkip++;
+      continue;
+    }
     await submitTranslation(server, secret, user, lang, english, translation);
+    rememberTranslation(pt, lang, english, translation);
     n++;
     submittedSoFar.n++;
+  }
+  if (nSkip > 0) {
+    console.log(`  skipped ${nSkip} ${lang} string(s) (already translated or empty)`);
   }
   return n;
 }
@@ -653,10 +810,11 @@ const kTransMarker = (i: number) => `<<<${i}>>>`;
 
 function buildTranslatePrompt(stringsToTranslate: string[], langCode: string): string {
   const n = stringsToTranslate.length;
-  const inputBlocks = stringsToTranslate
-    .map((s, i) => `${kTransMarker(i)}\n${s}`)
-    .join("\n");
-  return `Translate each English UI string to the language for locale code "${langCode}".
+  const langName = langDisplayName(langCode);
+  const inputBlocks = stringsToTranslate.map((s, i) => `${kTransMarker(i)}\n${s}`).join("\n");
+  return `Translate each UI string from English (source language) into ${langName}.
+
+The project's locale code is "${langCode}". Use the language name above — do not interpret the code as ISO 639-1 when they differ (in particular, "br" is Brazilian Portuguese / pt-BR, not Breton).
 
 There are exactly ${n} strings, numbered 0..${n - 1}.
 For each index i, output the marker <<<i>>> on its own line, then the translation on the following line(s).
@@ -727,7 +885,10 @@ function parseJsonTranslations(
   if (fence) {
     s = fence[1].trim();
   } else if (s.startsWith("```")) {
-    s = s.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+    s = s
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/```\s*$/, "")
+      .trim();
   }
   s = s.replace(/\\x([0-9a-fA-F]{2})/g, (_m, hex: string) => `\\u00${hex}`);
 
@@ -811,11 +972,7 @@ function parseAiTranslations(
   throw new Error(`Could not parse AI translations for lang ${langCode}`);
 }
 
-async function translateWithClaude(
-  apiKey: string,
-  strings: string[],
-  langCode: string,
-): Promise<Map<string, string>> {
+async function translateWithClaude(apiKey: string, strings: string[], langCode: string): Promise<Map<string, string>> {
   const stringsToTranslate = strings.map((s) => s.replaceAll("&", ""));
   const prompt = buildTranslatePrompt(stringsToTranslate, langCode);
 
@@ -849,11 +1006,7 @@ async function translateWithClaude(
   return parseAiTranslations(text, strings, stringsToTranslate, langCode);
 }
 
-async function translateWithGrok(
-  apiKey: string,
-  strings: string[],
-  langCode: string,
-): Promise<Map<string, string>> {
+async function translateWithGrok(apiKey: string, strings: string[], langCode: string): Promise<Map<string, string>> {
   const stringsToTranslate = strings.map((s) => s.replaceAll("&", ""));
   const prompt = buildTranslatePrompt(stringsToTranslate, langCode);
 
@@ -903,9 +1056,7 @@ async function translateBatchWithRetry(
   } catch (e) {
     if (strings.length <= 1) throw e;
     const mid = Math.ceil(strings.length / 2);
-    console.log(
-      `  retry ${langCode}: split batch of ${strings.length} → ${mid}+${strings.length - mid} (${e})`,
-    );
+    console.log(`  retry ${langCode}: split batch of ${strings.length} → ${mid}+${strings.length - mid} (${e})`);
     const left = await translateBatchWithRetry(ai, apiKey, strings.slice(0, mid), langCode);
     const right = await translateBatchWithRetry(ai, apiKey, strings.slice(mid), langCode);
     for (const [k, v] of right) left.set(k, v);
@@ -928,7 +1079,7 @@ async function fillMissingWithAiAndSubmit(
     if (args.langs && !args.langs.has(lang)) continue;
     if (args.maxSubmit > 0 && submitted.n >= args.maxSubmit) break;
     const pairs = autoAdded.get(lang)!;
-    const n = await submitMany(args.server, secret, "ai auto", lang, pairs, args.maxSubmit, submitted);
+    const n = await submitMany(args.server, secret, "ai auto", lang, pairs, args.maxSubmit, submitted, pt);
     if (n > 0) {
       console.log(`submitted ${n} auto no-prefix translations for ${lang}`);
     }
@@ -958,15 +1109,15 @@ async function fillMissingWithAiAndSubmit(
   let totalMissing = 0;
   for (const list of missing.values()) totalMissing += list.length;
   const langsInOrder = sortLangsByPopularity(missing.keys());
-  console.log(
-    `missing translations after auto-fill: ${totalMissing} across ${missing.size} languages`,
-  );
+  console.log(`missing translations after auto-fill: ${totalMissing} across ${missing.size} languages`);
   console.log(`AI order (most popular first, pl first): ${langsInOrder.join(", ")}`);
 
   // fully translate one language before moving to the next
   for (const lang of langsInOrder) {
     if (args.maxSubmit > 0 && submitted.n >= args.maxSubmit) break;
-    const currentMissing = missing.get(lang) ?? [];
+    const currentMissing = (missing.get(lang) ?? []).filter(
+      (s) => existingTranslation(pt.fromServer, lang, s) === undefined,
+    );
     if (currentMissing.length === 0) continue;
 
     console.log(`Lang ${lang}: ${currentMissing.length} missing — finishing this language first`);
@@ -986,25 +1137,17 @@ async function fillMissingWithAiAndSubmit(
           console.log(`  no translations returned for batch`);
           continue;
         }
-        const n = await submitMany(
-          args.server,
-          secret,
-          user,
-          lang,
-          translated,
-          args.maxSubmit,
-          submitted,
-        );
+        // only submit strings from this missing batch that the server does not already have
+        const toSubmit = new Map<string, string>();
+        for (const en of batch) {
+          if (existingTranslation(pt.fromServer, lang, en) !== undefined) {
+            continue;
+          }
+          const tr = translated.get(en);
+          if (tr) toSubmit.set(en, tr);
+        }
+        const n = await submitMany(args.server, secret, user, lang, toSubmit, args.maxSubmit, submitted, pt);
         console.log(`  submitted ${n} translations for ${lang}`);
-        // update in-memory so we don't re-translate
-        let m = pt.perLang.get(lang);
-        if (!m) {
-          m = new Map();
-          pt.perLang.set(lang, m);
-        }
-        for (const [en, tr] of translated) {
-          m.set(en, tr);
-        }
       } catch (e) {
         console.error(`  error translating to ${lang}: ${e}`);
       }
@@ -1072,18 +1215,13 @@ function writeTranslationsForBinary(pt: ParsedTranslations, downloadSha1: string
   console.log(`fully translated langs: ${fullyTranslated}`);
 }
 
-function makeLzsa(): void {
+async function makeLzsa(): Promise<void> {
   if (!existsSync(translationsTxtPath)) {
     throw new Error(`missing ${translationsTxtPath}; run without --skip-lzsa after download`);
   }
-  const makeLzsaExe = join("bin", "MakeLZSA.exe");
-  const lzsaArgs = [translationsLzsaPath, `${translationsTxtPath}:translations.txt`];
-  console.log(`Running ${makeLzsaExe} ${lzsaArgs.join(" ")}`);
-  const res = spawnSync(makeLzsaExe, lzsaArgs, { stdio: "inherit" });
-  if (res.status !== 0) {
-    throw new Error(`MakeLZSA failed with exit code ${res.status}`);
-  }
-  console.log(`Wrote ${translationsLzsaPath}`);
+  // pack translations into the combined embedded.dat (with marked/mermaid/manual)
+  const { packEmbedded } = await import("./pack-embedded");
+  await packEmbedded();
 }
 
 async function main() {
@@ -1098,7 +1236,7 @@ async function main() {
     console.log("TRANS_UPLOAD_SECRET not set; skipping download/AI");
     writeEmptyTranslations();
     if (!args.skipLzsa) {
-      makeLzsa();
+      await makeLzsa();
     }
     return;
   }
@@ -1131,15 +1269,15 @@ async function main() {
   let pt = parseTranslations(fullText);
   const autoAdded = autoAddNoPrefixTranslations(pt);
 
+  if (args.retranslate && args.langs) {
+    await markRetranslateAsMissing(args.server, args.langs, pt);
+  }
+
   // langs we care about filling: those already present on the server, plus
   // any --lang filter. When the store is empty (local), require --lang.
   const supportedLangs = loadSupportedLangCodes();
   const ensureLangs =
-    args.langs && args.langs.size > 0
-      ? [...args.langs]
-      : pt.perLang.size > 0
-        ? [...pt.perLang.keys()]
-        : null;
+    args.langs && args.langs.size > 0 ? [...args.langs] : pt.perLang.size > 0 ? [...pt.perLang.keys()] : null;
 
   // missing after in-memory auto-fill (auto-added still need server submit)
   const missingAfterAuto = findMissing(pt, args.langs, ensureLangs);
@@ -1170,9 +1308,7 @@ async function main() {
     dl = await downloadTranslations(args.server, strs, secret);
     const fixed2 = fixTranslations(dl.body);
     if (fixed2.badTranslations.length > 0) {
-      console.log(
-        `warning: ${fixed2.badTranslations.length} suspicious translation(s) still present after fix submit`,
-      );
+      console.log(`warning: ${fixed2.badTranslations.length} suspicious translation(s) still present after fix submit`);
       printBadTranslations(args.server, fixed2.badTranslations);
     }
     fullText = `AppTranslator: ${APP_NAME}\n${dl.sha1}\n${fixed2.fixed}\n`;
@@ -1185,7 +1321,7 @@ async function main() {
   //    (sha1 line is the full download sha1 for cache comparison on next run)
   writeTranslationsForBinary(pt, dl.sha1);
   if (!args.skipLzsa) {
-    makeLzsa();
+    await makeLzsa();
   }
 }
 

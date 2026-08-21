@@ -147,6 +147,7 @@ int utf8RuneLen(const u8* s) {
     return n;
 }
 
+// note: include Base.h instead of including directly
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
     int n = utf8RuneLen(source);
     if (source + n > sourceEnd) {
@@ -203,6 +204,31 @@ void str::Utf8Encode(char* buf, int& off, int c) {
     off = (int)((char*)tmp - buf);
 }
 
+bool Utf8IsContinuationByte(char c) {
+    return ((u8)c & 0xC0) == 0x80;
+}
+
+// the byte a sequence starts at, so that a byte index that landed in the middle
+// of one can be turned into a codepoint
+int Utf8CodepointStartByte(Str s, int byteIdx) {
+    if (byteIdx <= 0) {
+        return 0;
+    }
+    byteIdx = std::min(byteIdx, len(s));
+    while (byteIdx > 0 && Utf8IsContinuationByte(s.s[byteIdx])) {
+        byteIdx--;
+    }
+    return byteIdx;
+}
+
+// the codepoint the byte at byteIdx is part of, 0 if there is none
+int Utf8CodepointContaining(Str s, int byteIdx) {
+    if (!s || byteIdx < 0 || byteIdx >= len(s)) {
+        return 0;
+    }
+    return Utf8CodepointAtByte(s, Utf8CodepointStartByte(s, byteIdx));
+}
+
 int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut) {
     if (bytesOut) {
         *bytesOut = 0;
@@ -254,9 +280,7 @@ int Utf8CodepointPrev(Str s, int& byteIdx) {
     if (!s || byteIdx <= 0) {
         return 0;
     }
-    if (byteIdx > s.len) {
-        byteIdx = s.len;
-    }
+    byteIdx = std::min(byteIdx, s.len);
     int prevByte = byteIdx - 1;
     while (prevByte > 0 && (((u8)s.s[prevByte] & 0xc0) == 0x80)) {
         prevByte--;
@@ -295,9 +319,7 @@ Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
     if (!s || nCodepoints <= 0) {
         return {};
     }
-    if (startCodepoint < 0) {
-        startCodepoint = 0;
-    }
+    startCodepoint = std::max(startCodepoint, 0);
     int startByte = Utf8CodepointToByteIndex(s, startCodepoint);
     int endByte = Utf8AdvanceCodepoints(s, startByte, nCodepoints);
     return Str(s.s + startByte, endByte - startByte);
@@ -326,9 +348,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
             return s;
         }
         int keep = maxRunes - 3;
-        if (keep < 0) {
-            keep = 0;
-        }
+        keep = std::max(keep, 0);
         char* ret = AllocArrayTemp<char>(keep + 4);
         memcpy(ret, s.s, keep);
         ret[keep] = '.';
@@ -341,9 +361,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
         return s;
     }
     int keep = maxRunes - 3;
-    if (keep < 0) {
-        keep = 0;
-    }
+    keep = std::max(keep, 0);
     char* ret = AllocArrayTemp<char>((maxRunes * 4) + 1);
     int src = 0;
     int tmp = 0;
@@ -458,7 +476,7 @@ static int WStrCodepointAt(WStr s, int& idx) {
 
 Str ToUtf8(Arena* arena, WStr wide) {
     if (len(wide) == 0) {
-        return Str();
+        return {};
     }
 #if OS_WIN
     int n = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
@@ -491,7 +509,7 @@ WStr ToWStrTemp(Str s) {
     }
 #if OS_WIN
     int wideLen = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
-    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
+    wchar_t* wide = (wchar_t*)AllocTemp((int)((wideLen + 1) * sizeof(wchar_t)));
     MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, wide, wideLen);
 #else
     int wideLen = 0;

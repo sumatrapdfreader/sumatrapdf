@@ -1,0 +1,367 @@
+webp: decode images with libwebp (HAVE_WEBP) (#3415)
+
+Adapted from Artifex bug 697749 / koreader's webp-upstream-697749.patch
+for mupdf 1.28.2. Standalone .webp and comics already decoded via
+EngineImages; EPUB/MOBI/HTML go through fz_new_image_from_buffer and
+showed an IMAGE placeholder.
+
+Adds FZ_IMAGE_WEBP, a 12-byte RIFF/WEBP recognizer, source/fitz/load-webp.c,
+and .webp on the CBZ extension list. Decode is WebPGetFeatures +
+WebPDecodeRGB(A)Into into the pixmap. EXIF/ICC via libwebp demux are
+omitted: we do not build that library.
+
+https://github.com/sumatrapdfreader/sumatrapdf/issues/3415
+https://bugs.ghostscript.com/show_bug.cgi?id=697749
+
+---
+diff --git a/include/mupdf/fitz/compressed-buffer.h b/include/mupdf/fitz/compressed-buffer.h
+index 326d524dd..296079618 100644
+--- a/include/mupdf/fitz/compressed-buffer.h
++++ b/include/mupdf/fitz/compressed-buffer.h
+@@ -133,10 +133,10 @@ fz_stream *fz_open_image_decomp_stream_from_buffer(fz_context *ctx, fz_compresse
+ fz_stream *fz_open_image_decomp_stream(fz_context *ctx, fz_stream *, fz_compression_params *, int *l2factor);
+ 
+ /**
+-	Recognise image format strings in the first 8 bytes from image
++	Recognise image format strings in the first 12 bytes from image
+ 	data.
+ */
+-int fz_recognize_image_format(fz_context *ctx, unsigned char p[8]);
++int fz_recognize_image_format(fz_context *ctx, unsigned char p[12]);
+ 
+ /**
+ 	Map from FZ_IMAGE_* value to string.
+@@ -176,6 +176,7 @@ enum
+ 	FZ_IMAGE_PNM,
+ 	FZ_IMAGE_TIFF,
+ 	FZ_IMAGE_PSD,
++	FZ_IMAGE_WEBP,
+ };
+ 
+ /**
+diff --git a/scripts/wrap/make_cppyy.py b/scripts/wrap/make_cppyy.py
+index a37456d81..69604a377 100644
+--- a/scripts/wrap/make_cppyy.py
++++ b/scripts/wrap/make_cppyy.py
+@@ -763,7 +763,7 @@ def make_cppyy(
+                     ''')
+ 
+             # Provide an overload for mfz_recognize_image_format(), because
+-            # the default unsigned char p[8] causes problems.
++            # the default unsigned char p[12] causes problems.
+             #
+             cppyy.cppdef(f'''
+                     namespace mupdf
+diff --git a/source/cbz/mucbz.c b/source/cbz/mucbz.c
+index c295f6903..1d0d93bb2 100644
+--- a/source/cbz/mucbz.c
++++ b/source/cbz/mucbz.c
+@@ -49,6 +49,7 @@ static const char *cbz_ext_list[] = {
+ 	".tif",
+ 	".tiff",
+ 	".wdp",
++	".webp",
+ 	NULL
+ };
+ 
+diff --git a/source/cbz/muimg.c b/source/cbz/muimg.c
+index 69d1f990f..f96804e55 100644
+--- a/source/cbz/muimg.c
++++ b/source/cbz/muimg.c
+@@ -191,8 +191,14 @@ img_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream
+ 		len = fz_buffer_storage(ctx, doc->buffer, &data);
+ 
+ 		fmt = FZ_IMAGE_UNKNOWN;
+-		if (len >= 8)
++		if (len >= 12)
+ 			fmt = fz_recognize_image_format(ctx, data);
++		else if (len >= 8)
++		{
++			unsigned char head[12] = {0};
++			memcpy(head, data, len);
++			fmt = fz_recognize_image_format(ctx, head);
++		}
+ 		if (fmt == FZ_IMAGE_TIFF)
+ 		{
+ 			doc->page_count = fz_load_tiff_subimage_count(ctx, data, len);
+@@ -236,7 +242,7 @@ img_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream
+ static int
+ img_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **state, fz_document_recognize_state_free_fn **free_state)
+ {
+-	unsigned char data[8];
++	unsigned char data[12] = {0};
+ 	size_t n;
+ 	int fmt;
+ 
+@@ -248,9 +254,9 @@ img_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_st
+ 	if (free_state)
+ 		*free_state = NULL;
+ 
+-	n = fz_read(ctx, stream, data, 8);
++	n = fz_read(ctx, stream, data, 12);
+ 
+-	if (n != 8)
++	if (n < 8)
+ 		return 0;
+ 
+ 	fmt = fz_recognize_image_format(ctx, data);
+diff --git a/source/fitz/image-imp.h b/source/fitz/image-imp.h
+index 960ab9bbf..999ddbc1f 100644
+--- a/source/fitz/image-imp.h
++++ b/source/fitz/image-imp.h
+@@ -32,6 +32,7 @@ fz_pixmap *fz_load_gif(fz_context *ctx, const unsigned char *data, size_t size);
+ fz_pixmap *fz_load_bmp(fz_context *ctx, const unsigned char *data, size_t size);
+ fz_pixmap *fz_load_pnm(fz_context *ctx, const unsigned char *data, size_t size);
+ fz_pixmap *fz_load_jbig2(fz_context *ctx, const unsigned char *data, size_t size);
++fz_pixmap *fz_load_webp(fz_context *ctx, const unsigned char *data, size_t size);
+ 
+ void fz_load_jpeg_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace, uint8_t *orientation);
+ void fz_load_png_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
+@@ -42,6 +43,7 @@ void fz_load_gif_info(fz_context *ctx, const unsigned char *data, size_t size, i
+ void fz_load_bmp_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
+ void fz_load_pnm_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
+ void fz_load_jbig2_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
++void fz_load_webp_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
+ 
+ /*
+  * The defcs parameter is used as a default colorspace if the image doesn't
+diff --git a/source/fitz/image.c b/source/fitz/image.c
+index 41b5cb516..565433c97 100644
+--- a/source/fitz/image.c
++++ b/source/fitz/image.c
+@@ -830,6 +830,9 @@ compressed_image_get_pixmap(fz_context *ctx, fz_image *image_, fz_irect *subarea
+ 	case FZ_IMAGE_BMP:
+ 		tile = fz_load_bmp(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
+ 		break;
++	case FZ_IMAGE_WEBP:
++		tile = fz_load_webp(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
++		break;
+ 	case FZ_IMAGE_TIFF:
+ 		tile = fz_load_tiff(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
+ 		break;
+@@ -1431,6 +1434,7 @@ fz_image_type_name(int type)
+ 	case FZ_IMAGE_PNG: return "png";
+ 	case FZ_IMAGE_PNM: return "pnm";
+ 	case FZ_IMAGE_TIFF: return "tiff";
++	case FZ_IMAGE_WEBP: return "webp";
+ 	}
+ }
+ 
+@@ -1453,11 +1457,12 @@ fz_lookup_image_type(const char *type)
+ 	if (!strcmp(type, "png")) return FZ_IMAGE_PNG;
+ 	if (!strcmp(type, "pnm")) return FZ_IMAGE_PNM;
+ 	if (!strcmp(type, "tiff")) return FZ_IMAGE_TIFF;
++	if (!strcmp(type, "webp")) return FZ_IMAGE_WEBP;
+ 	return FZ_IMAGE_UNKNOWN;
+ }
+ 
+ int
+-fz_recognize_image_format(fz_context *ctx, unsigned char p[8])
++fz_recognize_image_format(fz_context *ctx, unsigned char p[12])
+ {
+ 	if (p[0] == 'P' && p[1] >= '1' && p[1] <= '7')
+ 		return FZ_IMAGE_PNM;
+@@ -1490,6 +1495,9 @@ fz_recognize_image_format(fz_context *ctx, unsigned char p[8])
+ 		return FZ_IMAGE_JBIG2;
+ 	if (p[0] == '8' && p[1] == 'B' && p[2] == 'P' && p[3] == 'S')
+ 		return FZ_IMAGE_PSD;
++	if (p[0] == 'R' && p[1] == 'I' && p[2] == 'F' && p[3] == 'F' &&
++		p[8] == 'W' && p[9] == 'E' && p[10] == 'B' && p[11] == 'P')
++		return FZ_IMAGE_WEBP;
+ 	return FZ_IMAGE_UNKNOWN;
+ }
+ 
+@@ -1509,7 +1517,14 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
+ 	if (len < 8)
+ 		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown image file format");
+ 
+-	type = fz_recognize_image_format(ctx, buf);
++	if (len < 12)
++	{
++		unsigned char head[12] = {0};
++		memcpy(head, buf, len);
++		type = fz_recognize_image_format(ctx, head);
++	}
++	else
++		type = fz_recognize_image_format(ctx, buf);
+ 	bpc = 8;
+ 	switch (type)
+ 	{
+@@ -1544,6 +1559,9 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
+ 		fz_load_jbig2_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
+ 		bpc = 1;
+ 		break;
++	case FZ_IMAGE_WEBP:
++		fz_load_webp_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
++		break;
+ 	default:
+ 		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown image file format");
+ 	}
+diff --git a/source/fitz/load-webp.c b/source/fitz/load-webp.c
+new file mode 100644
+index 000000000..ef3574ca2
+--- /dev/null
++++ b/source/fitz/load-webp.c
+@@ -0,0 +1,136 @@
++// Copyright (C) 2004-2025 Artifex Software, Inc.
++//
++// This file is part of MuPDF.
++//
++// Based on Artifex bug 697749 / the koreader webp-upstream-697749 patch.
++// Decode uses libwebp (HAVE_WEBP). EXIF/ICC via demux are omitted: we do
++// not build libwebp's demux library.
++
++#include "mupdf/fitz.h"
++
++#ifdef HAVE_WEBP
++
++#include "pixmap-imp.h"
++
++#include <string.h>
++
++#include <webp/decode.h>
++
++struct info
++{
++	int width, height;
++	int xres, yres;
++	fz_colorspace *cs;
++};
++
++static fz_pixmap *
++webp_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_t total, int only_metadata)
++{
++	fz_pixmap *image = NULL;
++	WebPBitstreamFeatures features;
++
++	memset(info, 0, sizeof(*info));
++
++	if (WebPGetFeatures(p, total, &features) != VP8_STATUS_OK)
++		fz_throw(ctx, FZ_ERROR_FORMAT, "unable to extract webp features");
++
++	info->width = features.width;
++	info->height = features.height;
++	info->xres = 72;
++	info->yres = 72;
++	info->cs = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
++
++	if (only_metadata)
++		return NULL;
++
++	fz_var(image);
++
++	fz_try(ctx)
++	{
++		int alpha = features.has_alpha;
++		size_t out_size;
++		image = fz_new_pixmap(ctx, info->cs, info->width, info->height, NULL, alpha);
++		fz_set_pixmap_resolution(ctx, image, info->xres, info->yres);
++		out_size = (size_t)image->stride * (size_t)image->h;
++		if (alpha)
++		{
++			if (!WebPDecodeRGBAInto(p, total, image->samples, out_size, (int)image->stride))
++				fz_throw(ctx, FZ_ERROR_FORMAT, "failed decoding webp image");
++			fz_premultiply_pixmap(ctx, image);
++		}
++		else
++		{
++			if (!WebPDecodeRGBInto(p, total, image->samples, out_size, (int)image->stride))
++				fz_throw(ctx, FZ_ERROR_FORMAT, "failed decoding webp image");
++		}
++	}
++	fz_catch(ctx)
++	{
++		fz_drop_pixmap(ctx, image);
++		fz_rethrow(ctx);
++	}
++
++	return image;
++}
++
++fz_pixmap *
++fz_load_webp(fz_context *ctx, const unsigned char *p, size_t total)
++{
++	fz_pixmap *image = NULL;
++	struct info info;
++
++	memset(&info, 0, sizeof info);
++	fz_var(image);
++
++	fz_try(ctx)
++	{
++		image = webp_read_image(ctx, &info, p, total, 0);
++	}
++	fz_always(ctx)
++		fz_drop_colorspace(ctx, info.cs);
++	fz_catch(ctx)
++	{
++		fz_drop_pixmap(ctx, image);
++		fz_rethrow(ctx);
++	}
++
++	return image;
++}
++
++void
++fz_load_webp_info(fz_context *ctx, const unsigned char *p, size_t total, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
++{
++	struct info info;
++
++	memset(&info, 0, sizeof info);
++
++	fz_try(ctx)
++		webp_read_image(ctx, &info, p, total, 1);
++	fz_catch(ctx)
++	{
++		fz_drop_colorspace(ctx, info.cs);
++		fz_rethrow(ctx);
++	}
++
++	*cspacep = info.cs;
++	*wp = info.width;
++	*hp = info.height;
++	*xresp = info.xres;
++	*yresp = info.yres;
++}
++
++#else /* HAVE_WEBP */
++
++fz_pixmap *
++fz_load_webp(fz_context *ctx, const unsigned char *p, size_t total)
++{
++	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "WebP codec is not available");
++}
++
++void
++fz_load_webp_info(fz_context *ctx, const unsigned char *p, size_t total, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
++{
++	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "WebP codec is not available");
++}
++
++#endif /* HAVE_WEBP */
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index 5352b152d..02bf77486 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -696,6 +696,8 @@ static fz_image *load_html_image(fz_context *ctx, fz_archive *zip, const char *b
+ 			buf = fz_new_buffer_from_base64(ctx, src+22, 0);
+ 		else if (!strncmp(src, "data:image/gif;base64,", 22))
+ 			buf = fz_new_buffer_from_base64(ctx, src+22, 0);
++		else if (!strncmp(src, "data:image/webp;base64,", 23))
++			buf = fz_new_buffer_from_base64(ctx, src+23, 0);
+ 		else
+ 		{
+ 			fz_strlcpy(path, base_uri, sizeof path);
+diff --git a/source/html/mobi.c b/source/html/mobi.c
+index 4edb1f4aa..23b9e24dd 100644
+--- a/source/html/mobi.c
++++ b/source/html/mobi.c
+@@ -317,7 +317,7 @@ fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi)
+ 		for (i = extra; i < n; ++i)
+ 		{
+ 			uint32_t size = offsets[i+1] - offsets[i];
+-			if (size > 8)
++			if (size > 12)
+ 			{
+ 				unsigned char *data = mobi->data + offsets[i];
+ 				if (fz_recognize_image_format(ctx, data))

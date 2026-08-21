@@ -1,0 +1,20 @@
+pdf-op-run: avoid a double free when repairing the structure tree throws
+
+pdf_check_structure_tree() can throw on the repair-and-retry path, after
+line_a / line_b have already been freed - and then fz_always frees them a
+second time.
+---
+diff --git a/source/pdf/pdf-op-run.c b/source/pdf/pdf-op-run.c
+index a785a63..cf448b7 100644
+--- a/source/pdf/pdf-op-run.c
++++ b/source/pdf/pdf-op-run.c
+@@ -2071,7 +2071,9 @@ repaired:
+ 			if (!doc->struct_tree_repaired)
+ 			{
+ 				fz_free(ctx, line_a);
++				line_a = NULL; /* SumatraPDF: prevent double free in fz_always if the retry throws */
+ 				fz_free(ctx, line_b);
++				line_b = NULL; /* SumatraPDF */
+ 				(void)pdf_check_structure_tree(ctx, doc);
+ 				goto repaired;
+ 			}

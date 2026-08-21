@@ -170,14 +170,13 @@ static ImageAlpha GetAlphaType(const u8* data, size_t n) {
         return Alpha_Normal;
     }
 
-    switch (extAreaLE->alphaType) {
-        case Alpha_Normal:
-            return Alpha_Normal;
-        case Alpha_Premultiplied:
-            return Alpha_Premultiplied;
-        default:
-            return Alpha_Ignore;
+    if (extAreaLE->alphaType == Alpha_Normal) {
+        return Alpha_Normal;
     }
+    if (extAreaLE->alphaType == Alpha_Premultiplied) {
+        return Alpha_Premultiplied;
+    }
+    return Alpha_Ignore;
 }
 
 // checks whether this could be data for a TGA image
@@ -233,7 +232,11 @@ static void CopyPixelToBGRA(u8* dst, const u8* src, int bits, int alphaBits, Ima
             dst[0] = Scale5To8(v & 0x1f);
             dst[1] = Scale5To8((v >> 5) & 0x1f);
             dst[2] = Scale5To8((v >> 10) & 0x1f);
-            dst[3] = (bits == 16 && alphaBits == 1 && alphaType != Alpha_Ignore) ? ((v & 0x8000) ? 255 : 0) : 255;
+            if (bits == 16 && alphaBits == 1 && alphaType != Alpha_Ignore) {
+                dst[3] = (v & 0x8000) ? 255 : 0;
+            } else {
+                dst[3] = 255;
+            }
             break;
         }
         case 24:
@@ -272,7 +275,7 @@ static void ReadPixel(ReadState& s, u8* dst, int bits, int alphaBits, ImageAlpha
         case Type_Palette_RLE:
             idx = ((u8)s.data[0] | (2 == s.n ? ((u8)s.data[1] << 8) : 0)) - s.cmap.firstEntry;
             if (0 <= idx && idx < s.cmap.length) {
-                src = s.cmap.data + (idx * s.cmap.n);
+                src = s.cmap.data + ((size_t)idx * s.cmap.n);
             } else {
                 s.failed = true;
             }
@@ -316,7 +319,7 @@ Pixmap* PixmapFromData(Str d) {
         s.cmap.n = (headerLE->cmapBitDepth + 7) / 8;
         s.cmap.length = convLE(headerLE->cmapLength);
         s.cmap.firstEntry = convLE(headerLE->cmapFirstEntry);
-        s.data += s.cmap.length * s.cmap.n;
+        s.data += (size_t)s.cmap.length * s.cmap.n;
         if (s.data > s.end) {
             return nullptr;
         }
@@ -345,9 +348,9 @@ Pixmap* PixmapFromData(Str d) {
         return nullptr;
     }
     for (int y = 0; y < h; y++) {
-        u8* rowOut = pixmap->data + (pixmap->stride * (invertY ? y : h - 1 - y));
+        u8* rowOut = pixmap->data + ((size_t)pixmap->stride * (invertY ? y : h - 1 - y));
         for (int x = 0; x < w; x++) {
-            ReadPixel(s, rowOut + (4 * (invertX ? w - 1 - x : x)), bits, alphaBits, alphaType);
+            ReadPixel(s, rowOut + ((size_t)4 * (invertX ? w - 1 - x : x)), bits, alphaBits, alphaType);
         }
     }
     if (s.failed) {
@@ -357,7 +360,7 @@ Pixmap* PixmapFromData(Str d) {
     return pixmap;
 }
 
-inline bool memeq3(const char* pix1, const char* pix2) {
+static inline bool memeq3(const char* pix1, const char* pix2) {
     return pix1[0] == pix2[0] && pix1[1] == pix2[1] && pix1[2] == pix2[2];
 }
 
@@ -400,7 +403,7 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
     TgaFooter footerLE = {0, 0, TGA_FOOTER_SIGNATURE};
 
     str::Builder tgaData;
-    tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
+    tgaData.Append(Str((char*)&headerLE, sizeofi(headerLE)));
     for (int k = 0; k < h; k++) {
         int y = h - 1 - k;
         for (int i = 0, j = 1; i < w; i += j, j = 1) {
@@ -430,13 +433,13 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
             }
         }
     }
-    tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
+    tgaData.Append(Str((char*)&footerLE, sizeofi(footerLE)));
 
     // don't compress the image data if that increases the file size
     if ((size_t)len(tgaData) > sizeof(headerLE) + (size_t)(w * h * 3) + sizeof(footerLE)) {
         tgaData.RemoveAt(0, len(tgaData));
         headerLE.imageType = Type_Truecolor;
-        tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
+        tgaData.Append(Str((char*)&headerLE, sizeofi(headerLE)));
         for (int k = 0; k < h; k++) {
             int y = h - 1 - k;
             for (int x = 0; x < w; x++) {
@@ -445,7 +448,7 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
                 tgaData.Append(Str(pixel, 3));
             }
         }
-        tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
+        tgaData.Append(Str((char*)&footerLE, sizeofi(footerLE)));
     }
 
     return tgaData.TakeStr();

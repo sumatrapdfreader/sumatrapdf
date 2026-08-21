@@ -7,6 +7,9 @@
     <Filter Include="base\tests">
       <UniqueIdentifier>{62C33BDB-4E7B-7D28-B782-5684A3591819}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
@@ -15,12 +18,17 @@
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DocProperties.h" />
+    <ClInclude Include="..\src\FilterUtil.h" />
     <ClInclude Include="..\src\Flags.h" />
+    <ClInclude Include="..\src\PageRenderPolicy.h" />
     <ClInclude Include="..\src\PdfDarkMode.h" />
     <ClInclude Include="..\src\RefHoverDetect.h" />
     <ClInclude Include="..\src\RefHoverTextDetect.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
+    <ClInclude Include="..\src\base\AppendStore.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\Arena.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -54,13 +62,13 @@
     <ClInclude Include="..\src\base\DirScan.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Dpi.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\File.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\FileWatcher.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\GdiPlusUtil.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Geom.h">
@@ -123,6 +131,15 @@
     <ClInclude Include="..\src\base\WinDynCalls.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\CommandPaletteModel.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\Dpi.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\Layout.h">
+      <Filter>gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
@@ -130,7 +147,9 @@
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
+    <ClCompile Include="..\src\FilterUtil.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
+    <ClCompile Include="..\src\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\PdfDarkModeImageClassifier_ut.cpp" />
     <ClCompile Include="..\src\PdfDarkModeImageRules.cpp" />
     <ClCompile Include="..\src\PdfDarkModeOklab.cpp" />
@@ -141,6 +160,9 @@
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
+    <ClCompile Include="..\src\base\AppendStore.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -183,9 +205,6 @@
     <ClCompile Include="..\src\base\DirScan_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Dpi_win.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\File.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -193,6 +212,9 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\File_win.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\GdiPlusUtil.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Geom.cpp">
@@ -249,10 +271,16 @@
     <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\tests\AppendStore_ut.cpp">
+      <Filter>base\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\tests\Base_ut.cpp">
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\ByteReaderWriter_ut.cpp">
+      <Filter>base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\ClipboardImage_ut.cpp">
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Crypto_ut.cpp">
@@ -296,6 +324,15 @@
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Dpi_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Layout.cpp">
+      <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\test_util.cpp">
       <Filter>tools</Filter>

@@ -117,6 +117,8 @@ void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     props[idx].val = val;
 }
 
+// like AddProp but stores an owned (heap) copy of val. Use when props must
+// outlive the buffer val points into (e.g. the temp arena). Free with FreeProps.
 void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     if (!val) {
         return;
@@ -134,6 +136,7 @@ void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     props[idx].val = owned;
 }
 
+// frees values stored by AddPropOwned and empties props
 void FreeProps(Props& props) {
     int n = PropsCount(props);
     for (int i = 0; i < n; i++) {

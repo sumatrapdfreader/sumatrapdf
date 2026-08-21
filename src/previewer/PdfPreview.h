@@ -22,7 +22,7 @@ class PdfPreview : public IThumbnailProvider,
                    public IPreviewHandler,
                    public IOleWindow {
   public:
-    PdfPreview(long* plRefCount, PreviewType type);
+    PdfPreview(AtomicInt* plRefCount, PreviewType type);
     ~PdfPreview();
 
     // IUnknown
@@ -32,10 +32,10 @@ class PdfPreview : public IThumbnailProvider,
                                     QITABENT(PdfPreview, IObjectWithSite),
                                     QITABENT(PdfPreview, IPreviewHandler),
                                     QITABENT(PdfPreview, IOleWindow),
-                                    {0}};
+                                    {}};
         return QISearch(this, qit, riid, ppv);
     }
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
         if (cRef == 0) {
@@ -49,12 +49,16 @@ class PdfPreview : public IThumbnailProvider,
 
     // IInitializeWithStream
     IFACEMETHODIMP Initialize(IStream* pStm, __unused DWORD grfMode) {
-        m_pStream = pStm;
-        if (!m_pStream) {
+        if (!pStm) {
             return E_INVALIDARG;
         }
-        m_pStream->AddRef();
-        return S_OK;
+        // The shell hands us a deny-write stream, so keeping it alive locks the
+        // file for as long as the preview is on screen and an editor rebuilding
+        // the document can't write over it (issue #1530). We only ever read it
+        // once anyway - every engine is built from a memory buffer - so read it
+        // here and let go of the file.
+        m_data = ReadIStream(pStm);
+        return str::IsNull(m_data) ? E_FAIL : S_OK;
     };
 
     // IObjectWithSite
@@ -134,7 +138,11 @@ class PdfPreview : public IThumbnailProvider,
             DestroyWindow(m_hwnd);
             m_hwnd = nullptr;
         }
-        m_pStream = nullptr;
+        userZoom = 0;
+        panX = 0;
+        panY = 0;
+        panning = false;
+        str::FreePtr(&m_data);
         if (m_engine) {
             m_engine->Release();
             m_engine = nullptr;
@@ -153,27 +161,36 @@ class PdfPreview : public IThumbnailProvider,
     IFACEMETHODIMP ContextSensitiveHelp(__unused BOOL fEnterMode) { return E_NOTIMPL; }
 
     EngineBase* GetEngine() {
-        if (!m_engine && m_pStream) {
-            m_engine = LoadEngine(m_pStream);
+        if (!m_engine && !str::IsNull(m_data)) {
+            m_engine = LoadEngine(m_data);
+            // the engine has its own copy; a failed load won't do better on a
+            // second try, so let the bytes go either way
+            str::FreePtr(&m_data);
         }
         return m_engine;
     }
 
     PageRenderer* renderer = nullptr;
+    // 0 = fit page; otherwise engine-scale zoom (1 = 100%)
+    float userZoom = 0.f;
+    int panX = 0;
+    int panY = 0;
+    bool panning = false;
+    Point panLast;
 
   protected:
-    long m_lRef = 1;
-    long* m_plModuleRef = nullptr;
+    AtomicInt m_lRef = 1;
+    AtomicInt* m_plModuleRef = nullptr;
     PreviewType m_type;
-    ScopedComPtr<IStream> m_pStream;
+    // the file's bytes, owned; freed once the engine has been built from them
+    Str m_data;
     EngineBase* m_engine = nullptr;
     ScopedGdiPlus* m_gdiScope = nullptr;
-    bool m_muiInitialized = false;
     // state for IPreviewHandler
     ScopedComPtr<IUnknown> m_site;
     HWND m_hwnd = nullptr;
     HWND m_hwndParent = nullptr;
     Rect m_rcParent;
 
-    EngineBase* LoadEngine(IStream* stream);
+    EngineBase* LoadEngine(const Str& data);
 };

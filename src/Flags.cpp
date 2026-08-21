@@ -42,8 +42,9 @@ enum class Arg {
     FwdSearchColor = 68, FwdSearchPermanent = 69, MangaMode = 70, Search = 71,
     AllUsers = 72, AllUsers2 = 73, RunInstallNow = 74, Adobe = 75,
     DDE = 76, Pwd = 77, EngineDump = 78, SetColorRange = 79,
-    UpgradeFrom = 80, ForTesting = 81, DumpExif = 82, DumpChm = 83,
-    Control = 84, UnitTests = 85,
+    UpgradeFrom = 80, ForTesting = 81, QuickLook = 82, QuickLookAgent = 83,
+    WindowPos = 84, DumpExif = 85, DumpChm = 86, Control = 87,
+    UnitTests = 88,
 };
 
 static SeqStrings gArgNames =
@@ -67,12 +68,14 @@ static SeqStrings gArgNames =
     "fwdsearch-color\0" "fwdsearch-permanent\0" "manga-mode\0" "search\0"
     "all-users\0" "allusers\0" "run-install-now\0" "a\0"
     "dde\0" "pwd\0" "engine-dump\0" "set-color-range\0"
-    "upgrade-from\0" "for-testing\0" "dump-exif\0" "dump-chm\0"
-    "dbg-control\0" "unit-tests\0";
+    "upgrade-from\0" "for-testing\0" "quicklook\0" "quicklook-agent\0"
+    "window-pos\0" "dump-exif\0" "dump-chm\0" "dbg-control\0"
+    "unit-tests\0";
 // clang-format on
 // @gen-end flags
 
 #if OS_WIN
+// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
 void ShowPrintersDialog(bool consoleOnly) {
     str::Builder out;
 
@@ -109,6 +112,7 @@ static TempStr ResolveLnkTemp(Str path) {
     return str::DupTemp(path);
 }
 
+// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
 void ShowPrintersDialog(bool) {}
 #endif
 
@@ -152,7 +156,7 @@ bool IsValidPageRange(Str ranges) {
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
 bool IsBenchPagesInfo(Str s) {
-    return str::EqI(s, "loadonly") || IsValidPageRange(s);
+    return str::EqI(s, StrL("loadonly")) || IsValidPageRange(s);
 }
 
 // -view [continuous][singlepage|facing|bookview]
@@ -191,7 +195,7 @@ static void ParseZoomValue(float* zoom, Str txtOrig) {
         return;
     }
     // remove trailing % in place, if exists
-    if (str::EndsWith(txtDup, "%")) {
+    if (str::EndsWith(txtDup, StrL("%"))) {
         txtDup.len--;
     }
     str::Parse(txtDup, "%f", zoom);
@@ -200,6 +204,18 @@ static void ParseZoomValue(float* zoom, Str txtOrig) {
     if (*zoom < 1.f) {
         *zoom = kZoomActualSize;
     }
+}
+
+// -window-pos <width>x<height>@<x>x<y> e.g. 960x540@960x0
+static void ParseWindowPos(Rect* rect, Str txt) {
+    int dx, dy, x, y;
+    if (str::IsNull(str::Parse(txt, "%dx%d@%dx%d%$", &dx, &dy, &x, &y))) {
+        return;
+    }
+    if (dx <= 0 || dy <= 0) {
+        return;
+    }
+    *rect = Rect(x, y, dx, dy);
 }
 
 // -scroll x,y
@@ -239,7 +255,7 @@ static Arg GetArg(Str s) {
 // https://stackoverflow.com/questions/619158/adobe-reader-command-line-reference
 // https://www.robvanderwoude.com/commandlineswitches.php#Acrobat
 // with Sumatra extensions
-void ParseAdobeFlags(FileArgs& i, Str s) {
+static void ParseAdobeFlags(FileArgs& i, Str s) {
     StrVec parts;
     StrVec parts2;
     Str name;
@@ -269,22 +285,22 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         valN = ParseInt(val);
 
         // https://pdfobject.com/pdf/pdf_open_parameters_acro8.pdf
-        if (str::EqI(name, "nameddest")) {
+        if (str::EqI(name, StrL("nameddest"))) {
             i.destName = str::Dup(val);
             continue;
         }
-        if (str::EqI(name, "page") && valN >= 1) {
+        if (str::EqI(name, StrL("page")) && valN >= 1) {
             i.pageNumber = valN;
             continue;
         }
         // comment=
         // collab=setting
-        if (str::EqI(name, "zoom")) {
+        if (str::EqI(name, StrL("zoom"))) {
             // TODO: handle zoom
             // 100 is 100%
             continue;
         }
-        if (str::EqI(name, "view")) {
+        if (str::EqI(name, StrL("view"))) {
             // TODO: Fit FitH FitH,top FitV FitV,left
             // FitB FitBH FitBH,top FitBV, FitBV,left
             continue;
@@ -292,7 +308,7 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         // viewrect
         // pagemode=bookmarks, thumbs, none
         // scrollbar=1|0
-        if (str::EqI(name, "search")) {
+        if (str::EqI(name, StrL("search"))) {
             if (len(val) > 0) {
                 i.search = str::Dup(val);
             }
@@ -307,14 +323,14 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
 
         // those are Sumatra additions
 
-        if (str::EqI(name, "annotatt") && valN > 0) {
+        if (str::EqI(name, StrL("annotatt")) && valN > 0) {
             // for annotations that are attachments this is pdf object number
             // representing the attachment
             i.annotAttObjNum = valN;
             continue;
         }
 
-        if (str::EqI(name, "attachno") && valN > 0) {
+        if (str::EqI(name, StrL("attachno")) && valN > 0) {
             // this is attachment number, use PdfLoadAttachment() to load it
             i.attachmentNo = valN;
             continue;
@@ -371,7 +387,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         // for some reason that makes Directory Opus "Open With" provide the file twice
         // and gives "%3" and "%4' on cmd-line.
         // this is a hack to ignore that
-        if (str::Eq(argName, "%2") || str::Eq(argName, "%3") || str::Eq(argName, "%4")) {
+        if (str::Eq(argName, StrL("%2")) || str::Eq(argName, StrL("%3")) || str::Eq(argName, StrL("%4"))) {
             logf("ParseFlags: skipping '%s'\n", argName);
             continue;
         }
@@ -514,6 +530,14 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             i.forTesting = true;
             continue;
         }
+        if (arg == Arg::QuickLook) {
+            i.quickLook = true;
+            continue;
+        }
+        if (arg == Arg::QuickLookAgent) {
+            i.quickLookAgent = true;
+            continue;
+        }
         if (arg == Arg::UnitTests) {
             i.unitTests = true;
             i.exitImmediately = true;
@@ -625,6 +649,10 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::Scroll) {
             ParseScrollValue(&i.startScroll, param);
+            continue;
+        }
+        if (arg == Arg::WindowPos) {
+            ParseWindowPos(&i.windowPos, param);
             continue;
         }
         if (arg == Arg::AppData) {
@@ -779,7 +807,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     CollectFile:
         // Resolve shell shortcuts so opening a .lnk loads the target document.
         Str filePath = argName;
-        if (str::EndsWithI(filePath, ".lnk")) {
+        if (str::EndsWithI(filePath, StrL(".lnk"))) {
             filePath = ResolveLnkTemp(argName);
         }
         if (filePath) { // resolve might fail

@@ -15,7 +15,7 @@ static inline char GenRandChar() {
 
 static Str GenRandomString() {
     static char buf[256];
-    int n = 1 + (rand() % (dimof(buf) - 4)); // 4 just in case, 2 should be precise value
+    int n = 1 + (rand() % (int)(dimof(buf) - 4)); // 4 just in case, 2 should be precise value
 
     for (int i = 0; i < n; i++) {
         buf[i] = GenRandChar();

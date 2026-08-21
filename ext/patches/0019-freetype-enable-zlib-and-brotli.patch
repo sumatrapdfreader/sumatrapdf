@@ -1,0 +1,22 @@
+freetype: enable zlib and brotli so woff2 and compressed tables load
+
+Our freetype build has zlib and brotli available, so turn them on. Upstream's
+slim options file disables them, which loses woff2 and compressed-table
+support.
+---
+diff --git a/scripts/freetype/slimftoptions.h b/scripts/freetype/slimftoptions.h
+index 395eb1d..ddd4bae 100644
+--- a/scripts/freetype/slimftoptions.h
++++ b/scripts/freetype/slimftoptions.h
+@@ -2,8 +2,10 @@
+ 
+ #include <freetype/config/ftoption.h>
+ 
++#define FT_CONFIG_OPTION_USE_ZLIB
++#define FT_CONFIG_OPTION_USE_BROTLI
++
+ #undef FT_CONFIG_OPTION_USE_LZW
+-#undef FT_CONFIG_OPTION_USE_ZLIB
+ #undef FT_CONFIG_OPTION_USE_BZIP2
+ #undef FT_CONFIG_OPTION_USE_PNG
+ #undef FT_CONFIG_OPTION_USE_HARFBUZZ

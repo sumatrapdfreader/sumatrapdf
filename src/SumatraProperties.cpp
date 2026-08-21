@@ -4,12 +4,15 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/UITask.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -28,61 +31,43 @@
 #include "SumatraConfig.h"
 #include "Print.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
+#include "EutlTrust.h"
+
+#if OS_WIN
+#include <wincrypt.h>
+#endif
 
 void ShowProperties(HWND parent, DocController* ctrl);
 
 constexpr int kButtonPadding = 8;
 
-struct PropertiesWnd : Wnd {
-    ~PropertiesWnd() override;
-
+struct PropertiesWnd : WindowBase {
     HWND hwndParent = nullptr;
+    bool showPdfCertActions = false;
     Edit* editProps = nullptr;
-    Button* btnCopyToClipboard = nullptr;
-    HFONT propsFont = nullptr;
+    VirtButton* btnCopyToClipboard = nullptr;
+    VirtButton* btnViewCert = nullptr;
+    VirtButton* btnUpdateEutl = nullptr;
+    PlatformFont* propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
-    // CloseDocumentInCurrentTab and DeleteMainWindow can both try to tear the
-    // properties window down; only one deferred delete may run.
-    bool deleteScheduled = false;
 
     bool Create(HWND parent);
-    void LayoutToClient();
-    void UpdateTheme();
+    void UpdateTheme() override;
+    void ApplyDarkMode() override;
     void SetPropsText(Str text);
     void SizeToContent();
-    void CopyToClipboard();
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    bool PreTranslateMessage(MSG& msg) override;
-    bool OnCommand(WPARAM wparam, LPARAM lparam) override;
-    void ScheduleDelete();
+    void CopyToClipboard(VirtMouseEvent* ev = nullptr);
+    void ViewCertificate(VirtMouseEvent* ev = nullptr);
+    void UpdateEutl(VirtMouseEvent* ev = nullptr);
+    void OnCommand(WindowBase::CommandEvent* ev);
 };
 
 static Vec<PropertiesWnd*> gPropertiesWindows;
 
-PropertiesWnd::~PropertiesWnd() {
-    if (propsFont) {
-        DeleteObject(propsFont);
-        propsFont = nullptr;
-    }
-}
-
-static void DeletePropertiesWndInstance(PropertiesWnd* w) {
-    delete w;
-}
-
-void PropertiesWnd::ScheduleDelete() {
-    if (deleteScheduled) {
-        return;
-    }
-    deleteScheduled = true;
-    auto fn = MkFunc0<PropertiesWnd>(DeletePropertiesWndInstance, this);
-    uitask::Post(fn, "SafeDeletePropertiesWnd");
-}
-
-static int ButtonPadding(HWND hwnd) {
-    return DpiScale(hwnd, kButtonPadding);
+static int ButtonPadding() {
+    return DpiScale(kButtonPadding);
 }
 
 PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
@@ -95,6 +80,21 @@ PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
         }
     }
     return nullptr;
+}
+
+// True for the properties dialog and its children (the read-only edit),
+// but not the owner frame. Used so Home/End keep navigating the document
+// while Properties stays open (issue #5971).
+bool IsHwndInPropertiesWindow(HWND hwnd) {
+    if (!hwnd) {
+        return false;
+    }
+    for (PropertiesWnd* w : gPropertiesWindows) {
+        if (w->hwnd == hwnd || (w->hwnd && IsChild(w->hwnd, hwnd))) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd);
@@ -127,9 +127,7 @@ static bool PdfDateParseA(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
 
     Str slice = date;
     // "D:" at the beginning is optional
-    if (str::StartsWith(slice, "D:")) {
-        slice = Str(slice.s + 2, slice.len - 2);
-    }
+    str::TrimPrefix(slice, StrL("D:"));
     int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
     Str end = str::Parse(slice,
                          "%4d%2d%2d"
@@ -262,12 +260,12 @@ static TempStr FormatPageSizeUnitTemp(SizeF sizeInches, double unitsPerInch, Str
     }
     TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
     TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
-    return fmt("%s x %s %s", strWidth, strHeight, unit);
+    return fmt("%sx%s %s", strWidth, strHeight, unit);
 }
 
-// Format page size in cm/mm/in (locale unit first) and pixels (issue #2186).
-// Metric: "21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 px (A4)"
-// US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 px (A4)"
+// Format page size in cm/mm/in (locale unit first) and points (issue #2186).
+// Metric: "21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 pt (A4)"
+// US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 pt (A4)"
 static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
     float fileDpi = engine->GetFileDPI();
@@ -303,23 +301,25 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
         case PaperFormat::Statement:
             formatName = StrL(" (Statement)");
             break;
+        case PaperFormat::Other:
+            formatName = StrL(" (Other)");
+            break;
     }
 
     TempStr inStr = FormatPageSizeUnitTemp(size, 1.0, StrL("in"));
     TempStr cmStr = FormatPageSizeUnitTemp(size, 2.54, StrL("cm"));
     TempStr mmStr = FormatPageSizeUnitTemp(size, 25.4, StrL("mm"));
 
-    // Pixel size at the document's native DPI (PDF media box is typically 72 dpi)
-    int pxW = (int)((size.dx * fileDpi) + 0.5f);
-    int pxH = (int)((size.dy * fileDpi) + 0.5f);
-    TempStr pxStr = fmt("%d x %d px", pxW, pxH);
+    int ptW = (int)lroundf(size.dx * 72.0f);
+    int ptH = (int)lroundf(size.dy * 72.0f);
+    TempStr ptStr = fmt("%dx%d pt", ptW, ptH);
 
-    // Locale unit first, then the other two, then pixels (issue #2186)
+    // Locale unit first, then the other two, then points (issue #2186)
     bool isMetric = GetMeasurementSystem() == 0;
     if (isMetric) {
-        return fmt("%s, %s, %s, %s%s", cmStr, mmStr, inStr, pxStr, formatName);
+        return fmt("%s, %s, %s, %s%s", cmStr, mmStr, inStr, ptStr, formatName);
     }
-    return fmt("%s, %s, %s, %s%s", inStr, cmStr, mmStr, pxStr, formatName);
+    return fmt("%s, %s, %s, %s%s", inStr, cmStr, mmStr, ptStr, formatName);
 }
 
 // returns a list of permissions denied by this document
@@ -365,6 +365,7 @@ static const PropLabel propToName[] = {
     {DocProp::Files, _TRN("Files:")},
     {DocProp::Keywords, _TRN("Keywords:")},
     {DocProp::Encryption, _TRN("Encryption:")},
+    {DocProp::Signatures, _TRN("Signatures:")},
     {DocProp::ImageSize, _TRN("Image Size:")},
     {DocProp::Dpi, _TRN("DPI:")},
     {DocProp::Comment, _TRN("Comment:")},
@@ -434,7 +435,7 @@ static void AppendPropTranslated(str::Builder& out, DocProp prop, Str val) {
 
 static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath) {
     if (len(fstruct) == 0) {
-        bool isPDF = str::EndsWithI(filePath, ".pdf");
+        bool isPDF = str::EndsWithI(filePath, StrL(".pdf"));
         if (isPDF) {
             AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), StrL(":")), _TRA("No"));
         }
@@ -484,7 +485,7 @@ static void GetAllProps(DocController* ctrl, Props& propsOut) {
     }
 }
 
-void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
+static void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
     SYSTEMTIME date;
     int timeZone = 0;
     bool ok = false;
@@ -515,6 +516,86 @@ static void AddImageProperties(EngineBase* engine, int pageNo, str::Builder& out
     }
 }
 
+// Types whose name is more than an upper-cased extension. Everything else
+// reads fine as-is (".pdf" -> "PDF"), so only the exceptions live here.
+static Str FileTypeDisplayName(FileType ft) {
+    if (ft == FileType::Jxl) {
+        return StrL("JPEG-XL");
+    }
+    return {};
+}
+
+// The file type as sniffed from the content, which is what the app went by
+// when it picked an engine - the extension can say something else entirely.
+// Only for a plain file on disk: a directory document has no content of its
+// own, an embedded PDF stream isn't a file, and in plugin mode the "path" is
+// a URL we can't read.
+static void AppendFileType(str::Builder& out, Str path) {
+    if (gPluginMode || len(path) == 0) {
+        return;
+    }
+    if (path::IsDirectory(path) || !file::Exists(path)) {
+        return;
+    }
+    FileType ft = GuessFileTypeFromFile(path);
+    if (ft == FileType::Unknown) {
+        return;
+    }
+    Str name = FileTypeDisplayName(ft);
+    if (!name) {
+        TempStr ext = GetExtForFileTypeTemp(ft);
+        if (len(ext) < 2) {
+            return;
+        }
+        // ".pdf" reads better as "PDF" next to the file name it belongs to
+        TempStr fromExt = str::DupTemp(Str(ext.s + 1, ext.len - 1));
+        str::ToUpperInPlace(fromExt);
+        name = fromExt;
+    }
+    AppendProp(out, _TRA("File Type:"), name);
+}
+
+// Which way the pages run, and where that came from. A PDF can state it with
+// ViewerPreferences /Direction; an EPUB with page-progression-direction.
+// Otherwise it's the manga-mode default or the user's own toggle
+// (issues #1264, #2022).
+// Not shown for a standalone image (no page sequence) or a one-page document
+// that neither declares a direction nor has had manga mode toggled (#5950).
+static bool ShouldShowReadingDirection(DisplayModel* dm) {
+    if (!dm) {
+        return false;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || engine->kind == kindEngineImage) {
+        return false;
+    }
+    const PageLayout& layout = engine->preferredLayout;
+    if (layout.r2lDeclared) {
+        return true;
+    }
+    if (dm->GetDisplayR2L() != layout.r2l) {
+        return true;
+    }
+    return dm->PageCount() > 1;
+}
+
+static void AppendReadingDirection(str::Builder& out, DisplayModel* dm) {
+    if (!ShouldShowReadingDirection(dm)) {
+        return;
+    }
+    bool r2l = dm->GetDisplayR2L();
+    Str dir = r2l ? _TRA("Right to left") : _TRA("Left to right");
+    Str src;
+    const PageLayout& layout = dm->GetEngine()->preferredLayout;
+    if (layout.r2lDeclared && r2l == layout.r2l) {
+        src = _TRA("from the document");
+    } else if (r2l != layout.r2l) {
+        src = _TRA("changed by you");
+    }
+    TempStr val = src ? str::JoinTemp(dir, StrL(" ("), src, StrL(")")) : TempStr(dir);
+    AppendProp(out, _TRA("Reading Direction:"), val);
+}
+
 static void GetPropsText(DocController* ctrl, str::Builder& out) {
     ReportIf(!ctrl);
 
@@ -536,6 +617,8 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
         strTemp = FormatFileSizeTransTemp(fileSize);
         AppendProp(out, _TRA("File Size:"), strTemp);
     }
+    AppendFileType(out, path);
+    AppendReadingDirection(out, dm);
 
     Props props;
     GetAllProps(ctrl, props);
@@ -617,6 +700,19 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     AppendPropTranslated(out, DocProp::Files, GetPropValueTemp(props, DocProp::Files));
 }
 
+// make text end with exactly one '\n' (if not empty) so that appending
+// a section preceded by "\n" yields a single empty line, not more.
+// the last property is optional (e.g. "Files:") so text can end with
+// a stray blank line
+static void EndWithSingleNewline(str::Builder& b) {
+    while (len(b) > 0 && b.LastChar() == '\n') {
+        b.RemoveLast();
+    }
+    if (len(b) > 0) {
+        b.AppendChar('\n');
+    }
+}
+
 static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
     for (int i = 0; i + 2 < line.len; i++) {
         if (line.s[i] != ':' || line.s[i + 1] != ' ') {
@@ -638,9 +734,7 @@ static void AlignPropertiesText(str::Builder& text) {
         int lineLen = nl >= 0 ? nl : rest.len;
         int labelBytes = 0;
         int labelWidth = GetPropertyLabelWidth(Str(rest.s, lineLen), &labelBytes);
-        if (labelWidth > maxLabelWidth) {
-            maxLabelWidth = labelWidth;
-        }
+        maxLabelWidth = std::max(labelWidth, maxLabelWidth);
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
     if (maxLabelWidth == 0) {
@@ -673,9 +767,101 @@ static void AlignPropertiesText(str::Builder& text) {
     text.Reset(ToStr(aligned));
 }
 
-void PropertiesWnd::CopyToClipboard() {
+void PropertiesWnd::CopyToClipboard(VirtMouseEvent*) {
     CopyTextToClipboard(ToStr(propsText));
 }
+
+#if OS_WIN
+// CryptUIDlgViewContext is in cryptui.dll. MSVC can pull that via
+// #pragma comment; mingw-w64 often has no import lib, so load it here.
+static void ViewCertDer(HWND parent, Str der) {
+    if (len(der) == 0) {
+        return;
+    }
+    PCCERT_CONTEXT cert =
+        CertCreateCertificateContext(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, (const BYTE*)der.s, (DWORD)len(der));
+    if (!cert) {
+        return;
+    }
+    using Fn = BOOL(WINAPI*)(DWORD, const void*, HWND, LPCWSTR, DWORD, void*);
+    HMODULE h = LoadLibraryW(L"cryptui.dll");
+    Fn fn = h ? (Fn)GetProcAddress(h, "CryptUIDlgViewContext") : nullptr;
+    if (fn) {
+        fn(CERT_STORE_CERTIFICATE_CONTEXT, cert, parent, L"Certificate", 0, nullptr);
+    }
+    if (h) {
+        FreeLibrary(h);
+    }
+    CertFreeCertificateContext(cert);
+}
+
+void PropertiesWnd::ViewCertificate(VirtMouseEvent*) {
+    MainWindow* win = FindMainWindowByHwnd(hwndParent);
+    DisplayModel* dm = win && win->ctrl ? win->ctrl->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        MessageBoxW(hwnd, L"No PDF document is open.", L"View Certificate", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    Vec<PdfSigCert> certs;
+    EngineMupdfGetSignatureCerts(engine, certs);
+    if (len(certs) == 0) {
+        MessageBoxW(hwnd, L"This document has no signature certificates to view.", L"View Certificate",
+                    MB_OK | MB_ICONINFORMATION);
+        FreePdfSigCerts(certs);
+        return;
+    }
+    if (len(certs) == 1) {
+        ViewCertDer(hwnd, certs[0].der);
+        FreePdfSigCerts(certs);
+        return;
+    }
+    HMENU menu = CreatePopupMenu();
+    for (int i = 0; i < len(certs); i++) {
+        AppendMenuW(menu, MF_STRING, (UINT_PTR)(i + 1), CWStrTemp(certs[i].label));
+    }
+    POINT pt{};
+    GetCursorPos(&pt);
+    int id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hwnd, nullptr);
+    DestroyMenu(menu);
+    if (id >= 1 && id <= len(certs)) {
+        ViewCertDer(hwnd, certs[id - 1].der);
+    }
+    FreePdfSigCerts(certs);
+}
+
+struct EutlUpdateJob {
+    HWND hwnd = nullptr;
+    bool ok = false;
+    Str msg;
+};
+
+static void OnEutlUpdateDone(EutlUpdateJob* job) {
+    if (job->hwnd && IsWindow(job->hwnd)) {
+        MessageBoxW(job->hwnd, CWStrTemp(job->msg), L"EU Trusted List",
+                    MB_OK | (job->ok ? MB_ICONINFORMATION : MB_ICONWARNING));
+    }
+    str::Free(job->msg);
+    delete job;
+}
+
+static void EutlUpdateThread(EutlUpdateJob* job) {
+    Str err;
+    job->ok = EutlUpdate(&err);
+    TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
+    job->msg = str::Dup(msg);
+    str::Free(err);
+    auto fn = MkFunc0<EutlUpdateJob>(OnEutlUpdateDone, job);
+    uitask::Post(fn, "EutlUpdateDone");
+}
+
+void PropertiesWnd::UpdateEutl(VirtMouseEvent*) {
+    auto* job = new EutlUpdateJob;
+    job->hwnd = hwnd;
+    auto fn = MkFunc0<EutlUpdateJob>(EutlUpdateThread, job);
+    RunAsync(fn, "EutlUpdate");
+}
+#endif
 
 void PropertiesWnd::SetPropsText(Str text) {
     if (!editProps) {
@@ -697,11 +883,6 @@ void PropertiesWnd::SizeToContent() {
     if (!editProps) {
         return;
     }
-    HWND hwndEdit = editProps->hwnd;
-
-    HFONT font = (HFONT)SendMessageW(hwndEdit, WM_GETFONT, 0, 0);
-    HDC hdcEdit = GetDC(hwndEdit);
-    HGDIOBJ origFont = SelectObject(hdcEdit, font);
     int maxLineDx = 0;
     int nLines = 0;
     Str text = ToStr(propsText);
@@ -709,40 +890,35 @@ void PropertiesWnd::SizeToContent() {
         Str rest = Str(text.s + off, text.len - off);
         int nl = str::IndexOfChar(rest, '\n');
         int lineLen = nl >= 0 ? nl : rest.len;
-        Size size = HdcGetTextExtentPoint32(hdcEdit, Str(rest.s, lineLen));
-        if (size.dx > maxLineDx) {
-            maxLineDx = size.dx;
-        }
+        Size size = PlatformFontMeasureText(propsFont, Str(rest.s, lineLen));
+        maxLineDx = std::max(size.dx, maxLineDx);
         nLines++;
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
     maxLineDx += 16;
 
-    TEXTMETRICW tm{};
-    GetTextMetricsW(hdcEdit, &tm);
-    int lineHeight = tm.tmHeight + tm.tmExternalLeading;
-
-    SelectObject(hdcEdit, origFont);
-    ReleaseDC(hwndEdit, hdcEdit);
+    int lineHeight = PlatformFontLineHeight(propsFont);
+    // a bit of slack so the longest lines don't touch the right edge
+    maxLineDx += 4 * PlatformFontMeasureText(propsFont, "x").dx;
 
     // add padding for scrollbar, border, window frame
-    int editPadding = GetSystemMetrics(SM_CXVSCROLL) + (2 * GetSystemMetrics(SM_CXEDGE)) + 16;
-    int frameDx = GetSystemMetrics(SM_CXFRAME) * 2;
+    int editPadding = DpiGetSystemMetrics(SM_CXVSCROLL) + (2 * DpiGetSystemMetrics(SM_CXEDGE)) + 16;
+    int frameDx = DpiGetSystemMetrics(SM_CXFRAME) * 2;
     int wantedClientDx = maxLineDx + editPadding;
     if (btnCopyToClipboard) {
         Size buttonSize = btnCopyToClipboard->GetIdealSize();
-        wantedClientDx = std::max(wantedClientDx, buttonSize.dx + (2 * ButtonPadding(hwnd)));
+        wantedClientDx = std::max(wantedClientDx, buttonSize.dx + (2 * ButtonPadding()));
     }
     int wantedDx = wantedClientDx + frameDx;
 
     // calculate height to fit all lines
-    int editBorderDy = 2 * GetSystemMetrics(SM_CYEDGE);
-    int frameDy = (GetSystemMetrics(SM_CYFRAME) * 2) + GetSystemMetrics(SM_CYCAPTION);
-    int btnAreaDy = DpiScale(hwnd, 40);
+    int editBorderDy = 2 * DpiGetSystemMetrics(SM_CYEDGE);
+    int frameDy = (DpiGetSystemMetrics(SM_CYFRAME) * 2) + DpiGetSystemMetrics(SM_CYCAPTION);
+    int btnAreaDy = DpiScale(40);
     if (btnCopyToClipboard) {
-        btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + (2 * ButtonPadding(hwnd)));
+        btnAreaDy = std::max(btnAreaDy, btnCopyToClipboard->GetIdealSize().dy + (2 * ButtonPadding()));
     }
-    int bottomMargin = ButtonPadding(hwnd);
+    int bottomMargin = ButtonPadding();
     int wantedDy = ((nLines + 3) * lineHeight) + editBorderDy + btnAreaDy + bottomMargin + frameDy;
 
     // cap at 80% of screen
@@ -754,65 +930,27 @@ void PropertiesWnd::SizeToContent() {
 
     Rect wRc = HwndWindowRect(hwnd);
     MoveWindow(hwnd, wRc.x, wRc.y, wantedDx, wantedDy, TRUE);
-    LayoutToClient();
+    DoLayout();
 }
 
-void PropertiesWnd::LayoutToClient() {
-    if (!layout || !hwnd) {
-        return;
-    }
-    Rect rc = HwndClientRect(hwnd);
-    Constraints bc = Tight({rc.dx, rc.dy});
-    layout->Layout(bc);
-    layout->SetBounds({0, 0, rc.dx, rc.dy});
+void PropertiesWnd::ApplyDarkMode() {
+    DarkModeApplyToWindowAndEraseBg(hwnd);
 }
 
 void PropertiesWnd::UpdateTheme() {
-    COLORREF colBg = ThemeWindowControlBackgroundColor();
-    COLORREF colTxt = ThemeWindowTextColor();
-    SetColors(colTxt, colBg);
-    if (editProps) {
-        editProps->SetColors(colTxt, colBg);
+    WindowBase::UpdateTheme();
+    // Re-apply monospaced font after darkmode child theming (may reset font).
+    if (editProps && propsFont) {
+        editProps->SetFont(propsFont);
     }
-    if (btnCopyToClipboard) {
-        btnCopyToClipboard->SetColors(colTxt, colBg);
-    }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
-LRESULT PropertiesWnd::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg == WM_SIZE) {
-        LayoutToClient();
-        return 0;
-    }
-    return WndProcDefault(hwndIn, msg, wp, lp);
-}
-
-bool PropertiesWnd::PreTranslateMessage(MSG& msg) {
-    if (!hwnd) {
-        return false;
-    }
-    if (msg.hwnd != hwnd && !IsChild(hwnd, msg.hwnd)) {
-        return false;
-    }
-    if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) {
-        Close();
-        return true;
-    }
-    return false;
-}
-
-bool PropertiesWnd::OnCommand(WPARAM wparam, LPARAM lparam) {
-    auto cmd = LOWORD(wparam);
+void PropertiesWnd::OnCommand(WindowBase::CommandEvent* ev) {
+    auto cmd = LOWORD(ev->wparam);
     if (cmd == CmdCopySelection) {
         CopyToClipboard();
-        return true;
+        ev->didHandle = true;
     }
-    return Wnd::OnCommand(wparam, lparam);
 }
 
 static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
@@ -822,14 +960,15 @@ static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
     Rect rc = HwndWindowRect(hwnd);
     Point pos = {rc.x, rc.y};
     if (pos != w->initialPos) {
+        // Only stash the point. SaveSettings() walks every tab and can re-enter
+        // IsDocLoaded while CloseDocumentInCurrentTab has already cleared win->ctrl.
         gGlobalPrefs->propWinPos = pos;
-        SaveSettings();
     }
 }
 
-// WM_CLOSE must clean up here: Wnd::Destroy() clears hwnd and drops the Wnd from
+// WM_CLOSE must clean up here: WindowBase::Destroy() clears hwnd and drops the WindowBase from
 // the hwnd map before DestroyWindow(), so WM_DESTROY never reaches onDestroy.
-static void OnPropertiesClose(Wnd::CloseEvent* ev) {
+static void OnPropertiesClose(WindowBase::CloseEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
     if (!w || w->deleteScheduled) {
         return;
@@ -839,7 +978,7 @@ static void OnPropertiesClose(Wnd::CloseEvent* ev) {
     w->ScheduleDelete();
 }
 
-static void OnPropertiesDestroy(Wnd::DestroyEvent* ev) {
+static void OnPropertiesDestroy(WindowBase::DestroyEvent* ev) {
     PropertiesWnd* w = (PropertiesWnd*)ev->e->self;
     // Fallback if the window was destroyed without WM_CLOSE (or Close already
     // scheduled the deferred free — then deleteScheduled is set and we no-op).
@@ -862,7 +1001,7 @@ bool PropertiesWnd::Create(HWND parent) {
         args.title = _TRA("Document Properties");
         args.visible = false;
         args.style = WS_OVERLAPPEDWINDOW;
-        args.font = GetAppFont(parent);
+        args.font = GetAppFont();
         args.isRtl = isRtl;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
@@ -889,6 +1028,8 @@ bool PropertiesWnd::Create(HWND parent) {
         editProps = new Edit();
         editProps->Create(args);
         SendMessageW(editProps->hwnd, EM_SETREADONLY, TRUE, 0);
+        // multi-line edit default can still cap text; font lists may be large
+        SendMessageW(editProps->hwnd, EM_SETLIMITTEXT, 0, 0);
         DWORD tabStop = 16;
         SendMessageW(editProps->hwnd, EM_SETTABSTOPS, 1, (LPARAM)&tabStop);
         vbox->AddChild(editProps, 1);
@@ -898,13 +1039,24 @@ bool PropertiesWnd::Create(HWND parent) {
         auto* btnRow = new HBox();
         btnRow->alignMain = MainAxisAlign::MainEnd;
         btnRow->alignCross = CrossAxisAlign::CrossCenter;
-        btnCopyToClipboard = CreateButton(hwnd, _TRA("Copy To Clipboard"),
-                                          MkMethod0<PropertiesWnd, &PropertiesWnd::CopyToClipboard>(this), isRtl);
-        btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(hwnd, kButtonPadding, 0, 0, 0)));
+        btnRow->gap = GetAppFont()->averageCharWidth;
+        btnCopyToClipboard = NewThemedButton(hwnd, _TRA("Copy To Clipboard"), GetAppFont(), true);
+        btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
+        btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+#if OS_WIN
+        if (showPdfCertActions) {
+            btnViewCert = NewThemedButton(hwnd, _TRA("View Certificate..."), GetAppFont(), true);
+            btnViewCert->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::ViewCertificate>(this);
+            btnRow->AddChild(new Padding(btnViewCert, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+            btnUpdateEutl = NewThemedButton(hwnd, _TRA("Update EU Trusted List"), GetAppFont(), true);
+            btnUpdateEutl->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::UpdateEutl>(this);
+            btnRow->AddChild(new Padding(btnUpdateEutl, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
+        }
+#endif
         vbox->AddChild(btnRow);
     }
 
-    layout = new Padding(vbox, DpiScaledInsets(hwnd, 0, kButtonPadding, kButtonPadding, kButtonPadding));
+    layout = new Padding(vbox, DpiScaledInsets(0, kButtonPadding, kButtonPadding, kButtonPadding));
 
     SetPropsText(ToStr(propsText));
     SizeToContent();
@@ -925,11 +1077,10 @@ static void OnGetFontsFinished(GetFontsResult* result) {
         Str props = ToStr(w->propsText);
         int pos = str::IndexOf(props, marker);
         if (pos >= 0) {
-            if (pos > 0 && props.s[pos - 1] == '\n') {
-                pos--;
-            }
             w->propsText.RemoveAt(pos, len(w->propsText) - pos);
         }
+        // fontsText starts with "\n" to separate it with a single empty line
+        EndWithSingleNewline(w->propsText);
         w->propsText.Append(ToStr(result->fontsText));
         w->SetPropsText(ToStr(w->propsText));
         w->SizeToContent();
@@ -939,12 +1090,12 @@ static void OnGetFontsFinished(GetFontsResult* result) {
 
 struct GetFontsData {
     HWND hwnd;
-    DocController* ctrl;
+    EngineBase* engine;
 };
 
 static void GetFontsThread(GetFontsData* data) {
-    TempStr val = data->ctrl->GetPropertyTemp(DocProp::FontList);
-    auto result = new GetFontsResult;
+    TempStr val = data->engine->GetPropertyTemp(DocProp::FontList);
+    auto* result = new GetFontsResult;
     result->hwnd = data->hwnd;
     if (val) {
         result->fontsText.Append("\n");
@@ -954,6 +1105,7 @@ static void GetFontsThread(GetFontsData* data) {
     }
     auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
     uitask::Post(fn, "GetFontsFinished");
+    data->engine->Release();
     delete data;
     DestroyTempArena();
 }
@@ -971,13 +1123,24 @@ void ShowProperties(HWND parent, DocController* ctrl) {
 
     auto* wnd = new PropertiesWnd();
     gPropertiesWindows.Append(wnd);
+    DisplayModel* dm = ctrl->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    wnd->showPdfCertActions = EngineMupdfIsPdf(engine);
+#if OS_WIN
+    if (wnd->showPdfCertActions) {
+        EutlRegisterLookup();
+    }
+#endif
     GetPropsText(ctrl, wnd->propsText);
     AlignPropertiesText(wnd->propsText);
+    EndWithSingleNewline(wnd->propsText);
     wnd->propsText.Append("\n");
     wnd->propsText.Append(_TRA("Getting font information..."));
 
-    wnd->onClose = MkFunc1Void<Wnd::CloseEvent*>(OnPropertiesClose);
-    wnd->onDestroy = MkFunc1Void<Wnd::DestroyEvent*>(OnPropertiesDestroy);
+    wnd->closeOnEsc = true;
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnPropertiesClose);
+    wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnPropertiesDestroy);
+    wnd->onCommand = MkMethod1<PropertiesWnd, WindowBase::CommandEvent*, &PropertiesWnd::OnCommand>(wnd);
     if (!wnd->Create(parent)) {
         gPropertiesWindows.Remove(wnd);
         delete wnd;
@@ -987,7 +1150,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     Point savedPos = gGlobalPrefs->propWinPos;
     if (!savedPos.IsEmpty()) {
         SetWindowPos(wnd->hwnd, nullptr, savedPos.x, savedPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-        wnd->LayoutToClient();
+        wnd->DoLayout();
     } else {
         HwndCenterDialog(wnd->hwnd, parent);
     }
@@ -997,9 +1160,16 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         wnd->initialPos = {rc.x, rc.y};
     }
 
-    auto data = new GetFontsData;
+    if (!dm || !dm->engine) {
+        auto* result = new GetFontsResult;
+        result->hwnd = wnd->hwnd;
+        OnGetFontsFinished(result);
+        return;
+    }
+    auto* data = new GetFontsData;
     data->hwnd = wnd->hwnd;
-    data->ctrl = ctrl;
+    data->engine = dm->engine;
+    data->engine->AddRef();
     auto fn = MkFunc0<GetFontsData>(GetFontsThread, data);
     RunAsync(fn, "GetFontsThread");
 }

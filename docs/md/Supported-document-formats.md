@@ -5,12 +5,12 @@ SumatraPDF reader supports the following document types:
 - PDF (.pdf, .ai)
 - eBook formats:
   - unencrypted EPUB (.epub)
-  - MOBI / Kindle (.mobi, and un-encrypted .azw, .azw3, .azw4, .prc)
+  - MOBI / Kindle (.mobi, and un-encrypted .azw, .azw3, .prc); Print Replica (.azw4) opens as the wrapped PDF
   - FictionBook (.fb2, .fb2z, .fbz, .zfb2, .fb2.zip)
   - Palm DOC (.pdb)
   - plain text (.txt, .log, .nfo, .tcr, …)
 - Markdown (.md, .markdown), rendered as GitHub Flavored Markdown
-- comic book files: .cbz, .cbr, .cbt, .cb7 (and .ora)
+- comic book files: .cbz, .cbr, .cbt, .cb7 (and .ora) — see [Comics and manga](Comics-and-manga.md)
 - archive files (.zip, .rar, .7z, .tar) containing images
 - DjVu (.djvu, .djv)
 - Microsoft Compiled HTML Help (.chm)
@@ -23,7 +23,7 @@ SumatraPDF reader supports the following document types:
   - TIFF (.tif, .tiff), including multi-page
   - BMP (.bmp, .dib)
   - TGA (.tga)
-  - WebP (.webp)
+  - WebP (.webp) — also images inside EPUB, MOBI and HTML
   - JPEG XR (.jxr, .hdp, .wdp)
   - JPEG 2000 (.jp2, .j2k, .jpx, .jpf, .jpm, .j2c)
   - AVIF (.avif)

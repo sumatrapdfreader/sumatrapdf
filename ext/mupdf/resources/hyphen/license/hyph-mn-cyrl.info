@@ -1,0 +1,70 @@
+% title: Hyphenation patterns for Mongolian, Cyrillic script
+% copyright: Copyright (C) 2007-2015 by Dorjgotov Batmunkh
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Mongolian, Cyrillic script
+%     tag: mn-cyrl
+% version: v1.2 2008/03/23
+% authors:
+%   -
+%     name: Dorjgotov Batmunkh
+%     affiliation: National University of Mongolia
+%     contact: bataak (at) gmail.com
+% licence:
+%     - This file is available under any of the following licenses:
+%     -
+%         name: LPPL
+%         version: 1.3
+%         or_later: true
+%         url: http://www.latex-project.org/lppl/lppl-1-3.txt
+%     -
+%        name: MIT
+%        url: https://opensource.org/licenses/MIT
+%        text: >
+%             Permission is hereby granted, free of charge, to any person obtaining a copy
+%             of this software and associated documentation files (the "Software"), to deal
+%             in the Software without restriction, including without limitation the rights
+%             to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%             copies of the Software, and to permit persons to whom the Software is
+%             furnished to do so, subject to the following conditions:
+%
+%             The above copyright notice and this permission notice shall be included in
+%             all copies or substantial portions of the Software.
+%
+%             THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%             IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%             FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+%             AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%             LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%             OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%             THE SOFTWARE.
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - 2008/03/23 v1.2
+%     - 2008/06/08 Patterns added to hyph-utf8
+%     - 2015/12/05 Patterns released under the MIT license
+% texlive:
+%     encoding: t2a
+%     babelname: mongolian
+%     legacy_patterns: mnhyphn.tex
+%     message: (New) Mongolian hyphenation patterns
+%     package: mongolian
+% ==========================================
+% Special thanks to: Jim Hefferon and Robin Fairbairns
+%
+% There are few basic rules in mongolian
+%
+% 1. If there is a consonant then it can use hyphen before it.
+%    And if there're two consonants then it can use hyphen before second consonant.
+%    Are there three consonants then it can put hyphen before third consonant,
+%    also are there four consonants then it can use hyphen before fourth consonant.
+% 2. In the case of hardsign or softsign, it's possible to hyphen after these signs.
+%    For instance, байгуулъ-я, үзүүль-е
+% 3. However one vowel can be belong to a syllable, it's not possible to use hyphen.
+%
+% for mongolian words:
+% for russian words:

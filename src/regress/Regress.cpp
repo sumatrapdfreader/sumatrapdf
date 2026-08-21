@@ -24,10 +24,11 @@ To write new regression test:
 #include "base/GuessFileType.h"
 #include "base/GdiPlusUtil.h"
 #include "base/HtmlTags.h"
-#include "mui/Mui.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocProperties.h"
 #include "DocController.h"
@@ -180,12 +181,10 @@ int RegressMain() {
     InstallCrashHandler();
     InitAllCommonControls();
     ScopedGdiPlus gdi;
-    mui::Initialize();
 
     RunTests();
 
     printflush("All tests completed successfully!\n");
-    mui::Destroy();
     UninstallCrashHandler();
 
     system("pause");

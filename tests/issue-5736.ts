@@ -4,7 +4,7 @@
 // the fixed page-number column when the window is narrow.
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 function buildPdf(line: string): Buffer {

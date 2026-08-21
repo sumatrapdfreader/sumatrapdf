@@ -20,7 +20,7 @@ import { gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 
 const DATA = join(import.meta.dir, "issue-5633-data");
 const WORK = join(DATA, ".work");
@@ -30,7 +30,7 @@ const TEX_FILE = "test.tex";
 // line 4 of issue-5633-data/test.tex is a body paragraph that synctex maps to a position
 const TARGET_LINE = 4;
 
-function findLatexEngine(engine: "pdflatex" | "lualatex"): string | null {
+export function findLatexEngine(engine: "pdflatex" | "lualatex"): string | null {
   const exe = `${engine}.exe`;
   const localAppData = process.env.LOCALAPPDATA ?? "";
   const candidates = [

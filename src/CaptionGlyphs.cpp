@@ -232,7 +232,7 @@ static void BuildCaptionSysButtonPath(CaptionSysButtonKind kind, Gdiplus::Graphi
     }
 }
 
-void DrawCaptionSysButtonGlyph(HDC hdc, CaptionSysButtonKind kind, Rect rc, COLORREF iconCol, int iconPx) {
+void DrawCaptionSysButtonGlyph(HDC hdc, CaptionSysButtonKind kind, Rect rc, Color iconCol, int iconPx) {
     if (iconPx < 1) {
         return;
     }

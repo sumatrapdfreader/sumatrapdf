@@ -1,19 +1,17 @@
-// Ad-hoc selection translation test for Grok Build / Claude Code / OpenAI Codex.
+// Ad-hoc selection translation test for Grok Build / Claude Code / OpenAI Codex / Antigravity.
 //
 // Exercises the C++ translation path via -dbg-control TestSelectionTranslate.
 // Requires the corresponding CLI to be installed; missing backends are skipped.
 //
-// NOT registered in tests/all.ts — run directly:
+// NOT registered in tests/run-almost-all.ts — run directly:
 //   bun tests/ad-hoc-selection-translate.ts [--no-build]
-// or as part of: bun tests/before-release.ts
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 import { EXE, runStandalone } from "./util.ts";
 
-const PHRASE =
-  "In July of last year, Amazon.com reached an important way station.";
+const PHRASE = "In July of last year, Amazon.com reached an important way station.";
 
 type Backend = {
   id: number;
@@ -35,14 +33,7 @@ const BACKENDS: Backend[] = [
     name: "Claude Code",
     exePaths: [
       join(process.env.USERPROFILE ?? "", ".local", "bin", "claude.exe"),
-      join(
-        process.env.USERPROFILE ?? "",
-        "AppData",
-        "Local",
-        "Programs",
-        "claude-code",
-        "claude.exe",
-      ),
+      join(process.env.USERPROFILE ?? "", "AppData", "Local", "Programs", "claude-code", "claude.exe"),
     ],
   },
   {
@@ -51,13 +42,17 @@ const BACKENDS: Backend[] = [
     exePaths: [
       join(process.env.USERPROFILE ?? "", ".codex", "bin", "codex.exe"),
       join(process.env.USERPROFILE ?? "", ".local", "bin", "codex.exe"),
-      join(
-        process.env.LOCALAPPDATA ?? "",
-        "Microsoft",
-        "WinGet",
-        "Links",
-        "codex.exe",
-      ),
+      join(process.env.LOCALAPPDATA ?? "", "Microsoft", "WinGet", "Links", "codex.exe"),
+    ],
+  },
+  {
+    id: 3,
+    name: "Antigravity",
+    exePaths: [
+      join(process.env.USERPROFILE ?? "", "AppData", "Local", "agy", "bin", "agy.exe"),
+      join(process.env.USERPROFILE ?? "", "AppData", "Local", "agy", "bin", "antigravity.exe"),
+      join(process.env.USERPROFILE ?? "", ".local", "bin", "antigravity.exe"),
+      join(process.env.USERPROFILE ?? "", ".local", "bin", "agy.exe"),
     ],
   },
 ];
@@ -122,13 +117,7 @@ function translationsAgree(a: string, b: string): boolean {
   }
 
   // PHRASE is English mentioning July and Amazon.com
-  if (
-    /amazon/i.test(na) &&
-    /amazon/i.test(nb) &&
-    /lipc/i.test(na) &&
-    /lipc/i.test(nb) &&
-    overlap >= 0.25
-  ) {
+  if (/amazon/i.test(na) && /amazon/i.test(nb) && /lipc/i.test(na) && /lipc/i.test(nb) && overlap >= 0.25) {
     return true;
   }
 
@@ -163,9 +152,7 @@ function looksLikePolish(text: string, english: string): boolean {
 }
 
 function isSkippableError(translation: string): boolean {
-  return /authentication|api error|not installed|timed out|model is not supported/i.test(
-    translation,
-  );
+  return /authentication|api error|not installed|timed out|model is not supported/i.test(translation);
 }
 
 async function translatePhrase(
@@ -267,11 +254,7 @@ async function runBackendTranslation(backend: Backend): Promise<void> {
   const englishNorm = normalizeTranslation(english.translation);
   const autoNorm = normalizeTranslation(auto.translation);
   if (!translationsAgree(english.translation, auto.translation)) {
-    fail(
-      `${backend.name} Auto vs English mismatch:\n` +
-        `  English: ${englishNorm}\n` +
-        `  Auto:    ${autoNorm}`,
-    );
+    fail(`${backend.name} Auto vs English mismatch:\n` + `  English: ${englishNorm}\n` + `  Auto:    ${autoNorm}`);
   }
 
   if (englishNorm === autoNorm) {

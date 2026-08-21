@@ -6,7 +6,6 @@
 #include "base/ByteReaderWriter.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
-#include "base/Win.h"
 
 #include "GumboHelpers.h"
 
@@ -45,10 +44,10 @@ static chm_entry* ChmResolveObject(const ChmFile* chm, Str fileName) {
     if (!fileName) {
         return nullptr;
     }
-    if (!str::StartsWith(fileName, "/")) {
+    if (!str::StartsWith(fileName, StrL("/"))) {
         fileName = str::JoinTemp(StrL("/"), fileName);
-    } else if (str::StartsWith(fileName, "///")) {
-        fileName = Str(fileName.s + 2, fileName.len - 2);
+    } else if (str::StartsWith(fileName, StrL("///"))) {
+        str::TrimPrefix(fileName, StrL("//"));
     }
 
     chm_entry* e = ChmLookupPath(chm, fileName);
@@ -69,7 +68,7 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
     if (!e) {
         return {};
     }
-    if (e->length > 128 * 1024 * 1024) {
+    if (e->length > 128ULL * 1024 * 1024) {
         // limit to 128 MB
         return {};
     }
@@ -87,9 +86,11 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
     return Str((char*)(d), n);
 }
 
+// Strip a UTF-8 BOM if present; otherwise convert from `codepage` to UTF-8
+// (unless already UTF-8). Returns a TempStr owned by the temp allocator.
 TempStr SmartToUtf8Temp(Str s, uint codepage) {
-    if (str::StartsWith(s, UTF8_BOM)) {
-        return str::DupTemp(Str(s.s + 3, s.len - 3));
+    if (str::TrimPrefix(s, UTF8_BOM)) {
+        return str::DupTemp(s);
     }
     if (CP_UTF8 == codepage) {
         return str::DupTemp(s);
@@ -352,7 +353,7 @@ bool ChmFile::Load(Str path) {
     uint fileCodepage = codepage;
     char header[24]{};
     int n = file::ReadN(path, (u8*)header, sizeof(header));
-    if (n < (int)sizeof(header)) {
+    if (n < sizeofi(header)) {
         ByteReader r(Str(header, sizeof(header)));
         DWORD lcid = r.UInt32LE(20);
         fileCodepage = LcidToCodepage(lcid);
@@ -370,9 +371,9 @@ bool ChmFile::Load(Str path) {
 
     if (!HasData(homePath)) {
         Str pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
-        for (int i = 0; i < dimof(pathsToTest); i++) {
-            if (HasData(pathsToTest[i])) {
-                str::ReplaceWithCopy(&homePath, pathsToTest[i]);
+        for (Str testPath : pathsToTest) {
+            if (HasData(testPath)) {
+                str::ReplaceWithCopy(&homePath, testPath);
             }
         }
         if (!HasData(homePath)) {
@@ -445,9 +446,9 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
         if (!attrName || !attrVal) {
             continue;
         }
-        if (str::EqI(attrName->value, "Name")) {
+        if (str::EqI(attrName->value, StrL("Name"))) {
             name = str::DupTemp(attrVal->value);
-        } else if (str::EqI(attrName->value, "Local")) {
+        } else if (str::EqI(attrName->value, StrL("Local"))) {
             local = str::DupTemp(StripItsProtocol(Str(attrVal->value)));
         }
     }
@@ -488,15 +489,15 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
         if (!attrName || !attrVal) {
             continue;
         }
-        if (str::EqI(attrName->value, "Keyword")) {
+        if (str::EqI(attrName->value, StrL("Keyword"))) {
             keyword = Str(attrVal->value);
-        } else if (str::EqI(attrName->value, "Name")) {
+        } else if (str::EqI(attrName->value, StrL("Name"))) {
             name = Str(attrVal->value);
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword) {
                 keyword = name;
             }
-        } else if (str::EqI(attrName->value, "Local") && name) {
+        } else if (str::EqI(attrName->value, StrL("Local")) && name) {
             references.Append(name);
             references.Append(StripItsProtocol(Str(attrVal->value)));
         }
@@ -610,7 +611,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         }
         if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "object")) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
-            if (type && str::EqI(type->value, "text/sitemap")) {
+            if (type && str::EqI(type->value, StrL("text/sitemap"))) {
                 *hadOneInOut |= isIndex ? VisitChmIndexItem(visitor, node, 1) : VisitChmTocItem(visitor, node, 1);
                 continue; // don't recurse into the object's <param> children
             }
@@ -687,7 +688,7 @@ static int ChmEntityByte(WCHAR c) {
 // codepage. Labels that decoded to real Unicode (codepoints > 0xFF, i.e. raw
 // non-Latin bytes already converted by SmartToUtf8Temp) are left untouched, as
 // are pure-ASCII labels (issue #842).
-static const TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
+static TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     uint cp = (codepage == CP_ACP) ? GetACP() : codepage;
     if (!s || !ChmTocNeedsEntityRemap(cp)) {
         return s;

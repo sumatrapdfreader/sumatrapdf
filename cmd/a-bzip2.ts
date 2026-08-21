@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -31,15 +23,7 @@ const sourcePreamble = `#ifndef BZ_NO_STDIO
 #include "bzlib.h"
 `;
 
-const sourceFiles = [
-  "blocksort.c",
-  "bzlib.c",
-  "compress.c",
-  "crctable.c",
-  "decompress.c",
-  "huffman.c",
-  "randtable.c",
-];
+const sourceFiles = ["blocksort.c", "bzlib.c", "compress.c", "crctable.c", "decompress.c", "huffman.c", "randtable.c"];
 
 const sumatraSourceAdditions = `
 #include <assert.h>
@@ -80,11 +64,7 @@ function parseArgs(): Args {
   };
 }
 
-async function checkout(
-  repo: string,
-  rev: string,
-  keep: boolean,
-): Promise<void> {
+async function checkout(repo: string, rev: string, keep: boolean): Promise<void> {
   mkdirSync(depsDir, { recursive: true });
   if (!keep && existsSync(checkoutDir)) {
     rmSync(checkoutDir, { recursive: true, force: true });
@@ -212,9 +192,7 @@ function removeLocalIncludes(text: string): string {
 }
 
 function prepareChunk(path: string): string {
-  return normalizeBlankLines(
-    removeLocalIncludes(stripComments(readText(path))),
-  );
+  return normalizeBlankLines(removeLocalIncludes(stripComments(readText(path))));
 }
 
 function generateAmalgamation(root: string): {
@@ -223,10 +201,7 @@ function generateAmalgamation(root: string): {
 } {
   const srcDir = findBzip2SrcDir(root);
   const header = prepareChunk(join(srcDir, "bzlib.h"));
-  const chunks: string[] = [
-    sourcePreamble,
-    prepareChunk(join(srcDir, "bzlib_private.h")),
-  ];
+  const chunks: string[] = [sourcePreamble, prepareChunk(join(srcDir, "bzlib_private.h"))];
   for (const name of sourceFiles) {
     chunks.push(prepareChunk(join(srcDir, name)));
   }
@@ -237,12 +212,9 @@ function generateAmalgamation(root: string): {
 function versionText(repo: string, rev: string): string {
   const commitSha1 = gitOutput(["rev-parse", "HEAD"], checkoutDir);
   return (
-    [
-      `project_homepage: ${homepage}`,
-      `repo_url: ${repo}`,
-      `revision: ${rev}`,
-      `commit_sha1: ${commitSha1}`,
-    ].join("\n") + "\n"
+    [`project_homepage: ${homepage}`, `repo_url: ${repo}`, `revision: ${rev}`, `commit_sha1: ${commitSha1}`].join(
+      "\n",
+    ) + "\n"
   );
 }
 
@@ -299,15 +271,23 @@ async function main() {
   const outHeader = join(outDir, "bzlib.h");
   const outSource = join(outDir, "bzip2.c");
   const outVersion = join(outDir, "version.txt");
+  const outLicense = join(outDir, "LICENSE");
+  const srcLicense = join(checkoutDir, "LICENSE");
   rmSync(outHeader, { force: true });
   rmSync(outSource, { force: true });
   rmSync(outVersion, { force: true });
+  rmSync(outLicense, { force: true });
   writeFileSync(outHeader, header);
   writeFileSync(outSource, source);
   writeFileSync(outVersion, version);
+  if (!existsSync(srcLicense)) {
+    throw new Error(`missing license file: ${srcLicense}`);
+  }
+  writeFileSync(outLicense, readFileSync(srcLicense));
   console.log(`wrote ${outHeader}`);
   console.log(`wrote ${outSource}`);
   console.log(`wrote ${outVersion}`);
+  console.log(`wrote ${outLicense}`);
 }
 
 await main();

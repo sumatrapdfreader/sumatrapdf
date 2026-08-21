@@ -93,6 +93,7 @@ int GetPreservePdfImagesMinSize() {
     return 72;
 }
 
+// PDF dark mode runtime options (not stored in settings file)
 bool GetPreservePdfImagesInDarkMode() {
     return true;
 }
@@ -118,9 +119,20 @@ DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
     return DocumentColorsFollowTheme::Off;
 }
 
+DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
+    (void)v;
+    return DocumentColorsFollowTheme::Off;
+}
+
 void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
     (void)mode;
 }
+
+void SetDocumentColorsFollowThemePreview(DocumentColorsFollowTheme mode) {
+    (void)mode;
+}
+
+void ClearDocumentColorsFollowThemePreview() {}
 
 bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds) {
     (void)imgRect;
@@ -141,11 +153,20 @@ RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH
     return imgPage;
 }
 
+// Cap bbox when embedded image dimensions are unknown (common with content-stream tiles).
 RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight) {
     (void)pageHeight;
     return imgPage;
 }
 
+bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage) {
+    (void)ctx;
+    (void)image;
+    (void)pageCoverage;
+    return false;
+}
+
+// Gate for Legacy skip-rect preserve: combines bbox size, pixel stats, and artwork heuristics.
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH) {
     (void)ctx;

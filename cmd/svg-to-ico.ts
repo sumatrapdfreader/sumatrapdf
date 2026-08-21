@@ -7,15 +7,7 @@
 //   Download: https://github.com/linebender/resvg/releases (resvg-win64.zip)
 //   Optional: bin/zopflipng.exe for smaller 256 PNGs
 
-import {
-  readFileSync,
-  writeFileSync,
-  readdirSync,
-  mkdtempSync,
-  rmSync,
-  existsSync,
-  mkdirSync,
-} from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, mkdtempSync, rmSync, existsSync, mkdirSync } from "node:fs";
 import { join, basename } from "node:path";
 import { tmpdir } from "node:os";
 import { deflateSync, inflateSync } from "node:zlib";
@@ -160,7 +152,7 @@ function encodePngRgba(w: number, h: number, rgba: Buffer): Buffer {
     let c = ~0;
     for (let i = 0; i < buf.length; i++) {
       c ^= buf[i];
-      for (let k = 0; k < 8; k++) c = c & 1 ? (0xedb88320 ^ (c >>> 1)) : c >>> 1;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     }
     return ~c >>> 0;
   }

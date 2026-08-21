@@ -32,11 +32,15 @@ Some settings (for example `UseTabs`) require restarting SumatraPDF. Per-documen
 
 **I accidentally inverted document colors — how do I undo?**
 
-Press `Shift + I` again (`CmdInvertColors`), or set `DocumentColorsFollowTheme = off` in advanced settings. See [Customize theme colors](Customize-theme-colors.md).
+Press `Shift + I` again (`CmdInvertColors`) — it is a session-only swap of the page colors. If the pages are recolored even without it, set `DocumentColorsFollowTheme = off` in advanced settings. See [Customize theme colors](Customize-theme-colors.md).
 
-**How do I get a dark background without inverting images in EPUBs?**
+**How do I get dark page colors without crushing photos and figures?**
 
-There is no perfect one-click solution: `Shift + I` inverts the whole rendered page including images. For EPUBs you can tune `EBookUI` (custom CSS, `WindowBgCol`) or use themes — see [Customize eBook UI](Customize-eBook-UI.md).
+Set **`DocumentColorsFollowTheme = smart`** (or press **`Shift + I`** once from `off`). That recolors text and background but keeps images as in the file. Use **`legacy`** only if you want images recolored too (old invert-style behavior). UI chrome is separate: pick a dark **`Theme`**. Details: [Customize theme colors](Customize-theme-colors.md).
+
+**How do I get a dark background for reflowed EPUBs?**
+
+Prefer **`DocumentColorsFollowTheme = smart`** for MuPDF page recoloring that preserves images. You can also tune `EBookUI` (`CustomCSS`, `IgnoreDocumentCSS`, `WindowBgCol`) — see [Customize eBook UI](Customize-eBook-UI.md).
 
 ## Links and navigation
 

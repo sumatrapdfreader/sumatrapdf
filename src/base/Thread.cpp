@@ -86,13 +86,13 @@ void SetThreadName(Str threadName, ThreadId threadId) {
     }
 #if OS_DARWIN
     char buf[64];
-    size_t n = (size_t)std::min(threadName.len, (int)sizeof(buf) - 1);
+    size_t n = (size_t)std::min(threadName.len, sizeofi(buf) - 1);
     memcpy(buf, threadName.s, n);
     buf[n] = 0;
     pthread_setname_np(buf);
 #elif OS_LINUX
     char buf[16];
-    size_t n = (size_t)std::min(threadName.len, (int)sizeof(buf) - 1);
+    size_t n = (size_t)std::min(threadName.len, sizeofi(buf) - 1);
     memcpy(buf, threadName.s, n);
     buf[n] = 0;
     pthread_setname_np(pthread_self(), buf);
@@ -112,7 +112,7 @@ static DWORD WINAPI ThreadFunc0(void* data) {
 }
 
 ThreadHandle StartThread(const Func0& fn, Str threadName) {
-    auto fp = new Func0(fn);
+    auto* fp = new Func0(fn);
     ThreadId threadId = 0;
     ThreadHandle hThread = CreateThread(nullptr, 0, ThreadFunc0, (void*)fp, 0, &threadId);
     if (!hThread) {

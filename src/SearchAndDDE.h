@@ -4,6 +4,8 @@
 #define kSumatraDdeServer L"SUMATRA"
 #define kSumatraDdeTopic L"control"
 
+struct Gfx;
+
 // WM_COPYDATA magic numbers (in COPYDATASTRUCT::dwData):
 // - kCopyDataDdeW   : payload is a null-terminated UTF-16 DDE command string
 //                    ("[Open(\"...\",...)]..."). Handled synchronously via
@@ -38,6 +40,9 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp);
 
 #define HIDE_FWDSRCHMARK_TIMER_ID 4
 #define HIDE_FWDSRCHMARK_DELAY_IN_MS 400
+// dest highlight after a link/bookmark jump (#5945): stay solid longer than
+// SyncTeX so the mark is still there after you look at the new page
+#define HIDE_LINKDESTMARK_DELAY_IN_MS 2000
 #define HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS 100
 #define HIDE_FWDSRCHMARK_STEPS 5
 
@@ -48,8 +53,10 @@ bool NeedsFindUI(MainWindow* win);
 void ClearSearchResult(MainWindow* win);
 bool OnInverseSearch(MainWindow* win, int x, int y);
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int col, int ret, int page, Vec<Rect>& rects);
-void PaintForwardSearchMark(MainWindow* win, HDC hdc);
-void PaintAllFindMatches(MainWindow* win, HDC hdc);
+void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest);
+void PaintForwardSearchMark(MainWindow* win, Gfx* gfx);
+TempStr LinkDestHighlightResultTemp(int* exitCodeOut);
+void PaintAllFindMatches(MainWindow* win, Gfx* gfx);
 void InvalidateFindMatchPaintCache();
 
 void FindPrev(MainWindow* win);
@@ -57,28 +64,23 @@ void FindNext(MainWindow* win);
 void FindFirst(MainWindow* win);
 void FindToggleMatchCase(MainWindow* win);
 void FindToggleMatchWholeWord(MainWindow* win);
-// called when the user edits the find bar's text (find-as-you-type)
 void OnFindBarTextChanged(MainWindow* win);
-// fired by the debounce WM_TIMER on hwndFrame: runs the deferred search
+bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut);
 void FindDebounceTimerFired(MainWindow* win);
-// if a debounced search is pending, cancel the timer and start it now (so Enter
-// forces the search to start immediately). Returns true if one was pending.
 bool FindFlushPendingSearch(MainWindow* win);
-// navigate to and select a match chosen from the floating results list
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph);
-// free the cached per-match snippets (win->findMatches)
 void ClearFindMatches(MainWindow* win);
-// Drop find-match / match-count state that only applies to the previous document
-// (tab switch, close-current, reload). Keeps find box text (#5308). If the find
-// UI is still open, starts a new count so all-match highlights rebuild.
 void InvalidateFindForDocumentChange(MainWindow* win);
 void FindSelection(MainWindow* win, TextSearch::Direction direction);
-// in-page find result posted by a chm / markdown webview: update the find bar status
 void BrowserFindResultReceived(MainWindow* win, int gen, int current, int total);
-// all-pages find result posted by a chm / markdown webview: rebuild win->findMatches
 void BrowserFindAllResultReceived(MainWindow* win, Str payload);
 bool AbortFinding(MainWindow* win, bool hideMessage);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified, bool showProgress);
+
+struct DropDown;
+void RememberFindQuery(Str);
+void ApplyFindHistory(DropDown*);
+TempStr FindHistoryResultTemp(int* exitCodeOut);
 extern bool gIsStartup;
 extern StrVec gDdeOpenOnStartup;

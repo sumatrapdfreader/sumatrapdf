@@ -444,7 +444,7 @@ static void PlainTextCitationDetected() {
     // Cursor on the 'S' of "Smith" (glyph 13 → x = 72 + 13*6 = 150).
     bool ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{152, 206}, &surname, &year);
     utassert(ok);
-    utassert(surname && str::Eq(surname, "Smith"));
+    utassert(surname && str::Eq(surname, StrL("Smith")));
     utassert(year == 2020);
     str::Free(surname);
 }
@@ -697,14 +697,14 @@ static void PlainTextCitationSrcRectDistinctOnLine() {
     // Cursor on 'S' of Smith (glyph 6 → x = 72 + 6*6 = 108).
     bool ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{110, 206}, &surname, &year, &first);
     utassert(ok);
-    utassert(surname && str::Eq(surname, "Smith"));
+    utassert(surname && str::Eq(surname, StrL("Smith")));
     utassert(year == 2020);
     utassert(first.dx > 0);
     str::Free(surname);
     // Cursor on 'J' of Jones (glyph 25 → x = 72 + 25*6 = 222).
     ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{224, 206}, &surname, &year, &second);
     utassert(ok);
-    utassert(surname && str::Eq(surname, "Jones"));
+    utassert(surname && str::Eq(surname, StrL("Jones")));
     utassert(year == 2021);
     utassert(second.dx > 0);
     str::Free(surname);

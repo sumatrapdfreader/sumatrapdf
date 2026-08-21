@@ -30,12 +30,13 @@ struct Archive {
 
     struct FileInfo {
         int fileId = 0;
-        Str name = {};
+        Str name;
         i64 fileTime = 0; // this is typedef'ed as time64_t in unrar.h
         int fileSizeUncompressed = 0;
         bool isDir = false;
-        // set when eagerLoad extraction failed for this entry (bad data,
-        // OOM, etc.). `data` will be nullptr in that case.
+        // Permanent extract failure (no path to reopen, corrupt entry).
+        // Transient I/O (sleep, network drop) leaves this false so a later
+        // GetFileDataById retries. `data` is nullptr when failed.
         bool failed = false;
 
         // internal use
@@ -51,31 +52,15 @@ struct Archive {
     Format format = Format::Unknown;
 
     bool Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExtractProgressCb& cbProgress);
-    bool OpenFromData(Str data);
+    bool OpenFromData(Str data, bool eagerLoad = true);
 
     Vec<FileInfo*> const& GetFileInfos();
 
     int GetFileId(Str fileName);
 
-    // Return the FileInfo record for a given entry, loading its data into
-    // fileInfo->data on demand (on a miss, re-opens the archive unless
-    // that was disabled by eager-load mode).
-    //
-    // Ownership: the returned FileInfo* is owned by this archive. By
-    // default fileInfo->data is *not* transferred to the caller — a later
-    // call for the same entry returns the same cached buffer, and the
-    // archive destructor frees it. If the caller wants the buffer to
-    // outlive the archive, they should set fileInfo->data = nullptr after
-    // saving the pointer; they then become responsible for free()ing it.
-    //
-    // Returns nullptr for an unknown name / out-of-range fileId. For an
-    // entry whose decompression failed check fileInfo->failed — data will
-    // be nullptr in that case.
     FileInfo* GetFileDataByName(Str filename);
     FileInfo* GetFileDataById(int fileId);
     Str GetFileDataPartById(int fileId, int sizeHint);
-
-    Str GetComment();
 
     // password for encrypted archives (owned by this object)
     Str password;
@@ -88,6 +73,8 @@ struct Archive {
     Vec<FileInfo*> fileInfos_;
 
     Str archivePath_;
+    // compressed bytes when opened from memory; kept so we can re-open for lazy extract
+    Str archiveData_;
 
     // only set when we loaded file infos using unrar.dll fallback
     Str rarFilePath_;
@@ -96,8 +83,6 @@ struct Archive {
     bool ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
 
     bool OpenUnrarFallback(Str rarPathUtf, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
-    // Populate fileInfos_[fileId]->data via the respective backend; set
-    // ->failed when extraction didn't produce the expected bytes.
     void LoadFileDataByIdUnrarDll(int fileId);
     void LoadFileDataByIdLibarchive(int fileId);
     Str GetFileDataPartByIdUnrarDll(int fileId, int sizeHint);

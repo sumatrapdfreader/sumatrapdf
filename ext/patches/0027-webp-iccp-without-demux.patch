@@ -1,0 +1,98 @@
+webp: apply ICCP chunk via our own RIFF walk
+
+WebP stores an ICC profile in an ICCP RIFF chunk. We do not
+build libwebp demux; walk the container the same way we walk
+EXIF and hand the payload to fz_new_icc_colorspace.
+
+---
+diff --git a/source/fitz/load-webp.c b/source/fitz/load-webp.c
+index ef3574ca2..b69284829 100644
+--- a/source/fitz/load-webp.c
++++ b/source/fitz/load-webp.c
+@@ -3,8 +3,8 @@
+ // This file is part of MuPDF.
+ //
+ // Based on Artifex bug 697749 / the koreader webp-upstream-697749 patch.
+-// Decode uses libwebp (HAVE_WEBP). EXIF/ICC via demux are omitted: we do
+-// not build libwebp's demux library.
++// Decode uses libwebp (HAVE_WEBP). ICCP is applied via our own RIFF walk,
++// not libwebp demux (we do not build that library).
+ 
+ #include "mupdf/fitz.h"
+ 
+@@ -23,6 +23,67 @@ struct info
+ 	fz_colorspace *cs;
+ };
+ 
++// payload of the first RIFF chunk whose FourCC is fourcc; 0 if missing
++static int
++webp_find_chunk(const unsigned char *p, size_t total, const char fourcc[4], const unsigned char **out, size_t *out_len)
++{
++	size_t idx = 12;
++	if (total < 12 || memcmp(p, "RIFF", 4) || memcmp(p + 8, "WEBP", 4))
++		return 0;
++	while (idx + 8 <= total)
++	{
++		size_t size = (size_t)p[idx + 4] | ((size_t)p[idx + 5] << 8) |
++			((size_t)p[idx + 6] << 16) | ((size_t)p[idx + 7] << 24);
++		size_t payload = idx + 8;
++		if (payload + size > total)
++			return 0;
++		if (memcmp(p + idx, fourcc, 4) == 0)
++		{
++			*out = p + payload;
++			*out_len = size;
++			return 1;
++		}
++		idx = payload + size + (size & 1);
++	}
++	return 0;
++}
++
++static fz_colorspace *
++webp_icc_colorspace(fz_context *ctx, const unsigned char *p, size_t total, fz_colorspace *colorspace)
++{
++#if FZ_ENABLE_ICC
++	const unsigned char *icc = NULL;
++	size_t icc_len = 0;
++	fz_buffer *buf = NULL;
++	fz_colorspace *cs = NULL;
++
++	if (!webp_find_chunk(p, total, "ICCP", &icc, &icc_len) || icc_len < 128)
++		return colorspace;
++
++	fz_var(buf);
++	fz_try(ctx)
++	{
++		buf = fz_new_buffer_from_copied_data(ctx, icc, icc_len);
++		cs = fz_new_icc_colorspace(ctx, fz_colorspace_type(ctx, colorspace), 0, NULL, buf);
++		fz_drop_colorspace(ctx, colorspace);
++		colorspace = cs;
++	}
++	fz_always(ctx)
++		fz_drop_buffer(ctx, buf);
++	fz_catch(ctx)
++	{
++		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
++		fz_report_error(ctx);
++		fz_warn(ctx, "ignoring embedded ICC profile in WebP");
++	}
++	return colorspace;
++#else
++	(void)p;
++	(void)total;
++	return colorspace;
++#endif
++}
++
+ static fz_pixmap *
+ webp_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_t total, int only_metadata)
+ {
+@@ -39,6 +100,7 @@ webp_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size
+ 	info->xres = 72;
+ 	info->yres = 72;
+ 	info->cs = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
++	info->cs = webp_icc_colorspace(ctx, p, total, info->cs);
+ 
+ 	if (only_metadata)
+ 		return NULL;

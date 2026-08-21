@@ -1,0 +1,409 @@
+# GNU Makefile for third party libraries used by MuPDF
+
+ifeq ($(USE_SYSTEM_LIBS),yes)
+  USE_SYSTEM_FREETYPE ?= yes
+  USE_SYSTEM_GUMBO ?= yes
+  USE_SYSTEM_HARFBUZZ ?= yes
+  USE_SYSTEM_JBIG2DEC ?= yes
+  USE_SYSTEM_JPEGXR ?= no # not available
+  USE_SYSTEM_LCMS2 ?= no # lcms2mt is strongly preferred
+  USE_SYSTEM_LIBJPEG ?= yes
+  USE_SYSTEM_MUJS ?= no # not available
+  USE_SYSTEM_OPENJPEG ?= yes
+  USE_SYSTEM_ZLIB ?= yes
+  USE_SYSTEM_GLUT ?= yes
+  USE_SYSTEM_CURL ?= yes
+  USE_SYSTEM_LEPTONICA ?= yes
+  USE_SYSTEM_TESSERACT ?= yes
+  USE_SYSTEM_ZXINGCPP ?= yes
+  USE_SYSTEM_BROTLI ?= yes
+  USE_SYSTEM_CMARK_GFM ?= no
+endif
+
+ifeq ($(OS),MACOS)
+  USE_SYSTEM_GLUT := yes
+endif
+
+ifeq ($(OS),Linux)
+  USE_SYSTEM_CURL ?= yes
+endif
+
+# Use of Tesseract is optional:
+ifeq ($(USE_TESSERACT),yes)
+  USE_LEPTONICA := yes
+  ifeq ($(USE_SYSTEM_TESSERACT),yes)
+    HAVE_TESSERACT := $(HAVE_SYS_TESSERACT)
+  else
+    ifneq ($(wildcard thirdparty/tesseract/src/*),)
+      HAVE_TESSERACT := yes
+    endif
+  endif
+  ifneq ($(HAVE_TESSERACT),yes)
+    $(error USE_TESSERACT set but tesseract not found)
+  endif
+endif
+
+ifeq ($(USE_LEPTONICA),yes)
+  ifeq ($(USE_SYSTEM_LEPTONICA),yes)
+    HAVE_LEPTONICA := $(HAVE_SYS_LEPTONICA)
+  else
+    ifneq ($(wildcard thirdparty/leptonica/src/*),)
+      HAVE_LEPTONICA := yes
+    endif
+  endif
+  ifneq ($(HAVE_LEPTONICA),yes)
+    $(error USE_LEPTONICA set but leptonica not found)
+  endif
+endif
+
+ifeq ($(USE_TESSERACT),yes)
+  ifneq ($(HAVE_LEPTONICA),yes)
+    $(error USE_TESSERACT requires USE_LEPTONICA)
+  endif
+endif
+
+# Use of ZXing is optional:
+ifeq ($(USE_ZXINGCPP),yes)
+  ifeq ($(USE_SYSTEM_ZXINGCPP),yes)
+    HAVE_ZXINGCPP := $(HAVE_SYS_ZXINGCPP)
+  else
+    ifneq ($(wildcard thirdparty/zxing-cpp/core/src/*),)
+      HAVE_ZXINGCPP := yes
+    endif
+  endif
+  ifneq ($(HAVE_ZXINGCPP),yes)
+    $(error USE_ZXINGCPP set but zxing not found)
+  endif
+endif
+
+# Use of libarchive is optional:
+ifeq ($(USE_LIBARCHIVE),yes)
+  HAVE_LIBARCHIVE := $(HAVE_SYS_LIBARCHIVE)
+  ifneq ($(HAVE_LIBARCHIVE),yes)
+    $(error USE_LIBARCHIVE set but libarchive not found)
+  endif
+endif
+
+# --- Include source file lists ---
+
+include Makelists
+
+# --- BROTLI ---
+
+ifeq ($(USE_BROTLI),yes)
+ifeq ($(USE_SYSTEM_BROTLI),yes)
+  THIRD_CFLAGS += $(SYS_BROTLI_CFLAGS)
+  THIRD_LIBS += $(SYS_BROTLI_LIBS)
+else
+  THIRD_CFLAGS += $(BROTLI_CFLAGS)
+  THIRD_LIBS += $(BROTLI_LIBS)
+  THIRD_SRC += $(BROTLI_SRC)
+$(OUT)/thirdparty/brotli/c/common/%.o: thirdparty/brotli/c/common/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(BROTLI_CFLAGS) $(BROTLI_BUILD_CFLAGS)
+$(OUT)/thirdparty/brotli/c/dec/%.o: thirdparty/brotli/c/dec/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(BROTLI_CFLAGS) $(BROTLI_BUILD_CFLAGS)
+$(OUT)/thirdparty/brotli/c/enc/%.o: thirdparty/brotli/c/enc/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(BROTLI_CFLAGS) $(BROTLI_BUILD_CFLAGS)
+endif
+endif
+
+# --- CMARK-GFM ---
+
+ifeq ($(USE_CMARK_GFM),yes)
+ifeq ($(USE_SYSTEM_CMARK_GFM),yes)
+  THIRD_CFLAGS += $(SYS_CMARK_GFM_CFLAGS)
+  THIRD_LIBS += $(SYS_CMARK_CFM_LIBS)
+else
+  THIRD_CFLAGS += $(CMARKGFM_CFLAGS)
+  THIRD_LIBS += $(CMARKCGM_LIBS)
+  THIRD_SRC += $(CMARKGFM_SRC)
+$(OUT)/thirdparty/cmark-gfm/src/%.o: thirdparty/cmark-gfm/src/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(CMARKGFM_CFLAGS) $(CMARKGFM_BUILD_CFLAGS)
+$(OUT)/thirdparty/cmark-gfm/extensions/%.o: thirdparty/cmark-gfm/extensions/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(CMARKGFM_CFLAGS) $(CMARKGFM_BUILD_CFLAGS)
+endif
+endif
+
+# --- FREETYPE 2 ---
+
+ifeq ($(USE_SYSTEM_FREETYPE),yes)
+  THIRD_CFLAGS += $(SYS_FREETYPE_CFLAGS)
+  THIRD_LIBS += $(SYS_FREETYPE_LIBS)
+else
+  THIRD_CFLAGS += $(FREETYPE_CFLAGS)
+  THIRD_LIBS += $(FREETYPE_LIBS)
+  THIRD_SRC += $(FREETYPE_SRC)
+$(OUT)/thirdparty/freetype/%.o: thirdparty/freetype/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(FREETYPE_CFLAGS) $(FREETYPE_BUILD_CFLAGS)
+endif
+
+# --- GUMBO (HTML5 parser) ---
+
+ifeq ($(USE_GUMBO),yes)
+ifeq ($(USE_SYSTEM_GUMBO),yes)
+  THIRD_CFLAGS += $(SYS_GUMBO_CFLAGS)
+  THIRD_LIBS += $(SYS_GUMBO_LIBS)
+else
+  THIRD_CFLAGS += $(GUMBO_CFLAGS)
+  THIRD_LIBS += $(GUMBO_LIBS)
+  THIRD_SRC += $(GUMBO_SRC)
+$(OUT)/thirdparty/gumbo-parser/%.o: thirdparty/gumbo-parser/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(GUMBO_CFLAGS) $(GUMBO_BUILD_CFLAGS)
+endif
+endif
+
+# --- HARFBUZZ ---
+
+ifeq ($(USE_HARFBUZZ),yes)
+ifeq ($(USE_SYSTEM_HARFBUZZ),yes)
+  THIRD_CFLAGS += $(SYS_HARFBUZZ_CFLAGS)
+  THIRD_LIBS += $(SYS_HARFBUZZ_LIBS)
+else
+  THIRD_CFLAGS += $(HARFBUZZ_CFLAGS)
+  THIRD_LIBS += $(HARFBUZZ_LIBS)
+  THIRD_SRC += $(HARFBUZZ_SRC)
+$(OUT)/thirdparty/harfbuzz/%.o: thirdparty/harfbuzz/%.cc
+	$(CXX_CMD) $(LIB_CFLAGS) $(HARFBUZZ_CFLAGS) $(HARFBUZZ_BUILD_CFLAGS)
+endif
+endif
+
+# --- JPEG-XR ---
+
+ifeq ($(HAVE_JPEGXR),yes)
+  THIRD_CFLAGS += -DHAVE_JPEGXR
+ifeq ($(USE_SYSTEM_JPEGXR),yes)
+  THIRD_CFLAGS += $(SYS_JPEGXR_CFLAGS)
+  THIRD_LIBS += $(SYS_JPEGXR_LIBS)
+else
+  THIRD_CFLAGS += $(JPEGXR_CFLAGS)
+  THIRD_LIBS += $(JPEGXR_LIBS)
+  THIRD_SRC += $(JPEGXR_SRC)
+$(OUT)/thirdparty/jpegxr/%.o: thirdparty/jpegxr/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(JPEGXR_CFLAGS) $(JPEGXR_BUILD_CFLAGS)
+endif
+endif
+
+# --- LIBJPEG ---
+
+ifeq ($(USE_SYSTEM_LIBJPEG),yes)
+  THIRD_CFLAGS += $(SYS_LIBJPEG_CFLAGS) -DSHARE_JPEG
+  THIRD_LIBS += $(SYS_LIBJPEG_LIBS)
+else
+  THIRD_CFLAGS += $(LIBJPEG_CFLAGS)
+  THIRD_LIBS += $(LIBJPEG_LIBS)
+  THIRD_SRC += $(LIBJPEG_SRC)
+$(OUT)/thirdparty/libjpeg/%.o: thirdparty/libjpeg/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(LIBJPEG_CFLAGS) $(LIBJPEG_BUILD_CFLAGS)
+endif
+
+# --- LCMS2 ---
+
+ifeq ($(USE_SYSTEM_LCMS2),yes)
+  THIRD_CFLAGS += $(SYS_LCMS2_CFLAGS)
+  THIRD_LIBS += $(SYS_LCMS2_LIBS)
+else
+  THIRD_CFLAGS += $(LCMS2_CFLAGS)
+  THIRD_LIBS += $(LCMS2_LIBS)
+  THIRD_SRC += $(LCMS2_SRC)
+$(OUT)/thirdparty/lcms2/%.o: thirdparty/lcms2/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(LCMS2_CFLAGS) $(LCMS2_BUILD_CFLAGS)
+endif
+
+# --- MuJS ---
+
+ifeq ($(USE_MUJS),yes)
+ifeq ($(USE_SYSTEM_MUJS),yes)
+  THIRD_CFLAGS += $(SYS_MUJS_CFLAGS)
+  THIRD_LIBS += $(SYS_MUJS_LIBS)
+else
+  THIRD_CFLAGS += $(MUJS_CFLAGS)
+  THIRD_LIBS += $(MUJS_LIBS)
+  THIRD_SRC += $(MUJS_SRC)
+$(OUT)/thirdparty/mujs/%.o: thirdparty/mujs/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(MUJS_CFLAGS) $(MUJS_BUILD_CFLAGS)
+endif
+endif
+
+# --- ZLIB ---
+
+ifeq ($(USE_SYSTEM_ZLIB),yes)
+  THIRD_CFLAGS += $(SYS_ZLIB_CFLAGS)
+  THIRD_LIBS += $(SYS_ZLIB_LIBS)
+else
+  THIRD_CFLAGS += $(ZLIB_CFLAGS)
+  THIRD_LIBS += $(ZLIB_LIBS)
+  THIRD_SRC += $(ZLIB_SRC)
+$(OUT)/thirdparty/zlib/%.o: thirdparty/zlib/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(ZLIB_CFLAGS) $(ZLIB_BUILD_CFLAGS)
+endif
+
+# --- JBIG2DEC ---
+
+ifeq ($(USE_SYSTEM_JBIG2DEC),yes)
+  THIRD_CFLAGS += $(SYS_JBIG2DEC_CFLAGS)
+  THIRD_LIBS += $(SYS_JBIG2DEC_LIBS)
+else
+  THIRD_CFLAGS += $(JBIG2DEC_CFLAGS)
+  THIRD_LIBS += $(JBIG2DEC_LIBS)
+  THIRD_SRC += $(JBIG2DEC_SRC)
+$(OUT)/thirdparty/jbig2dec/%.o: thirdparty/jbig2dec/%.c
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(JBIG2DEC_CFLAGS) $(JBIG2DEC_BUILD_CFLAGS)
+endif
+
+# --- OPENJPEG ---
+
+ifeq ($(USE_SYSTEM_OPENJPEG),yes)
+  THIRD_CFLAGS += $(SYS_OPENJPEG_CFLAGS)
+  THIRD_LIBS += $(SYS_OPENJPEG_LIBS)
+else
+  THIRD_CFLAGS += $(OPENJPEG_CFLAGS)
+  THIRD_LIBS += $(OPENJPEG_LIBS)
+  THIRD_SRC += $(OPENJPEG_SRC)
+$(OUT)/thirdparty/openjpeg/%.o: thirdparty/openjpeg/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(OPENJPEG_CFLAGS) $(OPENJPEG_BUILD_CFLAGS)
+endif
+
+# --- FreeGLUT ---
+
+ifeq ($(USE_SYSTEM_GLUT),yes)
+  THIRD_GLUT_CFLAGS += $(SYS_GLUT_CFLAGS) $(SYS_GL_CFLAGS)
+  THIRD_GLUT_LIBS += $(SYS_GLUT_LIBS) $(SYS_GL_LIBS)
+else
+  THIRD_GLUT_CFLAGS += $(GLUT_CFLAGS) $(SYS_GL_CFLAGS)
+  THIRD_GLUT_LIBS += $(GLUT_LIBS) $(SYS_GL_LIBS)
+  THIRD_GLUT_SRC += $(GLUT_SRC)
+$(OUT)/thirdparty/freeglut/%.o: thirdparty/freeglut/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(GLUT_CFLAGS) $(GLUT_BUILD_CFLAGS)
+endif
+
+# --- cURL ---
+
+ifeq ($(USE_SYSTEM_CURL),yes)
+  ifeq ($(HAVE_SYS_CURL),yes)
+    HAVE_CURL := yes
+    CURL_CFLAGS := $(SYS_CURL_CFLAGS) -DHAVE_CURL
+    CURL_LIBS := $(SYS_CURL_LIBS)
+  endif
+endif
+
+# --- LEPTONICA ---
+
+ifeq ($(HAVE_LEPTONICA),yes)
+  THIRD_CFLAGS += -DHAVE_LEPTONICA
+ifeq ($(USE_SYSTEM_LEPTONICA),yes)
+  THIRD_LIBS += $(SYS_LEPTONICA_LIBS)
+  LEPTONICA_CFLAGS = $(SYS_LEPTONICA_CFLAGS)
+else
+  THIRD_LIBS += $(LEPTONICA_LIBS)
+  THIRD_SRC += $(LEPTONICA_SRC)
+$(OUT)/thirdparty/leptonica/%.o: thirdparty/leptonica/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(LEPTONICA_CFLAGS) $(LEPTONICA_BUILD_CFLAGS)
+endif
+endif
+
+# --- TESSERACT ---
+
+ifeq ($(HAVE_TESSERACT),yes)
+  THIRD_CFLAGS += -DHAVE_TESSERACT
+ifeq ($(USE_SYSTEM_TESSERACT),yes)
+  THIRD_LIBS += $(SYS_TESSERACT_LIBS) -lstdc++
+  TESSERACT_CFLAGS = $(SYS_TESSERACT_CFLAGS)
+  TESSERACT_LANGFLAGS =
+else
+  THIRD_LIBS += $(TESSERACT_LIBS)
+  THIRD_SRC += $(TESSERACT_SRC)
+$(OUT)/thirdparty/tesseract/%.o: thirdparty/tesseract/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(TESSERACT_CFLAGS) $(TESSERACT_BUILD_CFLAGS)
+endif
+endif
+
+# --- ZXING-CPP ---
+
+ifeq ($(HAVE_ZXINGCPP),yes)
+  THIRD_CFLAGS += -DHAVE_ZXINGCPP
+ifeq ($(USE_SYSTEM_ZXINGCPP),yes)
+  THIRD_LIBS += $(SYS_ZXINGCPP_LIBS) -lstdc++
+  ZXINGCPP_CFLAGS = $(SYS_ZXINGCPP_CFLAGS) -DUSE_SYSTEM_ZXINGCPP
+  ZXINGCPP_LANGFLAGS =
+else
+  THIRD_LIBS += $(ZXINGCPP_LIBS)
+  THIRD_SRC += $(ZXINGCPP_SRC)
+$(OUT)/thirdparty/zxing-cpp/core/src/%.o: thirdparty/zxing-cpp/core/src/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+$(OUT)/thirdparty/zxing-cpp/core/src/aztec/%.o: thirdparty/zxing-cpp/core/src/aztec/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+$(OUT)/thirdparty/zxing-cpp/core/src/datamatrix/%.o: thirdparty/zxing-cpp/core/src/datamatrix/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+$(OUT)/thirdparty/zxing-cpp/core/src/libzueci/%.o: thirdparty/zxing-cpp/core/src/libzueci/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS)
+$(OUT)/thirdparty/zxing-cpp/core/src/maxicode/%.o: thirdparty/zxing-cpp/core/src/maxicode/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+$(OUT)/thirdparty/zxing-cpp/core/src/oned/%.o: thirdparty/zxing-cpp/core/src/oned/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+$(OUT)/thirdparty/zxing-cpp/core/src/pdf147/%.o: thirdparty/zxing-cpp/core/src/pdf147/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+$(OUT)/thirdparty/zxing-cpp/core/src/qrcode/%.o: thirdparty/zxing-cpp/core/src/qrcode/%.cpp
+	$(CXX_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+$(OUT)/thirdparty/zint/backend/%.o: thirdparty/zint/backend/%.c
+	$(CC_CMD) $(LIB_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_BUILD_CFLAGS)
+endif
+endif
+
+# --- EXTRACT ---
+
+ifeq ($(USE_EXTRACT),yes)
+
+THIRD_CFLAGS += $(EXTRACT_CFLAGS)
+THIRD_LIBS += $(EXTRACT_LIBS)
+THIRD_SRC += $(EXTRACT_SRC)
+$(OUT)/thirdparty/extract/%.o: thirdparty/extract/%.c
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(EXTRACT_CFLAGS) $(ZLIB_CFLAGS) $(EXTRACT_BUILD_CFLAGS)
+
+# The first python3 command in the next two rules returns 0 (success) iff
+# python3 exists and is version 3.6 or later.
+
+thirdparty/extract/src/docx_template.c: thirdparty/extract/src/template.docx thirdparty/extract/src/docx_template_build.py
+	$(QUIET_GEN) if python3 -c 'import sys; sys.exit(sys.version_info < (3,6))'; \
+		then python3 thirdparty/extract/src/docx_template_build.py \
+			-i thirdparty/extract/src/template.docx \
+			-n docx \
+			-o thirdparty/extract/src/docx_template ; \
+		else echo python3 is older than 3.6 so not running docx_template_build.py; \
+		fi
+	@touch $@
+
+thirdparty/extract/src/odt_template.c: thirdparty/extract/src/template.odt thirdparty/extract/src/docx_template_build.py
+	$(QUIET_GEN) if python3 -c 'import sys; sys.exit(sys.version_info < (3,6))'; \
+		then python3 thirdparty/extract/src/docx_template_build.py \
+			-i thirdparty/extract/src/template.odt \
+			-n odt \
+			-o thirdparty/extract/src/odt_template ; \
+		else echo python3 is older than 3.6 so not running docx_template_build.py; \
+		fi
+	@touch $@
+
+generate: thirdparty/extract/src/docx_template.c
+
+endif
+
+# --- LIBARCHIVE ---
+
+ifeq ($(HAVE_LIBARCHIVE),yes)
+  THIRD_CFLAGS += -DHAVE_LIBARCHIVE
+  THIRD_CFLAGS += $(SYS_LIBARCHIVE_CFLAGS)
+  THIRD_LIBS += $(SYS_LIBARCHIVE_LIBS) -lstdc++
+endif
+
+# --- HAVE_SMARTOFFICE ---
+
+ifeq ($(HAVE_SMARTOFFICE),yes)
+  THIRD_CFLAGS += -DHAVE_SMARTOFFICE -Ithirdparty/so/include
+  SODOCHANDLER_LIB = $(OUT)/libsodochandler.a
+  COMMERCIAL_LIBS = $(SODOCHANDLER_LIB)
+  SOLIB_PATH ?= thirdparty/so/lib/linux/x64/
+  THIRD_LIBS += -L$(OUT) -L$(SOLIB_PATH) -lsodochandler -l:smart-office-lib.a
+endif
+
+SODOCHANDLER_SRC := $(sort $(wildcard thirdparty/so/source/*.c))
+SODOCHANDLER_OBJ := $(SODOCHANDLER_SRC:%.c=$(OUT)/%.o)
+$(SODOCHANDLER_LIB) : $(SODOCHANDLER_OBJ)

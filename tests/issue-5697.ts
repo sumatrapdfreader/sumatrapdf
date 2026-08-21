@@ -2,7 +2,7 @@
 //
 // Verifies _TRA resolves runtime error strings through the translation table.
 
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone } from "./util.ts";
 
 async function requestWithRetry(client: ControlClient): Promise<string> {

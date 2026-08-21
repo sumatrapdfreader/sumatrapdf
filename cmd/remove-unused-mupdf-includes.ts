@@ -4,7 +4,7 @@
 //
 // Usage:
 //   bun cmd/remove-unused-mupdf-includes.ts
-//   bun cmd/remove-unused-mupdf-includes.ts --file mupdf/source/fitz/error.c
+//   bun cmd/remove-unused-mupdf-includes.ts --file ext/mupdf/source/fitz/error.c
 //   bun cmd/remove-unused-mupdf-includes.ts --from 42
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { cpus } from "node:os";
@@ -98,23 +98,23 @@ const clArgs = [
   "/DCMARK_GFM_STATIC_DEFINE",
   "/D_HAS_EXCEPTIONS=0",
   "/I",
-  "ext/zlib",
+  "ext/a-zlib",
   "/I",
-  "mupdf/include",
+  "ext/mupdf/include",
   "/I",
-  "mupdf/generated",
+  "ext/mupdf/generated",
   "/I",
-  "ext/jbig2dec",
+  "ext/a-jbig2dec",
   "/I",
   "ext/libjpeg-turbo",
   "/I",
-  "ext/openjpeg/src/lib/openjp2",
+  "ext/a-openjpeg",
   "/I",
-  "mupdf/scripts/freetype",
+  "ext/mupdf/scripts/freetype",
   "/I",
   "ext/freetype/include",
   "/I",
-  "ext/mujs",
+  "ext/a-mujs",
   "/I",
   "ext/brotli/c/include",
   "/I",
@@ -122,7 +122,7 @@ const clArgs = [
   "/I",
   "ext/cmark-gfm/extensions",
   "/I",
-  "mupdf/scripts/cmark-gfm",
+  "ext/mupdf/scripts/cmark-gfm",
   "/I",
   "ext/harfbuzz/src",
   "/I",
@@ -130,7 +130,7 @@ const clArgs = [
   "/I",
   "ext/gumbo-parser/src",
   "/I",
-  "ext/extract/include",
+  "ext/a-extract",
   "/I",
   "ext/libarchive",
   "/Od",
@@ -161,7 +161,7 @@ function parseArgs(): { fileFilter?: string; from: number } {
     }
     if (arg === "--help" || arg === "-h") {
       console.log(`Usage: bun cmd/remove-unused-mupdf-includes.ts [--file <path>] [--from <n>]`);
-      console.log(`  --file   only process this .c file (e.g. mupdf/source/fitz/error.c)`);
+      console.log(`  --file   only process this .c file (e.g. ext/mupdf/source/fitz/error.c)`);
       console.log(`  --from   start at include number n (1-based, for resuming)`);
       process.exit(0);
     }

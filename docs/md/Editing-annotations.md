@@ -55,6 +55,16 @@ You can also create annotation object at your mouse location:
 - free text
 - stamp
 - caret
+- image from the clipboard
+- image from a file (`Insert Image...`)
+
+To put a picture of your signature (or any other image) on a PDF page:
+
+- **File → Insert Image...**, or
+- right-click the page → **Document → Insert Image...**, or
+- right-click the page → **Create annotation under cursor → Image From File...**
+
+Pick a PNG (or JPEG, etc.). The image is stamped on the page and you can drag or resize it. Save with **File → Save Annotations to existing PDF** (or save as a new PDF). This is an electronic signature image, not a cryptographic digital signature (`File → Sign Document...`, which uses a certificate from the Windows store or a `.pfx` / `.p12` file). **Sign Document** can also draw a PNG or JPEG inside the digital signature itself, and you can turn off the "Digitally signed by" labels and the other lines.
 
 ![Context Menu Annotation Under Cursor](img/context-menu-annot-under-cursor.png)
 
@@ -84,20 +94,22 @@ To move an annotation on the page, left click with mouse and drag to new locatio
 
 Open **Settings → Advanced Options...** and edit the `Annotations` block:
 
-| Setting | Used for |
-| --- | --- |
-| `HighlightColor` | New highlights (`a`) — default `#ffff00` |
-| `UnderlineColor` | Underline annotations |
-| `SquigglyColor` | Squiggly underline |
-| `StrikeOutColor` | Strike-out |
-| `FreeTextColor` / `FreeTextBackgroundColor` | Free text annotations |
-| `FreeTextSize` | Default font size for free text (default `12`) |
-| `FreeTextBorderWidth` | Border width for free text |
-| `FreeTextOpacity` | `0`–`100` percent opacity for free text |
-| `TextIconColor` / `TextIconType` | Sticky-note style icons |
-| `DefaultAuthor` | Author name written into new annotations |
+| Setting                                     | Used for                                       |
+| ------------------------------------------- | ---------------------------------------------- |
+| `HighlightColor`                            | New highlights (`a`) — default `#ffff00`       |
+| `UnderlineColor`                            | Underline annotations                          |
+| `SquigglyColor`                             | Squiggly underline                             |
+| `StrikeOutColor`                            | Strike-out                                     |
+| `FreeTextColor` / `FreeTextBackgroundColor` | Free text annotations                          |
+| `FreeTextSize`                              | Default font size for free text (default `12`) |
+| `FreeTextBorderWidth`                       | Border width for free text                     |
+| `FreeTextOpacity`                           | `0`–`100` percent opacity for free text        |
+| `TextIconColor` / `TextIconType`            | Sticky-note style icons                        |
+| `DefaultAuthor`                             | Author name written into new annotations       |
 
-Highlight/underline/strikeout opacity is changed **per annotation** in the annotation editor, not via a global default.
+Highlight, underline, squiggly and strike-out colors accept `#aarrggbb` so you can set a default opacity: `#80ffff00` is a half-transparent yellow highlight. `#rrggbb` (6 digits) is fully opaque. You can still change one annotation's opacity in the annotation editor.
+
+Free-text opacity is the separate `FreeTextOpacity` percent (0–100).
 
 See [Advanced options / settings](Advanced-options-settings.md) for the full list.
 
@@ -111,14 +123,16 @@ Add annotation commands to the toolbar via the `Shortcuts` array — see [Custom
 
 ## Saving workflow
 
-| Action | Shortcut / command |
-| --- | --- |
-| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`) |
-| Save when closing | Prompt dialog — choose existing file, new file, or discard |
+| Action                   | Shortcut / command                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`)                                                                              |
+| Save to a new PDF        | `CmdSaveAnnotationsNewFile` (tab context menu or command palette)                                                      |
+| Discard unsaved changes  | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K` command palette) — reloads the file from disk |
+| Save when closing        | Prompt dialog — choose existing file, new file, or discard                                                             |
 
 There is **no undo** (`Ctrl + Z`) for annotation edits. Delete an annotation with `Delete` when the cursor is over it, or remove it in the annotation editor.
 
-To avoid the save prompt on every close, save explicitly with `Ctrl + Shift + S` before closing.
+To avoid the save prompt on every close, save explicitly with `Ctrl + Shift + S` before closing. To drop unsaved work without closing the tab, use **Discard Changes** (`CmdDiscardChanges`).
 
 ## Annotations from other programs
 

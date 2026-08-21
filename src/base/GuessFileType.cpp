@@ -3,7 +3,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // This file must only contain code that doesn't depend on
-// external libraries (mupdf/, ext/). GuessFileTypeFromFile.cpp has
+// external libraries (ext/). GuessFileTypeFromFile.cpp has
 // the parts that need base/Archive.h (and thus ext/libarchive).
 
 #include "base/Base.h"
@@ -31,6 +31,7 @@
     V(".ps", FileType::PS)             \
     V(".ps.gz", FileType::PS)          \
     V(".eps", FileType::PS)            \
+    V(".lit", FileType::Lit)           \
     V(".fb2", FileType::Fb2)           \
     V(".fb2z", FileType::Fb2z)         \
     V(".fbz", FileType::Fb2z)          \
@@ -103,16 +104,29 @@ static FileType gExtsType[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
 static FileType GetTypeByFileExt(Str path) {
-    TempStr ext = path::GetExtTemp(path);
-    int idx = SeqStrIndexIS(gFileExts, ext);
-    if (idx < 0) {
+    // Prefer the longest registered suffix so multi-dot names like
+    // "book.fb2.zip" map to Fb2z rather than Zip (path::GetExtTemp only
+    // returns the last ".zip" component).
+    int n = dimofi(gExtsType);
+    int bestIdx = -1;
+    int bestLen = 0;
+    for (int i = 0; i < n; i++) {
+        TempStr ext = SeqStrByIndex(gFileExts, i);
+        if (len(ext) == 0) {
+            continue;
+        }
+        if (!str::EndsWithI(path, ext)) {
+            continue;
+        }
+        if (len(ext) > bestLen) {
+            bestLen = len(ext);
+            bestIdx = i;
+        }
+    }
+    if (bestIdx < 0) {
         return FileType::Unknown;
     }
-    int n = (int)dimof(gExtsType);
-    if (idx >= n) {
-        return FileType::Unknown;
-    }
-    return gExtsType[idx];
+    return gExtsType[bestIdx];
 }
 
 TempStr GetExtForFileTypeTemp(FileType ft) {
@@ -121,17 +135,6 @@ TempStr GetExtForFileTypeTemp(FileType ft) {
         return SeqStrByIndex(gFileExts, idx);
     }
     return {};
-}
-
-// ensure gFileExts and gExtsType match
-static bool gDidVerifyExtsMatch = false;
-static void VerifyExtsMatch() {
-    if (gDidVerifyExtsMatch) {
-        return;
-    }
-    ReportIf(FileType::Epub != GetTypeByFileExt("foo.epub"));
-    ReportIf(FileType::Jp2 != GetTypeByFileExt("foo.JP2"));
-    gDidVerifyExtsMatch = true;
 }
 
 int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
@@ -148,6 +151,7 @@ int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
     V(0, "Rar!\x1A\x07\x01\x00", FileType::Rar)           \
     V(0, "7z\xBC\xAF\x27\x1C", FileType::SevenZ)          \
     V(0, "PK\x03\x04", FileType::Zip)                     \
+    V(0, "ITOLITLS", FileType::Lit)                       \
     V(0, "ITSF", FileType::Chm)                           \
     V(0x3c, "BOOKMOBI", FileType::Mobi)                   \
     V(0x3c, "TEXtREAd", FileType::PalmDoc)                \
@@ -206,20 +210,20 @@ static bool IsPSFileContent(Str d) {
         return false;
     }
     // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
-    if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
+    if (str::StartsWith(header, StrL("\xC5\xD0\xD3\xC6"))) {
         DWORD psStart = ByteReader(d).UInt32LE(4);
         if ((int)psStart >= n - 12) {
             return true;
         }
         Str sub = Str(header.s + psStart, header.len - (int)psStart);
-        return str::StartsWith(sub, "%!PS-Adobe-");
+        return str::StartsWith(sub, StrL("%!PS-Adobe-"));
     }
-    if (str::StartsWith(header, "%!PS-Adobe-")) {
+    if (str::StartsWith(header, StrL("%!PS-Adobe-"))) {
         return true;
     }
     // PJL (Printer Job Language) files containing Postscript data
     // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
-    bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
+    bool isPJL = str::StartsWith(header, StrL("\x1B%-12345X@PJL"));
     if (isPJL && !str::Contains(header, StrL("%!PS-Adobe-"))) {
         isPJL = false;
     }
@@ -248,27 +252,57 @@ static FileType DetectHicAndAvif(Str d) {
         'mif1' also happens?
     */
     // TODO: support more ftyp types?
-    if (str::StartsWith(hdr, "ftypheic")) {
+    if (str::StartsWith(hdr, StrL("ftypheic"))) {
         return FileType::Heic;
     }
-    if (str::StartsWith(hdr, "ftypheix")) {
+    if (str::StartsWith(hdr, StrL("ftypheix"))) {
         return FileType::Heic;
     }
-    if (str::StartsWith(hdr, "ftypmif1")) {
+    if (str::StartsWith(hdr, StrL("ftypmif1"))) {
         return FileType::Heic;
     }
-    if (str::StartsWith(hdr, "ftypavif")) {
+    if (str::StartsWith(hdr, StrL("ftypavif"))) {
         return FileType::Avif;
     }
     hdr = Str(s.s + 16, s.len - 16);
-    if (str::StartsWith(hdr, "mif1heic")) {
+    if (str::StartsWith(hdr, StrL("mif1heic"))) {
         return FileType::Heic;
     }
     return FileType::Unknown;
 }
 
 static bool HasWebpSignature(Str d) {
-    return d.len > 12 && str::StartsWith(d, "RIFF") && str::StartsWith(Str(d.s + 8, d.len - 8), "WEBP");
+    return d.len >= 12 && str::StartsWith(d, StrL("RIFF")) && str::StartsWith(Str(d.s + 8, d.len - 8), StrL("WEBP"));
+}
+
+// payload of the first RIFF chunk whose FourCC is fourcc. out is a view into d.
+bool FindWebpChunk(Str d, const char fourcc[4], Str& out) {
+    out = {};
+    if (!fourcc || !HasWebpSignature(d)) {
+        return false;
+    }
+    ByteReader r(d);
+    int idx = 12;
+    while (idx + 8 <= r.len) {
+        int size = (int)r.UInt32LE(idx + 4);
+        int payload = idx + 8;
+        if (size < 0 || payload + size > r.len) {
+            return false;
+        }
+        if (MemEq(r.d + idx, fourcc, 4)) {
+            out = Str((char*)(r.d + payload), size);
+            return true;
+        }
+        int chunkSize = size + (size & 1);
+        if (chunkSize < size) {
+            return false;
+        }
+        idx = payload + chunkSize;
+        if (idx < 8) {
+            return false;
+        }
+    }
+    return false;
 }
 
 static bool HasJxlSignature(Str d) {
@@ -276,8 +310,8 @@ static bool HasJxlSignature(Str d) {
     static const u8 jxlContainer[] = {0x00, 0x00, 0x00, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a};
 
     const u8* data = (const u8*)d.s;
-    return (d.len >= (int)sizeof(jxlCodestream) && memeq(data, jxlCodestream, (int)sizeof(jxlCodestream))) ||
-           (d.len >= (int)sizeof(jxlContainer) && memeq(data, jxlContainer, (int)sizeof(jxlContainer)));
+    return (d.len >= sizeofi(jxlCodestream) && MemEq(data, jxlCodestream, sizeofi(jxlCodestream))) ||
+           (d.len >= sizeofi(jxlContainer) && MemEq(data, jxlContainer, sizeofi(jxlContainer)));
 }
 
 #pragma pack(push, 1)
@@ -366,7 +400,7 @@ static FileType DetectFileTypeFromData(Str d) {
     // TODO: sniff .fb2 content
     u8* data = (u8*)d.s;
     int dataLen = d.len;
-    int n = (int)dimof(gFileSigs);
+    int n = dimofi(gFileSigs);
 
     for (int i = 0; i < n; i++) {
         Str sig = gFileSigs[i].sig;
@@ -374,7 +408,7 @@ static FileType DetectFileTypeFromData(Str d) {
         int sigLen = gFileSigs[i].sigLen;
         int sigMaxLen = off + sigLen;
         u8* dat = data + off;
-        if ((dataLen > sigMaxLen) && memeq(dat, sig.s, sigLen)) {
+        if ((dataLen > sigMaxLen) && MemEq(dat, sig.s, sigLen)) {
             return gFileSigs[i].ft;
         }
     }
@@ -420,7 +454,7 @@ static void AppendImageSize(FileTypeInfo& res, int n, int& cap, int dx, int dy) 
 // frame count and each fcTL chunk a frame's size
 static void ParsePng(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
-    if (r.len < 24 || !memeq(r.d + 12, "IHDR", 4)) {
+    if (r.len < 24 || !MemEq(r.d + 12, "IHDR", 4)) {
         return;
     }
     res.imageDx = (int)r.UInt32BE(16);
@@ -435,13 +469,13 @@ static void ParsePng(ByteReader r, FileTypeInfo& res) {
         }
         u32 chunkLen = r.UInt32BE(idx);
         const u8* type = r.d + idx + 4;
-        if (memeq(type, "acTL", 4)) {
+        if (MemEq(type, "acTL", 4)) {
             nDeclared = (int)r.UInt32BE(idx + 8);
-        } else if (memeq(type, "fcTL", 4) && chunkLen >= 12) {
+        } else if (MemEq(type, "fcTL", 4) && chunkLen >= 12) {
             // sequence number, then u32 width and height
             AppendImageSize(res, nFcTL, cap, (int)r.UInt32BE(idx + 12), (int)r.UInt32BE(idx + 16));
             nFcTL++;
-        } else if (memeq(type, "IEND", 4)) {
+        } else if (MemEq(type, "IEND", 4)) {
             break;
         }
         if (chunkLen > (u32)r.len) {
@@ -646,7 +680,14 @@ static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
             continue;
         }
         u16 type = r.UInt16(idx + 2, isBE);
-        int typeSize = type == 1 ? 1 : type == 3 ? 2 : type == 4 ? 4 : 0;
+        int typeSize = 0;
+        if (type == 1) {
+            typeSize = 1;
+        } else if (type == 3) {
+            typeSize = 2;
+        } else if (type == 4) {
+            typeSize = 4;
+        }
         u32 nVals = r.UInt32(idx + 4, isBE);
         if (typeSize == 0 || nVals == 0) {
             continue;
@@ -755,18 +796,18 @@ static void ParseWebp(ByteReader r, FileTypeInfo& res) {
         const u8* fourcc = r.d + idx;
         u32 size = r.UInt32LE(idx + 4);
         int payload = idx + 8;
-        if (memeq(fourcc, "VP8X", 4) && size >= 10) {
+        if (MemEq(fourcc, "VP8X", 4) && size >= 10) {
             // 4 flag bytes, then 24-bit little-endian width-1 and height-1
             res.imageDx = 1 + (r.UInt8(payload + 4) | (r.UInt8(payload + 5) << 8) | (r.UInt8(payload + 6) << 16));
             res.imageDy = 1 + (r.UInt8(payload + 7) | (r.UInt8(payload + 8) << 8) | (r.UInt8(payload + 9) << 16));
-        } else if (memeq(fourcc, "VP8 ", 4) && res.imageDx == 0 && size >= 10) {
+        } else if (MemEq(fourcc, "VP8 ", 4) && res.imageDx == 0 && size >= 10) {
             res.imageDx = r.UInt16LE(payload + 6) & 0x3fff;
             res.imageDy = r.UInt16LE(payload + 8) & 0x3fff;
-        } else if (memeq(fourcc, "VP8L", 4) && res.imageDx == 0 && size >= 5 && r.UInt8(payload) == 0x2f) {
+        } else if (MemEq(fourcc, "VP8L", 4) && res.imageDx == 0 && size >= 5 && r.UInt8(payload) == 0x2f) {
             u32 bits = r.UInt32LE(payload + 1);
             res.imageDx = (int)(bits & 0x3FFF) + 1;
             res.imageDy = (int)((bits >> 14) & 0x3FFF) + 1;
-        } else if (memeq(fourcc, "ANMF", 4) && size >= 12) {
+        } else if (MemEq(fourcc, "ANMF", 4) && size >= 12) {
             // 24-bit little-endian frame x, y, then width-1 and height-1
             int w = 1 + (r.UInt8(payload + 6) | (r.UInt8(payload + 7) << 8) | (r.UInt8(payload + 8) << 16));
             int h = 1 + (r.UInt8(payload + 9) | (r.UInt8(payload + 10) << 8) | (r.UInt8(payload + 11) << 16));
@@ -857,33 +898,11 @@ static int JpegExifOrientation(ByteReader r) {
 
 // Read EXIF orientation from a WebP EXIF chunk. Returns 1-8 or 0 if not found.
 int WebpExifOrientation(Str d) {
-    if (!HasWebpSignature(d)) {
+    Str exif;
+    if (!FindWebpChunk(d, "EXIF", exif) || exif.len < 8) {
         return 0;
     }
-    ByteReader r(d);
-    int idx = 12;
-    while (idx + 8 <= r.len) {
-        if (r.UInt8(idx) == 'E' && r.UInt8(idx + 1) == 'X' && r.UInt8(idx + 2) == 'I' && r.UInt8(idx + 3) == 'F') {
-            int size = (int)r.UInt32LE(idx + 4);
-            int payload = idx + 8;
-            if (payload + size <= r.len && size >= 8) {
-                int orient = ExifOrientationFromTiff(r, payload);
-                if (orient != 0) {
-                    return orient;
-                }
-            }
-        }
-        int size = (int)r.UInt32LE(idx + 4);
-        int chunkSize = size + (size & 1);
-        if (chunkSize < size) {
-            return 0;
-        }
-        idx += 8 + chunkSize;
-        if (idx < 8) {
-            return 0;
-        }
-    }
-    return 0;
+    return ExifOrientationFromTiff(ByteReader(exif), 0);
 }
 
 // find a box of the given type among the ISO BMFF boxes in [idx, end).
@@ -910,7 +929,7 @@ static int FindIsoBmffBox(ByteReader r, int idx, int end, const char* type, int*
         if (size < hdr || size > end - idx) {
             return -1;
         }
-        if (memeq(r.d + idx + 4, type, 4)) {
+        if (MemEq(r.d + idx + 4, type, 4)) {
             *boxEndOut = idx + (int)size;
             return idx + hdr;
         }
@@ -991,7 +1010,7 @@ static void ParseHeif(ByteReader r, FileTypeInfo& res) {
             break;
         }
         const u8* type = r.d + idx + 4;
-        if (memeq(type, "ispe", 4) && size >= 20) {
+        if (MemEq(type, "ispe", 4) && size >= 20) {
             // version/flags, then u32 width and height
             int w = (int)r.UInt32BE(idx + 12);
             int h = (int)r.UInt32BE(idx + 16);
@@ -999,7 +1018,7 @@ static void ParseHeif(ByteReader r, FileTypeInfo& res) {
                 dx = w;
                 dy = h;
             }
-        } else if (memeq(type, "irot", 4) && size >= 9) {
+        } else if (MemEq(type, "irot", 4) && size >= 9) {
             // one byte: rotation in 90-degree counter-clockwise units
             swapDims = (r.UInt8(idx + 8) & 1) != 0;
         }
@@ -1257,13 +1276,12 @@ EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
     return res;
 }
 
-FileType GuessFileTypeFromName(Str path) {
-    VerifyExtsMatch();
-
+// path::IsDirectory() is expensive on network drives so we can pass notDir=true if we know the path is not a directory
+FileType GuessFileTypeFromName(Str path, bool notDir) {
     if (!path) {
         return FileType::Unknown;
     }
-    if (path::IsDirectory(path)) {
+    if (!notDir && path::IsDirectory(path)) {
         return FileType::Directory;
     }
     FileType res = GetTypeByFileExt(path);
@@ -1328,6 +1346,8 @@ TempStr GfxFileExtFromDataTemp(Str d) {
 
 // compares the guessed type's canonical extension (the first extension
 // registered for it, e.g. ".pdf" for sample.ai) to expectedExt
+// Headless test helper: compare GuessFileTypeFromName's canonical extension
+// to an expected one (e.g. "sample.ai" -> ".pdf").
 TempStr FileKindResultTemp(Str path, Str expectedExt, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {

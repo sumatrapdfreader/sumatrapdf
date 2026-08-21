@@ -8,7 +8,7 @@
 #include "base/GuessFileType.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocProperties.h"
 #include "DocController.h"
@@ -78,7 +78,7 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariableW(L"PATH", nullptr, 0);
-    TempWStr envpathW = WStr(AllocArrayTemp<WCHAR>(size + 1), (int)size + 1);
+    TempWStr envpathW = WStr(AllocArrayTemp<WCHAR>((int)size + 1), (int)size + 1);
     if (size == 0) {
         return {};
     }
@@ -115,7 +115,7 @@ struct AutoDeleteFile {
 static Rect ExtractDSCPageSize(const WCHAR* path) {
     char header[1024]{};
     file::ReadN(path, (u8*)header, sizeof(header) - 1);
-    if (!str::StartsWith((char*)header, "%!PS-Adobe-")) {
+    if (!str::StartsWith((char*)header, StrL("%!PS-Adobe-"))) {
         return {};
     }
 
@@ -126,7 +126,7 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
     char* nl = (char*)header;
     RectF bbox;
     while ((nl = strchr(nl + 1, '\n')) != nullptr && '%' == nl[1]) {
-        if (str::StartsWith(nl + 1, "%%BoundingBox:") &&
+        if (str::StartsWith(nl + 1, StrL("%%BoundingBox:")) &&
             str::Parse(nl + 1, "%%%%BoundingBox: 0 0 %f %f% ", &bbox.dx, &bbox.dy)) {
             return ToRect(bbox);
         }
@@ -211,16 +211,27 @@ static EngineBase* psgz2pdf(Str fileName) {
         return nullptr;
     }
 
+    constexpr i64 kMaxUncompressedPostScriptSize = 512LL * 1024 * 1024;
+    i64 totalSize = 0;
+    bool ok = true;
     char buffer[12 * 1024];
     for (;;) {
         int n = gzread(inFile, buffer, sizeof(buffer));
         if (n <= 0) {
+            ok = n == 0;
             break;
         }
-        fwrite(buffer, 1, n, outFile);
+        totalSize += n;
+        if (totalSize > kMaxUncompressedPostScriptSize || fwrite(buffer, 1, n, outFile) != (size_t)n) {
+            ok = false;
+            break;
+        }
     }
     fclose(outFile);
     gzclose(inFile);
+    if (!ok) {
+        return nullptr;
+    }
 
     return ps2pdf(tmpFile);
 }
@@ -331,7 +342,7 @@ class EnginePs : public EngineBase {
             return false;
         }
 
-        if (str::EndsWithI(FilePath(), ".eps")) {
+        if (str::EndsWithI(FilePath(), StrL(".eps"))) {
             defaultExt = str::Dup(StrL(".eps"));
         }
 
@@ -355,6 +366,7 @@ EngineBase* CreateEnginePsFromFile(Str fileName) {
     return engine;
 }
 
+/* EnginePs.cpp */
 bool IsEnginePsAvailable() {
     TempStr gswin32c = GetGhostscriptPathTemp();
     return len(gswin32c) > 0;

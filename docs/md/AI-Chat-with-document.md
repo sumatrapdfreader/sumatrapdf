@@ -10,7 +10,7 @@ Three backends are supported: [Claude Code](#claude-code), [Grok Build](#grok-bu
 
 This feature requires **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** to be installed and available on your system. SumatraPDF launches the `claude` command-line tool when you send a message.
 
-If Claude Code is missing, the chat panel shows an error such as *Cannot find claude. Is Claude Code installed?*
+If Claude Code is missing, the chat panel shows an error such as _Cannot find claude. Is Claude Code installed?_
 
 Install and set up Claude Code using Anthropic's official guide:
 
@@ -24,7 +24,7 @@ The model picker includes Claude Code's documented aliases: `default`, `best`, `
 
 This feature can also use **[Grok Build](https://x.ai/news/grok-build-cli)** (the `grok` command-line tool).
 
-If Grok Build is missing, the chat panel shows an error such as *Cannot find grok. Is Grok Build installed?*
+If Grok Build is missing, the chat panel shows an error such as _Cannot find grok. Is Grok Build installed?_
 
 Install Grok Build and sign in using xAI's instructions. SumatraPDF looks for `grok.exe` on `PATH`, in `%USERPROFILE%\.grok\bin\`, and in `%USERPROFILE%\.local\bin\`.
 
@@ -38,7 +38,7 @@ The first time you open the Grok chat panel in an app session, SumatraPDF runs `
 
 This feature can also use **[OpenAI Codex](https://developers.openai.com/codex/cli)** (the `codex` command-line tool).
 
-If OpenAI Codex is missing, the chat panel shows an error such as *Cannot find codex. Is OpenAI Codex installed?*
+If OpenAI Codex is missing, the chat panel shows an error such as _Cannot find codex. Is OpenAI Codex installed?_
 
 Install and sign in using OpenAI's official guides:
 
@@ -61,8 +61,9 @@ The first time you open the Codex chat panel in an app session, SumatraPDF asks 
    - **View → Claude chat** (`CmdAIChatWithClaudeCode`)
    - **View → Grok chat** (`CmdAIChatWithGrokBuild`)
    - **View → Codex chat** (`CmdAIChatWithOpenAICodex`)
-   
+
    Or open the [command palette](Command-Palette.md) (`Ctrl + K`) and search for `Claude`, `Grok`, or `Codex`.
+
 3. Type a question in the input box at the bottom of the sidebar and press `Enter`.
 4. Drag the splitter between the document and the chat panel to resize the sidebar.
 
@@ -78,12 +79,9 @@ While the agent is working on a reply, use **Stop** to cancel the current reques
 
 ## Supported documents
 
-AI Chat is available only for file types the agent CLIs can work with directly:
+AI Chat is available only for **PDF** (`.pdf`) files.
 
-- **PDF** (`.pdf`)
-- **Single image files** (e.g. `.png`, `.jpg`, `.webp`, `.gif`, `.tiff`, `.bmp`, and other image formats SumatraPDF opens as a single image)
-
-It is **not** available for comic archives (`.cbr`, `.cbz`, etc.), folders of images, ebooks (EPUB, MOBI, …), CHM, DjVu, XPS, PostScript, plain text, and other formats. On unsupported tabs the command is disabled and the panel shows that the feature is only available for PDF and image files.
+It is **not** available for single images, comic archives (`.cbr`, `.cbz`, etc.), folders of images, DjVu, ebooks (EPUB, MOBI, …), CHM, XPS, PostScript, plain text, and other formats. On those tabs the **AI chat with document** commands and context-menu submenu are hidden.
 
 ## Settings
 

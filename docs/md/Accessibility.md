@@ -16,6 +16,8 @@ SumatraPDF exposes a [UI Automation](https://learn.microsoft.com/en-us/windows/w
 2. Open a document in SumatraPDF.
 3. Move focus to the document canvas and navigate / select text — Narrator should read document content via the UIA text pattern.
 
+**ver 3.7+:** reading through the document character by character, word by word, line by line and page by page works. Before 3.7 the text range never advanced, so a screen reader would repeat the first line (or read nothing) even though the text was there. Reading the text under the mouse pointer or finger (Narrator's mouse mode, touch exploration) works too, and screen readers can now locate the text they read on screen — so Narrator can highlight it.
+
 **Supported document types for UIA:** PDF, XPS, DjVu (engines that expose extractable page text).
 
 **Known issue:** Narrator sometimes stops reading until you switch focus to another window and back.
@@ -56,7 +58,7 @@ Window
       |
       |-> Fragment
           Name: [filename]
-          ControlType: UIA_DocumentControlTypeId 
+          ControlType: UIA_DocumentControlTypeId
           NativeWindowHandle: 0
           Patterns: ITextProvider
             |

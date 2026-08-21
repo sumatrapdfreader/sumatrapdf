@@ -5,7 +5,7 @@ struct TextSelection;
 class SumatraUIAutomationDocumentProvider;
 
 class SumatraUIAutomationTextRange : public ITextRangeProvider {
-    LONG refCount;
+    AtomicInt refCount;
 
     // used for getting dm and document state (== is document closed == dm is invalid)
     // text range will hold reference to document to prevent it from being removed
@@ -17,13 +17,9 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     int startGlyph, endGlyph;
 
   public:
-    // creates empty range
     SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document);
-    // creates range containing the given page
     SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, int pageNum);
-    // creates range containing the given TextSelection range
     SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, TextSelection* range);
-    // creates a copy of give range
     SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange&);
     SumatraUIAutomationTextRange& operator=(const SumatraUIAutomationTextRange&) = delete;
 
@@ -32,6 +28,7 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     bool operator==(const SumatraUIAutomationTextRange&) const;
 
     void SetToDocumentRange();
+    void SetToDegenerateAt(int pageNo, int glyphIdx);
     void SetToNullRange();
     bool IsNullRange() const;
     bool IsEmptyRange() const;
@@ -47,12 +44,10 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     int FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial = false);
     int FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial = false);
 
-    // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
     ULONG STDMETHODCALLTYPE AddRef();
     ULONG STDMETHODCALLTYPE Release();
 
-    // ITextRangeProvider
     HRESULT STDMETHODCALLTYPE Clone(ITextRangeProvider** clonedRange);
     HRESULT STDMETHODCALLTYPE Compare(ITextRangeProvider* range, BOOL* areSame);
     HRESULT STDMETHODCALLTYPE CompareEndpoints(enum TextPatternRangeEndpoint srcEndPoint, ITextRangeProvider* range,

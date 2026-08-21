@@ -4,7 +4,7 @@
 #include "base/Base.h"
 
 #include "DocController.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
@@ -54,7 +54,7 @@ static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
 }
 TextSearch::TextSearch(EngineBase* engine) : TextSelection(engine) {
     nPages = engine->PageCount();
-    pagesToSkip.SetSize(nPages);
+    VecResize(pagesToSkip, nPages);
     markAllPagesNonSkip(pagesToSkip);
 }
 
@@ -133,6 +133,7 @@ void TextSearch::SetText(Str text) {
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. https://web.archive.org/web/20140201013717/http://forums.fofou.org:80/sumatrapdf/topic?id=2432337&comments=3
+    // NOLINTNEXTLINE(bugprone-branch-clone): homoglyph case is distinct from the empty-anchor fallback
     else if (searchTextLen > 0 && (firstChar == '-' || firstChar == '\'' || firstChar == '"')) {
         anchor = {};
     } else if (searchTextLen > 0) {
@@ -169,6 +170,79 @@ void TextSearch::SetMatchWholeWord(bool newMatchWholeWord) {
     // SetText() (the re-search after a toggle always calls it), so we only need
     // to invalidate the per-page skip cache here, like SetMatchCase().
     markAllPagesNonSkip(pagesToSkip);
+}
+
+bool TextSearch::PageAllowed(int pageNo) const {
+    if (pageNo < 1 || pageNo > nPages) {
+        return false;
+    }
+    if (len(pageAllowed) == 0) {
+        return true;
+    }
+    if (pageNo > len(pageAllowed)) {
+        return false;
+    }
+    return pageAllowed[pageNo - 1];
+}
+
+int TextSearch::RestrictFirst() const {
+    if (len(pageAllowed) == 0) {
+        return 1;
+    }
+    int n = std::min(len(pageAllowed), nPages);
+    for (int i = 0; i < n; i++) {
+        if (pageAllowed[i]) {
+            return i + 1;
+        }
+    }
+    return 1;
+}
+
+int TextSearch::RestrictLast() const {
+    if (len(pageAllowed) == 0) {
+        return nPages;
+    }
+    int last = 0;
+    int n = std::min(len(pageAllowed), nPages);
+    for (int i = 0; i < n; i++) {
+        if (pageAllowed[i]) {
+            last = i + 1;
+        }
+    }
+    return last > 0 ? last : nPages;
+}
+
+void TextSearch::SetAllowedPages(const Vec<bool>& allowed) {
+    pageAllowed = allowed;
+    markAllPagesNonSkip(pagesToSkip);
+}
+
+void TextSearch::SetPageRange(int first, int last) {
+    if (first < 0) {
+        first = 0;
+    }
+    if (last < 0) {
+        last = 0;
+    }
+    if (first == 0 && last == 0) {
+        pageAllowed.Reset();
+        markAllPagesNonSkip(pagesToSkip);
+        return;
+    }
+    int lo = first > 0 ? first : 1;
+    int hi = last > 0 ? last : nPages;
+    if (lo > hi) {
+        int tmp = lo;
+        lo = hi;
+        hi = tmp;
+    }
+    Vec<bool> allowed;
+    VecResize(allowed, nPages);
+    for (int i = 0; i < nPages; i++) {
+        int page = i + 1;
+        allowed[i] = page >= lo && page <= hi;
+    }
+    SetAllowedPages(allowed);
 }
 
 void TextSearch::SetDirection(TextSearch::Direction direction) {
@@ -471,6 +545,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                 }
             }
         }
+        // NOLINTNEXTLINE(bugprone-branch-clone): each empty branch documents a different normalization
         if (isMatch) {
             /* characters are identical */;
         } else if (str::IsWs((char)matchCh) && lookingAtWs) {
@@ -502,8 +577,11 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             endIdx += endAdv;
         } else {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
-            // -> skip to next page
+            // -> skip to next page (but not past a restricted range)
             ++currentPage;
+            if (!PageAllowed(currentPage)) {
+                return notFound;
+            }
             bool abortSearch = false;
             currentPageText =
                 GetTextForPageForSearch(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
@@ -523,7 +601,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                                        (lookingAtWs && str::IsWs((char)prevMatchCh)))) {
             SkipWhitespace(findText, findTextLen, matchIdx, matchByteIdx);
             SkipWhitespace(currentPageText, currentPageTextLen, endIdx, endByteIdx);
-            while (endIdx >= currentPageTextLen && currentPage < nPages) {
+            while (endIdx >= currentPageTextLen && PageAllowed(currentPage + 1)) {
                 // treat page break as whitespace, too
                 ++currentPage;
                 bool abortSearch = false;
@@ -587,41 +665,43 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
 
     int found = -1;
     PageAndOffset fg;
-    do {
-        if (WasCanceled(progressCb)) {
-            return false;
-        }
-        if (!anchor) {
-            found = GetNextIndex(pageTextLen, findIndex, forward);
-        } else if (forward) {
-            if (matchCase) {
-                found = StrStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
-            } else {
-                found = StrStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+    for (;;) {
+        do {
+            if (WasCanceled(progressCb)) {
+                return false;
             }
-        } else {
-            if (matchCase) {
-                found = StrRStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
+            if (!anchor) {
+                found = GetNextIndex(pageTextLen, findIndex, forward);
+            } else if (forward) {
+                if (matchCase) {
+                    found = StrStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                } else {
+                    found = StrStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                }
             } else {
-                found = StrRStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                if (matchCase) {
+                    found = StrRStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                } else {
+                    found = StrRStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
+                }
             }
-        }
-        if (found < 0) {
-            return false;
-        }
-        findIndex = found + (forward ? 1 : 0);
-        fg = MatchEnd(found);
-    } while (fg.page <= 0);
+            if (found < 0) {
+                return false;
+            }
+            findIndex = found + (forward ? 1 : 0);
+            fg = MatchEnd(found);
+        } while (fg.page <= 0);
 
-    int offset = found;
-    searchHitStartAt = pageNo;
-    StartAt(pageNo, offset);
-    SelectUpTo(fg.page, fg.offset);
-    findIndex = forward ? fg.offset : offset;
+        int offset = found;
+        searchHitStartAt = pageNo;
+        StartAt(pageNo, offset);
+        SelectUpTo(fg.page, fg.offset);
+        findIndex = forward ? fg.offset : offset;
 
-    // try again if the found text is completely outside the page's mediabox
-    if (result.len == 0) {
-        return FindTextInPage(pageNo, finalGlyph);
+        // try again if the found text is completely outside the page's mediabox
+        if (result.len != 0) {
+            break;
+        }
     }
 
     if (finalGlyph) {
@@ -635,11 +715,19 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
         return false;
     }
 
+    int lo = RestrictFirst();
+    int hi = RestrictLast();
+    if (pageNo < lo) {
+        pageNo = forward ? lo : 0;
+    } else if (pageNo > hi) {
+        pageNo = forward ? nPages + 1 : hi;
+    }
+
     int next = forward ? 1 : -1;
-    while ((1 <= pageNo) && (pageNo <= nPages) && !WasCanceled(progressCb)) {
+    while ((lo <= pageNo) && (pageNo <= hi) && !WasCanceled(progressCb)) {
         UpdateProgress(progressCb, pageNo, nPages);
 
-        if (pagesToSkip[pageNo - 1]) {
+        if (!PageAllowed(pageNo) || pagesToSkip[pageNo - 1]) {
             pageNo += next;
             continue;
         }
@@ -678,8 +766,8 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
         return true;
     }
 
-    // allow for the first/last page to be included in the next search
-    searchHitStartAt = findPage = forward ? nPages + 1 : 0;
+    // allow for the first/last page of the (restricted) range to be included next
+    searchHitStartAt = findPage = forward ? hi + 1 : lo - 1;
 
     return false;
 }
@@ -695,6 +783,7 @@ TextSel* TextSearch::FindFirst(int page, Str text) {
 
 // search only `pageNo` (no wrapping to other pages), mirroring the per-page step
 // inside FindStartingAtPage. Used for page-constrained search (issue #3085)
+// like FindFirst but searches only the given page (issue #3085)
 TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     SetText(text);
     if (len(findText) == 0 || pageNo < 1 || pageNo > nPages) {

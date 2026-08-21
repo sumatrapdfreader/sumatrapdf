@@ -13,35 +13,14 @@
 // "Embedded". pdf.js recovers these glyph names in _simpleFontToUnicode(); the
 // mupdf fix mirrors that heuristic in pdf_load_to_unicode (pdf-unicode.c).
 //
-// Run:  bun tests/issue-3219.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-3219.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, runStandalone } from "./util.ts";
+import { extractPageText, runStandalone } from "./util.ts";
 
 const PDF = join(import.meta.dir, "issue-3219.pdf");
 const TARGET = "Embedded";
-
-// extract page text via mupdf using the -extract-text harness. It prints the
-// text as hex bytes (to avoid console locale mangling); we decode it back.
-// The GUI exe's stdout doesn't reach a Bun pipe directly, but PowerShell (a
-// console app, which Bun can pipe) relays it.
-function extractWithMupdf(pdf: string): string {
-  const psCmd = `& '${EXE}' -for-testing -extract-text -1 '${pdf}' 2>&1 | Out-String -Width 100000`;
-  const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psCmd]);
-  const raw = p.stdout.toString();
-  let all = "";
-  for (const m of raw.matchAll(/text on page \d+: '([0-9a-f ]*)'/g)) {
-    const hex = m[1].trim();
-    if (!hex) {
-      continue;
-    }
-    const bytes = hex.split(/\s+/).map((h) => parseInt(h, 16));
-    all += Buffer.from(bytes).toString("utf8");
-  }
-  // '_' is the harness's stand-in for newline
-  return all.split("_").join("\n");
-}
 
 // extract page text via pdf.js; returns null if pdfjs-dist isn't installed
 async function extractWithPdfjs(pdf: string): Promise<string | null> {
@@ -72,7 +51,7 @@ export async function testit(): Promise<void> {
     return;
   }
 
-  const mupdfText = extractWithMupdf(PDF);
+  const mupdfText = extractPageText(PDF);
   const mupdfHas = mupdfText.includes(TARGET);
   console.log(`mupdf: ${mupdfText.length} chars, has "${TARGET}": ${mupdfHas}`);
 

@@ -48,11 +48,63 @@ Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap) {
     if (GetObject(hbmp, sizeof(ds), &ds) == sizeof(ds) && ds.dsBm.bmBits) {
         p->stride = ds.dsBm.bmWidthBytes;
         p->data = (u8*)ds.dsBm.bmBits;
-        p->format = (ds.dsBm.bmBitsPixel == 24) ? PixmapFormat::BGR8 : PixmapFormat::BGRA8;
+        // stride is the DIB's real byte width either way, so the memory
+        // accounting stays right even when the pixels aren't ours to read
+        int bpp = ds.dsBm.bmBitsPixel;
+        p->format = PixmapFormat::Native;
+        if (bpp == 24) {
+            p->format = PixmapFormat::BGR8;
+        } else if (bpp == 32) {
+            p->format = PixmapFormat::BGRA8;
+        }
         // Orientation follows the DIB. Pixel readers that care about orientation should
         // prefer the HBITMAP-based helpers, which handle it.
     }
     return p;
+}
+
+Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p) {
+    if (!p || !p->hbmp || p->width <= 0 || p->height <= 0) {
+        return nullptr;
+    }
+    Pixmap* dst = AllocPixmapDIB(p->width, p->height);
+    if (!dst) {
+        return nullptr;
+    }
+    bool ok = false;
+    HDC dstDC = CreateCompatibleDC(nullptr);
+    HDC srcDC = CreateCompatibleDC(nullptr);
+    if (dstDC && srcDC) {
+        HGDIOBJ prevDst = SelectObject(dstDC, dst->hbmp);
+        HGDIOBJ prevSrc = SelectObject(srcDC, p->hbmp);
+        if (prevDst && prevSrc) {
+            ok = BitBlt(dstDC, 0, 0, p->width, p->height, srcDC, 0, 0, SRCCOPY) != 0;
+            GdiFlush();
+        }
+        if (prevDst) {
+            SelectObject(dstDC, prevDst);
+        }
+        if (prevSrc) {
+            SelectObject(srcDC, prevSrc);
+        }
+    }
+    DeleteDC(dstDC);
+    DeleteDC(srcDC);
+    if (!ok) {
+        FreePixmap(dst);
+        return nullptr;
+    }
+    // BitBlt leaves the alpha channel alone (i.e. at the zero CreateDIBSection
+    // gave us), which would make the copy fully transparent
+    for (int y = 0; y < dst->height; y++) {
+        u8* d = dst->data + ((size_t)y * dst->stride);
+        for (int x = 0; x < dst->width; x++, d += 4) {
+            d[3] = 0xff;
+        }
+    }
+    dst->xres = p->xres;
+    dst->yres = p->yres;
+    return dst;
 }
 
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb) {
@@ -64,6 +116,19 @@ Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb) {
     rb->hMap = nullptr;
     delete rb;
     return p;
+}
+
+// The alpha in a DIB section is straight, not premultiplied: that is what PNG,
+// CF_DIBV5 and GDI+ all expect of a 32bpp bitmap, and mupdf hands us
+// premultiplied pixels. Undoing it here keeps the invariant in one place.
+static void UnpremultiplyBgra(u8* d) {
+    u32 a = d[3];
+    if (a == 0 || a == 255) {
+        return;
+    }
+    d[0] = (u8)std::min<u32>(255, ((u32)d[0] * 255 + (a / 2)) / a);
+    d[1] = (u8)std::min<u32>(255, ((u32)d[1] * 255 + (a / 2)) / a);
+    d[2] = (u8)std::min<u32>(255, ((u32)d[2] * 255 + (a / 2)) / a);
 }
 
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
@@ -100,6 +165,9 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
                     memcpy(dst, src, 4);
                     src += 4;
                 }
+                if (px->premultiplied) {
+                    UnpremultiplyBgra(dst);
+                }
                 dst += 4;
             }
         }
@@ -114,6 +182,8 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
     return rb;
 }
 
+// DIB-section-backed: GDI owns the pixels, free via the native handles
+// frees a DIB-section-backed Pixmap's native handles (and its pixels).
 void FreePixmapNativeBitmap(Pixmap* p) {
     if (!p) {
         return;
@@ -129,9 +199,17 @@ void FreePixmapNativeBitmap(Pixmap* p) {
     p->data = nullptr;
 }
 
+static bool BlitPixmapRegionComposited(Pixmap* p, HDC hdc, Rect target, Rect source);
+
 bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
     if (!p || !p->data || target.IsEmpty() || source.IsEmpty()) {
         return false;
+    }
+    // a pixmap that carries real transparency (an image with an alpha channel)
+    // has to be blended with what's underneath, or SRCCOPY paints its
+    // transparent parts black (issue #5844)
+    if (p->hasAlpha && p->format == PixmapFormat::BGRA8 && !p->hbmp) {
+        return BlitPixmapRegionComposited(p, hdc, target, source);
     }
     SetStretchBltMode(hdc, HALFTONE);
     if (p->hbmp) {
@@ -180,6 +258,132 @@ bool BlitPixmap(Pixmap* p, HDC hdc, Rect target) {
     return BlitPixmapRegion(p, hdc, target, Rect(0, 0, p->width, p->height));
 }
 
+static inline u8 BlendOver(u8 src, u8 dst, u32 srcAlpha, bool premultiplied) {
+    u32 inv = 255 - srcAlpha;
+    u32 s = premultiplied ? src : (((u32)src * srcAlpha) + 127) / 255;
+    return (u8)std::min<u32>(255, s + ((((u32)dst * inv) + 127) / 255));
+}
+
+// Like BlitPixmap(), but honours the source alpha. BlitPixmap() is a straight
+// SRCCOPY, which paints the transparent parts of an icon black; anything drawn
+// over an arbitrary background (toolbar icons on the home page) needs this.
+//
+// The compositing is done by hand rather than with AlphaBlend() or GDI+:
+// msimg32 and GdiPlusUtil are linked into SumatraPDF.exe but not into the other
+// consumers of base (test_util, PdfFilter, ...). Reading the destination back
+// costs a BitBlt, which is nothing at icon sizes.
+//
+// Only 1:1 blits are composited; a scaling blit falls back to the opaque path.
+bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target) {
+    if (!p || !p->data || target.IsEmpty()) {
+        return false;
+    }
+    bool sameSize = (target.dx == p->width) && (target.dy == p->height);
+    if (p->format != PixmapFormat::BGRA8 || !sameSize) {
+        return BlitPixmap(p, hdc, target);
+    }
+    int dx = p->width;
+    int dy = p->height;
+    Pixmap* dst = AllocPixmapDIB(dx, dy);
+    if (!dst) {
+        return false;
+    }
+    bool ok = false;
+    HDC memDC = CreateCompatibleDC(hdc);
+    if (memDC) {
+        HGDIOBJ prev = SelectObject(memDC, dst->hbmp);
+        if (prev) {
+            // read the background, blend the source over it, put it back
+            BitBlt(memDC, 0, 0, dx, dy, hdc, target.x, target.y, SRCCOPY);
+            GdiFlush();
+            for (int y = 0; y < dy; y++) {
+                const u8* s = p->data + ((size_t)y * p->stride);
+                u8* d = dst->data + ((size_t)y * dst->stride);
+                for (int x = 0; x < dx; x++, s += 4, d += 4) {
+                    u32 a = s[3];
+                    if (a == 0) {
+                        continue;
+                    }
+                    if (a == 255) {
+                        d[0] = s[0];
+                        d[1] = s[1];
+                        d[2] = s[2];
+                        continue;
+                    }
+                    d[0] = BlendOver(s[0], d[0], a, p->premultiplied);
+                    d[1] = BlendOver(s[1], d[1], a, p->premultiplied);
+                    d[2] = BlendOver(s[2], d[2], a, p->premultiplied);
+                }
+            }
+            GdiFlush();
+            ok = BitBlt(hdc, target.x, target.y, dx, dy, memDC, 0, 0, SRCCOPY) != 0;
+            SelectObject(memDC, prev);
+        }
+        DeleteDC(memDC);
+    }
+    FreePixmap(dst);
+    return ok;
+}
+
+// Draw a region of an alpha-carrying pixmap, blending over what's already on
+// the target so the document background - a solid colour, or the checkered
+// pattern - shows through the transparent parts (issue #5844).
+//
+// Hand-rolled for the same reason as BlitPixmapAlpha: msimg32's AlphaBlend()
+// isn't linked into every consumer of base. Unlike that one this has to handle
+// a scaling blit, because a stale tile is stretched while the new one renders.
+// The sampling is nearest-neighbour, which is all a stretched stale tile is.
+static bool BlitPixmapRegionComposited(Pixmap* p, HDC hdc, Rect target, Rect source) {
+    source = Rect(0, 0, p->width, p->height).Intersect(source);
+    if (source.IsEmpty()) {
+        return false;
+    }
+    int dx = target.dx;
+    int dy = target.dy;
+    Pixmap* dst = AllocPixmapDIB(dx, dy);
+    if (!dst) {
+        return false;
+    }
+    bool ok = false;
+    HDC memDC = CreateCompatibleDC(hdc);
+    if (memDC) {
+        HGDIOBJ prev = SelectObject(memDC, dst->hbmp);
+        if (prev) {
+            // read the background, blend the source over it, put it back
+            BitBlt(memDC, 0, 0, dx, dy, hdc, target.x, target.y, SRCCOPY);
+            GdiFlush();
+            for (int y = 0; y < dy; y++) {
+                int sy = (dy == source.dy) ? y : (int)(((i64)y * source.dy) / dy);
+                const u8* srcRow = p->data + ((size_t)(source.y + sy) * p->stride);
+                u8* d = dst->data + ((size_t)y * dst->stride);
+                for (int x = 0; x < dx; x++, d += 4) {
+                    int sx = (dx == source.dx) ? x : (int)(((i64)x * source.dx) / dx);
+                    const u8* s = srcRow + ((size_t)(source.x + sx) * 4);
+                    u32 a = s[3];
+                    if (a == 0) {
+                        continue;
+                    }
+                    if (a == 255) {
+                        d[0] = s[0];
+                        d[1] = s[1];
+                        d[2] = s[2];
+                        continue;
+                    }
+                    d[0] = BlendOver(s[0], d[0], a, p->premultiplied);
+                    d[1] = BlendOver(s[1], d[1], a, p->premultiplied);
+                    d[2] = BlendOver(s[2], d[2], a, p->premultiplied);
+                }
+            }
+            GdiFlush();
+            ok = BitBlt(hdc, target.x, target.y, dx, dy, memDC, 0, 0, SRCCOPY) != 0;
+            SelectObject(memDC, prev);
+        }
+        DeleteDC(memDC);
+    }
+    FreePixmap(dst);
+    return ok;
+}
+
 static bool SkipRecolorPixel(int x, int y, Vec<Rect>* skipRects) {
     if (skipRects) {
         for (Rect& r : *skipRects) {
@@ -197,7 +401,7 @@ static int Mul255(int a, int b) {
     return n >> 8;
 }
 
-void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF linkColor, Vec<Rect>* skipRects) {
+void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
     if (!px) {
         return;
     }
@@ -208,7 +412,7 @@ void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF li
     if (!px->data || px->width <= 0 || px->height <= 0 || px->format == PixmapFormat::RGBA8) {
         return;
     }
-    if ((textColor & 0xffffff) == WIN_COL_BLACK && (bgColor & 0xffffff) == WIN_COL_WHITE && !linkColor && !skipRects) {
+    if ((textColor & 0xffffff) == kColBlack && (bgColor & 0xffffff) == kColWhite && !linkColor && !skipRects) {
         return;
     }
     byte linkR = 0, linkG = 0, linkB = 0;
@@ -238,6 +442,12 @@ void RecolorPixmap(Pixmap* px, COLORREF textColor, COLORREF bgColor, COLORREF li
             }
         }
     }
+}
+
+static Size GetBitmapSize(HBITMAP hbmp) {
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+    return {bmpInfo.bmWidth, bmpInfo.bmHeight};
 }
 
 // Returns a copy of the clipboard bitmap as a platform-independent Pixmap.

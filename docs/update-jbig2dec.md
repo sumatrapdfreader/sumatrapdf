@@ -14,7 +14,9 @@ build.
 
 2. The script checks out the requested revision under `deps/jbig2dec` and writes
    `ext/a-jbig2dec/jbig2.h`, `ext/a-jbig2dec/jbig2dec.c`, and
-   `ext/a-jbig2dec/version.txt`.
+   `ext/a-jbig2dec/version.txt`. It also re-copies the upstream `COPYING` and
+   `LICENSE` files into `ext/a-jbig2dec`; they are the only copies in the tree
+   and `AUTHORS` points at `ext/a-jbig2dec/COPYING`.
 3. Review `ext/a-jbig2dec/version.txt`; it records the project homepage, source
    repo URL, requested revision, resolved commit SHA-1, and GitHub commit URL.
 4. Regenerate the Visual Studio projects:
@@ -26,8 +28,5 @@ build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
-
-The old `ext/jbig2dec` checkout is intentionally left in the tree for now, but
-the active MuPDF build uses the amalgamated `ext/a-jbig2dec` source.

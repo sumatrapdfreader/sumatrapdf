@@ -5,9 +5,11 @@
 #define SMOOTHSCROLL_DELAY_IN_MS 20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
 
+struct Gfx;
+
 /* Represents selected area on given page */
 struct SelectionOnPage {
-    explicit SelectionOnPage(int pageNo = 0, const RectF* const rect = nullptr);
+    explicit SelectionOnPage(int pageNo = 0, const RectF* rect = nullptr);
 
     int pageNo; // page this selection is on
     RectF rect; // position of selection rectangle on page (in page coordinates)
@@ -26,19 +28,24 @@ struct SelectionOnPage {
 constexpr u8 kSelectionDefaultAlpha = 0x5f;
 
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel = false);
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor,
+void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color selectionColor,
                                 u8 alpha = kSelectionDefaultAlpha, int pad = 2, bool drawBorder = false);
-void PaintSelection(MainWindow* win, HDC hdc);
+void PaintSelection(MainWindow* win, Gfx* gfx);
 void UpdateTextSelection(MainWindow* win, bool select = true);
 void CopySelectionToClipboard(MainWindow* win);
 void OnSelectAll(MainWindow* win, bool textOnly = false);
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
 void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
-void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key);
+void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key, bool forceRect = false);
 void OnSelectionStop(MainWindow* win, int x, int y, bool aborted);
 TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelectionOut);
 
-// Rectangular (Ctrl+drag) selection: move/resize after it exists.
+// Touch text selection handles (issue #538). Rects are in canvas coordinates.
+// Returns false when there is no text selection to put handles on.
+bool GetTouchSelHandleRects(MainWindow* win, Rect& startOut, Rect& endOut);
+TouchSelHandle HitTestTouchSelHandle(MainWindow* win, int x, int y);
+void HideTouchSelHandles(MainWindow* win);
+
 bool IsRectangularSelection(MainWindow* win);
 Rect GetRectangularSelectionScreenRect(MainWindow* win);
 SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int x, int y);

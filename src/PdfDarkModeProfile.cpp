@@ -2,9 +2,8 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -16,10 +15,10 @@
 #include "PdfDarkMode.h"
 
 static float ColorChannel01(byte v) {
-    return v / 255.f;
+    return (float)v / 255.f;
 }
 
-static DarkModePalette BuildPaletteFromColors(COLORREF textCol, COLORREF bgCol, COLORREF linkCol) {
+static DarkModePalette BuildPaletteFromColors(Color textCol, Color bgCol, Color linkCol) {
     byte tr, tg, tb, br, bg, bb, lr, lg, lb;
     UnpackColor(textCol, tr, tg, tb);
     UnpackColor(bgCol, br, bg, bb);
@@ -86,8 +85,8 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
     // dark pages come from DocumentColorsFollowTheme or custom dark
     // FixedPageUI colors, so key the dark modes off the effective page
     // background rather than the window chrome
-    COLORREF bgCol;
-    COLORREF textCol = ThemePageRenderColors(bgCol);
+    Color bgCol;
+    Color textCol = ThemePageRenderColors(bgCol);
     bool pagesDark = !IsLightColor(bgCol);
     profile->foreground = textCol;
     profile->pageBackground = bgCol;
@@ -106,20 +105,17 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
     }
 
     if (EngineUsesDocumentColorsFollowTheme(engine)) {
-        switch (GetDocumentColorsFollowTheme()) {
-            case DocumentColorsFollowTheme::Legacy:
+        if (GetDocumentColorsFollowTheme() == DocumentColorsFollowTheme::Legacy) {
+            profile->mode = PageColorMode::LegacyInvert;
+        } else {
+            // Smart (or Off with pagesDark already handled above): prefer object-level
+            if (EngineSupportsSmartDarkMode(engine) && PdfDarkModeUsesObjectLevel()) {
+                profile->mode = PageColorMode::SmartDark;
+            } else if (profile->preservePdfImages) {
+                profile->mode = PageColorMode::PreserveImages;
+            } else {
                 profile->mode = PageColorMode::LegacyInvert;
-                break;
-            case DocumentColorsFollowTheme::Smart:
-            default:
-                if (EngineSupportsSmartDarkMode(engine) && PdfDarkModeUsesObjectLevel()) {
-                    profile->mode = PageColorMode::SmartDark;
-                } else if (profile->preservePdfImages) {
-                    profile->mode = PageColorMode::PreserveImages;
-                } else {
-                    profile->mode = PageColorMode::LegacyInvert;
-                }
-                break;
+            }
         }
     }
 

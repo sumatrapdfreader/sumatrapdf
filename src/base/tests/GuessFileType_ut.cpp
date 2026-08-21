@@ -267,6 +267,20 @@ static void webpTest() {
     utassert(fti.imageSizes);
     utassert(fti.imageSizes[0] == Size(2, 1));
     utassert(fti.imageSizes[1] == Size(4, 3));
+
+    // RIFF walk: EXIF + ICCP chunks, no image data needed
+    static const u8 webpChunks[] = {
+        'R', 'I', 'F', 'F', 40, 0, 0, 0, 'W', 'E', 'B', 'P', 'E', 'X', 'I', 'F', 8,   0,   0,   0,
+        'I', 'I', 42,  0,   8,  0, 0, 0, 'I', 'C', 'C', 'P', 4,   0,   0,   0,   'a', 'c', 's', 'p',
+    };
+    Str chunkFile = Str((char*)webpChunks, dimofi(webpChunks));
+    Str payload;
+    utassert(FindWebpChunk(chunkFile, "EXIF", payload));
+    utassert(payload.len == 8 && payload.s[0] == 'I' && payload.s[1] == 'I');
+    utassert(FindWebpChunk(chunkFile, "ICCP", payload));
+    utassert(payload.len == 4 && MemEq(payload.s, "acsp", 4));
+    utassert(!FindWebpChunk(chunkFile, "XMP ", payload));
+    utassert(!FindWebpChunk(Str((char*)webp, dimofi(webp)), "ICCP", payload));
     FreeFileTypeInfo(&fti);
 }
 
@@ -456,11 +470,19 @@ static void nonImageTest() {
 static void extMapTest() {
     utassert(GuessFileTypeFromName(StrL("foo.pdf")) == FileType::PDF);
     utassert(GuessFileTypeFromName(StrL("foo.JP2")) == FileType::Jp2); // case-insensitive
+    utassert(GuessFileTypeFromName(StrL("foo.epub")) == FileType::Epub);
     utassert(GuessFileTypeFromName(StrL("foo.tar")) == FileType::Tar);
     utassert(GuessFileTypeFromName(StrL("foo.unknown-ext")) == FileType::Unknown);
+    // multi-dot / FB2 zip containers: longest registered suffix wins over bare .zip
+    utassert(GuessFileTypeFromName(StrL("book.fb2.zip")) == FileType::Fb2z);
+    utassert(GuessFileTypeFromName(StrL("book.fbz")) == FileType::Fb2z);
+    utassert(GuessFileTypeFromName(StrL("book.fb2")) == FileType::Fb2);
     // the canonical extension is the first one registered for the type
-    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Jpeg), ".jpg"));
-    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Mobi), ".mobi"));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Jpeg), StrL(".jpg")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Mobi), StrL(".mobi")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Epub), StrL(".epub")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2), StrL(".fb2")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2z), StrL(".fb2z")));
     utassert(!GetExtForFileTypeTemp(FileType::Unknown));
 }
 

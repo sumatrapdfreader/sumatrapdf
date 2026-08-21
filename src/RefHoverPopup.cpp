@@ -3,10 +3,10 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"
@@ -14,7 +14,7 @@
 
 static int gClassRegistered = 0;
 
-static bool PopupClientToPagePt(RefHoverState* s, HWND hwnd, int clientX, int clientY, PointF& ptOut) {
+static bool PopupClientToPagePt(RefHoverState* s, int clientX, int clientY, PointF& ptOut) {
     if (!s || !s->hitEngine || s->displayed.destPage <= 0) {
         return false;
     }
@@ -22,7 +22,7 @@ static bool PopupClientToPagePt(RefHoverState* s, HWND hwnd, int clientX, int cl
     if (zoom <= 0.f) {
         return false;
     }
-    int border = DpiScale(hwnd, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     // When a column-wrap continuation is stitched below displayed.region in
     // the bitmap (see RefHoverRender.cpp's StackPixmapsVertically), a click
     // there falls outside what displayed.region maps to — the formula below
@@ -54,7 +54,7 @@ static IPageDestination* LaunchLinkAtPagePt(RefHoverState* s, PointF pagePt) {
 
 static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, HWND hwnd, int clientX, int clientY) {
     PointF pagePt;
-    if (!PopupClientToPagePt(s, hwnd, clientX, clientY, pagePt)) {
+    if (!PopupClientToPagePt(s, clientX, clientY, pagePt)) {
         return nullptr;
     }
     return LaunchLinkAtPagePt(s, pagePt);
@@ -67,7 +67,7 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         if (s && GetCursorPos(&p)) {
             ScreenToClient(hwnd, &p);
             if (LaunchLinkAtPopupPt(s, hwnd, p.x, p.y)) {
-                SetCursor(LoadCursorW(nullptr, IDC_HAND));
+                SetCursorCached(IDC_HAND);
                 return TRUE;
             }
         }
@@ -76,14 +76,14 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        HBRUSH hbg = CreateSolidBrush(RGB(255, 252, 200));
+        HBRUSH hbg = CreateSolidBrush(MkRgb(255, 252, 200));
         HdcFillRect(hdc, HwndClientRect(hwnd), hbg);
         DeleteObject(hbg);
 
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s && s->bmp) {
             Size bmpSize = Size(s->bmp->width, s->bmp->height);
-            int border = DpiScale(hwnd, kRefHoverBorder);
+            int border = DpiScale(kRefHoverBorder);
             HDC bmpDC = CreateCompatibleDC(hdc);
             HGDIOBJ oldBmp = bmpDC ? SelectObject(bmpDC, s->bmp->hbmp) : nullptr;
             if (oldBmp) {
@@ -124,7 +124,7 @@ static bool RegisterClassIfNeeded() {
     wc.lpfnWndProc = RefHoverWndProc;
     wc.hInstance = GetModuleHandleW(nullptr);
     wc.lpszClassName = REF_HOVER_CLASS;
-    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hCursor = GetCachedCursor(IDC_ARROW);
     ATOM atom = RegisterClassW(&wc);
     gClassRegistered = atom ? 1 : -1;
     return gClassRegistered > 0;
@@ -150,7 +150,7 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
         return;
     }
     Size bmpSize = Size(s->bmp->width, s->bmp->height);
-    int border = DpiScale(s->hwndPopup, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     int popupW = bmpSize.dx + (2 * border);
     int popupH = bmpSize.dy + (2 * border);
 
@@ -165,21 +165,13 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
     int bottomBound = mi.rcWork.bottom;
     Rect pr = s->pending.pageScreenRect;
     if (pr.dy > 0) {
-        if (pr.y > topBound) {
-            topBound = pr.y;
-        }
-        if (pr.y + pr.dy < bottomBound) {
-            bottomBound = pr.y + pr.dy;
-        }
+        topBound = std::max(pr.y, topBound);
+        bottomBound = std::min(pr.y + pr.dy, bottomBound);
     }
     int boundW = rightBound - leftBound;
     int boundH = bottomBound - topBound;
-    if (popupW > boundW) {
-        popupW = boundW;
-    }
-    if (popupH > boundH) {
-        popupH = boundH;
-    }
+    popupW = std::min(popupW, boundW);
+    popupH = std::min(popupH, boundH);
 
     int pageCenterX = (pr.dx > 0) ? (pr.x + (pr.dx / 2)) : screenPt.x;
     int anchorX = pageCenterX;
@@ -190,7 +182,7 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
         }
     }
     int x = anchorX - (popupW / 2);
-    int cursorPad = DpiScale(s->hwndPopup, kRefHoverCursorPad);
+    int cursorPad = DpiScale(kRefHoverCursorPad);
     int spaceBelow = bottomBound - (screenPt.y + cursorPad);
     int spaceAbove = (screenPt.y - cursorPad) - topBound;
     int y;
@@ -209,15 +201,11 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
         }
         y = screenPt.y - popupH - cursorPad;
     }
-    if (x < leftBound) {
-        x = leftBound;
-    }
+    x = std::max(x, leftBound);
     if (x + popupW > rightBound) {
         x = rightBound - popupW;
     }
-    if (y < topBound) {
-        y = topBound;
-    }
+    y = std::max(y, topBound);
     if (y + popupH > bottomBound) {
         popupH = bottomBound - y;
     }
@@ -249,6 +237,10 @@ bool RefHoverRerenderDisplayedRegion(RefHoverState* s, EngineBase* engine, int p
     return true;
 }
 
+// Re-render the popup at adjusted zoom in response to a mouse-wheel event.
+// Popup window keeps its initial size; only the rendered content scales.
+// Positive delta zooms in, negative zooms out. Returns true if the zoom
+// changed and a re-render happened.
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     if (!s || !s->hwndPopup || s->displayed.destPage <= 0 || !engine) {
         return false;
@@ -266,7 +258,7 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     s->displayed.userZoom = newZoom;
 
     Rect rc = HwndClientRect(s->hwndPopup);
-    int border = DpiScale(s->hwndPopup, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     float clientW = (float)(rc.dx - (2 * border));
     float clientH = (float)(rc.dy - (2 * border));
     float zoom = s->displayed.baseZoom * s->displayed.userZoom;
@@ -291,6 +283,11 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     return RefHoverRerenderDisplayedRegion(s, engine, s->displayed.destPage, region);
 }
 
+// Scroll the popup's rendered region by a wheel notch. Positive delta scrolls
+// toward earlier content (up); negative scrolls toward later content (down).
+// Rolls over to the previous / next page when the viewport hits a page edge
+// (continuous scrolling). Popup window keeps its initial size; only the
+// rendered region's Y (and possibly page number) changes.
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     if (!s || !s->hwndPopup || s->displayed.destPage <= 0 || !engine) {
         return false;
@@ -307,7 +304,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         return false;
     }
 
-    float scrollStep = (float)DpiScale(s->hwndPopup, kRefHoverScrollStepPx);
+    float scrollStep = (float)DpiScale(kRefHoverScrollStepPx);
     float scrollPt = scrollStep * ((float)wheelDelta / (float)WHEEL_DELTA) / zoom;
     float newY = region.y - scrollPt;
 
@@ -317,9 +314,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
             page--;
             mediabox = engine->PageMediabox(page);
             newY = mediabox.dy - region.dy - overflow;
-            if (newY < 0.f) {
-                newY = 0.f;
-            }
+            newY = std::max(newY, 0.f);
         } else {
             newY = 0.f;
         }
@@ -332,14 +327,10 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
             if (newY + region.dy > mediabox.dy) {
                 newY = mediabox.dy - region.dy;
             }
-            if (newY < 0.f) {
-                newY = 0.f;
-            }
+            newY = std::max(newY, 0.f);
         } else {
             newY = mediabox.dy - region.dy;
-            if (newY < 0.f) {
-                newY = 0.f;
-            }
+            newY = std::max(newY, 0.f);
         }
     }
 
@@ -347,9 +338,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         return false;
     }
     region.y = newY;
-    if (region.dy > mediabox.dy) {
-        region.dy = mediabox.dy;
-    }
+    region.dy = std::min(region.dy, mediabox.dy);
     if (region.x + region.dx > mediabox.dx) {
         region.x = mediabox.dx - region.dx;
         if (region.x < 0.f) {

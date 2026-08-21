@@ -20,7 +20,7 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
         {"Software\\Classes\\CLSID"
          "\\" kPdfFilterHandler "\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
          nullptr, kPdfFilterClsid},
-        {"Software\\Classes\\.pdf\\PersistentHandler", nullptr, kPdfFilterHandler},
+        {R"(Software\Classes\.pdf\PersistentHandler)", nullptr, kPdfFilterHandler},
 #ifdef BUILD_TEX_IFILTER
         {"Software\\Classes\\CLSID\\" kTexFilterClsid, nullptr, "SumatraPDF IFilter"},
         {"Software\\Classes\\CLSID\\" kTexFilterClsid "\\InProcServer32", nullptr, dllPath},
@@ -45,11 +45,11 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
 #endif
     };
     HKEY hkey = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    for (int i = 0; i < dimof(regVals); i++) {
-        auto key = regVals[i].key;
-        auto val = regVals[i].value;
-        auto data = regVals[i].data;
-        bool ok = LoggedWriteRegStr(hkey, key, val, data);
+    for (auto& regVal : regVals) {
+        auto keyName = regVal.key;
+        auto valName = regVal.value;
+        auto value = regVal.data;
+        bool ok = LoggedWriteRegStr(hkey, keyName, valName, value);
         if (!ok) {
             return false;
         }
@@ -61,7 +61,7 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
 bool UninstallSearchFilter() {
     Str regKeys[] = {
         "Software\\Classes\\CLSID\\" kPdfFilterClsid,  "Software\\Classes\\CLSID\\" kPdfFilterHandler,
-        "Software\\Classes\\.pdf\\PersistentHandler",
+        R"(Software\Classes\.pdf\PersistentHandler)",
 #ifdef BUILD_TEX_IFILTER
         "Software\\Classes\\CLSID\\" kTexFilterClsid,  "Software\\Classes\\CLSID\\" kTexFilterHandler,
         "Software\\Classes\\.tex\\PersistentHandler",
@@ -74,9 +74,9 @@ bool UninstallSearchFilter() {
 
     bool ok = true;
 
-    for (int i = 0; i < dimof(regKeys); i++) {
-        LoggedDeleteRegKey(HKEY_LOCAL_MACHINE, regKeys[i]);
-        ok &= LoggedDeleteRegKey(HKEY_CURRENT_USER, regKeys[i]);
+    for (auto regKey : regKeys) {
+        LoggedDeleteRegKey(HKEY_LOCAL_MACHINE, regKey);
+        ok &= LoggedDeleteRegKey(HKEY_CURRENT_USER, regKey);
     }
     return ok;
 }

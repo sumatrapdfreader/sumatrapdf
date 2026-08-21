@@ -1,0 +1,243 @@
+tools: say SumatraPDF in usage text, not mutool/mudraw/muraster
+
+SumatraPDF exposes mutool's tools as `SumatraPDF <tool>` subcommands, so the
+usage text has to name SumatraPDF and not the mutool / mudraw / muraster
+binaries the user never runs. muraster also drops its version banner.
+
+Pure string changes; re-apply by hand if upstream rewords a usage block.
+---
+diff --git a/source/tools/muconvert.c b/source/tools/muconvert.c
+index e290208..cdc755f 100644
+--- a/source/tools/muconvert.c
++++ b/source/tools/muconvert.c
+@@ -53,7 +53,7 @@ static int count;
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"Usage: mutool convert [options] file [pages]\n"
++		"Usage: SumatraPDF convert [options] file [pages]\n"
+ 		"\t-p -\tpassword\n"
+ 		"\n"
+ 		"\t-o -\toutput file name (%%d for page number)\n"
+diff --git a/source/tools/mudraw.c b/source/tools/mudraw.c
+index ef740d4..3357e43 100644
+--- a/source/tools/mudraw.c
++++ b/source/tools/mudraw.c
+@@ -426,7 +426,7 @@ static struct {
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mudraw [options] file [pages]\n"
++		"usage: SumatraPDF draw [options] file [pages]\n"
+ 		"\t-p -\tpassword\n"
+ 		"\n"
+ 		"\t-o -\toutput file name (%%d for page number)\n"
+diff --git a/source/tools/mugrep.c b/source/tools/mugrep.c
+index fbaa66a..dffee5f 100644
+--- a/source/tools/mugrep.c
++++ b/source/tools/mugrep.c
+@@ -45,7 +45,7 @@ static const char *mark_close = "";
+ static int mugrep_usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mugrep [options] pattern input.pdf [ input2.pdf ... ]\n"
++		"usage: SumatraPDF grep [options] pattern input.pdf [ input2.pdf ... ]\n"
+ 		"\t-p -\tpassword for encrypted PDF files\n"
+ 		"\t-F\tpattern is a fixed string\n"
+ 		"\t-a\tignore accents (diacritics)\n"
+diff --git a/source/tools/muraster.c b/source/tools/muraster.c
+index 682e4b0..eb8afc1 100644
+--- a/source/tools/muraster.c
++++ b/source/tools/muraster.c
+@@ -505,8 +505,7 @@ static struct {
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"muraster version " FZ_VERSION "\n"
+-		"usage: muraster [options] file [pages]\n"
++		"usage: SumatraPDF raster [options] file [pages]\n"
+ 		"\t-p -\tpassword\n"
+ 		"\n"
+ 		"\t-o -\toutput file name\n"
+diff --git a/source/tools/mutrace.c b/source/tools/mutrace.c
+index 2c2efd1..06b5cb9 100644
+--- a/source/tools/mutrace.c
++++ b/source/tools/mutrace.c
+@@ -29,7 +29,7 @@
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool trace [options] file [pages]\n"
++		"Usage: SumatraPDF trace [options] file [pages]\n"
+ 		"\t-p -\tpassword\n"
+ 		"\n"
+ 		"\t-b -\tuse named page box (MediaBox, CropBox, BleedBox, TrimBox, or ArtBox)\n"
+diff --git a/source/tools/pdfaudit.c b/source/tools/pdfaudit.c
+index 92b289f..7dbf9b7 100644
+--- a/source/tools/pdfaudit.c
++++ b/source/tools/pdfaudit.c
+@@ -2091,7 +2091,7 @@ filter_file(fz_context *ctx, fz_output *out, const char *filename)
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool audit [options] input.pdf [input2.pdf ...]\n"
++		"Usage: SumatraPDF audit [options] input.pdf [input2.pdf ...]\n"
+ 		"\t-o -\toutput file\n"
+ 		);
+ 	return 1;
+diff --git a/source/tools/pdfbake.c b/source/tools/pdfbake.c
+index 9976664..4faddd0 100644
+--- a/source/tools/pdfbake.c
++++ b/source/tools/pdfbake.c
+@@ -34,7 +34,7 @@
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool bake [options] input.pdf [output.pdf]\n"
++		"Usage: SumatraPDF bake [options] input.pdf [output.pdf]\n"
+ 		"\t-A\tkeep annotations\n"
+ 		"\t-F\tkeep forms\n"
+ 		"\t-O -\tcomma separated list of output options\n"
+diff --git a/source/tools/pdfclean.c b/source/tools/pdfclean.c
+index b4b5e2d..36d1054 100644
+--- a/source/tools/pdfclean.c
++++ b/source/tools/pdfclean.c
+@@ -41,7 +41,7 @@
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool clean [options] input.pdf [output.pdf] [pages]\n"
++		"Usage: SumatraPDF clean [options] input.pdf [output.pdf] [pages]\n"
+ 		"\t-p -\tpassword\n"
+ 		"\t-g\tgarbage collect unused objects\n"
+ 		"\t-gg\tin addition to -g compact xref table\n"
+diff --git a/source/tools/pdfcreate.c b/source/tools/pdfcreate.c
+index 1a8d9e7..a28ac21 100644
+--- a/source/tools/pdfcreate.c
++++ b/source/tools/pdfcreate.c
+@@ -36,7 +36,7 @@
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool create [-o output.pdf] [-O options] page.txt [page2.txt ...]\n"
++		"Usage: SumatraPDF create [-o output.pdf] [-O options] page.txt [page2.txt ...]\n"
+ 		"\t-o -\tname of PDF file to create\n"
+ 		"\t-O -\tcomma separated list of output options\n"
+ 		"\tpage.txt\tcontent stream with annotations for creating resources\n\n"
+diff --git a/source/tools/pdfextract.c b/source/tools/pdfextract.c
+index ca17d13..4fc7aa3 100644
+--- a/source/tools/pdfextract.c
++++ b/source/tools/pdfextract.c
+@@ -38,7 +38,7 @@ static int doicc = 1;
+ 
+ static int usage(void)
+ {
+-	fprintf(stderr, "usage: mutool extract [options] file.pdf [object numbers]\n");
++	fprintf(stderr, "Usage: SumatraPDF extract [options] file.pdf [object numbers]\n");
+ 	fprintf(stderr, "\t-p\tpassword\n");
+ 	fprintf(stderr, "\t-r\tconvert images to rgb\n");
+ 	fprintf(stderr, "\t-a\tembed SMasks as alpha channel\n");
+diff --git a/source/tools/pdfinfo.c b/source/tools/pdfinfo.c
+index 9090ec1..25eeeeb 100644
+--- a/source/tools/pdfinfo.c
++++ b/source/tools/pdfinfo.c
+@@ -186,7 +186,7 @@ static void
+ infousage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool info [options] file.pdf [pages]\n"
++		"Usage: SumatraPDF info [options] file.pdf [pages]\n"
+ 		"\t-p -\tpassword for decryption\n"
+ 		"\t-F\tlist fonts\n"
+ 		"\t-I\tlist images\n"
+diff --git a/source/tools/pdfmerge.c b/source/tools/pdfmerge.c
+index 85a78e1..fa1f09d 100644
+--- a/source/tools/pdfmerge.c
++++ b/source/tools/pdfmerge.c
+@@ -36,7 +36,7 @@
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool merge [-o output.pdf] [-O options] input.pdf [pages] [input2.pdf] [pages2] ...\n"
++		"Usage: SumatraPDF merge [-o output.pdf] [-O options] input.pdf [pages] [input2.pdf] [pages2] ...\n"
+ 		"\t-o -\tname of PDF file to create\n"
+ 		"\t-O -\tcomma separated list of output options\n"
+ 		"\tinput.pdf\tname of input file from which to copy pages\n"
+diff --git a/source/tools/pdfpages.c b/source/tools/pdfpages.c
+index cfca188..e59c5a3 100644
+--- a/source/tools/pdfpages.c
++++ b/source/tools/pdfpages.c
+@@ -35,7 +35,7 @@ static int
+ infousage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool pages [options] file.pdf [pages]\n"
++		"Usage: SumatraPDF pages [options] file.pdf [pages]\n"
+ 		"\t-p -\tpassword for decryption\n"
+ 		"\tpages\tcomma separated list of page numbers and ranges\n"
+ 		);
+diff --git a/source/tools/pdfposter.c b/source/tools/pdfposter.c
+index b655623..2d8159d 100644
+--- a/source/tools/pdfposter.c
++++ b/source/tools/pdfposter.c
+@@ -40,7 +40,7 @@ static int x_dir = 1;
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool poster [options] input.pdf [output.pdf]\n"
++		"Usage: SumatraPDF poster [options] input.pdf [output.pdf]\n"
+ 		"\t-p -\tpassword\n"
+ 		"\t-m -\tmargin (overlap) between pages (pts, or %%)\n"
+ 		"\t-x\tx decimation factor\n"
+diff --git a/source/tools/pdfrecolor.c b/source/tools/pdfrecolor.c
+index 2eb2ca3..4904aa5 100644
+--- a/source/tools/pdfrecolor.c
++++ b/source/tools/pdfrecolor.c
+@@ -33,7 +33,7 @@
+ static int
+ usage(void)
+ {
+-	fprintf(stderr, "usage: mutool recolor [options] <input filename>\n");
++	fprintf(stderr, "Usage: SumatraPDF recolor [options] <input filename>\n");
+ 	fprintf(stderr, "\t-c -\tOutput colorspace (gray(default), rgb, cmyk)\n");
+ 	fprintf(stderr, "\t-o -\tOutput file\n");
+ 	fprintf(stderr, "\t-r\tRemove OutputIntent(s)\n");
+diff --git a/source/tools/pdfshow.c b/source/tools/pdfshow.c
+index 36444ee..fae4c86 100644
+--- a/source/tools/pdfshow.c
++++ b/source/tools/pdfshow.c
+@@ -44,7 +44,7 @@ static int showcolumn;
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool show [options] file.pdf ( trailer | xref | pages | grep | outline | js | form | <path> ) *\n"
++		"Usage: SumatraPDF show [options] file.pdf ( trailer | xref | pages | grep | outline | js | form | <path> ) *\n"
+ 		"\t-p -\tpassword\n"
+ 		"\t-o -\toutput file\n"
+ 		"\t-e\tleave stream contents in their original form\n"
+diff --git a/source/tools/pdfsign.c b/source/tools/pdfsign.c
+index e3e1746..0041b5a 100644
+--- a/source/tools/pdfsign.c
++++ b/source/tools/pdfsign.c
+@@ -44,7 +44,7 @@ static int list = 1;
+ static int usage(void)
+ {
+ 	fprintf(stderr,
+-		"usage: mutool sign [options] input.pdf [signature object numbers]\n"
++		"Usage: SumatraPDF sign [options] input.pdf [signature object numbers]\n"
+ 		"\t-p -\tpassword\n"
+ 		"\t-v \tverify signature\n"
+ 		"\t-c \tclear signatures\n"
+diff --git a/source/tools/pdftrim.c b/source/tools/pdftrim.c
+index a9fd724..3763013 100644
+--- a/source/tools/pdftrim.c
++++ b/source/tools/pdftrim.c
+@@ -164,7 +164,7 @@ read_margins(float *margin, char *arg)
+ static int
+ usage(void)
+ {
+-	fprintf(stderr, "usage: mutool trim [options] <input filename>\n");
++	fprintf(stderr, "Usage: SumatraPDF trim [options] <input filename>\n");
+ 	fprintf(stderr, "\t-b -\tWhich box to trim to (MediaBox(default), CropBox, BleedBox, TrimBox, ArtBox)\n");
+ 	fprintf(stderr, "\t-f\tFallback to mediabox if specified box not available\n");
+ 	fprintf(stderr, "\t-m -\tAdd margins to box (+ve for inwards, -ve outwards).\n");

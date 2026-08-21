@@ -3,9 +3,10 @@
 
 #include "base/Base.h"
 #include "base/ByteReaderWriter.h"
+#include "base/File.h"
 #include "base/GuessFileType.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "GumboHelpers.h"
 
@@ -214,7 +215,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
         return false;
     }
     code &= ((1 << (codeLength)) - 1);
-    u16 offset = UInt16BE(dicts[dict] + (code * 2));
+    u16 offset = UInt16BE(dicts[dict] + ((size_t)code * 2));
 
     if ((u32)offset + 2 > dictSize[dict]) {
         logf("invalid offset\n");
@@ -345,11 +346,11 @@ bool HuffDicDecompressor::SetHuffData(u8* huffData, int huffDataLen) {
         return false;
     }
     // we conservatively use the big-endian version of the data,
-    for (int i = 0; i < kCacheItemCount; i++) {
-        cacheTable[i] = d.UInt32BE();
+    for (u32& v : cacheTable) {
+        v = d.UInt32BE();
     }
-    for (int i = 0; i < kBaseTableItemCount; i++) {
-        baseTable[i] = d.UInt32BE();
+    for (u32& v : baseTable) {
+        v = d.UInt32BE();
     }
     ReportIf(d.Offset() != kHuffRecordMinLen);
     return true;
@@ -367,6 +368,9 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     }
     u32 hdrLen = UInt32BE(cdicData + 4);
     u32 codeLen = UInt32BE(cdicData + 12);
+    if (codeLen == 0 || codeLen > 16) {
+        return false;
+    }
     if (0 == codeLength) {
         codeLength = codeLen;
     } else {
@@ -380,7 +384,7 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     u32 size = cdicDataLen - hdrLen;
 
     u32 maxSize = 2u * (1u << codeLength);
-    if (maxSize >= size) {
+    if (maxSize > size) {
         return false;
     }
     dicts[dictsCount] = cdicData + hdrLen;
@@ -443,7 +447,7 @@ static void DecodeMobiDocHeader(const u8* buf, int bufLen, MobiHeader* hdr) {
     d.Bytes(hdr->reserved2, 62);
     hdr->extraDataFlags = d.UInt16BE();
     if (hdr->hdrLen >= 232) {
-        hdr->indxRec = d.UInt32BE();
+        hdr->indxRec = (i32)d.UInt32BE();
     }
 }
 
@@ -509,7 +513,12 @@ bool MobiDoc::ParseHeader() {
         // cf. https://code.google.com/archive/p/sumatrapdf/issues/2529
         docRecCount--;
     }
-    docUncompressedSize = palmDocHdr.uncompressedDocSize;
+    constexpr u32 kMaxMobiTextSize = 256 * 1024 * 1024;
+    if (palmDocHdr.uncompressedDocSize > kMaxMobiTextSize) {
+        logf("MOBI text is too large\n");
+        return false;
+    }
+    docUncompressedSize = (int)palmDocHdr.uncompressedDocSize;
 
     if (kPalmDocHeaderLen == recSize) {
         // TODO: calculate imageFirstRec / imagesCount
@@ -536,7 +545,7 @@ bool MobiDoc::ParseHeader() {
         AddPropOwned(props, DocProp::UnsupportedFeatures, v);
         str::Free(v);
     }
-    textEncoding = mobiHdr.textEncoding;
+    textEncoding = (int)mobiHdr.textEncoding;
 
     if (pdbReader->GetRecordCount() > (int)mobiHdr.imageFirstRec) {
         imageFirstRec = (int)mobiHdr.imageFirstRec;
@@ -609,7 +618,7 @@ bool MobiDoc::ParseHeader() {
 }
 
 bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
-    if (dataLen < 12 || !memeq(data, "EXTH", 4)) {
+    if (dataLen < 12 || !MemEq(data, "EXTH", 4)) {
         return false;
     }
 
@@ -653,7 +662,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
             case 201:
                 if (length == 12 && imageFirstRec) {
                     d.Unskip(4);
-                    coverImageRec = imageFirstRec + d.UInt32BE();
+                    coverImageRec = imageFirstRec + (int)d.UInt32BE();
                 }
                 continue;
             case 503:
@@ -855,9 +864,19 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
         return false;
     }
 
+    // Print Replica / AZW4 is a PDF in a MOBI wrapper. Do not treat the
+    // binary records as HTML (issue #1315).
+    if (pdbReader->GetRecordCount() >= 2) {
+        auto rec1 = pdbReader->GetRecord(1);
+        if (len(rec1) >= 4 && MemEq(rec1.s, "%MOP", 4)) {
+            logf("MobiDoc: Print Replica / AZW4, not a MOBI ebook\n");
+            return false;
+        }
+    }
+
     ReportIf(len(doc) != 0);
     doc.Reset();
-    doc.cap = (u32)docUncompressedSize; // capacity hint, same trick as ByteWriter ctor
+    doc.cap = docUncompressedSize; // capacity hint, same trick as ByteWriter ctor
     int nFailed = 0;
     for (int i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, doc)) {
@@ -870,7 +889,13 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     // is detected.
     // Figure out if this is a bug in my decoding.
     if (nFailed > docRecCount / 2) {
-        return false;
+        if (CountLoadedImages() < 2) {
+            return false;
+        }
+        // KF8 / AZW3 image books often have a tiny or undecompressible PalmDoc
+        // stub; keep going so MaybeSynthesizeImagePages can use the JPEGs.
+        logf("MobiDoc: %d/%d text records failed, falling back to images\n", nFailed, docRecCount);
+        doc.Reset();
     }
 
     // replace unexpected \0 with spaces
@@ -888,7 +913,139 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
             doc.Append(docUtf8);
         }
     }
+    MaybeSynthesizeImagePages();
     return true;
+}
+
+int MobiDoc::CountLoadedImages() const {
+    int n = 0;
+    for (int i = 0; i < imagesCount; i++) {
+        if (len(images[i]) > 0) {
+            n++;
+        }
+    }
+    return n;
+}
+
+// KF8 <img src="kindle:embed:XXXX"> uses a base-32 resource id (alphabet 0-9A-V).
+int KindleEmbedToRecIndex(Str src) {
+    Str prefix = StrL("kindle:embed:");
+    if (!str::StartsWithI(src, prefix)) {
+        return 0;
+    }
+    const char* p = src.s + len(prefix);
+    const char* end = src.s + len(src);
+    int n = 0;
+    bool any = false;
+    while (p < end) {
+        char c = *p;
+        int digit = -1;
+        if (c >= '0' && c <= '9') {
+            digit = c - '0';
+        } else if (c >= 'A' && c <= 'V') {
+            digit = 10 + (c - 'A');
+        } else if (c >= 'a' && c <= 'v') {
+            digit = 10 + (c - 'a');
+        } else {
+            break;
+        }
+        n = n * 32 + digit;
+        any = true;
+        p++;
+    }
+    return any ? n : 0;
+}
+
+static void CollectKindleEmbedRecIndexes(Str html, Vec<int>& out) {
+    Str prefix = StrL("kindle:embed:");
+    if (!html.s || len(html) < len(prefix)) {
+        return;
+    }
+    const char* p = html.s;
+    const char* end = html.s + len(html);
+    while (p + len(prefix) <= end) {
+        if (*p != 'k' && *p != 'K') {
+            p++;
+            continue;
+        }
+        Str rest(p, (int)(end - p));
+        if (!str::StartsWithI(rest, prefix)) {
+            p++;
+            continue;
+        }
+        int n = KindleEmbedToRecIndex(rest);
+        if (n > 0) {
+            out.Append(n);
+        }
+        p += len(prefix);
+    }
+}
+
+static void EmitRecindexPages(str::Builder& doc, const Vec<int>& recs) {
+    doc.Reset();
+    doc.Append(StrL("<html><body>"));
+    for (int i = 0; i < len(recs); i++) {
+        doc.Append(fmt("<img recindex=\"%d\"/><mbp:pagebreak/>", recs[i]));
+    }
+    doc.Append(StrL("</body></html>"));
+}
+
+// AZW3 / KF8 fixed-layout books (Kindle comics, photo books, some textbooks)
+// store each page as a JPEG in the PDB. PalmDoc markup is either empty or KF8
+// fragments with kindle:embed (and leftover CSS). EngineMobi would otherwise
+// show a blank document or CSS junk (issue #4315). Classic MOBI recindex
+// markup is left alone. Reflowable KF8 that uses kindle:embed without a
+// viewport stays as-is so MobiFormatter can resolve the images in place.
+void MobiDoc::MaybeSynthesizeImagePages() {
+    int nImg = CountLoadedImages();
+    if (nImg < 2) {
+        return;
+    }
+    Str html = ToStr(doc);
+    if (html && str::ContainsI(html, StrL("recindex"))) {
+        return;
+    }
+
+    Vec<int> embedIdx;
+    CollectKindleEmbedRecIndexes(html, embedIdx);
+    bool fixedLayout =
+        html && (str::ContainsI(html, StrL("name=\"viewport\"")) || str::ContainsI(html, StrL("name='viewport'")));
+    if (len(embedIdx) >= 2 && fixedLayout) {
+        logf("MobiDoc: synthesizing %d pages from kindle:embed (htmlLen=%d)\n", len(embedIdx), len(html));
+        EmitRecindexPages(doc, embedIdx);
+        return;
+    }
+    if (len(embedIdx) >= 2) {
+        return;
+    }
+
+    int maxImgLen = 0;
+    for (int i = 0; i < imagesCount; i++) {
+        maxImgLen = std::max(maxImgLen, len(images[i]));
+    }
+    // Drop HD-media thumbnails (often ~10KB next to 200KB page JPEGs).
+    int minKeep = maxImgLen / 8;
+    logf("MobiDoc: synthesizing %d image pages (htmlLen=%d, minKeep=%d)\n", nImg, len(html), minKeep);
+    int coverNo = -1;
+    if (coverImageRec >= imageFirstRec) {
+        coverNo = coverImageRec - imageFirstRec;
+    }
+    Vec<int> recs;
+    for (int i = 0; i < imagesCount; i++) {
+        int imgLen = len(images[i]);
+        if (imgLen == 0 || imgLen < minKeep) {
+            continue;
+        }
+        if (i == coverNo) {
+            // MobiFormatter already emits the cover on its own page
+            continue;
+        }
+        recs.Append(i + 1);
+    }
+    if (len(recs) < 2) {
+        return;
+    }
+    EmitRecindexPages(doc, recs);
 }
 
 // don't free the result
@@ -957,7 +1114,7 @@ bool MobiDoc::HasToc() {
         if (filepos) {
             unsigned int pos;
             if (!str::IsNull(str::Parse(Str(filepos->value), "%u%$", &pos))) {
-                docTocIndex = pos;
+                docTocIndex = (int)pos;
             }
         }
     }
@@ -1081,7 +1238,13 @@ bool MobiDoc::IsSupportedFileType(FileType kind) {
 MobiDoc* MobiDoc::CreateFromFile(Str path) {
     MobiDoc* mb = new MobiDoc(path);
     PdbReader* pdbReader = PdbReader::CreateFromFile(path);
-    if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
+    if (!pdbReader) {
+        logf("MobiDoc::CreateFromFile: PdbReader failed for '%s'\n", path);
+        delete mb;
+        return nullptr;
+    }
+    if (!mb->LoadForPdbReader(pdbReader)) {
+        logf("MobiDoc::CreateFromFile: LoadForPdbReader failed for '%s'\n", path);
         delete mb;
         return nullptr;
     }
@@ -1096,4 +1259,225 @@ MobiDoc* MobiDoc::CreateFromData(Str data) {
         return nullptr;
     }
     return mb;
+}
+
+// KindleUnpack: extra-data flags are only valid for MOBI header length >= 0xE4
+// and format version >= 5. Print Replica files often have a long header but
+// version 4 and must not have trailers stripped (that would corrupt the PDF).
+static void PrintReplicaTrailerInfo(const MobiHeader& mobi, int& trailersCount, bool& multibyte) {
+    trailersCount = 0;
+    multibyte = false;
+    if (mobi.hdrLen < 228 || mobi.minRequiredMobiFormatVersion < 5) {
+        return;
+    }
+    u16 flags = mobi.extraDataFlags;
+    multibyte = ((flags & 1) != 0);
+    while (flags > 1) {
+        if (0 != (flags & 2)) {
+            trailersCount++;
+        }
+        flags = flags >> 1;
+    }
+}
+
+// First section of the first %MOP table is the PDF (KindleUnpack processPrintReplica).
+static Str ExtractPdfFromMopRaw(Str raw) {
+    if (len(raw) < 8) {
+        return {};
+    }
+    if (!MemEq(raw.s, "%MOP", 4)) {
+        int idx = str::IndexOf(raw, StrL("%PDF-"));
+        if (idx < 0) {
+            return {};
+        }
+        return str::Dup(Str(raw.s + idx, raw.len - idx));
+    }
+
+    ByteReader d(raw);
+    d.Skip(4);
+    u32 numTables = d.UInt32BE();
+    if (!d.IsOk() || numTables == 0 || numTables > 32) {
+        return {};
+    }
+    // All per-table section counts come first, then the section index.
+    for (u32 t = 0; t < numTables; t++) {
+        d.UInt32BE();
+    }
+    if (!d.IsOk()) {
+        return {};
+    }
+    u32 sectionOffset = d.UInt32BE();
+    u32 sectionLength = d.UInt32BE();
+    if (!d.IsOk()) {
+        return {};
+    }
+    if (sectionOffset > (u32)raw.len || sectionLength > (u32)raw.len - sectionOffset) {
+        return {};
+    }
+    if (sectionLength < 5) {
+        return {};
+    }
+    Str pdf(raw.s + (int)sectionOffset, (int)sectionLength);
+    if (!str::StartsWith(pdf, StrL("%PDF-"))) {
+        logf("ExtractPdfFromPrintReplica: first %MOP section is not a PDF\n");
+        return {};
+    }
+    return str::Dup(pdf);
+}
+
+static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
+    if (!pdb || pdb->GetRecordCount() < 2) {
+        return {};
+    }
+    if (GetPdbDocType(pdb->GetDbType()) != PdbDocType::Mobipocket) {
+        return {};
+    }
+
+    auto rec0 = pdb->GetRecord(0);
+    if (len(rec0) < kPalmDocHeaderLen + 12) {
+        return {};
+    }
+
+    PalmDocHeader palm;
+    DecodePalmDocHeader((const u8*)rec0.s, &palm);
+    u16 encrType = ByteReader(rec0).UInt16BE(12);
+    if (encrType != ENCRYPTION_NONE) {
+        logf("ExtractPdfFromPrintReplica: encrypted\n");
+        return {};
+    }
+
+    bool isPrintReplica = false;
+    int trailersCount = 0;
+    bool multibyte = false;
+    if (len(rec0) >= kPalmDocHeaderLen + kMobiHeaderMinLen) {
+        MobiHeader mobi{};
+        DecodeMobiDocHeader((const u8*)rec0.s + kPalmDocHeaderLen, rec0.len - kPalmDocHeaderLen, &mobi);
+        if (str::EqN(StrL("MOBI"), Str(mobi.id, 4), 4)) {
+            // MOBI type 8 is Print Replica (AZW4).
+            if (mobi.type == 8) {
+                isPrintReplica = true;
+            }
+            PrintReplicaTrailerInfo(mobi, trailersCount, multibyte);
+        }
+    }
+
+    auto rec1 = pdb->GetRecord(1);
+    if (len(rec1) >= 4 && MemEq(rec1.s, "%MOP", 4)) {
+        isPrintReplica = true;
+    }
+    if (!isPrintReplica) {
+        return {};
+    }
+
+    if (!IsValidCompression(palm.compressionType) || palm.compressionType == COMPRESSION_HUFF) {
+        logf("ExtractPdfFromPrintReplica: unsupported compression %d\n", (int)palm.compressionType);
+        return {};
+    }
+
+    int recCount = palm.recordsCount;
+    if (recCount >= pdb->GetRecordCount()) {
+        recCount = pdb->GetRecordCount() - 1;
+    }
+    if (recCount < 1) {
+        return {};
+    }
+
+    constexpr u32 kMaxPrintReplicaRaw = 512 * 1024 * 1024;
+    if (palm.uncompressedDocSize > kMaxPrintReplicaRaw) {
+        logf("ExtractPdfFromPrintReplica: raw markup too large (%u)\n", palm.uncompressedDocSize);
+        return {};
+    }
+
+    str::Builder raw((int)palm.uncompressedDocSize);
+    for (int i = 1; i <= recCount; i++) {
+        auto rec = pdb->GetRecord(i);
+        if (len(rec) == 0) {
+            return {};
+        }
+        int recSize = GetRealRecordSize((const u8*)rec.s, rec.len, trailersCount, multibyte);
+        if (kInvalidSize == recSize) {
+            recSize = rec.len;
+        }
+        if (COMPRESSION_NONE == palm.compressionType) {
+            raw.Append(Str(rec.s, recSize));
+        } else if (COMPRESSION_PALM == palm.compressionType) {
+            if (!PalmdocUncompress((const u8*)rec.s, recSize, raw)) {
+                logf("ExtractPdfFromPrintReplica: PalmDoc decompression failed\n");
+                return {};
+            }
+        }
+    }
+
+    Str pdf = ExtractPdfFromMopRaw(ToStr(raw));
+    if (len(pdf) > 0) {
+        logf("ExtractPdfFromPrintReplica: extracted %d byte PDF\n", len(pdf));
+    }
+    return pdf;
+}
+
+// Owned PDF bytes from an AZW4 / Kindle Print Replica (PDF in a MOBI wrapper).
+// Cheap peek so regular MOBI files are not fully re-read just to reject them.
+static bool FileMightBePrintReplica(Str path) {
+    constexpr int kPeek = 256 * 1024;
+    u8 buf[kPeek];
+    int n = file::ReadN(path, buf, kPeek);
+    if (n < 80) {
+        return false;
+    }
+    if (!MemEq(buf + 0x3c, "BOOKMOBI", 8)) {
+        return false;
+    }
+    ByteReader r(buf, n);
+    u16 numRecs = r.UInt16BE(76);
+    if (numRecs < 2) {
+        return false;
+    }
+    int tableBytes = (int)numRecs * 8;
+    if (78 + tableBytes > n) {
+        return true;
+    }
+    u32 off0 = r.UInt32BE(78);
+    u32 off1 = r.UInt32BE(86);
+    bool isType8 = false;
+    bool sawType = false;
+    if (off0 + 28 <= (u32)n && MemEq(buf + off0 + 16, "MOBI", 4)) {
+        sawType = true;
+        isType8 = r.UInt32BE((int)off0 + 24) == 8;
+    }
+    bool sawRec1 = false;
+    bool rec1Mop = false;
+    if (off1 + 4 <= (u32)n) {
+        sawRec1 = true;
+        rec1Mop = MemEq(buf + off1, "%MOP", 4);
+    }
+    if (isType8 || rec1Mop) {
+        return true;
+    }
+    if (sawType && sawRec1) {
+        return false;
+    }
+    return true;
+}
+
+Str ExtractPdfFromPrintReplicaFile(Str path) {
+    if (!FileMightBePrintReplica(path)) {
+        return {};
+    }
+    PdbReader* pdb = PdbReader::CreateFromFile(path);
+    if (!pdb) {
+        return {};
+    }
+    Str pdf = ExtractPdfFromPrintReplica(pdb);
+    delete pdb;
+    return pdf;
+}
+
+Str ExtractPdfFromPrintReplicaData(Str data) {
+    PdbReader* pdb = PdbReader::CreateFromData(str::Dup(data));
+    if (!pdb) {
+        return {};
+    }
+    Str pdf = ExtractPdfFromPrintReplica(pdb);
+    delete pdb;
+    return pdf;
 }

@@ -53,7 +53,7 @@ void ByteOrderTests() {
         utassert(23 == d.Offset());
 
         d.Bytes(b, 3);
-        utassert(memeq(ABC, b, 3));
+        utassert(MemEq(ABC, b, 3));
         utassert(26 == d.Offset());
     }
 
@@ -81,7 +81,7 @@ void ByteOrderTests() {
         vu16 = d.UInt16BE();
         utassert(vu16 == 0x200);
         d.Bytes(b, 3);
-        utassert(memeq(ABC, b, 3));
+        utassert(MemEq(ABC, b, 3));
         utassert(26 == d.Offset());
     }
 
@@ -109,7 +109,7 @@ void ByteOrderTests() {
         v16 = d.Int16LE();
         utassert(v16 == 0x2);
         d.Bytes(b, 3);
-        utassert(memeq(ABC, b, 3));
+        utassert(MemEq(ABC, b, 3));
         utassert(26 == d.Offset());
     }
 
@@ -137,7 +137,7 @@ void ByteOrderTests() {
         v16 = d.Int16BE();
         utassert(v16 == 0x200);
         d.Bytes(b, 3);
-        utassert(memeq(ABC, b, 3));
+        utassert(MemEq(ABC, b, 3));
         utassert(26 == d.Offset());
     }
 }

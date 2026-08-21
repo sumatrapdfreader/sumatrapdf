@@ -19,7 +19,6 @@ void MarkMenuOwnerDraw(HMENU, bool isMenuBar = false);
 void FreeMenuOwnerDrawInfoData(HMENU);
 void MenuCustomDrawMesureItem(HWND, MEASUREITEMSTRUCT*);
 void MenuCustomDrawItem(HWND, DRAWITEMSTRUCT*);
-HFONT GetMenuFont();
 
 HMENU BuildMenuFromDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx);
 void RemoveBadMenuSeparators(HMENU menu);
@@ -31,3 +30,13 @@ int CmdIdFromVirtualZoom(float virtualZoom);
 void UpdateAppMenu(MainWindow* win, HMENU m);
 void ToggleMenuBar(MainWindow* win, bool showTemporarily);
 float ZoomMenuItemToZoom(int menuItemId);
+
+int GetMenuBarRebarHeight(MainWindow*);
+void CreateMenuBarRebar(MainWindow*);
+void DestroyMenuBarRebar(MainWindow*);
+void ShowMenuBarRebar(MainWindow*);
+void RebuildMenuBarButtons(MainWindow*);
+bool IsShowingMenuBarRebar(MainWindow*);
+bool HandleMenuBarCommand(MainWindow*, int cmdId);
+bool ActivateMenuBarByAccel(MainWindow*, WCHAR accel);
+void UpdateCustomMenuBarMenuSelect(MainWindow*, WPARAM, LPARAM);

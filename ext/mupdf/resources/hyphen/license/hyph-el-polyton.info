@@ -1,0 +1,86 @@
+% title: Hyphenation patterns for Modern Greek, polytonic
+% copyright: Copyright (C) 2008-2011 Dimitrios Filippou
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Modern Greek, polytonic spelling
+%     tag: el-polyton
+% version: 5.0
+% authors:
+%   -
+%     name: Dimitrios Filippou
+%     contact: dimitrios.ap.filippou (at) gmail.com
+% licence:
+%     - This file is available under any of the following licences:
+%     -
+%         name: LPPL
+%         url: https://latex-project.org/lppl/
+%     -
+%         name: MIT
+%         url: https://opensource.org/licenses/MIT
+% hyphenmins:
+%     typesetting:
+%         left: 1
+%         right: 1
+% changes:
+%     - Created:       June 6, 2008
+%     - Last modified: Sept. 12, 2011
+% texlive:
+%     synonyms:
+%         - polygreek
+%     babelname: greek
+%     use_old_patterns_comment: Old patterns work in a different way, one-to-one conversion from UTF-8 is not possible.
+%     legacy_patterns: grphyph5.tex
+%     message: Hyphenation patterns for multi-accent (polytonic) Modern Greek
+%     package: greek
+% ==========================================
+% This file was first created by mechanical translation from
+% GRPhyph5.tex via "elhyph-utf8 -p -c" (version 0.1 by Peter
+% Heslin -- p.j.heslin at durham dot ac dot uk). Some additions
+% were also made by hand.
+%
+% Created by Dimitrios Filippou with some ideas borrowed from
+% Yannis Haralambous, Kostis Dryllerakis and Claudio Beccari.
+% Mojca Miklavec adapted it for the "hyph-utf8" package.
+%
+% These hyphenation patterns are explained in "modern.pdf", which
+% can be found in the "elhyphen" or "hyphenation-greek" package.
+% Questionable patterns are marked by three question marks "???".
+%
+% Documentation in English can be found in: D. Filippou,
+% "Hyphenation patterns for Ancient and Modern Greek," in
+% "TeX, XML, and Digital Typography" (A. Syropoulos et al.,
+% eds.), Lecture Notes in Computer Science 3130, Springer-Verlag
+% Berlin-Heidelberg, 2004. ISBN 3-540-22801-2.
+%
+%%%% vowels
+%-- Vowel patterns (pre-combined)
+%%%% diphthogs (also known as "double vowels") and exceptions
+%%%% other diphthogs: two vowels pronounced together in *one* syllable
+%%%% (in some cases, the rules below will not allow the split up of
+%%%% syllables in words like: >i-'on, ka-ko-poi-'oc, etc., but, better
+%%%% this than mistakes like: qw-ri-'o)
+% 'a"i --- not be separated: ne-r'a"ida
+%%%%
+%%%% consonants at the end of words
+%%%% right apostrophe and consonants with right apostrophe
+%%%% consonants at the beggining of words
+%%%% separable double consonants
+%%%% other breakable consonant combinations
+% "dm" --- not separable: dm~hsic = >exhm'erwsh (>arq.)
+% "dn" --- not separable: dnofer'oc = zofer'oc, skotein'oc (>arq.)
+%                        Dne'iperoc = potam'oc t~hc Rws'iac
+% "tl" --- not separable: tlhmws'unh = ft'wqia (>arq.)
+%%%%
+%%%% non-separable nasal combinations (gk, mp, nt) and some exceptions
+%%%%
+%%%%
+%%%%
+%%%%
+%%%% some `weird' terminations in words of Greek and non-Greek origin
+%%%%
+%%%%
+%%%% some weird double-consonant combinations that may occur in
+%%%% words of non-greek origin like "romp-nte-s'ampr" (= robe de
+%%%% chambre)
+%%%%

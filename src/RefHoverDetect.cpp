@@ -8,9 +8,6 @@
 
 #include "base/Base.h"
 
-#include <cstdlib>
-#include <wctype.h>
-
 static constexpr float kAnchorTopMarginPt = 6.f;
 // pt of padding around the detected entry box.
 static constexpr float kEntryPadPt = 6.f;
@@ -175,16 +172,29 @@ static void ClipToMediabox(RectF& box, RectF mediabox) {
 // flatten each line to a uniform top-aligned row — the shape the detectors
 // assume. `out` must have room for glyphCount rects; aliasing `coords` is not
 // allowed.
+// Pure-function region detectors used by RefHover to decide what slice of the
+// destination page to render into the hover popup. Kept engine-independent so
+// the heuristics can be unit-tested with synthetic glyph arrays (see
+// src/base/tests/RefHover_ut.cpp).
+//
+// All three functions take:
+//   text     — per-glyph WCHAR view, one WCHAR per engine text codepoint
+//   coords   — per-glyph Rect array, parallel to `text` (second out-ptr)
+//   textLen  — glyph count
+//   mediabox — page bounds in PDF user space
+//   destX, destY — link's destination coordinates (PDF user space)
+//
+// Returned RectF is in PDF user space, clipped to mediabox.
 void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     if (!coords || !out || glyphCount <= 0) {
         return;
     }
     constexpr int kBaselineTolPt = 4;
     constexpr int kMaxLines = 4096;
-    int* lineBaseline = AllocArray<int>(kMaxLines);
-    int* lineTop = AllocArray<int>(kMaxLines);
-    int* lineBottom = AllocArray<int>(kMaxLines);
-    int* lineId = AllocArray<int>(glyphCount);
+    int* lineBaseline = AllocArrayTemp<int>(kMaxLines);
+    int* lineTop = AllocArrayTemp<int>(kMaxLines);
+    int* lineBottom = AllocArrayTemp<int>(kMaxLines);
+    int* lineId = AllocArrayTemp<int>(glyphCount);
     int nLines = 0;
     for (int i = 0; i < glyphCount; i++) {
         int bl = coords[i].y + coords[i].dy;
@@ -211,12 +221,8 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
                 best = 0;
             }
         } else {
-            if (coords[i].y < lineTop[best]) {
-                lineTop[best] = coords[i].y;
-            }
-            if (bl > lineBottom[best]) {
-                lineBottom[best] = bl;
-            }
+            lineTop[best] = std::min(coords[i].y, lineTop[best]);
+            lineBottom[best] = std::max(bl, lineBottom[best]);
         }
         lineId[i] = best;
     }
@@ -226,10 +232,6 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
         out[i].y = lineTop[L];
         out[i].dy = lineBottom[L] - lineTop[L];
     }
-    free(lineBaseline);
-    free(lineTop);
-    free(lineBottom);
-    free(lineId);
 }
 
 // Drop diagonal draft / "under review" watermark glyphs from a page's *raw*
@@ -244,6 +246,11 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
 //
 // `outText`/`outCoords` are caller-allocated with room for glyphCount entries;
 // returns the number of glyphs kept (written to the front of the out arrays).
+// Remove diagonal draft / "under review" watermark glyphs (oversized + sitting
+// on sparse baselines) from a page's raw glyph arrays, so 2-column gutter and
+// entry-bound detection see clean text. Run on the engine's raw coords *before*
+// NormalizeGlyphLines. `outText`/`outCoords` need room for glyphCount entries;
+// returns the kept-glyph count, written to the front of the out arrays.
 int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* outCoords) {
     int n = text.len;
     if (n <= 0 || !coords || !outText || !outCoords) {
@@ -252,33 +259,35 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     // Typical body glyph height = the most common dy (the watermark, a heading,
     // and any super/subscripts are all minorities). Histogram over non-space
     // glyph heights and take the mode.
+    constexpr int kMaxHistogramGlyphHeight = 4096;
     int maxDy = 0;
     for (int i = 0; i < n; i++) {
-        if (coords[i].dy > maxDy) {
+        if (coords[i].dy > maxDy && coords[i].dy <= kMaxHistogramGlyphHeight) {
             maxDy = coords[i].dy;
         }
     }
     int modeDy = 0;
     if (maxDy > 0) {
-        int* hist = AllocArray<int>(maxDy + 1);
-        for (int i = 0; i < n; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
-                continue;
+        int* hist = AllocArrayTemp<int>(maxDy + 1);
+        if (hist) {
+            for (int i = 0; i < n; i++) {
+                WCHAR c = text.s[i];
+                if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                    continue;
+                }
+                int d = coords[i].dy;
+                if (d > 0 && d <= maxDy) {
+                    hist[d]++;
+                }
             }
-            int d = coords[i].dy;
-            if (d > 0) {
-                hist[d]++;
+            int modeCount = 0;
+            for (int d = 1; d <= maxDy; d++) {
+                if (hist[d] > modeCount) {
+                    modeCount = hist[d];
+                    modeDy = d;
+                }
             }
         }
-        int modeCount = 0;
-        for (int d = 1; d <= maxDy; d++) {
-            if (hist[d] > modeCount) {
-                modeCount = hist[d];
-                modeDy = d;
-            }
-        }
-        free(hist);
     }
 
     // Only strip when there's a stable body height to compare against, and only
@@ -344,12 +353,13 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
 // Auto-fit in RefHoverOnTimer + the monitor-based popup height cap keep
 // the popup a sensible size; the user can wheel-zoom in if text is too
 // small.
+// Landscape view: full page width strip anchored at destY, extending downward
+// to the last text glyph or a recognised caption block. Fallback when no
+// recognisable entry or equation is found.
 RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Rect* coords) {
     (void)destX;
     float ty = (destY >= 0.f) ? destY - kAnchorTopMarginPt : 0.f;
-    if (ty < 0.f) {
-        ty = 0.f;
-    }
+    ty = std::max(ty, 0.f);
     // When destY anchors at a "Figure N.M" / "Abbildung N.M" / "Table N.M"
     // caption line, the figure / table *body* sits above the caption — but
     // ty currently starts at the caption. Extend upward so the popup
@@ -372,9 +382,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     if (destAtCaption) {
         constexpr float kFigureBodyExtendPt = 250.f;
         float newTy = ty - kFigureBodyExtendPt;
-        if (newTy < 0.f) {
-            newTy = 0.f;
-        }
+        newTy = std::max(newTy, 0.f);
         ty = newTy;
     }
     float h = mediabox.dy - ty;
@@ -388,9 +396,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     constexpr float kMaxLandscapePt = 200.f;
     constexpr float kMaxLandscapeCaptionPt = 360.f;
     float maxLandscape = destAtCaption ? kMaxLandscapeCaptionPt : kMaxLandscapePt;
-    if (h > maxLandscape) {
-        h = maxLandscape;
-    }
+    h = std::min(h, maxLandscape);
     // Caption extension: if a "Figure N.M" / "Table N.M" / "Listing N.M" /
     // "Algorithm N.M" caption appears within ~250pt below the capped region
     // bottom (typical figure body height), extend the region downward to
@@ -430,9 +436,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
             int pageRightX = 0;
             for (int j = 0; j < text.len; j++) {
                 int rx = coords[j].x + coords[j].dx;
-                if (rx > pageRightX) {
-                    pageRightX = rx;
-                }
+                pageRightX = std::max(rx, pageRightX);
             }
             // Walk subsequent lines below capStartY. Stop when we hit a
             // paragraph break (vertical gap above inter-line leading) or
@@ -466,17 +470,11 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
                         continue;
                     }
                     foundLine = true;
-                    if (gy < lineTopY) {
-                        lineTopY = gy;
-                    }
+                    lineTopY = std::min(gy, lineTopY);
                     int gb = gy + coords[j].dy;
-                    if (gb > lineBottomY) {
-                        lineBottomY = gb;
-                    }
+                    lineBottomY = std::max(gb, lineBottomY);
                     int rx = coords[j].x + coords[j].dx;
-                    if (rx > lineRightX) {
-                        lineRightX = rx;
-                    }
+                    lineRightX = std::max(rx, lineRightX);
                 }
                 if (!foundLine) {
                     break;
@@ -498,9 +496,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
                 }
             }
             float extendedH = (float)captionEndY + kAnchorTopMarginPt - ty;
-            if (extendedH > h) {
-                h = extendedH;
-            }
+            h = std::max(extendedH, h);
         }
     }
     // Trim trailing blank margin: find the bottom of the last text glyph
@@ -520,9 +516,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
                 continue;
             }
             int glyphBottom = r.y + r.dy;
-            if (glyphBottom > lastTextBottom) {
-                lastTextBottom = glyphBottom;
-            }
+            lastTextBottom = std::max(glyphBottom, lastTextBottom);
         }
         float trimmedH = (float)lastTextBottom + kAnchorTopMarginPt - ty;
         if (trimmedH > 20.f && trimmedH < h) {
@@ -538,6 +532,9 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
 // bounding box (full page width, ~one eq line tall) when found, empty rect
 // otherwise. Used to avoid the landscape-style 200pt slice that sweeps in
 // the paragraph and the next equation below an equation cross-reference.
+// Equation cross-ref: tight one-line box around a "(N)" or "(N.M)" label
+// sitting at the right column edge near destY. Returns empty rect when no
+// equation label is detected.
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
     (void)destX;
     RectF empty{};
@@ -738,9 +735,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         if (rightX - leftX > kColWidthMax || leftX < nextColLeftX - 20) {
             continue;
         }
-        if (r.y < topY) {
-            topY = r.y;
-        }
+        topY = std::min(r.y, topY);
     }
     if (topY == INT_MAX) {
         return RectF{};
@@ -781,13 +776,11 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         int bandTop = topY - 2;
         int bandBot = topY + (6 * topDy);
         int xLo = nextColLeftX - 5;
-        if (xLo < 0) {
-            xLo = 0;
-        }
+        xLo = std::max(xLo, 0);
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>(n);
+            char* occ = AllocArrayTemp<char>(n);
             for (int i = 0; i < text.len; i++) {
                 WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
@@ -802,12 +795,8 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
                 if (b <= 0 || a >= n) {
                     continue;
                 }
-                if (a < 0) {
-                    a = 0;
-                }
-                if (b > n) {
-                    b = n;
-                }
+                a = std::max(a, 0);
+                b = std::min(b, n);
                 for (int x = a; x < b; x++) {
                     occ[x] = 1;
                 }
@@ -821,7 +810,6 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
                     break;
                 }
             }
-            free(occ);
             if (lastOcc > nextColLeftX) {
                 colRightX = lastOcc;
             }
@@ -889,18 +877,10 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         if (r.y < topY - 5 || r.y >= boundaryY) {
             continue;
         }
-        if (r.x < bMinX) {
-            bMinX = r.x;
-        }
-        if (r.y < bMinY) {
-            bMinY = r.y;
-        }
-        if (r.x + r.dx > bMaxX) {
-            bMaxX = r.x + r.dx;
-        }
-        if (r.y + r.dy > bMaxY) {
-            bMaxY = r.y + r.dy;
-        }
+        bMinX = std::min(r.x, bMinX);
+        bMinY = std::min(r.y, bMinY);
+        bMaxX = std::max(r.x + r.dx, bMaxX);
+        bMaxY = std::max(r.y + r.dy, bMaxY);
     }
     if (bMinX == INT_MAX || (bMaxX - bMinX) < 30 || (bMaxY - bMinY) < 8) {
         return RectF{};
@@ -921,6 +901,16 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
 // (TOC, topbar, cross-ref, table caption). The landscape box renders a half-
 // page-tall slice of the page anchored on the destination so the user sees
 // surrounding context (e.g. the table rows under a caption).
+// Bibliography / glossary / abbreviation entry box. Tries bracket-style
+// ("[Foo+09]"), hanging-indent author-year, and single-line description-list
+// layouts. Falls back to LandscapeBox when the destination doesn't look like
+// a list entry.
+//
+// continuationOut, if non-null, is set to a second box when a bracket-style
+// entry runs off the bottom of its 2-column-layout column with no natural
+// close and continues at the top of the next column (e.g. "[63]"-style
+// entries wrapping across a column break); empty when there's no such
+// continuation. Ignored (left untouched) by callers that don't need it.
 RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY, RectF* continuationOut) {
     if (continuationOut) {
         *continuationOut = RectF{};
@@ -1130,9 +1120,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             int bLeftIdx, bLeftX, bRightX;
             LineRunExtent(text, coords, bodyIdx, &bLeftIdx, &bLeftX, &bRightX);
             entryBodyLeftX = bLeftX;
-            if (bRightX + 40 > columnRightX) {
-                columnRightX = bRightX + 40;
-            }
+            columnRightX = std::max(bRightX + 40, columnRightX);
         }
     }
 
@@ -1180,13 +1168,11 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         int bandBot = firstLineY + (6 * linePitch);
         int scanStartX = (entryBodyLeftX >= 0) ? entryBodyLeftX : firstLineLeftX;
         int xLo = scanStartX - 5;
-        if (xLo < 0) {
-            xLo = 0;
-        }
+        xLo = std::max(xLo, 0);
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>(n);
+            char* occ = AllocArrayTemp<char>(n);
             for (int i = 0; i < text.len; i++) {
                 WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
@@ -1201,12 +1187,8 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                 if (b <= 0 || a >= n) {
                     continue;
                 }
-                if (a < 0) {
-                    a = 0;
-                }
-                if (b > n) {
-                    b = n;
-                }
+                a = std::max(a, 0);
+                b = std::min(b, n);
                 for (int x = a; x < b; x++) {
                     occ[x] = 1;
                 }
@@ -1220,7 +1202,6 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                     break;
                 }
             }
-            free(occ);
             if (lastOcc > firstLineLeftX) {
                 columnRightX = lastOcc;
             }
@@ -1274,9 +1255,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         // "[") doesn't sweep the page footer / page number into the popup.
         constexpr int kMaxBracketEntryPt = 250;
         int capY = firstLineY + kMaxBracketEntryPt;
-        if (capY < entryYBoundary) {
-            entryYBoundary = capY;
-        }
+        entryYBoundary = std::min(capY, entryYBoundary);
         // Pull the boundary up by ~half a line height so the next entry's
         // first line — whose glyph tops can round to within 1–2 pt of the
         // "[" we picked — is reliably excluded.
@@ -1296,9 +1275,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             // a thin gap into a following block (e.g. a footnote past a rule).
             int lineH = linePitch;
             int gapThresh = lineH * 3 / 2;
-            if (gapThresh < 12) {
-                gapThresh = 12;
-            }
+            gapThresh = std::max(gapThresh, 12);
             int prevBottom = firstLineY + lineH;
             int blockBottom = prevBottom;
             for (;;) {
@@ -1317,9 +1294,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                     if (r.y <= prevBottom - 2 || r.y > prevBottom + gapThresh) {
                         continue;
                     }
-                    if (r.y + r.dy > nextBottom) {
-                        nextBottom = r.y + r.dy;
-                    }
+                    nextBottom = std::max(r.y + r.dy, nextBottom);
                 }
                 if (nextBottom < 0) {
                     break;
@@ -1327,9 +1302,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                 blockBottom = nextBottom;
                 prevBottom = nextBottom;
             }
-            if (blockBottom + 1 < entryYBoundary) {
-                entryYBoundary = blockBottom + 1;
-            }
+            entryYBoundary = std::min(blockBottom + 1, entryYBoundary);
         }
         int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
         for (int i = 0; i < text.len; i++) {
@@ -1347,18 +1320,10 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             if (r.y >= entryYBoundary) {
                 continue;
             }
-            if (r.x < bMinX) {
-                bMinX = r.x;
-            }
-            if (r.y < bMinY) {
-                bMinY = r.y;
-            }
-            if (r.x + r.dx > bMaxX) {
-                bMaxX = r.x + r.dx;
-            }
-            if (r.y + r.dy > bMaxY) {
-                bMaxY = r.y + r.dy;
-            }
+            bMinX = std::min(r.x, bMinX);
+            bMinY = std::min(r.y, bMinY);
+            bMaxX = std::max(r.x + r.dx, bMaxX);
+            bMaxY = std::max(r.y + r.dy, bMaxY);
         }
         if (bMinX != INT_MAX && (bMaxX - bMinX) >= 50 && (bMaxY - bMinY) >= 12) {
             RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt,
@@ -1562,12 +1527,8 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             // baselines would otherwise inflate max-bottom and shrink
             // currentLineY artificially.
             if (isMajorGlyph) {
-                if (r.y < currentLineY) {
-                    currentLineY = r.y;
-                }
-                if (r.y + r.dy > currentLineMaxBottom) {
-                    currentLineMaxBottom = r.y + r.dy;
-                }
+                currentLineY = std::min(r.y, currentLineY);
+                currentLineMaxBottom = std::max(r.y + r.dy, currentLineMaxBottom);
             }
         }
     }
@@ -1587,18 +1548,10 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         if (r.y < firstLineY - 5) {
             continue;
         }
-        if (r.x < minX) {
-            minX = r.x;
-        }
-        if (r.y < minY) {
-            minY = r.y;
-        }
-        if (r.x + r.dx > maxX) {
-            maxX = r.x + r.dx;
-        }
-        if (r.y + r.dy > maxY) {
-            maxY = r.y + r.dy;
-        }
+        minX = std::min(r.x, minX);
+        minY = std::min(r.y, minY);
+        maxX = std::max(r.x + r.dx, maxX);
+        maxY = std::max(r.y + r.dy, maxY);
     }
     if (minX == INT_MAX) {
         return LandscapeBox(mediabox, destX, destY, text, coords);

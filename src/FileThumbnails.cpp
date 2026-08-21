@@ -5,7 +5,7 @@
 #include "base/Crypto.h"
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
-#include "base/Win.h"
+#include "base/Pixmap.h"
 
 #include "Settings.h"
 #include "ImageReader.h"
@@ -46,9 +46,12 @@ TempStr GetThumbnailCacheDirTemp() {
     return thumbsDir;
 }
 
-void DeleteThumbnailCacheDirectory() {
+// Empty rather than remove: SaveThumbnail runs on the UI thread and re-creates
+// this directory, so deleting it out from under a save in flight made
+// dir::CreateAll fail (crash 2026-08-05/8c3bf9e1f000001).
+void EmptyThumbnailCacheDirectory() {
     TempStr thumbsDir = GetThumbnailCacheDirTemp();
-    dir::RemoveAll(thumbsDir);
+    dir::Empty(thumbsDir);
 }
 
 void DeleteThumbnailForFile(Str filePath) {
@@ -57,11 +60,15 @@ void DeleteThumbnailForFile(Str filePath) {
         return;
     }
     bool ok = file::Delete(thumbPath);
-    auto status = ok ? "ok" : "failed";
+    const auto* status = ok ? "ok" : "failed";
     logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath, Str(status));
 }
 
-RenderedBitmap* LoadThumbnail(FileState* fs) {
+static bool PixmapIsEmpty(const Pixmap* px) {
+    return !px || px->width <= 0 || px->height <= 0 || !px->data;
+}
+
+Pixmap* LoadThumbnail(FileState* fs) {
     if (!fs || len(fs->filePath) == 0) {
         return nullptr;
     }
@@ -73,13 +80,18 @@ RenderedBitmap* LoadThumbnail(FileState* fs) {
         return nullptr;
     }
 
-    RenderedBitmap* bmp = LoadRenderedBitmap(bmpPath);
-    if (!bmp || bmp->GetSize().IsEmpty()) {
-        delete bmp;
+    Str data = file::ReadFile(bmpPath);
+    if (!data) {
+        return nullptr;
+    }
+    Pixmap* px = PixmapFromData(data);
+    str::Free(data);
+    if (PixmapIsEmpty(px)) {
+        FreePixmap(px);
         return nullptr;
     }
 
-    fs->thumbnail = bmp;
+    fs->thumbnail = px;
     return fs->thumbnail;
 }
 
@@ -100,7 +112,7 @@ bool HasThumbnail(FileState* fs) {
     FILETIME fileTime = file::GetModificationTime(fs->filePath);
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
-        delete fs->thumbnail;
+        FreePixmap(fs->thumbnail);
         fs->thumbnail = nullptr;
     }
 
@@ -108,13 +120,13 @@ bool HasThumbnail(FileState* fs) {
 }
 
 // takes ownership of bmp
-void SetThumbnail(FileState* fs, RenderedBitmap* bmp) {
-    ReportIf(bmp && bmp->GetSize().IsEmpty());
-    if (!fs || len(fs->filePath) == 0 || !bmp || bmp->GetSize().IsEmpty()) {
-        delete bmp;
+void SetThumbnail(FileState* fs, Pixmap* bmp) {
+    ReportIf(bmp && PixmapIsEmpty(bmp));
+    if (!fs || len(fs->filePath) == 0 || PixmapIsEmpty(bmp)) {
+        FreePixmap(bmp);
         return;
     }
-    delete fs->thumbnail;
+    FreePixmap(fs->thumbnail);
     fs->thumbnail = bmp;
     SaveThumbnail(fs);
 }
@@ -128,20 +140,51 @@ void SaveThumbnail(FileState* fs) {
     if (!thumbnailPath) {
         return;
     }
-    if (!dir::CreateForFile(thumbnailPath)) {
-        logf("SaveThumbnail: dir::CreateForFile('%s') failed, file path: '%s'\n", thumbnailPath, fs->filePath);
-        ReportIfFast(true);
-    }
-    ReportIfFast(!str::EndsWithI(thumbnailPath, ".png"));
-
-    RenderedBitmap* thumbnail = fs->thumbnail;
-    if (!thumbnail) {
+    // failing to create the cache dir is environmental (antivirus, ACLs, disk full,
+    // a file occupying the name) rather than a bug, so log and skip the thumbnail -
+    // same as the other dir::CreateForFile callers. err == 0 means the create
+    // reported success but the directory was gone when we looked.
+    int err = 0;
+    if (!dir::CreateForFile(thumbnailPath, &err)) {
+        logf("SaveThumbnail: dir::CreateForFile('%s') failed, err=%d, file path: '%s'\n", thumbnailPath, err,
+             fs->filePath);
         return;
     }
-    Gdiplus::Bitmap bmp(thumbnail->GetBitmap(), nullptr);
+    ReportIfFast(!str::EndsWithI(thumbnailPath, StrL(".png")));
+
+    Pixmap* thumbnail = fs->thumbnail;
+    if (PixmapIsEmpty(thumbnail)) {
+        return;
+    }
+    // the engine renders pages to an 8-bit palette DIB when it can, and those
+    // pixels can only be read through the platform bitmap
+    Pixmap* converted = nullptr;
+    defer {
+        FreePixmap(converted);
+    };
+    if (thumbnail->format == PixmapFormat::Native) {
+        converted = PixmapCopyAs32bppDIB(thumbnail);
+        if (!converted) {
+            logf("SaveThumbnail: PixmapCopyAs32bppDIB() failed for '%s'\n", fs->filePath);
+            return;
+        }
+        thumbnail = converted;
+    }
+    // Wrap (don't take ownership) so we can encode the in-memory thumbnail as PNG.
+    Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(thumbnail);
+    if (!bmp) {
+        return;
+    }
     CLSID tmpClsid = GetGdiPlusEncoderClsid(L"image/png");
     WCHAR* pathW = CWStrTemp(thumbnailPath);
-    bmp.Save(pathW, &tmpClsid, nullptr);
+    Gdiplus::Status st = bmp->Save(pathW, &tmpClsid, nullptr);
+    delete bmp;
+    if (st != Gdiplus::Ok) {
+        // gdi+ creates the file before it encodes, so a failure leaves a 0-byte
+        // png behind, which reads back as a blank thumbnail (issue #5932)
+        logf("SaveThumbnail: Save('%s') failed with %d\n", thumbnailPath, (int)st);
+        file::Delete(thumbnailPath);
+    }
 }
 
 void RemoveThumbnail(FileState* fs) {
@@ -156,6 +199,6 @@ void RemoveThumbnail(FileState* fs) {
     if (bmpPath) {
         file::Delete(bmpPath);
     }
-    delete fs->thumbnail;
+    FreePixmap(fs->thumbnail);
     fs->thumbnail = nullptr;
 }

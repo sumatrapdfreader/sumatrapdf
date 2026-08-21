@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{10a2f8c2-298d-4611-a36f-205770920fff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="implementation">
+      <UniqueIdentifier>{eec68422-bf13-4fb2-a55c-b7a1a6db7eea}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\c++\implementation\exceptions.cpp">
+      <Filter>implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\c++\implementation\functions.cpp">
+      <Filter>implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\c++\implementation\internal.cpp">
+      <Filter>implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\c++\implementation\classes.cpp">
+      <Filter>implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\c++\implementation\classes2.cpp">
+      <Filter>implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\c++\implementation\extra.cpp">
+      <Filter>implementation</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\c++\include\classes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\c++\include\exceptions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\c++\include\functions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\c++\include\internal.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

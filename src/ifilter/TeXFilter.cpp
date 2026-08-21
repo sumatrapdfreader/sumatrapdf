@@ -1,4 +1,4 @@
-﻿/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "base/Base.h"
@@ -11,14 +11,12 @@
 HRESULT TeXFilter::OnInit() {
     if (!m_pData) {
         // load content of LaTeX file into m_pData
-        Str data = ReadIStream(m_pStream);
-        if (str::IsNull(data)) {
+        if (str::IsNull(m_data)) {
             return E_FAIL;
         }
 
-        m_pData = strconv::StrCPToWStr(Str((char*)(u8*)data.s, (int)(size_t)data.len), CP_ACP).s;
-        m_pBuffer = AllocArray<WCHAR>(data.len + 1);
-        str::Free(data);
+        m_pData = strconv::StrCPToWStr(Str((char*)(u8*)m_data.s, (int)(size_t)m_data.len), CP_ACP).s;
+        m_pBuffer = AllocArray<WCHAR>(m_data.len + 1);
 
         if (!m_pData || !m_pBuffer) {
             CleanUp();
@@ -67,14 +65,23 @@ WStr TeXFilter::ExtractBracedBlock() {
                 // skip all LaTeX/TeX commands
                 if (iscmdchar(*m_pPtr)) {
                     // ignore the content of \begin{...} and \end{...}
-                    if (wstr::StartsWith(m_pPtr, L"begin{") || wstr::StartsWith(m_pPtr, L"end{")) {
-                        m_pPtr = wcschr(m_pPtr, '{') + 1;
-                        ExtractBracedBlock();
+                    if (wstr::StartsWith(m_pPtr, WStrL(L"begin{")) || wstr::StartsWith(m_pPtr, WStrL(L"end{"))) {
+                        int braceIdx = wstr::IndexOfChar(WStr(m_pPtr), L'{');
+                        m_pPtr += braceIdx + 1;
+                        int depth = 1;
+                        while (*m_pPtr && depth > 0) {
+                            if (*m_pPtr == '{') {
+                                depth++;
+                            } else if (*m_pPtr == '}') {
+                                depth--;
+                            }
+                            m_pPtr++;
+                        }
                         addsingleNL(result, &rptr);
                         break;
                     }
                     // convert \item to a single dash
-                    if (wstr::StartsWith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
+                    if (wstr::StartsWith(m_pPtr, WStrL(L"item")) && !iscmdchar(*(m_pPtr + 4))) {
                         m_pPtr += 4;
                         addsingleNL(result, &rptr);
                         *rptr++ = '-';
@@ -85,8 +92,11 @@ WStr TeXFilter::ExtractBracedBlock() {
                     }
                     skipspace(m_pPtr);
                     // ignore command parameters in brackets
-                    if (*m_pPtr == '[' && wcschr(m_pPtr, ']')) {
-                        m_pPtr = wcschr(m_pPtr, ']') + 1;
+                    if (*m_pPtr == '[') {
+                        int bracketIdx = wstr::IndexOfChar(WStr(m_pPtr), L']');
+                        if (bracketIdx >= 0) {
+                            m_pPtr += bracketIdx + 1;
+                        }
                     }
                     break;
                 }
@@ -112,17 +122,17 @@ WStr TeXFilter::ExtractBracedBlock() {
                     break;
                 }
                 // TODO: handle more international characters
-                if (wstr::StartsWith(m_pPtr, L"'e")) {
+                if (wstr::StartsWith(m_pPtr, WStrL(L"'e"))) {
                     *rptr++ = L'é';
                     m_pPtr += 2;
                     break;
                 }
-                if (wstr::StartsWith(m_pPtr, L"`e")) {
+                if (wstr::StartsWith(m_pPtr, WStrL(L"`e"))) {
                     *rptr++ = L'è';
                     m_pPtr += 2;
                     break;
                 }
-                if (wstr::StartsWith(m_pPtr, L"`a")) {
+                if (wstr::StartsWith(m_pPtr, WStrL(L"`a"))) {
                     *rptr++ = L'à';
                     m_pPtr += 2;
                     break;
@@ -171,12 +181,16 @@ WStr TeXFilter::ExtractBracedBlock() {
                     addsinglespace(result, &rptr);
                 }
                 break;
-            case '[':
+            case '[': {
                 // ignore command parameters in brackets
-                if (wcschr(m_pPtr, ']') && wcschr(m_pPtr, ']') < wcschr(m_pPtr, '\n')) {
-                    m_pPtr = wcschr(m_pPtr, ']') + 1;
+                WStr rest(m_pPtr);
+                int bracketIdx = wstr::IndexOfChar(rest, L']');
+                int newlineIdx = wstr::IndexOfChar(rest, L'\n');
+                if (bracketIdx >= 0 && newlineIdx >= 0 && bracketIdx < newlineIdx) {
+                    m_pPtr += bracketIdx + 1;
                 }
                 break;
+            }
             case '%':
                 skipcomment(m_pPtr);
                 break;
@@ -265,13 +279,17 @@ ContinueParsing:
             }
             m_pPtr++;
 
-            if (!wcsncmp(start, L"author", end - start) || !wcsncmp(start, L"title", end - start)) {
-                chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
-                return S_OK;
-            }
+            {
+                int cmdLen = (int)(end - start);
+                WStr cmd(start, cmdLen);
+                if (wstr::EqN(cmd, WStrL(L"author"), cmdLen) || wstr::EqN(cmd, WStrL(L"title"), cmdLen)) {
+                    chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
+                    return S_OK;
+                }
 
-            if (!wcsncmp(start, L"begin", end - start) && wstr::Eq(ExtractBracedBlock(), L"document")) {
-                m_state = STATE_TEX_CONTENT;
+                if (wstr::EqN(cmd, WStrL(L"begin"), cmdLen) && wstr::Eq(ExtractBracedBlock(), WStrL(L"document"))) {
+                    m_state = STATE_TEX_CONTENT;
+                }
             }
             goto ContinueParsing;
         case STATE_TEX_CONTENT:

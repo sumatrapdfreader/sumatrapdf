@@ -2,19 +2,27 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/File.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "PdfCreator.h"
+#include "ImageReader.h"
+#include "PngOptimizer.h"
+#include "base/Pixmap.h"
+#include "base/GdiPlusUtil.h"
 #include "SumatraPDF.h"
 #include "SumatraConfig.h"
 #include "MainWindow.h"
@@ -25,7 +33,7 @@
 #include "DisplayModel.h"
 #include "Theme.h"
 
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 
 extern "C" int pdfbake_main(int argc, char** argv);
 extern "C" int pdfclean_main(int argc, char** argv);
@@ -34,13 +42,9 @@ extern "C" void fz_set_optind(int val);
 
 // compute a dialog client width that fits the source path text, clamped to a
 // minimum and to 80% of the screen width (long paths get ellipsized instead)
-static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int padding) {
-    HDC hdc = GetDC(nullptr);
-    HFONT oldFont = (HFONT)SelectObject(hdc, font);
-    Size size = HdcGetTextExtentPoint32(hdc, path);
-    SelectObject(hdc, oldFont);
-    ReleaseDC(nullptr, hdc);
-    int dlgW = size.dx + (2 * padding) + DpiScale(hwndParent, 32);
+static int CalcDlgWidth(PlatformFont* font, Str path, int minW, int padding) {
+    Size size = PlatformFontMeasureText(font, path);
+    int dlgW = size.dx + (2 * padding) + DpiScale(32);
     dlgW = std::max(dlgW, minW);
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     dlgW = std::min(dlgW, screenW * 80 / 100);
@@ -56,7 +60,8 @@ static HICON GetAppIcon() {
 // Seeds the dialog with the edit's current text and writes the chosen path back.
 static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     WCHAR dstFileName[MAX_PATH + 1]{};
-    GetWindowTextW(edit->hwnd, dstFileName, MAX_PATH);
+    TempWStr currentFileName = ToWStrTemp(HwndGetTextTemp(edit->hwnd));
+    wstr::BufSet(WStr(dstFileName, MAX_PATH), currentFileName);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -72,70 +77,240 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     }
 }
 
-// create the source-path Static used as the first row of the PDF tool dialogs,
-// ellipsized in the middle for long paths
-static Static* CreatePathLabel(HWND parent, HFONT font, Str path, bool isRtl) {
-    Static::CreateArgs args;
-    args.parent = parent;
-    args.font = font;
-    args.text = path;
-    args.isRtl = isRtl;
-    auto c = new Static();
-    c->Create(args);
-    DWORD style = (DWORD)GetWindowLongPtrW(c->hwnd, GWL_STYLE);
-    SetWindowLongPtrW(c->hwnd, GWL_STYLE, style | SS_PATHELLIPSIS);
-    return c;
-}
-
-// Bake PDF dialog, built with the wingui layout library (VBox/HBox/Padding)
-// instead of manual control positioning.
-struct PdfBakeDialog : Wnd {
-    HFONT hFont = nullptr;
-    Str srcPath;
+// Every dialog here has the same shape: the source path, a destination edit
+// with a browse button, sometimes one more labelled field, and an action +
+// Cancel row. PdfToolDialog builds that as one layout tree: the labels and
+// buttons are virtual controls, the text fields are native edits, and they sit
+// in the same VBox/HBox side by side. Each dialog only adds its rows and
+// implements DoIt().
+struct PdfToolDialog : WindowBase {
+    Str srcPath; // owned
     MainWindow* win = nullptr;
+    // what the "..." button's save dialog offers
+    WStr browseFilter;
+    WStr browseDefExt;
 
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
+    VBox* mainBox = nullptr;
+    VirtText* pathLabel = nullptr;
     Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Button* bakeBtn = nullptr;
-    Button* cancelBtn = nullptr;
+    VirtButton* browseBtn = nullptr;
+    VirtButton* actionBtn = nullptr;
+    VirtButton* cancelBtn = nullptr;
+    // the row AddRow() built last, so a dialog can put more in it
+    HBox* lastRow = nullptr;
+    int rowGap = 0;
+    int gap = 0;
 
-    ~PdfBakeDialog() override;
+    ~PdfToolDialog() override;
 
-    bool Create(MainWindow* win, WindowTab* tab);
-    void OnBrowse();
-    void DoBake();
-    void OnCancel();
+    bool CreateToolDialog(MainWindow*, WindowTab*, Str title);
+    HBox* AddRow();
+    void AddPathRow();
+    void AddDestRow(Str destPath, WStr filter, WStr defExt);
+    Edit* AddLabeledEdit(Str label, Str text, bool isPassword = false);
+    void AddButtonsRow(Str actionText, Str hint = {});
+    void FinishDialog(Edit* focusOn);
+    VirtButton* NewButton(Str text, bool isDefault);
+
+    void OnBrowse(VirtMouseEvent* ev = nullptr);
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    // what the action button does; the only thing the dialogs really differ in
+    virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
 };
 
-PdfBakeDialog::~PdfBakeDialog() {
+PdfToolDialog::~PdfToolDialog() {
     str::FreePtr(&srcPath);
-    delete mainLayout;
+    // ~WindowBase deletes `layout`, which owns the whole tree - the virtual
+    // controls and the edits alike
 }
 
-void PdfBakeDialog::OnCancel() {
+static void PdfToolDialogOnClose(WindowBase::CloseEvent* ev) {
+    auto* dlg = (PdfToolDialog*)ev->e->self;
+    delete dlg;
+}
+
+void PdfToolDialog::OnCancel(VirtMouseEvent*) {
     Close();
 }
 
-void PdfBakeDialog::OnBrowse() {
-    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+void PdfToolDialog::OnBrowse(VirtMouseEvent*) {
+    BrowseForDest(hwnd, destEdit, browseFilter, browseDefExt);
 }
 
-void PdfBakeDialog::DoBake() {
+VirtButton* PdfToolDialog::NewButton(Str text, bool isDefault) {
+    return NewThemedButton(hwnd, text, font, isDefault);
+}
+
+bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
+    win = w;
+    srcPath = str::Dup(tab->filePath);
+    PlatformFont* dialogFont = GetDefaultGuiFont();
+    closeOnEsc = true;
+    onClose = MkFunc1Void(PdfToolDialogOnClose);
+
+    CreateCustomArgs cargs;
+    cargs.title = title;
+    cargs.font = dialogFont;
+    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    cargs.visible = false;
+    cargs.icon = GetAppIcon();
+    cargs.bgColor = DarkModeDialogBgColor();
+    CreateCustom(cargs);
+    if (!hwnd) {
+        return false;
+    }
+    // make the dialog an owned (rather than child) window of the main frame
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+
+    rowGap = DpiScale(6);
+    gap = DpiScale(8);
+    mainBox = new VBox();
+    mainBox->alignCross = CrossAxisAlign::Stretch;
+    layout = new Padding(mainBox, DpiScaledInsets(10));
+    return true;
+}
+
+// a row of the dialog, with the gap that separates it from the row above
+HBox* PdfToolDialog::AddRow() {
+    auto* row = new HBox();
+    row->alignCross = CrossAxisAlign::CrossCenter;
+    if (mainBox->ChildrenCount() > 0) {
+        mainBox->AddChild(new Padding(row, Insets{rowGap, 0, 0, 0}));
+    } else {
+        mainBox->AddChild(row);
+    }
+    lastRow = row;
+    return row;
+}
+
+// the source path, ellipsized in the middle for long paths
+void PdfToolDialog::AddPathRow() {
+    pathLabel = NewVirtText({.s = srcPath, .font = font, .isRtl = IsUIRtl(), .ellipsis = true});
+    mainBox->AddChild(pathLabel);
+}
+
+void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
+    browseFilter = filter;
+    browseDefExt = defExt;
+    HBox* row = AddRow();
+    row->gap = font->averageCharWidth;
+
+    Edit::CreateArgs args;
+    args.parent = hwnd;
+    args.withBorder = true;
+    args.font = font;
+    args.text = destPath;
+    args.isRtl = IsUIRtl();
+    destEdit = new Edit();
+    destEdit->Create(args);
+    row->AddChild(destEdit, 1);
+
+    browseBtn = NewButton("...", false);
+    browseBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnBrowse>(this);
+    row->AddChild(browseBtn);
+
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    if (pathLabel) {
+        pathLabel->padding.left = destEdit->GetLeftTextMargin();
+    }
+}
+
+Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
+    HBox* row = AddRow();
+
+    row->AddChild(NewVirtText({.s = label, .font = font, .isRtl = IsUIRtl()}));
+    row->AddChild(new Spacer(gap, 0));
+
+    Edit::CreateArgs eargs;
+    eargs.parent = hwnd;
+    eargs.withBorder = true;
+    eargs.font = font;
+    eargs.text = text;
+    eargs.isRtl = IsUIRtl();
+    auto* e = new Edit();
+    e->Create(eargs);
+    if (isPassword) {
+        HwndSetWindowStyle(e->hwnd, ES_PASSWORD, true);
+    }
+    row->AddChild(e, 1);
+    return e;
+}
+
+void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
+    HBox* row = AddRow();
+    row->gap = font->averageCharWidth;
+    if (hint) {
+        row->AddChild(NewVirtText({.s = hint, .font = font, .isRtl = IsUIRtl()}));
+    }
+    // a flexible spacer pushes the buttons to the right
+    row->AddChild(new Spacer(0, 0), 1);
+
+    actionBtn = NewButton(actionText, true);
+    actionBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::DoIt>(this);
+    row->AddChild(actionBtn);
+
+    cancelBtn = NewButton(_TRA("Cancel"), false);
+    cancelBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnCancel>(this);
+    row->AddChild(cancelBtn);
+}
+
+void PdfToolDialog::FinishDialog(Edit* focusOn) {
+    // size to a width that fits the source path (clamped), let the layout
+    // compute the height
+    int minClientW = DpiScale(480);
+    int clientW = CalcDlgWidth(font, srcPath, minClientW, DpiScale(10));
+    Size size = layout->Layout(ExpandHeight(clientW));
+    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+    // positions everything and picks up the virtual controls to paint
+    DoLayout(size);
+
+    HwndCenterDialog(hwnd, win->hwndFrame);
+    UpdateTheme();
+    SetIsVisible(true);
+    if (focusOn) {
+        HwndSetFocus(focusOn->hwnd);
+    }
+}
+
+struct PdfBakeDialog : PdfToolDialog {
+    bool Create(MainWindow* win, WindowTab* tab);
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
+};
+
+void PdfBakeDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
     }
 
-    logf("PdfBakeDoIt: baking '%s' to '%s'\n", srcPath, destPath);
+    Str inputPath = srcPath;
+    TempStr tmpPath;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    // pdfbake_main re-opens the file from disk, so unsaved session
+    // annotations would be missing unless we write them out first (issue #5977).
+    if (engine && EngineHasUnsavedAnnotations(engine)) {
+        tmpPath = GetTempFilePathTemp(StrL("bake"));
+        if (!tmpPath || !EngineMupdfSaveCopy(engine, tmpPath)) {
+            MessageBoxWarning(hwnd, "Failed to bake PDF file.", _TRA("Bake PDF"));
+            return;
+        }
+        inputPath = tmpPath;
+        logf("PdfBakeDoIt: unsaved annotations, baking from temp '%s'\n", tmpPath);
+    }
+
+    logf("PdfBakeDoIt: baking '%s' to '%s'\n", inputPath, destPath);
 
     // build argv for pdfbake_main: "bake" input output
-    char* argv[] = {(char*)"bake", CStrTemp(srcPath), CStrTemp(destPath)};
+    char* argv[] = {(char*)"bake", CStrTemp(inputPath), CStrTemp(destPath)};
     int argc = 3;
 
     fz_set_optind(0);
     int res = pdfbake_main(argc, argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfBakeDoIt: baked successfully\n");
         MainWindow* w = win;
@@ -150,124 +325,14 @@ void PdfBakeDialog::DoBake() {
     }
 }
 
-static void PdfBakeOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfBakeDialog*)ev->e->self;
-    delete dlg;
-}
-
 bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
-    win = w;
-    srcPath = str::Dup(tab->filePath);
-    hFont = GetDefaultGuiFont();
-    onClose = MkFunc1Void(PdfBakeOnClose);
-
-    CreateCustomArgs cargs;
-    cargs.title = _TRA("Bake PDF");
-    cargs.font = hFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    cargs.visible = false;
-    cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
-    CreateCustom(cargs);
-    if (!hwnd) {
+    if (!CreateToolDialog(w, tab, _TRA("Bake PDF"))) {
         return false;
     }
-    // make the dialog an owned (rather than child) window of the main frame
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
-
-    bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
-
-    // row 1: source path label (ellipsized in the middle for long paths)
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
-
-    // row 2: dest edit (flex) + browse button
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.withBorder = true;
-        args.font = hFont;
-        args.text = MakeUniqueFilePathTemp(srcPath);
-        args.isRtl = isRtl;
-        destEdit = new Edit();
-        destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
-
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfBakeDialog, &PdfBakeDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 3: Bake + Cancel buttons (right-aligned), each sized to its label
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        bakeBtn = new Button();
-        bakeBtn->isDefault = true;
-        bakeBtn->onClick = MkMethod0<PdfBakeDialog, &PdfBakeDialog::DoBake>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Bake PDF");
-        bargs.isRtl = isRtl;
-        bakeBtn->Create(bargs);
-        hbox->AddChild(bakeBtn);
-
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfBakeDialog, &PdfBakeDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
-
-    // size to a width that fits the source path (clamped), let the layout
-    // compute the height
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-
-    HwndCenterDialog(hwnd, w->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    SetIsVisible(true);
-    HwndSetFocus(destEdit->hwnd);
+    AddPathRow();
+    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddButtonsRow(_TRA("Bake PDF"));
+    FinishDialog(destEdit);
     return true;
 }
 
@@ -279,12 +344,12 @@ void ShowPdfBakeDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     logf("ShowPdfBakeDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfBakeDialog();
+    auto* dlg = new PdfBakeDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -292,40 +357,11 @@ void ShowPdfBakeDialog(MainWindow* win) {
 
 // --- Extract PDF Text dialog ---
 
-struct PdfExtractTextDialog : Wnd {
-    HFONT hFont = nullptr;
-    Str srcPath;
-    MainWindow* win = nullptr;
-
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
-    Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Static* pagesLabel = nullptr;
+struct PdfExtractTextDialog : PdfToolDialog {
     Edit* pagesEdit = nullptr;
-    Button* extractBtn = nullptr;
-    Button* cancelBtn = nullptr;
-
-    ~PdfExtractTextDialog() override;
-
     bool Create(MainWindow* win, WindowTab* tab);
-    void OnBrowse();
-    void DoExtract();
-    void OnCancel();
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
-
-PdfExtractTextDialog::~PdfExtractTextDialog() {
-    str::FreePtr(&srcPath);
-    delete mainLayout;
-}
-
-void PdfExtractTextDialog::OnCancel() {
-    Close();
-}
-
-void PdfExtractTextDialog::OnBrowse() {
-    BrowseForDest(hwnd, destEdit, L"Text Files\0*.txt\0All Files\0*.*\0", L"txt");
-}
 
 static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pages) {
     MainWindow* win = dlg->win;
@@ -361,7 +397,7 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pa
     return file::WriteFile(destPath, ToStr(text));
 }
 
-void PdfExtractTextDialog::DoExtract() {
+void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -376,7 +412,7 @@ void PdfExtractTextDialog::DoExtract() {
 
     bool ok = false;
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
-    bool isPdf = tab && CouldBePDFDoc(tab);
+    bool isPdf = tab && IsPdfDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
         char* argv[] = {(char*)"convert", (char*)"-o", CStrTemp(destPath), CStrTemp(srcPath), CStrTemp(pages)};
@@ -399,152 +435,18 @@ void PdfExtractTextDialog::DoExtract() {
     }
 }
 
-static void PdfExtractTextOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfExtractTextDialog*)ev->e->self;
-    delete dlg;
-}
-
 bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
-    win = w;
-    srcPath = str::Dup(tab->filePath);
-    hFont = GetDefaultGuiFont();
-    onClose = MkFunc1Void(PdfExtractTextOnClose);
-
-    CreateCustomArgs cargs;
-    cargs.title = _TRA("Extract Text");
-    cargs.font = hFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    cargs.visible = false;
-    cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
-    CreateCustom(cargs);
-    if (!hwnd) {
+    if (!CreateToolDialog(w, tab, _TRA("Extract Text From PDF"))) {
         return false;
     }
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
-
-    bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
-
-    // row 1: source path label
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
-
-    // row 2: dest edit (flex) + browse button
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        TempStr noExt = path::GetPathNoExtTemp(srcPath);
-        TempStr txtPath = str::JoinTemp(noExt, StrL(".txt"));
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.withBorder = true;
-        args.font = hFont;
-        args.text = MakeUniqueFilePathTemp(txtPath);
-        args.isRtl = isRtl;
-        destEdit = new Edit();
-        destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
-
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfExtractTextDialog, &PdfExtractTextDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 3: "Pages:" label + pages edit (flex)
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Static::CreateArgs largs;
-        largs.parent = hwnd;
-        largs.font = hFont;
-        largs.text = _TRA("Pages:");
-        largs.isRtl = isRtl;
-        pagesLabel = new Static();
-        pagesLabel->Create(largs);
-        hbox->AddChild(new Padding(pagesLabel, DpiScaledInsets(hwnd, 0, 4, 0, 0)));
-
-        int pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
-        Edit::CreateArgs eargs;
-        eargs.parent = hwnd;
-        eargs.withBorder = true;
-        eargs.font = hFont;
-        eargs.text = fmt("1-%d", pageCount);
-        eargs.isRtl = isRtl;
-        pagesEdit = new Edit();
-        pagesEdit->Create(eargs);
-        hbox->AddChild(pagesEdit, 1);
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 4: Extract Text + Cancel buttons (right-aligned), each sized to its label
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        extractBtn = new Button();
-        extractBtn->isDefault = true;
-        extractBtn->onClick = MkMethod0<PdfExtractTextDialog, &PdfExtractTextDialog::DoExtract>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Extract Text");
-        bargs.isRtl = isRtl;
-        extractBtn->Create(bargs);
-        hbox->AddChild(extractBtn);
-
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfExtractTextDialog, &PdfExtractTextDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
-
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-
-    HwndCenterDialog(hwnd, w->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    SetIsVisible(true);
-    HwndSetFocus(destEdit->hwnd);
+    AddPathRow();
+    TempStr noExt = path::GetPathNoExtTemp(srcPath);
+    TempStr txtPath = str::JoinTemp(noExt, StrL(".txt"));
+    AddDestRow(MakeUniqueFilePathTemp(txtPath), L"Text Files\0*.txt\0All Files\0*.*\0", L"txt");
+    int pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
+    pagesEdit = AddLabeledEdit(_TRA("Pages:"), fmt("1-%d", pageCount));
+    AddButtonsRow(_TRA("Extract Text"));
+    FinishDialog(destEdit);
     return true;
 }
 
@@ -558,7 +460,7 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
     }
     logf("ShowPdfExtractTextDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfExtractTextDialog();
+    auto* dlg = new PdfExtractTextDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -566,40 +468,12 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
 
 // --- Compress PDF dialog ---
 
-struct PdfCompressDialog : Wnd {
-    HFONT hFont = nullptr;
-    Str srcPath;
-    MainWindow* win = nullptr;
-
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
-    Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Button* compressBtn = nullptr;
-    Button* cancelBtn = nullptr;
-
-    ~PdfCompressDialog() override;
-
+struct PdfCompressDialog : PdfToolDialog {
     bool Create(MainWindow* win, WindowTab* tab);
-    void OnBrowse();
-    void DoCompress();
-    void OnCancel();
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
-PdfCompressDialog::~PdfCompressDialog() {
-    str::FreePtr(&srcPath);
-    delete mainLayout;
-}
-
-void PdfCompressDialog::OnCancel() {
-    Close();
-}
-
-void PdfCompressDialog::OnBrowse() {
-    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-}
-
-void PdfCompressDialog::DoCompress() {
+void PdfCompressDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -627,121 +501,14 @@ void PdfCompressDialog::DoCompress() {
     }
 }
 
-static void PdfCompressOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfCompressDialog*)ev->e->self;
-    delete dlg;
-}
-
 bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
-    win = w;
-    srcPath = str::Dup(tab->filePath);
-    hFont = GetDefaultGuiFont();
-    onClose = MkFunc1Void(PdfCompressOnClose);
-
-    CreateCustomArgs cargs;
-    cargs.title = _TRA("Compress PDF");
-    cargs.font = hFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    cargs.visible = false;
-    cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
-    CreateCustom(cargs);
-    if (!hwnd) {
+    if (!CreateToolDialog(w, tab, _TRA("Compress PDF"))) {
         return false;
     }
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
-
-    bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
-
-    // row 1: source path label
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
-
-    // row 2: dest edit (flex) + browse button
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.withBorder = true;
-        args.font = hFont;
-        args.text = MakeUniqueFilePathTemp(srcPath);
-        args.isRtl = isRtl;
-        destEdit = new Edit();
-        destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
-
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfCompressDialog, &PdfCompressDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 3: Compress + Cancel buttons (right-aligned), each sized to its label
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        compressBtn = new Button();
-        compressBtn->isDefault = true;
-        compressBtn->onClick = MkMethod0<PdfCompressDialog, &PdfCompressDialog::DoCompress>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Compress PDF");
-        bargs.isRtl = isRtl;
-        compressBtn->Create(bargs);
-        hbox->AddChild(compressBtn);
-
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfCompressDialog, &PdfCompressDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
-
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-
-    HwndCenterDialog(hwnd, w->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    SetIsVisible(true);
-    HwndSetFocus(destEdit->hwnd);
+    AddPathRow();
+    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddButtonsRow(_TRA("Compress PDF"));
+    FinishDialog(destEdit);
     return true;
 }
 
@@ -753,12 +520,12 @@ void ShowPdfCompressDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     logf("ShowPdfCompressDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfCompressDialog();
+    auto* dlg = new PdfCompressDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -766,40 +533,12 @@ void ShowPdfCompressDialog(MainWindow* win) {
 
 // --- Decompress PDF dialog ---
 
-struct PdfDecompressDialog : Wnd {
-    HFONT hFont = nullptr;
-    Str srcPath;
-    MainWindow* win = nullptr;
-
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
-    Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Button* decompressBtn = nullptr;
-    Button* cancelBtn = nullptr;
-
-    ~PdfDecompressDialog() override;
-
+struct PdfDecompressDialog : PdfToolDialog {
     bool Create(MainWindow* win, WindowTab* tab);
-    void OnBrowse();
-    void DoDecompress();
-    void OnCancel();
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
-PdfDecompressDialog::~PdfDecompressDialog() {
-    str::FreePtr(&srcPath);
-    delete mainLayout;
-}
-
-void PdfDecompressDialog::OnCancel() {
-    Close();
-}
-
-void PdfDecompressDialog::OnBrowse() {
-    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-}
-
-void PdfDecompressDialog::DoDecompress() {
+void PdfDecompressDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -826,121 +565,14 @@ void PdfDecompressDialog::DoDecompress() {
     }
 }
 
-static void PdfDecompressOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfDecompressDialog*)ev->e->self;
-    delete dlg;
-}
-
 bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
-    win = w;
-    srcPath = str::Dup(tab->filePath);
-    hFont = GetDefaultGuiFont();
-    onClose = MkFunc1Void(PdfDecompressOnClose);
-
-    CreateCustomArgs cargs;
-    cargs.title = _TRA("Decompress PDF");
-    cargs.font = hFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    cargs.visible = false;
-    cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
-    CreateCustom(cargs);
-    if (!hwnd) {
+    if (!CreateToolDialog(w, tab, _TRA("Decompress PDF"))) {
         return false;
     }
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
-
-    bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
-
-    // row 1: source path label
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
-
-    // row 2: dest edit (flex) + browse button
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.withBorder = true;
-        args.font = hFont;
-        args.text = MakeUniqueFilePathTemp(srcPath);
-        args.isRtl = isRtl;
-        destEdit = new Edit();
-        destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
-
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfDecompressDialog, &PdfDecompressDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 3: Decompress + Cancel buttons (right-aligned), each sized to its label
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        decompressBtn = new Button();
-        decompressBtn->isDefault = true;
-        decompressBtn->onClick = MkMethod0<PdfDecompressDialog, &PdfDecompressDialog::DoDecompress>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Decompress PDF");
-        bargs.isRtl = isRtl;
-        decompressBtn->Create(bargs);
-        hbox->AddChild(decompressBtn);
-
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfDecompressDialog, &PdfDecompressDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
-
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-
-    HwndCenterDialog(hwnd, w->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    SetIsVisible(true);
-    HwndSetFocus(destEdit->hwnd);
+    AddPathRow();
+    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddButtonsRow(_TRA("Decompress PDF"));
+    FinishDialog(destEdit);
     return true;
 }
 
@@ -952,12 +584,12 @@ void ShowPdfDecompressDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     logf("ShowPdfDecompressDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfDecompressDialog();
+    auto* dlg = new PdfDecompressDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -965,41 +597,18 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 // --- Delete Pages From PDF dialog ---
 
-struct PdfDeletePageDialog : Wnd {
-    HFONT hFont = nullptr;
-    Str srcPath;
+// The dialog's content is a VirtCtrl tree: the labels and buttons are virtual
+// controls, while the two text fields stay real HWND edits, hosted in the tree
+// so they take part in the same layout.
+struct PdfDeletePageDialog : PdfToolDialog {
     bool isExtract = false;
-    MainWindow* win = nullptr;
     int pageCount = 0;
-
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
-    Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Static* pagesLabel = nullptr;
     Edit* pagesEdit = nullptr;
-    Static* totalLabel = nullptr;
-    Static* syntaxLabel = nullptr;
-    Button* actionBtn = nullptr; // "Delete Pages" or "Extract Pages"
-    Button* cancelBtn = nullptr;
-
-    ~PdfDeletePageDialog() override;
 
     bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
-    void OnBrowse();
-    void DoIt();
-    void OnCancel();
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
     void UpdateButton();
 };
-
-PdfDeletePageDialog::~PdfDeletePageDialog() {
-    str::FreePtr(&srcPath);
-    delete mainLayout;
-}
-
-void PdfDeletePageDialog::OnCancel() {
-    Close();
-}
 
 // Parse delete page ranges like "1,3-8,13-N" where N means last page.
 // Returns a sorted list of unique 1-based page numbers to delete.
@@ -1030,12 +639,12 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
             // "8-" means "8-N" (from page 8 to the last page)
             bool endIsEmpty = !endStr;
             int start, end;
-            if (str::EqI(startStr, "N")) {
+            if (str::EqI(startStr, StrL("N"))) {
                 start = pageCount;
             } else {
                 start = !str::IsNull(str::Parse(startStr, "%d%$", &start)) ? start : -1;
             }
-            if (endIsEmpty || str::EqI(endStr, "N")) {
+            if (endIsEmpty || str::EqI(endStr, StrL("N"))) {
                 end = pageCount;
             } else {
                 end = !str::IsNull(str::Parse(endStr, "%d%$", &end)) ? end : -1;
@@ -1049,7 +658,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
         } else {
             // single page
             int page;
-            if (str::EqI(part, "N")) {
+            if (str::EqI(part, StrL("N"))) {
                 page = pageCount;
             } else {
                 page = !str::IsNull(str::Parse(part, "%d%$", &page)) ? page : -1;
@@ -1064,7 +673,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
         return false;
     }
     // sort and deduplicate
-    pagesToDelete.SortTyped([](const int* a, const int* b) -> int { return *a - *b; });
+    VecSort(pagesToDelete, [](const int* a, const int* b) -> int { return *a - *b; });
     int prev = -1;
     Vec<int> unique;
     for (int p : pagesToDelete) {
@@ -1150,14 +759,14 @@ void PdfDeletePageDialog::UpdateButton() {
     if (valid && !isExtract && len(parsedPages) >= pageCount) {
         valid = false;
     }
-    actionBtn->SetIsEnabled(valid);
+    if (valid == actionBtn->HasFlag(vwfEnabled)) {
+        return;
+    }
+    actionBtn->SetFlag(vwfEnabled, valid);
+    actionBtn->Invalidate();
 }
 
-void PdfDeletePageDialog::OnBrowse() {
-    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-}
-
-void PdfDeletePageDialog::DoIt() {
+void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -1213,178 +822,34 @@ void PdfDeletePageDialog::DoIt() {
     }
 }
 
-static void PdfDeletePageOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfDeletePageDialog*)ev->e->self;
-    delete dlg;
-}
+// the buttons are virtual controls, so they are styled here rather than by the
+// system: a filled box with a border, brighter on hover
 
 bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractArg) {
-    win = w;
-    srcPath = str::Dup(tab->filePath);
-    hFont = GetDefaultGuiFont();
     isExtract = isExtractArg;
-    pageCount = w->ctrl ? w->ctrl->PageCount() : 0;
-    onClose = MkFunc1Void(PdfDeletePageOnClose);
-
-    CreateCustomArgs cargs;
-    cargs.title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
-    cargs.font = hFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    cargs.visible = false;
-    cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
-    CreateCustom(cargs);
-    if (!hwnd) {
+    Str title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
+    if (!CreateToolDialog(w, tab, title)) {
         return false;
     }
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+    pageCount = w->ctrl ? w->ctrl->PageCount() : 0;
+    AddPathRow();
+    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
 
-    bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
+    int currentPage = w->ctrl ? w->ctrl->CurrentPageNo() : 1;
+    Str pagesLabel = isExtract ? _TRA("Pages To Extract:") : _TRA("Pages To Delete:");
+    pagesEdit = AddLabeledEdit(pagesLabel, fmt("%d", currentPage));
+    // "of N" after the edit
+    lastRow->AddChild(new Spacer(gap, 0));
+    lastRow->AddChild(NewVirtText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
 
-    // row 1: source path label
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
-
-    // row 2: dest edit (flex) + browse button
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.withBorder = true;
-        args.font = hFont;
-        args.text = MakeUniqueFilePathTemp(srcPath);
-        args.isRtl = isRtl;
-        destEdit = new Edit();
-        destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
-
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 3: pages label + pages edit (flex) + total pages label
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Static::CreateArgs largs;
-        largs.parent = hwnd;
-        largs.font = hFont;
-        largs.text = isExtract ? _TRA("Pages To Extract:") : _TRA("Pages To Delete:");
-        largs.isRtl = isRtl;
-        pagesLabel = new Static();
-        pagesLabel->Create(largs);
-        hbox->AddChild(new Padding(pagesLabel, DpiScaledInsets(hwnd, 0, 8, 0, 0)));
-
-        int currentPage = w->ctrl ? w->ctrl->CurrentPageNo() : 1;
-        Edit::CreateArgs eargs;
-        eargs.parent = hwnd;
-        eargs.withBorder = true;
-        eargs.font = hFont;
-        eargs.text = fmt("%d", currentPage);
-        eargs.isRtl = isRtl;
-        pagesEdit = new Edit();
-        pagesEdit->Create(eargs);
-        hbox->AddChild(pagesEdit, 1);
-
-        Static::CreateArgs targs;
-        targs.parent = hwnd;
-        targs.font = hFont;
-        targs.text = fmt("of %d", pageCount);
-        targs.isRtl = isRtl;
-        totalLabel = new Static();
-        totalLabel->Create(targs);
-        hbox->AddChild(new Padding(totalLabel, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 4: syntax hint (left) + action + Cancel buttons (right)
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Static::CreateArgs sargs;
-        sargs.parent = hwnd;
-        sargs.font = hFont;
-        sargs.text = "Syntax: 2,5-7,13-";
-        sargs.isRtl = isRtl;
-        syntaxLabel = new Static();
-        syntaxLabel->Create(sargs);
-        hbox->AddChild(syntaxLabel);
-
-        // flexible spacer pushes the buttons to the right
-        hbox->AddChild(new Spacer(0, 0), 1);
-
-        actionBtn = new Button();
-        actionBtn->isDefault = true;
-        actionBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::DoIt>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
-        bargs.isRtl = isRtl;
-        actionBtn->Create(bargs);
-        hbox->AddChild(actionBtn);
-
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
-
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+    Str actionText = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
+    AddButtonsRow(actionText, "Syntax: 2,5-7,13-");
+    FinishDialog(pagesEdit);
 
     // attach the change handler only now that actionBtn exists, then set the
     // initial validation state (Edit::Create fires onTextChanged on initial text)
     pagesEdit->onTextChanged = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::UpdateButton>(this);
     UpdateButton();
-
-    HwndCenterDialog(hwnd, w->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    SetIsVisible(true);
-    HwndSetFocus(pagesEdit->hwnd);
     return true;
 }
 
@@ -1396,7 +861,7 @@ static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
 
@@ -1407,7 +872,7 @@ static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     logf("ShowPdfPageRangeDialog: opening %s dialog for '%s', %d pages\n", Str(isExtract ? "extract" : "delete"),
          tab->filePath, pageCount);
 
-    auto dlg = new PdfDeletePageDialog();
+    auto* dlg = new PdfDeletePageDialog();
     if (!dlg->Create(win, tab, isExtract)) {
         delete dlg;
     }
@@ -1423,48 +888,25 @@ void ShowPdfExtractPagesDialog(MainWindow* win) {
 
 // --- Encrypt PDF dialog ---
 
-struct PdfEncryptDialog : Wnd {
-    HFONT hFont = nullptr;
-    Str srcPath;
-    MainWindow* win = nullptr;
-
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
-    Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Static* passwordLabel = nullptr;
+struct PdfEncryptDialog : PdfToolDialog {
     Edit* passwordEdit = nullptr;
-    Button* encryptBtn = nullptr;
-    Button* cancelBtn = nullptr;
-
-    ~PdfEncryptDialog() override;
-
     bool Create(MainWindow* win, WindowTab* tab);
-    void OnBrowse();
-    void DoEncrypt();
-    void OnCancel();
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
     void UpdateButton();
 };
 
-PdfEncryptDialog::~PdfEncryptDialog() {
-    str::FreePtr(&srcPath);
-    delete mainLayout;
-}
-
-void PdfEncryptDialog::OnCancel() {
-    Close();
-}
-
+// there is nothing to encrypt with until a password is typed
 void PdfEncryptDialog::UpdateButton() {
     TempStr pwd = passwordEdit->GetTextTemp();
-    encryptBtn->SetIsEnabled(len(pwd) > 0);
+    bool valid = len(pwd) > 0;
+    if (valid == actionBtn->HasFlag(vwfEnabled)) {
+        return;
+    }
+    actionBtn->SetFlag(vwfEnabled, valid);
+    actionBtn->Invalidate();
 }
 
-void PdfEncryptDialog::OnBrowse() {
-    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-}
-
-void PdfEncryptDialog::DoEncrypt() {
+void PdfEncryptDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -1498,153 +940,17 @@ void PdfEncryptDialog::DoEncrypt() {
     }
 }
 
-static void PdfEncryptOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfEncryptDialog*)ev->e->self;
-    delete dlg;
-}
-
 bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
-    win = w;
-    srcPath = str::Dup(tab->filePath);
-    hFont = GetDefaultGuiFont();
-    onClose = MkFunc1Void(PdfEncryptOnClose);
-
-    CreateCustomArgs cargs;
-    cargs.title = _TRA("Encrypt PDF");
-    cargs.font = hFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    cargs.visible = false;
-    cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
-    CreateCustom(cargs);
-    if (!hwnd) {
+    if (!CreateToolDialog(w, tab, _TRA("Encrypt PDF"))) {
         return false;
     }
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
-
-    bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
-
-    // row 1: source path label
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
-
-    // row 2: dest edit (flex) + browse button
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.withBorder = true;
-        args.font = hFont;
-        args.text = MakeUniqueFilePathTemp(srcPath);
-        args.isRtl = isRtl;
-        destEdit = new Edit();
-        destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
-
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 3: "Password:" label + password edit (flex)
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Static::CreateArgs largs;
-        largs.parent = hwnd;
-        largs.font = hFont;
-        largs.text = _TRA("Password:");
-        largs.isRtl = isRtl;
-        passwordLabel = new Static();
-        passwordLabel->Create(largs);
-        hbox->AddChild(new Padding(passwordLabel, DpiScaledInsets(hwnd, 0, 4, 0, 0)));
-
-        Edit::CreateArgs eargs;
-        eargs.parent = hwnd;
-        eargs.withBorder = true;
-        eargs.font = hFont;
-        eargs.isRtl = isRtl;
-        passwordEdit = new Edit();
-        passwordEdit->Create(eargs);
-        hbox->AddChild(passwordEdit, 1);
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 4: Encrypt PDF + Cancel buttons (right-aligned), each sized to its label
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        encryptBtn = new Button();
-        encryptBtn->isDefault = true;
-        encryptBtn->onClick = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::DoEncrypt>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Encrypt PDF");
-        bargs.isRtl = isRtl;
-        encryptBtn->Create(bargs);
-        hbox->AddChild(encryptBtn);
-
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
-
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-
-    // attach the change handler only now that encryptBtn exists, then disable
-    // the button until a password is entered
+    AddPathRow();
+    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    passwordEdit = AddLabeledEdit(_TRA("Password:"), {}, true);
+    AddButtonsRow(_TRA("Encrypt PDF"));
+    FinishDialog(passwordEdit);
     passwordEdit->onTextChanged = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::UpdateButton>(this);
-    encryptBtn->SetIsEnabled(false);
-
-    HwndCenterDialog(hwnd, w->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    SetIsVisible(true);
-    HwndSetFocus(passwordEdit->hwnd);
+    UpdateButton();
     return true;
 }
 
@@ -1656,7 +962,7 @@ void ShowPdfEncryptDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     EngineBase* engine = tab->GetEngine();
@@ -1666,7 +972,7 @@ void ShowPdfEncryptDialog(MainWindow* win) {
     }
     logf("ShowPdfEncryptDialog: opening for '%s'\n", tab->filePath);
 
-    auto dlg = new PdfEncryptDialog();
+    auto* dlg = new PdfEncryptDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }
@@ -1674,42 +980,20 @@ void ShowPdfEncryptDialog(MainWindow* win) {
 
 // --- Decrypt PDF dialog ---
 
-struct PdfDecryptDialog : Wnd {
-    HFONT hFont = nullptr;
-    Str srcPath;
+struct PdfDecryptDialog : PdfToolDialog {
+    // the password the document was opened with
     Str password;
-    MainWindow* win = nullptr;
-
-    ILayout* mainLayout = nullptr;
-    Static* pathLabel = nullptr;
-    Edit* destEdit = nullptr;
-    Button* browseBtn = nullptr;
-    Button* decryptBtn = nullptr;
-    Button* cancelBtn = nullptr;
 
     ~PdfDecryptDialog() override;
-
     bool Create(MainWindow* win, WindowTab* tab, Str pwd);
-    void OnBrowse();
-    void DoDecrypt();
-    void OnCancel();
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
 PdfDecryptDialog::~PdfDecryptDialog() {
-    str::FreePtr(&srcPath);
     str::FreePtr(&password);
-    delete mainLayout;
 }
 
-void PdfDecryptDialog::OnCancel() {
-    Close();
-}
-
-void PdfDecryptDialog::OnBrowse() {
-    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-}
-
-void PdfDecryptDialog::DoDecrypt() {
+void PdfDecryptDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
         return;
@@ -1739,122 +1023,15 @@ void PdfDecryptDialog::DoDecrypt() {
     }
 }
 
-static void PdfDecryptOnClose(Wnd::CloseEvent* ev) {
-    auto dlg = (PdfDecryptDialog*)ev->e->self;
-    delete dlg;
-}
-
 bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
-    win = w;
-    srcPath = str::Dup(tab->filePath);
-    password = str::Dup(pwd);
-    hFont = GetDefaultGuiFont();
-    onClose = MkFunc1Void(PdfDecryptOnClose);
-
-    CreateCustomArgs cargs;
-    cargs.title = _TRA("Decrypt PDF");
-    cargs.font = hFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    cargs.visible = false;
-    cargs.icon = GetAppIcon();
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
-        cargs.bgColor = ThemeWindowControlBackgroundColor();
-    } else {
-        cargs.bgColor = MkGray(0xee);
-    }
-    CreateCustom(cargs);
-    if (!hwnd) {
+    if (!CreateToolDialog(w, tab, _TRA("Decrypt PDF"))) {
         return false;
     }
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
-
-    bool isRtl = IsUIRtl();
-    auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::Stretch;
-
-    // row 1: source path label
-    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
-    vbox->AddChild(pathLabel);
-
-    // row 2: dest edit (flex) + browse button
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.withBorder = true;
-        args.font = hFont;
-        args.text = MakeUniqueFilePathTemp(srcPath);
-        args.isRtl = isRtl;
-        destEdit = new Edit();
-        destEdit->Create(args);
-        hbox->AddChild(destEdit, 1);
-
-        browseBtn = new Button();
-        browseBtn->onClick = MkMethod0<PdfDecryptDialog, &PdfDecryptDialog::OnBrowse>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = "...";
-        bargs.isRtl = isRtl;
-        browseBtn->Create(bargs);
-        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // row 3: Decrypt + Cancel buttons (right-aligned), each sized to its label
-    {
-        auto hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        decryptBtn = new Button();
-        decryptBtn->isDefault = true;
-        decryptBtn->onClick = MkMethod0<PdfDecryptDialog, &PdfDecryptDialog::DoDecrypt>(this);
-        Button::CreateArgs bargs;
-        bargs.parent = hwnd;
-        bargs.font = hFont;
-        bargs.text = _TRA("Decrypt PDF");
-        bargs.isRtl = isRtl;
-        decryptBtn->Create(bargs);
-        hbox->AddChild(decryptBtn);
-
-        cancelBtn = new Button();
-        cancelBtn->onClick = MkMethod0<PdfDecryptDialog, &PdfDecryptDialog::OnCancel>(this);
-        Button::CreateArgs cargs2;
-        cargs2.parent = hwnd;
-        cargs2.font = hFont;
-        cargs2.text = _TRA("Cancel");
-        cargs2.isRtl = isRtl;
-        cancelBtn->Create(cargs2);
-        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
-
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
-    }
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    pathLabel->insets.left = destEdit->GetLeftTextMargin();
-    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
-
-    int minClientW = DpiScale(hwnd, 480);
-    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
-    Size size = mainLayout->Layout(ExpandHeight(clientW));
-    Rect bounds{0, 0, size.dx, size.dy};
-    mainLayout->SetBounds(bounds);
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-
-    HwndCenterDialog(hwnd, w->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    SetIsVisible(true);
-    HwndSetFocus(destEdit->hwnd);
+    password = str::Dup(pwd);
+    AddPathRow();
+    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddButtonsRow(_TRA("Decrypt PDF"));
+    FinishDialog(destEdit);
     return true;
 }
 
@@ -1866,7 +1043,7 @@ void ShowPdfDecryptDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    if (!CouldBePDFDoc(tab)) {
+    if (!IsPdfDoc(tab)) {
         return;
     }
     EngineBase* engine = tab->GetEngine();
@@ -1881,8 +1058,639 @@ void ShowPdfDecryptDialog(MainWindow* win) {
     }
     logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath, len(pwd));
 
-    auto dlg = new PdfDecryptDialog();
+    auto* dlg = new PdfDecryptDialog();
     if (!dlg->Create(win, tab, pwd)) {
+        delete dlg;
+    }
+}
+
+// --- Convert to PDF dialog (comics, image folders, single images; issue #4118) ---
+
+// Default destination: same path with .pdf extension, made unique if the file
+// already exists (e.g. comic.cbz → comic.pdf, or comic.1.pdf if taken).
+static TempStr DefaultPdfDestPathTemp(Str srcPath) {
+    if (!srcPath) {
+        return {};
+    }
+    TempStr noExt = path::GetPathNoExtTemp(srcPath);
+    if (!noExt) {
+        noExt = str::DupTemp(srcPath);
+    }
+    TempStr pdfPath = str::JoinTemp(noExt, StrL(".pdf"));
+    return MakeUniqueFilePathTemp(pdfPath);
+}
+
+struct ConvertToPdfDialog : PdfToolDialog {
+    bool Create(MainWindow* win, WindowTab* tab);
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
+};
+
+void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
+    TempStr destPath = destEdit->GetTextTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine || !engine->IsImageCollection()) {
+        MessageBoxWarning(hwnd, _TRA("Failed to save a file"), _TRA("Convert to PDF"));
+        return;
+    }
+
+    logf("ConvertToPdf: converting '%s' to '%s'\n", srcPath, destPath);
+
+    TempStr producer = fmt("SumatraPDF %s", currentVersion);
+    PdfCreator::SetProducerName(producer);
+    // Formats PDF cannot re-wrap (WebP, JXL, HEIC, AVIF, TGA, …): decode via
+    // the same codecs we use for viewing, then PNG + zopfli before embed.
+    auto toOptimizedPng = [](Str data) -> Str {
+        Pixmap* px = PixmapFromData(data);
+        if (!px) {
+            logf("ConvertToPdf: decode-to-pixmap failed (%d bytes)\n", len(data));
+            return {};
+        }
+        Str png = EncodeAndOptimizePngFromPixmap(px);
+        FreePixmap(px);
+        return png;
+    };
+    bool ok = PdfCreator::SaveImageCollectionAsPdf(destPath, engine, toOptimizedPng);
+    if (ok) {
+        logf("ConvertToPdf: converted successfully\n");
+        MainWindow* w = win;
+        TempStr path = str::DupTemp(destPath);
+        Close();
+        LoadArgs args(path, w);
+        StartLoadDocument(&args);
+    } else {
+        logf("ConvertToPdf: SaveImageCollectionAsPdf failed\n");
+        MessageBoxWarning(hwnd, _TRA("Failed to save a file"), _TRA("Convert to PDF"));
+    }
+}
+
+bool ConvertToPdfDialog::Create(MainWindow* w, WindowTab* tab) {
+    if (!CreateToolDialog(w, tab, _TRA("Convert to PDF"))) {
+        return false;
+    }
+    AddPathRow();
+    AddDestRow(DefaultPdfDestPathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddButtonsRow(_TRA("Convert to PDF"));
+    FinishDialog(destEdit);
+    return true;
+}
+
+void ShowConvertToPdfDialog(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath) {
+        return;
+    }
+    EngineBase* engine = tab->GetEngine();
+    if (!engine || !engine->IsImageCollection()) {
+        return;
+    }
+    if (!engine->AllowsPrinting()) {
+        return;
+    }
+    logf("ShowConvertToPdfDialog: opening for '%s'\n", tab->filePath);
+
+    auto* dlg = new ConvertToPdfDialog();
+    if (!dlg->Create(win, tab)) {
+        delete dlg;
+    }
+}
+
+// --- Convert PDF to Images dialog (issue #5991) ---
+
+constexpr float kConvertPdfToImagesDpi = 150.0f;
+
+// PNG / JPEG / BMP, same core formats as the Save Image dialog
+struct ConvertImageFormat {
+    Str label;
+    Str ext; // including the dot, e.g. ".png"
+    WStr mime;
+    WStr defExt; // OPENFILENAME lpstrDefExt, no dot
+};
+
+static const ConvertImageFormat kConvertImageFormats[] = {
+    {StrL("PNG"), StrL(".png"), L"image/png", L"png"},
+    {StrL("JPEG"), StrL(".jpg"), L"image/jpeg", L"jpg"},
+    {StrL("BMP"), StrL(".bmp"), L"image/bmp", L"bmp"},
+};
+
+static int ConvertImageFormatCount() {
+    return dimofi(kConvertImageFormats);
+}
+
+static int ConvertImageFormatIdxFromPath(Str path) {
+    if (str::EndsWithI(path, StrL(".jpg")) || str::EndsWithI(path, StrL(".jpeg"))) {
+        return 1;
+    }
+    if (str::EndsWithI(path, StrL(".bmp"))) {
+        return 2;
+    }
+    return 0; // PNG
+}
+
+static bool IsSupportedConvertImageExt(Str path) {
+    return str::EndsWithI(path, StrL(".png")) || str::EndsWithI(path, StrL(".jpg")) ||
+           str::EndsWithI(path, StrL(".jpeg")) || str::EndsWithI(path, StrL(".bmp"));
+}
+
+static bool PathHasPagePlaceholder(Str path) {
+    return str::ContainsI(path, StrL("<N>"));
+}
+
+// dest template: if <N> is missing and we'll write more than one file, insert
+// it before the extension so pages don't overwrite each other
+static TempStr EnsurePagePlaceholderTemp(Str path, bool multiPage) {
+    if (PathHasPagePlaceholder(path) || !multiPage) {
+        return str::DupTemp(path);
+    }
+    TempStr ext = path::GetExtTemp(path);
+    TempStr noExt = path::GetPathNoExtTemp(path);
+    if (!ext) {
+        return str::JoinTemp(noExt, StrL("-<N>.png"));
+    }
+    return str::JoinTemp(noExt, StrL("-<N>"), ext);
+}
+
+static TempStr WithDefaultImageExtTemp(Str path) {
+    if (IsSupportedConvertImageExt(path)) {
+        return str::DupTemp(path);
+    }
+    TempStr ext = path::GetExtTemp(path);
+    if (ext) {
+        // has an extension we don't write
+        return {};
+    }
+    return str::JoinTemp(path, StrL(".png"));
+}
+
+static TempStr ReplacePagePlaceholderTemp(Str path, int pageNo) {
+    TempStr n = fmt("%d", pageNo);
+    TempStr s = str::ReplaceTemp(path, "<N>", n);
+    if (str::Contains(s, "<n>")) {
+        s = str::ReplaceTemp(s, "<n>", n);
+    }
+    return s;
+}
+
+static bool GetImageEncoderForPath(Str path, CLSID* encOut) {
+    if (!IsSupportedConvertImageExt(path)) {
+        return false;
+    }
+    int idx = ConvertImageFormatIdxFromPath(path);
+    CLSID enc = GetGdiPlusEncoderClsid(kConvertImageFormats[idx].mime);
+    if (enc.Data1 == 0 && enc.Data2 == 0 && enc.Data3 == 0) {
+        return false;
+    }
+    *encOut = enc;
+    return true;
+}
+
+static bool SavePixmapAsImageFile(Pixmap* px, Str path) {
+    if (!px || !path) {
+        return false;
+    }
+    CLSID enc{};
+    if (!GetImageEncoderForPath(path, &enc)) {
+        return false;
+    }
+    Pixmap* converted = nullptr;
+    Pixmap* use = px;
+    if (px->format == PixmapFormat::Native) {
+        converted = PixmapCopyAs32bppDIB(px);
+        if (!converted) {
+            return false;
+        }
+        use = converted;
+    }
+    Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(use);
+    bool ok = false;
+    if (bmp) {
+        bmp->SetResolution(use->xres, use->yres);
+        WCHAR* pathW = CWStrTemp(path);
+        ok = bmp->Save(pathW, &enc, nullptr) == Gdiplus::Ok;
+        delete bmp;
+    } else if (use->hbmp) {
+        Gdiplus::Bitmap gbmp(use->hbmp, nullptr);
+        gbmp.SetResolution(use->xres, use->yres);
+        WCHAR* pathW = CWStrTemp(path);
+        ok = gbmp.Save(pathW, &enc, nullptr) == Gdiplus::Ok;
+    }
+    FreePixmap(converted);
+    if (!ok) {
+        file::Delete(path);
+    }
+    return ok;
+}
+
+// render each page at kConvertPdfToImagesDpi and write it to templatePath with
+// <N> replaced by the 1-based page number. Returns how many files were written.
+static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages,
+                                Str* firstPathOwnedOut) {
+    if (firstPathOwnedOut) {
+        *firstPathOwnedOut = {};
+    }
+    if (!engine || len(pages) == 0 || len(templatePath) == 0) {
+        return 0;
+    }
+    TempStr withExt = WithDefaultImageExtTemp(templatePath);
+    if (!withExt) {
+        return 0;
+    }
+    TempStr templ = EnsurePagePlaceholderTemp(withExt, len(pages) > 1);
+    float fileDpi = engine->GetFileDPI();
+    if (fileDpi <= 0) {
+        fileDpi = 72.0f;
+    }
+    float zoom = kConvertPdfToImagesDpi / fileDpi;
+    int nOk = 0;
+    StrVec pngs;
+    for (int pageNo : pages) {
+        TempStr dest = ReplacePagePlaceholderTemp(templ, pageNo);
+        RenderPageArgs args(pageNo, zoom, rotation);
+        Pixmap* px = engine->RenderPage(args);
+        if (!px) {
+            logf("ConvertPagesToImages: RenderPage failed for page %d\n", pageNo);
+            continue;
+        }
+        px->xres = kConvertPdfToImagesDpi;
+        px->yres = kConvertPdfToImagesDpi;
+        bool ok = SavePixmapAsImageFile(px, dest);
+        FreePixmap(px);
+        if (!ok) {
+            logf("ConvertPagesToImages: save failed for '%s'\n", dest);
+            continue;
+        }
+        if (nOk == 0 && firstPathOwnedOut) {
+            *firstPathOwnedOut = str::Dup(dest);
+        }
+        if (str::EndsWithI(dest, StrL(".png"))) {
+            pngs.Append(dest);
+        }
+        nOk++;
+    }
+    OptimizePngFilesAsync(pngs);
+    return nOk;
+}
+
+static void CollectAllPages(int pageCount, Vec<int>& pages) {
+    pages.Reset();
+    for (int i = 1; i <= pageCount; i++) {
+        pages.Append(i);
+    }
+}
+
+TempStr ConvertPagesToImagesResultTemp(Str templatePath, Str pagesSpec, int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    if (len(gWindows) == 0) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-engine")));
+    }
+    int pageCount = engine->PageCount();
+    Vec<int> pages;
+    if (str::EqI(pagesSpec, StrL("current"))) {
+        int cur = dm->CurrentPageNo();
+        if (cur < 1 || cur > pageCount) {
+            return finish(1, str::DupTemp(StrL("ERROR bad-current")));
+        }
+        pages.Append(cur);
+    } else if (str::EqI(pagesSpec, StrL("all"))) {
+        CollectAllPages(pageCount, pages);
+    } else if (!ParseDeletePages(pagesSpec, pageCount, pages)) {
+        return finish(1, str::DupTemp(StrL("ERROR bad-pages")));
+    }
+    Str firstPath;
+    int n = ConvertPagesToImages(engine, dm->GetRotation(), templatePath, pages, &firstPath);
+    if (n == 0) {
+        str::Free(firstPath);
+        return finish(1, str::DupTemp(StrL("ERROR convert-failed")));
+    }
+    TempStr res = fmt("OK n=%d first=%s", n, firstPath);
+    str::Free(firstPath);
+    return finish(0, res);
+}
+
+struct ConvertPdfToImagesDialog : PdfToolDialog {
+    int pageCount = 0;
+    Checkbox* radioCurrent = nullptr;
+    Checkbox* radioAll = nullptr;
+    Checkbox* radioCustom = nullptr;
+    Edit* pagesEdit = nullptr;
+    DropDown* dropFormat = nullptr;
+    bool syncingFormat = false;
+
+    bool Create(MainWindow* win, WindowTab* tab);
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
+    void OnBrowseTemplate(VirtMouseEvent* ev = nullptr);
+    void UpdateButton();
+    void OnPagesModeChanged();
+    void OnFormatChanged();
+    void SetDestExtFromFormat();
+    void SyncFormatFromPath(Str path);
+    int SelectedFormatIdx() const;
+};
+
+static Checkbox* NewPagesRadio(HWND parent, PlatformFont* font, Str text, bool groupStart, bool checked) {
+    Checkbox::CreateArgs args;
+    args.parent = parent;
+    args.text = text;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    args.isRadio = true;
+    args.isGroupStart = groupStart;
+    args.initialState = checked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
+    auto* c = new Checkbox();
+    c->Create(args);
+    c->SetColors(ThemeWindowTextColor(), DarkModeDialogBgColor());
+    return c;
+}
+
+int ConvertPdfToImagesDialog::SelectedFormatIdx() const {
+    if (!dropFormat) {
+        return 0;
+    }
+    int idx = dropFormat->GetCurrentSelection();
+    if (idx < 0 || idx >= ConvertImageFormatCount()) {
+        return 0;
+    }
+    return idx;
+}
+
+void ConvertPdfToImagesDialog::SetDestExtFromFormat() {
+    if (!destEdit) {
+        return;
+    }
+    TempStr dest = destEdit->GetTextTemp();
+    if (len(dest) == 0) {
+        return;
+    }
+    Str ext = kConvertImageFormats[SelectedFormatIdx()].ext;
+    TempStr noExt = path::GetPathNoExtTemp(dest);
+    TempStr newDest = str::JoinTemp(noExt, ext);
+    if (str::EqI(dest, newDest)) {
+        return;
+    }
+    destEdit->SetText(newDest);
+}
+
+void ConvertPdfToImagesDialog::SyncFormatFromPath(Str path) {
+    if (!dropFormat) {
+        return;
+    }
+    int idx = ConvertImageFormatIdxFromPath(path);
+    if (idx == dropFormat->GetCurrentSelection()) {
+        return;
+    }
+    syncingFormat = true;
+    dropFormat->SetCurrentSelection(idx);
+    syncingFormat = false;
+}
+
+void ConvertPdfToImagesDialog::OnFormatChanged() {
+    if (syncingFormat) {
+        return;
+    }
+    SetDestExtFromFormat();
+}
+
+void ConvertPdfToImagesDialog::OnPagesModeChanged() {
+    bool custom = radioCustom && radioCustom->IsChecked();
+    if (pagesEdit) {
+        pagesEdit->SetIsEnabled(custom);
+    }
+    UpdateButton();
+}
+
+void ConvertPdfToImagesDialog::UpdateButton() {
+    if (!actionBtn) {
+        return;
+    }
+    TempStr dest = destEdit ? destEdit->GetTextTemp() : TempStr{};
+    bool destOk = len(dest) > 0;
+    bool pagesOk = true;
+    if (radioCustom && radioCustom->IsChecked()) {
+        TempStr pages = pagesEdit ? pagesEdit->GetTextTemp() : TempStr{};
+        Vec<int> parsed;
+        pagesOk = ParseDeletePages(pages, pageCount, parsed);
+    }
+    bool valid = destOk && pagesOk;
+    if (valid == actionBtn->HasFlag(vwfEnabled)) {
+        return;
+    }
+    actionBtn->SetFlag(vwfEnabled, valid);
+    actionBtn->Invalidate();
+}
+
+void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
+    WCHAR dstFileName[MAX_PATH + 1]{};
+    TempStr current = destEdit->GetTextTemp();
+    // < and > are illegal in Windows filenames; show {N} in the save dialog
+    TempStr shown = str::ReplaceTemp(current, "<N>", "{N}");
+    if (str::Contains(shown, "<n>")) {
+        shown = str::ReplaceTemp(shown, "<n>", "{N}");
+    }
+    wstr::BufSet(WStr(dstFileName, MAX_PATH), ToWStrTemp(shown));
+
+    int fmtIdx = SelectedFormatIdx();
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0All Files\0*.*\0";
+    ofn.nFilterIndex = (DWORD)(fmtIdx + 1);
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;
+
+    if (!GetSaveFileNameW(&ofn)) {
+        return;
+    }
+    TempStr picked = ToUtf8Temp(dstFileName);
+    if (str::Contains(picked, "{N}")) {
+        picked = str::ReplaceTemp(picked, "{N}", "<N>");
+    } else if (!PathHasPagePlaceholder(picked)) {
+        picked = EnsurePagePlaceholderTemp(picked, true);
+    }
+    destEdit->SetText(picked);
+    int filterIdx = (int)ofn.nFilterIndex - 1;
+    if (filterIdx >= 0 && filterIdx < ConvertImageFormatCount()) {
+        syncingFormat = true;
+        dropFormat->SetCurrentSelection(filterIdx);
+        syncingFormat = false;
+        SetDestExtFromFormat();
+    } else {
+        SyncFormatFromPath(picked);
+    }
+}
+
+void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
+    TempStr destPath = destEdit->GetTextTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        MessageBoxWarning(hwnd, "Failed to convert PDF to images.", _TRA("Convert PDF to Images"));
+        return;
+    }
+
+    Vec<int> pages;
+    if (radioCurrent && radioCurrent->IsChecked()) {
+        int cur = dm->CurrentPageNo();
+        if (cur < 1 || cur > pageCount) {
+            return;
+        }
+        pages.Append(cur);
+    } else if (radioAll && radioAll->IsChecked()) {
+        CollectAllPages(pageCount, pages);
+    } else {
+        TempStr custom = pagesEdit ? pagesEdit->GetTextTemp() : TempStr{};
+        if (!ParseDeletePages(custom, pageCount, pages)) {
+            return;
+        }
+    }
+
+    logf("ConvertPdfToImages: '%s' -> '%s', %d page(s)\n", srcPath, destPath, len(pages));
+
+    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
+    Str firstPath;
+    int nOk = ConvertPagesToImages(engine, dm->GetRotation(), destPath, pages, &firstPath);
+    SetCursor(prev);
+
+    if (nOk == 0) {
+        str::Free(firstPath);
+        MessageBoxWarning(hwnd, "Failed to convert PDF to images.", _TRA("Convert PDF to Images"));
+        return;
+    }
+    logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
+    TempStr openPath = str::DupTemp(firstPath);
+    str::Free(firstPath);
+    Close();
+    OpenPathInDefaultFileManager(openPath);
+}
+
+bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
+    if (!CreateToolDialog(w, tab, _TRA("Convert PDF to Images"))) {
+        return false;
+    }
+    pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
+    AddPathRow();
+
+    TempStr noExt = path::GetPathNoExtTemp(srcPath);
+    TempStr pngPath = str::JoinTemp(noExt, StrL("-<N>.png"));
+
+    HBox* destRow = AddRow();
+    destRow->gap = font->averageCharWidth;
+
+    Edit::CreateArgs dargs;
+    dargs.parent = hwnd;
+    dargs.withBorder = true;
+    dargs.font = font;
+    dargs.text = pngPath;
+    dargs.isRtl = IsUIRtl();
+    destEdit = new Edit();
+    destEdit->Create(dargs);
+    destRow->AddChild(destEdit, 1);
+
+    {
+        auto* dd = new DropDown();
+        DropDown::CreateArgs ddargs;
+        ddargs.parent = hwnd;
+        ddargs.font = font;
+        ddargs.isRtl = IsUIRtl();
+        dd->Create(ddargs);
+        StrVec items;
+        for (int i = 0; i < ConvertImageFormatCount(); i++) {
+            items.Append(kConvertImageFormats[i].label);
+        }
+        dd->SetItems(items);
+        dd->SetCurrentSelection(0);
+        dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+        dd->onSelectionChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnFormatChanged>(this);
+        dropFormat = dd;
+        destRow->AddChild(dropFormat);
+    }
+
+    browseBtn = NewButton("...", false);
+    browseBtn->onClick =
+        MkMethod1<ConvertPdfToImagesDialog, VirtMouseEvent*, &ConvertPdfToImagesDialog::OnBrowseTemplate>(this);
+    destRow->AddChild(browseBtn);
+
+    if (pathLabel) {
+        pathLabel->padding.left = destEdit->GetLeftTextMargin();
+    }
+
+    HBox* row = AddRow();
+    row->gap = font->averageCharWidth;
+    row->AddChild(NewVirtText({.s = _TRA("Pages:"), .font = font, .isRtl = IsUIRtl()}));
+
+    radioCurrent = NewPagesRadio(hwnd, font, _TRA("Current"), true, false);
+    radioCurrent->onStateChanged =
+        MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
+    row->AddChild(radioCurrent);
+
+    radioAll = NewPagesRadio(hwnd, font, _TRA("All"), false, true);
+    radioAll->onStateChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
+    row->AddChild(radioAll);
+
+    radioCustom = NewPagesRadio(hwnd, font, _TRA("Custom"), false, false);
+    radioCustom->onStateChanged =
+        MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
+    row->AddChild(radioCustom);
+
+    Edit::CreateArgs eargs;
+    eargs.parent = hwnd;
+    eargs.withBorder = true;
+    eargs.font = font;
+    eargs.text = fmt("1-%d", pageCount);
+    eargs.isRtl = IsUIRtl();
+    pagesEdit = new Edit();
+    pagesEdit->Create(eargs);
+    pagesEdit->SetIsEnabled(false);
+    row->AddChild(pagesEdit, 1);
+
+    AddButtonsRow(_TRA("Convert"), _TRA("Use <N> for the page number"));
+    FinishDialog(destEdit);
+
+    destEdit->onTextChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::UpdateButton>(this);
+    pagesEdit->onTextChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::UpdateButton>(this);
+    UpdateButton();
+    return true;
+}
+
+void ShowConvertPdfToImagesDialog(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->filePath) {
+        return;
+    }
+    if (!IsPdfDoc(tab)) {
+        return;
+    }
+    logf("ShowConvertPdfToImagesDialog: opening for '%s'\n", tab->filePath);
+
+    auto* dlg = new ConvertPdfToImagesDialog();
+    if (!dlg->Create(win, tab)) {
         delete dlg;
     }
 }

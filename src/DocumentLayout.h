@@ -11,9 +11,9 @@ struct DocumentLayoutMargin {
 };
 
 struct DocumentLayoutPage {
-    RectF mediaBox{};
-    Rect pos{};
-    Rect pageOnScreen{};
+    RectF mediaBox;
+    Rect pos;
+    Rect pageOnScreen;
     float visibleRatio = 0;
     float zoomReal = 1;
     bool isShown = false;
@@ -22,8 +22,8 @@ struct DocumentLayoutPage {
 struct DocumentLayoutParams {
     DisplayMode displayMode{};
     int startPage = 1;
-    Size viewPortSize{};
-    Point viewPortOffset{};
+    Size viewPortSize;
+    Point viewPortOffset;
     float zoomVirtual = 100;
     float dpiFactor = 1;
     int rotation = 0;
@@ -31,15 +31,27 @@ struct DocumentLayoutParams {
     bool usePageZooms = false;
     // extra scroll room after last page in continuous view (issue #411)
     bool paddingAfterLastPage = false;
+    // comic/image facing and book view: a page wider than it is tall occupies
+    // the whole two-page row (issues #1324, #872)
+    bool landscapeAsSpread = false;
+    Vec<u8> spreadFlags;
     DocumentLayoutMargin windowMargin{};
-    Size pageSpacing{};
+    Size pageSpacing;
 };
+
+struct FacingRow {
+    int firstPage = 1;
+    int lastPage = 1;
+    bool isSpread = false;
+};
+
+void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags);
 
 struct DocumentLayout {
     Vec<DocumentLayoutPage> pages;
     DocumentLayoutParams params;
-    Size canvasSize{};
-    Rect viewPort{};
+    Size canvasSize;
+    Rect viewPort;
     float zoomReal = 1;
 
     void Reset(int pageCount);
@@ -50,5 +62,6 @@ struct DocumentLayout {
     void Relayout(const DocumentLayoutParams& params);
     void RecalcVisibleParts();
     int CurrentPageNo() const;
+    int PageNoAtViewPortTop() const;
     int FirstVisiblePageNo() const;
 };

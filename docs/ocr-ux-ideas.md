@@ -115,4 +115,4 @@ That stays aligned with SumatraPDF: small surface area, palette + contextual pro
 - Image collections — Find disabled (`Menu.cpp`); selection/copy limited (`Selection.cpp`, `SearchAndDDE.cpp`)
 - Read aloud — shows “No text available…” when page lacks text (`SumatraPDF.cpp`)
 - Copy on restricted/no-text pages — may copy as image with notification (`Selection.cpp`)
-- MuPDF has tessocr integration (`mupdf/source/fitz/tessocr.cpp`); tool-draw docs mention OCR output formats but mark some as disabled
+- MuPDF has tessocr integration (`ext/mupdf/source/fitz/tessocr.cpp`); tool-draw docs mention OCR output formats but mark some as disabled

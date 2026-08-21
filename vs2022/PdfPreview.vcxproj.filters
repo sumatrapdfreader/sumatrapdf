@@ -4,8 +4,8 @@
     <Filter Include="base">
       <UniqueIdentifier>{8078947C-6CAF-950D-159C-7B1001B2110F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mui">
-      <UniqueIdentifier>{1092880B-7C9B-887C-0517-9F7C711F947C}</UniqueIdentifier>
+    <Filter Include="gui">
+      <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
     </Filter>
     <Filter Include="previewer">
       <UniqueIdentifier>{7EF07E97-EA5A-330E-3399-E4B39F421163}</UniqueIdentifier>
@@ -38,11 +38,11 @@
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mui\Mui.h">
-      <Filter>mui</Filter>
+    <ClInclude Include="..\src\gui\PlatformFont.h">
+      <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mui\TextRender.h">
-      <Filter>mui</Filter>
+    <ClInclude Include="..\src\gui\PlatformText.h">
+      <Filter>gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\previewer\PdfPreview.h">
       <Filter>previewer</Filter>
@@ -80,11 +80,17 @@
     <ClCompile Include="..\src\base\Archive.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mui\Mui.cpp">
-      <Filter>mui</Filter>
+    <ClCompile Include="..\src\gui\PlatformFont.cpp">
+      <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mui\TextRender.cpp">
-      <Filter>mui</Filter>
+    <ClCompile Include="..\src\gui\PlatformFont_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText_win.cpp">
+      <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreview.cpp">
       <Filter>previewer</Filter>

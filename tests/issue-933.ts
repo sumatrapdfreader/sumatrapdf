@@ -11,7 +11,7 @@
 
 import { writeFileSync } from "node:fs";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 
 // Build a minimal single-page PDF that shows the given lines using Helvetica
 // with WinAnsiEncoding (so byte 0xDF renders/extracts as ß). `lines` are raw
@@ -42,11 +42,6 @@ function buildPdf(lines: string[]): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-async function search(pdfPath: string, needle: string): Promise<string> {
-  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestSearch, [pdfPath, needle]);
-  return String(rawArg).trim();
-}
-
 export async function testit(): Promise<void> {
   // ß = octal \337 (0xDF in WinAnsi). PDF text has only these spellings.
   const pdfPath = tmpPath("issue-933.pdf");
@@ -61,14 +56,17 @@ export async function testit(): Promise<void> {
     { needle: "Xyzzy", expectFound: false }, // control: no match
   ];
 
-  for (const c of cases) {
-    const res = await search(pdfPath, c.needle);
-    const found = res.startsWith("FOUND");
-    console.log(`  search "${c.needle}" -> ${res}`);
-    if (found !== c.expectFound) {
-      throw new Error(`search "${c.needle}": expected ${c.expectFound ? "FOUND" : "NOTFOUND"}, got: ${res}`);
+  await withControlledSumatra(EXE, async (client) => {
+    for (const c of cases) {
+      const [, rawArg] = await client.request(ControlCommand.TestSearch, [pdfPath, c.needle]);
+      const res = String(rawArg).trim();
+      const found = res.startsWith("FOUND");
+      console.log(`  search "${c.needle}" -> ${res}`);
+      if (found !== c.expectFound) {
+        throw new Error(`search "${c.needle}": expected ${c.expectFound ? "FOUND" : "NOTFOUND"}, got: ${res}`);
+      }
     }
-  }
+  });
 
   console.log("✅ ß <-> ss search equivalence works");
 }

@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "GumboHelpers.h"
+// Not self-sufficient: include GumboHelpers.h (after base/Base.h) before this header.
 
 struct AttrInfo {
     Str name;

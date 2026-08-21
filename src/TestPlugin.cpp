@@ -112,7 +112,7 @@ void TestPlugin(WStr cmdLine) {
     // find the position of -test-plugin and take args after it
     int pluginIdx = -1;
     for (int i = 0; i < len(argList); i++) {
-        if (str::EqI(argList[i], "-test-plugin")) {
+        if (str::EqI(argList[i], StrL("-test-plugin"))) {
             pluginIdx = i;
             break;
         }
@@ -132,7 +132,7 @@ void TestPlugin(WStr cmdLine) {
     }
 
     // if no exe path given or first arg doesn't end with .exe, use our own exe
-    if (len(args) == 1 || !str::EndsWithI(args[0], ".exe")) {
+    if (len(args) == 1 || !str::EndsWithI(args[0], StrL(".exe"))) {
         TempStr selfPath = GetSelfExePathTemp();
         args.InsertAt(0, selfPath);
     }
@@ -153,7 +153,7 @@ void TestPlugin(WStr cmdLine) {
     wc.lpfnWndProc = PluginParentWndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = PLUGIN_TEST_NAME;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClass(&wc);
 
     PluginStartData data = {args[0], args[2], args[1]};

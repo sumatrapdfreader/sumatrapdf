@@ -11,6 +11,8 @@ import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 import { spawn } from "node:child_process";
+import { windowPosArgs } from "./win-automation.ts";
+import { killAndWait } from "./winapi.ts";
 
 const mutoolCandidates = [
   join(process.env.USERPROFILE || "", "OneDrive", "bin", "mupdf-1.27.0", "mutool.exe"),
@@ -94,17 +96,22 @@ export async function testit(): Promise<void> {
   } catch {
     /* ok */
   }
-  const p1 = spawn(
-    EXE,
-    ["-for-testing", "-pwd", "test", "-log", "-log-to-file", log1, a, b, a],
-    { cwd: ROOT, stdio: "ignore" },
-  );
-  await sleep(2500);
-  p1.kill();
-  await sleep(200);
-
-  const loadsA1 = await countLoads(log1, "a-pwd.pdf");
-  const loadsB1 = await countLoads(log1, "b-pwd.pdf");
+  const p1 = spawn(EXE, ["-for-testing", ...windowPosArgs(), "-pwd", "test", "-log", "-log-to-file", log1, a, b, a], {
+    cwd: ROOT,
+    stdio: "ignore",
+  });
+  const deadline1 = Date.now() + 8000;
+  let loadsA1 = 0;
+  let loadsB1 = 0;
+  while (Date.now() < deadline1) {
+    loadsA1 = await countLoads(log1, "a-pwd.pdf");
+    loadsB1 = await countLoads(log1, "b-pwd.pdf");
+    if (loadsA1 >= 1 && loadsB1 >= 1) {
+      break;
+    }
+    await sleep(40);
+  }
+  await killAndWait(p1);
   if (loadsA1 !== 1) {
     throw new Error(`cmdline multi-open: expected 1 load of a-pwd.pdf, got ${loadsA1}`);
   }
@@ -136,18 +143,33 @@ export async function testit(): Promise<void> {
 
   const primary = spawn(
     EXE,
-    ["-appdata", appdata, "-pwd", "test", "-log", "-log-to-file", log2, a],
-    { cwd: ROOT, stdio: "ignore" },
+    [...windowPosArgs(), "-appdata", appdata, "-pwd", "test", "-log", "-log-to-file", log2, a],
+    {
+      cwd: ROOT,
+      stdio: "ignore",
+    },
   );
-  await sleep(800);
+  const deadlineP = Date.now() + 5000;
+  while (Date.now() < deadlineP) {
+    if ((await countLoads(log2, "a-pwd.pdf")) >= 1) {
+      break;
+    }
+    await sleep(40);
+  }
   const secB = spawn(EXE, ["-appdata", appdata, "-pwd", "test", b], { cwd: ROOT, stdio: "ignore" });
-  await sleep(400);
+  const deadlineB = Date.now() + 4000;
+  while (Date.now() < deadlineB) {
+    const text = existsSync(log2) ? await Bun.file(log2).text() : "";
+    if ((text.match(/CreateControllerForEngineOrFile: '.*b-pwd\.pdf'/g) || []).length >= 1) {
+      break;
+    }
+    await sleep(40);
+  }
   const secA = spawn(EXE, ["-appdata", appdata, "-pwd", "test", a], { cwd: ROOT, stdio: "ignore" });
-  await sleep(2500);
-  secB.kill();
-  secA.kill();
-  primary.kill();
-  await sleep(200);
+  await sleep(400);
+  await killAndWait(secB);
+  await killAndWait(secA);
+  await killAndWait(primary);
 
   // Primary log: one sync load of A. B is async (StartLoadDocument) so it may not
   // emit "LoadDocument: N pages" — but a second A must not produce a second

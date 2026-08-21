@@ -1,0 +1,56 @@
+% title: Hyphenation patterns for Danish
+% copyright: Copyright (C) 1994 Frank Jensen
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Danish
+%     tag: da
+% version: 2011-01-11
+% authors:
+%   -
+%     name: Frank Jensen
+%     contact: frank.jensen (at) hugin.com
+% licence:
+%     - This file is available under any of these licences:
+%     -
+%         name: LPPL
+%         version: 1.3
+%         or_later: true
+%         url: http://www.latex-project.org/lppl/lppl-1-3.html
+%     -
+%         name: MIT
+%         url: https://opensource.org/licenses/MIT
+%         text: >
+%             Permission is hereby granted, free of charge, to any person
+%             obtaining a copy of this software and associated documentation
+%             files (the "Software"), to deal in the Software without
+%             restriction, including without limitation the rights to use,
+%             copy, modify, merge, publish, distribute, sublicense, and/or sell
+%             copies of the Software, and to permit persons to whom the
+%             Software is furnished to do so, subject to the following
+%             conditions:
+%
+%             The above copyright notice and this permission notice shall be
+%             included in all copies or substantial portions of the Software.
+%
+%             THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+%             EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+%             OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+%             NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+%             HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+%             WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%             FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+%             OTHER DEALINGS IN THE SOFTWARE.
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - 2011-01-11 - remove support for OT1 encoding
+% texlive:
+%     encoding: ec
+%     babelname: danish
+%     legacy_patterns: dkhyph.tex
+%     message: Danish hyphenation patterns
+%     description: Hyphenation patterns for Danish in T1/EC and UTF-8 encodings.
+%

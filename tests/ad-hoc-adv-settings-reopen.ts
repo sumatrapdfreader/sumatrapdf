@@ -3,12 +3,12 @@
 // it again, checking each time that a top-level "Advanced Settings" window
 // appears. Run: bun tests/ad-hoc-adv-settings-reopen.ts
 import { cmdId } from "./util.ts";
-import { launchSumatra, waitForFrame, sendCommand } from "./win-automation.ts";
+import { launchSumatra, waitForFrame, sendCommand, killAndWait } from "./win-automation.ts";
 import { enumWindows, getWindowText, getWindowPid, postMessage, sleep } from "./winapi.ts";
 
 const CmdAdvancedSettings = cmdId("CmdAdvancedSettings");
 const WM_CLOSE = 0x0010;
-const PDF = "ext/zlib/zlib.3.pdf";
+const PDF = "ext/a-zlib/zlib.3.pdf";
 
 function findDialog(pid: number): number {
   let found = 0;
@@ -58,7 +58,7 @@ const r1 = await openCheckClose(1);
 const r2 = await openCheckClose(2);
 const r3 = await openCheckClose(3);
 
-proc.kill();
+await killAndWait(proc);
 console.log(`\nresult: round1=${r1} round2=${r2} round3=${r3}`);
 if (r1 && r2 && r3) {
   console.log("PASS: dialog reopened every time");

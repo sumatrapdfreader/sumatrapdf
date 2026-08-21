@@ -45,6 +45,7 @@ struct Synchronizer {
 
     bool NeedsToRebuildIndex();
     int MarkIndexWasRebuilt();
+    i64 SyncFileTimestamp() const;
     Str PrependDir(Str filename) const;
     TempStr PrependDirTemp(Str filename) const;
 

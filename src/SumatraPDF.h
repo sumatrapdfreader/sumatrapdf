@@ -37,8 +37,12 @@ constexpr int kHideCursorDelayInMs = 3000;
 #define READ_ALOUD_HIGHLIGHT_DELAY_IN_MS 80
 // debounce: coalesce bursts of file-change notifications (a single save can
 // fire several) into one reload. SetTimer() with the same id resets it, so the
-// reload only happens once the file has been quiet for this long (#5690)
+// reload only happens once the file has been quiet for this long (#5690).
+// The timer also re-arms itself while the file keeps changing, so a slow
+// writer doesn't get us to load a half-written document
 #define AUTO_RELOAD_DELAY_IN_MS 500
+// stop waiting for the writer after this long and reload whatever is there
+constexpr u64 kAutoReloadMaxWaitMs = 5000;
 
 // permissions that can be revoked through sumatrapdfrestrict.ini or the -restrict command line flag
 enum class Perm : uint {
@@ -87,16 +91,18 @@ inline constexpr Perm operator~(Perm lhs) {
 struct Favorites;
 struct FileHistory;
 struct MainWindow;
+extern Func1<MainWindow*> gAfterLayout;
+// tells the frame's virtual tree which splitters exist (they are created
+// with their panes)
+void FrameSyncSplitters(MainWindow*);
 struct NotificationWnd;
 struct RenderCache;
 struct WindowTab;
-struct LabelWithCloseWnd;
 struct SessionData;
 struct Flags;
 
 // all defined in SumatraPDF.cpp
 extern Flags* gCli;
-extern bool gShowFrameRate;
 
 extern Str gPluginURL;
 extern bool gMyWindowWasEmbedded;
@@ -130,17 +136,19 @@ bool CanAccessDisk();
 bool AnnotationsAreDisabled();
 bool IsUIRtl();
 bool SumatraLaunchBrowser(Str url);
-TempStr URLEncodeMayTruncateTemp(Str s);
 void LaunchDocumentation(Str docURI);
 bool MaybeLaunchDocumentation(Str url);
 bool OpenFileExternally(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
-// true if read aloud was paused and can be resumed in this tab
 bool CanContinueReadAloud(WindowTab* tab);
-// false if the user canceled (don't proceed with closing/replacing the doc)
 bool MaybeSaveAnnotations(WindowTab* tab);
+void DeleteFileFromDiskAndHistory(Str path);
+WindowTab* FindTabByFilePath(Str path);
+// the tab that currently owns this controller, null if it is no longer shown
+WindowTab* FindTabByController(DocController*);
 WindowTab* GetReadAloudSourceTab();
+void ReadAloudForgetTab(WindowTab*);
 
 constexpr UINT CmdTtsVoiceDefault = 0x7100;
 constexpr UINT CmdTtsVoiceFirst = 0x7101;
@@ -161,6 +169,7 @@ bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);
 void SetReadAloudAppSubmenu(HMENU menu);
 bool IsReadAloudAppSubmenu(HMENU menu);
 void SetReadAloudContextSubmenu(HMENU menu);
+void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen);
 bool IsReadAloudContextSubmenu(HMENU menu);
 HMENU GetReadAloudContextSubmenu();
 bool CanCloseWindow(MainWindow* win);
@@ -171,6 +180,8 @@ void RememberFavTreeExpansionState(MainWindow* win);
 void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(Str langCode);
 void UpdateDocumentColors();
+void MaybeRedrawHomePage();
+Str NextCursorPositionUnitName(MainWindow*);
 void UpdateFixedPageScrollbarsVisibility();
 
 // scrollbar mode values: "windows\0smart\0overlay\0hidden\0"
@@ -185,7 +196,7 @@ bool ScrollbarsAreHidden();
 bool ScrollbarsUseOverlay();
 OverlayScrollbar::Mode ScrollbarsOverlayMode();
 
-// toolbar mode values: "show\0hide\0overlay\0"
+// toolbar mode values: "show\0hide\0overlay\0" (Toolbar and Fullscreen.Toolbar)
 constexpr int kToolbarShow = 0;
 constexpr int kToolbarHide = 1;
 constexpr int kToolbarOverlay = 2;
@@ -194,6 +205,8 @@ int ToolbarModeFromPrefs();
 bool ToolbarModeIsOverlay();
 bool ToolbarModeIsHidden();
 void SetToolbarMode(int mode);
+int FullscreenToolbarModeFromPrefs();
+void SetFullscreenToolbarMode(int mode);
 
 // toolbar position values: "top\0bottom\0"
 constexpr int kToolbarTop = 0;
@@ -202,7 +215,10 @@ extern SeqStrings gToolbarPositionNames;
 int ToolbarPositionFromPrefs();
 bool ToolbarAtBottom();
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
-void ReloadDocument(MainWindow* win, bool autoRefresh);
+void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword = true);
+bool AutoReloadFileStillChanging(WindowTab* tab);
+void DeleteControllerAsync(DocController* ctrl);
+void WaitForPendingControllerDeletes();
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 
 // flags for ScheduleUiUpdate
@@ -219,26 +235,16 @@ constexpr u32 kUiTabsDirty = 0x8;    // repaint the tab bar
 constexpr u32 kUiNoToolbars = 0x10;
 constexpr u32 kUiSidebarDirty = 0x20; // repaint toc/favorites boxes and their splitters
 
-// Request an async, coalesced UI update: records what needs to happen and
-// posts WM_UPDATE_UI once; any further requests before it's handled are
-// folded into the same pass. Prefer this over direct relayout/RedrawWindow
-// calls to avoid excessive repaints. sidebarDx >= 0 relayouts with a new
-// sidebar width (splitter dragging).
 void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout, int sidebarDx = -1);
 void DuplicateTabInNewWindow(WindowTab* tab);
 void CopyFilePath(WindowTab*);
 
-// note: background tabs are only searched if focusTab is true
-// when limitWin is set, only that window's tabs are considered
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin = nullptr);
 MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab);
 WindowTab* FindTabByFile(Str file, MainWindow* limitWin = nullptr);
 void SelectTabInWindow(WindowTab*);
 
-// True if a tab already shows this file, or a load for it is already in progress
-// (tab is only created when load finishes, so mid-password / async loads need this).
 bool IsDocumentOpenOrLoading(Str file);
-// Mark/unmark a path as currently loading. Call from the UI thread only.
 void BeginDocumentLoad(Str file);
 void EndDocumentLoad(Str file);
 
@@ -261,6 +267,9 @@ struct LoadArgs {
     // we don't own those values
     EngineBase* engine = nullptr;
     MainWindow* win = nullptr;
+    // HWND only (not MainWindow*): password UI parent for the load thread. The
+    // window may close while loading; never dereference win on the load thread.
+    HWND hwndPwdParent = nullptr;
 
     bool showWin = true;
     bool forceReuse = false;
@@ -282,6 +291,10 @@ struct LoadArgs {
     // open paths). DDE and other global lookups leave this false.
     bool activateExistingInWindow = false;
 
+    DisplayMode initialDisplayMode = DisplayMode::Automatic;
+    float initialZoom = kInvalidZoom;
+    float ebookLayoutAspect = 0;
+
     DocController* ctrl = nullptr;
 
     FileArgs* fileArgs = nullptr;
@@ -292,8 +305,6 @@ struct LoadArgs {
     // if set, called on the UI thread when the load finishes,
     // with true if the document was loaded successfully
     Func1<bool> onFinished;
-    // corner for the "Loading ..." notification; zero-init is TopLeft
-    NotifCorner loadingNotifCorner{};
 
   private:
     Str fileName;
@@ -308,6 +319,7 @@ void StartLoadDocument(LoadArgs* args);
 void StartLoadDocuments(StrVec& paths, MainWindow* win);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = true);
 void ShowMainWindow(MainWindow* win, int windowState);
+void MaybeShowDefaultAppNotification(MainWindow* win);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win);
 
 uint MbRtlReadingMaybe();
@@ -328,11 +340,14 @@ struct SettingsApplyState {
     bool disableAntiAlias = false;
     bool chmUseFixedPageUI = false;
     bool markdownUseFixedPageUI = false;
+    bool explorerQuickLook = false;
 };
 SettingsApplyState GetSettingsApplyState();
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before);
 
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
+void OnDocumentVerticalScrollIntent(MainWindow* win, bool down);
+void DismissNextFileScrollHint(MainWindow* win);
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();

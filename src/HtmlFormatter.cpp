@@ -6,14 +6,17 @@
 #include "base/HtmlTags.h"
 #include "base/Pixmap.h"
 #include "base/CssParser.h"
+
+#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 #include "ImageReader.h"
 
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "HtmlFormatter.h"
 
 #if OS_WIN
 #include "base/GdiPlusUtil.h"
-#include "mui/Mui.h"
 #endif
 
 /*
@@ -68,6 +71,7 @@ bool ValidReparseIdx(ptrdiff_t idx, GumboHtmlParser* parser) {
     return !((idx < 0) || (idx > (int)parser->Len()));
 }
 
+// helper constructors for instructions that need additional arguments
 DrawInstr DrawInstr::Text(::Str s, RectF bbox, bool rtl) {
     DrawInstr di(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox);
     di.str = s;
@@ -145,6 +149,11 @@ StyleRule StyleRule::Parse(CssPullParser* parser) {
             case Css_Padding_Left:
                 ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
                 break;
+        if (prop->type == Css_Text_Align) {
+            rule.textAlign = FindAlignAttr(prop->s);
+        } else if (prop->type == Css_Text_Indent) {
+            // TODO: some documents use Css_Padding_Left for indentation
+            ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
         }
     }
     return rule;
@@ -165,124 +174,6 @@ void StyleRule::Merge(StyleRule& source) {
     }
 }
 
-static Vec<PlatformFont*> gPlatformFonts;
-
-#if OS_WIN
-static Gdiplus::FontStyle ToGdiPlusFontStyle(PlatformFontStyle style) {
-    return (Gdiplus::FontStyle)(int)style;
-}
-
-static mui::TextRenderMethod ToMuiTextRenderMethod(PlatformTextMeasureMethod method) {
-    switch (method) {
-        case PlatformTextMeasureMethod::Gdiplus:
-            return mui::TextRenderMethod::Gdiplus;
-        case PlatformTextMeasureMethod::GdiplusQuick:
-            return mui::TextRenderMethod::GdiplusQuick;
-        case PlatformTextMeasureMethod::Gdi:
-            return mui::TextRenderMethod::Gdi;
-        case PlatformTextMeasureMethod::Hdc:
-            return mui::TextRenderMethod::Hdc;
-        case PlatformTextMeasureMethod::Stub:
-            break;
-    }
-    return mui::TextRenderMethod::Gdiplus;
-}
-#endif
-
-PlatformFont* GetPlatformFont(WStr name, float sizePt, PlatformFontStyle style) {
-    for (PlatformFont* font : gPlatformFonts) {
-        if (font->sizePt == sizePt && font->style == style && wstr::Eq(font->name, name)) {
-            return font;
-        }
-    }
-
-    PlatformFont* font = new PlatformFont();
-    font->name = wstr::Dup(name);
-    font->sizePt = sizePt;
-    font->style = style;
-#if OS_WIN
-    font->cachedFont = mui::GetCachedFont(name, sizePt, ToGdiPlusFontStyle(style));
-#endif
-    gPlatformFonts.Append(font);
-    return font;
-}
-
-struct StubTextMeasurer : PlatformTextMeasurer {
-    PlatformFont* currFont = nullptr;
-
-    float CurrFontSize() const {
-        if (currFont && currFont->GetSize() > 0) {
-            return currFont->GetSize();
-        }
-        return 12.5f;
-    }
-
-    float AverageCharDx() const { return CurrFontSize() * 0.55f; }
-
-    void SetFont(PlatformFont* font) override { currFont = font; }
-
-    float GetCurrFontLineSpacing() override { return CurrFontSize() * 1.25f; }
-
-    float GetSpaceDx() override { return AverageCharDx(); }
-
-    RectF Measure(WStr s) override { return RectF(0, 0, (float)len(s) * AverageCharDx(), GetCurrFontLineSpacing()); }
-
-    int StringLenForWidth(WStr s, float dx, float sWidth) override {
-        int n = len(s);
-        if (n == 0 || dx <= 0) {
-            return 0;
-        }
-        if (sWidth < 0) {
-            sWidth = Measure(s).dx;
-        }
-        if (sWidth <= dx) {
-            return n;
-        }
-        int res = (int)floorf((float)n * dx / sWidth);
-        return limitValue(res, 0, n);
-    }
-};
-
-#if OS_WIN
-struct WinTextMeasurer : PlatformTextMeasurer {
-    Gdiplus::Graphics* gfx = nullptr;
-    mui::ITextRender* textMeasure = nullptr;
-
-    explicit WinTextMeasurer(PlatformTextMeasureMethod method) {
-        gfx = mui::AllocGraphicsForMeasureText();
-        textMeasure = mui::CreateTextRender(ToMuiTextRenderMethod(method), gfx, 10, 10);
-    }
-
-    ~WinTextMeasurer() override {
-        delete textMeasure;
-        mui::FreeGraphicsForMeasureText(gfx);
-    }
-
-    void SetFont(PlatformFont* font) override { textMeasure->SetFont(font->GetCachedFont()); }
-
-    float GetCurrFontLineSpacing() override { return textMeasure->GetCurrFontLineSpacing(); }
-
-    float GetSpaceDx() override { return mui::GetSpaceDx(textMeasure); }
-
-    RectF Measure(WStr s) override { return textMeasure->Measure(s); }
-
-    int StringLenForWidth(WStr s, float dx, float sWidth) override {
-        return mui::StringLenForWidth(textMeasure, s, dx, sWidth);
-    }
-};
-#endif
-
-PlatformTextMeasurer* CreatePlatformTextMeasurer(PlatformTextMeasureMethod method) {
-#if OS_WIN
-    if (method != PlatformTextMeasureMethod::Stub) {
-        return new WinTextMeasurer(method);
-    }
-#else
-    (void)method;
-#endif
-    return new StubTextMeasurer();
-}
-
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     : pageDx(args->pageDx), pageDy(args->pageDy), textAllocator(args->textAllocator) {
     currReparseIdx = args->reparseIdx;
@@ -290,9 +181,10 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     htmlParser->SetCurrPosOff(currReparseIdx);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
-    textMeasure = CreatePlatformTextMeasurer(args->textRenderMethod);
-    defaultFontName = wstr::Dup(args->GetFontName());
+    textMeasure = CreatePlatformTextRender(args->textRenderMethod);
+    defaultFontName = str::Dup(ToUtf8Temp(args->GetFontName()));
     defaultFontSize = args->fontSize;
+    overrideFontName = args->overrideFontName;
 
     // pre-size each font's measured-text cache from the size of the text: text
     // runs are mostly words (avg. ~6 bytes of html) and many repeat, so guess
@@ -327,7 +219,7 @@ HtmlFormatter::~HtmlFormatter() {
     for (int i = 0; i < nMeasureCaches; i++) {
         delete measureCaches[i].keys;
     }
-    wstr::Free(defaultFontName);
+    str::Free(defaultFontName);
 }
 
 // find (or lazily create) the per-font measured-text cache for the current
@@ -358,16 +250,15 @@ HtmlFormatter::MeasureCache* HtmlFormatter::GetMeasureCacheForCurrFont() {
 // measuring text is expensive and text runs (mostly words) repeat a lot
 // within a document, so cache the measured size per font, keyed by text.
 // The caller must have called textMeasure->SetFont(CurrFont()) already.
-RectF HtmlFormatter::MeasureTextCached(WStr s) {
+RectF HtmlFormatter::MeasureTextCached(Str s) {
     MeasureCache* mc = GetMeasureCacheForCurrFont();
     if (!mc) {
         return textMeasure->Measure(s);
     }
-    // MapStrToInt keys are UTF-8; the WStr text is our key
-    TempStr key = ToUtf8Temp(s);
+    // MapStrToInt keys are utf-8, which is what we measure, so s is the key
     int existingIdx = 0;
     int idx = len(mc->vals);
-    if (!mc->keys->Insert(key, idx, &existingIdx)) {
+    if (!mc->keys->Insert(s, idx, &existingIdx)) {
         return mc->vals[existingIdx];
     }
     RectF bbox = textMeasure->Measure(s);
@@ -383,7 +274,7 @@ void HtmlFormatter::AppendInstr(const DrawInstr& di) {
     }
 }
 
-void HtmlFormatter::SetFont(WStr fontName, PlatformFontStyle fs, float fontSize) {
+void HtmlFormatter::SetFont(Str fontName, PlatformFontStyle fs, float fontSize) {
     if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
     }
@@ -398,7 +289,7 @@ void HtmlFormatter::SetFont(WStr fontName, PlatformFontStyle fs, float fontSize)
 }
 
 void HtmlFormatter::SetFontBasedOn(PlatformFont* font, PlatformFontStyle fs, float fontSize) {
-    WStr fontName = font->GetName();
+    Str fontName = font->GetName();
     if (len(fontName) == 0) {
         fontName = defaultFontName;
     }
@@ -446,8 +337,9 @@ static bool IsVisibleDrawInstr(DrawInstr& i) {
         case DrawInstrType::Line:
         case DrawInstrType::Image:
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 // sum of widths of all elements with a fixed size and flexible
@@ -485,7 +377,7 @@ float HtmlFormatter::CurrLineDy() {
 // indentation inside lists)
 float HtmlFormatter::NewLineX() const {
     // TODO: indent based on font size instead?
-    float x = 15.f * listDepth;
+    float x = 15.f * (float)listDepth;
     if (x < pageDx - 20.f) {
         return x;
     }
@@ -879,13 +771,44 @@ void HtmlFormatter::EmitElasticSpace() {
 }
 
 // return true if we can break a word on a given character during layout
-static bool CanBreakWordOnChar(WCHAR c) {
+static bool CanBreakWordOnChar(int c) {
     // don't break on Chinese and Japan characters
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/250
     // https://github.com/sumatrapdfreader/sumatrapdf/pull/1057
     // There are other  ranges, but far less common
     // https://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
     return c >= 0x2E80 && c <= 0xA4CF;
+}
+
+// how much of `run` the first `bufLen` bytes of its soft-hyphen-stripped copy
+// cover
+static int RunLenForBufLen(Str run, int bufLen) {
+    int i = 0;
+    int n = 0;
+    while (i < len(run) && n < bufLen) {
+        if ((u8)run.s[i] == 0xC2 && (i + 1) < len(run) && (u8)run.s[i + 1] == 0xAD) {
+            i += 2;
+            continue;
+        }
+        i++;
+        n++;
+    }
+    return i;
+}
+
+// soft hyphens (U+00AD, 0xC2 0xAD in utf-8) should not be displayed
+static void RemoveSoftHyphensInPlace(Str& s) {
+    char* dst = s.s;
+    const char* src = s.s;
+    const char* end = s.s + s.len;
+    while (src < end) {
+        if ((u8)src[0] == 0xC2 && (src + 1) < end && (u8)src[1] == 0xAD) {
+            src += 2;
+            continue;
+        }
+        *dst++ = *src++;
+    }
+    s.len = (int)(dst - s.s);
 }
 
 // a text run is a string of consecutive text with uniform style
@@ -906,9 +829,8 @@ void HtmlFormatter::EmitTextRun(Str s) {
             currReparseIdx = htmlParser->PosOf(run);
         }
 
-        TempWStr buf = ToWStrTemp(run);
-        // soft hyphens should not be displayed
-        buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
+        TempStr buf = str::DupTemp(run);
+        RemoveSoftHyphensInPlace(buf);
         if (len(buf) == 0) {
             break;
         }
@@ -924,10 +846,10 @@ void HtmlFormatter::EmitTextRun(Str s) {
         int lenThatFits = textMeasure->StringLenForWidth(buf, pageDx - currX, bbox.dx);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
-            if (!CanBreakWordOnChar(buf.s[lenThatFits])) {
+            if (!CanBreakWordOnChar(Utf8CodepointContaining(buf, lenThatFits))) {
                 int lenTmp;
                 for (lenTmp = lenThatFits; lenTmp > 0; lenTmp--) {
-                    if (CanBreakWordOnChar(buf.s[lenTmp - 1])) {
+                    if (CanBreakWordOnChar(Utf8CodepointContaining(buf, lenTmp - 1))) {
                         break;
                     }
                 }
@@ -949,18 +871,20 @@ void HtmlFormatter::EmitTextRun(Str s) {
             continue;
         }
 
-        textMeasure->SetFont(CurrFont());
-        bbox = MeasureTextCached(WStr(buf.s, lenThatFits));
-        ReportIf(bbox.dx > pageDx);
-        // s is UTF-8 and buf is UTF-16, so one
-        // WCHAR doesn't always equal one char
-        // TODO: this usually fails for non-BMP characters (i.e. hardly ever)
-        for (int i = lenThatFits; i > 0; i--) {
-            lenThatFits += buf.s[i - 1] < 0x80 ? 0 : buf.s[i - 1] < 0x800 ? 1 : 2;
+        // never cut a utf-8 sequence in half (this used to be the utf-16
+        // surrogate-pair case)
+        if (lenThatFits < len(buf)) {
+            lenThatFits = Utf8CodepointStartByte(buf, lenThatFits);
         }
-        AppendInstr(DrawInstr::Text(Str(run.s, lenThatFits), bbox, dirRtl));
+        textMeasure->SetFont(CurrFont());
+        bbox = MeasureTextCached(Str(buf.s, lenThatFits));
+        ReportIf(bbox.dx > pageDx);
+        // buf is `run` with the soft hyphens removed, so a length in buf maps
+        // back to a longer one in run
+        int runLenThatFits = RunLenForBufLen(run, lenThatFits);
+        AppendInstr(DrawInstr::Text(Str(run.s, runLenThatFits), bbox, dirRtl));
         currX += bbox.dx;
-        run = Str(run.s + lenThatFits, run.len - lenThatFits);
+        run = Str(run.s + runLenThatFits, run.len - runLenThatFits);
     }
 }
 
@@ -968,16 +892,13 @@ void HtmlFormatter::EmitTextRun(Str s) {
 // position. Unlike EmitTextRun, s isn't part of the source HTML, so it must
 // stay valid for the lifetime of the page: pass a string literal or one
 // allocated in textAllocator.
+// emits a synthetic, persistent string (e.g. a list bullet/number)
 void HtmlFormatter::EmitTextMarker(Str s) {
     if (!s) {
         return;
     }
-    TempWStr buf = ToWStrTemp(s);
-    if (len(buf) == 0) {
-        return;
-    }
     textMeasure->SetFont(CurrFont());
-    RectF bbox = MeasureTextCached(buf);
+    RectF bbox = MeasureTextCached(s);
     AppendInstr(DrawInstr::Text(s, bbox, dirRtl));
     currX += bbox.dx;
 }
@@ -1077,12 +998,12 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     }
 
     AttrInfo* attr = t->GetAttrByName(StrL("face"));
-    WStr faceName = CurrFont()->GetName();
-    if (attr) {
-        TempWStr buf = ToWStrTemp(attr->val);
+    Str faceName = CurrFont()->GetName();
+    if (attr && !overrideFontName) {
+        TempStr buf = str::DupTemp(attr->val);
         // multiple font names can be comma separated
-        if (buf && buf.s[0] != L',') {
-            wstr::TransCharsInPlace(buf, WStrL(L","), WStrL(L"\0"));
+        if (buf && buf.s[0] != ',') {
+            str::TransCharsInPlace(buf, StrL(","), StrL("\0"));
             faceName = buf;
         }
     }
@@ -1132,8 +1053,9 @@ inline bool IsTagH(HtmlTag tag) {
         case Tag_H5:
         case Tag_H6:
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 void HtmlFormatter::HandleTagHx(HtmlToken* t) {
@@ -1170,7 +1092,7 @@ void HtmlFormatter::HandleTagList(HtmlToken* t) {
 void HtmlFormatter::HandleTagPre(HtmlToken* t) {
     FlushCurrLine(true);
     if (t->IsStartTag()) {
-        SetFont(WStrL(L"Courier New"), CurrFont()->GetStyle());
+        SetFont(StrL("Courier New"), CurrFont()->GetStyle());
         CurrStyle()->align = AlignAttr::Left;
         preFormatted = true;
     } else if (t->IsEndTag()) {
@@ -1453,7 +1375,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         }
     } else if (Tag_Code == tag || Tag_Tt == tag) {
         if (t->IsStartTag()) {
-            SetFont(WStrL(L"Courier New"), CurrFont()->GetStyle());
+            SetFont(StrL("Courier New"), CurrFont()->GetStyle());
         } else if (t->IsEndTag()) {
             RevertStyleChange();
         }
@@ -1626,7 +1548,6 @@ Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
 #if OS_WIN
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::Graphics;
 using Gdiplus::Ok;
 using Gdiplus::Pen;
@@ -1634,11 +1555,11 @@ using Gdiplus::Status;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Gdiplus::Color textColor, bool* abortCookie) {
-    Pen debugPen(Color(255, 0, 0), 1);
-    // Pen linePen(Color(0, 0, 0), 2.f);
-    Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
+void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
+                  float offY, bool showBbox, Color textColor, bool* abortCookie) {
+    Pen debugPen(Gdiplus::Color(255, 0, 0), 1);
+    // Pen linePen(Gdiplus::Color(0, 0, 0), 2.f);
+    Pen linePen(Gdiplus::Color(0x5F, 0x4B, 0x32), 2.f);
 
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else
@@ -1652,12 +1573,11 @@ void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInst
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            TempWStr buf = ToWStrTemp(i.str);
-            // soft hyphens should not be displayed
-            buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
+            TempStr buf = str::DupTemp(i.str);
+            RemoveSoftHyphensInPlace(buf);
             textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
-            textDraw->SetFont(i.font->GetCachedFont());
+            textDraw->SetFont(i.font);
         }
         if (abortCookie && *abortCookie) {
             break;
@@ -1725,7 +1645,7 @@ void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInst
 #endif
 
 static PlatformTextMeasureMethod gTextRenderMethod = PlatformTextMeasureMethod::Gdi;
-// static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethodGdiplus;
+// static TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;
 
 PlatformTextMeasureMethod GetTextRenderMethod() {
     return gTextRenderMethod;

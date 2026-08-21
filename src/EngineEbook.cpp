@@ -6,21 +6,23 @@
 
 #include "base/Base.h"
 #include "base/Archive.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/File.h"
 #include "base/HtmlTags.h"
 #include "base/Pixmap.h"
 
-#include "GumboHtmlParser.h"
 #include "GumboHelpers.h"
+#include "GumboHtmlParser.h"
 
 #include "DocProperties.h"
 #include "ImageReader.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"
 #include "EbookDoc.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
@@ -30,11 +32,8 @@
 #include "base/Win.h"
 #include "base/Zip.h"
 
-#include "mui/Mui.h"
-
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
-using Gdiplus::Color;
 using Gdiplus::FontFamily;
 using Gdiplus::Graphics;
 using Gdiplus::Matrix;
@@ -53,6 +52,7 @@ Kind kindEngineHtml = "engineHtml";
 Kind kindEngineTxt = "engineTxt";
 
 static Str gDefaultFontName;
+static Str gDefaultChmFontName;
 static float gDefaultFontSize = 10.f;
 
 static WStr GetDefaultFontName() {
@@ -61,6 +61,13 @@ static WStr GetDefaultFontName() {
         return ToWStrTemp(s);
     }
     return WStrL(L"Georgia");
+}
+
+static WStr GetDefaultChmFontName() {
+    if (gDefaultChmFontName) {
+        return ToWStrTemp(gDefaultChmFontName);
+    }
+    return GetDefaultFontName();
 }
 
 static float GetDefaultFontSize() {
@@ -74,7 +81,7 @@ static float GetDefaultFontSize() {
 
 void SetDefaultEbookFont(Str name, float size) {
     // intentionally don't validate the input
-    if (str::Eq(name, "default")) {
+    if (str::Eq(name, StrL("default"))) {
         // "default" is used for mupdf engine to indicate
         // we should use the font as given in css
         name = StrL("Georgia");
@@ -83,6 +90,10 @@ void SetDefaultEbookFont(Str name, float size) {
     // use a somewhat smaller size than in the EbookUI, since fit page/width
     // is likely to be above 100% for the paperback page dimensions
     gDefaultFontSize = size * 0.8f;
+}
+
+void SetDefaultChmFont(Str name) {
+    gDefaultChmFontName = name ? str::Dup(GetPermArena(), name) : Str();
 }
 
 /* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, HTML and TXT engines */
@@ -134,6 +145,7 @@ class EngineEbook : public EngineBase {
 
     IPageDestination* GetNamedDest(Str name) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
+    Str GetImageDataForPageElement(IPageElement* el) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -165,8 +177,7 @@ class EngineEbook : public EngineBase {
     HtmlPage* GetHtmlPage2(int pageNo);
 };
 
-static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* dest, int pageNo = 0,
-                                  bool showUrl = false) {
+static IPageElement* NewEbookLink(Rect rect, IPageDestination* dest, int pageNo = 0) {
     if (!dest) {
         // TODO: this doesn't make sense
         dest = new PageDestination();
@@ -192,7 +203,8 @@ static IPageElement* NewImageDataElement(int pageNo, Rect bbox, int imageID) {
 }
 
 static TocItem* newEbookTocItem(TocItem* parent, Str title, IPageDestination* dest) {
-    auto res = new TocItem(parent, title, 0);
+    auto res = AllocTocItem(nullptr, title, 0);
+    res->parent = parent;
     res->dest = dest;
     if (dest) {
         res->pageNo = PageDestGetPageNo(dest);
@@ -385,9 +397,9 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     DeleteObject(SelectObject(hDC, hbmp));
 
     Graphics g(hDC);
-    mui::InitGraphicsMode(&g);
+    InitGraphicsMode(&g);
 
-    Color white(0xFF, 0xFF, 0xFF);
+    Gdiplus::Color white(0xFF, 0xFF, 0xFF);
     SolidBrush tmpBrush(white);
     Gdiplus::Rect screenR(ToGdipRect(screen));
     screenR.Inflate(1, 1);
@@ -406,8 +418,8 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 
     ScopedMutex scope(&pagesAccess);
 
-    mui::ITextRender* textDraw = mui::TextRenderGdiplus::Create(&g);
-    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black),
+    PlatformTextRender* textDraw = CreateGdiplusTextRender(&g);
+    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, kColBlack,
                  cookie ? &cookie->abort : nullptr);
     delete textDraw;
     DeleteDC(hDC);
@@ -521,7 +533,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     Str linkStr = link->str;
     TempStr url = strconv::HtmlUtf8ToStrTemp(linkStr);
     if (url::IsAbsolute(url)) {
-        return NewEbookLink(link, rect, nullptr, pageNo);
+        return NewEbookLink(rect, nullptr, pageNo);
     }
 
     DrawInstr* baseAnchor = baseAnchors[pageNo - 1];
@@ -535,7 +547,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     if (!dest) {
         return nullptr;
     }
-    return NewEbookLink(link, rect, dest, pageNo);
+    return NewEbookLink(rect, dest, pageNo);
 }
 
 Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
@@ -569,11 +581,11 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
 static RenderedBitmap* getImageFromData(Str imageData) {
     HBITMAP hbmp = nullptr;
     Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(imageData));
-    if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
+    if (!bmp || bmp->GetHBITMAP((ARGB)Gdiplus::Color::White, &hbmp) != Ok) {
         delete bmp;
         return nullptr;
     }
-    Size size(bmp->GetWidth(), bmp->GetHeight());
+    Size size((int)bmp->GetWidth(), (int)bmp->GetHeight());
     delete bmp;
     return new RenderedBitmap(hbmp, size);
 }
@@ -593,6 +605,22 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     ReportIf(i.type != DrawInstrType::Image);
     return getImageFromData(i.GetImage());
 #endif
+}
+
+Str EngineEbook::GetImageDataForPageElement(IPageElement* iel) {
+    if (!iel || iel->GetKind() != kindPageElementImage) {
+        return {};
+    }
+    PageElementImage* el = (PageElementImage*)iel;
+    Vec<DrawInstr>* pageInstrs = GetHtmlPage(el->pageNo);
+    if (!pageInstrs || el->imageID < 0 || el->imageID >= len(*pageInstrs)) {
+        return {};
+    }
+    auto&& i = (*pageInstrs)[el->imageID];
+    if (i.type != DrawInstrType::Image) {
+        return {};
+    }
+    return str::Dup(i.GetImage());
 }
 
 // don't delete the result
@@ -678,14 +706,14 @@ TempStr EngineEbook::ExtractFontListTemp() {
             seenFonts.Append(i.font);
 
 #if OS_WIN
-            mui::CachedFont* font = i.font->GetCachedFont();
+            PlatformFont* font = i.font;
             FontFamily family;
-            if (!font || !font->font) {
+            if (!font || !font->gdiFont) {
                 // TODO: handle gdi
                 ReportIf(font && !font->GetHFont());
                 continue;
             }
-            Status ok = font->font->GetFamily(&family);
+            Status ok = font->gdiFont->GetFamily(&family);
             if (ok != Ok) {
                 continue;
             }
@@ -697,8 +725,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
             TempStr fontName = ToUtf8Temp(fontNameW);
             AppendIfNotExists(&fonts, fontName);
 #else
-            TempStr fontName = ToUtf8Temp(i.font->GetName());
-            AppendIfNotExists(&fonts, fontName);
+            AppendIfNotExists(&fonts, i.font->GetName());
 #endif
         }
     }
@@ -755,8 +782,7 @@ void EbookTocBuilder::Visit(Str name, Str url, int level) {
     } else {
         dest = engine->GetNamedDest(url);
         if (!dest && str::ContainsChar(url, '%')) {
-            TempStr decodedUrl = str::DupTemp(url);
-            url::DecodeInPlace(decodedUrl.s);
+            TempStr decodedUrl = url::DecodeTemp(url);
             dest = engine->GetNamedDest(decodedUrl);
         }
     }
@@ -800,7 +826,7 @@ class EngineEpub : public EngineEbook {
     bool FinishLoading();
 };
 
-EngineEpub::EngineEpub() : EngineEbook() {
+EngineEpub::EngineEpub() {
     kind = kindEngineEpub;
     SetDefaultExt(defaultExt, ".epub");
 }
@@ -877,6 +903,7 @@ bool EngineEpub::FinishLoading() {
     }
 
     preferredLayout = PageLayout(PageLayout::Type::Book);
+    preferredLayout.r2lDeclared = doc->HasReadingDirection();
     if (doc->IsRTL()) {
         preferredLayout.r2l = true;
     }
@@ -894,7 +921,7 @@ TocTree* EngineEpub::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -918,6 +945,7 @@ EngineBase* EngineEpub::CreateFromData(Str data) {
     return engine;
 }
 
+/* EngineEbook.cpp */
 EngineBase* CreateEngineEpubFromFile(Str fileName) {
     return EngineEpub::CreateFromFile(fileName);
 }
@@ -930,7 +958,7 @@ EngineBase* CreateEngineEpubFromData(Str data) {
 
 class EngineFb2 : public EngineEbook {
   public:
-    EngineFb2() : EngineEbook() {
+    EngineFb2() {
         kind = kindEngineFb2;
         SetDefaultExt(defaultExt, ".fb2");
     }
@@ -1019,7 +1047,7 @@ TocTree* EngineFb2::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1057,7 +1085,7 @@ EngineBase* CreateEngineFb2FromData(Str data) {
 
 class EngineMobi : public EngineEbook {
   public:
-    EngineMobi() : EngineEbook() {
+    EngineMobi() {
         kind = kindEngineMobi;
         SetDefaultExt(defaultExt, ".mobi");
     }
@@ -1180,7 +1208,7 @@ TocTree* EngineMobi::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1216,7 +1244,7 @@ EngineBase* CreateEngineMobiFromData(Str data) {
 
 class EnginePdb : public EngineEbook {
   public:
-    EnginePdb() : EngineEbook() {
+    EnginePdb() {
         kind = kindEnginePdb;
         SetDefaultExt(defaultExt, ".pdb");
     }
@@ -1287,7 +1315,7 @@ TocTree* EnginePdb::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1383,13 +1411,15 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName(StrL("src"));
     if (attr) {
-        Str src = str::DupTemp(attr->val);
-        url::DecodeInPlace(src);
+        TempStr src = url::DecodeTemp(attr->val);
         Str img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
-        HandleText(str::Dup(textAllocator, attr->val));
+    if (needAlt) {
+        attr = t->GetAttrByName(StrL("alt"));
+        if (attr != nullptr) {
+            HandleText(str::Dup(textAllocator, attr->val));
+        }
     }
 }
 
@@ -1427,8 +1457,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = str::DupTemp(attr->val);
-    url::DecodeInPlace(src);
+    TempStr src = url::DecodeTemp(attr->val);
     TempStr data = chmDoc->GetFileData(src, pagePath);
     if ((u8*)data.s) {
         ParseStyleSheet(data);
@@ -1439,7 +1468,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
 
 class EngineChm : public EngineEbook {
   public:
-    EngineChm() : EngineEbook() {
+    EngineChm() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
@@ -1502,7 +1531,7 @@ static uint HttpCharsetFromMetaNode(const GumboNode* node) {
         return 0;
     }
     const GumboAttribute* httpEquiv = gumbo_get_attribute(&node->v.element.attributes, "http-equiv");
-    if (!httpEquiv || !str::EqI(httpEquiv->value, "Content-Type")) {
+    if (!httpEquiv || !str::EqI(httpEquiv->value, StrL("Content-Type"))) {
         return 0;
     }
     const GumboAttribute* content = gumbo_get_attribute(&node->v.element.attributes, "content");
@@ -1582,7 +1611,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
         StrVec paths;
         doc->GetAllPaths(&paths);
         for (Str path : paths) {
-            if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
+            if (str::EndsWithI(path, StrL(".htm")) || str::EndsWithI(path, StrL(".html"))) {
                 if (path.s[0] == '/') {
                     path = Str(path.s + 1, path.len - 1);
                 }
@@ -1633,7 +1662,8 @@ bool EngineChm::Load(Str fileName) {
     args.htmlStr = dataCache->GetHtmlData();
     args.pageDx = (float)pageRect.dx - (2 * pageBorder);
     args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
+    args.SetFontName(GetDefaultChmFontName());
+    args.overrideFontName = len(gDefaultChmFontName) > 0;
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
     args.textRenderMethod = GetTextRenderMethod();
@@ -1681,7 +1711,7 @@ TocTree* EngineChm::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1707,7 +1737,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     }
 
     IPageDestination* dest = newChmEmbeddedDest(url);
-    return NewEbookLink(link, rect, dest, pageNo);
+    return NewEbookLink(rect, dest, pageNo);
 }
 
 EngineBase* EngineChm::CreateFromFile(Str path) {
@@ -1728,7 +1758,7 @@ EngineBase* CreateEngineChmFromFile(Str fileName) {
 
 class EngineHtml : public EngineEbook {
   public:
-    EngineHtml() : EngineEbook() {
+    EngineHtml() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         SetDefaultExt(defaultExt, ".html");
@@ -1810,7 +1840,7 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
     }
 
     IPageDestination* dest = newRemoteHtmlDest(url);
-    return NewEbookLink(link, rect, dest, pageNo, true);
+    return NewEbookLink(rect, dest, pageNo);
 }
 
 EngineBase* EngineHtml::CreateFromFile(Str path) {
@@ -1830,7 +1860,7 @@ EngineBase* CreateEngineHtmlFromFile(Str fileName) {
 
 class EngineTxt : public EngineEbook {
   public:
-    EngineTxt() : EngineEbook() {
+    EngineTxt() {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
@@ -1912,7 +1942,7 @@ TocTree* EngineTxt::GetToc() {
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
 
-    auto realRoot = new TocItem();
+    auto realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = root;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -1933,4 +1963,5 @@ EngineBase* CreateEngineTxtFromFile(Str fileName) {
 
 void EngineEbookCleanup() {
     gDefaultFontName = {};
+    gDefaultChmFontName = {};
 }

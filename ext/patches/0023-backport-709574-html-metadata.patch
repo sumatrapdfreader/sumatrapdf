@@ -1,0 +1,266 @@
+backport: title/author/subject metadata for html and fb2 (bug 709574)
+
+BACKPORT of upstream mupdf 976c9f122e31f48e4b7f4dfd44a0b2703902085a, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709574
+
+This is our own patch, upstreamed: the commit says "Based on a patch from
+Krzysztof Kowalczyk of SumatraPDF", and it took our append_xml_text() /
+collect_text() helpers verbatim. It replaces our
+0015-html-fb2-author-and-annotation.
+
+Upstream generalised it rather than bolting author/subject onto fz_html: the
+parser now fills an fz_html_metadata { title, author, subject } instead of a
+lone char **rtitle, and html title extraction goes through the same
+text-gathering helpers, which is a little more resilient than reading a single
+text node. Same three properties reach Document Properties as before.
+---
+diff --git a/source/html/html-doc.c b/source/html/html-doc.c
+index aec5477..f5792e8 100644
+--- a/source/html/html-doc.c
++++ b/source/html/html-doc.c
+@@ -173,8 +173,12 @@ htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char
+ 	html_document *doc = (html_document *)doc_;
+ 	if (!strcmp(key, FZ_META_FORMAT))
+ 		return 1 + (int)fz_strlcpy(buf, doc->format->format_name, size);
+-	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
+-		return 1 + (int)fz_strlcpy(buf, doc->html->title, size);
++	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->metadata.title)
++		return 1 + (int)fz_strlcpy(buf, doc->html->metadata.title, size);
++	if (!strcmp(key, FZ_META_INFO_AUTHOR) && doc->html->metadata.author)
++		return 1 + (int)fz_strlcpy(buf, doc->html->metadata.author, size);
++	if (!strcmp(key, FZ_META_INFO_SUBJECT) && doc->html->metadata.subject)
++		return 1 + (int)fz_strlcpy(buf, doc->html->metadata.subject, size);
+ 	return -1;
+ }
+ 
+diff --git a/source/html/html-imp.h b/source/html/html-imp.h
+index ce0be26..1d5f75e 100644
+--- a/source/html/html-imp.h
++++ b/source/html/html-imp.h
+@@ -352,6 +352,13 @@ typedef struct
+ 	fz_html_box *root;
+ } fz_html_tree;
+ 
++typedef struct
++{
++	char *title;
++	char *author;
++	char *subject;
++} fz_html_metadata;
++
+ struct fz_html_s
+ {
+ 	/* fz_html is derived from fz_html_tree, so must start with that. */
+@@ -362,7 +369,7 @@ struct fz_html_s
+ 	float meta_w, meta_h;
+ 	float layout_w, layout_h, layout_em;
+ 	float page_margin[4];
+-	char *title;
++	fz_html_metadata metadata;
+ };
+ 
+ typedef enum
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index 5329044..6d4d26e 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -2033,6 +2033,67 @@ static void parse_meta_viewport(fz_context *ctx, const char *viewport, float *me
+ 		*meta_h = fz_atoi(p + 7);
+ }
+ 
++static void
++append_xml_text(fz_context *ctx, fz_buffer *buf, fz_xml *node)
++{
++	while (node)
++	{
++		const char *text = fz_xml_text(node);
++		if (text && text[0])
++		{
++			/* skip pure whitespace text nodes between elements */
++			const char *p = text;
++			while (*p && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r'))
++				p++;
++			if (*p)
++			{
++				if (fz_buffer_storage(ctx, buf, NULL) > 0)
++					fz_append_byte(ctx, buf, ' ');
++				fz_append_string(ctx, buf, text);
++			}
++		}
++		append_xml_text(ctx, buf, fz_xml_down(node));
++		node = fz_xml_next(node);
++	}
++}
++
++static char *
++collect_text(fz_context *ctx, fz_pool *pool, fz_xml *node)
++{
++	fz_buffer *buf;
++	char *s = NULL;
++	unsigned char *data = NULL;
++	size_t len;
++
++	if (!node)
++		return NULL;
++
++	buf = fz_new_buffer(ctx, 128);
++	fz_try(ctx)
++	{
++		append_xml_text(ctx, buf, fz_xml_down(node));
++		fz_terminate_buffer(ctx, buf);
++		len = fz_buffer_storage(ctx, buf, &data);
++		if (len > 0 && data)
++		{
++			char *start = (char *)data;
++			char *end;
++			while (*start == ' ' || *start == '\t' || *start == '\n' || *start == '\r')
++				start++;
++			end = start + strlen(start);
++			while (end > start && (end[-1] == ' ' || end[-1] == '\t' || end[-1] == '\n' || end[-1] == '\r'))
++				*--end = 0;
++			if (*start)
++				s = fz_pool_strdup(ctx, pool, start);
++		}
++	}
++	fz_always(ctx)
++		fz_drop_buffer(ctx, buf);
++	fz_catch(ctx)
++		fz_rethrow(ctx);
++	return s;
++}
++
+ static void
+ xml_to_boxes(fz_context *ctx,
+ 	fz_html_font_set *set,
+@@ -2041,16 +2102,15 @@ xml_to_boxes(fz_context *ctx,
+ 	const char *user_css,
+ 	fz_xml_doc *xml,
+ 	fz_html_tree *tree,
+-	char **rtitle,
++	fz_html_metadata *metadata,
+ 	fz_html_flavor flavor,
+ 	int publisher_css,
+ 	float *meta_w,
+ 	float *meta_h
+ )
+ {
+-	fz_xml *root, *node, *head;
++	fz_xml *root, *node, *head, *node2;
+ 	char *viewport;
+-	char *title;
+ 
+ 	fz_css_match root_match, match;
+ 	struct genstate g = {0};
+@@ -2075,8 +2135,8 @@ xml_to_boxes(fz_context *ctx,
+ 	g.publisher_css = publisher_css;
+ 	g.depth = 0;
+ 
+-	if (rtitle)
+-		*rtitle = NULL;
++	if (metadata)
++		memset(metadata, 0, sizeof(*metadata));
+ 
+ 	root = fz_xml_root(g.xml);
+ 	g.css = fz_new_css(ctx);
+@@ -2167,27 +2227,27 @@ xml_to_boxes(fz_context *ctx,
+ 
+ 		if (g.is_fb2)
+ 		{
+-			node = fz_xml_find(root, "FictionBook");
+-			node = fz_xml_find_down(node, "description");
+-			node = fz_xml_find_down(node, "title-info");
+-			node = fz_xml_find_down(node, "book-title");
+-			if (rtitle)
++			if (metadata)
+ 			{
+-				title = fz_xml_text(fz_xml_down(node));
+-				if (title)
+-					*rtitle = fz_pool_strdup(ctx, g.pool, title);
++				node = fz_xml_find(root, "FictionBook");
++				node = fz_xml_find_down(node, "description");
++				node = fz_xml_find_down(node, "title-info");
++				node2 = fz_xml_find_down(node, "book-title");
++				metadata->title = collect_text(ctx, g.pool, node2);
++				node2 = fz_xml_find_down(node, "author");
++				metadata->author = collect_text(ctx, g.pool, node2);
++				node2 = fz_xml_find_down(node, "annotation");
++				metadata->subject = collect_text(ctx, g.pool, node2);
+ 			}
+ 		}
+ 		else
+ 		{
+-			head = fz_xml_find(root, "html");
+-			head = fz_xml_find_down(head, "head");
+-			node = fz_xml_find_down(head, "title");
+-			if (rtitle)
++			if (metadata)
+ 			{
+-				title = fz_xml_text(fz_xml_down(node));
+-				if (title)
+-					*rtitle = fz_pool_strdup(ctx, g.pool, title);
++				head = fz_xml_find(root, "html");
++				head = fz_xml_find_down(head, "head");
++				node = fz_xml_find_down(head, "title");
++				metadata->title = collect_text(ctx, g.pool, node);
+ 			}
+ 
+ 			// Move html or body background-color to :root.
+@@ -2214,10 +2274,14 @@ xml_to_boxes(fz_context *ctx,
+ 	}
+ 	fz_catch(ctx)
+ 	{
+-		if (rtitle)
++		if (metadata)
+ 		{
+-			fz_free(ctx, *rtitle);
+-			*rtitle = NULL;
++			fz_free(ctx, metadata->title);
++			metadata->title = NULL;
++			fz_free(ctx, metadata->author);
++			metadata->author = NULL;
++			fz_free(ctx, metadata->subject);
++			metadata->subject = NULL;
+ 		}
+ 		fz_rethrow(ctx);
+ 	}
+@@ -2320,7 +2384,7 @@ patch_mobi_html(fz_context *ctx, fz_pool *pool, fz_xml *node)
+ static void
+ fz_parse_html_tree(fz_context *ctx,
+ 	fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css,
+-	int try_xml, int try_html5, fz_html_tree *tree, char **rtitle, fz_html_flavor flavor,
++	int try_xml, int try_html5, fz_html_tree *tree, fz_html_metadata *metadata, fz_html_flavor flavor,
+ 	int publisher_css,
+ 	float *meta_w,
+ 	float *meta_h
+@@ -2328,8 +2392,8 @@ fz_parse_html_tree(fz_context *ctx,
+ {
+ 	fz_xml_doc *xml;
+ 
+-	if (rtitle)
+-		*rtitle = NULL;
++	if (metadata)
++		memset(metadata, 0, sizeof(*metadata));
+ 
+ 	xml = parse_to_xml(ctx, buf, try_xml, try_html5);
+ 
+@@ -2337,7 +2401,7 @@ fz_parse_html_tree(fz_context *ctx,
+ 		patch_mobi_html(ctx, xml->u.doc.pool, fz_xml_root(xml));
+ 
+ 	fz_try(ctx)
+-		xml_to_boxes(ctx, set, zip, base_uri, user_css, xml, tree, rtitle, flavor, publisher_css,
++		xml_to_boxes(ctx, set, zip, base_uri, user_css, xml, tree, metadata, flavor, publisher_css,
+ 			meta_w, meta_h);
+ 	fz_always(ctx)
+ 		fz_drop_xml(ctx, xml);
+@@ -2384,7 +2448,7 @@ fz_parse_html(fz_context *ctx,
+ 	html->layout_em = 0;
+ 
+ 	fz_try(ctx)
+-		fz_parse_html_tree(ctx, set, zip, base_uri, buf, user_css, try_xml, try_html5, &html->tree, &html->title, flavor, publisher_css,
++		fz_parse_html_tree(ctx, set, zip, base_uri, buf, user_css, try_xml, try_html5, &html->tree, &html->metadata, flavor, publisher_css,
+ 			&html->meta_w, &html->meta_h);
+ 	fz_catch(ctx)
+ 	{

@@ -1,0 +1,106 @@
+css: let user-stylesheet !important declarations beat author rules and inline style
+
+In the CSS cascade a user-origin !important declaration outranks both author
+rules and inline style attributes. mupdf gave every !important the same weight,
+so a setting from SumatraPDF's user stylesheet lost to a publisher's inline
+style.
+
+Mark the rules parsed from the user stylesheet (fz_parse_css called with
+file == "<user>") and give their !important declarations a specificity above
+INLINE_SPECIFICITY.
+---
+diff --git a/source/html/css-apply.c b/source/html/css-apply.c
+index 0da95cb..fd483ff 100644
+--- a/source/html/css-apply.c
++++ b/source/html/css-apply.c
+@@ -435,12 +435,20 @@ count_selector_names(fz_css_selector *sel)
+ 
+ #define INLINE_SPECIFICITY 10000
+ 
++/* SumatraPDF: a user (settings) stylesheet's !important declarations must beat
++ * the publisher's rules *and* inline style attributes, as they do in a browser
++ * (in the CSS cascade user-origin !important wins over author-origin).
++ * Above INLINE_SPECIFICITY but well inside the short of fz_css_match.spec */
++#define USER_IMPORTANT_SPECIFICITY 20000
++
+ static int
+-selector_specificity(fz_css_selector *sel, int important)
++selector_specificity(fz_css_selector *sel, int important, int user)
+ {
+ 	int b = count_selector_ids(sel);
+ 	int c = count_selector_atts(sel);
+ 	int d = count_selector_names(sel);
++	if (important && user)
++		return USER_IMPORTANT_SPECIFICITY + b * 100 + c * 10 + d;
+ 	return important * 1000 + b * 100 + c * 10 + d;
+ }
+ 
+@@ -1088,7 +1096,7 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css
+ 			if (match_selector(sel, node, pseudo))
+ 			{
+ 				for (prop = rule->declaration; prop; prop = prop->next)
+-					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important));
++					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important, rule->user));
+ 				break;
+ 			}
+ 			sel = sel->next;
+@@ -1143,7 +1151,7 @@ fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css)
+ 			if (sel->name && !strcmp(sel->name, "@page"))
+ 			{
+ 				for (prop = rule->declaration; prop; prop = prop->next)
+-					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important));
++					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important, rule->user));
+ 				break;
+ 			}
+ 			sel = sel->next;
+@@ -2330,7 +2338,7 @@ static void print_rule(fz_css_rule *rule)
+ 	for (sel = rule->selector; sel; sel = sel->next)
+ 	{
+ 		print_selector(sel);
+-		printf(" /* %d */", selector_specificity(sel, 0));
++		printf(" /* %d */", selector_specificity(sel, 0, 0));
+ 		if (sel->next)
+ 			printf(", ");
+ 	}
+diff --git a/source/html/css-parse.c b/source/html/css-parse.c
+index 3b97063..49dc692 100644
+--- a/source/html/css-parse.c
++++ b/source/html/css-parse.c
+@@ -1193,7 +1193,22 @@ fz_css_property *fz_parse_css_properties(fz_context *ctx, fz_pool *pool, const c
+ void fz_parse_css(fz_context *ctx, fz_css *css, const char *source, const char *file)
+ {
+ 	struct lexbuf buf;
++	/* SumatraPDF: remember where the existing rules end so the ones parsed
++	 * from the user stylesheet can be marked (see fz_css_rule_s.user) */
++	int is_user = !strcmp(file, "<user>");
++	fz_css_rule *tail = is_user ? css->rule : NULL;
++	if (tail)
++		while (tail->next)
++			tail = tail->next;
++
+ 	css_lex_init(ctx, &buf, css->pool, source, file);
+ 	next(&buf);
+ 	css->rule = parse_stylesheet(&buf, css->rule);
++
++	if (is_user)
++	{
++		fz_css_rule *rule = tail ? tail->next : css->rule;
++		for (; rule; rule = rule->next)
++			rule->user = 1;
++	}
+ }
+diff --git a/source/html/html-imp.h b/source/html/html-imp.h
+index 6901c78..ce0be26 100644
+--- a/source/html/html-imp.h
++++ b/source/html/html-imp.h
+@@ -90,6 +90,10 @@ struct fz_css_rule_s
+ 	fz_css_property *declaration;
+ 	fz_css_rule *next;
+ 	int loaded;
++	/* SumatraPDF: rule comes from the user stylesheet (fz_style_document's
++	 * user_css), which makes its !important declarations outrank both the
++	 * publisher's rules and inline style attributes */
++	int user;
+ };
+ 
+ struct fz_css_selector_s

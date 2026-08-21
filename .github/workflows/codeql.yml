@@ -52,7 +52,7 @@ jobs:
           build-mode: ${{ matrix.build-mode }}
 
       - if: matrix.build-mode == 'manual'
-        run: bun .\cmd\build-codeql.ts
+        run: bun .\cmd\build.ts -codeql
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4

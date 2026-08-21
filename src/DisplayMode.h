@@ -9,6 +9,8 @@ bool IsValidZoom(float zoomLevel);
 
 Str DisplayModeToString(DisplayMode mode);
 DisplayMode DisplayModeFromString(Str s, DisplayMode defVal);
+bool TryParseDisplayMode(Str s, DisplayMode* modeOut);
+bool IsPageAspectDisplayMode(Str s);
 float ZoomFromString(Str s, float defVal);
 void ZoomToString(Str* dst, float zoom, FileState* fileState);
 bool MaybeGetNextZoomByIncrement(float* currZoomInOut, float towardsLevel);

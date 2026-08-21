@@ -13,8 +13,8 @@ struct FileInfo {
     const u8* compressedData;
 };
 
-// Note: good enough for our purposes, can be expanded when needed
-#define MAX_LZMA_ARCHIVE_FILES 128
+// translations + marked + mermaid + in-app manual assets share one LzSA
+#define MAX_LZMA_ARCHIVE_FILES 256
 
 struct SimpleArchive {
     int filesCount;
@@ -25,7 +25,6 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
 int GetIdxFromName(SimpleArchive* archive, Str name);
 u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* a);
 u8* GetFileDataByName(SimpleArchive* archive, Str fileName, Arena* a);
-// files is an array of Str entries, last element must be empty
 bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* a);
 
 } // namespace lzma

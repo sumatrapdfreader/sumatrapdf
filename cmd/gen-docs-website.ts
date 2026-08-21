@@ -1,79 +1,57 @@
-import {
-  existsSync,
-  rmSync,
-  readdirSync,
-  statSync,
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-  copyFileSync,
-} from "node:fs";
-import { join, resolve, extname } from "node:path";
-import { $ } from "bun";
-import { copyFileNormalized, isGitClean } from "./util";
+import { existsSync, rmSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { copyFileNormalized } from "./util";
+
+const kCopiedWebsiteFiles = ["sumatra.css", "gen_toc.js", "gen_code_copy.js", "favicon.ico"];
 
 function getWebsiteDir(): string {
   return resolve(join("..", "hack", "webapps", "sumatra-website"));
 }
 
-async function runGitInDir(dir: string, ...args: string[]): Promise<string> {
-  const proc = Bun.spawn(["git", ...args], {
+function die(msg: string): never {
+  console.error(msg);
+  process.exit(1);
+}
+
+async function runInDir(dir: string, cmd: string, args: string[], opts?: { pipeStdout?: boolean }): Promise<string> {
+  const proc = Bun.spawn([cmd, ...args], {
     cwd: dir,
-    stdout: "pipe",
+    stdout: opts?.pipeStdout === false ? "inherit" : "pipe",
     stderr: "inherit",
   });
+  let out = "";
+  if (opts?.pipeStdout !== false && proc.stdout) {
+    out = await new Response(proc.stdout).text();
+  }
   const exitCode = await proc.exited;
-  const out = await new Response(proc.stdout).text();
   if (exitCode !== 0) {
-    throw new Error(`git ${args.join(" ")} failed with exit code ${exitCode}`);
+    throw new Error(`${cmd} ${args.join(" ")} failed with exit code ${exitCode}`);
   }
   return out;
 }
 
+async function runGitInDir(dir: string, ...args: string[]): Promise<string> {
+  return runInDir(dir, "git", args);
+}
+
 function getCurrentBranch(dir: string): string {
-  const proc = Bun.spawnSync(["git", "branch"], {
+  const proc = Bun.spawnSync(["git", "rev-parse", "--abbrev-ref", "HEAD"], {
     cwd: dir,
     stdout: "pipe",
-    stderr: "inherit",
+    stderr: "pipe",
   });
-  const s = new TextDecoder().decode(proc.stdout);
-  if (s.includes("(HEAD detached")) {
-    return "master";
+  if (proc.exitCode !== 0) {
+    const err = new TextDecoder().decode(proc.stderr).trim();
+    die(`git rev-parse failed in '${dir}': ${err || `exit ${proc.exitCode}`}`);
   }
-  for (const line of s.split("\n")) {
-    const l = line.trim();
-    if (l.startsWith("* ")) {
-      return l.slice(2);
-    }
-  }
-  return "";
+  return new TextDecoder().decode(proc.stdout).trim();
 }
 
-async function updateSumatraWebsite(): Promise<string> {
-  const dir = getWebsiteDir();
-  console.log(`sumatra website dir: '${dir}'`);
-  if (!existsSync(dir)) {
-    throw new Error(`directory for sumatra website '${dir}' doesn't exist`);
-  }
-  // if (!(await isGitClean(dir))) {
-  //   throw new Error(`github repository '${dir}' must be clean`);
-  // }
-  if (getCurrentBranch(dir) !== "master") {
-    throw new Error(`github repository '${dir}' must be on master branch`);
-  }
-  // git pull
-  const pullOut = await runGitInDir(dir, "pull");
-  if (pullOut.trim()) {
-    console.log(pullOut.trim());
-  }
-  const wwwDir = join(dir, "www");
-  if (!existsSync(wwwDir)) {
-    throw new Error(`directory for sumatra website '${wwwDir}' doesn't exist`);
-  }
-  return wwwDir;
+function copiedGitPaths(): string[] {
+  return ["www/docs-md", ...kCopiedWebsiteFiles.map((n) => `www/${n}`)];
 }
 
-function shouldCopyFile(name: string, isDir: boolean): boolean {
+function shouldCopyFile(name: string): boolean {
   const bannedSuffixes = [".go", ".bat"];
   for (const s of bannedSuffixes) {
     if (name.endsWith(s)) return false;
@@ -89,7 +67,7 @@ function shouldCopyFile(name: string, isDir: boolean): boolean {
 function copyFilesRecur(dstDir: string, srcDir: string): void {
   const entries = readdirSync(srcDir, { withFileTypes: true });
   for (const entry of entries) {
-    if (!shouldCopyFile(entry.name, entry.isDirectory())) continue;
+    if (!shouldCopyFile(entry.name)) continue;
     const srcPath = join(srcDir, entry.name);
     const dstPath = join(dstDir, entry.name);
     if (entry.isDirectory()) {
@@ -100,43 +78,82 @@ function copyFilesRecur(dstDir: string, srcDir: string): void {
   }
 }
 
+async function copyDocsToWebsite(websiteDir: string): Promise<void> {
+  const srcDir = join("docs", "md");
+  const dstDir = join(websiteDir, "www", "docs-md");
+  rmSync(dstDir, { recursive: true, force: true });
+  copyFilesRecur(dstDir, srcDir);
+  for (const name of kCopiedWebsiteFiles) {
+    copyFileNormalized(join(websiteDir, "www", name), join("docs", name));
+  }
+  rmSync(join(dstDir, ".obsidian"), { recursive: true, force: true });
+}
+
 async function main() {
   console.log("genHTMLDocsForWebsite starting");
   const timeStart = performance.now();
 
-  const wwwDir = await updateSumatraWebsite();
-  const currBranch = getCurrentBranch(wwwDir);
-  if (currBranch !== "master") {
-    throw new Error(`expected master branch, got '${currBranch}'`);
-  }
-
-  // copy docs/md to website/www/docs-md
-  const srcDir = join("docs", "md");
   const websiteDir = getWebsiteDir();
-  const dstDir = join(websiteDir, "www", "docs-md");
-  rmSync(dstDir, { recursive: true, force: true });
-  copyFilesRecur(dstDir, srcDir);
-
-  // copy CSS and JS files
-  const htmlFiles = ["sumatra.css", "gen_toc.js", "gen_code_copy.js", "favicon.ico"];
-  for (const name of htmlFiles) {
-    const srcPath = join("docs", name);
-    const dstPath = join(websiteDir, "www", name);
-    copyFileNormalized(dstPath, srcPath);
+  console.log(`sumatra website dir: '${websiteDir}'`);
+  if (!existsSync(websiteDir)) {
+    die(`directory for sumatra website '${websiteDir}' doesn't exist`);
   }
 
-  // remove .obsidian directory
-  const obsidianDir = join(dstDir, ".obsidian");
-  rmSync(obsidianDir, { recursive: true, force: true });
+  const branch = getCurrentBranch(websiteDir);
+  if (branch !== "master") {
+    die(`sumatra-website must be on master (currently '${branch}')`);
+  }
 
-  // show git status
-  const statusOut = await runGitInDir(websiteDir, "status");
-  console.log(`\n${statusOut}`);
+  const dirty = (await runGitInDir(websiteDir, "status", "--porcelain", "--", ".")).trim();
+  if (dirty) {
+    die(`sumatra-website must be clean (no uncommitted changes):\n${dirty}`);
+  }
+
+  try {
+    const pullOut = await runGitInDir(websiteDir, "pull");
+    if (pullOut.trim()) {
+      console.log(pullOut.trim());
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    die(`git pull failed: ${msg}`);
+  }
+
+  const wwwDir = join(websiteDir, "www");
+  if (!existsSync(wwwDir)) {
+    die(`directory for sumatra website '${wwwDir}' doesn't exist`);
+  }
+
+  await copyDocsToWebsite(websiteDir);
+
+  try {
+    await runInDir(websiteDir, "go", ["run", ".", "-check-docs"], { pipeStdout: false });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    die(`docs check failed: ${msg}`);
+  }
+
+  const paths = copiedGitPaths();
+  await runGitInDir(websiteDir, "add", "-A", "--", ...paths);
+  const porcelain = (await runGitInDir(websiteDir, "status", "--porcelain", "--", ...paths)).trim();
+  if (!porcelain) {
+    console.log("no doc changes to commit");
+  } else {
+    console.log(porcelain);
+    await runGitInDir(websiteDir, "commit", "-m", "sumatra-website: update docs");
+    await runGitInDir(websiteDir, "push");
+    console.log("committed and pushed sumatra-website docs");
+  }
 
   const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
   console.log(`genHTMLDocsForWebsite finished in ${elapsed}s`);
 }
 
 if (import.meta.main) {
-  await main();
+  try {
+    await main();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    die(msg);
+  }
 }

@@ -2,30 +2,38 @@
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-You can run `sumatrapdf-tool.exe <tool>` to perform operations on PDF and other files.
+You can run `sumatrapdf-tool.exe <tool>` or [SumatraPDF.exe <tool>](Tools.md) to perform operations on PDF and other files. Both work with the portable EXE; no install required.
 
-Convert, extract, compress and more.
+## `sumatrapdf-tool.exe` vs. `SumatraPDF.exe`
 
-> `sumatrapdf-tool.exe` is a small console program installed next to `SumatraPDF.exe`. The command-line tools only work after SumatraPDF has been installed (not in the single-file portable build). See [Installation](Installation.md).
+When you install SumatraPDF, we also install `sumatrapdf-tool.exe` and add it to PATH.
+
+`sumatrapdf-tool.exe` is a console program that provides command-line access to many SumatraPDF's features.
+
+It's meant for use from command-line or from scripts.
+
+The same commands work with the portable EXE as `SumatraPDF.exe <tool>` — no install and no extra extract. You can also extract `sumatrapdf-tool.exe` with `-x` if you want the console binary.
+
+The difference is that `SumatraPDF.exe` is a GUI application so it won't work as well when e.g. re-directing output to a file or from scripts.
 
 ## I want to…
 
-| Goal | Tool / doc |
-| --- | --- |
-| Delete specific pages | `clean` — [Delete pages from PDF](Tool-x-delete-pages-from-pdf.md) |
-| Delete the last page without knowing the count | `clean input.pdf out.pdf 1-N-1` (`N` = last page) |
-| Extract pages into a new PDF | `clean` — [Extract pages from PDF](Tool-x-extract-pages-from-pdf.md) |
-| Merge PDFs | `merge` — [Tool merge](Tool-merge.md) |
-| Search text in one or many PDFs | `grep` — [Tool grep](Tool-grep.md) |
-| Extract plain text | `draw -tt` or `grep` — [Extract text from PDF](Tool-x-extract-text-from-pdf.md) |
-| Extract embedded images | `extract` — [Extract images from PDF](Tool-x-extract-images-from-pdf.md) |
-| Compress / rewrite PDF | `clean` — [Compress a PDF](Tool-x-compress-pdf.md) |
-| Remove compression streams | `clean` — [Decompress a PDF](Tool-x-decompress-pdf.md) |
-| Password-protect a PDF | `clean` — [Encrypt a PDF](Tool-x-encrypt-pdf-with-password.md) |
-| Remove password | `clean` — [Decrypt a PDF](Tool-x-decrypt-pdf.md) |
-| Convert images / other formats to PDF | `convert` / `draw` — [Tool convert](Tool-convert.md) |
-| Inspect PDF structure | `info`, `show`, `pages` — [Tool info](Tool-info.md) |
-| Run JavaScript on PDFs | `run` — [Tool run](Tool-run.md) |
+| Goal                                           | Tool / doc                                                                                                       |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Delete specific pages                          | `clean` — [Delete pages from PDF](Tool-x-delete-pages-from-pdf.md)                                               |
+| Delete the last page without knowing the count | `clean input.pdf out.pdf 1-N-1` (`N` = last page)                                                                |
+| Extract pages into a new PDF                   | `clean` — [Extract pages from PDF](Tool-x-extract-pages-from-pdf.md)                                             |
+| Merge PDFs                                     | `merge` — [Tool merge](Tool-merge.md)                                                                            |
+| Search text in one or many PDFs                | `grep` — [Tool grep](Tool-grep.md)                                                                               |
+| Extract plain text                             | `draw -tt` or `grep` — [Extract text from PDF](Tool-x-extract-text-from-pdf.md)                                  |
+| Extract embedded images                        | `extract` — [Extract images from PDF](Tool-x-extract-images-from-pdf.md)                                         |
+| Compress / rewrite PDF                         | `clean` — [Compress a PDF](Tool-x-compress-pdf.md)                                                               |
+| Remove compression streams                     | `clean` — [Decompress a PDF](Tool-x-decompress-pdf.md)                                                           |
+| Password-protect a PDF                         | `clean` — [Encrypt a PDF](Tool-x-encrypt-pdf-with-password.md)                                                   |
+| Remove password                                | `clean` — [Decrypt a PDF](Tool-x-decrypt-pdf.md)                                                                 |
+| Convert images / other formats to PDF          | `convert` / `draw` — [Tool convert](Tool-convert.md); GUI for comics/images: [Convert to PDF](Convert-to-PDF.md) |
+| Inspect PDF structure                          | `info`, `show`, `pages` — [Tool info](Tool-info.md)                                                              |
+| Run JavaScript on PDFs                         | `run` — [Tool run](Tool-run.md)                                                                                  |
 
 The same page-delete operations are also available in the app: `Ctrl + K` → **Delete Pages From PDF**, or context menu **Document → Delete Pages From PDF**.
 

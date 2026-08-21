@@ -16,13 +16,13 @@
 //   - "nope"          (unknown)                          -> NOTFOUND
 // Before the fix, "nameddest=ch2" resolved to NOTFOUND and would fail here.
 //
-// Run:  bun tests/issue-5642.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5642.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 
 const PDF = join(tmpdir(), "sumatra-issue-5642.pdf");
 
@@ -52,14 +52,6 @@ function makePdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-// resolves a named destination, returns the 1-based page or 0 if not found
-async function resolve(name: string): Promise<{ page: number; raw: string }> {
-  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestNamedDest, [PDF, name]);
-  const raw = String(rawArg).trim();
-  const m = raw.match(/page=(-?\d+)/);
-  return { page: m ? parseInt(m[1]) : 0, raw };
-}
-
 export async function testit(): Promise<void> {
   if (!existsSync(EXE)) {
     throw new Error(`app not found: ${EXE} (build first)`);
@@ -74,13 +66,18 @@ export async function testit(): Promise<void> {
   ];
 
   let allOk = true;
-  for (const [name, expectPage, desc] of cases) {
-    const r = await resolve(name);
-    const ok = r.page === expectPage;
-    allOk &&= ok;
-    console.log(`  ${ok ? "✅" : "❌"} "${name}": ${desc}`);
-    console.log(`        -> ${r.raw}  (expected ${expectPage ? `page ${expectPage}` : "NOTFOUND"})`);
-  }
+  await withControlledSumatra(EXE, async (client) => {
+    for (const [name, expectPage, desc] of cases) {
+      const [, rawArg] = await client.request(ControlCommand.TestNamedDest, [PDF, name]);
+      const raw = String(rawArg).trim();
+      const m = raw.match(/page=(-?\d+)/);
+      const page = m ? parseInt(m[1]!) : 0;
+      const ok = page === expectPage;
+      allOk &&= ok;
+      console.log(`  ${ok ? "✅" : "❌"} "${name}": ${desc}`);
+      console.log(`        -> ${raw}  (expected ${expectPage ? `page ${expectPage}` : "NOTFOUND"})`);
+    }
+  });
 
   rmSync(PDF, { force: true });
   if (!allOk) {

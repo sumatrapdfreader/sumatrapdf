@@ -24,7 +24,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(R
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::AddRef() {
-    return InterlockedIncrement(&refCount);
+    return AtomicIntInc(&refCount);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Release() {
@@ -36,6 +36,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Release() {
     return res;
 }
 
+// IRawElementProviderFragment
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Navigate(enum NavigateDirection direction,
                                                                          IRawElementProviderFragment** pRetVal) {
     if (pRetVal == nullptr) {
@@ -107,6 +108,7 @@ SumatraUIAutomationStartPageProvider::get_FragmentRoot(IRawElementProviderFragme
     return S_OK;
 }
 
+// IRawElementProviderSimple
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPatternProvider(__unused PATTERNID patternId,
                                                                                    IUnknown** pRetVal) {
     *pRetVal = nullptr;

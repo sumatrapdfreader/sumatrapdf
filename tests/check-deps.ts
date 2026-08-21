@@ -48,7 +48,12 @@ function runCmd(cmd: string[]): { ok: boolean; stdout: string; stderr: string } 
 }
 
 function firstLine(text: string): string {
-  return text.split(/\r?\n/).find((l) => l.trim())?.trim() ?? "";
+  return (
+    text
+      .split(/\r?\n/)
+      .find((l) => l.trim())
+      ?.trim() ?? ""
+  );
 }
 
 function findOnPath(exe: string): string | null {
@@ -112,15 +117,13 @@ function checkCore(): Dep[] {
       : {
           name: "SumatraPDF.exe (dbg64)",
           ok: false,
-          install: "bun ./cmd/build.ts",
+          install: "bun cmd/build.ts -debug",
         },
   );
 
   const git = findOnPath("git");
   deps.push(
-    git
-      ? depFromCmd("git", [git, "--version"])
-      : { name: "git", ok: false, install: "winget install Git.Git" },
+    git ? depFromCmd("git", [git, "--version"]) : { name: "git", ok: false, install: "winget install Git.Git" },
   );
 
   const cl = findOnPath("cl");
@@ -178,7 +181,7 @@ function checkAdHocOptional(): Dep[] {
       : {
           name: "SumatraPDF-static.exe (ASan, issue-chm-lzx)",
           ok: false,
-          install: "bun ./cmd/build-asan.ts",
+          install: "bun cmd/build.ts -asan",
         },
   );
 
@@ -199,10 +202,7 @@ function checkAdHocOptional(): Dep[] {
   deps.push(
     depFromExePaths(
       "Grok Build CLI (ad-hoc-selection-translate)",
-      [
-        join(userProfile, ".grok", "bin", "grok.exe"),
-        join(userProfile, ".local", "bin", "grok.exe"),
-      ],
+      [join(userProfile, ".grok", "bin", "grok.exe"), join(userProfile, ".local", "bin", "grok.exe")],
       "Install Grok CLI from https://x.ai/",
     ),
   );
@@ -227,6 +227,19 @@ function checkAdHocOptional(): Dep[] {
         join(localAppData, "Microsoft", "WinGet", "Links", "codex.exe"),
       ],
       "Install Codex CLI from https://openai.com/codex",
+    ),
+  );
+
+  deps.push(
+    depFromExePaths(
+      "Antigravity CLI (ad-hoc-selection-translate)",
+      [
+        join(userProfile, "AppData", "Local", "agy", "bin", "agy.exe"),
+        join(userProfile, "AppData", "Local", "agy", "bin", "antigravity.exe"),
+        join(userProfile, ".local", "bin", "antigravity.exe"),
+        join(userProfile, ".local", "bin", "agy.exe"),
+      ],
+      "Install the Antigravity CLI (agy / antigravity)",
     ),
   );
 
@@ -285,9 +298,9 @@ function main(): void {
   const adHoc = checkAdHocOptional();
 
   let missing = 0;
-  missing += printSection("Core (tests/all.ts)", core);
+  missing += printSection("Core (tests/run-almost-all.ts)", core);
   missing += printSection("LaTeX / SyncTeX (tests/latex.ts)", latex);
-  missing += printSection("Ad-hoc / before-release (optional)", adHoc);
+  missing += printSection("Ad-hoc / pre-release (optional)", adHoc);
 
   printLatexSummary(latex);
 

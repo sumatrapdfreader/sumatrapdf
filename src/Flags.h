@@ -87,6 +87,14 @@ struct Flags {
     // -for-testing: for ad-hoc testing by humans or agents. Always starts
     // a new instance, doesn't restore session, doesn't save settings
     bool forTesting = false;
+    // -quicklook: chrome-less always-on-top preview window (Explorer Space)
+    bool quickLook = false;
+    // -quicklook-agent: hidden Space-bar hook for Explorer, no UI
+    bool quickLookAgent = false;
+    // -window-pos <width>x<height>@<x>x<y>: open every window exactly there,
+    // e.g. 960x540@960x0. Empty unless given. Meant for automated tests, where
+    // a window a quarter of the screen renders and captures four times faster
+    Rect windowPos;
     Str controlPipeName; // -dbg-control <named-pipe>
     bool testRenderPage = false;
     bool testExtractPage = false;
@@ -137,7 +145,6 @@ struct Flags {
 #if OS_WIN
 void ParseFlags(Arena* a, WStr cmdLine, Flags&, Str toolNames = {});
 #endif
-// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
 void ShowPrintersDialog(bool consoleOnly = false);
 
 bool IsValidPageRange(Str ranges);

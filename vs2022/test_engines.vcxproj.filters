@@ -4,6 +4,9 @@
     <Filter Include="base">
       <UniqueIdentifier>{8078947C-6CAF-950D-159C-7B1001B2110F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
@@ -12,10 +15,18 @@
     <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
+    <ClInclude Include="..\src\LitDoc.h" />
     <ClInclude Include="..\src\PdfCadDetect.h" />
     <ClInclude Include="..\src\PdfCadEnhanceDevice.h" />
     <ClInclude Include="..\src\PdfDarkMode.h" />
-    <ClInclude Include="..\src\TreeModel.h" />
+    <ClInclude Include="..\src\TextSearch.h" />
+    <ClInclude Include="..\src\TextSelection.h" />
+    <ClInclude Include="..\src\base\UtAssert.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\UIModels.h">
+      <Filter>gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AvifReader.cpp" />
@@ -30,15 +41,23 @@
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
+    <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCadDetect.cpp" />
     <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
-    <ClCompile Include="..\src\TreeModel.cpp" />
+    <ClCompile Include="..\src\TextSearch.cpp" />
+    <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp">
       <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\UtAssert.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\UIModels.cpp">
+      <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\test_engines.cpp">
       <Filter>tools</Filter>

@@ -11,3 +11,8 @@ void ShowPdfDeletePageDialog(MainWindow* win);
 void ShowPdfExtractPagesDialog(MainWindow* win);
 void ShowPdfEncryptDialog(MainWindow* win);
 void ShowPdfDecryptDialog(MainWindow* win);
+// comic books / image folders / single images → multi-page PDF (issue #4118)
+void ShowConvertToPdfDialog(MainWindow* win);
+// PDF pages → PNG / JPEG / BMP files (issue #5991)
+void ShowConvertPdfToImagesDialog(MainWindow* win);
+TempStr ConvertPagesToImagesResultTemp(Str templatePath, Str pagesSpec, int* exitCodeOut);

@@ -8,16 +8,12 @@
 #include "base/Win.h"
 #include "base/Crypto.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
 
 #include "SumatraConfig.h"
 #include "Translations.h"
 #include "Version.h"
 #include "AppTools.h"
-
-bool NeedsWindowEmbeddingHacks();
 
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
@@ -30,7 +26,7 @@ static bool HasBeenInstalled() {
     }
 
     TempStr exePath = GetSelfExePathTemp();
-    if (!str::EndsWithI(installedPath, ".exe")) {
+    if (!str::EndsWithI(installedPath, StrL(".exe"))) {
         installedPath = path::JoinTemp(installedPath.s, path::GetBaseNameTemp(exePath).s);
     }
     return path::IsSame(installedPath, exePath);
@@ -341,7 +337,7 @@ static TextEditor editorRules[] = {
         "notepad.exe",
         "\"%f\"",
         RegType::BinaryDir,
-        "Software\\Microsoft\\Windows NT\\CurrentVersion",
+        R"(Software\Microsoft\Windows NT\CurrentVersion)",
         "SystemRoot",
     }
 };
@@ -355,7 +351,7 @@ static void FindTextEditors() {
     }
     StrVec found;
     // all but last entry, which is notepad.exe
-    int n = (int)dimof(editorRules) - 1;
+    int n = dimofi(editorRules) - 1;
     for (int i = 0; i < n; i++) {
         auto& rule = editorRules[i];
         Str regKey = rule.regKey;
@@ -398,7 +394,7 @@ static void FindTextEditors() {
 // corresponding inverse search commands.
 void DetectTextEditors(Vec<TextEditor*>& res) {
     FindTextEditors();
-    int n = (int)dimof(editorRules);
+    int n = dimofi(editorRules);
     for (int i = 0; i < n; i++) {
         TextEditor* e = &editorRules[i];
         if (!e->openFileCmd) {
@@ -408,74 +404,16 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
     }
 }
 
-#define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
-
-// selects all text in an edit box if it's selected either
-// through a keyboard shortcut or a non-selecting mouse click
-// (or responds to Ctrl+Backspace as nowadays expected)
-bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
-    static bool delayFocus = false;
-
-    switch (msg) {
-        case WM_LBUTTONDOWN:
-            delayFocus = !HwndIsFocused(hwnd);
-            if (delayFocus && NeedsWindowEmbeddingHacks()) {
-                HWND hwndFg = GetForegroundWindow();
-                ThreadId fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
-                ThreadId ourTid = GetCurrentThreadId();
-                bool attached = false;
-                if (fgTid && fgTid != ourTid) {
-                    attached = AttachThreadInput(ourTid, fgTid, TRUE) != 0;
-                }
-                SetFocus(hwnd);
-                if (attached) {
-                    AttachThreadInput(ourTid, fgTid, FALSE);
-                }
-            }
-            return true;
-
-        case WM_LBUTTONUP: {
-            if (delayFocus) {
-                DWORD sel = Edit_GetSel(hwnd);
-                if (LOWORD(sel) == HIWORD(sel)) {
-                    PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
-                }
-                delayFocus = false;
-            }
-            return true;
-        }
-
-        case WM_KILLFOCUS:
-            return false; // for easier debugging (make setting a breakpoint possible)
-
-        case WM_SETFOCUS: {
-            if (!delayFocus) {
-                PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
-            }
-            return true;
-        }
-
-        case UWM_DELAYED_SET_FOCUS: {
-            EditSelectAll(hwnd);
-            return true;
-        }
-
-        case WM_KEYDOWN: {
-            bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed();
-            if (isCtrlBack) {
-                PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
-                return true;
-            }
-            return false;
-        }
-
-        case UWM_DELAYED_CTRL_BACK: {
-            EditImplementCtrlBack(hwnd);
-            return true;
-        }
-
-        default:
-            return false;
+// Detected text-editor command lines plus the current setting, if any.
+void CollectInverseSearchCommands(StrVec& out, Str cmdLine) {
+    out.Reset();
+    Vec<TextEditor*> textEditors;
+    DetectTextEditors(textEditors);
+    for (auto* e : textEditors) {
+        AppendIfNotExists(&out, e->openFileCmd);
+    }
+    if (cmdLine) {
+        AppendIfNotExists(&out, cmdLine);
     }
 }
 
@@ -577,7 +515,7 @@ TempStr GetWebViewDataDirTemp() {
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
-TempStr FormatSizeShortTransTemp(i64 size) {
+TempStr FormatFileSizeShortTransTemp(i64 size) {
     Str units[3] = {_TRA("GB"), _TRA("MB"), _TRA("KB")};
     return str::FormatSizeShortTemp(size, units);
 }
@@ -588,7 +526,7 @@ TempStr FormatFileSizeTransTemp(i64 size) {
     if (size <= 0) {
         return fmt("%d", size);
     }
-    TempStr n1 = FormatSizeShortTransTemp(size);
+    TempStr n1 = FormatFileSizeShortTransTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
     return fmt("%s (%s %s)", n1, n2, _TRA("Bytes"));
 }
@@ -645,7 +583,7 @@ bool AdjustVariableDriveLetter(Str& path) {
 bool IsUntrustedFile(Str filePath, Str fileURL) {
     TempStr protocol;
     if (fileURL && !str::IsNull(str::Parse(fileURL, "%S:", &protocol))) {
-        if (len(protocol) > 1 && !str::EqI(protocol, "file")) {
+        if (len(protocol) > 1 && !str::EqI(protocol, StrL("file"))) {
             return true;
         }
     }

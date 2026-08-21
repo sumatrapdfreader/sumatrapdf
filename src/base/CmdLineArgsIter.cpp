@@ -19,12 +19,15 @@
 //
 // Returns {} if arg.s is null. Empty (len 0) arg becomes "".
 // Note: Str's operator bool is false for empty strings (len==0), so check .s.
+// Quote for CreateProcessW command lines (Windows argv rules; always quoted).
 TempStr QuoteCmdLineArgTemp(Str arg) {
     if (!arg.s) {
         return {};
     }
 
-    str::Builder res;
+    // Paths/args usually fit; worst case ~2x arg for backslash doubling + quotes.
+    char resScratch[1024]{};
+    str::Builder res(Str(resScratch, sizeofi(resScratch)));
     res.AppendChar('"');
 
     int n = arg.len;

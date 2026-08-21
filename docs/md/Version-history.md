@@ -4,28 +4,100 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Advanced Settings shows **changed settings: n** in red, bold, centered on a yellow row when values have been edited in this session. Esc no longer closes the window while those edits are unsaved. The hints are a single line (**Enter or double-click to edit. Bold value: different from default**), and the window cannot be resized narrower than 480 pixels (fixes #6012)
+- About window: **Copy program and machine info to clipboard** copies a multi-line dump (version, built-on date, OS, 32/64-bit, WebView2, memory, and other bug-report details). The right-hand date is labeled **built on** (fixes #6008)
+- Advanced Settings can edit compact values such as `FixedPageUI.PageSpacing` and `ComicBookUI.PageSpacing` (written as `4 4`). Changing them applies to open documents without restarting. Comics and image collections use `ComicBookUI.PageSpacing`, not `FixedPageUI.PageSpacing`. `PageSpacing = 0 0` no longer leaves a 1px seam between pages (fixes #6018)
+- **Help: Manual** (F1) opens next to the main window, in the upper half, on the side with more room. Its position and size are remembered across sessions and kept fully on-screen after a resolution or monitor change (fixes #6013)
+- **Uniform Page Width** in the View menu keeps mixed-size pages at the same displayed width at percentage zoom levels, using page 1 as the reference. The chosen reading size stays unchanged when the window or fullscreen size changes, and the choice is remembered per document (fixes #5512)
+- Document Properties for digitally signed PDFs shows the hash and signature algorithms, the document hash, the issuer and expiry, whether the signature is LTV-enabled, an RFC 3161 timestamp when one is present (device time vs secure TSA time), a PAdES level when the signature is CAdES, and whether the certificate is on the EU Trusted List. **View Certificate...** opens the Windows certificate dialog; **Update EU Trusted List** downloads the EU LOTL (fixes #5581)
+- Kindle Print Replica (`.azw4`) files open as the embedded PDF instead of as a reflowable MOBI ebook (fixes #1315)
+- keyboard shortcuts accept `AltGr` (also `RAlt` / `RightAlt`) as a modifier, the same as `Ctrl + Alt` on Windows, so bindings like `AltGr + Return` and `AltGr + Shift + Return` work (fixes #5973). Set Screenshot Hotkey can record Return and the arrow keys when a modifier (including AltGr) is held; unmodified Return / arrows are ignored so they are not registered as a global hotkey
+- Command Palette: `Ctrl + A` selects the query; `Home` / `End` jump to the first / last match when the caret is already at the start / end of the query (`Ctrl + Home` / `Ctrl + End` always do); `Page Up` / `Page Down` move the list a page at a time (fixes #5972)
+- Command Palette: type `%` for the table of contents of the current document (like `$` for favorites). `% TOC` appears in the mode row when the document has a TOC. The old `*` prefix still works
+- connecting Remote Desktop at a different scale no longer leaves the toolbar, title bar, bookmarks and menus at the old size; they follow the session DPI without restarting (fixes #4581)
+- installer `-x` no longer tries to overwrite the running `SumatraPDF.exe` when extracting into that exe's own directory; extract errors are printed to an already-attached console (fixes #6003)
+- comic book archives of 32 MB or less on a network drive are loaded into memory instead of being copied to the local `cbx-cache`
+- PDFs opened from OneNote or Outlook (and other host-app cache folders) are copied first so the original file is not left locked; OneNote can sync the section instead of showing "We can't sync this section because we were denied access to the file" (fixes #4705)
+- if a PDF has no outline, the Bookmarks sidebar is filled from numbered headings in the text (`I. Introduction`, `II.A. Nested`, `1.2 Title`) so you can still jump around papers and reports that never stored a TOC (fixes #5724)
+- Command Palette mode switches at the top (`#` File History, `>` Commands, …) use the same smaller font as the hints at the bottom
+- Explorer and Outlook preview pane: Ctrl+wheel zooms, drag pans when zoomed in, and the wheel pans then turns the page at the edge. Double-click returns to fit-page (fixes #859)
+- Toggle Page Boxes (`CmdTogglePageBoxes`) outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each visible page — only boxes that page actually declares — and labels them `media`, `crop`, `trim`, and so on. For PDF development (print marks, trim vs crop). Palette and Debug menu; no default shortcut (fixes #814)
+- Change Language is a modeless window like Change Theme (search box, language list, OK / Cancel) instead of a modal dialog
+- Add Favorite is a modeless window like Change Theme instead of a modal dialog
+- Change Scrollbar is a modeless window like Change Theme instead of a modal dialog
+- Custom Zoom is a modeless window like Change Theme instead of a modal dialog
+- Go to Page is a modeless window like Change Theme instead of a modal dialog (the toolbar page box is still used when the toolbar is visible)
+- Enter password is a WindowBase dialog like Change Theme; it stays modal because opening an encrypted file has to wait for the password
+- Set inverse search command line is a modeless window like Change Theme instead of a modal dialog
+- Settings (Options) is a modeless window like Change Theme instead of a modal dialog
+- Change Background Color and Change Tab Color share a modeless window like Change Theme instead of a modal dialog
+- Navigate Files in Folder is a normal modeless window that stays open (no longer a popup that closes when it loses focus or after opening a file); Esc or the close button dismisses it, and Enter / double-click replaces the document in the current tab, while `Ctrl + Enter` / `Ctrl + double-click` switches to the tab already showing that file, or opens it in a new tab. `Alt + Up` goes to the parent directory (like Explorer), as does the `..` entry. `Del` moves the selected file to the recycle bin without asking (directories are not deleted); if that file is open in a tab, the tab closes first. The window uses the app icon and the regular UI font (fixes #5877). The listing re-reads the directory whenever the window is activated or the command is invoked again, so files renamed (`F2`), added or removed meanwhile show up; `F5` refreshes on demand (fixes #5878). It also works on the home page — there's a **Navigate Files in Folder** link next to **Open a document...** — starting in the folder of the most recently opened document
 - Renamed the companion engine DLL from `libmupdf.dll` to `libsumatrapdf.dll` (through 3.6 the name was `libmupdf.dll`; 3.7 and later use `libsumatrapdf.dll`). Installer upgrades move the old name aside; see [Portable vs installer](SumatraPDF-portable.md) and [Failed to load libsumatrapdf.dll](Failed-to-load-libmupdf.md)
 - Themes can set optional UI colors (`DisabledTextColor`, `DarkerTextColor`, `HotBackgroundColor`, `EdgeColor`, `HotEdgeColor`, `DisabledEdgeColor`, `ErrorBackgroundColor`, and notification highlight colors) so disabled and hover states are not derived only from `TextColor` / backgrounds; built-in themes (including Dracula) set them so tinted foregrounds no longer look muddy yellow (issue #4721)
 - new built-in themes: **One Dark**, **Monokai**, **Nord**, **GitHub Dark**, **Catppuccin Mocha**, **Tokyo Night**, **Gruvbox**, **Night Owl**, **Ayu**, and **Palenight** (common palettes from VS Code and other editors)
 - theme list cleanup: removed **Darker** (folded into **Charcoal**, the former “Dark background Bright text”); settings that still name `Darker` or the old long name keep working
-- Screen readers (Narrator, NVDA, and other UI Automation clients) can access document text on the canvas for PDF, XPS, and DjVu; the experimental UIA provider is now enabled in release builds, not only debug (issue #321)
-- smoother mouse-wheel scrolling when `SmoothScroll` is enabled (default **true**): continuous exponential chase of the target, sub-pixel steps, 1 ms timer while animating; set `SmoothScroll = false` for instant wheel steps
+- Screen readers (Narrator, NVDA, and other UI Automation clients) can access document text on the canvas for PDF, XPS, and DjVu; the experimental UIA provider is now enabled in release builds, not only debug, reading through the document character by character, word by word, line by line or page by page now advances instead of repeating the first line, and reading the text under the mouse pointer or finger works (Narrator mouse mode / touch exploration), including telling the screen reader where that text is on screen (issue #321)
+- smoother mouse-wheel and arrow-key scrolling when `SmoothScroll` is enabled (default **true**): continuous exponential chase of the target, sub-pixel steps, 1 ms timer while animating; set `SmoothScroll = false` for instant steps
+- add `ScrollLineAmount` advanced setting: distance scrolled by an arrow-key press or one mouse-wheel line; defaults to 16 screen pixels at 96 DPI (fixes #2447)
 - Favorites can open as a full-window tab so long paths and names use the whole window; the sidebar Favorites panel still works independently. The sidebar Favorites/ToC width can also be dragged past half the window (keeps ~200px for the document)
 - Favorites list has a search box (like Bookmarks), in both the sidebar panel and the Favorites tab
 - Favorites can be sorted alphabetically by name (or page label) within each file instead of by page number: `SortFavoritesByName = true`, or the **Sort By Name** checkbox in the Favorites tree context menu (fixes #2277)
-
-- fix UI (tabs, toolbar, bookmarks/favorites trees, caption) not rescaling when moving the window between monitors with different DPI/scaling (issue #5827)
+- rename `CmdDiscardAnnotations` to `CmdDiscardChanges` ("Discard Changes"): reloads the current document from disk, dropping unsaved annotations and form changes; available from the tab context menu when there are unsaved changes and from the `Ctrl + K` command palette
 - PDF bookmark / link destinations now apply Adobe-style view modes (`/Fit`, `/FitH`, `/FitV`, `/FitB`, `/FitBH`, `/FitBV`, `/XYZ` zoom) instead of only jumping to the page (fixes #5828)
-- fix Advanced Settings list jumping scroll position on the first click after open or filter change (fixes #5829)
+- add `IgnoreDestinationZoom` advanced setting: when true, clicking a bookmark or a link inside the document keeps the zoom you are reading at instead of switching to the zoom the destination asks for; it still goes to the page and the position on it. The same option Adobe Reader and Foxit call "forbid the change of the current Zoom factor during execution of 'Go to Destination' actions"; off by default (discussion #5938)
+- following an internal link or bookmark can flash a highlight at the destination so you can see where you landed (a bibliography entry, figure, or named dest). Uses the same color and fade as LaTeX forward search, and stays solid for about two seconds before fading so it is still there after the page jump. Off by default; turn it on with `HighlightLinkDestination = true` (fixes #1085, #5945)
+- empty fillable PDF form fields are highlighted in pale blue so they are visible without hovering. Toggle with View → Highlight Form Fields, the command palette (`CmdToggleHighlightFormFields`), or the `HighlightFormFields` advanced setting (default **true**) (fixes #5966)
+- add `DisableLinks` advanced setting (default **false**): when true, document links are ignored so you can select and read without accidentally following them — useful for drawings and schematics with many links. Toggle it from the command palette. The existing **Toggle Show Links** only draws a blue outline around links; it does not disable them (fixes #5939)
+- add `RememberViewOffsetOnPageTurn` advanced setting (default **false**): next/previous page keeps the same view position on the new page instead of jumping to the top, so zoomed-in pages of similar size stay lined up. It applies to explicit page turns (`N` / `P`, click-to-turn, the toolbar arrows); wheeling off the bottom of a page still opens the next page at its top, because there you are continuing to read rather than turning a page (fixes #5069)
+- add `MouseWheelTurnsPage` advanced setting (default **false**): one wheel notch goes to the next / previous page instead of scrolling, even when the page is zoomed past the window. Together with `RememberViewOffsetOnPageTurn` the view stays parked on the part of the page you are reading and the pages move under it, which is how sheet music and scans with wide margins are read without touching the keyboard. `Alt + wheel` still scrolls, so the rest of the page stays reachable, and `Shift + wheel` (horizontal) and `Ctrl + wheel` (zoom) are unchanged. Bind it to a key or a toolbar button with `CmdToggleBoolSetting MouseWheelTurnsPage` (fixes #5069)
+- `EBookUI` and `ComicBookUI` each have their own `DefaultDisplayMode` so ebooks and comics can open in a different layout than PDFs (empty keeps the global `DefaultDisplayMode`) (fixes #2588)
+- `ComicBookUI.DefaultZoom` sets the first-open zoom for comic archives (`.cbz`, `.cbr`, …); empty keeps the global `DefaultZoom`. Use `fit width` so new comics fill the window while PDFs stay at Fit Page (fixes #5946)
+- Favorites remember how far you had scrolled on the page, so jumping to one returns you to that place, not just the top of the page
+- in facing and book view, a landscape comic or image page (wider than it is tall) occupies the whole two-page row instead of pairing with the next page, so a double-page spread stored as one image displays as a centerfold. Off with `ComicBookUI.LandscapeAsSpread = false` (or `ImageUI.LandscapeAsSpread` for image folders); default is on (fixes #1324, #872)
+- add `EBookUI.FontName` advanced setting: the font family for ebooks (EPUB, MOBI, FB2, …), e.g. `Segoe UI` or `Microsoft YaHei`. Empty (the default) keeps the engine serif. When set, it overrides the document's own `font-family` so you can read in a sans-serif or a CJK UI font without editing the file (fixes #3138)
+- `EBookUI.FontName` (and `CustomCSS`) now win over the document even when it sets the font in an inline `style="font-family: ..."` or on a `<span>`, so you no longer need `IgnoreDocumentCSS = true` to read an ebook in the font you picked. A font name that can't be loaded is reported with a notification instead of silently doing nothing (fixes #4600)
+- the ebook settings (font, size, line spacing, layout size, CSS) can be set for a single document, as an `EBookUI` block inside its entry in `FileStates`. Fields you leave out use the global `EBookUI` value, and nothing is written to the settings file for documents you haven't customized (fixes #4600)
+- add `EBookUI.Margin`: the white space around the text of a reflowable document, in points, instead of the fixed 3 em / 2 em MuPDF uses. Written like a CSS margin - one number for all four sides, two for top/bottom and left/right, or four in top-right-bottom-left order. `0` gives the text the whole page. Also settable per document, and in the eBook Settings dialog (fixes #4600)
+- new **Change eBook Settings** command (`CmdChangeEbookSettings`): a dialog with the font, size, margin and line spacing for a reflowable document, which shows the CSS it generates from them and lets you take over and write that CSS yourself. Applies to the open document only or to all ebooks (fixes #4600)
+- add `ChmUI.FontName` advanced setting to choose the font in the CHM fixed-page view and override fonts specified by the document (fixes #2737)
+- add `EBookUI.LineSpacing` advanced setting: set a line-height multiplier such as `1.5` for more space between lines in EPUB, MOBI, FB2 and other reflowable ebooks; 0 keeps the document or engine default (fixes #476)
+- **Toggle Manga Mode** is available for PDF, XPS, DjVu, ebooks, images and other fixed-page documents, not only comic books. It puts facing and book-view pages in right-to-left order and remembers that choice per document (fixes #2258)
+- `DefaultDisplayMode` accepts `page aspect`: on first open of a PDF, XPS, DjVu or PostScript file, pick the layout from page 1 — taller than wide uses continuous + fit width (papers), wider than tall uses single page + fit page (slides). A remembered view for that file still wins (fixes #4055)
+- add `Fullscreen.DisplayMode` advanced setting: page layout to use in presentation (`Ctrl + L`) and windowed fullscreen (`Shift + Ctrl + L` / `F11`). Empty (the default) keeps the current behavior — presentation still goes to single page and fit-page, windowed fullscreen keeps whatever layout you had. Set it to `facing` or `book view` to switch to that layout on enter and restore the previous layout on exit (fixes #4753)
+- add `SidebarOnRight` advanced setting: when true, the bookmarks / favorites sidebar is on the right of the window instead of the left. Right-to-left UI languages already put it on the right; this setting does the same in left-to-right languages (fixes #2165)
+- add `ClickEdgeToTurnPage` advanced setting: when true, a click (not a drag) on the left fifth of the page area goes to the previous page and a click on the right fifth goes to the next page — useful for comics and for reading with a mouse or touchpad. In manga (right-to-left) mode the sides are reversed. Off by default so a click still selects text. Presentation mode (`Ctrl + L`) already turns pages on click and is unchanged (fixes #1203)
+- the floating Find window (`Ctrl + F`, then pop out) can limit a search to a page range: **Limit to pages 1-N:** accepts lists such as `3,4-6,18-`, or a single span `10-25`, `10`, `10-`, `-25`. Empty (the default) still searches the whole document. The `n / m` counter and the results list follow the same range (fixes #5694)
+- warning notifications ("File not found", "Errors in document", update messages) use an amber background in every theme instead of a color derived from the theme accent, which came out as a loud purple in Dracula and a bright blue in GitHub Dark, and was indistinguishable from a normal notification in most other dark themes. Links inside a warning use the warning text color so they stay readable (fixes #5876)
+- while a search is still scanning, the Find status shows the page it is currently on next to the running match count (e.g. `520 61`), so a long search over a big document visibly progresses even across stretches with no matches
+- the compact Find bar can be resized: drag its left edge to make the search field wider or narrower (the bar stays anchored to the right edge and keeps its height)
+- select text with the keyboard, like a browser's caret browsing: `F7` (**Select Text With Keyboard**) puts a text caret in the page. The arrow keys move it, `Shift + arrows` extend the selection, `Home` / `End` go to the ends of the line and `Ctrl + Home` / `Ctrl + End` to the ends of the document, `Ctrl + Left` / `Ctrl + Right` move by word, and `PageUp` / `PageDown` by a screenful. `v` switches to visual mode, where the arrows extend the selection without holding Shift (like Vimium's caret / visual modes). `Ctrl + C` or `y` copies and leaves the mode, `Esc` or `F7` leaves it without copying (fixes #4684, #4116)
+- extend a text selection from the keyboard by a character or a word, whichever way it was started (mouse drag, double-click, `Ctrl + A` or `F7`): the **Extend Selection One Character/Word Left/Right** commands. They have no default shortcut because `Ctrl + Shift + Left/Right` already navigate between files, so assign your own in the `Shortcuts` section of the advanced settings (discussion #5922)
+- laser pointer for presentations: the **Toggle Laser Pointer** command turns the mouse cursor over the document into a glowing red laser dot, so you can point at what you're talking about. It has no default shortcut — assign one in the `Shortcuts` section of the advanced settings — and while it's on the cursor no longer auto-hides in presentation mode. Invoke it again to get the normal cursors back (fixes #5930)
+- zoom to a selection: select an area with `Ctrl + drag` (or select text), then **Zoom / To Selection** (`Ctrl + 4`, also in the right-click menu) scales the view so the selection fills the window and centers it. The selection is kept, so you can still copy it, and `Alt + Left` (Navigate Back) returns to the view you zoomed from, zoom included (fixes #1699)
+- follow links from the keyboard, like Vimium: `Shift + F` labels visible links with letters and highlights them; type a hint to follow the link (internal destination or URL). Prefix-free multi-letter hints are used when needed. `Shift + F` again or `Esc` leaves the mode. The labels follow the page while you scroll and are recalculated shortly after scrolling stops. Not offered for comic books, image folders and images, whose pages can't have links (fixes #2629)
 - Bookmarks sidebar: **Collapse All** expands a single top-level root one level when that is all the outline has (typical Word-export TOC), and the context menu has **Expand to Level 1/2/3** for explicit depth control (fixes #5239)
 - Bookmarks context menu **Collapse Same Level** collapses every outline entry that shares the parent of the selected/clicked item (siblings at that nesting level) (fixes #1895)
 - FB2 document properties (`Ctrl+D`) now show the book annotation from `title-info` as Subject (fixes #2254)
-- fix portable self-update failing to replace the running exe when installing from the update dialog
+- hovering a link that goes to a place inside the document shows the description the PDF gives it (the link annotation's `/Contents`), the way hovering an external link shows its URL; before, such links showed nothing (fixes #1724)
+- Space in File Explorer (or on the desktop) previews the selected file in a popup, like macOS Quick Look. Esc or Space closes it; Left / Right open the previous / next file in the folder. Off with `ExplorerQuickLook = false` (fixes #2568)
+- clicking a component on an Altium Designer schematic PDF shows a popup with the part's properties (comment, footprint, value, …). A line that contains a URL can be opened. Those hotspots used Acrobat JavaScript and previously did nothing (fixes #1198)
+- bookmarks (PDF outline) entries are drawn with the color and the bold / italic style the document asks for again; they had been shown as plain text since 3.3 (fixes #3560)
+- zoom further than 6400%, for documents like large maps where the old limit hid detail that is in the file: the largest level in the `ZoomLevels` advanced setting is now the maximum zoom, so adding e.g. `12800 25600 51200` to it zooms that far. Values up to 1000000 are accepted; a given document is also limited by its own size, since all of its pages have to fit on one canvas. [Scrolling and zooming](Scrolling-and-zooming.md) documents the built-in levels as a `ZoomLevels` line to copy and edit (fixes #1195)
+- add `ToolbarCustomLayout` advanced setting: the built-in toolbar buttons you want and the order you want them in, e.g. `ToolbarCustomLayout = CmdFindFirst | PageInfo CmdGoToPrevPage CmdGoToNextPage`. Leaving a button out hides it, `|` is a separator and `PageInfo` is the page number box; empty (the default) is the standard layout, which [Customize toolbar](Customize-toolbar.md) documents as a layout you can edit down (fixes #5095)
+- the annotation editor's list of annotations and the Contents box of the selected annotation grow with the window instead of being a fixed 5 (or 14) lines, so making the window taller shows more annotations and more of the annotation's text rather than more empty space (fixes #3769, #5834)
 - new `Advanced Settings...` dialog (`Ctrl + K` command palette): a filterable list of the advanced settings where you can toggle booleans, pick enum values from a drop-down and edit strings, colors and numbers in-place, then `Save`. Replaces the per-setting toggle commands (`CmdToggleSmoothScroll`, `CmdToggleEscToExit`, `CmdToggleReuseInstance` etc.), which were removed
 - can open and view Markdown documents (`.md`, `.markdown`): they render as formatted text (GitHub Flavored Markdown, including tables, task lists and strikethrough) via the rendering engine, and the installer registers the file association so they open from Explorer and drag&drop
+- Markdown (WebView2 UI): fenced `mermaid` code blocks are rendered as diagrams (bundled Mermaid runtime, works offline). Fixed-page MuPDF markdown still shows the source code
+- in Markdown and HTML documents, a relative link to a document rather than to another page — `[the manual](./manual.pdf)`, an `.epub`, a `.cbz` — opens that document in SumatraPDF (`Ctrl + click` opens it in a new window); files of a type we can't open are handed to the shell instead. Links to other pages, images and other web resources still follow inside the document view (discussion #5924)
+- Markdown documents have a **Show Generated HTML** command (`Ctrl + K` command palette) that saves the rendered HTML to a temporary `.html` file and opens it in Notepad
 - HEIC / HEIF still images now decode with a built-in decoder (no Windows HEIC codec required for most phone photos); AVIF still uses dav1d. The system WIC path remains as a fallback if built-in decode fails
 - Read Aloud: adjustable playback speed — pick 0.5x .. 3x in the new `Speed` submenu (next to `Voice` in the Read Aloud menu, toolbar dropdown and context menu) or click the speed button on the playback bar to cycle presets (right-click cycles backwards); the speed persists across sessions via the `ReadAloudSpeed` advanced setting
-- updated the bundled MuPDF rendering engine to 1.28.0
+- clicking an empty signature field in a PDF opens **Sign Document** with that field already selected, instead of doing nothing and leaving the command to be found in a menu (fixes #5964)
+- **Sign Document** can use a certificate from the current user's Windows certificate store (the Personal / MY store), not only a `.pfx` / `.p12` file. The drop-down lists store certificates that have a private key; pick **Certificate file...** to keep the old file-and-password path (fixes #5965)
+- adding a new signature (**New signature on page N**) now asks you to click or drag on the page to place it, instead of putting it in a fixed corner. A selection already on the page is still used (fixes #5967)
+- **Sign Document** appearance: choose which lines the signature draws (labels such as "Digitally signed by", the name, the distinguished name, the date), and optionally a PNG or JPEG on the left instead of the large name (fixes #5963)
+- EPUB, MOBI and HTML documents show WebP images instead of an IMAGE placeholder (fixes #3415). Standalone `.webp` files and comics already worked.
+- updated the bundled MuPDF rendering engine to 1.28.2
 - add [AI Chat with document](AI-Chat-with-document.md) sidebar (in View menu and `Ctrl + k` [command palette](Command-Palette.md)) for asking questions about the open PDF or image via [Claude Code](https://docs.anthropic.com/en/docs/claude-code); per-tab session state, model/effort selection, and session history from `~/.claude/projects/`
 - add `ClaudeCode` advanced settings (`Model`, `Effort`, `SkipPermissions`, `BgColor`, `SidebarDx`) in `SumatraPDF-settings.txt`
 - auto-link plain-text DOIs in PDF text (e.g. `10.1109/WICSA.2015.29` opens `https://doi.org/...`); uses the same auto-detect path as URLs and email addresses
@@ -43,19 +115,27 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add `PaddingAfterLastPage` advanced setting: when true, continuous view has extra scroll room after the last page so you can bring the end of the document up (e.g. when the window is partly covered); off by default (fixes #411)
 - document properties page size shows cm, mm, in (locale unit first) and pixels, e.g. `21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 px` (fixes #2186)
 - Zoom menu shows the current level (radio/check mark) when using custom `ZoomLevels` and zooming with +/- (fixes #5832)
-- fix EPUB/reflow images that vanished when publisher CSS set `img { width: 100%; height: 100%; }` (default user CSS forces `height: auto` and `max-width: 100%`) (fixes #5805)
 - the `FixedPageUI.SelectionColor` advanced setting now honors an alpha channel: set an `#aarrggbb` value (e.g. `#40f5fc0c`) to make the text-selection overlay more transparent so selected text stays crisp instead of looking washed out; `#rrggbb` keeps the previous default opacity (fixes #3209)
 - middle-click auto-scroll is now smooth: it's driven by a high-frequency timer with fractional-pixel accumulation instead of a coarse 20ms timer with integer steps, so it no longer looks choppy (also enables fine, slow scroll speeds) (fixes #2693)
 - associated file types now show their localized name in Explorer's "Type" column on non-English Windows; previously registration hardcoded an English name like "PDF File", overriding the name Windows would localize (fixes #3323)
 - expand the table of contents tree down to the current page's entry and select it, like Explorer's "Expand to current folder" (in the Bookmarks sidebar right-click menu and the `Ctrl + k` command palette) (fixes #1998)
 - Save As now warns instead of failing silently when a file can't be written (e.g. the destination path exceeds the Windows `MAX_PATH` limit); previously there was no way to tell the save hadn't happened (fixes #1016)
 - can convert an image to a PDF: right-click an image (or an open image document) and choose `Image / Convert to PDF`, or pick `PDF` in the format drop-down of the Save Image dialog. The new PDF gets `CreationDate`/`ModDate` metadata with the current time and time zone (fixes #949)
+- **Image / Save** defaults to an exact copy: the dest file uses the original format (`.jpg` for a JPEG, …) and Save writes the original file bytes unless you crop, resize, or change the extension
 - in the Favorites pane and menu, a favorite for a file with a long name now shows your favorite's name first, then the file name, so the name you gave it is no longer pushed out of view (fixes #829, #2236)
 - case-insensitive search now treats German ß as equivalent to `ss`, so searching `Strasse` finds `Straße` and vice versa (fixes #933)
 - hovering a thumbnail on the Frequently Read home page now shows a ✕ button in its top-right corner to remove that document from the list, without going through the right-click menu (fixes #283)
+- home page document history: `Del` removes the keyboard-selected entry from history (shown as a shortcut on **Remove From History** in the right-click menu); the menu also has **Delete File** (recycle bin + drop from history) and **Show in folder** opens the in-app Navigate Files in Folder picker on that file's directory
+- Open File (`Ctrl + O`) can use either the standard Windows file picker or the in-app Navigate Files in Folder window (`FilePicker = os | sumatrapdf`, empty means Windows). Toggle with **Settings / SumatraPDF File Picker** or the same check under **File** (below Open). **Open File With Windows File Picker** (`CmdOpenFileWithOSFilePicker`) always uses the system dialog. The home page no longer shows a separate Navigate Files in Folder link
+
 - the home page document history can be shown as a list instead of thumbnails (toggle buttons next to the header, or the `HomePageViewMode = thumbnails | list` advanced setting). Each list row shows a small preview, the file name, the file's directory (right-aligned, muted), the file size, and remove/pin buttons (fixes #4909)
 - new zoom mode `Fit by Orientation` (in the View / Zoom menu) that automatically fits width when the view is landscape and fits page when portrait, updating as you resize the window or rotate the screen (fixes #702)
 - new zoom mode `Fit Height` (View / Zoom menu and command palette): scales the page so its height fills the window (width may require horizontal scrolling) — useful for landscape pages on portrait screens and for mixed page widths with a stable vertical size; also accepted as `-zoom fitheight` / advanced setting `fit height` and DDE zoom `-6` (fixes #1714)
+- comics / images: advanced settings `ComicBookUI.LimitToWindowWidth` / `LimitToWindowHeight` and the same under `ImageUI` — when true, absolute zoom never makes a page wider (or taller) than the window; each page is capped independently so double-page spreads stay on screen while single pages can stay large (fixes #2197)
+- comic book archives (`.cbz`, `.cbr`, …) whose images live in chapter folders now show those folders as nested Bookmarks (table of contents) entries. A directory shared by every file is still omitted so a single-folder comic stays a flat list. ComicInfo.xml bookmarks still win when present (fixes #5317)
+- **Convert to PDF** (`CmdConvertToPDF`) for comic books (`.cbz`, `.cbr`, …), image folders, and single images: dialog suggests a unique `.pdf` path next to the source; original images are embedded when possible (fixes #4118, #5532). Docs: [Convert to PDF](Convert-to-PDF.md)
+- **Convert PDF to Images** (`CmdConvertPdfToImages`): dialog like Extract Text, with a destination path template (`<N>` is the page number), a PNG / JPEG / BMP format drop-down that updates the extension, and **Current** / **All** / **Custom** page radios (custom takes a range such as `1,3-5`). Writes one file per page at 150 DPI; PNGs are losslessly recompressed in the background (fixes #5991). Docs: [Convert PDF to Images](Convert-PDF-to-images.md)
+- Explorer preview / thumbnails for FictionBook: plain `.fb2` and zip containers `.fb2z`, `.fbz`, `.zfb2`, and `.fb2.zip` (reinstall or re-enable the preview handler to pick up the extra extensions) (fixes #1677)
 - add `sumatrapdf-tool.exe` command-line tools for PDF manipulation (see [Tools](Tools.md))
 - [command palette](Command-Palette.md) has a new `*` mode that jumps to a table of contents entry of the current document (`Shift + F12`). Shows the fully expanded outline, indented by nesting level, with the entry closest to the current page pre-selected (fixes #5676)
 - [command palette](Command-Palette.md) has a new `$` mode that jumps to a favorite, listing the current document's favorites first, then favorites of other documents
@@ -82,8 +162,6 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `Ctrl + click` on a PDF link opens it in a new tab (instead of navigating in the current tab)
 - you can now drag&drop selected text to another application, like a text editor
 - triple-click selects the whole line of text (double-click still selects a word) (fixes #694)
-- fix `ExternalViewers` `CommandLine` parsing mangling quotes (e.g. `-t="Hello World"` became `"-t=Hello World"`); the command line is now passed through with the user's quoting preserved, only substituting `%1`/`%p`/`%d` (fixes #5695)
-- fix `-print-settings paper=A3` (and other standard sizes) when the printer driver reports a longer paper name such as `A3 297 x 420 mm` (fixes #5632)
 - add `stretch` page scaling (and a matching "Stretch pages to fill paper" option in the Advanced print dialog) that fills the paper in both dimensions, ignoring the aspect ratio (fixes #2220)
 - add "Center page horizontally on the paper" option to the Advanced print dialog, to center a page smaller than the paper (fixes #348)
 - add "Choose paper source by document page size" option to the Advanced print dialog, to let the printer pick the input tray whose paper matches the page (fixes #349)
@@ -99,7 +177,6 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `[SetView]` DDE command now accepts a zoom of `0` to keep the current zoom; previously, scrolling via `SetView` while passing a Fit zoom re-fit the page and jumped the scroll position to the next page (fixes #5068)
 - toggle commands (`CmdToggleFullscreen`, `CmdTogglePresentationMode`, `CmdToggleToolbar`, `CmdToggleMenuBar`, `CmdToggleContinuousView`, `CmdToggleTableOfContents`/`CmdToggleBookmarks`) accept an optional `state` argument to force an on/off state instead of toggling, e.g. `[CmdToggleFullscreen on]` (fixes #5067); also fixes parsing of boolean command arguments (`off`/`no`/`0` and `on` are now recognized)
 - add `[GotoPageWord]` [DDE command](DDE-Commands.md) to go to a page and select a search term only if it's on that page (a page-constrained search, unlike `[Search]` which wraps); also documented the existing `[Search]` DDE command (fixes #3085)
-- fix EXIF orientation ignored for JPEG and WebP images (fixes #1544)
 - move `DefaultImageZoom` advanced setting to `ImageUI.DefaultZoom`, default to `shrink to fit`
 - improve Toggle Use Tabs: you can now transition between using tabs / not using tabs without restarting the app
 - allow showing menu bar when using tabs (previously menu bar was only shown when not using tabs)
@@ -108,22 +185,22 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - crop and resize images when viewing image files
 - `Ctrl + V` pastes image from clipboard, saves as PNG in Downloads folder and opens it
 - Can save images in different formats: PNG, JPEG, BMP, GIF, TIFF.
-- add `Fullscreen` advanced setting with `ShowToolbar` and `ShowMenubar` options to show toolbar and menu bar in fullscreen mode. Use `F9` / `F8` to toggle them while in fullscreen
+- add `Fullscreen` advanced setting with `Toolbar` (show / hide / overlay, like `Toolbar`) and `ShowMenubar` options for fullscreen mode. Use `F8` / `F9` to toggle toolbar / menubar while in fullscreen. Legacy `ShowToolbar` / `Fullscreen.ShowToolbar` remain for migration only
 - add `Show Errors` in right-click context menu for PDF documents that have mupdf warnings/errors
 - replace `HideScrollbars` and `UseOverlayScrollbar` settings with `Scrollbars` setting (values: `windows`, `smart`, `overlay`, `hidden`)
 - save and restore groups of tabs; saved groups are persisted in `TabGroups` advanced setting
 - add `Shrink To Fit` zoom mode: shows at 100% if page is smaller than view area, otherwise fits page
 - add `TabsMru` advanced setting to change order of navigating tabs when using `Ctrl + Tab`
+- add `CtrlTabSimple` advanced setting: when true, `Ctrl + Tab` / `Ctrl + Shift + Tab` switch to the next / previous tab immediately, in tab-strip order, without showing the tab switcher (the behavior before 3.6)
+- the tab switcher (`Ctrl + Tab`) window is sized to the number of tabs instead of always being a tall, mostly empty window
 - improve document properties for comic book files (CBZ, CBR, CB7, CBT). We now show list of image files and per-image EXIF metadata
 - improve document properties for image files: size, dimensions, DPI, exif metadata
 - support encrypted .cbz, .cbr files
 - you can drag&drop images from PDF documents to other applications (web apps, image editors, file explorer etc.)
 - pen/stylus input now works for text selection on Windows tablets
-- fix Edit Annotations window not restoring to the correct monitor in multi-monitor setups
 - use `GetFileAttributesEx` instead of opening files for change detection on network drives, avoiding Windows Defender re-scans
-- fix toolbar page number misalignment when `PrinterAccess` is revoked in `sumatrapdfrestrict.ini`
 - add citation/reference hover preview: hovering an internal-document link (e.g. a `[1]` citation, figure reference, or footnote marker) now shows a small popup rendering the destination region, so you can see the bibliography entry / figure / footnote without leaving the current page. The `CitationHoverDelay` advanced setting sets the hover delay in ms (-1 disables the popup) (fixes [#128](https://github.com/sumatrapdfreader/sumatrapdf/issues/128), [#4221](https://github.com/sumatrapdfreader/sumatrapdf/issues/4221))
-- translate selected text with Grok Build, Claude Code, or OpenAI Codex when the corresponding CLI is installed (selection context menu); opens a dialog to edit the text, pick source and destination languages, and show the translation inline
+- translate selected text with Grok Build, Claude Code, OpenAI Codex, or Antigravity when the corresponding CLI is installed (selection context menu); opens a dialog to edit the text, pick source and destination languages, and show the translation inline
 - add a **Match whole word** toggle to the Find bar (next to **Match Case**) so a search only matches complete words, e.g. `cat` no longer matches `category` (fixes #4295)
 - when searching, the **current** match is now highlighted with the customizable `FixedPageUI.SelectionColor` (the color users tune to be most noticeable) and all other matches use a secondary orange highlight, so the active match is easier to spot; previously it was the other way around (fixes #5740)
 - find-as-you-type now waits briefly after you stop typing before searching (500 ms, or 1 s for 1–2 character terms) instead of searching on every keystroke; pressing Enter searches immediately (fixes #4626)
@@ -132,34 +209,56 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - text in some PDFs that use embedded subset fonts naming glyphs like `G45` (with no `ToUnicode` map) is now extracted and searchable: previously such text came out as `�` and couldn't be found (e.g. searching "Emergency" failed). mupdf now recovers Unicode from those glyph names the way pdf.js does (fixes #3219)
 - add `AllowExternalImages` advanced setting (off by default): when on, a PDF may display an image stored in a separate file referenced by name (an "external image stream"); the file must sit next to the PDF. Off by default for security, matching Acrobat (fixes #3731)
 - add **Set Inverse Search Command Line** (`Ctrl + K` [command palette](Command-Palette.md)): opens a standalone dialog to configure the SyncTeX inverse-search command (with detected TeX editors in a drop-down and a Help link to [LaTeX integration](LaTeX-integration.md)); OK saves `InverseSearchCmdLine` and enables TeX enhancements, Cancel leaves settings unchanged. Works from the home page without an open document
-- one-click light/dark theme switching: **Toggle Light/Dark Theme** (`Ctrl + K` command palette) flips between the last used light and dark themes (remembered in the new `LastLightTheme` / `LastDarkTheme` advanced settings). Setting `Theme = System` makes SumatraPDF follow the Windows light/dark app mode, switching automatically when the OS does. Inspired by the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
+- one-click light/dark theme switching: **Toggle Light/Dark Theme** (`Ctrl + K` command palette) flips between the last used light and dark themes (remembered in the new `LastLightTheme` / `LastDarkTheme` advanced settings). **Follow Windows** in the Change Theme dialog (or `Theme = System` in advanced settings) makes SumatraPDF follow the Windows light/dark app mode, switching automatically when the OS does (fixes #5995). Inspired by the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
 - caption (title bar) minimize/maximize/restore/close buttons are drawn with Windows 11 style rounded glyphs (Segoe Fluent Icons outlines), DPI-scaled (from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork)
 - new built-in **Light Warm** theme: a warm, paper-like "eye-care" chrome palette (from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork; their Dracula and pure-black dark palettes already exist here as the `Dracula` and `Dark` themes)
 - smarter inverted (dark) page rendering for MuPDF documents (PDF, XPS, EPUB, MOBI, FB2, HTML, etc.): the `DocumentColorsFollowTheme` advanced setting (also via **Set Document Colors Follow Theme** in the `Ctrl + K` command palette and the **Change Theme** dialog) picks how page colors follow the UI theme: `off` (keep original page colors, the default), `smart` (recolor text and background but not images; **Invert Colors** / `Shift + I` toggles between `off` and `smart`), or `legacy` (recolor text, background and images — pre-3.7 behavior). **Toggle Preserve PDF Image Colors in Dark Mode** switches image preservation for the session. Ported from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
-- a small floating toolbar pops up after selecting text, with the most common selection actions: **Copy**, **Read Aloud**, **Highlight**, **Underline**, **Squiggly**, **Strike Out** (annotation buttons only for documents that support annotations). Disable it with the new `SelectionToolbar` advanced setting. Ported from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
+- a small floating toolbar pops up after selecting text, with the most common selection actions: **Copy**, **Read Aloud**, **Highlight**, **Underline**, **Squiggly**, **Strike Out** (annotation buttons only for documents that support annotations). It appears half a second after the selection settles, so it does not flash in and out while you are still selecting. Disable it with the new `SelectionToolbar` advanced setting. Ported from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
+- add `Annotations.FreeTextAlignment` advanced setting (`left`, `center`, `right`): how text is aligned in newly created free text annotations, so the **Text Alignment** you want no longer has to be set by hand on every annotation. Right-to-left scripts (Arabic, Hebrew, Persian) want `right`. `CmdCreateAnnotFreeText` and the other `CmdCreateAnnot*` commands take a matching `alignment` argument (issue #4799)
 - clearer rendering of CAD / engineering-drawing PDFs: hairline strokes get a zoom-aware minimum width and typical CAD-export grays are darkened toward Acrobat-like contrast, so drawings stay readable when zoomed out. Applied automatically when a drawing is detected (PDF/E marker, CAD authoring tool in the metadata, or content heuristics; screenshot/raster and WPS-style hairline exports are handled too); control it with the `EngineeringDrawingEnhance` advanced setting (`off` / `auto` / `on`) or per document with **Toggle Engineering Drawing Enhancement** (`Ctrl + K` command palette). Ported from the [SumatraPDF Plus](https://github.com/dengxibo/sumatrapdf-plus) fork
+- **Fit Content** (`Ctrl + 3`) now works on print-ready PDFs. Those draw crop and registration marks in the bleed area outside the page, and the content detection used to count them, so it reported the whole page and zooming to content did nothing. Ink drawn outside the page is now ignored. Same for **Shrink** / **Fit to printable area** printing, which uses the same detection. Fit Content also crops the margins properly in the non-continuous **Single Page**, **Facing** and **Book View** modes (it used to show the top/left margin with the content cut off at the other end), and in the continuous modes the mouse wheel now scrolls the document instead of flipping a whole page per notch
+- PDF documents can be digitally signed from the UI: **Sign Document...** (in the **File** menu and in the right-click **Document** submenu, for PDFs only) asks for a certificate (a `.pfx` / `.p12` file plus its password) and an optional reason and location, then fills in an empty signature field the document already has, or adds a new signature: you click or drag on the page to place it (or it uses the current selection if there is one) and saves to a file you pick. Previously signing was only possible with the bundled `sumatrapdf-tool sign` command line. The signature is written incrementally, so signatures already in the document stay valid, and Document Properties reports the signer and whether the document changed since signing (fixes #5962, #5967)
+- The Annotations window can select many annotations with the usual Windows keys (`Shift` or `Ctrl` click, `Shift` + arrows, `Ctrl + A`) and `Del` deletes all of them (fixes #5976)
+- **Bake PDF** includes annotations created in the current session. It used to re-open the file from disk, so a bake without saving first dropped those annotations (fixes #5977)
+- Find remembers the last 10 search queries for the session (not saved to settings) and offers them from a drop-down on the find field (fixes #893)
 
 **New commands:**
 
+- `CmdToggleUniformPageWidth` : "Toggle Uniform Page Width"
 - `CmdAIChatWithClaudeCode` : "AI Chat"
 - `CmdChangeBackgroundColor` : "Change Background Color"
+- `CmdChangeTheme` : "Change Theme..." — dialog to pick a UI theme and document-color follow mode
 - `CmdChangeScrollbar` : "Change Scrollbar"
-- `CmdCommandPalette *` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
+- `CmdCommandPalette %` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
 - `CmdCommandPalette $` : command palette favorites mode (`CmdCommandPaletteFavorites`)
 - `CmdCommandPaletteFavorites` : "Command Palette: Favorites"
 - `CmdContinueReadAloud` : "Continue Reading"
+- `CmdDeleteFileAndOpenNext` : "Delete File And Open Next" — opens the next file in the folder, then moves the previous file to the Recycle Bin (discussion #5845)
 - `CmdFavoriteShowInTab` : "Show Favorites in Tab" — full-window Favorites tab (sidebar Favorites still works)
 - `CmdToggleFavoritesSort` : "Sort Favorites By Name" — Favorites tree context menu checkbox; toggles `SortFavoritesByName` (fixes #2277)
 - `CmdZoomFitHeight` : "Zoom: Fit Height" — scale page height to the window (fixes #1714)
+- `CmdSelectTextViaKeyboard` : "Select Text With Keyboard" (`F7`) — caret browsing: move a text caret with the arrows and select without the mouse (fixes #4684, #4116)
+- `CmdExtendSelectionCharLeft`, `CmdExtendSelectionCharRight`, `CmdExtendSelectionWordLeft`, `CmdExtendSelectionWordRight` : "Extend Selection One Character/Word Left/Right" — no default shortcut, bind your own (discussion #5922)
+- `CmdToggleLaserPointer` : "Toggle Laser Pointer" — laser dot cursor over the document, no default shortcut, bind your own (fixes #5930)
+- `CmdToggleHoverPreview` : "Toggle Hover Preview" — palette-only; enables/disables the citation/reference hover popup (`CitationHoverDelay`)
+- `CmdToggleDisableLinks` : "Toggle Disable Links" — palette-only; toggles `DisableLinks` (fixes #5939)
+- `CmdZoomToSelection` : "Zoom: To Selection" (`Ctrl + 4`) — zoom so the selection fills the window (fixes #1699)
+- `CmdOpenFileWithOSFilePicker` : "Open File With Windows File Picker..." — always the system multi-select open dialog (when `FilePicker = sumatrapdf`, use this to force the Windows picker)
+- `CmdToggleFilePicker` : "SumatraPDF File Picker" — check under Settings and File menus; toggles `FilePicker` between Windows and SumatraPDF
+- `CmdToggleBoolSetting` : "Toggle Boolean Setting" — custom shortcut/toolbar command with a setting name argument, e.g. `CmdToggleBoolSetting Fullscreen.ShowMenubar` (fixes #5912)
+- `CmdFixDefaultApp` : "Fix Default App For Extension" — `CmdFixDefaultApp .pdf` opens the OS default-app UI for that extension; home page shows a bottom bar with fix links when registered extensions are no longer default
+- `CmdToggleKeyboardLinkFollowing` : "Follow Link With Keyboard" (`Shift + F`) — labels visible links with Vimium-style letter hints; type a hint to follow its link (fixes #2629)
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"
-- `CmdNavigateFilesInFolder` : "Navigate Files in Folder" — floating directory browser for openable files (Enter/double-click opens a file or enters a directory, `..` goes up, Esc closes)
+- `CmdNavigateFilesInFolder` : "Navigate Files in Folder" (`Ctrl + Shift + Up`) — directory browser for openable files (stays open; Enter/double-click replaces the current tab or enters a directory, `Ctrl + Enter`/`Ctrl + double-click` uses an existing or new tab, `..` goes up, `Del` deletes the selected file, `F5` refreshes, Esc closes)
 - `CmdGoToPrevFavorite` : "Go to Previous Favorite"
 - `CmdCreateAnnotImageFromClipboard` : "Create Image Annotation From Clipboard"
 - `CmdStopReadAloud` : "Stop Reading"
 - `CmdReadAloudFromTopPage` : "Start Reading From Top"
 - `CmdReadAloudSelection` : "Start Reading Selection"
-- `CmdConvertImageToPdf` : "Convert Image To PDF"
+- `CmdConvertImageToPdf` : "Convert Page To PDF" — image editor path for one page
+- `CmdConvertToPDF` : "Convert To PDF..." — comic / image folder / image → multi-page PDF (fixes #4118, #5532)
+- `CmdConvertPdfToImages` : "Convert PDF to Images..." — PDF pages → PNG / JPEG / BMP (fixes #5991)
 - `CmdCropImage` : "Crop Image"
 - `CmdDocumentExtractText` : "Extract Text From Document"
 - `CmdDocumentShowOutline` : "Show Document Outline"
@@ -180,10 +279,12 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdPdShowInfo` : "Show PDF Info"
 - `CmdReadAloud` : "Read Aloud"
 - `CmdRemoveDeletedFilesFromHistory` : "Remove Deleted Files From History"
+- `CmdDeleteCachedFiles` : "Delete Cached Files" — deletes local network-drive comic book cache (`cbx-cache`)
 - `CmdResizeImage` : "Resize Image"
 - `CmdScreenshot` : "Take Screenshot"
 - `CmdSetScreenshotHotkey` : "Set Screenshot Hotkey"
 - `CmdSetInverseSearch` : "Set Inverse Search Command Line" — opens a dialog to configure the SyncTeX inverse-search command (`Ctrl + k` command palette)
+- `CmdShowGeneratedHTML` : "Show Generated HTML" — available for Markdown documents
 - `CmdSetTabColor` : "Set Tab Color"
 - `CmdStartAutoScroll` : "Start Auto-Scroll"
 - `CmdTabGroupRestore` : "Restore Tab Group"
@@ -195,16 +296,23 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdTogglePreservePdfImages` : "Toggle Preserve PDF Image Colors in Dark Mode" — session-only toggle
 - `CmdToggleWindowsPreviewer` : "Toggle Windows Previewer"
 - `CmdToggleWindowsSearchFilter` : "Toggle Windows Search Filter"
+- `CmdTranslateSelection` : "Translate Selection..." — dialog to translate the current selection
 - `CmdTranslateSelectionWithClaudeCode` : "Translate Selection with Claude Code"
 - `CmdTranslateSelectionWithGrokBuild` : "Translate Selection with Grok Build"
 - `CmdTranslateSelectionWithOpenAICodex` : "Translate Selection with OpenAI Codex"
+- `CmdTranslateSelectionWithAntiGravity` : "Translate Selection with Antigravity"
 - `CmdZoomFitByOrientation` : "Fit by Orientation"
 - `CmdZoomShrinkToFit` : "Shrink To Fit"
+- `CmdDebugShowFitContentArea` : "Debug: Show Fit Content Area" — Debug menu checkbox; outlines in red the area **Fit Content** zoom would fit to, without changing the zoom
+- `CmdTogglePageBoxes` : "Toggle Page Boxes" — palette / Debug menu; outlines PDF Media/Crop/Bleed/Trim/Art boxes that the page actually has (fixes #814)
+- `CmdSignDocument` : "Sign Document..." — sign a PDF with a Windows-store or `.pfx` / `.p12` certificate (fixes #5962)
 
 **New command-line arguments:**
 
 - `-for-testing` : for ad-hoc testing; always starts a new instance, doesn't restore a session, doesn't save settings
-- `-dbg-control <named-pipe>` : drive automated tests over a named-pipe request/response protocol (`cmd/control.ts`)
+- `-quicklook` : open a chrome-less always-on-top preview window (Explorer Space preview) (fixes #2568)
+- `-quicklook-agent` : hidden File Explorer Space-bar helper (started when `ExplorerQuickLook` is true)
+- `-dbg-control <named-pipe>` : drive automated tests over a named-pipe request/response protocol (`tests/control.ts`)
 - `-dump-chm <file>` : headlessly list CHM contents, unpack entries to memory, and print TOC/index metadata
 - `-pwd <password>` : open password-protected documents from the command line (fixes #906)
 - `-log-to-file <file>` : log to a specific file (like `-log` but with a custom log file path)

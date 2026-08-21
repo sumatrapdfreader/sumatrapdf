@@ -63,7 +63,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(REFIID rii
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::AddRef() {
-    return InterlockedIncrement(&refCount);
+    return AtomicIntInc(&refCount);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release() {
@@ -91,8 +91,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPropertyValue(PROPERTY
         pRetVal->bstrVal = SysAllocString(L"Canvas");
         return S_OK;
     } else if (propertyId == UIA_IsKeyboardFocusablePropertyId) {
+        // VARIANT_TRUE (-1), not TRUE (1) - see DocumentProvider::GetPropertyValue
         pRetVal->vt = VT_BOOL;
-        pRetVal->boolVal = TRUE;
+        pRetVal->boolVal = VARIANT_TRUE;
         return S_OK;
     } else if (propertyId == UIA_ControlTypePropertyId) {
         pRetVal->vt = VT_I4;

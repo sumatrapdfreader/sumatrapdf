@@ -1,10 +1,13 @@
 #include "base/Base.h"
 
 #include "base/Win.h"
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 
 // in TestTab.cpp
 extern int TestTab(int nCmdShow);
@@ -21,19 +24,21 @@ static void LaunchLayout() {
     TestLayout(SW_SHOW);
 }
 
-static ILayout* CreateMainLayout(HWND hwnd) {
+static ILayout* CreateMainLayout(HWND) {
     auto* vbox = new VBox();
 
     vbox->alignMain = MainAxisAlign::MainCenter;
     vbox->alignCross = CrossAxisAlign::CrossCenter;
-    auto isRtl = IsUIRtl();
+    PlatformFont* font = GetDefaultGuiFont();
     {
-        auto b = CreateButton(hwnd, "Tabs test", MkFunc0Void(LaunchTabs), isRtl);
+        auto* b = new VirtButton("Tabs test", font);
+        b->onClick = MkFunc0Void(LaunchTabs);
         vbox->AddChild(b);
     }
 
     {
-        auto b = CreateButton(hwnd, "Layout test", MkFunc0Void(LaunchLayout), isRtl);
+        auto* b = new VirtButton("Layout test", font);
+        b->onClick = MkFunc0Void(LaunchLayout);
         vbox->AddChild(b);
     }
 
@@ -41,21 +46,18 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     return padding;
 }
 
-struct TestWnd : Wnd {};
+struct TestWnd : WindowBase {};
 
-static void OnDestroy(Wnd::DestroyEvent*) {
+static void OnDestroy(WindowBase::DestroyEvent*) {
     ::PostQuitMessage(0);
 }
 
-// in Window.cpp
-int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
-
 void TestApp() {
     auto w = new TestWnd();
-    auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
+    auto fn = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     w->onDestroy = fn;
 
-    // w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
+    // w->backgroundColor = MkRgb((u8)0xae, (u8)0xae, (u8)0xae);
     CreateCustomArgs args;
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
     args.title = "a little test app";

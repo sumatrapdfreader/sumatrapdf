@@ -1,0 +1,23 @@
+html: fit images against the fixed page height (issue #6007)
+
+layout_flow advances ld->bounds through the document. Using those bounds to
+calculate the page height makes it zero or negative after the first page, so
+the max-height check no longer shrinks later images and they are clipped over
+several pages. ld->page retains the fixed pagination rectangle used by the
+rest of the layout code.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6007
+---
+diff --git a/source/html/html-layout.c b/source/html/html-layout.c
+index 7a76cf9f2..e3fc9bf98 100644
+--- a/source/html/html-layout.c
++++ b/source/html/html-layout.c
+@@ -942,7 +942,7 @@ static void layout_flow(fz_context *ctx, fz_html_box *box, fz_html_box *top, flo
+ 			float max_w, max_h;
+ 			float xs = 1, ys = 1, s;
+ 			float aspect = 1;
+-			float page_h = ld->bounds[B] - ld->bounds[T];
++			float page_h = ld->page[B] - ld->page[T];
+ 
+ 			max_w = ld->bounds[R] - ld->bounds[L];
+ 			max_h = page_h;

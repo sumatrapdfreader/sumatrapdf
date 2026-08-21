@@ -4,16 +4,16 @@ SumatraPDF can open documents in **tabs** inside one window, or in **separate wi
 
 ## The two settings
 
-| Setting | Default | What it does |
-| --- | --- | --- |
-| `UseTabs` | `true` | New documents open as **tabs** in an existing window instead of always spawning a new window |
-| `ReuseInstance` | `true` | Opening a file from Explorer or the command line **reuses** an already running SumatraPDF process |
+| Setting         | Default | What it does                                                                                      |
+| --------------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `UseTabs`       | `true`  | New documents open as **tabs** in an existing window instead of always spawning a new window      |
+| `ReuseInstance` | `true`  | Opening a file from Explorer or the command line **reuses** an already running SumatraPDF process |
 
 Both live in [advanced settings](Advanced-options-settings.md) (`Settings → Advanced Options...`).
 
 ### Common confusion: tabs enabled but new window every time
 
-If `UseTabs = true` but `ReuseInstance = false`, each file is opened by a **new process**, so you always get a separate window — tabs only apply *within* one process.
+If `UseTabs = true` but `ReuseInstance = false`, each file is opened by a **new process**, so you always get a separate window — tabs only apply _within_ one process.
 
 **Fix:** set `ReuseInstance = true` and restart SumatraPDF.
 
@@ -21,18 +21,18 @@ This is the most frequent tabs question on the [forum](https://github.com/sumatr
 
 ## When settings take effect
 
-| Setting | Restart required? |
-| --- | --- |
+| Setting         | Restart required?                       |
+| --------------- | --------------------------------------- |
 | `ReuseInstance` | No — takes effect on the next file open |
-| `UseTabs` | **Yes** — close and restart SumatraPDF |
+| `UseTabs`       | **Yes** — close and restart SumatraPDF  |
 
 You can also change `ReuseInstance` and `UseTabs` at runtime (**ver 3.7+**) via `Ctrl + K` → `Advanced Settings...` (`CmdAdvancedSettings`). Changing `UseTabs` affects **new** windows only; switching between tabbed and non-tabbed layout for an existing window may still need a restart.
 
 ## Command-line flags
 
-| Flag | Effect |
-| --- | --- |
-| `-new-window` | Open in a **new window** even when `UseTabs = true` (**ver 3.2+**). With several files: one new window, all files as tabs (**ver 3.7+**) |
+| Flag              | Effect                                                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `-new-window`     | Open in a **new window** even when `UseTabs = true` (**ver 3.2+**). With several files: one new window, all files as tabs (**ver 3.7+**)         |
 | `-reuse-instance` | Send the file to an already running instance (mainly for [DDE](DDE-Commands.md) and scripts). For normal use, prefer the `ReuseInstance` setting |
 
 `-reuse-instance` is **not** needed for everyday double-click opening when `ReuseInstance = true`.
@@ -65,7 +65,9 @@ Use the [command palette](Command-Palette.md): type `@` to switch tabs by name.
 
 In **3.5 and earlier**, `Ctrl + Tab` / `Ctrl + Shift + Tab` switched tabs immediately in tab-strip order (no overlay list). In **3.6+** those keys run **Smart Tab Switch** (`CmdNextTabSmart` / `CmdPrevTabSmart`), which shows a tab list while Ctrl is held.
 
-If you prefer the old behavior (useful when flicking quickly between two documents), either:
+If you prefer the old behavior (useful when flicking quickly between two documents), the simplest way (**ver 3.7+**) is to set the `CtrlTabSimple` advanced setting to `true`. From then on `Ctrl + Tab` / `Ctrl + Shift + Tab` switch tabs immediately in tab-strip order and the switcher no longer shows up (set it back to `false` to get the switcher back).
+
+Alternatively:
 
 1. Use **`Ctrl + PageDown` / `Ctrl + PageUp`** instead, or
 2. [Rebind the keys](Customize-keyboard-shortcuts.md) in advanced settings so `Ctrl + Tab` runs plain next/prev tab again:
@@ -83,7 +85,7 @@ Shortcuts [
 ]
 ```
 
-Note: the advanced setting `TabsMru` only changes the **order** of tabs inside the Smart Tab Switch list (most-recently-used vs strip order). It does **not** hide the switcher; use the shortcut rebind above for that.
+Note: the advanced setting `TabsMru` only changes the **order** of tabs inside the Smart Tab Switch list (most-recently-used vs strip order). It does **not** hide the switcher; use `CtrlTabSimple` or the shortcut rebind above for that.
 
 ## Home tab
 

@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/Exif.h"
 #include "base/File.h"
-#include "base/Win.h"
 
 #include "Settings.h"
 #include "Flags.h"
@@ -31,6 +30,8 @@ static void CliPrint(Str s) {
     CliWrite(StrL("\n"), 1);
 }
 
+// Dump all EXIF metadata for path to stdout (exif-py compatible format).
+// Returns true if any EXIF was found.
 bool DumpExifFile(Str path) {
     if (!path) {
         return false;

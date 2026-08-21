@@ -2,7 +2,7 @@
 // Generates src/Settings.h, website HTML docs, and markdown docs from settings definitions
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname, resolve, basename } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { extractSumatraVersion, clangFormatFiles, runLogged, isGitClean } from "./util";
 
 async function runCapture(cmd: string, args: string[], cwd?: string): Promise<string> {
@@ -72,6 +72,9 @@ class Field {
     if (this.Type.name === "Struct" || this.Type.name === "Compact") {
       this.Type.ctype = structName;
     }
+    if (this.Type.name === "StructPtr") {
+      this.Type.ctype = `${structName} *`;
+    }
     return this;
   }
 }
@@ -106,6 +109,16 @@ function struct(name: string, fields: Field[], comment: string): Field {
 function compactStruct(name: string, fields: Field[], comment: string): Field {
   const res = struct(name, fields, comment);
   res.Type.name = "Compact";
+  return res;
+}
+
+// an optional sub-struct: a pointer that is null until the user sets it, and
+// isn't written out at all while it's null. use it for a block that only some
+// instances of a much-repeated struct (e.g. FileState) ever have
+function structPtr(name: string, structName: string, fields: Field[], comment: string): Field {
+  const typ: Type = { name: "StructPtr", ctype: `${structName} *` };
+  const res = field(name, typ, fields, comment);
+  res.StructName = structName;
   return res;
 }
 
@@ -149,57 +162,174 @@ function isComment(f: Field): boolean {
 }
 
 const ebookUI: Field[] = [
-  field("FontSize", Float, 0, "font size, default 8.0"),
-  field("LayoutDx", Float, 0, "default is 420"),
-  field("LayoutDy", Float, 0, "default is 595"),
-  field("IgnoreDocumentCSS", Bool, false, "if true, we ignore ebook's CSS"),
-  field("CustomCSS", Str, null, "custom CSS. Might need to set IgnoreDocumentCSS = true"),
+  field(
+    "FontName",
+    Str,
+    "",
+    "default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft YaHei). " +
+      "empty uses the engine default (typically a serif). applied as user CSS " +
+      "with !important, which beats the document's own font-family even when it " +
+      "comes from an inline style attribute; leave empty to keep the publisher's " +
+      "fonts. wrapping quotes are stripped. a name that can't be loaded is " +
+      "reported with a notification when the document opens",
+  ).ver("3.7"),
+  field("FontSize", Float, 0, "font size in points; 0 means the default (8.0)"),
+  compactArray(
+    "Margin",
+    Float,
+    null,
+    "white space around the text, in points (not screen pixels), like LayoutDx. " +
+      "one number sets all four sides, two are top/bottom and left/right, four " +
+      "are top, right, bottom, left - the same order as in CSS. empty keeps the " +
+      "default (3 em above and below, 2 em left and right, so it follows the font " +
+      "size); 0 leaves no margin at all. each value can be up to 200",
+  ).ver("3.7"),
+  field(
+    "LineSpacing",
+    Float,
+    0,
+    "line-height multiplier for ebook text (e.g. 1.5); 0 keeps the document or engine default. " +
+      "values from 0.5 to 5 are accepted",
+  ).ver("3.7"),
+  field(
+    "LayoutDx",
+    Float,
+    0,
+    "width of the page the ebook is laid out into, in points (not screen pixels); 0 means the default (420)",
+  ),
+  field(
+    "LayoutDy",
+    Float,
+    0,
+    "height of the page the ebook is laid out into, in points (not screen pixels); 0 derives it " +
+      "from the window's shape when the document is opened, so Fit Width shows a whole page",
+  ),
+  field("IgnoreDocumentCSS", Bool, false, "if true, the CSS in the ebook is ignored and only CustomCSS applies"),
+  field(
+    "CustomCSS",
+    Str,
+    null,
+    "additional CSS applied to ebooks; set IgnoreDocumentCSS = true if the document's own CSS overrides it",
+  ),
   field(
     "WindowBgCol",
     Color,
     "",
     "if given, sets the canvas background color for ebook documents (epub, mobi etc.)",
   ).ver("3.7"),
+  field(
+    "DefaultDisplayMode",
+    Str,
+    "",
+    "default page layout for ebooks; empty uses the global DefaultDisplayMode. " +
+      "valid values: automatic, single page, facing, book view, continuous, " +
+      "continuous facing, continuous book view",
+  ).ver("3.7"),
 ];
 
+// the colors after LinkColor are optional: when empty they're derived from
+// TextColor / BackgroundColor / ControlBackgroundColor. That's said in each of
+// their doc comments because it's the main thing you need to know when writing
+// a custom theme
 const theme: Field[] = [
-  field("Name", Str, "", "name of the theme"),
-  field("TextColor", Color, "", "text color"),
-  field("BackgroundColor", Color, "", "background color"),
-  field("ControlBackgroundColor", Color, "", "control background color"),
-  field("LinkColor", Color, "", "link color"),
-  // optional; empty = derived from TextColor/BackgroundColor/ControlBackgroundColor
-  field("DisabledTextColor", Color, "", "disabled / grayed text color").ver("3.7"),
-  field("DarkerTextColor", Color, "", "secondary / muted text color").ver("3.7"),
-  field("HotBackgroundColor", Color, "", "hovered control background color").ver("3.7"),
-  field("EdgeColor", Color, "", "control border / edge color").ver("3.7"),
-  field("HotEdgeColor", Color, "", "hovered control border color").ver("3.7"),
-  field("DisabledEdgeColor", Color, "", "disabled control border color").ver("3.7"),
-  field("ErrorBackgroundColor", Color, "", "error background color").ver("3.7"),
-  field("NotificationBackgroundColor", Color, "", "notification tip background color").ver("3.7"),
-  field("NotificationHighlightColor", Color, "", "notification tip highlight background color").ver("3.7"),
-  field("NotificationHighlightTextColor", Color, "", "notification tip highlight text color").ver("3.7"),
-  field("ColorizeControls", Bool, false, "should we colorize Windows controls and window areas"),
+  field("Name", Str, "", "name of the theme, as shown in the Settings / Theme menu"),
+  field("TextColor", Color, "", "color of text in menus, toolbar, tabs and sidebars"),
+  field("BackgroundColor", Color, "", "background color of the window around the document"),
+  field("ControlBackgroundColor", Color, "", "background color of toolbar, tabs, sidebars and dialogs"),
+  field("LinkColor", Color, "", "color of clickable links in the UI"),
+  field(
+    "DisabledTextColor",
+    Color,
+    "",
+    "color of disabled (grayed out) text; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field(
+    "DarkerTextColor",
+    Color,
+    "",
+    "color of secondary / muted text like the page label; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field(
+    "HotBackgroundColor",
+    Color,
+    "",
+    "background color of a control the mouse is over; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field("EdgeColor", Color, "", "color of control borders and separators; if empty, derived from the colors above").ver(
+    "3.7",
+  ),
+  field(
+    "HotEdgeColor",
+    Color,
+    "",
+    "border color of a control the mouse is over; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field(
+    "DisabledEdgeColor",
+    Color,
+    "",
+    "border color of a disabled control; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field(
+    "ErrorBackgroundColor",
+    Color,
+    "",
+    "background color of error messages; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field(
+    "NotificationBackgroundColor",
+    Color,
+    "",
+    "background color of notification tips; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field(
+    "NotificationHighlightColor",
+    Color,
+    "",
+    "background color of a highlighted notification tip; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field(
+    "NotificationHighlightTextColor",
+    Color,
+    "",
+    "text color of a highlighted notification tip; if empty, derived from the colors above",
+  ).ver("3.7"),
+  field("ColorizeControls", Bool, false, "if true, apply the theme colors to Windows controls and window areas too"),
 ];
 
-const tabFile: Field[] = [field("Path", Str, "", "file path")];
+const tabFile: Field[] = [field("Path", Str, "", "path of the document")];
 
 const tabGroup: Field[] = [
-  field("Name", Str, "", "name of the tab group"),
-  array("TabFiles", tabFile, "files in the tab group"),
+  field("Name", Str, "", "name of the tab group, as shown when restoring it"),
+  array("TabFiles", tabFile, "documents that belong to this tab group"),
 ];
 
+// screen coordinates in real (already DPI-scaled) pixels: these are saved from
+// the actual window, not authored by hand, so they must not be scaled again
 const windowPos: Field[] = [
-  field("X", Int, 0, "x coordinate"),
-  field("Y", Int, 0, "y coordinate"),
-  field("Dx", Int, 0, "width"),
-  field("Dy", Int, 0, "height"),
+  field("X", Int, 0, "x coordinate of the top-left corner, in screen pixels"),
+  field("Y", Int, 0, "y coordinate of the top-left corner, in screen pixels"),
+  field("Dx", Int, 0, "width, in screen pixels"),
+  field("Dy", Int, 0, "height, in screen pixels"),
 ];
 
-const pointPos: Field[] = [field("X", Int, 0, "x coordinate"), field("Y", Int, 0, "y coordinate")];
+const windowSize: Field[] = [
+  field("Dx", Int, 0, "width, in screen pixels"),
+  field("Dy", Int, 0, "height, in screen pixels"),
+];
+
+const pointPos: Field[] = [
+  field("X", Int, 0, "x coordinate, in screen pixels"),
+  field("Y", Int, 0, "y coordinate, in screen pixels"),
+];
 
 const keyboardShortcut: Field[] = [
-  field("Cmd", Str, "", "command"),
+  field(
+    "Cmd",
+    Str,
+    "",
+    "command to run, e.g. CmdOpenFile. See [the list of commands](https://www.sumatrapdfreader.org/docs/Commands)",
+  ),
   field("Key", Str, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
   field("Name", Str, null, "name shown in command palette").ver("3.6"),
   field("ToolbarText", Str, null, "if given, shows in toolbar").ver("3.6"),
@@ -212,57 +342,86 @@ const keyboardShortcut: Field[] = [
   field("CmdId", Int, null, "command id").ver("3.6").notSaved(),
 ];
 
-const scrollPos: Field[] = [field("X", Float, 0, "x coordinate"), field("Y", Float, 0, "y coordinate")];
+const scrollPos: Field[] = [
+  field("X", Float, 0, "horizontal scroll offset, in document units"),
+  field("Y", Float, 0, "vertical scroll offset, in document units"),
+];
 
-const fileTime: Field[] = [field("DwHighDateTime", Int, 0, ""), field("DwLowDateTime", Int, 0, "")];
+// -1 means "not stored" so old favorites without ScrollPos keep jumping to the
+// top of the page (GetScrollState / SetScrollState use the same sentinel)
+const favoriteScrollPos: Field[] = [
+  field("X", Float, -1, "horizontal position on the page, in document units; -1 if not stored"),
+  field("Y", Float, -1, "vertical position on the page, in document units; -1 if not stored"),
+];
+
+// a Windows FILETIME (100-nanosecond intervals since 1601-01-01), split in two
+// because the settings file has no 64-bit integer type
+const fileTime: Field[] = [
+  field("DwHighDateTime", Int, 0, "high 32 bits of the FILETIME"),
+  field("DwLowDateTime", Int, 0, "low 32 bits of the FILETIME"),
+];
 
 const printerDefaults: Field[] = [
   field("PrintScale", Str, "shrink", "default value for scaling (shrink, fit, none)"),
-  field("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)"),
+  field("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)").ver(
+    "3.7",
+  ),
 ];
 
+// HighlightOffset / HighlightWidth are in document units (multiplied by the
+// current zoom when drawn), not screen pixels, so they must not be DPI-scaled
 const forwardSearch: Field[] = [
   field(
     "HighlightOffset",
     Int,
     0,
-    "when set to a positive value, the forward search highlight style will " +
-      "be changed to a rectangle at the left of the page (with the indicated " +
-      "amount of margin from the page margin)",
+    "if greater than 0, the forward search result is marked with a bar down the left " +
+      "side of the page instead of highlighting the matched text. The value is how far " +
+      "the bar sits from the left edge of the page, in document units",
   ),
-  field("HighlightWidth", Int, 15, "width of the highlight rectangle (if HighlightOffset is > 0)"),
+  field(
+    "HighlightWidth",
+    Int,
+    15,
+    "width of that bar in document units (only used when HighlightOffset is greater than 0)",
+  ),
   field("HighlightColor", Color, rgb(0x65, 0x81, 0xff), "color used for the forward search highlight"),
   field(
     "HighlightPermanent",
     Bool,
     false,
-    "if true, highlight remains visible until the next mouse click " + "(instead of fading away immediately)",
+    "if true, the highlight stays visible until the next mouse click instead of fading away after a few seconds",
   ),
 ];
 
+// WindowMargin / PageSpacing are pixels at 100% display scaling: DisplayModel
+// ::SetUiDpi() scales them to the dpi of the window showing the document
 const windowMarginFixedPageUI: Field[] = [
-  field("Top", Int, 2, "size of the top margin between window and document"),
-  field("Right", Int, 4, "size of the right margin between window and document"),
-  field("Bottom", Int, 2, "size of the bottom margin between window and document"),
-  field("Left", Int, 4, "size of the left margin between window and document"),
+  field("Top", Int, 2, "space between the top of the window and the document, in pixels at 100% display scaling"),
+  field("Right", Int, 4, "space between the right of the window and the document, in pixels at 100% display scaling"),
+  field("Bottom", Int, 2, "space between the bottom of the window and the document, in pixels at 100% display scaling"),
+  field("Left", Int, 4, "space between the left of the window and the document, in pixels at 100% display scaling"),
 ];
 
 const windowMarginComicBookUI: Field[] = [
-  field("Top", Int, 0, "size of the top margin between window and document"),
-  field("Right", Int, 0, "size of the right margin between window and document"),
-  field("Bottom", Int, 0, "size of the bottom margin between window and document"),
-  field("Left", Int, 0, "size of the left margin between window and document"),
+  field("Top", Int, 0, "space between the top of the window and the document, in pixels at 100% display scaling"),
+  field("Right", Int, 0, "space between the right of the window and the document, in pixels at 100% display scaling"),
+  field("Bottom", Int, 0, "space between the bottom of the window and the document, in pixels at 100% display scaling"),
+  field("Left", Int, 0, "space between the left of the window and the document, in pixels at 100% display scaling"),
 ];
 
-const pageSpacing: Field[] = [field("Dx", Int, 4, "horizontal difference"), field("Dy", Int, 4, "vertical difference")];
+const pageSpacing: Field[] = [
+  field("Dx", Int, 4, "horizontal gap between two pages, in pixels at 100% display scaling"),
+  field("Dy", Int, 4, "vertical gap between two pages, in pixels at 100% display scaling"),
+];
 
 const fixedPageUI: Field[] = [
-  field("TextColor", Color, rgb(0x00, 0x00, 0x00), "color value with which black (text) will be substituted"),
+  field("TextColor", Color, rgb(0x00, 0x00, 0x00), "color used instead of black for the document's text"),
   field(
     "BackgroundColor",
     Color,
     rgb(0xff, 0xff, 0xff),
-    "color value with which white (background) will be substituted",
+    "color used instead of white for the document's page background",
   ),
   field(
     "SelectionColor",
@@ -280,17 +439,16 @@ const fixedPageUI: Field[] = [
   compactStruct(
     "PageSpacing",
     pageSpacing,
-    "horizontal and vertical distance between two pages in facing and book view modes",
+    "horizontal and vertical gap between pages (between columns in facing/book view, between rows in continuous view)",
   ).structName("Size"),
   compactArray(
     "GradientColors",
     Color,
     null,
-    "colors to use for the gradient from top to bottom (stops will be inserted " +
-      "at regular intervals throughout the document); currently only up to three " +
-      "colors are supported; the idea behind this experimental feature is that the " +
-      "background might allow to subconsciously determine reading progress; " +
-      "suggested values: #2828aa #28aa28 #aa2828",
+    "experimental: instead of a single background color, fade through these colors from the top " +
+      "of the document to the bottom (stops are spread evenly, at most 3 colors). The shifting " +
+      "background is meant to give a subconscious sense of reading progress. " +
+      "Suggested values: #2828aa #28aa28 #aa2828",
   ),
   field("WindowBgCol", Color, "", "if given, sets the canvas background color for PDF files").ver("3.7"),
 ];
@@ -304,15 +462,52 @@ const comicBookUI: Field[] = [
   compactStruct(
     "PageSpacing",
     pageSpacing,
-    "horizontal and vertical distance between two pages in facing and book view modes",
+    "horizontal and vertical gap between pages (between columns in facing/book view, between rows in continuous view)",
   ).structName("Size"),
   field(
     "CbxMangaMode",
     Bool,
     false,
-    "if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)",
+    "if true, documents that don't state their own reading direction default to manga mode, i.e. right to left. A document that states a direction (PDF ViewerPreferences/Direction, or an EPUB with page-progression-direction) is shown the way it asks for",
   ),
   field("WindowBgCol", Color, "", "if given, sets the canvas background color for comic book files").ver("3.7"),
+  field(
+    "LimitToWindowWidth",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). " +
+      "Useful for comics/manga with double-page spreads that are much wider than regular pages (issue #2197)",
+  ).ver("3.7"),
+  field(
+    "LimitToWindowHeight",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page taller than the window (each page is capped at Fit Height)",
+  ).ver("3.7"),
+  field(
+    "DefaultDisplayMode",
+    Str,
+    "",
+    "default page layout for comic books; empty uses the global DefaultDisplayMode. " +
+      "valid values: automatic, single page, facing, book view, continuous, " +
+      "continuous facing, continuous book view",
+  ).ver("3.7"),
+  field(
+    "DefaultZoom",
+    Str,
+    "",
+    "default zoom for comic books; empty uses the global DefaultZoom. " +
+      "valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
+  ).ver("3.7"),
+  field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
+  field(
+    "LandscapeAsSpread",
+    Bool,
+    true,
+    "if true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row " +
+      "instead of pairing with the next page. For comics that store double-page spreads as one image " +
+      "(issues #1324, #872)",
+  ).ver("3.7"),
 ];
 
 const imageUI: Field[] = [
@@ -324,10 +519,38 @@ const imageUI: Field[] = [
     "default zoom for image files. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
+  field(
+    "LimitToWindowWidth",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page wider than the window (each page is capped at Fit Width). " +
+      "Useful for image folders with mixed aspect ratios (issue #2197)",
+  ).ver("3.7"),
+  field(
+    "LimitToWindowHeight",
+    Bool,
+    false,
+    "if true, absolute zoom never makes a page taller than the window (each page is capped at Fit Height)",
+  ).ver("3.7"),
+  field(
+    "LandscapeAsSpread",
+    Bool,
+    true,
+    "if true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row " +
+      "instead of pairing with the next page (issues #1324, #872)",
+  ).ver("3.7"),
 ];
 
 const chmUI: Field[] = [
   field("UseFixedPageUI", Bool, false, "if true, the UI used for PDF documents will be used for CHM documents as well"),
+  field(
+    "FontName",
+    Str,
+    null,
+    "font family for the CHM fixed-page view (e.g. Segoe UI, Georgia, Microsoft YaHei). " +
+      "empty uses EBookUI.FontName or the engine default. overrides fonts specified by the document; " +
+      "wrapping quotes are stripped",
+  ).ver("3.7"),
 ];
 
 const markdownUI: Field[] = [
@@ -336,6 +559,15 @@ const markdownUI: Field[] = [
     Bool,
     false,
     "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available",
+  ),
+];
+
+const htmlUI: Field[] = [
+  field(
+    "UseFixedPageUI",
+    Bool,
+    false,
+    "if true, use MuPDF to render HTML; if false, use WebView2 browser view when available",
   ),
 ];
 
@@ -383,9 +615,46 @@ const claudeCode: Field[] = [
   field("BgColor", Color, "#ffffff", "background color of the Claude Code chat panel"),
 ];
 
+const antiGravity: Field[] = [
+  field("Model", Str, "gemini-3.6-flash", "Antigravity model ID for --model (e.g. gemini-3.6-flash)"),
+  field("Models", Str, "", "extra Antigravity model IDs for the dropdown, comma-separated"),
+  field("Effort", Int, 1, "Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max"),
+  field(
+    "AutoApprove",
+    Bool,
+    true,
+    "if true, pass --dangerously-skip-permissions to Antigravity CLI so it can read the current file " +
+      "etc. in headless print mode (agy cannot prompt for permissions with -p)",
+  ),
+  field("BgColor", Color, "#ffffff", "background color of the Antigravity chat panel"),
+];
+
 const fullscreen: Field[] = [
-  field("ShowToolbar", Bool, false, "if true, show the toolbar in fullscreen mode"),
+  field(
+    "ShowToolbar",
+    Bool,
+    false,
+    "legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty, " +
+      "derived as show/hide (internal; use Fullscreen.Toolbar instead)",
+  ).internal(),
+  field(
+    "Toolbar",
+    Str,
+    null,
+    "toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay " +
+      "(toolbar floats over the page, only shown when the mouse is near it). " +
+      "if empty, derived from Fullscreen.ShowToolbar",
+  ).ver("3.7"),
   field("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
+  field(
+    "DisplayMode",
+    Str,
+    "",
+    "page layout in presentation (Ctrl+L) and windowed fullscreen (Shift+Ctrl+L / F11). " +
+      "empty keeps the current behavior: presentation uses single page, windowed fullscreen " +
+      "keeps the existing layout. valid values: automatic, single page, facing, book view, " +
+      "continuous, continuous facing, continuous book view",
+  ).ver("3.7"),
 ];
 
 const externalViewer: Field[] = [
@@ -423,35 +692,116 @@ const selectionHandler: Field[] = [
   ),
   field("Name", Str, null, "name shown in context menu"),
   field("Key", Str, null, "keyboard shortcut").ver("3.6"),
+  field(
+    "Exe",
+    Str,
+    null,
+    "command line of a program to run instead of opening a URL. Use ${selectionfile} to pass " +
+      "the selection as a temporary utf-8 file, which has no length limit. If set, URL is ignored",
+  ).ver("3.7"),
+  field(
+    "Method",
+    Str,
+    "GET",
+    "how to send the selection. GET (default) puts it in the URL, which limits how much text " +
+      "fits. POST sends it in the request body with no length limit and shows the response. " +
+      "POST-VIA-BROWSER submits a form from your browser instead, so the service sees your " +
+      "normal browser session (cookies, logins)",
+  ).ver("3.7"),
+  field(
+    "Body",
+    Str,
+    null,
+    "request body for POST / POST-VIA-BROWSER; the same ${selection}, ${selectionjson} and " +
+      "${userlang} substitutions apply. If unset, the body is the raw selection",
+  ).ver("3.7"),
+  field(
+    "ContentType",
+    Str,
+    null,
+    "value of the Content-Type header for POST. Defaults to 'text/plain; charset=utf-8', which " +
+      "matches the default raw-selection body. Use 'application/json' or " +
+      "'application/x-www-form-urlencoded' when Body is in that format. Ignored by " +
+      "POST-VIA-BROWSER, which always submits a form",
+  ).ver("3.7"),
+  field(
+    "Headers",
+    Str,
+    null,
+    "extra HTTP headers for POST, one per line as 'Name: value' (use \\n to separate them in " +
+      "this file). Needed for services that authenticate with an api key, e.g. " +
+      "'Authorization: Bearer sk-...'. Ignored by POST-VIA-BROWSER. Note that anything you put " +
+      "here is stored in plain text in this settings file",
+  ).ver("3.7"),
+  field(
+    "SelectToolbarNameOrSvg",
+    Str,
+    null,
+    "if set, the handler also gets a button in the toolbar that pops up over a text selection. " +
+      "The value is the button's text, or, if it starts with '<svg', an icon to draw instead",
+  ).ver("3.7"),
 ];
 
 const annotations: Field[] = [
-  field("HighlightColor", Color, rgb(0xff, 0xff, 0x0), "highlight annotation color"),
-  field("UnderlineColor", Color, rgb(0x00, 0xff, 0x0), "underline annotation color"),
-  field("SquigglyColor", Color, rgb(0xff, 0x00, 0xff), "squiggly annotation color").ver("3.5"),
-  field("StrikeOutColor", Color, rgb(0xff, 0x00, 0x00), "strike out annotation color").ver("3.5"),
-  field("FreeTextColor", Color, "", "text color of free text annotation").ver("3.5"),
-  field("FreeTextBackgroundColor", Color, "", "background color of free text annotation").ver("3.6"),
+  field(
+    "HighlightColor",
+    Color,
+    rgb(0xff, 0xff, 0x0),
+    "color of newly created highlight annotations. Use an #aarrggbb value to set " +
+      "default opacity (00 = transparent, FF = opaque); #rrggbb is fully opaque",
+  ),
+  field(
+    "UnderlineColor",
+    Color,
+    rgb(0x00, 0xff, 0x0),
+    "color of newly created underline annotations. #aarrggbb sets default opacity " + "the same way as HighlightColor",
+  ),
+  field(
+    "SquigglyColor",
+    Color,
+    rgb(0xff, 0x00, 0xff),
+    "color of newly created squiggly underline annotations. #aarrggbb sets default opacity " +
+      "the same way as HighlightColor",
+  ).ver("3.5"),
+  field(
+    "StrikeOutColor",
+    Color,
+    rgb(0xff, 0x00, 0x00),
+    "color of newly created strike out annotations. #aarrggbb sets default opacity " + "the same way as HighlightColor",
+  ).ver("3.5"),
+  field("FreeTextColor", Color, "", "text color of newly created free text annotations").ver("3.5"),
+  field("FreeTextBackgroundColor", Color, "", "background color of newly created free text annotations").ver("3.6"),
   field(
     "FreeTextOpacity",
     Int,
     100,
     "opacity of free text annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half transparent, 100 - fully opaque",
   ).ver("3.6"),
-  field("FreeTextSize", Int, 12, "size of free text annotation").ver("3.5"),
-  field("FreeTextBorderWidth", Int, 1, "width of free text annotation border").ver("3.5"),
-  field("TextIconColor", Color, "", "text icon annotation color"),
+  // sizes are in PDF user space units (points), not screen pixels: they're
+  // part of the document, so they must not be DPI-scaled
+  field("FreeTextSize", Int, 12, "font size of free text annotations, in points").ver("3.5"),
+  field("FreeTextBorderWidth", Int, 1, "border width of free text annotations, in points").ver("3.5"),
+  field(
+    "FreeTextAlignment",
+    Str,
+    "left",
+    "how text is aligned in newly created free text annotations (Text Alignment in the annotation " +
+      "editor): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want right",
+  ).ver("3.7"),
+  field("TextIconColor", Color, "", "color of newly created text (sticky note) annotations"),
   field(
     "TextIconType",
     Str,
     "",
-    "type of text annotation icon: comment, help, insert, key, new paragraph, note, paragraph. If not set: note.",
+    "icon shown for text (sticky note) annotations: comment, help, insert, key, " +
+      "new paragraph, note or paragraph. If not set, note is used",
   ),
   field(
     "DefaultAuthor",
     Str,
     "",
-    "default author for created annotations, use (none) to not add an author at all. If not set will use Windows user name",
+    "author recorded on newly created annotations. If not set, the Windows user name is used; " +
+      "set it to (none) to leave the author out entirely",
   ).ver("3.4"),
 ];
 
@@ -464,54 +814,117 @@ const favorite: Field[] = [
     null,
     "label for this page (only present if logical and physical page numbers are not the same)",
   ),
+  compactStruct(
+    "ScrollPos",
+    favoriteScrollPos,
+    "position on the page when the favorite was added (document units; -1 if not stored)",
+  )
+    .structName("PointF")
+    .ver("3.7"),
   field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)").notSaved(),
+  // search-start mark ("/") from Find; session-only. Field is in metadata so
+  // SerializeStruct can skip array elements with IsTemporary=true; the field
+  // itself is never written (SettingsUtil) (issue #5862)
+  field("IsTemporary", Bool, false, "session-only favorite; omitted when serializing array elements")
+    .internal()
+    .ver("3.7"),
+];
+
+// per-document version of the EBookUI section. Every field means "unset" when
+// it's empty / 0, in which case the global EBookUI value is used, so a document
+// can override just the font and keep the rest.
+const fileEBookUI: Field[] = [
+  field(
+    "FontName",
+    Str,
+    "",
+    "font family for this document (e.g. Segoe UI, Microsoft YaHei); " + "empty uses EBookUI.FontName",
+  ).ver("3.7"),
+  field("FontSize", Float, 0, "font size in points for this document; 0 uses EBookUI.FontSize").ver("3.7"),
+  compactArray(
+    "Margin",
+    Float,
+    null,
+    "white space around the text for this document, in points; one, two or four " +
+      "values like EBookUI.Margin. empty uses EBookUI.Margin",
+  ).ver("3.7"),
+  field("LineSpacing", Float, 0, "line-height multiplier for this document (e.g. 1.5); 0 uses EBookUI.LineSpacing").ver(
+    "3.7",
+  ),
+  field(
+    "LayoutDx",
+    Float,
+    0,
+    "width of the page this document is laid out into, in points; 0 uses EBookUI.LayoutDx",
+  ).ver("3.7"),
+  field(
+    "LayoutDy",
+    Float,
+    0,
+    "height of the page this document is laid out into, in points; 0 uses EBookUI.LayoutDy",
+  ).ver("3.7"),
+  field(
+    "IgnoreDocumentCSS",
+    Str,
+    "",
+    "whether the CSS in this document is ignored: true or false; " + "empty uses EBookUI.IgnoreDocumentCSS",
+  ).ver("3.7"),
+  field("CustomCSS", Str, "", "additional CSS applied to this document; empty uses EBookUI.CustomCSS").ver("3.7"),
 ];
 
 const fileSettings: Field[] = [
   field("FilePath", Str, null, "path of the document"),
-  array("Favorites", favorite, "Values which are persisted for bookmarks/favorites"),
+  array("Favorites", favorite, "pages of this document bookmarked in the Favorites menu"),
   field(
     "IsPinned",
     Bool,
     false,
-    'a document can be "pinned" to the Frequently Read list so that it ' +
-      "isn't displaced by recently opened documents",
+    'if true, the document is "pinned" to the Frequently Read list, so that ' +
+      "recently opened documents don't displace it",
   ),
   field(
     "IsMissing",
     Bool,
     false,
-    "if a document can no longer be found but we still remember valuable state, " +
-      "it's classified as missing so that it can be hidden instead of removed",
+    "if true, the document can no longer be found. State worth keeping is still " +
+      "remembered, so the entry is hidden rather than removed",
   ).doc("if true, the file is considered missing and won't be shown in any list"),
   field(
     "OpenCount",
     Int,
     0,
-    "in order to prevent documents that haven't been opened for a while " +
-      "but used to be opened very frequently constantly remain in top positions, " +
-      "the openCount will be cut in half after every week, so that the " +
-      "Frequently Read list hopefully better reflects the currently relevant documents",
+    "how often the document was opened, halved every week so that the Frequently Read " +
+      "list reflects what's relevant now instead of what used to be opened a lot",
   ).doc("number of times this document has been opened recently"),
   field(
     "DecryptionKey",
     Str,
     null,
-    "Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
-      "crypt key (64 chars) - only applies for PDF documents",
+    "hex encoded MD5 fingerprint of the file content (32 chars) followed by the " +
+      "crypt key (64 chars); only applies to PDF documents",
   ).doc("data required to open a password protected document without having to " + "ask for the password again"),
+  structPtr(
+    "EBookUI",
+    "FileEBookUI",
+    fileEBookUI,
+    "reflowable (ebook) settings for just this document. The block is absent " +
+      "until you add it; a field left empty or 0 uses the global EBookUI value. " +
+      "The global section's WindowBgCol and DefaultDisplayMode are already " +
+      "per-document as BgCol and DisplayMode below",
+  ).ver("3.7"),
   field(
     "UseDefaultState",
     Bool,
     false,
-    "if true, we use global defaults when opening this file (instead of " + "the values below)",
+    "if true, this document opens with the global defaults instead of the values below",
   ),
   field(
     "DisplayMode",
     Str,
     "automatic",
-    "how pages should be laid out for this document, needs to be synchronized with " +
-      "DefaultDisplayMode after deserialization and before serialization",
+    "how pages are laid out for this document. The string is the persisted form of " +
+      "DisplayModel::displayMode, so it's parsed after deserialization and written back " +
+      "before serialization",
   ).doc(
     "layout of pages. valid values: automatic, single page, facing, book view, " +
       "continuous, continuous facing, continuous book view",
@@ -529,20 +942,15 @@ const fileSettings: Field[] = [
     "state of the window. 1 is normal, 2 is maximized, " + "3 is fullscreen, 4 is minimized",
   ),
   compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
+  field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
+  field("SidebarDx", Int, 0, "width of the bookmarks / favorites sidebar in screen pixels, as last resized"),
+  field("DisplayR2L", Bool, false, "if true, the document is displayed right-to-left in facing and book view modes"),
   field(
-    "ShowToc",
-    Bool,
-    true,
-    "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
-  ),
-  field("SidebarDx", Int, 0, "width of the left sidebar panel containing the table of contents"),
-  field(
-    "DisplayR2L",
+    "UniformPageWidth",
     Bool,
     false,
-    "if true, the document is displayed right-to-left in facing and book view modes " +
-      "(only used for comic book documents)",
-  ),
+    "if true, percentage zoom scales every page to the width page 1 has at that zoom level",
+  ).ver("3.7"),
   field("BgCol", Color, "", "if given, overrides the background color for this document").ver("3.7"),
   field("TabCol", Color, "", "if given, overrides the tab color for this document").ver("3.7"),
   field(
@@ -559,31 +967,37 @@ const fileSettings: Field[] = [
     "tocState is an array of ids for ToC items that have been toggled by " +
       "the user (i.e. aren't in their default expansion state). - " +
       "Note: We intentionally track toggle state as opposed to expansion state " +
-      "so that we only have to save a diff instead of all states for the whole " +
+      "so that only a diff has to be saved instead of all states for the whole " +
       "tree (which can be quite large) (internal)",
   ).doc("data required to determine which parts of the table of contents have been expanded"),
   field(
     "Thumbnail",
-    { name: "", ctype: "RenderedBitmap *" },
+    { name: "", ctype: "Pixmap *" },
     "NULL",
     "thumbnails are saved as PNG files in sumatrapdfcache directory",
   ).notSaved(),
   field("Index", Int, 0, "temporary value needed for FileHistory::cmpOpenCount").notSaved(),
-  field("Himl", { name: "", ctype: "HIMAGELIST" }, "NULL", "").notSaved(),
-  field("IconIdx", Int, -1, "").notSaved(),
+  field("Himl", { name: "", ctype: "HIMAGELIST" }, "NULL", "image list holding the file's shell icon").notSaved(),
+  field("IconIdx", Int, -1, "index of the file's shell icon in Himl, -1 if not loaded yet").notSaved(),
 ];
 
 const tabState: Field[] = [
   field("FilePath", Str, null, "path of the document"),
-  field("DisplayMode", Str, "automatic", "same as FileStates -> DisplayMode"),
+  field(
+    "DisplayMode",
+    Str,
+    "automatic",
+    "layout of pages in this tab. valid values: automatic, single page, facing, " +
+      "book view, continuous, continuous facing, continuous book view",
+  ),
   field("PageNo", Int, 1, "number of the last read page"),
-  field("Zoom", Str, "fit page", "same as FileStates -> Zoom"),
-  field("Rotation", Int, 0, "same as FileStates -> Rotation"),
+  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
+  field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   compactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)").structName(
     "PointF",
   ),
   field("ShowToc", Bool, true, "if true, the table of contents was shown when the document was closed"),
-  compactArray("TocState", Int, null, "same as FileStates -> TocState"),
+  compactArray("TocState", Int, null, "which table of contents items were expanded (see FileStates -> TocState)"),
 ];
 
 const sessionData: Field[] = [
@@ -594,9 +1008,9 @@ const sessionData: Field[] = [
       "(required for handling documents being opened twice)",
   ).doc("data required for restoring the view state of a single tab"),
   field("TabIndex", Int, 1, "index of the currently selected tab (1-based)"),
-  field("WindowState", Int, 0, "same as FileState -> WindowState"),
-  compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
-  field("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)"),
+  field("WindowState", Int, 0, "state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized"),
+  compactStruct("WindowPos", windowPos, "position of the window (can be on any monitor)").structName("Rect"),
+  field("SidebarDx", Int, 0, "width of the favorites / bookmarks sidebar in screen pixels (0 if it wasn't shown)"),
 ];
 
 const globalPrefs: Field[] = [
@@ -607,11 +1021,15 @@ const globalPrefs: Field[] = [
     "DefaultDisplayMode",
     Str,
     "automatic",
-    "how pages should be laid out by default, needs to be synchronized with " +
-      "DefaultDisplayMode after deserialization and before serialization",
+    "how pages are laid out by default. The string is the persisted form of " +
+      "DefaultDisplayModeEnum, so it's parsed after deserialization and written back " +
+      "before serialization",
   ).doc(
     "default layout of pages. valid values: automatic, single page, facing, " +
-      "book view, continuous, continuous facing, continuous book view",
+      "book view, continuous, continuous facing, continuous book view, page aspect. " +
+      "page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file " +
+      "uses page 1 — taller than wide is continuous + fit width, wider than tall " +
+      "is single page + fit page; a remembered FileState still wins",
   ),
   field(
     "DefaultZoom",
@@ -636,29 +1054,33 @@ const globalPrefs: Field[] = [
     "EnableTeXEnhancements",
     Bool,
     false,
-    "if true, we expose the SyncTeX inverse search command line in Settings -> Options",
+    "if true, show the SyncTeX inverse search command line in Settings -> Options, so a " +
+      "double-click in the document can jump to the matching line in a LaTeX editor",
   ),
   field("EscToExit", Bool, false, "if true, Esc key closes SumatraPDF"),
-  field("FullPathInTitle", Bool, false, "if true, we show the full path to a file in the title bar").ver("3.0"),
+  field("FullPathInTitle", Bool, false, "if true, show the full path to the document in the title bar").ver("3.0"),
   field("InverseSearchCmdLine", Str, null, "pattern used to launch the LaTeX editor when doing inverse search"),
   field(
     "LazyLoading",
     Bool,
     false,
-    "when restoring session, delay loading of documents until their tab is selected",
+    "if true, restoring a session delays loading each document until its tab is selected",
   ).ver("3.6"),
   field(
     "MainWindowBackground",
     Color,
     rgba(0xff, 0xf2, 0x00, 0x80),
-    "background color of the non-document windows, traditionally yellow",
+    "background color of the area around the document, traditionally yellow. Only applies to the " +
+      'Light theme; the default #80fff200 is a marker meaning "use the theme\'s color", so setting ' +
+      "any other value also colorizes the toolbar and sidebars",
   ),
   field("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
   field(
     "HomePageSortByFrequentlyRead",
     Bool,
     false,
-    "if true implements pre-3.6 behavior of showing opened files by frequently used count. If false, shows most recently opened first",
+    "if true, the home page lists documents by how often they've been opened (the pre-3.6 " +
+      "behavior); if false, the most recently opened come first",
   ),
   field(
     "HomePageViewMode",
@@ -667,7 +1089,16 @@ const globalPrefs: Field[] = [
     "how the home page shows the document history: thumbnails (a grid of page previews) or list (one row per file)",
   )
     .ver("3.7")
-    .doc("Valid values: thumbnails, list"),
+    .doc("valid values: thumbnails, list"),
+  field(
+    "FilePicker",
+    Str,
+    "",
+    "file open dialog used by Open File: empty or os (standard Windows file picker), " +
+      "or sumatrapdf (Navigate Files in Folder). Toggled by Settings / SumatraPDF File Picker",
+  )
+    .ver("3.7")
+    .doc("valid values: (empty), os, sumatrapdf"),
   field(
     "ReloadModifiedDocuments",
     Bool,
@@ -675,24 +1106,29 @@ const globalPrefs: Field[] = [
     "if true, a document will be reloaded automatically whenever it's changed " +
       "(currently doesn't work for documents shown in the ebook UI)",
   ).ver("2.5"),
-  field("RememberOpenedFiles", Bool, true, "if true, we remember which files we opened and their display settings"),
+  field("RememberOpenedFiles", Bool, true, "if true, remember which documents were opened and their display settings"),
   field(
     "RememberStatePerDocument",
     Bool,
     true,
-    "if true, we store display settings for each document separately (i.e. everything " +
+    "if true, store display settings for each document separately (i.e. everything " +
       "after UseDefaultState in FileStates)",
   ),
   field("RestoreSession", Bool, true, "if true and SessionData isn't empty, that session will be restored at startup"),
-  field("ReuseInstance", Bool, true, "if true, we'll always open files using existing SumatraPDF process"),
+  field(
+    "ReuseInstance",
+    Bool,
+    true,
+    "if true, open documents in the already running SumatraPDF instead of starting a new one",
+  ),
   field(
     "ShowMenubar",
     Bool,
     true,
-    "if false, the menu bar will be hidden (use F9 to toggle, persisted across sessions)",
+    "if true, show the menu bar (F9 toggles it; the choice is remembered across sessions)",
   ).ver("2.5"),
   field("ShowMenubarWithTabs", Bool, false, "if true, show the menu bar when using tabs (useTabs = true)").ver("3.7"),
-  field("ShowTips", Bool, true, "if true, we show tips on the home page").ver("3.7"),
+  field("ShowTips", Bool, true, "if true, show tips on the home page").ver("3.7"),
   field(
     "CustomColors",
     Str,
@@ -701,7 +1137,12 @@ const globalPrefs: Field[] = [
   )
     .internal()
     .ver("3.7"),
-  field("ShowToolbar", Bool, true, "if true, we show the toolbar at the top of the window"),
+  field(
+    "ShowToolbar",
+    Bool,
+    true,
+    "legacy bool for toolbar; if Toolbar is empty, derived as show/hide " + "(internal; use Toolbar instead)",
+  ).internal(),
   field(
     "Toolbar",
     Str,
@@ -723,7 +1164,7 @@ const globalPrefs: Field[] = [
     "if true, the find UI is a floating, movable window with a results list " +
       "instead of the compact toolbar overlay",
   ).ver("3.7"),
-  field("ShowFavorites", Bool, false, "if true, we show the Favorites sidebar"),
+  field("ShowFavorites", Bool, false, "if true, show the Favorites sidebar"),
   field(
     "SortFavoritesByName",
     Bool,
@@ -731,13 +1172,61 @@ const globalPrefs: Field[] = [
     "if true, favorites within each file are sorted alphabetically by name " +
       "(or page label); if false (the default), they are sorted by page number",
   ).ver("3.7"),
+  field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
   field(
-    "ShowToc",
+    "SidebarOnRight",
+    Bool,
+    false,
+    "if true, put the bookmarks / favorites sidebar on the right of the window " +
+      "(left is the default; right-to-left UI languages already put it on the right)",
+  ).ver("3.7"),
+  field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
+  field(
+    "HighlightFormFields",
     Bool,
     true,
-    "if true, we show table of contents (Bookmarks) sidebar if it's present " + "in the document",
-  ),
-  field("ShowLinks", Bool, false, "if true we draw a blue border around links in the document").ver("3.6"),
+    "if true, highlight empty fillable PDF form fields in pale blue so they are easy to find",
+  ).ver("3.7"),
+  field(
+    "ClickEdgeToTurnPage",
+    Bool,
+    false,
+    "if true, a click (not a drag) on the left fifth of the page area goes to " +
+      "the previous page and a click on the right fifth goes to the next page " +
+      "(reversed in manga / right-to-left mode). Links, annotations and " +
+      "presentation-mode clicks are unchanged",
+  ).ver("3.7"),
+  field(
+    "DisableLinks",
+    Bool,
+    false,
+    "if true, document links are ignored so you can select and read " +
+      "(useful for drawings with many links); if false, clicking a link follows it",
+  ).ver("3.7"),
+  field(
+    "ExplorerQuickLook",
+    Bool,
+    false,
+    "if true, Space in File Explorer (or on the desktop) previews the selected " +
+      "file in a popup window, like macOS Quick Look. Esc or Space closes it; " +
+      "Left / Right open the previous / next file in the folder. Starts a small " +
+      "background helper at logon so it works even when SumatraPDF is not open",
+  ).ver("3.7"),
+  field(
+    "RememberViewOffsetOnPageTurn",
+    Bool,
+    false,
+    "if true, next/previous page keeps the same view position on the page " +
+      "instead of jumping to the top (useful when zoomed in on similarly sized pages)",
+  ).ver("3.7"),
+  field(
+    "MouseWheelTurnsPage",
+    Bool,
+    false,
+    "if true, one mouse-wheel notch goes to the next / previous page instead of scrolling; " +
+      "combine with RememberViewOffsetOnPageTurn to read zoomed-in pages without touching the keyboard. " +
+      "Alt + wheel still scrolls, Shift + wheel scrolls horizontally and Ctrl + wheel zooms",
+  ).ver("3.7"),
   field(
     "ShowDocumentFocusIndicator",
     Bool,
@@ -756,21 +1245,32 @@ const globalPrefs: Field[] = [
     true,
     "if true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries",
   ).ver("3.7"),
-  field("ShowStartPage", Bool, true, "if true, we show a list of frequently read documents when no document is loaded"),
-  field("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)").internal(),
+  field("ShowStartPage", Bool, true, "if true, show a list of frequently read documents when no document is loaded"),
+  field(
+    "SidebarDx",
+    Int,
+    0,
+    "width of the favorites / bookmarks sidebar in screen pixels, as last resized (0 means the default)",
+  ).internal(),
   field(
     "Scrollbars",
     Str,
     "windows",
     "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
   ).ver("3.7"),
-  field("ScrollbarInSinglePage", Bool, false, "if true, we show scrollbar in single page mode").ver("3.6"),
+  field("ScrollbarInSinglePage", Bool, false, "if true, show a scrollbar in single page mode as well").ver("3.6"),
   field(
     "SmoothScroll",
     Bool,
     true,
-    "if true, smooth mouse-wheel scrolling (exponential chase of the target; continuous wheel input stays fluid)",
+    "if true, smooth mouse-wheel and arrow-key scrolling (exponential chase of the target; continuous input stays fluid)",
   ).ver("3.6"),
+  field(
+    "ScrollLineAmount",
+    Int,
+    16,
+    "distance, in screen pixels at 96 DPI, scrolled by an arrow-key press or one mouse-wheel line; values below 1 use 16",
+  ).ver("3.7"),
   field(
     "PaddingAfterLastPage",
     Bool,
@@ -778,10 +1278,30 @@ const globalPrefs: Field[] = [
     "if true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the top of the window",
   ).ver("3.7"),
   field(
+    "IgnoreDestinationZoom",
+    Bool,
+    false,
+    "if true, going to a destination (clicking a bookmark or a link inside the document) keeps " +
+      "the current zoom instead of applying the zoom the destination asks for; it still goes to " +
+      "the page and the position. Same as Adobe Reader's 'forbid the change of the current zoom " +
+      "factor during execution of Go to Destination actions'",
+  ).ver("3.7"),
+  field(
+    "HighlightLinkDestination",
+    Bool,
+    false,
+    "if true, following an internal link or bookmark flashes a highlight at the " +
+      "destination so you can see where you landed (a bibliography entry, figure, " +
+      "or named destination). The color and fade match ForwardSearch. Off when the " +
+      "destination is only a page with no position",
+  ).ver("3.7"),
+  field(
     "CitationHoverDelay",
     Int,
     -1,
-    "how long to hover an internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it",
+    "how long an internal-document link has to be hovered, in milliseconds, before a popup " +
+      "rendering the destination region (citation entry, figure, footnote) appears. -1 (the " +
+      "default) disables the popup; set a positive value like 300 to enable it",
   ).ver("3.7"),
   field(
     "ReadAloudVoiceId",
@@ -807,10 +1327,25 @@ const globalPrefs: Field[] = [
     true,
     "if true, prevents the screen from turning off when in fullscreen or presentation mode",
   ),
-  field("TabWidth", Int, 300, "maximum width of a single tab"),
-  field("Theme", Str, "", "the name of the theme to use. System picks the last used light or dark theme based on the Windows app mode")
+  field("TabWidth", Int, 300, "maximum width of a single tab, in pixels at 100% display scaling (at least 60)"),
+  // Built-in names must stay in sync with themesTxt in src/Theme.cpp (plus System)
+  field(
+    "Theme",
+    Str,
+    "",
+    "the name of the theme to use. System follows the Windows light/dark app mode " +
+      "and switches between LastLightTheme and LastDarkTheme. Built-in themes: " +
+      "Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, " +
+      "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, " +
+      "Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, " +
+      "Palenight, System (custom Themes[] entries can add more)",
+  )
     .ver("3.5")
-    .doc("Valid themes: light, dark, darker, system"),
+    .doc(
+      "valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, " +
+        "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, " +
+        "GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System",
+    ),
   // remembered by the light/dark toggle and System theme; not user-facing knobs
   field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to")
     .internal()
@@ -818,31 +1353,79 @@ const globalPrefs: Field[] = [
   field("LastDarkTheme", Str, "", "the dark theme the light/dark toggle and the System theme switch to")
     .internal()
     .ver("3.7"),
+  // Full text is shown in Advanced Settings and Advanced-options-settings.md
+  // (do not use a short .doc() here — that would replace this description).
   field(
     "DocumentColorsFollowTheme",
     Str,
     "off",
-    "how fixed-page documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, HTML, etc.) follow the UI theme: off (keep original page colors), smart (recolor text and background but not images), or legacy (recolor text and background and images, pre-3.7 behavior)",
-  )
-    .ver("3.7")
-    .doc("Valid values: off, smart, legacy"),
+    "how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) " +
+      "use UI / FixedPageUI colors for the page. Values: off (document's own colors; default); " +
+      "smart (recolor text and page background, keep photos/images as-is — best for dark reading); " +
+      "legacy (also recolor images; pre-3.7 invert-style). Does not change menus/toolbars — use Theme " +
+      "for UI chrome. Settings / Theme and the CmdSetDocumentColorsFollowTheme command set " +
+      "all three values. Shift+I (Invert Colors) is separate: it swaps the page colors for " +
+      "the session whatever this is set to",
+  ).ver("3.7"),
   field(
     "TocDy",
     Int,
     0,
-    "if both favorites and bookmarks parts of sidebar are visible, this is " +
-      "the height of bookmarks (table of contents) part",
+    "if both the favorites and the bookmarks part of the sidebar are visible, this is " +
+      "the height of the bookmarks (table of contents) part, in screen pixels",
   ).internal(),
-  field("ToolbarSize", Int, 18, "height of toolbar").ver("3.4"),
+  field(
+    "ToolbarCustomLayout",
+    Str,
+    "",
+    "the toolbar's built-in buttons, in the order you want them, e.g. " +
+      "CmdOpenFile CmdPrint PageInfo | CmdFindFirst. Leave a button out to hide it. " +
+      "| is a separator and PageInfo is the page number box. Empty (the default) means " +
+      "the standard layout. Buttons you added yourself (see Shortcuts) still come last",
+  ).ver("3.7"),
+  field(
+    "ToolbarShowReadAloud",
+    Bool,
+    false,
+    "if true, the toolbar has a Read Aloud button (with a drop-down for voice, speed and " +
+      "what to read). Read Aloud is still reachable from the Read Aloud menu when this is false",
+  ).ver("3.7"),
+  field(
+    "ToolbarSize",
+    Int,
+    18,
+    "size of the toolbar icons in pixels at 100% display scaling (8-64); the toolbar itself " +
+      "is a few pixels taller",
+  ).ver("3.4"),
   field(
     "TreeFontName",
     Str,
     "automatic",
     "font name for bookmarks and favorites tree views. automatic means Windows default",
   ),
-  field("TreeFontSize", Int, 0, "font size for bookmarks and favorites tree views. 0 means Windows default").ver("3.3"),
-  field("UIFontSize", Int, 0, "over-ride application font size. 0 means Windows default").ver("3.6"),
-  field("DisableAntiAlias", Bool, false, "if true, disables anti-aliasing for rendering PDF documents").ver("3.6"),
+  // font sizes are used as-is at every dpi (see GetAppMenuFontSizeForDpi):
+  // a user who picks a size wants that size, not a scaled one
+  field(
+    "TreeFontSize",
+    Int,
+    0,
+    "font size for bookmarks and favorites tree views, in pixels; 0 means the Windows default. " +
+      "Not scaled by the display scaling",
+  ).ver("3.3"),
+  field(
+    "UIFontSize",
+    Int,
+    0,
+    "overrides the font size used for menus, toolbar and dialogs, in pixels; 0 means the " +
+      "Windows default. Not scaled by the display scaling",
+  ).ver("3.6"),
+  field(
+    "DisableAntiAlias",
+    Bool,
+    false,
+    "if true, render MuPDF-based documents (PDF, XPS, DjVu, EPUB etc.) without anti-aliasing, " +
+      "giving sharper but jagged edges",
+  ).ver("3.6"),
   field(
     "EngineeringDrawingEnhance",
     Str,
@@ -854,12 +1437,12 @@ const globalPrefs: Field[] = [
     Bool,
     false,
     "if true, disables auto-linking of URLs and email addresses found in PDF text",
-  ),
+  ).ver("3.7"),
   field(
     "UseSysColors",
     Bool,
     false,
-    "if true, we use Windows system colors for background/text color. Over-rides other settings",
+    "if true, use the Windows system colors for the document background and text. Overrides other color settings",
   ),
   field("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows").ver("3.0"),
   field(
@@ -873,28 +1456,39 @@ const globalPrefs: Field[] = [
     Bool,
     false,
     "if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order",
-  ),
+  ).ver("3.7"),
+  field(
+    "CtrlTabSimple",
+    Bool,
+    false,
+    "if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order " +
+      "(the behavior before version 3.6) instead of showing the tab switcher",
+  ).ver("3.7"),
   compactArray(
     "ZoomLevels",
     Float,
     "",
-    "zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
-      "the minimum and maximum allowed values (8.33 and 6400)",
-  ).doc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
-  compactArray("ZoomLevelsCmdIds", Int, "", "").notSaved(),
+    "zoom levels which zooming steps through in addition to Fit Page and Fit Width. " +
+      "The largest value is also the highest zoom that can be set at all, so listing " +
+      "levels above 6400 (up to 1000000) is how you zoom further into e.g. a large map",
+  ).doc(
+    "sequence of zoom levels when zooming in/out; values must lie between 8.33 and 1000000 " +
+      "(the largest one becomes the maximum zoom, which is 6400 by default)",
+  ),
+  compactArray("ZoomLevelsCmdIds", Int, "", "command id assigned to each entry of ZoomLevels").notSaved(),
   field(
     "ZoomIncrement",
     Float,
     0,
-    "zoom step size in percents relative to the current zoom level. " +
-      "if zero or negative, the values from ZoomLevels are used instead",
+    "how much a single zoom in / zoom out step changes the zoom, as a percentage of the " +
+      "current zoom level. If 0 or negative, zooming steps through ZoomLevels instead",
   ),
 
   emptyLine(),
 
   struct("FixedPageUI", fixedPageUI, "customization options for PDF, XPS, DjVu and PostScript UI"),
   emptyLine(),
-  struct("EBookUI", ebookUI, "customization options for eBookUI"),
+  struct("EBookUI", ebookUI, "customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)"),
   emptyLine(),
   struct("ComicBookUI", comicBookUI, "customization options for Comic Book UI"),
   emptyLine(),
@@ -903,7 +1497,7 @@ const globalPrefs: Field[] = [
   struct(
     "ChmUI",
     chmUI,
-    "customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
+    "customization options for CHM UI. UseFixedPageUI switches to the PDF-style view; FontName applies to that view",
   ),
   emptyLine(),
   struct(
@@ -912,11 +1506,19 @@ const globalPrefs: Field[] = [
     "customization options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
   ),
   emptyLine(),
+  struct(
+    "HtmlUI",
+    htmlUI,
+    "customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available",
+  ).ver("3.7"),
+  emptyLine(),
   struct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar").ver("3.7"),
   emptyLine(),
   struct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar").ver("3.7"),
   emptyLine(),
   struct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar").ver("3.7"),
+  emptyLine(),
+  struct("AntiGravity", antiGravity, "settings for the Antigravity chat sidebar").ver("3.7"),
   emptyLine(),
   field(
     "AIChatSidebarDx",
@@ -942,7 +1544,7 @@ const globalPrefs: Field[] = [
     "TranslateEngine",
     Str,
     "",
-    "remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code or OpenAI Codex",
+    "remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity",
   )
     .internal()
     .ver("3.7"),
@@ -959,7 +1561,7 @@ const globalPrefs: Field[] = [
   struct(
     "ForwardSearch",
     forwardSearch,
-    "customization options for how we show forward search results (used from " + "LaTeX editors)",
+    "customization options for how forward search results are shown (used from LaTeX editors)",
   ),
   emptyLine(),
   struct("PrinterDefaults", printerDefaults, "these override the default settings in the Print dialog"),
@@ -983,7 +1585,8 @@ const globalPrefs: Field[] = [
     "CustomScreenDPI",
     Int,
     0,
-    "actual resolution of the main screen in DPI (if this value " + "isn't positive, the system's UI setting is used)",
+    "actual resolution of the main screen in DPI, used to show documents at their physical " +
+      "size; if 0 or negative, the resolution reported by Windows is used",
   ).ver("2.5"),
   emptyLine(),
 
@@ -997,7 +1600,7 @@ const globalPrefs: Field[] = [
   field("UiLanguage", Str, null, "ISO code of the current UI language").doc(
     "[ISO code](langs.html) of the current UI language",
   ),
-  field("VersionToSkip", Str, null, "we won't ask again to update to this version"),
+  field("VersionToSkip", Str, null, "SumatraPDF won't offer to update to this version again"),
   field("WindowState", Int, 1, "default state of new windows (same as the last closed)").doc(
     "default state of the window. 1 is normal, 2 is maximized, " + "3 is fullscreen, 4 is minimized",
   ),
@@ -1009,6 +1612,14 @@ const globalPrefs: Field[] = [
     windowPos,
     "position/size of the floating find window (see SearchUIFloating)",
   ).structName("Rect"),
+  compactStruct("HelpWindowPos", windowPos, "position/size of the in-app Help: Manual window")
+    .structName("Rect")
+    .ver("3.7")
+    .internal(),
+  compactStruct("AnnotationsWindowSize", windowSize, "last-used client size of the annotations window")
+    .structName("Size")
+    .ver("3.7")
+    .internal(),
 
   array("FileStates", fileSettings, "information about opened files (in most recently used order)"),
   array("SessionData", sessionData, "state of the last session, usage depends on RestoreSession").ver("3.1"),
@@ -1043,7 +1654,7 @@ const globalPrefs: Field[] = [
   compactStruct("PropWinPos", pointPos, "position of the document properties window").structName("Point"),
   // saved & honored, but hidden from the advanced settings dialog (edited via
   // the "Automatically check for updates" checkbox in Options instead)
-  field("CheckForUpdates", Bool, true, "if true, we check once a day if an update is available").internal(),
+  field("CheckForUpdates", Bool, true, "if true, check once a day whether an update is available").internal(),
   emptyLine(),
   comment("Settings below are not recognized by the current version"),
 ];
@@ -1113,7 +1724,7 @@ function cdefault(f: Field, built: Record<string, number>): string {
     return `(intptr_t)"${f.Default}"`;
   }
   const typeName = f.Type.name;
-  if (["Struct", "Array", "Compact"].includes(typeName)) {
+  if (["Struct", "StructPtr", "Array", "Compact"].includes(typeName)) {
     let idStr = "";
     const id = built[f.StructName] || 0;
     if (id > 0) {
@@ -1200,10 +1811,13 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
     if (isComment(field)) continue;
     const comments = formatComment(field.Comment, "\t//");
     lines.push(...comments);
-    lines.push(`\t${field.Type.ctype} ${field.CName};`);
     if (field.Type.name === "Color") {
-      lines.push(`\tParsedColor ${field.CName}Parsed;`);
-    } else if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
+      // a color setting is its text plus the parse of it; see ParsedColor
+      lines.push(`\tParsedColor ${field.CName};`);
+    } else {
+      lines.push(`\t${field.Type.ctype} ${field.CName};`);
+    }
+    if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
       const name = field.Name;
       if (name === field.StructName || name === field.StructName + "s") {
         if (built[name] === undefined) {
@@ -1211,6 +1825,13 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
           required.push(s, "");
           built[name] = (built[name] || 0) + 1;
         }
+      }
+    } else if (field.Type.name === "StructPtr") {
+      const name = field.StructName;
+      if (built[name] === undefined) {
+        const s = buildStruct(field, built);
+        required.push(s, "");
+        built[name] = (built[name] || 0) + 1;
       }
     }
   }
@@ -1249,7 +1870,7 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     // per-field doc comment, aligned with names; used by the advanced settings
     // dialog to describe the selected setting
     comments.push(field.DocComment || "");
-    if (["Struct", "Compact", "Array"].includes(field.Type.name)) {
+    if (["Struct", "StructPtr", "Compact", "Array"].includes(field.Type.name)) {
       const sublines = buildMetaData(field, built);
       lines.push(sublines, "");
       built[field.StructName] = (built[field.StructName] || 0) + 1;
@@ -1267,18 +1888,29 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
   const constStr = fullName !== "FileState" ? "const " : "";
   const namesStr = names.join("\\0");
   const commentsStr = comments.map(escapeCStr).join("\\0");
+  // true if metadata includes Bool IsTemporary (SerializeStruct skips those array elements)
+  let couldBeTemporary = false;
+  for (const field of fields) {
+    if (field.NotSaved || isComment(field)) {
+      continue;
+    }
+    if (field.Name === "IsTemporary" && field.Type.name === "Bool") {
+      couldBeTemporary = true;
+      break;
+    }
+  }
   lines.push(
-    `static ${constStr}StructInfo g${fullName}Info = { sizeof(${struc.StructName}), ${names.length}, g${fullName}Fields, "${namesStr}", "${commentsStr}" };`,
+    `static ${constStr}StructInfo g${fullName}Info = { sizeof(${struc.StructName}), ${names.length}, g${fullName}Fields, "${namesStr}", "${commentsStr}", ${couldBeTemporary} };`,
   );
   return lines.join("\n");
 }
 
-const settingsStructsHeader = `// !!!!! This file is auto-generated by do/settings_gen_code.go
+const settingsStructsHeader = `// !!!!! This file is auto-generated by cmd/gen-settings.ts
 
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING) */
 
-struct RenderedBitmap;
+struct Pixmap;
 
 enum class DisplayMode {
 \t// automatic means: the continuous form of single page, facing or
@@ -1299,7 +1931,9 @@ constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
 constexpr float kZoomFitHeight = -6.F;
 constexpr float kZoomActualSize = 100.0F;
-constexpr float kZoomMax = 6400.F; /* max zoom in % */
+constexpr float kZoomMaxDefault = 6400.F;     /* max zoom in %, unless ZoomLevels raises it */
+constexpr float kZoomMaxAllowed = 1000000.F;  /* the highest ZoomLevels can raise it to */
+extern float kZoomMax;                        /* the max zoom in % in force, see DisplayMode.cpp */
 constexpr float kZoomMin = 8.33F;  /* min zoom in % */
 constexpr float kInvalidZoom = -99.0F;
 
@@ -1427,7 +2061,7 @@ function genStructHTML(struc: Field, indent: string): string {
       const end = `${indent2}]\n${indent}]`;
       const inside = genStructHTML(field, indent + indentStr);
       lines.push(start, inside, end);
-    } else if (field.Type.name === "Struct") {
+    } else if (field.Type.name === "Struct" || field.Type.name === "StructPtr") {
       const start = `${indent}${field.Name} [`;
       const end = `${indent}]`;
       const inside = genStructHTML(field, indent + indentStr);
@@ -1503,7 +2137,7 @@ function genStructMarkdown(struc: Field, indent: string): string {
       const end = `${indent2}]\n${indent}]`;
       const inside = genStructMarkdown(field, indent + indentStr);
       lines.push(start, inside, end);
-    } else if (field.Type.name === "Struct") {
+    } else if (field.Type.name === "Struct" || field.Type.name === "StructPtr") {
       const start = `${indent}${field.Name} [`;
       const end = `${indent}]`;
       const inside = genStructMarkdown(field, indent + indentStr);
@@ -1705,12 +2339,12 @@ If you add or remove lines with square brackets, **make sure to always add/remov
 The syntax for colors is: \`#rrggbb\` or \`#aarrggbb\`.
 
 The components are hex values (ranging from 00 to FF) and stand for:
-- \`aa\` : alpha (transparency). ff is fully transparent, 0 is not transparent, and 7f is 50% transparent
+- \`aa\` : alpha (opacity). \`00\` is fully transparent, \`FF\` is fully opaque, and \`7F\` is about 50% opaque
 - \`rr\` : red component
 - \`gg\` : green component
 - \`bb\` : blue component
 
-For example #ff0000 means red color. #7fff0000 is half-transparent red. You can use [Sphere](https://colorsphere.app/) to pick a color.
+For example \`#ff0000\` is opaque red. \`#7fff0000\` is half-transparent red. \`#rrggbb\` (6 digits) is the same as \`#FFrrggbb\`. You can use [Sphere](https://colorsphere.app/) to pick a color. This applies to annotation colors too (\`Annotations.HighlightColor\`, underline, squiggly, strike-out).
 
 `;
 

@@ -41,6 +41,12 @@ struct WindowTab {
     DocController* ctrl = nullptr;
     LoadState loadState = LoadState::None;
     u64 loadStartedAt = 0;
+    // network-drive copy progress while loading (-1 = not in copy phase)
+    i64 loadCopyBytesCopied = -1;
+    i64 loadCopyBytesTotal = 0;
+    // why the load failed, shown under the error message (owned; empty if we
+    // couldn't tell). See FileLoadErrorReasonTemp()
+    Str loadErrorReason;
     LoadArgs* pendingLoadArgs = nullptr;
     // text of win->hwndFrame when the tab is selected
     Str frameTitle;
@@ -63,7 +69,7 @@ struct WindowTab {
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
     TocTree* currToc = nullptr; // not owned by us
     EditAnnotationsWindow* editAnnotsWindow = nullptr;
-    Rect lastEditAnnotsWindowPos = {};
+    Rect lastEditAnnotsWindowPos;
 
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;
@@ -79,11 +85,11 @@ struct WindowTab {
     HWND hwndPDFOutline = nullptr;
 
     // per-document background color from FileState; kColorUnset = use default
-    COLORREF bgColor = kColorUnset;
+    Color bgColor = kColorUnset;
     // true if per-document background is explicitly set to checkered pattern
     bool bgColorCheckered = false;
     // per-document tab color from FileState; kColorUnset = use default
-    COLORREF tabColor = kColorUnset;
+    Color tabColor = kColorUnset;
 
     // a page of this tab has been painted from the render cache at least
     // once. Until then page placeholders paint in the theme background color
@@ -96,11 +102,19 @@ struct WindowTab {
     // and already call ReloadDocument ourselves). Consumed by AUTO_RELOAD_TIMER.
     bool ignoreNextAutoReload = false;
 
-    // per-provider AI chat state, indexed by AIChatBackend
-    // (0 = Claude, 1 = Grok, 2 = Codex)
-    AIChatTabState aiChat[3];
+    // file size / mtime seen at the previous AUTO_RELOAD_TIMER tick, and when
+    // the pending auto-reload was first scheduled. Used to wait out a writer
+    // that is still producing the file (see AUTO_RELOAD_TIMER_ID in Canvas.cpp)
+    i64 autoReloadSize = -1;
+    FILETIME autoReloadModTime{};
+    u64 autoReloadStartMs = 0;
 
-    // which AI chat sidebar is open for this tab (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex)
+    // per-provider AI chat state, indexed by AIChatBackend
+    // (0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)
+    AIChatTabState aiChat[4];
+
+    // which AI chat sidebar is open for this tab
+    // (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)
     int aiChatPanelOpen = -1;
 
     // read aloud: cleaned text that was being read and the utf8 offset
@@ -131,7 +145,6 @@ struct WindowTab {
 
     bool IsAboutTab() const;
     bool IsFavoritesTab() const;
-    // About or Favorites: no document controller
     bool IsNonDocumentTab() const;
 
     DisplayModel* AsFixed() const;
@@ -139,7 +152,6 @@ struct WindowTab {
     void SetFilePath(Str path);
     void SetDisplayName(Str name);
 
-    // only if AsFixed()
     EngineBase* GetEngine() const;
     Kind GetEngineType() const;
 
@@ -149,6 +161,7 @@ struct WindowTab {
     Str GetTabTitle() const;
     bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
+    float NextToggleZoom() const;
     void ToggleZoom() const;
 };
 

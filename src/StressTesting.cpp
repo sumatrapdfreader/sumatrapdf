@@ -3,14 +3,16 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/DirIter.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Timer.h"
 #include "base/Win.h"
 #include "base/StrQueue.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "DocProperties.h"
@@ -445,12 +447,10 @@ again:
         return path;
     }
     path = queue.PopFront();
-    if (queue.IsSentinel(path)) {
+    if (StrQueue::IsSentinel(path)) {
         return {};
     }
-    path = str::Dup(path);
     if (!IsStressTestSupportedFile(path, fileFilter)) {
-        str::Free(path);
         goto again;
     }
     AtomicIntInc(&nFiles);
@@ -686,7 +686,9 @@ static bool OpenFile(StressTest* st, Str fileName) {
     // search immediately in single page documents
     if (1 == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
-        HwndSetText(st->win->hwndFindEdit, "!z_yt");
+        if (st->win->findEdit) {
+            st->win->findEdit->SetText(StrL("!z_yt"));
+        }
         FindTextOnThread(st->win, TextSearch::Direction::Forward, true);
     }
 
@@ -830,7 +832,9 @@ static bool GoToNextPage(StressTest* st) {
     // current API doesn't make it easy
     if (st->currPageNo == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
-        HwndSetText(st->win->hwndFindEdit, "!z_yt");
+        if (st->win->findEdit) {
+            st->win->findEdit->SetText(StrL("!z_yt"));
+        }
         FindTextOnThread(st->win, TextSearch::Direction::Forward, true);
     }
 
@@ -1011,7 +1015,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
             Start(dst, filesProvider, i->stressTestCycles);
         }
 
-        free(windows);
+        free((void*)windows);
     } else {
         PositionStressWindows(&win, 1);
         // dst will be deleted when the stress ends

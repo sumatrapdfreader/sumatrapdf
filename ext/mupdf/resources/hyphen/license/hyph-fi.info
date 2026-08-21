@@ -1,0 +1,64 @@
+% title: Hyphenation patterns for Finnish
+% copyright: Copyright (C) 1986, 1988, 1989 Kauko Saarinen
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Finnish
+%     tag: fi
+% version: 2.2
+% authors:
+%   -
+%     name: Kauko Saarinen
+%     affiliation: Computing Centre, University of Jyväskylä, Finland
+% licence:
+%     - text: Patterns may be freely distributed
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - First release 1986-01 by Kauko Saarinen,
+%     - >
+%         Completely rewritten 1988-01. The new patterns make
+%         much less mistakes with foreign and compound words.
+%         The article "Automatic Hyphenation of Finnish"
+%         by Professor Fred Karlsson is also referred
+%     - 1989-03-08 (vers. 2.2), some vowel triples by Fred Karlsson added.
+%     - 1995-01-09: added \uccode and \lccode by Thomas Esser
+% texlive:
+%     encoding: ec
+%     babelname: finnish
+%     legacy_patterns: fihyph.tex
+%     message: Finnish hyphenation patterns
+%     package: finnish
+%
+% ------- Some common words borrowed from other languages -------
+% ------- This part could be updated from time to time    -------
+%
+%
+%  ------ Some special cases occuring with compound words only ----
+%  ------ There still remains well known problem as 'kaivos\-aukko' etc.
+%a1y   (common in borrowed words)
+%    lyhyt/pitka -vokaalipareja, tavallisesti sanarajalla
+%i1eu     % keski-eurooppalainen
+%          vokaalikolmikkoja etc.  yhdyssanojen rajoissa
+% -------- vowel triples by Fred Karlsson
+% e1oi % ambiguous for ex. video-ilme (8.3.89)
+% u1oi   % ambiguous    (8.3.89)
+%ie1u   % ambiguous
+% uo1i % ambiguous
+%   ---------------- End of vowel triples --------------------
+%
+% The following patterns contain no general scientific rule. They
+% are selected more or less intuitively to solve problems
+% with common and frequently appearing compound words.
+% However, every pattern resolves more than only one
+% hyphenation problem.
+%
+%
+% *** The following rules may be used on user's responsibility ***
+% *** for example, may be needed with narrow columns           ***
+%       >>>>>>>>>>>  a1e a1o e1o o1a u1a  <<<<<<<<<<<
+%
+% ----- Some districting rules by Professor Fred Karlsson's ideas   ------
+%

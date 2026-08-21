@@ -12,8 +12,8 @@ Use `cmd/a-bzip2.ts` to update the amalgamated bzip2 copy used by the build.
    Running `bun cmd/a-bzip2.ts` without arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/bzip2` and writes
-   `ext/a-bzip2/bzlib.h`, `ext/a-bzip2/bzip2.c`, and
-   `ext/a-bzip2/version.txt`.
+   `ext/a-bzip2/bzlib.h`, `ext/a-bzip2/bzip2.c`, `ext/a-bzip2/version.txt`,
+   and `ext/a-bzip2/LICENSE`.
 3. Review `ext/a-bzip2/version.txt`; it records the project homepage, source
    repo URL, requested revision, and resolved commit SHA-1.
 4. Regenerate the Visual Studio projects:
@@ -25,8 +25,7 @@ Use `cmd/a-bzip2.ts` to update the amalgamated bzip2 copy used by the build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
-The old `ext/bzip2` checkout is intentionally left in the tree for now, but
-the active libarchive build uses the amalgamated `ext/a-bzip2` source.
+The active libarchive build uses only the amalgamated `ext/a-bzip2` source.

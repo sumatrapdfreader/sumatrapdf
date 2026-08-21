@@ -5,11 +5,12 @@
 #include "base/HtmlTags.h"
 
 #include "GumboHelpers.h"
+
 #include "GumboHtmlParser.h"
 
 // returns -1 if didn't find
 int HtmlEntityNameToRune(Str name) {
-    return FindHtmlEntityRune(name);
+    return (int)FindHtmlEntityRune(name);
 }
 
 static int HtmlEntityHexDigit(char c) {
@@ -49,9 +50,13 @@ static Str ParseHtmlNumericEntity(Str str, int& rune) {
     bool any = false;
     bool overflow = false;
     while (off < str.len) {
-        int digit = base == 16                               ? HtmlEntityHexDigit(str.s[off])
-                    : str.s[off] >= '0' && str.s[off] <= '9' ? (int)(str.s[off] - '0')
-                                                             : -1;
+        char c = str.s[off];
+        int digit = -1;
+        if (base == 16) {
+            digit = HtmlEntityHexDigit(c);
+        } else if (c >= '0' && c <= '9') {
+            digit = (int)(c - '0');
+        }
         if (digit < 0 || digit >= base) {
             break;
         }
@@ -150,7 +155,7 @@ bool IsSpaceOnly(Str s) {
 }
 
 static void MemAppend(char* buf, int& off, Str src) {
-    if (!src) {
+    if (!buf || !src) {
         return;
     }
     memcpy(buf + off, src.s, src.len);
@@ -260,7 +265,7 @@ static bool IsNameWithNS(Str s, Str nameToCheck) {
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "xlink:href" with name="href" and any value of attrNS)
 // TODO: add proper namespace support
-bool AttrInfo::NameIsNS(Str nameToCheck, Str) const {
+bool AttrInfo::NameIsNS(Str nameToCheck, Str /*ns*/) const {
     // ReportIf(!ns);
     return IsNameWithNS(name, nameToCheck);
 }
@@ -300,7 +305,7 @@ bool HtmlToken::NameIs(Str nameToFind) const {
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
 // TODO: add proper namespace support
-bool HtmlToken::NameIsNS(Str nameToCheck, Str) const {
+bool HtmlToken::NameIsNS(Str nameToCheck, Str /*ns*/) const {
     // ReportIf(!ns);
     return IsNameWithNS(name, nameToCheck);
 }
@@ -397,9 +402,7 @@ static Str StartTagInner(Str raw, bool selfClosing) {
             end = slash;
         }
     }
-    if (end < start) {
-        end = start;
-    }
+    end = std::max(end, start);
     return Str(raw.s + start, end - start);
 }
 
@@ -416,10 +419,11 @@ static Str EndTagInner(Str raw) {
 }
 
 static Str CDataText(Str raw, const GumboNode* node) {
-    if (str::StartsWith(raw, StrL("<![CDATA[")) && str::EndsWith(raw, StrL("]]>"))) {
-        return Str(raw.s + 9, raw.len - 12);
+    if (str::TrimPrefix(raw, StrL("<![CDATA[")) && str::EndsWith(raw, StrL("]]>"))) {
+        raw.len -= 3;
+        return raw;
     }
-    return Str(node->v.text.text);
+    return {node->v.text.text};
 }
 
 static ptrdiff_t PosOfSource(Str html, Str p) {
@@ -542,12 +546,8 @@ HtmlToken* GumboHtmlParser::TokenFromEvent(Event& ev) {
 }
 
 void GumboHtmlParser::SetCurrPosOff(ptrdiff_t off) {
-    if (off < 0) {
-        off = 0;
-    }
-    if (off > html.len) {
-        off = html.len;
-    }
+    off = std::max<ptrdiff_t>(off, 0);
+    off = std::min<ptrdiff_t>(off, html.len);
 
     textStartOff = -1;
     eventIdx = (size_t)len(events);

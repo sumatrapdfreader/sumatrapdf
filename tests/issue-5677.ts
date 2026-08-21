@@ -12,7 +12,7 @@
 // This runs `info issue-5677.pdf`, captures stdout, and asserts it contains the
 // expected PDF info and none of the internal log noise.
 //
-// Run:  bun tests/issue-5677.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5677.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";

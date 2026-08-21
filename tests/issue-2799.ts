@@ -9,11 +9,10 @@
 // Builds a 3-page PDF with /Fit and /XYZ null destinations, opens it, scrolls
 // away from page 1, then navigates each outline entry and checks CurrentPageNo.
 //
-// Run:  bun tests/issue-2799.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-2799.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 const PDF = tmpPath("issue-2799-page-dests.pdf");

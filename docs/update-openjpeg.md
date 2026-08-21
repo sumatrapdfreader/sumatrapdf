@@ -12,8 +12,8 @@ build.
    Running `bun cmd/a-openjpeg.ts` without arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/openjpeg` and writes
-   `ext/a-openjpeg/*.h`, `ext/a-openjpeg/openjpeg.c`, and
-   `ext/a-openjpeg/version.txt`.
+   `ext/a-openjpeg/*.h`, `ext/a-openjpeg/openjpeg.c`,
+   `ext/a-openjpeg/version.txt`, and `ext/a-openjpeg/LICENSE`.
 3. Review `ext/a-openjpeg/version.txt`; it records the project homepage, source
    repo URL, requested revision, resolved commit SHA-1, and GitHub commit URL.
 4. Regenerate the Visual Studio projects:
@@ -25,8 +25,7 @@ build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
-The old `ext/openjpeg` checkout is intentionally left in the tree for now, but
-the active MuPDF build uses the amalgamated `ext/a-openjpeg` source.
+The active MuPDF build uses only the amalgamated `ext/a-openjpeg` source.

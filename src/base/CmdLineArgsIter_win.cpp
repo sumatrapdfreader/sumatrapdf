@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/Win.h"
 
 #include "base/CmdLineArgsIter.h"
 
@@ -20,7 +19,7 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
         }
         argsOut.Append(arg);
     }
-    LocalFree(argsArr);
+    LocalFree((void*)argsArr);
 }
 #else
 void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
@@ -37,7 +36,7 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
         }
         argsOut.Append(arg);
     }
-    LocalFree(argsArr);
+    LocalFree((void*)argsArr);
 }
 #endif
 

@@ -10,8 +10,6 @@ extern "C" {
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
 
-#include <math.h>
-
 static constexpr int kMaxMaskDim = 256;
 static constexpr int kMaxBlendPixels = 4096 * 4096;
 
@@ -50,25 +48,25 @@ static void ReadPixmapPixel(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int components = fz_colorspace_n(ctx, cs);
-    unsigned char* px = pix->samples + (y * pix->stride) + (x * n);
+    unsigned char* px = pix->samples + ((size_t)y * pix->stride) + ((size_t)x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-        conv[c] = px[c] / 255.f;
+        conv[c] = (float)px[c] / 255.f;
     }
     fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
     *outR = srcRgb[0];
     *outG = srcRgb[1];
     *outB = srcRgb[2];
     if (pix->alpha && n > components) {
-        *outA = px[components] / 255.f;
+        *outA = (float)px[components] / 255.f;
     }
 }
 
 static void RemapForegroundPixel(float r, float g, float b, const DarkModePalette& palette, float* outR, float* outG,
                                  float* outB) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 
@@ -107,8 +105,8 @@ static float SampleMaskBilinear(const float* mask, int maskW, int maskH, float u
     if (y1 >= maskH) {
         y1 = maskH - 1;
     }
-    float tx = fx - x0;
-    float ty = fy - y0;
+    float tx = fx - (float)x0;
+    float ty = fy - (float)y0;
     float v00 = mask[(y0 * maskW) + x0];
     float v10 = mask[(y0 * maskW) + x1];
     float v01 = mask[(y1 * maskW) + x0];
@@ -249,6 +247,7 @@ static bool BuildEdgeConnectedBgMask(fz_context* ctx, fz_pixmap* src, float bgR,
     return true;
 }
 
+// Phase 4: returns kept fz_image with alpha, or nullptr to fall back to per-pixel adaptive recolor.
 fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* src, const DarkImageAnalysis& analysis,
                                                    const DarkModePalette& palette) {
     if (!ctx || !src || !src->samples || src->w <= 0 || src->h <= 0) {
@@ -278,12 +277,8 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
             maskW = (maskW * kMaxMaskDim) / maskH;
             maskH = kMaxMaskDim;
         }
-        if (maskW < 1) {
-            maskW = 1;
-        }
-        if (maskH < 1) {
-            maskH = 1;
-        }
+        maskW = std::max(maskW, 1);
+        maskH = std::max(maskH, 1);
     }
 
     int maskN = maskW * maskH;
@@ -315,7 +310,7 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
 
                 float r, g, b, a;
                 ReadPixmapPixel(ctx, src, x, y, &r, &g, &b, &a);
-                unsigned char* px = dst->samples + (y * dst->stride) + (x * n);
+                unsigned char* px = dst->samples + ((size_t)y * dst->stride) + ((size_t)x * n);
 
                 if (fgConf < 0.04f || a < 0.02f) {
                     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
@@ -334,23 +329,13 @@ fz_pixmap* PdfDarkModeProcessLightBackgroundPixmap(fz_context* ctx, fz_pixmap* s
                 float back[FZ_MAX_COLORS] = {};
                 fz_convert_color(ctx, rgb, outRgb, cs, back, cs, fz_default_color_params);
                 for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-                    int vpx = (int)((back[c] * 255.f) + 0.5f);
-                    if (vpx < 0) {
-                        vpx = 0;
-                    }
-                    if (vpx > 255) {
-                        vpx = 255;
-                    }
+                    int vpx = (int)lroundf(back[c] * 255.f);
+                    vpx = limitValue(vpx, 0, 255);
                     px[c] = (unsigned char)vpx;
                 }
                 if (dst->alpha) {
-                    int av = (int)((a * fgConf * 255.f) + 0.5f);
-                    if (av < 0) {
-                        av = 0;
-                    }
-                    if (av > 255) {
-                        av = 255;
-                    }
+                    int av = (int)lroundf(a * fgConf * 255.f);
+                    av = limitValue(av, 0, 255);
                     px[components] = (unsigned char)av;
                 }
             }

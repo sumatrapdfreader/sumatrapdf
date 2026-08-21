@@ -2,9 +2,8 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"

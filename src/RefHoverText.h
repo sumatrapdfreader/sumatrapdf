@@ -4,22 +4,9 @@
 class EngineBase;
 struct RefHoverState;
 
-// Plain-text citation hover: when no link element is under the cursor, try
-// to detect a "(Surname et al., 2020)" / "Surname (2020)" pattern at pagePos
-// on srcPage, find the bibliography entry that matches, and return its
-// location. Returns true on success and fills destPage/destX/destY.
-// Lookups are cached on s.
-// srcRectOut: on success, set to a stable per-occurrence source key (page
-// coords, including horizontal span) so the caller can tell two occurrences
-// of the same citation apart — even on one text line — and reposition the
-// popup instead of treating it as the same hover.
 bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Point pagePos, int& destPageOut,
                           float& destXOut, float& destYOut, RectF& srcRectOut);
 
-// Free the lazy-init plain-text lookup cache held on the hover state.
 void RefHoverFreeLookupCache(RefHoverState* s);
 
-// When a link destination is page-level (no specific destY), extract the
-// source link's text from srcRect on srcPage and search destPage for a
-// matching entry anchor. Returns -1 if no match.
 float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage);

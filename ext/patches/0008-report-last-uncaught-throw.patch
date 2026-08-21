@@ -1,0 +1,76 @@
+error: remember the last uncaught fz_throw and crash into the crash handler
+
+When fz_throw runs with no active fz_try, mupdf prints a line and calls exit().
+SumatraPDF's crash handler never runs, so the crash report carries no
+explanation of what actually failed.
+
+Stash the message in a static that CrashHandler reads back through
+fz_last_uncaught_error() (exported from libsumatrapdf.dll and looked up with
+GetProcAddress), then write through a null pointer so the unhandled-exception
+filter runs and produces a dump.
+---
+diff --git a/include/mupdf/fitz/context.h b/include/mupdf/fitz/context.h
+index 91267fb..57a48c8 100644
+--- a/include/mupdf/fitz/context.h
++++ b/include/mupdf/fitz/context.h
+@@ -131,6 +131,13 @@ void fz_warn(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
+ */
+ const char *fz_caught_message(fz_context *ctx);
+ 
++/**
++	SumatraPDF: message from the last uncaught fz_throw (no active fz_try),
++	or NULL if none. Used by the crash handler so reports still explain the
++	failure when the callstack only shows the intentional abort write.
++*/
++const char *fz_last_uncaught_error(void);
++
+ /**
+ 	Within an fz_catch() block, retrieve the error code for
+ 	the current exception.
+diff --git a/source/fitz/error.c b/source/fitz/error.c
+index b2b7bbe..79f149c 100644
+--- a/source/fitz/error.c
++++ b/source/fitz/error.c
+@@ -205,6 +205,16 @@ fz_error_cb *fz_error_callback(fz_context *ctx, void **user)
+  *             catch region entered with state = 1.
+  */
+ 
++/* SumatraPDF: last uncaught fz_throw message for the crash report. Survives
++ * until process exit; read from CrashHandler via fz_last_uncaught_error(). */
++static char g_fz_last_uncaught[256];
++
++/* Exported from libsumatrapdf.dll via libsumatrapdf.def (GetProcAddress). */
++const char *fz_last_uncaught_error(void)
++{
++	return g_fz_last_uncaught[0] ? g_fz_last_uncaught : NULL;
++}
++
+ FZ_NORETURN static void throw(fz_context *ctx, int code)
+ {
+ 	if (ctx->error.top > ctx->error.stack_base)
+@@ -217,9 +227,25 @@ FZ_NORETURN static void throw(fz_context *ctx, int code)
+ 	}
+ 	else
+ 	{
++		/* No active fz_try: stash the message before we crash so the crash
++		 * report still explains the failure when the callstack is empty. */
++		if (ctx->error.message[0])
++			fz_strlcpy(g_fz_last_uncaught, ctx->error.message, sizeof g_fz_last_uncaught);
++		else
++			fz_strlcpy(g_fz_last_uncaught, "(empty message)", sizeof g_fz_last_uncaught);
++
+ 		fz_flush_warnings(ctx);
+ 		if (ctx->error.print)
++		{
+ 			ctx->error.print(ctx->error.print_user, "aborting process from uncaught error!");
++			if (ctx->error.message[0])
++				ctx->error.print(ctx->error.print_user, ctx->error.message);
++		}
++		/* SumatraPDF: intentional null-write so UEF / crash handler runs
++		 * (exit() alone would terminate without a useful dump). Message is in
++		 * g_fz_last_uncaught for BuildCrashInfoText. */
++		char *p = 0;
++		*p = 0;
+ 		exit(EXIT_FAILURE);
+ 	}
+ }

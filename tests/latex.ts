@@ -22,9 +22,7 @@ export async function testit(): Promise<void> {
     console.log(`\n========== ${name} ==========`);
     await runTest(name, fn);
   }
-  console.log(
-    `\n✅ all ${tests.length} LaTeX test(s) passed in ${formatDuration(performance.now() - t0)}`,
-  );
+  console.log(`\n✅ all ${tests.length} LaTeX test(s) passed in ${formatDuration(performance.now() - t0)}`);
 }
 
 if (import.meta.main) {

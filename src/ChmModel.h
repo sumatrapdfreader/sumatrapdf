@@ -12,19 +12,16 @@ struct ChmModel : DocController {
     explicit ChmModel(DocControllerCallback* cb);
     ~ChmModel() override;
 
-    // meta data
     Str GetFilePath() const override;
     Str GetDefaultFileExt() const override;
     int PageCount() const override;
     TempStr GetPropertyTemp(DocProp prop) override;
 
-    // page navigation (stateful)
     int CurrentPageNo() const override;
     void GoToPage(int pageNo, bool addNavPoint) override;
     bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
 
-    // view settings
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override;
     void SetInPresentation(bool) override;
@@ -33,7 +30,6 @@ struct ChmModel : DocController {
     float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;
 
-    // table of contents
     TocTree* GetToc() override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
 
@@ -42,18 +38,17 @@ struct ChmModel : DocController {
     IPageDestination* GetNamedDest(Str name) override;
 
     void GetDisplayState(FileState* fs) override;
-    // asynchronously calls saveThumbnail (fails silently)
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
-    // for quick type determination and type-safe casting
     ChmModel* AsChm() override;
 
     static ChmModel* Create(Str fileName, DocControllerCallback* cb = nullptr);
 
-    // the following is specific to ChmModel
-
     bool SetParentHwnd(HWND hwnd);
+    // hide for tab switch (keep WebView2 for fast re-show)
     void RemoveParentHwnd();
+    // full teardown (tab/window close); DestroyWindow can pump messages
+    void DestroyParentHwnd();
 
     void PrintCurrentPage(bool showUI) const;
     void FindInCurrentPage() const;
@@ -67,7 +62,6 @@ struct ChmModel : DocController {
     void CopySelection() const;
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 
-    // for HtmlWindowCallback (called through htmlWindowCb)
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);
     void OnLButtonDown();

@@ -26,6 +26,10 @@ the deserialization of such a settings file.
 
 enum class SettingType {
     Struct,
+    // an optional sub-struct, stored as a pointer that is null when unset.
+    // it's only written out when set, so a struct with many instances (e.g.
+    // FileState) doesn't carry an empty block per instance
+    StructPtr,
     Array,
     Compact,
     Bool,
@@ -61,6 +65,9 @@ struct StructInfo {
     // one string of fieldCount zero-terminated per-field doc comments, in the
     // same order as fieldNames (empty entry if a field has no comment)
     const char* fieldComments = nullptr;
+    // true if this struct has a Bool field named IsTemporary (array elements
+    // with that flag set are omitted when serializing)
+    bool couldBeTemporary = false;
 };
 
 Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData = {});

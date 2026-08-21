@@ -3,8 +3,14 @@ import { join, dirname, extname } from "node:path";
 
 const msBuildRelPath = String.raw`MSBuild\Current\Bin\MSBuild.exe`;
 // VS 2022 ships llvm tools in Llvm\bin, VS 18 in Llvm\x64\bin
-const clangFormatRelPaths = [String.raw`VC\Tools\Llvm\bin\clang-format.exe`, String.raw`VC\Tools\Llvm\x64\bin\clang-format.exe`];
-const clangTidyRelPaths = [String.raw`VC\Tools\Llvm\bin\clang-tidy.exe`, String.raw`VC\Tools\Llvm\x64\bin\clang-tidy.exe`];
+const clangFormatRelPaths = [
+  String.raw`VC\Tools\Llvm\bin\clang-format.exe`,
+  String.raw`VC\Tools\Llvm\x64\bin\clang-format.exe`,
+];
+const clangTidyRelPaths = [
+  String.raw`VC\Tools\Llvm\bin\clang-tidy.exe`,
+  String.raw`VC\Tools\Llvm\x64\bin\clang-tidy.exe`,
+];
 
 const vsEditions = ["Community", "Professional", "Enterprise"];
 
@@ -132,9 +138,7 @@ export function detectVisualStudio2026(): VisualStudioInfo {
 export function detectVisualStudio(): VisualStudioInfo {
   let res = detectVisualStudioVer("2022");
   if (res) return res;
-  if (!res) {
-    res = detectVisualStudioVer("18");
-  }
+  res = detectVisualStudioVer("18");
   if (!res) {
     throw new Error(`couldn't find vs 2026 or vs 2022`);
   }

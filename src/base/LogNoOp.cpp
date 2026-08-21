@@ -3,6 +3,4 @@
 
 #include "base/Base.h"
 
-void log(Str) {}
-
-void loga(Str) {}
+void log(Str /*s*/) {}

@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -81,7 +81,7 @@ static bool ReadAloudByteLocHasRect(const ReadAloudByteLoc& loc) {
 }
 
 static Rect ReadAloudByteLocToRect(const ReadAloudByteLoc& loc) {
-    return Rect(loc.x, loc.y, loc.dx, loc.dy);
+    return {loc.x, loc.y, loc.dx, loc.dy};
 }
 
 static bool IsLineBreakGlyph(const Rect* coords, int idx, int c) {
@@ -226,9 +226,7 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
         return;
     }
 
-    if (startGlyph < 0) {
-        startGlyph = 0;
-    }
+    startGlyph = std::max(startGlyph, 0);
     if (endGlyph < 0 || endGlyph > textLen) {
         endGlyph = textLen;
     }
@@ -595,9 +593,7 @@ static bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, in
     if (wordStartAbs < 0 || wordStartAbs >= map->len) {
         return false;
     }
-    if (wordEndAbs > map->len) {
-        wordEndAbs = map->len;
-    }
+    wordEndAbs = std::min(wordEndAbs, map->len);
     if (wordEndAbs <= wordStartAbs) {
         return false;
     }
@@ -711,7 +707,7 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
         return;
     }
 
-    int margin = DpiScale(win->hwndCanvas, 48);
+    int margin = DpiScale(48);
     if (ReadAloudIsWordRectFullyVisibleInViewport(win, wordRect, margin)) {
         return;
     }
@@ -735,7 +731,7 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
         return;
     }
 
-    int maxStep = std::max(canvas.dy / 4, DpiScale(win->hwndCanvas, 120));
+    int maxStep = std::max(canvas.dy / 4, DpiScale(120));
     if (dx > maxStep) {
         dx = maxStep;
     } else if (dx < -maxStep) {
@@ -752,7 +748,7 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
     win->readAloudScrollFromCode = false;
 }
 
-void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
+void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
     if (!TtsIsSpeaking()) {
         gReadAloudPaintLogState = 0;
         return;
@@ -793,9 +789,7 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
         ReadAloudPaintLogOnce(5, "ReadAloud: PaintHighlight: wordStartAbs out of range");
         return;
     }
-    if (wordEndAbs > map->len) {
-        wordEndAbs = map->len;
-    }
+    wordEndAbs = std::min(wordEndAbs, map->len);
     if (wordEndAbs <= wordStartAbs) {
         ReadAloudPaintLogOnce(6, "ReadAloud: PaintHighlight: empty word range");
         return;
@@ -803,7 +797,7 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
 
     int pageCount = dm->GetEngine()->PageCount();
     Vec<RectF> pageUnions;
-    pageUnions.SetSize(pageCount + 1);
+    VecResize(pageUnions, pageCount + 1);
 
     for (int i = wordStartAbs; i < wordEndAbs; i++) {
         ReadAloudByteLoc& loc = map->locs[i];
@@ -842,5 +836,5 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
     }
-    PaintTransparentRectangles(hdc, win->canvasRc, screenRects, parsedCol->col, alpha);
+    PaintTransparentRectangles(gfx, win->canvasRc, screenRects, parsedCol->col, alpha);
 }

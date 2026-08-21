@@ -15,7 +15,7 @@ class EngineBase;
 
 class PdfFilter : public FilterBase {
   public:
-    PdfFilter(long* plRefCount) : FilterBase(plRefCount) {}
+    PdfFilter(AtomicInt* plRefCount) : FilterBase(plRefCount) {}
     ~PdfFilter() override { CleanUp(); }
 
     HRESULT OnInit() override;

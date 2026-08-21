@@ -17,11 +17,11 @@
 #endif
 #include "SumatraLog.h"
 
-long g_lRefCount = 0;
+static AtomicInt g_lRefCount = 0;
 
 class FilterClassFactory : public IClassFactory {
   public:
-    explicit FilterClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { InterlockedIncrement(&g_lRefCount); }
+    explicit FilterClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { AtomicIntInc(&g_lRefCount); }
 
     ~FilterClassFactory() { InterlockedDecrement(&g_lRefCount); }
 
@@ -31,7 +31,7 @@ class FilterClassFactory : public IClassFactory {
         return QISearch(this, qit, riid, ppv);
     }
 
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
 
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
@@ -75,7 +75,7 @@ class FilterClassFactory : public IClassFactory {
 
     IFACEMETHODIMP LockServer(BOOL bLock) {
         if (bLock) {
-            InterlockedIncrement(&g_lRefCount);
+            AtomicIntInc(&g_lRefCount);
         } else {
             InterlockedDecrement(&g_lRefCount);
         }
@@ -83,17 +83,27 @@ class FilterClassFactory : public IClassFactory {
     }
 
   private:
-    long m_lRef;
+    AtomicInt m_lRef;
     CLSID m_clsid;
 };
 
-STDAPI_(BOOL) DllMain(__unused HINSTANCE hInstance, DWORD dwReason, __unused LPVOID lpReserved) {
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
+        gLogAppName = StrL("PdfFilter");
+        gLogToConsole = false;
+        log("DllMain\n");
+    } else if (dwReason == DLL_PROCESS_DETACH) {
+        // lpReserved is non-null when the process is exiting; skip teardown
+        // then so we don't take locks under the loader as other DLLs die.
+        // FreeLibrary unload (ifilttst, SearchFilterHost) is lpReserved == 0
+        // and that's the leak the CRT dump sees (#4859).
+        if (!lpReserved) {
+            DestroyLogging();
+            DestroyTempArena();
+            DestroyPermArena();
+        }
     }
-    gLogAppName = StrL("PdfFilter");
-    gLogToConsole = false;
-    log("DllMain\n");
     return TRUE;
 }
 

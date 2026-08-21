@@ -2,25 +2,20 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct StrVec;
+struct Gfx;
+struct PlatformFont;
+
+#include "FilterUtil.h"
 
 template <typename T>
-class Vec;
+struct Vec;
 
-void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
-                              COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt);
+void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted, Color colBg,
+                              bool isRtl, bool matchWholeWord, u32 drawFlags, PlatformFont* font,
+                              Color colText = kColorUnset);
 
-// TreeView post-paint: repaint the label with multi-word match underlays
-// (command-palette style). `font` should be the tree's font (WM_GETFONT) so
-// extents match the control's text; pass nullptr to keep the HDC font.
-void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec& filterWords, COLORREF bgCol,
-                                 COLORREF txtCol, HFONT font);
+void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVec& filterWords, Color bgCol,
+                                 Color txtCol, PlatformFont* font);
 
-// Colors for clearing/redrawing a TreeView label after default paint.
-// Non-selected: prefer sampling the already-painted row (theme/darkmode), not
-// COLOR_WINDOW. treeBg/treeTxt are TreeView::bgColor/textColor (may be unset).
-// itemRc is the full row rect (TreeView_GetItemRect with textOnly=FALSE).
-void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF treeTxt, bool isSelected,
-                                 bool hasFocus, COLORREF* bgOut, COLORREF* txtOut);
-
-void SplitFilterToWords(Str filter, StrVec& words);
-bool FilterMatches(Str str, const StrVec& words);
+void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, Color treeBg, Color treeTxt, bool isSelected, bool hasFocus,
+                                 Color* bgOut, Color* txtOut);

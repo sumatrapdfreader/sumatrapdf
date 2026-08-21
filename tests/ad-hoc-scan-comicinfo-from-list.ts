@@ -5,7 +5,6 @@
 
 import { closeSync, createReadStream, openSync, readSync, statSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
-import { join } from "node:path";
 import { tmpPath } from "./util.ts";
 
 const LIST = tmpPath("all-cbz.txt");

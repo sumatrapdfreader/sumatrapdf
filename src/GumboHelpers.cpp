@@ -11,7 +11,7 @@ static Str GumboElementTagName(const GumboNode* node) {
         return {};
     }
     if (node->v.element.tag != GUMBO_TAG_UNKNOWN) {
-        return Str(gumbo_normalized_tagname(node->v.element.tag));
+        return {gumbo_normalized_tagname(node->v.element.tag)};
     }
     Str orig = Str((char*)node->v.element.original_tag.data, (int)node->v.element.original_tag.length);
     int off = 0;
@@ -26,6 +26,11 @@ static Str GumboElementTagName(const GumboNode* node) {
     return Str(orig.s + off, end - off);
 }
 
+// True if `node` is an element whose tag name matches `name`
+// (case-insensitive). Handles both standard HTML tags (via
+// gumbo_normalized_tagname) and unknown tags (case-preserved in
+// original_tag) -- the latter covers e.g. PascalCase XML element names
+// like <ComicInfo>'s <Title>, <Year>, ...
 bool GumboTagNameIs(const GumboNode* node, Str name) {
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
         return false;
@@ -33,7 +38,7 @@ bool GumboTagNameIs(const GumboNode* node, Str name) {
     return str::EqI(GumboElementTagName(node), name);
 }
 
-bool GumboTagNameIsNS(const GumboNode* node, Str name, Str) {
+bool GumboTagNameIsNS(const GumboNode* node, Str name, Str /*ns*/) {
     // Preserve the old parser's compatibility: namespace URI is ignored,
     // and a prefix in the source tag name is treated as optional.
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
@@ -50,6 +55,8 @@ bool GumboTagNameIsNS(const GumboNode* node, Str name, Str) {
     return str::EqI(after, name);
 }
 
+// First direct element child of `node` whose tag matches `name`.
+// Returns nullptr if `node` isn't an element or no matching child exists.
 const GumboNode* GumboFindChildByTag(const GumboNode* node, Str name) {
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
         return nullptr;
@@ -94,6 +101,8 @@ static const GumboNode* GumboFindDescendantByTagImpl(const GumboNode* node, Str 
     return nullptr;
 }
 
+// Depth-first search for the first element under `node` with the given
+// tag name. Walks both ELEMENT and DOCUMENT nodes.
 const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name) {
     return GumboFindDescendantByTagImpl(node, name, {}, false);
 }
@@ -113,6 +122,8 @@ TempStr GumboAttributeValueTemp(const GumboNode* node, const char* name) {
     return str::DupTemp(Str(attr->value));
 }
 
+// Concatenated text content (TEXT/WHITESPACE/CDATA children) of an
+// element. Returns nullptr for non-element nodes or empty content.
 TempStr GumboTextContentTemp(const GumboNode* node) {
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
         return {};
@@ -131,10 +142,10 @@ TempStr GumboTextContentTemp(const GumboNode* node) {
     return ToStrTemp(sb);
 }
 
-static void* GumboMallocWrapper(void*, size_t size) {
+static void* GumboMallocWrapper(void* /*userdata*/, size_t size) {
     return malloc(size);
 }
-static void GumboFreeWrapper(void*, void* ptr) {
+static void GumboFreeWrapper(void* /*userdata*/, void* ptr) {
     free(ptr);
 }
 

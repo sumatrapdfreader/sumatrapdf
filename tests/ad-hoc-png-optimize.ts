@@ -1,4 +1,4 @@
-// Ad-hoc test for background PNG optimization (ext/zopfli) of saved PNGs.
+// Ad-hoc test for background PNG optimization (ext/a-zopfli) of saved PNGs.
 //
 // CmdPasteClipboardImage saves the clipboard image as clipboard*.png in the
 // Downloads folder, then OptimizePngFileAsync() recompresses it in place on a
@@ -8,14 +8,14 @@
 // shrinks and still decodes to the same dimensions.
 //
 // Touches the system clipboard and the real Downloads folder, so it's an
-// ad-hoc test (not in all.ts). Cleans up the file it creates.
+// ad-hoc test (not in run-almost-all.ts). Cleans up the file it creates.
 //
 // Run:  bun tests/ad-hoc-png-optimize.ts
 
 import { readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone } from "./util.ts";
-import { waitForFrame, sendCommand } from "./win-automation.ts";
+import { cmdId, runStandalone } from "./util.ts";
+import { launchSumatra, waitForFrame, sendCommand, killAndWait, killProcessesNamed } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
 const IMG_W = 1200;
@@ -77,9 +77,8 @@ export async function testit(): Promise<void> {
 
   setClipboardImage();
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing"], { stdout: "ignore", stderr: "ignore" });
+  await killProcessesNamed("SumatraPDF.exe");
+  const proc = launchSumatra([]);
   let newFile = "";
   try {
     const frame = await waitForFrame(proc.pid!);
@@ -132,14 +131,15 @@ export async function testit(): Promise<void> {
 
     // the "optimized by us" tEXt marker chunk must sit right after IHDR
     // (offset 33) so future optimize runs skip this file
-    const head = readFileSync(newFile).subarray(33, 33 + 64).toString("latin1");
+    const head = readFileSync(newFile)
+      .subarray(33, 33 + 64)
+      .toString("latin1");
     if (!head.startsWith("\0\0\0\x1atEXtSoftware\0SumatraPDF zopfli")) {
       throw new Error("optimized png is missing the SumatraPDF zopfli marker chunk after IHDR");
     }
     console.log("PASS: saved png was optimized in place, has the marker chunk and still decodes");
   } finally {
-    proc.kill();
-    await sleep(300);
+    await killAndWait(proc);
     if (newFile) {
       rmSync(newFile, { force: true });
     }

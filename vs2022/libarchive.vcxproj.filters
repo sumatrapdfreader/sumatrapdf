@@ -502,6 +502,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ext\a-bzip2\LICENSE">
+      <Filter>a-bzip2</Filter>
+    </None>
     <None Include="..\ext\a-bzip2\version.txt">
       <Filter>a-bzip2</Filter>
     </None>

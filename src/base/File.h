@@ -26,13 +26,18 @@ TempWStr GetDirTemp(WStr path);
 
 TempStr GetNonVirtualTemp(Str virtualPath);
 
-Str Join(Arena* a, Str path, Str fileName);
-Str Join(Str path, Str fileName);
-WStr Join(WStr path, WStr fileName, WStr fileName2 = WStr());
-TempStr JoinTemp(Str path, Str fileName, Str fileName2 = Str());
-TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2 = WStr());
+Str Join(Arena* a, Str dir, Str name);
+Str Join(Str dir, Str name);
+WStr Join(WStr dir, WStr name, WStr name2 = WStr());
+TempStr JoinTemp(Str dir, Str name, Str name2 = Str());
+TempWStr JoinTemp(WStr dir, WStr name, WStr name2 = WStr());
 
 bool IsDirectory(Str path);
+
+DWORD GetCachedAttributes(Str path);
+#if OS_WIN
+bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out);
+#endif
 
 TempStr NormalizeTemp(Str path);
 TempStr ToOSTemp(Str path);
@@ -42,7 +47,9 @@ bool IsSame(Str path1, Str path2);
 bool HasVariableDriveLetter(Str path);
 bool IsOnFixedDrive(Str path);
 bool IsOnNetworkDrive(Str path);
+bool IsOnAvailableDrive(Str path);
 bool IsCloudPlaceholder(Str path);
+bool IsEphemeralHostFile(Str path);
 bool SupportsChangeNotifications(Str path);
 bool IsAbsolute(Str path);
 
@@ -63,12 +70,10 @@ Type GetType(Str path);
 } // namespace path
 
 TempStr GetTempFilePathTemp(Str filePrefix = Str());
-// Path of this process image (exe or DLL that contains this code).
 TempStr GetSelfExePathTemp();
 #if OS_WIN
 TempWStr GetSelfExePathW();
 #endif
-// Directory containing GetSelfExePathTemp().
 TempStr GetSelfExeDirTemp();
 TempStr GetPathInExeDirTemp(Str fileName = Str());
 TempStr MakeUniqueFilePathTemp(Str path);
@@ -87,12 +92,21 @@ bool Exists(Str path);
 
 FILE* OpenFILE(Str path);
 FileHandle OpenReadOnly(Str path);
+
+// handle-based i/o, for files kept open across many reads / appends
+FileHandle OpenReadWrite(Str path, bool createIfMissing);
+void Close(FileHandle);
+i64 SeekEnd(FileHandle);
+bool WriteAll(FileHandle, Str data);
+bool ReadAt(FileHandle, i64 offset, void* buf, int size);
+bool Flush(FileHandle);
+TempStr LastErrorTemp();
+
 Str ReadFileWithArena(Str path, Arena*);
 Str ReadFile(Str path);
 int ReadN(Str path, u8* buf, size_t toRead);
 bool WriteFile(Str path, Str);
 
-i64 GetSize(FileHandle h);
 i64 GetSize(Str path);
 
 // read-only memory-mapped view of an entire file
@@ -136,6 +150,7 @@ extern thread_local CopyProgressCb gFileCopyProgressCb;
 bool Copy(Str dst, Str src, bool dontOverwrite);
 bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress);
 bool Rename(Str newPath, Str oldPath);
+bool RenameReplace(Str newPath, Str oldPath);
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs);
 
 bool SetAccessTime(Str path, FILETIME accessTime);
@@ -149,15 +164,14 @@ bool Exists(WStr dir);
 bool Exists(Str dir);
 
 bool Create(Str dir);
-bool CreateForFile(Str path);
-bool CreateAll(Str dir);
+bool CreateForFile(Str path, int* errOut = nullptr);
+bool CreateAll(Str dir, int* errOut = nullptr);
 bool RemoveAll(Str dir);
+bool Empty(Str dir);
 bool HasWriteAccess(Str dir);
 
 } // namespace dir
 
-// global file utilities (paths are UTF-8); moved here from Base.h
-// (formerly src/common/file_util.cpp)
 bool FileSystemEntryExists(Str s);
 Str FindFirstValidParentDir(Str path);
 Str PathGetDirTemp(Str path);

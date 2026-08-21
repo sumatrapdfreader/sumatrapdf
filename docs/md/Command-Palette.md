@@ -13,7 +13,7 @@ Command palette is fast and convenient way to:
 - access all SumatraPDF functionality via commands : default view and `>`
 - `#` : open file from history
 - `@` : switch to another tab
-- `*` : jump to a table of contents entry of current document
+- `%` : jump to a table of contents entry of current document
 - `$` : jump to a favorite (current document's favorites first, then others)
 - `:` : combined view (replicates behavior before ver 3.6)
 
@@ -22,6 +22,9 @@ How to use it:
 - press `Ctrl-K` to show command palette window
 - enter text to narrow down list of matches
 - `up` / `down` arrow navigate between matches
+- `Page Up` / `Page Down` jump a page of matches
+- `Home` / `End` go to the first / last match when the caret is already at the start / end of the query (`Ctrl + Home` / `Ctrl + End` always do)
+- `Ctrl + A` selects the query
 - `Enter` to execute selected match (or double-click with mouse)
 - `Escape` to close the window (or click outside of it)
 
@@ -41,8 +44,9 @@ Type `#` to open a file from list of previously opened files:
 
 ## Table of contents
 
-Type `*` to jump to a table of contents entry of the current document (or press
-`Shift + F12`, which is bound to the `CmdCommandPaletteTOC` command):
+Type `%` to jump to a table of contents entry of the current document (or press
+`Shift + F12`, which is bound to the `CmdCommandPaletteTOC` command). That
+command can also be a [toolbar button](./Customize-toolbar.md#command-palette-on-the-toolbar).
 
 The list shows the fully expanded table of contents, indented to reflect the
 tree hierarchy. The entry closest to the current page is pre-selected. Type to
@@ -59,7 +63,8 @@ another document opens that document.
 
 You can bind a keyboard shortcut to open the palette directly in favorites mode
 with the `CmdCommandPaletteFavorites` [command](./Commands.md) (see
-[Managing favorites](./Managing-favorites.md)).
+[Managing favorites](./Managing-favorites.md)). The same command can be a
+[toolbar button](./Customize-toolbar.md#command-palette-on-the-toolbar).
 
 ## Combined view
 

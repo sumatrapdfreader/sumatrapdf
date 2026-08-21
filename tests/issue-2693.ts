@@ -16,7 +16,8 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, tmpPath } from "./util";
+import { tmpPath } from "./util";
+import { findCanvas, launchControlled, killAndWait } from "./win-automation";
 import {
   getClientRect,
   getScrollPos,
@@ -26,8 +27,6 @@ import {
   showWindow,
   sleep,
   SW_RESTORE,
-  waitForChildWindow,
-  waitForTopWindow,
   WM_MBUTTONDOWN,
   WM_MOUSEMOVE,
   MK_MBUTTON,
@@ -80,20 +79,14 @@ export async function testit(): Promise<void> {
 
   // kill stale dev-build instances so reuse-instance can't forward our launch
   // to an old window (which would leave our process window-less)
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-
-  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf], { defaultWindowPos: true });
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
+    await client.waitForRenderIdle();
     showWindow(frame, SW_RESTORE);
     moveWindow(frame, 0, 0, 900, 750);
-    await sleep(1200);
+    await client.waitForRenderIdle();
 
-    const canvas = await waitForChildWindow(frame, "SUMATRA_PDF_CANVAS");
+    const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("could not find the canvas window");
     }
@@ -131,7 +124,8 @@ export async function testit(): Promise<void> {
     }
     console.log(`  fractional-speed auto-scroll works (moved ${moved}px) ✓`);
   } finally {
-    proc.kill();
+    client.close();
+    await killAndWait(proc);
   }
 }
 

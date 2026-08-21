@@ -3,6 +3,7 @@
 You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also see [standard Windows keyboard shortcuts](https://support.microsoft.com/en-us/windows/keyboard-shortcuts-in-windows-dcc61a57-8ff0-cffe-9796-cb9706c75eec) for controls like tree view or edit fields.
 
 :columns
+
 ### File menu
 
 - `Ctrl + N` Open a new window
@@ -17,7 +18,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 ### Go To menu
 
 - `Right Arrow` / `Left Arrow`- Next / Previous Page
-    scrolls left / right if page width > window width
+  scrolls left / right if page width > window width
 - `Home` First Page
 - `End` Last Page
 - `Ctrl + G` Go To Page...
@@ -42,6 +43,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `F8` Show / Hide Toolbar
 - `Ctrl + A` Select All
 - `Ctrl + C` Copy Selection
+- `F7` Select text with the keyboard (**ver 3.7+**): puts a caret in the page text; arrows move it, `Shift + arrows` select, `v` toggles visual mode (arrows select without Shift), `Ctrl + C` or `y` copies, `Esc` or `F7` leaves
 
 ### Zoom menu
 
@@ -60,7 +62,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `space` Scroll by screen
 - `Shift + space` Scroll back by screen
 - `n` / `p` Next / previous page
-- `Page Down` /  `Page Up` Next / previous page
+- `Page Down` / `Page Up` Next / previous page
 - `Ctrl + Down` / `Ctrl + Up` Next / previous page
 - `Alt + Left` Go back
 - `Alt + Right` Go forward
@@ -76,7 +78,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 
 - `+` / `-` zoom in/out
 - `Ctrl + scroll wheel` zoom in/out
-- `z` toggle zoom between Fit Page, Fit Width, Fit Height, Fit Content
+- `z` cycle zoom: Fit Page → Fit Width → Fit Height → Fit Content → Shrink To Fit → Fit Page
 - `c` toggle between continuous/non-continuous mode
 - `Ctrl + Shift + -` rotate left
 - `/` on numeric keypad rotate left

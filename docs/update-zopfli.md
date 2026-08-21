@@ -14,7 +14,8 @@ Use `cmd/a-zopfli.ts` to update the amalgamated zopfli copy used by the build.
 2. The script checks out the requested revision under `deps/zopfli` and writes
    `ext/a-zopfli/zopflipng/zopflipng_lib.h`,
    `ext/a-zopfli/zopflipng/lodepng/lodepng.h`,
-   `ext/a-zopfli/zopfli.cpp`, and `ext/a-zopfli/version.txt`.
+   `ext/a-zopfli/zopfli.cpp`, `ext/a-zopfli/version.txt`, and
+   `ext/a-zopfli/COPYING`.
 3. Review `ext/a-zopfli/version.txt`; it records the project homepage, source
    repo URL, requested revision, resolved commit SHA-1, and GitHub commit URL.
 4. Regenerate the Visual Studio projects:
@@ -26,8 +27,7 @@ Use `cmd/a-zopfli.ts` to update the amalgamated zopfli copy used by the build.
 5. Build:
 
    ```sh
-   bun ./cmd/build.ts
+   bun cmd/build.ts -debug
    ```
 
-The old `ext/zopfli` checkout is intentionally left in the tree for now, but
-the active SumatraPDF build uses the amalgamated `ext/a-zopfli` source.
+The active SumatraPDF build uses only the amalgamated `ext/a-zopfli` source.

@@ -4,10 +4,14 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include <uiautomationcore.h>
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
+#include "base/ScopedWin.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/Gfx.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -25,6 +29,7 @@
 #include "WindowTab.h"
 #include "Selection.h"
 #include "SelectionToolbar.h"
+#include "SelectTextKeyboard.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
@@ -42,7 +47,7 @@ Rect SelectionOnPage::GetRect(DisplayModel* dm) const {
     // if the page is not visible, we return an empty rectangle
     PageInfo* pageInfo = dm->GetPageInfo(pageNo);
     if (!pageInfo || pageInfo->visibleRatio <= 0.0) {
-        return Rect();
+        return {};
     }
 
     return dm->CvtToScreen(pageNo, rect);
@@ -67,7 +72,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
         RectF isectD = dm->CvtFromScreen(intersect, pageNo);
         sel->Append(SelectionOnPage(pageNo, &isectD));
     }
-    sel->Reverse();
+    VecReverse(*sel);
 
     if (len(*sel) == 0) {
         delete sel;
@@ -77,13 +82,14 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
 }
 
 Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
-    Vec<SelectionOnPage>* sel = new Vec<SelectionOnPage>(textSel->len);
+    Vec<SelectionOnPage>* sel = new Vec<SelectionOnPage>();
+    VecReserve(*sel, textSel->len);
 
     for (int i = textSel->len - 1; i >= 0; i--) {
         RectF rect = ToRectF(textSel->rects[i]);
         sel->Append(SelectionOnPage(textSel->pages[i], &rect));
     }
-    sel->Reverse();
+    VecReverse(*sel);
 
     if (len(*sel) == 0) {
         delete sel;
@@ -109,6 +115,7 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     }
 }
 
+// Rectangular (Ctrl+drag) selection: move/resize after it exists.
 bool IsRectangularSelection(MainWindow* win) {
     if (!win || !win->showSelection) {
         return false;
@@ -167,7 +174,7 @@ static Rect ApplySelectionEdgeDrag(Rect orig, SelectionDragEdge edge, int dx, in
     int h = orig.dy;
 
     if (edge == SelectionDragEdge::Move) {
-        return Rect(x + dx, y + dy, w, h);
+        return {x + dx, y + dy, w, h};
     }
 
     if (edge == SelectionDragEdge::Left || edge == SelectionDragEdge::TopLeft ||
@@ -207,7 +214,7 @@ static Rect ApplySelectionEdgeDrag(Rect orig, SelectionDragEdge edge, int dx, in
             y = orig.y;
         }
     }
-    return Rect(x, y, w, h);
+    return {x, y, w, h};
 }
 
 SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int mx, int my) {
@@ -218,7 +225,7 @@ SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int mx, int my) {
     if (r.IsEmpty()) {
         return SelectionDragEdge::None;
     }
-    int t = DpiScale(win->hwndCanvas, 6);
+    int t = DpiScale(6);
     int left = r.x;
     int right = r.x + r.dx;
     int top = r.y;
@@ -317,10 +324,9 @@ void UpdateRectangularSelectionEdit(MainWindow* win, int x, int y) {
     win->selectionMeasure = win->AsFixed() ? win->AsFixed()->CvtFromScreen(win->selectionRect).Size() : SizeF();
 }
 
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha, int pad,
+void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color selectionColor, u8 alpha, int pad,
                                 bool drawBorder) {
-    // create path from rectangles
-    Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
+    Vec<Rect> paintedRects;
     screenRc.Inflate(pad, pad);
     for (int i = 0; i < len(rects); i++) {
         Rect rc = rects[i];
@@ -329,26 +335,84 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
         }
         rc = rc.Intersect(screenRc);
         if (!rc.IsEmpty()) {
-            path.AddRectangle(ToGdipRect(rc));
+            paintedRects.Append(rc);
         }
     }
-
-    Gdiplus::Graphics gs(hdc);
-    u8 r, g, b;
-    UnpackColor(selectionColor, r, g, b);
-    Gdiplus::Color c(alpha, r, g, b);
-    Gdiplus::SolidBrush tmpBrush(c);
-    gs.FillPath(&tmpBrush, &path);
-    if (drawBorder && pad > 0) {
-        // black outline around the filled region (only the selection asks for this;
-        // find-match and read-aloud highlights stay borderless)
-        path.Outline(nullptr, 0.2f);
-        Gdiplus::Pen tmpPen(Gdiplus::Color(alpha, 0, 0, 0), (float)pad);
-        gs.DrawPath(&tmpPen, &path);
-    }
+    int outlineWidth = drawBorder ? pad : 0;
+    gfx->FillRects(paintedRects.els, len(paintedRects), selectionColor, alpha, outlineWidth);
 }
 
-void PaintSelection(MainWindow* win, HDC hdc) {
+// Touch selection handles: a dot under each end of the selection, big enough
+// to grab with a fingertip. kTouchSelHandleDip is the dot's diameter; the
+// touchable area around it is padded so a slightly-off tap still lands.
+constexpr int kTouchSelHandleDip = 14;
+constexpr int kTouchSelHandleHitPadDip = 10;
+
+bool GetTouchSelHandleRects(MainWindow* win, Rect& startOut, Rect& endOut) {
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    if (!dm || !tab || !tab->selectionOnPage) {
+        return false;
+    }
+    Vec<SelectionOnPage>& sel = *tab->selectionOnPage;
+    int n = len(sel);
+    if (n == 0) {
+        return false;
+    }
+    // the selection runs first rect -> last rect, so the handles belong under
+    // the bottom-left of the first and the bottom-right of the last
+    Rect first = sel[0].GetRect(dm);
+    Rect last = sel[n - 1].GetRect(dm);
+    int dxy = DpiScale(kTouchSelHandleDip);
+    int r = dxy / 2;
+    startOut = Rect(first.x - r, first.y + first.dy, dxy, dxy);
+    endOut = Rect(last.x + last.dx - r, last.y + last.dy, dxy, dxy);
+    return true;
+}
+
+TouchSelHandle HitTestTouchSelHandle(MainWindow* win, int x, int y) {
+    if (!win->touchSelHandles) {
+        return TouchSelHandle::None;
+    }
+    Rect start, end;
+    if (!GetTouchSelHandleRects(win, start, end)) {
+        return TouchSelHandle::None;
+    }
+    int pad = DpiScale(kTouchSelHandleHitPadDip);
+    start.Inflate(pad, pad);
+    end.Inflate(pad, pad);
+    Point pt(x, y);
+    // the end handle wins a tie: it's the one a reader adjusts most
+    if (end.Contains(pt)) {
+        return TouchSelHandle::End;
+    }
+    if (start.Contains(pt)) {
+        return TouchSelHandle::Start;
+    }
+    return TouchSelHandle::None;
+}
+
+void HideTouchSelHandles(MainWindow* win) {
+    if (!win->touchSelHandles) {
+        return;
+    }
+    win->touchSelHandles = false;
+    win->touchSelDragging = TouchSelHandle::None;
+    ScheduleRepaint(win, 0);
+}
+
+static void PaintTouchSelHandles(MainWindow* win, Gfx* gfx) {
+    Rect start, end;
+    if (!win->touchSelHandles || !GetTouchSelHandleRects(win, start, end)) {
+        return;
+    }
+    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    Color col = parsedCol->col;
+    gfx->FillEllipse(start, col);
+    gfx->FillEllipse(end, col);
+}
+
+void PaintSelection(MainWindow* win, Gfx* gfx) {
     ReportIf(!win->AsFixed());
 
     Vec<Rect> rects;
@@ -402,7 +466,8 @@ void PaintSelection(MainWindow* win, HDC hdc) {
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
     }
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha, 2, /*drawBorder*/ true);
+    PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha, 2, /*drawBorder*/ true);
+    PaintTouchSelHandles(win, gfx);
 }
 
 void UpdateTextSelection(MainWindow* win, bool select) {
@@ -519,10 +584,22 @@ void CopySelectionToClipboard(MainWindow* win) {
     int rotation = dm->GetRotation();
     RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
     Pixmap* bmp = dm->GetEngine()->RenderPage(args);
-    if (bmp) {
-        CopyImageToClipboard(bmp->hbmp, true);
+    if (!bmp) {
+        logf("CopySelectionToClipboard: RenderPage(page %d) failed\n", selOnPage->pageNo);
+        return;
     }
-    FreePixmap(bmp);
+    // EngineImages (image files, cbz/cbr) renders sub-rects through GDI+ and
+    // returns a malloc-backed Pixmap with no DIB section, so bmp->hbmp is null.
+    // RenderedBitmapFromPixmap() makes one when needed (and consumes bmp).
+    RenderedBitmap* rbmp = RenderedBitmapFromPixmap(bmp);
+    if (!rbmp) {
+        logf("CopySelectionToClipboard: RenderedBitmapFromPixmap() failed\n");
+        return;
+    }
+    if (!CopyImageToClipboard(rbmp->GetBitmap(), true)) {
+        logf("CopySelectionToClipboard: CopyImageToClipboard() failed\n");
+    }
+    delete rbmp;
 }
 
 void OnSelectAll(MainWindow* win, bool textOnly) {
@@ -530,7 +607,7 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
         return;
     }
 
-    if (HwndIsFocused(win->hwndFindEdit) || HwndIsFocused(win->hwndPageEdit)) {
+    if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
         EditSelectAll(GetFocus());
         return;
     }
@@ -568,12 +645,51 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
     ScheduleRepaint(win, 0);
 }
 
-#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(win->hwndFrame, 15)
-#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScale(win->hwndFrame, 10)
+#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(15)
+#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScale(10)
 
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     return x < SELECT_AUTOSCROLL_AREA_WIDTH || x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH ||
            y < SELECT_AUTOSCROLL_AREA_WIDTH || y > win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH;
+}
+
+// Horizontal auto-scroll while selecting text exists to reveal text the
+// selection has reached. Once the selected text's leading edge is on screen
+// there is nothing left to reveal, and scrolling on just pans the page out from
+// under the user: at high zoom the cursor sits in the right margin long before
+// the line ends, so the view runs away while the selection stays put (#5497).
+// Vertical auto-scroll is untouched - there the next line really is off screen.
+// Returns how much of `dx` is still needed, 0 once the selection is visible.
+static int LimitTextSelectionAutoscrollDx(MainWindow* win, int dx) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSelection) {
+        return dx;
+    }
+    TextSel* sel = &dm->textSelection->result;
+    if (sel->len == 0 || !sel->pages || !sel->rects) {
+        return dx;
+    }
+    int selLeft = INT_MAX;
+    int selRight = INT_MIN;
+    for (int i = 0; i < sel->len; i++) {
+        int pageNo = sel->pages[i];
+        if (!dm->PageVisible(pageNo)) {
+            continue;
+        }
+        Rect rc = dm->CvtToScreen(pageNo, ToRectF(sel->rects[i]));
+        selLeft = std::min(selLeft, rc.x);
+        selRight = std::max(selRight, rc.x + rc.dx);
+    }
+    if (selLeft > selRight) {
+        return dx; // nothing selected on a visible page
+    }
+    int margin = SELECT_AUTOSCROLL_AREA_WIDTH;
+    if (dx > 0) {
+        int needed = selRight - (win->canvasRc.dx - margin);
+        return limitValue(needed, 0, dx);
+    }
+    int needed = selLeft - margin;
+    return limitValue(needed, dx, 0);
 }
 
 void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
@@ -591,6 +707,11 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     }
 
     ReportIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
+    // after the assert: clamping can legitimately leave dx at 0 while the
+    // cursor is still in the auto-scroll strip
+    if (dx != 0 && MouseAction::SelectingText == win->mouseAction) {
+        dx = LimitTextSelectionAutoscrollDx(win, dx);
+    }
     if (dx != 0 || dy != 0) {
         ReportIf(!win->AsFixed());
         DisplayModel* dm = win->AsFixed();
@@ -617,8 +738,11 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     }
 }
 
-void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
+void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/, bool forceRect) {
     ReportIf(!win->AsFixed());
+    // selecting with the mouse takes over: leave keyboard selection mode so its
+    // caret and help bar don't linger over a mouse selection
+    StopSelectTextWithKeyboard(win);
     DeleteOldSelectionInfo(win, true);
 
     win->selectionDragEdge = SelectionDragEdge::None;
@@ -630,8 +754,9 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
     bool isShift = IsShiftPressed();
     bool isCtrl = IsCtrlPressed();
 
-    // Ctrl+drag forces a rectangular selection
-    if (!isCtrl || isShift) {
+    // Ctrl+drag (or forceRect, used when placing a new signature) is a
+    // rectangular selection, not a text one
+    if (!forceRect && (!isCtrl || isShift)) {
         DisplayModel* dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(Point(x, y));
         if (dm->ValidPageNo(pageNo)) {

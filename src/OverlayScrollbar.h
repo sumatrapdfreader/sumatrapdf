@@ -4,7 +4,6 @@
 // Overlay scrollbar - a semi-transparent top-level window that acts like
 // a standard Windows scrollbar but floats over the owner window.
 
-extern int gThickVisibilityDistance;
 extern bool gOverlayScrollbarSuppressThick;
 
 struct OverlayScrollbar {
@@ -67,19 +66,16 @@ OverlayScrollbar* OverlayScrollbarCreate(HWND hwndOwner, OverlayScrollbar::Type 
                                          OverlayScrollbar::Mode mode = OverlayScrollbar::Mode::Smart);
 void OverlayScrollbarDestroy(OverlayScrollbar* sb);
 
-// Same API as SetScrollInfo / GetScrollInfo
 void OverlayScrollbarSetInfo(OverlayScrollbar* sb, const SCROLLINFO* si, bool redraw);
 void OverlayScrollbarGetInfo(OverlayScrollbar* sb, SCROLLINFO* si);
 
-// Call when owner window moves/resizes
 void OverlayScrollbarUpdatePos(OverlayScrollbar* sb);
 
-// Show/hide
 void OverlayScrollbarShow(OverlayScrollbar* sb, bool show);
 void OverlayScrollbarHide(OverlayScrollbar* sb);
 
-// Change the scrollbar mode (Smart vs Thick)
+void OverlayScrollbarNotifyScroll(OverlayScrollbar* sb);
+
 void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode);
 
-// returns true if scrollbar is visible (thin, thick, or always thick)
 bool IsOverlayScrollbarVisible(OverlayScrollbar* sb);

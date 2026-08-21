@@ -1,0 +1,326 @@
+// #2629: Vimium-style keyboard link following. Shift + F
+// (CmdToggleKeyboardLinkFollowing) labels the links visible on screen with
+// letters and pressing a complete hint follows the link. The labels are
+// recalculated shortly after scrolling stops, and the whole feature is
+// unavailable for formats whose pages can't have links (comic books, image
+// folders, images).
+//
+// Drives the app over -dbg-control (TestKeyboardLinkFollow reports the mode and
+// the labeled targets) and posts the real WM_COMMAND / WM_CHAR messages, so the
+// accelerator and key paths are exercised, not just the internals.
+import { writeFileSync } from "node:fs";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
+import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { FRAME_CLASS, sendCommandSync } from "./win-automation";
+import { VK_ESCAPE, WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
+
+const VK_F = 0x46;
+
+// An unmodified key press. Modified shortcuts (Shift + F) can't be driven this
+// way: TranslateAccelerator asks GetKeyState() for the modifiers and posted key
+// messages don't set it, so a posted Shift + F arrives as a plain F. The
+// Shift + F binding is checked through the accel= field of the state dump.
+// lParam matters: a key-up whose transition / previous-state bits (31, 30) are
+// clear looks like a press to TranslateMessage, which then produces an extra
+// WM_CHAR. That stray 'f' typed itself into the link hints when it landed after
+// the mode was turned on again - it matches the "F" hint exactly, so the app
+// followed that link and left the mode, and the test timed out waiting for it.
+function pressVKey(hwnd: number, vk: number): void {
+  postMessage(hwnd, WM_KEYDOWN, vk, 0x00000001);
+  postMessage(hwnd, WM_KEYUP, vk, 0xc0000001);
+}
+
+// 3 pages. Page 1 carries 20 link annotations in a stack (enough to require
+// multi-letter hints); pages 2 and 3 have none.
+function makeLinkedPdf(): Buffer {
+  const enc = (s: string) => Buffer.from(s, "latin1");
+  const body: Record<number, Buffer> = {};
+  body[1] = enc("<< /Type /Catalog /Pages 2 0 R >>");
+  body[2] = enc("<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 >>");
+
+  // Link rects are in PDF space (origin bottom-left); page is 612x2000.
+  const links: { rect: string; dest: string }[] = [];
+  for (let i = 0; i < 20; i++) {
+    const y2 = 1950 - i * 70;
+    const pageObj = i % 2 === 0 ? 4 : 5;
+    links.push({ rect: `[72 ${y2 - 30} 300 ${y2}]`, dest: `/Dest [${pageObj} 0 R /Fit]` });
+  }
+  const linkObjs: number[] = [];
+  let objNo = 20;
+  for (const l of links) {
+    body[objNo] = enc(`<< /Type /Annot /Subtype /Link /Rect ${l.rect} /Border [0 0 0] ${l.dest} >>`);
+    linkObjs.push(objNo);
+    objNo++;
+  }
+  const annots = linkObjs.map((n) => `${n} 0 R`).join(" ");
+
+  for (let i = 0; i < 3; i++) {
+    const pageObj = 3 + i;
+    const contentObj = 10 + i;
+    const stream = `BT /F1 24 Tf 72 1000 Td (Page ${i + 1}) Tj ET`;
+    body[contentObj] = enc(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+    const annotsEntry = i === 0 ? ` /Annots [${annots}]` : "";
+    body[pageObj] = enc(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 2000] ` +
+        `/Resources << /Font << /F1 6 0 R >> >> /Contents ${contentObj} 0 R${annotsEntry} >>`,
+    );
+  }
+  body[6] = enc("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+  const maxN = objNo - 1;
+  const parts: Buffer[] = [enc("%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")];
+  const offsets: Record<number, number> = {};
+  let pos = parts[0]!.length;
+  for (let n = 1; n <= maxN; n++) {
+    offsets[n] = pos;
+    const obj = Buffer.concat([enc(`${n} 0 obj\n`), body[n] ?? enc("null"), enc("\nendobj\n")]);
+    parts.push(obj);
+    pos += obj.length;
+  }
+  let xref = `xref\n0 ${maxN + 1}\n0000000000 65535 f \n`;
+  for (let n = 1; n <= maxN; n++) {
+    xref += `${String(offsets[n]).padStart(10, "0")} 00000 n \n`;
+  }
+  parts.push(enc(`${xref}trailer\n<< /Size ${maxN + 1} /Root 1 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
+  return Buffer.concat(parts);
+}
+
+// a 1x1 PNG: an image document, where the feature must stay unavailable
+const PNG_1PX = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+type State = { active: boolean; canFollow: boolean; page: number; count: number; accel: string; hints: string[] };
+
+function parseState(dump: string): State {
+  const m = /active=(\d+) canFollow=(\d+) page=(-?\d+) count=(\d+) accel=(.*)/.exec(dump);
+  if (!m) {
+    throw new Error(`unexpected TestKeyboardLinkFollow output:\n${dump}`);
+  }
+  const hints = [...dump.matchAll(/ hint=([A-Z]+)$/gm)].map((match) => match[1]!);
+  return {
+    active: m[1] === "1",
+    canFollow: m[2] === "1",
+    page: +m[3]!,
+    count: +m[4]!,
+    accel: m[5]!.trim(),
+    hints,
+  };
+}
+
+async function getState(client: ControlClient): Promise<{ state: State; dump: string }> {
+  const res = await client.request(ControlCommand.TestKeyboardLinkFollow, []);
+  const dump = String(res[1] ?? "");
+  return { state: parseState(dump), dump };
+}
+
+async function waitForState(
+  client: ControlClient,
+  pred: (s: State) => boolean,
+  timeoutMs = 4000 * SLOW_BUILD_FACTOR,
+): Promise<{ state: State; dump: string }> {
+  const deadline = Date.now() + timeoutMs;
+  let last = { state: { active: false, canFollow: false, page: 0, count: 0, accel: "", hints: [] }, dump: "" };
+  while (Date.now() < deadline) {
+    last = await getState(client);
+    if (pred(last.state)) {
+      return last;
+    }
+    await sleep(25);
+  }
+  throw new Error(`keyboard-link state did not match in time\n${last.dump}`);
+}
+
+async function waitForFullscreenState(client: ControlClient, expected: boolean): Promise<void> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let dump = "";
+  while (Date.now() < deadline) {
+    const res = await client.request(ControlCommand.TestDisplayMode, ["get"]);
+    dump = String(res[1] ?? "");
+    const m = /fullscreen=(\d+)/.exec(dump);
+    if (m && (m[1] === "1") === expected) {
+      // TranslateMessage can append a WM_CHAR behind the control request that
+      // observed the completed key command. A second UI-thread request drains
+      // that message before the test activates link following.
+      await getState(client);
+      return;
+    }
+    await sleep(25);
+  }
+  throw new Error(`fullscreen state did not become ${expected ? "on" : "off"}\n${dump}`);
+}
+
+async function setupPdfView(client: ControlClient, proc: Bun.Subprocess): Promise<number> {
+  const frame = await waitForTopWindow(proc.pid!, FRAME_CLASS);
+  if (!frame) {
+    throw new Error("no frame window");
+  }
+  await client.waitForRenderIdle();
+  sendCommandSync(frame, cmdId("CmdZoomFitPage"));
+  await client.waitForRenderIdle();
+  sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
+  await client.waitForRenderIdle();
+  return frame;
+}
+
+async function testLinkedPdf(): Promise<void> {
+  const pdf = tmpPath("issue-2629-links.pdf");
+  writeFileSync(pdf, makeLinkedPdf());
+
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      // Fit the whole first page so all 20 link hints are visible.
+      const frame = await setupPdfView(client, proc);
+
+      const fail = (msg: string, dump: string) => {
+        throw new Error(`${msg}\nstate dump:\n${dump}`);
+      };
+
+      let { state, dump } = await getState(client);
+      if (!state.canFollow) {
+        fail("keyboard link following should be available for a PDF", dump);
+      }
+      if (state.active) {
+        fail("mode should start off", dump);
+      }
+      // the shortcut itself can't be pressed from here (posted key messages
+      // carry no modifier state), so check what it is bound to
+      if (state.accel !== "Shift + F") {
+        fail(`expected the Shift + F shortcut, got '${state.accel}'`, dump);
+      }
+
+      // turn the mode on
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active));
+      // All 20 links on page 1 are visible.
+      if (state.count !== 20) {
+        fail(`expected 20 labeled links at the top of page 1, got ${state.count}`, dump);
+      }
+      const expectedHints = "A SA C D SD E F SF G H J SJ K SK L SL M P SS W".split(" ");
+      if (state.hints.join(" ") !== expectedHints.join(" ")) {
+        fail(`unexpected Vimium-style hints: ${state.hints.join(" ")}`, dump);
+      }
+
+      // the command toggles: a second one leaves the mode
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => !s.active && s.count === 0));
+
+      // plain 'f' still belongs to fullscreen: it must not turn the mode on
+      // (pressed twice so the window doesn't stay fullscreen)
+      pressVKey(frame, VK_F);
+      await waitForFullscreenState(client, true);
+      ({ state, dump } = await getState(client));
+      const wrongKey = state.active;
+      pressVKey(frame, VK_F);
+      await waitForFullscreenState(client, false);
+      if (wrongKey) {
+        fail("plain 'f' must toggle fullscreen, not keyboard link following", dump);
+      }
+
+      // Esc leaves the mode
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active));
+      pressVKey(frame, VK_ESCAPE);
+      ({ state, dump } = await waitForState(client, (s) => !s.active));
+
+      // B is not in Vimium's ergonomic hint alphabet. It cancels the mode and
+      // is consumed instead of falling through to an unrelated shortcut.
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      postMessage(frame, WM_CHAR, "b".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => !s.active && s.page === 1));
+
+      // A is a complete single-letter hint for the first link.
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      postMessage(frame, WM_CHAR, "a".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
+      const singleHintPage = state.page;
+
+      // SA is a two-letter hint for the second link. S alone must keep the mode
+      // active instead of following a different link or falling through to an
+      // application shortcut.
+      sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
+      await client.waitForRenderIdle();
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      postMessage(frame, WM_CHAR, "s".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.page === 1));
+      postMessage(frame, WM_CHAR, "a".charCodeAt(0), 0);
+      ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
+      if (state.page === singleHintPage) {
+        fail(`A and SA should follow different adjacent links, but both went to page ${state.page}`, dump);
+      }
+    },
+    [pdf],
+  );
+}
+
+// The labels must be recalculated after navigating to a page with no links
+// (debounced by 300ms, so wait longer than that).
+async function testRecomputeAfterNavigation(): Promise<void> {
+  const pdf = tmpPath("issue-2629-links.pdf");
+  writeFileSync(pdf, makeLinkedPdf());
+
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      const frame = await setupPdfView(client, proc);
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      let { state, dump } = await waitForState(client, (s) => s.active && s.count === 20);
+      const atTop = state.count;
+
+      // Page 2 has no links. Labels are recalculated 300ms after navigation.
+      sendCommandSync(frame, cmdId("CmdGoToNextPage"));
+      await sleep(350);
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count !== atTop));
+      if (!state.active) {
+        throw new Error(`page navigation must not leave the mode\n${dump}`);
+      }
+      if (state.count === atTop) {
+        throw new Error(`link labels were not recalculated after page navigation (still ${state.count})\n${dump}`);
+      }
+    },
+    [pdf],
+  );
+}
+
+// images can't have links: the command must report itself unavailable and
+// toggling it must do nothing
+async function testImageUnavailable(): Promise<void> {
+  const png = tmpPath("issue-2629.png");
+  writeFileSync(png, PNG_1PX);
+
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      const frame = await waitForTopWindow(proc.pid!, FRAME_CLASS);
+      if (!frame) {
+        throw new Error("no frame window");
+      }
+      await client.waitForRenderIdle();
+      let { state, dump } = await getState(client);
+      if (state.canFollow) {
+        throw new Error(`keyboard link following must not be available for an image\n${dump}`);
+      }
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await getState(client));
+      if (state.active) {
+        throw new Error(`the mode must not turn on for an image\n${dump}`);
+      }
+    },
+    [png],
+  );
+}
+
+export async function testit(): Promise<void> {
+  await testLinkedPdf();
+  await testRecomputeAfterNavigation();
+  await testImageUnavailable();
+}
+
+if (import.meta.main) {
+  await runStandalone(testit);
+}

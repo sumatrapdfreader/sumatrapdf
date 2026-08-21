@@ -2,13 +2,17 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/File.h"
 #include "base/Win.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/GuiColors.h"
+#include "gui/VirtCtrl.h"
 
 #include "Theme.h"
 #include "Accelerators.h"
@@ -26,29 +30,39 @@ void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
-    ListBox* lb = ev->listBox;
-    auto m = (ListBoxModelCP*)lb->model;
+void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
+    auto* m = (ListBoxModelCP*)lb->model;
     if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
         return;
     }
 
-    HDC hdc = ev->hdc;
+    Gfx* gfx = ev->gfx;
+    HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
 
-    COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
-    COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    Color colBg = lb->GetColor(kColListBg);
+    Color colText = lb->GetColor(kColListText);
+    if (IsSpecialColor(colBg)) {
+        colBg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(colText)) {
+        colText = GetSysColor(COLOR_WINDOWTEXT);
+    }
     if (ev->selected) {
         colBg = AccentColor(colBg, 30);
     }
 
-    SetBkColor(hdc, colBg);
-    HdcFillRectWithBkColor(hdc, rc);
+    gfx->FillRect(rc, colBg);
 
-    bool isRtl = HwndIsRtl(lb->hwnd);
-    if (isRtl) {
-        SetLayout(hdc, 0);
-    }
+    // Gfx (Direct2D / GDI+) does not pick up WS_EX_LAYOUTRTL, so we lay the
+    // row out right-to-left ourselves. Do not use HwndIsRtl(): the palette
+    // hwnd stays LTR so mouse hit-testing and virtual-control coords match
+    // (issue #5956). If the DC is still mirrored (nested RTL hwnd), turn it
+    // off so Hebrew glyphs are not reversed.
+    bool isRtl = CommandPaletteUiRtl();
+    bool hwndRtl = HwndIsRtl(hwndList);
+    bool prevMirrored = hwndRtl ? gfx->SetMirrored(false) : false;
 
     Str itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
@@ -66,20 +80,12 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         rightStr = path::GetDirTemp(data->filePath);
     }
 
-    SetTextColor(hdc, colText);
-    SetBkMode(hdc, TRANSPARENT);
-
-    HFONT oldFont = nullptr;
-    if (lb->font) {
-        oldFont = SelectFont(hdc, lb->font);
-    }
-
-    int padX = DpiScale(lb->hwnd, 4);
+    int padX = DpiScale(4);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
     if (data->indent > 0) {
-        int indentW = data->indent * DpiScale(lb->hwnd, 16);
+        int indentW = data->indent * DpiScale(16);
         if (isRtl) {
             rc.dx -= indentW;
         } else {
@@ -92,12 +98,11 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     // is always visible; the item text gets the remaining space and is
     // ellipsized when too long.
     Rect rcText = rc;
-    TempWStr rightStrW = nullptr;
+    bool hasRight = rightStr && rightStr.s[0];
     int rightW = 0;
-    if (rightStr && rightStr.s[0]) {
-        rightStrW = ToWStrTemp(rightStr);
-        int gap = DpiScale(lb->hwnd, 8);
-        rightW = HdcGetTextExtentPoint32(hdc, rightStr).dx;
+    if (hasRight) {
+        int gap = DpiScale(8);
+        rightW = gfx->MeasureText(rightStr, lb->font).dx;
         if (isRtl) {
             rcText.x += rightW + gap;
             rcText.dx -= rightW + gap;
@@ -107,29 +112,27 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     }
 
     {
-        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
-        drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
-        DrawMaybeHighlightedText(hdc, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
+        u32 drawFmt = gfxTextEllipsis | gfxTextVCenter;
+        drawFmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+        DrawMaybeHighlightedText(gfx, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt,
+                                 lb->font, colText);
     }
 
-    if (rightStrW) {
+    if (hasRight) {
         Rect rcRight = rc;
-        uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+        u32 rightFmt = gfxTextVCenter;
         if (isRtl) {
             rcRight.dx = rightW;
-            fmt |= DT_LEFT | DT_RTLREADING;
+            rightFmt |= gfxTextLeft;
         } else {
             rcRight.x += rcRight.dx - rightW;
             rcRight.dx = rightW;
-            fmt |= DT_RIGHT;
+            rightFmt |= gfxTextRight;
         }
-        COLORREF rightCol = AccentColor(colText, 80);
-        SetTextColor(hdc, rightCol);
-        HdcDrawText(hdc, rightStrW, rcRight, fmt);
-        SetTextColor(hdc, colText);
+        gfx->DrawText(rightStr, rcRight, rightFmt, lb->font, AccentColor(colText, 80));
     }
 
-    if (oldFont) {
-        SelectFont(hdc, oldFont);
+    if (hwndRtl) {
+        gfx->SetMirrored(prevMirrored);
     }
 }

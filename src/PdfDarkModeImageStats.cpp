@@ -25,13 +25,13 @@ static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     fz_colorspace* cs = pix->colorspace ? pix->colorspace : fz_device_rgb(ctx);
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
-    int stride = pix->stride;
-    unsigned char* px = pix->samples + (y * stride) + (x * n);
+    int stride = (int)pix->stride;
+    unsigned char* px = pix->samples + ((size_t)y * stride) + ((size_t)x * n);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
     int components = fz_colorspace_n(ctx, cs);
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-        conv[c] = px[c] / 255.f;
+        conv[c] = (float)px[c] / 255.f;
     }
     fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
     *outR = srcRgb[0];
@@ -75,14 +75,14 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
             for (int x = 0; x < pix->w; x += stepX) {
                 float r, g, b;
                 SamplePixmapRgb(ctx, pix, x, y, &r, &g, &b);
-                int ri = (int)((r * 255.f) + 0.5f);
-                int gi = (int)((g * 255.f) + 0.5f);
-                int bi = (int)((b * 255.f) + 0.5f);
+                int ri = (int)lroundf(r * 255.f);
+                int gi = (int)lroundf(g * 255.f);
+                int bi = (int)lroundf(b * 255.f);
                 int bucket = ((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4);
                 buckets[bucket]++;
 
-                float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-                float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                float maxC = std::max({r, g, b});
+                float minC = std::min({r, g, b});
                 float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
                 lumSum += lum;
                 lumSqSum += lum * lum;
@@ -100,15 +100,15 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
         }
 
         int significantBuckets = 0;
-        for (int i = 0; i < 4096; i++) {
-            if (buckets[i] * 100 > n) {
+        for (int bucket : buckets) {
+            if (bucket * 100 > n) {
                 significantBuckets++;
             }
         }
 
-        float lumMean = lumSum / n;
+        float lumMean = lumSum / (float)n;
         stats.significantBuckets = significantBuckets;
-        stats.lumVar = (lumSqSum / n) - (lumMean * lumMean);
+        stats.lumVar = (lumSqSum / (float)n) - (lumMean * lumMean);
         stats.satRatio = (float)saturated / (float)n;
         stats.highLumRatio = (float)highLum / (float)n;
         stats.valid = true;
@@ -186,23 +186,20 @@ RectF PdfDarkModeClampImagePageRect(const RectF& imgPage, int imageW, int imageH
     // Bbox taller than bitmap → trim height (painting drawn in top of tall column).
     if (bboxAspect < imageAspect / maxSkew) {
         newDy = imgPage.dx / imageAspect;
-        if (newDy > imgPage.dy) {
-            newDy = imgPage.dy;
-        }
+        newDy = std::min(newDy, imgPage.dy);
     }
     // Bbox wider than bitmap → trim width (avoids preserving a whole page column).
     if (bboxAspect > imageAspect * maxSkew) {
         float clampedDx = imgPage.dy * imageAspect;
-        if (clampedDx < newDx) {
-            newDx = clampedDx;
-        }
+        newDx = std::min(clampedDx, newDx);
     }
     if (newDx == imgPage.dx && newDy == imgPage.dy) {
         return imgPage;
     }
-    return RectF(imgPage.x, imgPage.y, newDx, newDy);
+    return {imgPage.x, imgPage.y, newDx, newDy};
 }
 
+// Cap bbox when embedded image dimensions are unknown (common with content-stream tiles).
 RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight) {
     if (imgPage.IsEmpty() || pageHeight <= 0.f) {
         return imgPage;
@@ -211,7 +208,7 @@ RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight)
     if (imgPage.dy <= maxH) {
         return imgPage;
     }
-    return RectF(imgPage.x, imgPage.y, imgPage.dx, maxH);
+    return {imgPage.x, imgPage.y, imgPage.dx, maxH};
 }
 
 static bool PdfDarkModeStatsLookLikeDarkArtwork(const PdfDarkModeImageSampleStats& stats, float pageCoverage) {
@@ -238,7 +235,9 @@ bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, floa
     return PdfDarkModeStatsLookLikeDarkArtwork(PdfDarkModeSampleImageStats(ctx, image), pageCoverage);
 }
 
-bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage, int devW, int devH) {
+// Stricter pixel gate used by PdfDarkModeShouldPreserveEmbeddedImageRect.
+bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage, int /*devW*/,
+                                            int /*devH*/) {
     if (!ctx || !image) {
         return false;
     }
@@ -261,7 +260,8 @@ bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, fl
     return false;
 }
 
-bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage, int devW, int devH) {
+bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage, int /*devW*/,
+                                        int /*devH*/) {
     if (!ctx || !image) {
         return false;
     }
@@ -284,9 +284,22 @@ bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float 
     return false;
 }
 
+// A page-sized image is normally a scan or a full-bleed background, and those
+// should recolor along with the page. Artwork shouldn't: keeping pictures as
+// they are is what smart mode is for, and a cover illustration is no less a
+// picture for filling the page (issue #5887). LooksLikeDarkArtwork is the
+// discriminator - a scanned page is mostly bright paper, which it rejects.
+bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage) {
+    if (pageCoverage < kMaxPreserveImagePageCoverage) {
+        return false; // not page-dominant, the ordinary rules decide
+    }
+    return !PdfDarkModeImageLooksLikeDarkArtwork(ctx, image, pageCoverage);
+}
+
+// Gate for Legacy skip-rect preserve: combines bbox size, pixel stats, and artwork heuristics.
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH) {
-    if (pageCoverage >= kMaxPreserveImagePageCoverage) {
+    if (PdfDarkModePageDominantImageRecolors(ctx, image, pageCoverage)) {
         return false;
     }
     int minPx = GetPreservePdfImagesMinSize();

@@ -2,9 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-
-#include <limits.h>
-
 #include "base/File.h"
 
 // we pad data read with 3 zeros for convenience. That way returned
@@ -87,15 +84,15 @@ TempStr GetPathNoExtTemp(Str path) {
     return str::DupTemp(Str(path.s, ext));
 }
 
-TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
-    SkipLeadingPathSep(fileName);
+TempStr JoinTemp(Str dir, Str name, Str name2) {
+    SkipLeadingPathSep(name);
     Str sepStr = {};
-    if (len(path) > 0 && !IsSep(path.s[path.len - 1])) {
+    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
         sepStr = StrL(PATH_SEP);
     }
-    TempStr res = str::JoinTemp(path, sepStr, fileName);
-    if (fileName2) {
-        res = JoinTemp(res, fileName2);
+    TempStr res = str::JoinTemp(dir, sepStr, name);
+    if (name2) {
+        res = JoinTemp(res, name2);
     }
     return res;
 }
@@ -108,34 +105,34 @@ TempStr ToOSTemp(Str path) {
 #endif
 }
 
-Str Join(Arena* a, Str path, Str fileName) {
-    SkipLeadingPathSep(fileName);
+Str Join(Arena* a, Str dir, Str name) {
+    SkipLeadingPathSep(name);
     Str sepStr = {};
-    if (len(path) > 0 && !IsSep(path.s[path.len - 1])) {
+    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
         sepStr = StrL(PATH_SEP);
     }
-    return str::Join(a, path, sepStr, fileName);
+    return str::Join(a, dir, sepStr, name);
 }
 
-Str Join(Str path, Str fileName) {
-    return Join(nullptr, path, fileName);
+Str Join(Str dir, Str name) {
+    return Join(nullptr, dir, name);
 }
 
-TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
-    SkipLeadingPathSep(fileName);
+TempWStr JoinTemp(WStr dir, WStr name, WStr name2) {
+    SkipLeadingPathSep(name);
     WStr sepStr;
-    if (len(path) > 0 && !IsSep(path.s[path.len - 1])) {
+    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
         sepStr = PATH_SEP_WSTR;
     }
-    TempWStr res = str::JoinTemp(path, sepStr, fileName);
-    if (fileName2) {
-        res = JoinTemp(res, fileName2);
+    TempWStr res = str::JoinTemp(dir, sepStr, name);
+    if (name2) {
+        res = JoinTemp(res, name2);
     }
     return res;
 }
 
-WStr Join(WStr path, WStr fileName, WStr fileName2) {
-    TempWStr res = JoinTemp(path, fileName, fileName2);
+WStr Join(WStr dir, WStr name, WStr name2) {
+    TempWStr res = JoinTemp(dir, name, name2);
     return wstr::Dup(res);
 }
 
@@ -221,11 +218,11 @@ bool Match(Str path, Str filter) {
 }
 
 bool IsWslUnc(Str path) {
-    return str::StartsWithI(path, "\\\\wsl.localhost\\") || str::StartsWithI(path, "\\\\wsl$\\");
+    return str::StartsWithI(path, StrL("\\\\wsl.localhost\\")) || str::StartsWithI(path, StrL("\\\\wsl$\\"));
 }
 
 bool IsWslMount(Str path) {
-    if (!path || !str::StartsWithI(path, "/mnt/")) {
+    if (!path || !str::StartsWithI(path, StrL("/mnt/"))) {
         return false;
     }
     if (path.len < 6) {
@@ -241,9 +238,9 @@ TempStr WslUncToUnixTemp(Str path) {
     }
 
     int off = 0;
-    if (str::StartsWithI(path, "\\\\wsl.localhost\\")) {
+    if (str::StartsWithI(path, StrL("\\\\wsl.localhost\\"))) {
         off = LenL("\\\\wsl.localhost\\");
-    } else if (str::StartsWithI(path, "\\\\wsl$\\")) {
+    } else if (str::StartsWithI(path, StrL("\\\\wsl$\\"))) {
         off = LenL("\\\\wsl$\\");
     } else {
         return {};
@@ -296,6 +293,8 @@ namespace file {
 
 thread_local CopyProgressCb gFileCopyProgressCb;
 
+#if !OS_WIN
+// Windows has its own ReadFileWithArena() in File_win.cpp that skips the CRT
 Str ReadFileWithArena(Str filePath, Arena* a) {
     char* d = nullptr;
     int res;
@@ -339,11 +338,14 @@ Error:
     Free(a, (void*)d);
     return {};
 }
+#endif
 
 Str ReadFile(Str path) {
     return ReadFileWithArena(path, nullptr);
 }
 
+#if !OS_WIN
+// Windows has its own ReadN() in File_win.cpp that skips the CRT
 int ReadN(Str path, u8* buf, size_t toRead) {
     FILE* fp = OpenFILE(path);
     if (!fp) {
@@ -357,6 +359,7 @@ int ReadN(Str path, u8* buf, size_t toRead) {
     }
     return (int)nRead;
 }
+#endif
 
 bool StartsWithN(Str path, Str s) {
     u8* buf = AllocArrayTemp<u8>(s.len);
@@ -366,7 +369,7 @@ bool StartsWithN(Str path, Str s) {
     if (ReadN(path, buf, s.len) != s.len) {
         return false;
     }
-    return memeq(buf, s.s, s.len);
+    return MemEq(buf, s.s, s.len);
 }
 
 bool StartsWith(Str path, Str s) {
@@ -377,17 +380,14 @@ bool StartsWith(Str path, Str s) {
 
 namespace dir {
 
-bool CreateAll(Str dir) {
-    TempStr parent = path::GetDirTemp(dir);
-    if (!str::Eq(parent, dir) && !Exists(parent)) {
-        CreateAll(parent);
-    }
-    return Create(dir);
-}
+// CreateAll is platform-specific (File_win.cpp / File_posix.cpp).
 
-bool CreateForFile(Str path) {
+// errOut (optional) gets the OS error when creation fails, so callers can log why.
+// 0 there means the create itself reported success but the directory wasn't there
+// afterwards.
+bool CreateForFile(Str path, int* errOut) {
     TempStr dir = path::GetDirTemp(path);
-    return CreateAll(dir);
+    return CreateAll(dir, errOut);
 }
 
 } // namespace dir
@@ -396,6 +396,8 @@ bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
     return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
 }
 
+// global file utilities (paths are UTF-8); moved here from Base.h
+// (formerly src/common/file_util.cpp)
 bool FileSystemEntryExists(Str s) {
     return path::GetType(s) != path::Type::None;
 }
@@ -417,7 +419,7 @@ Str FindFirstValidParentDir(Str path) {
 
 Str PathGetDirTemp(Str path) {
     if (len(path) == 0) {
-        return Str();
+        return {};
     }
     while (path.len > 1 && path::IsSep(path.s[path.len - 1])) {
         path.len--;
@@ -429,7 +431,7 @@ Str PathGetDirTemp(Str path) {
         }
     }
     if (idx < 0) {
-        return Str();
+        return {};
     }
     int n = idx;
     if (idx == 0) {
@@ -442,7 +444,7 @@ Str PathGetDirTemp(Str path) {
 
 Str PathGetNameTemp(Str path) {
     if (len(path) == 0) {
-        return Str();
+        return {};
     }
     while (path.len > 1 && path::IsSep(path.s[path.len - 1])) {
         path.len--;

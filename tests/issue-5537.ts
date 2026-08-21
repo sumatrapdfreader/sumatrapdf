@@ -12,13 +12,13 @@
 //   3. /XYZ 100 700 1    -> zoom 1    (explicit 100%, NOT retained)
 // Before the fix, dest 1 resolved to zoom 1 (forced 100%) and would fail here.
 //
-// Run:  bun tests/issue-5537.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5537.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 
 const PDF = join(tmpdir(), "sumatra-issue-5537.pdf");
 
@@ -50,17 +50,6 @@ function makePdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-// returns { page, zoom } for the n-th outline destination
-async function resolveDest(no: number): Promise<{ page: number; zoom: number; raw: string }> {
-  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestDest, [PDF, no]);
-  const raw = String(rawArg).trim();
-  const m = raw.match(/page=(-?\d+)\s+zoom=([\d.eE+-]+)/);
-  if (!m) {
-    return { page: -1, zoom: NaN, raw };
-  }
-  return { page: parseInt(m[1]), zoom: parseFloat(m[2]), raw };
-}
-
 export async function testit(): Promise<void> {
   if (!existsSync(EXE)) {
     throw new Error(`app not found: ${EXE} (build first)`);
@@ -75,13 +64,19 @@ export async function testit(): Promise<void> {
   ];
 
   let allOk = true;
-  for (const [no, expectZoom, desc] of cases) {
-    const r = await resolveDest(no);
-    const ok = r.page === 2 && Math.abs(r.zoom - expectZoom) < 1e-4;
-    allOk &&= ok;
-    console.log(`  ${ok ? "✅" : "❌"} dest ${no}: ${desc}`);
-    console.log(`        -> ${r.raw}  (expected page=2 zoom=${expectZoom})`);
-  }
+  await withControlledSumatra(EXE, async (client) => {
+    for (const [no, expectZoom, desc] of cases) {
+      const [, rawArg] = await client.request(ControlCommand.TestDest, [PDF, no]);
+      const raw = String(rawArg).trim();
+      const m = raw.match(/page=(-?\d+)\s+zoom=([\d.eE+-]+)/);
+      const page = m ? parseInt(m[1]!) : -1;
+      const zoom = m ? parseFloat(m[2]!) : NaN;
+      const ok = page === 2 && Math.abs(zoom - expectZoom) < 1e-4;
+      allOk &&= ok;
+      console.log(`  ${ok ? "✅" : "❌"} dest ${no}: ${desc}`);
+      console.log(`        -> ${raw}  (expected page=2 zoom=${expectZoom})`);
+    }
+  });
 
   rmSync(PDF, { force: true });
   if (!allOk) {

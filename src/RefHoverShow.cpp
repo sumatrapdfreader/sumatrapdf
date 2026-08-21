@@ -2,10 +2,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/Dpi.h"
-#include "base/Win.h"
+#include "gui/Dpi.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"
@@ -13,6 +12,8 @@
 #include "RefHoverInternal.h"
 #include "RefHoverText.h"
 
+// pageZoom is the destination page's current display zoom (px-per-pt) —
+// used as the initial render zoom so popup text height matches the page.
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom) {
     KillTimer(hwndCanvas, kRefHoverTimerID);
     if (!s || !engine || s->pending.destPage <= 0) {
@@ -38,9 +39,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         float resolved = RefHoverResolveDestYFromSourceText(engine, s->pending.srcPage, s->pending.srcRect, destPage);
         if (resolved >= 0.f) {
             destY = resolved;
-            if (destX < 0.f) {
-                destX = 0.f;
-            }
+            destX = std::max(destX, 0.f);
         }
     }
 
@@ -69,28 +68,28 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             // Strip the page watermark on the raw glyphs first (its true height
             // is only visible pre-normalization), then normalize the survivors
             // so the detectors below see clean, baseline-flattened text.
-            cleanText = AllocArray<WCHAR>(textLen);
-            cleanCoords = AllocArray<Rect>(textLen);
+            cleanText = AllocArrayTemp<WCHAR>(textLen);
+            cleanCoords = AllocArrayTemp<Rect>(textLen);
             int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
             text = WStr(cleanText, cleanLen);
-            normCoords = AllocArray<Rect>(cleanLen);
+            normCoords = AllocArrayTemp<Rect>(cleanLen);
             NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
         }
         region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
         if (region.dx <= 0.f || region.dy <= 0.f) {
             region = DetectEntryBox(text, normCoords, mediabox, destX, destY, &continuation);
         }
-        if (normCoords != coords) {
-            free(normCoords);
-        }
-        free(cleanText);
-        free(cleanCoords);
     }
     bool hasContinuation = continuation.dx > 0.f && continuation.dy > 0.f;
     s->displayed.userZoom = 1.f;
-    float baseZoom = useLinkZoom ? linkZoom : ((pageZoom > 0.f) ? pageZoom : kRefHoverRenderZoom);
+    float baseZoom = kRefHoverRenderZoom;
+    if (useLinkZoom) {
+        baseZoom = linkZoom;
+    } else if (pageZoom > 0.f) {
+        baseZoom = pageZoom;
+    }
 
-    int popupWCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupWidth);
+    int popupWCap = DpiScale(kRefHoverMaxPopupWidth);
     {
         POINT mp = {s->pending.screenPt.x, s->pending.screenPt.y};
         HMONITOR hmon = MonitorFromPoint(mp, MONITOR_DEFAULTTONEAREST);
@@ -99,9 +98,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         if (GetMonitorInfoW(hmon, &mi)) {
             int monW = mi.rcWork.right - mi.rcWork.left;
             int dyn = monW * 95 / 100;
-            if (dyn > popupWCap) {
-                popupWCap = dyn;
-            }
+            popupWCap = std::max(dyn, popupWCap);
         }
     }
     // Combined content extent (region stacked above continuation, if any) used
@@ -110,28 +107,24 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     float contentDx = hasContinuation && continuation.dx > region.dx ? continuation.dx : region.dx;
 
     int popupHCap;
-    int cursorPad = DpiScale(s->hwndPopup, kRefHoverCursorPad);
+    int cursorPad = DpiScale(kRefHoverCursorPad);
     if (contentDy > 250.f && s->pending.pageScreenRect.dy > 0) {
         Rect pr = s->pending.pageScreenRect;
         int curY = s->pending.screenPt.y;
         int spaceAbove = curY - pr.y - cursorPad;
         int spaceBelow = (pr.y + pr.dy) - curY - cursorPad;
         int maxSpace = (spaceAbove > spaceBelow) ? spaceAbove : spaceBelow;
-        if (maxSpace < 0) {
-            maxSpace = 0;
-        }
+        maxSpace = std::max(maxSpace, 0);
         int pageBased = pr.dy * 75 / 100;
         popupHCap = (pageBased > maxSpace) ? pageBased : maxSpace;
     } else {
-        popupHCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupHeight);
+        popupHCap = DpiScale(kRefHoverMaxPopupHeight);
         if (s->pending.pageScreenRect.dy > 0) {
             int pageBased = s->pending.pageScreenRect.dy * 45 / 100;
-            if (pageBased < popupHCap) {
-                popupHCap = pageBased;
-            }
+            popupHCap = std::min(pageBased, popupHCap);
         }
     }
-    int border = DpiScale(s->hwndPopup, kRefHoverBorder);
+    int border = DpiScale(kRefHoverBorder);
     float availH = (float)(popupHCap - (2 * border));
     float availW = (float)(popupWCap - (2 * border));
     if (useLinkZoom) {
@@ -139,18 +132,10 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         float wantH = availH / baseZoom;
         float maxW = mediabox.dx - region.x;
         float maxH = mediabox.dy - region.y;
-        if (wantW > maxW) {
-            wantW = maxW;
-        }
-        if (wantH > maxH) {
-            wantH = maxH;
-        }
-        if (wantW < 1.f) {
-            wantW = 1.f;
-        }
-        if (wantH < 1.f) {
-            wantH = 1.f;
-        }
+        wantW = std::min(wantW, maxW);
+        wantH = std::min(wantH, maxH);
+        wantW = std::max(wantW, 1.f);
+        wantH = std::max(wantH, 1.f);
         region.dx = wantW;
         region.dy = wantH;
     } else {
@@ -161,9 +146,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             baseZoom = availW / contentDx;
         }
     }
-    if (baseZoom < kRefHoverMinUserZoom) {
-        baseZoom = kRefHoverMinUserZoom;
-    }
+    baseZoom = std::max(baseZoom, kRefHoverMinUserZoom);
     s->displayed.baseZoom = baseZoom;
 
     RefHoverState::RenderRequest req;

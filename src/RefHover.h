@@ -29,7 +29,7 @@ struct RefHoverState {
     // Pending hover request: set by RefHoverSchedule, consumed by
     // RefHoverOnTimer when the hover-delay timer fires.
     struct Pending {
-        Point screenPt{};
+        Point screenPt;
         int destPage = -1;
         float destX = -1.f;
         float destY = -1.f;
@@ -46,11 +46,11 @@ struct RefHoverState {
         // abbreviation / glossary links render the whole abbreviations page
         // from top.
         int srcPage = -1;
-        RectF srcRect{};
+        RectF srcRect;
         // Screen rect of the source page (visible portion). Used to clamp
         // the popup so it stays within the document area and doesn't drift
         // into the gray margins outside the page.
-        Rect pageScreenRect{};
+        Rect pageScreenRect;
     } pending;
 
     // Async rendering: renders run on a background thread (a complex page
@@ -63,7 +63,7 @@ struct RefHoverState {
         EngineBase* engine = nullptr; // AddRef()'ed for the render duration
         int pageNo = -1;
         float zoom = 0.f;
-        RectF region{};
+        RectF region;
         // Second crop stitched below `region` in the delivered bitmap, for a
         // bracket-style entry that wraps across a 2-column page break (see
         // DetectEntryBox's continuationOut). Empty (dx/dy <= 0) when there's
@@ -72,19 +72,19 @@ struct RefHoverState {
         // displayed.region and never populate this, so the stitched strip is
         // dropped as soon as the user interacts (region-shift math for a
         // composited bitmap isn't supported).
-        RectF continuationRegion{};
+        RectF continuationRegion;
         // initial show: commit displayed.* and show the popup on completion.
         // false for wheel zoom / scroll re-renders, which update displayed.*
         // optimistically and only need the new bitmap.
         bool showPopup = false;
-        Point screenPt{};
+        Point screenPt;
         float destXRaw = -1.f;
         float destYRaw = -1.f;
         // source link location (page coords) that triggered this show; carried
         // through so RefHoverSchedule can tell two occurrences of the same
         // reference apart and reposition the popup to the new one
         int srcPageRaw = -1;
-        RectF srcRectRaw{};
+        RectF srcRectRaw;
     };
     // bumped on every new request and on hide, invalidating older results
     int renderGen = 0;
@@ -103,7 +103,7 @@ struct RefHoverState {
         float destY = -1.f;
         // Region of the page rendered into the popup bitmap, kept so the
         // wheel handlers can shift / scale it without re-running detection.
-        RectF region{};
+        RectF region;
         // baseZoom matches the document's current page zoom on first show
         // so popup text height is comparable to page text. userZoom is the
         // multiplier driven by the user's mouse-wheel.
@@ -113,7 +113,7 @@ struct RefHoverState {
         // RefHoverSchedule so hovering a different occurrence of the same
         // reference re-positions the popup instead of skipping as a no-op.
         int srcPage = -1;
-        RectF srcRect{};
+        RectF srcRect;
     } displayed;
 };
 
@@ -122,40 +122,18 @@ constexpr UINT_PTR kRefHoverHideTimerID = 10;
 
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
-// Canvas wiring entry points (RefHoverCanvas.cpp) — keep Canvas.cpp thin.
 bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm);
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs);
 void RefHoverOnCanvasMouseLeave(RefHoverState* s, HWND hwndCanvas, int hoverDelayMs);
 void RefHoverOnCanvasLeftButtonDown(RefHoverState* s, HWND hwndCanvas);
 bool RefHoverOnCanvasTimer(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, UINT_PTR timerId);
-// delayMs: how long the cursor must hover before the popup shows
-// (the CitationHoverDelay advanced setting)
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point screenPt, int destPage, float destX,
                       float destY, float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect);
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas);
-// Like RefHoverHide but deferred: cancels any pending show immediately, then
-// hides the visible popup after delayMs. While the timer is pending, moving
-// the cursor onto the popup (e.g. to click a DOI link inside it) keeps it
-// alive. Lets the cursor cross the gap between the link and the popup without
-// the popup vanishing. Cancelled by a new RefHoverSchedule / RefHoverHide.
 void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs);
-// Fired by kRefHoverHideTimerID: hides the popup unless the cursor is now
-// over it (in which case it re-arms and keeps the popup up).
 void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas);
-// Open a launch link (external URL / file) hit-tested inside the popup.
 void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest);
-// pageZoom is the destination page's current display zoom (px-per-pt) —
-// used as the initial render zoom so popup text height matches the page.
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom);
-// Re-render the popup at adjusted zoom in response to a mouse-wheel event.
-// Popup window keeps its initial size; only the rendered content scales.
-// Positive delta zooms in, negative zooms out. Returns true if the zoom
-// changed and a re-render happened.
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta);
-// Scroll the popup's rendered region by a wheel notch. Positive delta scrolls
-// toward earlier content (up); negative scrolls toward later content (down).
-// Rolls over to the previous / next page when the viewport hits a page edge
-// (continuous scrolling). Popup window keeps its initial size; only the
-// rendered region's Y (and possibly page number) changes.
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta);

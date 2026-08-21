@@ -4,6 +4,31 @@
 
 You can add buttons to a toolbar using `Shortcuts` [advanced setting](Advanced-options-settings.md). You can also add toolbar buttons for custom external viewers using `ExternalViewers`.
 
+## Choose which buttons are on the toolbar, and in what order
+
+**Ver 3.7+:** `ToolbarCustomLayout` [advanced setting](Advanced-options-settings.md) lists the built-in buttons you want, in the order you want them:
+
+```
+ToolbarCustomLayout = CmdFindFirst | PageInfo CmdGoToPrevPage CmdGoToNextPage | CmdZoomOut CmdZoomIn
+```
+
+- entries are [command ids](Commands.md), separated by spaces (commas and semicolons work too)
+- `|` (or `Separator`) inserts a separator
+- `PageInfo` is the page number box (`Page: 3 / 120`); leave it out and it isn't shown at all
+- **leaving a button out is how you hide it** — that's the point of the setting: keep the toolbar and fill it with the buttons you actually use
+- an empty value (the default) means the standard layout
+- names that aren't built-in toolbar buttons are ignored (see the log with `-log`)
+
+Hiding a button doesn't disable the command: it's still available from the menu, the [command palette](Command-Palette.md) and its keyboard shortcut. Buttons you add yourself (`ToolbarText` / `ToolbarSvgIcon`, below) always come after the built-in ones.
+
+This is the standard toolbar written out, a convenient starting point to edit down:
+
+```
+ToolbarCustomLayout = CmdOpenFile CmdPrint | PageInfo CmdGoToPrevPage CmdGoToNextPage | CmdNavigateBack CmdNavigateForward | CmdReadAloud | CmdZoomFitWidthAndContinuous CmdZoomFitPageAndSinglePage CmdRotateLeft CmdRotateRight CmdZoomOut CmdZoomIn | CmdFindFirst
+```
+
+Some buttons only show when they apply (the Read Aloud button needs `ToolbarShowReadAloud`, Find needs a document that can be searched, rotate needs a document that can be rotated), so a button you list may still stay hidden.
+
 ## Show, hide or overlay the toolbar
 
 **Ver 3.7+:** the `Toolbar` [advanced setting](Advanced-options-settings.md) controls how the toolbar is shown:
@@ -54,12 +79,32 @@ Shortcuts [
 ```
 
 Explanation:
+
 - `CmdNextTab` is one of the [commands](Commands.md)
 - `Next Tab` will be shown in the toolbar
 
 If you provide `Name`, it'll be available in [Command Palette](Command-Palette.md).
 
 See [customize shortcuts](Customize-keyboard-shortcuts.md) for more complete docs on `Shortcuts` [advanced setting](Advanced-options-settings.md).
+
+## Command palette on the toolbar
+
+`Ctrl + K` then `$` opens the [command palette](Command-Palette.md) in favorites
+mode (a floating list that closes when it loses focus). To put that on the
+toolbar, add a shortcut with `ToolbarText` or `ToolbarSvgIcon`:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdCommandPaletteFavorites
+        Name = Favorites
+        ToolbarText = $
+    ]
+]
+```
+
+The table of contents (document bookmarks) is `Ctrl + K` then `%`, or
+`Shift + F12`. For a toolbar button use `CmdCommandPaletteTOC` the same way.
 
 See [customize external viewers](Customize-external-viewers.md) for adding external-viewer toolbar buttons.
 

@@ -91,20 +91,27 @@ class ScopedComQIPtr {
         HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
-    T* operator=(IUnknown* newUnk) {
-        if (ptr) ptr->Release();
+    ScopedComQIPtr<T>& operator=(IUnknown* newUnk) {
+        if (ptr) {
+            ptr->Release();
+        }
         HRESULT hr = newUnk->QueryInterface(&ptr);
-        if (FAILED(hr)) ptr = nullptr;
-        return ptr;
+        if (FAILED(hr)) {
+            ptr = nullptr;
+        }
+        return *this;
     }
     operator T*() const { // NOLINT
         return ptr;
     }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
-    T* operator=(T* newPtr) {
-        if (ptr) ptr->Release();
-        return (ptr = newPtr);
+    ScopedComQIPtr<T>& operator=(T* newPtr) {
+        if (ptr) {
+            ptr->Release();
+        }
+        ptr = newPtr;
+        return *this;
     }
 };
 
@@ -196,7 +203,7 @@ class ScopedSelectFont {
     explicit ScopedSelectFont(HDC hdc, HFONT font) {
         this->hdc = hdc;
         if (font) {
-            prev = (HFONT)SelectObject(hdc, font);
+            prev = SelectObject(hdc, font);
         }
     }
 
@@ -225,22 +232,38 @@ class ScopedSelectBrush {
 
     ~ScopedSelectBrush() { SelectObject(hdc, prevBrush); }
 };
+// CoUninitialize() / OleUninitialize() must only be called when the matching
+// Initialize succeeded. On failure (RPC_E_CHANGED_MODE when the thread is
+// already in the other apartment kind) it would decrement an apartment count
+// we never incremented, tearing COM down for the whole thread while other code
+// still expects it. S_FALSE ("already initialized") is a success and does need
+// the matching Uninitialize, so test with SUCCEEDED, not == S_OK.
 class ScopedCom {
   public:
-    ScopedCom() { (void)CoInitialize(nullptr); }
-    ~ScopedCom() { CoUninitialize(); }
+    HRESULT hr;
+    ScopedCom() { hr = CoInitialize(nullptr); }
+    ~ScopedCom() {
+        if (SUCCEEDED(hr)) {
+            CoUninitialize();
+        }
+    }
 };
 
 class ScopedOle {
   public:
-    ScopedOle() { (void)OleInitialize(nullptr); }
-    ~ScopedOle() { OleUninitialize(); }
+    HRESULT hr;
+    ScopedOle() { hr = OleInitialize(nullptr); }
+    ~ScopedOle() {
+        if (SUCCEEDED(hr)) {
+            OleUninitialize();
+        }
+    }
 };
 
 class ScopedGdiPlus {
   protected:
-    Gdiplus::GdiplusStartupInput si{};
-    Gdiplus::GdiplusStartupOutput so{};
+    Gdiplus::GdiplusStartupInput si;
+    Gdiplus::GdiplusStartupOutput so;
     ULONG_PTR token = 0;
     ULONG_PTR hookToken = 0;
     bool noBgThread = false;

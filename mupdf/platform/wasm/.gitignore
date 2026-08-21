@@ -1,5 +1,0 @@
-dist
-node_modules
-package-lock.json
-lib/mupdf-wasm.d.ts
-LICENSE

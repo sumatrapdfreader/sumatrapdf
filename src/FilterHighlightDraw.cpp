@@ -2,8 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/ScopedWin.h"
 #include "base/Win.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
+
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
 
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
@@ -18,17 +22,17 @@ static bool IsWordByte(u8 b) {
     return IsCharAlphaNumericW((WCHAR)b) || b == '_';
 }
 
-void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
-                              COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt) {
+void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted, Color colBg,
+                              bool isRtl, bool matchWholeWord, u32 drawFlags, PlatformFont* font, Color colText) {
     int nWords = len(filterWords);
     if (nWords == 0) {
-        HdcDrawText(hdc, text, rc, drawFmt);
+        gfx->DrawText(text, rc, drawFlags, font, colText);
         return;
     }
 
     // find all match ranges in text
     int textLen = text.len;
-    u8* hl = highlighted.EnsureCap(textLen);
+    u8* hl = VecReserve(highlighted, textLen);
     memset(hl, 0, textLen);
     for (int w = 0; w < nWords; w++) {
         Str word = filterWords[w];
@@ -85,63 +89,53 @@ void DrawMaybeHighlightedText(HDC hdc, Rect rc, Str text, const StrVec& filterWo
         }
     }
 
-    TempWStr textW = ToWStrTemp(text);
-
     // measure total string width for RTL positioning
     int strOriginX = rc.x;
     if (isRtl) {
-        Size sizeTotal = HdcGetTextExtentPoint32(hdc, textW);
+        Size sizeTotal = gfx->MeasureText(text, font);
         strOriginX = rc.x + rc.dx - sizeTotal.dx;
     }
 
     // compute pixel rectangles for each highlighted range
     Rect highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
-        TempWStr prefixToStart = ToWStrTemp(Str(text.s, byteRanges[i].start));
-        int wStart = len(prefixToStart);
-        TempWStr prefixToEnd = ToWStrTemp(Str(text.s, byteRanges[i].end));
-        int wEnd = len(prefixToEnd);
-
-        Size sizeStart = HdcGetTextExtentPoint32(hdc, WStr(textW.s, wStart));
-        Size sizeEnd = HdcGetTextExtentPoint32(hdc, WStr(textW.s, wEnd));
-
+        Size sizeStart = gfx->MeasureText(Str(text.s, byteRanges[i].start), font);
+        Size sizeEnd = gfx->MeasureText(Str(text.s, byteRanges[i].end), font);
         highlightRects[i] = {strOriginX + sizeStart.dx, rc.y, sizeEnd.dx - sizeStart.dx, rc.dy};
     }
 
     // draw highlight background rectangles for matches
     {
-        COLORREF highlightCol;
+        Color highlightCol;
         if (IsCurrentThemeDefault()) {
-            highlightCol = RGB(255, 255, 0); // yellow for default theme
+            highlightCol = kColYellow; // yellow for default theme
         } else {
             highlightCol = AccentColor(colBg, 40);
         }
-        HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
         for (int i = 0; i < nRanges; i++) {
             // highlightRects are computed from the full (untruncated) string, but
             // the text is drawn clipped/ellipsized to rc. Clip to rc so a match
             // in the truncated-away tail doesn't paint a stray box outside the label.
             Rect clipped = highlightRects[i].Intersect(rc);
             if (!clipped.IsEmpty()) {
-                HdcFillRect(hdc, clipped, hbrHighlight);
+                gfx->FillRect(clipped, highlightCol);
             }
         }
-        DeleteObject(hbrHighlight);
     }
 
     // draw the whole string at once over the highlights
-    HdcDrawText(hdc, textW, rc, drawFmt);
+    gfx->DrawText(text, rc, drawFlags, font, colText);
 }
 
 // Ink that stays readable on a solid highlight underlay (black on yellow).
-static COLORREF TextColorContrasting(COLORREF bg) {
+static Color TextColorContrasting(Color bg) {
     int lum = (GetRValue(bg) * 299 + GetGValue(bg) * 587 + GetBValue(bg) * 114) / 1000;
-    return lum >= 140 ? RGB(0, 0, 0) : RGB(255, 255, 255);
+    return lum >= 140 ? kColBlack : kColWhite;
 }
 
 // Sample the row background the TreeView already painted (indent/icon strip).
 // Falls back to kColorUnset if GetPixel fails.
-static COLORREF SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
+static Color SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
     if (itemRc.IsEmpty()) {
         return kColorUnset;
     }
@@ -150,32 +144,46 @@ static COLORREF SamplePaintedRowBackground(HDC hdc, Rect itemRc) {
         x = itemRc.x;
     }
     int y = itemRc.y + (itemRc.dy / 2);
-    COLORREF c = GetPixel(hdc, x, y);
+    Color c = GetPixel(hdc, x, y);
     if (c == CLR_INVALID) {
         return kColorUnset;
     }
     return c;
 }
 
-void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF treeTxt, bool isSelected,
-                                 bool hasFocus, COLORREF* bgOut, COLORREF* txtOut) {
-    ReportIf(!bgOut || !txtOut);
+// Colors for clearing/redrawing a TreeView label after default paint.
+// Selected+focus: system highlight. Selected unfocused: themed accent of
+// treeBg (not COLOR_BTNFACE — unreadable with light text in dark mode).
+// Non-selected: sample the painted row / treeBg / theme control bg.
+// treeBg/treeTxt are TreeView::bgColor/textColor (may be unset).
+// itemRc is the full row rect (TreeView_GetItemRect with textOnly=FALSE).
+void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, Color treeBg, Color treeTxt, bool isSelected, bool hasFocus,
+                                 Color* bgOut, Color* txtOut) {
+    if (!bgOut || !txtOut) {
+        ReportIf(true);
+        return;
+    }
     if (isSelected && hasFocus) {
         *bgOut = GetSysColor(COLOR_HIGHLIGHT);
         *txtOut = GetSysColor(COLOR_HIGHLIGHTTEXT);
         return;
     }
     if (isSelected) {
-        // Selected but unfocused: keep system inactive-selection face; text from
-        // the tree/theme so dark themes don't fall back to pure black on gray.
-        *bgOut = GetSysColor(COLOR_BTNFACE);
+        // Selected but unfocused (or multi-match "current page" rows): use a
+        // subtle accent of the themed tree background. Explorer-themed TreeView
+        // inactive selection is often a light gray even in dark mode; combined
+        // with light theme text that made the initial bookmark highlight
+        // unreadable (issue #5848). COLOR_BTNFACE has the same problem when
+        // system colors are not fully remapped.
+        Color base = !IsSpecialColor(treeBg) ? treeBg : ThemeControlBackgroundColor();
+        *bgOut = AccentColor(base, 40);
         *txtOut = IsSpecialColor(treeTxt) ? ThemeWindowTextColor() : treeTxt;
         return;
     }
 
     // Non-selected: match the already-painted themed row, not COLOR_WINDOW
     // (white), which washed out dark/blue-ish sidebar backgrounds.
-    COLORREF sampled = SamplePaintedRowBackground(hdc, itemRc);
+    Color sampled = SamplePaintedRowBackground(hdc, itemRc);
     if (!IsSpecialColor(sampled)) {
         *bgOut = sampled;
     } else if (!IsSpecialColor(treeBg)) {
@@ -186,8 +194,11 @@ void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, COLORREF treeBg, COLORREF
     *txtOut = IsSpecialColor(treeTxt) ? ThemeWindowTextColor() : treeTxt;
 }
 
-void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec& filterWords, COLORREF bgCol,
-                                 COLORREF txtCol, HFONT font) {
+// TreeView post-paint: repaint the label with multi-word match underlays
+// (command-palette style). `font` should be the tree's font (WM_GETFONT) so
+// extents match the control's text; pass nullptr to keep the HDC font.
+void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVec& filterWords, Color bgCol,
+                                 Color txtCol, PlatformFont* font) {
     // TreeView has already painted the row. We repaint only the text label:
     // solid bg (selection or window) so themed double-draw artifacts go away,
     // yellow/accent underlays for each match word, then the string in runs so
@@ -198,11 +209,6 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
     // misalign and look oversized relative to the control's text.
     if (!text || len(text) == 0 || len(filterWords) == 0) {
         return;
-    }
-
-    HFONT oldFont = nullptr;
-    if (font) {
-        oldFont = (HFONT)SelectObject(hdc, font);
     }
 
     int textLen = text.len;
@@ -250,60 +256,44 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
         }
     }
     if (nRanges == 0) {
-        if (oldFont) {
-            SelectObject(hdc, oldFont);
-        }
         return;
     }
 
-    TempWStr textW = ToWStrTemp(text);
-    Size sizeFull = HdcGetTextExtentPoint32(hdc, textW);
+    Size sizeFull = gfx->MeasureText(text, font);
     // center underlay height on the glyph height (labelRect can be taller than
     // the font, which made yellow bars spill into neighboring rows)
     int textTop = labelRect.y + ((labelRect.dy - sizeFull.dy) / 2);
-    if (textTop < labelRect.y) {
-        textTop = labelRect.y;
-    }
+    textTop = std::max(textTop, labelRect.y);
     int textBottom = textTop + sizeFull.dy;
     if (textBottom > labelRect.y + labelRect.dy) {
         textBottom = labelRect.y + labelRect.dy;
         textTop = textBottom - sizeFull.dy;
-        if (textTop < labelRect.y) {
-            textTop = labelRect.y;
-        }
+        textTop = std::max(textTop, labelRect.y);
     }
 
     // clear label so we do not stack on top of the control's text
-    HBRUSH hbrBg = CreateSolidBrush(bgCol);
-    HdcFillRect(hdc, labelRect, hbrBg);
-    DeleteObject(hbrBg);
+    gfx->FillRect(labelRect, bgCol);
 
-    COLORREF highlightCol;
+    Color highlightCol;
     if (IsCurrentThemeDefault()) {
-        highlightCol = RGB(255, 255, 0);
+        highlightCol = kColYellow;
     } else {
         highlightCol = AccentColor(bgCol, 40);
     }
-    HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
     for (int i = 0; i < nRanges; i++) {
-        TempWStr prefixToStart = ToWStrTemp(Str(text.s, byteRanges[i].start));
-        TempWStr prefixToEnd = ToWStrTemp(Str(text.s, byteRanges[i].end));
-        Size sizeStart = HdcGetTextExtentPoint32(hdc, WStr(textW.s, len(prefixToStart)));
-        Size sizeEnd = HdcGetTextExtentPoint32(hdc, WStr(textW.s, len(prefixToEnd)));
+        Size sizeStart = gfx->MeasureText(Str(text.s, byteRanges[i].start), font);
+        Size sizeEnd = gfx->MeasureText(Str(text.s, byteRanges[i].end), font);
         Rect hr{labelRect.x + sizeStart.dx, textTop, sizeEnd.dx - sizeStart.dx, textBottom - textTop};
         Rect clipped = hr.Intersect(labelRect);
         if (!clipped.IsEmpty()) {
-            HdcFillRect(hdc, clipped, hbrHighlight);
+            gfx->FillRect(clipped, highlightCol);
         }
     }
-    DeleteObject(hbrHighlight);
 
     // Draw non-match runs in the row text color (white when selected+focused);
     // match runs use ink that contrasts with the underlay so yellow+white does
     // not wash out. Prefix extents keep run x positions aligned with underlays.
-    COLORREF matchTxtCol = TextColorContrasting(highlightCol);
-    int oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    COLORREF oldTxtCol = SetTextColor(hdc, txtCol);
+    Color matchTxtCol = TextColorContrasting(highlightCol);
     int pos = 0;
     while (pos < textLen) {
         bool isHl = hl[pos] != 0;
@@ -311,57 +301,15 @@ void DrawTreeItemFilterHighlight(HDC hdc, Rect labelRect, Str text, const StrVec
         while (pos < textLen && (hl[pos] != 0) == isHl) {
             pos++;
         }
-        TempWStr prefixToStart = ToWStrTemp(Str(text.s, start));
-        Size sizeStart = HdcGetTextExtentPoint32(hdc, WStr(textW.s, len(prefixToStart)));
-        TempWStr runW = ToWStrTemp(Str(text.s + start, pos - start));
-        if (len(runW) == 0) {
+        Size sizeStart = gfx->MeasureText(Str(text.s, start), font);
+        Str run(text.s + start, pos - start);
+        if (len(run) == 0) {
             continue;
         }
         Rect runRect = labelRect;
         runRect.x = labelRect.x + sizeStart.dx;
         runRect.y = textTop;
         runRect.dy = textBottom - textTop;
-        SetTextColor(hdc, isHl ? matchTxtCol : txtCol);
-        HdcDrawText(hdc, runW, runRect, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
-    }
-    SetBkMode(hdc, oldBkMode);
-    SetTextColor(hdc, oldTxtCol);
-
-    if (oldFont) {
-        SelectObject(hdc, oldFont);
-    }
-}
-
-bool FilterMatches(Str str, const StrVec& words) {
-    int nWords = len(words);
-    for (int i = 0; i < nWords; i++) {
-        Str word = words[i];
-        if (len(word) == 0) {
-            continue;
-        }
-        if (!str::ContainsI(str, word)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void SplitFilterToWords(Str filter, StrVec& words) {
-    int i = 0;
-    while (i < filter.len && filter.s[i]) {
-        while (i < filter.len && str::IsWs(filter.s[i])) {
-            i++;
-        }
-        if (i >= filter.len || !filter.s[i]) {
-            break;
-        }
-        int start = i;
-        while (i < filter.len && filter.s[i] && !str::IsWs(filter.s[i])) {
-            i++;
-        }
-        Str word(filter.s + start, i - start);
-        if (len(word) > 0) {
-            AppendIfNotExists(&words, word);
-        }
+        gfx->DrawText(run, runRect, gfxTextSingleLine | gfxTextNoClip, font, isHl ? matchTxtCol : txtCol);
     }
 }

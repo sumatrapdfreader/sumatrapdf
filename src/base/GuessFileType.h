@@ -45,8 +45,9 @@ enum class FileType : u8 {
     Txt = 36,
 
     Directory = 37,
+    Lit = 38,
 };
-constexpr int kFileTypeCount = (int)FileType::Directory + 1;
+constexpr int kFileTypeCount = (int)FileType::Lit + 1;
 
 // embedded PDF files have paths like "c:/foo.pdf:${pdfStreamNo}"
 // or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}"
@@ -74,10 +75,11 @@ struct FileTypeInfo {
 FileTypeInfo GuessFileInfoFromData(Str d);
 void FreeFileTypeInfo(FileTypeInfo*);
 int WebpExifOrientation(Str d);
+bool FindWebpChunk(Str d, const char fourcc[4], Str& out);
 bool ExifOrientationSwapsDimensions(int orientation);
 FileType GuessFileTypeFromFile(Str path);
 FileType GuessFileTypeFromData(Str d);
-FileType GuessFileTypeFromName(Str path);
+FileType GuessFileTypeFromName(Str path, bool notDir = false);
 FileType GuessFileType(Str path, bool sniff);
 TempStr GfxFileExtFromDataTemp(Str);
 TempStr GfxFileExtFromTypeTemp(FileType);
@@ -85,6 +87,4 @@ TempStr GetExtForFileTypeTemp(FileType);
 
 int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft);
 
-// Headless test helper: compare GuessFileTypeFromName's canonical extension
-// to an expected one (e.g. "sample.ai" -> ".pdf").
 TempStr FileKindResultTemp(Str path, Str expectedExt, int* exitCodeOut = nullptr);

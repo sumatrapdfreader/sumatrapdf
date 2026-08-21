@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct VirtRoot;
+
 constexpr int kInstallerWinDy = 340;
 
 enum class PreviousInstallationType {
@@ -49,7 +51,8 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-void OnPaintFrame(HWND hwnd, bool skipMessage);
+// virt: the window's virtual controls, painted on top of the frame (can be null)
+void OnPaintFrame(HWND hwnd, bool skipMessage, VirtRoot* virt = nullptr);
 void AnimStep();
 
 void NotifyFailed(Str msg);
@@ -67,6 +70,9 @@ bool ExtractLibsumatrapdfToDir(Str destDir);
 TempStr GetExistingInstallationDirTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 bool IsOurExeInstalled();
+
+bool IsPathUnderProgramFiles(Str path);
+bool InstallNeedsElevation(Str installDir, bool allUsers);
 
 TempStr GetInstallationFilePathTemp(Str installDir, Str name);
 
@@ -86,7 +92,7 @@ struct ShellExtInstallState {
     bool searchFilter = false;
     bool preview = false;
     bool allUsers = false;
-    Str installDir{};
+    Str installDir;
 };
 void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallState* removedOut = nullptr);
 void RestoreShellExtensions(const ShellExtInstallState& state);
@@ -94,17 +100,12 @@ void RestoreShellExtensions(const ShellExtInstallState& state);
 bool CheckInstallUninstallPossible(HWND hwnd, bool silent = false);
 Str GetInstallerLogPath();
 
-// case-insensitive check whether dir is a ';'-delimited component of a PATH-like string
 bool IsDirInPath(Str path, Str dir);
-// write value as REG_EXPAND_SZ (PATH may contain %vars%) under root\keyName:valueName
 bool WriteRegExpandSz(HKEY root, Str keyName, Str valueName, Str value);
 
 TempStr GetRegPathUninstTemp(Str appName);
 
-// Installer.cpp
 void RemoveAppShortcuts();
-
-// RegistryInstaller.cpp
 
 bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir);
 bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath);
@@ -113,3 +114,5 @@ void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();
 
 void ReRegisterFileAssociations();
+void CollectNonDefaultRegisteredExtensions(StrVec& out);
+void LaunchDefaultAppDialogForExtension(HWND hwnd, Str ext);

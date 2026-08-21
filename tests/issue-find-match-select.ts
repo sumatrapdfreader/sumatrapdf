@@ -17,7 +17,7 @@
 // typed text, then selects the capitalized match.
 
 import { writeFileSync } from "node:fs";
-import { ControlClient, ControlCommand, withControlledSumatra } from "../cmd/control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // filler pages deliberately avoid the substring "The" so the search only finds

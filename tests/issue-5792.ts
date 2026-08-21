@@ -16,29 +16,10 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone } from "./util.ts";
-import { sleep } from "./winapi.ts";
-import { launchSumatra, sendCommand, waitForFrame } from "./win-automation.ts";
+import { cmdId, EXE, extractPageText, runStandalone } from "./util.ts";
+import { launchControlled, sendCommandSync, killAndWait } from "./win-automation.ts";
 
 const FB2 = join(import.meta.dir, "issue-5792.fb2");
-
-function extractPage(page: number, file: string): string {
-  const p = Bun.spawnSync([EXE, "-for-testing", "-extract-text", String(page), file], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const raw = p.stdout.toString() + p.stderr.toString();
-  let all = "";
-  for (const m of raw.matchAll(/text on page \d+: '([0-9a-f ]*)'/g)) {
-    const hex = m[1].trim();
-    if (!hex) {
-      continue;
-    }
-    const bytes = hex.split(/\s+/).map((h) => parseInt(h, 16));
-    all += Buffer.from(bytes).toString("utf8");
-  }
-  return all.split("_").join("\n");
-}
 
 function assertSoftJoinedParagraphs(text: string, label: string): void {
   if (!text.includes("Alpha paragraph") || !text.includes("Bravo paragraph")) {
@@ -60,43 +41,32 @@ function assertSoftJoinedParagraphs(text: string, label: string): void {
   }
   // Soft-join spaces at wrap points (not "visuallines")
   if (!alphaBlock.includes("visual lines") || !alphaBlock.includes("hard newlines")) {
-    throw new Error(
-      `#5793 ${label}: missing soft-join spaces at wrap points:\n${JSON.stringify(alphaBlock)}`,
-    );
+    throw new Error(`#5793 ${label}: missing soft-join spaces at wrap points:\n${JSON.stringify(alphaBlock)}`);
   }
   if (!bravoBlock.includes("paragraphs stay")) {
-    throw new Error(
-      `#5793 ${label}: missing soft-join space in Bravo:\n${JSON.stringify(bravoBlock)}`,
-    );
+    throw new Error(`#5793 ${label}: missing soft-join space in Bravo:\n${JSON.stringify(bravoBlock)}`);
   }
   // Paragraph boundaries kept as newlines
   if (!/[\r\n]+\s*Bravo paragraph/.test(text) || !/[\r\n]+\s*Charlie paragraph/.test(text)) {
-    throw new Error(
-      `#5793 ${label}: expected hard newlines between paragraphs:\n${JSON.stringify(text)}`,
-    );
+    throw new Error(`#5793 ${label}: expected hard newlines between paragraphs:\n${JSON.stringify(text)}`);
   }
 }
 
 async function copyAllViaUi(): Promise<string> {
-  const proc = launchSumatra([FB2]);
+  const { proc, client, frame } = await launchControlled([FB2]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!frame) {
-      throw new Error("#5793: no frame window");
-    }
-    await sleep(2500);
-    sendCommand(frame, cmdId("CmdSelectAll"));
-    await sleep(300);
-    sendCommand(frame, cmdId("CmdCopySelection"));
-    await sleep(300);
+    await client.waitForRenderIdle();
+    sendCommandSync(frame, cmdId("CmdSelectAll"));
+    sendCommandSync(frame, cmdId("CmdCopySelection"));
     const clip = Bun.spawnSync(["powershell", "-NoProfile", "-Command", "Get-Clipboard -Raw"], {
       stdout: "pipe",
       stderr: "pipe",
     });
     return clip.stdout.toString();
   } finally {
+    client.close();
     try {
-      proc.kill();
+      await killAndWait(proc);
     } catch {
       // already exited
     }
@@ -111,7 +81,7 @@ export async function testit(): Promise<void> {
     throw new Error(`exe missing: ${EXE}`);
   }
 
-  const text = extractPage(1, FB2);
+  const text = extractPageText(FB2, 1);
   console.log(`page 1 extract len=${text.length} newlines=${(text.match(/\n/g) || []).length}`);
   if (!text) {
     throw new Error("#5792: empty extract for fixture FB2");
@@ -125,7 +95,12 @@ export async function testit(): Promise<void> {
   assertSoftJoinedParagraphs(text, "extract-text");
 
   // #5792 sanity: short sample is one page — page 2 must be empty / fail extract
-  const page2 = extractPage(2, FB2);
+  let page2 = "";
+  try {
+    page2 = extractPageText(FB2, 2);
+  } catch {
+    // no "text on page 2" is fine for a one-page fixture
+  }
   if (page2.includes("Alpha paragraph")) {
     throw new Error("#5792: body repeated on page 2 (unexpected giant-font pagination?)");
   }

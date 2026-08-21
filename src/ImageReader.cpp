@@ -11,7 +11,7 @@
 
 extern "C" {
 #include "mupdf/fitz.h"
-#include "../mupdf/source/fitz/color-imp.h"
+#include "../ext/mupdf/source/fitz/color-imp.h"
 }
 
 #include "ImageReader.h"
@@ -34,13 +34,18 @@ static void fz_unlock_context_cs(void* user, int lock) {
 
 // route mupdf's warnings/errors through our log() instead of the default
 // callback, which does fputs() to stderr; that first fputs makes the CRT
-// allocate a stdio buffer it never frees, which shows up as a leak
-static void fz_log_cb(void*, const char* msg) {
-    log(Str(msg));
+// allocate a stdio buffer it never frees, which shows up as a leak.
+// mupdf hands us the message without the newline its default callback prints
+static void fz_log_cb(void* /*user*/, const char* msg) {
+    Str msgStr = Str(msg);
+    if (!str::EndsWith(msgStr, StrL("\n"))) {
+        msgStr = str::JoinTemp(msgStr, StrL("\n"));
+    }
+    log(msgStr);
 }
 
 fz_context* fz_new_context_windows(size_t maxStore) {
-    auto c = new MupdfContext();
+    auto* c = new MupdfContext();
     c->fz_locks_ctx.user = c;
     c->fz_locks_ctx.lock = fz_lock_context_cs;
     c->fz_locks_ctx.unlock = fz_unlock_context_cs;
@@ -53,7 +58,7 @@ fz_context* fz_new_context_windows(size_t maxStore) {
 }
 
 void fz_drop_context_windows(fz_context* ctx) {
-    auto c = (MupdfContext*)ctx->locks.user;
+    auto* c = (MupdfContext*)ctx->locks.user;
     ReportIf(ctx != c->ctx);
     fz_drop_context(ctx);
     delete c;
@@ -102,16 +107,41 @@ static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix) {
     // Zero-copy: borrow the Pixmap's buffer in an fz_pixmap and convert the decoded image
     // straight into it. fz_device_bgr lays the samples out as B,G,R,A, matching BGRA8.
     fz_pixmap* dest = nullptr;
+    fz_pixmap* bgr = nullptr;
     fz_var(px);
     fz_var(dest);
+    fz_var(bgr);
 
     fz_try(ctx) {
         fz_colorspace* csdest = fz_device_bgr(ctx);
-        dest = fz_new_pixmap_with_data(ctx, csdest, w, h, nullptr, 1, px->stride, px->data);
-        fz_convert_pixmap_samples(ctx, pix, dest, nullptr, nullptr, fz_default_color_params, 0);
+        if (pix->alpha) {
+            dest = fz_new_pixmap_with_data(ctx, csdest, w, h, nullptr, 1, px->stride, px->data);
+            fz_convert_pixmap_samples(ctx, pix, dest, nullptr, nullptr, fz_default_color_params, 0);
+        } else {
+            // mupdf's ICC pixmap transform needs the alpha channels to match; converting a
+            // decoded JPEG (no alpha) straight into BGRA made lcms reject the transform
+            // ("Mismatched alpha channels") and every image with an embedded ICC profile
+            // fell back to the non-color-managed fast conversion, with a warning per page.
+            // Convert to BGR first, then expand to BGRA with an opaque alpha
+            bgr = fz_new_pixmap(ctx, csdest, w, h, nullptr, 0);
+            fz_convert_pixmap_samples(ctx, pix, bgr, nullptr, nullptr, fz_default_color_params, 0);
+            for (int y = 0; y < h; y++) {
+                const u8* s = bgr->samples + ((size_t)y * (size_t)bgr->stride);
+                u8* d = px->data + ((size_t)y * (size_t)px->stride);
+                for (int x = 0; x < w; x++) {
+                    d[0] = s[0];
+                    d[1] = s[1];
+                    d[2] = s[2];
+                    d[3] = 0xff;
+                    s += 3;
+                    d += 4;
+                }
+            }
+        }
     }
     fz_always(ctx) {
         fz_drop_pixmap(ctx, dest);
+        fz_drop_pixmap(ctx, bgr);
         fz_drop_pixmap(ctx, pix);
     }
     fz_catch(ctx) {
@@ -123,6 +153,18 @@ static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix) {
     return px;
 }
 
+bool ImageDecodedPixmapWouldBeHuge(Str d) {
+    FileTypeInfo fti = GuessFileInfoFromData(d);
+    i64 w = fti.imageDx;
+    i64 h = fti.imageDy;
+    FreeFileTypeInfo(&fti);
+    if (w <= 0 || h <= 0) {
+        return false;
+    }
+    return w * h * 4 > kMaxDecodedPixmapBytes;
+}
+
+// Decode via MuPDF (JPEG / JPEG2000 currently).
 Pixmap* PixmapFromDataFz(Str d) {
     const u8* data = (const u8*)d.s;
     size_t n = (size_t)d.len;
@@ -136,9 +178,12 @@ Pixmap* PixmapFromDataFz(Str d) {
     }
 
     Pixmap* result = nullptr;
-    if (str::StartsWith(d, "\xFF\xD8")) {
-        result = PixmapFromImageData(ctx, data, n);
-    } else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
+    Str icc;
+    bool jpegOrJp2 = str::StartsWith(d, StrL("\xFF\xD8")) || MemEq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12);
+    // WebP with an ICCP chunk: mupdf applies the profile. Plain WebP stays on
+    // the faster libwebp path in ImageReader_win / webp::PixmapFromData.
+    bool webpIcc = FindWebpChunk(d, "ICCP", icc);
+    if (jpegOrJp2 || webpIcc) {
         result = PixmapFromImageData(ctx, data, n);
     }
 
@@ -148,6 +193,7 @@ Pixmap* PixmapFromDataFz(Str d) {
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
+// Cheap size probe (header parse, else full decode). Returns empty Size on failure.
 Size ImageSizeFromData(Str d) {
     Size result;
     FileTypeInfo fti = GuessFileInfoFromData(d);

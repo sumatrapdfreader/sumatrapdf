@@ -8,11 +8,10 @@ table of contents)).
 
 We can have multiple favorites per file.
 
-Favorites are accurate to a page - it's simple and should be good enough
-for the user.
-
-A favorite is identified by a (mandatory) page number and (optional) name
-(provided by the user) and page label (from EngineBase::GetPageLabel).
+A favorite is identified by a (mandatory) page number, an optional name
+(provided by the user), an optional page label (from EngineBase::GetPageLabel),
+and the scroll position on that page (so jumping back lands where you were,
+not only at the top).
 
 Favorites do not remember presentation settings like zoom or viewing mode -
 they are for navigation only. Presentation settings are remembered on a
@@ -23,33 +22,28 @@ struct WindowTab;
 
 bool HasFavorites();
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn);
+void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
 void AddFavoriteForPage(MainWindow* win, int pageNo);
 void AddFavoriteForCurrentPage(MainWindow* win);
 void DelFavorite(Str filePath, int pageNo);
 void RebuildFavMenu(MainWindow* win, HMENU menu);
 void CreateFavorites(MainWindow* win);
 void ToggleFavorites(MainWindow* win); // sidebar
-// open/select full-window Favorites tab (can use with sidebar Favorites)
 void ToggleFavoritesTab(MainWindow* win);
-// find the Favorites tab in this window, or nullptr
 WindowTab* FindFavoritesTab(MainWindow* win);
 void PopulateFavTreeIfNeeded(MainWindow* win);
-// layout label + tree inside hwndFavBox (call after resizing the box)
 void LayoutFavoritesContainer(MainWindow* win);
 void GoToFavoriteByMenuId(MainWindow* win, int cmdId);
 void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();
 bool IsPageInFavorites(Str filePath, int pageNo);
 
-// navigate to the nearest favorite (bookmark) page after / before the current
-// page in the open document (issue #3744)
 void GoToNextFavorite(MainWindow* win, bool forward);
 
-// shared with CommandPalette.cpp (favorites mode)
 TempStr FavReadableNameTemp(Favorite* fn);
 void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav);
+void JumpToFavorite(MainWindow* win, Favorite* fav);
 
 void SetSearchStartFavorite(MainWindow* win);
 
-// toggle SortFavoritesByName, re-sort, refresh trees, and save settings
 void ToggleSortFavoritesByName();

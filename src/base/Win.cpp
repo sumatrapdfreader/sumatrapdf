@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/BitManip.h"
 #include "base/File.h"
 #include "base/WinDynCalls.h"
@@ -14,7 +14,7 @@
 #if COMPILER_MINGW
 #include <cpuid.h>
 #endif
-#include <float.h>
+#include <float.h> // for _clearfp / _controlfp_s in MaskFpExceptions
 #include <mlang.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IMultiLanguage2
@@ -23,10 +23,10 @@ __CRT_UUID_DECL(IMultiLanguage2, 0xDCCFC164, 0x2B38, 0x11D2, 0xB7, 0xEC, 0x00, 0
 
 //--- subclass ids
 
-static LONG gSubclassId = 0;
+static AtomicInt gSubclassId = 0;
 
 UINT_PTR NextSubclassId() {
-    LONG res = InterlockedIncrement(&gSubclassId);
+    int res = AtomicIntInc(&gSubclassId);
     return (UINT_PTR)res;
 }
 
@@ -90,52 +90,6 @@ HBITMAP RenderedBitmap::GetBitmap() const {
 
 void EditSelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
-}
-
-int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
-    ReportIf(lines < 1);
-    ReportIf(lines > 256);
-
-    HFONT hfont = HwndGetFont(hwnd);
-    Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
-    // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    TempStr txt = HwndGetTextTemp(hwnd);
-    Size s2 = HwndMeasureText(hwnd, txt, hfont);
-    int dy = std::min(s1.dy, s2.dy);
-    if (dy == 0) {
-        dy = std::max(s1.dy, s2.dy);
-    }
-    dy = dy * lines;
-    if (hasBorder) {
-        dy += DpiScale(hwnd, 8);
-    }
-    // logf("Edit::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
-    return dy;
-}
-
-// HWND should be Edit control
-// Should be called after user types Ctrl + Backspace to
-// delete word backwards from current cursor position
-void EditImplementCtrlBack(HWND hwnd) {
-    // we calc selection in WCHAR space because it's easier
-    TempWStr text = HwndGetTextWTemp(hwnd);
-    int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
-    // remove the rectangle produced by Ctrl+Backspace
-    if (selStart > 0 && text.s[selStart - 1] == '\x7F') {
-        memmove(text.s + selStart - 1, text.s + selStart, len(text.s + selStart - 1) * sizeof(WCHAR));
-        TempStr s = ToUtf8Temp(text);
-        HwndSetText(hwnd, s);
-        selStart = selEnd = selStart - 1;
-    }
-    // remove the previous word (and any spacing after it)
-    for (; selStart > 0 && wstr::IsWs(text.s[selStart - 1]); selStart--) {
-        ;
-    }
-    for (; selStart > 0 && !wstr::IsWs(text.s[selStart - 1]); selStart--) {
-        ;
-    }
-    Edit_SetSel(hwnd, selStart, selEnd);
-    SendMessageW(hwnd, WM_CLEAR, 0, 0); // delete selected text
 }
 
 //--- list box
@@ -205,7 +159,7 @@ Rect LbGetItemRect(HWND hwnd, int idx) {
     if (res == LB_ERR) {
         return {};
     }
-    return Rect(rect);
+    return {rect};
 }
 
 int LbItemFromPoint(HWND hwnd, Point point, bool* outside) {
@@ -225,6 +179,124 @@ bool LbSetTopIndex(HWND hwnd, int idx) {
 
 void LbInitStorage(HWND hwnd, int count) {
     SendMessageW(hwnd, LB_INITSTORAGE, (WPARAM)count, 0);
+}
+
+//--- list view
+
+int LvGetItemCount(HWND hwnd) {
+    return (int)SendMessageW(hwnd, LVM_GETITEMCOUNT, 0, 0);
+}
+
+int LvGetNextItem(HWND hwnd, int start, UINT flags) {
+    return (int)SendMessageW(hwnd, LVM_GETNEXTITEM, (WPARAM)start, MAKELPARAM(flags, 0));
+}
+
+void LvSetItemState(HWND hwnd, int i, UINT state, UINT mask) {
+    LVITEMW item = {};
+    item.stateMask = mask;
+    item.state = state;
+    SendMessageW(hwnd, LVM_SETITEMSTATE, (WPARAM)i, (LPARAM)&item);
+}
+
+UINT LvGetItemState(HWND hwnd, int i, UINT mask) {
+    return (UINT)SendMessageW(hwnd, LVM_GETITEMSTATE, (WPARAM)i, (LPARAM)mask);
+}
+
+void LvEnsureVisible(HWND hwnd, int i, bool partialOk) {
+    SendMessageW(hwnd, LVM_ENSUREVISIBLE, (WPARAM)i, (LPARAM)(partialOk ? TRUE : FALSE));
+}
+
+HWND LvGetEditControl(HWND hwnd) {
+    return (HWND)SendMessageW(hwnd, LVM_GETEDITCONTROL, 0, 0);
+}
+
+int LvInsertItem(HWND hwnd, const LVITEMW* item) {
+    return (int)SendMessageW(hwnd, LVM_INSERTITEMW, 0, (LPARAM)item);
+}
+
+bool LvEditLabel(HWND hwnd, int i) {
+    return SendMessageW(hwnd, LVM_EDITLABELW, (WPARAM)i, 0) != 0;
+}
+
+void LvDeleteItem(HWND hwnd, int i) {
+    SendMessageW(hwnd, LVM_DELETEITEM, (WPARAM)i, 0);
+}
+
+void LvDeleteAllItems(HWND hwnd) {
+    SendMessageW(hwnd, LVM_DELETEALLITEMS, 0, 0);
+}
+
+// empty Rect on failure
+Rect LvGetItemRect(HWND hwnd, int i, int code) {
+    RECT rc = {};
+    rc.left = code;
+    if (!SendMessageW(hwnd, LVM_GETITEMRECT, (WPARAM)i, (LPARAM)&rc)) {
+        return {};
+    }
+    return {rc};
+}
+
+Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code) {
+    RECT rc = {};
+    rc.top = iSub;
+    rc.left = code;
+    if (!SendMessageW(hwnd, LVM_GETSUBITEMRECT, (WPARAM)iItem, (LPARAM)&rc)) {
+        return {};
+    }
+    return {rc};
+}
+
+void LvSetColumnWidth(HWND hwnd, int iCol, int cx) {
+    SendMessageW(hwnd, LVM_SETCOLUMNWIDTH, (WPARAM)iCol, MAKELPARAM(cx, 0));
+}
+
+void LvSetItemText(HWND hwnd, int i, int iSub, WStr text) {
+    LVITEMW item = {};
+    item.iSubItem = iSub;
+    item.pszText = CWStrTemp(text);
+    SendMessageW(hwnd, LVM_SETITEMTEXTW, (WPARAM)i, (LPARAM)&item);
+}
+
+void LvSetItemText(HWND hwnd, int i, int iSub, Str text) {
+    LvSetItemText(hwnd, i, iSub, ToWStrTemp(text));
+}
+
+TempWStr LvGetItemTextTemp(HWND hwnd, int i, int iSub) {
+    // LVM_GETITEMTEXT needs a buffer; grow until it fits
+    int cch = 256;
+    for (;;) {
+        TempWStr text = AllocArrayTemp<WCHAR>(cch);
+        LVITEMW item = {};
+        item.iSubItem = iSub;
+        item.pszText = text.s;
+        item.cchTextMax = cch;
+        int n = (int)SendMessageW(hwnd, LVM_GETITEMTEXTW, (WPARAM)i, (LPARAM)&item);
+        if (n + 1 < cch || cch >= 32 * 1024) {
+            text.len = n;
+            return text;
+        }
+        cch *= 2;
+    }
+}
+
+// client coords; flagsOut optional (LVHT_*)
+int LvHitTest(HWND hwnd, Point pt, UINT* flagsOut) {
+    LVHITTESTINFO info = {};
+    info.pt.x = pt.x;
+    info.pt.y = pt.y;
+    int i = (int)SendMessageW(hwnd, LVM_HITTEST, 0, (LPARAM)&info);
+    if (flagsOut) {
+        *flagsOut = info.flags;
+    }
+    return i;
+}
+
+DWORD LvSetExtendedStyle(HWND hwnd, DWORD ex) {
+    return (DWORD)SendMessageW(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)ex);
+}
+
+int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col) {
+    return (int)SendMessageW(hwnd, LVM_INSERTCOLUMNW, (WPARAM)iCol, (LPARAM)col);
 }
 
 //--- resources / instance / common controls
@@ -251,13 +323,13 @@ void FillWndClassEx(WNDCLASSEX& wcex, WStr clsName, WNDPROC wndproc) {
 Rect HwndClientRect(HWND hwnd) {
     RECT rc{};
     ::GetClientRect(hwnd, &rc);
-    return Rect(rc);
+    return {rc};
 }
 
 Rect HwndWindowRect(HWND hwnd) {
     RECT rc{};
     GetWindowRect(hwnd, &rc);
-    return Rect(rc);
+    return {rc};
 }
 
 void HwndInvalidateRect(HWND hwnd, Rect rect, bool erase) {
@@ -300,19 +372,19 @@ int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
 Point HwndMapWindowPoint(HWND hwndFrom, HWND hwndTo, Point p) {
     POINT pt = ToPOINT(p);
     ::MapWindowPoints(hwndFrom, hwndTo, &pt, 1);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 Point HwndClientToScreen(HWND hwnd, Point p) {
     POINT pt = ToPOINT(p);
     ClientToScreen(hwnd, &pt);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 Point HwndScreenToClient(HWND hwnd, Point p) {
     POINT pt = ToPOINT(p);
     ScreenToClient(hwnd, &pt);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 HWND HwndWindowFromPoint(Point p) {
@@ -322,7 +394,7 @@ HWND HwndWindowFromPoint(Point p) {
 Point GetCursorPosition() {
     POINT pt{};
     GetCursorPos(&pt);
-    return Point(pt.x, pt.y);
+    return {pt.x, pt.y};
 }
 
 //--- HWND: focus / visibility / Z-order
@@ -421,7 +493,7 @@ TempStr GetEnvVariableTemp(Str name) {
     if (res >= cchBufSize) {
         // buffer was too small
         cchBufSize = res + 4; // +4 jic
-        buf = AllocArrayTemp<WCHAR>(cchBufSize);
+        buf = AllocArrayTemp<WCHAR>((int)cchBufSize);
         res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
         ReportIf(res == 0 || res > cchBufSize);
     }
@@ -499,7 +571,7 @@ bool IsRunningOnWine() {
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         auto nameA = ToUtf8Temp(mod.szModule);
-        if (str::EqI(nameA, "winex11.drv") || str::EqI(nameA, "winewayland.drv")) {
+        if (str::EqI(nameA, StrL("winex11.drv")) || str::EqI(nameA, StrL("winewayland.drv"))) {
             isWine = true;
             break;
         }
@@ -607,7 +679,7 @@ TryAgainWOW64:
         DWORD valLen;
         res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
         if (ERROR_SUCCESS == res) {
-            val = WStr(AllocArray<WCHAR>((valLen / sizeof(WCHAR)) + 1));
+            val = WStr(AllocArray<WCHAR>((int)(valLen / sizeof(WCHAR)) + 1));
             res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val.s, &valLen);
             if (ERROR_SUCCESS != res) {
                 wstr::FreePtr(&val);
@@ -726,7 +798,7 @@ bool CreateRegKey(HKEY keySub, Str keyName) {
     return true;
 }
 
-const TempStr RegKeyNameTemp(HKEY key) {
+TempStr RegKeyNameTemp(HKEY key) {
     if (key == HKEY_LOCAL_MACHINE) {
         return "HKEY_LOCAL_MACHINE";
     }
@@ -739,9 +811,8 @@ const TempStr RegKeyNameTemp(HKEY key) {
     return "RegKeyName: unknown key";
 }
 
-const TempStr RegKeyNameWTemp(HKEY key) {
-    auto k = RegKeyNameTemp(key);
-    return str::Dup(k);
+static TempStr RegKeyNameWTemp(HKEY key) {
+    return RegKeyNameTemp(key);
 }
 
 // Open a registry key's DACL so we can delete protected uninstall/keys.
@@ -1029,15 +1100,10 @@ static void SendEnterToParentConsole(HWND foregroundWnd) {
 
 void HandleRedirectedConsoleOnShutdown() {
     InitConsoleState();
-    switch (gConsoleState) {
-        case ConsoleState::AllocatedNew:
-            system("pause");
-            break;
-        case ConsoleState::AttachedToParent:
-            SendEnterToParentConsole(nullptr);
-            break;
-        default:
-            break;
+    if (gConsoleState == ConsoleState::AllocatedNew) {
+        system("pause");
+    } else if (gConsoleState == ConsoleState::AttachedToParent) {
+        SendEnterToParentConsole(nullptr);
     }
 }
 
@@ -1131,9 +1197,8 @@ static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
 }
 
 TempStr ResolveLnkTemp(Str path) {
-    WStr pathW = ToWStr(path);
-    ScopedMem<OLECHAR> olePath(pathW.s);
-    if (!olePath) {
+    TempWStr pathW = ToWStrTemp(path);
+    if (!pathW.s) {
         return nullptr;
     }
 
@@ -1147,7 +1212,7 @@ TempStr ResolveLnkTemp(Str path) {
         return nullptr;
     }
 
-    HRESULT hRes = file->Load(olePath, STGM_READ);
+    HRESULT hRes = file->Load(pathW.s, STGM_READ);
     if (FAILED(hRes)) {
         return nullptr;
     }
@@ -1237,7 +1302,7 @@ IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd) {
 
 bool IsKeyPressed(int key) {
     SHORT state = GetKeyState(key);
-    SHORT isDown = state & 0x8000;
+    SHORT isDown = (SHORT)(state & 0x8000);
     return isDown != 0;
 }
 
@@ -1305,9 +1370,7 @@ void OpenPathInDefaultFileManager(Str path) {
     }
 
     // strip \\?\ prefix — shell APIs (ILCreateFromPath, explorer.exe) don't understand it
-    if (str::StartsWith(path, StrL("\\\\?\\"))) {
-        path = Str(path.s + 4, path.len - 4);
-    }
+    str::TrimPrefix(path, StrL("\\\\?\\"));
 
     // Use SHOpenFolderAndSelectItems which respects the default file manager
     // (e.g. Directory Opus) instead of hardcoding explorer.exe
@@ -1487,7 +1550,7 @@ static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
     BOOL isMember = FALSE;
     DWORD highestGroup = 0;
     BOOL validTokenGroups = FALSE;
-    TOKEN_GROUPS* ptg = NULL;
+    TOKEN_GROUPS* ptg = nullptr;
     DWORD cbTokenGroups;
 
     BOOL ok = OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken) ||
@@ -1502,7 +1565,7 @@ static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
         // the token. Note that we expect a FALSE result from GetTokenInformation
         // because we've given it a NULL buffer. On exit cbTokenGroups will tell
         // the size of the group information.
-        if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &cbTokenGroups) &&
+        if (!GetTokenInformation(hToken, TokenGroups, nullptr, 0, &cbTokenGroups) &&
             GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
             // Allocate buffer and ask for the group information again.
             // This may fail if an administrator has added this account
@@ -1518,17 +1581,16 @@ static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
     SID_IDENTIFIER_AUTHORITY systemSid = {SECURITY_NT_AUTHORITY};
     if (validTokenGroups || checkTokenForGroupDeny) {
         PSID psid = nullptr;
-        for (size_t i = 0; i < dimof(groupsToCheck); i++) {
+        for (DWORD groupID : groupsToCheck) {
             // Create a SID for the local group and then check if it exists in our token
             DWORD sub1 = SECURITY_BUILTIN_DOMAIN_RID;
-            DWORD groupID = groupsToCheck[i];
             ok = AllocateAndInitializeSid(&systemSid, 2, sub1, groupID, 0, 0, 0, 0, 0, 0, &psid);
             if (!ok) {
                 continue;
             }
 
             if (checkTokenForGroupDeny) {
-                CheckTokenMembership(0, psid, &isMember);
+                CheckTokenMembership(nullptr, psid, &isMember);
             } else if (validTokenGroups) {
                 isMember = FALSE;
                 for (DWORD j = 0; !isMember && (j < ptg->GroupCount); j++) {
@@ -1605,13 +1667,9 @@ Size HwndLimitSizeToScreen(HWND hwnd, Size size) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
     }
     int dx = RectDx(mi.rcWork);
-    if (size.dx > dx) {
-        size.dx = dx;
-    }
+    size.dx = std::min(size.dx, dx);
     int dy = RectDy(mi.rcWork);
-    if (size.dy > dy) {
-        size.dy = dy;
-    }
+    size.dy = std::min(size.dy, dy);
     return size;
 }
 
@@ -1671,10 +1729,10 @@ Rect HwndGetFullscreenRect(HWND hwnd) {
         return ToRect(mi.rcMonitor);
     }
     // fall back to the primary monitor
-    return Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    return {0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)};
 }
 
-static BOOL CALLBACK GetMonitorRectProc(HMONITOR, HDC, LPRECT rcMonitor, LPARAM data) {
+static BOOL CALLBACK GetMonitorRectProc(HMONITOR /*hMonitor*/, HDC /*hdc*/, LPRECT rcMonitor, LPARAM data) {
     Rect* rcAll = (Rect*)data;
     *rcAll = rcAll->Union(ToRect(*rcMonitor));
     return TRUE;
@@ -1702,7 +1760,7 @@ void HdcFillRect(HDC hdc, const Rect& rect, HBRUSH br) {
     ::FillRect(hdc, &r, br);
 }
 
-void HdcFillRect(HDC hdc, const Rect& rect, COLORREF col) {
+void HdcFillRect(HDC hdc, const Rect& rect, Color col) {
     AutoDeleteBrush br(CreateSolidBrush(col));
     RECT r = ToRECT(rect);
     ::FillRect(hdc, &r, br);
@@ -1774,11 +1832,6 @@ void HwndCenterDialog(HWND hDlg, HWND hParent) {
     rcDialog = ShiftRectToWorkArea(rcDialog, hParent, true);
 
     SetWindowPos(hDlg, nullptr, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-}
-
-void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt) {
-    HWND hwnd = GetDlgItem(hDlg, nIDDlgItem);
-    HwndSetFont(hwnd, fnt);
 }
 
 // Get the name of default printer or nullptr if not exists.
@@ -1933,7 +1986,7 @@ static void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
         newStyle = style & ~flags;
     }
     if (newStyle != style) {
-        SetWindowLongW(hwnd, type, newStyle);
+        SetWindowLongW(hwnd, type, (LONG)newStyle);
     }
 }
 
@@ -1973,190 +2026,6 @@ Rect ChildPosWithinParent(HWND hwnd) {
     return rc;
 }
 
-constexpr u16 kFontFlagItalic = 0x01;
-constexpr u16 kFontFlagBold = 0x02;
-
-struct CreatedFontInfo {
-    CreatedFontInfo* next = nullptr;
-    Str name; // if empty, default gui font
-    HFONT font = nullptr;
-    u16 size = 0;
-    u16 flags = 0;
-    u16 weightOffset = 0;
-};
-
-// those are cached for the lifetime of the app
-static CreatedFontInfo* gFonts = nullptr;
-static HFONT gMenuFont = nullptr;
-
-static CreatedFontInfo* FindCreatedFont(Str name, int size, u16 flags, u16 weightOffset) {
-    CreatedFontInfo* curr = gFonts;
-    while (curr) {
-        if (curr->size == (u16)size && curr->flags == flags && curr->weightOffset == weightOffset &&
-            str::Eq(curr->name, name)) {
-            /* logf("FindCreatedFont: found font '%s', size: %d, flags: %x, weightOffset: %d\n", name, (int)size,
-                 (int)flags, (int)weightOffset); */
-            return curr;
-        }
-        curr = curr->next;
-    }
-    return nullptr;
-}
-
-void DeleteCreatedFonts() {
-    CreatedFontInfo* curr = gFonts;
-    while (curr) {
-        auto next = curr->next;
-        str::Free(curr->name);
-        DeleteFont(curr->font);
-        delete curr;
-        curr = next;
-    }
-    gFonts = nullptr;
-
-    DeleteFont(gMenuFont);
-    gMenuFont = nullptr;
-}
-
-static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags, u16 weightOffset) {
-    auto cf = new CreatedFontInfo();
-    cf->name = str::Dup(name);
-    cf->font = font;
-    cf->size = (u16)size;
-    cf->flags = flags;
-    cf->weightOffset = weightOffset;
-    ListInsertFront(&gFonts, cf);
-    /* logf("RememberCreatedFont: added font '%s', size: %d, flags: %x, weightOffset: %d\n", name, size, (int)flags,
-         (int)weightOffset);  */
-    return font;
-}
-
-//--- GDI: fonts
-
-HFONT GetMenuFont() {
-    if (!gMenuFont) {
-        NONCLIENTMETRICS ncm{};
-        ncm.cbSize = sizeof(ncm);
-        SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-        gMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
-    }
-    return gMenuFont;
-}
-
-HFONT HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
-    int realSize = MulDiv(fontSizePt, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
-
-    u16 flags = 0;
-    auto f = FindCreatedFont(fontName, realSize, flags, 0);
-    if (f) {
-        return f->font;
-    }
-
-    TempWStr fontNameW = ToWStrTemp(fontName);
-    LOGFONTW lf{};
-
-    lf.lfWidth = 0;
-    lf.lfHeight = -realSize;
-    lf.lfItalic = FALSE;
-    lf.lfUnderline = FALSE;
-    lf.lfStrikeOut = FALSE;
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfOutPrecision = OUT_TT_PRECIS;
-    lf.lfQuality = DEFAULT_QUALITY;
-    lf.lfPitchAndFamily = DEFAULT_PITCH;
-    wstr::BufSet(WStr(lf.lfFaceName, dimof(lf.lfFaceName)), fontNameW);
-    lf.lfWeight = FW_DONTCARE;
-    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    lf.lfEscapement = 0;
-    lf.lfOrientation = 0;
-
-    HFONT res = CreateFontIndirectW(&lf);
-    return RememberCreatedFont(res, fontName, realSize, flags, 0);
-}
-
-HFONT GetDefaultGuiFontOfSize(int size) {
-    auto f = FindCreatedFont(Str(), size, 0, 0);
-    if (f) {
-        return f->font;
-    }
-
-    NONCLIENTMETRICS ncm = {};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    ncm.lfMessageFont.lfHeight = -size;
-    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return RememberCreatedFont(res, Str(), size, 0, 0);
-}
-
-HFONT GetUserGuiFont(Str fontName, int size) {
-    return GetUserGuiFontEx(fontName, size, false, false);
-}
-
-HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
-    if (str::EqI(fontName, "automatic") || str::EqI(fontName, "auto")) {
-        fontName = Str();
-    }
-    u16 flags = 0;
-    if (bold) {
-        flags |= kFontFlagBold;
-    }
-    if (italic) {
-        flags |= kFontFlagItalic;
-    }
-    auto f = FindCreatedFont(fontName, size, flags, (u16)0);
-    if (f) {
-        return f->font;
-    }
-
-    NONCLIENTMETRICS ncm = {};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    if (len(fontName) > 0) {
-        WCHAR* dest = ncm.lfMessageFont.lfFaceName;
-        int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
-        TempWStr nameW = ToWStrTemp(fontName);
-        wstr::BufSet(WStr(dest, cchDestBufSize), nameW);
-    }
-    ncm.lfMessageFont.lfHeight = -size;
-    if (bold) {
-        ncm.lfMessageFont.lfWeight = FW_BOLD;
-    }
-    if (italic) {
-        ncm.lfMessageFont.lfItalic = TRUE;
-    }
-    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return RememberCreatedFont(res, fontName, size, flags, 0);
-}
-
-HFONT GetDefaultGuiFont(bool bold, bool italic) {
-    u16 flags = 0;
-    if (bold) {
-        flags |= kFontFlagBold;
-    }
-    if (italic) {
-        flags |= kFontFlagItalic;
-    }
-
-    NONCLIENTMETRICS ncm = {};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    int size = (int)std::abs(ncm.lfMessageFont.lfHeight);
-
-    auto f = FindCreatedFont(Str(), size, flags, 0);
-    if (f) {
-        return f->font;
-    }
-
-    if (bold) {
-        ncm.lfMessageFont.lfWeight = FW_BOLD;
-    }
-    if (italic) {
-        ncm.lfMessageFont.lfItalic = true;
-    }
-    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return RememberCreatedFont(res, Str(), size, flags, 0);
-}
-
 int GetSizeOfDefaultGuiFont() {
     NONCLIENTMETRICS ncm{};
     ncm.cbSize = sizeof(ncm);
@@ -2178,7 +2047,7 @@ bool GetNonClientMetricsForDpi(int dpi, NONCLIENTMETRICS* ncm) {
     if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(*ncm), ncm, 0)) {
         return false;
     }
-    int sysDpi = DpiGet(nullptr);
+    int sysDpi = DpiGetForHwnd(nullptr);
     if (sysDpi <= 0 || sysDpi == dpi) {
         return true;
     }
@@ -2199,7 +2068,8 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), hdcCanvas(::Ge
         return;
     }
 
-    doubleBuffer = CreateCompatibleBitmap(hdcCanvas, rect.dx, rect.dy);
+    // 32-bit DIB so Direct2D can BindDC this memory DC (a 24-bit DDB fails)
+    doubleBuffer = CreateMemoryBitmap({rect.dx, rect.dy});
     if (!doubleBuffer) {
         return;
     }
@@ -2208,6 +2078,10 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), hdcCanvas(::Ge
     if (!hdcBuffer) {
         return;
     }
+    // CreateCompatibleDC copies LAYOUT_RTL from an RTL hwnd's DC. The document
+    // canvas must stay LTR (issue #5326); a mirrored buffer would flip the
+    // page and keep it flipped after the hwnd is set back to LTR.
+    SetLayout(hdcBuffer, 0);
 
     if (rect.x != 0 || rect.y != 0) {
         SetGraphicsMode(hdcBuffer, GM_ADVANCED);
@@ -2232,8 +2106,19 @@ HDC DoubleBuffer::GetDC() const {
 
 void DoubleBuffer::Flush(HDC hdc) const {
     ReportIf(hdc == hdcBuffer);
-    if (hdcBuffer) {
-        BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+    if (!hdcBuffer) {
+        return;
+    }
+    // BitBlt onto a LAYOUT_RTL DC mirrors the whole bitmap (glyphs included).
+    // The buffer is painted in LTR; copy it verbatim, same as VirtHost.
+    DWORD layout = GetLayout(hdc);
+    bool mirrored = layout != GDI_ERROR && (layout & LAYOUT_RTL);
+    if (mirrored) {
+        SetLayout(hdc, 0);
+    }
+    BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+    if (mirrored) {
+        SetLayout(hdc, layout);
     }
 }
 
@@ -2271,9 +2156,44 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
     this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
 }
 
+// A transparent WebView canvas growing into a sibling's old rectangle must
+// discard those screen bits or the sibling remains visible until composition.
+void DeferWinPosHelper::MoveWindowNoCopyBits(HWND hWnd, Rect r) {
+    uint flags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOCOPYBITS;
+    this->SetWindowPos(hWnd, nullptr, r.x, r.y, r.dx, r.dy, flags);
+}
+
 void MenuSetChecked(HMENU m, int id, bool isChecked) {
     ReportIf(id < 0);
-    CheckMenuItem(m, (UINT)id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
+    if (!m || id < 0) {
+        return;
+    }
+    // CheckMenuItem(MF_BYCOMMAND) only hits the first item with that id. The
+    // same command can appear twice (e.g. File and Settings "Use SumatraPDF
+    // File Picker"), so walk the whole menu tree and update every match.
+    int n = GetMenuItemCount(m);
+    for (int i = 0; i < n; i++) {
+        MENUITEMINFOW mii{};
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_ID | MIIM_SUBMENU | MIIM_STATE | MIIM_FTYPE;
+        if (!GetMenuItemInfoW(m, (UINT)i, TRUE, &mii)) {
+            continue;
+        }
+        if (mii.hSubMenu) {
+            MenuSetChecked(mii.hSubMenu, id, isChecked);
+            continue;
+        }
+        if ((int)mii.wID != id) {
+            continue;
+        }
+        mii.fMask = MIIM_STATE;
+        if (isChecked) {
+            mii.fState |= MFS_CHECKED;
+        } else {
+            mii.fState &= ~MFS_CHECKED;
+        }
+        SetMenuItemInfoW(m, (UINT)i, TRUE, &mii);
+    }
 }
 
 bool MenuSetEnabled(HMENU m, int id, bool isEnabled) {
@@ -2287,6 +2207,8 @@ void MenuRemove(HMENU m, int id) {
     RemoveMenu(m, (UINT)id, MF_BYCOMMAND);
 }
 
+// TODO: this doesn't recognize enum Cmd, why?
+// void Remove(HMENU m, enum Cmd id);
 void MenuEmpty(HMENU m) {
     while (RemoveMenu(m, 0, MF_BYPOSITION)) {
         // no-op
@@ -2365,7 +2287,7 @@ Str ReadIStream(IStream* stream) {
     }
 
     int n = (int)stat.cbSize.QuadPart;
-    char* d = AllocArray<char>(n + sizeof(WCHAR));
+    char* d = AllocArray<char>(n + sizeofi(WCHAR));
     if (!d) {
         return {};
     }
@@ -2550,118 +2472,22 @@ void HwndHide(HWND hwnd) {
 
 //--- GDI: bitmaps / pixmaps
 
-Size GetBitmapSize(HBITMAP hbmp) {
-    BITMAP bmpInfo;
-    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    return Size(bmpInfo.bmWidth, bmpInfo.bmHeight);
-}
-
 // cf. fz_mul255 in fitz.h
-inline int mul255(int a, int b) {
+static inline int mul255(int a, int b) {
     int x = (a * b) + 128;
     x += x >> 8;
     return x >> 8;
-}
-
-void FinalizeBitmapPixels(BitmapPixels* bitmapPixels) {
-    HDC hdc = bitmapPixels->hdc;
-    if (hdc) {
-        SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels,
-                  &bitmapPixels->bmi, DIB_RGB_COLORS);
-        DeleteDC(hdc);
-    }
-    free(bitmapPixels);
-}
-
-static bool IsPalettedBitmap(DIBSECTION& info, int nBytes) {
-    return sizeof(info) == nBytes && info.dsBmih.biBitCount != 0 && info.dsBmih.biBitCount <= 8;
-}
-
-COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
-    ReportIf(x < 0 || x >= bitmap->size.dx);
-    ReportIf(y < 0 || y >= bitmap->size.dy);
-    u8* pixels = bitmap->pixels;
-    u8* pixel = pixels + (y * bitmap->nBytesPerRow) + (x * bitmap->nBytesPerPixel);
-    // color order in DIB is blue-green-red-alpha
-    COLORREF c = 0;
-    if (3 == bitmap->nBytesPerPixel) {
-        c = RGB(pixel[2], pixel[1], pixel[0]);
-    } else if (4 == bitmap->nBytesPerPixel) {
-        c = RGB(pixel[3], pixel[2], pixel[1]);
-    } else {
-        ReportIf(true);
-    }
-    return c;
-}
-
-BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
-    BitmapPixels* res = AllocStruct<BitmapPixels>();
-
-    DIBSECTION info{};
-    int nBytes = GetObject(hbmp, sizeof(info), &info);
-    ReportIf(nBytes < sizeof(info.dsBm));
-    Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
-
-    res->size = size;
-    res->hbmp = hbmp;
-
-    if (nBytes >= sizeof(info.dsBm)) {
-        res->pixels = (u8*)info.dsBm.bmBits;
-    }
-
-    // for mapped 32-bit DI bitmaps: directly access the pixel data
-    if (res->pixels && 32 == info.dsBm.bmBitsPixel && size.dx * 4 == info.dsBm.bmWidthBytes) {
-        res->nBytesPerPixel = 4;
-        res->nBytesPerRow = info.dsBm.bmWidthBytes;
-        res->nBytes = size.dx * size.dy * 4;
-        return res;
-    }
-
-    // for mapped 24-bit DI bitmaps: directly access the pixel data
-    if (res->pixels && 24 == info.dsBm.bmBitsPixel && info.dsBm.bmWidthBytes >= size.dx * 3) {
-        res->nBytesPerPixel = 3;
-        res->nBytesPerRow = info.dsBm.bmWidthBytes;
-        res->nBytes = size.dx * size.dy * 4;
-        return res;
-    }
-
-    // we don't support paletted DI bitmaps
-    if (IsPalettedBitmap(info, nBytes)) {
-        FinalizeBitmapPixels(res);
-        return nullptr;
-    }
-
-    BITMAPINFO bmi{};
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = size.dx;
-    bmi.bmiHeader.biHeight = size.dy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    HDC hdc = CreateCompatibleDC(nullptr);
-    int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<u8> bmpData((u8*)malloc(bmpBytes));
-    ReportIf(!bmpData);
-
-    if (!GetDIBits(hdc, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
-        DeleteDC(hdc);
-        FinalizeBitmapPixels(res);
-        return nullptr;
-    }
-    res->hdc = hdc;
-    return res;
 }
 
 // Recolor a rendered page bitmap: map black->textColor and white->bgColor
 // (proportionally in between). When linkColor is non-zero, pixels that look
 // like link text (blue-ish) are set to linkColor instead. Pixels inside
 // skipRects keep their original colors (dark-mode image preservation).
-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLORREF linkColor, Vec<Rect>* skipRects) {
+void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
     if (!hbmp) {
         return;
     }
-    if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE && !linkColor && !skipRects) {
+    if ((textColor & 0xFFFFFF) == kColBlack && (bgColor & 0xFFFFFF) == kColWhite && !linkColor && !skipRects) {
         return;
     }
 
@@ -2748,7 +2574,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, COLO
         u8* bmpData = (u8*)info.dsBm.bmBits;
         for (int y = 0; y < size.dy; y++) {
             for (int x = 0; x < size.dx; x++) {
-                u8* px = bmpData + (y * info.dsBm.bmWidthBytes) + (x * 3);
+                u8* px = bmpData + ((size_t)y * info.dsBm.bmWidthBytes) + ((size_t)x * 3);
                 u8 b = px[0];
                 u8 g = px[1];
                 u8 r = px[2];
@@ -3004,7 +2830,8 @@ void VariantInitBstr(VARIANT& urlVar, WStr s) {
     urlVar.bstrVal = SysAllocStringLen(s.s, s.len);
 }
 
-static HDDEDATA CALLBACK DdeCallback(UINT, UINT, HCONV, HSZ, HSZ, HDDEDATA, ULONG_PTR, ULONG_PTR) {
+static HDDEDATA CALLBACK DdeCallback(UINT /*type*/, UINT /*fmt*/, HCONV /*hconv*/, HSZ /*hsz1*/, HSZ /*hsz2*/,
+                                     HDDEDATA /*hdata*/, ULONG_PTR /*data1*/, ULONG_PTR /*data2*/) {
     return nullptr;
 }
 
@@ -3069,7 +2896,7 @@ static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,    IDC_HAND,     IDC_SI
 static HCURSOR cachedCursors[dimof(knownCursorIds)]{};
 
 static int GetCursorIndex(LPWSTR cursorId) {
-    int n = (int)dimof(knownCursorIds);
+    int n = dimofi(knownCursorIds);
     for (int i = 0; i < n; i++) {
         if (cursorId == knownCursorIds[i]) {
             return i;
@@ -3097,7 +2924,7 @@ static void LogCursor(LPWSTR cursorId) {
     n++;
 }
 #else
-static void LogCursor(LPWSTR) {
+static void LogCursor(LPWSTR /*cursorId*/) {
     // no-op
 }
 #endif
@@ -3126,11 +2953,10 @@ void SetCursorCached(LPWSTR cursorId) {
 }
 
 void DeleteCachedCursors() {
-    for (int i = 0; i < dimof(knownCursorIds); i++) {
-        HCURSOR cur = cachedCursors[i];
+    for (HCURSOR& cur : cachedCursors) {
         if (cur) {
             DestroyCursor(cur);
-            cachedCursors[i] = nullptr;
+            cur = nullptr;
         }
     }
 }
@@ -3179,8 +3005,8 @@ Size ButtonGetIdealSize(HWND hwnd) {
     SIZE s{};
     Button_GetIdealSize(hwnd, &s);
     // add padding
-    int xPadding = DpiScale(hwnd, 8 * 2);
-    int yPadding = DpiScale(hwnd, 2 * 2);
+    int xPadding = DpiScale(8 * 2);
+    int yPadding = DpiScale(2 * 2);
     s.cx += xPadding;
     s.cy += yPadding;
     Size res = {s.cx, s.cy};
@@ -3194,7 +3020,7 @@ bool LockDataResource(int resId, LoadedDataResource* res) {
         return res->dataSize != kResourceNotFound;
     }
 
-    auto h = GetModuleHandleW(nullptr);
+    auto* h = GetModuleHandleW(nullptr);
     WCHAR* name = MAKEINTRESOURCEW(resId);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
@@ -3302,38 +3128,42 @@ void HwndSetFont(HWND hwnd, HFONT font) {
     SetWindowFont(hwnd, font, TRUE);
 }
 
+static BOOL CALLBACK SetFontChildProc(HWND hwnd, LPARAM lp) {
+    SetWindowFont(hwnd, (HFONT)lp, TRUE);
+    return TRUE;
+}
+
+// Set the font on hwnd and every descendant. Handy after a DPI change, when the
+// whole dialog has to move to a font scaled for the new DPI.
+void HwndSetFontForWindowAndItsChildren(HWND hwnd, HFONT font) {
+    if (!hwnd || !font) {
+        return;
+    }
+    SetWindowFont(hwnd, font, TRUE);
+    EnumChildWindows(hwnd, SetFontChildProc, (LPARAM)font);
+}
+
 void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi) {
     if (!hwndTree || !font) {
         return;
     }
     if (dpi <= 0) {
-        dpi = DpiGet(hwndTree);
+        dpi = RoundUp(DpiGetForHwnd(hwndTree), 4);
     }
     HwndSetFont(hwndTree, font);
     HDC dc = GetDC(hwndTree);
     if (!dc) {
         return;
     }
-    HFONT old = (HFONT)SelectObject(dc, font);
-    TEXTMETRICW tm{};
-    if (GetTextMetricsW(dc, &tm)) {
-        int itemH = tm.tmHeight + tm.tmExternalLeading + MulDiv(4, dpi, 96);
-        SendMessageW(hwndTree, TVM_SETITEMHEIGHT, (WPARAM)itemH, 0);
+    {
+        ScopedSelectFont selectFont(dc, font);
+        TEXTMETRICW tm{};
+        if (GetTextMetricsW(dc, &tm)) {
+            int itemH = tm.tmHeight + tm.tmExternalLeading + MulDiv(4, dpi, 96);
+            SendMessageW(hwndTree, TVM_SETITEMHEIGHT, (WPARAM)itemH, 0);
+        }
     }
-    SelectObject(dc, old);
     ReleaseDC(hwndTree, dc);
-}
-
-void HwndSetTreeFont(HWND hwndTree, HFONT font) {
-    HwndSetTreeFontForDpi(hwndTree, font, DpiGet(hwndTree));
-}
-
-HFONT HwndGetFont(HWND hwnd) {
-    if (!hwnd) {
-        return nullptr;
-    }
-    auto res = GetWindowFont(hwnd);
-    return res;
 }
 
 // change size of the window to have a given client size
@@ -3387,7 +3217,7 @@ void HwndPostCommand(HWND hwnd, int cmdId, LPARAM lp) {
 }
 
 void HwndDestroyWindowSafe(HWND* hwndPtr) {
-    auto hwnd = *hwndPtr;
+    auto* hwnd = *hwndPtr;
     *hwndPtr = nullptr;
 
     if (!hwnd || !::IsWindow(hwnd)) {
@@ -3398,34 +3228,8 @@ void HwndDestroyWindowSafe(HWND* hwndPtr) {
 
 //--- toolbar / GDI handles / tree view / HGLOBAL / timing
 
-int TbGetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
-    int res = (int)SendMessageW(hwnd, TB_GETBUTTONINFOW, buttonId, (LPARAM)info);
-    ReportDebugIf(res < 0);
-    return res;
-}
-
-void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
-    auto res = SendMessageW(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)info);
-    ReportDebugIf(0 == res);
-}
-
-void TbSetButtonChecked(HWND hwnd, int buttonId, bool checked) {
-    auto res = SendMessageW(hwnd, TB_CHECKBUTTON, buttonId, MAKELONG(checked ? 1 : 0, 0));
-    ReportDebugIf(0 == res);
-}
-
 void TbSetButtonStructSize(HWND hwnd, int size) {
     SendMessageW(hwnd, TB_BUTTONSTRUCTSIZE, (WPARAM)size, 0);
-}
-
-void TbSetButtonSize(HWND hwnd, Size size) {
-    auto res = SendMessageW(hwnd, TB_SETBUTTONSIZE, 0, MAKELONG(size.dx, size.dy));
-    ReportDebugIf(0 == res);
-}
-
-void TbSetBitmapSize(HWND hwnd, Size size) {
-    auto res = SendMessageW(hwnd, TB_SETBITMAPSIZE, 0, MAKELONG(size.dx, size.dy));
-    ReportDebugIf(0 == res);
 }
 
 void TbAddButtons(HWND hwnd, int count, const TBBUTTON* buttons) {
@@ -3433,25 +3237,12 @@ void TbAddButtons(HWND hwnd, int count, const TBBUTTON* buttons) {
     ReportDebugIf(0 == res);
 }
 
-void TbAutosIZE(HWND hwnd) {
+void TbAutoSize(HWND hwnd) {
     SendMessageW(hwnd, TB_AUTOSIZE, 0, 0);
-}
-
-HIMAGELIST TbSetImageList(HWND hwnd, HIMAGELIST imageList) {
-    return (HIMAGELIST)SendMessageW(hwnd, TB_SETIMAGELIST, 0, (LPARAM)imageList);
-}
-
-HIMAGELIST TbGetImageList(HWND hwnd) {
-    return (HIMAGELIST)SendMessageW(hwnd, TB_GETIMAGELIST, 0, 0);
 }
 
 int TbGetButtonCount(HWND hwnd) {
     return (int)SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0);
-}
-
-int TbHitTest(HWND hwnd, Point point) {
-    POINT pt = ToPOINT(point);
-    return (int)SendMessageW(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
 }
 
 DWORD TbGetExtendedStyle(HWND hwnd) {
@@ -3460,40 +3251,6 @@ DWORD TbGetExtendedStyle(HWND hwnd) {
 
 void TbSetExtendedStyle(HWND hwnd, DWORD style) {
     SendMessageW(hwnd, TB_SETEXTENDEDSTYLE, 0, style);
-}
-
-Size TbGetMaxSize(HWND hwnd) {
-    SIZE size{};
-    SendMessageW(hwnd, TB_GETMAXSIZE, 0, (LPARAM)&size);
-    return Size((int)size.cx, (int)size.cy);
-}
-
-void TbGetPadding(HWND hwnd, int* padX, int* padY) {
-    DWORD res = (DWORD)SendMessageW(hwnd, TB_GETPADDING, 0, 0);
-    *padX = (int)LOWORD(res);
-    *padY = (int)HIWORD(res);
-}
-
-void TbSetPadding(HWND hwnd, int padX, int padY) {
-    LPARAM lp = MAKELPARAM(padX, padY);
-    auto res = SendMessageW(hwnd, TB_SETPADDING, 0, lp);
-    ReportIf(0 == res);
-}
-
-// https://docs.microsoft.com/en-us/windows/win32/controls/tb-getrect
-Rect TbGetRect(HWND hwnd, int buttonId) {
-    if (!hwnd) {
-        return {};
-    }
-    RECT r{};
-    auto res = SendMessageW(hwnd, TB_GETRECT, buttonId, (LPARAM)&r);
-    if (res == 0) {
-        logf("TbGetRect: hwnd=0x%p, buttonId: %d pos: (%d, %d) size: (%d, %d)\n", hwnd, buttonId, r.left, r.top,
-             RectDx(r), RectDy(r));
-        LogLastError();
-        ReportIf(res == 0);
-    }
-    return Rect(r);
 }
 
 Rect TbGetItemRect(HWND hwnd, int buttonIdx) {
@@ -3507,17 +3264,7 @@ Rect TbGetItemRect(HWND hwnd, int buttonIdx) {
         LogLastError();
         ReportIf(res == 0);
     }
-    return Rect(rc);
-}
-
-void TbGetMetrics(HWND hwnd, TBMETRICS* metrics) {
-    LPARAM lp = (LPARAM)metrics;
-    SendMessageW(hwnd, TB_GETMETRICS, 0, lp);
-}
-
-void TbSetMetrics(HWND hwnd, TBMETRICS* metrics) {
-    LPARAM lp = (LPARAM)metrics;
-    SendMessageW(hwnd, TB_SETMETRICS, 0, lp);
+    return {rc};
 }
 
 bool DeleteObjectSafe(HGDIOBJ* h) {
@@ -3568,7 +3315,7 @@ int HdcDrawText(HDC hdc, WStr s, const Point& pos, uint format, HFONT font) {
     return HdcDrawText(hdc, s, r, format, font);
 }
 
-Rect HdcMeasureWithDrawText(HDC hdc, WStr s, Rect r, uint format, HFONT font) {
+static Rect HdcMeasureWithDrawText(HDC hdc, WStr s, Rect r, uint format, HFONT font) {
     if (len(s) == 0) {
         return r;
     }
@@ -3578,7 +3325,7 @@ Rect HdcMeasureWithDrawText(HDC hdc, WStr s, Rect r, uint format, HFONT font) {
     return ToRect(r2);
 }
 
-Rect HdcMeasureWithDrawText(HDC hdc, Str s, Rect r, uint format, HFONT font) {
+static Rect HdcMeasureWithDrawText(HDC hdc, Str s, Rect r, uint format, HFONT font) {
     return HdcMeasureWithDrawText(hdc, ToWStrTemp(s), r, format, font);
 }
 
@@ -3608,19 +3355,6 @@ Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font) {
     return {measured.dx, measured.dy};
 }
 
-Size HdcMeasureText(HDC hdc, Str s, uint format, HFONT font) {
-    // a very large area
-    return HdcMeasureText(hdc, s, 4096, format, font);
-}
-
-Size HdcMeasureText(HDC hdc, Str s, HFONT font) {
-    // DT_LEFT - left-aligned
-    // DT_NOCLIP - is faster, no clipping
-    // DT_NOPREFIX - doesn't process & to underline next char
-    uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX;
-    return HdcMeasureText(hdc, s, fmt, font);
-}
-
 void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL) {
     int prevMode = SetBkMode(hdc, TRANSPARENT);
     uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
@@ -3631,52 +3365,6 @@ void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL) {
     if (prevMode != 0) {
         SetBkMode(hdc, prevMode);
     }
-}
-
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, Str txt, HFONT font) {
-    if (len(txt) == 0) {
-        return Size{};
-    }
-    TempWStr sw = ToWStrTemp(txt);
-    WStr ws = sw;
-    if (!ws) {
-        return Size{};
-    }
-    AutoReleaseDC dc(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    }
-    ScopedSelectFont prev(dc, font);
-
-    RECT r{};
-    // TODO: DT_EDITCONTROL is probably not correct here
-    // TODO: what about DT_NOPREFIX?
-    uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
-    DrawTextExW(dc, ws.s, ws.len, &r, fmt, nullptr);
-
-    int dx = RectDx(r);
-    int dy = RectDy(r);
-    return {dx, dy};
-}
-
-// return approximate height of font in pixels
-int FontDyPx(HWND hwnd, HFONT hfont) {
-    if (!hfont) {
-        Size s = HwndMeasureText(hwnd, "A", hfont);
-        return s.dy;
-    }
-    AutoReleaseDC dc(hwnd);
-    ScopedSelectFont prev(dc, hfont);
-    TEXTMETRIC tm{};
-    if (!GetTextMetrics(dc, &tm)) {
-        Size s = HwndMeasureText(hwnd, "A", hfont);
-        return s.dy;
-    }
-    return tm.tmHeight + tm.tmExternalLeading;
 }
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {
@@ -3693,9 +3381,42 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
     }
 }
 
+// SHAddToRecentDocs can block on network paths (shell resolves / writes Recent).
+// Run those off the UI thread with COM initialized and a heap-owned path.
+static void AddPathToRecentDocsOnThread(WCHAR* pathW) {
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    bool comInitedByUs = SUCCEEDED(hr);
+    if (!comInitedByUs && hr != RPC_E_CHANGED_MODE) {
+        logf("AddPathToRecentDocsOnThread: CoInitializeEx failed hr=0x%08x\n", (unsigned)hr);
+        free(pathW);
+        return;
+    }
+
+    if (pathW) {
+        SHAddToRecentDocs(SHARD_PATH, pathW);
+    }
+    free(pathW);
+
+    if (comInitedByUs) {
+        CoUninitialize();
+    }
+}
+
 void AddPathToRecentDocs(Str path) {
-    WCHAR* pathW = CWStrTemp(path);
-    SHAddToRecentDocs(SHARD_PATH, pathW);
+    if (!path) {
+        return;
+    }
+    if (!path::IsOnNetworkDrive(path)) {
+        WCHAR* pathW = CWStrTemp(path);
+        SHAddToRecentDocs(SHARD_PATH, pathW);
+        return;
+    }
+
+    WCHAR* owned = ToWStr(path).s; // heap; thread frees
+    if (!owned) {
+        return;
+    }
+    RunAsync(MkFunc0(AddPathToRecentDocsOnThread, owned), StrL("AddPathToRecentDocs"));
 }
 
 TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
@@ -3717,7 +3438,7 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
 HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
     HGLOBAL h = GlobalAlloc(flags, n);
     if (!h) {
-        return 0;
+        return nullptr;
     }
     void* d = GlobalLock(h);
     if (d) {
@@ -3905,8 +3626,8 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
 
 void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
     constexpr int kCheckerSize = 8;
-    COLORREF lightColor = RGB(255, 255, 255);
-    COLORREF darkColor = RGB(204, 204, 204);
+    Color lightColor = kColWhite;
+    Color darkColor = MkRgb(204, 204, 204);
     HBRUSH lightBrush = CreateSolidBrush(lightColor);
     HBRUSH darkBrush = CreateSolidBrush(darkColor);
 
@@ -3949,7 +3670,7 @@ void RestoreDCState(SavedDCState* state) {
 Size HdcGetTextExtentPoint32(HDC hdc, WStr str) {
     SIZE size{};
     GetTextExtentPoint32W(hdc, str.s, str.len, &size);
-    return Size((int)size.cx, (int)size.cy);
+    return {(int)size.cx, (int)size.cy};
 }
 
 Size HdcGetTextExtentPoint32(HDC hdc, Str str) {
@@ -4039,7 +3760,7 @@ Str GetAppLocalDataDirTemp() {
     wchar_t* path = nullptr;
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path);
     if (FAILED(hr) || !path) {
-        return Str();
+        return {};
     }
     Str result = ToUtf8Temp(WStr(path));
     CoTaskMemFree(path);

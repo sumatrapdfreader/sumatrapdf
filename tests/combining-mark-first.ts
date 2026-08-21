@@ -10,32 +10,19 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, runStandalone } from "./util.ts";
+import { extractPageText, runStandalone } from "./util.ts";
 
 const PDF = join(import.meta.dir, "combining-mark-first.pdf");
-
-function extractPageTextHex(pdf: string): string {
-  const psCmd = `& '${EXE}' -for-testing -extract-text -1 '${pdf}' 2>&1 | Out-String -Width 100000`;
-  const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psCmd]);
-  const out = p.stdout.toString();
-  if (p.exitCode !== 0) {
-    throw new Error(`-extract-text failed with exit code ${p.exitCode}: ${out.trim()}`);
-  }
-
-  const m = out.match(/text on page 1: '([0-9a-f ]*)'/);
-  if (!m) {
-    throw new Error(`missing text extraction output: ${out.trim()}`);
-  }
-  return m[1].trim();
-}
 
 export async function testit(): Promise<void> {
   if (!existsSync(PDF)) {
     throw new Error(`fixture not found: ${PDF}`);
   }
 
-  const hex = extractPageTextHex(PDF);
+  const text = extractPageText(PDF, 1);
+  const hex = Buffer.from(text, "utf8").toString("hex").replace(/(..)/g, "$1 ").trim();
   console.log(`text on page 1: '${hex}'`);
+  // U+0301 COMBINING ACUTE ACCENT as UTF-8
   if (!hex.startsWith("cc 81")) {
     throw new Error(`expected extracted text to start with U+0301 bytes "cc 81", got: '${hex}'`);
   }

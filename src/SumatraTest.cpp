@@ -4,14 +4,18 @@
 #include "base/Base.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
+#include "base/Pixmap.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "Annotation.h"
+#include "ImageReader.h"
+#include "PdfCadDetect.h"
 #include "DisplayModel.h"
 #include "PdfSync.h"
 #include "ProgressUpdateUI.h"
@@ -23,6 +27,9 @@
 #include "SearchAndDDE.h"
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
+#include "MarkdownModel.h"
+#include "TableOfContents.h"
+#include "gui/win/BrowserDocView.h"
 
 #include <chm.h>
 #include "EbookBase.h"
@@ -30,8 +37,6 @@
 
 // internal LZX test hook, defined in chm.c but not exposed in chm.h
 extern "C" int LZX_test_pretree_make_decode_table(void);
-
-Str CleanRemoteDestName(Str destName);
 
 static void EnsureTestGlobalPrefs() {
     // engine creation reads a few fields off gGlobalPrefs (e.g. disableAntiAlias)
@@ -123,7 +128,7 @@ class TestPasswordUI : public PasswordUI {
   public:
     explicit TestPasswordUI(Str password) : password(password) {}
 
-    Str GetPassword(Str, u8*, u8[32], bool* saveKey) override {
+    Str GetPassword(Str /*path*/, u8* /*fileDigest*/, u8 /*decryptionKeyOut*/[32], bool* saveKey) override {
         *saveKey = false;
         if (triedPassword || !password) {
             return nullptr;
@@ -143,7 +148,7 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
-        auto ts = new TextSearch(engine);
+        auto* ts = new TextSearch(engine);
         ts->SetDirection(TextSearch::Direction::Forward);
         ts->SetMatchCase(false);
         TextSel* sel = ts->FindFirst(1, needle);
@@ -159,6 +164,52 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
     return ToStrTemp(out);
 }
 
+// Headless search restricted to pages first..last (0 = unbounded). Reports
+// every match page in document order. Used by tests/issue-5694.ts.
+TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
+        return finish(1);
+    }
+    auto* ts = new TextSearch(engine);
+    ts->SetDirection(TextSearch::Direction::Forward);
+    ts->SetMatchCase(false);
+    if (spec) {
+        Vec<bool> allowed;
+        if (!ParseFindPageRange(spec, engine->PageCount(), allowed)) {
+            allowed.Reset();
+        }
+        ts->SetAllowedPages(allowed);
+    } else {
+        ts->SetPageRange(first, last);
+    }
+    int n = 0;
+    TextSel* sel = ts->FindFirst(ts->RestrictFirst(), needle);
+    while (sel && sel->len > 0) {
+        out.Append(fmt("page=%d\n", sel->pages[0]));
+        n++;
+        sel = ts->FindNext();
+    }
+    if (n == 0) {
+        out.Append(fmt("NOTFOUND needle=%s first=%d last=%d\n", needle, first, last));
+    }
+    delete ts;
+    SafeEngineRelease(&engine);
+    return finish(0);
+}
+
 // walk the outline tree in document order, return the `target`-th (1-based) item
 // that has a destination. `counter` tracks how many dests we've seen so far.
 static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
@@ -172,6 +223,22 @@ static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
         IPageDestination* d = NthDestInToc(item->child, target, counter);
         if (d) {
             return d;
+        }
+    }
+    return nullptr;
+}
+
+static TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter) {
+    for (; item; item = item->next) {
+        if (item->dest) {
+            counter++;
+            if (counter == target) {
+                return item;
+            }
+        }
+        TocItem* found = NthTocItemWithDest(item->child, target, counter);
+        if (found) {
+            return found;
         }
     }
     return nullptr;
@@ -275,10 +342,10 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
 
             for (int i = 0; i < nEntries; i++) {
                 chm_entry* e = entries[i];
-                if (e->path && str::Eq(e->path, "/payload")) {
+                if (e->path && str::Eq(e->path, StrL("/payload"))) {
                     payloadEntry = e;
                 }
-                if (e->length == 0 || e->length > 128 * 1024 * 1024) {
+                if (e->length == 0 || e->length > 128ULL * 1024 * 1024) {
                     continue;
                 }
                 u8* buf = AllocArray<u8>((int)e->length + 1);
@@ -295,7 +362,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 free(buf);
             }
 
-            if (payloadEntry && payloadEntry->length > 0 && payloadEntry->length <= 128 * 1024 * 1024) {
+            if (payloadEntry && payloadEntry->length > 0 && payloadEntry->length <= 128ULL * 1024 * 1024) {
                 // chm_read_entry reads the whole entry, so the buffer must be
                 // at least entry->length bytes; this decompresses /payload and
                 // lets ASan catch the LZX overflow (issue-chm-lzx)
@@ -370,7 +437,7 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
     if (str::IsEmptyOrWhiteSpace(word1) || str::IsEmptyOrWhiteSpace(word2) || str::IsEmptyOrWhiteSpace(cursorWord)) {
         return fail("ERROR missing word1, word2 or cursorWord");
     }
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];
@@ -417,6 +484,178 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
         out.Append(fmt("OK selected=%s\n", original));
     } else {
         out.Append(fmt("FAIL original=%s after=%s\n", original, after));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
+// a spot on `pageNo` with no text (and no link / image) under it, in screen
+// coords, or an empty Point if the visible part of the page is all text
+static Point FindEmptySpotOnPage(MainWindow* win, DisplayModel* dm, int pageNo) {
+    Rect client = win->canvasRc;
+    constexpr int kStep = 8;
+    for (int y = client.y + kStep; y < client.y + client.dy; y += kStep) {
+        for (int x = client.x + kStep; x < client.x + client.dx; x += kStep) {
+            Point pt{x, y};
+            if (dm->GetPageNoByPoint(pt) != pageNo) {
+                continue;
+            }
+            if (dm->IsOverText(pt)) {
+                continue;
+            }
+            // a link or image under the cursor makes the click do something else
+            if (dm->GetElementAtPos(pt, nullptr)) {
+                continue;
+            }
+            return pt;
+        }
+    }
+    return Point{};
+}
+
+// Regression test for issue #5881: clicking empty space clears the text
+// selection. #5737 made find highlights independent of the selection, which
+// meant ClearSearchResult() -- what the "click, not a drag" path in
+// OnMouseLeftButtonUp called -- no longer cleared the selection, leaving Esc as
+// the only way to drop it. Selects `word` on page 1 the way a drag would, then
+// sends a real left click (down + up, no movement) at a spot with no text under
+// it, so the whole canvas mouse path runs, and reports what is still selected.
+TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail("ERROR missing word");
+    }
+    if (len(gWindows) == 0) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    double wx = 0, wy = 0;
+    if (!FindWordCenter(engine, pageNo, word, &wx, &wy)) {
+        return fail("ERROR word-not-found");
+    }
+
+    // select the word, the way a left-drag across it would
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win, true);
+    dm->textSelection->StartAt(pageNo, wx, wy);
+    dm->textSelection->SelectUpTo(pageNo, wx, wy);
+    dm->textSelection->SelectWordAt(pageNo, wx, wy);
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+
+    bool isTextOnly = false;
+    TempStr selected = str::DupTemp(GetSelectedTextTemp(tab, " ", isTextOnly));
+    if (len(selected) == 0) {
+        return fail("ERROR empty-selection");
+    }
+
+    Point pt = FindEmptySpotOnPage(win, dm, pageNo);
+    if (pt.IsEmpty()) {
+        return fail("ERROR no-empty-spot");
+    }
+
+    // a real click: down and up at the same point, so it isn't a drag
+    LPARAM lp = MAKELPARAM(pt.x, pt.y);
+    SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, 0, lp);
+    SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, lp);
+
+    TempStr after = GetSelectedTextTemp(tab, " ", isTextOnly);
+    bool cleared = (len(after) == 0) && !win->showSelection;
+    if (cleared) {
+        out.Append(fmt("OK selected=%s cleared at %d,%d\n", selected, pt.x, pt.y));
+    } else {
+        out.Append(fmt("FAIL selected=%s still=%s showSelection=%d\n", selected, after, (int)win->showSelection));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = cleared ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
+// Regression test for the rectangular-selection drag: a Ctrl+drag rectangle is
+// normally drawn over text, and the "clicking already selected text starts a
+// drag-out" check used to run first and claim every press inside it, so the
+// rectangle could never be moved or resized. Builds a rectangle around `word`
+// on page 1 and presses the left button in the middle of it (over text), then
+// reports what the canvas decided to do.
+TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail("ERROR missing word");
+    }
+    if (len(gWindows) == 0) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    double wx = 0, wy = 0;
+    if (!FindWordCenter(engine, pageNo, word, &wx, &wy)) {
+        return fail("ERROR word-not-found");
+    }
+    Point center = dm->CvtToScreen(pageNo, PointF((float)wx, (float)wy));
+
+    // a rectangle around the word, as a Ctrl+drag would leave it. No glyphs in
+    // the text selection, which is what makes it a rectangular selection
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win, true);
+    int half = 40;
+    Rect rc(center.x - half, center.y - (half / 2), half * 2, half);
+    tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
+    win->showSelection = tab->selectionOnPage != nullptr;
+    if (!win->showSelection) {
+        return fail("ERROR no-rect-selection");
+    }
+    if (!IsRectangularSelection(win)) {
+        return fail("ERROR not-rectangular");
+    }
+    // the point we press must be over text, otherwise this doesn't test anything
+    if (!dm->IsOverText(center)) {
+        return fail("ERROR press-point-not-over-text");
+    }
+
+    SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(center.x, center.y));
+    SelectionDragEdge edge = win->selectionDragEdge;
+    bool dragging = (win->mouseAction == MouseAction::Selecting) && (edge != SelectionDragEdge::None);
+    bool textDrag = win->textDragPending;
+    SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, MAKELPARAM(center.x, center.y));
+
+    bool ok = dragging && !textDrag;
+    if (ok) {
+        out.Append(fmt("OK moving rect selection, edge=%d\n", (int)edge));
+    } else {
+        out.Append(
+            fmt("FAIL edge=%d mouseAction=%d textDragPending=%d\n", (int)edge, (int)win->mouseAction, (int)textDrag));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
@@ -474,7 +713,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     if (str::IsEmptyOrWhiteSpace(word) || str::IsEmptyOrWhiteSpace(typed)) {
         return fail("ERROR missing word or typed");
     }
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];
@@ -543,13 +782,21 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
         visible = !vp.Intersect(sr).IsEmpty();
     }
 
+    // PaintAllFindMatches only paints a match in the selection color (rather
+    // than as one of the plain matches) while textSearch->result is populated,
+    // so an empty result here means the match we navigated to doesn't read as
+    // the current one - and with the find UI closed isn't highlighted at all
+    // (issue #5889). SetLastResult()->SetText() drops it exactly when the
+    // document text differs from what was typed, which is this test's case.
+    bool hasResult = ts->result.len > 0;
+
     bool matchOk = (curPage == pageNo) && (curStart == startGlyph) && (curEnd == endGlyph) && str::Eq(matched, word);
-    bool ok = matchOk && visible;
+    bool ok = matchOk && visible && hasResult;
     if (ok) {
-        out.Append(fmt("OK match=%s page=%d visible=1\n", matched, pageNo));
+        out.Append(fmt("OK match=%s page=%d visible=1 highlighted=1\n", matched, pageNo));
     } else {
-        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d\n", word, matched ? matched : StrL("(none)"),
-                       pageNo, visible ? 1 : 0));
+        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d highlighted=%d\n", word,
+                       matched ? matched : StrL("(none)"), pageNo, visible ? 1 : 0, hasResult ? 1 : 0));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
@@ -693,6 +940,8 @@ static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
 // Navigate to the n-th (1-based) outline destination that has a dest, then
 // report CurrentPageNo vs the destination page. Used by tests/issue-2799.ts.
 // Expects a document already open in gWindows[0] (withControlledSumatra args).
+// Navigate to the n-th (1-based) outline destination in the open document and
+// report landed page vs destination page (issue #2799).
 TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg, int code = 1) -> TempStr {
@@ -704,7 +953,7 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail(StrL("NOTREADY no-window"), 2);
     }
     MainWindow* win = gWindows[0];
@@ -753,6 +1002,167 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Zoom to startZoomPerc, then follow the destNo-th outline destination the way
+// a bookmark click does, and report the zoom on both sides of it. That is what
+// IgnoreDestinationZoom decides: whether the destination's zoom wins or the
+// zoom the reader is at is kept (discussion #5938). With destNo == 0 nothing is
+// followed, so the caller can zoom and read back the zoom around a navigation
+// it drives itself (a real click in the Bookmarks sidebar).
+// Used by tests/issue-5938.ts.
+TempStr DestZoomNavResultTemp(int destNo, int startZoomPerc, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return fail(StrL("NOTREADY not-fixed"), 2);
+    }
+    IPageDestination* dest = nullptr;
+    if (destNo > 0) {
+        EngineBase* engine = dm->GetEngine();
+        TocTree* toc = engine ? engine->GetToc() : nullptr;
+        if (!toc || !toc->root) {
+            return fail(StrL("ERROR no-toc"));
+        }
+        int counter = 0;
+        dest = NthDestInToc(toc->root, destNo, counter);
+        if (!dest) {
+            return fail(fmt("ERROR no-dest destNo=%d", destNo));
+        }
+    }
+
+    if (startZoomPerc > 0) {
+        dm->SetZoomVirtual((float)startZoomPerc, nullptr);
+    }
+    float zoomBefore = dm->GetZoomVirtual();
+    if (dest) {
+        win->ctrl->HandleLink(dest, win->linkHandler);
+    }
+    float zoomAfter = dm->GetZoomVirtual();
+
+    out.Append(fmt("OK dest=%d destZoom=%g page=%d landed=%d zoomBefore=%g zoomAfter=%g ignore=%d\n", destNo,
+                   dest ? PageDestGetZoom(dest) : 0.f, dest ? PageDestGetPageNo(dest) : 0, dm->CurrentPageNo(),
+                   zoomBefore, zoomAfter, gGlobalPrefs->ignoreDestinationZoom ? 1 : 0));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// With destNo > 0, start navigation to that Markdown TOC item through the real
+// deferred TOC path. With destNo == 0, report whether WebView has reached the
+// requested vertical scroll position. Used by tests/issue-5842.ts.
+TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+    MarkdownModel* mm = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+    if (!mm || !mm->docView) {
+        return finish(StrL("NOTREADY no-markdown-webview"), 2);
+    }
+
+    if (destNo > 0) {
+        TocTree* toc = mm->GetToc();
+        int counter = 0;
+        TocItem* item = toc && toc->root ? NthTocItemWithDest(toc->root, destNo, counter) : nullptr;
+        if (!item) {
+            // headings are filled in on a background thread; the files-only
+            // stub TOC is installed first, so dest 3 may not exist yet
+            return finish(fmt("NOTREADY no-dest destNo=%d", destNo), 2);
+        }
+        GoToTocItem(win, item);
+        return finish(fmt("NAVIGATING dest=%d name=%s", destNo, PageDestGetName(item->dest)), 0);
+    }
+
+    Point pos = mm->docView->GetScrollPos();
+    if (pos.y < minScrollY) {
+        return finish(fmt("NOTREADY scrollY=%d min=%d", pos.y, minScrollY), 2);
+    }
+    return finish(fmt("OK scrollX=%d scrollY=%d", pos.x, pos.y), 0);
+}
+
+// Click a link in the currently shown markdown/html document: `href` is the url
+// WebView2 would report for it (relative to the document, or the full virtual
+// host url), and this goes through the same MarkdownModel::OnBeforeNavigate()
+// the browser calls. Reports whether the view would navigate to it, then lists
+// the tabs of every window so a test can see what got opened where.
+// With follow == false nothing is clicked and only the tabs are listed: opening
+// a linked document runs from a uitask, so its result has to be read back in a
+// later request, by which time the current tab may no longer be the markdown one.
+// Used by tests/issue-5924.ts.
+TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+
+    int navigate = -1;
+    if (follow) {
+        MarkdownModel* mm = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+        if (!mm) {
+            return finish(StrL("NOTREADY no-markdown"), 2);
+        }
+        if (!href) {
+            return finish(StrL("ERROR no-href"), 1);
+        }
+        navigate = mm->OnBeforeNavigate(href, false) ? 1 : 0;
+    }
+    out.Append(fmt("OK navigate=%d\n", navigate));
+    for (int i = 0; i < len(gWindows); i++) {
+        MainWindow* w = gWindows[i];
+        for (WindowTab* tab : w->Tabs()) {
+            int isCurrent = tab == w->CurrentTab() ? 1 : 0;
+            int pageNo = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
+            out.Append(fmt("tab win=%d current=%d pageNo=%d file=%s\n", i, isCurrent, pageNo, tab->filePath));
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Follow the first internal link on page 1 after pinning the viewport to the
 // left; used by tests/issue-5064.ts (issue #5064).
 TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
@@ -766,7 +1176,7 @@ TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (gWindows.IsEmpty()) {
+    if (len(gWindows) == 0) {
         return fail("NOTREADY no-window");
     }
     MainWindow* win = gWindows[0];
@@ -825,17 +1235,21 @@ TempStr I18nErrorStringResultTemp(int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
-static void AppendTocItems(str::Builder& out, TocItem* item) {
+static void AppendTocItems(str::Builder& out, TocItem* item, int depth = 0) {
     for (; item; item = item->next) {
         if (item->title) {
+            for (int i = 0; i < depth; i++) {
+                out.Append(StrL("  "));
+            }
             out.Append(fmt("%s|page=%d\n", item->title, item->pageNo));
         }
-        AppendTocItems(out, item->child);
+        AppendTocItems(out, item->child, depth + 1);
     }
 }
 
 // Headless test for document TOC (e.g. ComicInfo.xml bookmarks in CBZ). Returns
-// one line per top-level TOC entry: "title|page=N". Used by tests/issue-1201.ts.
+// one line per TOC entry: "title|page=N", indented two spaces per nesting
+// level. Used by tests/issue-1201.ts and tests/issue-5317.ts.
 TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
@@ -902,7 +1316,13 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
         }
         nLinks++;
         Str value = PageDestGetValue(dest);
-        out.Append(fmt("kind=%s value=%s\n", Str(dest->GetKind()), value));
+        TempStr valueShown = str::ReplaceTemp(value, StrL("\r\n"), StrL("|"));
+        valueShown = str::ReplaceTemp(valueShown, StrL("\n"), StrL("|"));
+        RectF src = el->GetRect();
+        RectF destRc = PageDestGetRect(dest);
+        out.Append(fmt("kind=%s page=%d src=%g,%g,%g,%g dest=%g,%g,%g,%g value=%s\n", Str(dest->GetKind()),
+                       PageDestGetPageNo(dest), src.x, src.y, src.dx, src.dy, destRc.x, destRc.y, destRc.dx, destRc.dy,
+                       valueShown));
     }
     if (nLinks == 0) {
         if (exitCodeOut) {
@@ -913,5 +1333,477 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
         *exitCodeOut = 0;
     }
     SafeEngineRelease(&engine);
+    return ToStrTemp(out);
+}
+
+// Hover-tip strings for annotation comments on a page (issue #5329).
+// Newlines in a tip are reported as "|".
+TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR engine-create-failed path=%s\n", path));
+        return ToStrTemp(out);
+    }
+
+    if (!engine->BenchLoadPage(pageNo)) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR page-load-failed page=%d\n", pageNo));
+        SafeEngineRelease(&engine);
+        return ToStrTemp(out);
+    }
+
+    int nComments = 0;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (!el || !el->Is(kindPageElementComment)) {
+            continue;
+        }
+        Str value = el->GetValue();
+        TempStr flat = str::ReplaceTemp(value, StrL("\n"), StrL("|"));
+        nComments++;
+        out.Append(fmt("comment=%s\n", flat));
+    }
+    if (nComments == 0) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR no-comments page=%d\n", pageNo));
+    } else if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    SafeEngineRelease(&engine);
+    return ToStrTemp(out);
+}
+
+// Color histogram of a page rendered with the CAD/engineering enhancement forced
+// on, so a test can tell what that enhancement did to the page's grays. Reports
+// the most common neutral grays as "gray=<value> count=<n>" (issue #5937).
+TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    // the enhancement is normally decided per document by CAD detection; force
+    // it so the fixture doesn't have to look like a CAD export
+    SetEngineeringDrawingEnhanceMode(StrL("on"));
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    if (pageNo < 1 || pageNo > engine->PageCount()) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR bad-page page=%d\n", pageNo));
+    }
+    if (!EngineMupdfCadEnhanceActive(engine)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR cad-enhance-not-active\n"));
+    }
+
+    // RenderPageArgs::zoom is a scale factor, not a percentage
+    float zoom = (float)zoomPercent / 100.f;
+    RenderPageArgs args(pageNo, zoom, 0);
+    Pixmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    // the engine may render to a palette DIB we can't read directly
+    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    if (!rgb) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR pixmap-convert-failed\n"));
+    }
+
+    int counts[256] = {};
+    for (int y = 0; y < rgb->height; y++) {
+        const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+        for (int x = 0; x < rgb->width; x++) {
+            const u8* px = row + ((size_t)x * 4);
+            // BGRA8: neutral grays only, which is all this enhancement touches
+            if (px[0] == px[1] && px[1] == px[2]) {
+                counts[px[0]]++;
+            }
+        }
+    }
+    out.Append(fmt("size=%dx%d\n", rgb->width, rgb->height));
+    // every gray with a meaningful area, so the test can see what survived
+    for (int i = 0; i < 256; i++) {
+        if (counts[i] >= 64) {
+            out.Append(fmt("gray=%d count=%d\n", i, counts[i]));
+        }
+    }
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// Render an image page and report dest size plus the RGB of the left and right
+// edge pixels. clipKind=1 uses the slightly-off page rect that Copy Selection
+// produces after CvtFromScreen (issue #3434).
+TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    RectF box = engine->PageMediabox(1);
+    float zoom = (float)zoomPercent / 100.f;
+    RectF clip;
+    RectF* pageRect = nullptr;
+    if (clipKind != 0) {
+        // same half-pixel pull-back CvtFromScreen applies to a pixel-aligned
+        // selection of the whole image
+        clip = RectF(-0.499f, -0.499f, box.dx, box.dy);
+        pageRect = &clip;
+    }
+    RenderPageArgs args(1, zoom, 0, pageRect, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR render-failed box=%gx%g zoom=%g\n", box.dx, box.dy, zoom));
+    }
+    if (bmp->width < 2 || bmp->height < 1 || !bmp->data) {
+        TempStr msg = fmt("ERROR pixmap-too-small bmp=%dx%d fmt=%d box=%gx%g\n", bmp->width, bmp->height,
+                          (int)bmp->format, box.dx, box.dy);
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    int bpp = PixmapBytesPerPixel(bmp->format);
+    if (bpp < 3) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR pixmap-fmt=%d\n", (int)bmp->format));
+    }
+
+    auto pixel = [&](int x, int y, int* r, int* g, int* b) {
+        const u8* px = bmp->data + ((size_t)y * (size_t)bmp->stride) + ((size_t)x * bpp);
+        if (bmp->format == PixmapFormat::RGBA8) {
+            *r = px[0];
+            *g = px[1];
+            *b = px[2];
+        } else {
+            *b = px[0];
+            *g = px[1];
+            *r = px[2];
+        }
+    };
+    int lr, lg, lb, rr, rg, rb;
+    pixel(0, bmp->height / 2, &lr, &lg, &lb);
+    pixel(bmp->width - 1, bmp->height / 2, &rr, &rg, &rb);
+    out.Append(fmt("size=%dx%d left=%d,%d,%d right=%d,%d,%d\n", bmp->width, bmp->height, lr, lg, lb, rr, rg, rb));
+
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// Stamp an image file onto page 1 of a PDF (the #1744 "electronic signature"
+// path) and report how many annotations the page has plus how many red-ish
+// pixels the render shows. The fixture image is solid red so a successful
+// stamp lights up a block of red.
+TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", pdfPath));
+    }
+    if (!EngineSupportsAnnotations(engine)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR annots-not-supported\n"));
+    }
+    Str data = file::ReadFile(imagePath);
+    Pixmap* image = PixmapFromData(data);
+    str::Free(data);
+    if (!image) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR image-load-failed path=%s\n", imagePath));
+    }
+    if (!engine->BenchLoadPage(1)) {
+        FreePixmap(image);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed\n"));
+    }
+
+    AnnotCreateArgs args{AnnotationType::Stamp};
+    args.stampImage = image;
+    Annotation* annot = EngineMupdfCreateAnnotation(engine, 1, PointF{72.f, 100.f}, &args);
+    if (!annot) {
+        TempStr msg = fmt("ERROR stamp-create-failed fmt=%d %dx%d\n", (int)image->format, image->width, image->height);
+        FreePixmap(image);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    FreePixmap(image);
+
+    Vec<Annotation*> annots;
+    EngineGetAnnotations(engine, annots);
+    int nAnnots = len(annots);
+    RectF ar = GetRect(annot);
+    out.Append(fmt("annot=%s rect=%g,%g,%g,%g\n", AnnotationReadableNameTemp(Type(annot)), ar.x, ar.y, ar.dx, ar.dy));
+
+    RenderPageArgs rargs(1, 1.f, 0, nullptr, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(rargs);
+    if (!bmp || !bmp->data) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    if (!rgb || !rgb->data) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", (int)bmp->format));
+    }
+    int bpp = PixmapBytesPerPixel(rgb->format);
+    int red = 0;
+    int nonWhite = 0;
+    if (bpp >= 3) {
+        for (int y = 0; y < rgb->height; y++) {
+            const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+            for (int x = 0; x < rgb->width; x++) {
+                const u8* px = row + ((size_t)x * bpp);
+                int r, g, b;
+                if (rgb->format == PixmapFormat::RGBA8) {
+                    r = px[0];
+                    g = px[1];
+                    b = px[2];
+                } else {
+                    b = px[0];
+                    g = px[1];
+                    r = px[2];
+                }
+                if (r < 250 || g < 250 || b < 250) {
+                    nonWhite++;
+                }
+                if (r > 180 && g < 80 && b < 80) {
+                    red++;
+                }
+            }
+        }
+    }
+    out.Append(fmt("annots=%d red=%d nonwhite=%d size=%dx%d\n", nAnnots, red, nonWhite, rgb->width, rgb->height));
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = (nAnnots >= 1 && red > 50) ? 0 : 1;
+    }
+    if (nAnnots < 1 || red <= 50) {
+        out.Append(StrL("ERROR stamp-not-visible\n"));
+    }
+    return ToStrTemp(out);
+}
+
+// Open any document, render page 1, and report dest size plus how many
+// red-ish / non-white pixels it has. Used to check that a WebP inside an
+// EPUB actually paints (issue #3415) instead of the IMAGE placeholder.
+TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut) {
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    if (!engine->BenchLoadPage(1)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed\n"));
+    }
+
+    RenderPageArgs rargs(1, 1.f, 0, nullptr, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(rargs);
+    if (!bmp || !bmp->data) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    if (!rgb || !rgb->data) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", (int)bmp->format));
+    }
+    int bpp = PixmapBytesPerPixel(rgb->format);
+    int red = 0;
+    int nonWhite = 0;
+    if (bpp >= 3) {
+        for (int y = 0; y < rgb->height; y++) {
+            const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+            for (int x = 0; x < rgb->width; x++) {
+                const u8* px = row + ((size_t)x * bpp);
+                int r, g, b;
+                if (rgb->format == PixmapFormat::RGBA8) {
+                    r = px[0];
+                    g = px[1];
+                    b = px[2];
+                } else {
+                    b = px[0];
+                    g = px[1];
+                    r = px[2];
+                }
+                if (r < 250 || g < 250 || b < 250) {
+                    nonWhite++;
+                }
+                if (r > 180 && g < 80 && b < 80) {
+                    red++;
+                }
+            }
+        }
+    }
+    out.Append(
+        fmt("red=%d nonwhite=%d size=%dx%d pages=%d\n", red, nonWhite, rgb->width, rgb->height, engine->PageCount()));
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// SHA-1 thumbprints and drop-down labels of CurrentUser\MY certs that can
+// sign, one pair per cert. Used to check the store enumeration for #5965.
+TempStr ListSigningCertsResultTemp(int* exitCodeOut) {
+    StrVec thumbs;
+    StrVec labels;
+    ListWindowsSigningCertificates(thumbs, labels);
+    str::Builder out;
+    out.Append(fmt("n=%d\n", len(thumbs)));
+    for (int i = 0; i < len(thumbs); i++) {
+        out.Append(fmt("thumb=%s\nlabel=%s\n", thumbs[i], labels[i]));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// Sign pdfPath with a Windows-store cert (thumbprint) or a .pfx (certPath +
+// password), write destPath, and report ok=1 on success. The dest file is a
+// copy of the source so the signature can be saved incrementally.
+TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword, Str imagePath,
+                               int appearanceFlags, int* exitCodeOut) {
+    EnsureTestGlobalPrefs();
+
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    if (len(thumbprint) == 0 && len(certPath) == 0) {
+        return fail(StrL("ERROR need thumbprint or certPath\n"));
+    }
+    if (!file::Exists(pdfPath)) {
+        return fail(fmt("ERROR pdf-missing path=%s\n", pdfPath));
+    }
+    if (!file::Copy(destPath, pdfPath, false)) {
+        return fail(fmt("ERROR copy-failed dest=%s\n", destPath));
+    }
+
+    EngineBase* engine = CreateEngineFromFile(destPath, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", destPath));
+    }
+
+    PdfSignArgs args;
+    args.certThumbprint = thumbprint;
+    args.certPath = certPath;
+    args.certPassword = certPassword;
+    args.imagePath = imagePath;
+    args.appearanceFlags = appearanceFlags;
+    args.pageNo = 1;
+    StrVec fieldNames;
+    Vec<int> fieldPages;
+    EngineMupdfGetUnsignedSignatureFields(engine, fieldNames, fieldPages);
+    if (len(fieldNames) > 0) {
+        args.fieldName = fieldNames[0];
+        args.pageNo = fieldPages[0];
+    }
+
+    Str err;
+    bool ok = EngineMupdfSignDocument(engine, args, &err);
+    if (!ok) {
+        TempStr msg = fmt("ERROR sign-failed %s\n", err ? err : StrL("(no message)"));
+        str::Free(err);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    str::Free(err);
+
+    if (!EngineMupdfSaveUpdated(engine, destPath, {})) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR save-failed\n"));
+    }
+    SafeEngineRelease(&engine);
+    out.Append(StrL("ok=1\n"));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
     return ToStrTemp(out);
 }

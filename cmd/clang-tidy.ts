@@ -1,32 +1,67 @@
 import { Glob } from "bun";
+import { readdirSync, existsSync } from "node:fs";
 import { unlink, appendFile, writeFile } from "node:fs/promises";
 import { join, basename } from "node:path";
 import { detectVisualStudio } from "./util";
 
-const includes = [
-  "-I",
-  "mupdf/include",
-  "-I",
+// Keep in sync with AdditionalIncludeDirectories in vs2022/SumatraPDF-static.vcxproj.
+// A missing dir isn't fatal: clang reports "file not found" and keeps parsing with
+// that header's declarations unknown, which silently degrades every check in the
+// files that include it (this used to affect 25 files, SumatraPDF.cpp among them).
+const includeDirs = [
+  "ext/mupdf/include",
   "src",
-  "-I",
   "src/base",
-  "-I",
-  "src/wingui",
-  "-I",
+  "src/gui",
+  "src/gui/win",
   "ext/chmdec",
-  "-I",
   "ext/djvudec",
-  "-I",
-  "ext/zlib",
-  "-I",
+  "ext/a-zlib",
   "ext/synctex",
-  "-I",
   "ext/lzma/C",
-  "-I",
   "ext/libwebp/src",
-  "-I",
   "ext/freetype/include",
+  "ext/libarchive",
+  "ext/a-zopfli",
+  "ext/cmark-gfm/src",
+  "ext/cmark-gfm/extensions",
+  "ext/mupdf/scripts/cmark-gfm",
+  "ext/heicdec",
+  "ext/jxldec",
+  "ext/darkmodelib/include",
 ];
+
+// resolved at runtime so bumping the NuGet package doesn't silently re-break WebView.cpp
+function webView2IncludeDir(): string | null {
+  const packages = "packages";
+  if (!existsSync(packages)) {
+    return null;
+  }
+  const dir = readdirSync(packages).find((d) => d.startsWith("Microsoft.Web.WebView2."));
+  if (!dir) {
+    return null;
+  }
+  const inc = join(packages, dir, "build/native/include");
+  return existsSync(inc) ? inc : null;
+}
+
+function buildIncludes(): string[] {
+  const dirs = [...includeDirs];
+  const wv2 = webView2IncludeDir();
+  if (wv2) {
+    dirs.push(wv2);
+  } else {
+    console.log("warning: WebView2 package not found, WebView.cpp will not fully parse");
+  }
+  for (const d of dirs) {
+    if (!existsSync(d)) {
+      console.log(`warning: include dir '${d}' does not exist`);
+    }
+  }
+  return dirs.flatMap((d) => ["-I", d]);
+}
+
+const includes = buildIncludes();
 
 const defines = [
   "-DUNICODE",
@@ -66,28 +101,22 @@ async function runAndLog(exePath: string, args: string[]): Promise<void> {
   }
 }
 
+// Checks, HeaderFilterRegex/ExcludeHeaderFilterRegex and FormatStyle all come from
+// .clang-tidy -- don't pass --checks/--header-filter here or that file stops being
+// the single source of truth. -fix only adds --fix on top.
 function clangTidyFileArgs(path: string): string[] {
-  return ["--header-filter=.*", "-extra-arg=-std=c++20", path, "--", ...includes, ...defines];
+  return ["-extra-arg=-std=c++20", path, "--", ...includes, ...defines];
 }
 
 function clangTidyFixArgs(path: string): string[] {
-  return [
-    "--checks=-*,modernize-raw-string-literal",
-    "-p",
-    ".",
-    "--header-filter=src/",
-    "--fix",
-    "-extra-arg=-std=c++20",
-    path,
-    "--",
-    ...includes,
-    ...defines,
-  ];
+  return ["--fix", "-extra-arg=-std=c++20", path, "--", ...includes, ...defines];
 }
 
 const whitelisted = [
   "resource.h",
   "version.h",
+  // vendored PCH shim: a lone #include "hb.hh", needs harfbuzz-only include dirs
+  "harfbuzzpch.cpp",
   "translationlangs.cpp",
   "doc.cpp",
   "ebookcontroller.cpp",
@@ -131,7 +160,8 @@ async function main() {
     "src/*.cpp",
     "src/mui/*.cpp",
     "src/base/*.cpp",
-    "src/wingui/*.cpp",
+    "src/gui/*.cpp",
+    "src/gui/win/*.cpp",
     "src/uia/*.cpp",
     "src/previewer/*.cpp",
     "src/ifilter/*.cpp",

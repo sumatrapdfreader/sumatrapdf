@@ -15,7 +15,7 @@
 #define OS_LINUX 0
 #endif
 
-#if defined(WIN32) || defined(_WIN32)
+#if defined(_WIN32)
 #define OS_WIN 1
 #else
 #define OS_WIN 0
@@ -77,9 +77,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-// Windows headers use _unused
-#define __unused [[maybe_unused]]
-
 // C/C++ standard headers  we use often
 #include <cctype>
 #include <climits>
@@ -95,9 +92,13 @@
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
 #if OS_POSIX
+// pthread.h first: glibc mutex structs have a field named __unused
 #include <pthread.h>
 #include <strings.h>
 #endif
+
+// after system headers so we don't rewrite pthread's __unused field
+#define __unused [[maybe_unused]]
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -128,8 +129,6 @@
 // that use min/max as identifiers; pre-include them before defining macros
 #ifdef __GNUC__
 #include <cmath>
-#include <algorithm>
-#include <limits>
 #endif
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
@@ -155,7 +154,7 @@ using BOOL = int;
 using WCHAR = wchar_t;
 using WPARAM = uintptr_t;
 using LPARAM = intptr_t;
-using COLORREF = uint32_t;
+using LRESULT = intptr_t;
 using LCID = uint32_t;
 
 struct HWND__;
@@ -168,6 +167,10 @@ struct HIMAGELIST__;
 using HIMAGELIST = HIMAGELIST__*;
 struct HTREEITEM__;
 using HTREEITEM = HTREEITEM__*;
+struct HBITMAP__;
+using HBITMAP = HBITMAP__*;
+struct HBRUSH__;
+using HBRUSH = HBRUSH__*;
 using LPWSTR = WCHAR*;
 
 struct EXCEPTION_POINTERS;
@@ -188,62 +191,6 @@ constexpr int MAX_PATH = 4096;
 constexpr int URLZONE_INVALID = -1;
 constexpr int URLZONE_INTERNET = 3;
 
-struct POINT {
-    LONG x;
-    LONG y;
-};
-
-struct RECT {
-    LONG left;
-    LONG top;
-    LONG right;
-    LONG bottom;
-};
-
-namespace Gdiplus {
-struct Point {
-    int X;
-    int Y;
-
-    Point() = default;
-    Point(int x, int y) : X(x), Y(y) {}
-};
-struct PointF {
-    float X;
-    float Y;
-
-    PointF() = default;
-    PointF(float x, float y) : X(x), Y(y) {}
-};
-struct Rect {
-    int X;
-    int Y;
-    int Width;
-    int Height;
-
-    Rect() = default;
-    Rect(int x, int y, int width, int height) : X(x), Y(y), Width(width), Height(height) {}
-};
-struct RectF {
-    float X;
-    float Y;
-    float Width;
-    float Height;
-
-    RectF() = default;
-    RectF(float x, float y, float width, float height) : X(x), Y(y), Width(width), Height(height) {}
-};
-struct Color {
-    uint32_t argb = 0;
-
-    Color() = default;
-    explicit Color(uint32_t argb) : argb(argb) {}
-    Color(uint8_t r, uint8_t g, uint8_t b) : argb((uint32_t)0xff << 24 | (uint32_t)r << 16 | (uint32_t)g << 8 | b) {}
-    Color(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
-        : argb((uint32_t)a << 24 | (uint32_t)r << 16 | (uint32_t)g << 8 | b) {}
-};
-} // namespace Gdiplus
-
 #define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))
 #endif
 
@@ -261,10 +208,12 @@ using uint = unsigned int;
 using AtomicBool = volatile LONG;
 using AtomicInt = volatile LONG;
 using AtomicRefCount = volatile LONG;
+using AtomicPtr = void* volatile;
 #else
 using AtomicBool = volatile int;
 using AtomicInt = volatile int;
 using AtomicRefCount = volatile int;
+using AtomicPtr = void* volatile;
 #endif
 
 bool AtomicBoolGet(AtomicBool* p);
@@ -276,12 +225,15 @@ int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
 int AtomicRefCountAdd(AtomicRefCount* v);
 int AtomicRefCountDec(AtomicRefCount* v);
+void* AtomicPtrGet(AtomicPtr* p);
+void AtomicPtrSet(AtomicPtr* p, void* v);
+void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
 #if !OS_WIN
-// milliseconds since some unspecified epoch, monotonic; a portable stand-in for
-// the Win32 GetTickCount64() (which <windows.h> already declares on Windows).
 u64 GetTickCount64();
 #endif
+
+i64 UnixTimeMsNow();
 
 struct Arena;
 
@@ -364,6 +316,7 @@ template <typename T, size_t N>
 char (&DimofSizeHelper(T (&array)[N]))[N];
 #define dimof(array) (sizeof(DimofSizeHelper(array)))
 #define dimofi(array) (int)(sizeof(DimofSizeHelper(array)))
+#define sizeofi(x) ((int)sizeof(x))
 
 #if COMPILER_MSVC
 // https://msdn.microsoft.com/en-us/library/4dt9kyhy.aspx
@@ -437,35 +390,33 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #if defined(DEBUG)
 #define ReportDebugIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
 #else
-#define ReportDebugIf(cond)
+// In release the check is gone, but the condition must still be *read*, or a
+// variable whose only consumer is a ReportDebugIf looks unused: the compiler
+// warns and clang-analyzer-deadcode.DeadStores reports a dead store, tempting
+// someone to "clean up" the variable and delete the debug assert with it.
+// Passing it to an empty inline function is a real read that costs nothing --
+// the call and the (side-effect-free) condition both optimize away.
+inline void ReportDebugIfNoOp(bool) {}
+#define ReportDebugIf(cond) ReportDebugIfNoOp(!!(cond))
 #endif
 
-/* Logging macros are defined here but must be implemented by the app because different apps have different logging
+/* Logging is declared here but must be implemented by the app because different apps have different logging
  * needs. */
 void log(Str s);
-void loga(Str s); // log always
 
-#define logf(...)                     \
-    do {                              \
-        Str s__ = ::fmt(__VA_ARGS__); \
-        ::log(s__);                   \
-    } while (0)
-#define logfa(...)                    \
-    do {                              \
-        Str s__ = ::fmt(__VA_ARGS__); \
-        ::loga(s__);                  \
-    } while (0)
+// logf() is defined at the end of this file, after
+// base/StrFormatParse.h brings in str::FormatTemp()
 
 void* AllocZero(int count, int size);
 
 template <typename T>
 FORCEINLINE T* AllocArray(int n) {
-    return (T*)AllocZero(n, (int)sizeof(T));
+    return (T*)AllocZero(n, sizeofi(T));
 }
 
 template <typename T>
 FORCEINLINE T* AllocStruct() {
-    return (T*)AllocZero(1, (int)sizeof(T));
+    return (T*)AllocZero(1, sizeofi(T));
 }
 
 template <typename T>
@@ -530,8 +481,7 @@ inline bool mulSafe(T* valInOut, T n) {
     return true;
 }
 
-void* memdup(const void* data, int n, int extraBytes = 0);
-bool memeq(const void* s1, const void* s2, int n);
+bool MemEq(const void* s1, const void* s2, int n);
 
 int RoundToPowerOf2(int size);
 u32 MurmurHash2(const void* key, int n);
@@ -690,13 +640,15 @@ class ExitScopeHelp {
 using func0Ptr = void (*)(void*);
 using funcVoidPtr = void (*)();
 
-#define kFuncNoArg ((void*)(-1))
-
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
 struct Func0 {
+    // Func1 keeps a flag in userData's lowest bit, so every value stored there
+    // has to be even - including this sentinel, which is why it is ~1 and not -1
+    static constexpr uintptr_t kFuncNoArg = ~(uintptr_t)1;
+
     void* fn = nullptr;
-    void* userData = nullptr;
+    uintptr_t userData = 0;
 
     Func0() = default;
     // copy constructor
@@ -714,7 +666,6 @@ struct Func0 {
     }
     ~Func0() = default;
 
-    bool IsEmpty() const { return fn == nullptr; }
     bool IsValid() const { return fn != nullptr; }
     void Call() const {
         if (!fn) {
@@ -726,7 +677,7 @@ struct Func0 {
             return;
         }
         auto func = (func0Ptr)fn;
-        func(userData);
+        func((void*)userData);
     }
 };
 Func0 MkFunc0Void(funcVoidPtr fn);
@@ -735,7 +686,7 @@ template <typename T>
 Func0 MkFunc0(void (*fn)(T*), T* d) {
     auto res = Func0{};
     res.fn = (void*)fn;
-    res.userData = (void*)d;
+    res.userData = (uintptr_t)d;
     return res;
 }
 
@@ -748,16 +699,28 @@ template <typename T, void (T::*Method)()>
 Func0 MkMethod0(T* obj) {
     auto res = Func0{};
     res.fn = (void*)&MethodTrampoline<T, Method>;
-    res.userData = (void*)obj;
+    res.userData = (uintptr_t)obj;
     return res;
 }
 
 template <typename T>
 struct Func1 {
+    // bit 0 of userData says fn takes no T, so Call() drops the argument -
+    // that's how a Func0 can stand in for a Func1. Everything we store is at
+    // least 2-byte aligned (and kFuncNoArg is even), so the bit is free and the
+    // struct stays two words
+    static constexpr uintptr_t kDropsArgBit = 1;
+    static constexpr uintptr_t kFuncNoArg = Func0::kFuncNoArg;
+
     void (*fn)(void*, T) = nullptr;
-    void* userData = nullptr;
+    uintptr_t userData = 0;
 
     Func1() = default;
+    // a Func0 is a Func1 that doesn't look at its argument
+    Func1(const Func0& that) {
+        this->fn = (void (*)(void*, T))that.fn;
+        this->SetData((void*)that.userData, true);
+    }
     // copy constructor
     Func1(const Func1& that) {
         this->fn = that.fn;
@@ -773,19 +736,36 @@ struct Func1 {
     }
     ~Func1() = default;
 
+    void SetData(void* d, bool dropsArg) {
+        // an odd pointer would collide with the flag. Nothing we take the
+        // address of is 1-byte aligned, so this means the caller handed us
+        // something that isn't a real pointer
+        ReportIf(((uintptr_t)d & kDropsArgBit) != 0);
+        userData = (uintptr_t)d | (dropsArg ? kDropsArgBit : 0);
+    }
     bool IsValid() const { return fn != nullptr; }
-    bool IsEmpty() const { return fn == nullptr; }
     void Call(T arg) const {
         if (!fn) {
             return;
         }
-        if (userData == kFuncNoArg) {
+        uintptr_t d = userData & ~kDropsArgBit;
+        if (userData & kDropsArgBit) {
+            if (d == kFuncNoArg) {
+                auto func = (funcVoidPtr)fn;
+                func();
+            } else {
+                auto func = (func0Ptr)fn;
+                func((void*)d);
+            }
+            return;
+        }
+        if (d == kFuncNoArg) {
             using fptr = void (*)(T);
             auto func = (fptr)fn;
             func(arg);
             return;
         }
-        fn(userData, arg);
+        fn((void*)d, arg);
     }
 };
 
@@ -799,7 +779,7 @@ Func1<TArg> MkMethod1(T* obj) {
     auto res = Func1<TArg>{};
     using fptr = void (*)(void*, TArg);
     res.fn = (fptr)&MethodTrampoline1<T, TArg, Method>;
-    res.userData = (void*)obj;
+    res.SetData((void*)obj, false);
     return res;
 }
 
@@ -808,7 +788,7 @@ Func1<T2> MkFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res.fn = (fptr)fn;
-    res.userData = (void*)d;
+    res.SetData((void*)d, false);
     return res;
 }
 
@@ -817,7 +797,7 @@ Func1<T2> MkFunc1Void(void (*fn)(T2)) {
     auto res = Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res.fn = (fptr)fn;
-    res.userData = kFuncNoArg;
+    res.SetData((void*)Func1<T2>::kFuncNoArg, false);
     return res;
 }
 
@@ -826,7 +806,7 @@ Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = new Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res->fn = (fptr)fn;
-    res->userData = (void*)d;
+    res->SetData((void*)d, false);
     return res;
 }
 
@@ -838,16 +818,26 @@ int setMinMax(int& v, int minVal, int maxVal);
 extern AtomicInt gAllowAllocFailure;
 
 #include "base/Geom.h"
+// Thread (Mutex) then Arena before Vec: Vec templates call Alloc/Free/Realloc;
+// GCC two-phase lookup needs those names declared at the template definition site.
+#include "base/Thread.h"
+#include "base/Arena.h"
 #include "base/Vec.h"
 #include "base/Str.h"
 #include "base/StrUtf8.h"
 #include "base/StrFormatParse.h"
 #include "base/StrVec.h"
 #include "base/Strconv.h"
-#include "base/Thread.h"
-#include "base/Arena.h"
 #include "base/Scoped.h"
 #include "base/Color.h"
+
+// logf() formats with fmt() and logs. A template rather than a macro so it
+// merely overloads the math library's logf(float) instead of mangling every
+// use of it
+template <typename... TArgs>
+void logf(const char* s, const TArgs&... args) {
+    ::log(str::FormatTemp(s, args...));
+}
 
 // Windows/MSVC string APIs: use str::/wstr:: BufSet, EqI, CmpI instead.
 #ifdef lstrcpy

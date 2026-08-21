@@ -65,10 +65,10 @@ void VecTest() {
 
     {
         char buf[2] = {'a', '\0'};
-        str::Builder v(0, nullptr);
+        str::Builder v;
         for (int i = 0; i < 7; i++) {
             v.Append(Str(buf, 1));
-            buf[0] = buf[0] + 1;
+            buf[0] = (char)(buf[0] + 1);
         }
         Str s = ToStr(v);
         utassert(str::Eq("abcdefg", s));
@@ -99,7 +99,7 @@ void VecTest() {
     }
 
     {
-        str::Builder v(0, nullptr);
+        str::Builder v;
         for (int i = 0; i < 32; i++) {
             utassert(len(v) == i * 6);
             v.Append("lambd");
@@ -117,17 +117,17 @@ void VecTest() {
         v.RemoveAt(0, 6 * 15);
         utassert(len(v) == 6);
         Str s = ToStr(v);
-        utassert(str::Eq(s, "lambda"));
+        utassert(str::Eq(s, StrL("lambda")));
         s = v.TakeStr();
-        utassert(str::Eq(s, "lambda"));
+        utassert(str::Eq(s, StrL("lambda")));
         str::Free(s);
         utassert(len(v) == 0);
 
         v.Append("lambda");
-        utassert(str::Eq(ToStr(v), "lambda"));
+        utassert(str::Eq(ToStr(v), StrL("lambda")));
         char c = v.RemoveLast();
         utassert(c == 'a');
-        utassert(str::Eq(ToStr(v), "lambd"));
+        utassert(str::Eq(ToStr(v), StrL("lambd")));
     }
 
     VecTestAppendFmt();
@@ -156,10 +156,10 @@ void VecTest() {
         v.Append(2);
         for (int i = 0; i < 500; i++) v.Append(4);
         v[250] = 5;
-        v.Reverse();
+        VecReverse(v);
         utassert(len(v) == 501 && v[0] == 4 && v[249] == v[251] && v[250] == 5 && v[500] == 2);
         v.Remove(4);
-        v.Reverse();
+        VecReverse(v);
         utassert(len(v) == 500 && v[0] == 2 && v[249] == v[251] && v[250] == 5 && v[499] == 4);
     }
 

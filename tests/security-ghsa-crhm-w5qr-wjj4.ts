@@ -1,59 +1,104 @@
 // Regression test for GHSA-crhm-w5qr-wjj4. If a restriction INI exists,
 // policy initialization must start fully restricted and only add explicitly
 // enabled permissions. Invalid policy files must also fail closed.
+//
+// Reads the granted bits over -dbg-control. The old check watched for an
+// IFileOpenDialog after CmdOpenFile; that dialog is often hosted out of
+// process (or slower than a 3s poll on ASan), so CI saw "no dialog" even
+// when DiskAccess was on.
 
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { enumWindows, getClassName, getWindowPid, sleep } from "./winapi.ts";
-import { sendCommand, waitForFrame } from "./win-automation.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { EXE, runStandalone, tmpPath } from "./util.ts";
 
-const DLL = join(dirname(EXE), "libsumatrapdf.dll");
+// What the exe needs beside it once copied out of the build directory. The
+// regular build loads the engine from libsumatrapdf.dll; the static (ASan) one
+// has it linked in but needs the ASan runtime, so copy whichever is there.
+const SIDE_BY_SIDE_DLLS = ["libsumatrapdf.dll", "clang_rt.asan_dynamic-x86_64.dll"].map((name) =>
+  join(dirname(EXE), name),
+);
 
-async function assertFileDialog(name: string, ini: string, expected: boolean): Promise<void> {
+type PolicyBits = {
+  restricted: number;
+  internet: number;
+  disk: number;
+  prefs: number;
+  registry: number;
+  printer: number;
+  copy: number;
+  fullscreen: number;
+};
+
+function parsePolicies(raw: string): PolicyBits {
+  const n = (key: string): number => {
+    const m = new RegExp(`^${key}=(\\d+)`, "m").exec(raw);
+    if (!m) {
+      throw new Error(`missing ${key} in policy dump:\n${raw}`);
+    }
+    return parseInt(m[1], 10);
+  };
+  return {
+    restricted: n("restricted"),
+    internet: n("internet"),
+    disk: n("disk"),
+    prefs: n("prefs"),
+    registry: n("registry"),
+    printer: n("printer"),
+    copy: n("copy"),
+    fullscreen: n("fullscreen"),
+  };
+}
+
+async function assertPolicies(name: string, ini: string, want: Partial<PolicyBits>): Promise<void> {
   const appDir = tmpPath(`ghsa-crhm-w5qr-wjj4-${name}`);
   rmSync(appDir, { recursive: true, force: true });
   mkdirSync(appDir, { recursive: true });
 
   const testExe = join(appDir, "SumatraPDF.exe");
   copyFileSync(EXE, testExe);
-  copyFileSync(DLL, join(appDir, basename(DLL)));
-  writeFileSync(join(appDir, "sumatrapdfrestrict.ini"), ini);
-
-  const proc = Bun.spawn([testExe, "-for-testing"], {
-    cwd: appDir,
-    stdout: "ignore",
-    stderr: "ignore",
-  });
-  try {
-    const frame = await waitForFrame(proc.pid);
-    if (!frame) {
-      throw new Error(`${name}: SumatraPDF window did not appear`);
-    }
-    sendCommand(frame, cmdId("CmdOpenFile"));
-    await sleep(800);
-
-    let foundFileDialog = false;
-    enumWindows((hwnd) => {
-      if (getWindowPid(hwnd) === proc.pid && getClassName(hwnd) === "#32770") {
-        foundFileDialog = true;
-        return false;
-      }
-      return true;
-    });
-    if (foundFileDialog !== expected) {
-      throw new Error(`${name}: expected file dialog=${expected}, got ${foundFileDialog}`);
-    }
-  } finally {
-    if (proc.exitCode === null) {
-      proc.kill();
+  for (const dll of SIDE_BY_SIDE_DLLS) {
+    if (existsSync(dll)) {
+      copyFileSync(dll, join(appDir, basename(dll)));
     }
   }
+  writeFileSync(join(appDir, "sumatrapdfrestrict.ini"), ini);
+
+  await withControlledSumatra(
+    testExe,
+    async (client) => {
+      const res = await client.request(ControlCommand.TestGetPolicies);
+      const raw = String(res[1] ?? "");
+      if (res[0] !== 0) {
+        throw new Error(`${name}: TestGetPolicies failed: ${raw.trim()}`);
+      }
+      const got = parsePolicies(raw);
+      for (const [key, expected] of Object.entries(want) as [keyof PolicyBits, number][]) {
+        if (got[key] !== expected) {
+          throw new Error(`${name}: expected ${key}=${expected}, got ${got[key]}\n${raw}`);
+        }
+      }
+      console.log(`  ${name}: ${raw.trim().replace(/\n/g, " ")} ✓`);
+    },
+    [],
+    { cwd: appDir },
+  );
 }
 
+const kFullyClosed: Partial<PolicyBits> = {
+  restricted: 1,
+  internet: 0,
+  disk: 0,
+  prefs: 0,
+  registry: 0,
+  printer: 0,
+  copy: 0,
+  fullscreen: 0,
+};
+
 export async function testit(): Promise<void> {
-  await assertFileDialog("allow-disk", "[Policies]\nDiskAccess = 1\n", true);
-  await assertFileDialog(
+  await assertPolicies("allow-disk", "[Policies]\nDiskAccess = 1\n", { ...kFullyClosed, disk: 1 });
+  await assertPolicies(
     "deny-all",
     [
       "[Policies]",
@@ -66,9 +111,9 @@ export async function testit(): Promise<void> {
       "FullscreenAccess = 0",
       "",
     ].join("\n"),
-    false,
+    kFullyClosed,
   );
-  await assertFileDialog("malformed", "[Poilcies]\nDiskAccess = 0\n", false);
+  await assertPolicies("malformed", "[Poilcies]\nDiskAccess = 0\n", kFullyClosed);
 }
 
 if (import.meta.main) {

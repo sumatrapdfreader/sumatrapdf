@@ -36,7 +36,7 @@ static DarkModeProcessCache* PdfDarkModeEnsureProcessCache(DarkModePageAnalysis*
     }
     int n = len(analysis->images);
     if (len(cache->processedImages) != n) {
-        cache->processedImages.SetSize(n);
+        VecResize(cache->processedImages, n);
         for (int i = 0; i < n; i++) {
             cache->processedImages[i] = nullptr;
         }
@@ -76,17 +76,17 @@ static void dm_transform_pixmap_rgb(fz_context* ctx, fz_pixmap* pix, const DarkM
     fz_colorspace* rgb = fz_device_rgb(ctx);
     int components = fz_colorspace_n(ctx, cs);
     int n = pix->n;
-    int stride = pix->stride;
+    int stride = (int)pix->stride;
     int w = pix->w;
     int h = pix->h;
     for (int y = 0; y < h; y++) {
-        unsigned char* row = pix->samples + (y * stride);
+        unsigned char* row = pix->samples + ((size_t)y * stride);
         for (int x = 0; x < w; x++) {
-            unsigned char* px = row + (x * n);
+            unsigned char* px = row + ((size_t)x * n);
             float conv[FZ_MAX_COLORS] = {};
             float srcRgb[FZ_MAX_COLORS] = {};
             for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-                conv[c] = px[c] / 255.f;
+                conv[c] = (float)px[c] / 255.f;
             }
             fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
             float nr = 0.f, ng = 0.f, nb = 0.f;
@@ -95,13 +95,8 @@ static void dm_transform_pixmap_rgb(fz_context* ctx, fz_pixmap* pix, const DarkM
             float back[FZ_MAX_COLORS] = {};
             fz_convert_color(ctx, rgb, out, cs, back, cs, fz_default_color_params);
             for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-                int v = (int)((back[c] * 255.f) + 0.5f);
-                if (v < 0) {
-                    v = 0;
-                }
-                if (v > 255) {
-                    v = 255;
-                }
+                int v = (int)lroundf(back[c] * 255.f);
+                v = limitValue(v, 0, 255);
                 px[c] = (unsigned char)v;
             }
         }
@@ -236,7 +231,7 @@ static fz_image* dm_build_processed_shade(fz_context* ctx, fz_shade* shade, fz_m
     fz_try(ctx) {
         pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), bounds, nullptr, 1);
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
-        fz_matrix local_ctm = fz_concat(fz_translate(-bounds.x0, -bounds.y0), ctm);
+        fz_matrix local_ctm = fz_concat(fz_translate((float)-bounds.x0, (float)-bounds.y0), ctm);
         shadeDev = fz_new_draw_device(ctx, local_ctm, pix);
         fz_fill_shade(ctx, shadeDev, shade, fz_identity, alpha, fz_default_color_params);
         fz_close_device(ctx, shadeDev);
@@ -261,6 +256,7 @@ static fz_image* dm_build_processed_shade(fz_context* ctx, fz_shade* shade, fz_m
     return result;
 }
 
+// Returns a kept fz_image for fill_image, or nullptr to use the source image.
 fz_image* PdfDarkModeGetCachedImage(fz_context* ctx, DarkModeEngineCache* engineCache, DarkModePageAnalysis* analysis,
                                     int occurrenceIndex, fz_image* srcImage, DarkImagePolicy policy,
                                     const DarkModePalette& palette, u32 profileHash) {
@@ -306,6 +302,7 @@ fz_image* PdfDarkModeGetCachedImage(fz_context* ctx, DarkModeEngineCache* engine
     return fz_keep_image(ctx, built);
 }
 
+// Returns a kept fz_image covering bounds, or nullptr to fall back to direct shade fill.
 fz_image* PdfDarkModeGetCachedShade(fz_context* ctx, DarkModePageAnalysis* analysis, fz_shade* shade, fz_matrix ctm,
                                     float alpha, fz_irect bounds, const DarkModePalette& palette) {
     if (!analysis || !shade) {

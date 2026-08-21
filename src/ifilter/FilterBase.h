@@ -139,13 +139,12 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     inline DWORD GetChunkId() const { return m_dwChunkId; }
 
   public:
-    FilterBase(long* plRefCount)
-        : m_lRef(1), m_plModuleRef(plRefCount), m_dwChunkId(0), m_iText(0), m_pStream(nullptr) {
-        InterlockedIncrement(m_plModuleRef);
+    FilterBase(AtomicInt* plRefCount) : m_lRef(1), m_plModuleRef(plRefCount), m_dwChunkId(0), m_iText(0) {
+        AtomicIntInc(m_plModuleRef);
     }
 
     virtual ~FilterBase() {
-        if (m_pStream) m_pStream->Release();
+        str::Free(m_data);
         InterlockedDecrement(m_plModuleRef);
     }
 
@@ -156,10 +155,10 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
                                     QITABENTMULTI(FilterBase, IPersist, IPersistStream),
                                     QITABENT(FilterBase, IInitializeWithStream),
                                     QITABENT(FilterBase, IFilter),
-                                    {0}};
+                                    {}};
         return QISearch(this, qit, riid, ppv);
     }
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
         if (cRef == 0) delete this;
@@ -229,11 +228,14 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
 
     // IInitializeWithStream
     IFACEMETHODIMP Initialize(IStream* pStm, __unused DWORD grfMode) {
-        if (m_pStream) m_pStream->Release();
-        m_pStream = pStm;
-        if (!m_pStream) return E_INVALIDARG;
-        m_pStream->AddRef();
-        return S_OK;
+        if (!pStm) return E_INVALIDARG;
+        // The shell hands us a deny-write stream, so keeping it alive locks the
+        // file for as long as this filter lives and an editor can't write over
+        // it while it's being indexed (issue #1530). Every filter reads the
+        // whole thing anyway, so read it here and let go of the file.
+        str::FreePtr(&m_data);
+        m_data = ReadIStream(pStm);
+        return str::IsNull(m_data) ? E_FAIL : S_OK;
     };
 
     // IPersistStream
@@ -244,37 +246,40 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
 
     // IPersistFile (for compatibility with older Windows Desktop Search versions and ifilttst.exe)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, __unused DWORD dwMode) {
-        HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL, nullptr);
+        // share everything: we only read, and denying writers would lock the
+        // file for the read the same way holding the shell's stream did
+        DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+        HANDLE hFile =
+            CreateFileW(pszFileName, GENERIC_READ, share, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE) return E_INVALIDARG;
-        DWORD size = GetFileSize(hFile, nullptr), read;
-        HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
+        DWORD size = GetFileSize(hFile, nullptr), read = 0;
+        char* data = AllocArray<char>((int)size + 1);
         if (!data) {
             CloseHandle(hFile);
             return E_OUTOFMEMORY;
         }
-        BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, nullptr);
-        GlobalUnlock(data);
+        BOOL ok = ReadFile(hFile, data, size, &read, nullptr);
         CloseHandle(hFile);
-
-        IStream* pStm;
-        if (!ok || FAILED(CreateStreamOnHGlobal(data, TRUE, &pStm))) {
-            GlobalFree(data);
+        if (!ok || read != size) {
+            free(data);
             return E_FAIL;
         }
-        HRESULT res = Initialize(pStm, 0);
-        pStm->Release();
-        return res;
+        str::FreePtr(&m_data);
+        m_data = Str(data, (int)size);
+        return S_OK;
     }
     IFACEMETHODIMP Save(__unused LPCOLESTR pszFileName, __unused BOOL bRemember) { return E_NOTIMPL; }
     IFACEMETHODIMP SaveCompleted(__unused LPCOLESTR pszFileName) { return E_NOTIMPL; }
     IFACEMETHODIMP GetCurFile(__unused LPOLESTR* ppszFileName) { return E_NOTIMPL; }
 
   protected:
-    IStream* m_pStream;
+    // the file's bytes, owned; filters read them in OnInit(), which can run
+    // again if IFilter::Init() is called for another pass
+    Str m_data;
 
   private:
-    long m_lRef, *m_plModuleRef;
+    AtomicInt m_lRef;
+    AtomicInt* m_plModuleRef;
 
     DWORD m_dwChunkId;
     DWORD m_iText;

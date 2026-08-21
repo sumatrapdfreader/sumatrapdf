@@ -1,0 +1,72 @@
+% title: Hyphenation patterns for Turkish
+% copyright: Copyright (C) 1987 Pierre A. MacKay, 2008, 2011 TUG
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Turkish
+%     tag: tr
+% authors:
+%     -
+%         name: Pierre A. MacKay
+%     -
+%         name: H. Turgut Uyar
+%         contact: uyar (at) itu.edu.tr
+%     -
+%         name: S. Ekin Kocabas
+%         contact: kocabas (at) stanford.edu
+%     -
+%         name: Mojca Miklavec
+% licence:
+%     name: LPPL
+%     version: 1
+%     or_later: true
+%     url: https://latex-project.org/lppl/lppl-1-0.html
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - 2008-06-25/27/28 - create this file by adapting Ottoman rules for modern Turkish
+%     - 2011-08-10 - add LPPL licence with permission of Pierre A. MacKay
+% texlive:
+%     encoding: ec
+%     babelname: turkish
+%     legacy_patterns: tkhyph.tex
+%     message: Turkish hyphenation patterns
+%     description: |-
+%         Hyphenation patterns for Turkish in T1/EC and UTF-8 encodings.
+%         Auto-generated from a script included in the distribution.
+%         The patterns for Turkish were first produced for the Ottoman Texts
+%         Project in 1987 and were suitable for both Modern Turkish and Ottoman
+%         Turkish in Latin script, however the required character set didn't fit
+%         into EC encoding, so support for Ottoman Turkish had to be dropped to
+%         keep compatibility with 8-bit engines.
+% ==========================================
+% This file is auto-generated from
+% source/generic/hyph-utf8/languages/tr/generate_patterns_tr.rb
+% that is part of hyph-utf8.
+% Please don't modify this file; modify the generating script instead.
+%
+% Credits:
+% - algorithm developed by P. A. MacKay for the Ottoman Texts Project in 1987
+% - rules adapted for modern Turkish by H. Turgut Uyar <uyar at itu.edu.tr>
+% - initiative to improve Turkish patterns by S. Ekin Kocabas <kocabas at stanford.edu>
+% - script written by Mojca Miklavec <mojca.miklavec.lists at gmail.com> in June 2008
+%
+% See also:
+% - http://mirror.ctan.org/language/turkish/hyphen/turk_hyf.c
+% - http://www.tug.org/TUGboat/Articles/tb09-1/tb20mackay.pdf
+%
+% Differences with Ottoman patterns:
+% - adapted for the use on modern TeX engines, using UTF-8 charactes
+% - only letters for Modern Turkish + âîû (the first one often needed, the other two don't hurt)
+% - (if needed, support for Ottoman Turkish might be provided separately under language code 'ota')
+%
+% prohibit hyphen before vowels, allow after
+% allow hyphen either side of consonants
+% prevent e-cek at end of word
+% prohibit hyphen before pair of consonants
+% many pairs generated here are impossible anyway
+% allow hyphen between vowels, but not after second vowel of pair
+% several phonetically impossible pairs here
+% a couple of consonant-clusters

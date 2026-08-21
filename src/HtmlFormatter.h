@@ -10,60 +10,10 @@ namespace Gdiplus {
 class Color;
 class Graphics;
 } // namespace Gdiplus
-
-namespace mui {
-struct CachedFont;
-class ITextRender;
-} // namespace mui
 #endif
 
-enum class PlatformFontStyle {
-    Regular = 0,
-    Bold = 1,
-    Italic = 2,
-    Underline = 4,
-    Strikeout = 8,
-};
-
-inline PlatformFontStyle operator|(PlatformFontStyle a, PlatformFontStyle b) {
-    return (PlatformFontStyle)((int)a | (int)b);
-}
-
-struct PlatformFont {
-    WStr name;
-    float sizePt = 0;
-    PlatformFontStyle style = PlatformFontStyle::Regular;
-#if OS_WIN
-    mui::CachedFont* cachedFont = nullptr;
-#endif
-
-    WStr GetName() const { return name; }
-    float GetSize() const { return sizePt; }
-    PlatformFontStyle GetStyle() const { return style; }
-#if OS_WIN
-    mui::CachedFont* GetCachedFont() const { return cachedFont; }
-#endif
-};
-
-enum class PlatformTextMeasureMethod {
-    Gdiplus,
-    GdiplusQuick,
-    Gdi,
-    Hdc,
-    Stub,
-};
-
-struct PlatformTextMeasurer {
-    virtual void SetFont(PlatformFont* font) = 0;
-    virtual float GetCurrFontLineSpacing() = 0;
-    virtual float GetSpaceDx() = 0;
-    virtual RectF Measure(WStr s) = 0;
-    virtual int StringLenForWidth(WStr s, float dx, float sWidth = -1) = 0;
-    virtual ~PlatformTextMeasurer() = default;
-};
-
-PlatformFont* GetPlatformFont(WStr name, float sizePt, PlatformFontStyle style);
-PlatformTextMeasurer* CreatePlatformTextMeasurer(PlatformTextMeasureMethod method);
+// PlatformFont / PlatformFontStyle live in gui/PlatformFont.h and the text
+// measuring API in gui/PlatformText.h; include them before this header
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
@@ -112,7 +62,6 @@ struct DrawInstr {
         return Str((char*)str.s, (int)str.len);
     }
 
-    // helper constructors for instructions that need additional arguments
     static DrawInstr Text(::Str s, RectF bbox, bool rtl = false);
     static DrawInstr Image(Str, RectF bbox);
     static DrawInstr SetFont(PlatformFont* font);
@@ -186,6 +135,7 @@ struct HtmlFormatterArgs {
     WStr GetFontName() const { return fontName; }
 
     float fontSize = 0;
+    bool overrideFontName = false;
 
     /* Strings stored in DrawInstr must outlive the formatter (they are
        used for the lifetime of the engine). Strings that don't point into
@@ -244,7 +194,6 @@ struct HtmlFormatter {
     bool EmitImage(Str img);
     void EmitHr();
     void EmitTextRun(::Str s);
-    // emits a synthetic, persistent string (e.g. a list bullet/number)
     void EmitTextMarker(::Str s);
     void EmitElasticSpace();
     void EmitParagraph(float indent);
@@ -255,7 +204,7 @@ struct HtmlFormatter {
 
     DrawStyle* CurrStyle() { return &styleStack.Last(); }
     PlatformFont* CurrFont() { return CurrStyle()->font; }
-    void SetFont(WStr fontName, PlatformFontStyle fs, float fontSize = -1);
+    void SetFont(Str fontName, PlatformFontStyle fs, float fontSize = -1);
     void SetFontBasedOn(PlatformFont* origFont, PlatformFontStyle fs, float fontSize = -1);
     void ChangeFontStyle(PlatformFontStyle fs, bool addStyle);
     void SetAlignment(AlignAttr align);
@@ -269,7 +218,7 @@ struct HtmlFormatter {
     bool IsCurrLineEmpty();
     virtual bool IgnoreText();
 
-    RectF MeasureTextCached(WStr s);
+    RectF MeasureTextCached(Str s);
 
     void DumpLineDebugInfo();
 
@@ -278,10 +227,11 @@ struct HtmlFormatter {
     float pageDy = 0;
     float lineSpacing = 0;
     float spaceDx = 0;
-    WStr defaultFontName;
+    Str defaultFontName;
     float defaultFontSize = 0;
+    bool overrideFontName = false;
     Arena* textAllocator = nullptr;
-    PlatformTextMeasurer* textMeasure = nullptr;
+    PlatformTextRender* textMeasure = nullptr;
 
     // Cache of measured text. We assume few distinct fonts, so each font gets
     // its own hash table (keyed by text only). If we ever see more than
@@ -363,8 +313,8 @@ struct HtmlFormatter {
 };
 
 #if OS_WIN
-void DrawHtmlPage(Gdiplus::Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Gdiplus::Color textColor, bool* abortCookie = nullptr);
+void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
+                  float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr);
 #endif
 
 PlatformTextMeasureMethod GetTextRenderMethod();

@@ -3,9 +3,9 @@
 
 #include "base/Base.h"
 
-u64 arena_default_reserve_size = 64ull * 1024ull * 1024ull;
-u64 arena_default_commit_size = 64ull * 1024ull;
-ArenaFlags arena_default_flags = 0;
+u64 gArenaDefaultReserveSize = 64ull * 1024ull * 1024ull;
+u64 gArenaDefaultCommitSize = 64ull * 1024ull;
+ArenaFlags gArenaDefaultFlags = 0;
 
 static u64 ArenaAlignPow2(u64 value, u64 align) {
     if (align <= 1) {
@@ -39,7 +39,7 @@ void* ArenaReserveAndCommit(u64 size, bool largePages);
 void ArenaReleaseMemory(void* base, u64 size);
 
 static void ArenaRelease(Arena* arena) {
-    ArenaReleaseMemory(arena, arena->res);
+    ArenaReleaseMemory(arena, arena->reserved);
 }
 
 static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
@@ -54,15 +54,13 @@ static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
     }
 
     u64 pos = ArenaAlignPow2(current->pos, 8);
-    if (pos >= current->cmt) {
+    if (pos >= current->committed) {
         *bufSizeOut = 0;
         return nullptr;
     }
 
-    u64 available = current->cmt - pos;
-    if (available > 0x7fffffff) {
-        available = 0x7fffffff;
-    }
+    u64 available = current->committed - pos;
+    available = std::min<u64>(available, 0x7fffffff);
     *bufSizeOut = (int)available;
     return (char*)current + pos;
 }
@@ -80,24 +78,24 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     u64 posPost = posPre + size;
 
     u64 sizeToZero = 0;
-    if (zero && current->cmt > posPre) {
-        sizeToZero = ArenaMin(current->cmt, posPost) - posPre;
+    if (zero && current->committed > posPre) {
+        sizeToZero = ArenaMin(current->committed, posPost) - posPre;
     }
 
-    if (current->res < posPost && !(arena->flags & ArenaFlag_NoChain)) {
-        u64 resSize = current->res_size;
-        u64 cmtSize = current->cmt_size;
-        if (size + ARENA_HEADER_SIZE > resSize) {
-            resSize = ArenaAlignPow2(size + ARENA_HEADER_SIZE, ArenaMax(align, ArenaPageSize()));
-            cmtSize = resSize;
+    if (current->reserved < posPost && !(arena->flags & ArenaFlagNoChain)) {
+        u64 reserveChunkSize = current->reserveChunkSize;
+        u64 commitChunkSize = current->commitChunkSize;
+        if (size + kArenaHeaderSize > reserveChunkSize) {
+            reserveChunkSize = ArenaAlignPow2(size + kArenaHeaderSize, ArenaMax(align, ArenaPageSize()));
+            commitChunkSize = reserveChunkSize;
         }
 
         ArenaParams newParams = {};
         newParams.flags = current->flags;
-        newParams.reserve_size = resSize;
-        newParams.commit_size = cmtSize;
-        newParams.allocation_site_file = current->allocation_site_file;
-        newParams.allocation_site_line = current->allocation_site_line;
+        newParams.reserveSize = reserveChunkSize;
+        newParams.commitSize = commitChunkSize;
+        newParams.allocationSiteFile = current->allocationSiteFile;
+        newParams.allocationSiteLine = current->allocationSiteLine;
         newParams.name = current->name;
 
         Arena* newBlock = ArenaNew(newParams);
@@ -105,7 +103,7 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
             return nullptr;
         }
 
-        newBlock->base_pos = current->base_pos + current->res;
+        newBlock->basePos = current->basePos + current->reserved;
         newBlock->prev = current;
         arena->current = newBlock;
         current = newBlock;
@@ -114,22 +112,22 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
         sizeToZero = 0;
     }
 
-    if (current->cmt < posPost) {
-        if (current->flags & ArenaFlag_LargePages) {
+    if (current->committed < posPost) {
+        if (current->flags & ArenaFlagLargePages) {
             return nullptr;
         }
 
-        u64 commitEnd = ArenaAlignPow2(posPost, current->cmt_size);
-        u64 commitClamped = ArenaClampTop(commitEnd, current->res);
-        u64 commitSize = commitClamped - current->cmt;
-        void* commitPtr = (char*)current + current->cmt;
+        u64 commitEnd = ArenaAlignPow2(posPost, current->commitChunkSize);
+        u64 commitClamped = ArenaClampTop(commitEnd, current->reserved);
+        u64 commitSize = commitClamped - current->committed;
+        void* commitPtr = (char*)current + current->committed;
         if (!ArenaCommit(commitPtr, commitSize, false)) {
             return nullptr;
         }
-        current->cmt = commitClamped;
+        current->committed = commitClamped;
     }
 
-    if (current->cmt < posPost) {
+    if (current->committed < posPost) {
         return nullptr;
     }
 
@@ -140,13 +138,9 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     // chained blocks). peak is the high-water mark of total bytes used.
     arena->nAllocsLifetime++;
     arena->nAllocsSinceReset++;
-    u64 used = current->base_pos + posPost;
-    if (used > arena->peakBytesLifetime) {
-        arena->peakBytesLifetime = used;
-    }
-    if (used > arena->peakBytesSinceReset) {
-        arena->peakBytesSinceReset = used;
-    }
+    u64 used = current->basePos + posPost;
+    arena->peakBytesLifetime = std::max(used, arena->peakBytesLifetime);
+    arena->peakBytesSinceReset = std::max(used, arena->peakBytesSinceReset);
 
     if (sizeToZero) {
         memset(result, 0, (size_t)sizeToZero);
@@ -156,28 +150,28 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
 
 ArenaParams ArenaDefaultParams() {
     ArenaParams params = {};
-    params.flags = arena_default_flags;
-    params.reserve_size = arena_default_reserve_size;
-    params.commit_size = arena_default_commit_size;
+    params.flags = gArenaDefaultFlags;
+    params.reserveSize = gArenaDefaultReserveSize;
+    params.commitSize = gArenaDefaultCommitSize;
     return params;
 }
 
 Arena* ArenaNew(const ArenaParams& srcParams) {
     ArenaParams params = srcParams;
-    if (params.reserve_size == 0) {
-        params.reserve_size = arena_default_reserve_size;
+    if (params.reserveSize == 0) {
+        params.reserveSize = gArenaDefaultReserveSize;
     }
-    if (params.commit_size == 0) {
-        params.commit_size = arena_default_commit_size;
+    if (params.commitSize == 0) {
+        params.commitSize = gArenaDefaultCommitSize;
     }
 
-    bool useLargePages = (params.flags & ArenaFlag_LargePages) != 0;
+    bool useLargePages = (params.flags & ArenaFlagLargePages) != 0;
     const u64 pageSize = useLargePages ? ArenaLargePageSize() : ArenaPageSize();
-    u64 reserveSize = ArenaAlignPow2(ArenaMax(params.reserve_size, ARENA_HEADER_SIZE), pageSize);
-    u64 commitSize = ArenaAlignPow2(ArenaMax(params.commit_size, ARENA_HEADER_SIZE), pageSize);
+    u64 reserveSize = ArenaAlignPow2(ArenaMax(params.reserveSize, kArenaHeaderSize), pageSize);
+    u64 commitSize = ArenaAlignPow2(ArenaMax(params.commitSize, kArenaHeaderSize), pageSize);
     commitSize = ArenaClampTop(commitSize, reserveSize);
 
-    void* base = params.optional_backing_buffer;
+    void* base = params.optionalBackingBuffer;
     bool usesExternalBuffer = (base != nullptr);
     ArenaFlags actualFlags = params.flags;
 
@@ -187,7 +181,7 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
             if (base) {
                 commitSize = reserveSize;
             } else {
-                actualFlags &= ~ArenaFlag_LargePages;
+                actualFlags &= ~ArenaFlagLargePages;
                 useLargePages = false;
                 reserveSize = ArenaAlignPow2(reserveSize, ArenaPageSize());
                 commitSize = ArenaAlignPow2(commitSize, ArenaPageSize());
@@ -209,21 +203,21 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
         return nullptr;
     }
 
-    memset(base, 0, (size_t)std::min<u64>(commitSize, ARENA_HEADER_SIZE));
+    memset(base, 0, (size_t)std::min<u64>(commitSize, kArenaHeaderSize));
     Arena* arena = (Arena*)base;
     arena->prev = nullptr;
     arena->current = arena;
     arena->flags = actualFlags;
-    arena->cmt_size = useLargePages ? reserveSize : commitSize;
-    arena->res_size = reserveSize;
-    arena->base_pos = 0;
-    arena->pos = ARENA_HEADER_SIZE;
-    arena->cmt = commitSize;
-    arena->res = reserveSize;
-    arena->allocation_site_file = params.allocation_site_file;
-    arena->allocation_site_line = params.allocation_site_line;
+    arena->commitChunkSize = useLargePages ? reserveSize : commitSize;
+    arena->reserveChunkSize = reserveSize;
+    arena->basePos = 0;
+    arena->pos = kArenaHeaderSize;
+    arena->committed = commitSize;
+    arena->reserved = reserveSize;
+    arena->allocationSiteFile = params.allocationSiteFile;
+    arena->allocationSiteLine = params.allocationSiteLine;
     arena->name = params.name;
-    arena->uses_external_buffer = usesExternalBuffer;
+    arena->usesExternalBuffer = usesExternalBuffer;
     arena->nAllocsLifetime = 0;
     arena->peakBytesLifetime = 0;
     arena->nAllocsSinceReset = 0;
@@ -239,7 +233,7 @@ void ArenaDelete(Arena* arena) {
     Arena* node = arena->current;
     while (node) {
         Arena* prev = node->prev;
-        if (!node->uses_external_buffer) {
+        if (!node->usesExternalBuffer) {
             ArenaRelease(node);
         }
         node = prev;
@@ -262,7 +256,7 @@ u64 Arena::Pos() {
         return 0;
     }
     Arena* current = arena->current;
-    return current->base_pos + current->pos;
+    return current->basePos + current->pos;
 }
 
 void Arena::PopTo(u64 pos) {
@@ -273,14 +267,14 @@ void Arena::PopTo(u64 pos) {
 
     lock.Lock();
 
-    u64 bigPos = ArenaClampBot(ARENA_HEADER_SIZE, pos);
+    u64 bigPos = ArenaClampBot(kArenaHeaderSize, pos);
     Arena* current = arena->current;
-    while (current && current->base_pos >= bigPos) {
+    while (current && current->basePos >= bigPos) {
         Arena* prev = current->prev;
-        if (!current->uses_external_buffer) {
+        if (!current->usesExternalBuffer) {
             ArenaRelease(current);
         } else {
-            current->pos = ARENA_HEADER_SIZE;
+            current->pos = kArenaHeaderSize;
         }
         current = prev;
     }
@@ -291,7 +285,7 @@ void Arena::PopTo(u64 pos) {
     }
 
     arena->current = current;
-    u64 newPos = bigPos - current->base_pos;
+    u64 newPos = bigPos - current->basePos;
     ReportIf(newPos > current->pos);
     current->pos = newPos;
     lock.Unlock();
@@ -303,15 +297,77 @@ void Arena::Pop(u64 amt) {
     PopTo(posNew);
 }
 
-ArenaSavepoint ArenaGetSavepoint(Arena* arena) {
+ArenaSavepoint GetArenaSavepoint(Arena* arena) {
     ArenaSavepoint temp = {arena, arena ? arena->Pos() : 0};
     return temp;
 }
 
-void ArenaRestoreSavepoint(ArenaSavepoint temp) {
+void RestoreArenaSavepoint(ArenaSavepoint temp) {
     if (temp.arena) {
         temp.arena->PopTo(temp.pos);
     }
+}
+
+// ArenaPtrCompress / ArenaPtrUncompress: store a pointer as a u32 offset from
+// the first block in the arena chain. The head has basePos 0; each chained
+// block has basePos = sum of previous blocks' reserved. nullptr compresses to 0.
+// Pointers must belong to this arena (any block). Offsets beyond u32 fail.
+
+// Walk current -> prev to find the block whose reserved range contains ptr.
+static Arena* ArenaFindBlockContaining(Arena* arena, const void* ptr) {
+    for (Arena* block = arena->current; block; block = block->prev) {
+        char* base = (char*)block;
+        if ((const char*)ptr >= base && (const char*)ptr < base + block->reserved) {
+            return block;
+        }
+    }
+    return nullptr;
+}
+
+// Walk current -> prev to find the block whose basePos range contains offset.
+static Arena* ArenaFindBlockForOffset(Arena* arena, u64 offset) {
+    for (Arena* block = arena->current; block; block = block->prev) {
+        if (offset >= block->basePos && offset < block->basePos + block->reserved) {
+            return block;
+        }
+    }
+    return nullptr;
+}
+
+u32 ArenaPtrCompress(Arena* arena, void* ptr) {
+    if (!arena || !ptr) {
+        return 0;
+    }
+    arena->lock.Lock();
+    Arena* block = ArenaFindBlockContaining(arena, ptr);
+    if (!block) {
+        arena->lock.Unlock();
+        ReportIf(true);
+        return 0;
+    }
+    u64 off = block->basePos + (u64)((char*)ptr - (char*)block);
+    arena->lock.Unlock();
+    if (off > 0xffffffffull) {
+        ReportIf(true);
+        return 0;
+    }
+    return (u32)off;
+}
+
+void* ArenaPtrUncompress(Arena* arena, u32 compressed) {
+    if (!arena || compressed == 0) {
+        return nullptr;
+    }
+    arena->lock.Lock();
+    Arena* block = ArenaFindBlockForOffset(arena, compressed);
+    if (!block) {
+        arena->lock.Unlock();
+        ReportIf(true);
+        return nullptr;
+    }
+    void* ptr = (char*)block + (compressed - block->basePos);
+    arena->lock.Unlock();
+    return ptr;
 }
 
 void* Arena::Alloc(int size) {
@@ -319,10 +375,6 @@ void* Arena::Alloc(int size) {
         return nullptr;
     }
     return Push((u64)size, 8, false);
-}
-
-void Arena::Free(void* ptr) {
-    (void)ptr;
 }
 
 void Arena::Reset() {
@@ -371,6 +423,8 @@ void* Arena::CommitReserved(void* mem, int size) {
     return dst;
 }
 
+// size_t overloads that match the legacy Allocator::* static helper API
+// and fall back to malloc/free when arena is nullptr.
 void* Alloc(Arena* arena, int size) {
     if (size <= 0) {
         return nullptr;
@@ -382,16 +436,13 @@ void* Alloc(Arena* arena, int size) {
 }
 
 void Free(Arena* arena, void* mem) {
-    if (!mem) {
-        return;
-    }
-    if (!arena) {
-        free(mem);
-        return;
-    }
-    arena->Free(mem);
+    // Arena has no free
+    if (arena) return;
+    free(mem);
 }
 
+// size_t overloads that match the legacy Allocator::* static helper API
+// and fall back to malloc/free when arena is nullptr.
 void* Alloc(Arena* arena, size_t size) {
     if (size == 0) {
         return nullptr;
@@ -430,9 +481,7 @@ void* Realloc(Arena* arena, void* mem, size_t newSize, size_t copySize) {
         // Arena bump allocations can end up adjacent to (and overlapping) the
         // old block; memmove handles that. copySize is the caller's used bytes.
         size_t n = copySize;
-        if (n > newSize) {
-            n = newSize;
-        }
+        n = std::min(n, newSize);
         memmove(newMem, mem, n);
     }
     return newMem;
@@ -498,7 +547,7 @@ void* AllocTemp(int size, u64 align) {
 // allocate null-terminated string
 Str AllocStrTemp(int size) {
     if (size == 0) {
-        return Str();
+        return {};
     }
     Arena* arena = GetTempArena();
     char* res = (char*)arena->Push((u64)size + 1, 1, false);
@@ -506,39 +555,53 @@ Str AllocStrTemp(int size) {
     return Str(res, size);
 }
 
-void* ReallocMem(Arena* arena, void* els, int* cap, int newCap, int elSize) {
-    if (newCap <= 0 || elSize <= 0) {
-        return els;
+// Grow/shrink vec storage to newCap elements, plus one trailing zero-pad
+// element (so Vec<char>/Vec<WCHAR> stay C-string compatible).
+// Keeps the first min(len, newCap) elements; zeros the rest of the new block.
+// Updates *els and *cap. len is not modified (caller owns logical length).
+// Grow/shrink vec-like storage to newCap elements (+1 trailing zero pad).
+// Updates *els and *cap; keeps min(len, newCap) elements.
+NO_INLINE bool VecRealloc(Arena* a, void** els, int len, int* cap, int newCap, int elSize) {
+    // newCap+1 must fit in int; newElCount * elSize must not overflow.
+    if (elSize <= 0 || newCap < 0 || newCap > INT_MAX - 1) {
+        return false;
+    }
+    int newElCount = newCap + 1;
+    if (newElCount > INT_MAX / elSize) {
+        return false;
     }
 
-    int newSize = newCap * elSize;
-    if (!arena) {
-        void* newEls = realloc(els, newSize);
-        if (!newEls) {
-            return els;
-        }
-        *cap = newCap;
-        return newEls;
-    }
+    int keep = len;
+    keep = std::max(keep, 0);
+    keep = std::min(keep, newCap);
+    int oldSize = keep * elSize;
+    int allocSize = newElCount * elSize;
 
-    void* newEls = arena->Alloc(newSize);
+    // Realloc(a, nullptr, n, 0) is malloc-like; single path for first alloc and grow.
+    void* newEls = Realloc(a, *els, (size_t)allocSize, (size_t)oldSize);
     if (!newEls) {
-        return els;
+        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
+        return false;
     }
-
-    if (els && *cap > 0) {
-        int oldSize = *cap * elSize;
-        memcpy(newEls, els, oldSize);
+    int tail = allocSize - oldSize;
+    if (tail > 0) {
+        memset((char*)newEls + oldSize, 0, (size_t)tail);
     }
-
+    *els = newEls;
     *cap = newCap;
-    return newEls;
+    return true;
 }
 
-void* ReallocToWantedSize(Arena* arena, void* els, int* cap, int wantedSize, int elSize) {
-    int newCap = (*cap == 0) ? 8 : *cap * 2;
-    while (newCap < wantedSize) {
-        newCap *= 2;
+// Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
+// logging is torn down.
+void LogArenaStats(Str what, Arena* a) {
+    if (!a) {
+        return;
     }
-    return ReallocMem(arena, els, cap, newCap, elSize);
+    u64 nAllocs = a->nAllocsLifetime;
+    u64 peakBytes = a->peakBytesLifetime;
+    char human[32];
+    FormatSizeHumanIntoBuf(peakBytes, Str(human, sizeofi(human)));
+    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
+         str::FormatNumWithThousandSepTemp((i64)peakBytes), Str(human));
 }

@@ -3,9 +3,12 @@
 
 #include "base/Base.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 
 #include "FilterHighlightDraw.h"
 #include "CommandPalette.h"
@@ -32,25 +35,18 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     }
 
     bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false;
-    if (str::StartsWith(filter, kPalettePrefixEverything)) {
-        filter = Str(filter.s + 1);
+    if (str::TrimPrefix(filter, kPalettePrefixEverything)) {
         searchTabs = searchHistory = searchCommands = true;
-    } else if (str::StartsWith(filter, kPalettePrefixTabs)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixTabs)) {
         searchTabs = true;
-    } else if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixFileHistory)) {
         searchHistory = true;
-    } else if (str::StartsWith(filter, kPalettePrefixTOC)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixTOC) || str::TrimPrefix(filter, kPalettePrefixTOCLegacy)) {
         searchToc = true;
-    } else if (str::StartsWith(filter, kPalettePrefixFavorites)) {
-        filter = Str(filter.s + 1);
+    } else if (str::TrimPrefix(filter, kPalettePrefixFavorites)) {
         searchFavorites = true;
     } else {
-        if (str::StartsWith(filter, kPalettePrefixCommands)) {
-            filter = Str(filter.s + 1);
-        }
+        str::TrimPrefix(filter, kPalettePrefixCommands);
         searchCommands = true;
     }
 
@@ -77,7 +73,7 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
 void CommandPaletteWnd::QueryChanged() {
     Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
     int currSelIdx = 0;
-    auto m = (ListBoxModelCP*)listBox->model;
+    auto* m = (ListBoxModelCP*)listBox->model;
     int nItemsPrev = m->ItemsCount();
     if (smartTabMode) {
         if (!stickyMode) {
@@ -97,7 +93,8 @@ void CommandPaletteWnd::QueryChanged() {
         CommandPaletteSetCurrentSelection(this, currSelIdx);
         return;
     }
-    if (str::StartsWith(filter, kPalettePrefixTOC) && len(filterWords) == 0) {
+    if ((str::StartsWith(filter, kPalettePrefixTOC) || str::StartsWith(filter, kPalettePrefixTOCLegacy)) &&
+        len(filterWords) == 0) {
         int idx = (currTocIdx >= 0 && currTocIdx < nItems) ? currTocIdx : 0;
         CommandPaletteSetCurrentSelection(this, idx);
         return;

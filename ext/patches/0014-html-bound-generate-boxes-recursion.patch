@@ -1,0 +1,46 @@
+html: bound generate_boxes() recursion so deeply nested markup cannot blow the stack
+
+Deeply nested markup recursed generate_boxes() until the stack overflowed.
+
+Bound the depth at 500 and unwind through the existing `end:` label, which
+means the save_* locals have to be assigned after the guard rather than at
+their declarations.
+---
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index 8e297c0..5329044 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -1404,12 +1404,21 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
+ 	const char *lang_att;
+ 	const char *dir_att;
+ 
+-	int save_markup_dir = g->markup_dir;
+-	int save_markup_lang = g->markup_lang;
+-	char *save_href = g->href;
++	int save_markup_dir;
++	int save_markup_lang;
++	char *save_href;
+ 
+-	if (display == DIS_NONE)
++	/* Limit recursion depth to prevent stack overflow on deeply nested HTML. */
++	if (g->depth > 500)
+ 		return;
++	g->depth++;
++
++	save_markup_dir = g->markup_dir;
++	save_markup_lang = g->markup_lang;
++	save_href = g->href;
++
++	if (display == DIS_NONE)
++		goto end;
+ 
+ 	if (g->depth > 100)
+ 	{
+@@ -1554,6 +1563,7 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
+ 	}
+ 
+ end:
++	g->depth--;
+ 	g->markup_dir = save_markup_dir;
+ 	g->markup_lang = save_markup_lang;
+ 	g->href = save_href;

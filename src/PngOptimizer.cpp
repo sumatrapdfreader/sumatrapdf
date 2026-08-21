@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/Pixmap.h"
 #include "base/Timer.h"
 
 #include "zopflipng/zopflipng_lib.h"
@@ -21,8 +22,8 @@ constexpr int kMaxPngSizeToOptimize = 16 * 1024 * 1024;
 // offset (IHDR is always first and fixed-size), so detection is a memcmp of
 // the file's first kMarkerOffset + kMarkerChunkSize bytes.
 static const char kMarkerPayload[] = "Software\0SumatraPDF zopfli";
-constexpr int kMarkerPayloadLen = (int)sizeof(kMarkerPayload) - 1; // sans implicit terminating NUL
-constexpr int kMarkerChunkSize = 4 + 4 + kMarkerPayloadLen + 4;    // length + type + payload + crc
+constexpr int kMarkerPayloadLen = sizeofi(kMarkerPayload) - 1;  // sans implicit terminating NUL
+constexpr int kMarkerChunkSize = 4 + 4 + kMarkerPayloadLen + 4; // length + type + payload + crc
 // 8-byte PNG signature + IHDR chunk (4 length + 4 type + 13 data + 4 crc)
 constexpr int kMarkerOffset = 8 + 25;
 
@@ -147,10 +148,138 @@ static void OptimizePngThread(OptimizePngData* d) {
 // is not a .png file, so it's safe to call unconditionally after saving an
 // image in a user-selected format.
 void OptimizePngFileAsync(Str path) {
-    if (!str::EndsWithI(path, ".png")) {
+    if (!str::EndsWithI(path, StrL(".png"))) {
         return;
     }
-    auto d = new OptimizePngData();
+    auto* d = new OptimizePngData();
     d->path = str::Dup(path);
     RunAsync(MkFunc0(OptimizePngThread, d), "OptimizePngThread");
+}
+
+struct OptimizePngFilesData {
+    StrVec paths;
+};
+
+static void OptimizePngFilesThread(OptimizePngFilesData* d) {
+    int n = len(d->paths);
+    for (int i = 0; i < n; i++) {
+        Str p = d->paths[i];
+        if (str::EndsWithI(p, StrL(".png"))) {
+            OptimizePngFile(p);
+        }
+    }
+    delete d;
+}
+
+// Same as OptimizePngFileAsync for each .png path, one after another on a
+// single background thread so converting many pages does not spawn one
+// zopfli thread per file
+void OptimizePngFilesAsync(const StrVec& paths) {
+    auto* d = new OptimizePngFilesData();
+    int n = len(paths);
+    for (int i = 0; i < n; i++) {
+        Str p = paths[i];
+        if (str::EndsWithI(p, StrL(".png"))) {
+            d->paths.Append(p);
+        }
+    }
+    if (len(d->paths) == 0) {
+        delete d;
+        return;
+    }
+    RunAsync(MkFunc0(OptimizePngFilesThread, d), "OptimizePngFilesThread");
+}
+
+// Pack pixmap pixels as tightly packed RGBA8 for lodepng_encode32.
+static u8* PixmapToRgbaContiguous(const Pixmap* px) {
+    if (!px || !px->data || px->width <= 0 || px->height <= 0) {
+        return nullptr;
+    }
+    int w = px->width;
+    int h = px->height;
+    int n = w * h * 4;
+    u8* rgba = (u8*)malloc((size_t)n);
+    if (!rgba) {
+        return nullptr;
+    }
+    for (int y = 0; y < h; y++) {
+        const u8* src = px->data + ((ptrdiff_t)y * px->stride);
+        u8* dst = rgba + ((ptrdiff_t)y * w * 4);
+        if (px->format == PixmapFormat::RGBA8) {
+            memcpy(dst, src, (size_t)w * 4);
+        } else if (px->format == PixmapFormat::BGRA8) {
+            for (int x = 0; x < w; x++) {
+                dst[0] = src[2]; // R
+                dst[1] = src[1]; // G
+                dst[2] = src[0]; // B
+                dst[3] = src[3]; // A
+                src += 4;
+                dst += 4;
+            }
+        } else if (px->format == PixmapFormat::BGR8) {
+            for (int x = 0; x < w; x++) {
+                dst[0] = src[2];
+                dst[1] = src[1];
+                dst[2] = src[0];
+                dst[3] = 255;
+                src += 3;
+                dst += 4;
+            }
+        } else {
+            free(rgba);
+            return nullptr;
+        }
+    }
+    return rgba;
+}
+
+// Losslessly recompress PNG bytes with zopfli. Returns owned Str (may be the
+// original duplicated if optimize fails or does not shrink). Caller frees.
+static Str OptimizePngBytesOwned(Str png) {
+    int nOrig = len(png);
+    if (nOrig == 0) {
+        return {};
+    }
+    if (nOrig > kMaxPngSizeToOptimize) {
+        return str::Dup(png);
+    }
+    CZopfliPNGOptions opts;
+    CZopfliPNGSetDefaults(&opts);
+    unsigned char* out = nullptr;
+    size_t outSize = 0;
+    int err = CZopfliPNGOptimize((const unsigned char*)png.s, (size_t)nOrig, &opts, 0, &out, &outSize);
+    if (err != 0 || !out || outSize == 0 || outSize >= (size_t)nOrig) {
+        free(out);
+        return str::Dup(png);
+    }
+    Str res = str::Dup(Str((char*)out, (int)outSize));
+    free(out);
+    return res;
+}
+
+Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
+    if (!px) {
+        return {};
+    }
+    u8* rgba = PixmapToRgbaContiguous(px);
+    if (!rgba) {
+        return {};
+    }
+    unsigned char* pngOut = nullptr;
+    size_t pngSize = 0;
+    unsigned err = lodepng_encode32(&pngOut, &pngSize, rgba, (unsigned)px->width, (unsigned)px->height);
+    free(rgba);
+    if (err != 0 || !pngOut || pngSize == 0) {
+        free(pngOut);
+        logf("EncodeAndOptimizePngFromPixmap: lodepng_encode32 failed, err=%u\n", err);
+        return {};
+    }
+    Str rawPng((char*)pngOut, (int)pngSize);
+    Str optimized = OptimizePngBytesOwned(rawPng);
+    free(pngOut);
+    if (len(optimized) > 0) {
+        logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, (int)pngSize,
+             len(optimized));
+    }
+    return optimized;
 }

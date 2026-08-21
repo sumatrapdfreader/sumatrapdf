@@ -10,7 +10,7 @@ enum TEX_FILTER_STATE {
 
 class TeXFilter : public FilterBase {
   public:
-    TeXFilter(long* plRefCount)
+    TeXFilter(AtomicInt* plRefCount)
         : FilterBase(plRefCount),
           m_state(STATE_TEX_END),
           m_pData(nullptr),

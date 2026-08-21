@@ -9,13 +9,13 @@
 //   - AllowExternalImages = true  -> the image renders (canvas has color)
 //   - AllowExternalImages = false -> blank (secure default; image not loaded)
 //
-// Run:  bun tests/issue-3731.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-3731.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
-import { launchSumatra, waitForFrame, findCanvas } from "./win-automation.ts";
-import { sleep, captureWindowToPng } from "./winapi.ts";
+import { launchControlled, findCanvas, killAndWait } from "./win-automation.ts";
+import { captureWindowToPng } from "./winapi.ts";
 
 // build a PDF whose only image is an external-file stream (/F + /FFilter), with
 // an empty embedded stream. imgName sits next to the PDF; w/h are the image dims
@@ -79,45 +79,21 @@ function distinctColors(png: string): number {
 }
 
 async function renderDistinctColors(pdf: string, appdata: string, label: string): Promise<number> {
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = launchSumatra(["-appdata", appdata, pdf]);
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
-    const frame = await waitForFrame(proc.pid!);
-    const png = tmpPath(`issue-3731-${label}.png`);
-    // Capture once external decode + paint has *settled* rather than at a fixed
-    // delay: under full-suite load 2s wasn't enough and we'd catch an
-    // intermediate paint state (a count between the denied ~2 and rendered ~450),
-    // failing spuriously. Poll until the color count is stable across two
-    // consecutive captures (the canvas is static once rendering finishes).
-    let prev = -1;
-    let val = 0;
-    let stable = 0;
-    const deadline = Date.now() + 15000;
-    while (Date.now() < deadline) {
-      await sleep(500);
-      const canvas = findCanvas(frame);
-      if (!canvas) {
-        continue;
-      }
-      if (!captureWindowToPng(canvas, png)) {
-        throw new Error("capture failed");
-      }
-      val = distinctColors(png);
-      if (val === prev) {
-        stable++;
-        if (stable >= 2) {
-          break;
-        }
-      } else {
-        stable = 0;
-        prev = val;
-      }
+    await client.waitForRenderIdle();
+    const canvas = findCanvas(frame);
+    if (!canvas) {
+      throw new Error("canvas not found");
     }
-    return val;
+    const png = tmpPath(`issue-3731-${label}.png`);
+    if (!captureWindowToPng(canvas, png)) {
+      throw new Error("capture failed");
+    }
+    return distinctColors(png);
   } finally {
-    proc.kill();
-    await sleep(300);
+    client.close();
+    await killAndWait(proc);
   }
 }
 

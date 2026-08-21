@@ -4,7 +4,7 @@ Favorites let you save important places in documents and jump back to them later
 
 ## Add a favorite
 
-Press `Ctrl + B` to add the current page to favorites.
+Press `Ctrl + B` to add the current page to favorites. The favorite stores the page **and** how far you had scrolled on it, so jumping back returns you to the same place on the page, not only the top.
 
 You can also use `Ctrl + K` command palette and run `Add Favorite`.
 
@@ -45,5 +45,23 @@ After saving, pressing `b` opens the command palette directly in favorites mode.
 You can also use `CmdCommandPalette` with a `$` mode argument, but in settings
 files a literal `$` must be escaped as `$$` (e.g. `Cmd = CmdCommandPalette $$`).
 Prefer `CmdCommandPaletteFavorites` to avoid that.
+
+## Favorites button on the toolbar
+
+Add `ToolbarText` (or `ToolbarSvgIcon`) on the same shortcut entry to put a
+button on the toolbar. The button opens the same floating list as `Ctrl + K`
+then `$`. See [Customize toolbar](Customize-toolbar.md).
+
+```
+Shortcuts [
+    [
+        Cmd = CmdCommandPaletteFavorites
+        Name = Favorites
+        ToolbarText = $
+    ]
+]
+```
+
+`Name` is the tooltip. The button is added after the built-in toolbar buttons.
 
 See [customize keyboard shortcuts](Customize-keyboard-shortcuts.md) for details.

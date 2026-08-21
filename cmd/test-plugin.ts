@@ -40,9 +40,7 @@ async function main() {
   copyFileSync(sumatraExe, testPluginExe);
   console.log(`copied ${sumatraExe} -> ${testPluginExe}`);
 
-  console.log(
-    `running: ${testPluginExe} -test-plugin ${sumatraExe} "${pdfFile}"`,
-  );
+  console.log(`running: ${testPluginExe} -test-plugin ${sumatraExe} "${pdfFile}"`);
   await runLogged(testPluginExe, ["-test-plugin", sumatraExe, pdfFile]);
 }
 

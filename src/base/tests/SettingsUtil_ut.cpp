@@ -156,13 +156,13 @@ Key = Value";
         str::Free(reserializedBs);
         data->internal++;
     }
-    utassert(str::Eq(data->color, "#abcdef"));
-    utassert(str::Eq(data->escapedString.s, "\t\r\n$ "));
-    utassert(str::Eq(data->escapedUtf8String.s, "\r\n[]\t"));
+    utassert(str::Eq(data->color, StrL("#abcdef")));
+    utassert(str::Eq(data->escapedString.s, StrL("\t\r\n$ ")));
+    utassert(str::Eq(data->escapedUtf8String.s, StrL("\r\n[]\t")));
     utassert(2 == len(*data->intArray) && 3 == (*data->intArray)[0]);
     utassert(3 == len(*data->strArray) && 0 == len(*data->emptyStrArray));
-    utassert(str::Eq((*data->strArray)[0], "with space") && str::Eq((*data->strArray)[1], "plain") &&
-             str::Eq((*data->strArray)[2], "quote:\""));
+    utassert(str::Eq((*data->strArray)[0], StrL("with space")) && str::Eq((*data->strArray)[1], StrL("plain")) &&
+             str::Eq((*data->strArray)[2], StrL("quote:\"")));
     utassert(2 == len(*data->sutStructItems));
     utassert(Point(-1, 5) == (*data->sutStructItems)[0]->compactPoint);
     utassert(2 == len(*(*data->sutStructItems)[0]->floatArray));
@@ -192,10 +192,10 @@ Key = Value";
     }
     utassert(data->boolean && str::Eq("0xffcc9933", data->color));
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
-    utassert(str::Eq(data->string, "String") && str::IsNull(data->nullString) &&
-             str::Eq(data->escapedString, "$\nstring "));
-    utassert(str::Eq(data->utf8String, "Utf-8 String") && str::IsNull(data->nullUtf8String) &&
-             str::Eq(data->escapedUtf8String, "$\nstring "));
+    utassert(str::Eq(data->string, StrL("String")) && str::IsNull(data->nullString) &&
+             str::Eq(data->escapedString, StrL("$\nstring ")));
+    utassert(str::Eq(data->utf8String, StrL("Utf-8 String")) && str::IsNull(data->nullUtf8String) &&
+             str::Eq(data->escapedUtf8String, StrL("$\nstring ")));
     utassert(data->intArray);
     utassert(3 == len(*data->intArray) && 1 == (*data->intArray)[0]);
     utassert(2 == (*data->intArray)[1] && -3 == (*data->intArray)[2]);
@@ -204,9 +204,9 @@ Key = Value";
     utassert(3 == len(*data->strArray));
     utassert(0 == len(*data->emptyStrArray));
     Vec<Str>* sa = data->strArray;
-    utassert(str::Eq((*sa)[0], "one"));
-    utassert(str::Eq((*sa)[1], "two three"));
-    utassert(str::Eq((*sa)[2], ""));
+    utassert(str::Eq((*sa)[0], StrL("one")));
+    utassert(str::Eq((*sa)[1], StrL("two three")));
+    utassert(str::Eq((*sa)[2], StrL("")));
 
     utassert(Point(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == len(*data->sutStructItems));
@@ -220,5 +220,137 @@ Key = Value";
         data = (SutStruct*)DeserializeStruct(&gSutStructInfo, boolData[i]);
         utassert(data->boolean == ((i % 2) == 0));
         FreeStruct(&gSutStructInfo, data);
+    }
+
+    // Array elements with Bool field IsTemporary=true are omitted on serialize
+    // (session-only favorites, issue #5862). The IsTemporary field itself is
+    // never written.
+    struct SutTempItem {
+        Str name;
+        int pageNo;
+        bool isTemporary;
+    };
+    static const FieldInfo gSutTempItemFields[] = {
+        {offsetof(SutTempItem, name), SettingType::String, 0},
+        {offsetof(SutTempItem, pageNo), SettingType::Int, 0},
+        {offsetof(SutTempItem, isTemporary), SettingType::Bool, (intptr_t)false},
+    };
+    static const StructInfo gSutTempItemInfo = {sizeof(SutTempItem),         3,       gSutTempItemFields,
+                                                "Name\0PageNo\0IsTemporary", nullptr, true};
+
+    struct SutTempRoot {
+        Vec<SutTempItem*>* items;
+    };
+    static const FieldInfo gSutTempRootFields[] = {
+        {offsetof(SutTempRoot, items), SettingType::Array, (intptr_t)&gSutTempItemInfo},
+    };
+    static const StructInfo gSutTempRootInfo = {sizeof(SutTempRoot), 1, gSutTempRootFields, "Items"};
+
+    {
+        auto* root = (SutTempRoot*)DeserializeStruct(&gSutTempRootInfo, nullptr);
+        utassert(root && root->items);
+
+        auto* keep = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        str::ReplaceWithCopy(&keep->name, StrL("keep"));
+        keep->pageNo = 3;
+        keep->isTemporary = false;
+
+        auto* drop = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        str::ReplaceWithCopy(&drop->name, StrL("/"));
+        drop->pageNo = 7;
+        drop->isTemporary = true;
+
+        auto* keep2 = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        str::ReplaceWithCopy(&keep2->name, StrL("also"));
+        keep2->pageNo = 9;
+        keep2->isTemporary = false;
+
+        root->items->Append(keep);
+        root->items->Append(drop);
+        root->items->Append(keep2);
+
+        Str out = SerializeStruct(&gSutTempRootInfo, root);
+        utassert(str::Contains(out, StrL("Name = keep")));
+        utassert(str::Contains(out, StrL("PageNo = 3")));
+        utassert(str::Contains(out, StrL("Name = also")));
+        utassert(str::Contains(out, StrL("PageNo = 9")));
+        utassert(!str::Contains(out, StrL("Name = /")));
+        utassert(!str::Contains(out, StrL("PageNo = 7")));
+        utassert(!str::Contains(out, StrL("IsTemporary")));
+        // still three elements in memory after serialize
+        utassert(3 == len(*root->items));
+
+        // only the two non-temporary elements round-trip
+        auto* loaded = (SutTempRoot*)DeserializeStruct(&gSutTempRootInfo, out);
+        str::Free(out);
+        utassert(loaded && loaded->items && 2 == len(*loaded->items));
+        utassert(str::Eq((*loaded->items)[0]->name, StrL("keep")));
+        utassert(3 == (*loaded->items)[0]->pageNo);
+        utassert(!(*loaded->items)[0]->isTemporary);
+        utassert(str::Eq((*loaded->items)[1]->name, StrL("also")));
+        utassert(9 == (*loaded->items)[1]->pageNo);
+        FreeStruct(&gSutTempRootInfo, loaded);
+        FreeStruct(&gSutTempRootInfo, root);
+    }
+
+    // SettingType::StructPtr is an optional sub-struct: null by default and not
+    // written at all until it's set (per-document EBookUI overrides, #4600)
+    struct SutOptSub {
+        Str name;
+        int size;
+    };
+    static const FieldInfo gSutOptSubFields[] = {
+        {offsetof(SutOptSub, name), SettingType::String, 0},
+        {offsetof(SutOptSub, size), SettingType::Int, 0},
+    };
+    static const StructInfo gSutOptSubInfo = {sizeof(SutOptSub), 2, gSutOptSubFields, "Name\0Size"};
+
+    struct SutOptRoot {
+        int other;
+        SutOptSub* sub;
+    };
+    static const FieldInfo gSutOptRootFields[] = {
+        {offsetof(SutOptRoot, other), SettingType::Int, 7},
+        {offsetof(SutOptRoot, sub), SettingType::StructPtr, (intptr_t)&gSutOptSubInfo},
+    };
+    static const StructInfo gSutOptRootInfo = {sizeof(SutOptRoot), 2, gSutOptRootFields, "Other\0Sub"};
+
+    {
+        // default: not set, and nothing about it in the output
+        auto* root = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, nullptr);
+        utassert(root && !root->sub);
+        Str out = SerializeStruct(&gSutOptRootInfo, root);
+        utassert(str::Contains(out, StrL("Other = 7")));
+        utassert(!str::Contains(out, StrL("Sub")));
+        str::Free(out);
+
+        // once set, it round-trips
+        root->sub = (SutOptSub*)DeserializeStruct(&gSutOptSubInfo, nullptr);
+        str::ReplaceWithCopy(&root->sub->name, StrL("Segoe UI"));
+        root->sub->size = 14;
+        out = SerializeStruct(&gSutOptRootInfo, root);
+        utassert(str::Contains(out, StrL("Sub [")));
+        utassert(str::Contains(out, StrL("Name = Segoe UI")));
+
+        auto* loaded = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, out);
+        str::Free(out);
+        utassert(loaded && loaded->sub);
+        utassert(str::Eq(loaded->sub->name, StrL("Segoe UI")));
+        utassert(14 == loaded->sub->size);
+        FreeStruct(&gSutOptRootInfo, loaded);
+        FreeStruct(&gSutOptRootInfo, root);
+
+        // a block in the data with none of its fields set still means "set"
+        auto* empty = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, StrL(UTF8_BOM "Sub [\r\n]\r\n"));
+        utassert(empty && empty->sub && !empty->sub->name && 0 == empty->sub->size);
+
+        // deserializing onto an existing struct merges, like the other types:
+        // fields not in the data keep their value, present ones win
+        str::ReplaceWithCopy(&empty->sub->name, StrL("old"));
+        empty->sub->size = 3;
+        DeserializeStruct(&gSutOptRootInfo, StrL(UTF8_BOM "Other = 9\r\nSub [\r\n\tSize = 5\r\n]\r\n"), empty);
+        utassert(9 == empty->other && empty->sub);
+        utassert(str::Eq(empty->sub->name, StrL("old")) && 5 == empty->sub->size);
+        FreeStruct(&gSutOptRootInfo, empty);
     }
 }

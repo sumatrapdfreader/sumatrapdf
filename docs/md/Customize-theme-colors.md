@@ -58,10 +58,28 @@ Meaning of the parameters:
 
 **Required / base colors**
 - `TextColor` and `BackgroundColor` are for main window color and color of text.
-- **`Shift + I`** (`CmdInvertColors`) toggles `DocumentColorsFollowTheme` between `off` and `smart` for MuPDF-rendered documents (PDF, ePub, etc.). With `smart` or `legacy`, `FixedPageUI.TextColor` and `FixedPageUI.BackgroundColor` (or theme colors when those are left at default) drive page recoloring.
 - `ControlBackgroundColor` is for background of Windows controls (buttons, window frame, menus, list controls etc.).
 - `LinkColor` is a color for links. Typically it's blue.
 - `ColorizeControls` should be `true`. If `false` we won't try to change colors of standard windows controls (menu, toolbar, buttons etc.) so a lot of UI will not respect theme colors.
+
+## Document page colors (`DocumentColorsFollowTheme`)
+
+UI themes only recolor chrome (menus, tabs, toolbars). Separately, **document pages** (PDF, XPS, DjVu, EPUB, MOBI, FB2, comics, images, and other MuPDF-rendered formats) can follow the theme via the advanced setting **`DocumentColorsFollowTheme`**:
+
+| Value | Effect |
+| --- | --- |
+| **`off`** (default) | Keep the document’s own page colors. |
+| **`smart`** | Recolor text and page background using `FixedPageUI.TextColor` / `FixedPageUI.BackgroundColor` when set, otherwise the current theme’s text/background. **Photos and other images stay as in the file** — preferred for dark reading. |
+| **`legacy`** | Also recolor images (same idea as older invert / colorize behavior before 3.7). Use when you want a fully monochrome page. |
+
+How to change it:
+
+- **Settings → Theme…** or **Settings → Make Document Colors Follow Theme** (command palette / `CmdSetDocumentColorsFollowTheme`) for a drop-down including **`legacy`**.
+- Advanced settings: `DocumentColorsFollowTheme = off` / `smart` / `legacy`.
+
+`Shift + I` (`CmdInvertColors`) is a different thing: it swaps the page colors for the rest of the session, whatever `DocumentColorsFollowTheme` and `FixedPageUI` are set to, and is not saved to the settings file.
+
+This is independent of `Theme = ...`. You can use a dark UI theme with `DocumentColorsFollowTheme = off` (original white PDF pages) or a light UI with `smart` page recoloring.
 
 **Optional UI colors** (leave empty to derive from the base colors; set them when a warm or tinted `TextColor` would make derived disabled/hover colors look wrong — e.g. Dracula’s near-white foreground)
 

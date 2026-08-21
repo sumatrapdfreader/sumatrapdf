@@ -9,13 +9,7 @@ import { rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { runStandalone } from "./util.ts";
-import {
-  pdfPageCount,
-  requirePrintToPdf,
-  runPrintToPdf,
-  tempPrintOutput,
-  writeMultiPagePdf,
-} from "./print-util.ts";
+import { pdfPageCount, requirePrintToPdf, runPrintToPdf, tempPrintOutput, writeMultiPagePdf } from "./print-util.ts";
 
 const FIXTURE = join(tmpdir(), "sumatra-issue-4967.pdf");
 const PAGES = ["Page 1", "Page 2", "Page 3"];
@@ -28,7 +22,10 @@ export async function testit(): Promise<void> {
       throw new Error(`fixture should have ${PAGES.length} pages`);
     }
 
-    for (const c of [{ name: "last", settings: "last" }, { name: "-1", settings: "-1" }]) {
+    for (const c of [
+      { name: "last", settings: "last" },
+      { name: "-1", settings: "-1" },
+    ]) {
       const out = tempPrintOutput(`4967-${c.name}`);
       const res = runPrintToPdf(FIXTURE, out, c.settings);
       if (!res.ok) {

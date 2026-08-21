@@ -1,8 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="src">
-      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    <Filter Include="base">
+      <UniqueIdentifier>{8078947C-6CAF-950D-159C-7B1001B2110F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui\win">
+      <UniqueIdentifier>{877BE114-F35A-60B0-FC72-EB8668D1C611}</UniqueIdentifier>
     </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
@@ -12,10 +18,88 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\BasePch.cpp">
-      <Filter>src</Filter>
+    <ClInclude Include="..\src\base\UtAssert.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\Gfx.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\GuiColors.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\Layout.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\Layout_win.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\PlatformFont.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\PlatformText.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\UIModels.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\VirtCtrl.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\BasePch.cpp" />
+    <ClCompile Include="..\src\base\UtAssert.cpp">
+      <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\tools\logview\logview.cpp">
+    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Gfx_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\GuiColors.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Layout.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\Layout_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformFont.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformFont_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\PlatformText_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\UIModels.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\VirtCtrl.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Edit.cpp">
+      <Filter>gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\Tooltip.cpp">
+      <Filter>gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\win\WindowBase.cpp">
+      <Filter>gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\logview\logview.cpp">
       <Filter>tools\logview</Filter>
     </ClCompile>
   </ItemGroup>

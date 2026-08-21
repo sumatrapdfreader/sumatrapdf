@@ -4,30 +4,24 @@
 struct SquareTreeNode {
     SquareTreeNode() = default;
     ~SquareTreeNode();
+    SquareTreeNode(const SquareTreeNode&) = delete;
+    SquareTreeNode& operator=(const SquareTreeNode&) = delete;
 
+    // key (and str for values) live in one malloc with the DataItem, like StrNode
     struct DataItem {
-        Str key = {};
+        Str key;
         // only one of str or child are set
-        Str str = {};
+        Str str;
         SquareTreeNode* child = nullptr;
-
-        DataItem() = default;
-        DataItem(Str k, Str string) {
-            this->key = k;
-            this->str = string;
-            this->child = nullptr;
-        }
-        DataItem(Str k, SquareTreeNode* node) {
-            this->key = k;
-            this->str = {};
-            this->child = node;
-        }
     };
-    Vec<DataItem> data;
+    Vec<DataItem*> data;
 
-    Str GetValue(Str key, size_t* startIdx = nullptr) const;
-    SquareTreeNode* GetChild(Str key, size_t* startIdx = nullptr) const;
+    void RemoveDataAt(int idx);
+
+    Str GetValue(Str key, int* startIdx = nullptr) const;
+    SquareTreeNode* GetChild(Str key, int* startIdx = nullptr) const;
 };
 
 SquareTreeNode* ParseSquareTree(Str s);
+void SerializeSquareTreeNode(str::Builder& out, SquareTreeNode* node, Str indentUnit, Str lineEnd, int depth = 0);
 TempStr SerializeSquareTreeNodeTemp(SquareTreeNode*);

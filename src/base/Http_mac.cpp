@@ -130,7 +130,7 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
     return IsHttpRspOk(rspOut);
 }
 
-bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress) {
+bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress, i64 maxSize) {
     logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
     TempStr statusPath = NewTempFilePathTemp(StrL("sumatra-http-status-"));
     if (!statusPath) {
@@ -139,6 +139,9 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
 
     str::Builder cmd(1024);
     bool ok = AppendCurlBase(&cmd, destFilePath, statusPath);
+    if (maxSize >= 0) {
+        cmd.Append(fmt(" --max-filesize %lld ", maxSize));
+    }
     AppendShellQuoted(&cmd, urlA);
     AppendStatusRedirect(&cmd, statusPath);
     ok = ok && RunShellCommand(ToStr(cmd));

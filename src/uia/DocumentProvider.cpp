@@ -2,18 +2,20 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Win.h"
 #include <uiautomationcore.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IAccIdentity
 __CRT_UUID_DECL(IAccIdentity, 0x7852B78D, 0x1CFD, 0x41C1, 0xA6, 0x15, 0x9C, 0x0C, 0x85, 0x96, 0x0B, 0x5F)
 #endif
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
+#include "TextSelection.h"
 #include "base/File.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Constants.h"
@@ -96,6 +98,12 @@ DisplayModel* SumatraUIAutomationDocumentProvider::GetDM() {
     return dm;
 }
 
+// the window text ranges map their page coordinates to, for the screen
+// rectangles UIA clients ask for
+HWND SumatraUIAutomationDocumentProvider::GetCanvasHwnd() const {
+    return canvasHwnd;
+}
+
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage() {
     ReportIf(!IsDocumentLoaded());
     return child_first;
@@ -116,7 +124,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(RE
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef() {
-    return InterlockedIncrement(&refCount);
+    return AtomicIntInc(&refCount);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release() {
@@ -237,23 +245,26 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
         return E_FAIL;
     }
 
+    // properties that are simply TRUE for a document element
+    bool isTrueBoolProp = propertyId == UIA_IsTextPatternAvailablePropertyId ||
+                          propertyId == UIA_IsContentElementPropertyId || propertyId == UIA_IsControlElementPropertyId;
     if (propertyId == UIA_NamePropertyId) {
         // typically filename
         pRetVal->vt = VT_BSTR;
         TempStr s = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
         pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
         return S_OK;
-    } else if (propertyId == UIA_IsTextPatternAvailablePropertyId) {
+    } else if (isTrueBoolProp) {
+        // must be VARIANT_TRUE (-1), not TRUE (1): UI Automation compares
+        // against VARIANT_TRUE, so a 1 here reads as false and kept the
+        // document (the element that has the text) out of the control and
+        // content views that screen readers navigate (#321)
         pRetVal->vt = VT_BOOL;
-        pRetVal->boolVal = TRUE;
+        pRetVal->boolVal = VARIANT_TRUE;
         return S_OK;
     } else if (propertyId == UIA_ControlTypePropertyId) {
         pRetVal->vt = VT_I4;
         pRetVal->lVal = UIA_DocumentControlTypeId;
-        return S_OK;
-    } else if (propertyId == UIA_IsContentElementPropertyId || propertyId == UIA_IsControlElementPropertyId) {
-        pRetVal->vt = VT_BOOL;
-        pRetVal->boolVal = TRUE;
         return S_OK;
     } else if (propertyId == UIA_NativeWindowHandlePropertyId) {
         pRetVal->vt = VT_I4;
@@ -365,11 +376,34 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(__unused struct UiaPoint point,
-                                                                              __unused ITextRangeProvider** pRetVal) {
-    // TODO: Is this even used? We wont support editing either way
-    // so there won't be even a caret visible. Hence empty ranges are useless?
-    return E_NOTIMPL;
+// The empty range at the character nearest to a point on the screen. Screen
+// readers use it to read what is under the mouse or the finger (Narrator's
+// mouse mode, touch exploration): they call this and then expand the range to
+// a word or a line. Returning E_NOTIMPL, as we used to, means none of that
+// reads anything.
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(struct UiaPoint point,
+                                                                              ITextRangeProvider** pRetVal) {
+    if (pRetVal == nullptr) {
+        return E_POINTER;
+    }
+    if (released || !dm) {
+        return E_FAIL;
+    }
+
+    Point pt = HwndScreenToClient(canvasHwnd, Point((int)point.x, (int)point.y));
+    int pageNo = dm->GetPageNoByPoint(pt);
+    auto* res = new SumatraUIAutomationTextRange(this);
+    if (dm->ValidPageNo(pageNo)) {
+        PointF ptD = dm->CvtFromScreen(pt, pageNo);
+        int glyphIdx = dm->textSelection->FindClosestGlyphAt(pageNo, ptD.x, ptD.y);
+        res->SetToDegenerateAt(pageNo, glyphIdx);
+    } else {
+        // not over a page (window margin, between pages): the nearest text is
+        // the start of the page being looked at
+        res->SetToDegenerateAt(dm->CurrentPageNo(), 0);
+    }
+    *pRetVal = res;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_DocumentRange(ITextRangeProvider** pRetVal) {
@@ -414,7 +448,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString
             }
 
             memset(*ppIDString, 0, 8);
-            memcpy(*ppIDString, &it, sizeof(void*)); // copy the pointer to the allocated array
+            memcpy(*ppIDString, (const void*)&it, sizeof(void*)); // copy the pointer to the allocated array
             *pdwIDStringLen = 8;
             return S_OK;
         }

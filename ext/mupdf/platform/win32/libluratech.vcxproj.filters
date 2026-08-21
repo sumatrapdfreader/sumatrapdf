@@ -1,0 +1,934 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ldf_jb2">
+      <UniqueIdentifier>{7b5e0931-9b74-446e-a4b6-e163f6a7ecca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ldf_jb2\common">
+      <UniqueIdentifier>{99d6f3ca-f9de-49bd-b870-d11ab899bfff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ldf_jb2\compress">
+      <UniqueIdentifier>{a4691800-0103-4e40-aca0-f39116a97511}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lwf_jp2">
+      <UniqueIdentifier>{1fe2d07c-57fe-4ae2-9027-917a8add30d6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_cache.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_buffer.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_decoder.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_ref_buffer.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_ref_decoder.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_collective_bitmap.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_generic_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_halftone_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_pattern_dict.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_symbol_dict.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_text_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_external_cache.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_file.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_file_extras.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_handle_document.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_decoder.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table_standard.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table_symbol.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table_user_defined.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_tree.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_location.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_memory.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_message.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mmr_decoder.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mmr_tables.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mq_decoder.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mq_state.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_pattern_dict.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_pdf_file.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_pdf_stream.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_props_decompress.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_read_bit_buffer.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_read_data.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_common.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_generic_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_halftone_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_text_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_array.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_end_of_file.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_end_of_page.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_end_of_stripe.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_generic_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_halftone_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_page_info.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_pattern_dict.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_symbol_dict.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_table.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_text_region.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_types.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol_dict.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol_instance.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_write_bits.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_write_data.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_write_pdf.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_common.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_license_dummy.c">
+      <Filter>ldf_jb2\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component_class.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component_group.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component_match.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_context_encoder.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_context_ref_encoder.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_encoder_generic_region.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_encoder_symbol_dict.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_encoder_text_region.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_handle_compress.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_huffman_encoder.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_mmr_encoder.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_mq_encoder.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_props_compress.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_run_array.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stack.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_clean_up.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_encoder.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_half_tone.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_preprocessing.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_text.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_symbol_unify.c">
+      <Filter>ldf_jb2\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_band_array.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_band_buffer.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_block_array.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_cache.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_comp.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_component_array.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_decomp.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_ebcot_decoder.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_external_cache.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_image.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_memory.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_mq_decoder.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_mq_state.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_packet_decoder.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_precinct_array.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_rate.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_rate_list.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_read_bits.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_read_data.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_reader_requirements.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_resolution_array.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_tile_array.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_tlm_marker_array.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_write_data.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_buffer.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_code_cb.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_common.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_icc.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_license.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_packet.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_tag_tree.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_code_cb.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_coder.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_codestream.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_file_format.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_format.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_memory.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_progression.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_quant.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_wavelet.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_wavelet_lifting.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_wavelet_lifting_mmx.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_weights.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_write.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_codestream.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_decoder.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_file_format.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_format.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_image.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_memory.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_partial_decoding.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_progression.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_quant.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_scale.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_wavelet.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_wavelet_lifting.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_wavelet_lifting_mmx.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_write.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_codestream.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_file_format.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_image.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_memory.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_progression.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_transcoder.c">
+      <Filter>lwf_jp2</Filter>
+    </ClCompile>
+    <ClCompile Include="dummy.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_cache.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_buffer.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_decoder.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_ref_buffer.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_context_ref_decoder.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_collective_bitmap.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_generic_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_halftone_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_pattern_dict.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_symbol_dict.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_decoder_text_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_external_cache.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_file.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_file_extras.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_decoder.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table_entry.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table_standard.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table_symbol.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_table_user_defined.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_huffman_tree.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_location.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_memory.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_message.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mmr_decoder.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mmr_tables.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mq_decoder.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mq_ids.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_mq_state.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_pattern_dict.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_pdf_file.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_pdf_stream.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_props_decompress.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_read_bit_buffer.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_read_data.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_common.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_generic_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_halftone_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_render_text_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_array.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_end_of_file.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_end_of_page.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_end_of_stripe.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_generic_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_halftone_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_page_info.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_pattern_dict.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_symbol_dict.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_table.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_text_region.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_segment_types.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol_array.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol_dict.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol_instance.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_symbol_instance_array.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_write_bits.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_write_data.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_adt_write_pdf.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_common.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_defines.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\common\jb2_license.h">
+      <Filter>ldf_jb2\common</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component_array.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component_class.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component_group.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_component_match.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_context_encoder.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_context_ref_encoder.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_encoder_generic_region.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_encoder_symbol_dict.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_encoder_text_region.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_huffman_encoder.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_mmr_encoder.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_mq_encoder.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_props_compress.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_run.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_run_array.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stack.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_clean_up.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_encoder.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_half_tone.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_preprocessing.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_stripe_text.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\ldf_jb2\source\compress\jb2_adt_symbol_unify.h">
+      <Filter>ldf_jb2\compress</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_band_array.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_band_buffer.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_block_array.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_cache.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_comp.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_component_array.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_decomp.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_ebcot_decoder.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_external_cache.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_image.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_memory.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_mq_decoder.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_mq_state.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_packet_decoder.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_precinct_array.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_rate.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_rate_list.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_read_bits.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_read_data.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_reader_requirements.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_resolution_array.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_tile_array.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_tlm_marker_array.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_adt_write_data.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_assembly.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_buffer.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_code_cb.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_codestream.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_common.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_file_format.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_icc.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_image.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_license.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_mac_carbon.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_packet.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2_tag_tree.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_coder.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_codestream.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_file_format.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_format.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_memory.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_progression.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_quant.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_wavelet.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_wavelet_lifting.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_wavelet_lifting_mmx.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_weights.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2c_write.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_codestream.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_decoder.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_file_format.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_format.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_image.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_memory.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_partial_decoding.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_progression.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_quant.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_scale.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_wavelet.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_wavelet_lifting.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_wavelet_lifting_mmx.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2d_write.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_codestream.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_file_format.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_image.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_memory.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_progression.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\jp2t_transcoder.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\lwf_jp2.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\tiff.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\thirdparty\luratech\lwf_jp2\library\source\tiffio.h">
+      <Filter>lwf_jp2</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

@@ -10,6 +10,8 @@ EXPORTS
 
 	fz_set_optind
 
+	fz_last_uncaught_error
+
 	fz_open_document
 
 	fz_write_byte
@@ -75,6 +77,8 @@ EXPORTS
 	fz_authenticate_password
 
 	fz_layout_document
+
+	fz_is_document_reflowable
 
 	fz_page_number_from_location
 
@@ -179,6 +183,12 @@ EXPORTS
 	fz_new_device_of_size
 
 	fz_load_outline
+	fz_new_outline_iterator
+	fz_drop_outline_iterator
+	fz_outline_iterator_item
+	fz_outline_iterator_next
+	fz_outline_iterator_down
+	fz_outline_iterator_up
 
 	fz_load_page
 
@@ -363,6 +373,8 @@ EXPORTS
 	fz_fin_cached_color_converter
 
 	fz_compressed_buffer_size
+
+	fz_compressed_image_buffer
 
 	fz_open_compressed_buffer
 
@@ -583,6 +595,8 @@ EXPORTS
 	fz_install_load_system_font_funcs
 
 	fz_load_system_font
+
+	fz_lookup_builtin_font
 
 	fz_load_system_cjk_font
 
@@ -807,6 +821,8 @@ EXPORTS
 	fz_clone_path
 
 	fz_bound_path
+
+	fz_walk_path
 
 	fz_adjust_rect_for_stroke
 
@@ -1146,6 +1162,10 @@ EXPORTS
 
 	pdf_parse_link_dest
 
+	pdf_parse_link_action
+
+	pdf_new_link
+
 	pdf_lookup_dest
 
 	pdf_lookup_name
@@ -1403,6 +1423,8 @@ EXPORTS
 	pdf_dict_get_val
 
 	pdf_dict_get
+	pdf_dict_get_rect
+	pdf_dict_get_text_string
 
 	pdf_dict_gets
 
@@ -1535,6 +1557,8 @@ EXPORTS
 	pdf_load_raw_stream
 
 	pdf_load_stream
+
+	pdf_load_stream_or_string_as_utf8
 
 	pdf_open_raw_stream
 
@@ -1786,6 +1810,7 @@ EXPORTS
 	jxl_ctx_new
 	jxl_ctx_free
 	jxl_ctx_set_bgr
+	jxl_ctx_set_srgb_output
 	jxl_decode
 	jxl_decode_size
 	jxl_image_destroy
@@ -1872,6 +1897,14 @@ EXPORTS
 
 	pdf_check_widget_digest
 
+	pdf_check_certificate
+
+	pdf_check_digest
+
+	pdf_signature_contents
+
+	pdf_walk_tree
+
 	pdf_signature_get_widget_signatory
 
 	pdf_signature_drop_distinguished_name
@@ -1898,6 +1931,21 @@ EXPORTS
 	pkcs7_windows_check_certificate
 	pkcs7_windows_check_digest
 	pkcs7_windows_distinguished_name
+	pkcs7_windows_inspect
+	pkcs7_windows_sig_info_clear
+	pkcs7_windows_sig_info_free
+
+; signing a pdf (PdfSign.cpp): reading the certificate + filling in a
+; signature field
+
+	pkcs7_windows_read_pfx
+	pkcs7_windows_read_store
+	pdf_drop_signer
+	pdf_sign_signature
+	pdf_create_signature_widget
+	pdf_widget_is_signed
+	pdf_load_field_name
+	pdf_keep_annot
 
 ; cmark-gfm exports (required for MarkdownToc; also used by mupdf md.c).
 ; Keep the cmark-gfm static-lib project; link it only into mupdf/libsumatrapdf.dll
@@ -1914,7 +1962,13 @@ EXPORTS
 	cmark_node_free
 	cmark_node_get_heading_level
 	cmark_node_get_type
+	cmark_node_get_url
+	cmark_node_insert_before
+	cmark_node_new
 	cmark_node_next
+	cmark_node_set_on_enter
+	cmark_node_set_url
+	cmark_node_unlink
 	cmark_parser_attach_syntax_extension
 	cmark_parser_feed
 	cmark_parser_finish
@@ -1968,3 +2022,15 @@ EXPORTS
 	chm_read_entry
 	chm_get_entries
 	LZX_test_pretree_make_decode_table
+
+; the raw LZX decompressor inside chmdec, used by LitDoc.cpp (.lit sections)
+
+	LZXinit
+	LZXteardown
+	LZXreset
+	LZXdecompress
+
+; msdes exports used by LitDoc.cpp to unseal .lit DRM1 content
+
+	deskey
+	des

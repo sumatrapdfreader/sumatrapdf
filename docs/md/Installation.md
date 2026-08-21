@@ -125,11 +125,11 @@ After installing, follow [Set as default PDF viewer](Set-as-default-pdf-viewer.m
 
 ## Command-line tools
 
-`sumatrapdf-tool.exe` is installed next to `SumatraPDF.exe` by the installer. It is not included in the single-file portable build. See [Tools](Tools.md).
+After a full install, `sumatrapdf-tool.exe` is next to `SumatraPDF.exe` and on PATH. With the portable EXE you can run the same commands as `SumatraPDF.exe <tool>` (see [Tools](Tools.md)), or extract `sumatrapdf-tool.exe` with `-x`. No install required.
 
 ## See also
 
-- [Portable vs installer / libsumatrapdf.dll](SumatraPDF-portable.md) — pre-3.7 vs 3.7 single-EXE layout, where the DLL is extracted, installer name / `-install` flag
+- [Portable vs installer](SumatraPDF-portable.md) — pre-3.7 vs 3.7 single-EXE layout, where the DLL is extracted, installer name / `-install` flag
 - [FAQ](FAQ.md)
 - [Corrupted installation](Corrupted-installation.md)
 - [Uninstalling SumatraPDF](Uninstalling-SumatraPDF.md)

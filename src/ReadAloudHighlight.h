@@ -3,6 +3,7 @@
 
 class EngineBase;
 struct DisplayModel;
+struct Gfx;
 struct MainWindow;
 namespace str {
 struct Builder;
@@ -47,4 +48,4 @@ void ReadAloudUpdateAutoScroll(MainWindow* win);
 
 bool ReadAloudGetProgressPage(WindowTab* tab, int* pageOut, int* pageCountOut);
 
-void PaintReadAloudHighlight(MainWindow* win, HDC hdc);
+void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx);

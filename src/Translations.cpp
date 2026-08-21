@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/Win.h"
 #include "base/LzmaSimpleArchive.h"
+#include "EmbeddedResources.h"
 
 #include "SumatraConfig.h"
 
@@ -71,7 +71,6 @@ static void FreeTranslations() {
 
 static void ParseTranslationsTxt(Str d, Str langCode) {
     TempStr langCodePref = str::JoinTemp(langCode, StrL(":"));
-    int nLangCode = langCodePref.len;
 
     StrVec lines;
     Split(&lines, d, "\n", true);
@@ -86,7 +85,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
 
     delete gTranslationCache;
     gTranslationCache = new StrVec();
-    auto c = gTranslationCache;
+    auto* c = gTranslationCache;
     int nUntranslated = 0;
 
     Str orig;
@@ -101,8 +100,8 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
         while (i < nLines && lines[i] && lines[i].s[0] != ':') {
             if (!trans) {
                 Str line = lines[i];
-                if (str::StartsWith(line, langCodePref)) {
-                    trans = Str(line.s + nLangCode, line.len - nLangCode);
+                if (str::TrimPrefix(line, langCodePref)) {
+                    trans = line;
                 }
             }
             i++;
@@ -131,7 +130,7 @@ Str GetTranslation(Str s) {
         // 0 is english, no translation needed
         return s;
     }
-    auto c = gTranslationCache;
+    auto* c = gTranslationCache;
     if (!c) {
         // translations failed to load (e.g. corrupted resource data)
         return s;
@@ -196,36 +195,14 @@ void SetCurrentLangByCode(Str langCode) {
         // in debug we want to execute this code to catch errors
         return;
     }
-    LoadedDataResource ldr;
-    bool lok = LockDataResource(IDR_TRANSLATIONS, &ldr);
-    if (!lok) {
-        logf("SetCurrentLangByCode: LockDataResource(IDR_TRANSLATIONS) failed\n");
-        FallbackToEnglish();
-        return;
-    }
-    lzma::SimpleArchive archive;
-    lok = lzma::ParseSimpleArchive(ldr.data, ldr.dataSize, &archive);
-    if (!lok) {
-        logf("SetCurrentLangByCode: ParseSimpleArchive failed\n");
-        FallbackToEnglish();
-        return;
-    }
-    int fileIdx = lzma::GetIdxFromName(&archive, "translations.txt");
-    if (fileIdx < 0) {
-        logf("SetCurrentLangByCode: translations.txt not found in archive\n");
-        FallbackToEnglish();
-        return;
-    }
-    auto* fi = &archive.files[fileIdx];
-    logf("SetCurrentLangByCode: translations.txt compressed=%u uncompressed=%u (archive=%d)\n",
-         (unsigned)fi->compressedSize, (unsigned)fi->uncompressedSize, ldr.dataSize);
-    u8* data = lzma::GetFileDataByIdx(&archive, fileIdx, nullptr);
+    int dataSize = 0;
+    u8* data = GetEmbeddedFileData(StrL("translations.txt"), &dataSize);
     if (!data) {
-        logf("SetCurrentLangByCode: GetFileDataByIdx failed\n");
+        logf("SetCurrentLangByCode: translations.txt not found in embedded.dat\n");
         FallbackToEnglish();
         return;
     }
-    int dataSize = (int)fi->uncompressedSize;
+    logf("SetCurrentLangByCode: translations.txt uncompressed=%d\n", dataSize);
     // empty file is expected when TRANS_UPLOAD_SECRET was missing at build time
     if (dataSize <= 0) {
         logf("SetCurrentLangByCode: translations.txt is empty (no translations available)\n");
@@ -253,7 +230,7 @@ void SetCurrentLangByCode(Str langCode) {
 }
 
 Str ValidateLangCode(Str langCode) {
-    if (!langCode) return Str();
+    if (!langCode) return {};
     int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         return nullptr;

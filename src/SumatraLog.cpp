@@ -32,10 +32,10 @@ bool gDestroyedLogging = false;
 
 // if true, doesn't log if the same text has already been logged
 // reduces logging but also can be confusing i.e. log lines are not showing up
-bool gSkipDuplicateLines = false;
+static bool gSkipDuplicateLines = false;
 
 bool gLogToPipe = true;
-HANDLE hLogPipe = INVALID_HANDLE_VALUE;
+static HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 static Mutex gPipeMutex;
 
 Str gLogFilePath;
@@ -102,8 +102,8 @@ static void logToPipe(Str s) {
     gPipeMutex.Unlock();
 }
 
-static void log2(Str s, bool always) {
-    bool skipLog = !always && gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
+void log(Str s) {
+    bool skipLog = gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
 
     if (!skipLog) {
         // in reduced logging mode, we do want to log to at least the debugger
@@ -130,7 +130,8 @@ static void log2(Str s, bool always) {
 
     if (!gLogBuf) {
         gLogAllocator = ArenaNew();
-        gLogBuf = new str::Builder(32 * 1024, gLogAllocator);
+        gLogBuf = new str::Builder(32 * 1024);
+        gLogBuf->a = gLogAllocator;
     } else {
         if (len(*gLogBuf) > kMaxLogBuf) {
             // TODO: use gLogBuf->Clear(), which doesn't free the allocated space
@@ -151,7 +152,7 @@ static void log2(Str s, bool always) {
     }
 
     if (gLogFilePath) {
-        auto f = fopen(gLogFilePath.s, "a");
+        auto* f = fopen(gLogFilePath.s, "a");
         if (f != nullptr) {
             fwrite(s.s, 1, n, f);
             fflush(f);
@@ -160,17 +161,6 @@ static void log2(Str s, bool always) {
     }
     logToPipe(s);
     gLogMutex.Unlock();
-}
-
-void log(Str s) {
-    log2(s, false);
-}
-
-void loga(Str s) {
-    if (gDestroyedLogging) {
-        return;
-    }
-    log2(s, true);
 }
 
 void StartLogToFile(Str path, bool removeIfExists) {
@@ -210,4 +200,153 @@ void DestroyLogging() {
     gLogMutex.Unlock();
     str::FreePtr(&gLogFilePath);
     FileWatcherSetSkipPath(Str());
+}
+
+// --- parent process chain (startup diagnostics) --------------------------------
+
+// Parent PID of process `pid` via Toolhelp snapshot, or 0 on failure.
+static DWORD GetProcessParentPid(DWORD pid) {
+    if (pid == 0) {
+        return 0;
+    }
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (INVALID_HANDLE_VALUE == snap) {
+        return 0;
+    }
+    PROCESSENTRY32W pe{};
+    pe.dwSize = sizeof(pe);
+    if (!Process32FirstW(snap, &pe)) {
+        return 0;
+    }
+    do {
+        if (pe.th32ProcessID == pid) {
+            return pe.th32ParentProcessID;
+        }
+    } while (Process32NextW(snap, &pe));
+    return 0;
+}
+
+static TempStr GetProcessImagePathTemp(DWORD pid) {
+    if (pid == 0) {
+        return {};
+    }
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return {};
+    }
+    // Long paths can exceed MAX_PATH; grow if needed.
+    DWORD cap = MAX_PATH;
+    for (int attempt = 0; attempt < 3; attempt++) {
+        WCHAR* buf = AllocArrayTemp<WCHAR>((int)cap);
+        DWORD n = cap;
+        if (QueryFullProcessImageNameW(hProc, 0, buf, &n)) {
+            return ToUtf8Temp(WStr(buf, (int)n));
+        }
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+            return {};
+        }
+        cap *= 2;
+    }
+    return {};
+}
+
+// Process command line via NtQueryInformationProcess ProcessCommandLineInformation
+// (Windows 10+). Returns empty if unavailable or access denied.
+static TempStr GetProcessCommandLineTemp(DWORD pid) {
+    if (pid == 0) {
+        return {};
+    }
+    using NtQueryInformationProcessFn = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+    static NtQueryInformationProcessFn ntQip = nullptr;
+    static bool tried = false;
+    if (!tried) {
+        tried = true;
+        HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+        if (ntdll) {
+            ntQip = (NtQueryInformationProcessFn)GetProcAddress(ntdll, "NtQueryInformationProcess");
+        }
+    }
+    if (!ntQip) {
+        return {};
+    }
+
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return {};
+    }
+
+    // ProcessCommandLineInformation = 60 (Windows 10+)
+    constexpr ULONG kProcessCommandLineInformation = 60;
+    ULONG retLen = 0;
+    LONG status = ntQip(hProc, kProcessCommandLineInformation, nullptr, 0, &retLen);
+    // STATUS_INFO_LENGTH_MISMATCH (0xC0000004) expected when sizing
+    (void)status;
+    if (retLen == 0 || retLen > 64 * 1024) {
+        return {};
+    }
+    void* buf = malloc(retLen);
+    if (!buf) {
+        return {};
+    }
+    status = ntQip(hProc, kProcessCommandLineInformation, buf, retLen, &retLen);
+    if (status < 0) {
+        free(buf);
+        return {};
+    }
+    // Buffer is a UNICODE_STRING (Length, MaximumLength, Buffer*) with data following.
+    struct {
+        USHORT Length;
+        USHORT MaximumLength;
+        PWSTR Buffer;
+    }* us = (decltype(us))buf;
+    TempStr out{};
+    if (us->Buffer && us->Length >= sizeof(WCHAR)) {
+        int nChars = (int)(us->Length / sizeof(WCHAR));
+        out = ToUtf8Temp(WStr(us->Buffer, nChars));
+    }
+    free(buf);
+    return out;
+}
+
+// Log parent → grandparent → … (path + command line when readable).
+// Walk parent PIDs and log path + command line for each (startup diagnostics).
+void LogParentProcessChain() {
+    log("Parent process chain:\n");
+    DWORD pid = GetCurrentProcessId();
+    DWORD seen[16]{};
+    int nSeen = 0;
+    for (int depth = 0; depth < 16; depth++) {
+        DWORD parentPid = GetProcessParentPid(pid);
+        if (parentPid == 0 || parentPid == pid) {
+            if (depth == 0) {
+                log("  (none / unknown)\n");
+            }
+            break;
+        }
+        bool cycle = false;
+        for (int i = 0; i < nSeen; i++) {
+            if (seen[i] == parentPid) {
+                cycle = true;
+                break;
+            }
+        }
+        if (cycle) {
+            logf("  [%d] pid=%u (cycle, stop)\n", depth, parentPid);
+            break;
+        }
+        seen[nSeen++] = parentPid;
+
+        TempStr path = GetProcessImagePathTemp(parentPid);
+        TempStr cmd = GetProcessCommandLineTemp(parentPid);
+        if (path && cmd) {
+            logf("  [%d] pid=%u path='%s'\n      cmdline='%s'\n", depth, parentPid, path, cmd);
+        } else if (path) {
+            logf("  [%d] pid=%u path='%s'\n      cmdline=(unavailable)\n", depth, parentPid, path);
+        } else if (cmd) {
+            logf("  [%d] pid=%u path=(unavailable)\n      cmdline='%s'\n", depth, parentPid, cmd);
+        } else {
+            logf("  [%d] pid=%u path=(unavailable) cmdline=(unavailable)\n", depth, parentPid);
+        }
+        pid = parentPid;
+    }
 }

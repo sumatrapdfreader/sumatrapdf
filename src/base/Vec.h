@@ -3,149 +3,72 @@
 
 // note: include Base.h instead of including directly
 
-/* Simple but also optimized for small sizes vector/array class that can
-store pointer types or POD types
+/* Simple vector/array class that can store pointer types or POD types
 (http://stackoverflow.com/questions/146452/what-are-pod-types-in-c).
 
+Storage is heap (or arena) only; starts empty with no allocation.
 */
 template <typename T>
-class Vec {
-  public:
-    Arena* a = nullptr;
+struct Vec;
+
+// Ensure capacity is at least wantedSize for a vec-like {els,len,cap}.
+// Growth: max(cap*2, wantedSize). arena may be null (heap).
+template <typename T>
+bool VecReserve(Arena* arena, T& v, int wantedSize);
+
+// Heap Vec: same growth; returns v.els (nullptr on failure).
+template <typename T>
+inline T* VecReserve(Vec<T>& v, int capNeeded);
+
+// Open a hole of `count` elements at `idx`; updates len. Returns &v.els[idx].
+template <typename T>
+T* VecInsertSpace(Vec<T>& v, int idx, int count);
+
+template <typename T>
+struct Vec {
     int len = 0;
     int cap = 0;
-    int capacityHint = 0;
     T* els = nullptr;
-    T buf[16];
 
     // We always pad the elements with a single 0 value. This makes
     // Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior).
-    static constexpr int kPadding = 1;
-    // byte size of a single element; kept size_t because it's used in
-    // allocation-size arithmetic that must not overflow
-    static constexpr size_t kElSize = sizeof(T);
-
-  private:
-    NO_INLINE bool EnsureCapSlow(int needed, size_t elSize) {
-        int newCap = cap * 2;
-        if (needed > newCap) {
-            newCap = needed;
-        }
-        if (newCap < capacityHint) {
-            newCap = capacityHint;
-        }
-
-        size_t newElCount = (size_t)newCap + kPadding;
-        if (newElCount >= SIZE_MAX / elSize) {
-            return false;
-        }
-        if (newElCount > INT_MAX) {
-            // limitation of Vec::Find
-            return false;
-        }
-
-        size_t oldSize = (size_t)len * elSize;
-        size_t allocSize = newElCount * elSize;
-        size_t newPadding = allocSize - oldSize;
-        T* newEls;
-        if (buf == els) {
-            newEls = (T*)MemDup(a, buf, oldSize, newPadding);
-        } else {
-            newEls = (T*)Realloc(a, els, allocSize, oldSize);
-        }
-        if (!newEls) {
-            ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
-            return false;
-        }
-        els = newEls;
-        memset((char*)els + oldSize, 0, newPadding);
-        cap = newCap;
-        return true;
-    }
-
-  public:
-    inline T* EnsureCap(int capNeeded) {
-        // this is frequent, fast path that should be inlined
-        if (cap >= capNeeded) {
-            return els;
-        }
-        // slow path
-        if (!EnsureCapSlow(capNeeded, kElSize)) {
-            return nullptr;
-        }
-        return els;
-    }
-
-    T* MakeSpaceAt(int idx, int count) {
-        int newLen = std::max(len, idx) + count;
-        T* ok = EnsureCap(newLen);
-        if (!ok) {
-            return nullptr;
-        }
-        T* res = &(els[idx]);
-        if (len > idx) {
-            T* src = els + idx;
-            T* dst = els + idx + count;
-            memmove(dst, src, (len - idx) * kElSize);
-        }
-        len = newLen;
-        return res;
-    }
 
     void FreeEls() {
-        if (els != buf) {
-            Free(a, els);
+        if (els) {
+            Free(nullptr, (void*)els);
             els = nullptr;
         }
     }
 
-  public:
     // resets to initial state, freeing memory
     void Reset() {
         FreeEls();
         len = 0;
-        cap = dimofi(buf) - kPadding;
-        els = buf;
-        memset(buf, 0, sizeof(buf));
+        cap = 0;
     }
 
     // use to empty but don't free els
     // for efficient reuse
     void Clear() {
         len = 0;
-        memset(els, 0, cap * kElSize);
-    }
-
-    bool SetSize(int newSize) {
-        if (newSize <= cap) {
-            len = newSize;
-            memset(els + len, 0, (cap - len) * kElSize);
-            return true;
+        if (els && cap > 0) {
+            memset((void*)els, 0, (size_t)cap * sizeof(T));
         }
-        auto res = MakeSpaceAt(0, newSize);
-        return res != nullptr;
     }
 
-    // arena is not owned by Vec and must outlive it
-    explicit Vec(int capHint = 0, Arena* a = nullptr) {
-        this->a = a;
-        capacityHint = capHint;
-        els = buf;
-        Reset();
-    }
+    explicit Vec() = default;
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
     Vec(const Vec& other) {
-        els = buf;
-        Reset();
-
-        EnsureCap(other.len);
+        VecReserve(*this, other.len);
         len = other.len;
         // using memcpy, as Vec only supports POD types
-        memcpy(els, other.els, kElSize * (other.len));
+        if (other.len > 0 && other.els && els) {
+            memcpy((void*)els, (const void*)other.els, sizeof(T) * (size_t)other.len);
+        }
     }
 
     // TODO: write Vec(const Vec&& other)
@@ -155,14 +78,14 @@ class Vec {
             return *this;
         }
 
-        els = buf;
         Reset();
-        EnsureCap(other.len);
+        VecReserve(*this, other.len);
         // using memcpy, as Vec only supports POD types
         len = other.len;
-        capacityHint = other.capacityHint;
-        memcpy(els, other.els, kElSize * len);
-        memset(els + len, 0, kElSize * (cap - len));
+        if (other.len > 0) {
+            memcpy((void*)els, (const void*)other.els, sizeof(T) * (size_t)len);
+            memset((void*)(els + len), 0, sizeof(T) * (size_t)(cap - len));
+        }
         return *this;
     }
 
@@ -187,7 +110,7 @@ class Vec {
     bool isValidIndex(int idx) const { return (idx >= 0) && (idx < len); }
 
     bool InsertAt(int idx, const T& el) {
-        T* p = MakeSpaceAt(idx, 1);
+        T* p = VecInsertSpace(*this, idx, 1);
         if (!p) {
             return false;
         }
@@ -201,11 +124,11 @@ class Vec {
         if (0 == count) {
             return true;
         }
-        T* dst = MakeSpaceAt(len, count);
+        T* dst = VecInsertSpace(*this, len, count);
         if (!dst) {
             return false;
         }
-        memcpy(dst, src, (size_t)count * kElSize);
+        memcpy((void*)dst, (const void*)src, (size_t)count * sizeof(T));
         return true;
     }
 
@@ -216,16 +139,16 @@ class Vec {
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
-    T* AppendBlanks(int count) { return MakeSpaceAt(len, count); }
+    T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
 
     void RemoveAt(int idx, int count = 1) {
         if (len > idx + count) {
             T* dst = els + idx;
             T* src = els + idx + count;
-            memmove(dst, src, (size_t)(len - idx - count) * kElSize);
+            memmove((void*)dst, (const void*)src, (size_t)(len - idx - count) * sizeof(T));
         }
         len -= count;
-        memset(els + len, 0, (size_t)count * kElSize);
+        memset((void*)(els + len), 0, (size_t)count * sizeof(T));
     }
 
     void RemoveLast() {
@@ -248,9 +171,9 @@ class Vec {
         T* toRemove = els + idx;
         T* last = els + len - 1;
         if (toRemove != last) {
-            memcpy(toRemove, last, kElSize);
+            memcpy((void*)toRemove, (const void*)last, sizeof(T));
         }
-        memset(last, 0, kElSize);
+        memset((void*)last, 0, sizeof(T));
         --len;
     }
 
@@ -279,11 +202,9 @@ class Vec {
     // it doesn't matter
     T* Take() {
         T* res = els;
-        if (els == buf) {
-            res = (T*)MemDup(a, buf, (len + kPadding) * kElSize);
-        }
-        els = buf;
-        Reset();
+        els = nullptr;
+        len = 0;
+        cap = 0;
         return res;
     }
 
@@ -318,39 +239,95 @@ class Vec {
         return i;
     }
 
-    void Sort(int (*cmpFunc)(const void* a, const void* b)) { qsort(els, len, kElSize, cmpFunc); }
-
-    void SortTyped(int (*cmpFunc)(const T* a, const T* b)) {
-        auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
-        qsort(els, len, kElSize, cmpFunc2);
-    }
-
-    void Reverse() {
-        for (int i = 0; i < len / 2; i++) {
-            std::swap(els[i], els[len - i - 1]);
-        }
-    }
-
-    bool IsEmpty() const { return len == 0; }
-
-    // TOOD: replace with IsEmpty()
-    bool empty() const { return len == 0; }
-
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     using iterator = T*;
     using const_iterator = const T*;
 
-    iterator begin() { return &(els[0]); }
-    const_iterator begin() const { return &(els[0]); }
-    iterator end() { return &(els[len]); }
-    const_iterator end() const { return &(els[len]); }
+    iterator begin() { return els; }
+    const_iterator begin() const { return els; }
+    iterator end() { return els ? els + len : nullptr; }
+    const_iterator end() const { return els ? els + len : nullptr; }
 };
 
 // number of elements, as int (matches len() for Str / WStr)
 template <typename T>
 inline int len(const Vec<T>& v) {
     return v.len;
+}
+
+// cmp is non-deduced (via nested type) so lambdas convert after T is known from v.
+template <typename T>
+struct VecSortCmp {
+    using Fn = int (*)(const T* a, const T* b);
+};
+
+template <typename T>
+void VecSort(Vec<T>& v, typename VecSortCmp<T>::Fn cmpFunc) {
+    if (v.len > 0) {
+        auto cmp = (int (*)(const void* a, const void* b))cmpFunc;
+        qsort((void*)v.els, v.len, sizeof(T), cmp);
+    }
+}
+
+template <typename T>
+void VecReverse(Vec<T>& v) {
+    for (int i = 0; i < v.len / 2; i++) {
+        std::swap(v.els[i], v.els[v.len - i - 1]);
+    }
+}
+
+template <typename T>
+bool VecReserve(Arena* arena, T& v, int wantedSize) {
+    if (wantedSize <= v.cap) {
+        return true;
+    }
+    int newCap = std::max(v.cap * 2, wantedSize);
+    return VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, (int)sizeof(*v.els));
+}
+
+template <typename T>
+inline T* VecReserve(Vec<T>& v, int capNeeded) {
+    if (!VecReserve(nullptr, v, capNeeded)) {
+        return nullptr;
+    }
+    return v.els;
+}
+
+template <typename T>
+T* VecInsertSpace(Vec<T>& v, int idx, int count) {
+    int newLen = std::max(v.len, idx) + count;
+    T* ok = VecReserve(v, newLen);
+    if (!ok) {
+        return nullptr;
+    }
+    T* res = &(v.els[idx]);
+    if (v.len > idx) {
+        T* src = v.els + idx;
+        T* dst = v.els + idx + count;
+        memmove((void*)dst, (const void*)src, (size_t)(v.len - idx) * sizeof(T));
+    }
+    v.len = newLen;
+    return res;
+}
+
+// Set logical length to newSize (std::vector::resize). Grows capacity if needed;
+// zeros unused capacity beyond the new length.
+template <typename T>
+bool VecResize(Vec<T>& v, int newSize) {
+    if (newSize < 0) {
+        return false;
+    }
+    if (newSize > v.cap) {
+        if (!VecReserve(v, newSize)) {
+            return false;
+        }
+    }
+    v.len = newSize;
+    if (v.els && v.cap > v.len) {
+        memset((void*)(v.els + v.len), 0, (size_t)(v.cap - v.len) * sizeof(T));
+    }
+    return true;
 }
 
 // only suitable for T that are pointers to C++ objects
@@ -362,25 +339,15 @@ inline void DeleteVecMembers(Vec<T>& v) {
     v.Clear();
 }
 
-template <typename T>
-void VecExpandTo(Arena* arena, T& v, int wantedSize) {
-    if (wantedSize <= v.cap) {
-        return;
-    }
-    v.els = (decltype(v.els))ReallocToWantedSize(arena, v.els, &v.cap, wantedSize, (int)sizeof(*v.els));
-}
-
-template <typename T>
-void VecExpand(Arena* arena, T& v, int n) {
-    int wantedSize = v.len + n;
-    VecExpandTo(arena, v, wantedSize);
-}
-
 template <typename T, typename E>
-void VecPush(Arena* arena, T& v, E el) {
-    VecExpand(arena, v, 1);
+bool VecPush(Arena* arena, T& v, E el) {
+    bool ok = VecReserve(arena, v, v.len + 1);
+    if (!ok) {
+        return false;
+    }
     v.els[v.len] = el;
     v.len++;
+    return true;
 }
 
 // Iterator wrapper for range-based for loops over Vec types (structs with len/els)
@@ -391,7 +358,7 @@ class VecIterator {
   public:
     VecIterator(Vec* v) : vec(v) {}
     auto begin() { return vec ? vec->els : nullptr; }
-    auto end() { return vec ? vec->els + vec->len : nullptr; }
+    auto end() { return vec && vec->els ? vec->els + vec->len : nullptr; }
 };
 
 // Helper functions for type deduction (works with both Vec& and Vec*)

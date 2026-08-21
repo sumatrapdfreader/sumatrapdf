@@ -121,7 +121,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'" Label="Configuration">
@@ -147,7 +147,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'" Label="Configuration">
@@ -175,7 +175,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
@@ -204,7 +204,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
   </PropertyGroup>
@@ -369,9 +369,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -406,9 +406,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -443,9 +443,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -480,9 +480,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -517,8 +517,8 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -553,8 +553,8 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -589,8 +589,8 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -625,8 +625,8 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -661,9 +661,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -698,9 +698,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -735,9 +735,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -772,9 +772,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -808,9 +808,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -846,9 +846,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -884,9 +884,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -922,9 +922,9 @@
       <PrecompiledHeaderFile>hb.hh</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4805;4100;4146;4244;4245;4267;4310;4456;4457;4459;4505;4701;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\harfbuzz\src;..\ext\harfbuzz\src\hb-ucdn;..\ext\mupdf\scripts\freetype;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>hb.hh</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>

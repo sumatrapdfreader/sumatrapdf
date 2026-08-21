@@ -13,8 +13,7 @@
 #include "base/ByteReaderWriter.h"
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
-#include "base/DirIter.h"
-#include "base/Win.h"
+#include "base/DirScan.h"
 #include "base/LzmaSimpleArchive.h"
 
 namespace lzsa {
@@ -44,7 +43,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
         LzmaEncProps_Init(&props);
 
         // always apply the BCJ filter for speed (else two or three compression passes would be required)
-        ScopedMem<u8> bcj_enc(AllocArray<u8>(uncompressedSize));
+        ScopedMem<u8> bcj_enc(AllocArray<u8>((int)uncompressedSize));
         if (bcj_enc) {
             memcpy(bcj_enc, uncompressed, uncompressedSize);
             UInt32 x86State;
@@ -65,7 +64,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     if (lzma_size <= uncompressedSize) {
         *compressedSize = lzma_size;
     } else {
-        compressed[0] = (u8)-1;
+        compressed[0] = (char)(u8)-1;
         memcpy(compressed + 1, uncompressed, uncompressedSize);
         *compressedSize = uncompressedSize + 1;
     }
@@ -221,7 +220,7 @@ static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
         Str arg = ToUtf8Temp(argsArr[i]);
         args.Append(arg);
     }
-    LocalFree(argsArr);
+    LocalFree((void*)argsArr);
 }
 
 int mainVerify(Str archivePath) {

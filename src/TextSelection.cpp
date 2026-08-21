@@ -4,7 +4,7 @@
 #include "base/Base.h"
 
 #include "DocController.h"
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #if defined(DEBUG)
 #include "base/UtAssert.h"
@@ -49,7 +49,8 @@ void TextSelection::Reset() {
 static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     Rect* coords;
     int textLen = 0;
-    Str text = ts->engine->GetTextForPage(pageNo, &textLen, &coords);
+    // called for the side effect of filling textLen and coords
+    ts->engine->GetTextForPage(pageNo, &textLen, &coords);
     PointF pt = PointF((float)x, (float)y);
 
     unsigned int maxDist = UINT_MAX;
@@ -143,9 +144,7 @@ static void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int te
         ReportIf(left < 0);
         if (left == 0) {
             int newCap = result->cap * 2;
-            if (newCap < 64) {
-                newCap = 64;
-            }
+            newCap = std::max(newCap, 64);
             int* newPages = (int*)realloc(result->pages, sizeof(int) * newCap);
             Rect* newRects = (Rect*)realloc(result->rects, sizeof(Rect) * newCap);
             ReportIf(!newPages);
@@ -171,12 +170,8 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         length += glyph;
         glyph = 0;
     }
-    if (length < 0) {
-        length = 0;
-    }
-    if (glyph > textLen) {
-        glyph = textLen;
-    }
+    length = std::max(length, 0);
+    glyph = std::min(glyph, textLen);
     if (glyph + length > textLen) {
         length = textLen - glyph;
     }
@@ -276,6 +271,8 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     return coords[glyphIx].Contains(pt);
 }
 
+// index of the glyph closest to (x, y) on pageNo, without mutating the
+// selection (unlike StartAt, which stores it in startGlyph)
 int TextSelection::FindClosestGlyphAt(int pageNo, double x, double y) {
     return FindClosestGlyph(this, pageNo, x, y);
 }
@@ -325,12 +322,8 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
 
         int glyph = page == fromPage ? fromGlyph : 0;
         int end = page == toPage ? toGlyph : textLen;
-        if (glyph < 0) {
-            glyph = 0;
-        }
-        if (end > textLen) {
-            end = textLen;
-        }
+        glyph = std::max(glyph, 0);
+        end = std::min(end, textLen);
         int length = end - glyph;
         if (length > 0) {
             FillResultRects(this, page, glyph, length);
@@ -498,9 +491,7 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
         }
         // extend backward across comma groups
         wordStart = ExtendBackAcrossCommaGroups(text, wordStart);
-        if (maybeNumberStart < wordStart) {
-            wordStart = maybeNumberStart;
-        }
+        wordStart = std::min(maybeNumberStart, wordStart);
     }
     *wordStartOut = wordStart;
     *wordEndOut = wordEnd;
@@ -518,6 +509,7 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     SelectUpTo(pageNo, wordEnd);
 }
 
+// select the whole line of text at (x, y) (triple-click; issue #694)
 void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     int i = FindClosestGlyph(this, pageNo, x, y);
     if (i < 0) {
@@ -564,6 +556,8 @@ static bool PosBefore(int pageA, int glyphA, int pageB, int glyphB) {
     return glyphA < glyphB;
 }
 
+// extend the selection so it spans whole words from the anchor word (set by
+// the last SelectWordAt) to the word at (x, y)
 void TextSelection::SelectWordsUpTo(int pageNo, double x, double y) {
     // no anchor word yet (shouldn't happen) - fall back to glyph selection
     if (wordStartGlyph == -1) {
@@ -653,6 +647,46 @@ static bool MoveFreeEndByGlyph(EngineBase* engine, int& page, int& glyph, int di
         return true;
     }
     return false;
+}
+
+// Move free end (page, glyph) to the previous / next word boundary. dir +1 / -1.
+// Steps off the current position, then over any run of non-word characters, then
+// to the far side of the word it lands in - i.e. what Ctrl+Left / Ctrl+Right do
+// in a text editor. Stops at a page boundary so a single step never skips a page.
+static bool MoveFreeEndByWord(EngineBase* engine, int& page, int& glyph, int dir) {
+    int textLen = 0;
+    Str text = engine->GetTextForPage(page, &textLen);
+    if (textLen <= 0) {
+        return MoveFreeEndByGlyph(engine, page, glyph, dir);
+    }
+    auto charAt = [&](int ix) -> int {
+        if (ix < 0 || ix >= textLen) {
+            return 0;
+        }
+        int byteIdx = Utf8CodepointToByteIndex(text, ix);
+        int next = byteIdx;
+        return Utf8CodepointNext(text, next);
+    };
+
+    int fromPage = page;
+    if (!MoveFreeEndByGlyph(engine, page, glyph, dir)) {
+        return false;
+    }
+    if (page != fromPage) {
+        return true;
+    }
+    // the character we are moving toward decides whether we're still in a word
+    while (glyph > 0 && glyph < textLen && !isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
+        if (!MoveFreeEndByGlyph(engine, page, glyph, dir) || page != fromPage) {
+            break;
+        }
+    }
+    while (glyph > 0 && glyph < textLen && isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
+        if (!MoveFreeEndByGlyph(engine, page, glyph, dir) || page != fromPage) {
+            break;
+        }
+    }
+    return true;
 }
 
 // True if glyph i is a zero-width newline (line break in the page text stream).
@@ -800,6 +834,26 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
     return true;
 }
 
+// Move a (page, glyph) position one unit in reading order, without touching any
+// selection. Keyboard selection drives its caret with this; ExtendBy() moves the
+// selection's free end with the same steps.
+bool TextPosMoveBy(EngineBase* engine, int& page, int& glyph, TextSelectUnit unit, int dir) {
+    if (!engine || page < 1 || glyph < 0 || dir == 0) {
+        return false;
+    }
+    int d = dir > 0 ? 1 : -1;
+    if (unit == TextSelectUnit::Glyph) {
+        return MoveFreeEndByGlyph(engine, page, glyph, d);
+    }
+    if (unit == TextSelectUnit::Word) {
+        return MoveFreeEndByWord(engine, page, glyph, d);
+    }
+    return MoveFreeEndByLine(engine, page, glyph, d);
+}
+
+// Move the free end (endPage/endGlyph) by delta units in reading order.
+// delta > 0 toward document end, delta < 0 toward document start.
+// Returns true if the free end moved. Platform code maps keys to unit+delta.
 bool TextSelection::ExtendBy(TextSelectUnit unit, int delta) {
     if (!engine || startPage < 1 || endPage < 1 || delta == 0) {
         return false;
@@ -814,13 +868,7 @@ bool TextSelection::ExtendBy(TextSelectUnit unit, int delta) {
     int dir = delta > 0 ? 1 : -1;
 
     for (int s = 0; s < steps; s++) {
-        bool moved = false;
-        if (unit == TextSelectUnit::Glyph) {
-            moved = MoveFreeEndByGlyph(engine, page, glyph, dir);
-        } else {
-            moved = MoveFreeEndByLine(engine, page, glyph, dir);
-        }
-        if (!moved) {
+        if (!TextPosMoveBy(engine, page, glyph, unit, dir)) {
             break;
         }
     }

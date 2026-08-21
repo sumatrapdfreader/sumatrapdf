@@ -6,10 +6,14 @@
 #include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/BitManip.h"
-#include "base/Dpi.h"
+#include "gui/Dpi.h"
 #include "base/Win.h"
+#include "base/Pixmap.h"
+#include "base/GdiPlusUtil.h"
 
-#include "wingui/UIModels.h"
+#include "gui/UIModels.h"
+#include "gui/Gfx.h"
+#include "gui/PlatformFont.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -25,7 +29,7 @@
 #include "Annotation.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
-#include "SumatraDialogs.h"
+#include "Canvas.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Commands.h"
@@ -35,15 +39,19 @@
 #include "HomePage.h"
 #include "Translations.h"
 #include "Toolbar.h"
+#include "resource.h"
+#include "DarkMode_win.h"
+#include "Tabs.h"
 #include "Accelerators.h"
 #include "ImageSaveCropResize.h"
 #include "CommandAvailability.h"
 #include "Menu.h"
+#include "NavFilesInFolder.h"
 #include "ReadAloudHighlight.h"
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
-    Str text = {};
+    Str text;
     // copy of MENUITEMINFO fields
     uint fType = 0;
     uint fState = 0;
@@ -76,6 +84,10 @@ static MenuDef menuDefFile[] = {
         CmdOpenFile,
     },
     {
+        _TRN("Use SumatraPDF File Picker"),
+        CmdToggleFilePicker,
+    },
+    {
         _TRN("&Close"),
         CmdClose,
     },
@@ -96,8 +108,24 @@ static MenuDef menuDefFile[] = {
         CmdSaveAs,
     },
     {
+        _TRN("Convert to PDF..."),
+        CmdConvertToPDF,
+    },
+    {
+        _TRN("Convert PDF to Images..."),
+        CmdConvertPdfToImages,
+    },
+    {
         _TRN("Save Annotations to existing PDF"),
         CmdSaveAnnotations,
+    },
+    {
+        _TRN("Insert Image..."),
+        CmdInsertImage,
+    },
+    {
+        _TRN("Sign Document..."),
+        CmdSignDocument,
     },
 //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
@@ -116,6 +144,10 @@ static MenuDef menuDefFile[] = {
     {
         _TRN("Delete"),
         CmdDeleteFile,
+    },
+    {
+        _TRN("Delete and Open Next File"),
+        CmdDeleteFileAndOpenNext,
     },
     {
         _TRN("&Print..."),
@@ -221,6 +253,10 @@ static MenuDef menuDefView[] = {
         CmdToggleMangaMode,
     },
     {
+        _TRN("&Uniform Page Width"),
+        CmdToggleUniformPageWidth,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -261,6 +297,10 @@ static MenuDef menuDefView[] = {
         CmdToggleToolbar,
     },
     {
+        _TRN("&Highlight Form Fields"),
+        CmdToggleHighlightFormFields,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -275,6 +315,10 @@ static MenuDef menuDefView[] = {
     {
         _TRN("Codex chat"),
         CmdAIChatWithOpenAICodex,
+    },
+    {
+        _TRN("Antigravity chat"),
+        CmdAIChatWithAntiGravity,
     },
     {
         nullptr,
@@ -366,6 +410,10 @@ static MenuDef menuDefZoomShort[] = {
         CmdZoomCustom,
     },
     {
+        _TRN("To &Selection"),
+        CmdZoomToSelection,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -408,6 +456,10 @@ static MenuDef menuDefZoom[] = {
     {
         _TRN("Custom &Zoom..."),
         CmdZoomCustom,
+    },
+    {
+        _TRN("To &Selection"),
+        CmdZoomToSelection,
     },
     {
         kMenuSeparator,
@@ -473,7 +525,7 @@ static MenuDef menuDefZoom[] = {
 //] ACCESSKEY_GROUP Zoom Menu
 
 // TODO: replace with CmdetTheme
-MenuDef menuDefThemes[] = {
+static MenuDef menuDefThemes[] = {
     {
         nullptr,
         0,
@@ -490,6 +542,10 @@ static MenuDef menuDefSettings[] = {
     { _TRN("Contribute Translation"),       CmdContributeTranslation },
     { kMenuSeparator,                             0                  },
 #endif
+    {
+        _TRN("Use SumatraPDF File Picker"),
+        CmdToggleFilePicker,
+    },
     {
         _TRN("&Options..."),
         CmdOptions,
@@ -525,7 +581,7 @@ static MenuDef menuDefTabGroups[] = {
     },
 };
 
-MenuDef menuDefFavorites[] = {
+static MenuDef menuDefFavorites[] = {
     {
         _TRN("Add to favorites"),
         CmdFavoriteAdd,
@@ -610,6 +666,18 @@ static MenuDef menuDefDebug[] = {
         CmdToggleLinks,
     },
     {
+        "Show page boxes",
+        CmdTogglePageBoxes,
+    },
+    {
+        "Show images",
+        CmdToggleImages,
+    },
+    {
+        "Show fit content area",
+        CmdDebugShowFitContentArea,
+    },
+    {
         "Download symbols",
         CmdDebugDownloadSymbols,
     },
@@ -649,6 +717,10 @@ static MenuDef menuDefSelection[] = {
     {
         _TRN("Translate with OpenAI &Codex"),
         CmdTranslateSelectionWithOpenAICodex,
+    },
+    {
+        _TRN("Translate with &Antigravity"),
+        CmdTranslateSelectionWithAntiGravity,
     },
     {
         _TRN("Search With &Google"),
@@ -702,6 +774,10 @@ static MenuDef menuDefMainSelection[] = {
     {
         _TRN("Translate with OpenAI &Codex"),
         CmdTranslateSelectionWithOpenAICodex,
+    },
+    {
+        _TRN("Translate with &Antigravity"),
+        CmdTranslateSelectionWithAntiGravity,
     },
     {
         _TRN("&Search With Google"),
@@ -853,6 +929,10 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
         CmdCreateAnnotImageFromClipboard,
     },
     {
+        _TRN("Image From &File..."),
+        CmdInsertImage,
+    },
+    {
         _TRN("&Caret"),
         CmdCreateAnnotCaret,
     },
@@ -904,8 +984,12 @@ static MenuDef menuDefContextImage[] = {
         CmdResizeImage,
     },
     {
-        _TRN("Convert to &PDF"),
+        _TRN("Convert page to &PDF"),
         CmdConvertImageToPdf,
+    },
+    {
+        _TRN("Convert to PDF..."),
+        CmdConvertToPDF,
     },
     {
         nullptr,
@@ -927,6 +1011,10 @@ static MenuDef menuDefDocumentAIChat[] = {
     {
         _TRN("Claude Code"),
         CmdAIChatWithClaudeCode,
+    },
+    {
+        _TRN("Antigravity"),
+        CmdAIChatWithAntiGravity,
     },
     {
         nullptr,
@@ -982,6 +1070,22 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdPdfBake,
     },
     {
+        _TRN("Insert Image..."),
+        CmdInsertImage,
+    },
+    {
+        _TRN("Sign Document..."),
+        CmdSignDocument,
+    },
+    {
+        _TRN("Convert to PDF..."),
+        CmdConvertToPDF,
+    },
+    {
+        _TRN("Convert PDF to Images..."),
+        CmdConvertPdfToImages,
+    },
+    {
         _TRN("Show in &folder"),
         CmdShowInFolder,
     },
@@ -997,6 +1101,10 @@ static MenuDef menuDefContext[] = {
     {
         _TRN("&Copy Selection"),
         CmdCopySelection,
+    },
+    {
+        _TRN("&Zoom To Selection"),
+        CmdZoomToSelection,
     },
     //{
     //    _TRN("Create Annotation From Selection"),
@@ -1102,7 +1210,7 @@ static MenuDef menuDefContextStart[] = {
     },
     {
         _TRN("Show in folder"),
-        CmdShowInFolder,
+        CmdNavigateFilesInFolder,
     },
     {
         _TRN("&Pin Document"),
@@ -1117,6 +1225,10 @@ static MenuDef menuDefContextStart[] = {
         CmdForgetSelectedDocument,
     },
     {
+        _TRN("Delete File"),
+        CmdDeleteFile,
+    },
+    {
         nullptr,
         0,
     },
@@ -1129,6 +1241,7 @@ static MenuDef menuDefContextStart[] = {
 static int disableIfDirectoryOrBrokenPDF[] = {
     CmdRenameFile,
     CmdDeleteFile,
+    CmdDeleteFileAndOpenNext,
     CmdSendByEmail,
     CmdOpenWithAcrobat,
     CmdOpenWithFoxIt,
@@ -1143,6 +1256,7 @@ static UINT_PTR selectionTextCmds[] = {
     CmdTranslateSelectionWithGrokBuild,
     CmdTranslateSelectionWithClaudeCode,
     CmdTranslateSelectionWithOpenAICodex,
+    CmdTranslateSelectionWithAntiGravity,
     CmdSearchSelectionWithGoogle,
     CmdSearchSelectionWithBing,
     CmdSearchSelectionWithWikipedia,
@@ -1166,7 +1280,7 @@ static UINT_PTR menusNoTranslate[] = {
 };
 // clang-format on
 
-static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
+static bool CmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
     for (int i = 0; i < n; i++) {
         UINT_PTR id = idsList[i];
         if (id == cmdId) {
@@ -1176,7 +1290,7 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
     return false;
 }
 
-#define cmdIdInList(name) __cmdIdInList(cmdId, name, dimof(name))
+#define cmdIdInList(name) CmdIdInList(cmdId, name, dimof(name))
 
 static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
     ReportIf(!filePath || !menuFile);
@@ -1204,7 +1318,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
 
     int i;
     for (i = 0; i < kFileHistoryMaxRecent; i++) {
-        FileState* fs = gFileHistory.Get(i);
+        FileState* fs = FileHistoryGet(i);
         if (!fs || fs->isMissing) {
             break;
         }
@@ -1514,8 +1628,8 @@ static struct {
 // clang-format on
 
 static void BuildMenuZoom(HMENU m) {
-    auto prefs = gGlobalPrefs;
-    auto customZoomLevels = prefs->zoomLevels;
+    auto* prefs = gGlobalPrefs;
+    auto* customZoomLevels = prefs->zoomLevels;
     int n = len(*customZoomLevels);
     if (n <= 0) {
         return;
@@ -1548,7 +1662,7 @@ int CmdIdFromVirtualZoom(float virtualZoom) {
 // Custom ZoomLevels menu items use dynamically allocated command ids (not in
 // CmdZoomFirst..CmdZoomLast). Map an absolute zoom % to that custom id, or 0.
 static int CustomZoomCmdIdFromLevel(float zoomVirtual) {
-    auto prefs = gGlobalPrefs;
+    auto* prefs = gGlobalPrefs;
     if (!prefs || !prefs->zoomLevels || !prefs->zoomLevelsCmdIds) {
         return 0;
     }
@@ -1582,7 +1696,7 @@ static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
         MenuSetEnabled(m, it.cmdId, canZoom);
     }
 
-    auto prefs = gGlobalPrefs;
+    auto* prefs = gGlobalPrefs;
     Vec<int>* customIds = prefs ? prefs->zoomLevelsCmdIds : nullptr;
     int nCustom = customIds ? len(*customIds) : 0;
     for (int i = 0; i < nCustom; i++) {
@@ -1626,7 +1740,7 @@ static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
     }
 }
 
-void MenuUpdateZoom(MainWindow* win) {
+static void MenuUpdateZoom(MainWindow* win) {
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
@@ -1644,7 +1758,7 @@ void MenuUpdateZoom(MainWindow* win) {
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
 
-void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) {
+static void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) {
     bool filePrintEnabled = win->IsDocLoaded();
 #if defined(DISABLE_DOCUMENT_RESTRICTIONS)
     bool filePrintAllowed = true;
@@ -1672,7 +1786,7 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
 
 static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
     MenuEmpty(menu);
-    auto ctx = NewBuildMenuCtx(tab, Point{0, 0});
+    auto* ctx = NewBuildMenuCtx(tab, Point{0, 0});
     AutoDelete delCtx(ctx);
     BuildMenuFromDef(menuDefFile, menu, ctx);
     DynamicPartOfFileMenu(menu, ctx);
@@ -1693,7 +1807,7 @@ static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
     for (int i = 0; disableIfNoSelection[i]; i++) {
         MenuSetEnabled(menu, (int)disableIfNoSelection[i], isTextSelected);
     }
-    auto curr = gFirstCustomCommand;
+    auto* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdSelectionHandler) {
             MenuSetEnabled(menu, curr->id, isTextSelected);
@@ -1702,7 +1816,7 @@ static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
     }
 }
 
-void MenuUpdateDisplayMode(MainWindow* win) {
+static void MenuUpdateDisplayMode(MainWindow* win) {
     bool enabled = win->IsDocLoaded();
     DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
     if (enabled) {
@@ -1731,7 +1845,9 @@ void MenuUpdateDisplayMode(MainWindow* win) {
     if (dm && win->CurrentTab()) {
         bool mangaMode = dm->GetDisplayR2L();
         MenuSetChecked(win->menu, CmdToggleMangaMode, mangaMode);
-        MenuSetEnabled(win->menu, CmdToggleMangaMode, !IsSingle(displayMode));
+        MenuSetEnabled(win->menu, CmdToggleMangaMode, true);
+        MenuSetChecked(win->menu, CmdToggleUniformPageWidth, dm->GetUniformPageWidth());
+        MenuSetEnabled(win->menu, CmdToggleUniformPageWidth, true);
     }
 }
 
@@ -1755,7 +1871,11 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
 
     MenuSetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
     MenuSetChecked(win->menu, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
-    MenuSetChecked(win->menu, CmdToggleToolbar, gGlobalPrefs->showToolbar);
+    {
+        // checked when mode is not "hide" (show or overlay)
+        bool toolbarOn = win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+        MenuSetChecked(win->menu, CmdToggleToolbar, toolbarOn);
+    }
     MenuSetChecked(win->menu, CmdToggleMenuBar, gGlobalPrefs->showMenubar);
     // CmdChangeScrollbar doesn't need a check mark - it opens a dialog
     MenuUpdateDisplayMode(win);
@@ -1788,12 +1908,19 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     if (win->IsDocLoaded() && !fileExists) {
         MenuSetEnabled(win->menu, CmdRenameFile, false);
         MenuSetEnabled(win->menu, CmdDeleteFile, false);
+        MenuSetEnabled(win->menu, CmdDeleteFileAndOpenNext, false);
     }
 
     CheckMenuRadioItem(win->menu, gFirstSetThemeCmdId, gLastSetThemeCmdId, gCurrSetThemeCmdId, MF_BYCOMMAND);
 
     MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
+    MenuSetChecked(win->menu, CmdTogglePageBoxes, win->showPageBoxes);
+    MenuSetChecked(win->menu, CmdToggleHighlightFormFields, gGlobalPrefs->highlightFormFields);
+    MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
+    MenuSetChecked(win->menu, CmdDebugShowFitContentArea, ShowFitContentArea());
     MenuSetEnabled(win->menu, CmdTabGroupSave, HasOpenedDocuments(win));
+    MenuSetChecked(win->menu, CmdToggleFilePicker,
+                   gGlobalPrefs && str::EqI(gGlobalPrefs->filePicker, StrL("sumatrapdf")));
 }
 
 void OnAboutContextMenu(MainWindow* win, int x, int y) {
@@ -1802,12 +1929,23 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
-    TempStr path = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
-    if (!path || path.s[0] == '<' || str::StartsWith(path, "http://") || str::StartsWith(path, "https://")) {
+    // Prefer the file under the click; keyboard/context-menu key falls back to
+    // the keyboard-selected home entry.
+    TempStr path = HomePageFilePathAtTemp(win, x, y);
+    bool fromClick = path && path::IsAbsolute(path);
+    if (!fromClick) {
+        path = str::DupTemp(HomePageSelectedFilePathTemp(win));
+    }
+    if (!path || !path::IsAbsolute(path)) {
         return;
     }
 
-    FileState* fs = gFileHistory.FindByPath(path);
+    // Keep keyboard selection in sync with the right-clicked thumbnail
+    if (fromClick) {
+        HomePageOnHover(win, x, y);
+    }
+
+    FileState* fs = FileHistoryFindByPath(path);
     if (!fs) {
         return;
     }
@@ -1817,7 +1955,20 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     ctx.filePath = path;
     HMENU popup = BuildMenuFromDef(menuDefContextStart, CreatePopupMenu(), &ctx);
     MenuSetChecked(popup, CmdPinSelectedDocument, fs->isPinned);
+    // Del is home-page-only (not a global accelerator), so AppendAccelKey won't
+    // pick it up — show it next to Remove From History explicitly
+    MenuSetText(popup, CmdForgetSelectedDocument, str::JoinTemp(_TRA("&Remove From History"), StrL("\tDel")));
     Point pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, {x, y});
+    // keyboard menu (no hit under the cursor): place at cursor or near the frame
+    if (!fromClick) {
+        Point cursor = GetCursorPosition();
+        if (!cursor.IsEmpty()) {
+            pt = cursor;
+        } else {
+            Rect rc = HwndWindowRect(win->hwndFrame);
+            pt = Point(rc.x + 40, rc.y + 80);
+        }
+    }
     MarkMenuOwnerDraw(popup);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
@@ -1831,8 +1982,35 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
-    if (CmdShowInFolder == cmd) {
-        SumatraOpenPathInDefaultFileManager(path);
+    if (CmdNavigateFilesInFolder == cmd) {
+        ShowNavFilesInFolder(win, path);
+        return;
+    }
+
+    if (CmdDeleteFile == cmd) {
+        if (!CanAccessDisk() || gPluginMode) {
+            return;
+        }
+        // own the path: delete closes tabs and rewrites history
+        TempStr pathOwned = str::DupTemp(path);
+        if (file::Exists(pathOwned)) {
+            WindowTab* tab = FindTabByFilePath(pathOwned);
+            if (tab) {
+                if (!MaybeSaveAnnotations(tab)) {
+                    return;
+                }
+                CloseTab(tab, false);
+            }
+            DeleteFileFromDiskAndHistory(pathOwned);
+        } else {
+            // missing file: still drop it from history
+            ForgetFileFromFrequentlyRead(win, pathOwned);
+            return;
+        }
+        if (IsMainWindowValidAndNotClosing(win)) {
+            win->DeleteToolTip();
+            win->RedrawAll(true);
+        }
         return;
     }
 
@@ -1853,16 +2031,16 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
 // favorites are only hidden (so the favorites aren't lost). Used by both the
 // context menu and the per-thumbnail ✕ button (issue #283).
 void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
-    FileState* fs = gFileHistory.FindByPath(filePath);
+    FileState* fs = FileHistoryFindByPath(filePath);
     if (!fs) {
         return;
     }
     TempStr path = str::DupTemp(fs->filePath);
-    if (!fs->favorites->IsEmpty()) {
+    if (len(*fs->favorites) > 0) {
         // only hide documents with favorites
-        gFileHistory.MarkFileInexistent(fs->filePath, true);
+        FileHistoryMarkFileInexistent(fs->filePath, true);
     } else {
-        gFileHistory.Remove(fs);
+        FileHistoryRemove(fs);
         DeleteFileState(fs);
     }
     DeleteThumbnailForFile(path);
@@ -1875,8 +2053,8 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
 // We only want the "path.pdf" / "foo@bar.com"
 static TempStr CleanupURLForClipbardCopyTemp(Str s) {
     Str slice = s;
-    str::Skip(slice, "file:");
-    str::Skip(slice, "mailto:");
+    str::TrimPrefix(slice, StrL("file:"));
+    str::TrimPrefix(slice, StrL("mailto:"));
     return str::DupTemp(slice);
 }
 
@@ -1897,7 +2075,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         value = pageEl->GetValue();
     }
 
-    auto ctx = NewBuildMenuCtx(tab, cursorPos);
+    auto* ctx = NewBuildMenuCtx(tab, cursorPos);
     AutoDelete delCtx(ctx);
     HMENU popup = BuildMenuFromDef(menuDefContext, CreatePopupMenu(), ctx);
 
@@ -1918,16 +2096,23 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     EngineBase* engine = dm->GetEngine();
 
     win->contextMenuPt = cursorPos;
-    win->contextMenuPtValid = ReadAloudCanReadFromCursor(dm, cursorPos);
+    bool isImageDoc = engine && (engine->IsImageCollection() || engine->kind == kindEngineImage ||
+                                 engine->kind == kindEngineImageDir || engine->kind == kindEngineComicBooks);
+    win->contextMenuPtValid = !isImageDoc && ReadAloudCanReadFromCursor(dm, cursorPos);
     HMENU readAloudCtxMenu = GetReadAloudContextSubmenu();
-    if (readAloudCtxMenu) {
+    // no text to speak on comics / image folders / single images
+    if (readAloudCtxMenu && !isImageDoc) {
         RebuildReadAloudMenu(win, readAloudCtxMenu, true, win->contextMenuPtValid);
     }
 
-    if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
+    if (!pageEl || !pageEl->Is(kindPageElementDest) || !PageDestHasAddress(pageEl->AsLink())) {
         MenuRemove(popup, CmdCopyLinkTarget);
     }
-    if (!pageEl || !pageEl->Is(kindPageElementComment) || !value) {
+    bool hasCommentToCopy = pageEl && pageEl->Is(kindPageElementComment) && value;
+    if (ctx->annotationUnderCursor) {
+        hasCommentToCopy = !str::IsEmptyOrWhiteSpace(Contents(ctx->annotationUnderCursor));
+    }
+    if (!hasCommentToCopy) {
         MenuRemove(popup, CmdCopyComment);
     }
     // show "Save Attachment" only for file attachment annotations
@@ -2047,7 +2232,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     // TrackPopupMenu runs a nested message loop; during that time the window
     // can be force-closed (e.g. by a plugin host destroying the parent).
     // If that happened, all our cached pointers (win, dm, pageEl, etc.) are dangling.
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
 
@@ -2057,7 +2242,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         HwndRepaintNow(win->hwndCanvas);
     }
 
-    auto cmd = FindCustomCommand(cmdId);
+    auto* cmd = FindCustomCommand(cmdId);
     if (cmd && cmd->origId == CmdSelectionHandler) {
         HwndSendCommand(win->hwndFrame, cmd->id);
         return;
@@ -2087,14 +2272,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 HwndSendCommand(win->hwndFrame, cmdId);
                 return;
             }
-            RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
-            if (!bmp) {
-                return;
-            }
-            TempStr dir = path::GetDirTemp(filePath);
-            TempStr base = path::GetBaseNameTemp(filePath);
-            TempStr noExt = path::GetPathNoExtTemp(base);
-            TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d.png", noExt, pageNoUnderCursor));
+            EngineBase* imgEngine = dm->GetEngine();
             ImageEditMode m = ImageEditMode::Save;
             bool selectPdf = false;
             if (cmdId == CmdCropImage) {
@@ -2104,7 +2282,27 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             } else if (cmdId == CmdConvertImageToPdf) {
                 selectPdf = true;
             }
-            ShowImageEditWindow(win, m, destPath, bmp, selectPdf);
+            // a standalone image file: load from disk so Save can write the original
+            // bytes when the image is not cropped or resized
+            if (imgEngine->kind == kindEngineImage && imgEngine->FilePath()) {
+                ShowImageEditWindow(win->hwndFrame, m, imgEngine->FilePath(), nullptr, selectPdf);
+                return;
+            }
+            RenderedBitmap* bmp = imgEngine->GetImageForPageElement(pageEl);
+            if (!bmp) {
+                return;
+            }
+            TempStr dir = path::GetDirTemp(filePath);
+            TempStr base = path::GetBaseNameTemp(filePath);
+            TempStr noExt = path::GetPathNoExtTemp(base);
+            Str origData = imgEngine->GetImageDataForPageElement(pageEl);
+            Str ext = ImageSaveExtFromData(origData);
+            if (!ext) {
+                ext = StrL(".png");
+            }
+            TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d%s", noExt, pageNoUnderCursor, ext));
+            ShowImageEditWindow(win->hwndFrame, m, destPath, bmp, selectPdf, origData);
+            str::Free(origData);
             delete bmp;
             return;
         };
@@ -2117,8 +2315,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             return;
         };
         case CmdCopyComment: {
-            if (len(value) > 0) {
-                CopyTextToClipboard(value);
+            Str comment = value;
+            if (ctx->annotationUnderCursor) {
+                // The page element's value is hover text. For FreeText that is
+                // only the author because the contents are already on the page.
+                comment = Contents(ctx->annotationUnderCursor);
+            }
+            if (!str::IsEmptyOrWhiteSpace(comment)) {
+                CopyTextToClipboard(comment);
             }
             return;
         }
@@ -2150,9 +2354,12 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             if (pageEl) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
-                    CopyImageToClipboard(bmp->GetBitmap(), false);
+                    // via the Pixmap, so an image with an alpha channel reaches
+                    // the clipboard with its transparency intact (#5844, #5598)
+                    Pixmap* px = PixmapFromRenderedBitmap(bmp); // takes ownership of bmp
+                    CopyPixmapToClipboard(px, false);
+                    FreePixmap(px);
                 }
-                delete bmp;
             }
             return;
         }
@@ -2172,7 +2379,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 }
 
 // so that we can do free everything at exit
-Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
+static Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
 
 void FreeAllMenuDrawInfos() {
     while (len(g_menuDrawInfos) != 0) {
@@ -2201,6 +2408,61 @@ static TempStr ParseMenuTextTemp(Str sIn, Str* shortcutOut) {
     return str::DupTemp(before);
 }
 
+struct MenuAccelText {
+    Str display;
+    int underlineOff = -1;
+    int underlineLen = 0;
+};
+
+// Remove Win32's '&' accelerator markup and remember the first character that
+// needs an underline. A doubled ampersand is a literal one.
+static MenuAccelText ParseMenuAccelTextTemp(Str s) {
+    MenuAccelText res;
+    if (!str::Contains(s, StrL("&"))) {
+        res.display = s;
+        return res;
+    }
+    char* buf = AllocArrayTemp<char>(len(s) + 1);
+    int out = 0;
+    for (int i = 0; i < len(s); i++) {
+        if (s.s[i] != '&') {
+            buf[out++] = s.s[i];
+            continue;
+        }
+        if (i + 1 >= len(s)) {
+            break;
+        }
+        if (s.s[i + 1] == '&') {
+            buf[out++] = '&';
+            i++;
+            continue;
+        }
+        if (res.underlineOff < 0) {
+            res.underlineOff = out;
+            int remain = len(s) - i - 1;
+            int n = utf8RuneLen((const u8*)(s.s + i + 1));
+            res.underlineLen = std::min(std::max(n, 1), remain);
+        }
+    }
+    buf[out] = 0;
+    res.display = Str(buf, out);
+    return res;
+}
+
+static void DrawMenuText(Gfx* gfx, Str text, Rect rc, u32 flags, PlatformFont* font, Color col) {
+    MenuAccelText parsed = ParseMenuAccelTextTemp(text);
+    gfx->DrawText(parsed.display, rc, flags, font, col);
+    if (parsed.underlineOff < 0 || parsed.underlineLen <= 0) {
+        return;
+    }
+    Size full = gfx->MeasureText(parsed.display, font);
+    Size before = parsed.underlineOff > 0 ? gfx->MeasureText(Str(parsed.display.s, parsed.underlineOff), font) : Size{};
+    Size ch = gfx->MeasureText(Str(parsed.display.s + parsed.underlineOff, parsed.underlineLen), font);
+    int textX = (flags & gfxTextRight) ? rc.x + rc.dx - full.dx : rc.x;
+    int underlineY = rc.y + full.dy - 1;
+    gfx->DrawLine({textX + before.dx, underlineY, ch.dx, 0}, col);
+}
+
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     MENUITEMINFOW mii{};
     mii.cbSize = sizeof(MENUITEMINFOW);
@@ -2210,7 +2472,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
         mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_SUBMENU;
         BOOL ok = GetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
         ReportIf(!ok);
-        auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
+        auto* modi = (MenuOwnerDrawInfo*)mii.dwItemData;
         if (modi != nullptr) {
             FreeMenuOwnerDrawInfo(modi);
             mii.dwItemData = 0;
@@ -2223,7 +2485,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     };
 }
 #if 1
-void MarkMenuOwnerDraw(HMENU, bool) {
+void MarkMenuOwnerDraw(HMENU /*hmenu*/, bool /*isMenuBar*/) {
     // our painting isn't good enough so disable for now
     // rely on darkmodelib for menu theming, which only does light / dark theme from os
 }
@@ -2231,7 +2493,7 @@ void MarkMenuOwnerDraw(HMENU, bool) {
 void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
     // darkmodelib handles the menu bar via setWindowMenuBarSubclass
     // but doesn't handle popup/context menus, so we owner-draw those
-    if (isMenuBar && UseDarkModeLib() && DarkMode::isEnabled()) {
+    if (isMenuBar && DarkModeIsActive()) {
         return;
     }
     if (!ThemeColorizeControls()) {
@@ -2240,8 +2502,8 @@ void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
 
     // https://stackoverflow.com/questions/30353644/cmenu-border-color-on-mfc
     static HBRUSH hbrBrush = nullptr;
-    static COLORREF bgCol = (COLORREF)-1;
-    COLORREF col = ThemeMainWindowBackgroundColor();
+    static Color bgCol = (Color)-1;
+    Color col = ThemeMainWindowBackgroundColor();
     if (!hbrBrush) {
         bgCol = col;
         hbrBrush = ::CreateSolidBrush(col);
@@ -2302,13 +2564,16 @@ void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
 #endif
 
 static int GetMenuCheckMarkCx(HWND hwnd) {
-    int cx = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
+    DpiSetFromHwnd(hwnd);
+    // GetSystemMetrics() already answers in pixels for the system dpi, so the
+    // old DpiScale(GetSystemMetrics(...)) scaled it a second time
+    int cx = DpiGetSystemMetrics(SM_CXMENUCHECK);
     if (!IsMenuFontSizeDefault()) {
-        cx = GetAppMenuFontSize(hwnd);
+        cx = GetAppMenuFontSize();
         // this applies scaling for default values on my win 11 i.e.:
         // font size is 12, menu checkmark is 15
         cx = (cx * 15) / 12;
-        cx = DpiScale(hwnd, cx);
+        cx = DpiScale(cx);
     }
     return cx;
 }
@@ -2317,35 +2582,37 @@ constexpr int kMenuPaddingY = 4;
 constexpr int kMenuPaddingX = 8;
 
 void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
+    DpiSetFromHwnd(hwnd);
     if (ODT_MENU != mis->CtlType) {
         return;
     }
-    auto modi = (MenuOwnerDrawInfo*)mis->itemData;
+    auto* modi = (MenuOwnerDrawInfo*)mis->itemData;
 
     bool isSeparator = bit::IsMaskSet(modi->fType, (uint)MFT_SEPARATOR);
     if (isSeparator) {
-        mis->itemHeight = DpiScale(hwnd, 7);
-        mis->itemWidth = DpiScale(hwnd, 33);
+        mis->itemHeight = DpiScale(7);
+        mis->itemWidth = DpiScale(33);
         return;
     }
 
     Str text = modi && modi->text ? modi->text : StrL("Dummy");
-    HFONT font = GetAppMenuFont(hwnd);
+    PlatformFont* font = GetAppMenuFont();
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(text, &shortcutText);
+    MenuAccelText parsed = ParseMenuAccelTextTemp(menuText);
 
-    auto size = HwndMeasureText(hwnd, menuText, font);
+    auto size = PlatformFontMeasureText(font, parsed.display);
     mis->itemHeight = size.dy;
     int dx = size.dx;
     if (shortcutText) {
         // add space betweeen menu text and shortcut
-        size = HwndMeasureText(hwnd, "    ", font);
+        size = PlatformFontMeasureText(font, "    ");
         dx += size.dx;
-        size = HwndMeasureText(hwnd, shortcutText, font);
+        size = PlatformFontMeasureText(font, shortcutText);
         dx += size.dx;
     }
-    auto padX = DpiScale(hwnd, kMenuPaddingX);
-    auto padY = DpiScale(hwnd, kMenuPaddingY);
+    auto padX = DpiScale(kMenuPaddingX);
+    auto padY = DpiScale(kMenuPaddingY);
 
     int cxMenuCheckMark = GetMenuCheckMarkCx(hwnd);
     mis->itemHeight += padY * 2;
@@ -2360,10 +2627,11 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
 // - paint MFS_DISABLED state
 // - paint icons for system menus
 void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
+    DpiSetFromHwnd(hwnd);
     if (ODT_MENU != dis->CtlType) {
         return;
     }
-    auto modi = (MenuOwnerDrawInfo*)dis->itemData;
+    auto* modi = (MenuOwnerDrawInfo*)dis->itemData;
     if (!modi) {
         return;
     }
@@ -2397,12 +2665,14 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // if isChecked, show as radio button (i.e. circle)
     bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
 
-    auto hdc = dis->hDC;
-    HFONT font = GetAppMenuFont(hwnd);
-    ScopedSelectFont restoreFont(hdc, font);
+    PlatformFont* font = GetAppMenuFont();
+    Gfx* gfx = GfxCreate(dis->hDC);
+    defer {
+        delete gfx;
+    };
 
-    COLORREF bgCol = ThemeMainWindowBackgroundColor();
-    COLORREF txtCol = ThemeWindowTextColor();
+    Color bgCol = ThemeMainWindowBackgroundColor();
+    Color txtCol = ThemeWindowTextColor();
 
     bool isSelected = bit::IsMaskSet(dis->itemState, (uint)ODS_SELECTED);
     if (isDisabled) {
@@ -2415,38 +2685,21 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         bgCol = AccentColor(bgCol, 40);
     }
 
-    RECT rc = dis->rcItem;
-    int rcDy = RectDy(rc);
+    Rect rc = ToRect(dis->rcItem);
+    int rcDy = rc.dy;
 
     int cxCheckMark = GetMenuCheckMarkCx(hwnd);
-    int padY = DpiScale(hwnd, kMenuPaddingY);
-    int padX = DpiScale(hwnd, kMenuPaddingX);
+    int padY = DpiScale(kMenuPaddingY);
+    int padX = DpiScale(kMenuPaddingX);
 
-    COLORREF prevTxtCol = SetTextColor(hdc, txtCol);
-    COLORREF prevBgCol = SetBkColor(hdc, bgCol);
-    defer {
-        SetTextColor(hdc, prevTxtCol);
-        SetBkColor(hdc, prevBgCol);
-    };
-
-    auto brBg = CreateSolidBrush(bgCol);
-    HdcFillRect(hdc, ToRect(rc), brBg);
-    auto brTxt = CreateSolidBrush(txtCol);
-
-    AutoDeleteObject deleteBgBrush(brBg);
-    AutoDeleteObject deleteTxtBrush(brTxt);
+    gfx->FillRect(rc, bgCol);
 
     if (isSeparator) {
         ReportIf(modi->text);
-        int sx = rc.left + cxCheckMark;
-        int y = rc.top + (rcDy / 2);
-        int ex = rc.right - padX;
-        auto pen = CreatePen(PS_SOLID, 1, txtCol);
-        auto prevPen = SelectObject(hdc, pen);
-        MoveToEx(hdc, sx, y, nullptr);
-        LineTo(hdc, ex, y);
-        SelectObject(hdc, prevPen);
-        DeleteObject(pen);
+        int sx = rc.x + cxCheckMark;
+        int y = rc.y + (rcDy / 2);
+        int ex = rc.x + rc.dx - padX;
+        gfx->DrawLine({sx, y, ex - sx, 0}, txtCol);
         return;
     }
 
@@ -2458,51 +2711,48 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(modi->text, &shortcutText);
 
-    // DrawTextEx handles & => underscore drawing
-    rc.top += padY;
-    rc.left += cxCheckMark;
-    WCHAR* ws = CWStrTemp(menuText);
-    DrawTextExW(hdc, ws, -1, &rc, DT_LEFT, nullptr);
+    rc.y += padY;
+    rc.dy -= padY;
+    rc.x += cxCheckMark;
+    rc.dx -= cxCheckMark;
+    DrawMenuText(gfx, menuText, rc, gfxTextSingleLine, font, txtCol);
     if (shortcutText) {
-        ws = CWStrTemp(shortcutText);
-        rc = dis->rcItem;
-        rc.top += padY;
-        rc.right -= (padX + (cxCheckMark / 2));
-        DrawTextExW(hdc, ws, -1, &rc, DT_RIGHT, nullptr);
+        rc = ToRect(dis->rcItem);
+        rc.y += padY;
+        rc.dy -= padY;
+        rc.dx -= padX + (cxCheckMark / 2);
+        gfx->DrawText(shortcutText, rc, gfxTextSingleLine | gfxTextRight, font, txtCol);
     }
 
     constexpr int kRadioCircleDx = 6;
     if (isChecked) {
-        rc = dis->rcItem;
+        rc = ToRect(dis->rcItem);
         // draw radio check indicator (a circle)
         if (isRadioCheck) {
-            int dx = DpiScale(hwnd, kRadioCircleDx);
-            int offX = DpiScale(hwnd, 1); // why? beause it looks better
-            rc.left = rc.left + offX + (cxCheckMark / 2) - (dx / 2);
-            rc.right = rc.left + dx;
-            rc.top = rc.top + (rcDy / 2) - (dx / 2);
-            rc.bottom = rc.top + dx;
-            ScopedSelectObject restoreBrush(hdc, brTxt);
-            Ellipse(hdc, rc.left, rc.top, rc.right, rc.bottom);
+            int dx = DpiScale(kRadioCircleDx);
+            int offX = DpiScale(1); // why? beause it looks better
+            rc.x = rc.x + offX + (cxCheckMark / 2) - (dx / 2);
+            rc.dx = dx;
+            rc.y = rc.y + (rcDy / 2) - (dx / 2);
+            rc.dy = dx;
+            gfx->FillEllipse(rc, txtCol);
             return;
         }
 
         // draw a checkmark
-        AutoDeletePen pen(CreatePen(PS_SOLID, 2, txtCol));
-        ScopedSelectPen restorePen(hdc, pen);
-        POINT points[3];
-        int offX = DpiScale(hwnd, 6); // 6 is chosen experimentally
-        points[0] = {rc.left + offX, rc.top + (rcDy / 2)};
-        points[1] = {rc.left + (cxCheckMark / 2), rc.bottom - (padY * 3)};
-        points[2] = {rc.left + cxCheckMark - offX, rc.top + (padY * 3)};
-        Polyline(hdc, points, dimof(points));
+        int offX = DpiScale(6); // 6 is chosen experimentally
+        Point p0 = {rc.x + offX, rc.y + (rcDy / 2)};
+        Point p1 = {rc.x + (cxCheckMark / 2), rc.y + rc.dy - (padY * 3)};
+        Point p2 = {rc.x + cxCheckMark - offX, rc.y + (padY * 3)};
+        gfx->DrawLineAA(p0, p1, txtCol, 2);
+        gfx->DrawLineAA(p1, p2, txtCol, 2);
     }
 }
 
 HMENU BuildMenu(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
 
-    auto ctx = NewBuildMenuCtx(tab, Point{0, 0});
+    auto* ctx = NewBuildMenuCtx(tab, Point{0, 0});
     AutoDelete delCtx(ctx);
     HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), ctx);
 
@@ -2524,7 +2774,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         // document-dependent commands when no document is loaded, and a null ctx
         // looks like "no document" -- which dropped CmdFavoriteAdd/CmdFavoriteDel
         // from the rebuilt menu, so RebuildFavMenu's MenuSetText then failed
-        auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+        auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
         AutoDelete delCtx(ctx);
         BuildMenuFromDef(menuDefFavorites, m, ctx);
         RebuildFavMenu(win, m);
@@ -2594,4 +2844,504 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
     SetMenu(hwnd, hideMenu ? nullptr : win->menu);
     gGlobalPrefs->showMenubar = !hideMenu;
     gGlobalPrefs->showMenubarWithTabs = !hideMenu;
+}
+
+// --- Menu bar as rebar control (used when tabs are in titlebar) ---
+
+static int MenuBarToolbarIdealDy(MainWindow* win) {
+    PlatformFont* font = GetAppMenuFont();
+    int dy = PlatformFontLineHeight(font) + DpiScale(4);
+    int minDy = DpiScale(kTabBarDy);
+    return std::max(dy, minDy);
+}
+
+int GetMenuBarRebarHeight(MainWindow* win) {
+    HWND hwnd = win ? win->hwndMenuReBar : nullptr;
+    if (!hwnd || !::IsWindow(hwnd)) {
+        return 0;
+    }
+    // RB_GETBARHEIGHT underreports by 1px without WS_BORDER
+    int dy = (int)SendMessageW(hwnd, RB_GETBARHEIGHT, 0, 0) + 1;
+    if (dy > 1) {
+        if (IsRunningOnWine()) {
+            logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d\n", win->hwndMenuReBar, dy);
+        }
+        return dy;
+    }
+    int ideal = MenuBarToolbarIdealDy(win);
+    if (IsRunningOnWine()) {
+        logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d fallbackIdeal=%d\n", win->hwndMenuReBar, dy, ideal);
+    }
+    return ideal;
+}
+
+static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
+                                            DWORD_PTR /*dwRefData*/) {
+    if (WM_ERASEBKGND == uMsg) {
+        // always paint background with theme color to avoid gray strips in light theme
+        HDC hdc = (HDC)wParam;
+        Color bgCol = ThemeControlBackgroundColor();
+        auto* bgBrush = CreateSolidBrush(bgCol);
+        HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
+        DeleteObject(bgBrush);
+        return 1;
+    }
+    if (WM_NOTIFY == uMsg) {
+        auto* win = FindMainWindowByHwnd(hWnd);
+        NMHDR* hdr = (NMHDR*)lParam;
+        if (win && hdr->code == NM_CUSTOMDRAW && hdr->hwndFrom == win->hwndMenuToolbar) {
+            NMTBCUSTOMDRAW* custDraw = (NMTBCUSTOMDRAW*)hdr;
+            switch (custDraw->nmcd.dwDrawStage) {
+                case CDDS_PREPAINT:
+                    return CDRF_NOTIFYITEMDRAW;
+                case CDDS_ITEMPREPAINT: {
+                    auto col = ThemeWindowTextColor();
+                    UINT itemState = custDraw->nmcd.uItemState;
+                    if (itemState & CDIS_DISABLED) {
+                        col = ThemeWindowTextDisabledColor();
+                    }
+                    custDraw->clrText = col;
+                    return CDRF_DODEFAULT;
+                }
+            }
+        }
+    }
+    if (WM_NCDESTROY == uMsg) {
+        RemoveWindowSubclass(hWnd, MenuBarReBarWndProc, uIdSubclass);
+    }
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+static LRESULT CALLBACK MenuBarToolbarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
+                                              DWORD_PTR /*dwRefData*/) {
+    if (WM_ERASEBKGND == uMsg) {
+        // don't erase background here; toolbar paints its own background during WM_PAINT
+        // filling here causes visible flicker (erase then paint) during window resize
+        return 1;
+    }
+    if (WM_NCDESTROY == uMsg) {
+        RemoveWindowSubclass(hWnd, MenuBarToolbarWndProc, uIdSubclass);
+    }
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+constexpr int kMenuBarCmdFirst = 50000;
+constexpr int kMenuBarCmdLast = 50020;
+
+struct MenuBarPopupNav {
+    MainWindow* win = nullptr;
+    HMENU rootMenu = nullptr;
+    HMENU currentMenu = nullptr;
+    UINT currentFlags = 0;
+    int nextMenuIdx = -1;
+};
+
+static MenuBarPopupNav gMenuBarPopupNav;
+
+// track when a menu popup was last dismissed so a second click on the same
+// menu bar button closes the popup instead of immediately reopening it
+static int gMenuBarLastDismissedIdx = -1;
+static u64 gMenuBarLastDismissedTick = 0;
+
+static bool ShouldSwitchCustomMenuBarPopup(UINT vk) {
+    if (!gMenuBarPopupNav.win || !gMenuBarPopupNav.rootMenu) {
+        return false;
+    }
+    if (!gMenuBarPopupNav.currentMenu || gMenuBarPopupNav.currentMenu != gMenuBarPopupNav.rootMenu) {
+        return false;
+    }
+    if (bit::IsMaskSet(gMenuBarPopupNav.currentFlags, (UINT)MF_POPUP)) {
+        return false;
+    }
+
+    int menuCount = GetMenuItemCount(gMenuBarPopupNav.win->menu);
+    if (menuCount <= 1) {
+        return false;
+    }
+
+    int step = 0;
+    if (vk == VK_LEFT) {
+        step = -1;
+    } else if (vk == VK_RIGHT) {
+        step = 1;
+    }
+    if (step == 0) {
+        return false;
+    }
+
+    gMenuBarPopupNav.nextMenuIdx += step;
+    if (gMenuBarPopupNav.nextMenuIdx < 0) {
+        gMenuBarPopupNav.nextMenuIdx = menuCount - 1;
+    } else if (gMenuBarPopupNav.nextMenuIdx >= menuCount) {
+        gMenuBarPopupNav.nextMenuIdx = 0;
+    }
+    return true;
+}
+
+// check if mouse is over a different toolbar button and switch to it
+static bool ShouldSwitchMenuBarOnMouseMove() {
+    if (!gMenuBarPopupNav.win || !gMenuBarPopupNav.win->hwndMenuToolbar) {
+        return false;
+    }
+    HWND hwndTb = gMenuBarPopupNav.win->hwndMenuToolbar;
+
+    Point pt = HwndGetCursorPos(hwndTb);
+
+    // hit-test the toolbar
+    int btnCount = TbGetButtonCount(hwndTb);
+    for (int i = 0; i < btnCount; i++) {
+        Rect rc = TbGetItemRect(hwndTb, i);
+        if (rc.Contains(pt.x, pt.y)) {
+            TBBUTTON tb{};
+            SendMessageW(hwndTb, TB_GETBUTTON, i, (LPARAM)&tb);
+            int menuIdx = tb.idCommand - kMenuBarCmdFirst;
+            if (menuIdx != gMenuBarPopupNav.nextMenuIdx) {
+                gMenuBarPopupNav.nextMenuIdx = menuIdx;
+                return true;
+            }
+            return false;
+        }
+    }
+    return false;
+}
+
+static LRESULT CALLBACK MenuBarMsgFilterHook(int code, WPARAM wParam, LPARAM lParam) {
+    if (code == MSGF_MENU && gMenuBarPopupNav.win) {
+        MSG* msg = (MSG*)lParam;
+        if ((msg->message == WM_KEYDOWN || msg->message == WM_SYSKEYDOWN) &&
+            ShouldSwitchCustomMenuBarPopup((UINT)msg->wParam)) {
+            EndMenu();
+            return 1;
+        }
+        if (msg->message == WM_MOUSEMOVE && ShouldSwitchMenuBarOnMouseMove()) {
+            EndMenu();
+            return 1;
+        }
+    }
+    return CallNextHookEx(nullptr, code, wParam, lParam);
+}
+
+void UpdateCustomMenuBarMenuSelect(MainWindow* win, WPARAM wp, LPARAM lp) {
+    if (gMenuBarPopupNav.win != win) {
+        return;
+    }
+
+    UINT flags = HIWORD(wp);
+    HMENU menu = (HMENU)lp;
+    if (flags == 0xFFFF && !menu) {
+        gMenuBarPopupNav.currentMenu = nullptr;
+        gMenuBarPopupNav.currentFlags = 0;
+        return;
+    }
+
+    gMenuBarPopupNav.currentMenu = menu;
+    gMenuBarPopupNav.currentFlags = flags;
+}
+
+void RebuildMenuBarButtons(MainWindow* win) {
+    HWND hwndMb = win->hwndMenuToolbar;
+    if (!hwndMb) {
+        return;
+    }
+
+    // remove existing buttons
+    while (SendMessageW(hwndMb, TB_DELETEBUTTON, 0, 0)) {
+    }
+
+    HMENU menu = win->menu;
+    int count = GetMenuItemCount(menu);
+    if (count <= 0) {
+        return;
+    }
+
+    MENUITEMINFOW mii{};
+    mii.cbSize = sizeof(MENUITEMINFOW);
+    mii.fMask = MIIM_SUBMENU | MIIM_STRING;
+
+    for (int i = 0; i < count && i < (kMenuBarCmdLast - kMenuBarCmdFirst); i++) {
+        mii.dwTypeData = nullptr;
+        mii.cch = 0;
+        GetMenuItemInfoW(menu, i, TRUE, &mii);
+        if (!mii.hSubMenu || !mii.cch) {
+            continue;
+        }
+        mii.cch++;
+        WCHAR* name = AllocArrayTemp<WCHAR>((int)mii.cch);
+        mii.dwTypeData = name;
+        GetMenuItemInfoW(menu, i, TRUE, &mii);
+
+        TBBUTTON b{};
+        b.iBitmap = I_IMAGENONE;
+        b.idCommand = kMenuBarCmdFirst + i;
+        b.fsState = TBSTATE_ENABLED;
+        b.fsStyle = BTNS_AUTOSIZE | BTNS_SHOWTEXT;
+        b.iString = (INT_PTR)name;
+        TbAddButtons(hwndMb, 1, &b);
+    }
+
+    TbAutoSize(hwndMb);
+
+    if (win->hwndMenuReBar) {
+        Rect rc = TbGetItemRect(hwndMb, 0);
+        int menuBarDy = MenuBarToolbarIdealDy(win);
+        if (rc.dy > 0) {
+            menuBarDy = rc.dy + (2 * rc.y);
+        }
+        REBARBANDINFOW rbBand{};
+        rbBand.cbSize = sizeof(REBARBANDINFOW);
+        rbBand.fMask = RBBIM_CHILDSIZE;
+        rbBand.cyChild = menuBarDy;
+        rbBand.cyMinChild = menuBarDy;
+        SendMessageW(win->hwndMenuReBar, RB_SETBANDINFO, 0, (LPARAM)&rbBand);
+    }
+}
+
+void CreateMenuBarRebar(MainWindow* win) {
+    if (!win || win->hwndMenuReBar) {
+        return;
+    }
+    // embedded hosts (TC lister) must not get titlebar menu rebar chrome
+    if (gMyWindowWasEmbedded) {
+        return;
+    }
+    HWND hwndParent = win->hwndFrame;
+    if (!hwndParent || !::IsWindow(hwndParent)) {
+        return;
+    }
+
+    bool isRtl = IsUIRtl();
+    HINSTANCE hinst = GetModuleHandle(nullptr);
+
+    // create hidden; caller shows after the scheduled relayout positions it
+    // no WS_BORDER (avoids 1px gap) and no RBS_BANDBORDERS (avoids gray band separators)
+    DWORD style = WS_CHILD | WS_CLIPCHILDREN | RBS_VARHEIGHT;
+    style |= CCS_NODIVIDER | CCS_NOPARENTALIGN;
+    DWORD exStyle = WS_EX_TOOLWINDOW;
+    if (isRtl) {
+        exStyle |= WS_EX_LAYOUTRTL;
+    }
+
+    win->hwndMenuReBar = CreateWindowExW(exStyle, REBARCLASSNAME, nullptr, style, 0, 0, 0, 0, hwndParent,
+                                         (HMENU)IDC_MENUBAR_REBAR, hinst, nullptr);
+    SetWindowSubclass(win->hwndMenuReBar, MenuBarReBarWndProc, 0, 0);
+
+    REBARINFO rbi{};
+    rbi.cbSize = sizeof(REBARINFO);
+    SendMessageW(win->hwndMenuReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
+    SendMessageW(win->hwndMenuReBar, RB_SETBKCOLOR, 0, ThemeControlBackgroundColor());
+
+    style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_FLAT | TBSTYLE_LIST;
+    style |= CCS_NODIVIDER | CCS_NOPARENTALIGN;
+    exStyle = 0;
+    if (isRtl) {
+        exStyle |= WS_EX_LAYOUTRTL;
+    }
+
+    win->hwndMenuToolbar = CreateWindowExW(exStyle, TOOLBARCLASSNAME, nullptr, style, 0, 0, 0, 0, win->hwndMenuReBar,
+                                           (HMENU)IDC_MENUBAR, hinst, nullptr);
+    SetWindowSubclass(win->hwndMenuToolbar, MenuBarToolbarWndProc, 0, 0);
+    TbSetButtonStructSize(win->hwndMenuToolbar, sizeofi(TBBUTTON));
+
+    if (!DarkModeIsActive()) {
+        if (!IsCurrentThemeDefault()) {
+            SetWindowTheme(win->hwndMenuToolbar, L"", L"");
+        }
+    }
+
+    PlatformFont* font = GetAppMenuFont();
+    HwndSetFont(win->hwndMenuToolbar, font->GetHFont());
+
+    DWORD tbExStyle = TbGetExtendedStyle(win->hwndMenuToolbar);
+    tbExStyle |= TBSTYLE_EX_MIXEDBUTTONS;
+    TbSetExtendedStyle(win->hwndMenuToolbar, tbExStyle);
+
+    RebuildMenuBarButtons(win);
+
+    Rect rc = TbGetItemRect(win->hwndMenuToolbar, 0);
+    int menuBarDy = rc.dy + (2 * rc.y);
+    if (menuBarDy <= 0) {
+        menuBarDy = MenuBarToolbarIdealDy(win);
+    }
+
+    ShowWindow(win->hwndMenuToolbar, SW_SHOW);
+
+    REBARBANDINFOW rbBand{};
+    rbBand.cbSize = sizeof(REBARBANDINFOW);
+    rbBand.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
+    rbBand.fStyle = RBBS_FIXEDSIZE;
+    rbBand.hwndChild = win->hwndMenuToolbar;
+    rbBand.cxMinChild = 0;
+    rbBand.cyMinChild = menuBarDy;
+    rbBand.cx = 0;
+    SendMessageW(win->hwndMenuReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+
+    DarkModeApplyToMenuBar(win->hwndMenuReBar);
+}
+
+void ShowMenuBarRebar(MainWindow* win) {
+    HWND hwnd = win ? win->hwndMenuReBar : nullptr;
+    if (hwnd && ::IsWindow(hwnd)) {
+        ShowWindow(hwnd, SW_SHOW);
+    }
+}
+
+void DestroyMenuBarRebar(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    // clear fields first so re-entrant layout/paint cannot SetWindowPos them
+    HWND hwndTb = win->hwndMenuToolbar;
+    HWND hwndRb = win->hwndMenuReBar;
+    win->hwndMenuToolbar = nullptr;
+    win->hwndMenuReBar = nullptr;
+    // hide before destroy so nested paint is less likely to walk half-torn
+    // rebar/toolbar scroll-arrow state (comctl32!DrawScrollBar AV)
+    if (hwndRb && ::IsWindow(hwndRb)) {
+        ShowWindow(hwndRb, SW_HIDE);
+    }
+    if (hwndTb && ::IsWindow(hwndTb)) {
+        ShowWindow(hwndTb, SW_HIDE);
+        DestroyWindow(hwndTb);
+    }
+    if (hwndRb && ::IsWindow(hwndRb)) {
+        DestroyWindow(hwndRb);
+    }
+}
+
+bool IsShowingMenuBarRebar(MainWindow* win) {
+    if (!win) {
+        return false;
+    }
+    HWND hwnd = win->hwndMenuReBar;
+    if (!hwnd || !::IsWindow(hwnd)) {
+        return false;
+    }
+    // host reparented us as WS_CHILD: menu rebar is being (or about to be)
+    // torn down; treat as not showing so layout does not SetWindowPos it
+    if (gMyWindowWasEmbedded) {
+        return false;
+    }
+    if (win->presentation || win->isQuickLook) {
+        return false;
+    }
+    return true;
+}
+
+bool HandleMenuBarCommand(MainWindow* win, int cmdId) {
+    if (cmdId < kMenuBarCmdFirst || cmdId >= kMenuBarCmdLast) {
+        return false;
+    }
+    if (!win->hwndMenuToolbar) {
+        return false;
+    }
+
+    int menuCount = GetMenuItemCount(win->menu);
+    int menuIdx = cmdId - kMenuBarCmdFirst;
+
+    // if same button was clicked shortly after dismissing its popup, treat as toggle-close
+    u64 now = GetTickCount64();
+    if (menuIdx == gMenuBarLastDismissedIdx && (now - gMenuBarLastDismissedTick) < 500) {
+        gMenuBarLastDismissedIdx = -1;
+        return true;
+    }
+
+    UINT flags = TPM_LEFTALIGN | TPM_TOPALIGN;
+    if (IsUIRtl()) {
+        flags = TPM_RIGHTALIGN | TPM_TOPALIGN;
+    }
+
+    for (;;) {
+        HMENU subMenu = GetSubMenu(win->menu, menuIdx);
+        if (!subMenu) {
+            return true;
+        }
+
+        // get button rect in screen coordinates
+        int btnCmdId = kMenuBarCmdFirst + menuIdx;
+        int btnIdx = (int)SendMessageW(win->hwndMenuToolbar, TB_COMMANDTOINDEX, btnCmdId, 0);
+        Rect btnRect = TbGetItemRect(win->hwndMenuToolbar, btnIdx);
+        btnRect = HwndMapRectToWindow(btnRect, win->hwndMenuToolbar, HWND_DESKTOP);
+
+        gMenuBarPopupNav.win = win;
+        gMenuBarPopupNav.rootMenu = subMenu;
+        gMenuBarPopupNav.currentMenu = subMenu;
+        gMenuBarPopupNav.currentFlags = 0;
+        gMenuBarPopupNav.nextMenuIdx = menuIdx;
+
+        HHOOK hook = SetWindowsHookExW(WH_MSGFILTER, MenuBarMsgFilterHook, nullptr, GetCurrentThreadId());
+        TrackPopupMenu(subMenu, flags, btnRect.x, btnRect.y + btnRect.dy, 0, win->hwndFrame, nullptr);
+        if (hook) {
+            UnhookWindowsHookEx(hook);
+        }
+
+        int nextMenuIdx = gMenuBarPopupNav.nextMenuIdx;
+        gMenuBarPopupNav = {};
+        if (nextMenuIdx == menuIdx || menuCount <= 1) {
+            gMenuBarLastDismissedIdx = menuIdx;
+            gMenuBarLastDismissedTick = GetTickCount64();
+            break;
+        }
+        menuIdx = nextMenuIdx;
+    }
+
+    return true;
+}
+
+// Activate a menu bar button by accelerator key (Alt+letter).
+// If accel is 0, activate the first menu item.
+// Returns true if handled.
+bool ActivateMenuBarByAccel(MainWindow* win, WCHAR accel) {
+    if (!win->hwndMenuToolbar || !win->menu) {
+        return false;
+    }
+
+    int count = GetMenuItemCount(win->menu);
+    if (count <= 0) {
+        return false;
+    }
+
+    // if accel is 0 (bare Alt press), open the first menu
+    if (accel == 0) {
+        return HandleMenuBarCommand(win, kMenuBarCmdFirst);
+    }
+
+    // normalize to uppercase for matching
+    if (accel >= 'a' && accel <= 'z') {
+        accel -= 'a' - 'A';
+    }
+
+    // find the menu item whose text has &<accel>
+    MENUITEMINFOW mii{};
+    mii.cbSize = sizeof(MENUITEMINFOW);
+    mii.fMask = MIIM_STRING;
+
+    for (int i = 0; i < count && i < (kMenuBarCmdLast - kMenuBarCmdFirst); i++) {
+        mii.dwTypeData = nullptr;
+        mii.cch = 0;
+        GetMenuItemInfoW(win->menu, i, TRUE, &mii);
+        if (!mii.cch) {
+            continue;
+        }
+        mii.cch++;
+        WCHAR* name = AllocArrayTemp<WCHAR>((int)mii.cch);
+        mii.dwTypeData = name;
+        GetMenuItemInfoW(win->menu, i, TRUE, &mii);
+
+        // look for &X where X matches accel
+        WStr menuName(name, len(WStr(name)));
+        for (int off = 0; off < menuName.len; off++) {
+            if (menuName.s[off] == L'&' && off + 1 < menuName.len) {
+                WCHAR ch = menuName.s[off + 1];
+                if (ch >= 'a' && ch <= 'z') {
+                    ch -= 'a' - 'A';
+                }
+                if (ch == accel) {
+                    return HandleMenuBarCommand(win, kMenuBarCmdFirst + i);
+                }
+                break;
+            }
+        }
+    }
+
+    return false;
 }

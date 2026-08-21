@@ -1,29 +1,19 @@
 // Test for https://github.com/sumatrapdfreader/sumatrapdf/issues/3744
 //
 // "Go to Next/Previous Favorite" jump to the nearest favorite (bookmark) page
-// after / before the current page.
+// after / before the current page (no wrap-around).
 //
-// We open a 25-page PDF (each page renders a big "Page N"), add favorites at
-// pages 10 and 20 through the UI (CmdFavoriteAdd + dismiss its dialog), then
-// drive the new commands and compare the average tone in the center of canvas
-// screenshots. The page's solid grey fill identifies it without depending on
-// incidental canvas pixels such as scrollbars or focus indicators.
+// Driven entirely via -dbg-control (TestFavoriteNav): no GUI automation,
+// dialogs, or screenshots.
 //
-// Run:  bun tests/issue-3744.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-3744.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { waitForFrame, sendCommand, findCanvas } from "./win-automation.ts";
-import { sleep, enumWindows, getWindowPid, getClassName, sendMessage, captureWindowToPng } from "./winapi.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import { EXE, runStandalone, tmpPath } from "./util.ts";
 
-const WM_COMMAND = 0x111;
-const IDOK = 1;
-
-// minimal N-page PDF. Each page is filled with a distinct grey level so that
-// screenshots differ per page *regardless of the view's zoom/scroll* - drawing
-// only a "Page N" label isn't enough because the canvas can clip the right edge
-// and hide the units digit (making "Page 10" look identical to "Page 1").
+// minimal N-page PDF (content doesn't matter; we assert CurrentPageNo).
 function makePdf(nPages: number): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
   const body: Record<number, Buffer> = {};
@@ -37,8 +27,7 @@ function makePdf(nPages: number): Buffer {
   for (let i = 0; i < nPages; i++) {
     const po = 4 + i * 2;
     const co = po + 1;
-    const grey = ((i + 1) / (nPages + 1)).toFixed(3);
-    const stream = `${grey} g 0 0 612 792 re f 0 g BT /F1 60 Tf 72 690 Td (Page ${i + 1}) Tj ET`;
+    const stream = `BT /F1 24 Tf 72 720 Td (Page ${i + 1}) Tj ET`;
     body[po] = enc(
       `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
         `/Resources << /Font << /F1 3 0 R >> >> /Contents ${co} 0 R >>`,
@@ -63,29 +52,33 @@ function makePdf(nPages: number): Buffer {
   return Buffer.concat(parts);
 }
 
-function pageTones(paths: string[]): number[] {
-  const quotedPaths = paths.map((p) => `'${p.replaceAll("'", "''")}'`).join(",");
-  const ps =
-    `Add-Type -AssemblyName System.Drawing; @(${quotedPaths}) | ForEach-Object { ` +
-    `$b=[System.Drawing.Bitmap]::FromFile($_); ` +
-    `$x0=[int]($b.Width*0.35); $x1=[int]($b.Width*0.65); ` +
-    `$y0=[int]($b.Height*0.35); $y1=[int]($b.Height*0.65); ` +
-    `$sum=0.0; $n=0; for($y=$y0;$y -lt $y1;$y+=4){for($x=$x0;$x -lt $x1;$x+=4){` +
-    `$c=$b.GetPixel($x,$y); $sum+=($c.R+$c.G+$c.B)/3; $n++}}; ` +
-    `$b.Dispose(); [Math]::Round($sum/$n, 2) }`;
-  const res = Bun.spawnSync(["powershell", "-NoProfile", "-Command", ps]);
-  if (res.exitCode !== 0) {
-    throw new Error(`failed to analyze page screenshots:\n${res.stderr.toString()}`);
+function parsePage(raw: string): number {
+  const m = /page=(\d+)/.exec(raw);
+  if (!m) {
+    throw new Error(`missing page= in control response: ${raw.trim()}`);
   }
-  const tones = res.stdout
-    .toString()
-    .trim()
-    .split(/\r?\n/)
-    .map((s) => Number(s.trim()));
-  if (tones.length !== paths.length || tones.some((n) => !Number.isFinite(n))) {
-    throw new Error(`unexpected screenshot tones: ${res.stdout.toString().trim()}`);
+  return Number(m[1]);
+}
+
+async function favNav(client: ControlClient, action: string, pageNo?: number): Promise<number> {
+  const deadline = Date.now() + 20_000;
+  for (;;) {
+    const args: (string | number)[] = pageNo === undefined ? [action] : [action, pageNo];
+    const res = await client.request(ControlCommand.TestFavoriteNav, args);
+    const exitCode = res[0] as number;
+    const raw = String(res[1] ?? "");
+    if (exitCode === 0) {
+      return parsePage(raw);
+    }
+    if (exitCode === 2 && raw.includes("NOTREADY")) {
+      if (Date.now() > deadline) {
+        throw new Error(`issue-3744: timed out waiting for doc: ${raw.trim()}`);
+      }
+      await new Promise((r) => setTimeout(r, 50));
+      continue;
+    }
+    throw new Error(`issue-3744: TestFavoriteNav ${action} failed: ${raw.trim()}`);
   }
-  return tones;
 }
 
 export async function testit(): Promise<void> {
@@ -94,7 +87,8 @@ export async function testit(): Promise<void> {
   mkdirSync(dir, { recursive: true });
   const pdf = join(dir, "issue-3744.pdf");
   writeFileSync(pdf, makePdf(25));
-  // isolated appdata so the favorites we add can't touch the tester's settings
+
+  // isolated appdata so favorites can't touch the tester's settings
   const appdata = join(dir, "appdata");
   mkdirSync(appdata, { recursive: true });
   writeFileSync(
@@ -102,113 +96,41 @@ export async function testit(): Promise<void> {
     "ReuseInstance = false\nRestoreSession = false\nShowStartPage = false\nCheckForUpdates = false\n",
   );
 
-  const cNextPage = cmdId("CmdGoToNextPage");
-  const cFirstPage = cmdId("CmdGoToFirstPage");
-  const cFavAdd = cmdId("CmdFavoriteAdd");
-  const cNextFav = cmdId("CmdGoToNextFavorite");
-  const cPrevFav = cmdId("CmdGoToPrevFavorite");
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await favNav(client, "add", 10);
+      await favNav(client, "add", 20);
 
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
-  try {
-    const frame = await waitForFrame(proc.pid!);
-    await sleep(1500);
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error("no canvas");
-    }
-
-    async function dismissDialog(): Promise<boolean> {
-      for (let i = 0; i < 25; i++) {
-        let dlg = 0;
-        enumWindows((h) => {
-          if (getWindowPid(h) === proc.pid! && getClassName(h) === "#32770") {
-            dlg = h;
-            return false;
-          }
-          return true;
-        });
-        if (dlg) {
-          sendMessage(dlg, WM_COMMAND, IDOK, 0); // accept the "Add Favorite" dialog
-          return true;
-        }
-        await sleep(80);
+      const on1 = await favNav(client, "goto", 1);
+      if (on1 !== 1) {
+        throw new Error(`issue-3744: expected page 1 after goto, got ${on1}`);
       }
-      return false;
-    }
 
-    async function gotoPage(n: number): Promise<void> {
-      sendCommand(frame, cFirstPage);
-      await sleep(250);
-      for (let i = 1; i < n; i++) {
-        sendCommand(frame, cNextPage);
+      const to10 = await favNav(client, "next");
+      if (to10 !== 10) {
+        throw new Error(`issue-3744: next from 1 expected 10, got ${to10}`);
       }
-      await sleep(450);
-    }
 
-    // add favorites at pages 10 and 20
-    for (const p of [10, 20]) {
-      await gotoPage(p);
-      sendCommand(frame, cFavAdd);
-      if (!(await dismissDialog())) {
-        throw new Error(`Add Favorite dialog didn't appear for page ${p}`);
+      const to20 = await favNav(client, "next");
+      if (to20 !== 20) {
+        throw new Error(`issue-3744: next from 10 expected 20, got ${to20}`);
       }
-      await sleep(400);
-    }
 
-    const cap = (name: string): string => {
-      const p = join(dir, name);
-      if (!captureWindowToPng(canvas, p)) {
-        throw new Error(`capture failed: ${name}`);
+      const stay20 = await favNav(client, "next");
+      if (stay20 !== 20) {
+        throw new Error(`issue-3744: next at last favorite should stay on 20, got ${stay20}`);
       }
-      return p;
-    };
 
-    await gotoPage(1);
-    const page1 = cap("p1.png");
+      const back10 = await favNav(client, "prev");
+      if (back10 !== 10) {
+        throw new Error(`issue-3744: prev from 20 expected 10, got ${back10}`);
+      }
 
-    sendCommand(frame, cNextFav); // 1 -> 10
-    await sleep(700);
-    const fav10 = cap("fav10.png");
-
-    sendCommand(frame, cNextFav); // 10 -> 20
-    await sleep(700);
-    const fav20 = cap("fav20.png");
-
-    sendCommand(frame, cNextFav); // 20 -> 20 (no wrap)
-    await sleep(700);
-    const fav20b = cap("fav20b.png");
-
-    sendCommand(frame, cPrevFav); // 20 -> 10
-    await sleep(700);
-    const back10 = cap("back10.png");
-
-    const [tone1, tone10, tone20, tone20b, toneBack10] = pageTones([page1, fav10, fav20, fav20b, back10]);
-    const samePage = (a: number, b: number) => Math.abs(a - b) <= 2;
-    const differentPage = (a: number, b: number) => Math.abs(a - b) >= 10;
-    console.log(`  page tones: 1=${tone1}, 10=${tone10}, 20=${tone20}, 20b=${tone20b}, back10=${toneBack10}`);
-
-    // assertions (compare the generated pages' solid grey tones, not control text)
-    const checks: [string, boolean][] = [
-      ["next from page 1 moved off page 1", differentPage(tone10, tone1)],
-      ["next advanced 10 -> 20 (different page)", differentPage(tone20, tone10)],
-      ["next at last favorite stays on 20 (no wrap)", samePage(tone20b, tone20)],
-      ["prev from 20 returns to the page-10 favorite", samePage(toneBack10, tone10)],
-    ];
-    let ok = true;
-    for (const [label, pass] of checks) {
-      console.log(`${pass ? "PASS" : "FAIL"} ${label}`);
-      ok &&= pass;
-    }
-    if (!ok) {
-      throw new Error("Go to Next/Previous Favorite navigation incorrect (issue #3744)");
-    }
-    console.log("PASS: Go to Next/Previous Favorite works (issue #3744)");
-  } finally {
-    proc.kill();
-    await sleep(300);
-  }
+      console.log("PASS: Go to Next/Previous Favorite works (issue #3744)");
+    },
+    ["-appdata", appdata, pdf],
+  );
 }
 
 if (import.meta.main) {

@@ -5,13 +5,13 @@
 // search fixture with the bundled `clean` tool, then checks that the control search command
 // can only load/search it when the password is provided.
 //
-// Run:  bun tests/issue-906.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-906.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
-import { ControlCommand, runControlCommand } from "../cmd/control.ts";
+import { ControlCommand, runControlCommand } from "./control.ts";
 
 const SRC_PDF = join(import.meta.dir, "issue-5597.pdf");
 const PASSWORD = "issue-906-password";

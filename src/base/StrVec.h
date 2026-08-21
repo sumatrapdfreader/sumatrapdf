@@ -13,6 +13,7 @@ struct StrVecPage;
 
 struct StrVec {
     StrVecPage* first = nullptr;
+    StrVecPage* last = nullptr;
     int* sortIndexes = nullptr;
     int nextPageSize = 256;
     int size = 0;
@@ -52,9 +53,9 @@ struct StrVec {
 
         iterator(const StrVec* v, int idx);
         Str operator*() const;
-        iterator& operator++();   // ++it
-        iterator operator++(int); // it++
-        iterator& operator+(int); // it += n
+        iterator& operator++();        // ++it
+        iterator operator++(int);      // it++
+        iterator operator+(int) const; // it + n
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
@@ -69,7 +70,7 @@ inline int len(const StrVec& v) {
 
 template <typename T>
 struct StrVecWithData : StrVec {
-    StrVecWithData() : StrVec((int)sizeof(T)) {}
+    StrVecWithData() : StrVec(sizeofi(T)) {}
 
     T* AtData(int i) const {
         void* res = AtDataRaw(i);

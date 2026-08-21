@@ -9,10 +9,10 @@
 #include "base/Base.h"
 #include "base/Archive.h"
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
-#include "wingui/WebView.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/win/WebView.h"
 
 #include "DocProperties.h"
 #include "SimpleBrowserWindow.h"
@@ -26,7 +26,7 @@ void TestBrowser() {
     args.title = "Test Browser Window";
     args.url = "https://blog.kowalczyk.info/";
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
-    auto w = new SimpleBrowserWindow();
+    auto* w = new SimpleBrowserWindow();
     w->Create(args);
     // RunMessageLoop(nullptr, w->hwnd);
     // delete w;

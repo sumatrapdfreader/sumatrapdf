@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -271,7 +263,12 @@ function generateAmalgamation(srcDir: string): { headers: Map<string, string>; s
     headers.set(basename(path), prepareHeader(path, srcDir));
   }
   const includedIncludes = new Set<string>();
-  const chunks = ['#include "openjpeg.h"\n'];
+  // The amalgamation is a single TU mixing non-SIMD code with SIMD sections that
+  // include <immintrin.h>/<mm_malloc.h>. opj_malloc.h poisons malloc/free, and
+  // #pragma GCC poison can't be undone, so the first include poisons them and the
+  // later SIMD headers fail to compile (clang-18's mm_malloc.h uses malloc/free).
+  // Disable the poison for the whole amalgamated TU.
+  const chunks = ["#define OPJ_SKIP_POISON\n", '#include "openjpeg.h"\n'];
   for (const name of sourceFiles) {
     chunks.push(prepareChunk(join(srcDir, name), srcDir, includedIncludes));
   }
@@ -309,6 +306,19 @@ function writeOutput(dir: string, headers: Map<string, string>, source: string, 
   if (version) {
     writeFileSync(join(dir, "version.txt"), version);
   }
+}
+
+// OpenJPEG is BSD-licensed, so the notice has to ship with the source. This is
+// the only copy in the tree now that ext/openjpeg is gone, and writeOutput()
+// wipes the directory, so re-copy it on every regeneration.
+function writeLicense(dir: string): void {
+  const srcLicense = join(checkoutDir, "LICENSE");
+  if (!existsSync(srcLicense)) {
+    throw new Error(`missing license file: ${srcLicense}`);
+  }
+  const outLicense = join(dir, "LICENSE");
+  writeFileSync(outLicense, readFileSync(srcLicense));
+  console.log(`wrote ${outLicense}`);
 }
 
 async function validateCompile(headers: Map<string, string>, source: string): Promise<void> {
@@ -363,6 +373,7 @@ async function main(): Promise<void> {
   const { headers, source } = generateAmalgamation(srcDir);
   await validateCompile(headers, source);
   writeOutput(outDir, headers, source, versionText(args.repo, args.rev));
+  writeLicense(outDir);
   console.log(`wrote ${outDir}`);
 }
 

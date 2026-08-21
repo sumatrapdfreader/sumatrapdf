@@ -11,8 +11,6 @@ void TtsRelease();
 
 bool TtsIsSpeaking();
 
-// utf8 offset of the most recently spoken word within the text passed
-// to TtsSpeakUtf8, -1 if not known
 int TtsGetSpokenPosUtf8();
 
 void TtsSetNotifyWindow(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);

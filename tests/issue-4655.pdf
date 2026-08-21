@@ -1,0 +1,55 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 300] /Resources << /Font << /Helv 4 0 R /Sym 5 0 R >> >> /Contents 7 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /YFLGZT+Symbol /FirstChar 233 /LastChar 235 /Encoding 6 0 R /FontDescriptor 8 0 R /Widths [333 333 333] >>
+endobj
+6 0 obj
+<< /Type /Encoding /Differences [233 /bracketlefttp 234 /bracketleftex 235 /bracketleftbt] >>
+endobj
+7 0 obj
+<< /Length 139 >>
+stream
+BT
+/Helv 14 Tf
+1 0 0 1 140 270 Tm
+(OK) Tj
+/Sym 72 Tf
+1 0 0 1 20 210 Tm
+(\351) Tj
+1 0 0 1 20 155 Tm
+(\352) Tj
+1 0 0 1 20 100 Tm
+(\353) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /FontDescriptor /FontName /Symbol /Flags 32 /ItalicAngle 0 /Ascent 709 /Descent -241 /CapHeight 674 /StemV 91 /FontBBox [-180 -293 1090 1010] >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000254 00000 n 
+0000000351 00000 n 
+0000000514 00000 n 
+0000000623 00000 n 
+0000000813 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+982
+%%EOF

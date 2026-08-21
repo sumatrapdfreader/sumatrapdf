@@ -1,6 +1,6 @@
 # sumatrapdf-tool bake
 
-> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+or [SumatraPDF.exe bake](Tools.md)
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 

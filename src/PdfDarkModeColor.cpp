@@ -26,12 +26,12 @@ static bool gPreservePdfImagesInDarkMode = true;
 // (DocumentColorsFollowTheme or custom dark FixedPageUI colors); master's
 // themes never touch page colors, unlike the fork's
 static bool DarkChromeActive() {
-    COLORREF bg;
+    Color bg;
     ThemePageRenderColors(bg);
     return !IsLightColor(bg);
 }
 
-static DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
+DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
     if (!v || str::EqI(v, StrL("off"))) {
         return DocumentColorsFollowTheme::Off;
     }
@@ -55,15 +55,13 @@ static DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
 }
 
 static const char* DocumentColorsFollowThemeToString(DocumentColorsFollowTheme mode) {
-    switch (mode) {
-        case DocumentColorsFollowTheme::Smart:
-            return "smart";
-        case DocumentColorsFollowTheme::Legacy:
-            return "legacy";
-        case DocumentColorsFollowTheme::Off:
-        default:
-            return "off";
+    if (mode == DocumentColorsFollowTheme::Smart) {
+        return "smart";
     }
+    if (mode == DocumentColorsFollowTheme::Legacy) {
+        return "legacy";
+    }
+    return "off";
 }
 
 static int gShadeForwardCount = 0;
@@ -78,6 +76,7 @@ int PdfDarkModeTakeShadeForwardCount() {
     return n;
 }
 
+// PDF dark mode runtime options (not stored in settings file)
 bool GetPreservePdfImagesInDarkMode() {
     return gPreservePdfImagesInDarkMode;
 }
@@ -98,11 +97,32 @@ bool DocumentColorsFollowThemeEnabled() {
     return GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Off;
 }
 
+// an unsaved value the advanced settings dialog is previewing; -1 when there is
+// none and the saved setting applies
+static int gDocumentColorsFollowThemePreview = -1;
+
 DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
+    if (gDocumentColorsFollowThemePreview >= 0) {
+        return (DocumentColorsFollowTheme)gDocumentColorsFollowThemePreview;
+    }
     if (!gGlobalPrefs || !gGlobalPrefs->documentColorsFollowTheme) {
         return DocumentColorsFollowTheme::Off;
     }
     return DocumentColorsFollowThemeFromString(gGlobalPrefs->documentColorsFollowTheme);
+}
+
+// Render pages as if the setting had this value, without touching gGlobalPrefs,
+// so the advanced settings dialog can show what a value does before it's saved
+// (and go back to the saved one when it's cancelled). The caller re-renders.
+void SetDocumentColorsFollowThemePreview(DocumentColorsFollowTheme mode) {
+    if (mode < DocumentColorsFollowTheme::Off || mode > DocumentColorsFollowTheme::Legacy) {
+        mode = DocumentColorsFollowTheme::Off;
+    }
+    gDocumentColorsFollowThemePreview = (int)mode;
+}
+
+void ClearDocumentColorsFollowThemePreview() {
+    gDocumentColorsFollowThemePreview = -1;
 }
 
 void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
@@ -119,15 +139,13 @@ void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
 }
 
 const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode) {
-    switch (mode) {
-        case DocumentColorsFollowTheme::Smart:
-            return _TRN("Document colors follow theme: Smart (recolor text and background, not images)");
-        case DocumentColorsFollowTheme::Legacy:
-            return _TRN("Document colors follow theme: Legacy (recolor text, background and images)");
-        case DocumentColorsFollowTheme::Off:
-        default:
-            return _TRN("Document colors follow theme: Off");
+    if (mode == DocumentColorsFollowTheme::Smart) {
+        return _TRN("Document colors follow theme: Smart (recolor text and background, not images)");
     }
+    if (mode == DocumentColorsFollowTheme::Legacy) {
+        return _TRN("Document colors follow theme: Legacy (recolor text, background and images)");
+    }
+    return _TRN("Document colors follow theme: Off");
 }
 
 bool PdfDarkModeUsesObjectLevel() {
@@ -140,20 +158,20 @@ bool PdfDarkModeUsesObjectLevel() {
     return GetPdfDarkModeRenderer() == PdfDarkModeRenderer::ObjectLevelDevice;
 }
 
-void PdfDarkModeClearPixmapToThemeBackground(fz_context* ctx, fz_pixmap* pix, const DarkModePalette& palette) {
+void PdfDarkModeClearPixmapToThemeBackground(fz_context* /*ctx*/, fz_pixmap* pix, const DarkModePalette& palette) {
     if (!pix || !pix->samples) {
         return;
     }
-    byte rb = (byte)((palette.bgR * 255.f) + 0.5f);
-    byte gb = (byte)((palette.bgG * 255.f) + 0.5f);
-    byte bb = (byte)((palette.bgB * 255.f) + 0.5f);
+    byte rb = (byte)lroundf(palette.bgR * 255.f);
+    byte gb = (byte)lroundf(palette.bgG * 255.f);
+    byte bb = (byte)lroundf(palette.bgB * 255.f);
     int w = pix->w;
     int h = pix->h;
     int n = pix->n;
     for (int y = 0; y < h; y++) {
         unsigned char* row = pix->samples + ((size_t)y * pix->stride);
         for (int x = 0; x < w; x++) {
-            unsigned char* p = row + (x * n);
+            unsigned char* p = row + ((size_t)x * n);
             p[0] = rb;
             p[1] = gb;
             p[2] = bb;
@@ -185,9 +203,9 @@ DarkModePalette PdfDarkModeBuildPalette() {
 }
 
 static bool IsLikelyLinkRgb(float r, float g, float b) {
-    int ri = (int)((r * 255.f) + 0.5f);
-    int gi = (int)((g * 255.f) + 0.5f);
-    int bi = (int)((b * 255.f) + 0.5f);
+    int ri = (int)lroundf(r * 255.f);
+    int gi = (int)lroundf(g * 255.f);
+    int bi = (int)lroundf(b * 255.f);
     int maxRG = ri > gi ? ri : gi;
     if (bi < maxRG + 25) {
         return false;
@@ -218,8 +236,8 @@ static float SmoothStep(float edge0, float edge1, float x) {
 
 void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePalette& palette, float* outR, float* outG,
                                    float* outB) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
 
@@ -259,13 +277,9 @@ void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePale
 
     float cappedV = lum;
     const float maxBright = 0.82f;
-    if (cappedV > maxBright) {
-        cappedV = maxBright;
-    }
+    cappedV = std::min(cappedV, maxBright);
     const float minBright = 0.12f;
-    if (cappedV < minBright) {
-        cappedV = minBright;
-    }
+    cappedV = std::max(cappedV, minBright);
 
     float s = maxC > 0.f ? delta / maxC : 0.f;
     float c = cappedV * s;
@@ -337,8 +351,8 @@ void MapFillColorToDarkTheme(fz_context* ctx, fz_colorspace* cs, const float* co
 }
 
 void MapRgbFillToDarkTheme(float r, float g, float b, const DarkModePalette& palette, float* outRgb) {
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
     float chroma = maxC - minC;
     DarkModeOptions opts = PdfDarkModeCurrentOptions();
@@ -360,8 +374,8 @@ void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModeP
     }
 
     float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
-    float maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-    float minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    float maxC = std::max({r, g, b});
+    float minC = std::min({r, g, b});
     float chroma = maxC - minC;
 
     const float lowChroma = 0.10f;
@@ -371,9 +385,7 @@ void ApplyPreserveImagePaperSoftening(float r, float g, float b, const DarkModeP
         paperW = SmoothStep(0.72f, 0.94f, lum);
     } else {
         float chromaFactor = 1.f - (chroma / 0.45f);
-        if (chromaFactor < 0.f) {
-            chromaFactor = 0.f;
-        }
+        chromaFactor = std::max(chromaFactor, 0.f);
         paperW = SmoothStep(0.72f, 0.94f, lum) * chromaFactor;
     }
     paperW *= strength;

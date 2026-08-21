@@ -8,14 +8,13 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut);
 void ParseCmdLine(Str cmdLine, StrVec& argsOut);
 #endif
 void BuildCmdLineArgs(int argc, char** argv, StrVec& argsOut);
-// Quote for CreateProcessW command lines (Windows argv rules; always quoted).
 TempStr QuoteCmdLineArgTemp(Str arg);
 
 struct CmdLineArgsIter {
     StrVec args;
     int curr = 0;
     int nArgs = 0;
-    Str currArg = {};
+    Str currArg;
 
 #if OS_WIN
     explicit CmdLineArgsIter(WStr cmdLine);

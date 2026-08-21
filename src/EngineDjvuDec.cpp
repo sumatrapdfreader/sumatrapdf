@@ -13,7 +13,7 @@ extern "C" {
 #include "djvu.h"
 }
 
-#include "TreeModel.h"
+#include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 
@@ -28,7 +28,7 @@ Kind kindEngineDjVu = "engineDjVu";
 // of failing with an error code.
 bool gMemoryMapLargeFiles = true;
 
-constexpr i64 kMemoryMapMinFileSize = 128 * 1024 * 1024;
+constexpr i64 kMemoryMapMinFileSize = 128LL * 1024 * 1024;
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
@@ -44,7 +44,8 @@ static bool DjvuDecCouldBeURL(Str link) {
     if (!link) {
         return false;
     }
-    if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
+    if (str::StartsWithI(link, StrL("http:")) || str::StartsWithI(link, StrL("https:")) ||
+        str::StartsWithI(link, StrL("mailto:"))) {
         return true;
     }
     return str::Contains(link, ".");
@@ -73,35 +74,35 @@ struct PageDestinationDjvuDec : IPageDestination {
         if (!DjvuDecCouldBeURL(link)) {
             return {};
         }
-        value = str::Dup(link);
-        url::DecodeInPlace(value);
+        value = str::Dup(url::DecodeTemp(link));
         return value;
     }
 };
 
 static IPageDestination* NewDjvuDecDestination(Str link, Str comment) {
-    if (!link || str::Eq(link, "#")) {
+    if (!link || str::Eq(link, StrL("#"))) {
         return nullptr;
     }
-    auto res = new PageDestinationDjvuDec(link, comment);
+    auto* res = new PageDestinationDjvuDec(link, comment);
     res->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
     res->pageNo = ParseDjvuDecLink(link);
     return res;
 }
 
 static IPageElement* NewDjvuDecLink(int pageNo, Rect rect, Str link, Str comment) {
-    auto dest = NewDjvuDecDestination(link, comment);
+    auto* dest = NewDjvuDecDestination(link, comment);
     if (!dest) {
         return nullptr;
     }
-    auto res = new PageElementDestination(dest);
+    auto* res = new PageElementDestination(dest);
     res->rect = ToRectF(rect);
     res->pageNo = pageNo;
     return res;
 }
 
 static TocItem* NewDjvuDecTocItem(TocItem* parent, Str title, Str link) {
-    auto res = new TocItem(parent, title, 0);
+    auto* res = AllocTocItem(nullptr, title, 0);
+    res->parent = parent;
     res->dest = NewDjvuDecDestination(link, {});
     if (res->dest) {
         res->pageNo = PageDestGetPageNo(res->dest);
@@ -144,7 +145,7 @@ class EngineDjvuDec : public EngineBase {
 
     RectF PageMediabox(int pageNo) override;
 
-    Pixmap* RenderPage(RenderPageArgs&) override;
+    Pixmap* RenderPage(RenderPageArgs& args) override;
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
@@ -158,7 +159,7 @@ class EngineDjvuDec : public EngineBase {
 
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
-    bool HandleLink(IPageDestination*, ILinkHandler*) override;
+    bool HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) override;
 
     IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
@@ -221,7 +222,7 @@ class EngineDjvuDec : public EngineBase {
 
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool FinishLoading();
-    TocItem* BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter);
+    TocItem* BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter, int depth);
     // After a successful render of page0: mark MRU and drop cold pages if the
     // decoder's page-local cache exceeds the byte/page budget.
     void NotePageCacheAfterRender(int page0);
@@ -232,7 +233,7 @@ class EngineDjvuDec : public EngineBase {
 
 // Cap decoder page-local cache (Sjbz/IW44/bg) so multi-GB books don't keep
 // every visited page. Tuned for interactive re-paint of a few recent pages.
-constexpr size_t kDjvuPageCacheMaxBytes = 64 * 1024 * 1024;
+constexpr size_t kDjvuPageCacheMaxBytes = 64ull * 1024 * 1024;
 constexpr int kDjvuPageCacheMaxPages = 32;
 
 EngineDjvuDec::EngineDjvuDec() {
@@ -284,17 +285,17 @@ bool EngineDjvuDec::LoadFromData(Str data) {
     return FinishLoading();
 }
 
-static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) {
+static void DjvuDecErrorCb(void* /*user*/, djvu_severity sev, const char* msg) {
     if (sev >= DJVU_SEVERITY_ERROR) {
         logf("djvudec: %s\n", Str(msg));
     }
 }
 
-void EngineDjvuDec::CacheLockCb(void* user, void*) {
+void EngineDjvuDec::CacheLockCb(void* user, void* /*ctx*/) {
     ((EngineDjvuDec*)user)->djvuCacheLock.Lock();
 }
 
-void EngineDjvuDec::CacheUnlockCb(void* user, void*) {
+void EngineDjvuDec::CacheUnlockCb(void* user, void* /*ctx*/) {
     ((EngineDjvuDec*)user)->djvuCacheLock.Unlock();
 }
 
@@ -348,7 +349,7 @@ bool EngineDjvuDec::FinishLoading() {
     }
 
     for (int i = 0; i < pageCount; i++) {
-        auto pi = new DjvuDecPageInfo();
+        auto* pi = new DjvuDecPageInfo();
         djvu_page_info info{};
         RectF mbox(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI()); // fallback: letter size
         if (djvu_doc_page_info(doc, i, &info) == 0) {
@@ -367,8 +368,8 @@ bool EngineDjvuDec::FinishLoading() {
             }
             pi->uprightW = upW;
             pi->uprightH = upH;
-            float dx = upW * GetFileDPI() / dpi;
-            float dy = upH * GetFileDPI() / dpi;
+            float dx = (float)upW * GetFileDPI() / (float)dpi;
+            float dy = (float)upH * GetFileDPI() / (float)dpi;
             bool isValid = dx > 0 && dx < 1e6f && dy > 0 && dy < 1e6f;
             if (isValid) {
                 mbox = RectF(0, 0, dx, dy);
@@ -392,15 +393,15 @@ RectF EngineDjvuDec::PageMediabox(int pageNo) {
     return pages[pageNo - 1]->mediabox;
 }
 
-bool EngineDjvuDec::HasClipOptimizations(int) {
+bool EngineDjvuDec::HasClipOptimizations(int /*pageNo*/) {
     return false;
 }
 
-TempStr EngineDjvuDec::GetPropertyTemp(DocProp) {
+TempStr EngineDjvuDec::GetPropertyTemp(DocProp /*prop*/) {
     return {};
 }
 
-bool EngineDjvuDec::BenchLoadPage(int) {
+bool EngineDjvuDec::BenchLoadPage(int /*pageNo*/) {
     return true;
 }
 
@@ -537,12 +538,8 @@ static int DjvuDecPickSubsample(int uprightW, int uprightH, int targetDx, int ta
            (uprightH + subsample) / (subsample + 1) >= targetDy) {
         subsample++; // ceil(uprightW/(s+1)) >= targetDx && ceil(uprightH/(s+1)) >= targetDy
     }
-    if (subsample > uprightW) {
-        subsample = uprightW;
-    }
-    if (subsample > uprightH) {
-        subsample = uprightH;
-    }
+    subsample = std::min(subsample, uprightW);
+    subsample = std::min(subsample, uprightH);
     return subsample;
 }
 
@@ -559,7 +556,7 @@ static inline u8 BilinearByte(float v00, float v10, float v01, float v11, float 
     float v0 = v00 + ((v10 - v00) * tx);
     float v1 = v01 + ((v11 - v01) * tx);
     float v = v0 + ((v1 - v0) * ty);
-    return (u8)ClampInt((int)(v + 0.5f), 0, 255);
+    return (u8)ClampInt((int)lroundf(v), 0, 255);
 }
 
 // Map decoded page pixels into the target pixmap with bilinear filtering. The
@@ -656,7 +653,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    auto pi = pages[pageNo - 1];
+    auto* pi = pages[pageNo - 1];
     int subsample = DjvuDecPickSubsample(pi->uprightW, pi->uprightH, full.dx, full.dy);
     // The decoder applies the page's intrinsic rotation at every subsample (via
     // a fast tiled transpose) and djvu_page_render_info already reports the
@@ -673,11 +670,16 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     bool isBitonal = pi->pageType == DJVU_PAGE_BITONAL || ri.format == DJVU_FORMAT_GRAY8;
     int comp = (ri.format == DJVU_FORMAT_GRAY8) ? 1 : 3;
     int sdx = ri.width, sdy = ri.height;
-    u8* pixels = AllocArray<u8>(sdx * sdy * comp);
+    i64 stride = (i64)sdx * comp;
+    i64 pixelCount = stride * sdy;
+    if (sdx <= 0 || sdy <= 0 || stride > INT_MAX || pixelCount > INT_MAX) {
+        return nullptr;
+    }
+    u8* pixels = AllocArray<u8>((int)pixelCount);
     if (!pixels) {
         return nullptr;
     }
-    if (djvu_page_render_into_abortable(doc, pageNo - 1, subsample, pixels, sdx * comp, ab) != 0) {
+    if (djvu_page_render_into_abortable(doc, pageNo - 1, subsample, pixels, (int)stride, ab) != 0) {
         free(pixels);
         return nullptr;
     }
@@ -726,7 +728,8 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
             djvu_text_zone* c = &z->children[i];
             CollectZonesUtf8(c, dpiF, sb, coords);
             if (c->type == DJVU_ZONE_WORD) {
-                coords.Append(Rect((int)((c->x + c->w) * dpiF), (int)(c->y * dpiF), 2, (int)(c->h * dpiF)));
+                coords.Append(
+                    Rect((int)((float)(c->x + c->w) * dpiF), (int)((float)c->y * dpiF), 2, (int)((float)c->h * dpiF)));
                 sb.AppendChar(' ');
             } else if (c->type == DJVU_ZONE_LINE) {
                 coords.Append(Rect());
@@ -738,7 +741,7 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
     if (len(z->text) == 0) {
         return;
     }
-    Rect r((int)(z->x * dpiF), (int)(z->y * dpiF), (int)(z->w * dpiF), (int)(z->h * dpiF));
+    Rect r((int)((float)z->x * dpiF), (int)((float)z->y * dpiF), (int)((float)z->w * dpiF), (int)((float)z->h * dpiF));
     // zones are usually word-granularity, so approximate per-glyph rects by
     // evenly splitting the box horizontally (computed from endpoints so slices
     // tile exactly); this makes partial-word search hits and selections
@@ -793,7 +796,7 @@ static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, Str name) {
 
 Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     ReportIf(pageNo < 1 || pageNo > PageCount());
-    auto pi = pages[pageNo - 1];
+    auto* pi = pages[pageNo - 1];
     if (pi->gotElements) {
         return pi->allElements;
     }
@@ -815,12 +818,13 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
         if (!url) {
             continue;
         }
-        Rect rect((int)(l.x * dpiF), (int)(l.y * dpiF), (int)(l.w * dpiF), (int)(l.h * dpiF));
+        Rect rect((int)((float)l.x * dpiF), (int)((float)l.y * dpiF), (int)((float)l.w * dpiF),
+                  (int)((float)l.h * dpiF));
         TempStr link = ResolveNamedDestDjvuDecTemp(doc, url);
         if (!link) {
             link = url;
         }
-        auto el = NewDjvuDecLink(pageNo, rect, link, Str(l.comment));
+        auto* el = NewDjvuDecLink(pageNo, rect, link, Str(l.comment));
         if (el) {
             els.Append(el);
         }
@@ -833,7 +837,7 @@ IPageElement* EngineDjvuDec::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
     int n = len(els);
     for (int i = n - 1; i >= 0; i--) {
-        auto el = els[i];
+        auto* el = els[i];
         if (el->GetRect().Contains(pt)) {
             return el;
         }
@@ -845,13 +849,13 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
     if (dest->GetKind() != kindDestinationDjVu) {
         return false;
     }
-    auto ddest = (PageDestinationDjvuDec*)dest;
+    auto* ddest = (PageDestinationDjvuDec*)dest;
     Str link = ddest->link;
-    if (str::Eq(link, "#+1")) {
+    if (str::Eq(link, StrL("#+1"))) {
         linkHandler->GoToNextPage();
         return true;
     }
-    if (str::Eq(link, "#-1")) {
+    if (str::Eq(link, StrL("#-1"))) {
         linkHandler->GoToPrevPage();
         return true;
     }
@@ -876,9 +880,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
 
 IPageDestination* EngineDjvuDec::GetNamedDest(Str name) {
     Str n = name;
-    if (str::StartsWith(n, "#")) {
-        n = Str(n.s + 1, n.len - 1);
-    }
+    str::TrimPrefix(n, StrL("#"));
     TempStr link = ResolveNamedDestDjvuDecTemp(doc, n);
     if (link) {
         return NewDjvuDecDestination(link, {});
@@ -886,7 +888,10 @@ IPageDestination* EngineDjvuDec::GetNamedDest(Str name) {
     return nullptr;
 }
 
-TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter) {
+TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter, int depth) {
+    if (depth >= 64) {
+        return nullptr;
+    }
     TocItem* node = nullptr;
     for (int i = 0; i < n; i++) {
         djvu_outline_item& it = items[i];
@@ -901,7 +906,7 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
         }
         TocItem* tocItem = NewDjvuDecTocItem(parent, title, link);
         tocItem->id = ++idCounter;
-        tocItem->child = BuildTocTree(tocItem, it.children, it.nchildren, idCounter);
+        tocItem->child = BuildTocTree(tocItem, it.children, it.nchildren, idCounter, depth + 1);
         if (!node) {
             node = tocItem;
         } else {
@@ -924,12 +929,12 @@ TocTree* EngineDjvuDec::GetToc() {
         return nullptr;
     }
     int idCounter = 0;
-    TocItem* rootItem = BuildTocTree(nullptr, root->children, root->nchildren, idCounter);
+    TocItem* rootItem = BuildTocTree(nullptr, root->children, root->nchildren, idCounter, 0);
     djvu_outline_destroy(ctx, root);
     if (!rootItem) {
         return nullptr;
     }
-    auto realRoot = new TocItem();
+    auto* realRoot = AllocTocItem(nullptr, {}, 0);
     realRoot->child = rootItem;
     tocTree = new TocTree(realRoot);
     return tocTree;
@@ -979,6 +984,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
     }
 }
 
+/* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
 bool IsEngineDjVuSupportedFileType(FileType kind) {
     return kind == FileType::DjVu;
 }

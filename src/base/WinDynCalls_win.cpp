@@ -21,6 +21,7 @@ Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext = nullptr;
 Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext = nullptr;
 Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext = nullptr;
 Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi = nullptr;
+Sig_GetSystemMetricsForDpi DynGetSystemMetricsForDpi = nullptr;
 Sig_GetDpiForMonitor DynGetDpiForMonitor = nullptr;
 
 #define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
@@ -40,6 +41,16 @@ static HMODULE SafeLoadLibrary(Str dllName) {
     return LoadLibraryW(dllPath);
 }
 
+/*
+A centrialized location for all APIs that we need to load dynamically.
+The convention is: for a function like SetThreadDescription(), we define
+a function pointer DynSetThreadDescription() (with a signature matching
+SetThreadDescription()).
+
+You can test if a function is available with if (DynSetThreadDescription).
+
+APIs available on our minimum OS (Windows 7) are called directly, not via Dyn*.
+*/
 void InitDynCalls() {
     HMODULE h = SafeLoadLibrary("kernel32.dll");
     ReportIf(!h);
@@ -57,6 +68,7 @@ void InitDynCalls() {
     DynSetThreadDpiAwarenessContext =
         (Sig_SetThreadDpiAwarenessContext)GetProcAddress(h, "SetThreadDpiAwarenessContext");
     DynSystemParametersInfoForDpi = (Sig_SystemParametersInfoForDpi)GetProcAddress(h, "SystemParametersInfoForDpi");
+    DynGetSystemMetricsForDpi = (Sig_GetSystemMetricsForDpi)GetProcAddress(h, "GetSystemMetricsForDpi");
 
     h = SafeLoadLibrary("shcore.dll");
     if (h) {

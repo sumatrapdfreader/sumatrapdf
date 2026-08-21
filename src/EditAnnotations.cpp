@@ -4,18 +4,23 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
+#include "gui/Dpi.h"
 #include "base/UITask.h"
 
 extern "C" {
 #include <mupdf/pdf.h>
 }
 
-#include "wingui/UIModels.h"
-#include "wingui/Layout.h"
-#include "wingui/WinGui.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
+#include "GlobalPrefs.h"
 #include "DocController.h"
 #include "Annotation.h"
 #include "EngineBase.h"
@@ -29,8 +34,9 @@ extern "C" {
 #include "Toolbar.h"
 #include "WindowTab.h"
 #include "EditAnnotations.h"
+#include "FormFields.h"
 #include "SumatraPDF.h"
-#include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 
 #include "Theme.h"
 
@@ -49,7 +55,6 @@ static SeqStrings gColors =
     "Transparent\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
 static SeqStrings gFontNames = "Cour\0Helv\0TiRo\0";
 static SeqStrings gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
-static SeqStrings gQuaddingNames = "Left\0Center\0Right\0";
 
 static PdfColor gColorsValues[] = {
 	0x00000000, /* transparent */
@@ -79,8 +84,8 @@ static AnnotationType gAnnotsIsColorBackground[] = {
 };
 // clang-format on
 
-TempStr GetKnownColorNameTemp(PdfColor c) {
-    int n = (int)dimof(gColorsValues);
+static TempStr GetKnownColorNameTemp(PdfColor c) {
+    int n = dimofi(gColorsValues);
     for (int i = 0; i < n; i++) {
         if (c == gColorsValues[i]) {
             return SeqStrByIndex(gColors, i);
@@ -89,52 +94,52 @@ TempStr GetKnownColorNameTemp(PdfColor c) {
     return {};
 }
 
-struct EditAnnotationsWindow : Wnd {
+struct EditAnnotationsWindow : WindowBase {
     WindowTab* tab = nullptr;
-    LayoutBase* mainLayout = nullptr;
+    ILayout* mainLayout = nullptr;
 
-    ListBox* listBox = nullptr;
-    Static* staticRect = nullptr;
-    Static* staticAuthor = nullptr;
-    Static* staticModificationDate = nullptr;
-    Static* staticPopup = nullptr;
-    Static* staticContents = nullptr;
+    VirtListBox* listBox = nullptr;
+    VirtText* staticRect = nullptr;
+    VirtText* staticAuthor = nullptr;
+    VirtText* staticModificationDate = nullptr;
+    VirtText* staticPopup = nullptr;
+    VirtText* staticContents = nullptr;
     Edit* editContents = nullptr;
-    Static* staticTextAlignment = nullptr;
+    VirtText* staticTextAlignment = nullptr;
     DropDown* dropDownTextAlignment = nullptr;
-    Static* staticTextFont = nullptr;
+    VirtText* staticTextFont = nullptr;
     DropDown* dropDownTextFont = nullptr;
-    Static* staticTextSize = nullptr;
+    VirtText* staticTextSize = nullptr;
     Trackbar* trackbarTextSize = nullptr;
-    Static* staticTextColor = nullptr;
+    VirtText* staticTextColor = nullptr;
     DropDown* dropDownTextColor = nullptr;
 
-    Static* staticLineStart = nullptr;
+    VirtText* staticLineStart = nullptr;
     DropDown* dropDownLineStart = nullptr;
-    Static* staticLineEnd = nullptr;
+    VirtText* staticLineEnd = nullptr;
     DropDown* dropDownLineEnd = nullptr;
 
-    Static* staticIcon = nullptr;
+    VirtText* staticIcon = nullptr;
     DropDown* dropDownIcon = nullptr;
 
-    Static* staticBorder = nullptr;
+    VirtText* staticBorder = nullptr;
     Trackbar* trackbarBorder = nullptr;
 
-    Static* staticColor = nullptr;
+    VirtText* staticColor = nullptr;
     DropDown* dropDownColor = nullptr;
-    Static* staticInteriorColor = nullptr;
+    VirtText* staticInteriorColor = nullptr;
     DropDown* dropDownInteriorColor = nullptr;
 
-    Static* staticOpacity = nullptr;
+    VirtText* staticOpacity = nullptr;
     Trackbar* trackbarOpacity = nullptr;
 
-    Button* buttonSaveAttachment = nullptr;
-    Button* buttonEmbedAttachment = nullptr;
+    VirtButton* buttonSaveAttachment = nullptr;
+    VirtButton* buttonEmbedAttachment = nullptr;
 
-    Button* buttonDelete = nullptr;
+    VirtButton* buttonDelete = nullptr;
 
-    Button* buttonSaveToCurrentFile = nullptr;
-    Button* buttonSaveToNewFile = nullptr;
+    VirtButton* buttonSaveToCurrentFile = nullptr;
+    VirtButton* buttonSaveToNewFile = nullptr;
 
     // those are
     Vec<Annotation*> annotations;
@@ -147,9 +152,9 @@ struct EditAnnotationsWindow : Wnd {
     str::Builder currCustomColor;
     str::Builder currCustomInteriorColor;
 
-    void OnSize(UINT msg, UINT type, Size size) override;
-    void OnFocus() override;
-    bool PreTranslateMessage(MSG&) override;
+    void OnSize(WindowBase::SizeEvent* ev);
+    void OnFocus(WindowBase::FocusEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
 
     void ListBoxSelectionChanged();
 
@@ -192,7 +197,54 @@ static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
     return nullptr;
 }
 
+static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
+static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
+
+// Drop non-owning Annotation* held by UI (selection, drag, hover, form edit).
+// Call before DeleteAnnotation frees the wrapper, or when the engine is about
+// to die and raw Annotation* must not be used again.
+void DetachAnnotationFromUI(Annotation* annot) {
+    if (!annot) {
+        return;
+    }
+    CancelFormFieldEditIfWidget(annot);
+    for (MainWindow* win : gWindows) {
+        if (win->annotationBeingDragged == annot) {
+            win->annotationBeingDragged = nullptr;
+            win->annotationBeingResized = false;
+        }
+        if (win->annotationUnderCursor == annot) {
+            win->annotationUnderCursor = nullptr;
+        }
+        int nTabs = win->TabCount();
+        for (int i = 0; i < nTabs; i++) {
+            WindowTab* t = win->GetTab(i);
+            if (t && t->selectedAnnotation == annot) {
+                t->selectedAnnotation = nullptr;
+            }
+        }
+    }
+}
+
+// Clear the edit-annotations list (and listbox) before the engine is destroyed
+// so ReloadDocument cannot leave dangling Annotation* in the open panel.
+void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
+    if (!tab || !tab->editAnnotsWindow) {
+        return;
+    }
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    // selectedAnnotation is usually already null; do not FlushContents into a
+    // dying engine. Drop non-owning list entries before ~EngineMupdf frees them.
+    ew->annotations.Clear();
+    RebuildAnnotationsListBox(ew);
+}
+
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
+    if (!annot) {
+        // the listbox selection can be stale (see DeleteSelectedAnnotation), and
+        // FindAnnotationOnSamePage() below dereferences annot
+        return;
+    }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     Annotation* selectNext = nullptr;
     if (annot != tab->selectedAnnotation) {
@@ -203,50 +255,64 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         selectNext = FindAnnotationOnSamePage(tab, annot);
     }
 
+    // Clear all UI holders before DeleteAnnotation frees the wrapper.
+    DetachAnnotationFromUI(annot);
     DeleteAnnotation(annot);
-    // Deleted annot must not remain selected (use-after-free on subsequent UI).
-    if (tab->selectedAnnotation == annot) {
-        tab->selectedAnnotation = nullptr;
-    }
     if (ew != nullptr) {
         // can be null if called from Menu.cpp and annotations window is not visible
-        // ew->skipGoToPage = true;
-        // int currSelIdx = ew ? ew->listBox->GetCurrentSelection() : -1;
         UpdateAnnotationsList(ew);
-#if 0
-        if ((selectNext == nullptr) && (currSelIdx >= 0)) {
-            // if we're deleting currently selected, pick
-            // next to select
-            annot = PickNewSelectedAnnotation(ew, currSelIdx);
-        }
-#endif
     }
     SetSelectedAnnotation(tab, selectNext);
 }
 
 static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
-    int idx = ew->listBox->GetCurrentSelection();
-    if (idx < 0) {
+    if (!ew || !ew->listBox || !ew->tab) {
+        return;
+    }
+    Vec<int> idxs;
+    ew->listBox->GetSelectedIndices(idxs);
+    if (len(idxs) == 0) {
+        int idx = ew->listBox->GetCurrentSelection();
+        if (idx >= 0) {
+            idxs.Append(idx);
+        }
+    }
+    if (len(idxs) == 0) {
         // can get out of sync e.g. after UpdateAnnotationsList during save/reload
         ew->tab->selectedAnnotation = nullptr;
         return;
     }
-    Annotation* annot = ew->annotations[idx];
-    if (ew->tab->selectedAnnotation != annot) {
-        // can get out of sync if e.g. keyboard navigation in listbox
-        // hasn't triggered ListBoxSelectionChanged yet
-        ew->tab->selectedAnnotation = annot;
+    Vec<Annotation*> toDelete;
+    for (int idx : idxs) {
+        if (ew->annotations.isValidIndex(idx)) {
+            toDelete.Append(ew->annotations[idx]);
+        }
     }
-    DeleteAnnotationAndUpdateUI(ew->tab, annot);
-
-    // Note: auto-selecting next annotation might cause page jumping
-#if 0
-    annot = PickNewSelectedAnnotation(this, idx);
-    skipGoToPage = false;
-    if (annot) {
-        SetSelectedAnnotation(tab, annot);
+    if (len(toDelete) == 0) {
+        return;
     }
-#endif
+    // After rebuild, the first remaining item after the last deleted one
+    // lands at lastIdx - (count-1). If that is past the end, take the last.
+    int nextIdxHint = idxs[len(idxs) - 1] - (len(idxs) - 1);
+    FlushContentsFromEdit(ew);
+    for (Annotation* annot : toDelete) {
+        DetachAnnotationFromUI(annot);
+        DeleteAnnotation(annot);
+    }
+    UpdateAnnotationsList(ew);
+    Annotation* selectNext = nullptr;
+    int n = len(ew->annotations);
+    if (n > 0) {
+        int pick = nextIdxHint;
+        if (pick >= n) {
+            pick = n - 1;
+        }
+        if (pick < 0) {
+            pick = 0;
+        }
+        selectNext = ew->annotations[pick];
+    }
+    SetSelectedAnnotation(ew->tab, selectNext);
 }
 
 static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
@@ -318,14 +384,11 @@ static bool IsAnnotationTypeInArray(AnnotationType* arr, int arrSize, Annotation
     return false;
 }
 
-// return true if closed the window, false if there was no window to close
-static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
-
 bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
     if (!tab->editAnnotsWindow) {
         return false;
     }
-    auto ew = tab->editAnnotsWindow;
+    auto* ew = tab->editAnnotsWindow;
     FlushContentsFromEdit(ew);
     tab->editAnnotsWindow = nullptr;
     // this will trigger closing the window
@@ -340,15 +403,17 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     auto cr = HwndClientRect(hwnd);
     tab->lastEditAnnotsWindowPos.dx = cr.dx;
     tab->lastEditAnnotsWindowPos.dy = cr.dy;
+    gGlobalPrefs->annotationsWindowSize = {cr.dx, cr.dy};
 
     if (tab->selectedAnnotation != nullptr) {
         tab->selectedAnnotation = nullptr;
-        if (!tab->win->isBeingClosed) {
+        // tab->win can be null (SafeDeleteEditAnnotationsWindow checks it too)
+        if (IsMainWindowValidAndNotClosing(tab->win)) {
             MainWindowRerender(tab->win);
             ToolbarUpdateStateForWindow(tab->win, false);
         }
     }
-    delete mainLayout;
+    // ~WindowBase deletes `layout`, which is the same tree as mainLayout
 }
 
 static bool DidAnnotationsChange(EditAnnotationsWindow* ew) {
@@ -394,13 +459,13 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
 }
 
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
-    auto model = new ListBoxModelStrings();
+    auto* model = new ListBoxModelStrings();
     int n = 0;
     n = len(ew->annotations);
 
     str::Builder s;
     for (int i = 0; i < n; i++) {
-        auto annot = ew->annotations[i];
+        auto* annot = ew->annotations[i];
         s.Reset();
         s.Append(fmt(_TRA("page %d,").s, annot->pageNo));
         Str name = AnnotationReadableNameTemp(annot->type);
@@ -408,12 +473,9 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
         model->strings.Append(ToStr(s));
     }
 
-    auto topIdx = LbGetTopIndex(ew->listBox->hwnd);
-    ew->listBox->SetModel(model);
-    topIdx = std::min(ew->listBox->GetCount() - 1, topIdx);
-    if (topIdx >= 0) {
-        LbSetTopIndex(ew->listBox->hwnd, topIdx);
-    }
+    int prevScrollY = ew->listBox->scrollY;
+    ew->listBox->SetModel(model); // resets the scroll position
+    ew->listBox->ScrollTo(prevScrollY);
     EnableSaveIfAnnotationsChanged(ew);
 }
 
@@ -452,10 +514,10 @@ static void ScheduleDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
 }
 
 // CloseEvent::didHandle defaults to true, so the framework skips its default
-// Destroy(); we own teardown via the scheduled delete (which runs ~Wnd and
+// Destroy(); we own teardown via the scheduled delete (which runs ~WindowBase and
 // DestroyWindow).
-static void OnClose(Wnd::CloseEvent* ev) {
-    auto w = (EditAnnotationsWindow*)ev->e->self;
+static void OnClose(WindowBase::CloseEvent* ev) {
+    auto* w = (EditAnnotationsWindow*)ev->e->self;
     FlushContentsFromEdit(w);
     ScheduleDeleteEditAnnotationsWindow(w);
 }
@@ -463,15 +525,28 @@ static void OnClose(Wnd::CloseEvent* ev) {
 // CloseAndDeleteEditAnnotationsWindow already nulls the tab pointer and
 // deletes; only schedule if this is an unexpected destroy with the pointer
 // still set.
-static void OnDestroy(Wnd::DestroyEvent* ev) {
-    auto w = (EditAnnotationsWindow*)ev->e->self;
+static void OnDestroy(WindowBase::DestroyEvent* ev) {
+    auto* w = (EditAnnotationsWindow*)ev->e->self;
     if (w->tab && w->tab->editAnnotsWindow == w) {
         ScheduleDeleteEditAnnotationsWindow(w);
     }
 }
 
-void EditAnnotationsWindow::OnFocus() {
+static void FocusAnnotationsList(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->listBox || ew->listBox->ItemsCount() == 0) {
+        return;
+    }
+    ew->SetFocusTo(ew->listBox);
+}
+
+void EditAnnotationsWindow::OnFocus(WindowBase::FocusEvent*) {
     SelectTabInWindow(tab);
+    // WM_KILLFOCUS clears virtual focus. If the window itself got HWND focus
+    // back (not a child Edit), put it on the list so Home / End / arrows
+    // navigate annotations again (issue #5975).
+    if (::GetFocus() == hwnd && (!vroot || !vroot->focused)) {
+        FocusAnnotationsList(this);
+    }
 }
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
@@ -498,89 +573,76 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     SaveAnnotationsToExistingFile(ew->tab);
 }
 
-constexpr int kMaxControls = 18;
-
-static void AdvanceFocus(EditAnnotationsWindow* ew, bool forward) {
-    HWND controls[kMaxControls];
-    int n = 0;
-    auto addIfVisible = [&](HWND h) {
-        if (h && HwndIsVisible(h)) {
-            ReportIf(n >= kMaxControls);
-            controls[n++] = h;
-        }
-    };
-
-    addIfVisible(ew->listBox->hwnd);
-    addIfVisible(ew->editContents->hwnd);
-    addIfVisible(ew->dropDownTextAlignment->hwnd);
-    addIfVisible(ew->dropDownTextFont->hwnd);
-    addIfVisible(ew->trackbarTextSize->hwnd);
-    addIfVisible(ew->dropDownTextColor->hwnd);
-    addIfVisible(ew->dropDownLineStart->hwnd);
-    addIfVisible(ew->dropDownLineEnd->hwnd);
-    addIfVisible(ew->dropDownIcon->hwnd);
-    addIfVisible(ew->trackbarBorder->hwnd);
-    addIfVisible(ew->dropDownColor->hwnd);
-    addIfVisible(ew->dropDownInteriorColor->hwnd);
-    addIfVisible(ew->trackbarOpacity->hwnd);
-    addIfVisible(ew->buttonSaveAttachment->hwnd);
-    addIfVisible(ew->buttonEmbedAttachment->hwnd);
-    addIfVisible(ew->buttonDelete->hwnd);
-    addIfVisible(ew->buttonSaveToCurrentFile->hwnd);
-    addIfVisible(ew->buttonSaveToNewFile->hwnd);
-
-    if (n == 0) {
-        return;
-    }
-
-    HWND focused = ::GetFocus();
-    int idx = -1;
-    for (int i = 0; i < n; i++) {
-        if (controls[i] == focused || ::IsChild(controls[i], focused)) {
-            idx = i;
-            break;
-        }
-    }
-
-    int next;
-    if (forward) {
-        next = (idx + 1) % n;
-    } else {
-        next = (idx <= 0) ? n - 1 : idx - 1;
-    }
-    HwndSetFocus(controls[next]);
+static bool IsAnnotationListNavKey(int vkey) {
+    return vkey == VK_UP || vkey == VK_DOWN || vkey == VK_PRIOR || vkey == VK_NEXT || vkey == VK_HOME || vkey == VK_END;
 }
 
-bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
-    if (msg.message == WM_KEYDOWN) {
-        int key = (int)msg.wParam;
-        if (key == VK_TAB) {
-            bool forward = !IsShiftPressed();
-            AdvanceFocus(this, forward);
-            return true;
-        }
-        if (key == VK_DELETE) {
-            // When focus is in a text field, let the Edit control handle Delete /
-            // Ctrl+Delete (word delete). Only delete the annotation when focus is
-            // outside an edit control (issue #5815).
-            HWND focused = ::GetFocus();
-            TempStr cls = HwndGetClassName(focused);
-            if (str::EqI(cls, "Edit")) {
-                return false;
-            }
-            // Ctrl+Delete (and plain Delete) remove the selected annotation
-            DeleteSelectedAnnotation(this);
-            return true;
-        }
-        if (key == 'S' && IsShiftPressed() && IsCtrlPressed()) {
-            // TODO: delay by posting a message?
-            // TODO: the keybinding could be changed so this should
-            // be more sophisticated and match the shortcut
-            ButtonSaveToCurrentPDFHandler(this);
-            return true;
-        }
+void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_TAB) {
+        // Tab / Shift+Tab. The ring is the layout order and skips what is hidden,
+        // HWND controls and virtual ones alike
+        TabNavigate(!ev->isShift);
+        ev->didHandle = true;
+        return;
     }
-    return false;
+    if (ev->vkey == VK_DELETE) {
+        // When focus is in a text field, let the Edit control handle Delete /
+        // Ctrl+Delete (word delete). Only delete the annotation when focus is
+        // outside an edit control (issue #5815).
+        HWND focused = ::GetFocus();
+        TempStr cls = HwndGetClassName(focused);
+        if (str::EqI(cls, StrL("Edit"))) {
+            return;
+        }
+        // Ctrl+Delete (and plain Delete) remove the selected annotation(s)
+        DeleteSelectedAnnotation(this);
+        ev->didHandle = true;
+        return;
+    }
+    if (ev->vkey == 'A' && ev->isCtrl && !ev->isAlt && !ev->isShift) {
+        // Ctrl+A selects every annotation, like a win32 listbox. Leave it
+        // to the Contents edit when that has focus (issue #5976).
+        HWND focused = ::GetFocus();
+        if (focused && focused != hwnd && ::IsChild(hwnd, focused)) {
+            return;
+        }
+        if (listBox && listBox->multiSelect && listBox->ItemsCount() > 0) {
+            FocusAnnotationsList(this);
+            listBox->SelectAll();
+            ev->didHandle = true;
+        }
+        return;
+    }
+    if (ev->vkey == 'S' && ev->isShift && ev->isCtrl) {
+        // TODO: delay by posting a message?
+        // TODO: the keybinding could be changed so this should
+        // be more sophisticated and match the shortcut
+        ButtonSaveToCurrentPDFHandler(this);
+        ev->didHandle = true;
+        return;
+    }
+    // Home / End / PageUp / PageDown / arrows used to move the native ListBox
+    // in 3.6.1. The list is a VirtListBox now, so those keys only reach it when
+    // it has virtual focus — which is often missing (window just opened, or
+    // WM_KILLFOCUS cleared it). Drive the list from here unless a child HWND
+    // (Contents edit, drop-down, trackbar) has focus (issue #5975).
+    if (IsAnnotationListNavKey(ev->vkey)) {
+        HWND focused = ::GetFocus();
+        if (focused && focused != hwnd && ::IsChild(hwnd, focused)) {
+            return;
+        }
+        if (!listBox || listBox->ItemsCount() == 0) {
+            return;
+        }
+        FocusAnnotationsList(this);
+        VirtKeyEvent ke;
+        ke.vkey = ev->vkey;
+        ke.isCtrl = ev->isCtrl;
+        ke.isShift = ev->isShift;
+        ke.isAlt = ev->isAlt;
+        listBox->OnKeyDown(&ke);
+        ev->didHandle = ke.didHandle;
+    }
 }
 
 static void ItemsFromSeqstrings(StrVec& items, SeqStrings strings) {
@@ -610,7 +672,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Builder& customCo
 static PdfColor GetDropDownColor(Str sv) {
     int idx = SeqStrIndex(gColors, sv);
     if (idx >= 0) {
-        int nMaxColors = (int)dimof(gColorsValues);
+        int nMaxColors = dimofi(gColorsValues);
         ReportIf(idx >= nMaxColors);
         if (idx < nMaxColors) {
             return gColorsValues[idx];
@@ -622,7 +684,7 @@ static PdfColor GetDropDownColor(Str sv) {
     return col.pdfCol;
 }
 
-bool gShowRect = true;
+static bool gShowRect = true;
 
 // TODO: only limit to widgets that have rect?
 static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -691,10 +753,7 @@ static void FlushContentsFromEdit(EditAnnotationsWindow* ew) {
         return;
     }
     Annotation* a = ew->tab->selectedAnnotation;
-    if (!a || !a->engine || !a->pdfannot) {
-        return;
-    }
-    if (ew->annotations.Find(a) < 0) {
+    if (!AnnotationIsLive(a) || ew->annotations.Find(a) < 0) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();
@@ -728,7 +787,7 @@ static void DoTextAlignment(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextAlignmentSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -756,7 +815,7 @@ static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextFontSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -784,7 +843,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextFontSizeChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -807,7 +866,7 @@ static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -833,7 +892,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void BorderWidthChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -863,7 +922,7 @@ static void DoLineStartEnd(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void LineStartSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -877,7 +936,7 @@ static void LineStartSelectionChanged(EditAnnotationsWindow* ew) {
 }
 
 static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -921,7 +980,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void IconSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -950,7 +1009,7 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -973,7 +1032,7 @@ static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -1006,7 +1065,7 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    auto annot = ew->tab->selectedAnnotation;
+    auto* annot = ew->tab->selectedAnnotation;
     if (!annot || !annot->engine) {
         return;
     }
@@ -1017,6 +1076,8 @@ static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangin
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
+
+static void RelayoutEditAnnotationsWindow(EditAnnotationsWindow* ew, int clientDx, int clientDy);
 
 // TODO: maybe use ew->tab->selectedAnnotation instead of annot
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation* annot, bool isNew = false,
@@ -1051,20 +1112,25 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         DoOpacity(ew, annot);
         DoSaveEmbed(ew, annot);
 
-        ew->listBox->SetCurrentSelection(itemNo);
+        // Don't collapse a Shift/Ctrl multi-select when the caret is already
+        // on this row (issue #5976).
+        if (ew->listBox->GetCurrentSelection() != itemNo) {
+            ew->listBox->SetCurrentSelection(itemNo);
+        }
         ew->buttonDelete->SetIsVisible(true);
 
+        // NOLINTNEXTLINE(bugprone-branch-clone): branch order matters, an explicit focus wins over isNew
         if (focus == EditAnnotFocus::Edit) {
             HwndSetFocus(ew->editContents->hwnd);
             ew->editContents->SelectAll();
-        } else if (focus == EditAnnotFocus::List) {
-            HwndSetFocus(ew->listBox->hwnd);
+        } else if (focus == EditAnnotFocus::List) { // NOLINT(bugprone-branch-clone)
+            ew->SetFocusTo(ew->listBox);
         } else if (isNew && annot->type == AnnotationType::FreeText) {
             HwndSetFocus(ew->editContents->hwnd);
             // ew->editContents->SetCursorPositionAtEnd();
             ew->editContents->SelectAll();
         } else {
-            HwndSetFocus(ew->listBox->hwnd);
+            ew->SetFocusTo(ew->listBox);
         }
     }
 
@@ -1078,7 +1144,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         dx = currBounds.dx;
         dy = currBounds.dy;
     }
-    LayoutAndSizeToContent(ew->mainLayout, dx, dy, ew->hwnd);
+    RelayoutEditAnnotationsWindow(ew, dx, dy);
 
     if (!annot) {
         return;
@@ -1161,7 +1227,7 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
         return;
     }
     EngineMupdf* engine = GetEngineMupdf(ew);
-    if (!engine || !engine->pdfdoc || !annot->pdfannot) {
+    if (!engine || !engine->pdfdoc || !AnnotationIsLive(annot)) {
         return;
     }
 
@@ -1178,6 +1244,11 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
     if (!GetOpenFileNameW(&ofn)) {
+        return;
+    }
+
+    // Dialog can pump messages (reload/close); re-check after return.
+    if (!AnnotationIsLive(annot)) {
         return;
     }
 
@@ -1233,7 +1304,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     // but not do the rest of the logic as it triggers infinite loop
     // TODO: maybe if we already have selected annotation, do not auto-pick
     MainWindow* win = tab->win;
-    auto ew = tab->editAnnotsWindow;
+    auto* ew = tab->editAnnotsWindow;
     if (annot == tab->selectedAnnotation) {
         MainWindowRerender(win);
         if (ew) {
@@ -1261,7 +1332,7 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     if (!ew) {
         return;
     }
-    auto engine = GetEngineMupdf(ew);
+    auto* engine = GetEngineMupdf(ew);
     EngineMupdfGetAnnotations(engine, ew->annotations);
     RebuildAnnotationsListBox(ew);
 }
@@ -1282,8 +1353,8 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
         return;
     }
     if (!annotations.isValidIndex(itemNo)) {
-        logfa("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(annotations)=%d\n", itemNo,
-              len(annotations));
+        logf("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(annotations)=%d\n", itemNo,
+             len(annotations));
         ReportDebugIf(true);
         return;
     }
@@ -1302,7 +1373,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
         return;
     }
     Annotation* a = ew->tab->selectedAnnotation;
-    if (!a || !a->engine) {
+    if (!AnnotationIsLive(a)) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();
@@ -1325,62 +1396,115 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     UINT timeoutInMs = 1000;
     gMainWindowForRender = win;
     gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
-        if (IsMainWindowValid(gMainWindowForRender)) {
+        if (IsMainWindowValidAndNotClosing(gMainWindowForRender)) {
             MainWindowRerender(gMainWindowForRender);
         }
         gMainWindowRerenderTimer = 0;
     });
 }
 
-void EditAnnotationsWindow::OnSize(UINT msg, UINT, Size size) {
-    if (msg != WM_SIZE) {
+// how much taller a multi-line edit gets for one more line of text
+static int EditLineDy(Edit* e) {
+    int prev = e->idealSizeLines;
+    e->idealSizeLines = 1;
+    int dy1 = e->GetIdealSize().dy;
+    e->idealSizeLines = 2;
+    int dy2 = e->GetIdealSize().dy;
+    e->idealSizeLines = prev;
+    return std::max(dy2 - dy1, 1);
+}
+
+// Hand the vertical space the rest of the window doesn't need to the two
+// controls that can use it: the list of annotations and, when an annotation is
+// selected, its Contents box. Both used to be a fixed number of lines, so a
+// taller window just grew its empty area - the list stayed put (#3769) and a
+// multi-line annotation stayed cut off with room to spare below it (#5834).
+static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientDy) {
+    constexpr int kPreferredLines = 5;
+    if (!ew->listBox || !ew->mainLayout) {
+        return;
+    }
+    int listLineDy = ew->listBox->GetItemHeight();
+    if (listLineDy <= 0 || targetClientDy <= 0) {
+        return;
+    }
+    Edit* contents = ew->editContents;
+    bool growContents = contents && contents->IsVisible();
+
+    // how tall everything is with the smallest list and Contents box we'd like
+    // to show
+    ew->listBox->idealSizeLines = kPreferredLines;
+    if (growContents) {
+        contents->idealSizeLines = kPreferredLines;
+    }
+    Size natural = ew->mainLayout->Layout(ExpandInf());
+    int extraDy = targetClientDy - natural.dy;
+
+    if (growContents && extraDy != 0) {
+        // share leftover (or shortage) between the list and Contents
+        int forContents = extraDy / 2;
+        extraDy -= forContents;
+        contents->idealSizeLines = std::max(1, kPreferredLines + (forContents / EditLineDy(contents)));
+    }
+    // one line is the floor: better a cramped list than a window taller than
+    // the screen
+    ew->listBox->idealSizeLines = std::max(kPreferredLines + (extraDy / listLineDy), 1);
+}
+
+void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg != WM_SIZE) {
         return;
     }
     if (!mainLayout) {
         return;
     }
-    int dx = size.dx;
-    int dy = size.dy;
+    int dx = ev->size.dx;
+    int dy = ev->size.dy;
     if (dx == 0 || dy == 0) {
         return;
     }
+    // Save while the window is live: app shutdown writes settings before it
+    // destroys tabs and their annotation editors.
+    gGlobalPrefs->annotationsWindowSize = {dx, dy};
     HwndInvalidate(hwnd);
     if (false && mainLayout->lastBounds.EqSize(dx, dy)) {
         // avoid un-necessary layout
         return;
     }
-    LayoutToSize(mainLayout, {dx, dy});
+    SetGrowingControlsToFit(this, dy);
+    DoLayout({dx, dy});
 }
 
-static Static* CreateStatic(HWND parent, Str s = nullptr) {
-    auto w = new Static();
-    Static::CreateArgs args;
-    args.parent = parent;
-    args.text = s;
-    args.isRtl = IsUIRtl();
-    args.font = GetAppFont(parent);
-    HWND hwnd = w->Create(args);
-    ReportIf(!hwnd);
-    return w;
+static VirtText* CreateStatic(Str s = nullptr) {
+    return NewVirtText({
+        .s = s,
+        .font = GetAppFont(),
+        .isRtl = IsUIRtl(),
+        .ellipsis = true,
+    });
+}
+
+static VirtButton* CreateVirtButton(Str text) {
+    auto* b = new VirtButton(text, GetAppFont());
+    b->textPadding = DpiScaledInsets(5, 12);
+    return b;
 }
 
 static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HWND parent = ew->hwnd;
-    auto vbox = new VBox();
+    auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-    HFONT fnt = GetAppFont(parent);
+    PlatformFont* fnt = GetAppFont();
 
     {
-        ListBox::CreateArgs args;
-        args.parent = parent;
-        args.idealSizeLines = 5;
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-        auto w = new ListBox();
-        w->SetInsetsPt(4, 0);
-        w->Create(args);
-        auto lbModel = new ListBoxModelStrings();
+        auto* w = new VirtListBox();
+        w->dpi = ew->GetDpi();
+        w->font = fnt;
+        w->padding = DpiScaledInsets(4, 0);
+        w->idealSizeLines = 5;
+        w->multiSelect = true;
+        auto* lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
         w->onSelectionChanged = MkFunc0(ListBoxSelectionChanged, ew);
         ew->listBox = w;
@@ -1388,13 +1512,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic();
         ew->staticRect = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic();
         // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
         // l2->SetInsetsPt(20, 0, 0, 0);
         ew->staticAuthor = w;
@@ -1402,21 +1526,21 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic();
         ew->staticModificationDate = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = CreateStatic(parent);
+        auto* w = CreateStatic();
         ew->staticPopup = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Contents:"));
+        auto* w = CreateStatic(_TRA("Contents:"));
         ew->staticContents = w;
-        w->SetInsetsPt(4, 0, 0, 0);
+        w->padding = DpiScaledInsets(4, 0, 0, 0);
         vbox->AddChild(w);
     }
 
@@ -1427,18 +1551,21 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.idealSizeLines = 5;
         args.font = fnt;
         args.isRtl = IsUIRtl();
-        auto w = new Edit();
+        auto* w = new Edit();
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
         w->maxDx = 150;
         w->onTextChanged = MkFunc0(ContentsChanged, ew);
+        // flush Contents on blur (EN_KILLFOCUS); do not fold this into
+        // onTextChanged — that must stay EN_CHANGE-only (Advanced Settings UAF)
+        w->onKillFocus = MkFunc0(ContentsChanged, ew);
         ew->editContents = w;
         vbox->AddChild(w);
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Alignment:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Text Alignment:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticTextAlignment = w;
         vbox->AddChild(w);
     }
@@ -1449,7 +1576,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1460,8 +1587,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Font:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Text Font:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticTextFont = w;
         vbox->AddChild(w);
     }
@@ -1471,7 +1598,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.parent = parent;
         args.font = fnt;
         args.isRtl = IsUIRtl();
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
 
         w->Create(args);
@@ -1482,8 +1609,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Size:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Text Size:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticTextSize = w;
         vbox->AddChild(w);
     }
@@ -1496,7 +1623,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Trackbar();
+        auto* w = new Trackbar();
         w->SetInsetsPt(4, 0, 0, 0);
 
         w->Create(args);
@@ -1507,7 +1634,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Text Color:"));
+        auto* w = CreateStatic(_TRA("Text Color:"));
         ew->staticTextColor = w;
         vbox->AddChild(w);
     }
@@ -1518,7 +1645,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1529,8 +1656,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Line Start:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Line Start:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticLineStart = w;
         vbox->AddChild(w);
     }
@@ -1541,7 +1668,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1551,8 +1678,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Line End:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Line End:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticLineEnd = w;
         vbox->AddChild(w);
     }
@@ -1563,7 +1690,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1573,8 +1700,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Icon:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Icon:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticIcon = w;
         vbox->AddChild(w);
     }
@@ -1585,7 +1712,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1595,8 +1722,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, "Border:");
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic("Border:");
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticBorder = w;
         vbox->AddChild(w);
     }
@@ -1609,7 +1736,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Trackbar();
+        auto* w = new Trackbar();
         w->Create(args);
         w->onPositionChanging = MkFunc1(BorderWidthChanging, ew);
         ew->trackbarBorder = w;
@@ -1617,8 +1744,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Color:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Color:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticColor = w;
         vbox->AddChild(w);
     }
@@ -1629,7 +1756,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
         w->SetItemsSeqStrings(gColors);
@@ -1639,8 +1766,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Interior Color:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Interior Color:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticInteriorColor = w;
         vbox->AddChild(w);
     }
@@ -1651,7 +1778,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new DropDown();
+        auto* w = new DropDown();
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
@@ -1662,8 +1789,8 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, _TRA("Opacity:"));
-        w->SetInsetsPt(8, 0, 0, 0);
+        auto* w = CreateStatic(_TRA("Opacity:"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         ew->staticOpacity = w;
         vbox->AddChild(w);
     }
@@ -1676,7 +1803,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         args.isRtl = IsUIRtl();
 
-        auto w = new Trackbar();
+        auto* w = new Trackbar();
         w->Create(args);
 
         w->onPositionChanging = MkFunc1(OpacityChanging, ew);
@@ -1685,51 +1812,24 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Save...");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto w = new Button();
-        w->SetInsetsPt(8, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
+        auto* w = CreateVirtButton(_TRA("Save..."));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         w->onClick = MkFunc0(ButtonSaveAttachment, ew);
         ew->buttonSaveAttachment = w;
         vbox->AddChild(w);
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Embed...");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto w = new Button();
-        w->SetInsetsPt(8, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
+        auto* w = CreateVirtButton(_TRA("Embed..."));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         w->onClick = MkFunc0(ButtonEmbedAttachment, ew);
         ew->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Delete Annotation");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto w = new Button();
-        w->SetInsetsPt(11, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
+        auto* w = CreateVirtButton(_TRA("Delete Annotation"));
+        w->padding = DpiScaledInsets(11, 0, 0, 0);
         w->onClick = MkFunc0(ButtonDeleteHandler, ew);
         ew->buttonDelete = w;
         vbox->AddChild(w);
@@ -1737,22 +1837,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
     {
         // used to take all available space between the what's above and below
-        auto w = new Spacer(0, 0);
+        auto* w = new Spacer(0, 0);
         vbox->AddChild(w, 1);
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
         // text set by UpdateSaveButtonLabels once tab is attached
-        args.text = _TRA("Save changes to existing PDF");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto w = new Button();
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
+        auto* w = CreateVirtButton(_TRA("Save changes to existing PDF"));
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClick = MkFunc0(ButtonSaveToCurrentPDFHandler, ew);
         ew->buttonSaveToCurrentFile = w;
@@ -1760,52 +1851,102 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        Button::CreateArgs args;
-        args.parent = parent;
-        args.text = _TRA("Save changes to a new PDF");
-        args.font = fnt;
-        args.isRtl = IsUIRtl();
-
-        auto w = new Button();
-        w->SetInsetsPt(8, 0, 0, 0);
-        HWND hwnd = w->Create(args);
-        ReportIf(!hwnd);
-
+        auto* w = CreateVirtButton(_TRA("Save changes to a new PDF"));
+        w->padding = DpiScaledInsets(8, 0, 0, 0);
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClick = MkFunc0(ButtonSaveToNewFileHandler, ew);
         ew->buttonSaveToNewFile = w;
         vbox->AddChild(w);
     }
 
-    auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
+    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
     ew->mainLayout = padding;
+    // WindowBase owns and lays out `layout`; mainLayout is the same tree, kept
+    // as an ILayout* for its lastBounds
+    ew->layout = padding;
     HidePerAnnotControls(ew);
 }
 
 static void LimitEditAnnotationsClientSizeToScreen(HWND hwnd, HWND hwndRelative, Size& size) {
-    Rect work = GetWorkAreaRect(HwndWindowRect(hwndRelative), hwndRelative);
+    // nullptr hwnd so we use the nearest monitor, not the primary
+    Rect work = GetWorkAreaRect(HwndWindowRect(hwndRelative), nullptr);
     WINDOWINFO wi{};
     wi.cbSize = sizeof(wi);
-    if (!GetWindowInfo(hwnd, &wi)) {
-        size = HwndLimitSizeToScreen(hwndRelative, size);
+    int nonClientDx = 0;
+    int nonClientDy = 0;
+    if (GetWindowInfo(hwnd, &wi)) {
+        nonClientDx = RectDx(wi.rcWindow) - RectDx(wi.rcClient);
+        nonClientDy = RectDy(wi.rcWindow) - RectDy(wi.rcClient);
+    }
+    // a newly created hidden window can report rcWindow == rcClient
+    if (nonClientDx <= 0 || nonClientDy <= 0) {
+        RECT rc{0, 0, 100, 100};
+        DWORD style = hwnd ? (DWORD)GetWindowLongW(hwnd, GWL_STYLE) : WS_OVERLAPPEDWINDOW;
+        DWORD exStyle = hwnd ? (DWORD)GetWindowLongW(hwnd, GWL_EXSTYLE) : 0;
+        AdjustWindowRectEx(&rc, style, FALSE, exStyle);
+        nonClientDx = (rc.right - rc.left) - 100;
+        nonClientDy = (rc.bottom - rc.top) - 100;
+    }
+    int maxClientDx = std::max(work.dx - nonClientDx, 1);
+    int maxClientDy = std::max(work.dy - nonClientDy, 1);
+    size.dx = std::min(size.dx, maxClientDx);
+    size.dy = std::min(size.dy, maxClientDy);
+}
+
+static HWND AnnotEditorRelativeHwnd(EditAnnotationsWindow* ew) {
+    if (ew && ew->tab && ew->tab->win && ew->tab->win->hwndFrame) {
+        return ew->tab->win->hwndFrame;
+    }
+    return ew ? ew->hwnd : nullptr;
+}
+
+// Size the HWND to a client size that fits the work area and lay out the
+// growing list / Contents box inside it. Does not grow the window to fit
+// every field — extra annot controls take space from the list instead.
+static void RelayoutEditAnnotationsWindow(EditAnnotationsWindow* ew, int clientDx, int clientDy) {
+    if (!ew || !ew->hwnd || !ew->mainLayout) {
         return;
     }
+    Size size{clientDx, clientDy};
+    if (size.dx <= 0 || size.dy <= 0) {
+        Rect cr = HwndClientRect(ew->hwnd);
+        size = {cr.dx, cr.dy};
+    }
+    HWND rel = AnnotEditorRelativeHwnd(ew);
+    if (rel) {
+        LimitEditAnnotationsClientSizeToScreen(ew->hwnd, rel, size);
+    }
+    if (size.dx <= 0 || size.dy <= 0) {
+        return;
+    }
+    SetGrowingControlsToFit(ew, size.dy);
+    ResizeHwndToClientArea(ew->hwnd, size.dx, size.dy, false);
+    ew->DoLayout({size.dx, size.dy});
+}
 
-    int nonClientDx = RectDx(wi.rcWindow) - RectDx(wi.rcClient);
-    int nonClientDy = RectDy(wi.rcWindow) - RectDy(wi.rcClient);
-    int maxClientDx = work.dx - nonClientDx;
-    int maxClientDy = work.dy - nonClientDy;
-    if (size.dx > maxClientDx) {
-        size.dx = maxClientDx;
+static void ClampEditAnnotationsWindowToWorkArea(HWND hwnd, HWND hwndRelative) {
+    if (!hwnd) {
+        return;
     }
-    if (size.dy > maxClientDy) {
-        size.dy = maxClientDy;
+    Rect r = HwndWindowRect(hwnd);
+    Rect probe = hwndRelative ? HwndWindowRect(hwndRelative) : r;
+    Rect work = GetWorkAreaRect(probe, nullptr);
+    if (work.IsEmpty()) {
+        return;
     }
+    if (r.dx > work.dx) {
+        r.dx = work.dx;
+    }
+    if (r.dy > work.dy) {
+        r.dy = work.dy;
+    }
+    r = ShiftRectToWorkArea(r, nullptr, true);
+    SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER);
 }
 
 void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus focus) {
     if (!tab) return;
-    auto engine = tab->GetEngine();
+    auto* engine = tab->GetEngine();
     auto canAnnotate = EngineSupportsAnnotations(engine);
     if (!canAnnotate) {
         ReportDebugIf(true);
@@ -1817,28 +1958,33 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         HwndShowWithoutActivate(ew->hwnd);
         SetForegroundWindow(ew->hwnd);
         if (ew->listBox && ew->listBox->model->ItemsCount() > 0) {
-            HwndSetFocus(ew->listBox->hwnd);
+            ew->SetFocusTo(ew->listBox);
         }
         if (!annot) return;
         SetSelectedAnnotation(tab, annot, isNew, focus);
         return;
     }
     ew = new EditAnnotationsWindow();
+    // OnSize grows the list / Contents box before DoLayout
+    ew->autoLayout = false;
+    // Esc normally does not close because the user may be editing text
+    // (issue #5934). EscToExit is the explicit opt-in to close anyway.
+    ew->closeOnEsc = gGlobalPrefs->escToExit;
+    ew->closeOnCtrlW = true;
     ew->onClose = MkFunc1Void(OnClose);
     ew->onDestroy = MkFunc1Void(OnDestroy);
+    ew->onSize = MkMethod1<EditAnnotationsWindow, WindowBase::SizeEvent*, &EditAnnotationsWindow::OnSize>(ew);
+    ew->onFocus = MkMethod1<EditAnnotationsWindow, WindowBase::FocusEvent*, &EditAnnotationsWindow::OnFocus>(ew);
+    ew->onKeyDown = MkMethod1<EditAnnotationsWindow, KeyEvent*, &EditAnnotationsWindow::OnKeyDown>(ew);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
     // mainWindow->isDialog = true;
-    if (UseDarkModeLib()) {
-        args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
-    } else {
-        args.bgColor = MkGray(0xee);
-    }
+    args.bgColor = DarkModeDialogBgColor();
 
     args.title = str::JoinTemp(_TRA("Annotations"), StrL(": "), tab->GetTabTitle());
     args.visible = false;
-    args.font = GetAppFont(tab->win ? tab->win->hwndFrame : nullptr);
+    args.font = GetAppFont();
 
     // PositionCloseTo(w, args->hwndRelatedTo);
     // Size winSize = {w->initialSize.dx, w->initialSize.Height};
@@ -1854,33 +2000,27 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     UpdateAnnotationsList(ew);
 
     Rect lastPos = tab->lastEditAnnotsWindowPos;
-    // size our editor window to be the same height as main window
-    int minDy = lastPos.dy;
-    if (minDy == 0) {
-        minDy = 720;
+    Size lastSize = gGlobalPrefs->annotationsWindowSize;
+    if (lastSize.IsEmpty() && !lastPos.IsEmpty()) {
+        lastSize = {lastPos.dx, lastPos.dy};
+    }
+    if (lastSize.IsEmpty()) {
+        lastSize = {520, 720};
+        // size our editor window to be the same height as main window
         // TODO: this is slightly less that wanted
         HWND hwnd = tab->win->hwndCanvas;
         auto rc = HwndClientRect(hwnd);
         if (rc.dy > 0) {
-            minDy = rc.dy;
+            lastSize.dy = rc.dy;
         }
     }
 
-    // if it's a tall window, up the number of items in list box
-    // from 5 to 14
-    if (minDy > 1024) {
-        ew->listBox->idealSizeLines = 14;
-    }
-
     if (lastPos.IsEmpty()) {
-        Size size = {520, minDy};
-        LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
+        RelayoutEditAnnotationsWindow(ew, lastSize.dx, lastSize.dy);
         HwndPositionToTheRightOf(ew->hwnd, tab->win->hwndFrame);
+        ClampEditAnnotationsWindowToWorkArea(ew->hwnd, tab->win->hwndFrame);
     } else {
-        Size size = {lastPos.dx, minDy};
-        LimitEditAnnotationsClientSizeToScreen(ew->hwnd, tab->win->hwndFrame, size);
-        LayoutAndSizeToContent(ew->mainLayout, size.dx, size.dy, ew->hwnd);
+        RelayoutEditAnnotationsWindow(ew, lastSize.dx, lastSize.dy);
         // pass nullptr for hwnd so ShiftRectToWorkArea uses the saved rect
         // to find the correct monitor (not the monitor the hwnd is currently on)
         Rect r = HwndWindowRect(ew->hwnd);
@@ -1888,6 +2028,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         r.y = lastPos.y;
         r = ShiftRectToWorkArea(r, nullptr, true);
         SetWindowPos(ew->hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+        ClampEditAnnotationsWindowToWorkArea(ew->hwnd, tab->win->hwndFrame);
     }
     if (!annot) annot = ew->tab->selectedAnnotation;
     ew->skipGoToPage = (annot != nullptr);
@@ -1895,12 +2036,95 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         bool isNew = annot != ew->tab->win->annotationUnderCursor;
         SetSelectedAnnotation(tab, annot, isNew, focus);
     }
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndNotifySafe(ew->hwnd);
-        DarkMode::setWindowEraseBgSubclass(ew->hwnd);
-    }
+    DarkModeApplyToNotifyWindowAndEraseBg(ew->hwnd);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     ew->SetIsVisible(true);
+    // SetSelectedAnnotation focuses the list when an annot is selected; if the
+    // window opened on an empty selection, give the list the keys so Home /
+    // End / arrows work immediately (issue #5975).
+    if (!annot) {
+        FocusAnnotationsList(ew);
+    }
+}
+
+// Resize the annotation editor to clientDy and report list / Contents / gap
+// sizes for tests/issue-3769.ts and tests/issue-5834.ts. selectItem is
+// 1-based; 0 leaves the selection alone; -1 selects every row. selectLast
+// (1-based) with selectItem > 0 selects that inclusive range (issue #5976).
+TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut, int selectLast) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !EngineSupportsAnnotations(tab->GetEngine())) {
+        return finish(StrL("ERROR no-annot-engine"), 1);
+    }
+
+    ShowEditAnnotationsWindow(tab, nullptr);
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    if (!ew || !ew->hwnd || !ew->listBox) {
+        return finish(StrL("ERROR no-editor"), 1);
+    }
+
+    if (selectItem < 0) {
+        if (len(ew->annotations) == 0) {
+            return finish(StrL("ERROR no-annot"), 1);
+        }
+        ew->listBox->SelectAll();
+        ew->ListBoxSelectionChanged();
+    } else if (selectItem > 0) {
+        int idx = selectItem - 1;
+        if (!ew->annotations.isValidIndex(idx)) {
+            return finish(fmt("ERROR no-annot item=%d n=%d", selectItem, len(ew->annotations)), 1);
+        }
+        int last = selectLast > 0 ? selectLast - 1 : idx;
+        if (selectLast > 0 && !ew->annotations.isValidIndex(last)) {
+            return finish(fmt("ERROR no-annot item=%d n=%d", selectLast, len(ew->annotations)), 1);
+        }
+        if (last != idx) {
+            ew->listBox->SelectRange(idx, last);
+        } else {
+            ew->listBox->SetCurrentSelection(idx);
+        }
+        ew->ListBoxSelectionChanged();
+    }
+
+    if (clientDy > 0) {
+        ResizeHwndToClientArea(ew->hwnd, 520, clientDy, false);
+        // MoveWindow can skip WM_SIZE when the outer size is unchanged;
+        // force the grow-to-fit layout either way.
+        Rect crNow = HwndClientRect(ew->hwnd);
+        SetGrowingControlsToFit(ew, crNow.dy);
+        ew->DoLayout(crNow.Size());
+    }
+
+    Rect cr = HwndClientRect(ew->hwnd);
+    Rect listR = ew->listBox->lastBounds;
+    int contentsDy = 0;
+    if (ew->editContents && ew->editContents->IsVisible() && ew->editContents->hwnd) {
+        contentsDy = HwndClientRect(ew->editContents->hwnd).dy;
+    }
+    int gapBelow = cr.dy - (listR.y + listR.dy);
+    int sel = ew->listBox->GetCurrentSelection();
+    int n = len(ew->annotations);
+    int selCount = ew->listBox->SelectedCount();
+    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d selCount=%d", cr.dy, listR.dy,
+                      contentsDy, gapBelow, sel, n, selCount),
+                  0);
 }

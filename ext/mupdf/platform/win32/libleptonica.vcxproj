@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Memento|ARM64">
+      <Configuration>Memento</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Memento|Win32">
+      <Configuration>Memento</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Memento|x64">
+      <Configuration>Memento</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\source\fitz\leptonica-wrap.h" />
+    <ClInclude Include="..\..\source\fitz\tessocr.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\allheaders.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\alltypes.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\array.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\arrayaccess.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\bbuffer.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\bilateral.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\bmf.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\bmfdata.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\bmp.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\ccbord.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\colorinfo.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\dewarp.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\environ.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\gplot.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\hashmap.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\heap.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\imageio.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\jbclass.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\leptwin.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\list.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\morph.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\pix.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\ptra.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\queue.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\rbtree.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\readbarcode.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\recog.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\regutils.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\stack.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\stringcode.h" />
+    <ClInclude Include="..\..\thirdparty\leptonica\src\watershed.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\fitz\leptonica-wrap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\adaptmap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\affine.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\affinecompose.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\arrayaccess.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\baseline.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bbuffer.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bilateral.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bilinear.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\binarize.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\binexpand.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\binreduce.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\blend.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bmf.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bmpio.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bmpiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bootnumgen4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxbasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\boxfunc5.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\bytearray.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ccbord.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\classapp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorcontent.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\coloring.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colormap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colormorph.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorquant1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorquant2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorseg.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\colorspace.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\compare.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\conncomp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\convertfiles.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\convolve.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\correlscore.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dewarp4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dnabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dnafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dnahash.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dwacomb.2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\dwacomblow.2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\edge.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\encoding.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\enhance.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fhmtauto.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fhmtgenlow.1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphauto.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphgen.1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fmorphgenlow.1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fpix1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\fpix2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\gifiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\gplot.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\graphics.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\graymorph.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\grayquant.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\hashmap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\heap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jbclass.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kheader.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kheaderstub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jp2kiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\jpegiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\kernel.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\libversions.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\list.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\map.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morph.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morphapp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morphdwa.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\morphseq.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\numabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\numafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\numafunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pageseg.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\paintcmap.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\partify.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\partition.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio1stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pdfio2stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix3.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix4.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pix5.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixacc.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixafunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixalloc.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixarith.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixcomp.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixconv.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixlabel.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pixtiling.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pngiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pnmio.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\pnmiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\projective.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio1stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\psio2stub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptabasic.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptafunc1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptafunc2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\ptra.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\quadtree.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\queue.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rank.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rbtree.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\readfile.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\regutils.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rop.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\roplow.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotate.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateam.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateorth.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\rotateshear.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\runlength.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sarray1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sarray2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\scale1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\scale2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\seedfill.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sel1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\sel2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\selgen.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\shear.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\skew.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\spixio.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\stack.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\stringcode.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\strokes.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\textops.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\tiffiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\utils1.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\utils2.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\warper.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\webpiostub.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\writefile.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\zlibmem.c" />
+    <ClCompile Include="..\..\thirdparty\leptonica\src\zlibmemstub.c" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{ca0bda38-89b9-4703-a77d-8049ac3a0d04}</ProjectGuid>
+    <RootNamespace>libleptonica</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|ARM64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(Platform)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|ARM64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;WIN32;_DEBUG;_LIB</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BrowseInformation>true</BrowseInformation>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BrowseInformation>true</BrowseInformation>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;MEMENTO;_DEBUG;_LIB</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_CRT_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

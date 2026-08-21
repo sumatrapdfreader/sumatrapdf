@@ -10,7 +10,7 @@
 //   - a `const Cmd... = <number>` constant, or
 //   - an inline numeric id passed to sendCommand(win, <number>).
 //
-// Run standalone: bun tests/lint-command-ids.ts  (also runs first in all.ts)
+// Run standalone: bun tests/lint-command-ids.ts  (also runs first in run-almost-all.ts)
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -34,7 +34,7 @@ export async function testit(): Promise<void> {
   }
   if (violations.length > 0) {
     throw new Error(
-      "hardcoded command ids found - use cmdId(\"CmdName\") from tests/util.ts instead:\n" + violations.join("\n"),
+      'hardcoded command ids found - use cmdId("CmdName") from tests/util.ts instead:\n' + violations.join("\n"),
     );
   }
   console.log("PASS: no hardcoded command ids in tests");

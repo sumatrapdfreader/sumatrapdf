@@ -100,6 +100,16 @@ function winver7_defines()
 
   -- v143 is the last that supports windows 7
   toolset "v143"   -- this is the official way in recent Premake versions
+
+  -- ...but only x86 / x64 need to run on Windows 7, and the v143 ARM64 tools
+  -- are not on the GitHub windows-2025-vs2026 runner image (MSB8020), which is
+  -- what the daily build hits. ARM64 never had a Windows 7 to support, so build
+  -- it with the VS 2026 toolset that is there. That toolset is v145 -- the
+  -- v180 in the MSBuild path is the targets-directory version, not a toolset
+  -- name (MSBuild\Microsoft\VC\v180\Platforms\ARM64\PlatformToolsets\v145).
+  filter "platforms:arm64"
+  toolset "v145"
+  filter {}
 end
 
 function winver_latest_defines()
@@ -117,8 +127,8 @@ function winver_defines()
   -- winver_latest_defines()
 end
 
--- WebView2 (manual viewer, SimpleBrowserWindow, BrowserDocView). wingui/*.cpp is
--- included via wingui_files() in premake5.files.lua.
+-- WebView2 (manual viewer, SimpleBrowserWindow, BrowserDocView). gui/*.cpp is
+-- included via gui_files() in premake5.files.lua.
 function webview_conf()
   includedirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/include" }
   filter "platforms:x86"
@@ -366,6 +376,11 @@ workspace "SumatraPDF"
     architecture "ARM64"
   filter {}
 
+  -- Tracy profiling is opt-in; define it everywhere so `#if IS_TRACY` compiles
+  -- without C4668 ("not defined as a preprocessor macro, replacing with 0"),
+  -- which is an error under /W4 /WX. Set to 1 to build with Tracy zones.
+  defines { "IS_TRACY=0" }
+
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
   -- /utf-8 sets both source and execution charset to UTF-8
   -- fixes compilation on non-English Windows (e.g. Chinese) where
@@ -472,6 +487,18 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4456", "4996" }
     files { "ext/chmdec/*.c", "ext/chmdec/*.h" }
 
+  -- msdes: public domain d3des, used by LitDoc.cpp to unseal .lit DRM1.
+  -- Linked into libsumatrapdf.dll (and the static EXE); dynamic consumers
+  -- import the required functions through libsumatrapdf.def.
+  project "msdes"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4131", "4244" }
+    files { "ext/msdes/*.c", "ext/msdes/*.h" }
+
   -- cmark-gfm: linked into mupdf → libsumatrapdf.dll (md.c + MarkdownToc imports).
   -- Do not also link into SumatraPDF.exe; re-export via libsumatrapdf.def instead.
   project "cmark-gfm"
@@ -479,7 +506,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optimized_conf()
-    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
+    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "ext/mupdf/scripts/cmark-gfm" }
     defines { "CMARK_GFM_STATIC_DEFINE", "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4013", "4018", "4090", "4100", "4101", "4127", "4130", "4132", "4146", "4201", "4204", "4232", "4244", "4245", "4267", "4305", "4306", "4310", "4312", "4389", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4805", "4819", "4996" }
     cmark_gfm_files()
@@ -510,6 +537,7 @@ workspace "SumatraPDF"
     files {
       "ext/a-zopfli/zopfli.cpp", "ext/a-zopfli/zopflipng/zopflipng_lib.h",
       "ext/a-zopfli/zopflipng/lodepng/lodepng.h", "ext/a-zopfli/version.txt",
+      "ext/a-zopfli/COPYING",
     }
 
   -- libarchive: linked into mupdf → libsumatrapdf.dll (and into static EXE).
@@ -533,7 +561,7 @@ workspace "SumatraPDF"
     -- bzip2 support for libarchive
     defines { "BZ_NO_STDIO" }
     includedirs { "ext/a-bzip2" }
-    files { "ext/a-bzip2/bzip2.c", "ext/a-bzip2/bzlib.h", "ext/a-bzip2/version.txt" }
+    files { "ext/a-bzip2/bzip2.c", "ext/a-bzip2/bzlib.h", "ext/a-bzip2/version.txt", "ext/a-bzip2/LICENSE" }
     -- LzmaDec/Bra* for LzSA live in base/exe (not here): installer must extract
     -- libsumatrapdf.dll without calling into the delay-loaded DLL.
     -- liblzma for LZMA/LZMA2/XZ decompression (needed for 7zip support in libarchive)
@@ -715,7 +743,10 @@ workspace "SumatraPDF"
     disablewarnings { "4005", "4100", "4127", "4244", "4310", "4389", "4456", "4702" }
     defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     includedirs { "ext/a-openjpeg" }
-    files { "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h", "ext/a-openjpeg/version.txt" }
+    files {
+      "ext/a-openjpeg/openjpeg.c", "ext/a-openjpeg/*.h",
+      "ext/a-openjpeg/version.txt", "ext/a-openjpeg/LICENSE",
+    }
 
   project "freetype"
     static_intermediate_dirs()
@@ -728,7 +759,7 @@ workspace "SumatraPDF"
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
     }
     disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include" }
+    includedirs { "ext/mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include" }
     freetype_files()
 
   project "lcms2"
@@ -748,7 +779,7 @@ workspace "SumatraPDF"
     optimized_conf()
     -- ext/harfbuzz/src is required so /Yu"hb.hh" and forceincludes can resolve
     -- hb.hh (sources also rely on same-dir includes for other headers).
-    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
+    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "ext/mupdf/scripts/freetype", "ext/freetype/include" }
     defines {
       "_CRT_SECURE_NO_WARNINGS",
       "HAVE_FALLBACK=1",
@@ -784,7 +815,10 @@ workspace "SumatraPDF"
     optimized_conf()
     includedirs { "ext/a-mujs" }
     disablewarnings { "4090", "4100", "4146", "4310", "4702", "4706" }
-    files { "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/version.txt" }
+    files {
+      "ext/a-mujs/mujs.c", "ext/a-mujs/mujs.h", "ext/a-mujs/regexp.h",
+      "ext/a-mujs/version.txt", "ext/a-mujs/COPYING",
+    }
 
   project "a-extract"
     static_intermediate_dirs()
@@ -807,33 +841,33 @@ workspace "SumatraPDF"
   function fonts()
     files {
 
-      "mupdf/resources/fonts/urw/Dingbats.cff",
-      "mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
-      "mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
-      "mupdf/resources/fonts/urw/NimbusMonoPS-Bold.cff",
-      "mupdf/resources/fonts/urw/NimbusMonoPS-BoldItalic.cff",
-      "mupdf/resources/fonts/urw/NimbusRoman-Regular.cff",
-      "mupdf/resources/fonts/urw/NimbusRoman-Italic.cff",
-      "mupdf/resources/fonts/urw/NimbusRoman-Bold.cff",
-      "mupdf/resources/fonts/urw/NimbusRoman-BoldItalic.cff",
-      "mupdf/resources/fonts/urw/NimbusSans-Regular.cff",
-      "mupdf/resources/fonts/urw/NimbusSans-Italic.cff",
-      "mupdf/resources/fonts/urw/NimbusSans-Bold.cff",
-      "mupdf/resources/fonts/urw/NimbusSans-BoldItalic.cff",
-      "mupdf/resources/fonts/urw/StandardSymbolsPS.cff",
-      "mupdf/resources/fonts/droid/DroidSansFallbackFull.ttf",
-      "mupdf/resources/fonts/sil/CharisSIL.cff",
-      "mupdf/resources/fonts/sil/CharisSIL-Bold.cff",
-      "mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
-      "mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
+      "ext/mupdf/resources/fonts/urw/Dingbats.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Bold.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-BoldItalic.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusRoman-Regular.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusRoman-Italic.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusRoman-Bold.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusRoman-BoldItalic.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusSans-Regular.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusSans-Italic.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusSans-Bold.cff",
+      "ext/mupdf/resources/fonts/urw/NimbusSans-BoldItalic.cff",
+      "ext/mupdf/resources/fonts/urw/StandardSymbolsPS.cff",
+      "ext/mupdf/resources/fonts/droid/DroidSansFallbackFull.ttf",
+      "ext/mupdf/resources/fonts/sil/CharisSIL.cff",
+      "ext/mupdf/resources/fonts/sil/CharisSIL-Bold.cff",
+      "ext/mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
+      "ext/mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
 
-      "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
-      "mupdf/resources/fonts/noto/NotoSansMath-Regular.otf",
-      "mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf",
-      "mupdf/resources/fonts/noto/NotoSansSymbols2-Regular.otf",
-      "mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf",
-      "mupdf/resources/fonts/noto/NotoMusic-Regular.otf",
-      "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
+      "ext/mupdf/resources/fonts/noto/NotoSans-Regular.otf",
+      "ext/mupdf/resources/fonts/noto/NotoSansMath-Regular.otf",
+      "ext/mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf",
+      "ext/mupdf/resources/fonts/noto/NotoSansSymbols2-Regular.otf",
+      "ext/mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf",
+      "ext/mupdf/resources/fonts/noto/NotoMusic-Regular.otf",
+      "ext/mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
     }
 
     filter { 'files:**.cff', 'platforms:x86' }
@@ -904,7 +938,7 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
-    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
+    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1", "HAVE_WEBP=1" }
     defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
@@ -920,28 +954,29 @@ workspace "SumatraPDF"
       "4005", "4013", "4018", "4057", "4100", "4115", "4130", "4132", "4146", "4200", "4204", "4206", "4210",
       "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819", "5286"
     }
-    -- force including mupdf/scripts/openjpeg/opj_config_private.h
+    -- force including ext/mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
 
     uses_zlib()
     includedirs {
-      "mupdf/include",
-      "mupdf/generated",
-      "ext/jbig2dec",
+      "ext/mupdf/include",
+      "ext/mupdf/generated",
+      "ext/a-jbig2dec",
       "ext/libjpeg-turbo/src",
       "ext/a-openjpeg",
-      "mupdf/scripts/freetype",
+      "ext/mupdf/scripts/freetype",
       "ext/freetype/include",
       "ext/a-mujs",
       "ext/brotli/c/include",
       "ext/cmark-gfm/src",
       "ext/cmark-gfm/extensions",
-      "mupdf/scripts/cmark-gfm",
+      "ext/mupdf/scripts/cmark-gfm",
       "ext/harfbuzz/src",
       "ext/lcms2/include",
       "ext/a-gumbo",
       "ext/a-extract",
       "ext/libarchive",
+      "ext/libwebp/src",
     }
     fonts()
 
@@ -989,10 +1024,11 @@ workspace "SumatraPDF"
     -- static EXE). Archive.cpp RAR* APIs are re-exported via libsumatrapdf.def so
     -- SumatraPDF / PdfFilter / PdfPreview do not carry a second copy.
     -- chmdec: same pattern — ChmFile / -dump-chm import chm_* via libsumatrapdf.def.
+    -- msdes: LitDoc imports deskey/des through libsumatrapdf.def.
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec"
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes"
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1000,6 +1036,18 @@ workspace "SumatraPDF"
       "winspool", "wininet", "urlmon", "gdiplus", "ole32",
       "oleAut32", "shlwapi", "version", "crypt32"
     }
+    -- Invalidate SumatraPDF's embedded payload when this DLL is rebuilt so a
+    -- later SumatraPDF prebuild re-packs InstallerData.dat with the new binary
+    -- (that prebuild only creates InstallerData.dat when it is missing).
+    -- Note: libsumatrapdf's targetdir is out/<cfg>/obj (intermediates); the DLL
+    -- and InstallerData.dat ship in out/<cfg>/, so delete there explicitly.
+    for_each_out_config(function(platform, config, outDir)
+      filter { platform, config }
+      prebuildcommands {
+        "if exist ..\\" .. outDir:gsub("/", "\\") .. "\\InstallerData.dat del /f /q ..\\" .. outDir:gsub("/", "\\") .. "\\InstallerData.dat",
+      }
+    end)
+    filter {}
 
   project "base"
     static_intermediate_dirs()
@@ -1052,14 +1100,18 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
-    disablewarnings { "4838" }
-    includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar", "mupdf/include" }
-    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
+    -- FZ_UNUSED is a no-op outside gcc/clang, so mupdf's headers trip 4100;
+    -- every other project including them disables it too
+    disablewarnings { "4100", "4838" }
+    includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar", "ext/mupdf/include" }
+    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec", "ext/msdes" }
     test_engines_files()
     links_zlib()
     -- static link (no libsumatrapdf.dll): same image-codec set as libsumatrapdf.dll
     links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
     links { "libwebp", "dav1d", "heicdec", "jxldec", "brotli" }
+    -- LitDoc.cpp: DES decryption of DRM-free .lit sections, LZX section decompression
+    links { "msdes", "chmdec" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
       "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "urlmon",
@@ -1103,6 +1155,41 @@ workspace "SumatraPDF"
       "ole32", "oleAut32", "windowscodecs", "shcore", "wininet",
     }
 
+  -- small console app that loads PdfPreview.dll and saves a thumbnail as PNG
+  project "preview_test"
+    static_app_objdir()
+    static_linker_intermediates()
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4838" }
+    includedirs { "src" }
+    preview_test_files()
+    setup_base_pch()
+    links { "base" }
+    links {
+      "gdiplus", "gdi32", "user32", "ole32", "shell32", "shlwapi", "uuid",
+    }
+
+  -- minimal host for SumatraPDF -plugin mode (see src/tools/plugin-test.cpp)
+  project "plugin-test"
+    static_app_objdir()
+    static_linker_intermediates()
+    kind "WindowedApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4838" }
+    includedirs { "src" }
+    plugin_test_files()
+    setup_base_pch()
+    links { "base" }
+    links {
+      "gdiplus", "gdi32", "user32", "comctl32", "shell32", "shlwapi", "Version",
+      "wininet", "ole32", "oleAut32",
+    }
+
   -- native log viewer: the pipe server side of src/SumatraLog.cpp. GUI app,
   -- links the base static lib for its string / container / win helpers.
   project "logview"
@@ -1119,7 +1206,7 @@ workspace "SumatraPDF"
     links { "base" }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version", "wininet",
-      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32",
+      "shcore", "wintrust", "crypt32", "shell32", "ole32", "oleAut32", "uxtheme",
     }
 
   -- LzSA archive tool (packs installer payloads / PDBs, see LzmaSimpleArchive.cpp).
@@ -1168,7 +1255,7 @@ workspace "SumatraPDF"
     filter { "configurations:Debug" }
     defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
     filter {}
-    includedirs { "src", "src/wingui", "mupdf/include", "ext/libarchive" }
+    includedirs { "src", "src/gui", "ext/mupdf/include", "ext/libarchive" }
     search_filter_files()
     -- libarchive + unrar live in libsumatrapdf.dll (re-exported); do not link second copies
     links { "base", "libsumatrapdf" }
@@ -1180,7 +1267,7 @@ workspace "SumatraPDF"
   --   cppdialect "C++latest"
   --   mixed_dbg_rel_conf()
   --   disablewarnings { "4100", "4838" }
-  --   includedirs { "src", "src/wingui" }
+  --   includedirs { "src", "src/gui" }
   --   search_filter2_files()
   --   links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
@@ -1191,7 +1278,7 @@ workspace "SumatraPDF"
   --   mixed_dbg_rel_conf()
   --   disablewarnings { "4100", "4838" }
   --   includedirs {
-  --     "src", "src/wingui"
+  --     "src", "src/gui"
   --   }
   --   pdf_preview2_files()
   --   links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
@@ -1207,7 +1294,7 @@ workspace "SumatraPDF"
     -- image codecs (webp/jxl/heic/dav1d) live in libsumatrapdf.dll and are imported
     -- via libsumatrapdf.def; only headers are needed here to compile the readers.
     includedirs {
-      "src", "src/wingui", "mupdf/include",
+      "src", "src/gui", "ext/mupdf/include",
       "ext/djvudec", "ext/chmdec",
       "ext/libarchive",
       "ext/heicdec", "ext/libwebp/src", "ext/jxldec",
@@ -1230,9 +1317,9 @@ workspace "SumatraPDF"
     entrypoint "WinMainCRTStartup"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
-    includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
-    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
+    includedirs { "src", "ext/mupdf/include" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli", "ext/msdes" }
+    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "ext/mupdf/scripts/cmark-gfm" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
@@ -1255,8 +1342,7 @@ workspace "SumatraPDF"
     filter {}
 
     synctex_files()
-    mui_files()
-    wingui_files()
+    gui_files()
     uia_files()
     engines_files()
     sumatrapdf_files()
@@ -1296,7 +1382,7 @@ workspace "SumatraPDF"
     -- (freetype) + needed by heic.
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
-      "mupdf", "libarchive", "base", "unrar", "chmdec", "a-zopfli"
+      "mupdf", "libarchive", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1316,12 +1402,10 @@ workspace "SumatraPDF"
     linkoptions { "/INFERASANLIBS" }
     filter {}
     dependson { "test_util" }
-    -- translations are not checked in; seed an empty .work/translations.txt when
-    -- missing so CI (no APPTRANSLATOR secret) can still pack the RC resource.
+    -- pack translations + marked/mermaid + manual into .work/embedded.dat
+    -- (IDR_EMBEDDED_PAK). Uses cmd so MSBuild need not have bun on PATH.
     prebuildcommands {
-      "if not exist ..\\.work mkdir ..\\.work",
-      "if not exist ..\\.work\\translations.txt type nul > ..\\.work\\translations.txt",
-      "..\\bin\\MakeLZSA.exe ..\\.work\\translations.txt.lzsa ..\\.work\\translations.txt:translations.txt",
+      "call ..\\cmd\\pack-embedded-prebuild.cmd",
     }
 
   -- a dll version where most functionality is in libsumatrapdf.dll
@@ -1336,10 +1420,10 @@ workspace "SumatraPDF"
     entrypoint "WinMainCRTStartup"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
-    includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/zopfli/src" }
+    includedirs { "src", "ext/mupdf/include" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/darkmodelib/include" }
-    -- headers only: webp/jxl/heic/chm symbols come from libsumatrapdf.dll (libsumatrapdf.def)
+    -- headers only: webp/jxl/heic/chm/DES symbols come from libsumatrapdf.dll (libsumatrapdf.def)
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
@@ -1357,8 +1441,7 @@ workspace "SumatraPDF"
     darkmodelib_files()
 
     synctex_files()
-    mui_files()
-    wingui_files()
+    gui_files()
     uia_files()
     engines_files()
     sumatrapdf_files()
@@ -1404,7 +1487,7 @@ workspace "SumatraPDF"
     -- MarkdownToc / Archive.cpp / ChmFile use cmark + libarchive + unrar +
     -- chmdec via libsumatrapdf.def exports (all live in libsumatrapdf.dll; do not link
     -- second copies into the EXE).
-    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
+    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "ext/mupdf/scripts/cmark-gfm" }
     defines { "CMARK_GFM_STATIC_DEFINE" }
 
     links {
@@ -1424,14 +1507,17 @@ workspace "SumatraPDF"
     -- delay-loaded libsumatrapdf.dll which LoadLibsumatrapdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     dependson { "PdfFilter", "PdfPreview", "test_util", "sumatrapdf-tool" }
-    -- translations are not checked in; seed an empty .work/translations.txt when
-    -- missing so CI (no APPTRANSLATOR secret) can still pack the RC resource.
+    -- pack translations + marked/mermaid + manual into .work/embedded.dat
     prebuildcommands {
-      "if not exist ..\\.work mkdir ..\\.work",
-      "if not exist ..\\.work\\translations.txt type nul > ..\\.work\\translations.txt",
-      "..\\bin\\MakeLZSA.exe ..\\.work\\translations.txt.lzsa ..\\.work\\translations.txt:translations.txt",
+      "call ..\\cmd\\pack-embedded-prebuild.cmd",
     }
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libsumatrapdf.dll:libsumatrapdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe" }
+    -- Only pack InstallerData.dat when missing. Signed release builds create it
+    -- after signtool (so the archive holds signed DLLs); a rebuild of
+    -- libsumatrapdf deletes InstallerData.dat so regular builds are not stuck
+    -- with a stale pack.
+    prebuildcommands {
+      "cd %{cfg.targetdir} & if not exist InstallerData.dat ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libsumatrapdf.dll:libsumatrapdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe",
+    }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it
     -- won't launch. Nothing copies it automatically, so do it here.
@@ -1464,6 +1550,7 @@ workspace "SumatraPDF"
       "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "libwebp", "unrar",
     })
     set_group("tools", {
-      "bench_image", "bin2coff", "logview", "MakeLZSA", "test_engines", "test_util",
+      "bench_image", "bin2coff", "logview", "MakeLZSA", "plugin-test", "preview_test",
+      "test_engines", "test_util",
     })
   end

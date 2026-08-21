@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="com/artifex/mupdf/fitz">
+      <UniqueIdentifier>{f8c210a2-298d-4611-a36f-205770920fff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jni">
+      <UniqueIdentifier>{8422eec6-bf13-4fb2-a55c-b7a1a6db7eea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jni\android">
+      <UniqueIdentifier>{83fcde2c-3b4e-4639-a49f-64fd6e10adc4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\AbortException.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Annotation.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Buffer.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\BufferInputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\BufferOutputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\ColorParams.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\ColorSpace.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Context.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Cookie.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DefaultColorSpaces.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Device.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DisplayList.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DisplayListDevice.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Document.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DocumentWriter.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DrawDevice.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Font.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Image.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Link.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Matrix.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\NativeDevice.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Outline.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\OutlineIterator.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Page.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Path.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PathWalker.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFDocument.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFGraftMap.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFObject.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Pixmap.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Point.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Rect.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\RectI.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Separation.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Separations.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Shade.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\StrokeState.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\StructuredText.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\StructuredTextWalker.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Text.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\TextWalker.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\TryLaterException.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFWidget.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\FileStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\FitzInputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Location.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFAnnotation.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFPage.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7DistinguishedName.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7Signer.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7Verifier.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Quad.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableInputOutputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableInputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableOutputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Story.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\XML.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\java\mupdf_native.c" />
+    <ClCompile Include="..\java\jni\archive.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\barcodeinfo.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\buffer.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\colorspace.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\context.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\cookie.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\defaultcolorspaces.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\device.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\displaylist.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\displaylistdevice.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\document.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\documentwriter.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\drawdevice.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\fitzinputstream.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\font.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\helpers.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\image.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\nativedevice.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\link.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\multiarchive.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\outlineiterator.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\page.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\path.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfannotation.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfdocument.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdffilespec.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfgraftmap.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfobject.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfpage.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfwidget.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pixmap.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pkcs7signer.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pkcs7verifier.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\rect.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\shade.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\strokestate.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\structuredtext.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\text.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\treearchive.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\wrap.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\android\androiddrawdevice.c">
+      <Filter>jni\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\android\androidfonts.c">
+      <Filter>jni\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\android\androidimage.c">
+      <Filter>jni\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\story.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\xml.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\dom.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\java\mupdf_native.h" />
+  </ItemGroup>
+</Project>

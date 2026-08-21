@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Win.h"
 #include "base/Pixmap.h"
 
 #include "base/GdiPlusUtil.h"
@@ -19,8 +20,15 @@ using Gdiplus::Status;
 using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsMeasureTrailingSpaces;
 
+void InitGraphicsMode(Graphics* g) {
+    g->SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
+    g->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(Gdiplus::UnitPixel);
+}
+
 Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
-    return Gdiplus::RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height);
+    return {(float)r.X, (float)r.Y, (float)r.Width, (float)r.Height};
 }
 
 // note: gdi+ seems to under-report the width, the longer the text, the
@@ -32,7 +40,7 @@ Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
 RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
     int n = s.len;
     if (0 == n) {
-        return RectF(0, 0, 0, 0); // TODO: should set height to font's height
+        return {0, 0, 0, 0}; // TODO: should set height to font's height
     }
     // note: frankly, I don't see a difference between those StringFormat variations
     StringFormat sf(StringFormat::GenericTypographic());
@@ -81,10 +89,10 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
     if (-1 == idx) {
         LOGFONTW lfw;
         Status ok = f->GetLogFontW(g, &lfw);
-        bool isItalicOrMonospace = Ok != ok || lfw.lfItalic || wstr::Eq(lfw.lfFaceName, L"Courier New") ||
+        bool isItalicOrMonospace = Ok != ok || lfw.lfItalic || wstr::Eq(lfw.lfFaceName, WStrL(L"Courier New")) ||
                                    wstr::FindFrom(lfw.lfFaceName, L"Consol") ||
-                                   wstr::EndsWith(lfw.lfFaceName, L"Mono") ||
-                                   wstr::EndsWith(lfw.lfFaceName, L"Typewriter");
+                                   wstr::EndsWith(lfw.lfFaceName, WStrL(L"Mono")) ||
+                                   wstr::EndsWith(lfw.lfFaceName, WStrL(L"Typewriter"));
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);
         idx = fontCache.len - 1;
@@ -101,8 +109,6 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
                 case 't':
                 case 'f':
                 case 'I':
-                    correct += 0.1f;
-                    break;
                 case '.':
                 case ',':
                 case '!':
@@ -110,7 +116,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
                     break;
             }
         }
-        bbox.Width *= (1.0f - (correct / n)) * 0.99f;
+        bbox.Width *= (1.0f - (correct / (float)n)) * 0.99f;
     }
     bbox.Height *= 0.95f;
     return RectF{bbox};
@@ -192,6 +198,9 @@ float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
 #endif
 }
 
+// float     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
+// int   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm
+// algo=nullptr);
 void GetBaseTransform(Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation) {
     rotation = rotation % 360;
     if (rotation < 0) {
@@ -223,12 +232,16 @@ void ApplyExifOrientation(Bitmap* bmp, int exifOrientation) {
         return;
     }
     int iRot = exifOrientation - 2;
-    if (iRot < (int)dimof(rfts)) {
+    if (iRot < dimofi(rfts)) {
         bmp->RotateFlip(rfts[iRot]);
     }
 }
 
+// 0 (an invalid gdi+ format) when the pixels aren't ours to read
 static Gdiplus::PixelFormat PixmapToGdiplusPixelFormat(const Pixmap* px) {
+    if (px->format == PixmapFormat::Native) {
+        return 0;
+    }
     if (px->format == PixmapFormat::BGR8) {
         return PixelFormat24bppRGB;
     }
@@ -257,6 +270,10 @@ Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px) {
         return nullptr;
     }
     Gdiplus::PixelFormat fmt = PixmapToGdiplusPixelFormat(px);
+    if (!fmt) {
+        FreePixmap(px);
+        return nullptr;
+    }
     auto* bmp = new PixmapBackedBitmap(px, fmt);
     if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp; // also frees px
@@ -328,6 +345,9 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
         return nullptr;
     }
     Gdiplus::PixelFormat fmt = PixmapToGdiplusPixelFormat(px);
+    if (!fmt) {
+        return nullptr;
+    }
     auto* bmp = new Gdiplus::Bitmap(px->width, px->height, px->stride, fmt, px->data);
     if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp;
@@ -344,7 +364,7 @@ CLSID GetGdiPlusEncoderClsid(WStr format) {
     if (ok != Ok || 0 == size) {
         return null;
     }
-    ScopedMem<Gdiplus::ImageCodecInfo> codecInfo((Gdiplus::ImageCodecInfo*)malloc(size));
+    auto* codecInfo = (Gdiplus::ImageCodecInfo*)AllocTemp((int)size);
     if (!codecInfo) {
         return null;
     }
@@ -355,4 +375,178 @@ CLSID GetGdiPlusEncoderClsid(WStr format) {
         }
     }
     return null;
+}
+
+static bool PixmapHasTransparency(const Pixmap* p) {
+    if (!p || !p->data || p->format != PixmapFormat::BGRA8) {
+        return false;
+    }
+    for (int y = 0; y < p->height; y++) {
+        const u8* d = p->data + ((size_t)y * p->stride);
+        for (int x = 0; x < p->width; x++, d += 4) {
+            if (d[3] != 255) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// 32bpp top-down DIB with any alpha composited onto white, so apps that only
+// understand CF_BITMAP / CF_DIB paste an image on white paper instead of the
+// black that dropping the alpha channel gives them
+static HBITMAP PixmapToHbitmapOnWhite(const Pixmap* p) {
+    Pixmap* dib = AllocPixmapDIB(p->width, p->height);
+    if (!dib) {
+        return nullptr;
+    }
+    int bpp = PixmapBytesPerPixel(p->format);
+    bool rgba = p->format == PixmapFormat::RGBA8;
+    for (int y = 0; y < p->height; y++) {
+        const u8* s = p->data + ((size_t)y * p->stride);
+        u8* d = dib->data + ((size_t)y * dib->stride);
+        for (int x = 0; x < p->width; x++, s += bpp, d += 4) {
+            u32 a = bpp == 3 ? 255 : s[3];
+            u32 b = rgba ? s[2] : s[0];
+            u32 g = s[1];
+            u32 r = rgba ? s[0] : s[2];
+            u32 inv = 255 - a;
+            d[0] = (u8)std::min<u32>(255, ((b * a + 127) / 255) + inv);
+            d[1] = (u8)std::min<u32>(255, ((g * a + 127) / 255) + inv);
+            d[2] = (u8)std::min<u32>(255, ((r * a + 127) / 255) + inv);
+            d[3] = 255;
+        }
+    }
+    HBITMAP hbmp = dib->hbmp;
+    dib->hbmp = nullptr;
+    dib->data = nullptr;
+    FreePixmap(dib);
+    return hbmp;
+}
+
+// CF_DIBV5: 32bpp BI_BITFIELDS with an alpha mask, top-down, straight alpha
+static HGLOBAL PixmapToDibV5Global(const Pixmap* p) {
+    size_t rowBytes = (size_t)p->width * 4;
+    size_t nBytes = sizeof(BITMAPV5HEADER) + rowBytes * (size_t)p->height;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, nBytes);
+    if (!hMem) {
+        return nullptr;
+    }
+    auto* bi = (BITMAPV5HEADER*)GlobalLock(hMem);
+    if (!bi) {
+        GlobalFree(hMem);
+        return nullptr;
+    }
+    memset(bi, 0, sizeof(*bi));
+    bi->bV5Size = sizeof(BITMAPV5HEADER);
+    bi->bV5Width = p->width;
+    bi->bV5Height = -p->height; // top-down
+    bi->bV5Planes = 1;
+    bi->bV5BitCount = 32;
+    bi->bV5Compression = BI_BITFIELDS;
+    bi->bV5SizeImage = (DWORD)(rowBytes * (size_t)p->height);
+    bi->bV5RedMask = 0x00ff0000;
+    bi->bV5GreenMask = 0x0000ff00;
+    bi->bV5BlueMask = 0x000000ff;
+    bi->bV5AlphaMask = 0xff000000;
+    bi->bV5CSType = LCS_WINDOWS_COLOR_SPACE;
+    bi->bV5Intent = LCS_GM_IMAGES;
+    u8* dst = (u8*)bi + sizeof(BITMAPV5HEADER);
+    for (int y = 0; y < p->height; y++) {
+        memcpy(dst + ((size_t)y * rowBytes), p->data + ((size_t)y * p->stride), rowBytes);
+    }
+    GlobalUnlock(hMem);
+    return hMem;
+}
+
+static HGLOBAL PixmapToPngGlobal(const Pixmap* p) {
+    Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(p);
+    if (!bmp) {
+        return nullptr;
+    }
+    CLSID pngClsid = GetGdiPlusEncoderClsid(L"image/png");
+    IStream* stream = nullptr;
+    HRESULT hr = CreateStreamOnHGlobal(nullptr, FALSE, &stream);
+    if (FAILED(hr) || !stream) {
+        delete bmp;
+        return nullptr;
+    }
+    Gdiplus::Status status = bmp->Save(stream, &pngClsid, nullptr);
+    HGLOBAL hMem = nullptr;
+    if (status == Gdiplus::Ok) {
+        GetHGlobalFromStream(stream, &hMem);
+    }
+    stream->Release();
+    delete bmp;
+    return status == Gdiplus::Ok ? hMem : nullptr;
+}
+
+// Put an image on the clipboard so that a paste into an image editor keeps its
+// transparency. CF_BITMAP cannot carry alpha, so an image with transparent
+// pixels is published in three formats, richest first:
+//   PNG       - the registered format image editors prefer; lossless, alpha
+//   CF_DIBV5  - alpha via BI_BITFIELDS, for the apps that read it
+//   CF_BITMAP - alpha flattened onto white, so Paint / Word still paste
+//               something sensible rather than the black that dropping the
+//               alpha channel gives them
+// A fully opaque image gets CF_BITMAP alone, exactly as before.
+// Takes ownership of nothing; the caller still owns p.
+bool CopyPixmapToClipboard(Pixmap* p, bool appendOnly) {
+    if (!p || p->width <= 0 || p->height <= 0) {
+        return false;
+    }
+    // a Native pixmap (e.g. the palette DIB the mupdf engine renders some pages
+    // to) has no pixels we can read; copy it into one we can. It has no alpha
+    // either, so this just keeps the plain CF_BITMAP path working
+    Pixmap* readable = nullptr;
+    if (p->format == PixmapFormat::Native || !p->data) {
+        readable = PixmapCopyAs32bppDIB(p);
+        if (!readable) {
+            return false;
+        }
+        p = readable;
+    }
+    defer {
+        FreePixmap(readable);
+    };
+
+    bool hasAlpha = PixmapHasTransparency(p);
+    HBITMAP hbmp = PixmapToHbitmapOnWhite(p); // a no-op copy when there's no alpha
+    if (!hbmp) {
+        return false;
+    }
+    HGLOBAL hPng = hasAlpha ? PixmapToPngGlobal(p) : nullptr;
+    HGLOBAL hDibV5 = hasAlpha ? PixmapToDibV5Global(p) : nullptr;
+
+    if (!appendOnly && !OpenClipboardForUpdate()) {
+        DeleteObject(hbmp);
+        if (hPng) {
+            GlobalFree(hPng);
+        }
+        if (hDibV5) {
+            GlobalFree(hDibV5);
+        }
+        return false;
+    }
+
+    bool ok = false;
+    if (hPng) {
+        static UINT cfPng = RegisterClipboardFormatW(L"PNG");
+        if (!cfPng || !SetClipboardData(cfPng, hPng)) {
+            GlobalFree(hPng);
+        }
+    }
+    if (hDibV5 && !SetClipboardData(CF_DIBV5, hDibV5)) {
+        GlobalFree(hDibV5);
+    }
+    if (SetClipboardData(CF_BITMAP, hbmp)) {
+        ok = true;
+    } else {
+        DeleteObject(hbmp);
+    }
+
+    if (!appendOnly) {
+        CloseClipboardAfterUpdate();
+    }
+    return ok;
 }

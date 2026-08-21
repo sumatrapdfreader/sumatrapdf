@@ -1,17 +1,29 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct GlobalPrefs;
+struct MainWindow;
+struct WindowTab;
 
-Str Dialog_GoToPage(HWND hwnd, Str currentPageLabel, int pageCount, bool onlyNumeric = true);
-Str Dialog_Find(HWND hwnd, Str previousSearch, bool* matchCase);
-Str Dialog_GetPassword(HWND hwnd, Str fileName, bool* rememberPassword, bool* showPassword);
-Str Dialog_ChangeLanguge(HWND hwnd, Str currLangCode);
-bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut);
-bool Dialog_ChangeScrollbar(HWND hwnd);
-INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
-bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs);
-bool Dialog_AddFavorite(HWND hwnd, Str pageNo, Str& favName);
+void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
+void ShowAdvancedSettingsDialog(MainWindow* win);
+TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut);
+void ShowChangeBackgroundColorDialog(MainWindow* win);
+void ShowChangeLanguageDialog(MainWindow* win);
+void ShowChangeScrollbarDialog(MainWindow* win);
+void ShowChangeThemeDialog(MainWindow* win);
+void ShowSetDocumentColorsFollowThemeDialog(MainWindow* win);
+void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab);
+void ShowCustomZoomDialog(MainWindow* win);
+void ShowSignDocumentDialog(MainWindow* win, Str fieldName = {}, bool hasField = false);
+bool IsPlacingSignature(MainWindow* win);
+bool CancelPlacingSignature(MainWindow* win);
+void CloseSignDocumentDialog(MainWindow* win);
+bool FinishSignaturePlacement(MainWindow* win, int x, int y, bool aborted);
+void ShowEbookSettingsDialog(MainWindow* win);
+Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword);
+void ShowGoToPageDialog(MainWindow* win);
+void ShowInverseSearchDialog(MainWindow* win);
+void ShowSettingsDialog(MainWindow* win);
 
 enum class PrintRangeAdv {
     All = 0,
@@ -62,17 +74,3 @@ struct Print_Advanced_Data {
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
-
-struct MainWindow;
-
-struct BgColorResult {
-    COLORREF color;
-    bool isCheckered;
-    bool applyToAllFiles; // true = all files like this, false = this file only
-};
-
-bool Dialog_ChangeBackgroundColor(HWND hwnd, COLORREF currentColor, bool isCheckered, Str allFilesLabel,
-                                  BgColorResult& result);
-bool Dialog_SetTabColor(HWND hwnd, COLORREF currentColor, bool isUnset, COLORREF& resultColor, bool& resultIsUnset);
-
-TempStr ZoomLevelStr(float zoom);

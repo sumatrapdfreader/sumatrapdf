@@ -1,17 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
 License: Simplified BSD (see COPYING.BSD) */
 
-/*
-A centrialized location for all APIs that we need to load dynamically.
-The convention is: for a function like SetThreadDescription(), we define
-a function pointer DynSetThreadDescription() (with a signature matching
-SetThreadDescription()).
-
-You can test if a function is available with if (DynSetThreadDescription).
-
-APIs available on our minimum OS (Windows 7) are called directly, not via Dyn*.
-*/
-
 void InitDynCalls();
 
 #if OS_WIN
@@ -81,11 +70,13 @@ typedef HANDLE(WINAPI* Sig_GetThreadDpiAwarenessContext)(void);
 typedef int(WINAPI* Sig_GetAwarenessFromDpiAwarenessContext)(HANDLE);
 typedef HANDLE(WINAPI* Sig_SetThreadDpiAwarenessContext)(HANDLE);
 typedef BOOL(WINAPI* Sig_SystemParametersInfoForDpi)(UINT, UINT, PVOID, UINT, UINT);
+typedef int(WINAPI* Sig_GetSystemMetricsForDpi)(int, UINT);
 extern Sig_GetDpiForWindow DynGetDpiForWindow;
 extern Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext;
 extern Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext;
 extern Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext;
 extern Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi;
+extern Sig_GetSystemMetricsForDpi DynGetSystemMetricsForDpi;
 
 // shcore.dll
 typedef HRESULT(WINAPI* Sig_GetDpiForMonitor)(HMONITOR, int, UINT*, UINT*);

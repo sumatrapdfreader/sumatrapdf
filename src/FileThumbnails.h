@@ -5,13 +5,16 @@
 constexpr int kThumbnailDx = 212;
 constexpr int kThumbnailDy = 150;
 
-RenderedBitmap* LoadThumbnail(FileState* fs);
+struct Pixmap;
+struct FileState;
+
+Pixmap* LoadThumbnail(FileState* fs);
 bool HasThumbnail(FileState* fs);
-void SetThumbnail(FileState* fs, RenderedBitmap* bmp);
+void SetThumbnail(FileState* fs, Pixmap* bmp);
 void SaveThumbnail(FileState* fs);
 void RemoveThumbnail(FileState* fs);
 
 TempStr GetThumbnailCacheDirTemp();
 TempStr GetThumbnailPathTemp(Str filePath);
 void DeleteThumbnailForFile(Str path);
-void DeleteThumbnailCacheDirectory();
+void EmptyThumbnailCacheDirectory();

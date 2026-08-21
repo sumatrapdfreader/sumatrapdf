@@ -1,38 +1,112 @@
 import { spawn } from "node:child_process";
 import { join } from "node:path";
-import { detectVisualStudio2026, runLogged } from "./util";
-import { clearDirPreserveSettings } from "./clean";
 
-let clean = false;
+type Config = "debug" | "release";
 
-let t = `/t:SumatraPDF`;
+interface RunOptions {
+  config: Config;
+  asan: boolean;
+  clean: boolean;
+}
 
-async function main() {
-  const timeStart = performance.now();
+const usage = `Usage: bun cmd/run.ts <-dbg | -rel> [-asan] [-clean]
 
-  console.log("debug build");
-  if (clean) {
-    const dirs = [join("out", "dbg64")];
-    for (const dir of dirs) {
-      clearDirPreserveSettings(dir);
+Build and run SumatraPDF.
+
+  -dbg     debug build
+  -rel     release build
+  -asan    enable AddressSanitizer in the selected build
+  -clean   build everything from scratch`;
+
+class CliError extends Error {}
+
+function parseArgs(args: string[]): RunOptions | undefined {
+  if (args.length === 0) return undefined;
+
+  let config: Config | undefined;
+  let asan = false;
+  let clean = false;
+  for (const arg of args) {
+    if (arg === "-dbg" || arg === "-rel") {
+      const next = arg === "-dbg" ? "debug" : "release";
+      if (config) throw new CliError(`-${config === "debug" ? "dbg" : "rel"} and ${arg} cannot be combined`);
+      config = next;
+    } else if (arg === "-asan") {
+      if (asan) throw new CliError("-asan can only be specified once");
+      asan = true;
+    } else if (arg === "-clean") {
+      if (clean) throw new CliError("-clean can only be specified once");
+      clean = true;
+    } else {
+      throw new CliError(`unknown option: ${arg}`);
     }
   }
+  if (!config) throw new CliError("one of -dbg or -rel is required");
+  return { config, asan, clean };
+}
 
-  const { msbuildPath } = detectVisualStudio2026();
-  const sln = String.raw`vs2022\SumatraPDF.sln`;
-  // const t = `/t:SumatraPDF;test_util`;
-  const p = `/p:Configuration=Debug;Platform=x64`;
-  await runLogged(msbuildPath, [sln, t, p, `/m`]);
-  const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
-  console.log(`build took ${elapsed}s`);
+async function run(
+  command: string[],
+  description: string,
+  env: Record<string, string | undefined> = process.env,
+): Promise<void> {
+  console.log(`> ${command.join(" ")}`);
+  const proc = Bun.spawn(command, {
+    cwd: ".",
+    env,
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) throw new Error(`${description} failed with exit code ${exitCode}`);
+}
 
-  const path = join("out", "dbg64", "SumatraPDF.exe");
-  // launch fully detached so SumatraPDF keeps running after this script exits.
-  // Bun.spawn isn't enough here: it kills its children when the parent exits, so
-  // unref() alone would let the script return but immediately kill SumatraPDF.
-  // node:child_process with { detached: true } + unref() truly detaches it.
-  const proc = spawn(path, [], { cwd: ".", detached: true, stdio: "ignore" });
+async function build(opts: RunOptions): Promise<void> {
+  const configFlag = opts.config === "release" ? "-release" : "-debug";
+  if (process.platform !== "win32") throw new Error(`unsupported operating system: ${process.platform}`);
+  const args = ["bun", "cmd/build.ts"];
+  args.push(configFlag);
+  if (opts.asan) args.push("-asan");
+  if (opts.clean) args.push("-clean");
+  await run(args, "build");
+}
+
+function runWindows(opts: RunOptions): void {
+  const dir = opts.config === "release" ? "rel64" : "dbg64";
+  const outDir = opts.asan ? `${dir}_asan` : dir;
+  const exe = join("out", outDir, opts.asan ? "SumatraPDF-static.exe" : "SumatraPDF.exe");
+  const proc = spawn(exe, ["-for-testing"], { cwd: ".", detached: true, stdio: "ignore" });
   proc.unref();
 }
 
-await main();
+function runApp(opts: RunOptions): void {
+  runWindows(opts);
+}
+
+async function main(): Promise<void> {
+  let opts: RunOptions | undefined;
+  try {
+    opts = parseArgs(Bun.argv.slice(2));
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    console.error(`error: ${error.message}\n`);
+    console.error(usage);
+    process.exitCode = 1;
+    return;
+  }
+  if (!opts) {
+    console.log(usage);
+    return;
+  }
+  await build(opts);
+  runApp(opts);
+}
+
+try {
+  await main();
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`\nRun failed: ${message}`);
+  process.exitCode = 1;
+}

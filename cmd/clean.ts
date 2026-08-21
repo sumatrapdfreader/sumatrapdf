@@ -1,4 +1,4 @@
-import { readdirSync, rmSync, unlinkSync, existsSync } from "node:fs";
+import { readdirSync, rmSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
 let nSkipped = 0;

@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 
@@ -213,12 +207,7 @@ function expandLocalIncludes(
       throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
     }
     includedIncludes?.add(incPath);
-    out.push(
-      expandLocalIncludes(incPath, skipIncludes, includedIncludes, [
-        ...stack,
-        path,
-      ]),
-    );
+    out.push(expandLocalIncludes(incPath, skipIncludes, includedIncludes, [...stack, path]));
   }
   return out.join("\n");
 }
@@ -227,14 +216,8 @@ function prepareHeader(path: string): string {
   return normalizeBlankLines(stripComments(expandLocalIncludes(path)));
 }
 
-function prepareChunk(
-  path: string,
-  skipIncludes: Set<string>,
-  includedIncludes: Set<string>,
-): string {
-  return normalizeBlankLines(
-    stripComments(expandLocalIncludes(path, skipIncludes, includedIncludes)),
-  );
+function prepareChunk(path: string, skipIncludes: Set<string>, includedIncludes: Set<string>): string {
+  return normalizeBlankLines(stripComments(expandLocalIncludes(path, skipIncludes, includedIncludes)));
 }
 
 function generateAmalgamation(root: string): { header: string; source: string } {
@@ -263,6 +246,21 @@ function versionText(repo: string, rev: string): string {
       `github_commit_url: ${homepage}/commit/${commitSha1}`,
     ].join("\n") + "\n"
   );
+}
+
+// jbig2dec is AGPL, so the notices have to ship with the source. This is the
+// only copy in the tree now that ext/jbig2dec is gone, so re-copy them on every
+// regeneration. AUTHORS points at ext/a-jbig2dec/COPYING.
+function writeLicenses(dir: string): void {
+  for (const name of ["COPYING", "LICENSE"]) {
+    const src = join(checkoutDir, name);
+    if (!existsSync(src)) {
+      throw new Error(`missing license file: ${src}`);
+    }
+    const out = join(dir, name);
+    writeFileSync(out, readFileSync(src));
+    console.log(`wrote ${out}`);
+  }
 }
 
 async function validateCompile(header: string, source: string): Promise<void> {
@@ -323,6 +321,7 @@ async function main() {
   console.log(`wrote ${join(outDir, "jbig2.h")}`);
   console.log(`wrote ${join(outDir, "jbig2dec.c")}`);
   console.log(`wrote ${join(outDir, "version.txt")}`);
+  writeLicenses(outDir);
 }
 
 await main();

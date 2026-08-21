@@ -14,21 +14,13 @@
 //
 // Drives the app from Bun via FFI (tests/winapi.ts). Needs a PDF with a
 // multi-level outline; uses one from the local bugs folder and skips cleanly if
-// it isn't present (so tests/all.ts keeps going).
+// it isn't present (so tests/run-almost-all.ts keeps going).
 
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, tmpPath } from "./util";
-import {
-  collapseTreeRoots,
-  countVisibleTreeRows,
-  findChildWindow,
-  sendMessage,
-  sleep,
-  treeGetSelection,
-  waitForTopWindow,
-  WM_COMMAND,
-} from "./winapi";
+import { cmdId, tmpPath } from "./util";
+import { launchControlled, sendCommandSync, killAndWait } from "./win-automation";
+import { collapseTreeRoots, countVisibleTreeRows, findChildWindow, sleep, treeGetSelection } from "./winapi";
 
 // a PDF with a nested (multi-level) table of contents
 const TOC_PDF = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-1352-merged_manuals-1.4.2.pdf";
@@ -68,42 +60,43 @@ export async function testit(): Promise<void> {
 
   // kill stale dev-build instances so reuse-instance can't forward our launch
   // to an old window (which would leave our process window-less)
-  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF.exe"]);
-  await sleep(300);
-
-  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
-    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
-    if (!frame) {
-      throw new Error("SumatraPDF main window did not appear");
-    }
+    await client.waitForRenderIdle();
 
     // wait for the TOC tree to load with items
+    const deadline = Date.now() + 8000;
     let tree = 0;
-    for (let i = 0; i < 60; i++) {
+    while (Date.now() < deadline) {
       tree = findChildWindow(frame, "SysTreeView32");
       if (tree && countVisibleTreeRows(tree) > 0) {
         break;
       }
-      await sleep(250);
+      await sleep(40);
     }
     if (!tree) {
       throw new Error("could not find the TOC tree window");
     }
 
     // go to the last page (deep in the document, under nested TOC entries)
-    sendMessage(frame, WM_COMMAND, CmdGoToLastPage, 0);
-    await sleep(600);
+    sendCommandSync(frame, CmdGoToLastPage);
+    await client.waitForRenderIdle();
 
     // collapse the whole tree, then measure
     collapseTreeRoots(tree);
-    await sleep(300);
     const collapsed = countVisibleTreeRows(tree);
 
     // invoke the command under test
-    sendMessage(frame, WM_COMMAND, CmdExpandToCurrentPage, 0);
-    await sleep(600);
-    const after = countVisibleTreeRows(tree);
+    sendCommandSync(frame, CmdExpandToCurrentPage);
+    const afterDeadline = Date.now() + 3000;
+    let after = collapsed;
+    while (Date.now() < afterDeadline) {
+      after = countVisibleTreeRows(tree);
+      if (after > collapsed && treeGetSelection(tree) !== 0n) {
+        break;
+      }
+      await sleep(30);
+    }
     const hasSelection = treeGetSelection(tree) !== 0n;
 
     console.log(`  collapsed rows=${collapsed}, after-expand rows=${after}, hasSelection=${hasSelection}`);
@@ -122,7 +115,8 @@ export async function testit(): Promise<void> {
     }
     console.log(`  expanded TOC to current page: ${collapsed} -> ${after} visible rows ✓`);
   } finally {
-    proc.kill();
+    client.close();
+    await killAndWait(proc);
   }
 }
 
