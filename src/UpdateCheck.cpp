@@ -83,6 +83,7 @@ struct UpdateInfo {
 
     Str dlURL;
     Str installerPath;
+    Str builtOn; // optional "yyyy-mm-dd" from the update-check file
 
     UpdateInfo() = default;
     ~UpdateInfo() {
@@ -95,6 +96,7 @@ struct UpdateInfo {
         str::Free(portableArm64);
         str::Free(dlURL);
         str::Free(installerPath);
+        str::Free(builtOn);
     }
 };
 
@@ -107,6 +109,7 @@ The format of update information downloaded from the server:
 
 [SumatraPDF]
 Latest: 14276
+BuiltOn: 2026-08-21
 Installer64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64-install.exe
 Installer32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-install.exe
 PortableExe64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64.exe
@@ -152,6 +155,10 @@ static UpdateInfo* ParseUpdateInfo(Str d) {
     }
     auto* res = new UpdateInfo();
     res->latestVer = str::Dup(latestVer);
+    Str onDate = node->GetValue(StrL("BuiltOn"));
+    if (onDate) {
+        res->builtOn = str::Dup(onDate);
+    }
 
     // those are optional. if missing, we'll just tell the user to go to website to download
     res->installer64 = str::Dup(node->GetValue(StrL("Installer64")));
@@ -455,7 +462,12 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     if (!str::ContainsChar(displayVer, '.')) {
         displayVer = fmt("%s.%s", StrL(CURR_VERSION_MAJOR_STRA), displayVer);
     }
-    TempStr msg = fmt(_TRA("Version %s available. %s").s, displayVer, link);
+    TempStr msg;
+    if (updateInfo->builtOn) {
+        msg = fmt(_TRA("Version %s available (built on %s). %s").s, displayVer, updateInfo->builtOn, link);
+    } else {
+        msg = fmt(_TRA("Version %s available. %s").s, displayVer, link);
+    }
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;
