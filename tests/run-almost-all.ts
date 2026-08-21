@@ -152,6 +152,7 @@ import { testit as issue4315 } from "./issue-4315.ts";
 import { testit as issue4662 } from "./issue-4662.ts";
 import { testit as issue6013 } from "./issue-6013.ts";
 import { testit as issue6018 } from "./issue-6018.ts";
+import { testit as issue6008 } from "./issue-6008.ts";
 
 export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
@@ -301,6 +302,7 @@ export const tests: NamedTest[] = [
   ["issue-4662", issue4662],
   ["issue-6013", issue6013],
   ["issue-6018", issue6018],
+  ["issue-6008", issue6008],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

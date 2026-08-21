@@ -12,6 +12,7 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/win/WebView.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
@@ -35,6 +36,7 @@
 #include "Version.h"
 #include "Theme.h"
 #include "AppSettings.h"
+#include "AppTools.h"
 #include "DarkMode_win.h"
 #include "SvgIcons.h"
 
@@ -232,7 +234,7 @@ static AboutRow gAboutRows[] = {
     // a null rightTxt means "the app version", filled in by Sync() because it
     // isn't known until runtime (32/64-bit, debug)
     {"version", nullptr, nullptr},
-    {"build", "Built: " __DATE__ " " __TIME__, nullptr},
+    {"built on", __DATE__ " " __TIME__, nullptr},
     {"website", "SumatraPDF website", kWebsiteURL},
     {"manual", "SumatraPDF manual", kManualURL},
     {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
@@ -265,11 +267,14 @@ struct AboutCtrl : VirtCtrl {
     VirtLink* showFreqRead = nullptr;
     // the colored app name on top of the box
     SumatraLogo* logo = nullptr;
+    // About dialog only: copies version / OS / machine info for bug reports
+    VirtButton* copyInfoBtn = nullptr;
 
     // geometry, computed by UpdateLayout()
     Rect aboutRect;  // the framed box
     Size headerSize; // the "SumatraPDF" band on top of it
     int dividerX = 0;
+    int extraBottomDy = 0; // space below the box for copyInfoBtn
 
     AboutCtrl();
     ~AboutCtrl() override;
@@ -515,7 +520,12 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
     // one extra row gap so the last row isn't flush against the frame
     r.dy = headerSize.dy + tableSize.dy + aboutTxtDy + (2 * ABOUT_LINE_OUTER_SIZE) + 4;
     r.x = clientRc.x + ((clientRc.dx - r.dx) / 2);
-    r.y = clientRc.y + ((clientRc.dy - r.dy) / 2);
+    // keep the framed box at the top when the copy-info button sits below it
+    if (copyInfoBtn && copyInfoBtn->GetVisibility() != Visibility::Collapse) {
+        r.y = clientRc.y + DpiScale(kAboutRectPadding);
+    } else {
+        r.y = clientRc.y + ((clientRc.dy - r.dy) / 2);
+    }
     aboutRect = r;
 
     logo->SetBounds({r.x + ((r.dx - headerSize.dx) / 2), r.y, headerSize.dx, headerSize.dy});
@@ -524,12 +534,120 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
     int y = r.y + headerSize.dy + 4;
     table->SetBounds({x, y, tableSize.dx, tableSize.dy});
     dividerX = table->CellRect(0, 1).x - leftRightSpaceDx;
+
+    extraBottomDy = 0;
+    if (copyInfoBtn && copyInfoBtn->GetVisibility() != Visibility::Collapse) {
+        Size btnSz = copyInfoBtn->GetIdealSize();
+        int gap = DpiScale(12);
+        extraBottomDy = gap + btnSz.dy;
+        int btnX = clientRc.x + ((clientRc.dx - btnSz.dx) / 2);
+        int btnY = r.y + r.dy + gap;
+        copyInfoBtn->SetBounds({btnX, btnY, btnSz.dx, btnSz.dy});
+    }
+}
+
+// Version, OS, WebView2, memory and similar facts for a bug report.
+static void AppendBugReportInfo(str::Builder& s) {
+    s.Append(fmt("SumatraPDF %s\r\n", GetAppVersionTemp()));
+    s.Append(fmt("Built on: %s %s\r\n", StrL(__DATE__), StrL(__TIME__)));
+    if (gitCommidId) {
+        s.Append(fmt("Git: %s\r\n", gitCommidId));
+    }
+    Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
+    Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");
+    s.Append(fmt("Type: %s, %s\r\n", exeType, instType));
+    if (gIsPreReleaseBuild) {
+        s.Append(StrL("Pre-release: yes\r\n"));
+    }
+    if (gIsAsanBuild) {
+        s.Append(StrL("ASan: yes\r\n"));
+    }
+
+    OSVERSIONINFOEX ver{};
+    if (GetOsVersion(ver)) {
+        TempStr os = OsNameFromVerTemp(ver);
+        int buildNumber = (int)ver.dwBuildNumber & 0xFFFF;
+        Str arch = StrL("64-bit");
+        if (IsProcess32()) {
+            arch = IsRunningInWow64() ? StrL("32-bit (Wow64)") : StrL("32-bit");
+        }
+        s.Append(fmt("OS: Windows %s, build %d, %s\r\n", os, buildNumber, arch));
+    }
+    if (IsOs64()) {
+        s.Append(StrL("OS architecture: 64-bit\r\n"));
+    } else {
+        s.Append(StrL("OS architecture: 32-bit\r\n"));
+    }
+
+    TempStr wv = GetWebView2VersionTemp();
+    if (len(wv) == 0) {
+        s.Append(StrL("WebView2: not installed\r\n"));
+    } else {
+        s.Append(fmt("WebView2: %s\r\n", wv));
+    }
+
+    MEMORYSTATUSEX ms{};
+    ms.dwLength = sizeof(ms);
+    if (GlobalMemoryStatusEx(&ms)) {
+        float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
+        s.Append(fmt("Physical memory: %.2f GB (%d%% in use)\r\n", physMemGB, (int)ms.dwMemoryLoad));
+    }
+
+    SYSTEM_INFO si{};
+    GetSystemInfo(&si);
+    s.Append(fmt("Processors: %d\r\n", (int)si.dwNumberOfProcessors));
+    TempStr cpuName =
+        ReadRegStrTemp(HKEY_LOCAL_MACHINE, R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)", "ProcessorNameString");
+    if (cpuName) {
+        s.Append(fmt("Processor: %s\r\n", cpuName));
+    }
+
+    int screenDx = GetSystemMetrics(SM_CXSCREEN);
+    int screenDy = GetSystemMetrics(SM_CYSCREEN);
+    int dpi = DpiGet();
+    s.Append(fmt("Screen: %dx%d, DPI %d (%d%%)\r\n", screenDx, screenDy, dpi, MulDiv(dpi, 100, 96)));
+
+    char country[32] = {}, lang[32]{};
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
+    s.Append(fmt("Locale: %s-%s\r\n", Str(lang), Str(country)));
+
+    Str theme = ThemeGetNameAt(ThemeGetCurrentIndex());
+    if (theme) {
+        s.Append(fmt("Theme: %s\r\n", theme));
+    }
+    if (IsRunningOnWine()) {
+        s.Append(StrL("Wine: yes\r\n"));
+    }
+}
+
+static void CopyAboutInfoToClipboard() {
+    str::Builder info(1024);
+    AppendBugReportInfo(info);
+    CopyTextToClipboard(ToStr(info));
+}
+
+static void OnCopyProgramInfo(VirtMouseEvent*) {
+    CopyAboutInfoToClipboard();
 }
 
 // prepares the About tree for hwnd and computes its geometry
 static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
+    DpiSetFromHwnd(hwnd);
     AboutCtrl* about = EnsureAboutCtrl(rootPtr, hwnd, clientRc);
     about->Sync();
+    if (hwnd == gHwndAbout) {
+        if (!about->copyInfoBtn) {
+            about->copyInfoBtn =
+                NewThemedButton(hwnd, _TRA("Copy program and machine info to clipboard"), GetAppFont(), false);
+            about->copyInfoBtn->onClick = MkFunc1Void(OnCopyProgramInfo);
+            about->AddChild(about->copyInfoBtn);
+        }
+        about->copyInfoBtn->font = GetAppFont();
+        about->copyInfoBtn->SetVisibility(Visibility::Visible);
+    } else if (about->copyInfoBtn) {
+        about->copyInfoBtn->SetVisibility(Visibility::Collapse);
+    }
     about->UpdateLayout(clientRc);
     return about;
 }
@@ -578,29 +696,6 @@ static void OnPaintAbout(HWND hwnd) {
     DrawAbout(gfx, gAboutRoot, clientRc);
     delete gfx;
     EndPaint(hwnd, &ps);
-}
-
-static void CopyAboutInfoToClipboard() {
-    str::Builder info(512);
-    TempStr ver = GetAppVersionTemp();
-    info.Append(fmt("%s %s\r\n", Str(kAppName), ver));
-    for (int i = len(info) - 2; i > 0; i--) {
-        info.AppendChar('-');
-    }
-    info.Append("\r\n");
-    // concatenate all the information into a single string
-    // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
-    int maxLen = 0;
-    for (AboutRow* el = gAboutRows; el->leftTxt; el++) {
-        maxLen = std::max(maxLen, len(el->leftTxt));
-    }
-    for (AboutRow* el = gAboutRows; el->leftTxt; el++) {
-        for (int i = maxLen - len(el->leftTxt); i > 0; i--) {
-            info.AppendChar(' ');
-        }
-        info.Append(fmt("%s: %s\r\n", el->leftTxt, el->url ? el->url.s : el->rightTxt));
-    }
-    CopyTextToClipboard(ToStr(info));
 }
 
 static void CreateInfotipForLink(Str tooltip, const Rect& rc) {
@@ -686,6 +781,12 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             break;
 
+        case WM_KEYDOWN:
+            if ('C' == wp && IsCtrlPressed()) {
+                CopyAboutInfoToClipboard();
+            }
+            break;
+
         case WM_COMMAND:
             if (CmdCopySelection == LOWORD(wp)) {
                 CopyAboutInfoToClipboard();
@@ -739,15 +840,19 @@ void ShowAboutWindow(MainWindow* win) {
 
     // get the dimensions required for the about box's content
     AboutCtrl* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, HwndClientRect(gHwndAbout));
-    Rect rc = about->aboutRect;
     int rectPadding = DpiScale(kAboutRectPadding);
-    rc.Inflate(rectPadding, rectPadding);
+    dx = about->aboutRect.dx + (2 * rectPadding);
+    dy = about->aboutRect.dy + (2 * rectPadding) + about->extraBottomDy;
+    if (about->copyInfoBtn) {
+        int btnDx = about->copyInfoBtn->GetIdealSize().dx + (2 * rectPadding);
+        dx = std::max(dx, btnDx);
+    }
 
     // resize the new window to just match these dimensions
     Rect wRc = HwndWindowRect(gHwndAbout);
     Rect cRc = HwndClientRect(gHwndAbout);
-    wRc.dx += rc.dx - cRc.dx;
-    wRc.dy += rc.dy - cRc.dy;
+    wRc.dx += dx - cRc.dx;
+    wRc.dy += dy - cRc.dy;
     MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
 
     HwndPositionInCenterOf(gHwndAbout, win->hwndFrame);
