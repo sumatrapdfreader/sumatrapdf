@@ -1,6 +1,7 @@
 // #5972: Command Palette should support the Find window's navigation keys.
 // Ctrl+A was eaten as CmdSelectAll (document select) and did not select the
-// query. Home/End/PageUp/PageDown never moved the list.
+// query. Ctrl+C was eaten as CmdCopySelection and did not copy the query.
+// Home/End/PageUp/PageDown never moved the list.
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { ROOT, cmdId, runStandalone } from "./util";
@@ -19,6 +20,27 @@ import { killAndWait, launchControlled, sendCommand, sendCommandSync, waitForExi
 const VK_END = 0x23;
 const VK_HOME = 0x24;
 const VK_NEXT = 0x22; // Page Down
+
+function clipboardText(): string {
+  const res = Bun.spawnSync(["powershell.exe", "-NoProfile", "-Command", "Get-Clipboard -Raw"], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (res.exitCode !== 0) {
+    throw new Error(`issue-5972: Get-Clipboard failed: ${res.stderr.toString()}`);
+  }
+  return res.stdout.toString().replace(/\r?\n$/, "");
+}
+
+function setClipboard(value: string): void {
+  const res = Bun.spawnSync(["powershell.exe", "-NoProfile", "-Command", `Set-Clipboard -Value '${value}'`], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (res.exitCode !== 0) {
+    throw new Error(`issue-5972: Set-Clipboard failed: ${res.stderr.toString()}`);
+  }
+}
 
 type PaletteState = { sel: number; items: number; querySel: [number, number]; queryLen: number };
 
@@ -86,16 +108,32 @@ export async function testit(): Promise<void> {
     postMessage(palette, WM_KEYDOWN, VK_HOME, 0);
     await waitForSel(client, 0, "Home");
 
-    sendText(edit, "hello");
+    const query = "palette-copy-5972";
+    sendText(edit, query);
     sendCommandSync(palette, cmdId("CmdSelectAll"));
     const deadline = Date.now() + 3_000;
     for (;;) {
       st = (await paletteState(client))!;
-      if (st.queryLen === 5 && st.querySel[0] === 0 && st.querySel[1] === 5) {
+      if (st.queryLen === query.length && st.querySel[0] === 0 && st.querySel[1] === query.length) {
         break;
       }
       if (Date.now() > deadline) {
         throw new Error(`issue-5972: Ctrl+A did not select the query: ${JSON.stringify(st)}`);
+      }
+      await sleep(40);
+    }
+
+    const sentinel = "issue-5972 clipboard sentinel";
+    setClipboard(sentinel);
+    sendCommandSync(palette, cmdId("CmdCopySelection"));
+    const copyDeadline = Date.now() + 3_000;
+    for (;;) {
+      const copied = clipboardText();
+      if (copied === query) {
+        break;
+      }
+      if (Date.now() > copyDeadline) {
+        throw new Error(`issue-5972: Ctrl+C did not copy the query (clipboard=${JSON.stringify(copied)})`);
       }
       await sleep(40);
     }

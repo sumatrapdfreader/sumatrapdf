@@ -214,6 +214,14 @@ void CommandPaletteWnd::OnCommand(WindowBase::CommandEvent* ev) {
             }
             ev->didHandle = true;
             return;
+        case CmdCopySelection:
+            // Ctrl+C is an accelerator (CmdCopySelection) sent to this window;
+            // copy the query instead of the document (issue #5972).
+            if (editQuery && editQuery->hwnd) {
+                SendMessageW(editQuery->hwnd, WM_COPY, 0, 0);
+            }
+            ev->didHandle = true;
+            return;
     }
 }
 
