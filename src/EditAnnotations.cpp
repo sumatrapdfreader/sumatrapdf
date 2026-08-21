@@ -1773,6 +1773,10 @@ static void LayoutAnnotWindowInPlace(EditAnnotationsWindow* ew) {
         return;
     }
     ew->DoLayout({dx, dy});
+    // Native children are positioned with SWP_NOREDRAW. Newly shown
+    // dropdowns (Icon on a Text annot) start at (0,0) over Contents;
+    // erase leftovers and paint once in the final layout.
+    RedrawWindow(ew->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
@@ -2349,14 +2353,24 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
     Rect cr = HwndClientRect(ew->hwnd);
     Rect listR = ew->listBox->lastBounds;
     int contentsDy = 0;
+    Rect contentsR{};
     if (ew->editContents && ew->editContents->IsVisible() && ew->editContents->hwnd) {
-        contentsDy = HwndClientRect(ew->editContents->hwnd).dy;
+        contentsR = HwndMapRectToWindow(HwndClientRect(ew->editContents->hwnd), ew->editContents->hwnd, ew->hwnd);
+        contentsDy = contentsR.dy;
+    }
+    Rect iconR{};
+    int iconVis = 0;
+    if (ew->dropDownIcon && ew->dropDownIcon->IsVisible() && ew->dropDownIcon->hwnd) {
+        iconVis = 1;
+        iconR = HwndMapRectToWindow(HwndClientRect(ew->dropDownIcon->hwnd), ew->dropDownIcon->hwnd, ew->hwnd);
     }
     int gapBelow = cr.dy - (listR.y + listR.dy);
     int sel = ew->listBox->GetCurrentSelection();
     int n = len(ew->annotations);
     int selCount = ew->listBox->SelectedCount();
-    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d selCount=%d", cr.dy, listR.dy,
-                      contentsDy, gapBelow, sel, n, selCount),
+    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d selCount=%d contents=%d,%d,%d,%d "
+                      "iconVis=%d icon=%d,%d,%d,%d",
+                      cr.dy, listR.dy, contentsDy, gapBelow, sel, n, selCount, contentsR.x, contentsR.y, contentsR.dx,
+                      contentsR.dy, iconVis, iconR.x, iconR.y, iconR.dx, iconR.dy),
                   0);
 }

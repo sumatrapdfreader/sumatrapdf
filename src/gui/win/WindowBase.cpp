@@ -1639,9 +1639,21 @@ void ControlBase::SetBounds(Rect bounds) {
     // move. Position without painting, then invalidate so they paint with
     // the parent on the next WM_PAINT. SWP_NOCOPYBITS skips the smeared
     // copy of old pixels into the new place.
+    // SWP_NOREDRAW also skips invalidating the parent where this child
+    // used to be, so a dropdown first shown at (0,0) then moved left a
+    // ghost over Contents (Edit Annotations Icon combo).
     if (hwnd) {
+        HWND parent = GetParent(hwnd);
+        RECT oldOnParent{};
+        if (parent) {
+            Rect old = HwndMapRectToWindow(HwndClientRect(hwnd), hwnd, parent);
+            oldOnParent = ToRECT(old);
+        }
         SetWindowPos(hwnd, nullptr, bounds.x, bounds.y, bounds.dx, bounds.dy,
                      SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW);
+        if (parent && !IsRectEmpty(&oldOnParent)) {
+            RedrawWindow(parent, &oldOnParent, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        }
         InvalidateRect(hwnd, nullptr, FALSE);
     }
 }
