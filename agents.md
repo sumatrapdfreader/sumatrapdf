@@ -1,4 +1,4 @@
-This is a C++ program for Windows, using mostly win32 windows API functions. The full Windows GUI app remains Windows-only for now; we are porting **non-UI** code so it also compiles on macOS and Linux, starting with `src/base/`. There is also an early Cocoa macOS app under `src/mac/` that can open a command-line document, render the first page through the existing engines, and display it.
+This is a C++ program for Windows, using mostly win32 windows API functions. It is Windows-only: the macOS and Linux ports (`src/mac/`, `src/linux/`, their GUI backends and their CI) were removed.
 
 We don't use STL but our own string / helper / container functions implemented in src\base directory
 
@@ -18,9 +18,7 @@ Keep `cmd/build.ts` as the single build entry point. Build-mode implementation m
 
 This creates ./out/dbg64/SumatraPDF.exe executable. The static build target is SumatraPDF-static and produces ./out/<config>/SumatraPDF-static.exe.
 
-To run a Linux build from Windows, use `bun cmd/build.ts -linux` (defaults to `-asan`) or add `-debug` / `-release`. To cross-compile the Windows exe with mingw inside WSL, use `bun cmd/build.ts -wine` (optional `-clean`, `-run`). The unified build command delegates these Windows-hosted modes to `cmd/helper/wsl-build.ts`. Both require a WSL distro named `Ubuntu` and bun in that distro; Linux deps are `sudo sh cmd/ubuntu-install-deps.sh`.
-
-To run the macOS build on the remote Mac, use `bun cmd/build.ts -mac-remote -branch <temporary-branch> -debug` (or `-release` / `-asan`, optionally with `-clean`). It connects with `ssh kjk@macbook-pro-14`, changes to `src/sumatrapdf`, verifies that the remote checkout is clean, fetches and switches to the temporary branch, runs `cmd/build.ts -mac`, and restores the original remote checkout on success or failure. The macOS build compiles the dependency/base libraries, builds `out/mac-<config>64/test_util`, runs it with `-for-ai`, builds `test_engines`, and builds `SumatraPDF.app`.
+To cross-compile the Windows exe with mingw inside WSL, use `bun cmd/build.ts -wine` (optional `-clean`, `-run`); the unified build command delegates it to `cmd/helper/wsl-build.ts`. It needs a WSL distro named `Ubuntu` with bun in it, plus `sudo apt install g++-mingw-w64-x86-64 unzip` (and `wine wine64` to run).
 
 To run unit tests with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-rel` / `-asan`). It builds the 64-bit `test_util.exe`, runs it with `-for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
@@ -37,69 +35,6 @@ Never commit changes automatically. Always wait for explicit command to commit c
 When committing a fix for a GitHub issue, end the commit message's **first line** with `(fixes #<issue-no>)`, e.g. `fix crash on committing an empty zoom value (fixes #5909)`. That is the line GitHub shows everywhere, so the link belongs there, not buried in the body.
 
 When committing work done with AI assistance, append the user prompt(s) that produced the change at the very end of the commit message as a single line: `prompt: ...`. If there were multiple prompts, squash them into one concise line. Record the substantive request only — omit meta-instructions such as "commit", "push", "check work", or "verify".
-
-## Cross-platform porting (macOS / Linux)
-
-We are making non-UI library code compile on macOS and Linux while keeping the Windows build working. **Start with `src/base/`**; other `src/` areas follow once base is portable.
-
-### Scope
-
-- **In scope:** platform-neutral logic and OS abstractions (files, paths, time, threading, memory, strings, etc.) under `src/base/` and later other non-UI `src/` trees; the early native macOS viewer under `src/mac/`.
-- **Out of scope for now:** porting the full Windows UI, Win32 windowing, Windows menus, printing UI, installer, and anything that depends on those.
-
-### macOS app (`src/mac/`)
-
-`src/mac/` is an early Cocoa application, not a port of the Windows UI. Keep it small and native for now:
-
-- Build it with `bun cmd/build.ts -mac -debug` (or `-release` / `-asan`). The app bundle is `out/mac-dbg64/SumatraPDF.app` for debug builds.
-- Run it with a document path using `open out/mac-dbg64/SumatraPDF.app --args <path>`, for example `open out/mac-dbg64/SumatraPDF.app --args ./ext/a-zlib/zlib.3.pdf`. Relative paths from the repo should work; absolute paths are fine.
-- The current app only opens the first command-line file, renders page 1 through the existing engine layer, displays it, and supports standard macOS Quit / `Cmd-Q`.
-- Keep Objective-C / Cocoa code in `.mm` files under `src/mac/`. Do **not** include `base/Base.h` or other Sumatra headers in files that import Cocoa/AppKit: Apple headers define names such as `Size` that conflict with Sumatra types. Use a small C/C++ bridge (`SumatraMacEngine.*`) between Cocoa code and engine/base code.
-- When adding mac-specific build inputs, update `MAC_APP_SOURCES` in `cmd/helper/mac-build.ts`.
-
-### Platform-specific source files
-
-When a source file needs platform-specific code, keep the files in the same module directory and use a platform suffix:
-
-| Suffix   | Used on             | Purpose                                      |
-| -------- | ------------------- | -------------------------------------------- |
-| `_win`   | Windows             | Win32 and other Windows-only implementations |
-| `_posix` | macOS **and** Linux | Code shared by both Unix-like targets        |
-| `_mac`   | macOS only          | Darwin-specific code not shared with Linux   |
-| `_linux` | Linux only          | Linux-specific code not shared with macOS    |
-
-**`_posix` is for code common to Linux and macOS** — prefer it over duplicating the same logic in `_mac` and `_linux`. Use `_mac` or `_linux` only when the two Unix platforms genuinely diverge.
-
-Example layout:
-
-```
-src/base/File.h          # shared declaration (platform-neutral API)
-src/base/File.cpp        # shared implementation, if any
-src/base/File_win.cpp    # Windows implementation
-src/base/File_posix.cpp  # macOS + Linux implementation
-src/base/File_mac.cpp    # macOS-only pieces (when posix isn't enough)
-src/base/File_linux.cpp  # Linux-only pieces (when posix isn't enough)
-```
-
-Not every file needs all four platform variants — only split when the implementation is platform-dependent. Keep portable code in the unsuffixed file (`src/base/Foo.cpp`) and move **only** the non-portable parts into the appropriate `_win` / `_posix` / `_mac` / `_linux` file.
-
-### Guidelines
-
-- **Preserve the public API.** Headers at the module root (`src/base/Foo.h`) should expose the same functions/types on every platform; platform differences stay in suffixed `.cpp` files.
-- **No `#ifdef` sprawl in shared headers** when a platform-specific `.cpp` split is clearer. Small include-guarded typedefs or macros in a shared header are fine.
-- **Prefer POSIX APIs in `_posix` files** (`open`, `read`, `stat`, `pthread`, etc.) and native APIs in `_win` files (Win32). Use `_mac` / `_linux` files for OS-specific extensions (e.g. FSEvents vs inotify).
-- **Keep Windows green.** Every change must still build and pass tests on Windows (`bun cmd/build.ts -debug`; use `bun cmd/run-unit-tests.ts -dbg` for base/test_util work). Do not break the existing Windows target while adding macOS/Linux support.
-- **Keep macOS green.** `bun cmd/build.ts -mac -debug` builds the macOS dependency/base libraries, builds and runs `test_util` with `-for-ai`, builds `test_engines`, and links `SumatraPDF.app`. From Windows, use `-mac-remote` on a temporary branch for portability changes.
-- **Keep Linux green.** From Windows, `bun cmd/build.ts -linux -debug` (or `-release` / `-asan`) uses the Ubuntu WSL distro. Use `bun cmd/build.ts -wine` to cross-compile the Windows exe with mingw inside WSL.
-- **Make tests platform-aware.** Preserve shared behavior tests on every platform where possible. Guard Windows-only expectations (drive letters, backslash-only paths, Win32 command-line parsing, UI/printing behavior, and similar platform specifics) with `#if OS_WIN`, and add POSIX expectations when the behavior is meant to be portable.
-
-### Remote macOS verification from Windows
-
-When doing macOS/Linux portability changes from a Windows machine, test them on the remote Mac by building from a temporary branch:
-
-1. Create a temporary branch locally, e.g. `git switch -c tmp/mac-port-<topic>`.
-2. Commit the portability changes on that temporary branch and push it to origin, e.g. `git push -u origin tmp/mac-port-<topic>`. This temporary commit is for remote build verification; still do not make the final feature commit unless the user explicitly asks.
-3. Run the remote build from Windows with `bun cmd/build.ts -mac-remote -branch tmp/mac-port-<topic> -debug`. The command aborts if the remote checkout is dirty, fetches and switches to the temporary branch, builds, runs macOS `test_util`, and restores the original remote branch or detached checkout on success or failure.
 
 ## C/C++ #include conventions
 
@@ -119,9 +54,9 @@ translation unit that includes them, so comments in a `.h` cost compilation time
 on every include. Keep the header declaration terse (ideally a single line) and
 put the explaining comment on the **definition** in the corresponding `.cpp`.
 
-For a function declared in `Foo.h` and defined in `Foo.cpp` (or `Foo_win.cpp` /
-`Foo_posix.cpp` / etc.), the doc comment lives **only** above the definition in
-the `.cpp` — not on the declaration in the `.h`.
+For a function declared in `Foo.h` and defined in `Foo.cpp` (or `Foo_win.cpp`),
+the doc comment lives **only** above the definition in the `.cpp` — not on the
+declaration in the `.h`.
 
 ```cpp
 // Foo.h — declaration only, no prose comment

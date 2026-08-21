@@ -11,7 +11,7 @@ interface RunOptions {
 
 const usage = `Usage: bun cmd/run.ts <-dbg | -rel> [-asan] [-clean]
 
-Build and run the native SumatraPDF application for the current operating system.
+Build and run SumatraPDF.
 
   -dbg     debug build
   -rel     release build
@@ -62,30 +62,10 @@ async function run(
   if (exitCode !== 0) throw new Error(`${description} failed with exit code ${exitCode}`);
 }
 
-function asanEnv(...options: string[]): Record<string, string | undefined> {
-  const current = process.env.ASAN_OPTIONS;
-  return { ...process.env, ASAN_OPTIONS: [...(current ? [current] : []), ...options].join(":") };
-}
-
-function linuxAsanEnv(): Record<string, string | undefined> {
-  const symbolizer = Bun.which("llvm-symbolizer");
-  if (symbolizer && !symbolizer.toLowerCase().endsWith(".exe")) {
-    return asanEnv("symbolize=1", `external_symbolizer_path=${symbolizer}`);
-  }
-  return asanEnv("symbolize=1", "allow_addr2line=1", "external_symbolizer_path=/usr/bin/addr2line");
-}
-
-function portableOutDir(platform: "linux" | "mac", opts: RunOptions): string {
-  if (opts.asan) return `${platform}-${opts.config === "release" ? "rel64_asan" : "asan64"}`;
-  return `${platform}-${opts.config === "release" ? "rel" : "dbg"}64`;
-}
-
 async function build(opts: RunOptions): Promise<void> {
   const configFlag = opts.config === "release" ? "-release" : "-debug";
+  if (process.platform !== "win32") throw new Error(`unsupported operating system: ${process.platform}`);
   const args = ["bun", "cmd/build.ts"];
-  if (process.platform === "linux") args.push("-linux");
-  else if (process.platform === "darwin") args.push("-mac");
-  else if (process.platform !== "win32") throw new Error(`unsupported operating system: ${process.platform}`);
   args.push(configFlag);
   if (opts.asan) args.push("-asan");
   if (opts.clean) args.push("-clean");
@@ -100,20 +80,8 @@ function runWindows(opts: RunOptions): void {
   proc.unref();
 }
 
-async function runApp(opts: RunOptions): Promise<void> {
-  if (process.platform === "win32") {
-    runWindows(opts);
-  } else if (process.platform === "linux") {
-    const env = opts.asan ? linuxAsanEnv() : process.env;
-    await run([`./out/${portableOutDir("linux", opts)}/SumatraPDF`], "SumatraPDF", env);
-  } else if (process.platform === "darwin") {
-    const app = join("out", portableOutDir("mac", opts), "SumatraPDF.app");
-    if (opts.asan) {
-      await run([join(app, "Contents", "MacOS", "SumatraPDF")], "SumatraPDF", asanEnv("symbolize=1"));
-    } else {
-      await run(["open", app], "SumatraPDF");
-    }
-  }
+function runApp(opts: RunOptions): void {
+  runWindows(opts);
 }
 
 async function main(): Promise<void> {
@@ -132,7 +100,7 @@ async function main(): Promise<void> {
     return;
   }
   await build(opts);
-  await runApp(opts);
+  runApp(opts);
 }
 
 try {

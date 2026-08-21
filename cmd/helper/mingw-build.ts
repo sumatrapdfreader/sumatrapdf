@@ -767,7 +767,7 @@ void TestPreview(WStr) {}
 
 // ── Top-level build functions ───────────────────────────────────────────────
 
-// same def as in linux-build.ts (ext/djvudec is the standalone DjVu decoder)
+// ext/djvudec is the standalone DjVu decoder
 const djvudec: LibDef = {
   name: "djvudec",
   alwaysOptimize: true,

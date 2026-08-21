@@ -1,23 +1,10 @@
 import { copyFileSync, existsSync, readdirSync } from "node:fs";
-import { cpus } from "node:os";
 import { join, resolve } from "node:path";
 import { $ } from "bun";
 import { clearDirPreserveSettings } from "./clean";
 import { detectVisualStudio2026, runLogged } from "./util";
 
-type BuildMode =
-  | "windows"
-  | "all"
-  | "smoke"
-  | "ci"
-  | "daily"
-  | "codeql"
-  | "linux"
-  | "mac"
-  | "mac-remote"
-  | "mingw"
-  | "wine"
-  | "build-no";
+type BuildMode = "windows" | "all" | "smoke" | "ci" | "daily" | "codeql" | "mingw" | "wine" | "build-no";
 type Config = "debug" | "release";
 
 interface BuildOptions {
@@ -28,7 +15,6 @@ interface BuildOptions {
   win32: boolean;
   run: boolean;
   runArgs: string[];
-  branch?: string;
   buildNo?: number;
 }
 
@@ -44,18 +30,12 @@ Windows builds:
   -daily                  Build daily artifacts
   -codeql                 Build the static release target for CodeQL
 
-Portable and cross-platform builds:
-  -linux [-debug|-release] [-asan] [-clean]
-                           Native Linux build; defaults to -asan
-  -mac [-debug|-release] [-asan] [-clean]
-                           Native macOS build; defaults to -debug
-  -mac-remote -branch <name> [-debug|-release] [-asan] [-clean]
-                           Build a temporary branch on the remote Mac
+MinGW cross-builds (they still produce a Windows exe):
   -mingw <-debug|-release> [-clean]
                            Direct MinGW cross-build on the current host
   -wine [-clean] [-run] [-- <SumatraPDF args>]
                            MinGW build on Linux and optionally run under Wine;
-                           from Windows, -linux and -wine run through WSL Ubuntu
+                           from Windows it runs through WSL Ubuntu
 
 Other:
   -build-no [number]      List recent build numbers or resolve one number
@@ -124,19 +104,11 @@ function parseArgs(args: string[]): BuildOptions | undefined {
     else if (arg === "-ci") setMode(opts, "ci");
     else if (arg === "-daily") setMode(opts, "daily");
     else if (arg === "-codeql") setMode(opts, "codeql");
-    else if (arg === "-linux") setMode(opts, "linux");
-    else if (arg === "-mac") setMode(opts, "mac");
-    else if (arg === "-mac-remote") setMode(opts, "mac-remote");
     else if (arg === "-mingw") setMode(opts, "mingw");
     else if (arg === "-wine" || arg === "-win") setMode(opts, "wine");
     else if (arg === "-run") {
       if (opts.run) throw new CliError("-run can only be specified once");
       opts.run = true;
-    } else if (arg === "-branch") {
-      if (opts.branch) throw new CliError("-branch can only be specified once");
-      const branch = args[++i];
-      if (!branch || branch.startsWith("-")) throw new CliError("-branch requires a branch name");
-      opts.branch = branch;
     } else if (arg === "-build-no") {
       setMode(opts, "build-no");
       const value = args[i + 1];
@@ -177,16 +149,11 @@ function validateOptions(opts: BuildOptions): void {
     reject(!opts.config, "-mingw requires -debug or -release");
     reject(opts.asan, "-asan is not supported with -mingw");
   }
-  reject(
-    opts.clean && !["windows", "all", "linux", "mac", "mac-remote", "mingw", "wine"].includes(mode),
-    `-clean is not valid with -${mode}`,
-  );
+  reject(opts.clean && !["windows", "all", "mingw", "wine"].includes(mode), `-clean is not valid with -${mode}`);
   reject(opts.win32 && mode !== "windows", "-32 is only valid for Windows builds");
   reject(opts.run && mode !== "wine", "-run is only valid with -wine");
   reject(opts.runArgs.length > 0 && mode !== "wine", "arguments after -- are only valid with -wine");
   reject(opts.runArgs.length > 0 && !opts.run, "arguments after -- require -run");
-  reject(!!opts.branch && mode !== "mac-remote", "-branch is only valid with -mac-remote");
-  reject(mode === "mac-remote" && !opts.branch, "-mac-remote requires -branch <name>");
 }
 
 async function buildWindows(config: Config, win32: boolean, clean: boolean): Promise<void> {
@@ -294,31 +261,15 @@ async function showBuildNo(buildNo?: number): Promise<void> {
   console.log(`${buildNo} ${lines[index]}`);
 }
 
-async function runWslLauncher(args: string[], target: "linux" | "wine"): Promise<void> {
-  const selector = target === "linux" ? "-linux" : "-win";
-  const proc = Bun.spawn(["bun", "cmd/helper/wsl-build.ts", selector, ...args], {
+// the wine build runs in WSL Ubuntu when started from Windows
+async function runWslLauncher(args: string[]): Promise<void> {
+  const proc = Bun.spawn(["bun", "cmd/helper/wsl-build.ts", "-win", ...args], {
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",
   });
   const code = await proc.exited;
-  if (code !== 0) throw new Error(`WSL ${target} build failed with exit code ${code}`);
-}
-
-interface PortableConfig {
-  isRelease: boolean;
-  asan: boolean;
-}
-
-function portableConfig(opts: BuildOptions, defaultConfig: "debug" | "asan"): PortableConfig {
-  const asan = opts.asan || (!opts.config && defaultConfig === "asan");
-  const isRelease = opts.config === "release";
-  return { isRelease, asan };
-}
-
-function portableOutDir(platform: "linux" | "mac", config: PortableConfig): string {
-  if (config.asan) return `out/${platform}-${config.isRelease ? "rel64_asan" : "asan64"}`;
-  return `out/${platform}-${config.isRelease ? "rel" : "dbg"}64`;
+  if (code !== 0) throw new Error(`WSL wine build failed with exit code ${code}`);
 }
 
 async function runBuild(opts: BuildOptions): Promise<void> {
@@ -338,36 +289,6 @@ async function runBuild(opts: BuildOptions): Promise<void> {
   } else if (mode === "codeql") {
     const { buildCodeql } = await import("./helper/codeql-build");
     await buildCodeql();
-  } else if (mode === "linux") {
-    const config = portableConfig(opts, "asan");
-    if (process.platform === "win32") {
-      const flags = [config.isRelease ? "-release" : "-debug", ...(config.asan ? ["-asan"] : [])];
-      await runWslLauncher([...flags, ...(opts.clean ? ["-clean"] : [])], "linux");
-    } else {
-      const { buildLinux } = await import("./helper/linux-build");
-      await buildLinux({
-        outDir: portableOutDir("linux", config),
-        isRelease: config.isRelease,
-        asan: config.asan,
-        clean: opts.clean,
-        jobs: Math.max(1, Math.min(4, cpus().length)),
-      });
-    }
-  } else if (mode === "mac") {
-    const config = portableConfig(opts, "debug");
-    const { buildMac } = await import("./helper/mac-build");
-    await buildMac({
-      outDir: portableOutDir("mac", config),
-      isRelease: config.isRelease,
-      asan: config.asan,
-      clean: opts.clean,
-      jobs: Math.max(1, Math.min(4, cpus().length)),
-    });
-  } else if (mode === "mac-remote") {
-    const config = portableConfig(opts, "debug");
-    const { buildMacRemote } = await import("./helper/mac-remote-build");
-    const flags = [config.isRelease ? "-release" : "-debug", ...(config.asan ? ["-asan"] : [])];
-    await buildMacRemote(opts.branch!, [...flags, ...(opts.clean ? ["-clean"] : [])]);
   } else if (mode === "mingw") {
     const { buildMingw } = await import("./helper/mingw-build");
     await buildMingw({
@@ -379,7 +300,7 @@ async function runBuild(opts: BuildOptions): Promise<void> {
     if (process.platform === "win32") {
       const args = [...(opts.clean ? ["-clean"] : []), ...(opts.run ? ["-run"] : [])];
       if (opts.runArgs.length) args.push("--", ...opts.runArgs);
-      await runWslLauncher(args, "wine");
+      await runWslLauncher(args);
     } else {
       const { buildWine } = await import("./helper/wine-build");
       await buildWine({ clean: opts.clean, run: opts.run, runArgs: opts.runArgs });

@@ -24,7 +24,7 @@ export async function testit(): Promise<void> {
   check(unknown.stderr.includes("unknown option: -not-a-build-option"), "unknown option did not print an error");
   check(unknown.stderr.includes("Usage: bun cmd/build.ts"), "unknown option did not print usage");
 
-  const conflict = run(["-linux", "-debug", "-release"]);
+  const conflict = run(["-mingw", "-debug", "-release"]);
   check(conflict.code !== 0, "conflicting configurations succeeded");
   check(conflict.stderr.includes("cannot be used together"), "configuration conflict did not explain the error");
   console.log("PASS: unified build CLI validation");
