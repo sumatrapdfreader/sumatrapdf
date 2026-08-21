@@ -178,9 +178,18 @@ export function startSuiteProgress(total: number): void {
 // run one test and print pass/fail timing
 export async function runTest(name: string, fn: () => void | Promise<void>, opts?: RunTestOptions): Promise<void> {
   const silent = opts?.silent ?? false;
-  if (progressTotal > 0) {
-    progressDone++;
-    console.log(`${progressDone}/${progressTotal} ${name}.ts`);
+  const progress = progressTotal > 0 ? `${++progressDone}/${progressTotal} ${name}.ts` : "";
+  // A silent run prints nothing while a test runs, so the line stays open and
+  // the timing completes it: "3/34 issue-5964.ts in 2.0s". A verbose run has
+  // the test's own output coming next, so end the line right away.
+  let lineOpen = false;
+  if (progress) {
+    if (silent) {
+      process.stdout.write(progress);
+      lineOpen = true;
+    } else {
+      console.log(progress);
+    }
   }
   const t0 = performance.now();
   const unmute = silent ? muteConsole() : () => {};
@@ -189,13 +198,19 @@ export async function runTest(name: string, fn: () => void | Promise<void>, opts
     unmute();
     recordTestTime(name, performance.now() - t0, true);
     const elapsed = formatDuration(performance.now() - t0);
-    if (silent) {
+    if (lineOpen) {
+      console.log(` in ${elapsed}`);
+    } else if (silent) {
       console.log(`== ${name} in ${elapsed}`);
     } else {
       console.log(`✅ ${name} passed in ${elapsed}`);
     }
   } catch (e) {
     unmute();
+    if (lineOpen) {
+      // don't glue the caller's error message onto the open line
+      console.log("");
+    }
     recordTestTime(name, performance.now() - t0, false);
     const msg = (e as Error)?.message ?? e;
     throw new Error(`${name} failed after ${formatDuration(performance.now() - t0)}: ${msg}`);
