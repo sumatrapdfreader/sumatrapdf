@@ -1510,6 +1510,9 @@ LRESULT ControlBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
 
 void ControlBase::SetVisibility(Visibility newVisibility) {
     ReportIf(!hwnd);
+    if (visibility == newVisibility) {
+        return;
+    }
     visibility = newVisibility;
     bool isVisible = IsVisible();
     // see WindowBase::SetVisibility(): only a WS_CHILD window can be shown by
@@ -1631,7 +1634,16 @@ void ControlBase::SetBounds(Rect bounds) {
     if (hwnd && ChildPosWithinParent(hwnd) == bounds) {
         return;
     }
-    HwndMoveWindow(hwnd, &bounds);
+    // Do not MoveWindow(..., TRUE): each child would paint immediately as
+    // layout walks the tree, which flashes when many dropdowns/trackbars
+    // move. Position without painting, then invalidate so they paint with
+    // the parent on the next WM_PAINT. SWP_NOCOPYBITS skips the smeared
+    // copy of old pixels into the new place.
+    if (hwnd) {
+        SetWindowPos(hwnd, nullptr, bounds.x, bounds.y, bounds.dx, bounds.dy,
+                     SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW);
+        InvalidateRect(hwnd, nullptr, FALSE);
+    }
 }
 
 LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
