@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- **Help: Manual** (F1) opens next to the main window, in the upper half, on the side with more room. Its position and size are remembered across sessions and kept fully on-screen after a resolution or monitor change (fixes #6013)
 - **Uniform Page Width** in the View menu keeps mixed-size pages at the same displayed width at percentage zoom levels, using page 1 as the reference. The chosen reading size stays unchanged when the window or fullscreen size changes, and the choice is remembered per document (fixes #5512)
 - Document Properties for digitally signed PDFs shows the hash and signature algorithms, the document hash, the issuer and expiry, whether the signature is LTV-enabled, an RFC 3161 timestamp when one is present (device time vs secure TSA time), a PAdES level when the signature is CAdES, and whether the certificate is on the EU Trusted List. **View Certificate...** opens the Windows certificate dialog; **Update EU Trusted List** downloads the EU LOTL (fixes #5581)
 - Kindle Print Replica (`.azw4`) files open as the embedded PDF instead of as a reflowable MOBI ebook (fixes #1315)

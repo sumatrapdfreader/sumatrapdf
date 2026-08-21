@@ -9809,7 +9809,101 @@ constexpr const WCHAR* kManualVirtualHostW = L"https://sumatrapdf.manual/";
 
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
 
-static void OnDestroyManualBrowserWindow(WindowBase::DestroyEvent* /*ev*/) {
+static HWND ManualBrowserParentFrame() {
+    if (MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow())) {
+        return win->hwndFrame;
+    }
+    if (len(gWindows) > 0) {
+        return gWindows[0]->hwndFrame;
+    }
+    return nullptr;
+}
+
+// Shrink to the work area if needed (saved size from a bigger monitor, or a
+// resolution change) and shift so the window is fully visible.
+static Rect ClampHelpWindowRect(Rect r, HWND hwndForMonitor) {
+    if (r.dx <= 0 || r.dy <= 0) {
+        return r;
+    }
+    Rect work = GetWorkAreaRect(r, hwndForMonitor);
+    if (work.IsEmpty()) {
+        return r;
+    }
+    r.dx = std::min(r.dx, work.dx);
+    r.dy = std::min(r.dy, work.dy);
+    return ShiftRectToWorkArea(r, hwndForMonitor, true);
+}
+
+// First open: upper half of the parent, on the side with more leftover space.
+static Rect DefaultHelpWindowRect(HWND parent) {
+    int dpi = parent ? DpiGetForHwnd(parent) : DpiGet();
+    Size size{DpiScaleByDpi(dpi, 720), DpiScaleByDpi(dpi, 860)};
+
+    Rect frame;
+    if (parent) {
+        frame = HwndWindowRect(parent);
+    }
+    Rect work = GetWorkAreaRect(frame.IsEmpty() ? Rect{} : frame, parent);
+    if (work.IsEmpty()) {
+        work = {0, 0, std::max(size.dx, 1920), std::max(size.dy, 1080)};
+    }
+    size.dx = std::min(size.dx, work.dx);
+    size.dy = std::min(size.dy, work.dy);
+
+    if (!parent || frame.IsEmpty()) {
+        int x = work.x + ((work.dx - size.dx) / 2);
+        int y = work.y + ((work.dy - size.dy) / 4);
+        return ClampHelpWindowRect({x, y, size.dx, size.dy}, parent);
+    }
+
+    int rightSpace = work.Right() - frame.Right();
+    int leftSpace = frame.x - work.x;
+    int x = (rightSpace >= leftSpace) ? frame.Right() : frame.x - size.dx;
+    int y = frame.y;
+    return ClampHelpWindowRect({x, y, size.dx, size.dy}, parent);
+}
+
+static Rect ManualBrowserPlacementRect(HWND parent) {
+    Rect saved = gGlobalPrefs->helpWindowPos;
+    if (!saved.IsEmpty()) {
+        // nullptr: nearest monitor to the saved rect (a disconnected display
+        // then maps to the nearest remaining one)
+        return ClampHelpWindowRect(saved, nullptr);
+    }
+    return DefaultHelpWindowRect(parent);
+}
+
+static void SaveManualBrowserPos(HWND hwnd = nullptr) {
+    if (!hwnd && gManualBrowserWindow) {
+        hwnd = gManualBrowserWindow->hwnd;
+    }
+    if (!hwnd || !IsWindow(hwnd) || IsIconic(hwnd)) {
+        return;
+    }
+    Rect r = HwndWindowRect(hwnd);
+    if (r.IsEmpty()) {
+        return;
+    }
+    gGlobalPrefs->helpWindowPos = r;
+}
+
+static void SaveManualBrowserPosNow() {
+    SaveManualBrowserPos();
+}
+
+// WindowBase nulls hwnd before DestroyWindow, so WM_DESTROY cannot read it
+// from the object. Save here while the handle is still on SimpleBrowserWindow,
+// then let the default close path destroy the window.
+static void OnCloseManualBrowserWindow(WindowBase::CloseEvent* ev) {
+    SaveManualBrowserPos();
+    if (ev && ev->e) {
+        ev->e->didHandle = false;
+    }
+}
+
+static void OnDestroyManualBrowserWindow(WindowBase::DestroyEvent* ev) {
+    HWND hwnd = ev && ev->e ? ev->e->hwnd : nullptr;
+    SaveManualBrowserPos(hwnd);
     gManualBrowserWindow = nullptr;
 }
 
@@ -9828,6 +9922,7 @@ static void DiscardManualBrowserWindowIfClosed() {
 }
 
 void DeleteManualBrowserWindow() {
+    SaveManualBrowserPos();
     delete gManualBrowserWindow;
     gManualBrowserWindow = nullptr;
 }
@@ -9977,13 +10072,15 @@ void LaunchDocumentation(Str docURI) {
         SimpleBrowserCreateArgs args;
         args.title = "SumatraPDF Documentation";
         args.url = localUrl;
+        args.pos = ManualBrowserPlacementRect(ManualBrowserParentFrame());
         args.resourceProvider = ManualResourceProvider();
         args.resourceUriPrefix = kManualVirtualHostW;
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
         if (gManualBrowserWindow != nullptr) {
             gManualBrowserWindow->closeOnEsc = gGlobalPrefs->escToExit;
-            auto fn = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroyManualBrowserWindow);
-            gManualBrowserWindow->onDestroy = fn;
+            gManualBrowserWindow->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnCloseManualBrowserWindow);
+            gManualBrowserWindow->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroyManualBrowserWindow);
+            gManualBrowserWindow->onPosChanged = MkFunc0Void(SaveManualBrowserPosNow);
             return;
         }
     }

@@ -980,6 +980,9 @@ WindowPos = 0 0 0 0
 ; position/size of the floating find window (see SearchUIFloating)
 SearchUIWindowPos = 0 0 0 0
 
+; position/size of the in-app Help: Manual window (introduced in version 3.7)
+HelpWindowPos = 0 0 0 0
+
 ; last-used client size of the annotations window (introduced in version 3.7)
 AnnotationsWindowSize = 0 0
 

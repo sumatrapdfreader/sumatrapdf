@@ -148,6 +148,10 @@ void SimpleBrowserWindow::OnFocus(WindowBase::FocusEvent*) {
 }
 
 void SimpleBrowserWindow::OnSize(WindowBase::SizeEvent* ev) {
+    if (ev->msg == WM_EXITSIZEMOVE) {
+        onPosChanged.Call();
+        return;
+    }
     if (ev->msg != WM_SIZE) {
         return;
     }

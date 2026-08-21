@@ -1037,6 +1037,8 @@ struct GlobalPrefs {
     Rect windowPos;
     // position/size of the floating find window (see SearchUIFloating)
     Rect searchUIWindowPos;
+    // position/size of the in-app Help: Manual window
+    Rect helpWindowPos;
     // last-used client size of the annotations window
     Size annotationsWindowSize;
     // information about opened files (in most recently used order)
@@ -1590,6 +1592,21 @@ static const StructInfo gRect_1_Info = {
     "pixels\0width, in screen pixels\0height, in screen pixels",
     false};
 
+static const FieldInfo gRect_2_Fields[] = {
+    {offsetof(Rect, x), SettingType::Int, 0},
+    {offsetof(Rect, y), SettingType::Int, 0},
+    {offsetof(Rect, dx), SettingType::Int, 0},
+    {offsetof(Rect, dy), SettingType::Int, 0},
+};
+static const StructInfo gRect_2_Info = {
+    sizeof(Rect),
+    4,
+    gRect_2_Fields,
+    "X\0Y\0Dx\0Dy",
+    "x coordinate of the top-left corner, in screen pixels\0y coordinate of the top-left corner, in screen "
+    "pixels\0width, in screen pixels\0height, in screen pixels",
+    false};
+
 static const FieldInfo gSize_2_Fields[] = {
     {offsetof(Size, dx), SettingType::Int, 0},
     {offsetof(Size, dy), SettingType::Int, 0},
@@ -1662,16 +1679,16 @@ static const StructInfo gPointF_1_Info = {
     "horizontal scroll offset, in document units\0vertical scroll offset, in document units",
     false};
 
-static const FieldInfo gRect_2_Fields[] = {
+static const FieldInfo gRect_3_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
     {offsetof(Rect, y), SettingType::Int, 0},
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRect_2_Info = {
+static const StructInfo gRect_3_Info = {
     sizeof(Rect),
     4,
-    gRect_2_Fields,
+    gRect_3_Fields,
     "X\0Y\0Dx\0Dy",
     "x coordinate of the top-left corner, in screen pixels\0y coordinate of the top-left corner, in screen "
     "pixels\0width, in screen pixels\0height, in screen pixels",
@@ -1692,7 +1709,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(FileState, rotation), SettingType::Int, 0},
     {offsetof(FileState, windowState), SettingType::Int, 0},
-    {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_2_Info},
+    {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_3_Info},
     {offsetof(FileState, showToc), SettingType::Bool, true},
     {offsetof(FileState, sidebarDx), SettingType::Int, 0},
     {offsetof(FileState, displayR2L), SettingType::Bool, false},
@@ -1762,16 +1779,16 @@ static const StructInfo gTabStateInfo = {
     "when the document was closed\0which table of contents items were expanded (see FileStates -> TocState)",
     false};
 
-static const FieldInfo gRect_3_Fields[] = {
+static const FieldInfo gRect_4_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
     {offsetof(Rect, y), SettingType::Int, 0},
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRect_3_Info = {
+static const StructInfo gRect_4_Info = {
     sizeof(Rect),
     4,
-    gRect_3_Fields,
+    gRect_4_Fields,
     "X\0Y\0Dx\0Dy",
     "x coordinate of the top-left corner, in screen pixels\0y coordinate of the top-left corner, in screen "
     "pixels\0width, in screen pixels\0height, in screen pixels",
@@ -1781,7 +1798,7 @@ static const FieldInfo gSessionDataFields[] = {
     {offsetof(SessionData, tabStates), SettingType::Array, (intptr_t)&gTabStateInfo},
     {offsetof(SessionData, tabIndex), SettingType::Int, 1},
     {offsetof(SessionData, windowState), SettingType::Int, 0},
-    {offsetof(SessionData, windowPos), SettingType::Compact, (intptr_t)&gRect_3_Info},
+    {offsetof(SessionData, windowPos), SettingType::Compact, (intptr_t)&gRect_4_Info},
     {offsetof(SessionData, sidebarDx), SettingType::Int, 0},
 };
 static const StructInfo gSessionDataInfo = {
@@ -1949,6 +1966,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, windowState), SettingType::Int, 1, true},
     {offsetof(GlobalPrefs, windowPos), SettingType::Compact, (intptr_t)&gRectInfo, true},
     {offsetof(GlobalPrefs, searchUIWindowPos), SettingType::Compact, (intptr_t)&gRect_1_Info, true},
+    {offsetof(GlobalPrefs, helpWindowPos), SettingType::Compact, (intptr_t)&gRect_2_Info, true},
     {offsetof(GlobalPrefs, annotationsWindowSize), SettingType::Compact, (intptr_t)&gSize_2_Info, true},
     {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo, true},
     {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo, true},
@@ -1962,7 +1980,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs),
-    145,
+    146,
     gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -1979,9 +1997,9 @@ static const StructInfo gGlobalPrefsInfo = {
     "EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0Ant"
     "iGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewe"
     "rs\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0C"
-    "ustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0Annota"
-    "tionsWindowSize\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUp"
-    "dates\0\0",
+    "ustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0HelpWi"
+    "ndowPos\0AnnotationsWindowSize\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWin"
+    "Pos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view, page aspect. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file "
     "uses page 1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered "
@@ -2098,12 +2116,12 @@ static const StructInfo gGlobalPrefsInfo = {
     "protected document (passwords containing spaces must be quoted)\0[ISO code](langs.html) of the current UI "
     "language\0SumatraPDF won't offer to update to this version again\0default state of the window. 1 is normal, 2 is "
     "maximized, 3 is fullscreen, 4 is minimized\0default position (x, y) and size (width, height) of the "
-    "window\0position/size of the floating find window (see SearchUIFloating)\0last-used client size of the "
-    "annotations window\0information about opened files (in most recently used order)\0state of the last session, "
-    "usage depends on RestoreSession\0data required for reloading documents after an auto-update\0data required to "
-    "determine when SumatraPDF last checked for updates\0value required to determine recency for the OpenCount value "
-    "in FileStates\0position of the document properties window\0if true, check once a day whether an update is "
-    "available\0\0Settings below are not recognized by the current version",
+    "window\0position/size of the floating find window (see SearchUIFloating)\0position/size of the in-app Help: "
+    "Manual window\0last-used client size of the annotations window\0information about opened files (in most recently "
+    "used order)\0state of the last session, usage depends on RestoreSession\0data required for reloading documents "
+    "after an auto-update\0data required to determine when SumatraPDF last checked for updates\0value required to "
+    "determine recency for the OpenCount value in FileStates\0position of the document properties window\0if true, "
+    "check once a day whether an update is available\0\0Settings below are not recognized by the current version",
     false};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
