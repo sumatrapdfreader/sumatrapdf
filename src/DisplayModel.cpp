@@ -640,6 +640,7 @@ DisplayModel::~DisplayModel() {
     logf("~DisplayModel: 0x%p\n", this);
     pauseRendering = true;
     EngineMupdfCancelHeadingToc(engine);
+    EngineMupdfCancelLoadAllAnnotations(engine);
     if (cb) {
         cb->CleanUp(this);
     }

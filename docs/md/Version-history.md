@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- The annotations window opens with annotations from the pages currently on screen; the rest of a large document fill in in the background without losing the current selection
 - Update available notification shows the build date when the update-check file has a `BuiltOn` date, e.g. **Version 3.7.21539 available (built on 2026-08-21). Update**
 - Annotations window: a search box at the top filters the list by contents and highlights matches in yellow, like the Command Palette. Delete sits under the list. Rect, Date and Author are always shown in a two-column table (empty when the annotation has no value). Per-annotation options sit in the same kind of table. Contents is a label above a 6-line edit box. Buttons match Advanced Settings. Each list row shows the type and contents on the left and the page number on the right
 - Advanced Settings shows **changed settings: n** in red, bold, centered on a yellow row when values have been edited in this session. Esc no longer closes the window while those edits are unsaved. The hints are a single line (**Enter or double-click to edit. Bold value: different from default**), and the window cannot be resized narrower than 480 pixels (fixes #6012)

@@ -124,6 +124,15 @@ void EngineMupdfCancelHeadingToc(EngineBase* engine) {
     e->headingTocDoneCb = {};
 }
 
+void EngineMupdfCancelLoadAllAnnotations(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e) {
+        return;
+    }
+    AtomicIntSet(&e->annotLoadCancel, 1);
+    e->annotLoadDoneCb = {};
+}
+
 // lets the UI ask without pulling in mupdf headers (declared in EngineAll.h)
 Str EngineEbookFontUnavailable(EngineBase* engine) {
     EngineMupdf* e = AsEngineMupdf(engine);
@@ -7987,22 +7996,222 @@ EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI)
     return engine;
 }
 
-// it's fast because we only collect pointers from FzPageInfo
-void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
+static void AppendLoadedAnnotations(EngineMupdf* e, Vec<Annotation*>& annotsOut) {
     annotsOut.Clear();
+    for (FzPageInfo* pi : e->pages) {
+        if (pi && pi->annotsLoaded) {
+            annotsOut.Append(pi->annotations);
+        }
+    }
+}
 
+// Collect Annotation* already sitting on FzPageInfo. Does not load pages.
+void EngineMupdfGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
+    annotsOut.Clear();
     EngineMupdf* e = AsEngineMupdf(engine);
-    if (!e->pdfdoc) {
+    if (!e || !e->pdfdoc) {
         return;
     }
     ScopedRecursiveMutex scope(&e->pagesLock);
+    AppendLoadedAnnotations(e, annotsOut);
+}
+
+// Like EngineMupdfGetLoadedAnnotations but does not wait for pagesLock.
+bool EngineMupdfTryGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        annotsOut.Clear();
+        return true;
+    }
+    if (!e->pagesLock.TryLock()) {
+        return false;
+    }
+    AppendLoadedAnnotations(e, annotsOut);
+    e->pagesLock.Unlock();
+    return true;
+}
+
+// Load each page just far enough to read its annots (not stext/links). Callers
+// that need the complete list now (tests, matching after reload) use this.
+void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
+    annotsOut.Clear();
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return;
+    }
     for (int i = 1; i <= e->pageCount; i++) {
-        FzPageInfo* pi = e->GetFzPageInfo(i, false);
+        FzPageInfo* pi = e->GetFzPageInfo(i, true);
         if (!pi) {
             continue;
         }
         annotsOut.Append(pi->annotations);
     }
+}
+
+static void AnnotLoadFinished(EngineMupdf* e) {
+    e->annotLoadDone = true;
+    Func0 cb = e->annotLoadDoneCb;
+    if (!AtomicIntGet(&e->annotLoadCancel)) {
+        cb.Call();
+    }
+    AtomicIntDec(&gDangerousThreadCount);
+    e->Release();
+}
+
+static void AnnotLoadProgressUi(EngineMupdf* e) {
+    Func0 cb = e->annotLoadDoneCb;
+    if (!AtomicIntGet(&e->annotLoadCancel) && cb.IsValid()) {
+        cb.Call();
+    }
+    e->Release();
+}
+
+static void PostAnnotLoadProgress(EngineMupdf* e) {
+    if (AtomicIntGet(&e->annotLoadCancel)) {
+        return;
+    }
+    if (!e->annotLoadDoneCb.IsValid()) {
+        return;
+    }
+    e->AddRef();
+    auto fn = MkFunc0(AnnotLoadProgressUi, e);
+    uitask::Post(fn, "AnnotLoadProgress");
+}
+
+static int CountLoadedAnnots(EngineMupdf* e) {
+    int n = 0;
+    ScopedRecursiveMutex scope(&e->pagesLock);
+    for (FzPageInfo* pi : e->pages) {
+        if (pi && pi->annotsLoaded) {
+            n += len(pi->annotations);
+        }
+    }
+    return n;
+}
+
+static int LoadAnnotsForPageNo(EngineMupdf* e, int pageNo) {
+    if (pageNo < 1 || pageNo > e->pageCount) {
+        return 0;
+    }
+    int before = 0;
+    {
+        ScopedRecursiveMutex scope(&e->pagesLock);
+        FzPageInfo* pi = e->pages[pageNo - 1];
+        if (pi && pi->annotsLoaded) {
+            return 0;
+        }
+        if (pi) {
+            before = len(pi->annotations);
+        }
+    }
+    FzPageInfo* pi = e->GetFzPageInfo(pageNo, true);
+    if (!pi) {
+        return 0;
+    }
+    int after = len(pi->annotations);
+    if (after < before) {
+        return 0;
+    }
+    return after - before;
+}
+
+static void AnnotLoadThread(EngineMupdf* e) {
+    Vec<int> first = e->annotLoadFirstPages;
+    int nPages = e->pageCount;
+    int nSincePost = 0;
+    bool postedAny = false;
+    TimeStamp lastPost = TimeGet();
+
+    auto maybePost = [&](bool force) {
+        if (AtomicIntGet(&e->annotLoadCancel)) {
+            return;
+        }
+        if (!force && nSincePost < 16) {
+            return;
+        }
+        if (!force && postedAny && TimeSinceInMs(lastPost) < 1000) {
+            return;
+        }
+        if (!force && nSincePost < 1) {
+            return;
+        }
+        if (force && CountLoadedAnnots(e) == 0 && nSincePost == 0) {
+            return;
+        }
+        logf("AnnotLoadProgress: force=%d nSincePost=%d loaded=%d\n", (int)force, nSincePost, CountLoadedAnnots(e));
+        PostAnnotLoadProgress(e);
+        nSincePost = 0;
+        lastPost = TimeGet();
+        postedAny = true;
+    };
+
+    for (int pageNo : first) {
+        if (AtomicIntGet(&e->annotLoadCancel)) {
+            break;
+        }
+        nSincePost += LoadAnnotsForPageNo(e, pageNo);
+    }
+    // Current / visible pages: show them immediately, even if fewer than 16.
+    maybePost(true);
+
+    for (int i = 1; i <= nPages; i++) {
+        if (AtomicIntGet(&e->annotLoadCancel)) {
+            break;
+        }
+        nSincePost += LoadAnnotsForPageNo(e, i);
+        maybePost(false);
+    }
+    e->ReleaseTextExtractionThreadContext();
+    if (AtomicIntGet(&e->annotLoadCancel)) {
+        AtomicIntDec(&gDangerousThreadCount);
+        e->Release();
+        return;
+    }
+    auto fn = MkFunc0(AnnotLoadFinished, e);
+    uitask::Post(fn, "AnnotLoadFinished");
+}
+
+void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firstPages, const Func0& onProgress) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return;
+    }
+    e->annotLoadDoneCb = onProgress;
+    if (e->annotLoadDone) {
+        return;
+    }
+    if (e->annotLoadStarted) {
+        return;
+    }
+    bool allLoaded = true;
+    {
+        ScopedRecursiveMutex scope(&e->pagesLock);
+        for (FzPageInfo* pi : e->pages) {
+            if (!pi || !pi->annotsLoaded) {
+                allLoaded = false;
+                break;
+            }
+        }
+    }
+    if (allLoaded) {
+        e->annotLoadStarted = true;
+        e->annotLoadDone = true;
+        return;
+    }
+    e->annotLoadFirstPages = firstPages;
+    e->annotLoadStarted = true;
+    e->AddRef();
+    AtomicIntInc(&gDangerousThreadCount);
+    auto fn = MkFunc0(AnnotLoadThread, e);
+    ThreadHandle th = StartThread(fn, "LoadAnnots");
+    if (!th) {
+        AtomicIntDec(&gDangerousThreadCount);
+        e->Release();
+        e->annotLoadDone = true;
+        onProgress.Call();
+        return;
+    }
+    SafeCloseThreadHandle(&th);
 }
 
 bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {

@@ -198,6 +198,14 @@ static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
         return nullptr;
     }
     int pageNo = annot->pageNo;
+    if (tab->editAnnotsWindow) {
+        for (Annotation* a : tab->editAnnotsWindow->annotations) {
+            if (a != annot && a->pageNo == pageNo) {
+                return a;
+            }
+        }
+        return nullptr;
+    }
     Vec<Annotation*> annots;
     EngineGetAnnotations(engine, annots);
     for (Annotation* a : annots) {
@@ -493,8 +501,15 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     }
 
     int prevScrollY = ew->listBox->scrollY;
+    Annotation* keep = ew->tab ? ew->tab->selectedAnnotation : nullptr;
     ew->listBox->SetModel(model); // resets the scroll position
     ew->listBox->ScrollTo(prevScrollY);
+    if (keep) {
+        int idx = ew->visibleAnnots.Find(keep);
+        if (idx >= 0) {
+            ew->listBox->SetCurrentSelection(idx);
+        }
+    }
     int n = len(ew->visibleAnnots);
     int listLines = n;
     if (listLines < 1) {
@@ -1472,13 +1487,101 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     ToolbarUpdateStateForWindow(win, false);
 }
 
+static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {
+    if (pageNo < 1 || pageNo > pageCount) {
+        return;
+    }
+    if (pages.Contains(pageNo)) {
+        return;
+    }
+    pages.Append(pageNo);
+}
+
+// Load annot wrappers for one page (page + annot dicts, not stext).
+static void LoadAnnotsForPage(EngineMupdf* e, int pageNo) {
+    if (!e || pageNo < 1 || pageNo > e->pageCount) {
+        return;
+    }
+    FzPageInfo* pi = e->GetFzPageInfo(pageNo, true);
+    if (!pi) {
+        logf("LoadAnnotsForPage: page %d GetFzPageInfo failed\n", pageNo);
+        return;
+    }
+    logf("LoadAnnotsForPage: page %d n=%d loaded=%d\n", pageNo, len(pi->annotations), (int)pi->annotsLoaded);
+}
+
+// Pages the background loader should finish first: current page (toolbar page
+// even when visibleRatio is still 0), every page overlapping the viewport, and
+// a context-menu annotation's page.
+static void CollectPriorityAnnotPages(EditAnnotationsWindow* ew, Annotation* extra, Vec<int>& pages) {
+    pages.Reset();
+    if (!ew || !ew->tab) {
+        return;
+    }
+    DisplayModel* dm = ew->tab->AsFixed();
+    if (!dm) {
+        return;
+    }
+    int n = dm->PageCount();
+    int curr = dm->CurrentPageNo();
+    if (curr < 1 || curr > n) {
+        curr = 1;
+    }
+    AddAnnotPage(pages, curr, n);
+    AddAnnotPage(pages, dm->FirstVisiblePageNo(), n);
+    for (int i = 1; i <= n; i++) {
+        if (dm->PageVisible(i)) {
+            AddAnnotPage(pages, i, n);
+        }
+    }
+    if (extra) {
+        AddAnnotPage(pages, extra->pageNo, n);
+    }
+}
+
+static void OnAnnotsProgress(WindowTab* tab) {
+    if (!tab || !tab->editAnnotsWindow) {
+        return;
+    }
+    if (!IsMainWindowValidAndNotClosing(tab->win)) {
+        return;
+    }
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    EngineMupdf* engine = GetEngineMupdf(ew);
+    if (!engine) {
+        return;
+    }
+    int nBefore = len(ew->annotations);
+    EngineMupdfGetLoadedAnnotations(engine, ew->annotations);
+    logf("OnAnnotsProgress: nAnnots=%d (was %d)\n", len(ew->annotations), nBefore);
+    if (len(ew->annotations) == nBefore) {
+        return;
+    }
+    RebuildAnnotationsListBox(ew);
+    LayoutAnnotWindowInPlace(ew);
+}
+
 void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     if (!ew) {
         return;
     }
     auto* engine = GetEngineMupdf(ew);
-    EngineMupdfGetAnnotations(engine, ew->annotations);
+    if (!engine) {
+        return;
+    }
+    Annotation* extra = ew->tab ? ew->tab->selectedAnnotation : nullptr;
+    Vec<int> firstPages;
+    CollectPriorityAnnotPages(ew, extra, firstPages);
+    // Load current/visible pages on this thread so the window never opens
+    // empty. loadQuick skips stext; we still wait for pagesLock/renderLock.
+    for (int pageNo : firstPages) {
+        LoadAnnotsForPage(engine, pageNo);
+    }
+    EngineMupdfGetLoadedAnnotations(engine, ew->annotations);
+    logf("UpdateAnnotationsList: nAnnots=%d firstPages=%d extra=%d\n", len(ew->annotations), len(firstPages),
+         extra ? extra->pageNo : 0);
     RebuildAnnotationsListBox(ew);
+    EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, ew->tab));
 }
 
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
@@ -2024,7 +2127,13 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     tab->editAnnotsWindow = ew;
     UpdateSaveButtonLabels(ew);
 
+    // so CollectPriorityAnnotPages includes this annot's page (context menu)
+    Annotation* prevSel = tab->selectedAnnotation;
+    if (annot) {
+        tab->selectedAnnotation = annot;
+    }
     UpdateAnnotationsList(ew);
+    tab->selectedAnnotation = prevSel;
 
     Rect lastPos = tab->lastEditAnnotsWindowPos;
     Size lastSize = gGlobalPrefs->annotationsWindowSize;
@@ -2057,7 +2166,25 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         SetWindowPos(ew->hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
         ClampEditAnnotationsWindowToWorkArea(ew->hwnd, tab->win->hwndFrame);
     }
-    if (!annot) annot = ew->tab->selectedAnnotation;
+    if (!annot) {
+        annot = ew->tab->selectedAnnotation;
+    }
+    if (!annot && len(ew->visibleAnnots) > 0) {
+        int curr = 0;
+        DisplayModel* dm = tab->AsFixed();
+        if (dm) {
+            curr = dm->CurrentPageNo();
+        }
+        for (Annotation* a : ew->visibleAnnots) {
+            if (curr < 1 || a->pageNo == curr) {
+                annot = a;
+                break;
+            }
+        }
+        if (!annot) {
+            annot = ew->visibleAnnots[0];
+        }
+    }
     ew->skipGoToPage = (annot != nullptr);
     if (annot) {
         bool isNew = annot != ew->tab->win->annotationUnderCursor;

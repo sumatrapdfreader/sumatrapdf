@@ -180,6 +180,11 @@ class EngineMupdf : public EngineBase {
     AtomicInt headingTocCancel = 0;
     bool headingTocStarted = false;
     bool headingTocDone = false;
+    AtomicInt annotLoadCancel = 0;
+    bool annotLoadStarted = false;
+    bool annotLoadDone = false;
+    Func0 annotLoadDoneCb;
+    Vec<int> annotLoadFirstPages;
     TocItem* pendingHeadingToc = nullptr;
     int pendingHeadingTocIdCounter = 0;
 
