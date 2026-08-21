@@ -1,7 +1,7 @@
 // Pre-release suite: fast regular tests, then the slow WebView TOC test,
 // then LaTeX / SyncTeX.
 //
-// Run:  bun tests/run-pre-release.ts [--no-build] [-silent]
+// Run:  bun tests/run-pre-release.ts [--no-build] [-silent] [-exe <SumatraPDF.exe>]
 
 import {
   formatDuration,
@@ -31,11 +31,9 @@ export async function testit(opts?: SuiteOptions): Promise<void> {
   }
   await runTest("latex", latexTests, { silent });
 
-  if (!silent) {
-    console.log(
-      `\n✅ pre-release checks passed (run-almost-all + issue-5842 + issue-6003 + latex) in ${formatDuration(performance.now() - t0)}`,
-    );
-  }
+  console.log(
+    `\n✅ pre-release checks passed (run-almost-all + issue-5842 + issue-6003 + latex) in ${formatDuration(performance.now() - t0)}`,
+  );
 }
 
 if (import.meta.main) {

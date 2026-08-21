@@ -5,16 +5,51 @@
 // or call process.exit -- that's the runner's job, so tests compose in
 // run-almost-all.ts / run-all.ts.
 
-import { appendFileSync, mkdirSync, readFileSync, rmSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 
 export const ROOT = join(import.meta.dir, "..");
 
-// The exe under test: the debug build, unless SUMATRA_TEST_EXE names another
-// one. The GitHub CI job sets it to the debug ASan build
-// (out/dbg64_asan/SumatraPDF-static.exe), which is the same app plus ASan.
-// It is read at import time, so set it in the environment (not at runtime).
-export const EXE = process.env.SUMATRA_TEST_EXE || join(ROOT, "out", "dbg64", "SumatraPDF.exe");
+// `-exe <path>` runs the tests against an executable that is already built,
+// e.g. a release or an ASan one, or a build from another checkout. Validated
+// here so a typo fails immediately instead of every test timing out.
+function exeFromArgv(argv: string[]): string {
+  const i = argv.indexOf("-exe");
+  if (i < 0) {
+    return "";
+  }
+  const bail = (why: string): never => {
+    console.error(`-exe: ${why}`);
+    process.exit(1);
+  };
+  const path = argv[i + 1];
+  if (!path || path.startsWith("-")) {
+    bail("expected a path to SumatraPDF.exe");
+  }
+  const full = resolve(path!);
+  if (!existsSync(full) || !statSync(full).isFile()) {
+    bail(`no such file: ${full}`);
+  }
+  if (!/\.exe$/i.test(full)) {
+    bail(`not an executable: ${full}`);
+  }
+  // the name can be anything (SumatraPDF-static.exe, a renamed copy), so ask
+  // the file itself what it is
+  const ps = `(Get-Item -LiteralPath '${full}').VersionInfo.ProductName`;
+  const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", ps]);
+  const product = p.stdout.toString().trim();
+  if (!/sumatrapdf/i.test(product)) {
+    bail(`not a SumatraPDF executable (ProductName is '${product}'): ${full}`);
+  }
+  return full;
+}
+
+// The exe under test: the debug build, unless `-exe <path>` or SUMATRA_TEST_EXE
+// names another one. The GitHub CI job sets the environment variable to the
+// debug ASan build (out/dbg64_asan/SumatraPDF-static.exe), which is the same app
+// plus ASan. Both are read at import time, before any test runs.
+export const EXE_FROM_ARGV = exeFromArgv(process.argv);
+export const EXE = EXE_FROM_ARGV || process.env.SUMATRA_TEST_EXE || join(ROOT, "out", "dbg64", "SumatraPDF.exe");
 
 // An ASan build renders and starts several times slower than the debug one, so
 // waits sized for a debug build time out against it (a 25600% zoom needs far
@@ -244,7 +279,7 @@ export async function runNamedTests(tests: NamedTest[], opts?: SuiteOptions): Pr
     }
     await runTest(name, fn, { silent });
   }
-  if (summary && !silent) {
+  if (summary) {
     const label = opts?.heading ?? "all";
     console.log(`\n✅ ${label}: ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
   }
@@ -252,13 +287,15 @@ export async function runNamedTests(tests: NamedTest[], opts?: SuiteOptions): Pr
 
 export async function runSuiteMain(testit: (opts: SuiteOptions) => Promise<void>): Promise<void> {
   const silent = isSilentArg();
-  if (!process.argv.includes("--no-build")) {
+  // an exe named with -exe is the one to test, so don't build over it
+  if (!process.argv.includes("--no-build") && !EXE_FROM_ARGV) {
     buildApp({ silent });
   }
+  const t0 = performance.now();
   try {
     await testit({ silent });
   } catch (e) {
-    console.error(`\n❌ ${(e as Error)?.message ?? e}`);
+    console.error(`\n❌ ${(e as Error)?.message ?? e} (after ${formatDuration(performance.now() - t0)})`);
     process.exit(1);
   }
   process.exit(0);
@@ -286,7 +323,7 @@ export function buildApp(opts?: { silent?: boolean }): void {
 export async function runStandalone(testit: () => void | Promise<void>, name?: string): Promise<void> {
   const label = name ?? (process.argv[1] ?? "test").replace(/\\/g, "/").split("/").pop()!.replace(/\.ts$/, "");
   try {
-    if (!process.argv.includes("--no-build")) {
+    if (!process.argv.includes("--no-build") && !EXE_FROM_ARGV) {
       buildApp();
     }
     await runTest(label, testit);

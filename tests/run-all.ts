@@ -1,6 +1,6 @@
 // Full regular suite: run-almost-all (fast) then the tests whose time is the test.
 //
-// Run:  bun tests/run-all.ts [--no-build] [-silent]
+// Run:  bun tests/run-all.ts [--no-build] [-silent] [-exe <SumatraPDF.exe>]
 //
 // Register a new test in run-almost-all.ts unless it cannot be made faster
 // (print-to-PDF, LaTeX, a measured wait, high-zoom tile settle, a huge
@@ -58,9 +58,7 @@ export async function testit(opts?: AllTestOptions): Promise<void> {
     console.log(`\n========== slow ==========`);
   }
   await runNamedTests(slowTests, { silent, keepTestTimes: true, summary: false });
-  if (!silent) {
-    console.log(`\n✅ all ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
-  }
+  console.log(`\n✅ all ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
 }
 
 if (import.meta.main) {
