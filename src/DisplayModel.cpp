@@ -2070,17 +2070,7 @@ void DisplayModel::SetInPresentation(bool enable) {
         SetZoomVirtual(kZoomFitPage, nullptr);
         return;
     }
-    if (engine && engine->IsImageCollection()) {
-        windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
-    } else {
-        windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
-    }
-#ifdef DRAW_PAGE_SHADOWS
-    windowMargin.top += 3;
-    windowMargin.bottom += 5;
-    windowMargin.right += 3;
-    windowMargin.left += 1;
-#endif
+    SetUiDpi(uiDpi);
     SetDisplayMode(presDisplayMode);
     if (!IsValidZoom(presZoomVirtual)) {
         presZoomVirtual = zoomVirtual;

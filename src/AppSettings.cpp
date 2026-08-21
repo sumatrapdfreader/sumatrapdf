@@ -27,6 +27,7 @@
 #include "SumatraPDF.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
+#include "DisplayModel.h"
 #include "AppSettings.h"
 #include "AppTools.h"
 #include "Favorites.h"
@@ -325,6 +326,12 @@ static void CreateCustomShortcuts() {
 /* Caller needs to CleanUpSettings() */
 void ApplySettingsToOpenWindows() {
     for (MainWindow* win : gWindows) {
+        // WindowMargin / PageSpacing are copied into DisplayModel at SetUiDpi;
+        // pick up the reloaded prefs before the relayout below (issue #6018)
+        if (DisplayModel* dm = win->AsFixed()) {
+            int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame);
+            dm->SetUiDpi(dpi);
+        }
         // LoadSettings re-creates custom commands (themes, external viewers,
         // selection handlers, shortcuts) with fresh command ids. Menus still
         // hold the old ids unless rebuilt — without this, e.g. "Set theme '…'"
@@ -869,6 +876,11 @@ static void ReloadSettings() {
         }
         UpdateFavoritesTree(win);
         UpdateControlsColors(win);
+        if (DisplayModel* dm = win->AsFixed()) {
+            int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame);
+            dm->SetUiDpi(dpi);
+        }
+        ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
     }
 
     UpdateDocumentColors();

@@ -124,11 +124,12 @@ struct SettingItem {
     u8* fieldPtr = nullptr;
     const char** enumValues = nullptr; // non-null for enum (string) settings
 
-    // pending value; strVal (owned) is used for String and Color
+    // pending value; strVal (owned) is used for String, Color and Compact
     bool boolVal = false;
     int intVal = 0;
     float floatVal = 0;
     Str strVal;
+    const StructInfo* compactInfo = nullptr; // Compact: WindowMargin, PageSpacing, …
 
     // default value from the settings metadata; defStr (owned) for String/Color
     bool defBool = false;
@@ -146,6 +147,52 @@ struct SettingItem {
     }
 };
 } // namespace
+
+static bool CompactIsAllInts(const StructInfo* info) {
+    if (!info || info->fieldCount == 0) {
+        return false;
+    }
+    for (size_t i = 0; i < info->fieldCount; i++) {
+        if (info->fields[i].type != SettingType::Int) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static TempStr FormatCompactIntsTemp(const StructInfo* info, const u8* base, bool useDefault) {
+    str::Builder b;
+    for (size_t i = 0; i < info->fieldCount; i++) {
+        const FieldInfo& f = info->fields[i];
+        if (i > 0) {
+            b.AppendChar(' ');
+        }
+        int val = useDefault ? (int)f.value : *(const int*)(base + f.offset);
+        b.Append(fmt("%d", val));
+    }
+    return ToStrTemp(b);
+}
+
+static void ApplyCompactInts(const StructInfo* info, u8* base, Str s) {
+    int off = 0;
+    for (size_t i = 0; i < info->fieldCount; i++) {
+        const FieldInfo& f = info->fields[i];
+        if (f.type != SettingType::Int) {
+            continue;
+        }
+        while (off < len(s) && str::IsWs(s.s[off])) {
+            off++;
+        }
+        int val = (int)f.value;
+        if (off < len(s)) {
+            val = ParseInt(Str(s.s + off, len(s) - off));
+            while (off < len(s) && !str::IsWs(s.s[off])) {
+                off++;
+            }
+        }
+        *(int*)(base + f.offset) = val;
+    }
+}
 
 static bool StrValsEq(Str a, Str b) {
     if (len(a) == 0 && len(b) == 0) {
@@ -212,6 +259,9 @@ static void SetItemChanged(SettingItem* item) {
         case SettingType::Float:
             item->changed = item->floatVal != *(float*)p;
             break;
+        case SettingType::Compact:
+            item->changed = !StrValsEq(item->strVal, FormatCompactIntsTemp(item->compactInfo, p, false));
+            break;
         default: {
             Str curr = *(Str*)p;
             bool bothEmpty = len(item->strVal) == 0 && len(curr) == 0;
@@ -250,6 +300,22 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
             case SettingType::Struct: {
                 const auto* sub = (const StructInfo*)field.value;
                 CollectSettings(items, sub, fieldPtr, path);
+                break;
+            }
+            case SettingType::Compact: {
+                const auto* sub = (const StructInfo*)field.value;
+                if (!CompactIsAllInts(sub)) {
+                    break;
+                }
+                auto* item = new SettingItem();
+                item->name = str::Dup(path);
+                item->comment = str::Dup(comment);
+                item->type = field.type;
+                item->fieldPtr = fieldPtr;
+                item->compactInfo = sub;
+                item->strVal = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, false));
+                item->defStr = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, true));
+                items.Append(item);
                 break;
             }
             case SettingType::Bool:
@@ -291,8 +357,8 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
                 break;
             }
             default:
-                // arrays, compact structs etc. can't be edited yet; the
-                // "Open Settings File" button covers those
+                // arrays and non-int compact structs; the "Open Settings File"
+                // button covers those
                 break;
         }
     }
@@ -896,6 +962,9 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
             case SettingType::Float:
                 *(float*)p = item->floatVal;
                 break;
+            case SettingType::Compact:
+                ApplyCompactInts(item->compactInfo, p, item->strVal);
+                break;
             default:
                 str::ReplaceWithCopy((Str*)p, item->strVal);
                 break;
@@ -1314,7 +1383,18 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     };
 
     AdvancedSettingsWnd* wnd = gAdvancedSettingsWnd;
-    if (!wnd || !wnd->hwnd || !wnd->listBox) {
+    if (!wnd || !wnd->hwnd) {
+        out.Append("NOTREADY no-dialog\n");
+        return finish(2);
+    }
+    if (str::Eq(action, "names")) {
+        for (SettingItem* item : wnd->items) {
+            out.Append(item->name);
+            out.AppendChar('\n');
+        }
+        return finish(0);
+    }
+    if (!wnd->listBox) {
         out.Append("NOTREADY no-dialog\n");
         return finish(2);
     }

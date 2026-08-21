@@ -428,6 +428,20 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
     AppendLayoutTree(out, StrL("favorites"), win->favLayout);
     AppendLayoutTree(out, StrL("aiChat"), win->aiChatLayout);
     AppendLayoutTree(out, StrL("homeSearch"), win->homeSearchLayout);
+
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        out.Append(fmt("pages count=%d spacing=%d,%d\n", dm->PageCount(), dm->pageSpacing.dx, dm->pageSpacing.dy));
+        int n = std::min(dm->PageCount(), 8);
+        for (int pageNo = 1; pageNo <= n; pageNo++) {
+            PageInfo* pi = dm->GetPageInfo(pageNo);
+            if (!pi) {
+                continue;
+            }
+            Rect p = pi->pos;
+            out.Append(fmt("page n=%d shown=%d pos=%d,%d,%d,%d\n", pageNo, pi->isShown ? 1 : 0, p.x, p.y, p.dx, p.dy));
+        }
+    }
     return finish({}, 0);
 }
 

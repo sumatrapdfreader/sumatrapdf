@@ -142,7 +142,7 @@ ComicBookUI [
 ```
 
 - `WindowMargin` — top, right, bottom, left gap between the window and the document (default all zeros for comics)
-- `PageSpacing` — horizontal and vertical gap between pages in facing / book view
+- `PageSpacing` — horizontal and vertical gap between pages (between columns in facing / book view, between rows in continuous view)
 
 Sizes are in pixels at 100% display scaling and are DPI-scaled.
 

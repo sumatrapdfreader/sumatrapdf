@@ -394,8 +394,8 @@ FixedPageUI [
     ; document
     WindowMargin = 2 4 2 4
 
-    ; horizontal and vertical distance between two pages in facing and book view
-    ; modes
+    ; horizontal and vertical gap between pages (between columns in facing/book
+    ; view, between rows in continuous view)
     PageSpacing = 4 4
 
     ; experimental: instead of a single background color, fade through these
@@ -469,8 +469,8 @@ ComicBookUI [
     ; document
     WindowMargin = 0 0 0 0
 
-    ; horizontal and vertical distance between two pages in facing and book view
-    ; modes
+    ; horizontal and vertical gap between pages (between columns in facing/book
+    ; view, between rows in continuous view)
     PageSpacing = 4 4
 
     ; if true, documents that don't state their own reading direction default to

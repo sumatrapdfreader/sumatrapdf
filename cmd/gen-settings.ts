@@ -439,7 +439,7 @@ const fixedPageUI: Field[] = [
   compactStruct(
     "PageSpacing",
     pageSpacing,
-    "horizontal and vertical distance between two pages in facing and book view modes",
+    "horizontal and vertical gap between pages (between columns in facing/book view, between rows in continuous view)",
   ).structName("Size"),
   compactArray(
     "GradientColors",
@@ -462,7 +462,7 @@ const comicBookUI: Field[] = [
   compactStruct(
     "PageSpacing",
     pageSpacing,
-    "horizontal and vertical distance between two pages in facing and book view modes",
+    "horizontal and vertical gap between pages (between columns in facing/book view, between rows in continuous view)",
   ).structName("Size"),
   field(
     "CbxMangaMode",
