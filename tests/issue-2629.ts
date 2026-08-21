@@ -20,9 +20,14 @@ const VK_F = 0x46;
 // way: TranslateAccelerator asks GetKeyState() for the modifiers and posted key
 // messages don't set it, so a posted Shift + F arrives as a plain F. The
 // Shift + F binding is checked through the accel= field of the state dump.
+// lParam matters: a key-up whose transition / previous-state bits (31, 30) are
+// clear looks like a press to TranslateMessage, which then produces an extra
+// WM_CHAR. That stray 'f' typed itself into the link hints when it landed after
+// the mode was turned on again - it matches the "F" hint exactly, so the app
+// followed that link and left the mode, and the test timed out waiting for it.
 function pressVKey(hwnd: number, vk: number): void {
-  postMessage(hwnd, WM_KEYDOWN, vk, 0);
-  postMessage(hwnd, WM_KEYUP, vk, 0);
+  postMessage(hwnd, WM_KEYDOWN, vk, 0x00000001);
+  postMessage(hwnd, WM_KEYUP, vk, 0xc0000001);
 }
 
 // 3 pages. Page 1 carries 20 link annotations in a stack (enough to require

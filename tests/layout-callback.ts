@@ -193,19 +193,28 @@ export async function testit(): Promise<void> {
 
     const before = await client.layout("reset");
     const canvasBefore = requireItem(before, "canvas");
-    sendCommandSync(frame, cmdId("CmdToggleToolbar"));
-    deadline = Date.now() + 3000;
-    let after = await client.layout();
-    while ((after.count === 0 || requireItem(after, "toolbar").visible) && Date.now() < deadline) {
-      await sleep(20);
+    // the toolbar cycles pinned -> overlay -> hidden, one relayout per step,
+    // so it takes two commands to get it off the canvas
+    let after = before;
+    for (const wantHidden of [false, true]) {
+      await client.layout("reset");
+      sendCommandSync(frame, cmdId("CmdToggleToolbar"));
+      deadline = Date.now() + 3000;
+      const done = (l: LayoutInfo) => l.count === 1 && (!wantHidden || !requireItem(l, "toolbar").visible);
       after = await client.layout();
+      while (!done(after) && Date.now() < deadline) {
+        await sleep(20);
+        after = await client.layout();
+      }
+      if (after.count !== 1) {
+        throw new Error(
+          `layout-callback: toggling one toolbar caused ${after.count} completed relayouts:\n${after.raw}`,
+        );
+      }
     }
 
     const canvasAfter = requireItem(after, "canvas");
     const toolbarAfter = requireItem(after, "toolbar");
-    if (after.count !== 1) {
-      throw new Error(`layout-callback: toggling one toolbar caused ${after.count} completed relayouts:\n${after.raw}`);
-    }
     if (toolbarAfter.visible) {
       throw new Error(`layout-callback: toolbar stayed visible:\n${after.raw}`);
     }

@@ -39,6 +39,20 @@ function rectSize(r: { left: number; top: number; right: number; bottom: number 
   return { w: r.right - r.left, h: r.bottom - r.top };
 }
 
+// the window's size once it stops changing
+async function settledSize(hwnd: number): Promise<{ w: number; h: number }> {
+  const deadline = Date.now() + 5000;
+  let prev = rectSize(getWindowRect(hwnd));
+  for (;;) {
+    await sleep(50);
+    const cur = rectSize(getWindowRect(hwnd));
+    if ((cur.w === prev.w && cur.h === prev.h) || Date.now() >= deadline) {
+      return cur;
+    }
+    prev = cur;
+  }
+}
+
 function nearlySameSize(a: { w: number; h: number }, b: { w: number; h: number }, tol = 8): boolean {
   return Math.abs(a.w - b.w) <= tol && Math.abs(a.h - b.h) <= tol;
 }
@@ -65,7 +79,10 @@ export async function testit(): Promise<void> {
     if (!isZoomed(frame)) {
       throw new Error("expected window to start maximized (WindowState = 2)");
     }
-    const maximizedBefore = rectSize(getWindowRect(frame));
+    // WM_SIZE reports the maximized state before the frame has been resized to
+    // the work area, so sampling right away can capture the pre-maximize
+    // WindowPos size and make the comparisons below meaningless
+    const maximizedBefore = await settledSize(frame);
 
     // --- path 1: maximized → fullscreen → exit → re-maximized ---
     sendCommandSync(frame, cmdId("CmdToggleFullscreen"));

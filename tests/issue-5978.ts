@@ -3,7 +3,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, runStandalone, tmpPath } from "./util";
-import { postMessage, sleep } from "./winapi";
+import { postMessage, setCursorPos, sleep } from "./winapi";
 import { findCanvas, launchControlled, killAndWait } from "./win-automation";
 import type { ControlClient, HomeSelection } from "./control.ts";
 
@@ -58,6 +58,10 @@ async function waitForHome(
 }
 
 export async function testit(): Promise<void> {
+  // a cursor left sitting over the thumbnails keeps re-selecting whatever is
+  // under it as the band scrolls, so the selection never ends up under the
+  // search field (same hover-vs-selection problem as issue-1136)
+  setCursorPos(0, 0);
   // compact window so a few files overflow the thumbs band and we can scroll
   // a thumbnail under the search field
   const { proc, client, frame } = await launchControlled(["-appdata", makeAppDir(), "-window-pos", "820x500@20x20"]);
