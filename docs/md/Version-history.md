@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Advanced Settings shows **changed settings: n** in red, bold, centered on a yellow row when values have been edited in this session. Esc no longer closes the window while those edits are unsaved. The hints are a single line (**Enter or double-click to edit. Bold value: different from default**), and the window cannot be resized narrower than 480 pixels (fixes #6012)
 - About window: **Copy program and machine info to clipboard** copies a multi-line dump (version, built-on date, OS, 32/64-bit, WebView2, memory, and other bug-report details). The right-hand date is labeled **built on** (fixes #6008)
 - Advanced Settings can edit compact values such as `FixedPageUI.PageSpacing` and `ComicBookUI.PageSpacing` (written as `4 4`). Changing them applies to open documents without restarting. Comics and image collections use `ComicBookUI.PageSpacing`, not `FixedPageUI.PageSpacing`. `PageSpacing = 0 0` no longer leaves a 1px seam between pages (fixes #6018)
 - **Help: Manual** (F1) opens next to the main window, in the upper half, on the side with more room. Its position and size are remembered across sessions and kept fully on-screen after a resolution or monitor change (fixes #6013)

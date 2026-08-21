@@ -41,6 +41,8 @@
 #include "SumatraDialogs.h"
 
 constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/settings/settings3-7.html";
+// smallest client width the user can drag the dialog to (96 dpi pixels)
+constexpr int kAdvSettingsMinClientDx = 480;
 
 // enum settings: string settings restricted to a fixed set of values.
 // Fixed string values for the in-place enum drop-down. Matched by full path
@@ -447,10 +449,14 @@ struct AdvancedSettingsWnd : WindowBase {
     VirtListBox* listBox = nullptr;
     ListBoxModelSettings* model = nullptr; // owned by listBox
     CommentText* commentText = nullptr;    // shows the selected setting's doc comment
-    Edit* editValue = nullptr;             // in-place value editor, created on demand
-    DropDown* dropDownValue = nullptr;     // in-place enum editor, created on demand
-    Str dropDownOrigVal;                   // value before the drop-down opened (owned), for Esc
-    int editItemIdx = -1;                  // index into items of the setting being edited
+    // "changed settings: n" under the list, above the setting help; collapsed when n == 0
+    ILayout* changedCountRow = nullptr;
+    VirtFill* changedCountBg = nullptr;
+    VirtText* changedCountText = nullptr;
+    Edit* editValue = nullptr;         // in-place value editor, created on demand
+    DropDown* dropDownValue = nullptr; // in-place enum editor, created on demand
+    Str dropDownOrigVal;               // value before the drop-down opened (owned), for Esc
+    int editItemIdx = -1;              // index into items of the setting being edited
     // Create/show/focus of the in-place editor can re-enter CancelEditValue
     // (filter EN_CHANGE, selection change) while the local editor pointer is
     // still in use — that was a heap UAF (CloseEnumEdit delete). While set,
@@ -477,8 +483,12 @@ struct AdvancedSettingsWnd : WindowBase {
     bool HandleEnterKey(bool isEditingValue, bool isEditingEnum);
     bool HandleUpDownKey(const KeyEvent& ev);
     void OnSize(WindowBase::SizeEvent* ev);
+    void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
 
     void QueryChanged();
+    int CountChangedSettings() const;
+    void UpdateChangedCountLabel();
+    void NoteItemEdited(SettingItem* item);
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
     void ActivateItem(int lbIdx);
     void OnItemDoubleClicked();
@@ -831,7 +841,7 @@ void AdvancedSettingsWnd::OnEnumSelectionChanged() {
     int sel = dropDownValue->GetCurrentSelection();
     if (sel >= 0) {
         str::ReplaceWithCopy(&item->strVal, item->enumValues[sel]);
-        SetItemChanged(item);
+        NoteItemEdited(item);
         // browsing the list with the arrow keys previews each value in turn
         PreviewSettingChange(item);
         listBox->Invalidate();
@@ -876,7 +886,7 @@ void AdvancedSettingsWnd::CloseEnumEdit(bool keepValue) {
     if (!keepValue) {
         SettingItem* item = items[editItemIdx];
         str::ReplaceWithCopy(&item->strVal, dropDownOrigVal);
-        SetItemChanged(item);
+        NoteItemEdited(item);
         PreviewSettingChange(item);
     }
     editItemIdx = -1;
@@ -909,7 +919,7 @@ void AdvancedSettingsWnd::CommitEditValue() {
             str::ReplaceWithCopy(&item->strVal, s);
             break;
     }
-    SetItemChanged(item);
+    NoteItemEdited(item);
     PreviewSettingChange(item);
     CancelEditValue();
     listBox->Invalidate();
@@ -925,7 +935,7 @@ void AdvancedSettingsWnd::ActivateItem(int lbIdx) {
     }
     if (item->type == SettingType::Bool) {
         item->boolVal = !item->boolVal;
-        SetItemChanged(item);
+        NoteItemEdited(item);
         listBox->Invalidate();
         return;
     }
@@ -1019,12 +1029,13 @@ void AdvancedSettingsWnd::OnSave(VirtMouseEvent*) {
     ApplyChangesAndSave();
 }
 
+// Esc cancels an in-place edit; it only closes the dialog when nothing is unsaved.
 bool AdvancedSettingsWnd::HandleEscapeKey(bool isEditingValue, bool isEditingEnum) {
     if (isEditingValue) {
         CancelEditValue();
     } else if (isEditingEnum) {
         CloseEnumEdit(false);
-    } else {
+    } else if (CountChangedSettings() == 0) {
         ScheduleDelete();
     }
     return true;
@@ -1154,6 +1165,60 @@ void AdvancedSettingsWnd::OnSize(WindowBase::SizeEvent* ev) {
     HwndInvalidate(hwnd);
 }
 
+void AdvancedSettingsWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
+    if (!ev->mmi) {
+        return;
+    }
+    int minClient = DpiScale(kAdvSettingsMinClientDx);
+    int chromeX = 0;
+    if (hwnd) {
+        Rect wr = HwndWindowRect(hwnd);
+        Rect cr = HwndClientRect(hwnd);
+        if (cr.dx > 0 && wr.dx > cr.dx) {
+            chromeX = wr.dx - cr.dx;
+        }
+    }
+    ev->mmi->ptMinTrackSize.x = minClient + chromeX;
+}
+
+int AdvancedSettingsWnd::CountChangedSettings() const {
+    int n = 0;
+    for (SettingItem* item : items) {
+        if (item->changed) {
+            n++;
+        }
+    }
+    return n;
+}
+
+// "changed settings: n" sits under the list, above the setting help.
+// Hidden until at least one value has been edited since the dialog opened.
+void AdvancedSettingsWnd::UpdateChangedCountLabel() {
+    if (!changedCountRow || !changedCountText) {
+        return;
+    }
+    int n = CountChangedSettings();
+    bool show = n > 0;
+    Visibility vis = show ? Visibility::Visible : Visibility::Collapse;
+    if (show) {
+        changedCountText->SetText(fmt(_TRA("changed settings: %d").s, n));
+    }
+    changedCountRow->SetVisibility(vis);
+    changedCountText->SetIsVisible(show);
+    if (changedCountBg) {
+        changedCountBg->SetIsVisible(show);
+    }
+    if (hwnd && layout) {
+        DoLayout();
+        HwndRepaintNow(hwnd);
+    }
+}
+
+void AdvancedSettingsWnd::NoteItemEdited(SettingItem* item) {
+    SetItemChanged(item);
+    UpdateChangedCountLabel();
+}
+
 // center the dialog over the main window frame
 static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     Rect rRelative = HwndWindowRect(hwndRelative);
@@ -1231,8 +1296,34 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(c, 1);
     }
 
-    // text area showing the selected setting's doc comment, between the list
-    // and the buttons
+    // under the list, above the selected setting's help: how many values were
+    // edited this session. Hidden until at least one has been changed.
+    {
+        auto* overlay = new Overlay();
+        changedCountBg = new VirtFill();
+        changedCountBg->SetColor(kColFillBg, kColYellow);
+        changedCountBg->SetIsVisible(false);
+        overlay->AddChild(changedCountBg);
+
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainCenter;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        changedCountText = NewVirtText({
+            .s = {},
+            .font = fontBold,
+            .textColor = kColRed,
+            .isRtl = isRtl,
+        });
+        changedCountText->SetIsVisible(false);
+        hbox->AddChild(new Padding(changedCountText, DpiScaledInsets(4, 8)));
+        overlay->AddChild(hbox, CrossAxisAlign::Stretch, CrossAxisAlign::CrossCenter);
+
+        overlay->SetVisibility(Visibility::Collapse);
+        changedCountRow = overlay;
+        vbox->AddChild(overlay);
+    }
+
+    // selected setting's doc comment (the help area)
     {
         auto* c = new CommentText();
         c->font = font;
@@ -1242,23 +1333,18 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(new Padding(c, DpiScaledInsets(4, 2)));
     }
 
-    // centered hints, above the buttons: how to edit a setting and what the
-    // bold text in the list means
+    // one centered hint above the buttons
     {
-        Str hints[] = {
-            _TRA("Enter or double-click to edit"),
-            _TRA("Value bold? Value is different from default"),
-            _TRA("Name bold? Value was changed but unsaved"),
-        };
-        for (const Str& hint : hints) {
-            auto* hbox = new HBox();
-            hbox->alignMain = MainAxisAlign::MainCenter;
-            hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-            auto* c = NewVirtText({.s = hint, .font = font, .isRtl = isRtl});
-            hbox->AddChild(new Padding(c, DpiScaledInsets(1, 8)));
-            vbox->AddChild(hbox);
-        }
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainCenter;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        auto* c = NewVirtText({
+            .s = _TRA("Enter or double-click to edit. Bold value: different from default"),
+            .font = font,
+            .isRtl = isRtl,
+        });
+        hbox->AddChild(new Padding(c, DpiScaledInsets(1, 8)));
+        vbox->AddChild(hbox);
     }
 
     {
@@ -1299,9 +1385,11 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     auto rc = HwndClientRect(win->hwndFrame);
     // Default is wide enough that long setting names (e.g. InverseSearchCmdLine)
     // and long values don't crowd each other; reuse last size if the user
-    // resized earlier this session (#5804).
+    // resized earlier this session (#5804), but never below kAdvSettingsMinClientDx.
+    int minDx = DpiScale(kAdvSettingsMinClientDx);
     int dy = gAdvSettingsLastClientDy > 0 ? gAdvSettingsLastClientDy : limitValue(rc.dy - 72, 480, 900);
     int dx = gAdvSettingsLastClientDx > 0 ? gAdvSettingsLastClientDx : limitValue(rc.dx - 128, 760, 1100);
+    dx = std::max(dx, minDx);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     // pick up the virtual controls so we paint them and they get their input
     DoLayout(HwndClientRect(hwnd).Size());
@@ -1394,6 +1482,47 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         }
         return finish(0);
     }
+    if (str::Eq(action, "changed")) {
+        int n = wnd->CountChangedSettings();
+        bool banner = wnd->changedCountRow && wnd->changedCountRow->GetVisibility() == Visibility::Visible;
+        out.Append(fmt("changed=%d banner=%d\n", n, banner ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, "toggle")) {
+        int nBool = 0;
+        SettingItem* target = nullptr;
+        for (SettingItem* item : wnd->items) {
+            if (item->type != SettingType::Bool) {
+                continue;
+            }
+            if (nBool == arg) {
+                target = item;
+                break;
+            }
+            nBool++;
+        }
+        if (!target) {
+            out.Append("ERROR no-bool\n");
+            return finish(1);
+        }
+        target->boolVal = !target->boolVal;
+        wnd->NoteItemEdited(target);
+        if (wnd->listBox) {
+            wnd->listBox->Invalidate();
+        }
+        int n = wnd->CountChangedSettings();
+        bool banner = wnd->changedCountRow && wnd->changedCountRow->GetVisibility() == Visibility::Visible;
+        out.Append(fmt("toggled=%s changed=%d banner=%d\n", target->name, n, banner ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, "esc")) {
+        bool editingValue = wnd->editValue != nullptr;
+        bool editingEnum = wnd->dropDownValue != nullptr;
+        wnd->HandleEscapeKey(editingValue, editingEnum);
+        bool closing = !gAdvancedSettingsWnd || gAdvancedSettingsWnd->deleteScheduled;
+        out.Append(fmt("closed=%d\n", closing ? 1 : 0));
+        return finish(0);
+    }
     if (!wnd->listBox) {
         out.Append("NOTREADY no-dialog\n");
         return finish(2);
@@ -1440,6 +1569,8 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onSize = MkMethod1<AdvancedSettingsWnd, WindowBase::SizeEvent*, &AdvancedSettingsWnd::OnSize>(wnd);
+    wnd->onGetMinMaxInfo =
+        MkMethod1<AdvancedSettingsWnd, WindowBase::GetMinMaxInfoEvent*, &AdvancedSettingsWnd::OnGetMinMaxInfo>(wnd);
     wnd->onKeyDown = MkMethod1<AdvancedSettingsWnd, KeyEvent*, &AdvancedSettingsWnd::OnKeyDown>(wnd);
     wnd->SetFont(GetAppFont());
     bool ok = wnd->Create(win);
