@@ -224,7 +224,10 @@ void SetRect(Annotation* annot, RectF r) {
     if (failed) {
         return;
     }
-    annot->bounds = r;
+    // pdf_update_annot can rewrite the rect (rubber stamps keep a 190x50
+    // aspect). Cached bounds must match that, or resize handles and hit
+    // testing cover empty space around the visible stamp (issue #5933).
+    annot->bounds = GetBounds(annot);
     // must be called outside docLock to avoid deadlock with pagesLock
     MarkNotificationAsModified(e, annot);
 }

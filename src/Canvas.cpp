@@ -2332,13 +2332,19 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    if (IsCtrlPressed() && win->annotationUnderCursor) {
-        ShowEditAnnotationsWindow(tab, win->annotationUnderCursor);
+    // Hit-test the click, not annotationUnderCursor: that is last-move hover
+    // and is stale when WM_MOUSEMOVE did not run (or returned early because
+    // dragStartPending was still set from the create gesture). Using it
+    // re-selected the new stamp when clicking empty page (issue #5933).
+    Annotation* clickedAnnot = dm->GetAnnotationAtPos(pt, tab ? tab->selectedAnnotation : nullptr);
+
+    if (IsCtrlPressed() && clickedAnnot) {
+        ShowEditAnnotationsWindow(tab, clickedAnnot);
         return;
     }
 
-    if (win->annotationUnderCursor && (tab->selectedAnnotation || tab->editAnnotsWindow)) {
-        SetSelectedAnnotation(tab, win->annotationUnderCursor);
+    if (clickedAnnot && tab && (tab->selectedAnnotation || tab->editAnnotsWindow)) {
+        SetSelectedAnnotation(tab, clickedAnnot);
         return;
     }
 
