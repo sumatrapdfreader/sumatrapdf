@@ -24,7 +24,13 @@
 // Keep this fast: F11 is near-instant; do not pad with multi-second sleeps or
 // dense GetPixel grids (a 200px × every-6px strip was ~64k FFI calls × 2).
 //
-// Run:  bun tests/issue-5866.ts [--no-build]   (or via tests/run-almost-all.ts)
+// Not registered in any suite, on purpose: it flips the taskbar's auto-hide
+// setting on the machine it runs on (restored in a finally, but a crashed run
+// would leave it), it is the slowest of the regular tests at ~12s, and a
+// hosted runner has no Explorer taskbar, so the daily could never run it
+// anyway. Run it by hand when touching fullscreen / relayout / chrome paint.
+//
+// Run:  bun tests/issue-5866.ts [--no-build]
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
