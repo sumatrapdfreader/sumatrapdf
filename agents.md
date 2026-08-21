@@ -303,6 +303,11 @@ Instead, run only what the change can plausibly break:
   manual check (launch with `-for-testing`, screenshot, probe log) is worth more than a
   green suite that never touched the code.
 
+When the user reports a failing test (from a release run or their own run), fix and verify **that test alone**: run it
+by itself several times in a row, since the failures that reach you this way are usually intermittent. Do not run a
+full suite afterwards to see what fails next - each run costs minutes and drags you into unrelated flakes. Fix the one
+test, say what you found, and let the next release run surface anything else.
+
 Never edit `tests/run-almost-all.ts` or `tests/run-all.ts` to skip tests so a run gets further. If a test fails and you
 suspect it is unrelated, check it out on a clean tree (`git stash`) and run it standalone
 several times - some are environment- and focus-dependent and fail intermittently

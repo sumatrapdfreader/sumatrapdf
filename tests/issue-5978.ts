@@ -30,6 +30,10 @@ function makeAppDir(): string {
   return dir;
 }
 
+function sameRect(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
 function rectsOverlap(a: number[], b: number[]): boolean {
   if (a[2]! <= 0 || a[3]! <= 0 || b[2]! <= 0 || b[3]! <= 0) {
     return false;
@@ -77,14 +81,28 @@ export async function testit(): Promise<void> {
       throw new Error("issue-5978: no canvas");
     }
 
+    // A wheel notch is applied asynchronously, so the state right after posting
+    // it is still the pre-scroll one - and the predicate below is already true
+    // then, which is what used to make this test read stale rects and give up
+    // before the band had moved at all. Wait for the band to settle instead.
+    const settled = async (): Promise<HomeSelection> => {
+      const deadline = Date.now() + 4000;
+      let prev = await waitForHome(client, (s) => s.ready && s.entries === nFiles, "home page lost its files");
+      for (;;) {
+        await sleep(60);
+        const cur = await waitForHome(client, (s) => s.ready && s.entries === nFiles, "home page lost its files");
+        if (sameRect(cur.outlineFull, prev.outlineFull) || Date.now() >= deadline) {
+          return cur;
+        }
+        prev = cur;
+      }
+    };
+
     let sawWouldOverlap = false;
+    let last = await settled();
     for (let i = 0; i < 12; i++) {
       postMessage(canvas, WM_MOUSEWHEEL, (-WHEEL_DELTA << 16) >>> 0, 0n);
-      const h = await waitForHome(
-        client,
-        (s) => s.ready && s.entries === nFiles,
-        "home page lost its files after scroll",
-      );
+      const h = await settled();
       if (rectsOverlap(h.outline, h.search)) {
         throw new Error(`issue-5978: painted outline overlaps the search field: ${h.raw}`);
       }
@@ -92,9 +110,13 @@ export async function testit(): Promise<void> {
         sawWouldOverlap = true;
         break;
       }
+      if (sameRect(h.outlineFull, last.outlineFull)) {
+        throw new Error(`issue-5978: the thumbnail band stopped scrolling after ${i + 1} notches: ${h.raw}`);
+      }
+      last = h;
     }
     if (!sawWouldOverlap) {
-      throw new Error("issue-5978: could not scroll a selected thumbnail under the search field");
+      throw new Error(`issue-5978: could not scroll a selected thumbnail under the search field: ${last.raw}`);
     }
     console.log("issue-5978: OK");
   } finally {

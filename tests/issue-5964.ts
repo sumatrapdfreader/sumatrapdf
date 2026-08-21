@@ -70,7 +70,11 @@ function findWindowByTitle(pid: number, title: string): number {
 }
 
 // the dialog enumerates certificates before it shows, which can take a while
-async function waitForWindowByTitle(pid: number, title: string, timeoutMs = 12000 * SLOW_BUILD_FACTOR): Promise<number> {
+async function waitForWindowByTitle(
+  pid: number,
+  title: string,
+  timeoutMs = 12000 * SLOW_BUILD_FACTOR,
+): Promise<number> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const h = findWindowByTitle(pid, title);

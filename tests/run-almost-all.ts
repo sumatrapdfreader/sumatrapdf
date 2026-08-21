@@ -163,6 +163,9 @@ import { testit as issue4315 } from "./issue-4315.ts";
 import { testit as issue4662 } from "./issue-4662.ts";
 
 export const tests: NamedTest[] = [
+  // first: it drives the home page, whose thumbnail selection follows the
+  // mouse, so it is the one test that cares what the machine was doing before
+  ["issue-5978", issue5978],
   ["issue-5972", issue5972],
   ["issue-5956", issue5956],
   ["issue-5989", issue5989],
@@ -300,7 +303,6 @@ export const tests: NamedTest[] = [
   ["issue-5974", issue5974],
   ["issue-5975", issue5975],
   ["issue-5968", issue5968],
-  ["issue-5978", issue5978],
   ["issue-5980", issue5980],
   ["issue-5982", issue5982],
   ["issue-5984", issue5984],
