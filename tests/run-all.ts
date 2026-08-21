@@ -6,7 +6,14 @@
 // (print-to-PDF, LaTeX, a measured wait, high-zoom tile settle, a huge
 // fixture, or copying the exe next to restrict.ini). Those go in `slowTests`.
 
-import { formatDuration, runNamedTests, runSuiteMain, type NamedTest, type SuiteOptions } from "./util.ts";
+import {
+  formatDuration,
+  runNamedTests,
+  runSuiteMain,
+  startSuiteProgress,
+  type NamedTest,
+  type SuiteOptions,
+} from "./util.ts";
 import { tests as almostAllTests, testit as runAlmostAll } from "./run-almost-all.ts";
 import { testit as issue5842 } from "./issue-5842.ts";
 import { testit as issue6003 } from "./issue-6003.ts";
@@ -45,6 +52,7 @@ export async function testit(opts?: AllTestOptions): Promise<void> {
   const keep = opts?.keepTestTimes ?? false;
   const silent = opts?.silent ?? false;
   const t0 = performance.now();
+  startSuiteProgress(tests.length);
   await runAlmostAll({ silent, keepTestTimes: keep, summary: false });
   if (!silent) {
     console.log(`\n========== slow ==========`);

@@ -161,9 +161,27 @@ function muteConsole(): () => void {
   };
 }
 
+// "3/34 issue-5964.ts" before each test: what is about to run, and how far along
+// the suite is. The outermost suite sets the total; a suite nested in another
+// one (run-almost-all inside run-all / run-pre-release) leaves it alone.
+let progressTotal = 0;
+let progressDone = 0;
+
+export function startSuiteProgress(total: number): void {
+  if (progressTotal > 0) {
+    return;
+  }
+  progressTotal = total;
+  progressDone = 0;
+}
+
 // run one test and print pass/fail timing
 export async function runTest(name: string, fn: () => void | Promise<void>, opts?: RunTestOptions): Promise<void> {
   const silent = opts?.silent ?? false;
+  if (progressTotal > 0) {
+    progressDone++;
+    console.log(`${progressDone}/${progressTotal} ${name}.ts`);
+  }
   const t0 = performance.now();
   const unmute = silent ? muteConsole() : () => {};
   try {

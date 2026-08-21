@@ -11,7 +11,7 @@
 //
 // Register a new fast test here. Inherently-slow ones go in tests/run-all.ts.
 
-import { runNamedTests, runSuiteMain, type NamedTest, type SuiteOptions } from "./util.ts";
+import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type SuiteOptions } from "./util.ts";
 import { setTestWindowLayout } from "./winapi.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
@@ -322,6 +322,7 @@ export const tests: NamedTest[] = [
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
+  startSuiteProgress(tests.length);
   // a quarter of the screen: this suite is run by a person, so the window
   // stays out of the way (run-github-ci.ts asks for the whole work area)
   setTestWindowLayout("quarter");
