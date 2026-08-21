@@ -42,6 +42,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0028-pkcs7-windows-inspect` | algorithms, issuer, digest, RFC 3161 timestamp from a PKCS#7 signature (#5581) |
 | `0029-pdf-tj-array-tc-tw` | `Tc`/`Tw` inside a `TJ` array is not a syntax error that dumps the rest of the page (#4157) |
 | `0030-pdf-subset-base14-font-name` | strip `ABCDEF+` subset tags so a non-embedded `XXXXXX+Symbol` uses the builtin Symbol font (#4655) |
+| `0031-html-image-page-height` | shrink every reflow image against the fixed page height, not advancing block bounds (#6007) |
 
 And three that are not ours but that we carry ahead of the release we vendor:
 

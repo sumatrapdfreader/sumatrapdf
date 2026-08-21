@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="book-id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="book-id">mupdf-image-page-height-repro</dc:identifier>
+    <dc:title>MuPDF image page height repro</dc:title>
+    <dc:language>en</dc:language>
+  </metadata>
+  <manifest>
+    <item id="content" href="content.xhtml" media-type="application/xhtml+xml"/>
+    <item id="image1" href="image1.svg" media-type="image/svg+xml"/>
+    <item id="image2" href="image2.svg" media-type="image/svg+xml"/>
+    <item id="image3" href="image3.svg" media-type="image/svg+xml"/>
+  </manifest>
+  <spine>
+    <itemref idref="content"/>
+  </spine>
+</package>

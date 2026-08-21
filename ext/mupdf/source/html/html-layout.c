@@ -942,7 +942,7 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			float max_w, max_h;
 			float xs = 1, ys = 1, s;
 			float aspect = 1;
-			float page_h = ld->bounds[B] - ld->bounds[T];
+			float page_h = ld->page[B] - ld->page[T];
 
 			max_w = ld->bounds[R] - ld->bounds[L];
 			max_h = page_h;
