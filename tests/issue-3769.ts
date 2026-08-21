@@ -1,9 +1,9 @@
 // Test for issue #3769: annotation editor list height.
 //
-// The list is as tall as the annotations, capped at 12 rows. Extra window
-// height goes to Contents, not the list, so resizing the window or moving
+// The list is as tall as the annotations, capped at 12 rows. Contents is a
+// fixed 6 lines. Extra window height is empty space, so resizing or moving
 // between annotations (which shows different per-type fields) does not
-// change the list height.
+// change the list or Contents height.
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
@@ -100,9 +100,15 @@ export async function testit(): Promise<void> {
             `(${text.raw} / ${freeText.raw})`,
         );
       }
+      if (Math.abs(text.contentsDy - freeText.contentsDy) > 8) {
+        throw new Error(
+          `Contents height changed when navigating: Text ${text.contentsDy}px vs FreeText ${freeText.contentsDy}px ` +
+            `(${text.raw} / ${freeText.raw})`,
+        );
+      }
       console.log(
         `  annotation list stays put: ${short.listDy}px at ${short.windowDy}/${tall.windowDy}, ` +
-          `Text/FreeText ${text.listDy}/${freeText.listDy} ✓`,
+          `Text/FreeText ${text.listDy}/${freeText.listDy}, Contents ${text.contentsDy}/${freeText.contentsDy} ✓`,
       );
     },
     [pdf],
