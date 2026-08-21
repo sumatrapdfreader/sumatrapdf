@@ -118,6 +118,13 @@ DisplayMode DisplayModel::GetDisplayMode() const {
     return displayMode;
 }
 
+bool DisplayModel::HasToc() {
+    if (!engine) {
+        return false;
+    }
+    return engine->HasToc();
+}
+
 TocTree* DisplayModel::GetToc() {
     if (!engine) {
         return nullptr;
@@ -263,6 +270,13 @@ static bool IsDisplayModelValid(DisplayModel* dm) {
         }
     }
     return false;
+}
+
+static void OnHeadingTocDone(DisplayModel* dm) {
+    if (!IsDisplayModelValid(dm) || !dm->cb) {
+        return;
+    }
+    dm->cb->TocChanged(dm);
 }
 
 static void RenderFinishedOnUIThread(PageRenderRequest* req) {
@@ -587,6 +601,8 @@ DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocC
 
     textSelection = new TextSelection(engine);
     textSearch = new TextSearch(engine);
+
+    EngineMupdfStartHeadingToc(engine, MkFunc0(OnHeadingTocDone, this));
 }
 
 // WindowMargin and PageSpacing are screen-space sizes written by the user at
@@ -623,6 +639,7 @@ void DisplayModel::SetUiDpi(int dpi) {
 DisplayModel::~DisplayModel() {
     logf("~DisplayModel: 0x%p\n", this);
     pauseRendering = true;
+    EngineMupdfCancelHeadingToc(engine);
     if (cb) {
         cb->CleanUp(this);
     }

@@ -13,6 +13,7 @@
 #include "base/Win.h"
 #endif
 #include "base/Timer.h"
+#include "base/UITask.h"
 
 extern "C" {
 #include <mupdf/pdf.h>
@@ -98,6 +99,29 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine) {
         return nullptr;
     }
     return (EngineMupdf*)engine;
+}
+
+bool EngineMupdfHeadingTocPending(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    return e && e->HeadingTocPending();
+}
+
+void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e) {
+        return;
+    }
+    e->headingTocDoneCb = onDone;
+    e->StartHeadingTocIfNeeded();
+}
+
+void EngineMupdfCancelHeadingToc(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e) {
+        return;
+    }
+    AtomicIntSet(&e->headingTocCancel, 1);
+    e->headingTocDoneCb = {};
 }
 
 // lets the UI ask without pulling in mupdf headers (declared in EngineAll.h)
@@ -3239,6 +3263,8 @@ EngineMupdf::~EngineMupdf() {
 
     str::Free(pdfPassword);
     delete pageLabels;
+    FreeTocItemRec(nullptr, pendingHeadingToc);
+    pendingHeadingToc = nullptr;
     delete tocTree;
 
     pagesLock.Unlock();
@@ -4767,11 +4793,21 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
         }
     };
 
+    TimeStamp t0 = TimeGet();
     for (int i = 0; i < e->pageCount && nAdded < kMaxGeneratedTocEntries; i++) {
+        if (AtomicIntGet(&e->headingTocCancel)) {
+            break;
+        }
         fz_page* page = nullptr;
         fz_stext_page* stext = nullptr;
         fz_var(page);
         fz_var(stext);
+        // Take locks per page so a render thread can run between pages. Holding
+        // them for the whole document blocked the first page while every page
+        // was extracted (annot-stress-99.pdf).
+        ScopedRecursiveMutex csPages(&e->pagesLock);
+        ScopedMutex csRender(&e->renderLock);
+        ScopedRecursiveMutex csDoc(&e->docLock);
         fz_try(ctx) {
             page = fz_load_page(ctx, e->_doc, i);
             stext = fz_new_stext_page_from_page(ctx, page, &opts);
@@ -4788,25 +4824,126 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
             fz_drop_stext_page(ctx, stext);
         }
     }
+    if (AtomicIntGet(&e->headingTocCancel)) {
+        FreeTocItemRec(nullptr, first);
+        return nullptr;
+    }
+    logf("GenerateTocFromHeadings: %d pages, %d entries, %.1f ms\n", e->pageCount, nAdded, TimeSinceInMs(t0));
     return first;
 }
 
-// TODO: maybe build in FinishLoading
+// Swap in a heading-generated tree (plus attachments). Returns the previous
+// tree so the caller can TocChanged() before deleting it.
+static TocTree* ReplaceTocWithHeadings(EngineMupdf* e, TocItem* headings, int idCounter) {
+    if (!e || !headings) {
+        return nullptr;
+    }
+    ScopedRecursiveMutex cs(&e->docLock);
+    TocTree* old = e->tocTree;
+    e->tocTree = nullptr;
+    TocItem* root = headings;
+    if (e->attachments) {
+        TocItem* att = e->BuildTocTree(nullptr, e->attachments, idCounter, true, 0);
+        if (root) {
+            root->AddSiblingAtEnd(att);
+        } else {
+            root = att;
+        }
+    }
+    if (!root) {
+        return old;
+    }
+    TocItem* realRoot = AllocTocItem(nullptr, {}, 0);
+    realRoot->child = root;
+    e->tocTree = new TocTree(realRoot);
+    return old;
+}
+
+static void HeadingTocBuildFinished(EngineMupdf* e) {
+    TocItem* headings = e->pendingHeadingToc;
+    e->pendingHeadingToc = nullptr;
+    int idCounter = e->pendingHeadingTocIdCounter;
+    TocTree* old = nullptr;
+    if (!AtomicIntGet(&e->headingTocCancel) && headings) {
+        old = ReplaceTocWithHeadings(e, headings, idCounter);
+    } else {
+        FreeTocItemRec(nullptr, headings);
+    }
+    e->headingTocDone = true;
+    Func0 cb = e->headingTocDoneCb;
+    cb.Call();
+    delete old;
+    AtomicIntDec(&gDangerousThreadCount);
+    e->Release();
+}
+
+static void HeadingTocBuildThread(EngineMupdf* e) {
+    int idCounter = 0;
+    TocItem* headings = GenerateTocFromHeadings(e, idCounter);
+    e->ReleaseTextExtractionThreadContext();
+    if (AtomicIntGet(&e->headingTocCancel)) {
+        FreeTocItemRec(nullptr, headings);
+        AtomicIntDec(&gDangerousThreadCount);
+        e->Release();
+        return;
+    }
+    e->pendingHeadingToc = headings;
+    e->pendingHeadingTocIdCounter = idCounter;
+    auto fn = MkFunc0(HeadingTocBuildFinished, e);
+    uitask::Post(fn, "HeadingTocBuildFinished");
+}
+
+bool EngineMupdf::HasToc() {
+    if (tocTree) {
+        return true;
+    }
+    return outline != nullptr || attachments != nullptr;
+}
+
+bool EngineMupdf::HeadingTocPending() const {
+    return headingTocStarted && !headingTocDone;
+}
+
+// Kick off heading extraction on a background thread. DisplayModel starts this
+// after load so HasToc()/GetToc() on the UI thread stay cheap (issue #5724
+// still fills the sidebar when the scan finishes).
+void EngineMupdf::StartHeadingTocIfNeeded() {
+    if (outline) {
+        return;
+    }
+    {
+        ScopedRecursiveMutex cs(&docLock);
+        if (headingTocStarted) {
+            return;
+        }
+        headingTocStarted = true;
+    }
+    AddRef();
+    AtomicIntInc(&gDangerousThreadCount);
+    auto fn = MkFunc0(HeadingTocBuildThread, this);
+    ThreadHandle th = StartThread(fn, "HeadingToc");
+    if (!th) {
+        AtomicIntDec(&gDangerousThreadCount);
+        Release();
+        headingTocDone = true;
+        return;
+    }
+    SafeCloseThreadHandle(&th);
+}
+
 TocTree* EngineMupdf::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    // Generating a TOC from headings loads and runs every page, so it needs
-    // pagesLock (fz_load_page mutates the document's list of open pages) and
-    // renderLock (stext extraction runs the page) on top of docLock. They are
-    // above docLock in the hierarchy, so they have to be taken out here, not
-    // inside the generator. Without them a render thread loading a page
-    // concurrently crashed in pdf_first_widget on a page that came back not
-    // being a pdf_page. A document with a real outline touches no pages.
-    if (!outline) {
-        ScopedRecursiveMutex csPages(&pagesLock);
-        ScopedMutex csRender(&renderLock);
-        return BuildToc();
+    // No DisplayModel (tests, -dump): generate headings now. The UI path starts
+    // StartHeadingTocIfNeeded() instead so opening a long document does not
+    // freeze the message loop.
+    if (!outline && !headingTocStarted) {
+        headingTocStarted = true;
+        int idCounter = 0;
+        TocItem* headings = GenerateTocFromHeadings(this, idCounter);
+        ReplaceTocWithHeadings(this, headings, idCounter);
+        headingTocDone = true;
     }
     return BuildToc();
 }
@@ -4824,8 +4961,6 @@ TocTree* EngineMupdf::BuildToc() {
     if (outline) {
         root = BuildTocTree(nullptr, outline, idCounter, false, 0);
         ApplyOutlineStyles(Ctx(), _doc, root);
-    } else {
-        root = GenerateTocFromHeadings(this, idCounter);
     }
     if (attachments) {
         att = BuildTocTree(nullptr, attachments, idCounter, true, 0);

@@ -576,7 +576,7 @@ class EngineBase {
     // 1-based page from safe PDF /OpenAction GoTo, or 0 (issue #1631)
     virtual int GetOpenActionPageNo() { return 0; }
 
-    bool HasToc();
+    virtual bool HasToc();
 
     virtual TocTree* GetToc();
 

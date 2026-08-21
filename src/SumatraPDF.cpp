@@ -1111,7 +1111,18 @@ void ControllerCallbackHandler::TocChanged(DocController* ctrl) {
     if (!tab) {
         return;
     }
-    ReloadTocTree(tab);
+    MainWindow* win = tab->win;
+    if (!win || win->CurrentTab() != tab) {
+        tab->currToc = nullptr;
+        return;
+    }
+    if (win->tocLoaded) {
+        ReloadTocTree(tab);
+        return;
+    }
+    if (tab->showToc) {
+        SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
+    }
 }
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
@@ -9065,6 +9076,10 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
         showFavorites = false;
     }
 
+    bool requestedToc = tocVisible;
+    EngineBase* engine = win->CurrentTab() ? win->CurrentTab()->GetEngine() : nullptr;
+    bool headingPending = EngineMupdfHeadingTocPending(engine);
+
     if (!win->IsDocLoaded() || !win->ctrl || !win->ctrl->HasToc()) {
         tocVisible = false;
     }
@@ -9086,7 +9101,11 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     if (!win->CurrentTab()) {
         ReportIf(tocVisible);
     } else if (!win->presentation) {
-        win->CurrentTab()->showToc = tocVisible;
+        if (win->ctrl && (win->ctrl->HasToc() || headingPending)) {
+            win->CurrentTab()->showToc = requestedToc;
+        } else {
+            win->CurrentTab()->showToc = tocVisible;
+        }
     } else if (PM_ENABLED == win->presentation) {
         win->CurrentTab()->showTocPresentation = tocVisible;
     }

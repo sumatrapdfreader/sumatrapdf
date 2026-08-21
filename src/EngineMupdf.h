@@ -107,9 +107,13 @@ class EngineMupdf : public EngineBase {
 
     IPageDestination* GetNamedDest(Str name) override;
     int GetOpenActionPageNo() override;
+    bool HasToc() override;
     TocTree* GetToc() override;
-    // GetToc() takes the page locks first when the TOC has to be generated
     TocTree* BuildToc();
+    void StartHeadingTocIfNeeded();
+    bool HeadingTocPending() const;
+
+    Func0 headingTocDoneCb;
 
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
@@ -172,6 +176,12 @@ class EngineMupdf : public EngineBase {
     StrVec* pageLabels = nullptr;
 
     TocTree* tocTree = nullptr;
+
+    AtomicInt headingTocCancel = 0;
+    bool headingTocStarted = false;
+    bool headingTocDone = false;
+    TocItem* pendingHeadingToc = nullptr;
+    int pendingHeadingTocIdCounter = 0;
 
     // password used to decrypt the document (needed for re-encryption/decryption)
     TempStr pdfPassword;

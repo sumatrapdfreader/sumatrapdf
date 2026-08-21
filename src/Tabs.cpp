@@ -666,7 +666,14 @@ static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
             expectedTocVisibility = tdata->showTocPresentation;
         }
     }
-    ReportDebugIf(win->uiState.tocVisible != expectedTocVisibility);
+    // Heading TOC is generated after the document is shown. Until that finishes
+    // the sidebar stays hidden (uiState.tocVisible) but the tab keeps the
+    // caller's showToc preference so we can open it when headings arrive.
+    if (win->uiState.tocVisible != expectedTocVisibility) {
+        bool headingPending = EngineMupdfHeadingTocPending(tdata->GetEngine());
+        bool okPendingHide = headingPending && expectedTocVisibility && !win->uiState.tocVisible;
+        ReportDebugIf(!okPendingHide);
+    }
     ReportIf(tdata->canvasRc != win->canvasRc);
 }
 

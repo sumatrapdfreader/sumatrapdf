@@ -328,7 +328,7 @@ void SetToolbarButtonCheckedState(MainWindow* win, int cmdId, bool isChecked) {
 
 // some commands are only avialble in certain contexts
 // we remove toolbar buttons for un-availalbe commands
-static bool IsCmdAvailable(MainWindow* win, int cmdId) {
+static bool IsCmdAvailable(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
     switch (cmdId) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
@@ -350,20 +350,20 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
         case PageInfoId:
             return true;
     }
-    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
-    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
     // Toolbar buttons stay visible (but disabled) when no document is open, so
     // decide visibility as if a document were loaded; otherwise the no-document
     // gate in GetCommandVisibility would remove them. Document-type-specific
     // removals (e.g. for CHM/image collections) still apply when a real document
     // is loaded, and the enabled state is handled separately in IsCmdEnabled.
+    bool savedLoaded = ctx->isDocLoaded;
     ctx->isDocLoaded = true;
     bool remove, disable;
     GetCommandIdState(ctx, cmdId, &remove, &disable);
+    ctx->isDocLoaded = savedLoaded;
     return !remove;
 }
 
-static bool IsCmdEnabled(MainWindow* win, int cmdId) {
+static bool IsCmdEnabled(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
     switch (cmdId) {
         case CmdNextTab:
         case CmdPrevTab:
@@ -374,8 +374,6 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
             return true;
     }
 
-    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
-    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
     bool remove, disable;
     GetCommandIdState(ctx, cmdId, &remove, &disable);
     if (remove || disable) {
@@ -510,6 +508,10 @@ static void SetToolbarButtonToolTipByIdx(MainWindow* win, int idx, int cmdId, St
 void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     int n = TotalButtonsCount();
     bool visibilityChanged = false;
+    // One command ctx for the whole pass. Building it per button used to call
+    // HasToc() (and page hit-testing) once per toolbar item during load.
+    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
     for (int i = 0; i < n; i++) {
         auto& tb = GetToolbarButtonInfoByIdx(i);
         int cmdId = tb.cmdId;
@@ -517,13 +519,13 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         // separators are always drawn. Which ones to drop is decided below,
         // by position, not by command availability.
         if (setButtonsVisibility && cmdId != WarningMsgId && cmdId != 0) {
-            bool hide = !IsCmdAvailable(win, cmdId);
+            bool hide = !IsCmdAvailable(win, cmdId, ctx);
             visibilityChanged |= SetToolbarButtonHiddenByIdx(win, i, hide);
         }
         if (!HasToolbarButtonContent(tb)) {
             continue;
         }
-        bool isEnabled = IsCmdEnabled(win, cmdId);
+        bool isEnabled = IsCmdEnabled(win, cmdId, ctx);
         SetToolbarButtonEnabledByIdx(win, i, isEnabled);
 
         if (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud) {

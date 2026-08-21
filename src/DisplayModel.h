@@ -112,6 +112,7 @@ struct DisplayModel : DocController {
     void SetViewPortSize(Size size) override;
 
     // table of contents
+    bool HasToc() override;
     TocTree* GetToc() override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;

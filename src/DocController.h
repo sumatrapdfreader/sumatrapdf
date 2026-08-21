@@ -90,7 +90,7 @@ struct DocController {
     virtual void FindClear() {}
 
     // table of contents
-    bool HasToc() {
+    virtual bool HasToc() {
         auto* tree = GetToc();
         return tree != nullptr;
     }
