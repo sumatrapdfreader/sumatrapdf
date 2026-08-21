@@ -1336,33 +1336,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
 
     LayoutAnnotWindowInPlace(ew);
 
-    if (!annot) {
-        return;
-    }
-    // skipGoToPage: set when the edit window was opened on an annot that is
-    // already under the user's view. isNew: creating an annotation implies the
-    // page was already visible (cursor / selection / placement), so don't scroll.
     if (ew->skipGoToPage || isNew) {
         ew->skipGoToPage = false;
-        return;
-    }
-
-    int annotPageNo = annot->pageNo;
-    DisplayModel* dm = ew->tab->AsFixed();
-    int nPages = dm->PageCount();
-    if (annotPageNo > nPages) {
-        // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1701
-        logf("UpdateUIForSelectedAnnotation: invalid annotPageNo (%d), should be <= than nPages (%d)\n", annotPageNo,
-             nPages);
-        ReportIf(annotPageNo > nPages);
-        return;
-    }
-
-    // don't switch pages if already visible. needed for cases where
-    // we show more than one page at a time and GoToPage() scrolls
-    // to top page
-    if (!dm->PageVisible(annotPageNo)) {
-        dm->GoToPage(annotPageNo, true);
     }
 }
 
@@ -1487,6 +1462,51 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
+// GoToPage / canvas scroll for the current selection. Posted so holding
+// arrows in the annot list can keep moving the caret (issue #6009). Find
+// uses ScheduleRepaint, not MainWindowRerender, for the same reason.
+static void ShowSelectedAnnotationView(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    tab->pendingShowSelectedAnnotation = false;
+    if (!IsMainWindowValidAndNotClosing(tab->win)) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    bool tabOpen = false;
+    for (WindowTab* t : win->Tabs()) {
+        if (t == tab) {
+            tabOpen = true;
+            break;
+        }
+    }
+    if (!tabOpen) {
+        return;
+    }
+    Annotation* annot = tab->selectedAnnotation;
+    DisplayModel* dm = tab->AsFixed();
+    if (AnnotationIsLive(annot) && dm) {
+        int pageNo = annot->pageNo;
+        int nPages = dm->PageCount();
+        if (pageNo < 1 || pageNo > nPages) {
+            logf("ShowSelectedAnnotationView: invalid pageNo=%d nPages=%d\n", pageNo, nPages);
+        } else if (!dm->PageVisible(pageNo)) {
+            dm->GoToPage(pageNo, true);
+        }
+    }
+    ScheduleRepaint(win, 0);
+    ToolbarUpdateStateForWindow(win, false);
+}
+
+static void ScheduleShowSelectedAnnotationView(WindowTab* tab) {
+    if (!tab || tab->pendingShowSelectedAnnotation) {
+        return;
+    }
+    tab->pendingShowSelectedAnnotation = true;
+    uitask::Post(MkFunc0(ShowSelectedAnnotationView, tab), "ShowSelectedAnnot");
+}
+
 void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAnnotFocus focus) {
     // when we delete an annotation we automatically pick one to
     // set as selected and it might end up as currently selected
@@ -1509,13 +1529,11 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     }
     tab->selectedAnnotation = annot;
     tab->didScrollToSelectedAnnotation = false;
-    // go to page with a given annotations before triggering repaint
     if (ew) {
         UpdateUIForSelectedAnnotation(ew, annot, isNew, focus);
         HwndShowWithoutActivate(ew->hwnd);
     }
-    MainWindowRerender(win);
-    ToolbarUpdateStateForWindow(win, false);
+    ScheduleShowSelectedAnnotationView(tab);
 }
 
 static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {

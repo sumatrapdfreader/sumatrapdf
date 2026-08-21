@@ -78,6 +78,7 @@ struct WindowTab {
 
     Annotation* selectedAnnotation = nullptr;
     bool didScrollToSelectedAnnotation = false; // only automatically scroll once
+    bool pendingShowSelectedAnnotation = false;
 
     bool hideAnnotations = false;
 
