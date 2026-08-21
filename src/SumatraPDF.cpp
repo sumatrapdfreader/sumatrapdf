@@ -2168,7 +2168,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (!win) {
         return;
     }
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
@@ -2483,7 +2483,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // cf. https://code.google.com/archive/p/sumatrapdf/issues/2541
     // ReportIf(win->IsDocLoaded() && args->showWin && win->canvasRc.IsEmpty() && !win->AsChm());
 
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
@@ -3193,7 +3193,7 @@ constexpr int kMaxDefaultAppLinks = 8;
 // On the home page: if we registered as Open With for extensions that no longer
 // open with us, show a bottom bar with per-extension fix links.
 void MaybeShowDefaultAppNotification(MainWindow* win) {
-    if (!win || !win->hwndCanvas || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->hwndCanvas) {
         return;
     }
     if (!win->IsCurrentTabAbout()) {
@@ -3671,7 +3671,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         tab->SetDisplayName(args->DisplayName());
         win->currentTabTemp = AddTabToWindow(win, tab);
 
-        if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        if (!IsMainWindowValidAndNotClosing(win)) {
             // the ctrl was not attached to the tab yet, don't leak it
             DeleteOrphanedController(win, args->ctrl);
             return nullptr;
@@ -3691,7 +3691,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     args->placeWindow = !SettingsUseTabs();
     bool lazyLoad = args->lazyLoad;
     if (!lazyLoad) {
-        if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        if (!IsMainWindowValidAndNotClosing(win)) {
             // the ctrl was not attached to the tab yet, don't leak it
             DeleteOrphanedController(win, args->ctrl);
             return nullptr;
@@ -3699,7 +3699,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         ReplaceDocumentInCurrentTab(args, args->ctrl, nullptr);
     }
 
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return nullptr;
     }
 
@@ -3872,7 +3872,7 @@ static void StartLoadingMessageTimer(WindowTab* tab) {
 }
 
 static bool IsLoadTargetValid(LoadArgs* args) {
-    if (!IsMainWindowValid(args->win) || args->win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(args->win)) {
         return false;
     }
     return !args->targetTab || FindMainWindowByTab(args->targetTab) == args->win;
@@ -4542,7 +4542,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         win->RedrawAll(true);
     }
     // ShowWindow / RedrawAll can pump messages, potentially destroying win
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     DisplayModel* prevDm = win->AsFixed();
@@ -4685,7 +4685,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     // CloseDocumentInCurrentTab cleared page-info; restore if still wanted
     ShowPageInfoIfWanted(win);
 
-    if (IsMainWindowValid(win)) {
+    if (IsMainWindowValidAndNotClosing(win)) {
         bool aiChatWas = win->uiState.aiChatVisible;
         AIChatSyncPanelsToCurrentTab(win);
         if (aiChatWas != win->uiState.aiChatVisible) {
@@ -6124,7 +6124,7 @@ static void RenameCurrentFile(MainWindow* win) {
     // LoadDocument is async; forceReuse already updates tab path/title when the
     // load is queued. Repaint tabs/frame now so the new name is visible without
     // waiting for hover or load finish (#5863).
-    if (IsMainWindowValid(win) && win->CurrentTab()) {
+    if (IsMainWindowValidAndNotClosing(win) && win->CurrentTab()) {
         WindowTab* tab = win->CurrentTab();
         TabsOnChangedDoc(win);
         SetFrameTitleForTab(tab, false);
@@ -6607,7 +6607,7 @@ void DismissNextFileScrollHint(MainWindow* win) {
 // vertical scroll intent for discoverability of "open next file in folder":
 // scroll-down at document end may show a next-file hint; scroll-up dismisses it
 void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     if (!down) {
@@ -6665,7 +6665,7 @@ struct NextPrevFileInFolderData {
 static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     // superseded: user advanced next/prev again (or navigated elsewhere) while loading
@@ -6770,7 +6770,7 @@ again:
     if (!MaybeSaveAnnotations(tab)) {
         return;
     }
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     tab->askedToSaveAnnotations = false;
@@ -7408,7 +7408,7 @@ static void UpdateOverlayScrollbarPositions(MainWindow* win) {
 
 // perform all UI work requested via ScheduleUiUpdate since the last update
 static void FrameUpdateUi(MainWindow* win) {
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     MainWindow::UIState& ui = win->uiState;
@@ -7655,7 +7655,7 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi, bool
 // same chrome refresh as a real DPI change when it moved.
 static void MaybeRefreshAllWindowsDpi() {
     for (MainWindow* w : gWindows) {
-        if (!IsMainWindowValid(w) || !w->hwndFrame) {
+        if (!IsMainWindowValidAndNotClosing(w) || !w->hwndFrame) {
             continue;
         }
         int dpi = RoundUp(DpiGetForHwnd(w->hwndFrame), 4);
@@ -7753,7 +7753,7 @@ static void ToggleDpiOverride() {
 }
 
 static void FinishDeferredMainWindowDpiRefresh(MainWindow* win) {
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     win->deferDpiChromeRefresh = false;
@@ -9574,7 +9574,7 @@ struct ClearHistoryData {
 static void ClearHistoryFinish(ClearHistoryData* d) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);
@@ -10336,7 +10336,7 @@ static Str CurrentImageTabPathTemp(MainWindow* win) {
 // vanishes and the app hangs with PrintDlgExW still on the stack.
 static void PrintCurrentFileDeferred(MainWindow* win) {
     // the window can be closed between posting this and running it
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     PrintCurrentFile(win);
@@ -10380,7 +10380,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
 
-    if (!win || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
@@ -13710,7 +13710,7 @@ void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen) {
 // rebar mid-paint crashes in comctl32!DrawScrollBar (null +0x10).
 // Posted via uitask::Post so it runs after the current message finishes.
 static void ApplyEmbeddedWindowChrome(MainWindow* win) {
-    if (!IsMainWindowValid(win) || !win->hwndFrame || !::IsWindow(win->hwndFrame)) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->hwndFrame || !::IsWindow(win->hwndFrame)) {
         return;
     }
     logf("ApplyEmbeddedWindowChrome\n");
@@ -13933,13 +13933,13 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_CHAR:
-            if (win && !win->isBeingClosed) {
+            if (IsMainWindowValidAndNotClosing(win)) {
                 FrameOnChar(win, wp, lp);
             }
             break;
 
         case WM_KEYDOWN:
-            if (win && !win->isBeingClosed) {
+            if (IsMainWindowValidAndNotClosing(win)) {
                 FrameOnKeydown(win, wp, lp);
             }
             break;

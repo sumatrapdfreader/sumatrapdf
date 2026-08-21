@@ -688,7 +688,7 @@ WindowTab* FindFavoritesTab(MainWindow* win) {
 }
 
 static void GoToFavoritePage(MainWindow* win, int pageNo, PointF scrollPos) {
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     ApplyFavoriteView(win, pageNo, scrollPos, true);
@@ -1142,7 +1142,7 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
 
 // Persist a favorite after the Add Favorite dialog's OK (name may be empty).
 void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name) {
-    if (!filePath || !IsMainWindowValid(win)) {
+    if (!filePath || !IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     TempStr plainLabel = fmt("%d", pageNo);
@@ -1161,7 +1161,7 @@ void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, 
 }
 
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn) {
-    if (!IsMainWindowValid(win) || !win->CurrentTab()) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->CurrentTab()) {
         return;
     }
     ShowAddFavoriteDialog(win, win->CurrentTab()->filePath, pageNo, pageLabel, nameIn);

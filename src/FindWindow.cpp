@@ -232,7 +232,7 @@ struct FindWindowWnd : WindowBase {
 
 static void DeferredGoToFindMatch(DeferredGoToFindMatchData* d) {
     AutoDelete del(d);
-    if (!IsMainWindowValid(d->win) || !d->findWindow) {
+    if (!IsMainWindowValidAndNotClosing(d->win) || !d->findWindow) {
         return;
     }
     if (d->epoch != d->findWindow->pendingNavEpoch) {

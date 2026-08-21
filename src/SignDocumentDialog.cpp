@@ -136,7 +136,7 @@ void CloseSignDocumentDialog(MainWindow* win) {
 }
 
 static EngineBase* GetPdfEngine(MainWindow* win) {
-    if (!IsMainWindowValid(win) || !win->IsDocLoaded()) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
         return nullptr;
     }
     DisplayModel* dm = win->AsFixed();

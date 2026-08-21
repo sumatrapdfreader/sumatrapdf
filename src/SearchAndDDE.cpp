@@ -740,7 +740,7 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     AutoDelete delData(d);
 
     auto* win = d->win;
-    if (!IsMainWindowValid(win) || win->findCancelled) {
+    if (!IsMainWindowValidAndNotClosing(win) || win->findCancelled) {
         return;
     }
     if (!d->showProgress) {
@@ -804,7 +804,7 @@ struct FindThreadData {
     }
 
     bool WasCanceled() {
-        bool winValid = IsMainWindowValid(win);
+        bool winValid = IsMainWindowValidAndNotClosing(win);
         auto res = !winValid || win->findCancelled;
         if (res) {
             logf("FindThreadData: WasCanceled() returns true, isMainWindowValid: %d, win->findCancelled: %d\n",
@@ -1042,7 +1042,7 @@ static void CountEndTask(CountEndTaskData* d) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
     CountThreadData* ctd = d->ctd;
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     if (win->findCountThread != ctd->thread) {
@@ -1124,7 +1124,7 @@ struct CountProgressTaskData {
 static void CountProgressTask(CountProgressTaskData* d) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
-    if (!IsMainWindowValid(win) || win->findCountEpoch != d->epoch) {
+    if (!IsMainWindowValidAndNotClosing(win) || win->findCountEpoch != d->epoch) {
         return;
     }
     SetFindCountProgressStatus(win, d->nFound, d->pageNo);
@@ -1178,7 +1178,7 @@ struct CountPartialTaskData {
 static void CountPartialTask(CountPartialTaskData* d) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     if (win->findCountEpoch != d->epoch) {
@@ -1486,7 +1486,7 @@ static void FindEndTask(FindEndTaskData* d) {
     auto loopedAround = d->loopedAround;
 
     AutoDelete delData(d);
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     if (win->findThread != ftd->thread) {

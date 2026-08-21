@@ -42,7 +42,7 @@ static HANDLE gQuickLookAgentMutex = nullptr;
 
 MainWindow* FindExplorerQuickLookWindow() {
     for (MainWindow* win : gWindows) {
-        if (win->isQuickLook && !win->isBeingClosed) {
+        if (win->isQuickLook && IsMainWindowValidAndNotClosing(win)) {
             return win;
         }
     }
@@ -114,7 +114,7 @@ void ShowExplorerQuickLook(Str path) {
     args.showWin = false;
     args.noSavePrefs = true;
     LoadDocument(&args);
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     ApplyExplorerQuickLookChrome(win);

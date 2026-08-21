@@ -4670,7 +4670,7 @@ static void RepaintTask(RepaintTaskData* d) {
     AutoDelete delData(d);
 
     auto* win = d->win;
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     if (!d->delayInMs) {
@@ -4696,7 +4696,7 @@ void ScheduleRepaint(MainWindow* win, int delayInMs) {
 static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
     Point pt;
 
-    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
 

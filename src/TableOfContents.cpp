@@ -296,7 +296,7 @@ static void GoToTocLink(GoToTocLinkData* d) {
     }
     MainWindow* win = tab->win;
     // destination snapshot is invalid if the DocController has been replaced
-    if (!IsMainWindowValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
+    if (!IsMainWindowValidAndNotClosing(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
         return;
     }
 

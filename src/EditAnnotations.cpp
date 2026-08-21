@@ -408,7 +408,7 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     if (tab->selectedAnnotation != nullptr) {
         tab->selectedAnnotation = nullptr;
         // tab->win can be null (SafeDeleteEditAnnotationsWindow checks it too)
-        if (tab->win && !tab->win->isBeingClosed) {
+        if (IsMainWindowValidAndNotClosing(tab->win)) {
             MainWindowRerender(tab->win);
             ToolbarUpdateStateForWindow(tab->win, false);
         }
@@ -1396,7 +1396,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     UINT timeoutInMs = 1000;
     gMainWindowForRender = win;
     gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
-        if (IsMainWindowValid(gMainWindowForRender)) {
+        if (IsMainWindowValidAndNotClosing(gMainWindowForRender)) {
             MainWindowRerender(gMainWindowForRender);
         }
         gMainWindowRerenderTimer = 0;

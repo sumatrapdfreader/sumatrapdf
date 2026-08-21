@@ -56,7 +56,7 @@ void GoToPageWnd::SetTarget(MainWindow* mainWin) {
     pageCount = 0;
     onlyNumeric = true;
     Str pageLabel;
-    if (IsMainWindowValid(win) && win->IsDocLoaded() && win->ctrl) {
+    if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
         pageCount = win->ctrl->PageCount();
         onlyNumeric = !win->ctrl->HasPageLabels();
         pageLabel = win->ctrl->GetPageLabeTemp(win->ctrl->CurrentPageNo());
@@ -76,7 +76,7 @@ void GoToPageWnd::OnCancel(VirtMouseEvent*) {
 }
 
 void GoToPageWnd::OnOk(VirtMouseEvent*) {
-    if (!IsMainWindowValid(win) || !win->IsDocLoaded() || !win->ctrl) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded() || !win->ctrl) {
         ScheduleDelete();
         return;
     }
@@ -103,7 +103,7 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 bool GoToPageWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     Str pageLabel;
-    if (IsMainWindowValid(win) && win->IsDocLoaded() && win->ctrl) {
+    if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
         pageCount = win->ctrl->PageCount();
         onlyNumeric = !win->ctrl->HasPageLabels();
         pageLabel = win->ctrl->GetPageLabeTemp(win->ctrl->CurrentPageNo());
@@ -202,7 +202,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
 }
 
 void ShowGoToPageDialog(MainWindow* win) {
-    if (!IsMainWindowValid(win) || !win->IsDocLoaded()) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
         return;
     }
     if (gGoToPageWnd) {

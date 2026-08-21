@@ -112,14 +112,14 @@ void SafeDeleteCommandPaletteWnd() {
     if (gTabToSelectOnClose) {
         WindowTab* tab = gTabToSelectOnClose;
         gTabToSelectOnClose = nullptr;
-        if (IsMainWindowValid(tab->win) && tab->win->GetTabIdx(tab) >= 0) {
+        if (IsMainWindowValidAndNotClosing(tab->win) && tab->win->GetTabIdx(tab) >= 0) {
             SelectTabInWindow(tab);
         }
     }
     if (gCmdIdToExecOnClose != 0) {
         i32 cmdId = gCmdIdToExecOnClose;
         gCmdIdToExecOnClose = 0;
-        if (IsMainWindowValid(win)) {
+        if (IsMainWindowValidAndNotClosing(win)) {
             HwndPostCommand(win->hwndFrame, cmdId);
         }
     }
@@ -128,7 +128,7 @@ void SafeDeleteCommandPaletteWnd() {
         Favorite* fav = gFavToGoToOnClose;
         gFavFsToGoToOnClose = nullptr;
         gFavToGoToOnClose = nullptr;
-        if (IsMainWindowValid(win)) {
+        if (IsMainWindowValidAndNotClosing(win)) {
             GoToFavorite(win, fs, fav);
         }
     }
@@ -139,7 +139,7 @@ void ScheduleDeleteAndExecCommand(i32 cmdId) {
         return;
     }
     gCmdIdToExecOnClose = cmdId;
-    if (IsMainWindowValid(gCommandPaletteWnd->win)) {
+    if (IsMainWindowValidAndNotClosing(gCommandPaletteWnd->win)) {
         HighlightTab(gCommandPaletteWnd->win, nullptr);
     }
     auto fn = MkFunc0Void(SafeDeleteCommandPaletteWnd);

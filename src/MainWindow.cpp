@@ -1024,11 +1024,20 @@ bool IsRightDragging(MainWindow* win) {
     return win->dragRightClick;
 }
 
-// sometimes we stash MainWindow pointer, do something on a thread and
-// then go back on main thread to finish things. At that point MainWindow
-// could have been destroyed so we need to check if it's still valid
+// True if `win` is still in gWindows (the object has not been deleted).
+// Does not look at isBeingClosed: CloseWindow sets that flag first and then
+// pumps messages (save-annotations dialog, ShowWindow), using this to detect
+// whether the window was destroyed during that pumping. Folding isBeingClosed
+// in here would make CloseWindow abort immediately after setting the flag.
 bool IsMainWindowValid(MainWindow* win) {
     return win && gWindows.Contains(win);
+}
+
+// True if `win` still exists and CloseWindow has not started. Use this for
+// deferred work (load finish, timers, find/print threads, UI updates) that
+// must not touch a window that is tearing down.
+bool IsMainWindowValidAndNotClosing(MainWindow* win) {
+    return IsMainWindowValid(win) && !win->isBeingClosed;
 }
 
 MainWindow* FindMainWindowByHwnd(HWND hwnd) {

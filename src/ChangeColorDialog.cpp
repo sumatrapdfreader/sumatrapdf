@@ -505,7 +505,7 @@ void ChangeColorWnd::OnCancel(VirtMouseEvent*) {
 }
 
 WindowTab* ChangeColorWnd::TargetTab() {
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return nullptr;
     }
     WindowTab* t = FindTabByFilePath(filePath);
@@ -698,7 +698,8 @@ void ChangeColorWnd::RelayoutRadios() {
 void ChangeColorWnd::SetTargetBackground(MainWindow* mainWin) {
     win = mainWin;
     forTabColor = false;
-    tab = (IsMainWindowValid(win) && win->CurrentTab() && win->CurrentTab()->ctrl) ? win->CurrentTab() : nullptr;
+    tab = (IsMainWindowValidAndNotClosing(win) && win->CurrentTab() && win->CurrentTab()->ctrl) ? win->CurrentTab()
+                                                                                                : nullptr;
     str::ReplaceWithCopy(&filePath, tab ? tab->filePath : Str{});
     ClassifyTab(tab);
     LoadCurrentColor();
@@ -917,7 +918,7 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
 }
 
 void ShowChangeBackgroundColorDialog(MainWindow* win) {
-    if (!IsMainWindowValid(win) || !win->CurrentTab() || !win->CurrentTab()->ctrl) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->CurrentTab() || !win->CurrentTab()->ctrl) {
         return;
     }
     if (gChangeColorWnd) {
@@ -945,7 +946,7 @@ void ShowChangeBackgroundColorDialog(MainWindow* win) {
 }
 
 void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab) {
-    if (!IsMainWindowValid(win) || !tab || !tab->ctrl) {
+    if (!IsMainWindowValidAndNotClosing(win) || !tab || !tab->ctrl) {
         return;
     }
     if (gChangeColorWnd) {

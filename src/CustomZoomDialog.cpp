@@ -81,7 +81,7 @@ void CustomZoomWnd::SetTarget(MainWindow* mainWin) {
     win = mainWin;
     forChm = false;
     startZoom = 0;
-    if (IsMainWindowValid(win) && win->IsDocLoaded() && win->ctrl) {
+    if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
         forChm = IsBrowserDocController(win->ctrl);
         startZoom = win->ctrl->GetZoomVirtual();
     }
@@ -111,7 +111,7 @@ void CustomZoomWnd::OnCancel(VirtMouseEvent*) {
 }
 
 void CustomZoomWnd::OnOk(VirtMouseEvent*) {
-    if (IsMainWindowValid(win) && win->IsDocLoaded()) {
+    if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded()) {
         SmartZoom(win, SelectedZoom(), nullptr, true);
     }
     ScheduleDelete();
@@ -131,7 +131,7 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 
 bool CustomZoomWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-    if (IsMainWindowValid(win) && win->IsDocLoaded() && win->ctrl) {
+    if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
         forChm = IsBrowserDocController(win->ctrl);
         startZoom = win->ctrl->GetZoomVirtual();
     }
@@ -213,7 +213,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
 }
 
 void ShowCustomZoomDialog(MainWindow* win) {
-    if (!IsMainWindowValid(win) || !win->IsDocLoaded()) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
         return;
     }
     if (gCustomZoomWnd) {

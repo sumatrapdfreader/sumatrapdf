@@ -765,7 +765,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
     auto* rsp = data->rsp;
     MainWindow* win = nullptr;
-    if (IsMainWindowValid(data->win)) {
+    if (IsMainWindowValidAndNotClosing(data->win)) {
         win = data->win;
     } else {
         if (len(gWindows) > 0) {

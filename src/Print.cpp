@@ -1144,7 +1144,7 @@ class PrintThreadData {
         uitask::Post(fn, nullptr);
     }
 
-    bool WasCanceled() { return isCanceled || !IsMainWindowValid(win) || win->printCanceled; }
+    bool WasCanceled() { return isCanceled || !IsMainWindowValidAndNotClosing(win) || win->printCanceled; }
 };
 
 struct DeletePrinterThreadData {
@@ -1464,7 +1464,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     HRESULT res = PrintDlgExW(&pdex);
 
     // PrintDlgExW pumps messages, so the window may have been closed/destroyed while the dialog was open
-    if (!IsMainWindowValid(win)) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         logf("PrintCurrentFile: window closed during PrintDlgEx\n");
         free(ppr);
         GlobalFree(pdex.hDevMode);

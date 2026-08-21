@@ -669,6 +669,7 @@ bool IsRightDragging(MainWindow*);
 MainWindow* FindMainWindowByTab(WindowTab*);
 MainWindow* FindMainWindowByHwnd(HWND);
 bool IsMainWindowValid(MainWindow*);
+bool IsMainWindowValidAndNotClosing(MainWindow*);
 bool IsWindowTabValid(WindowTab*);
 extern Vec<MainWindow*> gWindows;
 extern bool gShowFrameRate;

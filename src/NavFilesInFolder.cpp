@@ -396,7 +396,7 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection(bool inNewTab) {
     }
 
     MainWindow* mainWin = win;
-    if (!IsMainWindowValid(mainWin)) {
+    if (!IsMainWindowValidAndNotClosing(mainWin)) {
         ScheduleDeleteNavFilesWnd();
         return;
     }

@@ -443,7 +443,7 @@ void EbookSettingsWnd::OnOk(VirtMouseEvent*) {
     MainWindow* w = win;
     ScheduleDelete();
     // the settings only reach the text through a fresh layout
-    if (IsMainWindowValid(w) && w->IsDocLoaded()) {
+    if (IsMainWindowValidAndNotClosing(w) && w->IsDocLoaded()) {
         ReloadDocument(w, false);
     }
 }
@@ -675,7 +675,7 @@ bool EbookSettingsWnd::Create(MainWindow* mainWin) {
 }
 
 void ShowEbookSettingsDialog(MainWindow* win) {
-    if (!IsMainWindowValid(win) || !win->CurrentTab() || !win->CurrentTab()->ctrl) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->CurrentTab() || !win->CurrentTab()->ctrl) {
         return;
     }
     if (gEbookSettingsWnd) {
