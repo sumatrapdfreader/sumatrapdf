@@ -369,15 +369,15 @@ export async function waitForWindowIdle(hwnd: number, timeoutMs = 5000, settleMs
   return false;
 }
 
-// Where tests put the SumatraPDF window. "quarter" is the default and what a
-// developer wants: a quarter of the screen stays out of the way of whatever
-// else is on the desktop and renders (and captures) a quarter of the pixels.
+// Where tests put the SumatraPDF window. "rightHalf" is the default and what a
+// developer wants: it leaves the left half of the desktop alone and still gives
+// the app a window big enough for toolbars, sidebars and dialogs.
 // "workArea" is for a runner on a machine nobody is looking at, where the
-// screen is small (a GitHub runner boots at 1024x768) and a quarter of it is
-// too cramped for toolbars, sidebars and dialogs.
-export type TestWindowLayout = "quarter" | "workArea";
+// screen is small (a GitHub runner boots at 1024x768) and anything less than
+// all of it is too cramped.
+export type TestWindowLayout = "rightHalf" | "workArea";
 
-let gTestWindowLayout: TestWindowLayout = "quarter";
+let gTestWindowLayout: TestWindowLayout = "rightHalf";
 
 // Set by the test runner (run-all.ts vs run-github-ci.ts) before running any
 // test; every launch path takes its geometry from testWindowPos(), so this is
@@ -390,16 +390,16 @@ export function getTestWindowLayout(): TestWindowLayout {
   return gTestWindowLayout;
 }
 
-// The upper-right quarter of the work area (or all of it, see
-// setTestWindowLayout). Upper-right keeps it clear of the taskbar's usual
-// place and of anything at the top-left of the desktop.
+// The right half of the work area, three quarters of its height (or all of it,
+// see setTestWindowLayout). Anchored top-right, which keeps it clear of the
+// taskbar's usual place and of anything at the top-left of the desktop.
 export function testWindowPos(): WindowPos {
   const wa = getWorkArea();
   if (gTestWindowLayout === "workArea") {
     return { x: wa.left, y: wa.top, dx: wa.right - wa.left, dy: wa.bottom - wa.top };
   }
   const dx = Math.floor((wa.right - wa.left) / 2);
-  const dy = Math.floor((wa.bottom - wa.top) / 2);
+  const dy = Math.floor(((wa.bottom - wa.top) * 3) / 4);
   return { x: wa.left + dx, y: wa.top, dx, dy };
 }
 

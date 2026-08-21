@@ -101,12 +101,10 @@ async function openZoomed(name: string, settings: string[]): Promise<Session> {
     ["RestoreSession = false", "SmoothScroll = false", ...settings, ""].join("\n"),
   );
 
-  // zoomed to 200% in a small window, so the page is much taller than the view
+  // zoomed to 200%, so the page is much taller than the view in any window
   const { proc, client, frame } = await launchControlled([
     "-appdata",
     appdata,
-    "-window-pos",
-    "700x500@100x100",
     "-view",
     "single page",
     "-zoom",

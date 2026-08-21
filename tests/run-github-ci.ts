@@ -6,7 +6,7 @@
 //    tells us everything that broke, so every test runs and the failures are
 //    listed at the end (and the process exits non-zero, so the run is marked
 //    failed and we get notified).
-//  - the app window covers the whole work area instead of a quarter of it. A
+//  - the app window covers the whole work area instead of half of it. A
 //    hosted runner's screen is small and nobody is looking at it, so there is
 //    nothing to stay out of the way of, and tests get room for toolbars,
 //    sidebars and dialogs.

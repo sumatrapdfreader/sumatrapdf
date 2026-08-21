@@ -513,7 +513,7 @@ export async function withControlledSumatra<T>(
   } = {},
 ): Promise<T> {
   const pipeName = uniquePipeName();
-  // a window a quarter of the screen, in a corner, out of the way: see
+  // a window on the right half of the screen, out of the way: see
   // tests/winapi.ts testWindowPos()
   let posArgs: string[] = [];
   if (!options.defaultWindowPos && !extraArgs.includes("-window-pos")) {

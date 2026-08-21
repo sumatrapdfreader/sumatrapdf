@@ -323,9 +323,9 @@ export const tests: NamedTest[] = [
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
   startSuiteProgress(tests.length);
-  // a quarter of the screen: this suite is run by a person, so the window
+  // the right half of the screen: this suite is run by a person, so the window
   // stays out of the way (run-github-ci.ts asks for the whole work area)
-  setTestWindowLayout("quarter");
+  setTestWindowLayout("rightHalf");
   await runNamedTests(tests, { heading: "run-almost-all", ...opts });
 }
 

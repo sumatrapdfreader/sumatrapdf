@@ -100,8 +100,6 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled([
     "-appdata",
     dir,
-    "-window-pos",
-    "820x700@20x20",
     "-view",
     "single page",
     "-zoom",

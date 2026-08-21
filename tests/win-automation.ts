@@ -57,7 +57,7 @@ export { captureWindowToPng, killAndWait, killProcessesNamed };
 export const FRAME_CLASS = "SUMATRA_PDF_FRAME";
 export const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
 
-// -window-pos for the upper-right quarter of the screen (see testWindowPos)
+// -window-pos for the right half of the screen (see testWindowPos)
 export function windowPosArgs(): string[] {
   const p = testWindowPos();
   return ["-window-pos", `${p.dx}x${p.dy}@${p.x}x${p.y}`];
@@ -68,8 +68,8 @@ export function windowPosArgs(): string[] {
 // (only opens files passed on the cmd-line) and doesn't save settings. Use
 // proc.pid with waitForFrame() to get the window.
 //
-// The window opens as a quarter of the screen, which is a good deal faster to
-// render and to capture. Pass { defaultWindowPos: true } in a test that is
+// The window opens on the right half of the screen, which is a good deal
+// faster to render and to capture than a full-screen one. Pass { defaultWindowPos: true } in a test that is
 // about the window's own size or state - fullscreen, maximized, minimized,
 // restoring a remembered position - so the app picks the position itself.
 export function launchSumatra(args: string[], opts?: { defaultWindowPos?: boolean }): Bun.Subprocess {
