@@ -122,6 +122,7 @@ import { testit as issue5970 } from "./issue-5970.ts";
 import { testit as issue5971 } from "./issue-5971.ts";
 import { testit as issue5972 } from "./issue-5972.ts";
 import { testit as issue5933 } from "./issue-5933.ts";
+import { testit as annotDeleteRedraw } from "./annot-delete-redraw.ts";
 import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as issue5974 } from "./issue-5974.ts";
@@ -182,6 +183,7 @@ export const tests: NamedTest[] = [
   // --- default session: -for-testing + quadrant window + -dbg-control ----
   ["issue-5975", issue5975],
   ["issue-5933", issue5933],
+  ["annot-delete-redraw", annotDeleteRedraw],
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],

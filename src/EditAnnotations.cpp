@@ -288,6 +288,11 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         UpdateAnnotationsList(ew);
     }
     SetSelectedAnnotation(tab, selectNext);
+    // SetSelectedAnnotation only ScheduleRepaint (overlay handles). The page
+    // bitmap still has the deleted annot until we re-render.
+    if (IsMainWindowValidAndNotClosing(tab->win)) {
+        MainWindowRerender(tab->win);
+    }
 }
 
 static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
@@ -339,6 +344,11 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
         selectNext = ew->visibleAnnots[pick];
     }
     SetSelectedAnnotation(ew->tab, selectNext);
+    // SetSelectedAnnotation only ScheduleRepaint (overlay handles). The page
+    // bitmap still has the deleted annot until we re-render.
+    if (IsMainWindowValidAndNotClosing(ew->tab->win)) {
+        MainWindowRerender(ew->tab->win);
+    }
 }
 
 static NO_INLINE EngineMupdf* GetEngineMupdf(EditAnnotationsWindow* ew) {
