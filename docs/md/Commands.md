@@ -189,6 +189,7 @@ CmdToggleLaserPointer,,Toggle Laser Pointer,"ver 3.7+, replaces the mouse cursor
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
+CmdInsertImage,,Insert Image...,"Pick an image and stamp it onto the current page as a stamp annotation - a signature, say (fixes #1744), ver 3.7+"
 CmdCreateAnnotCaret,,Create Caret Annotation,
 CmdCreateAnnotCircle,,Create Circle Annotation,
 CmdCreateAnnotFileAttachment,,Create File Attachment Annotation,
@@ -326,6 +327,7 @@ CmdShowLog,,Show Logs,
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdHelpOpenManual,F1,Help: Manual,
 CmdHelpOpenKeyboardShortcuts,,Help: Keyboard Shortcuts,
+CmdToggleKeyboardHelp,?,Show Keyboard Shortcuts,"Overlay listing the most useful commands by section, each row showing the key it is currently bound to. Press again (or Esc) to close it, ver 3.7+"
 CmdHelpAbout,,Help: About SumatraPDF,
 CmdHelpOpenManualOnWebsite,,Help: Manual On Website,
 CmdHelpVisitWebsite,,Help: SumatraPDF Website,
@@ -352,6 +354,7 @@ CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where i
 CmdStopReadAloud,,Stop Reading,"Stop reading text aloud and clear the resume position, ver 3.7+"
 CmdReadAloudFromTopPage,,Start Reading From Top,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
 CmdReadAloudSelection,,Start Reading Selection,"Read the current text selection aloud, ver 3.7+"
+CmdToggleToolbarShowReadAloud,,Read Aloud: Show In Toolbar,"Show or hide the Read Aloud buttons in the toolbar; remembered in the `ToolbarShowReadAloud` setting, ver 3.7+"
 ```
 
 ## Debug
@@ -367,6 +370,7 @@ CmdDebugTogglePredictiveRender,,Debug: Toggle Predictive Rendering,
 CmdDebugToggleRenderInfo,,Debug: Toggle Render Queue Info,
 CmdDebugToggleCacheInfo,,Debug: Toggle Cache Info,
 CmdDebugToggleRtl,,Debug: Toggle Rtl,
+CmdToggleImages,,Toggle Show Images,"Outline the images on the page, like the link outlines. A debug aid: it lasts for the session and is not saved in the settings, ver 3.7+"
 CmdDebugShowFitContentArea,,Debug: Show Fit Content Area,"outlines in red the area Fit Content zoom would fit to (whole page if no content box was detected), without changing the zoom, ver 3.7+"
 CmdNone,,Do nothing,
 ```
@@ -386,6 +390,7 @@ CmdViewWithExternalViewer,,don't use,
 CmdSaveAttachment,,don't use,
 CmdOpenAttachment,,don't use,
 CmdExec,,internal,"runs an external program with optional filter; used internally (e.g. selection handlers), not for normal shortcuts or DDE"
+CmdDebugToggleDpiOverride,,internal,"debug builds only: cycles a pretend DPI (125, 150, 75, off) to check how the UI reacts to a DPI change; does nothing in a release build"
 ```
 
 `CmdFindMatch` is an old name for `CmdFindToggleMatchCase`. It is not a generated command ID, but SumatraPDF still accepts it in old shortcut settings for compatibility.
