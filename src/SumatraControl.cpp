@@ -439,7 +439,9 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
                 continue;
             }
             Rect p = pi->pos;
-            out.Append(fmt("page n=%d shown=%d pos=%d,%d,%d,%d\n", pageNo, pi->isShown ? 1 : 0, p.x, p.y, p.dx, p.dy));
+            Rect s = pi->pageOnScreen;
+            out.Append(fmt("page n=%d shown=%d pos=%d,%d,%d,%d screen=%d,%d,%d,%d\n", pageNo, pi->isShown ? 1 : 0, p.x,
+                           p.y, p.dx, p.dy, s.x, s.y, s.dx, s.dy));
         }
     }
     return finish({}, 0);

@@ -1,5 +1,6 @@
 // #6018: ComicBookUI.PageSpacing must change the gap between CBZ pages in
-// continuous view, and PageSpacing must appear in Advanced Settings.
+// continuous view, PageSpacing must appear in Advanced Settings, and 0 0 must
+// not leave a 1px canvas seam (layout size must match EngineImages/tile Round).
 //
 // CBZ files read ComicBookUI.PageSpacing, not FixedPageUI.PageSpacing.
 //
@@ -10,8 +11,8 @@ import { deflateSync } from "node:zlib";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { ControlCommand } from "./control.ts";
-import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
-import { sleep } from "./winapi.ts";
+import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
+import { readWindowDCColumn, setProcessDpiAware, sleep } from "./winapi.ts";
 
 function crc32(buf: Buffer): number {
   let crc = 0xffffffff;
@@ -97,15 +98,26 @@ function makeZip(entries: { name: string; data: Buffer }[]): Buffer {
   return Buffer.concat([localBuf, centralBuf, end]);
 }
 
-type PagePos = { n: number; y: number; dy: number };
+type PagePos = { n: number; y: number; dy: number; sy: number; sdy: number; sx: number; sdx: number };
 
 function parsePages(raw: string): { spacingDy: number; pages: PagePos[] } {
   const sm = /pages count=\d+ spacing=\d+,(\d+)/.exec(raw);
   const pages: PagePos[] = [];
   for (const line of raw.split("\n")) {
-    const m = /^page n=(\d+) shown=\d+ pos=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(line.trim());
+    const m =
+      /^page n=(\d+) shown=\d+ pos=(-?\d+),(-?\d+),(-?\d+),(-?\d+) screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(
+        line.trim(),
+      );
     if (m) {
-      pages.push({ n: +m[1]!, y: +m[3]!, dy: +m[5]! });
+      pages.push({
+        n: +m[1]!,
+        y: +m[3]!,
+        dy: +m[5]!,
+        sx: +m[6]!,
+        sy: +m[7]!,
+        sdx: +m[8]!,
+        sdy: +m[9]!,
+      });
     }
   }
   return { spacingDy: sm ? +sm[1]! : -1, pages };
@@ -151,12 +163,15 @@ function writeAppData(dir: string, spacing: string): string {
 }
 
 export async function testit(): Promise<void> {
+  setProcessDpiAware();
   const cbz = tmpPath("issue-6018.cbz");
   writeFileSync(
     cbz,
     makeZip([
-      { name: "001.png", data: makePng(80, 100, [200, 40, 40]) },
-      { name: "002.png", data: makePng(80, 100, [40, 80, 180]) },
+      // 400x51 so fit-width zoom * height is not an integer (the 1px
+      // layout-vs-tile seam only shows then)
+      { name: "001.png", data: makePng(400, 51, [200, 40, 40]) },
+      { name: "002.png", data: makePng(400, 51, [40, 80, 180]) },
     ]),
   );
 
@@ -177,8 +192,24 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6018: ComicBookUI.PageSpacing = 0 0 left model spacing.dy=${z.spacingDy}\n${z.raw}`);
     }
     const gap0 = gapBetween(z.pages, 1, 2);
-    if (Math.abs(gap0) > 1) {
+    if (gap0 !== 0) {
       throw new Error(`issue-6018: expected no gap between CBZ pages, got ${gap0}\n${z.raw}`);
+    }
+
+    await c0.setNotificationsEnabled(false);
+    const canvas = findCanvas(f0);
+    if (!canvas) {
+      throw new Error("issue-6018: canvas not found");
+    }
+    const p1 = z.pages.find((p) => p.n === 1)!;
+    const x = p1.sx + Math.floor(p1.sdx / 2);
+    const y = p1.sy + p1.sdy - 2;
+    const col = readWindowDCColumn(canvas, x, y, 5);
+    const isBlack = (c: number) => c === 0;
+    if (col.slice(1, 4).some(isBlack)) {
+      throw new Error(
+        `issue-6018: 1px canvas seam between pages at y=${y}: ${col.map((c) => c.toString(16)).join(",")}\n${z.raw}`,
+      );
     }
 
     sendCommandSync(f0, cmdId("CmdAdvancedSettings"));

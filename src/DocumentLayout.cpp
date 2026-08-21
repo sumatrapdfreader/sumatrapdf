@@ -114,6 +114,17 @@ static SizeF PageSizeAfterRotation(const DocumentLayoutPage* page, int rotation)
     return size;
 }
 
+// Pixel size of a page at `zoom`. Must match GetTileRectDevice / EngineImages
+// Transform().Round() (ceil of the scaled box). The old (int)(size * zoom +
+// 0.499) can be 1px smaller than the tile, so with PageSpacing 0 the canvas
+// background shows as a hairline between comic pages (issue #6018).
+static Size PagePixelSize(SizeF pageSize, float zoom) {
+    if (zoom <= 0 || pageSize.dx <= 0 || pageSize.dy <= 0) {
+        return {};
+    }
+    return RectF(0, 0, pageSize.dx * zoom, pageSize.dy * zoom).Round().Size();
+}
+
 static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoomVirtual, int pageNo) {
     const DocumentLayoutParams& params = layout.params;
     if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage) {
@@ -240,10 +251,9 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
 }
 
 static void SetPageDisplaySize(DocumentLayoutPage* page, int rotation, int currPosY) {
-    SizeF pageSize = PageSizeAfterRotation(page, rotation);
-    float zoom = page->zoomReal;
-    page->pos.dx = (int)((pageSize.dx * zoom) + 0.499f);
-    page->pos.dy = (int)((pageSize.dy * zoom) + 0.499f);
+    Size px = PagePixelSize(PageSizeAfterRotation(page, rotation), page->zoomReal);
+    page->pos.dx = px.dx;
+    page->pos.dy = px.dy;
     page->pos.y = currPosY;
 }
 
@@ -452,9 +462,9 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
 
         SizeF pageSize = PageSizeAfterRotation(page, params.rotation);
         Rect pos;
-        float zoom = page->zoomReal;
-        pos.dx = (int)((pageSize.dx * zoom) + 0.499f);
-        pos.dy = (int)((pageSize.dy * zoom) + 0.499f);
+        Size px = PagePixelSize(pageSize, page->zoomReal);
+        pos.dx = px.dx;
+        pos.dy = px.dy;
         rowMaxPageDy = std::max(rowMaxPageDy, pos.dy);
         pos.y = currPosY;
 
