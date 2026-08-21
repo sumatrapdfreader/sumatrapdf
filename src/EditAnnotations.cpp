@@ -16,6 +16,7 @@ extern "C" {
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -199,6 +200,7 @@ static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
 
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
 static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
+static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev);
 
 // Drop non-owning Annotation* held by UI (selection, drag, hover, form edit).
 // Call before DeleteAnnotation frees the wrapper, or when the engine is about
@@ -460,23 +462,85 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
 
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     auto* model = new ListBoxModelStrings();
-    int n = 0;
-    n = len(ew->annotations);
-
-    str::Builder s;
+    int n = len(ew->annotations);
     for (int i = 0; i < n; i++) {
         auto* annot = ew->annotations[i];
-        s.Reset();
-        s.Append(fmt(_TRA("page %d,").s, annot->pageNo));
-        Str name = AnnotationReadableNameTemp(annot->type);
-        s.Append(fmt(" %s", name));
-        model->strings.Append(ToStr(s));
+        model->strings.Append(AnnotationReadableNameTemp(annot->type));
     }
 
     int prevScrollY = ew->listBox->scrollY;
     ew->listBox->SetModel(model); // resets the scroll position
     ew->listBox->ScrollTo(prevScrollY);
     EnableSaveIfAnnotationsChanged(ew);
+}
+
+// Type on the left, optional contents in muted color, page number on the right.
+// Contents is clipped so it cannot paint over the page column.
+static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev) {
+    if (!ew->annotations.isValidIndex(ev->itemIndex)) {
+        return;
+    }
+    Annotation* annot = ew->annotations[ev->itemIndex];
+    VirtListBox* lb = ev->listBox;
+    Gfx* gfx = ev->gfx;
+    Rect rc = ev->itemRect;
+
+    Color colBg = lb->GetColor(kColListBg);
+    Color colText = lb->GetColor(kColListText);
+    if (IsSpecialColor(colBg)) {
+        colBg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(colText)) {
+        colText = GetSysColor(COLOR_WINDOWTEXT);
+    }
+    if (ev->selected) {
+        colBg = AccentColor(colBg, 30);
+    }
+    gfx->FillRect(rc, colBg);
+
+    int pad = DpiScale(6);
+    Rect rcText = rc;
+    rcText.x += pad;
+    rcText.dx -= 2 * pad;
+    if (rcText.dx <= 0) {
+        return;
+    }
+
+    TempStr pageStr = fmt("%d", annot->pageNo);
+    int pageGap = DpiScale(10);
+    int pageColDx = gfx->MeasureText(pageStr, lb->font).dx;
+    Rect rcPage = rcText;
+    rcPage.x = std::max(rcText.x, rcText.x + rcText.dx - pageColDx);
+    rcPage.dx = rcText.x + rcText.dx - rcPage.x;
+
+    Str typeName = AnnotationReadableNameTemp(annot->type);
+    int typeDx = gfx->MeasureText(typeName, lb->font).dx;
+    int typeMaxDx = std::max(0, rcPage.x - pageGap - rcText.x);
+    Rect rcType = rcText;
+    rcType.dx = std::min(typeDx, typeMaxDx);
+    if (rcType.dx > 0) {
+        gfx->DrawText(typeName, rcType, gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, lb->font, colText);
+    }
+
+    Str contents = Contents(annot);
+    if (contents && rcType.dx > 0) {
+        TempStr oneLine = str::NormalizeWSTemp(contents);
+        if (oneLine) {
+            int typeContentsGap = DpiScale(8);
+            Rect rcContents = rcText;
+            rcContents.x = rcType.x + rcType.dx + typeContentsGap;
+            rcContents.dx = rcPage.x - pageGap - rcContents.x;
+            if (rcContents.dx > 0) {
+                gfx->PushClip(rcContents);
+                gfx->DrawText(oneLine, rcContents, gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, lb->font,
+                              ThemeWindowTextDisabledColor());
+                gfx->PopClip();
+            }
+        }
+    }
+
+    gfx->FillRect(rcPage, colBg);
+    gfx->DrawText(pageStr, rcPage, gfxTextEllipsis | gfxTextVCenter | gfxTextRight, lb->font, colText);
 }
 
 // Delete off the stack of WM_CLOSE / WM_DESTROY (same pattern as
@@ -1384,6 +1448,9 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
         return;
     }
     EnableSaveIfAnnotationsChanged(ew);
+    if (ew->listBox) {
+        ew->listBox->Invalidate();
+    }
 
     MainWindow* win = ew->tab->win;
     if (!win || !win->hwndCanvas) {
@@ -1507,6 +1574,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto* lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
         w->onSelectionChanged = MkFunc0(ListBoxSelectionChanged, ew);
+        w->onDrawItem = MkFunc1(DrawAnnotationListItem, ew);
         ew->listBox = w;
         vbox->AddChild(w);
     }
