@@ -318,6 +318,9 @@ LoadArgs* LoadArgs::Clone() {
     res->onFinished = this->onFinished;
     res->hwndPwdParent = this->hwndPwdParent;
     res->engine = this->engine;
+    res->initialDisplayMode = this->initialDisplayMode;
+    res->initialZoom = this->initialZoom;
+    res->ebookLayoutAspect = this->ebookLayoutAspect;
     return res;
 }
 
@@ -2087,6 +2090,8 @@ static bool IsEbookFileType(FileType ft) {
            ft == FileType::PalmDoc || ft == FileType::HTML || ft == FileType::Txt || ft == FileType::Lit;
 }
 
+static float EbookLayoutAspectForView(MainWindow* win, Str path, DisplayMode displayMode, float zoom);
+
 // Per-type DefaultDisplayMode (empty = inherit the global DefaultDisplayMode).
 // Used only on first open when there is no remembered FileState (issue #2588).
 static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
@@ -2643,6 +2648,11 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     UpdateDisplayStateWindowRect(win, fs);
     UpdateSidebarDisplayState(tab, fs);
 
+    float aspect = EbookLayoutAspectForView(win, path, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
+    float previousAspect = EngineMupdfSetEbookLayoutAspect(aspect);
+    defer {
+        EngineMupdfSetEbookLayoutAspect(previousAspect);
+    };
     DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
@@ -4071,6 +4081,10 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     AtomicIntInc(&gDangerousThreadCount);
     // load threads are reused, so this has to be cleared before we return
     SetLoadThreadFileEBookUI(d->fileEBookUI);
+    float previousAspect = EngineMupdfSetEbookLayoutAspect(args->ebookLayoutAspect);
+    defer {
+        EngineMupdfSetEbookLayoutAspect(previousAspect);
+    };
     Str path = args->FilePath();
     EngineBase* engine = args->engine;
 
@@ -4143,6 +4157,49 @@ static float EbookLayoutAspectForWindow(MainWindow* win) {
     }
     rc.dy = std::max(rc.dy - chromeDy, 100);
     return (float)rc.dy / (float)rc.dx;
+}
+
+static float EbookLayoutAspectForView(MainWindow* win, Str path, DisplayMode displayMode, float zoom) {
+    FileType ft = GuessFileTypeFromName(path, true);
+    if (!IsEbookFileType(ft) || displayMode != DisplayMode::SinglePage || zoom != kZoomFitWidth) {
+        return 0;
+    }
+    return EbookLayoutAspectForWindow(win);
+}
+
+static float EbookLayoutAspectForLoad(LoadArgs* args, MainWindow* win) {
+    Str path = args->FilePath();
+    DisplayMode displayMode = DisplayModeForNewDocument(path, nullptr);
+    float zoom = gGlobalPrefs->defaultZoomFloat;
+
+    FileState* fs = nullptr;
+    if (gGlobalPrefs->rememberStatePerDocument) {
+        fs = FileHistoryFindByPath(path);
+        if (fs && fs->useDefaultState) {
+            fs = nullptr;
+        }
+    }
+    if (fs) {
+        displayMode = DisplayModeFromString(fs->displayMode, DisplayMode::Automatic);
+        zoom = ZoomFromString(fs->zoom, kZoomFitPage);
+    }
+    if (args->tabState) {
+        DisplayMode tabMode = DisplayModeFromString(args->tabState->displayMode, DisplayMode::Automatic);
+        float tabZoom = ZoomFromString(args->tabState->zoom, kInvalidZoom);
+        if (tabMode != DisplayMode::Automatic) {
+            displayMode = tabMode;
+        }
+        if (tabZoom != kInvalidZoom) {
+            zoom = tabZoom;
+        }
+    }
+    if (args->initialDisplayMode != DisplayMode::Automatic) {
+        displayMode = args->initialDisplayMode;
+    }
+    if (args->initialZoom != kInvalidZoom) {
+        zoom = args->initialZoom;
+    }
+    return EbookLayoutAspectForView(win, path, displayMode, zoom);
 }
 
 static void MaybeDetachEphemeralHostFile(LoadArgs* args);
@@ -4235,10 +4292,11 @@ void StartLoadDocument(LoadArgs* argsIn) {
         HwndInvalidate(win->hwndCanvas);
     }
 
-    // Lay reflowable ebooks out for this window's shape, so Fit Width shows a
-    // whole page instead of one that overflows the window (issue #3472). Done
-    // here because the load thread must not touch MainWindow.
-    EngineMupdfSetEbookLayoutAspect(EbookLayoutAspectForWindow(win));
+    // A reflow document's page size cannot change after loading. Match it to
+    // the window only for the Single Page + Fit Width view that needs one
+    // page to fill one screen (#3472); continuous view keeps stable pagination.
+    // Compute this here because the load thread must not touch MainWindow.
+    argsIn->ebookLayoutAspect = EbookLayoutAspectForLoad(argsIn, win);
 
     LoadArgs* args = argsIn->Clone();
     BeginDocumentLoad(path);
@@ -4413,8 +4471,11 @@ MainWindow* LoadDocument(LoadArgs* args) {
     MaybeDetachEphemeralHostFile(args);
     path = args->FilePath();
 
-    // see the same call in StartLoadDocument (issue #3472)
-    EngineMupdfSetEbookLayoutAspect(EbookLayoutAspectForWindow(win));
+    args->ebookLayoutAspect = EbookLayoutAspectForLoad(args, win);
+    float previousAspect = EngineMupdfSetEbookLayoutAspect(args->ebookLayoutAspect);
+    defer {
+        EngineMupdfSetEbookLayoutAspect(previousAspect);
+    };
 
     BeginDocumentLoad(path);
     auto timeStart = TimeGet();

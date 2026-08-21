@@ -328,6 +328,10 @@ static void MaybeStartSearch(MainWindow* win, Str searchTerm) {
 static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
+    if (isFirstWin) {
+        args.initialDisplayMode = flags.startView;
+        args.initialZoom = flags.startZoom;
+    }
     // Explorer multi-open with reuseInstance can deliver the same path via both
     // the cmdline and a DDE/COPYDATA open (and password dialogs keep gIsStartup
     // true long enough for both). Prefer the existing tab over a duplicate.

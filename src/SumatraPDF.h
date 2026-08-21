@@ -291,6 +291,10 @@ struct LoadArgs {
     // open paths). DDE and other global lookups leave this false.
     bool activateExistingInWindow = false;
 
+    DisplayMode initialDisplayMode = DisplayMode::Automatic;
+    float initialZoom = kInvalidZoom;
+    float ebookLayoutAspect = 0;
+
     DocController* ctrl = nullptr;
 
     FileArgs* fileArgs = nullptr;

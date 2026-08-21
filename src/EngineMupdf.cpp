@@ -51,14 +51,16 @@ static float layoutFontEm = 11.F;
 // width-fitted page is ~1.4x taller than any landscape window and has to be
 // scrolled through before turning it (issue #3472). Deriving the layout height
 // from the window's shape makes one page one screen. 0 keeps the fixed page.
-static float gEbookLayoutAspect = 0.F;
+static thread_local float gEbookLayoutAspect = 0.F;
 // layout height for ebooks loaded after this call, as a fraction of the layout
 // width; 0 restores the fixed A5 page. EBookUI.LayoutDy overrides it
-void EngineMupdfSetEbookLayoutAspect(float dyOverDx) {
+float EngineMupdfSetEbookLayoutAspect(float dyOverDx) {
     if (dyOverDx < 0.05f || dyOverDx > 20.f) {
         dyOverDx = 0.f;
     }
+    float prev = gEbookLayoutAspect;
     gEbookLayoutAspect = dyOverDx;
+    return prev;
 }
 
 // in mupdf_load_system_font.c
