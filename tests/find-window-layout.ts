@@ -84,7 +84,10 @@ async function waitForPage(client: ControlClient, expected: number, timeoutMs = 
   while (Date.now() < deadline) {
     const response = await client.request(ControlCommand.TestFavoriteNav, ["page", 0]);
     raw = String(response[1] ?? "").trim();
-    if (raw === `OK page=${expected}`) {
+    // the reply carries the scroll position too ("OK page=N y=N"), so match
+    // the page rather than the whole line
+    const m = /OK page=(\d+)/.exec(raw);
+    if (m && Number(m[1]) === expected) {
       return;
     }
     await sleep(50);

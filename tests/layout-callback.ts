@@ -106,6 +106,10 @@ export async function testit(): Promise<void> {
     [
       "ShowToolbar = true",
       "ShowMenubar = false",
+      // the sidebar stays open in fullscreen (only presentation hides it), so
+      // the canvas-covers-the-frame check needs it off - and a PDF without an
+      // outline can still get a generated one (#5724), zlib.3.pdf included
+      "ShowToc = false",
       "UseTabs = true",
       "RestoreSession = false",
       "CheckForUpdates = false",

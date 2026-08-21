@@ -76,6 +76,21 @@ async function waitForClosed(pid: number, hwnd: number): Promise<void> {
   throw new Error(`issue-6001: modal window ${hwnd} did not close`);
 }
 
+// the dialog is shown before RunModalWindow disables the owner, and we see it
+// from another process, so poll instead of sampling the instant it appears
+async function waitForEnabled(frame: number, want: boolean): Promise<boolean> {
+  const deadline = Date.now() + 3000;
+  for (;;) {
+    if (isWindowEnabled(frame) === want) {
+      return true;
+    }
+    if (Date.now() >= deadline) {
+      return false;
+    }
+    await sleep(20);
+  }
+}
+
 async function checkModal(pid: number, frame: number, hwnd: number, command: string): Promise<void> {
   if (!hwnd) {
     throw new Error(`issue-6001: ${command} did not create a visible top-level dialog`);
@@ -83,12 +98,12 @@ async function checkModal(pid: number, frame: number, hwnd: number, command: str
   if (getWindowOwner(hwnd) !== frame) {
     throw new Error(`issue-6001: ${command} dialog is not owned by the frame`);
   }
-  if (isWindowEnabled(frame)) {
+  if (!(await waitForEnabled(frame, false))) {
     throw new Error(`issue-6001: ${command} did not disable its owner`);
   }
   postMessage(hwnd, WM_CLOSE, 0, 0);
   await waitForClosed(pid, hwnd);
-  if (!isWindowEnabled(frame)) {
+  if (!(await waitForEnabled(frame, true))) {
     throw new Error(`issue-6001: ${command} did not re-enable its owner`);
   }
 }
