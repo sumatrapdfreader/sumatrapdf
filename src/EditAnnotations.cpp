@@ -46,6 +46,9 @@ constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
 constexpr int kMaxAnnotListLines = 12;
 constexpr int kPreferredContentsLines = 6;
+// pdf_update_annot on every EN_CHANGE stalls typing (annot-stress, FreeText).
+constexpr UINT_PTR kContentsDebounceTimerId = 1;
+constexpr UINT kContentsDebounceMs = 500;
 
 // clang-format off
 static SeqStrings gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
@@ -156,6 +159,7 @@ struct EditAnnotationsWindow : WindowBase {
     bool skipGoToPage = false;
     // True while DoContents/etc. programmatically fill the edit; ignore EN_CHANGE.
     bool updatingControls = false;
+    UINT_PTR contentsDebounceTimer = 0;
 
     str::Builder currTextColor;
     str::Builder currCustomColor;
@@ -164,6 +168,7 @@ struct EditAnnotationsWindow : WindowBase {
     void OnSize(WindowBase::SizeEvent* ev);
     void OnFocus(WindowBase::FocusEvent* ev);
     void OnKeyDown(KeyEvent* ev);
+    void OnTimer(WindowBase::TimerEvent* ev);
 
     void ListBoxSelectionChanged();
 
@@ -412,6 +417,10 @@ bool CloseAndDeleteEditAnnotationsWindow(WindowTab* tab) {
 }
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {
+    if (contentsDebounceTimer && hwnd) {
+        KillTimer(hwnd, contentsDebounceTimer);
+        contentsDebounceTimer = 0;
+    }
     // hacky: we want the position of the main window
     // but the size of client area
     tab->lastEditAnnotsWindowPos = HwndWindowRect(hwnd);
@@ -871,20 +880,42 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
     }
 }
 
-// Push the contents edit into the selected annotation. Called on switch/save/
-// close so unsaved last edits stick (plus df1b2aab8).
-static void FlushContentsFromEdit(EditAnnotationsWindow* ew) {
-    if (!ew || !ew->editContents || !ew->tab || ew->updatingControls) {
+static void KillContentsDebounce(EditAnnotationsWindow* ew) {
+    if (!ew || ew->contentsDebounceTimer == 0) {
         return;
+    }
+    if (ew->hwnd) {
+        KillTimer(ew->hwnd, ew->contentsDebounceTimer);
+    }
+    ew->contentsDebounceTimer = 0;
+}
+
+// pdf_update_annot + dropping the page display list is too slow for EN_CHANGE.
+static bool ApplyContentsFromEdit(EditAnnotationsWindow* ew) {
+    KillContentsDebounce(ew);
+    if (!ew || !ew->editContents || !ew->tab || ew->updatingControls) {
+        return false;
     }
     Annotation* a = ew->tab->selectedAnnotation;
     if (!AnnotationIsLive(a) || ew->annotations.Find(a) < 0) {
-        return;
+        return false;
     }
     auto txt = ew->editContents->GetTextTemp();
     txt = str::ReplaceTemp(txt, StrL("\r\n"), StrL("\n"));
-    SetContents(a, txt);
+    if (!SetContents(a, txt)) {
+        return false;
+    }
     EnableSaveIfAnnotationsChanged(ew);
+    if (ew->listBox) {
+        ew->listBox->Invalidate();
+    }
+    return true;
+}
+
+// Push the contents edit into the selected annotation. Called on switch/save/
+// close so unsaved last edits stick (plus df1b2aab8).
+static void FlushContentsFromEdit(EditAnnotationsWindow* ew) {
+    ApplyContentsFromEdit(ew);
 }
 
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -1612,29 +1643,10 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
 static UINT_PTR gMainWindowRerenderTimer = 0;
 static MainWindow* gMainWindowForRender = nullptr;
 
-// Called from the contents edit onTextChanged (EN_CHANGE / EN_KILLFOCUS).
-// Can fire after the selected annotation was deleted/deselected, or after
-// the window/tab went away — never assume selectedAnnotation is non-null.
-static void ContentsChanged(EditAnnotationsWindow* ew) {
-    if (!ew || !ew->tab || !ew->editContents || ew->updatingControls) {
+static void ScheduleMainWindowRerender(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->tab) {
         return;
     }
-    Annotation* a = ew->tab->selectedAnnotation;
-    if (!AnnotationIsLive(a)) {
-        return;
-    }
-    auto txt = ew->editContents->GetTextTemp();
-    txt = str::ReplaceTemp(txt, StrL("\r\n"), StrL("\n"));
-    // SetContents returns false when the text is unchanged; skip save-enable
-    // and re-render debounce in that case.
-    if (!SetContents(a, txt)) {
-        return;
-    }
-    EnableSaveIfAnnotationsChanged(ew);
-    if (ew->listBox) {
-        ew->listBox->Invalidate();
-    }
-
     MainWindow* win = ew->tab->win;
     if (!win || !win->hwndCanvas) {
         return;
@@ -1643,14 +1655,51 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
         KillTimer(win->hwndCanvas, gMainWindowRerenderTimer);
         gMainWindowRerenderTimer = 0;
     }
-    UINT timeoutInMs = 1000;
     gMainWindowForRender = win;
-    gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
+    gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, 1000, [](HWND, UINT, UINT_PTR, DWORD) {
         if (IsMainWindowValidAndNotClosing(gMainWindowForRender)) {
             MainWindowRerender(gMainWindowForRender);
         }
         gMainWindowRerenderTimer = 0;
     });
+}
+
+// EN_CHANGE: do not call pdf_update_annot per keystroke.
+static void ContentsChanged(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->tab || !ew->editContents || ew->updatingControls) {
+        return;
+    }
+    if (!AnnotationIsLive(ew->tab->selectedAnnotation)) {
+        return;
+    }
+    if (!ew->hwnd) {
+        ApplyContentsFromEdit(ew);
+        ScheduleMainWindowRerender(ew);
+        return;
+    }
+    KillContentsDebounce(ew);
+    UINT_PTR id = SetTimer(ew->hwnd, kContentsDebounceTimerId, kContentsDebounceMs, nullptr);
+    if (!id) {
+        ApplyContentsFromEdit(ew);
+        ScheduleMainWindowRerender(ew);
+        return;
+    }
+    ew->contentsDebounceTimer = id;
+}
+
+static void ContentsKillFocus(EditAnnotationsWindow* ew) {
+    if (ApplyContentsFromEdit(ew)) {
+        ScheduleMainWindowRerender(ew);
+    }
+}
+
+void EditAnnotationsWindow::OnTimer(WindowBase::TimerEvent* ev) {
+    if (!ev || ev->timerId != kContentsDebounceTimerId) {
+        return;
+    }
+    if (ApplyContentsFromEdit(this)) {
+        ScheduleMainWindowRerender(this);
+    }
 }
 
 // The list is as tall as the annotations (capped at kMaxAnnotListLines).
@@ -1880,7 +1929,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->onTextChanged = MkFunc0(ContentsChanged, ew);
         // flush Contents on blur (EN_KILLFOCUS); do not fold this into
         // onTextChanged — that must stay EN_CHANGE-only (Advanced Settings UAF)
-        w->onKillFocus = MkFunc0(ContentsChanged, ew);
+        w->onKillFocus = MkFunc0(ContentsKillFocus, ew);
         ew->editContents = w;
         vbox->AddChild(w);
     }
@@ -2106,6 +2155,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew->onSize = MkMethod1<EditAnnotationsWindow, WindowBase::SizeEvent*, &EditAnnotationsWindow::OnSize>(ew);
     ew->onFocus = MkMethod1<EditAnnotationsWindow, WindowBase::FocusEvent*, &EditAnnotationsWindow::OnFocus>(ew);
     ew->onKeyDown = MkMethod1<EditAnnotationsWindow, KeyEvent*, &EditAnnotationsWindow::OnKeyDown>(ew);
+    ew->onTimer = MkMethod1<EditAnnotationsWindow, WindowBase::TimerEvent*, &EditAnnotationsWindow::OnTimer>(ew);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
