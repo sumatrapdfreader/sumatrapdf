@@ -15,7 +15,6 @@ import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type S
 import { setTestWindowLayout } from "./winapi.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
-import { testit as layoutCallback } from "./layout-callback.ts";
 import { testit as buildCli } from "./build-cli.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
@@ -77,7 +76,6 @@ import { testit as issue5944 } from "./issue-5944.ts";
 import { testit as issue1201 } from "./issue-1201.ts";
 import { testit as issue5724 } from "./issue-5724.ts";
 import { testit as issue4705 } from "./issue-4705.ts";
-import { testit as issue1324 } from "./issue-1324.ts";
 import { testit as issue1189 } from "./issue-1189.ts";
 import { testit as issue5871 } from "./issue-5871.ts";
 import { testit as issue5873 } from "./issue-5873.ts";
@@ -91,21 +89,15 @@ import { testit as issue5780 } from "./issue-5780.ts";
 import { testit as issue2254 } from "./issue-2254.ts";
 import { testit as issue5950 } from "./issue-5950.ts";
 import { testit as issue5993 } from "./issue-5993.ts";
-import { testit as issue5069 } from "./issue-5069.ts";
-import { testit as issue5792 } from "./issue-5792.ts";
 import { testit as issue5845 } from "./issue-5845.ts";
 import { testit as issue5870 } from "./issue-5870.ts";
-import { testit as issue5882 } from "./issue-5882.ts";
-import { testit as issue5917 } from "./issue-5917.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
 import { testit as issue2165 } from "./issue-2165.ts";
-import { testit as issue1203 } from "./issue-1203.ts";
 import { testit as issue3472 } from "./issue-3472.ts";
 import { testit as pdfOnlyMenuItems } from "./pdf-only-menu-items.ts";
 import { testit as issue2258 } from "./issue-2258.ts";
-import { testit as issue2022 } from "./issue-2022.ts";
 import { testit as issue2737 } from "./issue-2737.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue814 } from "./issue-814.ts";
@@ -125,7 +117,6 @@ import { testit as issue5969 } from "./issue-5969.ts";
 import { testit as issue5866 } from "./issue-5866.ts";
 import { testit as issue5867 } from "./issue-5867.ts";
 import { testit as issue5868 } from "./issue-5868.ts";
-import { testit as issue5870ListDirs } from "./issue-5870-list-dirs.ts";
 import { testit as issue5899 } from "./issue-5899.ts";
 import { testit as issue5907 } from "./issue-5907.ts";
 import { testit as issue5970 } from "./issue-5970.ts";
@@ -137,7 +128,6 @@ import { testit as issue5974 } from "./issue-5974.ts";
 import { testit as issue5975 } from "./issue-5975.ts";
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
-import { testit as issue5934 } from "./issue-5934.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
 import { testit as issue5964 } from "./issue-5964.ts";
 import { testit as issue5965 } from "./issue-5965.ts";
@@ -186,7 +176,6 @@ export const tests: NamedTest[] = [
   ["issue-5875", issue5875],
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----
-  ["layout-callback", layoutCallback],
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],
@@ -248,15 +237,12 @@ export const tests: NamedTest[] = [
   ["issue-2254", issue2254],
   ["issue-5950", issue5950],
   ["issue-5993", issue5993],
-  ["issue-5069", issue5069],
-  ["issue-5792", issue5792],
   ["issue-3472", issue3472],
   ["pdf-only-menu-items", pdfOnlyMenuItems],
   ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
   ["issue-5780", issue5780],
   ["issue-5845", issue5845],
   ["issue-5870", issue5870],
-  ["issue-5934", issue5934],
   ["issue-5963", issue5963],
   ["issue-5964", issue5964],
   ["issue-5965", issue5965],
@@ -267,14 +253,10 @@ export const tests: NamedTest[] = [
   ["issue-5095", issue5095],
   ["issue-3731", issue3731],
   ["issue-5751", issue5751],
-  ["issue-5882", issue5882],
-  ["issue-5917", issue5917],
   ["issue-4753", issue4753],
   ["issue-4055", issue4055],
   ["issue-2165", issue2165],
-  ["issue-1203", issue1203],
   ["issue-2258", issue2258],
-  ["issue-2022", issue2022],
   ["issue-2737", issue2737],
   ["issue-1106", issue1106],
   ["issue-814", issue814],
@@ -284,7 +266,6 @@ export const tests: NamedTest[] = [
   ["issue-893", issue893],
   ["issue-1998", issue1998],
   ["issue-2199", issue2199],
-  ["issue-1324", issue1324],
   ["issue-906", issue906],
   ["issue-3560", issue3560],
   ["issue-3591", issue3591],
@@ -294,7 +275,6 @@ export const tests: NamedTest[] = [
   ["issue-5866", issue5866],
   ["issue-5867", issue5867],
   ["issue-5868", issue5868],
-  ["issue-5870-list-dirs", issue5870ListDirs],
   ["issue-5899", issue5899],
   ["issue-5907", issue5907],
   ["issue-5970", issue5970],

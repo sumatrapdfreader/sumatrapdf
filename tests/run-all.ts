@@ -27,6 +27,33 @@ import { testit as issue5865 } from "./issue-5865.ts";
 import { testit as issue5918 } from "./issue-5918.ts";
 import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as issue1195 } from "./issue-1195.ts";
+import { testit as issue5882 } from "./issue-5882.ts";
+import { testit as issue5870ListDirs } from "./issue-5870-list-dirs.ts";
+import { testit as issue1324 } from "./issue-1324.ts";
+import { testit as layoutCallback } from "./layout-callback.ts";
+import { testit as issue5069 } from "./issue-5069.ts";
+import { testit as issue5934 } from "./issue-5934.ts";
+import { testit as issue5917 } from "./issue-5917.ts";
+import { testit as issue2022 } from "./issue-2022.ts";
+import { testit as issue1203 } from "./issue-1203.ts";
+import { testit as issue5792 } from "./issue-5792.ts";
+
+// The slowest of the regular tests. They still run here and in the daily CI
+// suite, just not in run-pre-release: a couple of seconds each is nothing on
+// its own, but a pre-release build waits for the whole suite before it uploads,
+// and these ten were a sixth of its run.
+export const notInPreReleaseTests: NamedTest[] = [
+  ["issue-5882", issue5882],
+  ["issue-5870-list-dirs", issue5870ListDirs],
+  ["issue-1324", issue1324],
+  ["layout-callback", layoutCallback],
+  ["issue-5069", issue5069],
+  ["issue-5934", issue5934],
+  ["issue-5917", issue5917],
+  ["issue-2022", issue2022],
+  ["issue-1203", issue1203],
+  ["issue-5792", issue5792],
+];
 
 export const slowTests: NamedTest[] = [
   // WebView TOC
@@ -44,7 +71,7 @@ export const slowTests: NamedTest[] = [
   ["issue-1195", issue1195],
 ];
 
-export const tests: NamedTest[] = [...almostAllTests, ...slowTests];
+export const tests: NamedTest[] = [...almostAllTests, ...notInPreReleaseTests, ...slowTests];
 
 export type AllTestOptions = SuiteOptions;
 
@@ -57,7 +84,11 @@ export async function testit(opts?: AllTestOptions): Promise<void> {
   if (!silent) {
     console.log(`\n========== slow ==========`);
   }
-  await runNamedTests(slowTests, { silent, keepTestTimes: true, summary: false });
+  await runNamedTests([...notInPreReleaseTests, ...slowTests], {
+    silent,
+    keepTestTimes: true,
+    summary: false,
+  });
   console.log(`\n✅ all ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
 }
 
