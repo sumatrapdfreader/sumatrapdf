@@ -179,6 +179,7 @@ export const tests: NamedTest[] = [
   ["issue-5875", issue5875],
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----
+  ["issue-5975", issue5975],
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],
@@ -283,7 +284,6 @@ export const tests: NamedTest[] = [
   ["issue-5971", issue5971],
   ["image-only-palette-items", imageOnlyPaletteItems],
   ["issue-5974", issue5974],
-  ["issue-5975", issue5975],
   ["issue-5968", issue5968],
   ["issue-5980", issue5980],
   ["issue-5982", issue5982],

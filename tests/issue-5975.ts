@@ -123,9 +123,12 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-5975: expected ${kAnnotCount} annotations, got n=${st.n} (${st.raw})`);
     }
 
-    // no click: keys must work as soon as the window is open (3.6.1 ListBox)
-    postMessage(annotWin, WM_KEYDOWN, VK_DOWN, 0);
-    st = await waitSel(client, 0, "Down from no selection");
+    // no click: keys must work as soon as the window is open (3.6.1 ListBox).
+    // Opening now auto-selects the first annot on the current page (so Contents
+    // is filled). CmdEditAnnotations can also pick the annot under the cursor.
+    // Home pins the caret at 0 from either starting point.
+    postMessage(annotWin, WM_KEYDOWN, VK_HOME, 0);
+    st = await waitSel(client, 0, "Home on open");
 
     postMessage(annotWin, WM_KEYDOWN, VK_DOWN, 0);
     st = await waitSel(client, 1, "Down");
