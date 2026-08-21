@@ -40,6 +40,7 @@ extern "C" {
 #include "DarkMode_win.h"
 
 #include "Theme.h"
+#include "FilterHighlightDraw.h"
 
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
@@ -101,6 +102,7 @@ struct EditAnnotationsWindow : WindowBase {
     WindowTab* tab = nullptr;
     ILayout* mainLayout = nullptr;
 
+    Edit* editFilter = nullptr;
     VirtListBox* listBox = nullptr;
     VirtText* staticRect = nullptr;
     VirtText* staticAuthor = nullptr;
@@ -147,6 +149,9 @@ struct EditAnnotationsWindow : WindowBase {
 
     // those are
     Vec<Annotation*> annotations;
+    Vec<Annotation*> visibleAnnots;
+    StrVec filterWords;
+    Vec<u8> filterHlScratch;
 
     bool skipGoToPage = false;
     // True while DoContents/etc. programmatically fill the edit; ignore EN_CHANGE.
@@ -164,6 +169,8 @@ struct EditAnnotationsWindow : WindowBase {
 
     ~EditAnnotationsWindow() override;
 };
+
+static Annotation* VisibleAnnotAt(EditAnnotationsWindow* ew, int idx);
 
 #if 0
 static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prevIdx) {
@@ -289,8 +296,9 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
     }
     Vec<Annotation*> toDelete;
     for (int idx : idxs) {
-        if (ew->annotations.isValidIndex(idx)) {
-            toDelete.Append(ew->annotations[idx]);
+        Annotation* a = VisibleAnnotAt(ew, idx);
+        if (a) {
+            toDelete.Append(a);
         }
     }
     if (len(toDelete) == 0) {
@@ -306,7 +314,7 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
     }
     UpdateAnnotationsList(ew);
     Annotation* selectNext = nullptr;
-    int n = len(ew->annotations);
+    int n = len(ew->visibleAnnots);
     if (n > 0) {
         int pick = nextIdxHint;
         if (pick >= n) {
@@ -315,7 +323,7 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
         if (pick < 0) {
             pick = 0;
         }
-        selectNext = ew->annotations[pick];
+        selectNext = ew->visibleAnnots[pick];
     }
     SetSelectedAnnotation(ew->tab, selectNext);
 }
@@ -364,8 +372,6 @@ static void HidePerAnnotControls(EditAnnotationsWindow* ew) {
 
     ew->buttonSaveAttachment->SetIsVisible(false);
     ew->buttonEmbedAttachment->SetIsVisible(false);
-
-    ew->buttonDelete->SetIsVisible(false);
 }
 
 static int FindStringInArray(SeqStrings items, Str toFind, int valIfNotFound = -1) {
@@ -459,17 +465,37 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
+static bool AnnotMatchesFilter(Annotation* annot, const StrVec& words) {
+    if (len(words) == 0) {
+        return true;
+    }
+    return FilterMatches(Contents(annot), words);
+}
+
+static Annotation* VisibleAnnotAt(EditAnnotationsWindow* ew, int idx) {
+    if (!ew || !ew->visibleAnnots.isValidIndex(idx)) {
+        return nullptr;
+    }
+    return ew->visibleAnnots[idx];
+}
+
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
+    ew->visibleAnnots.Reset();
     auto* model = new ListBoxModelStrings();
-    int n = len(ew->annotations);
-    for (int i = 0; i < n; i++) {
-        auto* annot = ew->annotations[i];
+    int nAll = len(ew->annotations);
+    for (int i = 0; i < nAll; i++) {
+        Annotation* annot = ew->annotations[i];
+        if (!AnnotMatchesFilter(annot, ew->filterWords)) {
+            continue;
+        }
+        ew->visibleAnnots.Append(annot);
         model->strings.Append(AnnotationReadableNameTemp(annot->type));
     }
 
     int prevScrollY = ew->listBox->scrollY;
     ew->listBox->SetModel(model); // resets the scroll position
     ew->listBox->ScrollTo(prevScrollY);
+    int n = len(ew->visibleAnnots);
     int listLines = n;
     if (listLines < 1) {
         listLines = 1;
@@ -481,13 +507,42 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
+static void FilterAnnotationsChanged(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->editFilter || ew->updatingControls) {
+        return;
+    }
+    Annotation* keep = ew->tab ? ew->tab->selectedAnnotation : nullptr;
+    ew->filterWords.Reset();
+    SplitFilterToWords(ew->editFilter->GetTextTemp(), ew->filterWords);
+    RebuildAnnotationsListBox(ew);
+    if (ew->hwnd && ew->mainLayout) {
+        Rect cr = HwndClientRect(ew->hwnd);
+        if (cr.dx > 0 && cr.dy > 0) {
+            ew->DoLayout(cr.Size());
+        }
+    }
+    int idx = keep ? ew->visibleAnnots.Find(keep) : -1;
+    if (idx >= 0) {
+        ew->listBox->SetCurrentSelection(idx);
+        return;
+    }
+    if (len(ew->visibleAnnots) > 0) {
+        ew->listBox->SetCurrentSelection(0);
+        ew->ListBoxSelectionChanged();
+        return;
+    }
+    if (ew->tab) {
+        SetSelectedAnnotation(ew->tab, nullptr);
+    }
+}
+
 // Type on the left, optional contents in muted color, page number on the right.
 // Contents is clipped so it cannot paint over the page column.
 static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev) {
-    if (!ew->annotations.isValidIndex(ev->itemIndex)) {
+    Annotation* annot = VisibleAnnotAt(ew, ev->itemIndex);
+    if (!annot) {
         return;
     }
-    Annotation* annot = ew->annotations[ev->itemIndex];
     VirtListBox* lb = ev->listBox;
     Gfx* gfx = ev->gfx;
     Rect rc = ev->itemRect;
@@ -539,8 +594,9 @@ static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawI
             rcContents.dx = rcPage.x - pageGap - rcContents.x;
             if (rcContents.dx > 0) {
                 gfx->PushClip(rcContents);
-                gfx->DrawText(oneLine, rcContents, gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, lb->font,
-                              ThemeWindowTextDisabledColor());
+                DrawMaybeHighlightedText(gfx, rcContents, oneLine, ew->filterWords, ew->filterHlScratch, colBg, false,
+                                         false, gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, lb->font,
+                                         ThemeWindowTextDisabledColor());
                 gfx->PopClip();
             }
         }
@@ -1152,7 +1208,17 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
     DoContents(ew, annot);
 
     if (annot) {
-        int itemNo = ew->annotations.Find(annot);
+        int itemNo = ew->visibleAnnots.Find(annot);
+        if (itemNo < 0 && len(ew->filterWords) > 0 && ew->editFilter) {
+            // clicked/created annot is hidden by the filter: drop it so the
+            // row shows up
+            ew->updatingControls = true;
+            ew->editFilter->SetText({});
+            ew->updatingControls = false;
+            ew->filterWords.Reset();
+            RebuildAnnotationsListBox(ew);
+            itemNo = ew->visibleAnnots.Find(annot);
+        }
         if (itemNo < 0) {
             // can happen if annotations list is out of sync (e.g. after reload)
             LayoutAnnotWindowInPlace(ew);
@@ -1184,7 +1250,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         if (ew->listBox->GetCurrentSelection() != itemNo) {
             ew->listBox->SetCurrentSelection(itemNo);
         }
-        ew->buttonDelete->SetIsVisible(true);
+        ew->buttonDelete->SetIsEnabled(true);
 
         // NOLINTNEXTLINE(bugprone-branch-clone): branch order matters, an explicit focus wins over isNew
         if (focus == EditAnnotFocus::Edit) {
@@ -1199,6 +1265,10 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         } else {
             ew->SetFocusTo(ew->listBox);
         }
+    }
+
+    if (!annot) {
+        ew->buttonDelete->SetIsEnabled(false);
     }
 
     LayoutAnnotWindowInPlace(ew);
@@ -1413,13 +1483,13 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
         // an item has been deselected because e.g. selected annotation was deleted
         return;
     }
-    if (!annotations.isValidIndex(itemNo)) {
-        logf("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(annotations)=%d\n", itemNo,
-             len(annotations));
+    Annotation* annot = VisibleAnnotAt(this, itemNo);
+    if (!annot) {
+        logf("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(visibleAnnots)=%d\n", itemNo,
+             len(visibleAnnots));
         ReportDebugIf(true);
         return;
     }
-    Annotation* annot = annotations[itemNo];
     SetSelectedAnnotation(tab, annot);
 }
 
@@ -1564,10 +1634,18 @@ static void AddAnnotOptRow(Table* t, int row, VirtText* label, ILayout* ctrl) {
     rc.alignV = CrossAxisAlign::CrossCenter;
 }
 
-static VirtButton* CreateVirtButton(Str text) {
-    auto* b = new VirtButton(text, GetAppFont());
-    b->textPadding = DpiScaledInsets(5, 12);
-    return b;
+static void AddAnnotButton(HBox* row, VirtButton* b) {
+    // padding on the button so SetIsVisible(false) collapses the HBox slot
+    b->padding = Insets{4, 0, 4, 0};
+    row->AddChild(b);
+}
+
+static HBox* NewAnnotButtonRow() {
+    auto* hbox = new HBox();
+    hbox->alignMain = MainAxisAlign::MainStart;
+    hbox->alignCross = CrossAxisAlign::CrossCenter;
+    hbox->gap = GetAppFont()->averageCharWidth;
+    return hbox;
 }
 
 static void CreateMainLayout(EditAnnotationsWindow* ew) {
@@ -1576,6 +1654,26 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     PlatformFont* fnt = GetAppFont();
+    auto colBg = ThemeWindowControlBackgroundColor();
+    auto colTxt = ThemeWindowTextColor();
+
+    {
+        Edit::CreateArgs args;
+        args.parent = parent;
+        args.isMultiLine = false;
+        args.withBorder = true;
+        args.cueText = _TRA("enter search term to filter annotations");
+        args.font = fnt;
+        args.isRtl = IsUIRtl();
+        auto* c = new Edit();
+        c->SetColors(colTxt, colBg);
+        c->maxDx = 150;
+        HWND ok = c->Create(args);
+        ReportIf(!ok);
+        c->onTextChanged = MkFunc0(FilterAnnotationsChanged, ew);
+        ew->editFilter = c;
+        vbox->AddChild(c);
+    }
 
     {
         auto* w = new VirtListBox();
@@ -1590,6 +1688,16 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->onDrawItem = MkFunc1(DrawAnnotationListItem, ew);
         ew->listBox = w;
         vbox->AddChild(w);
+    }
+
+    {
+        auto* row = NewAnnotButtonRow();
+        auto* w = NewThemedButton(parent, _TRA("Delete Annotation"), fnt, false);
+        w->onClick = MkFunc0(ButtonDeleteHandler, ew);
+        w->SetIsEnabled(false);
+        ew->buttonDelete = w;
+        AddAnnotButton(row, w);
+        vbox->AddChild(row);
     }
 
     auto makeDropDown = [&]() -> DropDown* {
@@ -1620,10 +1728,10 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     meta->padding = DpiScaledInsets(4, 0, 0, 0);
     ew->staticRect = CreateStatic();
     AddAnnotOptRow(meta, 0, CreateAnnotOptLabel(_TRA("Rect:")), ew->staticRect);
-    ew->staticAuthor = CreateStatic();
-    AddAnnotOptRow(meta, 1, CreateAnnotOptLabel(_TRA("Author:")), ew->staticAuthor);
     ew->staticModificationDate = CreateStatic();
-    AddAnnotOptRow(meta, 2, CreateAnnotOptLabel(_TRA("Date:")), ew->staticModificationDate);
+    AddAnnotOptRow(meta, 1, CreateAnnotOptLabel(_TRA("Date:")), ew->staticModificationDate);
+    ew->staticAuthor = CreateStatic();
+    AddAnnotOptRow(meta, 2, CreateAnnotOptLabel(_TRA("Author:")), ew->staticAuthor);
     ew->staticPopupLabel = CreateAnnotOptLabel(_TRA("Popup:"));
     ew->staticPopup = CreateStatic();
     AddAnnotOptRow(meta, 3, ew->staticPopupLabel, ew->staticPopup);
@@ -1634,6 +1742,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         ew->staticContents = w;
         w->padding = DpiScaledInsets(4, 0, 0, 0);
         vbox->AddChild(w);
+        vbox->AddChild(new Spacer(0, DpiScale(8))); // 0.5rem between label and edit
     }
 
     {
@@ -1724,29 +1833,17 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     ReportIf(optRow != 11);
     vbox->AddChild(opts);
 
-    auto btnPad = DpiScaledInsets(8, 0, 0, 0);
     {
-        auto* w = CreateVirtButton(_TRA("Save..."));
-        w->padding = btnPad;
-        w->onClick = MkFunc0(ButtonSaveAttachment, ew);
-        ew->buttonSaveAttachment = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateVirtButton(_TRA("Embed..."));
-        w->padding = btnPad;
-        w->onClick = MkFunc0(ButtonEmbedAttachment, ew);
-        ew->buttonEmbedAttachment = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateVirtButton(_TRA("Delete Annotation"));
-        w->padding = btnPad;
-        w->onClick = MkFunc0(ButtonDeleteHandler, ew);
-        ew->buttonDelete = w;
-        vbox->AddChild(w);
+        auto* row = NewAnnotButtonRow();
+        auto* saveAtt = NewThemedButton(parent, _TRA("Save..."), fnt, false);
+        saveAtt->onClick = MkFunc0(ButtonSaveAttachment, ew);
+        ew->buttonSaveAttachment = saveAtt;
+        AddAnnotButton(row, saveAtt);
+        auto* embed = NewThemedButton(parent, _TRA("Embed..."), fnt, false);
+        embed->onClick = MkFunc0(ButtonEmbedAttachment, ew);
+        ew->buttonEmbedAttachment = embed;
+        AddAnnotButton(row, embed);
+        vbox->AddChild(row);
     }
 
     {
@@ -1756,22 +1853,19 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
+        auto* row = NewAnnotButtonRow();
         // text set by UpdateSaveButtonLabels once tab is attached
-        auto* w = CreateVirtButton(_TRA("Save changes to existing PDF"));
-        w->padding = btnPad;
-        w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClick = MkFunc0(ButtonSaveToCurrentPDFHandler, ew);
-        ew->buttonSaveToCurrentFile = w;
-        vbox->AddChild(w);
-    }
-
-    {
-        auto* w = CreateVirtButton(_TRA("Save changes to a new PDF"));
-        w->padding = btnPad;
-        w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClick = MkFunc0(ButtonSaveToNewFileHandler, ew);
-        ew->buttonSaveToNewFile = w;
-        vbox->AddChild(w);
+        auto* saveCur = NewThemedButton(parent, _TRA("Save changes to existing PDF"), fnt, true);
+        saveCur->SetIsEnabled(false); // only enabled if there are changes
+        saveCur->onClick = MkFunc0(ButtonSaveToCurrentPDFHandler, ew);
+        ew->buttonSaveToCurrentFile = saveCur;
+        AddAnnotButton(row, saveCur);
+        auto* saveNew = NewThemedButton(parent, _TRA("Save changes to a new PDF"), fnt, false);
+        saveNew->SetIsEnabled(false); // only enabled if there are changes
+        saveNew->onClick = MkFunc0(ButtonSaveToNewFileHandler, ew);
+        ew->buttonSaveToNewFile = saveNew;
+        AddAnnotButton(row, saveNew);
+        vbox->AddChild(row);
     }
 
     auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
