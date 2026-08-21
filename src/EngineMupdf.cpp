@@ -4794,7 +4794,22 @@ TocTree* EngineMupdf::GetToc() {
     if (tocTree) {
         return tocTree;
     }
+    // Generating a TOC from headings loads and runs every page, so it needs
+    // pagesLock (fz_load_page mutates the document's list of open pages) and
+    // renderLock (stext extraction runs the page) on top of docLock. They are
+    // above docLock in the hierarchy, so they have to be taken out here, not
+    // inside the generator. Without them a render thread loading a page
+    // concurrently crashed in pdf_first_widget on a page that came back not
+    // being a pdf_page. A document with a real outline touches no pages.
+    if (!outline) {
+        ScopedRecursiveMutex csPages(&pagesLock);
+        ScopedMutex csRender(&renderLock);
+        return BuildToc();
+    }
+    return BuildToc();
+}
 
+TocTree* EngineMupdf::BuildToc() {
     int idCounter = 0;
 
     ScopedRecursiveMutex cs(&docLock);
@@ -5269,8 +5284,10 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
     if (e->pdfdoc && !pageInfo->annotsLoaded) {
         pageInfo->annotsLoaded = true;
         fz_try(ctx) {
+            // null for a page that isn't a pdf_page; pdf_first_widget()
+            // dereferences it without checking (pdf_first_annot() doesn't)
             pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
-            pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
+            pdf_annot* annot = pdfpage ? pdf_first_annot(ctx, pdfpage) : nullptr;
             while (annot) {
                 Annotation* a = MakeAnnotationWrapper(e, annot, pageNo);
                 if (a) {
@@ -5278,7 +5295,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
                 }
                 annot = pdf_next_annot(ctx, annot);
             }
-            pdf_annot* widget = pdf_first_widget(ctx, pdfpage);
+            pdf_annot* widget = pdfpage ? pdf_first_widget(ctx, pdfpage) : nullptr;
             while (widget) {
                 Annotation* a = MakeAnnotationWrapper(e, widget, pageNo);
                 if (a) {

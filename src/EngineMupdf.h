@@ -108,6 +108,8 @@ class EngineMupdf : public EngineBase {
     IPageDestination* GetNamedDest(Str name) override;
     int GetOpenActionPageNo() override;
     TocTree* GetToc() override;
+    // GetToc() takes the page locks first when the TOC has to be generated
+    TocTree* BuildToc();
 
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
