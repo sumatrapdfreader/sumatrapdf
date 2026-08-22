@@ -5651,7 +5651,13 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     };
     // RememberDefaultWindowPosition becomes a no-op once the window is hidden
     RememberDefaultWindowPosition(win);
-    // hide the window before saving prefs (closing seems slightly faster that way)
+    // Persist before ShowWindow(SW_HIDE): hiding can pump WM_DESTROY and
+    // return with win already freed, which skipped this save and dropped
+    // ScheduleSaveSettings posts (home-page history / view mode).
+    if (lastWindow) {
+        SaveSettings();
+    }
+    // hide the window before tearing down (closing seems slightly faster that way)
     if (!lastWindow || quitIfLast) {
         ShowWindow(win->hwndFrame, SW_HIDE);
         // ShowWindow can pump messages. If the window is embedded (e.g. in Total Commander),
@@ -5660,12 +5666,6 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         if (!IsMainWindowValid(win)) {
             return;
         }
-    }
-
-    // if this is a last window, save state before closing window
-    // if not last, save after closing window (#5418)
-    if (lastWindow) {
-        SaveSettings();
     }
     TabsOnCloseWindow(win);
 

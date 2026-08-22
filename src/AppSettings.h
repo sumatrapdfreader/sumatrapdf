@@ -21,6 +21,7 @@ TempStr GetSettingsFileNameTemp();
 bool LoadSettings();
 bool SaveSettings();
 void ScheduleSaveSettings();
+void FlushScheduledSaveSettings();
 void ForceReloadSettings();
 void ApplySettingsToOpenWindows();
 void CleanUpSettings();

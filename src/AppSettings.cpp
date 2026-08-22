@@ -736,6 +736,16 @@ void ScheduleSaveSettings() {
     uitask::Post(fn, "SaveSettings");
 }
 
+// Run a deferred save now. Process exit / last-window close must not wait
+// for the uitask: ShowWindow(SW_HIDE) can tear the window down first, and
+// a fast ExitProcess never drains the queue.
+void FlushScheduledSaveSettings() {
+    if (!gSaveSettingsPending) {
+        return;
+    }
+    SaveSettings();
+}
+
 // called whenever global preferences change or a file is
 // added or removed from the file history (in order to keep
 // the list of recently opened documents in sync)

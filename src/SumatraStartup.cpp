@@ -2969,6 +2969,10 @@ Exit:
             fastExit = true;
         }
     }
+    // Deferred ScheduleSaveSettings posts may still be in the queue, and a
+    // fast ExitProcess never drains it. Flush while windows (and FileHistory)
+    // are still alive. No-op if OnMenuExit already saved (gDontSaveSettings).
+    FlushScheduledSaveSettings();
     if (fastExit) {
         // leave all the remaining clean-up to the OS
         // (as recommended for a quick exit)
