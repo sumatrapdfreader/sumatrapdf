@@ -505,9 +505,9 @@ ComicBookUI [
     ; version 3.7)
     DefaultDisplayMode = 
 
-    ; default zoom for comic books; empty uses the global DefaultZoom. valid
-    ; values: fit page, fit width, fit height, fit content, shrink to fit or
-    ; percent like 100% (introduced in version 3.7)
+    ; default zoom for comic books; empty uses fit page. valid values: fit page,
+    ; fit width, fit height, fit content, shrink to fit or percent like 100%
+    ; (introduced in version 3.7)
     DefaultZoom = 
 
     ; if true, in facing and book view a landscape page (wider than tall)

@@ -114,7 +114,7 @@ Default is **true**. Set it to `false` to keep the old pairing: every page occup
 | **Fit by Orientation**     | Fit width in landscape viewports, fit page in portrait                                                                                        |
 | **Fit Height**             | Page height fills the window (handy for landscape pages)                                                                                      |
 
-Default zoom for **single image files** is controlled by `ImageUI.DefaultZoom` (default `shrink to fit`). Comic archives use `ComicBookUI.DefaultZoom` on first open (empty keeps the global `DefaultZoom`); a remembered zoom for that file still wins. Set `ComicBookUI.DefaultZoom = fit width` to open new comics at Fit Width while PDFs stay at Fit Page.
+Default zoom for **single image files** is controlled by `ImageUI.DefaultZoom` (default `shrink to fit`). Comic archives use `ComicBookUI.DefaultZoom` on first open (empty uses Fit Page, not the global `DefaultZoom`); a remembered zoom for that file still wins. Set `ComicBookUI.DefaultZoom = fit width` to open new comics at Fit Width while PDFs stay at Fit Page.
 
 ## Background color
 

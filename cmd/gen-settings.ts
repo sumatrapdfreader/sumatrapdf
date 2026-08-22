@@ -496,7 +496,7 @@ const comicBookUI: Field[] = [
     "DefaultZoom",
     Str,
     "",
-    "default zoom for comic books; empty uses the global DefaultZoom. " +
+    "default zoom for comic books; empty uses fit page. " +
       "valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),

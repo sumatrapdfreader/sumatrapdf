@@ -145,9 +145,9 @@ struct ComicBookUI {
     // DefaultDisplayMode. valid values: automatic, single page, facing,
     // book view, continuous, continuous facing, continuous book view
     Str defaultDisplayMode;
-    // default zoom for comic books; empty uses the global DefaultZoom.
-    // valid values: fit page, fit width, fit height, fit content, shrink
-    // to fit or percent like 100%
+    // default zoom for comic books; empty uses fit page. valid values: fit
+    // page, fit width, fit height, fit content, shrink to fit or percent
+    // like 100%
     Str defaultZoom;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
@@ -1229,10 +1229,10 @@ static const StructInfo gComicBookUIInfo = {
     "are much wider than regular pages (issue #2197)\0if true, absolute zoom never makes a page taller than the window "
     "(each page is capped at Fit Height)\0default page layout for comic books; empty uses the global "
     "DefaultDisplayMode. valid values: automatic, single page, facing, book view, continuous, continuous facing, "
-    "continuous book view\0default zoom for comic books; empty uses the global DefaultZoom. valid values: fit page, "
-    "fit width, fit height, fit content, shrink to fit or percent like 100%\0if true, in facing and book view a "
-    "landscape page (wider than tall) occupies the whole two-page row instead of pairing with the next page. For "
-    "comics that store double-page spreads as one image (issues #1324, #872)",
+    "continuous book view\0default zoom for comic books; empty uses fit page. valid values: fit page, fit width, fit "
+    "height, fit content, shrink to fit or percent like 100%\0if true, in facing and book view a landscape page (wider "
+    "than tall) occupies the whole two-page row instead of pairing with the next page. For comics that store "
+    "double-page spreads as one image (issues #1324, #872)",
     false};
 
 static const FieldInfo gImageUIFields[] = {

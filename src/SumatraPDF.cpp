@@ -2126,7 +2126,8 @@ static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
 }
 
 // First open only: ComicBookUI.DefaultZoom when set (issue #5946). Empty
-// keeps the global DefaultZoom. Remembered FileState wins.
+// keeps fit page, the historical comic default — not the global DefaultZoom.
+// Remembered FileState wins.
 static float ZoomForNewDocument(Str path, EngineBase* engine, float fallback) {
     Kind k = engine ? engine->kind : nullptr;
     if (k == kindEngineComicBooks || (path && IsEngineCbxSupportedFileType(GuessFileTypeFromName(path, true)))) {
@@ -2134,6 +2135,7 @@ static float ZoomForNewDocument(Str path, EngineBase* engine, float fallback) {
         if (z != 0) {
             return z;
         }
+        return kZoomFitPage;
     }
     return fallback;
 }
