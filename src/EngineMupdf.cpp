@@ -3080,10 +3080,16 @@ static void fz_print_cb(void* user, const char* msg) {
     }
     log(msgStr);
     EngineMupdf* engine = (EngineMupdf*)user;
-    if (engine && !str::Contains(msgStr, StrL("unknown epub version"))) {
-        // epub 3.0 is rendered fine, so don't treat the version warning as an error
-        engine->AppendError(msgStr);
+    if (!engine) {
+        return;
     }
+    // logged above, not shown as "Errors in document": epub 3.0 is rendered
+    // fine, and a missing system font falls back to a default (issue #6027)
+    if (str::Contains(msgStr, StrL("unknown epub version")) ||
+        str::Contains(msgStr, StrL("couldn't find system font"))) {
+        return;
+    }
+    engine->AppendError(msgStr);
 }
 
 static void InstallFitzErrorCallbacks(EngineMupdf* engine, fz_context* ctx) {
