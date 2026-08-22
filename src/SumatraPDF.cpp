@@ -8837,6 +8837,24 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
             }
             rects.Append(sel.rect);
         }
+        // MuPDF draws underline / squiggly at 1/7 of the QuadPoints height from
+        // the bottom of the box. Selection rects are tight glyph ink
+        // (FZ_STEXT_ACCURATE_BBOXES), so that puts the line through the letters
+        // — worst for CJK and Latin without descenders (discussion #6015,
+        // issue #6023). Grow each box downward so 1/7 from the new bottom sits
+        // just below the ink. Highlight and strike-out keep the tight box.
+        if (args->annotType == AnnotationType::Underline || args->annotType == AnnotationType::Squiggly) {
+            for (RectF& r : rects) {
+                if (r.dy <= 0) {
+                    continue;
+                }
+                float extra = r.dy * 0.3f;
+                if (extra < 1.5f) {
+                    extra = 1.5f;
+                }
+                r.dy += extra;
+            }
+        }
         annot = EngineMupdfCreateAnnotation(engine, pageNo, PointF{}, args);
         if (!annot) {
             // Roll back annots created earlier in this call so we do not leave

@@ -365,6 +365,27 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     MarkNotificationAsModified(e, annot);
 }
 
+Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
+    Vec<RectF> res;
+    if (!AnnotationIsLive(annot)) {
+        return res;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    fz_try(ctx) {
+        int n = pdf_annot_quad_point_count(ctx, annot->pdfannot);
+        for (int i = 0; i < n; i++) {
+            fz_quad q = pdf_annot_quad_point(ctx, annot->pdfannot, i);
+            res.Append(ToRectF(fz_rect_from_quad(q)));
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return res;
+}
+
 // Regenerate appearance streams for the whole page after a form mutation.
 // A field change can affect *other* widgets (radio-group siblings sharing the
 // field value, or JS-calculated fields); each caches its resolved appearance
@@ -650,32 +671,6 @@ bool SetWidgetChoiceValue(Annotation* annot, Str value) {
     }
     return ok;
 }
-
-/*
-Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
-    EngineMupdf* e = annot->engine;
-    auto ctx = e->Ctx();
-    auto pdf = annot->pdf;
-    ScopedRecursiveMutex cs(&e->docLock);
-    Vec<RectF> res;
-    int n = pdf_annot_quad_point_count(ctx, annot->pdfannot);
-    for (int i = 0; i < n; i++) {
-        fz_quad q{};
-        fz_rect r{};
-        fz_try(ctx)
-        {
-            q = pdf_annot_quad_point(ctx, annot->pdfannot, i);
-            r = fz_rect_from_quad(q);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-        }
-        RectF rect = ToRectF(r);
-        res.Append(rect);
-    }
-    return res;
-}
-*/
 
 Str Contents(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {

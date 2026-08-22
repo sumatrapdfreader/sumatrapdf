@@ -97,6 +97,7 @@ RectF GetBounds(Annotation*);
 RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
+Vec<RectF> GetQuadPointsAsRect(Annotation*);
 
 Str Author(Annotation*);
 time_t ModificationDate(Annotation*);

@@ -49,6 +49,8 @@
 #include "AIChatCommon.h"
 #include "SumatraDialogs.h"
 #include "EditAnnotations.h"
+#include "Annotation.h"
+#include "EngineAll.h"
 #include "EutlTrust.h"
 #include "CommandPalette.h"
 #include "PdfTools.h"
@@ -484,6 +486,56 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
     return finish({}, 0);
 }
 
+// QuadPoints of markup annotations on the current document (issue #6023).
+static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (len(gWindows) == 0 || !gWindows[0]) {
+        return finish(StrL("NOTREADY no-window\n"), 2);
+    }
+    WindowTab* tab = gWindows[0]->CurrentTab();
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(StrL("NOTREADY no-engine\n"), 2);
+    }
+    Vec<Annotation*> annots;
+    EngineMupdfGetLoadedAnnotations(engine, annots);
+    int n = 0;
+    for (Annotation* a : annots) {
+        AnnotationType tp = Type(a);
+        if (tp != AnnotationType::Highlight && tp != AnnotationType::Underline && tp != AnnotationType::Squiggly &&
+            tp != AnnotationType::StrikeOut) {
+            continue;
+        }
+        Vec<RectF> quads = GetQuadPointsAsRect(a);
+        Str typeName = StrL("other");
+        if (tp == AnnotationType::Highlight) {
+            typeName = StrL("Highlight");
+        } else if (tp == AnnotationType::Underline) {
+            typeName = StrL("Underline");
+        } else if (tp == AnnotationType::Squiggly) {
+            typeName = StrL("Squiggly");
+        } else if (tp == AnnotationType::StrikeOut) {
+            typeName = StrL("StrikeOut");
+        }
+        out.Append(fmt("type=%s page=%d quads=%d\n", typeName, PageNo(a), len(quads)));
+        for (int i = 0; i < len(quads); i++) {
+            RectF r = quads[i];
+            out.Append(fmt("rect=%g,%g,%g,%g\n", r.x, r.y, r.dx, r.dy));
+        }
+        n++;
+    }
+    out.Append(fmt("n=%d\n", n));
+    return finish({}, 0);
+}
+
 static TempStr DocumentSignaturesResultTemp(int* exitCodeOut) {
     auto finish = [exitCodeOut](Str result, int code) -> TempStr {
         if (exitCodeOut) {
@@ -601,6 +653,7 @@ enum class ControlCmd : u16 {
     TestDpi = 71,
     TestSelectionVars = 72,
     TestSelectionToolbar = 73,
+    TestMarkupAnnots = 74,
 };
 
 enum class ControlArgType : u16 {
@@ -1391,6 +1444,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestSelectionToolbar: {
             AppendTestResult(req, 0, SelectionToolbarLayoutDumpTemp());
+            break;
+        }
+
+        case ControlCmd::TestMarkupAnnots: {
+            int exitCode = 0;
+            Str res = MarkupAnnotsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 
