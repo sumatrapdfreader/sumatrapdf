@@ -734,7 +734,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
     }
 
     SortNatural(&fonts);
-    return JoinTemp(&fonts, "\n");
+    return JoinTemp(&fonts, StrL("\n"));
 }
 
 static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
@@ -840,7 +840,7 @@ EngineBase* EngineEpub::Clone() {
     if (sourceData) {
         auto res = CreateFromData(sourceData);
         if (!res) {
-            log("EngineEpub::Clone() failed: CreateFromData() failed\n");
+            log(StrL("EngineEpub::Clone() failed: CreateFromData() failed\n"));
         }
         return res;
     }

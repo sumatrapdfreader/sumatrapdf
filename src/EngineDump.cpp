@@ -39,19 +39,19 @@ static TempStr EscapeTemp(Str str) {
     for (int i = 0; i < str.len; i++) {
         switch (str.s[i]) {
             case '&':
-                escaped.Append("&amp;");
+                escaped.Append(StrL("&amp;"));
                 break;
             case '<':
-                escaped.Append("&lt;");
+                escaped.Append(StrL("&lt;"));
                 break;
             case '>':
-                escaped.Append("&gt;");
+                escaped.Append(StrL("&gt;"));
                 break;
             case '"':
-                escaped.Append("&quot;");
+                escaped.Append(StrL("&quot;"));
                 break;
             case '\'':
-                escaped.Append("&amp;");
+                escaped.Append(StrL("&amp;"));
                 break;
             default:
                 escaped.AppendChar(str.s[i]);
@@ -131,8 +131,8 @@ static void DumpProperties(EngineBase* engine, bool fullDump) {
     TempStr fontlist = engine->GetPropertyTemp(DocProp::FontList);
     if (fontlist) {
         StrVec fonts;
-        Split(&fonts, fontlist, "\n");
-        str = EscapeTemp(Join(&fonts, "\n\t\t"));
+        Split(&fonts, fontlist, StrL("\n"));
+        str = EscapeTemp(Join(&fonts, StrL("\n\t\t")));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.s);
     }
 }

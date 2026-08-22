@@ -99,7 +99,7 @@ static bool CanStackWalk() {
     bool ok = DynSymCleanup && DynSymGetOptions && DynSymSetOptions && DynStackWalk64 && DynSymFunctionTableAccess64 &&
               DynSymGetModuleBase64 && DynSymFromAddr;
     // if (!ok)
-    //    plog("dbghelp::CanStackWalk(): no");
+    //    plog(StrL("dbghelp::CanStackWalk(): no"));
     return ok;
 }
 
@@ -147,7 +147,7 @@ bool Initialize(WStr symPathW, bool force) {
     bool needsCleanup = gSymInitializeOk;
 
     if (!DynSymInitializeW) {
-        log("dbghelp::Initialize(): SymInitializeW() and SymInitialize() not present in dbghelp.dll");
+        log(StrL("dbghelp::Initialize(): SymInitializeW() and SymInitialize() not present in dbghelp.dll"));
         return false;
     }
 
@@ -158,7 +158,7 @@ bool Initialize(WStr symPathW, bool force) {
     gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW.s, TRUE);
 
     if (!gSymInitializeOk) {
-        log("dbghelp::Initialize(): DynSymInitializeW() failed");
+        log(StrL("dbghelp::Initialize(): DynSymInitializeW() failed"));
         return false;
     }
 
@@ -286,8 +286,8 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
     DWORD_PTR offset;
     ok = GetAddrInfo((void*)addr, moduleName, sizeof(moduleName), section, offset);
     if (ok) {
-        str::ToLowerInPlace(moduleName);
-        TempStr moduleShort = path::GetBaseNameTemp(moduleName);
+        str::ToLowerInPlace(Str(moduleName));
+        TempStr moduleShort = path::GetBaseNameTemp(Str(moduleName));
         if (compact) {
             s.Append(moduleShort);
         } else {
@@ -311,7 +311,7 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
     } else {
         AppendAddress(s, addr);
     }
-    s.Append("\n");
+    s.Append(StrL("\n"));
 }
 
 static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, ThreadHandle hThread) {
@@ -331,7 +331,7 @@ static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT
         return true;
     }
     if (addr == stackFrame->AddrReturn.Offset) {
-        s.Append("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset");
+        s.Append(StrL("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset"));
         return false;
     }
 
@@ -341,7 +341,7 @@ static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT
 
 static bool GetCallstack(str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
     if (!CanStackWalk()) {
-        s.Append("GetCallstack(): CanStackWalk() returned false\n");
+        s.Append(StrL("GetCallstack(): CanStackWalk() returned false\n"));
         return false;
     }
 
@@ -375,7 +375,7 @@ static bool GetCallstack(str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
         framesCount++;
     }
     if (0 == framesCount) {
-        s.Append("StackWalk64() couldn't get even the first stack frame info\n");
+        s.Append(StrL("StackWalk64() couldn't get even the first stack frame info\n"));
         return false;
     }
     return true;
@@ -449,13 +449,13 @@ void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
     DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
     ThreadHandle hThread = OpenThread(access, false, threadId);
     if (!hThread) {
-        s.Append("Failed to OpenThread()\n");
+        s.Append(StrL("Failed to OpenThread()\n"));
         return;
     }
 
     DWORD res = SuspendThread(hThread);
     if ((DWORD)(-1) == res) {
-        s.Append("Failed to SuspendThread()\n");
+        s.Append(StrL("Failed to SuspendThread()\n"));
     } else {
         CONTEXT ctx{};
         ctx.ContextFlags = CONTEXT_FULL;
@@ -463,7 +463,7 @@ void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
         if (ok) {
             GetCallstack(s, ctx, hThread);
         } else {
-            s.Append("Failed to GetThreadContext()\n");
+            s.Append(StrL("Failed to GetThreadContext()\n"));
         }
 
         ResumeThread(hThread);
@@ -496,7 +496,7 @@ static str::Builder* gCallstackLogs = nullptr;
 TempStr GetCurrentThreadCallstackTemp() {
     str::Builder s(2048);
     if (!GetCurrentThreadCallstack(s)) {
-        return "";
+        return StrL("");
     }
     return ToStrTemp(s);
 }
@@ -517,7 +517,7 @@ Str GetCallstacks() {
         return {};
     }
     char* s = str::Dup(ToStr(*gCallstackLogs)).s;
-    return s;
+    return Str(s);
 }
 
 void LogCallstack() {
@@ -526,7 +526,7 @@ void LogCallstack() {
         return;
     }
 
-    s.Append("\n");
+    s.Append(StrL("\n"));
     if (gCallstackLogs) {
         gCallstackLogs->Append(ToStr(s));
     }
@@ -573,18 +573,18 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
         int readWriteFlag = (int)excRecord->ExceptionInformation[0];
         DWORD64 dataVirtAddr = (DWORD64)excRecord->ExceptionInformation[1];
         if (0 == readWriteFlag) {
-            s.Append("Fault reading address ");
+            s.Append(StrL("Fault reading address "));
             AppendAddress(s, dataVirtAddr);
         } else if (1 == readWriteFlag) {
-            s.Append("Fault writing address ");
+            s.Append(StrL("Fault writing address "));
             AppendAddress(s, dataVirtAddr);
         } else if (8 == readWriteFlag) {
-            s.Append("DEP violation at address ");
+            s.Append(StrL("DEP violation at address "));
             AppendAddress(s, dataVirtAddr);
         } else {
             s.Append(fmt("unknown readWriteFlag: %d", readWriteFlag));
         }
-        s.Append("\n");
+        s.Append(StrL("\n"));
     }
 
     PCONTEXT ctx = excPointers->ContextRecord;
@@ -614,7 +614,7 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
 #error "Unsupported CPU architecture"
 #endif
 
-    s.Append("\nCrashed thread:\n");
+    s.Append(StrL("\nCrashed thread:\n"));
     // it's not really for current thread, but it seems to work
     GetCallstack(s, *ctx, GetCurrentThread());
 }

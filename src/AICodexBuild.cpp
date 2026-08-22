@@ -480,7 +480,7 @@ struct CodexBuildProvider : AIChatProvider {
         Str extra = gGlobalPrefs->codexBuild.models;
         if (len(extra) > 0) {
             StrVec parts;
-            Split(&parts, extra, ",", true);
+            Split(&parts, extra, StrL(","), true);
             for (int i = 0; i < len(parts); i++) {
                 AIChatAppendModelUnique(models, parts[i]);
             }

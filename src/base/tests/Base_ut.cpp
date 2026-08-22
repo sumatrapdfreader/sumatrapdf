@@ -203,17 +203,17 @@ static void ListTest() {
 
 static void ColorTest() {
     ParsedColor parsed;
-    ParseColor(parsed, "#f2f2f2");
+    ParseColor(parsed, StrL("#f2f2f2"));
     utassert(parsed.parsedOk);
     utassert(parsed.col == MkRgb(0xf2, 0xf2, 0xf2));
 
     parsed = {};
-    ParseColor(parsed, "#80f2f2f2");
+    ParseColor(parsed, StrL("#80f2f2f2"));
     utassert(parsed.parsedOk);
     utassert(parsed.col == MkRgba(0xf2, 0xf2, 0xf2, 0x80));
 
     parsed = {};
-    ParseColor(parsed, "#f2f2f");
+    ParseColor(parsed, StrL("#f2f2f"));
     utassert(!parsed.parsedOk);
 }
 

@@ -83,7 +83,7 @@ Str gDefaultMsg; // Note: translation, not freeing
 // case-insensitive check whether dir is a ';'-delimited component of a PATH-like string
 bool IsDirInPath(Str path, Str dir) {
     StrVec parts;
-    Split(&parts, path, ";");
+    Split(&parts, path, StrL(";"));
     for (Str part : parts) {
         if (str::EqI(part, dir)) {
             return true;
@@ -150,7 +150,7 @@ TempStr GetExistingInstallationDirTemp() {
         // no logging if returning cached
         return gCachedExistingInstallationDir;
     }
-    log("GetExistingInstallationDir()\n");
+    log(StrL("GetExistingInstallationDir()\n"));
     TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
     TempStr dir = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!dir) {
@@ -259,7 +259,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     info->installationDir = str::Dup(GetExistingInstallationDirTemp());
     if (!info->installationDir) {
         info->typ = PreviousInstallationType::None;
-        log("GetPreviousInstallInfo: not installed\n");
+        log(StrL("GetPreviousInstallInfo: not installed\n"));
         return;
     }
     info->searchFilterInstalled = IsSearchFilterInstalled();
@@ -353,7 +353,7 @@ static bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2) {
 constexpr const char* kBrowserPluginName = "npPdfViewer.dll";
 
 void UninstallBrowserPlugin() {
-    log("UninstallBrowserPlugin()\n");
+    log(StrL("UninstallBrowserPlugin()\n"));
     TempStr dllPath = GetExistingInstallationFilePathTemp(kBrowserPluginName);
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
@@ -364,10 +364,10 @@ void UninstallBrowserPlugin() {
     }
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
-        log("  did uninstall browser plugin\n");
+        log(StrL("  did uninstall browser plugin\n"));
         return;
     }
-    log("  failed to uninstall browser plugin\n");
+    log(StrL("  failed to uninstall browser plugin\n"));
     NotifyFailed(_TRA("Couldn't uninstall browser plugin"));
 }
 
@@ -378,10 +378,10 @@ void RegisterSearchFilter(bool allUsers, Str installDir) {
     logf("RegisterSearchFilter() dllPath=%s\n", dllPath);
     bool ok = InstallSearchFilter(dllPath, allUsers);
     if (ok) {
-        log("  did register\n");
+        log(StrL("  did register\n"));
         return;
     }
-    log("  failed to register\n");
+    log(StrL("  failed to register\n"));
     NotifyFailed(_TRA("Couldn't install PDF search filter"));
 }
 
@@ -390,10 +390,10 @@ void UnRegisterSearchFilter() {
     logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath);
     bool ok = UninstallSearchFilter();
     if (ok) {
-        log("  did unregister\n");
+        log(StrL("  did unregister\n"));
         return;
     }
-    log("  failed to unregister\n");
+    log(StrL("  failed to unregister\n"));
     NotifyFailed(_TRA("Couldn't uninstall Sumatra search filter"));
 }
 
@@ -404,10 +404,10 @@ void RegisterPreviewer(bool allUsers, Str installDir) {
     logf("RegisterPreviewer() dllPath=%s\n", dllPath);
     bool ok = InstallPreviewDll(dllPath, allUsers);
     if (ok) {
-        log("  did register\n");
+        log(StrL("  did register\n"));
         return;
     }
-    log("  failed to register\n");
+    log(StrL("  failed to register\n"));
     NotifyFailed(_TRA("Couldn't install PDF previewer"));
 }
 
@@ -416,10 +416,10 @@ void UnRegisterPreviewer() {
     logf("UnRegisterPreviewer() dllPath=%s\n", dllPath);
     bool ok = UninstallPreviewDll();
     if (ok) {
-        log("  did unregister\n");
+        log(StrL("  did unregister\n"));
         return;
     }
-    log(" failed to unregister\n");
+    log(StrL(" failed to unregister\n"));
     NotifyFailed(_TRA("Couldn't uninstall PDF previewer"));
 }
 
@@ -603,11 +603,11 @@ void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallSt
     }
 
     if (removed.searchFilter) {
-        log("  unregistering search filter before file overwrite\n");
+        log(StrL("  unregistering search filter before file overwrite\n"));
         UninstallSearchFilter();
     }
     if (removed.preview) {
-        log("  unregistering previewer before file overwrite\n");
+        log(StrL("  unregistering previewer before file overwrite\n"));
         UninstallPreviewDll();
     }
     UninstallBrowserPlugin();
@@ -635,7 +635,7 @@ void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallSt
 
 void RestoreShellExtensions(const ShellExtInstallState& state) {
     if (!state.installDir) {
-        log("RestoreShellExtensions: no installDir, skip\n");
+        log(StrL("RestoreShellExtensions: no installDir, skip\n"));
         return;
     }
     logf("RestoreShellExtensions: filter=%d preview=%d allUsers=%d dir='%s'\n", (int)state.searchFilter,
@@ -651,7 +651,7 @@ void RestoreShellExtensions(const ShellExtInstallState& state) {
 // return names of processes that are running part of the installation
 // (i.e. have libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll, or plugin loaded)
 static void ProcessesUsingInstallation(StrVec& names) {
-    log("ProcessesUsingInstallation()\n");
+    log(StrL("ProcessesUsingInstallation()\n"));
     TempStr dir = GetExistingInstallationDirTemp();
     if (!dir) {
         return;

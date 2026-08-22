@@ -1472,23 +1472,23 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
 
     AdvancedSettingsWnd* wnd = gAdvancedSettingsWnd;
     if (!wnd || !wnd->hwnd) {
-        out.Append("NOTREADY no-dialog\n");
+        out.Append(StrL("NOTREADY no-dialog\n"));
         return finish(2);
     }
-    if (str::Eq(action, "names")) {
+    if (str::Eq(action, StrL("names"))) {
         for (SettingItem* item : wnd->items) {
             out.Append(item->name);
             out.AppendChar('\n');
         }
         return finish(0);
     }
-    if (str::Eq(action, "changed")) {
+    if (str::Eq(action, StrL("changed"))) {
         int n = wnd->CountChangedSettings();
         bool banner = wnd->changedCountRow && wnd->changedCountRow->GetVisibility() == Visibility::Visible;
         out.Append(fmt("changed=%d banner=%d\n", n, banner ? 1 : 0));
         return finish(0);
     }
-    if (str::Eq(action, "toggle")) {
+    if (str::Eq(action, StrL("toggle"))) {
         int nBool = 0;
         SettingItem* target = nullptr;
         for (SettingItem* item : wnd->items) {
@@ -1502,7 +1502,7 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
             nBool++;
         }
         if (!target) {
-            out.Append("ERROR no-bool\n");
+            out.Append(StrL("ERROR no-bool\n"));
             return finish(1);
         }
         target->boolVal = !target->boolVal;
@@ -1515,7 +1515,7 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         out.Append(fmt("toggled=%s changed=%d banner=%d\n", target->name, n, banner ? 1 : 0));
         return finish(0);
     }
-    if (str::Eq(action, "esc")) {
+    if (str::Eq(action, StrL("esc"))) {
         bool editingValue = wnd->editValue != nullptr;
         bool editingEnum = wnd->dropDownValue != nullptr;
         wnd->HandleEscapeKey(editingValue, editingEnum);
@@ -1524,19 +1524,19 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         return finish(0);
     }
     if (!wnd->listBox) {
-        out.Append("NOTREADY no-dialog\n");
+        out.Append(StrL("NOTREADY no-dialog\n"));
         return finish(2);
     }
     VirtListBox* lb = wnd->listBox;
     if (lb->bounds.IsEmpty()) {
-        out.Append("NOTREADY no-layout\n");
+        out.Append(StrL("NOTREADY no-layout\n"));
         return finish(2);
     }
     int itemDy = lb->GetItemHeight();
-    if (str::Eq(action, "scroll")) {
+    if (str::Eq(action, StrL("scroll"))) {
         lb->ScrollBy(arg * itemDy);
         HwndRepaintNow(wnd->hwnd);
-    } else if (!str::Eq(action, "geom")) {
+    } else if (!str::Eq(action, StrL("geom"))) {
         out.Append(fmt("ERROR unknown-action action=%s\n", action));
         return finish(1);
     }

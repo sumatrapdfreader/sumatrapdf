@@ -198,7 +198,7 @@ static void AppendPrinterStatus(str::Builder& out, DWORD status) {
         }
     }
     if (!any) {
-        out.Append("\n    READY");
+        out.Append(StrL("\n    READY"));
     }
 }
 
@@ -208,7 +208,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
     ReportIf(bins != binNames);
     if (0 == bins) {
-        out.Append("  no paper bins available\n");
+        out.Append(StrL("  no paper bins available\n"));
     } else if (bins == (DWORD)-1) {
         out.Append(fmt("  error: call to DeviceCapabilities failed with error %#x\n", GetLastError()));
     } else {
@@ -234,7 +234,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         // paper sizes in tenths of a millimeter
         POINT* paperSizes = AllocArrayTemp<POINT>((int)papers);
         DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes, nullptr);
-        out.Append("  paper sizes:\n");
+        out.Append(StrL("  paper sizes:\n"));
         for (DWORD j = 0; j < papers; j++) {
             TempStr s = ToUtf8Temp(WStr(paperNameValues + (64 * (size_t)j)));
             POINT sz = paperSizes[j];
@@ -281,13 +281,13 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     if (nRes > 0 && nRes != (DWORD)-1) {
         LONG* resPairs = AllocArrayTemp<LONG>(2 * (int)nRes);
         DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs, nullptr);
-        out.Append("  resolutions:");
+        out.Append(StrL("  resolutions:"));
         for (DWORD j = 0; j < nRes; j++) {
             LONG xDpi = resPairs[(size_t)j * 2];
             LONG yDpi = resPairs[(j * 2) + 1];
             out.Append(fmt(" %dx%d", (int)xDpi, (int)yDpi));
         }
-        out.Append("\n");
+        out.Append(StrL("\n"));
     }
 
     // N-up (pages per sheet)
@@ -295,11 +295,11 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     if (nup > 0 && nup != (DWORD)-1) {
         DWORD* nupValues = AllocArrayTemp<DWORD>((int)nup);
         DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues, nullptr);
-        out.Append("  pages per sheet (N-up):");
+        out.Append(StrL("  pages per sheet (N-up):"));
         for (DWORD j = 0; j < nup; j++) {
             out.Append(fmt(" %d", (int)nupValues[j]));
         }
-        out.Append("\n");
+        out.Append(StrL("\n"));
     }
 
     // media types
@@ -310,7 +310,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, mediaNames, nullptr);
         DWORD* mediaValues = AllocArrayTemp<DWORD>((int)nMedia);
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues, nullptr);
-        out.Append("  media types:\n");
+        out.Append(StrL("  media types:\n"));
         for (DWORD j = 0; j < nMedia; j++) {
             TempStr s = ToUtf8Temp(WStr(mediaNames + (64 * (size_t)j)));
             out.Append(fmt("    '%s' (%d)\n", s, (int)mediaValues[j]));
@@ -322,7 +322,7 @@ static void AppendDevModeInfo(str::Builder& out, DEVMODEW* dm) {
     if (!dm) {
         return;
     }
-    out.Append("  devmode defaults:\n");
+    out.Append(StrL("  devmode defaults:\n"));
     if (dm->dmFields & DM_ORIENTATION) {
         Str s = dm->dmOrientation == DMORIENT_PORTRAIT ? StrL("portrait") : StrL("landscape");
         out.Append(fmt("    orientation: %s\n", s));
@@ -417,15 +417,15 @@ void GetPrintersInfo(str::Builder& out) {
 
         out.Append(fmt("  status: %#x", info.Status));
         AppendPrinterStatus(out, info.Status);
-        out.Append("\n");
+        out.Append(StrL("\n"));
 
         out.Append(fmt("  attributes: %#x", attr));
         AppendPrinterAttributes(out, attr);
-        out.Append("\n");
+        out.Append(StrL("\n"));
 
         AppendDevModeInfo(out, info.pDevMode);
         AppendDeviceCapabilities(out, nameW, portW);
-        out.Append("\n");
+        out.Append(StrL("\n"));
     }
     free(info2Arr);
 }
@@ -1854,7 +1854,7 @@ static bool PrintSettingsHaveToken(Str settings, Str token) {
         return false;
     }
     StrVec list;
-    Split(&list, settings, ",", true);
+    Split(&list, settings, StrL(","), true);
     for (Str s : list) {
         if (str::EqI(s, token)) {
             return true;
@@ -1901,7 +1901,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
 
     StrVec rangeList;
     if (settings) {
-        Split(&rangeList, settings, ",", true);
+        Split(&rangeList, settings, StrL(","), true);
     }
 
     for (Str s : rangeList) {

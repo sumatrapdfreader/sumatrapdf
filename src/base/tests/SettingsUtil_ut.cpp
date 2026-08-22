@@ -145,11 +145,11 @@ Key = Value";
 
     SutStruct* data = nullptr;
     for (int i = 0; i < 3; i++) {
-        data = (SutStruct*)DeserializeStruct(&gSutStructInfo, serialized, data);
+        data = (SutStruct*)DeserializeStruct(&gSutStructInfo, Str(serialized), data);
         utassert(data->internal == i);
-        Str s = serialized;
+        Str s = Str(serialized);
         if (i < 2) {
-            s = unknownOnly;
+            Str(s = unknownOnly);
         }
         Str reserializedBs = SerializeStruct(&gSutStructInfo, data, s);
         utassert(str::Eq(serialized, reserializedBs));
@@ -169,8 +169,8 @@ Key = Value";
     utassert(0 == len(*(*data->sutStructItems)[0]->nested.colorArray));
     utassert(0 == len(*(*data->sutStructItems)[1]->floatArray));
     utassert(2 == len(*(*data->sutStructItems)[1]->nested.colorArray));
-    utassert(str::Eq("#12345678", (*(*data->sutStructItems)[1]->nested.colorArray)[0]));
-    utassert(str::Eq("#987654", (*(*data->sutStructItems)[1]->nested.colorArray)[1]));
+    utassert(str::Eq(StrL("#12345678"), (*(*data->sutStructItems)[1]->nested.colorArray)[0]));
+    utassert(str::Eq(StrL("#987654"), (*(*data->sutStructItems)[1]->nested.colorArray)[1]));
     utassert(!data->internalString);
     {
         Str res = SerializeStruct(&gSutStructInfo, data);
@@ -179,18 +179,18 @@ Key = Value";
     }
     (*data->sutStructItems)[0]->nested.point.x++;
     {
-        Str res = SerializeStruct(&gSutStructInfo, data, unknownOnly);
+        Str res = SerializeStruct(&gSutStructInfo, data, Str(unknownOnly));
         utassert(!str::Eq(serialized, res));
         str::Free(res);
     }
     FreeStruct(&gSutStructInfo, data);
 
-    data = (SutStruct*)DeserializeStruct(&gSutStructInfo, nullptr);
+    data = (SutStruct*)DeserializeStruct(&gSutStructInfo, Str());
     utassert(data);
     if (!data) {
         return;
     }
-    utassert(data->boolean && str::Eq("0xffcc9933", data->color));
+    utassert(data->boolean && str::Eq(StrL("0xffcc9933"), data->color));
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
     utassert(str::Eq(data->string, StrL("String")) && str::IsNull(data->nullString) &&
              str::Eq(data->escapedString, StrL("$\nstring ")));
@@ -217,7 +217,7 @@ Key = Value";
         "Boolean = no",   "Boolean = Yes",   "Boolean = No",   "Boolean = 1",     "Boolean = 0",
     };
     for (int i = 0; i < dimof(boolData); i++) {
-        data = (SutStruct*)DeserializeStruct(&gSutStructInfo, boolData[i]);
+        data = (SutStruct*)DeserializeStruct(&gSutStructInfo, Str(boolData[i]));
         utassert(data->boolean == ((i % 2) == 0));
         FreeStruct(&gSutStructInfo, data);
     }
@@ -247,20 +247,20 @@ Key = Value";
     static const StructInfo gSutTempRootInfo = {sizeof(SutTempRoot), 1, gSutTempRootFields, "Items"};
 
     {
-        auto* root = (SutTempRoot*)DeserializeStruct(&gSutTempRootInfo, nullptr);
+        auto* root = (SutTempRoot*)DeserializeStruct(&gSutTempRootInfo, Str());
         utassert(root && root->items);
 
-        auto* keep = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        auto* keep = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, Str());
         str::ReplaceWithCopy(&keep->name, StrL("keep"));
         keep->pageNo = 3;
         keep->isTemporary = false;
 
-        auto* drop = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        auto* drop = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, Str());
         str::ReplaceWithCopy(&drop->name, StrL("/"));
         drop->pageNo = 7;
         drop->isTemporary = true;
 
-        auto* keep2 = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, nullptr);
+        auto* keep2 = (SutTempItem*)DeserializeStruct(&gSutTempItemInfo, Str());
         str::ReplaceWithCopy(&keep2->name, StrL("also"));
         keep2->pageNo = 9;
         keep2->isTemporary = false;
@@ -317,7 +317,7 @@ Key = Value";
 
     {
         // default: not set, and nothing about it in the output
-        auto* root = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, nullptr);
+        auto* root = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, Str());
         utassert(root && !root->sub);
         Str out = SerializeStruct(&gSutOptRootInfo, root);
         utassert(str::Contains(out, StrL("Other = 7")));
@@ -325,7 +325,7 @@ Key = Value";
         str::Free(out);
 
         // once set, it round-trips
-        root->sub = (SutOptSub*)DeserializeStruct(&gSutOptSubInfo, nullptr);
+        root->sub = (SutOptSub*)DeserializeStruct(&gSutOptSubInfo, Str());
         str::ReplaceWithCopy(&root->sub->name, StrL("Segoe UI"));
         root->sub->size = 14;
         out = SerializeStruct(&gSutOptRootInfo, root);

@@ -526,11 +526,11 @@ static TempStr MarkdownPageCssTemp() {
 
     TempStr bg = ColorToCssTemp(bgCol);
     // the default black-on-white gets the classic GitHub palette
-    TempStr fg = isDefault ? str::DupTemp("#24292f") : ColorToCssTemp(txtCol);
+    TempStr fg = isDefault ? str::DupTemp(StrL("#24292f")) : ColorToCssTemp(txtCol);
     Str link = dark ? StrL("#4493f8") : StrL("#0969da");
     Str muted = dark ? StrL("#9198a1") : StrL("#57606a");
-    TempStr border = isDefault ? str::DupTemp("#d0d7de") : ColorToCssTemp(AccentColor(bgCol, 25));
-    TempStr codeBg = isDefault ? str::DupTemp("#f6f8fa") : ColorToCssTemp(AccentColor(bgCol, 8));
+    TempStr border = isDefault ? str::DupTemp(StrL("#d0d7de")) : ColorToCssTemp(AccentColor(bgCol, 25));
+    TempStr codeBg = isDefault ? str::DupTemp(StrL("#f6f8fa")) : ColorToCssTemp(AccentColor(bgCol, 8));
 
     TempStr cssVars =
         fmt("--bg:%s; --fg:%s; --link:%s; --muted:%s; --border:%s; --code-bg:%s;", bg, fg, link, muted, border, codeBg);

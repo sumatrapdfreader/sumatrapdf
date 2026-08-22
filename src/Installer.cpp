@@ -145,7 +145,7 @@ static bool IsDiskFullError(DWORD err) {
 static bool WriteInstallerFileRobust(Str path, Str data) {
     gLastWriteInstallerErr = 0;
     if (!path || !data.s) {
-        log("WriteInstallerFileRobust: null path or data\n");
+        log(StrL("WriteInstallerFileRobust: null path or data\n"));
         return false;
     }
     int expected = data.len;
@@ -180,7 +180,7 @@ static bool WriteInstallerFileRobust(Str path, Str data) {
     };
 
     auto tryTempRename = [&]() -> bool {
-        TempStr tmp = str::JoinTemp(path, ".tmp");
+        TempStr tmp = str::JoinTemp(path, StrL(".tmp"));
         logf("  trying write via temp '%s'\n", tmp);
         ClearReadOnly(tmp);
         file::Delete(tmp);
@@ -424,7 +424,7 @@ static TempStr ProcessesHoldingFileTemp(Str path) {
         }
         logf("ProcessesHoldingFile: holder pid=%u app='%s' type=%u\n", pid, app, (unsigned)infos[i].ApplicationType);
         if (len(sb) > 0) {
-            sb.Append("\n");
+            sb.Append(StrL("\n"));
         }
         sb.Append(fmt("• %s (pid %u)", app, pid));
     }
@@ -454,7 +454,7 @@ static void StartWindowsSearchService() {
         return;
     }
     if (StartServiceW(svc, 0, nullptr)) {
-        log("StartWindowsSearchService: start requested\n");
+        log(StrL("StartWindowsSearchService: start requested\n"));
     } else {
         DWORD err = GetLastError();
         if (err != ERROR_SERVICE_ALREADY_RUNNING) {
@@ -766,7 +766,7 @@ static bool MoveAsideInstallFile(Str installDir, Str fileName, bool silent) {
         logf("MoveAsideInstallFile: no existing '%s'\n", path);
         return true;
     }
-    TempStr copyPath = str::JoinTemp(path, ".copy");
+    TempStr copyPath = str::JoinTemp(path, StrL(".copy"));
     i64 existingSize = file::GetSize(path);
     logf("MoveAsideInstallFile: '%s' (size=%lld) -> '%s' silent=%d\n", path, (long long)existingSize, copyPath,
          (int)silent);
@@ -822,7 +822,7 @@ static void MoveAsideOrDeleteLegacyLibmupdf(Str installDir) {
     }
     logf("MoveAsideOrDeleteLegacyLibmupdf: found legacy '%s' size=%lld\n", path, (long long)file::GetSize(path));
     KillProcessesWithModule(path, true);
-    TempStr copyPath = str::JoinTemp(path, ".copy");
+    TempStr copyPath = str::JoinTemp(path, StrL(".copy"));
     if (TryRenameAsideOnce(path, copyPath)) {
         logf("MoveAsideOrDeleteLegacyLibmupdf: renamed to '%s'\n", copyPath);
         return;
@@ -904,7 +904,7 @@ static void RestoreInstallCopyFiles(Str installDir) {
     };
     for (Str name : kFiles) {
         TempStr path = path::JoinTemp(installDir, name);
-        TempStr copyPath = str::JoinTemp(path, ".copy");
+        TempStr copyPath = str::JoinTemp(path, StrL(".copy"));
         if (!file::Exists(copyPath)) {
             continue;
         }
@@ -914,7 +914,7 @@ static void RestoreInstallCopyFiles(Str installDir) {
             if (file::Delete(path)) {
                 logf("  deleted partial '%s'\n", path);
             } else {
-                TempStr failedPath = str::JoinTemp(path, ".failed");
+                TempStr failedPath = str::JoinTemp(path, StrL(".failed"));
                 file::Delete(failedPath);
                 if (MoveFileExW(CWStrTemp(path), CWStrTemp(failedPath), MOVEFILE_REPLACE_EXISTING)) {
                     logf("  moved partial '%s' -> '%s'\n", path, failedPath);
@@ -978,7 +978,7 @@ static bool CopySelfToDir(Str destDir) {
     logf("CopySelfToDir(%s)\n", destDir);
     TempStr exePath = GetSelfExePathTemp();
     TempStr dstPath = path::JoinTemp(destDir, kExeName);
-    TempStr tmpPath = str::JoinTemp(dstPath, ".tmp");
+    TempStr tmpPath = str::JoinTemp(dstPath, StrL(".tmp"));
     DWORD lastErr = 0;
 
     auto tryDirectCopy = [&]() -> bool {
@@ -1065,7 +1065,7 @@ static bool CopySelfToDir(Str destDir) {
 }
 
 static void CopySettingsFile() {
-    log("CopySettingsFile()\n");
+    log(StrL("CopySettingsFile()\n"));
     // Settings moved from %APPDATA% to %LOCALAPPDATA% in 3.2; copy from the old location on upgrade.
 
     // seen a crash when running elevated
@@ -1092,7 +1092,7 @@ static void CopySettingsFile() {
 static bool CreateAppShortcut(int csidl, Str installedExePath) {
     TempStr shortcutPath = GetShortcutPathTemp(csidl);
     if (!shortcutPath) {
-        log("CreateAppShortcut() failed\n");
+        log(StrL("CreateAppShortcut() failed\n"));
         return false;
     }
     logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath);
@@ -1167,7 +1167,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     if (len(currPath) > 0) {
         newPath.Append(currPath);
         if (newPath.LastChar() != ';') {
-            newPath.Append(";");
+            newPath.Append(StrL(";"));
         }
     }
     newPath.Append(installDir);
@@ -1203,7 +1203,7 @@ static void InstallerThread(Flags* cli) {
     StopWindowsSearchService();
 
     if (!ExtractInstallerFiles(cli->installDir)) {
-        log("ExtractInstallerFiles() failed\n");
+        log(StrL("ExtractInstallerFiles() failed\n"));
         // Put shell extensions back so the user keeps search/preview until they retry.
         RestoreShellExtensions(removedExts);
         goto Exit;
@@ -1256,7 +1256,7 @@ static void InstallerThread(Flags* cli) {
     AddInstallDirToPath(allUsers, cli->installDir);
 
     ProgressStep();
-    log("Installer thread finished\n");
+    log(StrL("Installer thread finished\n"));
 Exit:
     str::Free(removedExts.installDir);
     // Best-effort: restore search indexing after we may have stopped WSearch.
@@ -1266,7 +1266,7 @@ Exit:
     if (gInstallFailed) {
         TempStr cond = fmt("Installation failed: %s", gFirstError ? gFirstError : StrL("(no details)"));
         logf("InstallerThread: upload debug report: %s\n", cond);
-        _uploadDebugReport(cond, FILE_LINE, false, false);
+        _uploadDebugReport(cond, StrL(FILE_LINE), false, false);
     }
     if (gWnd && gWnd->hwnd) {
         if (!gCli->silent) {
@@ -1440,7 +1440,7 @@ static void OnButtonExit() {
     if (gWnd) {
         SendMessageW(gWnd->hwnd, WM_CLOSE, 0, 0);
     } else {
-        log("OnButtonExit: gWnd is null\n");
+        log(StrL("OnButtonExit: gWnd is null\n"));
     }
 }
 
@@ -1475,7 +1475,7 @@ static HRESULT CALLBACK InstallationFailedDialogCallback(HWND /*hwnd*/, UINT msg
 
 // Close the installer UI and show a TaskDialog with details + "Show log".
 static void ShowInstallationFailedUi(HWND hwndParent) {
-    log("ShowInstallationFailedUi\n");
+    log(StrL("ShowInstallationFailedUi\n"));
     Str firstErr = gFirstError ? gFirstError : StrL("(no details)");
     TempStr content =
         fmt("%s\n\n%s\n\n%s", firstErr, _TRA("Installation could not be completed."),
@@ -2109,7 +2109,7 @@ static LoadedDataResource gLoadedArchive;
 
 static bool OpenEmbeddedFilesArchive() {
     if (gArchive.filesCount > 0) {
-        log("OpenEmbeddedFilesArchive: already opened\n");
+        log(StrL("OpenEmbeddedFilesArchive: already opened\n"));
         return true;
     }
     bool ok = LockDataResource(IDR_DLL_PAK, &gLoadedArchive);
@@ -2131,12 +2131,12 @@ static bool OpenEmbeddedFilesArchive() {
 bool ExtractLibsumatrapdfToDir(Str destDir) {
     logf("ExtractLibsumatrapdfToDir: destDir='%s'\n", destDir);
     if (!OpenEmbeddedFilesArchive()) {
-        log("ExtractLibsumatrapdfToDir: OpenEmbeddedFilesArchive failed\n");
+        log(StrL("ExtractLibsumatrapdfToDir: OpenEmbeddedFilesArchive failed\n"));
         return false;
     }
     int idx = lzma::GetIdxFromName(&gArchive, "libsumatrapdf.dll");
     if (idx < 0) {
-        log("ExtractLibsumatrapdfToDir: libsumatrapdf.dll not found in archive\n");
+        log(StrL("ExtractLibsumatrapdfToDir: libsumatrapdf.dll not found in archive\n"));
         return false;
     }
     lzma::FileInfo* fi = &gArchive.files[idx];
@@ -2144,7 +2144,7 @@ bool ExtractLibsumatrapdfToDir(Str destDir) {
          (unsigned)fi->compressedSize);
     u8* uncompressed = lzma::GetFileDataByIdx(&gArchive, idx, nullptr);
     if (!uncompressed) {
-        log("ExtractLibsumatrapdfToDir: failed to decompress libsumatrapdf.dll\n");
+        log(StrL("ExtractLibsumatrapdfToDir: failed to decompress libsumatrapdf.dll\n"));
         return false;
     }
     if (!dir::CreateAll(destDir)) {
@@ -2244,7 +2244,7 @@ bool ExtractInstallerFiles(Str dir) {
     logf("ExtractInstallerFiles() to '%s'\n", dir);
     bool ok = dir::CreateAll(dir);
     if (!ok) {
-        log("  dir::CreateAll() failed\n");
+        log(StrL("  dir::CreateAll() failed\n"));
         LogLastError();
         NotifyFailed(_TRA("Couldn't create the installation directory"));
         return false;
@@ -2265,7 +2265,7 @@ bool ExtractInstallerFiles(Str dir) {
     bool silent = gCliNew.silent || (gCli && gCli->silent);
     bool skipSelfExe = gCli && gCli->justExtractFiles && IsExtractingOverSelf(dir);
     if (!PrepareInstallDirByRenaming(dir, silent, skipSelfExe)) {
-        log("ExtractInstallerFiles: PrepareInstallDirByRenaming failed\n");
+        log(StrL("ExtractInstallerFiles: PrepareInstallDirByRenaming failed\n"));
         // Some files may already be *.copy; put them back before aborting.
         RestoreInstallCopyFiles(dir);
         return false;
@@ -2436,19 +2436,19 @@ int RunInstaller() {
         InstallerThread(&gCliNew);
         ret = gInstallFailed ? 1 : 0;
     } else {
-        log("Before CreateInstallerWindow()\n");
+        log(StrL("Before CreateInstallerWindow()\n"));
         if (!CreateInstallerWindow(&gCliNew)) {
-            log("CreateInstallerWindow() failed\n");
+            log(StrL("CreateInstallerWindow() failed\n"));
             goto Exit;
         }
-        log("Before SetForegroundWindow()\n");
+        log(StrL("Before SetForegroundWindow()\n"));
         SetForegroundWindow(gWnd->hwnd);
-        log("Before RunApp()\n");
+        log(StrL("Before RunApp()\n"));
         ret = RunApp();
         logf("RunApp() returned %d\n", ret);
     }
 
-    log("Installer finished\n");
+    log(StrL("Installer finished\n"));
 Exit:
     if (installerLogPath && gInstallStarted) {
         RunNonElevated(installerLogPath);

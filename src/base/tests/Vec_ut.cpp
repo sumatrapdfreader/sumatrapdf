@@ -71,29 +71,29 @@ void VecTest() {
             buf[0] = (char)(buf[0] + 1);
         }
         Str s = ToStr(v);
-        utassert(str::Eq("abcdefg", s));
+        utassert(str::Eq(StrL("abcdefg"), s));
         utassert(7 == len(v));
         v.Reset(StrL("helo"));
         utassert(4 == len(v));
-        utassert(str::Eq("helo", ToStr(v)));
+        utassert(str::Eq(StrL("helo"), ToStr(v)));
     }
 
     {
         str::Builder v(128);
-        v.Append("boo");
-        utassert(str::Eq("boo", ToStr(v)));
+        v.Append(StrL("boo"));
+        utassert(str::Eq(StrL("boo"), ToStr(v)));
         utassert(len(v) == 3);
-        v.Append("fop");
-        utassert(str::Eq("boofop", ToStr(v)));
+        v.Append(StrL("fop"));
+        utassert(str::Eq(StrL("boofop"), ToStr(v)));
         utassert(len(v) == 6);
         v.RemoveAt(2, 3);
         utassert(len(v) == 3);
-        utassert(str::Eq("bop", ToStr(v)));
+        utassert(str::Eq(StrL("bop"), ToStr(v)));
         v.AppendChar('a');
         utassert(len(v) == 4);
-        utassert(str::Eq("bopa", ToStr(v)));
+        utassert(str::Eq(StrL("bopa"), ToStr(v)));
         Str s = v.TakeStr();
-        utassert(str::Eq("bopa", s));
+        utassert(str::Eq(StrL("bopa"), s));
         str::Free(s);
         utassert(len(v) == 0);
     }
@@ -102,7 +102,7 @@ void VecTest() {
         str::Builder v;
         for (int i = 0; i < 32; i++) {
             utassert(len(v) == i * 6);
-            v.Append("lambd");
+            v.Append(StrL("lambd"));
             if (i % 2 == 0)
                 v.AppendChar('a');
             else
@@ -123,7 +123,7 @@ void VecTest() {
         str::Free(s);
         utassert(len(v) == 0);
 
-        v.Append("lambda");
+        v.Append(StrL("lambda"));
         utassert(str::Eq(ToStr(v), StrL("lambda")));
         char c = v.RemoveLast();
         utassert(c == 'a');
@@ -176,7 +176,7 @@ void VecTest() {
 
     {
         str::Builder v;
-        v.Append("foo");
+        v.Append(StrL("foo"));
         utassert(len(v) == 3);
     }
 }

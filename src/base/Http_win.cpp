@@ -411,7 +411,7 @@ TempStr HttpNormalizeHeadersTemp(Str headers) {
             continue;
         }
         if (len(b) > 0) {
-            b.Append("\r\n");
+            b.Append(StrL("\r\n"));
         }
         b.Append(t);
     }
@@ -477,7 +477,7 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
         TempStr extra = HttpNormalizeHeadersTemp(extraHeaders);
         if (!str::IsEmptyOrWhiteSpace(extra)) {
             if (len(hdrs) > 0) {
-                hdrs.Append("\r\n");
+                hdrs.Append(StrL("\r\n"));
             }
             hdrs.Append(extra);
         }

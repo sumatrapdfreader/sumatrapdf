@@ -129,7 +129,7 @@ static int gSelectedTipIdx = -1;
 
 static void CollectTipsFromString(Str src, Str prefix, StrVec* out) {
     StrVec lines;
-    Split(&lines, src, "\n");
+    Split(&lines, src, StrL("\n"));
     for (int i = 0; i < len(lines); i++) {
         Str line = lines[i];
         if (str::IsEmptyOrWhiteSpace(line)) {
@@ -300,7 +300,7 @@ void SetPromoString(Str s) {
 }
 
 static TempStr GetAppVersionTemp() {
-    TempStr s = str::DupTemp("v" CURR_VERSION_STRA);
+    TempStr s = str::DupTemp(StrL("v" CURR_VERSION_STRA));
     if (IsProcess64()) {
         s = str::JoinTemp(s, StrL(" 64-bit"));
     } else {
@@ -1980,7 +1980,7 @@ static Rect FitRectInRect(Size src, Rect dst) {
 
 static TempStr FileSizeForHomeListTemp(i64 size) {
     if (size < 0) {
-        return str::DupTemp("");
+        return str::DupTemp(StrL(""));
     }
     return str::FormatSizeShortTemp(size, nullptr);
 }
@@ -2231,11 +2231,11 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 
     auto& c = gHomeLayoutCache;
     if (!c.valid) {
-        out.Append("NOTREADY no-layout\n");
+        out.Append(StrL("NOTREADY no-layout\n"));
         return finish(2);
     }
     if (!c.listView) {
-        out.Append("ERROR not-list-view\n");
+        out.Append(StrL("ERROR not-list-view\n"));
         return finish(1);
     }
     out.Append(fmt("OK rows=%d\n", len(c.thumbs)));

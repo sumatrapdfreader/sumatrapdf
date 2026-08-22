@@ -1802,7 +1802,7 @@ EngineBase* CreateEngineImageFromFile(Str path) {
 }
 
 EngineBase* CreateEngineImageFromData(Str data) {
-    log("CreateEngineImageFromData\n");
+    log(StrL("CreateEngineImageFromData\n"));
     return EngineImage::CreateFromData(data);
 }
 
@@ -2297,7 +2297,7 @@ EngineBase* EngineCbx::Clone() {
     if (sourceData) {
         auto* clone = CreateFromData(sourceData);
         if (!clone) {
-            log("EngineCbx::Clone() failed: CreateFromData() failed\n");
+            log(StrL("EngineCbx::Clone() failed: CreateFromData() failed\n"));
         }
         return clone;
     }
@@ -2651,7 +2651,7 @@ TempStr EngineCbx::GetPropertyTemp(DocProp prop) {
         if (len(cip.propAuthors) == 0) {
             return {};
         }
-        return JoinTemp(&cip.propAuthors, ", ");
+        return JoinTemp(&cip.propAuthors, StrL(", "));
     }
 
     if (prop == DocProp::CreationDate) {

@@ -488,7 +488,7 @@ bool MobiDoc::ParseHeader() {
     u8* firstRecData = (u8*)rec.s;
     int recSize = rec.len;
     if (!firstRecData || recSize < kPalmDocHeaderLen) {
-        log("failed to read record 0\n");
+        log(StrL("failed to read record 0\n"));
         return false;
     }
 
@@ -849,7 +849,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(int recNo, str::Builder& strOut) {
     if (COMPRESSION_UNSUPPORTED_DRM == compressionType) {
         // ensure a single blank page
         if (1 == recNo) {
-            strOut.Append("&nbsp;");
+            strOut.Append(StrL("&nbsp;"));
         }
         return true;
     }

@@ -348,20 +348,20 @@ static void evalDefault(Fmt& fmt, const FmtArg& arg) {
             break;
         case FmtArg::Kind::Int:
             bufFmt(buf, "%lld", (long long)arg.i);
-            fmt.res.Append(fmt.buf);
+            fmt.res.Append(Str(fmt.buf));
             break;
         case FmtArg::Kind::Ptr:
             bufFmt(buf, "%p", arg.ptr);
-            fmt.res.Append(fmt.buf);
+            fmt.res.Append(Str(fmt.buf));
             break;
         case FmtArg::Kind::Float:
             // Note: %G, unlike %f, avoids trailing '0'
             bufFmt(buf, "%G", (double)arg.f);
-            fmt.res.Append(fmt.buf);
+            fmt.res.Append(Str(fmt.buf));
             break;
         case FmtArg::Kind::Double:
             bufFmt(buf, "%G", arg.d);
-            fmt.res.Append(fmt.buf);
+            fmt.res.Append(Str(fmt.buf));
             break;
         case FmtArg::Kind::Str:
             fmt.res.Append(arg.str);
@@ -442,7 +442,7 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k] = 0;
                 bufFmt(bufS, fbuf, (int)ival);
             }
-            fmt.res.Append(buf);
+            fmt.res.Append(Str(buf));
             break;
         case 'u':
         case 'o':
@@ -459,13 +459,13 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k] = 0;
                 bufFmt(bufS, fbuf, (unsigned int)(unsigned long long)ival);
             }
-            fmt.res.Append(buf);
+            fmt.res.Append(Str(buf));
             break;
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
             bufFmt(bufS, fbuf, (int)ival);
-            fmt.res.Append(buf);
+            fmt.res.Append(Str(buf));
             break;
         case 'f':
         case 'F':
@@ -479,13 +479,13 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
             fbuf[k] = 0;
             double dv = (arg.t == FmtArg::Kind::Double) ? arg.d : (double)arg.f;
             bufFmt(bufS, fbuf, dv);
-            fmt.res.Append(buf);
+            fmt.res.Append(Str(buf));
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
             const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
             bufFmt(bufS, "%p", pv);
-            fmt.res.Append(buf);
+            fmt.res.Append(Str(buf));
         } break;
         default:
             ReportIf(true);
@@ -563,7 +563,7 @@ Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs) {
     // heap allocations at all (matters for the crash handler's pre-allocated
     // arena). TakeStr() then returns that arena buffer without a second copy.
     f.res.a = a;
-    bool ok = ParseFormat(f, fmt);
+    bool ok = ParseFormat(f, Str(fmt));
     if (!ok) {
         return {};
     }
@@ -730,7 +730,7 @@ Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
     if (str::IsNull(str) || !fmt) {
         return {};
     }
-    Str format = fmt;
+    Str format = Str(fmt);
     int argIdx = 0;
     int p = 0;
     for (int fi = 0; fi < format.len; fi++) {
@@ -855,7 +855,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 #if OS_WIN
     WCHAR thousandSepW[4]{};
     if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
-        str::BufSet(thousandSepW, dimof(thousandSepW), ",");
+        str::BufSet(thousandSepW, dimof(thousandSepW), StrL(","));
     }
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
 #else
@@ -969,8 +969,9 @@ TempStr FormatRomanNumeralTemp(int n) {
     static struct {
         int value;
         Str numeral;
-    } romandata[] = {{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"}, {90, "XC"}, {50, "L"},
-                     {40, "XL"},  {10, "X"},   {9, "IX"},  {5, "V"},    {4, "IV"},  {1, "I"}};
+    } romandata[] = {{1000, StrL("M")}, {900, StrL("CM")}, {500, StrL("D")}, {400, StrL("CD")}, {100, StrL("C")},
+                     {90, StrL("XC")},  {50, StrL("L")},   {40, StrL("XL")}, {10, StrL("X")},   {9, StrL("IX")},
+                     {5, StrL("V")},    {4, StrL("IV")},   {1, StrL("I")}};
 
     // Page numbers in roman are short (e.g. 3999 -> "MMMCMXCIX" = 9 chars).
     char romanScratch[32]{};

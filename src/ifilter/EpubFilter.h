@@ -23,7 +23,7 @@ class EpubFilter : public FilterBase {
     VOID CleanUp();
 
     // IPersist
-    IFACEMETHODIMP GetClassID(CLSID* pClassID) { return CLSIDFromString(kEpubFilterClsid, pClassID); }
+    IFACEMETHODIMP GetClassID(CLSID* pClassID) { return CLSIDFromString(StrL(kEpubFilterClsid), pClassID); }
 
   private:
     EPUB_FILTER_STATE m_state;

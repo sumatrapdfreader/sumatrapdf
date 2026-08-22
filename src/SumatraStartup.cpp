@@ -503,7 +503,7 @@ static bool SetupPluginMode(Flags& i) {
         TempStr args = str::DupTemp(i.pluginURL.s + hashIdx + 1);
         str::TransCharsInPlace(args, StrL("#"), StrL("&"));
         StrVec parts;
-        Split(&parts, args, "&", true);
+        Split(&parts, args, StrL("&"), true);
         for (int k = 0; k < len(parts); k++) {
             Str part = parts[k];
             int pageNo;
@@ -921,7 +921,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, StrL("-manga-mode"))) {
             param = i.globalPrefArgs[++n];
-            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI("true", param) || str::Eq("1", param);
+            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(StrL("true"), param) || str::Eq(StrL("1"), param);
         }
     }
 }
@@ -1307,7 +1307,7 @@ static bool LoadLibsumatrapdf(bool showErrorDialog) {
 
     // Upload a debug report (pre-release) without requiring symbols. captureCallstack
     // is false so we skip symbol download; the log (paths/sizes/errors) is the payload.
-    _uploadDebugReport(StrL("LoadLibsumatrapdf failed"), FILE_LINE, false, false);
+    _uploadDebugReport(StrL("LoadLibsumatrapdf failed"), StrL(FILE_LINE), false, false);
 
     if (!showErrorDialog) {
         // e.g. -print-to ... -silent invoked by another program:
@@ -2108,7 +2108,7 @@ static int MaybeRunMutool() {
     WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
     if (!wargv) {
         // Very rare – allocation failure or severely malformed command line
-        log("CommandLineToArgvW() failed\n");
+        log(StrL("CommandLineToArgvW() failed\n"));
         LogLastError();
         return kNoMutool;
     }
@@ -2537,7 +2537,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     LoadSettings();
     UpdateGlobalPrefs(flags);
     if (gMyWindowWasEmbedded) {
-        str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, "windows");
+        str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, StrL("windows"));
     }
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
     if (flags.showPrintersDialog) {
@@ -2961,7 +2961,7 @@ Exit:
             // Safe: windows are deleted below, so the threads' MainWindow*
             // stay valid while we wait; their queued finish tasks are drained
             // (and orphaned controllers freed) later in uitask::Destroy()
-            log("waiting for dangerous threads to finish instead of fast exit\n");
+            log(StrL("waiting for dangerous threads to finish instead of fast exit\n"));
             while (AreDangerousThreadsPending()) {
                 ::Sleep(100);
             }
@@ -2978,7 +2978,7 @@ Exit:
         // (as recommended for a quick exit)
         // note: this intentionally skips freeing engines/windows, so leak
         // trackers will report everything still allocated
-        log("fast exit: skipping cleanup, leak reports are expected\n");
+        log(StrL("fast exit: skipping cleanup, leak reports are expected\n"));
         ::ExitProcess(exitCode);
     }
 

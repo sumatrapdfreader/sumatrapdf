@@ -180,7 +180,7 @@ struct FileSig {
     FileType ft;
 };
 
-#define MK_SIG(OFF, SIG, FT) {OFF, SIG, (int)(sizeof(SIG) - 1), FT},
+#define MK_SIG(OFF, SIG, FT) {OFF, StrL(SIG), (int)(sizeof(SIG) - 1), FT},
 static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 #undef MK_SIG
 
@@ -345,7 +345,7 @@ static bool HasTgaVersion2Footer(const u8* data, size_t n) {
         return false;
     }
     const TgaFooter* footer = (const TgaFooter*)(data + n - sizeof(TgaFooter));
-    return str::EqN(footer->signature, "TRUEVISION-XFILE.", sizeof(footer->signature));
+    return str::EqN(Str(footer->signature), StrL("TRUEVISION-XFILE."), sizeof(footer->signature));
 }
 
 static bool IsSupportedTgaPixelFormat(const TgaHeader* header) {

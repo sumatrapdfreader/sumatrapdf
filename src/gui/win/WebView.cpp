@@ -1617,16 +1617,16 @@ void WebviewWnd::RebuildBindScript() {
         return;
     }
     str::Builder js;
-    js.Append("(function(){var m=[");
+    js.Append(StrL("(function(){var m=["));
     bool first = true;
     for (Str& name : boundNames) {
         if (!first) {
-            js.Append(",");
+            js.Append(StrL(","));
         }
         first = false;
         js.Append(fmt("\"%s\"", json::EscapeStrTemp(name)));
     }
-    js.Append("];m.forEach(function(n){window.__sumatra__.onBind(n)})})()");
+    js.Append(StrL("];m.forEach(function(n){window.__sumatra__.onBind(n)})})()"));
     bindScriptToken = AddInitScript(ToStr(js));
 }
 

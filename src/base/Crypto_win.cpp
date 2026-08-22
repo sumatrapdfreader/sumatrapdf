@@ -245,12 +245,12 @@ TempStr GetExecutableSignerTemp(Str exePath) {
 
     PCCERT_CONTEXT certCtx = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0,
                                                         CERT_FIND_SUBJECT_CERT, &certInfo, nullptr);
-    TempStr res = nullptr;
+    TempStr res = {};
     if (certCtx) {
         char buf[512];
         DWORD n = CertGetNameStringA(certCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, buf, dimof(buf));
         if (n > 1) {
-            res = str::DupTemp(buf);
+            res = str::DupTemp(Str(buf));
         }
         CertFreeCertificateContext(certCtx);
     }

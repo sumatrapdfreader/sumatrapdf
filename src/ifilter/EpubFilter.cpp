@@ -22,7 +22,7 @@
 #include "EpubFilter.h"
 
 VOID EpubFilter::CleanUp() {
-    log("EpubFilter::Cleanup()\n");
+    log(StrL("EpubFilter::Cleanup()\n"));
     if (m_epubDoc) {
         delete m_epubDoc;
         m_epubDoc = nullptr;
@@ -31,7 +31,7 @@ VOID EpubFilter::CleanUp() {
 }
 
 HRESULT EpubFilter::OnInit() {
-    log("EpubFilter::OnInit()\n");
+    log(StrL("EpubFilter::OnInit()\n"));
 
     CleanUp();
 
@@ -79,7 +79,7 @@ static void TrimHtmlTextToken(Str& tokText) {
 }
 
 static WStr ExtractHtmlText(EpubDoc* doc) {
-    log("ExtractHtmlText()\n");
+    log(StrL("ExtractHtmlText()\n"));
 
     Str d = doc->GetHtmlData();
     int dataLen = d.len;
@@ -107,7 +107,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
         } else if (t->IsEndTag()) {
             if (!IsInlineTag(t->tag) && len(text) > 0 && text.Last() == ' ') {
                 text.RemoveLast();
-                text.Append("\r\n");
+                text.Append(StrL("\r\n"));
             }
             // when closing a tag, if the top tag doesn't match but
             // there are only potentially self-closing tags on the
@@ -127,7 +127,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
 }
 
 HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
-    log("EpubFilter::GetNextChunkValue()\n");
+    log(StrL("EpubFilter::GetNextChunkValue()\n"));
 
     TempStr str = nullptr;
     WStr ws;

@@ -267,9 +267,9 @@ void StartInstallerAutoUpgrade(Str installerPath) {
     if (IsOurExeInstalled()) {
         // no need for sleep because it shows the installer dialog anyway
         if (gIsPreReleaseBuild) {
-            cmd.Append(" -fast-install");
+            cmd.Append(StrL(" -fast-install"));
         } else {
-            cmd.Append(" -install");
+            cmd.Append(StrL(" -install"));
         }
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
@@ -732,31 +732,31 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
 
 static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType) {
     url.Reset(baseURL);
-    url.Append("?v=");
+    url.Append(StrL("?v="));
     url.Append(UPDATE_CHECK_VERA);
     TempStr osVerTemp = GetWindowsVerTemp();
-    url.Append("&os=");
+    url.Append(StrL("&os="));
     url.Append(osVerTemp);
-    url.Append("&64bit=");
+    url.Append(StrL("&64bit="));
     url.Append(IsProcess64() ? "yes" : "no");
-    url.Append("&arm=");
+    url.Append(StrL("&arm="));
     url.Append(IsArmBuild() ? "yes" : "no");
     Str lang = trans::GetCurrentLangCode();
-    url.Append("&lang=");
+    url.Append(StrL("&lang="));
     url.Append(lang);
     TempStr webView2ver = GetWebView2VersionTemp();
     if (webView2ver) {
-        url.Append("&webview=");
+        url.Append(StrL("&webview="));
         url.Append(webView2ver);
     }
     if (gIsStoreBuild) {
-        url.Append("&store");
+        url.Append(StrL("&store"));
     }
-    url.Append("&simd=");
+    url.Append(StrL("&simd="));
     url.Append(LatestSupportedSIMD().s);
-    url.Append("&withPromo");
+    url.Append(StrL("&withPromo"));
     if (UpdateCheck::UserInitiated == updateCheckType) {
-        url.Append("&force");
+        url.Append(StrL("&force"));
     }
 }
 
@@ -769,7 +769,7 @@ struct UpdateCheckAsyncData {
 };
 
 static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
-    log("UpdateCheckFinish\n");
+    log(StrL("UpdateCheckFinish\n"));
     gUpdateCheckInProgress = false;
 
     AutoDelete delData(data);

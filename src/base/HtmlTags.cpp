@@ -81,7 +81,7 @@ HtmlTag FindHtmlTag(Str nameIn) {
             if (8 == n && CS4('f', 'o', 'n', 't') == STR4i(name + 4)) return Tag_Basefont;
             break;
         case CS4('b', 'l', 'o', 'c'):
-            if (10 == n && str::EqNI(name + 4, "kquote", 6)) return Tag_Blockquote;
+            if (10 == n && str::EqNI(Str(name + 4), StrL("kquote"), 6)) return Tag_Blockquote;
             break;
         case CS4('b', 'o', 'd', 'y'):
             if (4 == n) return Tag_Body;
@@ -150,7 +150,7 @@ HtmlTag FindHtmlTag(Str nameIn) {
             if (4 == n) return Tag_Link;
             break;
         case CS4('m', 'b', 'p', ':'):
-            if (13 == n && str::EqNI(name + 4, "pagebreak", 9)) return Tag_Mbp_Pagebreak;
+            if (13 == n && str::EqNI(Str(name + 4), StrL("pagebreak"), 9)) return Tag_Mbp_Pagebreak;
             break;
         case CS4('m', 'e', 't', 'a'):
             if (4 == n) return Tag_Meta;
@@ -165,7 +165,7 @@ HtmlTag FindHtmlTag(Str nameIn) {
         case CS1('p'):
             return Tag_P;
         case CS4('p', 'a', 'g', 'e'):
-            if (9 == n && str::EqNI(name + 4, "break", 5)) return Tag_Pagebreak;
+            if (9 == n && str::EqNI(Str(name + 4), StrL("break"), 5)) return Tag_Pagebreak;
             break;
         case CS4('p', 'a', 'r', 'a'):
             if (5 == n && CS1('m') == STR1i(name + 4)) return Tag_Param;
@@ -205,7 +205,7 @@ HtmlTag FindHtmlTag(Str nameIn) {
         case CS3('s', 'v', 'g'):
             return Tag_Svg;
         case CS4('s', 'v', 'g', ':'):
-            if (9 == n && str::EqNI(name + 4, "image", 5)) return Tag_Svg_Image;
+            if (9 == n && str::EqNI(Str(name + 4), StrL("image"), 5)) return Tag_Svg_Image;
             break;
         case CS4('t', 'a', 'b', 'l'):
             if (5 == n && CS1('e') == STR1i(name + 4)) return Tag_Table;
@@ -380,15 +380,15 @@ u32 FindHtmlEntityRune(Str nameIn) {
             if (5 == n && CS1('a') == STR1(name + 4)) return 916;
             break;
         case CS4('D', 'i', 'a', 'c'):
-            if (14 == n && str::EqN(name + 4, "riticalDot", 10)) return 729;
-            if (22 == n && str::EqN(name + 4, "riticalDoubleAcute", 18)) return 733;
-            if (16 == n && str::EqN(name + 4, "riticalTilde", 12)) return 732;
+            if (14 == n && str::EqN(Str(name + 4), StrL("riticalDot"), 10)) return 729;
+            if (22 == n && str::EqN(Str(name + 4), StrL("riticalDoubleAcute"), 18)) return 733;
+            if (16 == n && str::EqN(Str(name + 4), StrL("riticalTilde"), 12)) return 732;
             break;
         case CS4('D', 'o', 'u', 'b'):
-            if (9 == n && str::EqN(name + 4, "leDot", 5)) return 168;
+            if (9 == n && str::EqN(Str(name + 4), StrL("leDot"), 5)) return 168;
             break;
         case CS4('D', 'o', 'w', 'n'):
-            if (9 == n && str::EqN(name + 4, "Breve", 5)) return 785;
+            if (9 == n && str::EqN(Str(name + 4), StrL("Breve"), 5)) return 785;
             break;
         case CS4('D', 's', 't', 'r'):
             if (6 == n && CS2('o', 'k') == STR2(name + 4)) return 272;
@@ -565,7 +565,7 @@ u32 FindHtmlEntityRune(Str nameIn) {
         case CS2('P', 'i'):
             return 928;
         case CS4('P', 'l', 'u', 's'):
-            if (9 == n && str::EqN(name + 4, "Minus", 5)) return 177;
+            if (9 == n && str::EqN(Str(name + 4), StrL("Minus"), 5)) return 177;
             break;
         case CS4('P', 'r', 'i', 'm'):
             if (5 == n && CS1('e') == STR1(name + 4)) return 8243;
@@ -730,7 +730,7 @@ u32 FindHtmlEntityRune(Str nameIn) {
             if (4 == n) return 228;
             break;
         case CS4('b', 'a', 'c', 'k'):
-            if (11 == n && str::EqN(name + 4, "epsilon", 7)) return 1014;
+            if (11 == n && str::EqN(Str(name + 4), StrL("epsilon"), 7)) return 1014;
             break;
         case CS4('b', 'd', 'q', 'u'):
             if (5 == n && CS1('o') == STR1(name + 4)) return 8222;
@@ -1265,8 +1265,8 @@ u32 FindHtmlEntityRune(Str nameIn) {
             if (6 == n && CS2('e', 's') == STR2(name + 4)) return 9824;
             break;
         case CS4('s', 't', 'r', 'a'):
-            if (15 == n && str::EqN(name + 4, "ightepsilon", 11)) return 1013;
-            if (11 == n && str::EqN(name + 4, "ightphi", 7)) return 981;
+            if (15 == n && str::EqN(Str(name + 4), StrL("ightepsilon"), 11)) return 1013;
+            if (11 == n && str::EqN(Str(name + 4), StrL("ightphi"), 7)) return 981;
             break;
         case CS3('s', 'u', 'b'):
             return 8834;
@@ -1368,7 +1368,7 @@ u32 FindHtmlEntityRune(Str nameIn) {
             if (4 == n) return 252;
             break;
         case CS4('v', 'a', 'r', 'e'):
-            if (10 == n && str::EqN(name + 4, "psilon", 6)) return 949;
+            if (10 == n && str::EqN(Str(name + 4), StrL("psilon"), 6)) return 949;
             break;
         case CS4('v', 'a', 'r', 'k'):
             if (8 == n && CS4('a', 'p', 'p', 'a') == STR4(name + 4)) return 1008;
@@ -1439,49 +1439,49 @@ CssProp FindCssProp(Str nameIn) {
             break;
         case CS4('f', 'o', 'n', 't'):
             if (4 == n) return Css_Font;
-            if (11 == n && str::EqNI(name + 4, "-family", 7)) return Css_Font_Family;
-            if (9 == n && str::EqNI(name + 4, "-size", 5)) return Css_Font_Size;
-            if (10 == n && str::EqNI(name + 4, "-style", 6)) return Css_Font_Style;
-            if (11 == n && str::EqNI(name + 4, "-weight", 7)) return Css_Font_Weight;
+            if (11 == n && str::EqNI(Str(name + 4), StrL("-family"), 7)) return Css_Font_Family;
+            if (9 == n && str::EqNI(Str(name + 4), StrL("-size"), 5)) return Css_Font_Size;
+            if (10 == n && str::EqNI(Str(name + 4), StrL("-style"), 6)) return Css_Font_Style;
+            if (11 == n && str::EqNI(Str(name + 4), StrL("-weight"), 7)) return Css_Font_Weight;
             break;
         case CS4('l', 'i', 's', 't'):
-            if (10 == n && str::EqNI(name + 4, "-style", 6)) return Css_List_Style;
+            if (10 == n && str::EqNI(Str(name + 4), StrL("-style"), 6)) return Css_List_Style;
             break;
         case CS4('m', 'a', 'r', 'g'):
             if (6 == n && CS2('i', 'n') == STR2i(name + 4)) return Css_Margin;
-            if (13 == n && str::EqNI(name + 4, "in-bottom", 9)) return Css_Margin_Bottom;
-            if (11 == n && str::EqNI(name + 4, "in-left", 7)) return Css_Margin_Left;
-            if (12 == n && str::EqNI(name + 4, "in-right", 8)) return Css_Margin_Right;
-            if (10 == n && str::EqNI(name + 4, "in-top", 6)) return Css_Margin_Top;
+            if (13 == n && str::EqNI(Str(name + 4), StrL("in-bottom"), 9)) return Css_Margin_Bottom;
+            if (11 == n && str::EqNI(Str(name + 4), StrL("in-left"), 7)) return Css_Margin_Left;
+            if (12 == n && str::EqNI(Str(name + 4), StrL("in-right"), 8)) return Css_Margin_Right;
+            if (10 == n && str::EqNI(Str(name + 4), StrL("in-top"), 6)) return Css_Margin_Top;
             break;
         case CS4('m', 'a', 'x', '-'):
-            if (9 == n && str::EqNI(name + 4, "width", 5)) return Css_Max_Width;
+            if (9 == n && str::EqNI(Str(name + 4), StrL("width"), 5)) return Css_Max_Width;
             break;
         case CS4('o', 'p', 'a', 'c'):
             if (7 == n && CS3('i', 't', 'y') == STR3i(name + 4)) return Css_Opacity;
             break;
         case CS4('p', 'a', 'd', 'd'):
             if (7 == n && CS3('i', 'n', 'g') == STR3i(name + 4)) return Css_Padding;
-            if (14 == n && str::EqNI(name + 4, "ing-bottom", 10)) return Css_Padding_Bottom;
-            if (12 == n && str::EqNI(name + 4, "ing-left", 8)) return Css_Padding_Left;
-            if (13 == n && str::EqNI(name + 4, "ing-right", 9)) return Css_Padding_Right;
-            if (11 == n && str::EqNI(name + 4, "ing-top", 7)) return Css_Padding_Top;
+            if (14 == n && str::EqNI(Str(name + 4), StrL("ing-bottom"), 10)) return Css_Padding_Bottom;
+            if (12 == n && str::EqNI(Str(name + 4), StrL("ing-left"), 8)) return Css_Padding_Left;
+            if (13 == n && str::EqNI(Str(name + 4), StrL("ing-right"), 9)) return Css_Padding_Right;
+            if (11 == n && str::EqNI(Str(name + 4), StrL("ing-top"), 7)) return Css_Padding_Top;
             break;
         case CS4('p', 'a', 'g', 'e'):
-            if (16 == n && str::EqNI(name + 4, "-break-after", 12)) return Css_Page_Break_After;
-            if (17 == n && str::EqNI(name + 4, "-break-before", 13)) return Css_Page_Break_Before;
+            if (16 == n && str::EqNI(Str(name + 4), StrL("-break-after"), 12)) return Css_Page_Break_After;
+            if (17 == n && str::EqNI(Str(name + 4), StrL("-break-before"), 13)) return Css_Page_Break_Before;
             break;
         case CS4('t', 'e', 'x', 't'):
-            if (10 == n && str::EqNI(name + 4, "-align", 6)) return Css_Text_Align;
-            if (15 == n && str::EqNI(name + 4, "-decoration", 11)) return Css_Text_Decoration;
-            if (11 == n && str::EqNI(name + 4, "-indent", 7)) return Css_Text_Indent;
-            if (14 == n && str::EqNI(name + 4, "-underline", 10)) return Css_Text_Underline;
+            if (10 == n && str::EqNI(Str(name + 4), StrL("-align"), 6)) return Css_Text_Align;
+            if (15 == n && str::EqNI(Str(name + 4), StrL("-decoration"), 11)) return Css_Text_Decoration;
+            if (11 == n && str::EqNI(Str(name + 4), StrL("-indent"), 7)) return Css_Text_Indent;
+            if (14 == n && str::EqNI(Str(name + 4), StrL("-underline"), 10)) return Css_Text_Underline;
             break;
         case CS4('w', 'h', 'i', 't'):
-            if (11 == n && str::EqNI(name + 4, "e-space", 7)) return Css_White_Space;
+            if (11 == n && str::EqNI(Str(name + 4), StrL("e-space"), 7)) return Css_White_Space;
             break;
         case CS4('w', 'o', 'r', 'd'):
-            if (9 == n && str::EqNI(name + 4, "-wrap", 5)) return Css_Word_Wrap;
+            if (9 == n && str::EqNI(Str(name + 4), StrL("-wrap"), 5)) return Css_Word_Wrap;
             break;
     }
     return Css_Unknown;

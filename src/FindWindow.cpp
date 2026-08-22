@@ -1291,10 +1291,10 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     ClearFindMatches(win);
     FindMatch fm;
     fm.startPage = 1;
-    str::ReplaceWithCopy(&fm.snippet, "longprefix testword suffix");
+    str::ReplaceWithCopy(&fm.snippet, StrL("longprefix testword suffix"));
     win->findMatches.Append(fm);
     fw->filterWords.Reset();
-    fw->filterWords.Append("testword");
+    fw->filterWords.Append(StrL("testword"));
 
     HDC hdcScreen = GetDC(nullptr);
     if (!hdcScreen) {

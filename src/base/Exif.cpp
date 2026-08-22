@@ -36,115 +36,115 @@ struct TagDef {
 };
 
 const TagDef kImageTags[] = {
-    {0x010E, "ImageDescription"},
-    {0x010F, "Make"},
-    {0x0110, "Model"},
-    {0x0112, "Orientation"},
-    {0x011A, "XResolution"},
-    {0x011B, "YResolution"},
-    {0x0128, "ResolutionUnit"},
-    {0x0131, "Software"},
-    {0x0132, "DateTime"},
-    {0x013B, "Artist"},
-    {0x013C, "HostComputer"},
-    {0x0213, "YCbCrPositioning"},
-    {0x8298, "Copyright"},
-    {0x8769, "ExifOffset"},
-    {0x8825, "GPSInfo"},
-    {0x9C9B, "XPTitle"},
-    {0x9C9C, "XPComment"},
-    {0x9C9D, "XPAuthor"},
-    {0x9C9E, "XPKeywords"},
-    {0x9C9F, "XPSubject"},
-    {0xC4A5, "PrintIM"},
-    {0x0100, "ImageWidth"},
-    {0x0101, "ImageLength"},
-    {0x0102, "BitsPerSample"},
-    {0x0103, "Compression"},
-    {0x0201, "JPEGInterchangeFormat"},
-    {0x0202, "JPEGInterchangeFormatLength"},
+    {0x010E, StrL("ImageDescription")},
+    {0x010F, StrL("Make")},
+    {0x0110, StrL("Model")},
+    {0x0112, StrL("Orientation")},
+    {0x011A, StrL("XResolution")},
+    {0x011B, StrL("YResolution")},
+    {0x0128, StrL("ResolutionUnit")},
+    {0x0131, StrL("Software")},
+    {0x0132, StrL("DateTime")},
+    {0x013B, StrL("Artist")},
+    {0x013C, StrL("HostComputer")},
+    {0x0213, StrL("YCbCrPositioning")},
+    {0x8298, StrL("Copyright")},
+    {0x8769, StrL("ExifOffset")},
+    {0x8825, StrL("GPSInfo")},
+    {0x9C9B, StrL("XPTitle")},
+    {0x9C9C, StrL("XPComment")},
+    {0x9C9D, StrL("XPAuthor")},
+    {0x9C9E, StrL("XPKeywords")},
+    {0x9C9F, StrL("XPSubject")},
+    {0xC4A5, StrL("PrintIM")},
+    {0x0100, StrL("ImageWidth")},
+    {0x0101, StrL("ImageLength")},
+    {0x0102, StrL("BitsPerSample")},
+    {0x0103, StrL("Compression")},
+    {0x0201, StrL("JPEGInterchangeFormat")},
+    {0x0202, StrL("JPEGInterchangeFormatLength")},
 };
 
 const TagDef kExifTags[] = {
-    {0x829A, "ExposureTime"},
-    {0x829D, "FNumber"},
-    {0x8822, "ExposureProgram"},
-    {0x8827, "ISOSpeedRatings"},
-    {0x9000, "ExifVersion"},
-    {0x9003, "DateTimeOriginal"},
-    {0x9004, "DateTimeDigitized"},
-    {0x9010, "OffsetTime"},
-    {0x9011, "OffsetTimeOriginal"},
-    {0x9012, "OffsetTimeDigitized"},
-    {0x9101, "ComponentsConfiguration"},
-    {0x9102, "CompressedBitsPerPixel"},
-    {0x9201, "ShutterSpeedValue"},
-    {0x9202, "ApertureValue"},
-    {0x9203, "BrightnessValue"},
-    {0x9204, "ExposureBiasValue"},
-    {0x9205, "MaxApertureValue"},
-    {0x9207, "MeteringMode"},
-    {0x9208, "LightSource"},
-    {0x9209, "Flash"},
-    {0x920A, "FocalLength"},
-    {0x9214, "SubjectArea"},
-    {0x927C, "MakerNote"},
-    {0x9286, "UserComment"},
-    {0x9290, "SubSecTime"},
-    {0x9291, "SubSecTimeOriginal"},
-    {0x9292, "SubSecTimeDigitized"},
-    {0xA000, "FlashPixVersion"},
-    {0xA001, "ColorSpace"},
-    {0xA002, "ExifImageWidth"},
-    {0xA003, "ExifImageLength"},
-    {0xA005, "InteroperabilityOffset"},
-    {0xA20E, "FocalPlaneXResolution"},
-    {0xA20F, "FocalPlaneYResolution"},
-    {0xA210, "FocalPlaneResolutionUnit"},
-    {0xA217, "SensingMethod"},
-    {0xA300, "FileSource"},
-    {0xA301, "SceneType"},
-    {0xA401, "CustomRendered"},
-    {0xA402, "ExposureMode"},
-    {0xA403, "WhiteBalance"},
-    {0xA404, "DigitalZoomRatio"},
-    {0xA405, "FocalLengthIn35mmFilm"},
-    {0xA406, "SceneCaptureType"},
-    {0xA407, "GainControl"},
-    {0xA408, "Contrast"},
-    {0xA409, "Saturation"},
-    {0xA40A, "Sharpness"},
-    {0xA432, "LensSpecification"},
-    {0xA433, "LensMake"},
-    {0xA434, "LensModel"},
-    {0x8830, "SensitivityType"},
+    {0x829A, StrL("ExposureTime")},
+    {0x829D, StrL("FNumber")},
+    {0x8822, StrL("ExposureProgram")},
+    {0x8827, StrL("ISOSpeedRatings")},
+    {0x9000, StrL("ExifVersion")},
+    {0x9003, StrL("DateTimeOriginal")},
+    {0x9004, StrL("DateTimeDigitized")},
+    {0x9010, StrL("OffsetTime")},
+    {0x9011, StrL("OffsetTimeOriginal")},
+    {0x9012, StrL("OffsetTimeDigitized")},
+    {0x9101, StrL("ComponentsConfiguration")},
+    {0x9102, StrL("CompressedBitsPerPixel")},
+    {0x9201, StrL("ShutterSpeedValue")},
+    {0x9202, StrL("ApertureValue")},
+    {0x9203, StrL("BrightnessValue")},
+    {0x9204, StrL("ExposureBiasValue")},
+    {0x9205, StrL("MaxApertureValue")},
+    {0x9207, StrL("MeteringMode")},
+    {0x9208, StrL("LightSource")},
+    {0x9209, StrL("Flash")},
+    {0x920A, StrL("FocalLength")},
+    {0x9214, StrL("SubjectArea")},
+    {0x927C, StrL("MakerNote")},
+    {0x9286, StrL("UserComment")},
+    {0x9290, StrL("SubSecTime")},
+    {0x9291, StrL("SubSecTimeOriginal")},
+    {0x9292, StrL("SubSecTimeDigitized")},
+    {0xA000, StrL("FlashPixVersion")},
+    {0xA001, StrL("ColorSpace")},
+    {0xA002, StrL("ExifImageWidth")},
+    {0xA003, StrL("ExifImageLength")},
+    {0xA005, StrL("InteroperabilityOffset")},
+    {0xA20E, StrL("FocalPlaneXResolution")},
+    {0xA20F, StrL("FocalPlaneYResolution")},
+    {0xA210, StrL("FocalPlaneResolutionUnit")},
+    {0xA217, StrL("SensingMethod")},
+    {0xA300, StrL("FileSource")},
+    {0xA301, StrL("SceneType")},
+    {0xA401, StrL("CustomRendered")},
+    {0xA402, StrL("ExposureMode")},
+    {0xA403, StrL("WhiteBalance")},
+    {0xA404, StrL("DigitalZoomRatio")},
+    {0xA405, StrL("FocalLengthIn35mmFilm")},
+    {0xA406, StrL("SceneCaptureType")},
+    {0xA407, StrL("GainControl")},
+    {0xA408, StrL("Contrast")},
+    {0xA409, StrL("Saturation")},
+    {0xA40A, StrL("Sharpness")},
+    {0xA432, StrL("LensSpecification")},
+    {0xA433, StrL("LensMake")},
+    {0xA434, StrL("LensModel")},
+    {0x8830, StrL("SensitivityType")},
 };
 
 const TagDef kGpsTags[] = {
-    {0x0000, "GPSVersionID"},
-    {0x0001, "GPSLatitudeRef"},
-    {0x0002, "GPSLatitude"},
-    {0x0003, "GPSLongitudeRef"},
-    {0x0004, "GPSLongitude"},
-    {0x0005, "GPSAltitudeRef"},
-    {0x0006, "GPSAltitude"},
-    {0x0007, "GPSTimeStamp"},
-    {0x0009, "GPSStatus"},
-    {0x000A, "GPSMeasureMode"},
-    {0x000B, "GPSDOP"},
-    {0x000C, "GPSSpeedRef"},
-    {0x000D, "GPSSpeed"},
-    {0x0010, "GPSImgDirectionRef"},
-    {0x0011, "GPSImgDirection"},
-    {0x001D, "GPSDate"},
-    {0x001B, "GPSProcessingMethod"},
+    {0x0000, StrL("GPSVersionID")},
+    {0x0001, StrL("GPSLatitudeRef")},
+    {0x0002, StrL("GPSLatitude")},
+    {0x0003, StrL("GPSLongitudeRef")},
+    {0x0004, StrL("GPSLongitude")},
+    {0x0005, StrL("GPSAltitudeRef")},
+    {0x0006, StrL("GPSAltitude")},
+    {0x0007, StrL("GPSTimeStamp")},
+    {0x0009, StrL("GPSStatus")},
+    {0x000A, StrL("GPSMeasureMode")},
+    {0x000B, StrL("GPSDOP")},
+    {0x000C, StrL("GPSSpeedRef")},
+    {0x000D, StrL("GPSSpeed")},
+    {0x0010, StrL("GPSImgDirectionRef")},
+    {0x0011, StrL("GPSImgDirection")},
+    {0x001D, StrL("GPSDate")},
+    {0x001B, StrL("GPSProcessingMethod")},
 };
 
 const TagDef kInteropTags[] = {
-    {0x0001, "InteroperabilityIndex"},
-    {0x0002, "InteroperabilityVersion"},
-    {0x1001, "RelatedImageWidth"},
-    {0x1002, "RelatedImageLength"},
+    {0x0001, StrL("InteroperabilityIndex")},
+    {0x0002, StrL("InteroperabilityVersion")},
+    {0x1001, StrL("RelatedImageWidth")},
+    {0x1002, StrL("RelatedImageLength")},
 };
 
 Str LookupTagName(const TagDef* tags, int n, u16 id) {
@@ -448,7 +448,7 @@ TempStr Utf16LeToUtf8Temp(Str data) {
 
 TempStr TrimmedAsciiTemp(ByteReader r, int off, u32 count) {
     if (off < 0 || off >= r.len) {
-        return str::DupTemp("");
+        return str::DupTemp(StrL(""));
     }
     int n = (int)count;
     if (off + n > r.len) {
@@ -510,7 +510,7 @@ void AppendLine(ExifParser& parser, IfdGroup g, u16 tag, u16 type, TempStr value
 
 TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) {
     if (den == 0) {
-        return str::DupTemp("0");
+        return str::DupTemp(StrL("0"));
     }
     if (asFraction && num == 1) {
         return fmt("1/%u", den);
@@ -535,7 +535,7 @@ TempStr FormatComponentsConfig(ByteReader r, int off, u32 count) {
             break;
         }
         if (len(s) > 0) {
-            s.Append(", ");
+            s.Append(StrL(", "));
         }
         Str compName = SeqStrByIndex(compNames, c - 1);
         if (compName) {
@@ -543,14 +543,14 @@ TempStr FormatComponentsConfig(ByteReader r, int off, u32 count) {
         }
     }
     if (len(s) == 0) {
-        return str::DupTemp("YCbCr");
+        return str::DupTemp(StrL("YCbCr"));
     }
     return ToStrTemp(s);
 }
 
 TempStr FormatUndefinedBytesTemp(ByteReader r, int off, u32 count, bool asList) {
     if (count == 0) {
-        return str::DupTemp("");
+        return str::DupTemp(StrL(""));
     }
     if (off + (int)count > r.len) {
         count = (u32)(r.len - off);
@@ -575,18 +575,18 @@ TempStr FormatUndefinedBytesTemp(ByteReader r, int off, u32 count, bool asList) 
     // At most 20 bytes as "255, " ~ 80 chars + brackets.
     char sScratch[128]{};
     str::Builder s(Str(sScratch, sizeofi(sScratch)));
-    s.Append("[");
+    s.Append(StrL("["));
     u32 show = count > 20 ? 20 : count;
     for (u32 i = 0; i < show; i++) {
         if (i > 0) {
-            s.Append(", ");
+            s.Append(StrL(", "));
         }
         s.Append(fmt("%u", r.UInt8(off + i)));
     }
     if (count > show) {
-        s.Append(", ... ");
+        s.Append(StrL(", ... "));
     }
-    s.Append("]");
+    s.Append(StrL("]"));
     return ToStrTemp(s);
 }
 
@@ -607,7 +607,7 @@ bool ReadRational(const ExifParser& parser, int off, ExifRational* valOut, bool 
 TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type, u32 count, int off) {
     ByteReader r(parser.exifBlob);
     if (count == 0) {
-        return str::DupTemp("");
+        return str::DupTemp(StrL(""));
     }
 
     if (type == TiffShort && count == 1) {
@@ -692,12 +692,12 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
                 break;
             }
             if (i > 0) {
-                s.Append(", ");
+                s.Append(StrL(", "));
             }
             bool gpsDms = g == IfdGroup::Gps && (tag == 0x0002 || tag == 0x0004) && count == 3;
             if (gpsDms || (count > 1 && tag == (u16)ExifProp::LensSpecification)) {
                 if (i == 0) {
-                    s.Append("[");
+                    s.Append(StrL("["));
                 }
                 if (sr) {
                     s.Append(fmt("%d", rat.num));
@@ -708,9 +708,9 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
                     s.Append(FormatRationalPair((u32)rat.num, (u32)rat.den, true));
                 }
                 if (i < count - 1) {
-                    s.Append(", ");
+                    s.Append(StrL(", "));
                 } else {
-                    s.Append("]");
+                    s.Append(StrL("]"));
                 }
             } else if (sr) {
                 s.Append(fmt("%d", rat.num));
@@ -731,7 +731,7 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
         for (u32 i = 0; i < count; i++) {
             int eoff = off + ((int)i * 2);
             if (i > 0) {
-                s.Append(", ");
+                s.Append(StrL(", "));
             }
             if (type == TiffSShort) {
                 s.Append(fmt("%d", (i16)ReadWord(parser, eoff)));
@@ -758,7 +758,7 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
         for (u32 i = 0; i < count; i++) {
             int eoff = off + ((int)i * 4);
             if (i > 0) {
-                s.Append(", ");
+                s.Append(StrL(", "));
             }
             if (type == TiffSLong) {
                 s.Append(fmt("%d", (i32)ReadDWord(parser, eoff)));
@@ -772,18 +772,18 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
     if (type == TiffByte || type == TiffSByte) {
         char sScratch[256]{};
         str::Builder s(Str(sScratch, sizeofi(sScratch)));
-        s.Append("[");
+        s.Append(StrL("["));
         for (u32 i = 0; i < count; i++) {
             if (i > 0) {
-                s.Append(", ");
+                s.Append(StrL(", "));
             }
             s.Append(fmt("%u", r.UInt8(off + i)));
         }
-        s.Append("]");
+        s.Append(StrL("]"));
         return ToStrTemp(s);
     }
 
-    return str::DupTemp("");
+    return str::DupTemp(StrL(""));
 }
 
 void AddEntry(ExifParser& parser, IfdGroup group, u16 tag, u16 type, u32 count, int dataOff) {
@@ -1125,17 +1125,17 @@ ExifValueKind ExifParser::GetPropKind(ExifProp prop) const {
 TempStr ExifParser::GetStringProp(ExifProp prop, ExifProp altProp) const {
     const ExifEntry* entry = FindEntry(*this, prop);
     if (!entry) {
-        return altProp == ExifProp::None ? nullptr : GetStringProp(altProp);
+        return altProp == ExifProp::None ? Str() : GetStringProp(altProp);
     }
     ByteReader r(exifBlob);
     if (!EntryBoundsOk(*this, *entry, TypeElemSize(entry->type) * (int)entry->count)) {
-        return altProp == ExifProp::None ? nullptr : GetStringProp(altProp);
+        return altProp == ExifProp::None ? Str() : GetStringProp(altProp);
     }
     if (IsXpProp(prop)) {
         TempStr res = Utf16LeToUtf8Temp(Str((char*)(r.d + entry->dataOff), (int)entry->count));
         return str::IsEmptyOrWhiteSpace(res) && altProp != ExifProp::None ? GetStringProp(altProp) : res;
     }
-    TempStr res = nullptr;
+    TempStr res;
     bool isAsciiText = entry->type == TiffAscii || (entry->type == TiffUndefined && IsAsciiUndefinedProp(prop));
     if (isAsciiText) {
         res = TrimmedAsciiTemp(r, entry->dataOff, entry->count);
@@ -1148,7 +1148,7 @@ TempStr ExifParser::GetStringProp(ExifProp prop, ExifProp altProp) const {
         }
     }
     if (str::IsEmptyOrWhiteSpace(res)) {
-        return altProp == ExifProp::None ? nullptr : GetStringProp(altProp);
+        return altProp == ExifProp::None ? Str() : GetStringProp(altProp);
     }
     return res;
 }
@@ -1216,7 +1216,7 @@ bool ExifParser::GetFloatProp(ExifProp prop, double* valOut) const {
 TempStr ExifParser::GetFormattedPropTemp(ExifProp prop) const {
     const ExifEntry* entry = FindEntry(*this, prop);
     if (!entry) {
-        return nullptr;
+        return {};
     }
     return FormatValuesTemp(*this, (IfdGroup)entry->group, entry->tag, entry->type, entry->count, entry->dataOff);
 }

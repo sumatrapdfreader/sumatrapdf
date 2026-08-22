@@ -156,7 +156,7 @@ TempWStr GetDirTemp(WStr path) {
 TempStr GetDirTemp(Str path) {
     Str baseName = GetBaseNameTemp(path);
     if (baseName.s == path.s) {
-        return str::DupTemp(".");
+        return str::DupTemp(StrL("."));
     }
     if (baseName.s == path.s + 1) {
         return str::DupTemp(Str(path.s, 1));

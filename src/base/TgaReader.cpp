@@ -100,7 +100,7 @@ static bool HasVersion2Footer(const u8* data, size_t n) {
         return false;
     }
     const TgaFooter* footerLE = (const TgaFooter*)(data + n - sizeof(TgaFooter));
-    return str::EqN(footerLE->signature, TGA_FOOTER_SIGNATURE, sizeof(footerLE->signature));
+    return str::EqN(Str(footerLE->signature), StrL(TGA_FOOTER_SIGNATURE), sizeof(footerLE->signature));
 }
 
 static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t n) {

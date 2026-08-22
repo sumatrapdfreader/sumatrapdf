@@ -57,7 +57,7 @@ static bool EnsureSymbols() {
     symPath.a = GetTempArena();
     symPath.Append(GetSelfExeDirTemp());
     if (len(gSymbolsDir) > 0) {
-        symPath.Append(";");
+        symPath.Append(StrL(";"));
         symPath.Append(gSymbolsDir);
     }
     TempWStr ws = ToWStrTemp(ToStrTemp(symPath));
@@ -227,7 +227,7 @@ void StartUiHangDetector() {
     gHwndPing = CreateWindowExW(0, WC_STATICW, L"SumatraPDF hang detector", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr,
                                 GetModuleHandleW(nullptr), nullptr);
     if (!gHwndPing) {
-        log("StartUiHangDetector: failed to create the ping window\n");
+        log(StrL("StartUiHangDetector: failed to create the ping window\n"));
         return;
     }
     gStopEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);

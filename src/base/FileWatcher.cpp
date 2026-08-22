@@ -613,7 +613,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
         gThreadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
         auto fn = MkFunc0Void(FileWatcherThread);
-        gThreadHandle = StartThread(fn, "FileWatcherThread");
+        gThreadHandle = StartThread(fn, StrL("FileWatcherThread"));
     }
 
     return NewWatchedFile(path, onFileChangedCb, enableManualCheck);

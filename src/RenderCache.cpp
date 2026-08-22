@@ -1485,7 +1485,7 @@ static void SerializePredictive(str::Builder& s, int originPageNo, int nPred, co
     for (int j = 0; j < nPred; j++) {
         s.Append(fmt(" %d", pred[j]));
     }
-    s.Append("]");
+    s.Append(StrL("]"));
 }
 
 static void SerializeRequest(str::Builder& s, Str label, PageRenderRequest* r, u64 now) {
@@ -1493,14 +1493,14 @@ static void SerializeRequest(str::Builder& s, Str label, PageRenderRequest* r, u
     s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label, r->pageNo, r->zoom,
                  r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs));
     if (r->abort) {
-        s.Append("  ABORT");
+        s.Append(StrL("  ABORT"));
     }
     SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
     if (r->dm && r->dm->GetEngine()) {
         TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
         s.Append(fmt("  %s", name));
     }
-    s.Append("\r\n");
+    s.Append(StrL("\r\n"));
 }
 
 static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, u64 now) {
@@ -1513,7 +1513,7 @@ static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, u64 now) 
     if (r->fileName[0]) {
         s.Append(fmt("  %s", Str(r->fileName)));
     }
-    s.Append("\r\n");
+    s.Append(StrL("\r\n"));
 }
 
 // record a just-finished request in finishedHistory (call holding requestAccess)
@@ -1682,7 +1682,7 @@ static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, u64 now) {
     if (c->fileName[0]) {
         s.Append(fmt("  %s", Str(c->fileName)));
     }
-    s.Append("\r\n");
+    s.Append(StrL("\r\n"));
 }
 
 // serialize cache stats and recent changes as plain text for the cache-info

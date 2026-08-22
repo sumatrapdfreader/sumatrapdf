@@ -125,7 +125,7 @@ bool ParsePageRanges(Str ranges, Vec<PageRange>& result) {
     }
 
     StrVec rangeList;
-    Split(&rangeList, ranges, ",", true);
+    Split(&rangeList, ranges, StrL(","), true);
     SortNatural(&rangeList);
 
     for (Str rangeStr : rangeList) {
@@ -264,19 +264,19 @@ static void ParseAdobeFlags(FileArgs& i, Str s) {
 
     // tha args can be separated with `#` or `?` or `:`
     // i.e. `foo#bar` or foo&bar` or `foo:bar`
-    Split(&parts, s, "&", true);
+    Split(&parts, s, StrL("&"), true);
     if (len(parts) == 1) {
         parts.Reset();
-        Split(&parts, s, "#", true);
+        Split(&parts, s, StrL("#"), true);
     }
     if (len(parts) == 1) {
         parts.Reset();
-        Split(&parts, s, ";", true);
+        Split(&parts, s, StrL(";"), true);
     }
 
     for (Str part : parts) {
         parts2.Reset();
-        Split(&parts2, part, "=", true);
+        Split(&parts2, part, StrL("="), true);
         if (len(parts2) != 2) {
             continue;
         }
@@ -610,7 +610,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // disable-auto-rotation; page numbers can be negative (-1 = last page)
             // e.g. -print-settings "1-3,5,10-8,odd,fit" or "last" or "-1"
             i.printSettings = str::Dup(a, param);
-            str::RemoveCharsInPlace(i.printSettings, " ");
+            str::RemoveCharsInPlace(i.printSettings, StrL(" "));
             str::TransCharsInPlace(i.printSettings, StrL(";"), StrL(","));
             continue;
         }
@@ -820,7 +820,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         // or current directory if no /d given
         i.silent = true;
         if (!i.installDir) {
-            i.installDir = str::Dup(a, ".");
+            i.installDir = str::Dup(a, StrL("."));
         }
     }
 }

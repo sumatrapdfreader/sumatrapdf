@@ -11,12 +11,12 @@
 #include "base/Archive.h"
 
 static bool IsEpubArchive(Archive* archive) {
-    auto* container = archive->GetFileDataByName("META-INF/container.xml");
+    auto* container = archive->GetFileDataByName(StrL("META-INF/container.xml"));
     if (container && container->data) {
         return true;
     }
 
-    auto* mimeType = archive->GetFileDataByName("mimetype");
+    auto* mimeType = archive->GetFileDataByName(StrL("mimetype"));
     if (!mimeType || !mimeType->data) {
         return false;
     }
@@ -42,8 +42,8 @@ static bool IsEpubArchive(Archive* archive) {
 }
 
 static bool IsXpsArchive(Archive* archive) {
-    bool res = archive->GetFileId("_rels/.rels") >= 0 || archive->GetFileId("_rels/.rels/[0].piece") >= 0 ||
-               archive->GetFileId("_rels/.rels/[0].last.piece") >= 0;
+    bool res = archive->GetFileId(StrL("_rels/.rels")) >= 0 || archive->GetFileId(StrL("_rels/.rels/[0].piece")) >= 0 ||
+               archive->GetFileId(StrL("_rels/.rels/[0].last.piece")) >= 0;
     return res;
 }
 
@@ -67,7 +67,7 @@ FileType GuessFileTypeFromFile(Str path) {
     ReportIf(!path);
     if (path::IsDirectory(path)) {
         TempStr mimetypePath = path::JoinTemp(path, StrL("mimetype"));
-        if (file::StartsWith(mimetypePath, "application/epub+zip")) {
+        if (file::StartsWith(mimetypePath, StrL("application/epub+zip"))) {
             return FileType::Epub;
         }
         return FileType::Unknown;

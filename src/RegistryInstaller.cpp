@@ -142,7 +142,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "URLUpdateInfo",
                             "https://www.sumatrapdfreader.org/docs/Version-history.html");
     if (!ok) {
-        log("WriteUninstallerRegistryInfo() failed\n");
+        log(StrL("WriteUninstallerRegistryInfo() failed\n"));
     }
     return ok;
 }
@@ -378,7 +378,7 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
     ok &= LoggedWriteRegStr(hkey, key, "Extension", ".pdf");
 
     if (!ok) {
-        log("WriteExtendedFileExtensionInfo() failed\n");
+        log(StrL("WriteExtendedFileExtensionInfo() failed\n"));
     }
 
     ShellNotifyAssociationsChanged();
@@ -402,7 +402,7 @@ static TempStr GetRegClassesAppTemp(Str appName) {
 // Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did.
 // Used in pre-3.4
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
-    log("UnregisterFromBeingDefaultViewer()\n");
+    log(StrL("UnregisterFromBeingDefaultViewer()\n"));
     TempStr curr = LoggedReadRegStrTemp(hkey, kRegClassesPdf, nullptr);
     if (!curr || !str::Eq(curr, kAppName)) {
         // not the default, do nothing

@@ -121,7 +121,7 @@ static void DirTraverseThread(DirTraverseThreadData* td) {
 void StartDirTraverseAsync(StrQueue* queue, Str dir, bool recurse) {
     auto* td = new DirTraverseThreadData{queue, str::Dup(dir), recurse};
     auto fn = MkFunc0(DirTraverseThread, td);
-    RunAsync(fn, "DirTraverseThread");
+    RunAsync(fn, StrL("DirTraverseThread"));
 }
 
 // Find entry by name in a DirEntries

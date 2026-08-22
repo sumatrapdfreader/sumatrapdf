@@ -57,26 +57,26 @@ bool IsAIChatSupportedForTab(WindowTab* tab) {
 
 TempStr AIChatJsEscapeTemp(Str s) {
     if (!s) {
-        return str::DupTemp("");
+        return str::DupTemp(StrL(""));
     }
     str::Builder buf;
     for (int i = 0; i < s.len; i++) {
         char c = s.s[i];
         switch (c) {
             case '\\':
-                buf.Append("\\\\");
+                buf.Append(StrL("\\\\"));
                 break;
             case '\'':
-                buf.Append("\\'");
+                buf.Append(StrL("\\'"));
                 break;
             case '\n':
-                buf.Append("\\n");
+                buf.Append(StrL("\\n"));
                 break;
             case '\r':
-                buf.Append("\\r");
+                buf.Append(StrL("\\r"));
                 break;
             case '\t':
-                buf.Append("\\t");
+                buf.Append(StrL("\\t"));
                 break;
             default:
                 buf.AppendChar(c);
@@ -487,7 +487,7 @@ TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     Color themeBg = ThemeControlBackgroundColor();
     bool dark = followTheme && !IsLightColor(themeBg);
     TempStr bg = followTheme ? ColorToCssTemp(themeBg) : str::DupTemp(bgColor);
-    TempStr fg = dark ? ColorToCssTemp(ThemeWindowTextColor()) : str::DupTemp("#222222");
+    TempStr fg = dark ? ColorToCssTemp(ThemeWindowTextColor()) : str::DupTemp(StrL("#222222"));
     Str muted = dark ? StrL("#a0a0a0") : StrL("#555555");
     Str user = dark ? StrL("#7fb3d5") : StrL("#1a5276");
     Str border = dark ? StrL("#4a4a4a") : StrL("#cccccc");

@@ -188,7 +188,7 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
 // Reads the effective, user-override-aware table, so it shows what actually
 // works right now.
 TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
-    TempStr res = str::DupTemp("");
+    TempStr res = str::DupTemp(StrL(""));
     int n = 0;
     for (int i = 0; i < gAccelsCount && n < maxCount; i++) {
         ACCEL a = gAccels[i];
@@ -208,7 +208,7 @@ TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
             continue;
         }
         if (n > 0) {
-            res = str::JoinTemp(res, ", ");
+            res = str::JoinTemp(res, StrL(", "));
         }
         res = str::JoinTemp(res, key);
         n++;

@@ -376,11 +376,11 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     // "\tCtrl + Shift + Alt + F24" / localized variants fit in ~64 bytes.
     char strScratch[64]{};
     str::Builder str(Str(strScratch, sizeofi(strScratch)));
-    str.Append("\t"); // marks start of an accelerator in menu item
+    str.Append(StrL("\t")); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if ((virt & FALT) && (virt & FCONTROL)) {
         // same bits as AltGr on Windows; keep the name the user would type
-        str.Append("AltGr + ");
+        str.Append(StrL("AltGr + "));
     } else if (virt & FALT) {
         Str s = "Alt + ";
         if (isGerman) {

@@ -52,33 +52,32 @@ void JsonTest() {
         ExpectedValue value;
     } validJsonData[] = {
         // strings
-        {"\"test\"", ExpectedValue("", "test")},
-        {"\"\\\\\\n\\t\\u01234\"", ExpectedValue("",
-                                                 "\\\n\t\xC4\xA3"
-                                                 "4")},
+        {StrL("\"test\""), ExpectedValue(StrL(""), StrL("test"))},
+        {StrL("\"\\\\\\n\\t\\u01234\""), ExpectedValue(StrL(""), StrL("\\\n\t\xC4\xA3"
+                                                                      "4"))},
         // \u0000 is valid JSON
-        {"\"\\u0000\"", ExpectedValue("", Str("\0", 1))},
+        {StrL("\"\\u0000\""), ExpectedValue(StrL(""), Str("\0", 1))},
         // numbers
-        {"123", ExpectedValue("", "123", json::Type::Number)},
-        {"-99.99", ExpectedValue("", "-99.99", json::Type::Number)},
-        {"1.2E+15", ExpectedValue("", "1.2E+15", json::Type::Number)},
-        {"0e-7", ExpectedValue("", "0e-7", json::Type::Number)},
+        {StrL("123"), ExpectedValue(StrL(""), StrL("123"), json::Type::Number)},
+        {StrL("-99.99"), ExpectedValue(StrL(""), StrL("-99.99"), json::Type::Number)},
+        {StrL("1.2E+15"), ExpectedValue(StrL(""), StrL("1.2E+15"), json::Type::Number)},
+        {StrL("0e-7"), ExpectedValue(StrL(""), StrL("0e-7"), json::Type::Number)},
         // keywords
-        {"true", ExpectedValue("", "true", json::Type::Bool)},
-        {"false", ExpectedValue("", "false", json::Type::Bool)},
-        {"null", ExpectedValue("", "null", json::Type::Null)},
+        {StrL("true"), ExpectedValue(StrL(""), StrL("true"), json::Type::Bool)},
+        {StrL("false"), ExpectedValue(StrL(""), StrL("false"), json::Type::Bool)},
+        {StrL("null"), ExpectedValue(StrL(""), StrL("null"), json::Type::Null)},
         // dictionaries
-        {"{\"key\":\"test\"}", ExpectedValue("/key", "test")},
-        {"{ \"no\" : 123 }", ExpectedValue("/no", "123", json::Type::Number)},
-        {"{ \"bool\": true }", ExpectedValue("/bool", "true", json::Type::Bool)},
-        {"{}", ExpectedValue()},
+        {StrL("{\"key\":\"test\"}"), ExpectedValue(StrL("/key"), StrL("test"))},
+        {StrL("{ \"no\" : 123 }"), ExpectedValue(StrL("/no"), StrL("123"), json::Type::Number)},
+        {StrL("{ \"bool\": true }"), ExpectedValue(StrL("/bool"), StrL("true"), json::Type::Bool)},
+        {StrL("{}"), ExpectedValue()},
         // arrays
-        {"[\"test\"]", ExpectedValue("[0]", "test")},
-        {"[123]", ExpectedValue("[0]", "123", json::Type::Number)},
-        {"[ null ]", ExpectedValue("[0]", "null", json::Type::Null)},
-        {"[]", ExpectedValue()},
+        {StrL("[\"test\"]"), ExpectedValue(StrL("[0]"), StrL("test"))},
+        {StrL("[123]"), ExpectedValue(StrL("[0]"), StrL("123"), json::Type::Number)},
+        {StrL("[ null ]"), ExpectedValue(StrL("[0]"), StrL("null"), json::Type::Null)},
+        {StrL("[]"), ExpectedValue()},
         // combination
-        {"{\"key\":[{\"name\":-987}]}", ExpectedValue("/key[0]/name", "-987", json::Type::Number)},
+        {StrL("{\"key\":[{\"name\":-987}]}"), ExpectedValue(StrL("/key[0]/name"), StrL("-987"), json::Type::Number)},
     };
 
     for (size_t i = 0; i < dimof(validJsonData); i++) {
@@ -91,13 +90,13 @@ void JsonTest() {
         ExpectedValue value;
     } invalidJsonData[] = {
         // dictionaries
-        {"{\"key\":\"test\"", ExpectedValue("/key", "test")},
-        {"{ \"no\" : 123, }", ExpectedValue("/no", "123", json::Type::Number)},
-        {"{\"key\":\"test\"]", ExpectedValue("/key", "test")},
+        {StrL("{\"key\":\"test\""), ExpectedValue(StrL("/key"), StrL("test"))},
+        {StrL("{ \"no\" : 123, }"), ExpectedValue(StrL("/no"), StrL("123"), json::Type::Number)},
+        {StrL("{\"key\":\"test\"]"), ExpectedValue(StrL("/key"), StrL("test"))},
         // arrays
-        {"[\"test\"", ExpectedValue("[0]", "test")},
-        {"[123,]", ExpectedValue("[0]", "123", json::Type::Number)},
-        {"[\"test\"}", ExpectedValue("[0]", "test")},
+        {StrL("[\"test\""), ExpectedValue(StrL("[0]"), StrL("test"))},
+        {StrL("[123,]"), ExpectedValue(StrL("[0]"), StrL("123"), json::Type::Number)},
+        {StrL("[\"test\"}"), ExpectedValue(StrL("[0]"), StrL("test"))},
     };
 
     for (size_t i = 0; i < dimof(invalidJsonData); i++) {
@@ -105,10 +104,30 @@ void JsonTest() {
         utassert(!ParseVerify(invalidJsonData[i].json, &verifier));
     }
 
-    static Str invalidJson[] = {
-        "",    "string",      "nada",          "\"open",         "\"\\xC4\"", "\"\\u123h\"", "'string'", "01",  ".1",
-        "12.", "1e",          "1.e5",          "1.E+2",          "1e+",       "1e-",         "-",        "-01", "{",
-        "{,}", "{\"key\": }", "{\"key: 123 }", "{ 'key': 123 }", "[",         "[,]"};
+    static Str invalidJson[] = {StrL(""),
+                                StrL("string"),
+                                StrL("nada"),
+                                StrL("\"open"),
+                                StrL("\"\\xC4\""),
+                                StrL("\"\\u123h\""),
+                                StrL("'string'"),
+                                StrL("01"),
+                                StrL(".1"),
+                                StrL("12."),
+                                StrL("1e"),
+                                StrL("1.e5"),
+                                StrL("1.E+2"),
+                                StrL("1e+"),
+                                StrL("1e-"),
+                                StrL("-"),
+                                StrL("-01"),
+                                StrL("{"),
+                                StrL("{,}"),
+                                StrL("{\"key\": }"),
+                                StrL("{\"key: 123 }"),
+                                StrL("{ 'key': 123 }"),
+                                StrL("["),
+                                StrL("[,]")};
 
     JsonVerifier verifyError(nullptr, 0);
     {
@@ -121,15 +140,15 @@ void JsonTest() {
     }
 
     const ExpectedValue testData[] = {
-        ExpectedValue("/ComicBookInfo/1.0/title", "Meta data demo"),
-        ExpectedValue("/ComicBookInfo/1.0/publicationMonth", "4", json::Type::Number),
-        ExpectedValue("/ComicBookInfo/1.0/publicationYear", "2010", json::Type::Number),
-        ExpectedValue("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type::Bool),
-        ExpectedValue("/ComicBookInfo/1.0/credits[0]/role", "Writer"),
-        ExpectedValue("/ComicBookInfo/1.0/credits[1]/primary", "false", json::Type::Bool),
-        ExpectedValue("/ComicBookInfo/1.0/credits[1]/role", "Publisher"),
-        ExpectedValue("/ComicBookInfo/1.0/credits[2]", "null", json::Type::Null),
-        ExpectedValue("/appID", "Test/123"),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/title"), StrL("Meta data demo")),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/publicationMonth"), StrL("4"), json::Type::Number),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/publicationYear"), StrL("2010"), json::Type::Number),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/credits[0]/primary"), StrL("true"), json::Type::Bool),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/credits[0]/role"), StrL("Writer")),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/credits[1]/primary"), StrL("false"), json::Type::Bool),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/credits[1]/role"), StrL("Publisher")),
+        ExpectedValue(StrL("/ComicBookInfo/1.0/credits[2]"), StrL("null"), json::Type::Null),
+        ExpectedValue(StrL("/appID"), StrL("Test/123")),
     };
     Str jsonSample =
         "{\n\
@@ -154,14 +173,14 @@ void JsonTest() {
         const char paraSep[] = {'\xE2', '\x80', '\xA9'};
         utassert(str::Eq(json::EscapeStrTemp(Str(lineSep, 3)), "\\u2028"));
         utassert(str::Eq(json::EscapeStrTemp(Str(paraSep, 3)), "\\u2029"));
-        utassert(str::Eq(json::EscapeStrTemp(StrL("a\"b\\c\n")), "a\\\"b\\\\c\\n"));
-        utassert(str::Eq(json::EscapeStrTemp(StrL("\b\f\r\t")), "\\b\\f\\r\\t"));
+        utassert(str::Eq(json::EscapeStrTemp(StrL("a\"b\\c\n")), StrL("a\\\"b\\\\c\\n")));
+        utassert(str::Eq(json::EscapeStrTemp(StrL("\b\f\r\t")), StrL("\\b\\f\\r\\t")));
     }
 
     // PathMatch / PathBuildTemp / PathSeg helpers
     {
         StrNode* p = json::PathBuildTemp(StrL("/key"), StrL("i0"), StrL("/name"));
-        utassert(str::Eq(json::PathFormatTemp(p), "/key[0]/name"));
+        utassert(str::Eq(json::PathFormatTemp(p), StrL("/key[0]/name")));
         utassert(json::PathMatch(p, StrL("/key"), StrL("i0"), StrL("/name")));
         utassert(json::PathMatch(p, StrL("/key"), StrL("*"), StrL("/name")));
         utassert(json::PathMatch(p, StrL("*"), StrL("*"), StrL("*")));
@@ -170,7 +189,7 @@ void JsonTest() {
         utassert(!json::PathMatch(p, StrL("/key"), StrL("i0"), StrL("/name"), StrL("/x"))); // too long
         utassert(json::PathSegIndex(json::PathNth(p, 1)) == 0);
         utassert(json::PathSegIndex(p) == -1); // key segment
-        utassert(str::Eq(json::PathSegKey(p), "key"));
+        utassert(str::Eq(json::PathSegKey(p), StrL("key")));
         utassert(str::Eq(json::PathSegKey(json::PathNth(p, 2)), "name"));
         utassert(!json::PathSegKey(json::PathNth(p, 1)).s); // index segment
         utassert(!json::PathNth(p, 3));
@@ -179,10 +198,10 @@ void JsonTest() {
 
         // key containing '/' is one segment, not nested keys
         StrNode* slashKey = json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/title"));
-        utassert(str::Eq(json::PathFormatTemp(slashKey), "/ComicBookInfo/1.0/title"));
+        utassert(str::Eq(json::PathFormatTemp(slashKey), StrL("/ComicBookInfo/1.0/title")));
         utassert(json::PathMatch(slashKey, StrL("/ComicBookInfo/1.0"), StrL("/title")));
         utassert(!json::PathMatch(slashKey, StrL("/ComicBookInfo"), StrL("/1.0"), StrL("/title")));
-        utassert(str::Eq(json::PathSegKey(slashKey), "ComicBookInfo/1.0"));
+        utassert(str::Eq(json::PathSegKey(slashKey), StrL("ComicBookInfo/1.0")));
     }
 
     // object key with '/' is a single path segment when parsed
@@ -193,11 +212,11 @@ void JsonTest() {
         auto onValue = [](SlashKeyState* st, json::Value* v) {
             st->n++;
             utassert(v->type == json::Type::String);
-            utassert(str::Eq(v->value, "x"));
-            utassert(str::Eq(json::PathFormatTemp(v->path), "/a/b/c"));
+            utassert(str::Eq(v->value, StrL("x")));
+            utassert(str::Eq(json::PathFormatTemp(v->path), StrL("/a/b/c")));
             utassert(json::PathMatch(v->path, StrL("/a/b"), StrL("/c")));
             utassert(!json::PathMatch(v->path, StrL("/a"), StrL("/b"), StrL("/c")));
-            utassert(str::Eq(json::PathSegKey(v->path), "a/b"));
+            utassert(str::Eq(json::PathSegKey(v->path), StrL("a/b")));
             utassert(str::Eq(json::PathSegKey(json::PathNth(v->path, 1)), "c"));
         };
         utassert(json::Parse(StrL("{\"a/b\":{\"c\":\"x\"}}"), MkFunc1<SlashKeyState, json::Value*>(onValue, &st)));
@@ -213,7 +232,7 @@ void JsonTest() {
             st->n++;
             utassert(json::PathMatch(v->path, StrL("/a")));
             utassert(v->type == json::Type::Number);
-            utassert(str::Eq(v->value, "1"));
+            utassert(str::Eq(v->value, StrL("1")));
             v->stop = true;
         };
         utassert(json::Parse(StrL("{\"a\":1,\"b\":2,\"c\":3}"), MkFunc1<CancelState, json::Value*>(onValue, &st)));
@@ -229,7 +248,7 @@ void JsonTest() {
             st->n++;
             utassert(json::PathSegIndex(v->path) == 0);
             utassert(!v->path->next);
-            utassert(str::Eq(v->value, "first"));
+            utassert(str::Eq(v->value, StrL("first")));
             v->stop = true;
         };
         utassert(json::Parse(StrL("[\"first\",\"second\"]"), MkFunc1<CancelState, json::Value*>(onValue, &st)));
@@ -261,7 +280,7 @@ void JsonTest() {
         auto nestObject = [](int depth) -> TempStr {
             str::Builder b;
             for (int i = 0; i < depth; i++) {
-                b.Append("{\"k\":");
+                b.Append(StrL("{\"k\":"));
             }
             b.AppendChar('1');
             for (int i = 0; i < depth; i++) {
@@ -288,7 +307,7 @@ void JsonTest() {
             st->n++;
             utassert(!v->path);
             utassert(v->type == json::Type::Number);
-            utassert(str::Eq(v->value, "7"));
+            utassert(str::Eq(v->value, StrL("7")));
         };
         char bomJson[] = {'\xEF', '\xBB', '\xBF', '7'};
         utassert(json::Parse(Str(bomJson, 4), MkFunc1<BomState, json::Value*>(onValue, &st)));

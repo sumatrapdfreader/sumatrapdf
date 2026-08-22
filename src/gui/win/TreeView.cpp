@@ -585,7 +585,7 @@ void TreeView::OnNotifyReflect(ControlBase::NotifyReflectEvent* rev) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
     if (code == TVN_SELCHANGED) {
-        // log("tv: TVN_SELCHANGED\n");
+        // log(StrL("tv: TVN_SELCHANGED\n"));
         // only needed when a handler paints beyond the label; without one the
         // control's own invalidation is enough and this would just cost repaints
         if (onCustomDraw.IsValid()) {
@@ -613,7 +613,7 @@ void TreeView::OnNotifyReflect(ControlBase::NotifyReflectEvent* rev) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
     if (code == NM_CLICK || code == NM_DBLCLK) {
-        // log("tv: NM_CLICK\n");
+        // log(StrL("tv: NM_CLICK\n"));
         if (!onClick.IsValid()) {
             return;
         }

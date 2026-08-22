@@ -87,7 +87,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     if (false && rcLine.x + rcLine.dx + 2 < rcLabel.x + rcLabel.dx) {
         Str currInfoTip = treeView->treeModel->Text(ti);
         infotip.Append(currInfoTip);
-        infotip.Append("\r\n");
+        infotip.Append(StrL("\r\n"));
     }
 
     if (kindDestinationLaunchEmbedded == k || kindDestinationAttachment == k) {

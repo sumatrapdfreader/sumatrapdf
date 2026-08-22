@@ -37,7 +37,7 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("foo.pdf", i.pathsToBenchmark[0]));
+        utassert(str::Eq(StrL("foo.pdf"), i.pathsToBenchmark[0]));
         utassert(len(i.pathsToBenchmark[1]) == 0);
     }
 
@@ -50,7 +50,7 @@ static void ParseCommandLineTest() {
         s = i.globalPrefArgs[1];
         utassert(str::Eq(s, StrL("5")));
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("foo.pdf", i.pathsToBenchmark[0]));
+        utassert(str::Eq(StrL("foo.pdf"), i.pathsToBenchmark[0]));
         utassert(len(i.pathsToBenchmark[1]) == 0);
     }
 
@@ -58,8 +58,8 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench bar.pdf loadonly", i);
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("bar.pdf", i.pathsToBenchmark[0]));
-        utassert(str::Eq("loadonly", i.pathsToBenchmark[1]));
+        utassert(str::Eq(StrL("bar.pdf"), i.pathsToBenchmark[0]));
+        utassert(str::Eq(StrL("loadonly"), i.pathsToBenchmark[1]));
     }
 
     {
@@ -67,18 +67,18 @@ static void ParseCommandLineTest() {
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef", i);
         utassert(len(i.globalPrefArgs) == 3);
         utassert(2 == len(i.pathsToBenchmark));
-        utassert(str::Eq("bar.pdf", i.pathsToBenchmark[0]));
-        utassert(str::Eq("1", i.pathsToBenchmark[1]));
+        utassert(str::Eq(StrL("bar.pdf"), i.pathsToBenchmark[0]));
+        utassert(str::Eq(StrL("1"), i.pathsToBenchmark[1]));
     }
 
     {
         Flags i;
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34", i);
         utassert(4 == len(i.pathsToBenchmark));
-        utassert(str::Eq("bar.pdf", i.pathsToBenchmark[0]));
-        utassert(str::Eq("1-5,3", i.pathsToBenchmark[1]));
-        utassert(str::Eq("some.pdf", i.pathsToBenchmark[2]));
-        utassert(str::Eq("1,3,8-34", i.pathsToBenchmark[3]));
+        utassert(str::Eq(StrL("bar.pdf"), i.pathsToBenchmark[0]));
+        utassert(str::Eq(StrL("1-5,3"), i.pathsToBenchmark[1]));
+        utassert(str::Eq(StrL("some.pdf"), i.pathsToBenchmark[2]));
+        utassert(str::Eq(StrL("1,3,8-34"), i.pathsToBenchmark[3]));
     }
 
     {
@@ -87,8 +87,8 @@ static void ParseCommandLineTest() {
         utassert(true == i.enterPresentation);
         utassert(true == i.invertColors);
         utassert(2 == len(i.fileNames));
-        utassert(0 == i.fileNames.Find("foo.pdf"));
-        utassert(1 == i.fileNames.Find("bar.pdf"));
+        utassert(0 == i.fileNames.Find(StrL("foo.pdf")));
+        utassert(1 == i.fileNames.Find(StrL("bar.pdf")));
     }
 
     {
@@ -96,7 +96,7 @@ static void ParseCommandLineTest() {
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
         utassert(true == i.invertColors);
         utassert(1 == len(i.fileNames));
-        utassert(0 == i.fileNames.Find("rosanna.pdf"));
+        utassert(0 == i.fileNames.Find(StrL("rosanna.pdf")));
     }
 
     {
@@ -146,38 +146,38 @@ static void ParseCommandLineTest() {
 #endif
 
 static void BenchRangeTest() {
-    utassert(IsBenchPagesInfo("1"));
-    utassert(IsBenchPagesInfo("2-4"));
-    utassert(IsBenchPagesInfo("5,7"));
-    utassert(IsBenchPagesInfo("6,8,"));
-    utassert(IsBenchPagesInfo("1-3,4,6-9,13"));
-    utassert(IsBenchPagesInfo("2-"));
-    utassert(IsBenchPagesInfo("loadonly"));
+    utassert(IsBenchPagesInfo(StrL("1")));
+    utassert(IsBenchPagesInfo(StrL("2-4")));
+    utassert(IsBenchPagesInfo(StrL("5,7")));
+    utassert(IsBenchPagesInfo(StrL("6,8,")));
+    utassert(IsBenchPagesInfo(StrL("1-3,4,6-9,13")));
+    utassert(IsBenchPagesInfo(StrL("2-")));
+    utassert(IsBenchPagesInfo(StrL("loadonly")));
 
-    utassert(!IsBenchPagesInfo(""));
-    utassert(!IsBenchPagesInfo("-2"));
-    utassert(!IsBenchPagesInfo("2--4"));
-    utassert(!IsBenchPagesInfo("4-2"));
-    utassert(!IsBenchPagesInfo("1-3,loadonly"));
+    utassert(!IsBenchPagesInfo(StrL("")));
+    utassert(!IsBenchPagesInfo(StrL("-2")));
+    utassert(!IsBenchPagesInfo(StrL("2--4")));
+    utassert(!IsBenchPagesInfo(StrL("4-2")));
+    utassert(!IsBenchPagesInfo(StrL("1-3,loadonly")));
     utassert(!IsBenchPagesInfo(nullptr));
 }
 
 // TODO: disabled because they bring too many dependencies
 static void versioncheck_test() {
-    utassert(IsValidProgramVersion("1"));
-    utassert(IsValidProgramVersion("1.1"));
-    utassert(IsValidProgramVersion("1.1.1\r\n"));
-    utassert(IsValidProgramVersion("2662"));
+    utassert(IsValidProgramVersion(StrL("1")));
+    utassert(IsValidProgramVersion(StrL("1.1")));
+    utassert(IsValidProgramVersion(StrL("1.1.1\r\n")));
+    utassert(IsValidProgramVersion(StrL("2662")));
 
-    utassert(!IsValidProgramVersion("1.1b"));
-    utassert(!IsValidProgramVersion("1..1"));
-    utassert(!IsValidProgramVersion("1.1\r\n.1"));
+    utassert(!IsValidProgramVersion(StrL("1.1b")));
+    utassert(!IsValidProgramVersion(StrL("1..1")));
+    utassert(!IsValidProgramVersion(StrL("1.1\r\n.1")));
 
-    utassert(CompareProgramVersion("0.9.3.900", "0.9.3") > 0);
-    utassert(CompareProgramVersion("1.09.300", "1.09.3") > 0);
-    utassert(CompareProgramVersion("1.9.1", "1.09.3") < 0);
-    utassert(CompareProgramVersion("1.2.0", "1.2") == 0);
-    utassert(CompareProgramVersion("1.3.0", "2662") < 0);
+    utassert(CompareProgramVersion(StrL("0.9.3.900"), StrL("0.9.3")) > 0);
+    utassert(CompareProgramVersion(StrL("1.09.300"), StrL("1.09.3")) > 0);
+    utassert(CompareProgramVersion(StrL("1.9.1"), StrL("1.09.3")) < 0);
+    utassert(CompareProgramVersion(StrL("1.2.0"), StrL("1.2")) == 0);
+    utassert(CompareProgramVersion(StrL("1.3.0"), StrL("2662")) < 0);
 }
 
 static void hexstrTest() {
@@ -209,21 +209,21 @@ static void assertSerializedColor(Color c, Str s) {
 
 static void colorTest() {
     Color c = 0;
-    bool ok = ParseColor(&c, "0x01020304");
+    bool ok = ParseColor(&c, StrL("0x01020304"));
     utassert(ok);
-    assertSerializedColor(c, "#01020304");
+    assertSerializedColor(c, StrL("#01020304"));
 
-    ok = ParseColor(&c, "#01020304");
+    ok = ParseColor(&c, StrL("#01020304"));
     utassert(ok);
-    assertSerializedColor(c, "#01020304");
+    assertSerializedColor(c, StrL("#01020304"));
 
     Color c2 = MkRgba(2, 3, 4, 1);
-    assertSerializedColor(c2, "#01020304");
+    assertSerializedColor(c2, StrL("#01020304"));
     utassert(c == c2);
 
     c2 = MkRgba(5, 7, 6, 8);
-    assertSerializedColor(c2, "#08050706");
-    ok = ParseColor(&c, "#08050706");
+    assertSerializedColor(c2, StrL("#08050706"));
+    ok = ParseColor(&c, StrL("#08050706"));
     utassert(ok);
     utassert(c == c2);
 }
@@ -239,7 +239,7 @@ static void parseCommandsTest() {
     CommandArg* arg;
 
     {
-        auto* cmd = CreateCommandFromDefinition(" CmdCreateAnnotHighlight   #00ff00 openEdit copytoclipboard");
+        auto* cmd = CreateCommandFromDefinition(StrL(" CmdCreateAnnotHighlight   #00ff00 openEdit copytoclipboard"));
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
         arg = GetCommandArg(cmd, kCmdArgColor);
@@ -250,7 +250,7 @@ static void parseCommandsTest() {
         utassert(GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false) == true);
     }
     {
-        auto* cmd = CreateCommandFromDefinition(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes");
+        auto* cmd = CreateCommandFromDefinition(StrL(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes"));
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
         utassert(GetCommandArg(cmd, kCmdArgColor) != nullptr);
@@ -259,24 +259,24 @@ static void parseCommandsTest() {
     }
     {
         {
-            auto* cmd = CreateCommandFromDefinition("CmdGoToNextPage 3");
+            auto* cmd = CreateCommandFromDefinition(StrL("CmdGoToNextPage 3"));
             assertGoToNextPage3(cmd->id);
         }
         {
-            auto* cmd = CreateCommandFromDefinition("CmdGoToNextPage n 3");
+            auto* cmd = CreateCommandFromDefinition(StrL("CmdGoToNextPage n 3"));
             assertGoToNextPage3(cmd->id);
         }
         {
-            auto* cmd = CreateCommandFromDefinition("CmdGoToNextPage n: 3");
+            auto* cmd = CreateCommandFromDefinition(StrL("CmdGoToNextPage n: 3"));
             assertGoToNextPage3(cmd->id);
         }
         {
-            auto* cmd = CreateCommandFromDefinition("CmdGoToNextPage n=3");
+            auto* cmd = CreateCommandFromDefinition(StrL("CmdGoToNextPage n=3"));
             assertGoToNextPage3(cmd->id);
         }
     }
     {
-        Str argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
+        Str argStr = StrL(R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)");
         Str s = str::JoinTemp(StrL("CmdExec   "), argStr);
         auto* cmd = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
@@ -286,7 +286,7 @@ static void parseCommandsTest() {
         utassert(str::Eq(arg->strVal, argStr));
     }
     {
-        Str argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
+        Str argStr = StrL(R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)");
         Str s = str::JoinTemp(StrL("CmdExec  filter: *.jpeg "), argStr);
         auto* cmd = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
@@ -305,13 +305,13 @@ static void DocPropertiesTest() {
     utassert(str::Eq(PropNameTemp(DocProp::Title), StrL("title")));
     utassert(str::Eq(PropNameTemp(DocProp::FocalLength35mm), StrL("focalLength35mm")));
     utassert(str::Eq(PropNameTemp(DocProp::ImagePath), StrL("imagePath")));
-    utassert(PropFromName("title") == DocProp::Title);
-    utassert(PropFromName("focalLength35mm") == DocProp::FocalLength35mm);
-    utassert(PropFromName("imagePath") == DocProp::ImagePath);
+    utassert(PropFromName(StrL("title")) == DocProp::Title);
+    utassert(PropFromName(StrL("focalLength35mm")) == DocProp::FocalLength35mm);
+    utassert(PropFromName(StrL("imagePath")) == DocProp::ImagePath);
     // a couple more, plus unknown/None
     utassert(str::Eq(PropNameTemp(DocProp::CreationDate), StrL("creationDate")));
-    utassert(PropFromName("modDate") == DocProp::ModificationDate);
-    utassert(PropFromName("bogusPropName") == DocProp::None);
+    utassert(PropFromName(StrL("modDate")) == DocProp::ModificationDate);
+    utassert(PropFromName(StrL("bogusPropName")) == DocProp::None);
 }
 
 void SumatraPDF_UnitTests() {

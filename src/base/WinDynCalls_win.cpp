@@ -52,13 +52,13 @@ You can test if a function is available with if (DynSetThreadDescription).
 APIs available on our minimum OS (Windows 7) are called directly, not via Dyn*.
 */
 void InitDynCalls() {
-    HMODULE h = SafeLoadLibrary("kernel32.dll");
+    HMODULE h = SafeLoadLibrary(StrL("kernel32.dll"));
     ReportIf(!h);
     KERNEL32_API_LIST(API_LOAD);
     DynGetProcessInformation = (Sig_GetProcessInformation)GetProcAddress(h, "GetProcessInformation");
     DynSetProcessMitigationPolicy = (Sig_SetProcessMitigationPolicy)GetProcAddress(h, "SetProcessMitigationPolicy");
 
-    h = SafeLoadLibrary("user32.dll");
+    h = SafeLoadLibrary(StrL("user32.dll"));
     ReportIf(!h);
     DynGetDpiForWindow = (Sig_GetDpiForWindow)GetProcAddress(h, "GetDpiForWindow");
     DynGetThreadDpiAwarenessContext =
@@ -70,7 +70,7 @@ void InitDynCalls() {
     DynSystemParametersInfoForDpi = (Sig_SystemParametersInfoForDpi)GetProcAddress(h, "SystemParametersInfoForDpi");
     DynGetSystemMetricsForDpi = (Sig_GetSystemMetricsForDpi)GetProcAddress(h, "GetSystemMetricsForDpi");
 
-    h = SafeLoadLibrary("shcore.dll");
+    h = SafeLoadLibrary(StrL("shcore.dll"));
     if (h) {
         DynGetDpiForMonitor = (Sig_GetDpiForMonitor)GetProcAddress(h, "GetDpiForMonitor");
     }
@@ -79,7 +79,7 @@ void InitDynCalls() {
     WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
     h = LoadLibrary(dbghelpPath);
 #else
-    h = SafeLoadLibrary("dbghelp.dll");
+    h = SafeLoadLibrary(StrL("dbghelp.dll"));
 #endif
     if (h) {
         DBGHELP_API_LIST(API_LOAD)

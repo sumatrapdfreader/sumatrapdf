@@ -124,7 +124,7 @@ static inline void VariantSetLong(VARIANT* res, long val) {
 }
 
 bool IsBlankUrl(Str url) {
-    return str::EqI("about:blank", url);
+    return str::EqI(StrL("about:blank"), url);
 }
 
 bool IsBlankUrl(WStr url) {

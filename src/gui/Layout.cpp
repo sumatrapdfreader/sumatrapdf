@@ -17,7 +17,7 @@ void dbglayout(Str s) {
 
 static void LogAppendNum(str::Builder& s, int n, Str suffix) {
     if (n == Inf) {
-        s.Append("Inf");
+        s.Append(StrL("Inf"));
     } else {
         s.Append(fmt("%d", n));
     }
@@ -31,20 +31,20 @@ void LogConstraints(Constraints c, Str suffix) {
     char sScratch[128]{};
     str::Builder s(Str(sScratch, sizeofi(sScratch)));
     if (c.min.dx == c.max.dx) {
-        dbglayout("dx: ");
-        LogAppendNum(s, c.min.dx, " ");
+        dbglayout(StrL("dx: "));
+        LogAppendNum(s, c.min.dx, StrL(" "));
     } else {
-        dbglayout("dx: ");
-        LogAppendNum(s, c.min.dx, " - ");
-        LogAppendNum(s, c.max.dx, " ");
+        dbglayout(StrL("dx: "));
+        LogAppendNum(s, c.min.dx, StrL(" - "));
+        LogAppendNum(s, c.max.dx, StrL(" "));
     }
     if (c.min.dy == c.max.dy) {
-        dbglayout("dy: ");
-        LogAppendNum(s, c.min.dy, " ");
+        dbglayout(StrL("dy: "));
+        LogAppendNum(s, c.min.dy, StrL(" "));
     } else {
-        dbglayout("dy: ");
-        LogAppendNum(s, c.min.dy, " - ");
-        LogAppendNum(s, c.max.dy, " ");
+        dbglayout(StrL("dy: "));
+        LogAppendNum(s, c.min.dy, StrL(" - "));
+        LogAppendNum(s, c.max.dy, StrL(" "));
     }
     s.Append(suffix);
     dbglayout(fmt("%s", ToStr(s)));
@@ -325,8 +325,8 @@ Padding::~Padding() {
 
 // ILayout
 Size Padding::Layout(const Constraints bc) {
-    dbglayout("Padding::Layout() ");
-    LogConstraints(bc, "\n");
+    dbglayout(StrL("Padding::Layout() "));
+    LogConstraints(bc, StrL("\n"));
 
     auto hinset = insets.left + insets.right;
     auto vinset = insets.top + insets.bottom;
@@ -451,7 +451,7 @@ Size VBox::Layout(const Constraints bc) {
     totalFlex = updateFlex(children, alignMain);
 
     dbglayout(fmt("VBox::Layout() %d children, %d totalFlex ", n, totalFlex));
-    LogConstraints(bc, "\n");
+    LogConstraints(bc, StrL("\n"));
 
     // Determine the constraints for layout of child elements.
     auto cbc = bc;
@@ -761,7 +761,7 @@ Size HBox::Layout(const Constraints bc) {
     }
     totalFlex = updateFlex(children, alignMain);
     dbglayout(fmt("HBox::Layout() %d children, %d totalFlex ", n, totalFlex));
-    LogConstraints(bc, "\n");
+    LogConstraints(bc, StrL("\n"));
 
     // Determine the constraints for layout of child elements.
     auto cbc = bc;
@@ -1071,8 +1071,8 @@ Align::~Align() {
 
 // ILayout
 Size Align::Layout(const Constraints bc) {
-    dbglayout("Align::Layout() ");
-    LogConstraints(bc, "\n");
+    dbglayout(StrL("Align::Layout() "));
+    LogConstraints(bc, StrL("\n"));
 
     Size size = Child->Layout(bc.Loosen());
     childSize = size;

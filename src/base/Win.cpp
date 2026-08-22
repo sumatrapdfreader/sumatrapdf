@@ -429,28 +429,28 @@ bool GetOsVersion(OSVERSIONINFOEX& ver) {
 
 TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId) {
-        return str::DupTemp("9x");
+        return str::DupTemp(StrL("9x"));
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 3) {
-        return str::DupTemp("8.1"); // or Server 2012 R2
+        return str::DupTemp(StrL("8.1")); // or Server 2012 R2
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 2) {
-        return str::DupTemp("8"); // or Server 2012
+        return str::DupTemp(StrL("8")); // or Server 2012
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
-        return str::DupTemp("7"); // or Server 2008 R2
+        return str::DupTemp(StrL("7")); // or Server 2008 R2
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0) {
-        return str::DupTemp("Vista"); // or Server 2008
+        return str::DupTemp(StrL("Vista")); // or Server 2008
     }
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2) {
-        return str::DupTemp("Server 2003");
+        return str::DupTemp(StrL("Server 2003"));
     }
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1) {
-        return str::DupTemp("XP");
+        return str::DupTemp(StrL("XP"));
     }
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0) {
-        return str::DupTemp("2000");
+        return str::DupTemp(StrL("2000"));
     }
     if (ver.dwMajorVersion == 10) {
         // ver.dwMinorVersion seems to always be 0
@@ -474,7 +474,7 @@ TempStr GetWindowsVerTemp() {
     BOOL ok = GetVersionExW((OSVERSIONINFO*)&ver); // NOLINT
 #pragma warning(pop)
     if (!ok) {
-        return str::DupTemp("unknown");
+        return str::DupTemp(StrL("unknown"));
     }
     return OsNameFromVerTemp(ver);
 }
@@ -549,8 +549,8 @@ bool IsRunningOnWine() {
     // Fallback: Wine creates a Software\Wine registry key. Cheap, independent of
     // the graphics backend, available from process start, and present even when
     // the ntdll wine_* exports are hidden.
-    if (!isWine &&
-        (RegKeyExists(HKEY_CURRENT_USER, R"(Software\Wine)") || RegKeyExists(HKEY_LOCAL_MACHINE, R"(Software\Wine)"))) {
+    if (!isWine && (RegKeyExists(HKEY_CURRENT_USER, StrL(R"(Software\Wine)")) ||
+                    RegKeyExists(HKEY_LOCAL_MACHINE, StrL(R"(Software\Wine)")))) {
         isWine = true;
     }
     // Last resort: scan loaded modules for a Wine graphics driver. Covers the X11
@@ -666,7 +666,7 @@ bool RegKeyExists(HKEY keySub, Str keyName) {
 
 TempStr ReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
     if (!keySub) {
-        return nullptr;
+        return {};
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
@@ -800,15 +800,15 @@ bool CreateRegKey(HKEY keySub, Str keyName) {
 
 TempStr RegKeyNameTemp(HKEY key) {
     if (key == HKEY_LOCAL_MACHINE) {
-        return "HKEY_LOCAL_MACHINE";
+        return StrL("HKEY_LOCAL_MACHINE");
     }
     if (key == HKEY_CURRENT_USER) {
-        return "HKEY_CURRENT_USER";
+        return StrL("HKEY_CURRENT_USER");
     }
     if (key == HKEY_CLASSES_ROOT) {
-        return "HKEY_CLASSES_ROOT";
+        return StrL("HKEY_CLASSES_ROOT");
     }
-    return "RegKeyName: unknown key";
+    return StrL("RegKeyName: unknown key");
 }
 
 static TempStr RegKeyNameWTemp(HKEY key) {
@@ -1199,33 +1199,33 @@ static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
 TempStr ResolveLnkTemp(Str path) {
     TempWStr pathW = ToWStrTemp(path);
     if (!pathW.s) {
-        return nullptr;
+        return {};
     }
 
     ScopedComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink)) {
-        return nullptr;
+        return {};
     }
 
     ScopedComQIPtr<IPersistFile> file(lnk);
     if (!file) {
-        return nullptr;
+        return {};
     }
 
     HRESULT hRes = file->Load(pathW.s, STGM_READ);
     if (FAILED(hRes)) {
-        return nullptr;
+        return {};
     }
 
     hRes = lnk->Resolve(nullptr, SLR_UPDATE);
     if (FAILED(hRes)) {
-        return nullptr;
+        return {};
     }
 
     WCHAR newPath[MAX_PATH]{};
     hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
     if (FAILED(hRes)) {
-        return nullptr;
+        return {};
     }
 
     return ToUtf8Temp(newPath);
@@ -1436,7 +1436,7 @@ HANDLE LaunchProcessInDir(Str cmdLine, Str currDir, DWORD flags) {
 
 bool CreateProcessHelper(Str exe, Str args) {
     if (!args) {
-        args = "";
+        args = StrL("");
     }
     TempStr cmd = fmt("\"%s\" %s", exe, args);
     AutoCloseHandle process = LaunchProcessInDir(cmd);
@@ -1628,7 +1628,7 @@ DWORD GetOriginalAccountType() {
 }
 
 bool LaunchElevated(Str path, Str cmdline) {
-    return LaunchFileShell(path, cmdline, "runas");
+    return LaunchFileShell(path, cmdline, StrL("runas"));
 }
 
 /* Ensure that the rectangle is at least partially in the work area on a
@@ -1841,7 +1841,7 @@ TempStr GetDefaultPrinterNameTemp() {
     if (GetDefaultPrinter(buf, &bufSize)) {
         return ToUtf8Temp(buf);
     }
-    return nullptr;
+    return {};
 }
 
 static HWND gClipboardOwnerWnd = nullptr;
@@ -2337,7 +2337,7 @@ TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     // ::NormalizeString is Win32 (normaliz.dll); this function is our UTF-8 wrapper
     int sizeEst = ::NormalizeString((NORM_FORM)form, str.s, str.len, nullptr, 0);
     if (sizeEst <= 0) {
-        return nullptr;
+        return {};
     }
     // according to MSDN the estimate may be off somewhat:
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
@@ -2345,7 +2345,7 @@ TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     WCHAR* res = AllocArrayTemp<WCHAR>(sizeEst);
     sizeEst = ::NormalizeString((NORM_FORM)form, str.s, str.len, res, sizeEst);
     if (sizeEst <= 0) {
-        return nullptr;
+        return {};
     }
     return ToUtf8Temp(WStr(res));
 }
@@ -2382,7 +2382,7 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
             WCHAR* argsW = CWStrTemp(args);
             ok = SUCCEEDED(DllInstall(install, argsW));
         } else {
-            args = nullptr;
+            args = {};
         }
     }
 

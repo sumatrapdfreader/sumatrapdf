@@ -311,7 +311,7 @@ static TempStr GetProcessCommandLineTemp(DWORD pid) {
 // Log parent → grandparent → … (path + command line when readable).
 // Walk parent PIDs and log path + command line for each (startup diagnostics).
 void LogParentProcessChain() {
-    log("Parent process chain:\n");
+    log(StrL("Parent process chain:\n"));
     DWORD pid = GetCurrentProcessId();
     DWORD seen[16]{};
     int nSeen = 0;
@@ -319,7 +319,7 @@ void LogParentProcessChain() {
         DWORD parentPid = GetProcessParentPid(pid);
         if (parentPid == 0 || parentPid == pid) {
             if (depth == 0) {
-                log("  (none / unknown)\n");
+                log(StrL("  (none / unknown)\n"));
             }
             break;
         }

@@ -863,7 +863,7 @@ Str LitFile::GetSection(int section) {
 // its leading "../" stripped, like calibre does
 static TempStr LitNormPathTemp(Str path) {
     StrVec parts;
-    Split(&parts, path, "/", true);
+    Split(&parts, path, StrL("/"), true);
     StrVec out;
     for (int i = 0; i < len(parts); i++) {
         Str p = parts.At(i);
@@ -883,7 +883,7 @@ static TempStr LitNormPathTemp(Str path) {
     str::Builder res;
     for (int i = skip; i < len(out); i++) {
         if (i > skip) {
-            res.Append("/");
+            res.Append(StrL("/"));
         }
         res.Append(out.At(i));
     }
@@ -1130,7 +1130,7 @@ static TempStr LitResolveHrefTemp(UnBinaryCtx* ctx, Str href) {
         }
         str::Builder rel;
         for (int i = 0; i < nUp; i++) {
-            rel.Append("../");
+            rel.Append(StrL("../"));
         }
         rel.Append(target);
         path = str::DupTemp(ToStrTemp(rel));
@@ -1158,9 +1158,9 @@ static void LitEmitTextChar(str::Builder& out, int c) {
     if (c == '\v') {
         out.AppendChar('\n');
     } else if (c == '>') {
-        out.Append(">>");
+        out.Append(StrL(">>"));
     } else if (c == '<') {
-        out.Append("<<");
+        out.Append(StrL("<<"));
     } else {
         LitEmitChar(out, c);
     }
@@ -1211,7 +1211,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                 state = (c == 0) ? 0 : 3;
                 if (flags & kLitFlagOpening) {
                     tag = c;
-                    out.Append("<");
+                    out.Append(StrL("<"));
                     isGoingdown = !(flags & kLitFlagClosing);
                     if (tag == 0x8000) {
                         state = 6;
@@ -1248,9 +1248,9 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     state = 0;
                     if (!isGoingdown) {
                         tagName = nullptr;
-                        out.Append(" />");
+                        out.Append(StrL(" />"));
                     } else {
-                        out.Append(">");
+                        out.Append(StrL(">"));
                         // recursively emit children until the closing token
                         if (!LitBinaryToText(ctx, depth + 1)) {
                             return false;
@@ -1258,9 +1258,9 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                         if (!tagName) {
                             return false;
                         }
-                        out.Append("</");
+                        out.Append(StrL("</"));
                         out.Append(Str(tagName));
-                        out.Append(">");
+                        out.Append(StrL(">"));
                         tagName = nullptr;
                         isGoingdown = false;
                     }
@@ -1278,9 +1278,9 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                         state = 4;
                         break;
                     }
-                    out.Append(" ");
+                    out.Append(StrL(" "));
                     out.Append(Str(attr));
-                    out.Append("=");
+                    out.Append(StrL("="));
                     if (str::Eq(Str(attr), StrL("href")) || str::Eq(Str(attr), StrL("src"))) {
                         state = 10;
                     } else {
@@ -1290,12 +1290,12 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                 break;
             case 4: // get value length
                 if (!inCensorship) {
-                    out.Append("\"");
+                    out.Append(StrL("\""));
                 }
                 count = c - 1;
                 if (count == 0) {
                     if (!inCensorship) {
-                        out.Append("\"");
+                        out.Append(StrL("\""));
                     }
                     inCensorship = false;
                     state = 3;
@@ -1319,9 +1319,9 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                 } else if (count > 0) {
                     if (!inCensorship) {
                         if (c == '"') {
-                            out.Append("&quot;");
+                            out.Append(StrL("&quot;"));
                         } else if (c == '<') {
-                            out.Append("&lt;");
+                            out.Append(StrL("&lt;"));
                         } else {
                             LitEmitChar(out, c);
                         }
@@ -1330,7 +1330,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                 }
                 if (count == 0 && state == 5) {
                     if (!inCensorship) {
-                        out.Append("\"");
+                        out.Append(StrL("\""));
                     }
                     inCensorship = false;
                     state = 3;
@@ -1357,13 +1357,13 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                 if (count <= 0 || count > len(bin) - ctx->pos) {
                     return false;
                 }
-                out.Append(" ");
+                out.Append(StrL(" "));
                 state = 9;
                 break;
             case 9: // custom attr name
                 LitEmitChar(out, c);
                 if (--count == 0) {
-                    out.Append("=");
+                    out.Append(StrL("="));
                     state = 4;
                 }
                 break;
@@ -1379,9 +1379,9 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                 LitAppendUtf8(href, c);
                 if (--count == 0) {
                     TempStr path = LitResolveHrefTemp(ctx, ToStrTemp(href));
-                    out.Append("\"");
+                    out.Append(StrL("\""));
                     out.Append(Str(path));
-                    out.Append("\"");
+                    out.Append(StrL("\""));
                     state = 3;
                 }
                 break;
@@ -1426,7 +1426,7 @@ static Str LitEscapeReserved(Str s) {
             if (LitIsEntityStart(s, i)) {
                 out.AppendChar('&');
             } else {
-                out.Append("&amp;");
+                out.Append(StrL("&amp;"));
             }
             i++;
             continue;
@@ -1437,7 +1437,7 @@ static Str LitEscapeReserved(Str s) {
                 out.AppendChar('<');
                 i += 2;
             } else {
-                out.Append("&lt;");
+                out.Append(StrL("&lt;"));
                 i += 2;
             }
             continue;
@@ -1448,7 +1448,7 @@ static Str LitEscapeReserved(Str s) {
                 out.AppendChar('>');
                 i += 2;
             } else {
-                out.Append("&gt;");
+                out.Append(StrL("&gt;"));
                 i += 2;
             }
             continue;

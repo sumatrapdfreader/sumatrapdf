@@ -338,7 +338,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
         denials.Append(_TRA("copying text"));
     }
 
-    return JoinTemp(&denials, ", ");
+    return JoinTemp(&denials, StrL(", "));
 }
 
 static void AppendProp(str::Builder& out, Str key, Str value) {
@@ -442,30 +442,30 @@ static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath)
         return;
     }
     StrVec parts;
-    Split(&parts, fstruct, ",", true);
+    Split(&parts, fstruct, StrL(","), true);
 
     StrVec props;
 
     Str linearized = _TRA("No");
-    if (parts.Contains("linearized")) {
+    if (parts.Contains(StrL("linearized"))) {
         linearized = _TRA("Yes");
     }
     AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), StrL(":")), linearized);
 
-    if (parts.Contains("tagged")) {
+    if (parts.Contains(StrL("tagged"))) {
         props.Append(_TRA("Tagged PDF"));
     }
-    if (parts.Contains("PDFX")) {
-        props.Append("PDF/X (ISO 15930)");
+    if (parts.Contains(StrL("PDFX"))) {
+        props.Append(StrL("PDF/X (ISO 15930)"));
     }
-    if (parts.Contains("PDFA1")) {
-        props.Append("PDF/A (ISO 19005)");
+    if (parts.Contains(StrL("PDFA1"))) {
+        props.Append(StrL("PDF/A (ISO 19005)"));
     }
-    if (parts.Contains("PDFE1")) {
-        props.Append("PDF/E (ISO 24517)");
+    if (parts.Contains(StrL("PDFE1"))) {
+        props.Append(StrL("PDF/E (ISO 24517)"));
     }
 
-    TempStr val = JoinTemp(&props, ", ");
+    TempStr val = JoinTemp(&props, StrL(", "));
     AppendProp(out, _TRA("PDF Optimizations:"), val);
 }
 
@@ -754,7 +754,7 @@ static void AlignPropertiesText(str::Builder& text) {
                 aligned.AppendChar(' ');
             }
             aligned.Append(Str(rest.s, labelBytes));
-            aligned.Append("  ");
+            aligned.Append(StrL("  "));
             aligned.Append(Str(rest.s + labelBytes + 1, lineLen - labelBytes - 1));
         } else {
             aligned.Append(Str(rest.s, lineLen));
@@ -1098,9 +1098,9 @@ static void GetFontsThread(GetFontsData* data) {
     auto* result = new GetFontsResult;
     result->hwnd = data->hwnd;
     if (val) {
-        result->fontsText.Append("\n");
+        result->fontsText.Append(StrL("\n"));
         result->fontsText.Append(_TRA("Fonts:"));
-        result->fontsText.Append("\n");
+        result->fontsText.Append(StrL("\n"));
         result->fontsText.Append(val);
     }
     auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
@@ -1134,7 +1134,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     GetPropsText(ctrl, wnd->propsText);
     AlignPropertiesText(wnd->propsText);
     EndWithSingleNewline(wnd->propsText);
-    wnd->propsText.Append("\n");
+    wnd->propsText.Append(StrL("\n"));
     wnd->propsText.Append(_TRA("Getting font information..."));
 
     wnd->closeOnEsc = true;

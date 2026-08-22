@@ -216,7 +216,7 @@ static int cmpFloat(const float* a, const float* b) {
 }
 
 TempStr GetSettingsFileNameTemp() {
-    return str::DupTemp("SumatraPDF-settings.txt");
+    return str::DupTemp(StrL("SumatraPDF-settings.txt"));
 }
 
 // this could be virtual path when running in app store
@@ -472,7 +472,7 @@ bool LoadSettings() {
     setMinMax(gprefs->annotations.freeTextOpacity, 0, 100);
 
     if (SeqStrIndexIS(gScrollbarModeNames, gprefs->scrollbars) < 0) {
-        str::ReplaceWithCopy(&gprefs->scrollbars, "windows");
+        str::ReplaceWithCopy(&gprefs->scrollbars, StrL("windows"));
     }
 
     // toolbar mode: if unset/invalid, derive from the legacy showToolbar bool
@@ -492,7 +492,7 @@ bool LoadSettings() {
     }
 
     if (SeqStrIndexIS(gToolbarPositionNames, gprefs->toolbarPosition) < 0) {
-        str::ReplaceWithCopy(&gprefs->toolbarPosition, "top");
+        str::ReplaceWithCopy(&gprefs->toolbarPosition, StrL("top"));
     }
 
     if (!gprefs->treeFontName) {

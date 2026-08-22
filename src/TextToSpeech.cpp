@@ -664,7 +664,7 @@ static bool WinTtsInit() {
         }
     }
     if (nVoices == 0) {
-        log("WinTtsInit: no voices installed\n");
+        log(StrL("WinTtsInit: no voices installed\n"));
         gWinSynth->Release();
         gWinSynth = nullptr;
         if (gWinVoicesStatic) {
@@ -1024,7 +1024,7 @@ static bool WinTtsStartPlayback() {
     gWinWaveHdr.dwBufferLength = dataSize;
     if (waveOutPrepareHeader(gWinWaveOut, &gWinWaveHdr, sizeof(gWinWaveHdr)) != MMSYSERR_NOERROR ||
         waveOutWrite(gWinWaveOut, &gWinWaveHdr, sizeof(gWinWaveHdr)) != MMSYSERR_NOERROR) {
-        log("WinTtsStartPlayback: waveOutPrepareHeader() or waveOutWrite() failed\n");
+        log(StrL("WinTtsStartPlayback: waveOutPrepareHeader() or waveOutWrite() failed\n"));
         WinTtsStopPlayback();
         return false;
     }
@@ -1061,7 +1061,7 @@ static void WinTtsProcessEvents() {
                 WinTtsExtractCues(stream);
                 bool didRead = WinTtsReadStreamBytes(stream);
                 if (!didRead) {
-                    log("WinTtsProcessEvents: failed to read synthesized stream\n");
+                    log(StrL("WinTtsProcessEvents: failed to read synthesized stream\n"));
                 }
                 ok = didRead && WinTtsStartPlayback();
                 stream->Release();
@@ -1139,10 +1139,10 @@ static bool IsWinRtBackend() {
         bool forceSapi = len(GetEnvVariableTemp(StrL("SUMATRA_TTS_FORCE_SAPI"))) > 0;
         if (!forceSapi && WinTtsInit()) {
             gTtsBackend = TtsBackend::WinRt;
-            log("Tts: using Windows.Media.SpeechSynthesis\n");
+            log(StrL("Tts: using Windows.Media.SpeechSynthesis\n"));
         } else {
             gTtsBackend = TtsBackend::Sapi;
-            log("Tts: using SAPI\n");
+            log(StrL("Tts: using SAPI\n"));
         }
     }
     return gTtsBackend == TtsBackend::WinRt;

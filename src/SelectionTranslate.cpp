@@ -810,19 +810,19 @@ static TempStr BuildTranslateUrlTemp(TranslateEngine engine, Str srcLang, Str ds
     }
     TempStr src = LangCodeForUrlTemp(srcLang);
     if (!src) {
-        src = str::DupTemp("auto");
+        src = str::DupTemp(StrL("auto"));
     }
     TempStr dst = LangCodeForUrlTemp(dstLang);
     if (!dst) {
-        dst = str::DupTemp("en");
+        dst = str::DupTemp(StrL("en"));
     }
     if (engine == TranslateEngine::DeepL) {
         // DeepL uses plain "zh" for Chinese
         if (str::StartsWithI(src, StrL("zh"))) {
-            src = str::DupTemp("zh");
+            src = str::DupTemp(StrL("zh"));
         }
         if (str::StartsWithI(dst, StrL("zh"))) {
-            dst = str::DupTemp("zh");
+            dst = str::DupTemp(StrL("zh"));
         }
         return fmt("https://www.deepl.com/translator#%s/%s/%s", src, dst, enc);
     }

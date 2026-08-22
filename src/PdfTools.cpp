@@ -618,7 +618,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
         return false;
     }
     StrVec parts;
-    Split(&parts, s, ",", true);
+    Split(&parts, s, StrL(","), true);
     if (len(parts) == 0) {
         return false;
     }

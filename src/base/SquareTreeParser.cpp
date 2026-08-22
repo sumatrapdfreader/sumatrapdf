@@ -373,14 +373,14 @@ void SerializeSquareTreeNode(str::Builder& out, SquareTreeNode* node, Str indent
         AppendIndent(out, indentUnit, depth);
         out.Append(item->key);
         if (item->child) {
-            out.Append(" [");
+            out.Append(StrL(" ["));
             out.Append(lineEnd);
             SerializeSquareTreeNode(out, item->child, indentUnit, lineEnd, depth + 1);
             AppendIndent(out, indentUnit, depth);
-            out.Append("]");
+            out.Append(StrL("]"));
             out.Append(lineEnd);
         } else {
-            out.Append(" = ");
+            out.Append(StrL(" = "));
             if (item->str) {
                 out.Append(item->str);
             }

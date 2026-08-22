@@ -237,27 +237,27 @@ static void HtmlAttrEscape(str::Builder& b, Str s) {
         char c = p[i];
         switch (c) {
             case '&':
-                b.Append("&amp;");
+                b.Append(StrL("&amp;"));
                 break;
             case '<':
-                b.Append("&lt;");
+                b.Append(StrL("&lt;"));
                 break;
             case '>':
-                b.Append("&gt;");
+                b.Append(StrL("&gt;"));
                 break;
             case '"':
-                b.Append("&quot;");
+                b.Append(StrL("&quot;"));
                 break;
             case '\'':
-                b.Append("&#39;");
+                b.Append(StrL("&#39;"));
                 break;
             // a literal newline inside an attribute value does survive, but
             // only because browsers are lenient about it - be explicit
             case '\n':
-                b.Append("&#10;");
+                b.Append(StrL("&#10;"));
                 break;
             case '\r':
-                b.Append("&#13;");
+                b.Append(StrL("&#13;"));
                 break;
             default:
                 b.AppendChar(c);
@@ -274,11 +274,10 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
     Str pattern = str::IsEmptyOrWhiteSpace(bodyPattern) ? StrL("text=${selection}") : bodyPattern;
 
     str::Builder html;
-    html.Append("<!doctype html><html><head><meta charset=\"utf-8\"><title>SumatraPDF</title></head>\n");
-    html.Append(
-        "<body onload=\"document.forms[0].submit()\">\n<form method=\"post\" accept-charset=\"utf-8\" action=\"");
+    html.Append(StrL("<!doctype html><html><head><meta charset=\"utf-8\"><title>SumatraPDF</title></head>\n"));
+    html.Append(StrL("<body onload=\"document.forms[0].submit()\">\n<form method=\"post\" accept-charset=\"utf-8\" action=\""));
     HtmlAttrEscape(html, url);
-    html.Append("\">\n");
+    html.Append(StrL("\">\n"));
 
     StrVec fields;
     Split(&fields, pattern, StrL("&"), true);
@@ -296,11 +295,11 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
         TempStr value = ExpandSelectionVarsTemp(valuePattern, selection, false, 0, nullptr, tab);
         html.Append(R"(<input type="hidden" name=")");
         HtmlAttrEscape(html, name);
-        html.Append("\" value=\"");
+        html.Append(StrL("\" value=\""));
         HtmlAttrEscape(html, value);
-        html.Append("\">\n");
+        html.Append(StrL("\">\n"));
     }
-    html.Append("</form>\n<noscript><button type=\"submit\">Continue</button></noscript>\n</body></html>\n");
+    html.Append(StrL("</form>\n<noscript><button type=\"submit\">Continue</button></noscript>\n</body></html>\n"));
 
     TempStr dir = GetTempDirTemp();
     if (str::IsEmptyOrWhiteSpace(dir)) {

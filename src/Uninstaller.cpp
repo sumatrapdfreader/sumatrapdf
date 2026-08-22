@@ -83,14 +83,14 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
 
     str::Builder newPath;
     StrVec parts;
-    Split(&parts, currPath, ";");
+    Split(&parts, currPath, StrL(";"));
     for (Str entry : parts) {
         // skip empty entries and the one matching installDir (case-insensitive)
         if (!entry || str::EqI(entry, installDir)) {
             continue;
         }
         if (len(newPath) > 0) {
-            newPath.Append(";");
+            newPath.Append(StrL(";"));
         }
         newPath.Append(entry);
     }
@@ -108,7 +108,7 @@ static void RemoveInstalledFiles() {
     // delete registry entries
     Str dir = gCli->installDir;
     if (!dir) {
-        log("RemoveInstalledFiles(): dir is empty\n");
+        log(StrL("RemoveInstalledFiles(): dir is empty\n"));
     }
 #if 0
     for (const char* s : gInstalledFiles) {
@@ -129,7 +129,7 @@ static TempStr GetInstalledExePathTemp() {
 }
 
 static void UninstallerThread() {
-    log("UninstallerThread started\n");
+    log(StrL("UninstallerThread started\n"));
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     TempStr exePath = GetInstalledExePathTemp();
@@ -143,7 +143,7 @@ static void UninstallerThread() {
     ok |= RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER);
 
     if (!ok) {
-        log("RemoveUninstallerRegistryInfo failed\n");
+        log(StrL("RemoveUninstallerRegistryInfo failed\n"));
         NotifyFailed(_TRA("Failed to delete uninstaller registry keys"));
     }
 
@@ -164,7 +164,7 @@ static void UninstallerThread() {
     // always succeed, even for partial uninstallations
     success = true;
 
-    log("UninstallerThread finished\n");
+    log(StrL("UninstallerThread finished\n"));
     if (!gCli->silent) {
         PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
@@ -390,7 +390,7 @@ static TempStr GetUninstallerPathInSystemTemp() {
 // to be able to delete installation directory we must copy
 // ourselves to temp directory and re-launch
 static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
-    log("RelaunchMaybeElevatedFromTempDirectory()\n");
+    log(StrL("RelaunchMaybeElevatedFromTempDirectory()\n"));
     if (gIsDebugBuild) {
         // for easier debugging, debug build doesn't need
         // to be copied / re-launched
@@ -403,13 +403,13 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     str::Builder cmdLine;
     cmdLine.Append(StrL("-uninstall"));
     if (cli->silent) {
-        cmdLine.Append(" -silent");
+        cmdLine.Append(StrL(" -silent"));
     }
     if (cli->log) {
-        cmdLine.Append(" -log");
+        cmdLine.Append(StrL(" -log"));
     }
     if (cli->allUsers) {
-        cmdLine.Append(" -all-users");
+        cmdLine.Append(StrL(" -all-users"));
     }
     Str cl = ToStr(cmdLine);
 
@@ -448,7 +448,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
         //  - hold it open denying writers while we launch it
         TempStr sysTempPath = GetUninstallerPathInSystemTemp();
         if (str::IsEmptyOrWhiteSpace(sysTempPath) || str::EqI(sysTempPath, ownPath)) {
-            log("  already running from the system temp dir (or couldn't find it)\n");
+            log(StrL("  already running from the system temp dir (or couldn't find it)\n"));
             return;
         }
         file::Delete(sysTempPath);
@@ -479,7 +479,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
 
     TempStr installerTempPath = GetUninstallerPathInTemp();
     if (str::EqI(installerTempPath, ownPath)) {
-        log("  already running from temp dir\n");
+        log(StrL("  already running from temp dir\n"));
         return;
     }
     logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
@@ -525,11 +525,11 @@ static TempStr GetSystem32PathTemp(Str exeName) {
 // so PATH can't redirect it, and the file goes away seconds after we exit
 // rather than at the next boot. Same code path elevated or not.
 static void InitSelfDelete() {
-    log("InitSelfDelete()\n");
+    log(StrL("InitSelfDelete()\n"));
     TempStr exePath = GetSelfExePathTemp();
     TempStr cmdExe = GetSystem32PathTemp(StrL("cmd.exe"));
     if (str::IsEmptyOrWhiteSpace(cmdExe)) {
-        log("InitSelfDelete(): couldn't find cmd.exe\n");
+        log(StrL("InitSelfDelete(): couldn't find cmd.exe\n"));
         return;
     }
     // ping, not timeout: timeout.exe exits immediately with "Input redirection
@@ -572,7 +572,7 @@ int RunUninstaller() {
     int ret = 1;
     auto installerExists = file::Exists(exePath);
     if (!installerExists) {
-        log("Uninstaller executable doesn't exist\n");
+        log(StrL("Uninstaller executable doesn't exist\n"));
         auto caption = _TRA("Uninstallation failed");
         auto msg = _TRA("SumatraPDF installation not found.");
         MsgBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
@@ -589,11 +589,11 @@ int RunUninstaller() {
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
     if (gWasSearchFilterInstalled) {
-        log("Search filter is installed\n");
+        log(StrL("Search filter is installed\n"));
     }
     gWasPreviewInstaller = IsPreviewInstalled();
     if (gWasPreviewInstaller) {
-        log("Previewer is installed\n");
+        log(StrL("Previewer is installed\n"));
     }
 
     gDefaultMsg = _TRA("Are you sure you want to uninstall SumatraPDF?");

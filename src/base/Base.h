@@ -286,13 +286,26 @@ using TempWStr = WStr;
 // Create WStr from wide string literal with compile-time length
 #define WStrL(lit) WStr((wchar_t*)(lit), (int)((sizeof(lit) / sizeof(wchar_t)) - 1))
 
-// length of a Str / WStr as int. Also accepts a C string (char* / wchar_t*) via
-// Str/WStr's implicit ctor, like the former str::Leni / wstr::Leni it replaces.
+// length of a Str / WStr as int. C strings have a dedicated overload so
+// len(ptr) does not construct a Str.
 inline int len(Str s) {
     return s.len;
 }
 inline int len(WStr s) {
     return s.len;
+}
+inline int len(const char* s) {
+    return s ? (int)strlen(s) : 0;
+}
+inline int len(const wchar_t* s) {
+    if (!s) {
+        return 0;
+    }
+    int n = 0;
+    while (s[n]) {
+        n++;
+    }
+    return n;
 }
 
 struct VecStr {
@@ -377,12 +390,12 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 #define STRINGIZE(x) STRINGIZE_(x)
 #define FILE_LINE __FILE__ ":" STRINGIZE(__LINE__)
 
-#define ReportIfCond(cond, condStr, fileLine, isCrash, captureCallstack)      \
-    __analysis_assume(!(cond));                                               \
-    do {                                                                      \
-        if (cond) {                                                           \
-            _uploadDebugReport(condStr, fileLine, isCrash, captureCallstack); \
-        }                                                                     \
+#define ReportIfCond(cond, condStr, fileLine, isCrash, captureCallstack)                  \
+    __analysis_assume(!(cond));                                                           \
+    do {                                                                                  \
+        if (cond) {                                                                       \
+            _uploadDebugReport(StrL(condStr), StrL(fileLine), isCrash, captureCallstack); \
+        }                                                                                 \
     } while (0)
 
 #define ReportIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)

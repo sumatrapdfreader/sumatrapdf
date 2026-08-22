@@ -97,30 +97,30 @@ static void check(Str got, Str expected) {
 #define checkFmt(expected, spec, val)                    \
     do {                                                 \
         check(FormatTemp(spec, val), fmtRef(spec, val)); \
-        check(FormatTemp(spec, val), expected);          \
+        check(FormatTemp(spec, val), StrL(expected));    \
     } while (0)
 
 static void testStrings() {
-    check(FormatTemp("%s", StrL("foo")), "foo");
-    check(FormatTemp("%s", StrL("")), ""); // empty string
-    check(FormatTemp("[%s]", StrL("")), "[]");
-    check(FormatTemp("%s%s%s", StrL("a"), StrL("b"), StrL("c")), "abc");
-    check(FormatTemp("%s", WStrL(L"wide")), "wide"); // WStr -> utf8
+    check(FormatTemp("%s", StrL("foo")), StrL("foo"));
+    check(FormatTemp("%s", StrL("")), StrL("")); // empty string
+    check(FormatTemp("[%s]", StrL("")), StrL("[]"));
+    check(FormatTemp("%s%s%s", StrL("a"), StrL("b"), StrL("c")), StrL("abc"));
+    check(FormatTemp("%s", WStrL(L"wide")), StrL("wide")); // WStr -> utf8
     // %S with a non-ASCII wide string (U+2019 -> utf8 e2 80 99)
     check(FormatTemp("%S", WStrL(L"a"
                                  L"\x2019"
                                  L"a.pdf")),
-          "a\xE2\x80\x99"
-          "a.pdf");
+          StrL("a\xE2\x80\x99"
+               "a.pdf"));
     // width / left-justify / precision (truncation, byte-based like printf)
     check(FormatTemp("%-16s", StrL("hi")), fmtRef("%-16s", "hi"));
-    check(FormatTemp("%-16s", StrL("hi")), "hi              ");
+    check(FormatTemp("%-16s", StrL("hi")), StrL("hi              "));
     check(FormatTemp("%10s", StrL("hi")), fmtRef("%10s", "hi"));
-    check(FormatTemp("%10s", StrL("hi")), "        hi");
+    check(FormatTemp("%10s", StrL("hi")), StrL("        hi"));
     check(FormatTemp("%.3s", StrL("abcdef")), fmtRef("%.3s", "abcdef"));
-    check(FormatTemp("%.3s", StrL("abcdef")), "abc");
-    check(FormatTemp("%.0s", StrL("abc")), "");
-    check(FormatTemp("%-9s|", StrL("abc")), "abc      |");
+    check(FormatTemp("%.3s", StrL("abcdef")), StrL("abc"));
+    check(FormatTemp("%.0s", StrL("abc")), StrL(""));
+    check(FormatTemp("%-9s|", StrL("abc")), StrL("abc      |"));
     // a string longer than the internal numeric buffer must be fine (%s is manual)
     Str long600;
     {
@@ -134,8 +134,8 @@ static void testStrings() {
 }
 
 static void testChars() {
-    check(FormatTemp("%c", 'x'), "x");
-    check(FormatTemp("[%c]", 'A'), "[A]");
+    check(FormatTemp("%c", 'x'), StrL("x"));
+    check(FormatTemp("[%c]", 'A'), StrL("[A]"));
     check(FormatTemp("%c", 'x'), fmtRef("%c", 'x'));
 }
 
@@ -152,38 +152,38 @@ static void testInts() {
     checkFmt("-007", "%04d", -7);
     checkFmt("+7", "%+d", 7);
     // 64-bit
-    check(FormatTemp("%lld", (i64)9223372036854775807LL), "9223372036854775807");
-    check(FormatTemp("%lld", (i64)(-9223372036854775807LL - 1)), "-9223372036854775808");
+    check(FormatTemp("%lld", (i64)9223372036854775807LL), StrL("9223372036854775807"));
+    check(FormatTemp("%lld", (i64)(-9223372036854775807LL - 1)), StrL("-9223372036854775808"));
     check(FormatTemp("%lld", (i64)9223372036854775807LL), fmtRef("%lld", (i64)9223372036854775807LL));
     check(FormatTemp("%ld", (i64)-7), fmtRef("%ld", -7l));
 }
 
 static void testUnsigned() {
-    check(FormatTemp("%u", (i64)0), "0");
-    check(FormatTemp("%u", (i64)4000000000), "4000000000");
+    check(FormatTemp("%u", (i64)0), StrL("0"));
+    check(FormatTemp("%u", (i64)4000000000), StrL("4000000000"));
     check(FormatTemp("%u", (i64)4000000000), fmtRef("%u", 4000000000u));
     check(FormatTemp("%llu", (i64)18446744073709551615ULL), fmtRef("%llu", 18446744073709551615ULL));
-    check(FormatTemp("%llu", (i64)18446744073709551615ULL), "18446744073709551615");
-    check(FormatTemp("%zu", (size_t)1234), "1234");
+    check(FormatTemp("%llu", (i64)18446744073709551615ULL), StrL("18446744073709551615"));
+    check(FormatTemp("%zu", (size_t)1234), StrL("1234"));
 }
 
 static void testHex() {
-    check(FormatTemp("%x", 255), "ff");
-    check(FormatTemp("%X", 255), "FF");
+    check(FormatTemp("%x", 255), StrL("ff"));
+    check(FormatTemp("%X", 255), StrL("FF"));
     check(FormatTemp("%x", 255), fmtRef("%x", 255));
-    check(FormatTemp("%02x", 5), "05");
+    check(FormatTemp("%02x", 5), StrL("05"));
     check(FormatTemp("%08X", (int)0xdeadbeef), fmtRef("%08X", 0xdeadbeef));
-    check(FormatTemp("%08X", (int)0xdeadbeef), "DEADBEEF");
-    check(FormatTemp("%#x", 255), "0xff");
+    check(FormatTemp("%08X", (int)0xdeadbeef), StrL("DEADBEEF"));
+    check(FormatTemp("%#x", 255), StrL("0xff"));
     check(FormatTemp("%#x", 255), fmtRef("%#x", 255));
-    check(FormatTemp("%06x", 0x1234), "001234");
+    check(FormatTemp("%06x", 0x1234), StrL("001234"));
     // negative int via %x reads as 32-bit unsigned (matches printf)
-    check(FormatTemp("%x", -1), "ffffffff");
+    check(FormatTemp("%x", -1), StrL("ffffffff"));
     check(FormatTemp("%x", -1), fmtRef("%x", -1));
     // 64-bit hex
     check(FormatTemp("%016llX", (i64)0x123456789ABCLL), fmtRef("%016llX", (i64)0x123456789ABCLL));
-    check(FormatTemp("%016llX", (i64)0x123456789ABCLL), "0000123456789ABC");
-    check(FormatTemp("%016I64X", (i64)0xFFFFFFFFFFFFFFFFLL), "FFFFFFFFFFFFFFFF");
+    check(FormatTemp("%016llX", (i64)0x123456789ABCLL), StrL("0000123456789ABC"));
+    check(FormatTemp("%016I64X", (i64)0xFFFFFFFFFFFFFFFFLL), StrL("FFFFFFFFFFFFFFFF"));
     check(FormatTemp("%lx", (i64)0xabc), fmtRef("%lx", 0xabcul));
 }
 
@@ -196,71 +196,71 @@ static void testPointers() {
 
 static void testFloats() {
     check(FormatTemp("%f", 3.45f), fmtRef("%f", 3.45f));
-    check(FormatTemp("%f", 3.45f), "3.450000");
+    check(FormatTemp("%f", 3.45f), StrL("3.450000"));
     check(FormatTemp("%.2f", 3.456), fmtRef("%.2f", 3.456));
-    check(FormatTemp("%.2f", 3.456), "3.46");
+    check(FormatTemp("%.2f", 3.456), StrL("3.46"));
     check(FormatTemp("%.1f", -18.38f), fmtRef("%.1f", -18.38f));
-    check(FormatTemp("%.0f", 2.0), "2");
-    check(FormatTemp("%.0f", 0.0), "0");
+    check(FormatTemp("%.0f", 2.0), StrL("2"));
+    check(FormatTemp("%.0f", 0.0), StrL("0"));
     check(FormatTemp("%g", 0.5), fmtRef("%g", 0.5));
     check(FormatTemp("%6.2f", 3.5), fmtRef("%6.2f", 3.5));
-    check(FormatTemp("%6.2f", 3.5), "  3.50");
-    check(FormatTemp("%+.1f", 1.25), "+1.2"); // banker-ish rounding via printf
+    check(FormatTemp("%6.2f", 3.5), StrL("  3.50"));
+    check(FormatTemp("%+.1f", 1.25), StrL("+1.2")); // banker-ish rounding via printf
     check(FormatTemp("%+.1f", 1.25), fmtRef("%+.1f", 1.25));
     // double argument
-    check(FormatTemp("%.2f", 1234.5678), "1234.57");
+    check(FormatTemp("%.2f", 1234.5678), StrL("1234.57"));
 }
 
 // integer-family specs (%d %x %c %p) accept any integer-like arg (char / int /
 // pointer), matching printf. This is what lets e.g. an HWND print with %x.
 static void testCrossType() {
     void* p = (void*)(uintptr_t)0xabcd;
-    check(FormatTemp("0x%x", p), "0xabcd");                       // pointer via %x
+    check(FormatTemp("0x%x", p), StrL("0xabcd"));                 // pointer via %x
     check(FormatTemp("%p", 0x1234), fmtRef("%p", (void*)0x1234)); // int via %p
-    check(FormatTemp("%c", 65), "A");                             // int via %c
-    check(FormatTemp("%d", 'A'), "65");                           // char via %d
-    check(FormatTemp("%d", (char)-1), "-1");                      // signed char via %d
+    check(FormatTemp("%c", 65), StrL("A"));                       // int via %c
+    check(FormatTemp("%d", 'A'), StrL("65"));                     // char via %d
+    check(FormatTemp("%d", (char)-1), StrL("-1"));                // signed char via %d
 }
 
 static void testEscapeAndRaw() {
-    check(FormatTemp("100%%"), "100%");
-    check(FormatTemp("%d%% done", 50), "50% done");
-    check(FormatTemp("no specifiers"), "no specifiers");
-    check(FormatTemp(""), "");
+    check(FormatTemp("100%%"), StrL("100%"));
+    check(FormatTemp("%d%% done", 50), StrL("50% done"));
+    check(FormatTemp("no specifiers"), StrL("no specifiers"));
+    check(FormatTemp(""), StrL(""));
     // '{' is not special, so nothing needs escaping: registry paths, GUIDs and
     // CSS / JS templates go through fmt unharmed
-    check(FormatTemp("a{b"), "a{b");
-    check(FormatTemp("{}"), "{}");
-    check(FormatTemp("Class\\{4d36e968}\\%d", 7), "Class\\{4d36e968}\\7");
+    check(FormatTemp("a{b"), StrL("a{b"));
+    check(FormatTemp("{}"), StrL("{}"));
+    check(FormatTemp("Class\\{4d36e968}\\%d", 7), StrL("Class\\{4d36e968}\\7"));
 }
 
 static void testPositional() {
-    check(FormatTemp("c: %{0}, i: %{1}", 'x', -18), "c: x, i: -18");
-    check(FormatTemp("be%{0}-af", 888723), "be888723-af");
-    check(FormatTemp("int: %{1}, s: %{0}", WStrL(L"hello"), -1), "int: -1, s: hello");
-    check(FormatTemp("%{1}-%{0}", StrL("so"), WStrL(L"r")), "r-so");
-    check(FormatTemp("%{0}%{0}%{0}", StrL("ab")), "ababab"); // repeated positional
-    check(FormatTemp("foo %v", -23), "foo -23");
-    check(FormatTemp("%v %v %v", 'c', 5, StrL("s")), "c 5 s");
+    check(FormatTemp("c: %{0}, i: %{1}", 'x', -18), StrL("c: x, i: -18"));
+    check(FormatTemp("be%{0}-af", 888723), StrL("be888723-af"));
+    check(FormatTemp("int: %{1}, s: %{0}", WStrL(L"hello"), -1), StrL("int: -1, s: hello"));
+    check(FormatTemp("%{1}-%{0}", StrL("so"), WStrL(L"r")), StrL("r-so"));
+    check(FormatTemp("%{0}%{0}%{0}", StrL("ab")), StrL("ababab")); // repeated positional
+    check(FormatTemp("foo %v", -23), StrL("foo -23"));
+    check(FormatTemp("%v %v %v", 'c', 5, StrL("s")), StrL("c 5 s"));
 }
 
 // %{} is "the next argument, whatever its type", like %v
 static void testAnyType() {
-    check(FormatTemp("foo %{}", -23), "foo -23");
-    check(FormatTemp("%{} %{} %{}", 'c', 5, StrL("s")), "c 5 s");
-    check(FormatTemp("%{} = %d", StrL("n"), 7), "n = 7");
-    check(FormatTemp("%d = %{}", 7, WStrL(L"n")), "7 = n");
+    check(FormatTemp("foo %{}", -23), StrL("foo -23"));
+    check(FormatTemp("%{} %{} %{}", 'c', 5, StrL("s")), StrL("c 5 s"));
+    check(FormatTemp("%{} = %d", StrL("n"), 7), StrL("n = 7"));
+    check(FormatTemp("%d = %{}", 7, WStrL(L"n")), StrL("7 = n"));
 }
 
 // A '%{' with no closing '}' used to walk past the end of the format string
 // (ASAN: global-buffer-overflow in parseArgDefPositional). Malformed input must
 // fail safe instead. Reachable via a translated format string.
 static void testUnterminatedPositional() {
-    check(FormatTemp("%{1"), "");
-    check(FormatTemp("abc%{12"), "");
-    check(FormatTemp("%{"), "");
-    check(FormatTemp("%{x}"), ""); // only digits may go inside
-    check(FormatTemp("{1"), "{1"); // no '%': raw text, not a directive
+    check(FormatTemp("%{1"), StrL(""));
+    check(FormatTemp("abc%{12"), StrL(""));
+    check(FormatTemp("%{"), StrL(""));
+    check(FormatTemp("%{x}"), StrL("")); // only digits may go inside
+    check(FormatTemp("{1"), StrL("{1")); // no '%': raw text, not a directive
 }
 
 void StrFormatTest() {

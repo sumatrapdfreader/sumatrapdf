@@ -2785,13 +2785,13 @@ static Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res) {
         }
     }
     if (!win) {
-        res.Append("error: no opened file");
+        res.Append(StrL("error: no opened file"));
         return next;
     }
     if (!win->IsDocLoaded()) {
         ReloadDocument(win, false);
         if (!win->IsDocLoaded()) {
-            res.Append("error: file not loaded");
+            res.Append(StrL("error: file not loaded"));
             return next;
         }
     }
@@ -2849,7 +2849,7 @@ static Str HandleGetMousePosCmd(Str cmd, bool* ack, str::Builder& res) {
     }
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     if (!dm) {
-        res.Append("error: no document\n");
+        res.Append(StrL("error: no document\n"));
         return next;
     }
     Point pos = HwndGetCursorPos(win->hwndCanvas);

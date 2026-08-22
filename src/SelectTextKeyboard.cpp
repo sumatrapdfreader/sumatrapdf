@@ -539,7 +539,7 @@ TempStr SelectTextKeyboardResultTemp(int* exitCodeOut) {
     str::Builder out;
     if (len(gWindows) == 0) {
         *exitCodeOut = 2;
-        out.Append("NOTREADY no-window\n");
+        out.Append(StrL("NOTREADY no-window\n"));
         return ToStrTemp(out);
     }
     MainWindow* win = gWindows[0];

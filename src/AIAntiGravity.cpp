@@ -298,7 +298,7 @@ struct AntiGravityProvider : AIChatProvider {
         Str extra = gGlobalPrefs->antiGravity.models;
         if (len(extra) > 0) {
             StrVec parts;
-            Split(&parts, extra, ",", true);
+            Split(&parts, extra, StrL(","), true);
             for (int i = 0; i < len(parts); i++) {
                 AIChatAppendModelUnique(models, parts[i]);
             }
@@ -336,7 +336,7 @@ struct AntiGravityProvider : AIChatProvider {
         // prompt must come last, after --model/--effort/--output-format/--conversation.
         // Otherwise --output-format stream-json is dropped and agy prints plain
         // text the stream parser can't read (response comes back empty).
-        TempStr conversationArg = str::DupTemp("");
+        TempStr conversationArg = str::DupTemp(StrL(""));
         if (len(args.sessionId) > 0 && !str::Eq(args.sessionId, StrL("pending"))) {
             conversationArg = fmt("--conversation %s", args.sessionId);
         }

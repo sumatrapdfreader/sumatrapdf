@@ -5057,7 +5057,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         str::Contains(fileName, StrL("/")) || str::Contains(fileName, StrL("\\")) ||
         str::Contains(fileName, StrL(":"))) {
         // generate a fallback name
-        fileName = str::DupTemp("dropped_image.png");
+        fileName = str::DupTemp(StrL("dropped_image.png"));
     }
 
     TempStr destPath = path::JoinTemp(downloadsDir.s, fileName.s);

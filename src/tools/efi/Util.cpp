@@ -82,7 +82,7 @@ IDiaDataSource* LoadDia() {
         }
         FreeLibrary(hDll);
     }
-    log("  couldn't find (or properly initialize) any DIA dll, copying msdia*.dll to app dir might help.\n");
+    log(StrL("  couldn't find (or properly initialize) any DIA dll, copying msdia*.dll to app dir might help.\n"));
     return NULL;
 }
 

@@ -112,7 +112,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     RenderPageArgs args(1, zoom, 0, &page);
     Pixmap* bmp = engine->RenderPage(args);
     if (!bmp || !bmp->data) {
-        log("PdfPreview::GetThumbnail: RenderPage() failed\n");
+        log(StrL("PdfPreview::GetThumbnail: RenderPage() failed\n"));
         FreePixmap(bmp);
         return E_FAIL;
     }
@@ -136,7 +136,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     u8* bmpData = nullptr;
     HBITMAP hthumb = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void**)&bmpData, nullptr, 0);
     if (!hthumb) {
-        log("PdfPreview::GetThumbnail: CreateDIBSection() failed\n");
+        log(StrL("PdfPreview::GetThumbnail: CreateDIBSection() failed\n"));
         return E_OUTOFMEMORY;
     }
 
@@ -146,7 +146,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     if (pdwAlpha) {
         *pdwAlpha = WTSAT_RGB;
     }
-    log("PdfPreview::GetThumbnail: provided thumbnail\n");
+    log(StrL("PdfPreview::GetThumbnail: provided thumbnail\n"));
     return S_OK;
 }
 
@@ -259,7 +259,7 @@ class PageRenderer {
     }
 
     static DWORD WINAPI RenderThread(LPVOID data) {
-        log("PageRenderer::RenderThread started\n");
+        log(StrL("PageRenderer::RenderThread started\n"));
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
         PageRenderer* pr = (PageRenderer*)data;
@@ -692,7 +692,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 }
 
 IFACEMETHODIMP PdfPreview::DoPreview() {
-    log("PdfPreview::DoPreview()\n");
+    log(StrL("PdfPreview::DoPreview()\n"));
 
     WNDCLASSEX wcex{};
     wcex.cbSize = sizeof(wcex);

@@ -1105,7 +1105,7 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     MainWindow* win = len(gWindows) == 0 ? nullptr : gWindows[0];
     if (!win || !ToolbarHost(win)) {
         *exitCodeOut = 1;
-        out.Append("ERROR no-toolbar\n");
+        out.Append(StrL("ERROR no-toolbar\n"));
         return ToStrTemp(out);
     }
     ToolbarVirt* tb = win->toolbarVirt;

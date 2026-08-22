@@ -293,7 +293,7 @@ void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
         logf("BrowserOnJsNotify: bad params for '%s': %s\n", method, paramsJson);
         return;
     }
-    if (str::Eq(method, "scroll")) {
+    if (str::Eq(method, StrL("scroll"))) {
         int x = std::max(0, st.Int(0));
         int y = std::max(0, st.Int(1));
         self->webviewScrollPos = Point(x, y);
@@ -302,11 +302,11 @@ void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
     if (!self->cb) {
         return;
     }
-    if (str::Eq(method, "findResult")) {
+    if (str::Eq(method, StrL("findResult"))) {
         self->cb->OnFindResult(st.Int(0), st.Int(1), st.Int(2));
         return;
     }
-    if (str::Eq(method, "findAllResult")) {
+    if (str::Eq(method, StrL("findAllResult"))) {
         // downstream (BrowserFindAllResultReceived) still parses the flat
         // "<gen> <total> <recs>" form, so reassemble it here
         self->cb->OnFindAllResult(fmt("%d %d %s", st.Int(0), st.Int(1), st.Text(2)));
@@ -727,19 +727,19 @@ static TempStr JsEscapeTemp(Str s) {
         char c = s.s[i];
         switch (c) {
             case '\\':
-                buf.Append("\\\\");
+                buf.Append(StrL("\\\\"));
                 break;
             case '\'':
-                buf.Append("\\'");
+                buf.Append(StrL("\\'"));
                 break;
             case '\n':
-                buf.Append("\\n");
+                buf.Append(StrL("\\n"));
                 break;
             case '\r':
-                buf.Append("\\r");
+                buf.Append(StrL("\\r"));
                 break;
             case '\t':
-                buf.Append("\\t");
+                buf.Append(StrL("\\t"));
                 break;
             default:
                 buf.AppendChar(c);
@@ -776,7 +776,7 @@ void BrowserDocView::FindAllPages(const StrVec& pageUrls, Str term, bool matchCa
         return;
     }
     str::Builder js;
-    js.Append("window.__sumatraFind && __sumatraFind.searchAll([");
+    js.Append(StrL("window.__sumatraFind && __sumatraFind.searchAll(["));
     int n = len(pageUrls);
     for (int i = 0; i < n; i++) {
         if (i > 0) {

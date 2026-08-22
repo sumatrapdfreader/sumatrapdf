@@ -73,7 +73,7 @@ TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
                 Rect r = rects[0];
                 out.Append(fmt(" rect_x=%d rect_y=%d rect_dx=%d rect_dy=%d", r.x, r.y, r.dx, r.dy));
             }
-            out.Append("\n");
+            out.Append(StrL("\n"));
             delete sync;
         }
         SafeEngineRelease(&engine);
@@ -315,7 +315,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
 
     int pretreeRes = LZX_test_pretree_make_decode_table();
     if (pretreeRes == 1) {
-        out.Append("pretree_isolated=REJECTED\n");
+        out.Append(StrL("pretree_isolated=REJECTED\n"));
     } else {
         out.Append(fmt("pretree_isolated=UNEXPECTED_%d\n", pretreeRes));
         ok = false;
@@ -332,7 +332,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
             ok = false;
             chm_ctx_free(h);
         } else {
-            out.Append("chm_open=OK\n");
+            out.Append(StrL("chm_open=OK\n"));
 
             int retrieveOk = 0;
             int retrieveFail = 0;
@@ -371,9 +371,9 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 out.Append(got > 0 ? "payload_retrieve=ATTEMPTED\n" : "payload_retrieve=FAILED\n");
                 free(payloadBuf);
             } else if (payloadEntry) {
-                out.Append("payload_retrieve=FAILED\n");
+                out.Append(StrL("payload_retrieve=FAILED\n"));
             } else {
-                out.Append("payload_retrieve=NOTFOUND\n");
+                out.Append(StrL("payload_retrieve=NOTFOUND\n"));
             }
 
             out.Append(fmt("paths=%d retrieve_ok=%d retrieve_fail=%d\n", nEntries, retrieveOk, retrieveFail));
@@ -383,16 +383,16 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
 
     ChmFile* doc = ChmFile::CreateFromFile(chmPath);
     if (doc) {
-        out.Append("chmfile=OK\n");
+        out.Append(StrL("chmfile=OK\n"));
         StrVec allPaths;
         doc->GetAllPaths(&allPaths);
         out.Append(fmt("chmfile_paths=%d\n", len(allPaths)));
         if (doc->HasToc()) {
-            out.Append("chmfile_toc=YES\n");
+            out.Append(StrL("chmfile_toc=YES\n"));
         }
         delete doc;
     } else {
-        out.Append("chmfile=FAILED\n");
+        out.Append(StrL("chmfile=FAILED\n"));
     }
 
     EngineBase* engine = CreateEngineChmFromFile(chmPath);
@@ -400,13 +400,13 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
         out.Append(fmt("engine=OK pages=%d\n", engine->PageCount()));
         SafeEngineRelease(&engine);
     } else {
-        out.Append("engine=FAILED\n");
+        out.Append(StrL("engine=FAILED\n"));
     }
 
     if (ok) {
-        out.Append("result=OK\n");
+        out.Append(StrL("result=OK\n"));
     } else {
-        out.Append("result=FAILED\n");
+        out.Append(StrL("result=FAILED\n"));
     }
 
     if (exitCodeOut) {
@@ -858,7 +858,7 @@ TempStr TripleClickLineSelectResultTemp(Str pdfPath, Str clickWord, Str expected
     str::Builder out;
     if (str::IsEmptyOrWhiteSpace(pdfPath) || str::IsEmptyOrWhiteSpace(clickWord) ||
         str::IsEmptyOrWhiteSpace(expectedLine)) {
-        out.Append("ERROR missing pdf, clickWord, or expectedLine\n");
+        out.Append(StrL("ERROR missing pdf, clickWord, or expectedLine\n"));
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
@@ -1267,7 +1267,7 @@ TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
             if (exitCodeOut) {
                 *exitCodeOut = 1;
             }
-            out.Append("ERROR no-toc\n");
+            out.Append(StrL("ERROR no-toc\n"));
         } else {
             if (exitCodeOut) {
                 *exitCodeOut = 0;

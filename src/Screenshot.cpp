@@ -137,17 +137,17 @@ void UnregisterScreenshotHotkey(HWND hwnd) {
 static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt, bool altGr) {
     str::Builder s;
     if (altGr) {
-        s.Append("AltGr+");
+        s.Append(StrL("AltGr+"));
     } else {
         if (ctrl) {
-            s.Append("Ctrl+");
+            s.Append(StrL("Ctrl+"));
         }
         if (alt) {
-            s.Append("Alt+");
+            s.Append(StrL("Alt+"));
         }
     }
     if (shift) {
-        s.Append("Shift+");
+        s.Append(StrL("Shift+"));
     }
     bool isAlphaNumKey = (vk >= 'A' && vk <= 'Z') || (vk >= '0' && vk <= '9');
     if (vk >= VK_F1 && vk <= VK_F24) {
@@ -155,35 +155,35 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt, boo
     } else if (isAlphaNumKey) {
         s.AppendChar((char)vk);
     } else if (vk == VK_SNAPSHOT) {
-        s.Append("PrtSc");
+        s.Append(StrL("PrtSc"));
     } else if (vk == VK_RETURN) {
-        s.Append("Return");
+        s.Append(StrL("Return"));
     } else if (vk == VK_LEFT) {
-        s.Append("Left");
+        s.Append(StrL("Left"));
     } else if (vk == VK_RIGHT) {
-        s.Append("Right");
+        s.Append(StrL("Right"));
     } else if (vk == VK_UP) {
-        s.Append("Up");
+        s.Append(StrL("Up"));
     } else if (vk == VK_DOWN) {
-        s.Append("Down");
+        s.Append(StrL("Down"));
     } else if (vk == VK_DELETE) {
-        s.Append("Delete");
+        s.Append(StrL("Delete"));
     } else if (vk == VK_INSERT) {
-        s.Append("Insert");
+        s.Append(StrL("Insert"));
     } else if (vk == VK_HOME) {
-        s.Append("Home");
+        s.Append(StrL("Home"));
     } else if (vk == VK_END) {
-        s.Append("End");
+        s.Append(StrL("End"));
     } else if (vk == VK_PRIOR) {
-        s.Append("PageUp");
+        s.Append(StrL("PageUp"));
     } else if (vk == VK_NEXT) {
-        s.Append("PageDown");
+        s.Append(StrL("PageDown"));
     } else if (vk == VK_SPACE) {
-        s.Append("Space");
+        s.Append(StrL("Space"));
     } else if (vk == VK_PAUSE) {
-        s.Append("Pause");
+        s.Append(StrL("Pause"));
     } else if (vk == VK_SCROLL) {
-        s.Append("ScrollLock");
+        s.Append(StrL("ScrollLock"));
     } else if (vk >= VK_NUMPAD0 && vk <= VK_NUMPAD9) {
         s.Append(fmt("Numpad%d", (int)(vk - VK_NUMPAD0)));
     } else {

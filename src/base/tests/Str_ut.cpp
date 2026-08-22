@@ -13,10 +13,46 @@ static void StrReplaceTestOne(Str s, Str toReplace, Str replaceWith, Str expecte
 
 static void StrReplaceTest() {
     Str d[] = {
-        "golagon", "gon", "rabato", "golarabato", "a",   "a",      "bor", "bor", "abora", "a",
-        "",        "bor", "aaaaaa", "a",          "b",   "bbbbbb", "aba", "a",   "ccc",   "cccbccc",
-        "Aba",     "a",   "c",      "Abc",        "abc", "abc",    "",    "",    {},      "a",
-        "b",       {},    "a",      "",           "b",   {},       "a",   "b",   {},      {},
+        StrL("golagon"),
+        StrL("gon"),
+        StrL("rabato"),
+        StrL("golarabato"),
+        StrL("a"),
+        StrL("a"),
+        StrL("bor"),
+        StrL("bor"),
+        StrL("abora"),
+        StrL("a"),
+        StrL(""),
+        StrL("bor"),
+        StrL("aaaaaa"),
+        StrL("a"),
+        StrL("b"),
+        StrL("bbbbbb"),
+        StrL("aba"),
+        StrL("a"),
+        StrL("ccc"),
+        StrL("cccbccc"),
+        StrL("Aba"),
+        StrL("a"),
+        StrL("c"),
+        StrL("Abc"),
+        StrL("abc"),
+        StrL("abc"),
+        StrL(""),
+        StrL(""),
+        {},
+        StrL("a"),
+        StrL("b"),
+        {},
+        StrL("a"),
+        StrL(""),
+        StrL("b"),
+        {},
+        StrL("a"),
+        StrL("b"),
+        {},
+        {},
     };
     size_t n = dimof(d) / 4;
     for (size_t i = 0; i < n; i++) {
@@ -26,16 +62,16 @@ static void StrReplaceTest() {
     struct {
         Str string, find, replace, result;
     } data[] = {
-        {"golagon", "gon", "rabato", "golarabato"},
-        {"a", "a", "bor", "bor"},
-        {"abora", "a", "", "bor"},
-        {"aaaaaa", "a", "b", "bbbbbb"},
-        {"aba", "a", "ccc", "cccbccc"},
-        {"Aba", "a", "c", "Abc"},
-        {"abc", "abc", "", ""},
-        {nullptr, "a", "b", nullptr},
-        {"a", "", "b", nullptr},
-        {"a", "b", nullptr, nullptr},
+        {StrL("golagon"), StrL("gon"), StrL("rabato"), StrL("golarabato")},
+        {StrL("a"), StrL("a"), StrL("bor"), StrL("bor")},
+        {StrL("abora"), StrL("a"), StrL(""), StrL("bor")},
+        {StrL("aaaaaa"), StrL("a"), StrL("b"), StrL("bbbbbb")},
+        {StrL("aba"), StrL("a"), StrL("ccc"), StrL("cccbccc")},
+        {StrL("Aba"), StrL("a"), StrL("c"), StrL("Abc")},
+        {StrL("abc"), StrL("abc"), StrL(""), StrL("")},
+        {Str(), StrL("a"), StrL("b"), Str()},
+        {StrL("a"), StrL(""), StrL("b"), Str()},
+        {StrL("a"), StrL("b"), Str(), Str()},
     };
     for (size_t i = 0; i < dimof(data); i++) {
         TempStr result = str::ReplaceTemp(data[i].string, data[i].find, data[i].replace);
@@ -45,20 +81,20 @@ static void StrReplaceTest() {
 
 static void StrSeqNumTest() {
     str::Builder b;
-    SeqStrNumAppend(&b, "foo", 10);
-    SeqStrNumAppend(&b, "bar", -3);
-    SeqStrNumAppend(&b, "baz", 0x1234);
+    SeqStrNumAppend(&b, StrL("foo"), 10);
+    SeqStrNumAppend(&b, StrL("bar"), -3);
+    SeqStrNumAppend(&b, StrL("baz"), 0x1234);
     SeqStrNumFinish(&b);
     SeqStrNum seq = ToStr(b).s;
 
     i64 num = 0;
-    utassert(0 == SeqStrNumIndex(seq, "foo", &num));
+    utassert(0 == SeqStrNumIndex(seq, StrL("foo"), &num));
     utassert(num == 10);
-    utassert(1 == SeqStrNumIndex(seq, "bar", &num));
+    utassert(1 == SeqStrNumIndex(seq, StrL("bar"), &num));
     utassert(num == -3);
-    utassert(2 == SeqStrNumIndex(seq, "baz", &num));
+    utassert(2 == SeqStrNumIndex(seq, StrL("baz"), &num));
     utassert(num == 0x1234);
-    utassert(-1 == SeqStrNumIndex(seq, "missing", &num));
+    utassert(-1 == SeqStrNumIndex(seq, StrL("missing"), &num));
 
     Str s = SeqStrNumByIndex(seq, 1, &num);
     utassert(str::Eq(s, StrL("bar")));
@@ -80,27 +116,27 @@ static void StrSeqNumTest() {
 static void StrSeqTest() {
     static const char seqData[] = "foo\0a\0bar\0";
     Str s(seqData, (int)(sizeof(seqData) - 1));
-    utassert(0 == SeqStrIndex(s.s, "foo"));
-    utassert(1 == SeqStrIndex(s.s, "a"));
-    utassert(2 == SeqStrIndex(s.s, "bar"));
+    utassert(0 == SeqStrIndex(s.s, StrL("foo")));
+    utassert(1 == SeqStrIndex(s.s, StrL("a")));
+    utassert(2 == SeqStrIndex(s.s, StrL("bar")));
 
-    utassert(str::Eq("foo", SeqStrByIndex(s.s, 0)));
-    utassert(str::Eq("a", SeqStrByIndex(s.s, 1)));
-    utassert(str::Eq("bar", SeqStrByIndex(s.s, 2)));
+    utassert(str::Eq(StrL("foo"), SeqStrByIndex(s.s, 0)));
+    utassert(str::Eq(StrL("a"), SeqStrByIndex(s.s, 1)));
+    utassert(str::Eq(StrL("bar"), SeqStrByIndex(s.s, 2)));
 
-    utassert(0 == SeqStrIndex(s.s, "foo"));
-    utassert(1 == SeqStrIndex(s.s, "a"));
-    utassert(2 == SeqStrIndex(s.s, "bar"));
-    utassert(-1 == SeqStrIndex(s.s, "fo"));
-    utassert(-1 == SeqStrIndex(s.s, ""));
-    utassert(-1 == SeqStrIndex(s.s, "ab"));
-    utassert(-1 == SeqStrIndex(s.s, "baro"));
-    utassert(-1 == SeqStrIndex(s.s, "ba"));
+    utassert(0 == SeqStrIndex(s.s, StrL("foo")));
+    utassert(1 == SeqStrIndex(s.s, StrL("a")));
+    utassert(2 == SeqStrIndex(s.s, StrL("bar")));
+    utassert(-1 == SeqStrIndex(s.s, StrL("fo")));
+    utassert(-1 == SeqStrIndex(s.s, StrL("")));
+    utassert(-1 == SeqStrIndex(s.s, StrL("ab")));
+    utassert(-1 == SeqStrIndex(s.s, StrL("baro")));
+    utassert(-1 == SeqStrIndex(s.s, StrL("ba")));
 }
 
 static void StrIsDigitTest() {
-    Str nonDigits = "/:.bz{}";
-    Str digits = "0123456789";
+    Str nonDigits = StrL("/:.bz{}");
+    Str digits = StrL("0123456789");
     for (int i = 0; i < len(nonDigits); i++) {
 #if 0
         if (str::IsDigit(nonDigits[i])) {
@@ -144,18 +180,18 @@ static void StrConvTest() {
 }
 
 static void StrUrlExtractTest() {
-    utassert(!url::GetFileNameTemp(""));
-    utassert(!url::GetFileNameTemp("#hash_only"));
-    utassert(!url::GetFileNameTemp("?query=only"));
-    TempStr fileName = url::GetFileNameTemp("http://example.net/filename.ext");
+    utassert(!url::GetFileNameTemp(StrL("")));
+    utassert(!url::GetFileNameTemp(StrL("#hash_only")));
+    utassert(!url::GetFileNameTemp(StrL("?query=only")));
+    TempStr fileName = url::GetFileNameTemp(StrL("http://example.net/filename.ext"));
     utassert(str::Eq(fileName, StrL("filename.ext")));
-    fileName = url::GetFileNameTemp("http://example.net/filename.ext#with_hash");
+    fileName = url::GetFileNameTemp(StrL("http://example.net/filename.ext#with_hash"));
     utassert(str::Eq(fileName, StrL("filename.ext")));
-    fileName = url::GetFileNameTemp("http://example.net/path/to/filename.ext?more=data");
+    fileName = url::GetFileNameTemp(StrL("http://example.net/path/to/filename.ext?more=data"));
     utassert(str::Eq(fileName, StrL("filename.ext")));
-    fileName = url::GetFileNameTemp("http://example.net/pa%74h/na%2f%6d%65%2ee%78t");
+    fileName = url::GetFileNameTemp(StrL("http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
     utassert(str::Eq(fileName, StrL("na/me.ext")));
-    fileName = url::GetFileNameTemp("http://example.net/%E2%82%AC");
+    fileName = url::GetFileNameTemp(StrL("http://example.net/%E2%82%AC"));
     utassert(str::Eq(fileName, StrL("\xE2\x82\xaC")));
     TempStr wiki = url::DecodeTemp(
         "https://ru.wikipedia.org/wiki/"
@@ -164,22 +200,22 @@ static void StrUrlExtractTest() {
                                 "\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_"
                                 "\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD")));
     utassert(!url::DecodeTemp({}));
-    utassert(str::Eq(url::DecodeTemp("nothing to decode"), StrL("nothing to decode")));
+    utassert(str::Eq(url::DecodeTemp(StrL("nothing to decode")), StrL("nothing to decode")));
     // a stray or truncated escape is left alone
-    utassert(str::Eq(url::DecodeTemp("100%"), StrL("100%")));
-    utassert(str::Eq(url::DecodeTemp("%zz%41"), StrL("%zzA")));
+    utassert(str::Eq(url::DecodeTemp(StrL("100%")), StrL("100%")));
+    utassert(str::Eq(url::DecodeTemp(StrL("%zz%41")), StrL("%zzA")));
 
     // decoding shrinks the string, so the result's len must match its bytes, or
     // the bytes past the NUL travel with it into anything that copies by len
     // (issue #5926). str::Eq stops at the NUL and can't see that, so compare
     // the lengths directly.
-    TempStr decoded = url::DecodeTemp("umlaut_test_%C3%A4.html");
+    TempStr decoded = url::DecodeTemp(StrL("umlaut_test_%C3%A4.html"));
     utassert(len(decoded) == LenL("umlaut_test_\xC3\xA4.html"));
     TempStr joined = str::JoinTemp(StrL("dir\\"), decoded);
     utassert(str::Eq(joined, StrL("dir\\umlaut_test_\xC3\xA4.html")));
     utassert(len(joined) == LenL("dir\\umlaut_test_\xC3\xA4.html"));
     utassert(len(url::GetFullPathTemp("na%2Fme.ext?q=1")) == LenL("na/me.ext"));
-    utassert(len(url::GetFileNameTemp("http://example.net/na%2Fme.ext")) == LenL("na/me.ext"));
+    utassert(len(url::GetFileNameTemp(StrL("http://example.net/na%2Fme.ext"))) == LenL("na/me.ext"));
 }
 
 // Run fn once with no external buf, once with a stack buf of random size 1..128.
@@ -198,7 +234,7 @@ static void StrBuilderRunTwice(void (*fn)(str::Builder&)) {
 
 static void StrBuilderContainsAppend(str::Builder& str) {
     utassert(str.IsEmpty());
-    str.Append("blah");
+    str.Append(StrL("blah"));
     utassert(str.begin() != nullptr);
     utassert(str::Contains(str, StrL("blah")));
     utassert(str::Contains(str, StrL("ah")));
@@ -207,16 +243,16 @@ static void StrBuilderContainsAppend(str::Builder& str) {
     utassert(!str::Contains(str, StrL("blahd")));
     utassert(!str::Contains(str, StrL("blas")));
     utassert(str::Eq(ToStr(str), StrL("blah")));
-    str.Append("lost");
+    str.Append(StrL("lost"));
     utassert(str::Eq(ToStr(str), StrL("blahlost")));
     utassert(str::Contains(str, StrL("blahlost")));
     utassert(str::Contains(str, StrL("ahlo")));
 }
 
 static void StrBuilderGrowPastExternal(str::Builder& str) {
-    str.Append("blah");
+    str.Append(StrL("blah"));
     utassert(str::Eq(ToStr(str), StrL("blah")));
-    str.Append("lost");
+    str.Append(StrL("lost"));
     utassert(str::Eq(ToStr(str), StrL("blahlost")));
     str.Reset();
     // 200 chars always exceeds external scratch of at most 128
@@ -241,7 +277,7 @@ static void StrBuilderRemoveAtStaysOnHeap(str::Builder& str) {
     str.RemoveAt(0, 190);
     utassert(len(str) == 10);
     utassert((uintptr_t)str.begin() == heap);
-    str.Append("xyz");
+    str.Append(StrL("xyz"));
     utassert((uintptr_t)str.begin() == heap);
     // last 10 of 200 chars (i=190..199): i%26 => 8..17 => "ijklmnopqr"
     utassert(str::Eq(ToStr(str), StrL("ijklmnopqrxyz")));
@@ -249,7 +285,7 @@ static void StrBuilderRemoveAtStaysOnHeap(str::Builder& str) {
 
 static void StrBuilderManyAppends(str::Builder& str) {
     for (int i = 0; i < 50; i++) {
-        str.Append("01234567890123456789");
+        str.Append(StrL("01234567890123456789"));
     }
     utassert(len(str) == 1000);
     utassert(str::StartsWith(ToStr(str), StrL("01234567890123456789")));
@@ -257,7 +293,7 @@ static void StrBuilderManyAppends(str::Builder& str) {
 }
 
 static void StrBuilderTakeStr(str::Builder& str) {
-    str.Append("hello");
+    str.Append(StrL("hello"));
     char* before = str.begin();
     bool wasExternal = str.UsesExternalBuf();
     Str taken = str.TakeStr();
@@ -277,7 +313,7 @@ static void StrBuilderCapHint() {
     str::Builder str(1024);
     uintptr_t heap = 0;
     for (int i = 0; i < 50; i++) {
-        str.Append("01234567890123456789");
+        str.Append(StrL("01234567890123456789"));
         if (i == 0) {
             heap = (uintptr_t)str.begin();
             utassert(heap != 0);
@@ -295,7 +331,7 @@ static void StrBuilderCapHint() {
     heap = 0;
     int reallocsAtHeap = -1;
     for (int i = 0; i < 50; i++) {
-        str2.Append("01234567890123456789");
+        str2.Append(StrL("01234567890123456789"));
         if (!str2.UsesExternalBuf() && reallocsAtHeap < 0) {
             heap = (uintptr_t)str2.begin();
             reallocsAtHeap = str2.nReallocs;
@@ -466,34 +502,34 @@ static void StrFindITest() {
 static void StrCutTest() {
     // IndexOfAfter: offset just past the match, or -1
     Str s = "key=value";
-    utassert(str::IndexOfAfter(s, "=") == 4);
-    utassert(str::IndexOfAfter(s, "key") == 3);
-    utassert(str::IndexOfAfter(s, "xyz") == -1);
-    utassert(str::IndexOfAfter(s, "value") == 9); // match at end -> len
+    utassert(str::IndexOfAfter(s, StrL("=")) == 4);
+    utassert(str::IndexOfAfter(s, StrL("key")) == 3);
+    utassert(str::IndexOfAfter(s, StrL("xyz")) == -1);
+    utassert(str::IndexOfAfter(s, StrL("value")) == 9); // match at end -> len
 
     // Cut: split around first occurrence
     Str before, after;
-    utassert(str::Cut(s, "=", &before, &after));
+    utassert(str::Cut(s, StrL("="), &before, &after));
     utassert(str::Eq(before, StrL("key")) && str::Eq(after, StrL("value")));
 
     // only one side requested
     after = {};
-    utassert(str::Cut(s, "=", nullptr, &after) && str::Eq(after, StrL("value")));
+    utassert(str::Cut(s, StrL("="), nullptr, &after) && str::Eq(after, StrL("value")));
     before = {};
-    utassert(str::Cut(s, "=", &before, nullptr) && str::Eq(before, StrL("key")));
+    utassert(str::Cut(s, StrL("="), &before, nullptr) && str::Eq(before, StrL("key")));
 
     // separator not found: returns false, before = whole string, after = {}
     before = {};
     after = "sentinel";
-    utassert(!str::Cut(s, "#", &before, &after));
+    utassert(!str::Cut(s, StrL("#"), &before, &after));
     utassert(str::Eq(before, s) && len(after) == 0);
 
     // separator at the very end -> after is empty but Cut returns true
-    utassert(str::Cut(s, "value", &before, &after));
+    utassert(str::Cut(s, StrL("value"), &before, &after));
     utassert(str::Eq(before, StrL("key=")) && len(after) == 0);
 
     // multi-char separator, only first occurrence splits
-    utassert(str::Cut("a::b::c", "::", &before, &after));
+    utassert(str::Cut(StrL("a::b::c"), StrL("::"), &before, &after));
     utassert(str::Eq(before, StrL("a")) && str::Eq(after, StrL("b::c")));
 }
 
@@ -672,12 +708,12 @@ void StrTest() {
     str = str::Join(buf, buf);
     utassert(len(str) == 2 * len(buf));
     str::Free(str);
-    str = str::Join(nullptr, "ab");
+    str = str::Join(nullptr, StrL("ab"));
     utassert(str::Eq(str, StrL("ab")));
     str::Free(str);
 
 #if 0
-    str = str::Join("\uFDEF", "\uFFFF");
+    str = str::Join("\uFDEF", StrL("\uFFFF"));
     utassert(str::Eq(str, StrL("\uFDEF\uFFFF")));
     str::Free(str);
 #endif
@@ -692,7 +728,7 @@ void StrTest() {
     utassert(str::Eq(buf, StrL("AbC")));
 
     str::BufSet(Str(buf, dimof(buf)), "blogarapato");
-    int count = str::RemoveCharsInPlace(buf, "bo");
+    int count = str::RemoveCharsInPlace(buf, StrL("bo"));
     utassert(3 == count);
     utassert(str::Eq(buf, StrL("lgarapat")));
 
@@ -852,7 +888,7 @@ void StrTest() {
 #define TEST_STRING "aBc"
         char* strA = strconv::WStrToAnsi(TEXT(TEST_STRING)).s;
         AutoCall freeStrA(free, (void*)strA);
-        utassert(str::Eq(strA, TEST_STRING));
+        utassert(str::Eq(Str(strA), StrL(TEST_STRING)));
         auto res = strconv::AnsiToWStrTemp(Str(strA));
         utassert(wstr::Eq(res, TEXT(TEST_STRING)));
 #undef TEST_STRING
@@ -865,12 +901,12 @@ void StrTest() {
     utassert(!str::IsDigit(L'\xB2'));
 #endif
 
-    utassert(str::CmpNatural(".hg", "2.pdf") < 0);
-    utassert(str::CmpNatural("100.pdf", "2.pdf") > 0);
-    utassert(str::CmpNatural("2.pdf", "zzz") < 0);
-    utassert(str::CmpNatural("abc", ".svn") > 0);
-    utassert(str::CmpNatural("ab0200", "AB333") < 0);
-    utassert(str::CmpNatural("a b", "a  c") < 0);
+    utassert(str::CmpNatural(StrL(".hg"), StrL("2.pdf")) < 0);
+    utassert(str::CmpNatural(StrL("100.pdf"), StrL("2.pdf")) > 0);
+    utassert(str::CmpNatural(StrL("2.pdf"), StrL("zzz")) < 0);
+    utassert(str::CmpNatural(StrL("abc"), StrL(".svn")) > 0);
+    utassert(str::CmpNatural(StrL("ab0200"), StrL("AB333")) < 0);
+    utassert(str::CmpNatural(StrL("a b"), StrL("a  c")) < 0);
 
 #ifndef LOCALE_INVARIANT
 #define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))
@@ -881,14 +917,14 @@ void StrTest() {
         size_t number;
         Str result;
     } formatNumData[] = {
-        {1, "1"},
-        {12, "12"},
-        {123, "123"},
-        {1234, "1,234"},
-        {12345, "12,345"},
-        {123456, "123,456"},
-        {1234567, "1,234,567"},
-        {12345678, "12,345,678"},
+        {1, StrL("1")},
+        {12, StrL("12")},
+        {123, StrL("123")},
+        {1234, StrL("1,234")},
+        {12345, StrL("12,345")},
+        {123456, StrL("123,456")},
+        {1234567, StrL("1,234,567")},
+        {12345678, StrL("12,345,678")},
     };
     // clang-format on
 
@@ -902,13 +938,13 @@ void StrTest() {
         double number;
         Str result;
     } formatFloatData[] = {
-        {1, "1.0"},
-        {1.2, "1.2"},
-        {1.23, "1.23"},
-        {1.234, "1.23"},
-        {12.345, "12.35"},
-        {123.456, "123.46"},
-        {1234.5678, "1,234.57"},
+        {1, StrL("1.0")},
+        {1.2, StrL("1.2")},
+        {1.23, StrL("1.23")},
+        {1.234, StrL("1.23")},
+        {12.345, StrL("12.35")},
+        {123.456, StrL("123.46")},
+        {1234.5678, StrL("1,234.57")},
     };
     // clang-format on
 
@@ -920,7 +956,7 @@ void StrTest() {
     {
         char str1[] = "aAbBcC... 1-9";
         str::ToLowerInPlace(Str(str1));
-        utassert(str::Eq(str1, StrL("aabbcc... 1-9")));
+        utassert(str::Eq(Str(str1), StrL("aabbcc... 1-9")));
     }
 
     // clang-format off
@@ -928,16 +964,16 @@ void StrTest() {
         int number;
         Str result;
     } formatRomanData[] = {
-        {1, "I"},
-        {3, "III"},
-        {6, "VI"},
-        {14, "XIV"},
-        {49, "XLIX"},
-        {176, "CLXXVI"},
-        {499, "CDXCIX"},
-        {1666, "MDCLXVI"},
-        {2011, "MMXI"},
-        {12345, "MMMMMMMMMMMMCCCXLV"},
+        {1, StrL("I")},
+        {3, StrL("III")},
+        {6, StrL("VI")},
+        {14, StrL("XIV")},
+        {49, StrL("XLIX")},
+        {176, StrL("CLXXVI")},
+        {499, StrL("CDXCIX")},
+        {1666, StrL("MDCLXVI")},
+        {2011, StrL("MMXI")},
+        {12345, StrL("MMMMMMMMMMMMCCCXLV")},
         {0, {}},
         {-133, {}},
     };
@@ -964,55 +1000,55 @@ void StrTest() {
         utassert(s.len == 0);
         utassert(str::Eq(s, StrL("")));
 
-        str::ReplaceWithCopy(&s, "  \n\t  ");
+        str::ReplaceWithCopy(&s, StrL("  \n\t  "));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 6);
         utassert(s.len == 0);
         utassert(str::Eq(s, StrL("")));
 
-        str::ReplaceWithCopy(&s, "  \n\t  ");
+        str::ReplaceWithCopy(&s, StrL("  \n\t  "));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 6);
         utassert(s.len == 0);
         utassert(str::Eq(s, StrL("")));
 
-        str::ReplaceWithCopy(&s, "  \n\t  ");
+        str::ReplaceWithCopy(&s, StrL("  \n\t  "));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 6);
         utassert(s.len == 0);
         utassert(str::Eq(s, StrL("")));
 
-        str::ReplaceWithCopy(&s, "  lola");
+        str::ReplaceWithCopy(&s, StrL("  lola"));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
         utassert(s.len == 4);
         utassert(str::Eq(s, StrL("lola")));
 
-        str::ReplaceWithCopy(&s, "  lola");
+        str::ReplaceWithCopy(&s, StrL("  lola"));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 2);
         utassert(s.len == 4);
         utassert(str::Eq(s, StrL("lola")));
 
-        str::ReplaceWithCopy(&s, "  lola");
+        str::ReplaceWithCopy(&s, StrL("  lola"));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
         utassert(s.len == 6);
         utassert(str::Eq(s, StrL("  lola")));
 
-        str::ReplaceWithCopy(&s, "lola\r\t");
+        str::ReplaceWithCopy(&s, StrL("lola\r\t"));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 2);
         utassert(s.len == 4);
         utassert(str::Eq(s, StrL("lola")));
 
-        str::ReplaceWithCopy(&s, "lola\r\t");
+        str::ReplaceWithCopy(&s, StrL("lola\r\t"));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 2);
         utassert(s.len == 4);
         utassert(str::Eq(s, StrL("lola")));
 
-        str::ReplaceWithCopy(&s, "lola\r\t");
+        str::ReplaceWithCopy(&s, StrL("lola\r\t"));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
         utassert(s.len == 6);
@@ -1022,7 +1058,7 @@ void StrTest() {
     }
 
     {
-        TempStr tmp = strconv::ToMultiByteTemp("abc", 9876, 123456);
+        TempStr tmp = strconv::ToMultiByteTemp(StrL("abc"), 9876, 123456);
         utassert(!tmp);
     }
     {
@@ -1030,7 +1066,7 @@ void StrTest() {
         utassert(!tmp);
     }
     {
-        TempWStr tmp = strconv::StrCPToWStrTemp("abc", 12345);
+        TempWStr tmp = strconv::StrCPToWStrTemp(StrL("abc"), 12345);
         utassert(len(tmp) == 0);
     }
     {
@@ -1040,17 +1076,17 @@ void StrTest() {
 
     {
         char buf1[6]{};
-        size_t cnt = str::BufAppend(Str(buf1, dimof(buf1)), "");
+        size_t cnt = str::BufAppend(Str(buf1, dimof(buf1)), StrL(""));
         utassert(0 == cnt);
-        cnt = str::BufAppend(Str(buf1, dimof(buf1)), "1234");
+        cnt = str::BufAppend(Str(buf1, dimof(buf1)), StrL("1234"));
         utassert(4 == cnt);
-        utassert(str::Eq("1234", buf1));
-        cnt = str::BufAppend(Str(buf1, dimof(buf1)), "56");
+        utassert(str::Eq(StrL("1234"), Str(buf1)));
+        cnt = str::BufAppend(Str(buf1, dimof(buf1)), StrL("56"));
         utassert(1 == cnt);
-        utassert(str::Eq("12345", buf1));
-        cnt = str::BufAppend(Str(buf1, dimof(buf1)), "6");
+        utassert(str::Eq(StrL("12345"), Str(buf1)));
+        cnt = str::BufAppend(Str(buf1, dimof(buf1)), StrL("6"));
         utassert(0 == cnt);
-        utassert(str::Eq("12345", buf1));
+        utassert(str::Eq(StrL("12345"), Str(buf1)));
     }
 
     {

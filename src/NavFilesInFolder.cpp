@@ -200,7 +200,7 @@ static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
     TempStr parent = path::GetDirTemp(dir);
     if (!path::IsSame(parent, dir)) {
         NavFileEntry e;
-        e.name = str::Dup("..");
+        e.name = str::Dup(StrL(".."));
         e.isDir = true;
         m->entries.Append(e);
         firstIdx = 1; // keep ".." at the top when sorting

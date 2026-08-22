@@ -73,7 +73,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
     TempStr langCodePref = str::JoinTemp(langCode, StrL(":"));
 
     StrVec lines;
-    Split(&lines, d, "\n", true);
+    Split(&lines, d, StrL("\n"), true);
     int nStrings = 0;
     for (Str l : lines) {
         if (l && l.s[0] == ':') {

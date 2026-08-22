@@ -181,7 +181,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
     s.a = gCrashHandlerArena;
     if (!isCrash) {
         captureCallstack = true;
-        s.Append("Type: debug report (not crash)\n");
+        s.Append(StrL("Type: debug report (not crash)\n"));
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
@@ -190,7 +190,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
     AppendUncaughtMupdfError(s);
     if (gSystemInfo) {
         s.Append(gSystemInfo);
-        s.Append("\n");
+        s.Append(StrL("\n"));
     }
 
     //    GetStressTestInfo(&s);
@@ -198,38 +198,38 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
     if (gMei.ExceptionPointers) {
         // those are only set when we capture exception
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
-        s.Append("\n");
+        s.Append(StrL("\n"));
     } else {
         // GetExceptionInfo() also adds current thread callstack
         if (captureCallstack) {
-            s.Append("\nCrashed thread:\n");
+            s.Append(StrL("\nCrashed thread:\n"));
             dbghelp::GetCurrentThreadCallstack(s);
-            s.Append("\n");
+            s.Append(StrL("\n"));
         }
     }
 
-    s.Append("\n-------- Log -----------------\n\n");
+    s.Append(StrL("\n-------- Log -----------------\n\n"));
     if (gLogBuf) {
         s.Append(ToStr(*gLogBuf));
     } else {
-        s.Append("(no log - crashed before initializing logging)\n");
+        s.Append(StrL("(no log - crashed before initializing logging)\n"));
     }
 
     if (gSettingsFile) {
-        s.Append("\n\n----- Settings file ----------\n\n");
+        s.Append(StrL("\n\n----- Settings file ----------\n\n"));
         s.Append(gSettingsFile);
-        s.Append("\n\n");
+        s.Append(StrL("\n\n"));
     }
 
-    s.Append("\n-------- Modules   ----------\n\n");
+    s.Append(StrL("\n-------- Modules   ----------\n\n"));
     s.Append(gModulesInfo);
-    s.Append("\nModules loaded later:\n");
+    s.Append(StrL("\nModules loaded later:\n"));
     GetModules(s, true);
 
     if (captureCallstack) {
-        s.Append("\n-------- All Threads ----------\n\n");
+        s.Append(StrL("\n-------- All Threads ----------\n\n"));
         dbghelp::GetAllThreadsCallstacks(s);
-        s.Append("\n");
+        s.Append(StrL("\n"));
     }
 
     return s.TakeStr();
@@ -240,7 +240,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
     s.a = gCrashHandlerArena;
     if (!isCrash) {
         captureCallstack = true;
-        s.Append("Type: debug report (not crash)\n");
+        s.Append(StrL("Type: debug report (not crash)\n"));
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
@@ -249,7 +249,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
     AppendUncaughtMupdfError(s);
     if (gSystemInfo) {
         s.Append(gSystemInfo);
-        s.Append("\n");
+        s.Append(StrL("\n"));
     }
 
     ThreadId crashedThreadId = gMei.ThreadId;
@@ -257,14 +257,14 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     } else if (captureCallstack) {
         crashedThreadId = GetCurrentThreadId();
-        s.Append("\nCrashed thread:\n");
+        s.Append(StrL("\nCrashed thread:\n"));
         dbghelp::GetCurrentThreadCallstack(s);
     }
 
     if (captureCallstack) {
-        s.Append("\nOther threads:\n");
+        s.Append(StrL("\nOther threads:\n"));
         dbghelp::GetAllThreadsCallstacksExcept(s, crashedThreadId);
-        s.Append("\n");
+        s.Append(StrL("\n"));
     }
 
     return s.TakeStr();
@@ -293,14 +293,14 @@ static void WriteCrashInfoToStdErr(Str d) {
 }
 
 static void UploadCrashReport(Str d) {
-    log("UploadCrashReport()\n");
+    log(StrL("UploadCrashReport()\n"));
     if (len(d) == 0) {
         return;
     }
 
     str::Builder headers(256);
     headers.a = gCrashHandlerArena;
-    headers.Append("Content-Type: text/plain");
+    headers.Append(StrL("Content-Type: text/plain"));
 
     str::Builder data(16 * 1024);
     data.a = gCrashHandlerArena;
@@ -358,7 +358,7 @@ static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* a) {
 static bool DownloadAndUnzipSymbols(Str symDir) {
     if (gDisableSymbolsDownload) {
         // don't care about debug builds because we don't release them
-        log("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n");
+        log(StrL("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n"));
         return false;
     }
 
@@ -369,7 +369,7 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
 
     logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
     if (!symDir || !dir::Exists(symDir)) {
-        log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
+        log(StrL("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n"));
         return false;
     }
 
@@ -377,23 +377,23 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
 
     HttpRsp rsp;
     if (!HttpGet(gSymbolsUrl, &rsp)) {
-        log("DownloadAndUnzipSymbols: couldn't download symbols\n");
+        log(StrL("DownloadAndUnzipSymbols: couldn't download symbols\n"));
         return false;
     }
     if (!IsHttpRspOk(&rsp)) {
-        log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
+        log(StrL("DownloadAndUnzipSymbols: HttpRspOk() returned false\n"));
     }
 
     bool ok = ExtractSymbols(ToStr(rsp.data), symDir, gCrashHandlerArena);
     if (!ok) {
-        log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
+        log(StrL("DownloadAndUnzipSymbols: ExtractSymbols() failed\n"));
     }
     return ok;
 }
 
 bool CrashHandlerDownloadSymbols() {
     if (gLocalOnlyCrashHandler) {
-        log("CrashHandlerDownloadSymbols: skipping in local-only crash handler\n");
+        log(StrL("CrashHandlerDownloadSymbols: skipping in local-only crash handler\n"));
         return false;
     }
     return DownloadAndUnzipSymbols(gSymbolsDir);
@@ -440,13 +440,13 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
 
     // at this point symDir might not exist but we add it anyway
     path.Append(symDir);
-    path.Append(";");
+    path.Append(StrL(";"));
 
     // in debug builds the symbols are in the same directory as .exe
     if (gIsDebugBuild || gAddExeDir) {
         TempStr dir = GetSelfExeDirTemp();
         path.Append(dir);
-        path.Append(";");
+        path.Append(StrL(";"));
     }
 
     if (gAddNtSymbolPath) {
@@ -460,7 +460,7 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
         }
         if (len(ntSymPath) > 0) {
             path.Append(ntSymPath);
-            path.Append(";");
+            path.Append(StrL(";"));
         }
     }
     if (gAddSymbolServer && symDirExists) {
@@ -508,7 +508,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     if (condStr) {
         logf("_uploadDebugReport: %s %s\n", condStr, fileLine);
     } else {
-        log("_uploadDebugReport\n");
+        log(StrL("_uploadDebugReport\n"));
     }
 
     bool shouldUpload = true;
@@ -527,18 +527,18 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         InitializeDbgHelp(false);
         auto s = BuildLocalCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
         if (len(s) == 0) {
-            log("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
+            log(StrL("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n"));
             return;
         }
         Str d = s;
         SaveCrashInfo(d);
         WriteCrashInfoToStdErr(d);
         log(s);
-        log("_uploadDebugReport() finished local-only\n");
+        log(StrL("_uploadDebugReport() finished local-only\n"));
         if (gForTesting && !isCrash && !IsDebuggerPresent()) {
             // automated tests must fail on debug reports (crashes already
             // kill the process with a non-zero code on their own)
-            log("_uploadDebugReport(): -for-testing, terminating with exit code 105\n");
+            log(StrL("_uploadDebugReport(): -for-testing, terminating with exit code 105\n"));
             ::TerminateProcess(GetCurrentProcess(), kDebugReportTestExitCode);
         }
         return;
@@ -551,14 +551,14 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
             InitializeDbgHelp(false);
             auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
             if (len(s) == 0) {
-                log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
+                log(StrL("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n"));
                 return;
             }
             Str d = s;
             SaveCrashInfo(d);
             log(s);
         }
-        log("_uploadDebugReport skipping because !shouldUpload\n");
+        log(StrL("_uploadDebugReport skipping because !shouldUpload\n"));
         return;
     }
 
@@ -569,7 +569,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
 
     // don't send report if this is me debugging
     if (IsDebuggerPresent()) {
-        log("_uploadDebugReport skipping because IsDebuggerPresent\n");
+        log(StrL("_uploadDebugReport skipping because IsDebuggerPresent\n"));
         DebugBreak();
         return;
     }
@@ -580,7 +580,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     didSubmitDebugReport = true;
 
     if (!CrashHandlerCanUseNet()) {
-        log("_uploadDebugReport skipping because !CrashHandlerCanUseNet()\n");
+        log(StrL("_uploadDebugReport skipping because !CrashHandlerCanUseNet()\n"));
         return;
     }
 
@@ -594,7 +594,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
 
     auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
     if (len(s) == 0) {
-        log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
+        log(StrL("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n"));
         return;
     }
     Str d = s;
@@ -603,7 +603,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     UploadCrashReport(d);
     // gCrashHandlerArena->Free((const void*)d.data());
     log(s);
-    log("_uploadDebugReport() finished\n");
+    log(StrL("_uploadDebugReport() finished\n"));
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {
@@ -612,8 +612,8 @@ static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {
         return 0;
     }
 
-    log("CrashDumpThread\n");
-    _uploadDebugReport(nullptr, "", true, true);
+    log(StrL("CrashDumpThread\n"));
+    _uploadDebugReport(Str(), StrL(""), true, true);
 
     // always write a MiniDump (for the latest crash only)
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
@@ -636,7 +636,7 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
-    log("CrashDumpVectoredExceptionHandler\n");
+    log(StrL("CrashDumpVectoredExceptionHandler\n"));
     gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();
@@ -657,8 +657,8 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
 
 static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode)) {
-        log("CrashDumpExceptionHandler: exiting because !exceptionInfo || EXCEPTION_BREAKPOINT == "
-            "exceptionInfo->ExceptionRecord->ExceptionCode\n");
+        log(StrL("CrashDumpExceptionHandler: exiting because !exceptionInfo || EXCEPTION_BREAKPOINT == "
+                 "exceptionInfo->ExceptionRecord->ExceptionCode\n"));
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
@@ -666,7 +666,7 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
-    log("CrashDumpExceptionHandler\n");
+    log(StrL("CrashDumpExceptionHandler\n"));
     gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();
@@ -806,42 +806,42 @@ static void GetSystemInfo(str::Builder& s) {
     GetGraphicsDriverInfo(s);
     {
         auto cpu = CpuID();
-        s.Append("CPU: ");
+        s.Append(StrL("CPU: "));
         if (cpu & kCpuMMX) {
-            s.Append("MMX ");
+            s.Append(StrL("MMX "));
         }
         if (cpu & kCpuSSE) {
-            s.Append("SSE ");
+            s.Append(StrL("SSE "));
         }
         if (cpu & kCpuSSE2) {
-            s.Append("SSE2 ");
+            s.Append(StrL("SSE2 "));
         }
         if (cpu & kCpuSSE3) {
-            s.Append("SSE3 ");
+            s.Append(StrL("SSE3 "));
         }
         if (cpu & kCpuSSE41) {
-            s.Append("SSE41 ");
+            s.Append(StrL("SSE41 "));
         }
         if (cpu & kCpuSSE42) {
-            s.Append("SSE42 ");
+            s.Append(StrL("SSE42 "));
         }
         if (cpu & kCpuAVX) {
-            s.Append("AVX ");
+            s.Append(StrL("AVX "));
         }
         if (cpu & kCpuAVX2) {
-            s.Append("AVX2 ");
+            s.Append(StrL("AVX2 "));
         }
         if (cpu & kCpuNEON) {
-            s.Append("NEON ");
+            s.Append(StrL("NEON "));
         }
         if (cpu & kCpuArmCrypto) {
-            s.Append("Crypto ");
+            s.Append(StrL("Crypto "));
         }
         if (cpu & kCpuArmAtomics) {
-            s.Append("Atomics ");
+            s.Append(StrL("Atomics "));
         }
         if (cpu & kCpuArmDotProd) {
-            s.Append("DotProd ");
+            s.Append(StrL("DotProd "));
         }
     }
 }
@@ -942,7 +942,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     ReportIf(gDumpEvent || gDumpThread);
 
     if (!crashDumpPath) {
-        log("InstallCrashHandler: skipping because !crashDumpPath\n");
+        log(StrL("InstallCrashHandler: skipping because !crashDumpPath\n"));
         return;
     }
 
@@ -952,7 +952,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     gCrashHandlerArena = ArenaNew();
 
     if (!SetSymbolsDir(symDir)) {
-        log("InstallCrashHandler: skipping because !SetSymbolsDir()\n");
+        log(StrL("InstallCrashHandler: skipping because !SetSymbolsDir()\n"));
         return;
     }
 
@@ -970,7 +970,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     // as they're not helpful
     bool isWine = BuildModulesInfo();
     if (isWine) {
-        log("InstallCrashHandler: skipping because isWine\n");
+        log(StrL("InstallCrashHandler: skipping because isWine\n"));
         return;
     }
 
@@ -1004,12 +1004,12 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
 
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {
-        log("InstallCrashHandler: skipping because !gDumpEvent\n");
+        log(StrL("InstallCrashHandler: skipping because !gDumpEvent\n"));
         return;
     }
     gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, &gDumpThreadId);
     if (!gDumpThread) {
-        log("InstallCrashHandler: skipping because !gDumpThread\n");
+        log(StrL("InstallCrashHandler: skipping because !gDumpThread\n"));
         return;
     }
     gPrevExceptionFilter = SetUnhandledExceptionFilter(CrashDumpExceptionHandler);

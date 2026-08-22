@@ -3194,7 +3194,7 @@ EngineMupdf::EngineMupdf() {
     _ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
     if (!_ctx) {
         // can happen when out of memory. Load() will fail
-        log("EngineMupdf: fz_new_context() failed\n");
+        log(StrL("EngineMupdf: fz_new_context() failed\n"));
         return;
     }
     InstallFitzErrorCallbacks(this, _ctx);
@@ -7049,7 +7049,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         info.Append(name);
 #endif
         if (len(encoding) > 0 || len(type) > 0 || embedded) {
-            info.Append(" (");
+            info.Append(StrL(" ("));
             if (len(type) > 0) {
                 info.Append(fmt("%s; ", type));
             }
@@ -7057,10 +7057,10 @@ TempStr EngineMupdf::ExtractFontListTemp() {
                 info.Append(fmt("%s; ", encoding));
             }
             if (embedded) {
-                info.Append("embedded; ");
+                info.Append(StrL("embedded; "));
             }
             info.RemoveAt(len(info) - 2, 2);
-            info.Append(")");
+            info.Append(StrL(")"));
         }
 
         if (info.IsEmpty()) {
@@ -7073,7 +7073,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     }
 
     SortNatural(&fonts);
-    return JoinTemp(&fonts, "\n");
+    return JoinTemp(&fonts, StrL("\n"));
 }
 
 // @gen-start docprop-mupdf
@@ -7139,10 +7139,10 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     if (prop == DocProp::PdfFileStructure) {
         StrVec fstruct;
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Linearized"))) {
-            fstruct.Append("linearized");
+            fstruct.Append(StrL("linearized"));
         }
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Marked"))) {
-            fstruct.Append("tagged");
+            fstruct.Append(StrL("tagged"));
         }
         if (pdf_dict_gets(ctx, pdfInfo, "OutputIntents")) {
             int n = pdf_array_len(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"));
@@ -7156,7 +7156,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
         if (len(fstruct) == 0) {
             return {};
         }
-        return JoinTemp(&fstruct, ",");
+        return JoinTemp(&fstruct, StrL(","));
     }
 
     if (prop == DocProp::UnsupportedFeatures) {
@@ -7319,22 +7319,22 @@ static bool SubFilterIsCades(const char* sf) {
 
 static void AppendTrustSource(str::Builder& s, const u8* der, int derLen) {
     if (CertIsEuTrusted(der, derLen)) {
-        s.Append("  Source of trust: European Union Trusted List (EUTL)\n");
+        s.Append(StrL("  Source of trust: European Union Trusted List (EUTL)\n"));
     } else {
-        s.Append("  Source of trust: Windows Certificate Store\n");
+        s.Append(StrL("  Source of trust: Windows Certificate Store\n"));
     }
 }
 
 static void AppendLtvLine(str::Builder& s, bool ltv, int64_t notAfterUnix) {
     if (ltv) {
-        s.Append("  This signature is LTV enabled.\n");
+        s.Append(StrL("  This signature is LTV enabled.\n"));
         return;
     }
     TempStr exp = FormatUnixTimeTemp(notAfterUnix);
     if (exp) {
         s.Append(fmt("  This signature isn't LTV enabled and expires after: %s\n", exp));
     } else {
-        s.Append("  This signature isn't LTV enabled.\n");
+        s.Append(StrL("  This signature isn't LTV enabled.\n"));
     }
 }
 
@@ -7355,7 +7355,7 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
         level = "PAdES B-T";
     }
     if (hasPolicy && str::Eq(Str(level), StrL("PAdES B-B"))) {
-        s.Append("  Signature level: PAdES-EPES\n");
+        s.Append(StrL("  Signature level: PAdES-EPES\n"));
         return;
     }
     s.Append(fmt("  Signature level: %s\n", Str(level)));
@@ -7402,7 +7402,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         s.Append(fmt("Signature %d (document timestamp):\n", sigNo));
     }
     if (!pdf_signature_is_signed(ctx, pdfdoc, sigObj)) {
-        s.Append("  not signed\n");
+        s.Append(StrL("  not signed\n"));
         return;
     }
 
@@ -7430,12 +7430,12 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         fz_report_error(ctx);
     }
 
-    s.Append("  User certificate:\n");
+    s.Append(StrL("  User certificate:\n"));
     AppendTrustSource(s, info.cert_der, info.cert_der_len);
     if (info.signer_cn && info.signer_cn[0]) {
         s.Append(fmt("  Signed by: %s\n", Str(info.signer_cn)));
     } else {
-        s.Append("  Signed by: (unknown)\n");
+        s.Append(StrL("  Signed by: (unknown)\n"));
     }
 
     pdf_obj* mObj = pdf_dict_get(ctx, vDict, PDF_NAME(M));
@@ -7446,16 +7446,16 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     if (signedAt) {
         s.Append(fmt("  Signature time: %s\n", signedAt));
         if (isDocTs) {
-            s.Append("  The time and date displayed is from the secure time & date server.\n");
+            s.Append(StrL("  The time and date displayed is from the secure time & date server.\n"));
         } else {
-            s.Append("  The time and date displayed is from the user device.\n");
+            s.Append(StrL("  The time and date displayed is from the user device.\n"));
         }
     }
     if (info.issuer_cn && info.issuer_cn[0]) {
         s.Append(fmt("  Certificate issued by: %s\n", Str(info.issuer_cn)));
     }
     if (info.has_qc_statement) {
-        s.Append("  Qualified certificate (eIDAS qcStatements).\n");
+        s.Append(StrL("  Qualified certificate (eIDAS qcStatements).\n"));
     }
 
     pdf_signature_error certErr = PDF_SIGNATURE_ERROR_UNKNOWN;
@@ -7475,9 +7475,9 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     if (digErr) {
         s.Append(fmt("  Digest: %s\n", Str(pdf_signature_error_description(digErr))));
     } else if (edits) {
-        s.Append("  The document was changed since the signature was applied.\n");
+        s.Append(StrL("  The document was changed since the signature was applied.\n"));
     } else {
-        s.Append("  The document wasn't changed since the signature was applied.\n");
+        s.Append(StrL("  The document wasn't changed since the signature was applied.\n"));
     }
 
     bool ltv = docHasDss;
@@ -7499,8 +7499,8 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     AppendSigDictText(ctx, s, vDict, "contact", PDF_NAME(ContactInfo));
 
     if (info.has_timestamp) {
-        s.Append("  -----\n");
-        s.Append("  Included Time Stamp:\n");
+        s.Append(StrL("  -----\n"));
+        s.Append(StrL("  Included Time Stamp:\n"));
         AppendTrustSource(s, info.ts.cert_der, info.ts.cert_der_len);
         if (info.ts.signer_cn && info.ts.signer_cn[0]) {
             s.Append(fmt("  Signed by: %s\n", Str(info.ts.signer_cn)));
@@ -7508,7 +7508,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         TempStr tsTime = FormatUnixTimeTemp(info.ts.gen_time_unix);
         if (tsTime) {
             s.Append(fmt("  Signature time: %s\n", tsTime));
-            s.Append("  The time and date displayed is from the secure time & date server.\n");
+            s.Append(StrL("  The time and date displayed is from the secure time & date server.\n"));
         }
         if (info.ts.issuer_cn && info.ts.issuer_cn[0]) {
             s.Append(fmt("  Certificate issued by: %s\n", Str(info.ts.issuer_cn)));
@@ -8446,7 +8446,7 @@ static bool FormFieldValueIsEmpty(int wt, const char* val) {
         return true;
     }
     if (wt == PDF_WIDGET_TYPE_CHECKBOX || wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
-        return str::Eq(val, "Off");
+        return str::Eq(val, StrL("Off"));
     }
     return str::IsEmptyOrWhiteSpace(Str(val));
 }
@@ -8632,7 +8632,7 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
         doc = fz_open_document(ctx, CStrTemp(path));
         outline = fz_load_outline(ctx, doc);
         if (!outline) {
-            res = str::DupTemp("(no outline)");
+            res = str::DupTemp(StrL("(no outline)"));
         } else {
             buf = fz_new_buffer(ctx, 1024);
             out = fz_new_output_with_buffer(ctx, buf);

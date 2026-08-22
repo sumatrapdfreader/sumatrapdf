@@ -948,7 +948,7 @@ static const ArgSpec argSpecs[] = {
     // extension including leading dot, e.g. [CmdFixDefaultApp .pdf]
     {CmdFixDefaultApp, kCmdArgExt, CommandArg::Type::String}, // default
 
-    {CmdNone, "", CommandArg::Type::None}, // sentinel
+    {CmdNone, StrL(""), CommandArg::Type::None}, // sentinel
 };
 
 CustomCommand* gFirstCustomCommand = nullptr;
@@ -1321,7 +1321,7 @@ static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
         // creates a problem: all named args must be before default string arg
         valEnd = {};
     }
-    TempStr val = nullptr;
+    TempStr val = {};
     if (!valEnd) {
         val = str::DupTemp(rest);
         *argsInOut = {};
@@ -1408,7 +1408,7 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
         return nullptr;
     }
     Str valEnd = str::SliceFromChar(valStart, ' ');
-    TempStr val = nullptr;
+    TempStr val = {};
     Str afterVal;
     if (!valEnd) {
         val = str::DupTemp(valStart);
@@ -1469,7 +1469,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     }
 
     StrVec parts;
-    Split(&parts, definition, " ", true, 2);
+    Split(&parts, definition, StrL(" "), true, 2);
     Str cmd = parts[0];
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {

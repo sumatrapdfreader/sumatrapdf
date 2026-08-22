@@ -107,7 +107,7 @@ void PdfDarkModeImageClassifier_UnitTests() {
     utassert(outR <= 0.91f && outG <= 0.91f && outB <= 0.91f);
     utassert(outR > 0.82f);
 
-    utassert(str::Eq(PdfDarkModeKindDebugLabel(DarkImageKind::Photo), StrL("Photo")));
+    utassert(str::Eq(Str(PdfDarkModeKindDebugLabel(DarkImageKind::Photo)), StrL("Photo")));
 
     DarkImageAnalysis blendArt;
     blendArt.kind = DarkImageKind::LightBackgroundArtwork;

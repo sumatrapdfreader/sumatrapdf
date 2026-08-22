@@ -351,8 +351,8 @@ void InitializePolicies(bool restrict) {
     // (if the file isn't there, everything is allowed)
     TempStr restrictPath = GetPathInExeDirTemp(kRestrictionsFileName);
     if (!file::Exists(restrictPath)) {
-        Split(&gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, ",");
-        Split(&gAllowedFileTypes, DEFAULT_FILE_PERCEIVED_TYPES, ",");
+        Split(&gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, StrL(","));
+        Split(&gAllowedFileTypes, DEFAULT_FILE_PERCEIVED_TYPES, StrL(","));
         return;
     }
 
@@ -387,14 +387,14 @@ void InitializePolicies(bool restrict) {
             TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransCharsInPlace(protocols, StrL(" :;"), StrL(",,,"));
-            Split(&gAllowedLinkProtocols, protocols, ",", true);
+            Split(&gAllowedLinkProtocols, protocols, StrL(","), true);
         }
         value = polsec->GetValue(StrL("SafeFileTypes"));
         if (value) {
             TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransCharsInPlace(protocols, StrL(" :;"), StrL(",,,"));
-            Split(&gAllowedFileTypes, protocols, ",", true);
+            Split(&gAllowedFileTypes, protocols, StrL(","), true);
         }
     }
 }
@@ -487,7 +487,7 @@ bool OpenFileExternally(Str path) {
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, StrL(".htm")) || str::EndsWithI(path, StrL(".html")) ||
         str::EndsWithI(path, StrL(".xhtml"))) {
-        perceivedType = str::DupTemp("webpage");
+        perceivedType = str::DupTemp(StrL("webpage"));
     }
     str::ToLowerInPlace(perceivedType);
     if (gAllowedFileTypes.Contains(StrL("*"))) {
@@ -1904,7 +1904,7 @@ static DocController* CreateControllerForMarkdown(Str path, MainWindow* win) {
     }
     DocController* ctrl = nullptr;
     if (!mdModel->SetParentHwnd(win->hwndCanvas)) {
-        log("CreateControllerForMarkdown: WebView2 unavailable, falling back to MuPDF markdown view\n");
+        log(StrL("CreateControllerForMarkdown: WebView2 unavailable, falling back to MuPDF markdown view\n"));
         delete mdModel;
         return nullptr;
     }
@@ -1936,11 +1936,11 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
     // available, fall back on ChmEngine's fixed-page rendering
     DocController* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
-        log("CreateControllerForChm: interactive CHM backend unavailable, falling back to ChmEngine fixed-page view\n");
+        log(StrL("CreateControllerForChm: interactive CHM backend unavailable, falling back to ChmEngine fixed-page view\n"));
         delete chmModel;
         EngineBase* engine = CreateEngineFromFile(path, pwdUI, true);
         if (!engine) {
-            log("CreateControllerForChm: ChmEngine fallback also failed, can't display CHM\n");
+            log(StrL("CreateControllerForChm: ChmEngine fallback also failed, can't display CHM\n"));
             return nullptr;
         }
         ReportIf(engine->kind != kindEngineChm);
@@ -4217,7 +4217,7 @@ static void MaybeDetachEphemeralHostFile(LoadArgs* args);
 
 void StartLoadDocument(LoadArgs* argsIn) {
     if (gCrashOnOpen) {
-        log("LoadDocumentAsync: about to call CrashMe()\n");
+        log(StrL("LoadDocumentAsync: about to call CrashMe()\n"));
         CrashMe();
     }
 
@@ -4444,7 +4444,7 @@ static void MaybeDetachEphemeralHostFile(LoadArgs* args) {
 // reads page count and creates a child element for each page
 MainWindow* LoadDocument(LoadArgs* args) {
     if (gCrashOnOpen) {
-        log("LoadDocument: about to call CrashMe()\n");
+        log(StrL("LoadDocument: about to call CrashMe()\n"));
         CrashMe();
     }
 
@@ -5198,8 +5198,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     OPENFILENAME ofn{};
     str::Builder fileFilter(256);
     fileFilter.Append(_TRA("PDF documents"));
-    fileFilter.Append("\1*.pdf\1");
-    fileFilter.Append("\1*.*\1");
+    fileFilter.Append(StrL("\1*.pdf\1"));
+    fileFilter.Append(StrL("\1*.*\1"));
     Str fileFilterStr = ToStr(fileFilter);
     str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
     WCHAR* fileFilterW = CWStrTemp(fileFilterStr);
@@ -5781,7 +5781,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         fileFilter.Append(fmt("\1*%s\1", defExt));
     }
     fileFilter.Append(_TRA("All files"));
-    fileFilter.Append("\1*.*\1");
+    fileFilter.Append(StrL("\1*.*\1"));
     Str fileFilterStr = ToStr(fileFilter);
     str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
 
@@ -10262,9 +10262,9 @@ static TempStr PickImageFilePathTemp(HWND hwnd) {
     WCHAR pathW[MAX_PATH + 1]{};
     str::Builder fileFilter(256);
     fileFilter.Append(_TRA("Image files"));
-    fileFilter.Append("\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif\1");
+    fileFilter.Append(StrL("\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif\1"));
     fileFilter.Append(_TRA("All files"));
-    fileFilter.Append("\1*.*\1");
+    fileFilter.Append(StrL("\1*.*\1"));
     Str fileFilterStr = ToStr(fileFilter);
     str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
 
@@ -11365,7 +11365,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 TempStr dir = GetPdfPreviewLogDirTemp();
                 notifMsg = fmt("PDF preview logging enabled.\nLogs: %s", dir ? dir : StrL("(unknown)"));
             } else {
-                notifMsg = str::DupTemp("PDF preview logging disabled.");
+                notifMsg = str::DupTemp(StrL("PDF preview logging disabled."));
             }
             NotificationCreateArgs nargs;
             nargs.hwndParent = win->hwndCanvas;
@@ -11681,7 +11681,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
             // TODO: ideally would ask user for the cmd-line args but this will do
             Flags f;
-            // f.stressTestPath = str::Dup("C:\\Users\\kjk\\!sumatra\\all formats");
+            // f.stressTestPath = str::Dup(StrL("C:\\Users\\kjk\\!sumatra\\all formats"));
             f.stressTestPath = str::Dup(StrL("D:\\sumstress"));
             f.stressRandomizeFiles = true;
             f.stressTestMax = 25;
@@ -13510,7 +13510,7 @@ WindowTab* GetReadAloudSourceTab() {
 // Voice selection menu
 static TempStr TtsLangIdToLocaleNameTemp(Str lang) {
     if (len(lang) == 0) {
-        return str::DupTemp("unknown");
+        return str::DupTemp(StrL("unknown"));
     }
 
     // Windows.Media.SpeechSynthesis voices report a locale name like "en-US",
@@ -13774,7 +13774,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     if (win && !gMyWindowWasEmbedded && isChildWindow) {
         logf("Detected window embedded in another window\n");
         gMyWindowWasEmbedded = true;
-        str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, "windows");
+        str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, StrL("windows"));
         uitask::Post(MkFunc0(ApplyEmbeddedWindowChrome, win), "ApplyEmbeddedWindowChrome");
     }
     // custom caption is incompatible with WS_CHILD hosts; skip even before
@@ -14235,22 +14235,22 @@ void GetProgramInfo(str::Builder& s) {
         s.Append(fmt(" pre-release"));
     }
     if (IsProcess64()) {
-        s.Append(" 64-bit");
+        s.Append(StrL(" 64-bit"));
     } else {
-        s.Append(" 32-bit");
+        s.Append(StrL(" 32-bit"));
         if (IsRunningInWow64()) {
-            s.Append(" Wow64");
+            s.Append(StrL(" Wow64"));
         }
     }
     if (gIsDebugBuild) {
         if (!str::Contains(ToStr(s), StrL(" (dbg)"))) {
-            s.Append(" (dbg)");
+            s.Append(StrL(" (dbg)"));
         }
     }
     if (gPluginMode) {
-        s.Append(" [plugin]");
+        s.Append(StrL(" [plugin]"));
     }
-    s.Append("\r\n");
+    s.Append(StrL("\r\n"));
 
     if (gitCommidId) {
         s.Append(
@@ -14263,13 +14263,13 @@ bool CrashHandlerCanUseNet() {
 }
 
 void ShowCrashHandlerMessage() {
-    log("ShowCrashHandlerMessage\n");
+    log(StrL("ShowCrashHandlerMessage\n"));
     // don't show a message box in restricted use, as the user most likely won't be
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
     if (!CanAccessDisk()) {
-        log("ShowCrashHandlerMessage: skipping because !CanAccessDisk()\n");
+        log(StrL("ShowCrashHandlerMessage: skipping because !CanAccessDisk()\n"));
         return;
     }
 
@@ -14286,11 +14286,11 @@ void ShowCrashHandlerMessage() {
 
     int res = MsgBox(nullptr, msg, _TRA("SumatraPDF crashed"), flags);
     if (IDCANCEL != res) {
-        log("ShowCrashHandlerMessage: res != IDCANCEL\n");
+        log(StrL("ShowCrashHandlerMessage: res != IDCANCEL\n"));
         return;
     }
     if (!gCrashFilePath) {
-        log("ShowCrashHandlerMessage: !gCrashFilePath\n");
+        log(StrL("ShowCrashHandlerMessage: !gCrashFilePath\n"));
         return;
     }
     LaunchFileIfExists(gCrashFilePath);

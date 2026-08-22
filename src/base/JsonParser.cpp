@@ -445,25 +445,25 @@ TempStr EscapeStrTemp(Str s) {
         }
         switch (c) {
             case '"':
-                b.Append("\\\"");
+                b.Append(StrL("\\\""));
                 break;
             case '\\':
-                b.Append("\\\\");
+                b.Append(StrL("\\\\"));
                 break;
             case '\n':
-                b.Append("\\n");
+                b.Append(StrL("\\n"));
                 break;
             case '\r':
-                b.Append("\\r");
+                b.Append(StrL("\\r"));
                 break;
             case '\t':
-                b.Append("\\t");
+                b.Append(StrL("\\t"));
                 break;
             case '\b':
-                b.Append("\\b");
+                b.Append(StrL("\\b"));
                 break;
             case '\f':
-                b.Append("\\f");
+                b.Append(StrL("\\f"));
                 break;
             default:
                 if (c < 0x20) {

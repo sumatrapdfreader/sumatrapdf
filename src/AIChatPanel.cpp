@@ -285,7 +285,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     StrVec items;
-    items.Append("+ New Session");
+    items.Append(StrL("+ New Session"));
 
     WindowTab* tab = win->CurrentTab();
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
@@ -315,7 +315,7 @@ static void PopulateSessionCombo(MainWindow* win) {
 
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (st->sessionId && !foundCurrent) {
-        items.Append("(current session)");
+        items.Append(StrL("(current session)"));
         selectedIdx = len(sessions) + 1;
     }
 
@@ -737,7 +737,7 @@ static void AIChatReadAllPipe(HANDLE hPipe, str::Builder& out) {
 static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str& outText, Str& outErr) {
     AIChatProvider* p = GetAIChatProvider((int)backend);
     if (!p) {
-        outErr = str::Dup("unknown backend");
+        outErr = str::Dup(StrL("unknown backend"));
         return false;
     }
     TempStr exePath = p->FindExecutableTemp();
@@ -754,9 +754,9 @@ static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str&
         optionIdx = p->optionDefault;
     }
     TempStr sessionId = p->generatesSessionId ? AIChatGenerateSessionIdTemp() : Str{};
-    TempStr dir = len(filePath) > 0 ? path::GetDirTemp(filePath) : str::DupTemp(".");
+    TempStr dir = len(filePath) > 0 ? path::GetDirTemp(filePath) : str::DupTemp(StrL("."));
     if (!dir || len(dir) == 0) {
-        dir = str::DupTemp(".");
+        dir = str::DupTemp(StrL("."));
     }
 
     AIChatCmdArgs args;
@@ -791,7 +791,7 @@ static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str&
     if (waitRes == WAIT_TIMEOUT) {
         TerminateProcess(launch.hProcess, 1);
         AIChatCloseProcess(&launch.hProcess, false);
-        outErr = str::Dup("chat timed out");
+        outErr = str::Dup(StrL("chat timed out"));
         AIChatLog(p->logger, "<<< error", outErr);
         return false;
     }
@@ -830,7 +830,7 @@ static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str&
     Str txt = ToStr(sink.text);
     str::TrimWSInPlace(txt, str::TrimOpt::Both);
     if (len(txt) == 0) {
-        outErr = str::Dup("response contained no text");
+        outErr = str::Dup(StrL("response contained no text"));
         return false;
     }
     outText = str::Dup(txt);
@@ -843,12 +843,12 @@ TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCo
     bool ok = RunAIChatSync((AIChatBackend)backend, filePath, message, text, err);
     str::Builder res;
     if (ok) {
-        res.Append("OK\n");
+        res.Append(StrL("OK\n"));
         res.Append(text);
     } else {
-        res.Append("FAIL: ");
+        res.Append(StrL("FAIL: "));
         res.Append(err);
-        res.Append("\n--- debug log ---\n");
+        res.Append(StrL("\n--- debug log ---\n"));
         res.Append(AIChatDebugGetTemp());
     }
     if (exitCode) {
@@ -868,7 +868,7 @@ TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode) {
         if (exitCode) {
             *exitCode = 2;
         }
-        return str::DupTemp("NOTREADY no-window");
+        return str::DupTemp(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     AIChatDebugReset();
@@ -882,7 +882,7 @@ TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode) {
     if (exitCode) {
         *exitCode = 0;
     }
-    return str::DupTemp("OK replayed");
+    return str::DupTemp(StrL("OK replayed"));
 }
 
 // --- Sending a message ---

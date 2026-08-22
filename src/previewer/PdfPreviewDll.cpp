@@ -24,7 +24,7 @@ class PreviewClassFactory : public IClassFactory {
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
-        log("PdfPreview: QueryInterface()\n");
+        log(StrL("PdfPreview: QueryInterface()\n"));
         static const QITAB qit[] = {QITABENT(PreviewClassFactory, IClassFactory), {nullptr}};
         return QISearch(this, qit, riid, ppv);
     }
@@ -47,7 +47,7 @@ class PreviewClassFactory : public IClassFactory {
 
     // IClassFactory
     IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
-        log("PdfPreview: CreateInstance()\n");
+        log(StrL("PdfPreview: CreateInstance()\n"));
 
         *ppv = nullptr;
         if (punkOuter) {
@@ -135,7 +135,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }
-    log("PdfPreview: DllGetClassObject\n");
+    log(StrL("PdfPreview: DllGetClassObject\n"));
     return pClassFactory->QueryInterface(riid, ppv);
 }
 
@@ -152,18 +152,18 @@ STDAPI DllRegisterServer() {
     // in 3.4+ this will only install for current user (HKCU)
     bool ok = InstallPreviewDll(dllPath, false);
     if (!ok) {
-        log("DllRegisterServer failed!\n");
+        log(StrL("DllRegisterServer failed!\n"));
         return E_FAIL;
     }
     return S_OK;
 }
 
 STDAPI DllUnregisterServer() {
-    log("DllUnregisterServer\n");
+    log(StrL("DllUnregisterServer\n"));
 
     bool ok = UninstallPreviewDll();
     if (!ok) {
-        log("DllUnregisterServer failed!\n");
+        log(StrL("DllUnregisterServer failed!\n"));
         return E_FAIL;
     }
     return S_OK;

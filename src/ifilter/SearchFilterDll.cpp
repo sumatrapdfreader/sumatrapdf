@@ -43,7 +43,7 @@ class FilterClassFactory : public IClassFactory {
 
     // IClassFactory
     IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
-        log("FilterClassFactory::CreateInstance()\n");
+        log(StrL("FilterClassFactory::CreateInstance()\n"));
 
         *ppv = nullptr;
         if (punkOuter) {
@@ -53,14 +53,14 @@ class FilterClassFactory : public IClassFactory {
         ScopedComPtr<IFilter> pFilter;
 
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(kPdfFilterClsid, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
+        if (SUCCEEDED(CLSIDFromString(StrL(kPdfFilterClsid), &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new PdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
-        } else if (SUCCEEDED(CLSIDFromString(kTexFilterClsid, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
+        } else if (SUCCEEDED(CLSIDFromString(StrL(kTexFilterClsid), &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new TeXFilter(&g_lRefCount);
 #endif
 #ifdef BUILD_EPUB_IFILTER
-        } else if (SUCCEEDED(CLSIDFromString(kEpubFilterClsid, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
+        } else if (SUCCEEDED(CLSIDFromString(StrL(kEpubFilterClsid), &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new EpubFilter(&g_lRefCount);
 #endif
         } else {
@@ -92,7 +92,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
         ReportIf(hInstance != GetInstance());
         gLogAppName = StrL("PdfFilter");
         gLogToConsole = false;
-        log("DllMain\n");
+        log(StrL("DllMain\n"));
     } else if (dwReason == DLL_PROCESS_DETACH) {
         // lpReserved is non-null when the process is exiting; skip teardown
         // then so we don't take locks under the loader as other DLLs die.
@@ -121,7 +121,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
 }
 
 STDAPI DllRegisterServer() {
-    log("DllRegisterServer\n");
+    log(StrL("DllRegisterServer\n"));
     TempStr dllPath = GetSelfExePathTemp();
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
@@ -131,10 +131,10 @@ STDAPI DllRegisterServer() {
 }
 
 STDAPI DllUnregisterServer() {
-    log("DllUnregisterServer\n");
+    log(StrL("DllUnregisterServer\n"));
     bool ok = UninstallSearchFilter();
     if (!ok) {
-        log("DllUnregisterServer failed\n");
+        log(StrL("DllUnregisterServer failed\n"));
     }
     return ok ? S_OK : E_FAIL;
 }

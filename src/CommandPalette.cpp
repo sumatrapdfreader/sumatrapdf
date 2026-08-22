@@ -550,9 +550,9 @@ static TempStr WithKbdMarkupTemp(Str s) {
             i++;
             continue;
         }
-        out.Append("(Kbd/");
+        out.Append(StrL("(Kbd/"));
         out.Append(match);
-        out.Append(")");
+        out.Append(StrL(")"));
         i += len(match);
     }
     return ToStrTemp(out);
@@ -815,7 +815,7 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
         return ToStrTemp(out);
     };
     if (!gCommandPaletteWnd || !gCommandPaletteWnd->hwnd) {
-        out.Append("NOTREADY no-palette\n");
+        out.Append(StrL("NOTREADY no-palette\n"));
         return finish(2);
     }
     auto* wnd = gCommandPaletteWnd;

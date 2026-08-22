@@ -286,13 +286,13 @@ static TempStr Base64DecodeTemp(Str data) {
 static inline void AppendChar(str::Builder& htmlData, char c) {
     switch (c) {
         case '&':
-            htmlData.Append("&amp;");
+            htmlData.Append(StrL("&amp;"));
             break;
         case '<':
-            htmlData.Append("&lt;");
+            htmlData.Append(StrL("&lt;"));
             break;
         case '"':
-            htmlData.Append("&quot;");
+            htmlData.Append(StrL("&quot;"));
             break;
         default:
             htmlData.AppendChar(c);
@@ -1092,7 +1092,7 @@ bool Fb2Doc::Load(Str srcData) {
         } else if (inBody && tok->IsEndTag() && Tag_Body == tok->tag) {
             if (!--inBody) {
                 if (len(xmlData) > 0) {
-                    xmlData.Append("<pagebreak />");
+                    xmlData.Append(StrL("<pagebreak />"));
                 }
                 xmlData.AppendChar('<');
                 xmlData.Append(Str(bodyStart.s, (int)(tok->s.s - bodyStart.s) + tok->s.len));
@@ -1323,7 +1323,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             if (len(itemText) == 0) {
                 itemText = text;
             } else {
-                itemText = str::JoinTemp(itemText, " ", text);
+                itemText = str::JoinTemp(itemText, StrL(" "), text);
             }
         }
     }
@@ -1369,7 +1369,7 @@ PalmDoc::~PalmDoc() {
 static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, int n, uint /*codePage*/) {
     if (n < 9) {
     Fallback:
-        builder.Append("&lt;");
+        builder.Append(StrL("&lt;"));
         return text;
     }
     if (!str::StartsWithI(text, StrL("<BOOKMARK")) && !str::StartsWithI(text, StrL("<HEADER")) &&
@@ -1414,15 +1414,15 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         }
     } else if (tok->NameIs(StrL("HRULE"))) {
         // <HRULE STYLE=OUTLINE>
-        builder.Append("<hr>");
+        builder.Append(StrL("<hr>"));
         return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
     } else if (tok->NameIs(StrL("LABEL"))) {
         // <LABEL NAME="Contents">
         AttrInfo* attr = tok->GetAttrByName(StrL("NAME"));
         if (attr && attr->val) {
-            builder.Append("<a name=\"");
+            builder.Append(StrL("<a name=\""));
             builder.Append(attr->val);
-            builder.Append("\">");
+            builder.Append(StrL("\">"));
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs(StrL("LINK"))) {
@@ -1434,11 +1434,11 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
                 // skip links to other files
                 return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
             }
-            builder.Append("<a href=\"#");
+            builder.Append(StrL("<a href=\"#"));
             builder.Append(attrTag->val);
-            builder.Append("\">");
+            builder.Append(StrL("\">"));
             builder.Append(attrText->val);
-            builder.Append("</a>");
+            builder.Append(StrL("</a>"));
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs(StrL("TEALPAINT"))) {
@@ -1470,14 +1470,14 @@ bool PalmDoc::Load() {
     for (int i = 0; i < rest.len; i++) {
         char c = rest.s[i];
         if ('&' == c) {
-            htmlData.Append("&amp;");
+            htmlData.Append(StrL("&amp;"));
         } else if ('<' == c) {
             Str after = HandleTealDocTag(htmlData, tocEntries, Str(rest.s + i, rest.len - i), rest.len - i, codePage);
             if (after) {
                 i += (int)(after.s - (rest.s + i)) - 1;
             }
         } else if ('\n' == c || ('\r' == c && i + 1 < rest.len && '\n' != rest.s[i + 1])) {
-            htmlData.Append("\n<br>");
+            htmlData.Append(StrL("\n<br>"));
         } else {
             htmlData.AppendChar(c);
         }
@@ -1732,14 +1732,14 @@ static Str TextFindLinkEnd(str::Builder& htmlData, Str curr, char prevChar, bool
         }
     }
 
-    htmlData.Append("<a href=\"");
+    htmlData.Append(StrL("<a href=\""));
     if (fromWww) {
-        htmlData.Append("http://");
+        htmlData.Append(StrL("http://"));
     }
     for (int i = 0; i < endIdx; i++) {
         AppendChar(htmlData, curr.s[i]);
     }
-    htmlData.Append("\">");
+    htmlData.Append(StrL("\">"));
 
     return Str(curr.s + endIdx, curr.len - endIdx);
 }
@@ -1806,12 +1806,12 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
         int idx = len(htmlData) - beforeAt.len;
         htmlData.RemoveAt(idx, len(htmlData) - idx);
     }
-    htmlData.Append("<a href=\"mailto:");
+    htmlData.Append(StrL("<a href=\"mailto:"));
     htmlData.Append(beforeAt);
     for (int i = 0; i < (int)(end.s - linkStart.s); i++) {
         AppendChar(htmlData, linkStart.s[i]);
     }
-    htmlData.Append("\">");
+    htmlData.Append(StrL("\">"));
     htmlData.Append(beforeAt);
 
     return end;
@@ -1854,13 +1854,13 @@ bool TxtDoc::Load() {
     bool rfcHeader = false;
     int sectionCount = 0;
 
-    htmlData.Append("<pre>");
+    htmlData.Append(StrL("<pre>"));
     for (int i = 0; i < text.len; i++) {
         Str curr = Str(text.s + i, text.len - i);
         char c = text.s[i];
         // similar logic to LinkifyText in PdfEngine.cpp
         if (linkEndPos == i) {
-            htmlData.Append("</a>");
+            htmlData.Append(StrL("</a>"));
             linkEndPos = -1;
         } else if (linkEndPos >= 0) { // NOLINT(bugprone-branch-clone): each empty branch has its own reason
             /* don't check for hyperlinks inside a link */;
@@ -1897,7 +1897,7 @@ bool TxtDoc::Load() {
         if ('\f' == c && (i == 0 || '\n' == text.s[i - 1]) &&
             (i + 1 >= text.len || '\r' == text.s[i + 1] || '\n' == text.s[i + 1])) {
             if (i > 0 && i + 2 < text.len && (i + 3 < text.len || text.s[i + 2] != '\n')) {
-                htmlData.Append("<pagebreak />");
+                htmlData.Append(StrL("<pagebreak />"));
             }
             continue;
         }
@@ -1913,21 +1913,21 @@ bool TxtDoc::Load() {
                     }
                     AppendChar(htmlData, ch);
                 }
-                htmlData.Append("\">");
+                htmlData.Append(StrL("\">"));
                 rfcHeader = true;
             }
         }
         if (rfcHeader && ('\r' == c || '\n' == c)) {
-            htmlData.Append("</b>");
+            htmlData.Append(StrL("</b>"));
             rfcHeader = false;
         }
 
         AppendChar(htmlData, c);
     }
     if (linkEndPos >= 0) {
-        htmlData.Append("</a>");
+        htmlData.Append(StrL("</a>"));
     }
-    htmlData.Append("</pre>");
+    htmlData.Append(StrL("</pre>"));
 
     return true;
 }

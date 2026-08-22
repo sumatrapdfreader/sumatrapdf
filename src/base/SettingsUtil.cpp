@@ -10,7 +10,7 @@ static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
 }
 
 static Str FieldDefaultStr(const FieldInfo& field) {
-    return {(const char*)field.value};
+    return Str((const char*)field.value);
 }
 
 // only escape characters which are significant to SquareTreeParser:
@@ -31,13 +31,13 @@ static void EscapeStr(str::Builder& out, Str s) {
         char c = s.s[i];
         switch (c) {
             case '$':
-                out.Append("$$");
+                out.Append(StrL("$$"));
                 break;
             case '\n':
-                out.Append("$n");
+                out.Append(StrL("$n"));
                 break;
             case '\r':
-                out.Append("$r");
+                out.Append(StrL("$r"));
                 break;
             default:
                 out.AppendChar(c);
@@ -220,7 +220,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
 
     switch (field.type) {
         case SettingType::Bool:
-            out.Append(*(bool*)fieldPtr ? "true" : "false");
+            out.Append(Str(*(bool*)fieldPtr ? "true" : "false"));
             return true;
         case SettingType::Int:
             out.Append(fmt("%d", *(int*)fieldPtr));
@@ -463,7 +463,7 @@ static bool StructIsTemporary(const StructInfo* info, const void* data) {
         if (field.type != SettingType::Bool) {
             continue;
         }
-        if (!str::Eq(fieldName, StrL("IsTemporary"))) {
+        if (!str::Eq(Str(fieldName), StrL("IsTemporary"))) {
             continue;
         }
         return *(const bool*)((const u8*)data + field.offset);
@@ -487,27 +487,27 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
         if (SettingType::Struct == field.type) {
             Indent(out, indent);
             out.Append(fieldNameStr);
-            out.Append(" [\r\n");
+            out.Append(StrL(" [\r\n"));
             SerializeStructRec(out, GetSubstruct(field), base + field.offset,
                                prevNode ? prevNode->GetChild(fieldNameStr) : nullptr, indent + 1);
             Indent(out, indent);
-            out.Append("]\r\n");
+            out.Append(StrL("]\r\n"));
         } else if (SettingType::StructPtr == field.type) {
             // an optional sub-struct: nothing is written when it isn't set
             const void* sub = *(void* const*)(base + field.offset);
             if (sub) {
                 Indent(out, indent);
                 out.Append(fieldNameStr);
-                out.Append(" [\r\n");
+                out.Append(StrL(" [\r\n"));
                 SerializeStructRec(out, GetSubstruct(field), sub, prevNode ? prevNode->GetChild(fieldNameStr) : nullptr,
                                    indent + 1);
                 Indent(out, indent);
-                out.Append("]\r\n");
+                out.Append(StrL("]\r\n"));
             }
         } else if (SettingType::Array == field.type) {
             Indent(out, indent);
             out.Append(fieldNameStr);
-            out.Append(" [\r\n");
+            out.Append(StrL(" [\r\n"));
             Vec<void*>* array = *(Vec<void*>**)(base + field.offset);
             if (array && len(*array) > 0) {
                 const StructInfo* elemInfo = GetSubstruct(field);
@@ -517,29 +517,29 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
                         continue;
                     }
                     Indent(out, indent + 1);
-                    out.Append("[\r\n");
+                    out.Append(StrL("[\r\n"));
                     SerializeStructRec(out, elemInfo, elem, nullptr, indent + 2);
                     Indent(out, indent + 1);
-                    out.Append("]\r\n");
+                    out.Append(StrL("]\r\n"));
                 }
             }
             Indent(out, indent);
-            out.Append("]\r\n");
+            out.Append(StrL("]\r\n"));
         } else if (SettingType::Comment == field.type) {
             if (field.value) {
                 Indent(out, indent);
-                out.Append("# ");
+                out.Append(StrL("# "));
                 out.Append(FieldDefaultStr(field));
             }
-            out.Append("\r\n");
+            out.Append(StrL("\r\n"));
         } else {
             int offset = len(out);
             Indent(out, indent);
             out.Append(fieldNameStr);
-            out.Append(" = ");
+            out.Append(StrL(" = "));
             bool keep = SerializeField(out, base, field);
             if (keep) {
-                out.Append("\r\n");
+                out.Append(StrL("\r\n"));
             } else {
                 out.RemoveAt(offset, len(out) - offset);
             }
@@ -613,7 +613,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
 
 Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
     str::Builder out;
-    out.Append(UTF8_BOM);
+    out.Append(Str(UTF8_BOM));
     SquareTreeNode* root = ParseSquareTree(prevData);
     SerializeStructRec(out, info, strct, root);
     delete root;

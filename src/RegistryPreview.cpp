@@ -147,7 +147,7 @@ void DisablePreviewInstallExts(Str cmdLine) {
         str::ToLowerInPlace(extsList);
         str::TransCharsInPlace(extsList, StrL(";. :"), StrL(",,,\0"));
         StrVec exts;
-        Split(&exts, extsList, ",", true);
+        Split(&exts, extsList, StrL(","), true);
         for (auto& p : gPreviewers) {
             Str extNoDot = Str(p.ext.s + 1, p.ext.len - 1);
             p.skip = !exts.Contains(extNoDot);
