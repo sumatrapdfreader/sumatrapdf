@@ -117,6 +117,7 @@ CmdTogglePreservePdfImages,,Toggle Preserve PDF Image Colors in Dark Mode,"ver 3
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
 CmdToggleHighlightFormFields,,Toggle Highlight Form Fields,"ver 3.7+, toggles pale-blue highlight of empty fillable PDF form fields (`HighlightFormFields`; default on) (fixes #5966)"
 CmdToggleTransparencyGrid,,Toggle Transparency Grid,"ver 3.7+, checkerboard under the page so transparent PDFs (white art on a hole) are visible, like Acrobat's Transparency Grid. Session-only, not saved (fixes #1809)"
+CmdTogglePageGrid,,Toggle Page Grid,"ver 3.7+, dotted major/minor graph paper on the page (0.25 in / 1 in, color 128,128,255). Overlay on fixed-page documents only, not comics. Session-only, not saved (fixes #4398)"
 CmdToggleDisableLinks,,Toggle Disable Links,"ver 3.7+, palette-only; toggles `DisableLinks` so clicks, hover and keyboard following ignore document links (fixes #5939)"
 CmdToggleHoverPreview,,Toggle Hover Preview,"ver 3.7+, palette-only; toggles the citation/reference hover popup (`CitationHoverDelay`: 300 ms when on, -1 when off)"
 ```

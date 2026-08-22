@@ -305,6 +305,10 @@ static MenuDef menuDefView[] = {
         CmdToggleTransparencyGrid,
     },
     {
+        _TRN("Page Grid"),
+        CmdTogglePageGrid,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },
@@ -1921,6 +1925,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdTogglePageBoxes, win->showPageBoxes);
     MenuSetChecked(win->menu, CmdToggleHighlightFormFields, gGlobalPrefs->highlightFormFields);
     MenuSetChecked(win->menu, CmdToggleTransparencyGrid, ShowTransparencyGrid());
+    MenuSetChecked(win->menu, CmdTogglePageGrid, ShowPageGrid());
     MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
     MenuSetChecked(win->menu, CmdDebugShowFitContentArea, ShowFitContentArea());
     MenuSetEnabled(win->menu, CmdTabGroupSave, HasOpenedDocuments(win));

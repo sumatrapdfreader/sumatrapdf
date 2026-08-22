@@ -105,6 +105,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !ShowTransparencyGrid();
         } break;
+        case CmdTogglePageGrid: {
+            isToggle = true;
+            newIsOn = !ShowPageGrid();
+        } break;
         case CmdToggleLaserPointer: {
             isToggle = true;
             newIsOn = !IsLaserPointerActive();

@@ -11840,6 +11840,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdTogglePageGrid:
+            TogglePageGrid();
+            for (auto& w : gWindows) {
+                w->RedrawAll(true);
+            }
+            break;
+
         case CmdDebugShowFitContentArea:
             // like CmdToggleImages: session-only debug aid, not a setting
             ToggleShowFitContentArea();

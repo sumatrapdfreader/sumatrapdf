@@ -296,6 +296,7 @@ export const commands = [
     "CmdConvertPdfToImages", "Convert PDF to Images...",
     "CmdToggleUniformPageWidth", "Toggle Uniform Page Width",
     "CmdToggleTransparencyGrid", "Toggle Transparency Grid",
+    "CmdTogglePageGrid", "Toggle Page Grid",
     "CmdNone", "Do nothing",
 ];
 

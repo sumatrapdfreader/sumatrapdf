@@ -12,6 +12,8 @@ bool ShowImageOutlines();
 void ToggleShowImageOutlines();
 bool ShowTransparencyGrid();
 void ToggleTransparencyGrid();
+bool ShowPageGrid();
+void TogglePageGrid();
 bool ShowFitContentArea();
 void ToggleShowFitContentArea();
 bool IsLaserPointerActive();

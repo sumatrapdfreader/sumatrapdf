@@ -296,7 +296,8 @@ enum {
     CmdConvertPdfToImages = 485,
     CmdToggleUniformPageWidth = 486,
     CmdToggleTransparencyGrid = 487,
-    CmdNone = 488,
+    CmdTogglePageGrid = 488,
+    CmdNone = 489,
 
     /* range for file history */
     CmdFileHistoryFirst,

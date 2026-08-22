@@ -2714,6 +2714,19 @@ void ToggleTransparencyGrid() {
     gShowTransparencyGrid = !gShowTransparencyGrid;
 }
 
+// CmdTogglePageGrid: dotted graph paper on the page (issue #4398).
+// Session-only, not saved. Overlay on top of the page bitmap (normal PDFs
+// are opaque, so this cannot sit under glyphs). Fixed-page documents only.
+static bool gShowPageGrid = false;
+
+bool ShowPageGrid() {
+    return gShowPageGrid;
+}
+
+void TogglePageGrid() {
+    gShowPageGrid = !gShowPageGrid;
+}
+
 /* debug code to visualize links and images (can block while rendering) */
 static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
@@ -2867,6 +2880,113 @@ static Rect ClampRectTo(const Rect& r, const Rect& bounds) {
         o.y = bounds.Bottom() - o.dy;
     }
     return o;
+}
+
+// 0.25" minor / 1" major in PDF points. Color from the #4398 screenshot.
+constexpr float kPageGridMinorPt = 18.f;
+constexpr int kPageGridMajorEvery = 4;
+constexpr Color kPageGridColor = MkRgb(128, 128, 255);
+constexpr int kPageGridMinMinorPx = 6;
+constexpr int kPageGridMinMajorPx = 4;
+constexpr int kPageGridMaxDots = 8000;
+
+static float PageGridAlignDown(float v, float origin, float step) {
+    if (step <= 0) {
+        return origin;
+    }
+    return origin + floorf((v - origin) / step) * step;
+}
+
+static bool PageGridIsMajor(float v, float origin) {
+    int i = (int)floorf(((v - origin) / kPageGridMinorPt) + 0.5f);
+    if (i < 0) {
+        i = -i;
+    }
+    return (i % kPageGridMajorEvery) == 0;
+}
+
+static int PageGridScreenDist(Point a, Point b) {
+    int dx = a.x - b.x;
+    int dy = a.y - b.y;
+    if (dx < 0) {
+        dx = -dx;
+    }
+    if (dy < 0) {
+        dy = -dy;
+    }
+    return dx > dy ? dx : dy;
+}
+
+// Graph-paper overlay in page space, clipped to the visible page. Dots at
+// intersections: 1px minor, 3px major. Skips image collections and ebooks.
+static void PaintPageGrid(DisplayModel* dm, HDC hdc) {
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || engine->IsImageCollection() || engine->isReflowable) {
+        return;
+    }
+    Rect viewPort(Point(), dm->GetViewPort().Size());
+    HBRUSH br = CreateSolidBrush(kPageGridColor);
+    if (!br) {
+        return;
+    }
+
+    for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
+        if (!pi || !pi->isShown || 0.0 == pi->visibleRatio) {
+            continue;
+        }
+        Rect bounds = pi->pageOnScreen.Intersect(viewPort);
+        if (bounds.IsEmpty()) {
+            continue;
+        }
+        RectF box = engine->PageMediabox(pageNo);
+        if (box.IsEmpty()) {
+            continue;
+        }
+        RectF vis = dm->CvtFromScreen(bounds, pageNo).Intersect(box);
+        if (vis.IsEmpty()) {
+            continue;
+        }
+
+        Point p0 = dm->CvtToScreen(pageNo, PointF(box.x, box.y));
+        Point px = dm->CvtToScreen(pageNo, PointF(box.x + kPageGridMinorPt, box.y));
+        Point py = dm->CvtToScreen(pageNo, PointF(box.x, box.y + kPageGridMinorPt));
+        int cell = std::min(PageGridScreenDist(p0, px), PageGridScreenDist(p0, py));
+        if (cell * kPageGridMajorEvery < kPageGridMinMajorPx) {
+            continue;
+        }
+        bool drawMinor = cell >= kPageGridMinMinorPx;
+        float step = drawMinor ? kPageGridMinorPt : (kPageGridMinorPt * (float)kPageGridMajorEvery);
+
+        float x0 = PageGridAlignDown(vis.x, box.x, step);
+        float y0 = PageGridAlignDown(vis.y, box.y, step);
+        float x1 = vis.x + vis.dx;
+        float y1 = vis.y + vis.dy;
+        int nx = (int)((x1 - x0) / step) + 2;
+        int ny = (int)((y1 - y0) / step) + 2;
+        if (drawMinor && nx > 0 && ny > 0 && nx * ny > kPageGridMaxDots) {
+            drawMinor = false;
+            step = kPageGridMinorPt * (float)kPageGridMajorEvery;
+            x0 = PageGridAlignDown(vis.x, box.x, step);
+            y0 = PageGridAlignDown(vis.y, box.y, step);
+        }
+
+        int saved = SaveDC(hdc);
+        IntersectClipRect(hdc, bounds.x, bounds.y, bounds.x + bounds.dx, bounds.y + bounds.dy);
+        for (float y = y0; y <= y1 + 0.01f; y += step) {
+            bool yMajor = PageGridIsMajor(y, box.y);
+            for (float x = x0; x <= x1 + 0.01f; x += step) {
+                Point pt = dm->CvtToScreen(pageNo, PointF(x, y));
+                bool major = !drawMinor || (yMajor && PageGridIsMajor(x, box.x));
+                int sz = major ? 3 : 1;
+                int o = sz / 2;
+                RECT rc = {pt.x - o, pt.y - o, pt.x - o + sz, pt.y - o + sz};
+                FillRect(hdc, &rc, br);
+            }
+        }
+        RestoreDC(hdc, saved);
+    }
+    DeleteObject(br);
 }
 
 // CmdTogglePageBoxes: outline the PDF boxes this page actually declares
@@ -3271,6 +3391,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
     WindowTab* tab = win->CurrentTab();
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
+    if (ShowPageGrid() && win->presentation == PM_DISABLED) {
+        PaintPageGrid(dm, hdc);
+    }
     GfxHdc gfx(hdc);
 
     // empty form fields, under find/selection so those stay visible
