@@ -28,6 +28,26 @@ int dpiY = 96;
 
 static int gWineDpiOverride = 0;
 
+static void DpiMaybeReadEnvOverride() {
+    static bool done = false;
+    if (done) {
+        return;
+    }
+    done = true;
+    if (gDpiOverride > 0) {
+        return;
+    }
+    char buf[16]{};
+    DWORD n = GetEnvironmentVariableA("SUMATRA_DPI_OVERRIDE", buf, (DWORD)sizeof(buf));
+    if (n == 0 || n >= (DWORD)sizeof(buf)) {
+        return;
+    }
+    int pct = atoi(buf);
+    if (pct >= 50 && pct <= 500) {
+        gDpiOverride = pct;
+    }
+}
+
 void DpiSetWineOverride(int dpi) {
     gWineDpiOverride = dpi;
 }
@@ -60,6 +80,7 @@ static bool DpiFromMonitor(HMONITOR h, int* outX, int* outY) {
 // The monitor that contains (x,y), for seeding layout DPI before a window
 // exists. GetForegroundWindow / HWND_DESKTOP report the *primary* monitor.
 int DpiGetForPoint(int x, int y) {
+    DpiMaybeReadEnvOverride();
     if (gDpiOverride > 0) {
         return MulDiv(96, gDpiOverride, 100);
     }
@@ -79,6 +100,7 @@ int DpiGetForPoint(int x, int y) {
 // toolbar and tab bar 2.5× too big when launching on a 100% screen next to a
 // 250% primary (discussion #4831).
 static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
+    DpiMaybeReadEnvOverride();
     int x = 96;
     int y = 96;
     if (gDpiOverride > 0 && !DpiIsDesktopHwnd(hwnd)) {

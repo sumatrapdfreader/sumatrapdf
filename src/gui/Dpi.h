@@ -6,7 +6,8 @@
 // whole app is on a 125% / 150% monitor. Lets DPI-change handling be tested
 // without a second monitor. HWND_DESKTOP keeps reporting the real system DPI,
 // so code that mixes per-window and system DPI misbehaves here the same way it
-// does on a real multi-monitor setup.
+// does on a real multi-monitor setup. SUMATRA_DPI_OVERRIDE=<percent> sets this
+// at process start (the installer has no debug command to toggle it).
 extern int gDpiOverride;
 
 // Current layout DPI. DpiScale() and DpiGet() read these. Message dispatch

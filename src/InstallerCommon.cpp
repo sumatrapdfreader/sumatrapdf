@@ -21,6 +21,7 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/Dpi.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
@@ -47,6 +48,7 @@ using Gdiplus::SolidBrush;
 using Gdiplus::StringAlignmentCenter;
 using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsDirectionRightToLeft;
+using Gdiplus::UnitPixel;
 
 Gdiplus::Color gCol1(196, 64, 50);
 Gdiplus::Color gCol1Shadow(134, 48, 39);
@@ -862,14 +864,23 @@ void AnimStep() {
     }
 }
 
+// GDI+ Font(name, emSize) defaults to UnitPoint and converts with the Graphics
+// DPI. The installer window is already DpiScale'd; on Windows 7 GDI+ may still
+// use the real screen DPI while the process is 96-DPI virtualized, so the logo
+// is scaled twice (issue #6025). Draw in pixels at our layout DPI.
+static float ImpactPx(int sizePt) {
+    return (float)DpiGet() * (float)sizePt / 72.f;
+}
+
 static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
-    static BOOL didLayout = FALSE;
-    if (didLayout) {
+    static int laidOutDx = 0;
+    if (laidOutDx == dx) {
         return;
     }
+    laidOutDx = dx;
 
     StringFormat sfmt;
-    const float letterSpacing = -12.f;
+    const float letterSpacing = -(float)DpiScale(12);
     float totalDx = -letterSpacing; // counter last iteration of the loop
     WCHAR s[2]{};
     Gdiplus::PointF origin(0.f, 0.f);
@@ -890,13 +901,12 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
         x += letterSpacing;
     }
     RevealingLettersAnimStart();
-    didLayout = TRUE;
 }
 
 static float DrawMessage(Graphics& g, Str msg, float y, float dx, Gdiplus::Color color) {
     WCHAR* s = CWStrTemp(msg);
 
-    Font f(L"Impact", 16, FontStyleRegular);
+    Font f(L"Impact", ImpactPx(16), FontStyleRegular, UnitPixel);
     Gdiplus::RectF maxbox(0, y, dx, 0);
     Gdiplus::RectF bbox;
     g.MeasureString(s, -1, &f, maxbox, &bbox);
@@ -932,15 +942,16 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
         }
 
         g.RotateTransform(li.rotation, MatrixOrderAppend);
+        float dyOff = li.dyOff * (float)DpiGet() / 96.f;
         if (kDrawTextShadow) {
             // draw shadow first
             SolidBrush b2(li.colShadow);
-            Gdiplus::PointF o2(li.x - 3.f, y + 4.f + li.dyOff);
+            Gdiplus::PointF o2(li.x - (float)DpiScale(3), y + (float)DpiScale(4) + dyOff);
             g.DrawString(s, 1, f, o2, &b2);
         }
 
         SolidBrush b1(li.col);
-        Gdiplus::PointF o1(li.x, y + li.dyOff);
+        Gdiplus::PointF o1(li.x, y + dyOff);
         g.DrawString(s, 1, f, o1, &b1);
         g.RotateTransform(li.rotation, MatrixOrderAppend);
         g.ResetTransform();
@@ -950,13 +961,13 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     float x = gLetters[dimof(gLetters) - 1].x;
     g.TranslateTransform(x, y);
     g.RotateTransform(45.f);
-    float x2 = 15;
-    float y2 = -34;
+    float x2 = (float)DpiScale(15);
+    float y2 = -(float)DpiScale(34);
 
     const WCHAR* ver_s = L"v" CURR_VERSION_STR;
     if (kDrawTextShadow) {
         SolidBrush b1(Gdiplus::Color(0, 0, 0));
-        g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);
+        g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - (float)DpiScale(2), y2 - (float)DpiScale(1)), &b1);
     }
     SolidBrush b2(Gdiplus::Color(0xff, 0xff, 0xff));
     g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2, y2), &b2);
@@ -968,7 +979,7 @@ static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(Gdiplus::UnitPixel);
 
-    Font f(L"Impact", 40, FontStyleRegular);
+    Font f(L"Impact", ImpactPx(40), FontStyleRegular, UnitPixel);
     CalcLettersLayout(g, &f, r.dx);
 
     Gdiplus::Color bgCol;
@@ -978,8 +989,8 @@ static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
     r2.Inflate(1, 1);
     g.FillRectangle(&bgBrush, r2);
 
-    Font f2(L"Impact", 16, FontStyleRegular);
-    DrawSumatraLetters(g, &f, &f2, 18.f);
+    Font f2(L"Impact", ImpactPx(16), FontStyleRegular, UnitPixel);
+    DrawSumatraLetters(g, &f, &f2, (float)DpiScale(18));
 
     if (skipMessage) {
         return;
@@ -987,7 +998,7 @@ static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
 
     float msgY = (float)(r.dy / 2);
     if (gMsg) {
-        msgY += DrawMessage(g, gMsg, msgY, (float)r.dx, gMsgColor) + 5;
+        msgY += DrawMessage(g, gMsg, msgY, (float)r.dx, gMsgColor) + (float)DpiScale(5);
     }
     if (gMsgError) {
         DrawMessage(g, gMsgError, msgY, (float)r.dx, COLOR_MSG_FAILED);
