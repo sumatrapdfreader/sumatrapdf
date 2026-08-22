@@ -78,6 +78,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 
 - `+` / `-` zoom in/out
 - `Ctrl + scroll wheel` zoom in/out
+- `Right Mouse + scroll wheel` zoom in/out (hold the button; a click without moving still opens the context menu)
 - `z` cycle zoom: Fit Page → Fit Width → Fit Height → Fit Content → Shrink To Fit → Fit Page
 - `c` toggle between continuous/non-continuous mode
 - `Ctrl + Shift + -` rotate left
@@ -121,7 +122,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `Ctrl + Q` Quit app (close all windows and opened documents)
 - `Ctrl + Left Mouse` Select area (can then use with copy, print or +/- zoom)
 - `Ctrl + B` Add current page to favorites
-- `Right Mouse` Grab and pan page in any direction
+- `Right Mouse` drag to pan the page in any direction
 - `Alt + Scroll Wheel` Increase vertical scroll wheel steps (faster)
 - `Shift + Scroll Wheel` Pan horizontally with scroll wheel
 - `Ctrl + Y` Show dropdown zoom control

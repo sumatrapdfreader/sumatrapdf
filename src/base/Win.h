@@ -305,6 +305,7 @@ bool IsKeyPressed(int key);
 bool IsShiftPressed();
 bool IsAltPressed();
 bool IsCtrlPressed();
+bool IsRightButtonPressed();
 
 //--- cursors / mouse tracking
 

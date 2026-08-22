@@ -22,6 +22,7 @@ There are many ways to navigate around the document.
 - scroll up / down with mouse scroll wheel or touch pad scrolling gesture
 - press `Alt` while scrolling : scrolls faster (by half page instead of by line)
 - mouse over scrollbar : scrolls faster (by half page instead of by line)
+- hold the **right mouse button** and drag : pan the page (a click without dragging opens the context menu)
 
 ## Reading zoomed-in pages without the keyboard
 
@@ -65,6 +66,7 @@ For comic books and manga (right-to-left reading, double-page spreads, `LimitToW
 ## With mouse
 
 - `Ctrl` + mouse scroll wheel : zoom in / out
+- hold the **right mouse button** + mouse scroll wheel : zoom in / out (same as Ctrl + wheel; the context menu does not open if you zoomed)
 - `Ctrl` + touch pad scroll gesture : zoom in / out
 - pinch zoom gesture on touch screen
 - with `ClickEdgeToTurnPage = true` (advanced setting): click the left fifth of the page area for the previous page, the right fifth for the next page (sides reverse in manga mode)

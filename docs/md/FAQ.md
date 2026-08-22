@@ -38,6 +38,10 @@ Press `Shift + I` again (`CmdInvertColors`) — it is a session-only swap of the
 
 Set **`DocumentColorsFollowTheme = smart`** (or press **`Shift + I`** once from `off`). That recolors text and background but keeps images as in the file. Use **`legacy`** only if you want images recolored too (old invert-style behavior). UI chrome is separate: pick a dark **`Theme`**. Details: [Customize theme colors](Customize-theme-colors.md).
 
+**How do I pan and zoom with the mouse like Adobe Reader?**
+
+Hold the **right mouse button** and drag to pan; keep holding and use the **scroll wheel** to zoom at the cursor. A right-click without dragging still opens the context menu. `Ctrl + scroll wheel` also zooms. See [Scrolling and zooming](Scrolling-and-zooming.md).
+
 **How do I get a dark background for reflowed EPUBs?**
 
 Prefer **`DocumentColorsFollowTheme = smart`** for MuPDF page recoloring that preserves images. You can also tune `EBookUI` (`CustomCSS`, `IgnoreDocumentCSS`, `WindowBgCol`) — see [Customize eBook UI](Customize-eBook-UI.md).

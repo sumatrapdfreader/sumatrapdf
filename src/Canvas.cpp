@@ -3676,11 +3676,12 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     DisplayModel* dm = win->AsFixed();
 
-    // Note: not all mouse drivers correctly report the Ctrl key's state
-    // isCtrl is also set if this is pinch gestore from touchpad (on thinkpad x1 at least).
+    // Note: not all mouse drivers correctly report the Ctrl / right-button
+    // state on WM_MOUSEWHEEL. isCtrl is also set if this is a pinch gesture
+    // from a touchpad (on a ThinkPad X1 at least).
     bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
     bool isAlt = (LOWORD(wp) & MK_ALT) || IsAltPressed();
-    bool isRightButton = (LOWORD(wp) & MK_RBUTTON);
+    bool isRightButton = (LOWORD(wp) & MK_RBUTTON) || IsRightButtonPressed();
     bool isZooming = isCtrl || isRightButton;
     if (isZooming) {
         ZoomByMouseWheel(win, wp);

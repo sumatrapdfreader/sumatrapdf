@@ -1318,6 +1318,13 @@ bool IsCtrlPressed() {
     return IsKeyPressed(VK_CONTROL);
 }
 
+// Some mouse drivers omit MK_RBUTTON on WM_MOUSEWHEEL, the same way they omit
+// MK_CONTROL. Use this alongside the message flags so hold-right + wheel still
+// zooms.
+bool IsRightButtonPressed() {
+    return IsKeyPressed(VK_RBUTTON);
+}
+
 #if 0
 // The result value contains major and minor version in the high resp. the low WORD
 DWORD GetFileVersion(const WCHAR* path) {
