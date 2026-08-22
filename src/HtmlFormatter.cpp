@@ -140,7 +140,8 @@ StyleRule StyleRule::Parse(CssPullParser* parser) {
         if (prop->type == Css_Text_Align) {
             rule.textAlign = FindAlignAttr(prop->s);
         } else if (prop->type == Css_Text_Indent) {
-            // TODO: some documents use Css_Padding_Left for indentation
+            ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
+        } else if (prop->type == Css_Padding_Left) {
             ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
         }
     }
