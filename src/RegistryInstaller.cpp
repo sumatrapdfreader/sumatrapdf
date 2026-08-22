@@ -157,8 +157,8 @@ static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
 
     Str desc = StrL("SumatraPDF is a PDF reader.");
     ok &= LoggedWriteRegStr(hkey, appCapabilityPath, StrL("ApplicationDescription"), desc);
-    Str appLongName = StrL("SumatraPDF Reader");
-    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, StrL("ApplicationName"), appLongName);
+    // ApplicationName must match the RegisteredApplications value name (kAppName).
+    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, StrL("ApplicationName"), StrL(kAppName));
     // icon shown next to the app in Settings > Default Apps
     TempStr appIcon = str::JoinTemp(StrL("\""), installedExePath, StrL("\",0"));
     ok &= LoggedWriteRegStr(hkey, appCapabilityPath, StrL("ApplicationIcon"), appIcon);
