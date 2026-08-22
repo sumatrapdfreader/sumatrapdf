@@ -1382,17 +1382,38 @@ static void makeFullScrollbar(SCROLLINFO& si) {
     si.nPage = 100;
 }
 
+// True if the standard scrollbar actually occupies non-client space. ShowScrollBar
+// while the window is hidden can set WS_VSCROLL / WS_HSCROLL without WM_NCCALCSIZE,
+// so the style bit is on but the client is not shrunk and no bar is painted
+// (session restore, issue #6028).
+static bool WinScrollBarHasClientGap(HWND hwnd, int bar) {
+    Rect wr = HwndWindowRect(hwnd);
+    Rect cr = HwndClientRect(hwnd);
+    int gap = (bar == SB_VERT) ? (wr.dx - cr.dx) : (wr.dy - cr.dy);
+    return gap >= 4;
+}
+
 // ShowScrollBar is a no-op when the style bit already matches. Calling it
 // anyway sends WINDOWPOS/WM_SIZE, which re-enters UpdateCanvasSize and
 // UpdateScrollbars (hang: ScrollbarInSinglePage + zoom, issue #5969).
+// If the bit is already on but the bar was never laid out (hidden restore),
+// hide then show so WM_NCCALCSIZE runs. ShowScrollBar(TRUE) alone does not
+// layout when the bit is already set.
 static void ShowWinScrollBar(HWND hwnd, int bar, BOOL show) {
     DWORD bit = (bar == SB_HORZ) ? WS_HSCROLL : WS_VSCROLL;
     DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
     bool isShown = (style & bit) != 0;
-    if (isShown == (show != FALSE)) {
-        return;
+    bool want = show != FALSE;
+    if (isShown == want) {
+        if (!want || !HwndIsVisible(hwnd) || WinScrollBarHasClientGap(hwnd, bar)) {
+            return;
+        }
+        ShowScrollBar(hwnd, bar, FALSE);
     }
     ShowScrollBar(hwnd, bar, show);
+    if (want) {
+        RedrawWindow(hwnd, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+    }
 }
 
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
