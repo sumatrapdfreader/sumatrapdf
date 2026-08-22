@@ -231,6 +231,19 @@ static TempStr FormatSettingValueTemp(SettingItem* item) {
     }
 }
 
+static TempStr FormatSettingDefaultTemp(SettingItem* item) {
+    switch (item->type) {
+        case SettingType::Bool:
+            return str::DupTemp(item->defBool ? StrL("true") : StrL("false"));
+        case SettingType::Int:
+            return fmt("%d", item->defInt);
+        case SettingType::Float:
+            return fmt("%g", item->defFloat);
+        default:
+            return str::DupTemp(item->defStr);
+    }
+}
+
 // Show what a setting does before it's saved: some settings change how pages
 // are rendered, and picking a value from a list is guesswork without seeing it.
 // The value is previewed without touching gGlobalPrefs, so Cancel (or closing
@@ -1480,6 +1493,19 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
             out.Append(item->name);
             out.AppendChar('\n');
         }
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("nondefault"))) {
+        int n = 0;
+        for (SettingItem* item : wnd->items) {
+            if (!SettingDiffersFromDefault(item)) {
+                continue;
+            }
+            n++;
+            out.Append(
+                fmt("%s=%s default=%s\n", item->name, FormatSettingValueTemp(item), FormatSettingDefaultTemp(item)));
+        }
+        out.Append(fmt("count=%d\n", n));
         return finish(0);
     }
     if (str::Eq(action, StrL("changed"))) {

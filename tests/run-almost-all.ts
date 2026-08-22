@@ -163,6 +163,7 @@ import { testit as issue6025 } from "./issue-6025.ts";
 import { testit as issue5946 } from "./issue-5946.ts";
 import { testit as issue6008 } from "./issue-6008.ts";
 import { testit as issue6012 } from "./issue-6012.ts";
+import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
 
 export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
@@ -323,6 +324,7 @@ export const tests: NamedTest[] = [
   ["issue-5946", issue5946],
   ["issue-6008", issue6008],
   ["issue-6012", issue6012],
+  ["adv-settings-fresh-defaults", advSettingsFreshDefaults],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

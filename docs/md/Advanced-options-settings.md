@@ -131,7 +131,7 @@ ShowToolbar = true
 ; toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over
 ; the page, sized to its natural width and centered, only shown when the mouse
 ; is near it). if empty, derived from ShowToolbar (introduced in version 3.7)
-Toolbar =
+Toolbar = show
 
 ; where the toolbar is placed: top or bottom (applies to both show and overlay
 ; modes) (introduced in version 3.7)
@@ -280,7 +280,7 @@ TabWidth = 300
 ; Light, Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark,
 ; Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl,
 ; Ayu, Palenight, System (introduced in version 3.5)
-Theme = 
+Theme = Light
 
 ; the light theme the light/dark toggle and the System theme switch to
 ; (introduced in version 3.7)
@@ -794,7 +794,7 @@ Fullscreen [
     ; toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay
     ; (toolbar floats over the page, only shown when the mouse is near it). if
     ; empty, derived from Fullscreen.ShowToolbar (introduced in version 3.7)
-    Toolbar =
+    Toolbar = hide
 
     ; if true, show the menu bar in fullscreen mode
     ShowMenubar = false

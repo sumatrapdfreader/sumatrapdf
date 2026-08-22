@@ -1450,7 +1450,7 @@ static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults),
 
 static const FieldInfo gFullscreenFields[] = {
     {offsetof(Fullscreen, showToolbar), SettingType::Bool, false, true},
-    {offsetof(Fullscreen, toolbar), SettingType::String, 0},
+    {offsetof(Fullscreen, toolbar), SettingType::String, (intptr_t)"hide"},
     {offsetof(Fullscreen, showMenubar), SettingType::Bool, false},
     {offsetof(Fullscreen, displayMode), SettingType::String, (intptr_t)""},
 };
@@ -1874,7 +1874,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showTips), SettingType::Bool, true},
     {offsetof(GlobalPrefs, customColors), SettingType::String, 0, true},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true, true},
-    {offsetof(GlobalPrefs, toolbar), SettingType::String, 0},
+    {offsetof(GlobalPrefs, toolbar), SettingType::String, (intptr_t)"show"},
     {offsetof(GlobalPrefs, toolbarPosition), SettingType::String, (intptr_t)"top"},
     {offsetof(GlobalPrefs, searchUIFloating), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
@@ -1906,7 +1906,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, fastScrollOverScrollbar), SettingType::Bool, false},
     {offsetof(GlobalPrefs, preventSleepInFullscreen), SettingType::Bool, true},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
-    {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t)""},
+    {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t)"Light"},
     {offsetof(GlobalPrefs, lastLightTheme), SettingType::String, (intptr_t)"", true},
     {offsetof(GlobalPrefs, lastDarkTheme), SettingType::String, (intptr_t)"", true},
     {offsetof(GlobalPrefs, documentColorsFollowTheme), SettingType::String, (intptr_t)"off"},

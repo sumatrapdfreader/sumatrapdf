@@ -640,7 +640,7 @@ const fullscreen: Field[] = [
   field(
     "Toolbar",
     Str,
-    null,
+    "hide",
     "toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay " +
       "(toolbar floats over the page, only shown when the mouse is near it). " +
       "if empty, derived from Fullscreen.ShowToolbar",
@@ -1156,7 +1156,7 @@ const globalPrefs: Field[] = [
   field(
     "Toolbar",
     Str,
-    null,
+    "show",
     "toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over " +
       "the page, sized to its natural width and centered, only shown when the mouse is near it). " +
       "if empty, derived from ShowToolbar",
@@ -1342,7 +1342,7 @@ const globalPrefs: Field[] = [
   field(
     "Theme",
     Str,
-    "",
+    "Light",
     "the name of the theme to use. System follows the Windows light/dark app mode " +
       "and switches between LastLightTheme and LastDarkTheme. Built-in themes: " +
       "Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, " +
