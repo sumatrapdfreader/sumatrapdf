@@ -1201,7 +1201,7 @@ void AdvancedSettingsWnd::UpdateChangedCountLabel() {
     bool show = n > 0;
     Visibility vis = show ? Visibility::Visible : Visibility::Collapse;
     if (show) {
-        changedCountText->SetText(fmt(_TRA("changed settings: %d").s, n));
+        changedCountText->SetText(fmt(_TRA("Unsaved changes: %d").s, n));
     }
     changedCountRow->SetVisibility(vis);
     changedCountText->SetIsVisible(show);
