@@ -1381,6 +1381,9 @@ void UpdateAIChatDpi(MainWindow* win, int dpi) {
     int padY = DpiScaleByDpi(dpi, 5);
     int padX = DpiScaleByDpi(dpi, 12);
     win->aiChatStopBtn->textPadding = Insets{padY, padX, padY, padX};
+    if (win->aiChatHeader && win->aiChatHeader->ChildrenCount() > 1) {
+        ApplyLabelWithCloseDpi(win->aiChatLabel, AsVirtCloseButton(win->aiChatHeader->LayoutChildAt(1)), dpi);
+    }
     RelayoutAIChatPanel(win);
     HwndInvalidate(win->hwndAiChatBox, true);
 }

@@ -2875,23 +2875,35 @@ constexpr int kLabelPad = 2;
 constexpr int kCloseBtnDx = 16;
 constexpr int kCloseBtnGapDx = 8;
 
-LabelWithClose NewLabelWithClose(HWND hwnd, PlatformFont* font, const VirtMouseHandler& onClose) {
-    int pad = DpiScale(kLabelPad);
-    auto* label = NewVirtText({
-        .font = font,
-        .isRtl = HwndIsRtl(hwnd),
-        .ellipsis = true,
-        .padding = Insets{pad, pad, pad, pad},
-    });
-
-    auto* closeBtn = new VirtCloseButton();
-    int btnDx = DpiScale(kCloseBtnDx);
-    int gap = DpiScale(kCloseBtnGapDx);
+// Scale the header ✕ and label padding for this window's DPI.
+void ApplyLabelWithCloseDpi(VirtText* label, VirtCloseButton* closeBtn, int dpi) {
+    if (!label || !closeBtn || dpi <= 0) {
+        return;
+    }
+    int pad = DpiScaleByDpi(dpi, kLabelPad);
+    int btnDx = DpiScaleByDpi(dpi, kCloseBtnDx);
+    int gap = DpiScaleByDpi(dpi, kCloseBtnGapDx);
+    label->padding = Insets{pad, pad, pad, pad};
     // the padding is part of the ideal size, so it enlarges the hit area
     // without shrinking the ✕ itself
     closeBtn->padding = Insets{0, pad, 0, gap};
     closeBtn->idealSize = {btnDx + pad + gap, btnDx};
+}
+
+LabelWithClose NewLabelWithClose(HWND hwnd, PlatformFont* font, const VirtMouseHandler& onClose) {
+    int dpi = DpiGetForHwnd(hwnd);
+    if (dpi <= 0) {
+        dpi = DpiGet();
+    }
+    auto* label = NewVirtText({
+        .font = font,
+        .isRtl = HwndIsRtl(hwnd),
+        .ellipsis = true,
+    });
+
+    auto* closeBtn = new VirtCloseButton();
     closeBtn->onClick = onClose;
+    ApplyLabelWithCloseDpi(label, closeBtn, dpi);
 
     auto* box = new HBox();
     box->alignMain = MainAxisAlign::MainStart;
@@ -3054,6 +3066,13 @@ VirtButton* AsVirtButton(ILayout* l) {
 VirtIconButton* AsVirtIconButton(ILayout* l) {
     if (l && l->GetKind() == kindVirtCtrlIconButton) {
         return (VirtIconButton*)l;
+    }
+    return nullptr;
+}
+
+VirtCloseButton* AsVirtCloseButton(ILayout* l) {
+    if (l && l->GetKind() == kindVirtCtrlCloseButton) {
+        return (VirtCloseButton*)l;
     }
     return nullptr;
 }
@@ -3356,9 +3375,18 @@ bool VirtHostOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp
     if (!root || len(root->tops) == 0) {
         return false;
     }
-    if (msg == WM_ERASEBKGND) {
-        // WM_PAINT fills the whole client, so erasing first only flickers
-        res = TRUE;
+    if (msg == WM_ERASEBKGND || msg == WM_PRINTCLIENT) {
+        // A themed / darkmode checkbox asks the parent to paint under its
+        // label (DrawThemeParentBackground). Claiming handled with no fill
+        // left that label on a different color than the combos (issue #6017).
+        // The DC is clipped to the child for that request, so this does not
+        // blank the rest of the panel. WM_PAINT still double-buffers the
+        // virtual controls.
+        HDC hdc = (HDC)wp;
+        if (hdc) {
+            HdcFillRect(hdc, HwndClientRect(hwnd), bg);
+        }
+        res = msg == WM_ERASEBKGND ? TRUE : 0;
         return true;
     }
     if (msg == WM_NCHITTEST) {
