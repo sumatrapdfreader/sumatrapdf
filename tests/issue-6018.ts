@@ -1,13 +1,14 @@
 // #6018: ComicBookUI.PageSpacing must change the gap between CBZ pages in
 // continuous view, PageSpacing must appear in Advanced Settings, and 0 0 must
-// not leave a 1px canvas seam (layout size must match EngineImages/tile Round).
+// not leave a canvas seam. Layout size must match EngineImages/tile Round, and
+// the GDI+ bicubic path used for WebP must not darken page edges toward the
+// black comic canvas.
 //
 // CBZ files read ComicBookUI.PageSpacing, not FixedPageUI.PageSpacing.
 //
 // Run: bun tests/issue-6018.ts [--no-build]
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { deflateSync } from "node:zlib";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { ControlCommand } from "./control.ts";
@@ -26,38 +27,26 @@ function crc32(buf: Buffer): number {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
-}
+// Lossless 400x51 solid-color WebP (VP8L). WebP uses EngineImages' GDI+ scale
+// path (mupdf is not used), which is what left a 1-2px dark seam at
+// PageSpacing 0 0. 400x51 so fit-width zoom * height is not an integer.
+const kWebpRed400x51 = Buffer.from([
+  82, 73, 70, 70, 36, 0, 0, 0, 87, 69, 66, 80, 86, 80, 56, 76, 23, 0, 0, 0, 47, 143, 129, 12, 0, 7, 80, 148, 34, 23,
+  165, 255, 1, 0, 69, 250, 255, 95, 34, 250, 159, 210, 7, 0,
+]);
+const kWebpBlue400x51 = Buffer.from([
+  82, 73, 70, 70, 36, 0, 0, 0, 87, 69, 66, 80, 86, 80, 56, 76, 23, 0, 0, 0, 47, 143, 129, 12, 0, 7, 80, 168, 162, 148,
+  182, 255, 1, 0, 69, 250, 255, 95, 34, 250, 159, 210, 7, 0,
+]);
+const kPage1Color = 0x002828c8; // RGB(200,40,40) as COLORREF
+const kPage2Color = 0x00b45028; // RGB(40,80,180) as COLORREF
 
-function makePng(w: number, h: number, rgb: [number, number, number]): Buffer {
-  const raw = Buffer.alloc((w * 3 + 1) * h);
-  for (let y = 0; y < h; y++) {
-    const row = y * (w * 3 + 1);
-    raw[row] = 0;
-    for (let x = 0; x < w; x++) {
-      const i = row + 1 + x * 3;
-      raw[i] = rgb[0];
-      raw[i + 1] = rgb[1];
-      raw[i + 2] = rgb[2];
-    }
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(w, 0);
-  ihdr.writeUInt32BE(h, 4);
-  ihdr[8] = 8;
-  ihdr[9] = 2;
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    pngChunk("IHDR", ihdr),
-    pngChunk("IDAT", deflateSync(raw)),
-    pngChunk("IEND", Buffer.alloc(0)),
-  ]);
+function colorDist(c: number, want: number): number {
+  return (
+    Math.abs((c & 0xff) - (want & 0xff)) +
+    Math.abs(((c >> 8) & 0xff) - ((want >> 8) & 0xff)) +
+    Math.abs(((c >> 16) & 0xff) - ((want >> 16) & 0xff))
+  );
 }
 
 function makeZip(entries: { name: string; data: Buffer }[]): Buffer {
@@ -168,10 +157,8 @@ export async function testit(): Promise<void> {
   writeFileSync(
     cbz,
     makeZip([
-      // 400x51 so fit-width zoom * height is not an integer (the 1px
-      // layout-vs-tile seam only shows then)
-      { name: "001.png", data: makePng(400, 51, [200, 40, 40]) },
-      { name: "002.png", data: makePng(400, 51, [40, 80, 180]) },
+      { name: "001.webp", data: kWebpRed400x51 },
+      { name: "002.webp", data: kWebpBlue400x51 },
     ]),
   );
 
@@ -205,11 +192,18 @@ export async function testit(): Promise<void> {
     const x = p1.sx + Math.floor(p1.sdx / 2);
     const y = p1.sy + p1.sdy - 2;
     const col = readWindowDCColumn(canvas, x, y, 5);
+    const hex = col.map((c) => c.toString(16)).join(",");
     const isBlack = (c: number) => c === 0;
     if (col.slice(1, 4).some(isBlack)) {
-      throw new Error(
-        `issue-6018: 1px canvas seam between pages at y=${y}: ${col.map((c) => c.toString(16)).join(",")}\n${z.raw}`,
-      );
+      throw new Error(`issue-6018: 1px canvas seam between pages at y=${y}: ${hex}\n${z.raw}`);
+    }
+    // last pixel of page 1 / first of page 2: GDI+ bicubic without wrap-mode
+    // darkens these toward the black canvas (issue #6018 follow-up)
+    if (colorDist(col[1]!, kPage1Color) > 80) {
+      throw new Error(`issue-6018: page 1 edge darkened at y=${y + 1}: ${hex}\n${z.raw}`);
+    }
+    if (colorDist(col[2]!, kPage2Color) > 80) {
+      throw new Error(`issue-6018: page 2 edge darkened at y=${y + 2}: ${hex}\n${z.raw}`);
     }
 
     sendCommandSync(f0, cmdId("CmdAdvancedSettings"));

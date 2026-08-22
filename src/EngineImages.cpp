@@ -717,7 +717,14 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
                 g.Clear(Gdiplus::Color(0, 0, 0, 0));
                 // pageRc is in page-pixel coords; screen is the zoomed dest size.
                 Gdiplus::RectF dest(0, 0, (float)screen.dx, (float)screen.dy);
-                g.DrawImage(srcBmp, dest, pageRc.x, pageRc.y, pageRc.dx, pageRc.dy, Gdiplus::UnitPixel);
+                // Bicubic samples outside the source rect. Without a wrap mode
+                // GDI+ treats those samples as transparent, so the edge pixels
+                // composite toward the cleared dest and show as a 1-2px dark
+                // seam when comic pages sit on the black canvas at PageSpacing
+                // 0 0 (issue #6018).
+                Gdiplus::ImageAttributes imgAttrs;
+                imgAttrs.SetWrapMode(Gdiplus::WrapModeTileFlipXY);
+                g.DrawImage(srcBmp, dest, pageRc.x, pageRc.y, pageRc.dx, pageRc.dy, Gdiplus::UnitPixel, &imgAttrs);
                 Pixmap* result = PixmapFromGdiplus(dstBmp);
                 delete dstBmp;
                 delete srcBmp;
