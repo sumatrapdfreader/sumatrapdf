@@ -61,7 +61,8 @@ namespace dmlib_subclass
 		windowMenuBar,
 		windowSettingChange,
 		taskDlg,
-		comDlg
+		comDlg,
+		comboLBox
 	};
 
 	/**

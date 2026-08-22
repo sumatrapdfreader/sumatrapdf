@@ -356,6 +356,7 @@ extern "C"
 			}
 
 			case COLOR_3DFACE:
+			case COLOR_SCROLLBAR:
 			{
 				return g_clrGridlines;
 			}

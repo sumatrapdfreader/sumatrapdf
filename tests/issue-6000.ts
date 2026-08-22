@@ -1,6 +1,7 @@
-// Dark theme: combo corners, combo drop-down list, and tooltips must not stay
-// white (issue #6000). Visual styles ignore TTM_SETTIP* / WM_CTLCOLOR* unless
-// stripped; Win11 rounded combo frames left unpainted corner pixels.
+// Dark theme: combo corners, combo drop-down list + scrollbar, and tooltips
+// must not stay white (issue #6000). Visual styles ignore TTM_SETTIP* /
+// WM_CTLCOLOR* unless stripped; ComboLBox items use CTLCOLOR and the list's
+// classic scrollbar is painted dark.
 //
 // Run: bun tests/issue-6000.ts [--no-build]
 
@@ -19,11 +20,12 @@ import {
   isWindowVisible,
   postMessage,
   sendMessage,
+  sendText,
   setCursorPos,
   sleep,
   WM_CLOSE,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
+import { killAndWait, launchControlled, pressEnter, sendCommand, sendCommandSync } from "./win-automation.ts";
 
 const CB_SHOWDROPDOWN = 0x014f;
 const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
@@ -46,6 +48,53 @@ function grab(hwnd: number): { w: number; h: number; data: Uint8Array } {
     throw new Error("issue-6000: capture failed");
   }
   return { w, h, data };
+}
+
+function assertDarkDropDown(list: number, label: string, pngName: string): void {
+  captureWindowToPng(list, tmpPath(pngName));
+  const drop = grab(list);
+  let light = 0;
+  let n = 0;
+  for (let y = 2; y < drop.h - 2; y += 3) {
+    for (let x = 2; x < drop.w - 2; x += 3) {
+      n++;
+      if (tooLight(drop.data, x, y, drop.w)) {
+        light++;
+      }
+    }
+  }
+  if (n === 0 || light / n > 0.4) {
+    throw new Error(`issue-6000: ${label} drop-down is white in Dark theme (${light}/${n} light samples)`);
+  }
+  // classic combo scrollbar is a strip on the right of ComboLBox
+  const sbLeft = Math.max(2, drop.w - 10);
+  let sbLight = 0;
+  let sbN = 0;
+  for (let y = 4; y < drop.h - 4; y += 2) {
+    for (let x = sbLeft; x < drop.w - 2; x++) {
+      sbN++;
+      if (tooLight(drop.data, x, y, drop.w)) {
+        sbLight++;
+      }
+    }
+  }
+  if (sbN === 0 || sbLight / sbN > 0.5) {
+    throw new Error(`issue-6000: ${label} combo scrollbar is white in Dark theme (${sbLight}/${sbN})`);
+  }
+}
+
+async function openComboList(pid: number, combo: number): Promise<number> {
+  sendMessage(combo, CB_SHOWDROPDOWN, 1, 0);
+  const deadline = Date.now() + 3_000;
+  while (Date.now() < deadline) {
+    const list = findComboList(pid);
+    if (list) {
+      await sleep(50);
+      return list;
+    }
+    await sleep(40);
+  }
+  return 0;
 }
 
 function findFindCombo(pid: number, frame: number): number {
@@ -109,6 +158,7 @@ export async function testit(): Promise<void> {
   writeFileSync(
     join(dir, "SumatraPDF-settings.txt"),
     `Theme = Dark
+UiLanguage = en
 CheckForUpdates = false
 RestoreSession = false
 RememberOpenedFiles = false
@@ -149,6 +199,17 @@ RememberOpenedFiles = false
         throw new Error(`issue-6000: combo corner (${x},${y}) is white in Dark theme`);
       }
     }
+
+    sendText(combo, "a");
+    await pressEnter(combo);
+    await client.waitForRenderIdle();
+    const findList = await openComboList(proc.pid!, combo);
+    if (!findList) {
+      throw new Error("issue-6000: Find ComboLBox drop-down not found");
+    }
+    assertDarkDropDown(findList, "Find", "issue-6000-find-list.png");
+    sendMessage(combo, CB_SHOWDROPDOWN, 0, 0);
+    await sleep(50);
 
     const tb = findChildWindow(frame, "SUMATRA_VIRT_TOOLBAR");
     if (tb) {
@@ -201,37 +262,36 @@ RememberOpenedFiles = false
     if (!zoom.combo) {
       throw new Error("issue-6000: Custom Zoom ComboBox not found");
     }
-    sendMessage(zoom.combo, CB_SHOWDROPDOWN, 1, 0);
-    let list = 0;
-    const listDeadline = Date.now() + 3_000;
-    while (Date.now() < listDeadline) {
-      list = findComboList(proc.pid!);
-      if (list) {
-        break;
-      }
-      await sleep(40);
-    }
+    const list = await openComboList(proc.pid!, zoom.combo);
     if (!list) {
       throw new Error("issue-6000: ComboLBox drop-down not found");
     }
-    await sleep(50);
-    captureWindowToPng(list, tmpPath("issue-6000-list.png"));
-    const drop = grab(list);
-    let light = 0;
-    let n = 0;
-    for (let y = 2; y < drop.h - 2; y += 3) {
-      for (let x = 2; x < drop.w - 2; x += 3) {
-        n++;
-        if (tooLight(drop.data, x, y, drop.w)) {
-          light++;
-        }
-      }
-    }
-    if (n === 0 || light / n > 0.4) {
-      throw new Error(`issue-6000: drop-down list is white in Dark theme (${light}/${n} light samples)`);
-    }
+    assertDarkDropDown(list, "Custom Zoom", "issue-6000-list.png");
     if (zoom.dlg) {
       postMessage(zoom.dlg, WM_CLOSE, 0, 0);
+      await sleep(50);
+    }
+
+    sendCommand(frame, cmdId("CmdOptions"));
+    let opts = { dlg: 0, combo: 0 };
+    const optsDeadline = Date.now() + 5_000;
+    while (Date.now() < optsDeadline) {
+      opts = findDialogCombo(proc.pid!, "SumatraPDF Options");
+      if (opts.combo) {
+        break;
+      }
+      await sleep(50);
+    }
+    if (!opts.combo) {
+      throw new Error("issue-6000: Options ComboBox not found");
+    }
+    const optsList = await openComboList(proc.pid!, opts.combo);
+    if (!optsList) {
+      throw new Error("issue-6000: Options ComboLBox drop-down not found");
+    }
+    assertDarkDropDown(optsList, "Options", "issue-6000-options-list.png");
+    if (opts.dlg) {
+      postMessage(opts.dlg, WM_CLOSE, 0, 0);
       await sleep(50);
     }
   } finally {

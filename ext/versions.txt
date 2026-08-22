@@ -105,6 +105,7 @@ heicdec         dist       2026-07-28
 darkmodelib     0.75.0     2026-07-26
   https://github.com/ozone10/darkmodelib
   https://github.com/ozone10/darkmodelib/commit/fa99647299c4edb3cf662bc14f19b5451090723e
+  local edits in ext/darkmodelib/patches/
 
 jxldec          dist       2026-08-11
   https://github.com/kjk/jxldec

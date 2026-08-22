@@ -1,6 +1,9 @@
 # Set the default behavior.
 *               text=auto
 
+# SumatraPDF local patches: keep committed LF bytes
+patches/** -text
+
 # Visual Studio Project Files
 *.sln           text eol=crlf
 *.csproj        text eol=crlf

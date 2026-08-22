@@ -1551,8 +1551,7 @@ static void setComboBoxCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) DMLIB_M
 			dmlib::replaceClientEdgeWithBorderSafe(cbi.hwndList);
 		}
 
-		// dark scroll bar for list box of combo box
-		::SetWindowTheme(cbi.hwndList, p.m_themeClassName, nullptr);
+		dmlib::setDarkComboLBox(cbi.hwndList);
 	}
 
 	if (!dmlib_subclass::isThemePrefered() && p.m_subclass)
@@ -2871,6 +2870,26 @@ void dmlib::setDarkExplorerTheme(HWND hWnd)
 void dmlib::setDarkScrollBar(HWND hWnd)
 {
 	dmlib::setDarkExplorerTheme(hWnd);
+}
+
+void dmlib::setDarkComboLBox(HWND hList)
+{
+	if (hList == nullptr)
+	{
+		return;
+	}
+	dmlib_win32api::AllowDarkModeForWindow(hList, dmlib::isExperimentalActive());
+	// Empty app name keeps list items off visual styles (WM_CTLCOLORLISTBOX).
+	// pszSubIdList DarkMode_Explorer::ScrollBar is the same part-class
+	// RichEdit uses; ComboLBoxSubclass also paints the NC scrollbar if the
+	// theme does not take (SumatraPDF #6000).
+	::SetWindowTheme(hList, L"", L"");
+	if (dmlib::isEnabled() && dmlib::isExperimentalActive())
+	{
+		::SetWindowTheme(hList, nullptr, L"DarkMode_Explorer::ScrollBar");
+	}
+	dmlib_subclass::SetSubclass(hList, dmlib_subclass::ComboLBoxSubclass, dmlib_subclass::SubclassID::comboLBox);
+	::RedrawWindow(hList, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE | RDW_ERASE);
 }
 
 /**

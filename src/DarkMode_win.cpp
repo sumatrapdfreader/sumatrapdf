@@ -101,6 +101,10 @@ void DarkModeApplyThemeColors() {
     DarkMode::setViewTextColor(ThemeWindowTextColor());
     DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
     DarkMode::calculateTreeViewStyle();
+
+    DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getCtrlBackgroundColor());
+    DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
+    DarkMode::setSysColor(COLOR_BTNFACE, DarkMode::getViewGridlinesColor());
 }
 
 void DarkModeRememberTreeViewStyle() {
@@ -151,6 +155,7 @@ void DarkModeApplyToPopupWindow(HWND hwnd) {
     if (IsCurrentThemeDefault()) {
         return;
     }
+    DarkMode::setWindowCtlColorSubclass(hwnd);
     DarkMode::setChildCtrlsSubclassAndTheme(hwnd);
     DarkMode::setWindowNotifyCustomDrawSubclass(hwnd);
 }
