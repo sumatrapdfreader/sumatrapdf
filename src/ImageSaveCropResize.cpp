@@ -125,6 +125,8 @@ Str ImageSaveExtFromData(Str data) {
             return StrL(".tif");
         case FileType::Bmp:
             return StrL(".bmp");
+        case FileType::Ico:
+            return StrL(".ico");
         case FileType::Webp:
             return StrL(".webp");
         case FileType::Jxl:

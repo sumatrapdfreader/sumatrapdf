@@ -1371,6 +1371,7 @@ static SeqStrings gMimeTypes =
     ".jpg\0image/jpeg\0"
     ".jpeg\0image/jpeg\0"
     ".bmp\0image/bmp\0"
+    ".ico\0image/vnd.microsoft.icon\0"
     ".css\0text/css\0"
     ".js\0text/javascript\0"
     ".svg\0image/svg+xml\0"

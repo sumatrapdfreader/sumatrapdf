@@ -5210,7 +5210,7 @@ static bool IsImageUrl(Str url) {
     }
     // check for common image extensions
     Str exts[] = {StrL(".png"),  StrL(".jpg"),  StrL(".jpeg"), StrL(".gif"), StrL(".bmp"), StrL(".tiff"), StrL(".tif"),
-                  StrL(".webp"), StrL(".avif"), StrL(".heic"), StrL(".jxr"), StrL(".jp2"), StrL(".tga")};
+                  StrL(".webp"), StrL(".avif"), StrL(".heic"), StrL(".jxr"), StrL(".jp2"), StrL(".tga"),  StrL(".ico")};
     for (Str ext : exts) {
         if (n >= ext.len) {
             Str ending(url.s + n - ext.len, ext.len);

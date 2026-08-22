@@ -22,6 +22,7 @@ SumatraPDF reader supports the following document types:
   - GIF (.gif), including animations
   - TIFF (.tif, .tiff), including multi-page
   - BMP (.bmp, .dib)
+  - ICO (.ico), including multiple sizes
   - TGA (.tga)
   - WebP (.webp) — also images inside EPUB, MOBI and HTML
   - JPEG XR (.jxr, .hdp, .wdp)

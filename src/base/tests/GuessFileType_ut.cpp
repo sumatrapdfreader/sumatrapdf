@@ -164,6 +164,69 @@ static void bmpTest() {
     utassert(fti.hasImageSize);
 }
 
+static void icoTest() {
+    // ICONDIR + one 16x32 ICONDIRENTRY (no image payload needed for size parse)
+    u8 ico[6 + 16] = {};
+    ico[2] = 1;  // type = ICO
+    ico[4] = 1;  // count = 1
+    ico[6] = 16; // width
+    ico[7] = 32; // height
+    FileTypeInfo fti = infoFromBytes(ico, dimofi(ico));
+    utassert(fti.ft == FileType::Ico);
+    utassert(fti.nImages == 1);
+    utassert(fti.imageDx == 16);
+    utassert(fti.imageDy == 32);
+    utassert(fti.hasImageSize);
+
+    // two sizes; 0 in the directory means 256
+    u8 icoTwo[6 + 16 * 2] = {};
+    icoTwo[2] = 1;
+    icoTwo[4] = 2;
+    icoTwo[6] = 16;
+    icoTwo[7] = 16;
+    icoTwo[22] = 0; // width 256
+    icoTwo[23] = 0; // height 256
+    fti = infoFromBytes(icoTwo, dimofi(icoTwo));
+    utassert(fti.ft == FileType::Ico);
+    utassert(fti.nImages == 2);
+    utassert(!fti.hasImageSize);
+    utassert(fti.imageSizes);
+    utassert(fti.imageSizes[0] == Size(16, 16));
+    utassert(fti.imageSizes[1] == Size(256, 256));
+    FreeFileTypeInfo(&fti);
+
+    // PNG-in-ICO: directory says 0 (=256) but IHDR is 64x48
+    u8 icoPng[6 + 16 + 24] = {};
+    icoPng[2] = 1;
+    icoPng[4] = 1;
+    icoPng[6] = 0;
+    icoPng[7] = 0;
+    icoPng[18] = 22; // dwImageOffset = 22
+    int pngOff = 22;
+    icoPng[pngOff + 0] = 0x89;
+    icoPng[pngOff + 1] = 'P';
+    icoPng[pngOff + 2] = 'N';
+    icoPng[pngOff + 3] = 'G';
+    icoPng[pngOff + 4] = 0x0D;
+    icoPng[pngOff + 5] = 0x0A;
+    icoPng[pngOff + 6] = 0x1A;
+    icoPng[pngOff + 7] = 0x0A;
+    icoPng[pngOff + 12] = 'I';
+    icoPng[pngOff + 13] = 'H';
+    icoPng[pngOff + 14] = 'D';
+    icoPng[pngOff + 15] = 'R';
+    icoPng[pngOff + 19] = 64; // width 64 BE
+    icoPng[pngOff + 23] = 48; // height 48 BE
+    fti = infoFromBytes(icoPng, dimofi(icoPng));
+    utassert(fti.ft == FileType::Ico);
+    utassert(fti.nImages == 1);
+    utassert(fti.imageDx == 64);
+    utassert(fti.imageDy == 48);
+    utassert(fti.hasImageSize);
+
+    utassert(GuessFileTypeFromName(StrL("favicon.ico")) == FileType::Ico);
+}
+
 static void jpegTest() {
     // SOF0 with height 2, width 3
     static const u8 jpg[] = {
@@ -472,6 +535,7 @@ static void extMapTest() {
     utassert(GuessFileTypeFromName(StrL("foo.JP2")) == FileType::Jp2); // case-insensitive
     utassert(GuessFileTypeFromName(StrL("foo.epub")) == FileType::Epub);
     utassert(GuessFileTypeFromName(StrL("foo.tar")) == FileType::Tar);
+    utassert(GuessFileTypeFromName(StrL("foo.ico")) == FileType::Ico);
     utassert(GuessFileTypeFromName(StrL("foo.unknown-ext")) == FileType::Unknown);
     // multi-dot / FB2 zip containers: longest registered suffix wins over bare .zip
     utassert(GuessFileTypeFromName(StrL("book.fb2.zip")) == FileType::Fb2z);
@@ -491,6 +555,7 @@ void GuessFileTypeTest() {
     pngTest();
     gifTest();
     bmpTest();
+    icoTest();
     jpegTest();
     webpTest();
     tiffTest();

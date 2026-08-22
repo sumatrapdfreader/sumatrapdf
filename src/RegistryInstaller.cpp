@@ -22,12 +22,12 @@ static SeqStrings gSupportedExts =
     ".djvu\0.chm\0.mobi\0.epub\0.md\0.markdown\0.svg\0.azw\0.azw3\0.azw4\0" \
     ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
     ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
-    ".jfif\0.webp\0.jxl\0.bmp\0.jxr\0.hdp\0.wdp\0";
+    ".jfif\0.webp\0.jxl\0.bmp\0.ico\0.jxr\0.hdp\0.wdp\0";
 
 // Image extensions share icon resource id 7 (img-32bit.ico) — #5274
 static SeqStrings gImageExts =
     ".tif\0.tiff\0.jp2\0.png\0.jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
-    ".jfif\0.webp\0.jxl\0.bmp\0.jxr\0.hdp\0.wdp\0";
+    ".jfif\0.webp\0.jxl\0.bmp\0.ico\0.jxr\0.hdp\0.wdp\0";
 // clang-format on
 
 static bool ExtInList(SeqStrings list, Str ext) {

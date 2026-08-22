@@ -6400,7 +6400,7 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
         {_TRA("PalmDoc documents"), StrL("*.pdb;*.prc"), true},
         {_TRA("Images"),
          StrL("*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jfif;*.jxr;*.hdp;*.wdp;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.heif;"
-              "*.avif;*.jxl;*.jp2;*.j2k;*.jpx;*.jpf;*.jpm;*.j2c"),
+              "*.avif;*.jxl;*.jp2;*.j2k;*.jpx;*.jpf;*.jpm;*.j2c;*.ico"),
          true},
         {_TRA("Text documents"), StrL("*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr"), true},
     };
@@ -10486,7 +10486,7 @@ static TempStr PickImageFilePathTemp(HWND hwnd) {
     WCHAR pathW[MAX_PATH + 1]{};
     str::Builder fileFilter(256);
     fileFilter.Append(_TRA("Image files"));
-    fileFilter.Append(StrL("\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif\1"));
+    fileFilter.Append(StrL("\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif;*.ico\1"));
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append(StrL("\1*.*\1"));
     Str fileFilterStr = ToStr(fileFilter);

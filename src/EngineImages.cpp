@@ -246,7 +246,7 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     //   WebP     → libwebp (bench_image: faster than WIC)
     //   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec
     FileType kind = GuessFileTypeFromData(data);
-    if (FileType::Webp == kind || FileType::Heic == kind || FileType::Avif == kind) {
+    if (FileType::Webp == kind || FileType::Heic == kind || FileType::Avif == kind || FileType::Ico == kind) {
         return nullptr;
     }
     fz_image* img = nullptr;
@@ -1136,7 +1136,7 @@ class EngineImage : public EngineImages {
     static EngineBase* CreateFromFile(Str path);
     static EngineBase* CreateFromData(Str data);
 
-    // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
+    // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF / ICO.
     // owned by the engine; per-page cache entries may borrow these.
     Vec<Pixmap*> frames;
     FileType imageFormat = FileType::Unknown;
@@ -1274,7 +1274,7 @@ bool EngineImage::FinishLoading(Size fallbackSize) {
     pageInfos.Append(pi);
     pi->state = PageInfoState::Known;
 
-    // one page per decoded frame (multi-page TIFFs and animated GIFs have >1)
+    // one page per decoded frame (multi-page TIFFs, animated GIFs and ICOs have >1)
     for (int i = 1; i < len(frames); i++) {
         pageInfos.Append(new ImagePageInfo());
     }
@@ -1786,7 +1786,7 @@ static FileType imageEngineTypes[] = {
     FileType::Tiff, FileType::Bmp,  FileType::Tga,
     FileType::Jxr,  FileType::Hdp,  FileType::Wdp,
     FileType::Webp, FileType::Jp2,  FileType::Heic,
-    FileType::Avif, FileType::Jxl
+    FileType::Avif, FileType::Jxl,  FileType::Ico
 };
 // clang-format on
 

@@ -46,8 +46,9 @@ enum class FileType : u8 {
 
     Directory = 37,
     Lit = 38,
+    Ico = 39,
 };
-constexpr int kFileTypeCount = (int)FileType::Lit + 1;
+constexpr int kFileTypeCount = (int)FileType::Ico + 1;
 
 // embedded PDF files have paths like "c:/foo.pdf:${pdfStreamNo}"
 // or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}"

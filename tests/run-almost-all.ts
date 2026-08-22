@@ -21,6 +21,7 @@ import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 import { testit as issue5840 } from "./issue-5840.ts";
 import { testit as issue5844 } from "./issue-5844.ts";
 import { testit as issue3434 } from "./issue-3434.ts";
+import { testit as ico } from "./ico.ts";
 import { testit as cmykImageSave } from "./cmyk-image-save.ts";
 import { testit as issue1809 } from "./issue-1809.ts";
 import { testit as issue4398 } from "./issue-4398.ts";
@@ -186,6 +187,7 @@ export const tests: NamedTest[] = [
   ["issue-5840", issue5840],
   ["issue-5844", issue5844],
   ["issue-3434", issue3434],
+  ["ico", ico],
   ["cmyk-image-save", cmykImageSave],
   ["issue-1809", issue1809],
   ["issue-4398", issue4398],

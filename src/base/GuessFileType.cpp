@@ -57,6 +57,7 @@
     V(".tif", FileType::Tiff)          \
     V(".tiff", FileType::Tiff)         \
     V(".bmp", FileType::Bmp)           \
+    V(".ico", FileType::Ico)           \
     V(".tga", FileType::Tga)           \
     V(".jxr", FileType::Jxr)           \
     V(".hdp", FileType::Hdp)           \
@@ -163,6 +164,7 @@ int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
     V(0, "GIF89a", FileType::Gif)                         \
     V(0, "BM", FileType::Bmp)                             \
     V(0, "BA", FileType::Bmp)                             \
+    V(0, "\0\0\x01\x00", FileType::Ico)                   \
     V(0, "MM\x00\x2A", FileType::Tiff)                    \
     V(0, "II\x2A\x00", FileType::Tiff)                    \
     V(0, "II\xBC\x01", FileType::Jxr)                     \
@@ -750,6 +752,50 @@ static void ParseTiff(ByteReader r, FileTypeInfo& res, bool isJxr) {
     }
 }
 
+static void ParseIco(ByteReader r, FileTypeInfo& res) {
+    // ICONDIR (6 bytes) + ICONDIRENTRY[n] (16 bytes each). Width/height 0 means 256.
+    // PNG-compressed images (Vista+) store the real size in the PNG IHDR.
+    if (r.len < 6) {
+        return;
+    }
+    int n = r.UInt16LE(4);
+    if (n <= 0) {
+        return;
+    }
+    n = std::min(n, 256);
+    int cap = 0;
+    int got = 0;
+    for (int i = 0; i < n; i++) {
+        int ent = 6 + i * 16;
+        if (ent + 16 > r.len) {
+            break;
+        }
+        int dx = r.UInt8(ent);
+        int dy = r.UInt8(ent + 1);
+        if (dx == 0) {
+            dx = 256;
+        }
+        if (dy == 0) {
+            dy = 256;
+        }
+        int imgOff = (int)r.UInt32LE(ent + 12);
+        if (imgOff >= 0 && imgOff + 24 <= r.len && MemEq(r.d + imgOff, "\x89PNG\r\n\x1a\n", 8) &&
+            MemEq(r.d + imgOff + 12, "IHDR", 4)) {
+            dx = (int)r.UInt32BE(imgOff + 16);
+            dy = (int)r.UInt32BE(imgOff + 20);
+        }
+        if (dx > 0 && dy > 0) {
+            AppendImageSize(res, got, cap, dx, dy);
+            got++;
+        }
+    }
+    res.nImages = got;
+    if (got == 1 && res.imageSizes) {
+        res.imageDx = res.imageSizes[0].dx;
+        res.imageDy = res.imageSizes[0].dy;
+    }
+}
+
 static void ParseBmp(ByteReader r, FileTypeInfo& res) {
     res.nImages = 1;
     int off = 0;
@@ -1150,6 +1196,9 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
         case FileType::Bmp:
             ParseBmp(r, res);
             break;
+        case FileType::Ico:
+            ParseIco(r, res);
+            break;
         case FileType::Tiff:
             ParseTiff(r, res, false);
             break;
@@ -1311,7 +1360,8 @@ static const FileType gImageTypes[] = {
     FileType::Webp,
     FileType::Jp2,
     FileType::Heic,
-    FileType::Avif
+    FileType::Avif,
+    FileType::Ico
 };
 
 static const char* gImageFormatExts =
@@ -1328,6 +1378,7 @@ static const char* gImageFormatExts =
     ".jp2\0"
     ".heic\0"
     ".avif\0"
+    ".ico\0"
     "\0";
 // clang-format on
 

@@ -12,6 +12,7 @@ const CASES: [string, string][] = [
   ["doc.xod", ".xps"],
   ["scan.djv", ".djvu"],
   ["drawing.dwfx", ".xps"],
+  ["favicon.ico", ".ico"],
 ];
 
 export async function testit(): Promise<void> {
