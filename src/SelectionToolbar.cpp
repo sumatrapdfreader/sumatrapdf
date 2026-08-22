@@ -83,6 +83,65 @@ static const SelectionToolbarButton gCandidateButtons[] = {
     {CmdCreateAnnotStrikeOut, "Strike Out"}, {CmdCreateAnnotText, "Text"},
 };
 
+static const SelectionToolbarButton* FindCandidateButton(int cmdId) {
+    if (cmdId <= 0) {
+        return nullptr;
+    }
+    for (const SelectionToolbarButton& cand : gCandidateButtons) {
+        if (cand.cmdId == cmdId) {
+            return &cand;
+        }
+    }
+    return nullptr;
+}
+
+// Built-in buttons the selection toolbar should offer, in order.
+// Empty SelectionToolbarLayout is the standard set; otherwise the setting
+// lists command names (discussion #6015).
+static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
+    out.Reset();
+    auto addDefault = [&out]() {
+        for (const SelectionToolbarButton& cand : gCandidateButtons) {
+            out.Append(cand.cmdId);
+        }
+    };
+    Str setting = gGlobalPrefs ? gGlobalPrefs->selectionToolbarLayout : Str{};
+    if (str::IsEmptyOrWhiteSpace(setting)) {
+        addDefault();
+        return;
+    }
+    TempStr normalized = str::ReplaceTemp(setting, StrL(","), StrL(" "));
+    normalized = str::ReplaceTemp(normalized, StrL(";"), StrL(" "));
+    StrVec names;
+    Split(&names, normalized, StrL(" "), true);
+    for (Str name : names) {
+        Str tok = name;
+        str::TrimWSInPlace(tok, str::TrimOpt::Both);
+        if (!tok || str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
+            continue;
+        }
+        const SelectionToolbarButton* found = FindCandidateButton(GetCommandIdByName(tok));
+        if (!found) {
+            logf("SelectionToolbarLayout: no selection-toolbar button for '%s'\n", tok);
+            continue;
+        }
+        bool already = false;
+        for (int i = 0; i < len(out); i++) {
+            if (out[i] == found->cmdId) {
+                already = true;
+                break;
+            }
+        }
+        if (!already) {
+            out.Append(found->cmdId);
+        }
+    }
+    if (len(out) == 0) {
+        logf("SelectionToolbarLayout: nothing usable in '%s', using the standard layout\n", setting);
+        addDefault();
+    }
+}
+
 // selection handlers that asked for a button with SelectToolbarNameOrSvg
 static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommandCtx& ctx) {
     Vec<CustomCommand*> cmds;
@@ -111,16 +170,35 @@ static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommand
 static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
     AppCommandCtx ctx = NewAppCommandCtx(win);
     tb->buttons.Reset();
-    for (const SelectionToolbarButton& cand : gCandidateButtons) {
-        CommandVisibility v = GetCommandVisibility(cand.cmdId, ctx, CommandSurface::Toolbar);
+    Vec<int> ids;
+    CollectBuiltInSelectionToolbarCmds(ids);
+    for (int i = 0; i < len(ids); i++) {
+        const SelectionToolbarButton* cand = FindCandidateButton(ids[i]);
+        if (!cand) {
+            continue;
+        }
+        CommandVisibility v = GetCommandVisibility(cand->cmdId, ctx, CommandSurface::Toolbar);
         if (CommandShouldRemove(v)) {
             continue;
         }
-        SelectionToolbarButton b = cand;
+        SelectionToolbarButton b = *cand;
         b.enabled = !CommandShouldDisable(v);
         tb->buttons.Append(b);
     }
     AppendSelectionHandlerButtons(tb, ctx);
+}
+
+// cmd ids of the built-in buttons SelectionToolbarLayout would show, before
+// per-window visibility (for -dbg-control tests, discussion #6015).
+TempStr SelectionToolbarLayoutDumpTemp() {
+    Vec<int> ids;
+    CollectBuiltInSelectionToolbarCmds(ids);
+    str::Builder out;
+    out.Append(fmt("n=%d\n", len(ids)));
+    for (int i = 0; i < len(ids); i++) {
+        out.Append(fmt("cmd=%d\n", ids[i]));
+    }
+    return ToStrTemp(out);
 }
 
 constexpr int kBtnPadX = 8; // horizontal padding inside a button

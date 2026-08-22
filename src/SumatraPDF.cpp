@@ -9128,6 +9128,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
 
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
+constexpr const char* kSelectionPositionStr = "${selectionposition}";
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/4368
 // for Google translate tl= arg seems to be ISO-639 lang code
@@ -9202,6 +9203,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     }
     TempStr contryCode = GetISO639LangCodeFromLangTemp(lang);
     TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, contryCode);
+    uri = str::ReplaceNoCaseTemp(uri, kSelectionPositionStr, FormatSelectionPositionTemp(tab));
     uri = str::ReplaceNoCaseTemp(uri, kSelectionStr, encodedSelection);
     LaunchBrowser(uri);
 }
@@ -10467,7 +10469,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 if (!sel) {
                     return 0;
                 }
-                TempStr cmdLine = ExpandSelectionVarsTemp(exe, sel, false);
+                TempStr cmdLine = ExpandSelectionVarsTemp(exe, sel, false, 0, nullptr, tab);
                 RunWithExe(tab, cmdLine, nullptr);
                 return 0;
             }

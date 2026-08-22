@@ -4,6 +4,9 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- SelectionHandlers `URL`, `Exe` and POST `Body` accept `${selectionPosition}`: the current selection's bounding box in screen pixels as `x,y,dx,dy`, so a helper can place itself next to the selection (discussion #6015)
+- The floating selection toolbar's built-in buttons can be chosen and reordered with `SelectionToolbarLayout`, the same idea as `ToolbarCustomLayout` (discussion #6015)
+- A SelectionHandlers entry can put a search / translate / helper button on the main toolbar with `ToolbarText` or `ToolbarSvgIcon`, the same as ExternalViewers (discussion #6015)
 - The annotations window opens with annotations from the pages currently on screen; the rest of a large document fill in in the background without losing the current selection
 - Update available notification shows the build date when the update-check file has a `BuiltOn` date, e.g. **Version 3.7.21539 available (built on 2026-08-21). Update**
 - Annotations window: a search box at the top filters the list by contents and highlights matches in yellow, like the Command Palette. Delete sits under the list. Rect, Date and Author are always shown in a two-column table (empty when the annotation has no value). Per-annotation options sit in the same kind of table. Contents is a label above a 6-line edit box. Buttons match Advanced Settings. Each list row shows the type and contents on the left and the page number on the right

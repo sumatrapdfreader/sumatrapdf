@@ -358,6 +358,12 @@ UseTabs = true
 ; (introduced in version 3.7)
 SelectionToolbar = true
 
+; which built-in buttons the selection toolbar has and in what order, e.g.
+; CmdCopySelection CmdCreateAnnotHighlight. Leave a button out to hide it. Empty
+; (the default) is the standard set. SelectionHandlers with
+; SelectToolbarNameOrSvg still come last (introduced in version 3.7)
+SelectionToolbarLayout = 
+
 ; if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently
 ; used order instead of tab-strip order (introduced in version 3.7)
 TabsMru = false
@@ -805,9 +811,9 @@ Fullscreen [
 ; is active. See docs for more information (https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
 SelectionHandlers [
   [
-    ; url to invoke for the selection. ${selection} will be replaced with
-    ; current selection and ${userlang} with language code for current UI (e.g.
-    ; 'de' for German)
+    ; url to invoke for the selection. ${selection} is the selected text,
+    ; ${userlang} the UI language (e.g. 'de'), ${selectionPosition} the
+    ; selection's screen rect as x,y,dx,dy
     URL =
 
     ; name shown in context menu
@@ -818,7 +824,8 @@ SelectionHandlers [
 
     ; command line of a program to run instead of opening a URL. Use
     ; ${selectionfile} to pass the selection as a temporary utf-8 file, which
-    ; has no length limit. If set, URL is ignored (introduced in version 3.7)
+    ; has no length limit, and ${selectionPosition} for the selection's screen
+    ; rect (x,y,dx,dy). If set, URL is ignored (introduced in version 3.7)
     Exe =
 
     ; how to send the selection. GET (default) puts it in the URL, which limits
@@ -829,8 +836,8 @@ SelectionHandlers [
     Method = GET
 
     ; request body for POST / POST-VIA-BROWSER; the same ${selection},
-    ; ${selectionjson} and ${userlang} substitutions apply. If unset, the body
-    ; is the raw selection (introduced in version 3.7)
+    ; ${selectionjson}, ${userlang} and ${selectionPosition} substitutions
+    ; apply. If unset, the body is the raw selection (introduced in version 3.7)
     Body =
 
     ; value of the Content-Type header for POST. Defaults to 'text/plain;
@@ -847,10 +854,18 @@ SelectionHandlers [
     ; file (introduced in version 3.7)
     Headers =
 
-    ; if set, the handler also gets a button in the toolbar that pops up over a
-    ; text selection. The value is the button's text, or, if it starts with
-    ; '<svg', an icon to draw instead (introduced in version 3.7)
+    ; if set, the handler also gets a button on the floating selection toolbar.
+    ; The value is the button's text, or, if it starts with '<svg', an icon to
+    ; draw instead (introduced in version 3.7)
     SelectToolbarNameOrSvg =
+
+    ; if set, the handler also gets a button on the main toolbar with this label
+    ; (introduced in version 3.7)
+    ToolbarText =
+
+    ; optional SVG icon for that main-toolbar button; if both ToolbarSvgIcon and
+    ; ToolbarText are set, the icon is used (introduced in version 3.7)
+    ToolbarSvgIcon =
   ]
 ]
 

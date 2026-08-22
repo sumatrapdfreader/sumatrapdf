@@ -31,6 +31,9 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
+#include "TextSelection.h"
+#include "Selection.h"
+#include "SelectionHandlers.h"
 #include "FileHistory.h"
 #include "Favorites.h"
 #include "SelectionTranslate.h"
@@ -40,6 +43,7 @@
 #include "Toolbar.h"
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
+#include "SelectionToolbar.h"
 #include "HomePage.h"
 #include "Notifications.h"
 #include "AIChatCommon.h"
@@ -447,6 +451,39 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
     return finish({}, 0);
 }
 
+// Expand SelectionHandlers placeholders against the current tab's selection
+// (discussion #6015 ${selectionPosition}).
+static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (len(gWindows) == 0 || !gWindows[0]) {
+        return finish(StrL("NOTREADY no-window\n"), 2);
+    }
+    WindowTab* tab = gWindows[0]->CurrentTab();
+    bool isTextOnly = false;
+    TempStr sel = tab ? GetSelectedTextTemp(tab, "\n", isTextOnly) : TempStr{};
+    if (!sel) {
+        sel = StrL("");
+    }
+    if (str::IsEmptyOrWhiteSpace(pattern)) {
+        pattern = StrL("${selectionPosition}");
+    }
+    TempStr expanded = ExpandSelectionVarsTemp(pattern, sel, false, 0, nullptr, tab);
+    out.Append(StrL("pattern="));
+    out.Append(pattern);
+    out.AppendChar('\n');
+    out.Append(StrL("expanded="));
+    out.Append(expanded);
+    out.AppendChar('\n');
+    return finish({}, 0);
+}
+
 static TempStr DocumentSignaturesResultTemp(int* exitCodeOut) {
     auto finish = [exitCodeOut](Str result, int code) -> TempStr {
         if (exitCodeOut) {
@@ -562,6 +599,8 @@ enum class ControlCmd : u16 {
     TestConvertToImages = 69,
     TestLayout = 70,
     TestDpi = 71,
+    TestSelectionVars = 72,
+    TestSelectionToolbar = 73,
 };
 
 enum class ControlArgType : u16 {
@@ -1339,6 +1378,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = DpiResultTemp(action, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectionVars: {
+            Str pattern = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = SelectionVarsResultTemp(pattern, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectionToolbar: {
+            AppendTestResult(req, 0, SelectionToolbarLayoutDumpTemp());
             break;
         }
 

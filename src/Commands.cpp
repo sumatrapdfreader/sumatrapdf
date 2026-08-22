@@ -903,6 +903,8 @@ static const ArgSpec argSpecs[] = {
     {CmdSelectionHandler, kCmdArgContentType, CommandArg::Type::String},
     {CmdSelectionHandler, kCmdArgHeaders, CommandArg::Type::String},
     {CmdSelectionHandler, kCmdArgSelectToolbar, CommandArg::Type::String},
+    {CmdSelectionHandler, kCmdArgToolbarText, CommandArg::Type::String},
+    {CmdSelectionHandler, kCmdArgToolbarSvgIcon, CommandArg::Type::String},
 
     {CmdExec, kCmdArgExe, CommandArg::Type::String}, // default
     {CmdExec, kCmdArgFilter, CommandArg::Type::String},

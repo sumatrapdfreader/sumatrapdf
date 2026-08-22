@@ -54,12 +54,15 @@
 #include "WindowTab.h"
 #include "Notifications.h"
 #include "Translations.h"
+#include "TextSelection.h"
+#include "Selection.h"
 #include "SelectionHandlers.h"
 
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
 constexpr const char* kSelectionJsonStr = "${selectionjson}";
 constexpr const char* kSelectionFileStr = "${selectionfile}";
+constexpr const char* kSelectionPositionStr = "${selectionposition}";
 
 // how much of the response body to show in the notification. The point is to
 // tell the user whether it worked and why not, not to render the result
@@ -94,25 +97,30 @@ static TempStr WriteSelectionToTempFileTemp(Str selection, Str ext) {
     return path;
 }
 
-// Expands ${selection}, ${selectionjson}, ${selectionfile} and ${userlang} in
-// `pattern`. `urlEncodeSelection` picks how ${selection} is escaped: URL
-// encoding for a URL, none for a request body. When URL-encoding, `budget` caps
-// the encoded length and *didTruncateOut says whether it didn't all fit.
-TempStr ExpandSelectionVarsTemp(Str pattern, Str selection, bool urlEncodeSelection, int budget, bool* didTruncateOut) {
+// Expands ${selection}, ${selectionjson}, ${selectionfile}, ${userlang} and
+// ${selectionPosition} in `pattern`. `urlEncodeSelection` picks how ${selection}
+// is escaped: URL encoding for a URL, none for a request body. When
+// URL-encoding, `budget` caps the encoded length and *didTruncateOut says
+// whether it didn't all fit. `tab` is needed for ${selectionPosition}.
+TempStr ExpandSelectionVarsTemp(Str pattern, Str selection, bool urlEncodeSelection, int budget, bool* didTruncateOut,
+                                WindowTab* tab) {
     if (didTruncateOut) {
         *didTruncateOut = false;
     }
     Str lang = trans::GetCurrentLangCode();
     TempStr res = str::ReplaceNoCaseTemp(pattern, kUserLangStr, lang);
 
-    // do the file and json forms first: they must not be affected by whatever
-    // escaping ${selection} uses
+    // do the file, json and position forms first: they must not be affected by
+    // whatever escaping ${selection} uses
     if (str::ContainsI(res, kSelectionFileStr)) {
         TempStr path = WriteSelectionToTempFileTemp(selection, StrL(".txt"));
         res = str::ReplaceNoCaseTemp(res, kSelectionFileStr, path);
     }
     if (str::ContainsI(res, kSelectionJsonStr)) {
         res = str::ReplaceNoCaseTemp(res, kSelectionJsonStr, json::EscapeStrTemp(selection));
+    }
+    if (str::ContainsI(res, kSelectionPositionStr)) {
+        res = str::ReplaceNoCaseTemp(res, kSelectionPositionStr, FormatSelectionPositionTemp(tab));
     }
 
     if (urlEncodeSelection) {
@@ -211,7 +219,7 @@ void SelectionHandlerPost(WindowTab* tab, Str url, Str bodyPattern, Str contentT
     // thing for "just post my text somewhere", and pairs with the default
     // text/plain content type
     Str pattern = str::IsEmptyOrWhiteSpace(bodyPattern) ? Str(kSelectionStr) : bodyPattern;
-    req->body = str::Dup(ExpandSelectionVarsTemp(pattern, selection, false));
+    req->body = str::Dup(ExpandSelectionVarsTemp(pattern, selection, false, 0, nullptr, tab));
     Str ct = str::IsEmptyOrWhiteSpace(contentType) ? StrL("text/plain; charset=utf-8") : contentType;
     req->contentType = str::Dup(ct);
     req->headers = str::Dup(headers);
@@ -285,7 +293,7 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
         if (str::IsEmptyOrWhiteSpace(name)) {
             continue;
         }
-        TempStr value = ExpandSelectionVarsTemp(valuePattern, selection, false);
+        TempStr value = ExpandSelectionVarsTemp(valuePattern, selection, false, 0, nullptr, tab);
         html.Append(R"(<input type="hidden" name=")");
         HtmlAttrEscape(html, name);
         html.Append("\" value=\"");

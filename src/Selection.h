@@ -6,6 +6,7 @@
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
 
 struct Gfx;
+struct WindowTab;
 
 /* Represents selected area on given page */
 struct SelectionOnPage {
@@ -48,6 +49,8 @@ void HideTouchSelHandles(MainWindow* win);
 
 bool IsRectangularSelection(MainWindow* win);
 Rect GetRectangularSelectionScreenRect(MainWindow* win);
+bool GetSelectionScreenRect(WindowTab* tab, Rect& out);
+TempStr FormatSelectionPositionTemp(WindowTab* tab);
 SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int x, int y);
 LPWSTR CursorIdForSelectionEdge(SelectionDragEdge edge);
 bool StartRectangularSelectionEdit(MainWindow* win, int x, int y, SelectionDragEdge edge);

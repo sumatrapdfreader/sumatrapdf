@@ -154,6 +154,50 @@ Rect GetRectangularSelectionScreenRect(MainWindow* win) {
     return bounds;
 }
 
+// Bounding box of the current selection in screen pixels, so a helper can sit
+// next to it (${selectionPosition} in SelectionHandlers, discussion #6015).
+bool GetSelectionScreenRect(WindowTab* tab, Rect& out) {
+    out = {};
+    if (!tab || !tab->win || !tab->selectionOnPage) {
+        return false;
+    }
+    MainWindow* win = tab->win;
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !win->hwndCanvas || !win->showSelection) {
+        return false;
+    }
+    Rect bounds;
+    bool first = true;
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        Rect r = sel.GetRect(dm);
+        if (r.IsEmpty()) {
+            continue;
+        }
+        if (first) {
+            bounds = r;
+            first = false;
+        } else {
+            bounds = bounds.Union(r);
+        }
+    }
+    if (first) {
+        return false;
+    }
+    Point p = HwndClientToScreen(win->hwndCanvas, bounds.TL());
+    out = Rect(p.x, p.y, bounds.dx, bounds.dy);
+    return true;
+}
+
+TempStr FormatSelectionPositionTemp(WindowTab* tab) {
+    Rect r;
+    if (!GetSelectionScreenRect(tab, r)) {
+        // StrL("") is empty but not null: ReplaceTemp treats a null
+        // replacement as failure and would wipe the whole pattern
+        return StrL("");
+    }
+    return fmt("%d,%d,%d,%d", r.x, r.y, r.dx, r.dy);
+}
+
 static Rect NormalizeScreenRect(Rect r) {
     if (r.dx < 0) {
         r.x += r.dx;

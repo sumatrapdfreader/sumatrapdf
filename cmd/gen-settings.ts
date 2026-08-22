@@ -688,7 +688,7 @@ const selectionHandler: Field[] = [
     "URL",
     Str,
     null,
-    "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)",
+    "url to invoke for the selection. ${selection} is the selected text, ${userlang} the UI language (e.g. 'de'), ${selectionPosition} the selection's screen rect as x,y,dx,dy",
   ),
   field("Name", Str, null, "name shown in context menu"),
   field("Key", Str, null, "keyboard shortcut").ver("3.6"),
@@ -697,7 +697,8 @@ const selectionHandler: Field[] = [
     Str,
     null,
     "command line of a program to run instead of opening a URL. Use ${selectionfile} to pass " +
-      "the selection as a temporary utf-8 file, which has no length limit. If set, URL is ignored",
+      "the selection as a temporary utf-8 file, which has no length limit, and ${selectionPosition} " +
+      "for the selection's screen rect (x,y,dx,dy). If set, URL is ignored",
   ).ver("3.7"),
   field(
     "Method",
@@ -712,8 +713,8 @@ const selectionHandler: Field[] = [
     "Body",
     Str,
     null,
-    "request body for POST / POST-VIA-BROWSER; the same ${selection}, ${selectionjson} and " +
-      "${userlang} substitutions apply. If unset, the body is the raw selection",
+    "request body for POST / POST-VIA-BROWSER; the same ${selection}, ${selectionjson}, " +
+      "${userlang} and ${selectionPosition} substitutions apply. If unset, the body is the raw selection",
   ).ver("3.7"),
   field(
     "ContentType",
@@ -737,8 +738,17 @@ const selectionHandler: Field[] = [
     "SelectToolbarNameOrSvg",
     Str,
     null,
-    "if set, the handler also gets a button in the toolbar that pops up over a text selection. " +
+    "if set, the handler also gets a button on the floating selection toolbar. " +
       "The value is the button's text, or, if it starts with '<svg', an icon to draw instead",
+  ).ver("3.7"),
+  field("ToolbarText", Str, null, "if set, the handler also gets a button on the main toolbar with this label").ver(
+    "3.7",
+  ),
+  field(
+    "ToolbarSvgIcon",
+    Str,
+    null,
+    "optional SVG icon for that main-toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
   ).ver("3.7"),
 ];
 
@@ -1450,6 +1460,14 @@ const globalPrefs: Field[] = [
     Bool,
     true,
     "if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable it",
+  ).ver("3.7"),
+  field(
+    "SelectionToolbarLayout",
+    Str,
+    "",
+    "which built-in buttons the selection toolbar has and in what order, e.g. " +
+      "CmdCopySelection CmdCreateAnnotHighlight. Leave a button out to hide it. Empty (the default) " +
+      "is the standard set. SelectionHandlers with SelectToolbarNameOrSvg still come last",
   ).ver("3.7"),
   field(
     "TabsMru",

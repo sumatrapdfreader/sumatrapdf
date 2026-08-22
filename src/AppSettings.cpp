@@ -271,6 +271,8 @@ static void CreateSelectionHandlerCommands() {
             addArg(kCmdArgHeaders, sh->headers);
         }
         addArg(kCmdArgSelectToolbar, sh->selectToolbarNameOrSvg);
+        addArg(kCmdArgToolbarText, sh->toolbarText);
+        addArg(kCmdArgToolbarSvgIcon, sh->toolbarSvgIcon);
         CreateCustomCommand(definition, CmdSelectionHandler, args, sh->name, sh->key);
     }
 }

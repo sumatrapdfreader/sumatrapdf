@@ -14,6 +14,6 @@ enum class SelectionSendMethod {
 
 SelectionSendMethod ParseSelectionSendMethod(Str s);
 TempStr ExpandSelectionVarsTemp(Str pattern, Str selection, bool urlEncodeSelection, int budget = 0,
-                                bool* didTruncateOut = nullptr);
+                                bool* didTruncateOut = nullptr, WindowTab* tab = nullptr);
 void SelectionHandlerPost(WindowTab* tab, Str url, Str bodyPattern, Str contentType, Str headers, Str selection);
 void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, Str selection);

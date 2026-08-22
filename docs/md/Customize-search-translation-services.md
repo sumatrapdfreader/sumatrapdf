@@ -93,6 +93,41 @@ SelectionHandlers [
 Handlers without `SelectToolbarNameOrSvg` are unaffected: they stay in the
 context menu and the command palette as before.
 
+To put the same handler on the **main** toolbar, set `ToolbarText` (a short
+label) or `ToolbarSvgIcon` (same SVG format as [Customize toolbar](Customize-toolbar.md#using-svg-icons)).
+If both are set, the icon is used:
+
+```
+SelectionHandlers [
+  [
+    URL = https://duckduckgo.com/?q=${selection}
+    Name = &DuckDuckGo
+    ToolbarText = DDG
+  ]
+]
+```
+
+## Choose which buttons are on the selection toolbar (Ver 3.7+)
+
+`SelectionToolbarLayout` lists the built-in buttons you want, in the order you
+want them — the same idea as `ToolbarCustomLayout` for the main toolbar:
+
+```
+SelectionToolbarLayout = CmdCopySelection CmdCreateAnnotHighlight CmdCreateAnnotUnderline
+```
+
+- entries are [command ids](Commands.md), separated by spaces (commas and semicolons work too)
+- **leaving a button out is how you hide it**
+- an empty value (the default) is the standard set
+- names that aren't selection-toolbar buttons are ignored (see the log with `-log`)
+- handler buttons from `SelectToolbarNameOrSvg` still come last
+
+This is the standard selection toolbar written out:
+
+```
+SelectionToolbarLayout = CmdCopySelection CmdTranslateSelection CmdReadAloudSelection CmdCreateAnnotHighlight CmdCreateAnnotUnderline CmdCreateAnnotSquiggly CmdCreateAnnotStrikeOut CmdCreateAnnotText
+```
+
 ## Sending long text (Ver3.7+)
 
 A URL can only hold so much text. If you select several paragraphs and send them
@@ -195,14 +230,15 @@ the way around it.
 
 ## Placeholders
 
-These can be used in `URL` and in `Body`:
+These can be used in `URL`, `Exe` and `Body`:
 
-| Placeholder        | Replaced with                                                       |
-| ------------------ | ------------------------------------------------------------------- |
-| `${selection}`     | the selected text. URL-encoded in `URL`, raw in `Body`              |
-| `${selectionjson}` | the selected text escaped for a JSON string (no surrounding quotes) |
-| `${selectionfile}` | path to a temporary UTF-8 file holding the selection                |
-| `${userlang}`      | language code of the current UI language, e.g. `de` for German      |
+| Placeholder            | Replaced with                                                       |
+| ---------------------- | ------------------------------------------------------------------- |
+| `${selection}`         | the selected text. URL-encoded in `URL`, raw in `Body` / `Exe`      |
+| `${selectionjson}`     | the selected text escaped for a JSON string (no surrounding quotes) |
+| `${selectionfile}`     | path to a temporary UTF-8 file holding the selection                |
+| `${selectionPosition}` | the selection's bounding box in screen pixels, `x,y,dx,dy`          |
+| `${userlang}`          | language code of the current UI language, e.g. `de` for German      |
 
 `${selectionjson}` matters more than it looks. Selected text routinely contains
 quotes and newlines, and dropping those into a JSON body raw produces invalid
@@ -215,6 +251,11 @@ Body = {"text": "${selectionjson}", "target": "de"}
 
 ## Running a program instead of a web service
 
+`${selectionPosition}` is for a helper that wants to sit next to the selection
+(a dictionary popup, Anki helper, …). The four integers are the bounding box
+of the visible selection in screen pixels, the same space as a Win32
+`SetWindowPos`. Empty if there is no visible selection.
+
 Use `Exe` instead of `URL` to hand the selection to a program. Combined with
 `${selectionfile}` there is no length limit at all and no encoding to worry
 about, because the text goes through a file rather than the command line:
@@ -223,7 +264,7 @@ about, because the text goes through a file rather than the command line:
 SelectionHandlers [
   [
     Name = Summarize locally
-    Exe = "C:\tools\summarize.exe" "${selectionfile}"
+    Exe = "C:\tools\summarize.exe" --pos ${selectionPosition} "${selectionfile}"
   ]
 ]
 ```
