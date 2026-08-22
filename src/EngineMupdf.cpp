@@ -1701,11 +1701,13 @@ static fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspac
 }
 
 #if OS_WIN
-static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
+// preserveAlpha: palettizing drops the alpha channel, so skip it when the
+// caller needs transparent holes to composite over the canvas (issue #1809).
+static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool preserveAlpha = false) {
     if (!pixmap) {
         return nullptr;
     }
-    if (pixmap->n == 4 && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
+    if (!preserveAlpha && pixmap->n == 4 && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
         RenderedBitmap* res = TryRenderAsPaletteImage(pixmap);
         if (res) {
             return res;
@@ -1780,9 +1782,9 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
 }
 #endif
 
-static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
+static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool preserveAlpha = false) {
 #if OS_WIN
-    return PixmapFromRenderedBitmap(NewRenderedFzPixmap(ctx, pixmap));
+    return PixmapFromRenderedBitmap(NewRenderedFzPixmap(ctx, pixmap, preserveAlpha));
 #else
     fz_pixmap* bgrPixmap = nullptr;
     fz_var(bgrPixmap);
@@ -6364,6 +6366,27 @@ void EngineMupdf::ToggleCadEnhanceOverride() {
     }
 }
 
+// Transparent backdrop: leave unpainted samples at alpha 0 so the canvas
+// checkerboard (CmdToggleTransparencyGrid) shows through (issue #1809).
+static void ClearRenderedPagePixmap(fz_context* ctx, fz_pixmap* pix, const RenderPageArgs& args, bool objectLevelDark) {
+    if (args.transparentBackdrop) {
+        fz_clear_pixmap(ctx, pix);
+        return;
+    }
+    if (objectLevelDark && args.darkProfile) {
+        PdfDarkModeClearPixmapToThemeBackground(ctx, pix, args.darkProfile->palette);
+        return;
+    }
+    fz_clear_pixmap_with_value(ctx, pix, 0xff);
+}
+
+static void MarkTransparentBackdropPixmap(Pixmap* pixmap, bool transparentBackdrop) {
+    if (pixmap && transparentBackdrop) {
+        pixmap->hasAlpha = true;
+        pixmap->premultiplied = true;
+    }
+}
+
 Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto* ctx = Ctx();
     auto pageNo = args.pageNo;
@@ -6447,11 +6470,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fz_try(ctx) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
             bool objectLevelDark = args.darkProfile && DarkModeProfileUsesObjectLevel(args.darkProfile);
-            if (objectLevelDark) {
-                PdfDarkModeClearPixmapToThemeBackground(ctx, pix, args.darkProfile->palette);
-            } else {
-                fz_clear_pixmap_with_value(ctx, pix, 0xff);
-            }
+            ClearRenderedPagePixmap(ctx, pix, args, objectLevelDark);
             dev = fz_new_draw_device(ctx, ctm, pix);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
@@ -6477,7 +6496,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             if (CadEnhanceActive() && cadRasterDominant) {
                 PdfCadEnhancePixmap(ctx, pix, zoom, true);
             }
-            pixmap = NewPixmapFromFzPixmap(ctx, pix);
+            pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+            MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
             if (dev) {
@@ -6510,7 +6530,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fz_try(ctx) {
             pdfpage = pdf_page_from_fz_page(ctx, page);
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            fz_clear_pixmap_with_value(ctx, pix, 0xff);
+            ClearRenderedPagePixmap(ctx, pix, args, false);
             dev = fz_new_draw_device(ctx, ctm, pix);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
@@ -6525,7 +6545,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             if (CadEnhanceActive() && cadRasterDominant) {
                 PdfCadEnhancePixmap(ctx, pix, zoom, true);
             }
-            pixmap = NewPixmapFromFzPixmap(ctx, pix);
+            pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+            MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
             if (dev) {
@@ -6541,7 +6562,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     } else {
         fz_try(ctx) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            fz_clear_pixmap_with_value(ctx, pix, 0xff);
+            ClearRenderedPagePixmap(ctx, pix, args, false);
             dev = fz_new_draw_device(ctx, ctm, pix);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
@@ -6549,7 +6570,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             fz_run_page_contents(ctx, page, dev, fz_identity, nullptr);
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
-            pixmap = NewPixmapFromFzPixmap(ctx, pix);
+            pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+            MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
             fz_drop_pixmap(ctx, pix);

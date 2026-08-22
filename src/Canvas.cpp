@@ -2702,6 +2702,18 @@ void ToggleShowImageOutlines() {
     gShowImages = !gShowImages;
 }
 
+// CmdToggleTransparencyGrid: Acrobat-style checkerboard under the page so
+// transparent PDFs (white art on a hole) are visible. Session-only, not saved.
+static bool gShowTransparencyGrid = false;
+
+bool ShowTransparencyGrid() {
+    return gShowTransparencyGrid;
+}
+
+void ToggleTransparencyGrid() {
+    gShowTransparencyGrid = !gShowTransparencyGrid;
+}
+
 /* debug code to visualize links and images (can block while rendering) */
 static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
@@ -3178,9 +3190,13 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         Rect bounds = pi->pageOnScreen.Intersect(screen);
         // don't paint the frame background for images
         if (!dm->GetEngine()->IsImageCollection()) {
-            Rect r = pi->pageOnScreen;
-            auto presMode = win->presentation;
-            PaintPageFrameAndShadow(hdc, bounds, r, presMode, colPlaceholder);
+            if (ShowTransparencyGrid()) {
+                HdcPaintCheckerboard(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy);
+            } else {
+                Rect r = pi->pageOnScreen;
+                auto presMode = win->presentation;
+                PaintPageFrameAndShadow(hdc, bounds, r, presMode, colPlaceholder);
+            }
         }
 
         // check if this page is known to have failed rendering

@@ -462,6 +462,9 @@ struct RenderPageArgs {
     // onto white. Only the canvas does that; print and export need an opaque
     // page, and so does anything that blits the result with SRCCOPY (#5844)
     bool keepAlpha = false;
+    // clear the page pixmap to alpha 0 so the canvas background (solid colour
+    // or a checkerboard) shows through unpainted areas (issue #1809)
+    bool transparentBackdrop = false;
     AbortCookie** cookie_out = nullptr;
     // dark/recolor rendering profile for View renders (see PdfDarkMode.h);
     // owned by the caller, only valid for the duration of RenderPage()

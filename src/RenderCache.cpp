@@ -24,6 +24,7 @@
 #include "EngineBase.h"
 #include "PdfDarkMode.h"
 #include "DisplayModel.h"
+#include "Canvas.h"
 #include "RenderCache.h"
 
 // CONSERVE_MEMORY sets the compile-time default for gConserveMemory. When defined,
@@ -1102,6 +1103,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         // the canvas paints the document background before drawing the page,
         // so a page with transparency composites over it (#5844)
         args.keepAlpha = true;
+        args.transparentBackdrop = ShowTransparencyGrid();
         DarkModeProfile darkProfile;
         BuildViewDarkModeProfile(engine, &darkProfile);
         if (darkProfile.mode != PageColorMode::Normal) {
@@ -1135,7 +1137,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             } else {
                 recolor = ShouldUpdateBitmapColorsLegacy(engine, cache);
             }
-            if (recolor) {
+            if (recolor && !bmp->hasAlpha) {
                 bool preserve = profile && profile->mode == PageColorMode::PreserveImages && profile->preservePdfImages;
                 Vec<Rect> skipRects;
                 Vec<Rect>* skipRectsPtr = nullptr;
@@ -1280,6 +1282,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
         args.keepAlpha = true; // see the other RenderPageArgs above (#5844)
+        args.transparentBackdrop = ShowTransparencyGrid();
         Pixmap* bmp = dm->GetEngine()->RenderPage(args);
         bool success = bmp && BlitPixmap(bmp, hdc, bounds);
         FreePixmap(bmp);

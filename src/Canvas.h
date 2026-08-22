@@ -10,6 +10,8 @@ void CancelDrag(MainWindow*);
 void StartAutoScrollAtCursor(MainWindow*);
 bool ShowImageOutlines();
 void ToggleShowImageOutlines();
+bool ShowTransparencyGrid();
+void ToggleTransparencyGrid();
 bool ShowFitContentArea();
 void ToggleShowFitContentArea();
 bool IsLaserPointerActive();

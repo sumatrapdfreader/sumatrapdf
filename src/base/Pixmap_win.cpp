@@ -205,10 +205,11 @@ bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
     if (!p || !p->data || target.IsEmpty() || source.IsEmpty()) {
         return false;
     }
-    // a pixmap that carries real transparency (an image with an alpha channel)
-    // has to be blended with what's underneath, or SRCCOPY paints its
-    // transparent parts black (issue #5844)
-    if (p->hasAlpha && p->format == PixmapFormat::BGRA8 && !p->hbmp) {
+    // a pixmap that carries real transparency (an image with an alpha channel,
+    // or a PDF page rendered with a transparent backdrop) has to be blended
+    // with what's underneath, or SRCCOPY paints its transparent parts black
+    // (issues #5844, #1809). DIB-backed pages used to skip this and BitBlt.
+    if (p->hasAlpha && p->format == PixmapFormat::BGRA8) {
         return BlitPixmapRegionComposited(p, hdc, target, source);
     }
     SetStretchBltMode(hdc, HALFTONE);

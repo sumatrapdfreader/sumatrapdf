@@ -25,6 +25,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - if a PDF has no outline, the Bookmarks sidebar is filled from numbered headings in the text (`I. Introduction`, `II.A. Nested`, `1.2 Title`) so you can still jump around papers and reports that never stored a TOC (fixes #5724)
 - Command Palette mode switches at the top (`#` File History, `>` Commands, …) use the same smaller font as the hints at the bottom
 - Explorer and Outlook preview pane: Ctrl+wheel zooms, drag pans when zoomed in, and the wheel pans then turns the page at the edge. Double-click returns to fit-page (fixes #859)
+- **Transparency Grid** (`CmdToggleTransparencyGrid`, View menu) paints a checkerboard under the page so transparent PDFs (white elements on a hole) are visible, like Acrobat's Transparency Grid. Session-only; not saved in settings (fixes #1809)
 - Toggle Page Boxes (`CmdTogglePageBoxes`) outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each visible page — only boxes that page actually declares — and labels them `media`, `crop`, `trim`, and so on. For PDF development (print marks, trim vs crop). Palette and Debug menu; no default shortcut (fixes #814)
 - Change Language is a modeless window like Change Theme (search box, language list, OK / Cancel) instead of a modal dialog
 - Add Favorite is a modeless window like Change Theme instead of a modal dialog
@@ -305,6 +306,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdDebugShowFitContentArea` : "Debug: Show Fit Content Area" — Debug menu checkbox; outlines in red the area **Fit Content** zoom would fit to, without changing the zoom
 - `CmdTogglePageBoxes` : "Toggle Page Boxes" — palette / Debug menu; outlines PDF Media/Crop/Bleed/Trim/Art boxes that the page actually has (fixes #814)
 - `CmdSignDocument` : "Sign Document..." — sign a PDF with a Windows-store or `.pfx` / `.p12` certificate (fixes #5962)
+- `CmdToggleTransparencyGrid` : "Toggle Transparency Grid" — View menu; session-only checkerboard under the page (fixes #1809)
 
 **New command-line arguments:**
 

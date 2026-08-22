@@ -302,6 +302,7 @@ static SeqStrings gCommandNames =
     "CmdTogglePageBoxes\0"
     "CmdConvertPdfToImages\0"
     "CmdToggleUniformPageWidth\0"
+    "CmdToggleTransparencyGrid\0"
     "CmdNone\0"
     "\0";
 
@@ -592,6 +593,7 @@ static i32 gCommandIds[] = {
     CmdTogglePageBoxes,
     CmdConvertPdfToImages,
     CmdToggleUniformPageWidth,
+    CmdToggleTransparencyGrid,
     CmdNone,
 };
 
@@ -882,6 +884,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Page Boxes\0"
     "Convert PDF to Images...\0"
     "Toggle Uniform Page Width\0"
+    "Toggle Transparency Grid\0"
     "Do nothing\0"
     "\0";
 // clang-format on

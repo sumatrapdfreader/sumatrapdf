@@ -11829,6 +11829,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdToggleTransparencyGrid:
+            ToggleTransparencyGrid();
+            // cached tiles were rendered opaque; bump epoch so they are not reused
+            if (gRenderCache) {
+                gRenderCache->darkModeEpoch++;
+            }
+            for (auto& w : gWindows) {
+                w->RedrawAll(true);
+            }
+            break;
+
         case CmdDebugShowFitContentArea:
             // like CmdToggleImages: session-only debug aid, not a setting
             ToggleShowFitContentArea();
