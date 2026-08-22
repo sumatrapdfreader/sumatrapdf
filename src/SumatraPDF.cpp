@@ -227,8 +227,16 @@ static StrVec gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static StrVec gAllowedFileTypes;
 
+// Openable files in one directory, for next/prev and the end-of-document hint.
+// Built on a background thread: a folder of tens of thousands of files must
+// not freeze the UI (discussion #6014).
 static Str gNextPrevDir = {};
-static StrVec gNextPrevDirCache; // cached files in gNextPrevDir
+static StrVec gNextPrevDirCache;
+static int gNextPrevDirScanGen = 0;
+static bool gNextPrevDirReady = false;
+static bool gNextPrevDirScanning = false;
+
+static void EnsureNextPrevDirScan(Str filePath);
 
 static void CloseDocumentInCurrentTab(MainWindow* /*win*/, bool keepUIEnabled, bool deleteModel);
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh);
@@ -4259,6 +4267,9 @@ void StartLoadDocument(LoadArgs* argsIn) {
 
     MaybeDetachEphemeralHostFile(argsIn);
     path = argsIn->FilePath();
+    // overlap folder listing with the document load so next/prev and the
+    // last-page hint are ready without a UI-thread scan
+    EnsureNextPrevDirScan(path);
 
     if (argsIn->targetTab) {
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
@@ -6502,43 +6513,225 @@ static void RemoveFailedFiles(StrVec& files) {
     }
 }
 
-static StrVec& CollectNextPrevFilesIfChanged(Str path) {
-    StrVec& files = gNextPrevDirCache;
+static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete = {});
+static void MaybeShowNextFileScrollHint(MainWindow* win);
+static bool IsAtDocumentBottom(MainWindow* win);
 
-    TempStr dir = path::GetDirTemp(path);
-    if (!path::IsSame(dir, gNextPrevDir)) {
-        files.Reset();
-        str::ReplaceWithCopy(&gNextPrevDir, dir);
-        DirIter di{dir};
-        for (DirIterEntry* de : di) {
-            files.Append(de->filePath);
+static bool IsOpenableNextPrevFile(Str path) {
+    FileType kind = GuessFileTypeFromName(path, true);
+    return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
+}
+
+// File history is UI-thread only, so snapshot paths in this dir before the
+// worker runs and merge them there (unsupported types the user has opened).
+static void CollectHistoryFilesInDir(Str dir, StrVec& out) {
+    Vec<FileState*>* states = FileHistoryStates();
+    if (!states) {
+        return;
+    }
+    for (FileState* fs : *states) {
+        if (!fs || !fs->filePath) {
+            continue;
         }
+        TempStr d = path::GetDirTemp(fs->filePath);
+        if (!str::EqI(d, dir)) {
+            continue;
+        }
+        // DirIter already keeps openable names; only extra is unsupported
+        // types the user has opened (so we don't Contains() each history
+        // path against tens of thousands of listed files).
+        if (IsOpenableNextPrevFile(fs->filePath)) {
+            continue;
+        }
+        out.Append(fs->filePath);
+    }
+}
 
-        // remove unsupported files that have never been successfully loaded
-        int nFiles = len(files);
-        // remove unsupported files
-        // traverse from the end so that removing doesn't change iterator
-        for (int i = nFiles - 1; i >= 0; i--) {
-            Str path2 = files[i];
-            // files[] came from DirIter with the default includeDirs = false
-            FileType kind = GuessFileTypeFromName(path2, true);
-            bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
-            bool inHistory = FileHistoryFindByPath(path2);
-            if (isSupported || inHistory) {
-                continue;
-            }
-            files.RemoveAt(i);
+// Take ownership of src's pages so a 50k-file result isn't copied on the UI thread.
+static void StealStrVec(StrVec& dst, StrVec& src) {
+    dst.Reset();
+    dst.first = src.first;
+    dst.last = src.last;
+    dst.sortIndexes = src.sortIndexes;
+    dst.nextPageSize = src.nextPageSize;
+    dst.size = src.size;
+    dst.dataSize = src.dataSize;
+    src.first = nullptr;
+    src.last = nullptr;
+    src.sortIndexes = nullptr;
+    src.size = 0;
+    src.nextPageSize = 256;
+}
+
+// Keep the cached list naturally sorted without a full SortNatural on the UI thread.
+static void InsertSortedNatural(StrVec* v, Str s) {
+    if (v->Contains(s)) {
+        return;
+    }
+    int lo = 0;
+    int hi = len(*v);
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (StrLessNatural(v->At(mid), s)) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
         }
     }
-    // the set of failed files could have changed since the directory was read
-    RemoveFailedFiles(files);
+    v->InsertAt(lo, s);
+}
+
+struct PendingNextPrevNav {
+    MainWindow* win = nullptr;
+    bool forward = true;
+    Str pathToDelete; // owned
+    ~PendingNextPrevNav() { str::Free(pathToDelete); }
+};
+static PendingNextPrevNav* gPendingNextPrevNav = nullptr;
+
+static void ClearPendingNextPrevNav() {
+    delete gPendingNextPrevNav;
+    gPendingNextPrevNav = nullptr;
+}
+
+struct NextPrevDirScanReq {
+    int gen = 0;
+    Str dir; // owned
+    StrVec extraFromHistory;
+    ~NextPrevDirScanReq() { str::Free(dir); }
+};
+
+struct NextPrevDirScanResult {
+    int gen = 0;
+    Str dir; // owned
+    StrVec files;
+    int nRaw = 0;
+    double dirIterMs = 0;
+    double extraMs = 0;
+    double sortMs = 0;
+    double totalMs = 0;
+    ~NextPrevDirScanResult() { str::Free(dir); }
+};
+
+static void FinishNextPrevDirScan(NextPrevDirScanResult* r) {
+    AutoDelete del(r);
+    if (r->gen != gNextPrevDirScanGen) {
+        logf("NextPrevDirScan: drop stale gen %d (current %d), %d files\n", r->gen, gNextPrevDirScanGen, len(r->files));
+        return;
+    }
+    logf("NextPrevDirScan: apply %d files for %s (dirIter=%.1fms extra=%.1fms sort=%.1fms total=%.1fms UI thread=%d)\n",
+         len(r->files), r->dir, r->dirIterMs, r->extraMs, r->sortMs, r->totalMs, (int)uitask::IsMainUIThread());
+    StealStrVec(gNextPrevDirCache, r->files);
+    RemoveFailedFiles(gNextPrevDirCache);
+    gNextPrevDirReady = true;
+    gNextPrevDirScanning = false;
+
+    if (gPendingNextPrevNav) {
+        PendingNextPrevNav* p = gPendingNextPrevNav;
+        gPendingNextPrevNav = nullptr;
+        if (IsMainWindowValidAndNotClosing(p->win) && !p->win->IsCurrentTabAbout()) {
+            OpenNextPrevFileInFolder(p->win, p->forward, p->pathToDelete);
+        }
+        delete p;
+    }
+
+    for (MainWindow* w : gWindows) {
+        if (!IsMainWindowValidAndNotClosing(w) || !w->IsDocLoaded()) {
+            continue;
+        }
+        WindowTab* tab = w->CurrentTab();
+        if (!tab || !tab->filePath) {
+            continue;
+        }
+        TempStr dir = path::GetDirTemp(tab->filePath);
+        if (!str::EqI(dir, gNextPrevDir)) {
+            continue;
+        }
+        if (IsAtDocumentBottom(w)) {
+            MaybeShowNextFileScrollHint(w);
+        }
+    }
+}
+
+static void NextPrevDirScanThread(NextPrevDirScanReq* req) {
+    AutoDelete delReq(req);
+    auto tAll = TimeGet();
+    auto* r = new NextPrevDirScanResult;
+    r->gen = req->gen;
+    r->dir = str::Dup(req->dir);
+
+    auto t = TimeGet();
+    DirIter di{req->dir};
+    for (DirIterEntry* de : di) {
+        r->nRaw++;
+        if (IsOpenableNextPrevFile(de->filePath)) {
+            r->files.Append(de->filePath);
+        }
+    }
+    r->dirIterMs = TimeSinceInMs(t);
+
+    t = TimeGet();
+    for (int i = 0; i < len(req->extraFromHistory); i++) {
+        AppendIfNotExists(&r->files, req->extraFromHistory[i]);
+    }
+    r->extraMs = TimeSinceInMs(t);
+
+    t = TimeGet();
+    SortNatural(&r->files);
+    r->sortMs = TimeSinceInMs(t);
+    r->totalMs = TimeSinceInMs(tAll);
+
+    logf(
+        "NextPrevDirScan: thread done dir=%s nRaw=%d nKept=%d dirIter=%.1fms extra=%.1fms sort=%.1fms total=%.1fms UI "
+        "thread=%d\n",
+        r->dir, r->nRaw, len(r->files), r->dirIterMs, r->extraMs, r->sortMs, r->totalMs, (int)uitask::IsMainUIThread());
+
+    auto fn = MkFunc0(FinishNextPrevDirScan, r);
+    uitask::Post(fn, "FinishNextPrevDirScan");
+}
+
+static void StartNextPrevDirScan(Str dir) {
+    gNextPrevDirScanGen++;
+    gNextPrevDirReady = false;
+    gNextPrevDirScanning = true;
+    gNextPrevDirCache.Reset();
+    str::ReplaceWithCopy(&gNextPrevDir, dir);
+
+    auto* req = new NextPrevDirScanReq;
+    req->gen = gNextPrevDirScanGen;
+    req->dir = str::Dup(dir);
+    CollectHistoryFilesInDir(dir, req->extraFromHistory);
+
+    logf("NextPrevDirScan: start %s gen=%d extraFromHistory=%d (UI thread=%d)\n", dir, req->gen,
+         len(req->extraFromHistory), (int)uitask::IsMainUIThread());
+    auto fn = MkFunc0(NextPrevDirScanThread, req);
+    RunAsync(fn, StrL("NextPrevDirScan"));
+}
+
+static void EnsureNextPrevDirScan(Str filePath) {
+    if (!filePath || !CanAccessDisk() || gPluginMode) {
+        return;
+    }
+    TempStr dir = path::GetDirTemp(filePath);
+    if (path::IsSame(dir, gNextPrevDir) && (gNextPrevDirReady || gNextPrevDirScanning)) {
+        return;
+    }
+    StartNextPrevDirScan(dir);
+}
+
+// nullptr if the background listing is still running. Do not copy the vector.
+static StrVec* GetNextPrevFilesReady(Str path) {
+    EnsureNextPrevDirScan(path);
+    if (!gNextPrevDirReady) {
+        return nullptr;
+    }
+    RemoveFailedFiles(gNextPrevDirCache);
     // `path` itself is often one of the removed ones: it's the file we're
     // navigating away from and it may have just failed to load (the error page)
     // or be an unsupported type opened explicitly. Callers locate it in the list
     // to know where to continue from, so it has to be there (#5917)
-    AppendIfNotExists(&files, path);
-    SortNatural(&files);
-    return files;
+    InsertSortedNatural(&gNextPrevDirCache, path);
+    return &gNextPrevDirCache;
 }
 
 // at folder ends: forward = last file (next), !forward = first file (prev)
@@ -6588,16 +6781,19 @@ static TempStr PeekNextFileInFolderTemp(MainWindow* win, int* outN = nullptr, in
         return {};
     }
     Str path = tab->filePath;
-    StrVec& files = CollectNextPrevFilesIfChanged(path);
-    int nFiles = len(files);
+    StrVec* files = GetNextPrevFilesReady(path);
+    if (!files) {
+        return {}; // listing still running; hint is shown when it finishes
+    }
+    int nFiles = len(*files);
     if (nFiles < 2) {
         return {};
     }
-    int idx = files.Find(path);
+    int idx = files->Find(path);
     if (idx < 0 || idx + 1 >= nFiles) {
         return {}; // no wrap: already last
     }
-    Str next = files[idx + 1];
+    Str next = files->At(idx + 1);
     if (!file::Exists(next)) {
         return {};
     }
@@ -6617,19 +6813,8 @@ void DismissNextFileScrollHint(MainWindow* win) {
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifNextFileHint);
 }
 
-// scroll-down at document end: show open-next-file tip; scroll-up: dismiss.
-// Called after vertical scroll / page-change intents.
-// vertical scroll intent for discoverability of "open next file in folder":
-// scroll-down at document end may show a next-file hint; scroll-up dismisses it
-void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
-    if (!IsMainWindowValidAndNotClosing(win)) {
-        return;
-    }
-    if (!down) {
-        DismissNextFileScrollHint(win);
-        return;
-    }
-    if (!win->IsDocLoaded() || win->IsCurrentTabAbout()) {
+static void MaybeShowNextFileScrollHint(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded() || win->IsCurrentTabAbout()) {
         return;
     }
     if (!IsAtDocumentBottom(win)) {
@@ -6664,7 +6849,20 @@ void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
     ShowNotification(args);
 }
 
-static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete = {});
+// scroll-down at document end: show open-next-file tip; scroll-up: dismiss.
+// Called after vertical scroll / page-change intents.
+// vertical scroll intent for discoverability of "open next file in folder":
+// scroll-down at document end may show a next-file hint; scroll-up dismisses it
+void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    if (!down) {
+        DismissNextFileScrollHint(win);
+        return;
+    }
+    MaybeShowNextFileScrollHint(win);
+}
 
 struct NextPrevFileInFolderData {
     MainWindow* win = nullptr;
@@ -6695,8 +6893,8 @@ static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
         HwndRepaintNow(win->tabsCtrl->hwnd);
         return;
     }
-    // remember the failure so CollectNextPrevFilesIfChanged skips this
-    // file, then advance to the one after it in the same direction
+    // remember the failure so GetNextPrevFilesReady skips this file, then
+    // advance to the one after it in the same direction
     MarkFileFailedToOpen(d->path);
     OpenNextPrevFileInFolder(win, d->forward, d->pathToDelete);
 }
@@ -6735,46 +6933,47 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDe
     DismissNextFileScrollHint(win);
 
     WindowTab* tab = win->CurrentTab();
-    bool didRetry = false;
-again:
     Str path = tab->filePath;
-    StrVec files = CollectNextPrevFilesIfChanged(path);
-    if (len(files) < 2) {
+    StrVec* files = GetNextPrevFilesReady(path);
+    if (!files) {
+        ClearPendingNextPrevNav();
+        auto* p = new PendingNextPrevNav;
+        p->win = win;
+        p->forward = forward;
+        p->pathToDelete = str::Dup(pathToDelete);
+        gPendingNextPrevNav = p;
+        logf("OpenNextPrevFileInFolder: folder scan in progress, deferring (UI thread=%d)\n",
+             (int)uitask::IsMainUIThread());
+        return;
+    }
+    if (len(*files) < 2) {
         ShowNoFileToOpenNotif(win, forward);
         return;
     }
 
-    int nFiles = len(files);
-    int idx = files.Find(path);
+    int nFiles = len(*files);
+    int idx = files->Find(path);
     if (idx < 0) {
         ShowNoFileToOpenNotif(win, forward);
         return;
     }
-    // do not wrap around at the ends of the folder
-    if (forward) {
-        if (idx + 1 >= nFiles) {
-            ShowNoFileToOpenNotif(win, forward);
-            return;
+    // do not wrap around at the ends of the folder; skip files that vanished
+    int step = forward ? 1 : -1;
+    int next = idx + step;
+    Str chosen = {};
+    while (next >= 0 && next < nFiles) {
+        Str cand = files->At(next);
+        if (file::Exists(cand)) {
+            chosen = cand;
+            break;
         }
-        idx = idx + 1;
-    } else {
-        if (idx <= 0) {
-            ShowNoFileToOpenNotif(win, forward);
-            return;
-        }
-        idx = idx - 1;
+        next += step;
     }
-    path = files[idx];
-    if (!file::Exists(path)) {
-        if (didRetry) {
-            ShowNoFileToOpenNotif(win, forward);
-            return;
-        }
-        didRetry = true;
-        str::Free(gNextPrevDir);
-        gNextPrevDir = {}; // trigger re-reading the directory
-        goto again;
+    if (!chosen) {
+        ShowNoFileToOpenNotif(win, forward);
+        return;
     }
+    path = chosen;
 
     // with pathToDelete the caller wants the old file deleted once the new one
     // loaded, which only the load path does
@@ -14482,4 +14681,5 @@ void ShutdownCleanup() {
 
     gAllowedFileTypes.Reset();
     gAllowedLinkProtocols.Reset();
+    ClearPendingNextPrevNav();
 }
