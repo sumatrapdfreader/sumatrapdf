@@ -5,6 +5,11 @@
 #include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
+#include "base/ByteReaderWriter.h"
+
+extern "C" {
+#include <mupdf/fitz.h>
+}
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -15,6 +20,8 @@
 #include "EngineAll.h"
 #include "Annotation.h"
 #include "ImageReader.h"
+#include "ImageSaveCropResize.h"
+#include "PdfCreator.h"
 #include "PdfCadDetect.h"
 #include "DisplayModel.h"
 #include "PdfSync.h"
@@ -1805,6 +1812,191 @@ TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str ce
     out.Append(StrL("ok=1\n"));
     if (exitCodeOut) {
         *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+static int JpegSofComponents(Str jpeg) {
+    ByteReader r(jpeg);
+    int n = len(jpeg);
+    if (n < 4 || r.UInt8(0) != 0xFF || r.UInt8(1) != 0xD8) {
+        return 0;
+    }
+    int i = 2;
+    while (i + 9 < n) {
+        if (r.UInt8(i) != 0xFF) {
+            return 0;
+        }
+        u8 marker = r.UInt8(i + 1);
+        if (marker == 0xDA || marker == 0xD9) {
+            return 0;
+        }
+        if (marker >= 0xD0 && marker <= 0xD7) {
+            i += 2;
+            continue;
+        }
+        if (marker == 0x01) {
+            i += 2;
+            continue;
+        }
+        u16 seglen = r.UInt16BE(i + 2);
+        if (seglen < 2) {
+            return 0;
+        }
+        if (marker >= 0xC0 && marker <= 0xC3) {
+            return r.UInt8(i + 9);
+        }
+        i += 2 + (int)seglen;
+    }
+    return 0;
+}
+
+static u16 TiffPhotometric(Str tiff) {
+    ByteReader r(tiff);
+    int n = len(tiff);
+    if (n < 8 || r.UInt8(0) != 'I' || r.UInt8(1) != 'I') {
+        return 0;
+    }
+    u32 ifd = r.UInt32LE(4);
+    if (ifd + 2 > (u32)n) {
+        return 0;
+    }
+    u16 count = r.UInt16LE((int)ifd);
+    for (u16 i = 0; i < count; i++) {
+        int e = (int)ifd + 2 + (int)i * 12;
+        if (e + 12 > n) {
+            break;
+        }
+        if (r.UInt16LE(e) == 262) {
+            return r.UInt16LE(e + 8);
+        }
+    }
+    return 0;
+}
+
+// PDF with a DeviceCMYK JPEG (PDF polarity), then Save Image as JPEG/TIFF.
+// JPEG must stay CMYK with Adobe invert so it is not a negative; TIFF must
+// stay CMYK (not RGB).
+TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut) {
+    EnsureTestGlobalPrefs();
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        if (!str::EndsWith(msg, StrL("\n"))) {
+            out.AppendChar('\n');
+        }
+        return ToStrTemp(out);
+    };
+    if (!jpegPath || !tiffPath) {
+        return fail(StrL("ERROR bad-args"));
+    }
+
+    PdfCreator pdf;
+    if (!pdf.ctx || !pdf.doc) {
+        return fail(StrL("ERROR pdf-create"));
+    }
+    fz_context* ctx = pdf.ctx;
+    fz_pixmap* pix = nullptr;
+    fz_buffer* jpegBuf = nullptr;
+    Str jpegSrc;
+    bool built = false;
+    fz_var(pix);
+    fz_var(jpegBuf);
+
+    fz_try(ctx) {
+        pix = fz_new_pixmap(ctx, fz_device_cmyk(ctx), 32, 32, nullptr, 0);
+        fz_clear_pixmap(ctx, pix);
+        for (int y = 0; y < 32; y++) {
+            u8* p = pix->samples + ((size_t)y * (size_t)pix->stride);
+            for (int x = 0; x < 32; x++) {
+                p[0] = 200;
+                p[1] = 10;
+                p[2] = 20;
+                p[3] = 30;
+                p += 4;
+            }
+        }
+        // Adobe polarity so PdfCreator (standalone JPEG → Decode invert) embeds
+        // a typical Photoshop-style DeviceCMYK JPEG.
+        jpegBuf = fz_new_buffer_from_pixmap_as_jpeg(ctx, pix, fz_default_color_params, 95, 1);
+        unsigned char* data = nullptr;
+        size_t n = fz_buffer_storage(ctx, jpegBuf, &data);
+        if (data && n > 0 && n <= (size_t)INT_MAX) {
+            jpegSrc = Str((char*)data, (int)n);
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        jpegSrc = {};
+    }
+    if (jpegSrc) {
+        built = pdf.AddPageFromImageData(jpegSrc, 72.f);
+    }
+    fz_drop_buffer(ctx, jpegBuf);
+    fz_drop_pixmap(ctx, pix);
+    if (!built) {
+        return fail(StrL("ERROR embed-cmyk-jpeg"));
+    }
+
+    TempStr pdfPath = GetTempFilePathTemp(StrL("cmyksave"));
+    if (!pdfPath || !pdf.SaveToFile(pdfPath)) {
+        return fail(StrL("ERROR save-pdf"));
+    }
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        file::Delete(pdfPath);
+        return fail(StrL("ERROR engine-create-failed"));
+    }
+    if (!engine->BenchLoadPage(1)) {
+        SafeEngineRelease(&engine);
+        file::Delete(pdfPath);
+        return fail(StrL("ERROR page-load-failed"));
+    }
+    Vec<IPageElement*> els = engine->GetElements(1);
+    IPageElement* imgEl = nullptr;
+    for (IPageElement* el : els) {
+        if (el && el->Is(kindPageElementImage)) {
+            imgEl = el;
+            break;
+        }
+    }
+    if (!imgEl) {
+        SafeEngineRelease(&engine);
+        file::Delete(pdfPath);
+        return fail(StrL("ERROR no-image-element"));
+    }
+    Str jpeg = engine->GetImageDataForPageElement(imgEl);
+    SafeEngineRelease(&engine);
+    file::Delete(pdfPath);
+    if (!jpeg) {
+        return fail(StrL("ERROR no-image-data"));
+    }
+    bool wroteJpeg = file::WriteFile(jpegPath, jpeg);
+    bool wroteTiff = TrySaveOriginalAsCmykTiff(jpeg, tiffPath);
+    int nComp = JpegSofComponents(jpeg);
+    int cw = 0, ch = 0, cstride = 0;
+    Vec<u8> cmyk;
+    bool decoded = DecodeJpegToCmyk(jpeg, cw, ch, cstride, cmyk);
+    int jc = 0, jm = 0, jy = 0, jk = 0;
+    if (decoded && cstride >= 4 && len(cmyk) >= 4) {
+        jc = cmyk[0];
+        jm = cmyk[1];
+        jy = cmyk[2];
+        jk = cmyk[3];
+    }
+    Str tiff = file::ReadFile(tiffPath);
+    u16 photo = TiffPhotometric(tiff);
+    str::Free(tiff);
+    str::Free(jpeg);
+
+    out.Append(fmt("jpeg_ok=%d jpeg_n=%d jpeg_c=%d jpeg_m=%d jpeg_y=%d jpeg_k=%d tiff_ok=%d tiff_photo=%d\n",
+                   (int)wroteJpeg, nComp, jc, jm, jy, jk, (int)wroteTiff, (int)photo));
+    if (exitCodeOut) {
+        *exitCodeOut = (wroteJpeg && wroteTiff && nComp == 4 && photo == 5) ? 0 : 1;
     }
     return ToStrTemp(out);
 }

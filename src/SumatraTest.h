@@ -30,3 +30,4 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut = nullptr);
 TempStr ListSigningCertsResultTemp(int* exitCodeOut = nullptr);
 TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword,
                                Str imagePath = {}, int appearanceFlags = -1, int* exitCodeOut = nullptr);
+TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut = nullptr);

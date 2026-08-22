@@ -654,6 +654,7 @@ enum class ControlCmd : u16 {
     TestSelectionVars = 72,
     TestSelectionToolbar = 73,
     TestMarkupAnnots = 74,
+    TestCmykImageSave = 75,
 };
 
 enum class ControlArgType : u16 {
@@ -1501,6 +1502,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ConvertPagesToImagesResultTemp(templatePath, pagesSpec, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestCmykImageSave: {
+            Str jpegPath = StringArg(req, 0);
+            Str tiffPath = StringArg(req, 1);
+            if (!jpegPath || !tiffPath) {
+                AppendError(req, StrL("TestCmykImageSave expects string jpegPath, string tiffPath"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = CmykImageSaveResultTemp(jpegPath, tiffPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

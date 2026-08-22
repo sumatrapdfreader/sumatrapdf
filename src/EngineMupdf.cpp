@@ -6681,8 +6681,54 @@ RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
 #endif
 }
 
+// PDF-embedded CMYK JPEG uses PDF polarity (0 = no ink). A standalone JPEG
+// uses the Adobe/Photoshop convention (0 = full ink). Dumping the DCT stream
+// as a .jpg therefore looks inverted. Re-encode from the decoded pixmap with
+// invert_cmyk so Save Image keeps CMYK and displays correctly.
+static Str StandaloneJpegFromPdfCmykImage(fz_context* ctx, fz_image* image) {
+    fz_pixmap* pix = nullptr;
+    fz_pixmap* deviceCmyk = nullptr;
+    fz_buffer* buf = nullptr;
+    Str result;
+    fz_var(pix);
+    fz_var(deviceCmyk);
+    fz_var(buf);
+
+    fz_try(ctx) {
+        pix = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+        if (pix && pix->colorspace && fz_colorspace_is_cmyk(ctx, pix->colorspace) && !pix->alpha && pix->s == 0) {
+            fz_pixmap* src = pix;
+            if (pix->colorspace != fz_device_cmyk(ctx)) {
+                deviceCmyk =
+                    fz_convert_pixmap(ctx, pix, fz_device_cmyk(ctx), nullptr, nullptr, fz_default_color_params, 1);
+                src = deviceCmyk;
+            }
+            if (src) {
+                buf = fz_new_buffer_from_pixmap_as_jpeg(ctx, src, fz_default_color_params, 95, 1);
+                unsigned char* data = nullptr;
+                size_t n = fz_buffer_storage(ctx, buf, &data);
+                if (data && n > 0 && n <= (size_t)INT_MAX) {
+                    result = str::Dup(Str((char*)data, (int)n));
+                }
+            }
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+        fz_drop_pixmap(ctx, deviceCmyk);
+        fz_drop_pixmap(ctx, pix);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        str::Free(result);
+        result = {};
+    }
+    return result;
+}
+
 // JPEG/PNG/GIF/BMP/TIFF streams that are already a complete file. Flate-raw
-// samples, JPEG2000, JBIG2, and images with a decode/mask are not.
+// samples, JPEG2000, JBIG2, and images with a decode/mask are not. CMYK JPEG
+// is re-encoded (see StandaloneJpegFromPdfCmykImage).
 Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
     if (!ipel || ipel->GetKind() != kindPageElementImage) {
         return {};
@@ -6703,7 +6749,13 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
         return {};
     }
     int type = cbuf->params.type;
-    if (image->use_colorkey || image->use_decode || image->mask) {
+    if (image->use_colorkey || image->mask) {
+        return {};
+    }
+    if (type == FZ_IMAGE_JPEG && image->n == 4) {
+        return StandaloneJpegFromPdfCmykImage(ctx, image);
+    }
+    if (image->use_decode) {
         return {};
     }
     if (type != FZ_IMAGE_JPEG && type != FZ_IMAGE_PNG && type != FZ_IMAGE_GIF && type != FZ_IMAGE_BMP &&

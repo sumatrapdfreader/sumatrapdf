@@ -93,6 +93,81 @@ static Pixmap* PixmapFromImageData(fz_context* ctx, const u8* data, size_t n) {
     return pix ? PixmapFromFzPixmap(ctx, pix) : nullptr;
 }
 
+// Standalone JPEG → packed C,M,Y,K (stride = w*4). 0 = no ink (PDF polarity).
+// False if the JPEG is not CMYK/YCCK.
+bool DecodeJpegToCmyk(Str jpeg, int& w, int& h, int& stride, Vec<u8>& samples) {
+    w = 0;
+    h = 0;
+    stride = 0;
+    samples.Reset();
+    if (len(jpeg) < 4) {
+        return false;
+    }
+
+    fz_context* ctx = fz_new_context_windows();
+    if (!ctx) {
+        return false;
+    }
+
+    fz_buffer* buf = nullptr;
+    fz_image* img = nullptr;
+    fz_pixmap* pix = nullptr;
+    fz_pixmap* deviceCmyk = nullptr;
+    bool ok = false;
+    fz_var(buf);
+    fz_var(img);
+    fz_var(pix);
+    fz_var(deviceCmyk);
+
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_shared_data(ctx, (const u8*)jpeg.s, (size_t)len(jpeg));
+        img = fz_new_image_from_buffer(ctx, buf);
+        pix = fz_get_pixmap_from_image(ctx, img, nullptr, nullptr, nullptr, nullptr);
+        fz_pixmap* src = pix;
+        if (src && src->colorspace && fz_colorspace_is_cmyk(ctx, src->colorspace) && src->n >= 4) {
+            if (src->colorspace != fz_device_cmyk(ctx) || src->alpha || src->s > 0) {
+                deviceCmyk =
+                    fz_convert_pixmap(ctx, src, fz_device_cmyk(ctx), nullptr, nullptr, fz_default_color_params, 1);
+                src = deviceCmyk;
+            }
+        } else {
+            src = nullptr;
+        }
+        if (src && src->n == 4 && src->w > 0 && src->h > 0) {
+            int rowBytes = src->w * 4;
+            i64 nBytes = (i64)rowBytes * src->h;
+            if (nBytes > 0 && nBytes <= INT_MAX && VecReserve(samples, (int)nBytes)) {
+                samples.len = (int)nBytes;
+                for (int y = 0; y < src->h; y++) {
+                    memcpy(samples.els + ((size_t)y * (size_t)rowBytes),
+                           src->samples + ((size_t)y * (size_t)src->stride), (size_t)rowBytes);
+                }
+                w = src->w;
+                h = src->h;
+                stride = rowBytes;
+                ok = true;
+            }
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_pixmap(ctx, deviceCmyk);
+        fz_drop_pixmap(ctx, pix);
+        fz_drop_image(ctx, img);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        ok = false;
+        samples.Reset();
+        w = 0;
+        h = 0;
+        stride = 0;
+    }
+
+    fz_drop_context_windows(ctx);
+    return ok;
+}
+
 static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix) {
     int w = pix->w;
     int h = pix->h;
