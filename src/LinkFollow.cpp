@@ -122,6 +122,24 @@ bool KeyboardLinkFollowingActive(MainWindow* win) {
     return win && win->linkFollowActive;
 }
 
+// Unmodified letter keys and Backspace type a hint. Callers must already have
+// filtered out Ctrl/Alt/Shift so Shift+F still toggles the mode off. Issue #6019.
+bool KeyboardLinkFollowingCapturesKey(MainWindow* win, WPARAM vk) {
+    if (!KeyboardLinkFollowingActive(win)) {
+        return false;
+    }
+    if (vk == VK_BACK) {
+        return true;
+    }
+    if (vk >= 'A' && vk <= 'Z') {
+        return true;
+    }
+    if (vk >= 'a' && vk <= 'z') {
+        return true;
+    }
+    return false;
+}
+
 struct ScreenTarget {
     Rect screenRect;
     KeyboardLinkTarget target;

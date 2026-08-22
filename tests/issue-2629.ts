@@ -15,6 +15,7 @@ import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { VK_ESCAPE, WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
 
 const VK_F = 0x46;
+const VK_A = 0x41;
 
 // An unmodified key press. Modified shortcuts (Shift + F) can't be driven this
 // way: TranslateAccelerator asks GetKeyState() for the modifiers and posted key
@@ -238,6 +239,21 @@ async function testLinkedPdf(): Promise<void> {
       postMessage(frame, WM_CHAR, "a".charCodeAt(0), 0);
       ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
       const singleHintPage = state.page;
+
+      // issue #6019: 'a' is also CmdCreateAnnotHighlight. A real WM_KEYDOWN
+      // (what typing produces) must follow the hint, not create an annotation.
+      sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
+      await client.waitForRenderIdle();
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20 && s.page === 1));
+      pressVKey(frame, VK_A);
+      ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
+      if (state.page !== singleHintPage) {
+        fail(
+          `WM_KEYDOWN 'A' should follow the same hint as WM_CHAR 'a' (page ${singleHintPage}), went to ${state.page}`,
+          dump,
+        );
+      }
 
       // SA is a two-letter hint for the second link. S alone must keep the mode
       // active instead of following a different link or falling through to an

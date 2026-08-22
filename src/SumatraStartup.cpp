@@ -71,6 +71,7 @@
 #include "DarkMode_win.h"
 #include "CommandPalette.h"
 #include "SelectTextKeyboard.h"
+#include "LinkFollow.h"
 #include "SumatraControl.h"
 #include "ExplorerQuickLook.h"
 #include "SumatraLog.h"
@@ -746,6 +747,15 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         bool isCaretKey = key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_HOME ||
                           key == VK_END || key == VK_PRIOR || key == VK_NEXT;
         if (isCaretKey && SelectTextWithKeyboardActive(FindMainWindowByHwnd(msg.hwnd))) {
+            return false;
+        }
+    }
+
+    // Vimium-style link hints: letter keys type the hint, so skip letter
+    // accelerators ('a' = highlight, 'n' = next page, …). Ctrl/Alt/Shift
+    // shortcuts still work (Shift+F toggles the mode off). Issue #6019.
+    if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsAltPressed() && !IsShiftPressed()) {
+        if (KeyboardLinkFollowingCapturesKey(FindMainWindowByHwnd(msg.hwnd), msg.wParam)) {
             return false;
         }
     }
