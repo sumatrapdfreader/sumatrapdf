@@ -1211,8 +1211,7 @@ static void InstallerThread(Flags* cli) {
 
     // for cleaner upgrades, remove registry entries and shortcuts from previous installations
     // doing it unconditionally, because deleting non-existing things doesn't hurt
-    // (filter/preview/plugin already unregistered in FreeInstallationFilesInUse)
-    UninstallBrowserPlugin();
+    // (filter/preview already unregistered in FreeInstallationFilesInUse)
     UninstallPreviewDll();
     UninstallSearchFilter();
     if (gPrevInstall.allUsers) {

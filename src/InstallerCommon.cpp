@@ -311,15 +311,6 @@ TempStr GetShortcutPathTemp(int csidl) {
     return path::JoinTemp(dir, lnkName);
 }
 
-static TempStr GetInstalledBrowserPluginPathTemp() {
-#ifndef _WIN64
-    Str kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
-#else
-    Str kRegPathPlugin = StrL("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64");
-#endif
-    return LoggedReadRegStr2Temp(kRegPathPlugin, StrL("Path"));
-}
-
 static bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2) {
     // Note: don't know why procId 0 shows up as using our files
     if (procId == 0 || procId == GetCurrentProcessId()) {
@@ -348,27 +339,6 @@ static bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2) {
         cont = Module32Next(snap, &mod);
     }
     return false;
-}
-
-constexpr const char* kBrowserPluginName = "npPdfViewer.dll";
-
-void UninstallBrowserPlugin() {
-    log(StrL("UninstallBrowserPlugin()\n"));
-    TempStr dllPath = GetExistingInstallationFilePathTemp(Str(kBrowserPluginName));
-    if (!file::Exists(dllPath)) {
-        // uninstall the detected plugin, even if it isn't in the target installation path
-        dllPath = GetInstalledBrowserPluginPathTemp();
-        if (!file::Exists(dllPath)) {
-            return;
-        }
-    }
-    bool ok = UnRegisterServerDLL(dllPath);
-    if (ok) {
-        log(StrL("  did uninstall browser plugin\n"));
-        return;
-    }
-    log(StrL("  failed to uninstall browser plugin\n"));
-    NotifyFailed(_TRA("Couldn't uninstall browser plugin"));
 }
 
 constexpr const char* kSearchFilterDllName = "PdfFilter.dll";
@@ -525,7 +495,7 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
 }
 
 // Kill processes that have any of our install-dir modules loaded:
-// libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll, browser plugin, SumatraPDF.exe.
+// libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll, SumatraPDF.exe.
 // dllhost/prevhost/SearchFilterHost load the shell-extension DLLs; they may
 // keep PdfFilter.dll locked even after libsumatrapdf.dll was renamed aside.
 // returns false if there are processes and we failed to kill them
@@ -536,7 +506,6 @@ static bool KillProcessesUsingInstallationDir(Str dir) {
     }
     TempStr libsumatrapdf = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
     TempStr libmupdfLegacy = path::JoinTemp(dir, StrL("libmupdf.dll")); // through 3.6
-    TempStr browserPlugin = path::JoinTemp(dir, Str(kBrowserPluginName));
     TempStr filterDll = path::JoinTemp(dir, Str(kSearchFilterDllName));
     TempStr previewDll = path::JoinTemp(dir, Str(kPreviewDllName));
     TempStr exePath = path::JoinTemp(dir, Str(kExeName));
@@ -553,8 +522,7 @@ static bool KillProcessesUsingInstallationDir(Str dir) {
     while (ok) {
         DWORD procID = proc.th32ProcessID;
         bool uses = IsProcessUsingFiles(procID, libsumatrapdf, libmupdfLegacy) ||
-                    IsProcessUsingFiles(procID, browserPlugin, filterDll) ||
-                    IsProcessUsingFiles(procID, previewDll, exePath);
+                    IsProcessUsingFiles(procID, filterDll, previewDll) || IsProcessUsingFiles(procID, exePath, {});
         if (uses) {
             TempStr s = ToUtf8Temp(proc.szExeFile);
             logf("  attempting to kill process %d '%s'\n", (int)procID, s);
@@ -569,7 +537,7 @@ static bool KillProcessesUsingInstallationDir(Str dir) {
     }
 
     // Also target by module path (covers short-lived filter hosts).
-    const TempStr modulePaths[] = {libsumatrapdf, libmupdfLegacy, filterDll, previewDll, exePath, browserPlugin};
+    const TempStr modulePaths[] = {libsumatrapdf, libmupdfLegacy, filterDll, previewDll, exePath};
     for (TempStr mod : modulePaths) {
         if (file::Exists(mod)) {
             int n = KillProcessesWithModule(mod, true);
@@ -610,7 +578,6 @@ void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallSt
         log(StrL("  unregistering previewer before file overwrite\n"));
         UninstallPreviewDll();
     }
-    UninstallBrowserPlugin();
 
     if (installDir) {
         KillProcessesUsingInstallationDir(installDir);
@@ -649,7 +616,7 @@ void RestoreShellExtensions(const ShellExtInstallState& state) {
 }
 
 // return names of processes that are running part of the installation
-// (i.e. have libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll, or plugin loaded)
+// (i.e. have libsumatrapdf.dll, PdfFilter.dll, or PdfPreview.dll loaded)
 static void ProcessesUsingInstallation(StrVec& names) {
     log(StrL("ProcessesUsingInstallation()\n"));
     TempStr dir = GetExistingInstallationDirTemp();
@@ -658,7 +625,6 @@ static void ProcessesUsingInstallation(StrVec& names) {
     }
     TempStr libsumatrapdf = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
     TempStr libmupdfLegacy = path::JoinTemp(dir, StrL("libmupdf.dll")); // through 3.6
-    TempStr browserPlugin = path::JoinTemp(dir, Str(kBrowserPluginName));
     TempStr filterDll = path::JoinTemp(dir, Str(kSearchFilterDllName));
     TempStr previewDll = path::JoinTemp(dir, Str(kPreviewDllName));
     TempStr exePath = path::JoinTemp(dir, Str(kExeName));
@@ -674,8 +640,7 @@ static void ProcessesUsingInstallation(StrVec& names) {
     while (ok) {
         DWORD procID = proc.th32ProcessID;
         bool uses = IsProcessUsingFiles(procID, libsumatrapdf, libmupdfLegacy) ||
-                    IsProcessUsingFiles(procID, browserPlugin, filterDll) ||
-                    IsProcessUsingFiles(procID, previewDll, exePath);
+                    IsProcessUsingFiles(procID, filterDll, previewDll) || IsProcessUsingFiles(procID, exePath, {});
         if (uses) {
             // TODO: this kils ReadableProcName logic
             TempStr s = ToUtf8Temp(proc.szExeFile);
@@ -690,8 +655,6 @@ static void ProcessesUsingInstallation(StrVec& names) {
 // clang-format off
 static Str readableProcessNames[] = {
     Str(), Str(), // to be filled with our process
-    StrL("plugin-container.exe"), StrL("Mozilla Firefox"),
-    StrL("chrome.exe"), StrL("Google Chrome"),
     StrL("prevhost.exe"), StrL("Windows Explorer"),
     StrL("dllhost.exe"), StrL("Windows Explorer")
 };

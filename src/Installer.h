@@ -82,8 +82,6 @@ void UnRegisterPreviewer();
 void RegisterSearchFilter(bool allUsers, Str installDir);
 void UnRegisterSearchFilter();
 
-void UninstallBrowserPlugin();
-
 // Unregister shell extensions and kill processes holding install-dir files
 // so ExtractInstallerFiles can overwrite PdfFilter.dll / PdfPreview.dll / etc.
 // Call before extracting over an existing install. removedOut (optional) is

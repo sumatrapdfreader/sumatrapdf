@@ -51,7 +51,6 @@ const char* gInstalledFiles[] = {
     // files no longer shipped, to be deleted
     "libmupdf.dll", // renamed to libsumatrapdf.dll in 3.7
     "DroidSansFallback.ttf",
-    "npPdfViewer.dll",
     "uninstall.exe",
     "UnRar.dll",
     "UnRar64.dll",
@@ -151,7 +150,6 @@ static void UninstallerThread() {
     gWasSearchFilterInstalled = false;
     gWasPreviewInstaller = false;
 
-    UninstallBrowserPlugin();
     RemoveInstallRegistryKeys(HKEY_LOCAL_MACHINE);
     RemoveInstallRegistryKeys(HKEY_CURRENT_USER);
     RemoveAppShortcuts();
