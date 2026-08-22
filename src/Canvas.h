@@ -14,6 +14,8 @@ bool ShowTransparencyGrid();
 void ToggleTransparencyGrid();
 bool ShowPageGrid();
 void TogglePageGrid();
+void SetShowPageGrid(bool);
+void RedrawPageGridWindows();
 bool ShowFitContentArea();
 void ToggleShowFitContentArea();
 bool IsLaserPointerActive();

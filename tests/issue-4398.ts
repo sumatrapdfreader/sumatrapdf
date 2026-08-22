@@ -1,8 +1,9 @@
 // Test for https://github.com/sumatrapdfreader/sumatrapdf/issues/4398
 //
-// CmdTogglePageGrid overlays a dotted graph paper on fixed-page documents
-// (¼ inch minor / 1 inch major, color 128,128,255). Session-only; not saved.
-// On top of the page bitmap, unlike CmdToggleTransparencyGrid.
+// CmdTogglePageGrid overlays graph paper on fixed-page documents (default
+// ¼ inch minor / 1 inch major, color 128,128,255, dots). Showing it is
+// session-only. CmdConfigurePageGrid sets spacing, origin, color and style
+// (saved in FixedPageUI.PageGrid).
 //
 // The fixture is tests/issue-4398.pdf (opaque white page + text). Regenerated
 // by this file when run as main.
@@ -13,8 +14,20 @@ import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
 import { EXE, ROOT, cmdId, runStandalone } from "./util.ts";
-import { captureWindowPixels } from "./winapi.ts";
-import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
+import {
+  captureWindowPixels,
+  enumChildWindows,
+  enumWindows,
+  getClassName,
+  getControlText,
+  getWindowPid,
+  getWindowText,
+  sendMessage,
+  sleep,
+} from "./winapi.ts";
+import { findCanvas, pressEscape, sendCommand, waitForFrame } from "./win-automation.ts";
+
+const BM_CLICK = 0x00f5;
 
 const PDF = join(ROOT, "tests", "issue-4398.pdf");
 
@@ -41,6 +54,47 @@ export function makePageGridPdf(): string {
   }
   body += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
   return body;
+}
+
+async function waitForPageGridDialog(pid: number, timeoutMs = 5000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    let found = 0;
+    enumWindows((hwnd) => {
+      if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Page Grid") {
+        found = hwnd;
+      }
+      return true;
+    });
+    if (found) {
+      return found;
+    }
+    await sleep(30);
+  }
+  throw new Error("issue-4398: Page Grid dialog did not appear");
+}
+
+function findShowGridCheckbox(dlg: number): number {
+  let found = 0;
+  enumChildWindows(dlg, (hwnd) => {
+    if (getClassName(hwnd) === "Button" && getControlText(hwnd).replace(/&/g, "") === "Show Grid") {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
+function countChildClass(dlg: number, className: string): number {
+  let n = 0;
+  enumChildWindows(dlg, (hwnd) => {
+    if (getClassName(hwnd) === className) {
+      n++;
+    }
+    return true;
+  });
+  return n;
 }
 
 function countGridColor(data: Uint8Array): number {
@@ -89,6 +143,36 @@ export async function testit(): Promise<void> {
         throw new Error(`issue-4398: page grid did not show (grid pixels before=${nBefore} after=${nAfter})`);
       }
       console.log(`  grid pixels ${nBefore} -> ${nAfter} ✓`);
+
+      sendCommand(frame, cmdId("CmdTogglePageGrid"));
+      await client.waitForRenderIdle(30000);
+
+      sendCommand(frame, cmdId("CmdConfigurePageGrid"));
+      const dlg = await waitForPageGridDialog(proc.pid!);
+      const readyDeadline = Date.now() + 3000;
+      let cb = 0;
+      while (Date.now() < readyDeadline) {
+        cb = findShowGridCheckbox(dlg);
+        if (cb && countChildClass(dlg, "ComboBox") >= 2 && countChildClass(dlg, "Edit") >= 5) {
+          break;
+        }
+        await sleep(30);
+      }
+      if (!cb) {
+        throw new Error("issue-4398: Show Grid checkbox not found");
+      }
+      sendMessage(cb, BM_CLICK, 0, 0);
+      await client.waitForRenderIdle(30000);
+      const fromDlg = captureWindowPixels(canvas);
+      if (!fromDlg) {
+        throw new Error("issue-4398: capture after configure dialog failed");
+      }
+      const nDlg = countGridColor(fromDlg.data);
+      if (nDlg < nBefore + 40) {
+        throw new Error(`issue-4398: Show Grid in configure dialog did not show overlay (grid pixels=${nDlg})`);
+      }
+      console.log(`  configure dialog Show Grid pixels ${nDlg} ✓`);
+      await pressEscape(dlg);
     },
     [PDF],
   );

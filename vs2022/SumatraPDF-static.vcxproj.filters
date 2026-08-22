@@ -863,6 +863,9 @@
     <ClCompile Include="..\src\OverlayScrollbar.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PageGridDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\PageRenderPolicy.cpp">
       <Filter>src</Filter>
     </ClCompile>

@@ -47,6 +47,29 @@ struct WindowMargin {
     int left;
 };
 
+// measurement grid overlay (View > Page Grid). Spacing and style are
+// saved; showing the grid is session-only
+struct PageGrid {
+    // distance between major vertical grid lines, in PDF points (1/72
+    // inch)
+    float width;
+    // distance between major horizontal grid lines, in PDF points
+    float height;
+    // minor lines per major cell
+    int subdivisions;
+    // horizontal origin offset from the left of the page, in PDF points
+    float offsetX;
+    // vertical origin offset from the bottom of the page, in PDF points
+    float offsetY;
+    // color of the page grid overlay
+    ParsedColor color;
+    // grid overlay style: dots (marks at intersections), dotted (dotted
+    // lines), or solid
+    Str style;
+    // units shown in the Configure Page Grid dialog: pt, in, mm, or cm
+    Str units;
+};
+
 // customization options for PDF, XPS, DjVu and PostScript UI
 struct FixedPageUI {
     // color used instead of black for the document's text
@@ -72,6 +95,9 @@ struct FixedPageUI {
     Vec<Str>* gradientColors;
     // if given, sets the canvas background color for PDF files
     ParsedColor windowBgCol;
+    // measurement grid overlay (View > Page Grid). Spacing and style are
+    // saved; showing the grid is session-only
+    PageGrid pageGrid;
 };
 
 // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
@@ -1114,6 +1140,28 @@ static const StructInfo gSizeInfo = {sizeof(Size),
                                      "gap between two pages, in pixels at 100% display scaling",
                                      false};
 
+static const FieldInfo gPageGridFields[] = {
+    {offsetof(PageGrid, width), SettingType::Float, (intptr_t)"72"},
+    {offsetof(PageGrid, height), SettingType::Float, (intptr_t)"72"},
+    {offsetof(PageGrid, subdivisions), SettingType::Int, 4},
+    {offsetof(PageGrid, offsetX), SettingType::Float, (intptr_t)"0"},
+    {offsetof(PageGrid, offsetY), SettingType::Float, (intptr_t)"0"},
+    {offsetof(PageGrid, color), SettingType::Color, (intptr_t)"#8080ff"},
+    {offsetof(PageGrid, style), SettingType::String, (intptr_t)"dots"},
+    {offsetof(PageGrid, units), SettingType::String, (intptr_t)"in"},
+};
+static const StructInfo gPageGridInfo = {
+    sizeof(PageGrid),
+    8,
+    gPageGridFields,
+    "Width\0Height\0Subdivisions\0OffsetX\0OffsetY\0Color\0Style\0Units",
+    "distance between major vertical grid lines, in PDF points (1/72 inch)\0distance between major horizontal grid "
+    "lines, in PDF points\0minor lines per major cell\0horizontal origin offset from the left of the page, in PDF "
+    "points\0vertical origin offset from the bottom of the page, in PDF points\0color of the page grid overlay\0grid "
+    "overlay style: dots (marks at intersections), dotted (dotted lines), or solid\0units shown in the Configure Page "
+    "Grid dialog: pt, in, mm, or cm",
+    false};
+
 static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, textColor), SettingType::Color, (intptr_t)"#000000"},
     {offsetof(FixedPageUI, backgroundColor), SettingType::Color, (intptr_t)"#ffffff"},
@@ -1122,12 +1170,13 @@ static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
     {offsetof(FixedPageUI, windowBgCol), SettingType::Color, (intptr_t)""},
+    {offsetof(FixedPageUI, pageGrid), SettingType::Struct, (intptr_t)&gPageGridInfo},
 };
 static const StructInfo gFixedPageUIInfo = {
     sizeof(FixedPageUI),
-    7,
+    8,
     gFixedPageUIFields,
-    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0WindowBgCol",
+    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0WindowBgCol\0PageGrid",
     "color used instead of black for the document's text\0color used instead of white for the document's page "
     "background\0color value for the text selection rectangle (also used to highlight found text). Use an #aarrggbb "
     "value to control opacity: a smaller alpha (e.g. #40ffff00) makes the selection more transparent so the selected "
@@ -1136,7 +1185,8 @@ static const StructInfo gFixedPageUIInfo = {
     "in continuous view)\0experimental: instead of a single background color, fade through these colors from the top "
     "of the document to the bottom (stops are spread evenly, at most 3 colors). The shifting background is meant to "
     "give a subconscious sense of reading progress. Suggested values: #2828aa #28aa28 #aa2828\0if given, sets the "
-    "canvas background color for PDF files",
+    "canvas background color for PDF files\0measurement grid overlay (View > Page Grid). Spacing and style are saved; "
+    "showing the grid is session-only",
     false};
 
 static const FieldInfo gEBookUIFields[] = {

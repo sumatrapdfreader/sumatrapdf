@@ -2727,6 +2727,18 @@ void TogglePageGrid() {
     gShowPageGrid = !gShowPageGrid;
 }
 
+void SetShowPageGrid(bool on) {
+    gShowPageGrid = on;
+}
+
+void RedrawPageGridWindows() {
+    for (MainWindow* w : gWindows) {
+        if (w) {
+            w->RedrawAll(true);
+        }
+    }
+}
+
 /* debug code to visualize links and images (can block while rendering) */
 static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
@@ -2882,13 +2894,63 @@ static Rect ClampRectTo(const Rect& r, const Rect& bounds) {
     return o;
 }
 
-// 0.25" minor / 1" major in PDF points. Color from the #4398 screenshot.
-constexpr float kPageGridMinorPt = 18.f;
-constexpr int kPageGridMajorEvery = 4;
-constexpr Color kPageGridColor = MkRgb(128, 128, 255);
+// Drawing limits. Appearance (spacing, color, style) lives in
+// FixedPageUI.PageGrid; showing the overlay is session-only.
 constexpr int kPageGridMinMinorPx = 6;
 constexpr int kPageGridMinMajorPx = 4;
 constexpr int kPageGridMaxDots = 8000;
+constexpr int kPageGridMaxLines = 800;
+constexpr Color kPageGridDefaultColor = MkRgb(128, 128, 255);
+
+enum class PageGridStyleKind {
+    Dots,
+    Dotted,
+    Solid
+};
+
+struct PageGridDraw {
+    float widthPt = 72.f;
+    float heightPt = 72.f;
+    int subdiv = 4;
+    float offsetXPt = 0;
+    float offsetYPt = 0;
+    Color color = kPageGridDefaultColor;
+    PageGridStyleKind style = PageGridStyleKind::Dots;
+};
+
+static PageGridDraw GetPageGridDraw() {
+    PageGridDraw d;
+    if (!gGlobalPrefs) {
+        return d;
+    }
+    PageGrid& pg = gGlobalPrefs->fixedPageUI.pageGrid;
+    if (pg.width > 0) {
+        d.widthPt = pg.width;
+    }
+    if (pg.height > 0) {
+        d.heightPt = pg.height;
+    }
+    if (pg.subdivisions > 0) {
+        d.subdiv = pg.subdivisions;
+    }
+    d.offsetXPt = pg.offsetX;
+    d.offsetYPt = pg.offsetY;
+    ParseColor(pg.color);
+    if (pg.color.parsedOk && !IsSpecialColor(pg.color.col)) {
+        d.color = pg.color.col;
+    }
+    if (str::EqI(pg.style, StrL("dotted"))) {
+        d.style = PageGridStyleKind::Dotted;
+    } else if (str::EqI(pg.style, StrL("solid"))) {
+        d.style = PageGridStyleKind::Solid;
+    }
+    d.widthPt = limitValue(d.widthPt, 1.f, 720.f);
+    d.heightPt = limitValue(d.heightPt, 1.f, 720.f);
+    d.subdiv = limitValue(d.subdiv, 1, 32);
+    d.offsetXPt = limitValue(d.offsetXPt, -720.f, 720.f);
+    d.offsetYPt = limitValue(d.offsetYPt, -720.f, 720.f);
+    return d;
+}
 
 static float PageGridAlignDown(float v, float origin, float step) {
     if (step <= 0) {
@@ -2897,12 +2959,15 @@ static float PageGridAlignDown(float v, float origin, float step) {
     return origin + floorf((v - origin) / step) * step;
 }
 
-static bool PageGridIsMajor(float v, float origin) {
-    int i = (int)floorf(((v - origin) / kPageGridMinorPt) + 0.5f);
+static bool PageGridIsMajor(float v, float origin, float minorPt, int subdiv) {
+    if (minorPt <= 0.f || subdiv < 1) {
+        return true;
+    }
+    int i = (int)floorf(((v - origin) / minorPt) + 0.5f);
     if (i < 0) {
         i = -i;
     }
-    return (i % kPageGridMajorEvery) == 0;
+    return (i % subdiv) == 0;
 }
 
 static int PageGridScreenDist(Point a, Point b) {
@@ -2917,18 +2982,35 @@ static int PageGridScreenDist(Point a, Point b) {
     return dx > dy ? dx : dy;
 }
 
-// Graph-paper overlay in page space, clipped to the visible page. Dots at
-// intersections: 1px minor, 3px major. Skips image collections and ebooks.
+static void PageGridStroke(HDC hdc, DisplayModel* dm, int pageNo, PointF a, PointF b) {
+    Point sa = dm->CvtToScreen(pageNo, a);
+    Point sb = dm->CvtToScreen(pageNo, b);
+    MoveToEx(hdc, sa.x, sa.y, nullptr);
+    LineTo(hdc, sb.x, sb.y);
+}
+
+// Graph-paper overlay in page space, clipped to the visible page.
+// Style "dots": 1px minor / 3px major at intersections.
+// Style "dotted" / "solid": H/V lines (major heavier). Skips comics and ebooks.
 static void PaintPageGrid(DisplayModel* dm, HDC hdc) {
     EngineBase* engine = dm->GetEngine();
     if (!engine || engine->IsImageCollection() || engine->isReflowable) {
         return;
     }
+    PageGridDraw g = GetPageGridDraw();
+    float minorX = g.widthPt / (float)g.subdiv;
+    float minorY = g.heightPt / (float)g.subdiv;
+    if (minorX <= 0.f || minorY <= 0.f) {
+        return;
+    }
     Rect viewPort(Point(), dm->GetViewPort().Size());
-    HBRUSH br = CreateSolidBrush(kPageGridColor);
+    HBRUSH br = CreateSolidBrush(g.color);
     if (!br) {
         return;
     }
+    HPEN penMinor = CreatePen(g.style == PageGridStyleKind::Solid ? PS_SOLID : PS_DOT, 1, g.color);
+    int majorWidth = g.style == PageGridStyleKind::Solid ? 2 : 1;
+    HPEN penMajor = CreatePen(PS_SOLID, majorWidth, g.color);
 
     for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
         PageInfo* pi = dm->GetPageInfo(pageNo);
@@ -2948,44 +3030,70 @@ static void PaintPageGrid(DisplayModel* dm, HDC hdc) {
             continue;
         }
 
-        Point p0 = dm->CvtToScreen(pageNo, PointF(box.x, box.y));
-        Point px = dm->CvtToScreen(pageNo, PointF(box.x + kPageGridMinorPt, box.y));
-        Point py = dm->CvtToScreen(pageNo, PointF(box.x, box.y + kPageGridMinorPt));
+        float ox = box.x + g.offsetXPt;
+        float oy = box.y + g.offsetYPt;
+        Point p0 = dm->CvtToScreen(pageNo, PointF(ox, oy));
+        Point px = dm->CvtToScreen(pageNo, PointF(ox + minorX, oy));
+        Point py = dm->CvtToScreen(pageNo, PointF(ox, oy + minorY));
         int cell = std::min(PageGridScreenDist(p0, px), PageGridScreenDist(p0, py));
-        if (cell * kPageGridMajorEvery < kPageGridMinMajorPx) {
+        if (cell * g.subdiv < kPageGridMinMajorPx) {
             continue;
         }
         bool drawMinor = cell >= kPageGridMinMinorPx;
-        float step = drawMinor ? kPageGridMinorPt : (kPageGridMinorPt * (float)kPageGridMajorEvery);
+        float stepX = drawMinor ? minorX : g.widthPt;
+        float stepY = drawMinor ? minorY : g.heightPt;
 
-        float x0 = PageGridAlignDown(vis.x, box.x, step);
-        float y0 = PageGridAlignDown(vis.y, box.y, step);
+        float x0 = PageGridAlignDown(vis.x, ox, stepX);
+        float y0 = PageGridAlignDown(vis.y, oy, stepY);
         float x1 = vis.x + vis.dx;
         float y1 = vis.y + vis.dy;
-        int nx = (int)((x1 - x0) / step) + 2;
-        int ny = (int)((y1 - y0) / step) + 2;
-        if (drawMinor && nx > 0 && ny > 0 && nx * ny > kPageGridMaxDots) {
-            drawMinor = false;
-            step = kPageGridMinorPt * (float)kPageGridMajorEvery;
-            x0 = PageGridAlignDown(vis.x, box.x, step);
-            y0 = PageGridAlignDown(vis.y, box.y, step);
+        int nx = (int)((x1 - x0) / stepX) + 2;
+        int ny = (int)((y1 - y0) / stepY) + 2;
+        if (drawMinor) {
+            bool tooMany = g.style == PageGridStyleKind::Dots ? (nx > 0 && ny > 0 && nx * ny > kPageGridMaxDots)
+                                                              : (nx + ny > kPageGridMaxLines);
+            if (tooMany) {
+                drawMinor = false;
+                stepX = g.widthPt;
+                stepY = g.heightPt;
+                x0 = PageGridAlignDown(vis.x, ox, stepX);
+                y0 = PageGridAlignDown(vis.y, oy, stepY);
+                nx = (int)((x1 - x0) / stepX) + 2;
+                ny = (int)((y1 - y0) / stepY) + 2;
+            }
         }
 
         int saved = SaveDC(hdc);
         IntersectClipRect(hdc, bounds.x, bounds.y, bounds.x + bounds.dx, bounds.y + bounds.dy);
-        for (float y = y0; y <= y1 + 0.01f; y += step) {
-            bool yMajor = PageGridIsMajor(y, box.y);
-            for (float x = x0; x <= x1 + 0.01f; x += step) {
-                Point pt = dm->CvtToScreen(pageNo, PointF(x, y));
-                bool major = !drawMinor || (yMajor && PageGridIsMajor(x, box.x));
-                int sz = major ? 3 : 1;
-                int o = sz / 2;
-                RECT rc = {pt.x - o, pt.y - o, pt.x - o + sz, pt.y - o + sz};
-                FillRect(hdc, &rc, br);
+        SetBkMode(hdc, TRANSPARENT);
+        if (g.style == PageGridStyleKind::Dots) {
+            for (float y = y0; y <= y1 + 0.01f; y += stepY) {
+                bool yMajor = !drawMinor || PageGridIsMajor(y, oy, minorY, g.subdiv);
+                for (float x = x0; x <= x1 + 0.01f; x += stepX) {
+                    Point pt = dm->CvtToScreen(pageNo, PointF(x, y));
+                    bool major = !drawMinor || (yMajor && PageGridIsMajor(x, ox, minorX, g.subdiv));
+                    int sz = major ? 3 : 1;
+                    int o = sz / 2;
+                    RECT rc = {pt.x - o, pt.y - o, pt.x - o + sz, pt.y - o + sz};
+                    FillRect(hdc, &rc, br);
+                }
+            }
+        } else {
+            for (float x = x0; x <= x1 + 0.01f; x += stepX) {
+                bool major = !drawMinor || PageGridIsMajor(x, ox, minorX, g.subdiv);
+                SelectObject(hdc, major ? penMajor : penMinor);
+                PageGridStroke(hdc, dm, pageNo, PointF(x, vis.y), PointF(x, y1));
+            }
+            for (float y = y0; y <= y1 + 0.01f; y += stepY) {
+                bool major = !drawMinor || PageGridIsMajor(y, oy, minorY, g.subdiv);
+                SelectObject(hdc, major ? penMajor : penMinor);
+                PageGridStroke(hdc, dm, pageNo, PointF(vis.x, y), PointF(x1, y));
             }
         }
         RestoreDC(hdc, saved);
     }
+    DeleteObject(penMinor);
+    DeleteObject(penMajor);
     DeleteObject(br);
 }
 

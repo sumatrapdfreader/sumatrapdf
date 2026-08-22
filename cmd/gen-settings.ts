@@ -415,6 +415,19 @@ const pageSpacing: Field[] = [
   field("Dy", Int, 4, "vertical gap between two pages, in pixels at 100% display scaling"),
 ];
 
+const pageGrid: Field[] = [
+  field("Width", Float, 72, "distance between major vertical grid lines, in PDF points (1/72 inch)").ver("3.7"),
+  field("Height", Float, 72, "distance between major horizontal grid lines, in PDF points").ver("3.7"),
+  field("Subdivisions", Int, 4, "minor lines per major cell").ver("3.7"),
+  field("OffsetX", Float, 0, "horizontal origin offset from the left of the page, in PDF points").ver("3.7"),
+  field("OffsetY", Float, 0, "vertical origin offset from the bottom of the page, in PDF points").ver("3.7"),
+  field("Color", Color, rgb(128, 128, 255), "color of the page grid overlay").ver("3.7"),
+  field("Style", Str, "dots", "grid overlay style: dots (marks at intersections), dotted (dotted lines), or solid").ver(
+    "3.7",
+  ),
+  field("Units", Str, "in", "units shown in the Configure Page Grid dialog: pt, in, mm, or cm").ver("3.7"),
+];
+
 const fixedPageUI: Field[] = [
   field("TextColor", Color, rgb(0x00, 0x00, 0x00), "color used instead of black for the document's text"),
   field(
@@ -451,6 +464,11 @@ const fixedPageUI: Field[] = [
       "Suggested values: #2828aa #28aa28 #aa2828",
   ),
   field("WindowBgCol", Color, "", "if given, sets the canvas background color for PDF files").ver("3.7"),
+  struct(
+    "PageGrid",
+    pageGrid,
+    "measurement grid overlay (View > Page Grid). Spacing and style are saved; showing the grid is session-only",
+  ).ver("3.7"),
 ];
 
 const comicBookUI: Field[] = [

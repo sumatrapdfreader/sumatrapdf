@@ -304,6 +304,7 @@ static SeqStrings gCommandNames =
     "CmdToggleUniformPageWidth\0"
     "CmdToggleTransparencyGrid\0"
     "CmdTogglePageGrid\0"
+    "CmdConfigurePageGrid\0"
     "CmdNone\0"
     "\0";
 
@@ -596,6 +597,7 @@ static i32 gCommandIds[] = {
     CmdToggleUniformPageWidth,
     CmdToggleTransparencyGrid,
     CmdTogglePageGrid,
+    CmdConfigurePageGrid,
     CmdNone,
 };
 
@@ -888,6 +890,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Uniform Page Width\0"
     "Toggle Transparency Grid\0"
     "Toggle Page Grid\0"
+    "Configure Page Grid...\0"
     "Do nothing\0"
     "\0";
 // clang-format on

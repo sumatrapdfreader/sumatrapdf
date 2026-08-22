@@ -609,6 +609,7 @@ function sumatrapdf_files()
     "ChangeScrollbarDialog.*",
     "ChangeThemeDialog.*",
     "CustomZoomDialog.*",
+    "PageGridDialog.*",
     "SignDocumentDialog.*",
     "EbookSettingsDialog.*",
     "GetPasswordDialog.*",

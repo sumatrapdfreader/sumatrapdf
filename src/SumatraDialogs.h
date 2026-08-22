@@ -14,6 +14,7 @@ void ShowChangeThemeDialog(MainWindow* win);
 void ShowSetDocumentColorsFollowThemeDialog(MainWindow* win);
 void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab);
 void ShowCustomZoomDialog(MainWindow* win);
+void ShowPageGridDialog(MainWindow* win);
 void ShowSignDocumentDialog(MainWindow* win, Str fieldName = {}, bool hasField = false);
 bool IsPlacingSignature(MainWindow* win);
 bool CancelPlacingSignature(MainWindow* win);

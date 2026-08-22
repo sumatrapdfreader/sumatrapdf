@@ -414,6 +414,40 @@ FixedPageUI [
     ; if given, sets the canvas background color for PDF files (introduced in
     ; version 3.7)
     WindowBgCol = 
+
+    ; measurement grid overlay (View > Page Grid). Spacing and style are saved;
+    ; showing the grid is session-only (introduced in version 3.7)
+    PageGrid [
+        ; distance between major vertical grid lines, in PDF points (1/72 inch)
+        ; (introduced in version 3.7)
+        Width = 72
+
+        ; distance between major horizontal grid lines, in PDF points
+        ; (introduced in version 3.7)
+        Height = 72
+
+        ; minor lines per major cell (introduced in version 3.7)
+        Subdivisions = 4
+
+        ; horizontal origin offset from the left of the page, in PDF points
+        ; (introduced in version 3.7)
+        OffsetX = 0
+
+        ; vertical origin offset from the bottom of the page, in PDF points
+        ; (introduced in version 3.7)
+        OffsetY = 0
+
+        ; color of the page grid overlay (introduced in version 3.7)
+        Color = #8080ff
+
+        ; grid overlay style: dots (marks at intersections), dotted (dotted
+        ; lines), or solid (introduced in version 3.7)
+        Style = dots
+
+        ; units shown in the Configure Page Grid dialog: pt, in, mm, or cm
+        ; (introduced in version 3.7)
+        Units = in
+    ]
 ]
 
 ; customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)

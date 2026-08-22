@@ -26,7 +26,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Command Palette mode switches at the top (`#` File History, `>` Commands, …) use the same smaller font as the hints at the bottom
 - Explorer and Outlook preview pane: Ctrl+wheel zooms, drag pans when zoomed in, and the wheel pans then turns the page at the edge. Double-click returns to fit-page (fixes #859)
 - **Transparency Grid** (`CmdToggleTransparencyGrid`, View menu) paints a checkerboard under the page so transparent PDFs (white elements on a hole) are visible, like Acrobat's Transparency Grid. Session-only; not saved in settings (fixes #1809)
-- **Page Grid** (`CmdTogglePageGrid`, View menu) overlays a dotted graph paper on the page (¼ inch minor / 1 inch major, color 128,128,255), like PDF-XChange’s Show Grid. Fixed-page documents only (not comics). Session-only; not saved in settings (fixes #4398)
+- **Page Grid** (`CmdTogglePageGrid`, View menu) overlays graph paper on the page, like PDF-XChange’s Show Grid. Fixed-page documents only (not comics). Showing the grid is session-only. **Configure Page Grid** (`CmdConfigurePageGrid`) sets units, spacing, subdivisions, origin, color and line style (dots, dotted lines, or solid); those values are saved in `FixedPageUI.PageGrid` (default 1 inch major / 4 subdivisions, color 128,128,255, dots) (fixes #4398)
 - Toggle Page Boxes (`CmdTogglePageBoxes`) outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each visible page — only boxes that page actually declares — and labels them `media`, `crop`, `trim`, and so on. For PDF development (print marks, trim vs crop). Palette and Debug menu; no default shortcut (fixes #814)
 - Change Language is a modeless window like Change Theme (search box, language list, OK / Cancel) instead of a modal dialog
 - Add Favorite is a modeless window like Change Theme instead of a modal dialog
@@ -308,7 +308,8 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdTogglePageBoxes` : "Toggle Page Boxes" — palette / Debug menu; outlines PDF Media/Crop/Bleed/Trim/Art boxes that the page actually has (fixes #814)
 - `CmdSignDocument` : "Sign Document..." — sign a PDF with a Windows-store or `.pfx` / `.p12` certificate (fixes #5962)
 - `CmdToggleTransparencyGrid` : "Toggle Transparency Grid" — View menu; session-only checkerboard under the page (fixes #1809)
-- `CmdTogglePageGrid` : "Toggle Page Grid" — View menu; session-only dotted graph paper on the page (fixes #4398)
+- `CmdTogglePageGrid` : "Toggle Page Grid" — View menu; session-only graph paper on the page (fixes #4398)
+- `CmdConfigurePageGrid` : "Configure Page Grid..." — View menu; dialog for grid spacing, origin, color and style
 
 **New command-line arguments:**
 

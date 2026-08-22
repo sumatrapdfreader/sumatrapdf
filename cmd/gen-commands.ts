@@ -297,6 +297,7 @@ export const commands = [
     "CmdToggleUniformPageWidth", "Toggle Uniform Page Width",
     "CmdToggleTransparencyGrid", "Toggle Transparency Grid",
     "CmdTogglePageGrid", "Toggle Page Grid",
+    "CmdConfigurePageGrid", "Configure Page Grid...",
     "CmdNone", "Do nothing",
 ];
 

@@ -309,6 +309,10 @@ static MenuDef menuDefView[] = {
         CmdTogglePageGrid,
     },
     {
+        _TRN("Configure Page Grid..."),
+        CmdConfigurePageGrid,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

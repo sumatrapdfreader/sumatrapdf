@@ -11842,9 +11842,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdTogglePageGrid:
             TogglePageGrid();
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawPageGridWindows();
+            break;
+
+        case CmdConfigurePageGrid:
+            ShowPageGridDialog(win);
             break;
 
         case CmdDebugShowFitContentArea:
