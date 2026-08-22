@@ -191,71 +191,82 @@ static void PopulateLanguageDropDown(DropDown* dd, Str initial, bool includeAuto
     }
 }
 
+// clang-format off
+// Parallel LANG_* ids and English names; keep in the same order.
+static const WORD gPrimaryLangIds[] = {
+    LANG_ENGLISH,
+    LANG_CHINESE,
+    LANG_GERMAN,
+    LANG_FRENCH,
+    LANG_SPANISH,
+    LANG_ITALIAN,
+    LANG_PORTUGUESE,
+    LANG_RUSSIAN,
+    LANG_JAPANESE,
+    LANG_KOREAN,
+    LANG_ARABIC,
+    LANG_HINDI,
+    LANG_TURKISH,
+    LANG_VIETNAMESE,
+    LANG_POLISH,
+    LANG_UKRAINIAN,
+    LANG_DUTCH,
+    LANG_THAI,
+    LANG_INDONESIAN,
+    LANG_CZECH,
+    LANG_SWEDISH,
+    LANG_ROMANIAN,
+    LANG_GREEK,
+    LANG_HEBREW,
+    LANG_DANISH,
+    LANG_FINNISH,
+    LANG_NORWEGIAN,
+    LANG_HUNGARIAN,
+    LANG_SLOVAK,
+    LANG_BENGALI,
+};
+
+static SeqStrings gPrimaryLangNames =
+    "English\0"
+    "Chinese (Simplified)\0"
+    "German\0"
+    "French\0"
+    "Spanish\0"
+    "Italian\0"
+    "Portuguese\0"
+    "Russian\0"
+    "Japanese\0"
+    "Korean\0"
+    "Arabic\0"
+    "Hindi\0"
+    "Turkish\0"
+    "Vietnamese\0"
+    "Polish\0"
+    "Ukrainian\0"
+    "Dutch\0"
+    "Thai\0"
+    "Indonesian\0"
+    "Czech\0"
+    "Swedish\0"
+    "Romanian\0"
+    "Greek\0"
+    "Hebrew\0"
+    "Danish\0"
+    "Finnish\0"
+    "Norwegian\0"
+    "Hungarian\0"
+    "Slovak\0"
+    "Bengali\0";
+// clang-format on
+
 static Str PrimaryLangIdToEnglishName(WORD primary) {
-    switch (primary) {
-        case LANG_ENGLISH:
-            return StrL("English");
-        case LANG_CHINESE:
-            return StrL("Chinese (Simplified)");
-        case LANG_GERMAN:
-            return StrL("German");
-        case LANG_FRENCH:
-            return StrL("French");
-        case LANG_SPANISH:
-            return StrL("Spanish");
-        case LANG_ITALIAN:
-            return StrL("Italian");
-        case LANG_PORTUGUESE:
-            return StrL("Portuguese");
-        case LANG_RUSSIAN:
-            return StrL("Russian");
-        case LANG_JAPANESE:
-            return StrL("Japanese");
-        case LANG_KOREAN:
-            return StrL("Korean");
-        case LANG_ARABIC:
-            return StrL("Arabic");
-        case LANG_HINDI:
-            return StrL("Hindi");
-        case LANG_TURKISH:
-            return StrL("Turkish");
-        case LANG_VIETNAMESE:
-            return StrL("Vietnamese");
-        case LANG_POLISH:
-            return StrL("Polish");
-        case LANG_UKRAINIAN:
-            return StrL("Ukrainian");
-        case LANG_DUTCH:
-            return StrL("Dutch");
-        case LANG_THAI:
-            return StrL("Thai");
-        case LANG_INDONESIAN:
-            return StrL("Indonesian");
-        case LANG_CZECH:
-            return StrL("Czech");
-        case LANG_SWEDISH:
-            return StrL("Swedish");
-        case LANG_ROMANIAN:
-            return StrL("Romanian");
-        case LANG_GREEK:
-            return StrL("Greek");
-        case LANG_HEBREW:
-            return StrL("Hebrew");
-        case LANG_DANISH:
-            return StrL("Danish");
-        case LANG_FINNISH:
-            return StrL("Finnish");
-        case LANG_NORWEGIAN:
-            return StrL("Norwegian");
-        case LANG_HUNGARIAN:
-            return StrL("Hungarian");
-        case LANG_SLOVAK:
-            return StrL("Slovak");
-        case LANG_BENGALI:
-            return StrL("Bengali");
-        default:
-            return {};
+    int n = dimofi(gPrimaryLangIds);
+    for (int i = 0; i < n; i++) {
+        if (gPrimaryLangIds[i] == primary) {
+            return SeqStrByIndex(gPrimaryLangNames, i);
+        }
     }
+    return {};
 }
 
 static TempStr OsDefaultDestinationLanguageTemp() {
