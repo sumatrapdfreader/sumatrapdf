@@ -6,6 +6,8 @@
 #pragma once
 #include <windows.h>
 
+// NOLINTBEGIN(cppcoreguidelines-*, modernize-*)
+
 // processes messages related to UAH / custom menubar drawing.
 // return true if handled, false to continue with normal processing in your wndproc
 //bool UAHDarkModeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT* lr);
@@ -53,7 +55,7 @@ typedef struct tagUAHMENU
 // menu items are always referred to by iPosition here
 typedef struct tagUAHMENUITEM
 {
-	int iPosition; // 0-based position of menu item in menubar
+	[[maybe_unused]] int iPosition; // 0-based position of menu item in menubar
 	UAHMENUITEMMETRICS umim;
 	UAHMENUPOPUPMETRICS umpm;
 } UAHMENUITEM;
@@ -76,3 +78,5 @@ typedef struct tagUAHMEASUREMENUITEM
 	UAHMENU um;
 	UAHMENUITEM umi;
 } UAHMEASUREMENUITEM;
+
+// NOLINTEND(cppcoreguidelines-*, modernize-*)

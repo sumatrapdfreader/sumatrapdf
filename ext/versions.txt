@@ -102,9 +102,9 @@ heicdec         dist       2026-07-28
   Build flags: HEIC_HAVE_DAV1D, HEIC_HAVE_ZLIB, HEIC_HAVE_BROTLI.
   Replaces libheif.
 
-darkmodelib     trunk      2026-01-16
+darkmodelib     0.75.0     2026-07-26
   https://github.com/ozone10/darkmodelib
-  https://github.com/ozone10/darkmodelib/commit/57cc10c819d17c47b6afd295b424153082144193
+  https://github.com/ozone10/darkmodelib/commit/fa99647299c4edb3cf662bc14f19b5451090723e
 
 jxldec          dist       2026-08-11
   https://github.com/kjk/jxldec

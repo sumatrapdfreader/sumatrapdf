@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025-2026 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -19,7 +19,7 @@
 
 #include <uxtheme.h>
 
-#if defined(__GNUC__) || (WINVER < _WIN32_WINNT_WIN7)
+#if defined(__GNUC__) || (WINVER <= _WIN32_WINNT_WIN7)
 	#ifndef WM_DPICHANGED
 		#define WM_DPICHANGED 0x02E0
 	#endif
@@ -107,7 +107,10 @@ namespace dmlib_dpi
 
 	DPI_AWARENESS_CONTEXT SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT dpiContext) noexcept;
 
+	BOOL AdjustWindowRectExForDpi(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi) noexcept;
+
 	void loadIcon(HINSTANCE hinst, const wchar_t* pszName, int cx, int cy, HICON& hicon) noexcept;
+	void loadIconMetric(HINSTANCE hinst, const wchar_t* pszName, int lims, HICON& hicon) noexcept;
 
 	[[nodiscard]] HTHEME OpenThemeDataForDpi(HWND hwnd, LPCWSTR pszClassList, UINT dpi) noexcept;
 

@@ -786,7 +786,7 @@ end
 function darkmodelib_files()
   files_in_dir("ext/darkmodelib/src", {
     "*.h",
-    "DarkModeSubclass.cpp",
+    "Darkmodelib.cpp",
     "DmlibColor.cpp",
     "DmlibDpi.cpp",
     "DmlibHook.cpp",
@@ -797,6 +797,7 @@ function darkmodelib_files()
     "DmlibWinApi.cpp",
   })
   files_in_dir("ext/darkmodelib/include", {
+    "Darkmodelib.h",
     "DarkModeSubclass.h",
   })
 end

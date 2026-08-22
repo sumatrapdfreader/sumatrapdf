@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025-2026 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -25,16 +25,24 @@
 #include <array>
 #include <climits>
 #include <memory>
-#include <string>
 
-#include "DarkModeSubclass.h"
+#if defined(_DARKMODELIB_CUSTOM_MEM) && (_DARKMODELIB_CUSTOM_MEM == 0x002)
+#include "MemoryHelper.h"
+#else
+#include <string>
+#endif
+
+#include "Darkmodelib.h"
+
 #include "DmlibDpi.h"
 #include "DmlibGlyph.h"
 #include "DmlibHook.h"
 #include "DmlibPaintHelper.h"
 #include "DmlibSubclass.h"
 
-#if defined(__GNUC__)
+#include "MemoryHelperDef.h"
+
+#ifdef __GNUC__
 static constexpr int CP_DROPDOWNITEM = 9; // for some reason mingw use only enum up to 8
 #endif
 
@@ -64,7 +72,7 @@ static void renderButton(
 	HTHEME hTheme,
 	int iPartID,
 	int iStateID
-) noexcept
+) DMLIB_BUF_NOEXCEPT
 {
 	// Font part
 
@@ -136,9 +144,8 @@ static void renderButton(
 	RECT rcClient{};
 	::GetClientRect(hWnd, &rcClient);
 
-	std::wstring buffer;
 	const auto bufferLen = static_cast<size_t>(::GetWindowTextLengthW(hWnd));
-	buffer.resize(bufferLen + 1, L'\0');
+	auto buffer = DMLIB_BUF_WSTRING(bufferLen + 1, L'\0');
 	::GetWindowTextW(hWnd, buffer.data(), static_cast<int>(buffer.length()));
 
 	SIZE szBox{};
@@ -162,7 +169,7 @@ static void renderButton(
 	DTTOPTS dtto{};
 	dtto.dwSize = sizeof(DTTOPTS);
 	dtto.dwFlags = DTT_TEXTCOLOR;
-	dtto.crText = (::IsWindowEnabled(hWnd) == FALSE) ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor();
+	dtto.crText = (::IsWindowEnabled(hWnd) == FALSE) ? dmlib::getDisabledTextColor() : dmlib::getTextColor();
 
 	::DrawThemeTextEx(hTheme, hdc, iPartID, iStateID, buffer.c_str(), -1, dtFlags, &rcText, &dtto);
 
@@ -197,7 +204,7 @@ static void renderButton(
  *
  * @see renderButton()
  */
-static void paintButton(HWND hWnd, HDC hdc, dmlib_subclass::ButtonData& buttonData) noexcept
+static void paintButton(HWND hWnd, HDC hdc, dmlib_subclass::ButtonData& buttonData) DMLIB_BUF_NOEXCEPT
 {
 	const auto& hTheme = buttonData.m_themeData.getHTheme();
 
@@ -288,6 +295,13 @@ static void paintButton(HWND hWnd, HDC hdc, dmlib_subclass::ButtonData& buttonDa
 		}
 	}
 
+	if (!dmlib_paint::isAnimationEnabled())
+	{
+		renderButton(hWnd, hdc, hTheme, iPartID, iStateID);
+		buttonData.m_iStateID = iStateID;
+		return;
+	}
+
 	if (::BufferedPaintRenderAnimation(hWnd, hdc) == TRUE)
 	{
 		return;
@@ -308,8 +322,8 @@ static void paintButton(HWND hWnd, HDC hdc, dmlib_subclass::ButtonData& buttonDa
 
 	HDC hdcFrom = nullptr;
 	HDC hdcTo = nullptr;
-	HANIMATIONBUFFER hbpAnimation = ::BeginBufferedAnimation(hWnd, hdc, &rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
-	if (hbpAnimation != nullptr)
+	if (HANIMATIONBUFFER hbpAnimation = ::BeginBufferedAnimation(hWnd, hdc, &rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
+		hbpAnimation != nullptr)
 	{
 		if (hdcFrom != nullptr)
 		{
@@ -321,13 +335,11 @@ static void paintButton(HWND hWnd, HDC hdc, dmlib_subclass::ButtonData& buttonDa
 		}
 
 		buttonData.m_iStateID = iStateID;
-
 		::EndBufferedAnimation(hbpAnimation, TRUE);
 	}
 	else
 	{
 		renderButton(hWnd, hdc, hTheme, iPartID, iStateID);
-
 		buttonData.m_iStateID = iStateID;
 	}
 }
@@ -344,8 +356,8 @@ static void paintButton(HWND hWnd, HDC hdc, dmlib_subclass::ButtonData& buttonDa
  * @return LRESULT Result of message processing.
  *
  * @see paintButton()
- * @see DarkMode::setCheckboxOrRadioBtnCtrlSubclass()
- * @see DarkMode::removeCheckboxOrRadioBtnCtrlSubclass()
+ * @see dmlib::setCheckboxOrRadioBtnCtrlSubclass()
+ * @see dmlib::removeCheckboxOrRadioBtnCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
 	HWND hWnd,
@@ -354,7 +366,7 @@ LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) DMLIB_BUF_NOEXCEPT
 {
 	auto* pButtonData = reinterpret_cast<ButtonData*>(dwRefData);
 	auto& themeData = pButtonData->m_themeData;
@@ -364,14 +376,14 @@ LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
 		case WM_NCDESTROY:
 		{
 			::RemoveWindowSubclass(hWnd, ButtonSubclass, uIdSubclass);
-			std::unique_ptr<ButtonData> u_u_ptrData(pButtonData);
-			u_u_ptrData.reset(nullptr);
+			std::unique_ptr<ButtonData> u_ptrData(pButtonData);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
@@ -381,7 +393,7 @@ LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
 		case WM_PRINTCLIENT:
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
@@ -408,7 +420,9 @@ LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
 			themeData.closeTheme();
 			if (pButtonData->m_isSizeSet)
 			{
-				if (SIZE szBtn{};
+				// szBtn is changed in Button_GetIdealSize so const should not be used,
+				// but it is used to silence C26496 - The variable 'szBtn' is assigned only once, mark it as const.
+				if (const SIZE szBtn{};
 					Button_GetIdealSize(hWnd, &szBtn) == TRUE)
 				{
 					const UINT dpi = dmlib_dpi::GetDpiForParent(hWnd);
@@ -429,19 +443,22 @@ LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
 		case WM_SIZE:
 		case WM_DESTROY:
 		{
-			::BufferedPaintStopAllAnimations(hWnd);
+			if (dmlib_paint::isAnimationEnabled())
+			{
+				::BufferedPaintStopAllAnimations(hWnd);
+			}
 			break;
 		}
 
 		case WM_ENABLE:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
 
 			// Skip the button's normal wndproc so it won't redraw out of wm_paint
-			const LRESULT retVal = ::DefWindowProcW(hWnd, uMsg, wParam, lParam);
+			const auto retVal = ::DefWindowProcW(hWnd, uMsg, wParam, lParam);
 			::InvalidateRect(hWnd, nullptr, FALSE);
 			return retVal;
 		}
@@ -474,8 +491,8 @@ LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
  * - Determines current visual state (`GBS_DISABLED`, `GBS_NORMAL`).
  * - Retrieves themed font via `GetThemeFont` or falls back to dialog font.
  * - Measures caption text, computes layout and exclusion for frame clipping.
- * - Paints the outer rounded frame via @ref DarkMode::paintRoundFrameRect
- *   using `DarkMode::getEdgePen()`.
+ * - Paints the outer rounded frame via @ref dmlib::paintRoundFrameRect
+ *   using `dmlib::getEdgePen()`.
  * - Restores clip region and draws text using `DrawThemeTextEx` with custom colors.
  *
  * @param[in]   hWnd        Handle to the group box control.
@@ -484,9 +501,9 @@ LRESULT CALLBACK dmlib_subclass::ButtonSubclass(
  *
  * @note Ensures proper cleanup of temporary GDI objects (font, clip region).
  *
- * @see DarkMode::paintRoundFrameRect()
+ * @see dmlib::paintRoundFrameRect()
  */
-static void paintGroupbox(HWND hWnd, HDC hdc, const dmlib_subclass::ButtonData& buttonData) noexcept
+static void paintGroupbox(HWND hWnd, HDC hdc, const dmlib_subclass::ButtonData& buttonData) DMLIB_BUF_NOEXCEPT
 {
 	const auto& hTheme = buttonData.m_themeData.getHTheme();
 
@@ -517,7 +534,7 @@ static void paintGroupbox(HWND hWnd, HDC hdc, const dmlib_subclass::ButtonData& 
 
 	// Text rectangle part
 
-	std::wstring buffer;
+	DMLIB_BUF_WSTRING buffer;
 	const auto bufferLen = static_cast<size_t>(::GetWindowTextLengthW(hWnd));
 	if (bufferLen > 0)
 	{
@@ -560,7 +577,7 @@ static void paintGroupbox(HWND hWnd, HDC hdc, const dmlib_subclass::ButtonData& 
 	::GetThemeBackgroundContentRect(hTheme, hdc, BP_GROUPBOX, iStateID, &rcBackground, &rcContent);
 	::ExcludeClipRect(hdc, rcContent.left, rcContent.top, rcContent.right, rcContent.bottom);
 
-	dmlib_paint::paintFrameRect(hdc, rcBackground, DarkMode::getEdgePen()); // main frame
+	dmlib_paint::paintFrameRect(hdc, rcBackground, dmlib::getEdgePen()); // main frame
 
 	::SelectClipRgn(hdc, nullptr);
 
@@ -573,7 +590,7 @@ static void paintGroupbox(HWND hWnd, HDC hdc, const dmlib_subclass::ButtonData& 
 		DTTOPTS dtto{};
 		dtto.dwSize = sizeof(DTTOPTS);
 		dtto.dwFlags = DTT_TEXTCOLOR;
-		dtto.crText = isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor();
+		dtto.crText = isDisabled ? dmlib::getDisabledTextColor() : dmlib::getTextColor();
 
 		DWORD dtFlags = isCenter ? DT_CENTER : DT_LEFT;
 
@@ -598,8 +615,8 @@ static void paintGroupbox(HWND hWnd, HDC hdc, const dmlib_subclass::ButtonData& 
  * @return LRESULT Result of message processing.
  *
  * @see paintGroupbox()
- * @see DarkMode::setGroupboxCtrlSubclass()
- * @see DarkMode::removeGroupboxCtrlSubclass()
+ * @see dmlib::setGroupboxCtrlSubclass()
+ * @see dmlib::removeGroupboxCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::GroupboxSubclass(
 	HWND hWnd,
@@ -608,7 +625,7 @@ LRESULT CALLBACK dmlib_subclass::GroupboxSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) DMLIB_BUF_NOEXCEPT
 {
 	auto* pButtonData = reinterpret_cast<ButtonData*>(dwRefData);
 	auto& themeData = pButtonData->m_themeData;
@@ -619,13 +636,13 @@ LRESULT CALLBACK dmlib_subclass::GroupboxSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, GroupboxSubclass, uIdSubclass);
 			std::unique_ptr<ButtonData> u_ptrData(pButtonData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
@@ -635,7 +652,7 @@ LRESULT CALLBACK dmlib_subclass::GroupboxSubclass(
 		case WM_PRINTCLIENT:
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
@@ -696,21 +713,21 @@ LRESULT CALLBACK dmlib_subclass::GroupboxSubclass(
  *                          This state is considered only if the control is not disabled.
  *
  * @return      COLORREF    The color reference corresponding to the control's state:
- *                          - Disabled: color from `DarkMode::getDisabledTextColor()`.
- *                          - Hot: color from `DarkMode::getTextColor()`.
- *                          - Default: color from `DarkMode::getDarkerTextColor()`.
+ *                          - Disabled: color from `dmlib::getDisabledTextColor()`.
+ *                          - Hot: color from `dmlib::getTextColor()`.
+ *                          - Default: color from `dmlib::getDarkerTextColor()`.
  */
 static COLORREF getColorFromState(bool isDisabled, bool isHot) noexcept
 {
 	if (isDisabled)
 	{
-		return DarkMode::getDisabledTextColor();
+		return dmlib::getDisabledTextColor();
 	}
 	if (isHot)
 	{
-		return DarkMode::getTextColor();
+		return dmlib::getTextColor();
 	}
-	return DarkMode::getDarkerTextColor();
+	return dmlib::getDarkerTextColor();
 };
 
 /**
@@ -726,21 +743,21 @@ static COLORREF getColorFromState(bool isDisabled, bool isHot) noexcept
  *                          This state is considered only if the control is not disabled.
  *
  * @return      HBRUSH      The color reference corresponding to the control's state:
- *                          - Disabled: color from `DarkMode::getDlgBackgroundBrush()`.
- *                          - Hot: color from `DarkMode::getHotBackgroundBrush()`.
- *                          - Default: color from `DarkMode::getCtrlBackgroundBrush()`.
+ *                          - Disabled: color from `dmlib::getDlgBackgroundBrush()`.
+ *                          - Hot: color from `dmlib::getHotBackgroundBrush()`.
+ *                          - Default: color from `dmlib::getCtrlBackgroundBrush()`.
  */
 static HBRUSH getBrushFromState(bool isDisabled, bool isHot) noexcept
 {
 	if (isDisabled)
 	{
-		return DarkMode::getDlgBackgroundBrush();
+		return dmlib::getDlgBackgroundBrush();
 	}
 	if (isHot)
 	{
-		return DarkMode::getHotBackgroundBrush();
+		return dmlib::getHotBackgroundBrush();
 	}
-	return DarkMode::getCtrlBackgroundBrush();
+	return dmlib::getCtrlBackgroundBrush();
 };
 
 /**
@@ -756,22 +773,47 @@ static HBRUSH getBrushFromState(bool isDisabled, bool isHot) noexcept
  *                          This state is considered only if the control is not disabled.
  *
  * @return      HPEN        The color reference corresponding to the control's state:
- *                          - Disabled: color from `DarkMode::getDisabledEdgePen()`.
- *                          - Hot: color from `DarkMode::getHotEdgePen()`.
- *                          - Default: color from `DarkMode::getEdgePen()`.
+ *                          - Disabled: color from `dmlib::getDisabledEdgePen()`.
+ *                          - Hot: color from `dmlib::getHotEdgePen()`.
+ *                          - Default: color from `dmlib::getEdgePen()`.
  */
 static HPEN getEdgePenFromState(bool isDisabled, bool isHot) noexcept
 {
 	if (isDisabled)
 	{
-		return DarkMode::getDisabledEdgePen();
+		return dmlib::getDisabledEdgePen();
 	}
 	if (isHot)
 	{
-		return DarkMode::getHotEdgePen();
+		return dmlib::getHotEdgePen();
 	}
-	return DarkMode::getEdgePen();
+	return dmlib::getEdgePen();
 };
+
+/**
+ * @brief Get up-down control state.
+ *
+ * @param[in]   hWnd        Handle to the up-down control.
+ * @param[in]   ptCursor    Position of mouse cursor.
+ * @param[in]   rcBtn       Rectangle for up-down button.
+ *
+ * @see UpDownData
+ * @see paintUpDown()
+ *
+ * @note All 4 variants of up-down control buttons have enums with same values
+ */
+static int getUpDownBtnState(HWND hWnd, const POINT& ptCursor, const RECT& rcBtn) noexcept
+{
+	if (::IsWindowEnabled(hWnd) == FALSE)
+	{
+		return  UPS_DISABLED;
+	}
+	if (::PtInRect(&rcBtn, ptCursor) != FALSE)
+	{
+		return UPS_HOT;
+	}
+	return UPS_NORMAL;
+}
 
 /**
  * @brief Paints an up-down button with the appropriate background and edge based on its state.
@@ -784,6 +826,7 @@ static HPEN getEdgePenFromState(bool isDisabled, bool isHot) noexcept
  * @param[in]   rect        Rectangle that defines the area in which to paint the button.
  * @param[in]   isDisabled  Boolean indicating if the button is in a disabled state.
  * @param[in]   isHot       Boolean indicating if the button is in a hot state.
+ * @param[in]   roundness   Corner radius of rectangle.
  */
 static void paintUpDownBtn(
 	HDC hdc,
@@ -798,18 +841,18 @@ static void paintUpDownBtn(
 
 	if (isDisabled)
 	{
-		hBrush = DarkMode::getDlgBackgroundBrush();
-		hPen = DarkMode::getDisabledEdgePen();
+		hBrush = dmlib::getDlgBackgroundBrush();
+		hPen = dmlib::getDisabledEdgePen();
 	}
 	else if (isHot)
 	{
-		hBrush = DarkMode::getHotBackgroundBrush();
-		hPen = DarkMode::getHotEdgePen();
+		hBrush = dmlib::getHotBackgroundBrush();
+		hPen = dmlib::getHotEdgePen();
 	}
 	else
 	{
-		hBrush = DarkMode::getCtrlBackgroundBrush();
-		hPen = DarkMode::getEdgePen();
+		hBrush = dmlib::getCtrlBackgroundBrush();
+		hPen = dmlib::getEdgePen();
 	}
 
 	dmlib_paint::paintRoundRect(hdc, rect, hPen, hBrush, roundness, roundness);
@@ -826,19 +869,17 @@ static void paintUpDownBtn(
  * @param[in]   hWnd        Handle to the control for dpi calculation.
  * @param[in]   upDownData  Reference to layout and state information (segments, orientation, corner radius).
  * @param[in]   rect        Rectangle that defines the area in which to paint the arrow.
- * @param[in]   isHot       Boolean indicating if the arrow should appear hot (hovered).
+ * @param[in]   clr         Color based on state.
  * @param[in]   isPrev      Boolean indicating the direction of the arrow:
  *                          true for "previous" (left/up) and false for "next" (right/down).
- * @param[in]   isDisabled  Boolean indicating if the arrow is in a disabled state.
  */
 static void paintArrow(
 	HDC hdc,
 	HWND hWnd,
 	const dmlib_subclass::UpDownData& upDownData,
 	const RECT& rect,
-	bool isHot,
-	bool isPrev,
-	bool isDisabled
+	COLORREF clr,
+	bool isPrev
 ) noexcept
 {
 	SIZE size{};
@@ -889,21 +930,29 @@ static void paintArrow(
 	const auto yPos = static_cast<float>(rect.top) + ((static_cast<float>(rect.bottom - rect.top) - sizeArrow.y - offsetPosY) / 2.0F);
 
 	std::array<POINT, 3> ptsArrow{};
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 26446) // Prefer to use gsl::at() instead of unchecked subscript operator (bounds.4).
+#pragma warning(disable: 26482) // Only index into arrays using constant expressions.
+#endif
 	for (size_t i = 0; i < 3; ++i)
 	{
-		ptsArrow.at(i).x = static_cast<LONG>((ptsArrowSelected.at(i).x * sizeArrow.x) + xPos);
-		ptsArrow.at(i).y = static_cast<LONG>((ptsArrowSelected.at(i).y * sizeArrow.y) + yPos);
+		ptsArrow[i].x = static_cast<LONG>((ptsArrowSelected[i].x * sizeArrow.x) + xPos); // NOLINT(cppcoreguidelines-pro-bounds-*)
+		ptsArrow[i].y = static_cast<LONG>((ptsArrowSelected[i].y * sizeArrow.y) + yPos); // NOLINT(cppcoreguidelines-pro-bounds-*)
 	}
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
-	const COLORREF clrSelected = getColorFromState(isDisabled, isHot);
-	const auto hBrush = dmlib_paint::GdiObject{ hdc, ::CreateSolidBrush(clrSelected) };
-	const auto hPen = dmlib_paint::GdiObject{ hdc, ::CreatePen(PS_SOLID, 1, clrSelected) };
+	const auto hBrush = dmlib_paint::GdiObject{ hdc, ::CreateSolidBrush(clr) };
+	const auto hPen = dmlib_paint::GdiObject{ hdc, ::CreatePen(PS_SOLID, 1, clr) };
 
 	::Polygon(hdc, ptsArrow.data(), static_cast<int>(ptsArrow.size()));
 }
 
 /**
- * @brief Custom paints an up-down (spinner) control.
+ * @brief Draws a up-down control.
  *
  * Draws the two-button spinner control using either themed drawing or manual
  * owner-drawn logic depending on OS version and theme availability. Supports both
@@ -914,55 +963,43 @@ static void paintArrow(
  * - Rounded corners (optional, based on Windows 11 and parent class)
  * - Direction-aware layout and glyph placement
  *
- * @param[in]       hWnd        Handle to the up-down control.
- * @param[in]       hdc         Device context to draw into.
- * @param[in,out]   upDownData  Reference to layout and state information (segments, orientation, corner radius).
+ * @param[in]       hWnd            Handle to the up-down control.
+ * @param[in]       hdc             Device context to draw into.
+ * @param[in,out]   upDownData      Reference to layout and state information (segments, orientation, corner radius).
+ * @param[in]       iStateIDPrev    State of the up-down previous button.
+ * @param[in]       iStateIDNext    State of the up-down next button.
  *
  * @see UpDownData
+ * @see paintUpDown()
+ * @see paintUpDownBtn()
+ * @see paintUpDownBtn()
  */
-static void paintUpDown(HWND hWnd, HDC hdc, dmlib_subclass::UpDownData& upDownData) noexcept
+static void renderUpDown(
+	HWND hWnd,
+	HDC hdc,
+	dmlib_subclass::UpDownData& upDownData,
+	int iStateIDPrev,
+	int iStateIDNext
+) noexcept
 {
+	::FillRect(hdc, &upDownData.m_rcClient, dmlib::getDlgBackgroundBrush());
+	::SetBkMode(hdc, TRANSPARENT);
+
 	auto& themeData = upDownData.m_themeData;
 	const bool hasTheme = themeData.ensureTheme(hWnd);
 	const auto& hTheme = themeData.getHTheme();
 
-	const bool isDisabled = ::IsWindowEnabled(hWnd) == FALSE;
 	const bool isHorz = upDownData.m_isHorizontal;
 
-	::FillRect(hdc, &upDownData.m_rcClient, DarkMode::getDlgBackgroundBrush());
-	::SetBkMode(hdc, TRANSPARENT);
+	RECT rcPrev{ upDownData.m_rcPrev };
+	RECT rcNext{ upDownData.m_rcNext };
 
-	POINT ptCursor{};
-	::GetCursorPos(&ptCursor);
-	::ScreenToClient(hWnd, &ptCursor);
+	const bool isDisabled = iStateIDPrev == UPS_DISABLED;
+	const bool isHotPrev = iStateIDPrev == UPS_HOT;
+	const bool isHotNext = iStateIDNext == UPS_HOT;
 
-	const bool isHotPrev = ::PtInRect(&upDownData.m_rcPrev, ptCursor) == TRUE;
-	const bool isHotNext = ::PtInRect(&upDownData.m_rcNext, ptCursor) == TRUE;
-
-	upDownData.m_wasHotNext = !isHotPrev && (::PtInRect(&upDownData.m_rcClient, ptCursor) == TRUE);
-
-	if (hasTheme && DarkMode::isAtLeastWindows11() && dmlib_subclass::isThemePrefered())
+	if (hasTheme && dmlib::isAtLeastWindows11() && dmlib_subclass::isThemePrefered())
 	{
-		// all 4 variants of up-down control buttons have enums with same values
-		auto getStateId = [&isDisabled](bool isHot) noexcept
-		{
-			if (isDisabled)
-			{
-				return UPS_DISABLED;
-			}
-			if (isHot)
-			{
-				return UPS_HOT;
-			}
-			return UPS_NORMAL;
-		};
-
-		const int stateIdPrev = getStateId(isHotPrev);
-		const int stateIdNext = getStateId(isHotNext);
-
-		RECT rcPrev{ upDownData.m_rcPrev };
-		RECT rcNext{ upDownData.m_rcNext };
-
 		int partIdPrev = SPNP_DOWNHORZ;
 		int partIdNext = SPNP_UPHORZ;
 
@@ -975,38 +1012,144 @@ static void paintUpDown(HWND hWnd, HDC hdc, dmlib_subclass::UpDownData& upDownDa
 			partIdNext = SPNP_DOWN;
 		}
 
-		::DrawThemeBackground(hTheme, hdc, partIdPrev, stateIdPrev, &rcPrev, nullptr);
-		::DrawThemeBackground(hTheme, hdc, partIdNext, stateIdNext, &rcNext, nullptr);
+		::DrawThemeBackground(hTheme, hdc, partIdPrev, iStateIDPrev, &rcPrev, nullptr);
+		::DrawThemeBackground(hTheme, hdc, partIdNext, iStateIDPrev, &rcNext, nullptr);
+		return;
+	}
+
+	// Button part
+
+	paintUpDownBtn(hdc, rcPrev, isDisabled, isHotPrev, upDownData.m_cornerRoundness);
+	paintUpDownBtn(hdc, rcNext, isDisabled, isHotNext, upDownData.m_cornerRoundness);
+
+	// Glyph part
+
+	const COLORREF clrPrev = getColorFromState(isDisabled, isHotPrev);
+	const COLORREF clrNext = getColorFromState(isDisabled, isHotNext);
+
+	if (hasTheme)
+	{
+		paintArrow(hdc, hWnd, upDownData, rcPrev, clrPrev, true);
+		paintArrow(hdc, hWnd, upDownData, rcNext, clrNext, false);
+		return;
+	}
+
+	const auto hFont = dmlib_paint::GdiObject{ hdc, hWnd };
+
+	static constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+	const LONG offset = isHorz ? 1 : 0;
+
+	RECT rcTextPrev{ rcPrev.left, rcPrev.top, rcPrev.right, rcPrev.bottom - offset };
+	::SetTextColor(hdc, clrPrev);
+	::DrawText(hdc, isHorz ? dmlib_glyph::kArrowLeft : dmlib_glyph::kArrowUp, -1, &rcTextPrev, dtFlags);
+
+	RECT rcTextNext{ rcNext.left + offset, rcNext.top, rcNext.right, rcNext.bottom - offset };
+	::SetTextColor(hdc, clrNext);
+	::DrawText(hdc, isHorz ? dmlib_glyph::kArrowRight : dmlib_glyph::kArrowDown, -1, &rcTextNext, dtFlags);
+}
+
+/**
+ * @brief Custom paints an up-down (spinner) control.
+ *
+ * Draws the up-down control.
+ *
+ * Paint logic:
+ * - Background fill with dialog background brush
+ * - Rounded corners (optional, based on Windows 11 and parent class)
+ * - Direction-aware layout and glyph placement
+ * - Transition effect
+ *
+ * @param[in]       hWnd        Handle to the up-down control.
+ * @param[in]       hdc         Device context to draw into.
+ * @param[in,out]   upDownData  Reference to layout and state information (segments, orientation, corner radius).
+ *
+ * @see UpDownData
+ */
+static void paintUpDown(
+	HWND hWnd,
+	HDC hdc,
+	dmlib_subclass::UpDownData& upDownData
+) noexcept
+{
+	POINT ptCursor{};
+	::GetCursorPos(&ptCursor);
+	::ScreenToClient(hWnd, &ptCursor);
+
+	const int iStateIDPrev = getUpDownBtnState(hWnd, ptCursor, upDownData.m_rcPrev);
+	const int iStateIDNext = getUpDownBtnState(hWnd, ptCursor, upDownData.m_rcNext);
+
+	if (!dmlib_paint::isAnimationEnabled())
+	{
+		upDownData.m_wasHotNext = (iStateIDPrev != UPS_HOT) && (::PtInRect(&upDownData.m_rcClient, ptCursor) == TRUE);
+		renderUpDown(hWnd, hdc, upDownData, iStateIDPrev, iStateIDNext);
+		return;
+	}
+	
+	if (::BufferedPaintRenderAnimation(hWnd, hdc) == TRUE)
+	{
+		return;
+	}
+
+	upDownData.m_themeData.ensureTheme(hWnd);
+	const auto& hTheme = upDownData.m_themeData.getHTheme();
+
+	// Animation part - transition
+
+	BP_ANIMATIONPARAMS animParams{};
+	animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+	animParams.style = BPAS_LINEAR;
+	int oldStatePrev = upDownData.m_iStateIDPrev;
+	int oldStateNext = upDownData.m_iStateIDNext;
+	if (iStateIDPrev != upDownData.m_iStateIDPrev && upDownData.m_iStateIDPrev != UPS_NORMAL)
+	{
+		::GetThemeTransitionDuration(hTheme, SPNP_UP, upDownData.m_iStateIDPrev, iStateIDPrev, TMT_TRANSITIONDURATIONS, &animParams.dwDuration);
+		if (iStateIDPrev == UPS_NORMAL)
+		{
+			oldStateNext = iStateIDNext;
+		}
+	}
+
+	if (iStateIDNext != upDownData.m_iStateIDNext && upDownData.m_iStateIDNext != UPS_NORMAL)
+	{
+		::GetThemeTransitionDuration(hTheme, SPNP_UP, upDownData.m_iStateIDNext, iStateIDNext, TMT_TRANSITIONDURATIONS, &animParams.dwDuration);
+		if (iStateIDNext == UPS_NORMAL)
+		{
+			oldStatePrev = iStateIDPrev;
+		}
+	}
+
+	animParams.dwDuration /= 2;
+
+	RECT rcTmp{ upDownData.m_rcClient };
+	if (!upDownData.m_isHorizontal)
+	{
+		rcTmp.left += dmlib_subclass::UpDownData::kOffset;
+	}
+
+	HDC hdcFrom = nullptr;
+	HDC hdcTo = nullptr;
+	if (HANIMATIONBUFFER hbpAnimation = ::BeginBufferedAnimation(hWnd, hdc, &rcTmp, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
+		hbpAnimation != nullptr)
+	{
+		if (hdcFrom != nullptr)
+		{
+			renderUpDown(hWnd, hdcFrom, upDownData, oldStatePrev, oldStateNext);
+		}
+
+		if (hdcTo != nullptr)
+		{
+			renderUpDown(hWnd, hdcTo, upDownData, iStateIDPrev, iStateIDNext);
+		}
+
+		upDownData.m_iStateIDPrev = iStateIDPrev;
+		upDownData.m_iStateIDNext = iStateIDNext;
+		::EndBufferedAnimation(hbpAnimation, TRUE);
 	}
 	else
 	{
-		// Button part
-
-		paintUpDownBtn(hdc, upDownData.m_rcPrev, isDisabled, isHotPrev, upDownData.m_cornerRoundness);
-		paintUpDownBtn(hdc, upDownData.m_rcNext, isDisabled, isHotNext, upDownData.m_cornerRoundness);
-
-		// Glyph part
-
-		if (hasTheme)
-		{
-			paintArrow(hdc, hWnd, upDownData, upDownData.m_rcPrev, isHotPrev, true, isDisabled);
-			paintArrow(hdc, hWnd, upDownData, upDownData.m_rcNext, isHotNext, false, isDisabled);
-		}
-		else
-		{
-			const auto hFont = dmlib_paint::GdiObject{ hdc, hWnd };
-
-			static constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
-			const LONG offset = isHorz ? 1 : 0;
-
-			RECT rcTextPrev{ upDownData.m_rcPrev.left, upDownData.m_rcPrev.top, upDownData.m_rcPrev.right, upDownData.m_rcPrev.bottom - offset };
-			::SetTextColor(hdc, getColorFromState(isDisabled, isHotPrev));
-			::DrawText(hdc, isHorz ? dmlib_glyph::kArrowLeft : dmlib_glyph::kArrowUp, -1, &rcTextPrev, dtFlags);
-
-			RECT rcTextNext{ upDownData.m_rcNext.left + offset, upDownData.m_rcNext.top, upDownData.m_rcNext.right, upDownData.m_rcNext.bottom - offset };
-			::SetTextColor(hdc, getColorFromState(isDisabled, isHotNext));
-			::DrawText(hdc, isHorz ? dmlib_glyph::kArrowRight : dmlib_glyph::kArrowDown, -1, &rcTextNext, dtFlags);
-		}
+		renderUpDown(hWnd, hdc, upDownData, iStateIDPrev, iStateIDNext);
+		upDownData.m_iStateIDPrev = iStateIDPrev;
+		upDownData.m_iStateIDNext = iStateIDNext;
 	}
 }
 
@@ -1022,8 +1165,8 @@ static void paintUpDown(HWND hWnd, HDC hdc, dmlib_subclass::UpDownData& upDownDa
  * @return LRESULT Result of message processing.
  *
  * @see paintUpDown()
- * @see DarkMode::setUpDownCtrlSubclass()
- * @see DarkMode::removeUpDownCtrlSubclass()
+ * @see dmlib::setUpDownCtrlSubclass()
+ * @see dmlib::removeUpDownCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::UpDownSubclass(
 	HWND hWnd,
@@ -1032,7 +1175,7 @@ LRESULT CALLBACK dmlib_subclass::UpDownSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pUpDownData = reinterpret_cast<UpDownData*>(dwRefData);
 	auto& themeData = pUpDownData->m_themeData;
@@ -1044,18 +1187,19 @@ LRESULT CALLBACK dmlib_subclass::UpDownSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, UpDownSubclass, uIdSubclass);
 			std::unique_ptr<UpDownData> u_ptrData(pUpDownData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
 
-			if (reinterpret_cast<HDC>(wParam) != hMemDC)
+			if (!dmlib_paint::isAnimationEnabled()
+				&& reinterpret_cast<HDC>(wParam) != hMemDC)
 			{
 				return FALSE;
 			}
@@ -1064,13 +1208,24 @@ LRESULT CALLBACK dmlib_subclass::UpDownSubclass(
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
 
 			PAINTSTRUCT ps{};
 			HDC hdc = ::BeginPaint(hWnd, &ps);
+
+			RECT rcClient{};
+			::GetClientRect(hWnd, &rcClient);
+			pUpDownData->updateRect(rcClient);
+
+			if (dmlib_paint::isAnimationEnabled())
+			{
+				paintUpDown(hWnd, hdc, *pUpDownData);
+				::EndPaint(hWnd, &ps);
+				return 0;
+			}
 
 			if (!dmlib_paint::isRectValid(ps.rcPaint))
 			{
@@ -1080,19 +1235,12 @@ LRESULT CALLBACK dmlib_subclass::UpDownSubclass(
 
 			if (!pUpDownData->m_isHorizontal)
 			{
-				::OffsetRect(&ps.rcPaint, 2, 0);
-			}
-
-			RECT rcClient{};
-			::GetClientRect(hWnd, &rcClient);
-			pUpDownData->updateRect(rcClient);
-			if (!pUpDownData->m_isHorizontal)
-			{
-				::OffsetRect(&rcClient, 2, 0);
+				::OffsetRect(&ps.rcPaint, UpDownData::kOffset, 0);
+				::OffsetRect(&rcClient, UpDownData::kOffset, 0);
 			}
 
 			dmlib_paint::PaintWithBuffer<UpDownData>(*pUpDownData, hdc, ps,
-				[&]() { paintUpDown(hWnd, hMemDC, *pUpDownData); },
+				[&]() noexcept { paintUpDown(hWnd, hMemDC, *pUpDownData); },
 				rcClient);
 
 			::EndPaint(hWnd, &ps);
@@ -1112,9 +1260,19 @@ LRESULT CALLBACK dmlib_subclass::UpDownSubclass(
 			break;
 		}
 
+		case WM_SIZE:
+		case WM_DESTROY:
+		{
+			if (dmlib_paint::isAnimationEnabled())
+			{
+				::BufferedPaintStopAllAnimations(hWnd);
+			}
+			break;
+		}
+
 		case WM_MOUSEMOVE:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1130,7 +1288,7 @@ LRESULT CALLBACK dmlib_subclass::UpDownSubclass(
 
 		case WM_MOUSELEAVE:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1178,49 +1336,69 @@ static void paintTabItem(
 
 	const bool isHot = ::PtInRect(&rcItem, ptCursor) == TRUE;
 	const bool isSelectedTab = (i == iSelTab);
+	const LONG paddingTop = dmlib_dpi::scale(2, hWnd);
 
 	::InflateRect(&rcItem, -1, -1);
 	rcItem.right += 1;
 
-	std::wstring label(MAX_PATH, L'\0');
-	TCITEM tci{};
+	auto buffer = std::array<wchar_t, MAX_PATH>{}; // label
+	TCITEMW tci{};
 	tci.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_STATE;
 	tci.dwStateMask = TCIS_HIGHLIGHTED;
-	tci.pszText = label.data();
+	tci.pszText = buffer.data();
 	tci.cchTextMax = MAX_PATH - 1;
 
 	TabCtrl_GetItem(hWnd, i, &tci);
 
 	RECT rcText{ rcItem };
-
-	if (const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-		(nStyle & TCS_BUTTONS) == TCS_BUTTONS) // is button
+	const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+	if ((nStyle & TCS_BUTTONS) == TCS_BUTTONS) // is button
 	{
-		const bool isHighlighted = (tci.dwState & TCIS_HIGHLIGHTED) == TCIS_HIGHLIGHTED;
-		::FillRect(hdc, &rcItem, isHighlighted ? DarkMode::getHotBackgroundBrush() : DarkMode::getDlgBackgroundBrush());
-		::SetTextColor(hdc, isHighlighted ? DarkMode::getLinkTextColor() : DarkMode::getDarkerTextColor());
+		if (const bool isHighlighted = (tci.dwState & TCIS_HIGHLIGHTED) == TCIS_HIGHLIGHTED;
+			isHighlighted)
+		{
+			::FillRect(hdc, &rcItem, dmlib::getHotBackgroundBrush());
+			::SetTextColor(hdc, dmlib::getLinkTextColor());
+		}
+		else
+		{
+			::FillRect(hdc, &rcItem, dmlib::getDlgBackgroundBrush());
+			::SetTextColor(hdc, dmlib::getDarkerTextColor());
+		}
+		
+		::FrameRect(hdc, &rcFrame, dmlib::getEdgeBrush());
 	}
 	else
 	{
-		// For consistency getBackgroundBrush()
-		// would be better, than getCtrlBackgroundBrush(),
-		// however default getBackgroundBrush() has almost same color
-		// as getDlgBackgroundBrush()
+		::OffsetRect(&rcText, 0, 1);
 
-		::FillRect(hdc, &rcItem, getBrushFromState(isSelectedTab, isHot));
-		::SetTextColor(hdc, (isHot || isSelectedTab) ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
+		::SetTextColor(hdc, (isHot || isSelectedTab) ? dmlib::getTextColor() : dmlib::getDarkerTextColor());
 
 		if (isSelectedTab)
 		{
 			::OffsetRect(&rcText, 0, -1);
-			::InflateRect(&rcFrame, 0, 1);
+			rcFrame.bottom += 1;
+			rcFrame.left -= 2;
+		}
+		else if ((i - 1) == iSelTab)
+		{
+			rcFrame.top += paddingTop;
+		}
+		else
+		{
+			rcFrame.top += paddingTop;
+			rcFrame.left -= 1;
 		}
 
-		if (i != nTabs - 1)
+		const bool isMultiLine = ((nStyle & TCS_MULTILINE) == TCS_MULTILINE);
+		if (const bool isOneLine = isMultiLine ? TabCtrl_GetRowCount(hWnd) == 1 : true;
+			isOneLine && i != nTabs - 1)
 		{
 			rcFrame.right += 1;
 		}
 	}
+
+	dmlib_paint::paintRect(hdc, rcFrame, dmlib::getEdgePen(), getBrushFromState(isSelectedTab, isHot));
 
 	// Draw image
 	if (tci.iImage != -1)
@@ -1234,19 +1412,31 @@ static void paintTabItem(
 		rcText.left += cx;
 	}
 
-	::DrawText(hdc, label.c_str(), -1, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	if (dmlib::getHighlightColor() != dmlib::getCtrlBackgroundColor()
+		&& dmlib::isAtLeastWindows11()
+		&& isSelectedTab)
+	{
+		const RECT rcHighlightLine{ rcFrame.left + 1, rcFrame.top + 1, rcFrame.right - 1, rcFrame.top + paddingTop + 1 };
+		dmlib_paint::paintRect(hdc, rcHighlightLine, dmlib::getHighlightPen(), dmlib::getHighlightBrush());
+	}
 
-	::FrameRect(hdc, &rcFrame, DarkMode::getEdgeBrush());
+	::DrawText(hdc, tci.pszText, -1, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
 	// Draw focus keyboard cue
-	if (isSelectedTab && ::GetFocus() == hWnd)
+	if (!isSelectedTab || ::GetFocus() != hWnd)
 	{
-		if (const auto uiState = static_cast<DWORD>(::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0));
-			(uiState & UISF_HIDEFOCUS) != UISF_HIDEFOCUS)
+		return;
+	}
+
+	if (const auto uiState = static_cast<DWORD>(::SendMessage(hWnd, WM_QUERYUISTATE, 0, 0));
+		(uiState & UISF_HIDEFOCUS) != UISF_HIDEFOCUS)
+	{
+		if (dmlib::isAtLeastWindows11())
 		{
-			::InflateRect(&rcFrame, -2, -1);
-			::DrawFocusRect(hdc, &rcFrame);
+			rcFrame.top += (paddingTop + 1);
 		}
+		::InflateRect(&rcFrame, -2, -1);
+		::DrawFocusRect(hdc, &rcFrame);
 	}
 }
 
@@ -1272,9 +1462,31 @@ static void paintTabItem(
  */
 static void paintTab(HWND hWnd, HDC hdc, const RECT& rect) noexcept
 {
-	::FillRect(hdc, &rect, DarkMode::getDlgBackgroundBrush());
+	::FillRect(hdc, &rect, dmlib::getDlgBackgroundBrush());
 
-	const auto hPen = dmlib_paint::GdiObject{ hdc, DarkMode::getEdgePen(), true };
+	const auto iSelTab = TabCtrl_GetCurSel(hWnd);
+	const auto nTabs = TabCtrl_GetItemCount(hWnd);
+
+	int iTab = iSelTab;
+
+	const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+
+	if ((nStyle & TCS_BUTTONS) == TCS_BUTTONS)
+	{
+		iTab = nTabs - 1;
+	}
+
+	RECT rcSelTab{};
+	TabCtrl_GetItemRect(hWnd, iTab, &rcSelTab);
+
+	::ExcludeClipRect(hdc, rcSelTab.left, rcSelTab.top, rcSelTab.right, rcSelTab.bottom);
+	rcSelTab.bottom -= 1;
+
+	static const int roundness = dmlib::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness : 0;
+	const RECT rcCont{ rect.left, rcSelTab.bottom, rect.right, rect.bottom };
+	dmlib_paint::paintRoundFrameRect(hdc, rcCont, dmlib::getEdgePen(), roundness, roundness);
+
+	const auto hPen = dmlib_paint::GdiObject{ hdc, dmlib::getEdgePen(), true };
 	const auto hFont = dmlib_paint::GdiObject{ hdc, hWnd };
 
 	auto holdClip = ::CreateRectRgn(0, 0, 0, 0);
@@ -1290,12 +1502,31 @@ static void paintTab(HWND hWnd, HDC hdc, const RECT& rect) noexcept
 
 	::SetBkMode(hdc, TRANSPARENT);
 
-	const auto iSelTab = TabCtrl_GetCurSel(hWnd);
-	const auto nTabs = TabCtrl_GetItemCount(hWnd);
+	const bool isOwnerDraw = (nStyle & TCS_OWNERDRAWFIXED) != 0;
+
 	for (int i = 0; i < nTabs; ++i)
 	{
 		RECT rcItem{};
 		TabCtrl_GetItemRect(hWnd, i, &rcItem);
+
+		if (isOwnerDraw)
+		{
+			const DRAWITEMSTRUCT dis{
+				ODT_TAB
+				, 0
+				, static_cast<UINT>(i)
+				, ODA_DRAWENTIRE
+				, ODS_DEFAULT
+				, hWnd
+				, hdc
+				, rcItem
+				, 0
+			};
+
+			::SetTextColor(hdc, (iSelTab == i) ? dmlib::getTextColor() : dmlib::getDarkerTextColor());
+			::SendMessage(::GetParent(hWnd), WM_DRAWITEM, 0, reinterpret_cast<LPARAM>(&dis));
+			continue;
+		}
 
 		if (RECT rcIntersect{};
 			::IntersectRect(&rcIntersect, &rect, &rcItem) == FALSE)
@@ -1303,7 +1534,8 @@ static void paintTab(HWND hWnd, HDC hdc, const RECT& rect) noexcept
 			continue; // Skip to the next iteration when there is no intersection
 		}
 
-		HRGN hClip = ::CreateRectRgnIndirect(&rcItem);
+		const RECT rcTmp{ rcItem.left - 2, rcItem.top, rcItem.right + 1, rcItem.bottom };
+		HRGN hClip = ::CreateRectRgnIndirect(&rcTmp);
 		::SelectClipRgn(hdc, hClip);
 
 		paintTabItem(hdc, hWnd, rcItem, i, iSelTab, nTabs, ptCursor);
@@ -1332,8 +1564,8 @@ static void paintTab(HWND hWnd, HDC hdc, const RECT& rect) noexcept
  * @return LRESULT Result of message processing.
  *
  * @see paintTab()
- * @see DarkMode::setTabCtrlPaintSubclass()
- * @see DarkMode::removeTabCtrlPaintSubclass()
+ * @see dmlib::setTabCtrlPaintSubclass()
+ * @see dmlib::removeTabCtrlPaintSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::TabPaintSubclass(
 	HWND hWnd,
@@ -1342,13 +1574,13 @@ LRESULT CALLBACK dmlib_subclass::TabPaintSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pTabData = reinterpret_cast<TabData*>(dwRefData);
 	const auto& hMemDC = pTabData->m_bufferData.getHMemDC();
 
-	if (const auto nStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
-		((nStyle & (TCS_VERTICAL | TCS_OWNERDRAWFIXED)) != 0)
+	if (const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+		((nStyle & TCS_VERTICAL) != 0)
 		&& (uMsg != WM_NCDESTROY))
 	{
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -1360,13 +1592,13 @@ LRESULT CALLBACK dmlib_subclass::TabPaintSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, TabPaintSubclass, uIdSubclass);
 			std::unique_ptr<TabData> u_ptrData(pTabData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1380,7 +1612,7 @@ LRESULT CALLBACK dmlib_subclass::TabPaintSubclass(
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1397,7 +1629,7 @@ LRESULT CALLBACK dmlib_subclass::TabPaintSubclass(
 			RECT rcClient{};
 			::GetClientRect(hWnd, &rcClient);
 			dmlib_paint::PaintWithBuffer<TabData>(*pTabData, hdc, ps,
-				[&]() { paintTab(hWnd, hMemDC, rcClient); },
+				[&]() noexcept { paintTab(hWnd, hMemDC, rcClient); },
 				hWnd);
 
 			::EndPaint(hWnd, &ps);
@@ -1432,9 +1664,9 @@ LRESULT CALLBACK dmlib_subclass::TabPaintSubclass(
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setUpDownCtrlSubclass()
- * @see DarkMode::setTabCtrlUpDownSubclass()
- * @see DarkMode::removeTabCtrlUpDownSubclass()
+ * @see dmlib::setUpDownCtrlSubclass()
+ * @see dmlib::setTabCtrlUpDownSubclass()
+ * @see dmlib::removeTabCtrlUpDownSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::TabUpDownSubclass(
 	HWND hWnd,
@@ -1443,7 +1675,7 @@ LRESULT CALLBACK dmlib_subclass::TabUpDownSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
@@ -1458,9 +1690,9 @@ LRESULT CALLBACK dmlib_subclass::TabUpDownSubclass(
 			if (LOWORD(wParam) == WM_CREATE)
 			{
 				auto hUpDown = reinterpret_cast<HWND>(lParam);
-				if (dmlib_subclass::cmpWndClassName(hUpDown, UPDOWN_CLASS))
+				if (dmlib_subclass::WndClassName::cmpWndClassName(hUpDown, UPDOWN_CLASS))
 				{
-					DarkMode::setUpDownCtrlSubclass(hUpDown);
+					dmlib::setUpDownCtrlSubclass(hUpDown);
 					return 0;
 				}
 			}
@@ -1504,7 +1736,7 @@ static void ncPaintCustomBorder(HWND hWnd, const dmlib_subclass::BorderMetricsDa
 		rcClient.bottom += borderMetricsData.m_yScroll;
 	}
 
-	HPEN hPen = ::CreatePen(PS_SOLID, 1, (::IsWindowEnabled(hWnd) == TRUE) ? DarkMode::getBackgroundColor() : DarkMode::getDlgBackgroundColor());
+	const HPEN hPen = ::CreatePen(PS_SOLID, 1, (::IsWindowEnabled(hWnd) == TRUE) ? dmlib::getBackgroundColor() : dmlib::getDlgBackgroundColor());
 	RECT rcInner{ rcClient };
 	::InflateRect(&rcInner, -1, -1);
 	dmlib_paint::paintFrameRect(hdc, rcInner, hPen);
@@ -1516,10 +1748,28 @@ static void ncPaintCustomBorder(HWND hWnd, const dmlib_subclass::BorderMetricsDa
 
 	const bool isHot = ::PtInRect(&rcClient, ptCursor) == TRUE;
 	const bool hasFocus = ::GetFocus() == hWnd;
+	const bool isEditReadOnly = borderMetricsData.m_isEdit && (nStyle & ES_READONLY) == ES_READONLY;
 
-	HPEN hEnabledPen = ((borderMetricsData.m_isHot && isHot) || hasFocus ? DarkMode::getHotEdgePen() : DarkMode::getEdgePen());
+	const HPEN hEnabledPen = (!isEditReadOnly && ((borderMetricsData.m_isHot && isHot) || hasFocus)) ? dmlib::getHotEdgePen() : dmlib::getEdgePen();
 
-	dmlib_paint::paintFrameRect(hdc, rcClient, (::IsWindowEnabled(hWnd) == TRUE) ? hEnabledPen : DarkMode::getDisabledEdgePen());
+	static const int roundness = dmlib::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness : 0;
+	dmlib_paint::paintRoundRect(
+		hdc,
+		rcClient,
+		(::IsWindowEnabled(hWnd) == TRUE) ? hEnabledPen : dmlib::getDisabledEdgePen(),
+		static_cast<HBRUSH>(::GetStockObject(NULL_BRUSH)),
+		roundness,
+		roundness
+	);
+
+	if (dmlib::getHighlightColor() != dmlib::getCtrlBackgroundColor()
+		&& dmlib::isAtLeastWindows11()
+		&& hasFocus
+		&& borderMetricsData.m_isEdit)
+	{
+		const RECT rcHighlightBottomLine{ rcClient.left, rcClient.bottom - dmlib_dpi::scale(2, hWnd), rcClient.right, rcClient.bottom};
+		dmlib_paint::paintRoundRect(hdc, rcHighlightBottomLine, dmlib::getHighlightPen(), dmlib::getHighlightBrush(), roundness, roundness);
+	}
 
 	::ReleaseDC(hWnd, hdc);
 }
@@ -1535,8 +1785,8 @@ static void ncPaintCustomBorder(HWND hWnd, const dmlib_subclass::BorderMetricsDa
  * @param[in]   dwRefData   BorderMetricsData instance.
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass()
- * @see DarkMode::removeCustomBorderForListBoxOrEditCtrlSubclass()
+ * @see dmlib::setCustomBorderForListBoxOrEditCtrlSubclass()
+ * @see dmlib::removeCustomBorderForListBoxOrEditCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 	HWND hWnd,
@@ -1545,7 +1795,7 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pBorderMetricsData = reinterpret_cast<BorderMetricsData*>(dwRefData);
 
@@ -1555,13 +1805,13 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, CustomBorderSubclass, uIdSubclass);
 			std::unique_ptr<BorderMetricsData> u_ptrData(pBorderMetricsData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_NCPAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1575,7 +1825,7 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 
 		case WM_NCCALCSIZE:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1589,13 +1839,13 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 		case WM_DPICHANGED_AFTERPARENT:
 		{
 			pBorderMetricsData->setMetricsForDpi(dmlib_dpi::GetDpiForParent(hWnd));
-			DarkMode::redrawWindowFrame(hWnd);
+			dmlib::redrawWindowFrame(hWnd);
 			return 0;
 		}
 
 		case WM_MOUSEMOVE:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1615,14 +1865,14 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 			if (!pBorderMetricsData->m_isHot)
 			{
 				pBorderMetricsData->m_isHot = true;
-				DarkMode::redrawWindowFrame(hWnd);
+				dmlib::redrawWindowFrame(hWnd);
 			}
 			break;
 		}
 
 		case WM_MOUSELEAVE:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1630,7 +1880,7 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 			if (pBorderMetricsData->m_isHot)
 			{
 				pBorderMetricsData->m_isHot = false;
-				DarkMode::redrawWindowFrame(hWnd);
+				dmlib::redrawWindowFrame(hWnd);
 			}
 
 			TRACKMOUSEEVENT tme{};
@@ -1651,11 +1901,39 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
 }
 
 /**
- * @brief Custom paints a combo box control.
+ * @brief Get combo box state and client rectangle.
+ *
+ * @param[in]       hWnd        Handle to the combo box control.
+ * @param[in,out]   rcClient    Rectangle for combo box.
+ *
+ * @see ComboBoxData
+ * @see paintComboBox()
+ */
+static int getComboBoxStateAndRect(HWND hWnd, RECT& rcClient) noexcept
+{
+	::GetClientRect(hWnd, &rcClient);
+
+	POINT ptCursor{};
+	::GetCursorPos(&ptCursor);
+	::ScreenToClient(hWnd, &ptCursor);
+
+	if (::IsWindowEnabled(hWnd) == FALSE)
+	{
+		return  CBXSR_DISABLED;
+	}
+	if (::PtInRect(&rcClient, ptCursor) != FALSE)
+	{
+		return CBXSR_HOT;
+	}
+	return CBXSR_NORMAL;
+}
+
+/**
+ * @brief Draws a combo box control with `CBS_SIMPLE` or `CBS_DROPDOWN` style.
  *
  * This function handles owner-drawn drawing of a combo box, adapting its
  * appearance based on:
- * - Control style (`CBS_SIMPLE`, `CBS_DROPDOWN`, `CBS_DROPDOWNLIST`)
+ * - Control style (`CBS_SIMPLE`, `CBS_DROPDOWN`)
  * - Enabled/disabled state
  * - Hot (hover) state
  * - Focus state
@@ -1665,8 +1943,7 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
  * - Draws background with different brushes for normal, hot, and disabled states
  * - Uses `COMBOBOXINFO` to retrieve subcomponent rectangles.
  * - Draws text using theme APIs if available, otherwise GDI
- * - For `CBS_DROPDOWNLIST`, draws the selected item text directly.
- * - For `CBS_DROPDOWN` and `CBS_SIMPLE`, text is handled by the child edit control.
+ * - For `CBS_SIMPLE` and `CBS_DROPDOWN`, text is handled by the child edit control.
  * - The drop-down arrow is drawn either via `DrawThemeBackground` or a manual glyph.
  * - Borders are drawn with pens with custom colors depending on state (rounded corners on Windows 11+).
  * - Uses `ExcludeClipRect` to avoid overpainting the text/edit area.
@@ -1674,10 +1951,139 @@ LRESULT CALLBACK dmlib_subclass::CustomBorderSubclass(
  * @param[in]       hWnd            Handle to the combo box control.
  * @param[in]       hdc             Device context to draw into.
  * @param[in,out]   comboBoxData    Reference to the combo box' theme and style data.
+ * @param[in]       iStateID        State of the combo box.
  *
  * @see ComboBoxData
+ * @see paintComboBox()
+ * @see renderComboBoxList()
  */
-static void paintCombobox(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comboBoxData) noexcept
+static void renderComboBoxEdit(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comboBoxData, int iStateID) noexcept
+{
+	auto& themeData = comboBoxData.m_themeData;
+	const auto& hTheme = themeData.getHTheme();
+	const bool hasTheme = themeData.ensureTheme(hWnd);
+
+	const bool isSimple = comboBoxData.m_cbStyle == CBS_SIMPLE;
+
+	COMBOBOXINFO cbi{};
+	cbi.cbSize = sizeof(COMBOBOXINFO);
+	::GetComboBoxInfo(hWnd, &cbi);
+
+	RECT rcClient{};
+	::GetClientRect(hWnd, &rcClient);
+
+	const bool isDisabled = iStateID == CBXSR_DISABLED;
+	const bool isHot = iStateID == CBXSR_HOT;
+
+	bool hasFocus = false;
+
+	RECT rcArrow{ cbi.rcButton };
+	rcArrow.left -= 1;
+
+	// Text part
+
+	if (comboBoxData.m_cbStyle == CBS_DROPDOWN && cbi.hwndItem != nullptr)
+	{
+		hasFocus = ::GetFocus() == cbi.hwndItem;
+		const HBRUSH hBrush = getBrushFromState(isDisabled, isHot);
+		::FillRect(hdc, &rcArrow, hBrush);
+	}
+
+	const HPEN hPen = getEdgePenFromState(isDisabled, isHot || hasFocus || isSimple);
+	const auto holdPen = dmlib_paint::GdiObject{ hdc, hPen, true};
+
+	// Drop down arrow part
+	if (comboBoxData.m_cbStyle == CBS_DROPDOWN)
+	{
+		if (hasTheme
+			&& (dmlib::isExperimentalSupported()
+				|| !dmlib::isDarkDmTypeUsed()))
+		{
+			const RECT rcThemedArrow{ rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
+			::DrawThemeBackground(hTheme, hdc, CP_DROPDOWNBUTTONRIGHT, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, &rcThemedArrow, nullptr);
+		}
+		else
+		{
+			const auto holdFont = dmlib_paint::GdiObject{ hdc, hWnd };
+
+			::SetTextColor(hdc, getColorFromState(isDisabled, isHot));
+			static constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+			::SetBkMode(hdc, TRANSPARENT);
+			::DrawText(hdc, dmlib_glyph::kArrowDown, -1, &rcArrow, dtFlags);
+		}
+	}
+
+	// Frame part
+	::ExcludeClipRect(hdc, cbi.rcItem.left, cbi.rcItem.top, cbi.rcItem.right, cbi.rcItem.bottom);
+
+	if (isSimple && cbi.hwndList != nullptr)
+	{
+		RECT rcItem{ cbi.rcItem };
+		::MapWindowPoints(cbi.hwndItem, hWnd, reinterpret_cast<LPPOINT>(&rcItem), 2);
+		rcClient.bottom = rcItem.bottom;
+	}
+
+	RECT rcInner{ rcClient };
+	::InflateRect(&rcInner, -1, -1);
+
+	if (comboBoxData.m_cbStyle == CBS_DROPDOWN)
+	{
+		const std::array<POINT, 2> edge{ {
+			{ rcArrow.left - 1, rcArrow.top },
+			{ rcArrow.left - 1, rcArrow.bottom }
+		} };
+		::Polyline(hdc, edge.data(), static_cast<int>(edge.size()));
+
+		::ExcludeClipRect(hdc, rcArrow.left - 1, rcArrow.top, rcArrow.right, rcArrow.bottom);
+
+		rcInner.right = rcArrow.left - 1;
+	}
+
+	HPEN hInnerPen = ::CreatePen(PS_SOLID, 1, isDisabled ? dmlib::getDlgBackgroundColor() : dmlib::getBackgroundColor());
+	dmlib_paint::paintFrameRect(hdc, rcInner, hInnerPen);
+	::DeleteObject(hInnerPen);
+	::InflateRect(&rcInner, -1, -1);
+	::FillRect(hdc, &rcInner, isDisabled ? dmlib::getDlgBackgroundBrush() : dmlib::getCtrlBackgroundBrush());
+
+	static const int roundness = dmlib::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness : 0;
+	dmlib_paint::paintRoundFrameRect(hdc, rcClient, hPen, roundness, roundness);
+}
+
+/**
+ * @brief Draws a combo box control with `CBS_DROPDOWNLIST` style.
+ *
+ * This function handles owner-drawn drawing of a combo box, adapting its
+ * appearance based on:
+ * - Enabled/disabled state
+ * - Hot (hover) state
+ * - Focus state
+ * - Dark mode theme availability
+ * - `CBS_OWNERDRAWFIXED` and `CBS_OWNERDRAWVARIABLE` flags
+ *
+ * Paint logic:
+ * - Draws background with different brushes for normal, hot, and disabled states
+ * - Uses `COMBOBOXINFO` to retrieve subcomponent rectangles.
+ * - Draws text using theme APIs if available, otherwise GDI
+ * - For `CBS_DROPDOWNLIST`, draws the selected item text directly.
+ * - The drop-down arrow is drawn either via `DrawThemeBackground` or a manual glyph.
+ * - Borders are drawn with pens with custom colors depending on state (rounded corners on Windows 11+).
+ * - Uses `ExcludeClipRect` to avoid overpainting the text/edit area.
+ *
+ * @param[in]       hWnd            Handle to the combo box control.
+ * @param[in]       hdc             Device context to draw into.
+ * @param[in,out]   comboBoxData    Reference to the combo box' theme and style data.
+ * @param[in]       iStateID        State of the combo box.
+ *
+ * @see ComboBoxData
+ * @see paintComboBox()
+ * @see renderComboBoxEdit()
+ */
+static void renderComboBoxList(
+	HWND hWnd,
+	HDC hdc,
+	dmlib_subclass::ComboBoxData& comboBoxData,
+	int iStateID
+) DMLIB_BUF_NOEXCEPT
 {
 	auto& themeData = comboBoxData.m_themeData;
 	const auto& hTheme = themeData.getHTheme();
@@ -1690,40 +2096,51 @@ static void paintCombobox(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comb
 
 	RECT rcClient{};
 	::GetClientRect(hWnd, &rcClient);
-	// Win11 draws a rounded frame; fill first so the four corners aren't
-	// leftover white from the unpainted client (SumatraPDF #6000).
-	::FillRect(hdc, &rcClient, DarkMode::getDlgBackgroundBrush());
-
-	POINT ptCursor{};
-	::GetCursorPos(&ptCursor);
-	::ScreenToClient(hWnd, &ptCursor);
-
-	const bool isDisabled = ::IsWindowEnabled(hWnd) == FALSE;
-	const bool isHot = ::PtInRect(&rcClient, ptCursor) == TRUE && !isDisabled;
-
-	bool hasFocus = false;
 
 	const auto holdFont = dmlib_paint::GdiObject{ hdc, hWnd };
-	::SetBkMode(hdc, TRANSPARENT); // for non-theme DrawText
 
 	RECT rcArrow{ cbi.rcButton };
 	rcArrow.left -= 1;
 
-	HBRUSH hBrush = getBrushFromState(isDisabled, isHot);
+	const bool isDisabled = iStateID == CBXSR_DISABLED;
+	const bool isHot = iStateID == CBXSR_HOT;
+
+	const HBRUSH hBrush = getBrushFromState(isDisabled, isHot);
+	const COLORREF clrText = isDisabled ? dmlib::getDisabledTextColor() : dmlib::getTextColor();
 
 	// Text part
 
-	// CBS_DROPDOWN and CBS_SIMPLE text is handled by parent by WM_CTLCOLOREDIT
-	if (comboBoxData.m_cbStyle == CBS_DROPDOWNLIST)
-	{
-		// erase background on item change
-		::FillRect(hdc, &rcClient, hBrush);
+	// erase background on item change
+	::FillRect(hdc, &rcClient, hBrush);
 
-		if (const auto index = static_cast<int>(::SendMessage(hWnd, CB_GETCURSEL, 0, 0));
-			index != CB_ERR)
+	if (const auto index = static_cast<int>(::SendMessage(hWnd, CB_GETCURSEL, 0, 0));
+		index != CB_ERR)
+	{
+		if (const bool isOwnerDraw = (::GetWindowLongPtr(hWnd, GWL_STYLE) & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) != 0;
+			isOwnerDraw)
+		{
+			const auto itemData = ::SendMessage(hWnd, CB_GETITEMDATA, static_cast<WPARAM>(index), 0);
+			const int id = ::GetDlgCtrlID(hWnd);
+
+			const DRAWITEMSTRUCT dis{
+				ODT_COMBOBOX
+				, static_cast<UINT>(id)
+				, static_cast<UINT>(index)
+				, ODA_DRAWENTIRE
+				, ODS_DEFAULT
+				, hWnd
+				, hdc
+				, cbi.rcItem
+				, static_cast<ULONG_PTR>(itemData)
+			};
+
+			::SetTextColor(hdc, clrText);
+			::SendMessage(::GetParent(hWnd), WM_DRAWITEM, static_cast<WPARAM>(id), reinterpret_cast<LPARAM>(&dis));
+		}
+		else
 		{
 			const auto bufferLen = static_cast<size_t>(::SendMessage(hWnd, CB_GETLBTEXTLEN, static_cast<WPARAM>(index), 0));
-			std::wstring buffer(bufferLen + 1, L'\0');
+			auto buffer = DMLIB_BUF_WSTRING(bufferLen + 1, L'\0');
 			::SendMessage(hWnd, CB_GETLBTEXT, static_cast<WPARAM>(index), reinterpret_cast<LPARAM>(buffer.data()));
 
 			RECT rcText{ cbi.rcItem };
@@ -1735,92 +2152,153 @@ static void paintCombobox(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comb
 				DTTOPTS dtto{};
 				dtto.dwSize = sizeof(DTTOPTS);
 				dtto.dwFlags = DTT_TEXTCOLOR;
-				dtto.crText = isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor();
+				dtto.crText = clrText;
 
-				::DrawThemeTextEx(hTheme, hdc, CP_DROPDOWNITEM, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, buffer.c_str(), -1, dtFlags, &rcText, &dtto);
+				::DrawThemeTextEx(hTheme, hdc, CP_DROPDOWNITEM, iStateID, buffer.c_str(), -1, dtFlags, &rcText, &dtto);
 			}
 			else
 			{
-				::SetTextColor(hdc, isDisabled ? DarkMode::getDisabledTextColor() : DarkMode::getTextColor());
+				::SetTextColor(hdc, clrText);
+				::SetBkMode(hdc, TRANSPARENT);
 				::DrawText(hdc, buffer.c_str(), -1, &rcText, dtFlags);
 			}
 		}
-
-		hasFocus = ::GetFocus() == hWnd;
-		if (!isDisabled && hasFocus && ::SendMessage(hWnd, CB_GETDROPPEDSTATE, 0, 0) == FALSE)
-		{
-			::DrawFocusRect(hdc, &cbi.rcItem);
-		}
 	}
-	else if (cbi.hwndItem != nullptr)
+
+	const bool hasFocus = ::GetFocus() == hWnd;
+	if (!isDisabled && hasFocus && ::SendMessage(hWnd, CB_GETDROPPEDSTATE, 0, 0) == FALSE)
 	{
-		hasFocus = ::GetFocus() == cbi.hwndItem;
-
-		::FillRect(hdc, &rcArrow, hBrush);
+		::DrawFocusRect(hdc, &cbi.rcItem);
 	}
 
-	const HPEN hPen = getEdgePenFromState(isDisabled, isHot || hasFocus || comboBoxData.m_cbStyle == CBS_SIMPLE);
-	const auto holdPen = dmlib_paint::GdiObject{ hdc, hPen, true};
+	const HPEN hPen = getEdgePenFromState(isDisabled, isHot || hasFocus);
+	const auto holdPen = dmlib_paint::GdiObject{ hdc, hPen, true };
 
 	// Drop down arrow part
-	if (comboBoxData.m_cbStyle != CBS_SIMPLE)
+	if (hasTheme
+		&& (dmlib::isExperimentalSupported()
+			|| !dmlib::isDarkDmTypeUsed()))
 	{
-		if (hasTheme
-			&& (DarkMode::isExperimentalSupported()
-				|| !DarkMode::isDarkDmTypeUsed()))
-		{
-			const RECT rcThemedArrow{ rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
-			::DrawThemeBackground(hTheme, hdc, CP_DROPDOWNBUTTONRIGHT, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, &rcThemedArrow, nullptr);
-		}
-		else
-		{
-			::SetTextColor(hdc, getColorFromState(isDisabled, isHot));
-			static constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
-			::DrawText(hdc, dmlib_glyph::kArrowDown, -1, &rcArrow, dtFlags);
-		}
-	}
-
-	// Frame part
-	if (comboBoxData.m_cbStyle == CBS_DROPDOWNLIST)
-	{
-		::ExcludeClipRect(hdc, rcClient.left + 1, rcClient.top + 1, rcClient.right - 1, rcClient.bottom - 1);
+		const RECT rcThemedArrow{ rcArrow.left, rcArrow.top - 1, rcArrow.right, rcArrow.bottom - 1 };
+		::DrawThemeBackground(hTheme, hdc, CP_DROPDOWNBUTTONRIGHT, isDisabled ? CBXSR_DISABLED : CBXSR_NORMAL, &rcThemedArrow, nullptr);
 	}
 	else
 	{
-		::ExcludeClipRect(hdc, cbi.rcItem.left, cbi.rcItem.top, cbi.rcItem.right, cbi.rcItem.bottom);
-
-		if (comboBoxData.m_cbStyle == CBS_SIMPLE && cbi.hwndList != nullptr)
-		{
-			RECT rcItem{ cbi.rcItem };
-			::MapWindowPoints(cbi.hwndItem, hWnd, reinterpret_cast<LPPOINT>(&rcItem), 2);
-			rcClient.bottom = rcItem.bottom;
-		}
-
-		RECT rcInner{ rcClient };
-		::InflateRect(&rcInner, -1, -1);
-
-		if (comboBoxData.m_cbStyle == CBS_DROPDOWN)
-		{
-			const std::array<POINT, 2> edge{ {
-				{ rcArrow.left - 1, rcArrow.top },
-				{ rcArrow.left - 1, rcArrow.bottom }
-			} };
-			::Polyline(hdc, edge.data(), static_cast<int>(edge.size()));
-
-			::ExcludeClipRect(hdc, rcArrow.left - 1, rcArrow.top, rcArrow.right, rcArrow.bottom);
-
-			rcInner.right = rcArrow.left - 1;
-		}
-
-		HPEN hInnerPen = ::CreatePen(PS_SOLID, 1, isDisabled ? DarkMode::getDlgBackgroundColor() : DarkMode::getBackgroundColor());
-		dmlib_paint::paintFrameRect(hdc, rcInner, hInnerPen);
-		::DeleteObject(hInnerPen);
-		::InflateRect(&rcInner, -1, -1);
-		::FillRect(hdc, &rcInner, isDisabled ? DarkMode::getDlgBackgroundBrush() : DarkMode::getCtrlBackgroundBrush());
+		::SetTextColor(hdc, getColorFromState(isDisabled, isHot));
+		static constexpr UINT dtFlags = DT_NOPREFIX | DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP;
+		::DrawText(hdc, dmlib_glyph::kArrowDown, -1, &rcArrow, dtFlags);
 	}
 
-	static const int roundness = DarkMode::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness : 0;
+	// Frame part
+	::ExcludeClipRect(hdc, rcClient.left + 1, rcClient.top + 1, rcClient.right - 1, rcClient.bottom - 1);
+
+	static const int roundness = dmlib::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness : 0;
 	dmlib_paint::paintRoundFrameRect(hdc, rcClient, hPen, roundness, roundness);
+}
+
+/**
+ * @brief Draws a combo box control.
+ *
+ * This wrapper draws appropriate combo box based on its style.
+ *
+ * @param[in]       hWnd            Handle to the combo box control.
+ * @param[in]       hdc             Device context to draw into.
+ * @param[in,out]   comboBoxData    Reference to the combo box' theme and style data.
+ * @param[in]       iStateID        State of the combo box.
+ *
+ * @see ComboBoxData
+ * @see paintComboBox()
+ * @see renderComboBoxEdit()
+ * @see renderComboBoxList()
+ */
+static void renderComboBox(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comboBoxData, int iStateID) DMLIB_BUF_NOEXCEPT
+{
+	if (comboBoxData.m_cbStyle == CBS_DROPDOWNLIST)
+	{
+		renderComboBoxList(hWnd, hdc, comboBoxData, iStateID);
+	}
+	else
+	{
+		renderComboBoxEdit(hWnd, hdc, comboBoxData, iStateID);
+	}
+}
+
+/**
+ * @brief Custom paints a combo box control.
+ *
+ * This function handles owner-drawn drawing of a combo box,
+ * adapting its appearance based on:
+ * - Control style (`CBS_SIMPLE`, `CBS_DROPDOWN`, `CBS_DROPDOWNLIST`)
+ * - Transition effect for `CBS_DROPDOWNLIST`
+ * - Enabled/disabled state
+ * - Hot (hover) state
+ *
+ * @param[in]       hWnd            Handle to the combo box control.
+ * @param[in]       hdc             Device context to draw into.
+ * @param[in,out]   comboBoxData    Reference to the combo box' theme and style data.
+ *
+ * @see ComboBoxData
+ * @see renderComboBoxEdit()
+ * @see renderComboBoxList()
+ */
+static void paintComboBox(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comboBoxData) DMLIB_BUF_NOEXCEPT
+{
+	RECT rcClient{};
+	const int iStateID = getComboBoxStateAndRect(hWnd, rcClient);
+
+	if (comboBoxData.m_cbStyle == CBS_SIMPLE)
+	{
+		renderComboBoxEdit(hWnd, hdc, comboBoxData, iStateID);
+		return;
+	}
+
+	if (!dmlib_paint::isAnimationEnabled())
+	{
+		renderComboBox(hWnd, hdc, comboBoxData, iStateID);
+		return;
+	}
+
+	if (::BufferedPaintRenderAnimation(hWnd, hdc) == TRUE)
+	{
+		return;
+	}
+
+	comboBoxData.m_themeData.ensureTheme(hWnd);
+	const auto& hTheme = comboBoxData.m_themeData.getHTheme();
+
+	// Animation part - transition
+
+	BP_ANIMATIONPARAMS animParams{};
+	animParams.cbSize = sizeof(BP_ANIMATIONPARAMS);
+	animParams.style = BPAS_LINEAR;
+	if (iStateID != comboBoxData.m_iStateID)
+	{
+		::GetThemeTransitionDuration(hTheme, CP_DROPDOWNBUTTONRIGHT, comboBoxData.m_iStateID, iStateID, TMT_TRANSITIONDURATIONS, &animParams.dwDuration);
+	}
+
+	HDC hdcFrom = nullptr;
+	HDC hdcTo = nullptr;
+	if (HANIMATIONBUFFER hbpAnimation = ::BeginBufferedAnimation(hWnd, hdc, &rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
+		hbpAnimation != nullptr)
+	{
+		if (hdcFrom != nullptr)
+		{
+			renderComboBox(hWnd, hdcFrom, comboBoxData, comboBoxData.m_iStateID);
+		}
+
+		if (hdcTo != nullptr)
+		{
+			renderComboBox(hWnd, hdcTo, comboBoxData, iStateID);
+		}
+
+		comboBoxData.m_iStateID = iStateID;
+		::EndBufferedAnimation(hbpAnimation, TRUE);
+	}
+	else
+	{
+		renderComboBox(hWnd, hdc, comboBoxData, iStateID);
+		comboBoxData.m_iStateID = iStateID;
+	}
 }
 
 /**
@@ -1834,8 +2312,8 @@ static void paintCombobox(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData& comb
  * @param[in]   dwRefData   ComboBoxData instance.
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setComboBoxCtrlSubclass()
- * @see DarkMode::removeComboBoxCtrlSubclass()
+ * @see dmlib::setComboBoxCtrlSubclass()
+ * @see dmlib::removeComboBoxCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
 	HWND hWnd,
@@ -1844,7 +2322,7 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) DMLIB_BUF_NOEXCEPT
 {
 	auto* pComboboxData = reinterpret_cast<ComboBoxData*>(dwRefData);
 	auto& themeData = pComboboxData->m_themeData;
@@ -1856,18 +2334,19 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, ComboBoxSubclass, uIdSubclass);
 			std::unique_ptr<ComboBoxData> u_ptrData(pComboboxData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
 
-			if (pComboboxData->m_cbStyle != CBS_DROPDOWN
+			if (!dmlib_paint::isAnimationEnabled()
+				&& pComboboxData->m_cbStyle == CBS_DROPDOWNLIST
 				&& reinterpret_cast<HDC>(wParam) != hMemDC)
 			{
 				return FALSE;
@@ -1877,7 +2356,7 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -1885,7 +2364,8 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
 			PAINTSTRUCT ps{};
 			HDC hdc = ::BeginPaint(hWnd, &ps);
 
-			if (pComboboxData->m_cbStyle != CBS_DROPDOWN)
+			if (!dmlib_paint::isAnimationEnabled()
+				&& pComboboxData->m_cbStyle == CBS_DROPDOWNLIST)
 			{
 				if (!dmlib_paint::isRectValid(ps.rcPaint))
 				{
@@ -1894,28 +2374,16 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
 				}
 
 				dmlib_paint::PaintWithBuffer<ComboBoxData>(*pComboboxData, hdc, ps,
-					[&]() { paintCombobox(hWnd, hMemDC, *pComboboxData); },
+					[&]() DMLIB_BUF_NOEXCEPT { paintComboBox(hWnd, hMemDC, *pComboboxData); },
 					hWnd);
 			}
 			else
 			{
-				paintCombobox(hWnd, hdc, *pComboboxData);
+				paintComboBox(hWnd, hdc, *pComboboxData);
 			}
 
 			::EndPaint(hWnd, &ps);
 			return 0;
-		}
-
-		case WM_ENABLE:
-		{
-			if (!DarkMode::isEnabled())
-			{
-				break;
-			}
-
-			const LRESULT retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-			::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
-			return retVal;
 		}
 
 		case WM_DPICHANGED_AFTERPARENT:
@@ -1928,6 +2396,29 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
 		{
 			themeData.closeTheme();
 			break;
+		}
+
+		case WM_SIZE:
+		case WM_DESTROY:
+		{
+			if (dmlib_paint::isAnimationEnabled()
+				&& pComboboxData->m_cbStyle != CBS_SIMPLE)
+			{
+				::BufferedPaintStopAllAnimations(hWnd);
+			}
+			break;
+		}
+
+		case WM_ENABLE:
+		{
+			if (!dmlib::isEnabled())
+			{
+				break;
+			}
+
+			const auto retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
+			return retVal;
 		}
 
 		default:
@@ -1949,8 +2440,8 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxSubclass(
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setComboBoxExCtrlSubclass()
- * @see DarkMode::removeComboBoxExCtrlSubclass()
+ * @see dmlib::setComboBoxExCtrlSubclass()
+ * @see dmlib::removeComboBoxExCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::ComboBoxExSubclass(
 	HWND hWnd,
@@ -1959,46 +2450,46 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxExSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
 		case WM_NCDESTROY:
 		{
 			::RemoveWindowSubclass(hWnd, ComboBoxExSubclass, uIdSubclass);
-			dmlib_hook::unhookSysColor();
+			dmlib_hook::GetSysColor::unhook();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
 
 			RECT rcClient{};
 			::GetClientRect(hWnd, &rcClient);
-			::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, DarkMode::getDlgBackgroundBrush());
+			::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, dmlib::getDlgBackgroundBrush());
 			return TRUE;
 		}
 
 		case WM_CTLCOLOREDIT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
-			return DarkMode::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
+			return dmlib::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
 		}
 
 		case WM_CTLCOLORLISTBOX:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
-			return DarkMode::onCtlColorListbox(wParam, lParam);
+			return dmlib::onCtlColorListbox(wParam, lParam);
 		}
 
 		// ComboBoxEx has only one child combo box, so only control-defined notification code is checked.
@@ -2006,7 +2497,7 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxExSubclass(
 		// This process is used to avoid visual glitches in other GUI.
 		case WM_COMMAND:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -2015,13 +2506,13 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxExSubclass(
 			{
 				case CBN_DROPDOWN:
 				{
-					dmlib_hook::hookSysColor();
+					dmlib_hook::GetSysColor::hook();
 					break;
 				}
 
 				case CBN_CLOSEUP:
 				{
-					dmlib_hook::unhookSysColor();
+					dmlib_hook::GetSysColor::unhook();
 					break;
 				}
 
@@ -2056,7 +2547,7 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxExSubclass(
 	{
 		case CDDS_PREPAINT:
 		{
-			if (DarkMode::isExperimentalActive())
+			if (dmlib::isExperimentalActive())
 			{
 				return CDRF_NOTIFYITEMDRAW;
 			}
@@ -2065,7 +2556,7 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxExSubclass(
 
 		case CDDS_ITEMPREPAINT:
 		{
-			::SetTextColor(lpnmcd->hdc, DarkMode::getDarkerTextColor());
+			::SetTextColor(lpnmcd->hdc, dmlib::getDarkerTextColor());
 
 			return CDRF_NEWFONT;
 		}
@@ -2088,8 +2579,8 @@ LRESULT CALLBACK dmlib_subclass::ComboBoxExSubclass(
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setListViewCtrlSubclass()
- * @see DarkMode::removeListViewCtrlSubclass()
+ * @see dmlib::setListViewCtrlSubclass()
+ * @see dmlib::removeListViewCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::ListViewSubclass(
 	HWND hWnd,
@@ -2098,21 +2589,20 @@ LRESULT CALLBACK dmlib_subclass::ListViewSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
 		case WM_NCDESTROY:
 		{
 			::RemoveWindowSubclass(hWnd, ListViewSubclass, uIdSubclass);
-			dmlib_hook::unhookSysColor();
 			break;
 		}
 
 		// For gridlines
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -2128,33 +2618,44 @@ LRESULT CALLBACK dmlib_subclass::ListViewSubclass(
 
 			if (hasGridlines)
 			{
-				dmlib_hook::hookSysColor();
-				const LRESULT retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-				dmlib_hook::unhookSysColor();
-				return retVal;
+				auto const autoHook = dmlib_hook::AutoHook<dmlib_hook::GetSysColor>();
+				return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 			}
 			break;
 		}
 
 		case WM_DPICHANGED_AFTERPARENT:
 		{
-			DarkMode::setDarkListViewCheckboxes(hWnd);
+			dmlib::setDarkListViewCheckboxes(hWnd);
 			return 0;
 		}
 
 		// For edit control, which is created when renaming/editing items
 		case WM_CTLCOLOREDIT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
-			return DarkMode::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
+			return dmlib::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
+		}
+
+		case WM_ENABLE:
+		{
+			if (!dmlib::isEnabled())
+			{
+				break;
+			}
+
+			const bool isDisabled = (wParam == FALSE);
+			dmlib::replaceClientEdgeWithBorderSafeEx(hWnd, isDisabled);
+
+			break;
 		}
 
 		case WM_NOTIFY:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -2219,14 +2720,14 @@ static void paintHeaderItem(
 		{
 			::OffsetRect(&rcTmp, 1, 0);
 		}
-		else if (DarkMode::isExperimentalActive())
+		else if (dmlib::isExperimentalActive())
 		{
 			::OffsetRect(&rcTmp, -1, 0);
 		}
-		::FillRect(hdc, &rcTmp, DarkMode::getHeaderHotBackgroundBrush());
+		::FillRect(hdc, &rcTmp, dmlib::getHeaderHotBackgroundBrush());
 	}
 
-	std::wstring buffer(MAX_PATH, L'\0');
+	auto buffer = std::array<wchar_t, MAX_PATH>{};
 	HDITEM hdi{};
 	hdi.mask = HDI_TEXT | HDI_FORMAT;
 	hdi.pszText = buffer.data();
@@ -2255,7 +2756,7 @@ static void paintHeaderItem(
 	if (!hasGridlines)
 	{
 		--edgeX;
-		if (DarkMode::isExperimentalActive())
+		if (dmlib::isExperimentalActive())
 		{
 			--edgeX;
 		}
@@ -2323,12 +2824,28 @@ static void paintHeader(HWND hWnd, HDC hdc, dmlib_subclass::HeaderData& headerDa
 	const bool hasTheme = themeData.ensureTheme(hWnd);
 	auto& fontData = headerData.m_fontData;
 
+	HWND hList = ::GetParent(hWnd);
+
+	HBRUSH hBrush = dmlib::getHeaderBackgroundBrush();
+	HPEN hPen = dmlib::getHeaderEdgePen();
+	COLORREF clrText = dmlib::getHeaderTextColor();
+
+	const bool isDisabled = (::IsWindowEnabled(hWnd) == FALSE)
+		|| (headerData.m_isLVChild && (::IsWindowEnabled(hList) == FALSE));
+
+	if (isDisabled)
+	{
+		hBrush = dmlib::getDlgBackgroundBrush();
+		hPen = dmlib::getDisabledEdgePen();
+		clrText = dmlib::getDisabledTextColor();
+	}
+
 	::SetBkMode(hdc, TRANSPARENT);
-	const auto holdPen = dmlib_paint::GdiObject{ hdc, DarkMode::getHeaderEdgePen(), true };
+	const auto holdPen = dmlib_paint::GdiObject{ hdc, hPen, true };
 
 	RECT rcHeader{};
 	::GetClientRect(hWnd, &rcHeader);
-	::FillRect(hdc, &rcHeader, DarkMode::getHeaderBackgroundBrush());
+	::FillRect(hdc, &rcHeader, hBrush);
 
 	// Font part
 
@@ -2351,19 +2868,18 @@ static void paintHeader(HWND hWnd, HDC hdc, dmlib_subclass::HeaderData& headerDa
 	if (hasTheme)
 	{
 		dtto.dwFlags = DTT_TEXTCOLOR;
-		dtto.crText = DarkMode::getHeaderTextColor();
+		dtto.crText = clrText;
 	}
 	else
 	{
-		::SetTextColor(hdc, DarkMode::getHeaderTextColor());
+		::SetTextColor(hdc, clrText);
 	}
 
 	// Special handling with gridlines
 
-	HWND hList = ::GetParent(hWnd);
 	bool hasGridlines = false;
-	if (const auto lvStyle = ::GetWindowLongPtr(hList, GWL_STYLE) & LVS_TYPEMASK;
-		lvStyle == LVS_REPORT)
+	if (headerData.m_isLVChild
+		&& (::GetWindowLongPtr(hList, GWL_STYLE) & LVS_TYPEMASK) == LVS_REPORT)
 	{
 		const auto lvExStyle = ListView_GetExtendedListViewStyle(hList);
 		hasGridlines = (lvExStyle & LVS_EX_GRIDLINES) == LVS_EX_GRIDLINES;
@@ -2388,8 +2904,8 @@ static void paintHeader(HWND hWnd, HDC hdc, dmlib_subclass::HeaderData& headerDa
  * @param[in]   dwRefData   HeaderData instance.
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setHeaderCtrlSubclass()
- * @see DarkMode::removeHeaderCtrlSubclass()
+ * @see dmlib::setHeaderCtrlSubclass()
+ * @see dmlib::removeHeaderCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::HeaderSubclass(
 	HWND hWnd,
@@ -2398,7 +2914,7 @@ LRESULT CALLBACK dmlib_subclass::HeaderSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pHeaderData = reinterpret_cast<HeaderData*>(dwRefData);
 	auto& themeData = pHeaderData->m_themeData;
@@ -2410,13 +2926,13 @@ LRESULT CALLBACK dmlib_subclass::HeaderSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, HeaderSubclass, uIdSubclass);
 			std::unique_ptr<HeaderData> u_ptrData(pHeaderData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
@@ -2430,7 +2946,7 @@ LRESULT CALLBACK dmlib_subclass::HeaderSubclass(
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -2445,7 +2961,7 @@ LRESULT CALLBACK dmlib_subclass::HeaderSubclass(
 			}
 
 			dmlib_paint::PaintWithBuffer<HeaderData>(*pHeaderData, hdc, ps,
-				[&]() { paintHeader(hWnd, hMemDC, *pHeaderData); },
+				[&]() noexcept { paintHeader(hWnd, hMemDC, *pHeaderData); },
 				hWnd);
 
 			::EndPaint(hWnd, &ps);
@@ -2520,7 +3036,7 @@ LRESULT CALLBACK dmlib_subclass::HeaderSubclass(
 				break;
 			}
 
-			const LRESULT retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			const auto retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 
 			pHeaderData->m_isHot = false;
 			pHeaderData->m_pt.x = LONG_MIN;
@@ -2552,7 +3068,7 @@ LRESULT CALLBACK dmlib_subclass::HeaderSubclass(
  *
  * @see StatusBarData
  */
-static void paintStatusBar(HWND hWnd, HDC hdc, dmlib_subclass::StatusBarData& statusBarData) noexcept
+static void paintStatusBar(HWND hWnd, HDC hdc, dmlib_subclass::StatusBarData& statusBarData) DMLIB_BUF_NOEXCEPT
 {
 	struct
 	{
@@ -2566,19 +3082,19 @@ static void paintStatusBar(HWND hWnd, HDC hdc, dmlib_subclass::StatusBarData& st
 	const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 	const bool hasSizeGrip = (nStyle & SBARS_SIZEGRIP) == SBARS_SIZEGRIP;
 
-	const auto holdPen = dmlib_paint::GdiObject{ hdc, DarkMode::getEdgePen(), true };
+	const auto holdPen = dmlib_paint::GdiObject{ hdc, dmlib::getEdgePen(), true };
 	const auto holdFont = dmlib_paint::GdiObject{ hdc, statusBarData.m_fontData.getFont(), true };
 
 	::SetBkMode(hdc, TRANSPARENT);
-	::SetTextColor(hdc, DarkMode::getTextColor());
+	::SetTextColor(hdc, dmlib::getTextColor());
 
 	RECT rcClient{};
 	::GetClientRect(hWnd, &rcClient);
 
-	::FillRect(hdc, &rcClient, DarkMode::getBackgroundBrush());
+	::FillRect(hdc, &rcClient, dmlib::getBackgroundBrush());
 
 	const auto nParts = static_cast<int>(::SendMessage(hWnd, SB_GETPARTS, 0, 0));
-	std::wstring str;
+	DMLIB_BUF_WSTRING str;
 	RECT rcPart{};
 	RECT rcIntersect{};
 	// no edge before size grip
@@ -2605,11 +3121,11 @@ static void paintStatusBar(HWND hWnd, HDC hdc, dmlib_subclass::StatusBarData& st
 		rcPart.left += borders.between;
 		rcPart.right -= borders.vertical;
 
-		const LRESULT retValLen = ::SendMessage(hWnd, SB_GETTEXTLENGTH, static_cast<WPARAM>(i), 0);
+		const auto retValLen = ::SendMessage(hWnd, SB_GETTEXTLENGTH, static_cast<WPARAM>(i), 0);
 		const DWORD cchText = LOWORD(retValLen);
 
 		str.resize(static_cast<size_t>(cchText) + 1);
-		const LRESULT retValText = ::SendMessage(hWnd, SB_GETTEXT, static_cast<WPARAM>(i), reinterpret_cast<LPARAM>(str.data()));
+		const auto retValText = ::SendMessage(hWnd, SB_GETTEXT, static_cast<WPARAM>(i), reinterpret_cast<LPARAM>(str.data()));
 
 		// With `SBT_OWNERDRAW` flag parent will draw status bar.
 		if (cchText == 0 && (HIWORD(retValLen) & SBT_OWNERDRAW) != 0)
@@ -2640,7 +3156,7 @@ static void paintStatusBar(HWND hWnd, HDC hdc, dmlib_subclass::StatusBarData& st
 		{rcClient.left, rcClient.top},
 		{rcClient.right, rcClient.top}
 	};
-	Polyline(hdc, edgeHor, _countof(edgeHor));
+	::Polyline(hdc, edgeHor, _countof(edgeHor));
 #endif
 
 		// draw optional size grip
@@ -2671,8 +3187,8 @@ static void paintStatusBar(HWND hWnd, HDC hdc, dmlib_subclass::StatusBarData& st
  * @param[in]   dwRefData   StatusBarData instance.
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setStatusBarCtrlSubclass()
- * @see DarkMode::removeStatusBarCtrlSubclass()
+ * @see dmlib::setStatusBarCtrlSubclass()
+ * @see dmlib::removeStatusBarCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::StatusBarSubclass(
 	HWND hWnd,
@@ -2681,7 +3197,7 @@ LRESULT CALLBACK dmlib_subclass::StatusBarSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) DMLIB_BUF_NOEXCEPT
 {
 	auto* pStatusBarData = reinterpret_cast<StatusBarData*>(dwRefData);
 	auto& themeData = pStatusBarData->m_themeData;
@@ -2693,13 +3209,13 @@ LRESULT CALLBACK dmlib_subclass::StatusBarSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, StatusBarSubclass, uIdSubclass);
 			std::unique_ptr<StatusBarData> u_ptrData(pStatusBarData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
@@ -2713,7 +3229,7 @@ LRESULT CALLBACK dmlib_subclass::StatusBarSubclass(
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -2728,7 +3244,7 @@ LRESULT CALLBACK dmlib_subclass::StatusBarSubclass(
 			}
 
 			dmlib_paint::PaintWithBuffer<StatusBarData>(*pStatusBarData, hdc, ps,
-				[&]() { paintStatusBar(hWnd, hMemDC, *pStatusBarData); },
+				[&]() DMLIB_BUF_NOEXCEPT { paintStatusBar(hWnd, hMemDC, *pStatusBarData); },
 				hWnd);
 
 			::EndPaint(hWnd, &ps);
@@ -2807,7 +3323,7 @@ static void getProgressBarRects(HWND hWnd, RECT* rcEmpty, RECT* rcFilled) noexce
  * @param[in]   progressBarData Reference to the control's theme and state data.
  *
  * @see ProgressBarData
- * @see DarkMode::getProgressBarRects()
+ * @see dmlib::getProgressBarRects()
  */
 static void paintProgressBar(HWND hWnd, HDC hdc, const dmlib_subclass::ProgressBarData& progressBarData) noexcept
 {
@@ -2816,7 +3332,7 @@ static void paintProgressBar(HWND hWnd, HDC hdc, const dmlib_subclass::ProgressB
 	RECT rcClient{};
 	::GetClientRect(hWnd, &rcClient);
 
-	dmlib_paint::paintRoundFrameRect(hdc, rcClient, DarkMode::getEdgePen(), 0, 0);
+	dmlib_paint::paintRoundFrameRect(hdc, rcClient, dmlib::getEdgePen(), 0, 0);
 
 	::InflateRect(&rcClient, -1, -1);
 	rcClient.left = 1;
@@ -2824,7 +3340,7 @@ static void paintProgressBar(HWND hWnd, HDC hdc, const dmlib_subclass::ProgressB
 	RECT rcFill{};
 	getProgressBarRects(hWnd, &rcClient, &rcFill);
 	::DrawThemeBackground(hTheme, hdc, PP_FILL, progressBarData.m_iStateID, &rcFill, nullptr);
-	::FillRect(hdc, &rcClient, DarkMode::getCtrlBackgroundBrush());
+	::FillRect(hdc, &rcClient, dmlib::getCtrlBackgroundBrush());
 }
 
 /**
@@ -2872,8 +3388,8 @@ static void paintProgressBar(HWND hWnd, HDC hdc, const dmlib_subclass::ProgressB
  * @param[in]   dwRefData   ProgressBarData instance.
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setProgressBarCtrlSubclass()
- * @see DarkMode::removeProgressBarCtrlSubclass()
+ * @see dmlib::setProgressBarCtrlSubclass()
+ * @see dmlib::removeProgressBarCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::ProgressBarSubclass(
 	HWND hWnd,
@@ -2882,7 +3398,7 @@ LRESULT CALLBACK dmlib_subclass::ProgressBarSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pProgressBarData = reinterpret_cast<ProgressBarData*>(dwRefData);
 	auto& themeData = pProgressBarData->m_themeData;
@@ -2894,13 +3410,13 @@ LRESULT CALLBACK dmlib_subclass::ProgressBarSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, ProgressBarSubclass, uIdSubclass);
 			std::unique_ptr<ProgressBarData> u_ptrData(pProgressBarData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled() || !themeData.ensureTheme(hWnd))
+			if (!dmlib::isEnabled() || !themeData.ensureTheme(hWnd))
 			{
 				break;
 			}
@@ -2914,7 +3430,7 @@ LRESULT CALLBACK dmlib_subclass::ProgressBarSubclass(
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -2929,7 +3445,7 @@ LRESULT CALLBACK dmlib_subclass::ProgressBarSubclass(
 			}
 
 			dmlib_paint::PaintWithBuffer<ProgressBarData>(*pProgressBarData, hdc, ps,
-				[&]() { paintProgressBar(hWnd, hMemDC, *pProgressBarData); },
+				[&]() noexcept { paintProgressBar(hWnd, hMemDC, *pProgressBarData); },
 				hWnd);
 
 			::EndPaint(hWnd, &ps);
@@ -2973,8 +3489,8 @@ LRESULT CALLBACK dmlib_subclass::ProgressBarSubclass(
  * @param[in]   dwRefData   StaticTextData instance.
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setStaticTextCtrlSubclass()
- * @see DarkMode::removeStaticTextCtrlSubclass()
+ * @see dmlib::setStaticTextCtrlSubclass()
+ * @see dmlib::removeStaticTextCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::StaticTextSubclass(
 	HWND hWnd,
@@ -2983,7 +3499,7 @@ LRESULT CALLBACK dmlib_subclass::StaticTextSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pStaticTextData = reinterpret_cast<StaticTextData*>(dwRefData);
 
@@ -2993,7 +3509,7 @@ LRESULT CALLBACK dmlib_subclass::StaticTextSubclass(
 		{
 			::RemoveWindowSubclass(hWnd, StaticTextSubclass, uIdSubclass);
 			std::unique_ptr<StaticTextData> u_ptrData(pStaticTextData);
-			u_ptrData.reset(nullptr);
+			u_ptrData.reset();
 			break;
 		}
 
@@ -3047,15 +3563,15 @@ static void paintIPAddress(HWND hWnd, HDC hdc) noexcept
 
 	if (isEnabled)
 	{
-		::FillRect(hdc, &rcClient, DarkMode::getCtrlBackgroundBrush());
-		::SetTextColor(hdc, DarkMode::getDarkerTextColor());
-		::SetBkColor(hdc, DarkMode::getCtrlBackgroundColor());
+		::FillRect(hdc, &rcClient, dmlib::getCtrlBackgroundBrush());
+		::SetTextColor(hdc, dmlib::getDarkerTextColor());
+		::SetBkColor(hdc, dmlib::getCtrlBackgroundColor());
 	}
 	else
 	{
-		::FillRect(hdc, &rcClient, DarkMode::getDlgBackgroundBrush());
-		::SetTextColor(hdc, DarkMode::getDisabledTextColor());
-		::SetBkColor(hdc, DarkMode::getDlgBackgroundColor());
+		::FillRect(hdc, &rcClient, dmlib::getDlgBackgroundBrush());
+		::SetTextColor(hdc, dmlib::getDisabledTextColor());
+		::SetBkColor(hdc, dmlib::getDlgBackgroundColor());
 	}
 
 	RECT rcDot{ rcClient };
@@ -3087,8 +3603,8 @@ static void paintIPAddress(HWND hWnd, HDC hdc) noexcept
  * @return LRESULT Result of message processing.
  *
  * @see dmlib_subclass::paintIPAddress()
- * @see DarkMode::setIPAddressCtrlSubclass()
- * @see DarkMode::removeIPAddressCtrlSubclass()
+ * @see dmlib::setIPAddressCtrlSubclass()
+ * @see dmlib::removeIPAddressCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::IPAddressSubclass(
 	HWND hWnd,
@@ -3097,7 +3613,7 @@ LRESULT CALLBACK dmlib_subclass::IPAddressSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
@@ -3109,7 +3625,7 @@ LRESULT CALLBACK dmlib_subclass::IPAddressSubclass(
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -3120,23 +3636,23 @@ LRESULT CALLBACK dmlib_subclass::IPAddressSubclass(
 				reinterpret_cast<HDC>(wParam),
 				&rcClient,
 				(::IsWindowEnabled(hWnd) == TRUE)
-					? DarkMode::getCtrlBackgroundBrush()
-					: DarkMode::getDlgBackgroundBrush());
+					? dmlib::getCtrlBackgroundBrush()
+					: dmlib::getDlgBackgroundBrush());
 			return TRUE;
 		}
 
 		case WM_CTLCOLOREDIT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
-			return DarkMode::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
+			return dmlib::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
 		}
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -3169,8 +3685,8 @@ LRESULT CALLBACK dmlib_subclass::IPAddressSubclass(
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setHotKeyCtrlSubclass()
- * @see DarkMode::removeHotKeyCtrlSubclass()
+ * @see dmlib::setHotKeyCtrlSubclass()
+ * @see dmlib::removeHotKeyCtrlSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::HotKeySubclass(
 	HWND hWnd,
@@ -3179,41 +3695,106 @@ LRESULT CALLBACK dmlib_subclass::HotKeySubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
 		case WM_NCDESTROY:
 		{
 			::RemoveWindowSubclass(hWnd, HotKeySubclass, uIdSubclass);
-			dmlib_hook::unhookSysColor();
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
 
 			RECT rcClient{};
 			::GetClientRect(hWnd, &rcClient);
-			::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, DarkMode::getDlgBackgroundBrush());
+			::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, dmlib::getCtrlBackgroundBrush());
 			return TRUE;
 		}
 
 		case WM_PAINT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
 
-			dmlib_hook::hookSysColor();
-			const LRESULT resVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
-			dmlib_hook::unhookSysColor();
-			return resVal;
+			if (const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::GetSysColor>();
+				autoHook)
+			{
+				return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			}
+			break;
+		}
+
+		default:
+		{
+			break;
+		}
+	}
+	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+/**
+ * @brief Window subclass procedure for custom color for date time picker control.
+ *
+ * @param[in]   hWnd        Window handle being subclassed.
+ * @param[in]   uMsg        Message identifier.
+ * @param[in]   wParam      Message-specific data.
+ * @param[in]   lParam      Message-specific data.
+ * @param[in]   uIdSubclass Subclass identifier.
+ * @param[in]   dwRefData   Reserved data (unused).
+ * @return LRESULT Result of message processing.
+ *
+ * @see dmlib::setDTPCtrlSubclass()
+ * @see dmlib::removeDTPCtrlSubclass()
+ */
+LRESULT CALLBACK dmlib_subclass::DTPSubclass(
+	HWND hWnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT_PTR uIdSubclass,
+	[[maybe_unused]] DWORD_PTR dwRefData
+) noexcept
+{
+	switch (uMsg)
+	{
+		case WM_NCDESTROY:
+		{
+			::RemoveWindowSubclass(hWnd, DTPSubclass, uIdSubclass);
+			break;
+		}
+
+		case WM_PAINT:
+		{
+			if (!dmlib::isEnabled())
+			{
+				break;
+			}
+
+			if (const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::GetSysColor>();
+				autoHook)
+			{
+				return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			}
+			break;
+		}
+
+		// for DTS_APPCANPARSE style
+		case WM_CTLCOLOREDIT:
+		{
+			if (!dmlib::isEnabled())
+			{
+				break;
+			}
+			return dmlib::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
 		}
 
 		default:

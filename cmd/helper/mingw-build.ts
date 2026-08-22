@@ -194,7 +194,7 @@ const sumatraFiles: FileGroup[] = [
   {
     dir: "ext/darkmodelib/src",
     patterns: [
-      "DarkModeSubclass.cpp",
+      "Darkmodelib.cpp",
       "DmlibColor.cpp",
       "DmlibDpi.cpp",
       "DmlibHook.cpp",

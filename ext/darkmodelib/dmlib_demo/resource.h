@@ -15,9 +15,10 @@
 #define IDM_CHOOSECOLOR                 32771
 #define IDM_CHOOSEFONT                  32772
 #define IDM_TASKDIALOG                  32773
-#define IDM_DARK                        32774
-#define IDM_LIGHT                       32775
-#define IDM_CLASSIC                     32776
+#define IDM_MSGBOX                      32774
+#define IDM_DARK                        32775
+#define IDM_LIGHT                       32776
+#define IDM_CLASSIC                     32777
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

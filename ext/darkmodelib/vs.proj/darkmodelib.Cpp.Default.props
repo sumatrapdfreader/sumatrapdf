@@ -36,5 +36,6 @@
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '18'">v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
   </PropertyGroup>
 </Project>

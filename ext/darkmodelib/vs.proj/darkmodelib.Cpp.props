@@ -19,12 +19,12 @@
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <PreprocessorDefinitions>_WINDOWS;STRICT_TYPED_ITEMIDS;NOMINMAX;WIN32_LEAN_AND_MEAN;VC_EXTRALEAN;SUPPORT_UTF8;_DARKMODELIB_NO_INI_CONFIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;STRICT_TYPED_ITEMIDS;NOMINMAX;WIN32_LEAN_AND_MEAN;VC_EXTRALEAN;SUPPORT_UTF8;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
-      <DisableSpecificWarnings>26490</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26472; 26490</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

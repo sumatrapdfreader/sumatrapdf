@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\DarkModeSubclass.h">
+    <ClInclude Include="..\include\Darkmodelib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DmlibWinApi.h">
@@ -63,12 +63,18 @@
     <ClInclude Include="..\src\DmlibSubclassWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\MemoryHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MemoryHelperDef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\DmlibWinApi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\DarkModeSubclass.cpp">
+    <ClCompile Include="..\src\Darkmodelib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DmlibHook.cpp">

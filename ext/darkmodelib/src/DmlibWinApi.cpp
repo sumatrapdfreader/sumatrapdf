@@ -93,69 +93,45 @@ struct WINDOWCOMPOSITIONATTRIBDATA
 };
 #endif
 
-using fnRtlGetNtVersionNumbers = void (WINAPI*)(LPDWORD major, LPDWORD minor, LPDWORD build);
+using RtlGetNtVersionNumbers_t = void (WINAPI*)(LPDWORD major, LPDWORD minor, LPDWORD build);
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-using fnSetWindowCompositionAttribute = auto (WINAPI*)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*) -> BOOL;
+using SetWindowCompositionAttribute_t = auto (WINAPI*)(HWND hWnd, WINDOWCOMPOSITIONATTRIBDATA*) -> BOOL;
 #endif
 
 // 1809 17763
+using AllowDarkModeForWindow_t = auto (WINAPI*)(HWND hWnd, bool allow) -> bool; // ordinal 133
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-using fnShouldAppsUseDarkMode = auto (WINAPI*)() -> bool; // ordinal 132, is not reliable on 1903+
+using AllowDarkModeForApp_t = auto (WINAPI*)(bool allow) -> bool; // ordinal 135, in 1809
 #endif
-using fnAllowDarkModeForWindow = auto (WINAPI*)(HWND hWnd, bool allow) -> bool; // ordinal 133
+using FlushMenuThemes_t = void (WINAPI*)(); // ordinal 136
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-using fnAllowDarkModeForApp = auto (WINAPI*)(bool allow) -> bool; // ordinal 135, in 1809
+using IsDarkModeAllowedForWindow_t = auto (WINAPI*)(HWND hWnd) -> bool; // ordinal 137
 #endif
-using fnFlushMenuThemes = void (WINAPI*)(); // ordinal 136
-#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-using fnIsDarkModeAllowedForWindow = auto (WINAPI*)(HWND hWnd) -> bool; // ordinal 137
-#endif
-using fnRefreshImmersiveColorPolicyState = void (WINAPI*)(); // ordinal 104
-using fnGetIsImmersiveColorUsingHighContrast = auto (WINAPI*)(IMMERSIVE_HC_CACHE_MODE mode) -> bool; // ordinal 106
+using RefreshImmersiveColorPolicyState_t = void (WINAPI*)(); // ordinal 104
+using GetIsImmersiveColorUsingHighContrast_t = auto (WINAPI*)(IMMERSIVE_HC_CACHE_MODE mode) -> bool; // ordinal 106
 
 // 1903 18362
-using fnSetPreferredAppMode = auto (WINAPI*)(PreferredAppMode appMode)->PreferredAppMode; // ordinal 135, in 1903
+using SetPreferredAppMode_t = auto (WINAPI*)(PreferredAppMode appMode) -> PreferredAppMode; // ordinal 135, in 1903
 
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-static fnSetWindowCompositionAttribute pfSetWindowCompositionAttribute = nullptr;
-static fnShouldAppsUseDarkMode pfShouldAppsUseDarkMode = nullptr;
+static SetWindowCompositionAttribute_t pfSetWindowCompositionAttribute = nullptr;
 #endif
-static fnAllowDarkModeForWindow pfAllowDarkModeForWindow = nullptr;
+static AllowDarkModeForWindow_t pfAllowDarkModeForWindow = nullptr;
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-static fnAllowDarkModeForApp pfAllowDarkModeForApp = nullptr;
+static AllowDarkModeForApp_t pfAllowDarkModeForApp = nullptr;
 #endif
-static fnFlushMenuThemes pfFlushMenuThemes = nullptr;
+static FlushMenuThemes_t pfFlushMenuThemes = nullptr;
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-static fnIsDarkModeAllowedForWindow pfIsDarkModeAllowedForWindow = nullptr;
+static IsDarkModeAllowedForWindow_t pfIsDarkModeAllowedForWindow = nullptr;
 #endif
-static fnRefreshImmersiveColorPolicyState pfRefreshImmersiveColorPolicyState = nullptr;
-static fnGetIsImmersiveColorUsingHighContrast pfGetIsImmersiveColorUsingHighContrast = nullptr;
+static RefreshImmersiveColorPolicyState_t pfRefreshImmersiveColorPolicyState = nullptr;
+static GetIsImmersiveColorUsingHighContrast_t pfGetIsImmersiveColorUsingHighContrast = nullptr;
 
-// 1903 18362
-static fnSetPreferredAppMode pfSetPreferredAppMode = nullptr;
+static SetPreferredAppMode_t pfSetPreferredAppMode = nullptr;
 
 static bool g_darkModeSupported = false;
 static bool g_darkModeActive = false;
 static DWORD g_buildNumber = 0;
-
-[[nodiscard]] static bool ShouldAppsUseDarkMode() noexcept
-{
-#if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-	if (g_buildNumber < g_win10Build1903)
-	{
-		if (pfShouldAppsUseDarkMode == nullptr)
-		{
-			return false;
-		}
-		return pfShouldAppsUseDarkMode();
-	}
-	else
-#endif
-	{
-		return true;
-	}
-}
-
 
 /**
  * @brief Enables or disables dark mode support for a specific window.
@@ -214,9 +190,9 @@ static void SetTitleBarThemeColor(HWND hWnd, BOOL dark)
 void dmlib_win32api::RefreshTitleBarThemeColor(HWND hWnd)
 {
 	BOOL dark = FALSE;
-	if (pfIsDarkModeAllowedForWindow != nullptr && pfShouldAppsUseDarkMode != nullptr)
+	if (pfIsDarkModeAllowedForWindow != nullptr)
 	{
-		if (pfIsDarkModeAllowedForWindow(hWnd) && pfShouldAppsUseDarkMode() && !IsHighContrast())
+		if (pfIsDarkModeAllowedForWindow(hWnd) && !IsHighContrast())
 		{
 			dark = TRUE;
 		}
@@ -234,12 +210,9 @@ void dmlib_win32api::RefreshTitleBarThemeColor(HWND hWnd)
  */
 bool dmlib_win32api::IsColorSchemeChangeMessage(LPARAM lParam) noexcept
 {
-	bool isMsg = false;
-	if ((lParam != 0) // NULL
-		&& (_wcsicmp(reinterpret_cast<LPCWSTR>(lParam), L"ImmersiveColorSet") == 0))
-	{
-		isMsg = true;
-	}
+	const bool isMsg =
+		(lParam != 0) // NULL
+		&& (_wcsicmp(reinterpret_cast<LPCWSTR>(lParam), L"ImmersiveColorSet") == 0);
 
 	if (isMsg)
 	{
@@ -324,7 +297,14 @@ bool dmlib_win32api::IsWindows11() noexcept
 	return (g_buildNumber >= g_win11Build);
 }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 26497) // This function function-name could be marked constexpr if compile-time evaluation is desired (f.4). // Used only in runtime.
+#endif
 [[nodiscard]] static bool CheckBuildNumber(DWORD buildNumber) noexcept
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 {
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 	static constexpr size_t nWin10Builds = 8;
@@ -391,9 +371,14 @@ void dmlib_win32api::InitDarkMode() noexcept
 	{
 		return;
 	}
-
-	fnRtlGetNtVersionNumbers RtlGetNtVersionNumbers = nullptr;
-	
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 26429) // Symbol is never tested for nullness, it can be marked as not_null. // Already checked in dmlib_module::LoadFn.
+#endif
+	RtlGetNtVersionNumbers_t RtlGetNtVersionNumbers = nullptr;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 	if (HMODULE hNtdll = ::GetModuleHandleW(L"ntdll.dll");
 		hNtdll == nullptr
 		|| !dmlib_module::LoadFn(hNtdll, RtlGetNtVersionNumbers, "RtlGetNtVersionNumbers"))
@@ -417,10 +402,8 @@ void dmlib_win32api::InitDarkMode() noexcept
 
 		bool ptrFnOrd135NotNullptr = false;
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
-		bool ptrFnOrd132NotNullptr = true;
 		if (g_buildNumber < g_win10Build1903)
 		{
-			ptrFnOrd132NotNullptr = LoadFn(hUxtheme, pfShouldAppsUseDarkMode, 132);
 			ptrFnOrd135NotNullptr = LoadFn(hUxtheme, pfAllowDarkModeForApp, 135);
 		}
 		else
@@ -481,6 +464,115 @@ void dmlib_win32api::SetDarkMode(bool useDark, [[maybe_unused]] bool applyScroll
 			dmlib_hook::fixDarkScrollBar();
 		}
 #endif
-		g_darkModeActive = useDark && ShouldAppsUseDarkMode() && !dmlib_win32api::IsHighContrast();
+		g_darkModeActive = useDark && !dmlib_win32api::IsHighContrast();
+	}
+}
+
+extern "C"
+{
+	static LPCWSTR WINAPI DummyMB_GetString([[maybe_unused]] UINT wBtn) noexcept
+	{
+		return nullptr;
+	}
+}
+static decltype(&DummyMB_GetString) pfMB_GetString = DummyMB_GetString;
+
+/**
+ * @brief Initializes undocumented MB_GetString.
+ */
+void dmlib_win32api::InitMB_GetString() noexcept
+{
+	static bool isInit = false;
+	if (isInit)
+	{
+		return;
+	}
+
+	if (HMODULE hUser32 = ::GetModuleHandleW(L"user32.dll");
+		hUser32 != nullptr)
+	{
+		dmlib_module::LoadFn(hUser32, pfMB_GetString, "MB_GetString");
+		isInit = true;
+	}
+}
+
+/**
+ * @brief Returns strings for standard message box buttons.
+ *
+ * @param[in] wBtn The id of the string to return.
+ *                 These are identified by the Dialog Box Command ID values listed in winuser.h.
+ *                 https://learn.microsoft.com/en-us/windows/win32/dlgbox/mb-getstring
+ *
+ * @return LPCWSTR The string, or nullptr if not found.
+ */
+LPCWSTR dmlib_win32api::MB_GetString(UINT wBtn) noexcept
+{
+	if (auto str = pfMB_GetString(wBtn - 1);
+		str != nullptr)
+	{
+		return str;
+	}
+
+	switch (wBtn)
+	{
+		case IDOK:
+		{
+			return L"OK";
+		}
+
+		case IDCANCEL:
+		{
+			return L"Cancel";
+		}
+
+		case IDABORT:
+		{
+			return L"&Abort";
+		}
+
+		case IDRETRY:
+		{
+			return L"&Retry";
+		}
+
+		case IDIGNORE:
+		{
+			return L"&Ignore";
+		}
+
+		case IDYES:
+		{
+			return L"&Yes";
+		}
+
+		case IDNO:
+		{
+			return L"&No";
+		}
+
+		case IDCLOSE:
+		{
+			return L"&Close";
+		}
+
+		case IDHELP:
+		{
+			return L"Help";
+		}
+
+		case IDTRYAGAIN:
+		{
+			return L"&Try Again";
+		}
+
+		case IDCONTINUE:
+		{
+			return L"&Continue";
+		}
+
+		default:
+		{
+			return nullptr;
+		}
 	}
 }

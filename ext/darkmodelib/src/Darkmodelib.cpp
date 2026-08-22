@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025-2026 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -17,30 +17,38 @@
 
 #include "StdAfx.h"
 
-#include "DarkModeSubclass.h"
+#include "Darkmodelib.h"
 
-#if !defined(_DARKMODELIB_NOT_USED)
+#ifndef _DARKMODELIB_NOT_USED
 
 #include <windows.h>
 
+#include <colordlg.h>
+#include <dlgs.h>
 #include <dwmapi.h>
 #include <richedit.h>
 #include <uxtheme.h>
 #include <vsstyle.h>
 
 #include <array>
+#include <cstdint>
+
+#ifndef _DARKMODELIB_NO_INI_CONFIG
 #include <string>
+#endif
 
 #include "DmlibColor.h"
 #include "DmlibDpi.h"
 #include "DmlibHook.h"
-#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+#ifndef _DARKMODELIB_NO_INI_CONFIG
 #include "DmlibIni.h"
 #endif
 #include "DmlibSubclass.h"
 #include "DmlibSubclassControl.h"
 #include "DmlibSubclassWindow.h"
 #include "DmlibWinApi.h"
+
+#include "MemoryHelperDef.h"
 
 #include "Version.h"
 
@@ -61,7 +69,7 @@
  *
  * @see LibInfo
  */
-int DarkMode::getLibInfo(int libInfoType)
+int dmlib::getLibInfo(int libInfoType)
 {
 	switch (static_cast<LibInfo>(libInfoType))
 	{
@@ -88,7 +96,7 @@ int DarkMode::getLibInfo(int libInfoType)
 
 		case LibInfo::iniConfigUsed:
 		{
-#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+#ifndef _DARKMODELIB_NO_INI_CONFIG
 			return TRUE;
 #else
 			return FALSE;
@@ -97,7 +105,7 @@ int DarkMode::getLibInfo(int libInfoType)
 
 		case LibInfo::allowOldOS:
 		{
-#if defined(_DARKMODELIB_ALLOW_OLD_OS)
+#ifdef _DARKMODELIB_ALLOW_OLD_OS
 			return _DARKMODELIB_ALLOW_OLD_OS;
 #else
 			return FALSE;
@@ -106,7 +114,7 @@ int DarkMode::getLibInfo(int libInfoType)
 
 		case LibInfo::useDlgProcCtl:
 		{
-#if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS)
+#ifdef _DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS
 			return _DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS;
 #else
 			return FALSE;
@@ -115,7 +123,7 @@ int DarkMode::getLibInfo(int libInfoType)
 
 		case LibInfo::preferTheme:
 		{
-#if defined(_DARKMODELIB_PREFER_THEME)
+#ifdef _DARKMODELIB_PREFER_THEME
 			return _DARKMODELIB_PREFER_THEME;
 #else
 			return FALSE;
@@ -124,8 +132,17 @@ int DarkMode::getLibInfo(int libInfoType)
 
 		case LibInfo::useSBFix:
 		{
-#if defined(_DARKMODELIB_USE_SCROLLBAR_FIX)
+#ifdef _DARKMODELIB_USE_SCROLLBAR_FIX
 			return _DARKMODELIB_USE_SCROLLBAR_FIX;
+#else
+			return FALSE;
+#endif
+		}
+
+		case LibInfo::memAPI:
+		{
+#ifdef _DARKMODELIB_CUSTOM_MEM
+			return _DARKMODELIB_CUSTOM_MEM;
 #else
 			return FALSE;
 #endif
@@ -142,11 +159,22 @@ int DarkMode::getLibInfo(int libInfoType)
  * - `light`: Follow system mode; apply light theme when system is in light mode.
  * - `classic`: Follow system mode; apply classic style when system is in light mode.
  */
-enum class WinMode : unsigned char
+enum class WinMode : std::uint8_t
 {
 	disabled,  ///< Manual - system mode is ignored.
 	light,     ///< Use light theme if system is in light mode.
 	classic    ///< Use classic style if system is in light mode.
+};
+
+/// Types of list and tree views checkbox styles
+enum class ViewCheckbox : std::uint8_t
+{
+	listView,   ///< List view with LVS_EX_CHECKBOXES extendend style.
+	tvSimple,   ///< Tree view with TVS_CHECKBOXES style.
+
+	/// Tree view with any combination of TVS_EX_PARTIALCHECKBOXES, TVS_EX_EXCLUSIONCHECKBOXES,
+	/// TVS_EX_DIMMEDCHECKBOXES extendend styles.
+	tvExtended
 };
 
 /**
@@ -170,6 +198,12 @@ struct DarkModeParams
 /// Threshold range around 50.0 where TreeView uses classic style instead of light/dark.
 static constexpr double kMiddleGrayRange = 2.0;
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#pragma clang diagnostic ignored "-Wglobal-constructors"
+#endif
+
 namespace // anonymous
 {
 	/// Global struct
@@ -180,16 +214,16 @@ namespace // anonymous
 		DWM_SYSTEMBACKDROP_TYPE m_mica = DWMSBT_AUTO;
 		COLORREF m_tvBackground = RGB(41, 49, 52);
 		double m_lightness = 50.0;
-		DarkMode::TreeViewStyle m_tvStylePrev = DarkMode::TreeViewStyle::classic;
-		DarkMode::TreeViewStyle m_tvStyle = DarkMode::TreeViewStyle::classic;
+		dmlib::TreeViewStyle m_tvStylePrev = dmlib::TreeViewStyle::classic;
+		dmlib::TreeViewStyle m_tvStyle = dmlib::TreeViewStyle::classic;
 		bool m_micaExtend = false;
 		bool m_colorizeTitleBar = false;
-		DarkMode::DarkModeType m_dmType = DarkMode::DarkModeType::dark;
+		dmlib::DarkModeType m_dmType = dmlib::DarkModeType::dark;
 		WinMode m_windowsMode = WinMode::disabled;
 		bool m_isInit = false;
 		bool m_isInitExperimental = false;
 
-#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+#ifndef _DARKMODELIB_NO_INI_CONFIG
 		std::wstring m_iniName;
 		bool m_isIniNameSet = false;
 		bool m_iniExist = false;
@@ -210,10 +244,10 @@ static dmlib_color::Theme& getTheme() noexcept
  *
  * @param[in] colorTone The tone to apply (see @ref ColorTone enum).
  *
- * @see DarkMode::getColorTone()
+ * @see dmlib::getColorTone()
  * @see dmlib_color::Theme
  */
-void DarkMode::setColorTone(int colorTone)
+void dmlib::setColorTone(int colorTone)
 {
 	getTheme().setToneColors(static_cast<ColorTone>(colorTone));
 }
@@ -223,9 +257,9 @@ void DarkMode::setColorTone(int colorTone)
  *
  * @return The currently selected @ref ColorTone value.
  *
- * @see DarkMode::setColorTone()
+ * @see dmlib::setColorTone()
  */
-int DarkMode::getColorTone()
+int dmlib::getColorTone()
 {
 	return static_cast<int>(getTheme().getColorTone());
 }
@@ -236,20 +270,25 @@ static dmlib_color::ThemeView& getThemeView() noexcept
 	return tView;
 }
 
-COLORREF DarkMode::setBackgroundColor(COLORREF clrNew)      { return getTheme().setColorBackground(clrNew); }
-COLORREF DarkMode::setCtrlBackgroundColor(COLORREF clrNew)  { return getTheme().setColorCtrlBackground(clrNew); }
-COLORREF DarkMode::setHotBackgroundColor(COLORREF clrNew)   { return getTheme().setColorHotBackground(clrNew); }
-COLORREF DarkMode::setDlgBackgroundColor(COLORREF clrNew)   { return getTheme().setColorDlgBackground(clrNew); }
-COLORREF DarkMode::setErrorBackgroundColor(COLORREF clrNew) { return getTheme().setColorErrorBackground(clrNew); }
-COLORREF DarkMode::setTextColor(COLORREF clrNew)            { return getTheme().setColorText(clrNew); }
-COLORREF DarkMode::setDarkerTextColor(COLORREF clrNew)      { return getTheme().setColorDarkerText(clrNew); }
-COLORREF DarkMode::setDisabledTextColor(COLORREF clrNew)    { return getTheme().setColorDisabledText(clrNew); }
-COLORREF DarkMode::setLinkTextColor(COLORREF clrNew)        { return getTheme().setColorLinkText(clrNew); }
-COLORREF DarkMode::setEdgeColor(COLORREF clrNew)            { return getTheme().setColorEdge(clrNew); }
-COLORREF DarkMode::setHotEdgeColor(COLORREF clrNew)         { return getTheme().setColorHotEdge(clrNew); }
-COLORREF DarkMode::setDisabledEdgeColor(COLORREF clrNew)    { return getTheme().setColorDisabledEdge(clrNew); }
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
-void DarkMode::setThemeColors(const Colors* colors)
+COLORREF dmlib::setBackgroundColor(COLORREF clrNew)         { return getTheme().setColorBackground(clrNew); }
+COLORREF dmlib::setCtrlBackgroundColor(COLORREF clrNew)     { return getTheme().setColorCtrlBackground(clrNew); }
+COLORREF dmlib::setHotBackgroundColor(COLORREF clrNew)      { return getTheme().setColorHotBackground(clrNew); }
+COLORREF dmlib::setDlgBackgroundColor(COLORREF clrNew)      { return getTheme().setColorDlgBackground(clrNew); }
+COLORREF dmlib::setErrorBackgroundColor(COLORREF clrNew)    { return getTheme().setColorErrorBackground(clrNew); }
+COLORREF dmlib::setTextColor(COLORREF clrNew)               { return getTheme().setColorText(clrNew); }
+COLORREF dmlib::setDarkerTextColor(COLORREF clrNew)         { return getTheme().setColorDarkerText(clrNew); }
+COLORREF dmlib::setDisabledTextColor(COLORREF clrNew)       { return getTheme().setColorDisabledText(clrNew); }
+COLORREF dmlib::setLinkTextColor(COLORREF clrNew)           { return getTheme().setColorLinkText(clrNew); }
+COLORREF dmlib::setEdgeColor(COLORREF clrNew)               { return getTheme().setColorEdge(clrNew); }
+COLORREF dmlib::setHotEdgeColor(COLORREF clrNew)            { return getTheme().setColorHotEdge(clrNew); }
+COLORREF dmlib::setDisabledEdgeColor(COLORREF clrNew)       { return getTheme().setColorDisabledEdge(clrNew); }
+COLORREF dmlib::setHighlightColor(COLORREF clrNew)          { return getTheme().setColorHighlight(clrNew); }
+
+void dmlib::setThemeColors(const Colors* colors)
 {
 	if (colors != nullptr)
 	{
@@ -257,49 +296,54 @@ void DarkMode::setThemeColors(const Colors* colors)
 	}
 }
 
-void DarkMode::updateThemeBrushesAndPens()
+void dmlib::updateThemeBrushesAndPens()
 {
 	getTheme().updateTheme();
 }
 
-COLORREF DarkMode::getBackgroundColor()         { return getTheme().getColors().background; }
-COLORREF DarkMode::getCtrlBackgroundColor()     { return getTheme().getColors().ctrlBackground; }
-COLORREF DarkMode::getHotBackgroundColor()      { return getTheme().getColors().hotBackground; }
-COLORREF DarkMode::getDlgBackgroundColor()      { return getTheme().getColors().dlgBackground; }
-COLORREF DarkMode::getErrorBackgroundColor()    { return getTheme().getColors().errorBackground; }
-COLORREF DarkMode::getTextColor()               { return getTheme().getColors().text; }
-COLORREF DarkMode::getDarkerTextColor()         { return getTheme().getColors().darkerText; }
-COLORREF DarkMode::getDisabledTextColor()       { return getTheme().getColors().disabledText; }
-COLORREF DarkMode::getLinkTextColor()           { return getTheme().getColors().linkText; }
-COLORREF DarkMode::getEdgeColor()               { return getTheme().getColors().edge; }
-COLORREF DarkMode::getHotEdgeColor()            { return getTheme().getColors().hotEdge; }
-COLORREF DarkMode::getDisabledEdgeColor()       { return getTheme().getColors().disabledEdge; }
+COLORREF dmlib::getBackgroundColor()        { return getTheme().getColors().background; }
+COLORREF dmlib::getCtrlBackgroundColor()    { return getTheme().getColors().ctrlBackground; }
+COLORREF dmlib::getHotBackgroundColor()     { return getTheme().getColors().hotBackground; }
+COLORREF dmlib::getDlgBackgroundColor()     { return getTheme().getColors().dlgBackground; }
+COLORREF dmlib::getErrorBackgroundColor()   { return getTheme().getColors().errorBackground; }
+COLORREF dmlib::getTextColor()              { return getTheme().getColors().text; }
+COLORREF dmlib::getDarkerTextColor()        { return getTheme().getColors().darkerText; }
+COLORREF dmlib::getDisabledTextColor()      { return getTheme().getColors().disabledText; }
+COLORREF dmlib::getLinkTextColor()          { return getTheme().getColors().linkText; }
+COLORREF dmlib::getEdgeColor()              { return getTheme().getColors().edge; }
+COLORREF dmlib::getHotEdgeColor()           { return getTheme().getColors().hotEdge; }
+COLORREF dmlib::getDisabledEdgeColor()      { return getTheme().getColors().disabledEdge; }
+COLORREF dmlib::getHighlightColor()         { return getTheme().getColors().highlight; }
 
-HBRUSH DarkMode::getBackgroundBrush()           { return getTheme().getBrushes().m_background; }
-HBRUSH DarkMode::getCtrlBackgroundBrush()       { return getTheme().getBrushes().m_ctrlBackground; }
-HBRUSH DarkMode::getHotBackgroundBrush()        { return getTheme().getBrushes().m_hotBackground; }
-HBRUSH DarkMode::getDlgBackgroundBrush()        { return getTheme().getBrushes().m_dlgBackground; }
-HBRUSH DarkMode::getErrorBackgroundBrush()      { return getTheme().getBrushes().m_errorBackground; }
+HBRUSH dmlib::getBackgroundBrush()          { return getTheme().getBrushes().m_background; }
+HBRUSH dmlib::getCtrlBackgroundBrush()      { return getTheme().getBrushes().m_ctrlBackground; }
+HBRUSH dmlib::getHotBackgroundBrush()       { return getTheme().getBrushes().m_hotBackground; }
+HBRUSH dmlib::getDlgBackgroundBrush()       { return getTheme().getBrushes().m_dlgBackground; }
+HBRUSH dmlib::getErrorBackgroundBrush()     { return getTheme().getBrushes().m_errorBackground; }
 
-HBRUSH DarkMode::getEdgeBrush()                 { return getTheme().getBrushes().m_edge; }
-HBRUSH DarkMode::getHotEdgeBrush()              { return getTheme().getBrushes().m_hotEdge; }
-HBRUSH DarkMode::getDisabledEdgeBrush()         { return getTheme().getBrushes().m_disabledEdge; }
+HBRUSH dmlib::getEdgeBrush()                { return getTheme().getBrushes().m_edge; }
+HBRUSH dmlib::getHotEdgeBrush()             { return getTheme().getBrushes().m_hotEdge; }
+HBRUSH dmlib::getDisabledEdgeBrush()        { return getTheme().getBrushes().m_disabledEdge; }
 
-HPEN DarkMode::getDarkerTextPen()               { return getTheme().getPens().m_darkerText; }
-HPEN DarkMode::getEdgePen()                     { return getTheme().getPens().m_edge; }
-HPEN DarkMode::getHotEdgePen()                  { return getTheme().getPens().m_hotEdge; }
-HPEN DarkMode::getDisabledEdgePen()             { return getTheme().getPens().m_disabledEdge; }
+HBRUSH dmlib::getHighlightBrush()           { return getTheme().getBrushes().m_highlight; }
 
-COLORREF DarkMode::setViewBackgroundColor(COLORREF clrNew)      { return getThemeView().setColorBackground(clrNew); }
-COLORREF DarkMode::setViewTextColor(COLORREF clrNew)            { return getThemeView().setColorText(clrNew); }
-COLORREF DarkMode::setViewGridlinesColor(COLORREF clrNew)       { return getThemeView().setColorGridlines(clrNew); }
+HPEN dmlib::getDarkerTextPen()              { return getTheme().getPens().m_darkerText; }
+HPEN dmlib::getEdgePen()                    { return getTheme().getPens().m_edge; }
+HPEN dmlib::getHotEdgePen()                 { return getTheme().getPens().m_hotEdge; }
+HPEN dmlib::getDisabledEdgePen()            { return getTheme().getPens().m_disabledEdge; }
 
-COLORREF DarkMode::setHeaderBackgroundColor(COLORREF clrNew)    { return getThemeView().setColorHeaderBackground(clrNew); }
-COLORREF DarkMode::setHeaderHotBackgroundColor(COLORREF clrNew) { return getThemeView().setColorHeaderHotBackground(clrNew); }
-COLORREF DarkMode::setHeaderTextColor(COLORREF clrNew)          { return getThemeView().setColorHeaderText(clrNew); }
-COLORREF DarkMode::setHeaderEdgeColor(COLORREF clrNew)          { return getThemeView().setColorHeaderEdge(clrNew); }
+HPEN dmlib::getHighlightPen()               { return getTheme().getPens().m_highlight; }
 
-void DarkMode::setViewColors(const ColorsView* colors)
+COLORREF dmlib::setViewBackgroundColor(COLORREF clrNew)         { return getThemeView().setColorBackground(clrNew); }
+COLORREF dmlib::setViewTextColor(COLORREF clrNew)               { return getThemeView().setColorText(clrNew); }
+COLORREF dmlib::setViewGridlinesColor(COLORREF clrNew)          { return getThemeView().setColorGridlines(clrNew); }
+
+COLORREF dmlib::setHeaderBackgroundColor(COLORREF clrNew)       { return getThemeView().setColorHeaderBackground(clrNew); }
+COLORREF dmlib::setHeaderHotBackgroundColor(COLORREF clrNew)    { return getThemeView().setColorHeaderHotBackground(clrNew); }
+COLORREF dmlib::setHeaderTextColor(COLORREF clrNew)             { return getThemeView().setColorHeaderText(clrNew); }
+COLORREF dmlib::setHeaderEdgeColor(COLORREF clrNew)             { return getThemeView().setColorHeaderEdge(clrNew); }
+
+void dmlib::setViewColors(const ColorsView* colors)
 {
 	if (colors != nullptr)
 	{
@@ -307,27 +351,27 @@ void DarkMode::setViewColors(const ColorsView* colors)
 	}
 }
 
-void DarkMode::updateViewBrushesAndPens()
+void dmlib::updateViewBrushesAndPens()
 {
 	getThemeView().updateView();
 }
 
-COLORREF DarkMode::getViewBackgroundColor()         { return getThemeView().getColors().background; }
-COLORREF DarkMode::getViewTextColor()               { return getThemeView().getColors().text; }
-COLORREF DarkMode::getViewGridlinesColor()          { return getThemeView().getColors().gridlines; }
+COLORREF dmlib::getViewBackgroundColor()        { return getThemeView().getColors().background; }
+COLORREF dmlib::getViewTextColor()              { return getThemeView().getColors().text; }
+COLORREF dmlib::getViewGridlinesColor()         { return getThemeView().getColors().gridlines; }
 
-COLORREF DarkMode::getHeaderBackgroundColor()       { return getThemeView().getColors().headerBackground; }
-COLORREF DarkMode::getHeaderHotBackgroundColor()    { return getThemeView().getColors().headerHotBackground; }
-COLORREF DarkMode::getHeaderTextColor()             { return getThemeView().getColors().headerText; }
-COLORREF DarkMode::getHeaderEdgeColor()             { return getThemeView().getColors().headerEdge; }
+COLORREF dmlib::getHeaderBackgroundColor()      { return getThemeView().getColors().headerBackground; }
+COLORREF dmlib::getHeaderHotBackgroundColor()   { return getThemeView().getColors().headerHotBackground; }
+COLORREF dmlib::getHeaderTextColor()            { return getThemeView().getColors().headerText; }
+COLORREF dmlib::getHeaderEdgeColor()            { return getThemeView().getColors().headerEdge; }
 
-HBRUSH DarkMode::getViewBackgroundBrush()           { return getThemeView().getViewBrushesAndPens().m_background; }
-HBRUSH DarkMode::getViewGridlinesBrush()            { return getThemeView().getViewBrushesAndPens().m_gridlines; }
+HBRUSH dmlib::getViewBackgroundBrush()          { return getThemeView().getViewBrushesAndPens().m_background; }
+HBRUSH dmlib::getViewGridlinesBrush()           { return getThemeView().getViewBrushesAndPens().m_gridlines; }
 
-HBRUSH DarkMode::getHeaderBackgroundBrush()         { return getThemeView().getViewBrushesAndPens().m_headerBackground; }
-HBRUSH DarkMode::getHeaderHotBackgroundBrush()      { return getThemeView().getViewBrushesAndPens().m_headerHotBackground; }
+HBRUSH dmlib::getHeaderBackgroundBrush()        { return getThemeView().getViewBrushesAndPens().m_headerBackground; }
+HBRUSH dmlib::getHeaderHotBackgroundBrush()     { return getThemeView().getViewBrushesAndPens().m_headerHotBackground; }
 
-HPEN DarkMode::getHeaderEdgePen()                   { return getThemeView().getViewBrushesAndPens().m_headerEdge; }
+HPEN dmlib::getHeaderEdgePen()                  { return getThemeView().getViewBrushesAndPens().m_headerEdge; }
 
 /**
  * @brief Initializes default color set based on the current mode type.
@@ -343,10 +387,10 @@ HPEN DarkMode::getHeaderEdgePen()                   { return getThemeView().getV
  *
  * @param[in] updateBrushesAndOther Whether to refresh GDI brushes and pens, and tree view styling.
  *
- * @see DarkMode::updateThemeBrushesAndPens
- * @see DarkMode::calculateTreeViewStyle
+ * @see dmlib::updateThemeBrushesAndPens
+ * @see dmlib::calculateTreeViewStyle
  */
-void DarkMode::setDefaultColors(bool updateBrushesAndOther)
+void dmlib::setDefaultColors(bool updateBrushesAndOther)
 {
 	switch (g_dmCfg.m_dmType)
 	{
@@ -366,8 +410,8 @@ void DarkMode::setDefaultColors(bool updateBrushesAndOther)
 
 		case DarkModeType::classic:
 		{
-			DarkMode::setViewBackgroundColor(::GetSysColor(COLOR_WINDOW));
-			DarkMode::setViewTextColor(::GetSysColor(COLOR_WINDOWTEXT));
+			dmlib::setViewBackgroundColor(::GetSysColor(COLOR_WINDOW));
+			dmlib::setViewTextColor(::GetSysColor(COLOR_WINDOWTEXT));
 			break;
 		}
 	}
@@ -376,11 +420,11 @@ void DarkMode::setDefaultColors(bool updateBrushesAndOther)
 	{
 		if (g_dmCfg.m_dmType != DarkModeType::classic)
 		{
-			DarkMode::updateThemeBrushesAndPens();
-			DarkMode::updateViewBrushesAndPens();
+			dmlib::updateThemeBrushesAndPens();
+			dmlib::updateViewBrushesAndPens();
 		}
 	}
-	DarkMode::calculateTreeViewStyle();
+	dmlib::calculateTreeViewStyle();
 }
 
 /**
@@ -389,7 +433,7 @@ void DarkMode::setDefaultColors(bool updateBrushesAndOther)
  * Sets the active dark mode theming and system-following behavior according to the specified `dmType`:
  * - `0`: Light mode, do not follow system.
  * - `1` or default: Dark mode, do not follow system.
- * - `2`: *[Internal]* Follow system - light or dark depending on registry (see `DarkMode::isDarkModeReg()`).
+ * - `2`: *[Internal]* Follow system - light or dark depending on registry (see `dmlib::isDarkModeReg()`).
  * - `3`: Classic mode, do not follow system.
  * - `4`: *[Internal]* Follow system - classic or dark depending on registry.
  *
@@ -397,9 +441,9 @@ void DarkMode::setDefaultColors(bool updateBrushesAndOther)
  *
  * @see DarkModeType
  * @see WinMode
- * @see DarkMode::isDarkModeReg()
+ * @see dmlib::isDarkModeReg()
  */
-void DarkMode::initDarkModeConfig(UINT dmType)
+void dmlib::initDarkModeConfig(UINT dmType)
 {
 	switch (dmType)
 	{
@@ -412,7 +456,7 @@ void DarkMode::initDarkModeConfig(UINT dmType)
 
 		case 2:
 		{
-			g_dmCfg.m_dmType = DarkMode::isDarkModeReg() ? DarkModeType::dark : DarkModeType::light;
+			g_dmCfg.m_dmType = dmlib::isDarkModeReg() ? DarkModeType::dark : DarkModeType::light;
 			g_dmCfg.m_windowsMode = WinMode::light;
 			break;
 		}
@@ -426,7 +470,7 @@ void DarkMode::initDarkModeConfig(UINT dmType)
 
 		case 4:
 		{
-			g_dmCfg.m_dmType = DarkMode::isDarkModeReg() ? DarkModeType::dark : DarkModeType::classic;
+			g_dmCfg.m_dmType = dmlib::isDarkModeReg() ? DarkModeType::dark : DarkModeType::classic;
 			g_dmCfg.m_windowsMode = WinMode::classic;
 			break;
 		}
@@ -450,9 +494,9 @@ void DarkMode::initDarkModeConfig(UINT dmType)
  * @param[in] roundCornerStyle Integer value representing a `DWM_WINDOW_CORNER_PREFERENCE`.
  *
  * @see https://learn.microsoft.com/windows/win32/api/dwmapi/ne-dwmapi-dwm_window_corner_preference
- * @see DarkMode::setDarkTitleBarEx()
+ * @see dmlib::setDarkTitleBarEx()
  */
-void DarkMode::setRoundCornerConfig(UINT roundCornerStyle)
+void dmlib::setRoundCornerConfig(UINT roundCornerStyle)
 {
 	const auto cornerStyle = static_cast<DWM_WINDOW_CORNER_PREFERENCE>(roundCornerStyle);
 	if (cornerStyle > DWMWCP_ROUNDSMALL) // || cornerStyle < DWMWCP_DEFAULT) // should never be < 0
@@ -476,9 +520,9 @@ static constexpr DWORD kDwmwaClrDefaultRGBCheck = 0x00FFFFFF;
  * @param[in] clr Border color value, or sentinel to reset to system default.
  *
  * @see DWMWA_BORDER_COLOR
- * @see DarkMode::setDarkTitleBarEx()
+ * @see dmlib::setDarkTitleBarEx()
  */
-void DarkMode::setBorderColorConfig(COLORREF clr)
+void dmlib::setBorderColorConfig(COLORREF clr)
 {
 	if (clr == kDwmwaClrDefaultRGBCheck)
 	{
@@ -499,9 +543,9 @@ void DarkMode::setBorderColorConfig(COLORREF clr)
  * @param[in] mica Integer value representing a `DWM_SYSTEMBACKDROP_TYPE`.
  *
  * @see DWM_SYSTEMBACKDROP_TYPE
- * @see DarkMode::setDarkTitleBarEx()
+ * @see dmlib::setDarkTitleBarEx()
  */
-void DarkMode::setMicaConfig(UINT mica)
+void dmlib::setMicaConfig(UINT mica)
 {
 	const auto micaType = static_cast<DWM_SYSTEMBACKDROP_TYPE>(mica);
 	if (micaType > DWMSBT_TABBEDWINDOW) // || micaType < DWMSBT_AUTO)  // should never be < 0
@@ -522,9 +566,9 @@ void DarkMode::setMicaConfig(UINT mica)
  *
  * @param[in] extendMica `true` to apply Mica to the full window, `false` for title bar only.
  *
- * @see DarkMode::setDarkTitleBarEx()
+ * @see dmlib::setDarkTitleBarEx()
  */
-void DarkMode::setMicaExtendedConfig(bool extendMica)
+void dmlib::setMicaExtendedConfig(bool extendMica)
 {
 	g_dmCfg.m_micaExtend = extendMica;
 }
@@ -536,14 +580,14 @@ void DarkMode::setMicaExtendedConfig(bool extendMica)
  *
  * @param[in] colorize `true` to have title bar to have same colors as dialog window.
  *
- * @see DarkMode::setDarkTitleBarEx()
+ * @see dmlib::setDarkTitleBarEx()
  */
-void DarkMode::setColorizeTitleBarConfig(bool colorize)
+void dmlib::setColorizeTitleBarConfig(bool colorize)
 {
 	g_dmCfg.m_colorizeTitleBar = colorize;
 }
 
-#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+#ifndef _DARKMODELIB_NO_INI_CONFIG
 /**
  * @brief Initializes dark mode configuration and colors from an INI file.
  *
@@ -555,7 +599,7 @@ void DarkMode::setColorizeTitleBarConfig(bool colorize)
  * - Tone settings for dark theme (`ColorTone`)
  *
  * If the INI file does not exist, default dark mode behavior is applied via
- * @ref DarkMode::setDarkModeConfigEx.
+ * @ref dmlib::setDarkModeConfigEx.
  *
  * @param[in] iniName Name of INI file (resolved via @ref getIniPath).
  *
@@ -572,22 +616,22 @@ static void initOptions(const std::wstring& iniName)
 	g_dmCfg.m_iniExist = dmlib_ini::fileExists(iniPath);
 	if (g_dmCfg.m_iniExist)
 	{
-		DarkMode::initDarkModeConfig(::GetPrivateProfileIntW(L"main", L"mode", 1, iniPath.c_str()));
-		if (g_dmCfg.m_dmType == DarkMode::DarkModeType::classic)
+		dmlib::initDarkModeConfig(::GetPrivateProfileIntW(L"main", L"mode", 1, iniPath.c_str()));
+		if (g_dmCfg.m_dmType == dmlib::DarkModeType::classic)
 		{
-			DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkMode::DarkModeType::classic));
-			DarkMode::setDefaultColors(false);
+			dmlib::setDarkModeConfigEx(static_cast<UINT>(dmlib::DarkModeType::classic));
+			dmlib::setDefaultColors(false);
 			return;
 		}
 
-		const bool useDark = g_dmCfg.m_dmType == DarkMode::DarkModeType::dark;
+		const bool useDark = g_dmCfg.m_dmType == dmlib::DarkModeType::dark;
 
 		const std::wstring sectionBase = useDark ? L"dark" : L"light";
 		const std::wstring sectionColorsView = sectionBase + L".colors.view";
 		const std::wstring sectionColors = sectionBase + L".colors";
 
-		DarkMode::setMicaConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"mica", 0, iniPath.c_str()));
-		DarkMode::setRoundCornerConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"roundCorner", 0, iniPath.c_str()));
+		dmlib::setMicaConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"mica", 0, iniPath.c_str()));
+		dmlib::setRoundCornerConfig(::GetPrivateProfileIntW(sectionBase.c_str(), L"roundCorner", 0, iniPath.c_str()));
 		dmlib_ini::setClrFromIni(iniPath, sectionBase, L"borderColor", &g_dmCfg.m_borderColor);
 		if (g_dmCfg.m_borderColor == kDwmwaClrDefaultRGBCheck)
 		{
@@ -599,17 +643,17 @@ static void initOptions(const std::wstring& iniName)
 		if (useDark)
 		{
 			UINT tone = ::GetPrivateProfileIntW(sectionBase.c_str(), L"tone", 0, iniPath.c_str());
-			if (tone >= static_cast<UINT>(DarkMode::ColorTone::max))
+			if (tone >= static_cast<UINT>(dmlib::ColorTone::max))
 			{
 				tone = 0;
 			}
 
-			getTheme().setToneColors(static_cast<DarkMode::ColorTone>(tone));
+			getTheme().setToneColors(static_cast<dmlib::ColorTone>(tone));
 			getThemeView().setColorHeaderBackground(getTheme().getColors().background);
 			getThemeView().setColorHeaderHotBackground(getTheme().getColors().hotBackground);
 			getThemeView().setColorHeaderText(getTheme().getColors().darkerText);
 
-			if (!DarkMode::isWindowsModeEnabled())
+			if (!dmlib::isWindowsModeEnabled())
 			{
 				g_dmCfg.m_micaExtend = (::GetPrivateProfileIntW(sectionBase.c_str(), L"micaExtend", 0, iniPath.c_str()) == 1);
 			}
@@ -636,7 +680,7 @@ static void initOptions(const std::wstring& iniName)
 			{L"edgeHeader", &getThemeView().getToSetColors().headerEdge}
 		} };
 
-		static constexpr size_t nColorsMembers = 12;
+		static constexpr size_t nColorsMembers = 13;
 		const std::array<ColorEntry, nColorsMembers> baseColors{ {
 			{L"background", &getTheme().getToSetColors().background},
 			{L"backgroundCtrl", &getTheme().getToSetColors().ctrlBackground},
@@ -649,7 +693,8 @@ static void initOptions(const std::wstring& iniName)
 			{L"textLink", &getTheme().getToSetColors().linkText},
 			{L"edge", &getTheme().getToSetColors().edge},
 			{L"edgeHot", &getTheme().getToSetColors().hotEdge},
-			{L"edgeDisabled", &getTheme().getToSetColors().disabledEdge}
+			{L"edgeDisabled", &getTheme().getToSetColors().disabledEdge},
+			{L"highlight", &getTheme().getToSetColors().highlight}
 		} };
 
 		for (const auto& entry : viewColors)
@@ -662,21 +707,21 @@ static void initOptions(const std::wstring& iniName)
 			dmlib_ini::setClrFromIni(iniPath, sectionColors, entry.key, entry.clr);
 		}
 
-		DarkMode::updateThemeBrushesAndPens();
-		DarkMode::updateViewBrushesAndPens();
-		DarkMode::calculateTreeViewStyle();
+		dmlib::updateThemeBrushesAndPens();
+		dmlib::updateViewBrushesAndPens();
+		dmlib::calculateTreeViewStyle();
 
 		if (!g_dmCfg.m_micaExtend)
 		{
 			g_dmCfg.m_colorizeTitleBar = (::GetPrivateProfileIntW(sectionBase.c_str(), L"colorizeTitleBar", 0, iniPath.c_str()) == 1);
 		}
 
-		dmlib_win32api::SetDarkMode(g_dmCfg.m_dmType == DarkMode::DarkModeType::dark, true);
+		dmlib_win32api::SetDarkMode(g_dmCfg.m_dmType == dmlib::DarkModeType::dark, true);
 	}
 	else
 	{
-		DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkMode::DarkModeType::dark));
-		DarkMode::setDefaultColors(true);
+		dmlib::setDarkModeConfigEx(static_cast<UINT>(dmlib::DarkModeType::dark));
+		dmlib::setDefaultColors(true);
 	}
 }
 #endif // !defined(_DARKMODELIB_NO_INI_CONFIG)
@@ -686,17 +731,17 @@ static void initOptions(const std::wstring& iniName)
  *
  * Initializes the dark mode type settings and system-following behavior.
  * Enables or disables dark mode depending on whether `DarkModeType::dark` is selected.
- * It is recommended to use together with @ref DarkMode::setDefaultColors to also set colors.
+ * It is recommended to use together with @ref dmlib::setDefaultColors to also set colors.
  *
- * @param[in] dmType Dark mode configuration type; see @ref DarkMode::initDarkModeConfig for values.
+ * @param[in] dmType Dark mode configuration type; see @ref dmlib::initDarkModeConfig for values.
  *
- * @see DarkMode::setDarkModeConfig()
- * @see DarkMode::initDarkModeConfig()
- * @see DarkMode::setDefaultColors()
+ * @see dmlib::setDarkModeConfig()
+ * @see dmlib::initDarkModeConfig()
+ * @see dmlib::setDefaultColors()
  */
-void DarkMode::setDarkModeConfigEx(UINT dmType)
+void dmlib::setDarkModeConfigEx(UINT dmType)
 {
-	DarkMode::initDarkModeConfig(dmType);
+	dmlib::initDarkModeConfig(dmType);
 
 	const bool useDark = g_dmCfg.m_dmType == DarkModeType::dark;
 	dmlib_win32api::SetDarkMode(useDark, true);
@@ -705,20 +750,20 @@ void DarkMode::setDarkModeConfigEx(UINT dmType)
 /**
  * @brief Applies dark mode settings based on system mode preference.
  *
- * Determines the appropriate mode using @ref DarkMode::isDarkModeReg and forwards
- * the result to @ref DarkMode::setDarkModeConfigEx.
- * It is recommended to use together with @ref DarkMode::setDefaultColors to also set colors.
+ * Determines the appropriate mode using @ref dmlib::isDarkModeReg and forwards
+ * the result to @ref dmlib::setDarkModeConfigEx.
+ * It is recommended to use together with @ref dmlib::setDefaultColors to also set colors.
  *
  * Uses:
  * - `DarkModeType::dark` if registry prefers dark mode.
  * - `DarkModeType::classic` otherwise.
  *
- * @see DarkMode::setDarkModeConfigEx()
+ * @see dmlib::setDarkModeConfigEx()
  */
-void DarkMode::setDarkModeConfig()
+void dmlib::setDarkModeConfig()
 {
-	const auto dmType = static_cast<UINT>(DarkMode::isDarkModeReg() ? DarkModeType::dark : DarkModeType::classic);
-	DarkMode::setDarkModeConfigEx(dmType);
+	const auto dmType = static_cast<UINT>(dmlib::isDarkModeReg() ? DarkModeType::dark : DarkModeType::classic);
+	dmlib::setDarkModeConfigEx(dmType);
 }
 
 /**
@@ -737,10 +782,10 @@ void DarkMode::setDarkModeConfig()
  *       subsequent calls have no effect, unless follow system mode is used,
  *       then only colors are updated each time system changes mode.
  *
- * @see DarkMode::initDarkMode()
- * @see DarkMode::calculateTreeViewStyle()
+ * @see dmlib::initDarkMode()
+ * @see dmlib::calculateTreeViewStyle()
  */
-void DarkMode::initDarkModeEx([[maybe_unused]] const wchar_t* iniName)
+void dmlib::initDarkModeEx([[maybe_unused]] const wchar_t* iniName)
 {
 	if (!g_dmCfg.m_isInit)
 	{
@@ -751,7 +796,7 @@ void DarkMode::initDarkModeEx([[maybe_unused]] const wchar_t* iniName)
 			g_dmCfg.m_isInitExperimental = true;
 		}
 
-#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+#ifndef _DARKMODELIB_NO_INI_CONFIG
 		if (!g_dmCfg.m_isIniNameSet)
 		{
 			g_dmCfg.m_iniName = iniName;
@@ -759,19 +804,21 @@ void DarkMode::initDarkModeEx([[maybe_unused]] const wchar_t* iniName)
 
 			if (g_dmCfg.m_iniName.empty())
 			{
-				DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkModeType::dark));
-				DarkMode::setDefaultColors(true);
+				dmlib::setDarkModeConfigEx(static_cast<UINT>(DarkModeType::dark));
+				dmlib::setDefaultColors(true);
 			}
 		}
 		initOptions(g_dmCfg.m_iniName);
 #else
-		DarkMode::setDarkModeConfig();
-		DarkMode::setDefaultColors(true);
+		dmlib::setDarkModeConfig();
+		dmlib::setDefaultColors(true);
 #endif
 
-		DarkMode::setSysColor(COLOR_WINDOW, DarkMode::getBackgroundColor());
-		DarkMode::setSysColor(COLOR_WINDOWTEXT, DarkMode::getTextColor());
-		DarkMode::setSysColor(COLOR_BTNFACE, DarkMode::getViewGridlinesColor());
+		dmlib::setSysColor(COLOR_WINDOW, dmlib::getCtrlBackgroundColor());
+		dmlib::setSysColor(COLOR_WINDOWTEXT, dmlib::getTextColor());
+		dmlib::setSysColor(COLOR_3DFACE, dmlib::getViewGridlinesColor());
+
+		dmlib::updateCommonDlgsBrushes();
 
 		g_dmCfg.m_isInit = true;
 	}
@@ -780,13 +827,13 @@ void DarkMode::initDarkModeEx([[maybe_unused]] const wchar_t* iniName)
 /**
  * @brief Initializes dark mode without INI settings.
  *
- * Forwards to @ref DarkMode::initDarkModeEx with an empty INI path, effectively disabling INI settings.
+ * Forwards to @ref dmlib::initDarkModeEx with an empty INI path, effectively disabling INI settings.
  *
- * @see DarkMode::initDarkModeEx()
+ * @see dmlib::initDarkModeEx()
  */
-void DarkMode::initDarkMode()
+void dmlib::initDarkMode()
 {
-	DarkMode::initDarkModeEx(L"");
+	dmlib::initDarkModeEx(L"");
 }
 
 /**
@@ -794,9 +841,9 @@ void DarkMode::initDarkMode()
  *
  * @return `true` if there is config INI file that can be used.
  */
-bool DarkMode::doesConfigFileExist()
+bool dmlib::doesConfigFileExist()
 {
-#if !defined(_DARKMODELIB_NO_INI_CONFIG)
+#ifndef _DARKMODELIB_NO_INI_CONFIG
 	return g_dmCfg.m_iniExist;
 #else
 	return false;
@@ -812,12 +859,12 @@ bool DarkMode::doesConfigFileExist()
  *
  * @return `true` if a supported dark mode type is active, otherwise `false`.
  */
-bool DarkMode::isEnabled()
+bool dmlib::isEnabled()
 {
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 1)
 	return g_dmCfg.m_dmType != DarkModeType::classic;
 #else
-	return DarkMode::isAtLeastWindows10() && g_dmCfg.m_dmType != DarkModeType::classic;
+	return dmlib::isAtLeastWindows10() && g_dmCfg.m_dmType != DarkModeType::classic;
 #endif
 }
 
@@ -826,7 +873,7 @@ bool DarkMode::isEnabled()
  *
  * @return `true` if experimental dark mode is enabled.
  */
-bool DarkMode::isExperimentalActive()
+bool dmlib::isExperimentalActive()
 {
 	return dmlib_win32api::IsDarkModeActive();
 }
@@ -836,7 +883,7 @@ bool DarkMode::isExperimentalActive()
  *
  * @return `true` if dark mode experimental APIs are available.
  */
-bool DarkMode::isExperimentalSupported()
+bool dmlib::isExperimentalSupported()
 {
 	return dmlib_win32api::IsDarkModeSupported();
 }
@@ -846,7 +893,7 @@ bool DarkMode::isExperimentalSupported()
  *
  * @return `true` if "mode" is not `WinMode::disabled`, i.e. system mode is followed.
  */
-bool DarkMode::isWindowsModeEnabled()
+bool dmlib::isWindowsModeEnabled()
 {
 	return g_dmCfg.m_windowsMode != WinMode::disabled;
 }
@@ -856,7 +903,7 @@ bool DarkMode::isWindowsModeEnabled()
  *
  * @return `true` if running on Windows 10 or newer.
  */
-bool DarkMode::isAtLeastWindows10()
+bool dmlib::isAtLeastWindows10()
 {
 	return dmlib_win32api::IsWindows10();
 }
@@ -865,7 +912,7 @@ bool DarkMode::isAtLeastWindows10()
  *
  * @return `true` if running on Windows 11 or newer.
  */
-bool DarkMode::isAtLeastWindows11()
+bool dmlib::isAtLeastWindows11()
 {
 	return dmlib_win32api::IsWindows11();
 }
@@ -875,16 +922,35 @@ bool DarkMode::isAtLeastWindows11()
  *
  * @return Windows build number reported by the system.
  */
-DWORD DarkMode::getWindowsBuildNumber()
+DWORD dmlib::getWindowsBuildNumber()
 {
 	return dmlib_win32api::GetWindowsBuildNumber();
 }
 
-/// Check if OS is at leaast Windows 11 version 25H2 build 26200.
-static bool isAtLeastWin11Ver25H2() noexcept
+/// Check if OS is Windows 11 version 24H2 build 26100 rev 6899+,
+/// Windows 11 version 25H2 build 26200 rev 6899+, or later builds.
+static bool doesWin11SupportDarkThemeStyle() noexcept
 {
+	static const DWORD win11Revision = []() noexcept
+	{
+		DWORD revisionReg = 0;
+		DWORD dwBufSize = sizeof(revisionReg);
+		static constexpr LPCWSTR lpSubKey = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+		static constexpr LPCWSTR lpValue = L"UBR";
+
+		if (::RegGetValueW(HKEY_LOCAL_MACHINE, lpSubKey, lpValue, RRF_RT_REG_DWORD, nullptr, &revisionReg, &dwBufSize) == ERROR_SUCCESS)
+		{
+			return revisionReg;
+		}
+		return 0UL;
+	}();
+
+	static constexpr DWORD win11Build24H2 = 26100;
 	static constexpr DWORD win11Build25H2 = 26200;
-	return dmlib_win32api::GetWindowsBuildNumber() >= win11Build25H2;
+	static constexpr DWORD minWin11Revision = 6899;
+	return dmlib_win32api::GetWindowsBuildNumber() > win11Build25H2
+		|| (dmlib_win32api::GetWindowsBuildNumber() == win11Build25H2 && win11Revision >= minWin11Revision)
+		|| (dmlib_win32api::GetWindowsBuildNumber() == win11Build24H2 && win11Revision >= minWin11Revision);
 }
 
 /**
@@ -895,26 +961,26 @@ static bool isAtLeastWin11Ver25H2() noexcept
  * re-initialized.
  *
  * - Skips processing if experimental dark mode is unsupported.
- * - Relies on @ref DarkMode::isDarkModeReg for theme preference and skips during high contrast.
+ * - Relies on @ref dmlib::isDarkModeReg for theme preference and skips during high contrast.
  *
  * @param[in] lParam Message parameter (typically from `WM_SETTINGCHANGE`).
  * @return `true` if a dark mode change was handled; otherwise `false`.
  *
- * @see DarkMode::isDarkModeReg()
- * @see DarkMode::initDarkMode()
+ * @see dmlib::isDarkModeReg()
+ * @see dmlib::initDarkMode()
  */
-bool DarkMode::handleSettingChange(LPARAM lParam)
+bool dmlib::handleSettingChange(LPARAM lParam)
 {
-	if (DarkMode::isExperimentalSupported()
+	if (dmlib::isExperimentalSupported()
 		&& dmlib_win32api::IsColorSchemeChangeMessage(lParam))
 	{
-		// fnShouldAppsUseDarkMode (ordinal 132) is not reliable on 1903+, use DarkMode::isDarkModeReg() instead
-		if (const bool isDarkModeUsed = (DarkMode::isDarkModeReg() && !dmlib_win32api::IsHighContrast());
-			DarkMode::isExperimentalActive() != isDarkModeUsed
+		// fnShouldAppsUseDarkMode (ordinal 132) is not reliable on 1903+, use dmlib::isDarkModeReg() instead
+		if (const bool isDarkModeUsed = (dmlib::isDarkModeReg() && !dmlib_win32api::IsHighContrast());
+			dmlib::isExperimentalActive() != isDarkModeUsed
 			&& g_dmCfg.m_isInit)
 		{
 			g_dmCfg.m_isInit = false;
-			DarkMode::initDarkMode();
+			dmlib::initDarkMode();
 		}
 		return true;
 	}
@@ -924,15 +990,15 @@ bool DarkMode::handleSettingChange(LPARAM lParam)
 /**
  * @brief Checks if dark mode is enabled in the Windows registry.
  *
- * Queries `HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\\AppsUseLightTheme`.
+ * Queries `HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\\AppsUseLightTheme`.
  *
  * @return `true` if dark mode is preferred (value is `0`); otherwise `false`.
  */
-bool DarkMode::isDarkModeReg()
+bool dmlib::isDarkModeReg()
 {
 	DWORD data{};
 	DWORD dwBufSize = sizeof(data);
-	static constexpr LPCWSTR lpSubKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+	static constexpr LPCWSTR lpSubKey = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
 	static constexpr LPCWSTR lpValue = L"AppsUseLightTheme";
 
 	if (::RegGetValueW(HKEY_CURRENT_USER, lpSubKey, lpValue, RRF_RT_REG_DWORD, nullptr, &data, &dwBufSize) == ERROR_SUCCESS)
@@ -954,9 +1020,17 @@ bool DarkMode::isDarkModeReg()
  * @param[in]   nIndex  One of the supported system color indices.
  * @param[in]   color   Custom `COLORREF` value to apply.
  */
-void DarkMode::setSysColor(int nIndex, COLORREF color)
+void dmlib::setSysColor(int nIndex, COLORREF color)
 {
 	dmlib_hook::setMySysColor(nIndex, color);
+}
+/**
+ * @brief Updates custom color brushes for ChooseFont and ChooseColor dialogs.
+ */
+void dmlib::updateCommonDlgsBrushes()
+{
+	dmlib_hook::updateFontBrush();
+	dmlib_hook::updateLumSliderBrush();
 }
 
 /**
@@ -966,7 +1040,7 @@ void DarkMode::setSysColor(int nIndex, COLORREF color)
  *
  * @param[in] hWnd Handle to the parent window.
  */
-void DarkMode::enableDarkScrollBarForWindowAndChildren([[maybe_unused]] HWND hWnd)
+void dmlib::enableDarkScrollBarForWindowAndChildren([[maybe_unused]] HWND hWnd)
 {
 #if defined(_DARKMODELIB_USE_SCROLLBAR_FIX) && (_DARKMODELIB_USE_SCROLLBAR_FIX > 0)
 	dmlib_hook::enableDarkScrollBarForWindowAndChildren(hWnd);
@@ -976,9 +1050,9 @@ void DarkMode::enableDarkScrollBarForWindowAndChildren([[maybe_unused]] HWND hWn
 /**
  * @brief Checks if current mode is dark type.
  */
-bool DarkMode::isDarkDmTypeUsed() noexcept
+bool dmlib::isDarkDmTypeUsed() noexcept
 {
-	return g_dmCfg.m_dmType == DarkMode::DarkModeType::dark;
+	return g_dmCfg.m_dmType == dmlib::DarkModeType::dark;
 }
 
 /**
@@ -989,9 +1063,9 @@ bool DarkMode::isDarkDmTypeUsed() noexcept
  * @param[in] hWnd Handle to the checkbox, radio, or tri-state button control.
  *
  * @see dmlib_subclass::ButtonSubclass()
- * @see DarkMode::removeCheckboxOrRadioBtnCtrlSubclass()
+ * @see dmlib::removeCheckboxOrRadioBtnCtrlSubclass()
  */
-void DarkMode::setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
+void dmlib::setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::ButtonData>(hWnd, dmlib_subclass::ButtonSubclass, dmlib_subclass::SubclassID::button, hWnd);
 }
@@ -1004,9 +1078,9 @@ void DarkMode::setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed control.
  *
  * @see dmlib_subclass::ButtonSubclass()
- * @see DarkMode::setCheckboxOrRadioBtnCtrlSubclass()
+ * @see dmlib::setCheckboxOrRadioBtnCtrlSubclass()
  */
-void DarkMode::removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
+void dmlib::removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::ButtonData>(hWnd, dmlib_subclass::ButtonSubclass, dmlib_subclass::SubclassID::button);
 }
@@ -1019,9 +1093,9 @@ void DarkMode::removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the groupbox button control.
  *
  * @see dmlib_subclass::GroupboxSubclass()
- * @see DarkMode::removeGroupboxCtrlSubclass()
+ * @see dmlib::removeGroupboxCtrlSubclass()
  */
-void DarkMode::setGroupboxCtrlSubclass(HWND hWnd)
+void dmlib::setGroupboxCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::ButtonData>(hWnd, dmlib_subclass::GroupboxSubclass, dmlib_subclass::SubclassID::groupbox);
 }
@@ -1034,9 +1108,9 @@ void DarkMode::setGroupboxCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed control.
  *
  * @see dmlib_subclass::GroupboxSubclass()
- * @see DarkMode::setGroupboxCtrlSubclass()
+ * @see dmlib::setGroupboxCtrlSubclass()
  */
-void DarkMode::removeGroupboxCtrlSubclass(HWND hWnd)
+void dmlib::removeGroupboxCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::ButtonData>(hWnd, dmlib_subclass::GroupboxSubclass, dmlib_subclass::SubclassID::groupbox);
 }
@@ -1057,8 +1131,8 @@ void DarkMode::removeGroupboxCtrlSubclass(HWND hWnd)
  * @param[in]   p       Parameters defining theming and subclassing behavior.
  *
  * @see DarkModeParams
- * @see DarkMode::setCheckboxOrRadioBtnCtrlSubclass()
- * @see DarkMode::setGroupboxCtrlSubclass()
+ * @see dmlib::setCheckboxOrRadioBtnCtrlSubclass()
+ * @see dmlib::setGroupboxCtrlSubclass()
  */
 static void setBtnCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
 {
@@ -1081,14 +1155,14 @@ static void setBtnCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
 				break;
 			}
 
-			if (DarkMode::isAtLeastWindows11() && p.m_theme)
+			if (dmlib::isAtLeastWindows11() && p.m_theme)
 			{
 				::SetWindowTheme(hWnd, p.m_themeClassName, nullptr);
 			}
 
 			if (p.m_subclass)
 			{
-				DarkMode::setCheckboxOrRadioBtnCtrlSubclass(hWnd);
+				dmlib::setCheckboxOrRadioBtnCtrlSubclass(hWnd);
 			}
 			break;
 		}
@@ -1097,7 +1171,7 @@ static void setBtnCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
 		{
 			if (p.m_subclass)
 			{
-				DarkMode::setGroupboxCtrlSubclass(hWnd);
+				dmlib::setGroupboxCtrlSubclass(hWnd);
 			}
 			break;
 		}
@@ -1129,12 +1203,11 @@ static void setBtnCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
  * @param[in] hWnd Handle to the up-down (spinner) control.
  *
  * @see dmlib_subclass::UpDownSubclass()
- * @see DarkMode::removeUpDownCtrlSubclass()
+ * @see dmlib::removeUpDownCtrlSubclass()
  */
-void DarkMode::setUpDownCtrlSubclass(HWND hWnd)
+void dmlib::setUpDownCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::UpDownData>(hWnd, dmlib_subclass::UpDownSubclass, dmlib_subclass::SubclassID::upDown, hWnd);
-	DarkMode::setDarkExplorerTheme(hWnd);
 }
 
 /**
@@ -1145,9 +1218,9 @@ void DarkMode::setUpDownCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed control.
  *
  * @see dmlib_subclass::UpDownSubclass()
- * @see DarkMode::setUpDownCtrlSubclass()
+ * @see dmlib::setUpDownCtrlSubclass()
  */
-void DarkMode::removeUpDownCtrlSubclass(HWND hWnd)
+void dmlib::removeUpDownCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::UpDownData>(hWnd, dmlib_subclass::UpDownSubclass, dmlib_subclass::SubclassID::upDown);
 }
@@ -1162,17 +1235,18 @@ void DarkMode::removeUpDownCtrlSubclass(HWND hWnd)
  * @param[in]   p       Parameters controlling whether to apply theming and/or subclassing.
  *
  * @see DarkModeParams
- * @see DarkMode::setUpDownCtrlSubclass()
+ * @see dmlib::setUpDownCtrlSubclass()
  */
-static void setUpDownCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
+static void setUpDownCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) DMLIB_MEM_NOEXCEPT
 {
-	if (p.m_subclass)
-	{
-		DarkMode::setUpDownCtrlSubclass(hWnd);
-	}
-	else if (p.m_theme)
+	if (p.m_theme)
 	{
 		::SetWindowTheme(hWnd, p.m_themeClassName, nullptr);
+	}
+
+	if (p.m_subclass)
+	{
+		dmlib::setUpDownCtrlSubclass(hWnd);
 	}
 }
 
@@ -1184,7 +1258,7 @@ static void setUpDownCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
  * @see dmlib_subclass::TabPaintSubclass()
  * @see removeTabCtrlPaintSubclass()
  */
-static void setTabCtrlPaintSubclass(HWND hWnd)
+static void setTabCtrlPaintSubclass(HWND hWnd) DMLIB_MEM_NOEXCEPT
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::TabData>(hWnd, dmlib_subclass::TabPaintSubclass, dmlib_subclass::SubclassID::tabPaint);
 }
@@ -1213,9 +1287,9 @@ static void removeTabCtrlPaintSubclass(HWND hWnd) noexcept
  * @param[in] hWnd Handle to the tab control.
  *
  * @see dmlib_subclass::TabUpDownSubclass()
- * @see DarkMode::removeTabCtrlUpDownSubclass()
+ * @see dmlib::removeTabCtrlUpDownSubclass()
  */
-void DarkMode::setTabCtrlUpDownSubclass(HWND hWnd)
+void dmlib::setTabCtrlUpDownSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::TabUpDownSubclass, dmlib_subclass::SubclassID::tabUpDown);
 }
@@ -1228,9 +1302,9 @@ void DarkMode::setTabCtrlUpDownSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed tab control.
  *
  * @see dmlib_subclass::TabUpDownSubclass()
- * @see DarkMode::setTabCtrlUpDownSubclass()
+ * @see dmlib::setTabCtrlUpDownSubclass()
  */
-void DarkMode::removeTabCtrlUpDownSubclass(HWND hWnd)
+void dmlib::removeTabCtrlUpDownSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::TabUpDownSubclass, dmlib_subclass::SubclassID::tabUpDown);
 }
@@ -1238,20 +1312,20 @@ void DarkMode::removeTabCtrlUpDownSubclass(HWND hWnd)
 /**
  * @brief Applies owner drawn and up-down (spinner) child detection subclassings for a tab control.
  *
- * Applies both @ref DarkMode::TabPaintSubclass() for custom drawing
- * and @ref DarkMode::TabUpDownSubclass() for detecting and subclassing
+ * Applies both @ref dmlib::TabPaintSubclass() for custom drawing
+ * and @ref dmlib::TabUpDownSubclass() for detecting and subclassing
  * the associated up-down (spinner) control.
  *
  * @param[in] hWnd Handle to the tab control.
  *
- * @see DarkMode::removeTabCtrlSubclass()
+ * @see dmlib::removeTabCtrlSubclass()
  * @see setTabCtrlPaintSubclass()
- * @see DarkMode::setTabCtrlUpDownSubclass()
+ * @see dmlib::setTabCtrlUpDownSubclass()
  */
-void DarkMode::setTabCtrlSubclass(HWND hWnd)
+void dmlib::setTabCtrlSubclass(HWND hWnd)
 {
 	setTabCtrlPaintSubclass(hWnd);
-	DarkMode::setTabCtrlUpDownSubclass(hWnd);
+	dmlib::setTabCtrlUpDownSubclass(hWnd);
 }
 
 /**
@@ -1261,14 +1335,14 @@ void DarkMode::setTabCtrlSubclass(HWND hWnd)
  *
  * @param[in] hWnd Handle to the previously subclassed tab control.
  *
- * @see DarkMode::setTabCtrlSubclass()
+ * @see dmlib::setTabCtrlSubclass()
  * @see removeTabCtrlPaintSubclass()
- * @see DarkMode::removeTabCtrlUpDownSubclass()
+ * @see dmlib::removeTabCtrlUpDownSubclass()
  */
-void DarkMode::removeTabCtrlSubclass(HWND hWnd)
+void dmlib::removeTabCtrlSubclass(HWND hWnd)
 {
 	removeTabCtrlPaintSubclass(hWnd);
-	DarkMode::removeTabCtrlUpDownSubclass(hWnd);
+	dmlib::removeTabCtrlUpDownSubclass(hWnd);
 }
 
 /**
@@ -1281,19 +1355,23 @@ void DarkMode::removeTabCtrlSubclass(HWND hWnd)
  * @param[in]   p       Parameters controlling whether to apply theming and/or subclassing.
  *
  * @see DarkModeParams
- * @see DarkMode::setDarkTooltips()
- * @see DarkMode::setTabCtrlSubclass()
+ * @see dmlib::setDarkTooltips()
+ * @see dmlib::setTabCtrlSubclass()
  */
 static void setTabCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_theme)
 	{
-		DarkMode::setDarkTooltips(hWnd, static_cast<int>(DarkMode::ToolTipsType::tabbar));
+		dmlib::setDarkTooltips(hWnd, static_cast<int>(dmlib::ToolTipsType::tabbar));
+		if (doesWin11SupportDarkThemeStyle() && dmlib_subclass::isThemePrefered())
+		{
+			dmlib::setDarkThemeTheme(hWnd);
+		}
 	}
 
-	if (p.m_subclass)
+	if (p.m_subclass && !dmlib_subclass::isThemePrefered())
 	{
-		DarkMode::setTabCtrlSubclass(hWnd);
+		dmlib::setTabCtrlSubclass(hWnd);
 	}
 }
 
@@ -1303,9 +1381,9 @@ static void setTabCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
  * @param[in] hWnd Handle to the list box or edit control.
  *
  * @see dmlib_subclass::CustomBorderSubclass()
- * @see DarkMode::removeCustomBorderForListBoxOrEditCtrlSubclass()
+ * @see dmlib::removeCustomBorderForListBoxOrEditCtrlSubclass()
  */
-void DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
+void dmlib::setCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::BorderMetricsData>(hWnd, dmlib_subclass::CustomBorderSubclass, dmlib_subclass::SubclassID::customBorder, hWnd);
 }
@@ -1319,9 +1397,9 @@ void DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed control.
  *
  * @see dmlib_subclass::CustomBorderSubclass()
- * @see DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass()
+ * @see dmlib::setCustomBorderForListBoxOrEditCtrlSubclass()
  */
-void DarkMode::removeCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
+void dmlib::removeCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::BorderMetricsData>(hWnd, dmlib_subclass::CustomBorderSubclass, dmlib_subclass::SubclassID::customBorder);
 }
@@ -1341,9 +1419,9 @@ void DarkMode::removeCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd)
  * @note Custom border subclassing is skipped for combo box list boxes.
  *
  * @see DarkModeParams
- * @see DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass()
+ * @see dmlib::setCustomBorderForListBoxOrEditCtrlSubclass()
  */
-static void setCustomBorderForListBoxOrEditCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p, bool isListBox) noexcept
+static void setCustomBorderForListBoxOrEditCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p, bool isListBox) DMLIB_MEM_NOEXCEPT
 {
 	const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 	const bool hasScrollBar = ((nStyle & WS_HSCROLL) == WS_HSCROLL) || ((nStyle & WS_VSCROLL) == WS_VSCROLL);
@@ -1354,7 +1432,14 @@ static void setCustomBorderForListBoxOrEditCtrlSubclassAndTheme(HWND hWnd, DarkM
 		&& !isListBox
 		&& !hasScrollBar)
 	{
-		DarkMode::setDarkThemeExperimentalEx(hWnd, L"CFD");
+		if (doesWin11SupportDarkThemeStyle())
+		{
+			dmlib::setDarkThemeTheme(hWnd);
+		}
+		else
+		{
+			dmlib::setDarkThemeExperimentalEx(hWnd, L"CFD");
+		}
 	}
 	else
 	{
@@ -1370,13 +1455,13 @@ static void setCustomBorderForListBoxOrEditCtrlSubclassAndTheme(HWND hWnd, DarkM
 		if (const bool isCBoxListBox = isListBox && (nStyle & LBS_COMBOBOX) == LBS_COMBOBOX;
 			p.m_subclass && hasClientEdge && !isCBoxListBox)
 		{
-			DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass(hWnd);
+			dmlib::setCustomBorderForListBoxOrEditCtrlSubclass(hWnd);
 		}
 
 		if (::GetWindowSubclass(hWnd, dmlib_subclass::CustomBorderSubclass, static_cast<UINT_PTR>(dmlib_subclass::SubclassID::customBorder), nullptr) == TRUE)
 		{
-			const bool enableClientEdge = !DarkMode::isEnabled();
-			DarkMode::setWindowExStyle(hWnd, enableClientEdge, WS_EX_CLIENTEDGE);
+			const bool enableClientEdge = !dmlib::isEnabled();
+			dmlib::setWindowExStyle(hWnd, enableClientEdge, WS_EX_CLIENTEDGE);
 		}
 	}
 }
@@ -1392,11 +1477,16 @@ static void setCustomBorderForListBoxOrEditCtrlSubclassAndTheme(HWND hWnd, DarkM
  * @note Uses `GetWindowLongPtr` to extract the style bits.
  *
  * @see dmlib_subclass::ComboBoxSubclass()
- * @see DarkMode::removeComboBoxCtrlSubclass()
+ * @see dmlib::removeComboBoxCtrlSubclass()
  */
-void DarkMode::setComboBoxCtrlSubclass(HWND hWnd)
+void dmlib::setComboBoxCtrlSubclass(HWND hWnd)
 {
-	const auto cbStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE) & CBS_DROPDOWNLIST;
+	const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+	const auto cbStyle = nStyle & CBS_DROPDOWNLIST;
+	if (cbStyle != CBS_DROPDOWNLIST)
+	{
+		::SetWindowLongPtr(hWnd, GWL_STYLE, nStyle | WS_CLIPCHILDREN);
+	}
 	dmlib_subclass::SetSubclass<dmlib_subclass::ComboBoxData>(hWnd, dmlib_subclass::ComboBoxSubclass, dmlib_subclass::SubclassID::comboBox, cbStyle);
 }
 
@@ -1408,9 +1498,9 @@ void DarkMode::setComboBoxCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the combo box control.
  *
  * @see dmlib_subclass::ComboBoxSubclass()
- * @see DarkMode::setComboBoxCtrlSubclass()
+ * @see dmlib::setComboBoxCtrlSubclass()
  */
-void DarkMode::removeComboBoxCtrlSubclass(HWND hWnd)
+void dmlib::removeComboBoxCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::ComboBoxData>(hWnd, dmlib_subclass::ComboBoxSubclass, dmlib_subclass::SubclassID::comboBox);
 }
@@ -1437,52 +1527,61 @@ void DarkMode::removeComboBoxCtrlSubclass(HWND hWnd)
  * @note Skips subclassing for `ComboBoxEx` parents to avoid conflicts.
  *
  * @see DarkModeParams
- * @see DarkMode::setComboBoxCtrlSubclass()
+ * @see dmlib::setComboBoxCtrlSubclass()
  */
-static void setComboBoxCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p)
+static void setComboBoxCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) DMLIB_MEM_NOEXCEPT
 {
 	const auto cbStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE) & CBS_DROPDOWNLIST;
 	const bool isCbList = cbStyle == CBS_DROPDOWNLIST;
 	const bool isCbSimple = cbStyle == CBS_SIMPLE;
 
-	if (isCbList
-		|| cbStyle == CBS_DROPDOWN
-		|| isCbSimple)
+	if (cbStyle == 0) // something wrong happened
 	{
-		COMBOBOXINFO cbi{};
-		cbi.cbSize = sizeof(COMBOBOXINFO);
-		if (::GetComboBoxInfo(hWnd, &cbi) == TRUE
-			&& p.m_theme
-			&& cbi.hwndList != nullptr)
-		{
-			if (isCbSimple)
-			{
-				DarkMode::replaceClientEdgeWithBorderSafe(cbi.hwndList);
-			}
+		return;
+	}
 
-			// DarkMode_Explorer does not restyle ComboLBox items (they stay
-			// white). Strip the visual style so WM_CTLCOLORLISTBOX is used.
-			::SetWindowTheme(cbi.hwndList, L"", L"");
+	COMBOBOXINFO cbi{};
+	cbi.cbSize = sizeof(COMBOBOXINFO);
+	if (::GetComboBoxInfo(hWnd, &cbi) == TRUE
+		&& p.m_theme
+		&& cbi.hwndList != nullptr)
+	{
+		if (isCbSimple)
+		{
+			dmlib::replaceClientEdgeWithBorderSafe(cbi.hwndList);
 		}
 
-		if (!dmlib_subclass::isThemePrefered() && p.m_subclass)
+		// dark scroll bar for list box of combo box
+		::SetWindowTheme(cbi.hwndList, p.m_themeClassName, nullptr);
+	}
+
+	if (!dmlib_subclass::isThemePrefered() && p.m_subclass)
+	{
+		if (HWND hParent = ::GetParent(hWnd);
+			hParent == nullptr
+			|| !dmlib_subclass::WndClassName::cmpWndClassName(hParent, WC_COMBOBOXEX))
 		{
-			if (HWND hParent = ::GetParent(hWnd);
-				hParent == nullptr
-				|| dmlib_subclass::getWndClassName(hParent) != WC_COMBOBOXEX)
-			{
-				DarkMode::setComboBoxCtrlSubclass(hWnd);
-			}
+			dmlib::setComboBoxCtrlSubclass(hWnd);
+		}
+	}
+
+	if (p.m_theme) // for light dropdown arrow in dark mode
+	{
+		if (HWND hParent = ::GetParent(hWnd);
+			doesWin11SupportDarkThemeStyle()
+			&& (hParent == nullptr
+				|| !dmlib_subclass::WndClassName::cmpWndClassName(hParent, WC_COMBOBOXEX)))
+		{
+			dmlib::setDarkThemeTheme(hWnd);
+		}
+		else
+		{
+			dmlib::setDarkThemeExperimentalEx(hWnd, L"CFD");
 		}
 
-		if (p.m_theme) // for light dropdown arrow in dark mode
+		if (!isCbList)
 		{
-			DarkMode::setDarkThemeExperimentalEx(hWnd, L"CFD");
-
-			if (!isCbList)
-			{
-				::SendMessage(hWnd, CB_SETEDITSEL, 0, 0); // clear selection
-			}
+			::SendMessage(hWnd, CB_SETEDITSEL, 0, 0); // clear selection
 		}
 	}
 }
@@ -1495,9 +1594,9 @@ static void setComboBoxCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p)
  * @note Uses IAT hooking for custom colors.
  *
  * @see dmlib_subclass::ComboBoxSubclass()
- * @see DarkMode::removeComboBoxExCtrlSubclass()
+ * @see dmlib::removeComboBoxExCtrlSubclass()
  */
-void DarkMode::setComboBoxExCtrlSubclass(HWND hWnd)
+void dmlib::setComboBoxExCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::ComboBoxExSubclass, dmlib_subclass::SubclassID::comboBoxEx);
 }
@@ -1510,12 +1609,12 @@ void DarkMode::setComboBoxExCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the ComboBoxEx control.
  *
  * @see dmlib_subclass::ComboBoxSubclass()
- * @see DarkMode::setComboBoxExCtrlSubclass()
+ * @see dmlib::setComboBoxExCtrlSubclass()
  */
-void DarkMode::removeComboBoxExCtrlSubclass(HWND hWnd)
+void dmlib::removeComboBoxExCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::ComboBoxExSubclass, dmlib_subclass::SubclassID::comboBoxEx);
-	dmlib_hook::unhookSysColor();
+	dmlib_hook::GetSysColor::unhook();
 }
 
 /**
@@ -1526,13 +1625,13 @@ void DarkMode::removeComboBoxExCtrlSubclass(HWND hWnd)
  * @param[in]   hWnd    Handle to the ComboBoxEx control.
  * @param[in]   p       Parameters controlling whether to apply subclassing.
  *
- * @see DarkMode::setComboBoxExCtrlSubclass()
+ * @see dmlib::setComboBoxExCtrlSubclass()
  */
 static void setComboBoxExCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_subclass)
 	{
-		DarkMode::setComboBoxExCtrlSubclass(hWnd);
+		dmlib::setComboBoxExCtrlSubclass(hWnd);
 	}
 }
 
@@ -1546,9 +1645,9 @@ static void setComboBoxExCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
  * @note Uses IAT hooking for gridlines colors.
  *
  * @see dmlib_subclass::ListViewSubclass()
- * @see DarkMode::removeListViewCtrlSubclass()
+ * @see dmlib::removeListViewCtrlSubclass()
  */
-void DarkMode::setListViewCtrlSubclass(HWND hWnd)
+void dmlib::setListViewCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::ListViewSubclass, dmlib_subclass::SubclassID::listView);
 }
@@ -1561,9 +1660,9 @@ void DarkMode::setListViewCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the list view control.
  *
  * @see dmlib_subclass::ListViewSubclass()
- * @see DarkMode::setListViewCtrlSubclass()
+ * @see dmlib::setListViewCtrlSubclass()
  */
-void DarkMode::removeListViewCtrlSubclass(HWND hWnd)
+void dmlib::removeListViewCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::ListViewSubclass, dmlib_subclass::SubclassID::listView);
 }
@@ -1578,42 +1677,52 @@ void DarkMode::removeListViewCtrlSubclass(HWND hWnd)
  * @param[in]   hWnd    Handle to the list view control.
  * @param[in]   p       Parameters controlling whether to apply theming and/or subclassing.
  *
- * @see DarkMode::setDarkListView()
- * @see DarkMode::setDarkListViewCheckboxes()
- * @see DarkMode::setDarkTooltips()
- * @see DarkMode::setListViewCtrlSubclass()
- * @see DarkMode::setHeaderCtrlSubclass()
+ * @see dmlib::setDarkListView()
+ * @see dmlib::setDarkListViewCheckboxes()
+ * @see dmlib::setDarkTooltips()
+ * @see dmlib::setListViewCtrlSubclass()
+ * @see dmlib::setHeaderCtrlSubclass()
  */
-static void setListViewCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
+static void setListViewCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) DMLIB_MEM_NOEXCEPT
 {
 	auto* hHeader = ListView_GetHeader(hWnd);
 
 	if (p.m_theme)
 	{
-		ListView_SetTextColor(hWnd, DarkMode::getViewTextColor());
-		ListView_SetTextBkColor(hWnd, DarkMode::getViewBackgroundColor());
-		ListView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
+		ListView_SetTextColor(hWnd, dmlib::getViewTextColor());
+		ListView_SetTextBkColor(hWnd, dmlib::getViewBackgroundColor());
+		ListView_SetBkColor(hWnd, dmlib::getViewBackgroundColor());
 
-		DarkMode::setDarkListView(hWnd);
-		DarkMode::setDarkListViewCheckboxes(hWnd);
-		DarkMode::setDarkTooltips(hWnd, static_cast<int>(DarkMode::ToolTipsType::listview));
+		dmlib::setDarkListView(hWnd);
+		dmlib::setDarkListViewCheckboxes(hWnd);
+		dmlib::setDarkTooltips(hWnd, static_cast<int>(dmlib::ToolTipsType::listview));
 
 		if (dmlib_subclass::isThemePrefered())
 		{
-			DarkMode::setDarkThemeExperimentalEx(hHeader, L"ItemsView");
+			if (doesWin11SupportDarkThemeStyle())
+			{
+				dmlib::setDarkThemeTheme(hHeader);
+			}
+			else
+			{
+				dmlib::setDarkThemeExperimentalEx(hHeader, L"ItemsView");
+			}
 		}
+
+		const bool isDisabled = dmlib::isEnabled() && ::IsWindowEnabled(hWnd) == FALSE;
+		dmlib::replaceClientEdgeWithBorderSafeEx(hWnd, isDisabled);
 	}
 
 	if (p.m_subclass)
 	{
 		if (!dmlib_subclass::isThemePrefered())
 		{
-			DarkMode::setHeaderCtrlSubclass(hHeader);
+			dmlib::setHeaderCtrlSubclass(hHeader);
 		}
 
 		const auto lvExStyle = ListView_GetExtendedListViewStyle(hWnd);
 		ListView_SetExtendedListViewStyle(hWnd, lvExStyle | LVS_EX_DOUBLEBUFFER);
-		DarkMode::setListViewCtrlSubclass(hWnd);
+		dmlib::setListViewCtrlSubclass(hWnd);
 	}
 }
 
@@ -1628,12 +1737,11 @@ static void setListViewCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcep
  * @note Uses `GetWindowLongPtr` to extract the style bits.
  *
  * @see dmlib_subclass::HeaderSubclass()
- * @see DarkMode::removeHeaderCtrlSubclass()
+ * @see dmlib::removeHeaderCtrlSubclass()
  */
-void DarkMode::setHeaderCtrlSubclass(HWND hWnd)
+void dmlib::setHeaderCtrlSubclass(HWND hWnd)
 {
-	const bool hasBtnStyle = (::GetWindowLongPtr(hWnd, GWL_STYLE) & HDS_BUTTONS) == HDS_BUTTONS;
-	dmlib_subclass::SetSubclass<dmlib_subclass::HeaderData>(hWnd, dmlib_subclass::HeaderSubclass, dmlib_subclass::SubclassID::header, hasBtnStyle);
+	dmlib_subclass::SetSubclass<dmlib_subclass::HeaderData>(hWnd, dmlib_subclass::HeaderSubclass, dmlib_subclass::SubclassID::header, hWnd);
 }
 
 /**
@@ -1644,9 +1752,9 @@ void DarkMode::setHeaderCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the header control.
  *
  * @see dmlib_subclass::HeaderSubclass()
- * @see DarkMode::setHeaderCtrlSubclass()
+ * @see dmlib::setHeaderCtrlSubclass()
  */
-void DarkMode::removeHeaderCtrlSubclass(HWND hWnd)
+void dmlib::removeHeaderCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::HeaderData>(hWnd, dmlib_subclass::HeaderSubclass, dmlib_subclass::SubclassID::header);
 }
@@ -1662,9 +1770,9 @@ void DarkMode::removeHeaderCtrlSubclass(HWND hWnd)
  * @note Uses `SystemParametersInfoW` to extract the `lfStatusFont` font.
  *
  * @see dmlib_subclass::StatusBarSubclass()
- * @see DarkMode::removeStatusBarCtrlSubclass()
+ * @see dmlib::removeStatusBarCtrlSubclass()
  */
-void DarkMode::setStatusBarCtrlSubclass(HWND hWnd)
+void dmlib::setStatusBarCtrlSubclass(HWND hWnd)
 {
 	const auto lf = LOGFONT{ dmlib_dpi::getSysFontForDpi(::GetParent(hWnd), dmlib_dpi::FontType::status) };
 	dmlib_subclass::SetSubclass<dmlib_subclass::StatusBarData>(hWnd, dmlib_subclass::StatusBarSubclass, dmlib_subclass::SubclassID::statusBar, ::CreateFontIndirectW(&lf));
@@ -1678,9 +1786,9 @@ void DarkMode::setStatusBarCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the status bar control.
  *
  * @see dmlib_subclass::StatusBarSubclass()
- * @see DarkMode::setStatusBarCtrlSubclass()
+ * @see dmlib::setStatusBarCtrlSubclass()
  */
-void DarkMode::removeStatusBarCtrlSubclass(HWND hWnd)
+void dmlib::removeStatusBarCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::StatusBarData>(hWnd, dmlib_subclass::StatusBarSubclass, dmlib_subclass::SubclassID::statusBar);
 }
@@ -1693,13 +1801,19 @@ void DarkMode::removeStatusBarCtrlSubclass(HWND hWnd)
  * @param[in]   hWnd    Handle to the status bar control.
  * @param[in]   p       Parameters controlling whether to apply subclassing.
  *
- * @see DarkMode::setStatusBarCtrlSubclass()
+ * @see dmlib::setStatusBarCtrlSubclass()
  */
 static void setStatusBarCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
 {
-	if (p.m_subclass)
+	if (p.m_theme
+		&& dmlib_subclass::isThemePrefered()
+		&& doesWin11SupportDarkThemeStyle())
 	{
-		DarkMode::setStatusBarCtrlSubclass(hWnd);
+		dmlib::setDarkThemeTheme(hWnd);
+	}
+	else if (p.m_subclass)
+	{
+		dmlib::setStatusBarCtrlSubclass(hWnd);
 	}
 }
 
@@ -1714,9 +1828,9 @@ static void setStatusBarCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
  * @note Uses `PBM_GETSTATE` to determine the current visual state.
  *
  * @see dmlib_subclass::ProgressBarSubclass()
- * @see DarkMode::removeProgressBarCtrlSubclass()
+ * @see dmlib::removeProgressBarCtrlSubclass()
  */
-void DarkMode::setProgressBarCtrlSubclass(HWND hWnd)
+void dmlib::setProgressBarCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::ProgressBarData>(hWnd, dmlib_subclass::ProgressBarSubclass, dmlib_subclass::SubclassID::progressBar, hWnd);
 }
@@ -1729,9 +1843,9 @@ void DarkMode::setProgressBarCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the progress bar control.
  *
  * @see dmlib_subclass::ProgressBarSubclass()
- * @see DarkMode::setProgressBarCtrlSubclass()
+ * @see dmlib::setProgressBarCtrlSubclass()
  */
-void DarkMode::removeProgressBarCtrlSubclass(HWND hWnd)
+void dmlib::removeProgressBarCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::ProgressBarData>(hWnd, dmlib_subclass::ProgressBarSubclass, dmlib_subclass::SubclassID::progressBar);
 }
@@ -1749,19 +1863,27 @@ void DarkMode::removeProgressBarCtrlSubclass(HWND hWnd)
  * @param[in]   hWnd    Handle to the progress bar control.
  * @param[in]   p       Parameters controlling whether to apply theming or subclassing.
  *
- * @see DarkMode::setProgressBarClassicTheme()
- * @see DarkMode::setProgressBarCtrlSubclass()
+ * @see dmlib::setProgressBarClassicTheme()
+ * @see dmlib::setProgressBarCtrlSubclass()
  */
 static void setProgressBarCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
 {
 	const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-	if (p.m_theme && (nStyle & PBS_MARQUEE) == PBS_MARQUEE)
+	if (p.m_theme)
 	{
-		DarkMode::setProgressBarClassicTheme(hWnd);
+		if ((nStyle & PBS_MARQUEE) == PBS_MARQUEE)
+		{
+			dmlib::setProgressBarClassicTheme(hWnd);
+		}
+		else if (doesWin11SupportDarkThemeStyle())
+		{
+			::SetWindowTheme(hWnd, dmlib::isExperimentalActive() ? L"DarkMode_CopyEngine" : nullptr, nullptr);
+		}
 	}
-	else if (p.m_subclass)
+
+	if (p.m_subclass && ((nStyle & PBS_MARQUEE) != PBS_MARQUEE))
 	{
-		DarkMode::setProgressBarCtrlSubclass(hWnd);
+		dmlib::setProgressBarCtrlSubclass(hWnd);
 	}
 }
 
@@ -1779,9 +1901,9 @@ static void setProgressBarCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
  * - Works only if `WM_ENABLE` message is sent.
  *
  * @see dmlib_subclass::StaticTextSubclass()
- * @see DarkMode::removeStaticTextCtrlSubclass()
+ * @see dmlib::removeStaticTextCtrlSubclass()
  */
-void DarkMode::setStaticTextCtrlSubclass(HWND hWnd)
+void dmlib::setStaticTextCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::StaticTextData>(hWnd, dmlib_subclass::StaticTextSubclass, dmlib_subclass::SubclassID::staticText, hWnd);
 }
@@ -1794,9 +1916,9 @@ void DarkMode::setStaticTextCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the static control.
  *
  * @see dmlib_subclass::StaticTextSubclass()
- * @see DarkMode::setStaticTextCtrlSubclass()
+ * @see dmlib::setStaticTextCtrlSubclass()
  */
-void DarkMode::removeStaticTextCtrlSubclass(HWND hWnd)
+void dmlib::removeStaticTextCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::StaticTextData>(hWnd, dmlib_subclass::StaticTextSubclass, dmlib_subclass::SubclassID::staticText);
 }
@@ -1809,13 +1931,13 @@ void DarkMode::removeStaticTextCtrlSubclass(HWND hWnd)
  * @param[in]   hWnd    Handle to the static control.
  * @param[in]   p       Parameters controlling whether to apply subclassing.
  *
- * @see DarkMode::setStaticTextCtrlSubclass()
+ * @see dmlib::setStaticTextCtrlSubclass()
  */
 static void setStaticTextCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_subclass)
 	{
-		DarkMode::setStaticTextCtrlSubclass(hWnd);
+		dmlib::setStaticTextCtrlSubclass(hWnd);
 	}
 }
 
@@ -1827,9 +1949,9 @@ static void setStaticTextCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
  * @param[in] hWnd Handle to the IP address control.
  *
  * @see dmlib_subclass::IPAddressSubclass()
- * @see DarkMode::removeIPAddressCtrlSubclass()
+ * @see dmlib::removeIPAddressCtrlSubclass()
  */
-void DarkMode::setIPAddressCtrlSubclass(HWND hWnd)
+void dmlib::setIPAddressCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::IPAddressSubclass, dmlib_subclass::SubclassID::ipAddress);
 }
@@ -1840,9 +1962,9 @@ void DarkMode::setIPAddressCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the IP address control.
  *
  * @see dmlib_subclass::IPAddressSubclass()
- * @see DarkMode::setIPAddressCtrlSubclass()
+ * @see dmlib::setIPAddressCtrlSubclass()
  */
-void DarkMode::removeIPAddressCtrlSubclass(HWND hWnd)
+void dmlib::removeIPAddressCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::IPAddressSubclass, dmlib_subclass::SubclassID::ipAddress);
 }
@@ -1856,18 +1978,18 @@ void DarkMode::removeIPAddressCtrlSubclass(HWND hWnd)
  * @param[in]   hWnd    Handle to the IP address control.
  * @param[in]   p       Parameters controlling whether to apply subclassing.
  *
- * @see DarkMode::setIPAddressCtrlSubclass()
+ * @see dmlib::setIPAddressCtrlSubclass()
  */
 static void setIPAddressCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_subclass)
 	{
-		DarkMode::setIPAddressCtrlSubclass(hWnd);
+		dmlib::setIPAddressCtrlSubclass(hWnd);
 	}
 
 	if (p.m_theme)
 	{
-		DarkMode::replaceClientEdgeWithBorderSafe(hWnd);
+		dmlib::replaceClientEdgeWithBorderSafe(hWnd);
 	}
 }
 
@@ -1879,9 +2001,9 @@ static void setIPAddressCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
  * @param[in] hWnd Handle to the hot key control.
  *
  * @see dmlib_subclass::HotKeySubclass()
- * @see DarkMode::removeHotKeyCtrlSubclass()
+ * @see dmlib::removeHotKeyCtrlSubclass()
  */
-void DarkMode::setHotKeyCtrlSubclass(HWND hWnd)
+void dmlib::setHotKeyCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::HotKeySubclass, dmlib_subclass::SubclassID::hotKey);
 }
@@ -1892,9 +2014,9 @@ void DarkMode::setHotKeyCtrlSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the hot key control.
  *
  * @see dmlib_subclass::HotKeySubclass()
- * @see DarkMode::setHotKeyCtrlSubclass()
+ * @see dmlib::setHotKeyCtrlSubclass()
  */
-void DarkMode::removeHotKeyCtrlSubclass(HWND hWnd)
+void dmlib::removeHotKeyCtrlSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::HotKeySubclass, dmlib_subclass::SubclassID::hotKey);
 }
@@ -1908,18 +2030,70 @@ void DarkMode::removeHotKeyCtrlSubclass(HWND hWnd)
  * @param[in]   hWnd    Handle to the hot key control.
  * @param[in]   p       Parameters controlling whether to apply subclassing.
  *
- * @see DarkMode::setHotKeyCtrlSubclass()
+ * @see dmlib::setHotKeyCtrlSubclass()
  */
 static void setHotKeyCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_subclass)
 	{
-		DarkMode::setHotKeyCtrlSubclass(hWnd);
+		dmlib::setHotKeyCtrlSubclass(hWnd);
 	}
 
 	if (p.m_theme)
 	{
-		DarkMode::replaceClientEdgeWithBorderSafe(hWnd);
+		dmlib::replaceClientEdgeWithBorderSafe(hWnd);
+	}
+}
+
+/**
+ * @brief Applies custom color subclassing to a date time picker control.
+ *
+ * Handles custom colors for date time picker control via hooks.
+ *
+ * @param[in] hWnd Handle to the date time picker control.
+ *
+ * @see dmlib_subclass::DTPSubclass()
+ * @see dmlib::removeDTPCtrlSubclass()
+ */
+void dmlib::setDTPCtrlSubclass(HWND hWnd)
+{
+	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::DTPSubclass, dmlib_subclass::SubclassID::dtp);
+}
+
+/**
+ * @brief Removes the custom color subclass from a date time picker control.
+ *
+ * @param[in] hWnd Handle to the date time picker control.
+ *
+ * @see dmlib_subclass::DTPSubclass()
+ * @see dmlib::setDTPCtrlSubclass()
+ */
+void dmlib::removeDTPCtrlSubclass(HWND hWnd)
+{
+	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::DTPSubclass, dmlib_subclass::SubclassID::dtp);
+}
+
+/**
+ * @brief Applies custom color subclassing to a date time picker control.
+ *
+ * Applies the subclass only if `p.m_subclass` is `true`.
+ * Disable visual style if to allow custom colors.
+ *
+ * @param[in]   hWnd    Handle to the date time picker control.
+ * @param[in]   p       Parameters controlling whether to apply subclassing.
+ *
+ * @see dmlib::setDTPCtrlSubclass()
+ */
+static void setDTPCtrlSubclassAndTheme(HWND hWnd, DarkModeParams p) noexcept
+{
+	if (p.m_subclass)
+	{
+		dmlib::setDTPCtrlSubclass(hWnd);
+	}
+
+	if (p.m_theme)
+	{
+		dmlib::disableVisualStyle(hWnd, dmlib::isEnabled());
 	}
 }
 
@@ -1932,18 +2106,20 @@ static void setHotKeyCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
  * @param[in]   hWnd    Handle to the tree view control.
  * @param[in]   p       Parameters controlling whether to apply theming.
  *
- * @see DarkMode::setTreeViewWindowTheme()
- * @see DarkMode::setDarkTooltips()
+ * @see dmlib::setDarkTreeViewCheckboxes(hWnd);
+ * @see dmlib::setTreeViewWindowTheme()
+ * @see dmlib::setDarkTooltips()
  */
 static void setTreeViewCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_theme)
 	{
-		TreeView_SetTextColor(hWnd, DarkMode::getViewTextColor());
-		TreeView_SetBkColor(hWnd, DarkMode::getViewBackgroundColor());
+		TreeView_SetTextColor(hWnd, dmlib::getViewTextColor());
+		TreeView_SetBkColor(hWnd, dmlib::getViewBackgroundColor());
 
-		DarkMode::setTreeViewWindowThemeEx(hWnd, p.m_theme);
-		DarkMode::setDarkTooltips(hWnd, static_cast<int>(DarkMode::ToolTipsType::treeview));
+		dmlib::setTreeViewWindowThemeEx(hWnd, p.m_theme);
+		dmlib::setDarkTreeViewCheckboxes(hWnd);
+		dmlib::setDarkTooltips(hWnd, static_cast<int>(dmlib::ToolTipsType::treeview));
 	}
 }
 
@@ -1955,13 +2131,13 @@ static void setTreeViewCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
  * @param[in]   hWnd    Handle to the rebar control.
  * @param[in]   p       Parameters controlling whether to apply subclassing.
  *
- * @see DarkMode::setWindowEraseBgSubclass()
+ * @see dmlib::setWindowEraseBgSubclass()
  */
 static void setRebarCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_subclass)
 	{
-		DarkMode::setWindowEraseBgSubclass(hWnd);
+		dmlib::setWindowEraseBgSubclass(hWnd);
 	}
 }
 
@@ -1974,15 +2150,15 @@ static void setRebarCtrlSubclass(HWND hWnd, DarkModeParams p) noexcept
  * @param[in]   hWnd    Handle to the toolbar control.
  * @param[in]   p       Parameters controlling whether to apply theming.
  *
- * @see DarkMode::setDarkLineAbovePanelToolbar()
- * @see DarkMode::setDarkTooltips()
+ * @see dmlib::setDarkLineAbovePanelToolbar()
+ * @see dmlib::setDarkTooltips()
  */
 static void setToolbarCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_theme)
 	{
-		DarkMode::setDarkLineAbovePanelToolbar(hWnd);
-		DarkMode::setDarkTooltips(hWnd, static_cast<int>(DarkMode::ToolTipsType::toolbar));
+		dmlib::setDarkLineAbovePanelToolbar(hWnd);
+		dmlib::setDarkTooltips(hWnd, static_cast<int>(dmlib::ToolTipsType::toolbar));
 	}
 }
 
@@ -1992,13 +2168,13 @@ static void setToolbarCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
  * @param[in]   hWnd    Handle to the scroll bar control.
  * @param[in]   p       Parameters controlling whether to apply theming.
  *
- * @see DarkMode::setDarkScrollBar()
+ * @see dmlib::setDarkScrollBar()
  */
 static void setScrollBarCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_theme)
 	{
-		DarkMode::setDarkScrollBar(hWnd);
+		dmlib::setDarkScrollBar(hWnd);
 	}
 }
 
@@ -2011,13 +2187,13 @@ static void setScrollBarCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
  * @param[in]   hWnd    Handle to the SysLink control.
  * @param[in]   p       Parameters controlling whether to apply theming.
  *
- * @see DarkMode::enableSysLinkCtrlCtlColor()
+ * @see dmlib::enableSysLinkCtrlCtlColor()
  */
 static void enableSysLinkCtrlCtlColor(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_theme)
 	{
-		DarkMode::enableSysLinkCtrlCtlColor(hWnd);
+		dmlib::enableSysLinkCtrlCtlColor(hWnd);
 	}
 }
 
@@ -2030,15 +2206,15 @@ static void enableSysLinkCtrlCtlColor(HWND hWnd, DarkModeParams p) noexcept
  * @param[in]   hWnd    Handle to the trackbar control.
  * @param[in]   p       Parameters controlling whether to apply theming.
  *
- * @see DarkMode::setWindowStyle()
- * @see DarkMode::setDarkTooltips()
+ * @see dmlib::setWindowStyle()
+ * @see dmlib::setDarkTooltips()
  */
 static void setTrackbarCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_theme)
 	{
-		DarkMode::setWindowStyle(hWnd, DarkMode::isEnabled(), TBS_TRANSPARENTBKGND);
-		DarkMode::setDarkTooltips(hWnd, static_cast<int>(DarkMode::ToolTipsType::trackbar));
+		dmlib::setWindowStyle(hWnd, dmlib::isEnabled(), TBS_TRANSPARENTBKGND);
+		dmlib::setDarkTooltips(hWnd, static_cast<int>(dmlib::ToolTipsType::trackbar));
 	}
 }
 
@@ -2048,13 +2224,29 @@ static void setTrackbarCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
  * @param[in]   hWnd    Handle to the rich edit control.
  * @param[in]   p       Parameters controlling whether to apply theming.
  *
- * @see DarkMode::setDarkRichEdit()
+ * @see dmlib::setDarkRichEdit()
  */
 static void setRichEditCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
 {
 	if (p.m_theme)
 	{
-		DarkMode::setDarkRichEdit(hWnd);
+		dmlib::setDarkRichEdit(hWnd);
+	}
+}
+
+/**
+ * @brief Applies theming to a month calendar control.
+ *
+ * @param[in]   hWnd    Handle to the month calendar control.
+ * @param[in]   p       Parameters controlling whether to apply theming.
+ *
+ * @see dmlib::setDarkMonthCalendar()
+ */
+static void setMonthCalendarCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
+{
+	if (p.m_theme)
+	{
+		dmlib::setDarkMonthCalendar(hWnd);
 	}
 }
 
@@ -2075,36 +2267,39 @@ static void setRichEditCtrlTheme(HWND hWnd, DarkModeParams p) noexcept
  *      `WC_LISTVIEW`, `WC_TREEVIEW`, `REBARCLASSNAME`, `TOOLBARCLASSNAME`,
  *      `UPDOWN_CLASS`, `WC_TABCONTROL`, `STATUSCLASSNAME`, `WC_SCROLLBAR`,
  *      `WC_COMBOBOXEX`, `PROGRESS_CLASS`, `WC_LINK`, `TRACKBAR_CLASS`,
- *      `RICHEDIT_CLASS`, `MSFTEDIT_CLASS`, `WC_IPADDRESS`, and `HOTKEY_CLASS`
+ *      `RICHEDIT_CLASS`, `MSFTEDIT_CLASS`, `WC_IPADDRESS`, `HOTKEY_CLASS`,
+ *      `DATETIMEPICK_CLASS`, and `MONTHCAL_CLASS`
  * - The `#32770` dialog class is commented out for debugging purposes.
  *
- * @see DarkMode::setChildCtrlsSubclassAndTheme()
- * @see DarkMode::setChildCtrlsTheme()
+ * @see dmlib::setChildCtrlsSubclassAndTheme()
+ * @see dmlib::setChildCtrlsTheme()
  * @see DarkModeParams
- * @see DarkMode::setBtnCtrlSubclassAndTheme()
- * @see DarkMode::setStaticTextCtrlSubclass()
- * @see DarkMode::setComboBoxCtrlSubclassAndTheme()
- * @see DarkMode::setCustomBorderForListBoxOrEditCtrlSubclassAndTheme()
- * @see DarkMode::setListViewCtrlSubclassAndTheme()
- * @see DarkMode::setTreeViewCtrlTheme()
- * @see DarkMode::setRebarCtrlSubclass()
- * @see DarkMode::setToolbarCtrlTheme()
- * @see DarkMode::setUpDownCtrlSubclassAndTheme()
- * @see DarkMode::setTabCtrlSubclassAndTheme()
- * @see DarkMode::setStatusBarCtrlSubclass()
- * @see DarkMode::setScrollBarCtrlTheme()
- * @see DarkMode::setComboBoxExCtrlSubclass()
- * @see DarkMode::setProgressBarCtrlSubclass()
- * @see DarkMode::enableSysLinkCtrlCtlColor()
- * @see DarkMode::setTrackbarCtrlTheme()
- * @see DarkMode::setRichEditCtrlTheme()
- * @see DarkMode::setIPAddressCtrlSubclass()
- * @see DarkMode::setHotKeyCtrlSubclass()
+ * @see setBtnCtrlSubclassAndTheme()
+ * @see setStaticTextCtrlSubclass()
+ * @see setComboBoxCtrlSubclassAndTheme()
+ * @see setCustomBorderForListBoxOrEditCtrlSubclassAndTheme()
+ * @see setListViewCtrlSubclassAndTheme()
+ * @see setTreeViewCtrlTheme()
+ * @see setRebarCtrlSubclass()
+ * @see setToolbarCtrlTheme()
+ * @see setUpDownCtrlSubclassAndTheme()
+ * @see setTabCtrlSubclassAndTheme()
+ * @see setStatusBarCtrlSubclass()
+ * @see setScrollBarCtrlTheme()
+ * @see setComboBoxExCtrlSubclass()
+ * @see setProgressBarCtrlSubclass()
+ * @see enableSysLinkCtrlCtlColor()
+ * @see setTrackbarCtrlTheme()
+ * @see setRichEditCtrlTheme()
+ * @see setIPAddressCtrlSubclass()
+ * @see setHotKeyCtrlSubclass()
+ * @see setDTPCtrlSubclassAndTheme()
+ * @see setMonthCalendarCtrlTheme()
  */
-static BOOL CALLBACK DarkEnumChildProc(HWND hWnd, LPARAM lParam)
+static BOOL CALLBACK DarkEnumChildProc(HWND hWnd, LPARAM lParam) DMLIB_MEM_NOEXCEPT
 {
 	const auto& p = *reinterpret_cast<DarkModeParams*>(lParam);
-	const std::wstring className = dmlib_subclass::getWndClassName(hWnd);
+	const auto className = dmlib_subclass::WndClassName(hWnd);
 
 	if (className == WC_BUTTON)
 	{
@@ -2226,18 +2421,20 @@ static BOOL CALLBACK DarkEnumChildProc(HWND hWnd, LPARAM lParam)
 		return TRUE;
 	}
 
-#if 0 // for debugging
-	if (className == L"#32770") // dialog
-	{
-		return TRUE;
-	}
-
 	if (className == DATETIMEPICK_CLASS) // date and time picker
 	{
+		setDTPCtrlSubclassAndTheme(hWnd, p);
 		return TRUE;
 	}
 
 	if (className == MONTHCAL_CLASS) // month calendar
+	{
+		setMonthCalendarCtrlTheme(hWnd, p);
+		return TRUE;
+	}
+
+#if 0 // for debugging
+	if (className == L"#32770") // dialog
 	{
 		return TRUE;
 	}
@@ -2258,14 +2455,14 @@ static BOOL CALLBACK DarkEnumChildProc(HWND hWnd, LPARAM lParam)
  * @param[in]   subclass    Whether to apply subclassing.
  * @param[in]   theme       Whether to apply theming.
  *
- * @see DarkMode::setChildCtrlsSubclassAndTheme()
- * @see DarkMode::DarkEnumChildProc()
+ * @see dmlib::setChildCtrlsSubclassAndTheme()
+ * @see dmlib::DarkEnumChildProc()
  * @see DarkModeParams
  */
-void DarkMode::setChildCtrlsSubclassAndThemeEx(HWND hParent, bool subclass, bool theme)
+void dmlib::setChildCtrlsSubclassAndThemeEx(HWND hParent, bool subclass, bool theme)
 {
 	DarkModeParams p{
-		DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr
+		dmlib::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr
 		, subclass
 		, theme
 	};
@@ -2274,17 +2471,17 @@ void DarkMode::setChildCtrlsSubclassAndThemeEx(HWND hParent, bool subclass, bool
 }
 
 /**
- * @brief Wrapper for `DarkMode::setChildCtrlsSubclassAndThemeEx`.
+ * @brief Wrapper for `dmlib::setChildCtrlsSubclassAndThemeEx`.
  *
- * Forwards to `DarkMode::setChildCtrlsSubclassAndThemeEx` with `subclass` and `theme` parameters set as `true`.
+ * Forwards to `dmlib::setChildCtrlsSubclassAndThemeEx` with `subclass` and `theme` parameters set as `true`.
  *
  * @param[in] hParent Handle to the parent window whose child controls will be themed and/or subclassed.
  *
- * @see DarkMode::setChildCtrlsSubclassAndThemeEx()
+ * @see dmlib::setChildCtrlsSubclassAndThemeEx()
  */
-void DarkMode::setChildCtrlsSubclassAndTheme(HWND hParent)
+void dmlib::setChildCtrlsSubclassAndTheme(HWND hParent)
 {
-	DarkMode::setChildCtrlsSubclassAndThemeEx(hParent, true, true);
+	dmlib::setChildCtrlsSubclassAndThemeEx(hParent, true, true);
 }
 
 /**
@@ -2300,14 +2497,14 @@ void DarkMode::setChildCtrlsSubclassAndTheme(HWND hParent)
  *
  * @param[in] hParent Handle to the parent window whose child controls will be themed.
  *
- * @see DarkMode::setChildCtrlsSubclassAndTheme()
+ * @see dmlib::setChildCtrlsSubclassAndTheme()
  */
-void DarkMode::setChildCtrlsTheme(HWND hParent)
+void dmlib::setChildCtrlsTheme(HWND hParent)
 {
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 1)
-	DarkMode::setChildCtrlsSubclassAndThemeEx(hParent, false, true);
+	dmlib::setChildCtrlsSubclassAndThemeEx(hParent, false, true);
 #else
-	DarkMode::setChildCtrlsSubclassAndThemeEx(hParent, false, DarkMode::isAtLeastWindows10());
+	dmlib::setChildCtrlsSubclassAndThemeEx(hParent, false, dmlib::isAtLeastWindows10());
 #endif
 }
 
@@ -2317,9 +2514,9 @@ void DarkMode::setChildCtrlsTheme(HWND hParent)
  * @param[in] hWnd Handle to the control to subclass.
  *
  * @see dmlib_subclass::WindowEraseBgSubclass()
- * @see DarkMode::removeWindowEraseBgSubclass()
+ * @see dmlib::removeWindowEraseBgSubclass()
  */
-void DarkMode::setWindowEraseBgSubclass(HWND hWnd)
+void dmlib::setWindowEraseBgSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::WindowEraseBgSubclass, dmlib_subclass::SubclassID::windowEraseBg);
 }
@@ -2332,9 +2529,9 @@ void DarkMode::setWindowEraseBgSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed window.
  *
  * @see dmlib_subclass::WindowEraseBgSubclass()
- * @see DarkMode::removeWindowEraseBgSubclass()
+ * @see dmlib::removeWindowEraseBgSubclass()
  */
-void DarkMode::removeWindowEraseBgSubclass(HWND hWnd)
+void dmlib::removeWindowEraseBgSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::WindowEraseBgSubclass, dmlib_subclass::SubclassID::windowEraseBg);
 }
@@ -2348,9 +2545,9 @@ void DarkMode::removeWindowEraseBgSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the parent or composite control (dialog, rebar, toolbar, ...) to subclass.
  *
  * @see dmlib_subclass::WindowCtlColorSubclass()
- * @see DarkMode::removeWindowCtlColorSubclass()
+ * @see dmlib::removeWindowCtlColorSubclass()
  */
-void DarkMode::setWindowCtlColorSubclass(HWND hWnd)
+void dmlib::setWindowCtlColorSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::WindowCtlColorSubclass, dmlib_subclass::SubclassID::windowCtlColor);
 }
@@ -2363,9 +2560,9 @@ void DarkMode::setWindowCtlColorSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed window.
  *
  * @see dmlib_subclass::WindowCtlColorSubclass()
- * @see DarkMode::setWindowCtlColorSubclass()
+ * @see dmlib::setWindowCtlColorSubclass()
  */
-void DarkMode::removeWindowCtlColorSubclass(HWND hWnd)
+void dmlib::removeWindowCtlColorSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::WindowCtlColorSubclass, dmlib_subclass::SubclassID::windowCtlColor);
 }
@@ -2380,9 +2577,9 @@ void DarkMode::removeWindowCtlColorSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the window with child which support `NM_CUSTOMDRAW`.
  *
  * @see dmlib_subclass::WindowNotifySubclass()
- * @see DarkMode::removeWindowNotifyCustomDrawSubclass()
+ * @see dmlib::removeWindowNotifyCustomDrawSubclass()
  */
-void DarkMode::setWindowNotifyCustomDrawSubclass(HWND hWnd)
+void dmlib::setWindowNotifyCustomDrawSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::WindowNotifySubclass, dmlib_subclass::SubclassID::windowNotify);
 }
@@ -2395,9 +2592,9 @@ void DarkMode::setWindowNotifyCustomDrawSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed window.
  *
  * @see dmlib_subclass::WindowNotifySubclass()
- * @see DarkMode::setWindowNotifyCustomDrawSubclass()
+ * @see dmlib::setWindowNotifyCustomDrawSubclass()
  */
-void DarkMode::removeWindowNotifyCustomDrawSubclass(HWND hWnd)
+void dmlib::removeWindowNotifyCustomDrawSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::WindowNotifySubclass, dmlib_subclass::SubclassID::windowNotify);
 }
@@ -2405,16 +2602,16 @@ void DarkMode::removeWindowNotifyCustomDrawSubclass(HWND hWnd)
 /**
  * @brief Applies window subclassing for menu bar themed custom drawing.
  *
- * Installs @ref DarkMode::WindowMenuBarSubclass with an associated `ThemeData` instance
+ * Installs @ref dmlib::WindowMenuBarSubclass with an associated `ThemeData` instance
  * for the `VSCLASS_MENU` visual style. Enables custom drawing
  * behavior for menu bar.
  *
  * @param[in] hWnd Handle to the window with a menu bar.
  *
  * @see dmlib_subclass::WindowMenuBarSubclass()
- * @see DarkMode::removeWindowMenuBarSubclass()
+ * @see dmlib::removeWindowMenuBarSubclass()
  */
-void DarkMode::setWindowMenuBarSubclass(HWND hWnd)
+void dmlib::setWindowMenuBarSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass<dmlib_subclass::ThemeData>(hWnd, dmlib_subclass::WindowMenuBarSubclass, dmlib_subclass::SubclassID::windowMenuBar, VSCLASS_MENU);
 }
@@ -2427,9 +2624,9 @@ void DarkMode::setWindowMenuBarSubclass(HWND hWnd)
  * @param[in] hWnd Handle to the previously subclassed window.
  *
  * @see dmlib_subclass::WindowMenuBarSubclass()
- * @see DarkMode::setWindowMenuBarSubclass()
+ * @see dmlib::setWindowMenuBarSubclass()
  */
-void DarkMode::removeWindowMenuBarSubclass(HWND hWnd)
+void dmlib::removeWindowMenuBarSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass<dmlib_subclass::ThemeData>(hWnd, dmlib_subclass::WindowMenuBarSubclass, dmlib_subclass::SubclassID::windowMenuBar);
 }
@@ -2442,10 +2639,10 @@ void DarkMode::removeWindowMenuBarSubclass(HWND hWnd)
  *
  * @param[in] hWnd Handle to the main window.
  *
- * @see DarkMode::WindowSettingChangeSubclass()
- * @see DarkMode::removeWindowSettingChangeSubclass()
+ * @see dmlib::WindowSettingChangeSubclass()
+ * @see dmlib::removeWindowSettingChangeSubclass()
  */
-void DarkMode::setWindowSettingChangeSubclass(HWND hWnd)
+void dmlib::setWindowSettingChangeSubclass(HWND hWnd)
 {
 	dmlib_subclass::SetSubclass(hWnd, dmlib_subclass::WindowSettingChangeSubclass, dmlib_subclass::SubclassID::windowSettingChange);
 }
@@ -2457,10 +2654,10 @@ void DarkMode::setWindowSettingChangeSubclass(HWND hWnd)
  *
  * @param[in] hWnd Handle to the previously subclassed window.
  *
- * @see DarkMode::WindowSettingChangeSubclass()
- * @see DarkMode::setWindowSettingChangeSubclass()
+ * @see dmlib::WindowSettingChangeSubclass()
+ * @see dmlib::setWindowSettingChangeSubclass()
  */
-void DarkMode::removeWindowSettingChangeSubclass(HWND hWnd)
+void dmlib::removeWindowSettingChangeSubclass(HWND hWnd)
 {
 	dmlib_subclass::RemoveSubclass(hWnd, dmlib_subclass::WindowSettingChangeSubclass, dmlib_subclass::SubclassID::windowSettingChange);
 }
@@ -2475,12 +2672,12 @@ void DarkMode::removeWindowSettingChangeSubclass(HWND hWnd)
  *
  * @note Will affect all items, even if it's static (non-clickable).
  */
-void DarkMode::enableSysLinkCtrlCtlColor(HWND hWnd)
+void dmlib::enableSysLinkCtrlCtlColor(HWND hWnd)
 {
 	LITEM lItem{};
 	lItem.iLink = 0;
 	lItem.mask = LIF_ITEMINDEX | LIF_STATE;
-	lItem.state = DarkMode::isEnabled() ? LIS_DEFAULTCOLORS : 0;
+	lItem.state = dmlib::isEnabled() ? LIS_DEFAULTCOLORS : 0;
 	lItem.stateMask = LIS_DEFAULTCOLORS;
 	while (::SendMessage(hWnd, LM_SETITEM, 0, reinterpret_cast<LPARAM>(&lItem)) == TRUE)
 	{
@@ -2512,26 +2709,26 @@ void DarkMode::enableSysLinkCtrlCtlColor(HWND hWnd)
  * @see DwmSetWindowAttribute
  * @see DwmExtendFrameIntoClientArea
  */
-void DarkMode::setDarkTitleBarEx(HWND hWnd, bool useWin11Features)
+void dmlib::setDarkTitleBarEx(HWND hWnd, bool useWin11Features)
 {
 	if (static constexpr DWORD win10Build2004 = 19041;
-		DarkMode::getWindowsBuildNumber() >= win10Build2004)
+		dmlib::getWindowsBuildNumber() >= win10Build2004)
 	{
-		const BOOL useDark = DarkMode::isExperimentalActive() ? TRUE : FALSE;
+		const BOOL useDark = dmlib::isExperimentalActive() ? TRUE : FALSE;
 		::DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDark, sizeof(useDark));
 	}
 #if defined(_DARKMODELIB_ALLOW_OLD_OS) && (_DARKMODELIB_ALLOW_OLD_OS > 0)
 	else
 	{
-		dmlib_win32api::AllowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
+		dmlib_win32api::AllowDarkModeForWindow(hWnd, dmlib::isExperimentalActive());
 		dmlib_win32api::RefreshTitleBarThemeColor(hWnd);
 	}
 #endif
 
-	if (!DarkMode::isAtLeastWindows11())
+	if (!dmlib::isAtLeastWindows11())
 	{
 		// on Windows 10 title bar needs refresh when changing colors
-		if (DarkMode::isAtLeastWindows10())
+		if (dmlib::isAtLeastWindows10())
 		{
 			const bool isActive = (hWnd == ::GetActiveWindow()) && (hWnd == ::GetForegroundWindow());
 			::SendMessage(hWnd, WM_NCACTIVATE, static_cast<WPARAM>(!isActive), 0);
@@ -2551,10 +2748,10 @@ void DarkMode::setDarkTitleBarEx(HWND hWnd, bool useWin11Features)
 	bool canColorizeTitleBar = true;
 
 	if (static constexpr DWORD win11Mica = 22621;
-		DarkMode::getWindowsBuildNumber() >= win11Mica)
+		dmlib::getWindowsBuildNumber() >= win11Mica)
 	{
 		if (g_dmCfg.m_micaExtend && g_dmCfg.m_mica != DWMSBT_AUTO
-			&& !DarkMode::isWindowsModeEnabled()
+			&& !dmlib::isWindowsModeEnabled()
 			&& (g_dmCfg.m_dmType == DarkModeType::dark))
 		{
 			static constexpr MARGINS margins{ -1, 0, 0, 0 };
@@ -2566,9 +2763,9 @@ void DarkMode::setDarkTitleBarEx(HWND hWnd, bool useWin11Features)
 		canColorizeTitleBar = !g_dmCfg.m_micaExtend;
 	}
 
-	canColorizeTitleBar = g_dmCfg.m_colorizeTitleBar && canColorizeTitleBar && DarkMode::isEnabled();
-	const COLORREF clrDlg = canColorizeTitleBar ? DarkMode::getDlgBackgroundColor() : DWMWA_COLOR_DEFAULT;
-	const COLORREF clrText = canColorizeTitleBar ? DarkMode::getTextColor() : DWMWA_COLOR_DEFAULT;
+	canColorizeTitleBar = g_dmCfg.m_colorizeTitleBar && canColorizeTitleBar && dmlib::isEnabled();
+	const COLORREF clrDlg = canColorizeTitleBar ? dmlib::getDlgBackgroundColor() : DWMWA_COLOR_DEFAULT;
+	const COLORREF clrText = canColorizeTitleBar ? dmlib::getTextColor() : DWMWA_COLOR_DEFAULT;
 	::DwmSetWindowAttribute(hWnd, DWMWA_CAPTION_COLOR, &clrDlg, sizeof(clrDlg));
 	::DwmSetWindowAttribute(hWnd, DWMWA_TEXT_COLOR, &clrText, sizeof(clrText));
 }
@@ -2580,11 +2777,33 @@ void DarkMode::setDarkTitleBarEx(HWND hWnd, bool useWin11Features)
  *
  * @param[in] hWnd Handle to the top-level window.
  *
- * @see DarkMode::setDarkTitleBarEx()
+ * @see dmlib::setDarkTitleBarEx()
  */
-void DarkMode::setDarkTitleBar(HWND hWnd)
+void dmlib::setDarkTitleBar(HWND hWnd)
 {
-	DarkMode::setDarkTitleBarEx(hWnd, false);
+	dmlib::setDarkTitleBarEx(hWnd, false);
+}
+
+/**
+ * @brief Get dark mode theme name.
+ *
+ * @return "DarkMode_DarkTheme" on Windows 11 25H2+
+ * @return "DarkMode_Explorer" on Windows 10+
+ * @return nullptr if not on supported OS
+ *
+ * @see doesWin11SupportDarkThemeStyle()
+ */
+const wchar_t* dmlib::getDarkModeThemeName()
+{
+	if (doesWin11SupportDarkThemeStyle())
+	{
+		return L"DarkMode_DarkTheme";
+	}
+	if (dmlib::isAtLeastWindows10())
+	{
+		return L"DarkMode_Explorer";
+	}
+	return nullptr;
 }
 
 /**
@@ -2598,16 +2817,16 @@ void DarkMode::setDarkTitleBar(HWND hWnd)
  *
  * @note This function is a no-op if experimental theming is not supported on the current OS.
  *
- * @see DarkMode::isExperimentalSupported()
- * @see DarkMode::isExperimentalActive()
+ * @see dmlib::isExperimentalSupported()
+ * @see dmlib::isExperimentalActive()
  * @see dmlib_win32api::AllowDarkModeForWindow()
- * @see DarkMode::setDarkThemeExperimental()
+ * @see dmlib::setDarkThemeExperimental()
  */
-void DarkMode::setDarkThemeExperimentalEx(HWND hWnd, const wchar_t* themeClassName)
+void dmlib::setDarkThemeExperimentalEx(HWND hWnd, const wchar_t* themeClassName)
 {
-	if (DarkMode::isExperimentalSupported())
+	if (dmlib::isExperimentalSupported())
 	{
-		dmlib_win32api::AllowDarkModeForWindow(hWnd, DarkMode::isExperimentalActive());
+		dmlib_win32api::AllowDarkModeForWindow(hWnd, dmlib::isExperimentalActive());
 		::SetWindowTheme(hWnd, themeClassName, nullptr);
 	}
 }
@@ -2615,15 +2834,15 @@ void DarkMode::setDarkThemeExperimentalEx(HWND hWnd, const wchar_t* themeClassNa
 /**
  * @brief Applies an experimental Explorer visual style to the specified window, if supported.
  *
- * Forwards to `DarkMode::setDarkThemeExperimentalEx` with `themeClassName` as `L"Explorer"`.
+ * Forwards to `dmlib::setDarkThemeExperimentalEx` with `themeClassName` as `L"Explorer"`.
  *
  * @param[in] hWnd Handle to the target window or control.
  *
- * @see DarkMode::setDarkThemeExperimentalEx()
+ * @see dmlib::setDarkThemeExperimentalEx()
  */
-void DarkMode::setDarkThemeExperimental(HWND hWnd)
+void dmlib::setDarkThemeExperimental(HWND hWnd)
 {
-	DarkMode::setDarkThemeExperimentalEx(hWnd, L"Explorer");
+	dmlib::setDarkThemeExperimentalEx(hWnd, L"Explorer");
 }
 
 /**
@@ -2634,24 +2853,24 @@ void DarkMode::setDarkThemeExperimental(HWND hWnd)
  *
  * @param[in] hWnd Handle to the control or window to theme.
  */
-void DarkMode::setDarkExplorerTheme(HWND hWnd)
+void dmlib::setDarkExplorerTheme(HWND hWnd)
 {
-	::SetWindowTheme(hWnd, DarkMode::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
+	::SetWindowTheme(hWnd, dmlib::isExperimentalActive() ? L"DarkMode_Explorer" : nullptr, nullptr);
 }
 
 /**
  * @brief Applies "DarkMode_Explorer" visual style to scroll bars.
  *
- * Convenience wrapper that calls @ref DarkMode::setDarkExplorerTheme to apply dark scroll bar
+ * Convenience wrapper that calls @ref dmlib::setDarkExplorerTheme to apply dark scroll bar
  * for compatible controls (e.g. list views, tree views).
  *
  * @param[in] hWnd Handle to the control with scroll bars.
  *
- * @see DarkMode::setDarkExplorerTheme()
+ * @see dmlib::setDarkExplorerTheme()
  */
-void DarkMode::setDarkScrollBar(HWND hWnd)
+void dmlib::setDarkScrollBar(HWND hWnd)
 {
-	DarkMode::setDarkExplorerTheme(hWnd);
+	dmlib::setDarkExplorerTheme(hWnd);
 }
 
 /**
@@ -2661,57 +2880,62 @@ void DarkMode::setDarkScrollBar(HWND hWnd)
  * (e.g. toolbar, list view, tree view, tab bar) to retrieve the tooltip handle.
  * If `ToolTipsType::tooltip` is specified, applies theming directly to `hWnd`.
  *
- * Internally calls @ref DarkMode::setDarkExplorerTheme to set dark tooltip.
+ * Internally calls @ref dmlib::setDarkExplorerTheme to set dark tooltip.
  *
  * @param[in]   hWnd        Handle to the parent control or tooltip.
  * @param[in]   tooltipType The tooltip context type (toolbar, list view, etc.).
  *
- * @see DarkMode::setDarkExplorerTheme()
+ * @see dmlib::setDarkExplorerTheme()
  * @see ToolTipsType
  */
-void DarkMode::setDarkTooltips(HWND hWnd, int tooltipType)
+void dmlib::setDarkTooltips(HWND hWnd, UINT tooltipType)
 {
+	if (tooltipType > static_cast<UINT>(dmlib::ToolTipsType::rebar))
+	{
+		return;
+	}
+
 	const auto type = static_cast<ToolTipsType>(tooltipType);
 	UINT msg = 0;
 	switch (type)
 	{
-		case DarkMode::ToolTipsType::toolbar:
+		case dmlib::ToolTipsType::toolbar:
 		{
 			msg = TB_GETTOOLTIPS;
 			break;
 		}
 
-		case DarkMode::ToolTipsType::listview:
+		case dmlib::ToolTipsType::listview:
 		{
 			msg = LVM_GETTOOLTIPS;
 			break;
 		}
 
-		case DarkMode::ToolTipsType::treeview:
+		case dmlib::ToolTipsType::treeview:
 		{
 			msg = TVM_GETTOOLTIPS;
 			break;
 		}
 
-		case DarkMode::ToolTipsType::tabbar:
+		case dmlib::ToolTipsType::tabbar:
 		{
 			msg = TCM_GETTOOLTIPS;
 			break;
 		}
 
-		case DarkMode::ToolTipsType::trackbar:
+		case dmlib::ToolTipsType::trackbar:
 		{
 			msg = TBM_GETTOOLTIPS;
 			break;
 		}
 
-		case DarkMode::ToolTipsType::rebar:
+		case dmlib::ToolTipsType::rebar:
 		{
 			msg = RB_GETTOOLTIPS;
 			break;
 		}
 
-		case DarkMode::ToolTipsType::tooltip:
+		case dmlib::ToolTipsType::tooltip:
 		{
 			msg = 0;
 			break;
@@ -2720,14 +2944,14 @@ void DarkMode::setDarkTooltips(HWND hWnd, int tooltipType)
 
 	if (msg == 0)
 	{
-		DarkMode::setDarkExplorerTheme(hWnd);
+		dmlib::setDarkExplorerTheme(hWnd);
 	}
 	else
 	{
 		auto hTips = reinterpret_cast<HWND>(::SendMessage(hWnd, msg, 0, 0));
 		if (hTips != nullptr)
 		{
-			DarkMode::setDarkExplorerTheme(hTips);
+			dmlib::setDarkExplorerTheme(hTips);
 		}
 	}
 }
@@ -2735,15 +2959,16 @@ void DarkMode::setDarkTooltips(HWND hWnd, int tooltipType)
 /**
  * @brief Applies "DarkMode_DarkTheme" visual style if supported and experimental mode is active.
  *
- * If OS is at least Windows 11 version 25H2 applies "DarkMode_DarkTheme" visual style,
+ * Applies "DarkMode_DarkTheme" visual style if supported,
  * else applies "DarkMode_Explorer" visual style.
  *
  * @param[in] hWnd Handle to the control or window to theme.
+ *
+ * @see dmlib::getDarkModeThemeName()
  */
-void DarkMode::setDarkThemeTheme(HWND hWnd)
+void dmlib::setDarkThemeTheme(HWND hWnd)
 {
-	static const wchar_t* themeName = isAtLeastWin11Ver25H2() ? L"DarkMode_DarkTheme" : L"DarkMode_Explorer";
-	::SetWindowTheme(hWnd, DarkMode::isExperimentalActive() ? themeName : nullptr, nullptr);
+	::SetWindowTheme(hWnd, dmlib::isExperimentalActive() ? dmlib::getDarkModeThemeName() : nullptr, nullptr);
 }
 
 /**
@@ -2755,15 +2980,15 @@ void DarkMode::setDarkThemeTheme(HWND hWnd)
  *
  * @param[in] hWnd Handle to the toolbar control.
  */
-void DarkMode::setDarkLineAbovePanelToolbar(HWND hWnd)
+void dmlib::setDarkLineAbovePanelToolbar(HWND hWnd)
 {
 	COLORSCHEME scheme{};
 	scheme.dwSize = sizeof(COLORSCHEME);
 
-	if (DarkMode::isEnabled())
+	if (dmlib::isEnabled())
 	{
-		scheme.clrBtnHighlight = DarkMode::getDlgBackgroundColor();
-		scheme.clrBtnShadow = DarkMode::getDlgBackgroundColor();
+		scheme.clrBtnHighlight = dmlib::getDlgBackgroundColor();
+		scheme.clrBtnShadow = dmlib::getDlgBackgroundColor();
 	}
 	else
 	{
@@ -2777,48 +3002,40 @@ void DarkMode::setDarkLineAbovePanelToolbar(HWND hWnd)
 /**
  * @brief Applies an experimental Explorer visual style to a list view.
  *
- * Uses @ref DarkMode::setDarkThemeExperimental with the `"Explorer"` theme class to adapt
+ * Uses @ref dmlib::setDarkThemeExperimental with the `"Explorer"` theme class to adapt
  * list view visuals (e.g. scroll bars, selection color) for dark mode, if supported.
  *
  * @param[in] hWnd Handle to the list view control.
  *
- * @see DarkMode::setDarkThemeExperimental()
+ * @see dmlib::setDarkThemeExperimental()
  */
-void DarkMode::setDarkListView(HWND hWnd)
+void dmlib::setDarkListView(HWND hWnd)
 {
-	DarkMode::setDarkThemeExperimental(hWnd);
+	dmlib::setDarkThemeExperimental(hWnd);
 }
 
 /**
- * @brief Replaces default list view checkboxes with themed dark-mode versions on Windows 11.
- *
- * If the list view uses `LVS_EX_CHECKBOXES` and is running on Windows 11 or later,
- * this function manually draws the unchecked and checked checkbox visuals using
- * themed drawing APIs, then inserts the resulting icons into the state image list.
+ * @brief Replaces list view or tree view image list checkbox state images with themed dark mode versions on Windows 11.
  *
  * Uses `"DarkMode_Explorer::Button"` as the theme class if experimental dark mode is active;
  * otherwise falls back to `VSCLASS_BUTTON`.
  *
- * @param[in] hWnd Handle to the list view control with extended checkbox style.
+ * @param[in]   hWnd          Handle to the control to change checkbox style.
+ * @param[in]   hImgList      Handle to the image list of control containing checkbox state images.
+ * @param[in]   viewCheckbox  Type of checkbox style.
  *
- * @note Does nothing on pre-Windows 11 systems or if checkboxes are not enabled.
+ * @note Does nothing on pre-Windows 11 systems.
  */
-void DarkMode::setDarkListViewCheckboxes(HWND hWnd)
+static void setDarkCheckboxes(HWND hWnd, HIMAGELIST hImgList, ViewCheckbox viewCheckbox) noexcept
 {
-	if (!DarkMode::isAtLeastWindows11())
-	{
-		return;
-	}
-
-	if (const auto lvExStyle = ListView_GetExtendedListViewStyle(hWnd);
-		(lvExStyle & LVS_EX_CHECKBOXES) != LVS_EX_CHECKBOXES)
+	if (!dmlib::isAtLeastWindows11())
 	{
 		return;
 	}
 
 	HDC hdc = ::GetDC(nullptr);
 
-	const bool useDark = DarkMode::isExperimentalActive() && DarkMode::isThemeDark();
+	const bool useDark = dmlib::isExperimentalActive() && dmlib::isThemeDark();
 	HTHEME hTheme = dmlib_dpi::OpenThemeDataForDpi(nullptr, useDark ? L"DarkMode_Explorer::Button" : VSCLASS_BUTTON, ::GetParent(hWnd));
 
 	SIZE szBox{};
@@ -2826,14 +3043,12 @@ void DarkMode::setDarkListViewCheckboxes(HWND hWnd)
 
 	const RECT rcBox{ 0, 0, szBox.cx, szBox.cy };
 
-	auto hImgList = ListView_GetImageList(hWnd, LVSIL_STATE);
 	if (hImgList == nullptr)
 	{
 		::CloseThemeData(hTheme);
 		::ReleaseDC(nullptr, hdc);
 		return;
 	}
-	::ImageList_RemoveAll(hImgList);
 
 	HDC hBoxDC = ::CreateCompatibleDC(hdc);
 	HBITMAP hBoxBmp = ::CreateCompatibleBitmap(hdc, szBox.cx, szBox.cy);
@@ -2847,23 +3062,55 @@ void DarkMode::setDarkListViewCheckboxes(HWND hWnd)
 	ii.hbmColor = hBoxBmp;
 	ii.hbmMask = hMaskBmp;
 
+	int idx = (viewCheckbox == ViewCheckbox::listView) ? 0 : 1; // tree view state images start from index 1
+
 	HICON hIcon = ::CreateIconIndirect(&ii);
-	if (hIcon != nullptr)
-	{
-		::ImageList_AddIcon(hImgList, hIcon);
-		::DestroyIcon(hIcon);
-		hIcon = nullptr;
-	}
 
-	::DrawThemeBackground(hTheme, hBoxDC, BP_CHECKBOX, CBS_CHECKEDNORMAL, &rcBox, nullptr);
-	ii.hbmColor = hBoxBmp;
-
-	hIcon = ::CreateIconIndirect(&ii);
-	if (hIcon != nullptr)
+	auto addIcon = [&hImgList, &idx, &hIcon]() noexcept
 	{
-		::ImageList_AddIcon(hImgList, hIcon);
-		::DestroyIcon(hIcon);
-		hIcon = nullptr;
+		if (hIcon != nullptr)
+		{
+			::ImageList_ReplaceIcon(hImgList, idx, hIcon);
+			::DestroyIcon(hIcon);
+			hIcon = nullptr;
+			++idx;
+		}
+	};
+
+	addIcon(); // unchecked state
+
+	auto addIconState = [&](int iStateId) noexcept
+	{
+		::DrawThemeBackground(hTheme, hBoxDC, BP_CHECKBOX, iStateId, &rcBox, nullptr);
+		ii.hbmColor = hBoxBmp;
+
+		hIcon = ::CreateIconIndirect(&ii);
+		addIcon();
+	};
+
+	addIconState(CBS_CHECKEDNORMAL);
+
+	if (viewCheckbox == ViewCheckbox::tvExtended)
+	{
+		const auto tvExStyle = TreeView_GetExtendedStyle(hWnd);
+
+		// Tree view check boxes: The extended check box states
+		// https://devblogs.microsoft.com/oldnewthing/20171205-00/?p=97525
+		// The image list states are added in the order: Partial, then dimmed, then exclusion.
+		if ((tvExStyle & TVS_EX_PARTIALCHECKBOXES) != 0)
+		{
+			addIconState(CBS_MIXEDNORMAL);
+		}
+
+		if ((tvExStyle & TVS_EX_DIMMEDCHECKBOXES) != 0)
+		{
+			addIconState(CBS_IMPLICITPRESSED); // make it different from CBS_CHECKEDNORMAL
+		}
+
+		if ((tvExStyle & TVS_EX_EXCLUSIONCHECKBOXES) != 0)
+		{
+			addIconState(CBS_EXCLUDEDNORMAL);
+		}
 	}
 
 	::SelectObject(hBoxDC, holdBmp);
@@ -2875,7 +3122,77 @@ void DarkMode::setDarkListViewCheckboxes(HWND hWnd)
 }
 
 /**
- * @brief Sets colors and edges for a RichEdit control.
+ * @brief Replaces default list view checkboxes with themed dark-mode versions on Windows 11.
+ *
+ * If the list view uses `LVS_EX_CHECKBOXES` and is running on Windows 11 or later,
+ * this function then manually draws the unchecked and checked checkbox visuals using
+ * themed drawing APIs, then inserts the resulting icons into the state image list.
+ *
+ * Uses `"DarkMode_Explorer::Button"` as the theme class if experimental dark mode is active;
+ * otherwise falls back to `VSCLASS_BUTTON`.
+ *
+ * @param[in] hWnd Handle to the list view control with extended checkbox style.
+ *
+ * @see setDarkCheckboxes()
+ *
+ * @note Does nothing on pre-Windows 11 systems or if checkboxes are not enabled.
+ */
+void dmlib::setDarkListViewCheckboxes(HWND hWnd)
+{
+	if (const auto lvExStyle = ListView_GetExtendedListViewStyle(hWnd);
+		(lvExStyle & LVS_EX_CHECKBOXES) != LVS_EX_CHECKBOXES)
+	{
+		return;
+	}
+
+	setDarkCheckboxes(hWnd, ListView_GetImageList(hWnd, LVSIL_STATE), ViewCheckbox::listView);
+}
+
+/**
+ * @brief Replaces default tree view checkboxes with themed dark-mode versions on Windows 11.
+ *
+ * If the tree view uses `TVS_CHECKBOXES` or any combination of `TVS_EX_PARTIALCHECKBOXES`,
+ * `TVS_EX_EXCLUSIONCHECKBOXES`, `TVS_EX_DIMMEDCHECKBOXES` extended styles and is running on
+ * Windows 11 or later, this function then manually draws the checkbox state visuals using
+ * themed drawing APIs, then inserts the resulting icons into the state image list.
+ *
+ * Uses `"DarkMode_Explorer::Button"` as the theme class if experimental dark mode is active;
+ * otherwise falls back to `VSCLASS_BUTTON`.
+ *
+ * @param[in] hWnd Handle to the tree view control with normal or extended checkbox style.
+ *
+ * @see setDarkCheckboxes()
+ *
+ * @note Does nothing on pre-Windows 11 systems or if checkboxes are not enabled.
+ */
+void dmlib::setDarkTreeViewCheckboxes(HWND hWnd)
+{
+	if (hWnd == nullptr)
+	{
+		return;
+	}
+
+	ViewCheckbox tvType = ViewCheckbox::tvSimple;
+	if (const auto tvStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+		(tvStyle & TVS_CHECKBOXES) == TVS_CHECKBOXES)
+	{
+		// do nothing tvType already has ViewCheckbox::tvSimple
+	}
+	else if (const auto tvExStyle = TreeView_GetExtendedStyle(hWnd);
+		(tvExStyle & (TVS_EX_PARTIALCHECKBOXES | TVS_EX_EXCLUSIONCHECKBOXES | TVS_EX_DIMMEDCHECKBOXES)) != 0)
+	{
+		tvType = ViewCheckbox::tvExtended;
+	}
+	else
+	{
+		return;
+	}
+
+	setDarkCheckboxes(hWnd, TreeView_GetImageList(hWnd, TVSIL_STATE), tvType);
+}
+
+/**
+ * @brief Sets colors and edges for a rich edit control.
  *
  * Determines if the control has `WS_BORDER` or `WS_EX_STATICEDGE`, and sets the background
  * accordingly: uses control background color when edged, otherwise dialog background.
@@ -2888,34 +3205,29 @@ void DarkMode::setDarkListViewCheckboxes(HWND hWnd)
  * When not in dark mode, restores default visual styles and coloring.
  * Also conditionally swaps `WS_BORDER` and `WS_EX_CLIENTEDGE`.
  *
- * @param[in] hWnd Handle to the RichEdit control.
+ * @param[in] hWnd Handle to the rich edit control.
  *
- * @see DarkMode::setWindowStyle()
- * @see DarkMode::setWindowExStyle()
+ * @see dmlib::setWindowStyle()
+ * @see dmlib::setWindowExStyle()
  */
-void DarkMode::setDarkRichEdit(HWND hWnd)
+void dmlib::setDarkRichEdit(HWND hWnd)
 {
 	const auto nStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
-	const bool hasBorder = (nStyle & WS_BORDER) == WS_BORDER;
-
 	const bool isReadOnly = (nStyle & ES_READONLY) == ES_READONLY;
-
-	const auto nExStyle = ::GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
-	const bool hasClientEdge = (nExStyle & WS_EX_CLIENTEDGE) == WS_EX_CLIENTEDGE;
 
 	CHARFORMATW cf{};
 	cf.cbSize = sizeof(CHARFORMATW);
 	cf.dwMask = CFM_COLOR;
 
-	if (DarkMode::isEnabled())
+	if (dmlib::isEnabled())
 	{
-		const COLORREF clrBg = (!isReadOnly ? DarkMode::getCtrlBackgroundColor() : DarkMode::getDlgBackgroundColor());
+		const COLORREF clrBg = (!isReadOnly ? dmlib::getCtrlBackgroundColor() : dmlib::getDlgBackgroundColor());
 		::SendMessage(hWnd, EM_SETBKGNDCOLOR, 0, static_cast<LPARAM>(clrBg));
 
-		cf.crTextColor = DarkMode::getTextColor();
+		cf.crTextColor = dmlib::getTextColor();
 		::SendMessage(hWnd, EM_SETCHARFORMAT, SCF_DEFAULT, reinterpret_cast<LPARAM>(&cf));
 
-		::SetWindowTheme(hWnd, nullptr, DarkMode::isExperimentalActive() ? L"DarkMode_Explorer::ScrollBar" : nullptr);
+		::SetWindowTheme(hWnd, nullptr, dmlib::isExperimentalActive() ? L"DarkMode_Explorer::ScrollBar" : nullptr);
 	}
 	else
 	{
@@ -2926,8 +3238,31 @@ void DarkMode::setDarkRichEdit(HWND hWnd)
 		::SetWindowTheme(hWnd, nullptr, nullptr);
 	}
 
-	DarkMode::setWindowStyle(hWnd, DarkMode::isEnabled() || !hasClientEdge, WS_BORDER);
-	DarkMode::setWindowExStyle(hWnd, !DarkMode::isEnabled() || !hasBorder, WS_EX_CLIENTEDGE);
+	dmlib::replaceClientEdgeWithBorderSafe(hWnd);
+}
+
+/**
+ * @brief Sets colors for month calendar control.
+ *
+ * To set colors visual style needs to be disabled.
+ * Title background and header day text use same color #0078D7 Windows accent blue.
+ *
+ * @param[in] hWnd Handle to the month calendar control.
+ *
+ * @see dmlib::disableVisualStyle()
+ */
+void dmlib::setDarkMonthCalendar(HWND hWnd)
+{
+	dmlib::disableVisualStyle(hWnd, dmlib::isEnabled());
+	MonthCal_SetColor(hWnd, MCSC_BACKGROUND, dmlib::isEnabled() ? dmlib::getDlgBackgroundColor() : ::GetSysColor(COLOR_3DFACE));
+	if (dmlib::isEnabled())
+	{
+		MonthCal_SetColor(hWnd, MCSC_MONTHBK, dmlib::getCtrlBackgroundColor());
+		MonthCal_SetColor(hWnd, MCSC_TEXT, dmlib::getTextColor());
+		MonthCal_SetColor(hWnd, MCSC_TITLEBK, dmlib_color::kAccentBlue);
+		MonthCal_SetColor(hWnd, MCSC_TITLETEXT, dmlib::getTextColor());
+		MonthCal_SetColor(hWnd, MCSC_TRAILINGTEXT, dmlib::getDisabledTextColor());
+	}
 }
 
 /**
@@ -2942,40 +3277,40 @@ void DarkMode::setDarkRichEdit(HWND hWnd)
  * @param[in]   hWnd                Handle to the window. No action taken if `nullptr`.
  * @param[in]   useWin11Features    `true` to enable Windows 11 specific styling like Mica or rounded corners.
  *
- * @note Should not be used in combination with @ref DarkMode::setDarkWndNotifySafeEx
- *       and @ref DarkMode::setDarkWndNotifySafe to avoid overlapping styling logic.
+ * @note Should not be used in combination with @ref dmlib::setDarkWndNotifySafeEx
+ *       and @ref dmlib::setDarkWndNotifySafe to avoid overlapping styling logic.
  *
- * @see DarkMode::setDarkWndNotifySafeEx()
- * @see DarkMode::setDarkWndNotifySafe()
- * @see DarkMode::setDarkTitleBarEx()
- * @see DarkMode::setWindowCtlColorSubclass()
- * @see DarkMode::setChildCtrlsSubclassAndTheme()
- * @see DarkMode::setDarkWndSafe()
+ * @see dmlib::setDarkWndNotifySafeEx()
+ * @see dmlib::setDarkWndNotifySafe()
+ * @see dmlib::setDarkTitleBarEx()
+ * @see dmlib::setWindowCtlColorSubclass()
+ * @see dmlib::setChildCtrlsSubclassAndTheme()
+ * @see dmlib::setDarkWndSafe()
  */
-void DarkMode::setDarkWndSafeEx(HWND hWnd, bool useWin11Features)
+void dmlib::setDarkWndSafeEx(HWND hWnd, bool useWin11Features)
 {
 	if (hWnd == nullptr)
 	{
 		return;
 	}
 
-	DarkMode::setDarkTitleBarEx(hWnd, useWin11Features);
-	DarkMode::setWindowCtlColorSubclass(hWnd);
-	DarkMode::setChildCtrlsSubclassAndTheme(hWnd);
+	dmlib::setDarkTitleBarEx(hWnd, useWin11Features);
+	dmlib::setWindowCtlColorSubclass(hWnd);
+	dmlib::setChildCtrlsSubclassAndTheme(hWnd);
 }
 
 /**
  * @brief Applies visual styles; ctl color message and child controls subclassings with Windows 11 features.
  *
- * Forwards to `DarkMode::setDarkWndSafeEx` with parameter `useWin11Features` as `true`.
+ * Forwards to `dmlib::setDarkWndSafeEx` with parameter `useWin11Features` as `true`.
  *
  * @param[in] hWnd Handle to the window.
  *
- * @see DarkMode::setDarkWndSafeEx()
+ * @see dmlib::setDarkWndSafeEx()
  */
-void DarkMode::setDarkWndSafe(HWND hWnd)
+void dmlib::setDarkWndSafe(HWND hWnd)
 {
-	DarkMode::setDarkWndSafeEx(hWnd, true);
+	dmlib::setDarkWndSafeEx(hWnd, true);
 }
 
 /**
@@ -2993,54 +3328,54 @@ void DarkMode::setDarkWndSafe(HWND hWnd)
  * @param[in]   useWin11Features            `true` to enable Windows 11 specific styling like Mica or rounded corners.
  *
  * @note `setSettingChangeSubclass = true` should be used only on main window.
- *       For other secondary windows and controls use @ref DarkMode::setDarkWndNotifySafe.
- *       Should not be used in combination with @ref DarkMode::setDarkWndSafe
- *       and @ref DarkMode::setDarkWndNotifySafe to avoid overlapping styling logic.
+ *       For other secondary windows and controls use @ref dmlib::setDarkWndNotifySafe.
+ *       Should not be used in combination with @ref dmlib::setDarkWndSafe
+ *       and @ref dmlib::setDarkWndNotifySafe to avoid overlapping styling logic.
  *
- * @see DarkMode::setDarkWndNotifySafe()
- * @see DarkMode::setDarkWndSafe()
- * @see DarkMode::setDarkTitleBarEx()
- * @see DarkMode::setWindowCtlColorSubclass()
- * @see DarkMode::setWindowNotifyCustomDrawSubclass()
- * @see DarkMode::setChildCtrlsSubclassAndTheme()
- * @see DarkMode::isWindowsModeEnabled()
- * @see DarkMode::setWindowSettingChangeSubclass()
+ * @see dmlib::setDarkWndNotifySafe()
+ * @see dmlib::setDarkWndSafe()
+ * @see dmlib::setDarkTitleBarEx()
+ * @see dmlib::setWindowCtlColorSubclass()
+ * @see dmlib::setWindowNotifyCustomDrawSubclass()
+ * @see dmlib::setChildCtrlsSubclassAndTheme()
+ * @see dmlib::isWindowsModeEnabled()
+ * @see dmlib::setWindowSettingChangeSubclass()
  */
-void DarkMode::setDarkWndNotifySafeEx(HWND hWnd, bool setSettingChangeSubclass, bool useWin11Features)
+void dmlib::setDarkWndNotifySafeEx(HWND hWnd, bool setSettingChangeSubclass, bool useWin11Features)
 {
 	if (hWnd == nullptr)
 	{
 		return;
 	}
 
-	DarkMode::setDarkTitleBarEx(hWnd, useWin11Features);
-	DarkMode::setWindowCtlColorSubclass(hWnd);
-	DarkMode::setWindowNotifyCustomDrawSubclass(hWnd);
-	DarkMode::setChildCtrlsSubclassAndTheme(hWnd);
-	if (setSettingChangeSubclass && DarkMode::isWindowsModeEnabled())
+	dmlib::setDarkTitleBarEx(hWnd, useWin11Features);
+	dmlib::setWindowCtlColorSubclass(hWnd);
+	dmlib::setWindowNotifyCustomDrawSubclass(hWnd);
+	dmlib::setChildCtrlsSubclassAndTheme(hWnd);
+	if (setSettingChangeSubclass && dmlib::isWindowsModeEnabled())
 	{
-		DarkMode::setWindowSettingChangeSubclass(hWnd);
+		dmlib::setWindowSettingChangeSubclass(hWnd);
 	}
 }
 
 /**
  * @brief Applies visual styles; ctl color message, child controls, and custom drawing subclassings with Windows 11 features.
  *
- * Calls @ref DarkMode::setDarkWndNotifySafeEx with `setSettingChangeSubclass = false`
+ * Calls @ref dmlib::setDarkWndNotifySafeEx with `setSettingChangeSubclass = false`
  * and `useWin11Features = true`, streamlining dark mode setup for secondary or transient windows
  * that don't need to track system dark mode changes.
  *
  * @param[in] hWnd Handle to the target window.
  *
- * @note Should not be used in combination with @ref DarkMode::setDarkWndSafe
- *       and @ref DarkMode::setDarkWndNotifySafeEx to avoid overlapping styling logic.
+ * @note Should not be used in combination with @ref dmlib::setDarkWndSafe
+ *       and @ref dmlib::setDarkWndNotifySafeEx to avoid overlapping styling logic.
  *
- * @see DarkMode::setDarkWndNotifySafeEx()
- * @see DarkMode::setDarkWndSafe()
+ * @see dmlib::setDarkWndNotifySafeEx()
+ * @see dmlib::setDarkWndSafe()
  */
-void DarkMode::setDarkWndNotifySafe(HWND hWnd)
+void dmlib::setDarkWndNotifySafe(HWND hWnd)
 {
-	DarkMode::setDarkWndNotifySafeEx(hWnd, false, true);
+	dmlib::setDarkWndNotifySafeEx(hWnd, false, true);
 }
 
 /**
@@ -3055,7 +3390,7 @@ void DarkMode::setDarkWndNotifySafe(HWND hWnd)
  *
  * @see EnableThemeDialogTexture
  */
-void DarkMode::enableThemeDialogTexture(HWND hWnd, bool theme)
+void dmlib::enableThemeDialogTexture(HWND hWnd, bool theme)
 {
 	::EnableThemeDialogTexture(hWnd, theme && (g_dmCfg.m_dmType == DarkModeType::classic) ? ETDT_ENABLETAB : ETDT_DISABLE);
 }
@@ -3071,7 +3406,7 @@ void DarkMode::enableThemeDialogTexture(HWND hWnd, bool theme)
  *
  * @see SetWindowTheme
  */
-void DarkMode::disableVisualStyle(HWND hWnd, bool doDisable)
+void dmlib::disableVisualStyle(HWND hWnd, bool doDisable)
 {
 	if (doDisable)
 	{
@@ -3091,7 +3426,7 @@ void DarkMode::disableVisualStyle(HWND hWnd, bool doDisable)
  * @param[in] clr COLORREF in 0xBBGGRR format.
  * @return Lightness value as a double.
  */
-double DarkMode::calculatePerceivedLightness(COLORREF clr)
+double dmlib::calculatePerceivedLightness(COLORREF clr)
 {
 	return dmlib_color::calculatePerceivedLightness(clr);
 }
@@ -3101,7 +3436,7 @@ double DarkMode::calculatePerceivedLightness(COLORREF clr)
  *
  * @return Integer with enum value corresponding to the current `TreeViewStyle`.
  */
-int DarkMode::getTreeViewStyle()
+int dmlib::getTreeViewStyle()
 {
 	return static_cast<int>(g_dmCfg.m_tvStyle);
 }
@@ -3111,7 +3446,7 @@ int DarkMode::getTreeViewStyle()
  *
  * @param tvStyle TreeView style to set.
  */
-static void setTreeViewStyle(DarkMode::TreeViewStyle tvStyle) noexcept
+static void setTreeViewStyle(dmlib::TreeViewStyle tvStyle) noexcept
 {
 	g_dmCfg.m_tvStyle = tvStyle;
 }
@@ -3124,16 +3459,16 @@ static void setTreeViewStyle(DarkMode::TreeViewStyle tvStyle) noexcept
  * is based on how far the lightness deviates from the middle gray threshold range
  * around the midpoint value (50.0).
  *
- * @see DarkMode::calculatePerceivedLightness()
+ * @see dmlib::calculatePerceivedLightness()
  */
-void DarkMode::calculateTreeViewStyle()
+void dmlib::calculateTreeViewStyle()
 {
 	static constexpr double middle = 50.0;
 
-	if (const COLORREF bgColor = DarkMode::getViewBackgroundColor();
-		g_dmCfg.m_tvBackground != bgColor || g_dmCfg.m_lightness == middle)
+	if (const COLORREF bgColor = dmlib::getViewBackgroundColor();
+		g_dmCfg.m_tvBackground != bgColor || (g_dmCfg.m_lightness - middle) == 0.0)
 	{
-		g_dmCfg.m_lightness = DarkMode::calculatePerceivedLightness(bgColor);
+		g_dmCfg.m_lightness = dmlib::calculatePerceivedLightness(bgColor);
 		g_dmCfg.m_tvBackground = bgColor;
 	}
 
@@ -3155,7 +3490,7 @@ void DarkMode::calculateTreeViewStyle()
  * @brief (Re)applies the appropriate window theme style to the specified TreeView .
  *
  * Updates the TreeView's visual behavior and theme based on the currently selected
- * style @ref DarkMode::getTreeViewStyle. It conditionally adjusts the `TVS_TRACKSELECT`
+ * style @ref dmlib::getTreeViewStyle. It conditionally adjusts the `TVS_TRACKSELECT`
  * style flag and applies a matching visual theme using `SetWindowTheme()`.
  *
  * If `force` is `true`, the style is applied regardless of previous state.
@@ -3169,12 +3504,12 @@ void DarkMode::calculateTreeViewStyle()
  * @param[in]   force   Whether to forcibly reapply the style even if unchanged.
  *
  * @see TreeViewStyle
- * @see DarkMode::getTreeViewStyle()
- * @see DarkMode::getPrevTreeViewStyle()
+ * @see dmlib::getTreeViewStyle()
+ * @see dmlib::getPrevTreeViewStyle()
  */
-void DarkMode::setTreeViewWindowThemeEx(HWND hWnd, bool force)
+void dmlib::setTreeViewWindowThemeEx(HWND hWnd, bool force)
 {
-	if (!force && DarkMode::getPrevTreeViewStyle() == DarkMode::getTreeViewStyle())
+	if (!force && dmlib::getPrevTreeViewStyle() == dmlib::getTreeViewStyle())
 	{
 		return;
 	}
@@ -3182,9 +3517,9 @@ void DarkMode::setTreeViewWindowThemeEx(HWND hWnd, bool force)
 	auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 	const bool hasHotStyle = (nStyle & TVS_TRACKSELECT) == TVS_TRACKSELECT;
 	bool change = false;
-	std::wstring strSubAppName;
+	const wchar_t* strSubAppName = nullptr;
 
-	switch (static_cast<TreeViewStyle>(DarkMode::getTreeViewStyle()))
+	switch (static_cast<TreeViewStyle>(dmlib::getTreeViewStyle()))
 	{
 		case TreeViewStyle::light:
 		{
@@ -3199,7 +3534,7 @@ void DarkMode::setTreeViewWindowThemeEx(HWND hWnd, bool force)
 
 		case TreeViewStyle::dark:
 		{
-			if (DarkMode::isExperimentalSupported())
+			if (dmlib::isExperimentalSupported())
 			{
 				if (!hasHotStyle)
 				{
@@ -3219,7 +3554,6 @@ void DarkMode::setTreeViewWindowThemeEx(HWND hWnd, bool force)
 				nStyle &= ~TVS_TRACKSELECT;
 				change = true;
 			}
-			strSubAppName = L"";
 			break;
 		}
 	}
@@ -3229,22 +3563,22 @@ void DarkMode::setTreeViewWindowThemeEx(HWND hWnd, bool force)
 		::SetWindowLongPtr(hWnd, GWL_STYLE, nStyle);
 	}
 
-	::SetWindowTheme(hWnd, strSubAppName.empty() ? nullptr : strSubAppName.c_str(), nullptr);
+	::SetWindowTheme(hWnd, strSubAppName, nullptr);
 }
 
 /**
  * @brief Applies the appropriate window theme style to the specified TreeView.
  *
- * Forwards to `DarkMode::setTreeViewWindowThemeEx` with `force = false` to change tree view style
+ * Forwards to `dmlib::setTreeViewWindowThemeEx` with `force = false` to change tree view style
  * only if needed.
  *
  * @param[in] hWnd  Handle to the TreeView control.
  *
- * @see DarkMode::setTreeViewWindowThemeEx()
+ * @see dmlib::setTreeViewWindowThemeEx()
  */
-void DarkMode::setTreeViewWindowTheme(HWND hWnd)
+void dmlib::setTreeViewWindowTheme(HWND hWnd)
 {
-	DarkMode::setTreeViewWindowThemeEx(hWnd, false);
+	dmlib::setTreeViewWindowThemeEx(hWnd, false);
 }
 
 /**
@@ -3252,7 +3586,7 @@ void DarkMode::setTreeViewWindowTheme(HWND hWnd)
  *
  * @return Reference to the previous `TreeViewStyle`.
  */
-int DarkMode::getPrevTreeViewStyle()
+int dmlib::getPrevTreeViewStyle()
 {
 	return static_cast<int>(g_dmCfg.m_tvStylePrev);
 }
@@ -3260,9 +3594,9 @@ int DarkMode::getPrevTreeViewStyle()
 /**
  * @brief Stores the current TreeView style as the previous style for later comparison.
  */
-void DarkMode::setPrevTreeViewStyle()
+void dmlib::setPrevTreeViewStyle()
 {
-	g_dmCfg.m_tvStylePrev = static_cast<TreeViewStyle>(DarkMode::getTreeViewStyle());
+	g_dmCfg.m_tvStylePrev = static_cast<TreeViewStyle>(dmlib::getTreeViewStyle());
 }
 
 /**
@@ -3272,11 +3606,11 @@ void DarkMode::setPrevTreeViewStyle()
  *
  * @return `true` if the active style is `TreeViewStyle::dark`, otherwise `false`.
  *
- * @see DarkMode::getTreeViewStyle()
+ * @see dmlib::getTreeViewStyle()
  */
-bool DarkMode::isThemeDark()
+bool dmlib::isThemeDark()
 {
-	return static_cast<TreeViewStyle>(DarkMode::getTreeViewStyle()) == TreeViewStyle::dark;
+	return static_cast<TreeViewStyle>(dmlib::getTreeViewStyle()) == TreeViewStyle::dark;
 }
 
 /**
@@ -3287,12 +3621,12 @@ bool DarkMode::isThemeDark()
  * @return `true` if the perceived lightness of the color
  *         is less than (50.0 - kMiddleGrayRange), otherwise `false`.
  *
- * @see DarkMode::calculatePerceivedLightness()
+ * @see dmlib::calculatePerceivedLightness()
  */
-bool DarkMode::isColorDark(COLORREF clr)
+bool dmlib::isColorDark(COLORREF clr)
 {
 	static constexpr double middle = 50.0;
-	return DarkMode::calculatePerceivedLightness(clr) < (middle - kMiddleGrayRange);
+	return dmlib::calculatePerceivedLightness(clr) < (middle - kMiddleGrayRange);
 }
 
 /**
@@ -3303,7 +3637,7 @@ bool DarkMode::isColorDark(COLORREF clr)
  *
  * @param[in] hWnd Handle to the target window.
  */
-void DarkMode::redrawWindowFrame(HWND hWnd)
+void dmlib::redrawWindowFrame(HWND hWnd)
 {
 	::SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 }
@@ -3343,17 +3677,17 @@ static int setWindowLongPtrStyle(HWND hWnd, bool setFlag, LONG_PTR dwFlag, int g
  * @brief Sets a window's standard style flags and redraws window if needed.
  *
  * Wraps @ref setWindowLongPtrStyle with `GWL_STYLE`
- * and calls @ref DarkMode::redrawWindowFrame if a change occurs.
+ * and calls @ref dmlib::redrawWindowFrame if a change occurs.
  *
  * @param[in]   hWnd        Handle to the target window.
  * @param[in]   setStyle    `true` to set the flag, `false` to remove it.
  * @param[in]   styleFlag   Style bit to modify.
  */
-void DarkMode::setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag)
+void dmlib::setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag)
 {
 	if (setWindowLongPtrStyle(hWnd, setStyle, styleFlag, GWL_STYLE) == TRUE)
 	{
-		DarkMode::redrawWindowFrame(hWnd);
+		dmlib::redrawWindowFrame(hWnd);
 	}
 }
 
@@ -3361,17 +3695,17 @@ void DarkMode::setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag)
  * @brief Sets a window's extended style flags and redraws window if needed.
  *
  * Wraps @ref setWindowLongPtrStyle with `GWL_EXSTYLE`
- * and calls @ref DarkMode::redrawWindowFrame if a change occurs.
+ * and calls @ref dmlib::redrawWindowFrame if a change occurs.
  *
  * @param[in]   hWnd        Handle to the target window.
  * @param[in]   setExStyle  `true` to set the flag, `false` to remove it.
  * @param[in]   exStyleFlag Extended style bit to modify.
  */
-void DarkMode::setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag)
+void dmlib::setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag)
 {
 	if (setWindowLongPtrStyle(hWnd, setExStyle, exStyleFlag, GWL_EXSTYLE) == TRUE)
 	{
-		DarkMode::redrawWindowFrame(hWnd);
+		dmlib::redrawWindowFrame(hWnd);
 	}
 }
 
@@ -3392,13 +3726,42 @@ void DarkMode::setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag
  * @param[in]   replace     `true` to apply standard border; `false` to restore extended edge(s).
  * @param[in]   exStyleFlag One or more valid edge-related extended styles.
  *
- * @see DarkMode::setWindowExStyle()
- * @see DarkMode::setWindowStyle()
+ * @see dmlib::setWindowExStyle()
+ * @see dmlib::setWindowStyle()
  */
-void DarkMode::replaceExEdgeWithBorder(HWND hWnd, bool replace, LONG_PTR exStyleFlag)
+void dmlib::replaceExEdgeWithBorder(HWND hWnd, bool replace, LONG_PTR exStyleFlag)
 {
-	DarkMode::setWindowExStyle(hWnd, !replace, exStyleFlag);
-	DarkMode::setWindowStyle(hWnd, replace, WS_BORDER);
+	dmlib::setWindowStyle(hWnd, replace, WS_BORDER);
+	dmlib::setWindowExStyle(hWnd, !replace, exStyleFlag);
+}
+
+/**
+ * @brief Safely toggles `WS_EX_CLIENTEDGE` with `WS_BORDER`.
+ *
+ * @param[in]   hWnd Handle to the target window. No action is taken if `hWnd` is `nullptr`.
+ * @param[in]   replace `true` to apply `WS_BORDER`; `false` to restore`WS_EX_CLIENTEDGE`.
+ *
+ * @note Functions only affects controls, which have `WS_EX_CLIENTEDGE` or `WS_BORDER` (ex)styles.
+ *
+ * @see dmlib::replaceExEdgeWithBorder()
+ */
+void dmlib::replaceClientEdgeWithBorderSafeEx(HWND hWnd, bool replace)
+{
+	if (hWnd == nullptr)
+	{
+		return;
+	}
+
+	const auto nStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
+	const bool hasBorder = (nStyle & WS_BORDER) == WS_BORDER;
+
+	const auto nExStyle = ::GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+	const bool hasClientEdge = (nExStyle & WS_EX_CLIENTEDGE) == WS_EX_CLIENTEDGE;
+
+	if (hasBorder || hasClientEdge)
+	{
+		dmlib::replaceExEdgeWithBorder(hWnd, replace, WS_EX_CLIENTEDGE);
+	}
 }
 
 /**
@@ -3409,14 +3772,13 @@ void DarkMode::replaceExEdgeWithBorder(HWND hWnd, bool replace, LONG_PTR exStyle
  *
  * @param[in] hWnd Handle to the target window. No action is taken if `hWnd` is `nullptr`.
  *
- * @see DarkMode::replaceExEdgeWithBorder()
+ * @note Functions only affects controls, which have `WS_EX_CLIENTEDGE` or `WS_BORDER` (ex)styles.
+ *
+ * @see dmlib::replaceClientEdgeWithBorderSafeEx()
  */
-void DarkMode::replaceClientEdgeWithBorderSafe(HWND hWnd)
+void dmlib::replaceClientEdgeWithBorderSafe(HWND hWnd)
 {
-	if (hWnd != nullptr)
-	{
-		DarkMode::replaceExEdgeWithBorder(hWnd, DarkMode::isEnabled(), WS_EX_CLIENTEDGE);
-	}
+	dmlib::replaceClientEdgeWithBorderSafeEx(hWnd, dmlib::isEnabled());
 }
 
 /**
@@ -3424,27 +3786,30 @@ void DarkMode::replaceClientEdgeWithBorderSafe(HWND hWnd)
  *
  * When dark mode is enabled, applies `WS_BORDER`, removes visual styles
  * to allow to set custom background and fill colors using:
- * - Background: `DarkMode::getBackgroundColor()`
- * - Fill: Hardcoded green `0x06B025` via `PBM_SETBARCOLOR`
+ * - Background: `dmlib::getCtrlBackgroundColor()`
+ * - Fill: Hardcoded light green #06B025, dark green #0F7B0F,
+ *   or azure #60CDFF via `PBM_SETBARCOLOR`
  *
  * Typically used for marquee style progress bar.
  *
  * @param[in] hWnd Handle to the progress bar control.
  *
- * @see DarkMode::setWindowStyle()
- * @see DarkMode::disableVisualStyle()
+ * @see dmlib::setWindowStyle()
+ * @see dmlib::disableVisualStyle()
  */
-void DarkMode::setProgressBarClassicTheme(HWND hWnd)
+void dmlib::setProgressBarClassicTheme(HWND hWnd)
 {
-	DarkMode::setWindowStyle(hWnd, DarkMode::isEnabled(), WS_BORDER);
-	DarkMode::disableVisualStyle(hWnd, DarkMode::isEnabled());
-	DarkMode::setWindowExStyle(hWnd, false, WS_EX_STATICEDGE);
-	if (DarkMode::isEnabled())
+	dmlib::setWindowStyle(hWnd, dmlib::isEnabled(), WS_BORDER);
+	dmlib::disableVisualStyle(hWnd, dmlib::isEnabled());
+	dmlib::setWindowExStyle(hWnd, false, WS_EX_STATICEDGE);
+	if (dmlib::isEnabled())
 	{
-		::SendMessage(hWnd, PBM_SETBKCOLOR, 0, static_cast<LPARAM>(DarkMode::getCtrlBackgroundColor()));
+		::SendMessage(hWnd, PBM_SETBKCOLOR, 0, static_cast<LPARAM>(dmlib::getCtrlBackgroundColor()));
 		static constexpr COLORREF greenLight = dmlib_color::HEXRGB(0x06B025);
 		static constexpr COLORREF greenDark = dmlib_color::HEXRGB(0x0F7B0F);
-		::SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(DarkMode::isExperimentalActive() ? greenDark : greenLight));
+		static constexpr COLORREF azureDark = dmlib_color::HEXRGB(0x60CDFF);
+		static const auto clrDark = doesWin11SupportDarkThemeStyle() ? azureDark : greenDark;
+		::SendMessage(hWnd, PBM_SETBARCOLOR, 0, static_cast<LPARAM>(dmlib::isExperimentalActive() ? clrDark : greenLight));
 	}
 }
 
@@ -3455,27 +3820,27 @@ void DarkMode::setProgressBarClassicTheme(HWND hWnd)
  * Returns the corresponding background brush for painting.
  * Typically used for read-only controls (e.g. edit control and combo box' list box).
  * Typically used in response to `WM_CTLCOLORSTATIC` or in `WM_CTLCOLORLISTBOX`
- * via @ref DarkMode::onCtlColorListbox
+ * via @ref dmlib::onCtlColorListbox
  *
  * @param[in] hdc Handle to the device context (HDC) receiving the drawing instructions.
  * @return Background brush to use for painting, or `FALSE` (0) if classic mode is enabled
  *         and `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
  *         and has non-zero unsigned value.
  *
- * @see DarkMode::WindowCtlColorSubclass()
- * @see DarkMode::onCtlColorListbox()
+ * @see dmlib::WindowCtlColorSubclass()
+ * @see dmlib::onCtlColorListbox()
  */
-LRESULT DarkMode::onCtlColor(HDC hdc)
+LRESULT dmlib::onCtlColor(HDC hdc)
 {
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
-	if (!DarkMode::_isEnabled())
+	if (!dmlib::_isEnabled())
 	{
 		return FALSE;
 	}
 #endif
-	::SetTextColor(hdc, DarkMode::getTextColor());
-	::SetBkColor(hdc, DarkMode::getBackgroundColor());
-	return reinterpret_cast<LRESULT>(DarkMode::getBackgroundBrush());
+	::SetTextColor(hdc, dmlib::getTextColor());
+	::SetBkColor(hdc, dmlib::getBackgroundColor());
+	return reinterpret_cast<LRESULT>(dmlib::getBackgroundBrush());
 }
 
 /**
@@ -3484,28 +3849,28 @@ LRESULT DarkMode::onCtlColor(HDC hdc)
  * Sets the text and background colors on the provided HDC.
  * Returns the corresponding brush used to paint the background.
  * Typically used in response to `WM_CTLCOLOREDIT` and `WM_CTLCOLORLISTBOX`
- * via @ref DarkMode::onCtlColorListbox
+ * via @ref dmlib::onCtlColorListbox
  *
  * @param[in] hdc Handle to the device context for the target control.
  * @return The background brush, or `FALSE` if dark mode is disabled and
  *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
  *         and has non-zero unsigned value.
  *
- * @see DarkMode::WindowCtlColorSubclass()
- * @see DarkMode::onCtlColorListbox()
+ * @see dmlib::WindowCtlColorSubclass()
+ * @see dmlib::onCtlColorListbox()
  */
-LRESULT DarkMode::onCtlColorCtrl(HDC hdc)
+LRESULT dmlib::onCtlColorCtrl(HDC hdc)
 {
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
-	if (!DarkMode::_isEnabled())
+	if (!dmlib::_isEnabled())
 	{
 		return FALSE;
 	}
 #endif
 
-	::SetTextColor(hdc, DarkMode::getTextColor());
-	::SetBkColor(hdc, DarkMode::getCtrlBackgroundColor());
-	return reinterpret_cast<LRESULT>(DarkMode::getCtrlBackgroundBrush());
+	::SetTextColor(hdc, dmlib::getTextColor());
+	::SetBkColor(hdc, dmlib::getCtrlBackgroundColor());
+	return reinterpret_cast<LRESULT>(dmlib::getCtrlBackgroundBrush());
 }
 
 /**
@@ -3514,28 +3879,28 @@ LRESULT DarkMode::onCtlColorCtrl(HDC hdc)
  * Sets the text and background colors on the provided HDC.
  * Returns the corresponding brush used to paint the background.
  * Typically used in response to `WM_CTLCOLORDLG`, `WM_CTLCOLORSTATIC`
- * and `WM_CTLCOLORLISTBOX` via @ref DarkMode::onCtlColorListbox
+ * and `WM_CTLCOLORLISTBOX` via @ref dmlib::onCtlColorListbox
  *
  * @param[in] hdc Handle to the device context for the target control.
  * @return The background brush, or `FALSE` if dark mode is disabled and
  *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
  *         and has non-zero unsigned value.
  *
- * @see DarkMode::WindowCtlColorSubclass()
- * @see DarkMode::onCtlColorListbox()
+ * @see dmlib::WindowCtlColorSubclass()
+ * @see dmlib::onCtlColorListbox()
  */
-LRESULT DarkMode::onCtlColorDlg(HDC hdc)
+LRESULT dmlib::onCtlColorDlg(HDC hdc)
 {
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
-	if (!DarkMode::_isEnabled())
+	if (!dmlib::_isEnabled())
 	{
 		return FALSE;
 	}
 #endif
 
-	::SetTextColor(hdc, DarkMode::getTextColor());
-	::SetBkColor(hdc, DarkMode::getDlgBackgroundColor());
-	return reinterpret_cast<LRESULT>(DarkMode::getDlgBackgroundBrush());
+	::SetTextColor(hdc, dmlib::getTextColor());
+	::SetBkColor(hdc, dmlib::getDlgBackgroundColor());
+	return reinterpret_cast<LRESULT>(dmlib::getDlgBackgroundBrush());
 }
 
 /**
@@ -3548,20 +3913,20 @@ LRESULT DarkMode::onCtlColorDlg(HDC hdc)
  *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
  *         and has non-zero unsigned value.
  *
- * @see DarkMode::WindowCtlColorSubclass()
+ * @see dmlib::WindowCtlColorSubclass()
  */
-LRESULT DarkMode::onCtlColorError(HDC hdc)
+LRESULT dmlib::onCtlColorError(HDC hdc)
 {
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
-	if (!DarkMode::_isEnabled())
+	if (!dmlib::_isEnabled())
 	{
 		return FALSE;
 	}
 #endif
 
-	::SetTextColor(hdc, DarkMode::getTextColor());
-	::SetBkColor(hdc, DarkMode::getErrorBackgroundColor());
-	return reinterpret_cast<LRESULT>(DarkMode::getErrorBackgroundBrush());
+	::SetTextColor(hdc, dmlib::getTextColor());
+	::SetBkColor(hdc, dmlib::getErrorBackgroundColor());
+	return reinterpret_cast<LRESULT>(dmlib::getErrorBackgroundBrush());
 }
 
 /**
@@ -3578,20 +3943,20 @@ LRESULT DarkMode::onCtlColorError(HDC hdc)
  *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
  *         and has non-zero unsigned value.
  *
- * @see DarkMode::WindowCtlColorSubclass()
+ * @see dmlib::WindowCtlColorSubclass()
  */
-LRESULT DarkMode::onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled)
+LRESULT dmlib::onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled)
 {
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
-	if (!DarkMode::_isEnabled())
+	if (!dmlib::_isEnabled())
 	{
 		::SetTextColor(hdc, ::GetSysColor(isTextEnabled ? COLOR_WINDOWTEXT : COLOR_GRAYTEXT));
 		return FALSE;
 	}
 #endif
-	::SetTextColor(hdc, isTextEnabled ? DarkMode::getTextColor() : DarkMode::getDisabledTextColor());
-	::SetBkColor(hdc, DarkMode::getDlgBackgroundColor());
-	return reinterpret_cast<LRESULT>(DarkMode::getDlgBackgroundBrush());
+	::SetTextColor(hdc, isTextEnabled ? dmlib::getTextColor() : dmlib::getDisabledTextColor());
+	::SetBkColor(hdc, dmlib::getDlgBackgroundColor());
+	return reinterpret_cast<LRESULT>(dmlib::getDlgBackgroundBrush());
 }
 
 /**
@@ -3608,20 +3973,20 @@ LRESULT DarkMode::onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled)
  *         `_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS` is defined
  *         and has non-zero unsigned value.
  *
- * @see DarkMode::WindowCtlColorSubclass()
+ * @see dmlib::WindowCtlColorSubclass()
  */
-LRESULT DarkMode::onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled)
+LRESULT dmlib::onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled)
 {
 #if defined(_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS) && (_DARKMODELIB_DLG_PROC_CTLCOLOR_RETURNS > 0)
-	if (!DarkMode::_isEnabled())
+	if (!dmlib::_isEnabled())
 	{
 		::SetTextColor(hdc, ::GetSysColor(isTextEnabled ? COLOR_HOTLIGHT : COLOR_GRAYTEXT));
 		return FALSE;
 	}
 #endif
-	::SetTextColor(hdc, isTextEnabled ? DarkMode::getLinkTextColor() : DarkMode::getDisabledTextColor());
-	::SetBkColor(hdc, DarkMode::getDlgBackgroundColor());
-	return reinterpret_cast<LRESULT>(DarkMode::getDlgBackgroundBrush());
+	::SetTextColor(hdc, isTextEnabled ? dmlib::getLinkTextColor() : dmlib::getDisabledTextColor());
+	::SetBkColor(hdc, dmlib::getDlgBackgroundColor());
+	return reinterpret_cast<LRESULT>(dmlib::getDlgBackgroundBrush());
 }
 
 /**
@@ -3629,45 +3994,169 @@ LRESULT DarkMode::onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled)
  *
  * Inspects the list box style flags to detect if it's part of a combo box (via `LBS_COMBOBOX`)
  * and whether experimental feature is active. Based on the context, delegates to:
- * - @ref DarkMode::onCtlColorCtrl for standard enabled listboxes
- * - @ref DarkMode::onCtlColorDlg for disabled ones or when dark mode is disabled
- * - @ref DarkMode::onCtlColor for combo box' listbox
+ * - @ref dmlib::onCtlColorCtrl for standard enabled listboxes
+ * - @ref dmlib::onCtlColorDlg for disabled ones or when dark mode is disabled
+ * - @ref dmlib::onCtlColor for combo box' listbox
  *
  * @param[in]   wParam  WPARAM from `WM_CTLCOLORLISTBOX`, representing the HDC.
  * @param[in]   lParam  LPARAM from `WM_CTLCOLORLISTBOX`, representing the HWND of the listbox.
  * @return The brush handle as LRESULT for background painting, or `FALSE` if not themed.
  *
- * @see DarkMode::WindowCtlColorSubclass()
- * @see DarkMode::onCtlColor()
- * @see DarkMode::onCtlColorCtrl()
- * @see DarkMode::onCtlColorDlg()
+ * @see dmlib::WindowCtlColorSubclass()
+ * @see dmlib::onCtlColor()
+ * @see dmlib::onCtlColorCtrl()
+ * @see dmlib::onCtlColorDlg()
  */
-LRESULT DarkMode::onCtlColorListbox(WPARAM wParam, LPARAM lParam)
+LRESULT dmlib::onCtlColorListbox(WPARAM wParam, LPARAM lParam)
 {
 	auto hdc = reinterpret_cast<HDC>(wParam);
 	auto hWnd = reinterpret_cast<HWND>(lParam);
 
 	if (const auto nStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
 		((nStyle & LBS_COMBOBOX) != LBS_COMBOBOX) // is not child of combo box
-		|| !DarkMode::isExperimentalActive())
+		|| !dmlib::isExperimentalActive())
 	{
 		if (::IsWindowEnabled(hWnd) == TRUE)
 		{
-			return DarkMode::onCtlColorCtrl(hdc);
+			return dmlib::onCtlColorCtrl(hdc);
 		}
-		return DarkMode::onCtlColorDlg(hdc);
+		return dmlib::onCtlColorDlg(hdc);
 	}
-	return DarkMode::onCtlColor(hdc);
+	return dmlib::onCtlColor(hdc);
 }
 
 /**
- * @brief Hook procedure for customizing common dialogs with custom colors.
+ * @brief Window subclass procedure for customizing ChooseFont and ChooseColor dialogs.
+ *
+ * @param[in]   hWnd        Window handle being subclassed.
+ * @param[in]   uMsg        Message identifier.
+ * @param[in]   wParam      Message-specific data.
+ * @param[in]   lParam      Message-specific data.
+ * @param[in]   uIdSubclass Subclass identifier.
+ * @param[in]   dwRefData   Reference data (unused).
+ * @return LRESULT Result of message processing.
+ *
+ * @see dmlib::HookDlgProc()
  */
-UINT_PTR CALLBACK DarkMode::HookDlgProc(HWND hWnd, UINT uMsg, [[maybe_unused]] WPARAM wParam, [[maybe_unused]] LPARAM lParam)
+static LRESULT CALLBACK ComDlgSubclass(
+	HWND hWnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT_PTR uIdSubclass,
+	[[maybe_unused]] DWORD_PTR dwRefData
+) noexcept
+{
+	if (!dmlib::isEnabled() && uMsg != WM_NCDESTROY)
+	{
+		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	switch (uMsg)
+	{
+		case WM_NCDESTROY:
+		{
+			::RemoveWindowSubclass(hWnd, ComDlgSubclass, uIdSubclass);
+			break;
+		}
+
+		case WM_MOUSEMOVE: // for ChooseColor dialog luminosity slide control
+		{
+			if (const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::ClrGetSysColorBrush>();
+				autoHook)
+			{
+				return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			}
+			break;
+		}
+
+		case WM_PAINT: // for font preview background, control has id stc5 (0x444) and for ChooseColor dialog luminosity slide control
+		{
+			const auto ahFontSysColor = dmlib_hook::AutoHook<dmlib_hook::FontGetSysColor>();
+			const auto ahClrGetSysColorBrush = dmlib_hook::AutoHook<dmlib_hook::ClrGetSysColorBrush>();
+			return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+		}
+
+		case WM_DRAWITEM: // for combo boxes and their list boxes
+		{
+			if (wParam == cmb1 || wParam == cmb2 || wParam == cmb3 || wParam == cmb4 || wParam == cmb5)
+			{
+				const auto ahFontSysColor = dmlib_hook::AutoHook<dmlib_hook::FontGetSysColor>();
+				const auto ahFontFillRect = dmlib_hook::AutoHook<dmlib_hook::FontFillRect>();
+				return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			}
+
+			break;
+		}
+
+		case WM_COMMAND: // for ChooseColor dialog luminosity slide control
+		{
+			const int id = LOWORD(wParam);
+			const int nCode = HIWORD(wParam);
+
+			if (nCode == EN_CHANGE
+				&& (id == COLOR_RED
+					|| id == COLOR_GREEN
+					|| id == COLOR_BLUE))
+			{
+				if (const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::ClrGetSysColorBrush>();
+					autoHook)
+				{
+					return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+				}
+				break;
+			}
+
+			if (nCode == EN_CHANGE && id == COLOR_LUM)
+			{
+				const auto retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+
+				RECT rcClient{};
+				::GetClientRect(hWnd, &rcClient);
+
+				RECT rcLum{};
+				::GetWindowRect(::GetDlgItem(hWnd, COLOR_LUMSCROLL), &rcLum);
+				::MapWindowPoints(nullptr, hWnd, reinterpret_cast<POINT*>(&rcLum), 2);
+
+				const LONG gap = rcLum.top - rcClient.top;
+				::InflateRect(&rcLum, 0, gap);
+				rcLum.left = rcLum.right;
+				rcLum.right = rcClient.right;
+
+				::RedrawWindow(hWnd, &rcLum, nullptr, RDW_INVALIDATE);
+				return retVal;
+			}
+
+			if (id == IDOK && nCode == BN_CLICKED) // for ChooseFont dialog message boxes
+			{
+				if (const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::FontMB>();
+					autoHook)
+				{
+					return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+				}
+				break;
+			}
+
+			break;
+		}
+
+		default:
+		{
+			break;
+		}
+	}
+	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+/**
+ * @brief Hook procedure for customizing ChooseFont and ChooseColor dialogs with custom colors.
+ */
+UINT_PTR CALLBACK dmlib::HookDlgProc(HWND hWnd, UINT uMsg, [[maybe_unused]] WPARAM wParam, [[maybe_unused]] LPARAM lParam)
 {
 	if (uMsg == WM_INITDIALOG)
 	{
-		DarkMode::setDarkWndSafe(hWnd);
+		dmlib::setDarkWndSafe(hWnd);
+		dmlib_subclass::SetSubclass(hWnd, ComDlgSubclass, dmlib_subclass::SubclassID::comDlg);
 		return TRUE;
 	}
 	return FALSE;
@@ -3682,12 +4171,12 @@ UINT_PTR CALLBACK DarkMode::HookDlgProc(HWND hWnd, UINT uMsg, [[maybe_unused]] W
  *
  * @see dmlib_subclass::setTaskDlgChildCtrlsSubclassAndTheme()
  */
-void DarkMode::setDarkTaskDlg(HWND hWnd)
+void dmlib::setDarkTaskDlg(HWND hWnd)
 {
-	if (DarkMode::isExperimentalActive())
+	if (dmlib::isExperimentalActive())
 	{
-		DarkMode::setDarkTitleBar(hWnd);
-		DarkMode::setDarkExplorerTheme(hWnd);
+		dmlib::setDarkTitleBar(hWnd);
+		dmlib::setDarkExplorerTheme(hWnd);
 		dmlib_subclass::setTaskDlgChildCtrlsSubclassAndTheme(hWnd);
 	}
 }
@@ -3702,10 +4191,10 @@ void DarkMode::setDarkTaskDlg(HWND hWnd)
  * @param[in]   lpRefData   Reserved data (unused).
  * @return HRESULT A value defined by the hook procedure.
  *
- * @see DarkMode::setDarkTaskDlg()
- * @see DarkMode::darkTaskDialogIndirect()
+ * @see dmlib::setDarkTaskDlg()
+ * @see dmlib::darkTaskDialogIndirect()
  */
-HRESULT CALLBACK DarkMode::DarkTaskDlgCallback(
+HRESULT CALLBACK dmlib::DarkTaskDlgCallback(
 	HWND hWnd,
 	UINT uMsg,
 	[[maybe_unused]] WPARAM wParam,
@@ -3715,7 +4204,7 @@ HRESULT CALLBACK DarkMode::DarkTaskDlgCallback(
 {
 	if (uMsg == TDN_DIALOG_CONSTRUCTED)
 	{
-		DarkMode::setDarkTaskDlg(hWnd);
+		dmlib::setDarkTaskDlg(hWnd);
 	}
 	return S_OK;
 }
@@ -3723,17 +4212,15 @@ HRESULT CALLBACK DarkMode::DarkTaskDlgCallback(
 /**
  * @brief Wrapper for `TaskDialogIndirect` with dark mode support.
  */
-HRESULT DarkMode::darkTaskDialogIndirect(
+HRESULT dmlib::darkTaskDialogIndirect(
 	const TASKDIALOGCONFIG* pTaskConfig,
 	int* pnButton,
 	int* pnRadioButton,
 	BOOL* pfVerificationFlagChecked
 )
 {
-	dmlib_hook::hookThemeColor();
-	const HRESULT retVal = ::TaskDialogIndirect(pTaskConfig, pnButton, pnRadioButton, pfVerificationFlagChecked);
-	dmlib_hook::unhookThemeColor();
-	return retVal;
+	const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::TaskDlgTheme>();
+	return ::TaskDialogIndirect(pTaskConfig, pnButton, pnRadioButton, pfVerificationFlagChecked);
 }
 
 /**
@@ -3747,7 +4234,7 @@ HRESULT DarkMode::darkTaskDialogIndirect(
  * @return HRESULT A value defined by the hook procedure.
  *
  * @see DarkTaskDlgMsgBoxCallback()
- * @see DarkMode::darkMessageBoxW()
+ * @see dmlib::darkMessageBoxW()
  */
 static HRESULT CALLBACK DarkTaskDlgMsgBoxCallback(
 	HWND hWnd,
@@ -3755,18 +4242,22 @@ static HRESULT CALLBACK DarkTaskDlgMsgBoxCallback(
 	[[maybe_unused]] WPARAM wParam,
 	[[maybe_unused]] LPARAM lParam,
 	[[maybe_unused]] LONG_PTR lpRefData
-)
+) noexcept
 {
 	const auto uType = static_cast<UINT>(lpRefData);
 
 	if (uMsg == TDN_DIALOG_CONSTRUCTED)
 	{
-		DarkMode::setDarkTaskDlg(hWnd);
+		dmlib::setDarkTaskDlg(hWnd);
 		if ((uType & (MB_SYSTEMMODAL | MB_TOPMOST)) != 0)
+		{
 			::SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+		}
 
 		if ((uType & MB_SETFOREGROUND) == MB_SETFOREGROUND)
+		{
 			::SetForegroundWindow(hWnd);
+		}
 	}
 	return S_OK;
 }
@@ -3785,11 +4276,11 @@ static HRESULT CALLBACK DarkTaskDlgMsgBoxCallback(
  *                          This parameter can be a allowed combination of the following flags:
  *                          - MB_OK
  *                          - MB_OKCANCEL
- *                          - MB_ABORTRETRYIGNORE - buttons use only English loacalization
+ *                          - MB_ABORTRETRYIGNORE
  *                          - MB_YESNOCANCEL
  *                          - MB_YESNO
  *                          - MB_RETRYCANCEL
- *                          - MB_CANCELTRYCONTINUE - buttons use only English loacalization
+ *                          - MB_CANCELTRYCONTINUE
  *
  *                          - MB_DEFBUTTON1
  *                          - MB_DEFBUTTON2
@@ -3812,39 +4303,61 @@ static HRESULT CALLBACK DarkTaskDlgMsgBoxCallback(
  * @return TASKDIALOGCONFIG Returns the translated task dialog config.
  *
  * @see DarkTaskDlgMsgBoxCallback()
- * @see DarkMode::darkMessageBoxW()
+ * @see dmlib::darkMessageBoxW()
  */
-static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
+static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(
+	HWND hWnd,
+	LPCWSTR lpText,
+	LPCWSTR lpCaption,
+	UINT uType
+) noexcept
 {
 	// base config
 
+#ifdef _MSC_VER
+	#pragma warning(push)
+	#pragma warning(disable: 26476) // Expression/symbol 'name' uses a naked union 'union' with multiple type pointers: Use variant instead (type.7)
+#endif
 	TASKDIALOGCONFIG tdc{};
+#ifdef _MSC_VER
+	#pragma warning(pop)
+#endif
 	tdc.cbSize = sizeof(TASKDIALOGCONFIG);
 	tdc.hwndParent = hWnd;
 	tdc.hInstance = nullptr;
 	tdc.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT;
-	tdc.pszWindowTitle = lpCaption;
+	// Unlike message box localized "Error" string, task dialog uses filename if title is nullptr.
+	// Maintainer will need to provide localization themself.
+	tdc.pszWindowTitle = lpCaption != nullptr ? lpCaption : L"Error";
 	tdc.pszContent = lpText;
 	tdc.pfCallback = DarkTaskDlgMsgBoxCallback;
 	tdc.lpCallbackData = static_cast<LONG_PTR>(uType);
 
+	dmlib_win32api::InitMB_GetString();
+
 	// buttons
 
-	static const UINT btnDefMask = uType | MB_DEFMASK;
-	auto getDefBtn = [](std::array<int, 3> btnIDs)
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 26446) // Prefer to use gsl::at() instead of unchecked subscript operator (bounds.4).
+#pragma warning(disable: 26482) // Only index into arrays using constant expressions.
+#endif
+
+	// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
+	const UINT btnDefMask = uType & MB_DEFMASK;
+	static constexpr UINT maxBtns = 3;
+	auto getDefBtn = [&btnDefMask](std::array<int, maxBtns> btnIDs) noexcept
 	{
 		if (btnDefMask == MB_DEFBUTTON2)
 		{
-			return btnIDs.at(1);
+			return btnIDs[1];
 		}
-		else if (btnDefMask == MB_DEFBUTTON3)
+		if (btnDefMask == MB_DEFBUTTON3)
 		{
-			return btnIDs.at(2);
+			return btnIDs[2];
 		}
-		else
-		{
-			return btnIDs.at(0);
-		}
+		return btnIDs[0];
 	};
 
 	switch (uType & MB_TYPEMASK)
@@ -3864,15 +4377,15 @@ static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LP
 
 		case MB_ABORTRETRYIGNORE:
 		{
-			static constexpr std::array<TASKDIALOG_BUTTON, 3> buttons{ {
-				{ IDABORT, L"&Abort" },
-				{ IDRETRY, L"&Retry" },
-				{ IDIGNORE, L"&Ignore" }
+			static const std::array<TASKDIALOG_BUTTON, maxBtns> buttons{ {
+				{ IDABORT, dmlib_win32api::MB_GetString(IDABORT) },
+				{ IDRETRY, dmlib_win32api::MB_GetString(IDRETRY) },
+				{ IDIGNORE, dmlib_win32api::MB_GetString(IDIGNORE) }
 			} };
 
-			tdc.cButtons = static_cast<UINT>(buttons.size());;
+			tdc.cButtons = static_cast<UINT>(buttons.size());
 			tdc.pButtons = buttons.data();
-			tdc.nDefaultButton = getDefBtn({ { buttons.at(0).nButtonID, buttons.at(1).nButtonID, buttons.at(2).nButtonID } });
+			tdc.nDefaultButton = getDefBtn({ { buttons[0].nButtonID, buttons[1].nButtonID, buttons[2].nButtonID } });
 
 			break;
 		}
@@ -3900,15 +4413,15 @@ static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LP
 
 		case MB_CANCELTRYCONTINUE:
 		{
-			static constexpr std::array<TASKDIALOG_BUTTON, 3> buttons{ {
-				{ IDABORT, L"&Abort" },
-				{ IDTRYAGAIN, L"&Try Again" },
-				{ IDCONTINUE, L"&Continue" }
+			static const std::array<TASKDIALOG_BUTTON, maxBtns> buttons{ {
+				{ IDCANCEL, dmlib_win32api::MB_GetString(IDCANCEL) },
+				{ IDTRYAGAIN, dmlib_win32api::MB_GetString(IDTRYAGAIN) },
+				{ IDCONTINUE, dmlib_win32api::MB_GetString(IDCONTINUE) }
 			} };
 
-			tdc.cButtons = static_cast<UINT>(buttons.size());;
+			tdc.cButtons = static_cast<UINT>(buttons.size());
 			tdc.pButtons = buttons.data();
-			tdc.nDefaultButton = getDefBtn({ { buttons.at(0).nButtonID, buttons.at(1).nButtonID, buttons.at(2).nButtonID } });
+			tdc.nDefaultButton = getDefBtn({ { buttons[0].nButtonID, buttons[1].nButtonID, buttons[2].nButtonID } });
 
 			break;
 		}
@@ -3919,6 +4432,12 @@ static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LP
 			break;
 		}
 	}
+
+	// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 	// icons
 
@@ -3932,8 +4451,7 @@ static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LP
 
 		case MB_ICONQUESTION:
 		{
-			tdc.dwFlags |= TDF_USE_HICON_MAIN;
-			tdc.hMainIcon = static_cast<HICON>(::LoadImageW(nullptr, IDI_QUESTION, IMAGE_ICON, 0, 0, LR_SHARED));
+			tdc.pszMainIcon = IDI_QUESTION;
 			break;
 		}
 
@@ -3956,7 +4474,9 @@ static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LP
 	// other
 
 	if ((uType & MB_RTLREADING) == MB_RTLREADING)
+	{
 		tdc.dwFlags |= TDF_RTL_LAYOUT;
+	}
 
 	return tdc;
 }
@@ -3964,7 +4484,7 @@ static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LP
 /**
  * @brief Displays a message box as task dialog with themed styling.
  *
- * Shows a custom task dialog instead of classic message box if @ref DarkMode::isEnabled is true.
+ * Shows a custom task dialog instead of classic message box if @ref dmlib::isExperimentalActive is true.
  * Otherwise, it falls back to the standard Windows message box function.
  * The message box can present various buttons and icons based on the
  * specified parameters.
@@ -3975,20 +4495,20 @@ static TASKDIALOGCONFIG msgBoxParamToTaskDlgConfig(HWND hWnd, LPCWSTR lpText, LP
  * @param[in]   lpCaption   Text to be displayed in the title bar of the message box.
  * @param[in]   uType       Specifies the contents and behavior of the message box.
  *
- * @return HRESULT The returned value indicates which button was pressed by the user.
- *                 Or 0 zero if the function has failed.
+ * @return int The returned value indicates which button was pressed by the user.
+ *             Or 0 zero if the function has failed.
  *
  * @see DarkTaskDlgMsgBoxCallback()
  * @see msgBoxParamToTaskDlgConfig()
  */
-HRESULT DarkMode::darkMessageBoxW(
+int dmlib::darkMessageBoxW(
 	HWND hWnd,
 	LPCWSTR lpText,
 	LPCWSTR lpCaption,
 	UINT uType
 )
 {
-	if (!DarkMode::isEnabled())
+	if (!dmlib::isExperimentalActive())
 	{
 		return ::MessageBoxW(hWnd, lpText, lpCaption, uType);
 	}
@@ -3996,7 +4516,7 @@ HRESULT DarkMode::darkMessageBoxW(
 	const TASKDIALOGCONFIG tdc = msgBoxParamToTaskDlgConfig(hWnd, lpText, lpCaption, uType);
 
 	int btnPressed = 0;
-	if (DarkMode::darkTaskDialogIndirect(&tdc, &btnPressed, nullptr, nullptr) != S_OK)
+	if (dmlib::darkTaskDialogIndirect(&tdc, &btnPressed, nullptr, nullptr) != S_OK)
 	{
 		return ::MessageBoxW(hWnd, lpText, lpCaption, uType);
 	}

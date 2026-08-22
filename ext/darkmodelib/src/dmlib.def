@@ -22,6 +22,7 @@ EXPORTS
 	handleSettingChange
 	isDarkModeReg
 	setSysColor
+	updateCommonDlgsBrushes
 	enableDarkScrollBarForWindowAndChildren
 	setColorTone
 	getColorTone
@@ -37,6 +38,7 @@ EXPORTS
 	setEdgeColor
 	setHotEdgeColor
 	setDisabledEdgeColor
+	setHighlightColor
 	setThemeColors
 	updateThemeBrushesAndPens
 	getBackgroundColor
@@ -51,6 +53,7 @@ EXPORTS
 	getEdgeColor
 	getHotEdgeColor
 	getDisabledEdgeColor
+	getHighlightColor
 	getBackgroundBrush
 	getDlgBackgroundBrush
 	getCtrlBackgroundBrush
@@ -59,10 +62,12 @@ EXPORTS
 	getEdgeBrush
 	getHotEdgeBrush
 	getDisabledEdgeBrush
+	getHighlightBrush
 	getDarkerTextPen
 	getEdgePen
 	getHotEdgePen
 	getDisabledEdgePen
+	getHighlightPen
 	setViewBackgroundColor
 	setViewTextColor
 	setViewGridlinesColor
@@ -115,6 +120,8 @@ EXPORTS
 	removeIPAddressCtrlSubclass
 	setHotKeyCtrlSubclass
 	removeHotKeyCtrlSubclass
+	setDTPCtrlSubclass
+	removeDTPCtrlSubclass
 	setChildCtrlsSubclassAndThemeEx
 	setChildCtrlsSubclassAndTheme
 	setChildCtrlsTheme
@@ -131,6 +138,7 @@ EXPORTS
 	enableSysLinkCtrlCtlColor
 	setDarkTitleBarEx
 	setDarkTitleBar
+	getDarkModeThemeName
 	setDarkThemeExperimentalEx
 	setDarkThemeExperimental
 	setDarkExplorerTheme
@@ -139,7 +147,9 @@ EXPORTS
 	setDarkLineAbovePanelToolbar
 	setDarkListView
 	setDarkListViewCheckboxes
+	setDarkTreeViewCheckboxes
 	setDarkRichEdit
+	setDarkMonthCalendar
 	setDarkWndSafeEx
 	setDarkWndSafe
 	setDarkWndNotifySafeEx
@@ -159,6 +169,7 @@ EXPORTS
 	setWindowStyle
 	setWindowExStyle
 	replaceExEdgeWithBorder
+	replaceClientEdgeWithBorderSafeEx
 	replaceClientEdgeWithBorderSafe
 	setProgressBarClassicTheme
 	onCtlColor

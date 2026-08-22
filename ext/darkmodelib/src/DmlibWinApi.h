@@ -53,4 +53,9 @@ namespace dmlib_win32api
 	[[nodiscard]] bool IsDarkModeSupported() noexcept;
 	/// Checks if dark mode is active.
 	[[nodiscard]] bool IsDarkModeActive() noexcept;
+
+	/// Initializes undocumented MB_GetString.
+	void InitMB_GetString() noexcept;
+	/// Returns strings for standard message box buttons.
+	[[nodiscard]] LPCWSTR MB_GetString(UINT wBtn) noexcept;
 } // namespace dmlib_win32api

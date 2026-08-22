@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025-2026 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -22,14 +22,15 @@
 
 #include <array>
 #include <memory>
-#include <string>
 
-#include "DarkModeSubclass.h"
+#include "Darkmodelib.h"
+
 #include "DmlibDpi.h"
 #include "DmlibGlyph.h"
 #include "DmlibPaintHelper.h"
 #include "DmlibSubclass.h"
 #include "DmlibSubclassControl.h"
+#include "MemoryHelperDef.h"
 
 #include "UAHMenuBar.h"
 
@@ -47,8 +48,8 @@
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setWindowEraseBgSubclass()
- * @see DarkMode::removeWindowEraseBgSubclass()
+ * @see dmlib::setWindowEraseBgSubclass()
+ * @see dmlib::removeWindowEraseBgSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::WindowEraseBgSubclass(
 	HWND hWnd,
@@ -57,7 +58,7 @@ LRESULT CALLBACK dmlib_subclass::WindowEraseBgSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
@@ -69,14 +70,14 @@ LRESULT CALLBACK dmlib_subclass::WindowEraseBgSubclass(
 
 		case WM_ERASEBKGND:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
 
 			RECT rcClient{};
 			::GetClientRect(hWnd, &rcClient);
-			::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, DarkMode::getDlgBackgroundBrush());
+			::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, dmlib::getDlgBackgroundBrush());
 			return TRUE;
 		}
 
@@ -95,31 +96,31 @@ LRESULT CALLBACK dmlib_subclass::WindowEraseBgSubclass(
  * @param[in]   lParam      Message-specific data to get child HWND.
  * @return The brush handle as LRESULT for background painting.
  */
-static LRESULT onCtlColorStaticHelper(LPARAM lParam, WPARAM wParam)
+static LRESULT onCtlColorStaticHelper(LPARAM lParam, WPARAM wParam) noexcept
 {
 	auto* hdc = reinterpret_cast<HDC>(wParam);
 	auto hChild = reinterpret_cast<HWND>(lParam);
 
 	const bool isChildEnabled = ::IsWindowEnabled(hChild) == TRUE;
-	const std::wstring className = dmlib_subclass::getWndClassName(hChild);
+	const auto className = dmlib_subclass::WndClassName(hChild);
 
 	if (className == WC_EDIT)
 	{
-		return isChildEnabled ? DarkMode::onCtlColor(hdc) : DarkMode::onCtlColorDlg(hdc);
+		return isChildEnabled ? dmlib::onCtlColor(hdc) : dmlib::onCtlColorDlg(hdc);
 	}
 
 	if (className == WC_LINK)
 	{
-		return DarkMode::onCtlColorDlgLinkText(hdc, isChildEnabled);
+		return dmlib::onCtlColorDlgLinkText(hdc, isChildEnabled);
 	}
 
 	if (DWORD_PTR dwRefDataStaticText = 0;
 		::GetWindowSubclass(hChild, dmlib_subclass::StaticTextSubclass, static_cast<UINT_PTR>(dmlib_subclass::SubclassID::staticText), &dwRefDataStaticText) == TRUE)
 	{
 		const bool isTextEnabled = (reinterpret_cast<dmlib_subclass::StaticTextData*>(dwRefDataStaticText))->m_isEnabled;
-		return DarkMode::onCtlColorDlgStaticText(hdc, isTextEnabled);
+		return dmlib::onCtlColorDlgStaticText(hdc, isTextEnabled);
 	}
-	return DarkMode::onCtlColorDlg(hdc);
+	return dmlib::onCtlColorDlg(hdc);
 }
 
 /**
@@ -134,7 +135,7 @@ static LRESULT onCtlColorStaticHelper(LPARAM lParam, WPARAM wParam)
  *
  * Cleans up subclass on `WM_NCDESTROY`
  *
- * Uses `DarkMode::onCtlColor*` utilities.
+ * Uses `dmlib::onCtlColor*` utilities.
  *
  * @param[in]   hWnd        Window handle being subclassed.
  * @param[in]   uMsg        Message identifier.
@@ -144,11 +145,11 @@ static LRESULT onCtlColorStaticHelper(LPARAM lParam, WPARAM wParam)
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::onCtlColor()
- * @see DarkMode::onCtlColorDlg()
- * @see DarkMode::onCtlColorDlgStaticText()
- * @see DarkMode::onCtlColorDlgLinkText()
- * @see DarkMode::onCtlColorListbox()
+ * @see dmlib::onCtlColor()
+ * @see dmlib::onCtlColorDlg()
+ * @see dmlib::onCtlColorDlgStaticText()
+ * @see dmlib::onCtlColorDlgLinkText()
+ * @see dmlib::onCtlColorListbox()
  */
 LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 	HWND hWnd,
@@ -157,7 +158,7 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
@@ -169,35 +170,35 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 
 		case WM_CTLCOLOREDIT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
-			return DarkMode::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
+			return dmlib::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
 		}
 
 		case WM_CTLCOLORLISTBOX:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
-			return DarkMode::onCtlColorListbox(wParam, lParam);
+			return dmlib::onCtlColorListbox(wParam, lParam);
 		}
 
 		case WM_CTLCOLORDLG:
 		{
 
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
-			return DarkMode::onCtlColorDlg(reinterpret_cast<HDC>(wParam));
+			return dmlib::onCtlColorDlg(reinterpret_cast<HDC>(wParam));
 		}
 
 		case WM_CTLCOLORSTATIC:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -207,7 +208,7 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 
 		case WM_PRINTCLIENT:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
@@ -247,14 +248,14 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 {
 	// Set colors
 
-	lptbcd->hbrMonoDither = DarkMode::getBackgroundBrush();
-	lptbcd->hbrLines = DarkMode::getEdgeBrush();
-	lptbcd->hpenLines = DarkMode::getEdgePen();
-	lptbcd->clrText = DarkMode::getDarkerTextColor();
-	lptbcd->clrTextHighlight = DarkMode::getTextColor();
-	lptbcd->clrBtnFace = DarkMode::getBackgroundColor();
-	lptbcd->clrBtnHighlight = DarkMode::getCtrlBackgroundColor();
-	lptbcd->clrHighlightHotTrack = DarkMode::getHotBackgroundColor();
+	lptbcd->hbrMonoDither = dmlib::getBackgroundBrush();
+	lptbcd->hbrLines = dmlib::getEdgeBrush();
+	lptbcd->hpenLines = dmlib::getEdgePen();
+	lptbcd->clrText = dmlib::getDarkerTextColor();
+	lptbcd->clrTextHighlight = dmlib::getTextColor();
+	lptbcd->clrBtnFace = dmlib::getBackgroundColor();
+	lptbcd->clrBtnHighlight = dmlib::getCtrlBackgroundColor();
+	lptbcd->clrHighlightHotTrack = dmlib::getHotBackgroundColor();
 	lptbcd->nStringBkMode = TRANSPARENT;
 	lptbcd->nHLStringBkMode = TRANSPARENT;
 
@@ -272,7 +273,7 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 	::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_GETBUTTONINFO, lptbcd->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&tbi));
 
 	const bool isIcon = tbi.iImage != I_IMAGENONE;
-	const bool isDropDown = ((WORD{ tbi.fsStyle } & BTNS_DROPDOWN) == BTNS_DROPDOWN) && isIcon; // has 2 "buttons"
+	const bool isDropDown = ((static_cast<WORD>(tbi.fsStyle) & BTNS_DROPDOWN) == BTNS_DROPDOWN) && isIcon; // has 2 "buttons"
 	if (isDropDown)
 	{
 		const auto idx = ::SendMessage(lptbcd->nmcd.hdr.hwndFrom, TB_COMMANDTOINDEX, lptbcd->nmcd.dwItemSpec, 0);
@@ -281,7 +282,7 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 		rcItem.right = rcDrop.left;
 	}
 
-	static const int roundness = DarkMode::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness + 1 : 0;
+	static const int roundness = dmlib::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness + 1 : 0;
 
 	// Paint part
 
@@ -289,14 +290,14 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 	{
 		if (!isIcon)
 		{
-			::FillRect(lptbcd->nmcd.hdc, &rcItem, DarkMode::getHotBackgroundBrush());
+			::FillRect(lptbcd->nmcd.hdc, &rcItem, dmlib::getHotBackgroundBrush());
 		}
 		else
 		{
-			dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundness, roundness);
+			dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcItem, dmlib::getHotEdgePen(), dmlib::getHotBackgroundBrush(), roundness, roundness);
 			if (isDropDown)
 			{
-				dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundness, roundness);
+				dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, dmlib::getHotEdgePen(), dmlib::getHotBackgroundBrush(), roundness, roundness);
 			}
 		}
 
@@ -306,14 +307,14 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 	{
 		if (!isIcon)
 		{
-			::FillRect(lptbcd->nmcd.hdc, &rcItem, DarkMode::getCtrlBackgroundBrush());
+			::FillRect(lptbcd->nmcd.hdc, &rcItem, dmlib::getCtrlBackgroundBrush());
 		}
 		else
 		{
-			dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcItem, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundness, roundness);
+			dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcItem, dmlib::getEdgePen(), dmlib::getCtrlBackgroundBrush(), roundness, roundness);
 			if (isDropDown)
 			{
-				dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundness, roundness);
+				dmlib_paint::paintRoundRect(lptbcd->nmcd.hdc, rcDrop, dmlib::getEdgePen(), dmlib::getCtrlBackgroundBrush(), roundness, roundness);
 			}
 		}
 
@@ -371,7 +372,7 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 	rcArrow.bottom -= dmlib_dpi::scale(3, lptbcd->nmcd.hdr.hwndFrom);
 
 	::SetBkMode(lptbcd->nmcd.hdc, TRANSPARENT);
-	::SetTextColor(lptbcd->nmcd.hdc, DarkMode::getTextColor());
+	::SetTextColor(lptbcd->nmcd.hdc, dmlib::getTextColor());
 
 	const auto hFont = dmlib_paint::GdiObject{ lptbcd->nmcd.hdc, lptbcd->nmcd.hdr.hwndFrom };
 	static constexpr UINT dtFlags = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP | DT_NOPREFIX;
@@ -410,7 +411,7 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 	{
 		case CDDS_PREPAINT:
 		{
-			::FillRect(lptbcd->nmcd.hdc, &lptbcd->nmcd.rc, DarkMode::getDlgBackgroundBrush());
+			::FillRect(lptbcd->nmcd.hdc, &lptbcd->nmcd.rc, dmlib::getDlgBackgroundBrush());
 			return CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
 		}
 
@@ -439,8 +440,8 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
  * Handles list view custom colors and styles, and adapts to grid line configuration.
  *
  * Behavior:
- * - **Selected**: Uses `DarkMode::getCtrlBackground*()` colors and text brush.
- * - **Hot**: Uses `DarkMode::getHotBackground()` colors with optional hover frame.
+ * - **Selected**: Uses `dmlib::getCtrlBackground*()` colors and text brush.
+ * - **Hot**: Uses `dmlib::getHotBackground()` colors with optional hover frame.
  * - **Gridlines active**: Fills the entire row background, column by column.
  *
  * @param[in,out]   lplvcd          Reference to `LPNMLVCUSTOMDRAW`.
@@ -460,15 +461,15 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 
 	if (isSelected)
 	{
-		lplvcd->clrText = DarkMode::getTextColor();
-		lplvcd->clrTextBk = DarkMode::getCtrlBackgroundColor();
-		hBrush = DarkMode::getCtrlBackgroundBrush();
+		lplvcd->clrText = dmlib::getTextColor();
+		lplvcd->clrTextBk = dmlib::getCtrlBackgroundColor();
+		hBrush = dmlib::getCtrlBackgroundBrush();
 	}
 	else if (isHot)
 	{
-		lplvcd->clrText = DarkMode::getTextColor();
-		lplvcd->clrTextBk = DarkMode::getHotBackgroundColor();
-		hBrush = DarkMode::getHotBackgroundBrush();
+		lplvcd->clrText = dmlib::getTextColor();
+		lplvcd->clrTextBk = dmlib::getHotBackgroundColor();
+		hBrush = dmlib::getHotBackgroundBrush();
 	}
 
 	if (hBrush != nullptr)
@@ -481,8 +482,8 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 		{
 			auto* hHeader = ListView_GetHeader(hList);
 			const auto nCol = Header_GetItemCount(hHeader);
-			const LONG paddingLeft = DarkMode::isThemeDark() ? 1 : 0;
-			const LONG paddingRight = DarkMode::isThemeDark() ? 2 : 1;
+			const LONG paddingLeft = dmlib::isThemeDark() ? 1 : 0;
+			const LONG paddingRight = dmlib::isThemeDark() ? 2 : 1;
 
 			const auto lvii = LVITEMINDEX{ static_cast<int>(lplvcd->nmcd.dwItemSpec), 0 };
 			RECT rcSubitem{
@@ -495,7 +496,14 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 
 			for (int i = 1; i < nCol; ++i)
 			{
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-qual" // cast from 'const type *' to 'type *' drops const
+#endif
 				ListView_GetItemIndexRect(hList, &lvii, i, LVIR_BOUNDS, &rcSubitem);
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 				rcSubitem.left -= paddingLeft;
 				rcSubitem.right -= paddingRight;
 				::FillRect(lplvcd->nmcd.hdc, &rcSubitem, hBrush);
@@ -504,7 +512,7 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 	}
 	else if (hasGridLines)
 	{
-		::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getViewBackgroundBrush());
+		::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, dmlib::getViewBackgroundBrush());
 	}
 
 	if (isFocused)
@@ -515,7 +523,7 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 	}
 	else if (!isSelected && isHot && !hasGridLines)
 	{
-		::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getHotEdgeBrush());
+		::FrameRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, dmlib::getHotEdgeBrush());
 	}
 }
 
@@ -545,22 +553,33 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 {
 	auto* lplvcd = reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
 	const auto& hList = lplvcd->nmcd.hdr.hwndFrom;
-	const auto lvStyle = ::GetWindowLongPtr(hList, GWL_STYLE) & LVS_TYPEMASK;
-	const bool isReport = (lvStyle == LVS_REPORT);
-	bool hasGridlines = false;
-	if (isReport)
-	{
-		const auto lvExStyle = ListView_GetExtendedListViewStyle(hList);
-		hasGridlines = (lvExStyle & LVS_EX_GRIDLINES) == LVS_EX_GRIDLINES;
-	}
+	const bool isDisabled = ::IsWindowEnabled(hList) == FALSE;
+	// makes sense only in enabled state
+	const bool isReport = !isDisabled && ((::GetWindowLongPtr(hList, GWL_STYLE) & LVS_TYPEMASK) == LVS_REPORT);
+	// makes sense only if list view has LVS_REPORT style
+	const bool hasGridlines = isReport && ((ListView_GetExtendedListViewStyle(hList) & LVS_EX_GRIDLINES) == LVS_EX_GRIDLINES);
 
 	switch (lplvcd->nmcd.dwDrawStage)
 	{
 		case CDDS_PREPAINT:
 		{
-			if (isReport && hasGridlines)
+			const auto hBrush = [&isDisabled, &hasGridlines]() -> HBRUSH
 			{
-				::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, DarkMode::getViewBackgroundBrush());
+				if (isDisabled)
+				{
+					return dmlib::getDlgBackgroundBrush();
+				}
+
+				if (hasGridlines)
+				{
+					return dmlib::getViewBackgroundBrush();
+				}
+				return nullptr;
+			}();
+
+			if (hBrush != nullptr)
+			{
+				::FillRect(lplvcd->nmcd.hdc, &lplvcd->nmcd.rc, hBrush);
 			}
 
 			return CDRF_NOTIFYITEMDRAW;
@@ -568,7 +587,17 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 
 		case CDDS_ITEMPREPAINT:
 		{
-			prepaintListViewItem(lplvcd, isReport, hasGridlines);
+			if (isDisabled)
+			{
+				lplvcd->clrFace = dmlib::getDlgBackgroundColor();
+				lplvcd->clrText = dmlib::getDisabledTextColor();
+				lplvcd->clrTextBk = dmlib::getDlgBackgroundColor();
+			}
+			else
+			{
+				prepaintListViewItem(lplvcd, isReport, hasGridlines);
+			}
+
 			return CDRF_NEWFONT;
 		}
 
@@ -598,21 +627,21 @@ static void prepaintListViewItem(LPNMLVCUSTOMDRAW& lplvcd, bool isReport, bool h
 
 	if ((lptvcd->nmcd.uItemState & CDIS_SELECTED) == CDIS_SELECTED)
 	{
-		lptvcd->clrText = DarkMode::getTextColor();
-		lptvcd->clrTextBk = DarkMode::getCtrlBackgroundColor();
-		::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, DarkMode::getCtrlBackgroundBrush());
+		lptvcd->clrText = dmlib::getTextColor();
+		lptvcd->clrTextBk = dmlib::getCtrlBackgroundColor();
+		::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, dmlib::getCtrlBackgroundBrush());
 
 		retVal |= CDRF_NEWFONT | CDRF_NOTIFYPOSTPAINT;
 	}
 	else if ((lptvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT)
 	{
-		lptvcd->clrText = DarkMode::getTextColor();
-		lptvcd->clrTextBk = DarkMode::getHotBackgroundColor();
+		lptvcd->clrText = dmlib::getTextColor();
+		lptvcd->clrTextBk = dmlib::getHotBackgroundColor();
 
-		if (DarkMode::isAtLeastWindows10()
-			|| static_cast<DarkMode::TreeViewStyle>(DarkMode::getTreeViewStyle()) == DarkMode::TreeViewStyle::light)
+		if (dmlib::isAtLeastWindows10()
+			|| static_cast<dmlib::TreeViewStyle>(dmlib::getTreeViewStyle()) == dmlib::TreeViewStyle::light)
 		{
-			::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, DarkMode::getHotBackgroundBrush());
+			::FillRect(lptvcd->nmcd.hdc, &lptvcd->nmcd.rc, dmlib::getHotBackgroundBrush());
 			retVal |= CDRF_NOTIFYPOSTPAINT;
 		}
 		retVal |= CDRF_NEWFONT;
@@ -638,11 +667,11 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
 
 	if ((lptvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT)
 	{
-		dmlib_paint::paintRoundFrameRect(lptvcd->nmcd.hdc, rcFrame, DarkMode::getHotEdgePen(), 0, 0);
+		dmlib_paint::paintRoundFrameRect(lptvcd->nmcd.hdc, rcFrame, dmlib::getHotEdgePen(), 0, 0);
 	}
 	else if ((lptvcd->nmcd.uItemState & CDIS_SELECTED) == CDIS_SELECTED)
 	{
-		dmlib_paint::paintRoundFrameRect(lptvcd->nmcd.hdc, rcFrame, DarkMode::getEdgePen(), 0, 0);
+		dmlib_paint::paintRoundFrameRect(lptvcd->nmcd.hdc, rcFrame, dmlib::getEdgePen(), 0, 0);
 	}
 }
 
@@ -730,7 +759,7 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
 		{
 			if ((lpnmcd->uItemState & CDIS_SELECTED) == CDIS_SELECTED)
 			{
-				::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getCtrlBackgroundBrush());
+				::FillRect(lpnmcd->hdc, &lpnmcd->rc, dmlib::getCtrlBackgroundBrush());
 				retVal = CDRF_SKIPDEFAULT;
 			}
 			break;
@@ -740,12 +769,12 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
 		{
 			if (::IsWindowEnabled(lpnmcd->hdr.hwndFrom) == FALSE)
 			{
-				::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getDlgBackgroundBrush());
-				dmlib_paint::paintRoundFrameRect(lpnmcd->hdc, lpnmcd->rc, DarkMode::getEdgePen(), 0, 0);
+				::FillRect(lpnmcd->hdc, &lpnmcd->rc, dmlib::getDlgBackgroundBrush());
+				dmlib_paint::paintRoundFrameRect(lpnmcd->hdc, lpnmcd->rc, dmlib::getEdgePen(), 0, 0);
 			}
 			else
 			{
-				::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getCtrlBackgroundBrush());
+				::FillRect(lpnmcd->hdc, &lpnmcd->rc, dmlib::getCtrlBackgroundBrush());
 			}
 
 			retVal = CDRF_SKIPDEFAULT;
@@ -822,7 +851,7 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
  */
 [[nodiscard]] static LRESULT prepaintRebar(const LPNMCUSTOMDRAW& lpnmcd) noexcept
 {
-	::FillRect(lpnmcd->hdc, &lpnmcd->rc, DarkMode::getDlgBackgroundBrush());
+	::FillRect(lpnmcd->hdc, &lpnmcd->rc, dmlib::getDlgBackgroundBrush());
 
 	REBARBANDINFO rbBand{};
 	rbBand.cbSize = sizeof(REBARBANDINFO);
@@ -837,21 +866,21 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
 		if ((rbBand.fStyle & RBBS_USECHEVRON) == RBBS_USECHEVRON
 			&& (rbBand.rcChevronLocation.right - rbBand.rcChevronLocation.left) > 0)
 		{
-			static const int roundness = DarkMode::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness + 1 : 0;
+			static const int roundness = dmlib::isAtLeastWindows11() ? dmlib_paint::kWin11CornerRoundness + 1 : 0;
 
 			const bool isHot = (rbBand.uChevronState & STATE_SYSTEM_HOTTRACKED) == STATE_SYSTEM_HOTTRACKED;
 			const bool isPressed = (rbBand.uChevronState & STATE_SYSTEM_PRESSED) == STATE_SYSTEM_PRESSED;
 
 			if (isHot)
 			{
-				dmlib_paint::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getHotEdgePen(), DarkMode::getHotBackgroundBrush(), roundness, roundness);
+				dmlib_paint::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, dmlib::getHotEdgePen(), dmlib::getHotBackgroundBrush(), roundness, roundness);
 			}
 			else if (isPressed)
 			{
-				dmlib_paint::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, DarkMode::getEdgePen(), DarkMode::getCtrlBackgroundBrush(), roundness, roundness);
+				dmlib_paint::paintRoundRect(lpnmcd->hdc, rbBand.rcChevronLocation, dmlib::getEdgePen(), dmlib::getCtrlBackgroundBrush(), roundness, roundness);
 			}
 
-			::SetTextColor(lpnmcd->hdc, isHot ? DarkMode::getTextColor() : DarkMode::getDarkerTextColor());
+			::SetTextColor(lpnmcd->hdc, isHot ? dmlib::getTextColor() : dmlib::getDarkerTextColor());
 			::SetBkMode(lpnmcd->hdc, TRANSPARENT);
 
 			const auto hFont = dmlib_paint::GdiObject{ lpnmcd->hdc, lpnmcd->hdr.hwndFrom };
@@ -864,7 +893,7 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
 			&& ((rbBand.fStyle & RBBS_FIXEDSIZE) != RBBS_FIXEDSIZE
 				|| (rbBand.fStyle & RBBS_NOGRIPPER) != RBBS_NOGRIPPER))
 		{
-			auto holdPen = static_cast<HPEN>(::SelectObject(lpnmcd->hdc, DarkMode::getDarkerTextPen()));
+			auto holdPen = static_cast<HPEN>(::SelectObject(lpnmcd->hdc, dmlib::getDarkerTextPen()));
 
 			RECT rcBand{};
 			::SendMessage(lpnmcd->hdr.hwndFrom, RB_GETRECT, static_cast<WPARAM>(i), reinterpret_cast<LPARAM>(&rcBand));
@@ -913,10 +942,11 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
 }
 
 /**
- * @brief Helper for handling `NM_CUSTOMDRAW` notification code.
+ * @brief Helper for handling `NM_CUSTOMDRAW` or `DTN_DROPDOWN` notification code.
  *
  * Handles `NM_CUSTOMDRAW` for custom draw for supported controls:
  * - toolbar, list view, tree view, trackbar, and rebar.
+ * Handles `DTN_DROPDOWN` for date time picker control.
  *
  * @param[in]   hWnd        Window handle for specific control.
  * @param[in]   uMsg        Message identifier.
@@ -926,12 +956,17 @@ static void postpaintTreeViewItem(const LPNMTVCUSTOMDRAW& lptvcd) noexcept
  *
  * @see dmlib_subclass::WindowNotifySubclass()
  */
-static LRESULT onNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT onNotifyCustomDrawOrDTPDropDown(
+	HWND hWnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam
+) noexcept
 {
-	if (auto* lpnmhdr = reinterpret_cast<LPNMHDR>(lParam);
-		lpnmhdr->code == NM_CUSTOMDRAW)
+	auto* lpnmhdr = reinterpret_cast<LPNMHDR>(lParam);
+	if (lpnmhdr->code == NM_CUSTOMDRAW)
 	{
-		const std::wstring className = dmlib_subclass::getWndClassName(lpnmhdr->hwndFrom);
+		const auto className = dmlib_subclass::WndClassName(lpnmhdr->hwndFrom);
 
 		if (className == TOOLBARCLASSNAME)
 		{
@@ -958,6 +993,30 @@ static LRESULT onNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			return darkRebarNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
 		}
 	}
+	else if (lpnmhdr->code == DTN_DROPDOWN
+		&& dmlib_subclass::WndClassName::cmpWndClassName(lpnmhdr->hwndFrom, DATETIMEPICK_CLASS))
+	{
+		HWND hCal = DateTime_GetMonthCal(lpnmhdr->hwndFrom);
+		dmlib::setDarkMonthCalendar(hCal);
+
+		// Drop down container needs resizing to not clip month calendar
+		{
+			const UINT dpi = dmlib_dpi::GetDpiForWindow(hWnd);
+
+			RECT rcIdeal{};
+			MonthCal_GetMinReqRect(hCal, &rcIdeal);
+			// border + padding
+			const auto borderSize = MonthCal_GetCalendarBorder(hCal) + dmlib_dpi::scale(8, dpi);
+			HWND hCalContainer = ::GetParent(hCal);
+			const auto nStyle = static_cast<DWORD>(::GetWindowLongPtr(hCalContainer, GWL_STYLE));
+			const auto nExStyle = static_cast<DWORD>(::GetWindowLongPtr(hCalContainer, GWL_EXSTYLE));
+			dmlib_dpi::AdjustWindowRectExForDpi(&rcIdeal, nStyle, FALSE, nExStyle, dpi);
+			::SetWindowPos(hCalContainer, nullptr, 	0, 	0,
+				rcIdeal.right - rcIdeal.left + borderSize,
+				rcIdeal.bottom - rcIdeal.top + borderSize,
+				SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+		}
+	}
 	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
@@ -975,9 +1034,9 @@ static LRESULT onNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see onNotifyCustomDraw()
- * @see DarkMode::setWindowNotifyCustomDrawSubclass()
- * @see DarkMode::removeWindowNotifyCustomDrawSubclass()
+ * @see onNotifyCustomDrawOrDTPDropDown()
+ * @see dmlib::setWindowNotifyCustomDrawSubclass()
+ * @see dmlib::removeWindowNotifyCustomDrawSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::WindowNotifySubclass(
 	HWND hWnd,
@@ -986,7 +1045,7 @@ LRESULT CALLBACK dmlib_subclass::WindowNotifySubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
@@ -998,12 +1057,12 @@ LRESULT CALLBACK dmlib_subclass::WindowNotifySubclass(
 
 		case WM_NOTIFY:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				break;
 			}
 
-			return onNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
+			return onNotifyCustomDrawOrDTPDropDown(hWnd, uMsg, wParam, lParam);
 		}
 
 		default:
@@ -1019,7 +1078,7 @@ LRESULT CALLBACK dmlib_subclass::WindowNotifySubclass(
  * @brief Fills the menu bar background custom color.
  *
  * Uses `GetMenuBarInfo` and `GetWindowRect` to compute the menu bar rectangle
- * in client-relative coordinates, then fills it with @ref DarkMode::getDlgBackgroundBrush.
+ * in client-relative coordinates, then fills it with @ref dmlib::getDlgBackgroundBrush.
  *
  * @param[in]   hWnd    Handle to the window with a menu bar.
  * @param[in]   hdc     Target device context for painting.
@@ -1044,7 +1103,7 @@ static void paintMenuBar(HWND hWnd, HDC hdc) noexcept
 
 	rcBar.top -= 1;
 
-	::FillRect(hdc, &rcBar, DarkMode::getDlgBackgroundBrush());
+	::FillRect(hdc, &rcBar, dmlib::getDlgBackgroundBrush());
 }
 
 /**
@@ -1058,10 +1117,10 @@ static void paintMenuBar(HWND hWnd, HDC hdc) noexcept
  *
  * @see dmlib_subclass::WindowMenuBarSubclass()
  */
-static void paintMenuBarItems(UAHDRAWMENUITEM& UDMI, const HTHEME& hTheme)
+static void paintMenuBarItems(UAHDRAWMENUITEM& UDMI, const HTHEME& hTheme) noexcept
 {
 	// get the menu item string
-	std::wstring buffer(MAX_PATH, L'\0');
+	auto buffer = std::array<wchar_t, MAX_PATH>{};
 	MENUITEMINFO mii{};
 	mii.cbSize = sizeof(MENUITEMINFO);
 	mii.fMask = MIIM_STRING;
@@ -1113,21 +1172,21 @@ static void paintMenuBarItems(UAHDRAWMENUITEM& UDMI, const HTHEME& hTheme)
 		case MBI_NORMAL:
 		case MBI_DISABLED:
 		{
-			::FillRect(UDMI.um.hdc, &UDMI.dis.rcItem, DarkMode::getDlgBackgroundBrush());
+			::FillRect(UDMI.um.hdc, &UDMI.dis.rcItem, dmlib::getDlgBackgroundBrush());
 			break;
 		}
 
 		case MBI_HOT:
 		case MBI_DISABLEDHOT:
 		{
-			::FillRect(UDMI.um.hdc, &UDMI.dis.rcItem, DarkMode::getHotBackgroundBrush());
+			::FillRect(UDMI.um.hdc, &UDMI.dis.rcItem, dmlib::getHotBackgroundBrush());
 			break;
 		}
 
 		case MBI_PUSHED:
 		case MBI_DISABLEDPUSHED:
 		{
-			::FillRect(UDMI.um.hdc, &UDMI.dis.rcItem, DarkMode::getCtrlBackgroundBrush());
+			::FillRect(UDMI.um.hdc, &UDMI.dis.rcItem, dmlib::getCtrlBackgroundBrush());
 			break;
 		}
 
@@ -1147,7 +1206,7 @@ static void paintMenuBarItems(UAHDRAWMENUITEM& UDMI, const HTHEME& hTheme)
 		case MBI_HOT:
 		case MBI_PUSHED:
 		{
-			dttopts.crText = DarkMode::getTextColor();
+			dttopts.crText = dmlib::getTextColor();
 			break;
 		}
 
@@ -1155,7 +1214,7 @@ static void paintMenuBarItems(UAHDRAWMENUITEM& UDMI, const HTHEME& hTheme)
 		case MBI_DISABLEDHOT:
 		case MBI_DISABLEDPUSHED:
 		{
-			dttopts.crText = DarkMode::getDisabledTextColor();
+			dttopts.crText = dmlib::getDisabledTextColor();
 			break;
 		}
 
@@ -1165,7 +1224,7 @@ static void paintMenuBarItems(UAHDRAWMENUITEM& UDMI, const HTHEME& hTheme)
 		}
 	}
 
-	::DrawThemeTextEx(hTheme, UDMI.um.hdc, MENU_BARITEM, iTextStateID, buffer.c_str(), static_cast<int>(mii.cch), dwFlags, &UDMI.dis.rcItem, &dttopts);
+	::DrawThemeTextEx(hTheme, UDMI.um.hdc, MENU_BARITEM, iTextStateID, mii.dwTypeData, static_cast<int>(mii.cch), dwFlags, &UDMI.dis.rcItem, &dttopts);
 }
 
 /**
@@ -1203,7 +1262,7 @@ static void drawUAHMenuNCBottomLine(HWND hWnd) noexcept
 
 
 	HDC hdc = ::GetWindowDC(hWnd);
-	::FillRect(hdc, &rcAnnoyingLine, DarkMode::getDlgBackgroundBrush());
+	::FillRect(hdc, &rcAnnoyingLine, dmlib::getDlgBackgroundBrush());
 	::ReleaseDC(hWnd, hdc);
 }
 
@@ -1220,8 +1279,8 @@ static void drawUAHMenuNCBottomLine(HWND hWnd) noexcept
  * @param[in]   dwRefData   ThemeData instance.
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setWindowMenuBarSubclass()
- * @see DarkMode::removeWindowMenuBarSubclass()
+ * @see dmlib::setWindowMenuBarSubclass()
+ * @see dmlib::removeWindowMenuBarSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::WindowMenuBarSubclass(
 	HWND hWnd,
@@ -1230,11 +1289,11 @@ LRESULT CALLBACK dmlib_subclass::WindowMenuBarSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pMenuThemeData = reinterpret_cast<ThemeData*>(dwRefData);
 
-	if (uMsg != WM_NCDESTROY && (!DarkMode::isEnabled() || !pMenuThemeData->ensureTheme(hWnd)))
+	if (uMsg != WM_NCDESTROY && (!dmlib::isEnabled() || !pMenuThemeData->ensureTheme(hWnd)))
 	{
 		return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -1244,7 +1303,7 @@ LRESULT CALLBACK dmlib_subclass::WindowMenuBarSubclass(
 		case WM_NCDESTROY:
 		{
 			::RemoveWindowSubclass(hWnd, WindowMenuBarSubclass, uIdSubclass);
-			std::unique_ptr<ThemeData> ptrData(pMenuThemeData);
+			const std::unique_ptr<ThemeData> ptrData(pMenuThemeData);
 			break;
 		}
 
@@ -1284,7 +1343,7 @@ LRESULT CALLBACK dmlib_subclass::WindowMenuBarSubclass(
 		case WM_NCACTIVATE:
 		case WM_NCPAINT:
 		{
-			const LRESULT retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			const auto retVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 			drawUAHMenuNCBottomLine(hWnd);
 			return retVal;
 		}
@@ -1310,8 +1369,8 @@ LRESULT CALLBACK dmlib_subclass::WindowMenuBarSubclass(
  * @param[in]   dwRefData   Reserved data (unused).
  * @return LRESULT Result of message processing.
  *
- * @see DarkMode::setWindowSettingChangeSubclass()
- * @see DarkMode::removeWindowSettingChangeSubclass()
+ * @see dmlib::setWindowSettingChangeSubclass()
+ * @see dmlib::removeWindowSettingChangeSubclass()
  */
 LRESULT CALLBACK dmlib_subclass::WindowSettingChangeSubclass(
 	HWND hWnd,
@@ -1320,7 +1379,7 @@ LRESULT CALLBACK dmlib_subclass::WindowSettingChangeSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	[[maybe_unused]] DWORD_PTR dwRefData
-)
+) noexcept
 {
 	switch (uMsg)
 	{
@@ -1332,10 +1391,10 @@ LRESULT CALLBACK dmlib_subclass::WindowSettingChangeSubclass(
 
 		case WM_SETTINGCHANGE:
 		{
-			if (DarkMode::handleSettingChange(lParam))
+			if (dmlib::handleSettingChange(lParam))
 			{
-				DarkMode::setDarkTitleBarEx(hWnd, true);
-				DarkMode::setChildCtrlsTheme(hWnd);
+				dmlib::setDarkTitleBarEx(hWnd, true);
+				dmlib::setChildCtrlsTheme(hWnd);
 				::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW | RDW_FRAME);
 			}
 			break;
@@ -1447,7 +1506,7 @@ static LRESULT CALLBACK DarkTaskDlgSubclass(
 	LPARAM lParam,
 	UINT_PTR uIdSubclass,
 	DWORD_PTR dwRefData
-)
+) noexcept
 {
 	auto* pTaskDlgData = reinterpret_cast<TaskDlgData*>(dwRefData);
 
@@ -1456,13 +1515,13 @@ static LRESULT CALLBACK DarkTaskDlgSubclass(
 		case WM_NCDESTROY:
 		{
 			::RemoveWindowSubclass(hWnd, DarkTaskDlgSubclass, uIdSubclass);
-			std::unique_ptr<TaskDlgData> ptrData(pTaskDlgData);
+			const std::unique_ptr<TaskDlgData> ptrData(pTaskDlgData);
 			break;
 		}
 
 		case WM_ERASEBKGND:
 		{
-			const std::wstring className = dmlib_subclass::getWndClassName(hWnd);
+			const auto className = dmlib_subclass::WndClassName(hWnd);
 
 			if (className == L"CtrlNotifySink")
 			{
@@ -1506,9 +1565,9 @@ static LRESULT CALLBACK DarkTaskDlgSubclass(
  *
  * @param[in] hWnd Handle to the task dialog.
  *
- * @see DarkMode::DarkTaskDlgSubclass()
+ * @see DarkTaskDlgSubclass()
  */
-static void setDarkTaskDlgSubclass(HWND hWnd)
+static void setDarkTaskDlgSubclass(HWND hWnd) DMLIB_MEM_NOEXCEPT
 {
 	dmlib_subclass::SetSubclass<TaskDlgData>(hWnd, DarkTaskDlgSubclass, dmlib_subclass::SubclassID::taskDlg);
 }
@@ -1520,9 +1579,9 @@ static void setDarkTaskDlgSubclass(HWND hWnd)
  * @param[in]   lParam  LPARAM data (unused).
  * @return `TRUE` to continue enumeration.
  */
-static BOOL CALLBACK DarkTaskEnumChildProc(HWND hWnd, [[maybe_unused]] LPARAM lParam)
+static BOOL CALLBACK DarkTaskEnumChildProc(HWND hWnd, [[maybe_unused]] LPARAM lParam) DMLIB_MEM_NOEXCEPT
 {
-	const std::wstring className = dmlib_subclass::getWndClassName(hWnd);
+	const auto className = dmlib_subclass::WndClassName(hWnd);
 
 	if (className == L"CtrlNotifySink")
 	{
@@ -1537,7 +1596,7 @@ static BOOL CALLBACK DarkTaskEnumChildProc(HWND hWnd, [[maybe_unused]] LPARAM lP
 			case BS_RADIOBUTTON:
 			case BS_AUTORADIOBUTTON:
 			{
-				DarkMode::setCheckboxOrRadioBtnCtrlSubclass(hWnd);
+				dmlib::setCheckboxOrRadioBtnCtrlSubclass(hWnd);
 				break;
 			}
 
@@ -1547,27 +1606,27 @@ static BOOL CALLBACK DarkTaskEnumChildProc(HWND hWnd, [[maybe_unused]] LPARAM lP
 			}
 		}
 
-		DarkMode::setDarkExplorerTheme(hWnd);
+		dmlib::setDarkExplorerTheme(hWnd);
 
 		return TRUE;
 	}
 
 	if (className == WC_LINK)
 	{
-		DarkMode::enableSysLinkCtrlCtlColor(hWnd);
+		dmlib::enableSysLinkCtrlCtlColor(hWnd);
 		setDarkTaskDlgSubclass(hWnd);
 		return TRUE;
 	}
 
 	if (className == WC_SCROLLBAR)
 	{
-		DarkMode::setDarkScrollBar(hWnd);
+		dmlib::setDarkScrollBar(hWnd);
 		return TRUE;
 	}
 
 	if (className == PROGRESS_CLASS)
 	{
-		DarkMode::setProgressBarClassicTheme(hWnd);
+		dmlib::setProgressBarClassicTheme(hWnd);
 		return TRUE;
 	}
 
@@ -1575,14 +1634,22 @@ static BOOL CALLBACK DarkTaskEnumChildProc(HWND hWnd, [[maybe_unused]] LPARAM lP
 	{
 		::EnumChildWindows(hWnd, DarkTaskEnumChildProc, 0);
 		setDarkTaskDlgSubclass(hWnd);
-		DarkMode::setDarkExplorerTheme(hWnd);
+		dmlib::setDarkExplorerTheme(hWnd);
 		return TRUE;
 	}
 
 	return TRUE;
 }
 
-void dmlib_subclass::setTaskDlgChildCtrlsSubclassAndTheme(HWND hWnd)
+/**
+ * @brief Applies a subclass to task dialog and its children to handle dark mode.
+ *
+ * @param[in] hWnd Handle to the task dialog.
+ *
+ * @see DarkTaskDlgSubclass()
+ * @see DarkTaskEnumChildProc()
+ */
+void dmlib_subclass::setTaskDlgChildCtrlsSubclassAndTheme(HWND hWnd) DMLIB_MEM_NOEXCEPT
 {
 	setDarkTaskDlgSubclass(hWnd);
 	::EnumChildWindows(hWnd, DarkTaskEnumChildProc, 0);

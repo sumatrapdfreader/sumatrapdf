@@ -277,4 +277,20 @@ namespace dmlib_paint
 	{
 		return (rc.right > rc.left && rc.bottom > rc.top);
 	}
+
+	/**
+	 * @brief Checks whether a animation effects such as transition effect are enabled.
+	 *
+	 * @return `true`  If animation effects are enabled.
+	 * @return `false` Otherwise.
+	 */
+	[[nodiscard]] inline bool isAnimationEnabled() noexcept
+	{
+		if (BOOL isEnabled = FALSE;
+			::SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &isEnabled, FALSE) != FALSE)
+		{
+			return isEnabled == TRUE;
+		}
+		return false;
+	}
 } // namespace dmlib_paint

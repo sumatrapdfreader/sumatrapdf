@@ -12,6 +12,8 @@
 
 #pragma once
 
+#ifndef _DARKMODELIB_NO_INI_CONFIG
+
 #include <windows.h>
 
 #include <string>
@@ -25,3 +27,5 @@ namespace dmlib_ini
 	/// Reads a color value from an `.ini` file and converts it to a `COLORREF`.
 	bool setClrFromIni(const std::wstring& iniFilePath, const std::wstring& sectionName, const std::wstring& keyName, COLORREF* clr);
 } // namespace dmlib_ini
+
+#endif // _DARKMODELIB_NO_INI_CONFIG

@@ -1,7 +1,7 @@
 ﻿// SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2025 ozone10
+ * Copyright (c) 2025-2026 ozone10
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -14,6 +14,7 @@
 #include <windows.h>
 
 #include <commctrl.h>
+#include <commdlg.h>
 #include <richedit.h>
 
 #include <algorithm>
@@ -21,7 +22,7 @@
 #include <string>
 
 #if !defined(DMLIB_DLL)
-#include "DarkModeSubclass.h"
+#include "Darkmodelib.h"
 #else
 #include "dmlib_dll_helper.h"
 #endif
@@ -46,7 +47,7 @@ static HRESULT MyDummyDarkTaskDialogIndirect(
 
 // Example of how to define your function loader
 
-bool DarkMode::loadDarkModeFunctionsFromDll(const wchar_t* dllName)
+bool dmlib::loadDarkModeFunctionsFromDll(const wchar_t* dllName)
 {
 	wchar_t fullPath[MAX_PATH]{};
 	// workaround for SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
@@ -118,9 +119,9 @@ static inline UINT WINAPI MyGetDpiForSystem()
 static constexpr size_t MAX_LOADSTRING = 32;
 
 // Global Variables:
-HINSTANCE g_hInst = nullptr;                                    // Current instance
-std::wstring g_szTitle(MAX_LOADSTRING, L'\0');                  // The title bar text
-std::wstring g_szWindowClass(MAX_LOADSTRING, L'\0');            // The main window class name
+HINSTANCE g_hInst = nullptr;                                // Current instance
+auto g_szTitle = std::wstring(MAX_LOADSTRING, L'\0');       // The title bar text
+auto g_szWindowClass = std::wstring(MAX_LOADSTRING, L'\0'); // The main window class name
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	[[maybe_unused]] _In_opt_ HINSTANCE /*hPrevInstance*/,
@@ -131,7 +132,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	SetDllDirectoryW(L"");
 
 #if defined(DMLIB_DLL)
-	if (!DarkMode::loadDarkModeFunctionsFromDll(L"darkmode.dll"))
+	if (!dmlib::loadDarkModeFunctionsFromDll(L"darkmode.dll"))
 	{
 #if DMLIB_FAST_FAIL > 0
 		return FALSE;
@@ -139,9 +140,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 #endif
 
-	DarkMode::initDarkMode();
-	DarkMode::setDarkModeConfigEx(static_cast<UINT>(DarkMode::DarkModeType::dark));
-	DarkMode::setDefaultColors(true);
+	dmlib::initDarkMode();
+	dmlib::setDarkModeConfigEx(static_cast<UINT>(dmlib::DarkModeType::dark));
+	dmlib::setDefaultColors(true);
 
 	// Initialize global strings
 	LoadStringW(hInstance, IDS_APP_TITLE, g_szTitle.data(), MAX_LOADSTRING);
@@ -214,7 +215,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND& hMain)
 	g_hInst = hInstance; // Store instance handle in our global variable
 
 	hMain = CreateWindowExW(0, g_szWindowClass.c_str(), g_szTitle.c_str(), WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, Scale(970), Scale(550), nullptr, nullptr, hInstance, nullptr);
+		CW_USEDEFAULT, 0, Scale(1040), Scale(560), nullptr, nullptr, hInstance, nullptr);
 
 	if (hMain == nullptr)
 	{
@@ -246,11 +247,11 @@ enum class IdCtrl : WORD
 	checkCheckedDisabled,
 	triState,
 	triStateDisabled,
-	progressNormal = 1023,
+	progressNormal = triStateDisabled + 901,
 	progressError,
 	progressPaused,
 	progressMarquee,
-	radioUnset = 127,
+	radioUnset = progressMarquee - 899,
 	radioUnsetDisabled,
 	radioSet,
 	radioSetDisabled,
@@ -262,10 +263,10 @@ enum class IdCtrl : WORD
 	comboDropDisabled,
 	comboList,
 	comboListDisabled,
-	syslink = 1039,
-	upDownEdit = 140,
-	upDown = 1041,
-	trackbar = 142,
+	syslink = comboListDisabled + 901,
+	upDownEdit = syslink - 899,
+	upDown = upDownEdit + 901,
+	trackbar = upDown - 899,
 	tabcontrol,
 	listbox,
 	ipAddress,
@@ -274,7 +275,9 @@ enum class IdCtrl : WORD
 	treeview,
 	hotkey,
 	richEdit,
-	scrollH = 1049,
+	datePick,
+	monthCal,
+	scrollH = monthCal + 901,
 	scrollV,
 	statusbar
 };
@@ -295,7 +298,7 @@ static void SelectAndRefreshMode(HWND hWnd, UINT checkID)
 	{
 		case IDM_LIGHT:
 		{
-			if (!DarkMode::isExperimentalActive() && DarkMode::isEnabled())
+			if (!dmlib::isExperimentalActive() && dmlib::isEnabled())
 			{
 				return;
 			}
@@ -306,7 +309,7 @@ static void SelectAndRefreshMode(HWND hWnd, UINT checkID)
 
 		case IDM_CLASSIC:
 		{
-			if (!DarkMode::isEnabled())
+			if (!dmlib::isEnabled())
 			{
 				return;
 			}
@@ -317,7 +320,7 @@ static void SelectAndRefreshMode(HWND hWnd, UINT checkID)
 
 		case IDM_DARK:
 		{
-			if (DarkMode::isExperimentalActive())
+			if (dmlib::isExperimentalActive())
 			{
 				return;
 			}
@@ -331,14 +334,14 @@ static void SelectAndRefreshMode(HWND hWnd, UINT checkID)
 		}
 	}
 
-	DarkMode::setDarkModeConfigEx(dmType);
-	DarkMode::setDefaultColors(true);
-	DarkMode::setDarkTitleBarEx(hWnd, true);
-	DarkMode::setChildCtrlsTheme(hWnd);
+	dmlib::setDarkModeConfigEx(dmType);
+	dmlib::setDefaultColors(true);
+	dmlib::setDarkTitleBarEx(hWnd, true);
+	dmlib::setChildCtrlsTheme(hWnd);
 
 	if (checkID == IDM_CLASSIC)
 	{
-		DarkMode::disableVisualStyle(GetDlgItem(hWnd, static_cast<int>(IdCtrl::treeview)), false);
+		dmlib::disableVisualStyle(GetDlgItem(hWnd, static_cast<int>(IdCtrl::treeview)), false);
 	}
 
 	RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW | RDW_FRAME);
@@ -381,7 +384,7 @@ static HRESULT CALLBACK TaskDlgCallback(
 
 		case TDN_DIALOG_CONSTRUCTED:
 		{
-			DarkMode::setDarkTaskDlg(hWnd);
+			dmlib::setDarkTaskDlg(hWnd);
 			break;
 		}
 
@@ -391,6 +394,39 @@ static HRESULT CALLBACK TaskDlgCallback(
 		}
 	}
 	return S_OK;
+}
+
+static LRESULT CALLBACK RichEditNoTabSubclass(
+	HWND hWnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT_PTR uIdSubclass,
+	[[maybe_unused]] DWORD_PTR /*dwRefData*/
+)
+{
+	switch (uMsg)
+	{
+		case WM_NCDESTROY:
+		{
+			::RemoveWindowSubclass(hWnd, RichEditNoTabSubclass, uIdSubclass);
+			break;
+		}
+
+		case WM_GETDLGCODE:
+		{
+			LRESULT resVal = ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+			resVal &= ~DLGC_WANTTAB;
+			if (lParam != 0
+				&& reinterpret_cast<MSG*>(lParam)->message == WM_KEYDOWN
+				&& reinterpret_cast<MSG*>(lParam)->wParam == VK_TAB)
+			{
+				resVal &= ~DLGC_WANTMESSAGE;
+			}
+			return resVal;
+		}
+	}
+	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
 static HMODULE hModRich = nullptr;
@@ -411,7 +447,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_CREATE:
 		{
-			DarkMode::setWindowExStyle(hWnd, true, WS_EX_COMPOSITED);
+			dmlib::setWindowExStyle(hWnd, true, WS_EX_COMPOSITED);
 
 			CheckModeMenu(hWnd, IDM_DARK);
 
@@ -465,7 +501,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			static const int heightListBox = Scale(100);
 			static const int heightListView = Scale(98);
 			static const int heightTreeView = Scale(90);
-			static const int heightRichEdit = Scale(98);
+			static const int heightRichEdit = Scale(80);
+			static const int heightMonthCal = Scale(168);
 
 			static const int xPos1stCol = 10;
 			static const int xPos1stColCtrl = xPos1stCol + xPosCtrl;
@@ -474,7 +511,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			static const int wGroup2ndCol = Scale(160);
 			static const int wGroup3rdCol = Scale(160);
 			static const int wGroup4thCol = Scale(160);
-			static const int wGroup5thCol = Scale(160);
+			static const int wGroup5thCol = Scale(230);
 
 			static const int wBtn = (wGroup1stCol - (2 * xPosCtrl) - xGap) / 2;
 			static const int wCheck = wBtn * 2;
@@ -526,6 +563,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			static const int ySTTreeView = ySTListView + yPosCtrl + ((heightListView + yPosCtrlEnd) * 2) + yGap;
 
 			static const int yGBRichEdit = yRow + heightGBHotKey + yGap;
+			static const int yGBDatePicker = yGBRichEdit + heightGBRichEdit + yGap;
+			static const int ySTMonthCal = yGBDatePicker + heightGBHotKey + yGap;
 
 			static const int xPosSplit = xPos1stColCtrl + xGap + wBtn;
 
@@ -588,6 +627,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			static const int yHotKey = yRow + yPosCtrl + ((heightCtrl + heightEditGap) * 0);
 			static const int yRichEdit = yGBRichEdit + yPosCtrl + ((heightRichEdit + heightEditGap) * 0);
+			static const int yDatePicker = yGBDatePicker + yPosCtrl;
+			static const int yMonthCal = ySTMonthCal + yPosCtrl;
 
 			static const int xToolbar = Scale(100);
 			static const int wToolbar = xToolbar;
@@ -985,16 +1026,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (hModRich != nullptr)
 			{
 				static const std::wstring richEditText = L"{\\rtf1\\ansi\n"
-					L"\\line\n"
 					L"Darkmodelib\\line\n"
 					L"\\line\n"
 					L"by\\line\n"
 					L"\\line\n"
 					L"ozone10\\line\n";
 
-				createCtrl(MSFTEDIT_CLASS, richEditText.c_str(), ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_BORDER,
+				HWND hRichEdit = createCtrl(MSFTEDIT_CLASS, richEditText.c_str(), ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_BORDER,
 					xPos5thColCtrl, yRichEdit, wCtrl5thCol, heightRichEdit, IdCtrl::richEdit, WS_EX_CLIENTEDGE);
+
+				::SetWindowSubclass(hRichEdit, RichEditNoTabSubclass, static_cast<UINT_PTR>(IdCtrl::richEdit), 0);
 			}
+
+			// --- Date Time Picker ---
+			createCtrl(WC_BUTTON, L"Date Time Picker", BS_GROUPBOX,
+				xPos5thCol, yGBDatePicker, wGroup5thCol, heightGBHotKey);
+
+			createCtrl(DATETIMEPICK_CLASS, nullptr, DTS_LONGDATEFORMAT,
+				xPos5thColCtrl, yDatePicker, wCtrl5thCol, heightCtrl, IdCtrl::datePick);
+
+			// --- Month Calendar ---
+			createCtrl(WC_STATIC, L"Month Calendar:", SS_LEFT,
+				xPos5thCol, ySTMonthCal, wGroup5thCol, heightCtrl);
+
+			createCtrl(MONTHCAL_CLASS, nullptr, 0,
+				xPos5thCol, yMonthCal, wGroup5thCol, heightMonthCal, IdCtrl::monthCal);
 
 			// --- Scroll Bars ---
 			// Horizontal scroll bar
@@ -1036,12 +1092,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SendMessageW(hStatus, SB_SETTEXT, 2, reinterpret_cast<LPARAM>(L"Panel 2"));
 
 			// --- Dark Mode ---
-			DarkMode::setColorizeTitleBarConfig(true);
-			DarkMode::setDarkWndNotifySafe(hWnd);
-			DarkMode::setWindowEraseBgSubclass(hWnd);
-			DarkMode::setWindowMenuBarSubclass(hWnd);
+			dmlib::setColorizeTitleBarConfig(true);
+			dmlib::setDarkWndNotifySafe(hWnd);
+			dmlib::setWindowEraseBgSubclass(hWnd);
+			dmlib::setWindowMenuBarSubclass(hWnd);
 
-			DarkMode::setWindowExStyle(hWnd, false, WS_EX_COMPOSITED);
+			dmlib::setWindowExStyle(hWnd, false, WS_EX_COMPOSITED);
 
 			break;
 		}
@@ -1073,8 +1129,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					cc.hwndOwner = hWnd;
 					cc.lpCustColors = customColors.data();
 					cc.rgbResult = RGB(0, 120, 215);
-					cc.Flags = CC_FULLOPEN | CC_RGBINIT | CC_ENABLEHOOK;
-					cc.lpfnHook = static_cast<LPCCHOOKPROC>(DarkMode::HookDlgProc);
+					cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+					if (dmlib::isEnabled())
+					{
+						cc.Flags |= CC_ENABLEHOOK;
+						cc.lpfnHook = static_cast<LPCCHOOKPROC>(dmlib::HookDlgProc);
+					}
 
 					ChooseColorW(&cc);
 					break;
@@ -1096,11 +1156,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					cf.lStructSize = sizeof(cf);
 					cf.hwndOwner = hWnd;
 					cf.lpLogFont = &lf;
-					cf.Flags = CF_SCREENFONTS | CF_INITTOLOGFONTSTRUCT | CF_EFFECTS;
-					cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
-					cf.lpfnHook = static_cast<LPCFHOOKPROC>(DarkMode::HookDlgProc);
-					cf.hInstance = GetModuleHandleW(nullptr);
-					cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
+					cf.Flags = CF_BOTH | CF_INITTOLOGFONTSTRUCT | CF_EFFECTS | CF_LIMITSIZE | CF_FORCEFONTEXIST;
+					cf.nSizeMin = 8;
+					cf.nSizeMax = 72;
+					if (dmlib::isEnabled())
+					{
+						cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
+						cf.lpfnHook = static_cast<LPCFHOOKPROC>(dmlib::HookDlgProc);
+						cf.hInstance = GetModuleHandleW(nullptr);
+						cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
+					}
 
 					ChooseFontW(&cf);
 					break;
@@ -1130,7 +1195,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					taskDlgCfg.dwFlags = TDF_ENABLE_HYPERLINKS | TDF_ALLOW_DIALOG_CANCELLATION | TDF_USE_COMMAND_LINKS | TDF_EXPAND_FOOTER_AREA | TDF_SHOW_MARQUEE_PROGRESS_BAR | TDF_CAN_BE_MINIMIZED | TDF_SIZE_TO_CONTENT;
 					taskDlgCfg.dwCommonButtons = TDCBF_OK_BUTTON | TDCBF_YES_BUTTON | TDCBF_NO_BUTTON | TDCBF_CANCEL_BUTTON | TDCBF_RETRY_BUTTON | TDCBF_CLOSE_BUTTON;
 					taskDlgCfg.pszWindowTitle = L"Dark Task Dialog";
-					taskDlgCfg.pszMainIcon = TD_ERROR_ICON;
+					taskDlgCfg.pszMainIcon = TD_INFORMATION_ICON;
 					taskDlgCfg.pszMainInstruction = L"Simple Dark Task Dialog";
 					taskDlgCfg.pszContent = L"Example of task dialog with basic dark mode support.\nMight/might not support every task dialog configuration.\nCurrently works only on Windows 11.";
 					taskDlgCfg.cButtons = static_cast<UINT>(commandBtn.size());
@@ -1142,14 +1207,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					taskDlgCfg.pszExpandedInformation = L"Expanded Information in footer.\nThis can also go in the top part of the dialog.";
 					taskDlgCfg.pszExpandedControlText = L"Expanded Control Text\non two lines";
 					taskDlgCfg.pszCollapsedControlText = L"Collapsed Control Text";
-					taskDlgCfg.pszFooterIcon = TD_INFORMATION_ICON;
+					taskDlgCfg.pszFooterIcon = TD_WARNING_ICON;
 					taskDlgCfg.pszFooter = L"Footer with <a href=\"https://example.com\">hyperlink</a>";
 					taskDlgCfg.pfCallback = TaskDlgCallback;
 					taskDlgCfg.lpCallbackData = 0;
 					taskDlgCfg.cxWidth = 0;
 
 					BOOL checkFlag = FALSE;
-					DarkMode::darkTaskDialogIndirect(&taskDlgCfg, nullptr, nullptr, &checkFlag);
+					dmlib::darkTaskDialogIndirect(&taskDlgCfg, nullptr, nullptr, &checkFlag);
+					break;
+				}
+
+				case IDM_MSGBOX:
+				{
+					dmlib::darkMessageBoxW(hWnd,
+						L"In dark mode message box is replaced by task dialog to have dark colors.\n" \
+						L"If `lpCation` parameter is nullptr \"Error\" string is used. Developer will need to provide localization themself.",
+						nullptr, MB_CANCELTRYCONTINUE | MB_ICONQUESTION | MB_DEFBUTTON2);
 					break;
 				}
 
@@ -1317,17 +1391,26 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, [[maybe_unused]] 
 	{
 		case WM_INITDIALOG:
 		{
-			DarkMode::setDarkWndNotifySafe(hDlg);
+			dmlib::setDarkWndNotifySafe(hDlg);
 			std::wstring dmlVer = L"Darkmodelib demo ";
 #if defined(DMLIB_DLL)
-			dmlVer += L"DLL";
+			dmlVer += L"DLL ";
 #endif
-			dmlVer += L" v";
-			dmlVer += std::to_wstring(DarkMode::getLibInfo(static_cast<int>(DarkMode::LibInfo::verMajor)));
+			dmlVer += L"v";
+			dmlVer += std::to_wstring(dmlib::getLibInfo(static_cast<int>(dmlib::LibInfo::verMajor)));
 			dmlVer += L'.';
-			dmlVer += std::to_wstring(DarkMode::getLibInfo(static_cast<int>(DarkMode::LibInfo::verMinor)));
+			dmlVer += std::to_wstring(dmlib::getLibInfo(static_cast<int>(dmlib::LibInfo::verMinor)));
 			dmlVer += L'.';
-			dmlVer += std::to_wstring(DarkMode::getLibInfo(static_cast<int>(DarkMode::LibInfo::verRevision)));
+			dmlVer += std::to_wstring(dmlib::getLibInfo(static_cast<int>(dmlib::LibInfo::verRevision)));
+			dmlVer += L" ";
+
+#if defined(_MSC_VER)
+			dmlVer += L"MSVC";
+#elif defined(__clang__)
+			dmlVer += L"Clang";
+#elif defined(__GNUC__)
+			dmlVer += L"GCC";
+#endif
 
 			SetDlgItemTextW(hDlg, IDC_ABOUT_VERSION, dmlVer.c_str());
 			return TRUE;

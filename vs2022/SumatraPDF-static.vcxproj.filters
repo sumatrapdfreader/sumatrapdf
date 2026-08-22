@@ -45,6 +45,9 @@
     <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h">
       <Filter>ext\darkmodelib\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\include\Darkmodelib.h">
+      <Filter>ext\darkmodelib\include</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\darkmodelib\src\DmlibColor.h">
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
@@ -76,6 +79,12 @@
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\darkmodelib\src\IatHook.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\MemoryHelper.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\MemoryHelperDef.h">
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\darkmodelib\src\ModuleHelper.h">
@@ -545,7 +554,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp">
+    <ClCompile Include="..\ext\darkmodelib\src\Darkmodelib.cpp">
       <Filter>ext\darkmodelib\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\darkmodelib\src\DmlibColor.cpp">
