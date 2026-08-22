@@ -329,13 +329,19 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
 }
 
 // format a single value into a caller-provided buffer via snprintf, NUL-terminating
-// even on truncation. Avoids allocating (assuming vsnprintf doesn't allocate).
-static void bufFmt(Str buf, const char* fmt, ...) {
+// even on truncation. Returns a Str view of the written bytes (not including the NUL).
+// Avoids allocating (assuming vsnprintf doesn't allocate).
+static Str bufFmt(Str buf, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    str::VsnprintfUtf8(buf, fmt, args);
+    int n = str::VsnprintfUtf8(buf, fmt, args);
     va_end(args);
-    buf.s[buf.len - 1] = 0;
+    if (n < 0 || n >= buf.len) {
+        n = buf.len - 1;
+    }
+    buf.s[n] = 0;
+    buf.len = n;
+    return buf;
 }
 
 // default formatting for {n} positional and %v: format by the arg's runtime type
@@ -347,21 +353,17 @@ static void evalDefault(Fmt& fmt, const FmtArg& arg) {
             fmt.res.AppendChar(arg.c);
             break;
         case FmtArg::Kind::Int:
-            bufFmt(buf, "%lld", (long long)arg.i);
-            fmt.res.Append(Str(fmt.buf));
+            fmt.res.Append(bufFmt(buf, "%lld", (long long)arg.i));
             break;
         case FmtArg::Kind::Ptr:
-            bufFmt(buf, "%p", arg.ptr);
-            fmt.res.Append(Str(fmt.buf));
+            fmt.res.Append(bufFmt(buf, "%p", arg.ptr));
             break;
         case FmtArg::Kind::Float:
             // Note: %G, unlike %f, avoids trailing '0'
-            bufFmt(buf, "%G", (double)arg.f);
-            fmt.res.Append(Str(fmt.buf));
+            fmt.res.Append(bufFmt(buf, "%G", (double)arg.f));
             break;
         case FmtArg::Kind::Double:
-            bufFmt(buf, "%G", arg.d);
-            fmt.res.Append(Str(fmt.buf));
+            fmt.res.Append(bufFmt(buf, "%G", arg.d));
             break;
         case FmtArg::Kind::Str:
             fmt.res.Append(arg.str);
@@ -394,8 +396,7 @@ static i64 argToI64(const FmtArg& arg) {
 // 32/64-bit value width matches printf. %s padding/truncation is done by hand to
 // avoid relying on the Str being NUL-terminated.
 static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
-    char* buf = fmt.buf;
-    Str bufS(fmt.buf, dimofi(fmt.buf));
+    Str buf(fmt.buf, dimofi(fmt.buf));
 
     if (inst.conv == 's' || inst.conv == 'S') {
         Str sv = (arg.t == FmtArg::Kind::WStr) ? ToUtf8Temp(arg.wstr) : arg.str;
@@ -436,13 +437,12 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                bufFmt(bufS, fbuf, (long long)ival);
+                fmt.res.Append(bufFmt(buf, fbuf, (long long)ival));
             } else {
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                bufFmt(bufS, fbuf, (int)ival);
+                fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
             }
-            fmt.res.Append(Str(buf));
             break;
         case 'u':
         case 'o':
@@ -453,19 +453,17 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                bufFmt(bufS, fbuf, (unsigned long long)ival);
+                fmt.res.Append(bufFmt(buf, fbuf, (unsigned long long)ival));
             } else {
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                bufFmt(bufS, fbuf, (unsigned int)(unsigned long long)ival);
+                fmt.res.Append(bufFmt(buf, fbuf, (unsigned int)(unsigned long long)ival));
             }
-            fmt.res.Append(Str(buf));
             break;
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
-            bufFmt(bufS, fbuf, (int)ival);
-            fmt.res.Append(Str(buf));
+            fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
             break;
         case 'f':
         case 'F':
@@ -478,14 +476,12 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
             fbuf[k++] = conv;
             fbuf[k] = 0;
             double dv = (arg.t == FmtArg::Kind::Double) ? arg.d : (double)arg.f;
-            bufFmt(bufS, fbuf, dv);
-            fmt.res.Append(Str(buf));
+            fmt.res.Append(bufFmt(buf, fbuf, dv));
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
             const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
-            bufFmt(bufS, "%p", pv);
-            fmt.res.Append(Str(buf));
+            fmt.res.Append(bufFmt(buf, "%p", pv));
         } break;
         default:
             ReportIf(true);
