@@ -1367,6 +1367,19 @@ float DisplayModel::GetZoomReal(int pageNo) const {
     return std::min(zoomCurr, zoomNext);
 }
 
+// Viewport larger than windowMargin, so a fit zoom can be computed.
+bool DisplayModel::ViewportReadyForRelayout() const {
+    int dx = totalViewPortSize.dx;
+    int dy = totalViewPortSize.dy;
+    if (dx <= windowMargin.left + windowMargin.right) {
+        return false;
+    }
+    if (dy <= windowMargin.top + windowMargin.bottom) {
+        return false;
+    }
+    return true;
+}
+
 /* Given zoom and rotation, calculate the position of each page on a
    large sheet that is continuous view. Needs to be recalculated when:
      * zoom changes
@@ -1387,10 +1400,11 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
     bool needVScroll = false;
     viewPort = Rect(viewPort.TL(), totalViewPortSize);
     // Fit zoom is viewport minus windowMargin. LoadDocument Relayouts before
-    // the canvas is sized (and WM_SIZE during RelayoutFrame can be 0x0), which
-    // made CalcZoomReal's zoom < 0.01f ReportDebugIf kill -for-testing.
-    if (viewPort.dx <= windowMargin.left + windowMargin.right ||
-        viewPort.dy <= windowMargin.top + windowMargin.bottom) {
+    // the canvas is sized (and WM_SIZE during RelayoutFrame can be 0x0). Mark
+    // pendingRelayout so RelayoutFrame / UpdateCanvasSize finishes once the
+    // canvas has settled, instead of leaving zoomReal < 0.01 and no page visible.
+    if (!ViewportReadyForRelayout()) {
+        pendingRelayout = true;
         return;
     }
     bool hideScrollbars = ScrollbarsAreHidden();
@@ -1408,8 +1422,10 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         // zoom is < 0.01 (viewport barely larger than windowMargin). Applying
         // that empty layout made CurrentPageNo() report PageCount().
         if (zoomReal < 0.01f) {
+            pendingRelayout = true;
             return;
         }
+        pendingRelayout = false;
 
         int newViewPortOffsetX = 0;
         if (0 != currZoomReal && kInvalidZoom != currZoomReal) {
@@ -1890,8 +1906,8 @@ void DisplayModel::RenderVisibleParts() {
 void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     ScrollState ss;
 
-    bool isDocReady = ValidPageNo(startPage) && zoomReal != 0;
-    if (isDocReady) {
+    bool hadLayout = zoomReal >= 0.01f;
+    if (hadLayout) {
         ss = GetScrollState();
     }
 
@@ -1903,8 +1919,14 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
         return;
     }
     Relayout(zoomVirtual, rotation);
+    if (pendingRelayout) {
+        return;
+    }
 
-    if (isDocReady) {
+    if (hasPendingScroll) {
+        hasPendingScroll = false;
+        SetScrollState(pendingScroll);
+    } else if (hadLayout) {
         // when fitting to content, let GoToPage do the necessary scrolling
         if (zoomVirtual != kZoomFitContent) {
             SetScrollState(ss);

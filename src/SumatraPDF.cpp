@@ -2197,6 +2197,35 @@ static void ApplyPageAspectView(EngineBase* engine, DisplayMode* modeOut, float*
 }
 
 // Document is represented as DocController. Replace current DocController (if any) with ctrl
+// LoadDocument Relayouts before RelayoutFrame has given the canvas its final
+// size (hidden frame, HDWP 0x0 WM_SIZE). Relayout then leaves pendingRelayout.
+// Call after the canvas HWND has settled so fit zoom can be computed.
+static void FinishPendingDocumentRelayout(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    if (dm->pendingRelayout) {
+        win->canvasRc = {};
+        win->UpdateCanvasSize();
+    }
+    if (dm->pendingRelayout) {
+        return;
+    }
+    if (dm->hasPendingScroll) {
+        dm->hasPendingScroll = false;
+        dm->SetScrollState(dm->pendingScroll);
+    }
+    if (dm->pauseRendering) {
+        dm->pauseRendering = false;
+        dm->RenderVisibleParts();
+        dm->RepaintDisplay();
+    }
+}
+
 // in current tab.
 // meaning of the internal values of LoadArgs:
 // isNewWindow : if true then 'win' refers to a newly created window that needs
@@ -2430,10 +2459,11 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         tab->tocState = *fs->tocState;
     }
 
-    // DisplayModel needs a valid zoom value before any relayout
-    // caused by showing/hiding UI elements happends.
-    // Relayout before tearing down prevCtrl so a WM_PAINT pumped during
-    // the teardown never calls SetViewPortSize with an invalid zoom.
+    // DisplayModel needs a valid zoomVirtual before any relayout caused by
+    // showing/hiding UI elements. Relayout before tearing down prevCtrl so a
+    // WM_PAINT pumped during the teardown never calls SetViewPortSize with an
+    // invalid zoom. If the canvas is still tiny, Relayout sets pendingRelayout
+    // and we finish after RelayoutFrame / UpdateCanvasSize.
     // Pause rendering until the remembered page is restored so Relayout,
     // ShowWindow, and sidebar setup don't request page 1 first (issue #4973).
     DisplayModel* dm = win->AsFixed();
@@ -2532,11 +2562,21 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     if (dm) {
-        dm->pauseRendering = false;
-    }
-    // restore scroll state after the canvas size has been restored
-    if ((args->showWin || ss.page != 1) && dm) {
-        dm->SetScrollState(ss);
+        if (dm->pendingRelayout) {
+            // canvas not yet sized; RelayoutFrame / ShowWindow WM_SIZE will
+            // settle it. Keep pauseRendering until then so we don't paint page 1.
+            if (args->showWin || ss.page != 1) {
+                dm->pendingScroll = ss;
+                dm->hasPendingScroll = true;
+            }
+            uitask::Post(MkFunc0(FinishPendingDocumentRelayout, win), "FinishPendingDocumentRelayout");
+        } else {
+            dm->pauseRendering = false;
+            // restore scroll state after the canvas size has been restored
+            if (args->showWin || ss.page != 1) {
+                dm->SetScrollState(ss);
+            }
+        }
     }
 
     tab->canvasRc = win->canvasRc;
@@ -7593,6 +7633,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             RedrawWindow(win->hwndToolbar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
     }
+    // HDWP can deliver a 0x0 WM_SIZE before the canvas's final size; LoadDocument
+    // Relayout then left pendingRelayout. The HWND is placed now — finish layout.
+    FinishPendingDocumentRelayout(win);
     gAfterLayout.Call(win);
     return true;
 }
@@ -7655,6 +7698,11 @@ static void FrameUpdateUi(MainWindow* win) {
     // RelayoutFrame skips when nothing layout-affecting changed (a force is
     // requested by clearing win->uiState.layout)
     bool didLayout = RelayoutFrame(win, updateToolbars, sidebarDx);
+    if (!didLayout) {
+        // layout snapshot unchanged, so RelayoutFrame returned early; still
+        // finish a LoadDocument Relayout that was waiting for the canvas
+        FinishPendingDocumentRelayout(win);
+    }
     if (didLayout) {
         // maximize/restore toggles DWM border (hide when maximized; issue #5851)
         UpdateWindowFrameBorderColor(win);

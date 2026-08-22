@@ -157,6 +157,7 @@ struct DisplayModel : DocController {
     float GetZoomReal(int pageNo) const;
     float MaxZoomForDocument() const;
     void Relayout(float zoomVirtual, int rotation);
+    bool ViewportReadyForRelayout() const;
 
     Rect GetViewPort() const;
     bool IsHScrollbarVisible() const;
@@ -326,6 +327,10 @@ struct DisplayModel : DocController {
 
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool pauseRendering = false;
+
+    bool pendingRelayout = false;
+    bool hasPendingScroll = false;
+    ScrollState pendingScroll;
 
     void RenderFinished(PageRenderRequest* req);
     void RenderFinishedAsync(PageRenderRequest* req);
