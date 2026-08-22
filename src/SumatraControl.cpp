@@ -1396,6 +1396,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestHomeSelection: {
+            Str mode = StringArg(req, 0);
+            if (mode) {
+                SetHomePageListView(str::EqI(mode, StrL("list")));
+                if (len(gWindows) > 0) {
+                    MainWindow* win = gWindows[0];
+                    if (win && win->IsCurrentTabAbout()) {
+                        HomePageInvalidateLayoutCache();
+                        win->RedrawAll(true);
+                    }
+                }
+            }
             int exitCode = 0;
             Str res = HomeSelectionResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);

@@ -249,6 +249,8 @@ export const WM_RBUTTONUP = 0x0205;
 export const WM_MBUTTONDOWN = 0x0207;
 export const WM_CONTEXTMENU = 0x007b;
 export const WM_COMMAND = 0x0111;
+export const WM_SYSCOMMAND = 0x0112;
+export const SC_CLOSE = 0xf060;
 export const WM_COPYDATA = 0x004a;
 // virtual-key / mouse-button flags
 export const MK_LBUTTON = 0x0001;

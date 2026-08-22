@@ -2208,9 +2208,10 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
         outlineFull = HomeSelectionOutlineRect(c.thumbs[sel]);
         outline = outlineFull.Intersect(HomeOutlinePaintClip(c.rcThumbsArea, c.rcSearchBorder, c.rcTip, c.hasTip));
     }
-    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s",
+    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
+                         "listView=%d listIcon=%s",
                          sel, len(c.thumbs), searchFocus, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
-                         RectCsvTemp(outlineFull), path));
+                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(c.rcIconListView)));
 }
 
 // What the home page list drew for each row: the path, the size text as drawn,
@@ -2370,7 +2371,7 @@ static void HomePinEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
         return;
     }
     fs->isPinned = !fs->isPinned;
-    SaveSettings();
+    ScheduleSaveSettings();
     win->DeleteToolTip();
     win->RedrawAll(true);
 }
@@ -2397,7 +2398,7 @@ static void HomeViewModeClicked(MainWindow* win, VirtMouseEvent* ev) {
         win->DeleteToolTip();
     }
     win->homePageScrollY = 0;
-    SaveSettings();
+    ScheduleSaveSettings();
     win->RedrawAll(true);
 }
 

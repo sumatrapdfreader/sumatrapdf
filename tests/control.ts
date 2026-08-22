@@ -80,6 +80,8 @@ export type HomeSelection = {
   outline: number[];
   outlineFull: number[];
   path: string;
+  listView: boolean;
+  listIcon: number[];
   raw: string;
 };
 
@@ -391,8 +393,8 @@ export class ControlClient {
   // What the home page's keyboard navigation is doing: the selected entry, how
   // many entries the search box currently leaves, and whether it has the focus.
   // Wait on this after sending a key rather than sleeping.
-  async homeSelection(): Promise<HomeSelection> {
-    const res = await this.request(ControlCommand.TestHomeSelection, []);
+  async homeSelection(mode?: "list" | "thumbnails"): Promise<HomeSelection> {
+    const res = await this.request(ControlCommand.TestHomeSelection, mode ? [mode] : []);
     const code = typeof res[0] === "number" ? res[0] : -1;
     const raw = String(res[1] ?? "").trim();
     if (code !== 0) {
@@ -406,11 +408,13 @@ export class ControlClient {
         outline: [0, 0, 0, 0],
         outlineFull: [0, 0, 0, 0],
         path: "",
+        listView: false,
+        listIcon: [0, 0, 0, 0],
         raw,
       };
     }
     const m =
-      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*)$/.exec(
+      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(
         raw,
       );
     if (!m) {
@@ -426,6 +430,8 @@ export class ControlClient {
       outline: [parseInt(m[9], 10), parseInt(m[10], 10), parseInt(m[11], 10), parseInt(m[12], 10)],
       outlineFull: [parseInt(m[13], 10), parseInt(m[14], 10), parseInt(m[15], 10), parseInt(m[16], 10)],
       path: m[17].trim(),
+      listView: m[18] === "1",
+      listIcon: [parseInt(m[19], 10), parseInt(m[20], 10), parseInt(m[21], 10), parseInt(m[22], 10)],
       raw,
     };
   }

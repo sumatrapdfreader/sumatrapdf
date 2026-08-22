@@ -49,6 +49,18 @@ bool gDontSaveSettings = false;
 // clears it so a pending post becomes a no-op
 static bool gSaveSettingsPending = false;
 
+// last bytes we wrote (or loaded). Watcher reloads and SaveSettings() writes
+// are skipped when the file / serialized prefs still match this.
+static Str gLastSavedPrefs;
+
+static bool IsLastSavedPrefs(Str s) {
+    return len(gLastSavedPrefs) == len(s) && str::Eq(gLastSavedPrefs, s);
+}
+
+static void RememberLastSavedPrefs(Str s) {
+    str::ReplaceWithCopy(&gLastSavedPrefs, s);
+}
+
 static bool ApplyReadAloudVoiceFromSettings() {
     if (!gGlobalPrefs) {
         return false;
@@ -362,6 +374,7 @@ bool LoadSettings() {
         ReportIf(!gGlobalPrefs);
         gprefs = gGlobalPrefs;
         migratedDocumentColorsFollowTheme = MigrateDocumentColorsFollowThemeSetting(prefsData);
+        RememberLastSavedPrefs(prefsData);
         str::Free(prefsData);
     }
     if (MigrateRenamedThemeNames()) {
@@ -720,10 +733,6 @@ static void SaveSettingsPosted() {
     SaveSettings();
 }
 
-// Flush prefs on the next UI turn. Use when the caller mutated gGlobalPrefs
-// (or tab display state) but must not walk tabs in the middle of load/close,
-// and a later SaveSettings() / process exit will still persist if we crash
-// before the post runs.
 void ScheduleSaveSettings() {
     if (gSaveSettingsPending || gForTesting || gDontSaveSettings) {
         return;
@@ -736,9 +745,9 @@ void ScheduleSaveSettings() {
     uitask::Post(fn, "SaveSettings");
 }
 
-// Run a deferred save now. Process exit / last-window close must not wait
-// for the uitask: ShowWindow(SW_HIDE) can tear the window down first, and
-// a fast ExitProcess never drains the queue.
+// Last-window close and process exit cannot wait for the uitask:
+// ShowWindow(SW_HIDE) can tear the window down first, and a fast
+// ExitProcess never drains the queue.
 void FlushScheduledSaveSettings() {
     if (!gSaveSettingsPending) {
         return;
@@ -810,14 +819,15 @@ bool SaveSettings() {
         return false;
     }
 
-    // only save if anything's changed at all
-    if (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs)) {
+    if (IsLastSavedPrefs(prefs) || (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs))) {
+        RememberLastSavedPrefs(prefs);
         return true;
     }
 
     WatchedFileSetIgnore(gWatchedSettingsFile, true);
     bool ok = file::WriteFile(path, prefs);
     if (ok) {
+        RememberLastSavedPrefs(prefs);
         gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     }
     WatchedFileSetIgnore(gWatchedSettingsFile, false);
@@ -826,7 +836,7 @@ bool SaveSettings() {
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
-static void ReloadSettings() {
+static void ReloadSettings(bool force = false) {
     TempStr settingsPath = GetSettingsPathTemp();
     if (!file::Exists(settingsPath)) {
         return;
@@ -836,24 +846,36 @@ static void ReloadSettings() {
     // a short while to prevent accidental data loss
     // this is triggered when e.g. saving the file with VS Code
     bool ok = false;
+    Str prefsData{};
     for (int i = 0; !ok && i < 5; i++) {
-        SleepInMs(200);
-        Str prefsData = file::ReadFile(settingsPath);
+        str::Free(prefsData);
+        prefsData = file::ReadFile(settingsPath);
         if (prefsData.len > 0) {
             ok = true;
-            str::Free(prefsData);
-        } else {
-            logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath, i);
+            break;
         }
+        logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath, i);
+        SleepInMs(200);
     }
     if (!ok) {
+        str::Free(prefsData);
+        return;
+    }
+
+    if (!force && IsLastSavedPrefs(prefsData)) {
+        if (gGlobalPrefs) {
+            gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(settingsPath);
+        }
+        str::Free(prefsData);
         return;
     }
 
     FILETIME time = file::GetModificationTime(settingsPath);
-    if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
+    if (!force && gGlobalPrefs && FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
+        str::Free(prefsData);
         return;
     }
+    str::Free(prefsData);
 
     TempStr uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
     bool showToolbar = gGlobalPrefs->showToolbar;
@@ -902,15 +924,16 @@ void CleanUpSettings() {
     gGlobalPrefs = nullptr;
 }
 
-// reload settings from disk even if the file's timestamp matches
-// gGlobalPrefs->lastPrefUpdate (e.g. right after we saved it ourselves)
 void ForceReloadSettings() {
-    gGlobalPrefs->lastPrefUpdate = {};
-    ReloadSettings();
+    ReloadSettings(true);
+}
+
+static void ReloadSettingsFromWatcher() {
+    ReloadSettings(false);
 }
 
 static void SchedulePrefsReload() {
-    auto fn = MkFunc0Void(ReloadSettings);
+    auto fn = MkFunc0Void(ReloadSettingsFromWatcher);
     uitask::Post(fn, "TaskReloadSettings");
 }
 
