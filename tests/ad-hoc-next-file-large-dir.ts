@@ -6,7 +6,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util";
 import { ControlCommand } from "./control";
-import { getWindowText, postMessage, WM_CLOSE } from "./winapi";
+import { getWindowText, postMessage, sleep, WM_CLOSE } from "./winapi";
 import { killAndWait, launchControlled, sendCommandSync, waitForExit, waitForTitle } from "./win-automation";
 
 const DIR = join(homedir(), "Downloads", "sumatra-next-file-50k");
@@ -48,6 +48,19 @@ export async function testit(): Promise<void> {
     const nextTitleMs = Date.now() - tNext;
     console.log(`next file title f-00002.pdf after ${nextTitleMs}ms (now '${getWindowText(frame)}')`);
 
+    const tNav = Date.now();
+    sendCommandSync(frame, cmdId("CmdNavigateFilesInFolder"));
+    const navMs = Date.now() - tNav;
+    console.log(`CmdNavigateFilesInFolder (SendMessage): ${navMs}ms`);
+    let pingMax = 0;
+    while (Date.now() - tNav < 6000) {
+      const t = Date.now();
+      await client.request(ControlCommand.Ping);
+      pingMax = Math.max(pingMax, Date.now() - t);
+      await sleep(200);
+    }
+    console.log(`max ping during navigate-files listing: ${pingMax}ms`);
+
     postMessage(frame, WM_CLOSE, 0, 0);
     await waitForExit(proc, 8000);
   } finally {
@@ -59,7 +72,7 @@ export async function testit(): Promise<void> {
     const log = readFileSync(logPath, "utf8");
     const interesting = log
       .split(/\r?\n/)
-      .filter((l) => /CollectNextPrev|OpenNextPrev|HangDetector|UI thread blocked|NextPrevDir/i.test(l));
+      .filter((l) => /CollectNextPrev|OpenNextPrev|HangDetector|UI thread blocked|NextPrevDir|NavDirScan/i.test(l));
     console.log("--- log ---");
     console.log(interesting.join("\n") || "(no matching lines)");
   }

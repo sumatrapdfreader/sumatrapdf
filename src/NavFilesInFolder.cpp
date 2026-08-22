@@ -6,6 +6,7 @@
 #include "gui/Dpi.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
+#include "base/Timer.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 
@@ -85,13 +86,17 @@ struct NavFilesInFolderWnd : WindowBase {
     VirtText* dirLabel = nullptr;
     VirtListBox* listBox = nullptr;
     Str currDir; // owned
+    int scanGen = 0;
+    bool scanInFlight = false;
+    Str pendingSelectPath; // owned; file to select when a scan finishes
+    int pendingSelectIdx = -1;
 
     void OnKeyDown(KeyEvent* ev);
     void OnActivate(WindowBase::ActivateEvent* ev);
     void OnFocus(WindowBase::FocusEvent* ev);
 
     bool Create(MainWindow* win);
-    void SetDir(Str dir, Str selectPath);
+    void SetDir(Str dir, Str selectPath, int selectIdx = -1);
     TempStr SelectedPathTemp();
     void RefreshList();
     void ExecuteCurrentSelection(bool inNewTab = false);
@@ -106,7 +111,9 @@ static NavFilesInFolderWnd* gNavFilesWnd = nullptr;
 static HWND gHwndToActivateOnNavClose = nullptr;
 
 NavFilesInFolderWnd::~NavFilesInFolderWnd() {
+    scanGen++; // in-flight scans must not apply to a destroyed window
     str::Free(currDir);
+    str::Free(pendingSelectPath);
 }
 
 static void SafeDeleteNavFilesWnd() {
@@ -161,23 +168,51 @@ static bool CanOpenFile(Str path) {
     return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
 }
 
-// dirs first, then files, each sorted naturally by name
-static void SortNavEntries(Vec<NavFileEntry>& entries, int firstIdx) {
-    auto less = [](const NavFileEntry& a, const NavFileEntry& b) -> bool {
-        if (a.isDir != b.isDir) {
-            return a.isDir;
-        }
-        return str::CmpNatural(a.name, b.name) < 0;
-    };
-    for (int i = firstIdx + 1; i < len(entries); i++) {
-        NavFileEntry value = entries[i];
-        int j = i - 1;
-        while (j >= firstIdx && less(value, entries[j])) {
-            entries[j + 1] = entries[j];
-            j--;
-        }
-        entries[j + 1] = value;
+// dirs first, then files, each sorted naturally by name.
+// qsort: the old insertion sort was O(n^2) and froze on huge folders.
+static int CmpNavEntry(const NavFileEntry* a, const NavFileEntry* b) {
+    if (a->isDir != b->isDir) {
+        return a->isDir ? -1 : 1;
     }
+    return str::CmpNatural(a->name, b->name);
+}
+
+static void SortNavEntries(Vec<NavFileEntry>& entries, int firstIdx) {
+    int n = len(entries) - firstIdx;
+    if (n <= 1) {
+        return;
+    }
+    auto cmp = (int (*)(const void*, const void*))CmpNavEntry;
+    qsort(entries.els + firstIdx, (size_t)n, sizeof(NavFileEntry), cmp);
+}
+
+static void FreeNavEntries(Vec<NavFileEntry>& entries) {
+    for (NavFileEntry& e : entries) {
+        FreeNavEntry(e);
+    }
+    entries.Reset();
+}
+
+static void StealNavEntries(Vec<NavFileEntry>& dst, Vec<NavFileEntry>& src) {
+    FreeNavEntries(dst);
+    dst.els = src.els;
+    dst.len = src.len;
+    dst.cap = src.cap;
+    src.els = nullptr;
+    src.len = 0;
+    src.cap = 0;
+}
+
+static bool DirHasParent(Str dir) {
+    TempStr parent = path::GetDirTemp(dir);
+    return !path::IsSame(parent, dir);
+}
+
+static void AppendParentEntry(Vec<NavFileEntry>& entries) {
+    NavFileEntry e;
+    e.name = str::Dup(StrL(".."));
+    e.isDir = true;
+    entries.Append(e);
 }
 
 // leaf name for display: find-data names are usually basenames, but some network
@@ -190,19 +225,12 @@ static TempStr NavLeafNameTemp(DirIterEntry* de) {
     return leaf;
 }
 
-static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
-    for (NavFileEntry& e : m->entries) {
-        FreeNavEntry(e);
-    }
-    m->entries.Reset();
-
+// Built on a worker thread: listing + filtering + sorting a folder of tens of
+// thousands of files must not freeze the UI (discussion #6014).
+static void CollectNavEntriesForDir(Str dir, Vec<NavFileEntry>& out) {
     int firstIdx = 0;
-    TempStr parent = path::GetDirTemp(dir);
-    if (!path::IsSame(parent, dir)) {
-        NavFileEntry e;
-        e.name = str::Dup(StrL(".."));
-        e.isDir = true;
-        m->entries.Append(e);
+    if (DirHasParent(dir)) {
+        AppendParentEntry(out);
         firstIdx = 1; // keep ".." at the top when sorting
     }
 
@@ -242,10 +270,80 @@ static void FillEntriesForDir(ListBoxModelNav* m, Str dir) {
                 }
             }
         }
-        m->entries.Append(e);
+        out.Append(e);
     }
 
-    SortNavEntries(m->entries, firstIdx);
+    SortNavEntries(out, firstIdx);
+}
+
+static int FindEntryIndex(NavFilesInFolderWnd* wnd, ListBoxModelNav* m, Str selectPath);
+static void SelectAndEnsureVisible(VirtListBox* lb, int idx);
+
+struct NavDirScanReq {
+    NavFilesInFolderWnd* wnd = nullptr;
+    int gen = 0;
+    Str dir; // owned
+    ~NavDirScanReq() { str::Free(dir); }
+};
+
+struct NavDirScanResult {
+    NavFilesInFolderWnd* wnd = nullptr;
+    int gen = 0;
+    Str dir; // owned
+    Vec<NavFileEntry> entries;
+    double totalMs = 0;
+    ~NavDirScanResult() {
+        str::Free(dir);
+        for (NavFileEntry& e : entries) {
+            FreeNavEntry(e);
+        }
+    }
+};
+
+static void FinishNavDirScan(NavDirScanResult* r) {
+    AutoDelete del(r);
+    NavFilesInFolderWnd* wnd = gNavFilesWnd;
+    if (!wnd || wnd != r->wnd || r->gen != wnd->scanGen || !wnd->listBox) {
+        logf("NavDirScan: drop stale gen %d (current wnd gen=%d)\n", r->gen, wnd ? wnd->scanGen : -1);
+        return;
+    }
+    logf("NavDirScan: apply %d entries for %s (%.1fms UI thread=%d)\n", len(r->entries), r->dir, r->totalMs,
+         (int)uitask::IsMainUIThread());
+
+    auto* m = (ListBoxModelNav*)wnd->listBox->model;
+    if (!m) {
+        m = new ListBoxModelNav();
+    }
+    StealNavEntries(m->entries, r->entries);
+    wnd->scanInFlight = false;
+    wnd->listBox->SetModel(m);
+    wnd->UpdateDirLabel();
+
+    int selIdx = 0;
+    if (len(wnd->pendingSelectPath) > 0) {
+        selIdx = FindEntryIndex(wnd, m, wnd->pendingSelectPath);
+    } else if (wnd->pendingSelectIdx >= 0) {
+        selIdx = wnd->pendingSelectIdx;
+    }
+    if (m->ItemsCount() > 0) {
+        SelectAndEnsureVisible(wnd->listBox, selIdx);
+    }
+    wnd->listBox->Invalidate();
+}
+
+static void NavDirScanThread(NavDirScanReq* req) {
+    AutoDelete delReq(req);
+    auto tAll = TimeGet();
+    auto* r = new NavDirScanResult;
+    r->wnd = req->wnd;
+    r->gen = req->gen;
+    r->dir = str::Dup(req->dir);
+    CollectNavEntriesForDir(req->dir, r->entries);
+    r->totalMs = TimeSinceInMs(tAll);
+    logf("NavDirScan: thread done dir=%s n=%d total=%.1fms UI thread=%d\n", r->dir, len(r->entries), r->totalMs,
+         (int)uitask::IsMainUIThread());
+    auto fn = MkFunc0(FinishNavDirScan, r);
+    uitask::Post(fn, "FinishNavDirScan");
 }
 
 // full path for entry e under currDir
@@ -317,22 +415,36 @@ void NavFilesInFolderWnd::UpdateDirLabel() {
     dirLabel->SetText(currDir);
 }
 
-void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath) {
+void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx) {
     str::ReplaceWithCopy(&currDir, dir);
+    scanGen++;
+    scanInFlight = true;
+    str::ReplaceWithCopy(&pendingSelectPath, selectPath);
+    pendingSelectIdx = selectIdx;
 
     auto* m = (ListBoxModelNav*)listBox->model;
     if (!m) {
         m = new ListBoxModelNav();
     }
-    FillEntriesForDir(m, currDir);
+    // show ".." immediately so the window is usable while the listing runs
+    FreeNavEntries(m->entries);
+    if (DirHasParent(currDir)) {
+        AppendParentEntry(m->entries);
+    }
     listBox->SetModel(m);
     UpdateDirLabel();
-
     if (m->ItemsCount() > 0) {
-        int selIdx = FindEntryIndex(this, m, selectPath);
-        SelectAndEnsureVisible(listBox, selIdx);
+        SelectAndEnsureVisible(listBox, 0);
     }
     listBox->Invalidate();
+
+    auto* req = new NavDirScanReq;
+    req->wnd = this;
+    req->gen = scanGen;
+    req->dir = str::Dup(currDir);
+    logf("NavDirScan: start %s gen=%d (UI thread=%d)\n", currDir, scanGen, (int)uitask::IsMainUIThread());
+    auto fn = MkFunc0(NavDirScanThread, req);
+    RunAsync(fn, StrL("NavDirScan"));
 }
 
 // full path of the selected entry, or empty. Owned copy: callers pass it back
@@ -362,6 +474,10 @@ void NavFilesInFolderWnd::RefreshList() {
         return;
     }
     TempStr sel = SelectedPathTemp();
+    // listing still in flight: keep the file we meant to select
+    if (len(sel) == 0 && len(pendingSelectPath) > 0) {
+        sel = str::DupTemp(pendingSelectPath);
+    }
     TempStr dir = str::DupTemp(currDir);
     SetDir(dir, sel);
 }
@@ -477,8 +593,7 @@ void NavFilesInFolderWnd::DeleteCurrentSelection() {
     }
     // re-list; keep the selection where the deleted entry was
     TempStr dir = str::DupTemp(currDir);
-    SetDir(dir, Str{});
-    SelectAndEnsureVisible(listBox, idx);
+    SetDir(dir, Str{}, idx);
     SetFocusTo(listBox);
 }
 
@@ -516,7 +631,10 @@ void NavFilesInFolderWnd::OnKeyDown(KeyEvent* ev) {
 // after activate: refresh dir listing and put focus on the list (Alt-Tab)
 void NavFilesInFolderWnd::OnActivate(WindowBase::ActivateEvent* ev) {
     if (ev->state != WA_INACTIVE) {
-        RefreshList();
+        // first show already started a listing; don't kick off a second one
+        if (!scanInFlight) {
+            RefreshList();
+        }
         ScheduleFocusNavListBox();
     }
 }
