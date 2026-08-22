@@ -205,7 +205,7 @@ void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
     destEdit->Create(args);
     row->AddChild(destEdit, 1);
 
-    browseBtn = NewButton("...", false);
+    browseBtn = NewButton(StrL("..."), false);
     browseBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnBrowse>(this);
     row->AddChild(browseBtn);
 
@@ -293,7 +293,7 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
     if (engine && EngineHasUnsavedAnnotations(engine)) {
         tmpPath = GetTempFilePathTemp(StrL("bake"));
         if (!tmpPath || !EngineMupdfSaveCopy(engine, tmpPath)) {
-            MessageBoxWarning(hwnd, "Failed to bake PDF file.", _TRA("Bake PDF"));
+            MessageBoxWarning(hwnd, StrL("Failed to bake PDF file."), _TRA("Bake PDF"));
             return;
         }
         inputPath = tmpPath;
@@ -321,7 +321,7 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfBakeDoIt: pdfbake_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, "Failed to bake PDF file.", _TRA("Bake PDF"));
+        MessageBoxWarning(hwnd, StrL("Failed to bake PDF file."), _TRA("Bake PDF"));
     }
 }
 
@@ -388,7 +388,7 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pa
         for (int pageNo = start; pageNo <= end; pageNo++) {
             PageText pt = engine->ExtractPageText(pageNo);
             if (pt.text) {
-                text.Append(pt.text.s);
+                text.Append(Str(pt.text.s));
                 text.AppendChar('\n');
             }
             FreePageText(&pt);
@@ -431,7 +431,7 @@ void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
         OpenPathInDefaultFileManager(path);
     } else {
         logf("PdfExtractTextDoIt: failed to extract text, isPdf: %d\n", (int)isPdf);
-        MessageBoxWarning(hwnd, "Failed to extract text.", _TRA("Extract Text"));
+        MessageBoxWarning(hwnd, StrL("Failed to extract text."), _TRA("Extract Text"));
     }
 }
 
@@ -497,7 +497,7 @@ void PdfCompressDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfCompressDoIt: pdfclean_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, "Failed to compress PDF file.", _TRA("Compress PDF"));
+        MessageBoxWarning(hwnd, StrL("Failed to compress PDF file."), _TRA("Compress PDF"));
     }
 }
 
@@ -561,7 +561,7 @@ void PdfDecompressDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfDecompressDoIt: pdfclean_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, "Failed to decompress PDF file.", _TRA("Decompress PDF"));
+        MessageBoxWarning(hwnd, StrL("Failed to decompress PDF file."), _TRA("Decompress PDF"));
     }
 }
 
@@ -843,7 +843,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     lastRow->AddChild(NewVirtText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
 
     Str actionText = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
-    AddButtonsRow(actionText, "Syntax: 2,5-7,13-");
+    AddButtonsRow(actionText, StrL("Syntax: 2,5-7,13-"));
     FinishDialog(pagesEdit);
 
     // attach the change handler only now that actionBtn exists, then set the
@@ -936,7 +936,7 @@ void PdfEncryptDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfEncryptDoIt: pdfclean_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, "Failed to encrypt PDF file.", _TRA("Encrypt PDF"));
+        MessageBoxWarning(hwnd, StrL("Failed to encrypt PDF file."), _TRA("Encrypt PDF"));
     }
 }
 
@@ -1019,7 +1019,7 @@ void PdfDecryptDialog::DoIt(VirtMouseEvent*) {
     } else {
         logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, srcPath,
              len(password));
-        MessageBoxWarning(hwnd, "Failed to decrypt PDF file.", _TRA("Decrypt PDF"));
+        MessageBoxWarning(hwnd, StrL("Failed to decrypt PDF file."), _TRA("Decrypt PDF"));
     }
 }
 
@@ -1233,9 +1233,9 @@ static TempStr WithDefaultImageExtTemp(Str path) {
 
 static TempStr ReplacePagePlaceholderTemp(Str path, int pageNo) {
     TempStr n = fmt("%d", pageNo);
-    TempStr s = str::ReplaceTemp(path, "<N>", n);
-    if (str::Contains(s, "<n>")) {
-        s = str::ReplaceTemp(s, "<n>", n);
+    TempStr s = str::ReplaceTemp(path, StrL("<N>"), n);
+    if (str::Contains(s, StrL("<n>"))) {
+        s = str::ReplaceTemp(s, StrL("<n>"), n);
     }
     return s;
 }
@@ -1502,9 +1502,9 @@ void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
     WCHAR dstFileName[MAX_PATH + 1]{};
     TempStr current = destEdit->GetTextTemp();
     // < and > are illegal in Windows filenames; show {N} in the save dialog
-    TempStr shown = str::ReplaceTemp(current, "<N>", "{N}");
-    if (str::Contains(shown, "<n>")) {
-        shown = str::ReplaceTemp(shown, "<n>", "{N}");
+    TempStr shown = str::ReplaceTemp(current, StrL("<N>"), StrL("{N}"));
+    if (str::Contains(shown, StrL("<n>"))) {
+        shown = str::ReplaceTemp(shown, StrL("<n>"), StrL("{N}"));
     }
     wstr::BufSet(WStr(dstFileName, MAX_PATH), ToWStrTemp(shown));
 
@@ -1523,8 +1523,8 @@ void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
         return;
     }
     TempStr picked = ToUtf8Temp(dstFileName);
-    if (str::Contains(picked, "{N}")) {
-        picked = str::ReplaceTemp(picked, "{N}", "<N>");
+    if (str::Contains(picked, StrL("{N}"))) {
+        picked = str::ReplaceTemp(picked, StrL("{N}"), StrL("<N>"));
     } else if (!PathHasPagePlaceholder(picked)) {
         picked = EnsurePagePlaceholderTemp(picked, true);
     }
@@ -1548,7 +1548,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
-        MessageBoxWarning(hwnd, "Failed to convert PDF to images.", _TRA("Convert PDF to Images"));
+        MessageBoxWarning(hwnd, StrL("Failed to convert PDF to images."), _TRA("Convert PDF to Images"));
         return;
     }
 
@@ -1577,7 +1577,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
 
     if (nOk == 0) {
         str::Free(firstPath);
-        MessageBoxWarning(hwnd, "Failed to convert PDF to images.", _TRA("Convert PDF to Images"));
+        MessageBoxWarning(hwnd, StrL("Failed to convert PDF to images."), _TRA("Convert PDF to Images"));
         return;
     }
     logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
@@ -1629,7 +1629,7 @@ bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
         destRow->AddChild(dropFormat);
     }
 
-    browseBtn = NewButton("...", false);
+    browseBtn = NewButton(StrL("..."), false);
     browseBtn->onClick =
         MkMethod1<ConvertPdfToImagesDialog, VirtMouseEvent*, &ConvertPdfToImagesDialog::OnBrowseTemplate>(this);
     destRow->AddChild(browseBtn);

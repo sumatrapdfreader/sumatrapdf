@@ -390,7 +390,7 @@ void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc
     Vec<ThreadHandle> threads;
     for (int t = 0; t < numThreads; t++) {
         auto fn = MkFunc0(MdTocParseWorker, &ctx);
-        threads.Append(StartThread(fn, "MdTocParse"));
+        threads.Append(StartThread(fn, StrL("MdTocParse")));
     }
     for (ThreadHandle h : threads) {
 #if OS_WIN

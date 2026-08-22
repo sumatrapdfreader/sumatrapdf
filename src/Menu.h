@@ -11,7 +11,7 @@ struct MenuDef {
     UINT_PTR idOrSubmenu = 0;
 };
 
-constexpr const char* kMenuSeparator = "-----";
+#define kMenuSeparator "-----"
 
 void FreeAllMenuDrawInfos();
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);

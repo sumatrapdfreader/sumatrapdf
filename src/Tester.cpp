@@ -48,15 +48,15 @@ static int Usage() {
 // we assume this is called from main sumatradirectory, e.g. as:
 // ./obj-dbg/tester.exe, so we use the known files
 void ZipCreateTest() {
-    Str zipFileName = "tester-tmp.zip";
+    Str zipFileName = StrL("tester-tmp.zip");
     file::Delete(zipFileName);
     ZipCreator zc(zipFileName);
-    auto ok = zc.AddFile("premake5.lua");
+    auto ok = zc.AddFile(StrL("premake5.lua"));
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;
     }
-    ok = zc.AddFile("premake5.files.lua");
+    ok = zc.AddFile(StrL("premake5.files.lua"));
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;

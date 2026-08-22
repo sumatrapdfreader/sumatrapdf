@@ -41,7 +41,7 @@ extern "C" int LZX_test_pretree_make_decode_table(void);
 static void EnsureTestGlobalPrefs() {
     // engine creation reads a few fields off gGlobalPrefs (e.g. disableAntiAlias)
     if (!gGlobalPrefs) {
-        gGlobalPrefs = NewGlobalPrefs(nullptr);
+        gGlobalPrefs = NewGlobalPrefs({});
     }
     // Headless -dbg-control tests don't need form JavaScript. Force it off even
     // when LoadSettings() already ran (the test harness overrides user prefs).
@@ -122,7 +122,7 @@ TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y) {
 // it was found on (1-based) or NOTFOUND -- to the output file, then exits.
 // Used by tests/issue-5597.ts; not meant for end users.
 class TestPasswordUI : public PasswordUI {
-    Str password = nullptr;
+    Str password;
     bool triedPassword = false;
 
   public:
@@ -131,7 +131,7 @@ class TestPasswordUI : public PasswordUI {
     Str GetPassword(Str /*path*/, u8* /*fileDigest*/, u8 /*decryptionKeyOut*/[32], bool* saveKey) override {
         *saveKey = false;
         if (triedPassword || !password) {
-            return nullptr;
+            return {};
         }
         triedPassword = true;
         return str::Dup(password);
@@ -342,7 +342,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
 
             for (int i = 0; i < nEntries; i++) {
                 chm_entry* e = entries[i];
-                if (e->path && str::Eq(e->path, StrL("/payload"))) {
+                if (e->path && str::Eq(Str(e->path), StrL("/payload"))) {
                     payloadEntry = e;
                 }
                 if (e->length == 0 || e->length > 128ULL * 1024 * 1024) {
@@ -368,7 +368,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 // lets ASan catch the LZX overflow (issue-chm-lzx)
                 u8* payloadBuf = AllocArray<u8>((int)payloadEntry->length);
                 int64_t got = payloadBuf ? chm_read_entry(h, payloadEntry, payloadBuf) : 0;
-                out.Append(got > 0 ? "payload_retrieve=ATTEMPTED\n" : "payload_retrieve=FAILED\n");
+                out.Append(Str(got > 0 ? "payload_retrieve=ATTEMPTED\n" : "payload_retrieve=FAILED\n"));
                 free(payloadBuf);
             } else if (payloadEntry) {
                 out.Append(StrL("payload_retrieve=FAILED\n"));
@@ -435,27 +435,27 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
     };
 
     if (str::IsEmptyOrWhiteSpace(word1) || str::IsEmptyOrWhiteSpace(word2) || str::IsEmptyOrWhiteSpace(cursorWord)) {
-        return fail("ERROR missing word1, word2 or cursorWord");
+        return fail(StrL("ERROR missing word1, word2 or cursorWord"));
     }
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     if (!dm) {
-        return fail("NOTREADY no-doc");
+        return fail(StrL("NOTREADY no-doc"));
     }
     EngineBase* engine = dm->GetEngine();
     const int pageNo = 1;
     double x1 = 0, y1 = 0, x2 = 0, y2 = 0, xc = 0, yc = 0;
     if (!FindWordCenter(engine, pageNo, word1, &x1, &y1)) {
-        return fail("ERROR word1-not-found");
+        return fail(StrL("ERROR word1-not-found"));
     }
     if (!FindWordCenter(engine, pageNo, word2, &x2, &y2)) {
-        return fail("ERROR word2-not-found");
+        return fail(StrL("ERROR word2-not-found"));
     }
     if (!FindWordCenter(engine, pageNo, cursorWord, &xc, &yc)) {
-        return fail("ERROR cursorWord-not-found");
+        return fail(StrL("ERROR cursorWord-not-found"));
     }
 
     // build a text selection spanning word1..word2, like a left-drag would
@@ -467,9 +467,9 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
     win->showSelection = tab->selectionOnPage != nullptr;
 
     bool isTextOnly = false;
-    TempStr original = GetSelectedTextTemp(tab, " ", isTextOnly);
+    TempStr original = GetSelectedTextTemp(tab, StrL(" "), isTextOnly);
     if (len(original) == 0) {
-        return fail("ERROR empty-selection");
+        return fail(StrL("ERROR empty-selection"));
     }
     original = str::DupTemp(original);
 
@@ -478,7 +478,7 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
     Point screenPt = dm->CvtToScreen(pageNo, PointF((float)xc, (float)yc));
     ReadAloudCanReadFromCursor(dm, screenPt);
 
-    TempStr after = GetSelectedTextTemp(tab, " ", isTextOnly);
+    TempStr after = GetSelectedTextTemp(tab, StrL(" "), isTextOnly);
     bool ok = str::Eq(original, after);
     if (ok) {
         out.Append(fmt("OK selected=%s\n", original));
@@ -534,21 +534,21 @@ TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     };
 
     if (str::IsEmptyOrWhiteSpace(word)) {
-        return fail("ERROR missing word");
+        return fail(StrL("ERROR missing word"));
     }
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     if (!dm) {
-        return fail("NOTREADY no-doc");
+        return fail(StrL("NOTREADY no-doc"));
     }
     EngineBase* engine = dm->GetEngine();
     const int pageNo = 1;
     double wx = 0, wy = 0;
     if (!FindWordCenter(engine, pageNo, word, &wx, &wy)) {
-        return fail("ERROR word-not-found");
+        return fail(StrL("ERROR word-not-found"));
     }
 
     // select the word, the way a left-drag across it would
@@ -561,14 +561,14 @@ TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     win->showSelection = tab->selectionOnPage != nullptr;
 
     bool isTextOnly = false;
-    TempStr selected = str::DupTemp(GetSelectedTextTemp(tab, " ", isTextOnly));
+    TempStr selected = str::DupTemp(GetSelectedTextTemp(tab, StrL(" "), isTextOnly));
     if (len(selected) == 0) {
-        return fail("ERROR empty-selection");
+        return fail(StrL("ERROR empty-selection"));
     }
 
     Point pt = FindEmptySpotOnPage(win, dm, pageNo);
     if (pt.IsEmpty()) {
-        return fail("ERROR no-empty-spot");
+        return fail(StrL("ERROR no-empty-spot"));
     }
 
     // a real click: down and up at the same point, so it isn't a drag
@@ -576,7 +576,7 @@ TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, 0, lp);
     SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, lp);
 
-    TempStr after = GetSelectedTextTemp(tab, " ", isTextOnly);
+    TempStr after = GetSelectedTextTemp(tab, StrL(" "), isTextOnly);
     bool cleared = (len(after) == 0) && !win->showSelection;
     if (cleared) {
         out.Append(fmt("OK selected=%s cleared at %d,%d\n", selected, pt.x, pt.y));
@@ -607,21 +607,21 @@ TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
     };
 
     if (str::IsEmptyOrWhiteSpace(word)) {
-        return fail("ERROR missing word");
+        return fail(StrL("ERROR missing word"));
     }
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     if (!dm) {
-        return fail("NOTREADY no-doc");
+        return fail(StrL("NOTREADY no-doc"));
     }
     EngineBase* engine = dm->GetEngine();
     const int pageNo = 1;
     double wx = 0, wy = 0;
     if (!FindWordCenter(engine, pageNo, word, &wx, &wy)) {
-        return fail("ERROR word-not-found");
+        return fail(StrL("ERROR word-not-found"));
     }
     Point center = dm->CvtToScreen(pageNo, PointF((float)wx, (float)wy));
 
@@ -634,14 +634,14 @@ TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
     tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
     win->showSelection = tab->selectionOnPage != nullptr;
     if (!win->showSelection) {
-        return fail("ERROR no-rect-selection");
+        return fail(StrL("ERROR no-rect-selection"));
     }
     if (!IsRectangularSelection(win)) {
-        return fail("ERROR not-rectangular");
+        return fail(StrL("ERROR not-rectangular"));
     }
     // the point we press must be over text, otherwise this doesn't test anything
     if (!dm->IsOverText(center)) {
-        return fail("ERROR press-point-not-over-text");
+        return fail(StrL("ERROR press-point-not-over-text"));
     }
 
     SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(center.x, center.y));
@@ -711,15 +711,15 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     };
 
     if (str::IsEmptyOrWhiteSpace(word) || str::IsEmptyOrWhiteSpace(typed)) {
-        return fail("ERROR missing word or typed");
+        return fail(StrL("ERROR missing word or typed"));
     }
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     if (!dm) {
-        return fail("NOTREADY no-doc");
+        return fail(StrL("NOTREADY no-doc"));
     }
     EngineBase* engine = dm->GetEngine();
     // locate `word` on whichever page holds it (the test PDF puts it on a later
@@ -734,7 +734,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
         }
     }
     if (pageNo == 0) {
-        return fail("ERROR word-not-found");
+        return fail(StrL("ERROR word-not-found"));
     }
 
     // mimic a prior find: the typed (lowercase) text becomes textSearch's
@@ -761,7 +761,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     int curStart = ts->startGlyph;
     int curEnd = ts->endGlyph;
 
-    TempStr matched = nullptr;
+    TempStr matched;
     Rect* coords = nullptr;
     int pageTextLen = 0;
     Str pageTxt = engine->GetTextForPage(pageNo, &pageTextLen, &coords);
@@ -842,7 +842,7 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 }
 
 static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
-    Str s = ts.ExtractText(" ");
+    Str s = ts.ExtractText(StrL(" "));
     TempStr res = str::DupTemp(s);
     str::Free(s);
     return res;
@@ -1177,12 +1177,12 @@ TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
     };
 
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     if (!dm) {
-        return fail("NOTREADY no-doc");
+        return fail(StrL("NOTREADY no-doc"));
     }
 
     dm->SetZoomVirtual(200, nullptr);
@@ -1194,7 +1194,7 @@ TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
     int before = dm->viewPort.x;
     IPageDestination* dest = FirstLinkDestOnPage(dm->GetEngine(), 1);
     if (!dest) {
-        return fail("ERROR no-link");
+        return fail(StrL("ERROR no-link"));
     }
 
     win->ctrl->HandleLink(dest, win->linkHandler);
@@ -1220,9 +1220,10 @@ TempStr I18nErrorStringResultTemp(int* exitCodeOut) {
     Str err = _TRA("Error");
     Str crash = _TRA("SumatraPDF crashed");
     Str printers = _TRA("SumatraPDF - Show Printers");
-    bool ok = len(err) > 0 && len(crash) > 0 && len(printers) > 0 && str::Eq(err, trans::GetTranslation("Error")) &&
-              str::Eq(crash, trans::GetTranslation("SumatraPDF crashed")) &&
-              str::Eq(printers, trans::GetTranslation("SumatraPDF - Show Printers"));
+    bool ok = len(err) > 0 && len(crash) > 0 && len(printers) > 0 &&
+              str::Eq(err, trans::GetTranslation(StrL("Error"))) &&
+              str::Eq(crash, trans::GetTranslation(StrL("SumatraPDF crashed"))) &&
+              str::Eq(printers, trans::GetTranslation(StrL("SumatraPDF - Show Printers")));
     if (ok) {
         out.Append(fmt("OK error=%s crash=%s printers=%s\n", err, crash, printers));
     } else {

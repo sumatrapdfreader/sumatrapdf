@@ -38,119 +38,119 @@ static int gExternalViewersCount = 0;
 // clang-format off
 static ExternalViewerInfo gExternalViewers[] = {
     {
-        "Explorer",
+        StrL("Explorer"),
         CmdOpenWithExplorer,
-        "*",
-        "explorer.exe",
-        R"(/select,"%1")",
-        nullptr,
+        StrL("*"),
+        StrL("explorer.exe"),
+        StrL(R"(/select,"%1")"),
+        {},
         Str{},
     },
     {
-        "Directory Opus",
+        StrL("Directory Opus"),
         CmdOpenWithDirectoryOpus,
-        "*",
-        R"(GPSoftware\Directory Opus\dopus.exe)",
-        R"("%d")",
-        nullptr,
+        StrL("*"),
+        StrL(R"(GPSoftware\Directory Opus\dopus.exe)"),
+        StrL(R"("%d")"),
+        {},
         Str{},
     },
     {
-        "Total Commander",
+        StrL("Total Commander"),
         CmdOpenWithTotalCommander,
-        "*",
-        R"(totalcmd\TOTALCMD64.EXE)",
-        R"("%d")",
-        nullptr,
+        StrL("*"),
+        StrL(R"(totalcmd\TOTALCMD64.EXE)"),
+        StrL(R"("%d")"),
+        {},
         Str{},
     },
     {
-        "Double Commander",
+        StrL("Double Commander"),
         CmdOpenWithDoubleCommander,
-        "*",
-        R"(Double Commander\doublecmd.exe)",
-        R"(--no-splash --client "%d")",
-        nullptr,
+        StrL("*"),
+        StrL(R"(Double Commander\doublecmd.exe)"),
+        StrL(R"(--no-splash --client "%d")"),
+        {},
         Str{},
     },
     {
-        "Acrobat Reader",
+        StrL("Acrobat Reader"),
         CmdOpenWithAcrobat,
-        ".pdf",
-        R"(Adobe\Acrobat Reader DC\Reader\AcroRd32.exe)",
+        StrL(".pdf"),
+        StrL(R"(Adobe\Acrobat Reader DC\Reader\AcroRd32.exe)"),
         // Command line format for version 6 and later:
         //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
         // zoom=%z,%x,%y : percentage zoom and upper-left view (user-space coords)
-        R"(/A "page=%p&zoom=%z,%x,%y" "%1")",
+        StrL(R"(/A "page=%p&zoom=%z,%x,%y" "%1")"),
         kindEngineMupdf,
         Str{}
     },
     {
-        "Acrobat Reader",
+        StrL("Acrobat Reader"),
         CmdOpenWithAcrobat,
-        ".pdf",
-        R"(Adobe\Acrobat DC\Acrobat\Acrobat.exe)",
+        StrL(".pdf"),
+        StrL(R"(Adobe\Acrobat DC\Acrobat\Acrobat.exe)"),
         // Command line format for version 6 and later:
         //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
         // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
-        R"(/A "page=%p&zoom=%z,%x,%y" "%1")",
+        StrL(R"(/A "page=%p&zoom=%z,%x,%y" "%1")"),
         kindEngineMupdf,
         Str{}
     },
     {
-        "Foxit Reader",
+        StrL("Foxit Reader"),
         CmdOpenWithFoxIt,
-        ".pdf",
-        R"(Foxit Software\Foxit Reader\FoxitReader.exe)",
+        StrL(".pdf"),
+        StrL(R"(Foxit Software\Foxit Reader\FoxitReader.exe)"),
         // Foxit: filename [-n page] [-z zoom]
-        R"("%1" /A page=%p -z %z)",
+        StrL(R"("%1" /A page=%p -z %z)"),
         kindEngineMupdf,
         Str{}
     },
     {
-        "Foxit PhantomPDF",
+        StrL("Foxit PhantomPDF"),
         CmdOpenWithFoxItPhantom,
-        ".pdf",
-        R"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)",
-        R"("%1" /A page=%p -z %z)",
+        StrL(".pdf"),
+        StrL(R"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)"),
+        StrL(R"("%1" /A page=%p -z %z)"),
         kindEngineMupdf,
         Str{}
     },
     {
-        "PDF-XChange Editor",
+        StrL("PDF-XChange Editor"),
         CmdOpenWithPdfXchange,
-        ".pdf",
-        R"(Tracker Software\PDF Editor\PDFXEdit.exe)",
+        StrL(".pdf"),
+        StrL(R"(Tracker Software\PDF Editor\PDFXEdit.exe)"),
         // PDFXChange cmd-line format:
         // [/A "param=value [&param2=value ..."] [PDF filename]
-        R"(/A "page=%p&zoom=%z" "%1")",
+        StrL(R"(/A "page=%p&zoom=%z" "%1")"),
         kindEngineMupdf,
         Str{}
     },
     {
-        "Pdf & Djvu Bookmarker",
+        StrL("Pdf & Djvu Bookmarker"),
         CmdOpenWithPdfDjvuBookmarker,
-        ".pdf;.djvu",
-        R"(Pdf & Djvu Bookmarker\PdfDjvuBookmarker.exe)",
+        StrL(".pdf;.djvu"),
+        StrL(R"(Pdf & Djvu Bookmarker\PdfDjvuBookmarker.exe)"),
         Str{},
-        nullptr,
+        {},
         Str{}
     },
     {
-        "XPS Viewer",
+        StrL("XPS Viewer"),
         CmdOpenWithXpsViewer,
-        ".xps;.oxps",
-        "xpsrchvw.exe",
+        StrL(".xps;.oxps"),
+        StrL("xpsrchvw.exe"),
         Str{},
         kindEngineMupdf,
         Str{}
     },
     {
-        "HTML Help",
+        StrL("HTML Help"),
         CmdOpenWithHtmlHelp,
-        ".chm",
-        "hh.exe",
+        StrL(".chm"),
+        StrL("hh.exe"),
         Str{},
         kindEngineChm,
         Str{}
@@ -193,11 +193,11 @@ void FreeExternalViewers() {
 
 static TempStr GetAcrobatPathTemp() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    Str keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)";
-    TempStr path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
+    Str keyName = StrL(R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)");
+    TempStr path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, {});
     if (!path) {
-        keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)";
-        path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
+        keyName = StrL(R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)");
+        path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, {});
     }
     if (path && file::Exists(path)) {
         return path;
@@ -206,20 +206,20 @@ static TempStr GetAcrobatPathTemp() {
 }
 
 static TempStr GetFoxitPathTemp() {
-    Str keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)";
-    TempStr path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
+    Str keyName = StrL(R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)");
+    TempStr path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, StrL("DisplayIcon"));
     if (path && file::Exists(path)) {
         return path;
     }
     // Registry value for Foxit 5 (and maybe later)
-    keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)";
-    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
+    keyName = StrL(R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)");
+    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, StrL("DisplayIcon"));
     if (path && file::Exists(path)) {
         return path;
     }
     // Registry value for Foxit 5.5 MSI installer
-    keyName = R"(Software\Foxit Software\Foxit Reader)";
-    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
+    keyName = StrL(R"(Software\Foxit Software\Foxit Reader)");
+    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, StrL("InstallPath"));
     if (path) {
         path = path::JoinTemp(path, StrL("Foxit Reader.exe"));
     }
@@ -228,8 +228,8 @@ static TempStr GetFoxitPathTemp() {
     }
     // Registry value for Foxit PDF Reader 12.1.3.15356 (The last version with Add Bookmark function without bugs in
     // single-key accelerator)
-    keyName = R"(SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\FoxitPDFReader.exe)";
-    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "Path");
+    keyName = StrL(R"(SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\FoxitPDFReader.exe)");
+    path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, StrL("Path"));
     if (path) {
         path = path::JoinTemp(path, StrL("FoxitPDFReader.exe"));
     }
@@ -311,7 +311,7 @@ static TempStr GetPDFXChangePathTemp() {
     }
 
     // Legacy PDF-XChange Viewer registry entry.
-    Str keyName = R"(Software\Tracker Software\PDFViewer)";
+    Str keyName = StrL(R"(Software\Tracker Software\PDFViewer)");
     TempStr path = ReadRegStr2Temp(keyName, StrL("InstallPath"));
     if (!path) {
         return {};

@@ -351,7 +351,7 @@ static bool ParseProtoUrl(Str url, int* htmlWindowId, TempStr* urlRest) {
 static TempStr MimeFromUrlTemp(Str url, Str imgExt = {}) {
     Str ext = str::SliceFromCharLast(url, '.');
     if (!ext.s) {
-        return {kDefaultMimeType};
+        return StrL(kDefaultMimeType);
     }
 
     Str semi = str::SliceFromChar(ext, ';');
@@ -367,12 +367,12 @@ static TempStr MimeFromUrlTemp(Str url, Str imgExt = {}) {
         return mime;
     }
 
-    TempStr contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "Content Type");
+    TempStr contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, StrL("Content Type"));
     if (contentType) {
         return contentType;
     }
 
-    return {kDefaultMimeType};
+    return StrL(kDefaultMimeType);
 }
 
 // TODO: return an error page html in case of errors?
@@ -1512,7 +1512,7 @@ void HtmlWindow::CopySelection() {
 }
 
 void HtmlWindow::NavigateToAboutBlank() {
-    NavigateToUrl("about:blank");
+    NavigateToUrl(StrL("about:blank"));
 }
 
 void HtmlWindow::SetHtml(Str d, Str url) {

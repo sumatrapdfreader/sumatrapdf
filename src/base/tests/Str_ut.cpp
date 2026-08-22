@@ -193,9 +193,9 @@ static void StrUrlExtractTest() {
     utassert(str::Eq(fileName, StrL("na/me.ext")));
     fileName = url::GetFileNameTemp(StrL("http://example.net/%E2%82%AC"));
     utassert(str::Eq(fileName, StrL("\xE2\x82\xaC")));
-    TempStr wiki = url::DecodeTemp(
-        "https://ru.wikipedia.org/wiki/"
-        "%D0%AD%D0%BD%D0%B5%D1%80%D0%B3%D0%B8%D1%8F_%E2%80%94_%D0%91%D1%83%D1%80%D0%B0%D0%BD");
+    TempStr wiki =
+        url::DecodeTemp(StrL("https://ru.wikipedia.org/wiki/"
+                             "%D0%AD%D0%BD%D0%B5%D1%80%D0%B3%D0%B8%D1%8F_%E2%80%94_%D0%91%D1%83%D1%80%D0%B0%D0%BD"));
     utassert(str::Eq(wiki, StrL("https://ru.wikipedia.org/wiki/"
                                 "\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_"
                                 "\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD")));
@@ -214,7 +214,7 @@ static void StrUrlExtractTest() {
     TempStr joined = str::JoinTemp(StrL("dir\\"), decoded);
     utassert(str::Eq(joined, StrL("dir\\umlaut_test_\xC3\xA4.html")));
     utassert(len(joined) == LenL("dir\\umlaut_test_\xC3\xA4.html"));
-    utassert(len(url::GetFullPathTemp("na%2Fme.ext?q=1")) == LenL("na/me.ext"));
+    utassert(len(url::GetFullPathTemp(StrL("na%2Fme.ext?q=1"))) == LenL("na/me.ext"));
     utassert(len(url::GetFileNameTemp(StrL("http://example.net/na%2Fme.ext"))) == LenL("na/me.ext"));
 }
 
@@ -472,15 +472,15 @@ static void wstrBuilderTest() {
 // ASCII (issue #5717: TOC "*" palette search was case-sensitive for Cyrillic)
 static void StrFindITest() {
     // ASCII still works (fast path, regression guard)
-    Str hello = "Hello World";
-    utassert(str::ContainsI(hello, "hello"));
-    utassert(str::ContainsI(hello, "WORLD"));
-    utassert(!str::ContainsI(hello, "xyz"));
-    utassert(str::IndexOfI(hello, "WORLD") == 6);
+    Str hello = StrL("Hello World");
+    utassert(str::ContainsI(hello, StrL("hello")));
+    utassert(str::ContainsI(hello, StrL("WORLD")));
+    utassert(!str::ContainsI(hello, StrL("xyz")));
+    utassert(str::IndexOfI(hello, StrL("WORLD")) == 6);
 
     // Cyrillic: "Привет" (capitalized) vs "привет" (lowercase needle)
-    Str privetCap = "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
-    Str privetLow = "\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    Str privetCap = StrL("\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82");
+    Str privetLow = StrL("\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82");
     utassert(str::Contains(privetCap, privetCap));
     utassert(!str::Contains(privetCap, privetLow)); // case-sensitive: no match
     utassert(str::ContainsI(privetCap, privetLow)); // case-insensitive: matches
@@ -489,19 +489,19 @@ static void StrFindITest() {
 
     // mixed ASCII + Cyrillic: the returned offset must be the correct byte
     // offset into the original UTF-8 string ("abc " is 4 bytes)
-    Str mixed = "abc \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    Str mixed = StrL("abc \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82");
     utassert(str::IndexOfI(mixed, privetLow) == 4);
-    utassert(str::IndexOfI(mixed, "xyz") < 0);
+    utassert(str::IndexOfI(mixed, StrL("xyz")) < 0);
 
     // Greek: "ΛΟΓΟΣ" vs "λογος"
-    Str logosCap = "\xCE\x9B\xCE\x9F\xCE\x93\xCE\x9F\xCE\xA3";
-    Str logosLow = "\xCE\xBB\xCE\xBF\xCE\xB3\xCE\xBF\xCF\x83";
+    Str logosCap = StrL("\xCE\x9B\xCE\x9F\xCE\x93\xCE\x9F\xCE\xA3");
+    Str logosLow = StrL("\xCE\xBB\xCE\xBF\xCE\xB3\xCE\xBF\xCF\x83");
     utassert(str::ContainsI(logosCap, logosLow));
 }
 
 static void StrCutTest() {
     // IndexOfAfter: offset just past the match, or -1
-    Str s = "key=value";
+    Str s = StrL("key=value");
     utassert(str::IndexOfAfter(s, StrL("=")) == 4);
     utassert(str::IndexOfAfter(s, StrL("key")) == 3);
     utassert(str::IndexOfAfter(s, StrL("xyz")) == -1);
@@ -520,7 +520,7 @@ static void StrCutTest() {
 
     // separator not found: returns false, before = whole string, after = {}
     before = {};
-    after = "sentinel";
+    after = StrL("sentinel");
     utassert(!str::Cut(s, StrL("#"), &before, &after));
     utassert(str::Eq(before, s) && len(after) == 0);
 
@@ -537,7 +537,7 @@ static void StrNextLineTest() {
     Str line, rest;
 
     // LF, CR and CRLF are all single line terminators
-    rest = "a\nb\rc\r\nd";
+    rest = StrL("a\nb\rc\r\nd");
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, StrL("a")));
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, StrL("b")));
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, StrL("c")));
@@ -549,19 +549,19 @@ static void StrNextLineTest() {
     utassert(!str::NextLine(rest, line, rest));
 
     // a trailing terminator does not yield an extra empty line
-    rest = "a\n";
+    rest = StrL("a\n");
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, StrL("a")));
     utassert(!str::NextLine(rest, line, rest));
 
     // empty lines are returned as empty (not skipped)
-    rest = "\n\nx";
+    rest = StrL("\n\nx");
     utassert(str::NextLine(rest, line, rest) && len(line) == 0);
     utassert(str::NextLine(rest, line, rest) && len(line) == 0);
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, StrL("x")));
     utassert(!str::NextLine(rest, line, rest));
 
     // final line without a terminator
-    rest = "only";
+    rest = StrL("only");
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, StrL("only")));
     utassert(len(rest) == 0);
     utassert(!str::NextLine(rest, line, rest));
@@ -648,7 +648,7 @@ void StrTest() {
     StrArenaTest();
 
     char buf[32];
-    Str str = "a string";
+    Str str = StrL("a string");
     utassert(str.len == 8);
     utassert(str::Eq(str, StrL("a string")) && str::Eq(str, str));
     utassert(!str::Eq(str, Str{}) && !str::Eq(str, StrL("A String")));
@@ -656,7 +656,7 @@ void StrTest() {
     utassert(!str::EqI(str, Str{}) && str::EqI(Str{}, Str{}));
     utassert(str::EqI(Str("AbCx", 3), Str("abcY", 3)));
     utassert(!str::EqI(Str("AbCx", 3), Str("abcY", 4)));
-    utassert(str::EqN("abcd", "abce", 3) && !str::EqN("abcd", "Abcd", 3));
+    utassert(str::EqN(StrL("abcd"), StrL("abce"), 3) && !str::EqN(StrL("abcd"), StrL("Abcd"), 3));
     utassert(str::StartsWith(str, StrL("a s")) && str::StartsWithI(str, StrL("A Str")));
     utassert(!str::StartsWith(str, StrL("Astr")));
     Str withoutPrefix = str;
@@ -675,18 +675,18 @@ void StrTest() {
     utassert(!str::ContainsCharAny(str, Str{}));         // no candidates
     utassert(!str::ContainsCharAny(Str{}, StrL("abc"))); // empty subject
     int n = str::BufSet(Str(buf, dimof(buf)), str);
-    utassert(n == len(buf) && str::Eq(buf, str));
+    utassert(n == len(buf) && str::Eq(Str(buf), str));
     n = str::BufSet(Str(buf, 6), str);
-    utassert(n == 5 && str::Eq(buf, StrL("a str")));
+    utassert(n == 5 && str::Eq(Str(buf), StrL("a str")));
 
-    str = str::Dup(buf);
-    utassert(str::Eq(str, buf));
+    str = str::Dup(Str(buf));
+    utassert(str::Eq(str, Str(buf)));
     str::Free(str);
     str = str::Dup(Str(buf, 4));
     utassert(str::Eq(str, StrL("a st")));
     str::Free(str);
     str = fmt("%s", Str(buf));
-    utassert(str::Eq(str, buf));
+    utassert(str::Eq(str, Str(buf)));
     str = fmt("%S", WStrL(L"a"
                           L"\x2019"
                           L"a.pdf"));
@@ -705,10 +705,10 @@ void StrTest() {
     // TODO: in VS2015, str matches "\uFFFF" instead of nullptr
     utassert(str::Eq(str, nullptr));
 #endif
-    str = str::Join(buf, buf);
+    str = str::Join(Str(buf), Str(buf));
     utassert(len(str) == 2 * len(buf));
     str::Free(str);
-    str = str::Join(nullptr, StrL("ab"));
+    str = str::Join({}, StrL("ab"));
     utassert(str::Eq(str, StrL("ab")));
     str::Free(str);
 
@@ -718,42 +718,42 @@ void StrTest() {
     str::Free(str);
 #endif
 
-    str::BufSet(Str(buf, dimof(buf)), "abc\1efg\1");
+    str::BufSet(Str(buf, dimof(buf)), StrL("abc\1efg\1"));
     Str bufStr(buf, 9);
     str::TransCharsInPlace(bufStr, StrL("ace"), StrL("ACE"));
-    utassert(str::Eq(buf, StrL("AbC\1Efg\1")));
+    utassert(str::Eq(Str(buf), StrL("AbC\1Efg\1")));
     str::TransCharsInPlace(bufStr, StrL("\1"), StrL("\0"));
-    utassert(str::Eq(buf, StrL("AbC")) && str::Eq(buf + 4, StrL("Efg")));
+    utassert(str::Eq(Str(buf), StrL("AbC")) && str::Eq(Str(buf + 4), StrL("Efg")));
     str::TransCharsInPlace(bufStr, StrL(""), StrL("X"));
-    utassert(str::Eq(buf, StrL("AbC")));
+    utassert(str::Eq(Str(buf), StrL("AbC")));
 
-    str::BufSet(Str(buf, dimof(buf)), "blogarapato");
-    int count = str::RemoveCharsInPlace(buf, StrL("bo"));
+    str::BufSet(Str(buf, dimof(buf)), StrL("blogarapato"));
+    int count = str::RemoveCharsInPlace(Str(buf), StrL("bo"));
     utassert(3 == count);
-    utassert(str::Eq(buf, StrL("lgarapat")));
+    utassert(str::Eq(Str(buf), StrL("lgarapat")));
 
-    str::BufSet(Str(buf, dimof(buf)), "one\r\ntwo\t\v\f\tthree");
+    str::BufSet(Str(buf, dimof(buf)), StrL("one\r\ntwo\t\v\f\tthree"));
     count = str::NormalizeWSInPlace(Str(buf));
     utassert(4 == count);
-    utassert(str::Eq(buf, StrL("one two three")));
+    utassert(str::Eq(Str(buf), StrL("one two three")));
 
-    str::BufSet(Str(buf, dimof(buf)), " one    two three ");
+    str::BufSet(Str(buf, dimof(buf)), StrL(" one    two three "));
     count = str::NormalizeWSInPlace(Str(buf));
     utassert(5 == count);
-    utassert(str::Eq(buf, StrL("one two three")));
+    utassert(str::Eq(Str(buf), StrL("one two three")));
 
     count = str::NormalizeWSInPlace(Str(buf));
     utassert(0 == count);
-    utassert(str::Eq(buf, StrL("one two three")));
+    utassert(str::Eq(Str(buf), StrL("one two three")));
 
     {
         // NormalizeWSTemp: already-normalized input returns the same buffer (no copy)
-        Str norm = "one two three";
+        Str norm = StrL("one two three");
         TempStr r = str::NormalizeWSTemp(norm);
         utassert(r.s == norm.s);
         utassert(str::Eq(r, StrL("one two three")));
         // needs normalizing: returns a distinct temp copy, original untouched
-        Str raw = " one\t\rtwo  three ";
+        Str raw = StrL(" one\t\rtwo  three ");
         r = str::NormalizeWSTemp(raw);
         utassert(r.s != raw.s);
         utassert(str::Eq(r, StrL("one two three")));
@@ -763,7 +763,7 @@ void StrTest() {
     }
 
     {
-        Str str2 = "[Open(\"filename.pdf\",0,1,0)]";
+        Str str2 = StrL("[Open(\"filename.pdf\",0,1,0)]");
         {
             uint u1 = 0;
             TempStr str1;
@@ -821,7 +821,7 @@ void StrTest() {
     utassert(!str::Parse(Str(StrL("abcd").s, 3), "abcd").s);
 
     {
-        Str str1 = "string";
+        Str str1 = StrL("string");
         utassert(str::Parse(Str(str1.s, 4), "str").s == str1.s + 3);
 
         float f1, f2;
@@ -862,8 +862,8 @@ void StrTest() {
     }
 
     {
-        Str path =
-            "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20";
+        Str path = StrL(
+            "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20");
         float f[6];
         int b[2];
         Str s = str::Parse(path, "M%f%_%f", &f[0], &f[1]);

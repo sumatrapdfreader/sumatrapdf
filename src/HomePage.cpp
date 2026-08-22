@@ -57,7 +57,7 @@ struct SumatraCommandsContext : CommandsContext {
         if (cmdId <= 0) {
             return {}; // not a command: the markup stays literal text
         }
-        TempStr accel = AppendAccelKeyToMenuStringTemp("", cmdId);
+        TempStr accel = AppendAccelKeyToMenuStringTemp(StrL(""), cmdId);
         if (!accel || !*accel.s) {
             return str::DupTemp(cmdName); // a command, but unbound
         }
@@ -170,7 +170,7 @@ static void EnsureTipsParsed() {
     if (gTipsParsed) {
         return;
     }
-    CollectTipsFromString(sumatraTips, "Tip: ", &gTipLines);
+    CollectTipsFromString(sumatraTips, StrL("Tip: "), &gTipLines);
     CollectTipsFromString(sumatraPromos, {}, &gPromoLines);
     gTipsParsed = true;
     PickRandomTipOrPromo();
@@ -233,24 +233,26 @@ struct AboutRow {
 static AboutRow gAboutRows[] = {
     // a null rightTxt means "the app version", filled in by Sync() because it
     // isn't known until runtime (32/64-bit, debug)
-    {"version", nullptr, nullptr},
-    {"built on", __DATE__ " " __TIME__, nullptr},
-    {"website", "SumatraPDF website", kWebsiteURL},
-    {"manual", "SumatraPDF manual", kManualURL},
-    {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
-    {"programming", "The Programmers", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
-    {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
+    {StrL("version"), {}, {}},
+    {StrL("built on"), StrL(__DATE__ " " __TIME__), {}},
+    {StrL("website"), StrL("SumatraPDF website"), Str(kWebsiteURL)},
+    {StrL("manual"), StrL("SumatraPDF manual"), Str(kManualURL)},
+    {StrL("forums"), StrL("SumatraPDF forums"), StrL("https://github.com/sumatrapdfreader/sumatrapdf/discussions")},
+    {StrL("programming"), StrL("The Programmers"),
+     StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
+    {StrL("licenses"), StrL("Various Open Source"),
+     StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
 #if defined(GIT_COMMIT_ID_STR)
-    {"last change", "git commit " GIT_COMMIT_ID_STR,
-     "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
+    {StrL("last change"), StrL("git commit " GIT_COMMIT_ID_STR),
+     StrL("https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR)},
 #endif
 #if defined(PRE_RELEASE_VER)
-    {"a note", "Pre-release version, for testing only!", nullptr},
+    {StrL("a note"), StrL("Pre-release version, for testing only!"), {}},
 #endif
 #ifdef DEBUG
-    {"a note", "Debug version, for testing only!", nullptr},
+    {StrL("a note"), StrL("Debug version, for testing only!"), {}},
 #endif
-    {nullptr, nullptr, nullptr}};
+    {{}, {}, {}}};
 
 // The About screen's two text columns: a Table (ILayout) whose left column
 // is right-aligned and right column left-aligned. Rows with a url become
@@ -337,7 +339,7 @@ SumatraLogo::SumatraLogo() {
 }
 
 Size SumatraLogo::GetIdealSize() {
-    Size sz = PlatformFontMeasureText(font, kAppName);
+    Size sz = PlatformFontMeasureText(font, StrL(kAppName));
     HWND hwnd = GetHwnd();
     sz.dy += DpiScale(kAboutBoxMarginDy * 2);
     sz.dx += 2 * DpiScale(kInnerPadding);
@@ -346,7 +348,7 @@ Size SumatraLogo::GetIdealSize() {
 
 void SumatraLogo::Paint(VirtPaintCtx& ctx) {
     static Color cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
-    Size txtSize = PlatformFontMeasureText(font, kAppName);
+    Size txtSize = PlatformFontMeasureText(font, StrL(kAppName));
     Rect r = ctx.bounds;
     Point pt{r.x + ((r.dx - txtSize.dx) / 2), r.y + ((r.dy - txtSize.dy) / 2)};
     char buf[2] = {};
@@ -479,8 +481,8 @@ void AboutCtrl::Sync() {
 
     logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
 
-    PlatformFont* fontLeftTxt = GetUserGuiFont(kLeftTextFont, DpiScale(kLeftTextFontSize));
-    PlatformFont* fontRightTxt = GetUserGuiFont(kRightTextFont, DpiScale(kRightTextFontSize));
+    PlatformFont* fontLeftTxt = GetUserGuiFont(Str(kLeftTextFont), DpiScale(kLeftTextFontSize));
+    PlatformFont* fontRightTxt = GetUserGuiFont(Str(kRightTextFont), DpiScale(kRightTextFontSize));
     Color colText = ThemeWindowTextColor();
     Color colLink = ThemeWindowLinkColor();
 
@@ -596,8 +598,8 @@ static void AppendBugReportInfo(str::Builder& s) {
     SYSTEM_INFO si{};
     GetSystemInfo(&si);
     s.Append(fmt("Processors: %d\r\n", (int)si.dwNumberOfProcessors));
-    TempStr cpuName =
-        ReadRegStrTemp(HKEY_LOCAL_MACHINE, R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)", "ProcessorNameString");
+    TempStr cpuName = ReadRegStrTemp(HKEY_LOCAL_MACHINE, StrL(R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)"),
+                                     StrL("ProcessorNameString"));
     if (cpuName) {
         s.Append(fmt("Processor: %s\r\n", cpuName));
     }
@@ -883,7 +885,7 @@ void DrawAboutPage(MainWindow* win, Gfx* gfx) {
     if (about->showFreqRead) {
         VirtLink* link = about->showFreqRead;
         link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
-        link->font = GetUserGuiFont("MS Shell Dlg", DpiScale(16));
+        link->font = GetUserGuiFont(StrL("MS Shell Dlg"), DpiScale(16));
         link->sz = {0, 0}; // re-measure: the font may have changed with the DPI
         Size txtSize = link->GetIdealSize(true);
         Rect r = {0, 0, txtSize.dx, txtSize.dy};
@@ -1140,7 +1142,7 @@ constexpr int kSearchEditDy = 28;
 constexpr int kSearchThumbnailsGapY = 12;
 
 static PlatformFont* HomePageFont(int size) {
-    return GetUserGuiFont("MS Shell Dlg", DpiScale(size));
+    return GetUserGuiFont(StrL("MS Shell Dlg"), DpiScale(size));
 }
 
 static void HomeSelectFromSearchReturnCol(MainWindow* win);
@@ -1164,7 +1166,7 @@ struct HomeSearchEdit : Edit {
             return;
         }
         if (ev->msg == WM_KEYDOWN && ev->wparam == VK_ESCAPE) {
-            SetText("");
+            SetText(StrL(""));
             if (win) {
                 HwndSetFocus(win->hwndCanvas);
                 win->RedrawAll(true);
@@ -1591,7 +1593,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     auto* win = l.win;
 
     // filter by search query if present
-    TempStr searchQuery = nullptr;
+    TempStr searchQuery;
     if (win->homeSearch) {
         searchQuery = win->homeSearch->GetTextTemp();
     }
@@ -2095,7 +2097,7 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
     {
         int pinDx = thumb.rcListPin.dx > 0 ? thumb.rcListPin.dx : DpiScale(16);
         int pinDy = thumb.rcListPin.dy > 0 ? thumb.rcListPin.dy : pinDx;
-        Pixmap* pin = GetCachedPixmapForSvg(gIconPin, pinDx, pinDy);
+        Pixmap* pin = GetCachedPixmapForSvg(Str(gIconPin), pinDx, pinDy);
         if (pin) {
             gfx->DrawPixmap(pin, thumb.rcListPin);
         }
@@ -2140,7 +2142,7 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
 static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
     gfx->FillEllipse(r, kColWhite);
     PlatformFont* font = HomePageFont(14);
-    gfx->DrawText("?", r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
+    gfx->DrawText(StrL("?"), r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
 // Slack so the first/last row's rounded outline isn't cut by rcThumbsArea.
@@ -2736,9 +2738,9 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     entries->UpdateCloseBtnVisibility();
 
     Size iconSize = l.rcIconThumbnailView.Size();
-    chrome->thumbView->pixmap = GetCachedPixmapForSvg(gIconHomeThumbnails, iconSize.dx, iconSize.dy);
+    chrome->thumbView->pixmap = GetCachedPixmapForSvg(Str(gIconHomeThumbnails), iconSize.dx, iconSize.dy);
     chrome->thumbView->SetBounds(l.rcIconThumbnailView);
-    chrome->listView->pixmap = GetCachedPixmapForSvg(gIconHomeList, iconSize.dx, iconSize.dy);
+    chrome->listView->pixmap = GetCachedPixmapForSvg(Str(gIconHomeList), iconSize.dx, iconSize.dy);
     chrome->listView->SetBounds(l.rcIconListView);
 
     // re-apply: the bounds were set before the parent was positioned
@@ -2753,7 +2755,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
     rcOpen.Inflate(10, 10);
     HomeOpenDocCtrl* od = chrome->openDoc;
-    od->pixmap = GetCachedPixmapForSvg(gIconFileOpen, l.rcIconOpen.dx, l.rcIconOpen.dy);
+    od->pixmap = GetCachedPixmapForSvg(Str(gIconFileOpen), l.rcIconOpen.dx, l.rcIconOpen.dy);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
     // "Open a document" acts as a link, so it is drawn in the link color

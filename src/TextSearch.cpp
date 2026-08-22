@@ -264,7 +264,7 @@ void TextSearch::SetDirection(TextSearch::Direction direction) {
 void TextSearch::SetLastResult(TextSelection* sel) {
     CopySelection(sel);
 
-    Str selection = ExtractText(" ");
+    Str selection = ExtractText(StrL(" "));
     selection.len -= str::NormalizeWSInPlace(selection);
     SetText(selection);
     str::Free(selection);

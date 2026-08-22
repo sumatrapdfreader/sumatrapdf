@@ -859,7 +859,7 @@ void PropertiesWnd::UpdateEutl(VirtMouseEvent*) {
     auto* job = new EutlUpdateJob;
     job->hwnd = hwnd;
     auto fn = MkFunc0<EutlUpdateJob>(EutlUpdateThread, job);
-    RunAsync(fn, "EutlUpdate");
+    RunAsync(fn, StrL("EutlUpdate"));
 }
 #endif
 
@@ -899,7 +899,7 @@ void PropertiesWnd::SizeToContent() {
 
     int lineHeight = PlatformFontLineHeight(propsFont);
     // a bit of slack so the longest lines don't touch the right edge
-    maxLineDx += 4 * PlatformFontMeasureText(propsFont, "x").dx;
+    maxLineDx += 4 * PlatformFontMeasureText(propsFont, StrL("x")).dx;
 
     // add padding for scrollbar, border, window frame
     int editPadding = DpiGetSystemMetrics(SM_CXVSCROLL) + (2 * DpiGetSystemMetrics(SM_CXEDGE)) + 16;
@@ -1011,7 +1011,7 @@ bool PropertiesWnd::Create(HWND parent) {
     }
 
     HDC hdc = GetDC(hwnd);
-    propsFont = HdcCreateSimpleFont(hdc, "Consolas", 14);
+    propsFont = HdcCreateSimpleFont(hdc, StrL("Consolas"), 14);
     ReleaseDC(hwnd, hdc);
 
     auto* vbox = new VBox();
@@ -1171,5 +1171,5 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     data->engine = dm->engine;
     data->engine->AddRef();
     auto fn = MkFunc0<GetFontsData>(GetFontsThread, data);
-    RunAsync(fn, "GetFontsThread");
+    RunAsync(fn, StrL("GetFontsThread"));
 }

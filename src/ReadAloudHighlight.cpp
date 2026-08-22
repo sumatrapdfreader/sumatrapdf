@@ -759,19 +759,19 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
 
     WindowTab* tab = GetReadAloudSourceTab();
     if (!tab || tab->win != win) {
-        ReadAloudPaintLogOnce(1, "ReadAloud: PaintHighlight: no matching source tab");
+        ReadAloudPaintLogOnce(1, StrL("ReadAloud: PaintHighlight: no matching source tab"));
         return;
     }
 
     ReadAloudHighlightMap* map = tab->readAloudHighlight;
     if (!map || !map->locs || map->len <= 0) {
-        ReadAloudPaintLogOnce(2, "ReadAloud: PaintHighlight: no highlight map");
+        ReadAloudPaintLogOnce(2, StrL("ReadAloud: PaintHighlight: no highlight map"));
         return;
     }
 
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
-        ReadAloudPaintLogOnce(3, "ReadAloud: PaintHighlight: tab is not a fixed-layout document");
+        ReadAloudPaintLogOnce(3, StrL("ReadAloud: PaintHighlight: tab is not a fixed-layout document"));
         return;
     }
 
@@ -786,12 +786,12 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
     }
 
     if (wordStartAbs < 0 || wordStartAbs >= map->len) {
-        ReadAloudPaintLogOnce(5, "ReadAloud: PaintHighlight: wordStartAbs out of range");
+        ReadAloudPaintLogOnce(5, StrL("ReadAloud: PaintHighlight: wordStartAbs out of range"));
         return;
     }
     wordEndAbs = std::min(wordEndAbs, map->len);
     if (wordEndAbs <= wordStartAbs) {
-        ReadAloudPaintLogOnce(6, "ReadAloud: PaintHighlight: empty word range");
+        ReadAloudPaintLogOnce(6, StrL("ReadAloud: PaintHighlight: empty word range"));
         return;
     }
 
@@ -827,7 +827,7 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
     }
 
     if (len(screenRects) == 0) {
-        ReadAloudPaintLogOnce(7, "ReadAloud: PaintHighlight: no screen rects for current word");
+        ReadAloudPaintLogOnce(7, StrL("ReadAloud: PaintHighlight: no screen rects for current word"));
         return;
     }
 

@@ -242,7 +242,7 @@ struct Str {
     int len;
 
     Str() : s(nullptr), len(0) {}
-    Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; }
+    explicit Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; }
     explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}
     explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }
     explicit Str(char* s_, int len_) : s(s_), len(len_) {}
@@ -287,7 +287,7 @@ using TempWStr = WStr;
 #define WStrL(lit) WStr((wchar_t*)(lit), (int)((sizeof(lit) / sizeof(wchar_t)) - 1))
 
 // length of a Str / WStr as int. C strings have a dedicated overload so
-// len(ptr) does not construct a Str.
+// len(ptr) does not depend on Str's explicit const char* constructor.
 inline int len(Str s) {
     return s.len;
 }

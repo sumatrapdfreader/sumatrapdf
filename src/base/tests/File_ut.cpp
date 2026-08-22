@@ -30,7 +30,7 @@ void FileUtilTest() {
     dirName = path::GetDirTemp(StrL("/etc"));
     utassert(str::Eq(dirName, StrL("/")));
 
-    Str(path1 = "C:\\Program Files");
+    path1 = StrL("C:\\Program Files");
     Str path2 = path::Join(StrL("C:\\"), StrL("Program Files"));
     utassert(str::Eq(path1, path2));
     str::Free(path2);
@@ -75,7 +75,7 @@ void FileUtilTest() {
         path = path::JoinTemp(StrL("foo\\"), StrL("\\bar"));
         utassert(str::Eq(path, StrL("foo\\bar")));
 
-        path = path::JoinTemp(StrL("foo\\"), StrL("\\bar\\"), "\\z");
+        path = path::JoinTemp(StrL("foo\\"), StrL("\\bar\\"), StrL("\\z"));
         utassert(str::Eq(path, StrL("foo\\bar\\z")));
     }
     {
@@ -118,9 +118,9 @@ void FileUtilTest() {
     baseName = path::GetBaseNameTemp(dirName);
     utassert(str::Eq(baseName, StrL("SumatraPDF")));
 
-    dirName = path::GetDirTemp("/etc");
+    dirName = path::GetDirTemp(StrL("/etc"));
     utassert(str::Eq(dirName, StrL("/")));
-    dirName = path::GetDirTemp("file");
+    dirName = path::GetDirTemp(StrL("file"));
     utassert(str::Eq(dirName, StrL(".")));
 
     Str path2 = path::Join("/Applications", StrL("SumatraPDF"));

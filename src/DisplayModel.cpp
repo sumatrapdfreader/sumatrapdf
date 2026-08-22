@@ -349,7 +349,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->uniformPageWidth = uniformPageWidth;
 
     str::Free(fs->decryptionKey);
-    fs->decryptionKey = engine->decryptionKey.s ? str::Dup(engine->decryptionKey.s) : nullptr;
+    fs->decryptionKey = engine->decryptionKey ? str::Dup(engine->decryptionKey) : Str();
 }
 
 // Display rotation of an already-known rectangle. Engine::Transform also
@@ -1702,7 +1702,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
 Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     if (!pageInfo) {
-        Str isValid = ValidPageNo(pageNo) ? "yes" : "no";
+        Str isValid = ValidPageNo(pageNo) ? StrL("yes") : StrL("no");
         logf("DisplayModel::CvtToScreen: GetPageInfo(%d) failed, is valid page: %s\n", pageNo, isValid);
         ReportIf(!pageInfo);
         return {};

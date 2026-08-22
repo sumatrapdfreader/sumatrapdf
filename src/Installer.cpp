@@ -118,9 +118,9 @@ constexpr const char* kLogFileName = "sumatra-install-log.txt";
 Str GetInstallerLogPath() {
     TempStr dir = GetTempDirTemp();
     if (!dir) {
-        return str::Dup(kLogFileName);
+        return str::Dup(Str(kLogFileName));
     }
-    return path::Join(dir, kLogFileName);
+    return path::Join(dir, Str(kLogFileName));
 }
 
 static void ClearReadOnly(Str path) {
@@ -839,7 +839,7 @@ static void MoveAsideOrDeleteLegacyLibmupdf(Str installDir) {
 // destDir\SumatraPDF.exe is the running installer (e.g. `./SumatraPDF.exe -x`
 // from the exe's own directory). Overwriting/renaming it is confusing and fails.
 static bool IsExtractingOverSelf(Str destDir) {
-    TempStr dstExe = path::JoinTemp(destDir, kExeName);
+    TempStr dstExe = path::JoinTemp(destDir, Str(kExeName));
     return path::IsSame(dstExe, GetSelfExePathTemp());
 }
 
@@ -977,7 +977,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
 static bool CopySelfToDir(Str destDir) {
     logf("CopySelfToDir(%s)\n", destDir);
     TempStr exePath = GetSelfExePathTemp();
-    TempStr dstPath = path::JoinTemp(destDir, kExeName);
+    TempStr dstPath = path::JoinTemp(destDir, Str(kExeName));
     TempStr tmpPath = str::JoinTemp(dstPath, StrL(".tmp"));
     DWORD lastErr = 0;
 
@@ -1079,8 +1079,8 @@ static void CopySettingsFile() {
     }
 
     TempStr prefsFileName = GetSettingsFileNameTemp();
-    TempStr srcPath = path::JoinTemp(srcDir, kAppName, prefsFileName);
-    TempStr dstPath = path::JoinTemp(dstDir, kAppName, prefsFileName);
+    TempStr srcPath = path::JoinTemp(srcDir, StrL(kAppName), prefsFileName);
+    TempStr dstPath = path::JoinTemp(dstDir, StrL(kAppName), prefsFileName);
 
     // don't over-write
     bool failIfExists = true;
@@ -1149,15 +1149,15 @@ void RemoveAppShortcuts() {
 
 static Str GetEnvRegKey(bool allUsers) {
     if (allUsers) {
-        return R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)";
+        return StrL(R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)");
     }
-    return "Environment";
+    return StrL("Environment");
 }
 
 static void AddInstallDirToPath(bool allUsers, Str installDir) {
     HKEY root = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
     Str keyName = GetEnvRegKey(allUsers);
-    TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
+    TempStr currPath = ReadRegStrTemp(root, keyName, StrL("Path"));
     // check if installDir is already in PATH (case-insensitive)
     if (currPath && IsDirInPath(currPath, installDir)) {
         logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
@@ -1185,7 +1185,7 @@ static void InstallerThread(Flags* cli) {
 
     gInstallFailed = true;
 
-    TempStr installedExePath = path::JoinTemp(cli->installDir, kExeName);
+    TempStr installedExePath = path::JoinTemp(cli->installDir, Str(kExeName));
     auto allUsers = cli->allUsers;
     logf("InstallerThread: cli->allUsers: %d, cli->withFilter: %d, cli->withPreview: %d, installerExePath: '%s'\n",
          (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath);
@@ -1278,7 +1278,7 @@ Exit:
 
 static void RestartElevatedForAllUsers(Flags* cli) {
     TempStr exePath = GetSelfExePathTemp();
-    TempStr cmdLine = "-run-install-now";
+    TempStr cmdLine = StrL("-run-install-now");
     bool allUsersChecked = gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
     bool allUsers = cli->allUsers || allUsersChecked;
     logf("RestartElevatedForAllUsers: cli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)cli->allUsers,
@@ -1366,14 +1366,14 @@ static void StartInstallation(InstallerWnd* wnd) {
     HwndRepaintNow(wnd->hwnd);
 
     auto fn = MkFunc0(InstallerThread, &gCliNew);
-    wnd->hThread = StartThread(fn, "InstallerThread");
+    wnd->hThread = StartThread(fn, StrL("InstallerThread"));
 }
 
 static void OnButtonOptions(InstallerWnd* wnd);
 
 static TempStr GetInstalledExePathTemp(Flags* cli) {
     TempStr dir = cli->installDir;
-    return path::JoinTemp(dir, kExeName);
+    return path::JoinTemp(dir, Str(kExeName));
 }
 
 static void OnButtonInstall(InstallerWnd* wnd) {
@@ -1579,14 +1579,14 @@ static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) 
 
     if (forAllUsers) {
         TempStr dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
-        TempStr dir = path::JoinTemp(dirAll, kAppName);
+        TempStr dir = path::JoinTemp(dirAll, StrL(kAppName));
         logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
         return dir;
     }
 
     // %APPLOCALDATA%\SumatraPDF
     TempStr dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    TempStr dir = path::JoinTemp(dirUser, kAppName);
+    TempStr dir = path::JoinTemp(dirUser, StrL(kAppName));
     logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
     return dir;
 }
@@ -1758,9 +1758,9 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
 
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    TempStr end = str::JoinTemp(StrL("\\"), kAppName);
+    TempStr end = str::JoinTemp(StrL("\\"), StrL(kAppName));
     if (!str::EndsWithI(installPath, end)) {
-        installPath = path::JoinTemp(installPath, kAppName);
+        installPath = path::JoinTemp(installPath, StrL(kAppName));
     }
     editDir->SetText(installPath);
     editDir->SetSelection(0, -1);
@@ -1841,7 +1841,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         wnd->checkboxForAllUsers->onStateChanged = MkFunc0Void(ForAllUsersStateChanged);
     }
 
-    wnd->btnBrowseDir = CreateDefaultButton(hwnd, "&...", isRtl);
+    wnd->btnBrowseDir = CreateDefaultButton(hwnd, StrL("&..."), isRtl);
     wnd->btnBrowseDir->onClick = MkFunc0(OnButtonBrowse, wnd);
 
     Edit::CreateArgs eargs;
@@ -2114,7 +2114,7 @@ static bool OpenEmbeddedFilesArchive() {
     }
     bool ok = LockDataResource(IDR_DLL_PAK, &gLoadedArchive);
     if (!ok) {
-        ShowNoEmbeddedFiles("No embedded files");
+        ShowNoEmbeddedFiles(StrL("No embedded files"));
         return false;
     }
 
@@ -2122,7 +2122,7 @@ static bool OpenEmbeddedFilesArchive() {
     auto size = gLoadedArchive.dataSize;
     ok = lzma::ParseSimpleArchive(data, size, &gArchive);
     if (!ok) {
-        ShowNoEmbeddedFiles("Embedded lzsa archive is corrupted");
+        ShowNoEmbeddedFiles(StrL("Embedded lzsa archive is corrupted"));
         return false;
     }
     return true;
@@ -2134,7 +2134,7 @@ bool ExtractLibsumatrapdfToDir(Str destDir) {
         log(StrL("ExtractLibsumatrapdfToDir: OpenEmbeddedFilesArchive failed\n"));
         return false;
     }
-    int idx = lzma::GetIdxFromName(&gArchive, "libsumatrapdf.dll");
+    int idx = lzma::GetIdxFromName(&gArchive, StrL("libsumatrapdf.dll"));
     if (idx < 0) {
         log(StrL("ExtractLibsumatrapdfToDir: libsumatrapdf.dll not found in archive\n"));
         return false;
@@ -2332,9 +2332,9 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     ReportIf(hr == E_INVALIDARG);
     if (buttonPressedId == kBtnIdDownload) {
-        Str url = "https://www.sumatrapdfreader.org/download-free-pdf-viewer";
+        Str url = StrL("https://www.sumatrapdfreader.org/download-free-pdf-viewer");
         if (gIsPreReleaseBuild) {
-            url = "https://www.sumatrapdfreader.org/prerelease";
+            url = StrL("https://www.sumatrapdfreader.org/prerelease");
         }
         LaunchBrowser(url);
         return false;

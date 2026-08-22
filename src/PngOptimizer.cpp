@@ -153,7 +153,7 @@ void OptimizePngFileAsync(Str path) {
     }
     auto* d = new OptimizePngData();
     d->path = str::Dup(path);
-    RunAsync(MkFunc0(OptimizePngThread, d), "OptimizePngThread");
+    RunAsync(MkFunc0(OptimizePngThread, d), StrL("OptimizePngThread"));
 }
 
 struct OptimizePngFilesData {
@@ -187,7 +187,7 @@ void OptimizePngFilesAsync(const StrVec& paths) {
         delete d;
         return;
     }
-    RunAsync(MkFunc0(OptimizePngFilesThread, d), "OptimizePngFilesThread");
+    RunAsync(MkFunc0(OptimizePngFilesThread, d), StrL("OptimizePngFilesThread"));
 }
 
 // Pack pixmap pixels as tightly packed RGBA8 for lodepng_encode32.

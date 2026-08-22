@@ -194,65 +194,65 @@ static void PopulateLanguageDropDown(DropDown* dd, Str initial, bool includeAuto
 static Str PrimaryLangIdToEnglishName(WORD primary) {
     switch (primary) {
         case LANG_ENGLISH:
-            return "English";
+            return StrL("English");
         case LANG_CHINESE:
-            return "Chinese (Simplified)";
+            return StrL("Chinese (Simplified)");
         case LANG_GERMAN:
-            return "German";
+            return StrL("German");
         case LANG_FRENCH:
-            return "French";
+            return StrL("French");
         case LANG_SPANISH:
-            return "Spanish";
+            return StrL("Spanish");
         case LANG_ITALIAN:
-            return "Italian";
+            return StrL("Italian");
         case LANG_PORTUGUESE:
-            return "Portuguese";
+            return StrL("Portuguese");
         case LANG_RUSSIAN:
-            return "Russian";
+            return StrL("Russian");
         case LANG_JAPANESE:
-            return "Japanese";
+            return StrL("Japanese");
         case LANG_KOREAN:
-            return "Korean";
+            return StrL("Korean");
         case LANG_ARABIC:
-            return "Arabic";
+            return StrL("Arabic");
         case LANG_HINDI:
-            return "Hindi";
+            return StrL("Hindi");
         case LANG_TURKISH:
-            return "Turkish";
+            return StrL("Turkish");
         case LANG_VIETNAMESE:
-            return "Vietnamese";
+            return StrL("Vietnamese");
         case LANG_POLISH:
-            return "Polish";
+            return StrL("Polish");
         case LANG_UKRAINIAN:
-            return "Ukrainian";
+            return StrL("Ukrainian");
         case LANG_DUTCH:
-            return "Dutch";
+            return StrL("Dutch");
         case LANG_THAI:
-            return "Thai";
+            return StrL("Thai");
         case LANG_INDONESIAN:
-            return "Indonesian";
+            return StrL("Indonesian");
         case LANG_CZECH:
-            return "Czech";
+            return StrL("Czech");
         case LANG_SWEDISH:
-            return "Swedish";
+            return StrL("Swedish");
         case LANG_ROMANIAN:
-            return "Romanian";
+            return StrL("Romanian");
         case LANG_GREEK:
-            return "Greek";
+            return StrL("Greek");
         case LANG_HEBREW:
-            return "Hebrew";
+            return StrL("Hebrew");
         case LANG_DANISH:
-            return "Danish";
+            return StrL("Danish");
         case LANG_FINNISH:
-            return "Finnish";
+            return StrL("Finnish");
         case LANG_NORWEGIAN:
-            return "Norwegian";
+            return StrL("Norwegian");
         case LANG_HUNGARIAN:
-            return "Hungarian";
+            return StrL("Hungarian");
         case LANG_SLOVAK:
-            return "Slovak";
+            return StrL("Slovak");
         case LANG_BENGALI:
-            return "Bengali";
+            return StrL("Bengali");
         default:
             return {};
     }
@@ -265,9 +265,9 @@ static TempStr OsDefaultDestinationLanguageTemp() {
         return name;
     }
     if (SUBLANGID(langId) == SUBLANG_CHINESE_TRADITIONAL) {
-        return "Chinese (Traditional)";
+        return StrL("Chinese (Traditional)");
     }
-    return "English";
+    return StrL("English");
 }
 
 static TempStr DefaultDestinationLanguageTemp() {
@@ -468,9 +468,9 @@ static void ReadPipeToStrBuilder(HANDLE hPipe, str::Builder& out) {
 }
 
 static void AppendGrokTranslationText(Str line, str::Builder& out) {
-    TempStr eventType = AIChatJsonStrTemp(line, "type");
+    TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
     if (eventType && str::Eq(eventType, StrL("text"))) {
-        TempStr text = AIChatJsonStrTemp(line, "data");
+        TempStr text = AIChatJsonStrTemp(line, StrL("data"));
         if (len(text) > 0) {
             out.Append(text);
         }
@@ -478,13 +478,13 @@ static void AppendGrokTranslationText(Str line, str::Builder& out) {
 }
 
 static void AppendClaudeTranslationText(Str line, str::Builder& out) {
-    TempStr eventType = AIChatJsonStrTemp(line, "type");
+    TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
     if (!eventType) {
         return;
     }
     if (str::Eq(eventType, StrL("result"))) {
         bool isError = str::Contains(line, StrL("\"is_error\":true"));
-        TempStr text = AIChatJsonStrTemp(line, "result");
+        TempStr text = AIChatJsonStrTemp(line, StrL("result"));
         if (len(text) > 0) {
             if (isError) {
                 out.Reset();
@@ -499,12 +499,12 @@ static void AppendClaudeTranslationText(Str line, str::Builder& out) {
         return;
     }
     if (str::Eq(eventType, StrL("assistant")) && str::Contains(line, StrL("\"type\":\"text\""))) {
-        TempStr text = AIChatJsonStrTemp(line, "text");
+        TempStr text = AIChatJsonStrTemp(line, StrL("text"));
         if (len(text) > 0 && !TranslationLooksLikeError(text)) {
             out.Append(text);
         }
     } else if (str::Eq(eventType, StrL("content_block_delta"))) {
-        TempStr text = AIChatJsonStrTemp(line, "text");
+        TempStr text = AIChatJsonStrTemp(line, StrL("text"));
         if (len(text) > 0) {
             out.Append(text);
         }
@@ -515,18 +515,18 @@ static void AppendCodexTranslationText(Str line, str::Builder& out) {
     if (!line || line.s[0] != '{') {
         return;
     }
-    TempStr eventType = AIChatJsonStrTemp(line, "type");
+    TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
     if (!eventType || !str::Eq(eventType, StrL("item.completed"))) {
         return;
     }
-    TempStr text = AIChatJsonStrTemp(line, "text");
+    TempStr text = AIChatJsonStrTemp(line, StrL("text"));
     if (len(text) > 0) {
         out.Append(text);
         return;
     }
     Str agentMsg;
     if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &agentMsg)) {
-        text = AIChatJsonStrTemp(agentMsg, "text");
+        text = AIChatJsonStrTemp(agentMsg, StrL("text"));
         if (len(text) > 0) {
             out.Append(text);
         }
@@ -537,13 +537,13 @@ static void AppendCodexTranslationText(Str line, str::Builder& out) {
 // `event:step_update` lines with `step_type:agent_response`, and errors as an
 // `event:result` with status ERROR (see AIAntiGravity.cpp::ParseStreamLine).
 static void AppendAntiGravityTranslationText(Str line, str::Builder& out) {
-    TempStr eventName = AIChatJsonStrTemp(line, "event");
+    TempStr eventName = AIChatJsonStrTemp(line, StrL("event"));
     if (!eventName) {
         return;
     }
     if (str::Eq(eventName, StrL("step_update"))) {
         if (str::Contains(line, StrL("\"step_type\":\"agent_response\""))) {
-            TempStr delta = AIChatJsonStrTemp(line, "text_delta");
+            TempStr delta = AIChatJsonStrTemp(line, StrL("text_delta"));
             if (len(delta) > 0) {
                 out.Append(delta);
             }
@@ -551,9 +551,9 @@ static void AppendAntiGravityTranslationText(Str line, str::Builder& out) {
         return;
     }
     if (str::Eq(eventName, StrL("result"))) {
-        TempStr status = AIChatJsonStrTemp(line, "status");
+        TempStr status = AIChatJsonStrTemp(line, StrL("status"));
         if (status && str::Eq(status, StrL("ERROR"))) {
-            TempStr err = AIChatJsonStrTemp(line, "error");
+            TempStr err = AIChatJsonStrTemp(line, StrL("error"));
             if (len(err) > 0) {
                 out.Reset();
                 out.Append(err);
@@ -595,7 +595,7 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
     }
     if (len(translationOut) == 0 && output && !str::Contains(output, StrL("{\"type\":")) &&
         !str::Contains(output, StrL("{\"event\":"))) {
-        TempStr trimmed = str::DupTemp(output.s);
+        TempStr trimmed = str::DupTemp(output);
         str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
         if (!str::IsEmptyOrWhiteSpace(trimmed)) {
             translationOut.Append(trimmed);
@@ -606,7 +606,7 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
 static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     Str model = gGlobalPrefs->grokBuild.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
-        model = "grok-composer-2.5-fast";
+        model = StrL("grok-composer-2.5-fast");
     }
     Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
     // QuoteCmdLineArgTemp: full Windows argv quoting (not just " -> \") so
@@ -619,7 +619,7 @@ static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
 static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     Str model = gGlobalPrefs->claudeCode.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
-        model = "claude-sonnet-4-20250514";
+        model = StrL("claude-sonnet-4-20250514");
     }
     Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? StrL("--dangerously-skip-permissions") : Str{};
     TempStr sessionId = AIChatGenerateSessionIdTemp();
@@ -652,7 +652,7 @@ static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) 
 static TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
     Str model = gGlobalPrefs->antiGravity.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
-        model = "gemini-3.6-flash";
+        model = StrL("gemini-3.6-flash");
     }
     // the antigravity CLI takes different flags than claude (see the chat
     // provider in AIAntiGravity.cpp): --effort instead of --session-id, and
@@ -849,16 +849,16 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
         cmdLine = BuildAntiGravityTranslateCmdLineTemp(exePath, prompt);
     }
 
-    LogTranslation(backend, ">>> backend", BackendDisplayName(backend));
-    LogTranslation(backend, ">>> srcLang", srcLang);
-    LogTranslation(backend, ">>> dstLang", dstLang);
-    LogTranslation(backend, ">>> prompt", prompt);
-    LogTranslation(backend, ">>> cmd", cmdLine);
+    LogTranslation(backend, StrL(">>> backend"), BackendDisplayName(backend));
+    LogTranslation(backend, StrL(">>> srcLang"), srcLang);
+    LogTranslation(backend, StrL(">>> dstLang"), dstLang);
+    LogTranslation(backend, StrL(">>> prompt"), prompt);
+    LogTranslation(backend, StrL(">>> cmd"), cmdLine);
 
     AIChatProcessLaunchResult launch;
     if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, cwd, &launch)) {
         msgOut = str::Dup(_TRA("Failed to launch the AI CLI."));
-        LogTranslation(backend, "<<< error", msgOut);
+        LogTranslation(backend, StrL("<<< error"), msgOut);
         return false;
     }
 
@@ -872,24 +872,24 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
         TerminateProcess(launch.hProcess, 1);
         AIChatCloseProcess(&launch.hProcess, false);
         msgOut = str::Dup(_TRA("Translation timed out."));
-        LogTranslation(backend, "<<< error", msgOut);
+        LogTranslation(backend, StrL("<<< error"), msgOut);
         return false;
     }
     AIChatCloseProcess(&launch.hProcess, false);
 
-    LogTranslation(backend, "<<< raw", ToStr(output));
+    LogTranslation(backend, StrL("<<< raw"), ToStr(output));
 
     str::Builder translation(1024);
     ParseTranslationOutput(backend, ToStr(output), translation);
-    LogTranslation(backend, "<<< parsed", ToStr(translation));
+    LogTranslation(backend, StrL("<<< parsed"), ToStr(translation));
     if (len(translation) == 0) {
         msgOut = str::Dup(_TRA("Translation response did not contain text."));
-        LogTranslation(backend, "<<< error", msgOut);
+        LogTranslation(backend, StrL("<<< error"), msgOut);
         return false;
     }
     if (TranslationLooksLikeError(ToStr(translation))) {
         msgOut = translation.TakeStr();
-        LogTranslation(backend, "<<< error", msgOut);
+        LogTranslation(backend, StrL("<<< error"), msgOut);
         return false;
     }
     msgOut = translation.TakeStr();
@@ -1084,7 +1084,7 @@ void SelectionTranslateWnd::StartTranslation(VirtMouseEvent*) {
     task->srcLang = str::Dup(srcLang);
     task->dstLang = str::Dup(dstLang);
     task->text = str::Dup(text);
-    RunAsync(MkFunc0(SelectionTranslateThread, task), "SelectionTranslate");
+    RunAsync(MkFunc0(SelectionTranslateThread, task), StrL("SelectionTranslate"));
 }
 
 void SelectionTranslateWnd::OnTranslationFinished(bool ok, Str msg) {
@@ -1350,7 +1350,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     }
 
     bool isTextOnlySelection = false;
-    TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelection);
+    TempStr selText = GetSelectedTextTemp(tab, StrL("\n"), isTextOnlySelection);
     if (str::IsEmptyOrWhiteSpace(selText)) {
         return;
     }

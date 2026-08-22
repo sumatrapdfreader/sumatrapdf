@@ -240,7 +240,7 @@ static Str MupdfCStrDupTemp(const char* s) {
 }
 
 static Str MupdfCStrTemp(const char* s) {
-    if (!s || str::IsEmptyOrWhiteSpace(s)) {
+    if (!s || str::IsEmptyOrWhiteSpace(Str(s))) {
         return {};
     }
     return str::DupTemp(Str(s));
@@ -630,7 +630,7 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
             const char** opts = (const char**)fz_malloc(ctx, n * sizeof(char*));
             pdf_choice_widget_options(ctx, a, 0, opts);
             for (int i = 0; i < n; i++) {
-                out.Append(opts[i] ? opts[i] : "");
+                out.Append(Str(opts[i] ? opts[i] : ""));
             }
             fz_free(ctx, (void*)opts);
         }
@@ -1537,7 +1537,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 case AnnotationType::Squiggly:
                 case AnnotationType::StrikeOut: {
                     const char* content = CStrTemp(args->content);
-                    if (!str::IsEmptyOrWhiteSpace(content)) {
+                    if (!str::IsEmptyOrWhiteSpace(Str(content))) {
                         pdf_set_annot_contents(ctx, annot, content);
                     }
                 } break;
@@ -1626,7 +1626,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     pdf_set_annot_quadding(ctx, annot, args->quadding);
                 }
                 const char* content = CStrTemp(args->content);
-                if (!str::IsEmptyOrWhiteSpace(content)) {
+                if (!str::IsEmptyOrWhiteSpace(Str(content))) {
                     pdf_set_annot_contents(ctx, annot, content);
                 } else {
                     pdf_set_annot_contents(ctx, annot, "This is a text...");
@@ -1685,7 +1685,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
 
     if (typ == AnnotationType::Text) {
         TempStr iconName = GetAnnotationTextIconTemp();
-        if (!str::EqI(iconName.s, StrL("Note"))) {
+        if (!str::EqI(iconName, StrL("Note"))) {
             SetIconName(res, iconName);
         }
     }

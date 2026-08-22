@@ -553,7 +553,7 @@ static void FinishDragDrop(IDataObject* dataObj) {
 static void StartTextDragDrop(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     bool isTextOnly = false;
-    TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnly);
+    TempStr text = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnly);
     if (len(text) == 0) {
         return;
     }
@@ -3186,7 +3186,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         // check if this page is known to have failed rendering
         if (pi->failedToRender) {
             shouldPaint = true;
-            PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+            PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt->GetHFont());
             auto prevCol = SetTextColor(hdc, colDocTxt);
             TempStr msg = fmt(_TRA("Couldn't render page %d").s, pageNo);
@@ -3205,7 +3205,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
             }
         }
         if (renderDelay != 0) {
-            PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, "MS Shell Dlg", 14);
+            PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt->GetHFont());
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < kRenderDelayShowNotif) {
@@ -4578,7 +4578,7 @@ static void OnPaintDocumentStatus(MainWindow* win) {
     SetLayout(hdc, 0);
 
     Gfx* gfx = GfxCreate(hdc);
-    PlatformFont* fontRightTxt = GetUserGuiFont("MS Shell Dlg", DpiScale(14));
+    PlatformFont* fontRightTxt = GetUserGuiFont(StrL("MS Shell Dlg"), DpiScale(14));
     auto bgCol = ThemeMainWindowBackgroundColor();
     gfx->FillRect(ToRect(ps.rcPaint), bgCol);
     auto* tab = win->CurrentTab();
@@ -4961,8 +4961,8 @@ static bool IsImageUrl(Str url) {
         n = hIdx;
     }
     // check for common image extensions
-    Str exts[] = {".png",  ".jpg",  ".jpeg", ".gif", ".bmp", ".tiff", ".tif",
-                  ".webp", ".avif", ".heic", ".jxr", ".jp2", ".tga"};
+    Str exts[] = {StrL(".png"),  StrL(".jpg"),  StrL(".jpeg"), StrL(".gif"), StrL(".bmp"), StrL(".tiff"), StrL(".tif"),
+                  StrL(".webp"), StrL(".avif"), StrL(".heic"), StrL(".jxr"), StrL(".jp2"), StrL(".tga")};
     for (Str ext : exts) {
         if (n >= ext.len) {
             Str ending(url.s + n - ext.len, ext.len);
@@ -5060,7 +5060,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         fileName = str::DupTemp(StrL("dropped_image.png"));
     }
 
-    TempStr destPath = path::JoinTemp(downloadsDir.s, fileName.s);
+    TempStr destPath = path::JoinTemp(downloadsDir, fileName);
 
     // avoid overwriting: if file exists, add a numeric suffix
     if (file::Exists(destPath)) {
@@ -5068,7 +5068,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         TempStr base = str::DupTemp(Str(fileName.s, len(fileName) - len(ext)));
         for (int i = 1; i < 1000; i++) {
             TempStr newName = fmt("%s_%d%s", base, i, ext);
-            destPath = path::JoinTemp(downloadsDir.s, newName.s);
+            destPath = path::JoinTemp(downloadsDir, newName);
             if (!file::Exists(destPath)) {
                 break;
             }
@@ -5125,13 +5125,13 @@ static TempStr GetTextFromDataObject(IDataObject* dataObj) {
     TempStr res;
     if (SUCCEEDED(hr) && medium.hGlobal) {
         WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
-        res = w ? ToUtf8Temp(w) : nullptr;
+        res = w ? ToUtf8Temp(w) : TempStr();
         goto Cleanup;
     }
     hr = dataObj->GetData(&fmtAnsi, &medium);
     if (SUCCEEDED(hr) && medium.hGlobal) {
         char* s = (char*)GlobalLock(medium.hGlobal);
-        res = s ? str::DupTemp(Str(s)) : nullptr;
+        res = s ? str::DupTemp(Str(s)) : TempStr();
         goto Cleanup;
     }
     return {};
@@ -5151,7 +5151,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
         HRESULT hr = dataObj->GetData(&fmt, &medium);
         if (SUCCEEDED(hr) && medium.hGlobal) {
             WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
-            TempStr res = w ? ToUtf8Temp(w) : nullptr;
+            TempStr res = w ? ToUtf8Temp(w) : TempStr();
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
             if (res && (str::StartsWithI(res, StrL("http://")) || str::StartsWithI(res, StrL("https://")))) {
@@ -5167,7 +5167,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
         HRESULT hr = dataObj->GetData(&fmt, &medium);
         if (SUCCEEDED(hr) && medium.hGlobal) {
             char* s = (char*)GlobalLock(medium.hGlobal);
-            TempStr res = s ? str::DupTemp(Str(s)) : nullptr;
+            TempStr res = s ? str::DupTemp(Str(s)) : TempStr();
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
             if (res && (str::StartsWithI(res, StrL("http://")) || str::StartsWithI(res, StrL("https://")))) {
@@ -5271,7 +5271,7 @@ class CanvasDropTarget : public IDropTarget {
             data->url = str::Dup(url);
             data->hwndCanvas = hwnd;
             auto fn = MkFunc0<DownloadAndOpenUrlData>(DownloadAndOpenUrl, data);
-            RunAsync(fn, "DownloadAndOpenUrl");
+            RunAsync(fn, StrL("DownloadAndOpenUrl"));
         }
 
         return S_OK;

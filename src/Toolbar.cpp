@@ -64,23 +64,23 @@ struct ToolbarButtonInfo {
 static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconFileOpen, CmdOpenFile, _TRN("Open")},
     {gIconPrint, CmdPrint, _TRN("Print")},
-    {nullptr, 0, nullptr},          // separator
-    {nullptr, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
+    {nullptr, 0, {}},          // separator
+    {nullptr, PageInfoId, {}}, // text box for page number + show current page / no of pages
     {gIconPagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
     {gIconPageNext, CmdGoToNextPage, _TRN("Next Page")},
-    {nullptr, 0, nullptr}, // separator
+    {nullptr, 0, {}}, // separator
     {gIconNavigateBack, CmdNavigateBack, _TRN("Back")},
     {gIconNavigateForward, CmdNavigateForward, _TRN("Forward")},
-    {nullptr, 0, nullptr}, // separator
+    {nullptr, 0, {}}, // separator
     {gIconSpeak, CmdReadAloud, _TRN("Read Aloud")},
-    {nullptr, 0, nullptr}, // separator
+    {nullptr, 0, {}}, // separator
     {gIconLayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
     {gIconLayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
     {gIconRotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
     {gIconRotateRight, CmdRotateRight, _TRN("Rotate &Right")},
     {gIconZoomOut, CmdZoomOut, _TRN("Zoom Out")},
     {gIconZoomIn, CmdZoomIn, _TRN("Zoom In")},
-    {nullptr, 0, nullptr}, // separator
+    {nullptr, 0, {}}, // separator
     {gIconSearch, CmdFindFirst, _TRN("Find")},
 };
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
@@ -274,11 +274,11 @@ static void PopulateToolbarLayout() {
             continue;
         }
         if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
-            addButton({nullptr, 0, nullptr});
+            addButton({nullptr, 0, {}});
             continue;
         }
         if (str::EqI(tok, StrL("PageInfo"))) {
-            addButton({nullptr, PageInfoId, nullptr});
+            addButton({nullptr, PageInfoId, {}});
             continue;
         }
         int cmdId = GetCommandIdByName(tok);
@@ -449,7 +449,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
 
 static TempStr ToolbarTipTemp(int cmdId, Str tip, bool translate) {
     TempStr s = translate ? trans::GetTranslation(tip) : TempStr(tip);
-    TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, cmdId);
+    TempStr accelStr = AppendAccelKeyToMenuStringTemp({}, cmdId);
     if (accelStr) {
         Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
         s = str::JoinTemp(s, fmt(" (%s)", accel));
@@ -485,8 +485,8 @@ static void SetToolbarButtonImageByIdx(MainWindow* win, int idx, const char* ico
     }
     ToolbarVirt* tb = win->toolbarVirt;
     int sz = tb ? tb->iconSize : DpiScale(gGlobalPrefs->toolbarSize);
-    Pixmap* px = GetCachedPixmapForSvg(icon, sz, sz, TbTextColor());
-    Pixmap* pxOff = GetCachedPixmapForSvg(icon, sz, sz, TbDisabledColor());
+    Pixmap* px = GetCachedPixmapForSvg(Str(icon), sz, sz, TbTextColor());
+    Pixmap* pxOff = GetCachedPixmapForSvg(Str(icon), sz, sz, TbDisabledColor());
     if (ib->pixmap == px && ib->pixmapDisabled == pxOff) {
         return;
     }
@@ -890,9 +890,9 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (tb->pageLabel) {
         tb->pageLabel->SetText(_TRA("Page:"));
     }
-    TempStr txt = nullptr;
+    TempStr txt;
     if (-1 == pageCount || !pageCount) {
-        txt = " ";
+        txt = StrL(" ");
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
         txt = fmt(" / %d", pageCount);
     } else {
@@ -931,7 +931,7 @@ static TempStr CustomCommandToolbarToolTipTemp(CustomCommand* cmd, Str fallback)
     if (!str::IsEmptyOrWhiteSpace(fallback)) {
         return fallback;
     }
-    return "External Viewer";
+    return StrL("External Viewer");
 }
 
 static void PopulateCustomToolbarButtons() {
@@ -970,8 +970,8 @@ static void PopulateCustomToolbarButtons() {
         if (gCustomButtonsCount >= kMaxCustomButtons) {
             break;
         }
-        Str svgIcon = GetCommandStringArg(cc, kCmdArgToolbarSvgIcon, nullptr);
-        Str tbText = GetCommandStringArg(cc, kCmdArgToolbarText, nullptr);
+        Str svgIcon = GetCommandStringArg(cc, kCmdArgToolbarSvgIcon, {});
+        Str tbText = GetCommandStringArg(cc, kCmdArgToolbarText, {});
         if (!str::IsEmptyOrWhiteSpace(svgIcon)) {
             ToolbarButtonInfo tbi;
             tbi.cmdId = cc->id;

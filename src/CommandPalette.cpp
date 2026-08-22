@@ -162,27 +162,27 @@ void CommandPaletteWnd::SwitchToPrefix(Str prefix) {
 }
 
 void CommandPaletteWnd::SwitchToCommands() {
-    SwitchToPrefix(kPalettePrefixCommands);
+    SwitchToPrefix(Str(kPalettePrefixCommands));
 }
 
 void CommandPaletteWnd::SwitchToTabs() {
-    SwitchToPrefix(kPalettePrefixTabs);
+    SwitchToPrefix(Str(kPalettePrefixTabs));
 }
 
 void CommandPaletteWnd::SwitchToEverything() {
-    SwitchToPrefix(kPalettePrefixEverything);
+    SwitchToPrefix(Str(kPalettePrefixEverything));
 }
 
 void CommandPaletteWnd::SwitchToFileHistory() {
-    SwitchToPrefix(kPalettePrefixFileHistory);
+    SwitchToPrefix(Str(kPalettePrefixFileHistory));
 }
 
 void CommandPaletteWnd::SwitchToTOC() {
-    SwitchToPrefix(kPalettePrefixTOC);
+    SwitchToPrefix(Str(kPalettePrefixTOC));
 }
 
 void CommandPaletteWnd::SwitchToFavorites() {
-    SwitchToPrefix(kPalettePrefixFavorites);
+    SwitchToPrefix(Str(kPalettePrefixFavorites));
 }
 
 void CommandPaletteWnd::OnActivate(WindowBase::ActivateEvent* ev) {
@@ -604,10 +604,10 @@ static HBox* NewHelpRow(HBox* box) {
 }
 
 bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance) {
-    if (str::Eq(prefix, kPalettePrefixTabs)) {
+    if (str::Eq(prefix, Str(kPalettePrefixTabs))) {
         smartTabMode = smartTabAdvance != 0;
     }
-    tocMode = str::Eq(prefix, kPalettePrefixTOC) || str::Eq(prefix, kPalettePrefixTOCLegacy);
+    tocMode = str::Eq(prefix, Str(kPalettePrefixTOC)) || str::Eq(prefix, Str(kPalettePrefixTOCLegacy));
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -633,7 +633,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         args.parent = hwnd;
         args.isMultiLine = false;
         args.withBorder = true;
-        args.cueText = "enter search term";
+        args.cueText = StrL("enter search term");
         args.text = prefix;
         args.font = GetFont();
         args.isRtl = IsUIRtl();
@@ -664,15 +664,15 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
             box->AddChild(t);
         };
-        addSwitch(_TRA("# File History"), kPalettePrefixFileHistory);
-        addSwitch(_TRA("> Commands"), kPalettePrefixCommands);
-        addSwitch(_TRA("@ Tabs"), kPalettePrefixTabs);
-        addSwitch(_TRA(": Everything"), kPalettePrefixEverything);
+        addSwitch(_TRA("# File History"), Str(kPalettePrefixFileHistory));
+        addSwitch(_TRA("> Commands"), Str(kPalettePrefixCommands));
+        addSwitch(_TRA("@ Tabs"), Str(kPalettePrefixTabs));
+        addSwitch(_TRA(": Everything"), Str(kPalettePrefixEverything));
         if (len(toc) > 0) {
-            addSwitch(_TRA("% TOC"), kPalettePrefixTOC);
+            addSwitch(_TRA("% TOC"), Str(kPalettePrefixTOC));
         }
         if (len(favorites) > 0) {
-            addSwitch(_TRA("$ Favorites"), kPalettePrefixFavorites);
+            addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
         }
         vbox->AddChild(NewHelpRow(box));
     }

@@ -1418,7 +1418,7 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     SendMessageW(edit->hwnd, EM_SETLIMITTEXT, 0, 0);
 
     HDC hdc = GetDC(hwnd);
-    monoFont = HdcCreateSimpleFont(hdc, "Consolas", fontSize);
+    monoFont = HdcCreateSimpleFont(hdc, StrL("Consolas"), fontSize);
     ReleaseDC(hwnd, hdc);
     if (monoFont) {
         edit->SetFont(monoFont);

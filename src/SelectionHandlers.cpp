@@ -108,27 +108,27 @@ TempStr ExpandSelectionVarsTemp(Str pattern, Str selection, bool urlEncodeSelect
         *didTruncateOut = false;
     }
     Str lang = trans::GetCurrentLangCode();
-    TempStr res = str::ReplaceNoCaseTemp(pattern, kUserLangStr, lang);
+    TempStr res = str::ReplaceNoCaseTemp(pattern, Str(kUserLangStr), lang);
 
     // do the file, json and position forms first: they must not be affected by
     // whatever escaping ${selection} uses
-    if (str::ContainsI(res, kSelectionFileStr)) {
+    if (str::ContainsI(res, Str(kSelectionFileStr))) {
         TempStr path = WriteSelectionToTempFileTemp(selection, StrL(".txt"));
-        res = str::ReplaceNoCaseTemp(res, kSelectionFileStr, path);
+        res = str::ReplaceNoCaseTemp(res, Str(kSelectionFileStr), path);
     }
-    if (str::ContainsI(res, kSelectionJsonStr)) {
-        res = str::ReplaceNoCaseTemp(res, kSelectionJsonStr, json::EscapeStrTemp(selection));
+    if (str::ContainsI(res, Str(kSelectionJsonStr))) {
+        res = str::ReplaceNoCaseTemp(res, Str(kSelectionJsonStr), json::EscapeStrTemp(selection));
     }
-    if (str::ContainsI(res, kSelectionPositionStr)) {
-        res = str::ReplaceNoCaseTemp(res, kSelectionPositionStr, FormatSelectionPositionTemp(tab));
+    if (str::ContainsI(res, Str(kSelectionPositionStr))) {
+        res = str::ReplaceNoCaseTemp(res, Str(kSelectionPositionStr), FormatSelectionPositionTemp(tab));
     }
 
     if (urlEncodeSelection) {
         int b = budget > 0 ? budget : (kMaxUrlEncodedLen - len(res));
         TempStr enc = URLEncodeMayTruncateTemp(selection, b, didTruncateOut);
-        return str::ReplaceNoCaseTemp(res, kSelectionStr, enc);
+        return str::ReplaceNoCaseTemp(res, Str(kSelectionStr), enc);
     }
-    return str::ReplaceNoCaseTemp(res, kSelectionStr, selection);
+    return str::ReplaceNoCaseTemp(res, Str(kSelectionStr), selection);
 }
 
 static void ShowSelectionHandlerNotification(WindowTab* tab, Str msg, bool isWarning) {
@@ -225,7 +225,7 @@ void SelectionHandlerPost(WindowTab* tab, Str url, Str bodyPattern, Str contentT
     req->headers = str::Dup(headers);
 
     auto fn = MkFunc0<PostRequest>(PostRequestThread, req);
-    RunAsync(fn, "SelectionHandlerPost");
+    RunAsync(fn, StrL("SelectionHandlerPost"));
 }
 
 //--- Method = POST-VIA-BROWSER (self-submitting html form)
@@ -275,7 +275,8 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
 
     str::Builder html;
     html.Append(StrL("<!doctype html><html><head><meta charset=\"utf-8\"><title>SumatraPDF</title></head>\n"));
-    html.Append(StrL("<body onload=\"document.forms[0].submit()\">\n<form method=\"post\" accept-charset=\"utf-8\" action=\""));
+    html.Append(
+        StrL("<body onload=\"document.forms[0].submit()\">\n<form method=\"post\" accept-charset=\"utf-8\" action=\""));
     HtmlAttrEscape(html, url);
     html.Append(StrL("\">\n"));
 
@@ -293,7 +294,7 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
             continue;
         }
         TempStr value = ExpandSelectionVarsTemp(valuePattern, selection, false, 0, nullptr, tab);
-        html.Append(R"(<input type="hidden" name=")");
+        html.Append(StrL(R"(<input type="hidden" name=")"));
         HtmlAttrEscape(html, name);
         html.Append(StrL("\" value=\""));
         HtmlAttrEscape(html, value);

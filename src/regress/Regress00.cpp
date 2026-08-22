@@ -16,12 +16,12 @@ static void RegressTestEpubLoading(Str fileName) {
 
 // https://code.google.com/archive/p/sumatrapdf/issues/2102
 static void Regress02() {
-    RegressTestEpubLoading("epub\\sumatra-crash-nov-23-2012.epub");
+    RegressTestEpubLoading(StrL("epub\\sumatra-crash-nov-23-2012.epub"));
 }
 
 // https://code.google.com/archive/p/sumatrapdf/issues/2091
 static void Regress01() {
-    RegressTestEpubLoading("epub\\sumatra-crash-nov-12-2012.epub");
+    RegressTestEpubLoading(StrL("epub\\sumatra-crash-nov-12-2012.epub"));
 }
 
 // https://code.google.com/archive/p/sumatrapdf/issues/1926

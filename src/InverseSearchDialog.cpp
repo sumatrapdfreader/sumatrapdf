@@ -85,7 +85,7 @@ void InverseSearchWnd::OnOk(VirtMouseEvent*) {
 }
 
 void InverseSearchWnd::OnHelp(VirtMouseEvent*) {
-    LaunchDocumentation("/LaTeX-integration");
+    LaunchDocumentation(StrL("/LaTeX-integration"));
 }
 
 static void OnClose(WindowBase::CloseEvent* /*ev*/) {

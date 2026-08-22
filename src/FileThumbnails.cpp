@@ -42,7 +42,7 @@ TempStr GetThumbnailPathTemp(Str filePath) {
 }
 
 TempStr GetThumbnailCacheDirTemp() {
-    TempStr thumbsDir = GetPathInAppDataDirTemp("sumatrapdfcache");
+    TempStr thumbsDir = GetPathInAppDataDirTemp(StrL("sumatrapdfcache"));
     return thumbsDir;
 }
 

@@ -541,7 +541,7 @@ void ChangeColorWnd::ApplyBackground() {
         }
         FileState* fs = FileHistoryFindByPath(t->filePath);
         if (fs) {
-            SetColorText(fs->bgCol, "");
+            SetColorText(fs->bgCol, StrL(""));
         }
         t->bgColor = kColorUnset;
         t->bgColorCheckered = false;
@@ -567,7 +567,7 @@ void ChangeColorWnd::ApplyTabColor() {
     FileState* fs = FileHistoryFindByPath(t->filePath);
     if (fs) {
         if (isCheckered) {
-            SetColorText(fs->tabCol, "");
+            SetColorText(fs->tabCol, StrL(""));
         } else {
             SetColorText(fs->tabCol, SerializeColorTemp(currentColor));
         }

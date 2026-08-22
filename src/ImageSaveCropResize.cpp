@@ -49,6 +49,9 @@ static Str Tr(Str s) {
     }
     return s;
 }
+static Str Tr(const char* s) {
+    return Tr(Str(s));
+}
 
 #include <commctrl.h>
 #include <wincodec.h>
@@ -557,7 +560,7 @@ static int ImageEditButtonPadding() {
 }
 
 static int ImageEditLabelDy(ImageEditWindow* ew) {
-    return PlatformFontMeasureText(ew->font, "Ag").dy;
+    return PlatformFontMeasureText(ew->font, StrL("Ag")).dy;
 }
 
 static int ImageEditPathLabelRowDy(ImageEditWindow* ew) {
@@ -617,7 +620,7 @@ static void UpdateSaveButtonText(ImageEditWindow* ew) {
         return;
     }
     TempStr dest = ew->destEdit->GetTextTemp();
-    Str text = file::Exists(dest) ? Str(Tr("&Overwrite")) : Str(Tr("&Save"));
+    Str text = file::Exists(dest) ? Str(Tr(StrL("&Overwrite"))) : Str(Tr("&Save"));
     ew->btnSave->SetLabel(text);
     // re-layout since button width may have changed
     LayoutControls(ew);
@@ -1336,7 +1339,7 @@ static void OnSave(ImageEditWindow* ew) {
     if (writeOriginal) {
         bool saved = file::WriteFile(dest, ew->originalData);
         if (!saved) {
-            WarnBox(ew->hwnd, "Failed to save image", "Save Image");
+            WarnBox(ew->hwnd, StrL("Failed to save image"), StrL("Save Image"));
             return;
         }
         HWND hwndParent = ew->hwndParent;
@@ -1353,7 +1356,7 @@ static void OnSave(ImageEditWindow* ew) {
         // save as-is
         result = ew->srcBitmap->Clone(0, 0, ew->imgW, ew->imgH, ew->srcBitmap->GetPixelFormat());
         if (!result) {
-            WarnBox(ew->hwnd, "Failed to save image", "Save Image");
+            WarnBox(ew->hwnd, StrL("Failed to save image"), StrL("Save Image"));
             return;
         }
     } else if (ew->mode == ImageEditMode::Crop) {
@@ -1361,14 +1364,14 @@ static void OnSave(ImageEditWindow* ew) {
         Gdiplus::Rect srcRect(ew->cropX, ew->cropY, ew->cropW, ew->cropH);
         result = ew->srcBitmap->Clone(srcRect, ew->srcBitmap->GetPixelFormat());
         if (!result) {
-            WarnBox(ew->hwnd, "Failed to create cropped image", Tr("Crop Image"));
+            WarnBox(ew->hwnd, StrL("Failed to create cropped image"), Tr("Crop Image"));
             return;
         }
     } else {
         // create resized bitmap
         result = new Bitmap(ew->newW, ew->newH, ew->srcBitmap->GetPixelFormat());
         if (!result) {
-            WarnBox(ew->hwnd, "Failed to create resized image", Tr("Resize Image"));
+            WarnBox(ew->hwnd, StrL("Failed to create resized image"), Tr("Resize Image"));
             return;
         }
         Graphics g(result);
@@ -1385,7 +1388,7 @@ static void OnSave(ImageEditWindow* ew) {
     delete result;
 
     if (!saved) {
-        WarnBox(ew->hwnd, "Failed to save image", "Save Image");
+        WarnBox(ew->hwnd, StrL("Failed to save image"), StrL("Save Image"));
         return;
     }
     OptimizePngFileAsync(dest);
@@ -1411,7 +1414,7 @@ static void SwitchToSaveMode(ImageEditWindow* ew) {
     ew->cropH = ew->imgH;
     ew->newW = ew->imgW;
     ew->newH = ew->imgH;
-    HwndSetText(ew->hwnd, "Save Image");
+    HwndSetText(ew->hwnd, StrL("Save Image"));
     UpdateModeButtons(ew);
     UpdateSaveButtonText(ew);
     UpdateInfoLabel(ew);
@@ -1445,20 +1448,20 @@ static bool IsResizeChanged(ImageEditWindow* ew) {
 
 static void UpdateModeButtons(ImageEditWindow* ew) {
     if (ew->mode == ImageEditMode::Crop) {
-        ew->btnCrop->SetLabel(Tr("&Apply Crop"));
+        ew->btnCrop->SetLabel(Tr(StrL("&Apply Crop")));
         ew->btnCrop->SetIsEnabled(IsCropChanged(ew));
-        ew->btnResize->SetLabel(Tr("&Resize"));
+        ew->btnResize->SetLabel(Tr(StrL("&Resize")));
         ew->btnResize->SetIsEnabled(true);
     } else if (ew->mode == ImageEditMode::Resize) {
-        ew->btnCrop->SetLabel(Tr("&Crop"));
+        ew->btnCrop->SetLabel(Tr(StrL("&Crop")));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetLabel(Tr("&Apply Resize"));
+        ew->btnResize->SetLabel(Tr(StrL("&Apply Resize")));
         ew->btnResize->SetIsEnabled(IsResizeChanged(ew));
     } else {
         // Save mode
-        ew->btnCrop->SetLabel(Tr("&Crop"));
+        ew->btnCrop->SetLabel(Tr(StrL("&Crop")));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetLabel(Tr("&Resize"));
+        ew->btnResize->SetLabel(Tr(StrL("&Resize")));
         ew->btnResize->SetIsEnabled(true);
     }
 }
@@ -1524,7 +1527,7 @@ static void SwitchToCropMode(ImageEditWindow* ew) {
     ew->cropY = 0;
     ew->cropW = ew->imgW;
     ew->cropH = ew->imgH;
-    HwndSetText(ew->hwnd, "Crop Image");
+    HwndSetText(ew->hwnd, StrL("Crop Image"));
     UpdateModeButtons(ew);
     UpdateSaveButtonText(ew);
     UpdateInfoLabel(ew);
@@ -1541,7 +1544,7 @@ static void SwitchToResizeMode(ImageEditWindow* ew) {
     ew->mode = ImageEditMode::Resize;
     ew->newW = ew->imgW;
     ew->newH = ew->imgH;
-    HwndSetText(ew->hwnd, "Resize Image");
+    HwndSetText(ew->hwnd, StrL("Resize Image"));
     UpdateModeButtons(ew);
     UpdateSaveButtonText(ew);
     UpdateInfoLabel(ew);
@@ -2156,11 +2159,11 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     HMODULE h = GetModuleHandleW(nullptr);
     Size winSize = CalcImageEditWindowSizeEx(parent, parent, fromRenderedBitmap, imgW, imgH, nullptr);
 
-    Str title = "Save Image";
+    Str title = StrL("Save Image");
     if (mode == ImageEditMode::Crop) {
-        title = "Crop Image";
+        title = StrL("Crop Image");
     } else if (mode == ImageEditMode::Resize) {
-        title = "Resize Image";
+        title = StrL("Resize Image");
     }
     {
         CreateCustomArgs cargs;
@@ -2247,9 +2250,9 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     });
 
     // buttons
-    ew->btnSave = NewImageEditButton(ew, Tr("&Save"), MkFunc0(OnSave, ew));
-    ew->btnCrop = NewImageEditButton(ew, Tr("&Crop"), MkFunc0(OnCropButton, ew));
-    ew->btnResize = NewImageEditButton(ew, Tr("&Resize"), MkFunc0(OnResizeButton, ew));
+    ew->btnSave = NewImageEditButton(ew, Tr(StrL("&Save")), MkFunc0(OnSave, ew));
+    ew->btnCrop = NewImageEditButton(ew, Tr(StrL("&Crop")), MkFunc0(OnCropButton, ew));
+    ew->btnResize = NewImageEditButton(ew, Tr(StrL("&Resize")), MkFunc0(OnResizeButton, ew));
 
     // format dropdown
     {

@@ -579,7 +579,7 @@ int ThemeGetCount() {
 
 Str ThemeGetNameAt(int idx) {
     if (idx < 0 || idx >= gThemeCount) {
-        return nullptr;
+        return {};
     }
     return (*gThemes)[idx]->name;
 }

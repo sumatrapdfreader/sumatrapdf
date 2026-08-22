@@ -828,7 +828,7 @@ class EngineEpub : public EngineEbook {
 
 EngineEpub::EngineEpub() {
     kind = kindEngineEpub;
-    SetDefaultExt(defaultExt, ".epub");
+    SetDefaultExt(defaultExt, StrL(".epub"));
 }
 
 EngineEpub::~EngineEpub() {
@@ -960,7 +960,7 @@ class EngineFb2 : public EngineEbook {
   public:
     EngineFb2() {
         kind = kindEngineFb2;
-        SetDefaultExt(defaultExt, ".fb2");
+        SetDefaultExt(defaultExt, StrL(".fb2"));
     }
     ~EngineFb2() override {
         delete tocTree;
@@ -1025,7 +1025,7 @@ bool EngineFb2::FinishLoading() {
     args.textRenderMethod = GetTextRenderMethod();
 
     if (doc->IsZipped()) {
-        SetDefaultExt(defaultExt, ".fb2z");
+        SetDefaultExt(defaultExt, StrL(".fb2z"));
     }
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
@@ -1087,7 +1087,7 @@ class EngineMobi : public EngineEbook {
   public:
     EngineMobi() {
         kind = kindEngineMobi;
-        SetDefaultExt(defaultExt, ".mobi");
+        SetDefaultExt(defaultExt, StrL(".mobi"));
     }
     ~EngineMobi() override {
         delete tocTree;
@@ -1246,7 +1246,7 @@ class EnginePdb : public EngineEbook {
   public:
     EnginePdb() {
         kind = kindEnginePdb;
-        SetDefaultExt(defaultExt, ".pdb");
+        SetDefaultExt(defaultExt, StrL(".pdb"));
     }
     ~EnginePdb() override {
         delete tocTree;
@@ -1445,11 +1445,11 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
     AttrInfo* attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr->ValIs("stylesheet")) {
+    if (!attr || !attr->ValIs(StrL("stylesheet"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs("text/css")) {
+    if (attr && !attr->ValIs(StrL("text/css"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("href"));
@@ -1472,7 +1472,7 @@ class EngineChm : public EngineEbook {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
-        SetDefaultExt(defaultExt, ".chm");
+        SetDefaultExt(defaultExt, StrL(".chm"));
     }
     ~EngineChm() override {
         delete dataCache;
@@ -1514,9 +1514,10 @@ static uint CharsetNameToCodepage(Str charset) {
         Str name;
         uint codepage;
     } codepages[] = {
-        {"ISO-8859-1", 1252}, {"Latin1", 1252}, {"CP1252", 1252},       {"Windows-1252", 1252}, {"ISO-8859-2", 28592},
-        {"Latin2", 28592},    {"CP1251", 1251}, {"Windows-1251", 1251}, {"KOI8-R", 20866},      {"shift-jis", 932},
-        {"x-euc", 932},       {"euc-kr", 949},  {"Big5", 950},          {"GB2312", 936},        {"UTF-8", CP_UTF8},
+        {StrL("ISO-8859-1"), 1252},  {StrL("Latin1"), 1252},   {StrL("CP1252"), 1252},   {StrL("Windows-1252"), 1252},
+        {StrL("ISO-8859-2"), 28592}, {StrL("Latin2"), 28592},  {StrL("CP1251"), 1251},   {StrL("Windows-1251"), 1251},
+        {StrL("KOI8-R"), 20866},     {StrL("shift-jis"), 932}, {StrL("x-euc"), 932},     {StrL("euc-kr"), 949},
+        {StrL("Big5"), 950},         {StrL("GB2312"), 936},    {StrL("UTF-8"), CP_UTF8},
     };
     for (int i = 0; i < dimofi(codepages); i++) {
         if (str::EqI(charset, codepages[i].name)) {
@@ -1527,16 +1528,16 @@ static uint CharsetNameToCodepage(Str charset) {
 }
 
 static uint HttpCharsetFromMetaNode(const GumboNode* node) {
-    if (node->type != GUMBO_NODE_ELEMENT || !GumboTagNameIs(node, "meta")) {
+    if (node->type != GUMBO_NODE_ELEMENT || !GumboTagNameIs(node, StrL("meta"))) {
         return 0;
     }
     const GumboAttribute* httpEquiv = gumbo_get_attribute(&node->v.element.attributes, "http-equiv");
-    if (!httpEquiv || !str::EqI(httpEquiv->value, StrL("Content-Type"))) {
+    if (!httpEquiv || !str::EqI(Str(httpEquiv->value), StrL("Content-Type"))) {
         return 0;
     }
     const GumboAttribute* content = gumbo_get_attribute(&node->v.element.attributes, "content");
     TempStr mimetype, charset;
-    if (!content || str::IsNull(str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset))) {
+    if (!content || str::IsNull(str::Parse(Str(content->value), "%S;%_charset=%S", &mimetype, &charset))) {
         return 0;
     }
     return CharsetNameToCodepage(charset);
@@ -1602,7 +1603,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
         TempStr index = doc->GetHomePath();
         TempWStr urlW = strconv::StrCPToWStrTemp(index, doc->codepage);
         TempStr url = ToUtf8Temp(urlW);
-        Visit(nullptr, url, 0);
+        Visit({}, url, 0);
 
         // then add all pages linked to from the table of contents
         doc->ParseToc(this);
@@ -1703,7 +1704,7 @@ TocTree* EngineChm::GetToc() {
         // TODO: ToC code doesn't work too well for displaying an index,
         //       so this should really become a tree of its own (which
         //       doesn't rely on entries being in the same order as pages)
-        builder.Visit("Index", nullptr, 1);
+        builder.Visit(StrL("Index"), {}, 1);
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
@@ -1761,7 +1762,7 @@ class EngineHtml : public EngineEbook {
     EngineHtml() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        SetDefaultExt(defaultExt, ".html");
+        SetDefaultExt(defaultExt, StrL(".html"));
     }
     ~EngineHtml() override { delete doc; }
     EngineBase* Clone() override {
@@ -1864,7 +1865,7 @@ class EngineTxt : public EngineEbook {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        SetDefaultExt(defaultExt, ".txt");
+        SetDefaultExt(defaultExt, StrL(".txt"));
     }
     ~EngineTxt() override {
         delete tocTree;

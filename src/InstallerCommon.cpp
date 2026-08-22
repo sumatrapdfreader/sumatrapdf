@@ -151,8 +151,8 @@ TempStr GetExistingInstallationDirTemp() {
         return gCachedExistingInstallationDir;
     }
     log(StrL("GetExistingInstallationDir()\n"));
-    TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
-    TempStr dir = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
+    TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
+    TempStr dir = LoggedReadRegStr2Temp(regPathUninst, StrL("InstallLocation"));
     if (!dir) {
         return {};
     }
@@ -264,9 +264,9 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     }
     info->searchFilterInstalled = IsSearchFilterInstalled();
     info->previewInstalled = IsPreviewInstalled();
-    TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
-    TempStr dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation");
-    TempStr dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
+    TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
+    TempStr dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, StrL("InstallLocation"));
+    TempStr dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, StrL("InstallLocation"));
     if (dirLM && dirCU) {
         info->typ = PreviousInstallationType::Both;
         info->allUsers = true;
@@ -307,7 +307,7 @@ TempStr GetShortcutPathTemp(int csidl) {
     if (!dir) {
         return {};
     }
-    TempStr lnkName = str::JoinTemp(kAppName, StrL(".lnk"));
+    TempStr lnkName = str::JoinTemp(StrL(kAppName), StrL(".lnk"));
     return path::JoinTemp(dir, lnkName);
 }
 
@@ -315,9 +315,9 @@ static TempStr GetInstalledBrowserPluginPathTemp() {
 #ifndef _WIN64
     Str kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
 #else
-    Str kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64";
+    Str kRegPathPlugin = StrL("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64");
 #endif
-    return LoggedReadRegStr2Temp(kRegPathPlugin, "Path");
+    return LoggedReadRegStr2Temp(kRegPathPlugin, StrL("Path"));
 }
 
 static bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2) {
@@ -354,7 +354,7 @@ constexpr const char* kBrowserPluginName = "npPdfViewer.dll";
 
 void UninstallBrowserPlugin() {
     log(StrL("UninstallBrowserPlugin()\n"));
-    TempStr dllPath = GetExistingInstallationFilePathTemp(kBrowserPluginName);
+    TempStr dllPath = GetExistingInstallationFilePathTemp(Str(kBrowserPluginName));
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath = GetInstalledBrowserPluginPathTemp();
@@ -374,7 +374,7 @@ void UninstallBrowserPlugin() {
 constexpr const char* kSearchFilterDllName = "PdfFilter.dll";
 
 void RegisterSearchFilter(bool allUsers, Str installDir) {
-    TempStr dllPath = GetInstallationFilePathTemp(installDir, kSearchFilterDllName);
+    TempStr dllPath = GetInstallationFilePathTemp(installDir, Str(kSearchFilterDllName));
     logf("RegisterSearchFilter() dllPath=%s\n", dllPath);
     bool ok = InstallSearchFilter(dllPath, allUsers);
     if (ok) {
@@ -386,7 +386,7 @@ void RegisterSearchFilter(bool allUsers, Str installDir) {
 }
 
 void UnRegisterSearchFilter() {
-    TempStr dllPath = GetExistingInstallationFilePathTemp(kSearchFilterDllName);
+    TempStr dllPath = GetExistingInstallationFilePathTemp(Str(kSearchFilterDllName));
     logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath);
     bool ok = UninstallSearchFilter();
     if (ok) {
@@ -400,7 +400,7 @@ void UnRegisterSearchFilter() {
 constexpr const char* kPreviewDllName = "PdfPreview.dll";
 
 void RegisterPreviewer(bool allUsers, Str installDir) {
-    TempStr dllPath = GetInstallationFilePathTemp(installDir, kPreviewDllName);
+    TempStr dllPath = GetInstallationFilePathTemp(installDir, Str(kPreviewDllName));
     logf("RegisterPreviewer() dllPath=%s\n", dllPath);
     bool ok = InstallPreviewDll(dllPath, allUsers);
     if (ok) {
@@ -412,7 +412,7 @@ void RegisterPreviewer(bool allUsers, Str installDir) {
 }
 
 void UnRegisterPreviewer() {
-    TempStr dllPath = GetExistingInstallationFilePathTemp(kPreviewDllName);
+    TempStr dllPath = GetExistingInstallationFilePathTemp(Str(kPreviewDllName));
     logf("UnRegisterPreviewer() dllPath=%s\n", dllPath);
     bool ok = UninstallPreviewDll();
     if (ok) {
@@ -536,10 +536,10 @@ static bool KillProcessesUsingInstallationDir(Str dir) {
     }
     TempStr libsumatrapdf = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
     TempStr libmupdfLegacy = path::JoinTemp(dir, StrL("libmupdf.dll")); // through 3.6
-    TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
-    TempStr filterDll = path::JoinTemp(dir, kSearchFilterDllName);
-    TempStr previewDll = path::JoinTemp(dir, kPreviewDllName);
-    TempStr exePath = path::JoinTemp(dir, kExeName);
+    TempStr browserPlugin = path::JoinTemp(dir, Str(kBrowserPluginName));
+    TempStr filterDll = path::JoinTemp(dir, Str(kSearchFilterDllName));
+    TempStr previewDll = path::JoinTemp(dir, Str(kPreviewDllName));
+    TempStr exePath = path::JoinTemp(dir, Str(kExeName));
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -658,10 +658,10 @@ static void ProcessesUsingInstallation(StrVec& names) {
     }
     TempStr libsumatrapdf = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
     TempStr libmupdfLegacy = path::JoinTemp(dir, StrL("libmupdf.dll")); // through 3.6
-    TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
-    TempStr filterDll = path::JoinTemp(dir, kSearchFilterDllName);
-    TempStr previewDll = path::JoinTemp(dir, kPreviewDllName);
-    TempStr exePath = path::JoinTemp(dir, kExeName);
+    TempStr browserPlugin = path::JoinTemp(dir, Str(kBrowserPluginName));
+    TempStr filterDll = path::JoinTemp(dir, Str(kSearchFilterDllName));
+    TempStr previewDll = path::JoinTemp(dir, Str(kPreviewDllName));
+    TempStr exePath = path::JoinTemp(dir, Str(kExeName));
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -690,16 +690,16 @@ static void ProcessesUsingInstallation(StrVec& names) {
 // clang-format off
 static Str readableProcessNames[] = {
     Str(), Str(), // to be filled with our process
-    "plugin-container.exe", "Mozilla Firefox",
-    "chrome.exe", "Google Chrome",
-    "prevhost.exe", "Windows Explorer",
-    "dllhost.exe", "Windows Explorer"
+    StrL("plugin-container.exe"), StrL("Mozilla Firefox"),
+    StrL("chrome.exe"), StrL("Google Chrome"),
+    StrL("prevhost.exe"), StrL("Windows Explorer"),
+    StrL("dllhost.exe"), StrL("Windows Explorer")
 };
 // clang-format on
 
 static Str ReadableProcName(Str procPath) {
-    readableProcessNames[0] = kExeName;
-    readableProcessNames[1] = kAppName;
+    readableProcessNames[0] = Str(kExeName);
+    readableProcessNames[1] = StrL(kAppName);
     TempStr procName = path::GetBaseNameTemp(procPath);
     for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
         if (str::EqI(procName, readableProcessNames[i])) {
@@ -807,7 +807,7 @@ static void RandomizeLetters()
 #define kSumatraLettersCount (dimof(gLetters))
 
 static void SetLettersSumatraUpTo(size_t n) {
-    Str s = "SUMATRAPDF";
+    Str s = StrL("SUMATRAPDF");
     for (size_t i = 0; i < kSumatraLettersCount; i++) {
         char c = ' ';
         if (i < n) {

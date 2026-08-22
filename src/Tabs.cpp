@@ -351,7 +351,7 @@ static MenuDef menuDefContextTab[] = {
         CmdDiscardChanges,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -375,7 +375,7 @@ static MenuDef menuDefContextTab[] = {
         CmdSetTabColor,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -399,7 +399,7 @@ static MenuDef menuDefContextTab[] = {
         CmdCloseAllTabs,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -411,7 +411,7 @@ static MenuDef menuDefContextTab[] = {
         CmdTabGroupRestore,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -733,7 +733,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
         homeTab->canvasRc = win->canvasRc;
         TabInfo* newTab = new TabInfo();
         newTab->text = str::Dup(StrL("Home"));
-        newTab->tooltip = nullptr;
+        newTab->tooltip = {};
         newTab->isPinned = true;
         newTab->canClose = true;
         newTab->userData = (UINT_PTR)homeTab;

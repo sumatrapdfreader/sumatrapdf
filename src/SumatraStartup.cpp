@@ -81,7 +81,7 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
         return true;
     }
     logf("MakePluginWindow: win: 0x%p, hwndParent: 0x%p (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
-         (int)IsWindow(hwndParent), len(gPluginURL) == 0 ? "<nulL>" : gPluginURL);
+         (int)IsWindow(hwndParent), len(gPluginURL) == 0 ? StrL("<nulL>") : gPluginURL);
     ReportIf(!gPluginMode);
 
     if (!IsWindow(hwndParent)) {
@@ -500,7 +500,7 @@ static bool SetupPluginMode(Flags& i) {
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     int hashIdx = i.pluginURL ? str::IndexOfChar(i.pluginURL, '#') : -1;
     if (hashIdx >= 0) {
-        TempStr args = str::DupTemp(i.pluginURL.s + hashIdx + 1);
+        TempStr args = str::DupTemp(Str(i.pluginURL.s + hashIdx + 1));
         str::TransCharsInPlace(args, StrL("#"), StrL("&"));
         StrVec parts;
         Split(&parts, args, StrL("&"), true);
@@ -1410,13 +1410,13 @@ static bool ForceRunningAsInstaller() {
         return false;
     }
 
-    Str corruptedInstallationConsole = R"(
+    Str corruptedInstallationConsole = StrL(R"(
 Looks like corrupted installation of SumatraPDF.
 
 Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
-)";
-    Str corruptedInstallation = R"(Looks like corrupted installation of SumatraPDF.
-)";
+)");
+    Str corruptedInstallation = StrL(R"(Looks like corrupted installation of SumatraPDF.
+)");
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
         // if we're launched from console, print help to consle window
@@ -1469,7 +1469,7 @@ static Str kInstallerHelpTmpl() {
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    TempStr msg = str::ReplaceTemp(kInstallerHelpTmpl(), StrL("${appName}"), kAppName);
+    TempStr msg = str::ReplaceTemp(kInstallerHelpTmpl(), StrL("${appName}"), StrL(kAppName));
 
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
@@ -1647,7 +1647,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
     di.includeFiles = true;
     di.includeDirs = false;
     for (DirIterEntry* de : di) {
-        if (!str::StartsWith(de->name, kPdfPreviewLogPrefix)) {
+        if (!str::StartsWith(de->name, Str(kPdfPreviewLogPrefix))) {
             continue;
         }
         PreviewLogFile lf{str::Dup(de->filePath), de->modificationTime};
@@ -2048,8 +2048,8 @@ static int MaybeDelegateToToolExe() {
     if (!HasEmbeddedLibsumatrapdf()) {
         return kNoMutool;
     }
-    TempStr toolExe = GetPathInExeDirTemp("sumatrapdf-tool.exe");
-    TempStr libsumatrapdf = GetPathInExeDirTemp("libsumatrapdf.dll");
+    TempStr toolExe = GetPathInExeDirTemp(StrL("sumatrapdf-tool.exe"));
+    TempStr libsumatrapdf = GetPathInExeDirTemp(StrL("libsumatrapdf.dll"));
     if (!file::Exists(toolExe) || !file::Exists(libsumatrapdf)) {
         return kNoMutool;
     }
@@ -2132,13 +2132,13 @@ static int MaybeRunMutool() {
             // Emit the message via raw WriteFile (CRT fwrite is what's broken
             // here) to the inherited stderr handle so it survives the bad pipe.
             if (WasLaunchedByPowershellWithPipeRedirect()) {
-                static Str msg = R"(SumatraPDF: command-line tools don't work when their output is redirected by
+                static Str msg = StrL(R"(SumatraPDF: command-line tools don't work when their output is redirected by
 PowerShell (e.g. `SumatraPDF.exe info file.pdf > out.txt` or `... | more`).
 PowerShell pipes a GUI app's output through a pipe that drops the data.
 
 Run the command from cmd.exe instead, e.g.:
     cmd /c "SumatraPDF.exe info file.pdf > out.txt"
-)";
+)");
                 HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
                 if (hErr && hErr != INVALID_HANDLE_VALUE) {
                     DWORD written = 0;
@@ -2220,7 +2220,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     LogCommandLine();
 
     if (gIsAsanBuild) {
-        TempStr asanOpts = GetEnvVariableTemp("ASAN_OPTIONS");
+        TempStr asanOpts = GetEnvVariableTemp(StrL("ASAN_OPTIONS"));
         logf("ASAN_OPTIONS: '%s'\n", asanOpts ? asanOpts : StrL("<not set>"));
     }
 
@@ -2243,7 +2243,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         return ret;
     }
 
-    ParseFlags(GetPermArena(), GetCommandLineW(), flags, gToolNames);
+    ParseFlags(GetPermArena(), GetCommandLineW(), flags, Str(gToolNames));
     gCli = &flags;
     gForTesting = flags.forTesting;
     InstallSumatraCrashHandler(flags.forTesting || flags.controlPipeName);
@@ -2582,7 +2582,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     if (flags.hwndPluginParent) {
         // check early to avoid a crash in MakePluginWindow()
         if (!IsWindow(flags.hwndPluginParent)) {
-            MsgBox(nullptr, "-plugin argument is not a valid window handle (hwnd)", "Error", MB_OK | MB_ICONERROR);
+            MsgBox(nullptr, StrL("-plugin argument is not a valid window handle (hwnd)"), StrL("Error"),
+                   MB_OK | MB_ICONERROR);
             goto Exit;
         }
     }
@@ -2698,7 +2699,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
             } else {
                 // https://github.com/sumatrapdfreader/sumatrapdf/issues/3386
                 // e.g. when shift-click in taskbar, open a new window
-                SendMyselfDDE("[NewWindow]", existingHwnd);
+                SendMyselfDDE(StrL("[NewWindow]"), existingHwnd);
                 goto Exit;
             }
         }
@@ -2912,7 +2913,7 @@ ContinueOpenWindow:
 
     {
         auto fn = MkFunc0Void(DeleteStaleFilesAsync);
-        RunAsync(fn, "DeleteStaleFilesAsync");
+        RunAsync(fn, StrL("DeleteStaleFilesAsync"));
     }
 
     // needed if RememberOpenedFiles = false

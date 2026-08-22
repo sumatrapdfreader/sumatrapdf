@@ -279,7 +279,7 @@ void EbookSettingsWnd::SetValues(Str fontName, float fontSize, const Vec<float>*
 void EbookSettingsWnd::ReadControls(EbookVals& out) {
     TempStr font = ddFont->GetTextTemp();
     if (str::Eq(font, FontDefaultLabel())) {
-        font = nullptr;
+        font = {};
     }
     out.fontName = EbookFontNameFromSetting(font);
     out.fontSize = ParseFloatTemp(editSize);
@@ -314,7 +314,7 @@ void EbookSettingsWnd::UpdateCssPreview() {
     }
     TempStr font = ddFont->GetTextTemp();
     if (str::Eq(font, FontDefaultLabel())) {
-        font = nullptr;
+        font = {};
     }
     Vec<float> margin;
     ParseMargin(editMargin->GetTextTemp(), margin);

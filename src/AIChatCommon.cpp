@@ -177,7 +177,7 @@ TempStr AIChatDebugGetTemp() {
 
 void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     if (!text) {
-        text = "";
+        text = StrL("");
     }
 
     SYSTEMTIME st;
@@ -291,7 +291,7 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchEx
         return ToUtf8Temp(pathW);
     }
 #endif
-    return nullptr;
+    return {};
 }
 
 void AIChatAppendModelUnique(StrVec& models, Str model) {
@@ -601,7 +601,7 @@ TempStr AIChatFitPanelTitleTemp(PlatformFont* font, Str prefix, Str docName, int
 TempStr AIChatGenerateSessionIdTemp() {
     GUID guid;
     if (FAILED(CoCreateGuid(&guid))) {
-        return nullptr;
+        return {};
     }
     return fmt("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3, guid.Data4[0],
                guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);

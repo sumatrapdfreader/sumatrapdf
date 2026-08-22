@@ -75,7 +75,7 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)hwndAssociatedWith);
 
     text = NewVirtText({
-        .s = "0",
+        .s = StrL("0"),
         .font = GetDefaultGuiFont(),
         .textColor = kColWhite,
         .align = VirtTextAlign::Center,

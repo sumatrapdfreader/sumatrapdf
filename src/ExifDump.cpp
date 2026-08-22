@@ -71,6 +71,6 @@ void DumpExif(const Flags& flags) {
         }
     }
     if (!any && len(flags.fileNames) == 0) {
-        CliPrint("No file specified for -dump-exif");
+        CliPrint(StrL("No file specified for -dump-exif"));
     }
 }

@@ -919,7 +919,7 @@ void HtmlFormatter::HandleDirAttr(HtmlToken* t) {
     if (t->IsStartTag() && !IsInlineTag(t->tag)) {
         AttrInfo* attr = t->GetAttrByName(StrL("dir"));
         if (attr) {
-            dirRtl = CurrStyle()->dirRtl = attr->ValIs("RTL");
+            dirRtl = CurrStyle()->dirRtl = attr->ValIs(StrL("RTL"));
         }
     }
 }
@@ -1164,7 +1164,7 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
         return;
     }
     AttrInfo* attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs("text/css")) {
+    if (attr && !attr->ValIs(StrL("text/css"))) {
         return;
     }
 

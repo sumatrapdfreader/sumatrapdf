@@ -42,7 +42,7 @@ TempStr ClaudeCodeExecutablePathTemp() {
 }
 
 static Mutex gClaudeCodeLogMutex;
-static AIChatLogger gClaudeCodeLogger = {&gClaudeCodeLogMutex, "claude-code-log.txt", "claude-code"};
+static AIChatLogger gClaudeCodeLogger = {&gClaudeCodeLogMutex, StrL("claude-code-log.txt"), StrL("claude-code")};
 
 // --- Session history ---
 
@@ -77,7 +77,7 @@ static TempStr ExtractUserTextTemp(Str line) {
     }
     // try string format: "content":"text"
     if (str::Contains(line, StrL("\"content\":\""))) {
-        TempStr content = AIChatJsonStrTemp(line, "content");
+        TempStr content = AIChatJsonStrTemp(line, StrL("content"));
         if (!str::Contains(content, StrL("<command-"))) {
             return content;
         }
@@ -88,7 +88,7 @@ static TempStr ExtractUserTextTemp(Str line) {
         bool hasText =
             str::Contains(line, StrL("\"type\":\"text\",\"text\":\"")) || str::Contains(line, StrL("\"text\":\""));
         if (hasText) {
-            TempStr text = AIChatJsonStrTemp(line, "text");
+            TempStr text = AIChatJsonStrTemp(line, StrL("text"));
             if (!str::Contains(text, StrL("<command-"))) {
                 return text;
             }
@@ -203,7 +203,7 @@ static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
             continue;
         }
         if (str::Contains(line, StrL("\"type\":\"text\""))) {
-            TempStr text = AIChatJsonStrTemp(line, "text");
+            TempStr text = AIChatJsonStrTemp(line, StrL("text"));
             if (len(text) > 0) {
                 AIChatHistoryAppendText(win, text);
                 AIChatHistoryFlushBlock(win);
@@ -213,11 +213,11 @@ static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         if (!str::Contains(line, StrL("\"type\":\"tool_use\""))) {
             continue;
         }
-        TempStr toolName = AIChatJsonStrTemp(line, "name");
+        TempStr toolName = AIChatJsonStrTemp(line, StrL("name"));
         if (!toolName) {
             continue;
         }
-        TempStr fp = AIChatJsonStrTemp(line, "file_path");
+        TempStr fp = AIChatJsonStrTemp(line, StrL("file_path"));
         str::Builder desc;
         desc.Append(fmt("Tool: %s", toolName));
         if (fp) {
@@ -235,17 +235,17 @@ struct ClaudeCodeProvider : AIChatProvider {
     ClaudeCodeProvider() {
         backend = AIChatBackend::Claude;
         logger = &gClaudeCodeLogger;
-        name = "Claude Code";
-        exeName = "claude";
-        virtualHost = "https://sumatrapdf.claude/";
+        name = StrL("Claude Code");
+        exeName = StrL("claude");
+        virtualHost = StrL("https://sumatrapdf.claude/");
         virtualHostW = L"https://sumatrapdf.claude/";
-        webViewDataDirPrefix = "ClaudeWebView";
-        docUri = "/AI-Chat-with-document#claude-code";
-        defaultModel = "opus";
+        webViewDataDirPrefix = StrL("ClaudeWebView");
+        docUri = StrL("/AI-Chat-with-document#claude-code");
+        defaultModel = StrL("opus");
         optionItems = "Low\0Medium\0High\0Max\0";
         optionCount = 4;
         optionDefault = 1;
-        checkboxLabel = "Skip Permissions";
+        checkboxLabel = StrL("Skip Permissions");
         generatesSessionId = true;
         // claude emits result before the process exits; don't wait for EOF
         terminateOnFinish = true;
@@ -261,14 +261,14 @@ struct ClaudeCodeProvider : AIChatProvider {
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
-        AIChatAppendModelUnique(models, "default");
-        AIChatAppendModelUnique(models, "best");
-        AIChatAppendModelUnique(models, "sonnet");
-        AIChatAppendModelUnique(models, "opus");
-        AIChatAppendModelUnique(models, "haiku");
-        AIChatAppendModelUnique(models, "sonnet[1m]");
-        AIChatAppendModelUnique(models, "opus[1m]");
-        AIChatAppendModelUnique(models, "opusplan");
+        AIChatAppendModelUnique(models, StrL("default"));
+        AIChatAppendModelUnique(models, StrL("best"));
+        AIChatAppendModelUnique(models, StrL("sonnet"));
+        AIChatAppendModelUnique(models, StrL("opus"));
+        AIChatAppendModelUnique(models, StrL("haiku"));
+        AIChatAppendModelUnique(models, StrL("sonnet[1m]"));
+        AIChatAppendModelUnique(models, StrL("opus[1m]"));
+        AIChatAppendModelUnique(models, StrL("opusplan"));
         Str extra = gGlobalPrefs->claudeCode.models;
         if (len(extra) > 0) {
             StrVec parts;
@@ -294,8 +294,8 @@ struct ClaudeCodeProvider : AIChatProvider {
     }
 
     TempStr BuildCmdLineTemp(const AIChatCmdArgs& args) override {
-        Str efforts[] = {"low", "medium", "high", "max"};
-        Str permsFlag = args.flag ? "--dangerously-skip-permissions" : "";
+        Str efforts[] = {StrL("low"), StrL("medium"), StrL("high"), StrL("max")};
+        Str permsFlag = args.flag ? StrL("--dangerously-skip-permissions") : StrL("");
         TempStr sessionName = path::GetBaseNameTemp(args.filePath);
         TempStr sysPrompt = fmt("The user is currently reading the file: %s", args.filePath);
         if (args.isNewSession) {
@@ -314,13 +314,13 @@ struct ClaudeCodeProvider : AIChatProvider {
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {
-        TempStr eventType = AIChatJsonStrTemp(line, "type");
+        TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
         if (!eventType) {
             return;
         }
         if (str::Eq(eventType, StrL("assistant"))) {
             if (str::Contains(line, StrL("\"type\":\"text\""))) {
-                TempStr text = AIChatJsonStrTemp(line, "text");
+                TempStr text = AIChatJsonStrTemp(line, StrL("text"));
                 if (len(text) > 0) {
                     AIChatPostUpdate(ctx, AIChatUpdateType::Text, text);
                 }
@@ -328,13 +328,13 @@ struct ClaudeCodeProvider : AIChatProvider {
             if (!str::Contains(line, StrL("\"type\":\"tool_use\""))) {
                 return;
             }
-            TempStr toolName = AIChatJsonStrTemp(line, "name");
+            TempStr toolName = AIChatJsonStrTemp(line, StrL("name"));
             if (!toolName) {
                 return;
             }
-            TempStr fp = AIChatJsonStrTemp(line, "file_path");
-            TempStr cmd = AIChatJsonStrTemp(line, "command");
-            TempStr pat = AIChatJsonStrTemp(line, "pattern");
+            TempStr fp = AIChatJsonStrTemp(line, StrL("file_path"));
+            TempStr cmd = AIChatJsonStrTemp(line, StrL("command"));
+            TempStr pat = AIChatJsonStrTemp(line, StrL("pattern"));
             str::Builder desc;
             desc.Append(fmt("Tool: %s", toolName));
             if (fp) {
@@ -353,7 +353,7 @@ struct ClaudeCodeProvider : AIChatProvider {
         }
         if (str::Eq(eventType, StrL("user"))) {
             if (str::Contains(line, StrL("\"tool_use_result\""))) {
-                TempStr fp = AIChatJsonStrTemp(line, "filePath");
+                TempStr fp = AIChatJsonStrTemp(line, StrL("filePath"));
                 if (fp) {
                     str::Builder desc;
                     desc.Append(fmt("Result: %s", fp));
@@ -363,9 +363,9 @@ struct ClaudeCodeProvider : AIChatProvider {
             return;
         }
         if (str::Eq(eventType, StrL("result"))) {
-            TempStr sub = AIChatJsonStrTemp(line, "subtype");
+            TempStr sub = AIChatJsonStrTemp(line, StrL("subtype"));
             if (sub && str::Eq(sub, StrL("error"))) {
-                TempStr err = AIChatJsonStrTemp(line, "error");
+                TempStr err = AIChatJsonStrTemp(line, StrL("error"));
                 if (err) {
                     AIChatPostUpdate(ctx, AIChatUpdateType::Error, err);
                 }

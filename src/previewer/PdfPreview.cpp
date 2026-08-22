@@ -805,7 +805,7 @@ static Str ExtractFb2FromZipData(Str data) {
 static EngineBase* CreateFb2PreviewEngine(Str data) {
     Str extracted = ExtractFb2FromZipData(data);
     Str plain = extracted ? extracted : data;
-    EngineBase* engine = CreateEngineMupdfFromData(plain, "document.fb2", nullptr);
+    EngineBase* engine = CreateEngineMupdfFromData(plain, StrL("document.fb2"), nullptr);
     str::Free(extracted);
     if (engine) {
         return engine;
@@ -821,9 +821,9 @@ EngineBase* PdfPreview::LoadEngine(const Str& data) {
     }
     switch (m_type) {
         case PreviewType::Pdf:
-            return CreateEngineMupdfFromData(data, "foo.pdf", nullptr);
+            return CreateEngineMupdfFromData(data, StrL("foo.pdf"), nullptr);
         case PreviewType::Xps:
-            return CreateEngineMupdfFromData(data, "foo.xps", nullptr);
+            return CreateEngineMupdfFromData(data, StrL("foo.xps"), nullptr);
         case PreviewType::DjVu:
             return CreateEngineDjvuDecFromData(data);
         case PreviewType::Epub:

@@ -129,7 +129,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
 HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     log(StrL("EpubFilter::GetNextChunkValue()\n"));
 
-    TempStr str = nullptr;
+    TempStr str;
     WStr ws;
 
     switch (m_state) {

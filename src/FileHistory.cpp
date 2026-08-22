@@ -392,5 +392,5 @@ void RemoveNonExistentFilesAsync() {
     }
     logf("RemoveNonExistentFilesAsync: starting CheckFilesExistAsync to check %d files\n", len(d->toCheck));
     Func0 fn = MkFunc0<CheckFilesExistData>(CheckFilesExistAsync, d);
-    RunAsync(fn, "CheckFilesExistAsync");
+    RunAsync(fn, StrL("CheckFilesExistAsync"));
 }

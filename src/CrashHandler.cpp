@@ -306,7 +306,7 @@ static void UploadCrashReport(Str d) {
     data.a = gCrashHandlerArena;
     data.Append(d);
 
-    HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
+    HttpPost(StrL(kCrashHandlerServer), kCrashHandlerServerPort, StrL(kCrashHandlerServerSubmitURL), &headers, &data);
 }
 
 static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* a) {
@@ -632,7 +632,7 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    if (!TryStartCrashHandling("CrashDumpVectoredExceptionHandler")) {
+    if (!TryStartCrashHandling(StrL("CrashDumpVectoredExceptionHandler"))) {
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
@@ -657,12 +657,13 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
 
 static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode)) {
-        log(StrL("CrashDumpExceptionHandler: exiting because !exceptionInfo || EXCEPTION_BREAKPOINT == "
+        log(
+            StrL("CrashDumpExceptionHandler: exiting because !exceptionInfo || EXCEPTION_BREAKPOINT == "
                  "exceptionInfo->ExceptionRecord->ExceptionCode\n"));
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    if (!TryStartCrashHandling("CrashDumpExceptionHandler")) {
+    if (!TryStartCrashHandling(StrL("CrashDumpExceptionHandler"))) {
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
@@ -713,11 +714,11 @@ static void GetOsVersion(str::Builder& s) {
 
 static void GetProcessorName(str::Builder& s) {
     const auto* key = R"(HARDWARE\DESCRIPTION\System\CentralProcessor)";
-    TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
+    TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, Str(key), StrL("ProcessorNameString"));
     if (!name) {
         // if more than one processor
         key = R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)";
-        name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
+        name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, Str(key), StrL("ProcessorNameString"));
     }
     if (name) {
         s.Append(fmt("Processor: %s\n", name));
@@ -736,8 +737,8 @@ static void GetGraphicsDriverInfo(str::Builder& s) {
     //
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
-        TempStr key = str::JoinTemp(GFX_DRIVER_KEY_PREFIX, fmt("%04d", i));
-        TempStr v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverDesc");
+        TempStr key = str::JoinTemp(StrL(GFX_DRIVER_KEY_PREFIX), fmt("%04d", i));
+        TempStr v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DriverDesc"));
         // I assume that if I can't read the value, there are no more drivers
         if (!v) {
             break;
@@ -745,12 +746,12 @@ static void GetGraphicsDriverInfo(str::Builder& s) {
         s.Append(fmt("Graphics driver %d\n", i));
         s.Append(fmt("  DriverDesc:         %s\n", v));
 
-        v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverVersion");
+        v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DriverVersion"));
         if (v) {
             s.Append(fmt("  DriverVersion:      %s\n", v));
         }
 
-        v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "UserModeDriverName");
+        v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("UserModeDriverName"));
         if (v) {
             s.Append(fmt("  UserModeDriverName: %s\n", v));
         }
@@ -777,14 +778,16 @@ static void GetSystemInfo(str::Builder& s) {
     {
         TempStr ver = GetWebView2VersionTemp();
         if (len(ver) == 0) {
-            ver = "no WebView2 installed";
+            ver = StrL("no WebView2 installed");
         }
         s.Append(fmt("WebView2: %s\n", ver));
     }
     {
         // get computer name
-        TempStr s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, R"(HARDWARE\DESCRIPTION\System\BIOS)", "SystemFamily");
-        TempStr s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, R"(HARDWARE\DESCRIPTION\System\BIOS)", "SystemVersion");
+        TempStr s1 =
+            ReadRegStrTemp(HKEY_LOCAL_MACHINE, StrL(R"(HARDWARE\DESCRIPTION\System\BIOS)"), StrL("SystemFamily"));
+        TempStr s2 =
+            ReadRegStrTemp(HKEY_LOCAL_MACHINE, StrL(R"(HARDWARE\DESCRIPTION\System\BIOS)"), StrL("SystemVersion"));
 
         if (!s1 && !s2) {
             // no-op
@@ -994,7 +997,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
             DeleteFileStates(gp->fileStates);
             gp->fileStates = new Vec<FileState*>();
             // TODO: also sessionData?
-            Str d = SerializeGlobalPrefs(gp, nullptr);
+            Str d = SerializeGlobalPrefs(gp, {});
             gSettingsFile = str::Dup(gCrashHandlerArena, d);
             str::Free(d);
             DeleteGlobalPrefs(gp);

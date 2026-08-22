@@ -326,7 +326,7 @@ static TempStr ChmMimeFromPathTemp(Str path, Str data) {
     TempStr imgExt = GfxFileExtFromDataTemp(data);
     TempStr mime = MimeTypeFromExtTemp(ext, imgExt);
     if (!mime) {
-        mime = "text/html";
+        mime = StrL("text/html");
     }
     return mime;
 }
@@ -375,7 +375,7 @@ void BrowserDocView::NavigationCompleted(void* ctx, Str url, bool success) {
     // after zoom / restore have applied: init scripts may have missed this
     // document, and hash navigation often never fires a 'scroll' event
     if (view->wv) {
-        view->wv->Eval(kReportScrollJs);
+        view->wv->Eval(Str(kReportScrollJs));
     }
 }
 
@@ -557,8 +557,8 @@ bool BrowserDocView::CreateWebView2() {
         return false;
     }
 
-    wv->Init(kReportScrollJs);
-    wv->Init(kFindInPageJs);
+    wv->Init(Str(kReportScrollJs));
+    wv->Init(Str(kFindInPageJs));
 
     backend = Backend::WebView2;
     return true;
@@ -576,7 +576,7 @@ BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, 
         view->virtualHost = str::Dup(virtualHostPrefix);
         view->virtualHostW = wstr::Dup(ToWStrTemp(virtualHostPrefix));
     } else {
-        view->virtualHost = str::Dup(kChmVirtualHost);
+        view->virtualHost = str::Dup(Str(kChmVirtualHost));
         view->virtualHostW = wstr::Dup(kChmVirtualHostW);
     }
 
@@ -697,7 +697,7 @@ void BrowserDocView::SetScrollPos(Point pos) {
 void BrowserDocView::PrintCurrentPage(bool showUI) {
     if (backend == Backend::WebView2 && wv) {
         // WebView2 has no silent-print API; window.print() always shows the dialog
-        wv->Eval("window.print()");
+        wv->Eval(StrL("window.print()"));
         return;
     }
     if (backend == Backend::IE && ie) {
@@ -815,12 +815,12 @@ void BrowserDocView::FindClear() {
     if (!CanFindInPage()) {
         return;
     }
-    wv->Eval("window.__sumatraFind && __sumatraFind.clear();");
+    wv->Eval(StrL("window.__sumatraFind && __sumatraFind.clear();"));
 }
 
 void BrowserDocView::SelectAll() {
     if (backend == Backend::WebView2 && wv) {
-        wv->Eval("document.execCommand('selectAll', false, null)");
+        wv->Eval(StrL("document.execCommand('selectAll', false, null)"));
         return;
     }
     if (backend == Backend::IE && ie) {
@@ -830,7 +830,7 @@ void BrowserDocView::SelectAll() {
 
 void BrowserDocView::CopySelection() {
     if (backend == Backend::WebView2 && wv) {
-        wv->Eval("document.execCommand('copy', false, null)");
+        wv->Eval(StrL("document.execCommand('copy', false, null)"));
         return;
     }
     if (backend == Backend::IE && ie) {

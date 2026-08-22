@@ -60,7 +60,7 @@ TryAgain64Bit:
         for (Str gsProd : gsProducts) {
             Str ver = versions[i - 1];
             TempStr keyName = fmt("Software\\%s\\%s", gsProd, ver);
-            TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
+            TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, StrL("GS_DLL"));
             if (!gsDLL) {
                 continue;
             }
@@ -139,7 +139,7 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 static EngineBase* ps2pdf(Str path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     TempStr shortPath = path::ShortPathTemp(path);
-    TempStr tmpFile = GetTempFilePathTemp("PsE");
+    TempStr tmpFile = GetTempFilePathTemp(StrL("PsE"));
     AutoDeleteFile tmpFileScope(tmpFile);
     TempStr gswin32c = GetGhostscriptPathTemp();
     if (!shortPath || !tmpFile || !gswin32c) {
@@ -154,13 +154,13 @@ static EngineBase* ps2pdf(Str path) {
             gswin32c, tmpFile, shortPath);
 
     {
-        TempStr fileName = path::GetBaseNameTemp(__FILE__);
+        TempStr fileName = path::GetBaseNameTemp(StrL(__FILE__));
         TempStr tmpFileName = path::GetBaseNameTemp(tmpFile);
         logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin32c, tmpFileName);
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
-    HANDLE process = LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
+    HANDLE process = LaunchProcessInDir(cmdLine, {}, CREATE_NO_WINDOW);
     if (!process) {
         return nullptr;
     }
@@ -192,7 +192,7 @@ static EngineBase* ps2pdf(Str path) {
 }
 
 static EngineBase* psgz2pdf(Str fileName) {
-    TempStr tmpFile = GetTempFilePathTemp("PsE");
+    TempStr tmpFile = GetTempFilePathTemp(StrL("PsE"));
     AutoDeleteFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;

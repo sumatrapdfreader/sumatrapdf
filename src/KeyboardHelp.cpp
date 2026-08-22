@@ -112,7 +112,7 @@ struct DefaultKeyboardHelpDataSource : KeyboardHelpDataSource {
     TempStr CommandShortcutTemp(int cmdId, int) override {
         for (const auto& e : kFallbackShortcuts) {
             if (e.id == cmdId) {
-                return str::DupTemp(e.shortcut);
+                return str::DupTemp(Str(e.shortcut));
             }
         }
         return {};

@@ -103,8 +103,8 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(GetPermArena(), LR"(SumatraPDF.exe "foo \" bar \\.pdf" un\"quoted.pdf)", i);
         utassert(2 == len(i.fileNames));
-        utassert(0 == i.fileNames.Find(R"(foo " bar \\.pdf)"));
-        utassert(1 == i.fileNames.Find(R"(un"quoted.pdf)"));
+        utassert(0 == i.fileNames.Find(StrL(R"(foo " bar \\.pdf)")));
+        utassert(1 == i.fileNames.Find(StrL(R"(un"quoted.pdf)")));
     }
 
     {
@@ -159,7 +159,7 @@ static void BenchRangeTest() {
     utassert(!IsBenchPagesInfo(StrL("2--4")));
     utassert(!IsBenchPagesInfo(StrL("4-2")));
     utassert(!IsBenchPagesInfo(StrL("1-3,loadonly")));
-    utassert(!IsBenchPagesInfo(nullptr));
+    utassert(!IsBenchPagesInfo({}));
 }
 
 // TODO: disabled because they bring too many dependencies

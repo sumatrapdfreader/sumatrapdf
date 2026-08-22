@@ -366,7 +366,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
     // if installer not downloaded tell user to download from website
     if (!didDownloadInstaller) {
-        SumatraLaunchBrowser(kWebisteDownloadPageURL);
+        SumatraLaunchBrowser(StrL(kWebisteDownloadPageURL));
         return;
     }
 
@@ -425,7 +425,7 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     auto* hwndForNotif = data->hwndForNotif;
     auto* updateInfo = data->updateInfo;
 
-    TempStr installerPath = GetTempFilePathTemp("sumatra-installer");
+    TempStr installerPath = GetTempFilePathTemp(StrL("sumatra-installer"));
     // the installer must be named .exe or it won't be able to self-elevate
     // with "runas"
     installerPath = str::JoinTemp(installerPath, StrL(".exe"));
@@ -513,7 +513,7 @@ void DownloadAndInstallPendingUpdate(MainWindow* win) {
     fnData->hwndForNotif = hwndForNotif;
     fnData->updateInfo = updateInfo;
     auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateAsync, fnData);
-    RunAsync(fn, "DownloadUpdateAsync");
+    RunAsync(fn, StrL("DownloadUpdateAsync"));
 }
 
 static bool ShouldDownloadUpdate(UpdateInfo* updateInfo) {
@@ -624,7 +624,7 @@ Visit <a href="%s">%s</a> to download the latest version.)",
     int buttonPressedId = 0;
     TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     if (buttonPressedId == kBtnIdVisitWebsite) {
-        SumatraLaunchBrowser(kWebisteDownloadPageURL);
+        SumatraLaunchBrowser(StrL(kWebisteDownloadPageURL));
     }
 }
 
@@ -726,21 +726,21 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     fnData->hwndForNotif = hwndForNotif;
     fnData->updateInfo = updateInfo;
     auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateAsync, fnData);
-    RunAsync(fn, "DownloadUpdateAsync");
+    RunAsync(fn, StrL("DownloadUpdateAsync"));
     return 0;
 }
 
 static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType) {
     url.Reset(baseURL);
     url.Append(StrL("?v="));
-    url.Append(UPDATE_CHECK_VERA);
+    url.Append(StrL(UPDATE_CHECK_VERA));
     TempStr osVerTemp = GetWindowsVerTemp();
     url.Append(StrL("&os="));
     url.Append(osVerTemp);
     url.Append(StrL("&64bit="));
-    url.Append(IsProcess64() ? "yes" : "no");
+    url.Append(Str(IsProcess64() ? "yes" : "no"));
     url.Append(StrL("&arm="));
-    url.Append(IsArmBuild() ? "yes" : "no");
+    url.Append(Str(IsArmBuild() ? "yes" : "no"));
     Str lang = trans::GetCurrentLangCode();
     url.Append(StrL("&lang="));
     url.Append(lang);
@@ -753,7 +753,7 @@ static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateChe
         url.Append(StrL("&store"));
     }
     url.Append(StrL("&simd="));
-    url.Append(LatestSupportedSIMD().s);
+    url.Append(Str(LatestSupportedSIMD().s));
     url.Append(StrL("&withPromo"));
     if (UpdateCheck::UserInitiated == updateCheckType) {
         url.Append(StrL("&force"));
@@ -848,7 +848,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
     data->win = win;
     data->updateCheckType = updateCheckType;
     auto fn = MkFunc0<UpdateCheckAsyncData>(UpdateCheckAsync, data);
-    RunAsync(fn, "UpdateCheckAsync");
+    RunAsync(fn, StrL("UpdateCheckAsync"));
 }
 
 // the assumption is that this is a portable version downloaded to temp directory

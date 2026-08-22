@@ -568,7 +568,7 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     // human readable file size on the right (files only; include 0-byte files)
     Rect rcText = rc;
-    TempStr sizeStr = nullptr;
+    TempStr sizeStr;
     int rightDx = 0;
     if (!e.isDir) {
         sizeStr = str::FormatSizeShortTemp(e.size);

@@ -197,9 +197,9 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             {
                 HWND hwndCb = GetDlgItem(hDlg, IDC_PRINT_ROTATE);
                 CbAddString(hwndCb, _TRA("None"));
-                CbAddString(hwndCb, "90°");
-                CbAddString(hwndCb, "180°");
-                CbAddString(hwndCb, "270°");
+                CbAddString(hwndCb, StrL("90°"));
+                CbAddString(hwndCb, StrL("180°"));
+                CbAddString(hwndCb, StrL("270°"));
                 int rotIdx = (data->extraRotation / 90) % 4;
                 CbSetCurrentSelection(hwndCb, rotIdx);
             }

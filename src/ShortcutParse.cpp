@@ -230,20 +230,21 @@ static bool ParseShortcut(Str shortcut, ACCEL& accel) {
 again:
     skipWS(cursor);
     // before "alt": "AltGr + Return" would otherwise match "alt" and leave "Gr"
-    if (skipVirtKey(cursor, "altgr") || skipVirtKey(cursor, "ralt") || skipVirtKey(cursor, "rightalt")) {
+    if (skipVirtKey(cursor, StrL("altgr")) || skipVirtKey(cursor, StrL("ralt")) ||
+        skipVirtKey(cursor, StrL("rightalt"))) {
         // Windows reports Right Alt / AltGr as Ctrl+Alt
         fVirt |= (FCONTROL | FALT | FVIRTKEY);
         goto again;
     }
-    if (skipVirtKey(cursor, "alt")) {
+    if (skipVirtKey(cursor, StrL("alt"))) {
         fVirt |= (FALT | FVIRTKEY);
         goto again;
     }
-    if (skipVirtKey(cursor, "shift")) {
+    if (skipVirtKey(cursor, StrL("shift"))) {
         fVirt |= (FSHIFT | FVIRTKEY);
         goto again;
     }
-    if (skipVirtKey(cursor, "ctrl")) {
+    if (skipVirtKey(cursor, StrL("ctrl"))) {
         fVirt |= (FCONTROL | FVIRTKEY);
         goto again;
     }
@@ -382,22 +383,22 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
         // same bits as AltGr on Windows; keep the name the user would type
         str.Append(StrL("AltGr + "));
     } else if (virt & FALT) {
-        Str s = "Alt + ";
+        Str s = StrL("Alt + ");
         if (isGerman) {
-            s = "Größe + ";
+            s = StrL("Größe + ");
         }
         str.Append(s);
     } else if (virt & FCONTROL) {
-        Str s = "Ctrl + ";
+        Str s = StrL("Ctrl + ");
         if (isGerman) {
-            s = "Strg + ";
+            s = StrL("Strg + ");
         }
         str.Append(s);
     }
     if (virt & FSHIFT) {
-        Str s = "Shift + ";
+        Str s = StrL("Shift + ");
         if (isGerman) {
-            s = "Umschalt + ";
+            s = StrL("Umschalt + ");
         }
         str.Append(s);
     }

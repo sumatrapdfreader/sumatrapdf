@@ -81,7 +81,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
             HdcFillRect(hDC, ToRect(rcClient), brushBg);
             LOGFONTW lf{};
             lf.lfHeight = -14;
-            str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), "MS Shell Dlg");
+            str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), StrL("MS Shell Dlg"));
             HFONT hFont = CreateFontIndirectW(&lf);
             hFont = (HFONT)SelectObject(hDC, hFont);
             SetTextColor(hDC, 0x000000);
@@ -126,8 +126,8 @@ void TestPlugin(WStr cmdLine) {
     }
 
     if (len(args) == 0) {
-        MsgBox(nullptr, "Syntax: SumatraPDF.exe -test-plugin [<SumatraPDF.exe>] [<URL>] <filename.ext>",
-               "SumatraPDF Plugin Test", MB_OK | MB_ICONINFORMATION);
+        MsgBox(nullptr, StrL("Syntax: SumatraPDF.exe -test-plugin [<SumatraPDF.exe>] [<URL>] <filename.ext>"),
+               StrL("SumatraPDF Plugin Test"), MB_OK | MB_ICONINFORMATION);
         return;
     }
 
@@ -138,12 +138,12 @@ void TestPlugin(WStr cmdLine) {
     }
     // if no URL given (only exe + file), insert nullptr for URL
     if (len(args) == 2) {
-        args.InsertAt(1, nullptr);
+        args.InsertAt(1, {});
     }
 
     if (len(args) < 3) {
-        MsgBox(nullptr, "Syntax: SumatraPDF.exe -test-plugin [<SumatraPDF.exe>] [<URL>] <filename.ext>",
-               "SumatraPDF Plugin Test", MB_OK | MB_ICONINFORMATION);
+        MsgBox(nullptr, StrL("Syntax: SumatraPDF.exe -test-plugin [<SumatraPDF.exe>] [<URL>] <filename.ext>"),
+               StrL("SumatraPDF Plugin Test"), MB_OK | MB_ICONINFORMATION);
         return;
     }
 

@@ -150,7 +150,7 @@ void JsonTest() {
         ExpectedValue(StrL("/ComicBookInfo/1.0/credits[2]"), StrL("null"), json::Type::Null),
         ExpectedValue(StrL("/appID"), StrL("Test/123")),
     };
-    Str jsonSample =
+    Str jsonSample = StrL(
         "{\n\
     \"ComicBookInfo/1.0\": {\n\
         \"title\": \"Meta data demo\",\n\
@@ -163,7 +163,7 @@ void JsonTest() {
         ]\n\
     },\n\
     \"appID\": \"Test/123\"\n\
-}";
+}");
     JsonVerifier sampleVerifier(testData, dimof(testData));
     utassert(ParseVerify(jsonSample, &sampleVerifier));
 
@@ -171,8 +171,8 @@ void JsonTest() {
     {
         const char lineSep[] = {'\xE2', '\x80', '\xA8'};
         const char paraSep[] = {'\xE2', '\x80', '\xA9'};
-        utassert(str::Eq(json::EscapeStrTemp(Str(lineSep, 3)), "\\u2028"));
-        utassert(str::Eq(json::EscapeStrTemp(Str(paraSep, 3)), "\\u2029"));
+        utassert(str::Eq(json::EscapeStrTemp(Str(lineSep, 3)), StrL("\\u2028")));
+        utassert(str::Eq(json::EscapeStrTemp(Str(paraSep, 3)), StrL("\\u2029")));
         utassert(str::Eq(json::EscapeStrTemp(StrL("a\"b\\c\n")), StrL("a\\\"b\\\\c\\n")));
         utassert(str::Eq(json::EscapeStrTemp(StrL("\b\f\r\t")), StrL("\\b\\f\\r\\t")));
     }
@@ -190,7 +190,7 @@ void JsonTest() {
         utassert(json::PathSegIndex(json::PathNth(p, 1)) == 0);
         utassert(json::PathSegIndex(p) == -1); // key segment
         utassert(str::Eq(json::PathSegKey(p), StrL("key")));
-        utassert(str::Eq(json::PathSegKey(json::PathNth(p, 2)), "name"));
+        utassert(str::Eq(json::PathSegKey(json::PathNth(p, 2)), StrL("name")));
         utassert(!json::PathSegKey(json::PathNth(p, 1)).s); // index segment
         utassert(!json::PathNth(p, 3));
         utassert(json::PathMatch(nullptr));
@@ -217,7 +217,7 @@ void JsonTest() {
             utassert(json::PathMatch(v->path, StrL("/a/b"), StrL("/c")));
             utassert(!json::PathMatch(v->path, StrL("/a"), StrL("/b"), StrL("/c")));
             utassert(str::Eq(json::PathSegKey(v->path), StrL("a/b")));
-            utassert(str::Eq(json::PathSegKey(json::PathNth(v->path, 1)), "c"));
+            utassert(str::Eq(json::PathSegKey(json::PathNth(v->path, 1)), StrL("c")));
         };
         utassert(json::Parse(StrL("{\"a/b\":{\"c\":\"x\"}}"), MkFunc1<SlashKeyState, json::Value*>(onValue, &st)));
         utassert(st.n == 1);

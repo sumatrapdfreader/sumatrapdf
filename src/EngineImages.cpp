@@ -1302,11 +1302,11 @@ static void AddExifStringProp(Props& propsOut, DocProp docProp, const ExifParser
 TempStr EngineImage::GetPropertyTemp(DocProp prop) {
     Str data = file::ReadFile(FilePath());
     if (len(data) == 0) {
-        return nullptr;
+        return {};
     }
 
     ExifParser parser;
-    TempStr res = nullptr;
+    TempStr res;
     if (parser.Parse(data)) {
         if (prop == DocProp::Title) {
             res = parser.GetStringProp(ExifProp::ImageDescription, ExifProp::XPTitle);
@@ -1813,7 +1813,7 @@ class EngineImageDir : public EngineImages {
     EngineImageDir() {
         fileDPI = 96.0f;
         kind = kindEngineImageDir;
-        SetDefaultExt(defaultExt, "");
+        SetDefaultExt(defaultExt, StrL(""));
         // TODO: is there a better place to expose pageFileNames
         // than through page labels?
         hasPageLabels = true;
@@ -1832,7 +1832,7 @@ class EngineImageDir : public EngineImages {
     Str GetFileData() override { return {}; }
     bool SaveFileAs(Str dstPath) override;
 
-    TempStr GetPropertyTemp(DocProp /*prop*/) override { return nullptr; }
+    TempStr GetPropertyTemp(DocProp /*prop*/) override { return {}; }
 
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
@@ -2097,30 +2097,30 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
         }
         const GumboVector* children = nullptr;
         if (node->type == GUMBO_NODE_ELEMENT) {
-            if (GumboTagNameIs(node, "Title")) {
+            if (GumboTagNameIs(node, StrL("Title"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
                     ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/title")), v,
                                    json::Type::String);
                 }
-            } else if (GumboTagNameIs(node, "Year")) {
+            } else if (GumboTagNameIs(node, StrL("Year"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
                     ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationYear")), v,
                                    json::Type::Number);
                 }
-            } else if (GumboTagNameIs(node, "Month")) {
+            } else if (GumboTagNameIs(node, StrL("Month"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
                     ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth")), v,
                                    json::Type::Number);
                 }
-            } else if (GumboTagNameIs(node, "Summary")) {
+            } else if (GumboTagNameIs(node, StrL("Summary"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
                     ComicInfoVisit(cip, json::PathBuildTemp(StrL("/X-summary")), v, json::Type::String);
                 }
-            } else if (GumboTagNameIs(node, "Writer")) {
+            } else if (GumboTagNameIs(node, StrL("Writer"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
                     ComicInfoVisit(
@@ -2130,9 +2130,9 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
                     ComicInfoVisit(
                         cip,
                         json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i0"), StrL("/primary")),
-                        "true", json::Type::Bool);
+                        StrL("true"), json::Type::Bool);
                 }
-            } else if (GumboTagNameIs(node, "Penciller")) {
+            } else if (GumboTagNameIs(node, StrL("Penciller"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
                     ComicInfoVisit(
@@ -2142,9 +2142,9 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
                     ComicInfoVisit(
                         cip,
                         json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i1"), StrL("/primary")),
-                        "true", json::Type::Bool);
+                        StrL("true"), json::Type::Bool);
                 }
-            } else if (GumboTagNameIs(node, "Page")) {
+            } else if (GumboTagNameIs(node, StrL("Page"))) {
                 const GumboAttribute* imageAttr = gumbo_get_attribute(&node->v.element.attributes, "Image");
                 const GumboAttribute* bookmarkAttr = gumbo_get_attribute(&node->v.element.attributes, "Bookmark");
                 if (imageAttr && bookmarkAttr) {
@@ -2199,12 +2199,12 @@ void ComicInfoParser::Visit(json::Value* v) {
         propTitle = str::Dup(value);
     } else if (json::Type::Number == type &&
                json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/publicationYear"))) {
-        Str newDate = str::Dup(fmt("%s/%d", len(propDate) == 0 ? "" : propDate, ParseInt(value)));
+        Str newDate = str::Dup(fmt("%s/%d", len(propDate) == 0 ? StrL("") : propDate, ParseInt(value)));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::Number == type &&
                json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth"))) {
-        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), len(propDate) == 0 ? "" : propDate));
+        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), len(propDate) == 0 ? StrL("") : propDate));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::String == type && json::PathMatch(path, StrL("/appID"))) {
@@ -2338,13 +2338,13 @@ static bool cmpArchFileInfoByName(Archive::FileInfo* f1, Archive::FileInfo* f2) 
 static Str GetExtFromArchiveType(Archive* cbxFile) {
     switch (cbxFile->format) {
         case Archive::Format::Zip:
-            return ".cbz";
+            return StrL(".cbz");
         case Archive::Format::Rar:
-            return ".cbr";
+            return StrL(".cbr");
         case Archive::Format::SevenZip:
-            return ".cb7";
+            return StrL(".cb7");
         case Archive::Format::Tar:
-            return ".cbt";
+            return StrL(".cbt");
         case Archive::Format::Unknown:
             break;
     }
@@ -2510,7 +2510,7 @@ bool EngineCbx::FinishLoading() {
 
     constexpr int kMaxComicInfoSize = 4 * 1024 * 1024;
     Archive::FileInfo* metadataFi = nullptr;
-    int metadataId = cbxArchive->GetFileId("ComicInfo.xml");
+    int metadataId = cbxArchive->GetFileId(StrL("ComicInfo.xml"));
     if (metadataId >= 0) {
         auto* fi = fileInfos[metadataId];
         if (fi->fileSizeUncompressed >= 0 && fi->fileSizeUncompressed <= kMaxComicInfoSize) {

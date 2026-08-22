@@ -43,7 +43,7 @@ HRESULT PdfFilter::OnInit() {
     if (str::IsNull(m_data)) {
         return E_FAIL;
     }
-    m_pdfEngine = CreateEngineMupdfFromData(m_data, "foo.pdf", nullptr);
+    m_pdfEngine = CreateEngineMupdfFromData(m_data, StrL("foo.pdf"), nullptr);
     if (!m_pdfEngine) {
         return E_FAIL;
     }

@@ -55,13 +55,13 @@ bool* FindGlobalPrefsBoolSetting(Str name) {
 }
 
 FileState* NewFileState(Str filePath) {
-    FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
+    FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, {});
     SetFileStatePath(fs, filePath);
     return fs;
 }
 
 FileEBookUI* NewFileEBookUI() {
-    return (FileEBookUI*)DeserializeStruct(&gFileEBookUIInfo, nullptr);
+    return (FileEBookUI*)DeserializeStruct(&gFileEBookUIInfo, {});
 }
 
 FileEBookUI* CopyFileEBookUI(const FileEBookUI* src) {
@@ -98,7 +98,7 @@ void DeleteFileStates(Vec<FileState*>* a) {
 }
 
 Favorite* NewFavorite(int pageNo, Str name, Str pageLabel) {
-    Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, nullptr);
+    Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, {});
     fav->pageNo = pageNo;
     str::ReplaceWithCopy(&fav->name, name);
     str::ReplaceWithCopy(&fav->pageLabel, pageLabel);
@@ -198,11 +198,11 @@ void DeleteGlobalPrefs(GlobalPrefs* gp) {
 }
 
 SessionData* NewSessionData() {
-    return (SessionData*)DeserializeStruct(&gSessionDataInfo, nullptr);
+    return (SessionData*)DeserializeStruct(&gSessionDataInfo, {});
 }
 
 TabState* NewTabState(FileState* fs) {
-    TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
+    TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, {});
     str::ReplaceWithCopy(&state->filePath, fs->filePath);
     str::ReplaceWithCopy(&state->displayMode, fs->displayMode);
     state->pageNo = fs->pageNo;

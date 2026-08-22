@@ -347,7 +347,7 @@ TempStr KeyboardLinkFollowResultTemp(int* exitCodeOut) {
     int currPage = win->ctrl ? win->ctrl->CurrentPageNo() : 0;
     // the keyboard shortcut can't be exercised from a test (posted key messages
     // don't carry modifier state), so report what it is bound to
-    TempStr accel = AppendAccelKeyToMenuStringTemp(nullptr, CmdToggleKeyboardLinkFollowing);
+    TempStr accel = AppendAccelKeyToMenuStringTemp({}, CmdToggleKeyboardLinkFollowing);
     if (accel.len > 1 && accel.s[0] == '\t') {
         accel = TempStr(accel.s + 1, accel.len - 1);
     }
@@ -412,7 +412,7 @@ void PaintKeyboardLinkTargets(MainWindow* win, Gfx* gfx) {
     }
     PaintTransparentRectangles(gfx, win->canvasRc, screenRects, kLinkFollowHighlightCol, 90, 2, false);
 
-    PlatformFont* font = GetBoldPlatformFont(GetUserGuiFont("Segoe UI", DpiScale(11)));
+    PlatformFont* font = GetBoldPlatformFont(GetUserGuiFont(StrL("Segoe UI"), DpiScale(11)));
     int rectIdx = 0;
     for (int i = 0; i < n; i++) {
         const KeyboardLinkTarget& t = win->linkFollowTargets[i];

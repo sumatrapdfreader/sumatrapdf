@@ -41,7 +41,7 @@ TempStr CodexBuildExecutablePathTemp() {
 }
 
 static Mutex gCodexBuildLogMutex;
-static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, "gpt-5.5-log.txt", "gpt-5.5"};
+static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, StrL("gpt-5.5-log.txt"), StrL("gpt-5.5")};
 static bool gTriedCodexModels = false;
 static StrVec gCodexModels;
 
@@ -202,16 +202,16 @@ static bool IsCodexRolloutFileName(Str name) {
 }
 
 static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {
-    TempStr sid = AIChatJsonStrTemp(line, "session_id");
+    TempStr sid = AIChatJsonStrTemp(line, StrL("session_id"));
     if (!sid || !str::Eq(sid, sessionId)) {
         return {};
     }
-    return AIChatJsonStrTemp(line, "text");
+    return AIChatJsonStrTemp(line, StrL("text"));
 }
 
 static Str GetCodexSessionDescription(Str sessionId) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    TempStr historyPath = userProfile ? fmt("%s\\.codex\\history.jsonl", userProfile) : nullptr;
+    TempStr historyPath = userProfile ? fmt("%s\\.codex\\history.jsonl", userProfile) : TempStr();
     if (!historyPath) {
         return str::Dup(StrL("(no description)"));
     }
@@ -243,8 +243,8 @@ static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut)
     }
     Str payload;
     str::Cut(line, StrL("\"payload\":"), nullptr, &payload);
-    TempStr cwd = payload ? AIChatJsonStrTemp(payload, "cwd") : nullptr;
-    TempStr id = payload ? AIChatJsonStrTemp(payload, "id") : nullptr;
+    TempStr cwd = payload ? AIChatJsonStrTemp(payload, StrL("cwd")) : TempStr();
+    TempStr id = payload ? AIChatJsonStrTemp(payload, StrL("id")) : TempStr();
     if (!cwd || !id || !CodexPathsEqual(cwd, matchDir)) {
         return false;
     }
@@ -357,12 +357,12 @@ static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
     if (!str::Cut(line, StrL("\"input_text\""), nullptr, &inputText)) {
         return {};
     }
-    TempStr text = AIChatJsonStrTemp(inputText, "text");
+    TempStr text = AIChatJsonStrTemp(inputText, StrL("text"));
     if (!text || IsCodexInjectedUserText(text)) {
         return {};
     }
     str::TrimWSInPlace(text, str::TrimOpt::Both);
-    return len(text) > 0 ? text : nullptr;
+    return len(text) > 0 ? text : TempStr();
 }
 
 static TempStr ExtractCodexRolloutAssistantTextTemp(Str line) {
@@ -376,17 +376,17 @@ static TempStr ExtractCodexRolloutAssistantTextTemp(Str line) {
     if (!str::Cut(line, StrL("\"output_text\""), nullptr, &outputText)) {
         return {};
     }
-    return AIChatJsonStrTemp(outputText, "text");
+    return AIChatJsonStrTemp(outputText, StrL("text"));
 }
 
 static void AppendCodexRolloutTools(MainWindow* win, Str line) {
     if (!str::Contains(line, StrL("\"type\":\"response_item\""))) {
         return;
     }
-    TempStr name = nullptr;
+    TempStr name;
     if (str::Contains(line, StrL("\"type\":\"function_call\"")) ||
         str::Contains(line, StrL("\"type\":\"custom_tool_call\""))) {
-        name = AIChatJsonStrTemp(line, "name");
+        name = AIChatJsonStrTemp(line, StrL("name"));
     }
     if (len(name) > 0) {
         str::Builder desc;
@@ -438,17 +438,17 @@ struct CodexBuildProvider : AIChatProvider {
     CodexBuildProvider() {
         backend = AIChatBackend::Codex;
         logger = &gCodexBuildLogger;
-        name = "OpenAI Codex";
-        exeName = "codex";
-        virtualHost = "https://sumatrapdf.codex/";
+        name = StrL("OpenAI Codex");
+        exeName = StrL("codex");
+        virtualHost = StrL("https://sumatrapdf.codex/");
         virtualHostW = L"https://sumatrapdf.codex/";
-        webViewDataDirPrefix = "CodexWebView";
-        docUri = "/AI-Chat-with-document#openai-codex";
-        defaultModel = "gpt-5.5";
+        webViewDataDirPrefix = StrL("CodexWebView");
+        docUri = StrL("/AI-Chat-with-document#openai-codex");
+        defaultModel = StrL("gpt-5.5");
         optionItems = "Read-only\0Workspace write\0Full access\0";
         optionCount = 3;
         optionDefault = 1;
-        checkboxLabel = "Skip Sandbox";
+        checkboxLabel = StrL("Skip Sandbox");
     }
 
     TempStr TitleTemp() override { return str::DupTemp(_TRA("Codex chat")); }
@@ -473,9 +473,9 @@ struct CodexBuildProvider : AIChatProvider {
                 AIChatAppendModelUnique(models, gCodexModels[i]);
             }
         } else {
-            AIChatAppendModelUnique(models, "gpt-5.5");
-            AIChatAppendModelUnique(models, "gpt-5.4");
-            AIChatAppendModelUnique(models, "o3");
+            AIChatAppendModelUnique(models, StrL("gpt-5.5"));
+            AIChatAppendModelUnique(models, StrL("gpt-5.4"));
+            AIChatAppendModelUnique(models, StrL("o3"));
         }
         Str extra = gGlobalPrefs->codexBuild.models;
         if (len(extra) > 0) {
@@ -530,22 +530,22 @@ struct CodexBuildProvider : AIChatProvider {
         if (len(line) == 0 || line.s[0] != '{') {
             return;
         }
-        TempStr eventType = AIChatJsonStrTemp(line, "type");
+        TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
 
         if (eventType && str::Eq(eventType, StrL("thread.started"))) {
-            TempStr threadId = AIChatJsonStrTemp(line, "thread_id");
+            TempStr threadId = AIChatJsonStrTemp(line, StrL("thread_id"));
             if (threadId) {
                 AIChatStreamSetSessionId(ctx, threadId);
             }
         } else if (eventType && str::Eq(eventType, StrL("item.completed"))) {
             Str p;
             if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &p)) {
-                TempStr text = AIChatJsonStrTemp(p, "text");
+                TempStr text = AIChatJsonStrTemp(p, StrL("text"));
                 if (len(text) > 0) {
                     AIChatPostUpdate(ctx, AIChatUpdateType::Text, text);
                 }
             } else if (str::Cut(line, StrL("\"type\":\"command_execution\""), nullptr, &p)) {
-                TempStr cmd = AIChatJsonStrTemp(p, "command");
+                TempStr cmd = AIChatJsonStrTemp(p, StrL("command"));
                 if (len(cmd) > 0) {
                     TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
                     str::Builder desc;

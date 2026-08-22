@@ -633,7 +633,7 @@ static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd)
         Vec<ThreadHandle> threads;
         for (int t = 0; t < numThreads; t++) {
             auto fn = MkFunc0(CaptureWorker, &ctx);
-            threads.Append(StartThread(fn, "ScreenshotCapture"));
+            threads.Append(StartThread(fn, StrL("ScreenshotCapture")));
         }
         for (ThreadHandle h : threads) {
             WaitForSingleObject(h, INFINITE);
@@ -749,7 +749,7 @@ static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
     if (data->selected < 0 || data->selected >= len(data->captures)) {
         return;
     }
-    TempStr screenshotDir = gScreenshotHost.GetSaveDirTemp ? gScreenshotHost.GetSaveDirTemp() : nullptr;
+    TempStr screenshotDir = gScreenshotHost.GetSaveDirTemp ? gScreenshotHost.GetSaveDirTemp() : TempStr();
     if (!screenshotDir) {
         return;
     }
@@ -895,7 +895,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     int infoFontSize = std::abs((int)(ncm.lfMessageFont.lfHeight * 1.3));
-    PlatformFont* infoFont = GetUserGuiFontEx(nullptr, infoFontSize, true, false);
+    PlatformFont* infoFont = GetUserGuiFontEx({}, infoFontSize, true, false);
     HGDIOBJ prevInfoFont = SelectObject(hdcTemp, infoFont->GetHFont());
 
     SetTextColor(hdcTemp, kColWhite);

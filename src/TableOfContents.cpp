@@ -390,7 +390,7 @@ void ClearTocBox(MainWindow* win) {
     delete win->tocFilteredTree;
     win->tocFilteredTree = nullptr;
     if (win->tocFilterEdit) {
-        win->tocFilterEdit->SetText("");
+        win->tocFilterEdit->SetText(StrL(""));
     }
 
     win->currPageNo = 0;
@@ -746,7 +746,7 @@ static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     }
     MainWindow* win = tab->win;
     EngineBase* newEngine = CreateEngineMupdfFromData(data, fileName, nullptr);
-    DocController* ctrl = CreateControllerForEngineOrFile(newEngine, nullptr, nullptr, win);
+    DocController* ctrl = CreateControllerForEngineOrFile(newEngine, {}, nullptr, win);
     LoadArgs* args = new LoadArgs(tab->filePath, win);
     args->SetDisplayName(fileName);
     args->ctrl = ctrl;
@@ -892,7 +892,7 @@ static MenuDef menuDefContextToc[] = {
         CmdExpandToCurrentPage,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -913,15 +913,15 @@ static MenuDef menuDefContextToc[] = {
     },
     // note: strings cannot be "" or else items are not there
     {
-        "Add to favorites",
+        StrL("Add to favorites"),
         CmdFavoriteAdd,
     },
     {
-        "Remove from favorites",
+        StrL("Remove from favorites"),
         CmdFavoriteDel,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -1103,7 +1103,7 @@ void LoadTocTree(MainWindow* win) {
     win->tocFilteredTree = nullptr;
     tab->currToc = nullptr;
     if (win->tocFilterEdit) {
-        win->tocFilterEdit->SetText("");
+        win->tocFilterEdit->SetText(StrL(""));
     }
 
     auto* tocTree = tab->ctrl->GetToc();
@@ -1168,7 +1168,7 @@ void ReloadTocTree(WindowTab* tab) {
     // the items are about to be freed, so remember the selection the way the
     // user sees it rather than by pointer
     TreeView* treeView = win->tocTreeView;
-    TempStr selTitle = nullptr;
+    TempStr selTitle;
     int selPageNo = 0;
     if (treeView) {
         auto* sel = (TocItem*)treeView->GetSelection();
@@ -1514,7 +1514,7 @@ static void TocTreeKeyDown(TreeView::KeyDownEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     if (ev->keyCode == VK_ESCAPE) {
         if (win && win->tocFilterEdit) {
-            win->tocFilterEdit->SetText("");
+            win->tocFilterEdit->SetText(StrL(""));
             FocusTocFilterEdit(win);
             ev->result = 1;
             return;
@@ -1758,7 +1758,7 @@ static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPA
             if (edit) {
                 TempStr txt = edit->GetTextTemp();
                 if (txt && len(txt) > 0) {
-                    edit->SetText("");
+                    edit->SetText(StrL(""));
                     // onTextChanged will fire and restore the tree
                     return 0;
                 }

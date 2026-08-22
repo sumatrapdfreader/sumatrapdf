@@ -374,7 +374,7 @@ TempStr VirtCtrl::GetTooltipTemp(Point ptLocal) {
     if (tooltip) {
         return str::DupTemp(tooltip);
     }
-    return nullptr;
+    return {};
 }
 
 void VirtCtrl::AddChild(VirtCtrl* c) {
@@ -1535,7 +1535,7 @@ int VirtListBox::GetItemHeight() {
     if (itemDy > 0) {
         return itemDy;
     }
-    Size sz = PlatformFontMeasureText(font, "Ag");
+    Size sz = PlatformFontMeasureText(font, StrL("Ag"));
     int dy = sz.dy + DpiScaleByDpi(GetDpi(), 4);
     if (dy < 1) {
         dy = 1;

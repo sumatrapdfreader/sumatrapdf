@@ -193,13 +193,13 @@ static Str HwndName(HWND hwnd) {
     WCHAR cls[64]{};
     GetClassNameW(hwnd, cls, dimof(cls));
     if (wstr::Eq(cls, FRAME_CLASS_NAME)) {
-        return "frame";
+        return StrL("frame");
     }
     if (wstr::Eq(cls, CANVAS_CLASS_NAME)) {
-        return "canvas";
+        return StrL("canvas");
     }
     // TODO: could identify more windows (rebar, toc, etc.)
-    return "other";
+    return StrL("other");
 }
 
 static void LogRedraw(Str what, HWND hwnd, const RECT* rc = nullptr) {
@@ -349,10 +349,10 @@ void InitializePolicies(bool restrict) {
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (see ../docs/sumatrapdfrestrict.ini)
     // (if the file isn't there, everything is allowed)
-    TempStr restrictPath = GetPathInExeDirTemp(kRestrictionsFileName);
+    TempStr restrictPath = GetPathInExeDirTemp(Str(kRestrictionsFileName));
     if (!file::Exists(restrictPath)) {
-        Split(&gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, StrL(","));
-        Split(&gAllowedFileTypes, DEFAULT_FILE_PERCEIVED_TYPES, StrL(","));
+        Split(&gAllowedLinkProtocols, StrL(DEFAULT_LINK_PROTOCOLS), StrL(","));
+        Split(&gAllowedFileTypes, StrL(DEFAULT_FILE_PERCEIVED_TYPES), StrL(","));
         return;
     }
 
@@ -455,7 +455,7 @@ bool SumatraLaunchBrowser(Str url) {
         return false;
     }
 
-    return LaunchFileShell(url, nullptr, "open");
+    return LaunchFileShell(url, {}, StrL("open"));
 }
 
 bool DocIsSupportedFileType(FileType kind) {
@@ -483,7 +483,7 @@ bool OpenFileExternally(Str path) {
 
     // check if this file's perceived type is allowed
     TempStr ext = path::GetExtTemp(path);
-    TempStr perceivedType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "PerceivedType");
+    TempStr perceivedType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, StrL("PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, StrL(".htm")) || str::EndsWithI(path, StrL(".html")) ||
         str::EndsWithI(path, StrL(".xhtml"))) {
@@ -1223,7 +1223,7 @@ static void CreateThumbnailFromFileAsync(FileState* ds) {
     d->filePath = str::Dup(ds->filePath);
     d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
-    RunAsync(fn, "CreateThumbnailFromFile");
+    RunAsync(fn, StrL("CreateThumbnailFromFile"));
 }
 
 static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
@@ -1338,7 +1338,7 @@ void DeleteControllerAsync(DocController* ctrl) {
     }
     AtomicIntInc(&gPendingControllerDeletes);
     auto fn = MkFunc0<DocController>(WaitForRendersThenDelete, ctrl);
-    if (!StartThread(fn, "DeleteController")) {
+    if (!StartThread(fn, StrL("DeleteController"))) {
         // couldn't spawn: fall back to deleting (and waiting) right here
         AtomicIntDec(&gPendingControllerDeletes);
         delete ctrl;
@@ -1435,7 +1435,7 @@ bool ToolbarModeIsHidden() {
 void SetToolbarMode(int mode) {
     Str name = SeqStrByIndex(gToolbarModeNames, mode);
     if (!name) {
-        name = "show";
+        name = StrL("show");
         mode = kToolbarShow;
     }
     str::ReplaceWithCopy(&gGlobalPrefs->toolbar, name);
@@ -1455,7 +1455,7 @@ int FullscreenToolbarModeFromPrefs() {
 void SetFullscreenToolbarMode(int mode) {
     Str name = SeqStrByIndex(gToolbarModeNames, mode);
     if (!name) {
-        name = "hide";
+        name = StrL("hide");
         mode = kToolbarHide;
     }
     str::ReplaceWithCopy(&gGlobalPrefs->fullscreen.toolbar, name);
@@ -1767,7 +1767,7 @@ static void ShowPageInfoIfWanted(MainWindow* win) {
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.timeoutMs = 0;
-    args.msg = "";
+    args.msg = StrL("");
     args.groupId = kNotifPageInfo;
     // the message carries page labels and image entry names from the document
     args.plainText = true;
@@ -1936,7 +1936,9 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
     // available, fall back on ChmEngine's fixed-page rendering
     DocController* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
-        log(StrL("CreateControllerForChm: interactive CHM backend unavailable, falling back to ChmEngine fixed-page view\n"));
+        log(
+            StrL("CreateControllerForChm: interactive CHM backend unavailable, falling back to ChmEngine fixed-page "
+                 "view\n"));
         delete chmModel;
         EngineBase* engine = CreateEngineFromFile(path, pwdUI, true);
         if (!engine) {
@@ -2012,7 +2014,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
         titlePath = path::GetBaseNameTemp(titlePath);
     }
 
-    TempStr docTitle = "";
+    TempStr docTitle = StrL("");
     if (tab->ctrl) {
         // NormalizeWSTemp (not in-place): GetPropertyTemp() may return a string
         // owned by the document, which we must not mutate
@@ -2022,7 +2024,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
         }
     }
 
-    TempStr s = nullptr;
+    TempStr s;
     if (!IsUIRtl()) {
         s = fmt("%s %s- %s", titlePath, docTitle, Str(kSumatraWindowTitle));
     } else {
@@ -3904,7 +3906,7 @@ static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
     gLoadThreadsActive++;
     data->fileEBookUI = CopyFileEBookUIForPath(args->FilePath());
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
-    RunAsync(fn, "LoadDocumentThread");
+    RunAsync(fn, StrL("LoadDocumentThread"));
 }
 
 // start a background load now if a thread slot is free, otherwise queue it
@@ -4720,13 +4722,13 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
 
     // for MeasurementUnit::in
     float factor = 1;
-    Str unitName = "in";
+    Str unitName = StrL("in");
     if (unit == MeasurementUnit::pt) {
         factor = 72;
-        unitName = "pt";
+        unitName = StrL("pt");
     } else if (unit == MeasurementUnit::mm) {
         factor = 25.4f;
-        unitName = "mm";
+        unitName = StrL("mm");
     }
 
     TempStr xPos = str::FormatFloatWithThousandSepTemp((double)pt.x * (double)factor);
@@ -5025,7 +5027,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
             ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         }
         win->RedrawAll();
-        HwndSetText(win->hwndFrame, kSumatraWindowTitle);
+        HwndSetText(win->hwndFrame, Str(kSumatraWindowTitle));
         ReportIf(win->TabCount() != 0 || win->CurrentTab());
     }
 
@@ -5139,7 +5141,7 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     tab->ignoreNextAutoReload = true;
     ShowErrorData data{tab, path};
     auto fn = MkFunc1(ShowSaveAnnotationError, &data);
-    bool ok = EngineMupdfSaveUpdated(engine, nullptr, fn);
+    bool ok = EngineMupdfSaveUpdated(engine, {}, fn);
     if (!ok) {
         tab->ignoreNextAutoReload = false;
         return false;
@@ -5424,7 +5426,7 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
             Str path = engine->FilePath();
             ShowErrorData data{tab, path};
             auto fn = MkFunc1(ShowSaveAnnotationError, &data);
-            bool didSave = EngineMupdfSaveUpdated(engine, nullptr, fn);
+            bool didSave = EngineMupdfSaveUpdated(engine, {}, fn);
             if (!didSave) {
                 // fn reported the error. Don't close: that would discard the
                 // annotations. Re-arm the prompt so the user can retry or pick
@@ -5753,7 +5755,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     TempStr srcFileName = ctrl->GetFilePath();
     if (gPluginMode) {
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        srcFileName = "filename";
+        srcFileName = StrL("filename");
         TempStr urlName = url::GetFileNameTemp(gPluginURL);
         if (urlName) {
             srcFileName = urlName;
@@ -5849,7 +5851,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ctrl = win->ctrl;
     srcFileName = ctrl->GetFilePath();
     if (gPluginMode) {
-        srcFileName = "filename";
+        srcFileName = StrL("filename");
         TempStr urlName = url::GetFileNameTemp(gPluginURL);
         if (urlName) {
             srcFileName = urlName;
@@ -5877,7 +5879,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
 
     // TODO: engine->SaveFileA() is stupid
     // Replace with EngineGetDocumentData() and save that if not empty
-    TempStr errorMsg = nullptr;
+    TempStr errorMsg;
     if (!file::Exists(srcFileName) && engine) {
         // Recreate nonexistent files from memory...
         logf("calling engine->SaveFileAs(%s)\n", realDstFileName);
@@ -6207,13 +6209,13 @@ static void CreateLnkShortcut(MainWindow* win) {
     Str viewMode = DisplayModeToString(ctrl->GetDisplayMode());
     TempStr zoomVirtual = fmt("%.2f", ctrl->GetZoomVirtual());
     if (kZoomFitPage == ctrl->GetZoomVirtual()) {
-        zoomVirtual = "fitpage";
+        zoomVirtual = StrL("fitpage");
     } else if (kZoomFitWidth == ctrl->GetZoomVirtual()) {
-        zoomVirtual = "fitwidth";
+        zoomVirtual = StrL("fitwidth");
     } else if (kZoomFitHeight == ctrl->GetZoomVirtual()) {
-        zoomVirtual = "fitheight";
+        zoomVirtual = StrL("fitheight");
     } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
-        zoomVirtual = "fitcontent";
+        zoomVirtual = StrL("fitcontent");
     }
 
     TempStr args = fmt("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode, zoomVirtual,
@@ -6349,24 +6351,24 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
         Str filter;
         bool available;
     } fileFormats[] = {
-        {_TRA("PDF documents"), "*.pdf;*.p7m", true},
-        {_TRA("XPS documents"), "*.xps;*.oxps", true},
-        {_TRA("DjVu documents"), "*.djvu", true},
-        {_TRA("PostScript documents"), "*.ps;*.eps", IsEnginePsAvailable()},
-        {_TRA("Comic books"), "*.cbz;*.cbr;*.cb7;*.cbt", true},
-        {_TRA("CHM documents"), "*.chm", true},
-        {_TRA("SVG documents"), "*.svg", true},
-        {_TRA("EPUB ebooks"), "*.epub", true},
-        {_TRA("Microsoft Reader ebooks"), "*.lit", true},
-        {_TRA("Markdown documents"), "*.md;*.markdown", true},
-        {_TRA("Mobi documents"), "*.mobi", true},
-        {_TRA("FictionBook documents"), "*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},
-        {_TRA("PalmDoc documents"), "*.pdb;*.prc", true},
+        {_TRA("PDF documents"), StrL("*.pdf;*.p7m"), true},
+        {_TRA("XPS documents"), StrL("*.xps;*.oxps"), true},
+        {_TRA("DjVu documents"), StrL("*.djvu"), true},
+        {_TRA("PostScript documents"), StrL("*.ps;*.eps"), IsEnginePsAvailable()},
+        {_TRA("Comic books"), StrL("*.cbz;*.cbr;*.cb7;*.cbt"), true},
+        {_TRA("CHM documents"), StrL("*.chm"), true},
+        {_TRA("SVG documents"), StrL("*.svg"), true},
+        {_TRA("EPUB ebooks"), StrL("*.epub"), true},
+        {_TRA("Microsoft Reader ebooks"), StrL("*.lit"), true},
+        {_TRA("Markdown documents"), StrL("*.md;*.markdown"), true},
+        {_TRA("Mobi documents"), StrL("*.mobi"), true},
+        {_TRA("FictionBook documents"), StrL("*.fb2;*.fb2z;*.zfb2;*.fb2.zip"), true},
+        {_TRA("PalmDoc documents"), StrL("*.pdb;*.prc"), true},
         {_TRA("Images"),
-         "*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jfif;*.jxr;*.hdp;*.wdp;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.heif;"
-         "*.avif;*.jxl;*.jp2;*.j2k;*.jpx;*.jpf;*.jpm;*.j2c",
+         StrL("*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jfif;*.jxr;*.hdp;*.wdp;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.heif;"
+              "*.avif;*.jxl;*.jp2;*.j2k;*.jpx;*.jpf;*.jpm;*.j2c"),
          true},
-        {_TRA("Text documents"), "*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr", true},
+        {_TRA("Text documents"), StrL("*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr"), true},
     };
 
     str::Builder allPat;
@@ -7028,7 +7030,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     if (gRedrawLog) {
         RECT r = ToRECT(rc);
-        LogRedraw("RelayoutFrame", win->hwndFrame, &r);
+        LogRedraw(StrL("RelayoutFrame"), win->hwndFrame, &r);
     }
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -8824,7 +8826,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
 
     if (args->setContentToSelection) {
         bool isTextOnlySelection = false;
-        args->content = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
+        args->content = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelection);
     }
 
     Annotation* annot = nullptr;
@@ -9199,7 +9201,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
 #endif
 
     bool isTextOnlySelectionOut; // if false, a rectangular selection
-    TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelectionOut);
+    TempStr selText = GetSelectedTextTemp(tab, StrL("\n"), isTextOnlySelectionOut);
     if (!selText) {
         return;
     }
@@ -9217,12 +9219,12 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     // to be shomewhat resilient against typos, we'll accept a different case
     Str lang = trans::GetCurrentLangCode();
     if (str::Eq(lang, StrL("kr"))) {
-        lang = "ko";
+        lang = StrL("ko");
     }
     TempStr contryCode = GetISO639LangCodeFromLangTemp(lang);
-    TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, contryCode);
-    uri = str::ReplaceNoCaseTemp(uri, kSelectionPositionStr, FormatSelectionPositionTemp(tab));
-    uri = str::ReplaceNoCaseTemp(uri, kSelectionStr, encodedSelection);
+    TempStr uri = str::ReplaceNoCaseTemp(urlPattern, Str(kUserLangStr), contryCode);
+    uri = str::ReplaceNoCaseTemp(uri, Str(kSelectionPositionStr), FormatSelectionPositionTemp(tab));
+    uri = str::ReplaceNoCaseTemp(uri, Str(kSelectionStr), encodedSelection);
     LaunchBrowser(uri);
 }
 
@@ -9277,9 +9279,9 @@ TempStr GetSumatraBuildSpecificDirTemp() {
     char id[7] = "000000";
     Str sha1 = Sha1OfAppExe();
     if (sha1) {
-        str::BufSet(Str(id, dimof(id)), sha1.s);
+        str::BufSet(Str(id, dimof(id)), sha1);
     }
-    return path::JoinTemp(dataDir, id);
+    return path::JoinTemp(dataDir, Str(id));
 }
 
 TempStr GetLogFilePathTemp() {
@@ -9572,7 +9574,7 @@ static void ListPrintersShowResult(ListPrintersResult* d) {
 
     RemoveNotificationsForGroup(parent, kNotifActionResponse);
     // ShowTextInWindow copies text into the edit control before returning.
-    ShowTextInWindow("SumatraPDF - Printers", text);
+    ShowTextInWindow(StrL("SumatraPDF - Printers"), text);
     str::Free(text);
 }
 
@@ -9660,7 +9662,7 @@ static void ClearHistory(MainWindow* win) {
     data->win = win;
     data->nFiles = nFiles;
     auto fn = MkFunc0<ClearHistoryData>(ClearHistoryAsync, data);
-    RunAsync(fn, "ClearHistoryAsync");
+    RunAsync(fn, StrL("ClearHistoryAsync"));
 }
 
 // looks through the file history and removes entries for files that no
@@ -9754,7 +9756,7 @@ static void DeleteCachedFiles(MainWindow* win) {
 }
 
 static void DownloadDebugSymbols() {
-    TempStr msg = "Symbols were already downloaded";
+    TempStr msg = StrL("Symbols were already downloaded");
 
     bool ok = AreSymbolsDownloaded(gSymbolsDir);
     if (ok) {
@@ -9762,7 +9764,7 @@ static void DownloadDebugSymbols() {
     }
     ok = CrashHandlerDownloadSymbols();
     if (!ok) {
-        msg = "Failed to download symbols";
+        msg = StrL("Failed to download symbols");
         goto ShowMessage;
     }
     msg = fmt("Downloaded symbols to %s", gSymbolsDir);
@@ -9970,7 +9972,7 @@ static TempStr ManualMimeFromPathTemp(Str path) {
     Str ext = str::SliceFromCharLast(path, '.');
     TempStr mime = MimeTypeFromExtTemp(ext);
     if (!mime) {
-        mime = "text/html";
+        mime = StrL("text/html");
     }
     return mime;
 }
@@ -10002,7 +10004,7 @@ static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     Str mimePath = path;
     // Doc pages are rendered on demand from .md sources in WebView2.
     if (IsManualDocHtmlPage(path)) {
-        path = "manual.shell.html";
+        path = StrL("manual.shell.html");
         mimePath = path;
     }
 
@@ -10053,7 +10055,7 @@ static bool EnsureManualArchiveLoaded() {
 
 static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
     if (len(docURI) == 0) {
-        docURI = kManualDefaultDocURI;
+        docURI = Str(kManualDefaultDocURI);
     }
 
     Str fragment = str::SliceFromChar(docURI, '#');
@@ -10073,7 +10075,7 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
         htmlFile = str::JoinTemp(htmlFile, StrL(".html"));
     }
 
-    TempStr url = str::JoinTemp(kManualVirtualHost, htmlFile);
+    TempStr url = str::JoinTemp(Str(kManualVirtualHost), htmlFile);
     if (fragment) {
         url = str::JoinTemp(url, fragment);
     }
@@ -10082,7 +10084,7 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
 
 static TempStr DocURIToWebUrlTemp(Str docURI) {
     if (len(docURI) == 0) {
-        docURI = kManualDefaultDocURI;
+        docURI = Str(kManualDefaultDocURI);
     }
     if (len(docURI) > 0 && docURI.s[0] == '/') {
         return fmt("https://www.sumatrapdfreader.org/docs%s", docURI);
@@ -10109,7 +10111,7 @@ void LaunchDocumentation(Str docURI) {
         }
 
         SimpleBrowserCreateArgs args;
-        args.title = "SumatraPDF Documentation";
+        args.title = StrL("SumatraPDF Documentation");
         args.url = localUrl;
         args.pos = ManualBrowserPlacementRect(ManualBrowserParentFrame());
         args.resourceProvider = ManualResourceProvider();
@@ -10446,17 +10448,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
         case CmdViewWithExternalViewer: {
-            Str cmdLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
+            Str cmdLine = GetCommandStringArg(cmd, kCmdArgCommandLine, {});
             if (!cmdLine || !CanAccessDisk() || !tab || !file::Exists(tab->filePath)) {
                 return 0;
             }
-            Str filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+            Str filter = GetCommandStringArg(cmd, kCmdArgFilter, {});
             RunWithExe(tab, cmdLine, filter);
             return 0;
         }
 
         case CmdSetTheme: {
-            auto theme = GetCommandStringArg(cmd, kCmdArgTheme, nullptr);
+            auto theme = GetCommandStringArg(cmd, kCmdArgTheme, {});
             if (theme) {
                 SetTheme(theme);
                 ScheduleSaveSettings();
@@ -10478,20 +10480,20 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!HasPermission(Perm::CopySelection)) {
                 return 0;
             }
-            auto exe = GetCommandStringArg(cmd, kCmdArgExe, nullptr);
+            auto exe = GetCommandStringArg(cmd, kCmdArgExe, {});
             if (exe) {
                 // ${selectionfile} lets a helper program read arbitrarily long
                 // text without going near a command-line length limit
                 bool isTextOnly;
-                TempStr sel = GetSelectedTextTemp(tab, "\n", isTextOnly);
+                TempStr sel = GetSelectedTextTemp(tab, StrL("\n"), isTextOnly);
                 if (!sel) {
                     return 0;
                 }
                 TempStr cmdLine = ExpandSelectionVarsTemp(exe, sel, false, 0, nullptr, tab);
-                RunWithExe(tab, cmdLine, nullptr);
+                RunWithExe(tab, cmdLine, {});
                 return 0;
             }
-            auto url = GetCommandStringArg(cmd, kCmdArgURL, nullptr);
+            auto url = GetCommandStringArg(cmd, kCmdArgURL, {});
             if (!url) {
                 return 0;
             }
@@ -10500,7 +10502,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!isValidURL) {
                 url = str::JoinTemp(StrL("https://"), url);
             }
-            auto method = ParseSelectionSendMethod(GetCommandStringArg(cmd, kCmdArgMethod, nullptr));
+            auto method = ParseSelectionSendMethod(GetCommandStringArg(cmd, kCmdArgMethod, {}));
             if (method == SelectionSendMethod::Get) {
                 LaunchBrowserWithSelection(tab, url);
                 return 0;
@@ -10509,24 +10511,24 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             bool isTextOnlySelection;
-            TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelection);
+            TempStr selText = GetSelectedTextTemp(tab, StrL("\n"), isTextOnlySelection);
             if (!selText) {
                 return 0;
             }
-            auto body = GetCommandStringArg(cmd, kCmdArgBody, nullptr);
+            auto body = GetCommandStringArg(cmd, kCmdArgBody, {});
             if (method == SelectionSendMethod::PostViaBrowser) {
                 SelectionHandlerPostViaBrowser(tab, url, body, selText);
                 return 0;
             }
-            auto contentType = GetCommandStringArg(cmd, kCmdArgContentType, nullptr);
-            auto headers = GetCommandStringArg(cmd, kCmdArgHeaders, nullptr);
+            auto contentType = GetCommandStringArg(cmd, kCmdArgContentType, {});
+            auto headers = GetCommandStringArg(cmd, kCmdArgHeaders, {});
             SelectionHandlerPost(tab, url, body, contentType, headers, selText);
             return 0;
         }
 
         case CmdExec: {
-            auto filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
-            auto cmdLine = GetCommandStringArg(cmd, kCmdArgExe, nullptr);
+            auto filter = GetCommandStringArg(cmd, kCmdArgFilter, {});
+            auto cmdLine = GetCommandStringArg(cmd, kCmdArgExe, {});
             if (len(cmdLine) == 0) {
                 return 0;
             }
@@ -10650,19 +10652,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCommandPalette: {
             Str mode = {};
             if (cmd) {
-                mode = GetCommandStringArg(cmd, kCmdArgMode, nullptr);
+                mode = GetCommandStringArg(cmd, kCmdArgMode, {});
             }
             RunCommandPalette(win, mode, 0);
         } break;
 
         case CmdCommandPaletteTOC:
             // alias for `CmdCommandPalette %`: open the palette in TOC mode
-            RunCommandPalette(win, kPalettePrefixTOC, 0);
+            RunCommandPalette(win, Str(kPalettePrefixTOC), 0);
             break;
 
         case CmdCommandPaletteFavorites:
             // alias for `CmdCommandPalette $`: open the palette in favorites mode
-            RunCommandPalette(win, kPalettePrefixFavorites, 0);
+            RunCommandPalette(win, Str(kPalettePrefixFavorites), 0);
             break;
 
         case CmdAIChatWithClaudeCode:
@@ -10740,7 +10742,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             nargs.msg = _TRA("Collecting list of printers");
             ShowNotification(nargs);
             auto* data = new HWND(win->hwndCanvas);
-            RunAsync(MkFunc0<HWND>(ListPrintersThread, data), "ListPrinters");
+            RunAsync(MkFunc0<HWND>(ListPrintersThread, data), StrL("ListPrinters"));
             break;
         }
 
@@ -10759,7 +10761,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             if (win && win->TabCount() > 1) {
                 int advance = cmdId == CmdNextTabSmart ? 1 : -1;
-                RunCommandPalette(win, kPalettePrefixTabs, advance);
+                RunCommandPalette(win, Str(kPalettePrefixTabs), advance);
             }
         } break;
 
@@ -11322,15 +11324,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpVisitWebsite:
-            SumatraLaunchBrowser(kWebsiteURL);
+            SumatraLaunchBrowser(Str(kWebsiteURL));
             break;
 
         case CmdHelpOpenManual:
-            LaunchDocumentation("/SumatraPDF-documentation");
+            LaunchDocumentation(StrL("/SumatraPDF-documentation"));
             break;
 
         case CmdHelpOpenKeyboardShortcuts:
-            LaunchDocumentation("/Keyboard-shortcuts");
+            LaunchDocumentation(StrL("/Keyboard-shortcuts"));
             break;
 
         case CmdToggleKeyboardHelp:
@@ -11338,11 +11340,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpOpenManualOnWebsite:
-            SumatraLaunchBrowser(kManualURL);
+            SumatraLaunchBrowser(Str(kManualURL));
             break;
 
         case CmdContributeTranslation:
-            SumatraLaunchBrowser(kContributeTranslationsURL);
+            SumatraLaunchBrowser(Str(kContributeTranslationsURL));
             break;
 
         case CmdHelpAbout:
@@ -11360,7 +11362,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdTogglePdfPreviewLogging: {
             bool enabled = !IsPdfPreviewLoggingEnabled();
             SetPdfPreviewLoggingEnabled(enabled);
-            TempStr notifMsg = nullptr;
+            TempStr notifMsg;
             if (enabled) {
                 TempStr dir = GetPdfPreviewLogDirTemp();
                 notifMsg = fmt("PDF preview logging enabled.\nLogs: %s", dir ? dir : StrL("(unknown)"));
@@ -11403,7 +11405,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 } else {
                     TempStr info = EngineMupdfGetPdfInfo(tab->filePath);
                     if (info) {
-                        tab->hwndPDFInfo = ShowTextInWindow("PDF Info", info, &tab->hwndPDFInfo);
+                        tab->hwndPDFInfo = ShowTextInWindow(StrL("PDF Info"), info, &tab->hwndPDFInfo);
                     }
                 }
             }
@@ -11416,7 +11418,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // GetErrorsTextTemp is the engine's internal buffer; ShowTextInWindow
                 // copies it before returning, so it must not be kept past this frame.
                 TempStr text = engine->GetErrorsTextTemp();
-                ShowTextInWindow("Errors", text);
+                ShowTextInWindow(StrL("Errors"), text);
             }
             break;
         }
@@ -11428,14 +11430,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 } else if (tab->filePath && CouldBePDFDoc(tab)) {
                     TempStr outline = EngineMupdfGetPdfOutline(tab->filePath);
                     if (outline) {
-                        tab->hwndPDFOutline = ShowTextInWindow("Document Outline", outline, &tab->hwndPDFOutline);
+                        tab->hwndPDFOutline = ShowTextInWindow(StrL("Document Outline"), outline, &tab->hwndPDFOutline);
                     }
                 } else {
                     TocTree* tocTree = tab->ctrl->GetToc();
                     if (tocTree && tocTree->root) {
                         str::Builder s;
                         TocItemToText(s, tocTree->root, 0);
-                        tab->hwndPDFOutline = ShowTextInWindow("Document Outline", ToStr(s), &tab->hwndPDFOutline);
+                        tab->hwndPDFOutline =
+                            ShowTextInWindow(StrL("Document Outline"), ToStr(s), &tab->hwndPDFOutline);
                     }
                 }
             }
@@ -11519,19 +11522,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSearchSelectionWithGoogle:
-            LaunchBrowserWithSelection(tab, "https://www.google.com/search?q=${selection}");
+            LaunchBrowserWithSelection(tab, StrL("https://www.google.com/search?q=${selection}"));
             break;
 
         case CmdSearchSelectionWithBing:
-            LaunchBrowserWithSelection(tab, "https://www.bing.com/search?q=${selection}");
+            LaunchBrowserWithSelection(tab, StrL("https://www.bing.com/search?q=${selection}"));
             break;
 
         case CmdSearchSelectionWithWikipedia:
-            LaunchBrowserWithSelection(tab, "https://wikipedia.org/w/index.php?search=${selection}");
+            LaunchBrowserWithSelection(tab, StrL("https://wikipedia.org/w/index.php?search=${selection}"));
             break;
 
         case CmdSearchSelectionWithGoogleScholar:
-            LaunchBrowserWithSelection(tab, "https://scholar.google.com/scholar?q=${selection}");
+            LaunchBrowserWithSelection(tab, StrL("https://scholar.google.com/scholar?q=${selection}"));
             break;
 
         case CmdCopySelection:
@@ -11693,7 +11696,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 NotificationCreateArgs args;
                 args.hwndParent = win->hwndCanvas;
                 args.groupId = kNotifPersistentWarning;
-                args.msg = "This is a second notification\nMy friend.";
+                args.msg = StrL("This is a second notification\nMy friend.");
                 args.warning = false;
                 args.timeoutMs = kNotifDefaultTimeOut;
                 ShowNotification(args);
@@ -11702,7 +11705,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 NotificationCreateArgs args;
                 args.hwndParent = win->hwndCanvas;
                 args.groupId = kNotifAdHoc;
-                args.msg = "This is a second notification\nMy friend.";
+                args.msg = StrL("This is a second notification\nMy friend.");
                 args.warning = false;
                 args.timeoutMs = 0;
                 ShowNotification(args);
@@ -11711,7 +11714,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             {
                 NotificationCreateArgs args;
                 args.hwndParent = win->hwndCanvas;
-                args.msg = "This is a notification";
+                args.msg = StrL("This is a notification");
                 args.groupId = kNotifAdHoc;
                 args.warning = true;
                 args.timeoutMs = 0;
@@ -11725,7 +11728,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 args.warning = false;
                 args.timeoutMs = 0;
                 auto wnd = ShowNotification(args);
-                UpdateNotificationProgress(wnd, "Progress", 50);
+                UpdateNotificationProgress(wnd, StrL("Progress"), 50);
             }
 
             // a notification whose content is a VirtCtrl tree we build here
@@ -12477,7 +12480,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            LogRedraw("WM_PAINT", hwnd, &ps.rcPaint);
+            LogRedraw(StrL("WM_PAINT"), hwnd, &ps.rcPaint);
 
             Rect cr = win->captionRect;
             // span the full client width so the right frame-border column is painted
@@ -13367,7 +13370,7 @@ static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
     ReadAloudHighlightMap map{};
     if (!ReadAloudHighlightBuildFromTextSelection(dm->textSelection, &map, cleaned)) {
         bool isTextOnlySelection = false;
-        TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
+        TempStr text = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelection);
         TempStr cleanedStr = CleanReadAloudTextTemp(text);
         ReadAloudStartText(tab, cleanedStr, nullptr, 0, errMsg);
         return;
@@ -13388,7 +13391,7 @@ static void ReadAloudInTab(WindowTab* tab) {
     }
 
     bool isTextOnlySelection = false;
-    TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
+    TempStr text = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelection);
 
     if (len(text) > 0 && isTextOnlySelection) {
         logf("ReadAloud: InTab: using selection path (len=%d)\n", len(text));
@@ -13681,8 +13684,8 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
         }
         ReadAloudSelectionInTab(currTab);
     } else if (selected == CmdTtsVoiceDefault) {
-        if (TtsSetVoiceById("")) {
-            ReadAloudSaveVoicePref("");
+        if (TtsSetVoiceById(StrL(""))) {
+            ReadAloudSaveVoicePref(StrL(""));
         }
     } else if (selected >= CmdTtsVoiceFirst && selected <= CmdTtsVoiceLast) {
         Vec<TtsVoiceInfo> voices = TtsGetVoices();
@@ -14227,8 +14230,8 @@ void GetProgramInfo(str::Builder& s) {
     if (builtOn) {
         s.Append(fmt("BuiltOn: %s\n", builtOn));
     }
-    Str exeType = IsDllBuild() ? "dll" : "static";
-    Str instType = IsRunningInPortableMode() ? "portable" : "installed";
+    Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
+    Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");
     s.Append(fmt("ExeType: %s, %s\r\n", exeType, instType));
     s.Append(fmt("Ver: %s", currentVersion));
     if (gIsPreReleaseBuild) {
@@ -14295,7 +14298,7 @@ void ShowCrashHandlerMessage() {
     }
     LaunchFileIfExists(gCrashFilePath);
     const auto* url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
-    LaunchFileShell(url, nullptr, "open");
+    LaunchFileShell(Str(url), {}, StrL("open"));
 }
 
 TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut) {
@@ -14310,14 +14313,14 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
     };
 
     if (len(pathTwoPages) == 0 || len(pathOnePage) == 0) {
-        return fail("ERROR missing-paths");
+        return fail(StrL("ERROR missing-paths"));
     }
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     if (!win) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
 
     LoadArgs args2(pathTwoPages, win);
@@ -14325,13 +14328,13 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
     args2.noSavePrefs = true;
     LoadDocument(&args2);
     if (!win->IsDocLoaded() || win->ctrl->PageCount() != 2) {
-        return fail("ERROR two-page-load");
+        return fail(StrL("ERROR two-page-load"));
     }
 
     TogglePageInfoHelper(win);
     NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (!wnd) {
-        return fail("ERROR no-overlay");
+        return fail(StrL("ERROR no-overlay"));
     }
     TempStr msg = NotificationGetMessageTemp(wnd);
     if (!str::Contains(msg, StrL("/ 2"))) {
@@ -14345,21 +14348,21 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
     EngineBase* engine = CreateEngineFromFile(pathOnePage, nullptr, true);
     if (!engine || engine->PageCount() != 1) {
         SafeEngineRelease(&engine);
-        return fail("ERROR one-page-engine");
+        return fail(StrL("ERROR one-page-engine"));
     }
     DocController* ctrl = CreateControllerForEngineOrFile(engine, pathOnePage, nullptr, win);
     if (!ctrl) {
-        return fail("ERROR one-page-ctrl");
+        return fail(StrL("ERROR one-page-ctrl"));
     }
     LoadArgs args1(pathOnePage, win);
     args1.noSavePrefs = true;
     ReplaceDocumentInCurrentTab(&args1, ctrl, nullptr);
     if (!win->IsDocLoaded() || win->ctrl->PageCount() != 1) {
-        return fail("ERROR one-page-load");
+        return fail(StrL("ERROR one-page-load"));
     }
     wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (!wnd) {
-        return fail("ERROR overlay-gone");
+        return fail(StrL("ERROR overlay-gone"));
     }
     msg = NotificationGetMessageTemp(wnd);
     bool ok = str::Contains(msg, StrL("/ 1")) && !str::Contains(msg, StrL("/ 2"));

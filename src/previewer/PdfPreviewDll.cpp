@@ -55,21 +55,21 @@ class PreviewClassFactory : public IClassFactory {
         }
 
         PreviewType type;
-        if (IsClsid(kPdfPreviewClsid)) {
+        if (IsClsid(StrL(kPdfPreviewClsid))) {
             type = PreviewType::Pdf;
-        } else if (IsClsid(kXpsPreviewClsid)) {
+        } else if (IsClsid(StrL(kXpsPreviewClsid))) {
             type = PreviewType::Xps;
-        } else if (IsClsid(kDjVuPreviewClsid)) {
+        } else if (IsClsid(StrL(kDjVuPreviewClsid))) {
             type = PreviewType::DjVu;
-        } else if (IsClsid(kEpubPreviewClsid)) {
+        } else if (IsClsid(StrL(kEpubPreviewClsid))) {
             type = PreviewType::Epub;
-        } else if (IsClsid(kFb2PreviewClsid)) {
+        } else if (IsClsid(StrL(kFb2PreviewClsid))) {
             type = PreviewType::Fb2;
-        } else if (IsClsid(kMobiPreviewClsid)) {
+        } else if (IsClsid(StrL(kMobiPreviewClsid))) {
             type = PreviewType::Mobi;
-        } else if (IsClsid(kCbxPreviewClsid)) {
+        } else if (IsClsid(StrL(kCbxPreviewClsid))) {
             type = PreviewType::Cbx;
-        } else if (IsClsid(kTgaPreviewClsid)) {
+        } else if (IsClsid(StrL(kTgaPreviewClsid))) {
             type = PreviewType::Tga;
         } else {
             return E_NOINTERFACE;
@@ -102,15 +102,15 @@ class PreviewClassFactory : public IClassFactory {
 static Str GetReason(DWORD dwReason) {
     switch (dwReason) {
         case DLL_PROCESS_ATTACH:
-            return "DLL_PROCESS_ATTACH";
+            return StrL("DLL_PROCESS_ATTACH");
         case DLL_THREAD_ATTACH:
-            return "DLL_THREAD_ATTACH";
+            return StrL("DLL_THREAD_ATTACH");
         case DLL_THREAD_DETACH:
-            return "DLL_THREAD_DETACH";
+            return StrL("DLL_THREAD_DETACH");
         case DLL_PROCESS_DETACH:
-            return "DLL_PROCESS_DETACH";
+            return StrL("DLL_PROCESS_DETACH");
     }
-    return "Unknown reason";
+    return StrL("Unknown reason");
 }
 
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void* /*lpReserved*/) {

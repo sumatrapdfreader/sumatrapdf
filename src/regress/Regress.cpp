@@ -64,8 +64,8 @@ static void printflush(Str s) {
 /* Auto-detect the location of test files. Ultimately we might add a cmd-line
 option to specify this directory, for now just add your location(s) to the list */
 static bool FindTestFilesDir() {
-    Str dirsToCheck[] = {"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
-                         "C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
+    Str dirsToCheck[] = {StrL("C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra"),
+                         StrL("C:\\Users\\kkowalczyk\\Google Drive\\Sumatra")};
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
         Str dir = dirsToCheck[i];
         if (dir::Exists(dir)) {
@@ -95,14 +95,14 @@ static DWORD WINAPI CrashDumpThread(void*) {
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed) return 0;
 
-    printflush("Captain, we've got a crash!\n");
+    printflush(StrL("Captain, we've got a crash!\n"));
     if (!dbghelp::Initialize(L"", false)) {
-        printflush("CrashDumpThread(): dbghelp::Initialize() failed");
+        printflush(StrL("CrashDumpThread(): dbghelp::Initialize() failed"));
         return 0;
     }
 
     if (!dbghelp::HasSymbols()) {
-        printflush("CrashDumpThread(): dbghelp::HasSymbols() is false");
+        printflush(StrL("CrashDumpThread(): dbghelp::HasSymbols() is false"));
         return 0;
     }
 
@@ -110,7 +110,7 @@ static DWORD WINAPI CrashDumpThread(void*) {
     dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     dbghelp::GetAllThreadsCallstacks(s);
     s.Append(StrL("\r\n"));
-    printflush(ToStr(s).s);
+    printflush(Str(ToStr(s).s));
     return 0;
 }
 
@@ -138,12 +138,12 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
 static void InstallCrashHandler() {
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {
-        printflush("InstallCrashHandler(): CreateEvent() failed\n");
+        printflush(StrL("InstallCrashHandler(): CreateEvent() failed\n"));
         return;
     }
     gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, nullptr);
     if (!gDumpThread) {
-        printflush("InstallCrashHandler(): CreateThread() failed\n");
+        printflush(StrL("InstallCrashHandler(): CreateThread() failed\n"));
         return;
     }
     gPrevExceptionFilter = SetUnhandledExceptionFilter(CrashDumpExceptionHandler);
@@ -184,7 +184,7 @@ int RegressMain() {
 
     RunTests();
 
-    printflush("All tests completed successfully!\n");
+    printflush(StrL("All tests completed successfully!\n"));
     UninstallCrashHandler();
 
     system("pause");

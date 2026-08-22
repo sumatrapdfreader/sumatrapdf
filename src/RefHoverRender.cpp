@@ -142,7 +142,7 @@ static void RefHoverRenderThread(RefHoverRenderJob* job) {
 static void RefHoverStartRenderJob(RefHoverRenderJob* job) {
     job->s->renderInFlight = true;
     auto fn = MkFunc0<RefHoverRenderJob>(RefHoverRenderThread, job);
-    RunAsync(fn, "RefHoverRender");
+    RunAsync(fn, StrL("RefHoverRender"));
 }
 
 void RefHoverRequestRender(RefHoverState* s, EngineBase* engine, RefHoverState::RenderRequest req) {

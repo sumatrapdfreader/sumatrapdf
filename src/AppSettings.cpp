@@ -71,14 +71,14 @@ static bool ApplyReadAloudVoiceFromSettings() {
 
     Str voiceId = gGlobalPrefs->readAloudVoiceId;
     if (!voiceId) {
-        TtsSetVoiceById("");
+        TtsSetVoiceById(StrL(""));
         return false;
     }
 
     if (!TtsSetVoiceById(voiceId)) {
         logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
         str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, Str{});
-        TtsSetVoiceById("");
+        TtsSetVoiceById(StrL(""));
         return true;
     }
     return false;
@@ -295,7 +295,7 @@ static void CreateExternalViewersCommands() {
             auto* arg = NewStringArg(kCmdArgToolbarSvgIcon, ev->toolbarSvgIcon);
             InsertArg(&args, arg);
         }
-        CreateCustomCommand("", CmdViewWithExternalViewer, args, ev->name, ev->key);
+        CreateCustomCommand(StrL(""), CmdViewWithExternalViewer, args, ev->name, ev->key);
     }
 }
 
@@ -312,7 +312,7 @@ static void CreateZoomCommands() {
     for (int i = 0; i < n; i++) {
         float zoomLevel = (*prefs->zoomLevels)[i];
         CommandArg* arg = NewFloatArg(kCmdArgLevel, zoomLevel);
-        auto* cmd = CreateCustomCommand("CmdZoomCustom", CmdZoomCustom, arg);
+        auto* cmd = CreateCustomCommand(StrL("CmdZoomCustom"), CmdZoomCustom, arg);
         cmdIds->InsertAt(i, cmd->id);
     }
 }
@@ -478,7 +478,7 @@ bool LoadSettings() {
     // toolbar mode: if unset/invalid, derive from the legacy showToolbar bool
     // so existing settings (ShowToolbar = false) keep working
     if (SeqStrIndexIS(gToolbarModeNames, gprefs->toolbar) < 0) {
-        str::ReplaceWithCopy(&gprefs->toolbar, gprefs->showToolbar ? "show" : "hide");
+        str::ReplaceWithCopy(&gprefs->toolbar, gprefs->showToolbar ? StrL("show") : StrL("hide"));
     } else {
         // keep the legacy bool consistent with the mode
         gprefs->showToolbar = !str::EqI(gprefs->toolbar, StrL("hide"));
@@ -486,7 +486,7 @@ bool LoadSettings() {
 
     // fullscreen toolbar mode: same migration from Fullscreen.ShowToolbar
     if (SeqStrIndexIS(gToolbarModeNames, gprefs->fullscreen.toolbar) < 0) {
-        str::ReplaceWithCopy(&gprefs->fullscreen.toolbar, gprefs->fullscreen.showToolbar ? "show" : "hide");
+        str::ReplaceWithCopy(&gprefs->fullscreen.toolbar, gprefs->fullscreen.showToolbar ? StrL("show") : StrL("hide"));
     } else {
         gprefs->fullscreen.showToolbar = !str::EqI(gprefs->fullscreen.toolbar, StrL("hide"));
     }
@@ -1002,7 +1002,7 @@ PlatformFont* GetAppFontForDpi(int dpi) {
     if (fonts->appFont) {
         return fonts->appFont;
     }
-    fonts->appFont = GetUserGuiFont("auto", GetAppFontSizeForDpi(dpi));
+    fonts->appFont = GetUserGuiFont(StrL("auto"), GetAppFontSizeForDpi(dpi));
     return fonts->appFont;
 }
 
@@ -1072,7 +1072,7 @@ PlatformFont* GetAppSidebarLabelFontForDpi(int dpi) {
     if (fonts->sidebarLabelFont) {
         return fonts->sidebarLabelFont;
     }
-    fonts->sidebarLabelFont = GetUserGuiFontEx(nullptr, GetAppBiggerFontSizeForDpi(dpi), true, false);
+    fonts->sidebarLabelFont = GetUserGuiFontEx({}, GetAppBiggerFontSizeForDpi(dpi), true, false);
     return fonts->sidebarLabelFont;
 }
 
@@ -1127,7 +1127,7 @@ TempStr ZoomLevelStr(float zoom) {
         return _TRA("Fit by Orientation");
     }
     if (zoom == 0) {
-        return "-";
+        return StrL("-");
     }
     return fmt("%.f%%", zoom);
 }

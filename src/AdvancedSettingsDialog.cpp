@@ -109,7 +109,7 @@ static Str SettingPathLeaf(Str name) {
 static const char** GetEnumValuesForSetting(Str name) {
     Str leaf = SettingPathLeaf(name);
     for (const auto& def : gEnumSettings) {
-        if (str::EqI(name, def.name) || str::EqI(leaf, def.name)) {
+        if (str::EqI(name, Str(def.name)) || str::EqI(leaf, Str(def.name))) {
             return def.values;
         }
     }
@@ -221,7 +221,7 @@ static bool SettingDiffersFromDefault(SettingItem* item) {
 static TempStr FormatSettingValueTemp(SettingItem* item) {
     switch (item->type) {
         case SettingType::Bool:
-            return str::DupTemp(item->boolVal ? "true" : "false");
+            return str::DupTemp(item->boolVal ? StrL("true") : StrL("false"));
         case SettingType::Int:
             return fmt("%d", item->intVal);
         case SettingType::Float:
@@ -388,7 +388,7 @@ struct CommentText : VirtRichText {
     int nLines = 6;
 
     int FixedDy() {
-        int lineDy = PlatformFontMeasureText(font, "Ag").dy;
+        int lineDy = PlatformFontMeasureText(font, StrL("Ag")).dy;
         return (lineDy * nLines) + padding.top + padding.bottom;
     }
 
@@ -792,8 +792,8 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
     StrVec vals;
     int currSel = 0;
     for (int i = 0; item->enumValues[i]; i++) {
-        vals.Append(item->enumValues[i]);
-        if (str::EqI(item->strVal, item->enumValues[i])) {
+        vals.Append(Str(item->enumValues[i]));
+        if (str::EqI(item->strVal, Str(item->enumValues[i]))) {
             currSel = i;
         }
     }
@@ -840,7 +840,7 @@ void AdvancedSettingsWnd::OnEnumSelectionChanged() {
     SettingItem* item = items[editItemIdx];
     int sel = dropDownValue->GetCurrentSelection();
     if (sel >= 0) {
-        str::ReplaceWithCopy(&item->strVal, item->enumValues[sel]);
+        str::ReplaceWithCopy(&item->strVal, Str(item->enumValues[sel]));
         NoteItemEdited(item);
         // browsing the list with the arrow keys previews each value in turn
         PreviewSettingChange(item);
@@ -1013,7 +1013,7 @@ void AdvancedSettingsWnd::OnOpenSettingsFile(VirtMouseEvent*) {
 }
 
 void AdvancedSettingsWnd::OnHelp(VirtMouseEvent*) {
-    SumatraLaunchBrowser(kSettingsDocsUrl);
+    SumatraLaunchBrowser(Str(kSettingsDocsUrl));
 }
 
 void AdvancedSettingsWnd::OnCancel(VirtMouseEvent*) {

@@ -140,12 +140,12 @@ void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
 
 const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode) {
     if (mode == DocumentColorsFollowTheme::Smart) {
-        return _TRN("Document colors follow theme: Smart (recolor text and background, not images)");
+        return _TRN("Document colors follow theme: Smart (recolor text and background, not images)").s;
     }
     if (mode == DocumentColorsFollowTheme::Legacy) {
-        return _TRN("Document colors follow theme: Legacy (recolor text, background and images)");
+        return _TRN("Document colors follow theme: Legacy (recolor text, background and images)").s;
     }
-    return _TRN("Document colors follow theme: Off");
+    return _TRN("Document colors follow theme: Off").s;
 }
 
 bool PdfDarkModeUsesObjectLevel() {

@@ -31,11 +31,11 @@ static bool IsMarkdownVirtualHostUrl(Str url) {
     if (!url) {
         return false;
     }
-    if (str::StartsWith(url, kMdVirtualHost)) {
+    if (str::StartsWith(url, Str(kMdVirtualHost))) {
         return true;
     }
     TempStr plain = url::GetFullPathTemp(url);
-    return plain && str::StartsWith(plain, kMdVirtualHost);
+    return plain && str::StartsWith(plain, Str(kMdVirtualHost));
 }
 
 // Virtual-host pages use an https:// scheme but are served in-app via WebView2.
@@ -51,17 +51,17 @@ static TempStr NormalizeMarkdownUrlTemp(Str url) {
     if (!plainUrl) {
         return {};
     }
-    if (str::StartsWith(plainUrl, kMdVirtualHost)) {
+    if (str::StartsWith(plainUrl, Str(kMdVirtualHost))) {
         return plainUrl;
     }
-    return str::JoinTemp(kMdVirtualHost, plainUrl);
+    return str::JoinTemp(Str(kMdVirtualHost), plainUrl);
 }
 
 // Keep the fragment when navigating the browser. GetFullPathTemp() intentionally
 // removes it for page lookup and state tracking, but WebView2 needs it to scroll
 // to a heading within the current HTML page.
 static Str MarkdownBrowserNavigationUrl(Str url) {
-    str::TrimPrefix(url, kMdVirtualHost);
+    str::TrimPrefix(url, Str(kMdVirtualHost));
     return url;
 }
 
@@ -219,7 +219,7 @@ Str MarkdownModel::GetFilePath() const {
 }
 
 Str MarkdownModel::GetDefaultFileExt() const {
-    return isHtml ? ".html" : ".md";
+    return isHtml ? StrL(".html") : StrL(".md");
 }
 
 int MarkdownModel::PageCount() const {
@@ -266,7 +266,7 @@ TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
 }
 
 TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
-    if (!url || !str::TrimPrefix(url, kMdVirtualHost)) {
+    if (!url || !str::TrimPrefix(url, Str(kMdVirtualHost))) {
         return {};
     }
     Str pathPart = url;
@@ -450,7 +450,7 @@ TempStr MarkdownModel::LinkedDocPathTemp(Str url) const {
     // WebView2 reports an in-document url with the virtual host already stripped
     // ("sub/doc.pdf"), a TOC destination carries it; normalize to have it
     TempStr urlPath = NormalizeMarkdownUrlTemp(url);
-    if (!urlPath || !str::TrimPrefix(urlPath, kMdVirtualHost) || IsBrowserViewableExt(urlPath)) {
+    if (!urlPath || !str::TrimPrefix(urlPath, Str(kMdVirtualHost)) || IsBrowserViewableExt(urlPath)) {
         return {};
     }
     TempStr rel = str::ReplaceTemp(urlPath, StrL("/"), StrL("\\"));
@@ -513,7 +513,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
     pageUrl = str::DupTemp(pageUrl);
     if (IsMarkdownExternalUrl(pageUrl)) {
         if (cb) {
-            auto* item = NewMarkdownTocItem(nullptr, nullptr, 1, pageUrl);
+            auto* item = NewMarkdownTocItem(nullptr, {}, 1, pageUrl);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -770,7 +770,7 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     // document webview off-document (issue #5920)
     if (IsMarkdownExternalUrl(url)) {
         if (url && cb) {
-            auto* item = NewMarkdownTocItem(nullptr, nullptr, 1, url);
+            auto* item = NewMarkdownTocItem(nullptr, {}, 1, url);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -1115,7 +1115,7 @@ bool MarkdownModel::Load(Str fileName) {
     task->isHtml = isHtml;
     tocBuildTask = task;
     auto fn = MkFunc0(MarkdownTocBuildThread, task);
-    ThreadHandle th = StartThread(fn, "MarkdownTocBuild");
+    ThreadHandle th = StartThread(fn, StrL("MarkdownTocBuild"));
     SafeCloseThreadHandle(&th);
 
     // Prefer path::IsSame: DirIter paths may differ from the open path in
@@ -1128,7 +1128,7 @@ bool MarkdownModel::Load(Str fileName) {
         }
     }
     currentPageNo = openedIdx >= 0 ? openedIdx + 1 : 1;
-    currentPageUrl = nullptr;
+    currentPageUrl = {};
     return true;
 }
 

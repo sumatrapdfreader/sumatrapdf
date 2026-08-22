@@ -41,7 +41,7 @@ void TestPreview(WStr cmdLine) {
 
     // use kPdfPreviewClsid by default
     GUID clsid{};
-    WCHAR* clsidW = CWStrTemp(kPdfPreviewClsid);
+    WCHAR* clsidW = CWStrTemp(StrL(kPdfPreviewClsid));
     IIDFromString(clsidW, &clsid);
 
     HMODULE dll = LoadLibraryA(kPdfPreviewDllName.s);

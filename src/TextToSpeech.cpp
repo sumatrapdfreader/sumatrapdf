@@ -743,7 +743,7 @@ static void WinTtsGetVoices(Vec<TtsVoiceInfo>& voices) {
             TtsVoiceInfo info{};
             info.id = HStringToUtf8Dup(id);
             info.name = HStringToUtf8Dup(name);
-            info.lang = lang ? HStringToUtf8Dup(lang) : nullptr;
+            info.lang = lang ? HStringToUtf8Dup(lang) : Str();
             voices.Append(info);
         }
 

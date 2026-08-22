@@ -97,10 +97,10 @@ static uint GetCodepageFromPI(Str xmlPI) {
         Str namePart;
         uint codePage;
     } static encodings[] = {
-        {"UTF", CP_UTF8},
-        {"utf", CP_UTF8},
-        {"1252", 1252},
-        {"1251", 1251},
+        {StrL("UTF"), CP_UTF8},
+        {StrL("utf"), CP_UTF8},
+        {StrL("1252"), 1252},
+        {StrL("1251"), 1251},
         // TODO: any other commonly used codepages?
     };
     for (auto& enc : encodings) {
@@ -139,14 +139,14 @@ static bool IsValidUtf8(Str string) {
 }
 
 static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
-    if (str::TrimPrefix(s, UTF8_BOM)) {
+    if (str::TrimPrefix(s, StrL(UTF8_BOM))) {
         return str::DupTemp(s);
     }
-    if (str::TrimPrefix(s, UTF16_BOM)) {
+    if (str::TrimPrefix(s, StrL(UTF16_BOM))) {
         WStr ws = str::CastStrToWStr(s);
         return ToUtf8Temp(ws);
     }
-    if (str::TrimPrefix(s, UTF16BE_BOM)) {
+    if (str::TrimPrefix(s, StrL(UTF16BE_BOM))) {
         // convert from utf16 big endian to utf16
         int n = str::CastStrToWStr(s).len;
         for (int i = 0; i < n; i++) {
@@ -438,7 +438,7 @@ bool EpubDoc::Load() {
     if (!archive) {
         return false;
     }
-    auto* containerFi = archive->GetFileDataByName("META-INF/container.xml");
+    auto* containerFi = archive->GetFileDataByName(StrL("META-INF/container.xml"));
     if (!containerFi || !containerFi->data) {
         return false;
     }
@@ -462,7 +462,7 @@ bool EpubDoc::Load() {
 
     // encrypted files will be ignored (TODO: support decryption)
     StrVec encList;
-    auto* encryptionFi = archive->GetFileDataByName("META-INF/encryption.xml");
+    auto* encryptionFi = archive->GetFileDataByName(StrL("META-INF/encryption.xml"));
     if (encryptionFi && encryptionFi->data) {
         Str encryption = Str((char*)((u8*)encryptionFi->data), encryptionFi->fileSizeUncompressed);
         GumboDoc encryptionDoc(encryption, true);
@@ -780,7 +780,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Nav == tok->tag) {
             AttrInfo* attr = tok->GetAttrByName(StrL("epub:type"));
-            if (attr && attr->ValIs("toc")) {
+            if (attr && attr->ValIs(StrL("toc"))) {
                 break;
             }
         }
@@ -1083,7 +1083,7 @@ bool Fb2Doc::Load(Str srcData) {
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     Str bodyStart;
-    TempStr titleAuthors = nullptr; // every <author> in <title-info>, joined
+    TempStr titleAuthors; // every <author> in <title-info>, joined
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!inTitleInfo && !inDocInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
             if (!inBody++) {
@@ -1120,8 +1120,8 @@ bool Fb2Doc::Load(Str srcData) {
             // next to home-page / email / id, which are not part of the name.
             // Taking every text node would give "Ivan Petrov https://... ivan@..."
             // (issue #2254)
-            TempStr docAuthor = nullptr;
-            TempStr nickname = nullptr;
+            TempStr docAuthor;
+            TempStr nickname;
             bool inNamePart = false;
             bool inNickname = false;
             auto appendTo = [](TempStr cur, TempStr add) -> TempStr {
@@ -1573,13 +1573,13 @@ bool HtmlDoc::Load() {
             AttrInfo* attrValue = tok->GetAttrByName(StrL("content"));
             if (!attrName || !attrValue) {
                 /* ignore this tag */;
-            } else if (attrName->ValIs("author")) {
+            } else if (attrName->ValIs(StrL("author"))) {
                 TempStr val = ResolveHtmlEntitiesTemp(attrValue->val);
                 AddPropOwned(props, DocProp::Author, val);
-            } else if (attrName->ValIs("date")) {
+            } else if (attrName->ValIs(StrL("date"))) {
                 TempStr val = ResolveHtmlEntitiesTemp(attrValue->val);
                 AddPropOwned(props, DocProp::CreationDate, val);
-            } else if (attrName->ValIs("copyright")) {
+            } else if (attrName->ValIs(StrL("copyright"))) {
                 TempStr val = ResolveHtmlEntitiesTemp(attrValue->val);
                 AddPropOwned(props, DocProp::Copyright, val);
             }
@@ -1666,7 +1666,7 @@ TxtDoc::~TxtDoc() {
 #define TCR_HEADER "!!8-Bit!!"
 
 static TempStr DecompressTcrTextTemp(Str data) {
-    ReportIf(!str::StartsWith(data, TCR_HEADER));
+    ReportIf(!str::StartsWith(data, StrL(TCR_HEADER)));
     int hdrLen = LenL(TCR_HEADER);
     Str curr = Str(data.s + hdrLen, data.len - hdrLen);
     Str end = Str(data.s + data.len, 0);
@@ -1838,7 +1838,7 @@ bool TxtDoc::Load() {
 
     TempStr text;
     Str raw = fileContent;
-    if (str::EndsWithI(fileName, StrL(".tcr")) && str::StartsWith(raw, TCR_HEADER)) {
+    if (str::EndsWithI(fileName, StrL(".tcr")) && str::StartsWith(raw, StrL(TCR_HEADER))) {
         text = DecompressTcrTextTemp(raw);
     } else {
         text = DecodeTextToUtf8Temp(raw);
@@ -2014,44 +2014,47 @@ TxtDoc* TxtDoc::CreateFromFile(Str path) {
 // issue #5846: consecutive ../../ must fully resolve
 bool EbookDoc_UnitTestNormalizeURL() {
     auto eq = [](Str url, Str base, Str expected) -> bool { return str::Eq(NormalizeURLTemp(url, base), expected); };
+    auto eql = [&](const char* url, const char* base, const char* expected) -> bool {
+        return eq(Str(url), Str(base), Str(expected));
+    };
     // consecutive parent segments from OEBPS/html/ (EPUB cover layout)
-    if (!eq("../../cover.jpg", "OEBPS/html/titlepage.xhtml", "cover.jpg")) {
+    if (!eql("../../cover.jpg", "OEBPS/html/titlepage.xhtml", "cover.jpg")) {
         return false;
     }
-    if (!eq("../../root.jpg", "OEBPS/html/page.xhtml", "root.jpg")) {
+    if (!eql("../../root.jpg", "OEBPS/html/page.xhtml", "root.jpg")) {
         return false;
     }
-    if (!eq("../../img/c.jpg", "a/b/p.xhtml", "img/c.jpg")) {
+    if (!eql("../../img/c.jpg", "a/b/p.xhtml", "img/c.jpg")) {
         return false;
     }
-    if (!eq("../../../c.jpg", "a/b/x/p.xhtml", "c.jpg")) {
+    if (!eql("../../../c.jpg", "a/b/x/p.xhtml", "c.jpg")) {
         return false;
     }
     // single ../ still works
-    if (!eq("../ok.jpg", "OEBPS/html/page.xhtml", "OEBPS/ok.jpg")) {
+    if (!eql("../ok.jpg", "OEBPS/html/page.xhtml", "OEBPS/ok.jpg")) {
         return false;
     }
-    if (!eq("../Images/x.jpg", "OEBPS/Text/y.xhtml", "OEBPS/Images/x.jpg")) {
+    if (!eql("../Images/x.jpg", "OEBPS/Text/y.xhtml", "OEBPS/Images/x.jpg")) {
         return false;
     }
-    if (!eq("text/../cover.jpg", "page.xhtml", "cover.jpg")) {
+    if (!eql("text/../cover.jpg", "page.xhtml", "cover.jpg")) {
         return false;
     }
     // ./ collapse and over-pop
-    if (!eq("./y", "x/z", "x/y")) {
+    if (!eql("./y", "x/z", "x/y")) {
         return false;
     }
-    if (!eq("../../b", "a/c.xhtml", "b")) {
+    if (!eql("../../b", "a/c.xhtml", "b")) {
         return false;
     }
     // absolute / scheme URLs left alone
-    if (!eq("/abs/path", "OEBPS/html/p.xhtml", "/abs/path")) {
+    if (!eql("/abs/path", "OEBPS/html/p.xhtml", "/abs/path")) {
         return false;
     }
-    if (!eq("http://example.com/x", "OEBPS/html/p.xhtml", "http://example.com/x")) {
+    if (!eql("http://example.com/x", "OEBPS/html/p.xhtml", "http://example.com/x")) {
         return false;
     }
-    if (!eq("#frag", "OEBPS/html/p.xhtml#old", "OEBPS/html/p.xhtml#frag")) {
+    if (!eql("#frag", "OEBPS/html/p.xhtml#old", "OEBPS/html/p.xhtml#frag")) {
         return false;
     }
     return true;

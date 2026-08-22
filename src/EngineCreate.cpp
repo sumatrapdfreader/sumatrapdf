@@ -389,7 +389,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
         if (len(extracted) > 0) {
             FileType kind = GuessFileTypeFromData(extracted);
             if (kind == FileType::PDF) {
-                EngineBase* engine = CreateEngineMupdfFromData(extracted, "file.pdf", pwdUI);
+                EngineBase* engine = CreateEngineMupdfFromData(extracted, StrL("file.pdf"), pwdUI);
                 str::Free(extracted);
                 if (engine) {
                     engine->SetFilePath(path);

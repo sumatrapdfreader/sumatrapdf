@@ -24,20 +24,20 @@ static struct {
     Str ext2;
     bool skip = false;
 } gPreviewers[] = {
-    {kPdfPreviewClsid, ".pdf"},
-    {kCbxPreviewClsid, ".cbz", ".cbr"},
-    {kCbxPreviewClsid, ".cb7", ".cbt"},
-    {kTgaPreviewClsid, ".tga"},
-    {kDjVuPreviewClsid, ".djvu"},
-    {kXpsPreviewClsid, ".xps", ".oxps"},
-    {kEpubPreviewClsid, ".epub"},
+    {StrL(kPdfPreviewClsid), StrL(".pdf")},
+    {StrL(kCbxPreviewClsid), StrL(".cbz"), StrL(".cbr")},
+    {StrL(kCbxPreviewClsid), StrL(".cb7"), StrL(".cbt")},
+    {StrL(kTgaPreviewClsid), StrL(".tga")},
+    {StrL(kDjVuPreviewClsid), StrL(".djvu")},
+    {StrL(kXpsPreviewClsid), StrL(".xps"), StrL(".oxps")},
+    {StrL(kEpubPreviewClsid), StrL(".epub")},
     // FictionBook: plain .fb2 and common zip containers (.fb2z, .fbz, .zfb2,
     // .fb2.zip). Multi-dot .fb2.zip needs its own Classes key so Explorer does
     // not treat it as a generic .zip (issue #1677).
-    {kFb2PreviewClsid, ".fb2", ".fb2z"},
-    {kFb2PreviewClsid, ".fbz", ".zfb2"},
-    {kFb2PreviewClsid, ".fb2.zip"},
-    {kMobiPreviewClsid, ".mobi"},
+    {StrL(kFb2PreviewClsid), StrL(".fb2"), StrL(".fb2z")},
+    {StrL(kFb2PreviewClsid), StrL(".fbz"), StrL(".zfb2")},
+    {StrL(kFb2PreviewClsid), StrL(".fb2.zip")},
+    {StrL(kMobiPreviewClsid), StrL(".mobi")},
 };
 // clang-format on
 
@@ -57,27 +57,28 @@ bool InstallPreviewDll(Str dllPath, bool allUsers) {
         TempStr displayName = fmt("SumatraPDF Preview (*%s)", ext);
         // register class
         TempStr key = fmt("Software\\Classes\\CLSID\\%s", clsid);
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, displayName);
-        ok &= LoggedWriteRegStr(hkey, key, "AppId", IsRunningInWow64() ? kAppIdPrevHostExeWow64 : kAppIdPrevHostExe);
-        ok &= LoggedWriteRegStr(hkey, key, "DisplayName", displayName);
+        ok &= LoggedWriteRegStr(hkey, key, {}, displayName);
+        ok &= LoggedWriteRegStr(hkey, key, StrL("AppId"),
+                                IsRunningInWow64() ? StrL(kAppIdPrevHostExeWow64) : StrL(kAppIdPrevHostExe));
+        ok &= LoggedWriteRegStr(hkey, key, StrL("DisplayName"), displayName);
         key = fmt("Software\\Classes\\CLSID\\%s\\InProcServer32", clsid);
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, dllPath);
-        ok &= LoggedWriteRegStr(hkey, key, "ThreadingModel", "Apartment");
+        ok &= LoggedWriteRegStr(hkey, key, {}, dllPath);
+        ok &= LoggedWriteRegStr(hkey, key, StrL("ThreadingModel"), StrL("Apartment"));
         // IThumbnailProvider
         key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext);
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
+        ok &= LoggedWriteRegStr(hkey, key, {}, clsid);
         if (ext2) {
             key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2);
-            ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
+            ok &= LoggedWriteRegStr(hkey, key, {}, clsid);
         }
         // IPreviewHandler
         key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext);
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
+        ok &= LoggedWriteRegStr(hkey, key, {}, clsid);
         if (ext2) {
             key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2);
-            ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
+            ok &= LoggedWriteRegStr(hkey, key, {}, clsid);
         }
-        ok &= LoggedWriteRegStr(hkey, kRegKeyPreviewHandlers, clsid, displayName);
+        ok &= LoggedWriteRegStr(hkey, StrL(kRegKeyPreviewHandlers), clsid, displayName);
         if (!ok) {
             return false;
         }
@@ -108,8 +109,8 @@ bool UninstallPreviewDll() {
         Str ext2 = prev.ext2;
 
         // unregister preview handler
-        DeleteRegValue(HKEY_LOCAL_MACHINE, kRegKeyPreviewHandlers, clsid);
-        DeleteRegValue(HKEY_CURRENT_USER, kRegKeyPreviewHandlers, clsid);
+        DeleteRegValue(HKEY_LOCAL_MACHINE, StrL(kRegKeyPreviewHandlers), clsid);
+        DeleteRegValue(HKEY_CURRENT_USER, StrL(kRegKeyPreviewHandlers), clsid);
         // remove class data
         key = fmt("Software\\Classes\\CLSID\\%s", clsid);
         DeleteOrFail(key, &hr);
@@ -156,9 +157,9 @@ void DisablePreviewInstallExts(Str cmdLine) {
 }
 
 bool IsPreviewInstalled() {
-    Str key = ".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    TempStr iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, nullptr);
-    bool isInstalled = str::EqI(iid, kPdfPreviewClsid);
+    Str key = StrL(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}");
+    TempStr iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, {});
+    bool isInstalled = str::EqI(iid, StrL(kPdfPreviewClsid));
     logf("IsPreviewInstalled() isInstalled=%d\n", (int)isInstalled);
     return isInstalled;
 }
@@ -170,14 +171,14 @@ bool IsPreviewInstalled() {
 
 bool IsPdfPreviewLoggingEnabled() {
     DWORD val = 0;
-    if (!ReadRegDWORD(HKEY_CURRENT_USER, kRegKeySumatra, kRegValLogPdfPreview, val)) {
+    if (!ReadRegDWORD(HKEY_CURRENT_USER, StrL(kRegKeySumatra), StrL(kRegValLogPdfPreview), val)) {
         return false;
     }
     return val != 0;
 }
 
 void SetPdfPreviewLoggingEnabled(bool enable) {
-    WriteRegDWORD(HKEY_CURRENT_USER, kRegKeySumatra, kRegValLogPdfPreview, enable ? 1 : 0);
+    WriteRegDWORD(HKEY_CURRENT_USER, StrL(kRegKeySumatra), StrL(kRegValLogPdfPreview), enable ? 1 : 0);
     logf("SetPdfPreviewLoggingEnabled: %d\n", (int)enable);
 }
 
@@ -208,7 +209,7 @@ TempStr GetPdfPreviewLogDirTemp() {
         return {};
     }
     TempStr dir = path::JoinTemp(local, StrL("SumatraPDF-data"));
-    return path::JoinTemp(dir, id);
+    return path::JoinTemp(dir, Str(id));
 }
 
 // pdfpreview.log.<month>-<day>.<hour>-<minute>.<unique>.txt
@@ -224,7 +225,7 @@ static TempStr GetNewPdfPreviewLogFilePathTemp() {
     DWORD uniq = (GetCurrentProcessId() << 16) ^ (DWORD)(GetTickCount64() & 0xffff);
     TempStr name = fmt("%s%02d-%02d.%02d-%02d.%08x.txt", Str(kPdfPreviewLogPrefix), (int)st.wMonth, (int)st.wDay,
                        (int)st.wHour, (int)st.wMinute, uniq);
-    return path::JoinTemp(dir.s, name.s);
+    return path::JoinTemp(dir, name);
 }
 
 // if logging is enabled, route this module's log to a fresh unique file

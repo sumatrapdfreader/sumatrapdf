@@ -292,8 +292,8 @@ static void StrVecTest2_3(StrVec* v2) {
     int n = Split(v2, StrL("a,b,,c,"), StrL(","));
     utassert(n == 5 && v2->Find(StrL("c")) == 3);
     utassert(v2->Find(StrL("")) == 2);
-    utassert(v2->Find("", 3) == 4);
-    utassert(v2->Find("", 5) == -1);
+    utassert(v2->Find(StrL(""), 3) == 4);
+    utassert(v2->Find(StrL(""), 5) == -1);
     utassert(v2->Find(StrL("B")) == -1 && v2->FindI(StrL("B")) == 1);
     TempStr joined = JoinTemp(v2, StrL(";"));
     utassert(str::Eq(joined, StrL("a;b;;c;")));
@@ -311,27 +311,27 @@ static void StrVecTest2_4(StrVec* v2) {
 }
 
 static void StrVecTest2_5(StrVec* v2) {
-    int n = Split(v2, StrL("a,b,,c,d"), ",", true, 3);
+    int n = Split(v2, StrL("a,b,,c,d"), StrL(","), true, 3);
     Str s = JoinTemp(v2, StrL("__"));
     utassert(n == 3);
     utassert(str::Eq(s, StrL("a__b__c,d")));
 
     v2->Reset();
-    n = Split(v2, StrL("a,b,,c,d"), ",", false, 3);
+    n = Split(v2, StrL("a,b,,c,d"), StrL(","), false, 3);
     s = JoinTemp(v2, StrL("__"));
     utassert(n == 3);
     // TODO: fix me
     utassert(str::Eq(s, StrL("a__b__,c,d")));
 
     v2->Reset();
-    n = Split(v2, StrL("a,b,,c,d"), ",", true, 1);
+    n = Split(v2, StrL("a,b,,c,d"), StrL(","), true, 1);
     utassert(n == 1);
     s = v2->At(0);
     utassert(str::Eq(s, StrL("a,b,,c,d")));
 
     // max 0 is turned into 1
     v2->Reset();
-    n = Split(v2, StrL("a,b,,c,d"), ",", true, 0);
+    n = Split(v2, StrL("a,b,,c,d"), StrL(","), true, 0);
     s = v2->At(0);
     utassert(str::Eq(s, StrL("a,b,,c,d")));
 }
@@ -395,7 +395,7 @@ static void StrVecTest3_1(StrVec* v) {
     utassert(str::Eq(v->At(0), StrL("one")));
     utassert(str::EqI(v->At(2), StrL("one")));
     utassert(v->Find(StrL("One")) == 2);
-    utassert(v->FindI("One") == 0);
+    utassert(v->FindI(StrL("One")) == 0);
     utassert(v->Find(StrL("Two")) == -1);
     StrVecCheckIter(v, nullptr);
 }
@@ -419,7 +419,7 @@ static void StrVecTest4_1(StrVec* v) {
     int idx = 2;
 
     utassert(str::Eq(strs[idx], v->At(idx)));
-    auto s = "new value of string, should be large to get results faster";
+    Str s = StrL("new value of string, should be large to get results faster");
     // StrVec: tests adding where can allocate new value inside a page
     v->SetAt(idx, Str(s));
     utassert(str::Eq(s, v->At(idx)));
@@ -459,7 +459,7 @@ static void StrVecTest4_1(StrVec* v) {
         s2 = *it;
         utassert(str::Eq(s, s2));
     }
-    Str(s3 = "hello");
+    s3 = StrL("hello");
     v->SetAt(n / 2, s3);
     s2 = v->At(n / 2);
     utassert(str::Eq(s3, s2));
@@ -495,7 +495,7 @@ static void StrVecTest5_1(StrVec* v) {
     s = strs[0];
     s2 = v->At(1);
     utassert(str::Eq(s2, s));
-    Str(s = "middle");
+    s = StrL("middle");
     v->InsertAt(3, s);
     s2 = v->At(3);
     utassert(str::Eq(s2, s));
@@ -589,7 +589,7 @@ static void validateStringMatchesData(StrVecWithData<T>* v) {
         n = (int)d->n;
         got = v->At(i);
         exp = StrForN(n);
-        utassert(str::Eq(got.s, exp));
+        utassert(str::Eq(got, exp));
     }
 }
 
@@ -919,7 +919,7 @@ static void StrVecTestManyAppend() {
     v.SetAt(0, StrL("this is a much longer replacement string than the original was"));
     v.Append(StrL("after-compact"));
     ValidateSize(&v);
-    strEq(v.At(len(v) - 1), "after-compact");
+    strEq(v.At(len(v) - 1), StrL("after-compact"));
     utassert(v.Find(StrL("s1500")) >= 0);
 }
 

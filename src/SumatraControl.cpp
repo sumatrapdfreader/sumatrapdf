@@ -163,17 +163,17 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
         return finish(StrL("NOTREADY no-doc"), 2);
     }
 
-    if (str::EqI(action, "add")) {
+    if (str::EqI(action, StrL("add"))) {
         if (!win->ctrl->ValidPageNo(pageNo)) {
             return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
         }
         AddFavoriteSilent(win, pageNo);
-    } else if (str::EqI(action, "goto")) {
+    } else if (str::EqI(action, StrL("goto"))) {
         if (!win->ctrl->ValidPageNo(pageNo)) {
             return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
         }
         win->ctrl->GoToPage(pageNo, true);
-    } else if (str::EqI(action, "goto-fav")) {
+    } else if (str::EqI(action, StrL("goto-fav"))) {
         if (!win->ctrl->ValidPageNo(pageNo)) {
             return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
         }
@@ -191,11 +191,11 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
             return finish(fmt("ERROR no-fav page=%d", pageNo), 1);
         }
         JumpToFavorite(win, fav);
-    } else if (str::EqI(action, "next")) {
+    } else if (str::EqI(action, StrL("next"))) {
         GoToNextFavorite(win, true);
-    } else if (str::EqI(action, "prev")) {
+    } else if (str::EqI(action, StrL("prev"))) {
         GoToNextFavorite(win, false);
-    } else if (str::EqI(action, "page")) {
+    } else if (str::EqI(action, StrL("page"))) {
         // report only
     } else {
         return finish(fmt("ERROR unknown-action action=%s", action), 1);
@@ -469,7 +469,7 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
     }
     WindowTab* tab = gWindows[0]->CurrentTab();
     bool isTextOnly = false;
-    TempStr sel = tab ? GetSelectedTextTemp(tab, "\n", isTextOnly) : TempStr{};
+    TempStr sel = tab ? GetSelectedTextTemp(tab, StrL("\n"), isTextOnly) : TempStr{};
     if (!sel) {
         sel = StrL("");
     }
@@ -903,7 +903,7 @@ static void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
-            AppendArgString(req->results, "pong");
+            AppendArgString(req->results, StrL("pong"));
             AppendArgEnd(req->results);
             break;
 
@@ -918,7 +918,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::SetNotificationsEnabled: {
             i32 enabled = 0;
             if (!IntArg(req, 0, enabled)) {
-                AppendError(req, "SetNotificationsEnabled expects int enabled");
+                AppendError(req, StrL("SetNotificationsEnabled expects int enabled"));
                 break;
             }
             SetNotificationsEnabled(enabled != 0);
@@ -931,7 +931,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str pdf = StringArg(req, 0);
             Str src = StringArg(req, 1);
             if (!pdf || !src || !IntArg(req, 2, line)) {
-                AppendError(req, "TestSynctex expects string pdf, string source, int line");
+                AppendError(req, StrL("TestSynctex expects string pdf, string source, int line"));
                 break;
             }
             AppendTestResult(req, 0, SynctexResultTemp(pdf, src, line));
@@ -942,7 +942,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 page = 0, x = 0, y = 0;
             Str pdf = StringArg(req, 0);
             if (!pdf || !IntArg(req, 1, page) || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
-                AppendError(req, "TestInverseSearch expects string pdf, int page, int x, int y");
+                AppendError(req, StrL("TestInverseSearch expects string pdf, int page, int x, int y"));
                 break;
             }
             AppendTestResult(req, 0, InverseSearchResultTemp(pdf, page, x, y));
@@ -954,7 +954,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str needle = StringArg(req, 1);
             Str password = StringArg(req, 2);
             if (!pdf || !needle) {
-                AppendError(req, "TestSearch expects string pdf, string needle, optional string password");
+                AppendError(req, StrL("TestSearch expects string pdf, string needle, optional string password"));
                 break;
             }
             if (!password && gCli) {
@@ -968,7 +968,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 destNo = 0;
             Str pdf = StringArg(req, 0);
             if (!pdf || !IntArg(req, 1, destNo)) {
-                AppendError(req, "TestDest expects string pdf, int destinationNumber");
+                AppendError(req, StrL("TestDest expects string pdf, int destinationNumber"));
                 break;
             }
             AppendTestResult(req, 0, DestResultTemp(pdf, destNo));
@@ -979,7 +979,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str pdf = StringArg(req, 0);
             Str name = StringArg(req, 1);
             if (!pdf || !name) {
-                AppendError(req, "TestNamedDest expects string pdf, string name");
+                AppendError(req, StrL("TestNamedDest expects string pdf, string name"));
                 break;
             }
             AppendTestResult(req, 0, NamedDestResultTemp(pdf, name));
@@ -989,7 +989,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestChm: {
             Str chm = StringArg(req, 0);
             if (!chm) {
-                AppendError(req, "TestChm expects string chmPath");
+                AppendError(req, StrL("TestChm expects string chmPath"));
                 break;
             }
             int exitCode = 0;
@@ -1004,8 +1004,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str dstLang = StringArg(req, 2);
             Str text = StringArg(req, 3);
             if (!IntArg(req, 0, backend) || !srcLang || !dstLang || !text) {
-                AppendError(req,
-                            "TestSelectionTranslate expects int backend, string srcLang, string dstLang, string text");
+                AppendError(
+                    req,
+                    StrL("TestSelectionTranslate expects int backend, string srcLang, string dstLang, string text"));
                 break;
             }
             int exitCode = 0;
@@ -1019,7 +1020,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str clickWord = StringArg(req, 1);
             Str expectedLine = StringArg(req, 2);
             if (!pdf || !clickWord || !expectedLine) {
-                AppendError(req, "TestTripleClickLineSelect expects string pdf, string clickWord, string expectedLine");
+                AppendError(
+                    req, StrL("TestTripleClickLineSelect expects string pdf, string clickWord, string expectedLine"));
                 break;
             }
             int exitCode = 0;
@@ -1033,7 +1035,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str word2 = StringArg(req, 1);
             Str cursorWord = StringArg(req, 2);
             if (!word1 || !word2 || !cursorWord) {
-                AppendError(req, "TestContextMenuSelection expects string word1, string word2, string cursorWord");
+                AppendError(req,
+                            StrL("TestContextMenuSelection expects string word1, string word2, string cursorWord"));
                 break;
             }
             int exitCode = 0;
@@ -1046,7 +1049,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str word = StringArg(req, 0);
             Str typed = StringArg(req, 1);
             if (!word || !typed) {
-                AppendError(req, "TestGoToFindMatch expects string word, string typed");
+                AppendError(req, StrL("TestGoToFindMatch expects string word, string typed"));
                 break;
             }
             int exitCode = 0;
@@ -1058,7 +1061,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestImageResizeArrowKey: {
             Str imagePath = StringArg(req, 0);
             if (!imagePath) {
-                AppendError(req, "TestImageResizeArrowKey expects string imagePath");
+                AppendError(req, StrL("TestImageResizeArrowKey expects string imagePath"));
                 break;
             }
             int exitCode = 0;
@@ -1072,7 +1075,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 newW = 0;
             i32 newH = 0;
             if (!imagePath || !IntArg(req, 1, newW) || !IntArg(req, 2, newH)) {
-                AppendError(req, "TestImageResizeEdges expects string imagePath, int newW, int newH");
+                AppendError(req, StrL("TestImageResizeEdges expects string imagePath, int newW, int newH"));
                 break;
             }
             int exitCode = 0;
@@ -1084,7 +1087,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestClickClearsSelection: {
             Str word = StringArg(req, 0);
             if (!word) {
-                AppendError(req, "TestClickClearsSelection expects string word");
+                AppendError(req, StrL("TestClickClearsSelection expects string word"));
                 break;
             }
             int exitCode = 0;
@@ -1096,7 +1099,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestRectSelectionDrag: {
             Str word = StringArg(req, 0);
             if (!word) {
-                AppendError(req, "TestRectSelectionDrag expects string word");
+                AppendError(req, StrL("TestRectSelectionDrag expects string word"));
                 break;
             }
             int exitCode = 0;
@@ -1108,7 +1111,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestFindResultsOrder: {
             Str term = StringArg(req, 0);
             if (!term) {
-                AppendError(req, "TestFindResultsOrder expects string term, int startPage");
+                AppendError(req, StrL("TestFindResultsOrder expects string term, int startPage"));
                 break;
             }
             i32 startPage = 0;
@@ -1130,7 +1133,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str path = StringArg(req, 0);
             Str expectedKind = StringArg(req, 1);
             if (!path || !expectedKind) {
-                AppendError(req, "TestFileKind expects string path, string expectedKind");
+                AppendError(req, StrL("TestFileKind expects string path, string expectedKind"));
                 break;
             }
             int exitCode = 0;
@@ -1159,7 +1162,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str pathTwo = StringArg(req, 0);
             Str pathOne = StringArg(req, 1);
             if (!pathTwo || !pathOne) {
-                AppendError(req, "TestPageInfoOverlay expects string pathTwoPages, string pathOnePage");
+                AppendError(req, StrL("TestPageInfoOverlay expects string pathTwoPages, string pathOnePage"));
                 break;
             }
             int exitCode = 0;
@@ -1171,7 +1174,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestGetToc: {
             Str path = StringArg(req, 0);
             if (!path) {
-                AppendError(req, "TestGetToc expects string path");
+                AppendError(req, StrL("TestGetToc expects string path"));
                 break;
             }
             int exitCode = 0;
@@ -1184,7 +1187,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str path = StringArg(req, 0);
             i32 pageNo = 1;
             if (!path || !IntArg(req, 1, pageNo)) {
-                AppendError(req, "TestPageLinks expects string path, int pageNo");
+                AppendError(req, StrL("TestPageLinks expects string path, int pageNo"));
                 break;
             }
             int exitCode = 0;
@@ -1197,7 +1200,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str pdfPath = StringArg(req, 0);
             Str imagePath = StringArg(req, 1);
             if (!pdfPath || !imagePath) {
-                AppendError(req, "TestInsertImage expects string pdfPath, string imagePath");
+                AppendError(req, StrL("TestInsertImage expects string pdfPath, string imagePath"));
                 break;
             }
             int exitCode = 0;
@@ -1223,9 +1226,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 appearanceFlags = -1;
             IntArg(req, 6, appearanceFlags);
             if (!pdfPath || !destPath) {
-                AppendError(req,
-                            "TestSignDocument expects string pdfPath, string destPath [, thumbprint] [, certPath] [, "
-                            "password] [, imagePath] [, appearanceFlags]");
+                AppendError(
+                    req, StrL("TestSignDocument expects string pdfPath, string destPath [, thumbprint] [, certPath] [, "
+                              "password] [, imagePath] [, appearanceFlags]"));
                 break;
             }
             int exitCode = 0;
@@ -1255,7 +1258,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestRenderPageColors: {
             Str path = StringArg(req, 0);
             if (!path) {
-                AppendError(req, "TestRenderPageColors expects string path");
+                AppendError(req, StrL("TestRenderPageColors expects string path"));
                 break;
             }
             int exitCode = 0;
@@ -1269,7 +1272,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 zoomPercent = 100;
             i32 clipKind = 0;
             if (!path) {
-                AppendError(req, "TestImageRenderEdges expects string path [, int zoomPercent] [, int clipKind]");
+                AppendError(req, StrL("TestImageRenderEdges expects string path [, int zoomPercent] [, int clipKind]"));
                 break;
             }
             IntArg(req, 1, zoomPercent);
@@ -1285,7 +1288,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 pageNo = 1;
             i32 zoomPercent = 25;
             if (!path || !IntArg(req, 1, pageNo)) {
-                AppendError(req, "TestCadEnhanceColors expects string path, int pageNo [, int zoomPercent]");
+                AppendError(req, StrL("TestCadEnhanceColors expects string path, int pageNo [, int zoomPercent]"));
                 break;
             }
             IntArg(req, 2, zoomPercent); // optional
@@ -1299,7 +1302,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str path = StringArg(req, 0);
             i32 pageNo = 1;
             if (!path || !IntArg(req, 1, pageNo)) {
-                AppendError(req, "TestPageComments expects string path, int pageNo");
+                AppendError(req, StrL("TestPageComments expects string path, int pageNo"));
                 break;
             }
             int exitCode = 0;
@@ -1318,7 +1321,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestTocNavigate: {
             i32 destNo = 1;
             if (!IntArg(req, 0, destNo)) {
-                AppendError(req, "TestTocNavigate expects int destNo (1-based)");
+                AppendError(req, StrL("TestTocNavigate expects int destNo (1-based)"));
                 break;
             }
             int exitCode = 0;
@@ -1331,7 +1334,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 destNo = 1;
             i32 startZoomPerc = 0;
             if (!IntArg(req, 0, destNo)) {
-                AppendError(req, "TestDestZoomNav expects int destNo (1-based) [, int startZoomPerc]");
+                AppendError(req, StrL("TestDestZoomNav expects int destNo (1-based) [, int startZoomPerc]"));
                 break;
             }
             IntArg(req, 1, startZoomPerc); // optional
@@ -1402,7 +1405,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str spec = StringArg(req, 4); // optional "3,4-6,18-"
             if (!pdf || !needle) {
                 AppendError(
-                    req, "TestFindPageRange expects string pdf, string needle [, int first, int last [, string spec]]");
+                    req,
+                    StrL(
+                        "TestFindPageRange expects string pdf, string needle [, int first, int last [, string spec]]"));
                 break;
             }
             int exitCode = 0;
@@ -1458,7 +1463,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 destNo = 0;
             i32 minScrollY = 1;
             if (!IntArg(req, 0, destNo) || !IntArg(req, 1, minScrollY)) {
-                AppendError(req, "TestMarkdownTocNavigate expects int destNo, int minScrollY");
+                AppendError(req, StrL("TestMarkdownTocNavigate expects int destNo, int minScrollY"));
                 break;
             }
             int exitCode = 0;
@@ -1471,7 +1476,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str href = StringArg(req, 0);
             i32 follow = 0;
             if (!IntArg(req, 1, follow)) {
-                AppendError(req, "TestMarkdownFollowLink expects string href, int follow");
+                AppendError(req, StrL("TestMarkdownFollowLink expects string href, int follow"));
                 break;
             }
             int exitCode = 0;
@@ -1491,7 +1496,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str templatePath = StringArg(req, 0);
             Str pagesSpec = StringArg(req, 1);
             if (!templatePath || !pagesSpec) {
-                AppendError(req, "TestConvertToImages expects string templatePath, string pages");
+                AppendError(req, StrL("TestConvertToImages expects string templatePath, string pages"));
                 break;
             }
             int exitCode = 0;
@@ -1537,7 +1542,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 arg = 0;
             IntArg(req, 1, arg); // optional; only "scroll" uses it
             if (!action) {
-                AppendError(req, "TestAdvSettingsRows expects string action [, int rows]");
+                AppendError(req, StrL("TestAdvSettingsRows expects string action [, int rows]"));
                 break;
             }
             int exitCode = 0;
@@ -1551,7 +1556,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 pageNo = 0;
             IntArg(req, 1, pageNo); // optional for next/prev/page
             if (!action) {
-                AppendError(req, "TestFavoriteNav expects string action [, int pageNo]");
+                AppendError(req, StrL("TestFavoriteNav expects string action [, int pageNo]"));
                 break;
             }
             int exitCode = 0;
@@ -1586,7 +1591,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str filePath = StringArg(req, 1);
             Str message = StringArg(req, 2);
             if (!IntArg(req, 0, backend) || !filePath || !message) {
-                AppendError(req, "TestAIChat expects int backend, string filePath, string message");
+                AppendError(req, StrL("TestAIChat expects int backend, string filePath, string message"));
                 break;
             }
             int exitCode = 0;
@@ -1599,7 +1604,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str userMsg = StringArg(req, 0);
             Str response = StringArg(req, 1);
             if (!userMsg || !response) {
-                AppendError(req, "TestAIChatReplay expects string userMsg, string response");
+                AppendError(req, StrL("TestAIChatReplay expects string userMsg, string response"));
                 break;
             }
             int exitCode = 0;
@@ -1609,7 +1614,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         default:
-            AppendError(req, "unknown control command");
+            AppendError(req, StrL("unknown control command"));
             break;
     }
     SetEvent(req->done);
@@ -1843,5 +1848,5 @@ void StartSumatraControl(Str pipeName) {
         return;
     }
     auto* arg = new ControlThreadArg{str::Dup(pipeName)};
-    RunAsync(MkFunc0(SumatraControlThread, arg), "SumatraControl");
+    RunAsync(MkFunc0(SumatraControlThread, arg), StrL("SumatraControl"));
 }

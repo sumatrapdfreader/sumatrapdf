@@ -64,15 +64,15 @@ const char* gInstalledFiles[] = {
 
 static Str GetEnvRegKey(bool allUsers) {
     if (allUsers) {
-        return R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)";
+        return StrL(R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)");
     }
-    return "Environment";
+    return StrL("Environment");
 }
 
 static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     HKEY root = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
     Str keyName = GetEnvRegKey(allUsers);
-    TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
+    TempStr currPath = ReadRegStrTemp(root, keyName, StrL("Path"));
     if (len(currPath) == 0) {
         return;
     }
@@ -125,7 +125,7 @@ static void RemoveInstalledFiles() {
 
 static TempStr GetInstalledExePathTemp() {
     TempStr dir = gCli->installDir;
-    return path::JoinTemp(dir, kExeName);
+    return path::JoinTemp(dir, Str(kExeName));
 }
 
 static void UninstallerThread() {
@@ -181,7 +181,7 @@ static void OnButtonUninstall() {
     HwndRepaintNow(gHwndFrame);
 
     auto fn = MkFunc0Void(UninstallerThread);
-    hThread = StartThread(fn, "UninstallerThread");
+    hThread = StartThread(fn, StrL("UninstallerThread"));
 }
 
 static void OnButtonExit() {
@@ -237,7 +237,7 @@ static void CreateUninstallerWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    TempStr caption = str::JoinTemp(kAppName, StrL(" Uninstaller Usage"));
+    TempStr caption = str::JoinTemp(StrL(kAppName), StrL(" Uninstaller Usage"));
     TempStr msg = fmt(R"(uninstall.exe [/s][/d <path>]
 
 /s	uninstalls %s silently (without user interaction).
@@ -538,7 +538,7 @@ static void InitSelfDelete() {
     // running and failed. 3 pings to loopback is ~2s, enough for us to exit.
     TempStr cmdLine = fmt("\"%s\" /C ping -n 3 127.0.0.1 >nul & del \"%s\"", cmdExe, exePath);
     logf("InitSelfDelete(): '%s'\n", cmdLine);
-    HANDLE h = LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
+    HANDLE h = LaunchProcessInDir(cmdLine, {}, CREATE_NO_WINDOW);
     if (!h) {
         logf("InitSelfDelete(): failed to launch, scheduling delete for next reboot\n");
         LogLastError();

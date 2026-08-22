@@ -322,9 +322,9 @@ void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
         sc = new Shortcut();
         sc->cmd = str::Dup(StrL("CmdScreenshot"));
         sc->key = str::Dup(newHotkey);
-        sc->name = nullptr;
-        sc->toolbarText = nullptr;
-        sc->toolbarSvgIcon = nullptr;
+        sc->name = {};
+        sc->toolbarText = {};
+        sc->toolbarSvgIcon = {};
         sc->cmdId = 0;
         gGlobalPrefs->shortcuts->Append(sc);
     }

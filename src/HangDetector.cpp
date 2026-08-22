@@ -239,7 +239,7 @@ void StartUiHangDetector() {
     }
     gUiThreadId = GetCurrentThreadId();
     auto fn = MkFunc0Void(HangDetectorThreadFunc);
-    gWatchdogThread = StartThread(fn, "HangDetector");
+    gWatchdogThread = StartThread(fn, StrL("HangDetector"));
     if (!gWatchdogThread) {
         StopUiHangDetector();
         return;

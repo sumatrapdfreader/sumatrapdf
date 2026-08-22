@@ -195,7 +195,7 @@ TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
         if (a.cmd != cmdId) {
             continue;
         }
-        TempStr withTab = AppendAccelKeyToMenuStringTemp("", a);
+        TempStr withTab = AppendAccelKeyToMenuStringTemp(StrL(""), a);
         if (!withTab || withTab.s[0] != '\t') {
             continue;
         }

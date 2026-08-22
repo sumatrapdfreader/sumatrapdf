@@ -596,7 +596,7 @@ void CopySelectionToClipboard(MainWindow* win) {
     AutoCall closeClipboard(CloseClipboardAfterUpdate);
 
     DisplayModel* dm = win->AsFixed();
-    TempStr selText = nullptr;
+    TempStr selText;
     bool isTextOnlySelectionOut = false;
     if (!gDisableDocumentRestrictions && (dm && !dm->GetEngine()->AllowsCopyingText())) {
         NotificationCreateArgs args;
@@ -604,7 +604,7 @@ void CopySelectionToClipboard(MainWindow* win) {
         args.msg = _TRA("Copying text was denied (copying as image only)");
         ShowNotification(args);
     } else {
-        selText = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelectionOut);
+        selText = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelectionOut);
     }
 
     if (len(selText) > 0) {

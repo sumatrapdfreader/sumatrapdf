@@ -243,7 +243,7 @@ static void DeferredGoToFindMatch(DeferredGoToFindMatchData* d) {
 
 // append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
 static TempStr AppendCmdAccel(Str base, int cmd) {
-    TempStr accel = AppendAccelKeyToMenuStringTemp(nullptr, cmd);
+    TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
     if (!accel) {
         return base;
     }
@@ -281,7 +281,7 @@ void FindWindowWnd::UpdateButtonIcons(int dpi) {
     int isz = RoundUp(DpiScaleByDpi(dpi, 16), 4);
     for (int i = 0; i < 5; i++) {
         if (btns[i]) {
-            btns[i]->pixmap = GetCachedPixmapForSvg(icons[i], isz, isz);
+            btns[i]->pixmap = GetCachedPixmapForSvg(Str(icons[i]), isz, isz);
         }
     }
 }
@@ -1209,14 +1209,14 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
     };
 
     if (str::IsEmptyOrWhiteSpace(term)) {
-        return fail("ERROR missing term");
+        return fail(StrL("ERROR missing term"));
     }
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     if (!win || !win->AsFixed()) {
-        return fail("NOTREADY no-doc");
+        return fail(StrL("NOTREADY no-doc"));
     }
     if (!str::Eq(gFindOrderTerm, term)) {
         str::ReplaceWithCopy(&gFindOrderTerm, term);
@@ -1231,14 +1231,14 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
         }
         OnFindBarTextChanged(win);
         FindFlushPendingSearch(win); // run it now instead of waiting out the debounce
-        return fail("NOTREADY scan-started");
+        return fail(StrL("NOTREADY scan-started"));
     }
     if (!win->findCountValid) {
-        return fail("NOTREADY scanning");
+        return fail(StrL("NOTREADY scanning"));
     }
     FindWindowWnd* fw = win->findWindow;
     if (!fw || !fw->results) {
-        return fail("ERROR no-find-window");
+        return fail(StrL("ERROR no-find-window"));
     }
 
     int n = len(win->findMatches);
@@ -1274,18 +1274,18 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     };
 
     if (len(gWindows) == 0) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows[0];
     if (!win || !win->ctrl) {
-        return fail("NOTREADY no-doc");
+        return fail(StrL("NOTREADY no-doc"));
     }
     if (!win->findWindow) {
         win->findWindow = CreateFindWindow(win);
     }
     FindWindowWnd* fw = win->findWindow;
     if (!fw || !fw->results) {
-        return fail("ERROR no-find-window");
+        return fail(StrL("ERROR no-find-window"));
     }
 
     ClearFindMatches(win);
@@ -1298,7 +1298,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
 
     HDC hdcScreen = GetDC(nullptr);
     if (!hdcScreen) {
-        return fail("ERROR no-screen-dc");
+        return fail(StrL("ERROR no-screen-dc"));
     }
     const int w = 110;
     const int h = DpiScale(20);
@@ -1312,7 +1312,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
             DeleteObject(hbmp);
         }
         ReleaseDC(nullptr, hdcScreen);
-        return fail("ERROR no-mem-dc");
+        return fail(StrL("ERROR no-mem-dc"));
     }
     HGDIOBJ oldBmp = SelectObject(hdcMem, hbmp);
 

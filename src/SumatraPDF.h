@@ -323,7 +323,7 @@ void MaybeShowDefaultAppNotification(MainWindow* win);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win);
 
 uint MbRtlReadingMaybe();
-void MessageBoxWarning(HWND hwnd, Str msg, Str title = nullptr);
+void MessageBoxWarning(HWND hwnd, Str msg, Str title = {});
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd);
 void EnterFullScreen(MainWindow* win, bool presentation = false);
 void ExitFullScreen(MainWindow* win);

@@ -35,18 +35,19 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     }
 
     bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false;
-    if (str::TrimPrefix(filter, kPalettePrefixEverything)) {
+    if (str::TrimPrefix(filter, Str(kPalettePrefixEverything))) {
         searchTabs = searchHistory = searchCommands = true;
-    } else if (str::TrimPrefix(filter, kPalettePrefixTabs)) {
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTabs))) {
         searchTabs = true;
-    } else if (str::TrimPrefix(filter, kPalettePrefixFileHistory)) {
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixFileHistory))) {
         searchHistory = true;
-    } else if (str::TrimPrefix(filter, kPalettePrefixTOC) || str::TrimPrefix(filter, kPalettePrefixTOCLegacy)) {
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTOC)) ||
+               str::TrimPrefix(filter, Str(kPalettePrefixTOCLegacy))) {
         searchToc = true;
-    } else if (str::TrimPrefix(filter, kPalettePrefixFavorites)) {
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixFavorites))) {
         searchFavorites = true;
     } else {
-        str::TrimPrefix(filter, kPalettePrefixCommands);
+        str::TrimPrefix(filter, Str(kPalettePrefixCommands));
         searchCommands = true;
     }
 
@@ -93,7 +94,7 @@ void CommandPaletteWnd::QueryChanged() {
         CommandPaletteSetCurrentSelection(this, currSelIdx);
         return;
     }
-    if ((str::StartsWith(filter, kPalettePrefixTOC) || str::StartsWith(filter, kPalettePrefixTOCLegacy)) &&
+    if ((str::StartsWith(filter, Str(kPalettePrefixTOC)) || str::StartsWith(filter, Str(kPalettePrefixTOCLegacy))) &&
         len(filterWords) == 0) {
         int idx = (currTocIdx >= 0 && currTocIdx < nItems) ? currTocIdx : 0;
         CommandPaletteSetCurrentSelection(this, idx);

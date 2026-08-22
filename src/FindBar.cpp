@@ -149,7 +149,7 @@ struct FindBarWnd : WindowBase {
 // tooltip text for the bar's toolbar buttons
 // append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
 static TempStr AppendCmdAccel(Str base, int cmd) {
-    TempStr accel = AppendAccelKeyToMenuStringTemp(nullptr, cmd);
+    TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
     if (!accel) {
         return base;
     }
@@ -186,7 +186,7 @@ void FindBarWnd::UpdateButtonIcons() {
     int isz = RoundUp(DpiScale(16), 4);
     for (int i = 0; i < 6; i++) {
         if (btns[i]) {
-            btns[i]->pixmap = GetCachedPixmapForSvg(icons[i], isz, isz);
+            btns[i]->pixmap = GetCachedPixmapForSvg(Str(icons[i]), isz, isz);
         }
     }
 }
@@ -489,7 +489,7 @@ void RecreateFindBar(MainWindow* win) {
     // stop any in-flight find/count that captured the old bar's state
     AbortFinding(win, true);
     bool wasVisible = HwndIsVisible(win->findBar->hwnd);
-    TempStr text = wasVisible && win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : nullptr;
+    TempStr text = wasVisible && win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : TempStr();
     DeleteFindBar(win);
     win->findBar = CreateFindBar(win);
     if (win->findBar && wasVisible) {
@@ -616,8 +616,8 @@ void FindBarSyncHistory(MainWindow* win) {
 // switch the find UI between the compact toolbar overlay and the floating
 // window (persists the choice in gGlobalPrefs->searchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win) {
-    TempStr text = win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : nullptr;
-    TempStr pages = win->findPagesEdit ? str::DupTemp(win->findPagesEdit->GetTextTemp()) : nullptr;
+    TempStr text = win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : TempStr();
+    TempStr pages = win->findPagesEdit ? str::DupTemp(win->findPagesEdit->GetTextTemp()) : TempStr();
     int selStart = 0, selEnd = 0;
     if (win->findEdit) {
         win->findEdit->GetSelection(selStart, selEnd);

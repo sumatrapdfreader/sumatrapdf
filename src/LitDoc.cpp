@@ -590,7 +590,7 @@ Str LitFile::GetFile(Str name) {
 }
 
 static bool LitParseSectionNames(LitFile* lit) {
-    Str raw = lit->GetFile("::DataSpace/NameList");
+    Str raw = lit->GetFile(StrL("::DataSpace/NameList"));
     if (len(raw) < 4) {
         return false;
     }
@@ -626,14 +626,14 @@ static void LitDesDecrypt(u8* dst, const u8* src, int n, const u8 key[8]) {
 // DRM1 key: fold the mssha1 hash of (2 NUL bytes + /meta, zero-padded to a
 // 64-byte multiple) + (/DRMStorage/DRMSource, same padding)
 static bool LitReadDrm(LitFile* lit) {
-    if (lit->FindEntry("/DRMStorage/Licenses/EUL")) {
+    if (lit->FindEntry(StrL("/DRMStorage/Licenses/EUL"))) {
         lit->drmLevel = 5;
         logf("LitDoc: DRM5 (user-locked) book, cannot decrypt\n");
         return false;
     }
-    if (lit->FindEntry("/DRMStorage/DRMBookplate")) {
+    if (lit->FindEntry(StrL("/DRMStorage/DRMBookplate"))) {
         lit->drmLevel = 3;
-    } else if (lit->FindEntry("/DRMStorage/DRMSealed")) {
+    } else if (lit->FindEntry(StrL("/DRMStorage/DRMSealed"))) {
         lit->drmLevel = 1;
     } else {
         return true; // no DRM
@@ -650,7 +650,7 @@ static bool LitReadDrm(LitFile* lit) {
         if (!name) {
             continue;
         }
-        Str data = lit->GetFile(name);
+        Str data = lit->GetFile(Str(name));
         if (str::IsNull(data)) {
             return false;
         }
@@ -671,7 +671,7 @@ static bool LitReadDrm(LitFile* lit) {
         key[i % 8] ^= digest[i];
     }
 
-    Str sealed = lit->GetFile("/DRMStorage/DRMSealed");
+    Str sealed = lit->GetFile(StrL("/DRMStorage/DRMSealed"));
     if (len(sealed) < 16) {
         return false;
     }
@@ -891,7 +891,7 @@ static TempStr LitNormPathTemp(Str path) {
 }
 
 static bool LitParseManifest(LitFile* lit) {
-    Str raw = lit->GetFile("/manifest");
+    Str raw = lit->GetFile(StrL("/manifest"));
     if (str::IsNull(raw)) {
         return false;
     }
@@ -925,7 +925,7 @@ static bool LitParseManifest(LitFile* lit) {
                 // normalize the original path: windows separators, drive
                 // letters, stray ".." (all seen in the wild per calibre)
                 TempStr path = str::DupTemp(item.original);
-                str::TransCharsInPlace(path, "\\", "/");
+                str::TransCharsInPlace(path, StrL("\\"), StrL("/"));
                 if (len(path) > 2 && path.s[1] == ':' && path.s[2] == '/') {
                     path = str::DupTemp(Str(path.s + 3, len(path) - 3));
                 }
@@ -1182,7 +1182,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
     bool isGoingdown = false;
     bool tagIsAtom = false;
     int tag = 0;
-    TempStr tagName = nullptr;
+    TempStr tagName;
     str::Builder custom;
     str::Builder href;
 
@@ -1247,7 +1247,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                 if (c == 0) {
                     state = 0;
                     if (!isGoingdown) {
-                        tagName = nullptr;
+                        tagName = {};
                         out.Append(StrL(" />"));
                     } else {
                         out.Append(StrL(">"));
@@ -1261,7 +1261,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                         out.Append(StrL("</"));
                         out.Append(Str(tagName));
                         out.Append(StrL(">"));
-                        tagName = nullptr;
+                        tagName = {};
                         isGoingdown = false;
                     }
                 } else {
@@ -1527,12 +1527,12 @@ Str LitToEpubConvert(Str litData) {
         return {};
     }
 
-    Str meta = lit.GetFile("/meta");
+    Str meta = lit.GetFile(StrL("/meta"));
     if (str::IsNull(meta)) {
         logf("LitDoc: no /meta\n");
         return {};
     }
-    Str opf = LitUnBinary(&lit, meta, "content.opf", false, nullptr);
+    Str opf = LitUnBinary(&lit, meta, StrL("content.opf"), false, nullptr);
     if (str::IsNull(opf)) {
         logf("LitDoc: failed to reconstruct OPF\n");
         return {};
@@ -1540,11 +1540,11 @@ Str LitToEpubConvert(Str litData) {
 
     str::Builder zipData;
     ZipCreator zc(zipData);
-    bool ok = zc.AddFileData("mimetype", "application/epub+zip");
-    ok &= zc.AddFileData("META-INF/container.xml", Str(kContainerXml));
+    bool ok = zc.AddFileData(StrL("mimetype"), StrL("application/epub+zip"));
+    ok &= zc.AddFileData(StrL("META-INF/container.xml"), Str(kContainerXml));
     {
         TempStr full = str::JoinTemp(Str(kOpfDecl), opf);
-        ok &= zc.AddFileData("content.opf", Str(full));
+        ok &= zc.AddFileData(StrL("content.opf"), Str(full));
     }
     str::Free(opf);
 

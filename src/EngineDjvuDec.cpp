@@ -48,7 +48,7 @@ static bool DjvuDecCouldBeURL(Str link) {
         str::StartsWithI(link, StrL("mailto:"))) {
         return true;
     }
-    return str::Contains(link, ".");
+    return str::Contains(link, StrL("."));
 }
 
 struct PageDestinationDjvuDec : IPageDestination {
@@ -238,7 +238,7 @@ constexpr int kDjvuPageCacheMaxPages = 32;
 
 EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
-    SetDefaultExt(defaultExt, ".djvu");
+    SetDefaultExt(defaultExt, StrL(".djvu"));
     fileDPI = 300.0f;
 }
 
@@ -746,13 +746,13 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
     // evenly splitting the box horizontally (computed from endpoints so slices
     // tile exactly); this makes partial-word search hits and selections
     // highlight roughly just the matched characters
-    int n = Utf8CodepointCount(z->text);
+    int n = Utf8CodepointCount(Str(z->text));
     for (int i = 0; i < n; i++) {
         int xStart = r.x + ((i * r.dx) / n);
         int xEnd = r.x + (((i + 1) * r.dx) / n);
         coords.Append(Rect(xStart, r.y, xEnd - xStart, r.dy));
     }
-    sb.Append(z->text);
+    sb.Append(Str(z->text));
 }
 
 PageText EngineDjvuDec::ExtractPageText(int pageNo) {

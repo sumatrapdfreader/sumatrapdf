@@ -254,7 +254,7 @@ Str PageDestinationMupdf::GetName2() {
         return name;
     }
     if (outline && outline->title) {
-        name = str::Dup(outline->title);
+        name = str::Dup(Str(outline->title));
     }
     return name;
 }
@@ -629,14 +629,14 @@ static float FzRectOverlap(fz_rect r1, RectF r2f) {
 
 static TempWStr PdfToWStrTemp(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    TempWStr res = ToWStrTemp(s);
+    TempWStr res = ToWStrTemp(Str(s));
     fz_free(ctx, s);
     return res;
 }
 
 static TempStr PdfToUtf8Temp(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    TempStr res = str::DupTemp(s);
+    TempStr res = str::DupTemp(Str(s));
     fz_free(ctx, s);
     return res;
 }
@@ -2974,7 +2974,7 @@ static void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec
         }
         pli.startAt = (int)startAt;
 
-        pli.type = pdf_to_name(ctx, pdf_dict_gets(ctx, info, "S"));
+        pli.type = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, info, "S")));
         pli.prefix = pdf_dict_gets(ctx, info, "P");
         pli.countFrom = pdf_to_int(ctx, pdf_dict_gets(ctx, info, "St"));
         // BuildPageLabelVec computes countFrom + j for j < pageCount: keep the
@@ -3005,7 +3005,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
 
     StrVec* labels = new StrVec();
     for (int i = 0; i < pageCount; i++) {
-        labels->Append("");
+        labels->Append(StrL(""));
     }
 
     for (int i = 0; i < n; i++) {
@@ -3025,8 +3025,8 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         }
     }
 
-    for (int idx = 0; (idx = labels->Find(nullptr, idx)) != -1; idx++) {
-        labels->SetAt(idx, "");
+    for (int idx = 0; (idx = labels->Find(Str(), idx)) != -1; idx++) {
+        labels->SetAt(idx, StrL(""));
     }
 
     if (PageLabelsContainInternalPdgNames(labels, pageCount)) {
@@ -3443,7 +3443,7 @@ static Str TxtFileToHTML(Str path) {
     }
 
     str::Builder d;
-    d.Append(R"(<html>
+    d.Append(StrL(R"(<html>
     <head>
 <style>
     body {
@@ -3455,14 +3455,14 @@ static Str TxtFileToHTML(Str path) {
 </style>
     </head>
 <body>
-    <pre>)");
+    <pre>)"));
     bool ok = d.Append(data);
     if (!ok) {
         return {};
     }
-    d.Append(R"(</pre>
+    d.Append(StrL(R"(</pre>
 </body>
-</html>)");
+</html>)"));
     return d.TakeStr();
 }
 
@@ -3669,12 +3669,12 @@ bool EngineMupdf_UnitTestEbookFontFamilyCss() {
         return false;
     }
     TempStr css = EbookFontFamilyCssTemp(StrL("Segoe UI"));
-    if (!str::Contains(css, "font-family: \"Segoe UI\" !important;")) {
+    if (!str::Contains(css, StrL("font-family: \"Segoe UI\" !important;"))) {
         return false;
     }
     // the elements publishers actually hang fonts off, and no monospace ones
-    return str::Contains(css, "span,") && str::Contains(css, "div,") && str::Contains(css, "li,") &&
-           !str::Contains(css, "pre,") && !str::Contains(css, "code,");
+    return str::Contains(css, StrL("span,")) && str::Contains(css, StrL("div,")) && str::Contains(css, StrL("li,")) &&
+           !str::Contains(css, StrL("pre,")) && !str::Contains(css, StrL("code,"));
 }
 #endif
 
@@ -3839,7 +3839,8 @@ bool EngineMupdf_UnitTestMergeEBookUI() {
 // used to tell the user their EBookUI.FontName didn't take (issue #4600)
 static bool EbookFontIsAvailable(fz_context* ctx, Str fontName) {
     const char* name = CStrTemp(fontName);
-    if (str::EqI(name, "serif") || str::EqI(name, "sans-serif") || str::EqI(name, "monospace")) {
+    if (str::EqI(Str(name), StrL("serif")) || str::EqI(Str(name), StrL("sans-serif")) ||
+        str::EqI(Str(name), StrL("monospace"))) {
         return true;
     }
     int size = 0;
@@ -4428,7 +4429,7 @@ bool EngineMupdf::FinishLoading() {
             for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_dict_gets(ctx, pdf_array_get(ctx, intents, i), "S");
                 if (pdf_is_name(ctx, intent) && !pdf_is_indirect(ctx, intent) &&
-                    str::StartsWith(pdf_to_name(ctx, intent), StrL("GTS_PDF"))) {
+                    str::StartsWith(Str(pdf_to_name(ctx, intent)), StrL("GTS_PDF"))) {
                     pdf_array_push(ctx, list, intent);
                 }
             }
@@ -4493,7 +4494,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationAttachment;
     // WCHAR* path = ToWStr(outline->uri);
-    dest->name = str::Dup(outline->title);
+    dest->name = str::Dup(Str(outline->title));
     // page is really a stream number
     Str title = outline->title ? Str(outline->title) : StrL("");
     TempStr nameHex = str::MemToHexTemp(title);
@@ -4930,7 +4931,7 @@ void EngineMupdf::StartHeadingTocIfNeeded() {
     AddRef();
     AtomicIntInc(&gDangerousThreadCount);
     auto fn = MkFunc0(HeadingTocBuildThread, this);
-    ThreadHandle th = StartThread(fn, "HeadingToc");
+    ThreadHandle th = StartThread(fn, StrL("HeadingToc"));
     if (!th) {
         AtomicIntDec(&gDangerousThreadCount);
         Release();
@@ -5199,7 +5200,7 @@ static Str WidgetTooltipTemp(fz_context* ctx, pdf_annot* annot) {
     if (!s || !s[0]) {
         return {};
     }
-    return s;
+    return Str(s);
 }
 
 // Hover tip for an annotation: author and/or contents (issue #5329).
@@ -5208,10 +5209,10 @@ static Str WidgetTooltipTemp(fz_context* ctx, pdf_annot* annot) {
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_bound_annot(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
-    Str contents = NormalizeCommentNewlinesTemp(pdf_annot_contents(ctx, annot));
+    Str contents = NormalizeCommentNewlinesTemp(Str(pdf_annot_contents(ctx, annot)));
     Str author;
     if (pdf_annot_has_author(ctx, annot)) {
-        author = pdf_annot_author(ctx, annot);
+        author = Str(pdf_annot_author(ctx, annot));
         if (str::IsEmptyOrWhiteSpace(author)) {
             author = {};
         }
@@ -5240,14 +5241,14 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
 static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* annot, int pageNo,
                                                 Vec<IPageElement*>& comments) {
     auto tp = pdf_annot_type(ctx, annot);
-    Str contents = pdf_annot_contents(ctx, annot); // don't free
+    Str contents = Str(pdf_annot_contents(ctx, annot)); // don't free
     if (contents.len > 128) {
         contents = str::DupTemp(Str(contents.s, 128));
     }
     bool isContentsEmpty = !contents;
     Str author;
     if (pdf_annot_has_author(ctx, annot)) {
-        author = pdf_annot_author(ctx, annot);
+        author = Str(pdf_annot_author(ctx, annot));
         if (str::IsEmptyOrWhiteSpace(author)) {
             author = {};
         }
@@ -5271,7 +5272,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
 
         auto* dest = new PageDestination();
         dest->kind = kindDestinationLaunchEmbedded;
-        dest->value = str::Dup(attname);
+        dest->value = str::Dup(Str(attname));
         dest->embedObjNum = num;
 
         auto* el = new PageElementDestination(dest);
@@ -7008,9 +7009,9 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             if (font2 != font) {
                 Str type2 = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font2, "Subtype")));
                 if (str::Eq(type2, StrL("CIDFontType0"))) {
-                    type = "Type1 (CID)";
+                    type = StrL("Type1 (CID)");
                 } else if (str::Eq(type2, StrL("CIDFontType2"))) {
-                    type = "TrueType (CID)";
+                    type = StrL("TrueType (CID)");
                 }
             }
             if (str::Eq(type, StrL("Type3"))) {
@@ -7019,11 +7020,11 @@ TempStr EngineMupdf::ExtractFontListTemp() {
 
             encoding = Str(pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Encoding")));
             if (str::Eq(encoding, StrL("WinAnsiEncoding"))) {
-                encoding = "Ansi";
+                encoding = StrL("Ansi");
             } else if (str::Eq(encoding, StrL("MacRomanEncoding"))) {
-                encoding = "Roman";
+                encoding = StrL("Roman");
             } else if (str::Eq(encoding, StrL("MacExpertEncoding"))) {
-                encoding = "Expert";
+                encoding = StrL("Expert");
             }
         }
         fz_catch(ctx) {
@@ -7148,7 +7149,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
             int n = pdf_array_len(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"));
             for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"), i);
-                ReportIf(!str::StartsWith(pdf_to_name(ctx, intent), StrL("GTS_")));
+                ReportIf(!str::StartsWith(Str(pdf_to_name(ctx, intent)), StrL("GTS_")));
                 const char* intentName = pdf_to_name(ctx, intent);
                 fstruct.Append(Str(intentName + 4));
             }
@@ -7161,7 +7162,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
 
     if (prop == DocProp::UnsupportedFeatures) {
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Unsupported_XFA"))) {
-            return "XFA";
+            return StrL("XFA");
         }
         return {};
     }
@@ -7494,9 +7495,9 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     bool isCades = SubFilterIsCades(subFilter) || info.has_cades_attr;
     AppendPadesLevel(s, isCades, info.has_timestamp, ltv, docHasDocTs, isDocTs, info.has_sig_policy_attr);
 
-    AppendSigDictText(ctx, s, vDict, "reason", PDF_NAME(Reason));
-    AppendSigDictText(ctx, s, vDict, "location", PDF_NAME(Location));
-    AppendSigDictText(ctx, s, vDict, "contact", PDF_NAME(ContactInfo));
+    AppendSigDictText(ctx, s, vDict, StrL("reason"), PDF_NAME(Reason));
+    AppendSigDictText(ctx, s, vDict, StrL("location"), PDF_NAME(Location));
+    AppendSigDictText(ctx, s, vDict, StrL("contact"), PDF_NAME(ContactInfo));
 
     if (info.has_timestamp) {
         s.Append(StrL("  -----\n"));
@@ -7590,12 +7591,12 @@ void EngineMupdf::GetProperties(Props& propsOut) {
     auto* ctx = Ctx();
     ScopedRecursiveMutex ctxScope(&docLock);
 
-    TempStr val = LookupMetadataTemp(ctx, _doc, "info:Keywords");
+    TempStr val = LookupMetadataTemp(ctx, _doc, StrL("info:Keywords"));
     if (val) {
         AddProp(propsOut, DocProp::Keywords, val);
     }
 
-    val = LookupMetadataTemp(ctx, _doc, "encryption");
+    val = LookupMetadataTemp(ctx, _doc, StrL("encryption"));
     if (val) {
         AddProp(propsOut, DocProp::Encryption, val);
     }
@@ -7742,7 +7743,7 @@ bool EngineMupdfIsEncrypted(EngineBase* engine) {
 Str EngineMupdfGetPassword(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf) {
-        return nullptr;
+        return {};
     }
     return epdf->pdfPassword;
 }
@@ -7963,7 +7964,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, P
         }
         engine->displayDPI = displayDPI;
         fz_stream* stm = FzStreamFromData(engine->Ctx(), (u8*)d.s, d.len);
-        if (!engine->LoadFromStream(stm, "foo.fb2", pwdUI) || !engine->FinishLoading()) {
+        if (!engine->LoadFromStream(stm, StrL("foo.fb2"), pwdUI) || !engine->FinishLoading()) {
             SafeEngineRelease(&engine);
             return {};
         }
@@ -8203,7 +8204,7 @@ void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firs
     e->AddRef();
     AtomicIntInc(&gDangerousThreadCount);
     auto fn = MkFunc0(AnnotLoadThread, e);
-    ThreadHandle th = StartThread(fn, "LoadAnnots");
+    ThreadHandle th = StartThread(fn, StrL("LoadAnnots"));
     if (!th) {
         AtomicIntDec(&gDangerousThreadCount);
         e->Release();
@@ -8446,7 +8447,7 @@ static bool FormFieldValueIsEmpty(int wt, const char* val) {
         return true;
     }
     if (wt == PDF_WIDGET_TYPE_CHECKBOX || wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
-        return str::Eq(val, StrL("Off"));
+        return str::Eq(Str(val), StrL("Off"));
     }
     return str::IsEmptyOrWhiteSpace(Str(val));
 }
@@ -8623,7 +8624,7 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
         return {};
     }
     fz_register_document_handlers(ctx);
-    TempStr res = nullptr;
+    TempStr res;
     fz_document* doc = nullptr;
     fz_outline* outline = nullptr;
     fz_buffer* buf = nullptr;
@@ -8660,7 +8661,7 @@ TempStr EngineMupdfGetPdfInfo(Str path) {
         return {};
     }
     fz_register_document_handlers(ctx);
-    TempStr res = nullptr;
+    TempStr res;
     fz_buffer* buf = nullptr;
     fz_try(ctx) {
         buf = pdfinfo_to_buffer(ctx, path.s);

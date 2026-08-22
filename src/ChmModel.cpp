@@ -98,7 +98,7 @@ Str ChmModel::GetFilePath() const {
 }
 
 Str ChmModel::GetDefaultFileExt() const {
-    return ".chm";
+    return StrL(".chm");
 }
 
 int ChmModel::PageCount() const {
@@ -279,7 +279,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
         // (same as for PDF, XPS, etc. documents)
         if (cb) {
             // TODO: optimize, create just destination
-            auto* item = NewChmTocItem(nullptr, nullptr, 0, pageUrl);
+            auto* item = NewChmTocItem(nullptr, {}, 0, pageUrl);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -671,7 +671,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     if (newWindow || IsExternalUrl(url)) {
         if (url && cb) {
             // TODO: optimize, create just destination
-            auto* item = NewChmTocItem(nullptr, nullptr, 1, url);
+            auto* item = NewChmTocItem(nullptr, {}, 1, url);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -695,7 +695,7 @@ static TempStr ChmThemeStyleTemp() {
     Color txtCol = ThemePageRenderColors(bgCol);
     bool isDefault = (bgCol == kColWhite) && (txtCol == kColBlack);
     if (isDefault) {
-        return nullptr;
+        return {};
     }
     bool dark = !IsLightColor(bgCol);
     TempStr bg = ColorToCssTemp(bgCol);

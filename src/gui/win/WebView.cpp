@@ -771,7 +771,7 @@ class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
 
 static TempWStr MimeHeaderFromContentType(Str contentType) {
     if (len(contentType) == 0) {
-        contentType = "text/html";
+        contentType = StrL("text/html");
     }
     TempWStr contentTypeW = ToWStrTemp(contentType);
     return str::JoinTemp(WStrL(L"Content-Type: "), contentTypeW);
@@ -894,7 +894,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
         TempStr path = ToUtf8Temp(pathW);
         WebViewResourceResult res;
         if (!m_wnd->resourceProvider.getResource(m_wnd->resourceProvider.ctx, path, &res)) {
-            CreateWebResourceResponseFromData(args, {}, "text/plain", 404);
+            CreateWebResourceResponseFromData(args, {}, StrL("text/plain"), 404);
             return S_OK;
         }
 
@@ -1348,8 +1348,8 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
         failedHandler->Release();
     }
 
-    Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
-    Init(kJsBridgeScript);
+    Init(StrL("window.external={invoke:s=>window.chrome.webview.postMessage(s)}"));
+    Init(Str(kJsBridgeScript));
     // re-register any names bound before the controller was ready
     RebuildBindScript();
     initStarted = true;
@@ -1532,19 +1532,19 @@ static const char* kJsCallPrefix = "{\"__sumatraCall\":1";
 static const char* kJsNotifyPrefix = "{\"__sumatraNotify\":1";
 
 static bool IsJsCallMessage(Str msg) {
-    return str::StartsWith(msg, kJsCallPrefix);
+    return str::StartsWith(msg, Str(kJsCallPrefix));
 }
 
 static bool IsJsNotifyMessage(Str msg) {
-    return str::StartsWith(msg, kJsNotifyPrefix);
+    return str::StartsWith(msg, Str(kJsNotifyPrefix));
 }
 
 namespace {
 // json::Parse hands value as a temp-arena copy; path is valid only during the callback.
 struct JsCallState {
-    TempStr id = nullptr;
-    TempStr method = nullptr;
-    TempStr params = nullptr;
+    TempStr id;
+    TempStr method;
+    TempStr params;
 };
 
 static void JsCallOnValue(JsCallState* st, json::Value* v) {
@@ -2125,12 +2125,12 @@ void WebviewWnd::OnTimer(WindowBase::TimerEvent* ev) {
 void WebviewWnd::OnSize(WindowBase::SizeEvent* ev) {
     if (ev->msg == WM_ENTERSIZEMOVE) {
         isInSizeMove = true;
-        Eval("if (window.__setHostResizing) window.__setHostResizing(true);");
+        Eval(StrL("if (window.__setHostResizing) window.__setHostResizing(true);"));
         return;
     }
     if (ev->msg == WM_EXITSIZEMOVE) {
         isInSizeMove = false;
-        Eval("if (window.__setHostResizing) window.__setHostResizing(false);");
+        Eval(StrL("if (window.__setHostResizing) window.__setHostResizing(false);"));
         UpdateWebviewSize();
         return;
     }

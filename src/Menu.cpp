@@ -154,7 +154,7 @@ static MenuDef menuDefFile[] = {
         CmdPrint,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
@@ -203,7 +203,7 @@ static MenuDef menuDefFile[] = {
         CmdSendByEmail,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -211,7 +211,7 @@ static MenuDef menuDefFile[] = {
         CmdProperties,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -219,7 +219,7 @@ static MenuDef menuDefFile[] = {
         CmdExit,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -257,7 +257,7 @@ static MenuDef menuDefView[] = {
         CmdToggleUniformPageWidth,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -269,7 +269,7 @@ static MenuDef menuDefView[] = {
         CmdRotateRight,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -281,7 +281,7 @@ static MenuDef menuDefView[] = {
         CmdToggleFullscreen,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -301,7 +301,7 @@ static MenuDef menuDefView[] = {
         CmdToggleHighlightFormFields,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -321,7 +321,7 @@ static MenuDef menuDefView[] = {
         CmdAIChatWithAntiGravity,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -350,7 +350,7 @@ static MenuDef menuDefGoTo[] = {
         CmdGoToPage,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -362,7 +362,7 @@ static MenuDef menuDefGoTo[] = {
         CmdNavigateForward,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -370,7 +370,7 @@ static MenuDef menuDefGoTo[] = {
         CmdFindFirst,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -414,11 +414,11 @@ static MenuDef menuDefZoomShort[] = {
         CmdZoomToSelection,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -462,63 +462,63 @@ static MenuDef menuDefZoom[] = {
         CmdZoomToSelection,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
-        "6400%",
+        StrL("6400%"),
         CmdZoom6400,
     },
     {
-        "3200%",
+        StrL("3200%"),
         CmdZoom3200,
     },
     {
-        "1600%",
+        StrL("1600%"),
         CmdZoom1600,
     },
     {
-        "800%",
+        StrL("800%"),
         CmdZoom800,
     },
     {
-        "400%",
+        StrL("400%"),
         CmdZoom400,
     },
     {
-        "200%",
+        StrL("200%"),
         CmdZoom200,
     },
     {
-        "150%",
+        StrL("150%"),
         CmdZoom150,
     },
     {
-        "125%",
+        StrL("125%"),
         CmdZoom125,
     },
     {
-        "100%",
+        StrL("100%"),
         CmdZoom100,
     },
     {
-        "50%",
+        StrL("50%"),
         CmdZoom50,
     },
     {
-        "25%",
+        StrL("25%"),
         CmdZoom25,
     },
     {
-        "12.5%",
+        StrL("12.5%"),
         CmdZoom12_5,
     },
     {
-        "8.33%",
+        StrL("8.33%"),
         CmdZoom8_33,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -527,7 +527,7 @@ static MenuDef menuDefZoom[] = {
 // TODO: replace with CmdetTheme
 static MenuDef menuDefThemes[] = {
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -540,7 +540,7 @@ static MenuDef menuDefSettings[] = {
     },
 #if 0
     { _TRN("Contribute Translation"),       CmdContributeTranslation },
-    { kMenuSeparator,                             0                  },
+    { StrL(kMenuSeparator),                       0                  },
 #endif
     {
         _TRN("Use SumatraPDF File Picker"),
@@ -559,7 +559,7 @@ static MenuDef menuDefSettings[] = {
         (UINT_PTR)menuDefThemes,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -576,7 +576,7 @@ static MenuDef menuDefTabGroups[] = {
         CmdTabGroupRestore,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -599,7 +599,7 @@ static MenuDef menuDefFavorites[] = {
         CmdFavoriteShowInTab,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -607,7 +607,7 @@ static MenuDef menuDefFavorites[] = {
         (UINT_PTR)menuDefTabGroups,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -645,7 +645,7 @@ static MenuDef menuDefHelp[] = {
         CmdDebugToggleCacheInfo,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -653,7 +653,7 @@ static MenuDef menuDefHelp[] = {
         CmdHelpAbout,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -662,35 +662,35 @@ static MenuDef menuDefHelp[] = {
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
     {
-        "Show links",
+        StrL("Show links"),
         CmdToggleLinks,
     },
     {
-        "Show page boxes",
+        StrL("Show page boxes"),
         CmdTogglePageBoxes,
     },
     {
-        "Show images",
+        StrL("Show images"),
         CmdToggleImages,
     },
     {
-        "Show fit content area",
+        StrL("Show fit content area"),
         CmdDebugShowFitContentArea,
     },
     {
-        "Download symbols",
+        StrL("Download symbols"),
         CmdDebugDownloadSymbols,
     },
     {
-        "Test app",
+        StrL("Test app"),
         CmdDebugTestApp,
     },
     {
-        "Show notification",
+        StrL("Show notification"),
         CmdDebugShowNotif,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -743,7 +743,7 @@ static MenuDef menuDefSelection[] = {
         CmdSelectAll,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -800,7 +800,7 @@ static MenuDef menuDefMainSelection[] = {
         CmdSelectAll,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -816,7 +816,7 @@ static MenuDef menuDefReadAloud[] = {
         CmdReadAloud,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -829,7 +829,7 @@ static MenuDef menuDefContextReadAloud[] = {
         CmdReadAloud,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -874,11 +874,11 @@ static MenuDef menuDefMenubar[] = {
         (UINT_PTR)menuDefHelp,
     },
     {
-        "Debug",
+        StrL("Debug"),
         (UINT_PTR)menuDefDebug,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -904,7 +904,7 @@ static MenuDef menuDefCreateAnnotFromSelection[] = {
     },
     //{ _TRN("Redact"), CmdCreateAnnotRedact, },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -959,7 +959,7 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
     //{ _TRN("Ink"), CmdCreateAnnotInk, },
     //{ _TRN("File Attachment"), CmdCreateAnnotFileAttachment, },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -992,7 +992,7 @@ static MenuDef menuDefContextImage[] = {
         CmdConvertToPDF,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -1017,7 +1017,7 @@ static MenuDef menuDefDocumentAIChat[] = {
         CmdAIChatWithAntiGravity,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -1090,7 +1090,7 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdShowInFolder,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -1132,11 +1132,11 @@ static MenuDef menuDefContext[] = {
     },
     // note: strings cannot be "" or else items are not there
     {
-        "Add to favorites",
+        StrL("Add to favorites"),
         CmdFavoriteAdd,
     },
     {
-        "Remove from favorites",
+        StrL("Remove from favorites"),
         CmdFavoriteDel,
     },
     {
@@ -1152,7 +1152,7 @@ static MenuDef menuDefContext[] = {
         CmdToggleToolbar,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         kMenuSeparatorID,
     },
     {
@@ -1196,7 +1196,7 @@ static MenuDef menuDefContext[] = {
         CmdToggleFullscreen, // only seen in full-screen mode
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -1217,7 +1217,7 @@ static MenuDef menuDefContextStart[] = {
         CmdPinSelectedDocument,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -1229,7 +1229,7 @@ static MenuDef menuDefContextStart[] = {
         CmdDeleteFile,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };
@@ -1332,10 +1332,10 @@ static void AppendRecentFilesToMenu(HMENU m) {
 #if 0
     AddFileMenuItem(
         m,
-        "\xf0\x9f\xa4\xa3\xf0\x9f\x98\x8a\xf0\x9f\x98\x82\xe2\x9d\xa4\xf0\x9f\x98\x8d\xf0\x9f\x98\x92\xf0\x9f\x91\x8c"
-        "\xf0\x9f\x98\x98\xf0\x9f\x92\x95\xf0\x9f\x98\x81\xf0\x9f\x91\x8d\xf0\x9f\x99\x8c\xf0\x9f\xa4\xa6\xe2\x80\x8d"
-        "\xe2\x99\x80\xef\xb8\x8f\xf0\x9f\xa4\xa6\xe2\x80\x8d\xe2\x99\x82\xef\xb8\x8f\xf0\x9f\xa4\xb7\xe2\x80\x8d\xe2"
-        "\x99\x80\xef\xb8\x8f\xf0\x9f\xa4\xb7\xe2\x80\x8d\xe2\x99\x82\xef\xb8\x8f\x2e\x70\x64\x66",
+        StrL("\xf0\x9f\xa4\xa3\xf0\x9f\x98\x8a\xf0\x9f\x98\x82\xe2\x9d\xa4\xf0\x9f\x98\x8d\xf0\x9f\x98\x92\xf0\x9f\x91\x8c")
+        StrL("\xf0\x9f\x98\x98\xf0\x9f\x92\x95\xf0\x9f\x98\x81\xf0\x9f\x91\x8d\xf0\x9f\x99\x8c\xf0\x9f\xa4\xa6\xe2\x80\x8d")
+        StrL("\xe2\x99\x80\xef\xb8\x8f\xf0\x9f\xa4\xa6\xe2\x80\x8d\xe2\x99\x82\xef\xb8\x8f\xf0\x9f\xa4\xb7\xe2\x80\x8d\xe2")
+        StrL("\x99\x80\xef\xb8\x8f\xf0\x9f\xa4\xb7\xe2\x80\x8d\xe2\x99\x82\xef\xb8\x8f\x2e\x70\x64\x66"),
         i++);
 #endif
 
@@ -1378,8 +1378,8 @@ static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
     Vec<CustomCommand*> cmds;
     GetCommandsWithOrigId(cmds, CmdViewWithExternalViewer);
     for (CustomCommand* cmd : cmds) {
-        Str commandLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
-        Str filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+        Str commandLine = GetCommandStringArg(cmd, kCmdArgCommandLine, {});
+        Str filter = GetCommandStringArg(cmd, kCmdArgFilter, {});
         if (str::IsEmptyOrWhiteSpace(commandLine)) {
             continue;
         }
@@ -1526,7 +1526,7 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         // handle separators before command state checks
         // (separators have idOrSubmenu=0 which would match the 0 sentinel in removal lists)
-        if (str::Eq(md.title, kMenuSeparator)) {
+        if (str::Eq(md.title, StrL(kMenuSeparator))) {
             AppendMenuW(menu, MF_SEPARATOR, kMenuSeparatorID, nullptr);
             continue;
         }
@@ -2606,7 +2606,7 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     int dx = size.dx;
     if (shortcutText) {
         // add space betweeen menu text and shortcut
-        size = PlatformFontMeasureText(font, "    ");
+        size = PlatformFontMeasureText(font, StrL("    "));
         dx += size.dx;
         size = PlatformFontMeasureText(font, shortcutText);
         dx += size.dx;

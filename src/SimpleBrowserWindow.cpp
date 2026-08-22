@@ -175,7 +175,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         }
         cargs.title = args.title;
         if (!cargs.title) {
-            cargs.title = "Browser Window";
+            cargs.title = StrL("Browser Window");
         }
         HMODULE h = GetModuleHandleW(nullptr);
         WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());

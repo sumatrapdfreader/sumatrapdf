@@ -135,22 +135,22 @@ static void AppendPrinterAttributes(str::Builder& out, DWORD attr) {
         DWORD flag;
         Str name;
     } flags[] = {
-        {PRINTER_ATTRIBUTE_QUEUED, "QUEUED"},
-        {PRINTER_ATTRIBUTE_DIRECT, "DIRECT"},
-        {PRINTER_ATTRIBUTE_DEFAULT, "DEFAULT"},
-        {PRINTER_ATTRIBUTE_SHARED, "SHARED"},
-        {PRINTER_ATTRIBUTE_NETWORK, "NETWORK"},
-        {PRINTER_ATTRIBUTE_HIDDEN, "HIDDEN"},
-        {PRINTER_ATTRIBUTE_LOCAL, "LOCAL"},
-        {PRINTER_ATTRIBUTE_ENABLE_DEVQ, "ENABLE_DEVQ"},
-        {PRINTER_ATTRIBUTE_KEEPPRINTEDJOBS, "KEEPPRINTEDJOBS"},
-        {PRINTER_ATTRIBUTE_DO_COMPLETE_FIRST, "DO_COMPLETE_FIRST"},
-        {PRINTER_ATTRIBUTE_WORK_OFFLINE, "WORK_OFFLINE"},
-        {PRINTER_ATTRIBUTE_ENABLE_BIDI, "ENABLE_BIDI"},
-        {PRINTER_ATTRIBUTE_RAW_ONLY, "RAW_ONLY"},
-        {PRINTER_ATTRIBUTE_PUBLISHED, "PUBLISHED"},
-        {PRINTER_ATTRIBUTE_FAX, "FAX"},
-        {PRINTER_ATTRIBUTE_TS, "TS"},
+        {PRINTER_ATTRIBUTE_QUEUED, StrL("QUEUED")},
+        {PRINTER_ATTRIBUTE_DIRECT, StrL("DIRECT")},
+        {PRINTER_ATTRIBUTE_DEFAULT, StrL("DEFAULT")},
+        {PRINTER_ATTRIBUTE_SHARED, StrL("SHARED")},
+        {PRINTER_ATTRIBUTE_NETWORK, StrL("NETWORK")},
+        {PRINTER_ATTRIBUTE_HIDDEN, StrL("HIDDEN")},
+        {PRINTER_ATTRIBUTE_LOCAL, StrL("LOCAL")},
+        {PRINTER_ATTRIBUTE_ENABLE_DEVQ, StrL("ENABLE_DEVQ")},
+        {PRINTER_ATTRIBUTE_KEEPPRINTEDJOBS, StrL("KEEPPRINTEDJOBS")},
+        {PRINTER_ATTRIBUTE_DO_COMPLETE_FIRST, StrL("DO_COMPLETE_FIRST")},
+        {PRINTER_ATTRIBUTE_WORK_OFFLINE, StrL("WORK_OFFLINE")},
+        {PRINTER_ATTRIBUTE_ENABLE_BIDI, StrL("ENABLE_BIDI")},
+        {PRINTER_ATTRIBUTE_RAW_ONLY, StrL("RAW_ONLY")},
+        {PRINTER_ATTRIBUTE_PUBLISHED, StrL("PUBLISHED")},
+        {PRINTER_ATTRIBUTE_FAX, StrL("FAX")},
+        {PRINTER_ATTRIBUTE_TS, StrL("TS")},
     };
     for (auto& f : flags) {
         if (attr & f.flag) {
@@ -164,31 +164,31 @@ static void AppendPrinterStatus(str::Builder& out, DWORD status) {
         DWORD flag;
         Str name;
     } flags[] = {
-        {PRINTER_STATUS_PAUSED, "PAUSED"},
-        {PRINTER_STATUS_ERROR, "ERROR"},
-        {PRINTER_STATUS_PENDING_DELETION, "PENDING_DELETION"},
-        {PRINTER_STATUS_PAPER_JAM, "PAPER_JAM"},
-        {PRINTER_STATUS_PAPER_OUT, "PAPER_OUT"},
-        {PRINTER_STATUS_MANUAL_FEED, "MANUAL_FEED"},
-        {PRINTER_STATUS_PAPER_PROBLEM, "PAPER_PROBLEM"},
-        {PRINTER_STATUS_OFFLINE, "OFFLINE"},
-        {PRINTER_STATUS_IO_ACTIVE, "IO_ACTIVE"},
-        {PRINTER_STATUS_BUSY, "BUSY"},
-        {PRINTER_STATUS_PRINTING, "PRINTING"},
-        {PRINTER_STATUS_OUTPUT_BIN_FULL, "OUTPUT_BIN_FULL"},
-        {PRINTER_STATUS_NOT_AVAILABLE, "NOT_AVAILABLE"},
-        {PRINTER_STATUS_WAITING, "WAITING"},
-        {PRINTER_STATUS_PROCESSING, "PROCESSING"},
-        {PRINTER_STATUS_INITIALIZING, "INITIALIZING"},
-        {PRINTER_STATUS_WARMING_UP, "WARMING_UP"},
-        {PRINTER_STATUS_TONER_LOW, "TONER_LOW"},
-        {PRINTER_STATUS_NO_TONER, "NO_TONER"},
-        {PRINTER_STATUS_PAGE_PUNT, "PAGE_PUNT"},
-        {PRINTER_STATUS_USER_INTERVENTION, "USER_INTERVENTION"},
-        {PRINTER_STATUS_OUT_OF_MEMORY, "OUT_OF_MEMORY"},
-        {PRINTER_STATUS_DOOR_OPEN, "DOOR_OPEN"},
-        {PRINTER_STATUS_SERVER_UNKNOWN, "SERVER_UNKNOWN"},
-        {PRINTER_STATUS_POWER_SAVE, "POWER_SAVE"},
+        {PRINTER_STATUS_PAUSED, StrL("PAUSED")},
+        {PRINTER_STATUS_ERROR, StrL("ERROR")},
+        {PRINTER_STATUS_PENDING_DELETION, StrL("PENDING_DELETION")},
+        {PRINTER_STATUS_PAPER_JAM, StrL("PAPER_JAM")},
+        {PRINTER_STATUS_PAPER_OUT, StrL("PAPER_OUT")},
+        {PRINTER_STATUS_MANUAL_FEED, StrL("MANUAL_FEED")},
+        {PRINTER_STATUS_PAPER_PROBLEM, StrL("PAPER_PROBLEM")},
+        {PRINTER_STATUS_OFFLINE, StrL("OFFLINE")},
+        {PRINTER_STATUS_IO_ACTIVE, StrL("IO_ACTIVE")},
+        {PRINTER_STATUS_BUSY, StrL("BUSY")},
+        {PRINTER_STATUS_PRINTING, StrL("PRINTING")},
+        {PRINTER_STATUS_OUTPUT_BIN_FULL, StrL("OUTPUT_BIN_FULL")},
+        {PRINTER_STATUS_NOT_AVAILABLE, StrL("NOT_AVAILABLE")},
+        {PRINTER_STATUS_WAITING, StrL("WAITING")},
+        {PRINTER_STATUS_PROCESSING, StrL("PROCESSING")},
+        {PRINTER_STATUS_INITIALIZING, StrL("INITIALIZING")},
+        {PRINTER_STATUS_WARMING_UP, StrL("WARMING_UP")},
+        {PRINTER_STATUS_TONER_LOW, StrL("TONER_LOW")},
+        {PRINTER_STATUS_NO_TONER, StrL("NO_TONER")},
+        {PRINTER_STATUS_PAGE_PUNT, StrL("PAGE_PUNT")},
+        {PRINTER_STATUS_USER_INTERVENTION, StrL("USER_INTERVENTION")},
+        {PRINTER_STATUS_OUT_OF_MEMORY, StrL("OUT_OF_MEMORY")},
+        {PRINTER_STATUS_DOOR_OPEN, StrL("DOOR_OPEN")},
+        {PRINTER_STATUS_SERVER_UNKNOWN, StrL("SERVER_UNKNOWN")},
+        {PRINTER_STATUS_POWER_SAVE, StrL("POWER_SAVE")},
     };
     bool any = false;
     for (auto& f : flags) {
@@ -350,13 +350,13 @@ static void AppendDevModeInfo(str::Builder& out, DEVMODEW* dm) {
         out.Append(fmt("    color: %s\n", s));
     }
     if (dm->dmFields & DM_DUPLEX) {
-        Str s = "unknown";
+        Str s = StrL("unknown");
         if (dm->dmDuplex == DMDUP_SIMPLEX) {
-            s = "simplex";
+            s = StrL("simplex");
         } else if (dm->dmDuplex == DMDUP_HORIZONTAL) {
-            s = "horizontal";
+            s = StrL("horizontal");
         } else if (dm->dmDuplex == DMDUP_VERTICAL) {
-            s = "vertical";
+            s = StrL("vertical");
         }
         out.Append(fmt("    duplex: %s\n", s));
     }
@@ -722,7 +722,7 @@ static bool PrintToDevice(const PrintData& pd) {
         TempStr fileName = url::GetFileNameTemp(gPluginURL);
         // fall back to a generic "filename" instead of the more confusing temporary filename
         if (!fileName) {
-            fileName = "filename";
+            fileName = StrL("filename");
         }
         di.lpszDocName = CWStrTemp(fileName);
     } else {
@@ -1201,7 +1201,7 @@ static void PrintToDeviceOnThread(MainWindow* win, PrintData* data) {
     PrintThreadData* threadData = new PrintThreadData(win, data);
     win->printThread = nullptr;
     auto fn = MkFunc0(PrintThread, threadData);
-    win->printThread = StartThread(fn, "PrintThread");
+    win->printThread = StartThread(fn, StrL("PrintThread"));
 }
 
 void AbortPrinting(MainWindow* win) {
@@ -1847,7 +1847,7 @@ static short GetPaperSourceByName(Printer* printer, Str binName) {
 
 // the -print-settings token that disables honoring a PDF's /ViewerPreferences
 // print defaults (issue #534)
-static Str kIgnorePdfPrintSettingsToken = "ignore-pdf-print-settings";
+static Str kIgnorePdfPrintSettingsToken = StrL("ignore-pdf-print-settings");
 
 static bool PrintSettingsHaveToken(Str settings, Str token) {
     if (!settings) {

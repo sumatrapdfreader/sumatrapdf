@@ -601,7 +601,7 @@ static TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
         logf("CopyPlainSyncToTempFile: source file '.synctex' '%s' is empty.\n", pathSync);
         // return {};
     }
-    TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
+    TempStr tempPath = GetTempFilePathTemp(StrL("stx")); // stxabcdef.tmp
     if (!tempPath) {
         str::Free(data);
         logf("CopyPlainSyncToTempFile: unable to get temp file path. error: %d.\n", errno);
@@ -653,7 +653,7 @@ static TempStr DealPlainSync(TempStr pathSync) {
         logf("DealPlainSync: decoded content is empty.\n", pathSync);
         return {};
     }
-    TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
+    TempStr tempPath = GetTempFilePathTemp(StrL("stx")); // stxabcdef.tmp
     if (!tempPath) {
         str::Free(dst);
         logf("DealPlainSync: unable to get temp file path. error: %d.\n", errno);
@@ -704,7 +704,7 @@ static TempStr ungzipToTempSync(Str gzPath) {
         return {};
     }
 
-    TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
+    TempStr tempPath = GetTempFilePathTemp(StrL("stx")); // stxabcdef.tmp
     if (!tempPath) {
         str::Free(uncompr);
         logf("ungzipToTempSync: unable to get temp file path. error: %d.\n", errno);

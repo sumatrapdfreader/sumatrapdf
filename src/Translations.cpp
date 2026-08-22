@@ -61,7 +61,7 @@ static TempStr UnescapeTemp(Str sOrig) {
         src++;
     }
     *dst = 0;
-    return unescaped;
+    return s;
 }
 
 static void FreeTranslations() {
@@ -112,7 +112,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
         TempStr unescaped = UnescapeTemp(orig);
         c->Append(unescaped);
         if (!trans) {
-            c->Append(nullptr);
+            c->Append({});
             continue;
         }
         unescaped = UnescapeTemp(trans);
@@ -233,7 +233,7 @@ Str ValidateLangCode(Str langCode) {
     if (!langCode) return {};
     int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
-        return nullptr;
+        return {};
     }
     return GetLangCodeByIdxTemp(idx);
 }

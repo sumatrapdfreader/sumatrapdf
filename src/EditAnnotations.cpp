@@ -869,7 +869,7 @@ static void AppendPdfDate(str::Builder& s, time_t secs) {
     gmtime_s(&tm, &secs);
     char buf[100];
     strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
-    s.Append(buf);
+    s.Append(Str(buf));
 }
 
 static void DoModificationDate(EditAnnotationsWindow* ew, Annotation* annot) {
@@ -1803,7 +1803,7 @@ void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
     DoLayout({dx, dy});
 }
 
-static VirtText* CreateStatic(Str s = nullptr) {
+static VirtText* CreateStatic(Str s = {}) {
     return NewVirtText({
         .s = s,
         .font = GetAppFont(),

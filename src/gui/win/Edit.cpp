@@ -507,7 +507,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
 
 // height of one line of text in the control's font
 int Edit::LineDy() {
-    return PlatformFontMeasureText(font, "Minimal").dy;
+    return PlatformFontMeasureText(font, StrL("Minimal")).dy;
 }
 
 bool Edit::HasBorder() {
@@ -517,7 +517,7 @@ bool Edit::HasBorder() {
 }
 
 Size Edit::GetIdealSize() {
-    Size s1 = PlatformFontMeasureText(font, "Minimal");
+    Size s1 = PlatformFontMeasureText(font, StrL("Minimal"));
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
     TempStr txt = HwndGetTextTemp(hwnd);
     Size s2 = PlatformFontMeasureText(font, txt);

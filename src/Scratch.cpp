@@ -23,8 +23,8 @@
 
 void TestBrowser() {
     SimpleBrowserCreateArgs args;
-    args.title = "Test Browser Window";
-    args.url = "https://blog.kowalczyk.info/";
+    args.title = StrL("Test Browser Window");
+    args.url = StrL("https://blog.kowalczyk.info/");
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
     auto* w = new SimpleBrowserWindow();
     w->Create(args);

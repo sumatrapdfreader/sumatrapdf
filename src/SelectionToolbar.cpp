@@ -44,7 +44,7 @@
 
 struct SelectionToolbarButton {
     int cmdId = 0;
-    const char* label = nullptr; // English literal, translated via _TRA at layout/paint time
+    Str label; // English literal, translated via _TRA at layout/paint time
     // a selection handler's SelectToolbarNameOrSvg: user text shown as-is, or an
     // svg icon drawn instead of the text. Only one of them is set
     Str userLabel;
@@ -77,10 +77,14 @@ struct SelectionToolbar {
 // candidate buttons; per-window visibility/enabled state comes from
 // GetCommandVisibility (hidden buttons are dropped, disabled ones grayed)
 static const SelectionToolbarButton gCandidateButtons[] = {
-    {CmdCopySelection, _TRN("Copy")},        {CmdTranslateSelection, "Translate"},
-    {CmdReadAloudSelection, "Read Aloud"},   {CmdCreateAnnotHighlight, "Highlight"},
-    {CmdCreateAnnotUnderline, "Underline"},  {CmdCreateAnnotSquiggly, "Squiggly"},
-    {CmdCreateAnnotStrikeOut, "Strike Out"}, {CmdCreateAnnotText, "Text"},
+    {CmdCopySelection, _TRN("Copy")},
+    {CmdTranslateSelection, StrL("Translate")},
+    {CmdReadAloudSelection, StrL("Read Aloud")},
+    {CmdCreateAnnotHighlight, StrL("Highlight")},
+    {CmdCreateAnnotUnderline, StrL("Underline")},
+    {CmdCreateAnnotSquiggly, StrL("Squiggly")},
+    {CmdCreateAnnotStrikeOut, StrL("Strike Out")},
+    {CmdCreateAnnotText, StrL("Text")},
 };
 
 static const SelectionToolbarButton* FindCandidateButton(int cmdId) {
@@ -147,7 +151,7 @@ static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommand
     Vec<CustomCommand*> cmds;
     GetCommandsWithOrigId(cmds, CmdSelectionHandler);
     for (CustomCommand* cmd : cmds) {
-        Str s = GetCommandStringArg(cmd, kCmdArgSelectToolbar, nullptr);
+        Str s = GetCommandStringArg(cmd, kCmdArgSelectToolbar, {});
         if (str::IsEmptyOrWhiteSpace(s)) {
             continue;
         }

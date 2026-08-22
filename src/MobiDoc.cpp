@@ -1074,7 +1074,7 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
         if (!node) {
             continue;
         }
-        if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "reference")) {
+        if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, StrL("reference"))) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
             if (type && str::EqI(Str(type->value), StrL("toc"))) {
                 return node;
@@ -1132,7 +1132,7 @@ static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
             continue;
         }
         if (node->type == GUMBO_NODE_TEXT || node->type == GUMBO_NODE_CDATA || node->type == GUMBO_NODE_WHITESPACE) {
-            sb.Append(node->v.text.text);
+            sb.Append(Str(node->v.text.text));
             continue;
         }
         if (node->type != GUMBO_NODE_ELEMENT) {
@@ -1177,10 +1177,10 @@ void MobiTocWalker::Walk(const GumboNode* root) {
         if (node->type == GUMBO_NODE_DOCUMENT) {
             children = &node->v.document.children;
         } else if (node->type == GUMBO_NODE_ELEMENT) {
-            if (GumboTagNameIs(node, "mbp:pagebreak")) {
+            if (GumboTagNameIs(node, StrL("mbp:pagebreak"))) {
                 return;
             }
-            if (GumboTagNameIs(node, "a")) {
+            if (GumboTagNameIs(node, StrL("a"))) {
                 const GumboAttribute* attr = gumbo_get_attribute(&node->v.element.attributes, "filepos");
                 if (!attr) {
                     attr = gumbo_get_attribute(&node->v.element.attributes, "href");
@@ -1194,8 +1194,8 @@ void MobiTocWalker::Walk(const GumboNode* root) {
                 }
                 continue; // don't descend into the <a>'s children
             }
-            bool isLevel =
-                GumboTagNameIs(node, "blockquote") || GumboTagNameIs(node, "ul") || GumboTagNameIs(node, "ol");
+            bool isLevel = GumboTagNameIs(node, StrL("blockquote")) || GumboTagNameIs(node, StrL("ul")) ||
+                           GumboTagNameIs(node, StrL("ol"));
             childLevel = isLevel ? level + 1 : level;
             children = &node->v.element.children;
         }

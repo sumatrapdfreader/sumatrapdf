@@ -129,7 +129,7 @@ void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
     } else if (Tag_A == t->tag) {
         HandleAnchorAttr(t);
         // handle internal and external links (prefer internal ones)
-        if (!HandleTagA(t, "filepos")) {
+        if (!HandleTagA(t, StrL("filepos"))) {
             HandleTagA(t);
         }
     } else if (Tag_Hr == t->tag) {
@@ -190,11 +190,11 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
     AttrInfo* attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr->ValIs("stylesheet")) {
+    if (!attr || !attr->ValIs(StrL("stylesheet"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs("text/css")) {
+    if (attr && !attr->ValIs(StrL("text/css"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("href"));
@@ -327,22 +327,22 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagImg(t);
         HandleAnchorAttr(t);
     } else if (Tag_A == t->tag) {
-        HandleTagA(t, "href", "http://www.w3.org/1999/xlink");
+        HandleTagA(t, StrL("href"), StrL("http://www.w3.org/1999/xlink"));
         HandleAnchorAttr(t, true);
     } else if (Tag_Pagebreak == t->tag) {
         ForceNewPage();
     } else if (Tag_Strong == t->tag) {
-        HandleTagAsHtml(t, "b");
+        HandleTagAsHtml(t, StrL("b"));
     } else if (t->NameIs(StrL("emphasis"))) {
-        HandleTagAsHtml(t, "i");
+        HandleTagAsHtml(t, StrL("i"));
     } else if (t->NameIs(StrL("epigraph"))) {
-        HandleTagAsHtml(t, "blockquote");
+        HandleTagAsHtml(t, StrL("blockquote"));
     } else if (t->NameIs(StrL("empty-line"))) {
         if (!t->IsEndTag()) {
             EmitParagraph(0);
         }
     } else if (t->NameIs(StrL("stylesheet"))) {
-        HandleTagAsHtml(t, "style");
+        HandleTagAsHtml(t, StrL("style"));
     }
 }
 
@@ -374,11 +374,11 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
     AttrInfo* attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr->ValIs("stylesheet")) {
+    if (!attr || !attr->ValIs(StrL("stylesheet"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs("text/css")) {
+    if (attr && !attr->ValIs(StrL("text/css"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("href"));

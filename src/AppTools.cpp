@@ -19,15 +19,16 @@
    created by an installer (and should be updated through an installer) */
 static bool HasBeenInstalled() {
     // see GetDefaultInstallationDir() in Installer.cpp
-    TempStr regPathUninst = str::JoinTemp(StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"), kAppName);
-    TempStr installedPath = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
+    TempStr regPathUninst =
+        str::JoinTemp(StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"), StrL(kAppName));
+    TempStr installedPath = LoggedReadRegStr2Temp(regPathUninst, StrL("InstallLocation"));
     if (!installedPath) {
         return false;
     }
 
     TempStr exePath = GetSelfExePathTemp();
     if (!str::EndsWithI(installedPath, StrL(".exe"))) {
-        installedPath = path::JoinTemp(installedPath.s, path::GetBaseNameTemp(exePath).s);
+        installedPath = path::JoinTemp(installedPath, path::GetBaseNameTemp(exePath));
     }
     return path::IsSame(installedPath, exePath);
 }
@@ -137,17 +138,17 @@ void SetAppDataDir(Str dir) {
 
 TempStr GetAppDataDirTemp() {
     if (gAppDataDir) {
-        return gAppDataDir.s;
+        return gAppDataDir;
     }
     bool isPortable = IsRunningInPortableMode();
-    TempStr dir = nullptr;
+    TempStr dir;
     if (isPortable) {
         dir = GetSelfExeDirTemp();
         // sometimes people put executable in directory like c:\windows
         // and we can't write to it. in that case we'll fall back to %APPDATA%
         if (!dir::HasWriteAccess(dir)) {
             logf("GetAppDataDirTemp: no write access to '%s'\n", dir);
-            dir = nullptr;
+            dir = {};
         }
     }
     if (!dir) {
@@ -157,11 +158,11 @@ TempStr GetAppDataDirTemp() {
             ReportIf(true);
             dir = GetTempDirTemp(); // shouldn't happen, last chance thing
         }
-        dir = path::JoinTemp(dir, kAppName);
+        dir = path::JoinTemp(dir, StrL(kAppName));
     }
     logf("GetAppDataDirTemp(): '%s'%s\n", dir, Str(isPortable ? " (portable)" : "(installed)"));
     SetAppDataDir(dir);
-    return gAppDataDir.s;
+    return gAppDataDir;
 }
 
 // Generate full path for a file or directory for storing data
@@ -180,165 +181,165 @@ TempStr GetPathInAppDataDirTemp(Str name) {
 // clang-format off
 static TextEditor editorRules[] = {
     {
-        "Code.exe",
-        R"(--goto "%f:%l")",
+        StrL("Code.exe"),
+        StrL(R"(--goto "%f:%l")"),
         RegType::BinaryPath,
-        kRegCurrentVer "\\Uninstall\\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1",
+        StrL(kRegCurrentVer "\\Uninstall\\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1"),
         // TODO: change back to Code.exe
         // the way vscode saves a file seems to break
         // our reloading of settings
-        "DisplayIcon"
+        StrL("DisplayIcon"),
     },
     {
-        "WinEdt.exe",
-         "\"[Open(|%f|);SelPar(%l,8)]\"",
+        StrL("WinEdt.exe"),
+         StrL("\"[Open(|%f|);SelPar(%l,8)]\""),
         RegType::BinaryPath,
-        kRegCurrentVer "\\App Paths\\WinEdt.exe",
-        nullptr
+        StrL(kRegCurrentVer "\\App Paths\\WinEdt.exe"),
+        {}
     },
     {
-        "WinEdt.exe",
-        "\"[Open(|%f|);SelPar(%l,8)]\"",
+        StrL("WinEdt.exe"),
+        StrL("\"[Open(|%f|);SelPar(%l,8)]\""),
         RegType::BinaryDir,
-        "Software\\WinEdt",
-        "Install Root"
+        StrL("Software\\WinEdt"),
+        StrL("Install Root"),
     },
     {
-        "notepad++.exe",
-        "-n%l \"%f\"",
+        StrL("notepad++.exe"),
+        StrL("-n%l \"%f\""),
         RegType::BinaryPath,
-        kRegCurrentVer "\\App Paths\\notepad++.exe",
-        nullptr
+        StrL(kRegCurrentVer "\\App Paths\\notepad++.exe"),
+        {}
     },
     {
-        "notepad++.exe",
-        "-n%l \"%f\"",
+        StrL("notepad++.exe"),
+        StrL("-n%l \"%f\""),
         RegType::BinaryDir,
-        "Software\\Notepad++",
-        nullptr
+        StrL("Software\\Notepad++"),
+        {}
     },
     {
-        "notepad++.exe",
-        "-n%l \"%f\"",
+        StrL("notepad++.exe"),
+        StrL("-n%l \"%f\""),
         RegType::BinaryPath,
-        kRegCurrentVer "\\Uninstall\\Notepad++",
-        "DisplayIcon"
+        StrL(kRegCurrentVer "\\Uninstall\\Notepad++"),
+        StrL("DisplayIcon"),
     },
     {
-        "sublime_text.exe",
-        "\"%f:%l:%c\"",
+        StrL("sublime_text.exe"),
+        StrL("\"%f:%l:%c\""),
        RegType:: BinaryDir,
-        kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1",
-        "InstallLocation"
+        StrL(kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1"),
+        StrL("InstallLocation"),
     },
     {
-        "sublime_text.exe",
-        "\"%f:%l:%c\"",
+        StrL("sublime_text.exe"),
+        StrL("\"%f:%l:%c\""),
         RegType::BinaryPath,
-        kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1",
-        "DisplayIcon"
+        StrL(kRegCurrentVer "\\Uninstall\\Sublime Text 3_is1"),
+        StrL("DisplayIcon"),
     },
     {
-        "sublime_text.exe",
-        "\"%f:%l:%c\"",
+        StrL("sublime_text.exe"),
+        StrL("\"%f:%l:%c\""),
         RegType::BinaryDir,
-        kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1",
-         "InstallLocation"
+        StrL(kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1"),
+         StrL("InstallLocation"),
     },
     {
-        "sublime_text.exe",
-        "\"%f:%l:%c\"",
+        StrL("sublime_text.exe"),
+        StrL("\"%f:%l:%c\""),
         RegType::BinaryPath,
-        kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1",
-        "DisplayIcon"
+        StrL(kRegCurrentVer "\\Uninstall\\Sublime Text 2_is1"),
+        StrL("DisplayIcon"),
     },
     {
-        "sublime_text.exe",
-        "\"%f:%l:%c\"",
+        StrL("sublime_text.exe"),
+        StrL("\"%f:%l:%c\""),
         RegType::BinaryPath,
-        kRegCurrentVer "\\Uninstall\\Sublime Text_is1",
-        "DisplayIcon"
+        StrL(kRegCurrentVer "\\Uninstall\\Sublime Text_is1"),
+        StrL("DisplayIcon"),
     },
     {
-        "TeXnicCenter.exe",
-        "/ddecmd \"[goto('%f', '%l')]\"",
+        StrL("TeXnicCenter.exe"),
+        StrL("/ddecmd \"[goto('%f', '%l')]\""),
         RegType::BinaryDir,
-        "Software\\ToolsCenter\\TeXnicCenterNT",
-        "AppPath"
+        StrL("Software\\ToolsCenter\\TeXnicCenterNT"),
+        StrL("AppPath"),
     },
     {
-        "TeXnicCenter.exe",
-        "/ddecmd \"[goto('%f', '%l')]\"",
+        StrL("TeXnicCenter.exe"),
+        StrL("/ddecmd \"[goto('%f', '%l')]\""),
         RegType::BinaryDir,
-        kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
-        "InstallLocation"
+        StrL(kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1"),
+        StrL("InstallLocation"),
     },
     {
-        "TeXnicCenter.exe",
-        "/ddecmd \"[goto('%f', '%l')]\"",
+        StrL("TeXnicCenter.exe"),
+        StrL("/ddecmd \"[goto('%f', '%l')]\""),
         RegType::BinaryDir,
-        kRegCurrentVer "\\Uninstall\\TeXnicCenter Alpha_is1",
-        "InstallLocation"
+        StrL(kRegCurrentVer "\\Uninstall\\TeXnicCenter Alpha_is1"),
+        StrL("InstallLocation"),
     },
     {
-        "TEXCNTR.exe",
-        "/ddecmd \"[goto('%f', '%l')]\"",
+        StrL("TEXCNTR.exe"),
+        StrL("/ddecmd \"[goto('%f', '%l')]\""),
         RegType::BinaryDir,
-        "Software\\ToolsCenter\\TeXnicCenter",
-        "AppPath"
+        StrL("Software\\ToolsCenter\\TeXnicCenter"),
+        StrL("AppPath"),
     },
     {
-        "TEXCNTR.exe",
-        "/ddecmd \"[goto('%f', '%l')]\"",
+        StrL("TEXCNTR.exe"),
+        StrL("/ddecmd \"[goto('%f', '%l')]\""),
         RegType::BinaryDir,
-        kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1",
-        "InstallLocation"
+        StrL(kRegCurrentVer "\\Uninstall\\TeXnicCenter_is1"),
+        StrL("InstallLocation"),
     },
     {
-        "WinShell.exe",
-        "-c \"%f\" -l %l",
+        StrL("WinShell.exe"),
+        StrL("-c \"%f\" -l %l"),
         RegType::BinaryDir,
-        kRegCurrentVer "\\Uninstall\\WinShell_is1",
-        "InstallLocation"
+        StrL(kRegCurrentVer "\\Uninstall\\WinShell_is1"),
+        StrL("InstallLocation"),
     },
     {
-        "gvim.exe",
-        "\"%f\" +%l",
+        StrL("gvim.exe"),
+        StrL("\"%f\" +%l"),
         RegType::BinaryPath,
-        "Software\\Vim\\Gvim",
-        "path"
+        StrL("Software\\Vim\\Gvim"),
+        StrL("path"),
     },
     {
         // TODO: add this rule only if the latex-suite for ViM is installed
         // (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
-        "gvim.exe",
-        "-c \":RemoteOpen +%l %f\"",
+        StrL("gvim.exe"),
+        StrL("-c \":RemoteOpen +%l %f\""),
         RegType::BinaryPath,
-        "Software\\Vim\\Gvim",
-        "path"
+        StrL("Software\\Vim\\Gvim"),
+        StrL("path"),
     },
     {
-        "texmaker.exe",
-        "\"%f\" -line %l",
+        StrL("texmaker.exe"),
+        StrL("\"%f\" -line %l"),
         RegType::SiblingPath,
-        kRegCurrentVer "\\Uninstall\\Texmaker",
-        "UninstallString"
+        StrL(kRegCurrentVer "\\Uninstall\\Texmaker"),
+        StrL("UninstallString"),
     },
     {
-        "TeXworks.exe",
-        "-p=%l \"%f\"",
+        StrL("TeXworks.exe"),
+        StrL("-p=%l \"%f\""),
         RegType::BinaryDir,
-        kRegCurrentVer "\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1",
-        "InstallLocation",
+        StrL(kRegCurrentVer "\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1"),
+        StrL("InstallLocation"),
         // TODO: find a way to detect where emacs is installed
         // "emacsclientw.exe","+%l \"%f\"", BinaryPath, "???", "???",
     },
     {
-        "notepad.exe",
-        "\"%f\"",
+        StrL("notepad.exe"),
+        StrL("\"%f\""),
         RegType::BinaryDir,
-        R"(Software\Microsoft\Windows NT\CurrentVersion)",
-        "SystemRoot",
+        StrL(R"(Software\Microsoft\Windows NT\CurrentVersion)"),
+        StrL("SystemRoot"),
     }
 };
 
@@ -461,7 +462,7 @@ void SaveCallstackLogs() {
     if (len(s) == 0) {
         return;
     }
-    TempStr filePath = GetPathInAppDataDirTemp("callstacks.txt");
+    TempStr filePath = GetPathInAppDataDirTemp(StrL("callstacks.txt"));
     file::WriteFile(filePath, s);
     str::Free(s);
 }
@@ -481,11 +482,11 @@ Str Sha1OfAppExe() {
 
     TempStr appPath = GetSelfExePathTemp();
     if (!appPath) {
-        return nullptr;
+        return {};
     }
     Str d = file::ReadFile(appPath);
     if (len(d) == 0) {
-        return nullptr;
+        return {};
     }
 
     u8 sha1[20]{};
@@ -509,7 +510,7 @@ TempStr GetWebViewDataDirTemp() {
     if (sha1) {
         str::BufSet(Str(id, dimof(id)), sha1);
     }
-    dir = path::JoinTemp(dir, id);
+    dir = path::JoinTemp(dir, Str(id));
     return path::JoinTemp(dir, StrL("webview"));
 }
 
@@ -544,7 +545,7 @@ bool LaunchFileIfExists(Str path) {
         path = path::GetNonVirtualTemp(path);
         logf("LaunchFileIfExists: gIsStoreBuild, path='%s'\n", path);
     }
-    LaunchFileShell(path, nullptr, "open");
+    LaunchFileShell(path, {}, StrL("open"));
     return true;
 }
 
@@ -565,7 +566,7 @@ bool AdjustVariableDriveLetter(Str& path) {
     char szDrive[] = "A:\\";
     char origDrive = path.s[0];
     for (DWORD driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
-        if ((driveMask & 1) && szDrive[0] != origDrive && path::HasVariableDriveLetter(szDrive)) {
+        if ((driveMask & 1) && szDrive[0] != origDrive && path::HasVariableDriveLetter(Str(szDrive))) {
             path.s[0] = szDrive[0];
             if (file::Exists(path)) {
                 return true;

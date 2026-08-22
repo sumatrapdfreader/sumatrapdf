@@ -31,13 +31,13 @@ static ILayout* CreateMainLayout(HWND) {
     vbox->alignCross = CrossAxisAlign::CrossCenter;
     PlatformFont* font = GetDefaultGuiFont();
     {
-        auto* b = new VirtButton("Tabs test", font);
+        auto* b = new VirtButton(StrL("Tabs test"), font);
         b->onClick = MkFunc0Void(LaunchTabs);
         vbox->AddChild(b);
     }
 
     {
-        auto* b = new VirtButton("Layout test", font);
+        auto* b = new VirtButton(StrL("Layout test"), font);
         b->onClick = MkFunc0Void(LaunchLayout);
         vbox->AddChild(b);
     }
@@ -60,7 +60,7 @@ void TestApp() {
     // w->backgroundColor = MkRgb((u8)0xae, (u8)0xae, (u8)0xae);
     CreateCustomArgs args;
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
-    args.title = "a little test app";
+    args.title = StrL("a little test app");
     HWND hwnd = w->CreateCustom(args);
     ReportIf(!hwnd);
 

@@ -809,7 +809,7 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
     }
     res->isExpanded = isExpanded;
 
-    TempStr text = nullptr;
+    TempStr text;
     if (isCollapsed) {
         text = FavCompactReadableNameTemp(fs, fn);
     } else {
@@ -1009,7 +1009,7 @@ static LRESULT CALLBACK WndProcFavFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPA
             if (edit) {
                 TempStr txt = edit->GetTextTemp();
                 if (txt && len(txt) > 0) {
-                    edit->SetText("");
+                    edit->SetText(StrL(""));
                     // onTextChanged restores the full tree
                     return 0;
                 }
@@ -1366,7 +1366,7 @@ static void FavTreeKeyDown(TreeView::KeyDownEvent* ev) {
     // Esc: clear search and focus the filter (Favorites tab and sidebar)
     if (ev->keyCode == VK_ESCAPE) {
         if (win && win->favFilterEdit) {
-            win->favFilterEdit->SetText("");
+            win->favFilterEdit->SetText(StrL(""));
             FocusFavFilterEdit(win);
             ev->result = 1;
             return;
@@ -1394,7 +1394,7 @@ static MenuDef menuDefContextFav[] = {
         CmdToggleFavoritesSort,
     },
     {
-        kMenuSeparator,
+        StrL(kMenuSeparator),
         0,
     },
     {
@@ -1402,7 +1402,7 @@ static MenuDef menuDefContextFav[] = {
         CmdFavoriteDel,
     },
     {
-        nullptr,
+        {},
         0,
     },
 };

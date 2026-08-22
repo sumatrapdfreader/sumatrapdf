@@ -354,7 +354,7 @@ void FindFirst(MainWindow* win) {
     // to find edit only if it's different from current text. Setting the text
     // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && dm->textSelection->result.len > 0) {
-        Str sel = dm->textSelection->ExtractText(" ");
+        Str sel = dm->textSelection->ExtractText(StrL(" "));
         TempStr selection = str::DupTemp(sel);
         str::Free(sel);
         selection.len -= str::NormalizeWSInPlace(selection);
@@ -544,7 +544,7 @@ void OnFindBarTextChanged(MainWindow* win) {
             md->FindClear(); // remove the highlights in the webview
         }
         ClearSearchResult(win);
-        FindBarSetStatus(win, "");
+        FindBarSetStatus(win, StrL(""));
         ClearFindMatches(win);
         FindWindowRefreshResults(win); // empty the results list
         return;
@@ -681,7 +681,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
 
-    Str sel = dm->textSelection->ExtractText(" ");
+    Str sel = dm->textSelection->ExtractText(StrL(" "));
     TempStr selection = str::DupTemp(sel);
     str::Free(sel);
     selection.len -= str::NormalizeWSInPlace(selection);
@@ -794,10 +794,10 @@ struct FindThreadData {
 
         if (!success && !loopedAround) {
             // i.e. canceled
-            FindBarSetStatus(win, "");
+            FindBarSetStatus(win, StrL(""));
         } else if (!success && loopedAround) {
             // keep it compact and consistent with the "n / m" counter
-            FindBarSetStatus(win, "0 / 0", 0);
+            FindBarSetStatus(win, StrL("0 / 0"), 0);
         }
         // else: a match was found; the "n / m" counter (set by UpdateMatchCount
         // after this) is the only feedback - no beep on wrap-around
@@ -948,7 +948,7 @@ void InvalidateFindForDocumentChange(MainWindow* win) {
     }
     TempStr s = win->findEdit->GetTextTemp();
     if (len(s) == 0) {
-        FindBarSetStatus(win, "");
+        FindBarSetStatus(win, StrL(""));
         return;
     }
     if (win->AsFixed()) {
@@ -1388,7 +1388,7 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
                                   win->findPageRangeText, epoch);
     win->findCountThread = nullptr;
     auto fn = MkFunc0<CountThreadData>(CountThread, d);
-    win->findCountThread = StartThread(fn, "FindCountThread");
+    win->findCountThread = StartThread(fn, StrL("FindCountThread"));
     d->thread = win->findCountThread;
 }
 
@@ -1658,7 +1658,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
     ftd->ShowUI(showProgress);
     win->findThread = nullptr;
     auto fn = MkFunc0(FindThread, ftd);
-    win->findThread = StartThread(fn, "FindThread");
+    win->findThread = StartThread(fn, StrL("FindThread"));
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
 }
 
@@ -2197,7 +2197,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
         return;
     }
 
-    TempStr buf = nullptr;
+    TempStr buf;
     NotificationCreateArgs args{};
     args.hwndParent = win->hwndCanvas;
     // several of these embed a file name read from the .synctex / .pdfsync file
@@ -2723,7 +2723,7 @@ Open new window.
 [NewWindow]
 */
 static Str HandleNewWindowCmd(Str cmd, bool* ack) {
-    Str kNewWindowCmd = "[NewWindow]";
+    Str kNewWindowCmd = StrL("[NewWindow]");
     if (!str::TrimPrefix(cmd, kNewWindowCmd)) {
         return {};
     }

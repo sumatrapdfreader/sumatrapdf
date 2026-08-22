@@ -200,7 +200,7 @@ void DropDown::SetItemsSeqStrings(SeqStrings items) {
 }
 
 Size DropDown::GetIdealSize() {
-    Size s1 = PlatformFontMeasureText(font, "Minimal");
+    Size s1 = PlatformFontMeasureText(font, StrL("Minimal"));
 
     int n = len(items);
     for (int i = 0; i < n; i++) {

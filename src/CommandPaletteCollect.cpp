@@ -364,7 +364,7 @@ static void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCu
 void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
     favorites.Reset();
     WindowTab* currTab = mainWin->CurrentTab();
-    Str currFilePath = currTab ? currTab->filePath : nullptr;
+    Str currFilePath = currTab ? currTab->filePath : Str();
 
     FileState* currFs = nullptr;
     if (currFilePath) {

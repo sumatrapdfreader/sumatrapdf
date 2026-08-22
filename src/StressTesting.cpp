@@ -210,7 +210,7 @@ static void BenchDir(Str dir) {
     StrVec files;
     CollectFilesToBench(dir, files);
     for (int i = 0; i < len(files); i++) {
-        BenchFile(files[i], nullptr);
+        BenchFile(files[i], {});
     }
 }
 
@@ -231,7 +231,7 @@ void BenchFileOrDir(StrVec& pathsToBench) {
 static bool IsBlacklistedForStressTest(Str filePath) {
     TempStr name = path::GetBaseNameTemp(filePath);
     for (size_t i = 0; i < dimof(gStressTestBlacklist); i++) {
-        if (str::EqI(name, gStressTestBlacklist[i])) {
+        if (str::EqI(name, Str(gStressTestBlacklist[i]))) {
             return true;
         }
     }
@@ -923,11 +923,11 @@ void GetStressTestInfo(str::Builder* s) {
             continue;
         }
 
-        s->Append("File: ");
+        s->Append(StrL("File: "));
         Str filePath = w->CurrentTab()->filePath;
         s->Append(filePath);
         GetLogInfo(w->stressTest, s);
-        s->Append("\r\n");
+        s->Append(StrL("\r\n"));
     }
 }
 

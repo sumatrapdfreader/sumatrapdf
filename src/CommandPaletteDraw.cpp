@@ -67,9 +67,9 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     Str itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
 
-    TempStr rightStr = nullptr;
+    TempStr rightStr;
     if (data->cmdId != 0) {
-        TempStr withAccel = AppendAccelKeyToMenuStringTemp("", data->cmdId);
+        TempStr withAccel = AppendAccelKeyToMenuStringTemp(StrL(""), data->cmdId);
         if (withAccel && withAccel.s[0] == '\t') {
             rightStr = Str(withAccel.s + 1);
         }

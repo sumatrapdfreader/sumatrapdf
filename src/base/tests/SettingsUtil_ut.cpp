@@ -149,16 +149,16 @@ Key = Value";
         utassert(data->internal == i);
         Str s = Str(serialized);
         if (i < 2) {
-            Str(s = unknownOnly);
+            s = Str(unknownOnly);
         }
         Str reserializedBs = SerializeStruct(&gSutStructInfo, data, s);
-        utassert(str::Eq(serialized, reserializedBs));
+        utassert(str::Eq(Str(serialized), reserializedBs));
         str::Free(reserializedBs);
         data->internal++;
     }
     utassert(str::Eq(data->color, StrL("#abcdef")));
-    utassert(str::Eq(data->escapedString.s, StrL("\t\r\n$ ")));
-    utassert(str::Eq(data->escapedUtf8String.s, StrL("\r\n[]\t")));
+    utassert(str::Eq(data->escapedString, StrL("\t\r\n$ ")));
+    utassert(str::Eq(data->escapedUtf8String, StrL("\r\n[]\t")));
     utassert(2 == len(*data->intArray) && 3 == (*data->intArray)[0]);
     utassert(3 == len(*data->strArray) && 0 == len(*data->emptyStrArray));
     utassert(str::Eq((*data->strArray)[0], StrL("with space")) && str::Eq((*data->strArray)[1], StrL("plain")) &&
@@ -174,13 +174,13 @@ Key = Value";
     utassert(!data->internalString);
     {
         Str res = SerializeStruct(&gSutStructInfo, data);
-        utassert(!str::Eq(serialized, res));
+        utassert(!str::Eq(Str(serialized), res));
         str::Free(res);
     }
     (*data->sutStructItems)[0]->nested.point.x++;
     {
         Str res = SerializeStruct(&gSutStructInfo, data, Str(unknownOnly));
-        utassert(!str::Eq(serialized, res));
+        utassert(!str::Eq(Str(serialized), res));
         str::Free(res);
     }
     FreeStruct(&gSutStructInfo, data);

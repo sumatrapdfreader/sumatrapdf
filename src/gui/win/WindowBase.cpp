@@ -1583,7 +1583,7 @@ Size ControlBase::GetIdealSize() {
 
 Size ControlBase::Layout(const Constraints bc) {
     dbglayout(fmt("ControlBase::Layout() %s ", Str(GetKind())));
-    LogConstraints(bc, "\n");
+    LogConstraints(bc, StrL("\n"));
 
     auto hinset = insets.left + insets.right;
     auto vinset = insets.top + insets.bottom;

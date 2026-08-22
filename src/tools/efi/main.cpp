@@ -581,13 +581,13 @@ static bool ParseCommandLine(int argc, char** argv) {
     char* s;
     for (int i = 0; i < argc; i++) {
         s = argv[i];
-        if (str::EqI(s, "-compact"))
+        if (str::EqI(s, StrL("-compact")))
             g_compact = true;
-        else if (str::EqI(s, "-sections"))
+        else if (str::EqI(s, StrL("-sections")))
             g_dumpSections = true;
-        else if (str::EqI(s, "-symbols"))
+        else if (str::EqI(s, StrL("-symbols")))
             g_dumpSymbols = true;
-        else if (str::EqI(s, "-types"))
+        else if (str::EqI(s, StrL("-types")))
             g_dumpTypes = true;
         else {
             if (g_fileName != NULL) goto InvalidCmdLine;
