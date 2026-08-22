@@ -1135,7 +1135,7 @@ bool LogViewWnd::Create() {
     {
         CreateCustomArgs args;
         args.className = L"LogViewMain";
-        args.title = "Logview - SumatraPDF";
+        args.title = StrL("Logview - SumatraPDF");
         args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, DpiScale(1000), DpiScale(700)};
         args.bgColor = GetSysColor(COLOR_BTNFACE);
         args.icon = LoadIconW(nullptr, IDI_APPLICATION);
@@ -1154,20 +1154,20 @@ bool LogViewWnd::Create() {
         args.parent = hwnd;
         args.font = gUiFont;
         args.withBorder = true;
-        args.cueText = "filter '/'";
+        args.cueText = StrL("filter '/'");
         filterEdit = new Edit();
         filterEdit->Create(args);
         filterEdit->onTextChanged = MkFunc0Void(FilterTextChanged);
     }
 
     countText = NewVirtText({
-        .s = "",
+        .s = StrL(""),
         .font = gUiFont,
         .textColor = kColLogText,
         .align = VirtTextAlign::Right,
     });
-    btnClear = NewToolButton("c", MkFunc0Void(ClearSelectedTab));
-    btnAbout = NewToolButton("?", MkFunc1Void<VirtMouseEvent*>(AboutClicked));
+    btnClear = NewToolButton(StrL("c"), MkFunc0Void(ClearSelectedTab));
+    btnAbout = NewToolButton(StrL("?"), MkFunc1Void<VirtMouseEvent*>(AboutClicked));
 
     tabBar = new TabBarCtrl();
 
@@ -1224,7 +1224,7 @@ static void CreateFonts() {
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     gUiFont = GetPlatformFont(CreateFontIndirectW(&ncm.lfMessageFont));
 
-    gMonoFont = GetPlatformFont("Consolas", 10, PlatformFontStyle::Regular);
+    gMonoFont = GetPlatformFont(StrL("Consolas"), 10, PlatformFontStyle::Regular);
 
     {
         ScopedSelectFont selectFont(hdc, gMonoFont->GetHFont());
@@ -1269,7 +1269,7 @@ static bool HandleKey(MSG* msg) {
 
     if (filterFocused) {
         if (key == VK_ESCAPE) {
-            gWnd->filterEdit->SetText("");
+            gWnd->filterEdit->SetText(StrL(""));
             SetFocus(gHwndLog);
             return true;
         }
