@@ -12401,6 +12401,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
     UpdateAnnotationsList(tab->editAnnotsWindow);
+    // Drop the cached page bitmap. SetSelectedAnnotation only ScheduleRepaint
+    // (selection handles); without this the new annot is invisible until a
+    // later click re-selects it and forces a re-render (issue #6037).
+    MainWindowRerender(win);
+    ToolbarUpdateStateForWindow(win, true);
 
     EditAnnotFocus focusTarget = EditAnnotFocus::Default;
     if (GetCommandBoolArg(cmd, kCmdArgFocusEdit, false)) {
@@ -12419,11 +12424,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case AnnotationType::Highlight:
         case AnnotationType::Squiggly:
         case AnnotationType::StrikeOut:
-        case AnnotationType::Underline: {
-            MainWindowRerender(win);
-            ToolbarUpdateStateForWindow(win, false);
+        case AnnotationType::Underline:
             return 0;
-        }
         case AnnotationType::FreeText: {
             // for FreeText you want to edit text so show edit window
             ShowEditAnnotationsWindow(tab, lastCreatedAnnot, focusTarget);
