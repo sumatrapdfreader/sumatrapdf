@@ -950,6 +950,31 @@ void VirtRoot::TrackMouseLeaveIfNeeded() {
     }
 }
 
+// press a virtual control (mouse down, or a DBLCLK that is really a second click)
+static bool BeginVirtPress(VirtRoot* root, VirtCtrl* target, Point ptWindow, Point ptLocal, int button) {
+    root->ClearPressed();
+    HWND hwnd = root->hwnd;
+    if (target->HasFlag(vwfFocusable)) {
+        // virtual controls have no HWND. Keys go to whoever has Win32
+        // focus, so a child Edit (Contents, filter) would keep them
+        // after this click unless we take them back (issue #6033).
+        if (hwnd && ::GetFocus() != hwnd) {
+            ::SetFocus(hwnd);
+        }
+        root->SetFocus(target);
+    }
+    root->pressed = target;
+    target->SetFlag(vwfPressed, true);
+    target->Invalidate();
+    if (target->HasFlag(vwfCapturesMouse)) {
+        root->SetCapture(target);
+    }
+    VirtMouseEvent ev;
+    FillMouseEvent(ev, target, ptWindow, ptLocal, false);
+    ev.button = button;
+    return BubbleMouse(target, ev, &VirtCtrl::OnMouseDown);
+}
+
 bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     if (len(tops) == 0) {
         return false;
@@ -1012,30 +1037,13 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
         case WM_RBUTTONDOWN:
         case WM_MBUTTONDOWN: {
             VirtCtrl* target = VirtAtPoint(this, ptWindow, &ptLocal);
-            ClearPressed();
             if (!target) {
+                ClearPressed();
                 SetFocus(nullptr);
                 return false;
             }
-            if (target->HasFlag(vwfFocusable)) {
-                // virtual controls have no HWND. Keys go to whoever has Win32
-                // focus, so a child Edit (Contents, filter) would keep them
-                // after this click unless we take them back (issue #6033).
-                if (hwnd && ::GetFocus() != hwnd) {
-                    ::SetFocus(hwnd);
-                }
-                SetFocus(target);
-            }
-            pressed = target;
-            target->SetFlag(vwfPressed, true);
-            target->Invalidate();
-            if (target->HasFlag(vwfCapturesMouse)) {
-                SetCapture(target);
-            }
-            VirtMouseEvent ev;
-            FillMouseEvent(ev, target, ptWindow, ptLocal, false);
-            ev.button = (msg == WM_LBUTTONDOWN) ? 0 : ((msg == WM_RBUTTONDOWN) ? 1 : 2);
-            return BubbleMouse(target, ev, &VirtCtrl::OnMouseDown);
+            int button = (msg == WM_LBUTTONDOWN) ? 0 : ((msg == WM_RBUTTONDOWN) ? 1 : 2);
+            return BeginVirtPress(this, target, ptWindow, ptLocal, button);
         }
 
         case WM_LBUTTONUP:
@@ -1079,7 +1087,14 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             }
             VirtMouseEvent ev;
             FillMouseEvent(ev, target, ptWindow, ptLocal, false);
-            return BubbleMouse(target, ev, &VirtCtrl::OnDoubleClick);
+            if (BubbleMouse(target, ev, &VirtCtrl::OnDoubleClick)) {
+                return true;
+            }
+            // CS_DBLCLKS turns a fast second press into DBLCLK instead of DOWN.
+            // onClick-only buttons (Find Next/Prev, issue #6035) would otherwise
+            // ignore it until the double-click timeout. Treat it as another press
+            // so the following UP fires onClick.
+            return BeginVirtPress(this, target, ptWindow, ptLocal, 0);
         }
 
         case WM_MOUSEWHEEL: {

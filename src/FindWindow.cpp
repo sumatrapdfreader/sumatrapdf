@@ -1254,6 +1254,12 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
         }
         out.Append(fmt("%d", win->findMatches[i].startPage));
     }
+    if (fw->btns[0] && fw->btns[1]) {
+        Rect prev = fw->btns[0]->lastBounds;
+        Rect next = fw->btns[1]->lastBounds;
+        out.Append(fmt(" prev=%d,%d,%d,%d next=%d,%d,%d,%d", prev.x, prev.y, prev.dx, prev.dy, next.x, next.y, next.dx,
+                       next.dy));
+    }
     out.AppendChar('\n');
     if (exitCodeOut) {
         *exitCodeOut = 0;
