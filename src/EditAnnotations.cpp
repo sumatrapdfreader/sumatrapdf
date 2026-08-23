@@ -787,7 +787,7 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
         // HWND controls and virtual ones alike. Apply a pending list selection
         // first so Contents / combos show the highlighted annot.
         ApplyListSelectionNow(this);
-        TabNavigate(!ev->isShift);
+        TabNavigate(ev->isShift);
         ev->didHandle = true;
         return;
     }
