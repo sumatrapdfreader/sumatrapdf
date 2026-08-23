@@ -8967,6 +8967,13 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (CancelPlacingSignature(win)) {
         return;
     }
+    // Find bar/window are owned popups, so Esc on the frame never reaches
+    // FindBarWnd::OnKeyDown (e.g. after closing the F1 help window, which
+    // activates the frame instead of the find field).
+    if (IsFindUIVisible(win)) {
+        HideFindBar(win);
+        return;
+    }
     if (AbortFinding(win, true)) {
         return;
     }
@@ -10123,6 +10130,21 @@ constexpr const char* kManualVirtualHost = "https://sumatrapdf.manual/";
 constexpr const WCHAR* kManualVirtualHostW = L"https://sumatrapdf.manual/";
 
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
+// frame that had focus when the manual opened; used to put find-bar focus
+// back after the help window is destroyed (Windows activates the owner frame)
+static HWND gManualBrowserParentHwnd = nullptr;
+
+static void RestoreFindFocusAfterHelp() {
+    HWND parent = gManualBrowserParentHwnd;
+    gManualBrowserParentHwnd = nullptr;
+    MainWindow* win = FindMainWindowByHwnd(parent);
+    if (!win || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    if (IsFindUIVisible(win) && win->findEdit) {
+        win->findEdit->SetFocus();
+    }
+}
 
 static HWND ManualBrowserParentFrame() {
     if (MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow())) {
@@ -10220,6 +10242,9 @@ static void OnDestroyManualBrowserWindow(WindowBase::DestroyEvent* ev) {
     HWND hwnd = ev && ev->e ? ev->e->hwnd : nullptr;
     SaveManualBrowserPos(hwnd);
     gManualBrowserWindow = nullptr;
+    // WM_ACTIVATE on the frame runs after we return from DestroyWindow, so
+    // restore find focus on the next ui-task turn, not here
+    uitask::Post(MkFunc0Void(RestoreFindFocusAfterHelp), "RestoreFindFocusAfterHelp");
 }
 
 static bool IsManualBrowserWindowOpen() {
@@ -10373,6 +10398,7 @@ void LaunchDocumentation(Str docURI) {
     if (HasWebView() && EnsureManualArchiveLoaded()) {
         DiscardManualBrowserWindowIfClosed();
         if (IsManualBrowserWindowOpen()) {
+            gManualBrowserParentHwnd = ManualBrowserParentFrame();
             gManualBrowserWindow->webView->resourceProvider = ManualResourceProvider();
             gManualBrowserWindow->webView->Navigate(localUrl);
             HWND hwnd = gManualBrowserWindow->hwnd;
@@ -10387,7 +10413,9 @@ void LaunchDocumentation(Str docURI) {
         SimpleBrowserCreateArgs args;
         args.title = StrL("SumatraPDF Documentation");
         args.url = localUrl;
-        args.pos = ManualBrowserPlacementRect(ManualBrowserParentFrame());
+        HWND parentFrame = ManualBrowserParentFrame();
+        gManualBrowserParentHwnd = parentFrame;
+        args.pos = ManualBrowserPlacementRect(parentFrame);
         args.resourceProvider = ManualResourceProvider();
         args.resourceUriPrefix = kManualVirtualHostW;
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
@@ -10398,6 +10426,7 @@ void LaunchDocumentation(Str docURI) {
             gManualBrowserWindow->onPosChanged = MkFunc0Void(SaveManualBrowserPosNow);
             return;
         }
+        gManualBrowserParentHwnd = nullptr;
     }
 
     SumatraLaunchBrowser(webUrl);
