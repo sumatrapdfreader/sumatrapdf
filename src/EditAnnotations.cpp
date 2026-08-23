@@ -714,6 +714,14 @@ static void FocusAnnotationsList(EditAnnotationsWindow* ew) {
     ew->SetFocusTo(ew->listBox);
 }
 
+static void FocusAnnotationsFilter(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->editFilter || !ew->editFilter->hwnd) {
+        return;
+    }
+    HwndSetFocus(ew->editFilter->hwnd);
+    ew->editFilter->SelectAll();
+}
+
 void EditAnnotationsWindow::OnFocus(WindowBase::FocusEvent*) {
     SelectTabInWindow(tab);
     // WM_KILLFOCUS clears virtual focus. If the window itself got HWND focus
@@ -752,7 +760,28 @@ static bool IsAnnotationListNavKey(int vkey) {
     return vkey == VK_UP || vkey == VK_DOWN || vkey == VK_PRIOR || vkey == VK_NEXT || vkey == VK_HOME || vkey == VK_END;
 }
 
+static bool FilterEditFocused(EditAnnotationsWindow* ew, HWND focusedHwnd) {
+    return ew && ew->editFilter && ew->editFilter->hwnd && focusedHwnd == ew->editFilter->hwnd;
+}
+
+// Home / End in the filter: move the list when the caret is already at the
+// start/end of the text (command palette). Ctrl+Home / Ctrl+End always do.
+static bool FilterHomeEndMovesList(EditAnnotationsWindow* ew, const KeyEvent* ev) {
+    if (ev->vkey != VK_HOME && ev->vkey != VK_END) {
+        return true;
+    }
+    if (ev->isCtrl) {
+        return true;
+    }
+    int selStart = 0, selEnd = 0;
+    ew->editFilter->GetSelection(selStart, selEnd);
+    int textLen = ew->editFilter->GetTextLen();
+    bool toEnd = (ev->vkey == VK_END);
+    return (selStart == selEnd) && (toEnd ? selEnd == textLen : selStart == 0);
+}
+
 void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
+    bool filterFocused = FilterEditFocused(this, ev->hwnd);
     if (ev->vkey == VK_TAB) {
         // Tab / Shift+Tab. The ring is the layout order and skips what is hidden,
         // HWND controls and virtual ones alike. Apply a pending list selection
@@ -762,11 +791,38 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
         ev->didHandle = true;
         return;
     }
+    if (ev->vkey == VK_RETURN && filterFocused) {
+        // Single-line filter would otherwise click the default Save button.
+        // Apply the highlighted row, like Enter in the command palette.
+        ApplyListSelectionNow(this);
+        ev->didHandle = true;
+        return;
+    }
+    if (filterFocused && ev->vkey == VK_ESCAPE) {
+        if (len(editFilter->GetTextTemp()) > 0) {
+            editFilter->SetText({});
+            ev->didHandle = true;
+        }
+        return;
+    }
+    // Virt list/buttons use this HWND. Child Edits/combos do not: '/' must
+    // still type in Contents, and Ctrl+F there is document find.
+    HWND focused = ::GetFocus();
+    bool childHwnd = focused && focused != hwnd && ::IsChild(hwnd, focused);
+    if (!filterFocused && !childHwnd && !ev->isAlt) {
+        bool ctrlF = (ev->vkey == 'F' || ev->vkey == 'f') && ev->isCtrl && !ev->isShift;
+        bool f3 = ev->vkey == VK_F3 && !ev->isCtrl;
+        bool slash = (ev->vkey == VK_OEM_2 || ev->vkey == VK_DIVIDE) && !ev->isCtrl && !ev->isShift;
+        if (ctrlF || f3 || slash) {
+            FocusAnnotationsFilter(this);
+            ev->didHandle = true;
+            return;
+        }
+    }
     if (ev->vkey == VK_DELETE) {
         // When focus is in a text field, let the Edit control handle Delete /
         // Ctrl+Delete (word delete). Only delete the annotation when focus is
         // outside an edit control (issue #5815).
-        HWND focused = ::GetFocus();
         TempStr cls = HwndGetClassName(focused);
         if (str::EqI(cls, StrL("Edit"))) {
             return;
@@ -779,8 +835,7 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
     if (ev->vkey == 'A' && ev->isCtrl && !ev->isAlt && !ev->isShift) {
         // Ctrl+A selects every annotation, like a win32 listbox. Leave it
         // to the Contents edit when that has focus (issue #5976).
-        HWND focused = ::GetFocus();
-        if (focused && focused != hwnd && ::IsChild(hwnd, focused)) {
+        if (childHwnd) {
             return;
         }
         if (listBox && listBox->multiSelect && listBox->ItemsCount() > 0) {
@@ -802,16 +857,22 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
     // in 3.6.1. The list is a VirtListBox now, so those keys only reach it when
     // it has virtual focus — which is often missing (window just opened, or
     // WM_KILLFOCUS cleared it). Drive the list from here unless a child HWND
-    // (Contents edit, drop-down, trackbar) has focus (issue #5975).
+    // (Contents edit, drop-down, trackbar) has focus (issue #5975). The filter
+    // is the exception: arrows move the list and leave the caret in the edit,
+    // like the command palette / Advanced Settings.
     if (IsAnnotationListNavKey(ev->vkey)) {
-        HWND focused = ::GetFocus();
-        if (focused && focused != hwnd && ::IsChild(hwnd, focused)) {
+        if (!filterFocused && childHwnd) {
             return;
         }
         if (!listBox || listBox->ItemsCount() == 0) {
             return;
         }
-        FocusAnnotationsList(this);
+        if (filterFocused && !FilterHomeEndMovesList(this, ev)) {
+            return;
+        }
+        if (!filterFocused) {
+            FocusAnnotationsList(this);
+        }
         VirtKeyEvent ke;
         ke.vkey = ev->vkey;
         ke.isCtrl = ev->isCtrl;
@@ -1740,10 +1801,20 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
 // Clicking Contents / a combo takes HWND focus off the list. Apply the
 // highlighted row first so those controls belong to that annot.
 static void OnAnnotWndProc(WindowBase::WndProcEvent* ev) {
+    auto* ew = (EditAnnotationsWindow*)ev->w;
+    if (ev->msg == WM_CHAR && ev->wparam == '/') {
+        HWND focused = ::GetFocus();
+        bool childHwnd = focused && focused != ew->hwnd && ::IsChild(ew->hwnd, focused);
+        if (!childHwnd) {
+            FocusAnnotationsFilter(ew);
+            ev->didHandle = true;
+            ev->result = 0;
+        }
+        return;
+    }
     if (ev->msg != WM_KILLFOCUS) {
         return;
     }
-    auto* ew = (EditAnnotationsWindow*)ev->w;
     HWND newFocus = (HWND)ev->wparam;
     if (newFocus && ew->hwnd && ::IsChild(ew->hwnd, newFocus)) {
         ApplyListSelectionNow(ew);
