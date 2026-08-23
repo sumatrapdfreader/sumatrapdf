@@ -181,6 +181,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-5933", issue5933],
   ["issue-5964", issue5964],
   ["issue-6013", issue6013],
   ["issue-5972", issue5972],
@@ -210,7 +211,6 @@ export const tests: NamedTest[] = [
   ["issue-5975", issue5975],
   ["issue-6033", issue6033],
   ["issue-6036", issue6036],
-  ["issue-5933", issue5933],
   ["issue-6037", issue6037],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
   ["annot-delete-redraw", annotDeleteRedraw],

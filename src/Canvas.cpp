@@ -2133,6 +2133,14 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     if (isMoveableAnnot) {
         StartAnnotationDrag(win, annot, pt);
     } else {
+        // Clicking empty page (or non-moveable markup) while a shape is in
+        // size-edit must leave that mode on mouse-down. Mouse-up used to skip
+        // deselect when the press moved past SM_CXDRAG and became a page pan,
+        // so the only ways out were Esc or a right click (issue #5933).
+        if (tab && tab->selectedAnnotation) {
+            SetSelectedAnnotation(tab, nullptr);
+            return;
+        }
         ReportIf(win->linkOnLastButtonDown);
         IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
         if (pageEl && pageEl->Is(kindPageElementDest) && !gGlobalPrefs->disableLinks) {

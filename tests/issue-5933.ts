@@ -7,9 +7,11 @@ import { join } from "node:path";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
 import {
   captureWindowToPng,
+  clientToScreen,
   getClientRect,
   packCoords,
   sendMessage,
+  setCursorPos,
   sleep,
   MK_LBUTTON,
   VK_ESCAPE,
@@ -29,6 +31,20 @@ function clickAt(canvas: number, x: number, y: number) {
   const lp = packCoords(x, y);
   sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, lp);
   sendMessage(canvas, WM_LBUTTONUP, 0, lp);
+}
+
+// A real click usually moves a few pixels. That used to become a page pan
+// (SM_CXDRAG) and skip the mouse-up deselect, so size-edit stuck.
+function clickAwayWithJitter(canvas: number, x: number, y: number) {
+  const x1 = x + 16;
+  const y1 = y + 16;
+  const p0 = clientToScreen(canvas, x, y);
+  const p1 = clientToScreen(canvas, x1, y1);
+  setCursorPos(p0.x, p0.y);
+  sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x, y));
+  setCursorPos(p1.x, p1.y);
+  sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x1, y1));
+  sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(x1, y1));
 }
 
 export async function testit(): Promise<void> {
@@ -81,6 +97,37 @@ export async function testit(): Promise<void> {
     }
     if (!afterClick.equals(afterEsc)) {
       throw new Error("issue-5933: click away left a different selection than Esc");
+    }
+
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stampX, stampY));
+    await sleep(400);
+    await client.waitForRenderIdle();
+    const selected2Png = join(dir, "selected2.png");
+    if (!captureWindowToPng(canvas, selected2Png)) {
+      throw new Error("issue-5933: capture selected2 failed");
+    }
+    clickAwayWithJitter(canvas, awayX, awayY);
+    await sleep(400);
+    await client.waitForRenderIdle();
+    const afterJitterPng = join(dir, "after-jitter.png");
+    if (!captureWindowToPng(canvas, afterJitterPng)) {
+      throw new Error("issue-5933: capture after jitter click failed");
+    }
+    sendMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
+    await sleep(200);
+    await client.waitForRenderIdle();
+    const afterEsc2Png = join(dir, "after-esc2.png");
+    if (!captureWindowToPng(canvas, afterEsc2Png)) {
+      throw new Error("issue-5933: capture after Esc 2 failed");
+    }
+    const selected2 = readFileSync(selected2Png);
+    const afterJitter = readFileSync(afterJitterPng);
+    const afterEsc2 = readFileSync(afterEsc2Png);
+    if (selected2.equals(afterJitter)) {
+      throw new Error("issue-5933: jittered click away did not leave stamp size-edit mode");
+    }
+    if (!afterJitter.equals(afterEsc2)) {
+      throw new Error("issue-5933: jittered click away left a different selection than Esc");
     }
   } finally {
     client.close();
