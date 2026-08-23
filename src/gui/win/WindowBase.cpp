@@ -577,11 +577,11 @@ static void WindowBaseDefaultPaint(WindowBase* w, HDC hdc, PAINTSTRUCT* ps) {
 }
 
 void WindowBase::SetFocusTo(ControlBase* c) {
-    if (!c || !c->hwnd) {
+    if (!c) {
         return;
     }
     // the win32 focus moving away from us clears the virtual focus (WM_KILLFOCUS)
-    ::SetFocus(c->hwnd);
+    c->SetFocus();
 }
 
 void WindowBase::SetFocusTo(VirtCtrl* w) {

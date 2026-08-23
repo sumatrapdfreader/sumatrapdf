@@ -693,17 +693,28 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
     if (!win) {
         return nullptr;
     }
+    *hwndAccel = win->hwndFrame;
+    // Find bar/window are owned popups, not children of the frame. Their chrome,
+    // ComboBox and inner Edit must use the edit table: F on the main table is
+    // fullscreen and steals the focus Ctrl+F just gave them.
+    if (hwnd != win->hwndFrame && !::IsChild(win->hwndFrame, hwnd)) {
+        if (forwardSysKeys) {
+            *forwardSysKeys = true;
+        }
+        return editAccTable;
+    }
     // Edit / tree keep a reduced table so letters and arrows type/navigate.
     // Every other child (Virt toolbar, tabs HWND, canvas, WebView host, …)
     // uses the main table — those windows take focus on click, and returning
     // nullptr here is why Ctrl+W stopped closing a tab after the Virt toolbar.
     WCHAR clsName[256];
     int n = GetClassNameW(hwnd, clsName, dimof(clsName));
-    *hwndAccel = win->hwndFrame;
     if (n <= 0) {
         return accTable;
     }
-    if (wstr::EqI(clsName, WC_EDITW)) {
+    // ComboBox / ComboLBox take the win32 focus (find field, history list).
+    // Letters on the main table would fire (F = fullscreen) instead of typing.
+    if (wstr::EqI(clsName, WC_EDITW) || wstr::EqI(clsName, WC_COMBOBOX) || wstr::EqI(clsName, L"ComboLBox")) {
         if (forwardSysKeys) {
             *forwardSysKeys = true;
         }
@@ -718,12 +729,34 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
     return accTable;
 }
 
+// After a Ctrl/Alt+key accelerator, ignore auto-repeat of that key until it is
+// released. A slow CmdFindFirst (ASan) lets Windows queue a repeat KEYDOWN F
+// after Ctrl is up; F is CmdToggleFullscreen and steals find/search focus.
+static WPARAM gIgnoreRepeatKey = 0;
+
 static bool MaybeTranslateAccelerator(MSG& msg) {
     // TODO: why mouse events?
     bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
                      (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
     if (!doAccels) {
         return false;
+    }
+
+    if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP) {
+        if (gIgnoreRepeatKey && msg.wParam == gIgnoreRepeatKey) {
+            gIgnoreRepeatKey = 0;
+        }
+    } else if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) {
+        if (gIgnoreRepeatKey && msg.wParam == gIgnoreRepeatKey) {
+            // bit 30: key was already down (auto-repeat), not a new press
+            bool repeat = (msg.lParam & (1L << 30)) != 0;
+            if (repeat && !IsCtrlPressed() && !IsAltPressed()) {
+                return true;
+            }
+            if (!repeat) {
+                gIgnoreRepeatKey = 0;
+            }
+        }
     }
 
     // Explorer Quick Look overlay: Space/Esc close, Left/Right change file.
@@ -797,9 +830,20 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     HWND hwndAccel;
     bool forwardSysKeys = false;
     HACCEL accels = FindAcceleratorsForHwnd(msg.hwnd, &hwndAccel, &forwardSysKeys);
-    if (!accels) return false;
+    if (!accels) {
+        return false;
+    }
+    bool isChordKey = (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) &&
+                      (IsCtrlPressed() || IsAltPressed()) && msg.wParam != VK_CONTROL && msg.wParam != VK_MENU &&
+                      msg.wParam != VK_SHIFT;
+    if (isChordKey) {
+        gIgnoreRepeatKey = msg.wParam;
+    }
     if (TranslateAcceleratorW(hwndAccel, accels, &msg)) {
         return true;
+    }
+    if (isChordKey) {
+        gIgnoreRepeatKey = 0;
     }
     // Alt+<mnemonic> / F10 open the menu bar, but those aren't in the accelerator
     // tables; when focus is on a child pane (TOC tree / edit box) the control

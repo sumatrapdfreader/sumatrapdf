@@ -1049,6 +1049,24 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd) {
             return win;
         }
     }
+    // Owned popups (find bar / find window) and their children are WS_POPUP, not
+    // WS_CHILD of the frame, so IsChild misses them. ComboLBox (dropped history)
+    // is owned by the combo, so climb owner then parent until we hit a frame.
+    HWND cur = hwnd;
+    for (int i = 0; i < 16 && cur; i++) {
+        HWND owner = GetWindow(cur, GW_OWNER);
+        HWND parent = ::GetParent(cur);
+        HWND next = owner ? owner : parent;
+        if (!next || next == cur) {
+            break;
+        }
+        for (MainWindow* win : gWindows) {
+            if (next == win->hwndFrame) {
+                return win;
+            }
+        }
+        cur = next;
+    }
     return nullptr;
 }
 

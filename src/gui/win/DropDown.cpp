@@ -92,6 +92,14 @@ HWND DropDown::Create(const CreateArgs& args) {
     return hwnd;
 }
 
+// Editable combos keep the keyboard focus on the inner Edit. Focusing the
+// ComboBox HWND itself uses the main accelerator table, so a leftover F from
+// Ctrl+F can fire CmdToggleFullscreen and take focus away.
+void DropDown::SetFocus() {
+    HWND edit = EditHwnd();
+    HwndSetFocus(edit ? edit : hwnd);
+}
+
 HWND DropDown::EditHwnd() const {
     if (!hwnd) {
         return nullptr;

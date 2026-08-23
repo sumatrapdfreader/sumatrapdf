@@ -565,7 +565,7 @@ struct ControlBase : ILayout, HwndBase {
     bool IsVisible() const;
 
     virtual bool IsFocused() const;
-    void SetFocus();
+    virtual void SetFocus();
 
     LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
@@ -879,6 +879,7 @@ struct DropDown : ControlBase {
     void OnCommand(ControlBase::CommandEvent* ev);
     void OnMessageReflect(ControlBase::MessageReflectEvent* ev);
     bool IsFocused() const override;
+    void SetFocus() override;
 
     int GetCurrentSelection();
     void SetCurrentSelection(int n);
