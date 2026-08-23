@@ -1567,6 +1567,8 @@ static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
 // GoToPage / canvas scroll for the current selection. Posted so holding
 // arrows in the annot list can keep moving the caret (issue #6009). Find
 // uses ScheduleRepaint, not MainWindowRerender, for the same reason.
+// GoToPage used to run before HwndShowWithoutActivate; posting it meant the
+// frame (TOC select, overlay scrollbar HWND_TOP) could cover this window.
 static void ShowSelectedAnnotationView(WindowTab* tab) {
     if (!tab) {
         return;
@@ -1586,6 +1588,10 @@ static void ShowSelectedAnnotationView(WindowTab* tab) {
     if (!tabOpen) {
         return;
     }
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    HWND annotHwnd = ew ? ew->hwnd : nullptr;
+    HWND prevFocus = ::GetFocus();
+    bool annotHadFocus = annotHwnd && prevFocus && (prevFocus == annotHwnd || ::IsChild(annotHwnd, prevFocus));
     Annotation* annot = tab->selectedAnnotation;
     DisplayModel* dm = tab->AsFixed();
     if (AnnotationIsLive(annot) && dm) {
@@ -1599,6 +1605,12 @@ static void ShowSelectedAnnotationView(WindowTab* tab) {
     }
     ScheduleRepaint(win, 0);
     ToolbarUpdateStateForWindow(win, false);
+    if (annotHwnd && ::IsWindow(annotHwnd)) {
+        HwndShowWithoutActivate(annotHwnd);
+        if (annotHadFocus && prevFocus && ::IsWindow(prevFocus) && ::GetFocus() != prevFocus) {
+            ::SetFocus(prevFocus);
+        }
+    }
 }
 
 static void ScheduleShowSelectedAnnotationView(WindowTab* tab) {

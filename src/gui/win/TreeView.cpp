@@ -264,7 +264,13 @@ bool TreeView::SelectItem(TreeItem ti) {
     if (ti != TreeModel::kNullItem) {
         hi = GetHandleByTreeItem(ti);
     }
+    // TVM_SELECTITEM focuses the tree, which activates the parent frame and
+    // buries other top-level windows (annotations editor, command palette).
+    HWND prev = ::GetFocus();
     BOOL ok = TreeView_SelectItem(hwnd, hi);
+    if (prev && prev != hwnd && ::GetFocus() == hwnd) {
+        ::SetFocus(prev);
+    }
     return ok == TRUE;
 }
 

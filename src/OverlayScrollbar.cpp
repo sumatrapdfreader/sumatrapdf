@@ -383,7 +383,8 @@ static void SetState(OverlayScrollbar* sb, State newState) {
     OverlayScrollbarUpdatePos(sb);
     if (nowVisible) {
         if (!wasVisible) {
-            ShowWindow(sb->hwnd, SW_SHOWNOACTIVATE);
+            SetWindowPos(sb->hwnd, HWND_TOP, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
         }
         PaintScrollbar(sb);
     } else {
@@ -932,20 +933,20 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
     }
     SetWindowLongPtrW(sb->hwnd, GWL_EXSTYLE, exStyle);
 
-    UINT swpFlags = SWP_NOACTIVATE;
+    // SWP_NOOWNERZORDER: HWND_TOP on an owned popup otherwise raises the
+    // owner frame over other top-level windows (command palette, annotations).
+    UINT swpFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER;
+    HWND insertAfter = nullptr;
     // re-show the window if the state says it should be visible
     // (RelayoutFrame hides overlay scrollbar windows with SW_HIDE
     // to prevent them from appearing at stale positions)
     if (IsVisible(sb) && !HwndIsVisible(sb->hwnd)) {
         swpFlags |= SWP_SHOWWINDOW;
-    }
-    // When not visible, don't change Z-order — HWND_TOP on an owned popup
-    // brings the owner (frame) to the top too, which can hide other popups
-    // like the command palette
-    if (!IsVisible(sb)) {
+        insertAfter = HWND_TOP;
+    } else {
         swpFlags |= SWP_NOZORDER;
     }
-    SetWindowPos(sb->hwnd, IsVisible(sb) ? HWND_TOP : nullptr, x, y, w, h, swpFlags);
+    SetWindowPos(sb->hwnd, insertAfter, x, y, w, h, swpFlags);
 }
 
 // Hide the scrollbar window without stealing activation from other windows.
@@ -983,7 +984,8 @@ void OverlayScrollbarShow(OverlayScrollbar* sb, bool show) {
     }
     // re-show if window was temporarily hidden (e.g. during relayout)
     OverlayScrollbarUpdatePos(sb);
-    ShowWindow(sb->hwnd, SW_SHOWNOACTIVATE);
+    SetWindowPos(sb->hwnd, HWND_TOP, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
     PaintScrollbar(sb);
 }
 
