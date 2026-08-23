@@ -665,12 +665,11 @@ static TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = StrL("gemini-3.6-flash");
     }
-    // the antigravity CLI takes different flags than claude (see the chat
-    // provider in AIAntiGravity.cpp): --effort instead of --session-id, and
-    // --dangerously-skip-permissions instead of --auto-approve. A one-shot
-    // translation needs no --conversation.
+    // agy takes -p/--print's next argument as the prompt and ignores flags
+    // after it (see AIAntiGravity.cpp). Putting -p first made the prompt
+    // "--model", so the model answered with its own name instead of translating.
     Str permsFlag = gGlobalPrefs->antiGravity.autoApprove ? StrL("--dangerously-skip-permissions") : Str{};
-    return fmt("%s -p --model %s --effort low --output-format stream-json %s %s", QuoteCmdLineArgTemp(exePath),
+    return fmt("%s --model %s --effort low --output-format stream-json %s -p %s", QuoteCmdLineArgTemp(exePath),
                QuoteCmdLineArgTemp(model), permsFlag, QuoteCmdLineArgTemp(prompt));
 }
 
