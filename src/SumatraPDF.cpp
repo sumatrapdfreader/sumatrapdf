@@ -4921,6 +4921,10 @@ void UpdateDocumentColors() {
             if (mm) {
                 mm->UpdateTheme();
             }
+            ChmModel* chm = tab->AsChm();
+            if (chm) {
+                chm->UpdateTheme();
+            }
         }
     }
 

@@ -123,5 +123,16 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
 }
 
 bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
-    return engine && (engine->kind == kindEngineMupdf || engine->kind == kindEngineDjVu);
+    if (!engine || engine->IsImageCollection()) {
+        return false;
+    }
+    if (engine->kind == kindEngineMupdf || engine->kind == kindEngineDjVu) {
+        return true;
+    }
+    // Native HTML-layout engines paint black-on-white pages. Recolor them with
+    // FixedPageUI colors the same way as PDF (issue #6030: CHM went white when
+    // recolor was narrowed to MuPDF+DjVu).
+    return engine->kind == kindEngineChm || engine->kind == kindEngineEpub || engine->kind == kindEngineFb2 ||
+           engine->kind == kindEngineMobi || engine->kind == kindEnginePdb || engine->kind == kindEngineHtml ||
+           engine->kind == kindEngineTxt;
 }

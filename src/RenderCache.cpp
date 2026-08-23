@@ -44,8 +44,8 @@ static bool gShowTileLayout = false;
 int gMaxRenderThreads = 8;
 
 // Whether to run the bitmap recolor pass when no dark profile applies.
-// Only MuPDF-rendered documents (PDF, XPS, EPUB, MOBI, FB2, HTML, etc.) and
-// DjVu are recolored; image/comic/native-ebook engines keep original pixels.
+// MuPDF, DjVu, and native HTML-layout ebook engines (CHM, EPUB, MOBI, …)
+// are recolored; image/comic collections keep original pixels.
 static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cache) {
     (void)cache;
     return EngineUsesDocumentColorsFollowTheme(engine);
