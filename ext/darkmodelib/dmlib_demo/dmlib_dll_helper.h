@@ -27,6 +27,8 @@
 #endif
 
 typedef struct _TASKDIALOGCONFIG TASKDIALOGCONFIG; // forward declaration, from <commctrl.h>
+typedef struct tagCHOOSECOLORW* LPCHOOSECOLORW; // forward declaration, from <commdlg.h>
+typedef struct tagCHOOSEFONTW* LPCHOOSEFONTW; // forward declaration, from <commdlg.h>
 
 namespace dmlib_module
 {
@@ -422,6 +424,9 @@ namespace dmlib
 		[[nodiscard]] inline LRESULT DummyOnCtlColorListbox(WPARAM, LPARAM) { return FALSE; }
 
 		inline UINT_PTR CALLBACK DummyHookDlgProc(HWND, UINT, WPARAM, LPARAM) { return 0; }
+		inline BOOL DummyDarkChooseColorW(LPCHOOSECOLORW) { return FALSE; }
+		inline BOOL DummyDarkChooseFontW(LPCHOOSEFONTW, int) { return FALSE; }
+
 		inline void DummySetDarkTaskDlg(HWND) {}
 		inline HRESULT CALLBACK DummyDarkTaskDlgCallback(HWND, UINT, WPARAM, LPARAM, LONG_PTR) { return S_OK; }
 		inline HRESULT DummyDarkTaskDialogIndirect(const TASKDIALOGCONFIG*, int*, int*, BOOL*) { return S_OK; }
@@ -967,6 +972,12 @@ namespace dmlib
 
 	using HookDlgProc_t = auto (CALLBACK*)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) -> UINT_PTR;
 	inline HookDlgProc_t HookDlgProc = nullptr;
+
+	using darkChooseColorW_t = auto (*)(LPCHOOSECOLORW cc) -> BOOL;
+	inline darkChooseColorW_t darkChooseColorW = nullptr;
+
+	using darkChooseFontW_t = auto (*)(LPCHOOSEFONTW cf, int tmplId) -> BOOL;
+	inline darkChooseFontW_t darkChooseFontW = nullptr;
 
 	using setDarkTaskDlg_t = void (*)(HWND hWnd);
 	inline setDarkTaskDlg_t setDarkTaskDlg = nullptr;

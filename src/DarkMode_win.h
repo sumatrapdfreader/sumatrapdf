@@ -39,3 +39,7 @@ void DarkModeApplyToChildControls(HWND);
 // the main frame, right after it was created / after the theme changed
 void DarkModeApplyToNewFrame(MainWindow*);
 void DarkModeApplyToFrameAfterThemeChange(MainWindow*);
+
+// ChooseColorW, themed when darkmodelib is drawing
+struct tagCHOOSECOLORW;
+bool DarkModeChooseColor(tagCHOOSECOLORW*);

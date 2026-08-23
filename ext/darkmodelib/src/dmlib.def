@@ -180,6 +180,8 @@ EXPORTS
 	onCtlColorDlgLinkText
 	onCtlColorListbox
 	HookDlgProc
+	darkChooseColorW
+	darkChooseFontW
 	setDarkTaskDlg
 	DarkTaskDlgCallback
 	darkTaskDialogIndirect

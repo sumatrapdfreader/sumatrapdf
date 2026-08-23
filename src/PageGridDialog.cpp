@@ -332,7 +332,7 @@ void PageGridWnd::OnSwatchClick(VirtMouseEvent*) {
     cc.lpCustColors = gPageGridCustColors;
     cc.rgbResult = currentColor;
     cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-    if (!ChooseColorW(&cc)) {
+    if (!DarkModeChooseColor(&cc)) {
         return;
     }
     currentColor = cc.rgbResult;

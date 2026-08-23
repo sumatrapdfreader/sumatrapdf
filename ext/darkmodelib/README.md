@@ -1,4 +1,4 @@
-# Darkmodelib – Win32 Library for Dark Mode Support
+# Darkmodelib - Win32 Library for Dark Mode Support
 
 [![Build status](https://img.shields.io/github/actions/workflow/status/ozone10/darkmodelib/build_win.yml?logo=Github)](https://github.com/ozone10/darkmodelib/actions)
 [![Latest release](https://img.shields.io/github/v/release/ozone10/darkmodelib?include_prereleases)](https://github.com/ozone10/darkmodelib/releases/latest)
@@ -13,7 +13,7 @@ Darkmodelib is a C++ library that brings modern visual features, such as dark mo
 * * *
 
 <p align="center">
-  <img src="https://i.imgur.com/CCJ5txa.png">
+  <img src="https://i.imgur.com/HCdEBsc.png">
 </p>
 
 * * *
@@ -22,11 +22,23 @@ Darkmodelib is a C++ library that brings modern visual features, such as dark mo
   <summary>Gallery</summary>
 
   <p align="center">
-    <img src="https://i.imgur.com/XH9Egmz.png">
+    <img src="https://i.imgur.com/yHYCauy.png">
   </p>
 
   <p align="center">
-    <img src="https://i.imgur.com/0NMYNBh.png">
+    <img src="https://i.imgur.com/uzFeZhp.png">
+  </p>
+
+  <p align="center">
+    <img src="https://i.imgur.com/Arx1wEH.png">
+  </p>
+
+  <p align="center">
+    <img src="https://i.imgur.com/BSjoVrP.png">
+  </p>
+
+  <p align="center">
+    <img src="https://i.imgur.com/ye4sDy1.png">
   </p>
 
 </details>
@@ -38,10 +50,14 @@ Darkmodelib is a C++ library that brings modern visual features, such as dark mo
 - Simplify Mica material and other Windows 11's visual features integration on Windows 11
 - Automatic theme switching based on system light/dark mode settings
 - Support for common Win32 controls (buttons, edit controls, list views, tree views, ...)
+- Support for Color and Font common dialog boxes
+- Support for Task dialog 
 
 ## Compatibility
 
 Darkmodelib works best with Windows 10 version 1809 and later, and mainly targets Windows 11, while maintaining fallback compatibility as far as Windows Vista.
+
+For some controls darkmodelib uses IAT hooks.
 
 ## Used by
 

@@ -45,6 +45,16 @@ static HRESULT MyDummyDarkTaskDialogIndirect(
 	return ::TaskDialogIndirect(pTaskConfig, pnButton, pnRadioButton, pfVerificationFlagChecked);
 }
 
+static int MyDummyDarkMessageBoxW(
+	HWND hWnd,
+	LPCWSTR lpText,
+	LPCWSTR lpCaption,
+	UINT uType
+)
+{
+	return ::MessageBoxW(hWnd, lpText, lpCaption, uType);
+}
+
 // Example of how to define your function loader
 
 bool dmlib::loadDarkModeFunctionsFromDll(const wchar_t* dllName)
@@ -86,7 +96,10 @@ bool dmlib::loadDarkModeFunctionsFromDll(const wchar_t* dllName)
 	LOAD_FN(setWindowEraseBgSubclass, DummySetWindowEraseBgSubclass);
 	LOAD_FN(setWindowMenuBarSubclass, DummySetWindowMenuBarSubclass);
 	LOAD_FN(HookDlgProc, DummyHookDlgProc);
+	LOAD_FN(darkChooseColorW, DummyDarkChooseColorW);
+	LOAD_FN(darkChooseFontW, DummyDarkChooseFontW);
 	LOAD_FN(darkTaskDialogIndirect, MyDummyDarkTaskDialogIndirect);
+	LOAD_FN(darkMessageBoxW, MyDummyDarkMessageBoxW);
 	LOAD_FN(setDarkWndNotifySafe, DummySetDarkWndNotifySafe);
 	LOAD_FN(getLibInfo, DummyGetLibInfo);
 
@@ -1130,13 +1143,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					cc.lpCustColors = customColors.data();
 					cc.rgbResult = RGB(0, 120, 215);
 					cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-					if (dmlib::isEnabled())
-					{
-						cc.Flags |= CC_ENABLEHOOK;
-						cc.lpfnHook = static_cast<LPCCHOOKPROC>(dmlib::HookDlgProc);
-					}
 
-					ChooseColorW(&cc);
+					dmlib::darkChooseColorW(&cc);
 					break;
 				}
 
@@ -1159,15 +1167,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					cf.Flags = CF_BOTH | CF_INITTOLOGFONTSTRUCT | CF_EFFECTS | CF_LIMITSIZE | CF_FORCEFONTEXIST;
 					cf.nSizeMin = 8;
 					cf.nSizeMax = 72;
-					if (dmlib::isEnabled())
-					{
-						cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
-						cf.lpfnHook = static_cast<LPCFHOOKPROC>(dmlib::HookDlgProc);
-						cf.hInstance = GetModuleHandleW(nullptr);
-						cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
-					}
 
-					ChooseFontW(&cf);
+					dmlib::darkChooseFontW(&cf, IDD_DARK_FONT_DIALOG);
 					break;
 				}
 

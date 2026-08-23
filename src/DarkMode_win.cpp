@@ -7,6 +7,7 @@
 // enabled, is the current theme the default one - live here instead.
 
 #include "base/Base.h"
+#include <commdlg.h>
 #include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
@@ -97,6 +98,7 @@ void DarkModeApplyThemeColors() {
     DarkMode::setDisabledEdgeColor(ThemeDisabledEdgeColor());
     DarkMode::setErrorBackgroundColor(ThemeErrorBackgroundColor());
     DarkMode::updateThemeBrushesAndPens();
+    DarkMode::updateCommonDlgsBrushes();
 
     DarkMode::setViewTextColor(ThemeWindowTextColor());
     DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
@@ -197,6 +199,18 @@ void DarkModeApplyToNewFrame(MainWindow* win) {
     DarkMode::setDarkScrollBar(win->hwndCanvas);
     DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
     ApplyToInfotip(win);
+}
+
+// ChooseColorW with darkmodelib's hook so the system color dialog follows the
+// current theme (darkmodelib 0.76).
+bool DarkModeChooseColor(tagCHOOSECOLORW* cc) {
+    if (!cc) {
+        return false;
+    }
+    if (gUseDarkModeLib) {
+        return DarkMode::darkChooseColorW(cc);
+    }
+    return ChooseColorW(cc);
 }
 
 void DarkModeApplyToFrameAfterThemeChange(MainWindow* win) {

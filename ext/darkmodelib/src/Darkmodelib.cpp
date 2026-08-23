@@ -24,6 +24,7 @@
 #include <windows.h>
 
 #include <colordlg.h>
+#include <commdlg.h>
 #include <dlgs.h>
 #include <dwmapi.h>
 #include <richedit.h>
@@ -4026,7 +4027,9 @@ LRESULT dmlib::onCtlColorListbox(WPARAM wParam, LPARAM lParam)
 }
 
 /**
- * @brief Window subclass procedure for customizing ChooseFont and ChooseColor dialogs.
+ * @brief Window subclass procedure for customizing Font and Color dialog boxes.
+ *
+ * Hooks are installed only in needed messages to avoid side effects.
  *
  * @param[in]   hWnd        Window handle being subclassed.
  * @param[in]   uMsg        Message identifier.
@@ -4060,7 +4063,7 @@ static LRESULT CALLBACK ComDlgSubclass(
 			break;
 		}
 
-		case WM_MOUSEMOVE: // for ChooseColor dialog luminosity slide control
+		case WM_MOUSEMOVE: // for Color dialog box luminosity slide control
 		{
 			if (const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::ClrGetSysColorBrush>();
 				autoHook)
@@ -4070,14 +4073,14 @@ static LRESULT CALLBACK ComDlgSubclass(
 			break;
 		}
 
-		case WM_PAINT: // for font preview background, control has id stc5 (0x444) and for ChooseColor dialog luminosity slide control
+		case WM_PAINT: // for Font dialog box preview background (control has id stc5 (0x444)) and for Color dialog box luminosity slide control
 		{
 			const auto ahFontSysColor = dmlib_hook::AutoHook<dmlib_hook::FontGetSysColor>();
 			const auto ahClrGetSysColorBrush = dmlib_hook::AutoHook<dmlib_hook::ClrGetSysColorBrush>();
 			return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 		}
 
-		case WM_DRAWITEM: // for combo boxes and their list boxes
+		case WM_DRAWITEM: // for Font dialog box combo boxes and their list boxes
 		{
 			if (wParam == cmb1 || wParam == cmb2 || wParam == cmb3 || wParam == cmb4 || wParam == cmb5)
 			{
@@ -4089,7 +4092,7 @@ static LRESULT CALLBACK ComDlgSubclass(
 			break;
 		}
 
-		case WM_COMMAND: // for ChooseColor dialog luminosity slide control
+		case WM_COMMAND: // for Color dialog box luminosity slide control
 		{
 			const int id = LOWORD(wParam);
 			const int nCode = HIWORD(wParam);
@@ -4127,7 +4130,7 @@ static LRESULT CALLBACK ComDlgSubclass(
 				return retVal;
 			}
 
-			if (id == IDOK && nCode == BN_CLICKED) // for ChooseFont dialog message boxes
+			if (id == IDOK && nCode == BN_CLICKED) // for Font dialog box message boxes
 			{
 				if (const auto autoHook = dmlib_hook::AutoHook<dmlib_hook::FontMB>();
 					autoHook)
@@ -4149,9 +4152,16 @@ static LRESULT CALLBACK ComDlgSubclass(
 }
 
 /**
- * @brief Hook procedure for customizing ChooseFont and ChooseColor dialogs with custom colors.
+ * @brief Generic hook procedure for customizing Font and Color dialog boxes with custom colors.
+ *
+ * @see ComDlgSubclass()
  */
-UINT_PTR CALLBACK dmlib::HookDlgProc(HWND hWnd, UINT uMsg, [[maybe_unused]] WPARAM wParam, [[maybe_unused]] LPARAM lParam)
+UINT_PTR CALLBACK dmlib::HookDlgProc(
+	HWND hWnd,
+	UINT uMsg,
+	[[maybe_unused]] WPARAM wParam,
+	[[maybe_unused]] LPARAM lParam
+)
 {
 	if (uMsg == WM_INITDIALOG)
 	{
@@ -4160,6 +4170,182 @@ UINT_PTR CALLBACK dmlib::HookDlgProc(HWND hWnd, UINT uMsg, [[maybe_unused]] WPAR
 		return TRUE;
 	}
 	return FALSE;
+}
+
+/**
+ * @brief Window subclass procedure for removing hooks for a Color dialog box.
+ *
+ * @param[in]   hWnd        Window handle being subclassed.
+ * @param[in]   uMsg        Message identifier.
+ * @param[in]   wParam      Message-specific data.
+ * @param[in]   lParam      Message-specific data.
+ * @param[in]   uIdSubclass Subclass identifier.
+ * @param[in]   dwRefData   Reference data (unused).
+ * @return LRESULT Result of message processing.
+ *
+ * @see ChooseColorHookDlgProc()
+ */
+static LRESULT CALLBACK ChooseColorSubclass(
+	HWND hWnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT_PTR uIdSubclass,
+	[[maybe_unused]] DWORD_PTR dwRefData
+) noexcept
+{
+	if (uMsg == WM_NCDESTROY)
+	{
+		::RemoveWindowSubclass(hWnd, ChooseColorSubclass, uIdSubclass);
+		dmlib_hook::ClrGetSysColorBrush::unhook();
+	}
+	
+	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+/**
+ * @brief Hook procedure for customizing a Color dialog box with custom dialog colors.
+ *
+ * @see ChooseColorSubclass()
+ */
+static UINT_PTR CALLBACK ChooseColorHookDlgProc(
+	HWND hWnd,
+	UINT uMsg,
+	[[maybe_unused]] WPARAM wParam,
+	[[maybe_unused]] LPARAM lParam
+) noexcept
+{
+	if (uMsg == WM_INITDIALOG)
+	{
+		dmlib::setDarkWndSafe(hWnd);
+
+		dmlib_hook::ClrGetSysColorBrush::hook();
+		dmlib_subclass::SetSubclass(hWnd, ChooseColorSubclass, dmlib_subclass::SubclassID::comDlg);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * @brief Wrapper for `ChooseColorW` to enable dialog box customizing.
+ *
+ * Creates a Color dialog box that enables the user to select a color.
+ *
+ * Enables hook with `CC_ENABLEHOOK` to use hook procedure
+ * to enable customizing the Color dialog box.
+ * 
+ * @param[in,out] cc Contains information the `ChooseColor` function uses to initialize the Color dialog box.
+ *                   After the user closes the dialog box, the system returns information about the user's selection in this structure.
+ * @return BOOL If the user clicks the OK button of the dialog box, the return value is nonzero.
+ *              The rgbResult member of the `CHOOSECOLOR` structure contains the RGB color value of the color selected by the user.
+ * @return BOOL If the user cancels or closes the Color dialog box or an error occurs, the return value is zero.
+ *
+ * @see ChooseColorHookDlgProc()
+ */
+BOOL dmlib::darkChooseColorW(LPCHOOSECOLORW cc)
+{
+	if (dmlib::isEnabled())
+	{
+		cc->Flags |= CC_ENABLEHOOK;
+		cc->lpfnHook = static_cast<LPCCHOOKPROC>(ChooseColorHookDlgProc);
+	}
+
+	return ::ChooseColorW(cc);
+}
+
+/**
+ * @brief Window subclass procedure for removing hooks for a Font dialog box.
+ *
+ * @param[in]   hWnd        Window handle being subclassed.
+ * @param[in]   uMsg        Message identifier.
+ * @param[in]   wParam      Message-specific data.
+ * @param[in]   lParam      Message-specific data.
+ * @param[in]   uIdSubclass Subclass identifier.
+ * @param[in]   dwRefData   Reference data (unused).
+ * @return LRESULT Result of message processing.
+ *
+ * @see ChooseFontHookDlgProc()
+ */
+static LRESULT CALLBACK ChooseFontSubclass(
+	HWND hWnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT_PTR uIdSubclass,
+	[[maybe_unused]] DWORD_PTR dwRefData
+) noexcept
+{
+	if (uMsg == WM_NCDESTROY)
+	{
+		::RemoveWindowSubclass(hWnd, ChooseFontSubclass, uIdSubclass);
+		dmlib_hook::FontGetSysColor::unhook();
+		dmlib_hook::FontFillRect::unhook();
+		dmlib_hook::FontMB::unhook();
+	}
+
+	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+/**
+ * @brief Hook procedure for customizing a Font dialog box with custom dialog colors.
+ *
+ * @see ChooseFontSubclass()
+ */
+static UINT_PTR CALLBACK ChooseFontHookDlgProc(
+	HWND hWnd,
+	UINT uMsg,
+	[[maybe_unused]] WPARAM wParam,
+	[[maybe_unused]] LPARAM lParam
+) noexcept
+{
+	if (uMsg == WM_INITDIALOG)
+	{
+		dmlib::setDarkWndSafe(hWnd);
+
+		dmlib_hook::FontGetSysColor::hook();
+		dmlib_hook::FontFillRect::hook();
+		dmlib_hook::FontMB::hook();
+		dmlib_subclass::SetSubclass(hWnd, ChooseFontSubclass, dmlib_subclass::SubclassID::comDlg);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * @brief Wrapper for `ChooseFontW` to enable dialog box customizing.
+ *
+ * Creates a Font dialog box that enables the user to choose attributes for a logical font.
+ * These attributes include a font family and associated font style, a point size, effects
+ * (underline, strikeout, and text color), and a script (or character set).
+ *
+ * Enables hook with `CF_ENABLEHOOK` to use hook procedure
+ * to enable customizing the Color dialog box.
+ * Uses template as workaround to hook dialog layout downgrade.
+ *
+ * @param[in,out]   cf      Contains information that the ChooseFont function uses to initialize the Font dialog box.
+ *                          After the user closes the dialog box, the system returns information about the user's selection in this structure.
+ * @param[in]       tmplId  ID of template.
+ * @return BOOL If the user clicks the OK button of the dialog box, the return value is `TRUE`.
+ *              The members of the `CHOOSEFONT` structure indicate the user's selections.
+ * @return BOOL If the user cancels or closes the Font dialog box or an error occurs, the return value is `FALSE`.
+ *
+ * @see ChooseFontHookDlgProc()
+ */
+BOOL dmlib::darkChooseFontW(LPCHOOSEFONTW cf, int tmplId)
+{
+	if (dmlib::isEnabled())
+	{
+		cf->Flags |= CF_ENABLEHOOK;
+		cf->lpfnHook = static_cast<LPCFHOOKPROC>(ChooseFontHookDlgProc);
+		if ((cf->Flags & CF_ENABLETEMPLATE) != CF_ENABLETEMPLATE && tmplId > 0)
+		{
+			cf->Flags |= CF_ENABLETEMPLATE;
+			cf->hInstance = ::GetModuleHandleW(nullptr);
+			cf->lpTemplateName = MAKEINTRESOURCE(tmplId);
+		}
+	}
+
+	return ::ChooseFontW(cf);
 }
 
 /**

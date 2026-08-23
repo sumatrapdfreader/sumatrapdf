@@ -48,10 +48,13 @@
 #endif
 
 typedef struct _TASKDIALOGCONFIG TASKDIALOGCONFIG; // NOLINT // forward declaration, from <CommCtrl.h>
+typedef struct tagCHOOSECOLORW *LPCHOOSECOLORW; // NOLINT // forward declaration, from <commdlg.h>
+typedef struct tagCHOOSEFONTW *LPCHOOSEFONTW; // NOLINT // forward declaration, from <commdlg.h>
 
 #ifdef __clang__
 	#pragma clang diagnostic pop
 #endif
+
 /**
  * @namespace dmlib
  * @brief Provides dark mode theming, subclassing, and rendering utilities for most Win32 controls.
@@ -654,9 +657,8 @@ namespace dmlib
 	// ========================================================================
 
 	/**
-	 * @brief Hook procedure for customizing common dialogs with dark mode.
+	 * @brief Generic hook procedure for customizing Font and Color dialog boxes with custom colors.
 	 *
-	 * This function handles messages for all Windows common dialogs.
 	 * When initialized (`WM_INITDIALOG`), it applies dark mode styling to the dialog.
 	 *
 	 * ## Special Case: Font Dialog Workaround
@@ -742,6 +744,12 @@ namespace dmlib
 	 * @return UINT_PTR A value defined by the hook procedure.
 	 */
 	DMLIB_API UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	/// Wrapper for `ChooseColorW` to enable dialog box customizing.
+	DMLIB_API BOOL darkChooseColorW(LPCHOOSECOLORW cc);
+
+	/// Wrapper for `ChooseFontW` to enable dialog box customizing.
+	DMLIB_API BOOL darkChooseFontW(LPCHOOSEFONTW cf, int tmplId);
 
 	/// Applies dark mode visual styles to task dialog.
 	DMLIB_API void setDarkTaskDlg(HWND hWnd);

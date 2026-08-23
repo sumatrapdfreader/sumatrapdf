@@ -1971,6 +1971,7 @@ static void renderComboBoxEdit(HWND hWnd, HDC hdc, dmlib_subclass::ComboBoxData&
 
 	RECT rcClient{};
 	::GetClientRect(hWnd, &rcClient);
+	::DrawThemeParentBackground(hWnd, hdc, &rcClient); // to avoid unpainted corners in some cases on Windows 11
 
 	const bool isDisabled = iStateID == CBXSR_DISABLED;
 	const bool isHot = iStateID == CBXSR_HOT;

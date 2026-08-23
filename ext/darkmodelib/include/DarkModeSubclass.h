@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 // Compatibility shim: darkmodelib 0.75 renamed the public header and
-// namespace. Keep the old include/name so the rest of Sumatra does not
-// have to churn with every upstream rename.
+// namespace (kept through 0.76). Keep the old include/name so the rest
+// of Sumatra does not have to churn with every upstream rename.
 
 #pragma once
 

@@ -20,7 +20,7 @@ namespace dmlib_hook
 	class AutoHook
 	{
 	public:
-		AutoHook(bool forceDetach = false) noexcept
+		explicit AutoHook(bool forceDetach = false) noexcept
 			: m_isHooked(HookGroup::hook()), m_forceDetach(forceDetach)
 		{}
 
