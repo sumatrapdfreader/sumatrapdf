@@ -343,7 +343,22 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // to this pattern.
 static bool ParseProtoUrl(Str url, int* htmlWindowId, TempStr* urlRest) {
     Str rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
-    return !rest;
+    // success-at-end is {non-null, len 0}; failure is {nullptr, 0}. !rest is
+    // true for both (str::Parse unit tests use rest.s).
+    return rest.s && len(rest) == 0;
+}
+
+// If url is its://<id>/<rest> for this HtmlWindow, return <rest>. Otherwise
+// return url unchanged. Logs and ReportIf if the id belongs to another window.
+static TempStr UrlWithoutProtoTemp(Str url, int windowId) {
+    int protoWindowId = 0;
+    TempStr urlReal = url;
+    bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
+    if (ok && protoWindowId != windowId) {
+        logf("UrlWithoutProtoTemp: protoWindowId=%d windowId=%d url='%s'\n", protoWindowId, windowId, url);
+    }
+    ReportIf(ok && (protoWindowId != windowId));
+    return urlReal;
 }
 
 #define kDefaultMimeType "text/html"
@@ -1763,10 +1778,7 @@ bool HtmlWindow::OnBeforeNavigate(Str url, bool newWindow) {
 
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
-    int protoWindowId;
-    TempStr urlReal = url;
-    bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
-    ReportIf(ok && (protoWindowId != windowId));
+    TempStr urlReal = UrlWithoutProtoTemp(url, windowId);
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
     return shouldNavigate;
 }
@@ -1796,10 +1808,7 @@ void HtmlWindow::OnDocumentComplete(Str url) {
 
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
-    int protoWindowId;
-    TempStr urlReal = url;
-    bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
-    ReportIf(ok && (protoWindowId != windowId));
+    TempStr urlReal = UrlWithoutProtoTemp(url, windowId);
 
     str::Free(currentURL);
     currentURL = str::Dup(urlReal);
