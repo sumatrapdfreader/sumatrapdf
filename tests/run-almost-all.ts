@@ -135,6 +135,7 @@ import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as issue5974 } from "./issue-5974.ts";
 import { testit as issue5975 } from "./issue-5975.ts";
+import { testit as issue6033 } from "./issue-6033.ts";
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
@@ -203,6 +204,7 @@ export const tests: NamedTest[] = [
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----
   ["issue-5975", issue5975],
+  ["issue-6033", issue6033],
   ["issue-5933", issue5933],
   ["annot-delete-redraw", annotDeleteRedraw],
   ["annot-icon-over-contents", annotIconOverContents],

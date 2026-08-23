@@ -1018,6 +1018,12 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 return false;
             }
             if (target->HasFlag(vwfFocusable)) {
+                // virtual controls have no HWND. Keys go to whoever has Win32
+                // focus, so a child Edit (Contents, filter) would keep them
+                // after this click unless we take them back (issue #6033).
+                if (hwnd && ::GetFocus() != hwnd) {
+                    ::SetFocus(hwnd);
+                }
                 SetFocus(target);
             }
             pressed = target;
