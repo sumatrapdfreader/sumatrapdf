@@ -186,15 +186,6 @@ LRESULT CALLBACK dmlib_subclass::WindowCtlColorSubclass(
 			return dmlib::onCtlColorListbox(wParam, lParam);
 		}
 
-		case WM_CTLCOLORSCROLLBAR:
-		{
-			if (!dmlib::isEnabled())
-			{
-				break;
-			}
-			return dmlib::onCtlColorCtrl(reinterpret_cast<HDC>(wParam));
-		}
-
 		case WM_CTLCOLORDLG:
 		{
 

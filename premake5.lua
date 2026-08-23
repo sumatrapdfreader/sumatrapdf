@@ -1333,7 +1333,7 @@ workspace "SumatraPDF"
     debugenvs { 'ASAN_OPTIONS=windows_hook_legacy_allocators=0:suppressions="$(SolutionDir)..\\asan.supp"' }
 
     includedirs { "ext/darkmodelib/include" }
-    defines { "_DARKMODELIB_NO_INI_CONFIG" }
+    defines { "_DARKMODELIB_NO_INI_CONFIG", "_DARKMODELIB_CUSTOM_MEM=0x002" }
     darkmodelib_files()
 
     webview_conf()
@@ -1437,7 +1437,7 @@ workspace "SumatraPDF"
     debugenvs { 'ASAN_OPTIONS=windows_hook_legacy_allocators=0:suppressions="$(SolutionDir)..\\asan.supp"' }
 
     includedirs { "ext/darkmodelib/include" }
-    defines { "_DARKMODELIB_NO_INI_CONFIG" }
+    defines { "_DARKMODELIB_NO_INI_CONFIG", "_DARKMODELIB_CUSTOM_MEM=0x002" }
     darkmodelib_files()
 
     synctex_files()

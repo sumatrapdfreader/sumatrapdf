@@ -84,20 +84,6 @@ HWND DropDown::Create(const CreateArgs& args) {
         return nullptr;
     }
 
-    // Visual styles ignore WM_CTLCOLOR* (white list, white inner edit) and
-    // leave unfilled pixels at Win11 rounded corners (issue #6000).
-    SetWindowTheme(hwnd, L"", L"");
-    COMBOBOXINFO info{};
-    info.cbSize = sizeof(info);
-    if (GetComboBoxInfo(hwnd, &info)) {
-        if (info.hwndList) {
-            SetWindowTheme(info.hwndList, L"", L"");
-        }
-        if (info.hwndItem) {
-            SetWindowTheme(info.hwndItem, L"", L"");
-        }
-    }
-
     // SetDropDownItems(hwnd, items);
     SetCurrentSelection(-1);
     ComboBox_SetMinVisible(hwnd, 10);

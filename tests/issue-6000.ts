@@ -1,7 +1,6 @@
 // Dark theme: combo corners, combo drop-down list + scrollbar, and tooltips
-// must not stay white (issue #6000). Visual styles ignore TTM_SETTIP* /
-// WM_CTLCOLOR* unless stripped; ComboLBox items use CTLCOLOR and the list's
-// classic scrollbar is painted dark.
+// must not stay white (issue #6000). darkmodelib themes ComboLBox; tooltips
+// strip visual styles so TTM_SETTIP* colors apply.
 //
 // Run: bun tests/issue-6000.ts [--no-build]
 

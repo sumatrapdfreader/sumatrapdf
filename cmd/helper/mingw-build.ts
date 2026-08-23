@@ -509,6 +509,7 @@ async function buildSumatraExe(outDir: string, isRelease: boolean, archives: str
     "_CRT_SECURE_NO_WARNINGS",
     "DISABLE_DOCUMENT_RESTRICTIONS",
     "_DARKMODELIB_NO_INI_CONFIG",
+    "_DARKMODELIB_CUSTOM_MEM=0x002",
     "LIBARCHIVE_STATIC",
     "UNICODE",
     "_UNICODE",

@@ -549,8 +549,6 @@ namespace dmlib
 	DMLIB_API void setDarkExplorerTheme(HWND hWnd);
 	/// Applies "DarkMode_Explorer" visual style to scroll bars.
 	DMLIB_API void setDarkScrollBar(HWND hWnd);
-	/// Combo drop-down list: unthemed items (WM_CTLCOLORLISTBOX) + dark scrollbar.
-	DMLIB_API void setDarkComboLBox(HWND hList);
 	/// Applies "DarkMode_Explorer" visual style to tooltip controls based on context.
 	DMLIB_API void setDarkTooltips(HWND hWnd, UINT tooltipType);
 	/// Applies "DarkMode_DarkTheme" visual style if supported and experimental mode is active.
