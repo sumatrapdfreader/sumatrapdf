@@ -14214,6 +14214,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                 UpdateOverlayScrollbarPositions(win);
                 // keep the floating find bar anchored over the search icon
                 FindBarReposition(win);
+                ReadAloudPlaybackBarRelayout(win->hwndCanvas);
             }
             break;
 

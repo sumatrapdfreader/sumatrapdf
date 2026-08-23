@@ -5074,7 +5074,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             if (GetReadAloudSourceTab()) {
                 TtsProcessEvents();
                 ReadAloudUpdateAutoScroll(win);
-                ReadAloudPlaybackBarUpdateSession(GetReadAloudSourceTab());
+                ReadAloudPlaybackBarTick(win);
                 HwndInvalidate(hwnd);
             } else {
                 ReadAloudHighlightTimerStop(win);

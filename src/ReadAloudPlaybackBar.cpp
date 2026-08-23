@@ -40,11 +40,16 @@ struct ReadAloudPlaybackBar : WindowBase {
     void OnPaint(WindowBase::PaintEvent* ev);
 
     WindowTab* sessionTab = nullptr;
+    HWND hwndCanvas = nullptr;
     VirtButton* btnPause = nullptr;
     VirtButton* btnStop = nullptr;
     VirtButton* btnSpeed = nullptr;
     VirtText* status = nullptr;
     bool showResume = false;
+    int lastX = 0;
+    int lastY = 0;
+    int lastDx = 0;
+    int lastDy = 0;
 };
 
 constexpr int kBarMargin = 8;
@@ -115,10 +120,14 @@ static void OnSpeedClicked(ReadAloudPlaybackBar* bar, VirtMouseEvent* ev) {
 
 HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
     onPaint = MkMethod1<ReadAloudPlaybackBar, WindowBase::PaintEvent*, &ReadAloudPlaybackBar::OnPaint>(this);
+    hwndCanvas = parentCanvas;
     CreateCustomArgs args;
-    args.parent = parentCanvas;
-    args.style = WS_CHILD | SS_CENTER;
-    args.exStyle = WS_EX_TOPMOST;
+    // Owned popup, not a canvas child: WebView2 fills the canvas and steals
+    // clicks from sibling HWNDs (issue #6031). Same pattern as the overlay
+    // scrollbar / find bar.
+    args.owner = GetAncestor(parentCanvas, GA_ROOT);
+    args.style = WS_POPUP;
+    args.exStyle = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
     args.font = GetAppBiggerFont();
     args.visible = false;
     args.isRtl = IsUIRtl();
@@ -205,31 +214,37 @@ void ReadAloudPlaybackBar::SetSession(WindowTab* tab) {
     }
 
     UpdateLayout();
-    ShowWindow(hwnd, SW_SHOW);
-    BringWindowToTop(hwnd);
-    HwndRepaintNow(hwnd);
+    SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    HwndInvalidate(hwnd);
 }
 
 void ReadAloudPlaybackBar::UpdateLayout() {
-    if (!hwnd || !layout) {
+    if (!hwnd || !layout || !hwndCanvas) {
         return;
     }
 
     SyncLabels();
 
-    HWND parent = GetParent(hwnd);
-    Rect canvas = HwndClientRect(parent);
+    Rect canvas = HwndMapLtrClientRectToScreen(hwndCanvas, HwndClientRect(hwndCanvas));
     int margin = DpiScale(kBarMargin);
     int barDx = std::max(canvas.dx - (2 * margin), 0);
     Size natural = layout->Layout(ExpandInf());
     int barDy = natural.dy;
 
-    int x = margin;
-    int y = canvas.dy - barDy - margin;
-    y = std::max(y, margin);
+    int x = canvas.x + margin;
+    int y = canvas.y + canvas.dy - barDy - margin;
+    if (y < canvas.y + margin) {
+        y = canvas.y + margin;
+    }
 
-    uint flags = SWP_NOZORDER | SWP_NOACTIVATE;
-    SetWindowPos(hwnd, nullptr, x, y, barDx, barDy, flags);
+    bool samePos = (x == lastX && y == lastY && barDx == lastDx && barDy == lastDy);
+    lastX = x;
+    lastY = y;
+    lastDx = barDx;
+    lastDy = barDy;
+    if (!samePos) {
+        SetWindowPos(hwnd, HWND_TOP, x, y, barDx, barDy, SWP_NOACTIVATE);
+    }
     DoLayout({barDx, barDy});
 }
 
@@ -273,7 +288,8 @@ void ReadAloudPlaybackBarHide(MainWindow* win) {
         return;
     }
     win->readAloudPlaybackBar->sessionTab = nullptr;
-    ShowWindow(win->readAloudPlaybackBar->hwnd, SW_HIDE);
+    SetWindowPos(win->readAloudPlaybackBar->hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 }
 
 // the tab is going away; the bar has no reason to exist without it
@@ -284,7 +300,8 @@ void ReadAloudPlaybackBarForgetTab(MainWindow* win, WindowTab* tab) {
     }
     bar->sessionTab = nullptr;
     if (bar->hwnd) {
-        ShowWindow(bar->hwnd, SW_HIDE);
+        SetWindowPos(bar->hwnd, nullptr, 0, 0, 0, 0,
+                     SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
     }
 }
 
@@ -297,7 +314,22 @@ void ReadAloudPlaybackBarRelayout(HWND hwndCanvas) {
         return;
     }
     win->readAloudPlaybackBar->UpdateLayout();
-    HwndRepaintNow(win->readAloudPlaybackBar->hwnd);
+}
+
+// Highlight timer (~80ms): refresh Pause/page text without SetWindowPos.
+// Relayouting every tick ate mouse-up (issue #6031).
+void ReadAloudPlaybackBarTick(MainWindow* win) {
+    ReadAloudPlaybackBar* bar = win ? win->readAloudPlaybackBar : nullptr;
+    if (!bar || !bar->hwnd || !HwndIsVisible(bar->hwnd)) {
+        return;
+    }
+    bool wasResume = bar->showResume;
+    bar->SyncLabels();
+    if (wasResume != bar->showResume) {
+        bar->UpdateLayout();
+        return;
+    }
+    HwndInvalidate(bar->hwnd);
 }
 
 void ReadAloudPlaybackBarUpdateSession(WindowTab* tab) {
