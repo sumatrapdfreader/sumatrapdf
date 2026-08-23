@@ -464,7 +464,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     }
     TempStr msg;
     if (updateInfo->builtOn) {
-        msg = fmt(_TRA("Version %s available (built on %s). %s").s, displayVer, updateInfo->builtOn, link);
+        msg = fmt(_TRA("Version %s from %s available. %s").s, displayVer, updateInfo->builtOn, link);
     } else {
         msg = fmt(_TRA("Version %s available. %s").s, displayVer, link);
     }
