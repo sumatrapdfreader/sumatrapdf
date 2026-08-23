@@ -30,5 +30,4 @@ TempStr HttpNormalizeHeadersTemp(Str headers);
 // its own limit, so stay comfortably below.
 constexpr int kMaxUrlEncodedLen = 8192;
 
-TempStr UrlEscapePrefixTemp(const WCHAR* ws, int nChars);
 TempStr URLEncodeMayTruncateTemp(Str s, int maxEncodedLen = 0, bool* didTruncateOut = nullptr);

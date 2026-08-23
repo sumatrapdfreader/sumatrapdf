@@ -1272,6 +1272,100 @@ TempStr DecodeTemp(Str url) {
     res.len = dst;
     return res;
 }
+
+// RFC 3986 unreserved: ALPHA / DIGIT / "-" / "." / "_" / "~". Everything else
+// (including URL delimiters ? # & = / and quotes) is %HH so the result is
+// safe as a query value, not parsed as more URL syntax (discussion #6029).
+static bool UrlUnreserved(u8 c) {
+    if (c >= '0' && c <= '9') {
+        return true;
+    }
+    if (c >= 'A' && c <= 'Z') {
+        return true;
+    }
+    if (c >= 'a' && c <= 'z') {
+        return true;
+    }
+    return c == '-' || c == '.' || c == '_' || c == '~';
+}
+
+static int UrlEncodedByteLen(u8 c) {
+    return UrlUnreserved(c) ? 1 : 3;
+}
+
+static void UrlAppendEncodedByte(char* dst, int& n, u8 c) {
+    static const char kHex[] = "0123456789ABCDEF";
+    if (UrlUnreserved(c)) {
+        dst[n++] = (char)c;
+        return;
+    }
+    dst[n++] = '%';
+    dst[n++] = kHex[c >> 4];
+    dst[n++] = kHex[c & 0xF];
+}
+
+TempStr EncodeTemp(Str s) {
+    if (str::IsNull(s)) {
+        return {};
+    }
+    if (len(s) == 0) {
+        return str::DupTemp(StrL(""));
+    }
+    int n = len(s);
+    char* buf = AllocArrayTemp<char>(n * 3 + 1);
+    int dst = 0;
+    for (int i = 0; i < n; i++) {
+        UrlAppendEncodedByte(buf, dst, (u8)s.s[i]);
+    }
+    buf[dst] = '\0';
+    return Str(buf, dst);
+}
+
+// Encoded length depends on the bytes, not the rune count: ASCII stays 1, a
+// space or '?' becomes 3, a CJK rune is 3 UTF-8 bytes so 9 encoded chars.
+// Cut on a UTF-8 character boundary so we never emit a partial %HH sequence
+// or a broken multi-byte character.
+TempStr EncodeMayTruncateTemp(Str s, int maxEncodedLen, bool* didTruncateOut) {
+    if (didTruncateOut) {
+        *didTruncateOut = false;
+    }
+    if (str::IsNull(s)) {
+        return {};
+    }
+    if (maxEncodedLen <= 0) {
+        return EncodeTemp(s);
+    }
+    if (len(s) == 0) {
+        return str::DupTemp(StrL(""));
+    }
+    char* buf = AllocArrayTemp<char>(maxEncodedLen + 1);
+    int dst = 0;
+    int i = 0;
+    bool truncated = false;
+    while (i < len(s)) {
+        int start = i;
+        Utf8CodepointNext(s, i);
+        if (i <= start) {
+            i = start + 1;
+        }
+        int add = 0;
+        for (int j = start; j < i; j++) {
+            add += UrlEncodedByteLen((u8)s.s[j]);
+        }
+        if (dst + add > maxEncodedLen) {
+            truncated = true;
+            break;
+        }
+        for (int j = start; j < i; j++) {
+            UrlAppendEncodedByte(buf, dst, (u8)s.s[j]);
+        }
+    }
+    buf[dst] = '\0';
+    if (didTruncateOut) {
+        *didTruncateOut = truncated;
+    }
+    return Str(buf, dst);
+}
 } // namespace url
 
 // SeqStrings (SeqStr* helpers) is for size-efficient implementation of:

@@ -315,80 +315,13 @@ Exit:
 
 //--- URL encoding
 
-// url-escapes the first nChars of ws. Returns the encoded string, or empty on
-// failure. URL_ESCAPE_AS_UTF8 turns one WCHAR into at most 4 utf-8 bytes and
-// each byte into "%XX", so 12 chars per WCHAR is the true worst case.
-TempStr UrlEscapePrefixTemp(const WCHAR* ws, int nChars) {
-    if (nChars <= 0) {
-        return str::DupTemp(StrL(""));
-    }
-    WCHAR* in = AllocArrayTemp<WCHAR>(nChars + 1);
-    memcpy(in, ws, (size_t)nChars * sizeof(WCHAR));
-    in[nChars] = 0;
-    int bufCch = (nChars * 12) + 1;
-    WCHAR* buf = AllocArrayTemp<WCHAR>(bufCch);
-    auto cch = (DWORD)bufCch;
-    HRESULT hr = UrlEscapeW(in, buf, &cch, URL_ESCAPE_AS_UTF8);
-    if (FAILED(hr)) {
-        return {};
-    }
-    return ToUtf8Temp(buf);
-}
-
 // URL-encode s so it can be substituted into a URL, shortening it if the
 // encoded form would not fit in maxEncodedLen characters.
-//
-// Encoded length is wildly different from input length and depends on the
-// text: an ascii letter stays 1 char, a space becomes "%20" (3), a newline
-// "%0A" (3), and a CJK character is 3 utf-8 bytes so it becomes 9. That is why
-// we can't just cut the input at a fixed length - we binary-search for the
-// longest prefix that still fits once encoded.
-//
-// The cut is made on a character boundary (never inside a surrogate pair, and
-// never inside a %XX escape, since we shorten the *input* and re-encode rather
-// than chopping the encoded output). Callers that care pass didTruncateOut so
-// they can tell the user instead of silently sending less text than asked for.
 TempStr URLEncodeMayTruncateTemp(Str s, int maxEncodedLen, bool* didTruncateOut) {
-    if (didTruncateOut) {
-        *didTruncateOut = false;
-    }
     if (maxEncodedLen <= 0) {
         maxEncodedLen = kMaxUrlEncodedLen;
     }
-    TempWStr ws = ToWStrTemp(s);
-    int nChars = len(ws);
-    if (nChars == 0) {
-        return str::DupTemp(StrL(""));
-    }
-
-    TempStr full = UrlEscapePrefixTemp(ws.s, nChars);
-    if (full.s && len(full) <= maxEncodedLen) {
-        return full;
-    }
-
-    // longest prefix whose encoded form fits. lo always fits, hi never does.
-    int lo = 0;
-    int hi = nChars;
-    while (lo + 1 < hi) {
-        int mid = lo + ((hi - lo) / 2);
-        // don't split a surrogate pair
-        if (mid > 0 && mid < nChars && (ws.s[mid] & 0xFC00) == 0xDC00) {
-            mid--;
-        }
-        if (mid <= lo) {
-            break;
-        }
-        TempStr enc = UrlEscapePrefixTemp(ws.s, mid);
-        if (enc.s && len(enc) <= maxEncodedLen) {
-            lo = mid;
-        } else {
-            hi = mid;
-        }
-    }
-    if (didTruncateOut) {
-        *didTruncateOut = true;
-    }
-    return UrlEscapePrefixTemp(ws.s, lo);
+    return url::EncodeMayTruncateTemp(s, maxEncodedLen, didTruncateOut);
 }
 
 //--- POST with custom headers (WinHTTP)

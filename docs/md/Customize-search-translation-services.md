@@ -44,7 +44,7 @@ SelectionHandlers [
 ]
 ```
 
-`URL` is the website that will be launched. `${selection}` will be replaced with (URL-encoded) current selection.
+`URL` is the website that will be launched. `${selection}` will be replaced with the current selection, URL-encoded as a query value (spaces become `%20`, and reserved characters such as `?`, `"`, `&` and `#` become `%XX` so they are not parsed as more URL syntax).
 
 `Name` is what shows in the menu. You can use `&` characters to add Windows hot-key for keyboard-only invocation.
 

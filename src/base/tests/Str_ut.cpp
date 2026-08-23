@@ -216,6 +216,32 @@ static void StrUrlExtractTest() {
     utassert(len(joined) == LenL("dir\\umlaut_test_\xC3\xA4.html"));
     utassert(len(url::GetFullPathTemp(StrL("na%2Fme.ext?q=1"))) == LenL("na/me.ext"));
     utassert(len(url::GetFileNameTemp(StrL("http://example.net/na%2Fme.ext"))) == LenL("na/me.ext"));
+
+    // query-value encoding: reserved URL chars must not stay as syntax
+    // (discussion #6029: UrlEscapeW left '?' alone so "me?" became a new query)
+    utassert(str::Eq(url::EncodeTemp(StrL("")), StrL("")));
+    utassert(!url::EncodeTemp({}));
+    utassert(str::Eq(url::EncodeTemp(StrL("play with me? he asked")), StrL("play%20with%20me%3F%20he%20asked")));
+    utassert(str::Eq(url::EncodeTemp(StrL("play with me?\" he asked")), StrL("play%20with%20me%3F%22%20he%20asked")));
+    utassert(str::Eq(url::EncodeTemp(StrL("a&b=c#d/e~f_g-h.i")), StrL("a%26b%3Dc%23d%2Fe~f_g-h.i")));
+    // euro sign: 3 UTF-8 bytes → 9 encoded chars
+    utassert(str::Eq(url::EncodeTemp(StrL("\xE2\x82\xAC")), StrL("%E2%82%AC")));
+    utassert(str::Eq(url::DecodeTemp(url::EncodeTemp(StrL("caf\xC3\xA9?x=\"y\""))), StrL("caf\xC3\xA9?x=\"y\"")));
+
+    bool truncated = true;
+    TempStr fit = url::EncodeMayTruncateTemp(StrL("abc"), 100, &truncated);
+    utassert(!truncated && str::Eq(fit, StrL("abc")));
+    truncated = false;
+    TempStr cut = url::EncodeMayTruncateTemp(StrL("ab?cd"), 5, &truncated);
+    // 'a' 'b' then '?' is %3F (3 chars) → "ab" is 2, "ab%3F" is 5, so "ab?" fits
+    utassert(truncated && str::Eq(cut, StrL("ab%3F")));
+    truncated = false;
+    cut = url::EncodeMayTruncateTemp(StrL("ab?cd"), 4, &truncated);
+    utassert(truncated && str::Eq(cut, StrL("ab")));
+    // don't split a multi-byte character: euro is 9 encoded chars
+    truncated = false;
+    cut = url::EncodeMayTruncateTemp(StrL("x\xE2\x82\xACy"), 4, &truncated);
+    utassert(truncated && str::Eq(cut, StrL("x")));
 }
 
 // Run fn once with no external buf, once with a stack buf of random size 1..128.
