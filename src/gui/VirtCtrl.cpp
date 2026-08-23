@@ -1927,71 +1927,82 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
     ctx.gfx->FillRect(ctx.bounds, colBg);
     int n = ItemsCount();
     Rect clip = ctx.clip.Intersect(ctx.bounds);
-    if (n == 0 || clip.IsEmpty()) {
+    bool isFocused = HasFlag(vwfFocused);
+    if (clip.IsEmpty()) {
         return;
     }
 
-    // ctx.content is our bounds minus padding, so the items area only differs
-    // from it by the strip the scrollbar takes on the right
-    Rect items = ctx.content;
-    items.dx -= ScrollbarDx();
-    // only whole rows: the strip below the last one stays background
-    items.dy = UsableDy();
-    int dy = GetItemHeight();
-    int first = scrollY / dy;
-    int last = (scrollY + items.dy - 1) / dy;
-    last = std::min(last, n - 1);
+    if (n > 0) {
+        // ctx.content is our bounds minus padding, so the items area only differs
+        // from it by the strip the scrollbar takes on the right
+        Rect items = ctx.content;
+        items.dx -= ScrollbarDx();
+        // only whole rows: the strip below the last one stays background
+        items.dy = UsableDy();
+        int dy = GetItemHeight();
+        int first = scrollY / dy;
+        int last = (scrollY + items.dy - 1) / dy;
+        last = std::min(last, n - 1);
 
-    // the selection stands out more while the list has the keyboard focus,
-    // like a win32 listbox's
-    bool isFocused = HasFlag(vwfFocused);
-    Color colSel = GetColor(isFocused ? kColListSelFocused : kColListSel);
-    if (colSel == kColorUnset && !ColorSkipsPaint(colBg)) {
-        colSel = AccentColor(colBg, isFocused ? 45 : 25);
-    }
+        // the selection stands out more while the list has the keyboard focus,
+        // like a win32 listbox's
+        Color colSel = GetColor(isFocused ? kColListSelFocused : kColListSel);
+        if (colSel == kColorUnset && !ColorSkipsPaint(colBg)) {
+            colSel = AccentColor(colBg, isFocused ? 45 : 25);
+        }
 
-    // rows at the top and bottom of the viewport can be cut in half by it
-    ctx.gfx->PushClip(clip);
-    for (int i = first; i <= last; i++) {
-        Rect r = {items.x, items.y + (i * dy) - scrollY, items.dx, dy};
-        bool isSel = IsSelected(i);
-        if (onDrawItem.IsValid()) {
-            DrawItemEvent ev;
-            ev.listBox = this;
-            ev.gfx = ctx.gfx;
-            ev.itemRect = r;
-            ev.itemIndex = i;
-            ev.selected = isSel;
-            onDrawItem.Call(&ev);
-        } else {
-            if (isSel) {
-                ctx.gfx->FillRect(r, colSel);
+        // rows at the top and bottom of the viewport can be cut in half by it
+        ctx.gfx->PushClip(clip);
+        for (int i = first; i <= last; i++) {
+            Rect r = {items.x, items.y + (i * dy) - scrollY, items.dx, dy};
+            bool isSel = IsSelected(i);
+            if (onDrawItem.IsValid()) {
+                DrawItemEvent ev;
+                ev.listBox = this;
+                ev.gfx = ctx.gfx;
+                ev.itemRect = r;
+                ev.itemIndex = i;
+                ev.selected = isSel;
+                onDrawItem.Call(&ev);
+            } else {
+                if (isSel) {
+                    ctx.gfx->FillRect(r, colSel);
+                }
+                Rect rt = r;
+                rt.SubLR(DpiScaleByDpi(GetDpi(), 4), 0);
+                ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis | gfxTextVCenter, font, GetColor(kColListText));
             }
-            Rect rt = r;
-            rt.SubLR(DpiScaleByDpi(GetDpi(), 4), 0);
-            ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis | gfxTextVCenter, font, GetColor(kColListText));
+        }
+        ctx.gfx->PopClip();
+
+        Rect thumb = ThumbRectLocal();
+        if (!thumb.IsEmpty()) {
+            Color colThumb = GetColor(kColListScrollbar);
+            if (colThumb == kColorUnset && !ColorSkipsPaint(colBg)) {
+                colThumb = AccentColor(colBg, 60);
+            }
+            Point orig = ctx.bounds.TL();
+            thumb.Offset(orig.x, orig.y);
+            // a slim thumb with a gap on both sides, like an overlay scrollbar
+            thumb.SubLR(2, 2);
+            ctx.gfx->FillRect(thumb, colThumb);
         }
     }
-    // the dotted ring around the list says the keys go here, the same way a
-    // win32 listbox does it
-    if (isFocused) {
-        ctx.gfx->DrawFocusRect(items);
-    }
-    ctx.gfx->PopClip();
 
-    Rect thumb = ThumbRectLocal();
-    if (thumb.IsEmpty()) {
-        return;
+    // dashed outline while the list has the keys (annotations list, find
+    // results, command palette, …)
+    if (isFocused) {
+        Rect ring = ctx.bounds;
+        ring.SubTB(1, 1);
+        ring.SubLR(1, 1);
+        Color colRing = GetColor(kColListText);
+        if (ColorSkipsPaint(colRing) && !ColorSkipsPaint(colBg)) {
+            colRing = AccentColor(colBg, 90);
+        }
+        if (!ColorSkipsPaint(colRing) && !ring.IsEmpty()) {
+            ctx.gfx->DrawDashedRect(ring, colRing);
+        }
     }
-    Color colThumb = GetColor(kColListScrollbar);
-    if (colThumb == kColorUnset && !ColorSkipsPaint(colBg)) {
-        colThumb = AccentColor(colBg, 60);
-    }
-    Point orig = ctx.bounds.TL();
-    thumb.Offset(orig.x, orig.y);
-    // a slim thumb with a gap on both sides, like an overlay scrollbar
-    thumb.SubLR(2, 2);
-    ctx.gfx->FillRect(thumb, colThumb);
 }
 
 void VirtListBox::OnMouseDown(VirtMouseEvent* ev) {
