@@ -3086,9 +3086,11 @@ static void fz_print_cb(void* user, const char* msg) {
         return;
     }
     // logged above, not shown as "Errors in document": epub 3.0 is rendered
-    // fine, and a missing system font falls back to a default (issue #6027)
+    // fine, a missing system font falls back to a default (issue #6027), and
+    // Movie (etc.) appearance streams are a MuPDF limitation, not a PDF defect
     if (str::Contains(msgStr, StrL("unknown epub version")) ||
-        str::Contains(msgStr, StrL("couldn't find system font"))) {
+        str::Contains(msgStr, StrL("couldn't find system font")) ||
+        str::Contains(msgStr, StrL("cannot create appearance stream"))) {
         return;
     }
     engine->AppendError(msgStr);
