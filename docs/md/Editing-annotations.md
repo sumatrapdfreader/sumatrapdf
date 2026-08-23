@@ -58,6 +58,8 @@ You can also create annotation object at your mouse location:
 - image from the clipboard
 - image from a file (`Insert Image...`)
 
+Click a selected shape annotation (including polygon, polyline, and ink) and drag to move it.
+
 To put a picture of your signature (or any other image) on a PDF page:
 
 - **File → Insert Image...**, or

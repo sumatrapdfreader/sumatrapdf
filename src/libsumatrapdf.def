@@ -1124,6 +1124,20 @@ EXPORTS
 
 	pdf_set_annot_line
 
+	pdf_annot_vertex_count
+
+	pdf_annot_vertex
+
+	pdf_set_annot_vertices
+
+	pdf_annot_ink_list_count
+
+	pdf_annot_ink_list_stroke_count
+
+	pdf_annot_ink_list_stroke_vertex
+
+	pdf_set_annot_ink_list
+
 	pdf_annot_line_ending_styles
 
 	pdf_set_annot_line_ending_styles

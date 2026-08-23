@@ -519,11 +519,12 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
     int n = 0;
     for (Annotation* a : annots) {
         AnnotationType tp = Type(a);
-        if (tp != AnnotationType::Highlight && tp != AnnotationType::Underline && tp != AnnotationType::Squiggly &&
-            tp != AnnotationType::StrikeOut) {
+        bool isMarkup = tp == AnnotationType::Highlight || tp == AnnotationType::Underline ||
+                        tp == AnnotationType::Squiggly || tp == AnnotationType::StrikeOut;
+        bool isShape = tp == AnnotationType::Polygon || tp == AnnotationType::PolyLine || tp == AnnotationType::Ink;
+        if (!isMarkup && !isShape) {
             continue;
         }
-        Vec<RectF> quads = GetQuadPointsAsRect(a);
         Str typeName = StrL("other");
         if (tp == AnnotationType::Highlight) {
             typeName = StrL("Highlight");
@@ -533,7 +534,22 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
             typeName = StrL("Squiggly");
         } else if (tp == AnnotationType::StrikeOut) {
             typeName = StrL("StrikeOut");
+        } else if (tp == AnnotationType::Polygon) {
+            typeName = StrL("Polygon");
+        } else if (tp == AnnotationType::PolyLine) {
+            typeName = StrL("PolyLine");
+        } else if (tp == AnnotationType::Ink) {
+            typeName = StrL("Ink");
         }
+        if (isShape) {
+            RectF r = GetRect(a);
+            Rect screen = dm->CvtToScreen(PageNo(a), r);
+            out.Append(fmt("type=%s page=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a), r.x, r.y, r.dx,
+                           r.dy, screen.x, screen.y, screen.dx, screen.dy));
+            n++;
+            continue;
+        }
+        Vec<RectF> quads = GetQuadPointsAsRect(a);
         out.Append(fmt("type=%s page=%d quads=%d\n", typeName, PageNo(a), len(quads)));
         for (int i = 0; i < len(quads); i++) {
             RectF r = quads[i];

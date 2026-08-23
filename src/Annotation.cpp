@@ -198,16 +198,49 @@ void SetRect(Annotation* annot, RectF r) {
     EngineMupdf* e = annot->engine;
     auto* a = annot->pdfannot;
     bool failed = false;
+    // Vec lives outside fz_try: a longjmp would skip C++ destructors.
+    Vec<fz_point> pts;
+    Vec<int> strokeCounts;
     {
         auto* ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
         fz_rect rc = ToFzRect(r);
+        float dx = r.x - annot->bounds.x;
+        float dy = r.y - annot->bounds.y;
         fz_try(ctx) {
             if (annot->type == AnnotationType::Line) {
                 // line annotation doesn't have a rect but a line position
                 // TODO: not sure this is the right place for this
                 fz_point p1 = {rc.x0, rc.y0}, p2 = {rc.x1, rc.y1};
                 pdf_set_annot_line(ctx, a, p1, p2);
+            } else if (annot->type == AnnotationType::Polygon || annot->type == AnnotationType::PolyLine) {
+                // /Rect is derived from Vertices; pdf_set_annot_rect rejects these.
+                int n = pdf_annot_vertex_count(ctx, a);
+                for (int i = 0; i < n; i++) {
+                    fz_point p = pdf_annot_vertex(ctx, a, i);
+                    p.x += dx;
+                    p.y += dy;
+                    pts.Append(p);
+                }
+                if (n > 0) {
+                    pdf_set_annot_vertices(ctx, a, n, pts.els);
+                }
+            } else if (annot->type == AnnotationType::Ink) {
+                // /Rect is derived from InkList; pdf_set_annot_rect rejects Ink.
+                int nStrokes = pdf_annot_ink_list_count(ctx, a);
+                for (int i = 0; i < nStrokes; i++) {
+                    int nv = pdf_annot_ink_list_stroke_count(ctx, a, i);
+                    strokeCounts.Append(nv);
+                    for (int k = 0; k < nv; k++) {
+                        fz_point p = pdf_annot_ink_list_stroke_vertex(ctx, a, i, k);
+                        p.x += dx;
+                        p.y += dy;
+                        pts.Append(p);
+                    }
+                }
+                if (nStrokes > 0) {
+                    pdf_set_annot_ink_list(ctx, a, nStrokes, strokeCounts.els, pts.els);
+                }
             } else {
                 pdf_set_annot_rect(ctx, a, rc);
             }
@@ -1406,13 +1439,14 @@ static AnnotationType supportsInteriorColor[] = {
     AnnotationType::Polygon, AnnotationType::Square,
 };
 
-// matches rect_subtypes in pdf-annot.c + Line (because special case it in SetRect())
+// matches rect_subtypes in pdf-annot.c + Line (endpoints) + Polygon/PolyLine
+// (Vertices) + Ink (InkList). SetRect() translates that geometry.
 // TODO: should include AnnotationType::ThreeD but mupdf doesn't
 static AnnotationType moveableAnnotations[] = {
-    AnnotationType::Text,           AnnotationType::FreeText, AnnotationType::Square, AnnotationType::Circle,
-    AnnotationType::Redact,         AnnotationType::Stamp,    AnnotationType::Caret,  AnnotationType::Popup,
-    AnnotationType::FileAttachment, AnnotationType::Sound,    AnnotationType::Movie,  AnnotationType::Widget,
-    AnnotationType::Line,
+    AnnotationType::Text,           AnnotationType::FreeText, AnnotationType::Square,   AnnotationType::Circle,
+    AnnotationType::Redact,         AnnotationType::Stamp,    AnnotationType::Caret,    AnnotationType::Popup,
+    AnnotationType::FileAttachment, AnnotationType::Sound,    AnnotationType::Movie,    AnnotationType::Widget,
+    AnnotationType::Line,           AnnotationType::Polygon,  AnnotationType::PolyLine, AnnotationType::Ink,
 };
 
 static AnnotationType supportsBorder[] = {
@@ -1450,6 +1484,10 @@ bool AnnotationCanBeResized(AnnotationType tp) {
     if (tp == AnnotationType::Text) {
         // TODO: for now don't allow resizing text annotation because it's just an icon
         // would have to figure out how to change the size of the icon
+        return false;
+    }
+    if (tp == AnnotationType::Polygon || tp == AnnotationType::PolyLine || tp == AnnotationType::Ink) {
+        // geometry is a vertex / ink path; stretch-to-rect is not implemented
         return false;
     }
     return AnnotationCanBeMoved(tp);

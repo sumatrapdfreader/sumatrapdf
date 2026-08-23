@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Polygon, polyline, and ink annotations can be moved by dragging them, like other shape annotations
 - SelectionHandlers `${selection}` in a `URL` percent-encodes reserved characters (`?`, `"`, `&`, `#`, …) so they stay part of the value instead of starting a new query or cutting the string (discussion #6029)
 - SelectionHandlers `URL`, `Exe` and POST `Body` accept `${selectionPosition}`: the current selection's bounding box in screen pixels as `x,y,dx,dy`, so a helper can place itself next to the selection (discussion #6015)
 - The floating selection toolbar's built-in buttons can be chosen and reordered with `SelectionToolbarLayout`, the same idea as `ToolbarCustomLayout` (discussion #6015)
