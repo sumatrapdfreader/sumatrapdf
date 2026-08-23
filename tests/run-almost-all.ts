@@ -177,6 +177,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["issue-5964", issue5964],
+  ["issue-6013", issue6013],
   ["issue-5972", issue5972],
   ["issue-5956", issue5956],
   ["issue-5989", issue5989],
@@ -329,7 +330,6 @@ export const tests: NamedTest[] = [
   ["issue-4655", issue4655],
   ["issue-4315", issue4315],
   ["issue-4662", issue4662],
-  ["issue-6013", issue6013],
   ["issue-6018", issue6018],
   ["issue-6015", issue6015],
   ["issue-6023", issue6023],

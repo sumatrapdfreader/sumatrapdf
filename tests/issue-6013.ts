@@ -4,9 +4,15 @@
 //
 // Needs WebView2. If the documentation window never appears, skip.
 //
+// Runs on its own empty -appdata: the first check is about where the window
+// goes when nothing is remembered yet, and HelpWindowPos in the settings the
+// exe under test happens to load (a portable SumatraPDF-settings.txt next to
+// out/<build>/SumatraPDF.exe, say) would short-circuit that placement.
+//
 // Run: bun tests/issue-6013.ts [--no-build]
 
-import { cmdId, runStandalone } from "./util.ts";
+import { mkdirSync, rmSync } from "node:fs";
+import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   enumWindows,
   getWindowPid,
@@ -81,7 +87,11 @@ function fullyOnWorkArea(
 }
 
 export async function testit(): Promise<void> {
-  const { proc, client, frame } = await launchControlled([]);
+  const appdata = tmpPath("issue-6013-appdata");
+  rmSync(appdata, { recursive: true, force: true });
+  mkdirSync(appdata, { recursive: true });
+
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata]);
   const pid = proc.pid!;
   try {
     sendCommandSync(frame, cmdId("CmdHelpOpenManual"));
@@ -173,6 +183,7 @@ export async function testit(): Promise<void> {
   } finally {
     client.close();
     await killAndWait(proc);
+    rmSync(appdata, { recursive: true, force: true });
   }
 }
 
