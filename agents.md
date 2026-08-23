@@ -249,9 +249,17 @@ several times - some are environment- and focus-dependent and fail intermittentl
 regardless of the change (`issue-1136` and `issue-2254` have both done this). One passing
 run and one failing run is not evidence; compare several runs on each side.
 
-After fixing a flaky test, place it among the first tests run by the applicable
-`tests/run-*.ts` suite scripts. Update their shared source list when they derive their
-ordering from one another, and account for runner-specific tests scheduled before it.
+After fixing a failing or flaky test, move it to the beginning of `tests/run-pre-release.ts`,
+so the next pre-release run retries it in the first seconds rather than minutes in. That run
+is the only thing that can tell you the fix held, and a re-flake should be cheap to reach.
+
+`run-pre-release.ts` opens with `runAlmostAll`, so "the beginning" is the top of the `tests`
+array in `tests/run-almost-all.ts`: move the test's entry there (its import stays where it
+is), below `issue-5978`, which has to stay first because it is the one test that cares what
+the machine was doing before it. `tests/run-all.ts` splices that same array in and
+`tests/run-github-ci.ts` filters `run-all.ts`, so the one move covers every suite. A test
+registered in `run-pre-release.ts` itself (`issue-5842`, `issue-6003`, `latex`) moves above
+the `runAlmostAll` call instead.
 
 Structure of each test (so they compose in tests/run-almost-all.ts / tests/run-all.ts):
 
