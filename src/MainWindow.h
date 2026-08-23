@@ -10,6 +10,7 @@ class SumatraUIAutomationProvider;
 struct FrameRateWnd;
 struct ReadAloudPlaybackBar;
 struct VirtText;
+struct VirtCloseButton;
 struct VirtRoot;
 struct VirtSplitter;
 struct HBox;
@@ -211,6 +212,7 @@ struct MainWindow {
 
     // the panel header's label; the ✕ next to it closes the panel
     VirtText* tocLabel = nullptr;
+    VirtCloseButton* tocCloseBtn = nullptr;
     // the virtual controls of the header, hosted in hwndTocBox
     VirtRoot* tocRoot = nullptr;
     Edit* tocFilterEdit = nullptr;
@@ -237,6 +239,7 @@ struct MainWindow {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     VirtText* favLabel = nullptr;
+    VirtCloseButton* favCloseBtn = nullptr;
     VirtRoot* favRoot = nullptr;
     Edit* favFilterEdit = nullptr;
     TreeView* favTreeView = nullptr;

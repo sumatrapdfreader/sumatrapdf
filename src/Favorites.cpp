@@ -1518,6 +1518,7 @@ void CreateFavorites(MainWindow* win) {
     PlatformFont* labelFont = GetAppSidebarLabelFont();
     auto header = NewLabelWithClose(win->hwndFavBox, labelFont, MkFunc1(FavCloseClicked, win));
     win->favLabel = header.label;
+    win->favCloseBtn = header.closeBtn;
     // label text is set in UpdateToolbarSidebarText()
 
     auto* filterEdit = new Edit();

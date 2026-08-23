@@ -1790,6 +1790,7 @@ void CreateToc(MainWindow* win) {
     PlatformFont* labelFont = GetAppSidebarLabelFont();
     auto header = NewLabelWithClose(win->hwndTocBox, labelFont, MkFunc0(ToggleTocBox, win));
     win->tocLabel = header.label;
+    win->tocCloseBtn = header.closeBtn;
     // label text is set in UpdateToolbarSidebarText()
 
     auto* filterEdit = new Edit();

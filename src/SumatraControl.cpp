@@ -95,14 +95,23 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
         return finish(1);
     }
     MainWindow* win = gWindows[0];
-    out.Append(fmt("frame=%d current=%d home=%d tocLabel=%d tocEdit=%d aiLabel=%d aiInput=%d aiCheckbox=%d find=%d\n",
-                   win->frameDpi, DpiGet(), FontHeight(win->homeSearch ? win->homeSearch->GetFont() : nullptr),
-                   FontHeight(win->tocLabel ? win->tocLabel->font : nullptr),
-                   FontHeight(win->tocFilterEdit ? win->tocFilterEdit->GetFont() : nullptr),
-                   FontHeight(win->aiChatLabel ? win->aiChatLabel->font : nullptr),
-                   FontHeight(win->aiChatInput ? win->aiChatInput->GetFont() : nullptr),
-                   FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr),
-                   FindWindowFontHeight(win)));
+    int aiClose = 0;
+    if (win->aiChatHeader && win->aiChatHeader->ChildrenCount() > 1) {
+        if (VirtCloseButton* b = AsVirtCloseButton(win->aiChatHeader->LayoutChildAt(1))) {
+            aiClose = b->idealSize.dy;
+        }
+    }
+    out.Append(fmt(
+        "frame=%d current=%d home=%d tocLabel=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
+        "aiCheckbox=%d aiClose=%d find=%d\n",
+        win->frameDpi, DpiGet(), FontHeight(win->homeSearch ? win->homeSearch->GetFont() : nullptr),
+        FontHeight(win->tocLabel ? win->tocLabel->font : nullptr),
+        FontHeight(win->tocFilterEdit ? win->tocFilterEdit->GetFont() : nullptr),
+        win->tocCloseBtn ? win->tocCloseBtn->idealSize.dy : 0, win->favCloseBtn ? win->favCloseBtn->idealSize.dy : 0,
+        FontHeight(win->aiChatLabel ? win->aiChatLabel->font : nullptr),
+        FontHeight(win->aiChatInput ? win->aiChatInput->GetFont() : nullptr),
+        FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr), aiClose,
+        FindWindowFontHeight(win)));
     return finish(0);
 }
 

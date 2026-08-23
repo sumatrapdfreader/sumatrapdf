@@ -162,9 +162,11 @@ static Rect PositionHelpWindow(NativeWnd parent, bool fullscreen, Size size) {
 struct KeyboardHelpWnd : WindowBase {
     HWND parentFrame = nullptr;
     ScrollBox* scroll = nullptr;
+    VirtCloseButton* closeBtn = nullptr;
 
     ~KeyboardHelpWnd() override = default;
     bool Create(const KeyboardHelpArgs&);
+    void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
 };
 
 static KeyboardHelpWnd* gKeyboardHelpWnd = nullptr;
@@ -254,7 +256,18 @@ static void OnHelpKeyDown(KeyEvent* ev) {
     }
 }
 
-static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title, ScrollBox** scrollOut) {
+static void ApplyKeyboardHelpCloseDpi(VirtCloseButton* closeBtn, int dpi) {
+    if (!closeBtn || dpi <= 0) {
+        return;
+    }
+    int btnDx = DpiScaleByDpi(dpi, 16);
+    int btnPad = DpiScaleByDpi(dpi, 4);
+    closeBtn->padding = Insets{btnPad, btnPad, btnPad, btnPad};
+    closeBtn->idealSize = {btnDx + (2 * btnPad), btnDx + (2 * btnPad)};
+}
+
+static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title, ScrollBox** scrollOut,
+                                        VirtCloseButton** closeOut) {
     PlatformFont* fontRow = GetDefaultGuiFont();
     PlatformFont* fontHeader = GetBoldPlatformFont(fontRow);
     PlatformFont* fontTitle = GetScaledPlatformFont(fontHeader, 125);
@@ -315,14 +328,12 @@ static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title, S
     header->alignCross = CrossAxisAlign::CrossCenter;
     header->AddChild(new VirtText(title, fontTitle), 1);
     auto* closeBtn = new VirtCloseButton();
-    int btnDx = DpiScale(16);
-    int btnPad = DpiScale(4);
-    // the padding is part of the ideal size, so it enlarges the hit area
-    // without shrinking the ✕ itself
-    closeBtn->padding = Insets{btnPad, btnPad, btnPad, btnPad};
-    closeBtn->idealSize = {btnDx + (2 * btnPad), btnDx + (2 * btnPad)};
+    ApplyKeyboardHelpCloseDpi(closeBtn, DpiGet());
     closeBtn->onClick = MkFunc1Void<VirtMouseEvent*>(OnHelpCloseClicked);
     header->AddChild(closeBtn);
+    if (closeOut) {
+        *closeOut = closeBtn;
+    }
 
     auto* content = new HBox();
     content->gap = columnGap;
@@ -357,7 +368,7 @@ bool KeyboardHelpWnd::Create(const KeyboardHelpArgs& helpArgs) {
     DpiScope dpiScope(parentFrame);
     Str title = ds->Translate(StrL("Keyboard Shortcuts"));
 
-    layout = BuildKeyboardHelpLayout(ds, title, &scroll);
+    layout = BuildKeyboardHelpLayout(ds, title, &scroll, &closeBtn);
     if (!layout) {
         return false;
     }
@@ -375,6 +386,7 @@ bool KeyboardHelpWnd::Create(const KeyboardHelpArgs& helpArgs) {
     args.style = style;
     args.exStyle = WS_EX_TOOLWINDOW;
     args.visible = false;
+    onDpiChanged = MkMethod1<KeyboardHelpWnd, WindowBase::DpiChangedEvent*, &KeyboardHelpWnd::OnDpiChanged>(this);
     CreateCustom(args);
     if (!hwnd) {
         return false;
@@ -384,6 +396,11 @@ bool KeyboardHelpWnd::Create(const KeyboardHelpArgs& helpArgs) {
     if (parentFrame) {
         SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)parentFrame);
     }
+    int dpi = DpiGetForHwnd(hwnd);
+    if (dpi <= 0) {
+        dpi = DpiGet();
+    }
+    ApplyKeyboardHelpCloseDpi(closeBtn, dpi);
 
     Rect wr = PositionHelpWindow(parentFrame, helpArgs.parentFullscreen, size);
     SetWindowPos(hwnd, nullptr, wr.x, wr.y, wr.dx, wr.dy, SWP_NOZORDER | SWP_NOACTIVATE);
@@ -392,6 +409,13 @@ bool KeyboardHelpWnd::Create(const KeyboardHelpArgs& helpArgs) {
     SetIsVisible(true);
     HwndSetFocus(hwnd);
     return true;
+}
+
+void KeyboardHelpWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
+    int dpi = (int)ev->dpiX;
+    ApplyKeyboardHelpCloseDpi(closeBtn, dpi);
+    DoLayout();
+    ev->didHandle = true;
 }
 
 void ToggleKeyboardHelp(const KeyboardHelpArgs& args) {

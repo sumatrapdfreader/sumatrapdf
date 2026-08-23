@@ -7812,6 +7812,16 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
     if (win->favLabel) {
         win->favLabel->font = labelFont;
     }
+    ApplyLabelWithCloseDpi(win->tocLabel, win->tocCloseBtn, dpi);
+    ApplyLabelWithCloseDpi(win->favLabel, win->favCloseBtn, dpi);
+    // force a layout even if the box size in pixels is unchanged (the ✕
+    // ideal size is what changed)
+    if (win->tocLayout) {
+        win->tocLayout->lastBounds = {};
+    }
+    if (win->favLayout) {
+        win->favLayout->lastBounds = {};
+    }
     if (win->tocFilterEdit) {
         win->tocFilterEdit->SetFont(appFont);
     }

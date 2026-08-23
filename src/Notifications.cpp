@@ -213,6 +213,11 @@ void RelayoutNotifications(HWND hwndCanvas) {
         }
         int xMargin = DpiScale(wnd->xMargin);
         int yMargin = DpiScale(wnd->yMargin);
+        // close ✕ is sized at create; re-apply if DPI changed while it was up
+        int closeDx = DpiScale(16);
+        if (wnd->closeCtrl && wnd->closeCtrl->idealSize.dx != closeDx) {
+            wnd->Layout(HwndGetTextTemp(wnd->hwnd));
+        }
         NotifCorner corner = wnd->corner;
         bool isBar = (corner == NotifCorner::BottomBar);
         Rect rect = HwndWindowRect(wnd->hwnd);
