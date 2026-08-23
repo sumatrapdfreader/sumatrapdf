@@ -49,6 +49,8 @@ constexpr int kPreferredContentsLines = 6;
 // pdf_update_annot on every EN_CHANGE stalls typing (annot-stress, FreeText).
 constexpr UINT_PTR kContentsDebounceTimerId = 1;
 constexpr UINT kContentsDebounceMs = 500;
+constexpr UINT_PTR kSelectionDebounceTimerId = 2;
+constexpr UINT kSelectionDebounceMs = 300;
 
 // clang-format off
 static SeqStrings gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
@@ -160,6 +162,7 @@ struct EditAnnotationsWindow : WindowBase {
     // True while DoContents/etc. programmatically fill the edit; ignore EN_CHANGE.
     bool updatingControls = false;
     UINT_PTR contentsDebounceTimer = 0;
+    UINT_PTR selectionDebounceTimer = 0;
 
     str::Builder currTextColor;
     str::Builder currCustomColor;
@@ -224,6 +227,8 @@ static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
 static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
 static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev);
+static void KillSelectionDebounce(EditAnnotationsWindow* ew);
+static void ApplyListSelectionNow(EditAnnotationsWindow* ew);
 
 // Drop non-owning Annotation* held by UI (selection, drag, hover, form edit).
 // Call before DeleteAnnotation frees the wrapper, or when the engine is about
@@ -258,6 +263,7 @@ void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
         return;
     }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    KillSelectionDebounce(ew);
     // selectedAnnotation is usually already null; do not FlushContents into a
     // dying engine. Drop non-owning list entries before ~EngineMupdf frees them.
     ew->annotations.Clear();
@@ -431,6 +437,10 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
         KillTimer(hwnd, contentsDebounceTimer);
         contentsDebounceTimer = 0;
     }
+    if (selectionDebounceTimer && hwnd) {
+        KillTimer(hwnd, selectionDebounceTimer);
+        selectionDebounceTimer = 0;
+    }
     // hacky: we want the position of the main window
     // but the size of client area
     tab->lastEditAnnotsWindowPos = HwndWindowRect(hwnd);
@@ -528,6 +538,9 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
         if (idx >= 0) {
             ew->listBox->SetCurrentSelection(idx);
         }
+    }
+    if (ew->editFilter) {
+        ew->editFilter->SetCue(fmt(_TRA("filter %d annotations").s, len(ew->annotations)));
     }
     int n = len(ew->visibleAnnots);
     int listLines = n;
@@ -679,6 +692,7 @@ static void ScheduleDeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
 // DestroyWindow).
 static void OnClose(WindowBase::CloseEvent* ev) {
     auto* w = (EditAnnotationsWindow*)ev->e->self;
+    KillSelectionDebounce(w);
     FlushContentsFromEdit(w);
     ScheduleDeleteEditAnnotationsWindow(w);
 }
@@ -741,7 +755,9 @@ static bool IsAnnotationListNavKey(int vkey) {
 void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
     if (ev->vkey == VK_TAB) {
         // Tab / Shift+Tab. The ring is the layout order and skips what is hidden,
-        // HWND controls and virtual ones alike
+        // HWND controls and virtual ones alike. Apply a pending list selection
+        // first so Contents / combos show the highlighted annot.
+        ApplyListSelectionNow(this);
         TabNavigate(!ev->isShift);
         ev->didHandle = true;
         return;
@@ -898,6 +914,16 @@ static void KillContentsDebounce(EditAnnotationsWindow* ew) {
         KillTimer(ew->hwnd, ew->contentsDebounceTimer);
     }
     ew->contentsDebounceTimer = 0;
+}
+
+static void KillSelectionDebounce(EditAnnotationsWindow* ew) {
+    if (!ew || ew->selectionDebounceTimer == 0) {
+        return;
+    }
+    if (ew->hwnd) {
+        KillTimer(ew->hwnd, ew->selectionDebounceTimer);
+    }
+    ew->selectionDebounceTimer = 0;
 }
 
 // pdf_update_annot + dropping the page display list is too slow for EN_CHANGE.
@@ -1283,8 +1309,9 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
                                           EditAnnotFocus focus = EditAnnotFocus::Default) {
     // Set each control to its final visibility (no hide-all). Unchanged
     // dropdowns/trackbars stay put so navigating the list does not flash.
-    // The virt tree is already double-buffered; native children are positioned
-    // with SWP_NOREDRAW and painted on the next WM_PAINT with the parent.
+    // The window is WS_EX_COMPOSITED and the virt tree double-buffered;
+    // native children are positioned with SWP_NOREDRAW and painted on
+    // the next WM_PAINT with the parent.
     DoRect(ew, annot);
     DoAuthor(ew, annot);
     DoModificationDate(ew, annot);
@@ -1328,6 +1355,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         ew->buttonDelete->SetIsEnabled(true);
 
         // NOLINTNEXTLINE(bugprone-branch-clone): branch order matters, an explicit focus wins over isNew
+        HWND focused = ::GetFocus();
+        bool childFocused = focused && focused != ew->hwnd && ::IsChild(ew->hwnd, focused);
         if (focus == EditAnnotFocus::Edit) {
             HwndSetFocus(ew->editContents->hwnd);
             ew->editContents->SelectAll();
@@ -1337,6 +1366,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
             HwndSetFocus(ew->editContents->hwnd);
             // ew->editContents->SetCursorPositionAtEnd();
             ew->editContents->SelectAll();
+        } else if (childFocused) {
+            // Contents / combo already has focus (flushed after list nav)
         } else if (!ew->vroot || ew->vroot->focused != ew->listBox) {
             ew->SetFocusTo(ew->listBox);
         }
@@ -1525,6 +1556,9 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     // TODO: maybe if we already have selected annotation, do not auto-pick
     MainWindow* win = tab->win;
     auto* ew = tab->editAnnotsWindow;
+    if (ew) {
+        KillSelectionDebounce(ew);
+    }
     if (annot == tab->selectedAnnotation) {
         MainWindowRerender(win);
         if (ew) {
@@ -1652,20 +1686,68 @@ static void ListBoxSelectionChanged(EditAnnotationsWindow* ew) {
     ew->ListBoxSelectionChanged();
 }
 
-void EditAnnotationsWindow::ListBoxSelectionChanged() {
-    int itemNo = listBox->GetCurrentSelection();
-    if (itemNo < 0) {
-        // an item has been deselected because e.g. selected annotation was deleted
+// Apply the list caret to the details panel, canvas overlay, and GoToPage.
+static void ApplyListSelectionNow(EditAnnotationsWindow* ew) {
+    KillSelectionDebounce(ew);
+    if (!ew || !ew->listBox || !ew->tab) {
         return;
     }
-    Annotation* annot = VisibleAnnotAt(this, itemNo);
+    int itemNo = ew->listBox->GetCurrentSelection();
+    if (itemNo < 0) {
+        return;
+    }
+    Annotation* annot = VisibleAnnotAt(ew, itemNo);
     if (!annot) {
-        logf("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(visibleAnnots)=%d\n", itemNo,
-             len(visibleAnnots));
+        logf("ApplyListSelectionNow: invalid itemNo=%d, len(visibleAnnots)=%d\n", itemNo, len(ew->visibleAnnots));
         ReportDebugIf(true);
         return;
     }
-    SetSelectedAnnotation(tab, annot);
+    if (annot == ew->tab->selectedAnnotation) {
+        return;
+    }
+    SetSelectedAnnotation(ew->tab, annot);
+}
+
+// Holding arrows only needs the list caret to move. Rebuild the form 300ms
+// after the last change so intermediate annots are skipped.
+static void ScheduleListSelectionUi(EditAnnotationsWindow* ew) {
+    if (!ew || !ew->tab || !ew->listBox) {
+        return;
+    }
+    int itemNo = ew->listBox->GetCurrentSelection();
+    Annotation* annot = itemNo >= 0 ? VisibleAnnotAt(ew, itemNo) : nullptr;
+    if (annot == ew->tab->selectedAnnotation) {
+        KillSelectionDebounce(ew);
+        return;
+    }
+    if (!ew->hwnd) {
+        ApplyListSelectionNow(ew);
+        return;
+    }
+    KillSelectionDebounce(ew);
+    UINT_PTR id = SetTimer(ew->hwnd, kSelectionDebounceTimerId, kSelectionDebounceMs, nullptr);
+    if (!id) {
+        ApplyListSelectionNow(ew);
+        return;
+    }
+    ew->selectionDebounceTimer = id;
+}
+
+void EditAnnotationsWindow::ListBoxSelectionChanged() {
+    ScheduleListSelectionUi(this);
+}
+
+// Clicking Contents / a combo takes HWND focus off the list. Apply the
+// highlighted row first so those controls belong to that annot.
+static void OnAnnotWndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg != WM_KILLFOCUS) {
+        return;
+    }
+    auto* ew = (EditAnnotationsWindow*)ev->w;
+    HWND newFocus = (HWND)ev->wparam;
+    if (newFocus && ew->hwnd && ::IsChild(ew->hwnd, newFocus)) {
+        ApplyListSelectionNow(ew);
+    }
 }
 
 static UINT_PTR gMainWindowRerenderTimer = 0;
@@ -1722,7 +1804,14 @@ static void ContentsKillFocus(EditAnnotationsWindow* ew) {
 }
 
 void EditAnnotationsWindow::OnTimer(WindowBase::TimerEvent* ev) {
-    if (!ev || ev->timerId != kContentsDebounceTimerId) {
+    if (!ev) {
+        return;
+    }
+    if (ev->timerId == kSelectionDebounceTimerId) {
+        ApplyListSelectionNow(this);
+        return;
+    }
+    if (ev->timerId != kContentsDebounceTimerId) {
         return;
     }
     if (ApplyContentsFromEdit(this)) {
@@ -1775,8 +1864,10 @@ static void LayoutAnnotWindowInPlace(EditAnnotationsWindow* ew) {
     ew->DoLayout({dx, dy});
     // Native children are positioned with SWP_NOREDRAW. Newly shown
     // dropdowns (Icon on a Text annot) start at (0,0) over Contents;
-    // erase leftovers and paint once in the final layout.
-    RedrawWindow(ew->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    // invalidate the old parent rects (SetBounds) and paint once here.
+    // No RDW_ERASE: a full-window erase flashed on every list selection
+    // change. WM_PAINT already fills through a double-buffer.
+    RedrawWindow(ew->hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
 }
 
 void EditAnnotationsWindow::OnSize(WindowBase::SizeEvent* ev) {
@@ -1864,7 +1955,6 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.parent = parent;
         args.isMultiLine = false;
         args.withBorder = true;
-        args.cueText = _TRA("enter search term to filter annotations");
         args.font = fnt;
         args.isRtl = IsUIRtl();
         auto* c = new Edit();
@@ -2063,6 +2153,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         saveCur->onClick = MkFunc0(ButtonSaveToCurrentPDFHandler, ew);
         ew->buttonSaveToCurrentFile = saveCur;
         AddAnnotButton(row, saveCur);
+        row->AddChild(new Spacer(0, 0), 1);
         auto* saveNew = NewAnnotButton(parent, _TRA("Save changes to a new PDF"), fnt, false);
         saveNew->SetIsEnabled(false); // only enabled if there are changes
         saveNew->onClick = MkFunc0(ButtonSaveToNewFileHandler, ew);
@@ -2188,6 +2279,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew->onFocus = MkMethod1<EditAnnotationsWindow, WindowBase::FocusEvent*, &EditAnnotationsWindow::OnFocus>(ew);
     ew->onKeyDown = MkMethod1<EditAnnotationsWindow, KeyEvent*, &EditAnnotationsWindow::OnKeyDown>(ew);
     ew->onTimer = MkMethod1<EditAnnotationsWindow, WindowBase::TimerEvent*, &EditAnnotationsWindow::OnTimer>(ew);
+    ew->onWndProc = MkFunc1Void(OnAnnotWndProc);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
@@ -2197,6 +2289,9 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     args.title = str::JoinTemp(_TRA("Annotations"), StrL(": "), tab->GetTabTitle());
     args.visible = false;
     args.font = GetAppFont();
+    // Parent + native children (combos, Contents) paint off-screen so
+    // arrow-key selection changes don't flash through erase-then-paint.
+    args.exStyle = WS_EX_COMPOSITED;
 
     // PositionCloseTo(w, args->hwndRelatedTo);
     // Size winSize = {w->initialSize.dx, w->initialSize.Height};
@@ -2323,7 +2418,7 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
             return finish(StrL("ERROR no-annot"), 1);
         }
         ew->listBox->SelectAll();
-        ew->ListBoxSelectionChanged();
+        ApplyListSelectionNow(ew);
     } else if (selectItem > 0) {
         int idx = selectItem - 1;
         if (!ew->annotations.isValidIndex(idx)) {
@@ -2338,7 +2433,7 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
         } else {
             ew->listBox->SetCurrentSelection(idx);
         }
-        ew->ListBoxSelectionChanged();
+        ApplyListSelectionNow(ew);
     }
 
     if (clientDy > 0) {

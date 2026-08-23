@@ -1191,7 +1191,20 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 HDC hdc = (HDC)wparam;
                 auto* br = BackgroundBrush();
                 if (hdc && br) {
-                    HdcFillRect(hdc, HwndClientRect(hwnd), br);
+                    // A virt tree paints the full client through a
+                    // double-buffer. Filling here on a full-window erase
+                    // flashes (Edit Annotations arrow-key navigation).
+                    // Still fill when the DC is clipped to a child.
+                    bool fill = !vroot;
+                    if (!fill) {
+                        RECT clip{};
+                        GetClipBox(hdc, &clip);
+                        Rect client = HwndClientRect(hwnd);
+                        fill = clip.left > 0 || clip.top > 0 || clip.right < client.dx || clip.bottom < client.dy;
+                    }
+                    if (fill) {
+                        HdcFillRect(hdc, HwndClientRect(hwnd), br);
+                    }
                 }
                 return TRUE;
             }
@@ -1652,7 +1665,10 @@ void ControlBase::SetBounds(Rect bounds) {
         SetWindowPos(hwnd, nullptr, bounds.x, bounds.y, bounds.dx, bounds.dy,
                      SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW);
         if (parent && !IsRectEmpty(&oldOnParent)) {
-            RedrawWindow(parent, &oldOnParent, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            // Invalidate, don't erase: a parent fill here flashed the
+            // Edit Annotations window on every list selection. WM_PAINT
+            // covers virt leftovers; ALLCHILDREN covers Contents.
+            RedrawWindow(parent, &oldOnParent, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
         InvalidateRect(hwnd, nullptr, FALSE);
     }
