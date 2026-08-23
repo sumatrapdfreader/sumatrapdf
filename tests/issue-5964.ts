@@ -127,13 +127,32 @@ export async function testit(): Promise<void> {
 
     // click the middle of the canvas, which is inside the signature field
     const cr = getClientRect(canvas);
+    if (cr.right < 100 || cr.bottom < 100) {
+      throw new Error(`issue-5964: canvas is ${cr.right}x${cr.bottom}, too small to click into the field`);
+    }
     const cx = Math.floor(cr.right / 2);
     const cy = Math.floor(cr.bottom / 2);
-    await clickAt(canvas, cx, cy, 0);
 
-    const dlg = await waitForWindowByTitle(pid, "Sign Document");
+    // A click is hit-tested against the page's widgets through
+    // EngineMupdf::GetFzPageInfoCanFail(), which TryLocks the engine's page and
+    // render locks and gives up rather than block the ui thread behind a render
+    // (issue #4145). A click that loses that race is dropped silently, so a
+    // single click proves nothing: render-idle doesn't stop the render thread
+    // from picking up follow-up work, and under asan it's slow enough to still
+    // be holding a lock. Click again until the dialog shows up.
+    let dlg = 0;
+    let clicks = 0;
+    while (!dlg && clicks < 6) {
+      if (clicks > 0) {
+        await client.waitForRenderIdle();
+        await sleep(500);
+      }
+      await clickAt(canvas, cx, cy, 0);
+      clicks++;
+      dlg = await waitForWindowByTitle(pid, "Sign Document", 1500 * SLOW_BUILD_FACTOR);
+    }
     if (!dlg) {
-      throw new Error("issue-5964: clicking the empty signature field did not open Sign Document");
+      throw new Error(`issue-5964: ${clicks} clicks on the empty signature field didn't open Sign Document`);
     }
 
     // and it has to be aimed at the field that was clicked, not at "new
