@@ -1936,6 +1936,10 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
 static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt, ResizeHandle handle) {
     win->annotationBeingDragged = annot;
     win->annotationBeingResized = true;
+    // A completed right-click leaves dragRightClick set. This is a new
+    // left-button drag; otherwise its button-up is mistaken for a right drag
+    // and the annotation keeps resizing as the unpressed mouse moves (#5933).
+    win->dragRightClick = false;
     win->resizeHandle = (int)handle;
     win->dragStart = pt;
     RectF r = GetRect(annot);

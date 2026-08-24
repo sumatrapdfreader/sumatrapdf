@@ -14,12 +14,15 @@ import {
   setCursorPos,
   sleep,
   MK_LBUTTON,
+  MK_RBUTTON,
   VK_ESCAPE,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
+  WM_RBUTTONDOWN,
+  WM_RBUTTONUP,
 } from "./winapi";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation";
 
@@ -45,6 +48,23 @@ function clickAwayWithJitter(canvas: number, x: number, y: number) {
   setCursorPos(p1.x, p1.y);
   sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x1, y1));
   sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(x1, y1));
+}
+
+// Context-menu creation leaves dragRightClick set. Reproduce that without
+// opening a modal menu: cross the right-drag threshold, return to the start so
+// the page does not move, and release.
+function primeRightDragState(canvas: number, x: number, y: number) {
+  const x1 = x + 16;
+  const y1 = y + 16;
+  const p0 = clientToScreen(canvas, x, y);
+  const p1 = clientToScreen(canvas, x1, y1);
+  setCursorPos(p0.x, p0.y);
+  sendMessage(canvas, WM_RBUTTONDOWN, MK_RBUTTON, packCoords(x, y));
+  setCursorPos(p1.x, p1.y);
+  sendMessage(canvas, WM_MOUSEMOVE, MK_RBUTTON, packCoords(x1, y1));
+  setCursorPos(p0.x, p0.y);
+  sendMessage(canvas, WM_MOUSEMOVE, MK_RBUTTON, packCoords(x, y));
+  sendMessage(canvas, WM_RBUTTONUP, 0, packCoords(x, y));
 }
 
 export async function testit(): Promise<void> {
@@ -128,6 +148,49 @@ export async function testit(): Promise<void> {
     }
     if (!afterJitter.equals(afterEsc2)) {
       throw new Error("issue-5933: jittered click away left a different selection than Esc");
+    }
+
+    // Creating an annotation from the context menu used to leave the stale
+    // right-drag flag set. A later left-button resize then ignored button-up
+    // and continued resizing as the unpressed mouse moved.
+    primeRightDragState(canvas, awayX, awayY);
+    const freeTextX = 100;
+    const freeTextY = 300;
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(freeTextX, freeTextY));
+    await sleep(400);
+    await client.waitForRenderIdle();
+
+    // At fit-page zoom the default FreeText rectangle's bottom-right handle
+    // is 212x109 pixels from its placement point.
+    const resizeX = freeTextX + 212;
+    const resizeY = freeTextY + 109;
+    const resizedX = resizeX + 40;
+    const resizedY = resizeY + 40;
+    const pResize = clientToScreen(canvas, resizeX, resizeY);
+    const pResized = clientToScreen(canvas, resizedX, resizedY);
+    setCursorPos(pResize.x, pResize.y);
+    sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(resizeX, resizeY));
+    setCursorPos(pResized.x, pResized.y);
+    sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(resizedX, resizedY));
+    sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(resizedX, resizedY));
+    await sleep(300);
+    await client.waitForRenderIdle();
+    const afterResizeUpPng = join(dir, "after-resize-up.png");
+    if (!captureWindowToPng(canvas, afterResizeUpPng)) {
+      throw new Error("issue-5933: capture after resize mouse-up failed");
+    }
+
+    sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(resizedX + 60, resizedY + 60));
+    await sleep(300);
+    await client.waitForRenderIdle();
+    const afterUnpressedMovePng = join(dir, "after-unpressed-move.png");
+    if (!captureWindowToPng(canvas, afterUnpressedMovePng)) {
+      throw new Error("issue-5933: capture after unpressed mouse move failed");
+    }
+    const afterResizeUp = readFileSync(afterResizeUpPng);
+    const afterUnpressedMove = readFileSync(afterUnpressedMovePng);
+    if (!afterResizeUp.equals(afterUnpressedMove)) {
+      throw new Error("issue-5933: annotation kept resizing after the left mouse button was released");
     }
   } finally {
     client.close();
