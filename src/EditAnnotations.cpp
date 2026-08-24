@@ -180,50 +180,6 @@ struct EditAnnotationsWindow : WindowBase {
 
 static Annotation* VisibleAnnotAt(EditAnnotationsWindow* ew, int idx);
 
-#if 0
-static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prevIdx) {
-    int nAnnots = ew->annotations.Size();
-    if (nAnnots == 0) {
-        return nullptr;
-    }
-    if (prevIdx >= nAnnots) {
-        prevIdx = nAnnots - 1;
-    }
-    return ew->annotations[prevIdx];
-}
-#endif
-
-// when deleting the selected annotation, pick another annotation on the same
-// page to select next. restricting to the same page avoids jumping the view
-// (the reason the broader auto-select experiments below stayed disabled).
-static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
-    DisplayModel* dm = tab->AsFixed();
-    if (!dm) {
-        return nullptr;
-    }
-    EngineBase* engine = dm->GetEngine();
-    if (!engine) {
-        return nullptr;
-    }
-    int pageNo = annot->pageNo;
-    if (tab->editAnnotsWindow) {
-        for (Annotation* a : tab->editAnnotsWindow->annotations) {
-            if (a != annot && a->pageNo == pageNo) {
-                return a;
-            }
-        }
-        return nullptr;
-    }
-    Vec<Annotation*> annots;
-    EngineGetAnnotations(engine, annots);
-    for (Annotation* a : annots) {
-        if (a != annot && a->pageNo == pageNo) {
-            return a;
-        }
-    }
-    return nullptr;
-}
-
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
 static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
 static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev);
@@ -277,14 +233,8 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         return;
     }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
-    Annotation* selectNext = nullptr;
-    if (annot != tab->selectedAnnotation) {
-        // preserve current selection if we're not deleting it
-        selectNext = tab->selectedAnnotation;
-    } else {
-        // deleting the selected annotation: select another one on the same page
-        selectNext = FindAnnotationOnSamePage(tab, annot);
-    }
+    // Preserve an existing selection only when deleting a different annotation.
+    Annotation* keepSelected = annot == tab->selectedAnnotation ? nullptr : tab->selectedAnnotation;
 
     // Clear all UI holders before DeleteAnnotation frees the wrapper.
     DetachAnnotationFromUI(annot);
@@ -293,7 +243,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         // can be null if called from Menu.cpp and annotations window is not visible
         UpdateAnnotationsList(ew);
     }
-    SetSelectedAnnotation(tab, selectNext);
+    SetSelectedAnnotation(tab, keepSelected);
     // SetSelectedAnnotation only ScheduleRepaint (overlay handles). The page
     // bitmap still has the deleted annot until we re-render.
     if (IsMainWindowValidAndNotClosing(tab->win)) {
@@ -328,28 +278,17 @@ static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
     if (len(toDelete) == 0) {
         return;
     }
-    // After rebuild, the first remaining item after the last deleted one
-    // lands at lastIdx - (count-1). If that is past the end, take the last.
-    int nextIdxHint = idxs[len(idxs) - 1] - (len(idxs) - 1);
+    Annotation* keepSelected = ew->tab->selectedAnnotation;
+    if (toDelete.Contains(keepSelected)) {
+        keepSelected = nullptr;
+    }
     FlushContentsFromEdit(ew);
     for (Annotation* annot : toDelete) {
         DetachAnnotationFromUI(annot);
         DeleteAnnotation(annot);
     }
     UpdateAnnotationsList(ew);
-    Annotation* selectNext = nullptr;
-    int n = len(ew->visibleAnnots);
-    if (n > 0) {
-        int pick = nextIdxHint;
-        if (pick >= n) {
-            pick = n - 1;
-        }
-        if (pick < 0) {
-            pick = 0;
-        }
-        selectNext = ew->visibleAnnots[pick];
-    }
-    SetSelectedAnnotation(ew->tab, selectNext);
+    SetSelectedAnnotation(ew->tab, keepSelected);
     // SetSelectedAnnotation only ScheduleRepaint (overlay handles). The page
     // bitmap still has the deleted annot until we re-render.
     if (IsMainWindowValidAndNotClosing(ew->tab->win)) {
@@ -1622,11 +1561,6 @@ static void ScheduleShowSelectedAnnotationView(WindowTab* tab) {
 }
 
 void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAnnotFocus focus) {
-    // when we delete an annotation we automatically pick one to
-    // set as selected and it might end up as currently selected
-    // we still want to redraw to not show deleted annotation
-    // but not do the rest of the logic as it triggers infinite loop
-    // TODO: maybe if we already have selected annotation, do not auto-pick
     MainWindow* win = tab->win;
     auto* ew = tab->editAnnotsWindow;
     if (ew) {
