@@ -228,6 +228,10 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView->resourceProvider = args.resourceProvider;
         wstr::Free(webView->resourceUriPrefix);
         webView->resourceUriPrefix = wstr::Dup(args.resourceUriPrefix);
+        // Browser pages use light document colors when they do not paint their
+        // own root background. Keep transparent areas white instead of letting
+        // the UI theme show through during and after a resize.
+        webView->defaultBackgroundColor = kColWhite;
         webView->events.ctx = this;
         webView->events.navigationStarting = NavigationStarting;
         webView->events.navigationCompleted = NavigationCompleted;

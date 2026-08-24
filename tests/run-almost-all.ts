@@ -133,6 +133,7 @@ import { testit as issue5933 } from "./issue-5933.ts";
 import { testit as issue6037 } from "./issue-6037.ts";
 import { testit as issue6040 } from "./issue-6040.ts";
 import { testit as issue6043 } from "./issue-6043.ts";
+import { testit as issue6045 } from "./issue-6045.ts";
 import { testit as favoritesTabAfterDocumentClose } from "./favorites-tab-after-document-close.ts";
 import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts";
 import { testit as annotDeleteRedraw } from "./annot-delete-redraw.ts";
@@ -296,6 +297,7 @@ export const tests: NamedTest[] = [
 
   // --- isolated session: -appdata, saveSettings, or own window placement -
   ["favorites-tab-after-document-close", favoritesTabAfterDocumentClose],
+  ["issue-6045", issue6045],
   ["issue-3744", issue3744],
   ["issue-4986", issue4986],
   ["issue-5095", issue5095],
