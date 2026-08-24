@@ -1604,7 +1604,8 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 } break;
                 case AnnotationType::Line: {
                     fz_point a{pos.x, pos.y};
-                    fz_point b{pos.x + 100, pos.y + 50};
+                    fz_point b = args->hasLineEnd ? fz_point{args->lineEnd.x, args->lineEnd.y}
+                                                  : fz_point{pos.x + 100, pos.y + 50};
                     pdf_set_annot_line(ctx, annot, a, b);
                 } break;
                 case AnnotationType::Polygon: {

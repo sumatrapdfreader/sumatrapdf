@@ -90,6 +90,8 @@ struct AnnotCreateArgs {
     bool setContentToSelection = false;
     Str content;
     Pixmap* stampImage = nullptr;
+    bool hasLineEnd = false;
+    PointF lineEnd;
 };
 
 int PageNo(Annotation*);

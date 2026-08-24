@@ -82,6 +82,7 @@ void CancelAnnotationResizeRerender(MainWindow* win) {
 
 Kind kNotifAnnotation = "notifAnnotation";
 static Kind kNotifTextAnnotationPlacement = "notifTextAnnotationPlacement";
+static Kind kNotifLineAnnotationPlacement = "notifLineAnnotationPlacement";
 
 constexpr int kRenderDelayShowNotif = 500;
 
@@ -300,6 +301,7 @@ void StartTextAnnotationPlacement(MainWindow* win, int cmdId) {
     if (!win || !tab || !engine || !EngineSupportsAnnotations(engine) || cmdId <= 0) {
         return;
     }
+    CancelLineAnnotationPlacement(win);
     win->textAnnotationPlacementCmdId = cmdId;
     StopSelectTextWithKeyboard(win);
     DeleteOldSelectionInfo(win, true);
@@ -337,6 +339,86 @@ TempStr TextAnnotationPlacementStateTemp(MainWindow* win) {
     return fmt("textPlacement active=%d notification=%d cursor=%d cmd=%d message=%s\n",
                IsPlacingTextAnnotation(win) ? 1 : 0, notif ? 1 : 0, iconCursor ? 1 : 0,
                win->textAnnotationPlacementCmdId, message);
+}
+
+//--- line annotation placement
+
+bool IsPlacingLineAnnotation(MainWindow* win) {
+    return win && win->lineAnnotationPlacementCmdId > 0;
+}
+
+bool CancelLineAnnotationPlacement(MainWindow* win) {
+    if (!IsPlacingLineAnnotation(win)) {
+        return false;
+    }
+    win->lineAnnotationPlacementCmdId = 0;
+    win->lineAnnotationPlacementPageNo = -1;
+    win->lineAnnotationPlacementStart = {};
+    win->lineAnnotationPlacementEnd = {};
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifLineAnnotationPlacement);
+    HideAnnotationHoverOverlay(win);
+    ScheduleRepaint(win, 0);
+    if (win->hwndCanvas) {
+        SendMessageW(win->hwndCanvas, WM_SETCURSOR, (WPARAM)win->hwndCanvas, MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+    }
+    return true;
+}
+
+void StartLineAnnotationPlacement(MainWindow* win, int cmdId) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!win || !tab || !engine || !EngineSupportsAnnotations(engine) || cmdId <= 0) {
+        return;
+    }
+    CancelTextAnnotationPlacement(win);
+    win->lineAnnotationPlacementCmdId = cmdId;
+    win->lineAnnotationPlacementPageNo = -1;
+    win->lineAnnotationPlacementStart = {};
+    win->lineAnnotationPlacementEnd = {};
+    StopSelectTextWithKeyboard(win);
+    DeleteOldSelectionInfo(win, true);
+    if (tab->selectedAnnotation) {
+        SetSelectedAnnotation(tab, nullptr);
+    }
+    win->annotationUnderCursor = nullptr;
+    HideAnnotationHoverOverlay(win);
+    ScheduleRepaint(win, 0);
+
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = _TRA("Place line annotation. **Esc** to cancel.");
+    args.timeoutMs = kNotifNoTimeout;
+    args.groupId = kNotifLineAnnotationPlacement;
+    args.corner = NotifCorner::BottomBar;
+    args.warning = true;
+    args.tab = tab;
+    ShowNotification(args);
+
+    HwndSetFocus(win->hwndFrame);
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    if (HwndClientRect(win->hwndCanvas).Contains(pt)) {
+        SetCursorCached(IDC_CROSS);
+    }
+}
+
+TempStr LineAnnotationPlacementStateTemp(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return str::DupTemp(
+            StrL("linePlacement active=0 notification=0 cursor=0 started=0 cmd=0 page=-1 start=0,0 end=0,0 "
+                 "message=\n"));
+    }
+    NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifLineAnnotationPlacement);
+    Str message = NotificationGetMessageTemp(notif);
+    bool crossCursor = GetCursor() == GetCachedCursor(IDC_CROSS);
+    bool started = win->lineAnnotationPlacementPageNo > 0;
+    PointF start = win->lineAnnotationPlacementStart;
+    Point end = win->lineAnnotationPlacementEnd;
+    return fmt(
+        "linePlacement active=%d notification=%d cursor=%d started=%d cmd=%d page=%d start=%g,%g end=%d,%d "
+        "message=%s\n",
+        IsPlacingLineAnnotation(win) ? 1 : 0, notif ? 1 : 0, crossCursor ? 1 : 0, started ? 1 : 0,
+        win->lineAnnotationPlacementCmdId, win->lineAnnotationPlacementPageNo, start.x, start.y, end.x, end.y, message);
 }
 
 bool IsLaserPointerActive() {
@@ -387,6 +469,36 @@ static bool PlaceTextAnnotationAt(MainWindow* win, Point pt) {
     CancelTextAnnotationPlacement(win);
     WPARAM wp = MAKEWPARAM(cmdId, kTextAnnotationPlacementCommandCode);
     SendMessageW(win->hwndFrame, WM_COMMAND, wp, MAKELPARAM(pt.x, pt.y));
+    return true;
+}
+
+// The first page click anchors the preview. A second click on that page
+// executes the original command with both endpoints; a click anywhere else
+// cancels the mode because a PDF line annotation cannot span pages.
+static bool HandleLineAnnotationPlacementClick(MainWindow* win, Point pt) {
+    if (!IsPlacingLineAnnotation(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
+    bool started = win->lineAnnotationPlacementPageNo > 0;
+    if (!dm || !dm->ValidPageNo(pageNo) || (started && pageNo != win->lineAnnotationPlacementPageNo)) {
+        CancelLineAnnotationPlacement(win);
+        return true;
+    }
+    if (!started) {
+        win->lineAnnotationPlacementPageNo = pageNo;
+        win->lineAnnotationPlacementStart = dm->CvtFromScreen(pt, pageNo);
+        win->lineAnnotationPlacementEnd = pt;
+        ScheduleRepaint(win, 0);
+        return true;
+    }
+
+    win->lineAnnotationPlacementEnd = pt;
+    int cmdId = win->lineAnnotationPlacementCmdId;
+    WPARAM wp = MAKEWPARAM(cmdId, kLineAnnotationPlacementCommandCode);
+    SendMessageW(win->hwndFrame, WM_COMMAND, wp, MAKELPARAM(pt.x, pt.y));
+    CancelLineAnnotationPlacement(win);
     return true;
 }
 
@@ -1816,6 +1928,22 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
     if (!dm) return;
 
+    if (IsPlacingLineAnnotation(win)) {
+        if (win->annotationUnderCursor) {
+            win->annotationUnderCursor = nullptr;
+        }
+        HideAnnotationHoverOverlay(win);
+        SetCursorCached(IDC_CROSS);
+        if (win->lineAnnotationPlacementPageNo > 0) {
+            Point end{x, y};
+            if (end != win->lineAnnotationPlacementEnd) {
+                win->lineAnnotationPlacementEnd = end;
+                ScheduleRepaint(win, 0);
+            }
+        }
+        return;
+    }
+
     if (IsPlacingTextAnnotation(win)) {
         if (win->annotationUnderCursor) {
             win->annotationUnderCursor = nullptr;
@@ -2264,6 +2392,12 @@ static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot) {
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
+        return;
+    }
+
+    if (IsPlacingLineAnnotation(win)) {
+        HwndSetFocus(win->hwndFrame);
+        HandleLineAnnotationPlacementClick(win, Point{x, y});
         return;
     }
 
@@ -3484,6 +3618,27 @@ static void PaintHoveredAnnotationMark(MainWindow* win, HDC hdc, DisplayModel* d
     gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
 }
 
+static void PaintLineAnnotationPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
+    int pageNo = win ? win->lineAnnotationPlacementPageNo : -1;
+    if (!IsPlacingLineAnnotation(win) || !dm->ValidPageNo(pageNo) || !dm->PageVisible(pageNo)) {
+        return;
+    }
+    Point start = dm->CvtToScreen(pageNo, win->lineAnnotationPlacementStart);
+    Point end = win->lineAnnotationPlacementEnd;
+
+    Gdiplus::Graphics gs(hdc);
+    gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    Gdiplus::Color blue(255, 0, 80, 200);
+    Gdiplus::Pen pen(blue, (Gdiplus::REAL)std::max(DpiScale(2), 1));
+    gs.DrawLine(&pen, start.x, start.y, end.x, end.y);
+
+    int markerSize = std::max(DpiScale(6), 4);
+    int markerHalf = markerSize / 2;
+    Gdiplus::SolidBrush fill(Gdiplus::Color(255, 255, 255, 255));
+    gs.FillEllipse(&fill, start.x - markerHalf, start.y - markerHalf, markerSize, markerSize);
+    gs.DrawEllipse(&pen, start.x - markerHalf, start.y - markerHalf, markerSize, markerSize);
+}
+
 NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
     if (!tab) {
         return;
@@ -3794,6 +3949,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     }
 
     WindowTab* tab = win->CurrentTab();
+    PaintLineAnnotationPlacement(win, hdc, dm);
     PaintHoveredAnnotationMark(win, hdc, dm);
     RepositionAnnotationHoverOverlay(win);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
@@ -4012,6 +4168,12 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     ReportIf(win->hwndCanvas != hwnd);
     if (win->mouseAction != MouseAction::None) {
         win->DeleteToolTip();
+    }
+
+    if (IsPlacingLineAnnotation(win)) {
+        SetCursorCached(IDC_CROSS);
+        win->DeleteToolTip();
+        return TRUE;
     }
 
     if (IsPlacingTextAnnotation(win)) {

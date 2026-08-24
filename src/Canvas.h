@@ -26,10 +26,15 @@ void StartTextAnnotationPlacement(MainWindow*, int cmdId);
 bool CancelTextAnnotationPlacement(MainWindow*);
 void DeleteTextAnnotationPlacementCursor();
 TempStr TextAnnotationPlacementStateTemp(MainWindow*);
+bool IsPlacingLineAnnotation(MainWindow*);
+void StartLineAnnotationPlacement(MainWindow*, int cmdId);
+bool CancelLineAnnotationPlacement(MainWindow*);
+TempStr LineAnnotationPlacementStateTemp(MainWindow*);
 void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc);
 void InvalidateCanvasKeyboardFocus(MainWindow* win);
 
 constexpr WORD kTextAnnotationPlacementCommandCode = 0x5341;
+constexpr WORD kLineAnnotationPlacementCommandCode = 0x5342;
 
 extern Kind kNotifAnnotation;
 

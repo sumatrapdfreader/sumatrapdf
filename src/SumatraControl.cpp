@@ -571,6 +571,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
                    tab->editAnnotsWindow ? 1 : 0, selectedHover ? 1 : 0));
     out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
     out.Append(TextAnnotationPlacementStateTemp(gWindows[0]));
+    out.Append(LineAnnotationPlacementStateTemp(gWindows[0]));
     return finish({}, 0);
 }
 

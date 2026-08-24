@@ -4999,6 +4999,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
     CancelTextAnnotationPlacement(win);
+    CancelLineAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
     // leave the hidden placement dialog aimed at a dead model
     CloseSignDocumentDialog(win);
@@ -8997,6 +8998,9 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (CancelTextAnnotationPlacement(win)) {
         return;
     }
+    if (CancelLineAnnotationPlacement(win)) {
+        return;
+    }
     if (CancelPlacingSignature(win)) {
         return;
     }
@@ -10781,6 +10785,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     int cmdId = LOWORD(wp);
     int invokedCmdId = cmdId;
     bool isTextAnnotationPlacement = HIWORD(wp) == kTextAnnotationPlacementCommandCode;
+    bool isLineAnnotationPlacement = HIWORD(wp) == kLineAnnotationPlacementCommandCode;
     bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
@@ -12382,6 +12387,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotSquare:
             [[fallthrough]];
         case CmdCreateAnnotLine:
+            if (annotType == AnnotationType::Line && !isLineAnnotationPlacement && lp == 0) {
+                StartLineAnnotationPlacement(win, invokedCmdId);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotCircle:
             [[fallthrough]];
@@ -12404,22 +12413,43 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!EngineSupportsAnnotations(engine)) {
                 return 0;
             }
-            Point pt = HwndGetCursorPos(win->hwndCanvas);
-            if (lp != 0) {
-                // when sending from Menu.cpp mouse position is encoded as LPARAM
-                pt.x = GET_X_LPARAM(lp);
-                pt.y = GET_Y_LPARAM(lp);
-            }
-            int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-            if (pageNoUnderCursor < 0) {
-                if (!SetPointToVisiblePage(dm, pt, pageNoUnderCursor)) {
+            Point pt;
+            int pageNoUnderCursor = -1;
+            PointF ptOnPage;
+            PointF lineEndOnPage;
+            if (isLineAnnotationPlacement) {
+                if (annotType != AnnotationType::Line || !IsPlacingLineAnnotation(win)) {
                     return 0;
                 }
+                pageNoUnderCursor = win->lineAnnotationPlacementPageNo;
+                if (!dm->ValidPageNo(pageNoUnderCursor)) {
+                    return 0;
+                }
+                ptOnPage = win->lineAnnotationPlacementStart;
+                lineEndOnPage = dm->CvtFromScreen(win->lineAnnotationPlacementEnd, pageNoUnderCursor);
+                pt = win->lineAnnotationPlacementEnd;
+            } else {
+                pt = HwndGetCursorPos(win->hwndCanvas);
+                if (lp != 0) {
+                    // when sending from Menu.cpp mouse position is encoded as LPARAM
+                    pt.x = GET_X_LPARAM(lp);
+                    pt.y = GET_Y_LPARAM(lp);
+                }
+                pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+                if (pageNoUnderCursor < 0) {
+                    if (!SetPointToVisiblePage(dm, pt, pageNoUnderCursor)) {
+                        return 0;
+                    }
+                }
+                ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             }
-            PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             AnnotCreateArgs args{annotType};
             SetAnnotCreateArgs(args, cmd);
+            if (isLineAnnotationPlacement) {
+                args.hasLineEnd = true;
+                args.lineEnd = lineEndOnPage;
+            }
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
             openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
         } break;

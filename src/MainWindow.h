@@ -442,6 +442,10 @@ struct MainWindow {
     bool isToolbarVisible = false;
     bool pdfAnnotationsToolbarEnabled = false;
     int textAnnotationPlacementCmdId = 0;
+    int lineAnnotationPlacementCmdId = 0;
+    int lineAnnotationPlacementPageNo = -1;
+    PointF lineAnnotationPlacementStart;
+    Point lineAnnotationPlacementEnd;
     // overlay toolbar mode: the toolbar floats over the page (doesn't reserve
     // space) and is only revealed when the mouse is near the top
     bool isToolbarOverlay = false;
