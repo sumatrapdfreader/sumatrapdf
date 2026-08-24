@@ -30,6 +30,7 @@
 #include "SumatraTest.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "Canvas.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
 #include "Selection.h"
@@ -555,10 +556,16 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
         for (int i = 0; i < len(quads); i++) {
             RectF r = quads[i];
             out.Append(fmt("rect=%g,%g,%g,%g\n", r.x, r.y, r.dx, r.dy));
+            Rect screen = dm->CvtToScreen(PageNo(a), r);
+            out.Append(fmt("screen=%d,%d,%d,%d\n", screen.x, screen.y, screen.dx, screen.dy));
         }
         n++;
     }
     out.Append(fmt("n=%d\n", n));
+    bool hasNotification = GetNotificationForGroup(gWindows[0]->hwndCanvas, kNotifAnnotation) != nullptr;
+    out.Append(fmt("state selected=%d hover=%d editToolbar=%d notification=%d\n", tab->selectedAnnotation ? 1 : 0,
+                   gWindows[0]->annotationUnderCursor ? 1 : 0, gWindows[0]->pdfAnnotationsToolbarEnabled ? 1 : 0,
+                   hasNotification ? 1 : 0));
     return finish({}, 0);
 }
 

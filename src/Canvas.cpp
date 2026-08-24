@@ -1757,6 +1757,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
         case MouseAction::None: {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
+            bool editPdf = win->pdfAnnotationsToolbarEnabled;
             int srcPageNo = -1;
             IPageElement* el = dm->GetElementAtPos(pos, &srcPageNo);
             if (el && el->Is(kindPageElementDest) && gGlobalPrefs->disableLinks) {
@@ -1768,12 +1769,15 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
             bool citationHoverEnabled = hoverDelayMs >= 0;
             bool hasInternalLink = citationHoverEnabled && RefHoverIsInternalLink(el, dm);
             if (annot != prev) {
+                if (editPdf) {
+                    ScheduleRepaint(win, 0);
+                }
 #if 0
                 Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
                 Str prevName = prev ? AnnotationReadableNameTemp(prev->type) : StrL("none");
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
 #endif
-                if (gGlobalPrefs->showAnnotationNotification && !hasInternalLink) {
+                if (gGlobalPrefs->showAnnotationNotification && !hasInternalLink && !editPdf) {
                     if (annot) {
                         // auto r = annot->bounds;
                         // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
@@ -1791,7 +1795,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
                     }
                 }
             }
-            if (!annot || hasInternalLink || !gGlobalPrefs->showAnnotationNotification) {
+            if (!annot || hasInternalLink || !gGlobalPrefs->showAnnotationNotification || editPdf) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             }
             win->annotationUnderCursor = annot;
@@ -2118,6 +2122,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
+    bool editPdf = win->pdfAnnotationsToolbarEnabled;
+    if (editPdf && annot && !AnnotationCanBeMoved(annot->type)) {
+        SetSelectedAnnotation(tab, annot);
+        win->textDragPending = false;
+        return;
+    }
     bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type);
     if (isMoveableAnnot) {
         if (annot == tab->selectedAnnotation) {
@@ -2349,13 +2359,14 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // dragStartPending was still set from the create gesture). Using it
     // re-selected the new stamp when clicking empty page (issue #5933).
     Annotation* clickedAnnot = dm->GetAnnotationAtPos(pt, tab ? tab->selectedAnnotation : nullptr);
+    bool editPdf = win->pdfAnnotationsToolbarEnabled;
 
-    if (IsCtrlPressed() && clickedAnnot) {
+    if (!editPdf && IsCtrlPressed() && clickedAnnot) {
         ShowEditAnnotationsWindow(tab, clickedAnnot);
         return;
     }
 
-    if (clickedAnnot && tab && (tab->selectedAnnotation || tab->editAnnotsWindow)) {
+    if (clickedAnnot && tab && (editPdf || tab->selectedAnnotation || tab->editAnnotsWindow)) {
         SetSelectedAnnotation(tab, clickedAnnot);
         return;
     }
@@ -3200,6 +3211,25 @@ static void GetGradientColor(Color a, Color b, float perc, TRIVERTEX* tv) {
 // Draw a border around selected annotation
 static bool gDrawOldStyleAnnotationRect = false;
 
+static void PaintHoveredAnnotationMark(MainWindow* win, HDC hdc, DisplayModel* dm) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    Annotation* annot = win ? win->annotationUnderCursor : nullptr;
+    if (!win || !win->pdfAnnotationsToolbarEnabled || !tab || !annot || annot == tab->selectedAnnotation) {
+        return;
+    }
+    int pageNo = annot->pageNo;
+    if (!dm->PageVisible(pageNo)) {
+        return;
+    }
+    Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
+    rect.Inflate(4, 4);
+    Gdiplus::Graphics gs(hdc);
+    Gdiplus::Color blue(200, 0, 80, 200);
+    Gdiplus::Pen pen(blue, 2);
+    pen.SetDashStyle(Gdiplus::DashStyleDot);
+    gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
+}
+
 NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
     if (!tab) {
         return;
@@ -3510,6 +3540,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     }
 
     WindowTab* tab = win->CurrentTab();
+    PaintHoveredAnnotationMark(win, hdc, dm);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
     if (ShowPageGrid() && win->presentation == PM_DISABLED) {
         PaintPageGrid(dm, hdc);
@@ -3678,7 +3709,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, selected);
-    bool annotEditHover = annot && (selected || tab->editAnnotsWindow);
+    bool annotEditHover = annot && (win->pdfAnnotationsToolbarEnabled || selected || tab->editAnnotsWindow);
 
     int pageNo = 0;
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);

@@ -135,6 +135,7 @@ import { testit as issue6040 } from "./issue-6040.ts";
 import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts";
 import { testit as annotDeleteRedraw } from "./annot-delete-redraw.ts";
 import { testit as annotIconOverContents } from "./annot-icon-over-contents.ts";
+import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interaction.ts";
 import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as issue5974 } from "./issue-5974.ts";
@@ -219,6 +220,7 @@ export const tests: NamedTest[] = [
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
   ["annot-delete-redraw", annotDeleteRedraw],
   ["annot-icon-over-contents", annotIconOverContents],
+  ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],

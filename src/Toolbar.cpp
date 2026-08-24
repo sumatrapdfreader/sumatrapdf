@@ -22,6 +22,8 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "Notifications.h"
+#include "Canvas.h"
 #include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
@@ -728,6 +730,10 @@ void TogglePdfAnnotationsToolbar(MainWindow* win) {
     }
     win->pdfAnnotationsToolbarEnabled = !win->pdfAnnotationsToolbarEnabled;
     ToolbarUpdateStateForWindow(win, true);
+    if (win->pdfAnnotationsToolbarEnabled) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
+    }
+    ScheduleRepaint(win, 0);
 }
 
 // toolbar mode for this window: Fullscreen.Toolbar in fullscreen, else Toolbar
