@@ -10,10 +10,12 @@ import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
+  captureWindowDCRegionPixels,
   clientToScreen,
   enumChildWindows,
   enumWindows,
   getClassName,
+  getClientRect,
   getWindowPid,
   getWindowRect,
   getWindowText,
@@ -25,7 +27,7 @@ import {
   sleep,
   SW_MAXIMIZE,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
+import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 const HELP_TITLE = "SumatraPDF Documentation";
 
@@ -74,6 +76,42 @@ function nearBlackFraction(pixels: Uint8Array): number {
     }
   }
   return black / (pixels.length / 4);
+}
+
+async function waitForDarkStartup(pid: number, timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() <= deadline) {
+    const help = findHelpWindow(pid);
+    if (!help || !isWindowVisible(help)) {
+      await sleep(1);
+      continue;
+    }
+
+    const client = getClientRect(help);
+    const origin = clientToScreen(help, 0, 0);
+    const window = getWindowRect(help);
+    const sampleDx = Math.min(100, client.right - client.left);
+    const sampleDy = Math.min(60, client.bottom - client.top);
+    const x = origin.x - window.left + Math.max(0, client.right - sampleDx - 20);
+    const y = origin.y - window.top + Math.max(0, client.bottom - sampleDy - 20);
+    // The first DC read can precede DWM presenting the new top-level window.
+    // One frame later the prepared host must already be theme-black, even
+    // though WebView2 is still loading the Manual asynchronously.
+    await sleep(20);
+    const pixels = captureWindowDCRegionPixels(help, x, y, sampleDx, sampleDy);
+    if (!pixels) {
+      throw new Error("issue-6045: failed to read the Manual startup background");
+    }
+    const fraction = nearBlackFraction(pixels);
+    if (fraction < 0.98) {
+      const firstPixel = `${pixels[2]},${pixels[1]},${pixels[0]}`;
+      throw new Error(
+        `issue-6045: startup Manual background was only ${(fraction * 100).toFixed(1)}% theme black (first RGB ${firstPixel})`,
+      );
+    }
+    return true;
+  }
+  return false;
 }
 
 function captureWebViewRegion(
@@ -163,7 +201,11 @@ export async function testit(): Promise<void> {
 
   const { proc, client, frame } = await launchControlled(["-appdata", appdata], { defaultWindowPos: true });
   try {
-    sendCommandSync(frame, cmdId("CmdHelpOpenManual"));
+    sendCommand(frame, cmdId("CmdHelpOpenManual"));
+    if (!(await waitForDarkStartup(proc.pid!, 15000))) {
+      console.log("SKIP issue-6045: Help: Manual window did not open (WebView2 missing?)");
+      return;
+    }
     const windows = await waitForHelpWebView(proc.pid!, 15000);
     if (!windows) {
       console.log("SKIP issue-6045: Help: Manual window did not open (WebView2 missing?)");
