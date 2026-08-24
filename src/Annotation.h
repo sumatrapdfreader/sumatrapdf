@@ -95,6 +95,8 @@ struct AnnotCreateArgs {
     const Vec<PointF>* polyLinePoints = nullptr;
     bool hasRect = false;
     RectF rect;
+    const Vec<int>* inkStrokeCounts = nullptr;
+    const Vec<PointF>* inkPoints = nullptr;
 };
 
 int PageNo(Annotation*);

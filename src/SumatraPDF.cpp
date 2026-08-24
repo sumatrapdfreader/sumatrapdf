@@ -5002,6 +5002,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     CancelLineAnnotationPlacement(win);
     CancelPolyLineAnnotationPlacement(win);
     CancelShapeAnnotationPlacement(win);
+    CancelInkAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
     // leave the hidden placement dialog aimed at a dead model
     CloseSignDocumentDialog(win);
@@ -8891,6 +8892,10 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
         return true;
     }
 
+    if (IsPlacingInkAnnotation(win) && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed() && key == VK_RETURN) {
+        return FinishInkAnnotationPlacement(win);
+    }
+
     if (IsPlacingPolyLineAnnotation(win) && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed() &&
         (key == VK_SPACE || key == VK_RETURN)) {
         return FinishPolyLineAnnotationPlacement(win);
@@ -9012,6 +9017,9 @@ static void OnFrameKeyEsc(MainWindow* win) {
         return;
     }
     if (CancelShapeAnnotationPlacement(win)) {
+        return;
+    }
+    if (CancelInkAnnotationPlacement(win)) {
         return;
     }
     if (CancelPlacingSignature(win)) {
@@ -10801,6 +10809,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     bool isLineAnnotationPlacement = HIWORD(wp) == kLineAnnotationPlacementCommandCode;
     bool isPolyLineAnnotationPlacement = HIWORD(wp) == kPolyLineAnnotationPlacementCommandCode;
     bool isShapeAnnotationPlacement = HIWORD(wp) == kShapeAnnotationPlacementCommandCode;
+    bool isInkAnnotationPlacement = HIWORD(wp) == kInkAnnotationPlacementCommandCode;
     bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
@@ -12426,6 +12435,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             [[fallthrough]];
         case CmdCreateAnnotInk:
+            if (annotType == AnnotationType::Ink && !isInkAnnotationPlacement && lp == 0) {
+                StartInkAnnotationPlacement(win, invokedCmdId);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotRedact:
             [[fallthrough]];
@@ -12444,7 +12457,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             int pageNoUnderCursor = -1;
             PointF ptOnPage;
             PointF lineEndOnPage;
-            if (isShapeAnnotationPlacement) {
+            if (isInkAnnotationPlacement) {
+                if (annotType != AnnotationType::Ink || !IsPlacingInkAnnotation(win) ||
+                    len(win->inkAnnotationPlacementPoints) == 0 || len(win->inkAnnotationPlacementStrokeCounts) == 0) {
+                    return 0;
+                }
+                pageNoUnderCursor = win->inkAnnotationPlacementPageNo;
+                if (!dm->ValidPageNo(pageNoUnderCursor)) {
+                    return 0;
+                }
+                ptOnPage = win->inkAnnotationPlacementPoints[0];
+                pt = dm->CvtToScreen(pageNoUnderCursor, win->inkAnnotationPlacementPoints.Last());
+            } else if (isShapeAnnotationPlacement) {
                 bool validType = annotType == AnnotationType::Square || annotType == AnnotationType::Circle;
                 if (!validType || !IsPlacingShapeAnnotation(win)) {
                     return 0;
@@ -12496,7 +12520,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             AnnotCreateArgs args{annotType};
             SetAnnotCreateArgs(args, cmd);
-            if (isShapeAnnotationPlacement) {
+            if (isInkAnnotationPlacement) {
+                args.inkStrokeCounts = &win->inkAnnotationPlacementStrokeCounts;
+                args.inkPoints = &win->inkAnnotationPlacementPoints;
+            } else if (isShapeAnnotationPlacement) {
                 args.hasRect = true;
                 args.rect = win->shapeAnnotationPlacementRect;
             } else if (isLineAnnotationPlacement) {

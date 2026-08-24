@@ -785,11 +785,14 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         }
     }
 
-    // Enter and Space normally scroll via accelerators. During polyline
-    // placement they finish the path, so let FrameOnKeydown receive them.
+    // Enter and Space normally scroll via accelerators. During polyline or Ink
+    // placement they finish the annotation, so let FrameOnKeydown receive them.
     if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
         WPARAM key = msg.wParam;
-        if ((key == VK_RETURN || key == VK_SPACE) && IsPlacingPolyLineAnnotation(FindMainWindowByHwnd(msg.hwnd))) {
+        MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
+        bool finishPolyLine = (key == VK_RETURN || key == VK_SPACE) && IsPlacingPolyLineAnnotation(win);
+        bool finishInk = key == VK_RETURN && IsPlacingInkAnnotation(win);
+        if (finishPolyLine || finishInk) {
             return false;
         }
     }
@@ -3108,6 +3111,7 @@ Exit:
     DeleteCachedCursors();
     DeleteLaserPointerCursor();
     DeleteTextAnnotationPlacementCursor();
+    DeleteInkAnnotationPlacementCursor();
     DeleteCreatedFonts();
     DeleteBitmap(gBitmapReloadingCue);
     // all frame/canvas windows are destroyed by now

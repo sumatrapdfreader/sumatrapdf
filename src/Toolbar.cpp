@@ -729,6 +729,9 @@ void TogglePdfAnnotationsToolbar(MainWindow* win) {
     if (!ctx.isPdf || !ctx.supportsAnnots) {
         return;
     }
+    if (win->pdfAnnotationsToolbarEnabled) {
+        FinishInkAnnotationPlacement(win);
+    }
     win->pdfAnnotationsToolbarEnabled = !win->pdfAnnotationsToolbarEnabled;
     ToolbarUpdateStateForWindow(win, true);
     if (win->pdfAnnotationsToolbarEnabled) {

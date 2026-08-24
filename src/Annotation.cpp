@@ -1529,6 +1529,26 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             polyLinePoints.Append({point.x, point.y});
         }
     }
+    Vec<int> inkStrokeCounts;
+    Vec<fz_point> inkPoints;
+    bool hasInkList = args->inkStrokeCounts && args->inkPoints && len(*args->inkStrokeCounts) > 0;
+    int nInkPoints = 0;
+    if (hasInkList) {
+        for (int count : *args->inkStrokeCounts) {
+            if (count <= 0) {
+                hasInkList = false;
+                break;
+            }
+            inkStrokeCounts.Append(count);
+            nInkPoints += count;
+        }
+        hasInkList = hasInkList && nInkPoints == len(*args->inkPoints);
+        if (hasInkList) {
+            for (PointF point : *args->inkPoints) {
+                inkPoints.Append({point.x, point.y});
+            }
+        }
+    }
     {
         ScopedRecursiveMutex cs(&epdf->docLock);
 
@@ -1651,12 +1671,16 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     }
                 } break;
                 case AnnotationType::Ink: {
-                    fz_point points[] = {
-                        {pos.x, pos.y + 30},      {pos.x + 15, pos.y + 5},  {pos.x + 30, pos.y + 45},
-                        {pos.x + 48, pos.y + 10}, {pos.x + 65, pos.y + 40}, {pos.x + 85, pos.y + 15},
-                    };
-                    int count = dimof(points);
-                    pdf_set_annot_ink_list(ctx, annot, 1, &count, points);
+                    if (hasInkList) {
+                        pdf_set_annot_ink_list(ctx, annot, len(inkStrokeCounts), inkStrokeCounts.els, inkPoints.els);
+                    } else {
+                        fz_point points[] = {
+                            {pos.x, pos.y + 30},      {pos.x + 15, pos.y + 5},  {pos.x + 30, pos.y + 45},
+                            {pos.x + 48, pos.y + 10}, {pos.x + 65, pos.y + 40}, {pos.x + 85, pos.y + 15},
+                        };
+                        int count = dimof(points);
+                        pdf_set_annot_ink_list(ctx, annot, 1, &count, points);
+                    }
                 } break;
                 case AnnotationType::Redact: {
                     fz_rect rect{pos.x, pos.y, pos.x + 100, pos.y + 50};

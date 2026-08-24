@@ -459,6 +459,11 @@ struct MainWindow {
     bool shapeAnnotationPlacementMouseDown = false;
     bool shapeAnnotationPlacementDidDrag = false;
     bool shapeAnnotationPlacementConstrain = false;
+    int inkAnnotationPlacementCmdId = 0;
+    int inkAnnotationPlacementPageNo = -1;
+    Vec<int> inkAnnotationPlacementStrokeCounts;
+    Vec<PointF> inkAnnotationPlacementPoints;
+    bool inkAnnotationPlacementMouseDown = false;
     // overlay toolbar mode: the toolbar floats over the page (doesn't reserve
     // space) and is only revealed when the mouse is near the top
     bool isToolbarOverlay = false;
