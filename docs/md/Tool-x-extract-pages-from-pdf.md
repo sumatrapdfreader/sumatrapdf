@@ -18,6 +18,9 @@ Or:
 - right-click for context menu
 - `Document` > `Extract Pages From PDF`
 
+Enter the page range to consider. Select **Only with annotations** to extract
+only annotated pages within that range; use `1-N` to consider the whole PDF.
+
 ## From command-line
 
 To extract pages from a PDF using SumatraPDF on a command line:

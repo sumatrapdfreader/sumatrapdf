@@ -18,6 +18,7 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "Annotation.h"
 #include "PdfCreator.h"
 #include "ImageReader.h"
 #include "PngOptimizer.h"
@@ -604,6 +605,7 @@ struct PdfDeletePageDialog : PdfToolDialog {
     bool isExtract = false;
     int pageCount = 0;
     Edit* pagesEdit = nullptr;
+    Checkbox* onlyWithAnnotations = nullptr;
 
     bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
@@ -751,6 +753,30 @@ static TempStr FormatPageRangeTemp(const Vec<int>& pages) {
     return ToStrTemp(s);
 }
 
+static bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages) {
+    Vec<Annotation*> annotations;
+    if (!EngineGetAnnotations(engine, annotations)) {
+        return false;
+    }
+
+    Vec<int> annotationPages;
+    for (Annotation* annotation : annotations) {
+        int pageNo = PageNo(annotation);
+        if (!annotationPages.Contains(pageNo)) {
+            annotationPages.Append(pageNo);
+        }
+    }
+
+    Vec<int> filteredPages;
+    for (int pageNo : pages) {
+        if (annotationPages.Contains(pageNo)) {
+            filteredPages.Append(pageNo);
+        }
+    }
+    pages = filteredPages;
+    return true;
+}
+
 void PdfDeletePageDialog::UpdateButton() {
     TempStr pages = pagesEdit->GetTextTemp();
     Vec<int> parsedPages;
@@ -782,6 +808,20 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
+    WindowTab* sourceTab = isExtract ? FindTabByFile(srcPath, win) : nullptr;
+    EngineBase* sourceEngine = sourceTab ? sourceTab->GetEngine() : nullptr;
+    if (isExtract && onlyWithAnnotations && onlyWithAnnotations->IsChecked()) {
+        if (!sourceEngine || !KeepOnlyPagesWithAnnotations(sourceEngine, parsedPages)) {
+            MessageBoxWarning(hwnd, StrL("Failed to read annotations from PDF file."), _TRA("Extract Pages From PDF"));
+            return;
+        }
+        if (len(parsedPages) == 0) {
+            MessageBoxWarning(hwnd, StrL("No pages with annotations in the selected range."),
+                              _TRA("Extract Pages From PDF"));
+            return;
+        }
+    }
+
     TempStr pageRange;
     if (isExtract) {
         // for extract: pass the specified pages directly to pdfclean
@@ -795,17 +835,31 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op, pages, srcPath, destPath,
          pageRange);
 
+    Str inputPath = srcPath;
+    TempStr tmpPath;
+    if (isExtract && sourceEngine && EngineHasUnsavedAnnotations(sourceEngine)) {
+        tmpPath = GetTempFilePathTemp(StrL("extract-pages"));
+        if (!tmpPath || !EngineMupdfSaveCopy(sourceEngine, tmpPath)) {
+            MessageBoxWarning(hwnd, StrL("Failed to extract pages from PDF file."), _TRA("Extract Pages From PDF"));
+            return;
+        }
+        inputPath = tmpPath;
+    }
+
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input.pdf output.pdf <page-range>
     // use the same compression flags as Compress PDF so the result is re-written
     // compactly; otherwise the kept pages drag along the original's full content
     // and the output is nearly as big as the source
-    char* argv[] = {(char*)"clean",    (char*)"-gggg",     (char*)"-e",        (char*)"100",
-                    (char*)"-f",       (char*)"-i",        (char*)"-t",        (char*)"-Z",
-                    CStrTemp(srcPath), CStrTemp(destPath), CStrTemp(pageRange)};
+    char* argv[] = {(char*)"clean",      (char*)"-gggg",     (char*)"-e",        (char*)"100",
+                    (char*)"-f",         (char*)"-i",        (char*)"-t",        (char*)"-Z",
+                    CStrTemp(inputPath), CStrTemp(destPath), CStrTemp(pageRange)};
     int argc = 11;
 
     fz_set_optind(0);
     int res = pdfclean_main(argc, argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfDeletePageDoIt: %s pages successfully\n", op);
         MainWindow* w = win;
@@ -841,6 +895,18 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     // "of N" after the edit
     lastRow->AddChild(new Spacer(gap, 0));
     lastRow->AddChild(NewVirtText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
+
+    if (isExtract) {
+        Checkbox::CreateArgs args;
+        args.parent = hwnd;
+        args.text = _TRA("Only with annotations");
+        args.font = font;
+        args.isRtl = IsUIRtl();
+        onlyWithAnnotations = new Checkbox();
+        onlyWithAnnotations->Create(args);
+        onlyWithAnnotations->SetColors(ThemeWindowTextColor(), DarkModeDialogBgColor());
+        AddRow()->AddChild(onlyWithAnnotations);
+    }
 
     Str actionText = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
     AddButtonsRow(actionText, StrL("Syntax: 2,5-7,13-"));

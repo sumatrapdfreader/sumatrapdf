@@ -5,6 +5,7 @@
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 - PDF documents have an **Edit PDF** toggle at the end of the standard toolbar. It opens a second row of SVG annotation tools for highlight, underline, squiggly, strike out, text, free text, lines, shapes, ink, redaction, stamps, carets, and file attachments; text-markup tools are enabled only while text is selected
+- **Extract Pages From PDF** has an **Only with annotations** option that filters the selected page range to pages containing annotations (fixes #6046)
 - Polygon, polyline, and ink annotations can be moved by dragging them, like other shape annotations
 - SelectionHandlers `${selection}` in a `URL` percent-encodes reserved characters (`?`, `"`, `&`, `#`, …) so they stay part of the value instead of starting a new query or cutting the string (discussion #6029)
 - SelectionHandlers `URL`, `Exe` and POST `Body` accept `${selectionPosition}`: the current selection's bounding box in screen pixels as `x,y,dx,dy`, so a helper can place itself next to the selection (discussion #6015)
