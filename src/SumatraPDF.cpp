@@ -5522,15 +5522,28 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
     return true;
 }
 
+// After a message pump, a nested DDE CloseAllTabs / CloseWindow may have
+// already removed this tab. GetTabIdx does not dereference `tab`, so a freed
+// pointer just comes back as -1. Do not delete it again.
+static bool TabStillInWindow(MainWindow* win, WindowTab* tab) {
+    return IsMainWindowValid(win) && !win->isBeingClosed && win->GetTabIdx(tab) >= 0;
+}
+
 void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (!tab) {
         return;
     }
     MainWindow* win = tab->win;
+    if (!TabStillInWindow(win, tab)) {
+        return;
+    }
     logf("CloseTab: tab: 0x%p win: 0x%p, hwndFrame: 0x%x, quitIfLast: %d, dm: 0x%p\n", tab, win, win->hwndFrame,
          (int)quitIfLast, tab->AsFixed());
 
     AbortFinding(win, true);
+    if (!TabStillInWindow(win, tab)) {
+        return;
+    }
     // Dismiss find UI when closing the active tab so floating results from that
     // document cannot be clicked after a different tab is shown (issue #5807).
     // Tab switches already call HideFindBar via SaveCurrentWindowTab.
@@ -5539,6 +5552,9 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (tab == win->CurrentTab()) {
         HideFindBar(win);
         HideSelectionToolbar(win);
+        if (!TabStillInWindow(win, tab)) {
+            return;
+        }
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
@@ -5556,7 +5572,9 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     // During message pumping, the window might be destroyed
     // (e.g., WM_DESTROY from a plugin host). If so, everything
     // is already cleaned up by the reentrant CloseWindow().
-    if (!IsMainWindowValid(win)) {
+    // Nested DDE CloseAllTabs can also remove this tab without destroying win
+    // (last window, quitIfLast=false clears isBeingClosed after TabsOnCloseWindow).
+    if (!TabStillInWindow(win, tab)) {
         return;
     }
 
@@ -5564,6 +5582,9 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     // StopReadAloudIfSourceTab) also drops the pointers to this tab held by the
     // playback bar and the session, which is about to be a dangling one
     ResetReadAloudStateForTab(tab);
+    if (!TabStillInWindow(win, tab)) {
+        return;
+    }
 
     int tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
@@ -5573,6 +5594,11 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         }
     } else {
         ReportIf(gPluginMode && !gWindows.Contains(win));
+        // RemoveTab no-ops if a nested close already unlinked this tab; do not
+        // delete a tab we no longer own.
+        if (win->GetTabIdx(tab) < 0) {
+            return;
+        }
         RemoveTab(tab);
         // RemoveTab -> LoadModelIntoTab can pump messages, potentially destroying win
         // and its cbHandler. Since tab was already removed from win's tab list,
@@ -11160,9 +11186,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (cmdId == CmdCloseTabsToTheLeft) {
                 toClose = toCloseLeft;
             }
-            for (WindowTab* t : toClose) {
-                CloseTab(t, false);
-            }
+            CloseCollectedTabs(win, toClose);
         } break;
 
         case CmdExit:

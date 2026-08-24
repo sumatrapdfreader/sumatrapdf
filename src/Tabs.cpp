@@ -151,10 +151,20 @@ void UpdateTabWidth(MainWindow* win) {
 }
 
 void RemoveTab(WindowTab* tab) {
-    UpdateTabFileDisplayStateForTab(tab);
+    if (!tab) {
+        return;
+    }
     MainWindow* win = tab->win;
-    win->tabSelectionHistory->Remove(tab);
+    if (!win || !win->tabsCtrl) {
+        return;
+    }
     int idx = win->GetTabIdx(tab);
+    if (idx < 0) {
+        // nested close already took this tab out of the strip (DDE CloseAllTabs)
+        return;
+    }
+    UpdateTabFileDisplayStateForTab(tab);
+    win->tabSelectionHistory->Remove(tab);
     WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     ReportIf(tab != tab2);
     bool closedCurrentTab = (tab == win->CurrentTab());
@@ -434,7 +444,39 @@ void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& to
     }
 }
 
+void CloseCollectedTabs(MainWindow* win, const Vec<WindowTab*>& toClose) {
+    // CloseTab can pump (DDE, SaveSettings, dialogs). A nested close may have
+    // already freed some of these pointers; GetTabIdx is pointer identity and
+    // does not dereference a freed WindowTab.
+    if (!win) {
+        return;
+    }
+    for (WindowTab* t : toClose) {
+        if (!IsMainWindowValid(win) || win->isBeingClosed) {
+            return;
+        }
+        if (win->GetTabIdx(t) < 0) {
+            continue;
+        }
+        CloseTab(t, false);
+    }
+}
+
 void CloseAllTabs(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    if (win->isBeingClosed || win->inCloseAllTabs) {
+        logf("CloseAllTabs: skip isBeingClosed=%d inCloseAllTabs=%d\n", (int)win->isBeingClosed,
+             (int)win->inCloseAllTabs);
+        return;
+    }
+    win->inCloseAllTabs = true;
+    defer {
+        if (IsMainWindowValid(win)) {
+            win->inCloseAllTabs = false;
+        }
+    };
     // can't close while iterating over the tabs so collect them first
     Vec<WindowTab*> toClose;
     int nTabs = win->TabCount();
@@ -445,9 +487,7 @@ void CloseAllTabs(MainWindow* win) {
         }
         toClose.Append(t);
     }
-    for (WindowTab* t : toClose) {
-        CloseTab(t, false);
-    }
+    CloseCollectedTabs(win, toClose);
 }
 
 // TODO: add "Move to another window" sub-menu
@@ -521,21 +561,15 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
             return;
         }
         case CmdCloseOtherTabs: {
-            for (WindowTab* t : toCloseOther) {
-                CloseTab(t, false);
-            }
+            CloseCollectedTabs(win, toCloseOther);
             return;
         }
         case CmdCloseTabsToTheRight: {
-            for (WindowTab* t : toCloseRight) {
-                CloseTab(t, false);
-            }
+            CloseCollectedTabs(win, toCloseRight);
             return;
         }
         case CmdCloseTabsToTheLeft: {
-            for (WindowTab* t : toCloseLeft) {
-                CloseTab(t, false);
-            }
+            CloseCollectedTabs(win, toCloseLeft);
             return;
         }
         case CmdShowInFolder: {

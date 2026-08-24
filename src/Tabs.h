@@ -23,4 +23,5 @@ TempStr MakeTabTooltipTemp(Str path, bool dirty = false);
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft);
 void CloseAllTabs(MainWindow*);
+void CloseCollectedTabs(MainWindow* win, const Vec<WindowTab*>& toClose);
 void MoveTab(MainWindow* win, int dir);

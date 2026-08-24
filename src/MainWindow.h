@@ -638,6 +638,8 @@ struct MainWindow {
     // processing commands while closing (e.g. reentrancy
     // via modal dialogs pumping messages)
     bool isBeingClosed = false;
+    // CloseAllTabs is already on the stack (nested DDE CmdCloseAllTabs)
+    bool inCloseAllTabs = false;
 
     SumatraUIAutomationProvider* uiaProvider = nullptr;
 

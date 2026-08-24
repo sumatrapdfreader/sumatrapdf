@@ -1048,8 +1048,16 @@ void TabsCtrl::SetTabDirty(int idx, bool dirty) {
 
 // returns userData because it's not owned by TabsCtrl
 UINT_PTR TabsCtrl::RemoveTab(int idx) {
-    ReportIf(idx < 0);
-    ReportIf(idx >= TabCount());
+    // GetTabIdx's "not found" is -1; a nested DDE CloseAllTabs / CloseWindow can
+    // remove the tab before the outer CloseTab resumes. Do not index tabs[-1].
+    if (idx < 0 || idx >= TabCount()) {
+        if (idx < -1) {
+            ReportIf(true);
+        } else {
+            logf("TabsCtrl::RemoveTab: out-of-range idx=%d (tabs=%d)\n", idx, TabCount());
+        }
+        return 0;
+    }
     int selectedTab = selectedIdx;
     TabInfo* tab = tabs[idx];
     UINT_PTR userData = tab->userData;
