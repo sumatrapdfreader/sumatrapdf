@@ -71,6 +71,14 @@ function parseToolbarCmds(raw: string): number[] {
   return cmds;
 }
 
+function parseToolbarSvgIconCount(raw: string): number {
+  const m = /^svgIcons=(\d+)$/m.exec(raw);
+  if (!m) {
+    throw new Error(`issue-6015: no svgIcons= in:\n${raw}`);
+  }
+  return +m[1]!;
+}
+
 function parseExpanded(raw: string): string {
   const m = /^expanded=(.*)$/m.exec(raw);
   if (!m) {
@@ -152,6 +160,9 @@ export async function testit(): Promise<void> {
       if (copyAt >= hlAt) {
         throw new Error(`issue-6015: default layout should list Copy before Highlight:\n${dump}`);
       }
+      if (parseToolbarSvgIconCount(dump) !== 5) {
+        throw new Error(`issue-6015: expected icons for all 5 annotation buttons:\n${dump}`);
+      }
     } finally {
       c0.close();
       await killAndWait(p0);
@@ -180,6 +191,9 @@ export async function testit(): Promise<void> {
       }
       if (cmds.length !== 2) {
         throw new Error(`issue-6015: custom layout should have exactly 2 buttons, got ${cmds.length}:\n${dump}`);
+      }
+      if (parseToolbarSvgIconCount(dump) !== 1) {
+        throw new Error(`issue-6015: expected an icon for Underline but not Copy:\n${dump}`);
       }
     } finally {
       c1.close();

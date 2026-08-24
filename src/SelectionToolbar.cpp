@@ -44,17 +44,17 @@
 
 struct SelectionToolbarButton {
     int cmdId = 0;
-    Str label; // English literal, translated via _TRA at layout/paint time
-    // a selection handler's SelectToolbarNameOrSvg: user text shown as-is, or an
-    // svg icon drawn instead of the text. Only one of them is set
+    Str label; // English literal, translated for button text or an icon tooltip
+    // A selection handler's SelectToolbarNameOrSvg can also supply user text or
+    // an SVG icon. Only one of userLabel and svgIcon is set.
     Str userLabel;
     Str svgIcon;
     Pixmap* icon = nullptr; // svgIcon rendered at the current size; not owned
+    Pixmap* iconDisabled = nullptr;
     bool enabled = true;
 };
 
-// what to draw for a button that isn't an icon
-static Str ButtonText(const SelectionToolbarButton& b) {
+static Str ButtonLabel(const SelectionToolbarButton& b) {
     if (b.userLabel) {
         return b.userLabel;
     }
@@ -80,11 +80,11 @@ static const SelectionToolbarButton gCandidateButtons[] = {
     {CmdCopySelection, _TRN("Copy")},
     {CmdTranslateSelection, StrL("Translate")},
     {CmdReadAloudSelection, StrL("Read Aloud")},
-    {CmdCreateAnnotHighlight, StrL("Highlight")},
-    {CmdCreateAnnotUnderline, StrL("Underline")},
-    {CmdCreateAnnotSquiggly, StrL("Squiggly")},
-    {CmdCreateAnnotStrikeOut, StrL("Strike Out")},
-    {CmdCreateAnnotText, StrL("Text")},
+    {CmdCreateAnnotHighlight, StrL("Highlight"), {}, Str(gIconAnnotHighlight)},
+    {CmdCreateAnnotUnderline, StrL("Underline"), {}, Str(gIconAnnotUnderline)},
+    {CmdCreateAnnotSquiggly, StrL("Squiggly"), {}, Str(gIconAnnotSquiggly)},
+    {CmdCreateAnnotStrikeOut, StrL("Strike Out"), {}, Str(gIconAnnotStrikeOut)},
+    {CmdCreateAnnotText, StrL("Text"), {}, Str(gIconAnnotText)},
 };
 
 static const SelectionToolbarButton* FindCandidateButton(int cmdId) {
@@ -199,9 +199,15 @@ TempStr SelectionToolbarLayoutDumpTemp() {
     CollectBuiltInSelectionToolbarCmds(ids);
     str::Builder out;
     out.Append(fmt("n=%d\n", len(ids)));
+    int nSvgIcons = 0;
     for (int i = 0; i < len(ids); i++) {
         out.Append(fmt("cmd=%d\n", ids[i]));
+        const SelectionToolbarButton* b = FindCandidateButton(ids[i]);
+        if (b && b->svgIcon) {
+            nSvgIcons++;
+        }
     }
+    out.Append(fmt("svgIcons=%d\n", nSvgIcons));
     return ToStrTemp(out);
 }
 
@@ -276,12 +282,14 @@ static Color SelBarHoverBg(Color bg) {
 
 static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
     Color fgCol = SelBarTextColor();
+    Color disabledCol = SelBarMutedTextColor();
     Color bgCol = SelBarBg();
     for (SelectionToolbarButton& b : tb->buttons) {
         if (!b.svgIcon) {
             continue;
         }
         b.icon = GetCachedPixmapForSvg(b.svgIcon, size, size, fgCol, bgCol);
+        b.iconDisabled = GetCachedPixmapForSvg(b.svgIcon, size, size, disabledCol, bgCol);
     }
 }
 
@@ -368,12 +376,14 @@ static void LayoutToolbar(SelectionToolbar* tb) {
         if (b.svgIcon) {
             auto* ib = new SelToolbarIconButton();
             ib->pixmap = b.icon;
+            ib->pixmapDisabled = b.iconDisabled;
             ib->sideLen = rowDy;
             ib->hoverBg = hoverBg;
+            ib->SetTooltip(ButtonLabel(b));
             ib->onClick = MkFunc1(OnSelToolbarButtonClicked, tb);
             w = ib;
         } else {
-            auto* tbtn = new SelToolbarTextButton(ButtonText(b), tb->font);
+            auto* tbtn = new SelToolbarTextButton(ButtonLabel(b), tb->font);
             tbtn->textPadding = {padY, padX, padY, padX};
             tbtn->SetColor(kColBtnText, textCol);
             tbtn->SetColor(kColBtnTextDisabled, mutedCol);
