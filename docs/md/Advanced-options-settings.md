@@ -359,9 +359,10 @@ UseTabs = true
 SelectionToolbar = true
 
 ; which built-in buttons the selection toolbar has and in what order, e.g.
-; CmdCopySelection CmdCreateAnnotHighlight. Leave a button out to hide it. Empty
-; (the default) is the standard set. SelectionHandlers with
-; SelectToolbarNameOrSvg still come last (introduced in version 3.7)
+; CmdCopySelection | CmdCreateAnnotHighlight. | or Separator inserts a
+; separator. Leave a button out to hide it. Empty (the default) is the standard
+; set. SelectionHandlers with SelectToolbarNameOrSvg still come last (introduced
+; in version 3.7)
 SelectionToolbarLayout = 
 
 ; if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently
@@ -890,7 +891,8 @@ SelectionHandlers [
 
     ; if set, the handler also gets a button on the floating selection toolbar.
     ; The value is the button's text, or, if it starts with '<svg', an icon to
-    ; draw instead (introduced in version 3.7)
+    ; draw instead. SVG buttons use Name as their tooltip and ToolbarSize as
+    ; their icon size (introduced in version 3.7)
     SelectToolbarNameOrSvg =
 
     ; if set, the handler also gets a button on the main toolbar with this label

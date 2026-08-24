@@ -27,5 +27,6 @@ void UpdateToolbarAfterThemeChange(MainWindow*);
 Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
 void ToolbarNoteDropdownClosed();
 void TogglePdfAnnotationsToolbar(MainWindow*);
+int ToolbarIconSize();
 
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut);

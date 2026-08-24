@@ -33,6 +33,7 @@
 #include "Translations.h"
 #include "Theme.h"
 #include "SvgIcons.h"
+#include "Toolbar.h"
 #include "SelectionToolbar.h"
 
 // A small floating toolbar shown under/over a finished text selection with
@@ -46,7 +47,7 @@ struct SelectionToolbarButton {
     int cmdId = 0;
     Str label; // English literal, translated for button text or an icon tooltip
     // A selection handler's SelectToolbarNameOrSvg can also supply user text or
-    // an SVG icon. Only one of userLabel and svgIcon is set.
+    // an SVG icon. For an icon, userLabel is its Name-based tooltip.
     Str userLabel;
     Str svgIcon;
     Pixmap* icon = nullptr; // svgIcon rendered at the current size; not owned
@@ -118,10 +119,15 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
     normalized = str::ReplaceTemp(normalized, StrL(";"), StrL(" "));
     StrVec names;
     Split(&names, normalized, StrL(" "), true);
+    int nButtons = 0;
     for (Str name : names) {
         Str tok = name;
         str::TrimWSInPlace(tok, str::TrimOpt::Both);
-        if (!tok || str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
+        if (!tok) {
+            continue;
+        }
+        if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
+            out.Append(0);
             continue;
         }
         const SelectionToolbarButton* found = FindCandidateButton(GetCommandIdByName(tok));
@@ -138,10 +144,12 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
         }
         if (!already) {
             out.Append(found->cmdId);
+            nButtons++;
         }
     }
-    if (len(out) == 0) {
+    if (nButtons == 0) {
         logf("SelectionToolbarLayout: nothing usable in '%s', using the standard layout\n", setting);
+        out.Reset();
         addDefault();
     }
 }
@@ -163,6 +171,7 @@ static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommand
         b.cmdId = cmd->id;
         if (str::StartsWithI(s, StrL("<svg"))) {
             b.svgIcon = s;
+            b.userLabel = cmd->name;
         } else {
             b.userLabel = s;
         }
@@ -171,12 +180,37 @@ static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommand
     }
 }
 
+// Remove separators that would be leading, trailing, or adjacent after
+// unavailable commands have been dropped. A trailing layout separator is
+// retained when a selection-handler button follows it.
+static void NormalizeSelectionToolbarSeparators(Vec<SelectionToolbarButton>& buttons) {
+    int dst = 0;
+    bool separatorPending = false;
+    for (int i = 0; i < len(buttons); i++) {
+        SelectionToolbarButton b = buttons[i];
+        if (b.cmdId == 0) {
+            separatorPending = dst > 0;
+            continue;
+        }
+        if (separatorPending) {
+            buttons[dst++] = {};
+            separatorPending = false;
+        }
+        buttons[dst++] = b;
+    }
+    buttons.len = dst;
+}
+
 static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
     AppCommandCtx ctx = NewAppCommandCtx(win);
     tb->buttons.Reset();
     Vec<int> ids;
     CollectBuiltInSelectionToolbarCmds(ids);
     for (int i = 0; i < len(ids); i++) {
+        if (ids[i] == 0) {
+            tb->buttons.Append({});
+            continue;
+        }
         const SelectionToolbarButton* cand = FindCandidateButton(ids[i]);
         if (!cand) {
             continue;
@@ -190,25 +224,7 @@ static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
         tb->buttons.Append(b);
     }
     AppendSelectionHandlerButtons(tb, ctx);
-}
-
-// cmd ids of the built-in buttons SelectionToolbarLayout would show, before
-// per-window visibility (for -dbg-control tests, discussion #6015).
-TempStr SelectionToolbarLayoutDumpTemp() {
-    Vec<int> ids;
-    CollectBuiltInSelectionToolbarCmds(ids);
-    str::Builder out;
-    out.Append(fmt("n=%d\n", len(ids)));
-    int nSvgIcons = 0;
-    for (int i = 0; i < len(ids); i++) {
-        out.Append(fmt("cmd=%d\n", ids[i]));
-        const SelectionToolbarButton* b = FindCandidateButton(ids[i]);
-        if (b && b->svgIcon) {
-            nSvgIcons++;
-        }
-    }
-    out.Append(fmt("svgIcons=%d\n", nSvgIcons));
-    return ToStrTemp(out);
+    NormalizeSelectionToolbarSeparators(tb->buttons);
 }
 
 constexpr int kBtnPadX = 8; // horizontal padding inside a button
@@ -331,6 +347,25 @@ struct SelToolbarIconButton : VirtIconButton {
     int sideLen = 0;
 };
 
+static void PaintSelectionToolbarSeparator(VirtCustom*, VirtPaintCtx* ctx) {
+    Rect r = ctx->bounds;
+    int inset = DpiScale(5);
+    int dy = r.dy - (2 * inset);
+    if (dy <= 0) {
+        return;
+    }
+    int x = r.x + (r.dx / 2);
+    ctx->gfx->FillRect({x, r.y + inset, 1, dy}, SelBarMutedTextColor());
+}
+
+static VirtCtrl* MakeSelectionToolbarSeparator(int rowDy) {
+    auto* sep = new VirtCustom();
+    sep->idealSize = {DpiScale(8), rowDy};
+    sep->onPaint = MkFunc1(PaintSelectionToolbarSeparator, sep);
+    sep->SetFlag(vwfNoHitTest, true);
+    return sep;
+}
+
 static bool GetSelectionEndPoint(MainWindow* win, Point& out);
 
 static void OnSelToolbarButtonClicked(SelectionToolbar* tb, VirtMouseEvent* ev) {
@@ -365,15 +400,18 @@ static void LayoutToolbar(SelectionToolbar* tb) {
     Color mutedCol = SelBarMutedTextColor();
 
     int textDy = PlatformFontMeasureText(tb->font, StrL("Mg")).dy;
-    int rowDy = textDy + (2 * padY);
-    UpdateButtonIcons(tb, textDy);
+    int iconSize = ToolbarIconSize();
+    int rowDy = std::max(textDy, iconSize) + (2 * padY);
+    UpdateButtonIcons(tb, iconSize);
 
     auto* box = new HBox();
     box->alignCross = CrossAxisAlign::Stretch;
     bool isFirst = true;
     for (SelectionToolbarButton& b : tb->buttons) {
         VirtCtrl* w;
-        if (b.svgIcon) {
+        if (b.cmdId == 0) {
+            w = MakeSelectionToolbarSeparator(rowDy);
+        } else if (b.svgIcon) {
             auto* ib = new SelToolbarIconButton();
             ib->pixmap = b.icon;
             ib->pixmapDisabled = b.iconDisabled;
@@ -393,7 +431,9 @@ static void LayoutToolbar(SelectionToolbar* tb) {
             w = tbtn;
         }
         w->id = b.cmdId;
-        w->SetIsEnabled(b.enabled);
+        if (b.cmdId != 0) {
+            w->SetIsEnabled(b.enabled);
+        }
         ILayout* child = w;
         if (!isFirst) {
             child = new Padding(w, Insets{0, 0, 0, gap});
@@ -521,6 +561,49 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
     tb->font = GetScaledPlatformFont(GetAppFont(), kToolbarFontPct);
     win->selectionToolbar = tb;
     return tb;
+}
+
+// Parsed and laid-out selection toolbar state for -dbg-control tests.
+TempStr SelectionToolbarLayoutDumpTemp() {
+    Vec<int> ids;
+    CollectBuiltInSelectionToolbarCmds(ids);
+    str::Builder out;
+    out.Append(fmt("n=%d\n", len(ids)));
+    int nSvgIcons = 0;
+    for (int i = 0; i < len(ids); i++) {
+        out.Append(fmt("cmd=%d\n", ids[i]));
+        const SelectionToolbarButton* b = FindCandidateButton(ids[i]);
+        if (b && b->svgIcon) {
+            nSvgIcons++;
+        }
+    }
+    out.Append(fmt("svgIcons=%d\n", nSvgIcons));
+
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    SelectionToolbar* tb = win ? GetOrCreateToolbar(win) : nullptr;
+    if (!tb) {
+        out.Append(StrL("buttons=0\n"));
+        return ToStrTemp(out);
+    }
+    InitButtons(tb, win);
+    LayoutToolbar(tb);
+    int nSeparators = 0;
+    for (const SelectionToolbarButton& b : tb->buttons) {
+        if (b.cmdId == 0) {
+            nSeparators++;
+        }
+    }
+    out.Append(fmt("buttons=%d separators=%d toolbarSize=%d,%d mainIconSize=%d\n", len(tb->buttons), nSeparators,
+                   tb->size.dx, tb->size.dy, ToolbarIconSize()));
+    for (int i = 0; i < len(tb->buttons); i++) {
+        const SelectionToolbarButton& b = tb->buttons[i];
+        Str kind = b.cmdId == 0 ? StrL("separator") : (b.svgIcon ? StrL("icon") : StrL("text"));
+        int iconDx = b.icon ? b.icon->width : 0;
+        int iconDy = b.icon ? b.icon->height : 0;
+        out.Append(
+            fmt("button=%d cmd=%d kind=%s icon=%d,%d tooltip=%s\n", i, b.cmdId, kind, iconDx, iconDy, ButtonLabel(b)));
+    }
+    return ToStrTemp(out);
 }
 
 // Show the floating selection toolbar for the current text selection. Does

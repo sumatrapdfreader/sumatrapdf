@@ -77,7 +77,9 @@ If the value starts with `<svg`, it is an SVG icon and is drawn instead of the
 text, in the same format as `ToolbarSvgIcon` in
 [Customize toolbar](Customize-toolbar.md#using-svg-icons): 24x24,
 `stroke="currentColor"` and `fill="none"` so the icon picks up the theme's text
-color, and a full-size `<rect>` so its background comes out transparent.
+color, and a full-size `<rect>` so its background comes out transparent. The
+icon is rendered at `ToolbarSize`, matching main-toolbar icons, and the
+handler's `Name` is its tooltip.
 [Tabler Icons](https://tabler.io/icons) are already in that shape:
 
 ```
@@ -113,10 +115,11 @@ SelectionHandlers [
 want them — the same idea as `ToolbarCustomLayout` for the main toolbar:
 
 ```
-SelectionToolbarLayout = CmdCopySelection CmdCreateAnnotHighlight CmdCreateAnnotUnderline
+SelectionToolbarLayout = CmdCopySelection | CmdCreateAnnotHighlight CmdCreateAnnotUnderline
 ```
 
 - entries are [command ids](Commands.md), separated by spaces (commas and semicolons work too)
+- `|` (or `Separator`) inserts a separator
 - **leaving a button out is how you hide it**
 - an empty value (the default) is the standard set
 - names that aren't selection-toolbar buttons are ignored (see the log with `-log`)

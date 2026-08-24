@@ -1108,7 +1108,7 @@ static void PopulateCustomToolbarButtons() {
     }
 }
 
-static int ToolbarIconSize() {
+int ToolbarIconSize() {
     return RoundUp(DpiScale(gGlobalPrefs->toolbarSize), 4);
 }
 

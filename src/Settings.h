@@ -452,7 +452,8 @@ struct SelectionHandler {
     Str headers;
     // if set, the handler also gets a button on the floating selection
     // toolbar. The value is the button's text, or, if it starts with
-    // '<svg', an icon to draw instead
+    // '<svg', an icon to draw instead. SVG buttons use Name as their
+    // tooltip and ToolbarSize as their icon size
     Str selectToolbarNameOrSvg;
     // if set, the handler also gets a button on the main toolbar with this
     // label
@@ -975,9 +976,10 @@ struct GlobalPrefs {
     // disable it
     bool selectionToolbar;
     // which built-in buttons the selection toolbar has and in what order,
-    // e.g. CmdCopySelection CmdCreateAnnotHighlight. Leave a button out to
-    // hide it. Empty (the default) is the standard set. SelectionHandlers
-    // with SelectToolbarNameOrSvg still come last
+    // e.g. CmdCopySelection | CmdCreateAnnotHighlight. | or Separator
+    // inserts a separator. Leave a button out to hide it. Empty (the
+    // default) is the standard set. SelectionHandlers with
+    // SelectToolbarNameOrSvg still come last
     Str selectionToolbarLayout;
     // if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most
     // recently used order instead of tab-strip order
@@ -1551,9 +1553,10 @@ static const StructInfo gSelectionHandlerInfo = {
     "\\n to separate them in this file). Needed for services that authenticate with an api key, e.g. 'Authorization: "
     "Bearer sk-...'. Ignored by POST-VIA-BROWSER. Note that anything you put here is stored in plain text in this "
     "settings file\0if set, the handler also gets a button on the floating selection toolbar. The value is the "
-    "button's text, or, if it starts with '<svg', an icon to draw instead\0if set, the handler also gets a button on "
-    "the main toolbar with this label\0optional SVG icon for that main-toolbar button; if both ToolbarSvgIcon and "
-    "ToolbarText are set, the icon is used",
+    "button's text, or, if it starts with '<svg', an icon to draw instead. SVG buttons use Name as their tooltip and "
+    "ToolbarSize as their icon size\0if set, the handler also gets a button on the main toolbar with this "
+    "label\0optional SVG icon for that main-toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon "
+    "is used",
     false};
 
 static const FieldInfo gShortcutFields[] = {
@@ -2156,26 +2159,26 @@ static const StructInfo gGlobalPrefsInfo = {
     "the document background and text. Overrides other color settings\0if true, documents are opened in tabs instead "
     "of new windows\0if true, a small floating toolbar with selection actions (copy, read aloud, highlight etc.) pops "
     "up after selecting text. Set to false to disable it\0which built-in buttons the selection toolbar has and in what "
-    "order, e.g. CmdCopySelection CmdCreateAnnotHighlight. Leave a button out to hide it. Empty (the default) is the "
-    "standard set. SelectionHandlers with SelectToolbarNameOrSvg still come last\0if true, Ctrl+Tab and Ctrl+Shift+Tab "
-    "show the tab switcher in most recently used order instead of tab-strip order\0if true, Ctrl+Tab and "
-    "Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order (the behavior before version 3.6) "
-    "instead of showing the tab switcher\0sequence of zoom levels when zooming in/out; values must lie between 8.33 "
-    "and 1000000 (the largest one becomes the maximum zoom, which is 6400 by default)\0how much a single zoom in / "
-    "zoom out step changes the zoom, as a percentage of the current zoom level. If 0 or negative, zooming steps "
-    "through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options "
-    "for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization options for Comic Book "
-    "UI\0\0customization options for image files UI\0\0customization options for CHM UI. UseFixedPageUI switches to "
-    "the PDF-style view; FontName applies to that view\0\0customization options for Markdown UI. If UseFixedPageUI is "
-    "true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0customization options for HTML UI. "
-    "If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0settings for "
-    "the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat "
-    "sidebar\0\0settings for the Antigravity chat sidebar\0\0width of the AI chat sidebar (0 = use default); shared by "
-    "Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for selection "
-    "translation; empty uses OS UI language\0remembered source language for selection translation; empty means "
-    "Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or "
-    "Antigravity\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various "
-    "file types. See [docs for more "
+    "order, e.g. CmdCopySelection | CmdCreateAnnotHighlight. | or Separator inserts a separator. Leave a button out to "
+    "hide it. Empty (the default) is the standard set. SelectionHandlers with SelectToolbarNameOrSvg still come "
+    "last\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip "
+    "order\0if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order (the "
+    "behavior before version 3.6) instead of showing the tab switcher\0sequence of zoom levels when zooming in/out; "
+    "values must lie between 8.33 and 1000000 (the largest one becomes the maximum zoom, which is 6400 by "
+    "default)\0how much a single zoom in / zoom out step changes the zoom, as a percentage of the current zoom level. "
+    "If 0 or negative, zooming steps through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and "
+    "PostScript UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization "
+    "options for Comic Book UI\0\0customization options for image files UI\0\0customization options for CHM UI. "
+    "UseFixedPageUI switches to the PDF-style view; FontName applies to that view\0\0customization options for "
+    "Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
+    "available\0\0customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
+    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
+    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat sidebar\0\0width "
+    "of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
+    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
+    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
+    "DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity\0\0default values for annotations in PDF "
+    "documents\0\0list of additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
