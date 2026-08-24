@@ -842,6 +842,16 @@ th {
   color: rgba(55, 53, 47, 0.6);
 }
 
+.command-has-notes td {
+  border-bottom: none;
+}
+
+.command-notes td {
+  border-top: none;
+  font-size: 0.875em;
+  opacity: 0.7;
+}
+
 ol,
 ul {
   margin: 0;

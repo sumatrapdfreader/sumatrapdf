@@ -97,15 +97,18 @@
 
   function genCsvTableHTML(records) {
     if (!records.length) return "";
+    const commandColumnCount = 3;
     const out = ['<table class="collection-content">'];
     const hdr = records[0];
     out.push("<thead>", "<tr>");
-    for (let i = 0; i < hdr.length; i++) out.push("<th>" + hdr[i] + "</th>");
+    for (let i = 0; i < commandColumnCount; i++) out.push("<th>" + (hdr[i] || "") + "</th>");
     out.push("</tr>", "</thead>", "<tbody>");
     for (let r = 1; r < records.length; r++) {
-      out.push("<tr>");
-      for (let i = 0; i < records[r].length; i++) {
-        const cell = records[r][i].trim();
+      const row = records[r];
+      const notes = (row[commandColumnCount] || "").trim();
+      out.push('<tr class="command-row' + (notes ? " command-has-notes" : "") + '">');
+      for (let i = 0; i < commandColumnCount; i++) {
+        const cell = (row[i] || "").trim();
         if (!cell) {
           out.push("<td>", "</td>");
           continue;
@@ -115,6 +118,9 @@
         out.push("</td>");
       }
       out.push("</tr>");
+      if (notes) {
+        out.push('<tr class="command-notes">', '<td colspan="' + commandColumnCount + '">' + notes + "</td>", "</tr>");
+      }
     }
     out.push("</tbody>", "</table>");
     return out.join("\n");
@@ -183,11 +189,7 @@
     const searchHint =
       '<div onclick="window.openSearchDialog()" class="search-trigger-2"><kbd>Ctrl + K</kbd> to search...</div>\n';
     return (
-      '<nav class="sidebar-toc">\n' +
-      searchHint +
-      '<div class="toc-title"></div>\n' +
-      items.join("\n") +
-      "\n</nav>"
+      '<nav class="sidebar-toc">\n' + searchHint + '<div class="toc-title"></div>\n' + items.join("\n") + "\n</nav>"
     );
   }
 
@@ -224,10 +226,7 @@
       const tok = tokens[idx];
       let href = tok.attrGet("href") || "";
 
-      const isAbsolute =
-        href.startsWith("https://") ||
-        href.startsWith("http://") ||
-        href.startsWith("mailto:");
+      const isAbsolute = href.startsWith("https://") || href.startsWith("http://") || href.startsWith("mailto:");
 
       if (!isAbsolute) {
         const decoded = href.replace(/%20/g, " ");
@@ -237,10 +236,7 @@
         const ext = fileName.slice(fileName.lastIndexOf(".")).toLowerCase();
         if (ext === ".md") {
           if (fileName === "SumatraPDF-all-docs-for-llm-ai.md") {
-            tok.attrSet(
-              "href",
-              "https://www.sumatrapdfreader.org/docs/SumatraPDF-all-docs-for-llm-ai.md",
-            );
+            tok.attrSet("href", "https://www.sumatrapdfreader.org/docs/SumatraPDF-all-docs-for-llm-ai.md");
           } else {
             let dest = getHTMLFileName(fileName);
             if (hash) dest += "#" + hash;
@@ -255,9 +251,7 @@
       // the default OS browser instead of navigating the manual.
       const finalHref = tok.attrGet("href") || "";
       const isNonInternal =
-        finalHref.startsWith("https://") ||
-        finalHref.startsWith("http://") ||
-        finalHref.startsWith("mailto:");
+        finalHref.startsWith("https://") || finalHref.startsWith("http://") || finalHref.startsWith("mailto:");
       if (isNonInternal) {
         tok.attrSet("target", "_blank");
         tok.attrSet("rel", "noopener noreferrer");
@@ -287,7 +281,7 @@
 
     if (h1Text && !isMainPage) {
       const bc = h1BreadcrumbsStart + h1Text + h1BreadcrumbsEnd;
-      innerHTML = bc + innerHTML + '<div>&nbsp;</div>' + bc;
+      innerHTML = bc + innerHTML + "<div>&nbsp;</div>" + bc;
     }
 
     innerHTML = '<div class="notion-page">' + innerHTML + "</div>";
@@ -346,10 +340,7 @@
 
   function injectCommandsSearch(innerSlot) {
     function runJs() {
-      const js =
-        typeof kCommandsSearchJs === "string" && kCommandsSearchJs
-          ? kCommandsSearchJs
-          : null;
+      const js = typeof kCommandsSearchJs === "string" && kCommandsSearchJs ? kCommandsSearchJs : null;
       if (js) {
         runCommandsSearchScript(js);
         return Promise.resolve();
@@ -362,10 +353,7 @@
     }
     return fetchText("gen_docs.search.html")
       .then(function (searchHtml) {
-        innerSlot.innerHTML = innerSlot.innerHTML.replace(
-          "<div>:search:</div>",
-          searchHtml,
-        );
+        innerSlot.innerHTML = innerSlot.innerHTML.replace("<div>:search:</div>", searchHtml);
       })
       .then(runJs);
   }

@@ -169,15 +169,18 @@ function parseCsv(text: string): string[][] {
 
 function genCsvTableHTML(records: string[][]): string {
   if (!records.length) return "";
+  const commandColumnCount = 3;
   const out: string[] = ['<table class="collection-content">'];
   const hdr = records[0];
   out.push("<thead>", "<tr>");
-  for (const c of hdr) out.push(`<th>${c}</th>`);
+  for (let i = 0; i < commandColumnCount; i++) out.push(`<th>${hdr[i] ?? ""}</th>`);
   out.push("</tr>", "</thead>", "<tbody>");
   for (let r = 1; r < records.length; r++) {
-    out.push("<tr>");
-    for (let i = 0; i < records[r].length; i++) {
-      const cell = records[r][i].trim();
+    const row = records[r];
+    const notes = (row[commandColumnCount] ?? "").trim();
+    out.push(`<tr class="command-row${notes ? " command-has-notes" : ""}">`);
+    for (let i = 0; i < commandColumnCount; i++) {
+      const cell = (row[i] ?? "").trim();
       if (!cell) {
         out.push("<td>", "</td>");
         continue;
@@ -187,6 +190,9 @@ function genCsvTableHTML(records: string[][]): string {
       out.push("</td>");
     }
     out.push("</tr>");
+    if (notes) {
+      out.push('<tr class="command-notes">', `<td colspan="${commandColumnCount}">${notes}</td>`, "</tr>");
+    }
   }
   out.push("</tbody>", "</table>");
   return out.join("\n");
