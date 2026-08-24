@@ -160,8 +160,8 @@ export async function testit(): Promise<void> {
       if (copyAt >= hlAt) {
         throw new Error(`issue-6015: default layout should list Copy before Highlight:\n${dump}`);
       }
-      if (parseToolbarSvgIconCount(dump) !== 5) {
-        throw new Error(`issue-6015: expected icons for all 5 annotation buttons:\n${dump}`);
+      if (parseToolbarSvgIconCount(dump) !== 8) {
+        throw new Error(`issue-6015: expected icons for all 8 built-in buttons:\n${dump}`);
       }
     } finally {
       c0.close();
@@ -192,8 +192,8 @@ export async function testit(): Promise<void> {
       if (cmds.length !== 2) {
         throw new Error(`issue-6015: custom layout should have exactly 2 buttons, got ${cmds.length}:\n${dump}`);
       }
-      if (parseToolbarSvgIconCount(dump) !== 1) {
-        throw new Error(`issue-6015: expected an icon for Underline but not Copy:\n${dump}`);
+      if (parseToolbarSvgIconCount(dump) !== 2) {
+        throw new Error(`issue-6015: expected icons for Underline and Copy:\n${dump}`);
       }
     } finally {
       c1.close();

@@ -77,14 +77,14 @@ struct SelectionToolbar {
 // candidate buttons; per-window visibility/enabled state comes from
 // GetCommandVisibility (hidden buttons are dropped, disabled ones grayed)
 static const SelectionToolbarButton gCandidateButtons[] = {
-    {CmdCopySelection, _TRN("Copy")},
-    {CmdTranslateSelection, StrL("Translate")},
-    {CmdReadAloudSelection, StrL("Read Aloud")},
+    {CmdCopySelection, _TRN("Copy to clipboard"), {}, Str(gIconCopy)},
+    {CmdTranslateSelection, StrL("Translate"), {}, Str(gIconTranslate)},
+    {CmdReadAloudSelection, StrL("Read Aloud"), {}, Str(gIconSpeak)},
     {CmdCreateAnnotHighlight, StrL("Highlight"), {}, Str(gIconAnnotHighlight)},
     {CmdCreateAnnotUnderline, StrL("Underline"), {}, Str(gIconAnnotUnderline)},
     {CmdCreateAnnotSquiggly, StrL("Squiggly"), {}, Str(gIconAnnotSquiggly)},
     {CmdCreateAnnotStrikeOut, StrL("Strike Out"), {}, Str(gIconAnnotStrikeOut)},
-    {CmdCreateAnnotText, StrL("Text"), {}, Str(gIconAnnotText)},
+    {CmdCreateAnnotText, _TRN("Add text annotation"), {}, Str(gIconAnnotText)},
 };
 
 static const SelectionToolbarButton* FindCandidateButton(int cmdId) {
