@@ -18,6 +18,7 @@ extern "C" {
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
+#include "gui/VirtHost.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -208,6 +209,7 @@ void DetachAnnotationFromUI(Annotation* annot) {
         }
         if (win->annotationUnderCursor == annot) {
             win->annotationUnderCursor = nullptr;
+            HideAnnotationHoverOverlay(win);
         }
         int nTabs = win->TabCount();
         for (int i = 0; i < nTabs; i++) {
@@ -1180,11 +1182,9 @@ static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
     MainWindowRerender(ew->tab->win);
 }
 
-static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
+static SeqStrings AnnotationIconNames(Annotation* annot) {
     SeqStrings items = nullptr;
-    Str itemName = {};
     if (annot) {
-        itemName = IconName(annot);
         switch (Type(annot)) {
             case AnnotationType::Text:
                 items = AnnotationTextIcons();
@@ -1202,6 +1202,12 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
                 break;
         }
     }
+    return items;
+}
+
+static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
+    SeqStrings items = AnnotationIconNames(annot);
+    Str itemName = annot ? IconName(annot) : Str{};
     bool vis = items && len(itemName) > 0;
     ew->staticIcon->SetIsVisible(vis);
     if (!vis) {
@@ -1301,6 +1307,376 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
     bool vis = annot && Type(annot) == AnnotationType::FileAttachment;
     ew->buttonSaveAttachment->SetIsVisible(vis);
     ew->buttonEmbedAttachment->SetIsVisible(vis);
+}
+
+#define kAnnotationHoverOverlayClassName L"SumatraAnnotationHoverOverlay"
+
+struct AnnotationHoverRows {
+    StrVec keys;
+    StrVec labels;
+    StrVec values;
+
+    void Add(Str key, Str label, Str value) {
+        keys.Append(key);
+        labels.Append(label);
+        values.Append(value);
+    }
+};
+
+struct AnnotationHoverOverlay {
+    MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    Annotation* annot = nullptr;
+    VirtHost* host = nullptr;
+    PlatformFont* font = nullptr;
+    Size size;
+    Rect lastPlaced;
+    Rect anchorRect;
+    RectF annotBounds;
+    Str rowsDump;
+    int rowCount = 0;
+    bool isAbove = false;
+};
+
+static TempStr AnnotationColorNameTemp(PdfColor color) {
+    TempStr known = GetKnownColorNameTemp(color);
+    if (known) {
+        return known;
+    }
+    str::Builder value;
+    SerializePdfColor(color, value);
+    return ToStrTemp(value);
+}
+
+static TempStr ShortAnnotationHoverValueTemp(Str value, int maxRunes = 72) {
+    if (len(value) == 0) {
+        return StrL("");
+    }
+    TempStr oneLine = str::NormalizeWSTemp(value);
+    return ShortenStringUtf8Temp(oneLine, maxRunes);
+}
+
+static TempStr ShortAnnotationContentsTemp(Str value) {
+    constexpr int maxRunes = 32;
+    TempStr oneLine = str::NormalizeWSTemp(value);
+    int nRunes = utf8StrLen((const u8*)CStrTemp(oneLine));
+    if (nRunes >= 0 && nRunes <= maxRunes) {
+        return oneLine;
+    }
+
+    int bytesToKeep = std::min(maxRunes, len(oneLine));
+    if (nRunes >= 0) {
+        bytesToKeep = 0;
+        for (int i = 0; i < maxRunes; i++) {
+            int runeBytes = utf8RuneLen((const u8*)oneLine.s + bytesToKeep);
+            ReportIf(runeBytes <= 0);
+            if (runeBytes <= 0) {
+                break;
+            }
+            bytesToKeep += runeBytes;
+        }
+    } else if (len(oneLine) <= maxRunes) {
+        return oneLine;
+    }
+    return str::JoinTemp(Str(oneLine.s, bytesToKeep), StrL("..."));
+}
+
+// Keep the hover card's rows in lockstep with the per-annotation controls in
+// UpdateUIForSelectedAnnotation(). Metadata is always present; type-specific
+// properties use the same visibility predicates as the editor.
+static void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& rows) {
+    Str contents = Contents(annot);
+    if (len(contents) > 0) {
+        rows.Add(StrL("contents"), _TRA("Contents:"), ShortAnnotationContentsTemp(contents));
+    }
+
+    AnnotationType type = Type(annot);
+    if (type == AnnotationType::FreeText) {
+        int quadding = Quadding(annot);
+        rows.Add(StrL("textAlignment"), _TRA("Text Alignment:"), SeqStrByIndex(gQuaddingNames, quadding));
+
+        int fontIdx = SeqStrIndex(gFontNames, DefaultAppearanceTextFont(annot));
+        if (fontIdx >= 0) {
+            rows.Add(StrL("textFont"), _TRA("Text Font:"), SeqStrByIndex(gFontReadableNames, fontIdx));
+        }
+        rows.Add(StrL("textSize"), _TRA("Text Size:"), fmt("%d", DefaultAppearanceTextSize(annot)));
+        rows.Add(StrL("textColor"), _TRA("Text Color:"), AnnotationColorNameTemp(DefaultAppearanceTextColor(annot)));
+    }
+
+    if (type == AnnotationType::Line) {
+        int start = 0;
+        int end = 0;
+        GetLineEndingStyles(annot, &start, &end);
+        rows.Add(StrL("lineStart"), _TRA("Line Start:"), SeqStrByIndex(gLineEndingStyles, start));
+        rows.Add(StrL("lineEnd"), _TRA("Line End:"), SeqStrByIndex(gLineEndingStyles, end));
+    }
+
+    Str icon = IconName(annot);
+    if (AnnotationIconNames(annot) && icon) {
+        rows.Add(StrL("icon"), _TRA("Icon:"), ShortAnnotationHoverValueTemp(icon));
+    }
+    if (AnnotationSupportsBorder(type)) {
+        rows.Add(StrL("border"), _TRA("Border:"), fmt("%d", BorderWidth(annot)));
+    }
+    if (AnnotationSupportsColor(type)) {
+        bool isBackground = IsAnnotationTypeInArray(gAnnotsIsColorBackground, dimofi(gAnnotsIsColorBackground), type);
+        Str label = isBackground ? _TRA("Background Color:") : _TRA("Color:");
+        rows.Add(StrL("color"), label, AnnotationColorNameTemp(GetColor(annot)));
+    }
+    if (AnnotationSupportsInteriorColor(type)) {
+        rows.Add(StrL("interiorColor"), _TRA("Interior Color:"), AnnotationColorNameTemp(InteriorColor(annot)));
+    }
+    if (type == AnnotationType::Highlight) {
+        rows.Add(StrL("opacity"), _TRA("Opacity:"), fmt("%d", Opacity(annot)));
+    }
+
+    rows.Add(StrL("author"), _TRA("Author:"), ShortAnnotationHoverValueTemp(Author(annot)));
+    str::Builder date;
+    if (ModificationDate(annot) != 0) {
+        AppendPdfDate(date, ModificationDate(annot));
+    }
+    rows.Add(StrL("date"), _TRA("Date:"), ToStr(date));
+    int popupId = PopupId(annot);
+    if (popupId >= 0) {
+        rows.Add(StrL("popup"), _TRA("Popup:"), fmt("%d 0 R", popupId));
+    }
+    if (gShowRect) {
+        RectF rect = GetBounds(annot);
+        rows.Add(StrL("rect"), _TRA("Rect:"), fmt("%d-%d@%d-%d", (int)rect.dx, (int)rect.dy, (int)rect.x, (int)rect.y));
+    }
+}
+
+static Color AnnotationHoverBg() {
+    return ThemeNotificationsBackgroundColor();
+}
+
+static Color AnnotationHoverText() {
+    return ThemeNotificationsTextColor();
+}
+
+static void PaintAnnotationHoverOverlay(AnnotationHoverOverlay*, VirtHostPaintEvent* ev) {
+    int radius = DpiScale(6);
+    ev->gfx->FillRoundedRect(ev->clientRect, radius, AnnotationHoverBg(), ThemeEdgeColor());
+}
+
+static void AnnotationHoverNativeMsg(AnnotationHoverOverlay*, VirtHostNativeMsg* ev) {
+    if (ev->msg == WM_NCHITTEST) {
+        // This is an informational card, not a new interaction surface. Let
+        // mouse input continue to reach the annotation and canvas beneath it.
+        ev->didHandle = true;
+        ev->res = HTTRANSPARENT;
+    }
+}
+
+static AnnotationHoverOverlay* GetOrCreateAnnotationHoverOverlay(MainWindow* win) {
+    if (win->annotationHoverOverlay) {
+        return win->annotationHoverOverlay;
+    }
+    auto* overlay = new AnnotationHoverOverlay();
+    overlay->win = win;
+    overlay->font = GetAppFontForDpi(DpiGetForHwnd(win->hwndCanvas));
+
+    VirtHost::CreateArgs args;
+    args.parent = win->hwndFrame;
+    args.className = WStrL(kAnnotationHoverOverlayClassName);
+    args.initialSize = {1, 1};
+    args.bgColor = AnnotationHoverBg();
+    args.isPopup = true;
+    args.visible = false;
+    args.noActivate = true;
+    args.userData = overlay;
+    overlay->host = VirtHost::Create(args);
+    if (!overlay->host) {
+        delete overlay;
+        return nullptr;
+    }
+    overlay->host->onPaintBackground = MkFunc1(PaintAnnotationHoverOverlay, overlay);
+    overlay->host->onNativeMsg = MkFunc1(AnnotationHoverNativeMsg, overlay);
+    win->annotationHoverOverlay = overlay;
+    return overlay;
+}
+
+static void BuildAnnotationHoverOverlay(AnnotationHoverOverlay* overlay, Annotation* annot) {
+    AnnotationHoverRows rows;
+    CollectAnnotationHoverRows(annot, rows);
+
+    Color textColor = AnnotationHoverText();
+    Color labelColor = ThemeWindowTextDisabledColor();
+    auto* title = NewVirtText({
+        .s = AnnotationReadableNameTemp(Type(annot)),
+        .font = GetBoldPlatformFont(overlay->font),
+        .textColor = textColor,
+    });
+
+    auto* table = new Table();
+    table->SetSize(len(rows.labels), 2);
+    table->colGap = DpiScale(12);
+    table->rowGap = DpiScale(3);
+    for (int row = 0; row < len(rows.labels); row++) {
+        auto* label = NewVirtText({
+            .s = rows.labels[row],
+            .font = overlay->font,
+            .textColor = labelColor,
+        });
+        auto* value = NewVirtText({
+            .s = rows.values[row],
+            .font = overlay->font,
+            .textColor = textColor,
+            .ellipsis = !str::Eq(rows.keys[row], StrL("date")) && !str::Eq(rows.keys[row], StrL("rect")),
+        });
+        TableCell& labelCell = table->SetCell(row, 0, label);
+        labelCell.alignV = CrossAxisAlign::CrossCenter;
+        TableCell& valueCell = table->SetCell(row, 1, value);
+        valueCell.alignV = CrossAxisAlign::CrossCenter;
+    }
+
+    auto* column = new VBox();
+    column->alignCross = CrossAxisAlign::Stretch;
+    column->AddChild(title);
+    column->AddChild(new Spacer(0, DpiScale(5)));
+    column->AddChild(table);
+    auto* content = new Padding(column, DpiScaledInsets(8, 10));
+    overlay->size = overlay->host->SetLayoutSizedToContent(content);
+    overlay->host->ClipToRoundedRect(6, overlay->size);
+
+    str::Builder dump;
+    for (int i = 0; i < len(rows.keys); i++) {
+        dump.Append(fmt("row %s=%s\n", rows.keys[i], rows.values[i]));
+    }
+    str::ReplaceWithCopy(&overlay->rowsDump, ToStr(dump));
+    overlay->rowCount = len(rows.keys);
+    overlay->annot = annot;
+    overlay->tab = overlay->win->CurrentTab();
+    overlay->annotBounds = GetRect(annot);
+}
+
+static bool SameRectF(RectF a, RectF b) {
+    return a.x == b.x && a.y == b.y && a.dx == b.dx && a.dy == b.dy;
+}
+
+static bool PositionAnnotationHoverOverlay(AnnotationHoverOverlay* overlay) {
+    MainWindow* win = overlay ? overlay->win : nullptr;
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    Annotation* annot = overlay ? overlay->annot : nullptr;
+    if (!dm || !annot || !dm->PageVisible(PageNo(annot))) {
+        return false;
+    }
+
+    Rect canvas = HwndClientRect(win->hwndCanvas);
+    Rect annotRect = dm->CvtToScreen(PageNo(annot), GetRect(annot));
+    overlay->anchorRect = annotRect;
+    if (canvas.Intersect(annotRect).IsEmpty()) {
+        return false;
+    }
+
+    int gap = DpiScale(6);
+    int width = overlay->size.dx;
+    int height = std::min(overlay->size.dy, canvas.dy);
+    int x = annotRect.x;
+    int y = annotRect.y + annotRect.dy + gap;
+    overlay->isAbove = y + height > canvas.y + canvas.dy;
+    if (overlay->isAbove) {
+        y = annotRect.y - gap - height;
+    }
+
+    int maxX = canvas.x + canvas.dx - width;
+    x = std::max(canvas.x, std::min(x, maxX));
+    int maxY = canvas.y + canvas.dy - height;
+    y = std::max(canvas.y, std::min(y, maxY));
+
+    Point screen = HwndClientToScreen(win->hwndCanvas, Point(x, y));
+    Rect placed(screen.x, screen.y, width, height);
+    if (placed != overlay->lastPlaced) {
+        overlay->host->SetBounds(placed);
+        overlay->lastPlaced = placed;
+    }
+    return true;
+}
+
+void HideAnnotationHoverOverlay(MainWindow* win) {
+    AnnotationHoverOverlay* overlay = win ? win->annotationHoverOverlay : nullptr;
+    if (!overlay) {
+        return;
+    }
+    overlay->host->Show(false);
+    overlay->annot = nullptr;
+    overlay->tab = nullptr;
+    overlay->lastPlaced = {};
+    overlay->anchorRect = {};
+    overlay->annotBounds = {};
+    overlay->rowCount = 0;
+    str::Free(overlay->rowsDump);
+    overlay->rowsDump = {};
+}
+
+void UpdateAnnotationHoverOverlay(MainWindow* win) {
+    Annotation* annot = win ? win->annotationUnderCursor : nullptr;
+    if (!win || !win->pdfAnnotationsToolbarEnabled || win->mouseAction != MouseAction::None ||
+        !AnnotationIsLive(annot)) {
+        HideAnnotationHoverOverlay(win);
+        return;
+    }
+    AnnotationHoverOverlay* overlay = GetOrCreateAnnotationHoverOverlay(win);
+    if (!overlay) {
+        return;
+    }
+    RectF bounds = GetRect(annot);
+    bool rebuild = overlay->annot != annot || overlay->tab != win->CurrentTab() ||
+                   !SameRectF(bounds, overlay->annotBounds) || !overlay->host->IsVisible();
+    if (rebuild) {
+        BuildAnnotationHoverOverlay(overlay, annot);
+    }
+    if (!PositionAnnotationHoverOverlay(overlay)) {
+        HideAnnotationHoverOverlay(win);
+        return;
+    }
+    overlay->host->Show(true);
+    if (rebuild) {
+        overlay->host->Invalidate(false);
+    }
+}
+
+void RepositionAnnotationHoverOverlay(MainWindow* win) {
+    AnnotationHoverOverlay* overlay = win ? win->annotationHoverOverlay : nullptr;
+    if (!overlay || !overlay->host->IsVisible()) {
+        return;
+    }
+    UpdateAnnotationHoverOverlay(win);
+}
+
+void RefreshAnnotationHoverOverlay(MainWindow* win) {
+    AnnotationHoverOverlay* overlay = win ? win->annotationHoverOverlay : nullptr;
+    if (!overlay || !overlay->host->IsVisible()) {
+        return;
+    }
+    overlay->annot = nullptr;
+    UpdateAnnotationHoverOverlay(win);
+}
+
+void DeleteAnnotationHoverOverlay(MainWindow* win) {
+    AnnotationHoverOverlay* overlay = win ? win->annotationHoverOverlay : nullptr;
+    if (!overlay) {
+        return;
+    }
+    win->annotationHoverOverlay = nullptr;
+    str::Free(overlay->rowsDump);
+    delete overlay->host;
+    delete overlay;
+}
+
+TempStr AnnotationHoverOverlayStateTemp(MainWindow* win) {
+    AnnotationHoverOverlay* overlay = win ? win->annotationHoverOverlay : nullptr;
+    bool visible = overlay && overlay->host && overlay->host->IsVisible();
+    if (!visible) {
+        return StrL("overlay visible=0\n");
+    }
+    Rect r = overlay->host->ScreenRect();
+    Rect a = overlay->anchorRect;
+    str::Builder out;
+    out.Append(fmt("overlay visible=1 rows=%d above=%d rect=%d,%d,%d,%d anchor=%d,%d,%d,%d\n", overlay->rowCount,
+                   overlay->isAbove ? 1 : 0, r.x, r.y, r.dx, r.dy, a.x, a.y, a.dx, a.dy));
+    out.Append(overlay->rowsDump);
+    return ToStrTemp(out);
 }
 
 static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {

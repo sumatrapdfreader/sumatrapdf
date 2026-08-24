@@ -563,9 +563,12 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
     }
     out.Append(fmt("n=%d\n", n));
     bool hasNotification = GetNotificationForGroup(gWindows[0]->hwndCanvas, kNotifAnnotation) != nullptr;
-    out.Append(fmt("state selected=%d hover=%d editToolbar=%d notification=%d\n", tab->selectedAnnotation ? 1 : 0,
-                   gWindows[0]->annotationUnderCursor ? 1 : 0, gWindows[0]->pdfAnnotationsToolbarEnabled ? 1 : 0,
-                   hasNotification ? 1 : 0));
+    bool selectedHover = tab->selectedAnnotation && tab->selectedAnnotation == gWindows[0]->annotationUnderCursor;
+    out.Append(fmt("state selected=%d hover=%d editToolbar=%d notification=%d editor=%d selectedHover=%d\n",
+                   tab->selectedAnnotation ? 1 : 0, gWindows[0]->annotationUnderCursor ? 1 : 0,
+                   gWindows[0]->pdfAnnotationsToolbarEnabled ? 1 : 0, hasNotification ? 1 : 0,
+                   tab->editAnnotsWindow ? 1 : 0, selectedHover ? 1 : 0));
+    out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
     return finish({}, 0);
 }
 

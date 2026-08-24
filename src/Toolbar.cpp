@@ -31,6 +31,7 @@
 #include "CommandAvailability.h"
 #include "Menu.h"
 #include "SearchAndDDE.h"
+#include "EditAnnotations.h"
 #include "Toolbar.h"
 #include "ToolbarInternal.h"
 #include "Tabs.h"
@@ -732,6 +733,9 @@ void TogglePdfAnnotationsToolbar(MainWindow* win) {
     ToolbarUpdateStateForWindow(win, true);
     if (win->pdfAnnotationsToolbarEnabled) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
+        UpdateAnnotationHoverOverlay(win);
+    } else {
+        HideAnnotationHoverOverlay(win);
     }
     ScheduleRepaint(win, 0);
 }

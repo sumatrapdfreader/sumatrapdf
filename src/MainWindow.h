@@ -16,6 +16,7 @@ struct VirtSplitter;
 struct HBox;
 struct Splitter;
 struct Tooltip;
+struct AnnotationHoverOverlay;
 struct TreeView;
 struct SelectionToolbar;
 struct ILayout;
@@ -635,6 +636,9 @@ struct MainWindow {
     SelectionToolbar* selectionToolbar = nullptr;
     // a debounced show of the selection toolbar is waiting on its timer
     bool selectionToolbarShowPending = false;
+
+    // annotation details shown next to a hovered annotation in Edit PDF mode
+    AnnotationHoverOverlay* annotationHoverOverlay = nullptr;
 
     // set at the beginning of CloseWindow() to prevent
     // processing commands while closing (e.g. reentrancy

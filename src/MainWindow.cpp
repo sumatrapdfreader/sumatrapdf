@@ -36,6 +36,7 @@
 #include "SumatraPDF.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
+#include "EditAnnotations.h"
 #include "MainWindow.h"
 #include "SelectionToolbar.h"
 #include "FindBar.h"
@@ -167,6 +168,7 @@ MainWindow::~MainWindow() {
     ClearFindMatches(this);
 
     DeleteSelectionToolbar(this);
+    DeleteAnnotationHoverOverlay(this);
 
     delete linkHandler;
     delete buffer;
@@ -215,6 +217,7 @@ MainWindow::~MainWindow() {
 
 void ClearMouseState(MainWindow* win) {
     CancelAnnotationResizeRerender(win);
+    HideAnnotationHoverOverlay(win);
     win->dragStartPending = false;
     win->textDragPending = false;
     win->imageDragPending = false;

@@ -1809,6 +1809,11 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             }
             win->annotationUnderCursor = annot;
+            if (editPdf) {
+                UpdateAnnotationHoverOverlay(win);
+            } else {
+                HideAnnotationHoverOverlay(win);
+            }
 
             RefHoverOnCanvasMouseMove(win->refHover, win->hwndCanvas, win->ctrl, win->linkHandler, dm, x, y, el,
                                       srcPageNo, hoverDelayMs);
@@ -1817,6 +1822,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
 
         case MouseAction::Scrolling: {
             win->annotationUnderCursor = nullptr;
+            HideAnnotationHoverOverlay(win);
             win->yScrollSpeed = (float)(y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             win->xScrollSpeed = (float)(x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             break;
@@ -1828,6 +1834,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
             [[fallthrough]];
         case MouseAction::Selecting: {
             win->annotationUnderCursor = nullptr;
+            HideAnnotationHoverOverlay(win);
             if (win->selectionDragEdge != SelectionDragEdge::None) {
                 // move / resize existing rectangular selection
                 UpdateRectangularSelectionEdit(win, x, y);
@@ -2073,6 +2080,18 @@ static bool IsFullPageImage(DisplayModel* dm, IPageElement* el, int pageNo) {
     return imgArea >= 0.8f * pageArea;
 }
 
+static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot) {
+    if (!tab || !annot) {
+        return;
+    }
+    if (tab->editAnnotsWindow) {
+        SetSelectedAnnotation(tab, annot);
+    } else {
+        ShowEditAnnotationsWindow(tab, annot);
+    }
+    HideAnnotationHoverOverlay(tab->win);
+}
+
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
@@ -2179,7 +2198,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
     bool editPdf = win->pdfAnnotationsToolbarEnabled;
     if (editPdf && annot && !AnnotationCanBeMoved(annot->type)) {
-        SetSelectedAnnotation(tab, annot);
+        OpenOrSelectEditAnnotation(tab, annot);
         win->textDragPending = false;
         return;
     }
@@ -2421,7 +2440,12 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    if (clickedAnnot && tab && (editPdf || tab->selectedAnnotation || tab->editAnnotsWindow)) {
+    if (clickedAnnot && tab && editPdf) {
+        OpenOrSelectEditAnnotation(tab, clickedAnnot);
+        return;
+    }
+
+    if (clickedAnnot && tab && (tab->selectedAnnotation || tab->editAnnotsWindow)) {
         SetSelectedAnnotation(tab, clickedAnnot);
         return;
     }
@@ -3596,6 +3620,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
     WindowTab* tab = win->CurrentTab();
     PaintHoveredAnnotationMark(win, hdc, dm);
+    RepositionAnnotationHoverOverlay(win);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
     if (ShowPageGrid() && win->presentation == PM_DISABLED) {
         PaintPageGrid(dm, hdc);
@@ -3778,6 +3803,13 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
             SetTextOrArrorCursor(dm, pt);
         }
         win->DeleteToolTip();
+        return TRUE;
+    }
+    // The Edit PDF hover card has the annotation's contents and metadata.
+    // Do not put the old one-line comment tooltip on top of it.
+    if (win->pdfAnnotationsToolbarEnabled && annot && pageEl->Is(kindPageElementComment)) {
+        win->DeleteToolTip();
+        SetCursorCached(IDC_HAND);
         return TRUE;
     }
     Str text = pageEl->GetValue();
@@ -4721,6 +4753,9 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             return 0;
 
         case WM_MOUSELEAVE:
+            win->annotationUnderCursor = nullptr;
+            HideAnnotationHoverOverlay(win);
+            ScheduleRepaint(win, 0);
             RefHoverOnCanvasMouseLeave(win->refHover, win->hwndCanvas, gGlobalPrefs->citationHoverDelay);
             return 0;
 

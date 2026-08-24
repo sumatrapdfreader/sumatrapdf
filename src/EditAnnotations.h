@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct EditAnnotationsWindow;
+struct MainWindow;
 
 enum class EditAnnotFocus {
     Default,
@@ -18,4 +19,10 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow*);
 void DetachAnnotationFromUI(Annotation*);
 void InvalidateEditAnnotationsOnEngineChange(WindowTab*);
 void RefreshEditAnnotationsAfterEngineChange(WindowTab*);
+void UpdateAnnotationHoverOverlay(MainWindow*);
+void RepositionAnnotationHoverOverlay(MainWindow*);
+void HideAnnotationHoverOverlay(MainWindow*);
+void RefreshAnnotationHoverOverlay(MainWindow*);
+void DeleteAnnotationHoverOverlay(MainWindow*);
+TempStr AnnotationHoverOverlayStateTemp(MainWindow*);
 TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut = nullptr, int selectLast = 0);

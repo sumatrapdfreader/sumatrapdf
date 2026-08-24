@@ -3387,6 +3387,7 @@ void UpdateAfterThemeChange() {
         RecreateFindBar(win);
         UpdateFindWindowTheme(win);
         RefreshSelectionToolbarIcons(win);
+        RefreshAnnotationHoverOverlay(win);
         UpdateAIChatTheme(win);
         DarkModeApplyToFrameAfterThemeChange(win);
         UpdateWindowFrameBorderColor(win);
@@ -5542,6 +5543,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (tab == win->CurrentTab()) {
         HideFindBar(win);
         HideSelectionToolbar(win);
+        HideAnnotationHoverOverlay(win);
         if (!TabStillInWindow(win, tab)) {
             return;
         }
@@ -7865,6 +7867,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     logf("ApplyMainWindowDpiChromeRefresh: dpi=%d\n", dpi);
 
     HideSelectionToolbar(win);
+    HideAnnotationHoverOverlay(win);
     DestroySvgPixmapIconsCache();
     for (MainWindow* other : gWindows) {
         if (other == win) {
