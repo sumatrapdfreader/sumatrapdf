@@ -1522,6 +1522,13 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     auto col = args->col;
     auto bgCol = args->bgCol;
     auto interiorCol = args->interiorCol;
+    // Keep the Vec outside fz_try: a MuPDF longjmp would skip its destructor.
+    Vec<fz_point> polyLinePoints;
+    if (args->polyLinePoints) {
+        for (PointF point : *args->polyLinePoints) {
+            polyLinePoints.Append({point.x, point.y});
+        }
+    }
     {
         ScopedRecursiveMutex cs(&epdf->docLock);
 
@@ -1618,13 +1625,17 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     pdf_set_annot_vertices(ctx, annot, dimof(points), points);
                 } break;
                 case AnnotationType::PolyLine: {
-                    fz_point points[] = {
-                        {pos.x, pos.y + 70},
-                        {pos.x + 30, pos.y},
-                        {pos.x + 65, pos.y + 55},
-                        {pos.x + 100, pos.y + 10},
-                    };
-                    pdf_set_annot_vertices(ctx, annot, dimof(points), points);
+                    if (len(polyLinePoints) >= 2) {
+                        pdf_set_annot_vertices(ctx, annot, len(polyLinePoints), polyLinePoints.els);
+                    } else {
+                        fz_point points[] = {
+                            {pos.x, pos.y + 70},
+                            {pos.x + 30, pos.y},
+                            {pos.x + 65, pos.y + 55},
+                            {pos.x + 100, pos.y + 10},
+                        };
+                        pdf_set_annot_vertices(ctx, annot, dimof(points), points);
+                    }
                 } break;
                 case AnnotationType::Ink: {
                     fz_point points[] = {

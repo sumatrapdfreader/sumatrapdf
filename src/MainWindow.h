@@ -446,6 +446,10 @@ struct MainWindow {
     int lineAnnotationPlacementPageNo = -1;
     PointF lineAnnotationPlacementStart;
     Point lineAnnotationPlacementEnd;
+    int polyLineAnnotationPlacementCmdId = 0;
+    int polyLineAnnotationPlacementPageNo = -1;
+    Vec<PointF> polyLineAnnotationPlacementPoints;
+    Point polyLineAnnotationPlacementEnd;
     // overlay toolbar mode: the toolbar floats over the page (doesn't reserve
     // space) and is only revealed when the mouse is near the top
     bool isToolbarOverlay = false;

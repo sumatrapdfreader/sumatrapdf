@@ -92,6 +92,7 @@ struct AnnotCreateArgs {
     Pixmap* stampImage = nullptr;
     bool hasLineEnd = false;
     PointF lineEnd;
+    const Vec<PointF>* polyLinePoints = nullptr;
 };
 
 int PageNo(Annotation*);

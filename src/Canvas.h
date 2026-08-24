@@ -30,11 +30,17 @@ bool IsPlacingLineAnnotation(MainWindow*);
 void StartLineAnnotationPlacement(MainWindow*, int cmdId);
 bool CancelLineAnnotationPlacement(MainWindow*);
 TempStr LineAnnotationPlacementStateTemp(MainWindow*);
+bool IsPlacingPolyLineAnnotation(MainWindow*);
+void StartPolyLineAnnotationPlacement(MainWindow*, int cmdId);
+bool FinishPolyLineAnnotationPlacement(MainWindow*);
+bool CancelPolyLineAnnotationPlacement(MainWindow*);
+TempStr PolyLineAnnotationPlacementStateTemp(MainWindow*);
 void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc);
 void InvalidateCanvasKeyboardFocus(MainWindow* win);
 
 constexpr WORD kTextAnnotationPlacementCommandCode = 0x5341;
 constexpr WORD kLineAnnotationPlacementCommandCode = 0x5342;
+constexpr WORD kPolyLineAnnotationPlacementCommandCode = 0x5343;
 
 extern Kind kNotifAnnotation;
 

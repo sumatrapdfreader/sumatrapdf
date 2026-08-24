@@ -5000,6 +5000,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     CommitFormFieldEdit(false);
     CancelTextAnnotationPlacement(win);
     CancelLineAnnotationPlacement(win);
+    CancelPolyLineAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
     // leave the hidden placement dialog aimed at a dead model
     CloseSignDocumentDialog(win);
@@ -8889,6 +8890,11 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
         return true;
     }
 
+    if (IsPlacingPolyLineAnnotation(win) && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed() &&
+        (key == VK_SPACE || key == VK_RETURN)) {
+        return FinishPolyLineAnnotationPlacement(win);
+    }
+
     if (win->isQuickLook && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
         if (key == VK_LEFT || key == VK_PRIOR) {
             if (!win->IsCurrentTabAbout()) {
@@ -8999,6 +9005,9 @@ static void OnFrameKeyEsc(MainWindow* win) {
         return;
     }
     if (CancelLineAnnotationPlacement(win)) {
+        return;
+    }
+    if (CancelPolyLineAnnotationPlacement(win)) {
         return;
     }
     if (CancelPlacingSignature(win)) {
@@ -10786,6 +10795,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     int invokedCmdId = cmdId;
     bool isTextAnnotationPlacement = HIWORD(wp) == kTextAnnotationPlacementCommandCode;
     bool isLineAnnotationPlacement = HIWORD(wp) == kLineAnnotationPlacementCommandCode;
+    bool isPolyLineAnnotationPlacement = HIWORD(wp) == kPolyLineAnnotationPlacementCommandCode;
     bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
@@ -12397,6 +12407,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotPolygon:
             [[fallthrough]];
         case CmdCreateAnnotPolyLine:
+            if (annotType == AnnotationType::PolyLine && !isPolyLineAnnotationPlacement && lp == 0) {
+                StartPolyLineAnnotationPlacement(win, invokedCmdId);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotInk:
             [[fallthrough]];
@@ -12428,6 +12442,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 ptOnPage = win->lineAnnotationPlacementStart;
                 lineEndOnPage = dm->CvtFromScreen(win->lineAnnotationPlacementEnd, pageNoUnderCursor);
                 pt = win->lineAnnotationPlacementEnd;
+            } else if (isPolyLineAnnotationPlacement) {
+                if (annotType != AnnotationType::PolyLine || !IsPlacingPolyLineAnnotation(win) ||
+                    len(win->polyLineAnnotationPlacementPoints) < 2) {
+                    return 0;
+                }
+                pageNoUnderCursor = win->polyLineAnnotationPlacementPageNo;
+                if (!dm->ValidPageNo(pageNoUnderCursor)) {
+                    return 0;
+                }
+                ptOnPage = win->polyLineAnnotationPlacementPoints[0];
+                pt = dm->CvtToScreen(pageNoUnderCursor, win->polyLineAnnotationPlacementPoints.Last());
             } else {
                 pt = HwndGetCursorPos(win->hwndCanvas);
                 if (lp != 0) {
@@ -12449,6 +12474,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (isLineAnnotationPlacement) {
                 args.hasLineEnd = true;
                 args.lineEnd = lineEndOnPage;
+            } else if (isPolyLineAnnotationPlacement) {
+                args.polyLinePoints = &win->polyLineAnnotationPlacementPoints;
             }
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
             openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);

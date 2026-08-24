@@ -785,6 +785,15 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         }
     }
 
+    // Enter and Space normally scroll via accelerators. During polyline
+    // placement they finish the path, so let FrameOnKeydown receive them.
+    if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
+        WPARAM key = msg.wParam;
+        if ((key == VK_RETURN || key == VK_SPACE) && IsPlacingPolyLineAnnotation(FindMainWindowByHwnd(msg.hwnd))) {
+            return false;
+        }
+    }
+
     // Vimium-style link hints: letter keys type the hint, so skip letter
     // accelerators ('a' = highlight, 'n' = next page, …). Ctrl/Alt/Shift
     // shortcuts still work (Shift+F toggles the mode off). Issue #6019.

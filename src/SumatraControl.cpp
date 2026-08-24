@@ -572,6 +572,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
     out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
     out.Append(TextAnnotationPlacementStateTemp(gWindows[0]));
     out.Append(LineAnnotationPlacementStateTemp(gWindows[0]));
+    out.Append(PolyLineAnnotationPlacementStateTemp(gWindows[0]));
     return finish({}, 0);
 }
 

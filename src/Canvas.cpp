@@ -83,6 +83,7 @@ void CancelAnnotationResizeRerender(MainWindow* win) {
 Kind kNotifAnnotation = "notifAnnotation";
 static Kind kNotifTextAnnotationPlacement = "notifTextAnnotationPlacement";
 static Kind kNotifLineAnnotationPlacement = "notifLineAnnotationPlacement";
+static Kind kNotifPolyLineAnnotationPlacement = "notifPolyLineAnnotationPlacement";
 
 constexpr int kRenderDelayShowNotif = 500;
 
@@ -302,6 +303,7 @@ void StartTextAnnotationPlacement(MainWindow* win, int cmdId) {
         return;
     }
     CancelLineAnnotationPlacement(win);
+    CancelPolyLineAnnotationPlacement(win);
     win->textAnnotationPlacementCmdId = cmdId;
     StopSelectTextWithKeyboard(win);
     DeleteOldSelectionInfo(win, true);
@@ -372,6 +374,7 @@ void StartLineAnnotationPlacement(MainWindow* win, int cmdId) {
         return;
     }
     CancelTextAnnotationPlacement(win);
+    CancelPolyLineAnnotationPlacement(win);
     win->lineAnnotationPlacementCmdId = cmdId;
     win->lineAnnotationPlacementPageNo = -1;
     win->lineAnnotationPlacementStart = {};
@@ -419,6 +422,110 @@ TempStr LineAnnotationPlacementStateTemp(MainWindow* win) {
         "message=%s\n",
         IsPlacingLineAnnotation(win) ? 1 : 0, notif ? 1 : 0, crossCursor ? 1 : 0, started ? 1 : 0,
         win->lineAnnotationPlacementCmdId, win->lineAnnotationPlacementPageNo, start.x, start.y, end.x, end.y, message);
+}
+
+//--- polyline annotation placement
+
+bool IsPlacingPolyLineAnnotation(MainWindow* win) {
+    return win && win->polyLineAnnotationPlacementCmdId > 0;
+}
+
+bool CancelPolyLineAnnotationPlacement(MainWindow* win) {
+    if (!IsPlacingPolyLineAnnotation(win)) {
+        return false;
+    }
+    win->polyLineAnnotationPlacementCmdId = 0;
+    win->polyLineAnnotationPlacementPageNo = -1;
+    win->polyLineAnnotationPlacementPoints.Clear();
+    win->polyLineAnnotationPlacementEnd = {};
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifPolyLineAnnotationPlacement);
+    HideAnnotationHoverOverlay(win);
+    ScheduleRepaint(win, 0);
+    if (win->hwndCanvas) {
+        SendMessageW(win->hwndCanvas, WM_SETCURSOR, (WPARAM)win->hwndCanvas, MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+    }
+    return true;
+}
+
+void StartPolyLineAnnotationPlacement(MainWindow* win, int cmdId) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!win || !tab || !engine || !EngineSupportsAnnotations(engine) || cmdId <= 0) {
+        return;
+    }
+    CancelTextAnnotationPlacement(win);
+    CancelLineAnnotationPlacement(win);
+    win->polyLineAnnotationPlacementCmdId = cmdId;
+    win->polyLineAnnotationPlacementPageNo = -1;
+    win->polyLineAnnotationPlacementPoints.Clear();
+    win->polyLineAnnotationPlacementEnd = {};
+    StopSelectTextWithKeyboard(win);
+    DeleteOldSelectionInfo(win, true);
+    if (tab->selectedAnnotation) {
+        SetSelectedAnnotation(tab, nullptr);
+    }
+    win->annotationUnderCursor = nullptr;
+    HideAnnotationHoverOverlay(win);
+    ScheduleRepaint(win, 0);
+
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = _TRA(
+        "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish. "
+        "**Esc** to cancel.");
+    args.timeoutMs = kNotifNoTimeout;
+    args.groupId = kNotifPolyLineAnnotationPlacement;
+    args.corner = NotifCorner::BottomBar;
+    args.warning = true;
+    args.tab = tab;
+    ShowNotification(args);
+
+    HwndSetFocus(win->hwndFrame);
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    if (HwndClientRect(win->hwndCanvas).Contains(pt)) {
+        SetCursorCached(IDC_CROSS);
+    }
+}
+
+bool FinishPolyLineAnnotationPlacement(MainWindow* win) {
+    if (!IsPlacingPolyLineAnnotation(win)) {
+        return false;
+    }
+    if (len(win->polyLineAnnotationPlacementPoints) < 2) {
+        return true;
+    }
+    DisplayModel* dm = win->AsFixed();
+    int pageNo = win->polyLineAnnotationPlacementPageNo;
+    if (!dm || !dm->ValidPageNo(pageNo)) {
+        CancelPolyLineAnnotationPlacement(win);
+        return true;
+    }
+
+    Point pt = dm->CvtToScreen(pageNo, win->polyLineAnnotationPlacementPoints.Last());
+    int cmdId = win->polyLineAnnotationPlacementCmdId;
+    WPARAM wp = MAKEWPARAM(cmdId, kPolyLineAnnotationPlacementCommandCode);
+    SendMessageW(win->hwndFrame, WM_COMMAND, wp, MAKELPARAM(pt.x, pt.y));
+    CancelPolyLineAnnotationPlacement(win);
+    return true;
+}
+
+TempStr PolyLineAnnotationPlacementStateTemp(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return str::DupTemp(
+            StrL("polyLinePlacement active=0 notification=0 cursor=0 points=0 cmd=0 page=-1 end=0,0 "
+                 "message=\n"));
+    }
+    NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifPolyLineAnnotationPlacement);
+    Str message = NotificationGetMessageTemp(notif);
+    bool crossCursor = GetCursor() == GetCachedCursor(IDC_CROSS);
+    Point end = win->polyLineAnnotationPlacementEnd;
+    return fmt(
+        "polyLinePlacement active=%d notification=%d cursor=%d points=%d cmd=%d page=%d end=%d,%d "
+        "message=%s\n",
+        IsPlacingPolyLineAnnotation(win) ? 1 : 0, notif ? 1 : 0, crossCursor ? 1 : 0,
+        len(win->polyLineAnnotationPlacementPoints), win->polyLineAnnotationPlacementCmdId,
+        win->polyLineAnnotationPlacementPageNo, end.x, end.y, message);
 }
 
 bool IsLaserPointerActive() {
@@ -499,6 +606,28 @@ static bool HandleLineAnnotationPlacementClick(MainWindow* win, Point pt) {
     WPARAM wp = MAKEWPARAM(cmdId, kLineAnnotationPlacementCommandCode);
     SendMessageW(win->hwndFrame, WM_COMMAND, wp, MAKELPARAM(pt.x, pt.y));
     CancelLineAnnotationPlacement(win);
+    return true;
+}
+
+// Each page click commits a vertex and starts previewing the next segment.
+// A click off that page cancels the whole path, matching line placement.
+static bool HandlePolyLineAnnotationPlacementClick(MainWindow* win, Point pt) {
+    if (!IsPlacingPolyLineAnnotation(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
+    bool started = len(win->polyLineAnnotationPlacementPoints) > 0;
+    if (!dm || !dm->ValidPageNo(pageNo) || (started && pageNo != win->polyLineAnnotationPlacementPageNo)) {
+        CancelPolyLineAnnotationPlacement(win);
+        return true;
+    }
+    if (!started) {
+        win->polyLineAnnotationPlacementPageNo = pageNo;
+    }
+    win->polyLineAnnotationPlacementPoints.Append(dm->CvtFromScreen(pt, pageNo));
+    win->polyLineAnnotationPlacementEnd = pt;
+    ScheduleRepaint(win, 0);
     return true;
 }
 
@@ -1944,6 +2073,22 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
         return;
     }
 
+    if (IsPlacingPolyLineAnnotation(win)) {
+        if (win->annotationUnderCursor) {
+            win->annotationUnderCursor = nullptr;
+        }
+        HideAnnotationHoverOverlay(win);
+        SetCursorCached(IDC_CROSS);
+        if (len(win->polyLineAnnotationPlacementPoints) > 0) {
+            Point end{x, y};
+            if (end != win->polyLineAnnotationPlacementEnd) {
+                win->polyLineAnnotationPlacementEnd = end;
+                ScheduleRepaint(win, 0);
+            }
+        }
+        return;
+    }
+
     if (IsPlacingTextAnnotation(win)) {
         if (win->annotationUnderCursor) {
             win->annotationUnderCursor = nullptr;
@@ -2398,6 +2543,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     if (IsPlacingLineAnnotation(win)) {
         HwndSetFocus(win->hwndFrame);
         HandleLineAnnotationPlacementClick(win, Point{x, y});
+        return;
+    }
+
+    if (IsPlacingPolyLineAnnotation(win)) {
+        HwndSetFocus(win->hwndFrame);
+        HandlePolyLineAnnotationPlacementClick(win, Point{x, y});
         return;
     }
 
@@ -2863,6 +3014,11 @@ bool gDisableInteractiveInverseSearch = false;
 
 static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
+    if (IsPlacingPolyLineAnnotation(win)) {
+        HwndSetFocus(win->hwndFrame);
+        FinishPolyLineAnnotationPlacement(win);
+        return;
+    }
     auto isLeft = bit::IsMaskSet(key, (WPARAM)MK_LBUTTON);
     if (gGlobalPrefs->enableTeXEnhancements && !gDisableInteractiveInverseSearch && isLeft) {
         bool dontSelect = OnInverseSearch(win, x, y);
@@ -2983,6 +3139,11 @@ static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM /*key*/) {
 
 static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
     // lf("Right button clicked on %d %d", x, y);
+    if (IsPlacingPolyLineAnnotation(win)) {
+        HwndSetFocus(win->hwndFrame);
+        FinishPolyLineAnnotationPlacement(win);
+        return;
+    }
     if (MouseAction::Scrolling == win->mouseAction) {
         win->mouseAction = MouseAction::None;
     } else if (win->mouseAction != MouseAction::None) {
@@ -3639,6 +3800,36 @@ static void PaintLineAnnotationPlacement(MainWindow* win, HDC hdc, DisplayModel*
     gs.DrawEllipse(&pen, start.x - markerHalf, start.y - markerHalf, markerSize, markerSize);
 }
 
+static void PaintPolyLineAnnotationPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
+    int pageNo = win ? win->polyLineAnnotationPlacementPageNo : -1;
+    Vec<PointF>* points = win ? &win->polyLineAnnotationPlacementPoints : nullptr;
+    if (!IsPlacingPolyLineAnnotation(win) || !points || len(*points) == 0 || !dm->ValidPageNo(pageNo) ||
+        !dm->PageVisible(pageNo)) {
+        return;
+    }
+
+    Gdiplus::Graphics gs(hdc);
+    gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    Gdiplus::Color blue(255, 0, 80, 200);
+    Gdiplus::Pen pen(blue, (Gdiplus::REAL)std::max(DpiScale(2), 1));
+    int markerSize = std::max(DpiScale(6), 4);
+    int markerHalf = markerSize / 2;
+    Gdiplus::SolidBrush fill(Gdiplus::Color(255, 255, 255, 255));
+
+    Point previous = dm->CvtToScreen(pageNo, (*points)[0]);
+    for (int i = 1; i < len(*points); i++) {
+        Point current = dm->CvtToScreen(pageNo, (*points)[i]);
+        gs.DrawLine(&pen, previous.x, previous.y, current.x, current.y);
+        gs.FillEllipse(&fill, previous.x - markerHalf, previous.y - markerHalf, markerSize, markerSize);
+        gs.DrawEllipse(&pen, previous.x - markerHalf, previous.y - markerHalf, markerSize, markerSize);
+        previous = current;
+    }
+    Point end = win->polyLineAnnotationPlacementEnd;
+    gs.DrawLine(&pen, previous.x, previous.y, end.x, end.y);
+    gs.FillEllipse(&fill, previous.x - markerHalf, previous.y - markerHalf, markerSize, markerSize);
+    gs.DrawEllipse(&pen, previous.x - markerHalf, previous.y - markerHalf, markerSize, markerSize);
+}
+
 NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, DisplayModel* dm) {
     if (!tab) {
         return;
@@ -3950,6 +4141,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
     WindowTab* tab = win->CurrentTab();
     PaintLineAnnotationPlacement(win, hdc, dm);
+    PaintPolyLineAnnotationPlacement(win, hdc, dm);
     PaintHoveredAnnotationMark(win, hdc, dm);
     RepositionAnnotationHoverOverlay(win);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
@@ -4171,6 +4363,12 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     }
 
     if (IsPlacingLineAnnotation(win)) {
+        SetCursorCached(IDC_CROSS);
+        win->DeleteToolTip();
+        return TRUE;
+    }
+
+    if (IsPlacingPolyLineAnnotation(win)) {
         SetCursorCached(IDC_CROSS);
         win->DeleteToolTip();
         return TRUE;
