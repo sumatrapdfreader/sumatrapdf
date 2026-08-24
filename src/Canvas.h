@@ -47,3 +47,8 @@ constexpr uint kSelectionToolbarShowDelayInMs = 500;
 // either as a gesture stream or as synthesized mouse messages, so the hold is
 // detected both ways; this timer is the mouse-message half.
 constexpr UINT_PTR kTouchLongPressTimerID = 14;
+// Debounce PDF page rendering while an annotation resize is in progress.
+constexpr UINT_PTR kAnnotationResizeRerenderTimerID = 15;
+constexpr uint kAnnotationResizeRerenderDelayMs = 125;
+
+void CancelAnnotationResizeRerender(MainWindow* win);

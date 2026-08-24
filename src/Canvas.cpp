@@ -68,6 +68,16 @@
 // impression of lag
 static bool gNoFlickerRender = true;
 
+void CancelAnnotationResizeRerender(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    if (win->hwndCanvas) {
+        KillTimer(win->hwndCanvas, kAnnotationResizeRerenderTimerID);
+    }
+    win->annotationResizeRerenderTimer = 0;
+}
+
 Kind kNotifAnnotation = "notifAnnotation";
 
 constexpr int kRenderDelayShowNotif = 500;
@@ -1844,8 +1854,13 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
                     // Calculate and apply the new rectangle based on current mouse position
                     RectF newRect = CalculateResizedRect(win, x, y);
                     SetRect(annot, newRect);
-
-                    MainWindowRerender(win);
+                    // Keep the bounds indicator tracking the pointer using the
+                    // existing page bitmap. Re-render the PDF only after the
+                    // resize has been idle for a moment.
+                    ScheduleRepaint(win, 0);
+                    win->annotationResizeRerenderTimer = SetTimer(win->hwndCanvas, kAnnotationResizeRerenderTimerID,
+                                                                  kAnnotationResizeRerenderDelayMs, nullptr);
+                    ReportIf(!win->annotationResizeRerenderTimer);
                 } else {
                     Size size = win->annotationBeingMovedSize;
                     DrawMovePattern(win, prevPos, size);
@@ -1970,6 +1985,7 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
 }
 
 static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt, ResizeHandle handle) {
+    CancelAnnotationResizeRerender(win);
     win->annotationBeingDragged = annot;
     win->annotationBeingResized = true;
     // A completed right-click leaves dragRightClick set. This is a new
@@ -1999,6 +2015,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     Annotation* annot = win->annotationBeingDragged;
     win->annotationBeingResized = false;
     win->annotationBeingDragged = nullptr;
+    CancelAnnotationResizeRerender(win);
 
     // Release mouse capture and reset cursor
     if (GetCapture() == win->hwndCanvas) {
@@ -5045,6 +5062,11 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             // page-number edit flash on every scroll even when the page is
             // unchanged (very visible with tall comic pages).
             HwndInvalidate(hwnd);
+            break;
+
+        case kAnnotationResizeRerenderTimerID:
+            CancelAnnotationResizeRerender(win);
+            MainWindowRerender(win);
             break;
 
         case kTouchLongPressTimerID: {

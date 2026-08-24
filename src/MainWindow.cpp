@@ -101,6 +101,7 @@ void CreateMovePatternLazy(MainWindow* win) {
 }
 
 MainWindow::~MainWindow() {
+    CancelAnnotationResizeRerender(this);
     KillTimer(hwndCanvas, kSmoothScrollTimerID);
     if (scrollAnimHiResTimer) {
         timeEndPeriod(1);
@@ -213,6 +214,7 @@ MainWindow::~MainWindow() {
 }
 
 void ClearMouseState(MainWindow* win) {
+    CancelAnnotationResizeRerender(win);
     win->dragStartPending = false;
     win->textDragPending = false;
     win->imageDragPending = false;

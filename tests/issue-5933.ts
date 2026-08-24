@@ -37,7 +37,12 @@ function clickAt(canvas: number, x: number, y: number) {
   sendMessage(canvas, WM_LBUTTONUP, 0, lp);
 }
 
-type SelectedAnnotState = { rect: { x: number; y: number; dx: number; dy: number }; canResize: boolean; raw: string };
+type SelectedAnnotState = {
+  rect: { x: number; y: number; dx: number; dy: number };
+  canResize: boolean;
+  resizeRerenderPending: boolean;
+  raw: string;
+};
 
 async function selectedAnnotState(client: ControlClient): Promise<SelectedAnnotState> {
   const res = await client.request(ControlCommand.TestAnnotEditorLayout, [0, 0]);
@@ -49,6 +54,7 @@ async function selectedAnnotState(client: ControlClient): Promise<SelectedAnnotS
   return {
     rect: { x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! },
     canResize: m[5] === "1",
+    resizeRerenderPending: / resizeRerenderPending=1/.test(raw),
     raw,
   };
 }
@@ -114,7 +120,26 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-5933: stamp is not resizable: ${stampBeforeRight.raw}`);
     }
     const r0 = stampBeforeRight.rect;
-    dragLeftButton(canvas, r0.x + r0.dx, r0.y + Math.floor(r0.dy / 2), r0.x + r0.dx + 40, r0.y + Math.floor(r0.dy / 2));
+    const rightX = r0.x + r0.dx;
+    const middleY = r0.y + Math.floor(r0.dy / 2);
+    sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(rightX, middleY));
+    sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(rightX + 40, middleY));
+    const resizeInProgress = await selectedAnnotState(client);
+    if (!resizeInProgress.resizeRerenderPending || resizeInProgress.rect.dx < r0.dx + 30) {
+      throw new Error(
+        `issue-5933: resize bounds or rerender debounce was not updated immediately: ${resizeInProgress.raw}`,
+      );
+    }
+    let resizeSettled = resizeInProgress;
+    const rerenderDeadline = Date.now() + 2000;
+    while (resizeSettled.resizeRerenderPending && Date.now() < rerenderDeadline) {
+      await sleep(25);
+      resizeSettled = await selectedAnnotState(client);
+    }
+    if (resizeSettled.resizeRerenderPending) {
+      throw new Error(`issue-5933: annotation resize rerender did not run after 125 ms: ${resizeSettled.raw}`);
+    }
+    sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(rightX + 40, middleY));
     await client.waitForRenderIdle();
     const stampAfterRight = await selectedAnnotState(client);
     const r1 = stampAfterRight.rect;
