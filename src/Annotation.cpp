@@ -1481,9 +1481,10 @@ bool AnnotationCanBeMoved(AnnotationType tp) {
 }
 
 bool AnnotationCanBeResized(AnnotationType tp) {
-    if (tp == AnnotationType::Text) {
-        // TODO: for now don't allow resizing text annotation because it's just an icon
-        // would have to figure out how to change the size of the icon
+    // MuPDF regenerates these as fixed-size icon/caret appearances. Offering
+    // resize handles only shifts the appearance within the requested rect.
+    if (tp == AnnotationType::Text || tp == AnnotationType::Caret || tp == AnnotationType::FileAttachment ||
+        tp == AnnotationType::Sound) {
         return false;
     }
     if (tp == AnnotationType::Polygon || tp == AnnotationType::PolyLine || tp == AnnotationType::Ink) {

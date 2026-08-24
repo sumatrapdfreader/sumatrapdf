@@ -334,6 +334,7 @@ struct MainWindow {
     int resizeHandle = 0; // ResizeHandle enum casted to int
     bool annotationBeingResized = false;
     RectF annotationOriginalRect;
+    float annotationResizeAspectRatio = 0;
 
     /* when moving the document by middle-click auto-scroll, this keeps track of
        the speed (in pixels per 20ms) at which we should scroll, which depends on

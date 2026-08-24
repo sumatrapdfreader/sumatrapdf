@@ -1934,6 +1934,38 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
         r.dy = std::max(r.dy, minSize);
     }
 
+    float aspect = win->annotationResizeAspectRatio;
+    if (aspect > 0) {
+        bool widthDriven = moveLeft || moveRight;
+        if (widthDriven && (moveTop || moveBottom)) {
+            float widthChange = orig.dx > 0 ? fabsf(r.dx - orig.dx) / orig.dx : 0;
+            float heightChange = orig.dy > 0 ? fabsf(r.dy - orig.dy) / orig.dy : 0;
+            widthDriven = widthChange >= heightChange;
+        }
+        if (widthDriven) {
+            r.dx = std::max(r.dx, minSize * aspect);
+            r.dy = r.dx / aspect;
+        } else {
+            r.dy = std::max(r.dy, minSize);
+            r.dx = r.dy * aspect;
+        }
+
+        if (moveLeft) {
+            r.x = orig.x + orig.dx - r.dx;
+        } else if (moveRight) {
+            r.x = orig.x;
+        } else {
+            r.x = orig.x + (orig.dx - r.dx) / 2;
+        }
+        if (moveTop) {
+            r.y = orig.y + orig.dy - r.dy;
+        } else if (moveBottom) {
+            r.y = orig.y;
+        } else {
+            r.y = orig.y + (orig.dy - r.dy) / 2;
+        }
+    }
+
     return r;
 }
 
@@ -1948,6 +1980,12 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->dragStart = pt;
     RectF r = GetRect(annot);
     win->annotationOriginalRect = r;
+    win->annotationResizeAspectRatio = 0;
+    if (annot->type == AnnotationType::Stamp && r.dx > 0 && r.dy > 0) {
+        // Rubber stamps are regenerated at a fixed aspect ratio by MuPDF;
+        // preserving image-stamp aspect also avoids distortion.
+        win->annotationResizeAspectRatio = r.dx / r.dy;
+    }
     SetCapture(win->hwndCanvas);
     win->mouseAction = MouseAction::Dragging;
     win->dragPrevPos = pt;

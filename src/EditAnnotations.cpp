@@ -2537,5 +2537,12 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
             "iconVis=%d icon=%d,%d,%d,%d",
             cr.dy, listR.dy, contentsDy, gapBelow, sel, n, selCount, contentsR.x, contentsR.y, contentsR.dx,
             contentsR.dy, iconVis, iconR.x, iconR.y, iconR.dx, iconR.dy));
-    return finish(fmt(" ignoreReload=%d reloadOnFocus=%d", (int)tab->ignoreNextAutoReload, (int)tab->reloadOnFocus), 0);
+    out.Append(fmt(" ignoreReload=%d reloadOnFocus=%d", (int)tab->ignoreNextAutoReload, (int)tab->reloadOnFocus));
+    Annotation* annot = tab->selectedAnnotation;
+    if (annot) {
+        Rect annotRect = tab->AsFixed()->CvtToScreen(annot->pageNo, GetRect(annot));
+        out.Append(fmt(" annotType=%d annotRect=%d,%d,%d,%d canResize=%d", (int)annot->type, annotRect.x, annotRect.y,
+                       annotRect.dx, annotRect.dy, (int)AnnotationCanBeResized(annot->type)));
+    }
+    return finish({}, 0);
 }

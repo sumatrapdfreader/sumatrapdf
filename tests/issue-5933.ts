@@ -4,6 +4,7 @@
 // stamp (hover still on the stamp) kept the handles up.
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { ControlClient, ControlCommand } from "./control";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
 import {
   captureWindowToPng,
@@ -34,6 +35,28 @@ function clickAt(canvas: number, x: number, y: number) {
   const lp = packCoords(x, y);
   sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, lp);
   sendMessage(canvas, WM_LBUTTONUP, 0, lp);
+}
+
+type SelectedAnnotState = { rect: { x: number; y: number; dx: number; dy: number }; canResize: boolean; raw: string };
+
+async function selectedAnnotState(client: ControlClient): Promise<SelectedAnnotState> {
+  const res = await client.request(ControlCommand.TestAnnotEditorLayout, [0, 0]);
+  const raw = String(res[1] ?? "").trim();
+  const m = / annotType=\d+ annotRect=(-?\d+),(-?\d+),(\d+),(\d+) canResize=(\d)/.exec(raw);
+  if (res[0] !== 0 || !m) {
+    throw new Error(`issue-5933: could not read selected annotation: ${raw}`);
+  }
+  return {
+    rect: { x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! },
+    canResize: m[5] === "1",
+    raw,
+  };
+}
+
+function dragLeftButton(canvas: number, x: number, y: number, endX: number, endY: number): void {
+  sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x, y));
+  sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(endX, endY));
+  sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(endX, endY));
 }
 
 // A real click usually moves a few pixels. That used to become a page pan
@@ -85,6 +108,32 @@ export async function testit(): Promise<void> {
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stampX, stampY));
     await sleep(400);
     await client.waitForRenderIdle();
+
+    const stampBeforeRight = await selectedAnnotState(client);
+    if (!stampBeforeRight.canResize) {
+      throw new Error(`issue-5933: stamp is not resizable: ${stampBeforeRight.raw}`);
+    }
+    const r0 = stampBeforeRight.rect;
+    dragLeftButton(canvas, r0.x + r0.dx, r0.y + Math.floor(r0.dy / 2), r0.x + r0.dx + 40, r0.y + Math.floor(r0.dy / 2));
+    await client.waitForRenderIdle();
+    const stampAfterRight = await selectedAnnotState(client);
+    const r1 = stampAfterRight.rect;
+    if (Math.abs(r1.x - r0.x) > 2 || r1.dx < r0.dx + 30 || Math.abs(r1.y + r1.dy / 2 - (r0.y + r0.dy / 2)) > 2) {
+      throw new Error(
+        `issue-5933: right edge moved rather than resized stamp: before=${stampBeforeRight.raw} after=${stampAfterRight.raw}`,
+      );
+    }
+
+    dragLeftButton(canvas, r1.x + Math.floor(r1.dx / 2), r1.y + r1.dy, r1.x + Math.floor(r1.dx / 2), r1.y + r1.dy + 20);
+    await client.waitForRenderIdle();
+    const stampAfterBottom = await selectedAnnotState(client);
+    const r2 = stampAfterBottom.rect;
+    if (Math.abs(r2.y - r1.y) > 2 || r2.dy < r1.dy + 14 || Math.abs(r2.x + r2.dx / 2 - (r1.x + r1.dx / 2)) > 2) {
+      throw new Error(
+        `issue-5933: bottom edge moved rather than resized stamp: before=${stampAfterRight.raw} after=${stampAfterBottom.raw}`,
+      );
+    }
+
     hover(canvas, stampX + 20, stampY + 20);
     await sleep(80);
     const selectedPng = join(dir, "selected.png");
@@ -191,6 +240,17 @@ export async function testit(): Promise<void> {
     const afterUnpressedMove = readFileSync(afterUnpressedMovePng);
     if (!afterResizeUp.equals(afterUnpressedMove)) {
       throw new Error("issue-5933: annotation kept resizing after the left mouse button was released");
+    }
+
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotCaret"), packCoords(100, 200));
+    const caret = await selectedAnnotState(client);
+    if (caret.canResize) {
+      throw new Error(`issue-5933: fixed-size caret has resize handles: ${caret.raw}`);
+    }
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFileAttachment"), packCoords(100, 240));
+    const attachment = await selectedAnnotState(client);
+    if (attachment.canResize) {
+      throw new Error(`issue-5933: fixed-size file attachment has resize handles: ${attachment.raw}`);
     }
   } finally {
     client.close();
