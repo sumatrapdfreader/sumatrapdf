@@ -10,10 +10,10 @@
 //
 // Run: bun tests/issue-4398.ts [--no-build]   (or via tests/run-almost-all.ts)
 
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
-import { EXE, ROOT, cmdId, runStandalone } from "./util.ts";
+import { EXE, ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
   enumChildWindows,
@@ -130,6 +130,10 @@ export async function testit(): Promise<void> {
     writeFileSync(PDF, makePageGridPdf());
   }
 
+  const appdata = tmpPath("issue-4398-appdata");
+  rmSync(appdata, { recursive: true, force: true });
+  mkdirSync(appdata, { recursive: true });
+
   await withControlledSumatra(
     EXE,
     async (client, proc) => {
@@ -210,7 +214,7 @@ export async function testit(): Promise<void> {
       console.log("  Reset to defaults restored all page-grid fields and kept Show Grid on ✓");
       await pressEscape(dlg);
     },
-    [PDF],
+    ["-appdata", appdata, PDF],
   );
 }
 
