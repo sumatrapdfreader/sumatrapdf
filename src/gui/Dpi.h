@@ -7,7 +7,9 @@
 // without a second monitor. HWND_DESKTOP keeps reporting the real system DPI,
 // so code that mixes per-window and system DPI misbehaves here the same way it
 // does on a real multi-monitor setup. SUMATRA_DPI_OVERRIDE=<percent> sets this
-// at process start (the installer has no debug command to toggle it).
+// at process start (the installer has no debug command to toggle it). The
+// legacy:<percent> form also disables the newer monitor DPI query to emulate
+// Windows 7's system-DPI-only path.
 extern int gDpiOverride;
 
 // Current layout DPI. DpiScale() and DpiGet() read these. Message dispatch

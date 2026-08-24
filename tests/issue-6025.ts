@@ -86,10 +86,10 @@ async function captureLogoBand(hwnd: number): Promise<{ w: number; h: number; da
   return { w, h: bandH, data };
 }
 
-async function runAtDpi(dpiPercent: number, installDir: string): Promise<void> {
+async function runAtDpi(dpiPercent: number, installDir: string, legacy = false): Promise<number> {
   const env = { ...process.env };
   if (dpiPercent !== 100) {
-    env.SUMATRA_DPI_OVERRIDE = String(dpiPercent);
+    env.SUMATRA_DPI_OVERRIDE = legacy ? `legacy:${dpiPercent}` : String(dpiPercent);
   }
   const proc = Bun.spawn([EXE, "-for-testing", "-lang", "en", "-install", "-d", installDir], {
     stdout: "ignore",
@@ -102,12 +102,14 @@ async function runAtDpi(dpiPercent: number, installDir: string): Promise<void> {
       throw new Error(`issue-6025: installer window did not appear at ${dpiPercent}%`);
     }
     await sleep(2500 * SLOW_BUILD_FACTOR);
-    const png = tmpPath(`issue-6025-${dpiPercent}.png`);
+    const png = tmpPath(`issue-6025-${legacy ? "legacy-" : ""}${dpiPercent}.png`);
     captureWindowDCToPng(hwnd, png);
     const band = await captureLogoBand(hwnd);
     assertLettersFit(`${dpiPercent}%`, band.data, band.w, band.h);
+    const clientWidth = getClientRect(hwnd).right;
     postMessage(hwnd, WM_CLOSE, 0, 0);
     await killAndWait(proc);
+    return clientWidth;
   } catch (e) {
     await killAndWait(proc);
     throw e;
@@ -124,10 +126,20 @@ export async function testit(): Promise<void> {
   rmSync(installDir, { recursive: true, force: true });
   mkdirSync(installDir, { recursive: true });
 
+  const width100 = await runAtDpi(100, installDir);
   // 75% overflows with the old UnitPoint fonts on a 96-DPI machine.
   await runAtDpi(75, installDir);
   // 150% is the scale reported in the issue; letters must still fit.
   await runAtDpi(150, installDir);
+  // Windows 7 has neither GetDpiForMonitor nor GetDpiForWindow. Its system DPI
+  // must be read from the desktop DC instead of falling back to 96.
+  const widthLegacy150 = await runAtDpi(150, installDir, true);
+  const expectedLegacyWidth = Math.round(width100 * 1.5);
+  if (Math.abs(widthLegacy150 - expectedLegacyWidth) > 1) {
+    throw new Error(
+      `issue-6025 legacy 150%: installer width ${widthLegacy150}, expected ${expectedLegacyWidth} from ${width100}`,
+    );
+  }
 }
 
 if (import.meta.main) {

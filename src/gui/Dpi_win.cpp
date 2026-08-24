@@ -27,6 +27,7 @@ int dpiX = 96;
 int dpiY = 96;
 
 static int gWineDpiOverride = 0;
+static bool gDpiOverrideLegacy = false;
 
 static void DpiMaybeReadEnvOverride() {
     static bool done = false;
@@ -42,9 +43,15 @@ static void DpiMaybeReadEnvOverride() {
     if (n == 0 || n >= (DWORD)sizeof(buf)) {
         return;
     }
-    int pct = atoi(buf);
+    char* pctText = buf;
+    bool legacy = str::StartsWith(Str(buf, (int)n), StrL("legacy:"));
+    if (legacy) {
+        pctText += 7;
+    }
+    int pct = atoi(pctText);
     if (pct >= 50 && pct <= 500) {
         gDpiOverride = pct;
+        gDpiOverrideLegacy = legacy;
     }
 }
 
@@ -64,7 +71,7 @@ static bool DpiIsDesktopHwnd(HWND hwnd) {
 }
 
 static bool DpiFromMonitor(HMONITOR h, int* outX, int* outY) {
-    if (!h || !DynGetDpiForMonitor) {
+    if (!h || !DynGetDpiForMonitor || gDpiOverrideLegacy) {
         return false;
     }
     uint monX = 96, monY = 96;
@@ -81,7 +88,7 @@ static bool DpiFromMonitor(HMONITOR h, int* outX, int* outY) {
 // exists. GetForegroundWindow / HWND_DESKTOP report the *primary* monitor.
 int DpiGetForPoint(int x, int y) {
     DpiMaybeReadEnvOverride();
-    if (gDpiOverride > 0) {
+    if (gDpiOverride > 0 && !gDpiOverrideLegacy) {
         return MulDiv(96, gDpiOverride, 100);
     }
     POINT pt{x, y};
@@ -89,7 +96,11 @@ int DpiGetForPoint(int x, int y) {
     if (DpiFromMonitor(MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST), &dx, &dy)) {
         return dx;
     }
-    return 96;
+    // GetDpiForMonitor is unavailable on Windows 7. It only supports one
+    // system DPI, which the desktop DC reports even though GetDpiForWindow is
+    // also unavailable. Returning 96 here left the installer and first app
+    // window unscaled while their system fonts were scaled.
+    return DpiGetForHwnd(HWND_DESKTOP);
 }
 
 // Uncached per-window DPI. HWND_DESKTOP / null report the system (primary
@@ -139,6 +150,9 @@ static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
     ScopedGetDC dc(hwnd);
     x = GetDeviceCaps(dc, LOGPIXELSX);
     y = GetDeviceCaps(dc, LOGPIXELSY);
+    if (gDpiOverrideLegacy) {
+        x = y = MulDiv(96, gDpiOverride, 100);
+    }
     if (x < 72) {
         HDC screenDC = GetDC(nullptr);
         if (screenDC) {
