@@ -35,11 +35,16 @@ static SeqStrings kPageGridStyleTok = "dots\0dotted\0solid\0";
 
 constexpr float kPageGridPtPerIn = 72.f;
 constexpr float kPageGridMmPerIn = 25.4f;
+constexpr float kPageGridDefaultSizePt = 72.f;
+constexpr int kPageGridDefaultSubdivisions = 4;
+constexpr Color kPageGridDefaultColor = MkRgb(128, 128, 255);
+constexpr int kPageGridDefaultStyleIdx = 0;
+constexpr int kPageGridDefaultUnitIdx = 1;
 
 struct PageGridSnap {
-    float width = 72;
-    float height = 72;
-    int subdivisions = 4;
+    float width = kPageGridDefaultSizePt;
+    float height = kPageGridDefaultSizePt;
+    int subdivisions = kPageGridDefaultSubdivisions;
     float offsetX = 0;
     float offsetY = 0;
     Str color;
@@ -53,8 +58,8 @@ struct PageGridWnd : WindowBase {
 
     MainWindow* win = nullptr;
     PageGridSnap snap{};
-    Color currentColor = MkRgb(128, 128, 255);
-    int unitIdx = 1; // inches
+    Color currentColor = kPageGridDefaultColor;
+    int unitIdx = kPageGridDefaultUnitIdx;
     bool updating = false;
 
     DropDown* ddUnits = nullptr;
@@ -67,6 +72,7 @@ struct PageGridWnd : WindowBase {
     VirtCustom* swatch = nullptr;
     Edit* editColor = nullptr;
     Checkbox* cbShow = nullptr;
+    VirtButton* btnReset = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnOk = nullptr;
 
@@ -80,6 +86,7 @@ struct PageGridWnd : WindowBase {
     void OnColorEditChanged();
     void OnSwatchClick(VirtMouseEvent* ev);
     void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnReset(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
 };
 
@@ -181,9 +188,9 @@ static PageGrid* PageGridPrefs() {
 }
 
 static void CopyPageGridSnap(PageGridSnap& dst, const PageGrid& src, bool showGrid) {
-    dst.width = src.width > 0 ? src.width : 72.f;
-    dst.height = src.height > 0 ? src.height : 72.f;
-    dst.subdivisions = src.subdivisions > 0 ? src.subdivisions : 4;
+    dst.width = src.width > 0 ? src.width : kPageGridDefaultSizePt;
+    dst.height = src.height > 0 ? src.height : kPageGridDefaultSizePt;
+    dst.subdivisions = src.subdivisions > 0 ? src.subdivisions : kPageGridDefaultSubdivisions;
     dst.offsetX = src.offsetX;
     dst.offsetY = src.offsetY;
     str::ReplaceWithCopy(&dst.color, src.color.s);
@@ -215,13 +222,15 @@ void PageGridWnd::FillEditsFromPt() {
     }
     updating = true;
     if (editWidth) {
-        editWidth->SetText(PageGridNumTemp(PageGridFromPt(pg->width > 0 ? pg->width : 72.f, unitIdx)));
+        editWidth->SetText(
+            PageGridNumTemp(PageGridFromPt(pg->width > 0 ? pg->width : kPageGridDefaultSizePt, unitIdx)));
     }
     if (editHeight) {
-        editHeight->SetText(PageGridNumTemp(PageGridFromPt(pg->height > 0 ? pg->height : 72.f, unitIdx)));
+        editHeight->SetText(
+            PageGridNumTemp(PageGridFromPt(pg->height > 0 ? pg->height : kPageGridDefaultSizePt, unitIdx)));
     }
     if (editSub) {
-        int n = pg->subdivisions > 0 ? pg->subdivisions : 4;
+        int n = pg->subdivisions > 0 ? pg->subdivisions : kPageGridDefaultSubdivisions;
         editSub->SetText(fmt("%d", n));
     }
     if (editOffX) {
@@ -273,9 +282,9 @@ void PageGridWnd::ApplyLive() {
         pg->offsetX = ox;
         pg->offsetY = oy;
     }
-    int styleIdx = ddStyle ? ddStyle->GetCurrentSelection() : 0;
+    int styleIdx = ddStyle ? ddStyle->GetCurrentSelection() : kPageGridDefaultStyleIdx;
     if (styleIdx < 0) {
-        styleIdx = 0;
+        styleIdx = kPageGridDefaultStyleIdx;
     }
     str::ReplaceWithCopy(&pg->style, SeqStrByIndex(kPageGridStyleTok, styleIdx));
     str::ReplaceWithCopy(&pg->units, SeqStrByIndex(kPageGridUnitTok, unitIdx));
@@ -302,7 +311,7 @@ void PageGridWnd::OnUnitsChanged() {
     }
     int idx = ddUnits->GetCurrentSelection();
     if (idx < 0) {
-        idx = 1;
+        idx = kPageGridDefaultUnitIdx;
     }
     unitIdx = idx;
     FillEditsFromPt();
@@ -354,14 +363,14 @@ void PageGridWnd::LoadFromPrefs() {
     }
     CopyPageGridSnap(snap, *pg, ShowPageGrid());
     ParseColor(pg->color);
-    currentColor = (pg->color.parsedOk && !IsSpecialColor(pg->color.col)) ? pg->color.col : MkRgb(128, 128, 255);
+    currentColor = (pg->color.parsedOk && !IsSpecialColor(pg->color.col)) ? pg->color.col : kPageGridDefaultColor;
     unitIdx = SeqStrIndexIS(kPageGridUnitTok, pg->units);
     if (unitIdx < 0) {
-        unitIdx = 1;
+        unitIdx = kPageGridDefaultUnitIdx;
     }
     int styleIdx = SeqStrIndexIS(kPageGridStyleTok, pg->style);
     if (styleIdx < 0) {
-        styleIdx = 0;
+        styleIdx = kPageGridDefaultStyleIdx;
     }
     updating = true;
     if (ddUnits) {
@@ -387,6 +396,42 @@ void PageGridWnd::OnCancel(VirtMouseEvent*) {
     WriteSnapToPrefs();
     RedrawPageGridWindows();
     ScheduleDelete();
+}
+
+// Restore the shipped appearance settings as a live preview. Show Grid is a
+// session toggle rather than a saved setting, so leave it unchanged.
+void PageGridWnd::OnReset(VirtMouseEvent*) {
+    PageGrid* pg = PageGridPrefs();
+    if (!pg) {
+        return;
+    }
+    pg->width = kPageGridDefaultSizePt;
+    pg->height = kPageGridDefaultSizePt;
+    pg->subdivisions = kPageGridDefaultSubdivisions;
+    pg->offsetX = 0;
+    pg->offsetY = 0;
+    SetColorText(pg->color, SerializeColorTemp(kPageGridDefaultColor));
+    str::ReplaceWithCopy(&pg->style, SeqStrByIndex(kPageGridStyleTok, kPageGridDefaultStyleIdx));
+    str::ReplaceWithCopy(&pg->units, SeqStrByIndex(kPageGridUnitTok, kPageGridDefaultUnitIdx));
+
+    currentColor = kPageGridDefaultColor;
+    unitIdx = kPageGridDefaultUnitIdx;
+    updating = true;
+    if (ddUnits) {
+        ddUnits->SetCurrentSelection(unitIdx);
+    }
+    if (ddStyle) {
+        ddStyle->SetCurrentSelection(kPageGridDefaultStyleIdx);
+    }
+    if (editColor) {
+        editColor->SetText(SerializeColorTemp(currentColor));
+    }
+    updating = false;
+    FillEditsFromPt();
+    if (swatch) {
+        swatch->Invalidate();
+    }
+    ApplyLive();
 }
 
 void PageGridWnd::OnOk(VirtMouseEvent*) {
@@ -592,17 +637,26 @@ bool PageGridWnd::Create(MainWindow* mainWin) {
 
     {
         auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
+        hbox->alignMain = MainAxisAlign::SpaceBetween;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         hbox->gap = font->averageCharWidth;
         auto pad = Insets{8, 0, 4, 0};
 
+        btnReset = NewThemedButton(hwnd, _TRA("Reset to defaults"), font, false);
+        btnReset->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnReset>(this);
+        hbox->AddChild(new Padding(btnReset, pad));
+
+        auto* right = new HBox();
+        right->alignMain = MainAxisAlign::MainEnd;
+        right->alignCross = CrossAxisAlign::CrossCenter;
+        right->gap = font->averageCharWidth;
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
+        right->AddChild(new Padding(btnCancel, pad));
         btnOk = NewThemedButton(hwnd, _TRA("OK"), font, true);
         btnOk->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
+        right->AddChild(new Padding(btnOk, pad));
+        hbox->AddChild(right);
         vbox->AddChild(hbox);
     }
 

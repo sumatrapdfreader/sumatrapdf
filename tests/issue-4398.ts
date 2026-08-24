@@ -19,14 +19,17 @@ import {
   enumChildWindows,
   enumWindows,
   getClassName,
+  getClientRect,
   getControlText,
   getWindowPid,
   getWindowText,
   sendMessage,
+  sendText,
   sleep,
 } from "./winapi.ts";
-import { findCanvas, pressEscape, sendCommand, waitForFrame } from "./win-automation.ts";
+import { clickAt, findCanvas, pressEscape, sendCommand, waitForFrame } from "./win-automation.ts";
 
+const BM_GETCHECK = 0x00f0;
 const BM_CLICK = 0x00f5;
 
 const PDF = join(ROOT, "tests", "issue-4398.pdf");
@@ -95,6 +98,17 @@ function countChildClass(dlg: number, className: string): number {
     return true;
   });
   return n;
+}
+
+function childWindowsByClass(dlg: number, className: string): number[] {
+  const windows: number[] = [];
+  enumChildWindows(dlg, (hwnd) => {
+    if (getClassName(hwnd) === className) {
+      windows.push(hwnd);
+    }
+    return true;
+  });
+  return windows;
 }
 
 function countGridColor(data: Uint8Array): number {
@@ -172,6 +186,28 @@ export async function testit(): Promise<void> {
         throw new Error(`issue-4398: Show Grid in configure dialog did not show overlay (grid pixels=${nDlg})`);
       }
       console.log(`  configure dialog Show Grid pixels ${nDlg} ✓`);
+
+      const edits = childWindowsByClass(dlg, "Edit");
+      if (edits.length !== 6) {
+        throw new Error(`issue-4398: expected 6 page-grid edit controls, got ${edits.length}`);
+      }
+      sendText(edits[0]!, "2");
+      await sleep(150);
+      if (getControlText(edits[0]!) !== "2") {
+        throw new Error("issue-4398: failed to change a page-grid value before reset");
+      }
+
+      const dlgRect = getClientRect(dlg);
+      await clickAt(dlg, Math.round(dlgRect.right * 0.18), Math.round(dlgRect.bottom * 0.93));
+      const values = edits.map((hwnd) => getControlText(hwnd)).sort();
+      const defaults = ["#8080ff", "0", "0", "1", "1", "4"].sort();
+      if (values.join("|") !== defaults.join("|")) {
+        throw new Error(`issue-4398: Reset to defaults produced ${values.join(", ")}`);
+      }
+      if (Number(sendMessage(cb, BM_GETCHECK, 0, 0)) !== 1) {
+        throw new Error("issue-4398: Reset to defaults turned off Show Grid");
+      }
+      console.log("  Reset to defaults restored all page-grid fields and kept Show Grid on ✓");
       await pressEscape(dlg);
     },
     [PDF],
