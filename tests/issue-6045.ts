@@ -1,5 +1,5 @@
-// #6045: the in-app Manual keeps its white document background after the
-// window is resized or maximized while a dark UI theme is active.
+// #6045: the in-app Manual keeps its themed document background and text
+// colors after the window is resized or maximized.
 //
 // Needs WebView2. If the documentation window never appears, skip.
 //
@@ -9,7 +9,8 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
-  captureWindowDCRegionPixels,
+  captureWindowPixels,
+  clientToScreen,
   enumChildWindows,
   enumWindows,
   getClassName,
@@ -65,34 +66,89 @@ async function waitForHelpWebView(pid: number, timeoutMs: number): Promise<{ hel
   return null;
 }
 
-function nearWhiteFraction(pixels: Uint8Array): number {
-  let white = 0;
+function nearBlackFraction(pixels: Uint8Array): number {
+  let black = 0;
   for (let i = 0; i < pixels.length; i += 4) {
-    if (pixels[i] >= 250 && pixels[i + 1] >= 250 && pixels[i + 2] >= 250) {
-      white++;
+    if (pixels[i] <= 5 && pixels[i + 1] <= 5 && pixels[i + 2] <= 5) {
+      black++;
     }
   }
-  return white / (pixels.length / 4);
+  return black / (pixels.length / 4);
 }
 
-async function waitForWhiteBackground(webView: number, where: string): Promise<void> {
+function captureWebViewRegion(
+  help: number,
+  webView: number,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+): Uint8Array | null {
+  const capture = captureWindowPixels(help);
+  const webRect = getWindowRect(webView);
+  const clientOrigin = clientToScreen(help, 0, 0);
+  x += webRect.left - clientOrigin.x;
+  y += webRect.top - clientOrigin.y;
+  if (!capture || x < 0 || y < 0 || x + dx > capture.w || y + dy > capture.h) {
+    return null;
+  }
+  const pixels = new Uint8Array(dx * dy * 4);
+  for (let row = 0; row < dy; row++) {
+    const srcStart = ((y + row) * capture.w + x) * 4;
+    const dstStart = row * dx * 4;
+    pixels.set(capture.data.subarray(srcStart, srcStart + dx * 4), dstStart);
+  }
+  return pixels;
+}
+
+async function waitForDarkTheme(help: number, webView: number, where: string): Promise<void> {
   const deadline = Date.now() + 3000;
   let fraction = 0;
+  let firstPixel = "";
   do {
     const r = getWindowRect(webView);
     const dx = r.right - r.left;
     const dy = r.bottom - r.top;
-    const pixels = captureWindowDCRegionPixels(webView, Math.max(0, dx - 140), Math.max(0, dy - 100), 100, 60);
+    const pixels = captureWebViewRegion(help, webView, Math.max(0, dx - 140), Math.max(0, dy - 100), 100, 60);
     if (!pixels) {
       throw new Error(`issue-6045: failed to read the ${where} Manual background`);
     }
-    fraction = nearWhiteFraction(pixels);
+    firstPixel = `${pixels[2]},${pixels[1]},${pixels[0]}`;
+    fraction = nearBlackFraction(pixels);
     if (fraction >= 0.98) {
       return;
     }
     await sleep(50);
   } while (Date.now() <= deadline);
-  throw new Error(`issue-6045: ${where} Manual background was only ${(fraction * 100).toFixed(1)}% white`);
+  throw new Error(
+    `issue-6045: ${where} Manual background was only ${(fraction * 100).toFixed(1)}% theme black (first RGB ${firstPixel})`,
+  );
+}
+
+async function waitForLightThemeText(help: number, webView: number): Promise<void> {
+  const deadline = Date.now() + 15000;
+  let lightPixels = 0;
+  do {
+    // Maximizing makes the left navigation visible. It contains many rows of
+    // ordinary text; start below the white search input at its top.
+    const r = getWindowRect(webView);
+    const sampleDy = Math.min(500, r.bottom - r.top - 85);
+    const pixels = captureWebViewRegion(help, webView, 15, 75, 190, sampleDy);
+    if (!pixels) {
+      throw new Error("issue-6045: failed to read the Manual text");
+    }
+    lightPixels = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i] >= 180 && pixels[i + 1] >= 180 && pixels[i + 2] >= 180) {
+        lightPixels++;
+      }
+    }
+    if (lightPixels >= 100) {
+      return;
+    }
+    await sleep(50);
+  } while (Date.now() <= deadline);
+  throw new Error(`issue-6045: Manual text did not follow the light Dark-theme text color (${lightPixels} pixels)`);
 }
 
 export async function testit(): Promise<void> {
@@ -116,10 +172,11 @@ export async function testit(): Promise<void> {
 
     moveWindow(windows.help, 50, 50, 720, 560, true);
     setForegroundWindow(windows.help);
-    await waitForWhiteBackground(windows.webView, "resized");
+    await waitForDarkTheme(windows.help, windows.webView, "resized");
 
     showWindow(windows.help, SW_MAXIMIZE);
-    await waitForWhiteBackground(windows.webView, "maximized");
+    await waitForDarkTheme(windows.help, windows.webView, "maximized");
+    await waitForLightThemeText(windows.help, windows.webView);
   } finally {
     client.close();
     await killAndWait(proc);

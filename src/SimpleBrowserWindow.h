@@ -8,6 +8,7 @@ struct SimpleBrowserCreateArgs {
     Str dataDir;
     WebViewResourceProvider resourceProvider;
     WStr resourceUriPrefix;
+    Color backgroundColor = kColorTransparent;
 };
 
 struct VirtButton;

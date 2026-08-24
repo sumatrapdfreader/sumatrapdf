@@ -10304,6 +10304,35 @@ static TempStr ManualArchiveLookupPathTemp(Str path) {
     return lookupPath;
 }
 
+// The website stylesheet deliberately leaves the page canvas transparent and
+// uses inherited colors for most prose. Add the current app theme after its
+// stylesheets so the in-app Manual matches its native window without changing
+// the files served on sumatrapdfreader.org.
+static Str ManualInjectThemeCss(Str html) {
+    TempStr bg = SerializeColorTemp(ThemeWindowBackgroundColor());
+    TempStr fg = SerializeColorTemp(ThemeWindowTextColor());
+    TempStr link = SerializeColorTemp(ThemeWindowLinkColor());
+    Str colorScheme = IsLightColor(ThemeWindowBackgroundColor()) ? StrL("light") : StrL("dark");
+    TempStr css =
+        fmt("<style id=\"sumatra-manual-theme\">"
+            ":root{color-scheme:%s}"
+            "html,body{background-color:%s;color:%s}"
+            "a:not(.hlink){color:%s}"
+            ".sidebar-toc a{color:%s}"
+            "</style>",
+            colorScheme, bg, fg, link, fg);
+
+    int insertAt = str::IndexOfI(html, StrL("</head>"));
+    if (insertAt < 0) {
+        insertAt = 0;
+    }
+    str::Builder result(len(html) + len(css));
+    result.Append(Str(html.s, insertAt));
+    result.Append(css);
+    result.Append(Str(html.s + insertAt, len(html) - insertAt));
+    return result.TakeStr();
+}
+
 static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     auto* archive = (lzma::SimpleArchive*)ctx;
     if (!archive || !res || len(path) == 0) {
@@ -10329,8 +10358,15 @@ static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     }
 
     lzma::FileInfo* fi = &archive->files[idx];
+    size_t dataLen = fi->uncompressedSize;
+    if (str::EqI(path, StrL("manual.shell.html"))) {
+        Str themed = ManualInjectThemeCss(Str((char*)data, (int)dataLen));
+        free(data);
+        data = (u8*)themed.s;
+        dataLen = (size_t)len(themed);
+    }
     res->data = data;
-    res->dataLen = fi->uncompressedSize;
+    res->dataLen = dataLen;
     res->contentType = str::Dup(ManualMimeFromPathTemp(mimePath));
     res->ownsData = true;
     return true;
@@ -10428,6 +10464,7 @@ void LaunchDocumentation(Str docURI) {
         args.pos = ManualBrowserPlacementRect(parentFrame);
         args.resourceProvider = ManualResourceProvider();
         args.resourceUriPrefix = kManualVirtualHostW;
+        args.backgroundColor = ThemeWindowBackgroundColor();
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
         if (gManualBrowserWindow != nullptr) {
             gManualBrowserWindow->closeOnEsc = gGlobalPrefs->escToExit;
