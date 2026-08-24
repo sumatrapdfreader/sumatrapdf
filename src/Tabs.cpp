@@ -123,19 +123,13 @@ static void ShowTabBar(MainWindow* win, bool show) {
 // also shows/hides the tabbar when necessary
 void UpdateTabWidth(MainWindow* win) {
     int nTabs = win->TabCount();
-    // Count real documents only: Home (and Favorites) alone should not keep the
-    // tab bar open. Showing Home as a single tab after the last document closed
-    // fought RelayoutCaption (which hides tabs with no file tabs) and caused a
-    // continuous TabsCtrl repaint storm (issue #5861).
-    int nDocTabs = 0;
-    for (int i = 0; i < nTabs; i++) {
-        WindowTab* t = win->GetTab(i);
-        if (t && !t->IsNonDocumentTab()) {
-            nDocTabs++;
-        }
-    }
+    // Hide a lone Home tab. Keeping its tab bar open after the last document
+    // closed fought RelayoutCaption and caused a continuous repaint storm
+    // (issue #5861). Favorites is a closable tab, so it must remain visible
+    // even when it is the only tab left.
+    bool onlyHomeTab = nTabs == 1 && win->GetTab(0)->IsAboutTab();
     bool showSingleTab = SettingsUseTabs() || win->tabsInTitlebar;
-    bool showTabs = (nDocTabs > 1) || (showSingleTab && (nDocTabs > 0));
+    bool showTabs = !onlyHomeTab && ((nTabs > 1) || (showSingleTab && (nTabs > 0)));
     // TabWidth is stored in logical (96-DPI) units, same as other layout
     // settings; convert to physical pixels so HiDPI monitors honor the value
     // (issue #3850). Height already uses DpiScale via GetTabbarHeight.
