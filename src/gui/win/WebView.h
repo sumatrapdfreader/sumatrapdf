@@ -3,6 +3,7 @@
 
 TempStr GetWebView2VersionTemp();
 bool HasWebView();
+void WebViewShutdown();
 
 // TODO: maybe hide those inside a private struct
 typedef interface ICoreWebView2 ICoreWebView2;

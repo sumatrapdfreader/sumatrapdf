@@ -160,6 +160,7 @@ SharedWebViewEnvState gSharedEnvState = SharedWebViewEnvState::NotStarted;
 ICoreWebView2Environment* gSharedEnvironment = nullptr;
 WStr gSharedUserDataFolder;
 Vec<WebviewWnd*> gPendingWebviews;
+bool gWebViewShuttingDown = false;
 
 // Creating the environment fails with HRESULT_FROM_WIN32(ERROR_INVALID_STATE) when
 // another process is already using the same user data folder with different
@@ -1902,6 +1903,14 @@ static void CancelEnvRetryTimer() {
     gEnvRetryTimerHwnd = nullptr;
 }
 
+void WebViewShutdown() {
+    gWebViewShuttingDown = true;
+    CancelEnvRetryTimer();
+    FailPendingWebviews();
+    ResetSharedEnvironment();
+    wstr::Free(gSharedUserDataFolder);
+}
+
 // Retry on a timer rather than Sleep()ing: this runs on the UI thread.
 static void ScheduleEnvCreateRetry() {
     CancelEnvRetryTimer();
@@ -1937,6 +1946,9 @@ static void OnEnvCreateRetryTimer() {
 }
 
 static void OnSharedEnvironmentReady(HRESULT res, ICoreWebView2Environment* env) {
+    if (gWebViewShuttingDown) {
+        return;
+    }
     if (FAILED(res) || !env) {
         logf("WebView2: creating environment failed with 0x%x (attempt %d/%d)\n", (int)res, gEnvCreateAttempts,
              kMaxEnvCreateAttempts);
@@ -2014,6 +2026,9 @@ static bool EnvCreationAllowedAgain() {
 }
 
 bool WebviewWnd::Embed(WebViewMsgCb& cb) {
+    if (gWebViewShuttingDown) {
+        return false;
+    }
     if (initStarted) {
         return !initFailed;
     }
@@ -2263,6 +2278,7 @@ void WebviewWnd::ShowFindUI() {}
 bool WebviewWnd::Embed(WebViewMsgCb&) {
     return false;
 }
+void WebViewShutdown() {}
 void WebviewWnd::OnControllerReady(ICoreWebView2Controller*) {}
 void WebviewWnd::FailInit() {}
 void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str, int) {}

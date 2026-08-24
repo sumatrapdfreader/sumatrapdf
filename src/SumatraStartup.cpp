@@ -23,6 +23,7 @@
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#include "gui/win/WebView.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -1762,6 +1763,48 @@ static void DeleteStaleFilesAsync() {
     DeleteStaleOpenCacheFiles();
     DeleteOldPdfPreviewLogs(32);
 
+    // WebView2 can keep its browser process alive for several seconds after
+    // SumatraPDF exits. Each process therefore gets its own profile directory;
+    // remove profiles whose owning process no longer exists. If WebView2 still
+    // has a file open, this harmlessly fails and a later startup retries.
+    TempStr currentWebViewDir = GetWebViewDataDirTemp();
+    TempStr webViewRoot = path::GetDirTemp(currentWebViewDir);
+    if (webViewRoot) {
+        DirIter webViews{webViewRoot};
+        webViews.includeFiles = false;
+        webViews.includeDirs = true;
+        for (DirIterEntry* de : webViews) {
+            Str pidText = de->name;
+            if (!str::TrimPrefix(pidText, StrL("webview-")) || len(pidText) == 0) {
+                continue;
+            }
+            bool isPid = true;
+            for (int i = 0; i < len(pidText); i++) {
+                if (!str::IsDigit(pidText.s[i])) {
+                    isPid = false;
+                    break;
+                }
+            }
+            if (!isPid) {
+                continue;
+            }
+            int pid = ParseInt(pidText);
+            if (pid <= 0) {
+                continue;
+            }
+            AutoCloseHandle process = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
+            if (process.IsValid()) {
+                if (WaitForSingleObject(process, 0) == WAIT_TIMEOUT) {
+                    continue;
+                }
+            } else if (GetLastError() != ERROR_INVALID_PARAMETER) {
+                continue;
+            }
+            bool ok = dir::RemoveAll(de->filePath);
+            logf("DeleteStaleFilesAsync: remove WebView profile '%s' -> %d\n", de->filePath, (int)ok);
+        }
+    }
+
     if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
         return;
     }
@@ -3045,6 +3088,12 @@ Exit:
     FreeExternalViewers();
     while (len(gWindows) > 0) {
         DeleteMainWindow(gWindows[0]);
+    }
+    WebViewShutdown();
+    TempStr webViewDataDir = GetWebViewDataDirTemp();
+    if (dir::Exists(webViewDataDir)) {
+        bool removed = dir::RemoveAll(webViewDataDir);
+        logf("WebView shutdown: remove profile '%s' -> %d\n", webViewDataDir, (int)removed);
     }
 
     DeleteCachedCursors();

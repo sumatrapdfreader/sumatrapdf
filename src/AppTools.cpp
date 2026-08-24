@@ -511,7 +511,7 @@ TempStr GetWebViewDataDirTemp() {
         str::BufSet(Str(id, dimof(id)), sha1);
     }
     dir = path::JoinTemp(dir, Str(id));
-    return path::JoinTemp(dir, StrL("webview"));
+    return path::JoinTemp(dir, fmt("webview-%d", (int)GetCurrentProcessId()));
 }
 
 // Format the file size in a short form that rounds to the largest size unit
