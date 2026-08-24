@@ -11,6 +11,7 @@
 #include "base/Win.h"
 #include "base/ScopedWin.h"
 #include "base/Http.h"
+#include "base/Pixmap.h"
 #include "base/GdiPlusUtil.h"
 #include "base/GuessFileType.h"
 
@@ -60,6 +61,7 @@
 #include "HomePage.h"
 #include "Toolbar.h"
 #include "Translations.h"
+#include "SvgIcons.h"
 
 #include "RefHover.h"
 
@@ -79,6 +81,7 @@ void CancelAnnotationResizeRerender(MainWindow* win) {
 }
 
 Kind kNotifAnnotation = "notifAnnotation";
+static Kind kNotifTextAnnotationPlacement = "notifTextAnnotationPlacement";
 
 constexpr int kRenderDelayShowNotif = 500;
 
@@ -200,6 +203,142 @@ void DeleteLaserPointerCursor() {
     }
 }
 
+//--- text annotation placement
+
+static HCURSOR gCursorTextAnnotationPlacement = nullptr;
+static int gCursorTextAnnotationPlacementDx = 0;
+static int gCursorTextAnnotationPlacementDy = 0;
+static Color gCursorTextAnnotationPlacementColor = 0;
+
+static HCURSOR CreateTextAnnotationPlacementCursor(int dx, int dy, Color color) {
+    Pixmap* px = GetCachedPixmapForSvg(Str(gIconAnnotText), dx, dy, color);
+    if (!px || !px->hbmp) {
+        return nullptr;
+    }
+
+    int maskBytesPerRow = ((dx + 15) / 16) * 2;
+    u8* maskBits = AllocArray<u8>(maskBytesPerRow * dy);
+    HBITMAP hbmpMask = CreateBitmap(dx, dy, 1, 1, maskBits);
+    free(maskBits);
+    if (!hbmpMask) {
+        return nullptr;
+    }
+
+    ICONINFO ii{};
+    ii.fIcon = FALSE;
+    ii.xHotspot = 0;
+    ii.yHotspot = 0;
+    ii.hbmMask = hbmpMask;
+    ii.hbmColor = px->hbmp;
+    HCURSOR cursor = (HCURSOR)CreateIconIndirect(&ii);
+    DeleteObject(hbmpMask);
+    return cursor;
+}
+
+static HCURSOR GetTextAnnotationPlacementCursor() {
+    int dx = std::max(ToolbarIconSize(), DpiGetSystemMetrics(SM_CXCURSOR));
+    int dy = std::max(ToolbarIconSize(), DpiGetSystemMetrics(SM_CYCURSOR));
+    Color color = ThemeWindowTextColor();
+    if (gCursorTextAnnotationPlacement && dx == gCursorTextAnnotationPlacementDx &&
+        dy == gCursorTextAnnotationPlacementDy && color == gCursorTextAnnotationPlacementColor) {
+        return gCursorTextAnnotationPlacement;
+    }
+    HCURSOR cursor = CreateTextAnnotationPlacementCursor(dx, dy, color);
+    if (!cursor) {
+        return gCursorTextAnnotationPlacement;
+    }
+    if (gCursorTextAnnotationPlacement) {
+        DestroyCursor(gCursorTextAnnotationPlacement);
+    }
+    gCursorTextAnnotationPlacement = cursor;
+    gCursorTextAnnotationPlacementDx = dx;
+    gCursorTextAnnotationPlacementDy = dy;
+    gCursorTextAnnotationPlacementColor = color;
+    return gCursorTextAnnotationPlacement;
+}
+
+void DeleteTextAnnotationPlacementCursor() {
+    if (gCursorTextAnnotationPlacement) {
+        DestroyCursor(gCursorTextAnnotationPlacement);
+    }
+    gCursorTextAnnotationPlacement = nullptr;
+    gCursorTextAnnotationPlacementDx = 0;
+    gCursorTextAnnotationPlacementDy = 0;
+    gCursorTextAnnotationPlacementColor = 0;
+}
+
+static void SetTextAnnotationPlacementCursor() {
+    HCURSOR cursor = GetTextAnnotationPlacementCursor();
+    if (cursor) {
+        SetCursor(cursor);
+    } else {
+        SetCursorCached(IDC_CROSS);
+    }
+}
+
+bool IsPlacingTextAnnotation(MainWindow* win) {
+    return win && win->textAnnotationPlacementCmdId > 0;
+}
+
+bool CancelTextAnnotationPlacement(MainWindow* win) {
+    if (!IsPlacingTextAnnotation(win)) {
+        return false;
+    }
+    win->textAnnotationPlacementCmdId = 0;
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifTextAnnotationPlacement);
+    HideAnnotationHoverOverlay(win);
+    if (win->hwndCanvas) {
+        SendMessageW(win->hwndCanvas, WM_SETCURSOR, (WPARAM)win->hwndCanvas, MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+    }
+    return true;
+}
+
+void StartTextAnnotationPlacement(MainWindow* win, int cmdId) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!win || !tab || !engine || !EngineSupportsAnnotations(engine) || cmdId <= 0) {
+        return;
+    }
+    win->textAnnotationPlacementCmdId = cmdId;
+    StopSelectTextWithKeyboard(win);
+    DeleteOldSelectionInfo(win, true);
+    if (tab && tab->selectedAnnotation) {
+        SetSelectedAnnotation(tab, nullptr);
+    }
+    win->annotationUnderCursor = nullptr;
+    HideAnnotationHoverOverlay(win);
+    ScheduleRepaint(win, 0);
+
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = _TRA("Place text annotation. **Esc** to cancel.");
+    args.timeoutMs = kNotifNoTimeout;
+    args.groupId = kNotifTextAnnotationPlacement;
+    args.corner = NotifCorner::BottomBar;
+    args.warning = true;
+    args.tab = tab;
+    ShowNotification(args);
+
+    HwndSetFocus(win->hwndFrame);
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    if (HwndClientRect(win->hwndCanvas).Contains(pt)) {
+        SetTextAnnotationPlacementCursor();
+    }
+}
+
+TempStr TextAnnotationPlacementStateTemp(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return str::DupTemp(StrL("textPlacement active=0 notification=0 cursor=0 cmd=0 message=\n"));
+    }
+    NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifTextAnnotationPlacement);
+    Str message = NotificationGetMessageTemp(notif);
+    bool iconCursor = gCursorTextAnnotationPlacement && GetCursor() == gCursorTextAnnotationPlacement;
+    return fmt("textPlacement active=%d notification=%d cursor=%d cmd=%d message=%s\n",
+               IsPlacingTextAnnotation(win) ? 1 : 0, notif ? 1 : 0, iconCursor ? 1 : 0,
+               win->textAnnotationPlacementCmdId, message);
+}
+
 bool IsLaserPointerActive() {
     return gLaserPointer;
 }
@@ -229,6 +368,26 @@ static void SetCanvasCursor(MainWindow* win, LPWSTR cursorId) {
         return;
     }
     SetCursorCached(cursorId);
+}
+
+// A placement click outside every page is consumed but leaves the mode active.
+// A valid click leaves the mode first, then re-enters the normal command path
+// with the original command id so custom color/openEdit arguments are retained.
+static bool PlaceTextAnnotationAt(MainWindow* win, Point pt) {
+    if (!IsPlacingTextAnnotation(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
+    if (!dm || !dm->ValidPageNo(pageNo)) {
+        return true;
+    }
+
+    int cmdId = win->textAnnotationPlacementCmdId;
+    CancelTextAnnotationPlacement(win);
+    WPARAM wp = MAKEWPARAM(cmdId, kTextAnnotationPlacementCommandCode);
+    SendMessageW(win->hwndFrame, WM_COMMAND, wp, MAKELPARAM(pt.x, pt.y));
+    return true;
 }
 
 void ToggleLaserPointer(MainWindow* win) {
@@ -1657,6 +1816,16 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
     if (!dm) return;
 
+    if (IsPlacingTextAnnotation(win)) {
+        if (win->annotationUnderCursor) {
+            win->annotationUnderCursor = nullptr;
+            ScheduleRepaint(win, 0);
+        }
+        HideAnnotationHoverOverlay(win);
+        SetTextAnnotationPlacementCursor();
+        return;
+    }
+
     if (win->touchSelDragging != TouchSelHandle::None) {
         DragTouchSelHandle(win, x, y);
         return;
@@ -2095,6 +2264,12 @@ static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot) {
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
+        return;
+    }
+
+    if (IsPlacingTextAnnotation(win)) {
+        HwndSetFocus(win->hwndFrame);
+        PlaceTextAnnotationAt(win, Point{x, y});
         return;
     }
 
@@ -3837,6 +4012,12 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     ReportIf(win->hwndCanvas != hwnd);
     if (win->mouseAction != MouseAction::None) {
         win->DeleteToolTip();
+    }
+
+    if (IsPlacingTextAnnotation(win)) {
+        SetTextAnnotationPlacementCursor();
+        win->DeleteToolTip();
+        return TRUE;
     }
 
     // the laser dot replaces every other cursor, and while pointing at the page

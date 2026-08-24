@@ -562,6 +562,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
         n++;
     }
     out.Append(fmt("n=%d\n", n));
+    out.Append(fmt("annotations=%d\n", len(annots)));
     bool hasNotification = GetNotificationForGroup(gWindows[0]->hwndCanvas, kNotifAnnotation) != nullptr;
     bool selectedHover = tab->selectedAnnotation && tab->selectedAnnotation == gWindows[0]->annotationUnderCursor;
     out.Append(fmt("state selected=%d hover=%d editToolbar=%d notification=%d editor=%d selectedHover=%d\n",
@@ -569,6 +570,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
                    gWindows[0]->pdfAnnotationsToolbarEnabled ? 1 : 0, hasNotification ? 1 : 0,
                    tab->editAnnotsWindow ? 1 : 0, selectedHover ? 1 : 0));
     out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
+    out.Append(TextAnnotationPlacementStateTemp(gWindows[0]));
     return finish({}, 0);
 }
 

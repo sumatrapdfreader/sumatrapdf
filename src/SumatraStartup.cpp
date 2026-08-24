@@ -3098,6 +3098,7 @@ Exit:
 
     DeleteCachedCursors();
     DeleteLaserPointerCursor();
+    DeleteTextAnnotationPlacementCursor();
     DeleteCreatedFonts();
     DeleteBitmap(gBitmapReloadingCue);
     // all frame/canvas windows are destroyed by now

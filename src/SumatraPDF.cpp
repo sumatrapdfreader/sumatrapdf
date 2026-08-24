@@ -4998,6 +4998,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
+    CancelTextAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
     // leave the hidden placement dialog aimed at a dead model
     CloseSignDocumentDialog(win);
@@ -8993,6 +8994,9 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (StopSelectTextWithKeyboard(win)) {
         return;
     }
+    if (CancelTextAnnotationPlacement(win)) {
+        return;
+    }
     if (CancelPlacingSignature(win)) {
         return;
     }
@@ -10775,6 +10779,8 @@ static void PrintCurrentFileDeferred(MainWindow* win) {
 
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
+    int invokedCmdId = cmdId;
+    bool isTextAnnotationPlacement = HIWORD(wp) == kTextAnnotationPlacementCommandCode;
     bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
@@ -12362,6 +12368,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
             // Note: duplicated in OnWindowContextMenu because slightly different handling
         case CmdCreateAnnotText:
+            if (!isTextAnnotationPlacement && lp == 0) {
+                StartTextAnnotationPlacement(win, invokedCmdId);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotFreeText:
             [[fallthrough]];

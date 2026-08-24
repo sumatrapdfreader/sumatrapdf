@@ -21,8 +21,15 @@ void ToggleShowFitContentArea();
 bool IsLaserPointerActive();
 void ToggleLaserPointer(MainWindow*);
 void DeleteLaserPointerCursor();
+bool IsPlacingTextAnnotation(MainWindow*);
+void StartTextAnnotationPlacement(MainWindow*, int cmdId);
+bool CancelTextAnnotationPlacement(MainWindow*);
+void DeleteTextAnnotationPlacementCursor();
+TempStr TextAnnotationPlacementStateTemp(MainWindow*);
 void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc);
 void InvalidateCanvasKeyboardFocus(MainWindow* win);
+
+constexpr WORD kTextAnnotationPlacementCommandCode = 0x5341;
 
 extern Kind kNotifAnnotation;
 
