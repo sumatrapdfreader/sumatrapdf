@@ -450,6 +450,15 @@ struct MainWindow {
     int polyLineAnnotationPlacementPageNo = -1;
     Vec<PointF> polyLineAnnotationPlacementPoints;
     Point polyLineAnnotationPlacementEnd;
+    int shapeAnnotationPlacementCmdId = 0;
+    int shapeAnnotationPlacementPageNo = -1;
+    PointF shapeAnnotationPlacementStart;
+    Point shapeAnnotationPlacementEnd;
+    RectF shapeAnnotationPlacementRect;
+    bool shapeAnnotationPlacementCircle = false;
+    bool shapeAnnotationPlacementMouseDown = false;
+    bool shapeAnnotationPlacementDidDrag = false;
+    bool shapeAnnotationPlacementConstrain = false;
     // overlay toolbar mode: the toolbar floats over the page (doesn't reserve
     // space) and is only revealed when the mouse is near the top
     bool isToolbarOverlay = false;

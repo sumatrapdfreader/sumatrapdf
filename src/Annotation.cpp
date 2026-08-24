@@ -1585,8 +1585,6 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 case AnnotationType::Text:
                 case AnnotationType::FreeText:
                 case AnnotationType::Stamp:
-                case AnnotationType::Square:
-                case AnnotationType::Circle:
                 case AnnotationType::FileAttachment: {
                     fz_rect trect = pdf_annot_rect(ctx, annot);
                     float dx = trect.x1 - trect.x0;
@@ -1596,6 +1594,21 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     trect.y0 = pos.y;
                     trect.y1 = trect.y0 + dy;
                     pdf_set_annot_rect(ctx, annot, trect);
+                } break;
+                case AnnotationType::Square:
+                case AnnotationType::Circle: {
+                    if (args->hasRect) {
+                        pdf_set_annot_rect(ctx, annot, ToFzRect(args->rect));
+                    } else {
+                        fz_rect trect = pdf_annot_rect(ctx, annot);
+                        float dx = trect.x1 - trect.x0;
+                        trect.x0 = pos.x;
+                        trect.x1 = trect.x0 + dx;
+                        float dy = trect.y1 - trect.y0;
+                        trect.y0 = pos.y;
+                        trect.y1 = trect.y0 + dy;
+                        pdf_set_annot_rect(ctx, annot, trect);
+                    }
                 } break;
                 case AnnotationType::Caret: {
                     // MuPDF draws the caret glyph centered in the rect, so anchor

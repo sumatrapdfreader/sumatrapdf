@@ -5001,6 +5001,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     CancelTextAnnotationPlacement(win);
     CancelLineAnnotationPlacement(win);
     CancelPolyLineAnnotationPlacement(win);
+    CancelShapeAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
     // leave the hidden placement dialog aimed at a dead model
     CloseSignDocumentDialog(win);
@@ -9010,6 +9011,9 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (CancelPolyLineAnnotationPlacement(win)) {
         return;
     }
+    if (CancelShapeAnnotationPlacement(win)) {
+        return;
+    }
     if (CancelPlacingSignature(win)) {
         return;
     }
@@ -10796,6 +10800,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     bool isTextAnnotationPlacement = HIWORD(wp) == kTextAnnotationPlacementCommandCode;
     bool isLineAnnotationPlacement = HIWORD(wp) == kLineAnnotationPlacementCommandCode;
     bool isPolyLineAnnotationPlacement = HIWORD(wp) == kPolyLineAnnotationPlacementCommandCode;
+    bool isShapeAnnotationPlacement = HIWORD(wp) == kShapeAnnotationPlacementCommandCode;
     bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
@@ -12395,6 +12400,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotCaret:
             [[fallthrough]];
         case CmdCreateAnnotSquare:
+            if (annotType == AnnotationType::Square && !isShapeAnnotationPlacement && lp == 0) {
+                StartShapeAnnotationPlacement(win, invokedCmdId, false);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotLine:
             if (annotType == AnnotationType::Line && !isLineAnnotationPlacement && lp == 0) {
@@ -12403,6 +12412,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             [[fallthrough]];
         case CmdCreateAnnotCircle:
+            if (annotType == AnnotationType::Circle && !isShapeAnnotationPlacement && lp == 0) {
+                StartShapeAnnotationPlacement(win, invokedCmdId, true);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotPolygon:
             [[fallthrough]];
@@ -12431,7 +12444,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             int pageNoUnderCursor = -1;
             PointF ptOnPage;
             PointF lineEndOnPage;
-            if (isLineAnnotationPlacement) {
+            if (isShapeAnnotationPlacement) {
+                bool validType = annotType == AnnotationType::Square || annotType == AnnotationType::Circle;
+                if (!validType || !IsPlacingShapeAnnotation(win)) {
+                    return 0;
+                }
+                pageNoUnderCursor = win->shapeAnnotationPlacementPageNo;
+                if (!dm->ValidPageNo(pageNoUnderCursor) || win->shapeAnnotationPlacementRect.IsEmpty()) {
+                    return 0;
+                }
+                ptOnPage = win->shapeAnnotationPlacementRect.TL();
+                Rect screenRect = dm->CvtToScreen(pageNoUnderCursor, win->shapeAnnotationPlacementRect);
+                pt = screenRect.BR();
+            } else if (isLineAnnotationPlacement) {
                 if (annotType != AnnotationType::Line || !IsPlacingLineAnnotation(win)) {
                     return 0;
                 }
@@ -12471,7 +12496,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             AnnotCreateArgs args{annotType};
             SetAnnotCreateArgs(args, cmd);
-            if (isLineAnnotationPlacement) {
+            if (isShapeAnnotationPlacement) {
+                args.hasRect = true;
+                args.rect = win->shapeAnnotationPlacementRect;
+            } else if (isLineAnnotationPlacement) {
                 args.hasLineEnd = true;
                 args.lineEnd = lineEndOnPage;
             } else if (isPolyLineAnnotationPlacement) {

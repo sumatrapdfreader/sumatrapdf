@@ -523,7 +523,8 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
         AnnotationType tp = Type(a);
         bool isMarkup = tp == AnnotationType::Highlight || tp == AnnotationType::Underline ||
                         tp == AnnotationType::Squiggly || tp == AnnotationType::StrikeOut;
-        bool isShape = tp == AnnotationType::Polygon || tp == AnnotationType::PolyLine || tp == AnnotationType::Ink;
+        bool isShape = tp == AnnotationType::Square || tp == AnnotationType::Circle || tp == AnnotationType::Polygon ||
+                       tp == AnnotationType::PolyLine || tp == AnnotationType::Ink;
         if (!isMarkup && !isShape) {
             continue;
         }
@@ -536,6 +537,10 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
             typeName = StrL("Squiggly");
         } else if (tp == AnnotationType::StrikeOut) {
             typeName = StrL("StrikeOut");
+        } else if (tp == AnnotationType::Square) {
+            typeName = StrL("Square");
+        } else if (tp == AnnotationType::Circle) {
+            typeName = StrL("Circle");
         } else if (tp == AnnotationType::Polygon) {
             typeName = StrL("Polygon");
         } else if (tp == AnnotationType::PolyLine) {
@@ -573,6 +578,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
     out.Append(TextAnnotationPlacementStateTemp(gWindows[0]));
     out.Append(LineAnnotationPlacementStateTemp(gWindows[0]));
     out.Append(PolyLineAnnotationPlacementStateTemp(gWindows[0]));
+    out.Append(ShapeAnnotationPlacementStateTemp(gWindows[0]));
     return finish({}, 0);
 }
 

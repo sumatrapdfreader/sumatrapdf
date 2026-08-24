@@ -69,7 +69,8 @@ bool ToolbarFrameIsVisible(MainWindow* win) {
 void ToolbarPostCommand(MainWindow* win, int cmdId) {
     LPARAM commandPoint = 0;
     if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast && cmdId != CmdCreateAnnotText &&
-        cmdId != CmdCreateAnnotLine && cmdId != CmdCreateAnnotPolyLine) {
+        cmdId != CmdCreateAnnotLine && cmdId != CmdCreateAnnotPolyLine && cmdId != CmdCreateAnnotSquare &&
+        cmdId != CmdCreateAnnotCircle) {
         Rect canvas = HwndClientRect(win->hwndCanvas);
         Point pt{canvas.dx / 2, canvas.dy / 2};
         commandPoint = MAKELPARAM(pt.x, pt.y);

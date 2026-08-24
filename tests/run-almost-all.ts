@@ -144,6 +144,7 @@ import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interact
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as lineAnnotationPlacement } from "./line-annotation-placement.ts";
 import { testit as polylineAnnotationPlacement } from "./polyline-annotation-placement.ts";
+import { testit as shapeAnnotationPlacement } from "./shape-annotation-placement.ts";
 import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
@@ -237,6 +238,7 @@ export const tests: NamedTest[] = [
   ["text-annotation-placement", textAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
+  ["shape-annotation-placement", shapeAnnotationPlacement],
   ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],
