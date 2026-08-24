@@ -224,6 +224,7 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdShowAnnotations,
     CmdHideAnnotations,
     CmdToggleShowAnnotations,
+    CmdTogglePdfAnnotationsToolbar,
     // added past the CmdCreateAnnotFirst..CmdCreateAnnotLast range, so the
     // range check doesn't catch it
     CmdCreateAnnotImageFromClipboard,
@@ -612,7 +613,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (!ctx.isPdf) {
         if (cmdId == CmdPdShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
-            cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdConvertPdfToImages) {
+            cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdConvertPdfToImages ||
+            cmdId == CmdTogglePdfAnnotationsToolbar) {
             return CommandVisibility::Hide;
         }
     }

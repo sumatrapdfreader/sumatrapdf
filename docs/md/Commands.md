@@ -221,6 +221,7 @@ CmdDiscardChanges,,Discard Changes,"reloads the document from disk, discarding u
 CmdShowAnnotations,,Show Annotations,"ver 3.6+, for current document"
 CmdHideAnnotations,,Hide Annotations,"ver 3.6+, for current document"
 CmdToggleShowAnnotations,,Toggle Showing Annotations,"ver 3.6+, for current document"
+CmdTogglePdfAnnotationsToolbar,,Toggle PDF Annotations Toolbar,"shows or hides the PDF annotation toolbar below the standard toolbar, ver 3.7+"
 ```
 
 ## Zoom

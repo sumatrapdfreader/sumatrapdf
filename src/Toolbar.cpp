@@ -82,10 +82,36 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconZoomIn, CmdZoomIn, _TRN("Zoom In")},
     {nullptr, 0, {}}, // separator
     {gIconSearch, CmdFindFirst, _TRN("Find")},
+    {nullptr, 0, {}}, // separator
+    {gIconEditAnnotations, CmdTogglePdfAnnotationsToolbar, _TRN("Edit PDF")},
 };
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);
+
+static ToolbarButtonInfo gPdfAnnotationButtons[] = {
+    {gIconAnnotHighlight, CmdCreateAnnotHighlight, _TRN("Highlight")},
+    {gIconAnnotUnderline, CmdCreateAnnotUnderline, _TRN("Underline")},
+    {gIconAnnotSquiggly, CmdCreateAnnotSquiggly, _TRN("Squiggly")},
+    {gIconAnnotStrikeOut, CmdCreateAnnotStrikeOut, _TRN("Strike Out")},
+    {nullptr, 0, {}},
+    {gIconAnnotText, CmdCreateAnnotText, _TRN("Text")},
+    {gIconAnnotFreeText, CmdCreateAnnotFreeText, _TRN("Free Text")},
+    {nullptr, 0, {}},
+    {gIconAnnotLine, CmdCreateAnnotLine, _TRN("Line")},
+    {gIconAnnotSquare, CmdCreateAnnotSquare, _TRN("Square")},
+    {gIconAnnotCircle, CmdCreateAnnotCircle, _TRN("Circle")},
+    {gIconAnnotPolygon, CmdCreateAnnotPolygon, _TRN("Polygon")},
+    {gIconAnnotPolyLine, CmdCreateAnnotPolyLine, _TRN("Polyline")},
+    {gIconAnnotInk, CmdCreateAnnotInk, _TRN("Ink")},
+    {nullptr, 0, {}},
+    {gIconAnnotRedact, CmdCreateAnnotRedact, _TRN("Redact")},
+    {gIconAnnotStamp, CmdCreateAnnotStamp, _TRN("Stamp")},
+    {gIconAnnotCaret, CmdCreateAnnotCaret, _TRN("Caret")},
+    {gIconAnnotFileAttachment, CmdCreateAnnotFileAttachment, _TRN("File Attachment")},
+};
+
+constexpr int kPdfAnnotationButtonsCount = dimof(gPdfAnnotationButtons);
 
 // The built-in buttons actually on the toolbar, which is gToolbarButtons unless
 // ToolbarCustomLayout asks for a different set / order (issue #5095). A layout
@@ -163,6 +189,14 @@ static VirtCtrl* ToolbarItemAt(MainWindow* win, int idx) {
     return tb->items[idx];
 }
 
+static VirtCtrl* PdfAnnotationToolbarItemAt(MainWindow* win, int idx) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || idx < 0 || idx >= len(tb->annotationItems)) {
+        return nullptr;
+    }
+    return tb->annotationItems[idx];
+}
+
 // Includes disabled items (those are not hit-testable), so a click on a gray
 // button is not treated as empty toolbar and does not start a window drag.
 VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
@@ -171,6 +205,14 @@ VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
         return nullptr;
     }
     for (VirtCtrl* w : tb->items) {
+        if (!w || w->GetVisibility() != Visibility::Visible) {
+            continue;
+        }
+        if (w->BoundsInWindow().Contains(pt)) {
+            return w;
+        }
+    }
+    for (VirtCtrl* w : tb->annotationItems) {
         if (!w || w->GetVisibility() != Visibility::Visible) {
             continue;
         }
@@ -187,6 +229,15 @@ VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
 
 static void SetToolbarButtonEnabledByIdx(MainWindow* win, int idx, bool isEnabled) {
     VirtCtrl* w = ToolbarItemAt(win, idx);
+    if (!w || w->IsEnabled() == isEnabled) {
+        return;
+    }
+    w->SetIsEnabled(isEnabled);
+    w->Invalidate();
+}
+
+static void SetPdfAnnotationButtonEnabledByIdx(MainWindow* win, int idx, bool isEnabled) {
+    VirtCtrl* w = PdfAnnotationToolbarItemAt(win, idx);
     if (!w || w->IsEnabled() == isEnabled) {
         return;
     }
@@ -472,6 +523,16 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
             w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, true));
         }
     }
+    for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
+        const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
+        if (!bi.toolTip) {
+            continue;
+        }
+        VirtCtrl* w = PdfAnnotationToolbarItemAt(win, i);
+        if (w) {
+            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, true));
+        }
+    }
 }
 
 static void SetToolbarButtonImageByIdx(MainWindow* win, int idx, const char* icon) {
@@ -501,6 +562,23 @@ static void SetToolbarButtonToolTipByIdx(MainWindow* win, int idx, int cmdId, St
         return;
     }
     w->SetTooltip(ToolbarTipTemp(cmdId, s, false));
+}
+
+static void SetPdfAnnotationsToolbarVisible(MainWindow* win, bool visible) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || !tb->annotationRow) {
+        return;
+    }
+    Visibility want = visible ? Visibility::Visible : Visibility::Collapse;
+    if (tb->annotationRow->GetVisibility() == want) {
+        return;
+    }
+    tb->annotationRow->SetVisibility(want);
+    SetToolbarButtonCheckedState(win, CmdTogglePdfAnnotationsToolbar, visible);
+    ToolbarSetHeight(win, tb->rowDy * (visible ? 2 : 1));
+    tb->host->Relayout();
+    tb->host->Invalidate(true);
+    ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
 }
 
 // TODO: this is called too often
@@ -540,6 +618,18 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             }
             SetToolbarButtonToolTipByIdx(win, i, cmdId, tip);
         }
+    }
+
+    bool showPdfAnnotationsToolbar = win->pdfAnnotationsToolbarEnabled && ctx->isPdf && ctx->supportsAnnots;
+    SetPdfAnnotationsToolbarVisible(win, showPdfAnnotationsToolbar);
+    for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
+        const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
+        if (!HasToolbarButtonContent(bi)) {
+            continue;
+        }
+        CommandVisibility v = GetCommandVisibility(bi.cmdId, *ctx, CommandSurface::Toolbar);
+        SetPdfAnnotationButtonEnabledByIdx(
+            win, i, showPdfAnnotationsToolbar && !CommandShouldDisable(v) && !CommandShouldRemove(v));
     }
 
     if (setButtonsVisibility) {
@@ -621,6 +711,23 @@ void SetToolbarButtonEnableState(MainWindow* win, int cmdId, bool isEnabled) {
             SetToolbarButtonEnabledByIdx(win, i, isEnabled);
         }
     }
+    for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
+        if (gPdfAnnotationButtons[i].cmdId == originalCmdId) {
+            SetPdfAnnotationButtonEnabledByIdx(win, i, isEnabled);
+        }
+    }
+}
+
+void TogglePdfAnnotationsToolbar(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    AppCommandCtx ctx = NewAppCommandCtx(win);
+    if (!ctx.isPdf || !ctx.supportsAnnots) {
+        return;
+    }
+    win->pdfAnnotationsToolbarEnabled = !win->pdfAnnotationsToolbarEnabled;
+    ToolbarUpdateStateForWindow(win, true);
 }
 
 // toolbar mode for this window: Fullscreen.Toolbar in fullscreen, else Toolbar
@@ -1046,6 +1153,20 @@ static void RefreshToolbarIcons(MainWindow* win) {
         ib->pixmap = GetCachedPixmapForSvg(svg, sz, sz, fg, TbBgColor());
         ib->pixmapDisabled = GetCachedPixmapForSvg(svg, sz, sz, dis, TbBgColor());
     }
+    for (int i = 0; i < len(tb->annotationItems); i++) {
+        VirtCtrl* w = tb->annotationItems[i];
+        ApplyToolbarItemColors(w);
+        auto* ib = AsVirtIconButton(w);
+        if (!ib) {
+            continue;
+        }
+        const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
+        if (!HasToolbarButtonContent(bi)) {
+            continue;
+        }
+        ib->pixmap = GetCachedPixmapForSvg(Str(bi.icon), sz, sz, fg, TbBgColor());
+        ib->pixmapDisabled = GetCachedPixmapForSvg(Str(bi.icon), sz, sz, dis, TbBgColor());
+    }
     if (tb->pageLabel) {
         tb->pageLabel->SetColor(kColText, TbTextColor());
     }
@@ -1139,6 +1260,17 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
             toolIdx++;
         }
     }
+    int nAnnotations = len(tb->annotationItems);
+    bool annotationsVisible = tb->annotationRow && tb->annotationRow->GetVisibility() == Visibility::Visible;
+    out.Append(fmt("annotationButtons=%d visible=%d\n", nAnnotations, annotationsVisible ? 1 : 0));
+    for (int i = 0; i < nAnnotations; i++) {
+        VirtCtrl* w = tb->annotationItems[i];
+        Rect r = w ? w->BoundsInWindow() : Rect{};
+        bool hidden = !annotationsVisible || !w || w->GetVisibility() != Visibility::Visible;
+        const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
+        out.Append(fmt("annotation-idx=%d cmd=%d hidden=%d enabled=%d rect=%d,%d,%d,%d text=%s\n", i, w ? w->id : 0,
+                       hidden ? 1 : 0, w && w->IsEnabled() ? 1 : 0, r.x, r.y, r.x + r.dx, r.y + r.dy, bi.toolTip));
+    }
     *exitCodeOut = 0;
     return ToStrTemp(out);
 }
@@ -1211,6 +1343,8 @@ static void BuildToolbarLayout(MainWindow* win) {
 
     ToolbarVirt* tb = win->toolbarVirt;
     tb->items.Reset();
+    tb->annotationItems.Reset();
+    tb->annotationRow = nullptr;
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;
     win->pageEdit = nullptr;
@@ -1285,7 +1419,40 @@ static void BuildToolbarLayout(MainWindow* win) {
         box->AddChild(w);
     }
 
-    tb->host->SetLayout(new Padding(box, Insets{0, DpiScale(4), 0, DpiScale(4)}));
+    auto* annotationBox = new HBox();
+    annotationBox->alignMain = MainAxisAlign::MainCenter;
+    annotationBox->alignCross = CrossAxisAlign::CrossCenter;
+    annotationBox->rtl = box->rtl;
+    for (const ToolbarButtonInfo& bi : gPdfAnnotationButtons) {
+        VirtCtrl* w = nullptr;
+        if (!HasToolbarButtonContent(bi)) {
+            w = MakeToolbarSeparator(tb->rowDy);
+        } else {
+            auto* ib = new VirtIconButton();
+            ib->padding = {cyPad, iconPad, cyPad, iconPad};
+            ib->pixmap = GetCachedPixmapForSvg(Str(bi.icon), tb->iconSize, tb->iconSize, fg, TbBgColor());
+            ib->pixmapDisabled = GetCachedPixmapForSvg(Str(bi.icon), tb->iconSize, tb->iconSize, dis, TbBgColor());
+            w = ib;
+        }
+        ApplyToolbarItemColors(w);
+        w->id = bi.cmdId;
+        if (bi.toolTip) {
+            w->SetTooltip(ToolbarTipTemp(bi.cmdId, bi.toolTip, true));
+        }
+        if (bi.cmdId != 0) {
+            w->onClick = MkFunc1(OnToolbarButtonClicked, win);
+        }
+        tb->annotationItems.Append(w);
+        annotationBox->AddChild(w);
+    }
+
+    auto* root = new VBox();
+    root->alignCross = CrossAxisAlign::Stretch;
+    root->AddChild(new Padding(box, Insets{0, DpiScale(4), 0, DpiScale(4)}));
+    tb->annotationRow = new Padding(annotationBox, Insets{0, DpiScale(4), 0, DpiScale(4)});
+    tb->annotationRow->SetVisibility(Visibility::Collapse);
+    root->AddChild(tb->annotationRow);
+    tb->host->SetLayout(root);
 }
 
 static void PaintToolbarBackground(MainWindow*, VirtHostPaintEvent* ev) {

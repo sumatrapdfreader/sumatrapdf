@@ -10529,7 +10529,9 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         args.borderWidth = a.freeTextBorderWidth;
         args.quadding = QuaddingFromName(a.freeTextAlignment);
     } else if (typ == AnnotationType::Stamp || typ == AnnotationType::Caret || typ == AnnotationType::Square ||
-               typ == AnnotationType::Circle || typ == AnnotationType::Line) {
+               typ == AnnotationType::Circle || typ == AnnotationType::Line || typ == AnnotationType::Polygon ||
+               typ == AnnotationType::PolyLine || typ == AnnotationType::Ink || typ == AnnotationType::Redact ||
+               typ == AnnotationType::FileAttachment) {
         // MuPDF defaults these to red on create; no separate prefs color.
         // Leave args.col unset so we keep MuPDF's default.
     } else {
@@ -10539,6 +10541,29 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     if (col && col->parsedOk) {
         args.col = *col;
     }
+}
+
+// Pick the center of the visible part of the current page when a command has
+// no usable canvas point, as happens after clicking an annotation-toolbar button.
+static bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo) {
+    pageNo = dm->FirstVisiblePageNo();
+    if (!dm->ValidPageNo(pageNo)) {
+        pageNo = dm->CurrentPageNo();
+    }
+    if (!dm->ValidPageNo(pageNo)) {
+        return false;
+    }
+    PageInfo* pi = dm->GetPageInfo(pageNo);
+    Size viewport = dm->GetViewPort().Size();
+    Rect visible = pi->pageOnScreen.Intersect(Rect{0, 0, viewport.dx, viewport.dy});
+    if (visible.IsEmpty()) {
+        visible = pi->pageOnScreen;
+    }
+    if (visible.IsEmpty()) {
+        return false;
+    }
+    pt = Point(visible.x + (visible.dx / 2), visible.y + (visible.dy / 2));
+    return true;
 }
 
 // Place an image stamp at the canvas click (LPARAM from the context menu) or,
@@ -10559,13 +10584,9 @@ static Annotation* CreateImageStampAnnotation(MainWindow* win, WindowTab* tab, D
     }
     int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
     if (pageNoUnderCursor < 0) {
-        auto r = HwndWindowRect(win->hwndCanvas);
-        pt.x = r.dx / 2;
-        pt.y = 20;
-        pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-    }
-    if (pageNoUnderCursor < 0) {
-        return nullptr;
+        if (!SetPointToVisiblePage(dm, pt, pageNoUnderCursor)) {
+            return nullptr;
+        }
     }
     PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
     AnnotCreateArgs args{AnnotationType::Stamp};
@@ -12298,7 +12319,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             [[fallthrough]];
         case CmdCreateAnnotLine:
             [[fallthrough]];
-        case CmdCreateAnnotCircle: {
+        case CmdCreateAnnotCircle:
+            [[fallthrough]];
+        case CmdCreateAnnotPolygon:
+            [[fallthrough]];
+        case CmdCreateAnnotPolyLine:
+            [[fallthrough]];
+        case CmdCreateAnnotInk:
+            [[fallthrough]];
+        case CmdCreateAnnotRedact:
+            [[fallthrough]];
+        case CmdCreateAnnotFileAttachment: {
             if (!win || !tab || !dm) {
                 return 0;
             }
@@ -12317,18 +12348,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
             if (pageNoUnderCursor < 0) {
-                if (!cmd) return 0;
-                // this is a case of custom command invoked by clicking toolbar button
-                // in which case we don't know where to place the annotation
-                // so we guess it as y = 20 px of hwndFrame and x being in the middle of window
-                // it's a heuristic so might not be what user expects
-                // TODO: ideally creating those annotations should be more visual
-                // i.e. we start interactive process of creating an annotation via mouse
-                auto r = HwndWindowRect(win->hwndCanvas);
-                pt.x = r.dx / 2;
-                pt.y = 20;
-                pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-                if (pageNoUnderCursor < 0) return 0;
+                if (!SetPointToVisiblePage(dm, pt, pageNoUnderCursor)) {
+                    return 0;
+                }
             }
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
@@ -12384,6 +12406,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdToggleLightDarkTheme:
             ToggleLightDarkTheme();
             ScheduleSaveSettings();
+            break;
+
+        case CmdTogglePdfAnnotationsToolbar:
+            TogglePdfAnnotationsToolbar(win);
             break;
 
         case CmdToggleInverseSearch:

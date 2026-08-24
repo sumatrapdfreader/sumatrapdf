@@ -298,7 +298,8 @@ enum {
     CmdToggleTransparencyGrid = 487,
     CmdTogglePageGrid = 488,
     CmdConfigurePageGrid = 489,
-    CmdNone = 490,
+    CmdTogglePdfAnnotationsToolbar = 490,
+    CmdNone = 491,
 
     /* range for file history */
     CmdFileHistoryFirst,

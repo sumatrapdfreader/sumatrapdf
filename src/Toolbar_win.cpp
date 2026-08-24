@@ -67,7 +67,25 @@ bool ToolbarFrameIsVisible(MainWindow* win) {
 }
 
 void ToolbarPostCommand(MainWindow* win, int cmdId) {
-    HwndPostCommand(win->hwndFrame, cmdId, 0);
+    LPARAM commandPoint = 0;
+    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
+        Rect canvas = HwndClientRect(win->hwndCanvas);
+        Point pt{canvas.dx / 2, canvas.dy / 2};
+        commandPoint = MAKELPARAM(pt.x, pt.y);
+    }
+    HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
+}
+
+void ToolbarSetHeight(MainWindow* win, int dy) {
+    HWND hwnd = win ? win->hwndToolbar : nullptr;
+    if (!hwnd || dy <= 0) {
+        return;
+    }
+    Rect r = ChildPosWithinParent(hwnd);
+    if (r.dy == dy) {
+        return;
+    }
+    SetWindowPos(hwnd, nullptr, 0, 0, r.dx, dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 //--- the native page-number edit

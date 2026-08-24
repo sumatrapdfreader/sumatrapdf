@@ -265,6 +265,140 @@ const char* gIconPin =
   <path d="M9.5 4l10.5 10.5l-5.5 0.5l-4 4l-1 -4.5l-4.5 -1l4 -4z" />
 </svg>)";
 
+// PDF annotation tools, drawn in the same 24px stroke style as the toolbar's
+// Tabler icons.
+const char* gIconEditAnnotations =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M4 20h4l11 -11a2.8 2.8 0 0 0 -4 -4l-11 11v4" />
+  <path d="M13.5 6.5l4 4" />
+</svg>)";
+
+const char* gIconAnnotHighlight =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M4 17l4 3l10 -12a2.8 2.8 0 0 0 -4 -4l-10 13" />
+  <path d="M12.5 6l4 3.5" />
+  <path d="M3 21h18" />
+</svg>)";
+
+const char* gIconAnnotUnderline =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M6 4v7a6 6 0 0 0 12 0v-7" />
+  <path d="M4 21h16" />
+</svg>)";
+
+const char* gIconAnnotSquiggly =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M6 3v7a6 6 0 0 0 12 0v-7" />
+  <path d="M3 20c1.5 -3 3 3 4.5 0s3 3 4.5 0s3 3 4.5 0s3 3 4.5 0" />
+</svg>)";
+
+const char* gIconAnnotStrikeOut =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M16 6.5a5 3 0 0 0 -4 -1.5c-2.2 0 -4 1.1 -4 2.7c0 1.2 .9 2 2.8 2.6" />
+  <path d="M13 13.2c2 .5 3 1.3 3 2.7c0 1.8 -1.8 3.1 -4.2 3.1a6 4 0 0 1 -4.8 -2" />
+  <path d="M4 12h16" />
+</svg>)";
+
+const char* gIconAnnotText =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M5 4h14v12l-4 4h-10z" />
+  <path d="M15 20v-4h4" />
+  <path d="M8 8h8" />
+  <path d="M8 12h6" />
+</svg>)";
+
+const char* gIconAnnotFreeText =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M5 8v-3h14v3" />
+  <path d="M5 16v3h14v-3" />
+  <path d="M9 9h6" />
+  <path d="M12 9v7" />
+</svg>)";
+
+const char* gIconAnnotLine =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M5 19l14 -14" />
+  <circle cx="5" cy="19" r="1.5" />
+  <circle cx="19" cy="5" r="1.5" />
+</svg>)";
+
+const char* gIconAnnotSquare =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="4" y="4" width="16" height="16" rx="1" />
+</svg>)";
+
+const char* gIconAnnotCircle =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="8" />
+</svg>)";
+
+const char* gIconAnnotPolygon =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M12 3l8 6l-3 10h-10l-3 -10z" />
+  <circle cx="12" cy="3" r="1" />
+  <circle cx="20" cy="9" r="1" />
+  <circle cx="17" cy="19" r="1" />
+  <circle cx="7" cy="19" r="1" />
+  <circle cx="4" cy="9" r="1" />
+</svg>)";
+
+const char* gIconAnnotPolyLine =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M4 18l5 -11l5 9l6 -10" />
+  <circle cx="4" cy="18" r="1.2" />
+  <circle cx="9" cy="7" r="1.2" />
+  <circle cx="14" cy="16" r="1.2" />
+  <circle cx="20" cy="6" r="1.2" />
+</svg>)";
+
+const char* gIconAnnotInk =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M4 17c4 -8 5 -11 7 -11c3 0 -2 10 0 10c1.5 0 3 -6 4.5 -6c2.5 0 -1 6 1 6c1 0 2 -2 3.5 -3" />
+  <path d="M4 20h16" />
+</svg>)";
+
+const char* gIconAnnotRedact =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="4" y="5" width="16" height="14" rx="1" />
+  <rect x="7" y="9" width="10" height="6" fill="currentColor" stroke="none" />
+</svg>)";
+
+const char* gIconAnnotStamp =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M8 14c1 -2 1.5 -3.5 1.5 -6a2.5 2.5 0 0 1 5 0c0 2.5 .5 4 1.5 6" />
+  <path d="M6 14h12a2 2 0 0 1 2 2v2h-16v-2a2 2 0 0 1 2 -2" />
+  <path d="M5 21h14" />
+</svg>)";
+
+const char* gIconAnnotCaret =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M4 17l8 -10l8 10" />
+  <path d="M8 17l4 -5l4 5" />
+</svg>)";
+
+const char* gIconAnnotFileAttachment =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M8 12.5l6.5 -6.5a3 3 0 0 1 4.2 4.2l-8.5 8.5a5 5 0 0 1 -7.1 -7.1l8 -8" />
+  <path d="M7 15l8 -8" />
+</svg>)";
+
 // A custom ToolbarSvgIcon comes from the settings file, so it can be malformed:
 // a typo, or the file caught half-written by the settings watcher while the user
 // is editing it. mupdf signals that by throwing, and an uncaught mupdf exception

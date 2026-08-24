@@ -305,6 +305,7 @@ static SeqStrings gCommandNames =
     "CmdToggleTransparencyGrid\0"
     "CmdTogglePageGrid\0"
     "CmdConfigurePageGrid\0"
+    "CmdTogglePdfAnnotationsToolbar\0"
     "CmdNone\0"
     "\0";
 
@@ -598,6 +599,7 @@ static i32 gCommandIds[] = {
     CmdToggleTransparencyGrid,
     CmdTogglePageGrid,
     CmdConfigurePageGrid,
+    CmdTogglePdfAnnotationsToolbar,
     CmdNone,
 };
 
@@ -891,6 +893,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Transparency Grid\0"
     "Toggle Page Grid\0"
     "Configure Page Grid...\0"
+    "Toggle PDF Annotations Toolbar\0"
     "Do nothing\0"
     "\0";
 // clang-format on

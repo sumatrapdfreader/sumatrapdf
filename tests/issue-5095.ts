@@ -25,7 +25,7 @@ const DEFAULT_LAYOUT =
   "CmdOpenFile CmdPrint | PageInfo CmdGoToPrevPage CmdGoToNextPage | " +
   "CmdNavigateBack CmdNavigateForward | CmdReadAloud | " +
   "CmdZoomFitWidthAndContinuous CmdZoomFitPageAndSinglePage CmdRotateLeft CmdRotateRight " +
-  "CmdZoomOut CmdZoomIn | CmdFindFirst";
+  "CmdZoomOut CmdZoomIn | CmdFindFirst | CmdTogglePdfAnnotationsToolbar";
 
 function makePdf(): string {
   const objs = [
@@ -116,7 +116,14 @@ export async function testit(): Promise<void> {
   rmSync(appdata, { recursive: true, force: true });
   mkdirSync(appdata, { recursive: true });
 
-  const cmds = ["CmdOpenFile", "CmdPrint", "CmdGoToPrevPage", "CmdGoToNextPage", "CmdFindFirst"];
+  const cmds = [
+    "CmdOpenFile",
+    "CmdPrint",
+    "CmdGoToPrevPage",
+    "CmdGoToNextPage",
+    "CmdFindFirst",
+    "CmdTogglePdfAnnotationsToolbar",
+  ];
 
   // the standard layout: everything is there, Open comes before Find
   writeSettings(appdata, "");

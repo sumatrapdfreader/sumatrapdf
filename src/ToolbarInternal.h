@@ -19,6 +19,7 @@ struct VirtCtrl;
 struct VirtText;
 struct VirtHost;
 struct Edit;
+struct ILayout;
 
 // those are not real commands but we have to refer to toolbar buttons
 // is by a command. those are just background for area to be
@@ -33,6 +34,8 @@ struct ToolbarVirt {
     // the toolbar's window; owns the layout tree and the virtual controls
     VirtHost* host = nullptr;
     Vec<VirtCtrl*> items; // not owned; the layout owns them
+    Vec<VirtCtrl*> annotationItems;
+    ILayout* annotationRow = nullptr;
     VirtText* pageLabel = nullptr;
     VirtText* pageTotal = nullptr;
     PlatformFont* platformFont = nullptr;
@@ -54,3 +57,4 @@ void ToolbarRepaintUncovered(MainWindow*, Rect rInFrame);
 void ToolbarFocusFrame(MainWindow*);
 bool ToolbarFrameIsVisible(MainWindow*);
 void ToolbarPostCommand(MainWindow*, int cmdId);
+void ToolbarSetHeight(MainWindow*, int dy);

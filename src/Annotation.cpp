@@ -1550,13 +1550,8 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
 
             switch (typ) {
                 case AnnotationType::Link:
-                case AnnotationType::Polygon:
-                case AnnotationType::Redact:
-                case AnnotationType::Ink:
                 case AnnotationType::Popup:
-                case AnnotationType::PolyLine:
                 case AnnotationType::Unknown:
-                case AnnotationType::FileAttachment:
                 case AnnotationType::Sound:
                 case AnnotationType::Movie:
                 case AnnotationType::RichMedia:
@@ -1583,7 +1578,8 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 case AnnotationType::FreeText:
                 case AnnotationType::Stamp:
                 case AnnotationType::Square:
-                case AnnotationType::Circle: {
+                case AnnotationType::Circle:
+                case AnnotationType::FileAttachment: {
                     fz_rect trect = pdf_annot_rect(ctx, annot);
                     float dx = trect.x1 - trect.x0;
                     trect.x0 = pos.x;
@@ -1609,6 +1605,36 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     fz_point a{pos.x, pos.y};
                     fz_point b{pos.x + 100, pos.y + 50};
                     pdf_set_annot_line(ctx, annot, a, b);
+                } break;
+                case AnnotationType::Polygon: {
+                    fz_point points[] = {
+                        {pos.x + 50, pos.y},
+                        {pos.x + 100, pos.y + 50},
+                        {pos.x + 50, pos.y + 90},
+                        {pos.x, pos.y + 50},
+                    };
+                    pdf_set_annot_vertices(ctx, annot, dimof(points), points);
+                } break;
+                case AnnotationType::PolyLine: {
+                    fz_point points[] = {
+                        {pos.x, pos.y + 70},
+                        {pos.x + 30, pos.y},
+                        {pos.x + 65, pos.y + 55},
+                        {pos.x + 100, pos.y + 10},
+                    };
+                    pdf_set_annot_vertices(ctx, annot, dimof(points), points);
+                } break;
+                case AnnotationType::Ink: {
+                    fz_point points[] = {
+                        {pos.x, pos.y + 30},      {pos.x + 15, pos.y + 5},  {pos.x + 30, pos.y + 45},
+                        {pos.x + 48, pos.y + 10}, {pos.x + 65, pos.y + 40}, {pos.x + 85, pos.y + 15},
+                    };
+                    int count = dimof(points);
+                    pdf_set_annot_ink_list(ctx, annot, 1, &count, points);
+                } break;
+                case AnnotationType::Redact: {
+                    fz_rect rect{pos.x, pos.y, pos.x + 100, pos.y + 50};
+                    pdf_set_annot_rect(ctx, annot, rect);
                 } break;
             }
             if (typ == AnnotationType::Stamp && args->stampImage) {

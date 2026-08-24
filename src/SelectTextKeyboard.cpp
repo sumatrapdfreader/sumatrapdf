@@ -26,6 +26,7 @@
 #include "Commands.h"
 #include "Accelerators.h"
 #include "Selection.h"
+#include "Toolbar.h"
 #include "Notifications.h"
 #include "Translations.h"
 #include "SelectTextKeyboard.h"
@@ -160,16 +161,24 @@ static void ApplySelection(MainWindow* win, bool selecting) {
     if (!dm || !dm->textSelection) {
         return;
     }
+    bool hadTextSelection = dm->textSelection->result.len > 0;
     if (!selecting) {
         dm->textSelection->Reset();
         dm->textSelection->startPage = dm->textSelection->endPage = -1;
         dm->textSelection->startGlyph = dm->textSelection->endGlyph = -1;
         DeleteOldSelectionInfo(win, false);
+        if (hadTextSelection) {
+            ToolbarUpdateStateForWindow(win, false);
+        }
         return;
     }
     dm->textSelection->StartAt(win->textSelectAnchorPage, win->textSelectAnchorGlyph);
     dm->textSelection->SelectUpTo(win->textSelectPage, win->textSelectGlyph);
     UpdateTextSelection(win, false);
+    bool hasTextSelection = dm->textSelection->result.len > 0;
+    if (hadTextSelection != hasTextSelection) {
+        ToolbarUpdateStateForWindow(win, false);
+    }
 }
 
 static void RestartCaretBlink(MainWindow* win) {

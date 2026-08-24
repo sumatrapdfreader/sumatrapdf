@@ -29,6 +29,23 @@ extern const char* gIconMatchWholeWord;
 extern const char* gIconHomeList;
 extern const char* gIconHomeThumbnails;
 extern const char* gIconPin;
+extern const char* gIconEditAnnotations;
+extern const char* gIconAnnotHighlight;
+extern const char* gIconAnnotUnderline;
+extern const char* gIconAnnotSquiggly;
+extern const char* gIconAnnotStrikeOut;
+extern const char* gIconAnnotText;
+extern const char* gIconAnnotFreeText;
+extern const char* gIconAnnotLine;
+extern const char* gIconAnnotSquare;
+extern const char* gIconAnnotCircle;
+extern const char* gIconAnnotPolygon;
+extern const char* gIconAnnotPolyLine;
+extern const char* gIconAnnotInk;
+extern const char* gIconAnnotRedact;
+extern const char* gIconAnnotStamp;
+extern const char* gIconAnnotCaret;
+extern const char* gIconAnnotFileAttachment;
 
 struct Pixmap;
 
