@@ -143,6 +143,7 @@ import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interact
 import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
+import { testit as annotationEditorReload } from "./annotation-editor-reload.ts";
 import { testit as issue5974 } from "./issue-5974.ts";
 import { testit as issue5975 } from "./issue-5975.ts";
 import { testit as issue6033 } from "./issue-6033.ts";
@@ -336,6 +337,7 @@ export const tests: NamedTest[] = [
   ["issue-5971", issue5971],
   ["image-only-palette-items", imageOnlyPaletteItems],
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
+  ["annotation-editor-reload", annotationEditorReload],
   ["issue-5974", issue5974],
   ["issue-5968", issue5968],
   ["issue-5980", issue5980],

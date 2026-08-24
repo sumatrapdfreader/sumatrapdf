@@ -2684,13 +2684,6 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     // so the overlay's widget pointer can't dangle into freed memory
     CommitFormFieldEdit(false);
 
-    tab->selectedAnnotation = nullptr;
-    win->annotationBeingDragged = nullptr;
-    win->annotationBeingResized = false;
-    win->annotationUnderCursor = nullptr;
-    // EditAnnotationsWindow keeps non-owning Annotation* from the engine; clear
-    // them before ReplaceDocumentInCurrentTab deletes the old engine.
-    InvalidateEditAnnotationsOnEngineChange(tab);
     // Do not clear ignoreNextAutoReload here: SaveAnnotationsToExistingFile sets it
     // so the file-watcher auto-reload from that write is skipped. Clearing it on every
     // ReloadDocument caused a second full open right after the intentional post-save
@@ -2765,16 +2758,23 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     LoadArgs args(tab->filePath, win);
     args.showWin = true;
     args.placeWindow = false;
+    // EditAnnotationsWindow and canvas interaction state keep non-owning
+    // Annotation* from the engine. Capture editor state and clear those pointers
+    // only after a replacement controller was opened successfully (or a manual
+    // reload is about to replace the document with an error page).
+    InvalidateEditAnnotationsOnEngineChange(tab);
+    tab->selectedAnnotation = nullptr;
+    win->annotationBeingDragged = nullptr;
+    win->annotationBeingResized = false;
+    win->annotationUnderCursor = nullptr;
     ReplaceDocumentInCurrentTab(&args, ctrl, fs);
+
+    RefreshEditAnnotationsAfterEngineChange(tab);
 
     if (!ctrl) {
         DeleteFileState(fs);
         return;
     }
-
-    // after reload, refresh the annotations list in the edit window
-    // so that it stays in sync with the new engine
-    UpdateAnnotationsList(tab->editAnnotsWindow);
 
     tab->reloadOnFocus = false;
 
@@ -5226,21 +5226,11 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     }
     ShowSavedAnnotationsNotification(win->hwndCanvas, path);
 
-    // Capture selection before the engine (and Annotation*) is torn down.
-    SavedAnnotSel sel = CaptureSelectedAnnotation(tab);
-    // have to re-open edit annotations window because the current has
-    // a reference to deleted Engine
-    bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
     ReloadDocument(win, false);
     // Re-arm: the save notifies the file watcher, which schedules an auto-reload.
     // We already reloaded above; skip that one watcher event so we do not open
     // the PDF twice (and race background work against a just-rewritten file).
     tab->ignoreNextAutoReload = true;
-    if (hadEditAnnotations) {
-        Annotation* match = FindMatchingAnnotation(tab, sel);
-        ShowEditAnnotationsWindow(tab, match);
-    }
-
     return true;
 }
 

@@ -164,6 +164,12 @@ struct EditAnnotationsWindow : WindowBase {
     UINT_PTR contentsDebounceTimer = 0;
     UINT_PTR selectionDebounceTimer = 0;
 
+    bool reloadSelectionValid = false;
+    int reloadSelectionPageNo = 0;
+    AnnotationType reloadSelectionType = AnnotationType::Unknown;
+    RectF reloadSelectionBounds;
+    int reloadScrollY = 0;
+
     str::Builder currTextColor;
     str::Builder currCustomColor;
     str::Builder currCustomInteriorColor;
@@ -183,6 +189,7 @@ static Annotation* VisibleAnnotAt(EditAnnotationsWindow* ew, int idx);
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew);
 static void FlushContentsFromEdit(EditAnnotationsWindow* ew);
 static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev);
+static void KillContentsDebounce(EditAnnotationsWindow* ew);
 static void KillSelectionDebounce(EditAnnotationsWindow* ew);
 static void ApplyListSelectionNow(EditAnnotationsWindow* ew);
 
@@ -212,16 +219,26 @@ void DetachAnnotationFromUI(Annotation* annot) {
     }
 }
 
-// Clear the edit-annotations list (and listbox) before the engine is destroyed
-// so ReloadDocument cannot leave dangling Annotation* in the open panel.
+// Preserve enough UI state to rematch the selection after reload, then clear
+// every non-owning Annotation* before the old engine is destroyed.
 void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
     if (!tab || !tab->editAnnotsWindow) {
         return;
     }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    Annotation* selected = tab->selectedAnnotation;
+    ew->reloadSelectionValid = AnnotationIsLive(selected);
+    if (ew->reloadSelectionValid) {
+        ew->reloadSelectionPageNo = selected->pageNo;
+        ew->reloadSelectionType = selected->type;
+        ew->reloadSelectionBounds = selected->bounds;
+    }
+    ew->reloadScrollY = ew->listBox ? ew->listBox->scrollY : 0;
+    KillContentsDebounce(ew);
     KillSelectionDebounce(ew);
-    // selectedAnnotation is usually already null; do not FlushContents into a
-    // dying engine. Drop non-owning list entries before ~EngineMupdf frees them.
+    // Do not FlushContents into an engine being replaced. In particular, a
+    // pending edit from the old file must not overwrite an externally updated
+    // annotation after the new engine is installed.
     ew->annotations.Clear();
     RebuildAnnotationsListBox(ew);
 }
@@ -676,22 +693,20 @@ extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 static void ButtonSaveToNewFileHandler(EditAnnotationsWindow* ew) {
     FlushContentsFromEdit(ew);
     WindowTab* tab = ew->tab;
-    // On success SaveAnnotationsToMaybeNewPdfFile closes this window (and may
-    // open a new one). Do not touch ew after a successful return.
+    // Saving to a new path replaces the tab and closes this window; choosing
+    // the current path keeps it. Do not touch ew after the call in either case.
     bool ok = SaveAnnotationsToMaybeNewPdfFile(tab);
     if (!ok) {
         return;
     }
-    // New window (if any) is created inside Save*; labels/enabled state are
-    // set when it opens. Old ew is already deleted.
+    // A replacement window, if needed, is created inside Save*.
 }
 
 extern bool SaveAnnotationsToExistingFile(WindowTab* tab);
 
 static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
     FlushContentsFromEdit(ew);
-    // SaveAnnotationsToExistingFile closes this window and reloads the PDF
-    // (engine/Annotation* become invalid). Do not touch ew after this call.
+    // The PDF engine is replaced, but the editor refreshes in place.
     SaveAnnotationsToExistingFile(ew->tab);
 }
 
@@ -1672,6 +1687,9 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     Annotation* extra = ew->tab ? ew->tab->selectedAnnotation : nullptr;
     Vec<int> firstPages;
     CollectPriorityAnnotPages(ew, extra, firstPages);
+    if (ew->reloadSelectionValid) {
+        AddAnnotPage(firstPages, ew->reloadSelectionPageNo, engine->pageCount);
+    }
     // Load current/visible pages on this thread so the window never opens
     // empty. loadQuick skips stext; we still wait for pagesLock/renderLock.
     for (int pageNo : firstPages) {
@@ -1682,6 +1700,39 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
          extra ? extra->pageNo : 0);
     RebuildAnnotationsListBox(ew);
     EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, ew->tab));
+}
+
+// Repopulate an existing editor from the replacement engine and restore its
+// logical selection without recreating or activating the window.
+void RefreshEditAnnotationsAfterEngineChange(WindowTab* tab) {
+    if (!tab || !tab->editAnnotsWindow) {
+        return;
+    }
+    EditAnnotationsWindow* ew = tab->editAnnotsWindow;
+    UpdateAnnotationsList(ew);
+
+    Annotation* match = nullptr;
+    if (ew->reloadSelectionValid) {
+        for (Annotation* annot : ew->annotations) {
+            if (annot->pageNo == ew->reloadSelectionPageNo && annot->type == ew->reloadSelectionType &&
+                annot->bounds == ew->reloadSelectionBounds) {
+                match = annot;
+                break;
+            }
+        }
+    }
+    ew->reloadSelectionValid = false;
+    if (ew->listBox) {
+        ew->listBox->ScrollTo(ew->reloadScrollY);
+    }
+    // This is the same logical selection, so refresh its controls and overlay
+    // without scheduling GoToPage (the document reload already restored the
+    // user's view).
+    tab->selectedAnnotation = match;
+    SetSelectedAnnotation(tab, match);
+    if (ew->hwnd) {
+        HwndInvalidate(ew->hwnd);
+    }
 }
 
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
@@ -2480,9 +2531,10 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
     int sel = ew->listBox->GetCurrentSelection();
     int n = len(ew->annotations);
     int selCount = ew->listBox->SelectedCount();
-    return finish(fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d selCount=%d contents=%d,%d,%d,%d "
-                      "iconVis=%d icon=%d,%d,%d,%d",
-                      cr.dy, listR.dy, contentsDy, gapBelow, sel, n, selCount, contentsR.x, contentsR.y, contentsR.dx,
-                      contentsR.dy, iconVis, iconR.x, iconR.y, iconR.dx, iconR.dy),
-                  0);
+    out.Append(
+        fmt("OK windowDy=%d listDy=%d contentsDy=%d gapBelow=%d sel=%d n=%d selCount=%d contents=%d,%d,%d,%d "
+            "iconVis=%d icon=%d,%d,%d,%d",
+            cr.dy, listR.dy, contentsDy, gapBelow, sel, n, selCount, contentsR.x, contentsR.y, contentsR.dx,
+            contentsR.dy, iconVis, iconR.x, iconR.y, iconR.dx, iconR.dy));
+    return finish(fmt(" ignoreReload=%d reloadOnFocus=%d", (int)tab->ignoreNextAutoReload, (int)tab->reloadOnFocus), 0);
 }
