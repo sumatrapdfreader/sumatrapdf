@@ -15,7 +15,6 @@
 #include "gui/VirtCtrl.h"
 
 #include "Theme.h"
-#include "Accelerators.h"
 #include "FilterHighlightDraw.h"
 #include "CommandPaletteInternal.h"
 
@@ -69,10 +68,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     TempStr rightStr;
     if (data->cmdId != 0) {
-        TempStr withAccel = AppendAccelKeyToMenuStringTemp(StrL(""), data->cmdId);
-        if (withAccel && withAccel.s[0] == '\t') {
-            rightStr = Str(withAccel.s + 1);
-        }
+        rightStr = CommandPaletteShortcutTemp(data->cmdId);
     } else if (data->pageNo > 0) {
         // toc entry: show the destination page number on the right, e.g. "p33"
         rightStr = fmt("p%d", data->pageNo);
@@ -129,7 +125,13 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
             rcRight.dx = rightW;
             rightFmt |= gfxTextRight;
         }
-        gfx->DrawText(rightStr, rcRight, rightFmt, lb->font, AccentColor(colText, 80));
+        Color rightCol = AccentColor(colText, 80);
+        if (data->cmdId != 0) {
+            DrawMaybeHighlightedText(gfx, rcRight, rightStr, filterWords, highlighted, colBg, false, false, rightFmt,
+                                     lb->font, rightCol);
+        } else {
+            gfx->DrawText(rightStr, rcRight, rightFmt, lb->font, rightCol);
+        }
     }
 
     if (hwndRtl) {

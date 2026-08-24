@@ -10,9 +10,23 @@
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
 
+#include "Accelerators.h"
 #include "FilterHighlightDraw.h"
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
+
+// Return the same effective shortcut text that is painted on the right side
+// of a command row, without the menu separator tab.
+TempStr CommandPaletteShortcutTemp(i32 cmdId) {
+    if (cmdId == 0) {
+        return {};
+    }
+    TempStr withAccel = AppendAccelKeyToMenuStringTemp(StrL(""), cmdId);
+    if (!withAccel || withAccel.s[0] != '\t') {
+        return {};
+    }
+    return Str(withAccel.s + 1, len(withAccel) - 1);
+}
 
 static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matchedOut) {
     int n = len(strs);
@@ -21,7 +35,13 @@ static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matched
         if (len(s) == 0) {
             continue;
         }
-        if (!FilterMatches(s, words)) {
+        bool matches = FilterMatches(s, words);
+        ItemDataCP* data = strs.AtData(i);
+        if (!matches && data && data->cmdId != 0) {
+            TempStr shortcut = CommandPaletteShortcutTemp(data->cmdId);
+            matches = FilterMatches(shortcut, words);
+        }
+        if (!matches) {
             continue;
         }
         matchedOut.AppendFrom(&strs, i);

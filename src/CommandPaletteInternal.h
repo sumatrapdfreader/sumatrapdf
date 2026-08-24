@@ -88,6 +88,7 @@ extern CommandPaletteWnd* gCommandPaletteWnd;
 
 Str CommandPaletteSkipWS(Str s);
 bool CommandPaletteUiRtl();
+TempStr CommandPaletteShortcutTemp(i32 cmdId);
 void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx);
 void ScheduleDeleteAndExecCommand(i32 cmdId = 0);
 void SafeDeleteCommandPaletteWnd();
