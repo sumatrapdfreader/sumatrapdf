@@ -70,6 +70,7 @@ export enum ControlCommand {
   TestSelectionToolbar = 73,
   TestMarkupAnnots = 74,
   TestCmykImageSave = 75,
+  TestContextMenuPoint = 76,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

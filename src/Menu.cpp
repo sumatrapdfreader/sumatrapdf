@@ -2263,18 +2263,10 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     // handle in FrameOnCommand() in SumatraPDF.cpp
-    LPARAM lpArg = MAKELPARAM(x, y);
-    AnnotationType annotType = CmdIdToAnnotationType(cmdId);
-    if (annotType != AnnotationType::Unknown) {
+    if (CommandUsesContextMenuPoint(cmdId)) {
+        LPARAM lpArg = MAKELPARAM(x, y);
         HwndSendCommand(win->hwndFrame, cmdId, lpArg);
         return;
-    }
-    switch (cmdId) {
-        case CmdEditAnnotations:
-        case CmdDeleteAnnotation: {
-            HwndSendCommand(win->hwndFrame, cmdId, lpArg);
-            return;
-        }
     }
 
     switch (cmdId) {
@@ -2390,6 +2382,16 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
     // everything else we forward to FrameOnCommand() in SumatraPDF.cpp
     HwndSendCommand(win->hwndFrame, cmdId);
+}
+
+// Commands whose frame handler needs the original canvas click rather than
+// the cursor's position after the context menu has closed.
+bool CommandUsesContextMenuPoint(int cmdId) {
+    if (CmdIdToAnnotationType(cmdId) != AnnotationType::Unknown) {
+        return true;
+    }
+    return cmdId == CmdEditAnnotations || cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard ||
+           cmdId == CmdInsertImage;
 }
 
 // so that we can do free everything at exit

@@ -50,6 +50,7 @@
 #include "SumatraDialogs.h"
 #include "EditAnnotations.h"
 #include "Annotation.h"
+#include "Menu.h"
 #include "EngineAll.h"
 #include "EutlTrust.h"
 #include "CommandPalette.h"
@@ -680,6 +681,7 @@ enum class ControlCmd : u16 {
     TestSelectionToolbar = 73,
     TestMarkupAnnots = 74,
     TestCmykImageSave = 75,
+    TestContextMenuPoint = 76,
 };
 
 enum class ControlArgType : u16 {
@@ -1482,6 +1484,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = MarkupAnnotsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestContextMenuPoint: {
+            Str name = StringArg(req, 0);
+            int cmdId = GetCommandIdByName(name);
+            if (cmdId <= 0) {
+                AppendError(req, StrL("TestContextMenuPoint expects a command name"));
+                break;
+            }
+            Str res = CommandUsesContextMenuPoint(cmdId) ? StrL("1") : StrL("0");
+            AppendTestResult(req, 0, res);
             break;
         }
 
