@@ -2999,10 +2999,10 @@ static void PageGridStroke(HDC hdc, DisplayModel* dm, int pageNo, PointF a, Poin
 
 // Graph-paper overlay in page space, clipped to the visible page.
 // Style "dots": 1px minor / 3px major at intersections.
-// Style "dotted" / "solid": H/V lines (major heavier). Skips comics and ebooks.
+// Style "dotted" / "solid": H/V lines (major heavier). Skips comics.
 static void PaintPageGrid(DisplayModel* dm, HDC hdc) {
     EngineBase* engine = dm->GetEngine();
-    if (!engine || engine->IsImageCollection() || engine->isReflowable) {
+    if (!engine || engine->IsImageCollection()) {
         return;
     }
     PageGridDraw g = GetPageGridDraw();

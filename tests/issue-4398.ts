@@ -1,6 +1,6 @@
 // Test for https://github.com/sumatrapdfreader/sumatrapdf/issues/4398
 //
-// CmdTogglePageGrid overlays graph paper on fixed-page documents (default
+// CmdTogglePageGrid overlays graph paper on paginated documents (default
 // ¼ inch minor / 1 inch major, color 128,128,255, dots). Showing it is
 // session-only. CmdConfigurePageGrid sets spacing, origin, color and style
 // (saved in FixedPageUI.PageGrid).
