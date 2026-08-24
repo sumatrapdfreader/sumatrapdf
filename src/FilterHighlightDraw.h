@@ -15,7 +15,7 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
                               Color colText = kColorUnset);
 
 void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVec& filterWords, Color bgCol,
-                                 Color txtCol, PlatformFont* font);
+                                 Color txtCol, PlatformFont* font, int boldTextOffset = -1, int boldTextLen = 0);
 
 void ResolveTreeFilterItemColors(HDC hdc, Rect itemRc, Color treeBg, Color treeTxt, bool isSelected, bool hasFocus,
                                  Color* bgOut, Color* txtOut);

@@ -46,6 +46,8 @@ struct FavTreeItem {
     FavTreeItem* parent = nullptr;
     Str text;
     bool isExpanded = false;
+    int fileNameOffset = -1;
+    int fileNameLen = 0;
 
     // not owned by us
     Favorite* favorite = nullptr;
@@ -525,10 +527,17 @@ static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isC
         return fmt("%s : %s", _TRA("Current file"), rn);
     }
     TempStr fp = path::GetBaseNameTemp(fav->filePath);
-    // show the favorite's name first, then the file name, so that a long file
-    // name doesn't push the user's description out of view in the favorites
-    // pane / menu (fixes #829, #2236)
+    // Keep the favorite's name first in compact menu entries so a long file
+    // name doesn't push the user's description out of view (fixes #829, #2236).
     return fmt("%s : %s", rn, fp);
+}
+
+// Compact rows in the Favorites tree lead with the bold source filename so
+// single-favorite files line up with the file nodes used for grouped entries.
+static TempStr FavTreeCompactReadableNameTemp(FileState* fav, Favorite* fn) {
+    TempStr fp = path::GetBaseNameTemp(fav->filePath);
+    TempStr rn = FavReadableNameTemp(fn);
+    return fmt("%s : %s", fp, rn);
 }
 
 static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, bool isCurrent) {
@@ -809,13 +818,16 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
     }
     res->isExpanded = isExpanded;
 
+    TempStr baseName = path::GetBaseNameTemp(fs->filePath);
     TempStr text;
     if (isCollapsed) {
-        text = FavCompactReadableNameTemp(fs, fn);
+        text = FavTreeCompactReadableNameTemp(fs, fn);
     } else {
-        text = path::GetBaseNameTemp(fs->filePath);
+        text = baseName;
     }
     res->text = str::Dup(text);
+    res->fileNameOffset = 0;
+    res->fileNameLen = len(baseName);
     return res;
 }
 
@@ -877,6 +889,8 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
             auto* parent = new FavTreeItem();
             parent->favorite = (*fs->favorites)[0];
             parent->text = str::Dup(baseName);
+            parent->fileNameOffset = 0;
+            parent->fileNameLen = len(baseName);
             parent->isExpanded = win->expandedFavorites.Contains(fs);
             for (int j = 0; j < nFavs; j++) {
                 Favorite* fn = (*fs->favorites)[j];
@@ -900,7 +914,9 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
             }
             auto* ti = new FavTreeItem();
             ti->favorite = fn;
-            ti->text = str::Dup(FavCompactReadableNameTemp(fs, fn));
+            ti->text = str::Dup(FavTreeCompactReadableNameTemp(fs, fn));
+            ti->fileNameOffset = 0;
+            ti->fileNameLen = len(baseName);
             ti->isExpanded = false;
             res->root->children.Append(ti);
         }
@@ -1244,15 +1260,17 @@ static bool HasFavFilter(MainWindow* win) {
     return len(words) > 0;
 }
 
-// multi-word yellow/accent highlights via shared command-palette helpers
-static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win) {
+// Repaint favorite labels that contain a source file name so only that span is
+// bold. The same pass preserves multi-word search highlights when filtering.
+static void DrawFavItemText(TreeView::CustomDrawEvent* ev, MainWindow* win) {
     FavTreeItem* fti = (FavTreeItem*)ev->treeItem;
     if (!fti || !fti->text) {
         return;
     }
     StrVec words;
     GetFavFilterWords(win, words);
-    if (len(words) == 0) {
+    bool hasFileName = fti->fileNameOffset >= 0 && fti->fileNameLen > 0;
+    if (len(words) == 0 && !hasFileName) {
         return;
     }
 
@@ -1267,6 +1285,11 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     HDC hdc = tvcd->nmcd.hdc;
     NMCUSTOMDRAW* cd = &tvcd->nmcd;
+    int right = std::min(itemRect.x + itemRect.dx, (int)cd->rc.right);
+    labelRect.dx = std::max(0, right - labelRect.x);
+    if (labelRect.IsEmpty()) {
+        return;
+    }
     // POSTPAINT often omits CDIS_SELECTED; also check the control selection.
     bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
     if (!isSelected) {
@@ -1278,7 +1301,11 @@ static void DrawFavItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     Color bgCol, txtCol;
     ResolveTreeFilterItemColors(hdc, itemRect, tv->bgColor, tv->textColor, isSelected, hasFocus, &bgCol, &txtCol);
     GfxHdc gfx(hdc);
-    DrawTreeItemFilterHighlight(&gfx, labelRect, fti->text, words, bgCol, txtCol, tv->GetFont());
+    DrawTreeItemFilterHighlight(&gfx, labelRect, fti->text, words, bgCol, txtCol, tv->GetFont(), fti->fileNameOffset,
+                                fti->fileNameLen);
+    if ((cd->uItemState & CDIS_FOCUS) && isSelected && hasFocus) {
+        gfx.DrawFocusRect(labelRect);
+    }
 }
 
 static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
@@ -1298,8 +1325,10 @@ static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
         if (!ev->treeItem) {
             return;
         }
+        FavTreeItem* fti = (FavTreeItem*)ev->treeItem;
+        bool hasFileName = fti->fileNameOffset >= 0 && fti->fileNameLen > 0;
         LRESULT res = 0;
-        if (filterActive) {
+        if (filterActive || hasFileName) {
             res |= CDRF_NOTIFYPOSTPAINT;
         }
         ev->result = res;
@@ -1307,8 +1336,10 @@ static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
     }
 
     if (cd->dwDrawStage == CDDS_ITEMPOSTPAINT) {
-        if (filterActive && win) {
-            DrawFavItemHighlight(ev, win);
+        FavTreeItem* fti = (FavTreeItem*)ev->treeItem;
+        bool hasFileName = fti->fileNameOffset >= 0 && fti->fileNameLen > 0;
+        if ((filterActive || hasFileName) && win) {
+            DrawFavItemText(ev, win);
         }
         ev->result = CDRF_DODEFAULT;
         return;

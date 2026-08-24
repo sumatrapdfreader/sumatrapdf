@@ -285,7 +285,9 @@ export const SB_VERT = 1;
 const SIF_ALL = 0x17;
 // TreeView (SysTreeView32) messages / flags
 export const TVM_GETNEXTITEM = 0x110a;
+export const TVM_SELECTITEM = 0x110b;
 export const TVM_EXPAND = 0x1102;
+export const TVM_GETITEMHEIGHT = 0x111c;
 export const TVGN_ROOT = 0x0;
 export const TVGN_NEXT = 0x1;
 export const TVGN_CARET = 0x9;
@@ -497,6 +499,18 @@ export function findChildWindow(parent: number, className: string): number {
   return found;
 }
 
+export function findVisibleChildWindow(parent: number, className: string): number {
+  let found = 0;
+  enumChildWindows(parent, (hwnd) => {
+    if (getClassName(hwnd) === className && isWindowVisible(hwnd)) {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
 // poll for findTopWindow until it appears or timeout (returns 0 on timeout)
 export async function waitForTopWindow(pid: number, className: string, timeoutMs = 12000): Promise<number> {
   const deadline = Date.now() + timeoutMs;
@@ -596,8 +610,16 @@ export function treeGetSelection(tree: number): bigint {
   return treeGetNextItem(tree, TVGN_CARET, 0n);
 }
 
+export function treeClearSelection(tree: number): void {
+  sendMessage(tree, TVM_SELECTITEM, TVGN_CARET, 0);
+}
+
 export function treeExpand(tree: number, action: number, item: bigint): void {
   sendMessage(tree, TVM_EXPAND, action, item);
+}
+
+export function treeGetItemHeight(tree: number): number {
+  return Number(sendMessage(tree, TVM_GETITEMHEIGHT, 0, 0));
 }
 
 // number of currently-visible (i.e. expanded-into-view) rows in the tree
