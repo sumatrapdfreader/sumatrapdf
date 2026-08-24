@@ -1699,6 +1699,7 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     logf("UpdateAnnotationsList: nAnnots=%d firstPages=%d extra=%d\n", len(ew->annotations), len(firstPages),
          extra ? extra->pageNo : 0);
     RebuildAnnotationsListBox(ew);
+    LayoutAnnotWindowInPlace(ew);
     EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, ew->tab));
 }
 

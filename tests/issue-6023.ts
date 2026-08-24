@@ -25,9 +25,10 @@ function makeTextPdf(): Buffer {
   body[6] = enc("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
   const stream = `BT /F1 18 Tf 72 ${BASELINE_PDF_Y} Td (${LINE}) Tj ET`;
   body[10] = enc(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+  body[11] = enc("<< /Type /Annot /Subtype /Text /Rect [50 650 70 670] /Contents (existing note) >>");
   body[3] = enc(
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 ${PAGE_H}] ` +
-      `/Resources << /Font << /F1 6 0 R >> >> /Contents 10 0 R >>`,
+      `/Resources << /Font << /F1 6 0 R >> >> /Contents 10 0 R /Annots [11 0 R] >>`,
   );
   const maxN = 12;
   const parts: Buffer[] = [enc("%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")];
@@ -50,6 +51,17 @@ function makeTextPdf(): Buffer {
 function pressVKey(hwnd: number, vk: number): void {
   postMessage(hwnd, WM_KEYDOWN, vk, 0);
   postMessage(hwnd, WM_KEYUP, vk, 0);
+}
+
+async function annotationEditorLayout(client: ControlClient): Promise<{ listDy: number; count: number; raw: string }> {
+  const res = await client.request(ControlCommand.TestAnnotEditorLayout, [0, 0]);
+  const raw = String(res[1] ?? "").trim();
+  const list = / listDy=(\d+)/.exec(raw);
+  const count = / n=(\d+)/.exec(raw);
+  if (res[0] !== 0 || !list || !count) {
+    throw new Error(`could not read annotation editor layout: ${raw}`);
+  }
+  return { listDy: +list[1]!, count: +count[1]!, raw };
 }
 
 function parseMarkupDump(
@@ -85,6 +97,12 @@ export async function testit(): Promise<void> {
       }
       await client.waitForRenderIdle();
       await client.setNotificationsEnabled(false);
+
+      sendCommandSync(frame, cmdId("CmdEditAnnotations"));
+      const layoutBefore = await annotationEditorLayout(client);
+      if (layoutBefore.count !== 1) {
+        throw new Error(`expected one initial annotation: ${layoutBefore.raw}`);
+      }
 
       sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
       const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
@@ -125,6 +143,13 @@ export async function testit(): Promise<void> {
       }
 
       sendCommandSync(frame, cmdId("CmdCreateAnnotUnderline"));
+      const layoutAfter = await annotationEditorLayout(client);
+      if (layoutAfter.count !== 2 || layoutAfter.listDy <= layoutBefore.listDy) {
+        const message = `annotation list did not grow after adding underline: before=${layoutBefore.raw} after=${layoutAfter.raw}`;
+        sendCommandSync(frame, cmdId("CmdDiscardChanges"));
+        await client.waitForRenderIdle();
+        throw new Error(message);
+      }
       const annotDeadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
       let annotDump = "";
       let annots = parseMarkupDump("");
