@@ -3,10 +3,11 @@
 // Page Grid was painted only for fixed-page documents even though EPUBs use
 // the same paginated canvas and page-coordinate transforms.
 
+import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
-import { EXE, ROOT, cmdId, runStandalone } from "./util.ts";
-import { captureWindowPixels } from "./winapi.ts";
+import { EXE, ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { captureWindowPixels, sleep } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
 
 const EPUB = join(ROOT, "tests", "issue-5846.epub");
@@ -25,6 +26,10 @@ function countGridColor(data: Uint8Array): number {
 }
 
 export async function testit(): Promise<void> {
+  const appdata = tmpPath("issue-6039-appdata");
+  rmSync(appdata, { recursive: true, force: true });
+  mkdirSync(appdata, { recursive: true });
+
   await withControlledSumatra(
     EXE,
     async (client, proc) => {
@@ -43,17 +48,25 @@ export async function testit(): Promise<void> {
 
       sendCommand(frame, cmdId("CmdTogglePageGrid"));
       await client.waitForRenderIdle(30_000);
-      const after = captureWindowPixels(canvas);
-      if (!after) {
-        throw new Error("issue-6039: grid capture failed");
+      const deadline = Date.now() + 1000;
+      let nAfter = nBefore;
+      while (Date.now() < deadline) {
+        const after = captureWindowPixels(canvas);
+        if (!after) {
+          throw new Error("issue-6039: grid capture failed");
+        }
+        nAfter = countGridColor(after.data);
+        if (nAfter >= nBefore + 40) {
+          break;
+        }
+        await sleep(25);
       }
-      const nAfter = countGridColor(after.data);
       if (nAfter < nBefore + 40) {
         throw new Error(`issue-6039: EPUB page grid did not show (grid pixels before=${nBefore} after=${nAfter})`);
       }
       console.log(`  EPUB grid pixels ${nBefore} -> ${nAfter} ✓`);
     },
-    [EPUB],
+    ["-appdata", appdata, EPUB],
   );
 }
 
