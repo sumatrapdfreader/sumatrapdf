@@ -2852,7 +2852,11 @@ TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeO
         return finish(StrL("ERROR no-annot-engine"), 1);
     }
 
-    ShowEditAnnotationsWindow(tab, nullptr);
+    // Re-showing an existing editor steals focus while GUI tests query resize
+    // state, which can disturb mouse capture and overwrite the drag result.
+    if (!tab->editAnnotsWindow) {
+        ShowEditAnnotationsWindow(tab, nullptr);
+    }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (!ew || !ew->hwnd || !ew->listBox) {
         return finish(StrL("ERROR no-editor"), 1);
