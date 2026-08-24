@@ -2808,8 +2808,9 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         }
     }
     ew->skipGoToPage = (annot != nullptr);
+    bool isNew = false;
     if (annot) {
-        bool isNew = annot != ew->tab->win->annotationUnderCursor;
+        isNew = annot != ew->tab->win->annotationUnderCursor;
         SetSelectedAnnotation(tab, annot, isNew, focus);
     }
     DarkModeApplyToNotifyWindowAndEraseBg(ew->hwnd);
@@ -2817,10 +2818,13 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     ew->SetIsVisible(true);
-    // SetSelectedAnnotation focuses the list when an annot is selected; if the
-    // window opened on an empty selection, give the list the keys so Home /
-    // End / arrows work immediately (issue #5975).
-    if (!annot) {
+    // Showing the top-level window can clear focus set while it was hidden.
+    // Restore the same target UpdateUIForSelectedAnnotation chose so the first
+    // Tab starts from the annotation list (issue #6036).
+    if (annot && (focus == EditAnnotFocus::Edit ||
+                  (focus == EditAnnotFocus::Default && isNew && annot->type == AnnotationType::FreeText))) {
+        HwndSetFocus(ew->editContents->hwnd);
+    } else {
         FocusAnnotationsList(ew);
     }
 }
