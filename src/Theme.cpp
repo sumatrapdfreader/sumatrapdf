@@ -914,6 +914,11 @@ static Color ThemePageRenderColorsNoInvert(Color& bg) {
     Color text = kColBlack;
     bg = kColWhite;
 
+    // Headless harnesses such as -extract-text run before LoadSettings.
+    if (!gGlobalPrefs) {
+        return text;
+    }
+
     ParsedColor* parsedCol;
     parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
     if (parsedCol->parsedOk) {
