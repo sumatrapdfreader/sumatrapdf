@@ -11,6 +11,7 @@
 #include "gui/Dpi.h"
 #include "base/File.h"
 #include "base/FileWatcher.h"
+#include "base/Timer.h"
 #include "base/GdiPlusUtil.h"
 #include "gui/PlatformFont.h"
 #include "gui/PlatformText.h"
@@ -3070,12 +3071,18 @@ Exit:
         if (gIsDebugBuild) {
             // in debug builds wait for the threads instead of fast-exiting so
             // that full cleanup runs and leak trackers only report real leaks.
-            // Safe: windows are deleted below, so the threads' MainWindow*
-            // stay valid while we wait; their queued finish tasks are drained
-            // (and orphaned controllers freed) later in uitask::Destroy()
+            // Heading-TOC / annot-load workers decrement the counter from a
+            // uitask. After the message loop has exited those tasks never run
+            // unless we drain here, so a Sleep-only wait never ends.
             log(StrL("waiting for dangerous threads to finish instead of fast exit\n"));
+            TimeStamp waitStart = TimeGet();
             while (AreDangerousThreadsPending()) {
-                ::Sleep(100);
+                uitask::DrainQueue();
+                if (TimeSinceInMs(waitStart) > 10000) {
+                    log(StrL("timed out waiting for dangerous threads\n"));
+                    break;
+                }
+                ::Sleep(50);
             }
         } else {
             fastExit = true;
