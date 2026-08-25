@@ -17,6 +17,7 @@
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
+#include "gui/VirtHost.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -266,16 +267,16 @@ struct AboutCtrl : VirtCtrl {
     Table* table = nullptr;
     // "Show frequently read", bottom right of the About page (not the window)
     VirtLink* showFreqRead = nullptr;
-    // the colored app name on top of the box
+    // the colored app name on top of the box; hidden in the home-page dropdown
     SumatraLogo* logo = nullptr;
-    // About dialog only: copies version / OS / machine info for bug reports
+    // copies version / OS / machine info for bug reports (dialog and dropdown)
     VirtButton* copyInfoBtn = nullptr;
+    bool hideLogo = false;
 
     // geometry, computed by UpdateLayout()
     Rect aboutRect;  // the framed box
     Size headerSize; // the "SumatraPDF" band on top of it
     int dividerX = 0;
-    int extraBottomDy = 0; // space below the box for copyInfoBtn
 
     AboutCtrl();
     ~AboutCtrl() override;
@@ -283,6 +284,7 @@ struct AboutCtrl : VirtCtrl {
     void UpdateLayout(Rect clientRc);
     VirtText* LeftAt(int i);
     VirtText* RightAt(int i);
+    void Paint(VirtPaintCtx&) override;
     void PaintChildren(VirtPaintCtx&) override;
     int LayoutChildCount() override;
     ILayout* LayoutChildAt(int) override;
@@ -414,20 +416,48 @@ VirtText* AboutCtrl::RightAt(int i) {
     return (VirtText*)table->GetCell(i, 1);
 }
 
+// framed box: title band, body, then children, then the column divider
+void AboutCtrl::Paint(VirtPaintCtx& ctx) {
+    Rect rect = aboutRect;
+    if (rect.IsEmpty()) {
+        return;
+    }
+    Color lineCol = ThemeWindowTextColor();
+    Color bgCol = ThemeMainWindowBackgroundColor();
+    ctx.gfx->FillRect(rect, bgCol);
+
+#ifndef ABOUT_USE_LESS_COLORS
+    if (headerSize.dy > 0) {
+        Rect titleRect(rect.TL(), headerSize);
+        ctx.gfx->DrawRect({rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.dx, titleRect.dy}, lineCol,
+                          ABOUT_LINE_OUTER_SIZE);
+        ctx.gfx->DrawRect({rect.x, rect.y + titleRect.dy, rect.dx, rect.dy - titleRect.dy}, lineCol,
+                          ABOUT_LINE_OUTER_SIZE);
+    } else {
+        ctx.gfx->DrawRect(rect, lineCol, ABOUT_LINE_OUTER_SIZE);
+    }
+#endif
+}
+
 // paint logo (VirtCtrl children) and the table's VirtText / VirtLink cells
 void AboutCtrl::PaintChildren(VirtPaintCtx& ctx) {
     VirtCtrl::PaintChildren(ctx);
-    if (!table) {
-        return;
-    }
-    for (int i = 0; i < table->LayoutChildCount(); i++) {
-        VirtCtrl* v = table->LayoutChildAt(i)->AsVirtCtrl();
-        if (!v) {
-            continue;
+    if (table) {
+        for (int i = 0; i < table->LayoutChildCount(); i++) {
+            VirtCtrl* v = table->LayoutChildAt(i)->AsVirtCtrl();
+            if (!v) {
+                continue;
+            }
+            v->SetRoot(root);
+            // cells were given absolute window coords by Table::SetBounds
+            v->PaintTree(ctx.gfx, {0, 0}, ctx.clip);
         }
-        v->SetRoot(root);
-        // cells were given absolute window coords by Table::SetBounds
-        v->PaintTree(ctx.gfx, {0, 0}, ctx.clip);
+    }
+
+    if (table && !table->lastBounds.IsEmpty()) {
+        Color lineCol = ThemeWindowTextColor();
+        Rect t = table->lastBounds;
+        ctx.gfx->DrawLine({dividerX, t.y, 0, t.dy}, lineCol, ABOUT_LINE_SEP_SIZE);
     }
 }
 
@@ -503,7 +533,9 @@ void AboutCtrl::Sync() {
 // the About box is the title band above the two-column table. This sizes it from
 // the table, centers it in clientRc and positions the table inside it
 void AboutCtrl::UpdateLayout(Rect clientRc) {
-    headerSize = logo->GetIdealSize();
+    bool showLogo = logo && logo->GetVisibility() != Visibility::Collapse;
+    bool showCopy = copyInfoBtn && copyInfoBtn->GetVisibility() != Visibility::Collapse;
+    headerSize = showLogo ? logo->GetIdealSize() : Size{};
 
     int leftRightSpaceDx = DpiScale(kAboutLeftRightSpaceDx);
     int marginDx = DpiScale(kAboutMarginDx);
@@ -513,34 +545,45 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
     table->rowGap = aboutTxtDy;
     Size tableSize = table->Layout(ExpandInf());
 
+    Size btnSz{};
+    int gap = DpiScale(12);
+    int padBottom = DpiScale(kAboutRectPadding);
+    int copyBlockDy = 0;
+    if (showCopy) {
+        btnSz = copyInfoBtn->GetIdealSize();
+        copyBlockDy = gap + btnSz.dy + padBottom;
+    }
+
     Rect r;
     // the divider line is drawn inside the gap between the two columns
     r.dx = std::max(tableSize.dx + ABOUT_LINE_SEP_SIZE, headerSize.dx) + (2 * ABOUT_LINE_OUTER_SIZE) + (2 * marginDx);
+    if (showCopy) {
+        r.dx = std::max(r.dx, btnSz.dx + (2 * marginDx) + (2 * ABOUT_LINE_OUTER_SIZE));
+    }
     // one extra row gap so the last row isn't flush against the frame
-    r.dy = headerSize.dy + tableSize.dy + aboutTxtDy + (2 * ABOUT_LINE_OUTER_SIZE) + 4;
+    r.dy = headerSize.dy + tableSize.dy + aboutTxtDy + (2 * ABOUT_LINE_OUTER_SIZE) + 4 + copyBlockDy;
     r.x = clientRc.x + ((clientRc.dx - r.dx) / 2);
-    // keep the framed box at the top when the copy-info button sits below it
-    if (copyInfoBtn && copyInfoBtn->GetVisibility() != Visibility::Collapse) {
+    if (hideLogo) {
+        r.y = clientRc.y;
+    } else if (showCopy) {
         r.y = clientRc.y + DpiScale(kAboutRectPadding);
     } else {
         r.y = clientRc.y + ((clientRc.dy - r.dy) / 2);
     }
     aboutRect = r;
 
-    logo->SetBounds({r.x + ((r.dx - headerSize.dx) / 2), r.y, headerSize.dx, headerSize.dy});
+    if (showLogo) {
+        logo->SetBounds({r.x + ((r.dx - headerSize.dx) / 2), r.y, headerSize.dx, headerSize.dy});
+    }
 
     int x = r.x + ABOUT_LINE_OUTER_SIZE + marginDx;
-    int y = r.y + headerSize.dy + 4;
+    int y = r.y + (showLogo ? headerSize.dy : ABOUT_LINE_OUTER_SIZE) + 4;
     table->SetBounds({x, y, tableSize.dx, tableSize.dy});
     dividerX = table->CellRect(0, 1).x - leftRightSpaceDx;
 
-    extraBottomDy = 0;
-    if (copyInfoBtn && copyInfoBtn->GetVisibility() != Visibility::Collapse) {
-        Size btnSz = copyInfoBtn->GetIdealSize();
-        int gap = DpiScale(12);
-        extraBottomDy = gap + btnSz.dy;
-        int btnX = clientRc.x + ((clientRc.dx - btnSz.dx) / 2);
-        int btnY = r.y + r.dy + gap;
+    if (showCopy) {
+        int btnX = r.x + ((r.dx - btnSz.dx) / 2);
+        int btnY = r.y + r.dy - padBottom - btnSz.dy;
         copyInfoBtn->SetBounds({btnX, btnY, btnSz.dx, btnSz.dy});
     }
 }
@@ -631,11 +674,16 @@ static void OnCopyProgramInfo(VirtMouseEvent*) {
 }
 
 // prepares the About tree for hwnd and computes its geometry
-static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) {
+static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, Rect clientRc, bool hover = false) {
     DpiSetFromHwnd(hwnd);
     AboutCtrl* about = EnsureAboutCtrl(rootPtr, hwnd, clientRc);
+    about->hideLogo = hover;
+    if (about->logo) {
+        about->logo->SetVisibility(hover ? Visibility::Collapse : Visibility::Visible);
+    }
     about->Sync();
-    if (hwnd == gHwndAbout) {
+    bool showCopy = hover || (hwnd == gHwndAbout);
+    if (showCopy) {
         if (!about->copyInfoBtn) {
             about->copyInfoBtn =
                 NewThemedButton(hwnd, _TRA("Copy program and machine info to clipboard"), GetAppFont(), false);
@@ -656,33 +704,19 @@ static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, Rect clientRc
    software - hopeless to understand without seeing the design. */
 static void DrawAbout(Gfx* gfx, VirtRoot* root, Rect clientRc) {
     auto* about = (AboutCtrl*)root->owned;
-    Rect rect = about->aboutRect;
-    Color lineCol = ThemeWindowTextColor();
     Color bgCol = ThemeMainWindowBackgroundColor();
     gfx->FillRect(clientRc, bgCol);
 
-    /* render title */
-    Rect titleRect(rect.TL(), about->headerSize);
-
-#ifndef ABOUT_USE_LESS_COLORS
-    gfx->DrawRect({rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.dx, titleRect.dy}, lineCol, ABOUT_LINE_OUTER_SIZE);
-#else
-    Rect titleBgBand(0, rect.y, clientRc.dx, titleRect.dy);
+#ifdef ABOUT_USE_LESS_COLORS
+    Color lineCol = ThemeWindowTextColor();
+    Rect titleRect(about->aboutRect.TL(), about->headerSize);
+    Rect titleBgBand(0, about->aboutRect.y, clientRc.dx, titleRect.dy);
     gfx->FillRect(titleBgBand, bgCol);
-    gfx->DrawLine(Rect(0, rect.y, clientRc.dx, 0), lineCol);
-    gfx->DrawLine(Rect(0, rect.y + titleRect.dy, clientRc.dx, 0), lineCol);
+    gfx->DrawLine(Rect(0, about->aboutRect.y, clientRc.dx, 0), lineCol);
+    gfx->DrawLine(Rect(0, about->aboutRect.y + titleRect.dy, clientRc.dx, 0), lineCol);
 #endif
 
-    /* render attribution box */
-#ifndef ABOUT_USE_LESS_COLORS
-    gfx->DrawRect({rect.x, rect.y + titleRect.dy, rect.dx, rect.dy - titleRect.dy}, lineCol, ABOUT_LINE_OUTER_SIZE);
-#endif
-
-    /* render both text columns */
     root->Paint(gfx, clientRc);
-
-    Rect divideLine(about->dividerX, rect.y + titleRect.dy + 4, 0, rect.dy - titleRect.dy - 8);
-    gfx->DrawLine(divideLine, lineCol, ABOUT_LINE_SEP_SIZE);
 }
 
 static void OnPaintAbout(HWND hwnd) {
@@ -841,11 +875,7 @@ void ShowAboutWindow(MainWindow* win) {
     AboutCtrl* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, HwndClientRect(gHwndAbout));
     int rectPadding = DpiScale(kAboutRectPadding);
     dx = about->aboutRect.dx + (2 * rectPadding);
-    dy = about->aboutRect.dy + (2 * rectPadding) + about->extraBottomDy;
-    if (about->copyInfoBtn) {
-        int btnDx = about->copyInfoBtn->GetIdealSize().dx + (2 * rectPadding);
-        dx = std::max(dx, btnDx);
-    }
+    dy = about->aboutRect.dy + (2 * rectPadding);
 
     // resize the new window to just match these dimensions
     Rect wRc = HwndWindowRect(gHwndAbout);
@@ -1116,10 +1146,17 @@ struct HomeChromeCtrl : VirtCtrl {
     HomeViewIconCtrl* listView = nullptr;
     HomeOpenDocCtrl* openDoc = nullptr;
     HomeHelpBtnCtrl* helpBtn = nullptr;
+    // chrome-less About dropdown under the logo; shown after the tooltip delay
+    VirtHost* aboutHover = nullptr;
+
+    ~HomeChromeCtrl() override;
 };
 
 static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win);
+static HomeChromeCtrl* HomeChrome(MainWindow* win);
 static HomeEntriesCtrl* HomeEntries(MainWindow* win);
+static void HideHomeAboutHover(MainWindow* win);
+static void ShowHomeAboutHover(MainWindow* win);
 static void HomePageSyncChrome(HomePageLayout& l);
 static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t);
 static Rect HomeOutlinePaintClip(const Rect& thumbsArea, const Rect& searchBorder, const Rect& tip, bool hasTip);
@@ -1288,6 +1325,7 @@ void HomePageUpdateSearchColors(MainWindow* win) {
 // and text margins do not follow WM_DPICHANGED automatically, and the page's
 // cached rectangles were measured at the previous DPI.
 void HomePageOnDpiChanged(MainWindow* win, int dpi) {
+    HideHomeAboutHover(win);
     ClearHomeLayoutCache();
     if (!win || dpi <= 0) {
         return;
@@ -2556,6 +2594,153 @@ void HomeEntriesCtrl::OnMouseMove(VirtMouseEvent* ev) {
     return;
 }
 
+// TOOLTIPS_CLASS default for TTDT_INITIAL
+static int TooltipInitialDelayMs() {
+    int ms = (int)GetDoubleClickTime();
+    return ms > 0 ? ms : 500;
+}
+
+constexpr UINT_PTR kHomeAboutHoverTimerID = 100;
+
+static HomeChromeCtrl* HomeChrome(MainWindow* win) {
+    if (!win || !win->homeRoot) {
+        return nullptr;
+    }
+    if (!IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeCtrl)) {
+        return nullptr;
+    }
+    return (HomeChromeCtrl*)win->homeRoot->owned;
+}
+
+static Rect HomeLogoScreenRect(HomeChromeCtrl* chrome) {
+    if (!chrome || !chrome->logo) {
+        return {};
+    }
+    HWND hwnd = chrome->GetHwnd();
+    if (!hwnd) {
+        return {};
+    }
+    Rect logo = chrome->logo->BoundsInWindow();
+    Point origin = HwndClientToScreen(hwnd, Point());
+    return {origin.x + logo.x, origin.y + logo.y, logo.dx, logo.dy};
+}
+
+static bool CursorOverHomeLogo(HomeChromeCtrl* chrome) {
+    return HomeLogoScreenRect(chrome).Contains(GetCursorPosition());
+}
+
+static bool CursorOverAboutHover(HomeChromeCtrl* chrome) {
+    return chrome && chrome->aboutHover && chrome->aboutHover->IsVisible() &&
+           chrome->aboutHover->ScreenRect().Contains(GetCursorPosition());
+}
+
+static void CancelHomeAboutHoverTimer(MainWindow* win) {
+    if (win && win->hwndCanvas) {
+        KillTimer(win->hwndCanvas, kHomeAboutHoverTimerID);
+    }
+}
+
+static void HideHomeAboutHover(MainWindow* win) {
+    CancelHomeAboutHoverTimer(win);
+    HomeChromeCtrl* chrome = HomeChrome(win);
+    if (chrome && chrome->aboutHover) {
+        chrome->aboutHover->Show(false);
+    }
+}
+
+static void OnHomeAboutHoverLeave(MainWindow* win) {
+    // left the dropdown; keep it only if the cursor is back on the title
+    if (CursorOverHomeLogo(HomeChrome(win))) {
+        return;
+    }
+    HideHomeAboutHover(win);
+}
+
+static void CALLBACK HomeAboutHoverTimerProc(HWND hwnd, UINT, UINT_PTR id, DWORD) {
+    KillTimer(hwnd, id);
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
+    if (!win || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    ShowHomeAboutHover(win);
+}
+
+static void OnHomeLogoEnter(MainWindow* win) {
+    if (!win || !win->hwndCanvas || !win->IsCurrentTabAbout()) {
+        return;
+    }
+    HomeChromeCtrl* chrome = HomeChrome(win);
+    if (chrome && chrome->aboutHover && chrome->aboutHover->IsVisible()) {
+        return;
+    }
+    CancelHomeAboutHoverTimer(win);
+    SetTimer(win->hwndCanvas, kHomeAboutHoverTimerID, (UINT)TooltipInitialDelayMs(), HomeAboutHoverTimerProc);
+}
+
+static void OnHomeLogoLeave(MainWindow* win) {
+    // still on the title→dropdown path (cursor already over the popup)
+    if (CursorOverAboutHover(HomeChrome(win))) {
+        return;
+    }
+    HideHomeAboutHover(win);
+}
+
+// chrome-less About box under the home-page logo; links stay clickable
+static void ShowHomeAboutHover(MainWindow* win) {
+    if (!win || !IsMainWindowValidAndNotClosing(win) || !win->IsCurrentTabAbout()) {
+        return;
+    }
+    HomeChromeCtrl* chrome = HomeChrome(win);
+    if (!chrome || !chrome->logo || !CursorOverHomeLogo(chrome)) {
+        return;
+    }
+
+    if (!chrome->aboutHover) {
+        VirtHost::CreateArgs args;
+        args.parent = win->hwndFrame;
+        args.className = WStrL(L"SUMATRA_ABOUT_HOVER");
+        args.isPopup = true;
+        args.noActivate = true;
+        args.visible = false;
+        args.bgColor = ThemeMainWindowBackgroundColor();
+        args.userData = win;
+        chrome->aboutHover = VirtHost::Create(args);
+        if (!chrome->aboutHover) {
+            return;
+        }
+        chrome->aboutHover->onMouseLeave = MkFunc0(OnHomeAboutHoverLeave, win);
+        LONG_PTR cls = GetClassLongPtrW(chrome->aboutHover->native, GCL_STYLE);
+        SetClassLongPtrW(chrome->aboutHover->native, GCL_STYLE, cls | CS_DROPSHADOW);
+    }
+
+    VirtHost* host = chrome->aboutHover;
+    host->bgColor = ThemeMainWindowBackgroundColor();
+    DpiSetFromHwnd(host->native);
+
+    Rect measureRc{0, 0, 2000, 2000};
+    AboutCtrl* about = UpdateAboutLayout(&host->vroot, host->native, measureRc, true);
+    Size box = about->aboutRect.Size();
+    if (box.IsEmpty()) {
+        return;
+    }
+
+    Rect logoScreen = HomeLogoScreenRect(chrome);
+    Rect pos{logoScreen.x + ((logoScreen.dx - box.dx) / 2), logoScreen.Bottom(), box.dx, box.dy};
+    pos = ShiftRectToWorkArea(pos, win->hwndCanvas, true);
+    host->SetPos(pos, true);
+    UpdateAboutLayout(&host->vroot, host->native, {0, 0, box.dx, box.dy}, true);
+    host->Invalidate();
+}
+
+HomeChromeCtrl::~HomeChromeCtrl() {
+    HWND hwnd = GetHwnd();
+    if (hwnd) {
+        KillTimer(hwnd, kHomeAboutHoverTimerID);
+    }
+    delete aboutHover;
+    aboutHover = nullptr;
+}
+
 // created once per window so that hover / pressed state survives the repaints
 // that scrolling and filtering cause
 static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
@@ -2606,8 +2791,12 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->hdr = new VirtText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
-    // the app name in colorful letters, same as the About window
+    // the app name in colorful letters, same as the About window.
+    // Hit-testable so hovering it can open the About dropdown.
     chrome->logo = new SumatraLogo();
+    chrome->logo->SetFlag(vwfNoHitTest, false);
+    chrome->logo->onMouseEnter = MkFunc0(OnHomeLogoEnter, win);
+    chrome->logo->onMouseLeave = MkFunc0(OnHomeLogoLeave, win);
     chrome->AddChild(chrome->logo);
 
     chrome->openDoc = new HomeOpenDocCtrl();
@@ -2626,6 +2815,7 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
 }
 
 void HomePageDestroyChrome(MainWindow* win) {
+    CancelHomeAboutHoverTimer(win);
     delete win->homeRoot;
     win->homeRoot = nullptr;
 }
@@ -2645,6 +2835,20 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
     // a background window is meant to activate it.
     bool isHoverMsg = (msg == WM_MOUSEMOVE) || (msg == WM_SETCURSOR);
     if (isHoverMsg && GetForegroundWindow() != win->hwndFrame) {
+        // thumbnail hover / tooltips stay quiet so they don't steal activation
+        // from e.g. the command palette. The About dropdown is WS_EX_NOACTIVATE,
+        // so hovering the logo still shows it.
+        if (msg == WM_MOUSEMOVE) {
+            Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+            ILayout* el = ElementFromPoint(root, pt, nullptr);
+            VirtCtrl* w = el ? el->AsVirtCtrl() : nullptr;
+            if (w && IsVirtCtrlOfKind(w, kindSumatraLogo)) {
+                LRESULT ignored = 0;
+                root->OnMessage(msg, wp, lp, ignored);
+            } else {
+                HideHomeAboutHover(win);
+            }
+        }
         return false;
     }
     if (msg != WM_SETCURSOR) {
@@ -2656,6 +2860,10 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
             if (entries) {
                 entries->SetActiveEntry(-1);
             }
+        }
+        // canvas got the mouse and it is not on the title: left the SumatraPDF area
+        if (msg == WM_MOUSEMOVE && !IsVirtCtrlOfKind(root->hovered, kindSumatraLogo)) {
+            HideHomeAboutHover(win);
         }
         return didHandle;
     }
@@ -2747,6 +2955,15 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     // repaints the logo without a full relayout
     chrome->logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
     chrome->logo->SetBounds(l.rcLogo);
+    if (chrome->aboutHover && chrome->aboutHover->IsVisible()) {
+        Size sz = chrome->aboutHover->ScreenRect().Size();
+        Rect logoScreen = HomeLogoScreenRect(chrome);
+        Rect want{logoScreen.x + ((logoScreen.dx - sz.dx) / 2), logoScreen.Bottom(), sz.dx, sz.dy};
+        want = ShiftRectToWorkArea(want, l.win->hwndCanvas, true);
+        if (want != chrome->aboutHover->ScreenRect()) {
+            chrome->aboutHover->SetPos(want, true);
+        }
+    }
 
     // one click target covering the icon and the link text
     Rect rcOpen = l.rcIconOpen.Union(l.openDoc->lastBounds);
@@ -3073,6 +3290,7 @@ void HomePageOnWindowActivate(MainWindow* win, bool active) {
         // Also when the frame is iconic: activate can fire while minimized and
         // ClientToScreen then pins the tip at the top-left of the desktop (#5928).
         win->DeleteToolTip();
+        HideHomeAboutHover(win);
         return;
     }
     // only restore the selection tip (positioned at the active entry, not cursor)
@@ -3083,13 +3301,8 @@ void HomePageOnWindowActivate(MainWindow* win, bool active) {
 
 // the entries wnd of the chrome tree, if the home page is showing
 static HomeEntriesCtrl* HomeEntries(MainWindow* win) {
-    if (!win || !win->homeRoot) {
-        return nullptr;
-    }
-    if (!IsVirtCtrlOfKind(win->homeRoot->owned, kindHomeChromeCtrl)) {
-        return nullptr; // the About page is showing, not the home page
-    }
-    return ((HomeChromeCtrl*)win->homeRoot->owned)->entries;
+    HomeChromeCtrl* chrome = HomeChrome(win);
+    return chrome ? chrome->entries : nullptr;
 }
 
 // mouse left the canvas (or the page scrolled): drop the active entry so the
