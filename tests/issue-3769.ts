@@ -1,9 +1,9 @@
 // Test for issue #3769: annotation editor list height.
 //
-// The list is as tall as the annotations, capped at 12 rows. Contents is a
-// fixed 6 lines. Extra window height is empty space, so resizing or moving
-// between annotations (which shows different per-type fields) does not
-// change the list or Contents height.
+// The list is as tall as the annotations, at least 6 and capped at 12 rows.
+// Contents is a fixed 6 lines. Extra window height is empty space, so
+// resizing or moving between annotations (which shows different per-type
+// fields) does not change the list or Contents height.
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";

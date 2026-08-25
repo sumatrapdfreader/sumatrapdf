@@ -142,8 +142,8 @@ export async function testit(): Promise<void> {
 
       sendCommandSync(frame, cmdId("CmdCreateAnnotUnderline"));
       const layoutAfter = await annotationEditorLayout(client);
-      if (layoutAfter.count !== 2 || layoutAfter.listDy <= layoutBefore.listDy) {
-        const message = `annotation list did not grow after adding underline: before=${layoutBefore.raw} after=${layoutAfter.raw}`;
+      if (layoutAfter.count !== 2) {
+        const message = `annotation list did not add underline: before=${layoutBefore.raw} after=${layoutAfter.raw}`;
         sendCommandSync(frame, cmdId("CmdDiscardChanges"));
         await client.waitForRenderIdle();
         throw new Error(message);

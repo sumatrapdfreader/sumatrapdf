@@ -46,6 +46,7 @@ extern "C" {
 
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
+constexpr int kMinAnnotListLines = 6;
 constexpr int kMaxAnnotListLines = 12;
 constexpr int kPreferredContentsLines = 6;
 // pdf_update_annot on every EN_CHANGE stalls typing (annot-stress, FreeText).
@@ -475,6 +476,16 @@ static Annotation* VisibleAnnotAt(EditAnnotationsWindow* ew, int idx) {
     return ew->visibleAnnots[idx];
 }
 
+static int AnnotListIdealLines(int n) {
+    if (n < kMinAnnotListLines) {
+        return kMinAnnotListLines;
+    }
+    if (n > kMaxAnnotListLines) {
+        return kMaxAnnotListLines;
+    }
+    return n;
+}
+
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     ew->visibleAnnots.Reset();
     auto* model = new ListBoxModelStrings();
@@ -501,15 +512,7 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     if (ew->editFilter) {
         ew->editFilter->SetCue(fmt(_TRA("filter %d annotations").s, len(ew->annotations)));
     }
-    int n = len(ew->visibleAnnots);
-    int listLines = n;
-    if (listLines < 1) {
-        listLines = 1;
-    }
-    if (listLines > kMaxAnnotListLines) {
-        listLines = kMaxAnnotListLines;
-    }
-    ew->listBox->idealSizeLines = listLines;
+    ew->listBox->idealSizeLines = AnnotListIdealLines(len(ew->visibleAnnots));
     EnableSaveIfAnnotationsChanged(ew);
 }
 
@@ -2273,9 +2276,10 @@ void EditAnnotationsWindow::OnTimer(WindowBase::TimerEvent* ev) {
     }
 }
 
-// The list is as tall as the annotations (capped at kMaxAnnotListLines).
-// Contents stays kPreferredContentsLines so leftover height is a spacer
-// below the per-annot buttons, and navigating does not resize the edit.
+// The list is as tall as the annotations (at least kMinAnnotListLines, capped
+// at kMaxAnnotListLines). Contents stays kPreferredContentsLines so leftover
+// height is a spacer below the per-annot buttons, and navigating does not
+// resize the edit.
 static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientDy) {
     if (!ew->listBox || !ew->mainLayout) {
         return;
@@ -2283,15 +2287,7 @@ static void SetGrowingControlsToFit(EditAnnotationsWindow* ew, int targetClientD
     if (ew->listBox->GetItemHeight() <= 0 || targetClientDy <= 0) {
         return;
     }
-    int n = ew->listBox->ItemsCount();
-    int listLines = n;
-    if (listLines < 1) {
-        listLines = 1;
-    }
-    if (listLines > kMaxAnnotListLines) {
-        listLines = kMaxAnnotListLines;
-    }
-    ew->listBox->idealSizeLines = listLines;
+    ew->listBox->idealSizeLines = AnnotListIdealLines(ew->listBox->ItemsCount());
     if (ew->editContents) {
         ew->editContents->idealSizeLines = kPreferredContentsLines;
     }
@@ -2426,7 +2422,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->dpi = ew->GetDpi();
         w->font = fnt;
         w->padding = DpiScaledInsets(4, 0);
-        w->idealSizeLines = 1;
+        w->idealSizeLines = kMinAnnotListLines;
         w->multiSelect = true;
         auto* lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
@@ -2658,7 +2654,8 @@ static HWND AnnotEditorRelativeHwnd(EditAnnotationsWindow* ew) {
 }
 
 // Size the HWND to a client size that fits the work area. The list stays at
-// min(n, kMaxAnnotListLines) rows and Contents at kPreferredContentsLines.
+// clamp(n, kMinAnnotListLines, kMaxAnnotListLines) rows and Contents at
+// kPreferredContentsLines.
 static void RelayoutEditAnnotationsWindow(EditAnnotationsWindow* ew, int clientDx, int clientDy) {
     if (!ew || !ew->hwnd || !ew->mainLayout) {
         return;
