@@ -3,9 +3,9 @@
 
 // note: include Base.h instead of including directly
 
-#define UTF8_BOM "\xEF\xBB\xBF"
-#define UTF16_BOM "\xFF\xFE"
-#define UTF16BE_BOM "\xFE\xFF"
+#define kUtf8Bom "\xEF\xBB\xBF"
+#define kUtf16Bom "\xFF\xFE"
+#define kUtf16BeBom "\xFE\xFF"
 
 using StrArena = u32;
 StrArena StrArenaAlloc(Arena* a, int size);

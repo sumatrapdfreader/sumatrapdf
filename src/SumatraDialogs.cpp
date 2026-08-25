@@ -166,7 +166,7 @@ static DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
 }
 
 #ifndef ID_APPLY_NOW
-#define ID_APPLY_NOW 0x3021
+constexpr int ID_APPLY_NOW = 0x3021;
 #endif
 
 static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {

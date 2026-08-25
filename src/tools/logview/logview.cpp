@@ -59,7 +59,7 @@ constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\LOCAL\\ArsLexis-Logger";
 constexpr int kPipeBufSize = 1024 * 64;
 constexpr const WCHAR* kAboutURL = L"https://www.sumatrapdfreader.org/docs/Logview";
 
-constexpr int WM_APP_NEW_LOGS = WM_APP + 1;
+constexpr int kWmAppNewLogs = WM_APP + 1;
 
 // filtering is debounced: applied 300ms after the last keystroke in the filter box
 constexpr UINT_PTR kFilterTimerId = 1;
@@ -496,7 +496,7 @@ static DWORD WINAPI ReaderThread(void* arg) {
         bool posted = false;
         FlushLines(&ls, connNo, &posted);
         if (posted) {
-            PostMessageW(gHwndMain, WM_APP_NEW_LOGS, 0, 0);
+            PostMessageW(gHwndMain, kWmAppNewLogs, 0, 0);
         }
     }
 
@@ -506,7 +506,7 @@ static DWORD WINAPI ReaderThread(void* arg) {
         gQueueMutex.Lock();
         gQueue.Append(PendingLine{connNo, dup});
         gQueueMutex.Unlock();
-        PostMessageW(gHwndMain, WM_APP_NEW_LOGS, 0, 0);
+        PostMessageW(gHwndMain, kWmAppNewLogs, 0, 0);
     }
 
     DisconnectNamedPipe(hPipe);
@@ -1206,7 +1206,7 @@ void LogViewWnd::OnDestroy(WindowBase::DestroyEvent*) {
 
 // custom app message for the log drain queue
 void LogViewWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_APP_NEW_LOGS) {
+    if (ev->msg == kWmAppNewLogs) {
         DrainQueue();
         ev->result = 0;
         ev->didHandle = true;

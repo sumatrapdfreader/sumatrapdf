@@ -8,9 +8,9 @@
 #include "PalmDbReader.h"
 
 // size of PdbHeader
-#define kPdbHeaderLen 78
+constexpr int kPdbHeaderLen = 78;
 // size of PdbRecordHeader
-#define kPdbRecordHeaderLen 8
+constexpr int kPdbRecordHeaderLen = 8;
 
 // Takes ownership of d
 bool PdbReader::Parse(Str d) {
@@ -134,22 +134,22 @@ PdbReader* PdbReader::CreateFromFile(Str path) {
 }
 
 // values for typeCreator
-#define MOBI_TYPE_CREATOR "BOOKMOBI"
-#define PALMDOC_TYPE_CREATOR "TEXtREAd"
-#define TEALDOC_TYPE_CREATOR "TEXtTlDc"
-#define PLUCKER_TYPE_CREATOR "DataPlkr"
+constexpr const char* kMobiTypeCreator = "BOOKMOBI";
+constexpr const char* kPalmDocTypeCreator = "TEXtREAd";
+constexpr const char* kTealDocTypeCreator = "TEXtTlDc";
+constexpr const char* kPluckerTypeCreator = "DataPlkr";
 
 PdbDocType GetPdbDocType(Str typeCreator) {
-    if (MemEq(typeCreator.s, MOBI_TYPE_CREATOR, 8)) {
+    if (MemEq(typeCreator.s, kMobiTypeCreator, 8)) {
         return PdbDocType::Mobipocket;
     }
-    if (MemEq(typeCreator.s, PALMDOC_TYPE_CREATOR, 8)) {
+    if (MemEq(typeCreator.s, kPalmDocTypeCreator, 8)) {
         return PdbDocType::PalmDoc;
     }
-    if (MemEq(typeCreator.s, TEALDOC_TYPE_CREATOR, 8)) {
+    if (MemEq(typeCreator.s, kTealDocTypeCreator, 8)) {
         return PdbDocType::TealDoc;
     }
-    if (MemEq(typeCreator.s, PLUCKER_TYPE_CREATOR, 8)) {
+    if (MemEq(typeCreator.s, kPluckerTypeCreator, 8)) {
         return PdbDocType::Plucker;
     }
     return PdbDocType::Unknown;

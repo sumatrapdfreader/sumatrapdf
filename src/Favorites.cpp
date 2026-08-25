@@ -493,8 +493,8 @@ static void RemoveAllFavForFile(Str filePath) {
 }
 
 // Note: those might be too big
-#define MAX_FAV_SUBMENUS 10
-#define MAX_FAV_MENUS 10
+constexpr int kMaxFavSubmenus = 10;
+constexpr int kMaxFavMenus = 10;
 
 bool HasFavorites() {
     FileState* ds;
@@ -546,7 +546,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
         return;
     }
     for (int i = 0; i < len(*f->favorites); i++) {
-        if (i >= MAX_FAV_MENUS) {
+        if (i >= kMaxFavMenus) {
             return;
         }
         Favorite* fn = (*f->favorites)[i];
@@ -591,10 +591,10 @@ static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore =
 
 // For easy access, we try to show favorites in the menu, similar to a list of
 // recently opened files.
-// The first menu items are for currently opened file (up to MAX_FAV_MENUS), based
+// The first menu items are for currently opened file (up to kMaxFavMenus), based
 // on the assumption that user is usually interested in navigating current file.
 // Then we have a submenu for each file for which there are bookmarks (up to
-// MAX_FAV_SUBMENUS), each having up to MAX_FAV_MENUS menu items.
+// kMaxFavSubmenus), each having up to kMaxFavMenus menu items.
 // If not all favorites can be shown, we also enable "Show all favorites" menu which
 // will provide a way to see all favorites.
 // Note: not sure if that's the best layout. Maybe we should always use submenu and
@@ -628,7 +628,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
     int menuId = CmdFavoriteFirst;
 
     int menusCount = len(filePathsSorted);
-    menusCount = std::min(menusCount, MAX_FAV_MENUS);
+    menusCount = std::min(menusCount, kMaxFavMenus);
 
     for (int i = 0; i < menusCount; i++) {
         Str filePath = filePathsSorted[i];

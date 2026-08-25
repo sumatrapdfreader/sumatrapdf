@@ -22,7 +22,7 @@ calling into that DLL.
 */
 
 // 'LzSA' for "Lzma Simple Archive"
-#define LZMA_MAGIC_ID 0x41537a4c
+constexpr int kLzmaMagicId = 0x41537a4c;
 
 namespace lzma {
 
@@ -73,7 +73,7 @@ static u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
 // adapted from lzma/C/Lzma86Dec.c
 // (main difference: the uncompressed size isn't stored in bytes 6 to 13)
 
-#define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
+constexpr int kLzmaHeaderSize = 1 + LZMA_PROPS_SIZE;
 
 // the first compressed byte indicates whether compression is LZMA (0), LZMA+BJC (1) or none (-1)
 static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompressed, size_t uncompressedSize,
@@ -92,17 +92,17 @@ static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompre
         return true;
     }
 
-    if (compressedSize < LZMA_HEADER_SIZE || usesX86Filter > 1) {
+    if (compressedSize < kLzmaHeaderSize || usesX86Filter > 1) {
         return false;
     }
 
     SizeT uncompressedSizeCmp = uncompressedSize;
-    SizeT compressedSizeTmp = compressedSize - LZMA_HEADER_SIZE;
+    SizeT compressedSizeTmp = compressedSize - kLzmaHeaderSize;
 
     ISzAllocatorAlloc lzmaAlloc(a);
     ELzmaStatus status;
     u8* dest = uncompressed;
-    u8* src = (u8*)(compressed + LZMA_HEADER_SIZE);
+    u8* src = (u8*)(compressed + kLzmaHeaderSize);
     u8* propData = (u8*)(compressed + 1);
     int res = LzmaDecode(dest, &uncompressedSizeCmp, src, &compressedSizeTmp, propData, LZMA_PROPS_SIZE,
                          LZMA_FINISH_END, &status, &lzmaAlloc);
@@ -142,19 +142,19 @@ Integers are little-endian.
 */
 
 // magic_id + number of files
-#define HEADER_START_SIZE (4 + 4)
+constexpr int kHeaderStartSize = 4 + 4;
 
 // 4 * u32 + FILETIME + name
-#define FILE_ENTRY_MIN_SIZE ((4 * 4) + 8 + 1)
+constexpr int kFileEntryMinSize = (4 * 4) + 8 + 1;
 
 bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* archiveOut) {
-    if (dataLen < HEADER_START_SIZE) {
+    if (dataLen < kHeaderStartSize) {
         return false;
     }
 
     ByteReader br(archiveHeader, dataLen);
     u32 magic_id = br.UInt32LE();
-    if (magic_id != LZMA_MAGIC_ID) {
+    if (magic_id != kLzmaMagicId) {
         return false;
     }
 
@@ -166,12 +166,12 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
 
     FileInfo* fi;
     for (u32 i = 0; i < filesCount; i++) {
-        if (br.Offset() + FILE_ENTRY_MIN_SIZE > dataLen) {
+        if (br.Offset() + kFileEntryMinSize > dataLen) {
             return false;
         }
 
         u32 fileHeaderSize = br.UInt32LE();
-        if (fileHeaderSize < FILE_ENTRY_MIN_SIZE || fileHeaderSize > 1024) {
+        if (fileHeaderSize < kFileEntryMinSize || fileHeaderSize > 1024) {
             return false;
         }
         int fileHdrSize = (int)fileHeaderSize;
@@ -186,7 +186,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
         fi->ftModified.dwLowDateTime = br.UInt32LE();
         fi->ftModified.dwHighDateTime = br.UInt32LE();
         fi->name = Str((char*)archiveHeader + br.Offset());
-        br.Skip(fileHdrSize - FILE_ENTRY_MIN_SIZE);
+        br.Skip(fileHdrSize - kFileEntryMinSize);
         if (br.Char() != '\0') {
             return false;
         }

@@ -7,7 +7,7 @@
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
-#define ABC "abc"
+#define kAbc "abc"
 void ByteOrderTests() {
     u8 d1[] = {0x00, 0x01,
                0x00,                               // to skip
@@ -53,7 +53,7 @@ void ByteOrderTests() {
         utassert(23 == d.Offset());
 
         d.Bytes(b, 3);
-        utassert(MemEq(ABC, b, 3));
+        utassert(MemEq(kAbc, b, 3));
         utassert(26 == d.Offset());
     }
 
@@ -81,7 +81,7 @@ void ByteOrderTests() {
         vu16 = d.UInt16BE();
         utassert(vu16 == 0x200);
         d.Bytes(b, 3);
-        utassert(MemEq(ABC, b, 3));
+        utassert(MemEq(kAbc, b, 3));
         utassert(26 == d.Offset());
     }
 
@@ -109,7 +109,7 @@ void ByteOrderTests() {
         v16 = d.Int16LE();
         utassert(v16 == 0x2);
         d.Bytes(b, 3);
-        utassert(MemEq(ABC, b, 3));
+        utassert(MemEq(kAbc, b, 3));
         utassert(26 == d.Offset());
     }
 
@@ -137,9 +137,9 @@ void ByteOrderTests() {
         v16 = d.Int16BE();
         utassert(v16 == 0x200);
         d.Bytes(b, 3);
-        utassert(MemEq(ABC, b, 3));
+        utassert(MemEq(kAbc, b, 3));
         utassert(26 == d.Offset());
     }
 }
 
-#undef ABC
+#undef kAbc

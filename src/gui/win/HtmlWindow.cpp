@@ -222,9 +222,9 @@ static void FreeWindowId(int windowId) {
 }
 
 // Re-using its protocol, see comments at the top.
-#define HW_PROTO_PREFIX L"its"
+constexpr const WCHAR* kHwProtoPrefix = L"its";
 
-#define HW_PROTO_PREFIXA "its"
+#define kHwProtoPrefixA "its"
 
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
 static const GUID CLSID_HW_IInternetProtocol = {0xf1ec293f,
@@ -342,7 +342,7 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
 static bool ParseProtoUrl(Str url, int* htmlWindowId, TempStr* urlRest) {
-    Str rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
+    Str rest = str::Parse(url, kHwProtoPrefixA "://%d/%S", htmlWindowId, urlRest);
     // success-at-end is {non-null, len 0}; failure is {nullptr, 0}. !rest is
     // true for both (str::Parse unit tests use rest.s).
     return rest.s && len(rest) == 0;
@@ -361,7 +361,7 @@ static TempStr UrlWithoutProtoTemp(Str url, int windowId) {
     return urlReal;
 }
 
-#define kDefaultMimeType "text/html"
+constexpr const char* kDefaultMimeType = "text/html";
 
 static TempStr MimeFromUrlTemp(Str url, Str imgExt = {}) {
     Str ext = str::SliceFromCharLast(url, '.');
@@ -519,7 +519,7 @@ static AtomicInt gProtocolFactoryRefCount = 0;
 static HW_IInternetProtocolFactory* gInternetProtocolFactory = nullptr;
 
 // Register our protocol so that urlmon will call us for every
-// url that starts with HW_PROTO_PREFIX
+// url that starts with kHwProtoPrefix
 static void RegisterInternetProtocolFactory() {
     int val = AtomicIntInc(&gProtocolFactoryRefCount);
     if (val > 1) {
@@ -531,7 +531,7 @@ static void RegisterInternetProtocolFactory() {
     ReportIf(FAILED(hr));
     ReportIf(nullptr != gInternetProtocolFactory);
     gInternetProtocolFactory = new HW_IInternetProtocolFactory();
-    hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0,
+    hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, kHwProtoPrefix, 0,
                                             nullptr, 0);
     ReportIf(FAILED(hr));
 }
@@ -544,7 +544,7 @@ static void UnregisterInternetProtocolFactory() {
     ScopedComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
     ReportIf(FAILED(hr));
-    internetSession->UnregisterNameSpace(gInternetProtocolFactory, HW_PROTO_PREFIX);
+    internetSession->UnregisterNameSpace(gInternetProtocolFactory, kHwProtoPrefix);
     ULONG refCount = gInternetProtocolFactory->Release();
     ReportIf(refCount != 0);
     gInternetProtocolFactory = nullptr;
@@ -1550,7 +1550,7 @@ void HtmlWindow::SetHtmlReal(Str d) {
     }
     htmlContent = new HtmlMoniker();
     htmlContent->SetHtml(d);
-    TempStr baseUrl = fmt(HW_PROTO_PREFIXA "://%d/", windowId);
+    TempStr baseUrl = fmt(kHwProtoPrefixA "://%d/", windowId);
     htmlContent->SetBaseUrl(ToWStrTemp(baseUrl));
 
     ScopedComPtr<IDispatch> docDispatch;

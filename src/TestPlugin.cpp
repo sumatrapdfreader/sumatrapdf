@@ -10,7 +10,7 @@
 #include "base/Win.h"
 #include "base/CmdLineArgsIter.h"
 
-#define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
+constexpr const WCHAR* kPluginTestName = L"SumatraPDF Plugin Test";
 
 struct PluginStartData {
     Str sumatraPath;
@@ -152,12 +152,12 @@ void TestPlugin(WStr cmdLine) {
     WNDCLASS wc{};
     wc.lpfnWndProc = PluginParentWndProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = PLUGIN_TEST_NAME;
+    wc.lpszClassName = kPluginTestName;
     wc.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClass(&wc);
 
     PluginStartData data = {args[0], args[2], args[1]};
-    HWND hwnd = CreateWindowExW(0, PLUGIN_TEST_NAME, PLUGIN_TEST_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
+    HWND hwnd = CreateWindowExW(0, kPluginTestName, kPluginTestName, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
                                 CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, &data);
     ShowWindow(hwnd, SW_SHOW);
 

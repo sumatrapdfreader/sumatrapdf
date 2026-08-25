@@ -15,7 +15,7 @@
 #if OS_WIN && COMPILER_MSVC
 
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
-const DWORD MS_VC_EXCEPTION = 0x406D1388;
+constexpr DWORD MS_VC_EXCEPTION = 0x406D1388;
 
 #include <pshpack8.h>
 

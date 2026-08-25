@@ -3,17 +3,17 @@
 
 // Note: they must be in this numeric order for ::Paint() logic to detect
 // page that couldn't be rendered
-constexpr int RENDER_DELAY_UNDEFINED = INT_MAX - 1;
-constexpr int RENDER_DELAY_FAILED = INT_MAX - 2;
+constexpr int kRenderDelayUndefined = INT_MAX - 1;
+constexpr int kRenderDelayFailed = INT_MAX - 2;
 
-#define INVALID_TILE_RES ((USHORT) - 1)
+constexpr USHORT kInvalidTileRes = (USHORT)-1;
 
-#define MAX_PAGE_REQUESTS 8
+constexpr int kMaxPageRequests = 8;
 // keep this value reasonably low, else we'll run out of
 // GDI resources/memory when caching many larger bitmaps
 // TODO: this should be based on amount of memory taken by rendered pages
 // i.e. one big page can use as much memory as lots of small pages
-#define MAX_BITMAPS_CACHED 128
+constexpr int kMaxBitmapsCached = 128;
 
 // predictive rendering renders up to this many pages ahead, one at a time
 // (chained), so they don't flood the render queue
@@ -34,7 +34,7 @@ struct PredictiveChain {
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
    A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
 struct TilePosition {
-    USHORT res = INVALID_TILE_RES;
+    USHORT res = kInvalidTileRes;
     USHORT row = (USHORT)-1;
     USHORT col = (USHORT)-1;
 
@@ -150,13 +150,13 @@ struct FinishedRequestInfo {
 };
 
 struct RenderCache {
-    BitmapCacheEntry* cache[MAX_BITMAPS_CACHED]{};
+    BitmapCacheEntry* cache[kMaxBitmapsCached]{};
     int cacheCount = 0;
     // make sure to never ask for requestAccess in a cacheAccess
     // protected critical section in order to avoid deadlocks
     RecursiveMutex cacheAccess;
 
-    PageRenderRequest requests[MAX_PAGE_REQUESTS]{};
+    PageRenderRequest requests[kMaxPageRequests]{};
     int requestCount = 0;
 
     // ring buffer of recently finished requests (for the render-info window),
@@ -232,7 +232,7 @@ struct RenderCache {
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
     bool ReduceTileSize();
 
-    bool IsRenderQueueFull() const { return requestCount == MAX_PAGE_REQUESTS; }
+    bool IsRenderQueueFull() const { return requestCount == kMaxPageRequests; }
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true,
                           const PredictiveChain* chain = nullptr);

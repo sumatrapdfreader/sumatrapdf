@@ -84,9 +84,9 @@ static void HwndListAdd(HwndBase* w) {
 
 //- Taskbar.cpp
 
-const DWORD WM_TASKBARCALLBACK = WM_APP + 0x15;
-const DWORD WM_TASKBARCREATED = ::RegisterWindowMessage(L"TaskbarCreated");
-const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCreated");
+constexpr DWORD kWmTaskbarCallback = WM_APP + 0x15;
+const DWORD kWmTaskbarCreated = ::RegisterWindowMessage(L"TaskbarCreated");
+const DWORD kWmTaskbarButtonCreated = ::RegisterWindowMessage(L"TaskbarButtonCreated");
 
 //--- HwndBase
 
@@ -1379,7 +1379,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
 
         default: {
-            if (msg == WM_TASKBARCREATED || msg == WM_TASKBARBUTTONCREATED || msg == WM_TASKBARCALLBACK) {
+            if (msg == kWmTaskbarCreated || msg == kWmTaskbarButtonCreated || msg == kWmTaskbarCallback) {
                 if (onTaskbarCallback.IsValid()) {
                     TaskbarCallbackEvent ev;
                     ev.w = this;

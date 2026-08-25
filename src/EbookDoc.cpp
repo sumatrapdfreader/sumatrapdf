@@ -139,14 +139,14 @@ static bool IsValidUtf8(Str string) {
 }
 
 static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
-    if (str::TrimPrefix(s, StrL(UTF8_BOM))) {
+    if (str::TrimPrefix(s, StrL(kUtf8Bom))) {
         return str::DupTemp(s);
     }
-    if (str::TrimPrefix(s, StrL(UTF16_BOM))) {
+    if (str::TrimPrefix(s, StrL(kUtf16Bom))) {
         WStr ws = str::CastStrToWStr(s);
         return ToUtf8Temp(ws);
     }
-    if (str::TrimPrefix(s, StrL(UTF16BE_BOM))) {
+    if (str::TrimPrefix(s, StrL(kUtf16BeBom))) {
         // convert from utf16 big endian to utf16
         int n = str::CastStrToWStr(s).len;
         for (int i = 0; i < n; i++) {
@@ -1313,7 +1313,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             // NormalizeWSInPlace shortens the buffer in place; adjust len to match
             itemText.len -= str::NormalizeWSInPlace(itemText);
             if (len(itemText) > 0) {
-                TempStr url = fmt(FB2_TOC_ENTRY_MARK "%d", titleCount);
+                TempStr url = fmt(kFb2TocEntryMark "%d", titleCount);
                 visitor->Visit(itemText, url, level);
                 itemText = {};
             }
@@ -1363,7 +1363,7 @@ PalmDoc::~PalmDoc() {
     str::Free(fileName);
 }
 
-#define PDB_TOC_ENTRY_MARK "ToC!Entry!"
+#define kPdbTocEntryMark "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
 static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, int n, uint /*codePage*/) {
@@ -1389,7 +1389,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         if (attr && attr->val) {
             TempStr s = strconv::HtmlUtf8ToStrTemp(attr->val);
             tocEntries.Append(s);
-            builder.Append(fmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", ::len(tocEntries)));
+            builder.Append(fmt("<a name=" kPdbTocEntryMark "%d>", ::len(tocEntries)));
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs(StrL("HEADER"))) {
@@ -1505,7 +1505,7 @@ bool PalmDoc::HasToc() const {
 
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     for (int i = 0; i < len(tocEntries); i++) {
-        TempStr url = fmt(PDB_TOC_ENTRY_MARK "%d", i + 1);
+        TempStr url = fmt(kPdbTocEntryMark "%d", i + 1);
         Str name = tocEntries[i];
         visitor->Visit(name, url, 1);
     }
@@ -1663,11 +1663,11 @@ TxtDoc::~TxtDoc() {
 }
 
 // cf. http://www.cix.co.uk/~gidds/Software/TCR.html
-#define TCR_HEADER "!!8-Bit!!"
+#define kTcrHeader "!!8-Bit!!"
 
 static TempStr DecompressTcrTextTemp(Str data) {
-    ReportIf(!str::StartsWith(data, StrL(TCR_HEADER)));
-    int hdrLen = LenL(TCR_HEADER);
+    ReportIf(!str::StartsWith(data, StrL(kTcrHeader)));
+    int hdrLen = LenL(kTcrHeader);
     Str curr = Str(data.s + hdrLen, data.len - hdrLen);
     Str end = Str(data.s + data.len, 0);
 
@@ -1838,7 +1838,7 @@ bool TxtDoc::Load() {
 
     TempStr text;
     Str raw = fileContent;
-    if (str::EndsWithI(fileName, StrL(".tcr")) && str::StartsWith(raw, StrL(TCR_HEADER))) {
+    if (str::EndsWithI(fileName, StrL(".tcr")) && str::StartsWith(raw, StrL(kTcrHeader))) {
         text = DecompressTcrTextTemp(raw);
     } else {
         text = DecodeTextToUtf8Temp(raw);

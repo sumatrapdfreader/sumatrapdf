@@ -100,12 +100,12 @@ struct WindowTab {
     bool everPaintedPage = false;
 
     // Skip the next file-watcher auto-reload (e.g. after we save annotations
-    // and already call ReloadDocument ourselves). Consumed by AUTO_RELOAD_TIMER.
+    // and already call ReloadDocument ourselves). Consumed by kAutoReloadTimerID.
     bool ignoreNextAutoReload = false;
 
-    // file size / mtime seen at the previous AUTO_RELOAD_TIMER tick, and when
+    // file size / mtime seen at the previous kAutoReloadTimerID tick, and when
     // the pending auto-reload was first scheduled. Used to wait out a writer
-    // that is still producing the file (see AUTO_RELOAD_TIMER_ID in Canvas.cpp)
+    // that is still producing the file (see kAutoReloadTimerID in Canvas.cpp)
     i64 autoReloadSize = -1;
     FILETIME autoReloadModTime{};
     u64 autoReloadStartMs = 0;

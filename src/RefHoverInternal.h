@@ -6,7 +6,7 @@
 
 #include "RefHover.h"
 
-#define REF_HOVER_CLASS L"SumatraPDFRefHover"
+constexpr const WCHAR* kRefHoverClass = L"SumatraPDFRefHover";
 
 constexpr float kRefHoverRenderZoom = 1.5f;
 constexpr int kRefHoverMaxPopupWidth = 1200;

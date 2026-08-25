@@ -8,7 +8,7 @@
 #include "OverlayScrollbar.h"
 #include "Theme.h"
 
-#define OVERLAY_SCROLLBAR_CLASS L"SUMATRA_OVERLAY_SCROLLBAR"
+constexpr const WCHAR* kOverlayScrollbarClass = L"SUMATRA_OVERLAY_SCROLLBAR";
 
 static bool gScrollbarClassRegistered = false;
 
@@ -756,7 +756,7 @@ static void RegisterScrollbarClass() {
     wcex.lpfnWndProc = WndProcOverlayScrollbar;
     wcex.hInstance = GetModuleHandleW(nullptr);
     wcex.hCursor = GetCachedCursor(IDC_ARROW);
-    wcex.lpszClassName = OVERLAY_SCROLLBAR_CLASS;
+    wcex.lpszClassName = kOverlayScrollbarClass;
     RegisterClassExW(&wcex);
     gScrollbarClassRegistered = true;
 }
@@ -780,7 +780,7 @@ OverlayScrollbar* OverlayScrollbarCreate(HWND hwndOwner, OverlayScrollbar::Type 
     // use the top-level ancestor as owner so the scrollbar stays above its
     // own window but doesn't cover other application windows
     HWND hwndTopLevel = GetAncestor(hwndOwner, GA_ROOT);
-    sb->hwnd = CreateWindowExW(exStyle, OVERLAY_SCROLLBAR_CLASS, nullptr, style, 0, 0, 1, 1, hwndTopLevel, nullptr,
+    sb->hwnd = CreateWindowExW(exStyle, kOverlayScrollbarClass, nullptr, style, 0, 0, 1, 1, hwndTopLevel, nullptr,
                                GetModuleHandleW(nullptr), nullptr);
     SetWindowLongPtrW(sb->hwnd, GWLP_USERDATA, (LONG_PTR)sb);
 

@@ -64,7 +64,7 @@ Size Button::GetIdealSize() {
     return {dx, dy};
 }
 
-#define kButtonMargin 8
+constexpr int kButtonMargin = 8;
 
 // Only the installer and uninstaller use this, and neither loads settings, so
 // there is no theme to draw from - let Windows draw its own themed button.

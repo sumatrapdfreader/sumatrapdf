@@ -7,7 +7,7 @@
 
 namespace tga {
 
-#define TGA_FOOTER_SIGNATURE "TRUEVISION-XFILE."
+#define kTgaFooterSignature "TRUEVISION-XFILE."
 
 enum ImageType {
     Type_Palette = 1,
@@ -100,7 +100,7 @@ static bool HasVersion2Footer(const u8* data, size_t n) {
         return false;
     }
     const TgaFooter* footerLE = (const TgaFooter*)(data + n - sizeof(TgaFooter));
-    return str::EqN(Str(footerLE->signature), StrL(TGA_FOOTER_SIGNATURE), sizeof(footerLE->signature));
+    return str::EqN(Str(footerLE->signature), StrL(kTgaFooterSignature), sizeof(footerLE->signature));
 }
 
 static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t n) {
@@ -400,7 +400,7 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
     headerLE.width = convLE(w);
     headerLE.height = convLE(h);
     headerLE.bitDepth = 24;
-    TgaFooter footerLE = {0, 0, TGA_FOOTER_SIGNATURE};
+    TgaFooter footerLE = {0, 0, kTgaFooterSignature};
 
     str::Builder tgaData;
     tgaData.Append(Str((char*)&headerLE, sizeofi(headerLE)));

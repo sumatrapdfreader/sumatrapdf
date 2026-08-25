@@ -61,10 +61,10 @@ Gdiplus::Color gCol4Shadow(47, 89, 127);
 Gdiplus::Color gCol5(112, 115, 207);
 Gdiplus::Color gCol5Shadow(66, 71, 118);
 
-Gdiplus::Color COLOR_MSG_WELCOME(gCol5);
-Gdiplus::Color COLOR_MSG_OK(gCol5);
-Gdiplus::Color COLOR_MSG_INSTALLATION(gCol5);
-Gdiplus::Color COLOR_MSG_FAILED(gCol1);
+Gdiplus::Color kColorMsgWelcome(gCol5);
+Gdiplus::Color kColorMsgOk(gCol5);
+Gdiplus::Color kColorMsgInstallation(gCol5);
+Gdiplus::Color kColorMsgFailed(gCol1);
 
 HWND gHwndFrame = nullptr;
 Str gFirstError;
@@ -684,11 +684,11 @@ static void SetCloseProcessMsg() {
         }
     }
     TempStr s = fmt(_TRA("Please close %s to proceed!").s, procNames);
-    SetMsg(s, COLOR_MSG_FAILED);
+    SetMsg(s, kColorMsgFailed);
 }
 
 void SetDefaultMsg() {
-    SetMsg(gDefaultMsg, COLOR_MSG_WELCOME);
+    SetMsg(gDefaultMsg, kColorMsgWelcome);
 }
 
 static void InvalidateFrame() {
@@ -767,7 +767,7 @@ static void RandomizeLetters()
 }
 #endif
 
-#define kSumatraLettersCount (dimof(gLetters))
+constexpr int kSumatraLettersCount = dimofi(gLetters);
 
 static void SetLettersSumatraUpTo(size_t n) {
     Str s = StrL("SUMATRAPDF");
@@ -787,14 +787,14 @@ static void SetLettersSumatra() {
 // an animation that reveals letters one by one
 
 // how long the animation lasts, in seconds
-#define REVEALING_ANIM_DUR double(2)
+constexpr double kRevealingAnimDur = 2;
 
 static FrameTimeoutCalculator* gRevealingLettersAnim = nullptr;
 
 static int gRevealingLettersAnimLettersToShow;
 
 static void RevealingLettersAnimStart() {
-    int framesPerSec = (int)(double(kSumatraLettersCount) / REVEALING_ANIM_DUR);
+    int framesPerSec = (int)(double(kSumatraLettersCount) / kRevealingAnimDur);
     gRevealingLettersAnim = new FrameTimeoutCalculator(framesPerSec);
     gRevealingLettersAnimLettersToShow = 0;
     SetLettersSumatraUpTo(0);
@@ -808,7 +808,7 @@ static void RevealingLettersAnimStop() {
 }
 
 static void RevealingLettersAnim() {
-    if (gRevealingLettersAnim->ElapsedTotal() > REVEALING_ANIM_DUR) {
+    if (gRevealingLettersAnim->ElapsedTotal() > kRevealingAnimDur) {
         RevealingLettersAnimStop();
         return;
     }
@@ -964,7 +964,7 @@ static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
         msgY += DrawMessage(g, gMsg, msgY, (float)r.dx, gMsgColor) + (float)DpiScale(5);
     }
     if (gMsgError) {
-        DrawMessage(g, gMsgError, msgY, (float)r.dx, COLOR_MSG_FAILED);
+        DrawMessage(g, gMsgError, msgY, (float)r.dx, kColorMsgFailed);
     }
 }
 

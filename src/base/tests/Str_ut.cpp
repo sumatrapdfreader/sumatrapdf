@@ -914,13 +914,13 @@ void StrTest() {
     {
 // the test string should only contain ASCII characters,
 // as all others might not be available in all code pages
-#define TEST_STRING "aBc"
-        char* strA = strconv::WStrToAnsi(TEXT(TEST_STRING)).s;
+#define kTestString "aBc"
+        char* strA = strconv::WStrToAnsi(TEXT(kTestString)).s;
         AutoCall freeStrA(free, (void*)strA);
-        utassert(str::Eq(Str(strA), StrL(TEST_STRING)));
+        utassert(str::Eq(Str(strA), StrL(kTestString)));
         auto res = strconv::AnsiToWStrTemp(Str(strA));
-        utassert(wstr::Eq(res, TEXT(TEST_STRING)));
-#undef TEST_STRING
+        utassert(wstr::Eq(res, TEXT(kTestString)));
+#undef kTestString
     }
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));

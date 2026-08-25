@@ -9,7 +9,7 @@
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written
-#define ZERO_PADDING_COUNT 3
+constexpr int kZeroPaddingCount = 3;
 
 // Defined in Win.cpp; avoid pulling all of Win.h into this file.
 void LogLastError(DWORD err = 0);
@@ -1001,7 +1001,7 @@ static i64 GetSizeFromHandle(FileHandle h) {
 }
 
 // Reads the whole file into memory allocated from a (heap if a is nullptr),
-// followed by ZERO_PADDING_COUNT zero bytes so the result is also a valid
+// followed by kZeroPaddingCount zero bytes so the result is also a valid
 // NUL-terminated char* / WCHAR*.
 //
 // Skips the CRT for the same reason ReadN() does, plus two wins that matter
@@ -1024,15 +1024,15 @@ Str ReadFileWithArena(Str filePath, Arena* a) {
     AutoCloseHandle hf(h);
 
     i64 fileSize = GetSizeFromHandle(h);
-    if (fileSize < 0 || fileSize > (i64)(INT_MAX - ZERO_PADDING_COUNT)) {
+    if (fileSize < 0 || fileSize > (i64)(INT_MAX - kZeroPaddingCount)) {
         return {};
     }
     int size = (int)fileSize;
-    char* d = (char*)Alloc(a, (size_t)size + ZERO_PADDING_COUNT);
+    char* d = (char*)Alloc(a, (size_t)size + kZeroPaddingCount);
     if (!d) {
         return {};
     }
-    memset(d + size, 0, ZERO_PADDING_COUNT);
+    memset(d + size, 0, kZeroPaddingCount);
 
     int nTotal = 0;
     while (nTotal < size) {

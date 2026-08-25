@@ -28,8 +28,8 @@ struct ISzCrtAlloc : ISzAlloc {
     }
 };
 
-#define LZMA_MAGIC_ID 0x41537a4c
-#define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
+constexpr int kLzmaMagicId = 0x41537a4c;
+constexpr int kLzmaHeaderSize = 1 + LZMA_PROPS_SIZE;
 
 static bool Compress(const char* uncompressed, size_t uncompressedSize, char* compressed, size_t* compressedSize) {
     ReportIf(*compressedSize < uncompressedSize + 1);
@@ -37,7 +37,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
 
     size_t lzma_size = (size_t)-1;
 
-    if (*compressedSize >= LZMA_HEADER_SIZE) {
+    if (*compressedSize >= kLzmaHeaderSize) {
         ISzCrtAlloc lzmaAlloc;
         CLzmaEncProps props;
         LzmaEncProps_Init(&props);
@@ -52,13 +52,13 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
         }
         compressed[0] = bcj_enc ? 1 : 0;
 
-        SizeT outSize = *compressedSize - LZMA_HEADER_SIZE;
+        SizeT outSize = *compressedSize - kLzmaHeaderSize;
         SizeT propsSize = LZMA_PROPS_SIZE;
         SRes res =
-            LzmaEncode((Byte*)compressed + LZMA_HEADER_SIZE, &outSize, bcj_enc ? bcj_enc : (const Byte*)uncompressed,
+            LzmaEncode((Byte*)compressed + kLzmaHeaderSize, &outSize, bcj_enc ? bcj_enc : (const Byte*)uncompressed,
                        uncompressedSize, &props, (Byte*)compressed + 1, &propsSize, TRUE /* add EOS marker */, nullptr,
                        &lzmaAlloc, &lzmaAlloc);
-        if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE) lzma_size = outSize + LZMA_HEADER_SIZE;
+        if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE) lzma_size = outSize + kLzmaHeaderSize;
     }
 
     if (lzma_size <= uncompressedSize) {
@@ -145,7 +145,7 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
 
     constexpr int kBufSize = 8;
     ByteWriterLE lzsaHeader(kBufSize);
-    lzsaHeader.Write32(LZMA_MAGIC_ID);
+    lzsaHeader.Write32(kLzmaMagicId);
     lzsaHeader.Write32((u32)(len(files) - (int)skipFiles));
     ReportIf(lzsaHeader.Size() != kBufSize);
     data.Append(lzsaHeader.AsByteSlice());

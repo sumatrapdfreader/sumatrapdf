@@ -1108,7 +1108,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
     if (prevRule) {
         rule.Merge(*prevRule);
     }
-    prevRule = FindStyleRule(Tag_Any, Str());
+    prevRule = FindStyleRule(kTagAny, Str());
     if (prevRule) {
         rule.Merge(*prevRule);
     }
@@ -1120,7 +1120,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName(StrL("class"));
     if (attr) {
         Str clazz = attr->val;
-        prevRule = FindStyleRule(Tag_Any, clazz);
+        prevRule = FindStyleRule(kTagAny, clazz);
         if (prevRule) {
             rule.Merge(*prevRule);
         }

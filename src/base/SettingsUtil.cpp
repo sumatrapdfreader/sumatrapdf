@@ -613,7 +613,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
 
 Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
     str::Builder out;
-    out.Append(Str(UTF8_BOM));
+    out.Append(Str(kUtf8Bom));
     SquareTreeNode* root = ParseSquareTree(prevData);
     SerializeStructRec(out, info, strct, root);
     delete root;

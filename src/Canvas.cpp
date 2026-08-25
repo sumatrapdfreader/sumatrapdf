@@ -1094,10 +1094,10 @@ __unused static Str scrollMsgStr(USHORT msg) {
             return StrL("SB_LINEDOWN");
         case SB_LINEUP:
             return StrL("SB_LINEUP");
-        case SB_HALF_PAGEDOWN:
-            return StrL("SB_HALF_PAGEDOWN");
-        case SB_HALF_PAGEUP:
-            return StrL("SB_HALF_PAGEUP");
+        case kSbHalfPageDown:
+            return StrL("kSbHalfPageDown");
+        case kSbHalfPageUp:
+            return StrL("kSbHalfPageUp");
         case SB_PAGEDOWN:
             return StrL("SB_PAGEDOWN");
         case SB_PAGEUP:
@@ -1125,8 +1125,8 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 
     USHORT msg = LOWORD(wp);
     // for next-file-in-folder tip: scroll intent after handling the action
-    bool scrollDown = (msg == SB_LINEDOWN || msg == SB_PAGEDOWN || msg == SB_HALF_PAGEDOWN || msg == SB_BOTTOM);
-    bool scrollUp = (msg == SB_LINEUP || msg == SB_PAGEUP || msg == SB_HALF_PAGEUP || msg == SB_TOP);
+    bool scrollDown = (msg == SB_LINEDOWN || msg == SB_PAGEDOWN || msg == kSbHalfPageDown || msg == SB_BOTTOM);
+    bool scrollUp = (msg == SB_LINEUP || msg == SB_PAGEUP || msg == kSbHalfPageUp || msg == SB_TOP);
     auto* ctrl = win->ctrl;
     bool dmIsSinglePage = (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
     // scrollbarInSinglePage is false by default
@@ -1160,10 +1160,10 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
             case SB_LINEDOWN:
                 targetPage = std::min(ctrl->PageCount(), targetPage + 1);
                 break;
-            case SB_HALF_PAGEUP:
+            case kSbHalfPageUp:
                 targetPage = std::max(1, targetPage - 1);
                 break;
-            case SB_HALF_PAGEDOWN:
+            case kSbHalfPageDown:
                 targetPage = std::min(ctrl->PageCount(), targetPage + 1);
                 break;
             case SB_PAGEUP:
@@ -1220,10 +1220,10 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
         case SB_LINEDOWN:
             si.nPos += lineHeight;
             break;
-        case SB_HALF_PAGEUP:
+        case kSbHalfPageUp:
             si.nPos -= halfPage;
             break;
-        case SB_HALF_PAGEDOWN:
+        case kSbHalfPageDown:
             si.nPos += halfPage;
             break;
         case SB_PAGEUP:
@@ -1700,7 +1700,7 @@ static bool OnTouchLongPress(MainWindow* win, int x, int y) {
         if (GetCapture() == win->hwndCanvas) {
             ReleaseCapture();
         }
-        KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
+        KillTimer(win->hwndCanvas, kSelectSmoothScrollTimerID);
     }
 
     PointF ptf = dm->CvtFromScreen(pt, pageNo);
@@ -1913,8 +1913,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
         case MouseAction::Scrolling: {
             win->annotationUnderCursor = nullptr;
             HideAnnotationHoverOverlay(win);
-            win->yScrollSpeed = (float)(y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-            win->xScrollSpeed = (float)(x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+            win->yScrollSpeed = (float)(y - win->dragStart.y) / kSelectSmoothScrollSlowDownFactor;
+            win->xScrollSpeed = (float)(x - win->dragStart.x) / kSelectSmoothScrollSlowDownFactor;
             break;
         }
         case MouseAction::SelectingText:
@@ -2402,7 +2402,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
             win->mouseAction = MouseAction::SelectingText;
             win->dragStartPending = false;
             SetCapture(win->hwndCanvas);
-            SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+            SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
             ScheduleRepaint(win, 0);
             gLastWordSelectTime = 0; // so a 4th click doesn't re-trigger
         }
@@ -2742,7 +2742,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
             win->mouseAction = MouseAction::SelectingText;
             win->dragStartPending = false;
             SetCapture(win->hwndCanvas);
-            SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+            SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
             ScheduleRepaint(win, 0);
         }
         return;
@@ -2890,37 +2890,39 @@ static void OnMouseRightButtonDblClick(MainWindow* win, int x, int y, WPARAM key
 }
 
 #ifdef DRAW_PAGE_SHADOWS
-#define BORDER_SIZE 1
-#define SHADOW_OFFSET 4
+constexpr int kBorderSize = 1;
+constexpr int kShadowOffset = 4;
+constexpr COLORREF kColPageShadow = RGB(0x40, 0x40, 0x40);
+constexpr COLORREF kColPageFrame = RGB(0x88, 0x88, 0x88);
 static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation, Color /*bgCol*/) {
     // Frame info
     Rect frame = bounds;
-    frame.Inflate(BORDER_SIZE, BORDER_SIZE);
+    frame.Inflate(kBorderSize, kBorderSize);
 
     // Shadow info
     Rect shadow = frame;
-    shadow.Offset(SHADOW_OFFSET, SHADOW_OFFSET);
+    shadow.Offset(kShadowOffset, kShadowOffset);
     if (frame.x < 0) {
         // the left of the page isn't visible, so start the shadow at the left
-        int diff = std::min(-pageRect.x, SHADOW_OFFSET);
+        int diff = std::min(-pageRect.x, kShadowOffset);
         shadow.x -= diff;
         shadow.dx += diff;
     }
     if (frame.y < 0) {
         // the top of the page isn't visible, so start the shadow at the top
-        int diff = std::min(-pageRect.y, SHADOW_OFFSET);
+        int diff = std::min(-pageRect.y, kShadowOffset);
         shadow.y -= diff;
         shadow.dy += diff;
     }
 
     // Draw shadow
     if (!presentation) {
-        AutoDeleteBrush brush = CreateSolidBrush(COL_PAGE_SHADOW);
+        AutoDeleteBrush brush = CreateSolidBrush(kColPageShadow);
         HdcFillRect(hdc, shadow, brush);
     }
 
     // Draw frame
-    ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME));
+    ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : kColPageFrame));
     AutoDeleteBrush brush = CreateSolidBrush(gCurrentTheme->window.backgroundColor);
     SelectObject(hdc, pe);
     SelectObject(hdc, brush);
@@ -3786,7 +3788,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         if (renderDelay != 0) {
             PlatformFont* fontRightTxt = HdcCreateSimpleFont(hdc, StrL("MS Shell Dlg"), 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt->GetHFont());
-            if (renderDelay != RENDER_DELAY_FAILED) {
+            if (renderDelay != kRenderDelayFailed) {
                 if (renderDelay < kRenderDelayShowNotif) {
                     ScheduleRepaint(win, kRenderDelayShowNotif - renderDelay);
                 } else {
@@ -4471,7 +4473,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // alt while scrolling will scroll by half a page per tick
     // usefull for browsing long files
     if (isAlt) {
-        wp = (delta > 0) ? SB_HALF_PAGEUP : SB_HALF_PAGEDOWN;
+        wp = (delta > 0) ? kSbHalfPageUp : kSbHalfPageDown;
         SendMessageW(win->hwndCanvas, WM_VSCROLL, wp, 0);
         return 0;
     }
@@ -4481,7 +4483,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         if (HwndIsCursorOverWindow(win->hwndCanvas)) {
             Point pt = HwndGetCursorPos(win->hwndCanvas);
             if (pt.x > win->canvasRc.dx) {
-                wp = (delta > 0) ? SB_HALF_PAGEUP : SB_HALF_PAGEDOWN;
+                wp = (delta > 0) ? kSbHalfPageUp : kSbHalfPageDown;
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, wp, 0);
                 return 0;
             }
@@ -4810,18 +4812,18 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
 
 // WM_POINTER message support for pen/stylus input
 #ifndef WM_POINTERDOWN
-#define WM_POINTERDOWN 0x0246
-#define WM_POINTERUP 0x0247
-#define WM_POINTERUPDATE 0x0245
+constexpr UINT WM_POINTERDOWN = 0x0246;
+constexpr UINT WM_POINTERUP = 0x0247;
+constexpr UINT WM_POINTERUPDATE = 0x0245;
 #endif
 
 // POINTER_INPUT_TYPE values
-#define SUMATRA_PT_TOUCH 2
-#define SUMATRA_PT_PEN 3
+constexpr int kSumatraPtTouch = 2;
+constexpr int kSumatraPtPen = 3;
 
 // pointer message flags (in HIWORD of wParam)
-#define SUMATRA_POINTER_MESSAGE_FLAG_INCONTACT 0x0004
-#define SUMATRA_POINTER_MESSAGE_FLAG_FIRSTBUTTON 0x0010
+constexpr int kSumatraPointerMessageFlagInContact = 0x0004;
+constexpr int kSumatraPointerMessageFlagFirstButton = 0x0010;
 
 // dynamically loaded pointer API (Windows 8+)
 typedef BOOL(WINAPI* Sig_GetPointerType)(UINT32 pointerId, DWORD* pointerType);
@@ -4900,7 +4902,7 @@ static bool OnPointerMessage(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LP
     if (!DynGetPointerType(pointerId, &pointerType)) {
         return false;
     }
-    if (pointerType == SUMATRA_PT_TOUCH) {
+    if (pointerType == kSumatraPtTouch) {
         // Watch the raw contact but don't consume it: gestures (panning,
         // zooming) still have to come out of DefWindowProc. This is the only
         // place a finger's true timing shows up -- the gesture engine reports a
@@ -4911,7 +4913,7 @@ static bool OnPointerMessage(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LP
         return false;
     }
     // only handle pen input; let mouse and touch go through normal paths
-    if (pointerType != SUMATRA_PT_PEN) {
+    if (pointerType != kSumatraPtPen) {
         return false;
     }
 
@@ -4930,7 +4932,7 @@ static bool OnPointerMessage(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LP
         return true;
     }
     if (msg == WM_POINTERUPDATE) {
-        bool inContact = (flags & SUMATRA_POINTER_MESSAGE_FLAG_INCONTACT) != 0;
+        bool inContact = (flags & kSumatraPointerMessageFlagInContact) != 0;
         if (inContact) {
             mouseWp = MK_LBUTTON;
         }
@@ -5281,9 +5283,9 @@ static void RepaintTask(RepaintTaskData* d) {
         return;
     }
     if (!d->delayInMs) {
-        WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
+        WndProcCanvas(win->hwndCanvas, WM_TIMER, kRepaintTimerID, 0);
     } else if (!win->delayedRepaintTimer) {
-        win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, (uint)d->delayInMs, nullptr);
+        win->delayedRepaintTimer = SetTimer(win->hwndCanvas, kRepaintTimerID, (uint)d->delayInMs, nullptr);
     }
 }
 
@@ -5308,9 +5310,9 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
     }
 
     switch (timerId) {
-        case REPAINT_TIMER_ID:
+        case kRepaintTimerID:
             win->delayedRepaintTimer = 0;
-            KillTimer(hwnd, REPAINT_TIMER_ID);
+            KillTimer(hwnd, kRepaintTimerID);
             // Only the canvas needs a document repaint (scroll, page render,
             // selection, etc.). RedrawAllIncludingNonClient() repaints the
             // entire frame and all children, so the toolbar "Page:" label and
@@ -5346,14 +5348,14 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
         }
 
-        case SMOOTHSCROLL_TIMER_ID:
+        case kSelectSmoothScrollTimerID:
             if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
                 pt = HwndGetCursorPos(win->hwndCanvas);
                 if (NeedsSelectionEdgeAutoscroll(win, pt.x, pt.y)) {
                     OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
                 }
             } else {
-                KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+                KillTimer(hwnd, kSelectSmoothScrollTimerID);
             }
             break;
 
@@ -5415,12 +5417,12 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             SelectionToolbarOnShowTimer(win);
             break;
 
-        case HIDE_FWDSRCHMARK_TIMER_ID:
+        case kHideFwdSearchMarkTimerID:
             win->fwdSearchMark.hideStep++;
             if (1 == win->fwdSearchMark.hideStep) {
-                SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, nullptr);
-            } else if (win->fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
-                KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
+                SetTimer(hwnd, kHideFwdSearchMarkTimerID, kHideFwdSearchMarkDecayIntervalInMs, nullptr);
+            } else if (win->fwdSearchMark.hideStep >= kHideFwdSearchMarkSteps) {
+                KillTimer(hwnd, kHideFwdSearchMarkTimerID);
                 win->fwdSearchMark.show = false;
                 ScheduleRepaint(win, 0);
             } else {
@@ -5428,7 +5430,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             }
             break;
 
-        case READ_ALOUD_HIGHLIGHT_TIMER_ID:
+        case kReadAloudHighlightTimerID:
             if (GetReadAloudSourceTab()) {
                 TtsProcessEvents();
                 ReadAloudUpdateAutoScroll(win);
@@ -5439,8 +5441,8 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             }
             break;
 
-        case AUTO_RELOAD_TIMER_ID: {
-            KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
+        case kAutoReloadTimerID: {
+            KillTimer(hwnd, kAutoReloadTimerID);
             auto* tab = win->CurrentTab();
             if (tab && tab->reloadOnFocus) {
                 if (tab->ignoreNextAutoReload) {
@@ -5453,7 +5455,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                     // now shows a half-written document ("cannot find startxref",
                     // "document has no pages") and costs a second reload once the
                     // write finishes. Wait for it to go quiet instead.
-                    SetTimer(hwnd, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
+                    SetTimer(hwnd, kAutoReloadTimerID, kAutoReloadDelayInMs, nullptr);
                 } else {
                     // timer-driven: never ask for a password here (#3493)
                     ReloadDocument(win, true, false);

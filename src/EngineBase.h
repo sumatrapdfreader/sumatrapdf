@@ -345,8 +345,8 @@ struct PageElementDestination : IPageElement {
 // those are the same as F font bitmask in PDF docs
 // for TocItem::fontFlags
 // https://www.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf page 369
-constexpr int fontBitItalic = 0;
-constexpr int fontBitBold = 1;
+constexpr int kFontBitItalic = 0;
+constexpr int kFontBitBold = 1;
 
 extern Kind kindTocFzOutline;
 extern Kind kindTocFzLink;
@@ -379,7 +379,7 @@ struct TocItem {
     // between runs so that it can be persisted in FileState::tocState)
     int id;
 
-    int fontFlags; // fontBitBold, fontBitItalic
+    int fontFlags; // kFontBitBold, kFontBitItalic
     Color color;
 
     IPageDestination* dest;

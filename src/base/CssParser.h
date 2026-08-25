@@ -1,7 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define Tag_Any ((HtmlTag) - 1)
+// HtmlTag is declared in HtmlTags.h, which callers include first.
+#define kTagAny ((HtmlTag) - 1)
 
 struct CssSelector {
     Str s;

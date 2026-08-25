@@ -2838,7 +2838,7 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
 }
 
 // don't remember more than "enough" history entries (same number as Firefox uses)
-#define MAX_NAV_HISTORY_LEN 50
+constexpr int kMaxNavHistoryLen = 50;
 
 /* Records the current scroll state for later navigating back to.
    With rememberZoom the entry also carries the current zoom, so navigating back
@@ -2857,10 +2857,10 @@ void DisplayModel::AddNavPoint(bool rememberZoom) {
         return;
     }
     // make sure that the history doesn't grow overly large
-    if (navHistoryIdx >= MAX_NAV_HISTORY_LEN) {
-        ReportIf(navHistoryIdx > MAX_NAV_HISTORY_LEN);
-        navHistory.RemoveAt(0, navHistoryIdx - MAX_NAV_HISTORY_LEN + 1);
-        navHistoryIdx = MAX_NAV_HISTORY_LEN - 1;
+    if (navHistoryIdx >= kMaxNavHistoryLen) {
+        ReportIf(navHistoryIdx > kMaxNavHistoryLen);
+        navHistory.RemoveAt(0, navHistoryIdx - kMaxNavHistoryLen + 1);
+        navHistoryIdx = kMaxNavHistoryLen - 1;
     }
     // add a new Back history entry
     navHistory.Append(ss);

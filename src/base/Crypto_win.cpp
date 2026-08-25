@@ -9,7 +9,7 @@
 #include <softpub.h>
 
 #ifndef DWORD_MAX
-#define DWORD_MAX 0xffffffffUL
+constexpr DWORD DWORD_MAX = 0xffffffffUL;
 #endif
 
 // TODO: could use CryptoNG available starting in Vista

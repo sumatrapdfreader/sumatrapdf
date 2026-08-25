@@ -9,10 +9,10 @@
 
 void SquareTreeTest() {
     static Str keyValueData[] = {
-        Str(UTF8_BOM "key = value"),  Str(UTF8_BOM "key = value"),    Str(UTF8_BOM "key=value"),
-        Str(UTF8_BOM " key =value "), Str(UTF8_BOM "  key= value  "), Str(UTF8_BOM "key: value"),
-        Str(UTF8_BOM "key : value"),  Str(UTF8_BOM "key :value"),     Str(UTF8_BOM "# key and value:\n\tkey value\n"),
-        Str(UTF8_BOM "key\t\tvalue"),
+        Str(kUtf8Bom "key = value"),  Str(kUtf8Bom "key = value"),    Str(kUtf8Bom "key=value"),
+        Str(kUtf8Bom " key =value "), Str(kUtf8Bom "  key= value  "), Str(kUtf8Bom "key: value"),
+        Str(kUtf8Bom "key : value"),  Str(kUtf8Bom "key :value"),     Str(kUtf8Bom "# key and value:\n\tkey value\n"),
+        Str(kUtf8Bom "key\t\tvalue"),
     };
 
     for (size_t i = 0; i < dimof(keyValueData); i++) {
@@ -30,14 +30,14 @@ void SquareTreeTest() {
     }
 
     static Str nodeData[] = {
-        Str(UTF8_BOM "node [\nkey = value\n]"),
-        Str(UTF8_BOM "node[ # ignore comment\n\tkey: value\n] # end of node\n"),
-        Str(UTF8_BOM "node\n[\nkey:value"),
-        Str(UTF8_BOM "node\n# node content:\n\t[\n\tkey: value\n\t]\n"),
-        Str(UTF8_BOM "node [\n  key : value\n]\n]"),
-        Str(UTF8_BOM "node[\nkey=value\n]]]"),
-        Str(UTF8_BOM "[node]\nkey = value\n"),
-        Str(UTF8_BOM "[ node ]\nkey = value\n"),
+        Str(kUtf8Bom "node [\nkey = value\n]"),
+        Str(kUtf8Bom "node[ # ignore comment\n\tkey: value\n] # end of node\n"),
+        Str(kUtf8Bom "node\n[\nkey:value"),
+        Str(kUtf8Bom "node\n# node content:\n\t[\n\tkey: value\n\t]\n"),
+        Str(kUtf8Bom "node [\n  key : value\n]\n]"),
+        Str(kUtf8Bom "node[\nkey=value\n]]]"),
+        Str(kUtf8Bom "[node]\nkey = value\n"),
+        Str(kUtf8Bom "[ node ]\nkey = value\n"),
     };
 
     for (size_t i = 0; i < dimof(nodeData); i++) {
@@ -55,10 +55,10 @@ void SquareTreeTest() {
     }
 
     static Str arrayData[] = {
-        Str(UTF8_BOM "array [\n item = 0 \n] [\n item = 1 \n]"),
-        Str(UTF8_BOM "array [\n item = 0 \n]\n array [\n item = 1 \n]"),
-        Str(UTF8_BOM "[array]\n item = 0 \n[array]\n item = 1 \n"),
-        Str(UTF8_BOM "array [\n item = 0 \n]\n [array]\n item = 1 \n"),
+        Str(kUtf8Bom "array [\n item = 0 \n] [\n item = 1 \n]"),
+        Str(kUtf8Bom "array [\n item = 0 \n]\n array [\n item = 1 \n]"),
+        Str(kUtf8Bom "[array]\n item = 0 \n[array]\n item = 1 \n"),
+        Str(kUtf8Bom "array [\n item = 0 \n]\n [array]\n item = 1 \n"),
     };
 
     for (size_t i = 0; i < dimof(arrayData); i++) {
@@ -76,14 +76,14 @@ void SquareTreeTest() {
     }
 
     static Str serArrayData[] = {
-        Str(UTF8_BOM "array [\n[\n item = 0 \n]\n[\n item = 1 \n]\n]\n"),
-        Str(UTF8_BOM "array [\n[\n item = 0 \n] [\n item = 1 \n]]"),
-        Str(UTF8_BOM "array \n# serialized array with two items: \n[\n"
+        Str(kUtf8Bom "array [\n[\n item = 0 \n]\n[\n item = 1 \n]\n]\n"),
+        Str(kUtf8Bom "array [\n[\n item = 0 \n] [\n item = 1 \n]]"),
+        Str(kUtf8Bom "array \n# serialized array with two items: \n[\n"
                      "# first item: \n[\n item = 0 \n] # end of first item\n"
                      "# second item: \n[\n item = 1 \n] # end of second item\n"
                      "] # end of array"),
-        Str(UTF8_BOM "array [\n[\n item = 0 \n] [\n item = 1"),
-        Str(UTF8_BOM "[array]\n[\n item = 0 \n] [\n item = 1 \n]"),
+        Str(kUtf8Bom "array [\n[\n item = 0 \n] [\n item = 1"),
+        Str(kUtf8Bom "[array]\n[\n item = 0 \n] [\n item = 1 \n]"),
     };
 
     for (Str s : serArrayData) {
@@ -102,9 +102,9 @@ void SquareTreeTest() {
     }
 
     static Str valueArrayData[] = {
-        Str(UTF8_BOM "count = 0\ncount = 1"),
-        Str(UTF8_BOM "count:0\ncount:1\n"),
-        Str(UTF8_BOM "# first:\n count : 0 \n#second:\n count : 1 \n"),
+        Str(kUtf8Bom "count = 0\ncount = 1"),
+        Str(kUtf8Bom "count:0\ncount:1\n"),
+        Str(kUtf8Bom "# first:\n count : 0 \n#second:\n count : 1 \n"),
     };
 
     for (Str s : valueArrayData) {
@@ -121,8 +121,8 @@ void SquareTreeTest() {
     }
 
     static Str emptyNodeData[] = {
-        Str(UTF8_BOM "node [\n]"), Str(UTF8_BOM "node \n [ \n ] \n"), Str(UTF8_BOM "node ["), Str(UTF8_BOM "[node] \n"),
-        Str(UTF8_BOM "[node]"),    Str(UTF8_BOM "  [  node  ]  "),
+        Str(kUtf8Bom "node [\n]"), Str(kUtf8Bom "node \n [ \n ] \n"), Str(kUtf8Bom "node ["), Str(kUtf8Bom "[node] \n"),
+        Str(kUtf8Bom "[node]"),    Str(kUtf8Bom "  [  node  ]  "),
     };
 
     for (Str s : emptyNodeData) {
@@ -164,14 +164,14 @@ void SquareTreeTest() {
     }
 
     {
-        Str s = Str(UTF8_BOM);
+        Str s = Str(kUtf8Bom);
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 0 == len(root->data));
         delete root;
     }
 
     {
-        Str s = Str(UTF8_BOM "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]");
+        Str s = Str(kUtf8Bom "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]");
         SquareTreeNode* root = ParseSquareTree(s);
         SquareTreeNode* node = root;
         for (size_t i = 0; i < 5; i++) {
@@ -183,7 +183,7 @@ void SquareTreeTest() {
     }
 
     {
-        Str s = Str(UTF8_BOM "node1 [\n [node2] \n key:value");
+        Str s = Str(kUtf8Bom "node1 [\n [node2] \n key:value");
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && root->GetChild(StrL("node1")) && root->GetChild(StrL("node2")));
         utassert(0 == len(root->GetChild(StrL("node1"))->data));
@@ -193,7 +193,7 @@ void SquareTreeTest() {
 
     // EOF without trailing newline / separator: must not read past data.len
     {
-        Str s = Str(UTF8_BOM "key");
+        Str s = Str(kUtf8Bom "key");
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 1 == len(root->data));
         utassert(!root->data[0]->child && str::Eq(root->data[0]->key, StrL("key")));
@@ -201,14 +201,14 @@ void SquareTreeTest() {
         delete root;
     }
     {
-        Str s = Str(UTF8_BOM "key=");
+        Str s = Str(kUtf8Bom "key=");
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 1 == len(root->data));
         utassert(str::Eq(root->data[0]->key, StrL("key")) && str::Eq(root->data[0]->str, StrL("")));
         delete root;
     }
     {
-        Str s = Str(UTF8_BOM "key=value");
+        Str s = Str(kUtf8Bom "key=value");
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && str::Eq(root->GetValue(StrL("key")), StrL("value")));
         delete root;
@@ -216,7 +216,7 @@ void SquareTreeTest() {
 
     // serialize -> parse round-trip (space indent / \n and tab / \r\n styles)
     {
-        Str s = Str(UTF8_BOM "key = value\nnode [\n  nested = x\n  empty = \n]\ncount = 1\ncount = 2\n");
+        Str s = Str(kUtf8Bom "key = value\nnode [\n  nested = x\n  empty = \n]\ncount = 1\ncount = 2\n");
         SquareTreeNode* a = ParseSquareTree(s);
         TempStr ser = SerializeSquareTreeNodeTemp(a);
         SquareTreeNode* b = ParseSquareTree(ser);
@@ -232,7 +232,7 @@ void SquareTreeTest() {
         delete b;
     }
     {
-        Str s = Str(UTF8_BOM "top = 1\nchild [\n  a = b\n]\n");
+        Str s = Str(kUtf8Bom "top = 1\nchild [\n  a = b\n]\n");
         SquareTreeNode* a = ParseSquareTree(s);
         str::Builder out;
         SerializeSquareTreeNode(out, a, StrL("\t"), StrL("\r\n"), 0);

@@ -84,7 +84,7 @@ static const StructInfo gSutStructInfo = {sizeof(SutStruct), 17, gSutStructField
                                           "rArray\0Point\0\0SutStructItems"};
 
 void SettingsUtilTest() {
-    static const char* serialized = UTF8_BOM
+    static const char* serialized = kUtf8Bom
         "# This file will be overwritten - modify at your own risk!\r\n\r\n\
 Boolean = true\r\n\
 Color = #abcdef\r\n\
@@ -133,7 +133,7 @@ UnknownNode [\r\n\
 \t]\r\n\
 ]\r\n";
 
-    static const char* unknownOnly = UTF8_BOM
+    static const char* unknownOnly = kUtf8Bom
         "\
 UnknownString: Forget-me-not\r\n\
 [Point]\r\n\
@@ -341,14 +341,14 @@ Key = Value";
         FreeStruct(&gSutOptRootInfo, root);
 
         // a block in the data with none of its fields set still means "set"
-        auto* empty = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, StrL(UTF8_BOM "Sub [\r\n]\r\n"));
+        auto* empty = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, StrL(kUtf8Bom "Sub [\r\n]\r\n"));
         utassert(empty && empty->sub && !empty->sub->name && 0 == empty->sub->size);
 
         // deserializing onto an existing struct merges, like the other types:
         // fields not in the data keep their value, present ones win
         str::ReplaceWithCopy(&empty->sub->name, StrL("old"));
         empty->sub->size = 3;
-        DeserializeStruct(&gSutOptRootInfo, StrL(UTF8_BOM "Other = 9\r\nSub [\r\n\tSize = 5\r\n]\r\n"), empty);
+        DeserializeStruct(&gSutOptRootInfo, StrL(kUtf8Bom "Other = 9\r\nSub [\r\n\tSize = 5\r\n]\r\n"), empty);
         utassert(9 == empty->other && empty->sub);
         utassert(str::Eq(empty->sub->name, StrL("old")) && 5 == empty->sub->size);
         FreeStruct(&gSutOptRootInfo, empty);

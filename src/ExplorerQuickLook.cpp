@@ -30,8 +30,8 @@
 #include "ExplorerQuickLook.h"
 #include "SumatraLog.h"
 
-#define kQuickLookAgentClass L"SUMATRA_PDF_QUICKLOOK_AGENT"
-#define kQuickLookAgentMutexName L"SumatraPDF-QuickLookAgent"
+constexpr const WCHAR* kQuickLookAgentClass = L"SUMATRA_PDF_QUICKLOOK_AGENT";
+constexpr const WCHAR* kQuickLookAgentMutexName = L"SumatraPDF-QuickLookAgent";
 #define kQuickLookRunValue StrL("SumatraPDF-QuickLook")
 #define kQuickLookRunKey StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Run")
 constexpr UINT kMsgQuickLookSpace = WM_APP + 40;
@@ -160,7 +160,7 @@ bool HandleExplorerQuickLookCopyData(COPYDATASTRUCT* cds) {
 }
 
 static HWND FindExistingFrameHwnd() {
-    return FindWindowW(FRAME_CLASS_NAME, nullptr);
+    return FindWindowW(kFrameClassName, nullptr);
 }
 
 static void LaunchQuickLookProcess(Str path) {

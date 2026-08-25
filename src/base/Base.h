@@ -181,10 +181,10 @@ struct FILETIME {
     DWORD dwHighDateTime;
 };
 
-#define CP_ACP 0
-#define CP_UTF8 65001
-#define LOCALE_USER_DEFAULT 0
-#define LOCALE_INVARIANT 0
+constexpr UINT CP_ACP = 0;
+constexpr UINT CP_UTF8 = 65001;
+constexpr LCID LOCALE_USER_DEFAULT = 0;
+constexpr LCID LOCALE_INVARIANT = 0;
 #define __TEXT(s) L##s
 #define TEXT(s) __TEXT(s)
 constexpr int MAX_PATH = 4096;

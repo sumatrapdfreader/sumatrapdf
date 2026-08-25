@@ -65,7 +65,7 @@ struct EpubDoc {
 
 /* ********** FictionBook (FB2) ********** */
 
-#define FB2_TOC_ENTRY_MARK "ToC!Entry!"
+#define kFb2TocEntryMark "ToC!Entry!"
 
 struct Fb2Doc {
     Str fileName;

@@ -180,16 +180,16 @@ TempStr UnknownToUtf8Temp(Str s) {
         return str::DupTemp(s);
     }
 
-    if (str::TrimPrefix(s, Str(UTF8_BOM))) {
+    if (str::TrimPrefix(s, Str(kUtf8Bom))) {
         return str::DupTemp(s);
     }
 
-    if (str::TrimPrefix(s, Str(UTF16_BOM))) {
+    if (str::TrimPrefix(s, Str(kUtf16Bom))) {
         WStr ws = str::CastStrToWStr(s);
         return ToUtf8Temp(ws);
     }
 
-    if (str::TrimPrefix(s, Str(UTF16BE_BOM))) {
+    if (str::TrimPrefix(s, Str(kUtf16BeBom))) {
         // convert from utf16 big endian to utf16
         WStr ws = str::CastStrToWStr(s);
         TempWStr tmpW = str::DupTemp(ws);

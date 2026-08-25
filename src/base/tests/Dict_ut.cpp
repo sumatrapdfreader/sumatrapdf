@@ -7,10 +7,10 @@
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
-#define LETTERS "abcdefghijklmnopqrtswzABCDEFGHIJLMNOPQRTSWZ0123456789"
+#define kLetters "abcdefghijklmnopqrtswzABCDEFGHIJLMNOPQRTSWZ0123456789"
 
 static inline char GenRandChar() {
-    return LETTERS[rand() % dimof(LETTERS)];
+    return kLetters[rand() % dimof(kLetters)];
 }
 
 static Str GenRandomString() {

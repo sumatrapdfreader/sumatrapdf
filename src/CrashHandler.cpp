@@ -32,7 +32,7 @@
 // keeps logging (to at least the debugger) even when gReducedLogging is set.
 
 #define kCrashHandlerServer "www.sumatrapdfreader.org"
-#define kCrashHandlerServerPort 443
+constexpr int kCrashHandlerServerPort = 443;
 #define kCrashHandlerServerSubmitURL "/uploadcrash/sumatrapdf-crashes"
 
 // The following functions allow crash handler to be used by both installer
@@ -725,7 +725,7 @@ static void GetProcessorName(str::Builder& s) {
     }
 }
 
-#define GFX_DRIVER_KEY_PREFIX "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\"
+#define kGfxDriverKeyPrefix "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\"
 
 static void GetGraphicsDriverInfo(str::Builder& s) {
     // the info is in registry in:
@@ -737,7 +737,7 @@ static void GetGraphicsDriverInfo(str::Builder& s) {
     //
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
-        TempStr key = str::JoinTemp(StrL(GFX_DRIVER_KEY_PREFIX), fmt("%04d", i));
+        TempStr key = str::JoinTemp(StrL(kGfxDriverKeyPrefix), fmt("%04d", i));
         TempStr v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DriverDesc"));
         // I assume that if I can't read the value, there are no more drivers
         if (!v) {

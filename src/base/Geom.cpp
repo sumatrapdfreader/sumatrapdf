@@ -250,7 +250,7 @@ bool Rect::operator!=(const Rect& other) const {
 
 // cf. fz_roundrect in mupdf/fitz/base_geometry.c
 #ifndef FLT_EPSILON
-#define FLT_EPSILON 1.192092896e-07f
+constexpr float FLT_EPSILON = 1.192092896e-07f;
 #endif
 
 #if OS_WIN

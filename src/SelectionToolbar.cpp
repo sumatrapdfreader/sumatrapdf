@@ -41,7 +41,7 @@
 // Ported from dengxibo/sumatrapdf-plus (db0b32b7a and follow-ups); button
 // availability rewritten on top of CommandAvailability.
 
-#define kSelectionToolbarClassName L"SumatraSelectionToolbar"
+constexpr const WCHAR* kSelectionToolbarClassName = L"SumatraSelectionToolbar";
 
 struct SelectionToolbarButton {
     int cmdId = 0;
@@ -559,7 +559,7 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
 
     VirtHost::CreateArgs args;
     args.parent = win->hwndFrame;
-    args.className = WStrL(kSelectionToolbarClassName);
+    args.className = WStr(kSelectionToolbarClassName);
     args.isPopup = true;
     args.visible = false;
     // don't steal the focus from the canvas, so keyboard shortcuts keep working

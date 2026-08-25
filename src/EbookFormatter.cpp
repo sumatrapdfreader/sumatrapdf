@@ -308,7 +308,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {
             // the anchor must outlive the formatter, so not a TempStr
-            Str link = str::Dup(textAllocator, fmt(FB2_TOC_ENTRY_MARK "%d", ++titleCount));
+            Str link = str::Dup(textAllocator, fmt(kFb2TocEntryMark "%d", ++titleCount));
             currPage->instructions.Append(DrawInstr::Anchor(link, RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {

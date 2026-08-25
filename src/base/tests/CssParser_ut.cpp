@@ -49,7 +49,7 @@ static void Test03() {
     bool ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_Any == sel->tag && !sel->clazz && IsSelector(sel, StrL("*")));
+    utassert(sel && kTagAny == sel->tag && !sel->clazz && IsSelector(sel, StrL("*")));
     sel = parser.NextSelector();
     utassert(!sel);
     prop = parser.NextProperty();
@@ -69,7 +69,7 @@ static void Test03() {
     ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_Any == sel->tag && IsSelector(sel, StrL(".green")) &&
+    utassert(sel && kTagAny == sel->tag && IsSelector(sel, StrL(".green")) &&
              str::EqNIx(sel->clazz, sel->clazz.len, StrL("green")));
     prop = parser.NextProperty();
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, StrL("green")));

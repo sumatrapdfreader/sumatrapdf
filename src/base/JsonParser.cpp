@@ -312,7 +312,7 @@ static int ParseValue(ParseArgs& args, Str data, int off, int depth) {
 bool Parse(Str data, const VisitFn& onValue) {
     ParseArgs args(onValue);
     int off = 0;
-    if (data.len >= 3 && str::StartsWith(data, Str(UTF8_BOM))) {
+    if (data.len >= 3 && str::StartsWith(data, Str(kUtf8Bom))) {
         off = 3;
     }
     int end = ParseValue(args, data, off, 0);

@@ -908,9 +908,9 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     return buf;
 }
 
-constexpr double KB = 1024;
-constexpr double MB = (double)1024 * (double)1024;
-constexpr double GB = (double)1024 * (double)1024 * (double)1024;
+constexpr double kKb = 1024;
+constexpr double kMb = (double)1024 * (double)1024;
+constexpr double kGb = (double)1024 * (double)1024 * (double)1024;
 
 static Str sizeUnitsEnglish[3] = {StrL("GB"), StrL("MB"), StrL("KB")};
 
@@ -927,14 +927,14 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
     if (!sizeUnits) {
         sizeUnits = sizeUnitsEnglish;
     }
-    if (s > GB) {
-        s = s / GB;
+    if (s > kGb) {
+        s = s / kGb;
         unit = sizeUnits[0];
-    } else if (s > MB) {
-        s = s / MB;
+    } else if (s > kMb) {
+        s = s / kMb;
         unit = sizeUnits[1];
     } else {
-        s = s / KB;
+        s = s / kKb;
         unit = sizeUnits[2];
     }
 

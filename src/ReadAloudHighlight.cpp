@@ -483,14 +483,14 @@ void ReadAloudHighlightTimerStart(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return;
     }
-    SetTimer(win->hwndCanvas, READ_ALOUD_HIGHLIGHT_TIMER_ID, READ_ALOUD_HIGHLIGHT_DELAY_IN_MS, nullptr);
+    SetTimer(win->hwndCanvas, kReadAloudHighlightTimerID, kReadAloudHighlightDelayInMs, nullptr);
 }
 
 void ReadAloudHighlightTimerStop(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return;
     }
-    KillTimer(win->hwndCanvas, READ_ALOUD_HIGHLIGHT_TIMER_ID);
+    KillTimer(win->hwndCanvas, kReadAloudHighlightTimerID);
 }
 
 static int gReadAloudPaintLogState = 0;

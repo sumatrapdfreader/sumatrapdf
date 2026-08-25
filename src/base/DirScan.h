@@ -70,7 +70,8 @@ bool IsRegularFile(DirIterEntry*);
 // Forward declaration for DirEntry
 struct DirEntries;
 
-// Sentinel value indicating directory is still being scanned
+// Sentinel value indicating directory is still being scanned.
+// Not constexpr: MSVC rejects integer-to-pointer casts as constant expressions.
 #define kStillScanningDir ((DirEntries*)(uintptr_t)-2)
 
 // Check if DirEntry is a directory (dv != nullptr means it's a dir)

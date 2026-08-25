@@ -56,10 +56,10 @@ struct FindMatch {
 };
 
 // factor by how large the non-maximized caption should be in relation to the tabbar
-#define kCaptionTabBarDyFactor 1.0f
+constexpr float kCaptionTabBarDyFactor = 1.0f;
 
 // gap in pixels between top of caption and tabs; this area allows dragging the window
-#define kCaptionTopPadding 8
+constexpr int kCaptionTopPadding = 8;
 
 enum CaptionButtons {
     CB_BTN_FIRST = 0,

@@ -95,11 +95,11 @@ struct TipHookInstaller {
 static TipHookInstaller gTipHookInstaller;
 
 #ifndef ABOUT_USE_LESS_COLORS
-#define ABOUT_LINE_OUTER_SIZE 2
+constexpr int kAboutLineOuterSize = 2;
 #else
-#define ABOUT_LINE_OUTER_SIZE 1
+constexpr int kAboutLineOuterSize = 1;
 #endif
-#define ABOUT_LINE_SEP_SIZE 1
+constexpr int kAboutLineSepSize = 1;
 
 static Str sumatraTips = StrL(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
 You can [customize keyboard shortcuts](Help/Customize-keyboard-shortcuts).
@@ -216,7 +216,7 @@ constexpr int kInnerPadding = 8;
 static const Str kSumatraTxtFont = StrL("Arial Black");
 constexpr int kSumatraTxtFontSize = 24;
 
-#define LAYOUT_LTR 0
+constexpr int kLayoutLtr = 0;
 
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
@@ -429,12 +429,11 @@ void AboutCtrl::Paint(VirtPaintCtx& ctx) {
 #ifndef ABOUT_USE_LESS_COLORS
     if (headerSize.dy > 0) {
         Rect titleRect(rect.TL(), headerSize);
-        ctx.gfx->DrawRect({rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.dx, titleRect.dy}, lineCol,
-                          ABOUT_LINE_OUTER_SIZE);
+        ctx.gfx->DrawRect({rect.x, rect.y + kAboutLineOuterSize, rect.dx, titleRect.dy}, lineCol, kAboutLineOuterSize);
         ctx.gfx->DrawRect({rect.x, rect.y + titleRect.dy, rect.dx, rect.dy - titleRect.dy}, lineCol,
-                          ABOUT_LINE_OUTER_SIZE);
+                          kAboutLineOuterSize);
     } else {
-        ctx.gfx->DrawRect(rect, lineCol, ABOUT_LINE_OUTER_SIZE);
+        ctx.gfx->DrawRect(rect, lineCol, kAboutLineOuterSize);
     }
 #endif
 }
@@ -457,7 +456,7 @@ void AboutCtrl::PaintChildren(VirtPaintCtx& ctx) {
     if (table && !table->lastBounds.IsEmpty()) {
         Color lineCol = ThemeWindowTextColor();
         Rect t = table->lastBounds;
-        ctx.gfx->DrawLine({dividerX, t.y, 0, t.dy}, lineCol, ABOUT_LINE_SEP_SIZE);
+        ctx.gfx->DrawLine({dividerX, t.y, 0, t.dy}, lineCol, kAboutLineSepSize);
     }
 }
 
@@ -556,12 +555,12 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
 
     Rect r;
     // the divider line is drawn inside the gap between the two columns
-    r.dx = std::max(tableSize.dx + ABOUT_LINE_SEP_SIZE, headerSize.dx) + (2 * ABOUT_LINE_OUTER_SIZE) + (2 * marginDx);
+    r.dx = std::max(tableSize.dx + kAboutLineSepSize, headerSize.dx) + (2 * kAboutLineOuterSize) + (2 * marginDx);
     if (showCopy) {
-        r.dx = std::max(r.dx, btnSz.dx + (2 * marginDx) + (2 * ABOUT_LINE_OUTER_SIZE));
+        r.dx = std::max(r.dx, btnSz.dx + (2 * marginDx) + (2 * kAboutLineOuterSize));
     }
     // one extra row gap so the last row isn't flush against the frame
-    r.dy = headerSize.dy + tableSize.dy + aboutTxtDy + (2 * ABOUT_LINE_OUTER_SIZE) + 4 + copyBlockDy;
+    r.dy = headerSize.dy + tableSize.dy + aboutTxtDy + (2 * kAboutLineOuterSize) + 4 + copyBlockDy;
     r.x = clientRc.x + ((clientRc.dx - r.dx) / 2);
     if (hideLogo) {
         r.y = clientRc.y;
@@ -576,8 +575,8 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
         logo->SetBounds({r.x + ((r.dx - headerSize.dx) / 2), r.y, headerSize.dx, headerSize.dy});
     }
 
-    int x = r.x + ABOUT_LINE_OUTER_SIZE + marginDx;
-    int y = r.y + (showLogo ? headerSize.dy : ABOUT_LINE_OUTER_SIZE) + 4;
+    int x = r.x + kAboutLineOuterSize + marginDx;
+    int y = r.y + (showLogo ? headerSize.dy : kAboutLineOuterSize) + 4;
     table->SetBounds({x, y, tableSize.dx, tableSize.dy});
     dividerX = table->CellRect(0, 1).x - leftRightSpaceDx;
 
@@ -722,7 +721,7 @@ static void DrawAbout(Gfx* gfx, VirtRoot* root, Rect clientRc) {
 static void OnPaintAbout(HWND hwnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    SetLayout(hdc, LAYOUT_LTR);
+    SetLayout(hdc, kLayoutLtr);
     Rect clientRc = HwndClientRect(hwnd);
     UpdateAboutLayout(&gAboutRoot, hwnd, clientRc);
     Gfx* gfx = GfxCreate(hdc);

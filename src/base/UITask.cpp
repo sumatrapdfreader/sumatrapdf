@@ -82,7 +82,7 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-constexpr const WCHAR* UITASK_CLASS_NAME = L"UITask_Wnd_Class";
+constexpr const WCHAR* kUiTaskClassName = L"UITask_Wnd_Class";
 
 // Call Initialize() at program startup and Destroy() at the end
 void Initialize() {
@@ -92,11 +92,11 @@ void Initialize() {
     ReportIf(gExecuteTaskMessage != 0);
     gExecuteTaskMessage = RegisterWindowMessageA("UITask_Msg_StdFunction");
     WNDCLASSEX wcex;
-    FillWndClassEx(wcex, UITASK_CLASS_NAME, WndProcTaskDispatch);
+    FillWndClassEx(wcex, kUiTaskClassName, WndProcTaskDispatch);
     RegisterClassEx(&wcex);
 
     ReportIf(gTaskDispatchHwnd);
-    const auto* cls = UITASK_CLASS_NAME;
+    const auto* cls = kUiTaskClassName;
     const auto* title = L"UITask Dispatch Window";
     auto* m = GetModuleHandleW(nullptr);
     DWORD style = WS_OVERLAPPED;

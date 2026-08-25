@@ -38,7 +38,7 @@ Kind kindEngineComicBooks = "engineComicBooks";
 // the worker pool's in-flight pages, and a few prefetch slots without
 // thrashing. Each cached entry holds the decoded Pixmap, so the
 // memory cost scales with image dimensions -- bump cautiously.
-#define MAX_IMAGE_PAGE_CACHE 32
+constexpr int kMaxImagePageCache = 32;
 
 ///// EngineImages methods apply to all types of engines handling full-page images /////
 
@@ -939,8 +939,8 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
 
         if (!result) {
             // TODO: drop most memory intensive pages first
-            if (len(pageCache) >= MAX_IMAGE_PAGE_CACHE) {
-                ReportIf(len(pageCache) != MAX_IMAGE_PAGE_CACHE);
+            if (len(pageCache) >= kMaxImagePageCache) {
+                ReportIf(len(pageCache) != kMaxImagePageCache);
                 DropPage(pageCache.Last(), true);
             }
             // insert a loading placeholder; do the actual decode without
@@ -2749,7 +2749,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
         logf("EngineCbx::LoadMediabox: empty media box from header for page: %d\n", pageNo);
     }
 
-    ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == len(pageCache));
+    ImagePage* page = GetPage(pageNo, kMaxImagePageCache == len(pageCache));
     if (page) {
         int w = 0, h = 0;
         if (page->img) {

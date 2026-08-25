@@ -6,8 +6,8 @@ enum class FileType : u8;
 
 #include "OverlayScrollbar.h"
 
-#define CANVAS_CLASS_NAME L"SUMATRA_PDF_CANVAS"
-#define FRAME_CLASS_NAME L"SUMATRA_PDF_FRAME"
+constexpr const WCHAR* kCanvasClassName = L"SUMATRA_PDF_CANVAS";
+constexpr const WCHAR* kFrameClassName = L"SUMATRA_PDF_FRAME";
 
 constexpr int kFrameResizeHitTest = 5;
 
@@ -17,30 +17,30 @@ constexpr const char* kWebsiteURL = "https://www.sumatrapdfreader.org/";
 constexpr const char* kManualURL = "https://www.sumatrapdfreader.org/manual";
 constexpr const char* kContributeTranslationsURL = "https://www.sumatrapdfreader.org/docs/Contribute-translation";
 
-#ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL "https://www.sumatrapdfreader.org/docs/Contribute-to-SumatraPDF"
+#ifndef kCrashReportUrl
+#define kCrashReportUrl "https://www.sumatrapdfreader.org/docs/Contribute-to-SumatraPDF"
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)
-#define SB_HALF_PAGEUP (WM_USER + 102)
-#define SB_HALF_PAGEDOWN (WM_USER + 103)
+constexpr int kSbHalfPageUp = (WM_USER + 102);
+constexpr int kSbHalfPageDown = (WM_USER + 103);
 
 constexpr int kHideCursorTimerID = 3;
 constexpr int kHideCursorDelayInMs = 3000;
 
-#define REPAINT_TIMER_ID 1
-#define REPAINT_MESSAGE_DELAY_IN_MS 1000
+constexpr int kRepaintTimerID = 1;
+constexpr int kRepaintMessageDelayInMs = 1000;
 
-#define AUTO_RELOAD_TIMER_ID 5
+constexpr int kAutoReloadTimerID = 5;
 
-#define READ_ALOUD_HIGHLIGHT_TIMER_ID 8
-#define READ_ALOUD_HIGHLIGHT_DELAY_IN_MS 80
+constexpr int kReadAloudHighlightTimerID = 8;
+constexpr int kReadAloudHighlightDelayInMs = 80;
 // debounce: coalesce bursts of file-change notifications (a single save can
 // fire several) into one reload. SetTimer() with the same id resets it, so the
 // reload only happens once the file has been quiet for this long (#5690).
 // The timer also re-arms itself while the file keeps changing, so a slow
 // writer doesn't get us to load a half-written document
-#define AUTO_RELOAD_DELAY_IN_MS 500
+constexpr int kAutoReloadDelayInMs = 500;
 // stop waiting for the writer after this long and reload whatever is there
 constexpr u64 kAutoReloadMaxWaitMs = 5000;
 

@@ -7,7 +7,7 @@
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written
-#define ZERO_PADDING_COUNT 3
+constexpr int kZeroPaddingCount = 3;
 
 TempStr GetHomeDirTemp();
 TempStr ExpandEnvVarTemp(Str varName);
@@ -16,11 +16,11 @@ TempStr ToAbsolutePathTemp(Str path);
 namespace path {
 
 bool IsSep(char c) {
-    return c == PATH_SEP_CHAR || (OS_WIN && c == '/');
+    return c == kPathSepChar || (OS_WIN && c == '/');
 }
 
 static bool IsSep(WCHAR c) {
-    return c == PATH_SEP_WCHAR || (OS_WIN && c == L'/');
+    return c == kPathSepWChar || (OS_WIN && c == L'/');
 }
 
 static void SkipLeadingPathSep(Str& path) {
@@ -88,7 +88,7 @@ TempStr JoinTemp(Str dir, Str name, Str name2) {
     SkipLeadingPathSep(name);
     Str sepStr = {};
     if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
-        sepStr = StrL(PATH_SEP);
+        sepStr = StrL(kPathSep);
     }
     TempStr res = str::JoinTemp(dir, sepStr, name);
     if (name2) {
@@ -109,7 +109,7 @@ Str Join(Arena* a, Str dir, Str name) {
     SkipLeadingPathSep(name);
     Str sepStr = {};
     if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
-        sepStr = StrL(PATH_SEP);
+        sepStr = StrL(kPathSep);
     }
     return str::Join(a, dir, sepStr, name);
 }
@@ -122,7 +122,7 @@ TempWStr JoinTemp(WStr dir, WStr name, WStr name2) {
     SkipLeadingPathSep(name);
     WStr sepStr;
     if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
-        sepStr = PATH_SEP_WSTR;
+        sepStr = kPathSepWStr;
     }
     TempWStr res = str::JoinTemp(dir, sepStr, name);
     if (name2) {
@@ -310,11 +310,11 @@ Str ReadFileWithArena(Str filePath, Arena* a) {
     }
     long fileSize = ftell(fp);
     size_t nRead = 0;
-    if (fileSize < 0 || fileSize > INT_MAX - ZERO_PADDING_COUNT) {
+    if (fileSize < 0 || fileSize > INT_MAX - kZeroPaddingCount) {
         goto Error;
     }
     size = (int)fileSize;
-    d = AllocArray<char>(a, size + ZERO_PADDING_COUNT);
+    d = AllocArray<char>(a, size + kZeroPaddingCount);
     if (!d) {
         goto Error;
     }
@@ -469,7 +469,7 @@ Str SmartResolveDirectory(Str dir) {
     auto* ta = GetTempArena();
     char* normalized = (char*)Alloc(ta, dir.len + 1);
     for (int i = 0; i < dir.len; i++) {
-        normalized[i] = path::IsSep(dir.s[i]) ? PATH_SEP_CHAR : dir.s[i];
+        normalized[i] = path::IsSep(dir.s[i]) ? kPathSepChar : dir.s[i];
     }
     normalized[dir.len] = 0;
     Str result = Str(normalized, dir.len);

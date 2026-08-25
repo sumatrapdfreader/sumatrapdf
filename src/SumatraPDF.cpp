@@ -193,10 +193,10 @@ static void UpdateOverlayScrollbarPositions(MainWindow* win);
 static Str HwndName(HWND hwnd) {
     WCHAR cls[64]{};
     GetClassNameW(hwnd, cls, dimof(cls));
-    if (wstr::Eq(cls, FRAME_CLASS_NAME)) {
+    if (wstr::Eq(cls, kFrameClassName)) {
         return StrL("frame");
     }
-    if (wstr::Eq(cls, CANVAS_CLASS_NAME)) {
+    if (wstr::Eq(cls, kCanvasClassName)) {
         return StrL("canvas");
     }
     // TODO: could identify more windows (rebar, toc, etc.)
@@ -342,8 +342,8 @@ void SetCurrentLang(Str langCode) {
     trans::SetCurrentLangByCode(gGlobalPrefs->uiLanguage);
 }
 
-#define DEFAULT_FILE_PERCEIVED_TYPES "audio,video,webpage"
-#define DEFAULT_LINK_PROTOCOLS "http,https,mailto,file"
+#define kDefaultFilePerceivedTypes "audio,video,webpage"
+#define kDefaultLinkProtocols "http,https,mailto,file"
 
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
@@ -361,8 +361,8 @@ void InitializePolicies(bool restrict) {
     // (if the file isn't there, everything is allowed)
     TempStr restrictPath = GetPathInExeDirTemp(Str(kRestrictionsFileName));
     if (!file::Exists(restrictPath)) {
-        Split(&gAllowedLinkProtocols, StrL(DEFAULT_LINK_PROTOCOLS), StrL(","));
-        Split(&gAllowedFileTypes, StrL(DEFAULT_FILE_PERCEIVED_TYPES), StrL(","));
+        Split(&gAllowedLinkProtocols, StrL(kDefaultLinkProtocols), StrL(","));
+        Split(&gAllowedFileTypes, StrL(kDefaultFilePerceivedTypes), StrL(","));
         return;
     }
 
@@ -1702,7 +1702,7 @@ static int CollectPageInfoPages(DocController* ctrl, int pageNo, int* pagesOut, 
 }
 
 // Light separator between page-info values: space + U+00B7 MIDDLE DOT + space.
-#define PAGE_INFO_SEP " \xC2\xB7 "
+#define kPageInfoSep " \xC2\xB7 "
 
 static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo) {
     if (!ctrl->ValidPageNo(pageNo)) {
@@ -1716,7 +1716,7 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
     }
     float zoomLevel = ctrl->GetZoomVirtual();
     auto zoomStr = BuildZoomString(zoomLevel);
-    pageInfo = str::JoinTemp(pageInfo, StrL(PAGE_INFO_SEP), zoomStr);
+    pageInfo = str::JoinTemp(pageInfo, StrL(kPageInfoSep), zoomStr);
 
     // Image extras (issue #4456). Document file name is already on the tab.
     DisplayModel* dm = ctrl->AsFixed();
@@ -1735,16 +1735,16 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
             }
             if (imgSize >= 0) {
                 TempStr sizeStr = str::FormatSizeShortTemp(imgSize);
-                detail = detail ? fmt("%s%s%s", detail, StrL(PAGE_INFO_SEP), sizeStr) : sizeStr;
+                detail = detail ? fmt("%s%s%s", detail, StrL(kPageInfoSep), sizeStr) : sizeStr;
             }
             // fileDPI defaults to 96; only show when the image reports something else
             float dpi = engine->GetFileDPI();
             if (dpi > 0.5f && fabsf(dpi - 96.0f) > 0.5f) {
                 TempStr dpiStr = fmt("%.0f DPI", dpi);
-                detail = detail ? fmt("%s%s%s", detail, StrL(PAGE_INFO_SEP), dpiStr) : dpiStr;
+                detail = detail ? fmt("%s%s%s", detail, StrL(kPageInfoSep), dpiStr) : dpiStr;
             }
             if (detail) {
-                pageInfo = str::JoinTemp(pageInfo, StrL(PAGE_INFO_SEP), detail);
+                pageInfo = str::JoinTemp(pageInfo, StrL(kPageInfoSep), detail);
             }
         } else {
             // Comic / image folder: per-page name · dimensions · bytes (both if facing)
@@ -1765,7 +1765,7 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
                     if (!part) {
                         return;
                     }
-                    detail = detail ? fmt("%s%s%s", detail, StrL(PAGE_INFO_SEP), part) : part;
+                    detail = detail ? fmt("%s%s%s", detail, StrL(kPageInfoSep), part) : part;
                 };
                 appendPart(imgName);
                 if (w > 0 && h > 0) {
@@ -1775,7 +1775,7 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
                     appendPart(str::FormatSizeShortTemp(imgSize));
                 }
                 if (detail) {
-                    pageInfo = str::JoinTemp(pageInfo, StrL(PAGE_INFO_SEP), detail);
+                    pageInfo = str::JoinTemp(pageInfo, StrL(kPageInfoSep), detail);
                 }
             }
         }
@@ -3074,7 +3074,7 @@ static MainWindow* CreateMainWindow() {
         windowPos.x += nShift * DpiScale(15);
     }
 
-    WStr clsName = WStrL(FRAME_CLASS_NAME);
+    WStr clsName = WStr(kFrameClassName);
     WStr title = WStr(kSumatraWindowTitleW);
     DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     int x = windowPos.x;
@@ -3101,7 +3101,7 @@ static MainWindow* CreateMainWindow() {
     // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
     // screen's edge when maximized (cf. Fitts' law) and there are
     // no additional adjustments needed when (un)maximizing
-    clsName = CANVAS_CLASS_NAME;
+    clsName = kCanvasClassName;
     // WS_CLIPSIBLINGS so the canvas doesn't paint over the floating overlay
     // toolbar (a higher-Z sibling) in overlay mode
     style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
@@ -3443,7 +3443,7 @@ static void ReloadTab(WindowTab* tab) {
     tab->reloadOnFocus = true;
     if (tab == win->CurrentTab()) {
         // delay the reload slightly, in case we get another request immediately after this one
-        SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
+        SetTimer(win->hwndCanvas, kAutoReloadTimerID, kAutoReloadDelayInMs, nullptr);
     }
 }
 
@@ -8767,8 +8767,8 @@ void AdvanceFocus(MainWindow* win) {
     bool hasToolbar = !win->isFullScreen && !win->presentation && gGlobalPrefs->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
-    const int MAX_WINDOWS = 5;
-    HWND tabOrder[MAX_WINDOWS] = {win->hwndFrame};
+    constexpr int kMaxWindows = 5;
+    HWND tabOrder[kMaxWindows] = {win->hwndFrame};
     int nWindows = 1;
     if (hasToolbar && win->pageEdit) {
         tabOrder[nWindows++] = win->pageEdit->hwnd;
@@ -8781,7 +8781,7 @@ void AdvanceFocus(MainWindow* win) {
     if (gGlobalPrefs->showFavorites) {
         tabOrder[nWindows++] = win->favTreeView->hwnd;
     }
-    ReportIf(nWindows > MAX_WINDOWS);
+    ReportIf(nWindows > kMaxWindows);
 
     // find the currently focused element
     HWND focused = GetFocus();
@@ -11555,7 +11555,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             bool isCont = IsContinuous(win->ctrl->GetDisplayMode());
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_HALF_PAGEUP, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, kSbHalfPageUp, 0);
             if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
                 OnDocumentVerticalScrollIntent(win, false);
@@ -11639,7 +11639,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             bool isCont = IsContinuous(win->ctrl->GetDisplayMode());
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_HALF_PAGEDOWN, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, kSbHalfPageDown, 0);
             if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToNextPage();
                 OnDocumentVerticalScrollIntent(win, true);
@@ -12657,11 +12657,11 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
 
 // --- Caption code (moved from Caption.cpp) ---
 
-#define UNDOCUMENTED_MENU_CLASS_NAME L"#32768"
-#define DO_NOT_REOPEN_MENU_TIMER_ID 1
-#define DO_NOT_REOPEN_MENU_DELAY_IN_MS 1
-#define CBS_INACTIVE 5
-#define NON_CLIENT_BAND 1
+constexpr const WCHAR* kUndocumentedMenuClassName = L"#32768";
+constexpr int kDoNotReopenMenuTimerID = 1;
+constexpr int kDoNotReopenMenuDelayInMs = 1;
+constexpr int kCbsInactive = 5;
+constexpr int kNonClientBand = 1;
 
 static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem) {
     HMENU menu = GetSystemMenu(hwnd, FALSE);
@@ -12784,14 +12784,14 @@ static void HandleCaptionClick(MainWindow* win, int btnIdx) {
             PostMessageW(win->hwndFrame, WM_SYSCOMMAND, SC_CLOSE, 0);
             break;
         case CB_MENU:
-            if (!KillTimer(win->hwndFrame, DO_NOT_REOPEN_MENU_TIMER_ID) && !win->isMenuOpen) {
+            if (!KillTimer(win->hwndFrame, kDoNotReopenMenuTimerID) && !win->isMenuOpen) {
                 Rect r = win->captionBtn[CB_MENU].rect;
                 win->isMenuOpen = true;
                 RepaintButton(win->hwndFrame, CB_MENU, win);
                 MenuBarAsPopupMenu(win, r);
                 win->isMenuOpen = false;
                 RepaintButton(win->hwndFrame, CB_MENU, win);
-                SetTimer(win->hwndFrame, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, nullptr);
+                SetTimer(win->hwndFrame, kDoNotReopenMenuTimerID, kDoNotReopenMenuDelayInMs, nullptr);
             }
             HwndSetFocus(win->hwndFrame);
             break;
@@ -12851,7 +12851,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
     } else if (bi->highlighted) {
         stateId = CBS_HOT;
     } else if (bi->inactive) {
-        stateId = CBS_INACTIVE;
+        stateId = kCbsInactive;
     } else {
         stateId = CBS_NORMAL;
     }
@@ -12867,7 +12867,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         bool isClose = (button == CB_CLOSE);
         bool isHot = (stateId == CBS_HOT);
         bool isPushed = (stateId == CBS_PUSHED);
-        bool isInactive = (stateId == CBS_INACTIVE);
+        bool isInactive = (stateId == kCbsInactive);
 
         if (isHot || isPushed) {
             Gdiplus::Color bgCol;
@@ -13073,7 +13073,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             if (!IsIconic(hwnd)) {
                 RECT rc = ToRECT(win->captionRect);
                 if (IsCurrentThemeDefault()) {
-                    rc.bottom += NON_CLIENT_BAND;
+                    rc.bottom += kNonClientBand;
                 }
                 uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW;
                 RedrawWindow(hwnd, &rc, nullptr, flags);
@@ -13083,8 +13083,8 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             break;
 
         case WM_TIMER:
-            if (wp == DO_NOT_REOPEN_MENU_TIMER_ID) {
-                KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID);
+            if (wp == kDoNotReopenMenuTimerID) {
+                KillTimer(hwnd, kDoNotReopenMenuTimerID);
                 *callDef = false;
                 return 0;
             }
@@ -13110,7 +13110,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 // system metrics can still describe the old monitor during a
                 // cross-DPI move, leaving an unpainted strip at the screen edge.
                 // The proposed rect identifies the destination monitor reliably.
-                // Client fills the full work area — do not shrink by NON_CLIENT_BAND
+                // Client fills the full work area — do not shrink by kNonClientBand
                 // at the bottom (that left an unpainted 1px gap above the taskbar
                 // with tabs-in-titlebar; issue #5851).
                 HMONITOR monitor = MonitorFromRect(r, MONITOR_DEFAULTTONEAREST);
@@ -13355,9 +13355,9 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
         case WM_INITMENUPOPUP:
             // apply dark mode to popup menu window
-            DarkModeApplyToMenuWindow(FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr));
+            DarkModeApplyToMenuWindow(FindWindow(kUndocumentedMenuClassName, nullptr));
             if (gMenuAccelPressed) {
-                HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
+                HWND hMenu = FindWindow(kUndocumentedMenuClassName, nullptr);
                 if (hMenu) {
                     if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z') {
                         gMenuAccelPressed -= 'a' - 'A';
@@ -13385,7 +13385,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 HWND gLastActiveFrameHwnd = nullptr;
 
 // Text-to-speech/read-aloud integration
-static constexpr UINT WM_TTS_EVENT = WM_APP + 0x421;
+static constexpr UINT kWmTtsEvent = WM_APP + 0x421;
 
 static WindowTab* gReadAloudSourceTab = nullptr;
 static WindowTab* gReadAloudSessionTab = nullptr;
@@ -14387,7 +14387,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_CREATE:
             // do nothing
-            TtsSetNotifyWindow(hwnd, WM_TTS_EVENT, 0, 0);
+            TtsSetNotifyWindow(hwnd, kWmTtsEvent, 0, 0);
             goto InitMouseWheelInfo;
 
         case WM_SIZE:
@@ -14446,7 +14446,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_INITMENUPOPUP:
             // apply dark mode to popup menu window
-            DarkModeApplyToMenuWindow(FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr));
+            DarkModeApplyToMenuWindow(FindWindow(kUndocumentedMenuClassName, nullptr));
             // TODO: should I just build the menu from scratch every time?
             if (win) {
                 UpdateAppMenu(win, (HMENU)wp);
@@ -14708,7 +14708,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             return MA_ACTIVATE;
 
-        case WM_TTS_EVENT:
+        case kWmTtsEvent:
             TtsProcessEvents();
 
             if (TtsIsSpeaking() && gReadAloudSourceTab && gReadAloudSourceTab->win) {
@@ -14829,7 +14829,7 @@ void ShowCrashHandlerMessage() {
 #if 0
     int res = MsgBox(nullptr, _TRA("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TRA("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | MbRtlReadingMaybe());
     if (IDCANCEL == res) {
-        LaunchBrowser(CRASH_REPORT_URL);
+        LaunchBrowser(kCrashReportUrl);
     }
 #endif
 

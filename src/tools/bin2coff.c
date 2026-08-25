@@ -51,7 +51,7 @@ typedef long long int64_t;
 typedef unsigned long long uint64_t;
 #endif
 
-#define SIZE_LABEL_SUFFIX "_size"
+#define kSizeLabelSuffix "_size"
 #define SIZE_TYPE uint32_t
 
 #define IMAGE_SIZEOF_SHORT_NAME 8
@@ -340,14 +340,14 @@ int
     // on 32-bit we need to add _ to labelname
     int addUnderscore = machine == IMAGE_FILE_MACHINE_I386 ? 1 : 0;
     short_label = (strlen(label) + addUnderscore) <= IMAGE_SIZEOF_SHORT_NAME;
-    short_size = (strlen(label) + addUnderscore + strlen(SIZE_LABEL_SUFFIX)) <= IMAGE_SIZEOF_SHORT_NAME;
+    short_size = (strlen(label) + addUnderscore + strlen(kSizeLabelSuffix)) <= IMAGE_SIZEOF_SHORT_NAME;
     alloc_size = sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_SECTION_HEADER) + size + sizeof(SIZE_TYPE) +
                  (2 * sizeof(IMAGE_SYMBOL)) + sizeof(IMAGE_STRINGS);
     if (!short_label) {
         alloc_size += addUnderscore + strlen(label) + 1;
     }
     if (!short_size) {
-        alloc_size += addUnderscore + strlen(label) + strlen(SIZE_LABEL_SUFFIX) + 1;
+        alloc_size += addUnderscore + strlen(label) + strlen(kSizeLabelSuffix) + 1;
     }
 
     buffer = (uint8_t*)calloc(alloc_size, 1);
@@ -404,8 +404,8 @@ int
     if (short_size) {
         symbol_table[1].N.ShortName[1] = '_';
         memcpy(&symbol_table[1].N.ShortName[addUnderscore], label, strlen(label));
-        memcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], SIZE_LABEL_SUFFIX,
-               strlen(SIZE_LABEL_SUFFIX));
+        memcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], kSizeLabelSuffix,
+               strlen(kSizeLabelSuffix));
     } else {
         symbol_table[1].N.LongName.Zeroes = 0;
         symbol_table[1].N.LongName.Offset =
@@ -428,9 +428,9 @@ int
         memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)] + addUnderscore, label,
                strlen(label));
         string_table->TotalSize += addUnderscore + (uint32_t)strlen(label);
-        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)], SIZE_LABEL_SUFFIX,
-               strlen(SIZE_LABEL_SUFFIX) + 1);
-        string_table->TotalSize += (uint32_t)strlen(SIZE_LABEL_SUFFIX) + 1;
+        memcpy(&string_table->Strings[string_table->TotalSize - sizeof(IMAGE_STRINGS)], kSizeLabelSuffix,
+               strlen(kSizeLabelSuffix) + 1);
+        string_table->TotalSize += (uint32_t)strlen(kSizeLabelSuffix) + 1;
     }
 
     fd = fopen(argv[2], "wb");

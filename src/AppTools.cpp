@@ -419,20 +419,20 @@ void CollectInverseSearchCommands(StrVec& out, Str cmdLine) {
 }
 
 /* Default size for the window, happens to be american A4 size (I think) */
-#define DEF_PAGE_RATIO (612.0 / 792.0)
+constexpr double kDefPageRatio = 612.0 / 792.0;
 
-#define MIN_WIN_DX 50
-#define MIN_WIN_DY 50
+constexpr int kMinWinDx = 50;
+constexpr int kMinWinDy = 50;
 
 void EnsureAreaVisibility(Rect& r) {
     // adjust to the work-area of the current monitor (not necessarily the primary one)
     Rect work = GetWorkAreaRect(r, nullptr);
 
     // make sure that the window is neither too small nor bigger than the monitor
-    if (r.dx < MIN_WIN_DX || r.dx > work.dx) {
-        r.dx = std::min((int)((double)work.dy * DEF_PAGE_RATIO), work.dx);
+    if (r.dx < kMinWinDx || r.dx > work.dx) {
+        r.dx = std::min((int)((double)work.dy * kDefPageRatio), work.dx);
     }
-    if (r.dy < MIN_WIN_DY || r.dy > work.dy) {
+    if (r.dy < kMinWinDy || r.dy > work.dy) {
         r.dy = work.dy;
     }
 
@@ -451,7 +451,7 @@ Rect GetDefaultWindowPos() {
     Rect work = ToRect(workArea);
 
     Rect r = work;
-    r.dx = std::min((int)((double)r.dy * DEF_PAGE_RATIO), work.dx);
+    r.dx = std::min((int)((double)r.dy * kDefPageRatio), work.dx);
     r.x = (work.dx - r.dx) / 2;
 
     return r;

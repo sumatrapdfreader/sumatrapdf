@@ -1,7 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define kCopyDataQuickLook 0x514C6F6B // 'QLok'
+constexpr int kCopyDataQuickLook = 0x514C6F6B; // 'QLok'
 
 void ExplorerQuickLookApplyFromSettings();
 bool RunExplorerQuickLookAgentLoop();

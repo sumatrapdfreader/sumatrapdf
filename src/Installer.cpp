@@ -1270,7 +1270,7 @@ Exit:
     if (gWnd && gWnd->hwnd) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
-            PostMessageW(gWnd->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
+            PostMessageW(gWnd->hwnd, kWmAppInstallationFinished, 0, 0);
         }
     }
 }
@@ -1361,7 +1361,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     DeleteWnd(&wnd->checkboxRegisterPreview);
     DeleteWnd(&wnd->btnOptions);
 
-    SetMsg(_TRA("Installation in progress..."), COLOR_MSG_INSTALLATION);
+    SetMsg(_TRA("Installation in progress..."), kColorMsgInstallation);
     HwndRepaintNow(wnd->hwnd);
 
     auto fn = MkFunc0(InstallerThread, &gCliNew);
@@ -1541,7 +1541,7 @@ static void OnInstallationFinished(Flags* cli) {
         gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"), isRtl);
         gWnd->btnRunSumatra->onClick = MkFunc0Void(OnButtonStartSumatra);
     }
-    SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
+    SetMsg(_TRA("Thank you! SumatraPDF has been installed."), kColorMsgOk);
     gMsgError = gFirstError;
     HwndRepaintNow(gWnd->hwnd);
 
@@ -1982,13 +1982,13 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             break;
         }
 
-        case WM_APP_START_INSTALLATION: {
+        case kWmAppStartInstallation: {
             StartInstallation(gWnd);
             SetForegroundWindow(hwnd);
             break;
         }
 
-        case WM_APP_INSTALLATION_FINISHED: {
+        case kWmAppInstallationFinished: {
             OnInstallationFinished(&gCliNew);
             break;
         }
@@ -2000,7 +2000,7 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
     return 0;
 }
 
-#define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
+constexpr const WCHAR* kInstallerWindowClassName = L"SUMATRA_PDF_INSTALLER_FRAME";
 
 static bool CreateInstallerWnd(Flags* cli) {
     gWnd = new InstallerWnd();
@@ -2049,7 +2049,7 @@ static bool CreateInstallerWindow(Flags* cli) {
     // TODO: gHwndFrame is shared between installer and uninstaller windows
     gHwndFrame = gWnd->hwnd;
     if (autoStartInstall) {
-        PostMessageW(gWnd->hwnd, WM_APP_START_INSTALLATION, 0, 0);
+        PostMessageW(gWnd->hwnd, kWmAppStartInstallation, 0, 0);
     }
 
     SetDefaultMsg();

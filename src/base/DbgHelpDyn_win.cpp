@@ -265,14 +265,12 @@ static void AppendAddress(str::Builder& s, DWORD64 addr) {
 }
 
 void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
-    static const int MAX_SYM_LEN = 512;
-
-    char buf[sizeof(SYMBOL_INFO) + (MAX_SYM_LEN * sizeof(char))];
+    char buf[sizeof(SYMBOL_INFO) + (kMaxSymLen * sizeof(char))];
     SYMBOL_INFO* symInfo = (SYMBOL_INFO*)buf;
 
     memset(buf, 0, sizeof(buf));
     symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
-    symInfo->MaxNameLen = MAX_SYM_LEN;
+    symInfo->MaxNameLen = kMaxSymLen;
 
     DWORD64 symDisp = 0;
     char* symName = nullptr;

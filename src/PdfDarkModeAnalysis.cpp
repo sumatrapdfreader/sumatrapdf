@@ -16,7 +16,7 @@ extern "C" {
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
 
-#define DM_ANALYSIS_STACK_SIZE 96
+constexpr int kDmAnalysisStackSize = 96;
 
 typedef struct {
     fz_device super;
@@ -24,14 +24,14 @@ typedef struct {
     DarkModeOptions options;
     DarkModeEngineCache* engineCache;
     int top;
-    fz_rect stack[DM_ANALYSIS_STACK_SIZE];
+    fz_rect stack[kDmAnalysisStackSize];
     int textOps;
     int vectorOps;
     float maxImageCoverage;
 } pdf_dark_mode_analysis_device;
 
 static fz_rect dm_analysis_clip_rect(pdf_dark_mode_analysis_device* d, fz_rect rect) {
-    if (d->top > 0 && d->top <= DM_ANALYSIS_STACK_SIZE) {
+    if (d->top > 0 && d->top <= kDmAnalysisStackSize) {
         return fz_intersect_rect(rect, d->stack[d->top - 1]);
     }
     return rect;
@@ -39,7 +39,7 @@ static fz_rect dm_analysis_clip_rect(pdf_dark_mode_analysis_device* d, fz_rect r
 
 static void dm_analysis_push_clip(pdf_dark_mode_analysis_device* d, fz_rect rect, bool clip) {
     rect = dm_analysis_clip_rect(d, rect);
-    if (clip && ++d->top <= DM_ANALYSIS_STACK_SIZE) {
+    if (clip && ++d->top <= kDmAnalysisStackSize) {
         d->stack[d->top - 1] = rect;
     }
 }

@@ -25,7 +25,7 @@ The window must follow associated window so that it maintains an illusion
 that it's actually a part of that window.
 */
 
-#define FRAME_RATE_CLASS_NAME L"FrameRateWnd"
+constexpr const WCHAR* kFrameRateClassName = L"FrameRateWnd";
 
 static void PositionWindow(FrameRateWnd* w, Size s) {
     Rect rc = HwndClientRect(w->hwndAssociatedWith);
@@ -56,7 +56,7 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
 
     {
         CreateCustomArgs args;
-        args.className = FRAME_RATE_CLASS_NAME;
+        args.className = kFrameRateClassName;
         // WS_POPUP removes all decorations
         args.style = WS_POPUP | WS_DISABLED;
         // WS_EX_TRANSPARENT so that the mouse events fall through to the window below

@@ -14,11 +14,11 @@ struct FileInfo {
 };
 
 // translations + marked + mermaid + in-app manual assets share one LzSA
-#define MAX_LZMA_ARCHIVE_FILES 256
+constexpr int kMaxLzmaArchiveFiles = 256;
 
 struct SimpleArchive {
     int filesCount;
-    FileInfo files[MAX_LZMA_ARCHIVE_FILES];
+    FileInfo files[kMaxLzmaArchiveFiles];
 };
 
 bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* archiveOut);

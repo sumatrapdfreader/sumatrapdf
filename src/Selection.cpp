@@ -353,7 +353,7 @@ bool StartRectangularSelectionEdit(MainWindow* win, int x, int y, SelectionDragE
     win->textDragPending = false;
     win->imageDragPending = false;
     SetCapture(win->hwndCanvas);
-    SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+    SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
     ScheduleRepaint(win, 0);
     return true;
 }
@@ -692,12 +692,12 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
     ScheduleRepaint(win, 0);
 }
 
-#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(15)
-#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScale(10)
+#define kSelectAutoscrollAreaWidth DpiScale(15)
+#define kSelectAutoscrollStepLength DpiScale(10)
 
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
-    return x < SELECT_AUTOSCROLL_AREA_WIDTH || x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH ||
-           y < SELECT_AUTOSCROLL_AREA_WIDTH || y > win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH;
+    return x < kSelectAutoscrollAreaWidth || x > win->canvasRc.dx - kSelectAutoscrollAreaWidth ||
+           y < kSelectAutoscrollAreaWidth || y > win->canvasRc.dy - kSelectAutoscrollAreaWidth;
 }
 
 // Horizontal auto-scroll while selecting text exists to reveal text the
@@ -730,7 +730,7 @@ static int LimitTextSelectionAutoscrollDx(MainWindow* win, int dx) {
     if (selLeft > selRight) {
         return dx; // nothing selected on a visible page
     }
-    int margin = SELECT_AUTOSCROLL_AREA_WIDTH;
+    int margin = kSelectAutoscrollAreaWidth;
     if (dx > 0) {
         int needed = selRight - (win->canvasRc.dx - margin);
         return limitValue(needed, 0, dx);
@@ -742,15 +742,15 @@ static int LimitTextSelectionAutoscrollDx(MainWindow* win, int dx) {
 void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
     int dx = 0, dy = 0;
 
-    if (x < SELECT_AUTOSCROLL_AREA_WIDTH) {
-        dx = -SELECT_AUTOSCROLL_STEP_LENGTH;
-    } else if (x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH) {
-        dx = SELECT_AUTOSCROLL_STEP_LENGTH;
+    if (x < kSelectAutoscrollAreaWidth) {
+        dx = -kSelectAutoscrollStepLength;
+    } else if (x > win->canvasRc.dx - kSelectAutoscrollAreaWidth) {
+        dx = kSelectAutoscrollStepLength;
     }
-    if (y < SELECT_AUTOSCROLL_AREA_WIDTH) {
-        dy = -SELECT_AUTOSCROLL_STEP_LENGTH;
-    } else if (y > win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH) {
-        dy = SELECT_AUTOSCROLL_STEP_LENGTH;
+    if (y < kSelectAutoscrollAreaWidth) {
+        dy = -kSelectAutoscrollStepLength;
+    } else if (y > win->canvasRc.dy - kSelectAutoscrollAreaWidth) {
+        dy = kSelectAutoscrollStepLength;
     }
 
     ReportIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
@@ -814,7 +814,7 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/, bool forceR
     }
 
     SetCapture(win->hwndCanvas);
-    SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+    SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
     ScheduleRepaint(win, 0);
 }
 
@@ -822,7 +822,7 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     if (GetCapture() == win->hwndCanvas) {
         ReleaseCapture();
     }
-    KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
+    KillTimer(win->hwndCanvas, kSelectSmoothScrollTimerID);
 
     bool editingRect = win->selectionDragEdge != SelectionDragEdge::None && win->mouseAction == MouseAction::Selecting;
 

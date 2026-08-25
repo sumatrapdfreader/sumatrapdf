@@ -33,14 +33,14 @@
 #include "Flags.h"
 #include "SearchAndDDE.h"
 
-#define FIRST_STRESS_TIMER_ID 101
+constexpr int kFirstStressTimerID = 101;
 
 constexpr int kStressTestMaxPagesPerFile = 16;
 constexpr int kStressTestMaxPagesSlowFile = 8;
 constexpr int kStressTestSlowPageMs = 4 * 1000;
 
 static bool gIsStressTesting = false;
-static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
+static int gCurrStressTimerId = kFirstStressTimerID;
 static Kind kNotifStressTestBenchmark = "stressTestBenchmark";
 static Kind kNotifStressTestSummary = "stressTestSummary";
 static AtomicInt gStressTestFileNo = 0;

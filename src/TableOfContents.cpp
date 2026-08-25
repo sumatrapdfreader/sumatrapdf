@@ -1207,8 +1207,8 @@ void ReloadTocTree(WindowTab* tab) {
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
 // to get LOGFONT from existing font and then create a derived font
 static PlatformFont* UpdateFont(HDC hdc, int fontFlags) {
-    bool italic = bit::IsSet(fontFlags, fontBitItalic);
-    bool bold = bit::IsSet(fontFlags, fontBitBold);
+    bool italic = bit::IsSet(fontFlags, kFontBitItalic);
+    bool bold = bit::IsSet(fontFlags, kFontBitBold);
     PlatformFont* font = GetAppTreeFontEx(bold, italic);
     SelectObject(hdc, font->GetHFont());
     return font;

@@ -72,13 +72,13 @@ static TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
     return ToUtf8Temp(buf);
 }
 
-static const int MULTILINE_INFOTIP_WIDTH_PX = 500;
+constexpr int kMultilineInfotipWidthPx = 500;
 
 static void SetMaxWidthForText(HWND hwnd, Str s, bool multiline) {
     int dx = -1;
     if (multiline || str::ContainsChar(s, '\n')) {
         // TODO: dpi scale
-        dx = MULTILINE_INFOTIP_WIDTH_PX;
+        dx = kMultilineInfotipWidthPx;
     }
     SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
 }

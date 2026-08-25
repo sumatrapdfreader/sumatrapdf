@@ -89,7 +89,7 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
 // Strip a UTF-8 BOM if present; otherwise convert from `codepage` to UTF-8
 // (unless already UTF-8). Returns a TempStr owned by the temp allocator.
 TempStr SmartToUtf8Temp(Str s, uint codepage) {
-    if (str::TrimPrefix(s, StrL(UTF8_BOM))) {
+    if (str::TrimPrefix(s, StrL(kUtf8Bom))) {
         return str::DupTemp(s);
     }
     if (CP_UTF8 == codepage) {
@@ -158,7 +158,7 @@ void ChmFile::ParseWindowsData() {
     }
 }
 
-#define CP_CHM_DEFAULT 1252
+constexpr int kCpChmDefault = 1252;
 
 static uint LcidToCodepage(DWORD lcid) {
     // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
@@ -226,7 +226,7 @@ static uint LcidToCodepage(DWORD lcid) {
         }
     }
 
-    return CP_CHM_DEFAULT;
+    return kCpChmDefault;
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM

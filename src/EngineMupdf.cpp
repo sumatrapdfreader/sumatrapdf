@@ -2101,25 +2101,25 @@ static void FzAppendPageImageRect(fz_context* ctx, Vec<FitzPageImageInfo*>& imag
 // A pass-through-free device that records the page rects of drawn images,
 // including content-stream images that text extraction doesn't see. Tracks
 // the clip stack so recorded rects are clipped to what's actually visible.
-#define IMG_COLLECT_STACK_SIZE 96
+constexpr int kImgCollectStackSize = 96;
 
 typedef struct {
     fz_device super;
     Vec<FitzPageImageInfo*>* images;
     int pageNo;
     int top;
-    fz_rect stack[IMG_COLLECT_STACK_SIZE];
+    fz_rect stack[kImgCollectStackSize];
 } fz_image_collect_device;
 
 static void fz_img_collect_add(fz_context* ctx, fz_device* dev, fz_rect rect, bool clip, fz_image* image) {
     fz_image_collect_device* d = (fz_image_collect_device*)dev;
-    if (d->top > 0 && d->top <= IMG_COLLECT_STACK_SIZE) {
+    if (d->top > 0 && d->top <= kImgCollectStackSize) {
         rect = fz_intersect_rect(rect, d->stack[d->top - 1]);
     }
     if (!clip && !fz_is_empty_rect(rect)) {
         FzAppendPageImageRect(ctx, *d->images, d->pageNo, rect, image);
     }
-    if (clip && ++d->top <= IMG_COLLECT_STACK_SIZE) {
+    if (clip && ++d->top <= kImgCollectStackSize) {
         d->stack[d->top - 1] = rect;
     }
 }
@@ -4581,8 +4581,8 @@ static void ApplyOutlineStyles(fz_context* ctx, fz_outline_iterator* iter, TocIt
         if (!it) {
             return;
         }
-        // our fontBit* are the /F bit numbers (fontBitItalic is bit 1 of /F,
-        // fontBitBold is bit 2) and mupdf keeps /F as-is, so the low two bits
+        // our kFontBit* are the /F bit numbers (kFontBitItalic is bit 1 of /F,
+        // kFontBitBold is bit 2) and mupdf keeps /F as-is, so the low two bits
         // carry over directly. Don't go by fz_outline's FZ_OUTLINE_FLAG_*
         // names, they have bold and italic the other way round from the spec
         item->fontFlags = it->flags & 3;
@@ -5690,14 +5690,14 @@ static fz_display_list* GetOrBuildPageDisplayList(FzPageInfo* pi, fz_context* ct
 //
 // Clip paths are still bounded as a whole: a clip is a region, not ink, and its
 // bbox is the conservative thing to intersect subsequent ops against.
-#define CONTENT_BBOX_STACK_SIZE 96
+constexpr int kContentBboxStackSize = 96;
 
 typedef struct {
     fz_device super;
     fz_rect* result;
     fz_rect pageRect;
     int top;
-    fz_rect stack[CONTENT_BBOX_STACK_SIZE];
+    fz_rect stack[kContentBboxStackSize];
     // mask content and tiles are ignored
     int ignore;
 } fz_content_bbox_device;
@@ -5705,16 +5705,16 @@ typedef struct {
 static void fz_content_bbox_add_rect(fz_device* dev, fz_rect rect, bool clip) {
     fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
 
-    if (0 < d->top && d->top <= CONTENT_BBOX_STACK_SIZE) {
+    if (0 < d->top && d->top <= kContentBboxStackSize) {
         rect = fz_intersect_rect(rect, d->stack[d->top - 1]);
     }
-    if (!clip && d->top <= CONTENT_BBOX_STACK_SIZE && !d->ignore) {
+    if (!clip && d->top <= kContentBboxStackSize && !d->ignore) {
         // only the part that lands on the page is content. Disjoint rects
         // intersect to an invalid one, which fz_union_rect() ignores - so ink
         // fully outside the page contributes nothing
         *d->result = fz_union_rect(*d->result, fz_intersect_rect(rect, d->pageRect));
     }
-    if (clip && ++d->top <= CONTENT_BBOX_STACK_SIZE) {
+    if (clip && ++d->top <= kContentBboxStackSize) {
         d->stack[d->top - 1] = rect;
     }
 }

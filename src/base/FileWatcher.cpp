@@ -59,7 +59,7 @@ TODO:
 */
 
 // there's a balance between responsiveness to changes and efficiency
-#define FILEWATCH_DELAY_IN_MS 1000
+constexpr int kFileWatchDelayInMs = 1000;
 
 // Some people use overlapped.hEvent to store data but I'm playing it safe.
 struct OverlappedEx {
@@ -368,7 +368,7 @@ static DWORD GetTimeoutInMs() {
     ScopedMutex cs(&gFileWatcherMutex);
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->isManualCheck) {
-            return FILEWATCH_DELAY_IN_MS;
+            return kFileWatchDelayInMs;
         }
     }
     return INFINITE;

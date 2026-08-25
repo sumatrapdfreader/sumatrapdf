@@ -174,7 +174,7 @@ const CssSelector* CssPullParser::NextSelector() {
         (sel.clazz && sel.clazz.s == src.s + selStart + 1) ||
         (c == (sel.clazz ? (int)(sel.clazz.s - src.s - 1) : sEnd) && c == selStart + 1 && src.s[selStart] == '*');
     if (isAnyTag) {
-        sel.tag = Tag_Any;
+        sel.tag = kTagAny;
     } else if (c == selStart) {
         size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - src.s - selStart - 1) : (size_t)sel.s.len;
         sel.tag = FindHtmlTag(Str(sel.s.s, (int)tagLen));

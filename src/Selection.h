@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define SMOOTHSCROLL_TIMER_ID 2
-#define SMOOTHSCROLL_DELAY_IN_MS 20
-#define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
+constexpr int kSelectSmoothScrollTimerID = 2;
+constexpr int kSelectSmoothScrollDelayInMs = 20;
+constexpr int kSelectSmoothScrollSlowDownFactor = 10;
 
 struct Gfx;
 struct WindowTab;

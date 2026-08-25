@@ -33,8 +33,8 @@ Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
 
 // note: gdi+ seems to under-report the width, the longer the text, the
 // bigger the difference. I'm trying to correct for that with those magic values
-#define PER_CHAR_DX_ADJUST .2f
-#define PER_STR_DX_ADJUST 1.f
+constexpr float kPerCharDxAdjust = .2f;
+constexpr float kPerStrDxAdjust = 1.f;
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
 RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
@@ -63,7 +63,7 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
     Gdiplus::RectF bbox;
     r.GetBounds(&bbox, g);
     if (bbox.Width != 0) {
-        bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)n);
+        bbox.Width += kPerStrDxAdjust + (kPerCharDxAdjust * (float)n);
     }
     return RectF{bbox};
 }

@@ -6,7 +6,7 @@
 
 static HINSTANCE hInst;
 static const WCHAR* gWindowTitle = L"Test layout";
-static const WCHAR* WIN_CLASS = L"LayutWndCls";
+static const WCHAR* kWinClass = L"LayutWndCls";
 static HWND g_hwnd = nullptr;
 static VBox* vboxLayout = nullptr;
 static ILayout* mainLayout = nullptr;
@@ -256,14 +256,14 @@ static ATOM RegisterWinClass(HINSTANCE hInstance) {
     wcex.hCursor = GetCachedCursor(IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_TESTWIN);
-    wcex.lpszClassName = WIN_CLASS;
+    wcex.lpszClassName = kWinClass;
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
     return RegisterClassExW(&wcex);
 }
 
 static BOOL CreateMainWindow(HINSTANCE hInstance, int nCmdShow) {
     hInst = hInstance;
-    const WCHAR* cls = WIN_CLASS;
+    const WCHAR* cls = kWinClass;
 
     DWORD dwExStyle = 0;
     DWORD dwStyle = WS_OVERLAPPEDWINDOW;

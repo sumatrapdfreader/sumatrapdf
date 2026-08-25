@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define kTabBarDy 24
+constexpr int kTabBarDy = 24;
 
 int GetTabbarHeight(HWND, float factor = 1.f);
 

@@ -32,7 +32,7 @@ static bool gSaveImages = false;
 // if true, we'll do a layout of mobi files
 static bool gLayout = false;
 // directory to which we'll save mobi html and images
-#define kMobiSaveDir "..\\ebooks-converted"
+constexpr const char* kMobiSaveDir = "..\\ebooks-converted";
 
 static int Usage() {
     printf("Tester.exe\n");

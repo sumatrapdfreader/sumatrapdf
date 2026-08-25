@@ -6,7 +6,7 @@
 // VirtCloseButton. Include after gui/VirtCtrl.h (and its PlatformFont/Gfx
 // prerequisites).
 
-#define kTabMinDx 100
+constexpr int kTabMinDx = 100;
 
 struct TabsCtrl;
 struct TabInfo;
@@ -15,7 +15,7 @@ struct VirtRoot;
 struct VirtCloseButton;
 struct VirtMouseEvent;
 
-#define kTabDefaultBgCol ((Color)(-1))
+constexpr Color kTabDefaultBgCol = (Color)-1;
 
 struct TabInfo {
     Str text;

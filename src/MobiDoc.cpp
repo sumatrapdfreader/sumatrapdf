@@ -19,14 +19,14 @@
 constexpr int kInvalidSize = -1;
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
-#define COMPRESSION_NONE 1
-#define COMPRESSION_PALM 2
-#define COMPRESSION_HUFF 17480
-#define COMPRESSION_UNSUPPORTED_DRM (-1)
+constexpr int kCompressionNone = 1;
+constexpr int kCompressionPalm = 2;
+constexpr int kCompressionHuff = 17480;
+constexpr int kCompressionUnsupportedDrm = -1;
 
-#define ENCRYPTION_NONE 0
-#define ENCRYPTION_OLD 1
-#define ENCRYPTION_NEW 2
+constexpr int kEncryptionNone = 0;
+constexpr int kEncryptionOld = 1;
+constexpr int kEncryptionNew = 2;
 
 struct PalmDocHeader {
     u16 compressionType = 0;
@@ -43,7 +43,7 @@ struct PalmDocHeader {
         } mobi;
     };
 };
-#define kPalmDocHeaderLen 16
+constexpr int kPalmDocHeaderLen = 16;
 
 // http://wiki.mobileread.com/wiki/MOBI#PalmDOC_Header
 static void DecodePalmDocHeader(const u8* buf, PalmDocHeader* hdr) {
@@ -61,9 +61,9 @@ static void DecodePalmDocHeader(const u8* buf, PalmDocHeader* hdr) {
 // http://wiki.mobileread.com/wiki/MOBI#MOBI_Header
 // Note: the real length of MobiHeader is in MobiHeader.hdrLen. This is just
 // the size of the struct
-#define kMobiHeaderLen 232
+constexpr int kMobiHeaderLen = 232;
 // length up to MobiHeader.exthFlags
-#define kMobiHeaderMinLen 116
+constexpr int kMobiHeaderMinLen = 116;
 struct MobiHeader {
     char id[4];
     u32 hdrLen; // including 4 id bytes
@@ -150,7 +150,7 @@ static bool PalmdocUncompress(const u8* src, int srcLen, str::Builder& dst) {
     return true;
 }
 
-#define kHuffHeaderLen 24
+constexpr int kHuffHeaderLen = 24;
 struct HuffHeader {
     char id[4]; // "HUFF"
     u32 hdrLen; // should be 24
@@ -165,7 +165,7 @@ struct HuffHeader {
 };
 static_assert(kHuffHeaderLen == sizeof(HuffHeader), "wrong size of HuffHeader structure");
 
-#define kCdicHeaderLen 16
+constexpr int kCdicHeaderLen = 16;
 struct CdicHeader {
     char id[4]; // "CIDC"
     u32 hdrLen; // should be 16
@@ -175,15 +175,15 @@ struct CdicHeader {
 
 static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader structure");
 
-#define kCacheItemCount 256
-#define kCacheDataLen (kCacheItemCount * sizeof(u32))
-#define kBaseTableItemCount 64
-#define kBaseTableDataLen (kBaseTableItemCount * sizeof(u32))
+constexpr int kCacheItemCount = 256;
+constexpr int kCacheDataLen = kCacheItemCount * (int)sizeof(u32);
+constexpr int kBaseTableItemCount = 64;
+constexpr int kBaseTableDataLen = kBaseTableItemCount * (int)sizeof(u32);
 
-#define kHuffRecordMinLen (kHuffHeaderLen + kCacheDataLen + kBaseTableDataLen)
-#define kHuffRecordLen (kHuffHeaderLen + 2 * kCacheDataLen + 2 * kBaseTableDataLen)
+constexpr int kHuffRecordMinLen = kHuffHeaderLen + kCacheDataLen + kBaseTableDataLen;
+constexpr int kHuffRecordLen = kHuffHeaderLen + 2 * kCacheDataLen + 2 * kBaseTableDataLen;
 
-#define kCdicsMax 32
+constexpr int kCdicsMax = 32;
 
 struct HuffDicDecompressor {
     u32 cacheTable[kCacheItemCount]{};
@@ -452,7 +452,7 @@ static void DecodeMobiDocHeader(const u8* buf, int bufLen, MobiHeader* hdr) {
 }
 
 static bool IsValidCompression(int comprType) {
-    return (COMPRESSION_NONE == comprType) || (COMPRESSION_PALM == comprType) || (COMPRESSION_HUFF == comprType);
+    return (kCompressionNone == comprType) || (kCompressionPalm == comprType) || (kCompressionHuff == comprType);
 }
 
 MobiDoc::MobiDoc(Str filePath) {
@@ -502,7 +502,7 @@ bool MobiDoc::ParseHeader() {
     if (PdbDocType::Mobipocket == docType) {
         // TODO: this needs to be surfaced to the client so
         // that we can show the right error message
-        if (palmDocHdr.mobi.encrType != ENCRYPTION_NONE) {
+        if (palmDocHdr.mobi.encrType != kEncryptionNone) {
             logf("encryption is unsupported\n");
             return false;
         }
@@ -540,7 +540,7 @@ bool MobiDoc::ParseHeader() {
     if (mobiHdr.drmEntriesCount != (u32)-1) {
         logf("DRM is unsupported\n");
         // load an empty document and display a warning
-        compressionType = COMPRESSION_UNSUPPORTED_DRM;
+        compressionType = kCompressionUnsupportedDrm;
         Str v = strconv::WStrToCodePage(mobiHdr.textEncoding, WStrL(L"DRM"));
         AddPropOwned(props, DocProp::UnsupportedFeatures, v);
         str::Free(v);
@@ -573,7 +573,7 @@ bool MobiDoc::ParseHeader() {
         }
     }
 
-    if (COMPRESSION_HUFF == compressionType) {
+    if (kCompressionHuff == compressionType) {
         ReportIf(PdbDocType::Mobipocket != docType);
         rec = pdbReader->GetRecord((int)mobiHdr.huffmanFirstRec);
         int huffRecSize = rec.len;
@@ -680,17 +680,17 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
     return true;
 }
 
-#define EOF_REC 0xe98e0d0a
-#define FLIS_REC 0x464c4953 // 'FLIS'
-#define FCIS_REC 0x46434953 // 'FCIS
-#define FDST_REC 0x46445354 // 'FDST'
-#define DATP_REC 0x44415450 // 'DATP'
-#define SRCS_REC 0x53524353 // 'SRCS'
-#define VIDE_REC 0x56494445 // 'VIDE'
-#define RESC_REC 0x52455343 // 'RESC'
+constexpr int kEofRec = 0xe98e0d0a;
+constexpr int kFlisRec = 0x464c4953; // 'FLIS'
+constexpr int kFcisRec = 0x46434953; // 'FCIS
+constexpr int kFdstRec = 0x46445354; // 'FDST'
+constexpr int kDatpRec = 0x44415450; // 'DATP'
+constexpr int kSrcsRec = 0x53524353; // 'SRCS'
+constexpr int kVideRec = 0x56494445; // 'VIDE'
+constexpr int kRescRec = 0x52455343; // 'RESC'
 
 static bool IsEofRecord(Str d) {
-    return (4 == d.len) && (EOF_REC == UInt32BE((u8*)d.s));
+    return (4 == d.len) && (kEofRec == UInt32BE((u8*)d.s));
 }
 
 static bool KnownNonImageRec(Str d) {
@@ -700,13 +700,13 @@ static bool KnownNonImageRec(Str d) {
     u32 sig = UInt32BE((u8*)d.s);
 
     switch (sig) {
-        case FLIS_REC:
-        case FCIS_REC:
-        case FDST_REC:
-        case DATP_REC:
-        case SRCS_REC:
-        case VIDE_REC:
-        case RESC_REC:
+        case kFlisRec:
+        case kFcisRec:
+        case kFdstRec:
+        case kDatpRec:
+        case kSrcsRec:
+        case kVideRec:
+        case kRescRec:
             return true;
     }
     return false;
@@ -828,25 +828,25 @@ bool MobiDoc::LoadDocRecordIntoBuffer(int recNo, str::Builder& strOut) {
         return false;
     }
 
-    if (COMPRESSION_NONE == compressionType) {
+    if (kCompressionNone == compressionType) {
         strOut.Append(Str((char*)recData, recSize));
         return true;
     }
-    if (COMPRESSION_PALM == compressionType) {
+    if (kCompressionPalm == compressionType) {
         bool ok = PalmdocUncompress(recData, recSize, strOut);
         if (!ok) {
             logf("PalmDoc decompression failed\n");
         }
         return ok;
     }
-    if (COMPRESSION_HUFF == compressionType && huffDic) {
+    if (kCompressionHuff == compressionType && huffDic) {
         bool ok = huffDic->Decompress(recData, recSize, strOut);
         if (!ok) {
             logf("HuffDic decompression failed\n");
         }
         return ok;
     }
-    if (COMPRESSION_UNSUPPORTED_DRM == compressionType) {
+    if (kCompressionUnsupportedDrm == compressionType) {
         // ensure a single blank page
         if (1 == recNo) {
             strOut.Append(StrL("&nbsp;"));
@@ -1341,7 +1341,7 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
     PalmDocHeader palm;
     DecodePalmDocHeader((const u8*)rec0.s, &palm);
     u16 encrType = ByteReader(rec0).UInt16BE(12);
-    if (encrType != ENCRYPTION_NONE) {
+    if (encrType != kEncryptionNone) {
         logf("ExtractPdfFromPrintReplica: encrypted\n");
         return {};
     }
@@ -1369,7 +1369,7 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
         return {};
     }
 
-    if (!IsValidCompression(palm.compressionType) || palm.compressionType == COMPRESSION_HUFF) {
+    if (!IsValidCompression(palm.compressionType) || palm.compressionType == kCompressionHuff) {
         logf("ExtractPdfFromPrintReplica: unsupported compression %d\n", (int)palm.compressionType);
         return {};
     }
@@ -1398,9 +1398,9 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
         if (kInvalidSize == recSize) {
             recSize = rec.len;
         }
-        if (COMPRESSION_NONE == palm.compressionType) {
+        if (kCompressionNone == palm.compressionType) {
             raw.Append(Str(rec.s, recSize));
-        } else if (COMPRESSION_PALM == palm.compressionType) {
+        } else if (kCompressionPalm == palm.compressionType) {
             if (!PalmdocUncompress((const u8*)rec.s, recSize, raw)) {
                 logf("ExtractPdfFromPrintReplica: PalmDoc decompression failed\n");
                 return {};

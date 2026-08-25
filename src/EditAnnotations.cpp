@@ -44,8 +44,8 @@ extern "C" {
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
 
-constexpr int borderWidthMin = 0;
-constexpr int borderWidthMax = 12;
+constexpr int kBorderWidthMin = 0;
+constexpr int kBorderWidthMax = 12;
 constexpr int kMinAnnotListLines = 6;
 constexpr int kMaxAnnotListLines = 12;
 constexpr int kPreferredContentsLines = 6;
@@ -1126,7 +1126,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int borderWidth = BorderWidth(annot);
-    borderWidth = setMinMax(borderWidth, borderWidthMin, borderWidthMax);
+    borderWidth = setMinMax(borderWidth, kBorderWidthMin, kBorderWidthMax);
     TempStr s = fmt(_TRA("Border: %d").s, borderWidth);
     ew->staticBorder->SetText(s);
     ew->trackbarBorder->SetValue(borderWidth);
@@ -1321,7 +1321,7 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->buttonEmbedAttachment->SetIsVisible(vis);
 }
 
-#define kAnnotationHoverOverlayClassName L"SumatraAnnotationHoverOverlay"
+constexpr const WCHAR* kAnnotationHoverOverlayClassName = L"SumatraAnnotationHoverOverlay";
 
 struct AnnotationHoverRows {
     StrVec keys;
@@ -1369,17 +1369,17 @@ static TempStr ShortAnnotationHoverValueTemp(Str value, int maxRunes = 72) {
 }
 
 static TempStr ShortAnnotationContentsTemp(Str value) {
-    constexpr int maxRunes = 32;
+    constexpr int kMaxRunes = 32;
     TempStr oneLine = str::NormalizeWSTemp(value);
     int nRunes = utf8StrLen((const u8*)CStrTemp(oneLine));
-    if (nRunes >= 0 && nRunes <= maxRunes) {
+    if (nRunes >= 0 && nRunes <= kMaxRunes) {
         return oneLine;
     }
 
-    int bytesToKeep = std::min(maxRunes, len(oneLine));
+    int bytesToKeep = std::min(kMaxRunes, len(oneLine));
     if (nRunes >= 0) {
         bytesToKeep = 0;
-        for (int i = 0; i < maxRunes; i++) {
+        for (int i = 0; i < kMaxRunes; i++) {
             int runeBytes = utf8RuneLen((const u8*)oneLine.s + bytesToKeep);
             ReportIf(runeBytes <= 0);
             if (runeBytes <= 0) {
@@ -1387,7 +1387,7 @@ static TempStr ShortAnnotationContentsTemp(Str value) {
             }
             bytesToKeep += runeBytes;
         }
-    } else if (len(oneLine) <= maxRunes) {
+    } else if (len(oneLine) <= kMaxRunes) {
         return oneLine;
     }
     return str::JoinTemp(Str(oneLine.s, bytesToKeep), StrL("..."));
@@ -1490,7 +1490,7 @@ static AnnotationHoverOverlay* GetOrCreateAnnotationHoverOverlay(MainWindow* win
 
     VirtHost::CreateArgs args;
     args.parent = win->hwndFrame;
-    args.className = WStrL(kAnnotationHoverOverlayClassName);
+    args.className = WStr(kAnnotationHoverOverlayClassName);
     args.initialSize = {1, 1};
     args.bgColor = AnnotationHoverBg();
     args.isPopup = true;
@@ -2552,7 +2552,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     AddAnnotOptRow(opts, optRow++, ew->staticIcon, ew->dropDownIcon);
 
     ew->staticBorder = CreateAnnotOptLabel(_TRA("Border:"));
-    ew->trackbarBorder = makeTrackbar(borderWidthMin, borderWidthMax);
+    ew->trackbarBorder = makeTrackbar(kBorderWidthMin, kBorderWidthMax);
     ew->trackbarBorder->onPositionChanging = MkFunc1(BorderWidthChanging, ew);
     AddAnnotOptRow(opts, optRow++, ew->staticBorder, ew->trackbarBorder);
 

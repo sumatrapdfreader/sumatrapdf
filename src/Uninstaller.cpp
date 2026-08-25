@@ -164,7 +164,7 @@ static void UninstallerThread() {
 
     log(StrL("UninstallerThread finished\n"));
     if (!gCli->silent) {
-        PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+        PostMessageW(gHwndFrame, kWmAppInstallationFinished, 0, 0);
     }
 }
 
@@ -175,7 +175,7 @@ static void OnButtonUninstall() {
 
     // disable the button during uninstallation
     gButtonUninstaller->SetIsEnabled(false);
-    SetMsg(_TRA("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
+    SetMsg(_TRA("Uninstallation in progress..."), kColorMsgInstallation);
     HwndRepaintNow(gHwndFrame);
 
     auto fn = MkFunc0Void(UninstallerThread);
@@ -192,7 +192,7 @@ static void OnUninstallationFinished() {
     gButtonUninstaller = nullptr;
     gButtonExit = CreateDefaultButton(gHwndFrame, _TRA("Close"), isRtl);
     gButtonExit->onClick = MkFunc0Void(OnButtonExit);
-    SetMsg(_TRA("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
+    SetMsg(_TRA("SumatraPDF has been uninstalled."), gMsgError ? kColorMsgFailed : kColorMsgOk);
     gMsgError = gFirstError;
     HwndRepaintNow(gHwndFrame);
 
@@ -211,7 +211,7 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
     return true;
 }
 
-#define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
+constexpr const WCHAR* kInstallerWindowClassName = L"SUMATRA_PDF_INSTALLER_FRAME";
 
 static void CreateUninstallerWindow() {
     TempStr title = fmt(_TRA("SumatraPDF %s Uninstaller").s, StrL(CURR_VERSION_STRA));
@@ -284,7 +284,7 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
             break;
         }
 
-        case WM_APP_INSTALLATION_FINISHED: {
+        case kWmAppInstallationFinished: {
             OnUninstallationFinished();
             if (gButtonExit) {
                 HwndSetFocus(gButtonExit->hwnd);

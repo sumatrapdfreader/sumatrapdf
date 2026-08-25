@@ -127,14 +127,14 @@ static bool RegisterWinClass() {
     HMODULE h = GetModuleHandleW(nullptr);
     HBRUSH bgBrush = CreateSolidBrush(ThemeMainWindowBackgroundColor());
     gWinClassBgBrush = bgBrush;
-    FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcSumatraFrame);
+    FillWndClassEx(wcex, kFrameClassName, WndProcSumatraFrame);
     // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on every resize
     wcex.style = 0;
     wcex.hIcon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
     wcex.hbrBackground = bgBrush;
     RegisterClassEx(&wcex);
 
-    FillWndClassEx(wcex, CANVAS_CLASS_NAME, WndProcCanvas);
+    FillWndClassEx(wcex, kCanvasClassName, WndProcCanvas);
     // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on resize
     wcex.style = CS_DBLCLKS;
     wcex.hbrBackground = bgBrush;
@@ -632,7 +632,7 @@ Retry:
         // returns true for every window, so we reuse the first one as before.
         ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
         HWND otherDesktopWnd = nullptr; // a window of the prev instance, on another desktop
-        while ((hwnd = FindWindowExW(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
+        while ((hwnd = FindWindowExW(HWND_DESKTOP, hwnd, kFrameClassName, nullptr)) != nullptr) {
             DWORD wndProcId;
             GetWindowThreadProcessId(hwnd, &wndProcId);
             if (wndProcId != prevProcId) {
@@ -1114,31 +1114,31 @@ static bool IsLibsumatrapdfAvRaceError(DWORD err) {
 // 8c09d3b87000001 with err=4551 ("An Application Control policy has blocked this file.").
 // Older SDKs / MinGW lack these Smart App Control / System Integrity error codes.
 #ifndef ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION
-#define ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION 4551L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION = 4551L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_REPUTATION_MALICIOUS
-#define ERROR_SYSTEM_INTEGRITY_REPUTATION_MALICIOUS 4556L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_REPUTATION_MALICIOUS = 4556L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_REPUTATION_PUA
-#define ERROR_SYSTEM_INTEGRITY_REPUTATION_PUA 4557L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_REPUTATION_PUA = 4557L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_REPUTATION_DANGEROUS_EXT
-#define ERROR_SYSTEM_INTEGRITY_REPUTATION_DANGEROUS_EXT 4558L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_REPUTATION_DANGEROUS_EXT = 4558L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_REPUTATION_OFFLINE
-#define ERROR_SYSTEM_INTEGRITY_REPUTATION_OFFLINE 4559L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_REPUTATION_OFFLINE = 4559L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_REPUTATION_UNFRIENDLY_FILE
-#define ERROR_SYSTEM_INTEGRITY_REPUTATION_UNFRIENDLY_FILE 4580L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_REPUTATION_UNFRIENDLY_FILE = 4580L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_REPUTATION_UNATTAINABLE
-#define ERROR_SYSTEM_INTEGRITY_REPUTATION_UNATTAINABLE 4581L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_REPUTATION_UNATTAINABLE = 4581L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_REPUTATION_EXPLICIT_DENY_FILE
-#define ERROR_SYSTEM_INTEGRITY_REPUTATION_EXPLICIT_DENY_FILE 4582L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_REPUTATION_EXPLICIT_DENY_FILE = 4582L;
 #endif
 #ifndef ERROR_SYSTEM_INTEGRITY_WHQL_NOT_SATISFIED
-#define ERROR_SYSTEM_INTEGRITY_WHQL_NOT_SATISFIED 4583L
+constexpr DWORD ERROR_SYSTEM_INTEGRITY_WHQL_NOT_SATISFIED = 4583L;
 #endif
 static bool IsLibsumatrapdfAppControlError(DWORD err) {
     switch (err) {
@@ -2759,7 +2759,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     if (flags.printDialog || flags.stressTestPath || gPluginMode || gForTesting) {
         // TODO: pass print request through to previous instance?
     } else if (flags.reuseDdeInstance || flags.dde) {
-        existingHwnd = FindWindowW(FRAME_CLASS_NAME, nullptr);
+        existingHwnd = FindWindowW(kFrameClassName, nullptr);
     } else if (gGlobalPrefs->reuseInstance) {
         existingHwnd = existingInstanceHwnd;
     }

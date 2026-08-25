@@ -1,10 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-const int SUMATRA_UIA_STARTPAGE_RUNTIME_ID = 1;
-const int SUMATRA_UIA_DOCUMENT_RUNTIME_ID = 2;
+constexpr int kSumatraUiaStartPageRuntimeId = 1;
+constexpr int kSumatraUiaDocumentRuntimeId = 2;
 
-#define SUMATRA_UIA_PAGE_RUNTIME_ID(X) (100 + (X))
+constexpr int kSumatraUiaPageRuntimeId(int pageNum) {
+    return 100 + pageNum;
+}
 
 struct DisplayModel;
 class SumatraUIAutomationStartPageProvider;

@@ -2,15 +2,15 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #if OS_WIN
-#define PATH_SEP "\\"
-#define PATH_SEP_CHAR '\\'
-#define PATH_SEP_WSTR L"\\"
-#define PATH_SEP_WCHAR L'\\'
+#define kPathSep "\\"
+constexpr char kPathSepChar = '\\';
+constexpr const WCHAR* kPathSepWStr = L"\\";
+constexpr WCHAR kPathSepWChar = L'\\';
 #else
-#define PATH_SEP "/"
-#define PATH_SEP_CHAR '/'
-#define PATH_SEP_WSTR L"/"
-#define PATH_SEP_WCHAR L'/'
+#define kPathSep "/"
+constexpr char kPathSepChar = '/';
+constexpr const WCHAR* kPathSepWStr = L"/";
+constexpr WCHAR kPathSepWChar = L'/';
 #endif
 
 namespace path {

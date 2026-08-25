@@ -205,7 +205,7 @@ static Shortcut* FindScreenshotShortcutEntry() {
 
 // WM_KEYDOWN doesn't fire for VK_SNAPSHOT (PrtSc) because Windows intercepts it.
 // Use a low-level keyboard hook to capture it and post a custom message.
-constexpr UINT WM_HOTKEY_CAPTURED = WM_APP + 100;
+constexpr UINT kWmHotkeyCaptured = WM_APP + 100;
 static HHOOK gKeyboardHook = nullptr;
 static HWND gHotkeyDlgHwnd = nullptr;
 
@@ -213,7 +213,7 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wp, LPARAM lp) {
     if (nCode == HC_ACTION && (wp == WM_KEYDOWN || wp == WM_SYSKEYDOWN) && gHotkeyDlgHwnd) {
         auto* kb = (KBDLLHOOKSTRUCT*)lp;
         if (kb->vkCode == VK_SNAPSHOT) {
-            PostMessageW(gHotkeyDlgHwnd, WM_HOTKEY_CAPTURED, kb->vkCode, 0);
+            PostMessageW(gHotkeyDlgHwnd, kWmHotkeyCaptured, kb->vkCode, 0);
             return 1; // consume the key
         }
     }
@@ -373,7 +373,7 @@ VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
 }
 
 void SetHotkeyWnd::WndProc(WindowBase::WndProcEvent* ev) {
-    if (ev->msg == WM_HOTKEY_CAPTURED || ev->msg == WM_KEYDOWN || ev->msg == WM_SYSKEYDOWN) {
+    if (ev->msg == kWmHotkeyCaptured || ev->msg == WM_KEYDOWN || ev->msg == WM_SYSKEYDOWN) {
         HandleKeyDown((UINT)ev->wparam);
         ev->result = 0;
         ev->didHandle = true;

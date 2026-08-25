@@ -331,7 +331,7 @@ static void DumpThumbnail(EngineBase* engine) {
 }
 
 __unused static void DumpData(EngineBase* engine, bool fullDump) {
-    Out1(StrL(UTF8_BOM));
+    Out1(StrL(kUtf8Bom));
     Out1(StrL("<?xml version=\"1.0\"?>\n"));
     Out1(StrL("<EngineDump>\n"));
     DumpProperties(engine, fullDump);
@@ -399,7 +399,7 @@ __unused static bool RenderDocument(EngineBase* engine, Str renderPath, float zo
         }
         TempStr txtFilePath = fmt(renderPath.s, 0);
         TempStr textCrLf = str::ReplaceTemp(ToStr(text), StrL("\n"), StrL("\r\n"));
-        TempStr textUTF8BOM = str::JoinTemp(StrL(UTF8_BOM), textCrLf);
+        TempStr textUTF8BOM = str::JoinTemp(StrL(kUtf8Bom), textCrLf);
         return file::WriteFile(txtFilePath, textUTF8BOM);
     }
 

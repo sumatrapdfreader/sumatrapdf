@@ -17,8 +17,8 @@ void log(Str s) {
 }
 void _uploadDebugReport(Str, Str, bool, bool) {}
 
-#define PLUGIN_TEST_NAMEA "SumatraPDF Plugin Test"
-#define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
+#define kPluginTestNameA "SumatraPDF Plugin Test"
+constexpr const WCHAR* kPluginTestName = L"SumatraPDF Plugin Test";
 
 struct PluginStartData {
     // path to SumatraPDF.exe
@@ -103,7 +103,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     if (len(argList) == 1) {
         TempStr name = path::GetBaseNameTemp(argList[0]);
         TempStr msg = fmt("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
-        MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
+        MsgBox(nullptr, msg, kPluginTestNameA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
     if (len(argList) == 2 || !str::EndsWithI(argList[1], StrL(".exe"))) {
@@ -116,12 +116,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     WNDCLASS wc{};
     wc.lpfnWndProc = PluginParentWndProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = PLUGIN_TEST_NAME;
+    wc.lpszClassName = kPluginTestName;
     wc.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClass(&wc);
 
     PluginStartData data = {argList[1], argList[3], argList[2]};
-    HWND hwnd = CreateWindowExW(0, PLUGIN_TEST_NAME, PLUGIN_TEST_NAME, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
+    HWND hwnd = CreateWindowExW(0, kPluginTestName, kPluginTestName, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
                                 CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, &data);
     ShowWindow(hwnd, nCmdShow);
 

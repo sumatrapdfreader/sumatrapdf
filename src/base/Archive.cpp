@@ -23,7 +23,7 @@
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written
-#define ZERO_PADDING_COUNT 3
+constexpr int kZeroPaddingCount = 3;
 
 thread_local ArchiveExtractProgressCb gArchiveProgressCb{};
 
@@ -80,7 +80,7 @@ static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
     if (size <= 0) {
         return;
     }
-    fileInfo->data = AllocArray<char>(size + ZERO_PADDING_COUNT);
+    fileInfo->data = AllocArray<char>(size + kZeroPaddingCount);
     if (!fileInfo->data) {
         fileInfo->failed = true; // OOM
         return;
@@ -454,12 +454,12 @@ void Archive::LoadFileDataByIdLibarchive(int fileId) {
             continue;
         }
         int size = fileInfo->fileSizeUncompressed;
-        if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
+        if (addOverflows<int>(size, kZeroPaddingCount)) {
             archive_read_free(a);
             fileInfo->failed = true;
             return;
         }
-        u8* data = AllocArray<u8>(size + ZERO_PADDING_COUNT);
+        u8* data = AllocArray<u8>(size + kZeroPaddingCount);
         if (!data) {
             archive_read_free(a);
             return; // OOM: retry later
@@ -492,7 +492,7 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
     // if full data is cached, return a copy of the prefix
     if (fileInfo->data != nullptr) {
         int n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
-        u8* data = AllocArray<u8>(n + ZERO_PADDING_COUNT);
+        u8* data = AllocArray<u8>(n + kZeroPaddingCount);
         if (!data) {
             return {};
         }
@@ -515,7 +515,7 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
         if (idx == fileId) {
             int fullSize = fileInfo->fileSizeUncompressed;
             int toRead = std::min(fullSize, sizeHint);
-            u8* data = AllocArray<u8>(toRead + ZERO_PADDING_COUNT);
+            u8* data = AllocArray<u8>(toRead + kZeroPaddingCount);
             if (!data) {
                 archive_read_free(a);
                 return {};
@@ -694,13 +694,13 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     }
     size = fileInfo->fileSizeUncompressed;
     ReportIf(size != (int)rarHeader.UnpSize);
-    if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
+    if (addOverflows<int>(size, kZeroPaddingCount)) {
         permanent = true;
         ok = false;
         goto Exit;
     }
 
-    data = AllocArray<char>(size + ZERO_PADDING_COUNT);
+    data = AllocArray<char>(size + kZeroPaddingCount);
     if (!data) {
         ok = false;
         goto Exit; // OOM: retry later
@@ -731,7 +731,7 @@ Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
     ReportIf(fileInfo->fileId != fileId);
     if (fileInfo->data != nullptr) {
         int n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
-        u8* data = AllocArray<u8>(n + ZERO_PADDING_COUNT);
+        u8* data = AllocArray<u8>(n + kZeroPaddingCount);
         if (!data) {
             return {};
         }
@@ -759,12 +759,12 @@ Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
     }
     // allocate only sizeHint bytes; the callback will stop when the buffer is full
     size = std::min(fileInfo->fileSizeUncompressed, sizeHint);
-    if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
+    if (addOverflows<int>(size, kZeroPaddingCount)) {
         ok = false;
         goto Exit;
     }
 
-    data = AllocArray<char>(size + ZERO_PADDING_COUNT);
+    data = AllocArray<char>(size + kZeroPaddingCount);
     if (!data) {
         ok = false;
         goto Exit;

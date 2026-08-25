@@ -90,7 +90,7 @@ static bool IsSpecialDir(Str s) {
 // IO_REPARSE_TAG_APPEXECLINK. FindFirstFile reports size 0; the reparse
 // buffer names the real package executable, whose size is what to show.
 #ifndef IO_REPARSE_TAG_APPEXECLINK
-#define IO_REPARSE_TAG_APPEXECLINK (0x8000001BL)
+constexpr ULONG IO_REPARSE_TAG_APPEXECLINK = 0x8000001BL;
 #endif
 
 static bool IsAbsolutePathW(const WCHAR* s, int cch) {
