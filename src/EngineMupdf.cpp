@@ -902,31 +902,28 @@ static bool IsUnicodeScalar(int rune) {
     return true;
 }
 
-// Horizontal gap between the previous glyph and the next, in page units.
-// Used to drop "tracking" spaces that PDF writers insert between syllables
-// (look like word breaks to MuPDF but have near-zero visual gap) — #5627.
-static float GlyphGapX(const fz_stext_char* prev, const fz_stext_char* next) {
-    if (!prev || !next) {
-        return 1e9f;
-    }
-    fz_rect pr = fz_rect_from_quad(prev->quad);
-    // next origin vs previous glyph's right edge
-    return next->origin.x - pr.x1;
-}
-
 // True if this space is only tracking/justification between syllables, not a
 // real word break. PDFs that place space operators (or MuPDF synthetic spaces)
 // between every syllable produce "Kro nik, im mün" on copy (#5627).
-static bool IsTrackingSpace(const fz_stext_char* prevNonSpace, const fz_stext_char* nextNonSpace) {
-    if (!prevNonSpace || !nextNonSpace) {
+//
+// Measure from the space's own origin to the next letter, not from the previous
+// letter's font-box right edge. Without FZ_STEXT_ACCURATE_BBOXES the quad is
+// font-height, so italic shear of the full ascender can push prev.quad.x1 past
+// the next origin and a real ~0.25em word space looks negative (bug-5627
+// "Helicobacter pylori" after matching 3.6.1 selection boxes).
+static bool IsTrackingSpace(const fz_stext_char* space, const fz_stext_char* nextNonSpace) {
+    if (!space || !nextNonSpace) {
         return false;
     }
-    float gap = GlyphGapX(prevNonSpace, nextNonSpace);
-    float size = std::max(prevNonSpace->size, nextNonSpace->size);
+    float gap = nextNonSpace->origin.x - space->origin.x;
+    float size = space->size;
+    if (size <= 0) {
+        size = nextNonSpace->size;
+    }
     if (size <= 0) {
         size = 1.f;
     }
-    // Measured gap/size across tracking (#5627), ordinary body text, and
+    // Measured advance/size across tracking (#5627), ordinary body text, and
     // condensed headers (#5871 CompTIA / MyriadPro-BoldCond):
     //   tracking syllables: ~0.00-0.02em (often near zero)
     //   condensed real word spaces: ~0.16em
@@ -1074,9 +1071,8 @@ static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& cont
                                  Vec<SeenGlyph>& seen, Str hardLineSep, Str softLineSep) {
     fz_stext_line* line = block->u.t.first_line;
     while (line) {
-        // Walk each line with prev/next non-space so tracking spaces can be
-        // dropped (issue #5627: Turkish PDFs that space every syllable).
-        fz_stext_char* prevNonSpace = nullptr;
+        // Walk each line so tracking spaces can be dropped (issue #5627:
+        // Turkish PDFs that space every syllable).
         fz_stext_char* c = line->first_char;
         while (c) {
             int rune = c->c;
@@ -1099,15 +1095,12 @@ static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& cont
                     }
                     nextNonSpace = nextNonSpace->next;
                 }
-                if (IsTrackingSpace(prevNonSpace, nextNonSpace)) {
+                if (IsTrackingSpace(c, nextNonSpace)) {
                     c = c->next;
                     continue;
                 }
             }
             AddCharUtf8(line, c, content, rects, seen);
-            if (!isWs) {
-                prevNonSpace = c;
-            }
             c = c->next;
         }
         // Soft-join reflow lines within a paragraph for better copy (#5793);
