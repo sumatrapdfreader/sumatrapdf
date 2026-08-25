@@ -533,13 +533,15 @@ export async function withControlledSumatra<T>(
     posArgs = ["-window-pos", `${p.dx}x${p.dy}@${p.x}x${p.y}`];
   }
   // stderr is piped: on a debug report the app writes the report text there
-  // before terminating, and we surface it in the failure below
+  // before terminating, and we surface it in the failure below. Drain it
+  // immediately so a verbose ASan dump cannot fill the pipe and stall exit.
   const proc = Bun.spawn([exe, "-for-testing", ...posArgs, "-dbg-control", pipeName, ...extraArgs], {
     stdout: "ignore",
     stderr: "pipe",
     cwd: options.cwd,
     env: cleanEnv(options.env),
   });
+  const stderrPromise: Promise<string> = proc.stderr ? new Response(proc.stderr).text() : Promise.resolve("");
   let client: ControlClient | undefined;
   let killed = false;
   let result: T | undefined;
@@ -567,19 +569,23 @@ export async function withControlledSumatra<T>(
   }
   // quit is graceful (CmdExit) and could in theory be blocked by a dialog;
   // don't let a test hang forever waiting for the process to go away
+  const quitMs = 30_000 * SLOW_BUILD_FACTOR;
   let exitTimer: ReturnType<typeof setTimeout> | undefined;
   const exitCode = await Promise.race([
     proc.exited,
     new Promise<"timeout">((resolve) => {
-      exitTimer = setTimeout(() => resolve("timeout"), 30_000);
+      exitTimer = setTimeout(() => resolve("timeout"), quitMs);
     }),
   ]);
   clearTimeout(exitTimer);
   if (exitCode === "timeout") {
     await killAndWait(proc);
-    throw new Error("SumatraPDF did not exit within 30s of Quit");
   }
-  const stderrText = proc.stderr ? (await new Response(proc.stderr).text()).trim() : "";
+  const stderrText = (await stderrPromise).trim();
+  if (exitCode === "timeout") {
+    const details = stderrText ? `\n${stderrText}` : "";
+    throw new Error(`SumatraPDF did not exit within ${quitMs / 1000}s of Quit${details}`);
+  }
   if (!fnOk) {
     if (stderrText) {
       console.error(stderrText);
