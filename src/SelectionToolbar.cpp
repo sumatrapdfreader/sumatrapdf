@@ -538,11 +538,14 @@ static bool PositionToolbar(SelectionToolbar* tb, const Rect& sel) {
     if (placed == tb->lastPlaced) {
         return false;
     }
+    // the region is window-relative, so a pure move (frame drag) must not
+    // SetWindowRgn — that is what jittered the bar on frequent updates
+    bool sizeChanged = tb->lastPlaced.dx != w || tb->lastPlaced.dy != h;
     tb->lastPlaced = placed;
     tb->host->SetBounds(placed);
-    // the region must match the layout size after the move (the window may
-    // have been 0x0, and a 1x1 region left the toolbar invisible)
-    tb->host->ClipToRoundedRect(kCornerRadius, {w, h});
+    if (sizeChanged) {
+        tb->host->ClipToRoundedRect(kCornerRadius, {w, h});
+    }
     return true;
 }
 
@@ -593,6 +596,10 @@ TempStr SelectionToolbarLayoutDumpTemp() {
     SelectionToolbar* tb = win ? GetOrCreateToolbar(win) : nullptr;
     bool visible = tb && tb->host && tb->host->IsVisible();
     out.Append(fmt("visible=%d\n", visible ? 1 : 0));
+    if (visible) {
+        Rect r = tb->host->ScreenRect();
+        out.Append(fmt("placed=%d,%d,%d,%d\n", r.x, r.y, r.dx, r.dy));
+    }
     if (!tb) {
         out.Append(StrL("buttons=0\n"));
         return ToStrTemp(out);
@@ -769,10 +776,14 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
         HideSelectionToolbar(win);
         return;
     }
-    // Canvas repaints often (e.g. read-aloud); skip work when the selection has
-    // not moved, otherwise SetWindowRgn / ScheduleRepaint jitter the bar.
+    // Canvas-space bounds are unchanged on a frame move (and on many canvas
+    // paints, e.g. read-aloud). Still recompute screen placement — cheap when
+    // lastPlaced already matches — so a sidebar resize that shifted hwndCanvas
+    // does not leave the popup behind. Skip InitButtons/LayoutToolbar/Invalidate
+    // on this path; those are what jittered the bar (plus 3229c8b2c).
     int slack = SelectionBoundsSlack();
     if (!SelectionBoundsChanged(sel, tb->lastSelBounds, slack)) {
+        PositionToolbar(tb, sel);
         return;
     }
     DWORD now = GetTickCount();
@@ -787,6 +798,24 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
     if (PositionToolbar(tb, sel)) {
         tb->host->Invalidate(false);
     }
+}
+
+// Keep the popup on the selection when the frame moves. Canvas-space bounds
+// do not change, and a move typically does not paint the canvas, so the
+// paint-path update never runs; WM_MOVE (and layout/DPI) call this instead.
+void RepositionSelectionToolbar(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    SelectionToolbar* tb = win->selectionToolbar;
+    if (!tb || !tb->host || !tb->host->IsVisible()) {
+        return;
+    }
+    Rect sel;
+    if (!GetSelectionBounds(win, sel)) {
+        return;
+    }
+    PositionToolbar(tb, sel);
 }
 
 void RefreshSelectionToolbarIcons(MainWindow* win) {

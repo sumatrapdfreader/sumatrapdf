@@ -7732,6 +7732,7 @@ static void FrameUpdateUi(MainWindow* win) {
         UpdateWindowFrameBorderColor(win);
         // re-anchor the floating find bar over the (possibly moved) search icon
         FindBarReposition(win);
+        RepositionSelectionToolbar(win);
         if (win->presentation || win->isFullScreen) {
             Rect fullscreen = HwndGetFullscreenRect(win->hwndFrame);
             Rect rect = HwndWindowRect(win->hwndFrame);
@@ -7915,6 +7916,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     RelayoutCaption(win);
     UpdateOverlayScrollbarPositions(win);
     FindBarReposition(win);
+    RepositionSelectionToolbar(win);
 
     MainWindowRerender(win, true);
     uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
@@ -14400,6 +14402,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_EXITSIZEMOVE:
             if (win) {
+                RepositionSelectionToolbar(win);
                 if (win->dpiChromeRefreshPending) {
                     uitask::Post(MkFunc0(FinishDeferredMainWindowDpiRefresh, win), "DpiSettled");
                 } else {
@@ -14424,6 +14427,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                 // keep the floating find bar anchored over the search icon
                 FindBarReposition(win);
                 ReadAloudPlaybackBarRelayout(win->hwndCanvas);
+                RepositionSelectionToolbar(win);
             }
             break;
 
