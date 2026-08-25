@@ -987,7 +987,9 @@ enum class ResizeHandle {
     BottomRight,
     Bottom,
     BottomLeft,
-    Left
+    Left,
+    LineStart,
+    LineEnd,
 };
 
 // Size of resize handle hit area (in pixels)
@@ -1362,6 +1364,31 @@ static void StartMouseDrag(MainWindow* win, int x, int y, bool right = false) {
     }
 }
 
+static bool IsLineEndpointHandle(ResizeHandle handle) {
+    return handle == ResizeHandle::LineStart || handle == ResizeHandle::LineEnd;
+}
+
+// Line annotations: hit-test the two endpoints, not the bounding-box handles.
+static ResizeHandle GetLineEndpointHandleAt(DisplayModel* dm, Point pt, Annotation* annot) {
+    PointF start, end;
+    if (!GetLinePoints(annot, start, end)) {
+        return ResizeHandle::None;
+    }
+    Point startPt = dm->CvtToScreen(annot->pageNo, start);
+    Point endPt = dm->CvtToScreen(annot->pageNo, end);
+    int hs = kResizeHandleSize;
+    auto dist = [&](Point p) { return std::max(abs(pt.x - p.x), abs(pt.y - p.y)); };
+    int dStart = dist(startPt);
+    int dEnd = dist(endPt);
+    if (dStart <= hs && dStart <= dEnd) {
+        return ResizeHandle::LineStart;
+    }
+    if (dEnd <= hs) {
+        return ResizeHandle::LineEnd;
+    }
+    return ResizeHandle::None;
+}
+
 // Get the resize handle at the given point for the selected annotation
 static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* annot) {
     if (!annot) {
@@ -1376,6 +1403,10 @@ static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* ann
     int pageNo = annot->pageNo;
     if (!dm->PageVisible(pageNo)) {
         return ResizeHandle::None;
+    }
+
+    if (annot->type == AnnotationType::Line) {
+        return GetLineEndpointHandleAt(dm, pt, annot);
     }
 
     Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
@@ -1419,6 +1450,9 @@ static LPWSTR GetCursorForResizeHandle(ResizeHandle handle) {
         case ResizeHandle::Left:
         case ResizeHandle::Right:
             return IDC_SIZEWE;
+        case ResizeHandle::LineStart:
+        case ResizeHandle::LineEnd:
+            return IDC_SIZEALL;
         default:
             return IDC_ARROW;
     }
@@ -1863,11 +1897,23 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                     // During resize, calculate and apply new rectangle in real-time
                     win->dragPrevPos = pos;
                     // Keep the resize cursor active during resize
-                    SetCursorCached(GetCursorForResizeHandle((ResizeHandle)win->resizeHandle));
+                    auto handle = (ResizeHandle)win->resizeHandle;
+                    SetCursorCached(GetCursorForResizeHandle(handle));
 
-                    // Calculate and apply the new rectangle based on current mouse position
-                    RectF newRect = CalculateResizedRect(win, x, y);
-                    SetRect(annot, newRect);
+                    if (IsLineEndpointHandle(handle)) {
+                        PointF pagePt = dm->CvtFromScreen(Point{x, y}, PageNo(annot));
+                        PointF start = win->annotationOriginalLineStart;
+                        PointF end = win->annotationOriginalLineEnd;
+                        if (handle == ResizeHandle::LineStart) {
+                            start = pagePt;
+                        } else {
+                            end = pagePt;
+                        }
+                        SetLinePoints(annot, start, end);
+                    } else {
+                        RectF newRect = CalculateResizedRect(win, x, y);
+                        SetRect(annot, newRect);
+                    }
                     // Keep the bounds indicator tracking the pointer using the
                     // existing page bitmap. Re-render the PDF only after the
                     // resize has been idle for a moment.
@@ -2010,6 +2056,11 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->dragStart = pt;
     RectF r = GetRect(annot);
     win->annotationOriginalRect = r;
+    win->annotationOriginalLineStart = {};
+    win->annotationOriginalLineEnd = {};
+    if (annot->type == AnnotationType::Line) {
+        GetLinePoints(annot, win->annotationOriginalLineStart, win->annotationOriginalLineEnd);
+    }
     win->annotationResizeAspectRatio = 0;
     if (annot->type == AnnotationType::Stamp && r.dx > 0 && r.dy > 0) {
         // Rubber stamps are regenerated at a fixed aspect ratio by MuPDF;
@@ -3378,17 +3429,26 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     int hs = 6;                                                          // handle size
     int hh = hs / 2;                                                     // half handle
 
+    auto drawHandle = [&](int x, int y) {
+        gs.FillRectangle(&handleBrush, x, y, hs, hs);
+        gs.DrawRectangle(&handlePen, x, y, hs, hs);
+    };
+
+    PointF lineStart, lineEnd;
+    if (annot->type == AnnotationType::Line && GetLinePoints(annot, lineStart, lineEnd)) {
+        Point startPt = dm->CvtToScreen(pageNo, lineStart);
+        Point endPt = dm->CvtToScreen(pageNo, lineEnd);
+        drawHandle(startPt.x - hh, startPt.y - hh);
+        drawHandle(endPt.x - hh, endPt.y - hh);
+        return;
+    }
+
     int left = rect.x - hh;
     int midX = rect.x + (rect.dx / 2) - hh;
     int right = rect.x + rect.dx - hh;
     int top = rect.y - hh;
     int midY = rect.y + (rect.dy / 2) - hh;
     int bottom = rect.y + rect.dy - hh;
-
-    auto drawHandle = [&](int x, int y) {
-        gs.FillRectangle(&handleBrush, x, y, hs, hs);
-        gs.DrawRectangle(&handlePen, x, y, hs, hs);
-    };
 
     // corners
     drawHandle(left, top);

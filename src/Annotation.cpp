@@ -204,14 +204,19 @@ void SetRect(Annotation* annot, RectF r) {
     {
         auto* ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
-        fz_rect rc = ToFzRect(r);
         float dx = r.x - annot->bounds.x;
         float dy = r.y - annot->bounds.y;
         fz_try(ctx) {
             if (annot->type == AnnotationType::Line) {
-                // line annotation doesn't have a rect but a line position
-                // TODO: not sure this is the right place for this
-                fz_point p1 = {rc.x0, rc.y0}, p2 = {rc.x1, rc.y1};
+                // /L is the two endpoints, not a rect. Translate them so a
+                // drag does not rewrite a top-right/bottom-left line as
+                // top-left/bottom-right of the bounds.
+                fz_point p1{}, p2{};
+                pdf_annot_line(ctx, a, &p1, &p2);
+                p1.x += dx;
+                p1.y += dy;
+                p2.x += dx;
+                p2.y += dy;
                 pdf_set_annot_line(ctx, a, p1, p2);
             } else if (annot->type == AnnotationType::Polygon || annot->type == AnnotationType::PolyLine) {
                 // /Rect is derived from Vertices; pdf_set_annot_rect rejects these.
@@ -242,7 +247,7 @@ void SetRect(Annotation* annot, RectF r) {
                     pdf_set_annot_ink_list(ctx, a, nStrokes, strokeCounts.els, pts.els);
                 }
             } else {
-                pdf_set_annot_rect(ctx, a, rc);
+                pdf_set_annot_rect(ctx, a, ToFzRect(r));
             }
             pdf_update_annot(ctx, a);
         }
@@ -1323,6 +1328,63 @@ void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
     if (end) {
         *end = (int)leEnd;
     }
+}
+
+// The /L endpoints of a Line annotation, in page coordinates.
+bool GetLinePoints(Annotation* annot, PointF& start, PointF& end) {
+    start = {};
+    end = {};
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Line) {
+        return false;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    fz_point aPt{}, bPt{};
+    bool ok = false;
+    fz_try(ctx) {
+        pdf_annot_line(ctx, a, &aPt, &bPt);
+        ok = true;
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("GetLinePoints: pdf_annot_line() failed\n");
+    }
+    if (!ok) {
+        return false;
+    }
+    start = {aPt.x, aPt.y};
+    end = {bPt.x, bPt.y};
+    return true;
+}
+
+// The two endpoints of a Line annotation (/L). Bounds follow from that.
+void SetLinePoints(Annotation* annot, PointF start, PointF end) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Line) {
+        return;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    bool failed = false;
+    {
+        auto* ctx = e->Ctx();
+        ScopedRecursiveMutex cs(&e->docLock);
+        fz_try(ctx) {
+            pdf_set_annot_line(ctx, a, fz_point{start.x, start.y}, fz_point{end.x, end.y});
+            pdf_update_annot(ctx, a);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            failed = true;
+            logf("SetLinePoints: pdf_set_annot_line() failed\n");
+        }
+    }
+    if (failed) {
+        return;
+    }
+    annot->bounds = GetBounds(annot);
+    MarkNotificationAsModified(e, annot);
 }
 
 int BorderWidth(Annotation* annot) {

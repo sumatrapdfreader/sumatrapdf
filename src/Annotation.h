@@ -131,6 +131,8 @@ int BorderWidth(Annotation*);
 Str IconName(Annotation*); // empty if no icon
 int Opacity(Annotation*);
 void GetLineEndingStyles(Annotation*, int* start, int* end);
+bool GetLinePoints(Annotation*, PointF& start, PointF& end);
+void SetLinePoints(Annotation*, PointF start, PointF end);
 
 void SetDefaultAppearanceTextFont(Annotation*, Str);
 void SetDefaultAppearanceTextSize(Annotation*, int);

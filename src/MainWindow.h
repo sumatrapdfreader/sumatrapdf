@@ -366,6 +366,8 @@ struct MainWindow {
     int resizeHandle = 0; // ResizeHandle enum casted to int
     bool annotationBeingResized = false;
     RectF annotationOriginalRect;
+    PointF annotationOriginalLineStart;
+    PointF annotationOriginalLineEnd;
     float annotationResizeAspectRatio = 0;
     UINT_PTR annotationResizeRerenderTimer = 0;
 
