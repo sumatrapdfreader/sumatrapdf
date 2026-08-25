@@ -3,7 +3,7 @@
 //
 // Run: bun tests/issue-6008.ts [--no-build]
 
-import { cmdId, runStandalone } from "./util.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR } from "./util.ts";
 import { getClientRect, getWindowPid, getWindowText, sleep, waitForTopWindow, waitForWindowIdle } from "./winapi.ts";
 import { clickAt, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -26,6 +26,16 @@ function requireDump(dump: string, needle: string) {
   }
 }
 
+async function waitClipboardReplaced(sentinel: string): Promise<string> {
+  const deadline = Date.now() + 3000 * SLOW_BUILD_FACTOR;
+  let dump = clipboardText();
+  while (dump.includes(sentinel) && Date.now() < deadline) {
+    await sleep(50);
+    dump = clipboardText();
+  }
+  return dump;
+}
+
 export async function testit(): Promise<void> {
   const sentinel = "issue-6008 clipboard sentinel";
   const set = Bun.spawnSync(["powershell.exe", "-NoProfile", "-Command", `Set-Clipboard -Value '${sentinel}'`], {
@@ -39,7 +49,7 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled([]);
   try {
     sendCommandSync(frame, cmdId("CmdHelpAbout"));
-    const about = await waitForTopWindow(proc.pid!, ABOUT_CLASS, 8000);
+    const about = await waitForTopWindow(proc.pid!, ABOUT_CLASS, 8000 * SLOW_BUILD_FACTOR);
     if (!about) {
       throw new Error("issue-6008: About window did not open");
     }
@@ -48,8 +58,7 @@ export async function testit(): Promise<void> {
     }
 
     sendCommandSync(about, cmdId("CmdCopySelection"));
-    await sleep(200);
-    let dump = clipboardText();
+    let dump = await waitClipboardReplaced(sentinel);
     if (dump.includes(sentinel)) {
       throw new Error("issue-6008: Ctrl+C / CmdCopySelection did not replace the clipboard");
     }
@@ -78,8 +87,8 @@ export async function testit(): Promise<void> {
     await waitForWindowIdle(about);
     const cr = getClientRect(about);
     // the copy-info button sits in the bottom padding, centered
-    await clickAt(about, Math.floor(cr.right / 2), cr.bottom - 24, 400);
-    dump = clipboardText();
+    await clickAt(about, Math.floor(cr.right / 2), cr.bottom - 24, 400 * SLOW_BUILD_FACTOR);
+    dump = await waitClipboardReplaced(sentinel2);
     if (dump.includes(sentinel2)) {
       throw new Error("issue-6008: button click did not copy program/machine info");
     }

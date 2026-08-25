@@ -1875,16 +1875,23 @@ static HWND GetClipboardOwnerWnd() {
 
 //--- clipboard
 
+// OpenClipboard fails when another process still holds it (Explorer, a just-
+// exited Set-Clipboard). Retry briefly rather than silently dropping the copy.
 bool OpenClipboardForUpdate() {
     HWND owner = GetClipboardOwnerWnd();
-    if (!owner || !OpenClipboard(owner)) {
+    if (!owner) {
         return false;
     }
-    if (!EmptyClipboard()) {
-        CloseClipboard();
-        return false;
+    for (int i = 0; i < 10; i++) {
+        if (OpenClipboard(owner)) {
+            if (EmptyClipboard()) {
+                return true;
+            }
+            CloseClipboard();
+        }
+        Sleep(20);
     }
-    return true;
+    return false;
 }
 
 void CloseClipboardAfterUpdate() {
