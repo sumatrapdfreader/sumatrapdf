@@ -368,6 +368,8 @@ struct MainWindow {
     RectF annotationOriginalRect;
     PointF annotationOriginalLineStart;
     PointF annotationOriginalLineEnd;
+    PointF annotationLinePreviewStart;
+    PointF annotationLinePreviewEnd;
     float annotationResizeAspectRatio = 0;
     UINT_PTR annotationResizeRerenderTimer = 0;
 

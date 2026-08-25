@@ -1515,7 +1515,15 @@ static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
+static bool StopAnnotationResize(MainWindow* win, bool aborted);
+
 void CancelDrag(MainWindow* win) {
+    if (StopAnnotationResize(win, true)) {
+        win->mouseAction = MouseAction::None;
+        win->linkOnLastButtonDown = nullptr;
+        SetCanvasCursor(win, IDC_ARROW);
+        return;
+    }
     auto pt = win->dragPrevPos;
     auto [x, y] = pt;
     StopMouseDrag(win, x, y, true);
@@ -1902,25 +1910,25 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
 
                     if (IsLineEndpointHandle(handle)) {
                         PointF pagePt = dm->CvtFromScreen(Point{x, y}, PageNo(annot));
-                        PointF start = win->annotationOriginalLineStart;
-                        PointF end = win->annotationOriginalLineEnd;
                         if (handle == ResizeHandle::LineStart) {
-                            start = pagePt;
+                            win->annotationLinePreviewStart = pagePt;
                         } else {
-                            end = pagePt;
+                            win->annotationLinePreviewEnd = pagePt;
                         }
-                        SetLinePoints(annot, start, end);
+                        // Overlay only: leave the PDF page bitmap alone until
+                        // the drag ends.
+                        ScheduleRepaint(win, 0);
                     } else {
                         RectF newRect = CalculateResizedRect(win, x, y);
                         SetRect(annot, newRect);
+                        // Keep the bounds indicator tracking the pointer using the
+                        // existing page bitmap. Re-render the PDF only after the
+                        // resize has been idle for a moment.
+                        ScheduleRepaint(win, 0);
+                        win->annotationResizeRerenderTimer = SetTimer(win->hwndCanvas, kAnnotationResizeRerenderTimerID,
+                                                                      kAnnotationResizeRerenderDelayMs, nullptr);
+                        ReportIf(!win->annotationResizeRerenderTimer);
                     }
-                    // Keep the bounds indicator tracking the pointer using the
-                    // existing page bitmap. Re-render the PDF only after the
-                    // resize has been idle for a moment.
-                    ScheduleRepaint(win, 0);
-                    win->annotationResizeRerenderTimer = SetTimer(win->hwndCanvas, kAnnotationResizeRerenderTimerID,
-                                                                  kAnnotationResizeRerenderDelayMs, nullptr);
-                    ReportIf(!win->annotationResizeRerenderTimer);
                 } else {
                     Size size = win->annotationBeingMovedSize;
                     DrawMovePattern(win, prevPos, size);
@@ -2058,8 +2066,12 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->annotationOriginalRect = r;
     win->annotationOriginalLineStart = {};
     win->annotationOriginalLineEnd = {};
+    win->annotationLinePreviewStart = {};
+    win->annotationLinePreviewEnd = {};
     if (annot->type == AnnotationType::Line) {
         GetLinePoints(annot, win->annotationOriginalLineStart, win->annotationOriginalLineEnd);
+        win->annotationLinePreviewStart = win->annotationOriginalLineStart;
+        win->annotationLinePreviewEnd = win->annotationOriginalLineEnd;
     }
     win->annotationResizeAspectRatio = 0;
     if (annot->type == AnnotationType::Stamp && r.dx > 0 && r.dy > 0) {
@@ -2078,6 +2090,9 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     }
 
     Annotation* annot = win->annotationBeingDragged;
+    auto handle = (ResizeHandle)win->resizeHandle;
+    PointF lineStart = win->annotationLinePreviewStart;
+    PointF lineEnd = win->annotationLinePreviewEnd;
     win->annotationBeingResized = false;
     win->annotationBeingDragged = nullptr;
     CancelAnnotationResizeRerender(win);
@@ -2089,11 +2104,15 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     SetCanvasCursor(win, IDC_ARROW);
 
     if (aborted || !annot) {
+        ScheduleRepaint(win, 0);
         return true;
     }
 
-    // The annotation has already been updated during mouse move,
-    // just notify and update toolbar
+    if (IsLineEndpointHandle(handle)) {
+        SetLinePoints(annot, lineStart, lineEnd);
+    }
+
+    // Rectangle resizes already wrote the annot during mouse move.
     NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
@@ -3396,6 +3415,9 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         return;
     }
     bool canResize = AnnotationCanBeResized(annot->type);
+    MainWindow* win = tab->win;
+    bool draggingLine = win && win->annotationBeingResized && IsLineEndpointHandle((ResizeHandle)win->resizeHandle) &&
+                        annot->type == AnnotationType::Line;
 
     Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
     if (!tab->didScrollToSelectedAnnotation) {
@@ -3405,6 +3427,28 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     rect.Inflate(4, 4);
 
     Gdiplus::Graphics gs(hdc);
+
+    Gdiplus::SolidBrush handleBrush(Gdiplus::Color(255, 255, 255, 255)); // White
+    Gdiplus::Pen handlePen(Gdiplus::Color(255, 0, 0, 0), 1);             // Black
+    int hs = 6;                                                          // handle size
+    int hh = hs / 2;                                                     // half handle
+
+    auto drawHandle = [&](int x, int y) {
+        gs.FillRectangle(&handleBrush, x, y, hs, hs);
+        gs.DrawRectangle(&handlePen, x, y, hs, hs);
+    };
+
+    if (draggingLine) {
+        Point startPt = dm->CvtToScreen(pageNo, win->annotationLinePreviewStart);
+        Point endPt = dm->CvtToScreen(pageNo, win->annotationLinePreviewEnd);
+        gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+        Gdiplus::Color blue(255, 0, 80, 200);
+        Gdiplus::Pen pen(blue, (Gdiplus::REAL)std::max(DpiScale(2), 1));
+        gs.DrawLine(&pen, startPt.x, startPt.y, endPt.x, endPt.y);
+        drawHandle(startPt.x - hh, startPt.y - hh);
+        drawHandle(endPt.x - hh, endPt.y - hh);
+        return;
+    }
 
     if (gDrawOldStyleAnnotationRect) {
         Gdiplus::Color col = GdiRgbFromColor(0xff3333); // blue
@@ -3422,17 +3466,6 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     if (!canResize) {
         return;
     }
-
-    // Draw resize handles
-    Gdiplus::SolidBrush handleBrush(Gdiplus::Color(255, 255, 255, 255)); // White
-    Gdiplus::Pen handlePen(Gdiplus::Color(255, 0, 0, 0), 1);             // Black
-    int hs = 6;                                                          // handle size
-    int hh = hs / 2;                                                     // half handle
-
-    auto drawHandle = [&](int x, int y) {
-        gs.FillRectangle(&handleBrush, x, y, hs, hs);
-        gs.DrawRectangle(&handlePen, x, y, hs, hs);
-    };
 
     PointF lineStart, lineEnd;
     if (annot->type == AnnotationType::Line && GetLinePoints(annot, lineStart, lineEnd)) {
