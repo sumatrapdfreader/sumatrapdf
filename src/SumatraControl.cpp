@@ -534,7 +534,8 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
                         tp == AnnotationType::Squiggly || tp == AnnotationType::StrikeOut;
         bool isShape = tp == AnnotationType::Square || tp == AnnotationType::Circle || tp == AnnotationType::Polygon ||
                        tp == AnnotationType::PolyLine || tp == AnnotationType::Ink;
-        if (!isMarkup && !isShape) {
+        bool isStamp = tp == AnnotationType::Stamp;
+        if (!isMarkup && !isShape && !isStamp) {
             continue;
         }
         Str typeName = StrL("other");
@@ -556,8 +557,10 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
             typeName = StrL("PolyLine");
         } else if (tp == AnnotationType::Ink) {
             typeName = StrL("Ink");
+        } else if (tp == AnnotationType::Stamp) {
+            typeName = StrL("Stamp");
         }
-        if (isShape) {
+        if (isShape || isStamp) {
             RectF r = GetRect(a);
             Rect screen = dm->CvtToScreen(PageNo(a), r);
             out.Append(fmt("type=%s page=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a), r.x, r.y, r.dx,

@@ -12328,10 +12328,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdDeleteAnnotation: {
-            if (!tab) return 0;
-            Annotation* annot = tab->selectedAnnotation;
-            if (!annot) annot = GetAnnotionUnderCursor(tab, nullptr, lp);
-            if (!annot) return 0;
+            if (!tab) {
+                return 0;
+            }
+            // Ctrl+Delete always removes the annot under the cursor, even when
+            // the annotations window is open and has a different list selection.
+            Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
+            if (!annot) {
+                annot = tab->selectedAnnotation;
+            }
+            if (!annot) {
+                return 0;
+            }
             DeleteAnnotationAndUpdateUI(tab, annot);
             return 0;
         } break;

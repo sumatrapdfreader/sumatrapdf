@@ -91,6 +91,23 @@ function assertNoSelection(state: AnnotState, action: string): void {
   }
 }
 
+function stampAtCanvas(dump: string, cx: number, cy: number): boolean {
+  for (const line of dump.split("\n")) {
+    const m = /type=Stamp .* screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(line);
+    if (!m) {
+      continue;
+    }
+    const x = +m[1]!;
+    const y = +m[2]!;
+    const dx = +m[3]!;
+    const dy = +m[4]!;
+    if (cx >= x && cx < x + dx && cy >= y && cy < y + dy) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function countRedPixels(png: string): number {
   const p = png.split("\\").join("\\\\");
   const ps = `Add-Type -AssemblyName System.Drawing; $b=[System.Drawing.Bitmap]::FromFile('${p}'); $n=0; for($y=0;$y -lt $b.Height;$y+=2){for($x=0;$x -lt $b.Width;$x+=2){$c=$b.GetPixel($x,$y); if($c.R -gt 180 -and $c.G -lt 80 -and $c.B -lt 80){$n++}}}; $b.Dispose(); Write-Output $n`;
@@ -125,13 +142,30 @@ export async function testit(): Promise<void> {
       throw new Error(`annot-delete-redraw: expected 3 stamps in the list, got ${nBefore}`);
     }
 
-    // Exercise CmdDeleteAnnotation / DeleteAnnotationAndUpdateUI.
+    // Ctrl+Delete / CmdDeleteAnnotation removes the annot under the cursor,
+    // not the one selected in the editor list (the last stamp). Hit inside
+    // the first stamp, not its top-left, so hit-testing doesn't miss the edge.
+    const dumpBefore = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+    if (!stampAtCanvas(dumpBefore, 100, 100)) {
+      throw new Error(`annot-delete-redraw: no stamp at canvas 100,100\n${dumpBefore}`);
+    }
+    sendMessage(frame, WM_COMMAND, cmdId("CmdDeleteAnnotation"), packCoords(100, 100));
+    const afterCursorDelete = await waitForAnnotCount(client, nBefore - 1);
+    const dumpAfter = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+    if (stampAtCanvas(dumpAfter, 100, 100)) {
+      throw new Error(`annot-delete-redraw: stamp under cursor was not deleted\n${dumpAfter}`);
+    }
+    if (afterCursorDelete.selected < 0) {
+      throw new Error("annot-delete-redraw: deleting another annot cleared the list selection");
+    }
+
+    // No point: fall back to the selected annotation.
     sendMessage(frame, WM_COMMAND, cmdId("CmdDeleteAnnotation"), 0);
-    const afterCommandDelete = await waitForAnnotCount(client, nBefore - 1);
+    const afterCommandDelete = await waitForAnnotCount(client, nBefore - 2);
     assertNoSelection(afterCommandDelete, "command deletion");
 
-    // Explicitly select a remaining row, then exercise the editor's multi-row delete path.
-    const beforeEditorDelete = await annotState(client, 2);
+    // Explicitly select the remaining row, then exercise the editor's Delete key path.
+    const beforeEditorDelete = await annotState(client, 1);
     if (beforeEditorDelete.selected < 0 || beforeEditorDelete.selectedCount !== 1) {
       throw new Error(`annot-delete-redraw: failed to select an annotation (${JSON.stringify(beforeEditorDelete)})`);
     }
@@ -146,7 +180,7 @@ export async function testit(): Promise<void> {
     }
 
     postMessage(annotWin, WM_KEYDOWN, 0x2e /* VK_DELETE */, 0);
-    const afterDelete = await waitForAnnotCount(client, nBefore - 2);
+    const afterDelete = await waitForAnnotCount(client, nBefore - 3);
     assertNoSelection(afterDelete, "editor deletion");
     await client.waitForRenderIdle();
     const afterPng = join(dir, "after-delete.png");
@@ -154,14 +188,10 @@ export async function testit(): Promise<void> {
       throw new Error("annot-delete-redraw: capture after delete failed");
     }
     const redAfter = countRedPixels(afterPng);
-    // one of two DRAFT stamps gone; allow some leftover from the remaining one
-    if (redAfter >= redBefore * 0.8) {
+    if (redAfter >= redBefore * 0.5) {
       throw new Error(
         `annot-delete-redraw: page still shows deleted stamp (red before=${redBefore} after=${redAfter})`,
       );
-    }
-    if (redAfter < 5) {
-      throw new Error(`annot-delete-redraw: remaining stamp vanished too (red=${redAfter})`);
     }
 
     postMessage(annotWin, WM_KEYDOWN, VK_ESCAPE, 0);

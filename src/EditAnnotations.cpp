@@ -38,6 +38,7 @@ extern "C" {
 #include "EditAnnotations.h"
 #include "FormFields.h"
 #include "SumatraPDF.h"
+#include "Commands.h"
 #include "DarkMode_win.h"
 
 #include "Theme.h"
@@ -776,14 +777,22 @@ void EditAnnotationsWindow::OnKeyDown(KeyEvent* ev) {
         }
     }
     if (ev->vkey == VK_DELETE) {
-        // When focus is in a text field, let the Edit control handle Delete /
-        // Ctrl+Delete (word delete). Only delete the annotation when focus is
-        // outside an edit control (issue #5815).
+        if (ev->isCtrl && !ev->isAlt) {
+            // Ctrl+Delete always deletes the annotation under the cursor on
+            // the page (same as the main-window accelerator), even while this
+            // window has focus and a different list item is selected.
+            if (tab && tab->win) {
+                HwndPostCommand(tab->win->hwndFrame, CmdDeleteAnnotation);
+            }
+            ev->didHandle = true;
+            return;
+        }
+        // When focus is in a text field, let the Edit control handle Delete
+        // (issue #5815). Ctrl+Delete is handled above.
         TempStr cls = HwndGetClassName(focused);
         if (str::EqI(cls, StrL("Edit"))) {
             return;
         }
-        // Ctrl+Delete (and plain Delete) remove the selected annotation(s)
         DeleteSelectedAnnotation(this);
         ev->didHandle = true;
         return;
