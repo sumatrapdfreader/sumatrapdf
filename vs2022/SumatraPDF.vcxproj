@@ -1180,6 +1180,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\AIChatCommon.h" />
     <ClInclude Include="..\src\AIChatPanel.h" />
     <ClInclude Include="..\src\Accelerators.h" />
+    <ClInclude Include="..\src\AnnotPlacement.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
     <ClInclude Include="..\src\AppTools.h" />
@@ -1374,6 +1375,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\AddFavoriteDialog.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
+    <ClCompile Include="..\src\AnnotPlacement.cpp" />
     <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppSettings.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />

@@ -22,6 +22,7 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AnnotPlacement.h"
 #include "Notifications.h"
 #include "Canvas.h"
 #include "WindowTab.h"

@@ -43,6 +43,7 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AnnotPlacement.h"
 #include "WindowTab.h"
 #include "UpdateCheck.h"
 #include "resource.h"
@@ -790,9 +791,7 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
         WPARAM key = msg.wParam;
         MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
-        bool finishPolyLine = (key == VK_RETURN || key == VK_SPACE) && IsPlacingPolyLineAnnotation(win);
-        bool finishInk = key == VK_RETURN && IsPlacingInkAnnotation(win);
-        if (finishPolyLine || finishInk) {
+        if (AnnotationPlacementSkipAccelerator(win, key)) {
             return false;
         }
     }
@@ -3110,8 +3109,7 @@ Exit:
 
     DeleteCachedCursors();
     DeleteLaserPointerCursor();
-    DeleteTextAnnotationPlacementCursor();
-    DeleteInkAnnotationPlacementCursor();
+    DeleteAnnotationPlacementCursors();
     DeleteCreatedFonts();
     DeleteBitmap(gBitmapReloadingCue);
     // all frame/canvas windows are destroyed by now

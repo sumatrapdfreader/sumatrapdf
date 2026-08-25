@@ -159,6 +159,37 @@ enum class TouchSelHandle {
     End,
 };
 
+// One in-progress annotation placement. Only one kind is active at a time;
+// starting a new placement finishes or cancels the previous one.
+enum class AnnotPlacementKind {
+    None = 0,
+    Text,
+    Stamp,
+    Caret,
+    Line,
+    PolyLine,
+    Shape,
+    Ink,
+};
+
+struct AnnotPlacement {
+    AnnotPlacementKind kind = AnnotPlacementKind::None;
+    int cmdId = 0;
+    int pageNo = -1;
+    Point pos;
+    PointF start;
+    Point end;
+    RectF rect;
+    Vec<PointF> points;
+    Vec<int> strokeCounts;
+    bool circle = false;
+    bool mouseDown = false;
+    bool didDrag = false;
+    bool constrain = false;
+
+    void Reset();
+};
+
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 /* Describes information related to one window with (optional) a document
    on the screen */
@@ -441,30 +472,7 @@ struct MainWindow {
 
     bool isToolbarVisible = false;
     bool pdfAnnotationsToolbarEnabled = false;
-    int textAnnotationPlacementCmdId = 0;
-    Point pointAnnotationPlacementPos;
-    int lineAnnotationPlacementCmdId = 0;
-    int lineAnnotationPlacementPageNo = -1;
-    PointF lineAnnotationPlacementStart;
-    Point lineAnnotationPlacementEnd;
-    int polyLineAnnotationPlacementCmdId = 0;
-    int polyLineAnnotationPlacementPageNo = -1;
-    Vec<PointF> polyLineAnnotationPlacementPoints;
-    Point polyLineAnnotationPlacementEnd;
-    int shapeAnnotationPlacementCmdId = 0;
-    int shapeAnnotationPlacementPageNo = -1;
-    PointF shapeAnnotationPlacementStart;
-    Point shapeAnnotationPlacementEnd;
-    RectF shapeAnnotationPlacementRect;
-    bool shapeAnnotationPlacementCircle = false;
-    bool shapeAnnotationPlacementMouseDown = false;
-    bool shapeAnnotationPlacementDidDrag = false;
-    bool shapeAnnotationPlacementConstrain = false;
-    int inkAnnotationPlacementCmdId = 0;
-    int inkAnnotationPlacementPageNo = -1;
-    Vec<int> inkAnnotationPlacementStrokeCounts;
-    Vec<PointF> inkAnnotationPlacementPoints;
-    bool inkAnnotationPlacementMouseDown = false;
+    AnnotPlacement annotPlacement;
     // overlay toolbar mode: the toolbar floats over the page (doesn't reserve
     // space) and is only revealed when the mouse is near the top
     bool isToolbarOverlay = false;

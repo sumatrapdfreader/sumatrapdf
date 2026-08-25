@@ -64,6 +64,7 @@
 #include "SumatraPDF.h"
 #include "Notifications.h"
 #include "MainWindow.h"
+#include "AnnotPlacement.h"
 #include "WindowTab.h"
 #include "UpdateCheck.h"
 #include "resource.h"
@@ -4998,11 +4999,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
-    CancelTextAnnotationPlacement(win);
-    CancelLineAnnotationPlacement(win);
-    CancelPolyLineAnnotationPlacement(win);
-    CancelShapeAnnotationPlacement(win);
-    CancelInkAnnotationPlacement(win);
+    CancelAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
     // leave the hidden placement dialog aimed at a dead model
     CloseSignDocumentDialog(win);
@@ -8892,13 +8889,8 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
         return true;
     }
 
-    if (IsPlacingInkAnnotation(win) && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed() && key == VK_RETURN) {
-        return FinishInkAnnotationPlacement(win);
-    }
-
-    if (IsPlacingPolyLineAnnotation(win) && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed() &&
-        (key == VK_SPACE || key == VK_RETURN)) {
-        return FinishPolyLineAnnotationPlacement(win);
+    if (AnnotationPlacementOnKeyDown(win, key)) {
+        return true;
     }
 
     if (win->isQuickLook && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
@@ -9007,19 +8999,7 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (StopSelectTextWithKeyboard(win)) {
         return;
     }
-    if (CancelTextAnnotationPlacement(win)) {
-        return;
-    }
-    if (CancelLineAnnotationPlacement(win)) {
-        return;
-    }
-    if (CancelPolyLineAnnotationPlacement(win)) {
-        return;
-    }
-    if (CancelShapeAnnotationPlacement(win)) {
-        return;
-    }
-    if (CancelInkAnnotationPlacement(win)) {
+    if (CancelAnnotationPlacement(win)) {
         return;
     }
     if (CancelPlacingSignature(win)) {
@@ -10785,11 +10765,7 @@ static void PrintCurrentFileDeferred(MainWindow* win) {
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
     int invokedCmdId = cmdId;
-    bool isTextAnnotationPlacement = HIWORD(wp) == kTextAnnotationPlacementCommandCode;
-    bool isLineAnnotationPlacement = HIWORD(wp) == kLineAnnotationPlacementCommandCode;
-    bool isPolyLineAnnotationPlacement = HIWORD(wp) == kPolyLineAnnotationPlacementCommandCode;
-    bool isShapeAnnotationPlacement = HIWORD(wp) == kShapeAnnotationPlacementCommandCode;
-    bool isInkAnnotationPlacement = HIWORD(wp) == kInkAnnotationPlacementCommandCode;
+    bool isAnnotationPlacementCommit = HIWORD(wp) == kAnnotationPlacementCommandCode;
     bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
@@ -12385,60 +12361,32 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
             // Note: duplicated in OnWindowContextMenu because slightly different handling
         case CmdCreateAnnotText:
-            if (!isTextAnnotationPlacement && lp == 0) {
-                StartTextAnnotationPlacement(win, invokedCmdId);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotFreeText:
             [[fallthrough]];
         case CmdCreateAnnotStamp:
-            if (annotType == AnnotationType::Stamp && !isTextAnnotationPlacement && lp == 0) {
-                StartTextAnnotationPlacement(win, invokedCmdId);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotCaret:
-            if (annotType == AnnotationType::Caret && !isTextAnnotationPlacement && lp == 0) {
-                StartTextAnnotationPlacement(win, invokedCmdId);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotSquare:
-            if (annotType == AnnotationType::Square && !isShapeAnnotationPlacement && lp == 0) {
-                StartShapeAnnotationPlacement(win, invokedCmdId, false);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotLine:
-            if (annotType == AnnotationType::Line && !isLineAnnotationPlacement && lp == 0) {
-                StartLineAnnotationPlacement(win, invokedCmdId);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotCircle:
-            if (annotType == AnnotationType::Circle && !isShapeAnnotationPlacement && lp == 0) {
-                StartShapeAnnotationPlacement(win, invokedCmdId, true);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotPolygon:
             [[fallthrough]];
         case CmdCreateAnnotPolyLine:
-            if (annotType == AnnotationType::PolyLine && !isPolyLineAnnotationPlacement && lp == 0) {
-                StartPolyLineAnnotationPlacement(win, invokedCmdId);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotInk:
-            if (annotType == AnnotationType::Ink && !isInkAnnotationPlacement && lp == 0) {
-                StartInkAnnotationPlacement(win, invokedCmdId);
-                return 0;
-            }
             [[fallthrough]];
         case CmdCreateAnnotRedact:
             [[fallthrough]];
         case CmdCreateAnnotFileAttachment: {
+            if (CommandUsesPlacementMode(cmdId) && !isAnnotationPlacementCommit && lp == 0) {
+                StartAnnotationPlacement(win, invokedCmdId);
+                return 0;
+            }
             if (!win || !tab || !dm) {
                 return 0;
             }
@@ -12453,51 +12401,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             int pageNoUnderCursor = -1;
             PointF ptOnPage;
             PointF lineEndOnPage;
-            if (isInkAnnotationPlacement) {
-                if (annotType != AnnotationType::Ink || !IsPlacingInkAnnotation(win) ||
-                    len(win->inkAnnotationPlacementPoints) == 0 || len(win->inkAnnotationPlacementStrokeCounts) == 0) {
+            AnnotCreateArgs args{annotType};
+            SetAnnotCreateArgs(args, cmd);
+            if (isAnnotationPlacementCommit) {
+                if (!AnnotationPlacementFillCreate(win, annotType, pt, pageNoUnderCursor, ptOnPage, lineEndOnPage,
+                                                   args)) {
                     return 0;
                 }
-                pageNoUnderCursor = win->inkAnnotationPlacementPageNo;
-                if (!dm->ValidPageNo(pageNoUnderCursor)) {
-                    return 0;
-                }
-                ptOnPage = win->inkAnnotationPlacementPoints[0];
-                pt = dm->CvtToScreen(pageNoUnderCursor, win->inkAnnotationPlacementPoints.Last());
-            } else if (isShapeAnnotationPlacement) {
-                bool validType = annotType == AnnotationType::Square || annotType == AnnotationType::Circle;
-                if (!validType || !IsPlacingShapeAnnotation(win)) {
-                    return 0;
-                }
-                pageNoUnderCursor = win->shapeAnnotationPlacementPageNo;
-                if (!dm->ValidPageNo(pageNoUnderCursor) || win->shapeAnnotationPlacementRect.IsEmpty()) {
-                    return 0;
-                }
-                ptOnPage = win->shapeAnnotationPlacementRect.TL();
-                Rect screenRect = dm->CvtToScreen(pageNoUnderCursor, win->shapeAnnotationPlacementRect);
-                pt = screenRect.BR();
-            } else if (isLineAnnotationPlacement) {
-                if (annotType != AnnotationType::Line || !IsPlacingLineAnnotation(win)) {
-                    return 0;
-                }
-                pageNoUnderCursor = win->lineAnnotationPlacementPageNo;
-                if (!dm->ValidPageNo(pageNoUnderCursor)) {
-                    return 0;
-                }
-                ptOnPage = win->lineAnnotationPlacementStart;
-                lineEndOnPage = dm->CvtFromScreen(win->lineAnnotationPlacementEnd, pageNoUnderCursor);
-                pt = win->lineAnnotationPlacementEnd;
-            } else if (isPolyLineAnnotationPlacement) {
-                if (annotType != AnnotationType::PolyLine || !IsPlacingPolyLineAnnotation(win) ||
-                    len(win->polyLineAnnotationPlacementPoints) < 2) {
-                    return 0;
-                }
-                pageNoUnderCursor = win->polyLineAnnotationPlacementPageNo;
-                if (!dm->ValidPageNo(pageNoUnderCursor)) {
-                    return 0;
-                }
-                ptOnPage = win->polyLineAnnotationPlacementPoints[0];
-                pt = dm->CvtToScreen(pageNoUnderCursor, win->polyLineAnnotationPlacementPoints.Last());
             } else {
                 pt = HwndGetCursorPos(win->hwndCanvas);
                 if (lp != 0) {
@@ -12514,20 +12424,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             }
             pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
-            AnnotCreateArgs args{annotType};
-            SetAnnotCreateArgs(args, cmd);
-            if (isInkAnnotationPlacement) {
-                args.inkStrokeCounts = &win->inkAnnotationPlacementStrokeCounts;
-                args.inkPoints = &win->inkAnnotationPlacementPoints;
-            } else if (isShapeAnnotationPlacement) {
-                args.hasRect = true;
-                args.rect = win->shapeAnnotationPlacementRect;
-            } else if (isLineAnnotationPlacement) {
-                args.hasLineEnd = true;
-                args.lineEnd = lineEndOnPage;
-            } else if (isPolyLineAnnotationPlacement) {
-                args.polyLinePoints = &win->polyLineAnnotationPlacementPoints;
-            }
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
             openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
         } break;

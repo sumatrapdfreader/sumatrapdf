@@ -21,38 +21,8 @@ void ToggleShowFitContentArea();
 bool IsLaserPointerActive();
 void ToggleLaserPointer(MainWindow*);
 void DeleteLaserPointerCursor();
-bool IsPlacingTextAnnotation(MainWindow*);
-void StartTextAnnotationPlacement(MainWindow*, int cmdId);
-bool CancelTextAnnotationPlacement(MainWindow*);
-void DeleteTextAnnotationPlacementCursor();
-TempStr TextAnnotationPlacementStateTemp(MainWindow*);
-bool IsPlacingLineAnnotation(MainWindow*);
-void StartLineAnnotationPlacement(MainWindow*, int cmdId);
-bool CancelLineAnnotationPlacement(MainWindow*);
-TempStr LineAnnotationPlacementStateTemp(MainWindow*);
-bool IsPlacingPolyLineAnnotation(MainWindow*);
-void StartPolyLineAnnotationPlacement(MainWindow*, int cmdId);
-bool FinishPolyLineAnnotationPlacement(MainWindow*);
-bool CancelPolyLineAnnotationPlacement(MainWindow*);
-TempStr PolyLineAnnotationPlacementStateTemp(MainWindow*);
-bool IsPlacingShapeAnnotation(MainWindow*);
-void StartShapeAnnotationPlacement(MainWindow*, int cmdId, bool circle);
-bool CancelShapeAnnotationPlacement(MainWindow*);
-TempStr ShapeAnnotationPlacementStateTemp(MainWindow*);
-bool IsPlacingInkAnnotation(MainWindow*);
-void StartInkAnnotationPlacement(MainWindow*, int cmdId);
-bool FinishInkAnnotationPlacement(MainWindow*);
-bool CancelInkAnnotationPlacement(MainWindow*);
-void DeleteInkAnnotationPlacementCursor();
-TempStr InkAnnotationPlacementStateTemp(MainWindow*);
 void DrawCanvasKeyboardFocusIfNeeded(MainWindow* win, HDC hdc);
 void InvalidateCanvasKeyboardFocus(MainWindow* win);
-
-constexpr WORD kTextAnnotationPlacementCommandCode = 0x5341;
-constexpr WORD kLineAnnotationPlacementCommandCode = 0x5342;
-constexpr WORD kPolyLineAnnotationPlacementCommandCode = 0x5343;
-constexpr WORD kShapeAnnotationPlacementCommandCode = 0x5344;
-constexpr WORD kInkAnnotationPlacementCommandCode = 0x5345;
 
 extern Kind kNotifAnnotation;
 

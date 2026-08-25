@@ -30,6 +30,7 @@
 #include "SumatraTest.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AnnotPlacement.h"
 #include "Canvas.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
@@ -587,11 +588,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
                    gWindows[0]->pdfAnnotationsToolbarEnabled ? 1 : 0, hasNotification ? 1 : 0,
                    tab->editAnnotsWindow ? 1 : 0, selectedHover ? 1 : 0));
     out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
-    out.Append(TextAnnotationPlacementStateTemp(gWindows[0]));
-    out.Append(LineAnnotationPlacementStateTemp(gWindows[0]));
-    out.Append(PolyLineAnnotationPlacementStateTemp(gWindows[0]));
-    out.Append(ShapeAnnotationPlacementStateTemp(gWindows[0]));
-    out.Append(InkAnnotationPlacementStateTemp(gWindows[0]));
+    out.Append(AnnotationPlacementStateTemp(gWindows[0]));
     return finish({}, 0);
 }
 

@@ -619,6 +619,7 @@ function sumatrapdf_files()
     "AppSettings.*",
     "AppTools.*",
     "Canvas.*",
+    "AnnotPlacement.*",
     "CanvasAboutUI.*",
     "CaptionGlyphs.*",
     "ChmDump.*",

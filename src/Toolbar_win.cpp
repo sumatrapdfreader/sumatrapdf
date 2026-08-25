@@ -25,6 +25,7 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AnnotPlacement.h"
 #include "WindowTab.h"
 #include "Commands.h"
 #include "AppTools.h"
@@ -68,10 +69,7 @@ bool ToolbarFrameIsVisible(MainWindow* win) {
 
 void ToolbarPostCommand(MainWindow* win, int cmdId) {
     LPARAM commandPoint = 0;
-    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast && cmdId != CmdCreateAnnotText &&
-        cmdId != CmdCreateAnnotStamp && cmdId != CmdCreateAnnotCaret && cmdId != CmdCreateAnnotLine &&
-        cmdId != CmdCreateAnnotPolyLine && cmdId != CmdCreateAnnotSquare && cmdId != CmdCreateAnnotCircle &&
-        cmdId != CmdCreateAnnotInk) {
+    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast && !CommandUsesPlacementMode(cmdId)) {
         Rect canvas = HwndClientRect(win->hwndCanvas);
         Point pt{canvas.dx / 2, canvas.dy / 2};
         commandPoint = MAKELPARAM(pt.x, pt.y);

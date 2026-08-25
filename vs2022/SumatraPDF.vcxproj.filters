@@ -108,6 +108,9 @@
     <ClInclude Include="..\src\Accelerators.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AnnotPlacement.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Annotation.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -612,6 +615,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AnnotPlacement.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Annotation.cpp">
