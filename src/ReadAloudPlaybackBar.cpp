@@ -50,6 +50,7 @@ struct ReadAloudPlaybackBar : WindowBase {
     int lastY = 0;
     int lastDx = 0;
     int lastDy = 0;
+    Func1List<MainWindow*> onWindowMoved;
 };
 
 constexpr int kBarMargin = 8;
@@ -264,13 +265,23 @@ void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
     delete gfx;
 }
 
+static void ReadAloudPlaybackBarOnWindowMoved(ReadAloudPlaybackBar* bar, MainWindow*) {
+    if (!bar->hwnd || !HwndIsVisible(bar->hwnd)) {
+        return;
+    }
+    bar->UpdateLayout();
+}
+
 static ReadAloudPlaybackBar* ReadAloudPlaybackBarEnsure(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return nullptr;
     }
     if (!win->readAloudPlaybackBar) {
-        win->readAloudPlaybackBar = new ReadAloudPlaybackBar();
-        win->readAloudPlaybackBar->Create(win->hwndCanvas);
+        auto* bar = new ReadAloudPlaybackBar();
+        bar->Create(win->hwndCanvas);
+        bar->onWindowMoved = MkFunc1(ReadAloudPlaybackBarOnWindowMoved, bar);
+        win->RegisterOnWindowMoved(&bar->onWindowMoved);
+        win->readAloudPlaybackBar = bar;
     }
     return win->readAloudPlaybackBar;
 }
@@ -279,6 +290,7 @@ void ReadAloudPlaybackBarDestroy(MainWindow* win) {
     if (!win || !win->readAloudPlaybackBar) {
         return;
     }
+    win->UnregisterOnWindowMoved(&win->readAloudPlaybackBar->onWindowMoved);
     delete win->readAloudPlaybackBar;
     win->readAloudPlaybackBar = nullptr;
 }

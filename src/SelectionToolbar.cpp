@@ -73,6 +73,7 @@ struct SelectionToolbar {
     Rect lastSelBounds; // last canvas-space selection bounds used for placement
     DWORD lastPositionUpdateTick = 0;
     Vec<SelectionToolbarButton> buttons;
+    Func1List<MainWindow*> onWindowMoved;
 };
 
 // candidate buttons; per-window visibility/enabled state comes from
@@ -572,6 +573,8 @@ static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
     }
     tb->host->onPaintBackground = MkFunc1(PaintToolbar, tb);
     tb->font = GetScaledPlatformFont(GetAppFont(), kToolbarFontPct);
+    tb->onWindowMoved = MkFunc1Void(RepositionSelectionToolbar);
+    win->RegisterOnWindowMoved(&tb->onWindowMoved);
     win->selectionToolbar = tb;
     return tb;
 }
@@ -802,7 +805,7 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
 
 // Keep the popup on the selection when the frame moves. Canvas-space bounds
 // do not change, and a move typically does not paint the canvas, so the
-// paint-path update never runs; WM_MOVE (and layout/DPI) call this instead.
+// paint-path update never runs; onWindowMoved (and layout/DPI) call this instead.
 void RepositionSelectionToolbar(MainWindow* win) {
     if (!win) {
         return;
@@ -854,6 +857,7 @@ void DeleteSelectionToolbar(MainWindow* win) {
     if (!tb) {
         return;
     }
+    win->UnregisterOnWindowMoved(&tb->onWindowMoved);
     // ~VirtHost deletes the layout first: the buttons report their
     // destruction to the root
     delete tb->host;

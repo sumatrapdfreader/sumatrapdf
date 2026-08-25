@@ -123,6 +123,7 @@ struct FindBarWnd : WindowBase {
     // set while Layout() runs so the WM_SIZE its own SetWindowPos generates
     // doesn't re-enter Layout()
     bool inLayout = false;
+    Func1List<MainWindow*> onWindowMoved;
 
     FindBarWnd() = default;
     ~FindBarWnd() override;
@@ -175,6 +176,9 @@ static TempStr FindBarButtonTooltip(int cmd) {
 }
 
 FindBarWnd::~FindBarWnd() {
+    if (win) {
+        win->UnregisterOnWindowMoved(&onWindowMoved);
+    }
     // edit, status and buttons are owned by `layout` (deleted in ~WindowBase)
 }
 
@@ -277,6 +281,9 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
 
     DarkModeApplyToPopupWindow(hwnd);
     Layout();
+
+    onWindowMoved = MkFunc1Void(FindBarReposition);
+    win->RegisterOnWindowMoved(&onWindowMoved);
     return true;
 }
 

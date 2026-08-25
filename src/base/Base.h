@@ -795,6 +795,44 @@ Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
     return res;
 }
 
+// Func1 with an intrusive next pointer, so several callbacks can share one slot.
+// Embed a node in the client and Register() it onto a list head.
+template <typename T>
+struct Func1List : Func1<T> {
+    Func1List<T>* next = nullptr;
+
+    Func1List() = default;
+    Func1List(const Func1<T>& fn) : Func1<T>(fn) {}
+    Func1List& operator=(const Func1<T>& fn) {
+        Func1<T>::operator=(fn);
+        return *this;
+    }
+
+    void Register(Func1List<T>** head) {
+        ReportIf(!head);
+        for (Func1List<T>* p = *head; p; p = p->next) {
+            ReportIf(p == this);
+        }
+        ListInsertFront(head, this);
+    }
+
+    void Unregister(Func1List<T>** head) {
+        if (head) {
+            ListRemove(head, this);
+        }
+        next = nullptr;
+    }
+
+    void CallAll(T arg) const {
+        const Func1List<T>* p = this;
+        while (p) {
+            const Func1List<T>* n = p->next;
+            p->Call(arg);
+            p = n;
+        }
+    }
+};
+
 int setMinMax(int& v, int minVal, int maxVal);
 
 /* Usage: defer { instance->Release(); }; */

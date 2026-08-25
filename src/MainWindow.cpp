@@ -83,10 +83,36 @@ LinkHandler::~LinkHandler() {
 
 Vec<MainWindow*> gWindows;
 
+static void OverlayScrollbarsOnWindowMoved(MainWindow* win) {
+    OverlayScrollbarUpdatePos(win->overlayScrollV);
+    OverlayScrollbarUpdatePos(win->overlayScrollH);
+}
+
 MainWindow::MainWindow(HWND hwnd) {
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
     cbHandler = CreateControllerCallbackHandler(this);
+    overlayScrollOnMoved = MkFunc1Void(OverlayScrollbarsOnWindowMoved);
+    RegisterOnWindowMoved(&overlayScrollOnMoved);
+}
+
+void MainWindow::RegisterOnWindowMoved(Func1List<MainWindow*>* cb) {
+    ReportIf(!cb);
+    cb->Register(&onWindowMoved);
+}
+
+void MainWindow::UnregisterOnWindowMoved(Func1List<MainWindow*>* cb) {
+    if (!cb) {
+        return;
+    }
+    cb->Unregister(&onWindowMoved);
+}
+
+// fire onWindowMoved: popups placed in screen coords don't follow the frame on their own
+void MainWindow::NotifyWindowMoved() {
+    if (onWindowMoved) {
+        onWindowMoved->CallAll(this);
+    }
 }
 
 static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
@@ -194,6 +220,8 @@ MainWindow::~MainWindow() {
 
     delete frameRateWnd;
     ReadAloudPlaybackBarDestroy(this);
+    UnregisterOnWindowMoved(&overlayScrollOnMoved);
+    ReportIf(onWindowMoved);
     delete infotip;
     // tocLayout (VBox) owns the header, tocFilterEdit and tocTreeView; the
     // root only points at the header's virtual controls, so it outlives them

@@ -14407,7 +14407,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_EXITSIZEMOVE:
             if (win) {
-                RepositionSelectionToolbar(win);
+                win->NotifyWindowMoved();
                 if (win->dpiChromeRefreshPending) {
                     uitask::Post(MkFunc0(FinishDeferredMainWindowDpiRefresh, win), "DpiSettled");
                 } else {
@@ -14428,11 +14428,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_MOVE:
             if (win) {
                 RememberDefaultWindowPosition(win);
-                UpdateOverlayScrollbarPositions(win);
-                // keep the floating find bar anchored over the search icon
-                FindBarReposition(win);
-                ReadAloudPlaybackBarRelayout(win->hwndCanvas);
-                RepositionSelectionToolbar(win);
+                win->NotifyWindowMoved();
             }
             break;
 

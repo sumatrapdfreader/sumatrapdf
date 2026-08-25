@@ -85,6 +85,51 @@ static void Func1FromFunc0Test() {
     utassert(d1.p == -8);
 }
 
+static void testFn1List(TestFn0Data* d0, TestFn1Data* d1) {
+    d0->n++;
+    d1->p++;
+}
+
+static void Func1ListTest() {
+    utassert(sizeof(Func1List<TestFn1Data*>) == 3 * sizeof(void*));
+
+    TestFn0Data a, b, c;
+    TestFn1Data arg{};
+    Func1List<TestFn1Data*> na = MkFunc1(testFn1List, &a);
+    Func1List<TestFn1Data*> nb = MkFunc1(testFn1List, &b);
+    Func1List<TestFn1Data*> nc = MkFunc1(testFn1List, &c);
+    Func1List<TestFn1Data*>* head = nullptr;
+
+    na.Register(&head);
+    nb.Register(&head);
+    nc.Register(&head);
+    utassert(head == &nc);
+    utassert(nc.next == &nb && nb.next == &na && !na.next);
+
+    head->CallAll(&arg);
+    utassert(a.n == 1 && b.n == 1 && c.n == 1 && arg.p == 3);
+
+    // assigning a new Func1 must not unlink the node
+    nb = MkFunc1(testFn1List, &b);
+    utassert(nc.next == &nb && nb.next == &na);
+
+    nb.Unregister(&head);
+    utassert(head == &nc && nc.next == &na && !nb.next);
+
+    a.n = b.n = c.n = 0;
+    arg.p = 0;
+    head->CallAll(&arg);
+    utassert(a.n == 1 && b.n == 0 && c.n == 1 && arg.p == 2);
+
+    // unregistering a node that isn't on the list is a no-op
+    nb.Unregister(&head);
+    utassert(head == &nc && nc.next == &na);
+
+    na.Unregister(&head);
+    nc.Unregister(&head);
+    utassert(!head);
+}
+
 static void GeomTest() {
     PointF ptD(12.4f, -13.6f);
     utassert(ptD.x == 12.4f && ptD.y == -13.6f);
@@ -295,6 +340,7 @@ void BaseUtilTest() {
     Func0Test();
     Func1Test();
     Func1FromFunc0Test();
+    Func1ListTest();
     ColorTest();
     ArenaPtrCompressTest();
 
