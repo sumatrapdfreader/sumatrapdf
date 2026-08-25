@@ -1,8 +1,6 @@
-// #6023 / discussion #6015: underline markup sat inside the glyphs because
-// QuadPoints used tight ink boxes (FZ_STEXT_ACCURATE_BBOXES) and MuPDF draws
-// the line at 1/7 of that box from the bottom. Letters without descenders
-// (and CJK) showed it as a high overstrike. The create path now grows the
-// underline / squiggly box downward so the line sits below the baseline.
+// #6023 / discussion #6015: underline markup must sit below the baseline.
+// Selection boxes use the font's ascender/descender (as in 3.6.1), so MuPDF's
+// line at 1/7 of that box from the bottom clears letters without descenders.
 //
 // Run: bun tests/issue-6023.ts [--no-build]
 

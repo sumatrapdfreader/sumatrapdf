@@ -371,10 +371,13 @@ void UpdateRectangularSelectionEdit(MainWindow* win, int x, int y) {
 void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color selectionColor, u8 alpha, int pad,
                                 bool drawBorder) {
     Vec<Rect> paintedRects;
-    screenRc.Inflate(pad, pad);
+    // A bordered selection is the 3.6.1 look: font-height boxes as-is and a
+    // 1px outline. Find/read-aloud highlights stay borderless and pad the box.
+    int clipPad = drawBorder ? 1 : pad;
+    screenRc.Inflate(clipPad, clipPad);
     for (int i = 0; i < len(rects); i++) {
         Rect rc = rects[i];
-        if (pad > 0) {
+        if (!drawBorder && pad > 0) {
             rc.Inflate(pad, pad);
         }
         rc = rc.Intersect(screenRc);
@@ -382,7 +385,7 @@ void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color
             paintedRects.Append(rc);
         }
     }
-    int outlineWidth = drawBorder ? pad : 0;
+    int outlineWidth = drawBorder ? 1 : 0;
     gfx->FillRects(paintedRects.els, len(paintedRects), selectionColor, alpha, outlineWidth);
 }
 
@@ -510,7 +513,7 @@ void PaintSelection(MainWindow* win, Gfx* gfx) {
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
     }
-    PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha, 2, /*drawBorder*/ true);
+    PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha, 1, /*drawBorder*/ true);
     PaintTouchSelHandles(win, gfx);
 }
 

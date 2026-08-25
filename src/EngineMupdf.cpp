@@ -1182,12 +1182,12 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
 
 static fz_stext_options NewTextPageOptions(int flags = 0) {
     fz_stext_options opts{};
-    // Use glyph outline bounds so text selection rectangles match visible text
-    // instead of the looser line-height boxes from default MuPDF extraction.
-    // DEHYPHENATE: mark end-of-line hyphens as soft joins so FzTextPageToUtf8
-    // can drop them and stitch "hyphen-\\nated" into "hyphenated" for search
-    // (issue #1189; MuPDF FZ_STEXT_DEHYPHENATE since 2020).
-    opts.flags = flags | FZ_STEXT_ACCURATE_BBOXES | FZ_STEXT_DEHYPHENATE;
+    // Font ascender/descender boxes, like 3.6.1: FZ_STEXT_ACCURATE_BBOXES uses
+    // tight glyph ink, so a word such as "compass" (no d/h/l) has almost no
+    // padding above the letters. DEHYPHENATE: mark end-of-line hyphens as
+    // soft joins so FzTextPageToUtf8 can drop them and stitch
+    // "hyphen-\\nated" into "hyphenated" for search (issue #1189).
+    opts.flags = flags | FZ_STEXT_DEHYPHENATE;
     return opts;
 }
 

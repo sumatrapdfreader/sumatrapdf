@@ -494,6 +494,15 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
     out.Append(StrL("expanded="));
     out.Append(expanded);
     out.AppendChar('\n');
+    if (tab && tab->selectionOnPage) {
+        out.Append(fmt("nrects=%d\n", len(*tab->selectionOnPage)));
+        for (SelectionOnPage& onPage : *tab->selectionOnPage) {
+            RectF r = onPage.rect;
+            out.Append(fmt("rect=%g,%g,%g,%g page=%d\n", r.x, r.y, r.dx, r.dy, onPage.pageNo));
+        }
+    } else {
+        out.Append(StrL("nrects=0\n"));
+    }
     return finish({}, 0);
 }
 

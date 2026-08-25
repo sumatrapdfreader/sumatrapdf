@@ -185,6 +185,7 @@ import { testit as issue6013 } from "./issue-6013.ts";
 import { testit as issue6018 } from "./issue-6018.ts";
 import { testit as issue6015 } from "./issue-6015.ts";
 import { testit as selectionToolbarStays } from "./selection-toolbar-stays.ts";
+import { testit as selectionFontBbox } from "./selection-font-bbox.ts";
 import { testit as issue6023 } from "./issue-6023.ts";
 import { testit as issue6017 } from "./issue-6017.ts";
 import { testit as issue6025 } from "./issue-6025.ts";
@@ -374,6 +375,7 @@ export const tests: NamedTest[] = [
   ["issue-6018", issue6018],
   ["issue-6015", issue6015],
   ["selection-toolbar-stays", selectionToolbarStays],
+  ["selection-font-bbox", selectionFontBbox],
   ["issue-6023", issue6023],
   ["issue-6017", issue6017],
   ["issue-6025", issue6025],
