@@ -259,6 +259,41 @@ void BrowserFindAllResultReceived(MainWindow* win, Str payload) {
     ToolbarUpdateStateForWindow(win, false);
 }
 
+// Match SetText()'s normalization: strip one leading space (word-start) so a
+// trailing/whole-word space still compares as the same term.
+static Str FindTermWithoutWordStartSpace(Str text) {
+    if (text && len(text) > 0 && text.s[0] == ' ') {
+        return Str(text.s + 1, text.len - 1);
+    }
+    return text;
+}
+
+// True when the find box holds a different term than the current results /
+// last search, so Enter / Find Next should start a new search instead of
+// stepping a stale list (issue #893).
+bool FindTermDiffersFromLast(MainWindow* win) {
+    if (!win) {
+        return false;
+    }
+    TempStr term = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
+    Str searchText = FindTermWithoutWordStartSpace(term);
+    if (len(searchText) == 0) {
+        return false;
+    }
+    if (win->findCountText && len(win->findCountText) > 0) {
+        return !str::Eq(searchText, FindTermWithoutWordStartSpace(win->findCountText));
+    }
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (dm->textSearch && dm->textSearch->lastText) {
+            return !str::Eq(searchText, dm->textSearch->lastText);
+        }
+    }
+    if (win->browserFindTerm) {
+        return !str::Eq(searchText, FindTermWithoutWordStartSpace(win->browserFindTerm));
+    }
+    return true;
+}
+
 // jump to the idxInPage-th match on pageNo: directly if that page is showing,
 // otherwise navigate there and re-run the in-page find once it has loaded
 static void BrowserFindGotoMatch(MainWindow* win, DocController* md, int pageNo, int idxInPage) {
@@ -275,6 +310,10 @@ static void BrowserFindNextPrev(MainWindow* win, DocController* md, bool forward
     // typing still pending: run the search first instead of advancing
     // through the previous term's matches
     if (FindFlushPendingSearch(win)) {
+        return;
+    }
+    if (FindTermDiffersFromLast(win)) {
+        BrowserFindStartSearch(win, md);
         return;
     }
     int n = len(win->findMatches);

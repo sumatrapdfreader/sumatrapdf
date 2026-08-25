@@ -804,6 +804,11 @@ export function getRootWindow(hwnd: number): number {
   return Number(user32.symbols.GetAncestor(hwnd, GA_ROOT)) || hwnd;
 }
 
+export function getParentWindow(hwnd: number): number {
+  const GA_PARENT = 1;
+  return Number(user32.symbols.GetAncestor(hwnd, GA_PARENT));
+}
+
 export function setForegroundWindow(hwnd: number): boolean {
   return user32.symbols.SetForegroundWindow(hwnd);
 }

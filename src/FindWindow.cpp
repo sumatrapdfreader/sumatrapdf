@@ -221,6 +221,7 @@ struct FindWindowWnd : WindowBase {
     void OnResultSelected();
     void SaveSelectedMatch();
     bool MoveResultSelection(WPARAM vkey);
+    void FindNextOrPrev(bool forward);
     int CurrentMatchIndex();         // list index of the document's current match, or -1
     int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
@@ -806,6 +807,19 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
     return true;
 }
 
+// Enter / F3 / the Next/Prev buttons: walk the results list when it is for the
+// current term. If the find box changed (paste, WM_SETTEXT, debounce already
+// fired), start a new search instead of stepping stale matches (issue #893).
+void FindWindowWnd::FindNextOrPrev(bool forward) {
+    if (FindFlushPendingSearch(win)) {
+        return;
+    }
+    WPARAM dir = forward ? VK_DOWN : VK_UP;
+    if (FindTermDiffersFromLast(win) || !MoveResultSelection(dir)) {
+        forward ? FindNext(win) : FindPrev(win);
+    }
+}
+
 void FindWindowWnd::UpdatePagesLabel() {
     int n = 1;
     if (win && win->ctrl) {
@@ -923,18 +937,7 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
             break;
         case VK_RETURN:
         case VK_F3: {
-            // Enter forces a pending debounced search to start now (find the
-            // first match) instead of stepping the (stale) results list (#4626)
-            if (ev->vkey == VK_RETURN && FindFlushPendingSearch(win)) {
-                ev->didHandle = true;
-                break;
-            }
-            // step through the results list; fall back to a document search when
-            // there's no list (e.g. count not ready)
-            WPARAM dir = ev->isShift ? VK_UP : VK_DOWN;
-            if (!MoveResultSelection(dir)) {
-                ev->isShift ? FindPrev(win) : FindNext(win);
-            }
+            FindNextOrPrev(!ev->isShift);
             ev->didHandle = true;
             break;
         }
@@ -984,14 +987,10 @@ void FindWindowWnd::OnCommand(WindowBase::CommandEvent* ev) {
     int cmd = LOWORD(ev->wparam);
     switch (cmd) {
         case CmdFindPrev:
-            if (!MoveResultSelection(VK_UP)) {
-                FindPrev(win);
-            }
+            FindNextOrPrev(false);
             break;
         case CmdFindNext:
-            if (!MoveResultSelection(VK_DOWN)) {
-                FindNext(win);
-            }
+            FindNextOrPrev(true);
             break;
         case CmdFindToggleMatchCase:
             FindToggleMatchCase(win);

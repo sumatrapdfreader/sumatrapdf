@@ -68,6 +68,7 @@ void OnFindBarTextChanged(MainWindow* win);
 bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut);
 void FindDebounceTimerFired(MainWindow* win);
 bool FindFlushPendingSearch(MainWindow* win);
+bool FindTermDiffersFromLast(MainWindow* win);
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph);
 void ClearFindMatches(MainWindow* win);
 void InvalidateFindForDocumentChange(MainWindow* win);
