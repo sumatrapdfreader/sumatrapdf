@@ -536,6 +536,7 @@ static void PositionFindBar(FindBarWnd* bar) {
 }
 
 static void ShowCompactBar(MainWindow* win) {
+    TempStr term = CurrentFindTermTemp(win);
     if (!win->findBar) {
         win->findBar = CreateFindBar(win);
     }
@@ -545,6 +546,11 @@ static void ShowCompactBar(MainWindow* win) {
     FindBarWnd* bar = win->findBar;
     win->findEdit = bar->edit;    // make this the active find edit
     win->findPagesEdit = nullptr; // page range is only on the floating window
+    if (len(term) > 0 && win->findEdit->GetTextLen() == 0) {
+        bar->suppressTextChanged = true;
+        win->findEdit->SetText(term);
+        bar->suppressTextChanged = false;
+    }
     // reflect the current match-case / whole-word state on the toggle buttons
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
     FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);

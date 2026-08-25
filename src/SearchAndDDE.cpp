@@ -1392,6 +1392,30 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     d->thread = win->findCountThread;
 }
 
+// Term currently being searched: the find edit if it has text, else the last
+// completed count / TextSearch (so the floating Find window can pick up a
+// CLI/DDE -search that ran while the edit was still the hidden compact bar).
+TempStr CurrentFindTermTemp(MainWindow* win) {
+    if (!win) {
+        return {};
+    }
+    if (win->findEdit) {
+        TempStr s = win->findEdit->GetTextTemp();
+        if (len(s) > 0) {
+            return s;
+        }
+    }
+    if (win->findCountText && len(win->findCountText) > 0) {
+        return str::DupTemp(win->findCountText);
+    }
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (dm->textSearch && dm->textSearch->lastText) {
+            return str::DupTemp(dm->textSearch->lastText);
+        }
+    }
+    return {};
+}
+
 // update the n/m counter after a search settles on a match: instant from cache
 // when the term/match-case/document are unchanged, otherwise rebuild it
 static void UpdateMatchCount(MainWindow* win, Str text) {
@@ -1413,6 +1437,19 @@ static void UpdateMatchCount(MainWindow* win, Str text) {
     } else {
         StartFindCount(win, text, win->findMatchCase, win->findMatchWholeWord);
     }
+}
+
+// Rebuild the match-count / snippet list for the current term without starting
+// a new interactive Find Next (opening Find after -search must not skip a hit).
+void EnsureFindSnippets(MainWindow* win) {
+    if (!win || win->findThread) {
+        return;
+    }
+    TempStr text = CurrentFindTermTemp(win);
+    if (len(text) == 0) {
+        return;
+    }
+    UpdateMatchCount(win, text);
 }
 
 static void CancelPendingFind(MainWindow* win);

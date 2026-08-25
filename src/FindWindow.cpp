@@ -191,6 +191,8 @@ struct FindWindowWnd : WindowBase {
     // One-shot: RefreshResults consumes and clears it. <= 0: nothing saved
     int savedSelPage = -1;
     int savedSelGlyph = -1;
+    // programmatic SetText must not kick find-as-you-type (CLI -search restore)
+    bool suppressTextChanged = false;
     // in an interactive size/move loop (between WM_ENTERSIZEMOVE/EXITSIZEMOVE)
     bool inSizeMove = false;
     // list redraw is paused only while interactively *resizing* (a WM_SIZE
@@ -837,6 +839,9 @@ void FindWindowWnd::UpdateTheme() {
 }
 
 void FindWindowWnd::OnTextChanged() {
+    if (suppressTextChanged) {
+        return;
+    }
     OnFindBarTextChanged(win);
 }
 
@@ -1044,6 +1049,10 @@ static void PositionFindWindow(FindWindowWnd* w) {
 }
 
 void ShowFindWindow(MainWindow* win) {
+    // Capture before we re-point findEdit at this window's (possibly empty) edit.
+    // CLI -search writes the term into the hidden compact bar; without this the
+    // floating window opens with a blank box and empty result rows (#6055).
+    TempStr term = CurrentFindTermTemp(win);
     if (!win->findWindow) {
         win->findWindow = CreateFindWindow(win);
     }
@@ -1053,6 +1062,11 @@ void ShowFindWindow(MainWindow* win) {
     FindWindowWnd* w = win->findWindow;
     win->findEdit = w->edit; // make this the active find edit
     win->findPagesEdit = w->editPages;
+    if (len(term) > 0 && win->findEdit->GetTextLen() == 0) {
+        w->suppressTextChanged = true;
+        win->findEdit->SetText(term);
+        w->suppressTextChanged = false;
+    }
     w->UpdatePagesLabel();
     FindWindowSetMatchCaseChecked(win, win->findMatchCase);
     FindWindowSetMatchWholeWordChecked(win, win->findMatchWholeWord);
@@ -1068,7 +1082,19 @@ void ShowFindWindow(MainWindow* win) {
     // populate the results list: show what's cached, and (re)run the search for
     // the current term so snippets get built now that the window is visible
     w->RefreshResults();
-    if (win->findEdit && win->findEdit->GetTextLen() > 0) {
+    if (!win->findEdit || win->findEdit->GetTextLen() == 0) {
+        return;
+    }
+    if (win->findThread) {
+        // CLI/DDE search still running: FindEndTask -> UpdateMatchCount will
+        // request snippets because the window is visible now
+        return;
+    }
+    if (len(win->findMatches) > 0 && !win->findCountHasSnippets) {
+        EnsureFindSnippets(win);
+        return;
+    }
+    if (len(win->findMatches) == 0) {
         OnFindBarTextChanged(win);
     }
 }
@@ -1268,6 +1294,59 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
 }
 
 // Headless draw test for issue #5736: match highlights must not bleed into the page column.
+// Report the floating Find window's term and whether result snippets are filled
+// (CLI -search then Ctrl+F used to open an empty box / empty rows, #6055).
+TempStr FindWindowContentsResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->AsFixed()) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+
+    gGlobalPrefs->searchUIFloating = true;
+    ShowFindWindow(win);
+
+    TempStr term = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
+    if (len(term) == 0) {
+        return fail(StrL("ERROR empty-term"));
+    }
+    if (win->findThread || win->findCountThread || !win->findCountValid || !win->findCountHasSnippets) {
+        return fail(StrL("NOTREADY snippets"));
+    }
+
+    int n = len(win->findMatches);
+    int nSnippets = 0;
+    for (int i = 0; i < n; i++) {
+        if (len(win->findMatches[i].snippet) > 0) {
+            nSnippets++;
+        }
+    }
+    if (n == 0) {
+        return fail(StrL("ERROR no-matches"));
+    }
+    if (nSnippets == 0) {
+        return fail(StrL("ERROR empty-snippets"));
+    }
+
+    out.Append(fmt("OK term=%s n=%d snippets=%d first=%s\n", term, n, nSnippets, win->findMatches[0].snippet));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {

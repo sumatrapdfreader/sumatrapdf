@@ -21,3 +21,4 @@ void FindWindowSyncHistory(MainWindow* win);
 
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut = nullptr);
 TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut = nullptr);
+TempStr FindWindowContentsResultTemp(int* exitCodeOut = nullptr);

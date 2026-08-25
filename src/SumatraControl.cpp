@@ -747,6 +747,7 @@ enum class ControlCmd : u16 {
     TestMarkupAnnots = 74,
     TestCmykImageSave = 75,
     TestContextMenuPoint = 76,
+    TestFindWindowContents = 77,
 };
 
 enum class ControlArgType : u16 {
@@ -1555,6 +1556,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestMarkupAnnots: {
             int exitCode = 0;
             Str res = MarkupAnnotsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFindWindowContents: {
+            int exitCode = 0;
+            Str res = FindWindowContentsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

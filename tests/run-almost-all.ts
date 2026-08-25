@@ -54,6 +54,7 @@ import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as findResultsSorted } from "./find-results-sorted.ts";
 import { testit as findWindowLayout } from "./find-window-layout.ts";
 import { testit as issue5874 } from "./issue-5874.ts";
+import { testit as issue6055 } from "./issue-6055.ts";
 import { testit as issue2252 } from "./issue-2252.ts";
 import { testit as issue5834 } from "./issue-5834.ts";
 import { testit as issue5869 } from "./issue-5869.ts";
@@ -276,6 +277,7 @@ export const tests: NamedTest[] = [
   ["find-results-sorted", findResultsSorted],
   ["find-window-layout", findWindowLayout],
   ["issue-5874", issue5874],
+  ["issue-6055", issue6055],
   ["issue-2252", issue2252],
   ["issue-5834", issue5834],
   ["issue-5869", issue5869],
