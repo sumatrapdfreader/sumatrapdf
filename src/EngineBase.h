@@ -549,6 +549,7 @@ class EngineBase {
     void RequestTextExtraction(int pageNo);
     Str GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
     bool TryGetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
+    void InvalidateTextForPage(int pageNo);
     virtual void ReleaseTextExtractionThreadContext() {}
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;

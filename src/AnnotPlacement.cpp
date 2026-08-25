@@ -119,6 +119,7 @@ AnnotPlacementKind PlacementKindFromCommand(int cmdId) {
             return AnnotPlacementKind::PolyLine;
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotCircle:
+        case CmdCreateAnnotRedact:
             return AnnotPlacementKind::Shape;
         case CmdCreateAnnotInk:
             return AnnotPlacementKind::Ink;
@@ -288,7 +289,10 @@ static bool HasPreview(AnnotPlacementKind kind) {
            kind == AnnotPlacementKind::PolyLine || kind == AnnotPlacementKind::Shape || kind == AnnotPlacementKind::Ink;
 }
 
-static Str PlacementNotification(AnnotPlacementKind kind, bool circle) {
+static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId) {
+    if (OrigCommandId(cmdId) == CmdCreateAnnotRedact) {
+        return _TRA("Mark content for redaction. Drag or click twice. **Esc** to cancel.");
+    }
     switch (kind) {
         case AnnotPlacementKind::Stamp:
             return _TRA("Place stamp annotation. **Esc** to cancel.");
@@ -446,7 +450,7 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
 
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
-    args.msg = PlacementNotification(kind, p.circle);
+    args.msg = PlacementNotification(kind, p.circle, cmdId);
     args.timeoutMs = kNotifNoTimeout;
     args.groupId = NotifGroupForKind(kind);
     args.corner = NotifCorner::BottomBar;
@@ -1047,7 +1051,8 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
             args.inkPoints = &p.points;
             return true;
         case AnnotPlacementKind::Shape: {
-            bool validType = type == AnnotationType::Square || type == AnnotationType::Circle;
+            bool validType =
+                type == AnnotationType::Square || type == AnnotationType::Circle || type == AnnotationType::Redact;
             if (!validType) {
                 return false;
             }

@@ -204,7 +204,8 @@ CmdCreateAnnotLink,,Create Link Annotation,
 CmdCreateAnnotPolygon,,Create Polygon Annotation,
 CmdCreateAnnotPolyLine,,Create Poly Line Annotation,
 CmdCreateAnnotPopup,,Create Popup Annotation,
-CmdCreateAnnotRedact,,Create Redact Annotation,
+CmdCreateAnnotRedact,,Create Redact Annotation,"marks selected text, or a dragged rectangle, for removal; content is not deleted until Apply Redactions, ver 3.7+"
+CmdApplyRedactions,,Apply Redactions,"permanently deletes content marked with the Redact tool, after a confirmation; save a copy afterwards, ver 3.7+"
 CmdCreateAnnotSquare,,Create Square Annotation,
 CmdCreateAnnotSquiggly,,Create Squiggly Annotation,
 CmdCreateAnnotStamp,,Create Stamp Annotation,

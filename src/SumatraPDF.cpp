@@ -10762,6 +10762,93 @@ static void PrintCurrentFileDeferred(MainWindow* win) {
     PrintCurrentFile(win);
 }
 
+static bool ConfirmApplyRedactions(HWND hwndParent) {
+    if (gForTesting) {
+        return true;
+    }
+    TASKDIALOGCONFIG dialogConfig{};
+    TASKDIALOG_BUTTON buttons[2];
+    buttons[0].nButtonID = IDOK;
+    auto s = _TRA("&Apply");
+    buttons[0].pszButtonText = CWStrTemp(s);
+    buttons[1].nButtonID = IDCANCEL;
+    s = _TRA("&Cancel");
+    buttons[1].pszButtonText = CWStrTemp(s);
+
+    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_POSITION_RELATIVE_TO_WINDOW;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    s = _TRA("Apply Redactions");
+    dialogConfig.pszWindowTitle = CWStrTemp(s);
+    s = _TRA("Permanently remove marked content?");
+    dialogConfig.pszMainInstruction = CWStrTemp(s);
+    s = _TRA(
+        "This cannot be undone. Text and images under the marks are deleted from the file. Save a copy if you need "
+        "the unredacted document.");
+    dialogConfig.pszContent = CWStrTemp(s);
+    dialogConfig.nDefaultButton = IDCANCEL;
+    dialogConfig.dwFlags = (TASKDIALOG_FLAGS)flags;
+    dialogConfig.cxWidth = 0;
+    dialogConfig.pfCallback = nullptr;
+    dialogConfig.dwCommonButtons = 0;
+    dialogConfig.cButtons = dimof(buttons);
+    dialogConfig.pButtons = &buttons[0];
+    dialogConfig.pszMainIcon = TD_WARNING_ICON;
+    dialogConfig.hwndParent = hwndParent;
+
+    int buttonPressedId = 0;
+    auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
+    return hr == S_OK && buttonPressedId == IDOK;
+}
+
+static void ApplyRedactionsInTab(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    DisplayModel* dm = tab->AsFixed();
+    if (!win || !dm) {
+        return;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || !EngineSupportsAnnotations(engine)) {
+        return;
+    }
+
+    CancelAnnotationPlacement(win);
+    CancelDrag(win);
+
+    if (!EngineHasRedactMarks(engine)) {
+        ShowTemporaryNotification(win->hwndCanvas, _TRA("No redaction marks to apply"));
+        return;
+    }
+    if (!ConfirmApplyRedactions(win->hwndFrame)) {
+        return;
+    }
+    if (gRenderCache) {
+        gRenderCache->AbortRendering(dm);
+    }
+
+    Vec<Annotation*> deleted;
+    bool ok = EngineMupdfApplyRedactions(engine, deleted);
+    for (Annotation* a : deleted) {
+        DetachAnnotationFromUI(a);
+        DeleteAnnotation(a);
+    }
+    DeleteOldSelectionInfo(win, true);
+    UpdateAnnotationsList(tab->editAnnotsWindow);
+    ToolbarUpdateStateForWindow(win, true);
+    if (!ok) {
+        ShowWarningNotification(win->hwndCanvas, _TRA("Failed to apply redactions"), kNotif5SecsTimeOut);
+        return;
+    }
+    MainWindowRerender(win);
+    ShowTemporaryNotification(win->hwndCanvas, _TRA("Redactions applied. Save the file. This cannot be undone."),
+                              kNotif5SecsTimeOut);
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
     int invokedCmdId = cmdId;
@@ -11385,6 +11472,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSaveAnnotationsNewFile: {
             SaveAnnotationsToMaybeNewPdfFile(tab);
+            break;
+        }
+
+        case CmdApplyRedactions: {
+            ApplyRedactionsInTab(tab);
             break;
         }
 
@@ -12383,6 +12475,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotRedact:
             [[fallthrough]];
         case CmdCreateAnnotFileAttachment: {
+            if (cmdId == CmdCreateAnnotRedact && !isAnnotationPlacementCommit) {
+                if (win && tab) {
+                    AnnotCreateArgs selArgs{annotType};
+                    SetAnnotCreateArgs(selArgs, cmd);
+                    lastCreatedAnnot = MakeAnnotationsFromSelection(tab, &selArgs);
+                    if (lastCreatedAnnot) {
+                        openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
+                        break;
+                    }
+                }
+            }
             if (CommandUsesPlacementMode(cmdId) && !isAnnotationPlacementCommit && lp == 0) {
                 StartAnnotationPlacement(win, invokedCmdId);
                 return 0;

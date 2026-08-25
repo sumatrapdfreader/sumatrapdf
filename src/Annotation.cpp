@@ -201,6 +201,7 @@ void SetRect(Annotation* annot, RectF r) {
     // Vec lives outside fz_try: a longjmp would skip C++ destructors.
     Vec<fz_point> pts;
     Vec<int> strokeCounts;
+    Vec<fz_quad> redactQuads;
     {
         auto* ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
@@ -229,6 +230,27 @@ void SetRect(Annotation* annot, RectF r) {
                 }
                 if (n > 0) {
                     pdf_set_annot_vertices(ctx, a, n, pts.els);
+                }
+            } else if (annot->type == AnnotationType::Redact) {
+                // Text-selection marks store coverage in QuadPoints. Translate
+                // those on a move; a new rect (no quads) is an area mark.
+                int n = pdf_annot_quad_point_count(ctx, a);
+                if (n > 0) {
+                    for (int i = 0; i < n; i++) {
+                        fz_quad q = pdf_annot_quad_point(ctx, a, i);
+                        q.ul.x += dx;
+                        q.ul.y += dy;
+                        q.ur.x += dx;
+                        q.ur.y += dy;
+                        q.ll.x += dx;
+                        q.ll.y += dy;
+                        q.lr.x += dx;
+                        q.lr.y += dy;
+                        redactQuads.Append(q);
+                    }
+                    pdf_set_annot_quad_points(ctx, a, len(redactQuads), redactQuads.els);
+                } else {
+                    pdf_set_annot_rect(ctx, a, ToFzRect(r));
                 }
             } else if (annot->type == AnnotationType::Ink) {
                 // /Rect is derived from InkList; pdf_set_annot_rect rejects Ink.
@@ -1811,8 +1833,12 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     }
                 } break;
                 case AnnotationType::Redact: {
-                    fz_rect rect{pos.x, pos.y, pos.x + 100, pos.y + 50};
-                    pdf_set_annot_rect(ctx, annot, rect);
+                    if (args->hasRect) {
+                        pdf_set_annot_rect(ctx, annot, ToFzRect(args->rect));
+                    } else {
+                        fz_rect rect{pos.x, pos.y, pos.x + 100, pos.y + 50};
+                        pdf_set_annot_rect(ctx, annot, rect);
+                    }
                 } break;
             }
             if (typ == AnnotationType::Stamp && args->stampImage) {

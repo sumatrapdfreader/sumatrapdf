@@ -170,6 +170,8 @@ EXPORTS
 
 	pdf_save_document
 
+	pdf_redact_page
+
 	fz_warn
 
 	fz_buffer_extract

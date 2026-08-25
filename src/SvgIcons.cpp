@@ -396,6 +396,13 @@ const char* gIconAnnotRedact =
   <rect x="7" y="9" width="10" height="6" fill="currentColor" stroke="none" />
 </svg>)";
 
+const char* gIconApplyRedactions =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="4" y="5" width="16" height="14" rx="1" />
+  <path d="M8 12l3 3l5 -6" />
+</svg>)";
+
 const char* gIconAnnotStamp =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z"/>

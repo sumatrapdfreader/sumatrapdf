@@ -1444,6 +1444,10 @@ static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* ann
     if (IsPolyVertexType(annot->type)) {
         return GetPolyVertexAt(dm, pt, annot) >= 0 ? ResizeHandle::Vertex : ResizeHandle::None;
     }
+    if (annot->type == AnnotationType::Redact && len(GetQuadPointsAsRect(annot)) > 0) {
+        // text-selection marks are a set of quads, not a stretchable rect
+        return ResizeHandle::None;
+    }
 
     Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
     int hs = kResizeHandleSize;
@@ -3565,6 +3569,10 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
 
     if (IsPolyVertexType(annot->type)) {
         drawVertexHandles(GetVertices(annot));
+        return;
+    }
+
+    if (annot->type == AnnotationType::Redact && len(GetQuadPointsAsRect(annot)) > 0) {
         return;
     }
 

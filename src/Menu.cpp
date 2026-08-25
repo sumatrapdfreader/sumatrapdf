@@ -120,6 +120,10 @@ static MenuDef menuDefFile[] = {
         CmdSaveAnnotations,
     },
     {
+        _TRN("Apply Redactions"),
+        CmdApplyRedactions,
+    },
+    {
         _TRN("Insert Image..."),
         CmdInsertImage,
     },
@@ -914,7 +918,10 @@ static MenuDef menuDefCreateAnnotFromSelection[] = {
         _TRN("S&quiggly"),
         CmdCreateAnnotSquiggly,
     },
-    //{ _TRN("Redact"), CmdCreateAnnotRedact, },
+    {
+        _TRN("&Redact"),
+        CmdCreateAnnotRedact,
+    },
     {
         {},
         0,
@@ -1198,6 +1205,10 @@ static MenuDef menuDefContext[] = {
     {
         _TRN("Save Annotations to existing PDF"),
         CmdSaveAnnotations,
+    },
+    {
+        _TRN("Apply Redactions"),
+        CmdApplyRedactions,
     },
     {
         _TRN("Show Errors"),

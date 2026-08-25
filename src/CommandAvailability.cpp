@@ -216,6 +216,7 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
 static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSaveAnnotationsNewFile,
+    CmdApplyRedactions,
     // signing writes a signature widget into the PDF, so it needs the same
     // "this engine can be edited and re-saved" support annotations do
     CmdSignDocument,
@@ -414,6 +415,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.hasTextSelection = ctx.hasSelection && dm->textSelection->result.len > 0;
         ctx.supportsAnnots = EngineSupportsAnnotations(engine) && !win->isFullScreen;
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
+        ctx.hasRedactMarks = EngineHasRedactMarks(engine);
         int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
         if (pageNoUnderCursor > 0) {
             ctx.isCursorOnPage = true;
@@ -702,6 +704,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile)) {
         return ctx.hasUnsavedAnnotations ? CommandVisibility::Show : CommandVisibility::Disable;
+    }
+
+    if (cmdId == CmdApplyRedactions) {
+        return ctx.hasRedactMarks ? CommandVisibility::Show : CommandVisibility::Disable;
     }
 
     if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {

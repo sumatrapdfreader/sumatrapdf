@@ -475,6 +475,13 @@ bool EngineHasUnsavedAnnotations(EngineBase* engine) {
     return EngineMupdfHasUnsavedAnnotations(engine);
 }
 
+bool EngineHasRedactMarks(EngineBase* engine) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfHasRedactMarks(engine);
+}
+
 Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, Annotation* annot) {
     if (!IsEngineMupdf(engine)) {
         return nullptr;

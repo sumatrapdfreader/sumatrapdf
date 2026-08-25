@@ -299,7 +299,8 @@ enum {
     CmdTogglePageGrid = 488,
     CmdConfigurePageGrid = 489,
     CmdTogglePdfAnnotationsToolbar = 490,
-    CmdNone = 491,
+    CmdApplyRedactions = 491,
+    CmdNone = 492,
 
     /* range for file history */
     CmdFileHistoryFirst,

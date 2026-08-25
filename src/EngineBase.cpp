@@ -648,6 +648,20 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     return ReturnCachedPageText(pt, lenOut, coordsOut);
 }
 
+void EngineBase::InvalidateTextForPage(int pageNo) {
+    if (pageNo < 1 || pageNo > pageCount) {
+        return;
+    }
+    ScopedMutex scope(&textCacheLock);
+    if (!pagesText) {
+        return;
+    }
+    FreePageText(&pagesText[pageNo - 1]);
+    if (pagesTextState) {
+        pagesTextState[pageNo - 1] = TextExtractionState::NotExtracted;
+    }
+}
+
 // number of pages the loaded document contains
 int EngineBase::PageCount() const {
     ReportIf(pageCount < 0);

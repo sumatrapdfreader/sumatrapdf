@@ -45,6 +45,7 @@ extern const char* gIconAnnotPolygon;
 extern const char* gIconAnnotPolyLine;
 extern const char* gIconAnnotInk;
 extern const char* gIconAnnotRedact;
+extern const char* gIconApplyRedactions;
 extern const char* gIconAnnotStamp;
 extern const char* gIconAnnotCaret;
 extern const char* gIconAnnotFileAttachment;

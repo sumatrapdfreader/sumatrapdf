@@ -536,7 +536,8 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
         bool isShape = tp == AnnotationType::Square || tp == AnnotationType::Circle || tp == AnnotationType::Polygon ||
                        tp == AnnotationType::PolyLine || tp == AnnotationType::Ink;
         bool isStamp = tp == AnnotationType::Stamp;
-        if (!isMarkup && !isShape && !isStamp) {
+        bool isRedact = tp == AnnotationType::Redact;
+        if (!isMarkup && !isShape && !isStamp && !isRedact) {
             continue;
         }
         Str typeName = StrL("other");
@@ -560,6 +561,21 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
             typeName = StrL("Ink");
         } else if (tp == AnnotationType::Stamp) {
             typeName = StrL("Stamp");
+        } else if (tp == AnnotationType::Redact) {
+            typeName = StrL("Redact");
+        }
+        if (isRedact) {
+            Vec<RectF> quads = GetQuadPointsAsRect(a);
+            RectF r = GetRect(a);
+            Rect screen = dm->CvtToScreen(PageNo(a), r);
+            out.Append(fmt("type=%s page=%d quads=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a),
+                           len(quads), r.x, r.y, r.dx, r.dy, screen.x, screen.y, screen.dx, screen.dy));
+            for (int i = 0; i < len(quads); i++) {
+                RectF qr = quads[i];
+                out.Append(fmt("rect=%g,%g,%g,%g\n", qr.x, qr.y, qr.dx, qr.dy));
+            }
+            n++;
+            continue;
         }
         if (isShape || isStamp) {
             RectF r = GetRect(a);
@@ -581,6 +597,25 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
     }
     out.Append(fmt("n=%d\n", n));
     out.Append(fmt("annotations=%d\n", len(annots)));
+    {
+        int textLen = 0;
+        Str pageText = engine->GetTextForPage(1, &textLen);
+        str::Builder collapsed;
+        bool space = false;
+        for (int i = 0; i < len(pageText); i++) {
+            char c = pageText.s[i];
+            if (c == '\r' || c == '\n' || c == '\t') {
+                if (!space && len(collapsed) > 0) {
+                    collapsed.AppendChar(' ');
+                    space = true;
+                }
+                continue;
+            }
+            collapsed.AppendChar(c);
+            space = false;
+        }
+        out.Append(fmt("page1text=%s\n", ToStrTemp(collapsed)));
+    }
     bool hasNotification = GetNotificationForGroup(gWindows[0]->hwndCanvas, kNotifAnnotation) != nullptr;
     bool selectedHover = tab->selectedAnnotation && tab->selectedAnnotation == gWindows[0]->annotationUnderCursor;
     out.Append(fmt("state selected=%d hover=%d editToolbar=%d notification=%d editor=%d selectedHover=%d\n",

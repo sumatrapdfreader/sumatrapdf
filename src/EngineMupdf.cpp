@@ -8305,6 +8305,152 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     return epdf->modifiedAnnotations;
 }
 
+bool EngineMupdfHasRedactMarks(EngineBase* engine) {
+    Vec<Annotation*> annots;
+    EngineMupdfGetLoadedAnnotations(engine, annots);
+    for (Annotation* a : annots) {
+        if (a && a->type == AnnotationType::Redact) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void DropPageImages(fz_context* ctx, FzPageInfo* pi) {
+    for (FitzPageImageInfo* img : pi->images) {
+        if (img && img->image) {
+            fz_drop_image(ctx, img->image);
+            img->image = nullptr;
+        }
+    }
+    DeleteVecMembers(pi->images);
+}
+
+// Drop cached page bits that were built from the old content stream.
+// Caller holds pagesLock and renderLock. Leaves annotation wrappers in place.
+static void InvalidateFzPageAfterContentChange(EngineMupdf* e, FzPageInfo* pi) {
+    auto* ctx = e->Ctx();
+    if (pi->displayList) {
+        fz_drop_display_list(ctx, pi->displayList);
+        pi->displayList = nullptr;
+    }
+    PdfDarkModeInvalidatePage(ctx, pi);
+    pi->contentImagesCollected = false;
+    DropPageImages(ctx, pi);
+    DeleteVecMembers(pi->links);
+    DeleteVecMembers(pi->autoLinks);
+    if (pi->retainedLinks) {
+        fz_drop_link(ctx, pi->retainedLinks);
+        pi->retainedLinks = nullptr;
+    }
+    pi->elementsNeedRebuilding = true;
+    pi->fullyLoaded = false;
+}
+
+// Apply every /Redact annotation: rewrite the page content, drop the marks,
+// and return the Sumatra wrappers that MuPDF deleted (caller must Detach +
+// DeleteAnnotation). Incremental save is unsafe afterwards; pdfdoc->redacted
+// already forces a full rewrite in EngineMupdfSaveUpdated.
+bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut) {
+    deletedOut.Reset();
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return false;
+    }
+
+    pdf_redact_options opts{};
+    opts.black_boxes = 1;
+    opts.image_method = PDF_REDACT_IMAGE_PIXELS;
+    opts.line_art = PDF_REDACT_LINE_ART_REMOVE_IF_TOUCHED;
+    opts.text = PDF_REDACT_TEXT_REMOVE;
+
+    auto* ctx = e->Ctx();
+    bool any = false;
+    ScopedRecursiveMutex pagesScope(&e->pagesLock);
+    ScopedMutex renderScope(&e->renderLock);
+
+    for (int pageNo = 1; pageNo <= e->pageCount; pageNo++) {
+        FzPageInfo* pi = GetFzPageInfoLocked(e, pageNo, true, nullptr);
+        if (!pi || !pi->page) {
+            continue;
+        }
+
+        bool hasRedact = false;
+        for (Annotation* a : pi->annotations) {
+            if (a && a->type == AnnotationType::Redact) {
+                hasRedact = true;
+                break;
+            }
+        }
+        if (!hasRedact) {
+            continue;
+        }
+
+        Vec<Annotation*> before = pi->annotations;
+        int did = 0;
+        bool failed = false;
+        {
+            ScopedRecursiveMutex docScope(&e->docLock);
+            fz_try(ctx) {
+                pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
+                if (page) {
+                    did = pdf_redact_page(ctx, e->pdfdoc, page, &opts);
+                }
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+                failed = true;
+                logf("EngineMupdfApplyRedactions: pdf_redact_page failed on page %d\n", pageNo);
+            }
+        }
+        if (failed || !did) {
+            continue;
+        }
+
+        Vec<pdf_annot*> live;
+        bool listedLive = false;
+        {
+            ScopedRecursiveMutex docScope(&e->docLock);
+            fz_try(ctx) {
+                pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
+                for (pdf_annot* a = page ? pdf_first_annot(ctx, page) : nullptr; a; a = pdf_next_annot(ctx, a)) {
+                    live.Append(a);
+                }
+                listedLive = true;
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+            }
+        }
+
+        for (Annotation* w : before) {
+            if (!w) {
+                continue;
+            }
+            bool gone = listedLive ? live.Find(w->pdfannot) < 0 : w->type == AnnotationType::Redact;
+            if (!gone) {
+                continue;
+            }
+            w->pdfannot = nullptr;
+            pi->annotations.Remove(w);
+            deletedOut.Append(w);
+        }
+
+        {
+            ScopedRecursiveMutex docScope(&e->docLock);
+            RebuildCommentsFromAnnotations(ctx, pi);
+        }
+        InvalidateFzPageAfterContentChange(e, pi);
+        e->InvalidateTextForPage(pageNo);
+        any = true;
+    }
+
+    if (any) {
+        e->modifiedAnnotations = true;
+    }
+    return any;
+}
+
 // the mupdf engine also renders epub, mobi, fb2, xps, svg and more; only a real
 // PDF has a pdf_document behind it
 bool EngineMupdfIsPdf(EngineBase* engine) {

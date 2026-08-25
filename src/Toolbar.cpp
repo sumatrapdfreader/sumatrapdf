@@ -110,6 +110,7 @@ static ToolbarButtonInfo gPdfAnnotationButtons[] = {
     {gIconAnnotInk, CmdCreateAnnotInk, _TRN("Ink")},
     {nullptr, 0, {}},
     {gIconAnnotRedact, CmdCreateAnnotRedact, _TRN("Redact")},
+    {gIconApplyRedactions, CmdApplyRedactions, _TRN("Apply Redactions")},
     {gIconAnnotStamp, CmdCreateAnnotStamp, _TRN("Stamp")},
     {gIconAnnotCaret, CmdCreateAnnotCaret, _TRN("Caret")},
     {gIconAnnotFileAttachment, CmdCreateAnnotFileAttachment, _TRN("File Attachment")},
