@@ -4,11 +4,11 @@ or [SumatraPDF.exe grep](Tools.md)
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-To search text in `file.pdf`:
+To search for text in `file.pdf`:
 
 `sumatrapdf-tool grep -i foo file.pdf`
 
-`-i` ignores case i.e. does case-insensitive search, which is probably a good default.
+`-i` ignores case, i.e. performs a case-insensitive search, which is probably a good default.
 
 Other options:
 
@@ -18,9 +18,9 @@ Other options:
 
 `sumatrapdf-tool grep -i -G x.* file.pdf`
 
-- `-G` search pattern is a regex
-- `-i` you can combine it with case-insensitive flag
-- `x.*` is a regular expression that says: every string that starts with `x`
+- `-G` specifies that the search pattern is a regular expression
+- `-i` combines it with the case-insensitive flag
+- `x.*` is a regular expression that matches every string that starts with `x`
 
 ## Show where matches are
 

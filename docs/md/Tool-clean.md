@@ -12,7 +12,7 @@ See [all-options](#all-options) below.
 
 - compress a PDF
 - decompress a PDF
-- encrypt / decrypt PDF
+- encrypt / decrypt a PDF
 - extract / remove pages
 - repair a broken PDF (rewriting it often fixes structural problems)
 
@@ -30,7 +30,7 @@ If you don't specify an output file, it writes to `out.pdf`.
 
 `sumatrapdf-tool clean -E aes-256 -U pwd foo.pdf foo-encrypted.pdf`
 
-Now to open `foo-encrypted.pdf` the user will have to provide password `pwd`.
+To open `foo-encrypted.pdf`, the user will now have to provide the password `pwd`.
 
 ## Decrypt a PDF
 
@@ -40,25 +40,25 @@ Now to open `foo-encrypted.pdf` the user will have to provide password `pwd`.
 
 `sumatrapdf-tool clean input.pdf output.pdf 1,3-5`
 
-This creates PDF output.pdf with pages 1,3,4,5 of PDF input.pdf
+This creates `output.pdf` with pages 1, 3, 4, and 5 from `input.pdf`.
 
 ## Delete a page from PDF
 
-Let's say you have `input.pdf` with 8 pages. To delete a page 4:
+Suppose you have an eight-page `input.pdf`. To delete page 4:
 
 `sumatrapdf-tool clean input.pdf output.pdf 1-3,5-N`
 
-`N` represents last page.
+`N` represents the last page.
 
-### Extract 2nd page
+### Extract the second page
 
 `sumatrapdf-tool draw -o foo-page-2.pdf foo.pdf 2`
 
-### Extract pages 1,2,7,8 into a separate file each
+### Extract pages 1, 2, 7, and 8 into separate files
 
 `sumatrapdf-tool draw -o "foo-page-%d.pdf" foo.pdf 1-2,7,8`
 
-### Delete 3rd page
+### Delete the third page
 
 `sumatrapdf-tool draw -o foo-3rd-page-deleted.pdf foo.pdf 1-2,4-8`
 

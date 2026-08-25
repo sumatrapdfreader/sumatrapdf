@@ -2,37 +2,37 @@
 
 **Available in version 3.4 or later.**
 
-You can send selected text to Google / Bing search engine or Google / DeepL translation web service:
+You can send selected text to the Google or Bing search engine, or to the Google or DeepL translation service:
 
-- select text using mouse
-- right-click for context menu
+- select text using the mouse
+- right-click to open the context menu
 
 ![Context Menu Selection](img/context-menu-selection.png)
 
-- use `Selection` sub-menu and select web service to use for translation or search:
+- use the `Selection` submenu and select the web service to use for translation or search:
 
 ![Context Menu Translate](img/context-menu-translate.png)
 
-You can also use command palette (`Ctrl + K`):
+You can also use the command palette (`Ctrl + K`):
 
 - select text
-- `Ctrl + K` to open command palette
-- type e.g. `deepl` to find `Translate with DeepL` command
+- press `Ctrl + K` to open the command palette
+- type, for example, `deepl` to find the `Translate with DeepL` command
 
 ![Using Command Palette](img/cmd-palette-translate.png)
 
-- press `Enter` (or double-click with mouse) to execute the action
+- press `Enter` (or double-click with the mouse) to execute the action
 
 ## Adding more services
 
 You can add more web services using [advanced settings](https://www.sumatrapdfreader.org/settings/settings.html).
 
-To configure an external reader:
+To configure a selection handler:
 
-- use `Settings / Advanced Settings...` menu to open configuration file
-- modify `SelectionHandlers` section
+- use the `Settings / Advanced Settings...` menu to open the configuration file
+- modify the `SelectionHandlers` section
 
-Here's an example of adding [DuckDuckGo](https://duckduckgo.com/) search engine:
+Here is an example that adds the [DuckDuckGo](https://duckduckgo.com/) search engine:
 
 ```
 SelectionHandlers [
@@ -46,11 +46,11 @@ SelectionHandlers [
 
 `URL` is the website that will be launched. `${selection}` will be replaced with the current selection, URL-encoded as a query value (spaces become `%20`, and reserved characters such as `?`, `"`, `&` and `#` become `%XX` so they are not parsed as more URL syntax).
 
-`Name` is what shows in the menu. You can use `&` characters to add Windows hot-key for keyboard-only invocation.
+`Name` is what appears in the menu. You can use an `&` character to add a Windows hotkey for keyboard-only invocation.
 
-**Ver3.6+**: `Key` is a keyboard shortcut in the same format as in [Shortcuts](Customize-keyboard-shortcuts.md) advanced setting.
+**Ver 3.6+:** `Key` is a keyboard shortcut in the same format as in the [`Shortcuts`](Customize-keyboard-shortcuts.md) advanced setting.
 
-## A button on the selection toolbar (Ver3.7+)
+## A button on the selection toolbar (ver 3.7+)
 
 Selecting text pops up a small toolbar over the selection (turn it off with
 `SelectionToolbar` in advanced settings). `SelectToolbarNameOrSvg` puts the
@@ -71,7 +71,7 @@ SelectionHandlers [
 
 The value is the button's text. Keep it short — the toolbar sits over what you
 are reading, and every handler you add makes it wider. Unlike `Name`, it is
-shown as you typed it: no `&` hot-key handling, and no translation.
+shown as you typed it: no `&` hotkey handling, and no translation.
 
 If the value starts with `<svg`, it is an SVG icon and is drawn instead of the
 text, in the same format as `ToolbarSvgIcon` in
@@ -131,7 +131,7 @@ This is the standard selection toolbar written out:
 SelectionToolbarLayout = CmdCopySelection CmdTranslateSelection CmdReadAloudSelection CmdCreateAnnotHighlight CmdCreateAnnotUnderline CmdCreateAnnotSquiggly CmdCreateAnnotStrikeOut CmdCreateAnnotText
 ```
 
-## Sending long text (Ver3.7+)
+## Sending long text (ver 3.7+)
 
 A URL can only hold so much text. If you select several paragraphs and send them
 to a service with the default settings, the text is shortened to fit and you get
@@ -158,7 +158,7 @@ bigger — sometimes much bigger:
 - a Chinese, Japanese or Korean character is 3 bytes of UTF-8, so it becomes
   `%XX%XX%XX` — **9 characters**
 
-So the same budget is roughly 8000 latin characters but only about 900 CJK
+So the same budget is roughly 8000 Latin characters but only about 900 CJK
 characters. When the text doesn't fit, SumatraPDF shortens it at a character
 boundary (never in the middle of a character) and tells you it did.
 
@@ -233,7 +233,7 @@ the way around it.
 
 ## Placeholders
 
-These can be used in `URL`, `Exe` and `Body`:
+These can be used in `URL`, `Exe`, and `Body`:
 
 | Placeholder            | Replaced with                                                       |
 | ---------------------- | ------------------------------------------------------------------- |
@@ -257,7 +257,7 @@ Body = {"text": "${selectionjson}", "target": "de"}
 `${selectionPosition}` is for a helper that wants to sit next to the selection
 (a dictionary popup, Anki helper, …). The four integers are the bounding box
 of the visible selection in screen pixels, the same space as a Win32
-`SetWindowPos`. Empty if there is no visible selection.
+`SetWindowPos`. It is empty if there is no visible selection.
 
 Use `Exe` instead of `URL` to hand the selection to a program. Combined with
 `${selectionfile}` there is no length limit at all and no encoding to worry

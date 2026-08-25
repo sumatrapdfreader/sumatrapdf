@@ -2,7 +2,7 @@
 
 **Available in version 3.6 or later.**
 
-You can add buttons to a toolbar using `Shortcuts` [advanced setting](Advanced-options-settings.md). You can also add toolbar buttons for custom external viewers using `ExternalViewers`.
+You can add buttons to the toolbar using the [`Shortcuts` advanced setting](Advanced-options-settings.md). You can also add toolbar buttons for custom external viewers using `ExternalViewers`.
 
 ## Choose which buttons are on the toolbar, and in what order
 
@@ -43,11 +43,11 @@ Press `F8` (the **Toggle Toolbar** command) to cycle through the modes: show →
 Toolbar = overlay
 ```
 
-To customize toolbar:
+To customize the toolbar:
 
-- use `Settings` / `Advanced Options...` menu (or `Ctrl + K` Command Palette, type `adv` to narrow down and select `Advanced Options...` command)
-- this opens default .txt editor with advanced settings file
-- find `Shortcuts` array and add new shortcut definitions
+- use the `Settings` / `Advanced Options...` menu (or open the Command Palette with `Ctrl + K`, type `adv` to narrow the results, and select the `Advanced Options...` command)
+- this opens the advanced settings file in your default text editor
+- find the `Shortcuts` array and add new shortcut definitions
 
 Example using text labels (`ToolbarText`):
 
@@ -83,7 +83,7 @@ Explanation:
 - `CmdNextTab` is one of the [commands](Commands.md)
 - `Next Tab` will be shown in the toolbar
 
-If you provide `Name`, it'll be available in [Command Palette](Command-Palette.md).
+If you provide `Name`, it will be available in the [Command Palette](Command-Palette.md).
 
 See [customize shortcuts](Customize-keyboard-shortcuts.md) for more complete docs on `Shortcuts` [advanced setting](Advanced-options-settings.md).
 
@@ -141,4 +141,4 @@ As an alternative to SVG, you can use Unicode symbols in `ToolbarText` — they 
 
 Symbols supported by Windows' Segoe UI font: http://zuga.net/articles/unicode-all-characters-supported-by-the-font-segoe-ui/
 
-To find a symbol you can search for example for `arrow` and then copy & paste the symbol (e.g. `→`) into settings file.
+To find a symbol, you can search for a term such as `arrow`, then copy and paste the symbol (e.g. `→`) into the settings file.

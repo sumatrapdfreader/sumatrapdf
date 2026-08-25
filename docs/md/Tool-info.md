@@ -6,9 +6,9 @@ or [SumatraPDF.exe info](Tools.md)
 
 **Usage:** `sumatrapdf-tool info [options] file.pdf [pages]`
 
-PDF file can contain embedded fonts, images, patterns etc. Each object has an object number.
+A PDF file can contain embedded fonts, images, patterns, etc. Each object has an object number.
 
-`sumatrapdf-tool info foo.pdf` shows list of objects in the PDF file.
+`sumatrapdf-tool info foo.pdf` shows a list of objects in the PDF file.
 
 By default it shows all supported types of objects.
 

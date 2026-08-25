@@ -6,11 +6,11 @@ or [SumatraPDF.exe recolor](Tools.md)
 
 **Usage:** `sumatrapdf-tool recolor [options] <input filename>`
 
-A PDF can use several color spaces. You can use `recolor` to change the colorspace.
+A PDF can use several color spaces. You can use `recolor` to change the color space.
 
 To convert a PDF to gray: `sumatrapdf-tool recolor -o output.pdf -c gray input.pdf`
 
-The output colorspace (`-c`) can be `gray` (the default), `rgb` or `cmyk`. Use `-r` to also remove any [output intents](https://en.wikipedia.org/wiki/PDF/X) (embedded color profiles) from the file.
+The output color space (`-c`) can be `gray` (the default), `rgb`, or `cmyk`. Use `-r` to also remove any [output intents](https://en.wikipedia.org/wiki/PDF/X) (embedded color profiles) from the file.
 
 ## All options
 

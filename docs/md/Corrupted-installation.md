@@ -1,6 +1,6 @@
 # Corrupted installation
 
-See also [Installation](Installation.md) for portable vs installer overview.
+See also [Installation](Installation.md) for an overview of the portable and installer versions.
 
 If you're reading this, you might have been told by SumatraPDF that you have a corrupted installation.
 
@@ -12,7 +12,7 @@ A portable version is a self-contained executable and cannot be corrupted.
 
 An installer needs to be run to be properly installed. Part of it is extracting the engine library (`libsumatrapdf.dll` from **3.7**; through **3.6** it was named `libmupdf.dll`).
 
-There are 2 possible problems:
+There are two possible problems:
 
 - `libsumatrapdf.dll` is missing
 - `libsumatrapdf.dll` is there but its version doesn't match the version of `SumatraPDF.exe`
@@ -21,8 +21,8 @@ There are 2 possible problems:
 
 If you want to place SumatraPDF in any location, under any name, use the self-contained portable flavor.
 
-If you insist on using the installable version, just install it. The installer will run if it has `-install` in the name of the `.exe` (which it will if you download [official build](https://www.sumatrapdfreader.org/download-free-pdf-viewer)).
+If you want to use the installable version, install it. The installer will run if the `.exe` filename contains `-install` (as it will if you download an [official build](https://www.sumatrapdfreader.org/download-free-pdf-viewer)).
 
-If you rename the `.exe`, you can force running the installer with `-install` option.
+If you rename the `.exe`, you can force it to run as the installer with the `-install` option.
 
-Alternatively, you can extract `libsumatrapdf.dll` and all other files with `-x` option.
+Alternatively, you can extract `libsumatrapdf.dll` and all other files with the `-x` option.

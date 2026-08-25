@@ -1,11 +1,11 @@
 # Supported document formats
 
-SumatraPDF reader supports the following document types:
+SumatraPDF supports the following document types:
 
 - PDF (.pdf, .ai)
 - eBook formats:
   - unencrypted EPUB (.epub)
-  - MOBI / Kindle (.mobi, and un-encrypted .azw, .azw3, .prc); Print Replica (.azw4) opens as the wrapped PDF
+  - MOBI / Kindle (.mobi, and unencrypted .azw, .azw3, .prc); Print Replica (.azw4) opens as the wrapped PDF
   - FictionBook (.fb2, .fb2z, .fbz, .zfb2, .fb2.zip)
   - Palm DOC (.pdb)
   - plain text (.txt, .log, .nfo, .tcr, …)

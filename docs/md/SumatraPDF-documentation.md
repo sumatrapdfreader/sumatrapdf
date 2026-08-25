@@ -1,6 +1,6 @@
 [SumatraPDF](https://www.sumatrapdfreader.org/) is a free [PDF, EPUB, MOBI, CHM, XPS, DjVu, CBZ and CBR](Supported-document-formats.md) reader for Windows. It's small, fast, customizable and full of features.
 
-Using AI? You can ask them questions about SumatraPDF. Ask [Grok](https://grok.com/?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.), [ChatGPT](https://chatgpt.com/?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.), [Claude](https://claude.ai/new?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.).
+Using AI? You can ask an AI assistant questions about SumatraPDF. Ask [Grok](https://grok.com/?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.), [ChatGPT](https://chatgpt.com/?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.), or [Claude](https://claude.ai/new?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.).
 
 ## Documentation for users
 
@@ -159,7 +159,7 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 
 [Reporting printing bugs](Reporting-printing-bugs.md)
 
-[Update check doesnt work?](Update-check-doesnt-work.md)
+[Update check doesn't work?](Update-check-doesnt-work.md)
 
 [Failed to load libsumatrapdf.dll](Failed-to-load-libmupdf.md)
 
@@ -175,8 +175,8 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 
 ## Feedback
 
-Found a bug? Have feature request? Submit via [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues) and [vote for features](https://sumatrapdf.userjot.com) you want to see next.
+Found a bug? Have a feature request? Submit it via the [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues) and [vote for features](https://sumatrapdf.userjot.com) you want to see next.
 
-Have feedback or question? Discuss in a [forum](https://github.com/sumatrapdfreader/sumatrapdf/discussions).
+Have feedback or a question? Discuss it in the [forum](https://github.com/sumatrapdfreader/sumatrapdf/discussions).
 
 Want to make SumatraPDF work better in your language? [Contribute a translation.](Contribute-translation.md)

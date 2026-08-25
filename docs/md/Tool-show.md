@@ -102,7 +102,7 @@ page 3 = 13 0 R
 
 ## Object paths
 
-Instead of a keyword you can pass a path to drill down to a specific object. A path starts with an object number, the keyword `trailer` or `pages`, and walks into the object with `.` or `/` separators. Use `pages/N` to select the N-th page (the first page is `1`), and `*` to iterate over all array indices or dictionary properties.
+Instead of a keyword, you can pass a path to drill down to a specific object. A path starts with an object number or the keyword `trailer` or `pages`, and walks into the object with `.` or `/` separators. Use `pages/N` to select the Nth page (the first page is `1`), and `*` to iterate over all array indices or dictionary properties.
 
 Find the number of pages in a document:
 

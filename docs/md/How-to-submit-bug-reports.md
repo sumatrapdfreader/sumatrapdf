@@ -2,19 +2,19 @@
 
 Did you encounter a bug in SumatraPDF?
 
-## Check in latest pre-release build
+## Check the latest pre-release build
 
-First, see if it still happens in latest [pre-release version](https://www.sumatrapdfreader.org/prerelease). It's possible that a bug has already been fixed there.
+First, see if it still happens in the latest [pre-release version](https://www.sumatrapdfreader.org/prerelease). The bug may already have been fixed there.
 
 ## Create an issue
 
-If the problem is present in latest [pre-release build](https://www.sumatrapdfreader.org/prerelease), please create a bug report in our [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues).
+If the problem is present in the latest [pre-release build](https://www.sumatrapdfreader.org/prerelease), please create a bug report in our [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues).
 
 ## Provide a test file
 
-Does it involve a specific PDF (or CHM or XPS) file? 
+Does it involve a specific PDF (or CHM or XPS) file?
 
-Please attach it to the issue (try dragging and dropping on the issue field). Without a test document we rarely can make progress on fixing the issue.
+Please attach it to the issue (try dragging and dropping it onto the issue field). Without a test document, we can rarely make progress on fixing the issue.
 
 If the file (or other information) is confidential, you can e-mail it directly to [kkowalczyk@gmail.com](mailto:kkowalczyk@gmail.com) ([Krzysztof Kowalczyk](https://blog.kowalczyk.info/), SumatraPDF's main developer).
 

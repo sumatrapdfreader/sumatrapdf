@@ -24,7 +24,7 @@ SumatraPDF exposes a [UI Automation](https://learn.microsoft.com/en-us/windows/w
 
 ### Other screen readers (NVDA, JAWS, …)
 
-Any client that uses Windows UI Automation can query the same document tree. NVDA and JAWS are not exhaustively tested for every document; feedback welcome in [discussions](https://github.com/sumatrapdfreader/sumatrapdf/discussions) or issues.
+Any client that uses Windows UI Automation can query the same document tree. NVDA and JAWS are not exhaustively tested for every document; feedback is welcome in [discussions](https://github.com/sumatrapdfreader/sumatrapdf/discussions) or issues.
 
 **Tips:**
 

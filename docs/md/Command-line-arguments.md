@@ -4,18 +4,18 @@ For command-line arguments for the installer see [this page](Installer-cmd-line-
 
 You can launch Sumatra with additional command-line options: `SumatraPDF [argument ...] [filepath ...]`.
 
-Most arguments start with dash (`-`). Some Adobe Reader slash forms are also accepted (`/p`, `/t`, `/A`). Some arguments are followed by additional parameters.
+Most arguments start with a dash (`-`). Some Adobe Reader slash forms are also accepted (`/p`, `/t`, `/A`). Some arguments are followed by additional parameters.
 
-Anything that is not recognized as a known option is interpreted as a file path so it's possible to mix file paths and command-line arguments.
+Anything that is not recognized as a known option is interpreted as a file path, so it's possible to mix file paths and command-line arguments.
 
 ## List of command line options
 
 - `-presentation` : start in presentation view
 - `-fullscreen` : start in full screen view
-- `-new-window` : open each file in its own new window, as opposed to in a tab of an existing window (**ver 3.2+**). With several file arguments, one window per file
+- `-new-window` : open each file in its own new window rather than in a tab of an existing window (**ver 3.2+**). With several file arguments, it opens one window per file
 - `-new-window-tabs` : open **one** new window and load all files as tabs in that window (**ver 3.7+**, issue #5044)
-- `-appdata <directory>` : set custom directory where we'll store `SumatraPDF-settings.txt` file and thumbnail cache
-- `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. See [Configure for restricted use](Configure-for-restricted-use.md).
+- `-appdata <directory>` : set a custom directory in which to store the `SumatraPDF-settings.txt` file and thumbnail cache
+- `-restrict` : runs in restricted mode, where you can disable features that require access to the file system, registry, and internet. Useful for kiosk-like usage. See [Configure for restricted use](Configure-for-restricted-use.md).
 - `-for-testing` : for ad-hoc testing by humans or agents. Always starts a new instance, doesn't restore a session (only loads files given on the command line) and doesn't save settings (**ver 3.7+**)
 - `-quicklook` : open the file in a chrome-less always-on-top preview window (Explorer Space preview). Esc or Space closes it (**ver 3.7+**, fixes #2568)
 - `-quicklook-agent` : run the hidden File Explorer Space-bar helper with no UI. Started automatically when `ExplorerQuickLook` is true (**ver 3.7+**)
@@ -25,9 +25,9 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 ## Navigation options
 
-- `-named-dest <destination-name>` : searches the first indicated file for a destination or a table-of-contents entry (or starting with version 3.1 also a page label) matching destination-name and scrolls the document to it. Combine with -reuse-instance if the document is already open.
-- `-page <pageNo>` : scrolls the first indicated file to the indicated page. Combine with -reuse-instance if the document is already open.
-- `-view <view-mode>` : set view mode for the first indicated file. Available view modes:
+- `-named-dest <destination-name>` : searches the first indicated file for a destination, table-of-contents entry, or (starting with version 3.1) page label matching `<destination-name>`, and scrolls the document to it. Combine with `-reuse-instance` if the document is already open.
+- `-page <pageNo>` : scrolls the first indicated file to the indicated page. Combine with `-reuse-instance` if the document is already open.
+- `-view <view-mode>` : sets the view mode for the first indicated file. Available view modes:
   - `"single page"`
   - `"continuous single page"`
   - `facing`
@@ -35,12 +35,12 @@ Anything that is not recognized as a known option is interpreted as a file path 
   - `"book view"`
   - `"continuous book view"`
 
-  Notice that options with space have to be surrounded by "" quotes.
+  Options containing spaces must be enclosed in double quotes.
 
   Combine with `-reuse-instance` if the document is already open.
 
-- `-zoom <zoom-level>` : Sets the zoom level for the first indicated file. Alternatives are "fit page", "fit width", "fit height", "fit content" or any percentage value. Combine with -reuse-instance if the document is already open.
-- `-scroll <x,y>` : Scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
+- `-zoom <zoom-level>` : sets the zoom level for the first indicated file. Alternatives are `"fit page"`, `"fit width"`, `"fit height"`, `"fit content"`, or any percentage value. Combine with `-reuse-instance` if the document is already open.
+- `-scroll <x,y>` : scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
 - `-search <term>` : start a search for a given term when opening a document, e.g. `SumatraPDF -search "foo" bar.pdf`. **Ver 3.4+**. The leading `-` is required.
 - `/A "<params>"` : Adobe Reader-compatible open parameters for the first file (**ver 3.5+**). `params` is a list of `name=value` pairs separated by `;`, `#`, or `&`. Recognized names:
   - `page=<n>` : go to page n (1-based)
@@ -51,7 +51,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 ## Send DDE commands
 
-- `-dde cmd` : send [DDE commands](DDE-Commands.md) to currently running instance e.g. `-dde '[Open("C:\Users\kjk\foo.pdf")]'`. Make sure to properly quote arguments. File paths must be absolute. **Ver 3.5+**.
+- `-dde cmd` : sends [DDE commands](DDE-Commands.md) to the currently running instance, e.g. `-dde '[Open("C:\Users\kjk\foo.pdf")]'`. Make sure to quote arguments properly. File paths must be absolute. **Ver 3.5+**.
 
 ## Printing options
 
@@ -60,10 +60,10 @@ For a detailed printing guide with examples for common tasks, see [Printing](Pri
 - `-print-to-default` : prints all files indicated on this command line to the system default printer. After printing, SumatraPDF exits immediately (check the error code for failure).
 - `-print-to <printer-name>` : prints all files indicated on this command line to the named printer. After printing, SumatraPDF exits immediately (check the error code for failure). E.g. `-print-to "Microsoft XPS Document Writer"` prints all indicated files to the XPS virtual printer.
 - `-print-settings <settings-list>`
-  - used in combination with `-print-to` and `-print-to-default`. Allows to tweak some of the printing related settings without using the Print dialog. The settings-list is a comma separated list of page ranges and advanced options such as
+  - used in combination with `-print-to` and `-print-to-default`. Lets you adjust printing-related settings without using the Print dialog. The settings list is a comma-separated list of page ranges and advanced options such as
     - page ranges: a single page (e.g. `5`), a range (e.g. `2-6`, or reversed `10-8`), `last` for the last page, or a negative number counting from the end (`-1` is the last page, `-2` the second-to-last; ranges may use negatives too, e.g. `-3--1` for the last 3 pages)
     - `even` or `odd`.
-    - `portrait` or `landscape` : can provide 90 degree rotation of contents (NOT the rotation of paper which must be pre-set by the choice of printer defaults)
+    - `portrait` or `landscape` : can provide a 90-degree rotation of the contents (NOT the rotation of the paper, which must be preset in the printer defaults)
     - `disable-auto-rotation` : by default a page wider than it is tall is rotated 90 degrees to fit the paper; this prints the content in its original orientation instead (available since 3.5)
     - `rotate=<degrees>` : rotate the printout by an extra `90`, `180` or `270` degrees (on top of the automatic rotation). Useful to fix a wrong orientation, e.g. upside-down (`rotate=180`) output on virtual printers
     - `noscale`, `shrink`, `fit` and `stretch` (`stretch` fills the paper in both dimensions, ignoring the aspect ratio)
@@ -104,7 +104,7 @@ With multiple files, the exit code is `0` only if all printed; otherwise it's th
 - `-forward-search "<sourcepath>" <line> "<pdfpath>"`: performs a forward search from a LaTeX source file to a loaded PDF document (using PdfSync or SyncTeX). This is an alternative to the ForwardSearch DDE command. E.g. `-forward-search "/path/to/main.tex" 123 "/path/to/main.pdf"` highlights all text related to line 123 in main.tex.
 - `-reuse-instance` : tells an already open SumatraPDF to load the indicated files. If there are several running instances, behavior is undefined. Only needed when communicating with SumatraPDF through DDE (use the ReuseInstance setting instead otherwise).
 - `-inverse-search <command-line>` : sets the command line to be used for performing an inverse search from a PDF document (usually back to a LaTeX source file). The inverse search command line can also be set from the **Set Inverse Search Command Line** dialog (`Ctrl + K` command palette), from _Settings / Options_ when `EnableTeXEnhancements` is enabled, or via the `InverseSearchCmdLine` advanced setting. Use the variable %f for the current filename and %l for the current line.
-- `-fwdsearch-offset <offset> -fwdsearch-width <width> -fwdsearch-color <hexcolor> -fwdsearch-permanent <flag>` : allows to customize the forward search highlight. Set the offset to a positive number to change the highlight style to a rectangle at the left of the page (instead of rectangles over the whole text). The flag for `-fwdsearch-permanent` can be 0 (make the highlight fade away, default) or 1.
+- `-fwdsearch-offset <offset> -fwdsearch-width <width> -fwdsearch-color <hexcolor> -fwdsearch-permanent <flag>` : lets you customize the forward-search highlight. Set the offset to a positive number to change the highlight style to a rectangle at the left of the page (instead of rectangles over all the text). The flag for `-fwdsearch-permanent` can be 0 (make the highlight fade away, the default) or 1.
   [Deprecated]: Use the corresponding advanced settings instead.
 
 ## Developer options
@@ -128,7 +128,7 @@ With multiple files, the exit code is `0` only if all printed; otherwise it's th
 
 The following options just set values in the settings file and may be removed in any future version:
 
-- `-bg-color <hexcolor>` : changes the yellow background color to a different color. See e.g. [html-color-codes.info](https://html-color-codes.info/) for a way to generate the hexcode for a color. E.g. `-bg-color #999999` changes the color to gray. Deprecated: use the `MainWindowBackground` setting instead.
+- `-bg-color <hexcolor>` : changes the yellow background to a different color. See, for example, [html-color-codes.info](https://html-color-codes.info/) for a way to generate a color's hex code. `-bg-color #999999` changes the color to gray. Deprecated: use the `MainWindowBackground` setting instead.
 - `-esc-to-exit` : enables the Escape key to quit SumatraPDF. Deprecated: use the `EscToExit` setting instead.
 - `-set-color-range <text-hexcolor> <background-hexcolor>` : uses the given two colors for foreground and background and maps all other colors used in a document in between these two. E.g. `-set-color-range #dddddd #333333` displays soft white text on a dark gray background. Deprecated: use the `FixedPageUI.TextColor` and `FixedPageUI.BackgroundColor` settings instead.
 - `-lang <language-code>` : sets the UI language. See [Translation languages](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/TranslationLangs.cpp) for the list of available language codes. E.g. `-lang de`. Deprecated: use the `UiLanguage` setting instead.

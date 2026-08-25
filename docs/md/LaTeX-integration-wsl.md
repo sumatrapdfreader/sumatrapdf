@@ -15,9 +15,9 @@ SyncTeX file (`.synctex` or `.synctex.gz`) alongside the PDF. This file
 records which line of the source corresponds to each piece of text in the
 PDF. SumatraPDF uses this information to provide:
 
-* **Forward search**: jump from a line in the source file to the
+- **Forward search**: jump from a line in the source file to the
   corresponding location in the PDF.
-* **Inverse search**: jump from a location in the PDF back to the
+- **Inverse search**: jump from a location in the PDF back to the
   corresponding line in the source file.
 
 ## Forward Search
@@ -39,7 +39,7 @@ The exact setup depends on your editor. For example, if you use VS Code
 with the WSL Remote extension, you will first need a LaTeX language
 server. One option is TexLab:
 
-* https://github.com/latex-lsp/texlab-vscode
+- https://github.com/latex-lsp/texlab-vscode
 
 Once installed, add the following settings to `settings.json`:
 
@@ -57,7 +57,7 @@ Once installed, add the following settings to `settings.json`:
 
 Note that TexLab launches SumatraPDF directly from Windows rather than
 through a WSL shell. As a result, file paths must be written using the
-`\\wsl.localhost\<DISTRO>\...` form .
+`\\wsl.localhost\<DISTRO>\...` form.
 
 After configuring TexLab, open the Command Palette (`Ctrl+Shift+P`) and
 run **LaTeX: Forward Search** while editing a `.tex` file. TexLab will

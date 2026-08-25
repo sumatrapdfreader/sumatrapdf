@@ -1,15 +1,15 @@
 # Installer cmd-line arguments
 
-To get list of options run the installer with `-help`.
+To get a list of options, run the installer with `-help`.
 
 Available options:
 
-- `-install` : this triggers installation
-- `-s`, `-silent` : silent installation, doesn't show UI
+- `-install` : triggers installation
+- `-s`, `-silent` : performs a silent installation without showing the UI
 - `-d <directory>` e.g. `Sumatra-install.exe -install -d "c:\Sumatra PDF"`
-    set directory where program is installed. The default is `%LOCALAPPDATA%\SumatraPDF` or `%PROGRAMFILES%\SumatraPDF` with `-all-users`
+  sets the directory where the program is installed. The default is `%LOCALAPPDATA%\SumatraPDF`, or `%PROGRAMFILES%\SumatraPDF` with `-all-users`
 - `-x` : don't install, extract the files
-    extracts files to the current directory, or to `-d <directory>` if given. When the destination is this executable's own directory, `SumatraPDF.exe` is left in place and only the payload (`libsumatrapdf.dll` and the other install files) is unpacked. Errors are printed to the console if one is already attached.
+  extracts files to the current directory, or to `-d <directory>` if specified. When the destination is this executable's own directory, `SumatraPDF.exe` is left in place and only the payload (`libsumatrapdf.dll` and the other installation files) is unpacked. Errors are printed to the console if one is already attached.
 - `-with-filter` : install search filter
 - `-with-preview` : install shell preview for PDF files
 - `-uninstall` : uninstalls SumatraPDF
@@ -17,12 +17,12 @@ Available options:
 **Ver 3.2+**
 
 - `-log`
-writes installation log to `%LOCALAPPDATA%\sumatra-install-log.txt`. At the end of installation will open the log file in notepad.
+  writes the installation log to `%LOCALAPPDATA%\sumatra-install-log.txt`. At the end of the installation, it opens the log file in Notepad.
 
 **Ver 3.4+**
 
 - `-all-users` : installs system-wide, for all users
-installs to `%PROGRAMFILES%\SumatraPDF` and writes to `HKLM` registry
+  installs to `%PROGRAMFILES%\SumatraPDF` and writes to the `HKLM` registry
 
 **Ver 3.6+**
 

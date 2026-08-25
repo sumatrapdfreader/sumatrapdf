@@ -4,7 +4,7 @@ There are many ways to navigate around the document.
 
 ## Scrolling with keyboard
 
-`Up`, `Down`, `Left`, `Right` refers to arrow keys.
+`Up`, `Down`, `Left`, and `Right` refer to the arrow keys.
 
 - `k`, `j`, `h`, `l` : scroll up / down / left / right
 - `Up`, `Down` : scroll up / down
@@ -15,11 +15,11 @@ There are many ways to navigate around the document.
 - `Home`, `End` : go to first / last page
 - `g`, `Ctrl + g` : go to page (text field in toolbar or dialog if toolbar not shown)
 
-## Scrolling with mouse and touch pad
+## Scrolling with a mouse and touchpad
 
-- click on scrollbar to scroll up or down by page
-- `Shift` + click on scrollbar : scrolls to that position
-- scroll up / down with mouse scroll wheel or touch pad scrolling gesture
+- click the scrollbar to scroll up or down by a page
+- `Shift` + click the scrollbar : scroll to that position
+- scroll up / down with the mouse wheel or a touchpad scrolling gesture
 - press `Alt` while scrolling : scrolls faster (by half page instead of by line)
 - mouse over scrollbar : scrolls faster (by half page instead of by line)
 - hold the **right mouse button** and drag : pan the page (a click without dragging opens the context menu)
@@ -67,11 +67,9 @@ For comic books and manga (right-to-left reading, double-page spreads, `LimitToW
 
 - `Ctrl` + mouse scroll wheel : zoom in / out
 - hold the **right mouse button** + mouse scroll wheel : zoom in / out (same as Ctrl + wheel; the context menu does not open if you zoomed)
-- `Ctrl` + touch pad scroll gesture : zoom in / out
-- pinch zoom gesture on touch screen
+- `Ctrl` + touchpad scroll gesture : zoom in / out
+- pinch-to-zoom gesture on a touchscreen
 - with `ClickEdgeToTurnPage = true` (advanced setting): click the left fifth of the page area for the previous page, the right fifth for the next page (sides reverse in manga mode)
-
-Also mention in comics doc briefly.
 
 ## Zoom levels
 
@@ -93,14 +91,14 @@ Levels up to 1000000 (10000x) are accepted; anything larger is ignored. How far 
 
 ## Navigating history
 
-Certain actions add navigation point. You can go back and forward in the history of navigation points (similar to browser back button) with:
+Certain actions add navigation points. You can go back and forward in the history of navigation points (similar to a browser's back button) with:
 
 - `Alt + Left`, `Backspace` : go back in history
 - `Alt + Right`, `Shift + Backspace` : go forward in history
 
 After following an internal hyperlink (footnote, TOC entry), use `Alt + Left` to go back. See [Hyperlinks](Hyperlinks.md).
 
-Actions that add navigation point:
+Actions that add navigation points:
 
 - explicitly going to a page (`g`, `Ctrl + g`)
 - clicking on links within documents

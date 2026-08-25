@@ -4,23 +4,23 @@
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-## In application
+## In the application
 
 To decrypt a PDF in SumatraPDF:
 
-- open encrypted PDF document
-- `Ctrl + k` for [command palette](Command-Palette.md)
-- `Decrypt PDF`
+- open an encrypted PDF document
+- press `Ctrl + K` to open the [command palette](Command-Palette.md)
+- select `Decrypt PDF`
 
 Or:
 
-- open encrypted PDF document
-- right-click for context menu
-- `Document` > `Decrypt PDF`
+- open an encrypted PDF document
+- right-click to open the context menu
+- select `Document` > `Decrypt PDF`
 
-## From command-line
+## From the command line
 
-To decrypt a PDF using SumatraPDF from command-line:
+To decrypt a PDF using SumatraPDF from the command line:
 
 `sumatrapdf-tool clean -D -p pwd foo-encrypted.pdf foo-decrypted.pdf`
 
@@ -31,4 +31,4 @@ Flags:
 
 You can see [all flags](Tool-clean.md).
 
-You can also [encrypt](Tool-x-encrypt-pdf-with-password.md)
+You can also [encrypt a PDF](Tool-x-encrypt-pdf-with-password.md).

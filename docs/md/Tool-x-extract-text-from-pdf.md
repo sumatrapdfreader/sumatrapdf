@@ -4,29 +4,29 @@
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-## In application
+## In the application
 
-To extract pages from a PDF in SumatraPDF:
+To extract text from a PDF in SumatraPDF:
 
-- open PDF document
-- `Ctrl + k` for [command palette](Command-Palette.md)
-- `Extract Text From Document`
+- open a PDF document
+- press `Ctrl + K` to open the [command palette](Command-Palette.md)
+- select `Extract Text From Document`
 
 Or:
 
-- open PDF document
-- right-click for context menu
-- `Document` > `Extract Text From Document`
+- open a PDF document
+- right-click to open the context menu
+- select `Document` > `Extract Text From Document`
 
 ![Extract text from PDF in SumatraPDF](img/extract-text-dialog.png)
 
-This extract text from the document and saves it as a text file.
+This extracts text from the document and saves it as a text file.
 
-You can also extract from all pages or select a subset of pages.
+You can extract text from all pages or select a subset of pages.
 
-## From command-line
+## From the command line
 
-You can use SumatraPDF cmd-line to extract text from a PDF file.
+You can use the SumatraPDF command line to extract text from a PDF file.
 
 ### Extract all text from PDF
 
@@ -36,19 +36,19 @@ You can use SumatraPDF cmd-line to extract text from a PDF file.
 
 `sumatrapdf-tool convert -o output.txt input.pdf 1-3,4,8-9`
 
-This will extract text from pages 1,2,3,4,8,9.
+This extracts text from pages 1, 2, 3, 4, 8, and 9.
 
 # Structured text
 
-PDF files don't really contain text. It's made of glyphs (characters) in a given font positioned at (x,y) position in a page.
+PDF files don't really contain text. Text is made of glyphs (characters) in a given font, positioned at `(x,y)` coordinates on a page.
 
-Extracting text is based on heuristics i.e. the program tries to guess words and lines based on position of characters.
+Text extraction is based on heuristics, i.e. the program tries to identify words and lines based on the positions of characters.
 
 Structured text is detailed information about every character on the page:
 
 - font
 - glyph
-- (x,y) position on page
+- `(x,y)` position on the page
 - bounding box (area) of the glyph
 
 For example, in XML format it looks like:
@@ -58,7 +58,7 @@ For example, in XML format it looks like:
 <char quad="187.4652 295.9985 191.96033 295.9985 187.4652 301.9683 191.96033 301.9683" x="187.4652" y="301.871" bidi="0" color="#000000" alpha="#ff" flags="16" c="d"/>
 ```
 
-Here it shows that letter `d` in font `CharisSIL` is at a given x/y position in the page.
+This shows that the letter `d` in the `CharisSIL` font is at a given x/y position on the page.
 
 You can use this output in your custom processing program.
 

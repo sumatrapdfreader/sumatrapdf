@@ -10,7 +10,7 @@ See [all-options](#all-options) below.
 
 You can use `draw` to:
 
-- convert PDF to other formats (image, html, svg)
+- convert PDF to other formats (image, HTML, SVG)
 - extract, delete pages
 - extract text
 
@@ -18,13 +18,13 @@ You can use `draw` to:
 
 Let's assume you have `foo.pdf` with 8 pages.
 
-### Extract 2nd page as png image
+### Extract the second page as a PNG image
 
 `sumatrapdf-tool draw -o foo-page-2.png -F png foo.pdf 2`
 
 ### Rotate pages
 
-Use `-R 90|180|270` option to rotate pages.
+Use the `-R 90|180|270` option to rotate pages.
 
 ### Extract each page as PNG image
 
@@ -44,7 +44,7 @@ When converting to an image (like PNG), you can change the size of the output im
 
 ### Render at a specific resolution (DPI)
 
-Instead of a pixel size you can render at a resolution with `-r` (the default is 72 dpi). This is handy for print-quality images:
+Instead of a pixel size, you can render at a resolution with `-r` (the default is 72 DPI). This is handy for print-quality images:
 
 `sumatrapdf-tool draw -o "foo-%d.png" -r 300 foo.pdf`
 
@@ -66,9 +66,9 @@ Instead of a pixel size you can render at a resolution with `-r` (the default is
 
 ### Structured text
 
-In PDF text really consists of characters positioned in a page.
+In a PDF, text consists of characters positioned on a page.
 
-If you want to see detailed information about text in PDF, especially for further programmatic processing, you can extract structured text which is: font, glyph (character), position.
+If you want detailed information about text in a PDF, especially for further programmatic processing, you can extract structured text: font, glyph (character), and position.
 
 ### Extract structured text from PDF in XML format
 
@@ -81,7 +81,7 @@ In XML format it might look like:
 <char quad="187.4652 295.9985 191.96033 295.9985 187.4652 301.9683 191.96033 301.9683" x="187.4652" y="301.871" bidi="0" color="#000000" alpha="#ff" flags="16" c="d"/>
 ```
 
-Here it shows that letter `d` in font `CharisSIL` is at a given x/y position in the page.
+This shows that the letter `d` in the `CharisSIL` font is at a given x/y position on the page.
 
 ### Extract structured text from PDF in JSON format
 

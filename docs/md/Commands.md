@@ -402,7 +402,7 @@ CmdDebugToggleDpiOverride,,internal,"debug builds only: cycles a pretend DPI (12
 
 # Commands with arguments
 
-**Ver 3.6+:** some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customize-keyboard-shortcuts.md).
+**Ver 3.6+:** some commands accept arguments that provide more options when creating [custom keyboard shortcuts](Customize-keyboard-shortcuts.md).
 
 For example:
 
@@ -415,21 +415,21 @@ Shortcuts [
 ]
 ```
 
-By default `a` invokes `CmdCreateAnnotHighlight` with default yellow color.
+By default, `a` invokes `CmdCreateAnnotHighlight` with the default yellow color.
 
-You can over-ride `a` shortcut to create green (`#00ff00`) highlight annotation instead and automatically open annotations edit window (`openedit` boolean argument).
+You can override the `a` shortcut to create a green (`#00ff00`) highlight annotation and automatically open the annotation editor (`openedit` Boolean argument).
 
 You can create multiple keyboard shortcuts for multiple colors.
 
-Arguments can be: strings, numbers, booleans, colors (`#rrggbb` or `#aarrggbb` format).
+Arguments can be strings, numbers, Booleans, or colors (`#rrggbb` or `#aarrggbb` format).
 
-Arguments have names. For example `CmdCreateAnnotHighlight` has `color` argument of type color and optional `openedit` boolean argument.
+Arguments have names. For example, `CmdCreateAnnotHighlight` has a `color` argument of type color and an optional `openedit` Boolean argument.
 
-The format of providing arguments is: `CmdCreateAnnotHighlight color: #fafafa openedit: true`.
+The format for providing arguments is `CmdCreateAnnotHighlight color: #fafafa openedit: true`.
 
-For boolean arguments name is the same as `true` value i.e. `openedit` is the same as `openedit: true`.
+For Boolean arguments, using the name alone is the same as setting the value to `true`, i.e. `openedit` is the same as `openedit: true`.
 
-For default arguments you can skip the name. For example: `color` is a default `CmdCreateAnnotHighlight` argument so `CmdCreateAnnotHighlight #fafafa` is the same as `CmdCreateAnnotHighlight color: #fafafa`
+For default arguments, you can skip the name. For example, `color` is the default `CmdCreateAnnotHighlight` argument, so `CmdCreateAnnotHighlight #fafafa` is the same as `CmdCreateAnnotHighlight color: #fafafa`.
 
 You can combine those rules: `CmdCreateAnnotHighlight #fafafa openedit` is the same as `CmdCreateAnnotHighlight color: #fafafa openedit: true`.
 
@@ -437,7 +437,7 @@ You can combine those rules: `CmdCreateAnnotHighlight #fafafa openedit` is the s
 
 **Ver 3.7+**
 
-`CmdExtendSelectionCharLeft`, `CmdExtendSelectionCharRight`, `CmdExtendSelectionWordLeft` and `CmdExtendSelectionWordRight` move the free end of the current text selection by one character or one word, the way `Shift + Left/Right` and `Ctrl + Shift + Left/Right` do in a text editor. Moving toward the selection's anchor shrinks it, moving away grows it, and the selection continues across page boundaries.
+`CmdExtendSelectionCharLeft`, `CmdExtendSelectionCharRight`, `CmdExtendSelectionWordLeft`, and `CmdExtendSelectionWordRight` move the free end of the current text selection by one character or one word, the way `Shift + Left/Right` and `Ctrl + Shift + Left/Right` do in a text editor. Moving toward the selection's anchor shrinks it, moving away grows it, and the selection continues across page boundaries.
 
 They have no default shortcut because the obvious keys are already taken (`Ctrl + Shift + Left/Right` navigate between files), so assign your own:
 
@@ -454,7 +454,7 @@ Shortcuts [
 ]
 ```
 
-The selection can come from anywhere: dragging with the mouse, double-clicking a word, `Ctrl + A` or keyboard selection (`F7`). While `F7` keyboard selection is active these commands move the caret, so it stays at the end of the selection. Without a selection they do nothing, and they're not available for documents with no extractable text.
+The selection can come from anywhere: dragging with the mouse, double-clicking a word, pressing `Ctrl + A`, or using keyboard selection (`F7`). While `F7` keyboard selection is active, these commands move the caret, so it stays at the end of the selection. Without a selection, they do nothing, and they're not available for documents with no extractable text.
 
 ## `CmdScrollUp`, `CmdScrollDown`
 
@@ -464,7 +464,7 @@ Arguments:
 
 - `n` : default, integer, how many lines to scroll up or down (default: 1)
 
-Use case: if you want to speed up scrolling with `j`, `k` keys, you can re-assign them:
+Use case: if you want to speed up scrolling with the `j` and `k` keys, you can reassign them:
 
 ```
 Shortcuts [
@@ -487,7 +487,7 @@ Arguments:
 
 - `n` : default, integer, how many pages to advance by (default: 1)
 
-Use case: if you want to go forward, back by more than 1 page
+Use case: if you want to go forward or back by more than one page.
 
 ## `CmdCreateAnnotHighlight` and other `CmdCreateAnnot*`
 
@@ -495,15 +495,15 @@ Arguments:
 
 - `color` : default, color
 - `openedit` : boolean, `false` if not given
-- `copytoclipboard` : boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, copies the selection (text of annotation) to clipboard. This used to be default behavior for built-in `a` etc. keyboard shortcuts but now it has to be explicitly chosen.
-- `setcontent` : boolean, false if not given. For highlight/underline/squiggly/strikeout sets content of annotation to the selection (text of annotation)
+- `copytoclipboard` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, copies the selection (the annotation's text) to the clipboard. This used to be the default behavior for built-in keyboard shortcuts such as `a`, but now it has to be chosen explicitly.
+- `setcontent` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, sets the annotation's content to the selection (the annotation's text)
 
 Use cases:
 
 - change default color for annotations
 - create multiple shortcuts for different colors
 
-Example: change `a` to create green highlight annotation:
+Example: change `a` to create a green highlight annotation:
 
 ```
 Shortcuts [
@@ -524,11 +524,11 @@ Arguments for `CmdCreateAnnotHighlight` plus:
 - `bgcolor` : background color of annotation, fully transparent if not given
 - `textsize` : size of annotation text, 12 if not given
 - `borderwidth` : border width, 1 if not given
-- `alignment` : **ver 3.7+**, how free text is aligned in its box: `left`, `center` or `right`. Left if not given
-- `opacity` : opacity of annotation, 0 - fully transparent (i.e. invisible), 100 - fully opaque (default if not given)
-- `interiorcolor` : interior color for circle, square etc. annotations, fully transparent if not given
-- `focusedit` : boolean, when annotation edit window opens, focus the contents edit control
-- `focuslist` : boolean, when annotation edit window opens, focus the annotations list
+- `alignment` : **ver 3.7+**, how free text is aligned in its box: `left`, `center`, or `right`. Left if not given
+- `opacity` : opacity of annotation, 0 = fully transparent (i.e. invisible), 100 = fully opaque (default if not given)
+- `interiorcolor` : interior color for circle, square, etc. annotations, fully transparent if not given
+- `focusedit` : Boolean, when the annotation editor opens, focus the contents edit control
+- `focuslist` : Boolean, when the annotation editor opens, focus the annotations list
 
 ## `CmdToggleBoolSetting`
 
@@ -577,7 +577,7 @@ Arguments:
 
 `level` can be:
 
-- a number describing zoom level in percent e.g.:
+- a number describing the zoom level as a percentage, e.g.:
   - `50` or `50%` means 50% zoom
   - `125` means 125% zoom
 - a virtual zoom level:
@@ -603,8 +603,8 @@ Shortcuts [
 
 Argument:
 
-- `mode` : default, optional string, Values:
-  - `@` for opened files (tabs)
+- `mode` : default, optional string. Values:
+  - `@` for open files (tabs)
   - `#` for history of files
   - `>` for commands
   - `%` for table of contents (`CmdCommandPaletteTOC`, `Shift + F12`; `*` still works)
@@ -660,6 +660,6 @@ Examples (DDE):
 
 # Debugging
 
-If a custom shortcut defined in `Shortcuts` doesn't work it could be caused by invalid command name or invalid command arguments.
+If a custom shortcut defined in `Shortcuts` doesn't work, it could be caused by an invalid command name or invalid command arguments.
 
-We log information about unsuccessful parsing of a shortcut so [check the logs](Debugging-Sumatra.md#getting-logs) if things don't work as expected.
+We log information about unsuccessful shortcut parsing, so [check the logs](Debugging-Sumatra.md#getting-logs) if things don't work as expected.

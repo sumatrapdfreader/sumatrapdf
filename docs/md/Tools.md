@@ -8,13 +8,13 @@ You can run `sumatrapdf-tool.exe <tool>` or [SumatraPDF.exe <tool>](Tools.md) to
 
 When you install SumatraPDF, we also install `sumatrapdf-tool.exe` and add it to PATH.
 
-`sumatrapdf-tool.exe` is a console program that provides command-line access to many SumatraPDF's features.
+`sumatrapdf-tool.exe` is a console program that provides command-line access to many of SumatraPDF's features.
 
-It's meant for use from command-line or from scripts.
+It's meant for use from the command line or from scripts.
 
 The same commands work with the portable EXE as `SumatraPDF.exe <tool>` — no install and no extra extract. You can also extract `sumatrapdf-tool.exe` with `-x` if you want the console binary.
 
-The difference is that `SumatraPDF.exe` is a GUI application so it won't work as well when e.g. re-directing output to a file or from scripts.
+The difference is that `SumatraPDF.exe` is a GUI application, so it won't work as well when, for example, redirecting output to a file or running from scripts.
 
 ## I want to…
 

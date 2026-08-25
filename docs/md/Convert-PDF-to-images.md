@@ -20,7 +20,7 @@ The command appears only when the open document is a **PDF**. It is hidden for c
 3. A dialog shows the source path and a destination **template**:
    - Default is the same folder and base name as the PDF, with `-<N>.png` (for `book.pdf`, `book-<N>.png`).
    - `<N>` is replaced by the 1-based page number (`book-1.png`, `book-2.png`, …).
-   - A **format** drop-down (PNG, JPEG, BMP) next to the path, like Save Image: picking a format updates the file extension.
+   - A **format** drop-down (PNG, JPEG, BMP) next to the path works like Save Image: picking a format updates the file extension.
    - Edit the path, or use **…** to browse. If the chosen name has no `<N>`, `-<N>` is inserted before the extension.
 4. Choose which pages to convert:
    - **Current** — the page you are viewing
@@ -30,7 +30,7 @@ The command appears only when the open document is a **PDF**. It is hidden for c
 
 Press **Esc** or **Cancel** to close the dialog without converting.
 
-Pages are rendered at **150 DPI** (independent of the zoom you are reading at). PNG files are losslessly recompressed in the background (same zopfli pass as Save Image).
+Pages are rendered at **150 DPI** (independent of your current zoom level). PNG files are losslessly recompressed in the background (the same Zopfli pass as Save Image).
 
 ## From the command line
 

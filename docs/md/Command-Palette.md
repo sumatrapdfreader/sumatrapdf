@@ -4,42 +4,42 @@
 
 ## Commands
 
-Use `Ctrl + K` to invoke command palette:
+Use `Ctrl + K` to invoke the command palette:
 
 ![Command Palette](img/command-palette-commands.png)
 
-Command palette is fast and convenient way to:
+The command palette is a fast and convenient way to:
 
-- access all SumatraPDF functionality via commands : default view and `>`
-- `#` : open file from history
+- access all SumatraPDF functionality via commands: the default view and `>`
+- `#` : open a file from history
 - `@` : switch to another tab
-- `%` : jump to a table of contents entry of current document
+- `%` : jump to a table of contents entry in the current document
 - `$` : jump to a favorite (current document's favorites first, then others)
 - `:` : combined view (replicates behavior before ver 3.6)
 
 How to use it:
 
-- press `Ctrl-K` to show command palette window
+- press `Ctrl + K` to show the command palette window
 - enter text to narrow down list of matches
-- `up` / `down` arrow navigate between matches
+- `Up` / `Down` arrows navigate between matches
 - `Page Up` / `Page Down` jump a page of matches
 - `Home` / `End` go to the first / last match when the caret is already at the start / end of the query (`Ctrl + Home` / `Ctrl + End` always do)
 - `Ctrl + A` selects the query
 - `Ctrl + C` copies the selected query text (`Ctrl + V` pastes into the query)
-- `Enter` to execute selected match (or double-click with mouse)
-- `Escape` to close the window (or click outside of it)
+- `Enter` executes the selected match (or double-click it with the mouse)
+- `Escape` closes the window (or click outside it)
 
-By default it shows available commands.
+By default, it shows the available commands.
 
 ## Switching between tabs
 
-Type `@` to switch between opened tabs:
+Type `@` to switch between open tabs:
 
 ![Command Palette](img/command-palette-tabs.png)
 
 ## File history
 
-Type `#` to open a file from list of previously opened files:
+Type `#` to open a file from the list of previously opened files:
 
 ![Command Palette](img/command-palette-file-history.png)
 
@@ -75,7 +75,7 @@ Type `:` for a combined view (replicates 3.4 and 3.5 behavior):
 
 ## Replicate 3.4 and 3.5 behavior
 
-In 3.6 we've changed default command palette view from combined (`:`) to just commands (`>`).
+In 3.6, we changed the default command palette view from combined (`:`) to commands only (`>`).
 
 You can replicate pre-3.6 behavior by adding to [advanced settings](./Advanced-options-settings.md):
 
@@ -88,6 +88,6 @@ Shortcuts [
 ]
 ```
 
-The default for `Ctrl + K` keyboard shortcut is `CmdCommandPalette` [command](./Commands.md).
+The default command for the `Ctrl + K` keyboard shortcut is [`CmdCommandPalette`](./Commands.md).
 
 This changes it to `CmdCommandPalette :`, which replicates 3.4/3.5 behavior.

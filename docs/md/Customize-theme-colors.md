@@ -2,13 +2,13 @@
 
 **Available in version 3.6 or later.**
 
-You can change colors of SumatraPDF UI by creating a custom theme using `Themes` [advanced setting](Advanced-options-settings.md).
+You can change the colors of the SumatraPDF UI by creating a custom theme with the [`Themes` advanced setting](Advanced-options-settings.md).
 
 To create a theme:
 
-- Navigate to `Settings` / `Advanced Options...` menu (or `Ctrl + K` Command Palette, type `adv` to narrow down and select `Advanced Options...` command)
-- This will open `SumatraPDF-settings.txt` text file using your default text editor
-- Scroll down to the bottom to find `Themes` array and add new shortcut definitions
+- Navigate to the `Settings` / `Advanced Options...` menu (or open the Command Palette with `Ctrl + K`, type `adv` to narrow the results, and select the `Advanced Options...` command)
+- This opens the `SumatraPDF-settings.txt` file in your default text editor
+- Scroll to the bottom, find the `Themes` array, and add new theme definitions
 
 Example of customization:
 
@@ -59,10 +59,10 @@ Meaning of the parameters:
 
 **Required / base colors**
 
-- `TextColor` and `BackgroundColor` are for main window color and color of text.
-- `ControlBackgroundColor` is for background of Windows controls (buttons, window frame, menus, list controls etc.).
-- `LinkColor` is a color for links. Typically it's blue.
-- `ColorizeControls` should be `true`. If `false` we won't try to change colors of standard windows controls (menu, toolbar, buttons etc.) so a lot of UI will not respect theme colors.
+- `TextColor` and `BackgroundColor` set the main window's text and background colors.
+- `ControlBackgroundColor` sets the background of Windows controls (buttons, window frame, menus, list controls, etc.).
+- `LinkColor` sets the color of links. It is typically blue.
+- `ColorizeControls` should be `true`. If it is `false`, we won't try to change the colors of standard Windows controls (menus, toolbars, buttons, etc.), so much of the UI will not respect the theme colors.
 
 ## Document page colors (`DocumentColorsFollowTheme`)
 
@@ -92,8 +92,8 @@ This is independent of `Theme = ...`. You can use a dark UI theme with `Document
 - `ErrorBackgroundColor` — error surfaces
 - `NotificationBackgroundColor` / `NotificationHighlightColor` / `NotificationHighlightTextColor` — in-app notification tips
 
-Now, once you save the text file above, there are three main ways to choose a theme that you had created:
+After you save the settings file, there are three main ways to choose a theme that you created:
 
-1. By changing the value of `Theme = ` in the `SumatraPDF-settings.txt` which we accessed above (e.g. `Theme = Solarized Dark`). Or,
-2. By launching the Command Palette (`Ctrl + k`), and then typing `theme` (afterwards, select the desired theme from the list). Or,
-3. By navigating to `Settings` / `Theme` and then choosing a theme.
+1. Change the value of `Theme = ` in `SumatraPDF-settings.txt` (e.g. `Theme = Solarized Dark`).
+2. Open the Command Palette (`Ctrl + K`), type `theme`, and select the desired theme from the list.
+3. Navigate to `Settings` / `Theme` and choose a theme.

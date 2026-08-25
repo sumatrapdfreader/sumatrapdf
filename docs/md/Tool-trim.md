@@ -6,15 +6,15 @@ or [SumatraPDF.exe trim](Tools.md)
 
 **Usage:** `sumatrapdf-tool trim [options] <input filename>`
 
-A PDF page has a fixed dimension. It can also have MediaBox, CropBox, BleedBox, TrimeBox and ArtBox which define rectangular area within the page.
+A PDF page has fixed dimensions. It can also have MediaBox, CropBox, BleedBox, TrimBox, and ArtBox values that define rectangular areas within the page.
 
 You can see what kind of boxes a PDF page has using [sumatrapdf-tool pages](Tool-pages.md).
 
-Using `trim` you can trim the area outside of a given box i.e. if there is content outside of the box, it'll be removed.
+Using `trim`, you can trim the area outside a given box, i.e. remove any content outside the box.
 
-With `-e` it'll do the opposite i.e. remove the content inside the box.
+With `-e`, it does the opposite, i.e. removes the content inside the box.
 
-The `-m` margin can be given as a single value applied to all sides, two values `<V>,<H>` (vertical, horizontal) or four values `<T>,<R>,<B>,<L>` (top, right, bottom, left). Positive values move inwards, negative outwards.
+The `-m` margin can be given as a single value applied to all sides, two values `<V>,<H>` (vertical, horizontal), or four values `<T>,<R>,<B>,<L>` (top, right, bottom, left). Positive values move inward; negative values move outward.
 
 ## Examples
 

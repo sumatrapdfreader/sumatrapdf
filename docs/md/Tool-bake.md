@@ -6,9 +6,9 @@ or [SumatraPDF.exe bake](Tools.md)
 
 **Usage:** `sumatrapdf-tool bake [options] input.pdf [output.pdf]`
 
-PDF format has annotations and widgets (used in forms) as special kinds of objects.
+The PDF format has annotations and widgets (used in forms) as special kinds of objects.
 
-`bake` is an advanced tool that converts annotations and widgets into regular PDF objects. It bakes PDF form and annotations into static content.
+`bake` is an advanced tool that converts annotations and widgets into regular, static PDF content.
 
 By default it bakes both annotations and form fields into the page content. Use `-A` to keep annotations as annotations (don't bake them) and `-F` to keep form fields interactive.
 

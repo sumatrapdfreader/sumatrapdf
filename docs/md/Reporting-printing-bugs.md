@@ -1,14 +1,14 @@
 # Reporting printing bugs
 
-Printing bugs are hard to diagnose because each printer has a different printer driver, so the same file can print well on one printer and not print on another printer.
+Printing bugs are hard to diagnose because each printer has a different driver, so the same file may print correctly on one printer but not on another.
 
-That's why when reporting printing bugs in [https://github.com/sumatrapdfreader/sumatrapdf/issues](https://github.com/sumatrapdfreader/sumatrapdf/issues), please make sure to include the following information:
+When reporting printing bugs in the [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues), please include the following information:
 
 - version of Sumatra
-- version of the OS (e.g. windows Vista, windows 10 etc.)
+- version of the OS (e.g. Windows Vista or Windows 10)
 - name of the printer
 - can you open and see the file in Sumatra?
-- what exactly happens, are there any error messages?
+- what exactly happens, and are there any error messages?
 - if it happens only for some files but not the others
-    - is there anything different about the files that don't print that jumps out?
-    - please attach the file that doesn't print to bug report. If the file is confidential you can e-mail it to [kkowalczyk@gmail.com](mailto:kkowalczyk@gmail.com) ([Krzysztof Kowalczyk](https://blog.kowalczyk.info/), Sumatra's main developer).
+  - is there anything different about the files that don't print that jumps out?
+  - please attach the file that doesn't print to the bug report. If the file is confidential, you can email it to [kkowalczyk@gmail.com](mailto:kkowalczyk@gmail.com) ([Krzysztof Kowalczyk](https://blog.kowalczyk.info/), SumatraPDF's main developer).

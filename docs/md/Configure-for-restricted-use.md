@@ -2,12 +2,12 @@
 
 SumatraPDF can be configured for restricted use.
 
-A restricted mode is useful if you want to use SumatraPDF as a bundled viewer for your program's documentation or in kiosk mode
+Restricted mode is useful if you want to use SumatraPDF as a bundled viewer for your program's documentation or in kiosk mode.
 
-In restricted mode some actions that are not appropriate in such context are disabled:
+In restricted mode, some actions that are not appropriate in such contexts are disabled:
 
 - opening new files
-- launching URLs from within PDF document
+- launching URLs from within PDF documents
 - text and image selection
 - printing
 - changing default settings
@@ -17,10 +17,10 @@ In restricted mode some actions that are not appropriate in such context are dis
 - TeX preview support
 - registering as a default PDF viewer
 - opening with Adobe Acrobat
-- e-mailing PDF
+- emailing PDFs
 
-To restrict SumatraPDF put file `sumatrapdfrestrict.ini` in the same directory where `SumatraPDF` is.
+To restrict SumatraPDF, put the `sumatrapdfrestrict.ini` file in the same directory as `SumatraPDF.exe`.
 
-Here's a [full documentation of available options](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini).
+Here is the [full documentation for the available options](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini).
 
 To disable only auto-detected URL, email, and plain-text DOI links in PDF text (not embedded hyperlinks), use `DisableAutoLinks` in normal [advanced settings](Advanced-options-settings.md) instead — see [Hyperlinks](Hyperlinks.md).

@@ -5,18 +5,18 @@ Sumatra is translated into many languages but we rely on you to help us keep tra
 To help us translate Sumatra:
 
 - go to [https://www.apptranslator.org/app/SumatraPDF](https://www.apptranslator.org/app/SumatraPDF)
-- log-in with your GitHub account
+- log in with your GitHub account
 - pick a language you know
 - add new translations or improve existing translations
 
-To get notified about new strings that need to be translated you can subscribe to an rss feed for your language in an RSS reader of your choice (e.g. [https://www.apptranslator.org/rss?app=SumatraPDF&lang=de](https://www.apptranslator.org/rss?app=SumatraPDF&lang=de) is rss feed for changes in German language)
+To get notified about new strings that need translation, subscribe to your language's RSS feed in the reader of your choice. For example, [this feed](https://www.apptranslator.org/rss?app=SumatraPDF&lang=de) lists changes for German.
 
 ## The meaning of & in translations
 
-& means that the following character is the hot key. For example, `&File` means that `f` key is a hot key in menu items etc. Hot keys are rendered with underline in menu items (although it can be disabled system-wide).
+`&` means that the following character is the hotkey. For example, `&File` means that the `F` key is a hotkey for that menu item. Hotkeys are underlined in menu items, although the underline can be disabled system-wide.
 
-You don’t have to add hot keys in translations - those are for convenience and easier use with a keyboard.
+You don't have to add hotkeys in translations; they are provided for convenience and easier keyboard use.
 
-In translated text a different character could be an accelerator.
+In translated text, a different character can be used as the accelerator.
 
 See [https://github.com/sumatrapdfreader/sumatrapdf/discussions/2919](https://github.com/sumatrapdfreader/sumatrapdf/discussions/2919) for more information.

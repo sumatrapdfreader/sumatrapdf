@@ -1,8 +1,8 @@
 # Logview
 
-Logview is a tool that helps in debugging SumatraPDF.
+Logview is a tool that helps with debugging SumatraPDF.
 
-When LogView is running, you can see SumatraPDF logs in LogView window. Logs show information that can be helpful in diagnosing issues.
+When Logview is running, you can see SumatraPDF logs in its window. Logs contain information that can help diagnose issues.
 
 ## Download
 

@@ -6,7 +6,7 @@ or [SumatraPDF.exe pages](Tools.md)
 
 `Usage: sumatrapdf-tool pages [options] file.pdf [pages]`
 
-`pages` lists the box dimensions (MediaBox, CropBox, TrimBox etc.), rotation and UserUnit for each page, in XML format. The output looks like:
+`pages` lists the box dimensions (MediaBox, CropBox, TrimBox, etc.), rotation, and UserUnit for each page in XML format. The output looks like:
 
 ```xml
 <page pagenum="1">

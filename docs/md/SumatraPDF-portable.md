@@ -1,33 +1,33 @@
 # Portable vs installer
 
-Portable version is a self-contained executable that does not require installation. You can copy it to any folder / new computer, put on an USB drive and it'll just work.
+The portable version is a self-contained executable that does not require installation. You can copy it to any folder or new computer, put it on a USB drive, and it will just work.
 
-Installer version also includes:
+The installer version also includes:
 
-- `PdfPreview.dll` : provides OS level (e.g. in Explorer) preview / thumbnails for supported files formats
-- `PdfFilter.dll` : provides OS level search within supported files (e.g. PDF, ePub files etc.)
-- `libsumatrapdf.dll` : for technical reasons, to make `PdfPreview.dll` and `PdfFilter.dll` work, the application must be split into `libsumatrapdf.dll` (core functionality) and the app `SumatraPDF.exe`
-- `sumatrapdf-tool.exe` : cmd-line tool to [perform operations](Tools.md) on PDF files. You can also run the same commands as `SumatraPDF.exe <tool>` without extracting this file.
+- `PdfPreview.dll` : provides OS-level previews and thumbnails (e.g. in Explorer) for supported file formats
+- `PdfFilter.dll` : provides OS-level search within supported files (e.g. PDF and EPUB files)
+- `libsumatrapdf.dll` : for technical reasons, the application must be split into `libsumatrapdf.dll` (core functionality) and `SumatraPDF.exe` to make `PdfPreview.dll` and `PdfFilter.dll` work
+- `sumatrapdf-tool.exe` : command-line tool for [performing operations](Tools.md) on PDF files. You can also run the same commands as `SumatraPDF.exe <tool>` without extracting this file
 
-You can extract those files with `-x` cmd-line option. Use `-d <dir>` to extract to given directory.
+You can extract these files with the `-x` command-line option. Use `-d <dir>` to extract them to a given directory.
 
-Before **3.7**, the dll was called `libmupdf.dll`.
+Before **3.7**, the DLL was called `libmupdf.dll`.
 
-Before **3.7**, portable was a separate executable that contained the engine code.
+Before **3.7**, the portable version was a separate executable that contained the engine code.
 
-In **3.7** I simplified things. Portable version is exactly the same executable as the installer.
+In **3.7**, we simplified the distribution: the portable version is exactly the same executable as the installer.
 
-You can install it with `-install` cmd-line option or run it as portable executable.
+You can install it with the `-install` command-line option or run it as a portable executable.
 
-When exe has `-install` in the name, we assume it's intented to be run as installer.
+When the executable has `-install` in its name, we assume it's intended to be run as an installer.
 
-To make this dual-purpose portable/installer executable work, due to Windows technical limitations, we have to extract `libsumatrapdf.dll` to disk. The location is an implementation detail: `%LOCALAPPDATA%\SumatraPDF-data\<build-id>\libsumatrapdf.dll`. If you prefer, you can place it next to `SumatraPDF.exe` executable.
+Because of technical limitations in Windows, this dual-purpose portable/installer executable must extract `libsumatrapdf.dll` to disk. The location is an implementation detail: `%LOCALAPPDATA%\SumatraPDF-data\<build-id>\libsumatrapdf.dll`. If you prefer, you can place it next to the `SumatraPDF.exe` executable.
 
 Data storage (`SumatraPDF-settings.txt` etc.):
 
-- in portable mode application data is stored next to `SumatraPDF.exe`.
-- when installed, in `%LOCALAPPDATA%\SumatraPDF`.
-- you can over-ride the location with `-appdata <dir>` [cmd-line option](Command-line-arguments.md)
+- in portable mode, application data is stored next to `SumatraPDF.exe`
+- when installed, it is stored in `%LOCALAPPDATA%\SumatraPDF`
+- you can override the location with the [`-appdata <dir>` command-line option](Command-line-arguments.md)
 
 See also:
 

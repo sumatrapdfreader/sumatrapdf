@@ -17,7 +17,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 
 ### Go To menu
 
-- `Right Arrow` / `Left Arrow`- Next / Previous Page
+- `Right Arrow` / `Left Arrow` — Next / Previous Page
   scrolls left / right if page width > window width
 - `Home` First Page
 - `End` Last Page
@@ -35,8 +35,8 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `Ctrl + 6` Single Page
 - `Ctrl + 7` Facing
 - `Ctrl + 8` Book View
-- `Ctrl + Shift + -`, `[`- Rotate Left (anti-clockwise)
-- `Ctrl + Shift + +`, `]`- Rotate Right (clockwise)
+- `Ctrl + Shift + -`, `[` — Rotate Left (counterclockwise)
+- `Ctrl + Shift + +`, `]` — Rotate Right (clockwise)
 - `F5` Enter / Exit Presentation
 - `F11` Enter / Exit Full Screen
 - `F12` Show / Hide Bookmarks
@@ -58,7 +58,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `j` / `k` Scroll up / down by line
 - `h` / `l` Scroll left / right
 - `Up` / `Down` Scroll up/down by line
-- `Shift + Left` / `Shift + Right`- Scroll left /right faster
+- `Shift + Left` / `Shift + Right` — Scroll left / right faster
 - `space` Scroll by screen
 - `Shift + space` Scroll back by screen
 - `n` / `p` Next / previous page
@@ -87,10 +87,10 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `*` on numeric keypad rotate left
 - `F12` show/hide bookmarks (table of contents)
 - `F6` switch focus between bookmarks window and main window
-- `Ctrl + L`, `F5`, `Shift + F11`- Enter / exit presentation mode (minimal full screen mode)
+- `Ctrl + L`, `F5`, `Shift + F11` — Enter / exit presentation mode (minimal full screen mode)
 - `F11`, `Ctrl + Shift + L`, `f` Enter / Exit full screen mode
 - `ESC` exit full screen or presentation mode
-- mouse double click exit full screen or presentation mode
+- mouse double-click exits full screen or presentation mode
 - `i` toggle showing page info (**ver 3.6+** )
 - `i` invert colors in the document (**ver 3.5.2 or earlier**)
 - `Shift + i` invert colors in the document (**ver 3.6+**)

@@ -8,8 +8,8 @@ or [SumatraPDF.exe run](Tools.md)
 
 `run` executes a [sumatrapdf-tool](Tool-run-javascript-examples.md) JavaScript program. It's
 the same scripting engine as `mutool run` and gives you programmatic access to
-PDF (and other) documents: read and edit pages, annotations, metadata, render to
-images, extract text and more.
+PDF (and other) documents: read and edit pages, annotations, and metadata; render
+images; extract text; and more.
 
 ## Run a script
 
@@ -52,7 +52,7 @@ that follow the script name:
 ## Interactive mode (REPL)
 
 Run `sumatrapdf-tool run` with no script to start an interactive read-eval-print loop.
-It prints a `> ` prompt, evaluates each line you type and prints the result:
+It prints a `> ` prompt, evaluates each line you type, and prints the result:
 
 ```
 sumatrapdf-tool run
