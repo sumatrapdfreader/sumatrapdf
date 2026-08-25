@@ -1497,6 +1497,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestSelectionToolbar: {
+            Str action = StringArg(req, 0);
+            if (action) {
+                int exitCode = 0;
+                Str res = SelectionToolbarClickTemp(action, &exitCode);
+                AppendTestResult(req, exitCode, res);
+                break;
+            }
             AppendTestResult(req, 0, SelectionToolbarLayoutDumpTemp());
             break;
         }

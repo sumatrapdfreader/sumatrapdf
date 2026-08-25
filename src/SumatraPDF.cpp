@@ -9126,11 +9126,10 @@ static void AddUniquePageNo(Vec<int>& v, int pageNo) {
     v.Append(pageNo);
 }
 
-// create one or more annotations from current selection
-// returns last created annotations
+// create one or more markup annotations from the current text selection.
+// The selection (and the floating selection toolbar) stay so the user can
+// copy the same span or apply another markup without selecting again.
 static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args) {
-    // converts current selection to annotation (or back to regular text
-    // if it's already an annotation)
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return nullptr;
@@ -9215,7 +9214,6 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
     if (args->copyToClipboard) {
         CopySelectionToClipboard(win);
     }
-    DeleteOldSelectionInfo(win, true);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
     return annot;

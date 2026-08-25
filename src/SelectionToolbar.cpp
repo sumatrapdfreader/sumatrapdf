@@ -368,9 +368,12 @@ static VirtCtrl* MakeSelectionToolbarSeparator(int rowDy) {
 
 static bool GetSelectionEndPoint(MainWindow* win, Point& out);
 
-static void OnSelToolbarButtonClicked(SelectionToolbar* tb, VirtMouseEvent* ev) {
-    int cmdId = ev->target ? ev->target->id : 0;
-    if (!cmdId) {
+// Copy, highlight, underline and the other markup actions keep the text
+// selection, so leave the toolbar up with it. Sticky-note placement is the
+// exception: it records the selection end, then DeleteOldSelectionInfo hides
+// the bar because the selection is gone.
+static void InvokeSelectionToolbarCommand(SelectionToolbar* tb, int cmdId) {
+    if (!tb || !cmdId) {
         return;
     }
     MainWindow* win = tb->win;
@@ -382,8 +385,15 @@ static void OnSelToolbarButtonClicked(SelectionToolbar* tb, VirtMouseEvent* ev) 
         }
         DeleteOldSelectionInfo(win, true);
     }
-    HideSelectionToolbar(win);
     HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
+}
+
+static void OnSelToolbarButtonClicked(SelectionToolbar* tb, VirtMouseEvent* ev) {
+    int cmdId = ev->target ? ev->target->id : 0;
+    if (!cmdId) {
+        return;
+    }
+    InvokeSelectionToolbarCommand(tb, cmdId);
 }
 
 // Build the layout tree for the current buttons and measure it into tb->size
@@ -581,6 +591,8 @@ TempStr SelectionToolbarLayoutDumpTemp() {
 
     MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
     SelectionToolbar* tb = win ? GetOrCreateToolbar(win) : nullptr;
+    bool visible = tb && tb->host && tb->host->IsVisible();
+    out.Append(fmt("visible=%d\n", visible ? 1 : 0));
     if (!tb) {
         out.Append(StrL("buttons=0\n"));
         return ToStrTemp(out);
@@ -604,6 +616,39 @@ TempStr SelectionToolbarLayoutDumpTemp() {
             fmt("button=%d cmd=%d kind=%s icon=%d,%d tooltip=%s\n", i, b.cmdId, kind, iconDx, iconDy, ButtonLabel(b)));
     }
     return ToStrTemp(out);
+}
+
+// Fire a selection-toolbar button the same way a click does, for -dbg-control tests.
+TempStr SelectionToolbarClickTemp(Str cmdName, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
+    if (!tb || !tb->host || !tb->host->IsVisible()) {
+        return finish(StrL("ERROR toolbar-not-visible\n"), 1);
+    }
+    int cmdId = GetCommandIdByName(cmdName);
+    if (cmdId <= 0) {
+        return finish(fmt("ERROR unknown-cmd %s\n", cmdName), 1);
+    }
+    bool found = false;
+    for (const SelectionToolbarButton& b : tb->buttons) {
+        if (b.cmdId == cmdId) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        return finish(fmt("ERROR no-button %s\n", cmdName), 1);
+    }
+    InvokeSelectionToolbarCommand(tb, cmdId);
+    return finish(StrL("OK\n"), 0);
 }
 
 // Show the floating selection toolbar for the current text selection. Does

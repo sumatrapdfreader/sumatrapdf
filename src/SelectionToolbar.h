@@ -10,3 +10,4 @@ void HideSelectionToolbar(MainWindow* win);
 void RefreshSelectionToolbarIcons(MainWindow* win);
 void DeleteSelectionToolbar(MainWindow* win);
 TempStr SelectionToolbarLayoutDumpTemp();
+TempStr SelectionToolbarClickTemp(Str cmdName, int* exitCodeOut);
