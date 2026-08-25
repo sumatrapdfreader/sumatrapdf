@@ -71,6 +71,7 @@ const user32 = dlopen("user32.dll", {
   GetMenuItemCount: { args: [FFIType.u64], returns: FFIType.i32 },
   GetSubMenu: { args: [FFIType.u64, FFIType.i32], returns: FFIType.u64 },
   GetMenuStringW: { args: [FFIType.u64, FFIType.u32, FFIType.ptr, FFIType.i32, FFIType.u32], returns: FFIType.i32 },
+  GetMenuState: { args: [FFIType.u64, FFIType.u32, FFIType.u32], returns: FFIType.u32 },
 });
 
 // GDI + GDI+ for capturing a window to a PNG (see captureWindowToPng). Capturing
@@ -1498,8 +1499,18 @@ export function getMenuItemText(hmenu: bigint, pos: number): string {
 }
 
 export const MF_BYPOSITION = 0x400;
+export const MF_GRAYED = 0x0001;
+export const MF_DISABLED = 0x0002;
 
-export type MenuItem = { text: string; items?: MenuItem[] };
+export type MenuItem = { text: string; items?: MenuItem[]; disabled?: boolean };
+
+export function getMenuItemDisabled(hmenu: bigint, pos: number): boolean {
+  const st = user32.symbols.GetMenuState(hmenu, pos, MF_BYPOSITION);
+  if (st === 0xffffffff) {
+    return false;
+  }
+  return (st & (MF_GRAYED | MF_DISABLED)) !== 0;
+}
 
 // the whole menu tree, submenus included. Separators (empty labels) are skipped
 export function readMenuTree(hmenu: bigint): MenuItem[] {
@@ -1511,7 +1522,11 @@ export function readMenuTree(hmenu: bigint): MenuItem[] {
     if (sub) {
       out.push({ text, items: readMenuTree(sub) });
     } else if (text) {
-      out.push({ text });
+      const item: MenuItem = { text };
+      if (getMenuItemDisabled(hmenu, i)) {
+        item.disabled = true;
+      }
+      out.push(item);
     }
   }
   return out;

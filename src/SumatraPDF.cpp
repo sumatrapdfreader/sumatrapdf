@@ -14145,7 +14145,11 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
         AppendMenuW(menu, MF_STRING, CmdTtsMenuContinueReading, CWStrTemp(_TRA("Continue Reading")));
     }
     // always listed: the playback bar can be off-screen or lose z-order (issue #6053)
-    AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, CWStrTemp(_TRA("Stop Reading")));
+    UINT stopFlags = MF_STRING;
+    if (!isSpeaking && !canContinue) {
+        stopFlags |= MF_GRAYED;
+    }
+    AppendMenuW(menu, stopFlags, CmdTtsMenuStopReading, CWStrTemp(_TRA("Stop Reading")));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, CWStrTemp(_TRA("Start Reading From Top")));
     if (includeCursorItem) {

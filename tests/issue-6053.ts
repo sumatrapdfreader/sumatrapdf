@@ -1,5 +1,5 @@
 // Issue #6053: Stop Reading must be in the Read Aloud menu even when the
-// playback bar is not on screen (and when nothing is being read).
+// playback bar is not on screen. It is disabled when nothing is being read.
 
 import { join } from "node:path";
 import { cmdId, ROOT, runStandalone } from "./util.ts";
@@ -33,14 +33,19 @@ export async function testit(): Promise<void> {
     if (!readAloud || !readAloud.items) {
       throw new Error(`issue-6053: no Read Aloud submenu: ${JSON.stringify(tree.map((it) => it.text))}`);
     }
-    const labels = readAloud.items.map((it) => it.text);
-    if (!labels.includes("Stop Reading")) {
-      throw new Error(`issue-6053: Stop Reading missing from Read Aloud menu: ${JSON.stringify(labels)}`);
+    const stop = readAloud.items.find((it) => it.text === "Stop Reading");
+    if (!stop) {
+      throw new Error(`issue-6053: Stop Reading missing from Read Aloud menu: ${JSON.stringify(readAloud.items)}`);
+    }
+    if (!stop.disabled) {
+      throw new Error(
+        `issue-6053: Stop Reading should be disabled when not reading: ${JSON.stringify(readAloud.items)}`,
+      );
     }
 
     // Stop with no session must not crash (the playback bar / tab may already be gone)
     sendCommand(frame, cmdId("CmdStopReadAloud"));
-    console.log(`issue-6053: Read Aloud menu has Stop Reading (${labels.join(", ")})`);
+    console.log(`issue-6053: Stop Reading is in the menu and disabled when idle`);
   } finally {
     client.close();
     await killAndWait(proc);

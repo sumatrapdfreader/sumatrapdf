@@ -544,6 +544,21 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return IsOurExeInstalled() ? CommandVisibility::Show : CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdStopReadAloud) {
+        Kind k = ctx.engineKind;
+        bool isImage =
+            k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
+        if (isImage) {
+            return CommandVisibility::Hide;
+        }
+        // listed while a session is active (speaking or paused) so speech can be
+        // stopped when the playback bar is gone; grayed otherwise
+        if (ctx.isSpeaking || ctx.canContinueReadAloud) {
+            return CommandVisibility::Show;
+        }
+        return MapForSurface(CommandVisibility::Disable, surface);
+    }
+
     if (CmdWorksWithoutDocument(cmdId)) {
         return MapForSurface(CommandVisibility::Show, surface);
     }
@@ -757,7 +772,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     // No extractable text on comics, image folders, or single images.
     if (cmdId == CmdReadAloud || cmdId == CmdReadAloudFromTopPage || cmdId == CmdReadAloudSelection ||
-        cmdId == CmdPauseReadAloud || cmdId == CmdContinueReadAloud || cmdId == CmdStopReadAloud) {
+        cmdId == CmdPauseReadAloud || cmdId == CmdContinueReadAloud) {
         Kind k = ctx.engineKind;
         bool isImage =
             k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
@@ -770,10 +785,6 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
     if (cmdId == CmdContinueReadAloud) {
         return (ctx.canContinueReadAloud && !ctx.isSpeaking) ? CommandVisibility::Show : CommandVisibility::Hide;
-    }
-    if (cmdId == CmdStopReadAloud) {
-        // always listed so speech can be stopped when the playback bar is gone
-        return CommandVisibility::Show;
     }
     if (cmdId == CmdReadAloudSelection) {
         return ctx.hasSelection ? CommandVisibility::Show : CommandVisibility::Hide;
