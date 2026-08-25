@@ -4918,12 +4918,14 @@ void UpdateDocumentColors() {
     gRenderCache->linkColor = link;
     gRenderCache->darkModeEpoch++;
 
+    // abort in-flight renders before restyle drops fz_page (ApplyReflowThemeCss)
     // also drop the engines' cached dark-mode analyses / processed images
     // and regenerate markdown previews (their colors are baked into the html)
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             DisplayModel* dm = tab->AsFixed();
             if (dm) {
+                gRenderCache->AbortRendering(dm);
                 EngineMupdfInvalidateDarkMode(dm->GetEngine());
                 continue;
             }

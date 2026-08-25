@@ -111,6 +111,15 @@ bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
     return false;
 }
 
+bool EngineUsesReflowThemeCss(EngineBase* engine) {
+    (void)engine;
+    return false;
+}
+
+TempStr ReflowDocumentThemeCssTemp() {
+    return {};
+}
+
 bool DocumentColorsFollowThemeEnabled() {
     return false;
 }

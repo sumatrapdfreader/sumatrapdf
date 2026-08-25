@@ -21,7 +21,7 @@ reloaded when you press OK.
 **Reset to defaults** undoes the customization at whichever of the two is
 selected: for one document that means inheriting everything from the global
 section again, for all ebooks it means the values SumatraPDF ships with. `Tab`
-moves between the controls; `Esc` does *not* close the dialog, so a long piece
+moves between the controls; `Esc` does _not_ close the dialog, so a long piece
 of CSS can't be lost by a stray keypress — use **Cancel**.
 
 The command is only offered for reflowable documents — for a PDF or an image
@@ -46,16 +46,16 @@ EBookUI [
 ]
 ```
 
-| Setting                 | Meaning                                                                                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FontName`              | Default font family, e.g. `Segoe UI` or `Microsoft YaHei` (empty = engine default, usually a serif). Overrides the document's `font-family`, including inline `style="font-family: ..."`. A font that can't be loaded is reported with a notification (**ver 3.7+**) |
-| `FontSize`              | Base font size (default `8.0`; `0` = built-in default)                                                                                                     |
+| Setting                 | Meaning                                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FontName`              | Default font family, e.g. `Segoe UI` or `Microsoft YaHei` (empty = engine default, usually a serif). Overrides the document's `font-family`, including inline `style="font-family: ..."`. A font that can't be loaded is reported with a notification (**ver 3.7+**)                                                    |
+| `FontSize`              | Base font size (default `8.0`; `0` = built-in default)                                                                                                                                                                                                                                                                  |
 | `Margin`                | White space around the text, in points, written like a CSS margin: one number for all four sides, two for top/bottom and left/right, or four in top-right-bottom-left order. Empty keeps the default (3 em above and below, 2 em to the sides, so it follows the font size); `0` leaves no margin at all (**ver 3.7+**) |
-| `LineSpacing`           | Line-height multiplier, e.g. `1.5` for expanded spacing (`0` = document or engine default; **ver 3.7+**)                                                   |
-| `LayoutDx` / `LayoutDy` | Virtual page width / height for reflow (defaults `420` / `595`)                                                                                            |
-| `IgnoreDocumentCSS`     | Ignore stylesheet from the EPUB (`true` = your `CustomCSS` wins)                                                                                           |
-| `CustomCSS`             | Extra CSS rules. A declaration marked `!important` beats the document's own CSS and its inline styles, so `IgnoreDocumentCSS` is rarely needed              |
-| `WindowBgCol`           | Canvas background around the reflowed text (**ver 3.7+**)                                                                                                  |
+| `LineSpacing`           | Line-height multiplier, e.g. `1.5` for expanded spacing (`0` = document or engine default; **ver 3.7+**)                                                                                                                                                                                                                |
+| `LayoutDx` / `LayoutDy` | Virtual page width / height for reflow (defaults `420` / `595`)                                                                                                                                                                                                                                                         |
+| `IgnoreDocumentCSS`     | Ignore stylesheet from the EPUB (`true` = your `CustomCSS` wins)                                                                                                                                                                                                                                                        |
+| `CustomCSS`             | Extra CSS rules. A declaration marked `!important` beats the document's own CSS and its inline styles, so `IgnoreDocumentCSS` is rarely needed                                                                                                                                                                          |
+| `WindowBgCol`           | Canvas background around the reflowed text (**ver 3.7+**)                                                                                                                                                                                                                                                               |
 
 Full field reference: [Advanced options / settings](Advanced-options-settings.md).
 
@@ -92,16 +92,16 @@ history). The document has to be reopened for a change to take effect.
 
 ## Themes and document page colors
 
-UI themes (`Theme = ...`) only change window chrome. Ebooks that go through MuPDF’s fixed-page color path use the same **`DocumentColorsFollowTheme`** setting as PDF:
+UI themes (`Theme = ...`) only change window chrome. Ebooks that go through MuPDF (EPUB, HTML, FB2, MOBI, and similar reflowable formats) use the same **`DocumentColorsFollowTheme`** setting as PDF, applied as user CSS (page background and text color). **Images stay as in the file** — they are not inverted by bitmap recoloring.
 
-| Value        | Effect                                                           |
-| ------------ | ---------------------------------------------------------------- |
-| **`off`**    | Original page colors.                                            |
-| **`smart`**  | Dark (or custom) text and background; **images stay intact**.    |
-| **`legacy`** | Recolor text, background, **and** images (pre-3.7 invert-style). |
+| Value        | Effect                                                                           |
+| ------------ | -------------------------------------------------------------------------------- |
+| **`off`**    | Original page colors.                                                            |
+| **`smart`**  | Dark (or custom) text and background; **images stay intact**.                    |
+| **`legacy`** | Same as **`smart`** for these formats (bitmap invert of images is PDF/XPS/DjVu). |
 
-- **`Shift + I`** toggles **`off` ↔ `smart`**.
-- For **`legacy`**, use Settings → Theme… / Make Document Colors Follow Theme, or set `DocumentColorsFollowTheme = legacy` in advanced settings.
+- **`Shift + I`** swaps the page colors for the session (not saved). Images still stay as in the file.
+- For **`legacy`**, use Settings → Theme… / Make Document Colors Follow Theme, or set `DocumentColorsFollowTheme = legacy` in advanced settings. On reflowable MuPDF documents that still only changes text and background.
 
 For dark reading of reflowed EPUBs without recoloring the whole page, you can also use `EBookUI.CustomCSS` + `IgnoreDocumentCSS = true` and `WindowBgCol`. See [Customize theme colors](Customize-theme-colors.md).
 

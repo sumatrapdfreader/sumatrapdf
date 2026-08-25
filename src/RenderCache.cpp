@@ -48,6 +48,9 @@ int gMaxRenderThreads = 8;
 // are recolored; image/comic collections keep original pixels.
 static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cache) {
     (void)cache;
+    if (EngineUsesReflowThemeCss(engine)) {
+        return false;
+    }
     return EngineUsesDocumentColorsFollowTheme(engine);
 }
 

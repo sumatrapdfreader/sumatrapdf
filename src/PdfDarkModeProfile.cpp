@@ -104,7 +104,12 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
         return;
     }
 
-    if (EngineUsesDocumentColorsFollowTheme(engine)) {
+    if (EngineUsesReflowThemeCss(engine)) {
+        // EPUB/HTML/FB2/MOBI/TXT go through MuPDF's HTML engine: page colors
+        // are applied as user CSS (images stay as in the file). Bitmap recolor
+        // inverted some of those images (#6050).
+        profile->mode = PageColorMode::Normal;
+    } else if (EngineUsesDocumentColorsFollowTheme(engine)) {
         if (GetDocumentColorsFollowTheme() == DocumentColorsFollowTheme::Legacy) {
             profile->mode = PageColorMode::LegacyInvert;
         } else {
@@ -135,4 +140,8 @@ bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
     return engine->kind == kindEngineChm || engine->kind == kindEngineEpub || engine->kind == kindEngineFb2 ||
            engine->kind == kindEngineMobi || engine->kind == kindEnginePdb || engine->kind == kindEngineHtml ||
            engine->kind == kindEngineTxt;
+}
+
+bool EngineUsesReflowThemeCss(EngineBase* engine) {
+    return engine && engine->kind == kindEngineMupdf && engine->isReflowable;
 }

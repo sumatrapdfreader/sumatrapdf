@@ -139,6 +139,8 @@ bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile);
 void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile);
 u32 PdfDarkModeComputeProfileHash(const DarkModeProfile* profile);
 bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine);
+bool EngineUsesReflowThemeCss(EngineBase* engine);
+TempStr ReflowDocumentThemeCssTemp();
 bool DocumentColorsFollowThemeEnabled();
 DocumentColorsFollowTheme GetDocumentColorsFollowTheme();
 DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v);

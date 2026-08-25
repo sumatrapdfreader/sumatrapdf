@@ -5,6 +5,7 @@
 You can change colors of SumatraPDF UI by creating a custom theme using `Themes` [advanced setting](Advanced-options-settings.md).
 
 To create a theme:
+
 - Navigate to `Settings` / `Advanced Options...` menu (or `Ctrl + K` Command Palette, type `adv` to narrow down and select `Advanced Options...` command)
 - This will open `SumatraPDF-settings.txt` text file using your default text editor
 - Scroll down to the bottom to find `Themes` array and add new shortcut definitions
@@ -57,6 +58,7 @@ The above will provide you with custom themes such as `My Dark Theme` and `Dracu
 Meaning of the parameters:
 
 **Required / base colors**
+
 - `TextColor` and `BackgroundColor` are for main window color and color of text.
 - `ControlBackgroundColor` is for background of Windows controls (buttons, window frame, menus, list controls etc.).
 - `LinkColor` is a color for links. Typically it's blue.
@@ -66,11 +68,11 @@ Meaning of the parameters:
 
 UI themes only recolor chrome (menus, tabs, toolbars). Separately, **document pages** (PDF, XPS, DjVu, EPUB, MOBI, FB2, comics, images, and other MuPDF-rendered formats) can follow the theme via the advanced setting **`DocumentColorsFollowTheme`**:
 
-| Value | Effect |
-| --- | --- |
-| **`off`** (default) | Keep the document’s own page colors. |
-| **`smart`** | Recolor text and page background using `FixedPageUI.TextColor` / `FixedPageUI.BackgroundColor` when set, otherwise the current theme’s text/background. **Photos and other images stay as in the file** — preferred for dark reading. |
-| **`legacy`** | Also recolor images (same idea as older invert / colorize behavior before 3.7). Use when you want a fully monochrome page. |
+| Value               | Effect                                                                                                                                                                                                                                                                                                                                             |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`off`** (default) | Keep the document’s own page colors.                                                                                                                                                                                                                                                                                                               |
+| **`smart`**         | Recolor text and page background using `FixedPageUI.TextColor` / `FixedPageUI.BackgroundColor` when set, otherwise the current theme’s text/background. **Photos and other images stay as in the file** — preferred for dark reading. Reflowable MuPDF formats (EPUB, HTML, FB2, MOBI) do this with CSS rather than by recoloring the page bitmap. |
+| **`legacy`**        | Also recolor images on PDF, XPS, and DjVu (older invert / colorize behavior). Reflowable MuPDF formats still use CSS, so images stay original.                                                                                                                                                                                                     |
 
 How to change it:
 
@@ -91,6 +93,7 @@ This is independent of `Theme = ...`. You can use a dark UI theme with `Document
 - `NotificationBackgroundColor` / `NotificationHighlightColor` / `NotificationHighlightTextColor` — in-app notification tips
 
 Now, once you save the text file above, there are three main ways to choose a theme that you had created:
+
 1. By changing the value of `Theme = ` in the `SumatraPDF-settings.txt` which we accessed above (e.g. `Theme = Solarized Dark`). Or,
 2. By launching the Command Palette (`Ctrl + k`), and then typing `theme` (afterwards, select the desired theme from the list). Or,
 3. By navigating to `Settings` / `Theme` and then choosing a theme.

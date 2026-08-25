@@ -204,6 +204,17 @@ class EngineMupdf : public EngineBase {
     // the document opens (issue #4600). owned by the engine
     Str ebookFontUnavailable;
 
+    // reflowable docs (EPUB/HTML/…): user CSS without the theme overlay, plus
+    // the layout size passed to fz_layout_document, so a later theme-color
+    // change can restyle without reopening the file
+    Str ebookUserCss;
+    int ebookPublisherCss = 1;
+    float ebookLayoutW = 0;
+    float ebookLayoutH = 0;
+    float ebookLayoutEm = 0;
+
+    void ApplyReflowThemeCss();
+
     void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
                                    Vec<Rect>& skipRects) override;
 

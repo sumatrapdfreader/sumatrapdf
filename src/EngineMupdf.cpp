@@ -3226,6 +3226,7 @@ fz_context* EngineMupdf::Ctx() const {
 EngineMupdf::~EngineMupdf() {
     pagesLock.Lock();
     str::Free(ebookFontUnavailable);
+    str::Free(ebookUserCss);
 
     auto* ctx = _ctx;
     if (darkModeEngineCache) {
@@ -3947,6 +3948,12 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         }
         usePublisherCss = s.ignoreDocumentCSS ? 0 : 1;
     }
+    str::ReplaceWithCopy(&ebookUserCss, userCss);
+    ebookPublisherCss = usePublisherCss;
+    TempStr themeCss = ReflowDocumentThemeCssTemp();
+    if (themeCss) {
+        userCss = str::JoinTemp(userCss, themeCss);
+    }
     const char* userCssZ = CStrTemp(userCss);
 
     float dx, dy, fontDy;
@@ -3984,6 +3991,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         dx = DpiScale(ldx, displayDPI);
         dy = DpiScale(ldy, displayDPI);
         fontDy = DpiScale(lfontDy, displayDPI);
+        ebookLayoutW = dx;
+        ebookLayoutH = dy;
+        ebookLayoutEm = fontDy;
         fz_layout_document(ctx, _doc, dx, dy, fontDy);
     }
     fz_always(ctx) {
@@ -6402,10 +6412,15 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     }
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, fzcookie);
-    if (!pageInfo || !pageInfo->page) {
+    if (!pageInfo) {
         return nullptr;
     }
+    // Do not keep pageInfo->page across the gap before renderLock: theme
+    // restyle (ApplyReflowThemeCss) drops fz_page under that lock.
     fz_page* page = pageInfo->page;
+    if (!page) {
+        return nullptr;
+    }
 
     // AA level is per-thread-context state since Ctx() clones; no lock needed.
     if (disableAntiAlias) {
@@ -6439,6 +6454,11 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         // pdf_annot_flags on a freed annot dict.
         ScopedMutex cs(&renderLock);
         ScopedRecursiveMutex docScope(&docLock);
+
+        page = pageInfo->page;
+        if (!page) {
+            return nullptr;
+        }
 
         if (pageRect) {
             pRect = ToFzRect(*pageRect);
@@ -6522,6 +6542,11 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     // not what the cached display list captured), or display-list construction
     // failed. Run the page directly under per-page lock.
     ScopedMutex cs(&renderLock);
+
+    page = pageInfo->page;
+    if (!page) {
+        return nullptr;
+    }
 
     Str usage = (args.target == RenderTarget::Print) ? StrL("Print") : StrL("View");
     const char* usageZ = CStrTemp(usage);
@@ -8466,14 +8491,61 @@ bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
     return (epdf->pdfdoc != nullptr);
 }
 
+// Restyle a reflowable document with the current theme page colors and drop
+// cached page display lists so the next render uses the new HTML. Color-only
+// CSS should not change page count; if it does we keep the existing slots.
+void EngineMupdf::ApplyReflowThemeCss() {
+    if (!isReflowable || !_doc || ebookLayoutW <= 0 || ebookLayoutH <= 0) {
+        return;
+    }
+    TempStr themeCss = ReflowDocumentThemeCssTemp();
+    TempStr fullCss = ebookUserCss;
+    if (themeCss) {
+        fullCss = fullCss ? str::JoinTemp(fullCss, themeCss) : themeCss;
+    }
+    const char* cssZ = fullCss ? CStrTemp(fullCss) : "";
+
+    ScopedRecursiveMutex pagesScope(&pagesLock);
+    ScopedMutex renderScope(&renderLock);
+    ScopedRecursiveMutex docScope(&docLock);
+
+    fz_context* ctx = Ctx();
+    if (!ctx) {
+        return;
+    }
+    for (FzPageInfo* pi : pages) {
+        if (!pi) {
+            continue;
+        }
+        InvalidateFzPageAfterContentChange(this, pi);
+        if (pi->page) {
+            fz_drop_page(ctx, pi->page);
+            pi->page = nullptr;
+        }
+    }
+
+    fz_try(ctx) {
+        fz_style_document(ctx, _doc, ebookPublisherCss, cssZ);
+        fz_layout_document(ctx, _doc, ebookLayoutW, ebookLayoutH, ebookLayoutEm);
+        int n = fz_count_pages(ctx, _doc);
+        if (n != pageCount) {
+            logf("ApplyReflowThemeCss: page count %d -> %d, keeping %d\n", pageCount, n, pageCount);
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
 // Drop cached dark-mode analyses and processed images; call when dark-mode
-// options (theme, color mode, preserve toggle) change.
-// drop cached dark-mode analyses/images (call when dark-mode options change)
+// options (theme, color mode, preserve toggle) change. Reflowable docs also
+// restyle with the current theme CSS.
 void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf) {
         return;
     }
+    epdf->ApplyReflowThemeCss();
     ScopedRecursiveMutex scope(&epdf->pagesLock);
     fz_context* ctx = epdf->Ctx();
     if (epdf->darkModeEngineCache) {
