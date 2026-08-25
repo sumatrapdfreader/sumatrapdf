@@ -122,7 +122,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add `ShowAnnotationNotification` advanced setting: when false, disables the tip shown when hovering an annotation (e.g. "Highlight annotation. Ctrl+click to edit."); on by default (fixes #4501)
 - Bookmarks sidebar shows page numbers (labels) right-aligned on each entry; disable with `ShowTocPageNumbers = false` (fixes #3288)
 - page-info tip shows extra detail for images: comics / image folders list the current image file name and size (both pages when two are visible in facing view); a single image file shows pixel resolution, size, and DPI when it is not the default 96 (fixes #4456)
-- `-new-window` with several file arguments opens one new window containing all files as tabs, instead of a separate window per file (fixes #5044)
+- `-new-window` with several files opens each file in its own window. `-new-window-tabs` opens one new window and loads those files as tabs (issue #5044)
 - Manga mode (R2L): Left/Right arrows and horizontal swipe reverse so Left advances and Right goes back, matching right-to-left reading (fixes #3964)
 - starting a search (Ctrl+F) remembers the current page as favorite `/` so you can jump back via Favorites or the command palette `$` mode (fixes #5726)
 - PDFs with a Catalog `/OpenAction` GoTo destination open at that page on first load (when there is no remembered view); URI/Launch/JavaScript open actions are ignored (fixes #1631)
@@ -332,6 +332,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `-dbg-control <named-pipe>` : drive automated tests over a named-pipe request/response protocol (`tests/control.ts`)
 - `-dump-chm <file>` : headlessly list CHM contents, unpack entries to memory, and print TOC/index metadata
 - `-pwd <password>` : open password-protected documents from the command line (fixes #906)
+- `-new-window-tabs` : one new window, all files as tabs (issue #5044)
 - `-log-to-file <file>` : log to a specific file (like `-log` but with a custom log file path)
 - `/p` : Adobe Reader-compatible alias for `-print-dialog`
 - `/t` : Adobe Reader-compatible silent print (alias for `-print-to`)

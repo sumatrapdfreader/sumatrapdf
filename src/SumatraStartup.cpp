@@ -331,6 +331,11 @@ static void MaybeStartSearch(MainWindow* win, Str searchTerm) {
 static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
+    // -new-window: each file in its own window. -new-window-tabs keeps the
+    // default (one window, files as tabs).
+    if (flags.inNewWindow && !flags.inNewWindowTabs) {
+        args.forceNewWindow = true;
+    }
     if (isFirstWin) {
         args.initialDisplayMode = flags.startView;
         args.initialZoom = flags.startZoom;
@@ -2771,17 +2776,18 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // open the first file in a new window so it lands on the current desktop
         // (#5630). Subsequent files then open into that (now current) window.
         bool reuseInNewWindow = openInNewWindow && (existingHwnd == existingInstanceHwnd);
-        // -new-window with several files: only the first forces a new window;
-        // the rest open as tabs in that window (issue #5044). Previously every
-        // file got its own window.
-        bool userNewWindow = flags.inNewWindow;
-        bool canBatchOpen = nFiles > 1 && existingHwnd && !flags.reuseDdeInstance && IsSimpleOpenCase(flags, true);
+        // -new-window: each file in its own window. -new-window-tabs: one new
+        // window, remaining files as tabs in that window (issue #5044).
+        bool userNewWindowEach = flags.inNewWindow && !flags.inNewWindowTabs;
+        bool userNewWindowTabs = flags.inNewWindowTabs;
+        bool canBatchOpen = nFiles > 1 && existingHwnd && !flags.reuseDdeInstance && IsSimpleOpenCase(flags, true) &&
+                            !userNewWindowEach;
         if (canBatchOpen) {
             StrVec paths;
             for (Str path : flags.fileNames) {
                 paths.Append(path::NormalizeTemp(path));
             }
-            u32 newWindow = (reuseInNewWindow || userNewWindow) ? 2 : 0;
+            u32 newWindow = (reuseInNewWindow || userNewWindowTabs) ? 2 : 0;
             if (SendOpenFilesToExistingInstance(existingHwnd, paths, newWindow)) {
                 goto Exit;
             }
@@ -2792,8 +2798,10 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
             bool savedInNewWindow = flags.inNewWindow;
             if (reuseInNewWindow && n == 0) {
                 flags.inNewWindow = true;
-            } else if (userNewWindow) {
+            } else if (userNewWindowTabs) {
                 flags.inNewWindow = (n == 0);
+            } else if (userNewWindowEach) {
+                flags.inNewWindow = true;
             }
             OpenUsingDDE(existingHwnd, path, flags, isFirstWindow);
             flags.inNewWindow = savedInNewWindow;
@@ -2802,7 +2810,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/2306
             // if -new-window cmd-line flag given, create a new window
             // even if there are no files to open
-            if (flags.inNewWindow) {
+            if (flags.inNewWindow || flags.inNewWindowTabs) {
                 goto ContinueOpenWindow;
             } else {
                 // https://github.com/sumatrapdfreader/sumatrapdf/issues/3386

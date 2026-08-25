@@ -44,7 +44,7 @@ enum class Arg {
     DDE = 76, Pwd = 77, EngineDump = 78, SetColorRange = 79,
     UpgradeFrom = 80, ForTesting = 81, QuickLook = 82, QuickLookAgent = 83,
     WindowPos = 84, DumpExif = 85, DumpChm = 86, Control = 87,
-    UnitTests = 88,
+    UnitTests = 88, NewWindowTabs = 89,
 };
 
 static SeqStrings gArgNames =
@@ -70,7 +70,7 @@ static SeqStrings gArgNames =
     "dde\0" "pwd\0" "engine-dump\0" "set-color-range\0"
     "upgrade-from\0" "for-testing\0" "quicklook\0" "quicklook-agent\0"
     "window-pos\0" "dump-exif\0" "dump-chm\0" "dbg-control\0"
-    "unit-tests\0";
+    "unit-tests\0" "new-window-tabs\0";
 // clang-format on
 // @gen-end flags
 
@@ -524,6 +524,10 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::NewWindow) {
             i.inNewWindow = true;
+            continue;
+        }
+        if (arg == Arg::NewWindowTabs) {
+            i.inNewWindowTabs = true;
             continue;
         }
         if (arg == Arg::ForTesting) {

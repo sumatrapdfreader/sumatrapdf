@@ -12,7 +12,8 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 - `-presentation` : start in presentation view
 - `-fullscreen` : start in full screen view
-- `-new-window` : when opening a file, always open it in a new window, as opposed to in a tab (**ver 3.2+**). With several file arguments, opens **one** new window and loads all files as tabs in that window (**ver 3.7+**, fixes #5044); previously each file opened in its own window
+- `-new-window` : open each file in its own new window, as opposed to in a tab of an existing window (**ver 3.2+**). With several file arguments, one window per file
+- `-new-window-tabs` : open **one** new window and load all files as tabs in that window (**ver 3.7+**, issue #5044)
 - `-appdata <directory>` : set custom directory where we'll store `SumatraPDF-settings.txt` file and thumbnail cache
 - `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. See [Configure for restricted use](Configure-for-restricted-use.md).
 - `-for-testing` : for ad-hoc testing by humans or agents. Always starts a new instance, doesn't restore a session (only loads files given on the command line) and doesn't save settings (**ver 3.7+**)
@@ -81,16 +82,16 @@ Adobe Reader flags that are **not** supported because they conflict with Sumatra
 
 When printing with `-print-to` / `-print-to-default`, the process exit code tells you why printing failed (useful for unattended/silent printing):
 
-| Exit code | Meaning |
-| --- | --- |
-| `0` | success |
-| `2` | couldn't open the file (not found or unsupported format) |
-| `3` | the document doesn't allow printing |
-| `4` | the printer (named, or default) doesn't exist |
-| `5` | the printer driver / device failed |
-| `6` | printing is disabled by restriction policy |
+| Exit code | Meaning                                                  |
+| --------- | -------------------------------------------------------- |
+| `0`       | success                                                  |
+| `2`       | couldn't open the file (not found or unsupported format) |
+| `3`       | the document doesn't allow printing                      |
+| `4`       | the printer (named, or default) doesn't exist            |
+| `5`       | the printer driver / device failed                       |
+| `6`       | printing is disabled by restriction policy               |
 
-With multiple files, the exit code is `0` only if all printed; otherwise it's the category of the first failure. Note: failures that happen inside the print spooler/driver *after* the job is submitted (out of paper, offline, etc.) can't be reported this way.
+With multiple files, the exit code is `0` only if all printed; otherwise it's the category of the first failure. Note: failures that happen inside the print spooler/driver _after_ the job is submitted (out of paper, offline, etc.) can't be reported this way.
 
 ## Options related to forward/inverse search (for LaTeX editors)
 

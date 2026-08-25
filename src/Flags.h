@@ -65,10 +65,10 @@ struct Flags {
     bool invertColors = false;
     bool regress = false;
     bool tester = false;
-    // -new-window: open in a new window (not a tab of an existing one).
-    // With several file args, only the first file forces a new window; the
-    // rest open as tabs in that window (issue #5044).
+    // -new-window: each file in its own new window (not a tab of an existing one)
     bool inNewWindow = false;
+    // -new-window-tabs: one new window, all files as tabs in that window
+    bool inNewWindowTabs = false;
     Str search;
     Str password;
 

@@ -323,6 +323,7 @@ LoadArgs* LoadArgs::Clone() {
     res->tabState = this->tabState;
     res->targetTab = this->targetTab;
     res->forceReuse = this->forceReuse;
+    res->forceNewWindow = this->forceNewWindow;
     res->noSavePrefs = this->noSavePrefs;
     res->onFinished = this->onFinished;
     res->hwndPwdParent = this->hwndPwdParent;
@@ -3871,7 +3872,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
 static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
     MainWindow* win = args->win;
-    bool openNewTab = SettingsUseTabs() && !args->forceReuse;
+    bool openNewTab = SettingsUseTabs() && !args->forceReuse && !args->forceNewWindow;
     if (openNewTab && !args->win) {
         // modify the args so that we always reuse the same window
         // TODO: enable the tab bar if tabs haven't been initialized
@@ -3882,7 +3883,7 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
         }
     }
 
-    if (!win && 1 == len(gWindows) && gWindows[0]->IsCurrentTabAbout()) {
+    if (!win && 1 == len(gWindows) && gWindows[0]->IsCurrentTabAbout() && !args->forceNewWindow) {
         win = gWindows[0];
         args->win = win;
         args->isNewWindow = false;

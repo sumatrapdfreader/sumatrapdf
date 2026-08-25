@@ -92,6 +92,7 @@ const args = [
     "DumpChm", "dump-chm",
     "Control", "dbg-control",
     "UnitTests", "unit-tests",
+    "NewWindowTabs", "new-window-tabs",
 ];
 
 function generateCode(): string {

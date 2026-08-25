@@ -30,10 +30,11 @@ You can also change `ReuseInstance` and `UseTabs` at runtime (**ver 3.7+**) via 
 
 ## Command-line flags
 
-| Flag              | Effect                                                                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `-new-window`     | Open in a **new window** even when `UseTabs = true` (**ver 3.2+**). With several files: one new window, all files as tabs (**ver 3.7+**)         |
-| `-reuse-instance` | Send the file to an already running instance (mainly for [DDE](DDE-Commands.md) and scripts). For normal use, prefer the `ReuseInstance` setting |
+| Flag               | Effect                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `-new-window`      | Open each file in a **new window** even when `UseTabs = true` (**ver 3.2+**). Several files: one window per file                                 |
+| `-new-window-tabs` | Open **one** new window and load all files as tabs in that window (**ver 3.7+**)                                                                 |
+| `-reuse-instance`  | Send the file to an already running instance (mainly for [DDE](DDE-Commands.md) and scripts). For normal use, prefer the `ReuseInstance` setting |
 
 `-reuse-instance` is **not** needed for everyday double-click opening when `ReuseInstance = true`.
 
@@ -94,5 +95,5 @@ When `UseTabs = true`, an empty window may show a **Home** tab. Set `NoHomeTab =
 ## See also
 
 - [FAQ](FAQ.md) — quick troubleshooting
-- [Command-line arguments](Command-line-arguments.md) — `-new-window`, `-reuse-instance`
+- [Command-line arguments](Command-line-arguments.md) — `-new-window`, `-new-window-tabs`, `-reuse-instance`
 - [How we store settings](How-we-store-settings.md) — `RestoreSession`, `SessionData`

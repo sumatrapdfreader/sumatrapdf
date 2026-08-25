@@ -274,6 +274,8 @@ struct LoadArgs {
 
     bool showWin = true;
     bool forceReuse = false;
+    // do not add as a tab of an existing window (-new-window with several files)
+    bool forceNewWindow = false;
     // over-writes placeWindow and other flags and forces no changing
     // of window location after loading
     bool noPlaceWindow = false;
