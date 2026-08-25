@@ -4,7 +4,7 @@ For command-line arguments for the installer see [this page](Installer-cmd-line-
 
 You can launch Sumatra with additional command-line options: `SumatraPDF [argument ...] [filepath ...]`.
 
-Most arguments start with dash (`-`). Printing options also accept Adobe Reader's slash form (`/p`, `/t`). Some arguments are followed by additional parameters.
+Most arguments start with dash (`-`). Some Adobe Reader slash forms are also accepted (`/p`, `/t`, `/A`). Some arguments are followed by additional parameters.
 
 Anything that is not recognized as a known option is interpreted as a file path so it's possible to mix file paths and command-line arguments.
 
@@ -41,7 +41,13 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 - `-zoom <zoom-level>` : Sets the zoom level for the first indicated file. Alternatives are "fit page", "fit width", "fit height", "fit content" or any percentage value. Combine with -reuse-instance if the document is already open.
 - `-scroll <x,y>` : Scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
-- `search <term>` : Start a search for a given term when opening a document e.g. `SumatraPDF -search "foo" bar.pdf`. **Ver 3.4+**
+- `-search <term>` : start a search for a given term when opening a document, e.g. `SumatraPDF -search "foo" bar.pdf`. **Ver 3.4+**. The leading `-` is required.
+- `/A "<params>"` : Adobe Reader-compatible open parameters for the first file (**ver 3.5+**). `params` is a list of `name=value` pairs separated by `;`, `#`, or `&`. Recognized names:
+  - `page=<n>` : go to page n (1-based)
+  - `nameddest=<name>` : jump to a named destination
+  - `search=<term>` : start a search (same as `-search`)
+
+  e.g. `SumatraPDF /A "page=1;search=mr Fox" file.pdf`. The same `name=value` list can be appended to a file path after `?`, e.g. `file.pdf?page=4;search=foo`.
 
 ## Send DDE commands
 

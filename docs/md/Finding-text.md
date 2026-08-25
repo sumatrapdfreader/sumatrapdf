@@ -99,6 +99,14 @@ Open a document and start a search immediately:
 SumatraPDF.exe -search "needle" document.pdf
 ```
 
+The leading `-` is required. Adobe Reader-style `/A` also works:
+
+```
+SumatraPDF.exe /A "page=1;search=needle" document.pdf
+```
+
+See [Command-line arguments](Command-line-arguments.md) for the full `/A` parameter list.
+
 For an already open document, use [DDE](DDE-Commands.md):
 
 ```
