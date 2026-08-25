@@ -4,6 +4,8 @@ on:
   pull_request:
   repository_dispatch:
     types: [build-pre-rel]
+permissions:
+  contents: read
 jobs:
   build:
     name: Build

@@ -13,6 +13,8 @@ on:
         description: "only these tests (comma-separated, e.g. issue-1195); empty = all"
         required: false
         default: ""
+permissions:
+  contents: read
 jobs:
   build-daily:
     name: Daily build
