@@ -37,12 +37,14 @@ import { testit as issue5917 } from "./issue-5917.ts";
 import { testit as issue2022 } from "./issue-2022.ts";
 import { testit as issue1203 } from "./issue-1203.ts";
 import { testit as issue5792 } from "./issue-5792.ts";
+import { testit as issue5972 } from "./issue-5972.ts";
 
 // The slowest of the regular tests. They still run here and in the daily CI
 // suite, just not in run-pre-release: a couple of seconds each is nothing on
 // its own, but a pre-release build waits for the whole suite before it uploads,
 // and these ten were a sixth of its run.
 export const notInPreReleaseTests: NamedTest[] = [
+  ["issue-5972", issue5972],
   ["issue-5882", issue5882],
   ["issue-5870-list-dirs", issue5870ListDirs],
   ["issue-1324", issue1324],

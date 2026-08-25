@@ -131,7 +131,6 @@ import { testit as issue5907 } from "./issue-5907.ts";
 import { testit as settingsPersist } from "./settings-persist.ts";
 import { testit as issue5970 } from "./issue-5970.ts";
 import { testit as issue5971 } from "./issue-5971.ts";
-import { testit as issue5972 } from "./issue-5972.ts";
 import { testit as issue5933 } from "./issue-5933.ts";
 import { testit as issue6037 } from "./issue-6037.ts";
 import { testit as issue6040 } from "./issue-6040.ts";
@@ -213,7 +212,6 @@ export const tests: NamedTest[] = [
   ["issue-4398", issue4398],
   ["issue-5964", issue5964],
   ["issue-6013", issue6013],
-  ["issue-5972", issue5972],
   ["issue-5956", issue5956],
   ["issue-5989", issue5989],
 
