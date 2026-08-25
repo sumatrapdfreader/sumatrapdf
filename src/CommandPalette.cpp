@@ -187,7 +187,12 @@ void CommandPaletteWnd::SwitchToFavorites() {
 
 void CommandPaletteWnd::OnActivate(WindowBase::ActivateEvent* ev) {
     if (ev->state == WA_INACTIVE) {
-        ScheduleDeleteAndExecCommand();
+        // -for-testing runs in the background, so this popup never stays
+        // foreground. Closing on WA_INACTIVE would destroy it between
+        // sequential WM_SETTEXT queries (image-only-palette-items).
+        if (!gForTesting) {
+            ScheduleDeleteAndExecCommand();
+        }
         ev->didHandle = true;
     }
 }

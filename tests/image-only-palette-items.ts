@@ -4,7 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ROOT, SLOW_BUILD_FACTOR, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { enumWindows, findChildWindow, getWindowPid, isWindowVisible, sendText, sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
@@ -46,7 +46,7 @@ function findPaletteEdit(pid: number, frame: number): number {
 }
 
 async function waitForPalette(client: ControlClient): Promise<void> {
-  const deadline = Date.now() + 8_000;
+  const deadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
   for (;;) {
     const state = await paletteState(client);
     if (state && state.items > 1) {
@@ -59,13 +59,25 @@ async function waitForPalette(client: ControlClient): Promise<void> {
   }
 }
 
-async function querySelectedCommand(client: ControlClient, edit: number, query: string): Promise<number> {
+async function querySelectedCommand(client: ControlClient, pid: number, frame: number, query: string): Promise<number> {
   const text = `>${query}`;
-  sendText(edit, text);
-  const deadline = Date.now() + 3_000;
+  const deadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
   let lastState: PaletteState | null = null;
+  let sent = false;
   for (;;) {
-    const state = await paletteState(client);
+    let state = await paletteState(client);
+    if (!state) {
+      sendCommand(frame, cmdId("CmdCommandPalette"));
+      await waitForPalette(client);
+      sent = false;
+      state = await paletteState(client);
+    }
+    const edit = findPaletteEdit(pid, frame);
+    if (state && edit && !sent) {
+      sendText(edit, text);
+      sent = true;
+      state = await paletteState(client);
+    }
     lastState = state;
     if (state && state.queryLen === text.length) {
       return state.items > 0 ? state.selectedCmdId : 0;
@@ -90,14 +102,13 @@ async function checkDocument(file: string, shouldShow: boolean, appData: string)
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdCommandPalette"));
     await waitForPalette(client);
-    const edit = findPaletteEdit(proc.pid!, frame);
-    if (!edit) {
+    if (!findPaletteEdit(proc.pid!, frame)) {
       throw new Error("image-only-palette-items: no command palette edit");
     }
 
     for (const [query, commandName] of imageCommands) {
       const expected = cmdId(commandName);
-      const selected = await querySelectedCommand(client, edit, query);
+      const selected = await querySelectedCommand(client, proc.pid!, frame, query);
       if ((selected === expected) !== shouldShow) {
         throw new Error(
           `image-only-palette-items: ${commandName} selected=${selected}, expected ${shouldShow ? expected : "hidden"}`,

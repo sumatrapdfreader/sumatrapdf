@@ -205,6 +205,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["image-only-palette-items", imageOnlyPaletteItems],
   ["issue-5868", issue5868],
   ["issue-893", issue893],
   ["issue-2252", issue2252],
@@ -362,7 +363,6 @@ export const tests: NamedTest[] = [
   ["settings-persist", settingsPersist],
   ["issue-5970", issue5970],
   ["issue-5971", issue5971],
-  ["image-only-palette-items", imageOnlyPaletteItems],
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
   ["annotation-editor-reload", annotationEditorReload],
   ["issue-5974", issue5974],
