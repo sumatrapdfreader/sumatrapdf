@@ -1456,6 +1456,20 @@ TempStr SeqStrByIndex(SeqStrings strs, int idx) {
     return SeqStrAt(strs, off);
 }
 
+// How many strings the run holds. A table that parallels a SeqStrings has
+// to be as long as the run, and this is how something says so.
+int SeqStrCount(SeqStrings strs) {
+    if (!strs || !strs[0]) {
+        return 0;
+    }
+    int off = 0;
+    int n = 1;
+    while (SeqStrAdvance(strs, off)) {
+        n++;
+    }
+    return n;
+}
+
 // flat sequence of (extension, mime type) pairs
 static SeqStrings gMimeTypes =
     ".html\0text/html\0"

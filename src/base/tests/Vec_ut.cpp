@@ -24,6 +24,7 @@ void VecTest() {
     Vec<int> ints;
     utassert(len(ints) == 0);
     ints.Append(1);
+    utassert(ints.Cap() == 4);
     ints.Append(2);
     ints.InsertAt(0, -1);
     utassert(len(ints) == 3);
@@ -61,6 +62,27 @@ void VecTest() {
         utassert(len(ints) < len(ints2));
         ints2 = ints;
         utassert(len(ints2) == 998);
+    }
+
+    {
+        int buf[4];
+        Vec<int> v;
+        VecUseInline(v, buf);
+        utassert(v.Cap() == 4);
+        utassert(v.els == buf);
+        for (int i = 0; i < 4; i++) {
+            v.Append(i);
+        }
+        utassert(len(v) == 4);
+        utassert(v.els == buf);
+        utassert(v[0] == 0 && v[3] == 3);
+        v.Append(4);
+        utassert(len(v) == 5);
+        utassert(v.els != buf);
+        utassert(v.Cap() >= 5);
+        utassert(v[0] == 0 && v[4] == 4);
+        v.Reset();
+        utassert(v.els == nullptr);
     }
 
     {

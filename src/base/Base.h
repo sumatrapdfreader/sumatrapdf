@@ -664,20 +664,6 @@ struct Func0 {
     uintptr_t userData = 0;
 
     Func0() = default;
-    // copy constructor
-    Func0(const Func0& that) {
-        this->fn = that.fn;
-        this->userData = that.userData;
-    }
-    // copy assignment operator
-    Func0& operator=(const Func0& that) {
-        if (this != &that) {
-            this->fn = that.fn;
-            this->userData = that.userData;
-        }
-        return *this;
-    }
-    ~Func0() = default;
 
     bool IsValid() const { return fn != nullptr; }
     void Call() const {
@@ -725,29 +711,19 @@ struct Func1 {
     static constexpr uintptr_t kDropsArgBit = 1;
     static constexpr uintptr_t kFuncNoArg = Func0::kFuncNoArg;
 
-    void (*fn)(void*, T) = nullptr;
+    // Untyped, like Func0's, because Call below reads it as three different
+    // signatures and gcc's -Wcast-function-type refuses a cast from one
+    // function type straight to another. Every one of them goes through the
+    // void* instead.
+    void* fn = nullptr;
     uintptr_t userData = 0;
 
     Func1() = default;
     // a Func0 is a Func1 that doesn't look at its argument
     Func1(const Func0& that) {
-        this->fn = (void (*)(void*, T))that.fn;
+        this->fn = that.fn;
         this->SetData((void*)that.userData, true);
     }
-    // copy constructor
-    Func1(const Func1& that) {
-        this->fn = that.fn;
-        this->userData = that.userData;
-    }
-    // copy assignment operator
-    Func1& operator=(const Func1& that) {
-        if (this != &that) {
-            this->fn = that.fn;
-            this->userData = that.userData;
-        }
-        return *this;
-    }
-    ~Func1() = default;
 
     void SetData(void* d, bool dropsArg) {
         // an odd pointer would collide with the flag. Nothing we take the
@@ -773,12 +749,12 @@ struct Func1 {
             return;
         }
         if (d == kFuncNoArg) {
-            using fptr = void (*)(T);
-            auto func = (fptr)fn;
+            auto func = (void (*)(T))fn;
             func(arg);
             return;
         }
-        fn((void*)d, arg);
+        auto func = (void (*)(void*, T))fn;
+        func((void*)d, arg);
     }
 };
 
@@ -790,8 +766,7 @@ static void MethodTrampoline1(void* obj, TArg arg) {
 template <typename T, typename TArg, void (T::*Method)(TArg)>
 Func1<TArg> MkMethod1(T* obj) {
     auto res = Func1<TArg>{};
-    using fptr = void (*)(void*, TArg);
-    res.fn = (fptr)&MethodTrampoline1<T, TArg, Method>;
+    res.fn = (void*)&MethodTrampoline1<T, TArg, Method>;
     res.SetData((void*)obj, false);
     return res;
 }
@@ -799,8 +774,7 @@ Func1<TArg> MkMethod1(T* obj) {
 template <typename T1, typename T2>
 Func1<T2> MkFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = Func1<T2>{};
-    using fptr = void (*)(void*, T2);
-    res.fn = (fptr)fn;
+    res.fn = (void*)fn;
     res.SetData((void*)d, false);
     return res;
 }
@@ -808,8 +782,7 @@ Func1<T2> MkFunc1(void (*fn)(T1*, T2), T1* d) {
 template <typename T2>
 Func1<T2> MkFunc1Void(void (*fn)(T2)) {
     auto res = Func1<T2>{};
-    using fptr = void (*)(void*, T2);
-    res.fn = (fptr)fn;
+    res.fn = (void*)fn;
     res.SetData((void*)Func1<T2>::kFuncNoArg, false);
     return res;
 }
@@ -817,8 +790,7 @@ Func1<T2> MkFunc1Void(void (*fn)(T2)) {
 template <typename T1, typename T2>
 Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = new Func1<T2>{};
-    using fptr = void (*)(void*, T2);
-    res->fn = (fptr)fn;
+    res->fn = (void*)fn;
     res->SetData((void*)d, false);
     return res;
 }
