@@ -1666,25 +1666,29 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
 // term differs from TextSearch::lastText we force wasModified=true. Callers can
 // still pass true for the same text (restart after match-case toggle, etc.).
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified, bool showProgress) {
+    if (!win) {
+        return;
+    }
     AbortFinding(win, false);
     if (len(text) == 0) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSearch) {
         return;
     }
     RememberFindQuery(text);
     if (ApplyFindPageRange(win)) {
         wasModified = true;
     }
-    DisplayModel* dm = win->AsFixed();
-    if (dm && dm->textSearch) {
-        // Match SetText()'s normalization: strip one leading space (word-start)
-        // so trailing/whole-word spaces still compare correctly.
-        Str searchText = text;
-        if (searchText && searchText.s[0] == ' ') {
-            searchText = Str(searchText.s + 1, searchText.len - 1);
-        }
-        if (!str::Eq(searchText, dm->textSearch->lastText)) {
-            wasModified = true;
-        }
+    // Match SetText()'s normalization: strip one leading space (word-start)
+    // so trailing/whole-word spaces still compare correctly.
+    Str searchText = text;
+    if (searchText && searchText.s[0] == ' ') {
+        searchText = Str(searchText.s + 1, searchText.len - 1);
+    }
+    if (!str::Eq(searchText, dm->textSearch->lastText)) {
+        wasModified = true;
     }
     // New/changed term: record search-start page as session-only favorite "/"
     // (issue #5726 / #5862). Find Next/Prev for the same term does not update it.
@@ -1697,6 +1701,44 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
     auto fn = MkFunc0(FindThread, ftd);
     win->findThread = StartThread(fn, StrL("FindThread"));
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
+}
+
+// A command-line search can target a session-restored tab whose asynchronous
+// load has created the tab but not its controller yet. Keep the newest request
+// on that tab and start it after the controller is attached.
+void StartSearchFromCommandLine(MainWindow* win, Str text) {
+    if (!win || len(text) == 0) {
+        return;
+    }
+    if (win->findEdit) {
+        win->findEdit->SetText(text);
+    }
+    if (!win->IsDocLoaded()) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab && tab->type == WindowTab::Type::Document) {
+            str::ReplaceWithCopy(&tab->pendingFindText, text);
+        }
+        return;
+    }
+    if (DocController* browser = BrowserFindCtrl(win)) {
+        BrowserFindStartSearch(win, browser);
+        return;
+    }
+    FindTextOnThread(win, TextSearch::Direction::Forward, text, true, true);
+}
+
+// Consume a command-line search once its target tab is current and loaded.
+void StartPendingSearch(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->pendingFindText) {
+        return;
+    }
+    TempStr text = str::DupTemp(tab->pendingFindText);
+    str::FreePtr(&tab->pendingFindText);
+    StartSearchFromCommandLine(win, text);
 }
 
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655

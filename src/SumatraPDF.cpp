@@ -2668,6 +2668,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (!args->isNewWindow && win->presentation && win->ctrl) {
         win->ctrl->SetInPresentation(true);
     }
+    StartPendingSearch(win);
 }
 
 void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
@@ -4779,6 +4780,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     ShowNotificationsForActiveTab(win->hwndCanvas, tab);
     // CloseDocumentInCurrentTab cleared page-info; restore if still wanted
     ShowPageInfoIfWanted(win);
+    StartPendingSearch(win);
 
     if (IsMainWindowValidAndNotClosing(win)) {
         bool aiChatWas = win->uiState.aiChatVisible;

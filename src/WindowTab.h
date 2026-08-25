@@ -48,6 +48,7 @@ struct WindowTab {
     // couldn't tell). See FileLoadErrorReasonTemp()
     Str loadErrorReason;
     LoadArgs* pendingLoadArgs = nullptr;
+    Str pendingFindText;
     // text of win->hwndFrame when the tab is selected
     Str frameTitle;
     // state of the table of contents

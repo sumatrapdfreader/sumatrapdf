@@ -30,8 +30,12 @@ WindowTab::WindowTab(MainWindow* win) {
 
 void WindowTab::SetFilePath(Str path) {
     type = Type::Document;
-    if (filePath && !path::IsSame(filePath, path) && IsOpenCachePath(filePath)) {
+    bool changed = filePath && !path::IsSame(filePath, path);
+    if (changed && IsOpenCachePath(filePath)) {
         file::Delete(filePath);
+    }
+    if (changed) {
+        str::FreePtr(&pendingFindText);
     }
     str::ReplaceWithCopy(&filePath, path);
 }
@@ -114,6 +118,7 @@ WindowTab::~WindowTab() {
     displayName = {};
     str::Free(frameTitle);
     str::Free(loadErrorReason);
+    str::Free(pendingFindText);
     frameTitle = {};
     str::Free(readAloudText);
     readAloudText = {};
