@@ -109,23 +109,33 @@ function findWinDbgFromWindowsApps(): string | null {
 }
 
 // The debugger to use plus the flags that make it start the program right away
-// instead of stopping at the initial breakpoint. windbg / WinDbgX wins over
-// raddbg because it understands the ASan report.
+// instead of stopping at the initial breakpoint. Prefer cdb (console) over the
+// WinDbg GUI when it's installed; both beat raddbg because they understand the
+// ASan report.
 export function findDebugger(): { exe: string; flags: string[] } | null {
-  // windbg: -Q quiet (don't save settings), -o debug child processes,
-  // -g don't break on start, -G don't break on exit either, so the debugger
-  // closes with the program instead of sitting on the final breakpoint.
+  // -o debug child processes, -g don't break on start, -G don't break on
+  // exit either, so the debugger closes with the program instead of sitting
+  // on the final breakpoint. -x is -xd av: ASan maps shadow memory via
+  // first-chance access violations, so don't stop on those (second-chance
+  // still breaks). -Q (don't save settings) is WinDbg GUI only.
+  const kits = [
+    String.raw`C:\Program Files (x86)\Windows Kits\10\Debuggers\x64`,
+    String.raw`C:\Program Files\Windows Kits\10\Debuggers\x64`,
+  ];
+
+  const cdb = findOnPath("cdb.exe") ?? firstExisting(kits.map((d) => join(d, "cdb.exe")));
+  if (cdb) {
+    return { exe: cdb, flags: ["-o", "-g", "-G", "-x"] };
+  }
+
   const windbg =
     findOnPath("windbgx.exe") ??
     findOnPath("windbg.exe") ??
-    firstExisting([
-      String.raw`C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\windbg.exe`,
-      String.raw`C:\Program Files\Windows Kits\10\Debuggers\x64\windbg.exe`,
-    ]) ??
+    firstExisting(kits.map((d) => join(d, "windbg.exe"))) ??
     findWinDbgFromRegistry() ??
     findWinDbgFromWindowsApps();
   if (windbg) {
-    return { exe: windbg, flags: ["-Q", "-o", "-g", "-G"] };
+    return { exe: windbg, flags: ["-Q", "-o", "-g", "-G", "-x"] };
   }
 
   const raddbg = firstExisting([join(homedir(), "OneDrive", "bin", "raddbg.exe")]) ?? findOnPath("raddbg.exe");
@@ -148,7 +158,7 @@ async function main() {
   const dbg = findDebugger();
   if (!dbg) {
     console.error(
-      `no debugger found: looked for windbg/WinDbgX (PATH, Windows Kits, Store package) and ${join(homedir(), "OneDrive", "bin", "raddbg.exe")}`,
+      `no debugger found: looked for cdb/windbg/WinDbgX (PATH, Windows Kits, Store package) and ${join(homedir(), "OneDrive", "bin", "raddbg.exe")}`,
     );
     process.exit(1);
   }
