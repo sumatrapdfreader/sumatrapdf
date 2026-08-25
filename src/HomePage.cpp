@@ -235,11 +235,10 @@ static AboutRow gAboutRows[] = {
     // isn't known until runtime (32/64-bit, debug)
     {StrL("version"), {}, {}},
     {StrL("built on"), StrL(__DATE__ " " __TIME__), {}},
+    {StrL("manual"), StrL("SumatraPDF manual"), StrL("https://www.sumatrapdfreader.org/docs/SumatraPDF-documentation")},
+    {StrL("version history"), StrL("What's new"), StrL("https://www.sumatrapdfreader.org/docs/Version-history")},
     {StrL("website"), StrL("SumatraPDF website"), Str(kWebsiteURL)},
-    {StrL("manual"), StrL("SumatraPDF manual"), Str(kManualURL)},
     {StrL("forums"), StrL("SumatraPDF forums"), StrL("https://github.com/sumatrapdfreader/sumatrapdf/discussions")},
-    {StrL("programming"), StrL("The Programmers"),
-     StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
     {StrL("licenses"), StrL("Various Open Source"),
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
 #if defined(GIT_COMMIT_ID_STR)
@@ -291,9 +290,7 @@ struct AboutCtrl : VirtCtrl {
 
 static void OpenAboutUrl(VirtMouseEvent* ev) {
     auto* link = (VirtLink*)ev->target;
-    if (len(link->target) > 0) {
-        SumatraLaunchBrowser(link->target);
-    }
+    OpenTipUrl(link->target);
 }
 
 void SetPromoString(Str s) {
