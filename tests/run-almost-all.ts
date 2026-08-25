@@ -142,6 +142,7 @@ import { testit as annotDeleteRedraw } from "./annot-delete-redraw.ts";
 import { testit as annotIconOverContents } from "./annot-icon-over-contents.ts";
 import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interaction.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
+import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
 import { testit as lineAnnotationPlacement } from "./line-annotation-placement.ts";
 import { testit as polylineAnnotationPlacement } from "./polyline-annotation-placement.ts";
 import { testit as shapeAnnotationPlacement } from "./shape-annotation-placement.ts";
@@ -239,6 +240,7 @@ export const tests: NamedTest[] = [
   ["annot-icon-over-contents", annotIconOverContents],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
   ["text-annotation-placement", textAnnotationPlacement],
+  ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["shape-annotation-placement", shapeAnnotationPlacement],

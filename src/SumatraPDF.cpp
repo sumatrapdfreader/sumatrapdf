@@ -12393,8 +12393,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotFreeText:
             [[fallthrough]];
         case CmdCreateAnnotStamp:
+            if (annotType == AnnotationType::Stamp && !isTextAnnotationPlacement && lp == 0) {
+                StartTextAnnotationPlacement(win, invokedCmdId);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotCaret:
+            if (annotType == AnnotationType::Caret && !isTextAnnotationPlacement && lp == 0) {
+                StartTextAnnotationPlacement(win, invokedCmdId);
+                return 0;
+            }
             [[fallthrough]];
         case CmdCreateAnnotSquare:
             if (annotType == AnnotationType::Square && !isShapeAnnotationPlacement && lp == 0) {

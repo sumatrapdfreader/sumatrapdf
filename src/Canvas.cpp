@@ -62,6 +62,7 @@
 #include "Toolbar.h"
 #include "Translations.h"
 #include "SvgIcons.h"
+#include "Commands.h"
 
 #include "RefHover.h"
 
@@ -280,6 +281,29 @@ static void SetTextAnnotationPlacementCursor() {
     }
 }
 
+static bool IsPlacingStampOrCaret(MainWindow* win) {
+    int cmdId = win ? win->textAnnotationPlacementCmdId : 0;
+    return cmdId == CmdCreateAnnotStamp || cmdId == CmdCreateAnnotCaret;
+}
+
+static void SetPointAnnotationPlacementCursor(MainWindow* win) {
+    if (IsPlacingStampOrCaret(win)) {
+        SetCursorCached(IDC_CROSS);
+        return;
+    }
+    SetTextAnnotationPlacementCursor();
+}
+
+static Str PointPlacementNotification(int cmdId) {
+    if (cmdId == CmdCreateAnnotStamp) {
+        return _TRA("Place stamp annotation. **Esc** to cancel.");
+    }
+    if (cmdId == CmdCreateAnnotCaret) {
+        return _TRA("Place caret annotation. **Esc** to cancel.");
+    }
+    return _TRA("Place text annotation. **Esc** to cancel.");
+}
+
 static HCURSOR gCursorInkAnnotationPlacement = nullptr;
 static int gCursorInkAnnotationPlacementDx = 0;
 static int gCursorInkAnnotationPlacementDy = 0;
@@ -337,6 +361,7 @@ bool CancelTextAnnotationPlacement(MainWindow* win) {
         return false;
     }
     win->textAnnotationPlacementCmdId = 0;
+    win->pointAnnotationPlacementPos = {};
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifTextAnnotationPlacement);
     HideAnnotationHoverOverlay(win);
     if (win->hwndCanvas) {
@@ -357,6 +382,7 @@ void StartTextAnnotationPlacement(MainWindow* win, int cmdId) {
     CancelShapeAnnotationPlacement(win);
     FinishInkAnnotationPlacement(win);
     win->textAnnotationPlacementCmdId = cmdId;
+    win->pointAnnotationPlacementPos = HwndGetCursorPos(win->hwndCanvas);
     StopSelectTextWithKeyboard(win);
     DeleteOldSelectionInfo(win, true);
     if (tab && tab->selectedAnnotation) {
@@ -368,7 +394,7 @@ void StartTextAnnotationPlacement(MainWindow* win, int cmdId) {
 
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
-    args.msg = _TRA("Place text annotation. **Esc** to cancel.");
+    args.msg = PointPlacementNotification(cmdId);
     args.timeoutMs = kNotifNoTimeout;
     args.groupId = kNotifTextAnnotationPlacement;
     args.corner = NotifCorner::BottomBar;
@@ -377,22 +403,49 @@ void StartTextAnnotationPlacement(MainWindow* win, int cmdId) {
     ShowNotification(args);
 
     HwndSetFocus(win->hwndFrame);
-    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    Point pt = win->pointAnnotationPlacementPos;
     if (HwndClientRect(win->hwndCanvas).Contains(pt)) {
-        SetTextAnnotationPlacementCursor();
+        SetPointAnnotationPlacementCursor(win);
     }
 }
 
-TempStr TextAnnotationPlacementStateTemp(MainWindow* win) {
+static TempStr PointPlacementDumpLineTemp(MainWindow* win, int cmdId, Str key, bool svgCursor) {
+    bool active = win && win->textAnnotationPlacementCmdId == cmdId;
     if (!win || !win->hwndCanvas) {
-        return str::DupTemp(StrL("textPlacement active=0 notification=0 cursor=0 cmd=0 message=\n"));
+        if (svgCursor) {
+            return fmt("%s active=0 notification=0 cursor=0 cmd=0 message=\n", key);
+        }
+        return fmt("%s active=0 notification=0 cursor=0 preview=0 cmd=0 message=\n", key);
     }
-    NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifTextAnnotationPlacement);
+    NotificationWnd* notif = active ? GetNotificationForGroup(win->hwndCanvas, kNotifTextAnnotationPlacement) : nullptr;
     Str message = NotificationGetMessageTemp(notif);
-    bool iconCursor = gCursorTextAnnotationPlacement && GetCursor() == gCursorTextAnnotationPlacement;
-    return fmt("textPlacement active=%d notification=%d cursor=%d cmd=%d message=%s\n",
-               IsPlacingTextAnnotation(win) ? 1 : 0, notif ? 1 : 0, iconCursor ? 1 : 0,
-               win->textAnnotationPlacementCmdId, message);
+    bool cursor = false;
+    if (active) {
+        if (svgCursor) {
+            cursor = gCursorTextAnnotationPlacement && GetCursor() == gCursorTextAnnotationPlacement;
+        } else {
+            cursor = GetCursor() == GetCachedCursor(IDC_CROSS);
+        }
+    }
+    int cmdOut = active ? win->textAnnotationPlacementCmdId : 0;
+    if (svgCursor) {
+        return fmt("%s active=%d notification=%d cursor=%d cmd=%d message=%s\n", key, active ? 1 : 0, notif ? 1 : 0,
+                   cursor ? 1 : 0, cmdOut, message);
+    }
+    DisplayModel* dm = active ? win->AsFixed() : nullptr;
+    Point pt = win->pointAnnotationPlacementPos;
+    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
+    bool preview = active && dm && dm->ValidPageNo(pageNo);
+    return fmt("%s active=%d notification=%d cursor=%d preview=%d cmd=%d message=%s\n", key, active ? 1 : 0,
+               notif ? 1 : 0, cursor ? 1 : 0, preview ? 1 : 0, cmdOut, message);
+}
+
+TempStr TextAnnotationPlacementStateTemp(MainWindow* win) {
+    str::Builder out;
+    out.Append(PointPlacementDumpLineTemp(win, CmdCreateAnnotText, StrL("textPlacement"), true));
+    out.Append(PointPlacementDumpLineTemp(win, CmdCreateAnnotStamp, StrL("stampPlacement"), false));
+    out.Append(PointPlacementDumpLineTemp(win, CmdCreateAnnotCaret, StrL("caretPlacement"), false));
+    return ToStrTemp(out);
 }
 
 //--- line annotation placement
@@ -2562,7 +2615,14 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
             ScheduleRepaint(win, 0);
         }
         HideAnnotationHoverOverlay(win);
-        SetTextAnnotationPlacementCursor();
+        SetPointAnnotationPlacementCursor(win);
+        Point pt{x, y};
+        if (IsPlacingStampOrCaret(win) && pt != win->pointAnnotationPlacementPos) {
+            win->pointAnnotationPlacementPos = pt;
+            ScheduleRepaint(win, 0);
+        } else {
+            win->pointAnnotationPlacementPos = pt;
+        }
         return;
     }
 
@@ -4268,6 +4328,57 @@ static void PaintHoveredAnnotationMark(MainWindow* win, HDC hdc, DisplayModel* d
     gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
 }
 
+static void PaintStampCaretPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
+    if (!IsPlacingStampOrCaret(win) || !dm) {
+        return;
+    }
+    Point pt = win->pointAnnotationPlacementPos;
+    int pageNo = dm->GetPageNoByPoint(pt);
+    if (!dm->ValidPageNo(pageNo) || !dm->PageVisible(pageNo)) {
+        return;
+    }
+    PointF pagePt = dm->CvtFromScreen(pt, pageNo);
+    bool stamp = win->textAnnotationPlacementCmdId == CmdCreateAnnotStamp;
+    RectF pageRect;
+    if (stamp) {
+        pageRect = {pagePt.x, pagePt.y, 190.f, 50.f};
+    } else {
+        pageRect = {pagePt.x, pagePt.y - 7.5f, 18.f, 15.f};
+    }
+    Rect r = dm->CvtToScreen(pageNo, pageRect);
+    if (r.IsEmpty()) {
+        return;
+    }
+
+    Gdiplus::Graphics gs(hdc);
+    gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    if (stamp) {
+        Gdiplus::Color red(180, 200, 40, 40);
+        Gdiplus::Pen pen(red, (Gdiplus::REAL)std::max(DpiScale(2), 1));
+        Gdiplus::SolidBrush fill(Gdiplus::Color(40, 200, 40, 40));
+        gs.FillRectangle(&fill, r.x, r.y, r.dx, r.dy);
+        gs.DrawRectangle(&pen, r.x, r.y, r.dx, r.dy);
+        Gdiplus::REAL fontDy = (Gdiplus::REAL)std::max(r.dy * 0.45f, 8.f);
+        Gdiplus::Font font(L"Arial", fontDy, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+        Gdiplus::SolidBrush text(red);
+        Gdiplus::StringFormat fmt;
+        fmt.SetAlignment(Gdiplus::StringAlignmentCenter);
+        fmt.SetLineAlignment(Gdiplus::StringAlignmentCenter);
+        Gdiplus::RectF tr((Gdiplus::REAL)r.x, (Gdiplus::REAL)r.y, (Gdiplus::REAL)r.dx, (Gdiplus::REAL)r.dy);
+        gs.DrawString(L"DRAFT", -1, &font, tr, &fmt, &text);
+    } else {
+        Gdiplus::Color blue(220, 0, 80, 200);
+        Gdiplus::Pen pen(blue, (Gdiplus::REAL)std::max(DpiScale(2), 1));
+        int x0 = r.x;
+        int yTop = r.y;
+        int xMid = r.x + (r.dx / 2);
+        int x1 = r.x + r.dx;
+        int yBot = r.y + r.dy;
+        gs.DrawLine(&pen, x0, yBot, xMid, yTop);
+        gs.DrawLine(&pen, xMid, yTop, x1, yBot);
+    }
+}
+
 static void PaintLineAnnotationPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     int pageNo = win ? win->lineAnnotationPlacementPageNo : -1;
     if (!IsPlacingLineAnnotation(win) || !dm->ValidPageNo(pageNo) || !dm->PageVisible(pageNo)) {
@@ -4693,6 +4804,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     }
 
     WindowTab* tab = win->CurrentTab();
+    PaintStampCaretPlacement(win, hdc, dm);
     PaintLineAnnotationPlacement(win, hdc, dm);
     PaintPolyLineAnnotationPlacement(win, hdc, dm);
     PaintShapeAnnotationPlacement(win, hdc, dm);
@@ -4942,7 +5054,7 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     }
 
     if (IsPlacingTextAnnotation(win)) {
-        SetTextAnnotationPlacementCursor();
+        SetPointAnnotationPlacementCursor(win);
         win->DeleteToolTip();
         return TRUE;
     }

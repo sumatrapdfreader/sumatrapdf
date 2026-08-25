@@ -442,6 +442,7 @@ struct MainWindow {
     bool isToolbarVisible = false;
     bool pdfAnnotationsToolbarEnabled = false;
     int textAnnotationPlacementCmdId = 0;
+    Point pointAnnotationPlacementPos;
     int lineAnnotationPlacementCmdId = 0;
     int lineAnnotationPlacementPageNo = -1;
     PointF lineAnnotationPlacementStart;
