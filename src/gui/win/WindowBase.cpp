@@ -596,6 +596,22 @@ void WindowBase::SetFocusTo(VirtCtrl* w) {
     vroot->SetFocus(w);
 }
 
+// GetFocus() is null when this thread is not the foreground thread. The thread
+// still has a focused window; GUITHREADINFO reports it. Posted-key tests and a
+// properties dialog opened while the runner holds foreground both hit that.
+static HWND ThreadFocusHwnd() {
+    HWND h = ::GetFocus();
+    if (h) {
+        return h;
+    }
+    GUITHREADINFO gti{};
+    gti.cbSize = sizeof(gti);
+    if (GetGUIThreadInfo(GetCurrentThreadId(), &gti)) {
+        return gti.hwndFocus;
+    }
+    return nullptr;
+}
+
 bool WindowBase::TabNavigate(bool backwards) {
     if (!layout) {
         return false;
@@ -610,7 +626,7 @@ bool WindowBase::TabNavigate(bool backwards) {
     // control that owns the win32 focus
     int idx = -1;
     VirtCtrl* focusedVirt = vroot ? vroot->focused : nullptr;
-    HWND focusedHwnd = ::GetFocus();
+    HWND focusedHwnd = ThreadFocusHwnd();
     for (int i = 0; i < n && idx < 0; i++) {
         TabStop& ts = stops[i];
         if (focusedVirt && ts.vwnd == focusedVirt) {
