@@ -990,6 +990,7 @@ enum class ResizeHandle {
     Left,
     LineStart,
     LineEnd,
+    Vertex,
 };
 
 // Size of resize handle hit area (in pixels)
@@ -1368,6 +1369,14 @@ static bool IsLineEndpointHandle(ResizeHandle handle) {
     return handle == ResizeHandle::LineStart || handle == ResizeHandle::LineEnd;
 }
 
+static bool IsVertexHandle(ResizeHandle handle) {
+    return handle == ResizeHandle::Vertex;
+}
+
+static bool IsPolyVertexType(AnnotationType tp) {
+    return tp == AnnotationType::PolyLine || tp == AnnotationType::Polygon;
+}
+
 // Line annotations: hit-test the two endpoints, not the bounding-box handles.
 static ResizeHandle GetLineEndpointHandleAt(DisplayModel* dm, Point pt, Annotation* annot) {
     PointF start, end;
@@ -1389,6 +1398,30 @@ static ResizeHandle GetLineEndpointHandleAt(DisplayModel* dm, Point pt, Annotati
     return ResizeHandle::None;
 }
 
+// PolyLine / Polygon: hit-test each vertex. Returns index, or -1.
+static int GetPolyVertexAt(DisplayModel* dm, Point pt, Annotation* annot) {
+    if (!annot || !IsPolyVertexType(annot->type)) {
+        return -1;
+    }
+    Vec<PointF> pts = GetVertices(annot);
+    int n = len(pts);
+    if (n == 0) {
+        return -1;
+    }
+    int hs = kResizeHandleSize;
+    int best = -1;
+    int bestDist = hs + 1;
+    for (int i = 0; i < n; i++) {
+        Point p = dm->CvtToScreen(annot->pageNo, pts[i]);
+        int d = std::max(abs(pt.x - p.x), abs(pt.y - p.y));
+        if (d <= hs && d < bestDist) {
+            best = i;
+            bestDist = d;
+        }
+    }
+    return best;
+}
+
 // Get the resize handle at the given point for the selected annotation
 static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* annot) {
     if (!annot) {
@@ -1407,6 +1440,9 @@ static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* ann
 
     if (annot->type == AnnotationType::Line) {
         return GetLineEndpointHandleAt(dm, pt, annot);
+    }
+    if (IsPolyVertexType(annot->type)) {
+        return GetPolyVertexAt(dm, pt, annot) >= 0 ? ResizeHandle::Vertex : ResizeHandle::None;
     }
 
     Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
@@ -1452,6 +1488,7 @@ static LPWSTR GetCursorForResizeHandle(ResizeHandle handle) {
             return IDC_SIZEWE;
         case ResizeHandle::LineStart:
         case ResizeHandle::LineEnd:
+        case ResizeHandle::Vertex:
             return IDC_SIZEALL;
         default:
             return IDC_ARROW;
@@ -1918,6 +1955,13 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                         // Overlay only: leave the PDF page bitmap alone until
                         // the drag ends.
                         ScheduleRepaint(win, 0);
+                    } else if (IsVertexHandle(handle)) {
+                        PointF pagePt = dm->CvtFromScreen(Point{x, y}, PageNo(annot));
+                        int idx = win->annotationResizeVertexIndex;
+                        if (idx >= 0 && idx < len(win->annotationVertexPreview)) {
+                            win->annotationVertexPreview[idx] = pagePt;
+                        }
+                        ScheduleRepaint(win, 0);
                     } else {
                         RectF newRect = CalculateResizedRect(win, x, y);
                         SetRect(annot, newRect);
@@ -2068,10 +2112,15 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->annotationOriginalLineEnd = {};
     win->annotationLinePreviewStart = {};
     win->annotationLinePreviewEnd = {};
+    win->annotationResizeVertexIndex = -1;
+    win->annotationVertexPreview.Reset();
     if (annot->type == AnnotationType::Line) {
         GetLinePoints(annot, win->annotationOriginalLineStart, win->annotationOriginalLineEnd);
         win->annotationLinePreviewStart = win->annotationOriginalLineStart;
         win->annotationLinePreviewEnd = win->annotationOriginalLineEnd;
+    } else if (IsPolyVertexType(annot->type)) {
+        win->annotationVertexPreview = GetVertices(annot);
+        win->annotationResizeVertexIndex = GetPolyVertexAt(win->AsFixed(), pt, annot);
     }
     win->annotationResizeAspectRatio = 0;
     if (annot->type == AnnotationType::Stamp && r.dx > 0 && r.dy > 0) {
@@ -2110,6 +2159,8 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
 
     if (IsLineEndpointHandle(handle)) {
         SetLinePoints(annot, lineStart, lineEnd);
+    } else if (IsVertexHandle(handle)) {
+        SetVertices(annot, win->annotationVertexPreview);
     }
 
     // Rectangle resizes already wrote the annot during mouse move.
@@ -3418,6 +3469,8 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     MainWindow* win = tab->win;
     bool draggingLine = win && win->annotationBeingResized && IsLineEndpointHandle((ResizeHandle)win->resizeHandle) &&
                         annot->type == AnnotationType::Line;
+    bool draggingVertices = win && win->annotationBeingResized && IsVertexHandle((ResizeHandle)win->resizeHandle) &&
+                            IsPolyVertexType(annot->type);
 
     Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
     if (!tab->didScrollToSelectedAnnotation) {
@@ -3438,6 +3491,33 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         gs.DrawRectangle(&handlePen, x, y, hs, hs);
     };
 
+    auto drawVertexHandles = [&](const Vec<PointF>& pts) {
+        for (int i = 0; i < len(pts); i++) {
+            Point p = dm->CvtToScreen(pageNo, pts[i]);
+            drawHandle(p.x - hh, p.y - hh);
+        }
+    };
+
+    auto drawVertexPath = [&](const Vec<PointF>& pts, bool closed) {
+        int n = len(pts);
+        if (n == 0) {
+            return;
+        }
+        gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+        Gdiplus::Color blue(255, 0, 80, 200);
+        Gdiplus::Pen pen(blue, (Gdiplus::REAL)std::max(DpiScale(2), 1));
+        Point prev = dm->CvtToScreen(pageNo, pts[0]);
+        for (int i = 1; i < n; i++) {
+            Point cur = dm->CvtToScreen(pageNo, pts[i]);
+            gs.DrawLine(&pen, prev.x, prev.y, cur.x, cur.y);
+            prev = cur;
+        }
+        if (closed && n >= 2) {
+            Point first = dm->CvtToScreen(pageNo, pts[0]);
+            gs.DrawLine(&pen, prev.x, prev.y, first.x, first.y);
+        }
+    };
+
     if (draggingLine) {
         Point startPt = dm->CvtToScreen(pageNo, win->annotationLinePreviewStart);
         Point endPt = dm->CvtToScreen(pageNo, win->annotationLinePreviewEnd);
@@ -3447,6 +3527,13 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         gs.DrawLine(&pen, startPt.x, startPt.y, endPt.x, endPt.y);
         drawHandle(startPt.x - hh, startPt.y - hh);
         drawHandle(endPt.x - hh, endPt.y - hh);
+        return;
+    }
+
+    if (draggingVertices) {
+        bool closed = annot->type == AnnotationType::Polygon;
+        drawVertexPath(win->annotationVertexPreview, closed);
+        drawVertexHandles(win->annotationVertexPreview);
         return;
     }
 
@@ -3473,6 +3560,11 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         Point endPt = dm->CvtToScreen(pageNo, lineEnd);
         drawHandle(startPt.x - hh, startPt.y - hh);
         drawHandle(endPt.x - hh, endPt.y - hh);
+        return;
+    }
+
+    if (IsPolyVertexType(annot->type)) {
+        drawVertexHandles(GetVertices(annot));
         return;
     }
 

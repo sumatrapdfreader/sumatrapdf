@@ -1387,6 +1387,72 @@ void SetLinePoints(Annotation* annot, PointF start, PointF end) {
     MarkNotificationAsModified(e, annot);
 }
 
+// /Vertices of a PolyLine or Polygon, in page coordinates.
+Vec<PointF> GetVertices(Annotation* annot) {
+    Vec<PointF> res;
+    if (!AnnotationIsLive(annot)) {
+        return res;
+    }
+    if (annot->type != AnnotationType::PolyLine && annot->type != AnnotationType::Polygon) {
+        return res;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    fz_try(ctx) {
+        int n = pdf_annot_vertex_count(ctx, a);
+        for (int i = 0; i < n; i++) {
+            fz_point p = pdf_annot_vertex(ctx, a, i);
+            res.Append({p.x, p.y});
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("GetVertices: pdf_annot_vertex() failed\n");
+        res.Reset();
+    }
+    return res;
+}
+
+// Replace /Vertices. Bounds follow from that.
+void SetVertices(Annotation* annot, const Vec<PointF>& points) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
+    if (annot->type != AnnotationType::PolyLine && annot->type != AnnotationType::Polygon) {
+        return;
+    }
+    if (len(points) < 2) {
+        return;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    Vec<fz_point> pts;
+    for (int i = 0; i < len(points); i++) {
+        pts.Append({points[i].x, points[i].y});
+    }
+    bool failed = false;
+    {
+        auto* ctx = e->Ctx();
+        ScopedRecursiveMutex cs(&e->docLock);
+        fz_try(ctx) {
+            pdf_set_annot_vertices(ctx, a, len(pts), pts.els);
+            pdf_update_annot(ctx, a);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            failed = true;
+            logf("SetVertices: pdf_set_annot_vertices() failed\n");
+        }
+    }
+    if (failed) {
+        return;
+    }
+    annot->bounds = GetBounds(annot);
+    MarkNotificationAsModified(e, annot);
+}
+
 int BorderWidth(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
@@ -1549,8 +1615,8 @@ bool AnnotationCanBeResized(AnnotationType tp) {
         tp == AnnotationType::Sound) {
         return false;
     }
-    if (tp == AnnotationType::Polygon || tp == AnnotationType::PolyLine || tp == AnnotationType::Ink) {
-        // geometry is a vertex / ink path; stretch-to-rect is not implemented
+    if (tp == AnnotationType::Ink) {
+        // geometry is an ink path; stretch-to-rect is not implemented
         return false;
     }
     return AnnotationCanBeMoved(tp);

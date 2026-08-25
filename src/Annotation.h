@@ -133,6 +133,8 @@ int Opacity(Annotation*);
 void GetLineEndingStyles(Annotation*, int* start, int* end);
 bool GetLinePoints(Annotation*, PointF& start, PointF& end);
 void SetLinePoints(Annotation*, PointF start, PointF end);
+Vec<PointF> GetVertices(Annotation*);
+void SetVertices(Annotation*, const Vec<PointF>&);
 
 void SetDefaultAppearanceTextFont(Annotation*, Str);
 void SetDefaultAppearanceTextSize(Annotation*, int);

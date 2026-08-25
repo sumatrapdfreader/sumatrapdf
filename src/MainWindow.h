@@ -370,6 +370,8 @@ struct MainWindow {
     PointF annotationOriginalLineEnd;
     PointF annotationLinePreviewStart;
     PointF annotationLinePreviewEnd;
+    Vec<PointF> annotationVertexPreview;
+    int annotationResizeVertexIndex = -1;
     float annotationResizeAspectRatio = 0;
     UINT_PTR annotationResizeRerenderTimer = 0;
 
