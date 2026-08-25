@@ -134,9 +134,49 @@ static void RoundTripThroughRenderedBitmapTest() {
     FreePixmap(back);
 }
 
+// Area-copy then paste-as-stamp (GetClipboardImageAsPixmap). Widths that are
+// not a multiple of 4 used to shear when the clipboard bitmap was read as
+// 24bpp (issue #6059).
+static void ClipboardStampRoundTripTest() {
+    const int ws[] = {1, 2, 3, 5, 7, 8};
+    for (int wi = 0; wi < dimof(ws); wi++) {
+        int w = ws[wi];
+        int h = 3;
+        Pixmap* src = AllocPixmap(w, h, PixmapFormat::BGRA8, false);
+        utassert(src != nullptr);
+        for (int y = 0; y < h; y++) {
+            u8* d = src->data + ((size_t)y * src->stride);
+            for (int x = 0; x < w; x++, d += 4) {
+                d[0] = (u8)(x * 17 + y); // b
+                d[1] = (u8)(y * 40 + 10);
+                d[2] = (u8)(x * 40 + 20);
+                d[3] = 255;
+            }
+        }
+        utassert(CopyPixmapToClipboard(src, false));
+        Pixmap* got = GetClipboardImageAsPixmap();
+        utassert(got != nullptr);
+        utassert(got->width == w);
+        utassert(got->height == h);
+        utassert(got->format == PixmapFormat::BGRA8);
+        for (int y = 0; y < h; y++) {
+            const u8* s = src->data + ((size_t)y * src->stride);
+            const u8* g = got->data + ((size_t)y * got->stride);
+            for (int x = 0; x < w; x++, s += 4, g += 4) {
+                utassert(s[0] == g[0]);
+                utassert(s[1] == g[1]);
+                utassert(s[2] == g[2]);
+            }
+        }
+        FreePixmap(got);
+        FreePixmap(src);
+    }
+}
+
 void ClipboardImageTest() {
     ScopedGdiPlus gdiPlus;
     TransparentImageTest();
     OpaqueImageTest();
     RoundTripThroughRenderedBitmapTest();
+    ClipboardStampRoundTripTest();
 }

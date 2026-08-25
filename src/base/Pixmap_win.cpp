@@ -451,6 +451,46 @@ static Size GetBitmapSize(HBITMAP hbmp) {
     return {bmpInfo.bmWidth, bmpInfo.bmHeight};
 }
 
+// Copy an HBITMAP into a top-down 32bpp BGRA pixmap. Reading the clipboard as
+// 24bpp GetDIBits sheared paste-as-stamp (issue #6059): area-copy puts a
+// 32-bpp CF_BITMAP on the clipboard, and converting that to DWORD-padded 24bpp
+// rows does not land on the stride the stamp path uses. 32bpp BI_RGB rows are
+// always width*4, the same as AllocPixmap(BGRA8).
+static Pixmap* PixmapFromHBITMAPPixels(HBITMAP hbmp) {
+    Size size = GetBitmapSize(hbmp);
+    if (size.dx <= 0 || size.dy <= 0) {
+        return nullptr;
+    }
+    Pixmap* pixmap = AllocPixmap(size.dx, size.dy, PixmapFormat::BGRA8);
+    if (!pixmap) {
+        return nullptr;
+    }
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = size.dx;
+    bmi.bmiHeader.biHeight = -size.dy; // top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hdc = GetDC(nullptr);
+    int n = GetDIBits(hdc, hbmp, 0, (UINT)size.dy, pixmap->data, &bmi, DIB_RGB_COLORS);
+    ReleaseDC(nullptr, hdc);
+    if (!n) {
+        FreePixmap(pixmap);
+        return nullptr;
+    }
+    // CF_BITMAP has no alpha; GetDIBits leaves it 0, which would make a stamp
+    // fully transparent.
+    for (int y = 0; y < pixmap->height; y++) {
+        u8* d = pixmap->data + ((size_t)y * pixmap->stride);
+        for (int x = 0; x < pixmap->width; x++, d += 4) {
+            d[3] = 0xff;
+        }
+    }
+    return pixmap;
+}
+
 // Returns a copy of the clipboard bitmap as a platform-independent Pixmap.
 Pixmap* GetClipboardImageAsPixmap() {
     if (!IsClipboardFormatAvailable(CF_BITMAP) || !OpenClipboard(nullptr)) {
@@ -462,24 +502,7 @@ Pixmap* GetClipboardImageAsPixmap() {
     // returned by GetClipboardData() remains owned by the clipboard.
     HBITMAP hbmp = (HBITMAP)GetClipboardData(CF_BITMAP);
     if (hbmp) {
-        Size size = GetBitmapSize(hbmp);
-        pixmap = AllocPixmap(size.dx, size.dy, PixmapFormat::BGR8);
-        if (pixmap) {
-            BITMAPINFO bmi{};
-            bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-            bmi.bmiHeader.biWidth = size.dx;
-            bmi.bmiHeader.biHeight = -size.dy;
-            bmi.bmiHeader.biPlanes = 1;
-            bmi.bmiHeader.biBitCount = 24;
-            bmi.bmiHeader.biCompression = BI_RGB;
-
-            HDC hdc = GetDC(nullptr);
-            if (!GetDIBits(hdc, hbmp, 0, size.dy, pixmap->data, &bmi, DIB_RGB_COLORS)) {
-                FreePixmap(pixmap);
-                pixmap = nullptr;
-            }
-            ReleaseDC(nullptr, hdc);
-        }
+        pixmap = PixmapFromHBITMAPPixels(hbmp);
     }
     CloseClipboard();
     return pixmap;
