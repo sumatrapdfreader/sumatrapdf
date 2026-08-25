@@ -356,7 +356,7 @@ CmdSetScreenshotHotkey,,Set Screenshot Hotkey,"Open dialog to set or remove a gl
 CmdReadAloud,,Read Aloud,"Read selected text (or from the viewport if no selection) through the end of the document using Windows text-to-speech. Invoking again pauses reading. Voice is chosen in the Read Aloud Voice submenu and remembered in ReadAloudVoiceId, ver 3.7+"
 CmdPauseReadAloud,,Pause Reading,"Pause reading text aloud; resume with CmdContinueReadAloud, ver 3.7+"
 CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where it was paused, ver 3.7+"
-CmdStopReadAloud,,Stop Reading,"Stop reading text aloud and clear the resume position, ver 3.7+"
+CmdStopReadAloud,,Stop Reading,"Stop reading text aloud and clear the resume position. Always in the Read Aloud menu and command palette, even when the playback bar is not visible, ver 3.7+"
 CmdReadAloudFromTopPage,,Start Reading From Top,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
 CmdReadAloudSelection,,Start Reading Selection,"Read the current text selection aloud, ver 3.7+"
 CmdToggleToolbarShowReadAloud,,Read Aloud: Show In Toolbar,"Show or hide the Read Aloud buttons in the toolbar; remembered in the `ToolbarShowReadAloud` setting, ver 3.7+"

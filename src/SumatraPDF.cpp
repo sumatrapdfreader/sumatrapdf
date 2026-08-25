@@ -13395,6 +13395,10 @@ void SetReadAloudAppSubmenu(HMENU menu) {
     gReadAloudAppSubmenu = menu;
 }
 
+HMENU GetReadAloudAppSubmenu() {
+    return gReadAloudAppSubmenu;
+}
+
 bool IsReadAloudAppSubmenu(HMENU menu) {
     return menu && menu == gReadAloudAppSubmenu;
 }
@@ -13643,6 +13647,7 @@ void ReadAloudForgetTab(WindowTab* tab) {
         return;
     }
     if (gReadAloudSourceTab == tab) {
+        TtsStop();
         gReadAloudSourceTab = nullptr;
     }
     if (gReadAloudSessionTab == tab) {
@@ -13799,15 +13804,18 @@ void ReadAloudPlaybackCycleSpeed(int dir) {
 }
 
 void ReadAloudPlaybackStop() {
+    // always halt TTS, even if the session tab is already gone (issue #6053)
+    TtsStop();
     WindowTab* tab = gReadAloudSessionTab;
     if (!tab) {
         tab = GetReadAloudSourceTab();
     }
     if (!tab) {
+        ReadAloudClearSourceTab();
+        for (MainWindow* w : gWindows) {
+            ReadAloudPlaybackBarHide(w);
+        }
         return;
-    }
-    if (TtsIsSpeaking()) {
-        TtsStop();
     }
     ReadAloudFinishSession(tab, tab->win);
 }
@@ -14133,13 +14141,12 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
 
     if (isSpeaking) {
         AppendMenuW(menu, MF_STRING, CmdTtsMenuPauseReading, CWStrTemp(_TRA("Pause Reading")));
-        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, CWStrTemp(_TRA("Stop Reading")));
-        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     } else if (canContinue) {
         AppendMenuW(menu, MF_STRING, CmdTtsMenuContinueReading, CWStrTemp(_TRA("Continue Reading")));
-        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, CWStrTemp(_TRA("Stop Reading")));
-        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
+    // always listed: the playback bar can be off-screen or lose z-order (issue #6053)
+    AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, CWStrTemp(_TRA("Stop Reading")));
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, CWStrTemp(_TRA("Start Reading From Top")));
     if (includeCursorItem) {
         AppendMenuW(menu, canReadFromCursor ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadFromCursor,

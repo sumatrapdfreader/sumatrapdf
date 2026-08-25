@@ -828,6 +828,10 @@ static MenuDef menuDefMainSelection[] = {
 // BuildMenuFromDef mis-identifies it as a submenu pointer and crashes.
 static MenuDef menuDefReadAloud[] = {
     {
+        _TRN("Stop Reading"),
+        CmdStopReadAloud,
+    },
+    {
         _TRN("Start Reading From Top"),
         CmdReadAloud,
     },
@@ -840,6 +844,10 @@ static MenuDef menuDefReadAloud[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Read Aloud)
 static MenuDef menuDefContextReadAloud[] = {
+    {
+        _TRN("Stop Reading"),
+        CmdStopReadAloud,
+    },
     {
         _TRN("Start Reading From Top"),
         CmdReadAloud,
@@ -2782,6 +2790,8 @@ HMENU BuildMenu(MainWindow* win) {
     auto* ctx = NewBuildMenuCtx(tab, Point{0, 0});
     AutoDelete delCtx(ctx);
     HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), ctx);
+    // BuildMenuFromDef just set the global to this window's submenu
+    win->menuReadAloud = GetReadAloudAppSubmenu();
 
     MarkMenuOwnerDraw(mainMenu, true);
     return mainMenu;
@@ -2807,7 +2817,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         RebuildFavMenu(win, m);
     } else if (id == menuDefZoom[0].idOrSubmenu) {
         BuildMenuZoom(m);
-    } else if (IsReadAloudAppSubmenu(m)) {
+    } else if (m && m == win->menuReadAloud) {
         RebuildReadAloudMenu(win, m, false, false);
     } else if (IsReadAloudContextSubmenu(m)) {
         RebuildReadAloudMenu(win, m, true, win->contextMenuPtValid);

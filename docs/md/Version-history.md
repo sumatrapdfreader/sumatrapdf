@@ -232,6 +232,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - The Annotations window can select many annotations with the usual Windows keys (`Shift` or `Ctrl` click, `Shift` + arrows, `Ctrl + A`) and `Del` deletes all of them (fixes #5976)
 - **Bake PDF** includes annotations created in the current session
 - Find remembers the last 10 search queries for the session (not saved to settings) and offers them from a drop-down on the find field (fixes #893)
+- **Stop Reading** is always in the Read Aloud menu (main menu, context menu, toolbar dropdown, and command palette), even when the playback bar is not visible, so a session can still be stopped from the top menu (fixes #6053)
 
 **New commands:**
 

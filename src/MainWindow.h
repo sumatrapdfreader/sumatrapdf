@@ -342,6 +342,8 @@ struct MainWindow {
     Tooltip* infotip = nullptr;
 
     HMENU menu = nullptr;
+    // Read Aloud submenu of `menu`; per-window so WM_INITMENUPOPUP can rebuild it
+    HMENU menuReadAloud = nullptr;
 
     DoubleBuffer* buffer = nullptr;
 

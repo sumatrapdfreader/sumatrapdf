@@ -136,6 +136,7 @@ import { testit as issue6043 } from "./issue-6043.ts";
 import { testit as issue6045 } from "./issue-6045.ts";
 import { testit as issue6046 } from "./issue-6046.ts";
 import { testit as issue6048 } from "./issue-6048.ts";
+import { testit as issue6053 } from "./issue-6053.ts";
 import { testit as favoritesTabAfterDocumentClose } from "./favorites-tab-after-document-close.ts";
 import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts";
 import { testit as annotDeleteRedraw } from "./annot-delete-redraw.ts";
@@ -237,6 +238,7 @@ export const tests: NamedTest[] = [
   ["issue-6043", issue6043],
   ["issue-6046", issue6046],
   ["issue-6048", issue6048],
+  ["issue-6053", issue6053],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
   ["annot-delete-redraw", annotDeleteRedraw],
   ["annot-icon-over-contents", annotIconOverContents],

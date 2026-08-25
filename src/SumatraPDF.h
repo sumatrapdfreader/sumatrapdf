@@ -167,6 +167,7 @@ TempStr ReadAloudSpeedLabelTemp(float speed);
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem = false, bool canReadFromCursor = false);
 bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);
 void SetReadAloudAppSubmenu(HMENU menu);
+HMENU GetReadAloudAppSubmenu();
 bool IsReadAloudAppSubmenu(HMENU menu);
 void SetReadAloudContextSubmenu(HMENU menu);
 void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen);

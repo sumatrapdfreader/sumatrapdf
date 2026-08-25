@@ -92,6 +92,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdPasteClipboardImage,
     CmdTabGroupRestore,
     CmdSetScreenshotHotkey,
+    CmdStopReadAloud,
     0,
 };
 
@@ -771,7 +772,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return (ctx.canContinueReadAloud && !ctx.isSpeaking) ? CommandVisibility::Show : CommandVisibility::Hide;
     }
     if (cmdId == CmdStopReadAloud) {
-        return (ctx.isSpeaking || ctx.canContinueReadAloud) ? CommandVisibility::Show : CommandVisibility::Hide;
+        // always listed so speech can be stopped when the playback bar is gone
+        return CommandVisibility::Show;
     }
     if (cmdId == CmdReadAloudSelection) {
         return ctx.hasSelection ? CommandVisibility::Show : CommandVisibility::Hide;
