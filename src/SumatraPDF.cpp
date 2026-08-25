@@ -3648,16 +3648,20 @@ static void ShowLoadErrorInTab(MainWindow* win, LoadArgs* args, Str path) {
     }
     bool isNewTab = false;
     if (!tab && win->tabsCtrl && !gPluginMode) {
+        // AddTabToWindow changes the selected index without sending the tab
+        // selection callbacks, so save the outgoing tab before that happens.
+        SaveCurrentWindowTab(win);
         tab = new WindowTab(win);
         tab->SetFilePath(path);
         tab->SetDisplayName(args->DisplayName());
-        // must be before AddTabToWindow(): selecting the tab runs
-        // LoadModelIntoTab(), which would see LoadState::None and try to load
-        // the file all over again
+        // Must be set before LoadModelIntoTab(), which would otherwise try to
+        // load the unsupported file all over again.
         SetTabLoadError(tab, path);
         AddTabToWindow(win, tab);
-        // like the successful path does: the new tab is the current one
-        win->currentTabTemp = tab;
+        // Programmatic tab selection above sends no selection notification.
+        // Synchronize the shared document UI explicitly so the previous tab's
+        // TOC and controller cannot remain attached to this error tab.
+        LoadModelIntoTab(tab);
         isNewTab = true;
     }
     if (!tab) {
@@ -3675,6 +3679,7 @@ static void ShowLoadErrorInTab(MainWindow* win, LoadArgs* args, Str path) {
         // the title bar names the file that failed, like it did before the tab
         // went away
         SetFrameTitleForTab(tab, false);
+        HwndSetText(win->hwndFrame, tab->frameTitle);
         HwndInvalidate(win->hwndCanvas);
     }
     LoadDocumentMarkNotExist(win, path, args->noSavePrefs, args->showWin);

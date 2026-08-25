@@ -255,6 +255,12 @@ static bool DestNeedsValidPageNo(IPageDestination* dest) {
 }
 
 static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool selectInTree) {
+    DocController* ctrl = win->ctrl;
+    WindowTab* tab = win->CurrentTab();
+    if (!ctrl || !tab || tab->ctrl != ctrl) {
+        return nullptr;
+    }
+
     int pageNo = tocItem->pageNo;
     IPageDestination* dest = SnapshotDestForDeferredNav(tocItem->GetPageDestination(), pageNo);
 
@@ -272,8 +278,8 @@ static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bo
     }
 
     auto* data = new GoToTocLinkData;
-    data->ctrl = win->ctrl;
-    data->tab = win->CurrentTab();
+    data->ctrl = ctrl;
+    data->tab = tab;
     data->pageNo = pageNo;
     data->dest = dest;
     data->selectInTree = selectInTree;
@@ -296,7 +302,7 @@ static void GoToTocLink(GoToTocLinkData* d) {
     }
     MainWindow* win = tab->win;
     // destination snapshot is invalid if the DocController has been replaced
-    if (!IsMainWindowValidAndNotClosing(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
+    if (!ctrl || !IsMainWindowValidAndNotClosing(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
         return;
     }
 
