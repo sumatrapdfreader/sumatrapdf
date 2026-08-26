@@ -45,6 +45,9 @@ type FilterState = {
   floatVisible: boolean;
   floatBtn: Rect4;
   dockBtn: Rect4;
+  deleteEnabled: boolean;
+  discardEnabled: boolean;
+  saveEnabled: boolean;
   raw: string;
 };
 
@@ -84,6 +87,9 @@ function parseFilter(dump: string): FilterState | null {
     floatVisible: m[15] === "1",
     floatBtn: parseRect4(m, 16),
     dockBtn: parseRect4(m, 20),
+    deleteEnabled: /deleteEnabled=1/.test(dump),
+    discardEnabled: /discardEnabled=1/.test(dump),
+    saveEnabled: /saveEnabled=1/.test(dump),
     raw: dump,
   };
 }
@@ -206,6 +212,9 @@ export async function testit(): Promise<void> {
       250,
     );
     st = await waitFilter(client, (s) => s.floating && s.floatVisible && s.hidden && !s.listVisible);
+    if (st.discardEnabled || st.saveEnabled) {
+      throw new Error(`annot-filter-toolbar: save/discard should be disabled with no changes\n${st.raw}`);
+    }
 
     const floatWnd = findTopWindow(pid, FLOAT_CLASS);
     if (!floatWnd || !isWindowVisible(floatWnd)) {
@@ -229,6 +238,7 @@ export async function testit(): Promise<void> {
     sendMessage(floatEdit, WM_KEYDOWN, VK_DOWN, 0);
     st = await waitFilter(client, (s) => s.sel >= 0 && s.floatVisible);
     await sleep(400);
+    st = await waitFilter(client, (s) => s.deleteEnabled);
     const markup2 = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
     if (!/state selected=1 /.test(markup2)) {
       throw new Error(`annot-filter-toolbar: floating list arrow did not select annotation\n${markup2}`);

@@ -29,6 +29,7 @@
 #include "Toolbar.h"
 #include "AppSettings.h"
 #include "EditAnnotations.h"
+#include "AnnotFilterToolbar.h"
 
 #include "AnnotEditToolbar.h"
 
@@ -520,6 +521,7 @@ static void AnnotChanged(WindowTab* tab) {
     ToolbarUpdateStateForWindow(tab->win, false);
     MainWindowRerender(tab->win);
     UpdateAnnotEditToolbar(tab->win);
+    UpdateAnnotFilterToolbar(tab->win);
 }
 
 static int PopupPick(MainWindow* win, Point screen, const StrVec& names, int current) {

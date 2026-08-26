@@ -467,10 +467,16 @@ static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* ew) {
 }
 
 void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
-    if (!ew) {
-        return;
+    MainWindow* win = nullptr;
+    if (ew) {
+        EnableSaveIfAnnotationsChanged(ew);
+        if (ew->tab) {
+            win = ew->tab->win;
+        }
     }
-    EnableSaveIfAnnotationsChanged(ew);
+    if (win) {
+        UpdateAnnotFilterToolbar(win);
+    }
 }
 
 bool AnnotMatchesFilter(Annotation* annot, const StrVec& words) {

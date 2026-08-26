@@ -45,6 +45,7 @@
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "EditAnnotations.h"
+#include "AnnotFilterToolbar.h"
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
@@ -1531,6 +1532,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
+        UpdateAnnotFilterToolbar(win);
     }
     return true;
 }
@@ -2144,6 +2146,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
+    UpdateAnnotFilterToolbar(win);
 
     return true;
 }

@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/Win.h"
 #include "base/UITask.h"
 #include "gui/Dpi.h"
@@ -69,15 +70,22 @@ static void SetToolbarFilterWidgetsVisible(MainWindow*, bool);
 static void RelayoutToolbarFilter(MainWindow*);
 static void KillSelectionTimer(AnnotFilterToolbar*);
 static void CopyFilterText(AnnotFilterToolbar*, Edit* src, Edit* dst);
+static void UpdateFloatButtons(AnnotFilterToolbar*);
 
 struct AnnotFilterWindow : WindowBase {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
     VirtIconButton* dockBtn = nullptr;
     VirtListBox* listBox = nullptr;
+    VirtButton* btnDelete = nullptr;
+    VirtButton* btnDiscard = nullptr;
+    VirtButton* btnSave = nullptr;
+    VirtButton* btnSaveNew = nullptr;
     Padding* rootPadding = nullptr;
     HBox* header = nullptr;
     Spacer* headerListGap = nullptr;
+    Spacer* listButtonsGap = nullptr;
+    VBox* buttonsBox = nullptr;
     int layoutDpi = 96;
 
     bool Create(MainWindow* mainWin);
@@ -247,6 +255,7 @@ static void RebuildList(AnnotFilterToolbar* f) {
     if (f->floatWnd && f->floatWnd->listBox) {
         f->floatWnd->listBox->Invalidate();
     }
+    UpdateFloatButtons(f);
 }
 
 static void KillSelectionTimer(AnnotFilterToolbar* f) {
@@ -756,7 +765,7 @@ static Rect AnnotFilterWindowPlacementRect(MainWindow* win) {
         Rect fr = HwndWindowRect(win->hwndFrame);
         int dpi = DpiGetForHwnd(win->hwndFrame);
         int dx = DpiScaleByDpi(dpi, 360);
-        int dy = DpiScaleByDpi(dpi, 420);
+        int dy = DpiScaleByDpi(dpi, 540);
         r = {fr.x + fr.dx - dx - DpiScaleByDpi(dpi, 40), fr.y + DpiScaleByDpi(dpi, 80), dx, dy};
     }
     return ShiftRectToWorkArea(r, win ? win->hwndFrame : nullptr, true);
@@ -773,6 +782,87 @@ static void PositionAnnotFilterWindow(AnnotFilterWindow* w) {
 static void OnDockBtnClicked(AnnotFilterWindow* w, VirtMouseEvent*) {
     if (w && w->win) {
         DockAnnotFilterWindow(w->win);
+    }
+}
+
+static void OnFloatDelete(AnnotFilterWindow* w, VirtMouseEvent*) {
+    if (!w || !w->win) {
+        return;
+    }
+    WindowTab* tab = w->win->CurrentTab();
+    if (!tab) {
+        return;
+    }
+    Annotation* annot = tab->selectedAnnotation;
+    if (!annot) {
+        AnnotFilterToolbar* f = w->win->annotFilterToolbar;
+        if (f && w->listBox) {
+            annot = VisibleAnnotAt(f, w->listBox->GetCurrentSelection());
+        }
+    }
+    if (!annot) {
+        return;
+    }
+    DeleteAnnotationAndUpdateUI(tab, annot);
+}
+
+static void OnFloatDiscard(AnnotFilterWindow* w, VirtMouseEvent*) {
+    if (w && w->win) {
+        HwndPostCommand(w->win->hwndFrame, CmdDiscardChanges);
+    }
+}
+
+static void OnFloatSave(AnnotFilterWindow* w, VirtMouseEvent*) {
+    if (w && w->win) {
+        HwndPostCommand(w->win->hwndFrame, CmdSaveAnnotations);
+    }
+}
+
+static void OnFloatSaveNew(AnnotFilterWindow* w, VirtMouseEvent*) {
+    if (w && w->win) {
+        HwndPostCommand(w->win->hwndFrame, CmdSaveAnnotationsNewFile);
+    }
+}
+
+static VirtButton* NewFloatActionButton(HWND hwnd, Str text, bool enabled) {
+    auto* b = NewThemedButton(hwnd, text, GetAppFont(), false);
+    b->textPadding = DpiScaledInsets(2, 12);
+    b->SetIsEnabled(enabled);
+    return b;
+}
+
+static void UpdateFloatButtons(AnnotFilterToolbar* f) {
+    if (!f || !f->floatWnd) {
+        return;
+    }
+    AnnotFilterWindow* w = f->floatWnd;
+    WindowTab* tab = FilterTab(f);
+    Annotation* sel = tab ? tab->selectedAnnotation : nullptr;
+    if (!sel && w->listBox) {
+        sel = VisibleAnnotAt(f, w->listBox->GetCurrentSelection());
+    }
+    if (w->btnDelete) {
+        w->btnDelete->SetIsEnabled(sel != nullptr);
+    }
+    bool dirty = false;
+    if (tab && tab->AsFixed()) {
+        dirty = EngineHasUnsavedAnnotations(tab->AsFixed()->GetEngine());
+    }
+    if (w->btnDiscard) {
+        w->btnDiscard->SetIsEnabled(dirty);
+    }
+    if (w->btnSave) {
+        w->btnSave->SetIsEnabled(dirty);
+        TempStr base = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
+        if (len(base) > 0) {
+            w->btnSave->SetText(fmt(_TRA("Save changes to %s").s, base));
+        } else {
+            w->btnSave->SetText(_TRA("Save changes to existing PDF"));
+        }
+        w->btnSave->RequestLayout();
+    }
+    if (w->btnSaveNew) {
+        w->btnSaveNew->SetIsEnabled(dirty);
     }
 }
 
@@ -801,6 +891,16 @@ void AnnotFilterWindow::BuildLayout() {
     headerListGap = new Spacer(0, gap);
     vbox->AddChild(headerListGap);
     vbox->AddChild(listBox, 1);
+    listButtonsGap = new Spacer(0, gap);
+    vbox->AddChild(listButtonsGap);
+    buttonsBox = new VBox();
+    buttonsBox->alignCross = CrossAxisAlign::Stretch;
+    buttonsBox->gap = gap;
+    buttonsBox->AddChild(btnDelete);
+    buttonsBox->AddChild(btnDiscard);
+    buttonsBox->AddChild(btnSave);
+    buttonsBox->AddChild(btnSaveNew);
+    vbox->AddChild(buttonsBox);
 
     rootPadding = new Padding(vbox, Insets{pad, pad, pad, pad});
     layout = rootPadding;
@@ -866,6 +966,15 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
         WireListBox(f, listBox, GetDpi());
     }
 
+    btnDelete = NewFloatActionButton(hwnd, _TRA("Delete Annotation"), false);
+    btnDelete->onClick = MkFunc1(OnFloatDelete, this);
+    btnDiscard = NewFloatActionButton(hwnd, _TRA("Discard changes"), false);
+    btnDiscard->onClick = MkFunc1(OnFloatDiscard, this);
+    btnSave = NewFloatActionButton(hwnd, _TRA("Save changes to existing PDF"), false);
+    btnSave->onClick = MkFunc1(OnFloatSave, this);
+    btnSaveNew = NewFloatActionButton(hwnd, _TRA("Save changes to a new PDF"), false);
+    btnSaveNew->onClick = MkFunc1(OnFloatSaveNew, this);
+
     BuildLayout();
     DarkModeApplyToPopupWindow(hwnd);
     return true;
@@ -892,6 +1001,8 @@ void AnnotFilterWindow::UpdateTheme() {
     }
     ApplyListColorsTo(listBox);
     UpdateDockIcon();
+    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
+    UpdateFloatButtons(f);
 }
 
 void AnnotFilterWindow::UpdateDpi(int dpi) {
@@ -919,6 +1030,20 @@ void AnnotFilterWindow::UpdateDpi(int dpi) {
     int buttonPad = DpiScaleByDpi(dpi, 4);
     if (dockBtn) {
         dockBtn->padding = Insets{buttonPad, buttonPad, buttonPad, buttonPad};
+    }
+    if (listButtonsGap) {
+        listButtonsGap->dy = gap;
+    }
+    if (buttonsBox) {
+        buttonsBox->gap = gap;
+    }
+    Insets btnPad{DpiScaleByDpi(dpi, 2), DpiScaleByDpi(dpi, 12), DpiScaleByDpi(dpi, 2), DpiScaleByDpi(dpi, 12)};
+    VirtButton* btns[] = {btnDelete, btnDiscard, btnSave, btnSaveNew};
+    for (VirtButton* b : btns) {
+        if (b) {
+            b->font = appFont;
+            b->textPadding = btnPad;
+        }
     }
     layoutDpi = dpi;
     UpdateDockIcon();
@@ -1020,6 +1145,7 @@ static void ShowAnnotFilterWindow(MainWindow* win) {
     }
     LoadAnnotations(f);
     RebuildList(f);
+    UpdateFloatButtons(f);
     PositionAnnotFilterWindow(f->floatWnd);
     Rect wr = HwndWindowRect(f->floatWnd->hwnd);
     f->floatWnd->UpdateDpi(DpiGetForPoint(wr.x + wr.dx / 2, wr.y + wr.dy / 2));
@@ -1202,6 +1328,7 @@ void UpdateAnnotFilterToolbar(MainWindow* win) {
         }
     }
     UpdateCue(f);
+    UpdateFloatButtons(f);
     if (f->listHost && f->listHost->IsVisible()) {
         PositionList(f);
         f->listHost->Invalidate(false);
@@ -1215,6 +1342,7 @@ void RefreshAnnotFilterAnnotations(MainWindow* win) {
     }
     LoadAnnotations(f);
     RebuildList(f);
+    UpdateFloatButtons(f);
 }
 
 void DeleteAnnotFilterToolbar(MainWindow* win) {
@@ -1277,5 +1405,12 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     out.Append(fmt("listRect=%d,%d,%d,%d floating=%d floatVisible=%d floatBtn=%d,%d,%d,%d dockBtn=%d,%d,%d,%d\n", lr.x,
                    lr.y, lr.dx, lr.dy, floating ? 1 : 0, floatVisible ? 1 : 0, br.x, br.y, br.dx, br.dy, dr.x, dr.y,
                    dr.dx, dr.dy));
+    int deleteOn = 0, discardOn = 0, saveOn = 0;
+    if (f && f->floatWnd) {
+        deleteOn = f->floatWnd->btnDelete && f->floatWnd->btnDelete->IsEnabled() ? 1 : 0;
+        discardOn = f->floatWnd->btnDiscard && f->floatWnd->btnDiscard->IsEnabled() ? 1 : 0;
+        saveOn = f->floatWnd->btnSave && f->floatWnd->btnSave->IsEnabled() ? 1 : 0;
+    }
+    out.Append(fmt("deleteEnabled=%d discardEnabled=%d saveEnabled=%d\n", deleteOn, discardOn, saveOn));
     return ToStrTemp(out);
 }
