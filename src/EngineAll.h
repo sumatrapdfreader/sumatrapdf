@@ -126,6 +126,7 @@ void EngineMupdfCancelHeadingToc(EngineBase* engine);
 Str EngineMupdfGetPassword(EngineBase* engine);
 bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);
 bool EngineMupdfSaveCopy(EngineBase* engine, Str path);
+bool EngineMupdfRotatePagePermanently(EngineBase* engine, int pageNo, int angle);
 
 // digitally signing a PDF (SignDocumentDialog.cpp drives this)
 // appearance flag bits match mupdf's PDF_SIGNATURE_SHOW_* (logo is never used)

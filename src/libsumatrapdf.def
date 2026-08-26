@@ -2068,3 +2068,5 @@ EXPORTS
 
 	deskey
 	des
+	pdf_dict_put_int
+	pdf_dict_get_inheritable_int

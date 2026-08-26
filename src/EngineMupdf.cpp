@@ -7964,6 +7964,45 @@ bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
     return ok;
 }
 
+bool EngineMupdfRotatePagePermanently(EngineBase* engine, int pageNo, int angle) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc) {
+        return false;
+    }
+    auto* ctx = epdf->Ctx();
+    ScopedRecursiveMutex scope(&epdf->docLock);
+    bool ok = false;
+    fz_try(ctx) {
+        pdf_obj* pageobj = pdf_lookup_page_obj(ctx, epdf->pdfdoc, pageNo - 1);
+        if (pageobj) {
+            int rot = pdf_dict_get_inheritable_int(ctx, pageobj, PDF_NAME(Rotate));
+            pdf_dict_put_int(ctx, pageobj, PDF_NAME(Rotate), rot + angle);
+            ok = true;
+        }
+    }
+    fz_catch(ctx) {
+        logf("EngineMupdfRotatePagePermanently: failed: '%s'\n", Str(fz_caught_message(ctx)));
+        return false;
+    }
+
+    if (ok) {
+        Str path = engine->FilePath();
+        if (len(path) > 0) {
+            pdf_write_options save_opts{};
+            save_opts = pdf_default_write_options2;
+            save_opts.do_incremental = pdf_can_be_saved_incrementally(ctx, epdf->pdfdoc);
+            save_opts.do_compress = 1;
+            fz_try(ctx) {
+                pdf_save_document(ctx, epdf->pdfdoc, CStrTemp(path), &save_opts);
+            } fz_catch(ctx) {
+                logf("EngineMupdfRotatePagePermanently: saving '%s' failed: '%s'\n", path, Str(fz_caught_message(ctx)));
+                ok = false;
+            }
+        }
+    }
+    return ok;
+}
+
 // caller must hold pagesLock (protects pages[] and pageInfo->images)
 static bool HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
     ReportIf(pageNo < 1 || pageNo > e->pageCount);

@@ -132,7 +132,8 @@ static bool RegisterWinClass() {
     FillWndClassEx(wcex, kFrameClassName, WndProcSumatraFrame);
     // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on every resize
     wcex.style = 0;
-    wcex.hIcon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
+    wcex.hIcon = (HICON)LoadImageW(h, MAKEINTRESOURCEW(GetAppIconID()), IMAGE_ICON, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
+    wcex.hIconSm = (HICON)LoadImageW(h, MAKEINTRESOURCEW(GetAppIconID()), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
     wcex.hbrBackground = bgBrush;
     RegisterClassEx(&wcex);
 

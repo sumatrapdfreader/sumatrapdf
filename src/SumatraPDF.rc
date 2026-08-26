@@ -73,7 +73,7 @@ IDR_EMBEDDED_PAK        RCDATA               "..\\.work\\embedded.dat"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
+IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF.ico"
 // for compath with pre 3.4 registry association for pre-win10
 // have icon as ,1, which is index of this icon. unless we delete
 // those old registry on install, the icon would change

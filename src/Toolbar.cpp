@@ -948,17 +948,8 @@ static void SetOverlayShown(MainWindow* win, bool shown) {
 
 // re-evaluate overlay toolbar visibility based on the cursor's screen position
 void UpdateOverlayToolbarForMouse(MainWindow* win) {
-    if (!win->isToolbarOverlay || !ToolbarHost(win)) {
-        return;
-    }
-    bool show = OverlayToolbarShouldShowForCursor(win) || OverlayToolbarHasFocus(win);
-    if (show) {
-        CancelOverlayHide(win);
-        SetOverlayShown(win, true);
-    } else if (win->toolbarOverlayShown) {
-        // don't hide immediately; give the user kDelayToolbarHide to come back
-        ScheduleOverlayHide(win);
-    }
+    // Overlay mode is disabled: toolbar only shows/hides via F8, not on cursor hover.
+    return;
 }
 
 // reveal the overlay toolbar right now, without waiting for the cursor to enter
@@ -1026,6 +1017,11 @@ void ShowOrHideToolbar(MainWindow* win) {
     ScheduleUiUpdate(win, kUiForceRelayout | kUiRelayout);
     if (enteredOverlay) {
         ScheduleOverlayHide(win);
+    }
+    VirtHost* host = ToolbarHost(win);
+    if (host && show) {
+        host->Relayout();
+        host->Repaint();
     }
 }
 
@@ -1451,6 +1447,7 @@ static void BuildToolbarLayout(MainWindow* win) {
     Color dis = TbDisabledColor();
 
     auto* box = new HBox();
+    box->alignMain = MainAxisAlign::MainCenter;
     box->alignCross = CrossAxisAlign::CrossCenter;
     box->rtl = IsUIRtl();
 
