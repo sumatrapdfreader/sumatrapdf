@@ -29,17 +29,28 @@ import { clickAt, findChildByClass, killAndWait, launchControlled, pressEscape, 
 
 const TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
 const LIST_CLASS = "SumatraAnnotFilterList";
+const FLOAT_CLASS = "SUMATRA_ANNOT_FILTER_WND";
 const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
+
+type Rect4 = { x: number; y: number; dx: number; dy: number };
 
 type FilterState = {
   hidden: boolean;
-  rect: { x: number; y: number; dx: number; dy: number };
+  rect: Rect4;
   listVisible: boolean;
   nAll: number;
   nVisible: number;
   sel: number;
+  floating: boolean;
+  floatVisible: boolean;
+  floatBtn: Rect4;
+  dockBtn: Rect4;
   raw: string;
 };
+
+function parseRect4(m: RegExpMatchArray, i: number): Rect4 {
+  return { x: +m[i]!, y: +m[i + 1]!, dx: +m[i + 2]!, dy: +m[i + 3]! };
+}
 
 function makePdf(): string {
   const objs = [
@@ -56,7 +67,7 @@ function makePdf(): string {
 
 function parseFilter(dump: string): FilterState | null {
   const m =
-    /annotFilter hidden=(\d+) rect=(-?\d+),(-?\d+),(\d+),(\d+) listVisible=(\d+) nAll=(\d+) nVisible=(\d+) sel=(-?\d+)/.exec(
+    /annotFilter hidden=(\d+) rect=(-?\d+),(-?\d+),(\d+),(\d+) listVisible=(\d+) nAll=(\d+) nVisible=(\d+) sel=(-?\d+) listRect=(-?\d+),(-?\d+),(\d+),(\d+) floating=(\d+) floatVisible=(\d+) floatBtn=(-?\d+),(-?\d+),(\d+),(\d+) dockBtn=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(
       dump,
     );
   if (!m) {
@@ -64,11 +75,15 @@ function parseFilter(dump: string): FilterState | null {
   }
   return {
     hidden: m[1] === "1",
-    rect: { x: +m[2]!, y: +m[3]!, dx: +m[4]!, dy: +m[5]! },
+    rect: parseRect4(m, 2),
     listVisible: m[6] === "1",
     nAll: +m[7]!,
     nVisible: +m[8]!,
     sel: +m[9]!,
+    floating: m[14] === "1",
+    floatVisible: m[15] === "1",
+    floatBtn: parseRect4(m, 16),
+    dockBtn: parseRect4(m, 20),
     raw: dump,
   };
 }
@@ -182,6 +197,67 @@ export async function testit(): Promise<void> {
         `annot-filter-toolbar: Esc with empty filter did not focus canvas (class=${focused ? getClassName(focused) : "none"})`,
       );
     }
+
+    st = await waitFilter(client, (s) => s.floatBtn.dx >= 8 && s.floatBtn.dy >= 8);
+    await clickAt(
+      toolbar,
+      Math.floor(st.floatBtn.x + st.floatBtn.dx / 2),
+      Math.floor(st.floatBtn.y + st.floatBtn.dy / 2),
+      250,
+    );
+    st = await waitFilter(client, (s) => s.floating && s.floatVisible && s.hidden && !s.listVisible);
+
+    const floatWnd = findTopWindow(pid, FLOAT_CLASS);
+    if (!floatWnd || !isWindowVisible(floatWnd)) {
+      throw new Error("annot-filter-toolbar: floating annotation list window not visible");
+    }
+    captureWindowToPng(floatWnd, join(dir, "floating.png"));
+
+    let floatEdit = 0;
+    enumChildWindows(floatWnd, (hwnd) => {
+      if (getClassName(hwnd) === "Edit" && isWindowVisible(hwnd)) {
+        floatEdit = hwnd;
+        return false;
+      }
+      return true;
+    });
+    if (!floatEdit) {
+      throw new Error("annot-filter-toolbar: floating window has no Edit");
+    }
+    const floatEditRc = getClientRect(floatEdit);
+    await clickAt(floatEdit, Math.floor(floatEditRc.right / 2), Math.floor(floatEditRc.bottom / 2), 200);
+    sendMessage(floatEdit, WM_KEYDOWN, VK_DOWN, 0);
+    st = await waitFilter(client, (s) => s.sel >= 0 && s.floatVisible);
+    await sleep(400);
+    const markup2 = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+    if (!/state selected=1 /.test(markup2)) {
+      throw new Error(`annot-filter-toolbar: floating list arrow did not select annotation\n${markup2}`);
+    }
+
+    sendText(floatEdit, "unique");
+    st = await waitFilter(client, (s) => s.nVisible === 1 && s.floatVisible);
+
+    await pressEscape(floatEdit);
+    st = await waitFilter(client, (s) => s.nVisible >= 2 && s.floatVisible);
+    await pressEscape(floatEdit);
+    st = await waitFilter(client, (s) => s.floatVisible && s.nVisible >= 2);
+    const focusedAfterFloatEsc = getFocusedHwnd(frame);
+    if (!focusedAfterFloatEsc || getClassName(focusedAfterFloatEsc) !== CANVAS_CLASS) {
+      throw new Error(
+        `annot-filter-toolbar: Esc with empty floating filter did not focus canvas (class=${focusedAfterFloatEsc ? getClassName(focusedAfterFloatEsc) : "none"})`,
+      );
+    }
+
+    if (st.dockBtn.dx < 8 || st.dockBtn.dy < 8) {
+      throw new Error(`annot-filter-toolbar: dock icon missing ${JSON.stringify(st.dockBtn)}`);
+    }
+    await clickAt(
+      floatWnd,
+      Math.floor(st.dockBtn.x + st.dockBtn.dx / 2),
+      Math.floor(st.dockBtn.y + st.dockBtn.dy / 2),
+      250,
+    );
+    st = await waitFilter(client, (s) => !s.floating && !s.floatVisible && !s.hidden);
 
     await clickAt(filterEdit, Math.floor(editRc.right / 2), Math.floor(editRc.bottom / 2), 200);
     st = await waitFilter(client, (s) => s.listVisible);

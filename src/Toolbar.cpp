@@ -227,6 +227,11 @@ VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
             return w;
         }
     }
+    if (tb->annotFilterFloatBtn && tb->annotFilterFloatBtn->GetVisibility() == Visibility::Visible) {
+        if (tb->annotFilterFloatBtn->BoundsInWindow().Contains(pt)) {
+            return tb->annotFilterFloatBtn;
+        }
+    }
     if (tb->pageTotal && tb->pageTotal->GetVisibility() == Visibility::Visible &&
         tb->pageTotal->BoundsInWindow().Contains(pt)) {
         return tb->pageTotal;
@@ -1221,6 +1226,11 @@ static void RefreshToolbarIcons(MainWindow* win) {
     if (tb->annotFilterEdit) {
         tb->annotFilterEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
     }
+    if (tb->annotFilterFloatBtn) {
+        tb->annotFilterFloatBtn->pixmap = GetCachedPixmapForSvg(Str(gIconArrowsDiagonal), sz, sz, fg, TbBgColor());
+        ApplyToolbarItemColors(tb->annotFilterFloatBtn);
+        tb->annotFilterFloatBtn->Invalidate();
+    }
 }
 
 void UpdateToolbarAfterThemeChange(MainWindow* win) {
@@ -1396,6 +1406,7 @@ static void BuildToolbarLayout(MainWindow* win) {
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;
     tb->annotFilterEdit = nullptr;
+    tb->annotFilterFloatBtn = nullptr;
     win->pageEdit = nullptr;
 
     int cyPad = ToolbarCyPad();
@@ -1471,6 +1482,10 @@ static void BuildToolbarLayout(MainWindow* win) {
     Edit* annotFilter = CreateAnnotFilterEdit(win, tb->platformFont, tb->iconSize);
     annotFilter->SetVisibility(Visibility::Collapse);
     tb->annotFilterEdit = annotFilter;
+    VirtIconButton* annotFloatBtn = CreateAnnotFilterFloatBtn(win, tb->iconSize, cyPad, iconPad);
+    annotFloatBtn->SetVisibility(Visibility::Collapse);
+    ApplyToolbarItemColors(annotFloatBtn);
+    tb->annotFilterFloatBtn = annotFloatBtn;
 
     auto* annotationBox = new HBox();
     annotationBox->alignMain = MainAxisAlign::MainCenter;
@@ -1504,6 +1519,7 @@ static void BuildToolbarLayout(MainWindow* win) {
     mainRow->gap = DpiScale(kButtonSpacingX);
     mainRow->AddChild(box, 1);
     mainRow->AddChild(annotFilter);
+    mainRow->AddChild(annotFloatBtn);
 
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;
