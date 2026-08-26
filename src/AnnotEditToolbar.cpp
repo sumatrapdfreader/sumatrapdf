@@ -240,7 +240,6 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Opacity;
         it.number = Opacity(annot);
-        it.text = fmt("%d%%", (it.number * 100 + 127) / 255);
         it.tooltip = _TRA("Opacity");
         out.Append(it);
     }
@@ -248,7 +247,6 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Border;
         it.number = BorderWidth(annot);
-        it.text = fmt("%d", it.number);
         it.tooltip = _TRA("Border");
         out.Append(it);
     }
@@ -274,7 +272,6 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
             AnnotEditItem it;
             it.kind = AnnotEditKind::TextSize;
             it.number = DefaultAppearanceTextSize(annot);
-            it.text = fmt("%d", it.number);
             it.tooltip = _TRA("Text Size");
             out.Append(it);
         }
@@ -486,6 +483,18 @@ static void PaintIconGlyph(Gfx* gfx, Rect r, Str name, Color col, PlatformFont* 
     gfx->DrawText(label, inner, gfxTextCenter | gfxTextVCenter | gfxTextEllipsis, font, col);
 }
 
+static TempStr ChipLabelTemp(const AnnotEditItem& item) {
+    switch (item.kind) {
+        case AnnotEditKind::Opacity:
+            return fmt("%d%%", (item.number * 100 + 127) / 255);
+        case AnnotEditKind::Border:
+        case AnnotEditKind::TextSize:
+            return fmt("%d", item.number);
+        default:
+            return item.text;
+    }
+}
+
 void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
     if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
         ctx.gfx->FillRoundedRect(ctx.bounds, DpiScale(kButtonRadius), hoverBg);
@@ -513,11 +522,13 @@ void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
         case AnnotEditKind::Opacity:
         case AnnotEditKind::Border:
         case AnnotEditKind::FontName:
-        case AnnotEditKind::TextSize:
-            if (tb && tb->font && item.text) {
-                ctx.gfx->DrawText(item.text, r, gfxTextCenter | gfxTextVCenter, tb->font, textCol);
+        case AnnotEditKind::TextSize: {
+            Str label = ChipLabelTemp(item);
+            if (tb && tb->font && label) {
+                ctx.gfx->DrawText(label, r, gfxTextCenter | gfxTextVCenter, tb->font, textCol);
             }
             break;
+        }
     }
 }
 
@@ -532,7 +543,41 @@ static void AnnotChanged(WindowTab* tab) {
     UpdateAnnotFilterToolbar(tab->win);
 }
 
-static int PopupPick(MainWindow* win, Point screen, const StrVec& names, int current) {
+// The click that dismisses a TrackPopupMenu is then delivered to the chip
+// under the cursor and would open the menu again. Eat it when it landed on
+// the chip that opened this popup; a click on a different chip still opens
+// that chip's menu.
+static void EatDismissClickOverRect(Rect screenRect) {
+    POINT pt;
+    GetCursorPos(&pt);
+    if (!screenRect.Contains(pt.x, pt.y)) {
+        return;
+    }
+    MSG msg{};
+    while (PeekMessageW(&msg, nullptr, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE)) {
+    }
+    while (PeekMessageW(&msg, nullptr, WM_LBUTTONUP, WM_LBUTTONUP, PM_REMOVE)) {
+    }
+}
+
+static AnnotEditToolbar* gPopupTb = nullptr;
+static AnnotEditKind gPopupKind = AnnotEditKind::Color;
+static u64 gPopupDismissedAt = 0;
+
+static bool SameChipClickDismissedPopup(AnnotEditToolbar* tb, AnnotEditKind kind) {
+    if (!tb || tb != gPopupTb || kind != gPopupKind || gPopupDismissedAt == 0) {
+        return false;
+    }
+    return (GetTickCount64() - gPopupDismissedAt) < 400;
+}
+
+static void NotePopupDismissed(AnnotEditToolbar* tb, AnnotEditKind kind) {
+    gPopupTb = tb;
+    gPopupKind = kind;
+    gPopupDismissedAt = GetTickCount64();
+}
+
+static int PopupPick(MainWindow* win, Point screen, const StrVec& names, int current, Rect chipScreen) {
     HMENU menu = CreatePopupMenu();
     if (!menu) {
         return -1;
@@ -547,6 +592,7 @@ static int PopupPick(MainWindow* win, Point screen, const StrVec& names, int cur
     int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN, screen.x, screen.y, 0, win->hwndFrame,
                              nullptr);
     DestroyMenu(menu);
+    EatDismissClickOverRect(chipScreen);
     return cmd > 0 ? cmd - 1 : -1;
 }
 
@@ -592,7 +638,7 @@ static HBITMAP CreateColorSwatchBitmap(PdfColor pdfCol, int dx, int dy) {
     return bmp;
 }
 
-static int PopupPickColors(MainWindow* win, Point screen, int current) {
+static int PopupPickColors(MainWindow* win, Point screen, int current, Rect chipScreen) {
     HMENU menu = CreatePopupMenu();
     if (!menu) {
         return -1;
@@ -628,10 +674,11 @@ static int PopupPickColors(MainWindow* win, Point screen, int current) {
     for (HBITMAP bmp : bmps) {
         DeleteObject(bmp);
     }
+    EatDismissClickOverRect(chipScreen);
     return cmd > 0 ? cmd - 1 : -1;
 }
 
-static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int current) {
+static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int current, Rect chipScreen) {
     StrVec items;
     for (int off = 0; SeqStrAt(names, off);) {
         items.Append(SeqStrAt(names, off));
@@ -639,7 +686,7 @@ static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int cur
             break;
         }
     }
-    return PopupPick(win, screen, items, current);
+    return PopupPick(win, screen, items, current, chipScreen);
 }
 
 static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
@@ -655,6 +702,16 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
     Rect chipScreen = tb->host->ToScreen(chip->bounds);
     Point screen{chipScreen.x, chipScreen.y + chipScreen.dy};
     AnnotEditKind kind = chip->item.kind;
+    if (kind != AnnotEditKind::Contents && SameChipClickDismissedPopup(tb, kind)) {
+        return;
+    }
+    auto dismissed = [&](int idx) -> bool {
+        if (idx >= 0) {
+            return false;
+        }
+        NotePopupDismissed(tb, kind);
+        return true;
+    };
     switch (kind) {
         case AnnotEditKind::Color:
         case AnnotEditKind::InteriorColor:
@@ -667,8 +724,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                     break;
                 }
             }
-            int idx = PopupPickColors(tb->win, screen, current);
-            if (idx < 0) {
+            int idx = PopupPickColors(tb->win, screen, current, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             PdfColor col = AnnotEditorColorAt(idx);
@@ -692,8 +749,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                     current = i;
                 }
             }
-            int idx = PopupPick(tb->win, screen, names, current);
-            if (idx < 0) {
+            int idx = PopupPick(tb->win, screen, names, current, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             SetOpacity(annot, vals[idx]);
@@ -710,8 +767,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                     current = i;
                 }
             }
-            int idx = PopupPick(tb->win, screen, names, current);
-            if (idx < 0) {
+            int idx = PopupPick(tb->win, screen, names, current, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             SetBorderWidth(annot, vals[idx]);
@@ -728,8 +785,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                     current = i;
                 }
             }
-            int idx = PopupPick(tb->win, screen, names, current);
-            if (idx < 0) {
+            int idx = PopupPick(tb->win, screen, names, current, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             SetDefaultAppearanceTextSize(annot, vals[idx]);
@@ -737,8 +794,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             break;
         }
         case AnnotEditKind::FontName: {
-            int idx = PopupPickSeq(tb->win, screen, AnnotEditorFontReadableNames(), chip->item.number);
-            if (idx < 0) {
+            int idx = PopupPickSeq(tb->win, screen, AnnotEditorFontReadableNames(), chip->item.number, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             SetDefaultAppearanceTextFont(annot, SeqStrByIndex(AnnotEditorFontNames(), idx));
@@ -746,8 +803,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             break;
         }
         case AnnotEditKind::Alignment: {
-            int idx = PopupPickSeq(tb->win, screen, gQuaddingNames, chip->item.number);
-            if (idx < 0) {
+            int idx = PopupPickSeq(tb->win, screen, gQuaddingNames, chip->item.number, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             SetQuadding(annot, idx);
@@ -757,8 +814,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         case AnnotEditKind::Icon: {
             SeqStrings icons = AnnotationIconNames(annot);
             int current = SeqStrIndex(icons, chip->item.iconName);
-            int idx = PopupPickSeq(tb->win, screen, icons, current);
-            if (idx < 0) {
+            int idx = PopupPickSeq(tb->win, screen, icons, current, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             SetIconName(annot, SeqStrByIndex(icons, idx));
@@ -767,8 +824,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         }
         case AnnotEditKind::LineStart:
         case AnnotEditKind::LineEnd: {
-            int idx = PopupPickSeq(tb->win, screen, AnnotEditorLineEndingStyles(), chip->item.lineEnding);
-            if (idx < 0) {
+            int idx = PopupPickSeq(tb->win, screen, AnnotEditorLineEndingStyles(), chip->item.lineEnding, chipScreen);
+            if (dismissed(idx)) {
                 return;
             }
             if (kind == AnnotEditKind::LineStart) {
@@ -804,7 +861,8 @@ static Size ChipSizeFor(const AnnotEditItem& item, PlatformFont* font, int rowDy
         case AnnotEditKind::LineEnd:
             return {rowDy * 2, rowDy};
         default: {
-            Size text = PlatformFontMeasureText(font, item.text ? item.text : StrL("00"));
+            Str label = ChipLabelTemp(item);
+            Size text = PlatformFontMeasureText(font, label ? label : StrL("00"));
             return {text.dx + (2 * padX), rowDy};
         }
     }
@@ -1274,6 +1332,10 @@ void DeleteAnnotEditToolbar(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
     if (!tb) {
         return;
+    }
+    if (gPopupTb == tb) {
+        gPopupTb = nullptr;
+        gPopupDismissedAt = 0;
     }
     DestroyContentsEditor(tb);
     win->UnregisterOnWindowMoved(&tb->onWindowMoved);
