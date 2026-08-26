@@ -1142,6 +1142,67 @@ static void OnHostNativeMsg(AnnotEditToolbar* tb, VirtHostNativeMsg* ev) {
     }
 }
 
+// Themed button whose caption is a translated label plus a key-cap shortcut,
+// using the same (Kbd/...) rendering as the keyboard-help sheet. The rich
+// text is owned here (not a child) so hover and click stay on the button.
+struct ButtonWithKbd : VirtButton {
+    VirtRichText* kbdLabel = nullptr;
+
+    explicit ButtonWithKbd(PlatformFont* f) : VirtButton({}, f) {}
+    ~ButtonWithKbd() override;
+
+    Size GetIdealSize() override;
+    void Paint(VirtPaintCtx&) override;
+};
+
+ButtonWithKbd::~ButtonWithKbd() {
+    delete kbdLabel;
+}
+
+Size ButtonWithKbd::GetIdealSize() {
+    Size s2 = kbdLabel ? kbdLabel->GetIdealSize() : VirtText::GetIdealSize();
+    return {s2.dx + textPadding.left + textPadding.right, s2.dy + textPadding.top + textPadding.bottom};
+}
+
+void ButtonWithKbd::Paint(VirtPaintCtx& ctx) {
+    VirtButton::Paint(ctx);
+    if (!kbdLabel) {
+        return;
+    }
+    bool isEnabled = HasFlag(vwfEnabled);
+    Color bg = GetColor((isEnabled && HasFlag(vwfHovered)) ? kColBtnBgHover : kColBtnBg);
+    Color textCol = GetColor(kColBtnText);
+    if (!isEnabled) {
+        Color disabled = GetColor(kColBtnTextDisabled);
+        if (disabled != kColorUnset) {
+            textCol = disabled;
+        }
+    }
+    Rect r = ctx.content;
+    r.SubTB(textPadding.top, textPadding.bottom);
+    r.SubLR(textPadding.left, textPadding.right);
+    Size ks = kbdLabel->GetIdealSize();
+    int x = r.x + std::max(0, (r.dx - ks.dx) / 2);
+    int y = r.y + std::max(0, (r.dy - ks.dy) / 2);
+    kbdLabel->SetColor(kColRichText, textCol);
+    kbdLabel->SetColor(kColRichLink, textCol);
+    kbdLabel->SetColor(kColRichBg, bg);
+    kbdLabel->SetBounds({x, y, ks.dx, ks.dy});
+    kbdLabel->PaintStandalone(ctx.gfx);
+}
+
+static ButtonWithKbd* NewButtonWithKbd(HWND hwndForDpi, Str label, Str shortcut, PlatformFont* font, bool isDefault) {
+    DpiSetFromHwnd(hwndForDpi);
+    auto* b = new ButtonWithKbd(font);
+    b->SetIsDefault(isDefault);
+    b->textPadding = DpiScaledInsets(2, 10);
+    auto* rich = new VirtRichText();
+    rich->font = font;
+    ParseTipInto(rich, fmt("%s (Kbd/%s)", label, shortcut));
+    b->kbdLabel = rich;
+    return b;
+}
+
 static void LayoutContentsEditor(AnnotEditToolbar* tb) {
     int margin = DpiScale(kMargin);
     int gap = DpiScale(kBtnGap);
@@ -1158,11 +1219,9 @@ static void LayoutContentsEditor(AnnotEditToolbar* tb) {
     buttons->alignMain = MainAxisAlign::MainStart;
     buttons->alignCross = CrossAxisAlign::CrossCenter;
     buttons->gap = gap;
-    auto* btnAccept = NewThemedButton(tb->host->native, _TRA("Accept (Ctrl+Enter)"), tb->font, true);
-    btnAccept->textPadding = DpiScaledInsets(2, 10);
+    auto* btnAccept = NewButtonWithKbd(tb->host->native, _TRA("Accept"), StrL("Ctrl + Enter"), tb->font, true);
     btnAccept->onClick = MkFunc1(OnAcceptContentsClick, tb);
-    auto* btnCancel = NewThemedButton(tb->host->native, _TRA("Cancel (Esc)"), tb->font, false);
-    btnCancel->textPadding = DpiScaledInsets(2, 10);
+    auto* btnCancel = NewButtonWithKbd(tb->host->native, _TRA("Cancel"), StrL("Esc"), tb->font, false);
     btnCancel->onClick = MkFunc1(OnCancelContentsClick, tb);
     buttons->AddChild(btnAccept);
     buttons->AddChild(btnCancel);
