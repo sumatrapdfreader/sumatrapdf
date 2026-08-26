@@ -45,11 +45,14 @@ static Kind kNotifShapeAnnotationPlacement = "notifShapeAnnotationPlacement";
 static Kind kNotifInkAnnotationPlacement = "notifInkAnnotationPlacement";
 
 // MuPDF's default stamp is {12,12,12+190,12+50}; caret is {12,12,12+18,12+15}
-// with the caret mark at the middle of the left edge.
+// with the caret mark at the middle of the left edge; file attachment is
+// {12,12,12+16,12+16}.
 constexpr float kStampAnnotDefaultDx = 190.f;
 constexpr float kStampAnnotDefaultDy = 50.f;
 constexpr float kCaretAnnotDefaultDx = 18.f;
 constexpr float kCaretAnnotDefaultDy = 15.f;
+constexpr float kFileAttachmentAnnotDefaultDx = 16.f;
+constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
 
 static HCURSOR gCursorTextAnnotationPlacement = nullptr;
 static int gCursorTextAnnotationPlacementDx = 0;
@@ -86,6 +89,7 @@ static Kind NotifGroupForKind(AnnotPlacementKind kind) {
         case AnnotPlacementKind::Text:
         case AnnotPlacementKind::Stamp:
         case AnnotPlacementKind::Caret:
+        case AnnotPlacementKind::FileAttachment:
             return kNotifPointAnnotationPlacement;
         case AnnotPlacementKind::Line:
             return kNotifLineAnnotationPlacement;
@@ -113,6 +117,8 @@ AnnotPlacementKind PlacementKindFromCommand(int cmdId) {
             return AnnotPlacementKind::Stamp;
         case CmdCreateAnnotCaret:
             return AnnotPlacementKind::Caret;
+        case CmdCreateAnnotFileAttachment:
+            return AnnotPlacementKind::FileAttachment;
         case CmdCreateAnnotLine:
             return AnnotPlacementKind::Line;
         case CmdCreateAnnotPolyLine:
@@ -136,9 +142,13 @@ bool IsPlacingAnnotation(MainWindow* win) {
     return KindOf(win) != AnnotPlacementKind::None;
 }
 
+static bool IsPointPlacementKind(AnnotPlacementKind kind) {
+    return kind == AnnotPlacementKind::Text || kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret ||
+           kind == AnnotPlacementKind::FileAttachment;
+}
+
 bool IsPlacingPointAnnotation(MainWindow* win) {
-    AnnotPlacementKind kind = KindOf(win);
-    return kind == AnnotPlacementKind::Text || kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret;
+    return IsPointPlacementKind(KindOf(win));
 }
 
 bool IsPlacingLineAnnotation(MainWindow* win) {
@@ -274,6 +284,7 @@ static void SetPlacementCursor(MainWindow* win) {
             break;
         case AnnotPlacementKind::Stamp:
         case AnnotPlacementKind::Caret:
+        case AnnotPlacementKind::FileAttachment:
         case AnnotPlacementKind::Line:
         case AnnotPlacementKind::PolyLine:
         case AnnotPlacementKind::Shape:
@@ -285,7 +296,8 @@ static void SetPlacementCursor(MainWindow* win) {
 }
 
 static bool HasPreview(AnnotPlacementKind kind) {
-    return kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret || kind == AnnotPlacementKind::Line ||
+    return kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret ||
+           kind == AnnotPlacementKind::FileAttachment || kind == AnnotPlacementKind::Line ||
            kind == AnnotPlacementKind::PolyLine || kind == AnnotPlacementKind::Shape || kind == AnnotPlacementKind::Ink;
 }
 
@@ -298,6 +310,8 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
             return _TRA("Place stamp annotation. **Esc** to cancel.");
         case AnnotPlacementKind::Caret:
             return _TRA("Place caret annotation. **Esc** to cancel.");
+        case AnnotPlacementKind::FileAttachment:
+            return _TRA("Place file attachment. **Esc** to cancel.");
         case AnnotPlacementKind::Text:
             return _TRA("Place text annotation. **Esc** to cancel.");
         case AnnotPlacementKind::Line:
@@ -435,7 +449,7 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     p.kind = kind;
     p.cmdId = cmdId;
     p.circle = OrigCommandId(cmdId) == CmdCreateAnnotCircle;
-    if (kind == AnnotPlacementKind::Text || kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret) {
+    if (IsPointPlacementKind(kind)) {
         p.pos = HwndGetCursorPos(win->hwndCanvas);
     }
 
@@ -707,6 +721,7 @@ bool AnnotationPlacementOnLeftDown(MainWindow* win, Point pt, WPARAM key) {
         case AnnotPlacementKind::Text:
         case AnnotPlacementKind::Stamp:
         case AnnotPlacementKind::Caret:
+        case AnnotPlacementKind::FileAttachment:
             HwndSetFocus(win->hwndFrame);
             PlacePointAnnotationAt(win, pt);
             return true;
@@ -798,7 +813,8 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, WPARAM key) {
             break;
         case AnnotPlacementKind::Text:
         case AnnotPlacementKind::Stamp:
-        case AnnotPlacementKind::Caret: {
+        case AnnotPlacementKind::Caret:
+        case AnnotPlacementKind::FileAttachment: {
             bool previewMoved = HasPreview(p.kind) && pt != p.pos;
             p.pos = pt;
             if (previewMoved) {
@@ -848,7 +864,9 @@ bool AnnotationPlacementSkipAccelerator(MainWindow* win, WPARAM key) {
 
 static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     AnnotPlacementKind kind = KindOf(win);
-    if ((kind != AnnotPlacementKind::Stamp && kind != AnnotPlacementKind::Caret) || !dm) {
+    bool preview = kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret ||
+                   kind == AnnotPlacementKind::FileAttachment;
+    if (!preview || !dm) {
         return;
     }
     AnnotPlacement& p = win->annotPlacement;
@@ -861,8 +879,10 @@ static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     RectF pageRect;
     if (kind == AnnotPlacementKind::Stamp) {
         pageRect = {pagePt.x, pagePt.y, kStampAnnotDefaultDx, kStampAnnotDefaultDy};
-    } else {
+    } else if (kind == AnnotPlacementKind::Caret) {
         pageRect = {pagePt.x, pagePt.y - (kCaretAnnotDefaultDy / 2.f), kCaretAnnotDefaultDx, kCaretAnnotDefaultDy};
+    } else {
+        pageRect = {pagePt.x, pagePt.y, kFileAttachmentAnnotDefaultDx, kFileAttachmentAnnotDefaultDy};
     }
     Rect r = dm->CvtToScreen(pageNo, pageRect);
     if (r.IsEmpty()) {
@@ -885,7 +905,7 @@ static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
         fmt.SetLineAlignment(Gdiplus::StringAlignmentCenter);
         Gdiplus::RectF tr((Gdiplus::REAL)r.x, (Gdiplus::REAL)r.y, (Gdiplus::REAL)r.dx, (Gdiplus::REAL)r.dy);
         gs.DrawString(L"DRAFT", -1, &font, tr, &fmt, &text);
-    } else {
+    } else if (kind == AnnotPlacementKind::Caret) {
         Gdiplus::Color blue(220, 0, 80, 200);
         Gdiplus::Pen pen(blue, (Gdiplus::REAL)std::max(DpiScale(2), 1));
         int x0 = r.x;
@@ -895,6 +915,18 @@ static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
         int yBot = r.y + r.dy;
         gs.DrawLine(&pen, x0, yBot, xMid, yTop);
         gs.DrawLine(&pen, xMid, yTop, x1, yBot);
+    } else {
+        // MuPDF's default FileAttachment is a 16x16 yellow PushPin icon.
+        Gdiplus::Color yellow(220, 220, 180, 20);
+        Gdiplus::Pen border(yellow, (Gdiplus::REAL)std::max(DpiScale(1), 1));
+        Gdiplus::SolidBrush fill(Gdiplus::Color(80, 220, 180, 20));
+        gs.FillRectangle(&fill, r.x, r.y, r.dx, r.dy);
+        gs.DrawRectangle(&border, r.x, r.y, r.dx, r.dy);
+        Gdiplus::Pen pin(Gdiplus::Color(220, 40, 40, 40), (Gdiplus::REAL)std::max(DpiScale(1), 1));
+        int cx = r.x + r.dx / 2;
+        int head = std::max(r.dx / 5, 2);
+        gs.DrawEllipse(&pin, cx - head, r.y + head, head * 2, head * 2);
+        gs.DrawLine(&pin, cx, r.y + head * 3, cx, r.y + r.dy - head);
     }
 }
 
@@ -1108,6 +1140,11 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
                 return false;
             }
             break;
+        case AnnotPlacementKind::FileAttachment:
+            if (type != AnnotationType::FileAttachment) {
+                return false;
+            }
+            break;
         default:
             return false;
     }
@@ -1160,6 +1197,8 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
     out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Text, StrL("textPlacement"), true));
     out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Stamp, StrL("stampPlacement"), false));
     out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Caret, StrL("caretPlacement"), false));
+    out.Append(
+        PointPlacementDumpLineTemp(win, AnnotPlacementKind::FileAttachment, StrL("fileAttachmentPlacement"), false));
 
     if (!win || !win->hwndCanvas) {
         out.Append(

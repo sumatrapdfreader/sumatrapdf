@@ -166,6 +166,7 @@ enum class AnnotPlacementKind {
     Text,
     Stamp,
     Caret,
+    FileAttachment,
     Line,
     PolyLine,
     Shape,

@@ -1,6 +1,7 @@
-// Stamp and caret annotations from the PDF toolbar or Command Palette enter a
-// placement mode. A ghost of the annotation follows the cursor; canvas-margin
-// clicks do nothing; a page click creates it; Esc cancels.
+// Stamp, caret, and file-attachment annotations from the PDF toolbar or
+// Command Palette enter a placement mode. A ghost of the annotation follows
+// the cursor; canvas-margin clicks do nothing; a page click creates it; Esc
+// cancels.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -34,7 +35,7 @@ import {
   sendCommand,
 } from "./win-automation.ts";
 
-type Kind = "stamp" | "caret";
+type Kind = "stamp" | "caret" | "file";
 
 type PlacementState = {
   active: boolean;
@@ -57,19 +58,43 @@ function makeBlankPdf(): string {
 }
 
 function cmdName(kind: Kind): string {
-  return kind === "stamp" ? "CmdCreateAnnotStamp" : "CmdCreateAnnotCaret";
+  if (kind === "stamp") {
+    return "CmdCreateAnnotStamp";
+  }
+  if (kind === "caret") {
+    return "CmdCreateAnnotCaret";
+  }
+  return "CmdCreateAnnotFileAttachment";
 }
 
 function paletteQuery(kind: Kind): string {
-  return kind === "stamp" ? ">Create Stamp Annotation" : ">Create Caret Annotation";
+  if (kind === "stamp") {
+    return ">Create Stamp Annotation";
+  }
+  if (kind === "caret") {
+    return ">Create Caret Annotation";
+  }
+  return ">Create File Attachment Annotation";
 }
 
 function expectedMessage(kind: Kind): string {
-  return kind === "stamp" ? "Place stamp annotation. **Esc** to cancel." : "Place caret annotation. **Esc** to cancel.";
+  if (kind === "stamp") {
+    return "Place stamp annotation. **Esc** to cancel.";
+  }
+  if (kind === "caret") {
+    return "Place caret annotation. **Esc** to cancel.";
+  }
+  return "Place file attachment. **Esc** to cancel.";
 }
 
 function dumpKey(kind: Kind): string {
-  return kind === "stamp" ? "stampPlacement" : "caretPlacement";
+  if (kind === "stamp") {
+    return "stampPlacement";
+  }
+  if (kind === "caret") {
+    return "caretPlacement";
+  }
+  return "fileAttachmentPlacement";
 }
 
 async function placementState(client: ControlClient, kind: Kind): Promise<PlacementState> {
@@ -264,8 +289,9 @@ export async function testit(): Promise<void> {
 
     let n = await testKind(client, frame, canvas, "stamp", 0);
     n = await testKind(client, frame, canvas, "caret", n);
-    if (n !== 4) {
-      throw new Error(`stamp-caret-annotation-placement: expected 4 annotations, got ${n}`);
+    n = await testKind(client, frame, canvas, "file", n);
+    if (n !== 6) {
+      throw new Error(`stamp-caret-annotation-placement: expected 6 annotations, got ${n}`);
     }
   } finally {
     client.close();
