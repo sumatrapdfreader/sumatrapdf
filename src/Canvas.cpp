@@ -2316,20 +2316,19 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         win->textDragPending = false;
         return;
     }
-    bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type);
-    if (isMoveableAnnot) {
-        if (annot == tab->selectedAnnotation) {
-            // dragging the selected annotation. do nothing here, just start dragging in mouse move
-        } else if (annot->type == AnnotationType::Widget) {
-            // a form field is not something to move around by clicking it
-            isMoveableAnnot = false;
-        } else {
-            // clicking a shape annotation selects it, so it can be moved /
-            // resized right away. Only these: the text markup annotations
-            // (highlight and friends) lie on top of text, where a click has to
-            // stay a click on the text
-            SetSelectedAnnotation(tab, annot);
-        }
+    bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type) && annot->type != AnnotationType::Widget;
+    // Selecting / dragging an annotation is Edit PDF (Ctrl+click turns that
+    // on above). A click outside that mode must stay a page click. An
+    // annotation already selected (just created) can still be dragged.
+    if (isMoveableAnnot && !editPdf && annot != tab->selectedAnnotation) {
+        isMoveableAnnot = false;
+    }
+    if (isMoveableAnnot && annot != tab->selectedAnnotation) {
+        // clicking a shape annotation selects it, so it can be moved /
+        // resized right away. Only these: the text markup annotations
+        // (highlight and friends) lie on top of text, where a click has to
+        // stay a click on the text
+        SetSelectedAnnotation(tab, annot);
     }
 
     if (isMoveableAnnot) {
@@ -2561,8 +2560,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    if (clickedAnnot && tab && tab->selectedAnnotation) {
-        SetSelectedAnnotation(tab, clickedAnnot);
+    if (clickedAnnot && tab && clickedAnnot == tab->selectedAnnotation) {
         return;
     }
 

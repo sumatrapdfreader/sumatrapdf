@@ -76,7 +76,7 @@ Delete the selected annotation with `Delete`, or with **Delete Annotation** in t
 
 ## Moving annotations
 
-To move an annotation on the page, left-click it and drag it to a new location.
+To move an annotation on the page, left-click it and drag it in Edit PDF mode.
 
 ## Default colors, size, and opacity
 

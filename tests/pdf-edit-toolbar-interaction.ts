@@ -41,13 +41,14 @@ function makePdf(): string {
   const objs = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R 5 0 R] >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R 5 0 R 6 0 R] >>",
     "<< /Type /Annot /Subtype /Highlight /P 3 0 R /Rect [72 680 220 710] " +
       "/QuadPoints [72 710 220 710 72 680 220 680] /C [1 1 0] /CA 0.5 " +
       "/T (Ada) /M (D:20260824123400Z) " +
       "/Contents (A deliberately long annotation comment that must be shortened before it is shown in the hover card) >>",
     "<< /Type /Annot /Subtype /Highlight /P 3 0 R /Rect [72 50 220 80] " +
       "/QuadPoints [72 80 220 80 72 50 220 50] /C [1 1 0] >>",
+    "<< /Type /Annot /Subtype /Stamp /P 3 0 R /Rect [350 380 470 500] /Name /Approved >>",
   ];
   return assemblePdf(objs);
 }
@@ -155,6 +156,26 @@ export async function testit(): Promise<void> {
     state = await moveAndWaitForHover(client, canvas, centerX, centerY, true);
     if (!state.hover || state.notification || state.overlay.visible) {
       throw new Error(`pdf-edit-toolbar-interaction: hover showed a Ctrl+click hint or hover card\n${state.raw}`);
+    }
+
+    const stampDeadline = Date.now() + 5_000;
+    let stamp: { x: number; y: number; dx: number; dy: number } | undefined;
+    while (Date.now() < stampDeadline) {
+      const m = /type=Stamp[^\n]*screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(state.raw);
+      if (m) {
+        stamp = { x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! };
+        break;
+      }
+      await sleep(50);
+      state = await annotState(client);
+    }
+    if (!stamp || stamp.dx <= 0 || stamp.dy <= 0) {
+      throw new Error(`pdf-edit-toolbar-interaction: stamp screen rect missing\n${state.raw}`);
+    }
+    await clickAt(canvas, stamp.x + Math.floor(stamp.dx / 2), stamp.y + Math.floor(stamp.dy / 2));
+    state = await annotState(client);
+    if (state.selected || state.editToolbar) {
+      throw new Error(`pdf-edit-toolbar-interaction: click selected a stamp outside Edit PDF mode\n${state.raw}`);
     }
 
     await clickAt(canvas, centerX, centerY, 200, MK_CONTROL);
