@@ -4,10 +4,9 @@
 #include "base/Base.h"
 #include "base/WinDynCalls.h"
 #include "base/Win.h"
-#include "gui/Dpi.h"
-
 #include "base/Pixmap.h"
 
+#include "gui/Dpi.h"
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
@@ -31,11 +30,11 @@
 #include "SvgIcons.h"
 #include "Toolbar.h"
 #include "SearchAndDDE.h"
-#include "FindBar.h"
 #include "FindWindow.h"
 #include "Translations.h"
 #include "Theme.h"
 #include "DarkMode_win.h"
+#include "FindBar.h"
 
 // command ids for the bar's toolbar buttons; must not collide with real commands
 constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
@@ -161,7 +160,7 @@ static TempStr AppendCmdAccel(Str base, int cmd) {
     if (!accel) {
         return base;
     }
-    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, accel.len - 1))); // +1 skips the leading \t
+    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
 }
 
 static TempStr FindBarButtonTooltip(int cmd) {

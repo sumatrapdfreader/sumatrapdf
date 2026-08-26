@@ -5,10 +5,9 @@
 #include "base/WinDynCalls.h"
 #include "base/UITask.h"
 #include "base/Win.h"
-#include "gui/Dpi.h"
-
 #include "base/Pixmap.h"
 
+#include "gui/Dpi.h"
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
@@ -33,11 +32,11 @@
 #include "SvgIcons.h"
 #include "SearchAndDDE.h"
 #include "FindBar.h"
-#include "FindWindow.h"
 #include "FilterHighlightDraw.h"
 #include "Translations.h"
 #include "Theme.h"
 #include "DarkMode_win.h"
+#include "FindWindow.h"
 
 // command ids for the window's toolbar buttons (handled in OnCommand)
 constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
@@ -193,11 +192,6 @@ struct FindWindowWnd : WindowBase {
     int savedSelGlyph = -1;
     // programmatic SetText must not kick find-as-you-type (CLI -search restore)
     bool suppressTextChanged = false;
-    // in an interactive size/move loop (between WM_ENTERSIZEMOVE/EXITSIZEMOVE)
-    bool inSizeMove = false;
-    // list redraw is paused only while interactively *resizing* (a WM_SIZE
-    // arrived during the size/move loop), not while merely moving the window
-    bool listRedrawPaused = false;
 
     FindWindowWnd() = default;
     ~FindWindowWnd() override;
@@ -250,7 +244,7 @@ static TempStr AppendCmdAccel(Str base, int cmd) {
     if (!accel) {
         return base;
     }
-    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, accel.len - 1))); // +1 skips the leading \t
+    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
 }
 
 static TempStr FindWindowButtonTooltip(int cmd) {
@@ -868,10 +862,6 @@ void FindWindowWnd::OnHistorySelected() {
 }
 
 void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
-    if (ev->msg == WM_ENTERSIZEMOVE) {
-        inSizeMove = true;
-        return;
-    }
     if (ev->msg == WM_SIZE) {
         // autoLayout already reflowed `layout`; erase so snippet pixels
         // don't ghost when the dialog shrinks (#5796)
@@ -879,7 +869,6 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
         return;
     }
     if (ev->msg == WM_EXITSIZEMOVE) {
-        inSizeMove = false;
         HwndInvalidate(hwnd, true);
         SavePos();
     }
@@ -1024,8 +1013,7 @@ void FindWindowWnd::OnCommand(WindowBase::CommandEvent* ev) {
 
 //--- public API
 
-// The floating, movable/resizable variant of the find UI (see SearchUIFloating).
-// Phase 1: search controls only; a results list is added in a later phase.
+// The floating, movable/resizable find UI (see SearchUIFloating).
 FindWindowWnd* CreateFindWindow(MainWindow* win) {
     auto* w = new FindWindowWnd();
     w->onCommand = MkMethod1<FindWindowWnd, WindowBase::CommandEvent*, &FindWindowWnd::OnCommand>(w);
