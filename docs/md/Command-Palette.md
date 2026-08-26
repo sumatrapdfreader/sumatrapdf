@@ -4,7 +4,7 @@
 
 ## Commands
 
-Use `Ctrl + K` to invoke the command palette:
+Use `Ctrl + K` to invoke the command palette, or click the command-palette button above **?** on the home page:
 
 ![Command Palette](img/command-palette-commands.png)
 

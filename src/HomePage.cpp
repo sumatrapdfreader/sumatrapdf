@@ -1026,8 +1026,8 @@ struct HomePageLayout {
 HomePageLayout::~HomePageLayout() = default;
 
 // --- home page chrome as a VirtCtrl tree ---
-// The chrome (header, view-mode buttons, "Open a document..." link, help
-// button) lives for as long as the window, so hover / pressed state survives
+// The chrome (header, view-mode buttons, "Open a document..." link, circle
+// buttons) lives for as long as the window, so hover / pressed state survives
 // the repaints that scrolling and filtering cause. Geometry still comes from
 // LayoutHomePage(): HomePageSyncChrome() just feeds it into the tree.
 
@@ -1053,8 +1053,12 @@ struct HomeOpenDocCtrl : VirtCtrl {
     void Paint(VirtPaintCtx&) override;
 };
 
-struct HomeHelpBtnCtrl : VirtCtrl {
-    HomeHelpBtnCtrl();
+// white-circle home-page buttons: "?" keyboard help and the command palette
+struct HomeCircleBtnCtrl : VirtCtrl {
+    Pixmap* pixmap = nullptr; // not owned, from GetCachedPixmapForSvg(); null → glyph
+    Str glyph;                // not owned; used when pixmap is null ("?")
+
+    HomeCircleBtnCtrl();
     void Paint(VirtPaintCtx&) override;
 };
 
@@ -1144,7 +1148,8 @@ struct HomeChromeCtrl : VirtCtrl {
     HomeViewIconCtrl* thumbView = nullptr;
     HomeViewIconCtrl* listView = nullptr;
     HomeOpenDocCtrl* openDoc = nullptr;
-    HomeHelpBtnCtrl* helpBtn = nullptr;
+    HomeCircleBtnCtrl* paletteBtn = nullptr;
+    HomeCircleBtnCtrl* helpBtn = nullptr;
     // chrome-less About dropdown under the logo; shown after the tooltip delay
     VirtHost* aboutHover = nullptr;
 
@@ -2170,13 +2175,19 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
     }
 }
 
-// a white circle with a black "?" inside: the home page's affordance for the
-// keyboard-shortcuts sheet. The disc is drawn with GDI+ so its edge is smooth;
-// nothing is painted outside it, so the page background shows through.
-static void DrawHomeHelpButton(Gfx* gfx, Rect r) {
+// a white circle with either a centered SVG or a black glyph ("?"). Drawn with
+// GDI+ so the disc edge is smooth; nothing is painted outside it, so the page
+// background shows through.
+static void DrawHomeCircleButton(Gfx* gfx, Rect r, Pixmap* icon, Str glyph) {
     gfx->FillEllipse(r, kColWhite);
+    if (icon) {
+        int x = r.x + ((r.dx - icon->width) / 2);
+        int y = r.y + ((r.dy - icon->height) / 2);
+        gfx->DrawPixmap(icon, {x, y, icon->width, icon->height});
+        return;
+    }
     PlatformFont* font = HomePageFont(14);
-    gfx->DrawText(StrL("?"), r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
+    gfx->DrawText(glyph, r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
 // Slack so the first/last row's rounded outline isn't cut by rcThumbsArea.
@@ -2310,13 +2321,12 @@ void HomeOpenDocCtrl::Paint(VirtPaintCtx& ctx) {
     ctx.gfx->DrawPixmap(pixmap, r);
 }
 
-HomeHelpBtnCtrl::HomeHelpBtnCtrl() {
+HomeCircleBtnCtrl::HomeCircleBtnCtrl() {
     cursor = CursorId::Hand;
-    SetTooltip(_TRA("Keyboard Shortcuts"));
 }
 
-void HomeHelpBtnCtrl::Paint(VirtPaintCtx& ctx) {
-    DrawHomeHelpButton(ctx.gfx, ctx.bounds);
+void HomeCircleBtnCtrl::Paint(VirtPaintCtx& ctx) {
+    DrawHomeCircleButton(ctx.gfx, ctx.bounds, pixmap, glyph);
 }
 
 HomeSearchBorderCtrl::HomeSearchBorderCtrl() {
@@ -2444,6 +2454,10 @@ static void HomeOpenDocClicked(MainWindow* win, VirtMouseEvent*) {
 
 static void HomeHelpClicked(MainWindow* win, VirtMouseEvent*) {
     HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
+}
+
+static void HomePaletteClicked(MainWindow* win, VirtMouseEvent*) {
+    HwndSendCommand(win->hwndFrame, CmdCommandPalette);
 }
 
 static void HomeTipBandClicked(MainWindow* win, VirtMouseEvent*) {
@@ -2757,8 +2771,8 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->kind = kindHomeChromeCtrl;
     chrome->flags |= vwfNoHitTest;
 
-    // first, so that the rest of the chrome (notably the help button, which can
-    // overlap the thumbnails) hit-tests and paints on top of the entries
+    // first, so that the rest of the chrome (notably the circle buttons, which
+    // can overlap the thumbnails) hit-tests and paints on top of the entries
     // below everything else: the tip band sits at the bottom of the page
     chrome->tip = new HomeTipCtrl();
     chrome->tip->hwndForCmds = win->hwndFrame;
@@ -2805,7 +2819,15 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->openDoc->onClick = MkFunc1(HomeOpenDocClicked, win);
     chrome->AddChild(chrome->openDoc);
 
-    chrome->helpBtn = new HomeHelpBtnCtrl();
+    chrome->paletteBtn = new HomeCircleBtnCtrl();
+    chrome->paletteBtn->glyph = StrL(">");
+    chrome->paletteBtn->SetTooltip(_TRA("Command Palette"));
+    chrome->paletteBtn->onClick = MkFunc1(HomePaletteClicked, win);
+    chrome->AddChild(chrome->paletteBtn);
+
+    chrome->helpBtn = new HomeCircleBtnCtrl();
+    chrome->helpBtn->glyph = StrL("?");
+    chrome->helpBtn->SetTooltip(_TRA("Keyboard Shortcuts"));
     chrome->helpBtn->onClick = MkFunc1(HomeHelpClicked, win);
     chrome->AddChild(chrome->helpBtn);
 
@@ -2976,14 +2998,21 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     // re-apply now that the parent moved: bounds are relative to it
     od->text->SetBounds(l.openDoc->lastBounds);
 
-    // "?" help button in the bottom-right corner, opening the keyboard
-    // shortcuts sheet; sits above the tip band when a tip is showing
+    // white-circle buttons in the bottom-right corner: command palette above
+    // the "?" keyboard-shortcuts button. Sit above the tip band when a tip
+    // is showing
     {
         int diam = DpiScale(30);
         int margin = DpiScale(16);
+        int gap = DpiScale(10);
         int bottom = l.hasTip ? l.rcTip.y : l.rc.dy;
-        Rect btn{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
-        chrome->helpBtn->SetBounds(btn);
+        Rect help{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
+        Rect palette{help.x, help.y - gap - diam, diam, diam};
+        int iconSz = DpiScale(16);
+        chrome->paletteBtn->pixmap =
+            GetCachedPixmapForSvg(Str(gIconCommandPalette), iconSz, iconSz, kColBlack, kColWhite);
+        chrome->paletteBtn->SetBounds(palette);
+        chrome->helpBtn->SetBounds(help);
     }
 }
 
@@ -3001,8 +3030,8 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
     // the chrome tree paints everything else: search border, file entries
     // (thumbnails / list rows), tip band, header, view buttons, "Open a
-    // document..." and the help button (which has to land on top of the tip
-    // band, so the chrome keeps it as the last child)
+    // document..." and the circle buttons (which have to land on top of the
+    // tip band, so the chrome keeps them as the last children)
     win->homeRoot->Paint(gfx, l.rc);
 
     // thumbnails selection outline: after the entries so it sits on top of the

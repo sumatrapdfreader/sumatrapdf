@@ -167,6 +167,7 @@ struct KeyboardHelpWnd : WindowBase {
     ~KeyboardHelpWnd() override = default;
     bool Create(const KeyboardHelpArgs&);
     void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
+    void OnNcHitTest(WindowBase::NcHitTestEvent* ev);
 };
 
 static KeyboardHelpWnd* gKeyboardHelpWnd = nullptr;
@@ -195,8 +196,31 @@ static void OnHelpCloseClicked(VirtMouseEvent*) {
     ScheduleCloseKeyboardHelp();
 }
 
+// the window has no caption, so HTCAPTION on the client (except the close
+// button) is what lets the user drag it. A caption double-click would
+// otherwise maximize a popup that has no maximize box.
+void KeyboardHelpWnd::OnNcHitTest(WindowBase::NcHitTestEvent* ev) {
+    Point pt = HwndScreenToClient(hwnd, ev->screenPos);
+    Rect client = HwndClientRect(hwnd);
+    if (!client.Contains(pt)) {
+        return;
+    }
+    if (closeBtn && closeBtn->lastBounds.Contains(pt)) {
+        ev->result = HTCLIENT;
+        ev->didHandle = true;
+        return;
+    }
+    ev->result = HTCAPTION;
+    ev->didHandle = true;
+}
+
 // '?' toggles the help, so it also closes it while it has the focus
 static void OnHelpWndProc(WindowBase::WndProcEvent* ev) {
+    if (ev->msg == WM_NCLBUTTONDBLCLK) {
+        ev->result = 0;
+        ev->didHandle = true;
+        return;
+    }
     if (ev->msg == WM_CHAR && ev->wparam == '?') {
         ev->result = 0;
         ev->didHandle = true;
@@ -429,6 +453,7 @@ void ToggleKeyboardHelp(const KeyboardHelpArgs& args) {
     w->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnHelpClose);
     w->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnHelpDestroy);
     w->onWndProc = MkFunc1Void<WindowBase::WndProcEvent*>(OnHelpWndProc);
+    w->onNcHitTest = MkMethod1<KeyboardHelpWnd, WindowBase::NcHitTestEvent*, &KeyboardHelpWnd::OnNcHitTest>(w);
     w->onKeyDown = MkFunc1Void<KeyEvent*>(OnHelpKeyDown);
     if (!w->Create(args)) {
         delete w;
