@@ -53,6 +53,7 @@ import { testit as issue2799 } from "./issue-2799.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as findResultsSorted } from "./find-results-sorted.ts";
 import { testit as findWindowLayout } from "./find-window-layout.ts";
+import { testit as findUiState } from "./find-ui-state.ts";
 import { testit as issue5874 } from "./issue-5874.ts";
 import { testit as issue6055 } from "./issue-6055.ts";
 import { testit as sessionRestoreSearch } from "./session-restore-search.ts";
@@ -284,6 +285,7 @@ export const tests: NamedTest[] = [
   ["issue-find-match-select", findMatchSelect],
   ["find-results-sorted", findResultsSorted],
   ["find-window-layout", findWindowLayout],
+  ["find-ui-state", findUiState],
   ["issue-5874", issue5874],
   ["issue-6055", issue6055],
   ["session-restore-search", sessionRestoreSearch],

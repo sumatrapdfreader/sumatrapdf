@@ -745,34 +745,102 @@ void FindBarSyncHistory(MainWindow* win) {
 // switch the find UI between the compact toolbar overlay and the floating
 // window (persists the choice in gGlobalPrefs->searchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win) {
-    TempStr text = win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : TempStr();
-    TempStr pages = win->findPagesEdit ? str::DupTemp(win->findPagesEdit->GetTextTemp()) : TempStr();
-    int selStart = 0, selEnd = 0;
-    if (win->findEdit) {
-        win->findEdit->GetSelection(selStart, selEnd);
+    struct FindUiSwitchState {
+        MainWindow* win = nullptr;
+        Str text;
+        Str pages;
+        int selStart = 0;
+        int selEnd = 0;
+    };
+    Vec<FindUiSwitchState> states;
+    for (MainWindow* w : gWindows) {
+        if (!IsFindUIVisible(w)) {
+            continue;
+        }
+        FindUiSwitchState state;
+        state.win = w;
+        if (w->findEdit) {
+            state.text = str::Dup(w->findEdit->GetTextTemp());
+            w->findEdit->GetSelection(state.selStart, state.selEnd);
+        }
+        if (w->findPagesEdit) {
+            state.pages = str::Dup(w->findPagesEdit->GetTextTemp());
+        }
+        states.Append(state);
     }
-    bool wasShowing = IsFindBarVisible(win) || IsFindWindowVisible(win);
 
-    HideFindBar(win); // dispatches: hides whichever find UI is currently visible
+    for (FindUiSwitchState& state : states) {
+        HideFindBar(state.win); // dispatches: hides whichever find UI is currently visible
+    }
 
     gGlobalPrefs->searchUIFloating = !gGlobalPrefs->searchUIFloating;
     ScheduleSaveSettings();
 
-    if (!wasShowing) {
-        return; // just persist the preference; nothing was open
+    auto restore = [](FindUiSwitchState& state) {
+        MainWindow* w = state.win;
+        ShowFindBar(w); // shows the now-active UI and repoints win->findEdit
+        if (len(state.text) > 0 && w->findEdit) {
+            w->findEdit->SetText(state.text); // restore text (re-runs the search)
+        }
+        if (len(state.pages) > 0 && w->findPagesEdit) {
+            w->findPagesEdit->SetText(state.pages);
+        }
+        if (w->findEdit) {
+            w->findEdit->SetFocus();
+            // restore the caret/selection last, after Show/SetText reset it
+            w->findEdit->SetSelection(state.selStart, state.selEnd);
+        }
+    };
+    // Restore the initiating window last so switching another window does not
+    // steal focus from it.
+    for (FindUiSwitchState& state : states) {
+        if (state.win != win) {
+            restore(state);
+        }
     }
-    ShowFindBar(win); // shows the now-active UI and repoints win->findEdit
-    if (len(text) > 0 && win->findEdit) {
-        win->findEdit->SetText(text); // restore text (re-runs the search)
+    for (FindUiSwitchState& state : states) {
+        if (state.win == win) {
+            restore(state);
+        }
+        str::Free(state.text);
+        str::Free(state.pages);
     }
-    if (len(pages) > 0 && win->findPagesEdit) {
-        win->findPagesEdit->SetText(pages);
+}
+
+// Exercise and report find-UI state for focused integration tests.
+TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> Str {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (len(gWindows) == 0) {
+        out.Append(StrL("ERROR no-window\n"));
+        return finish(1);
     }
-    if (win->findEdit) {
-        win->findEdit->SetFocus();
-        // restore the caret/selection last, after Show/SetText reset it
-        win->findEdit->SetSelection(selStart, selEnd);
+    if (str::Eq(action, StrL("show-all"))) {
+        for (MainWindow* w : gWindows) {
+            ShowFindBar(w);
+        }
+    } else if (str::Eq(action, StrL("toggle-first"))) {
+        ToggleFloatingFindUI(gWindows[0]);
+    } else if (!str::Eq(action, StrL("state"))) {
+        out.Append(StrL("ERROR expected state, show-all or toggle-first\n"));
+        return finish(1);
     }
+    int docs = 0;
+    int compact = 0;
+    int floating = 0;
+    for (MainWindow* w : gWindows) {
+        docs += w->IsDocLoaded() ? 1 : 0;
+        compact += IsFindBarVisible(w) ? 1 : 0;
+        floating += IsFindWindowVisible(w) ? 1 : 0;
+    }
+    out.Append(fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d\n", len(gWindows), docs,
+                   gGlobalPrefs->searchUIFloating ? 1 : 0, compact, floating));
+    return finish(0);
 }
 
 // reposition over the search toolbar icon (no-op if not visible)

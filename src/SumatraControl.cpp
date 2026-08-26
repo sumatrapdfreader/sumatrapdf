@@ -753,6 +753,7 @@ enum class ControlCmd : u16 {
     TestCmykImageSave = 75,
     TestContextMenuPoint = 76,
     TestFindWindowContents = 77,
+    TestFindUiState = 78,
 };
 
 enum class ControlArgType : u16 {
@@ -1534,6 +1535,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = DpiResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFindUiState: {
+            Str action = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = FindUiStateResultTemp(action, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
