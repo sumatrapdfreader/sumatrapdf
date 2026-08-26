@@ -916,13 +916,15 @@ void VirtRoot::OnWndDestroyed(VirtCtrl* w) {
     }
 }
 
-static void FillMouseEvent(VirtMouseEvent& ev, VirtCtrl* target, Point ptWindow, Point ptLocal, bool captured) {
+static void FillMouseEvent(VirtMouseEvent& ev, VirtCtrl* target, Point ptWindow, Point ptLocal, bool captured,
+                           WPARAM wp = 0) {
     ev.target = target;
     ev.hit = target;
     ev.ptWindow = ptWindow;
     ev.pt = captured ? ptWindow : ptLocal;
-    ev.isCtrl = IsCtrlPressed();
-    ev.isShift = IsShiftPressed();
+    // MK_* on the mouse message so posted clicks (tests) match a real Ctrl/Shift
+    ev.isCtrl = IsCtrlPressed() || (wp & MK_CONTROL) != 0;
+    ev.isShift = IsShiftPressed() || (wp & MK_SHIFT) != 0;
     ev.isAlt = IsAltPressed();
 }
 
@@ -954,7 +956,7 @@ void VirtRoot::TrackMouseLeaveIfNeeded() {
 }
 
 // press a virtual control (mouse down, or a DBLCLK that is really a second click)
-static bool BeginVirtPress(VirtRoot* root, VirtCtrl* target, Point ptWindow, Point ptLocal, int button) {
+static bool BeginVirtPress(VirtRoot* root, VirtCtrl* target, Point ptWindow, Point ptLocal, int button, WPARAM wp = 0) {
     root->ClearPressed();
     HWND hwnd = root->hwnd;
     if (target->HasFlag(vwfFocusable)) {
@@ -973,7 +975,7 @@ static bool BeginVirtPress(VirtRoot* root, VirtCtrl* target, Point ptWindow, Poi
         root->SetCapture(target);
     }
     VirtMouseEvent ev;
-    FillMouseEvent(ev, target, ptWindow, ptLocal, false);
+    FillMouseEvent(ev, target, ptWindow, ptLocal, false, wp);
     ev.button = button;
     return BubbleMouse(target, ev, &VirtCtrl::OnMouseDown);
 }
@@ -1008,7 +1010,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 return false;
             }
             VirtMouseEvent ev;
-            FillMouseEvent(ev, target, ptWindow, ptLocal, captured != nullptr);
+            FillMouseEvent(ev, target, ptWindow, ptLocal, captured != nullptr, wp);
             if (captured) {
                 return target->OnMouseMove(ev);
             }
@@ -1046,7 +1048,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 return false;
             }
             int button = (msg == WM_LBUTTONDOWN) ? 0 : ((msg == WM_RBUTTONDOWN) ? 1 : 2);
-            return BeginVirtPress(this, target, ptWindow, ptLocal, button);
+            return BeginVirtPress(this, target, ptWindow, ptLocal, button, wp);
         }
 
         case WM_LBUTTONUP:
@@ -1064,7 +1066,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 return false;
             }
             VirtMouseEvent ev;
-            FillMouseEvent(ev, target, ptWindow, ptLocal, wasCaptured);
+            FillMouseEvent(ev, target, ptWindow, ptLocal, wasCaptured, wp);
             ev.button = (msg == WM_LBUTTONUP) ? 0 : ((msg == WM_RBUTTONUP) ? 1 : 2);
             // like the rest of the app, a click only counts when the button
             // went down and up on the same wnd
@@ -1089,7 +1091,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 return false;
             }
             VirtMouseEvent ev;
-            FillMouseEvent(ev, target, ptWindow, ptLocal, false);
+            FillMouseEvent(ev, target, ptWindow, ptLocal, false, wp);
             if (BubbleMouse(target, ev, &VirtCtrl::OnDoubleClick)) {
                 return true;
             }
@@ -1097,7 +1099,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             // onClick-only buttons (Find Next/Prev, issue #6035) would otherwise
             // ignore it until the double-click timeout. Treat it as another press
             // so the following UP fires onClick.
-            return BeginVirtPress(this, target, ptWindow, ptLocal, 0);
+            return BeginVirtPress(this, target, ptWindow, ptLocal, 0, wp);
         }
 
         case WM_MOUSEWHEEL: {
@@ -1110,7 +1112,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 return false;
             }
             VirtMouseEvent ev;
-            FillMouseEvent(ev, target, ptWindow, ptLocal, false);
+            FillMouseEvent(ev, target, ptWindow, ptLocal, false, wp);
             ev.wheelDelta = GET_WHEEL_DELTA_WPARAM(wp);
             return BubbleMouse(target, ev, &VirtCtrl::OnMouseWheel);
         }
@@ -1127,7 +1129,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
                 return false;
             }
             VirtMouseEvent ev;
-            FillMouseEvent(ev, target, ptWindow, ptLocal, false);
+            FillMouseEvent(ev, target, ptWindow, ptLocal, false, wp);
             return BubbleMouse(target, ev, &VirtCtrl::OnContextMenu);
         }
 

@@ -18,14 +18,24 @@ import {
   sendMessage,
   sendText,
   sleep,
+  VK_DELETE,
   VK_DOWN,
   WM_KEYDOWN,
   WM_LBUTTONDBLCLK,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
+  MK_CONTROL,
   MK_LBUTTON,
 } from "./winapi";
-import { clickAt, findChildByClass, killAndWait, launchControlled, pressEscape, sendCommand } from "./win-automation";
+import {
+  clickAt,
+  findChildByClass,
+  killAndWait,
+  launchControlled,
+  pressEscape,
+  pressKey,
+  sendCommand,
+} from "./win-automation";
 
 const TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
 const LIST_CLASS = "SumatraAnnotFilterList";
@@ -48,6 +58,9 @@ type FilterState = {
   deleteEnabled: boolean;
   discardEnabled: boolean;
   saveEnabled: boolean;
+  nSel: number;
+  itemDy: number;
+  listY: number;
   raw: string;
 };
 
@@ -90,6 +103,9 @@ function parseFilter(dump: string): FilterState | null {
     deleteEnabled: /deleteEnabled=1/.test(dump),
     discardEnabled: /discardEnabled=1/.test(dump),
     saveEnabled: /saveEnabled=1/.test(dump),
+    nSel: +(/nSel=(-?\d+)/.exec(dump)?.[1] ?? -1),
+    itemDy: +(/itemDy=(-?\d+)/.exec(dump)?.[1] ?? 0),
+    listY: +(/listY=(-?\d+)/.exec(dump)?.[1] ?? 0),
     raw: dump,
   };
 }
@@ -281,6 +297,24 @@ export async function testit(): Promise<void> {
     st = await waitFilter(client, (s) => s.sel >= 0);
     sendMessage(list2, WM_LBUTTONDBLCLK, MK_LBUTTON, lp);
     st = await waitFilter(client, (s) => !s.listVisible);
+
+    await clickAt(
+      toolbar,
+      Math.floor(st.floatBtn.x + st.floatBtn.dx / 2),
+      Math.floor(st.floatBtn.y + st.floatBtn.dy / 2),
+      250,
+    );
+    st = await waitFilter(client, (s) => s.floating && s.floatVisible && s.itemDy > 0);
+    const floatWnd2 = findTopWindow(pid, FLOAT_CLASS);
+    if (!floatWnd2) {
+      throw new Error("annot-filter-toolbar: floating window did not reopen");
+    }
+    await clickAt(floatWnd2, 24, st.listY + Math.floor(st.itemDy / 2), 200);
+    st = await waitFilter(client, (s) => s.nSel >= 1 && s.deleteEnabled);
+    await clickAt(floatWnd2, 24, st.listY + st.itemDy + Math.floor(st.itemDy / 2), 200, MK_CONTROL);
+    st = await waitFilter(client, (s) => s.nSel >= 2);
+    await pressKey(floatWnd2, VK_DELETE, 400);
+    st = await waitFilter(client, (s) => s.nAll === 0 && s.nSel === 0 && !s.deleteEnabled);
   } finally {
     client.close();
     await killAndWait(proc);

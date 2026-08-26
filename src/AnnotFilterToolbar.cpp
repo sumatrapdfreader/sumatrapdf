@@ -96,6 +96,7 @@ struct AnnotFilterWindow : WindowBase {
     void BuildLayout();
     void UpdateDockIcon();
     void OnClose(WindowBase::CloseEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
     void OnSize(WindowBase::SizeEvent* ev);
     void OnTimer(WindowBase::TimerEvent* ev);
     void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
@@ -210,19 +211,36 @@ static ListBoxModelStrings* NewAnnotListModel(AnnotFilterToolbar* f) {
     return model;
 }
 
-static void ApplyVisibleToList(AnnotFilterToolbar* f, VirtListBox* lb, Annotation* caret, int prevScrollY) {
+static void ApplyVisibleToList(AnnotFilterToolbar* f, VirtListBox* lb, Annotation* caret,
+                               const Vec<Annotation*>& keepSel, int prevScrollY) {
     if (!lb) {
         return;
     }
     lb->SetModel(NewAnnotListModel(f));
     lb->ScrollTo(prevScrollY);
-    int idx = caret ? f->visibleAnnots.Find(caret) : -1;
-    if (idx < 0) {
+    int caretIdx = caret ? f->visibleAnnots.Find(caret) : -1;
+    if (caretIdx < 0) {
         Annotation* keep = FilterTab(f) ? FilterTab(f)->selectedAnnotation : nullptr;
-        idx = keep ? f->visibleAnnots.Find(keep) : -1;
+        caretIdx = keep ? f->visibleAnnots.Find(keep) : -1;
     }
-    if (idx >= 0) {
-        lb->SetCurrentSelection(idx);
+    if (lb->multiSelect && len(keepSel) > 0) {
+        if (caretIdx < 0) {
+            caretIdx = f->visibleAnnots.Find(keepSel[0]);
+        }
+        if (caretIdx >= 0) {
+            lb->SetCurrentSelection(caretIdx);
+        }
+        for (Annotation* a : keepSel) {
+            int i = f->visibleAnnots.Find(a);
+            if (i >= 0 && !lb->IsSelected(i)) {
+                lb->ToggleSelected(i);
+            }
+        }
+        lb->Invalidate();
+        return;
+    }
+    if (caretIdx >= 0) {
+        lb->SetCurrentSelection(caretIdx);
     }
 }
 
@@ -232,10 +250,20 @@ static void RebuildList(AnnotFilterToolbar* f) {
     }
     Annotation* caret = nullptr;
     int prevScrollY = 0;
+    Vec<Annotation*> keepSel;
     VirtListBox* active = ActiveList(f);
     if (active) {
         caret = VisibleAnnotAt(f, active->GetCurrentSelection());
         prevScrollY = active->scrollY;
+        if (active->multiSelect) {
+            Vec<int> idxs;
+            active->GetSelectedIndices(idxs);
+            for (int i : idxs) {
+                if (Annotation* a = VisibleAnnotAt(f, i)) {
+                    keepSel.Append(a);
+                }
+            }
+        }
     }
     f->visibleAnnots.Reset();
     for (Annotation* annot : f->annotations) {
@@ -243,9 +271,9 @@ static void RebuildList(AnnotFilterToolbar* f) {
             f->visibleAnnots.Append(annot);
         }
     }
-    ApplyVisibleToList(f, f->listBox, caret, prevScrollY);
+    ApplyVisibleToList(f, f->listBox, caret, keepSel, prevScrollY);
     if (f->floatWnd) {
-        ApplyVisibleToList(f, f->floatWnd->listBox, caret, prevScrollY);
+        ApplyVisibleToList(f, f->floatWnd->listBox, caret, keepSel, prevScrollY);
     }
     UpdateCue(f);
     if (f->listHost && f->listHost->IsVisible()) {
@@ -353,6 +381,7 @@ static void OnListTimer(AnnotFilterToolbar* f, int timerId) {
 }
 
 static void OnListSelectionChanged(AnnotFilterToolbar* f) {
+    UpdateFloatButtons(f);
     ScheduleSelection(f);
 }
 
@@ -785,25 +814,54 @@ static void OnDockBtnClicked(AnnotFilterWindow* w, VirtMouseEvent*) {
     }
 }
 
-static void OnFloatDelete(AnnotFilterWindow* w, VirtMouseEvent*) {
-    if (!w || !w->win) {
+static void DeleteFloatSelected(AnnotFilterWindow* w) {
+    if (!w || !w->win || !w->listBox) {
         return;
     }
     WindowTab* tab = w->win->CurrentTab();
-    if (!tab) {
+    AnnotFilterToolbar* f = w->win->annotFilterToolbar;
+    if (!tab || !f) {
         return;
     }
-    Annotation* annot = tab->selectedAnnotation;
-    if (!annot) {
-        AnnotFilterToolbar* f = w->win->annotFilterToolbar;
-        if (f && w->listBox) {
-            annot = VisibleAnnotAt(f, w->listBox->GetCurrentSelection());
+    Vec<int> idxs;
+    w->listBox->GetSelectedIndices(idxs);
+    if (len(idxs) == 0) {
+        int idx = w->listBox->GetCurrentSelection();
+        if (idx >= 0) {
+            idxs.Append(idx);
         }
     }
-    if (!annot) {
+    Vec<Annotation*> toDelete;
+    for (int idx : idxs) {
+        if (Annotation* a = VisibleAnnotAt(f, idx)) {
+            toDelete.Append(a);
+        }
+    }
+    if (len(toDelete) == 0) {
+        if (tab->selectedAnnotation) {
+            toDelete.Append(tab->selectedAnnotation);
+        }
+    }
+    if (len(toDelete) == 0) {
         return;
     }
-    DeleteAnnotationAndUpdateUI(tab, annot);
+    Annotation* keepSelected = tab->selectedAnnotation;
+    if (toDelete.Contains(keepSelected)) {
+        keepSelected = nullptr;
+    }
+    for (Annotation* annot : toDelete) {
+        DetachAnnotationFromUI(annot);
+        DeleteAnnotation(annot);
+    }
+    RefreshAnnotationLists(tab);
+    SetSelectedAnnotation(tab, keepSelected);
+    if (IsMainWindowValidAndNotClosing(w->win)) {
+        MainWindowRerender(w->win);
+    }
+}
+
+static void OnFloatDelete(AnnotFilterWindow* w, VirtMouseEvent*) {
+    DeleteFloatSelected(w);
 }
 
 static void OnFloatDiscard(AnnotFilterWindow* w, VirtMouseEvent*) {
@@ -837,12 +895,24 @@ static void UpdateFloatButtons(AnnotFilterToolbar* f) {
     }
     AnnotFilterWindow* w = f->floatWnd;
     WindowTab* tab = FilterTab(f);
-    Annotation* sel = tab ? tab->selectedAnnotation : nullptr;
-    if (!sel && w->listBox) {
-        sel = VisibleAnnotAt(f, w->listBox->GetCurrentSelection());
+    int nSel = 0;
+    if (w->listBox) {
+        nSel = w->listBox->SelectedCount();
+        if (nSel == 0 && w->listBox->GetCurrentSelection() >= 0) {
+            nSel = 1;
+        }
+    }
+    if (nSel == 0 && tab && tab->selectedAnnotation) {
+        nSel = 1;
     }
     if (w->btnDelete) {
-        w->btnDelete->SetIsEnabled(sel != nullptr);
+        w->btnDelete->SetIsEnabled(nSel > 0);
+        if (nSel > 1) {
+            w->btnDelete->SetText(fmt(_TRA("Delete %d annotations").s, nSel));
+        } else {
+            w->btnDelete->SetText(_TRA("Delete Annotation"));
+        }
+        w->btnDelete->RequestLayout();
     }
     bool dirty = false;
     if (tab && tab->AsFixed()) {
@@ -964,6 +1034,8 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
     {
         listBox = new VirtListBox();
         WireListBox(f, listBox, GetDpi());
+        listBox->multiSelect = true;
+        listBox->SetFlag(vwfFocusable, true);
     }
 
     btnDelete = NewFloatActionButton(hwnd, _TRA("Delete Annotation"), false);
@@ -1106,6 +1178,30 @@ void AnnotFilterWindow::OnClose(WindowBase::CloseEvent* /*ev*/) {
     }
 }
 
+void AnnotFilterWindow::OnKeyDown(KeyEvent* ev) {
+    bool filterFocused = edit && ev->hwnd == edit->hwnd;
+    if (ev->vkey == VK_DELETE) {
+        if (filterFocused) {
+            return;
+        }
+        DeleteFloatSelected(this);
+        ev->didHandle = true;
+        return;
+    }
+    if (filterFocused || !listBox) {
+        return;
+    }
+    if ((ev->vkey == 'A' && ev->isCtrl && !ev->isAlt) || IsListNavKey(ev->vkey)) {
+        VirtKeyEvent ke;
+        ke.vkey = ev->vkey;
+        ke.isCtrl = ev->isCtrl;
+        ke.isShift = ev->isShift;
+        ke.isAlt = ev->isAlt;
+        listBox->OnKeyDown(&ke);
+        ev->didHandle = ke.didHandle;
+    }
+}
+
 static AnnotFilterWindow* CreateAnnotFilterWindow(MainWindow* win) {
     auto* w = new AnnotFilterWindow();
     w->onSize = MkMethod1<AnnotFilterWindow, WindowBase::SizeEvent*, &AnnotFilterWindow::OnSize>(w);
@@ -1113,6 +1209,7 @@ static AnnotFilterWindow* CreateAnnotFilterWindow(MainWindow* win) {
     w->onGetMinMaxInfo =
         MkMethod1<AnnotFilterWindow, WindowBase::GetMinMaxInfoEvent*, &AnnotFilterWindow::OnGetMinMaxInfo>(w);
     w->onClose = MkMethod1<AnnotFilterWindow, WindowBase::CloseEvent*, &AnnotFilterWindow::OnClose>(w);
+    w->onKeyDown = MkMethod1<AnnotFilterWindow, KeyEvent*, &AnnotFilterWindow::OnKeyDown>(w);
     w->onTimer = MkMethod1<AnnotFilterWindow, WindowBase::TimerEvent*, &AnnotFilterWindow::OnTimer>(w);
     if (!w->Create(win)) {
         delete w;
@@ -1405,12 +1502,18 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     out.Append(fmt("listRect=%d,%d,%d,%d floating=%d floatVisible=%d floatBtn=%d,%d,%d,%d dockBtn=%d,%d,%d,%d\n", lr.x,
                    lr.y, lr.dx, lr.dy, floating ? 1 : 0, floatVisible ? 1 : 0, br.x, br.y, br.dx, br.dy, dr.x, dr.y,
                    dr.dx, dr.dy));
-    int deleteOn = 0, discardOn = 0, saveOn = 0;
+    int deleteOn = 0, discardOn = 0, saveOn = 0, nSel = 0, itemDy = 0, listY = 0;
     if (f && f->floatWnd) {
         deleteOn = f->floatWnd->btnDelete && f->floatWnd->btnDelete->IsEnabled() ? 1 : 0;
         discardOn = f->floatWnd->btnDiscard && f->floatWnd->btnDiscard->IsEnabled() ? 1 : 0;
         saveOn = f->floatWnd->btnSave && f->floatWnd->btnSave->IsEnabled() ? 1 : 0;
+        if (f->floatWnd->listBox) {
+            nSel = f->floatWnd->listBox->SelectedCount();
+            itemDy = f->floatWnd->listBox->GetItemHeight();
+            listY = f->floatWnd->listBox->BoundsInWindow().y;
+        }
     }
-    out.Append(fmt("deleteEnabled=%d discardEnabled=%d saveEnabled=%d\n", deleteOn, discardOn, saveOn));
+    out.Append(fmt("deleteEnabled=%d discardEnabled=%d saveEnabled=%d nSel=%d itemDy=%d listY=%d\n", deleteOn,
+                   discardOn, saveOn, nSel, itemDy, listY));
     return ToStrTemp(out);
 }

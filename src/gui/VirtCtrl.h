@@ -478,6 +478,7 @@ struct VirtListBox : VirtCtrl {
     void GetSelectedIndices(Vec<int>& out);
     void SelectAll();
     void SelectRange(int from, int to);
+    void ToggleSelected(int idx);
     int ItemFromPoint(Point ptLocal);
     // the row's rectangle in window coords; empty when the row isn't visible
     Rect ItemRect(int idx);
@@ -504,7 +505,6 @@ struct VirtListBox : VirtCtrl {
     void EnsureSelectedSize();
     void ApplyClick(int idx, bool ctrl, bool shift);
     void ApplyNav(int idx, bool ctrl, bool shift);
-    void ToggleSelected(int idx);
     int GetDpi();
     int ScrollbarDx();
     Rect ContentRectLocal();
