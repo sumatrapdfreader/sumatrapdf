@@ -1026,10 +1026,11 @@ struct HomePageLayout {
 HomePageLayout::~HomePageLayout() = default;
 
 // --- home page chrome as a VirtCtrl tree ---
-// The chrome (header, view-mode buttons, "Open a document..." link, circle
-// buttons) lives for as long as the window, so hover / pressed state survives
-// the repaints that scrolling and filtering cause. Geometry still comes from
-// LayoutHomePage(): HomePageSyncChrome() just feeds it into the tree.
+// The chrome (header, view-mode buttons, "Open a document..." link, logo row)
+// lives for as long as the window, so hover / pressed state survives the
+// repaints that scrolling and filtering cause. Geometry still comes from
+// LayoutHomePage(): HomePageSyncChrome() just feeds it into the tree. The
+// [palette] logo [help] row is an HBox of virt controls.
 
 // Leaf home-page controls: no MainWindow*. Wire onClick / hwndForCmds when
 // building the chrome so the same VirtCtrl types stay reusable.
@@ -1059,7 +1060,22 @@ struct HomeCircleBtnCtrl : VirtCtrl {
     Str glyph;                // not owned; used when pixmap is null ("?")
 
     HomeCircleBtnCtrl();
+    Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
+};
+
+// [command palette] SumatraPDF [keyboard shortcuts] along the top of the home
+// page. An HBox sizes and places the three virt controls; they are also our
+// VirtCtrl children so paint / hit-test / delete stay on this tree.
+struct HomeLogoRow : VirtCtrl {
+    HBox* box = nullptr;
+
+    HomeLogoRow();
+    ~HomeLogoRow() override;
+
+    void AddItem(VirtCtrl*);
+    Size GetIdealSize() override;
+    void SetBounds(Rect) override;
 };
 
 struct HomeEntryCtrl;
@@ -1144,6 +1160,7 @@ struct HomeChromeCtrl : VirtCtrl {
     HomeSearchBorderCtrl* searchBorder = nullptr;
     HomeEntriesCtrl* entries = nullptr;
     VirtText* hdr = nullptr;
+    HomeLogoRow* logoRow = nullptr;
     SumatraLogo* logo = nullptr;
     HomeViewIconCtrl* thumbView = nullptr;
     HomeViewIconCtrl* listView = nullptr;
@@ -1676,7 +1693,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
     int thumbsContentWidth = (thumbsColsForLayout * kThumbnailDx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
 
-    // --- Step 1: two header rows: the app logo centered on top, then
+    // --- Step 1: two header rows: [palette] SumatraPDF [help] on top, then
     // [open link] [search edit] [view icons] ---
     Rect rcIconView(0, 0, 0, 0);
     rcIconView.dx = rcIconView.dy = HomePageIconSize();
@@ -1692,13 +1709,18 @@ static void LayoutHomePage(HomePageLayout& l) {
     int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
     int borderDy = searchEditDy + 2; // 1px border on each side
 
-    // the app name in colorful letters, same font as the About window
+    // [command palette] SumatraPDF [keyboard shortcuts], centered like the old
+    // title. The HBox in logoRow sizes the three virt controls.
     chrome->logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
-    Size logoSize = chrome->logo->GetIdealSize();
+    Size logoRowSize = chrome->logoRow->GetIdealSize();
     int logoY = DpiScale(8);
-    l.rcLogo = {thumbsStartX + ((thumbsContentWidth - logoSize.dx) / 2), logoY, logoSize.dx, logoSize.dy};
+    int logoX = thumbsStartX + ((thumbsContentWidth - logoRowSize.dx) / 2);
+    if (logoX < DpiScale(kInnerPadding)) {
+        logoX = DpiScale(kInnerPadding);
+    }
+    l.rcLogo = {logoX, logoY, logoRowSize.dx, logoRowSize.dy};
 
-    int hdrY = logoY + logoSize.dy + DpiScale(8);
+    int hdrY = logoY + logoRowSize.dy + DpiScale(8);
     int iconGap = DpiScale(4);
     int rowDy = std::max(rcIconView.dy, borderDy);
     // every row item (link, search box, view icons) is centered on the row's
@@ -2325,8 +2347,46 @@ HomeCircleBtnCtrl::HomeCircleBtnCtrl() {
     cursor = CursorId::Hand;
 }
 
+Size HomeCircleBtnCtrl::GetIdealSize() {
+    int d = DpiScale(30);
+    return {d, d};
+}
+
 void HomeCircleBtnCtrl::Paint(VirtPaintCtx& ctx) {
     DrawHomeCircleButton(ctx.gfx, ctx.bounds, pixmap, glyph);
+}
+
+HomeLogoRow::HomeLogoRow() {
+    flags |= vwfNoHitTest;
+    box = new HBox();
+    box->alignMain = MainAxisAlign::MainStart;
+    box->alignCross = CrossAxisAlign::CrossCenter;
+}
+
+HomeLogoRow::~HomeLogoRow() {
+    // the buttons and logo are VirtCtrl children; don't let HBox delete them
+    if (box) {
+        box->children.Clear();
+        delete box;
+        box = nullptr;
+    }
+}
+
+void HomeLogoRow::AddItem(VirtCtrl* c) {
+    AddChild(c);
+    box->AddChild(c);
+}
+
+Size HomeLogoRow::GetIdealSize() {
+    box->gap = DpiScale(10);
+    return {box->MinIntrinsicWidth(0), box->MinIntrinsicHeight(0)};
+}
+
+void HomeLogoRow::SetBounds(Rect r) {
+    VirtCtrl::SetBounds(r);
+    box->gap = DpiScale(10);
+    box->Layout(Tight(r.Size()));
+    box->SetBounds(r);
 }
 
 HomeSearchBorderCtrl::HomeSearchBorderCtrl() {
@@ -2771,9 +2831,8 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->kind = kindHomeChromeCtrl;
     chrome->flags |= vwfNoHitTest;
 
-    // first, so that the rest of the chrome (notably the circle buttons, which
-    // can overlap the thumbnails) hit-tests and paints on top of the entries
-    // below everything else: the tip band sits at the bottom of the page
+    // first, so that the rest of the chrome hit-tests and paints on top of the
+    // entries. Below everything else: the tip band sits at the bottom of the page
     chrome->tip = new HomeTipCtrl();
     chrome->tip->hwndForCmds = win->hwndFrame;
     chrome->tip->onClick = MkFunc1(HomeTipBandClicked, win);
@@ -2804,13 +2863,25 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->hdr = new VirtText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
-    // the app name in colorful letters, same as the About window.
-    // Hit-testable so hovering it can open the About dropdown.
+    // [command palette] SumatraPDF [keyboard shortcuts] in one HBox at the top.
+    // The title is hit-testable so hovering it can open the About dropdown.
+    chrome->logoRow = new HomeLogoRow();
+    chrome->paletteBtn = new HomeCircleBtnCtrl();
+    chrome->paletteBtn->glyph = StrL(">");
+    chrome->paletteBtn->SetTooltip(_TRA("Command Palette"));
+    chrome->paletteBtn->onClick = MkFunc1(HomePaletteClicked, win);
     chrome->logo = new SumatraLogo();
     chrome->logo->SetFlag(vwfNoHitTest, false);
     chrome->logo->onMouseEnter = MkFunc0(OnHomeLogoEnter, win);
     chrome->logo->onMouseLeave = MkFunc0(OnHomeLogoLeave, win);
-    chrome->AddChild(chrome->logo);
+    chrome->helpBtn = new HomeCircleBtnCtrl();
+    chrome->helpBtn->glyph = StrL("?");
+    chrome->helpBtn->SetTooltip(_TRA("Keyboard Shortcuts"));
+    chrome->helpBtn->onClick = MkFunc1(HomeHelpClicked, win);
+    chrome->logoRow->AddItem(chrome->paletteBtn);
+    chrome->logoRow->AddItem(chrome->logo);
+    chrome->logoRow->AddItem(chrome->helpBtn);
+    chrome->AddChild(chrome->logoRow);
 
     chrome->openDoc = new HomeOpenDocCtrl();
     chrome->openDoc->text = new VirtText(StrL(""));
@@ -2818,18 +2889,6 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->openDoc->AddChild(chrome->openDoc->text);
     chrome->openDoc->onClick = MkFunc1(HomeOpenDocClicked, win);
     chrome->AddChild(chrome->openDoc);
-
-    chrome->paletteBtn = new HomeCircleBtnCtrl();
-    chrome->paletteBtn->glyph = StrL(">");
-    chrome->paletteBtn->SetTooltip(_TRA("Command Palette"));
-    chrome->paletteBtn->onClick = MkFunc1(HomePaletteClicked, win);
-    chrome->AddChild(chrome->paletteBtn);
-
-    chrome->helpBtn = new HomeCircleBtnCtrl();
-    chrome->helpBtn->glyph = StrL("?");
-    chrome->helpBtn->SetTooltip(_TRA("Keyboard Shortcuts"));
-    chrome->helpBtn->onClick = MkFunc1(HomeHelpClicked, win);
-    chrome->AddChild(chrome->helpBtn);
 
     win->homeRoot->SetChild(chrome);
     return chrome;
@@ -2975,7 +3034,9 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     // font also set here so the cached-layout path (ApplyHomeLayoutCache)
     // repaints the logo without a full relayout
     chrome->logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
-    chrome->logo->SetBounds(l.rcLogo);
+    int iconSz = DpiScale(16);
+    chrome->paletteBtn->pixmap = GetCachedPixmapForSvg(Str(gIconCommandPalette), iconSz, iconSz, kColBlack, kColWhite);
+    chrome->logoRow->SetBounds(l.rcLogo);
     if (chrome->aboutHover && chrome->aboutHover->IsVisible()) {
         Size sz = chrome->aboutHover->ScreenRect().Size();
         Rect logoScreen = HomeLogoScreenRect(chrome);
@@ -2997,23 +3058,6 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     od->text->SetColor(kColText, gColsLink[kColText]);
     // re-apply now that the parent moved: bounds are relative to it
     od->text->SetBounds(l.openDoc->lastBounds);
-
-    // white-circle buttons in the bottom-right corner: command palette above
-    // the "?" keyboard-shortcuts button. Sit above the tip band when a tip
-    // is showing
-    {
-        int diam = DpiScale(30);
-        int margin = DpiScale(16);
-        int gap = DpiScale(10);
-        int bottom = l.hasTip ? l.rcTip.y : l.rc.dy;
-        Rect help{l.rc.dx - margin - diam, bottom - margin - diam, diam, diam};
-        Rect palette{help.x, help.y - gap - diam, diam, diam};
-        int iconSz = DpiScale(16);
-        chrome->paletteBtn->pixmap =
-            GetCachedPixmapForSvg(Str(gIconCommandPalette), iconSz, iconSz, kColBlack, kColWhite);
-        chrome->paletteBtn->SetBounds(palette);
-        chrome->helpBtn->SetBounds(help);
-    }
 }
 
 static void DrawHomePageLayout(HomePageLayout& l) {
@@ -3029,9 +3073,8 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     }
 
     // the chrome tree paints everything else: search border, file entries
-    // (thumbnails / list rows), tip band, header, view buttons, "Open a
-    // document..." and the circle buttons (which have to land on top of the
-    // tip band, so the chrome keeps them as the last children)
+    // (thumbnails / list rows), tip band, header (palette / logo / help),
+    // view buttons, and "Open a document..."
     win->homeRoot->Paint(gfx, l.rc);
 
     // thumbnails selection outline: after the entries so it sits on top of the
