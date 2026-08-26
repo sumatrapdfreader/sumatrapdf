@@ -12,7 +12,7 @@
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, tmpPath } from "./util";
+import { cmdId, tmpPath, assemblePdf } from "./util";
 import { captureWindowPixels, sendMessage, WM_COMMAND } from "./winapi";
 import { findCanvas, launchControlled, sendCommand, waitForExit, killAndWait } from "./win-automation";
 
@@ -30,20 +30,7 @@ function makePdf(nPages: number, square: number): string {
     objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${4 + i * 2} 0 R >>`);
     objs.push(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
   }
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  const size = objs.length + 1;
-  body += `xref\n0 ${size}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 // A fixed window, not the runner's/screen's: at 25600% the cost of getting the

@@ -5,7 +5,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { cmdId, runStandalone, tmpPath } from "./util";
+import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util";
 import {
   captureWindowToPng,
   clientToScreen,
@@ -50,19 +50,7 @@ function makePdf(): string {
     "<< /Type /Annot /Subtype /Highlight /P 3 0 R /Rect [72 50 220 80] " +
       "/QuadPoints [72 80 220 80 72 50 220 50] /C [1 1 0] >>",
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  body += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += `${off.toString().padStart(10, "0")} 00000 n \n`;
-  }
-  body += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 async function annotState(client: ControlClient): Promise<AnnotState> {

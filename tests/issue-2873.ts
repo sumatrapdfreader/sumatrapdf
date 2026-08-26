@@ -7,7 +7,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 
 // \r and \n inside a PDF literal string are written as the escapes \r and \n so
 // the bytes survive whatever line endings the file itself uses
@@ -36,20 +36,7 @@ function makePdf(): string {
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [${annots}] >>`,
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  const size = objs.length + 1;
-  body += `xref\n0 ${size}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 export async function testit(): Promise<void> {

@@ -4,7 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { cmdId, runStandalone, tmpPath } from "./util";
+import { assemblePdf, cmdId, runStandalone, tmpPath, waitForAnnotWindow } from "./util";
 import {
   enumWindows,
   getClassName,
@@ -14,7 +14,6 @@ import {
   getWorkArea,
   postMessage,
   setWindowPos,
-  sleep,
   WM_CLOSE,
 } from "./winapi";
 import { killAndWait, launchControlled, sendCommand, waitForExit } from "./win-automation";
@@ -26,32 +25,7 @@ function makePdf(contents: string): string {
     `<< /Type /Pages /Count 1 /Kids [3 0 R] >>`,
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [${annot}] >>`,
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  const size = objs.length + 1;
-  body += `xref\n0 ${size}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
-}
-
-function findAnnotWindow(pid: number, frame: number): number {
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (hwnd !== frame && getWindowPid(hwnd) === pid && getWindowText(hwnd).startsWith("Annotations")) {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
+  return assemblePdf(objs);
 }
 
 async function openAnnotWindow(client: ControlClient, pid: number, frame: number): Promise<number> {
@@ -62,17 +36,7 @@ async function openAnnotWindow(client: ControlClient, pid: number, frame: number
   if ((layout[0] as number) !== 0) {
     throw new Error(`issue-4494: editor didn't finish opening: ${String(layout[1] ?? "")}`);
   }
-  const deadline = Date.now() + 10_000;
-  for (;;) {
-    const hwnd = findAnnotWindow(pid, frame);
-    if (hwnd) {
-      return hwnd;
-    }
-    if (Date.now() > deadline) {
-      throw new Error("issue-4494: Annotations window did not open");
-    }
-    await sleep(50);
-  }
+  return waitForAnnotWindow(pid, frame);
 }
 
 function windowSize(hwnd: number): { dx: number; dy: number } {

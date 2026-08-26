@@ -1,19 +1,10 @@
 // Saving annotations to the current PDF and file-watcher reloads refresh the
 // existing annotation editor instead of destroying and recreating its HWND.
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import {
-  enumWindows,
-  getWindowPid,
-  getWindowText,
-  packCoords,
-  sendMessage,
-  sendText,
-  sleep,
-  WM_COMMAND,
-} from "./winapi.ts";
+import { assemblePdf, cmdId, findAnnotWindow, runStandalone, writeAppdata } from "./util.ts";
+import { getWindowPid, getWindowText, packCoords, sendMessage, sendText, sleep, WM_COMMAND } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
@@ -34,19 +25,7 @@ function makePdf(count: number): string {
     `<< /Type /Pages /Count 1 /Kids [3 0 R] >>`,
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [${annots.join(" ")}] >>`,
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  body += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 type AnnotState = { selected: number; count: number; ignoreReload: boolean; raw: string };
@@ -95,18 +74,6 @@ async function waitForOwnSaveReloadToClear(client: ControlClient): Promise<void>
   throw new Error(`annotation-editor-reload: save watcher event was not consumed: ${last?.raw ?? "not ready"}`);
 }
 
-function findAnnotWindow(pid: number, frame: number): number {
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (hwnd !== frame && getWindowPid(hwnd) === pid && getWindowText(hwnd).startsWith("Annotations")) {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
 function assertSameEditor(pid: number, expected: number, marker: string, action: string): void {
   const actualPid = getWindowPid(expected);
   const actualTitle = getWindowText(expected);
@@ -118,12 +85,9 @@ function assertSameEditor(pid: number, expected: number, marker: string, action:
 }
 
 export async function testit(): Promise<void> {
-  const dir = tmpPath("annotation-editor-reload");
-  rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
+  const dir = writeAppdata("annotation-editor-reload", SETTINGS);
   const pdf = join(dir, "watched.pdf");
   writeFileSync(pdf, makePdf(1), "latin1");
-  writeFileSync(join(dir, "SumatraPDF-settings.txt"), SETTINGS);
 
   const { proc, client, frame } = await launchControlled([
     "-appdata",

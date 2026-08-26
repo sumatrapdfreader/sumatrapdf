@@ -5,7 +5,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control";
-import { cmdId, runStandalone, tmpPath } from "./util";
+import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util";
 import {
   captureWindowPixels,
   captureWindowToPng,
@@ -25,19 +25,7 @@ function makePdf(): string {
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  body += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += `${off.toString().padStart(10, "0")} 00000 n \n`;
-  }
-  body += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 type InkCount = { left: number; right: number; bounds: string };

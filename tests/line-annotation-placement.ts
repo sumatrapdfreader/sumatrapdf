@@ -5,7 +5,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 import {
   captureWindowPixels,
   clientToScreen,
@@ -55,19 +55,7 @@ function makeBlankPdf(): string {
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objects.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
-  }
-  const xref = body.length;
-  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (const offset of offsets) {
-    body += `${offset.toString().padStart(10, "0")} 00000 n \n`;
-  }
-  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objects);
 }
 
 async function placementState(client: ControlClient): Promise<PlacementState> {

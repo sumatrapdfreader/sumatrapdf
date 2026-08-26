@@ -1,16 +1,14 @@
 // Smart overlay scrollbar must not paint over the Edit Annotations window
 // when the cursor moves in the main window (HWND_TOP used to raise it).
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
-import { cmdId, ROOT, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, ROOT, runStandalone, waitForAnnotWindow, writeAppdata } from "./util.ts";
 import {
   clientToScreen,
   enumWindows,
   getClassName,
   getWindowPid,
   getWindowRect,
-  getWindowText,
   isWindowAbove,
   setCursorPos,
   setForegroundWindow,
@@ -23,18 +21,6 @@ import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./wi
 
 const OVERLAY_CLASS = "SUMATRA_OVERLAY_SCROLLBAR";
 const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
-
-function findAnnotWindow(pid: number, frame: number): number {
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (hwnd !== frame && getWindowPid(hwnd) === pid && getWindowText(hwnd).startsWith("Annotations")) {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
 
 function findOverlayScrollbars(pid: number): number[] {
   const found: number[] = [];
@@ -49,11 +35,8 @@ function findOverlayScrollbars(pid: number): number[] {
 
 export async function testit(): Promise<void> {
   setProcessDpiAware();
-  const dir = tmpPath("overlay-scrollbar-annot-zorder");
-  rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    join(dir, "SumatraPDF-settings.txt"),
+  const dir = writeAppdata(
+    "overlay-scrollbar-annot-zorder",
     "UiLanguage = en\nCheckForUpdates = false\nRestoreSession = false\nScrollbars = smart\n",
   );
 
@@ -67,18 +50,7 @@ export async function testit(): Promise<void> {
       throw new Error(`overlay-scrollbar-annot-zorder: editor did not open: ${String(layout[1] ?? "")}`);
     }
     const pid = proc.pid!;
-    const deadline = Date.now() + 10_000;
-    let annot = 0;
-    while (Date.now() < deadline) {
-      annot = findAnnotWindow(pid, frame);
-      if (annot) {
-        break;
-      }
-      await sleep(40);
-    }
-    if (!annot) {
-      throw new Error("overlay-scrollbar-annot-zorder: Annotations window did not open");
-    }
+    const annot = await waitForAnnotWindow(pid, frame);
 
     const canvas = findCanvas(frame);
     if (!canvas) {

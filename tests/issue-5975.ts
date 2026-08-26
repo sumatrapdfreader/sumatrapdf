@@ -3,8 +3,8 @@
 // now, so those keys are handled on the editor window.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand } from "./control";
-import { cmdId, runStandalone, tmpPath } from "./util";
-import { enumWindows, getWindowPid, getWindowText, postMessage, sleep, WM_CLOSE, WM_KEYDOWN } from "./winapi";
+import { assemblePdf, cmdId, runStandalone, tmpPath, waitForAnnotWindow } from "./util";
+import { postMessage, sleep, WM_CLOSE, WM_KEYDOWN } from "./winapi";
 import { killAndWait, launchControlled, sendCommand, waitForExit } from "./win-automation";
 
 const VK_END = 0x23;
@@ -25,49 +25,7 @@ function makePdf(): string {
     `<< /Type /Pages /Count 1 /Kids [3 0 R] >>`,
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [${annots.join(" ")}] >>`,
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  const size = objs.length + 1;
-  body += `xref\n0 ${size}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
-}
-
-function findAnnotWindow(pid: number, frame: number): number {
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (hwnd === frame || getWindowPid(hwnd) !== pid) {
-      return true;
-    }
-    if (getWindowText(hwnd).startsWith("Annotations")) {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
-async function waitAnnotWindow(pid: number, frame: number): Promise<number> {
-  const deadline = Date.now() + 10_000;
-  for (;;) {
-    const hwnd = findAnnotWindow(pid, frame);
-    if (hwnd) {
-      return hwnd;
-    }
-    if (Date.now() > deadline) {
-      throw new Error("issue-5975: Annotations window did not open");
-    }
-    await sleep(50);
-  }
+  return assemblePdf(objs);
 }
 
 type AnnotList = { sel: number; n: number; raw: string };
@@ -117,7 +75,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdEditAnnotations"));
-    const annotWin = await waitAnnotWindow(proc.pid!, frame);
+    const annotWin = await waitForAnnotWindow(proc.pid!, frame);
     let st = await listState(client);
     if (st.n < kAnnotCount) {
       throw new Error(`issue-5975: expected ${kAnnotCount} annotations, got n=${st.n} (${st.raw})`);

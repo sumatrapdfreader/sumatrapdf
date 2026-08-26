@@ -7,7 +7,7 @@
 // Run: bun tests/issue-5968.ts [--no-build]
 
 import { existsSync, writeFileSync } from "node:fs";
-import { extractPageText, runStandalone, tmpPath } from "./util.ts";
+import { extractPageText, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 
 const kNeedles = ["IO224", "RGMII_BMC_RMM4_TXD0"];
 const kRealPdf = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-5968-Find_Zoom_Issues.pdf";
@@ -24,20 +24,7 @@ function makeTinyPdf(): string {
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
     `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  const size = objs.length + 1;
-  body += `xref\n0 ${size}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 function assertNeedles(text: string, label: string): void {

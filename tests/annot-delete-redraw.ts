@@ -3,13 +3,10 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
+import { ROOT, cmdId, runStandalone, tmpPath, waitForAnnotWindow } from "./util";
 import {
   captureWindowToPng,
-  enumWindows,
   getClientRect,
-  getWindowPid,
-  getWindowText,
   packCoords,
   postMessage,
   sendMessage,
@@ -19,35 +16,6 @@ import {
   WM_KEYDOWN,
 } from "./winapi";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation";
-
-function findAnnotWindow(pid: number, frame: number): number {
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (hwnd === frame || getWindowPid(hwnd) !== pid) {
-      return true;
-    }
-    if (getWindowText(hwnd).startsWith("Annotations")) {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
-async function waitAnnotWindow(pid: number, frame: number): Promise<number> {
-  const deadline = Date.now() + 10_000;
-  for (;;) {
-    const hwnd = findAnnotWindow(pid, frame);
-    if (hwnd) {
-      return hwnd;
-    }
-    if (Date.now() > deadline) {
-      throw new Error("annot-delete-redraw: Annotations window did not open");
-    }
-    await sleep(50);
-  }
-}
 
 type AnnotState = {
   selected: number;
@@ -136,7 +104,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdEditAnnotations"), 0);
-    const annotWin = await waitAnnotWindow(proc.pid!, frame);
+    const annotWin = await waitForAnnotWindow(proc.pid!, frame);
     const nBefore = (await annotState(client)).count;
     if (nBefore < 3) {
       throw new Error(`annot-delete-redraw: expected 3 stamps in the list, got ${nBefore}`);

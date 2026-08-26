@@ -15,7 +15,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, EXE, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 
 type Button = { visible: boolean; idx: number };
 
@@ -33,20 +33,7 @@ function makePdf(): string {
     `<< /Type /Pages /Count 1 /Kids [3 0 R] >>`,
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>`,
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  const size = objs.length + 1;
-  body += `xref\n0 ${size}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 type DumpBtn = { idx: number; cmd: number; hidden: boolean };

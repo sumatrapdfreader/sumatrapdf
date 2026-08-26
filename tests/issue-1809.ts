@@ -13,7 +13,7 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
-import { EXE, ROOT, cmdId, runStandalone } from "./util.ts";
+import { EXE, ROOT, cmdId, runStandalone, assemblePdf } from "./util.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
 
@@ -39,19 +39,7 @@ export function makeTransparentPdf(): string {
     `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
   ];
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefStart = body.length;
-  body += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    body += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  body += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return body;
+  return assemblePdf(objs);
 }
 
 function countCheckerGray(data: Uint8Array): number {
