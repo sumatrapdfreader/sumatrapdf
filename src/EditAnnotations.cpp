@@ -862,6 +862,30 @@ static void ItemsFromSeqstrings(StrVec& items, SeqStrings strings) {
     }
 }
 
+static PdfColor GetDropDownColor(Str sv) {
+    int idx = SeqStrIndex(gColors, sv);
+    if (idx >= 0) {
+        int nMaxColors = dimofi(gColorsValues);
+        ReportIf(idx >= nMaxColors);
+        if (idx < nMaxColors) {
+            return gColorsValues[idx];
+        }
+        return 0;
+    }
+    ParsedColor col;
+    ParseColor(col, sv);
+    return col.pdfCol;
+}
+
+static Color PdfColorToWinColor(PdfColor c) {
+    u8 r, g, b, a;
+    UnpackPdfColor(c, r, g, b, a);
+    if (a == 0) {
+        return kColorTransparent;
+    }
+    return MkRgb(r, g, b);
+}
+
 static void DropDownFillColors(DropDown* w, PdfColor col, str::Builder& customColor) {
     StrVec items;
     ItemsFromSeqstrings(items, gColors);
@@ -874,6 +898,10 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Builder& customCo
         idx = len(items) - 1;
     }
     w->SetItems(items);
+    w->itemColors.Reset();
+    for (int i = 0; i < len(items); i++) {
+        w->itemColors.Append(PdfColorToWinColor(GetDropDownColor(items[i])));
+    }
     w->SetCurrentSelection(idx);
 }
 
@@ -906,21 +934,6 @@ SeqStrings AnnotEditorFontNames() {
 
 SeqStrings AnnotEditorFontReadableNames() {
     return gFontReadableNames;
-}
-
-static PdfColor GetDropDownColor(Str sv) {
-    int idx = SeqStrIndex(gColors, sv);
-    if (idx >= 0) {
-        int nMaxColors = dimofi(gColorsValues);
-        ReportIf(idx >= nMaxColors);
-        if (idx < nMaxColors) {
-            return gColorsValues[idx];
-        }
-        return 0;
-    }
-    ParsedColor col;
-    ParseColor(col, sv);
-    return col.pdfCol;
 }
 
 static bool gShowRect = true;
@@ -2479,11 +2492,12 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         vbox->AddChild(row);
     }
 
-    auto makeDropDown = [&]() -> DropDown* {
+    auto makeDropDown = [&](bool colorSwatches = false) -> DropDown* {
         DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
         args.isRtl = IsUIRtl();
+        args.colorSwatches = colorSwatches;
         auto* w = new DropDown();
         w->Create(args);
         return w;
@@ -2567,7 +2581,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     AddAnnotOptRow(opts, optRow++, ew->staticTextSize, ew->trackbarTextSize);
 
     ew->staticTextColor = CreateAnnotOptLabel(_TRA("Text Color:"));
-    ew->dropDownTextColor = makeDropDown();
+    ew->dropDownTextColor = makeDropDown(true);
     ew->dropDownTextColor->SetItemsSeqStrings(gColors);
     ew->dropDownTextColor->onSelectionChanged = MkFunc0(TextColorSelectionChanged, ew);
     AddAnnotOptRow(opts, optRow++, ew->staticTextColor, ew->dropDownTextColor);
@@ -2593,13 +2607,13 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     AddAnnotOptRow(opts, optRow++, ew->staticBorder, ew->trackbarBorder);
 
     ew->staticColor = CreateAnnotOptLabel(_TRA("Color:"));
-    ew->dropDownColor = makeDropDown();
+    ew->dropDownColor = makeDropDown(true);
     ew->dropDownColor->SetItemsSeqStrings(gColors);
     ew->dropDownColor->onSelectionChanged = MkFunc0(ColorSelectionChanged, ew);
     AddAnnotOptRow(opts, optRow++, ew->staticColor, ew->dropDownColor);
 
     ew->staticInteriorColor = CreateAnnotOptLabel(_TRA("Interior Color:"));
-    ew->dropDownInteriorColor = makeDropDown();
+    ew->dropDownInteriorColor = makeDropDown(true);
     ew->dropDownInteriorColor->SetItemsSeqStrings(gColors);
     ew->dropDownInteriorColor->onSelectionChanged = MkFunc0(InteriorColorSelectionChanged, ew);
     AddAnnotOptRow(opts, optRow++, ew->staticInteriorColor, ew->dropDownInteriorColor);

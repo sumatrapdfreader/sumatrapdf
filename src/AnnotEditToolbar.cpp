@@ -510,6 +510,87 @@ static int PopupPick(MainWindow* win, Point screen, const StrVec& names, int cur
     return cmd > 0 ? cmd - 1 : -1;
 }
 
+// 32bpp PARGB: themed menus ignore 24-bit DDBs and treat a 32-bit DIB with
+// alpha 0 as fully transparent, so GDI FillRect into a DIB is not enough.
+static HBITMAP CreateColorSwatchBitmap(PdfColor pdfCol, int dx, int dy) {
+    if (dx < 1 || dy < 1) {
+        return nullptr;
+    }
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = dx;
+    bmi.bmiHeader.biHeight = -dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    void* bits = nullptr;
+    HBITMAP bmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!bmp || !bits) {
+        DeleteObject(bmp);
+        return nullptr;
+    }
+    u8 r, g, b, a;
+    UnpackPdfColor(pdfCol, r, g, b, a);
+    auto* px = (u32*)bits;
+    int cell = std::max(dx / 4, 2);
+    for (int y = 0; y < dy; y++) {
+        for (int x = 0; x < dx; x++) {
+            u8 pr, pg, pb;
+            if (x == 0 || y == 0 || x == dx - 1 || y == dy - 1) {
+                pr = pg = pb = 80;
+            } else if (a == 0) {
+                bool dark = ((x / cell) + (y / cell)) & 1;
+                pr = pg = pb = dark ? 180 : 240;
+            } else {
+                pr = r;
+                pg = g;
+                pb = b;
+            }
+            px[y * dx + x] = 0xFF000000u | ((u32)pr << 16) | ((u32)pg << 8) | pb;
+        }
+    }
+    return bmp;
+}
+
+static int PopupPickColors(MainWindow* win, Point screen, int current) {
+    HMENU menu = CreatePopupMenu();
+    if (!menu) {
+        return -1;
+    }
+    Vec<HBITMAP> bmps;
+    int n = AnnotEditorColorCount();
+    int sw = DpiScale(14);
+    for (int i = 0; i < n; i++) {
+        HBITMAP bmp = CreateColorSwatchBitmap(AnnotEditorColorAt(i), sw, sw);
+        if (bmp) {
+            bmps.Append(bmp);
+        }
+        MENUITEMINFOW mii{};
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_ID | MIIM_STRING | MIIM_STATE;
+        if (bmp) {
+            mii.fMask |= MIIM_BITMAP;
+            mii.hbmpItem = bmp;
+        }
+        mii.wID = (UINT)(i + 1);
+        Str name = AnnotEditorColorNameAt(i);
+        WCHAR* ws = ToWStrTemp(name).s;
+        mii.dwTypeData = ws;
+        mii.cch = (UINT)len(name);
+        if (i == current) {
+            mii.fState = MFS_CHECKED;
+        }
+        InsertMenuItemW(menu, (UINT)i, TRUE, &mii);
+    }
+    int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN, screen.x, screen.y, 0, win->hwndFrame,
+                             nullptr);
+    DestroyMenu(menu);
+    for (HBITMAP bmp : bmps) {
+        DeleteObject(bmp);
+    }
+    return cmd > 0 ? cmd - 1 : -1;
+}
+
 static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int current) {
     StrVec items;
     for (int off = 0; SeqStrAt(names, off);) {
@@ -538,16 +619,15 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         case AnnotEditKind::Color:
         case AnnotEditKind::InteriorColor:
         case AnnotEditKind::TextColor: {
-            StrVec names;
             int n = AnnotEditorColorCount();
             int current = -1;
             for (int i = 0; i < n; i++) {
-                names.Append(AnnotEditorColorNameAt(i));
                 if (AnnotEditorColorAt(i) == chip->item.color) {
                     current = i;
+                    break;
                 }
             }
-            int idx = PopupPick(tb->win, screen, names, current);
+            int idx = PopupPickColors(tb->win, screen, current);
             if (idx < 0) {
                 return;
             }

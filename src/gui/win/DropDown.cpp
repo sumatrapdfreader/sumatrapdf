@@ -9,6 +9,7 @@
 
 #include "gui/Layout.h"
 #include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
 #include "gui/win/WinGui.h"
 
 //- DropDown
@@ -50,7 +51,85 @@ void DropDown::OnCommand(ControlBase::CommandEvent* ev) {
     }
 }
 
+static int ColorSwatchItemDy(PlatformFont* font) {
+    return PlatformFontMeasureText(font, StrL("Mg")).dy + DpiScale(6);
+}
+
+static void PaintCheckerSwatch(Gfx* gfx, Rect r) {
+    gfx->FillRect(r, MkRgb(240, 240, 240));
+    int s = std::max(r.dx / 4, 2);
+    Color dark = MkRgb(180, 180, 180);
+    for (int y = 0; y < r.dy; y += s) {
+        for (int x = 0; x < r.dx; x += s) {
+            if (((x / s) + (y / s)) & 1) {
+                int dx = std::min(s, r.dx - x);
+                int dy = std::min(s, r.dy - y);
+                gfx->FillRect({r.x + x, r.y + y, dx, dy}, dark);
+            }
+        }
+    }
+}
+
+static void DrawColorSwatchItem(DropDown* w, DRAWITEMSTRUCT* dis) {
+    if (dis->itemID == (UINT)-1) {
+        return;
+    }
+    // Combo owner-draw is a native list DC; GfxHdc paints immediately and
+    // does not need Direct2D BindDC (which fails on some 24-bit combo DCs).
+    GfxHdc gfx(dis->hDC);
+    Rect rc = ToRect(dis->rcItem);
+    bool selected = (dis->itemState & ODS_SELECTED) != 0;
+    Color bg =
+        selected ? GetSysColor(COLOR_HIGHLIGHT) : (IsSpecialColor(w->bgColor) ? GetSysColor(COLOR_WINDOW) : w->bgColor);
+    Color txt = selected ? GetSysColor(COLOR_HIGHLIGHTTEXT)
+                         : (IsSpecialColor(w->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : w->textColor);
+    gfx.FillRect(rc, bg);
+
+    int pad = DpiScale(3);
+    int sw = std::max(rc.dy - (2 * pad), 8);
+    Rect swatch{rc.x + pad, rc.y + (rc.dy - sw) / 2, sw, sw};
+    Color col = kColorTransparent;
+    if ((int)dis->itemID < len(w->itemColors)) {
+        col = w->itemColors[(int)dis->itemID];
+    }
+    if (col == kColorTransparent || ColorSkipsPaint(col)) {
+        PaintCheckerSwatch(&gfx, swatch);
+    } else {
+        gfx.FillRect(swatch, col);
+    }
+    gfx.DrawRect(swatch, MkRgb(80, 80, 80), 1);
+
+    Str name;
+    if ((int)dis->itemID < len(w->items)) {
+        name = w->items[(int)dis->itemID];
+    }
+    if (name && w->font) {
+        int gap = DpiScale(6);
+        Rect textRc{swatch.x + swatch.dx + gap, rc.y, rc.Right() - (swatch.x + swatch.dx + gap + pad), rc.dy};
+        gfx.DrawText(name, textRc, gfxTextVCenter | gfxTextSingleLine | gfxTextEllipsis, w->font, txt);
+    }
+    if (dis->itemState & ODS_FOCUS) {
+        gfx.DrawFocusRect(rc);
+    }
+}
+
 void DropDown::OnMessageReflect(ControlBase::MessageReflectEvent* ev) {
+    if (colorSwatches && ev->msg == WM_MEASUREITEM) {
+        auto* mis = (MEASUREITEMSTRUCT*)ev->lparam;
+        if (mis->CtlType == ODT_COMBOBOX || mis->CtlType == ODT_LISTBOX) {
+            mis->itemHeight = (UINT)ColorSwatchItemDy(font);
+            ev->result = TRUE;
+        }
+        return;
+    }
+    if (colorSwatches && ev->msg == WM_DRAWITEM) {
+        auto* dis = (DRAWITEMSTRUCT*)ev->lparam;
+        if (dis->CtlType == ODT_COMBOBOX || dis->CtlType == ODT_LISTBOX) {
+            DrawColorSwatchItem(this, dis);
+            ev->result = TRUE;
+        }
+        return;
+    }
     if (ev->msg == WM_CTLCOLOREDIT || ev->msg == WM_CTLCOLORSTATIC || ev->msg == WM_CTLCOLORLISTBOX) {
         HDC hdc = (HDC)ev->wparam;
         if (!IsSpecialColor(textColor)) {
@@ -67,6 +146,7 @@ void DropDown::OnMessageReflect(ControlBase::MessageReflectEvent* ev) {
 HWND DropDown::Create(const CreateArgs& args) {
     onCommand = MkMethod1<DropDown, ControlBase::CommandEvent*, &DropDown::OnCommand>(this);
     onMessageReflect = MkMethod1<DropDown, ControlBase::MessageReflectEvent*, &DropDown::OnMessageReflect>(this);
+    colorSwatches = args.colorSwatches;
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.isRtl = args.isRtl;
@@ -75,6 +155,11 @@ HWND DropDown::Create(const CreateArgs& args) {
         cargs.style |= CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL;
     } else {
         cargs.style |= CBS_DROPDOWNLIST | WS_VSCROLL;
+    }
+    if (colorSwatches) {
+        cargs.style |= CBS_OWNERDRAWFIXED | CBS_HASSTRINGS;
+        static UINT nextId = 0x500;
+        cargs.ctrlId = (HMENU)(INT_PTR)nextId++;
     }
     cargs.className = WC_COMBOBOX;
     cargs.font = args.font;
@@ -87,6 +172,11 @@ HWND DropDown::Create(const CreateArgs& args) {
     // SetDropDownItems(hwnd, items);
     SetCurrentSelection(-1);
     ComboBox_SetMinVisible(hwnd, 10);
+    if (colorSwatches) {
+        int dy = ColorSwatchItemDy(font);
+        ComboBox_SetItemHeight(hwnd, 0, dy);
+        ComboBox_SetItemHeight(hwnd, -1, dy);
+    }
 
     SizeToIdealSize(this);
     return hwnd;
@@ -147,6 +237,7 @@ void DropDown::SetCueBanner(Str sv) {
 
 void DropDown::SetItems(StrVec& newItems) {
     items.Reset();
+    itemColors.Reset();
     int n = len(newItems);
     for (int i = 0; i < n; i++) {
         Str s = newItems[i];
@@ -211,6 +302,9 @@ Size DropDown::GetIdealSize() {
     }
     if (maxDx > 0 && dx > maxDx) {
         dx = maxDx;
+    }
+    if (colorSwatches) {
+        dx += s1.dy + DpiScale(10);
     }
     // TODO: 5 is a guessed number.
     int dyPad = DpiScale(4);

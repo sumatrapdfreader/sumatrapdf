@@ -854,6 +854,8 @@ struct DropDown : ControlBase {
         PlatformFont* font = nullptr;
         bool isRtl = false;
         bool isEditable = false;
+        // draw a color swatch to the left of each item (annotation color lists)
+        bool colorSwatches = false;
         // TODO: model or items
     };
 
@@ -861,6 +863,8 @@ struct DropDown : ControlBase {
 
     // TODO: use DropDownModel
     StrVec items;
+    Vec<Color> itemColors; // parallel to items when colorSwatches
+    bool colorSwatches = false;
     SelectionChangedHandler onSelectionChanged;
     TextChangedHandler onTextChanged;
     SelectionChangedHandler onCloseUp;
