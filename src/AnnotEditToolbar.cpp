@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
 #include "base/Win.h"
 #include "base/UITask.h"
 #include "gui/Dpi.h"
@@ -38,6 +39,7 @@ extern "C" {
 #include "FormFields.h"
 #include "FilterHighlightDraw.h"
 #include "AnnotFilterToolbar.h"
+#include "SvgIcons.h"
 
 #include "AnnotEditToolbar.h"
 
@@ -315,7 +317,6 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     if (type != AnnotationType::Widget) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Contents;
-        it.text = StrL("C");
         it.tooltip = _TRA("Contents");
         out.Append(it);
     }
@@ -353,25 +354,48 @@ static void PaintSwatch(Gfx* gfx, Rect r, PdfColor col, Color border) {
 }
 
 static void PaintAlignment(Gfx* gfx, Rect r, int quadding, Color col) {
-    int pad = DpiScale(5);
-    int x0 = r.x + pad;
-    int x1 = r.x + r.dx - pad;
-    int mid = r.x + r.dx / 2;
-    int y = r.y + pad;
-    int gap = std::max((r.dy - 2 * pad) / 4, 2);
-    int full = x1 - x0;
-    int shortDx = std::max(full / 2, 4);
+    int pad = DpiScale(6);
+    Rect inner = r;
+    inner.Inflate(-pad, -pad);
+    if (inner.dx < 6 || inner.dy < 8) {
+        inner = r;
+        inner.Inflate(-2, -2);
+    }
+    int lineH = std::max(DpiScale(2), 1);
+    int gap = std::max((inner.dy - 3 * lineH) / 2, 1);
+    int blockDy = 3 * lineH + 2 * gap;
+    int y = inner.y + (inner.dy - blockDy) / 2;
+    int full = inner.dx;
+    int shortDx = std::max((full * 2) / 3, 4);
     for (int i = 0; i < 3; i++) {
         int dx = (i == 1) ? shortDx : full;
-        int x = x0;
+        int x = inner.x;
         if (quadding == kQuaddingCenter) {
-            x = mid - dx / 2;
+            x = inner.x + (inner.dx - dx) / 2;
         } else if (quadding == kQuaddingRight) {
-            x = x1 - dx;
+            x = inner.x + inner.dx - dx;
         }
-        gfx->FillRect({x, y, dx, 2}, col);
-        y += gap;
+        gfx->FillRect({x, y, dx, lineH}, col);
+        y += lineH + gap;
     }
+}
+
+static void PaintSvgChip(Gfx* gfx, Rect r, const char* svg, Color fg, Color bg) {
+    int pad = DpiScale(3);
+    int sz = std::min(r.dx, r.dy) - 2 * pad;
+    if (sz < 8) {
+        sz = std::min(r.dx, r.dy);
+    }
+    if (sz < 1) {
+        return;
+    }
+    Pixmap* px = GetCachedPixmapForSvg(Str(svg), sz, sz, fg, bg);
+    if (!px) {
+        return;
+    }
+    int x = r.x + (r.dx - px->width) / 2;
+    int y = r.y + (r.dy - px->height) / 2;
+    gfx->DrawPixmap(px, {x, y, px->width, px->height});
 }
 
 static void PaintLineEndingMark(Gfx* gfx, Point tip, Point along, Color col, int style, int size) {
@@ -519,6 +543,8 @@ void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
             PaintLineEnding(ctx.gfx, r, item.lineEnding, item.lineIsStart, textCol);
             break;
         case AnnotEditKind::Contents:
+            PaintSvgChip(ctx.gfx, r, gIconAnnotText, textCol, BarBg());
+            break;
         case AnnotEditKind::Opacity:
         case AnnotEditKind::Border:
         case AnnotEditKind::FontName:
